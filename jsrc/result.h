@@ -188,7 +188,7 @@ do{
     // We free only the z block itself, not its children: children were incorporated above
     // if the value iz zappable, zap it (it may have become zappable, if it turned recursive above).  Free only the root block
     // We should do this for virtual blocks also, to get the full effect of tpop.  When we can zap virtuals we will
-    if(likely(zzoktozap<0)){*AZAPLOC(z)=0; mf(z);}  // free the root block.  If it has descendants their ownership was transferred to zz.
+    if(likely(zzoktozap<0)){ZAPTSTACKEND(z) mf(z);}  // free the root block.  If it has descendants their ownership was transferred to zz.
 #if !ZZSTARTATEND
     zzcellp+=zzcelllen;  // advance to next cell
 #else
@@ -257,7 +257,7 @@ do{
    ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&(-(AT(z)&DIRECT)))|~ZZFLAGPRISTINE;
    if(likely(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED))) {
     // normal case where we are creating the result box.  Must incorp the result.  Can't see an advantage is storing the virtual temporarily, and that would require testing for UNINCORP block
-    realizeifvirtual(z); razap(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine flagging (above) =INCORPRA
+    realizeifvirtual(z); razaptstackend(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine flagging (above) =INCORPRA.  We trouble to see if we can shorten tstack, since that is likely
     *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
    } else {
     // The result of this verb will be opened next, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might

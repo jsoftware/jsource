@@ -723,7 +723,7 @@ extern void jfree4gmp(void*,size_t);
 #define memoput(x0,x1,x2,x3)        jtmemoput(jt,(x0),(x1),(x2),(x3))
 #define merge1(x,y)                 jtmerge1(jt,(x),(y))
 #define merge2(x0,x1,x2,x3,x4)      jtmerge2(jt,(x0),(x1),(x2),(x3),(x4))
-#define mf(x)                       jtmf(jt,(x),AFHRH(x))
+#define mf(x)                       jtmf(jt,(x),FHRHPOOLBIN(AFHRH(x)))
 #define mfgmp(x)                    gmpmfree(x)  // to free GMP blocks
 #define minimum(x,y)                jtatomic2(jt,(x),(y),ds(CMIN))
 #define minors(x)                   jtminors(jt,(x))
@@ -923,12 +923,14 @@ extern void jfree4gmp(void*,size_t);
 #define raposgblqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){ACADD(x,1); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
 #define raposlocalqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
 // NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
-// We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
-#define raczap(x,cond)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){*AZAPLOC(x)=0; AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);} \
+// We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.  the tstackend variant checks to see if the value is the end of the stack
+#define raczapcommon(x,cond,zapfn)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){zapfn AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);} \
                                     radescend(x)}}
                                     // use ZAP for inplaceable blocks; don't increment PERMANENT blocks.  Use only if x's stack entry is in the current frame
                                     // cond must be true only if c<0
+#define raczap(x,cond)              raczapcommon(x,cond,*AZAPLOC(x)=0;)
 #define razap(x)                    raczap(x,c<0)  // default case is to zap whenever inplaceable, assuming abandoned
+#define razaptstackend(x)           raczapcommon(x,c<0,ZAPTSTACKEND(x))  // default case is to zap whenever inplaceable, assuming abandoned, but also checking to see if we can simply expunge the tstack entry
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))

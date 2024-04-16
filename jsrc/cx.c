@@ -72,7 +72,8 @@
 // Check for non-noun, but not if this is a modifier and the input to the next sentence (=this result) may make it to the function result
 // We refetch tcesx to have this cw and the next
 // popstmt is used to call tpop if the tpop stack is not empty; asgstmt is issued after the parse, where a variable can be invalidated to prevent it from being saved over calls
-#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); if(old!=jt->tnextpushp){popstmt} S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
+// we call only when the stack has many values on it.  We do our best during assignment to retrace the stack rather than zap it. 
+#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); if((UI)jt->tnextpushp-(UI)old>=8*SZI){popstmt} S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
  SETTRACK \
  if(likely(!(attnval+(NPGpysfmtdl&128+16))))z=parsea(queue,m);else {if(jt->sitop)jt->sitop->dclnk->dcix=~ic; z=parsex(queue,m,CWSOURCE(cwsent,CNSTOREDCW,ic),(NPGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))NPGpysfmtdl&=~2;} \
  {asgstmt} if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(NPGpysfmtdl&8)||(tcesx&TCESXCECANT)) \
@@ -729,8 +730,9 @@ bodyend: ;  // we branch to here to exit with z set to result
  // if an immex phrase is running or has been requested, because those would be confusing and also they call tpop
  if(unlikely(z==0))if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
   // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that are are about to pop over.  Only x and y are possible
-  UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(w!=0){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv=realize(ybuckptr->val); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}}  // y if any
-  if(a!=0){L *ybuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv=realize(ybuckptr->val); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}}  // x if any
+  UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
+  // For each of [xy], realize if UNINCORPABLE and replace the value with the realized version.  If error, the name will lose its value; that's OK.
+  while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv; if((rv=realize(ybuckptr->val))!=0)ACINITZAP(rv); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}} yxbucks>>=16;}
   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self); RETF(0);  // push a debug frame for this error.  We know we didn't free locsym
  }
 
@@ -1042,7 +1044,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  asgct = asgct + ((asgct+6)>>1); // leave just 33% empty space because buckets & symbol addresses do most of the work
  RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
- *(UI4*)LXAV0(actst)=(UI4)((SYMHASH(NAV(mnuvxynam[4])->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(mnuvxynam[5])->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
+ ((UI4*)LXAV0(actst))[0]=(UI4)((SYMHASH(NAV(mnuvxynam[4])->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(mnuvxynam[5])->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.

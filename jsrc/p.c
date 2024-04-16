@@ -805,7 +805,7 @@ RECURSIVERESULTSCHECK
         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
          // we start these loads here because the next branch will probably mispredict, allowing them to finish.  If we move them earlier we have more work to do with qualifying freea
-        if(unlikely(freea!=0)){INCRSTAT(wpop/*.27*/)  // if the arg has a place on the stack, look at it to see if the block is still around
+        if(unlikely(freea!=0)){INCRSTAT(wpop/*.27*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
          I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
          if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(wpopfa/*0.34 local, 0.9 global*/)   // inplaceable and not return value.  Sparse blocks are never inplaceable
           *tpopw=0; fanapop(freea,freeaflag);  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine

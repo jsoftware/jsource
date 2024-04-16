@@ -180,11 +180,11 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
  DC pmstacktop;  // Top (i. e. end) of the postmortem stack.  The pm stack is just the chain of private SYMB namespaces.  When there is an error that will go all the way back to console, the namespaces are preserved.  If the next
            // keyboard command turns on debug, they will be converted into a debug stack and moved out of this field.  They are deleted when debug mode is turned off or the stack is deleted by 13!:0.
- struct {
-  I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
-  A pool;             // pointer to first free block
- } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
-// cacheline 2 ends inside the pool struct (2 qwords extra)
+// obsolete  struct {
+ A mempool[-PMINL+PLIML+1];             // pointer to first free block
+ I memballo[-PMINL+PLIML+1];              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
+// obsolete  } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
+// cacheline 2 ends inside the allocation info (4 qwords extra)
 
 // things needed by name lookup (unquote)
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used

@@ -2076,7 +2076,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define SMAX            65535
 #define SMIN            (-65536)
 #if SY_64
-#define SYMHASH(h,n)    (((UI)(h)*(UI)(n)>>32)+SYMLINFOSIZE)   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
+#define SYMHASH(h,n)    (((UI)(h)*(UI)(n)>>32)+SYMLINFOSIZE)   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries).  Never 0.
 #else
 #define SYMHASH(h,n)    ((UI)(((D)(h)*(D)(n)*(1.0/4294967296.0))+SYMLINFOSIZE))   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
 #endif
@@ -2180,6 +2180,9 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
   C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
   stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end
 #define WITHEFORMATDEFERRED(stmt) {WITHDEBUGOFF(stmt) if(unlikely(jt->jerr!=0)){UC _d=jt->jerr; RESETERR ASSERT(0,_d)}}  // execute stmt with debug/eformat turned off; at end, if there is an error, re-signal it
+// If the abandoned value we want to ra is likely the last thing on the tstack, look to see if it is.  If so, just back up the tstack.  Otherwise ZAP the block
+#define ZAPTSTACKEND(w) {A *modloc=AZAPLOC(w); I modval=(I)(jt->tnextpushp-1); modloc=(I)AZAPLOC(w)==modval?(A*)&jt->tnextpushp:modloc; modval=(I)AZAPLOC(w)==modval?modval:0; *modloc=(A)modval;}
+
 #if C_LE
 #if BW==64
 #define IHALF0  0x00000000ffffffffLL

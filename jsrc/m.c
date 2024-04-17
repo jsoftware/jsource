@@ -46,6 +46,7 @@
 #define FHRHBINISGMP 14  // this block was allocated by GMP
 //  The following macros define the field
 #define FHRHPOOLBIN(h) CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
+#define FHRHBINISPOOL(h) ((h)&((2LL<<(PLIML-PMINL))-1))      // true is this is a pool allo, false if system or GMP (h is mask from block)
 #define FHRHBININPOOL(bin) ((bin)<PLIML-PMINL+1)      // true is this is a pool allo, false if system or GMP (h is bin#)
 #define ALLOJISPOOL(j) ((j)<=PLIML)     // true if pool allo, false if system (j is lg2(requested size))
 #define ALLOJBIN(j) ((j)-PMINL)   // convert j (=lg2(size)) to pool bin#
@@ -1415,6 +1416,25 @@ void jtrepatrecv(J jt){
 #endif
 }
 
+// repatriate a single block onto its queue, flushing if there is a change of owner or too much data
+static void jtrepat1(J jt, A w, I allocsize){
+#if PYXES
+ // repatriate a block allocated in another thread.  AC(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no AFCHAIN pointer
+ A repato=jt->repato;
+ if(common(repato&&repato->origin==w->origin)){      // adding to existing repatriation queue
+  allocsize+=AC(jt->repato);AC(jt->repato)=allocsize; // update allocated size
+  AFCHAIN(AAV0(repato)[0])=w; AAV0(repato)[0]=w;          // add block to chain
+ }else{
+  if(repato)jtrepatsend(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
+  jt->repato=w; AC(w)=allocsize; AAV0(w)[0]=w;             // queue now empty regardless; install w as both head and tail
+ }
+ if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);    // allocsize now has total size of repato.  if size of chain exceeded limit, flush
+#endif
+}
+
+static void jtmfgmp(J jt,A w){mfgmp(w);}
+
+
 
 
 #if MEMAUDIT&0x40
@@ -1423,7 +1443,7 @@ extern void jgmpguard(X);
 
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
-void jtmf(J jt,A w,I blockx){
+void jtmf(J jt,A w,I hrh,I blockx){
 #if MEMAUDIT&16
 auditmemchains();
 #endif
@@ -1448,8 +1468,8 @@ printf("%p-\n",w);
 #endif
 // obsolete  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
 #if MEMAUDIT&1
- if(AFHRH(w)!=FHRHISGMP) {
-	 if((AFHRH(w)==0 || blockx>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
+ if(hrh!=FHRHISGMP) {
+	 if((hrh==0 || blockx>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
  } else {
 #if MEMAUDIT&0x40
   jgmpguard(w);
@@ -1458,17 +1478,16 @@ printf("%p-\n",w);
 #if MEMAUDIT&17
 #endif
 #endif
- I allocsize;  // size of full allocation for this block
 // obsolete #if PYXES
 // obsolete  I origthread=w->origin;
 // obsolete #endif
- if(FHRHBININPOOL(blockx)){   // allocated from subpool
-  allocsize = FHRHPOOLBINTOSIZE(blockx);
+ if(FHRHBINISPOOL(hrh)){   // allocated from subpool
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
+  I allocsize = FHRHPOOLBINTOSIZE(blockx);
 #if PYXES
-  if(likely(w->origin==(US)THREADID(jt))){  // if block was allocated from this thread
+  if(unlikely(w->origin!=(US)THREADID(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
 #endif
   AFCHAIN(w)=jt->mempool[blockx];  // append free list to the new addition...
   jt->mempool[blockx]=w;   //  ...and make new addition the new head
@@ -1477,23 +1496,9 @@ printf("%p-\n",w);
    if(mfreeb&MFREEBCOUNTING)jt->bytes-=allocsize;  // keep track of total allocation, needed only if enabled
    if(mfreeb<0)jt->uflags.spfreeneeded=1;  // Indicate we have one more free buffer if this kicks the list into garbage-collection mode, indicate that
   }
-#if PYXES
- }else{
-  // repatriate a block allocated in another thread.  AC(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no AFCHAIN pointer
-   A repato=jt->repato;
-   if(common(repato&&repato->origin==w->origin)){      // adding to existing repatriation queue
-    allocsize+=AC(jt->repato);AC(jt->repato)=allocsize; // update allocated size
-    AFCHAIN(AAV0(repato)[0])=w; AAV0(repato)[0]=w;          // add block to chain
-   }else{
-    if(repato)jtrepatsend(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
-    jt->repato=w; AC(w)=allocsize; AAV0(w)[0]=w;             // queue now empty regardless; install w as both head and tail
-   }
-   if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);    // allocsize now has total size of repato.  if size of chain exceeded limit, flush
-  }
-#endif
- }else if(unlikely(blockx==FHRHBINISGMP)){mfgmp(w);  // if GMP allocation, free it through GMP
+ }else if(unlikely(blockx==FHRHBINISGMP)){jtmfgmp(jt,w);  // if GMP allocation, free it through GMP
  }else{    // buffer allocated from malloc
-  allocsize = FHRHSYSSIZE(AFHRH(w));
+  I allocsize = FHRHSYSSIZE(hrh);
 // obsolete   if(unlikely(hrh==FHRHISGMP)){mfgmp(w);
 // obsolete   }else{
 #if MEMAUDIT&4

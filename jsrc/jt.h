@@ -172,34 +172,36 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackmin;        // red warning for C stack pointer
  UI4 *futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate
- A filler1[2];
+ A* tstacknext;       // if not 0, points to the recently-used tstack allocation, whose first entry points to the current allocation  
+ A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
 // end of cacheline 1
 
  C _cl2[0];
-// things needed for memory allocation
- A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
- DC pmstacktop;  // Top (i. e. end) of the postmortem stack.  The pm stack is just the chain of private SYMB namespaces.  When there is an error that will go all the way back to console, the namespaces are preserved.  If the next
-           // keyboard command turns on debug, they will be converted into a debug stack and moved out of this field.  They are deleted when debug mode is turned off or the stack is deleted by 13!:0.
+// parser stack & others
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
+ PFRAME parserstackframe;  // 4 words    sf field initialized at task-start
+ A filler2[2];
+// end of cacheline 2
 // obsolete  struct {
- A mempool[-PMINL+PLIML+1];             // pointer to first free block
- I memballo[-PMINL+PLIML+1];              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
 // obsolete  } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
-// cacheline 2 ends inside the allocation info (4 qwords extra)
 
+ C _cl3[0];
 // things needed by name lookup (unquote)
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  A curname;          // current name, an A block containing an NM
  US fcalln;           // named fn calls: maximum permissible depth   could be a fixed value?
  US callstacknext;    // current stack pointer into callstack.  Could be elided if callstack put on a 16K boundary, not a bad idea anyway
  LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
- I bytes;            // bytes currently in use - used only during 7!:1
+// things needed for memory allocation
+ A mempool[-PMINL+PLIML+1];             // pointer to first free block in each pool.  ends at binary boundary
 // end of cacheline 3
 
  C _cl4[0];
- I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
- A* tstacknext;       // if not 0, points to the recently-used tstack allocation, whose first entry points to the current allocation  
- A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
- PFRAME parserstackframe;  // 4 words    sf field initialized at task-start
+ I memballo[-PMINL+PLIML+1];              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
+ A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
+ DC pmstacktop;  // Top (i. e. end) of the postmortem stack.  The pm stack is just the chain of private SYMB namespaces.  When there is an error that will go all the way back to console, the namespaces are preserved.  If the next
+           // keyboard command turns on debug, they will be converted into a debug stack and moved out of this field.  They are deleted when debug mode is turned off or the stack is deleted by 13!:0.
+ I bytes;            // bytes currently in use - used only during 7!:1
 // end of cacheline 4
 
  C _cl5[0];
@@ -458,7 +460,7 @@ _Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstru
 _Static_assert(offsetof(JTT,_cl0)==0*64,"cacheline 0 offset wrong");
 _Static_assert(offsetof(JTT,_cl1)==1*64,"cacheline 1 offset wrong");
 _Static_assert(offsetof(JTT,_cl2)==2*64,"cacheline 2 offset wrong");
-//_Static_assert(offsetof(JTT,_cl3)==3*64); //cacheline 3 ends in the middle of an object
+_Static_assert(offsetof(JTT,_cl3)==3*64,"cacheline 3 offset wrong");
 _Static_assert(offsetof(JTT,_cl4)==4*64,"cacheline 4 offset wrong");
 _Static_assert(offsetof(JTT,_cl5)==5*64,"cacheline 5 offset wrong");
 _Static_assert(offsetof(JTT,_cl6)==6*64,"cacheline 6 offset wrong");

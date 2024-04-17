@@ -723,7 +723,7 @@ extern void jfree4gmp(void*,size_t);
 #define memoput(x0,x1,x2,x3)        jtmemoput(jt,(x0),(x1),(x2),(x3))
 #define merge1(x,y)                 jtmerge1(jt,(x),(y))
 #define merge2(x0,x1,x2,x3,x4)      jtmerge2(jt,(x0),(x1),(x2),(x3),(x4))
-#define mf(x)                       jtmf(jt,(x),FHRHPOOLBIN(AFHRH(x)))
+#define mf(x)                       jtmf(jt,(x),AFHRH(x),FHRHPOOLBIN(AFHRH(x)))
 #define mfgmp(x)                    gmpmfree(x)  // to free GMP blocks
 #define minimum(x,y)                jtatomic2(jt,(x),(y),ds(CMIN))
 #define minors(x)                   jtminors(jt,(x))

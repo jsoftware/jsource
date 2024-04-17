@@ -441,8 +441,10 @@ typedef JST* JS;  // shared part of struct
 #define MTHREAD(jjt) (&jjt->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
 #define MDTHREAD(jjt) (&jjt->threaddata[jjt->promptthread])     // jt for master/debug thread.  jjt is the shared jt pointer
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
+#define THREADID1(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE))  // unique thread #, faster to calculate
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
+#define JTFORTHREAD1(jt,n) (&(JTTHREAD0(jt)[(n)-1]))   // JTT struct for thread# returned from THREADID1
 #define THREADIDFORWORKER(n) ((n)+1)  // convert worker# to thread#
 #define WORKERIDFORTHREAD(n) ((n)-1)  // convert thread# to worker#
 #define NALLTHREADS(jt) (THREADIDFORWORKER(JT(jt,wthreadhwmk)))   // total number of threads that have been activated

@@ -1228,15 +1228,15 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  // we visit them in back-to-front order so the first-allocated headers are in cache
 #if PYXES
 // the lock must always be cleared when the block is returned, so we can set it once.  The origin likewise doesn't change
-#define MOREINIT *(I4 *)&u->origin=THREADID(jt);  // init allocating thread# and clear the lock
+#define MOREINIT(u) *(I4 *)&u->origin=THREADID1(jt);  // init allocating thread# and clear the lock
 #else
-#define MOREINIT
+#define MOREINIT(u)
 #endif
  u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL);
 #if MEMAUDIT&17 && BW==64
- DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT);   // chain blocks to each other; set chain of last block to 0
+ DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT(u));   // chain blocks to each other; set chain of last block to 0
 #else
- DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT);    // chain blocks to each other; set chain of last block to 0
+ DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT(u));    // chain blocks to each other; set chain of last block to 0
 #endif
  AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
  jt->mempool[-PMINL+1+blockx]=(A)((C*)u+n);  // the second block becomes the head of the free list
@@ -1265,9 +1265,10 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  I nt=jt->malloctotal+=n;
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
-#if PYXES
- *(I4 *)&z->origin=THREADID(jt);  // init allocating thread# and clear the lock
-#endif
+// obsolete #if PYXES
+// obsolete  *(I4 *)&z->origin=THREADID1(jt);
+// obsolete #endif
+ MOREINIT(z);  // init allocating thread# and clear the lock
  R z;
 }
 
@@ -1388,10 +1389,10 @@ void jtrepatsend(J jt){
  A repato=jt->repato, tail;
  if(!repato)R; // nothing to repatriate
  tail=AAV0(repato)[0];  // extract tail
- I origthread=repato->origin;
+ I origthread1=repato->origin;
  I allocsize=AC(repato);  // extract total length in repato
  jt->repato=0;  // clear repato to empty
- jt=JTFORTHREAD(jt,origthread); // switch to the thread the chain must return to
+ jt=JTFORTHREAD1(jt,origthread1); // switch to the thread the chain must return to
  I zero=0,exsize;
  // Add chain of new blocks to repatq.  AC(repatq) has total alloc size in repatq
  A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AC(repato)=allocsize+(exsize=*(expval?&AC(expval):&zero)); } while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
@@ -1487,7 +1488,7 @@ printf("%p-\n",w);
 #endif
   I allocsize = FHRHPOOLBINTOSIZE(blockx);
 #if PYXES
-  if(unlikely(w->origin!=(US)THREADID(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
+  if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
 #endif
   AFCHAIN(w)=jt->mempool[blockx];  // append free list to the new addition...
   jt->mempool[blockx]=w;   //  ...and make new addition the new head
@@ -1506,7 +1507,7 @@ printf("%p-\n",w);
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
 #if PYXES
-  jt=JTFORTHREAD(jt,w->origin);  // for space accounting, switch to the thread the block came from  *** this modifies jt ***
+  jt=JTFORTHREAD1(jt,w->origin);  // for space accounting, switch to the thread the block came from  *** this modifies jt ***
 #endif
   jt->malloctotal-=allocsize;
   jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS

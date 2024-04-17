@@ -249,7 +249,7 @@ typedef I SI;
 #define AR(x)           ((x)->r)        /* Rank                            */
 #if PYXES
 #define ARINIT(x,v)     {*(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */ \
-    *(I4*)&(x)->origin=THREADID(jt);}   // save the originating thread and clear the lock to 0
+    *(I4*)&(x)->origin=THREADID1(jt);}   // save the originating thread and clear the lock to 0
 #else
 #define ARINIT(x,v)     *(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */
 #endif

@@ -213,6 +213,7 @@ static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be
 }
 
 static DF1(jtinv1){F1PREFIP;DECLFG;A z; ARGCHK1(w);A i; RZ(i=inv((fs))); FDEPINC(1);  WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);)       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
+  // we defer eformat till the caller so that the user doesn't see the description of the inverse, which might be unrecognizable
 static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; ARGCHK1(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
 static DF2(jtinv2){DECLFG;A z; ARGCHK2(a,w); FDEPINC(1); WITHEFORMATDEFERRED(df1(z,w,inv(amp(a,fs)));) FDEPDEC(1); STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads

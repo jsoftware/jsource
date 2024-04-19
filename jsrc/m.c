@@ -223,7 +223,7 @@ F1(jtmemhashs){
 
 #endif
 
-// initialise shared state for memory allocator
+// initialize shared state for memory allocator
 B jtmeminits(JS jjt){
  INITJT(jjt,adbreakr)=INITJT(jjt,adbreak)=(C*)&INITJT(jjt,breakbytes); /* required for ma to work */
  INITJT(jjt,mmax) =(I)1<<(MLEN-1);
@@ -1210,7 +1210,7 @@ static I lfsr = 1;  // holds varying memory pattern
 // call tp, but return the value passed in as z.  Used to save a register in caller
 __attribute__((noinline)) A jttgz(J jt,A *tp, A z){RZ(tp=tg(tp)); jt->tnextpushp=tp; R z;}
 
-__attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
+__attribute__((noinline)) A jtgafallopool(J jt){
  A u,chn; US hrh;
 #if ALIGNPOOLTOCACHE   // with smaller headers, always align pool allo to cache bdy
  // align the buffer list on a cache-line boundary
@@ -1221,6 +1221,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
  // allocate without alignment
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
+ I blockx=(I)jt&63; jt=(J)((I)jt&-64);
  I nt=jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
  jt->mfreegenallo+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;   // add to total from OS
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
@@ -1232,7 +1233,7 @@ __attribute__((noinline)) A jtgafallopool(J jt,I blockx,I n){
 #else
 #define MOREINIT(u)
 #endif
- u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL);
+ u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); I n=2L<<blockx;
 #if MEMAUDIT&17 && BW==64
  DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT(u));   // chain blocks to each other; set chain of last block to 0
 #else
@@ -1309,7 +1310,7 @@ if((I)jt&3)SEGFAULT;
   }else{
 // not worth checking   if(unlikely(lda(&jt->repatq)))if(jtrepatrecv(jt),z=jt->mempool[-PMINL+1+blockx])goto frompool; // didn't have any blocks of the right size, but managed to repatriate one
    // chain is empty, alloc PSIZE and split it into blocks
-   RZ(z=jtgafallopool(jt,blockx,(I)2<<blockx));
+   RZ(z=jtgafallopool((J)((I)jt+blockx)));
   }
  } else {      // here for non-pool allocs...
   // add to the allocation for the fixed tail and the alignment area
@@ -1347,6 +1348,43 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 }
 
 #if SY_64
+// fill an INDIRECT block with 0s, starting with s[0].  m is #bytes requested for allo-1
+A zfillind(A w, I m){
+ AS(w)[0]=0;  // the first byte by hand
+ if((m=(m-64)&-32)>=0){   // get #32-byte sections - 1; if there are some to do...
+  void *z=&AS(w)[1];   // point to cache-aligned result area
+  __m256i wd=_mm256_setzero_si256();  // write data, all 0
+  // store 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do
+  // m=0-31=>1 loop, backoff -4  32-63=>1, -3  etc
+  UI n2=(m>>(LGNPAR+LGSZI+2))+1;  // # turns through duff loop
+  UI backoff=(m>>(LGNPAR+LGSZI))|-4;  // backoff, -4 to -1
+  z=(C*)z+(backoff+1)*NPAR*SZI;
+  if(likely(m<L3CACHESIZE)){
+   // Normal case: not a huge copy
+   switch(backoff){
+   do{ ;
+   case -1: _mm256_storeu_si256((__m256i*)z,wd);
+   case -2: _mm256_storeu_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
+   case -3: _mm256_storeu_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
+   case -4: _mm256_storeu_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
+   z=(C*)z+4*NPAR*SZI;
+   }while(--n2>0);
+   }
+  }else{
+   // The copy length is bigger than L3 cache: use non-temporal stores to avoid excessive cache traffic
+   switch(backoff){
+   do{ ;
+   case -1: _mm256_stream_si256((__m256i*)z,wd);
+   case -2: _mm256_stream_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
+   case -3: _mm256_stream_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
+   case -4: _mm256_stream_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
+   z=(C*)z+4*NPAR*SZI;
+   }while(--n2>0);
+   }
+  }
+ }
+ R w;
+}
 // stats I statsnga=0, statsngashape=0;
 // like jtga, but don't copy shape.   Never called for SPARSE type
 // We pack rank+type into one reg to save registers (it also helps the LIMIT test).  With this, the compiler should be able to save/restore
@@ -1356,13 +1394,13 @@ RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
  I bytes; if(likely(ranktype&(((I)1<<(LASTNOUNX+1))-1)))bytes = ALLOBYTESVSZLG(atoms,ranktype>>32,bplg(ranktype),ranktype&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,ranktype>>32,bpnonnoun(ranktype),ranktype&LAST0,0);
-    // We never use GA for NAME types, so we don't need to check for it
  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
+    // We never use GA for NAME types, so we don't need to check for it
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC AFLAG AM
  AT(z)=(I4)ranktype; I rank=(UI)ranktype>>32; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
- if(unlikely(!(((I4)ranktype&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-32)&-32,&AS(z)[1],1,MEMSET00);}  // unlikely is important!  compiler strains then to use one less temp reg
+ if(unlikely(!(((I4)ranktype&DIRECT)>0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
 // stats  ++statsnga; statsngashape+=shaape!=0;
  R z;
 }

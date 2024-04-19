@@ -324,7 +324,7 @@ typedef struct JSTstruct {
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
  void *sminput;
  void *smoutput;
- A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives.
+ A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives.  could be A[2] implocref
 // end of cacheline 2
 
 // Cacheline 3: Locales

@@ -1017,7 +1017,11 @@ RECURSIVERESULTSCHECK
    if(unlikely(!PTISCAVN(stack[2].pt))){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FPE}
    if(unlikely(&stack[3]!=stackend1)){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FPE}
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error.  STKFAOWED semantics
-   // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x).  The fa must be deferred till after the result has been used.  We turn it into a tpush
+   // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x   or   a =: >: a   or a =. b).
+   // If the value has not been assigned, we might be about to print it or use it as a result.  In that case we tpush to protect it till the next gc,
+   // If the value was assigned, we can count on the assigned name to protect it, and we could just fa here.  BUT THAT COULD FAIL if the name is expunged
+   // by another thread while we are using the value.  That will crash.  The case is very rare but we test for it, so we have to make it work.
+   // scaf if final assignment was local this can't happen, and we could fa
    if(unlikely(ISSTKFAOWED(z))){tpushna(QCWORD(z));}  // if the result needs a free, do it via tpush
   }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
 failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.

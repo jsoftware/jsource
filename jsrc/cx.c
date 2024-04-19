@@ -72,8 +72,9 @@
 // Check for non-noun, but not if this is a modifier and the input to the next sentence (=this result) may make it to the function result
 // We refetch tcesx to have this cw and the next
 // popstmt is used to call tpop if the tpop stack is not empty; asgstmt is issued after the parse, where a variable can be invalidated to prevent it from being saved over calls
-// we call only when the stack has many values on it.  We do our best during assignment to retrace the stack rather than zap it. 
-#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); if((UI)jt->tnextpushp-(UI)old>=8*SZI){popstmt} S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
+// we call only when the stack has values on it.  We do our best during assignment to retrace the stack rather than zap it. If the stack has any values, we must call to make
+// sure that all assignments-in-place have had the usercount fully restored
+#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); if((UI)jt->tnextpushp!=(UI)old){popstmt} S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
  SETTRACK \
  if(likely(!(attnval+(NPGpysfmtdl&128+16))))z=parsea(queue,m);else {if(jt->sitop)jt->sitop->dclnk->dcix=~ic; z=parsex(queue,m,CWSOURCE(cwsent,CNSTOREDCW,ic),(NPGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))NPGpysfmtdl&=~2;} \
  {asgstmt} if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(NPGpysfmtdl&8)||(tcesx&TCESXCECANT)) \

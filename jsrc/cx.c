@@ -336,7 +336,7 @@ DF2(jtxdefn){
   // Do the other assignments, which occur less frequently, with symbis, without the special treatment of virtuals
   if(unlikely(((I)u|(I)v)!=0)){
    if(u){(symbis(mnuvxynam[2],u,locsym)); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym); }  // assign u, and m if u is a noun
-   if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // bug errors here must be detected
+   if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // errors here are impossible: the value exists and the names are known valid and allocated
   }
  }  // for name scope only
  FDEPINC(1);

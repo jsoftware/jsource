@@ -685,8 +685,8 @@ A jtprobequiet(J jt,A a){A g;
 }
 
 // assign symbol: assign name a in symbol table g to the value w (but g is ignored if a is a locative)
-// Result points to the symbol-table block for the assignment
-// flags set if jt: bit 0=this is a final assignment;
+// Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage
+// flags set in jt: bit 0=this is a final assignment;
 // if g is marked as having local symbols, we assume that it is equal to jt->locsyms (especially in subroutines)
 I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  ARGCHK2(a,w);
@@ -800,7 +800,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // in case the new value was being protected by the old (ex: n =. >n).
  // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
  SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock
- R 1;   // good return
+ R (I)jtinplace+2*(g==0);   // good return, with bit 0 set if final assignment, bit 1 if local
 exitlock:  // error exit
  if(g!=0)WRITEUNLOCK(g->lock)
  R 0;

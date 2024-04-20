@@ -166,7 +166,7 @@ static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,self),ABA
 
 // assignment, single or multiple
 // jt has flag set for final assignment (passed into symbis)
-// The return must be 0 for bad, anything else for good
+// The return must be 0 for bad, otherwise good with bit 0=final assignment, bit 1 = local assignment (never set)
 static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
  B ger=0;C *s;
  if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
@@ -227,7 +227,7 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
   }
  }
 retstack:  // return, but 0 if error
- R !jt->jerr;  // return 0 if error
+ R unlikely(jt->jerr!=0)?0:(I)jtinplace;  // return 0 if error, otherwise a nonzero with final assignment flag correct and local assignment clear
 }
 
 
@@ -922,7 +922,8 @@ RECURSIVERESULTSCHECK
        )  // fail if error, possibly with a message
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.
-       if(likely((US)pt0ecam==0))EP(1)  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
+       if(likely((US)pt0ecam==0))EP(rc)  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
+         // rc has bits 0-1 set to indicate if final assignment, and single assignment to a local name
        stack+=2;  // if we have to keep going, advance stack to the assigned value
        // here we are dealing with the uncommon case of non-final assignment.
        // the newly-assigned name might have been ra()d, if it couldn't be zapped.  If so, indicate that fact in the stacked address
@@ -1006,7 +1007,7 @@ RECURSIVERESULTSCHECK
   }  // break with stack==0 on error to failparse; main exit is when queue is empty (m<0), to exitparse
 
  exitparse:
-  // *** pt0ecam has been repurposed to 1 for final assignment, 0 otherwise
+  // *** pt0ecam has been repurposed to bit 0=final assignment, bit 1=assignment to local, others garbage
 #if MEMAUDIT&0x2
   audittstack(jt);
 #endif
@@ -1019,10 +1020,10 @@ RECURSIVERESULTSCHECK
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error.  STKFAOWED semantics
    // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x   or   a =: >: a   or a =. b).
    // If the value has not been assigned, we might be about to print it or use it as a result.  In that case we tpush to protect it till the next gc,
-   // If the value was assigned, we can count on the assigned name to protect it, and we could just fa here.  BUT THAT COULD FAIL if the name is expunged
-   // by another thread while we are using the value.  That will crash.  The case is very rare but we test for it, so we have to make it work.
-   // scaf if final assignment was local this can't happen, and we could fa
-   if(unlikely(ISSTKFAOWED(z))){tpushna(QCWORD(z));}  // if the result needs a free, do it via tpush
+   // If the value was assigned, we can count on the assigned name to protect it, and we could just fa here.  BUT THAT COULD CRASH if the name is expunged
+   // by another thread while we are using the value.  The case is very rare but we test for it, so we have to make it work.
+   // If final assignment was local this can't happen, and we do the fa
+   if(unlikely(ISSTKFAOWED(z))){if(pt0ecam&2){faowed(QCWORD(z),AC(QCWORD(z)),AT(QCWORD(z)))} else tpushna(QCWORD(z));}  // if the result needs a free, do it, possibly deferred via tpush
   }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
 failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.
                 // we set the error word# for the failing word and then resignal the error to get the spacing right and call eformat to annotate it
@@ -1051,7 +1052,7 @@ failparse:
 #endif
 
   // NOW it is OK to return.  Insert the final-assignment bit (pt0ecam) into the return
-  R (A)((I)QCWORD(z)+pt0ecam);  // this is the return point from normal parsing
+  R (A)((I)QCWORD(z)+(pt0ecam&JTFINALASGN));  // this is the return point from normal parsing
 
  }else{A y;A sv=0;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it

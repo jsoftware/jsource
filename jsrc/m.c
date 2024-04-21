@@ -863,7 +863,6 @@ A jtrealize(J jt, A w){A z; I t;
 // result is the address of the block, which may have changed if it had to be realized.  result can be 0
 // if the block could not be realized
 
-
 A jtgc(J jt,A w,A* old){
  ARGCHK1(w);  // return if no input (could be error or unfilled box)
  I c=AC(w);  // remember original usecount/inplaceability
@@ -906,11 +905,13 @@ A jtgc(J jt,A w,A* old){
   R w;  // if realize() failed, this could be returning 0
  }
  // non-VIRTUAL path
- // calls where w is the oldest thing on the tpush stack are not uncommon.  In that case we don't need to do ra/tpop/fa/repair-inplacing; we can just leave
- // the value as is on the tstack and make w recursive if it isn't already.  After w is recursive, we can tpop the rest of the tstack
+ // calls where w is the oldest thing on the tpush stack are not uncommon.  In that case we don't need to do ra/tpop/fa/repair-inplacing
  A *pushp=jt->tnextpushp;  // top of tstack
  if(old==pushp){if(AC(w)>=0){ra(w); tpush(w);}   // if nothing to pop: (a) if inplaceable, make no change; (b) otherwise protect the value on the tstack 
- }else if(*old==w){/*ramkrecursv(w);*/   // if w is first element, make it recursive then pop everything else.  We handle the case where there is only 1 element
+ }else if(*old==w){   // does the start of tstack point to w?
+  // w is the first element on the tstack.  If it is the ONLY element, we can stand pat; no need to make w recursive
+  // if there are other elements on tstack, we have to make w recursive because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
+  if(old!=pushp-1){radescend(w); *old=0; tpop(old); tpush(w);}  // raise descendants; cancel tpop of w; pop everything else; push w back.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
  }else{
   ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount (unless sparse).
    // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment

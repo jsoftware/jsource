@@ -906,26 +906,33 @@ A jtgc(J jt,A w,A* old){
   R w;  // if realize() failed, this could be returning 0
  }
  // non-VIRTUAL path
- ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount (unless sparse).
-  // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
-  // NOTE: it won't do to zap w, because AM may be invalid in WILLBEOPENED results from result.h (this could be fixed)
- tpop(old);  // delete everything allocated on the stack, except for w which was protected
- // Now we need to undo the effect of the initial ra and get the usecount back to its original value, with a matching tpush on the stack.
- // We could just do a tpush of the new block, but (1) we would just as soon do fa() rather than tpush() to save the overhead; (2) if the block was originally inplaceable
- // we would like to continue with it inplaceable.  The interesting case is when the block was NOT freed during the tpop.  That means that
- // the block was allocated somewhere else, either farther up the stack or in a name.  If the block is in a name, we must NOT do fa(), in case the
- // name is reassigned, freeing the components, while one of the components is a result.  OTOH, if the block actually is on the stack, it is safe
- // to do the fa().  We don't get it exactly right, but we note that any block that is part of a name will not be inplaceable, so we do the fa() only if
- // w is inplaceable - and in that case we can make the result here also inplaceable.  If the block was not inplaceable, or if it was freed during the tpop,
- // we push it again here.  In any case, if the input was inplaceable, so is the result.
- //
- // NOTE: certain functions (ex: rational determinant) perform operations 'in place' on non-direct names and then protect those names using gc().  The protection is
- // ineffective if the code goes through the fa() path here, because components that were modified will be freed immediately rather than later.  In those places we
- // must either use gc3() which always does the tpush, or do ACIPNO to force us through the tpush path here.  We generally use gc3().
- // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
- // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush; AM may have other uses if it is not returning inplaceable
- I cafter=AC(w); if((c&(1-cafter))>=0){A **amptr=(c<0?&AZAPLOC(w):(A**)&jt->shapesink); *amptr=jt->tnextpushp; tpush(w);}  // push unless was inplaceable and was not freed during tpop
- I *cptr=&AC(w); cptr=c<0?cptr:(I*)&jt->shapesink; *cptr=c; // make inplaceable if it was originally
+ // calls where w is the oldest thing on the tpush stack are not uncommon.  In that case we don't need to do ra/tpop/fa/repair-inplacing; we can just leave
+ // the value as is on the tstack and make w recursive if it isn't already.  After w is recursive, we can tpop the rest of the tstack
+ A *pushp=jt->tnextpushp;  // top of tstack
+ if(old==pushp){if(AC(w)>=0){ra(w); tpush(w);}   // if nothing to pop: (a) if inplaceable, make no change; (b) otherwise protect the value on the tstack 
+ }else if(*old==w){/*ramkrecursv(w);*/   // if w is first element, make it recursive then pop everything else.  We handle the case where there is only 1 element
+ }else{
+  ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount (unless sparse).
+   // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
+   // NOTE: it won't do to zap w, because AM may be invalid in WILLBEOPENED results from result.h (this could be fixed)
+  tpop(old);  // delete everything allocated on the stack, except for w which was protected
+  // Now we need to undo the effect of the initial ra and get the usecount back to its original value, with a matching tpush on the stack.
+  // We could just do a tpush of the new block, but (1) we would just as soon do fa() rather than tpush() to save the overhead; (2) if the block was originally inplaceable
+  // we would like to continue with it inplaceable.  The interesting case is when the block was NOT freed during the tpop.  That means that
+  // the block was allocated somewhere else, either farther up the stack or in a name.  If the block is in a name, we must NOT do fa(), in case the
+  // name is reassigned, freeing the components, while one of the components is a result.  OTOH, if the block actually is on the stack, it is safe
+  // to do the fa().  We don't get it exactly right, but we note that any block that is part of a name will not be inplaceable, so we do the fa() only if
+  // w is inplaceable - and in that case we can make the result here also inplaceable.  If the block was not inplaceable, or if it was freed during the tpop,
+  // we push it again here.  In any case, if the input was inplaceable, so is the result.
+  //
+  // NOTE: certain functions (ex: rational determinant) perform operations 'in place' on non-direct values and then protect those values using gc().  The protection is
+  // ineffective if the code goes through the fa() path here, because components that were modified will be freed immediately rather than later.  In those places we
+  // must either use gc3() which always does the tpush, or do ACIPNO to force us through the tpush path here.  We generally use gc3().
+  // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
+  // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush; AM may have other uses if it is not returning inplaceable
+  I cafter=AC(w); if((c&(1-cafter))>=0){A **amptr=(c<0?&AZAPLOC(w):(A**)&jt->shapesink); *amptr=jt->tnextpushp; tpush(w);}  // push unless was inplaceable and was not freed during tpop
+  I *cptr=&AC(w); cptr=c<0?cptr:(I*)&jt->shapesink; *cptr=c; // make inplaceable if it was originally
+ }
  R w;
 }
 // EPILOGZAP: ra00; zap; tpop; AM=t->tnextpushp; tpush(w); ACRESET(, ACINPLACE|ACUC1)
@@ -1122,6 +1129,7 @@ void freetstackallo(J jt){
  jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
 }
 
+// measureI tpopscaf[10];  // # tpops requested
 // pop stack,  ending when we have freed the entry with tnextpushp==old.  tnextpushp is left pointing to an empty slot
 // return value is pushp
 // If the block has recursive usecount, decrement usecount in children if we free it
@@ -1133,6 +1141,7 @@ void jttpop(J jt,A *old,A *pushp){A *endingtpushp;
 // obsolete  A *pushp=jt->tnextpushp;
  // errors that could not be eformatted at once might do tpop on the way out.  We ignore these if there is a pmstack.
  if(unlikely(jt->pmstacktop!=0))R;
+// measure if(EXPLICITRUNNING){I scafn=pushp-old; scafn=(UI)scafn>9?9:scafn; ++tpopscaf[scafn];}  // histo the stack size
  jt->tnextpushp = old;  // when we finish, this will be the new start point.  Set it early so we don't audit things in the middle of popping
  --pushp; --old;
  while(1) {A np;  // loop till end.  Return is at bottom of loop

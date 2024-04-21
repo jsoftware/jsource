@@ -903,7 +903,7 @@ extern void jfree4gmp(void*,size_t);
 #define qquad(z,w)                  jtqquad(jt,(z),(w))
 // If this block is recursible and not recursive, execute prolog and then raise the descendants.  Since sharing a block with another thread requires going recursive, the flag operations can be local
 #define radescend(x)         {I tt=AT(x); {if(unlikely(((tt^AFLAG(x))&TRAVERSIBLE)!=0)){AFLAGORLOCAL((x),(tt)&RECURSIBLE); jtra((x),(tt),0);}}}
-// Make a block recursive if it is recursible and not already recursive.  Virtuals are already recursive.  We use this in a place where we know the result can't be unincorpable.  x might not be a noun
+// Make a block recursive if it is recursible and not already recursive.  Virtuals are already recursive, as are PERMANENTs.  We use this in a place where we know the result can't be unincorpable.  x might not be a noun
 #define ramkrecursv(x)              if(unlikely(((AT(x)^AFLAG(x))&RECURSIBLE))){AFLAGORLOCAL((x),AT(x)&RECURSIBLE); x=jtra(x,AT(x),x);}  // if block is not recursive, it must be local
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
 #define ra00(x,tt)                {if(unlikely(((tt)&TRAVERSIBLE)!=0)){AFLAGORLOCAL((x),(tt)&RECURSIBLE); jtra((x),(tt),0);}}

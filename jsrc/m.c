@@ -1244,7 +1244,7 @@ __attribute__((noinline)) A jtgafallopool(J jt){
 #define MOREINIT(u)
 #endif
  u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); I n=2L<<blockx;
-#if MEMAUDIT&17 && BW==64
+#if MEMAUDIT&17
  DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT(u));   // chain blocks to each other; set chain of last block to 0
 #else
  DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT(u));    // chain blocks to each other; set chain of last block to 0
@@ -1531,10 +1531,10 @@ printf("%p-\n",w);
 // obsolete  I origthread=w->origin;
 // obsolete #endif
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
+  I allocsize = FHRHPOOLBINTOSIZE(blockx);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
-  I allocsize = FHRHPOOLBINTOSIZE(blockx);
 #if PYXES
   if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
 #endif

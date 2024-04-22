@@ -1007,7 +1007,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define MAXBYTEBOOL 65536  // if p exceeds this, we switch over to packed bits
 
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;fauxblockINT(zfaux,1,0);
-    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
+    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;I forkeyresult;
  ARGCHK2(a,w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // mk is set if w argument is omitted (we are just prehashing the a arg)
@@ -1312,7 +1312,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
 
   // Call the routine to perform the operation
   RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
-  AM(z)=AM(h);
+  forkeyresult=AM(h); 
   if(mk){A x,*zv;I*xv,ztype;
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
@@ -1333,7 +1333,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
    zv[0]=incorp(x); zv[1]=incorp(h); zv[2]=hi;
   }
  }  // end of 'not sequential comparison' which means we need a hashtable
- I forkeyresult=AM(z);
+// obsolete  I forkeyresult=AM(z);
  RZ(z=EPILOGNORET(z));
  // Since EPILOG may have rewritten AM, and IFORKEY never returns to the parser, we can store the FORKEY result in AM.
  *((mode&IIOPMSK)==IFORKEY?(I*)&AM(z):(I*)&jt->shapesink)=forkeyresult;

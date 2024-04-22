@@ -339,7 +339,6 @@ DF2(jtxdefn){
    if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // errors here are impossible: the value exists and the names are known valid and allocated
   }
  }  // for name scope only
- FDEPINC(1);
  // remember tnextpushp.  We will tpop after every few sentences, to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine (and be ready to move the pointer if there is an allocation in the loop)
  // If the user turns on debugging in the middle of a definition, we will raise old when he does
@@ -693,7 +692,6 @@ bodyend: ;  // we branch to here to exit with z set to result
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
  // if we did not get an error, the try. and for./select. stacks must be clear
 
- FDEPDEC(1);
  // check for pee
  if(likely(z!=0)){
   // There was a result (normal case)

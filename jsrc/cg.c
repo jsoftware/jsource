@@ -390,7 +390,7 @@ F2(jtagendai){F2PREFIP;I flag;
 
 
 static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); RZ(df1(z0,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id)); FDEPDEC(d);
+ STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id));
  RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
 }
 
@@ -403,17 +403,17 @@ static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
 // then we execute gerund v2 on y (with self set to v2)
 // then we execute ff on the result of (v2 y), with self set to ff
 static DF1(jtgcr1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); RZ(df1(z0,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id)); FDEPDEC(d);
+ STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id));
  RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
 }
 
 static DF2(jtgcl2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); RZ(df2(z0,a,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id)); FDEPDEC(d);
+ STACKCHKOFL RZ(df2(z0,a,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id));
  RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
 }
 
 static DF2(jtgcr2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL FDEPINC(d=fdep(C(hv[1]))); RZ(df2(z0,a,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id)); FDEPDEC(d);
+ STACKCHKOFL RZ(df2(z0,a,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id));
  RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
 }
 
@@ -437,10 +437,8 @@ static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
- FDEPINC(d=fdep(C(hv[1])));
  df1(ffm,w,hv[1]);  // x v1 y - no inplacing
- FDEPDEC(d);
- RZ(ffm);  // OK to fail after FDEPDEC
+ RZ(ffm);
  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (v1 y)}
  if(AT(hv[2])&NOUN){ffx=hv[2];}else{RZ(df1(ffx,w,hv[2]))}
  R df1(ffm,ffx,ff);
@@ -452,10 +450,8 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
- FDEPINC(d=fdep(C(hv[1])));
  df2(ffm,a,w,C(hv[1]));  // x v1 y - no inplacing.
- FDEPDEC(d);
- RZ(ffm);  // OK to fail after FDEPDEC
+ RZ(ffm);
  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (x v1 y)}  .  Alas, ffm can no longer be virtual
  // Protect any input that was returned by v1 (must be ][)
  // scaf we should free up unused results which might allow for inplacing the amend

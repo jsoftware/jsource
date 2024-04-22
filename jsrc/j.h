@@ -731,7 +731,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
 #ifndef NAMETRACK
-#define NAMETRACK 0    // turn on to define trackinfo in unquote, xdefn, line
+#define NAMETRACK 0   // turn on to define trackinfo in unquote, xdefn, line
 #endif
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #ifndef FINDNULLRET
@@ -1070,8 +1070,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // define fs block used in every/every2.  It is the self for the f in f&.>, and contains only function pointers, an optional param in AK, and the flag field
 #define EVERYFS(name,f0,f1,akparm,flg) PRIM name={{akparm,0,0,0,0,0,0},{.primvb={.valencefns={f0,f1},.flag=flg}}};
 
-#define FDEPDEC(d)
-#define FDEPINC(d)
 #define STACKCHKOFL {D stackpos; ASSERT((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK);}
 #define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK,suff);}
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VJTFLGOK1+VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
@@ -2181,6 +2179,8 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
   stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end
 #define WITHEFORMATDEFERRED(stmt) {WITHDEBUGOFF(stmt) if(unlikely(jt->jerr!=0)){UC _d=jt->jerr; RESETERR ASSERT(0,_d)}}  // execute stmt with debug/eformat turned off; at end, if there is an error, re-signal it
 // If the abandoned value we want to ra is likely the last thing on the tstack, look to see if it is.  If so, just back up the tstack.  Otherwise ZAP the block
+// It would be a disaster to back the tstack to in front of a valid 'old' pointer held somewhere.  The subsequent tpop would never end.  The case cannot occur, because we set 'old'
+// only before sentence execution, and there is no way for an abandoned value to come from a higher level (name:_ pushes a stack entry at the current level).
 #define ZAPTSTACKEND(w) {A *modloc=AZAPLOC(w); I modval=(I)(jt->tnextpushp-1); modloc=(I)AZAPLOC(w)==modval?(A*)&jt->tnextpushp:modloc; modval=(I)AZAPLOC(w)==modval?modval:0; *modloc=(A)modval;}
 
 #if C_LE

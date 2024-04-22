@@ -53,7 +53,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  forcetomemory(&trackinfo);
 #define SETTRACK if(x){mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN+' '); \
   I trackwlen=sprintf(trackinfo,"%d: ",tracklineno++); \
-  MC(trackinfo,CAV(x),MIN((I)sizeof(trackinfo)-trackwlen,AN(x)));}
+  MC(trackinfo,CAV(x),MIN((I)sizeof(trackinfo)-trackwlen,AN(x)));}  // no error allowed - used inside deba/debz
 #else
 #define SETTRACK
 #endif
@@ -69,8 +69,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  }
  // similarly for namecaching.  We push the per-script status and let the on/off status run independently
  C oldnmcachescript=jt->namecaching&1;  // save the per-script part of the status
- FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
- RZ(d=deba(DCSCRIPT,0L,w,(A)si));
+ RZ(d=deba(DCSCRIPT,0L,w,(A)si));   //  ************** no errors allowed till debz ******************
  d->dcpflags=(!(tso&&!JT(jt,seclev)))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
  J jtinplace=(J)((I)jt|d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
  d->dcss=1;  // indicate this script is not overridden by suspension
@@ -92,8 +91,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 #endif
   }
  }
-  debz();
- FDEPDEC(1);  // ASSERT OK now
+  debz();   // *************** errors allowed now *********************
  jt->emsgstate&=se|~EMSGSTATETRAPPING;  // retore original TRAPPING status.  We only set it higher here
  jt->namecaching&=~1; jt->namecaching|=oldnmcachescript;  // pop the per-script part
  jt->glock=oldk; // pop lock status

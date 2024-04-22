@@ -77,8 +77,7 @@ F1(jtsphwmk){
 DF1(jtspit){A z;I k; 
  F1RANK(1,jtspit,self);
  jt->bytesmax=k=spstarttracking(); A *old=jt->tnextpushp;  // start keeping track of bytesmax
- FDEPINC(1); z=exec1(w); spendtracking();  // end tracking, even if there was an error
- FDEPDEC(1); 
+ z=exec1(w); spendtracking();  // end tracking, even if there was an error
  RZ(z);
  tpop(old); // pop tstack so that a returned arg is taken off & usecount decremented - but not if error, which may set pm stack
  R sc(jt->bytesmax-k);
@@ -235,10 +234,8 @@ F1(jttss){ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 DF2(jttsit2){A z;D t;I n;
  F2RANK(0,1,jttsit2,self);
  RE(n=i0(a));
- FDEPINC(1);  // No ASSERTs/returns till the DEPDEC below
  t=qpc(); 
  A *old=jt->tnextpushp; DQ(n, z=exec1(w); if(!z)break; tpop(old););  // no tpop on error
- FDEPDEC(1);  // Assert OK now
  RZ(z);
  t=qpc()-t;
  R scf(n?t/(n*pf):0);

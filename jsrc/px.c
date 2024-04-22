@@ -33,7 +33,7 @@ DF1(jtexec1){A z;
  }else{
   F1RANK(1,jtexec1,self);
   A savself = jt->parserstackframe.sf;  // in case we are in a recursion, preserve the restart point
-  STACKCHKOFL FDEPINC(1); z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+!!EXPLICITRUNNING))); FDEPDEC(1);  // replace DDs, but require that they be complete within the string (no jgets)
+  STACKCHKOFL z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+!!EXPLICITRUNNING)));  // replace DDs, but require that they be complete within the string (no jgets)
  jt->parserstackframe.sf=savself;
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
@@ -51,7 +51,7 @@ F1(jtimmex){F1PREFJT;A z;
  // because if AKGST has been set it will already hold jt->global.  Of course, any event code must restore everything
  // to its previous state, including locales
  AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
- STACKCHKOFL FDEPINC(1); z=parse(AT(w)&BOX?w:tokens(w,1+!!EXPLICITRUNNING)); FDEPDEC(1);
+ STACKCHKOFL z=parse(AT(w)&BOX?w:tokens(w,1+!!EXPLICITRUNNING));
  if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr((J)((I)jtinplace|JTPRFORSCREEN),z);   // z not 0 && LSB of z is 0 && Result is not for debug
  RETF(z);
 }
@@ -90,6 +90,6 @@ DF2(jtapplystr){PROLOG(0054);A fs,z;
  F2RANK(1,RMAX,jtapplystr,self);
  RZ(fs=PARSERVALUE(parseforexec(tokens(vs(a),1+!!EXPLICITRUNNING))));
  ASSERT(VERB&AT(fs),EVSYNTAX);
- STACKCHKOFL FDEPINC(d=fdep(fs)); z=CALL1(FAV(fs)->valencefns[0],w,fs); FDEPDEC(d);
+ STACKCHKOFL z=CALL1(FAV(fs)->valencefns[0],w,fs);
  EPILOG(z); 
 }    /* execute string a on argument w */

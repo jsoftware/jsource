@@ -323,7 +323,7 @@ jobs:
       usesh: true
       sync: sshfs
       prepare: |
-       pkg_add
+       pkg_add -u
        rdate time.cloudflare.com || true
        pkg_add curl zip gmake nasm pcre2 libedit
 
@@ -393,7 +393,7 @@ jobs:
 
       run: |
        rm -f jobdone
-       sudo pkg_add
+       sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
@@ -461,7 +461,7 @@ jobs:
 
       run: |
        rm -f jobdone
-       sudo pkg_add
+       sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 libedit
        /sbin/ldconfig -r
@@ -522,7 +522,7 @@ jobs:
       usesh: true
       sync: sshfs
       prepare: |
-       sudo pkg upgrade
+       sudo pkg upgrade -y
        rdate time.cloudflare.com || true
        pkg install -y curl zip gmake nasm pcre2 libedit
 
@@ -593,7 +593,7 @@ jobs:
       run: |
        rm -f jobdone
        export IGNORE_OSVERSION=yes
-       sudo pkg upgrade
+       sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r
@@ -661,7 +661,7 @@ jobs:
       run: |
        rm -f jobdone
        export IGNORE_OSVERSION=yes
-       sudo pkg upgrade
+       sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit
        /sbin/ldconfig -r

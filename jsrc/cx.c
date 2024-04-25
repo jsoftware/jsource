@@ -239,7 +239,8 @@ static I debugnewi(I i, DC thisframe, A self){
 // it's a modifier, called as u adv adv or u v conj
 DF2(jtxdefn){
  V *sv=FAV(self); I sflg=sv->flag;   // pointer to definition, and flags therefrom
- F2PREFIP;PROLOG(0048);
+ F2PREFIP; PROLOG(0048);
+
  ARGCHK2(a,w);
  A * RESTRICT cwsent;   // Base pointer, to both the cw data (going down) and the sentence words (going up)  Filled in by LINE
 // obsolete  A *line;   // pointer to the words of the definition.  Filled in by LINE
@@ -334,13 +335,15 @@ DF2(jtxdefn){
    }else{ra(a);}
   }
   // Do the other assignments, which occur less frequently, with symbis, without the special treatment of virtuals
+  // We may not call these final assignments because that might back tpushptr before an outstanding 'old'
   if(unlikely(((I)u|(I)v)!=0)){
    if(u){(symbis(mnuvxynam[2],u,locsym)); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym); }  // assign u, and m if u is a noun
    if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // errors here are impossible: the value exists and the names are known valid and allocated
   }
  }  // for name scope only
  // remember tnextpushp.  We will tpop after every few sentences, to free blocks.  Do this AFTER any memory
- // allocation that has to remain throughout this routine (and be ready to move the pointer if there is an allocation in the loop)
+ // allocation that has to remain throughout this routine (and be ready to move the pointer if there is an allocation in the loop),
+ // and also after any assignments that might decrement tpushp
  // If the user turns on debugging in the middle of a definition, we will raise old when he does
  A *old=jt->tnextpushp;
 

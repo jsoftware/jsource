@@ -774,7 +774,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
     // be popped off every now & then in jtxdefn, since there is nothing else to pop them.  We detect this important case, in which the zaploc of the
     // abandoned value is the very last thing on the tstack: then we back up tpushp, removing all trace of the block
 // obsolete     *AZAPLOC(w)=0;
-    ZAPTSTACKEND(w) ACRESET(w,ACUC1)  // make it non-abandoned.  Like raczap(1)
+    ZAPTSTACKEND(w) ACRESET(w,ACUC1)  // make it non-abandoned.  Like raczap(1).  Context must ensure that taking w off tstack will not invalidate any pending tpop
     // NOTE: NJA can't zap either, but it never has AC<0
    }else{
     if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway

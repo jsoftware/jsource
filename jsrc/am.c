@@ -736,9 +736,19 @@ indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
  ASSERT(AT(ind)&NUMERIC+BOX||!AN(ind),EVDOMAIN);
  ASSERT(!ISSPARSE(AT(ind)),EVNONCE);  // m must be dense, and numeric or boxed
  if(AR(ind)==0&&AT(ind)&BOX){A ind0=(A)C(AAV(ind)[0]); if(AT(ind0)&NUMERIC&&AR(ind0)>1)ind=ind0;}  // if <array, extract array, which we will box presently
- if(AT(ind)&NUMERIC){  // numeric must have rank <3; if rank is 2, we treat it as <"1 ind
+ if(AT(ind)&NUMERIC){  // numeric must have rank <3; rank 2 is scatter amend
   ASSERT(AR(ind)<3,EVRANK);
-  if(AR(ind)==2){if(AN(ind)==0)ind=mtv; else{A aa=ind; RZ(ind=IRS1(aa,0,1,jtbox,ind));}}  // Convert empty 2-d to atom so aindex doesn't fail
+  if(AR(ind)==2){
+   // rank-2 numeric ind.  This is scatter amend; process as as <"1 ind
+   if(AN(ind)==0){
+    // empty scatter amend.  <"1 ind doesn't preserve the length of the rows of ind, which we would need to calculate agreement
+    // calculate agreement: ($a)-:(-#$a){.!._1(#ind),({:$ind)}.$w
+    A temp; ASSERT(equ(shape(a),dfv2(temp,negate(jtrank(jt,a)),over(tally(ind),drop(tail(shape(ind)),shape(w))),fit(ds(CTAKE),num(-1)))),EVLENGTH);
+    EPILOG(w);  // nothing to amend - return w
+// obsolete     ind=mtv;
+   }else{A aa=ind; RZ(ind=IRS1(aa,0,1,jtbox,ind));  // ind =. <"1 ind
+   }
+  }  // Convert empty 2-d to atom so aindex doesn't fail
  }
  // Sparse w.  a and t must be compatible; sparse w must not be boxed
  ASSERT(!(wtd&BOX),EVNONCE); ASSERT(HOMO(atd,wtd),EVDOMAIN);

@@ -910,9 +910,15 @@ A jtgc(J jt,A w,A* old){
  if(old==pushp){if(AC(w)>=0){ra(w); tpush(w);}   // if nothing to pop: (a) if inplaceable, make no change; (b) otherwise protect the value on the tstack 
  }else if(*old==w){   // does the start of tstack point to w?
   // w is the first element on the tstack.  If it is the ONLY element, we can stand pat; no need to make w recursive
-  // if there are other elements on tstack, we have to make w recursive because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
-  if(old!=pushp-1){radescend(w); *old=0; tpop(old); tpush(w);}  // raise descendants; cancel tpop of w; pop everything else; push w back.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
+  if(old!=pushp-1){
+   // there are other elements on tstack, we have to make w recursive because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
+   radescend(w); I old1=old+1; if(likely((old1&(NTSTACKBLOCK-1))!=0))tpop(old1); else{*old=0; tpop(old); tpush(w);}  // make w recursive; if we can back up to all but the first stack element, do that, leaving w on stack as before; otherwise reinstall
+  }  // raise descendants; cancel tpop of w; pop everything else; push w back.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
+ }else if(((UI)REPSGN(AC(w))&(UI)AZAPLOC(w))>=(UI)old && likely((((UI)old^(UI)pushp)&-NTSTACKBLOCK)==0)){  // zaploc>=old - but that is valid only when we know pushp and old are in the same stack block
+  // We can see that w is abandoned and is about to be freed.  Zap it rather than raising it, push it back
+  radescend(w); *AZAPLOC(w)=0; tpop(old); tpush(w); AZAPLOC(w)=old;  // update ZAPLOC to point to new position in stack
  }else{
+  // general case
   ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount (unless sparse).
    // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
    // NOTE: it won't do to zap w, because AM may be invalid in WILLBEOPENED results from result.h (this could be fixed)
@@ -1082,9 +1088,9 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
 
 // Result is address of new stack pointer pushp, or 0 if error.  pushx must have just rolled over, i. e. is the 0 entry for the new block
 // Caller is responsible for storing new pushp.
-// We advance to a new stack block, and to a new allocation if necessary.
-// BUT: if pushp is not within the current allocation, we do nothing.  In this case there has been a transfer of ownership and the allocated
-// blocks are being put directly into 
+// We advance to a new stack block, and to a new allocation if necessary.  Within an NTSTACK block the NTSTACKBLOCK blocks are in ascending order
+// BUT: if pushp is not within the current allocation, we do nothing.  In this case there has been a transfer of ownership and the pointers to the allocated
+// blocks are being put directly into the user's block  (ex.: <"1 i. 5 5)
 A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
  // If pushp is outside the current allocation, do nothing
  if((UI)pushp-(UI)jt->tstackcurr>NTSTACK+NTSTACKBLOCK)R pushp;  // pushp outside top allocation: it's not the tpush stack, leave it alone.  > because we just stored into the previous word, so - = would be coming from inside

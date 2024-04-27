@@ -456,7 +456,7 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
   if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
    if(likely(g==0)){  // first time through
     y=QCWORD(jtprobe((J)((I)jt+k),v,(UI4)hash,jt->locsyms));  // look up local first.
-    if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y);}  // if not local, start in implied locale.  ra to match syrd
+    if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y,y);}  // if not local, start in implied locale.  ra to match syrd
    }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
    ASSERTN(y,EVVALUE,nfs(k,v));  // verify found.  If y was found, it has been ra()d
    ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v),exitfa);   // verify atomic
@@ -511,11 +511,11 @@ A jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){A val;
   // If there is a local symbol table, search it first
-  if(val=probelocal(a,locsyms)){rapos(QCWORD(val)); R val;}  // return flagging the result if local.  Value pointers in symbols have QCGLOBAL semantics
+  if(val=probelocal(a,locsyms)){rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCGLOBAL semantics
   g=jt->global;  // Continue with the current locale
  }else{A val;  // locative
   RZ(g=sybaseloc(a));  // find the starting locale for the name lookup
-  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=probelocal(a,g)){rapos(QCWORD(val)); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
+  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=probelocal(a,g)){rapos(QCWORD(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
  }
  A res=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
  if(likely(res!=0))res=SETGLOBAL(res);  // mark found in global, if found
@@ -539,7 +539,7 @@ A jtsyrdnobuckets(J jt,A a){A g,res;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(!NAV(a)->bucket))if(res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){rapos(QCWORD(res)); R res;}  // return if found locally from name
+  if(unlikely(!NAV(a)->bucket))if(res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){rapos(QCWORD(res),res); R res;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
  res=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
@@ -698,9 +698,8 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // virtuals.
  // Find the internal code for the name to be assigned.  Do this before we take the lock.
  I wt=AT(w);
- I valtype=ATYPETOVALTYPE(wt);  // value to install.  It will have QCGLOBAL semantics
  rifv(w); // must realize any virtual
- if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE)jtra(w,wt,0);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
+ if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
  I arloc=AR(jt->locsyms);  // rank of local symbols is a flag
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
@@ -718,8 +717,9 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
   }
  }
  RZ(g)  // g has the locale we are writing to
+ I valtype=ATYPETOVALTYPE(wt);  // value to install.  It will have QCGLOBAL semantics
 
- if(unlikely((valtype&QCNOUN)==0)){
+ if(unlikely((wt&NOUN)==0)){
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS
   // NOTE that the value may be in use elsewhere; may even be a primitive.
 
@@ -747,6 +747,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
 
  // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
  if(unlikely(jt->uflags.trace&TRACEDB))if(e->val!=0&&((e->valtype&QCNOUN)==0))RZGOTO(redef(w,e->val),exitlock);  // could move outside of lock, but it's only for debug
+ // *** this is the last subroutine call till the end - registers available ***
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
 
  I xaf;  // holder for nvr/free flags
@@ -763,22 +764,26 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
    e->val=w;  // store the new value to free w before ra()
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
                    // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
+                   // SYMVALFA1 does not call a subroutine
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // Virtual values were realized earlier, and usecounts guaranteed recursive
    // If the value is abandoned inplaceable, we can just zap it and set its usecount to 1
    // SPARSE nouns must never be inplaceable, because their components are not 
    if((SGNIF(jtinplace,JTFINALASGNX)&AC(w))<0){  // if final assignment of abandoned value
-    // We can zap abandoned nouns.  But only if they are final assignment: something like nm:: [ nm=. 4+4 would free the active block if we zapped.
+    // We can zap abandoned nouns.  But only if they are final assignment: something like nm:_ [ nm=. 4+4 would free the active block if we zapped, when the FAOWED was applied
+    //  also, if the name is global it may vanish, along with the value, at any time, so we 
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     // very often a final assignment will assign the abandoned result of the last computation.  These values accumulate on the tstack and have to
     // be popped off every now & then in jtxdefn, since there is nothing else to pop them.  We detect this important case, in which the zaploc of the
     // abandoned value is the very last thing on the tstack: then we back up tpushp, removing all trace of the block
 // obsolete     *AZAPLOC(w)=0;
     ZAPTSTACKEND(w) ACRESET(w,ACUC1)  // make it non-abandoned.  Like raczap(1).  Context must ensure that taking w off tstack will not invalidate any pending tpop
+    // It would be a disaster to back the tstack to in front of a valid 'old' pointer held somewhere.  The subsequent tpop would never end.  The case cannot occur, because we set 'old'
+    // only before sentence execution, and there is no way for an anonymous abandoned value to come from a higher level (name:_ pushes a stack entry at the current level; assignment to y clears inplaceability).
     // NOTE: NJA can't zap either, but it never has AC<0
    }else{
     if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
-    ra(w);  // if zap not allowed, just ra() the whole thing.  w is known recursible so this is quick.  w may be inplaceable but not zappable so no rapos
+    rarecur(w);  // if zap not allowed, just ra() w, known recursive-if-recursible so this is quick.  Subroutine call.  w may be inplaceable but not zappable so no rapos; may be sparse so we must allow 1 small recursion then
    }
 
   }else x=0;  // repurpose x to be the value needing fa
@@ -799,7 +804,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
  // in case the new value was being protected by the old (ex: n =. >n).
  // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
- SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock
+ SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock (subroutine call)
  R (I)jtinplace+2*(g==0);   // good return, with bit 0 set if final assignment, bit 1 if local
 exitlock:  // error exit
  if(g!=0)WRITEUNLOCK(g->lock)

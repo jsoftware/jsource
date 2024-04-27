@@ -178,7 +178,7 @@ do{
      // if unzappable OR recursible nonrecursive, raise children - even if z is UNINCORPABLE or VIRTUAL.  The children are about to be copied
      // We raise only the children, not the base block.  This converts the children to recursive usecount.  We leave the base block nonrecursive if it started
      // that way.  We may zap it later.  By not making the base recursive, we add 1 to the effective usecount of the children
-     jtra(z,AT(z),0);   // raise children only and make them recursive
+     zzoktozap=(I)jtra(z,AT(z),(A)zzoktozap);   // raise children only and make them recursive
     }
     // copy the cells, which have been raised if needed.  If we are copying forward, it is OK to copy fullwords
     JMCR(CAV(zz)+zzcellp,AV(z),zzcelllen,ZZSTARTATEND,zzendmask)
@@ -189,6 +189,8 @@ do{
     // if the value iz zappable, zap it (it may have become zappable, if it turned recursive above).  Free only the root block
     // We should do this for virtual blocks also, to get the full effect of tpop.  When we can zap virtuals we will
     if(likely(zzoktozap<0)){ZAPTSTACKEND(z) mf(z);}  // free the root block.  If it has descendants their ownership was transferred to zz.
+    //   It would be a disaster to back the tstack to in front of a valid 'old' pointer held somewhere.  The subsequent tpop would never end.  Here we know that the result block, at the least, was pushed onto the tstack
+ 
 #if !ZZSTARTATEND
     zzcellp+=zzcelllen;  // advance to next cell
 #else

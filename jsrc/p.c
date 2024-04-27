@@ -1076,12 +1076,12 @@ failparse:
       // the very likely case of a local name.  This value needs no protection because there is nothing more to happen in the sentence and the local symbol table is sufficient protection.  Skip the ra and the tpush
       I svt=s->valtype;  // type of stored value
       if(likely((yflags&QCNAMEBYVALUE)|(svt&QCNOUN))){   // if noun or special name, use value
-       if(unlikely(yflags&QCNAMEABANDON)){raposlocal(sv); sv=(A)((I)sv+svt); goto abandname;}  // if abandoned, it loses the symbol-table protection and we have to protect it with ra
+       if(unlikely(yflags&QCNAMEABANDON)){raposlocal(sv,y); sv=(A)((I)sv+svt); goto abandname;}  // if abandoned, it loses the symbol-table protection and we have to protect it with ra
        y=sv; // we will use the value we read
-      }else{raposlocal(sv); y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  We must ra the value as if it came from syrd.  Flags in sv=0 to ensure flags=0 in return value
+      }else{raposlocal(sv,y); y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  We must ra the value as if it came from syrd.  Flags in sv=0 to ensure flags=0 in return value
       goto gotlocalval;   // y has the unprotected value read.  We can use that.
      }
-// obsolete       raposlocal(s->val); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics  scaf could avoid ra on local
+// obsolete       raposlocal(s->val,y); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics  scaf could avoid ra on local
     }
     if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname gives 0 without error
      // The name was found, not in a static local table.  sv has QCGLOBAL semantics

@@ -410,7 +410,7 @@ do{ \
 #define CP11recur case 0b110100: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,*(A*)av) ++ix0; av+=sizeof(A*);)) }  // install *av++
 #define CPn1recur case 0b110101: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; I cs=cellsize; do{A *avv=(A*)av; DQU(acatoms, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)}while(cs-=acatoms);) }  // repeatedly install *av to fill single cell, don't advance av
 #define CP1nrecur case 0b110110: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; A *avv=(A*)av; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)) }  // install *av, don't advance av
-#define CP1narecur case 0b110111: { DQNOUNROLL(n0, I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,(A)av) ++ix0;)) }  // install av repeatedly without refetching
+#define CP1narecur case 0b110111: { A ava=(A)av; DQNOUNROLL(n0, I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,ava) ++ix0;)) }  // install av repeatedly without refetching
 
  // scatter-copy the data
  while(1){
@@ -432,7 +432,7 @@ skippre:;
    CP1xv(1,0) break; CP1xv(1,1) break; CP1xv(0,0) break; CP1xv(0,1) break;
    CPn1v break; CP11recur break; CP1nrecur break; CPn1recur break; CP1narecur break;
    case 0b100111: case 0b101101:  // do-all copier when one of the last 2 axes is split.  Very rare.  100111 is normal, 101101 is recursive boxed
-    DONOUNROLL(n0, if(amflags&8){I ix0=*scan0++*cellsize; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,(A)av) ++ix0;)}
+    DONOUNROLL(n0, if(amflags&8){I ix0=*scan0++*cellsize; A ava=(A)av; DQU(cellsize, INSTALLBOXNVRECUR(((A*)base),ix0,ava) ++ix0;)}
                                 else JMC(base+cellsize**scan0++,av,cellsize,0)  // move 1 cell
                    av+=cellsize; if(((C)(amflags>>AMFLAGSPLITX))==(C)r&&(i+1)<n0&&(i+1)%axes[r].resetmod==0)av+=acresetcell;  // if axis -1 split, reset for it
     )

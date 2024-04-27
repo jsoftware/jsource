@@ -915,8 +915,8 @@ A jtgc(J jt,A w,A* old){
    radescend(w); A *old1=old+1; if(likely(((UI)old1&(NTSTACKBLOCK-1))!=0))tpop(old1); else{*old=0; tpop(old); tpush(w);}  // make w recursive; if we can back up to all but the first stack element, do that, leaving w on stack as before; otherwise reinstall
   }  // raise descendants.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
  }else if(((UI)REPSGN(AC(w))&(UI)AZAPLOC(w))>=(UI)old && likely((((UI)old^(UI)pushp)&-NTSTACKBLOCK)==0)){  // inplaceable zaploc>=old - but that is valid only when we know pushp and old are in the same stack block
-  // We can see that w is abandoned and is about to be freed.  Zap it rather than raising it, make it recursive, push it back
-  radescend(w); *AZAPLOC(w)=0; tpop(old); tpush(w); AZAPLOC(w)=old;  // update ZAPLOC to point to new position in stack
+  // We can see that w is abandoned and is about to be freed.  Swap it with *old and proceed
+  radescend(w); *AZAPLOC(w)=*old; *old=w; AZAPLOC(w)=old; tpop(old+1);  // update ZAPLOC to point to new position in stack
  }else{
   // general case, w not freed or not abandoned
   ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount (unless sparse).

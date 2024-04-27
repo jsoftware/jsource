@@ -51,7 +51,7 @@ DF2(jtunquote){A z;
     }else{raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does.  
     }
 #else
-    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs)); goto deflocal;}}
+    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}}
     fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
    deflocal:;
 #endif
@@ -67,7 +67,7 @@ DF2(jtunquote){A z;
      if(fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
       explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
-      raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does
+      raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
      }
     }
    }

@@ -905,20 +905,20 @@ A jtgc(J jt,A w,A* old){
   R w;  // if realize() failed, this could be returning 0
  }
  // non-VIRTUAL path
- // calls where w is the oldest thing on the tpush stack are not uncommon.  In that case we don't need to do ra/tpop/fa/repair-inplacing
+ // calls where w is the oldest thing on the tpush stack are not uncommon.  In that case we don't need to do ra/tpop/fa/repair-inplacing.  We can also save the repair if we KNOW w will be freed during the tpop
  A *pushp=jt->tnextpushp;  // top of tstack
- if(old==pushp){if(AC(w)>=0){ra(w); tpush(w);}   // if nothing to pop: (a) if inplaceable, make no change; (b) otherwise protect the value on the tstack 
+ if(old==pushp){if(AC(w)>=0){ra(w); tpush(w);}   // if nothing to pop: (a) if inplaceable, make no change (value must be protected up the tstack); (b) otherwise protect the value on the tstack 
  }else if(*old==w){   // does the start of tstack point to w?
   // w is the first element on the tstack.  If it is the ONLY element, we can stand pat; no need to make w recursive
   if(old!=pushp-1){
    // there are other elements on tstack, we have to make w recursive because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
-   radescend(w); I old1=old+1; if(likely((old1&(NTSTACKBLOCK-1))!=0))tpop(old1); else{*old=0; tpop(old); tpush(w);}  // make w recursive; if we can back up to all but the first stack element, do that, leaving w on stack as before; otherwise reinstall
-  }  // raise descendants; cancel tpop of w; pop everything else; push w back.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
- }else if(((UI)REPSGN(AC(w))&(UI)AZAPLOC(w))>=(UI)old && likely((((UI)old^(UI)pushp)&-NTSTACKBLOCK)==0)){  // zaploc>=old - but that is valid only when we know pushp and old are in the same stack block
-  // We can see that w is abandoned and is about to be freed.  Zap it rather than raising it, push it back
+   radescend(w); A *old1=old+1; if(likely(((UI)old1&(NTSTACKBLOCK-1))!=0))tpop(old1); else{*old=0; tpop(old); tpush(w);}  // make w recursive; if we can back up to all but the first stack element, do that, leaving w on stack as before; otherwise reinstall
+  }  // raise descendants.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
+ }else if(((UI)REPSGN(AC(w))&(UI)AZAPLOC(w))>=(UI)old && likely((((UI)old^(UI)pushp)&-NTSTACKBLOCK)==0)){  // inplaceable zaploc>=old - but that is valid only when we know pushp and old are in the same stack block
+  // We can see that w is abandoned and is about to be freed.  Zap it rather than raising it, make it recursive, push it back
   radescend(w); *AZAPLOC(w)=0; tpop(old); tpush(w); AZAPLOC(w)=old;  // update ZAPLOC to point to new position in stack
  }else{
-  // general case
+  // general case, w not freed or not abandoned
   ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount (unless sparse).
    // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
    // NOTE: it won't do to zap w, because AM may be invalid in WILLBEOPENED results from result.h (this could be fixed)

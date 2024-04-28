@@ -146,7 +146,7 @@ configcase''
 configfolders''
 configrecent''
 coerase <'jcfg'
-18!:4<'z'
+cocurrent <'z'
 )
 
 configrun$0

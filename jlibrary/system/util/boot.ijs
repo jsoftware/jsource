@@ -1,4 +1,5 @@
-18!:4 <'z' NB. start in z
+cocurrent_z_=: 18!:4@(<^:((> L.)~ *@#))
+cocurrent <'z' NB. start in z
 
 NB. =========================================================
 NB. android specific
@@ -43,7 +44,7 @@ load^:IFJA '~addons/ide/ja/ja.ijs'
 load^:((;:'jwin32 jjava')e.~<11!:0 ::0:'qwd') 'ide/jnet'
 load^:((;:'jwin32 jjava')e.~<11!:0 ::0:'qwd') 'ide/jnet/util/jadefull'
 
-18!:4 <'z' NB. restore locale changes during load
+cocurrent <'z' NB. restore locale changes during load
 
 NB. ---------------------------------------------------------
 NB. JVERSION_z_ (used in about box)
@@ -82,7 +83,7 @@ r=. r,LF,'Contact: ',contact
 JVERSION=: toJ r
 
 NB. ---------------------------------------------------------
-18!:4 <'base'
+cocurrent <'base'
 
 if. 'Android'-:UNAME do.
   startupandroid''
@@ -132,4 +133,4 @@ EMPTY
 )
 
 NB. =========================================================
-18!:4 <'base' NB. end in base
+cocurrent <'base' NB. end in base

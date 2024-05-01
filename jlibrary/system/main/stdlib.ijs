@@ -425,9 +425,7 @@ end.
 1
 )
 cocurrent <'z'
-coclass=: 18!:4 @ boxxopen f.
 cocreate=: 18!:3
-cocurrent=: 18!:4 @ boxxopen f.
 codestroy=: coerase @ coname
 coerase=: 18!:55
 cofullname=: 3 : 0

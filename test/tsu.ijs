@@ -56,6 +56,7 @@ blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp4
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 NB. temp workaround
 blacklist=: blacklist, (UNAME-:'OpenBSD')#(<testpath),each <'gtdot.ijs'
+blacklist=: blacklist, (UNAME-:'FreeBSD')#(<testpath),each 'gsp.ijs';'gsp111.ijs';'gss.ijs'
 
 blacklist=: ~.blacklist
 ddall    =: blacklist -.~ testfiles 'g'

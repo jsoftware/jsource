@@ -1,4 +1,4 @@
-18!:4 <'z'
+cocurrent <'z'
 3 : 0 ''
 
 JLIB=: '9.6.5'
@@ -89,7 +89,7 @@ else.
   0!:0 <jpath '~system/defs/',y,'_',(tolower xuname),(IF64#'_64'),'.ijs'
 end.
 )
-18!:4 <'j'
+cocurrent <'j'
 
 setjdefs=: 4 : 'if. _1=4!:0 y do. (>y)=: x end.'
 
@@ -133,8 +133,8 @@ end.
 
 4!:55 <'setjdefs'
 
-18!:4 <'z'
-18!:4 <'z'
+cocurrent <'z'
+cocurrent <'z'
 UNXLIB=: ([: <;._1 ' ',]);._2 (0 : 0)
 libc.so.6 libc.so.7 libc.so.7 libc.so libc.dylib libc.so
 libz.so.1 libz.so.7 libz.so.6 libz.so libz.dylib libz.so
@@ -167,7 +167,7 @@ r=. (;: 'c z sqlite3 libxml2 pcre2') i. <,y
 c=. (;: 'Linux OpenBSD FreeBSD Android Darwin') i. <UNAME_z_
 (<r,c) {:: UNXLIB_z_
 )
-18!:4 <'z'
+cocurrent <'z'
 anddf=: 4 : '''libj.so android_download_file > i *c *c'' 15!:0 x;y'
 andunzip=: 3 : 0
 '' andunzip y
@@ -200,7 +200,7 @@ end.
 'DM_density_ja_ DM_densityDpi_ja_ DM_scaledDensity_ja_'=: 1 2 4{dm
 dm
 )
-18!:4 <'z'
+cocurrent <'z'
 'TAB LF FF CR DEL EAV'=: 9 10 12 13 127 255{a.
 LF2=: LF,LF
 CRLF=: CR,LF
@@ -424,10 +424,8 @@ else.
 end.
 1
 )
-18!:4 <'z'
-coclass=: 18!:4 @ boxxopen
+cocurrent <'z'
 cocreate=: 18!:3
-cocurrent=: 18!:4 @ boxxopen
 codestroy=: coerase @ coname
 coerase=: 18!:55
 cofullname=: 3 : 0
@@ -1649,7 +1647,7 @@ c=. b +. y=' '
 b=. b > (1,}:b) +. }.c,0
 ' ' (I. b) } y
 )
-18!:4 <'z'
+cocurrent <'z'
 3 : 0''
 if. IFIOS>IFQT do.
   r=. 'Engine: ',9!:14''

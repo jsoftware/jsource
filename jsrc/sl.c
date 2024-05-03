@@ -346,7 +346,7 @@ static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  ARGCHK1(w);
  if(((b-2) & (SGNIF(AT(w),INTX) | (SGNIF(AT(w),B01X) & (AR(w)-1))))<0)R w;  // integer list or scalar boolean is OK  C_LE
  n=AN(w);
- ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
+ ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);   // error if nonempty & nonboxed
  wv=AAV(w); 
  for(i=0;i<n;++i){
   y=C(wv[i]);  // pointer to box
@@ -551,7 +551,11 @@ F2(jtloccre2){
 
 F1(jtlocswitch){A g;
  ARGCHK1(w);
- ASSERT(!AR(w),EVRANK); 
+ if(!(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)){  // atomic integer/bool is OK as is
+  // not a numeric atom.  perform boxxopen
+  if(((AN(w)-1)|SGNIF(AT(w),BOXX))>=0)RZ(w=box(w));  // if not empty & not boxed, box it
+  ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
+ }
  RZ(g=locale(1,w));
  // put a marker for the operation on the call stack
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)

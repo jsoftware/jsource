@@ -260,6 +260,7 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
  RZ(jtxoinit(jjt));  // master only
  RZ(jtsbtypeinit(jjt));  // master only
  RZ(jtrnginit(jt));
+ RZ(jtforeignassigninit(jt));  // master only
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
  RZ(jtxlinit(jjt));  // file info, master only

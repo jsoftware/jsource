@@ -1,8 +1,7 @@
 prolog './gmmf.ijs'
 NB. memory mapped files -------------------------------------------------
 
-t=: 18!:4
-1 [ t <'base' [ load 'jmf'
+1 [ cocurrent <'base' [ load 'jmf'
 3 : 0 ''
 if. _1=nc<'MAPNAME_jmf_' do.
  'MAPNAME_jmf_ MAPFN_jmf_ MAPSN_jmf_ MAPFH_jmf_ MAPMH_jmf_ MAPADDRESS_jmf_ MAPHEADER_jmf_ MAPFSIZE_jmf_ MAPMSIZE_jmf_ MAPREFS_jmf_'=: i.10

@@ -369,9 +369,8 @@ x_asdf_=: i.1e4
 18!:55 e,f
 
 
-NB. 18!:4 ---------------------------------------------------------------
+NB. 18!:4 accessible only through cocurrent ---------------------------------------------------------------
 
-lswitch=: 18!:4
 
 f_a_ =: 3 : 0
  p=. 18!:5 ''
@@ -382,7 +381,7 @@ f_a_ =: 3 : 0
 
 f1_b_ =: 3 : 0
  p=. 18!:5 ''
- lswitch_base_ <'asdf'
+ cocurrent_base_ <'asdf'
  q=. 18!:5 ''
  p,q
 )
@@ -405,41 +404,41 @@ f1_b_ =: 3 : 0
 
 f2_c_ =: 3 : 0
  p=. 18!:5 ''
- 18!:4 <'asdf'
+ cocurrent<'asdf'
  q=. 18!:5 ''
  p,q
 )
 
-(<;._1 ' a b c asdf asdf a') -: x=: f_a_ 0
+(<;._1 ' a b c asdf b a') -: x=: f_a_ 0
 
 f =: {{
-lswitch <'base'
+cocurrent <'base'
 assert. (<'base') -: 18!:5 ''
 
-lswitch xx=:<'NonExxistent2'
+cocurrent xx=:<'NonExxistent2'
 assert. xx_base_ -: 18!:5 ''
 assert. xx_base_ e. 18!:1 [0
-lswitch_base_ <'base'
+cocurrent_base_ <'base'
 assert. (<'base') -: 18!:5 ''
 
-lswitch <'base'
+cocurrent <'base'
 plus_a_=: +
 4 plus_a_ _3
 assert. (<'base') -: 18!:5 ''
 
 4!:55 ;:'a a_z_'
 d =: 0&".&.> e =: 18!:3 ''
-lswitch e
+cocurrent e
 a =: 5.4
-lswitch__ <'base'
+cocurrent__ <'base'
 assert. _1 -: 4!:0 <'a'
-lswitch d
+cocurrent d
 assert. a -: 5.4
-lswitch__ <'base'
+cocurrent__ <'base'
 assert. _1 -: 4!:0 <'a'
-lswitch >d
+cocurrent >d
 assert. a -: 5.4
-lswitch__ <'base'
+cocurrent__ <'base'
 assert. _1 -: 4!:0 <'a'
 
 18!:55 ;:'a b c asdf NonExxistent2'
@@ -448,34 +447,33 @@ assert. _1 -: 4!:0 <'a'
 }}
 f ''
 
-'locale error'    -: lswitch etx 0
-'domain error'    -: lswitch etx 'a'
-'locale error'    -: lswitch etx 2
-'locale error'    -: lswitch etx 15000
-'domain error'    -: lswitch etx 2.3
-'domain error'    -: lswitch etx 2j3
-'domain error'    -: lswitch etx 2x
-'domain error'    -: lswitch etx 2r3
+'locale error'    -: cocurrent etx 0
+'locale error'    -: cocurrent etx 2
+'locale error'    -: cocurrent etx 15000
+'domain error'    -: cocurrent etx 2.3
+'domain error'    -: cocurrent etx 2j3
+'domain error'    -: cocurrent etx 2x
+'domain error'    -: cocurrent etx 2r3
 
-'domain error'    -: lswitch etx <0 1 0
-'domain error'    -: lswitch etx <2 3 4
-'domain error'    -: lswitch etx <2 3.4
-'domain error'    -: lswitch etx <2 3j4
-'domain error'    -: lswitch etx <2 3x
-'domain error'    -: lswitch etx <2 3r4
-'domain error'    -: lswitch etx <<'abc'
+'domain error'    -: cocurrent etx <0 1 0
+'domain error'    -: cocurrent etx <2 3 4
+'domain error'    -: cocurrent etx <2 3.4
+'domain error'    -: cocurrent etx <2 3j4
+'domain error'    -: cocurrent etx <2 3x
+'domain error'    -: cocurrent etx <2 3r4
+'domain error'    -: cocurrent etx <<'abc'
 
-'valence error'    -: (<'j') lswitch etx <'abc'
+'valence error'    -: (<'j') cocurrent etx <'abc'
 
-'rank error'      -: lswitch etx <3 4$'a'
+'rank error'      -: cocurrent etx <3 4$'a'
 
-'length error'    -: lswitch etx <''
-'length error'    -: lswitch etx <$0
+'length error'    -: cocurrent etx <''
+'length error'    -: cocurrent etx <$0
 
-'ill-formed name' -: lswitch etx <'!!#+'
-'ill-formed name' -: lswitch etx <'abc_ju'
-'ill-formed name' -: lswitch etx <'abc_junk_'
-'ill-formed name' -: lswitch etx <'abc__j'
+'ill-formed name' -: cocurrent etx <'!!#+'
+'ill-formed name' -: cocurrent etx <'abc_ju'
+'ill-formed name' -: cocurrent etx <'abc_junk_'
+'ill-formed name' -: cocurrent etx <'abc__j'
 
 
 NB. 18!:5 ---------------------------------------------------------------
@@ -683,7 +681,6 @@ assert. 16b1ff8 > >./ allos
 
 NB. This is the version for hashed allocation
 f=: 3 : 0
-cocurrent =. 18!:4
 lastallo =. {: initallo =. allos =. , /:~ 0&".@> 18!:1 (1)   NB. locales as we see them
 deldallo =. $0
 NB. Allocate a starter set of locales
@@ -761,7 +758,7 @@ a__ = 5
 
 
 4!:55 ;:'a a_z_ ab c d dd dhs2liso dhs2liso_nonlocale_ e ee f '
-4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath lswitch '
+4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath'
 4!:55 ;:'not_a_locative s1 s2 s3 spnow t test x xx xy_z_ xy_nonlocale_ y '
 18!:55 ;:'abcpristloc nonlocale'
 

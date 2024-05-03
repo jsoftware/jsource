@@ -135,7 +135,7 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [LPARX-LASTNOUNX] = PTLPAR,  // PL
 [CONJX-LASTNOUNX] = 0xC9D04000,  // PC
 [RPARX-LASTNOUNX] = PTRPAR,  // PR
-// the LOCAL and ASGNTONAME flags are passed into PT
+// the LOCAL and ASGNTONAME flags are passed into PT.  They can cause line 6 to be matched when stack[2] is ASGN 
 [QCASGN-1] = 0xC900807F,
 [QCASGN+QCASGNISLOCAL-1] = 0xC940807F,
 [QCASGN+QCASGNISTONAME-1] = 0xC800807F,
@@ -958,6 +958,7 @@ RECURSIVERESULTSCHECK
        }else{
         // hook and non-fork tridents
         A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
+        if(unlikely(AT(QCWORD(arg2))&ASGN))goto rejectfrag;      // Because we use some bits in the PT flags as assignment types, we might get here with an ASGN in stack[2].  Reject the fragment
         I trident=PTISCAVN(stack[3].pt)?3:2; arg3=PTISCAVN(stack[3].pt)?arg3:mark;  // beginning of stack after execution; a is invalid in end-of-stack.  mark suffices to show not FAOWED
         A yy=hook(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the hook
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
@@ -991,6 +992,7 @@ RECURSIVERESULTSCHECK
     // the compiler doesn't handle the combination of likely and break.  If we don't put something here, the fail-parse branch will go backwards
     // and will predict that way, which is wrong.
     }else{
+rejectfrag:;
      // LPAR misses the main parse table, which is just as well because it would miss later branches anyway.  We pick it up here so as not to add
      // a couple of cycles to the main parse test.  Whether we stack or execute, y is still set with the next word+type
      if(!(GETSTACK0PT&PTNOTLPAR)){  // ( with no other line.  Better be ( CAVN )

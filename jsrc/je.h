@@ -724,6 +724,7 @@ extern D        jtdlcm(J,D,D);
 extern A        jtdropr(J,I,A);
 extern B        jtecvt(J,D,I,int*,int*,C*);
 extern B        jtecvtinit(J);
+extern I        jtforeignassigninit(J);
 extern A        jteformat(J,A,A,A,A);
 extern A        jtenqueue(J,A,A,I);
 extern B        jtequ(J,A,A);

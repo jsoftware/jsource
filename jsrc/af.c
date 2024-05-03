@@ -10,7 +10,7 @@ A jtunname(J jt,A w,I recurct){A x;V*v;
  ARGCHK1(w);
  if(recurct>100)RETF(w);  // avoid infinite recursion
  v=VAV(w);
- if(CTILDE==v->id&&!jt->glock&&!(VLOCK&v->flag)){x=v->fgh[0]; if(NAME&AT(x))R jtunname(jt,symbrd(x),recurct+1);}
+ if(CTILDE==v->id&&!jt->glock&&!(VLOCK&v->flag)){x=v->fgh[0]; if(NAME&AT(x)){A nmv; RZ(nmv=symbrd(x)); if(unlikely(AFLAG(nmv)&AFRO))R sfn(0,x); R jtunname(jt,nmv,recurct+1);}}  // if name~ unlocked, keep cocurrent as string, otherwise contents
  RETF(w);
 }
 
@@ -130,6 +130,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
    ASSERT(AN((A)IAV0(aa)[1])<248,EVLIMIT);  // error if too many names in expansion
    // recursion check finished.  Now replace the name with its value
    if(x=symbrdlock(f)){   // locked returns a ref to the same name
+    if(unlikely(AFLAG(x)&AFRO))R w;  // If name has readonly value (like cocurrent), leave it as a reference
     // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
     // The value we get from the lookup must be interpreted in the environment of the higher level
     A savloc=jt->locsyms;  // initial locales

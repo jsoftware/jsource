@@ -247,18 +247,20 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
   if(!delblockx){ret=0; break;}  // if chain empty or ended, not found
   L *sym=sympv+delblockx;  // address of next in chain, before we delete it
   LX nextdelblockx=sym->next;  // unroll loop once
-  IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
-    {
-     SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
-     if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
-      *asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
-      jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains
-     }  // add to symbol free list
-     ret=0;  // normal return
-     break;  // name match - return
-    }
+  if(likely(!(AFLAG(sym->name)&AFRO))){   // ignore request to delete readonly name (cocurrent)
+   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
+     {
+      SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
+      if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
+       *asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
+       jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains
+      }  // add to symbol free list
+      ret=0;  // normal return
+      break;  // name match - return
+     }
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
-  )
+   )
+  } 
   asymx=&sym->next;   // mismatch - step to next
   delblockx=nextdelblockx;
  }
@@ -688,7 +690,7 @@ A jtprobequiet(J jt,A a){A g;
 // Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage
 // flags set in jt: bit 0=this is a final assignment;
 // if g is marked as having local symbols, we assume that it is equal to jt->locsyms (especially in subroutines)
-I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
+I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  ARGCHK2(a,w);
  I anmf=NAV(a)->flag; // fetch flags for the name
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
@@ -748,7 +750,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
  if(unlikely(jt->uflags.trace&TRACEDB))if(e->val!=0&&((e->valtype&QCNOUN)==0))RZGOTO(redef(w,e->val),exitlock);  // could move outside of lock, but it's only for debug
  // *** this is the last subroutine call till the end - registers available ***
- x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
+ A x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
 
  I xaf;  // holder for nvr/free flags
  {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x
@@ -781,7 +783,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
     // It would be a disaster to back the tstack to in front of a valid 'old' pointer held somewhere.  The subsequent tpop would never end.  The case cannot occur, because we set 'old'
     // only before sentence execution, and there is no way for an anonymous abandoned value to come from a higher level (name:_ pushes a stack entry at the current level; assignment to y clears inplaceability).
     // NOTE: NJA can't zap either, but it never has AC<0
-   }else{
+   }else{   // not abandoned final assignment
     if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
     rarecur(w);  // if zap not allowed, just ra() w, known recursive-if-recursible so this is quick.  Subroutine call.  w may be inplaceable but not zappable so no rapos; may be sparse so we must allow 1 small recursion then
    }
@@ -790,10 +792,10 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;
  }else{  // x exists, and is either read-only or memory-mapped
   ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
-   // no need to store valtype - that can't change from noun
-   I wt=AT(w); wn=AN(w); wr=AR(w); I m=wn<<bplg(wt);
+   // no need to store valtype - that can't change from noun (because must be DIRECT below)
+   I wt=AT(w); I wn=AN(w); I wr=AR(w); I m=wn<<bplg(wt);  // we will move the flags/data from w to the preallocated area x
    ASSERTGOTO((wt&DIRECT)>0,EVDOMAIN,exitlock);  // boxed, extended, etc can't be assigned to memory-mapped array
-   ASSERTGOTO(allosize(x)>=m,EVALLOC,exitlock);  // ensure the file area can hold the data
+   ASSERTGOTO(AM(x)>=m,EVALLOC,exitlock);  // ensure the file area can hold the data.  AM of NJA is allosize
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
   }
   x=0;  // indicate no further fa needed

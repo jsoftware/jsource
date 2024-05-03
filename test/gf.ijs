@@ -181,6 +181,16 @@ f=: (C +:)"0 f.
 4!:55 ;:'C'
 (f -: (!+:)) y=: 10 ?@$ 6
 
+NB. f. special names
+
+'cocurrent_z_' -: 5!:5 <'cocurrent'
+'cocurrent_z_' -: 5!:5 <'cocurrent_z_'
+f =. cocurrent f.
+'cocurrent' -: 5!:5 <'f'
+f =. cocurrent_z_ f.
+'cocurrent_z_' -: 5!:5 <'f'
+'cocurrent_z_' -: 5!:5 <'coclass'
+
 
 4!:55 ;:'a a001 ambi ar b C cap dec dyad eachh eq f fact fact1 foo g i inc lr '
 4!:55 ;:'mat monad plus s sgn slash t v ws y'

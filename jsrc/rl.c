@@ -10,7 +10,7 @@
 #include <ctype.h>
 #endif
 
-// functions of this class add to the growing ltest
+// functions of this class add to the growing ltext
 #define F1X(f)           A f(J jt,A w,A *ltext)
 #define DF1X(f)           A f(J jt,A w,A self,A *ltext)
 #define F2X(f)           A f(J jt,A a,A w,A *ltext)
@@ -350,6 +350,7 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  ARGCHK1(w);
  // If name, it must be in ".@'name', or (in debug mode) the function name, which we will discard
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
+ if(unlikely(AFLAG(w)&AFRO))if(AT(w)&VERB){R str(12,"cocurrent_z_");}  // readonly name, must not expand it.  We don't have access to the name used
  if(AT(w)&NOUN)R lnoun(C(w));
  v=VAV(w); id=v->id;  // outer verb, & its id
  // if f is 0, we take f from g.  In other words, adverbs can put their left arg in either f or g.  u b. uses g so that it can leave f=0 to allow it to function as an ATOMIC2 op

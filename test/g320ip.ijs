@@ -863,10 +863,9 @@ assert. y -: i. 5 5
 )
 
 NB. Verify fork does not execute f if there is an error in f
-qd=:18!:4
-'domain error' -: (qd [ 1&+) etx <'nonexlocale'
+'domain error' -: (cocurrent [ 1&+) etx <'nonexlocale'
 -. (<'nonexlocale') e. 18!:1]0 
-'domain error' -: 1 (qd@] [ +) etx <'nonexlocale'
+'domain error' -: 1 (cocurrent@] [ +) etx <'nonexlocale'
 -. (<'nonexlocale') e. 18!:1]0
 
 NB. Test for intermediate result persisting when the name of which it is a part is reassigned

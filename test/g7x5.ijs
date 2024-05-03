@@ -149,8 +149,7 @@ if. _1=nc<'MAPNAME_jmf_' do.
 end. 
 1
 )
-f=: 18!:4
-f <'base'
+cocurrent <'base'
 1 [ unmap_jmf_ 'q'
 f=: <jpath'~temp/q','.jmf',~(":2!:6''),'_',":3&T.''
 1 [ createjmf_jmf_ f,<3e5      NB. 3e5 bytes for data

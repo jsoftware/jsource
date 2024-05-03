@@ -4,7 +4,7 @@ NB. mapped boxed arrays -------------------------------------------------
 NB. do not run prolog in this script
 
 load 'jmf'
-18!:4 <'base'
+cocurrent <'base'
 
 1 [ unmap_jmf_ 'q'
 f=: <jpath'~temp/q','.jmf',~(":2!:6''),'_',":3&T.''

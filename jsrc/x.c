@@ -367,8 +367,10 @@ void jtforeigninit(J jt){UI i;
 
 // called at initialization after memory reset, to assign cocurrent_z_ and coclass_z_.  The 18!:4 block is at the end of foreignA and is a read-only value
 I jtforeignassigninit(J jt){A nm;L *e;
+#if 0 // beta-7
  RZ(nm=nfs(12,"cocurrent_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeis(nm, *JT(jt,zpath)); e->flag|=LREADONLY; WRITEUNLOCK((*JT(jt,zpath))->lock)  // probe takes a lock
  RZ(nm=nfs(10,"coclass_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeis(nm, *JT(jt,zpath)); e->flag|=LREADONLY; WRITEUNLOCK((*JT(jt,zpath))->lock)
+#endif
  R 1;
 }
 
@@ -381,7 +383,9 @@ F2(jtforeign){F2PREFIP;I p,q;A z;
  ASSERT(!((AT(a)|AT(w))&VERB),EVDOMAIN)
  p=i0(a); q=i0(w); RE(0);
  if(p!=11){  // normal m!:n
+#if 0  // beta-7
   if(p==18 && q==4 && jt->parsercalls>=0x400){ASSERT(jtdeprecmsg(jt,~9,"(009) 18!:4 has been removed, use cocurrent/coclass\n")!=0,EVDOMAIN)}  // scaf
+#endif
   ASSERT(BETWEENC(p,0,128),EVDOMAIN) ASSERT(BETWEENC(q,-10,111),EVDOMAIN)   // check reasonable inputs
   ASSERT((z=findslot(p,q))!=0,EVDOMAIN)  // look up the (m,n), fail if not found
   RETF(z);  // return the block we found

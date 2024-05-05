@@ -182,7 +182,7 @@ f=: (C +:)"0 f.
 (f -: (!+:)) y=: 10 ?@$ 6
 
 NB. f. special names
-
+1: 0 : 0
 'cocurrent_z_' -: 5!:5 <'cocurrent'
 'cocurrent_z_' -: 5!:5 <'cocurrent_z_'
 f =. cocurrent f.
@@ -190,6 +190,7 @@ f =. cocurrent f.
 f =. cocurrent_z_ f.
 'cocurrent_z_' -: 5!:5 <'f'
 'cocurrent_z_' -: 5!:5 <'coclass'
+)  NB. scaf
 
 
 4!:55 ;:'a a001 ambi ar b C cap dec dyad eachh eq f fact fact1 foo g i inc lr '

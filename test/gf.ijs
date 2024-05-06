@@ -185,9 +185,9 @@ NB. f. special names
 1: 0 : 0
 'cocurrent_z_' -: 5!:5 <'cocurrent'
 'cocurrent_z_' -: 5!:5 <'cocurrent_z_'
-f =. cocurrent f.
+f =: cocurrent f.
 'cocurrent' -: 5!:5 <'f'
-f =. cocurrent_z_ f.
+f =: cocurrent_z_ f.
 'cocurrent_z_' -: 5!:5 <'f'
 'cocurrent_z_' -: 5!:5 <'coclass'
 )  NB. scaf

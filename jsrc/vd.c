@@ -61,7 +61,8 @@ DF1(jtrinv){
  ASSERT(AR(w)==2,EVRANK);  // rank at least 2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // error if not square
  if(!AN(w))R w;  // if empty, return empty
- R jtrinvip(jt,cvt(MAX(AT(w),FL),w),AS(w)[0],ISDENSETYPE(AT(w),FL)?2:0);  // take the inverse.  Since it runs in place, clone w.  For float, reduce overhead at bottom of recursion
+ RZ(w=cvt(ISDENSETYPE(AT(w),B01+INT)?FL:AT(w),w));  // always copy, but convert sparse B01/INT to FL
+ R jtrinvip(jt,w,AS(w)[0],ISDENSETYPE(AT(w),FL)?2:0);  // take the inverse.  Since it runs in place, clone w.  For float, reduce overhead at bottom of recursion
 }
 
 // recursive subroutine for qr decomposition, returns q;r

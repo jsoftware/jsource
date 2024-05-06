@@ -180,9 +180,17 @@ DF2(jtunquote){A z;
 
   if(jt->uflags.trace&TRACEPM)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cpC&FLGDYAD?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
+#if 1  // beta
   if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd && (US)flgd0cpC==jt->callstacknext){
    pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;); INCREXECCT(jt->global);  // push the call, and increment the count of the new exec (which is the same locale as the old)
   }  //  If cocurrent is about, make every call visible
+#else
+  if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd){
+   // This level has called cocurrent.  We have to reset that fact after we return, and have a marker to resetbstkreqd
+   pushcallstack1dsuff(CALLSTACKPOPFROMINCALLER,0,z=0; goto exitpop;); //  push the marker
+   jt->uflags.bstkreqd=0;    // the new function doesn't need slow mode while the marker is there
+  }
+#endif
   if((jt->uflags.trace&TRACEDB)&&!(jt->glock||VLOCK&FAV(fs)->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
    z=jtdbunquote((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
   }else{

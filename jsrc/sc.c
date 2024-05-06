@@ -23,6 +23,8 @@ DF2(jtunquote){A z;
 #define FLGCACHED ((I)1<<FLGCACHEDX)
 #define FLGDYADX 19  // operation is dyad
 #define FLGDYAD ((I)1<<FLGDYADX)
+#define FLLOCCHANGEDX 20  // operation is dyad
+#define FLLOCCHANGED ((I)1<<FLLOCCHANGEDX)
 // bits 0-15 hold the callstackx before execution
  I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad bits 0-15=jt->callstacknext at start
  // errors from here on must restore curname

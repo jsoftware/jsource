@@ -13,6 +13,7 @@ static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  ARGCHK1(w);
  if(n<=ncomp){
+  NAN0;
   // Handle 2x2 and smaller FL quickly and inplace to avoid recursion and memory-allocation overhead
   // result is 1/w00 w01/(w00*w11)
   //             0     1/w11     for 1x1, only the top-left
@@ -23,6 +24,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
    DAV2(w)[1]*=-w00r*w11r;  //  w01/(w00*w11)
    // w10 is already 0
   }
+  NAN1;
   R w;
   // Don't bother marking so small a matrix as uppertri
  }
@@ -32,7 +34,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
  ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp);  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
  di=jtrinvip(jt,drop(v2(m,m),w),n-m,ncomp);  // take inverse of w11
- bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1
+ RZ(bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di))));  // -w00^_1 mp w01 mp w11^_1
  if(ISSPARSE(AT(w))){z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
  }else{
   // copy in the pieces, line by line, writing over the input area
@@ -59,7 +61,7 @@ DF1(jtrinv){
  ASSERT(AR(w)==2,EVRANK);  // rank at least 2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // error if not square
  if(!AN(w))R w;  // if empty, return empty
- R jtrinvip(jt,ca(w),AS(w)[0],ISDENSETYPE(AT(w),FL)?2:0);  // take the inverse.  Since it runs in place, clone w.  For float, reduce overhead at bottom of recursion
+ R jtrinvip(jt,cvt(MAX(AT(w),FL),w),AS(w)[0],ISDENSETYPE(AT(w),FL)?2:0);  // take the inverse.  Since it runs in place, clone w.  For float, reduce overhead at bottom of recursion
 }
 
 // recursive subroutine for qr decomposition, returns q;r

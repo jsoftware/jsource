@@ -958,7 +958,9 @@ RECURSIVERESULTSCHECK
        }else{
         // hook and non-fork tridents
         A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
-        if(unlikely(AT(QCWORD(arg2))&ASGN))goto rejectfrag;      // Because we use some bits in the PT flags as assignment types, we might get here with an ASGN in stack[2].  Reject the fragment
+        // Because we use some bits in the PT flags to distinguish assignment types, those bits indicate valid-parse on some invalid combinations.  They come to here with an ASGN in stack[2].  Catch it and reject the fragment
+        // We could defer the check until later (in hook) but this seems tolerable
+        if(unlikely(AT(QCWORD(arg2))&ASGN))goto rejectfrag;
         I trident=PTISCAVN(stack[3].pt)?3:2; arg3=PTISCAVN(stack[3].pt)?arg3:mark;  // beginning of stack after execution; a is invalid in end-of-stack.  mark suffices to show not FAOWED
         A yy=hook(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the hook
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,

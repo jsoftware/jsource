@@ -143,6 +143,9 @@ DF2(jtunquote){A z;
  trackinfo[wx]=0;  // null-terminate the info
 #endif
  STACKCHKOFLSUFF(z=0; goto exitfa;)
+#if 0  // beta
+ A initloc=jt->global;  // the locale we were called in, in case we need to restore it
+#endif
  flgd0cpC|=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
  if(unlikely(explocale!=0)){  // there is a locative or implied locative
   // locative. switch to it, stacking the prev value.  If the switch is to the current local symbol table, that means 'switch to caller's environment'
@@ -151,7 +154,12 @@ DF2(jtunquote){A z;
    jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current.  Leave GST unchanged in it
    explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
   }
-  pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;); jt->global=explocale;  // move to new implied locale.  DO NOT change locale in lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
+#if 1   // beta
+  pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;);
+#else
+  flgd0cpC|=FLGPOPNEEDED;  // indicate that we know we must restore the initial locale
+#endif
+  jt->global=explocale;  // move to new implied locale.  DO NOT change locale in jt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
   INCREXECCT(explocale);   // we are starting a new execution in explocale.  Protect the locale while it runs
     // scaf if someone deletes the locale before we start it, we are toast
  }
@@ -186,9 +194,8 @@ DF2(jtunquote){A z;
   }  //  If cocurrent is about, make every call visible
 #else
   if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd){
-   // This level has called cocurrent.  We have to reset that fact after we return, and have a marker to resetbstkreqd
-   pushcallstack1dsuff(CALLSTACKPOPFROMINCALLER,0,z=0; goto exitpop;); //  push the marker
-   jt->uflags.bstkreqd=0;    // the new function doesn't need slow mode while the marker is there
+   // The caller has called encountered cocurrent.  If it does again, it will have to change locale counts.  Remember that  
+   flgd0cpC|=FLGLOCCHANGED; jt->uflags.bstkreqd=0;    // rememer locale already changed; remove slow mode for the next level
   }
 #endif
   if((jt->uflags.trace&TRACEDB)&&!(jt->glock||VLOCK&FAV(fs)->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
@@ -246,33 +253,18 @@ exitpop: ;
  I callstackx=(US)flgd0cpC;  // extract the init call stackx, which we will use to analyze
  if(unlikely(callstackx!=jt->callstacknext)){  // normal case, with no stack, bypasses all this
   // There are stack entries.  Process them
-  if(likely(((jt->callstack[callstackx].type^CALLSTACKPOPLOCALE) | ((callstackx+1)^jt->callstacknext))==0)) {   // jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext
+  I csatop=jt->callstacknext-1; I cstop=jt->callstack[csatop].type;  // index of top of stack, and type stored there  
+  if(likely(((cstop^CALLSTACKPOPLOCALE) | (callstackx^csatop))==0)) {   // jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext
    // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
    DECREXECCT(jt->global);  // end the execution that we started with this locative
-   SYMSETGLOBAL(jt->locsyms,jt->callstack[callstackx].value);  // restore global locale
+   SYMSETGLOBAL(jt->locsyms,jt->callstack[csatop].value);  // restore global locale
    jt->callstacknext=callstackx;  // restore stackpointer for caller
   }else{
+#if 1 // beta
    // Locales were changed.  Process the stack fully
    // PUSHLOCALSTYMS (u./v.) will always be first in stack, and we can process it now.  If it is there it is always followed by a POP
    if(jt->callstack[callstackx].type&CALLSTACKPUSHLOCALSYMS){SYMSETLOCAL((A)jt->callstack[callstackx].value); callstackx++;}  // restore locsyms if we stacked it, and restore possibly-changed global value therein
    // The stack is [CALLSTACKPUSHLOCALSYMS] [POPLOCALE] [POPFROM], no more.  We have advanced callstackx past the CALLSTACKPUSHLOCALSYMS if any
-#if 0
-// remove bstkreqd, POPFIRST, CHANGELOCALE
-   else{
-    if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPFROM){  // last entry on stack is POPFROM
-     // We called cocurrent/coclass.
-     if(!(jt->callstack[callstackx].type&CALLSTACKPOPLOCALE))jt->callstack[callstackx].type=CALLSTACKPOPLOCALE;  // if the call 
-     else 
-
-
-
-// if(last thing on stack is POPFROM)  cannot happen if u./v.
-//  if(current TOS is not POP)
-//   turn POPFROM into POP
-//  else decr the from locale
-//  incr the new locale;
-   jt->callstacknext=(US)flgd0cpC;  // restore stackpointer for caller
-#else  // obsolete 
 
    // scaf It is possible that the stack might be malformed, if the user called 18!:4 and then other calls without return.  Boot does this, alas; in particular stdlib calls 18!:4 directly and then finishes with cocurrent,
    // Which leaves the stack holding POPFROM followed by FIRST.  In this case the intermediate locales did not get their execcts raised/lowered, but that's OK during initialization.
@@ -340,6 +332,20 @@ exitpop: ;
      }
     }
    }
+#else
+      // PUSHLOCALSYMS (u./v.) will always be first in stack, and we can process it now.  If it is there it is always followed by a POP
+   if(jt->callstack[callstackx].type&CALLSTACKPUSHLOCALSYMS){SYMSETLOCAL((A)jt->callstack[callstackx].value); callstackx++;}  // restore locsyms if we stacked it, and restore possibly-changed global value therein
+   // The stack is [CALLSTACKPUSHLOCALSYMS] [CALLSTACKPOPLOCALE] [CALLSTACKPOPFROMINCALLER] [CALLSTACKPOPFROMSEEN].  Process back to front
+   I hadlocalechange=jt->uflags.bstkreqd;  // set if the caller has called cocurrent previously
+   if(cstop==CALLSTACKPOPFROMSEEN){  // the called function was cocurrent
+    explocale=jt->callstack[csatop].value); jt->uflags.bstkreqd=1;
+   }else explocale=0;  // if not cocurrent, don't attempt 
+   
+#define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
+#define CALLSTACKPOPFROMSEEN 4  // (pushed into caller of cocurrent) value is new locale
+#define CALLSTACKPOPFROMINCALLER 8  // value not used.  Acts as a spacer, and causes FROMSEEN to be restored
+#define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
+
 #endif
   }
  }

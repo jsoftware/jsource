@@ -932,7 +932,7 @@ typedef struct {
 #else
 #define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
 #define CALLSTACKPOPFROMSEEN 4  // (pushed into caller of cocurrent) value is new locale
-#define CALLSTACKPOPFROMINCALLER 8  // value not used.  Acts as a spacer, and causes FROMSEEN to be restored
+#define CALLSTACKPOPFROMINCALLER 8  // value not used.  Acts as a spacer, and causes bstkreqd to be restored
 #define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
 #endif
 

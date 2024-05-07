@@ -349,7 +349,7 @@ NB. I.^:_1
 'domain error' -: (I.^:_1) etx a:
 'domain error' -: (I.^:_1) etx 2j2
 'domain error' -: (I.^:_1) etx _1 3
-(-:  (I.^:_1)@({~ ?~@#)@I.) 20 ?@$ 100  NB. inverse applies properly to scrambled result
+(-:  (I.^:_1)@({~ ?~@#)@I.) 0 (>:@(i:&1@:~:) {. ]) 20 ?@$ 100  NB. inverse applies properly to scrambled result
 (-:  (I.^:_1)@({~ ?~@#)@I.) 0 (>:@(i:&1@:~:) {. ]) 100 ?@$ 20
 
 NB. special forms detected properly

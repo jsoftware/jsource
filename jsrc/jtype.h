@@ -919,28 +919,23 @@ typedef struct {
 
 // Definition of callstack
 
+#if 1  // beta
 typedef struct {
  I type;  // type of entry, flagged per below
  void *value;  // locale or name, depending on the type
 } LS;
-#if 1  // beta
 #define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
 #define CALLSTACKPOPFROM 4  // value is jt->global that must be modified in the caller of this function also
 #define CALLSTACKCHANGELOCALE 8  // value is the value of jt->global before it was modified by the called function
 #define CALLSTACKPOPLOCALEFIRST 16  // set in the POPLOCALE that is added when the first POPFROM is seen
 #define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
-#else
-#define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
-#define CALLSTACKPOPFROMSEEN 4  // (pushed into caller of cocurrent) value is new locale
-#define CALLSTACKPOPFROMINCALLER 8  // value not used.  Acts as a spacer, and causes bstkreqd to be restored
-#define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
-#endif
 
 // Add an entry to the call stack, and increment the index variable
 #define pushcallstack(i,t,v) (jt->callstack[i].type=(t), jt->callstack[i].value=(v), ++i)
 #define pushcallstack1(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK); pushcallstack(jt->callstacknext,(t),(v));}
 #define pushcallstack1d(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK); pushcallstack(jt->callstacknext,(t),(v));}
 #define pushcallstack1dsuff(t,v,suff) {ASSERTSUFF(jt->callstacknext<jt->fcalln,EVSTACK,suff); pushcallstack(jt->callstacknext,(t),(v));}
+#endif
 
 // NM struct: pointed to by the name field of a symbol, and used for lookups.  Names are allocated with rank 1 (?? but it means first cacheline is unused)
 typedef struct{

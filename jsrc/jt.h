@@ -98,9 +98,12 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TRACEDB              0xfd  // any of the debug flags; see 13!:0
 #define TRACEDBDEBUGENTRY 0x200  // set in command that starts pm debug.  suppresses the end-of-suspension action
                                    // debug flags are also used for dbuser
-   C init0area[0]; // label for initializing
                    // ************************************** here starts the area that is initialized to 0 when task starts 0x14
-   C bstkreqd;   // set if we MUST create a stack entry for each named call
+   C bstkreqd;   // init to 1 at thread startup.  cleared at the start of each function call.  Set at the end of a function call if (1) the function was cocurrent or (2) bstkreqd was set just before the function was called.  Taken together, these conditions
+                // mean that bstkreqd is set at the end of a function af that function or any preceding functions with the same caller changed the implied locale.  When a function ends, it looks at bstkreqd.  If it is set,
+                // the running locale has been changed by a called function and must be reset.  bstkreqd is set to 1 initially, which causes each change of locale before the first named call to incr/decr both locale counts, thus
+                // housekeeping the counts as if there were a named call to begin with.
+   C init0area[0]; // label for initializing
    union {
     US spflag; // access as short
     struct {
@@ -187,13 +190,17 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 
  C _cl3[0];
 // things needed by name lookup (unquote)
- LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  A curname;          // current name, an A block containing an NM
+#if USEJSTACK
+ LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  US fcalln;           // named fn calls: maximum permissible depth   could be a fixed value?
  US callstacknext;    // current stack pointer into callstack.  Could be elided if callstack put on a 16K boundary, not a bad idea anyway
+#else
+ C filler3[12]; // 12 bytes free
+#endif
  LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
 // things needed for memory allocation
- A mempool[-PMINL+PLIML+1];             // pointer to first free block in each pool.  ends at binary boundary
+ A mempool[-PMINL+PLIML+1];             // pointer to first free block in each pool.  ends at binary boundary (no longer needed)
 // end of cacheline 3
 
  C _cl4[0];

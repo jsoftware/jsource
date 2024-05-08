@@ -556,6 +556,7 @@ F1(jtlocswitch){A g;
   if(((AN(w)-1)|SGNIF(AT(w),BOXX))>=0)RZ(w=box(w));  // if not empty & not boxed, box it
   ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
  }
+#if USEJSTACK
  RZ(g=locale(1,w));
  // put a marker for the operation on the call stack
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
@@ -568,6 +569,10 @@ F1(jtlocswitch){A g;
  SYMSETGLOBAL(jt->locsyms,g);
 
  R mtm;
+#else
+RZ(g=locale(1,w));   // point to locale, if no error
+R (A)((I)g|1);  // set LSB as flag to unquote that we ran cocurrent
+#endif
 }    /* 18!:4  switch locale */
 
 F1(jtlocname){A g=jt->global;

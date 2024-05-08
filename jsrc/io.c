@@ -382,24 +382,36 @@ F1(jtjoff){I x;
 // POPFIRST on the stack (which is otherwise empty).  If there is a POPFIRST we need to decrement the current global locale.
 // in this routine jt is a thread pointer and jjt is the shared pointer
 static void jtimmexexecct(JJ jt, A x){
+#if USEJSTACK
  I4 savcallstack = jt->callstacknext;   // starting callstack
+#endif
  A startloc=jt->global;  // point to current global locale
  if(likely(startloc!=0))INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
  jtimmex(jt,x);   // run the sentence
  if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
+#if USEJSTACK
  jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
+#endif
 }
 
 
 // if there is an immex sentence, fetch it, protect it from deletion, run it, and undo the protection
 // in this routine jt is a thread pointer and jjt is the shared pointer
+#if USEJSTACK
 static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
+#else
+static void runiep(JS jjt,JJ jt,A *old){
+#endif
  while(1){
  // if there is an immex phrase, protect it during its execution
   A iep=0; if(jt->iepdo&1){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
   if(iep==0)break;
   // run the IEP and clean up after.  We leave iepdo set to 'running' during the exec to suppress postmortem debugging while IEPs are about
-  jt->iepdo=2; jtimmexexecct(jt,iep); fa(iep) jt->iepdo&=~2; if(savcallstack==0)CALLSTACKRESET(jt) MODESRESET(jt) RESETERR jttpop(jt,old,jt->tnextpushp);
+  jt->iepdo=2; jtimmexexecct(jt,iep); fa(iep) jt->iepdo&=~2;
+#if USEJSTACK
+ if(savcallstack==0)CALLSTACKRESET(jt) 
+#endif
+  MODESRESET(jt) RESETERR jttpop(jt,old,jt->tnextpushp);
  }
 }
 
@@ -424,9 +436,11 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
 
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
- // To prevent the stack from growing indefinitely, we reset it here.  We reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
- // the resumption of the name that was interrupted.
+// obsolete  // To prevent the stack from growing indefinitely, we reset it here.  We reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
+// obsolete  // the resumption of the name that was interrupted.
+#if USEJSTACK
  I4 savcallstack = jm->callstacknext;
+#endif
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
  __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
@@ -447,13 +461,20 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
   }
   JT(jt,dbuser)&=~(TRACEDBSUSCLEAR);  // always turn off flag
  }
- e=jm->jerr; if(savcallstack==0)CALLSTACKRESET(jm) MODESRESET(jm)  // save error on sentence to be our return code
+ e=jm->jerr; MODESRESET(jm)  // save error on sentence to be our return code
+#if USEJSTACK
+ if(savcallstack==0)CALLSTACKRESET(jm)
+#endif
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
  RESETERRT(jm)
  // if there is an immex latent expression (9!:27), execute it before prompting
  // All these immexes run with result-display enabled (jt flags=0)
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
+#if USEJSTACK
  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);  // IEP does not display its errors
+#else
+ if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old);  // IEP does not display its errors
+#endif
  if(likely(wasidle)){  // returning to immex in the FE
   jtclrtaskrunning(jm);  //  clear running state in case other tasks are running and need system lock - but not if recursion
   // since we are returning to user-prompt level, we might as well take user think time to trim up memory

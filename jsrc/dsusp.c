@@ -133,7 +133,9 @@ static A jtsusp(J jt){A z;
  // Make sure we have a decent amount of stack space left to run sentences in suspension
  // ****** no errors till end of routine, where jt and stacks have been restored *******
  jt->cstackmin=MAX(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),jt->cstackmin-CSTACKSIZE/10);
+#if USEJSTACK
  jt->fcalln=MIN(NFCALL,jt->fcalln+NFCALL/10);
+#endif
  // if there is a 13!:15 sentence (latent expression) to execute before going into debug, do it
  A trap=0; READLOCK(JT(jt,dblock)) if((trap=JT(jt,dbtrap))!=0)ra(trap); READUNLOCK(JT(jt,dblock))  // fetch trap sentence and protect it
  if(trap){RESETERR; immex(trap); fa(trap); tpop(old);}  // execute with force typeout, remove protection
@@ -178,10 +180,14 @@ static A jtsusp(J jt){A z;
  // Reset stack
  if(JT(jt,dbuser)&TRACEDB1){
   jt->cstackmin+=CSTACKSIZE/10;
+#if USEJSTACK
   jt->fcalln-=NFCALL/10;
+#endif
  } else {
   jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
+#if USEJSTACK
   jt->fcalln =NFCALL;
+#endif
  }
  debz(); 
  if(d)d->dcss=1;  // restore jgets() state if there is an active script
@@ -345,7 +351,9 @@ F1(jtdbc){I k;
  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the stack to allow suspension commands room to run
+#if USEJSTACK
  jt->fcalln=NFCALL>>(k&TRACEDB1);  // similarly reduce max fn-call depth
+#endif
  if(likely(!(k&TRACEDBDEBUGENTRY)))JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into debug, suppress this so we don't immediately come out of debug
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */

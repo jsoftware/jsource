@@ -133,7 +133,7 @@ void jtforeigninit(J jt){UI i;
  MN(18,2)  XPRIM(VERB, jtlocpath1,   jtlocpath2,   VFLAGNONE,VF2NONE,0,   1,   0   );
  MN(18,3)  XPRIM(VERB, jtloccre1,    jtloccre2,    VFLAGNONE,VF2NONE,RMAX,0,   RMAX);
  MN(18,4)  XPRIM(VERB, jtlocswitch,  0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);  // will be Andx=(sizeof(foreignA)/sizeof(foreignA[0]))-1;  scaf
- foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1]=foreignA[Andx]; AFLAG((A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1])|=AFRO;  // mark as unassignable name
+ foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1]=foreignA[Andx]; AFLAG((A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1])|=AFRO;  // mark as unassignable value
  MN(18,5)  XPRIM(VERB, jtlocname,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(128,2) XPRIM(VERB, 0,            jtapplystr,   VFLAGNONE,VF2NONE,RMAX,1,   RMAX);
  MN(128,5) XPRIM(VERB, jtisnan,      0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);

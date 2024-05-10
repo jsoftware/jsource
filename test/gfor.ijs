@@ -226,6 +226,15 @@ g1=: 3 : 0
 'control error' -: ex '3 : ''for. 4 5 6 7 '' '
 'control error' -: ex '3 : ''for. 4 5 6 7 for. 1 2 3 do. end.'' '
 
+NB. clearing readonly of xyz_index.
+f =: {{ for_k. ". y do. k end. }}
+'nonce error' -: f etx '$.i. 5'
+4 -: f 'i. 5'
+'domain error' -: f etx '>:a:'
+4 -: f 'i. 5'
+6 = {{ for_k. i. 5 do. if. k=3 do. break. end. end. for_k. 3 * i. k_index do. k end. }} 2  NB. k_index persists until second body
+
+
 
 NB. for. ----------------------------------------------------------------
 

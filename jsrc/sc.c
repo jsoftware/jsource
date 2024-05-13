@@ -17,7 +17,7 @@ DF2(jtunquote){A z;
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
  A savname=jt->curname;  // we stack the executing name
-#define FLGPSEUDOX 16  // operation is pseudo-named function
+#define FLGPSEUDOX 16  // operation is pseudo-named function  scaf move bits down
 #define FLGPSEUDO ((I)1<<FLGPSEUDOX)
 #define FLGCACHEDX 17  // operation is cached, not requiring lookup
 #define FLGCACHED ((I)1<<FLGCACHEDX)
@@ -27,10 +27,10 @@ DF2(jtunquote){A z;
 #define FLGPOPLOCALNEEDED ((I)1<<FLGPOPLOCALNEEDEDX)
 #define FLGLOCCHANGEDX 20  // the caller of this function has previously encountered cocurrent
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
-#define FLGDYADX 21  // operation is dyad - must be high bit in field
+#define FLGDYADX 21  // operation is dyad - must be high bit in field move to bit3?
 #define FLGDYAD ((I)1<<FLGDYADX)
 // obsolete // bits 0-15 hold the callstackx before execution
- I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad
+ I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad  scaf change to C
  // errors from here on must restore curname
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
@@ -172,18 +172,17 @@ DF2(jtunquote){A z;
  }
  // ************** from here on errors must pop the stack and unra() before exiting
  AF actionfn=FAV(fs)->valencefns[flgd0cpC>>FLGDYADX];  // index is 'is dyad'.  Load here to allow call address to settle.  If we move this any higher it gets spilled to memory
- w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed
+ w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
  if(likely(!(jt->uflags.ui4))) {
   // No special processing. Just run the entity
-  // We have to raise the usecount, in case the name is deleted while running.  But that will be very rare.  Plus, we know that the executable type is recursive and non-inplaceable.
-  // So, all we have to do is increment the usecount.  If it's a PERMANENT symbol no harm will be done, since we decrement below
   // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
   // possible before the branch.  Check the generated code on any change of compiler.
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through if the call supports inplacing
   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
+// when dyad is at bit 3 (J)((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace)
   if(unlikely(z==0)){jteformat(jt,fs,a,w,0);}  // make this a format point
  } else {
   // Extra processing is required.  Check each option individually
@@ -329,39 +328,39 @@ exitpop: ;
     }else{
      // We are in slow mode, which means the caller's stack must contain something.  It can't contain POPFROM, which is erased after it is read
      if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
-       // if the caller already has a locale-change token, we don't add another one.  The caller must have called the 18!:4 cover previously.  The previous implied locale, which
-       // we expected would be decremented on return from the caller, needs to be decremented now instead.  The new implied locale is retained and will be decremented when
-       // the CHANGE/FIRST is executed.
-       DECREXECCT(fromloc);   // undo the INCR of the formerly-ending exec, which is now just a middle
+      // if the caller already has a locale-change token, we don't add another one.  The caller must have called the 18!:4 cover previously.  The previous implied locale, which
+      // we expected would be decremented on return from the caller, needs to be decremented now instead.  The new implied locale is retained and will be decremented when
+      // the CHANGE/FIRST is executed.
+      DECREXECCT(fromloc);   // undo the INCR of the formerly-ending exec, which is now just a middle
      }else{
       // First 18!:4 in the caller.  Add a CHANGELOCALE entry to cause the implied locale to be decremented before the caller returns.
       pushcallstack1(CALLSTACKCHANGELOCALE,fromloc);
      }
     }
    }
-#else
-   // LSB of z will be set now iff what we just called was cocurrent
-   if(unlikely((I)z&1)){  // was the call to cocurrent?  (if error, it's just an error)
-     z=(A)((I)z&~1))); INCREXECCT(z);  // z has the locale to switch to.  clear flag bit; indicate new execution starting in the locale we switch to
-     if(flgd0cpC&FLGLOCCHANGED+FLGPOPNEEDED)DECREXECCT(jt->global)   // if jt->global was incremented when it was installed, undo the increment.  That is when the call to cocurrent used a locative or when it is a second call to cocurrent.
-        // If cocurrent was called with a locative, the temporary locale switch has no effect
-     SYMSETGLOBAL(jt->locsyms,z);   // install new globals pointers
-     z=mtm;  // we have switch; this is the result of cocurrent
-     jt->uflags.bstkreqd=1; // leave bstkreqd set as a flag indicating our caller has encountered cocurrent
-   }else{
-    // normal return from call
-    if(unlikely(jt->uflags.bstkreqd|(flgd0cpC&FLGPOPNEEDED))){  // normal case of non-locative call and no cocurrents called: no change needed, skip all this
-     // we must return to initloc, either because we are a locative call that moved the locale, or cocurrent was called.  The current locale is in execution and must be terminated;
-     // the initial execution before all changes remains in execution and all we have to do is switch to it.
-     DECREXECCT(jt->global)  // finish the executionwe moved to
-     if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){jt->locsyms=initloc; initloc=AKGST(initloc);}   // for u./v., move locals also
-     jt->global=initloc;  // restore original executing locale
-    }
-    jt->uflags.bstkreqd=(flgd0cpC>>FLGLOCCHANGEDX)&1;  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This is passed into the exitinig routine as FLGLOCCHANGED
-   }
-#endif
   }
  }
+#else
+ // LSB of z is set in the return iff what we just called was cocurrent
+ if(unlikely((I)z&1)){  // was the call to cocurrent?  (if error, it's just an error)
+  z=(A)((I)z&~1); INCREXECCT(z);  // z has the locale to switch to.  clear flag bit; indicate new execution starting in the locale we switch to
+  if(flgd0cpC&FLGLOCCHANGED+FLGPOPNEEDED)DECREXECCT(jt->global)   // if jt->global was incremented when it was installed, undo the increment.  That is when the call to cocurrent used a locative or when it is a second call to cocurrent.
+     // If cocurrent was called with a locative, the temporary locale switch has no effect
+  SYMSETGLOBAL(jt->locsyms,z);   // install new globals pointer
+  z=mtm;  // we have switched; this will be the result of cocurrent
+  jt->uflags.bstkreqd=1; // leave bstkreqd set as a flag indicating our caller has encountered cocurrent
+ }else{
+  // normal return from call, possibly an error
+  if(unlikely(jt->uflags.bstkreqd|(flgd0cpC&FLGPOPNEEDED))){  // normal case of non-locative call and no cocurrents called: no change needed, skip all this
+   // we must return to initloc, either because we are a locative call that moved the locale, or cocurrent was called.  The current locale is in execution and must be terminated;
+   // the initial execution before all changes remains in execution and all we have to do is switch to it.
+   DECREXECCT(jt->global)  // finish the execution we moved to
+   if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){jt->locsyms=initloc; initloc=AKGST(initloc);}   // for u./v., move locals also
+   jt->global=initloc;  // restore original executing locale
+  }
+  jt->uflags.bstkreqd=(flgd0cpC>>FLGLOCCHANGEDX)&1;  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This is passed into the exiting routine as FLGLOCCHANGED
+ }
+#endif
  // ************** errors OK now
 exitfa:
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){faacv(fs);}  // unra the name if it was looked up from the symbol tables

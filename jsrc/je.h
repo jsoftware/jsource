@@ -55,6 +55,8 @@ extern F1(jtcdq);
 // extern F1(jtceil1);
 extern F1(jtcerrno);
 extern F1(jtcheckfreepool);
+extern F1(jtsetgetrecurstate);
+extern F1(jtcallJDo);
 extern DF1(jtcompsum);
 // extern F1(jtconjug);
 extern F1(jtcpufeature);

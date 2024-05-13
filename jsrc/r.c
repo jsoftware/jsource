@@ -46,6 +46,7 @@ F1(jtdrep){A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
 F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  ARGCHK1(w);
  if(FUNC&AT(w)){
+  if(unlikely(AFLAG(w)&AFRO))if(AT(w)&VERB){R str(12,"cocurrent_z_");}  // readonly name, must not expand it.  We don't have access to the name used
   v=FAV(w); id=v->id;
   I fndx=(id==CBDOT)&&!v->fgh[0]; fs=v->fgh[fndx]; gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
   if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R aro(gs);  // if <@:t. discard the <@:

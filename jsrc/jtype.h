@@ -149,6 +149,7 @@ typedef AD *A;
 // following bit is used in the call to jtxdefn/unquote to indicate the execution is of a modifier
 // This bit is set in ALL calls to modifiers, in case they are named
 // ****** This bit should not be used for any other purpose ******
+// ****** this should be the highest flag bit, because it & above bits are preserved for the call
 #define JTXDEFMODIFIERX      8   // the executed entity is an adverb or conjunction
 #define JTXDEFMODIFIER       (((I)1)<<JTXDEFMODIFIERX)
 

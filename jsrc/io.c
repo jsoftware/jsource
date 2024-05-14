@@ -375,7 +375,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
     1!:1[1 read from keyboard */
  showerr();  // there may be error text that has not been emitted.  jt->jerr will be clear.
  ASSERT(IJT(jt,promptthread)==THREADID(jt),EVINPRUPT)  // only one thread is allowed to read from m : 0 or stdin - make sure we are it
- ASSERT(!jt->recurstate&RECSTATEPROMPTING,EVCTRL)   // if we are already prompting, a second prompt would be unrecoverable & we fail this request
+ ASSERT(!(jt->recurstate&RECSTATEPROMPTING),EVCTRL)   // if we are already prompting, a second prompt would be unrecoverable & we fail this request
  ASSERT(IJT(jt,nfe)||IJT(jt,sminput),EVBREAK);  // make sure there is a routine to read with
  // read from the front end. This is either through the nfe path or via the callback to the FE
  // make sure only one thread prompts at a time.

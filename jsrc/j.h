@@ -2178,9 +2178,10 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
-#define WITHDEBUGOFF(stmt) {UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
-  C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
-  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end
+#define MAYBEWITHDEBUG(dbg,jt,stmt) if(dbg){stmt}else{UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
+ C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
+ stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end
+#define WITHDEBUGOFF(stmt) MAYBEWITHDEBUG(0,jt,stmt)
 #define WITHEFORMATDEFERRED(stmt) {WITHDEBUGOFF(stmt) if(unlikely(jt->jerr!=0)){UC _d=jt->jerr; RESETERR ASSERT(0,_d)}}  // execute stmt with debug/eformat turned off; at end, if there is an error, re-signal it
 // If the abandoned value we want to ra is likely the last thing on the tstack, look to see if it is.  If so, just back up the tstack (if that backs over to the chain field, that will never match
 // the ZAP pointer and we will not modify tpushnext).  Otherwise ZAP the block

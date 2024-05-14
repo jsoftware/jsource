@@ -169,6 +169,67 @@ JHS has the additional complication of critical sections of J code
 */
 
 /*
+Example J script using window driver (wd).
+
+f=: 3 :0
+NB. p is path to non-existent file.
+p=: '~/j9.5-user/temp/42.ijs'
+wd 'sm open tab *' , p
+)
+f ''
+
+Flow diagram.
+
+Qt                                        JE
+JDo, lp="f ''"
+                                          JDo recurstate=0
+                                          jdo recurstate=1
+                                          Calls jtsettaskrunning.
+                                          wd 'sm open tab *...'
+                                          wd runs and sets recurstate=0.
+                                          wd1, 15!:0
+Parses 'sm open tab *...'.
+smopen()
+Sequence of calls to get absolute path to file
+using J script >{.getscripts_j_ '~/j9.5-user/temp/42.ijs'
+smgetscript(), dors(), dora().
+dora requests that JE calculate the path.
+Calls JDo, lp="r_jrx_=:>{.getscripts_j_
+   '~/j9.5-user/temp/42.ijs'".
+                                          JDo recurstate=1
+                                          jdo recurstate=1
+                                          Calls jtsettaskrunning.
+                                          JDo gets return from jdo and sets recurstate=0.
+Calls JDo, lp="q_jrx_=:4!:0<'r_jrx_'".
+                                          JDo recurstate=1
+                                          jdo recurstate=1
+                                          Calls jtsettaskrunning.
+                                          JDo gets return from jdo and sets recurstate=0.
+Calls JGetA, name="q_jrx_".
+                                          JGetA recurstate=0
+Calls JGetA, name="r_jrx_".
+                                          JGetA recurstate=0
+Gets the pointer to result (r_jrx) and
+additional information (q_jrx).
+Uses q_jrx to check if type and rank are correct.
+dors returns absolute path as std::string.
+smopen detects that file does not exist.
+Returns 1(=error) to wd.
+                                          wd 'qer'
+                                          wd1, 15!:0
+Returns error string.
+                                          wd 'qer' returns error string to first wd.
+                                          'error string' 13!:8 (3)
+                                          Calls jtclrtaskrunning.
+
+                                          Beware!
+                                          There WAS the following bug when the debugger was enabled.
+                                          Immediately enters debug inside wd.
+                                          Goes into debug suspension before it has returned to JQt - lockup.
+                                          Fixed (May 2024).
+*/
+
+/*
 Internally, on avx2/avx512 builds, JE always uses avx instructions, never sse instructions.
 Hence, we keep the cpu in avx mode all the time, instructing the compiler to avoid emitting spurious vzeroupper instructions between internal function boundaries with -mno-vzeroupper.
 However, a frontend might call into je and then try to execute some sse instructions while the cpu is still in avx mode, and thereby enter dirty high half mode, slowing down for no reason; that would be bad.
@@ -539,7 +600,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   8=multithreaded
 // smdowd = function pointer to Jwd, if NULL nothing will be called
   ASSERT(IJT(jt,smdowd),EVDOMAIN);
-  jt->recurstate&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
+  I origstate=jt->recurstate; jt->recurstate=RECSTATEPROMPT;  // host sentences run in RECUR state
   if(SMOPTLOCALE&IJT(jt,smoption)) {
 // pass locale as parameter of callback
     e=((dowdtype2)(IJT(jt,smdowd)))(JJTOJ(jt), (int)t, w, &z, getlocale(JJTOJ(jt)));
@@ -547,7 +608,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 // front-end will call getlocale() inside callback
     e=((dowdtype)(IJT(jt,smdowd)))(JJTOJ(jt), (int)t, w, &z);
   }
-  jt->recurstate|=RECSTATEBUSY;  // wd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
+  jt->recurstate=origstate;  // wd complete, restore previous running state
   if(!e) R mtm;   // e==0 is MTM
   ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
   if(SMOPTPOLL&IJT(jt,smoption)){jt->recurstate=RECSTATEPROMPT; z=(A)((polltype)(IJT(jt,smpoll)))(JJTOJ(jt), (int)t, (int)e); jt->recurstate=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
@@ -569,8 +630,12 @@ static char breaknone=0;
 B jtsesminit(JS jjt, I nthreads){R 1;}
 
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
-CDPROC int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;
+CDPROC int _stdcall JDo(JS jt, C* lp){int r; int dbg=1; UI savcstackmin, savcstackinit, savqtstackinit;
  SETJTJM(jt,jm)
+ if (jm->recurstate>=RECSTATEPROMPT) {
+  // Debug should be turned off for ALL recursive calls (which can come from callbacks from jtwd or from user events during a prompt).
+  dbg=0;
+ }
   // Normal output.  Call the output routine
  if(unlikely(jm->recurstate>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
@@ -584,7 +649,7 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, sav
   if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
  ++jm->recurstate;  // advance, to BUSY or RECUR state
- r=(int)jdo(jt,lp);
+ MAYBEWITHDEBUG(dbg,jm,r=(int)jdo(jt,lp);)
  if(unlikely(--jm->recurstate>RECSTATEIDLE)){  // return to IDLE or PROMPT state
   // return from recursive call.  Restore stackpointers
   jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // restore stack pointers after recursion
@@ -593,7 +658,7 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, sav
   // after nfeinput, but we dare not until the sentence has been executed, lest we deallocate the unexecuted sentence.  Also we have to suppress the pops while there is a
   // pm debug stack.  We take advantage of the fact that the popto point doesn't change, save that here, and suppress the pop during pm
  while(JT(jt,nfe)){  // nfe normally loops here forever
-  r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));  // use jt to force output in nfeinput
+  MAYBEWITHDEBUG(dbg,jm,r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));) // use jt to force output in nfeinput
   // If there is a postmortem stack active, jdo has frozen tpops and we have to honor that here, to keep the stack data allocated.
   if(likely(jm->pmttop==0))jttpop(jm,old,jm->tnextpushp);  // when the stack has been tpopped it is safe for us to resume
  }

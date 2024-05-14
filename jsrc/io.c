@@ -415,6 +415,10 @@ static void runiep(JS jjt,JJ jt,A *old){
  }
 }
 
+// execute the given sentence.  Result is 0 if OK, otherwise error code
+// We handle postmortem debugging here.
+// The sentence may have components that require prompting (m : 0 or {{ }}), which we allow from console only
+// at end, if sentence was from console, execute iep if any before returning
 static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread struct we are executing in (the master/debug thread)
  jm->jerr=0; jm->etxn=0; /* clear old errors */
  // if the previous console sentence ended with error, and the user replies with ENTER (i. e. empty string), treat that as a request to debug.
@@ -571,7 +575,7 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, sav
  if(unlikely(jm->recurstate>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
   savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
-  ASSERTTHREAD(!(jm->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR
+  ASSERTTHREAD(!(jm->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR scaf no ASSERT
   // we know that in PROMPT state there is no volatile C state about, such as zombie status
  }
  if(JT(jt,cstacktype)==2){

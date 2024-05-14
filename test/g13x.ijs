@@ -436,6 +436,17 @@ if. 3 = 4!:0<'f' do. eformat_j_ =: f f. end.
 1
 }} ''
 
+NB. test host recursion states
+1: 0 : 0  NB. beta scaf
+1 = 13!:_9 ''  NB. 13!:_9 sets/reads state, which is prompt/recur/unsafe
+([ 13!:_9@1:) 'control error' -: 1!:1 etx 1 [ 13!:_9 (5)   NB. set in prompt mode, verify reprompt fails
+23 = 13!:_10 '1+1'   NB. 13!:_10 (run through JDo) returns error code (control error, unallowed recursion)
+1 = 13!:_9 '' [ 13!:10 '1+1' [ 13!:_9 (0)   NB. verify return to nonrecur level
+(>:3) -: 13!:_10 '13!:8 >: 13!:_9$0' [ 13!:_9 (0)  NB. route state through error code 
+(>:3) -: 13!:_10 '13!:_10 ''13!:8 >: 13!:_9$0' [ 13!:_9 (2)'' [ 13!:_9 (0)  NB. second recursive call stays recursive 
+(>:3) -: 13!:_10 '13!:8 >: 13!:_9$0 [ 13!:_10 ''1+1'' [ 13!:_9 (2)' [ 13!:_9 (0)  NB. second recursive call returns to recursive 
+)
+
 NB. ------------ eformat ---------------------------------------------------
 
 1 e. '(0)' E. 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun

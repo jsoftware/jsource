@@ -3,7 +3,7 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
-#define USEJSTACK 1
+#define USEJSTACK 0
 
 #if defined(__clang_major__) && !defined(__clang__)
 #error need workaround by define __clang__ in preprocessor macro

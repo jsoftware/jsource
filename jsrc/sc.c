@@ -217,26 +217,14 @@ DF2(jtunquote){A z;
   if(d)debz();  // release stack frame if allocated
  }
 
- // Now pop the stack.  Execution may have added entries, but our stack frame always starts in the same place.
- // We may add entries to the end of the caller's stack frame
+ // Now pop the stack.  The pushes use the C stack; flags in flgd0cpC indicate which global values need to be restored
  //
  // The possibilities are:
  // 1. nothing (most likely) - we called a simple name and it returned
- // 2. just a CALLSTACKPOPLOCALE - we called a locative and it returned.  We have to restore the implied locale, which was saved on the stack, and decr the ending locale
- // 3. cocurrent puts a CALLSTACKPOPFROM entry giving the implied locale before the switch.  If there is a POPLOCALE, decr the locale before the switch, incr the one we moved to.  If no POPLOCALE, turn the POPFROM into a POPLOCALE and increment the new locale.
+ // 2. just a CALLSTACKPOPLOCALE - we called a locative and it returned. 
+ // 3. cocurrent (detected by return with LSB of z=1) keep the changed locale
+ // 4. u./v. pushes CALLSTACKPUSHLOCALSYMS to save the LOCAL symbol table. Then it looks like a locative
 
-//  scaf We expect that 18!:4 is called through a cover name and if we see it on the stack we
- //   suppress restoring the global locale when the current name (which must be the cover name) completes.  But, we have to make sure that the previous name, which
- //   might not have had any stack entry at all, knows to reset the implied locales when IT finishes.  [The problem is that there might be a string of calls with nothing on the stack,
- //   and then the 18!:4, and you need a marker to indicate which call the 18!:4 applies to.]  So, at the very end, we put a CALLSTACKPOPLOCALEFIRST entry into the
- //   CALLER's stack to notify it of what its starting locale was.  But there is a further mess: there might be oodles of calls to 18!:4 is a row, and if each one pushes CALLSTACKPOPLOCALEFIRST into
- //   its caller, the stack will overflow.  To prevent this, when we push the CALLSTACKPOPLOCALEFIRST onto the caller's stack we enter a new mode, wherein EVERY call starts with
- //   POPLOCALE.  Now there is no ambiguity about where the 18!:4 applies, and we can simply remove them as they come up.
-
-
-
- // 4. u./v. pushes CALLSTACKPUSHLOCALSYMS to save the LOCAL symbol table.  It overrides any other locale resetting above, is always first, and is always followd by CALLSTACKPOPLOCALE
- //
  // We also handle deletion of locales as they leave execution.  Locales cannot be deleted while they are pointed to by paths.  The AC is used to see when there are
  // no references to a locale, as usual; but if the locale has been marked for deletion and is no longer running, it is half-deleted, losing its path and all its symbols,
  // and exists as a zombie until its path references disappear.  To tell if a locale is running, we use a separate 'execution count' stored in AR, which is like a low-order extension
@@ -245,7 +233,16 @@ DF2(jtunquote){A z;
  // To prevent half-deletion while the locale is running, we increment the execution count when an execution (including the first) switches into the locale, and decrement the
  // execution count when that execution completes (either by a switch back to the previous locale or a successive 18!:4).
  // scaf AR is only 8 bits; if we call back & forth between 2 locales we could overflow the count at a call depth of 512.  Should have a longer count field, perhaps using 2 bytes starting at AR.
- //
+
+exitpop: ;
+#if USEJSTACK
+//  scaf We expect that 18!:4 is called through a cover name and if we see it on the stack we
+ //   suppress restoring the global locale when the current name (which must be the cover name) completes.  But, we have to make sure that the previous name, which
+ //   might not have had any stack entry at all, knows to reset the implied locales when IT finishes.  [The problem is that there might be a string of calls with nothing on the stack,
+ //   and then the 18!:4, and you need a marker to indicate which call the 18!:4 applies to.]  So, at the very end, we put a CALLSTACKPOPLOCALEFIRST entry into the
+ //   CALLER's stack to notify it of what its starting locale was.  But there is a further mess: there might be oodles of calls to 18!:4 is a row, and if each one pushes CALLSTACKPOPLOCALEFIRST into
+ //   its caller, the stack will overflow.  To prevent this, when we push the CALLSTACKPOPLOCALEFIRST onto the caller's stack we enter a new mode, wherein EVERY call starts with
+ //   POPLOCALE.  Now there is no ambiguity about where the 18!:4 applies, and we can simply remove them as they come up.
  // scaf Locale switches through 18!:4 take advantage of the fact that the cover verb does nothing except the 18!:4 function and thus cannot alter locales itself.
  // The 18!:4 is treated as the start of a new execution for execution-count purposes, and always ensures that the last thing in the caller's stack is either CALLSTACKPOPLOCALEFIRST (for the
  // very first 18!:4) or CALLSTACKCHANGELOCALE (for others).  When 18!:4 is executed, if the caller's stack ends with POPFIRST or CHANGELOCALE, that must mean that the 18!:4 being executed
@@ -255,8 +252,6 @@ DF2(jtunquote){A z;
  // the locale in the POPFIRST/CHANGELOCALE must be from the FIRST 18!:4 which will give the starting locale, though we could equally take this value from explocale)
  //
  // Note that the POPFROM after the first propagates back through the stack until it is annihilated by the POPFIRST.
-exitpop: ;
-#if USEJSTACK
  I callstackx=(US)flgd0cpC;  // extract the init call stackx, which we will use to analyze
  if(unlikely(callstackx!=jt->callstacknext)){  // normal case, with no stack, bypasses all this
   // There are stack entries.  Process them

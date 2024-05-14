@@ -373,20 +373,20 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
     debug suspension for normal input
     n : 0 input lines up to terminating ), or {{ reading for trailing }}
     1!:1[1 read from keyboard */
- ASSERT(IJT(jt,promptthread)==THREADID(jt),EVINPRUPT)  // only one thread is allowed to read from m : 0 or stdin - make sure we are it
- ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)   // if we are already prompting, a second prompt would be unrecoverable & we fail this request
- ASSERT(IJT(jt,nfe)||IJT(jt,sminput),EVBREAK);  // make sure there is a routine to read with
  showerr();  // there may be error text that has not been emitted.  jt->jerr will be clear.
+ ASSERT(IJT(jt,promptthread)==THREADID(jt),EVINPRUPT)  // only one thread is allowed to read from m : 0 or stdin - make sure we are it
+ ASSERT(!jt->recurstate&RECSTATEPROMPTING,EVCTRL)   // if we are already prompting, a second prompt would be unrecoverable & we fail this request
+ ASSERT(IJT(jt,nfe)||IJT(jt,sminput),EVBREAK);  // make sure there is a routine to read with
  // read from the front end. This is either through the nfe path or via the callback to the FE
- // make sure only one thread prompts at a time.  Prompting is rare & we just kludge up a spinlock for this
- jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
- if(IJT(jt,nfe)){
+ // make sure only one thread prompts at a time.
+ I origstate=jt->recurstate; jt->recurstate|=RECSTATERENT+RECSTATEPROMPTING; jt->recurstate&=~RECSTATERUNNING;  // indic reenterable & prompt; if any sentences come into JDo during the call, they are recursions
+ if(IJT(jt,nfe)){  // call the front end to prompt
   // Native Front End
   v=nfeinput(JJTOJ(jt),*p?"input_jfe_'      '":"input_jfe_''");   // use jt so always emit prompt
  }else{
   v=((inputtype)(IJT(jt,sminput)))(JJTOJ(jt),p);
  }
- jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state
+ jt->recurstate=origstate;   // prompt complete, go back to normal (running) state
  R inpl(b,(I)strlen(v),v);  // return A block for string
 }
 
@@ -484,7 +484,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  jm->jerr=0; jm->etxn=0; /* clear old errors */
  // if the previous console sentence ended with error, and the user replies with ENTER (i. e. empty string), treat that as a request to debug.
  // on any other reply, free up the values and allocations made by the failing sentence
- if(unlikely(jm->pmstacktop!=0&&jm->recurstate<RECSTATEPROMPT)){  // last sentence failed, and ran to completion to get a full error stack
+ if(unlikely(jm->pmstacktop!=0&&!(jm->recurstate&RECSTATERENT))){  // last sentence failed and ran to completion to get a full error stack; and our line is from the console
   C *lp2; for(lp2=lp;*lp2;++lp2)if(*lp2!=' '&&*lp2!='\t'&&*lp2!='\n')break;   // stop on non-whitespace or end-of-string
   if(*lp2){  // nonnull string
    // user responded to error with a new sentence.  Clear the error stack
@@ -515,7 +515,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
 // obsolete  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
 // obsolete  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
- x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>SYMLINFOSIZE));  // allow reads from jgets() if not recursive; return enqueue() result
+ x=jtddtokens(jm,x,(((jm->recurstate&RECSTATERENT)<<(2-RECSTATERENTX)))+1+(AN(jm->locsyms)>SYMLINFOSIZE));  // allow reads from jgets() if not recursive; return enqueue() result
  if(!jm->jerr)jtimmexexecct(jm,x);  //  ****** here is where we execute the user's sentence ******
  // if the result is an exit from suspension (which must be from dbr because we aren't now actually in a suspension), and there is a stack, purge symbols from the private symbs and free memory back to the error
  if(unlikely(JT(jt,dbuser)&TRACEDBSUSCLEAR)){  // if user executed dbr...
@@ -536,9 +536,9 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  // All these immexes run with result-display enabled (jt flags=0)
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
 #if USEJSTACK
- if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);  // IEP does not display its errors
+ if(likely(!(jm->recurstate&RECSTATERENT)))runiep(jt,jm,old,savcallstack);  // IEP does not display its errors
 #else
- if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old);  // IEP does not display its errors
+ if(likely(!(jm->recurstate&RECSTATERENT)))runiep(jt,jm,old);  // IEP does not display its errors
 #endif
  if(likely(wasidle)){  // returning to immex in the FE
   jtclrtaskrunning(jm);  //  clear running state in case other tasks are running and need system lock - but not if recursion
@@ -600,7 +600,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   8=multithreaded
 // smdowd = function pointer to Jwd, if NULL nothing will be called
   ASSERT(IJT(jt,smdowd),EVDOMAIN);
-  I origstate=jt->recurstate; jt->recurstate=RECSTATEPROMPT;  // host sentences run in RECUR state
+  I origstate=jt->recurstate; jt->recurstate|=RECSTATERENT; jt->recurstate&=~RECSTATERUNNING;  // indic reenterable, and a console task is running
   if(SMOPTLOCALE&IJT(jt,smoption)) {
 // pass locale as parameter of callback
     e=((dowdtype2)(IJT(jt,smdowd)))(JJTOJ(jt), (int)t, w, &z, getlocale(JJTOJ(jt)));
@@ -611,7 +611,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   jt->recurstate=origstate;  // wd complete, restore previous running state
   if(!e) R mtm;   // e==0 is MTM
   ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
-  if(SMOPTPOLL&IJT(jt,smoption)){jt->recurstate=RECSTATEPROMPT; z=(A)((polltype)(IJT(jt,smpoll)))(JJTOJ(jt), (int)t, (int)e); jt->recurstate=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
+  if(SMOPTPOLL&IJT(jt,smoption)){ jt->recurstate|=RECSTATERENT; jt->recurstate&=~RECSTATERUNNING; z=(A)((polltype)(IJT(jt,smpoll)))(JJTOJ(jt), (int)t, (int)e); jt->recurstate=origstate; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
   if(SMOPTNOJGA&IJT(jt,smoption)) z=ca(z);  // front-end promised not to use Jga to allocate memory, but not yet used in any front-end
   if(e==-1){      // e==-1 is lit or int
   RETF(z);
@@ -630,14 +630,22 @@ static char breaknone=0;
 B jtsesminit(JS jjt, I nthreads){R 1;}
 
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
-CDPROC int _stdcall JDo(JS jt, C* lp){int r; int dbg=1; UI savcstackmin, savcstackinit, savqtstackinit;
+// Run sentence; result is jt->jerr
+CDPROC int _stdcall JDo(JS jt, C* lp){int r;
  SETJTJM(jt,jm)
- if (jm->recurstate>=RECSTATEPROMPT) {
-  // Debug should be turned off for ALL recursive calls (which can come from callbacks from jtwd or from user events during a prompt).
-  dbg=0;
- }
-  // Normal output.  Call the output routine
- if(unlikely(jm->recurstate>RECSTATEIDLE)){
+// obsolete  if (jm->recurstate>=RECSTATEPROMPT) {
+// obsolete   // Debug should be turned off for ALL recursive calls (which can come from callbacks from jtwd or from user events during a prompt).
+// obsolete   dbg=0;
+// obsolete  }
+ // Move to next state.  If we are not interruptible, that's an error
+ I origrstate=jm->recurstate;   // save initial state
+ if(unlikely(origrstate&RECSTATERUNNING))R EVCTRL;  // running: reentrance not alllowed
+ jm->recurstate|=RECSTATERUNNING;  // if we were from console, this goes to running.  If we are running already, we must be at a recursion point that set RENT
+
+ // set the stacklimits to use.  Normally we keep the same stackpointer throughout, but (1) if the FE is multithreaded, we check for a new one on each call and restore it after a reentrant call
+ UI savcstackmin=0, savcstackinit, savqtstackinit;
+#if 0  // obsolete
+  if(unlikely(origrstate&RECSTATERENT)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
   savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
   ASSERTTHREAD(!(jm->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR scaf no ASSERT
@@ -648,17 +656,33 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r; int dbg=1; UI savcstackmin, savcsta
   JT(jt,qtstackinit) = (uintptr_t)&jt;
   if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
- ++jm->recurstate;  // advance, to BUSY or RECUR state
- MAYBEWITHDEBUG(dbg,jm,r=(int)jdo(jt,lp);)
+#else
+ if(JT(jt,cstacktype)==2){
+  // multithreaded FE.  Reinit the stack limit on every call, as long as cstackmin is nonzero
+  JT(jt,qtstackinit) = (uintptr_t)&jt;
+  if(jm->cstackmin){
+   if(origrstate&RECSTATERENT)savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion
+   jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
+  }
+ }
+
+#endif
+// obsolete  ++jm->recurstate;  // advance, to BUSY or RECUR state
+ MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,lp);)
+#if 0   // obsolete
  if(unlikely(--jm->recurstate>RECSTATEIDLE)){  // return to IDLE or PROMPT state
   // return from recursive call.  Restore stackpointers
   jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // restore stack pointers after recursion
  }
+#else
+ if(unlikely(savcstackmin!=0))jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // if stack pointers were saved, retire them
+ jm->recurstate=origrstate;   // restore original idle/rent state
+#endif
  A *old=jm->tnextpushp;  // For JHS we call nfeinput, which comes back with a string address, perhaps after considerable processing.  We need to clean up the stack
   // after nfeinput, but we dare not until the sentence has been executed, lest we deallocate the unexecuted sentence.  Also we have to suppress the pops while there is a
   // pm debug stack.  We take advantage of the fact that the popto point doesn't change, save that here, and suppress the pop during pm
  while(JT(jt,nfe)){  // nfe normally loops here forever
-  MAYBEWITHDEBUG(dbg,jm,r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));) // use jt to force output in nfeinput
+  MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));) // use jt to force output in nfeinput
   // If there is a postmortem stack active, jdo has frozen tpops and we have to honor that here, to keep the stack data allocated.
   if(likely(jm->pmttop==0))jttpop(jm,old,jm->tnextpushp);  // when the stack has been tpopped it is safe for us to resume
  }

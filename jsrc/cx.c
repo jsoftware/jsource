@@ -368,7 +368,7 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
   // Check for debug and other modes
   if(unlikely(jt->uflags.trace)){  // fast check to see if we have overhead functions to perform
    // here to handle debug jump, perf monitor, or any other unusual cases
-   if(!(NPGpysfmtdl&1)&&jt->recurstate<RECSTATEPROMPT){  // only if not locked and not recursive
+   if(!(NPGpysfmtdl&1)&&!(jt->recurstate&RECSTATERENT)){  // only if not locked and not recursive
     if(unlikely(!(NPGpysfmtdl&16))){  // if we have never allocated debug stack
      // if debug/perfmon is set, or has ever been set while this defn is running, there are 2 stack frames available: top of stack is a PARSE frame used for requesting line changes & ? else, and the
      // frame below the top is a DCCALL type which will hold debug info.  If the caller was unquote, it will have opened a CALL for the name, which can reuse (once)

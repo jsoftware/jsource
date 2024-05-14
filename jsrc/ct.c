@@ -465,7 +465,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
    memset(&jt->uflags.init0area,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.init0area));    // clear what should be cleared - up to locsyms
    A startloc=jt->global;  // extract the globals from the job
-   jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATEBUSY;  // init what needs initing.  Notably clear the local symbols
+   jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
 #if USEJSTACK

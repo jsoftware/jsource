@@ -1336,7 +1336,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp!=0,DEBADFN);}else fp=cc->fp;
 
  // call it.  This is a safe recursion point.
- I origstate=jt->recurstate; jt->recurstate=RECSTATEPROMPT;  // if any sentences come into JDo during the call, they are recursions
+ I origstate=jt->recurstate; jt->recurstate|=RECSTATERENT; jt->recurstate&=~RECSTATERUNNING;  // indic reenterable; if any sentences come into JDo during the call, they are recursions
  docall(fp, data, dv-data, dd, dcnt, cc->zl, xv, cc->alternate);  // call the function, set the result
  jt->recurstate=origstate;  // cd complete, go back to previous state
  DO(cipcount, convertup(cip[i].v,cip[i].n,cip[i].t,cip[i].cxlgsz);); /* convert s and int to I and f to d as required */

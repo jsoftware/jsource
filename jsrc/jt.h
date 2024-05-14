@@ -147,11 +147,13 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?
  US ranks;            // low half: rank of w high half: rank of a; for IRS. init for task to 3F3F
- C recurstate;       // state of recursions through JDo    init for task to BUSY
-#define RECSTATEIDLE    0  // JE is inactive, waiting for work
-#define RECSTATEBUSY    1  // JE is running a call from JDo
-#define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
-#define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
+ C recurstate;       // state of recursions through JDo    init for task to RECSTATERUNNING
+#define RECSTATERUNNINGX 0  // JE is running, recursive call not allowed
+#define RECSTATERUNNING (1LL<<RECSTATERUNNINGX)
+#define RECSTATERENTX 1 // JE has been reentered
+#define RECSTATERENT (1LL<<RECSTATERENTX)
+#define RECSTATEPROMPTINGX 2  // JE is at a prompt, a second prompt is not allowed
+#define RECSTATEPROMPTING (1LL<<RECSTATEPROMPTINGX)
 // **************************************  end of initialized part
 
  C persistarea[0];  // end of area set at task startup

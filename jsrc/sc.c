@@ -42,6 +42,7 @@ DF2(jtunquote){A z;
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
      RZSUFF(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find/create locale
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
+     explocale=explocale==jt->global?0:explocale;  // ignore locative if it does not change locale (saves atomic execct fiddling) 
     }
    }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
@@ -69,6 +70,7 @@ DF2(jtunquote){A z;
       if(!(NAV(thisname)->flag&NMILOC))FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
+     explocale=explocale==jt->global?0:explocale;  // ignore locative if it does not change locale (saves atomic execct fiddling) 
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
      if(fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
@@ -86,6 +88,7 @@ DF2(jtunquote){A z;
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
    // we have to wait till here to 
    if(unlikely((FAV(self)->flag2>>(VF2CACHEABLEX-QCNAMEDX))&namedloc)){   // cacheable nameref, and value found in a named locale
+    // the nameref is cachable.  Fill it in.  Happends the first time a cachable reference is encountered
     // point the nameref to the lookup result.  This prevents further changes to the lookup
     WRITELOCK(fs->lock);  // we want to cache a name only once
     if(FAV(self)->localuse.lu1.cachedref==0){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
@@ -339,8 +342,9 @@ exitpop: ;
  // LSB of z is set in the return iff what we just called was cocurrent
  if(unlikely((I)z&1)){  // was the call to cocurrent?  (if error, it's just an error)
   z=(A)((I)z&~1); INCREXECCT(z);  // z has the locale to switch to.  clear flag bit; indicate new execution starting in the locale we switch to
-  if(flgd0cpC&FLGLOCCHANGED+FLGPOPNEEDED)DECREXECCT(jt->global)   // if jt->global was incremented when it was installed, undo the increment.  That is when the call to cocurrent used a locative or when it is a second call to cocurrent.
-     // If cocurrent was called with a locative, the temporary locale switch has no effect
+  if(flgd0cpC&FLGPOPNEEDED)DECREXECCT(jt->global)     // If the call was a locative (cocurrent_l_) we temporarily started an execution in l.  We must close that now
+  if(flgd0cpC&FLGLOCCHANGED)DECREXECCT(initloc)   // if the caller's locale was moved to by cocurrent, it must be freed, replaced by z.  No DECR is performed for the FIRST cocurrent, so if that was entered by a locative
+         // it will be owed a DECR.  We can't DECR the first call because it might be in execution higher in the stack and already have a delete outstanding
   SYMSETGLOBAL(jt->locsyms,z);   // install new globals pointer
   z=mtm;  // we have switched; this will be the result of cocurrent
   jt->uflags.bstkreqd=1; // leave bstkreqd set as a flag indicating our caller has encountered cocurrent
@@ -349,6 +353,7 @@ exitpop: ;
   if(unlikely(jt->uflags.bstkreqd|(flgd0cpC&FLGPOPNEEDED))){  // normal case of non-locative call and no cocurrents called: no change needed, skip all this
    // we must return to initloc, either because we are a locative call that moved the locale, or cocurrent was called.  The current locale is in execution and must be terminated;
    // the initial execution before all changes remains in execution and all we have to do is switch to it.
+   if(jt->uflags.bstkreqd&&(flgd0cpC&FLGPOPNEEDED))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  scaf make bit 0 to avoid &&
    DECREXECCT(jt->global)  // finish the execution we moved to
    if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){jt->locsyms=initloc; initloc=AKGST(initloc);}   // for u./v., move locals also
    jt->global=initloc;  // restore original executing locale

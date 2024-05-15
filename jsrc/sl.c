@@ -401,6 +401,29 @@ F1(jtlocnl1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w,
 // 18!:_3 locale name list, but including zombie locales
 F1(jtlocnlz1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w,1);}
 
+// 18!:_4 locale header, including exec and del counts
+F1(jtlochdr){
+ ASSERT(AR(w)==0,EVRANK)
+ RZ(vlocnl(0,w));
+ A y;
+ if(AT(w)&(INT|B01)){y=findnl(BIV0(w));  // if integer, look it up
+ }else{
+  w=AAV(w)[0];  // move to contents of box
+  if(!AR(w)&&AT(w)&((INT|B01))){  // atomic numeric locale
+   y=findnl(BIV0(w));  // OK because the boxed value cannot be virtual, thus must have padding
+  }else{
+   // string locale, whether number or numeric
+   I m=AN(w); C *u=CAV(w); 
+   ASSERT(vlocnm(m,u),EVILNAME);
+   if(u[0]<='9') y=findnl(strtoI10s(m,u));
+   else y=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u));
+  }
+ }
+ ASSERT(y!=0,EVLOCALE)  // fail if nonexistent
+ R vec(INT,8,y);  // counts are in s[0]
+}
+
+
 F2(jtlocnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);

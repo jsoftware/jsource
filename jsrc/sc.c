@@ -17,7 +17,8 @@ DF2(jtunquote){A z;
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
  A savname=jt->curname;  // we stack the executing name
-#define FLGPSEUDOX 16  // operation is pseudo-named function  scaf move bits down
+#if USEJSTACK   // obsolete 
+#define FLGPSEUDOX 16  // operation is pseudo-named function
 #define FLGPSEUDO ((I)1<<FLGPSEUDOX)
 #define FLGCACHEDX 17  // operation is cached, not requiring lookup
 #define FLGCACHED ((I)1<<FLGCACHEDX)
@@ -27,10 +28,24 @@ DF2(jtunquote){A z;
 #define FLGPOPLOCALNEEDED ((I)1<<FLGPOPLOCALNEEDEDX)
 #define FLGLOCCHANGEDX 20  // the caller of this function has previously encountered cocurrent
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
-#define FLGDYADX 21  // operation is dyad - must be high bit in field move to bit3?
+#define FLGDYADX 21  // operation is dyad - must be high bit in field
 #define FLGDYAD ((I)1<<FLGDYADX)
+#else
+#define FLGPOPNEEDEDX 0  // global locale must be popped on exit
+#define FLGPOPNEEDED ((I)1<<FLGPOPNEEDEDX)
+#define FLGPSEUDOX 1  // operation is pseudo-named function
+#define FLGPSEUDO ((I)1<<FLGPSEUDOX)
+#define FLGCACHEDX 2  // operation is cached, not requiring lookup
+#define FLGCACHED ((I)1<<FLGCACHEDX)
+#define FLGDYADX 3  // operation is dyad - bit 3 for shift length
+#define FLGDYAD ((I)1<<FLGDYADX)
+#define FLGPOPLOCALNEEDEDX 4  // locals and global locale must be popped on exit
+#define FLGPOPLOCALNEEDED ((I)1<<FLGPOPLOCALNEEDEDX)
+#define FLGLOCCHANGEDX 5  // the caller of this function has previously encountered cocurrent
+#define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
+#endif
 // obsolete // bits 0-15 hold the callstackx before execution
- I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad  scaf change to C
+ I flgd0cpC=w!=self?FLGDYAD:0; // self is right now; if it =w, we must be processing a monad
  // errors from here on must restore curname
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors
@@ -174,7 +189,7 @@ DF2(jtunquote){A z;
     // scaf if someone deletes the locale before we start it, we are toast
  }
  // ************** from here on errors must pop the stack and unra() before exiting
- AF actionfn=FAV(fs)->valencefns[flgd0cpC>>FLGDYADX];  // index is 'is dyad'.  Load here to allow call address to settle.  If we move this any higher it gets spilled to memory
+ AF actionfn=FAV(fs)->valencefns[(flgd0cpC&FLGDYAD)>>FLGDYADX];  // index is 'is dyad'.  Load here to allow call address to settle.  If we move this any higher it gets spilled to memory
  w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
@@ -184,8 +199,9 @@ DF2(jtunquote){A z;
   // possible before the branch.  Check the generated code on any change of compiler.
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through if the call supports inplacing
-  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
-// when dyad is at bit 3 (J)((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace)
+// obsolete   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
+  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
+// obsolete (J)((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace)
   if(unlikely(z==0)){jteformat(jt,fs,a,w,0);}  // make this a format point
  } else {
   // Extra processing is required.  Check each option individually
@@ -208,9 +224,11 @@ DF2(jtunquote){A z;
   }
 #endif
   if((jt->uflags.trace&TRACEDB)&&!(jt->glock||VLOCK&FAV(fs)->flag)&&!(jt->recurstate&RECSTATERENT)){  // The verb is locked if it is marked as locked, or if the script is locked; don't debug/pm any recursion
-   z=jtdbunquote((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
+// obsolete    z=jtdbunquote((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
+   z=jtdbunquote((J)(((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
   }else{
-   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
+// obsolete    A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
+   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
    if(unlikely(z==0)){jteformat(jt,fs,a,w,0);}  // make this a format point
   }
   if(jt->uflags.trace&TRACEPM)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cpC&FLGDYAD?VAL2:VAL1);  // record the return from call
@@ -353,7 +371,8 @@ exitpop: ;
   if(unlikely(jt->uflags.bstkreqd|(flgd0cpC&FLGPOPNEEDED))){  // normal case of non-locative call and no cocurrents called: no change needed, skip all this
    // we must return to initloc, either because we are a locative call that moved the locale, or cocurrent was called.  The current locale is in execution and must be terminated;
    // the initial execution before all changes remains in execution and all we have to do is switch to it.
-   if(jt->uflags.bstkreqd&&(flgd0cpC&FLGPOPNEEDED))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  scaf make bit 0 to avoid &&
+   _Static_assert(FLGPOPNEEDED==1,"POPNEEDED is a boolean mask");
+   if(jt->uflags.bstkreqd&(flgd0cpC&FLGPOPNEEDED))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
    DECREXECCT(jt->global)  // finish the execution we moved to
    if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){jt->locsyms=initloc; initloc=AKGST(initloc);}   // for u./v., move locals also
    jt->global=initloc;  // restore original executing locale

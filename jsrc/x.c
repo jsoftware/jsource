@@ -386,7 +386,7 @@ F2(jtforeign){F2PREFIP;I p,q;A z;
  ASSERT(!((AT(a)|AT(w))&VERB),EVDOMAIN)
  p=i0(a); q=i0(w); RE(0);
  if(p!=11){  // normal m!:n
-  if(p==18 && q==4 && jt->parsercalls>=0x400){ASSERT(jtdeprecmsg(jt,~9,"(009) 18!:4 has been removed, use cocurrent/coclass\n")!=0,EVDOMAIN)}  // scaf beta
+// obsolete   if(p==18 && q==4 && jt->parsercalls>=0x400){ASSERT(jtdeprecmsg(jt,~9,"(009) 18!:4 has been removed, use cocurrent/coclass\n")!=0,EVDOMAIN)}  // scaf beta
   ASSERT(BETWEENC(p,0,128),EVDOMAIN) ASSERT(BETWEENC(q,-10,111),EVDOMAIN)   // check reasonable inputs
   ASSERT((z=findslot(p,q))!=0,EVDOMAIN)  // look up the (m,n), fail if not found
   RETF(z);  // return the block we found

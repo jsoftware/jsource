@@ -226,7 +226,7 @@ void jtforeigninit(J jt){UI i;
  MN(7,5)   XPRIM(VERB, jtspfor,      0,            VASGSAFE,VF2NONE,0,   RMAX,RMAX);
  MN(7,6)   XPRIM(VERB, jtspforloc,   0,            VASGSAFE,VF2NONE,0,   RMAX,RMAX);
  MN(7,7)   XPRIM(VERB, jtspresident, 0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(7,8)   XPRIM(VERB, jtspallthreads, 0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(7,8)   XPRIM(VERB, (PYXES?jtspallthreads:jtsp), 0, VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,0)   XPRIM(VERB, jtrngseedq,   0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,1)   XPRIM(VERB, jtrngseeds,   0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,2)   XPRIM(VERB, jtdispq,      0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);

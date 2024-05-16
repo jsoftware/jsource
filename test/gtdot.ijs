@@ -263,6 +263,7 @@ delth''
 1 -: 1 T. ''
 (8 {. ,: 1 0 1) -: 2 T."0 i. 8 [ 6!:3 (0.2)
 2 -: 0 T. 1  NB. 0 1
+'input interrupt' -: > etx 1!:1 t. '' ] 1   NB. (from pyx) is displayed also
 2 -: 1 T. ''
 (8 {. 2 # ,: 1 0 1) -: 2 T."0 i. 8 [ 6!:3 (0.2)
 3 -: 0 T. 2  NB. 0 1 2

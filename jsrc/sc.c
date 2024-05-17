@@ -74,12 +74,12 @@ DF2(jtunquote){A z;
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
 #if 0   // obsolete
     fs=0;if(unlikely(AR(jt->locsyms)&ARHASACV))fs=jtprobe(jtx,sx,hashx,jt->locsyms); if(likely(fs==0)){fs=jtsyrd1(jtx,sx,hashx,initloc);  // Try local (if local has an ACV), then look up the name starting in jt->global
-      // this is a pun - probe returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
     }else{raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does.  
     }
 #else
-    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}}
+    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}}  // ACV is probably not in local, and we can even check t0 see
     fs=jtsyrd1(jtx,sx,hashx,initloc);  // not found in local, search global
+      // this is a pun - probe returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
    deflocal:;
 #endif
    }else{  // locative or u./v.
@@ -102,7 +102,7 @@ DF2(jtunquote){A z;
      }
     }
    }
-   // fs has QCNAMED semantics
+   // Common path for named functions after lookup is finished.  fs has QCNAMED semantics
    ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;);  // name must be defined
    I namedloc=(I)fs&QCNAMED; fs=QCWORD(fs);  // extract NAMED flag from fs, clear other flags
    // ** as of here we know there is a value for the name, and it has been ra()d.  We must not take an error exit without fa
@@ -173,6 +173,7 @@ DF2(jtunquote){A z;
  }
  trackinfo[wx]=0;  // null-terminate the info
 #endif
+ AF actionfn=FAV(fs)->valencefns[flgd0cpC>>FLGDYADX];  // index is 'is dyad'.  Load here to allow call address to settle.  There are no calls from here to fn dispatch
  STACKCHKOFLSUFF(z=0; goto exitfa;)
 #if USEJSTACK
  flgd0cpC|=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
@@ -187,7 +188,7 @@ DF2(jtunquote){A z;
   jt->global=explocale;  // move to new implied locale.  DO NOT change locale in jt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
   INCREXECCT(explocale);   // we are starting a new execution in explocale.  Protect the locale while it runs
 #else
- if(unlikely(explocale!=0)){  // there is a locative or implied locative
+ if(unlikely(explocale!=0)){  // there is a locative or implied locative, we must change the current locale.  Remember that.
   if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){  // u./v.: must restore globals and locals
    initloc=explocale; jt->locsyms=(A)AM(initloc); explocale=AKGST(jt->locsyms);  // move to new locals and their globals
   }
@@ -195,8 +196,8 @@ DF2(jtunquote){A z;
 #endif
     // scaf if someone deletes the locale before we start it, we are toast
  }
+ // initloc and explocale tell where we started and where we are going.  flgd0cpC tells what we need to restore.  bstkreqd tells whether a cocurrent intervened.
  // ************** from here on errors must pop the stack and unra() before exiting
- AF actionfn=FAV(fs)->valencefns[flgd0cpC>>FLGDYADX];  // index is 'is dyad'.  Load here to allow call address to settle.  If we move this any higher it gets spilled to memory
  w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
@@ -208,7 +209,7 @@ DF2(jtunquote){A z;
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through if the call supports inplacing
 // obsolete   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
 // obsolete   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace),a,w,fs);  // keep all flags in jtinplace
-  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),a,w,fs);  // keep all flags in jtinplace
+  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),a,w,fs);  // keep MODIFIER flag always, and others too if verb supports it 
 // obsolete (J)((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace)
   if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
   jt->parserstackframe.sf=s;   // restore $: stack

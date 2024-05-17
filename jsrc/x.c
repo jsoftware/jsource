@@ -132,9 +132,10 @@ void jtforeigninit(J jt){UI i;
  MN(15,15) XPRIM(VERB, jtmemu,       jtmemu2,      VASGSAFE|VJTFLGOK1,VF2NONE,RMAX,0,   0   );
  MN(18,2)  XPRIM(VERB, jtlocpath1,   jtlocpath2,   VFLAGNONE,VF2NONE,0,   1,   0   );
  MN(18,3)  XPRIM(VERB, jtloccre1,    jtloccre2,    VFLAGNONE,VF2NONE,RMAX,0,   RMAX);
-// hidden MN(18,4)
- Andx=(sizeof(foreignA)/sizeof(foreignA[0]))-1; XPRIM(VERB, jtlocswitch,  0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);  // cocurrent/coclass, in end slot
-// obsolete  foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1]=foreignA[Andx];
+ MN(18,4)  // beta scaf
+// beta scaf Andx=(sizeof(foreignA)/sizeof(foreignA[0]))-1;
+ XPRIM(VERB, jtlocswitch,  0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);  // cocurrent/coclass, in end slot
+ foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1]=foreignA[Andx];
    AFLAG((A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1])|=AFRO;  // mark as read-only value, as a flag to lrep etc
  MN(18,5)  XPRIM(VERB, jtlocname,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(128,2) XPRIM(VERB, 0,            jtapplystr,   VFLAGNONE,VF2NONE,RMAX,1,   RMAX);
@@ -371,8 +372,10 @@ void jtforeigninit(J jt){UI i;
 
 // called at initialization after memory reset, to assign cocurrent_z_ and coclass_z_.  The 18!:4 block is at the end of foreignA and is a read-only value
 I jtforeignassigninit(J jt){A nm;L *e;
+#if 0  // beta scaf
  RZ(nm=nfs(12,"cocurrent_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeis(nm, *JT(jt,zpath)); e->flag|=LREADONLY; WRITEUNLOCK((*JT(jt,zpath))->lock)  // probe takes a lock
  RZ(nm=nfs(10,"coclass_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeis(nm, *JT(jt,zpath)); e->flag|=LREADONLY; WRITEUNLOCK((*JT(jt,zpath))->lock)
+#endif
  R 1;
 }
 

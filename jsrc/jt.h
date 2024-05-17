@@ -103,6 +103,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
                 // mean that bstkreqd is set at the end of a function af that function or any preceding functions with the same caller changed the implied locale.  When a function ends, it looks at bstkreqd.  If it is set,
                 // the running locale has been changed by a called function and must be reset.  bstkreqd is set to 1 initially, which causes each change of locale before the first named call to incr/decr both locale counts, thus
                 // housekeeping the counts as if there were a named call to begin with.
+                // value shuld be 0 or 1 only because of flag arithmetic
    C init0area[0]; // label for initializing
    union {
     US spflag; // access as short

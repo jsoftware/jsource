@@ -317,6 +317,7 @@ I jtsettaskrunning(J jt){C oldstate;
  // case someone has started a system lock and our running status has been captured.  LOCKACTIVE is set in state 1 and removed in state 5.  We must
  // first wait for the lock to clear and then wait to get out of state 5 (so that we don't do a systemlock request and think we are single-threaded)
  while(oldstate=jt->taskstate&~TASKSTATELOCKACTIVE, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, oldstate|TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+  if(unlikely(oldstate&TASKSTATERUNNING))R 0;   // if for some reason we are called with the bit already set, keep it set and indicate it wasn't us that set it
   if(unlikely(oldstate&TASKSTATELOCKACTIVE)){YIELD delay(1000);}
  }
  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD   // active set; wait till system lock is idle before allowing continuation

@@ -311,7 +311,6 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd:
   name: JE (OpenBSD vmactions)
-  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -378,6 +377,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
+  if: ${{ false }}
   runs-on: macos-12
   steps:
    - name: Checkout Git repository
@@ -863,7 +863,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-20.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jeopenbsd2]
-  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

@@ -23,8 +23,8 @@ DF2(jtunquote){A z;
 
  A thisname=FAV(self)->fgh[0]; A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
  // bits 0-8 come from jtinplace
-#define FLGPOPNEEDEDX 9  // global locale must be popped on exit
-#define FLGPOPNEEDED ((I)1<<FLGPOPNEEDEDX)
+// obsolete #define FLGPOPNEEDEDX 9  // global locale must be popped on exit
+// obsolete #define FLGPOPNEEDED ((I)1<<FLGPOPNEEDEDX)
 #define FLGPSEUDOX 11  // operation is pseudo-named function
 #define FLGPSEUDO ((I)1<<FLGPSEUDOX)
 #define FLGCACHEDX 12  // operation is cached, not requiring lookup
@@ -56,7 +56,7 @@ DF2(jtunquote){A z;
   if((fs=FAV(self)->localuse.lu1.cachedref)!=0){
    // There is a cached lookup for this nameref - use it
    // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
-   if(unlikely((explocale=(A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave explocale=0.  This is a pun on 0
+   if(unlikely(((A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave explocale=global
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
      RZSUFF(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find/create locale
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
@@ -185,17 +185,18 @@ DF2(jtunquote){A z;
   pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;);
   jt->global=explocale;  // move to new implied locale.  DO NOT change locale in jt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
   INCREXECCT(explocale);   // we are starting a new execution in explocale.  Protect the locale while it runs
+ }
 #else
 // obsolete  A initloc=jt->global;  // the locale we were called in, in case we need to restore it (if local, point to locals later)
- if(unlikely(explocale!=0)){  // there is a locative or implied locative
+// obsolete  if(unlikely(explocale!=0)){  // there is a locative or implied locative
 // obsolete   if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){  // u./v.: must restore globals and locals
 // obsolete    initloc=explocale;
 // obsolete    jt->locsyms=(A)AM(explocale); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
 // obsolete   }
-  jt->global=explocale; INCREXECCT(explocale); flgd0cpC|=FLGPOPNEEDED;   // move to new locale and increment; set flag to indicate restore needed  DO NOT change locale in jt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
+  jt->global=explocale; INCREXECCT(explocale);
+// obsolete  flgd0cpC|=FLGPOPNEEDED;
 #endif
     // scaf if someone deletes the locale before we start it, we are toast
- }
  // ************** from here on errors must pop the stack and unra() before exiting
  w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
 
@@ -211,7 +212,7 @@ DF2(jtunquote){A z;
   if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
 //  obsolete   jt->parserstackframe.sf=s;   // restore $: stack
 // obsolete  jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
- } else {
+ } else {jt=(J)((I)jt+((flgd0cpC+1)&0x200));  // jiggle jt to save register store
   // Extra processing is required.  Check each option individually
   DC d=0;  // pointer to debug stack frame, if one is allocated
   if(jt->uflags.trace){  // debug or pm
@@ -377,7 +378,8 @@ exitpop: ;
  // LSB of z is set in the return iff what we just called was cocurrent
  if(unlikely((I)z&1)){  // was the call to cocurrent?  (if error, it's just an error)
   z=(A)((I)z&~1); INCREXECCT(z);  // z has the locale to switch to.  clear flag bit; indicate new execution starting in the locale we switch to
-  if(flgd0cpC&FLGPOPNEEDED)DECREXECCT(jt->global)     // If the call was a locative (cocurrent_l_) we temporarily started an execution in l.  We must close that now
+// obsolete   if(flgd0cpC&FLGPOPNEEDED)
+  // we temporarily started an execution for the locative (now jt->global).  We will close that in common code
   if(flgd0cpC&FLGLOCCHANGED)DECREXECCT(stack.global)   // if the caller's locale was moved to by cocurrent, it must be replaced by z.  No DECR is performed for the FIRST cocurrent, so if that was entered by a locative
          // it will be owed a DECR.  We can't DECR the first call because it might be in execution higher in the stack and already have a delete outstanding
   SYMSETGLOBALINLOCAL(jt->locsyms,z);   // install new globals pointer into the locsyms (if any)...
@@ -387,16 +389,17 @@ exitpop: ;
  }else{
   // normal return from call, possibly an error
   // bstkreqd is set if the function called cocurrent at any time
-  if(unlikely(jt->uflags.bstkreqd|(flgd0cpC&FLGPOPNEEDED))){  // normal case of non-locative call and no cocurrents called: no change needed, skip all this
+// obsolete   if(unlikely(jt->uflags.bstkreqd|(flgd0cpC&FLGPOPNEEDED))){  // normal case of non-locative call and no cocurrents called: no change needed, skip all this
    // we must return to initloc, either because we are a locative call that moved the locale, or cocurrent was called.  The current locale is in execution and must be terminated;
    // the initial execution before all changes remains in execution and all we have to do is switch to it.
-   if(jt->uflags.bstkreqd&(flgd0cpC>>FLGPOPNEEDEDX))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
-   DECREXECCT(jt->global)  // finish the execution we moved to
+// obsolete    if(jt->uflags.bstkreqd&(flgd0cpC>>FLGPOPNEEDEDX))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
+   if(unlikely(jt->uflags.bstkreqd))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
 // obsolete    if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){jt->locsyms=initloc; initloc=AKGST(initloc);}   // for u./v., move locals also
 // obsolete    jt->global=initloc;  // restore original executing locale
-  }
+// obsolete   }
   jt->uflags.bstkreqd=(flgd0cpC>>FLGLOCCHANGEDX)&1;  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used either by the next call of the return from this caller
  }
+ DECREXECCT(jt->global)  // finish the execution we moved to
 #endif
  // ************** errors OK now
 exitfa:

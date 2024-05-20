@@ -887,7 +887,7 @@ extern B        jtsesminit(JS,I);
 extern I jtsettaskrunning(J);
 extern void jtclrtaskrunning(J);
 #else
-#define jtsettaskrunning(jt) (jt->taskstate|=TASKSTATERUNNING)
+#define jtsettaskrunning(jt) ({I r=(jt->taskstate&TASKSTATERUNNING)==0; jt->taskstate|=TASKSTATERUNNING; r;})
 #define jtclrtaskrunning(jt) (jt->taskstate&=~TASKSTATERUNNING)
 #endif
 extern void     jtsetleakcode(J,I);

@@ -317,6 +317,7 @@ I jtsettaskrunning(J jt){C oldstate;
  // case someone has started a system lock and our running status has been captured.  LOCKACTIVE is set in state 1 and removed in state 5.  We must
  // first wait for the lock to clear and then wait to get out of state 5 (so that we don't do a systemlock request and think we are single-threaded)
  while(oldstate=jt->taskstate&~TASKSTATELOCKACTIVE, !__atomic_compare_exchange_n(&jt->taskstate, &oldstate, oldstate|TASKSTATERUNNING, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)){
+  if(unlikely(oldstate&TASKSTATERUNNING))R 0;   // if for some reason we are called with the bit already set, keep it set and indicate it wasn't us that set it
   if(unlikely(oldstate&TASKSTATELOCKACTIVE)){YIELD delay(1000);}
  }
  while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD   // active set; wait till system lock is idle before allowing continuation
@@ -330,6 +331,9 @@ void jtclrtaskrunning(J jt){C oldstate;
  }
 }
 
+// block describing a waiting/executing job/task
+// this is aligned to a cacheline boundary, but to shorten the block the pyx of a user job is pointed to by the AM field of the
+// enclosing AD and the global symbols are pointed to by AK
 typedef struct jobstruct {
  JOB *next; // points to the block containing the next job
  UI4 n;  // number of tasks in this job.  If 0, this is a user job
@@ -338,7 +342,8 @@ typedef struct jobstruct {
  union {
   struct {
    A args[3];  // w,u,u if monad; a,w,u if dyad
-   I inherited[(offsetof(JTT,uflags.init0area)+SZI-1)>>LGSZI]; // inherited sections of JT, plus a bit.  The pyx is stored in AM
+   I inherited[(offsetof(JTT,uflags.init0area)+SZI-1)>>LGSZI]; // inherited sections of JT, plus a bit.
+   //  The pyx is stored in AM of the JOB block, globals in AK
   } user;
   struct uiint {
    unsigned char (*f)(J jt,void *ctx,UI4 i);  // function to do 1 internal task. C is the error code, 0=OK. i is the task# within this job
@@ -464,8 +469,8 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    A *old=jt->tnextpushp;  // we leave a clear stack when we go
    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
    memset(&jt->uflags.init0area,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.init0area));    // clear what should be cleared - up to locsyms
-   A startloc=jt->global;  // extract the globals from the job
-   jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // Init.  Init to no local symbols.  The thread stays in RUNNING
+   A startloc=(UNvoidAV1(job))->kchain.global;   // extract the globals pointer from the job
+   jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
 #if USEJSTACK
@@ -556,7 +561,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
   job->n=0; job->initthread=THREADID(jt);  // indicate this is a user job.  ns is immaterial since it will always trigger a deq.  Install initing thread# for repatriation
-  job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=arg3;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // A little overcopy OK
+  job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=arg3;(UNvoidAV1(job))->kchain.global=jt->global;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // A little overcopy OK
   (UNvoidAV1(job))->mback.jobpyx=pyx;  // pyx is secreted in header
   JOB *oldjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   if((UI)jobq->nthreads>(forcetask&jobq->nuunfin)){  // recheck after lock

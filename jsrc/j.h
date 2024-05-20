@@ -2086,7 +2086,8 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 // (the empty table can also be recognized by its address which is not on a cacheline boundary)
 // At all times we keep the k field of locsyms as a copy of jt->global so that if we need it for u./v. we know what the symbol tables were.  We could remove jt->global but that would cost
 // some load instructions sometimes.  AM(local table) points to the previous local table in the stack, looping to self at end
-#define SYMSETGLOBAL(l,g) (jt->global=(g), AKGST(l)=(g))  // l is jt->locsyms, g is new global value
+#define SYMSETGLOBALINLOCAL(l,g) (AKGST(l)=(g))  // l is jt->locsyms, g is new global value
+#define SYMSETGLOBAL(l,g) (jt->global=(g), SYMSETGLOBALINLOCAL(l,g))  // l is jt->locsyms, g is new global value
 #define SYMRESTOREFROMLOCAL(l) (jt->locsyms=(l), jt->global=AKGST(l))  // go to stacked local l
 #define SYMSWAPTOLOCAL(l,lsave) (lsave=jt->locsyms, SYMRESTOREFROMLOCAL(l))  // go to stacked local l, save current in lsave
 #define SYMSETLOCAL(l) (AKGST(l)=jt->global, jt->locsyms=(l))  // change the locals to l

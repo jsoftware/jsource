@@ -166,6 +166,7 @@ struct AD {
              // locale, which means that the locale can be deleted while the path is being changed.  We make these rules: (1) use atomic_exchange to modify LOCPATH;
              // (2) if you exchange out a nonzero, you have to free it; (3) you can replace a nonzero with another nonzero only under system lock, and if you
              // are changing the block address (i. e. not extending) you must take a system lock before freeing
+  A global;      // for user JOB blocks, points to jt->global for the job
  } kchain;
  FLAGT flag;
  union {
@@ -920,7 +921,7 @@ typedef struct {
 
 // Definition of callstack
 
-#if USEJSTACK  // beta
+#if 1  // beta
 typedef struct {
  I type;  // type of entry, flagged per below
  void *value;  // locale or name, depending on the type
@@ -1306,10 +1307,10 @@ typedef struct {
  typedef struct{
   PSTK* parserstkbgn;     // [0]:&start of parser stack  [-1]: address of words
   PSTK* parserstkend1;    // [0}&end+1 of parser stack   [-1]: number of words
-  A    sf;   // $: stack in the parser (other users of $: have their own stacks)
-  US   parseroridetok;  // inited to -1; set to the failing token number+1 to override looking at the exec stack. 0 for no error-line flag.  This is done when pee is detected
+  US parseroridetok;  // inited to -1; set to the failing token number+1 to override looking at the exec stack. 0 for no error-line flag.  This is done when pee is detected
                      // or preemptively for calls to syrd which can fail (kludge)
-  US   filler[2];
+  C filler[SZI-2];
+  A sf;   // $: stack in the parser (other users of $: have their own stacks)
  } PFRAME;  // these are stacked en bloc
 
 // input/result for fmtlong

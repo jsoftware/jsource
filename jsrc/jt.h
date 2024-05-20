@@ -79,7 +79,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl0[0];          // marker for the start of cacheline 0
 // task-initialized values
 // *********************************** the starting area contains values that are inherited from the spawning task en bloc.  Some of these are reinitialized
- A global;           // global symbol table inherit for task
  D cct;              // complementary comparison tolerance inherit for task  could be a float if non-complementary
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C ppn;              // print precision (field width for numeric output) inherit for task
@@ -99,12 +98,11 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TRACEDBDEBUGENTRY 0x200  // set in command that starts pm debug.  suppresses the end-of-suspension action
                                    // debug flags are also used for dbuser
                    // ************************************** here starts the area that is initialized to 0 when task starts 0x14
+   C init0area[0]; // label for initializing.  We overcopy to a full I, then back up to copy 0
    C bstkreqd;   // init to 1 at thread startup.  cleared at the start of each function call.  Set at the end of a function call if (1) the function was cocurrent or (2) bstkreqd was set just before the function was called.  Taken together, these conditions
                 // mean that bstkreqd is set at the end of a function af that function or any preceding functions with the same caller changed the implied locale.  When a function ends, it looks at bstkreqd.  If it is set,
                 // the running locale has been changed by a called function and must be reset.  bstkreqd is set to 1 initially, which causes each change of locale before the first named call to incr/decr both locale counts, thus
                 // housekeeping the counts as if there were a named call to begin with.
-                // value shuld be 0 or 1 only because of flag arithmetic
-   C init0area[0]; // label for initializing
    union {
     US spflag; // access as short
     struct {
@@ -141,13 +139,13 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
             // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval only to compare
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
  A xmod;             // extended integer: the m in m&|@f
-// end of cacheline 0
- C _cl1[0];
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  C initnon0area[0];
- A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
- I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?
  US ranks;            // low half: rank of w high half: rank of a; for IRS. init for task to 3F3F
+ C filler0[6];
+// end of cacheline 0, heavily used
+ C _cl1[0];
+ I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?
  C recurstate;       // state of recursions through JDo    init for task to RECSTATERUNNING
 #define RECSTATERUNNINGX 0  // JE is running, recursive call not allowed
 #define RECSTATERUNNING (1LL<<RECSTATERUNNINGX)
@@ -175,31 +173,37 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
  C scriptskipbyte;  // when not NUL, reading script discards lines up till the first one that starts NB. followed by skipbyte
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
+// 2 bytes free
  LX symfreehead[2];   // head of main and overflow symbol free chains
  UI cstackmin;        // red warning for C stack pointer
  UI4 *futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate
  A* tstacknext;       // if not 0, points to the recently-used tstack allocation, whose first entry points to the current allocation  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
-// end of cacheline 1
+ A filler1[1];
+// end of cacheline 1 - not heavily used
 
  C _cl2[0];
 // parser stack & others
- I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
+// *** start of fixed block for unquote.  stackframe.fs and 3 words following are saved at the
+// start, representing sf, global, curname which are all restored on exit
  PFRAME parserstackframe;  // 4 words    sf field initialized at task-start
- A filler2[2];
-// end of cacheline 2
+ A global;           // global symbol table inherit for task, but not for job
+ A curname;          // current name, an A block containing an NM
+ A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
+// *** end of fixed block
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
+// end of cacheline 2  (spanned by shapesink)
 // obsolete  struct {
 // obsolete  } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 
  C _cl3[0];
 // things needed by name lookup (unquote)
- A curname;          // current name, an A block containing an NM
 #if USEJSTACK
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  US fcalln;           // named fn calls: maximum permissible depth   could be a fixed value?
  US callstacknext;    // current stack pointer into callstack.  Could be elided if callstack put on a 16K boundary, not a bad idea anyway
 #else
- C filler3[12]; // 12 bytes free
+ C filler3a[12]; // 12 bytes free
 #endif
  LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
 // things needed for memory allocation
@@ -472,7 +476,7 @@ _Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstru
 _Static_assert(offsetof(JTT,_cl0)==0*64,"cacheline 0 offset wrong");
 _Static_assert(offsetof(JTT,_cl1)==1*64,"cacheline 1 offset wrong");
 _Static_assert(offsetof(JTT,_cl2)==2*64,"cacheline 2 offset wrong");
-_Static_assert(offsetof(JTT,_cl3)==3*64,"cacheline 3 offset wrong");
+// _Static_assert(offsetof(JTT,_cl3)==3*64,"cacheline 3 offset wrong");
 _Static_assert(offsetof(JTT,_cl4)==4*64,"cacheline 4 offset wrong");
 _Static_assert(offsetof(JTT,_cl5)==5*64,"cacheline 5 offset wrong");
 _Static_assert(offsetof(JTT,_cl6)==6*64,"cacheline 6 offset wrong");

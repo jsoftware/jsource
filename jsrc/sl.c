@@ -481,7 +481,7 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
  // This really sucks, but the alternative is to hold a lock on the path during the entire time the path is in use, which is worse.  better to
  // have a per-thread RFO flag indicating 'path in use', and wait here till all threads have been seen with that off
  // As a stopgap that will probably suffice forever, we avoid the system lock provided the new path merely extends the old from the beginning.  In that case,
- // we move the path pointer but we don't have the free anything, so we need no systemlock.  The test and exchange must be under a lock (which one isn't important,
+ // we move the path pointer but we don't have to free anything, so we need no systemlock.  The test and exchange must be under a lock (which one isn't important,
  // because this is the only place that stores a non-PERMANENT path that might get freed) to avoid ABA trouble.  We still have to use exchange to set the path because
  // a deleting thread may be installing 0 or zpath
  A op=0; ACINITZAP(x);  // op is address of A for old path, if any.  Remove death warrant for new path, in case we store it

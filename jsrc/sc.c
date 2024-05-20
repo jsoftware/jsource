@@ -21,22 +21,16 @@ DF2(jtunquote){A z;
   A locsyms;  // local symbol table
  } stack;
 
- A thisname=FAV(self)->fgh[0]; A fs; A explocale;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up  explocale=explicit locale if any
- F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
- {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
- ARGCHK2(a,w);  // w is w or self always, must be valid
- memcpy(&stack,&jt->parserstackframe.sf,sizeof(stack));  // push sf/globals/curname/locals
- // *** errors must to go the error exit to restore stacked values
-// obsolete  A savname=jt->curname;  // we stack the executing name
-// bits 0-8 come from jtinplace
+ A thisname=FAV(self)->fgh[0]; A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
+ // bits 0-8 come from jtinplace
 #define FLGPOPNEEDEDX 9  // global locale must be popped on exit
 #define FLGPOPNEEDED ((I)1<<FLGPOPNEEDEDX)
 #define FLGPSEUDOX 11  // operation is pseudo-named function
 #define FLGPSEUDO ((I)1<<FLGPSEUDOX)
 #define FLGCACHEDX 12  // operation is cached, not requiring lookup
 #define FLGCACHED ((I)1<<FLGCACHEDX)
-#define FLGPOPLOCALNEEDEDX 13  // locals and global locale must be popped on exit
-#define FLGPOPLOCALNEEDED ((I)1<<FLGPOPLOCALNEEDEDX)
+// obsolete #define FLGPOPLOCALNEEDEDX 13  // locals and global locale must be popped on exit
+// obsolete #define FLGPOPLOCALNEEDED ((I)1<<FLGPOPLOCALNEEDEDX)
 #define FLGLOCCHANGEDX 14  // the caller of this function has previously encountered cocurrent
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
 #define FLGMONADX VJTFLGOK1X  // operation is monad, in position to mask verb flags
@@ -44,8 +38,18 @@ DF2(jtunquote){A z;
 #define FLGDYADX (VJTFLGOK1X+1)  // operation is dyad  must be highest flag
 #define FLGDYAD ((I)1<<FLGDYADX)
 // obsolete // bits 0-15 hold the callstackx before execution
- I flgd0cpC=(I)1<<((w!=self)+FLGMONADX); // self is right now; if it =w, we must be processing a monad.  Set MONAD or DYAD
- flgd0cpC|=(I)jtinplace&JTFLAGMSK;  // save flag bits to pass through to function
+ I flgd0cpC=((I)jt&JTFLAGMSK)+(FLGMONAD<<(w!=self));  // save flag bits to pass through to function; set MONAD/DYAD
+ F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.  jtinplace unused
+ A explocale=jt->global;  // locale to execute in.  Init to current global, which we also use for lookups
+ {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
+ ARGCHK2(a,w);  // w is w or self always, must be valid
+#if C_AVX2 || EMU_AVX2
+ _mm256_storeu_si256((__m256i *)&stack,_mm256_loadu_si256((__m256i *)&jt->parserstackframe.sf));
+#else
+ memcpy(&stack,&jt->parserstackframe.sf,sizeof(stack));  // push sf/globals/curname/locals
+#endif
+ // *** errors must to go the error exit to restore stacked values
+// obsolete  A savname=jt->curname;  // we stack the executing name
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
   // normal path for named functions
@@ -56,14 +60,13 @@ DF2(jtunquote){A z;
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
      RZSUFF(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find/create locale
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
-     explocale=explocale==stack.global?0:explocale;  // ignore locative if it does not change locale (saves atomic execct fiddling)   scaf
+// obsolete      explocale=explocale==stack.global?0:explocale;  // ignore locative if it does not change locale (saves atomic execct fiddling)   scaf
     }
    }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
   }else{
    // name was not cached.  Look it up.  The calls to the lookup routines all issue ra() (under lock) on the value if found
    if(likely(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
-    explocale=0;  // flag no explicit locale
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
 #if 0   // obsolete
@@ -73,25 +76,26 @@ DF2(jtunquote){A z;
     }
 #else
     if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check t0 see
-    fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
+    fs=jtsyrd1(jtx,sx,hashx,explocale);  // not found in local, search global
    deflocal:;
 #endif
    }else{  // locative or u./v.
     I nmflgs=NAV(thisname)->flag;
-    if(likely(!(nmflgs&NMIMPLOC))){  // locative
+    if(likely(!(nmflgs&NMIMPLOC))){  // not implicit locative...
      // see if the locale is cached.  This will help name"n mainly, but also stored xctls like public_z_ =: entry_loc_ where entry_loc will have the locale pointer
-     if((explocale=FAV(self)->localuse.lu0.cachedloc)==0){  // use cached locale if there is one
+     if((explocale=FAV(self)->localuse.lu0.cachedloc)==0){  // use cached locale if there is one.  If not...
       RZSUFF(explocale=sybaseloc(thisname),z=0; goto exitname;);  //  get the explicit locale.  0 if erroneous locale
       if(!(nmflgs&NMILOC))FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
       thisname=jt->curname;  // refresh thisname
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
-     explocale=explocale==stack.global?0:explocale;  // ignore locative if it does not change locale (saves atomic execct fiddling) scaf
+// obsolete      explocale=explocale==stack.global?0:explocale;  // ignore locative if it does not change locale (saves atomic execct fiddling) scaf
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
      if(fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
-      explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
-      flgd0cpC|=FLGPOPLOCALNEEDED;  // indicate we must change locals
+// obsolete       explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
+// obsolete       flgd0cpC|=FLGPOPLOCALNEEDED;  // indicate we must change locals
+      jt->locsyms=(A)AM(jt->locsyms); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
       raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
      }
     }
@@ -140,7 +144,7 @@ DF2(jtunquote){A z;
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
   jt->curname=thisname=FAV(self)->fgh[1];  // get the original name
-  explocale=0;  // flag no explicit locale
+// obsolete   explocale=0;  // flag no explicit locale
   fs=FAV(self)->fgh[2];  // point to the actual executable
   ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;); // make sure the name's value is given also
   flgd0cpC|=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
@@ -184,10 +188,10 @@ DF2(jtunquote){A z;
 #else
 // obsolete  A initloc=jt->global;  // the locale we were called in, in case we need to restore it (if local, point to locals later)
  if(unlikely(explocale!=0)){  // there is a locative or implied locative
-  if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){  // u./v.: must restore globals and locals
+// obsolete   if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){  // u./v.: must restore globals and locals
 // obsolete    initloc=explocale;
-   jt->locsyms=(A)AM(explocale); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
-  }
+// obsolete    jt->locsyms=(A)AM(explocale); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
+// obsolete   }
   jt->global=explocale; INCREXECCT(explocale); flgd0cpC|=FLGPOPNEEDED;   // move to new locale and increment; set flag to indicate restore needed  DO NOT change locale in jt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
 #endif
     // scaf if someone deletes the locale before we start it, we are toast
@@ -398,7 +402,11 @@ exitpop: ;
 exitfa:
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){faacv(fs);}  // unra the name if it was looked up from the symbol tables
 exitname:
+#if C_AVX2 || EMU_AVX2
+ _mm256_storeu_si256((__m256i *)&jt->parserstackframe.sf,_mm256_loadu_si256((__m256i *)&stack));
+#else
  memcpy(&jt->parserstackframe.sf,&stack,sizeof(stack));  // restore sf/globals/curname/locals
+#endif
 // obsolete jt->curname=savname;  // restore the executing name
 RETF(z);
 }

@@ -236,7 +236,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
   case 2:  // local symbol table - we have no lock and we don't assign
    AR(g)=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
    // The first hashchain is not used as a symbol pointer - it holds xy bucket info
-   // Bloom filter not used for local symbol tables
+   // Bloom filter not used for local symbol tables (the field is a chain for the stack of active defs)
    break;
  }
  R g;

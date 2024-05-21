@@ -430,6 +430,12 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  RZ(g);  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
  I bloom=BLOOMMASK(hash); v=LOCPATH(g);
+ // This function is called after local symbols have been found wanting.  Usually g will be the base
+ // of the implied path.  But if the value is a locative, g is the locative locale to start in, and
+ // that might be a local table if name___1 is used.  We hereby define that ___1 searches only in
+ // the local table, not the path; and we have to disable the Bloom filter because local tables don't have
+ // one.
+ if(unlikely(AR(g)&ARLOCALTABLE)){bloom=0; v=(A*)&iotavec-IOTAVECBEGIN+0;}  // no bloom, empty path
  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
                          if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res); res=(A)(((I)res&~QCNAMED)+(AR(g)<<(QCNAMEDX-ARNAMEDX))); READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMED
                          READUNLOCK(g->lock)} g=gn;
@@ -539,13 +545,15 @@ A jtsyrdforlocale(J jt,A a){A g;
 // If the name/value are found, ra() the value
 A jtsyrdnobuckets(J jt,A a){A g,res;
  ARGCHK1(a);
+ I fndtblflg;  //  in the rare case of n___1, we have to look to see if the name was local
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
   if(unlikely(!NAV(a)->bucket))if(res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){rapos(QCWORD(res),res); R res;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
- } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
+  fndtblflg=0;  // through this path only global tables are found
+ } else{RZ(g=sybaseloc(a)); fndtblflg=AR(g);}  // if locative, start in locative locale & remember table type
  res=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
- if(likely(res!=0))res=SETGLOBAL(res);  // mark found in global, if found, which switches to QCGLOBAL semantics
+ if(likely(res!=0))if(likely(!(fndtblflg&ARLOCALTABLE)))res=SETGLOBAL(res);  // mark found in global, if found, which switches to QCGLOBAL semantics
  R res;
 }
 

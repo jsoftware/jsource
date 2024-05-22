@@ -1221,8 +1221,10 @@ NB. selections from empties
 'index error' -: (2 ; 0) {:: etx 11 22 33 ; (, 555) ; ''
 'index error' -: (<0) { etx i. 0 2
 'index error' -: (<2) { etx i. 2 0
+'index error' -: (<_3) { etx i. 2 0
 'index error' -: (<1 2) { etx i. 2 2 0
 'index error' -: (<1 1 ,: 1 2) { etx i. 2 2 0
+'index error' -: (<1 1 ,: 1 _3) { etx i. 2 2 0
 
 NB. i{y integer indices -------------------------------------------------
 

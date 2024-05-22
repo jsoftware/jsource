@@ -424,7 +424,7 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
   // if empty a, return w in full, one copy per 1-cell of a, as w"1 a   (}:$a) $ ,:w
   if(unlikely(AN(a)==0))R df1(z,a,qq(w,zeroionei(1)));
   // empty w.  We must verify the indexes of a do not exceed w's shape
-  I *ad=IAV(a); DO(nia, DO(naxa, ASSERT(*ad<ws[i],EVINDEX); ++ad;) ) 
+  I *ad=IAV(a); DO(nia, DO(naxa, ASSERT((*ad^REPSGN(*ad))<ws[i],EVINDEX); ++ad;) ) 
   // allocate empty result, move in shape: frame of w, frame of a, shape of item
   GA00(z,AT(w),0,wf+(wcr-naxa)+af); MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AS(a),af)  MCISH(AS(z)+wf+af,AS(w)+wf+naxa,wcr-naxa)
   R z;

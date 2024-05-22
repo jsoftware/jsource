@@ -920,7 +920,7 @@ typedef struct {
 
 // Definition of callstack
 
-#if 1  // beta
+#if USEJSTACK  // beta
 typedef struct {
  I type;  // type of entry, flagged per below
  void *value;  // locale or name, depending on the type

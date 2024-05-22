@@ -463,7 +463,7 @@ f ''
 'domain error'    -: cocurrent etx <2 3r4
 'domain error'    -: cocurrent etx <<'abc'
 
-NB. beta 'valence error'    -: (<'j') cocurrent etx <'abc'
+'valence error'    -: (<'j') cocurrent etx <'abc'
 
 'rank error'      -: cocurrent etx <3 4$'a'
 

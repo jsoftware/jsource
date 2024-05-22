@@ -132,8 +132,11 @@ void jtforeigninit(J jt){UI i;
  MN(15,15) XPRIM(VERB, jtmemu,       jtmemu2,      VASGSAFE|VJTFLGOK1,VF2NONE,RMAX,0,   0   );
  MN(18,2)  XPRIM(VERB, jtlocpath1,   jtlocpath2,   VFLAGNONE,VF2NONE,0,   1,   0   );
  MN(18,3)  XPRIM(VERB, jtloccre1,    jtloccre2,    VFLAGNONE,VF2NONE,RMAX,0,   RMAX);
- MN(18,4)  XPRIM(VERB, jtlocswitch,  0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);  // will be Andx=(sizeof(foreignA)/sizeof(foreignA[0]))-1;  scaf
- foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1]=foreignA[Andx]; AFLAG((A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1])|=AFRO;  // mark as unassignable value
+ MN(18,4)  // beta scaf
+// beta scaf Andx=(sizeof(foreignA)/sizeof(foreignA[0]))-1;
+ XPRIM(VERB, jtlocswitch,  0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);  // cocurrent/coclass, in end slot
+ foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1]=foreignA[Andx];
+   AFLAG((A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1])|=AFRO;  // mark as read-only value, as a flag to lrep etc
  MN(18,5)  XPRIM(VERB, jtlocname,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(128,2) XPRIM(VERB, 0,            jtapplystr,   VFLAGNONE,VF2NONE,RMAX,1,   RMAX);
  MN(128,5) XPRIM(VERB, jtisnan,      0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
@@ -369,7 +372,7 @@ void jtforeigninit(J jt){UI i;
 
 // called at initialization after memory reset, to assign cocurrent_z_ and coclass_z_.  The 18!:4 block is at the end of foreignA and is a read-only value
 I jtforeignassigninit(J jt){A nm;L *e;
-#if 0 // beta-7
+#if 0  // beta scaf
  RZ(nm=nfs(12,"cocurrent_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeis(nm, *JT(jt,zpath)); e->flag|=LREADONLY; WRITEUNLOCK((*JT(jt,zpath))->lock)  // probe takes a lock
  RZ(nm=nfs(10,"coclass_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeis(nm, *JT(jt,zpath)); e->flag|=LREADONLY; WRITEUNLOCK((*JT(jt,zpath))->lock)
 #endif
@@ -385,9 +388,7 @@ F2(jtforeign){F2PREFIP;I p,q;A z;
  ASSERT(!((AT(a)|AT(w))&VERB),EVDOMAIN)
  p=i0(a); q=i0(w); RE(0);
  if(p!=11){  // normal m!:n
-#if 0  // beta-7
-  if(p==18 && q==4 && jt->parsercalls>=0x400){ASSERT(jtdeprecmsg(jt,~9,"(009) 18!:4 has been removed, use cocurrent/coclass\n")!=0,EVDOMAIN)}  // scaf
-#endif
+  if(p==18 && q==4 && jt->parsercalls>=0x400){ASSERT(jtdeprecmsg(jt,~9,"(009) 18!:4 has been removed, use cocurrent/coclass\n")!=0,EVDOMAIN)}  // scaf beta
   ASSERT(BETWEENC(p,0,128),EVDOMAIN) ASSERT(BETWEENC(q,-10,111),EVDOMAIN)   // check reasonable inputs
   ASSERT((z=findslot(p,q))!=0,EVDOMAIN)  // look up the (m,n), fail if not found
   RETF(z);  // return the block we found

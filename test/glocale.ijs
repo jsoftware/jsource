@@ -1,6 +1,7 @@
 prolog './glocale.ijs'
 
 NB. locatives -----------------------------------------------------------
+NB. tohex_z_ =: ('0123456789abcdef' {~ (16#16) #: ]) "0
 
 ab__=: x=: ?20$1e9
 x -: ab__
@@ -412,23 +413,25 @@ f2_c_ =: 3 : 0
 (<;._1 ' a b c asdf b a') -: x=: f_a_ 0
 
 f =: {{
-cocurrent <'base'
-assert. (<'base') -: 18!:5 ''
+if. 0 { y do.  NB. first cocurrent is special
+  cocurrent <'base'
+  assert. (<'base') -: 18!:5 ''
 
-cocurrent xx=:<'NonExxistent2'
-assert. xx_base_ -: 18!:5 ''
-assert. xx_base_ e. 18!:1 [0
-cocurrent_base_ <'base'
-assert. (<'base') -: 18!:5 ''
+  cocurrent xx=:<'NonExxistent2'
+  assert. xx_base_ -: 18!:5 ''
+  assert. xx_base_ e. 18!:1 [0
+  cocurrent_base_ <'base'
+  assert. (<'base') -: 18!:5 ''
 
-cocurrent <'base'
-plus_a_=: +
-4 plus_a_ _3
-assert. (<'base') -: 18!:5 ''
+  cocurrent <'base'
+  plus_a_=: +
+  4 plus_a_ _3
+  assert. (<'base') -: 18!:5 ''
 
+end.
 4!:55 ;:'a a_z_'
 d =: 0&".&.> e =: 18!:3 ''
-cocurrent e
+if. 1 { y do. cocurrent e else. cocurrent_z_ e end.  NB. first cocurrent is special; test both locative & non
 a =: 5.4
 cocurrent__ <'base'
 assert. _1 -: 4!:0 <'a'
@@ -445,7 +448,7 @@ assert. _1 -: 4!:0 <'a'
 18!:55 e
 0 = e e. 18!:1 (1)  NB. Deleted because not on stack
 }}
-f ''
+f"1 #: i. 3
 
 'locale error'    -: cocurrent etx 0
 'locale error'    -: cocurrent etx 2
@@ -547,6 +550,7 @@ g_a_=: 3 : 0
 
 g_a_ 0
 -. (<,'a') e. 18!:1 [0
+
 
 g_b_=: 3 : 0
  z=. ''

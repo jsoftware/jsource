@@ -212,6 +212,7 @@ extern F1(jtlocname);
 extern F1(jtlocnc);
 extern F1(jtlocnl1);
 extern F1(jtlocnlz1);
+extern F1(jtlochdr);
 extern DF1(jtlocpath1);
 extern F1(jtlocsizeq);
 extern F1(jtlocsizes);

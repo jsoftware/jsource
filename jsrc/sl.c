@@ -401,6 +401,29 @@ F1(jtlocnl1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w,
 // 18!:_3 locale name list, but including zombie locales
 F1(jtlocnlz1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w,1);}
 
+// 18!:_4 locale header, including exec and del counts
+F1(jtlochdr){
+ ASSERT(AR(w)==0,EVRANK)
+ RZ(vlocnl(0,w));
+ A y;
+ if(AT(w)&(INT|B01)){y=findnl(BIV0(w));  // if integer, look it up
+ }else{
+  w=AAV(w)[0];  // move to contents of box
+  if(!AR(w)&&AT(w)&((INT|B01))){  // atomic numeric locale
+   y=findnl(BIV0(w));  // OK because the boxed value cannot be virtual, thus must have padding
+  }else{
+   // string locale, whether number or numeric
+   I m=AN(w); C *u=CAV(w); 
+   ASSERT(vlocnm(m,u),EVILNAME);
+   if(u[0]<='9') y=findnl(strtoI10s(m,u));
+   else y=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u));
+  }
+ }
+ ASSERT(y!=0,EVLOCALE)  // fail if nonexistent
+ R vec(INT,8,y);  // counts are in s[0]
+}
+
+
 F2(jtlocnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
@@ -458,7 +481,7 @@ DF2(jtlocpath2){A g,h; AD * RESTRICT x;
  // This really sucks, but the alternative is to hold a lock on the path during the entire time the path is in use, which is worse.  better to
  // have a per-thread RFO flag indicating 'path in use', and wait here till all threads have been seen with that off
  // As a stopgap that will probably suffice forever, we avoid the system lock provided the new path merely extends the old from the beginning.  In that case,
- // we move the path pointer but we don't have the free anything, so we need no systemlock.  The test and exchange must be under a lock (which one isn't important,
+ // we move the path pointer but we don't have to free anything, so we need no systemlock.  The test and exchange must be under a lock (which one isn't important,
  // because this is the only place that stores a non-PERMANENT path that might get freed) to avoid ABA trouble.  We still have to use exchange to set the path because
  // a deleting thread may be installing 0 or zpath
  A op=0; ACINITZAP(x);  // op is address of A for old path, if any.  Remove death warrant for new path, in case we store it

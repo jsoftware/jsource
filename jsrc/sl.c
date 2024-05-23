@@ -678,6 +678,6 @@ B jtlocdestroy(J jt,A g){
  LOCBLOOM(g)=0;
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
- if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one
+ if(g==jt->global)SYMSETGLOBAL(jt->locsyms,*JT(jt,zpath));  // if we deleted the global locale, throw us into z locale (which is permanent)
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

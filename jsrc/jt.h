@@ -306,7 +306,7 @@ typedef struct JSTstruct {
  B assert;           // 1 iff evaluate assert. statements     
  UC seclev;           /* security level                                  */
 // 4 bytes free
- A *zpath;         // path 'z', used for all initial paths
+ A *zpath;         // path 'z', used for all initial paths.  *JT(jt,zpath) is the z locale itself
 // end of cacheline 0
 
 // Cacheline 1: DLL variables

@@ -363,16 +363,16 @@ exitpop: ;
   // normal return from call, possibly an error
   // bstkreqd is set if the function called cocurrent at any time
 // obsolete   if(unlikely(jt->uflags.bstkreqd|(flgd0cpC&FLGPOPNEEDED))){  // normal case of non-locative call and no cocurrents called: no change needed, skip all this
-   // we must return to initloc, either because we are a locative call that moved the locale, or cocurrent was called.  The current locale is in execution and must be terminated;
-   // the initial execution before all changes remains in execution and all we have to do is switch to it.
+// obsolete    // we must return to initloc, either because we are a locative call that moved the locale, or cocurrent was called.  The current locale is in execution and must be terminated;
+// obsolete    // the initial execution before all changes remains in execution and all we have to do is switch to it.
 // obsolete    if(jt->uflags.bstkreqd&(flgd0cpC>>FLGPOPNEEDEDX))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
-   if(unlikely(jt->uflags.bstkreqd))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
+  if(unlikely(jt->uflags.bstkreqd))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
 // obsolete    if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){jt->locsyms=initloc; initloc=AKGST(initloc);}   // for u./v., move locals also
 // obsolete    jt->global=initloc;  // restore original executing locale
 // obsolete   }
   jt->uflags.bstkreqd=(flgd0cpC>>FLGLOCCHANGEDX)&1;  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used either by the next call of the return from this caller
  }
- DECREXECCT(jt->global)  // finish the execution we moved to
+ DECREXECCT(jt->global)  // finish the execution we moved to.  The one we moved from resumes execution
 #endif
  // ************** errors OK now
 exitfa:

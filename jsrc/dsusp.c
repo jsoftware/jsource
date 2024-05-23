@@ -304,13 +304,13 @@ noparse: ;
 A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
  sv=FAV(self); t=sv->fgh[0]; 
  if(CCOLON==sv->id&&(sv->flag&VXOP||t&&NOUN&AT(t))){  // : and executable body: either OP (adv/conj now with noun operands) or m : n
-  ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self);   if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);  // we have self, so this can be a format point
+  ras(self); a?df2ip(z,a,w,self):df1ip(z,w,self);   if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);  // we have self, so this can be a format point
  }else{                              /* tacit    */
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 
   while(1){
    d->dcnewlineno=0;  // turn off 'reexec requested' flag
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}  // if first line is a stop
-   else              {ras(self); z=a?dfs2ip(a,w,self):dfs1ip(w,self); if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);}
+   else              {ras(self); a?df2ip(z,a,w,self):df1ip(z,w,self); if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:0]0, and we should continue on outside of debug mode.  The debug stack frames are still on the stack, but they have been unchained from the root
    if(!z&&(jt->uflags.trace&TRACEDB)){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(jt->sitop!=0)self=jt->sitop->dcf;}

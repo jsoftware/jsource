@@ -309,6 +309,7 @@ A virtifnonip(J jt, I ipok, A buf) {
 }
 
 // We intercept all the function calls, for this file only
+#if 0  // obsolete 
 static A virtdfs1(J jtip, A w, A self){
  J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  w = virtifnonip(jt,(I)jtip&JTINPLACEW,w);
@@ -320,6 +321,7 @@ static A virtdfs2(J jtip, A a, A w, A self){
  w = virtifnonip(jt,(I)jtip&JTINPLACEW,w);
  R jtdfs2(jtip,a,w,self);
 }
+#endif
 static A virtfolk(J jtip, A f, A g, A h){
  J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  f = virtifnonip(jt,0,f);
@@ -335,8 +337,8 @@ static A virthook(J jtip, A f, A g){
 }
 
 // redefine the names for when they are used below
-#define jtdfs1 virtdfs1
-#define jtdfs2 virtdfs2
+// obsolete #define jtdfs1 virtdfs1
+// obsolete #define jtdfs2 virtdfs2
 #define jtfolk virtfolk
 #define jthook virthook
 #endif

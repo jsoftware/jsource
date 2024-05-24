@@ -427,7 +427,6 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    }
    // Now that the words have been moved, install the index to them, and their number, into the cw info; step word pointer over the words added
    d->tcesx|=m; m+=q;
-// obsolete  d->ig.indiv.sentn=(US)q;
    if(2==as)as=0;  // get out of post-post-assert. state if we are in it
    ++n;
   }

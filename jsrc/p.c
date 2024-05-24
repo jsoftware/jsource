@@ -309,19 +309,6 @@ A virtifnonip(J jt, I ipok, A buf) {
 }
 
 // We intercept all the function calls, for this file only
-#if 0  // obsolete 
-static A virtdfs1(J jtip, A w, A self){
- J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
- w = virtifnonip(jt,(I)jtip&JTINPLACEW,w);
- R jtdfs1(jtip,w,self);
-}
-static A virtdfs2(J jtip, A a, A w, A self){
- J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
- a = virtifnonip(jt,(I)jtip&JTINPLACEA,a);
- w = virtifnonip(jt,(I)jtip&JTINPLACEW,w);
- R jtdfs2(jtip,a,w,self);
-}
-#endif
 static A virtfolk(J jtip, A f, A g, A h){
  J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  f = virtifnonip(jt,0,f);
@@ -337,8 +324,6 @@ static A virthook(J jtip, A f, A g){
 }
 
 // redefine the names for when they are used below
-// obsolete #define jtdfs1 virtdfs1
-// obsolete #define jtdfs2 virtdfs2
 #define jtfolk virtfolk
 #define jthook virthook
 #endif
@@ -1074,8 +1059,6 @@ failparse:
    // No ASSERT - must get to the end to pop stack
    y=QCWORD(yflags);  // point y to the start of block
    if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up
-// obsolete    I at=AT(y=QCWORD(queue[0]));  // fetch the word
-// obsolete    if(likely((at&NAME)!=0)) {
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
      if(likely((sv=s->val)!=0)){  // value has been assigned
@@ -1087,11 +1070,9 @@ failparse:
       }else{raposlocal(sv,y); y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  We must ra the value as if it came from syrd.  Flags in sv=0 to ensure flags=0 in return value
       goto gotlocalval;   // y has the unprotected value read.  We can use that.
      }
-// obsolete       raposlocal(s->val,y); goto got1val;}  // if value has not been assigned, ignore it.  Could just treat as undef.  Must ra to match syrd.  sv has QCGLOBAL semantics  scaf could avoid ra on local
     }
     if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname gives 0 without error
      // The name was found, not in a static local table.  sv has QCGLOBAL semantics
- // obsolete     if(likely(((AT(QCWORD(sv))|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
      if(likely((yflags&QCNAMEBYVALUE)|((I)sv&QCNOUN))){   // if noun or special name, use value
       if(unlikely(yflags&QCNAMEABANDON)){
 abandname:;
@@ -1113,7 +1094,6 @@ abandname:;
 gotlocalval:;  // local fetches can skip the tpush.  Value in y
    jt->parserstackframe.parserstkbgn=ostk;  // restore pointer to caller's stack frame
   }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse.  This result must not be passed into a sentence
-// obsolete   jt->parserstackframe = oframe;
   R y;  // indicate not a final assignment - and may be 0
  }
 

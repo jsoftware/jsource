@@ -745,7 +745,6 @@ indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
     // calculate agreement: ($a)-:(-#$a){.!._1(#ind),({:$ind)}.$w
     A temp; ASSERT(equ(shape(a),dfv2(temp,negate(jtrank(jt,a)),over(tally(ind),drop(tail(shape(ind)),shape(w))),fit(ds(CTAKE),num(-1)))),EVLENGTH);
     EPILOG(w);  // nothing to amend - return w
-// obsolete     ind=mtv;
    }else{A aa=ind; RZ(ind=IRS1(aa,0,1,jtbox,ind));  // ind =. <"1 ind
    }
   }  // Convert empty 2-d to atom so aindex doesn't fail

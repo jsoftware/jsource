@@ -261,7 +261,6 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
  C cd; D cct;  // local copy of id of w;  cct for comparison combination, 0=use default
  if(unlikely(d==CFIT)){cct=FAV(wv->fgh[0])->localuse.lu1.cct; cd=FAV(wv->fgh[0])->id;}else{cct=0.0; cd=d;}
  if(unlikely((cd&~1)==CEBAR)){I n=-1;
-// obsolete  if(((d&~1)==CEBAR)||(d==CFIT&&(cct=FAV(wv->fgh[0])->localuse.lu1.cct,cd=FAV(wv->fgh[0])->id)==CEPS)){I n=-1;
   I cb=0;  // will be the id of the combining operator
   if(c==CSLASH){cb=FAV(av->fgh[0])->id; n=BETWEENC(cb,CPLUS,CSTARDOT)?0:n; cb+=1;}  // +/@ set cb to id of + +. *., plus 1 to match code for combining op
   else if(c==CAMP){cb=FAV(av->fgh[0])->id; A cr=av->fgh[1]; cr=(cb&~2)==CIOTA?cr:0; n=cr==num(0)?0:n; n=cr==num(1)?1:n;} // i.&0  already has combining op, set n if 0 or 1
@@ -444,7 +443,6 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   if(unlikely((I)(SPECAND>>(c&0x3f))&BETWEENC(c,CCOMMA,CPOUND))){
    if(unlikely(BOTHEQ8(FAV(a)->id,c,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
    else switch(FAV(a)->id&0x3f){
-// obsolete    case CCOMMA: if(c==CBOX){f2=jtjlink; linktype=ACINPLACE;} break;  // x ,&< y   supports IP 
    case CBOX&0x3f:   flag |= VF2BOXATOP1; break;  // <&u mark this as <@f for the monad
    case CGRADE&0x3f: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y
    case CSLASH&0x3f: if(c==CCOMMA){f1=jtredravel; } break;   // f/&, y

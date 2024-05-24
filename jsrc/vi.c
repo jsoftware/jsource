@@ -1333,7 +1333,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
    zv[0]=incorp(x); zv[1]=incorp(h); zv[2]=hi;
   }
  }  // end of 'not sequential comparison' which means we need a hashtable
-// obsolete  I forkeyresult=AM(z);
  RZ(z=EPILOGNORET(z));
  // Since EPILOG may have rewritten AM, and IFORKEY never returns to the parser, we can store the FORKEY result in AM.
  *((mode&IIOPMSK)==IFORKEY?(I*)&AM(z):(I*)&jt->shapesink)=forkeyresult;

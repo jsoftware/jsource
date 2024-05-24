@@ -473,9 +473,6 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
-#if USEJSTACK
-   I4 savcallstack = jt->callstacknext;   // starting callstack
-#endif
    if(likely(startloc!=0)){INCREXECCT(startloc); fa(startloc);}  // raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
    A arg1=job->user.args[0],arg2=job->user.args[1],arg3=job->user.args[2];
    fa(UNvoidAV1(job));  // job is no longer needed
@@ -486,12 +483,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // ***** this is where the user task is executed *******
    A z=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
    // ***** return from user task and look for next one *****
- #if USEJSTACK
-   if(likely(startloc!=0))DECREXECCT(startloc);  // remove exec-protection from executed locale.  This may result in its deletion
-   jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
-#else
    if(likely(jt->global!=0))DECREXECCT(jt->global);  // remove exec-protection from finiishing locale.  This may result in its deletion
-#endif
    // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
    C errcode=0;
    if(unlikely(z==0)){fail:errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualERR(z,goto fail;);}  // realize virtual result before returning it

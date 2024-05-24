@@ -287,8 +287,6 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
 // result points after the last line stored into zv
 static A*jtunparse1a(J jt,I m,A*hv,A*zv){A x,y;A *v;I i,j,k;
  y=hv[0]; v=CWBASE(y); I n=CWNC(y);
-// obsolete  y=hv[0]; v=AAV(y);  // v->word 0
-// obsolete  y=hv[1]; u=(CW*)AV(y);  // u is running pointer through control words
  y=0; j=k=-1;
  UI4 prevorigt=0;  // we must revert the change of BBEND END BB[END] to BBEND BBEND BB[END]
  for(i=0;i<m;++i){  // for each word
@@ -315,8 +313,6 @@ F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  p=!((I)jtinplace&JTEXPVALENCEOFF)&&(n>=0)&&((m>=0)||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
  if(equ(mtv,hv[2])&&equ(mtv,hv[2+HN])){
   // no comments: recover the original by unparsing
-// obsolete   if(m>=0)mn=1+((CW*)AV(mc))[m-1].source; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
-// obsolete   if(n>=0)dn=1+((CW*)AV(dc))[n-1].source; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
   // if there is a definition (even if there are no control words), set mn to the inferred #source lines
   if(m>=0)mn=1+CWSOURCE(CWBASE(mc),-CWNC(mc),~(CWNC(mc)-2));else mn=0; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
   if(n>=0)dn=1+CWSOURCE(CWBASE(dc),-CWNC(dc),~(CWNC(dc)-2));else dn=0; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
@@ -343,9 +339,7 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  wv=FAV(w); h=wv->fgh[2];
  if(!(h&&CCOLON==wv->id))R reshape(v2(0L,3L),ds(CACE)); 
  hv=AAV(h);
-// obsolete  x=hv[  j]; v=    AAV(x); 
  x=hv[j]; v=CWBASE(x); n=AR(x)==1?0:CWNC(x)-1;
-// obsolete  x=hv[1+j]; u=(CW*)AV(x); n=AN(x);
  GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;
  zv=AAV(z);
  UI4 prevorigt=0;  // we must revert the change of BBEND END BB[END] to BBEND BBEND BB[END]

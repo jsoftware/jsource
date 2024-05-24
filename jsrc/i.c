@@ -180,9 +180,6 @@ static B jtconsinitt(J jt){
  RESETRANK;  // init both ranks to RMAX
  jt->ppn=6;  // default precision for printf
  jt->ecmtries=3;  // number of tries for elliptic-curve factoring
-#if USEJSTACK
- jt->fcalln=NFCALL;
-#endif
  jt->cct= 1.0-FUZZ;
  jt->xmode=XMEXACT;
  // create an initial stack, so that stack[-1] can be used for saving error messages
@@ -199,9 +196,6 @@ static B jtbufferinits(JS jjt){
 // initialise thread-local buffers for thread threadno.  Requires synchronisation
 B jtbufferinitt(J jt){
  RZ(jt->etxinfo=malloc(sizeof(ETXDATA)));  // error-message buffer
-#if USEJSTACK
- RZ(jt->callstack=malloc(sizeof(LS)*(1+NFCALL)));  // function-call stack
-#endif
  RZ(jt->rngdata=aligned_malloc(sizeof(RNG),CACHELINESIZE)); // place to hold RNG data, aligned to cacheline
  memset(jt->rngdata,0,sizeof(RNG));
  R 1;

@@ -1145,7 +1145,6 @@ void jttpop(J jt,A *old,A *pushp){A *endingtpushp;
  // pushp points to an empty cell.  old points to the last cell to be freed.  decrement pushp to point to the cell to free (or to the chain).  decr old to match
  // if jttg failed to allocate a new block, we will have left pushp pointing to the cell after the last valid cell.  This may be in unmapped memory, but
  // that's OK, because we start by decrementing it to point to the last valid push
-// obsolete  A *pushp=jt->tnextpushp;
  // errors that could not be eformatted at once might do tpop on the way out.  We ignore these if there is a pmstack.
  if(unlikely(jt->pmstacktop!=0))R;
 // measure if(EXPLICITRUNNING){I scafn=pushp-old; scafn=(UI)scafn>9?9:scafn; ++tpopscaf[scafn];}  // histo the stack size
@@ -1282,9 +1281,6 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  I nt=jt->malloctotal+=n;
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
-// obsolete #if PYXES
-// obsolete  *(I4 *)&z->origin=THREADID1(jt);
-// obsolete #endif
  MOREINIT(z);  // init allocating thread# and clear the lock
  R z;
 }
@@ -1521,7 +1517,6 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
 #if SHOWALLALLOC
 printf("%p-\n",w);
 #endif
-// obsolete  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
 #if MEMAUDIT&1
  if(hrh!=FHRHISGMP) {
 	 if((hrh==0 || blockx>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
@@ -1533,9 +1528,6 @@ printf("%p-\n",w);
 #if MEMAUDIT&17
 #endif
 #endif
-// obsolete #if PYXES
-// obsolete  I origthread=w->origin;
-// obsolete #endif
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   I allocsize = FHRHPOOLBINTOSIZE(blockx);
 #if MEMAUDIT&4
@@ -1554,8 +1546,6 @@ printf("%p-\n",w);
  }else if(unlikely(blockx==FHRHBINISGMP)){jtmfgmp(jt,w);  // if GMP allocation, free it through GMP
  }else{    // buffer allocated from malloc
   I allocsize = FHRHSYSSIZE(hrh);
-// obsolete   if(unlikely(hrh==FHRHISGMP)){mfgmp(w);
-// obsolete   }else{
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
@@ -1571,7 +1561,6 @@ printf("%p-\n",w);
 #else
   FREECHK(w);  // free the block
 #endif
-// obsolete   }
  }
 }
 

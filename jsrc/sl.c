@@ -579,23 +579,8 @@ F1(jtlocswitch){A g;
   if(((AN(w)-1)|SGNIF(AT(w),BOXX))>=0)RZ(w=box(w));  // if not empty & not boxed, box it
   ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
  }
-#if USEJSTACK
- RZ(g=locale(1,w));
- // put a marker for the operation on the call stack
- // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
- if(jt->curname){
-  // We expect just one 18!:4 per named call.  If there are more, they will create multiple POPFROMs and the later ones will be deleted.  The exec counts for the intermediate locales will
-  // not be incremented or decremented
-  // jt->global can be 0 here, if the user deleted the base locale.  The only thing he can do then is 18!:4 from keyboard level.  The POPFROM we do here will never be executed
-  pushcallstack1(CALLSTACKPOPFROM,jt->global);
- }
- SYMSETGLOBAL(jt->locsyms,g);
-
- R mtm;
-#else
-RZ(g=locale(1,w));   // point to locale, if no error
-R (A)((I)g|1);  // set LSB as flag to unquote that we ran cocurrent
-#endif
+ RZ(g=locale(1,w));   // point to locale, if no error
+ R (A)((I)g|1);  // set LSB as flag to unquote that we ran cocurrent
 }    /* 18!:4  switch locale */
 
 F1(jtlocname){A g=jt->global;

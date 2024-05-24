@@ -443,35 +443,22 @@ F1(jtjoff){I x;
 // POPFIRST on the stack (which is otherwise empty).  If there is a POPFIRST we need to decrement the current global locale.
 // in this routine jt is a thread pointer and jjt is the shared pointer
 static void jtimmexexecct(JJ jt, A x){
-#if USEJSTACK
- I4 savcallstack = jt->callstacknext;   // starting callstack
-#endif
  A startloc=jt->global;  // point to current global locale
  if(likely(startloc!=0))INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
  jtimmex(jt,x);   // run the sentence
  if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
-#if USEJSTACK
- jtstackepilog(jt, savcallstack); // handle any remnant on the call stack
-#endif
 }
 
 
 // if there is an immex sentence, fetch it, protect it from deletion, run it, and undo the protection
 // in this routine jt is a thread pointer and jjt is the shared pointer
-#if USEJSTACK
-static void runiep(JS jjt,JJ jt,A *old,I4 savcallstack){
-#else
 static void runiep(JS jjt,JJ jt,A *old){
-#endif
  while(1){
  // if there is an immex phrase, protect it during its execution
   A iep=0; if(jt->iepdo&1){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
   if(iep==0)break;
   // run the IEP and clean up after.  We leave iepdo set to 'running' during the exec to suppress postmortem debugging while IEPs are about
   jt->iepdo=2; jtimmexexecct(jt,iep); fa(iep) jt->iepdo&=~2;
-#if USEJSTACK
- if(savcallstack==0)CALLSTACKRESET(jt) 
-#endif
   MODESRESET(jt) RESETERR jttpop(jt,old,jt->tnextpushp);
  }
 }
@@ -501,19 +488,12 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
 
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
-// obsolete  // To prevent the stack from growing indefinitely, we reset it here.  We reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
-// obsolete  // the resumption of the name that was interrupted.
-#if USEJSTACK
- I4 savcallstack = jm->callstacknext;
-#endif
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
  __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
  x=jtinpl(jm,0,(I)strlen(lp),lp);
  I wasidle=jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
       // but if the master task is already running, this is a recursion, and just stay in running state
-// obsolete  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
-// obsolete  if(likely(jm->recurstate<RECSTATEPROMPT))runiep(jt,jm,old,savcallstack);
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
  x=jtddtokens(jm,x,(((jm->recurstate&RECSTATERENT)<<(2-RECSTATERENTX)))+1+(AN(jm->locsyms)>SYMLINFOSIZE));  // allow reads from jgets() if not recursive; return enqueue() result
  if(!jm->jerr)jtimmexexecct(jm,x);  //  ****** here is where we execute the user's sentence ******
@@ -527,19 +507,12 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
   JT(jt,dbuser)&=~(TRACEDBSUSCLEAR);  // always turn off flag
  }
  e=jm->jerr; MODESRESET(jm)  // save error on sentence to be our return code
-#if USEJSTACK
- if(savcallstack==0)CALLSTACKRESET(jm)
-#endif
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
  RESETERRT(jm)
  // if there is an immex latent expression (9!:27), execute it before prompting
  // All these immexes run with result-display enabled (jt flags=0)
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
-#if USEJSTACK
- if(likely(!(jm->recurstate&RECSTATERENT)))runiep(jt,jm,old,savcallstack);  // IEP does not display its errors
-#else
  if(likely(!(jm->recurstate&RECSTATERENT)))runiep(jt,jm,old);  // IEP does not display its errors
-#endif
  if(likely(wasidle)){  // returning to immex in the FE
   jtclrtaskrunning(jm);  //  clear running state in case other tasks are running and need system lock - but not if recursion
   // since we are returning to user-prompt level, we might as well take user think time to trim up memory
@@ -633,10 +606,6 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 // Run sentence; result is jt->jerr
 CDPROC int _stdcall JDo(JS jt, C* lp){int r;
  SETJTJM(jt,jm)
-// obsolete  if (jm->recurstate>=RECSTATEPROMPT) {
-// obsolete   // Debug should be turned off for ALL recursive calls (which can come from callbacks from jtwd or from user events during a prompt).
-// obsolete   dbg=0;
-// obsolete  }
  // Move to next state.  If we are not interruptible, that's an error
  I origrstate=jm->recurstate;   // save initial state
  if(unlikely(origrstate&RECSTATERUNNING))R EVCTRL;  // running: reentrance not alllowed
@@ -644,19 +613,6 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r;
 
  // set the stacklimits to use.  Normally we keep the same stackpointer throughout, but (1) if the FE is multithreaded, we check for a new one on each call and restore it after a reentrant call
  UI savcstackmin=0, savcstackinit, savqtstackinit;
-#if 0  // obsolete
-  if(unlikely(origrstate&RECSTATERENT)){
-  // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
-  savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
-  ASSERTTHREAD(!(jm->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR scaf no ASSERT
-  // we know that in PROMPT state there is no volatile C state about, such as zombie status
- }
- if(JT(jt,cstacktype)==2){
-  // multithreaded FE.  Reinit the stack limit on every call, as long as cstackmin is nonzero
-  JT(jt,qtstackinit) = (uintptr_t)&jt;
-  if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
- }
-#else
  if(JT(jt,cstacktype)==2){
   // multithreaded FE.  Reinit the stack limit on every call, as long as cstackmin is nonzero
   JT(jt,qtstackinit) = (uintptr_t)&jt;
@@ -666,18 +622,9 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r;
   }
  }
 
-#endif
-// obsolete  ++jm->recurstate;  // advance, to BUSY or RECUR state
  MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,lp);)
-#if 0   // obsolete
- if(unlikely(--jm->recurstate>RECSTATEIDLE)){  // return to IDLE or PROMPT state
-  // return from recursive call.  Restore stackpointers
-  jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // restore stack pointers after recursion
- }
-#else
  if(unlikely(savcstackmin!=0))jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // if stack pointers were saved, retire them
  jm->recurstate=origrstate;   // restore original idle/rent state
-#endif
  A *old=jm->tnextpushp;  // For JHS we call nfeinput, which comes back with a string address, perhaps after considerable processing.  We need to clean up the stack
   // after nfeinput, but we dare not until the sentence has been executed, lest we deallocate the unexecuted sentence.  Also we have to suppress the pops while there is a
   // pm debug stack.  We take advantage of the fact that the popto point doesn't change, save that here, and suppress the pop during pm

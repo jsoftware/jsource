@@ -193,18 +193,10 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // *** end of fixed block
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
 // end of cacheline 2  (spanned by shapesink)
-// obsolete  struct {
-// obsolete  } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 
  C _cl3[0];
 // things needed by name lookup (unquote)
-#if USEJSTACK
- LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
- US fcalln;           // named fn calls: maximum permissible depth   could be a fixed value?
- US callstacknext;    // current stack pointer into callstack.  Could be elided if callstack put on a 16K boundary, not a bad idea anyway
-#else
  C filler3a[12]; // 12 bytes free
-#endif
  LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
 // things needed for memory allocation
  A mempool[-PMINL+PLIML+1];             // pointer to first free block in each pool.  ends at binary boundary (no longer needed)

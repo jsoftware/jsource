@@ -3,8 +3,6 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
-#define USEJSTACK 0
-
 #if defined(__clang_major__) && !defined(__clang__)
 #error need workaround by define __clang__ in preprocessor macro
 #endif
@@ -986,16 +984,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)((x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
-// obsolete #if SY_64
 // The Bloom filter is a bitmask derived from LSBs of the hash.  The LOCBLOOM of a locale holds the OR or all the Bloom masks that
 // have been written.  When a value is looked up, we skip the table if LOCBLOOM doesn't have a 1 in each position presented by the new mask.
 // 32/64 bits is pretty short for a Bloom filter.  We get about the same results from having 1 long section as fewer:
 // 1 bit is actually best over ~30 names, and better than 4 bits over ~20 names
-// obsolete #define BLOOMMASK(hash) ((0x1LL<<((hash)&15))+(0x10000LL<<(((hash)>>4)&15))+(0x100000000LL<<(((hash)>>8)&15))+(0x1000000000000LL<<(((hash)>>12)&15)))   // Bloom filter for a given hash
 #define BLOOMMASK(hash) ((0x1LL<<((hash)&(BW-1))))   // Bloom filter for a given hash
-// obsolete #else
-// obsolete #define BLOOMMASK(hash) ((1L<<((hash)&15))+(0x10000L<<(((hash)>>4)&15)))   // Bloom filter for a given hash
-// obsolete #endif
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
 #define BOTHASUS(x,y) (((US)(C)(x)<<8)+(US)(C)(y))
@@ -1031,9 +1024,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CALL2(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jt,)
 #define CALL2IP(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jtinplace,)
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
-#if USEJSTACK
-#define CALLSTACKRESET(jm)  {jm->callstacknext=0; jm->uflags.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The first things stacked may never be popped
-#endif
 #define MODESRESET(jm)      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c
 // create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB

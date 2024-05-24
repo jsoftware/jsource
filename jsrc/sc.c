@@ -23,21 +23,16 @@ DF2(jtunquote){A z;
 
  A thisname=FAV(self)->fgh[0]; A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
  // bits 0-8 come from jtinplace
-// obsolete #define FLGPOPNEEDEDX 9  // global locale must be popped on exit
-// obsolete #define FLGPOPNEEDED ((I)1<<FLGPOPNEEDEDX)
 #define FLGPSEUDOX 11  // operation is pseudo-named function
 #define FLGPSEUDO ((I)1<<FLGPSEUDOX)
 #define FLGCACHEDX 12  // operation is cached, not requiring lookup
 #define FLGCACHED ((I)1<<FLGCACHEDX)
-// obsolete #define FLGPOPLOCALNEEDEDX 13  // locals and global locale must be popped on exit
-// obsolete #define FLGPOPLOCALNEEDED ((I)1<<FLGPOPLOCALNEEDEDX)
 #define FLGLOCCHANGEDX 14  // the caller of this function has previously encountered cocurrent
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
 #define FLGMONADX VJTFLGOK1X  // operation is monad, in position to mask verb flags
 #define FLGMONAD ((I)1<<FLGMONADX)
 #define FLGDYADX (VJTFLGOK1X+1)  // operation is dyad  must be highest flag
 #define FLGDYAD ((I)1<<FLGDYADX)
-// obsolete // bits 0-15 hold the callstackx before execution
  I flgd0cpC=((I)jt&JTFLAGMSK)+(FLGMONAD<<(w!=self));  // save flag bits to pass through to function; set MONAD/DYAD
  F2PREFIP;  // We check inplaceability of the called function.  jtinplace unused
  A explocale=jt->global;  // locale to execute in.  Init to current global, which we also use for lookups
@@ -49,7 +44,6 @@ DF2(jtunquote){A z;
  memcpy(&stack,&jt->parserstackframe.sf,sizeof(stack));  // push sf/globals/curname/locals
 #endif
  // *** errors must to go the error exit to restore stacked values
-// obsolete  A savname=jt->curname;  // we stack the executing name
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
   // normal path for named functions
@@ -60,7 +54,6 @@ DF2(jtunquote){A z;
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
      RZSUFF(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find/create locale
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
-// obsolete      explocale=explocale==stack.global?0:explocale;  // ignore locative if it does not change locale (saves atomic execct fiddling)   scaf
     }
    }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
@@ -69,16 +62,9 @@ DF2(jtunquote){A z;
    if(likely(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
-#if 0   // obsolete
-    fs=0;if(unlikely(AR(jt->locsyms)&ARHASACV))fs=jtprobe(jtx,sx,hashx,jt->locsyms); if(likely(fs==0)){fs=jtsyrd1(jtx,sx,hashx,jt->global);  // Try local (if local has an ACV), then look up the name starting in jt->global
-      // this is a pun - probe returns QCGLOBAL semantics, but we know the value is local, so we treat that as not NAMED
-    }else{raposlocal(QCWORD(fs));  // incr usecount to match what syrd1 does.  
-    }
-#else
     if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check t0 see
     fs=jtsyrd1(jtx,sx,hashx,explocale);  // not found in local, search global
    deflocal:;
-#endif
    }else{  // locative or u./v.
     // there are subroutine calls here; we refresh thisname sometimes so the compiler won't carry it in a register
     I nmflgs=NAV(thisname)->flag;
@@ -90,12 +76,9 @@ DF2(jtunquote){A z;
       thisname=jt->curname;  // refresh thisname
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
-// obsolete      explocale=explocale==stack.global?0:explocale;  // ignore locative if it does not change locale (saves atomic execct fiddling) scaf
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
      if(fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
-// obsolete       explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
-// obsolete       flgd0cpC|=FLGPOPLOCALNEEDED;  // indicate we must change locals
       jt->locsyms=(A)AM(jt->locsyms); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
       raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
      }
@@ -146,7 +129,6 @@ DF2(jtunquote){A z;
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
   jt->curname=thisname=FAV(self)->fgh[1];  // get the original name
-// obsolete   explocale=0;  // flag no explicit locale
   fs=FAV(self)->fgh[2];  // point to the actual executable
   ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;); // make sure the name's value is given also
   flgd0cpC|=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
@@ -175,33 +157,11 @@ DF2(jtunquote){A z;
 #endif
  AF actionfn=FAV(fs)->valencefns[flgd0cpC>>FLGDYADX];  // index is 'is dyad'.  Load here to allow call address to settle.  There are no calls from here to fn dispatch
  STACKCHKOFLSUFF(z=0; goto exitfa;)  // this could be in an infinite-reursion loop; check
-#if USEJSTACK
- flgd0cpC|=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry or two; execution may add more
- if(unlikely(explocale!=0)){  // there is a locative or implied locative
-  // locative. switch to it, stacking the prev value.  If the switch is to the current local symbol table, that means 'switch to caller's environment'
-  if(unlikely(explocale==jt->locsyms)){
-   pushcallstack1dsuff(CALLSTACKPUSHLOCALSYMS,jt->locsyms,z=0; goto exitfa;);  // save current locsyms
-   jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current.  Leave GST unchanged in it
-   explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
-  }
-  pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;);
-  jt->global=explocale;  // move to new implied locale.  DO NOT change locale in jt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
-  INCREXECCT(explocale);   // we are starting a new execution in explocale.  Protect the locale while it runs
- }
-#else
- // Move to the destination locale.  The question is, What to do when the locale doesn't change?  The INCREXECCT is a single
- // lock inc instruction.  We take the RFO overhead rather than a missable branch.
-// obsolete  A initloc=jt->global;  // the locale we were called in, in case we need to restore it (if local, point to locals later)
-// obsolete  if(unlikely(explocale!=0)){  // there is a locative or implied locative
-// obsolete   if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){  // u./v.: must restore globals and locals
-// obsolete    initloc=explocale;
-// obsolete    jt->locsyms=(A)AM(explocale); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
-// obsolete   }
+  // Move to the destination locale.  The question is, What to do when the locale doesn't change?  The INCREXECCT is a single
+  // lock inc instruction.  We take the RFO overhead rather than a missable branch.
   jt->global=explocale; INCREXECCT(explocale);
-// obsolete  flgd0cpC|=FLGPOPNEEDED;
-#endif
-    // scaf if someone deletes the locale before we start it, we are toast
- // ************** from here on errors must pop the stack and unra() before exiting
+  // scaf if someone deletes the locale before we start it, we are toast
+  // ************** from here on errors must pop the stack and unra() before exiting
  w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
  jt->parserstackframe.sf=fs; // as part of starting the name we set the new recursion point
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
@@ -209,13 +169,8 @@ DF2(jtunquote){A z;
   // No special processing. Just run the entity
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through if the call supports inplacing
-// obsolete   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
-// obsolete   A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace),a,w,fs);  // keep all flags in jtinplace
    z=(*actionfn)((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),a,w,fs);  // keep MODIFIER flag always, and others too if verb supports it 
-// obsolete (J)((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace)
   if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
-//  obsolete   jt->parserstackframe.sf=s;   // restore $: stack
-// obsolete  jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;  // keep all flags in jtinplace
  } else {jt=(J)((I)jt+((flgd0cpC+1)&0x200));  // jiggle jt to save register store
   // Extra processing is required.  Check each option individually
   DC d=0;  // pointer to debug stack frame, if one is allocated
@@ -227,26 +182,15 @@ DF2(jtunquote){A z;
   A execlocname=jt->global?LOCNAME(jt->global):0;  // locale name for logging, known not to change since we haven't popped the executing locale yet
   if(jt->uflags.trace&TRACEPM)pmrecord(jt->curname,execlocname,-1L,flgd0cpC>>FLGMONADX);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
-#if USEJSTACK
-  if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd && (US)flgd0cpC==jt->callstacknext){
-   pushcallstack1dsuff(CALLSTACKPOPLOCALE,jt->global,z=0; goto exitpop;); INCREXECCT(jt->global);  // push the call, and increment the count of the new exec (which is the same locale as the old)
-  }  //  If cocurrent is about, make every call visible
-#else
   if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd){
    // The caller has called encountered cocurrent.  If it does again, it will have to change locale counts.  Remember that  
    flgd0cpC|=FLGLOCCHANGED; jt->uflags.bstkreqd=0;    // remember locale already changed; remove slow mode for the next level
   }
-#endif
   if((jt->uflags.trace&TRACEDB)&&!(jt->glock||VLOCK&FAV(fs)->flag)&&!(jt->recurstate&RECSTATERENT)){  // The verb is locked if it is marked as locked, or if the script is locked; don't debug/pm any recursion
-// obsolete    z=jtdbunquote((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
-// obsolete    z=jtdbunquote((J)(((I)-JTXDEFMODIFIER>>((FAV(fs)->flag>>(VJTFLGOK1X-FLGDYADX))&((flgd0cpC&FLGDYAD)+FLGDYAD)))&(I)jtinplace),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
    z=jtdbunquote((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
   }else{
-// obsolete    A s=jt->parserstackframe.sf; jt->parserstackframe.sf=fs; z=(*actionfn)((J)(((FAV(fs)->flag&(1LL<<((flgd0cpC>>FLGDYADX)+VJTFLGOK1X)))?-1:-JTXDEFMODIFIER)&(I)jtinplace),a,w,fs); jt->parserstackframe.sf=s;
-// obsolete    A s=jt->parserstackframe.sf;
    z=(*actionfn)((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),a,w,fs);
    if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
-// obsolete    jt->parserstackframe.sf=s;
   }
   if(jt->uflags.trace&TRACEPM)pmrecord(jt->curname,execlocname,-2L,flgd0cpC>>FLGMONADX);  // record the return from call
   if(jt->uflags.spflag){                        // Need to do some form of space reclamation?
@@ -263,95 +207,9 @@ DF2(jtunquote){A z;
  // To prevent half-deletion while the locale is running, we increment the execution count when an execution (including the first) switches into the locale, and decrement the
  // execution count when that execution completes (either by a switch back to the previous locale or a successive 18!:4).
 exitpop: ;
-#if USEJSTACK
- I callstackx=(US)flgd0cpC;  // extract the init call stackx, which we will use to analyze
- if(unlikely(callstackx!=jt->callstacknext)){  // normal case, with no stack, bypasses all this
-  // There are stack entries.  Process them
-  I csatop=jt->callstacknext-1; I cstop=jt->callstack[csatop].type;  // index of top of stack, and type stored there  
-  if(likely(((cstop^CALLSTACKPOPLOCALE) | (callstackx^csatop))==0)) {   // jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext
-   // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
-   DECREXECCT(jt->global);  // end the execution that we started with this locative
-   SYMSETGLOBAL(jt->locsyms,jt->callstack[csatop].value);  // restore global locale
-   jt->callstacknext=callstackx;  // restore stackpointer for caller
-  }else{
-   // Locales were changed.  Process the stack fully
-   // PUSHLOCALSTYMS (u./v.) will always be first in stack, and we can process it now.  If it is there it is always followed by a POP
-   if(jt->callstack[callstackx].type&CALLSTACKPUSHLOCALSYMS){SYMSETLOCAL((A)jt->callstack[callstackx].value); callstackx++;}  // restore locsyms if we stacked it, and restore possibly-changed global value therein
-   // The stack is [CALLSTACKPUSHLOCALSYMS] [POPLOCALE] [POPFROM], no more.  We have advanced callstackx past the CALLSTACKPUSHLOCALSYMS if any
-
-   // scaf It is possible that the stack might be malformed, if the user called 18!:4 and then other calls without return.  Boot does this, alas; in particular stdlib calls 18!:4 directly and then finishes with cocurrent,
-   // Which leaves the stack holding POPFROM followed by FIRST.  In this case the intermediate locales did not get their execcts raised/lowered, but that's OK during initialization.
-   // It appears that we can get out of boot by just processing the stack back to front, but it would be better for boot to use cocurrent everywhere
-
-   A fromloc=0;  // the locale to POPFIRST, if any.  Comes from POPFROM, but can be overridden by POP
-   A popdecrloc=jt->global;  // POP must decrement the execct of the locale it started.  This was put into jt->global and will still be there
-      // if there is no POPFROM/POPFIRST/CHANGELOCALE, all of which indicate the the implied locale was changed by the called name.  In those cases, the
-      // locale started in this name is in the POPFROM/POPFIRST/CHANGELOCALE, which will be the FIRST 18!:4 encountered.  The POPFIRST/CHANGELOCALE is reponsible for
-      // decrementing the usecount of jt->global, which was incremented when the POPFIRST/CHANGELOCALE was stacked
-   // Process the stack in reverse order.
-   do{
-    if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPFROM){
-     popdecrloc=jt->callstack[jt->callstacknext-1].value;  // recover the starting locale of this execct
-     // if TOS is POPFROM, the verb issued 18!:4 (perhaps multiple times, in which case we remember the first).  We must remember
-     // the locale as of the 18!:4 as a flag, so we don't reset the global pointer, and also as a value in case we have to add a POPLOCALEFIRST to it.
-     // If the verb is u./v., we ignore the POPFROM so that the global value in the extended definition doesn't change
-     if((US)flgd0cpC==callstackx){
-      // The just-completed name did n>0 18!:4s, and n-1 INCR/DECR pairs.  It is left to us to INCR for the last value, left in jt->global
-      INCREXECCT(jt->global);  // signal execution started on the last 18!:4
-      fromloc=jt->callstack[jt->callstacknext-1].value;  // remember original locale when calling the cover for 18!:4
-     }
-    }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
-     popdecrloc=jt->callstack[jt->callstacknext-1].value;  // recover the starting locale of this execct
-     // if TOS is POPLOCALEFIRST/CHANGELOCALE, the execution of this name included a change of locale.  We know this name will be popping, because CHANGELOCALE is created only when we are pushing on every call.
-     // Therefore we must terminate the execution of the global locale.
-     // EXCEPTION for boot kludge: if this stack frame also includes POPFROM, the execution of the implied locale will be inherited by the caller.  Don't terminate.  Cannot occur if cover used for 18!:4
-     // as a result of this, the execct of base is large, preventing its deletion.
-     if(!(jt->callstacknext-1>callstackx&&jt->callstack[jt->callstacknext-2].type&CALLSTACKPOPFROM))DECREXECCT(jt->global);  // end execution of the last switched locale - unless it persists (kludge)
-     if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){SYMSETGLOBAL(jt->locsyms,jt->callstack[jt->callstacknext-1].value); jt->uflags.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
-    }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALE){
-     // if this name did POPLOCALE, we have to terminate the execution that it started (now in jt->global); and also restore the implied locale EXCEPT when we had POPFROM indicating that the current name
-     // is a cover for 18!:4.  In that case we suppress the restore
-     DECREXECCT(popdecrloc);  // end execution of the locale this POP moved to
-     if(fromloc==0){SYMSETGLOBAL(jt->locsyms,jt->callstack[jt->callstacknext-1].value);  // pop to the caller's value, except when we are the cover for 18!:4
-     }else{fromloc=jt->callstack[jt->callstacknext-1].value;}  // if we are the cover for 18!:4, we may be a locative (usually the POP would not change the locale).  In case it does, we must point to the locale we are returning to
-    }
-   }while(--jt->callstacknext>callstackx);  // process the whole stack in reverse order
-
-   jt->callstacknext=(US)flgd0cpC;  // restore stackpointer for caller.  The following pushes are onto the caller's stack
-   // scaf NOTE: if there is no higher executing name, these pushes will never get popped.  That would correspond to trying to delete the locale that is running at the console,
-   // or typing (cocurrent 'a') into the console, which would leave a POP on the stack, never to be executed because there is no higher function to return to base locale.
-   // There is no way to detect this, because names that don't change locales don't leave a trace, and thus there is no guarantee that the function-call stack will
-   // be at 0 when the last name returns, because the name might have been called from the middle of a tacit expression that already had a function-call depth when the
-   // name was called.
-   // Therefore, we reset the name-stack pointer whenever we call from console level (jt->uflags.bstkreqd too)
-
-   // We have the implied locale and execution counts right.  If the name we are running did 18!:4 to change the locale in the caller, we have to
-   // install a stack entry in the caller to indicate that fact.  BUT we have to keep the stack to just a single POPLOCALEFIRST/POPFROM/CHANGELOCALE, so we may have
-   // to look into the caller's stack to see if there is something already there.  If there is, we add nothing, because we need the earliest pop-to locale.
-   if(fromloc){  // if we have just called 18!:4...
-    if(!jt->uflags.bstkreqd){
-     // We are still in fast mode.  That means that there in no 18!:4 info on the stack, and we can safely add CALLSTACKPOPLOCALEFIRST to the caller's stack.
-     pushcallstack1(CALLSTACKPOPLOCALEFIRST,fromloc); jt->uflags.bstkreqd=1;
-    }else{
-     // We are in slow mode, which means the caller's stack must contain something.  It can't contain POPFROM, which is erased after it is read
-     if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
-      // if the caller already has a locale-change token, we don't add another one.  The caller must have called the 18!:4 cover previously.  The previous implied locale, which
-      // we expected would be decremented on return from the caller, needs to be decremented now instead.  The new implied locale is retained and will be decremented when
-      // the CHANGE/FIRST is executed.
-      DECREXECCT(fromloc);   // undo the INCR of the formerly-ending exec, which is now just a middle
-     }else{
-      // First 18!:4 in the caller.  Add a CHANGELOCALE entry to cause the implied locale to be decremented before the caller returns.
-      pushcallstack1(CALLSTACKCHANGELOCALE,fromloc);
-     }
-    }
-   }
-  }
- }
-#else
  // LSB of z is set in the return iff what we just called was cocurrent
  if(unlikely((I)z&1)){  // was the call to cocurrent?  (if error, it's just an error)
   z=(A)((I)z&~1); INCREXECCT(z);  // z has the locale to switch to.  clear flag bit; indicate new execution starting in the locale we switch to
-// obsolete   if(flgd0cpC&FLGPOPNEEDED)
   // we temporarily started an execution for the locative (now jt->global).  We will close that below in common code
   if(flgd0cpC&FLGLOCCHANGED)DECREXECCT(stack.global)   // if the caller's locale was moved to by cocurrent(i.e. this is the second cocurrent in the calling function), it must be replaced by z.  No DECR is performed for the FIRST cocurrent, so if that was entered by a locative
          // it will be owed a DECR.  We can't DECR the first call because it might be in execution higher in the stack and already have a delete outstanding
@@ -362,18 +220,10 @@ exitpop: ;
  }else{
   // normal return from call, possibly an error
   // bstkreqd is set if the function called cocurrent at any time
-// obsolete   if(unlikely(jt->uflags.bstkreqd|(flgd0cpC&FLGPOPNEEDED))){  // normal case of non-locative call and no cocurrents called: no change needed, skip all this
-// obsolete    // we must return to initloc, either because we are a locative call that moved the locale, or cocurrent was called.  The current locale is in execution and must be terminated;
-// obsolete    // the initial execution before all changes remains in execution and all we have to do is switch to it.
-// obsolete    if(jt->uflags.bstkreqd&(flgd0cpC>>FLGPOPNEEDEDX))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
   if(unlikely(jt->uflags.bstkreqd))DECREXECCT(explocale)  // if we started with a locative and then had cocurrent, a DECR of explocale is owed (see above)  
-// obsolete    if(unlikely(flgd0cpC&FLGPOPLOCALNEEDED)){jt->locsyms=initloc; initloc=AKGST(initloc);}   // for u./v., move locals also
-// obsolete    jt->global=initloc;  // restore original executing locale
-// obsolete   }
   jt->uflags.bstkreqd=(flgd0cpC>>FLGLOCCHANGEDX)&1;  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used either by the next call of the return from this caller
  }
  DECREXECCT(jt->global)  // finish the execution we moved to.  The one we moved from resumes execution
-#endif
  // ************** errors OK now
 exitfa:
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){faacv(fs);}  // unra the name if it was looked up from the symbol tables
@@ -383,32 +233,8 @@ exitname:
 #else
  memcpy(&jt->parserstackframe.sf,&stack,sizeof(stack));  // restore sf/globals/curname/locals
 #endif
-// obsolete jt->curname=savname;  // restore the executing name
 RETF(z);
 }
-
-#if USEJSTACK
-// This code needs to be executed before returning to the initial caller (i. e. the keyboard, or at end of task).
-// It cleans up any stack entries left by the first named call (since there was no end-of-stack to handle them)
-void jtstackepilog(J jt, I4 initcurrstack){
-// scaf simplify
- // the stack may contain POPFIRST or POPFROM if the call changed locales, either properly by cocurrent or illicitly by 18!:4.  In either case we leave the implied locale as the
- // verb left it, i. e. NOT simulating a return to a named call in the FE.  But we do process the stack 
- while(jt->callstacknext>initcurrstack){  // discard the stack for this call.  This largely follows the code at the end of unquote
-  if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPFROM){
-   // if TOS is POPFROM, the user executed 18!:4 from the keyboard.  The new locale has not been started, so we do nothing.
-  }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKCHANGELOCALE+CALLSTACKPOPLOCALEFIRST){
-   // The called function switched locales and incremented the count for the new locale.  We must close that execution
-   DECREXECCT(jt->global);  // end execution of the last switched locale
-   if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.bstkreqd = 0;}  // processing FIRST takes us back to fast mode
-    // We don't go to fast mode willy-nilly because we could be an interrupt handler and the interrupted function may be in slow mode
-  }else if(jt->callstack[jt->callstacknext-1].type&CALLSTACKPOPLOCALE){
-   // Since we know we didn't do a POP, there's no need to look for one
-  }
-  --jt->callstacknext;
- } // process the whole stack in reverse order
-}
-#endif
 
 
 // return ref to adv/conj/verb whose name is a and whose value/type is val (with QCGLOBAL semantics if it is not 0; but typeflags may be 0 in a NONzero value if the result should be value/0)
@@ -421,7 +247,6 @@ void jtstackepilog(J jt, I4 initcurrstack){
 // The value is used only for flags and rank
 A jtnamerefacv(J jt, A a, A val){A y;V*v;
  y=likely(val!=0)?QCWORD(val):ds(CCAP);  // If there is a value, use it; if not, treat as [: (verb that creates error)
-// obsolete  if(unlikely((NOUN&AT(y))!=0))R (A)((I)val|QCFAOWED);  // if noun, keep the flags, and indicate we didn't fa() it
  if(unlikely(((I)val&QCNOUN)!=0))R (A)((I)val|QCFAOWED);  // if noun, keep the flags, and indicate we didn't fa() it
  // This reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: so we clear the bucket info if we ra() the reference

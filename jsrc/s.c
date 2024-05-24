@@ -786,7 +786,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
     // very often a final assignment will assign the abandoned result of the last computation.  These values accumulate on the tstack and have to
     // be popped off every now & then in jtxdefn, since there is nothing else to pop them.  We detect this important case, in which the zaploc of the
     // abandoned value is the very last thing on the tstack: then we back up tpushp, removing all trace of the block
-// obsolete     *AZAPLOC(w)=0;
     ZAPTSTACKEND(w) ACRESET(w,ACUC1)  // make it non-abandoned.  Like raczap(1).  Context must ensure that taking w off tstack will not invalidate any pending tpop
     // It would be a disaster to back the tstack to in front of a valid 'old' pointer held somewhere.  The subsequent tpop would never end.  The case cannot occur, because we set 'old'
     // only before sentence execution, and there is no way for an anonymous abandoned value to come from a higher level (name:_ pushes a stack entry at the current level; assignment to y clears inplaceability).

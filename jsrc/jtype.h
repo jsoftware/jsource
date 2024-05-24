@@ -748,15 +748,6 @@ UI4 tcesx;  // cw type/canend/number of first word in the line
 #define TCESXCECAN ((UI4)1<<TCESXCEX)  // set if this result can become the result of the defn
 #define TCESXCECANT ((UI4)2<<TCESXCEX)  // set if this result cannot become the result of the defn
 #define TCESXSXMSK 0xffffff  // mask of line-number bits
-// obsolete  union{
-// obsolete   struct {
-// obsolete    C type;  // control-word number from w.h (bits 0-5)
-// obsolete    C canend;  // Indicates that the most-recent B-block result can (1) or can't (2) become the result of the running definition.  0 means we don't know yet.
-// obsolete    US obsolete;    // number of tokens in the sentence
-// obsolete    I4 sentx;   // index of the start of the sentence in the sequential list of tokens for the definition
-// obsolete   } indiv;  // individual fields
-// obsolete   UI group[2-SY_64];  // fields all in one or two words
-// obsolete  } ig;
  US go;  // line number.  Depends on type; can be loop-to point, failing-branch point, or error handler
  US source;  // source line number
 } CW;
@@ -920,24 +911,6 @@ typedef struct {
 
 
 // Definition of callstack
-
-#if 1  // beta
-typedef struct {
- I type;  // type of entry, flagged per below
- void *value;  // locale or name, depending on the type
-} LS;
-#define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
-#define CALLSTACKPOPFROM 4  // value is jt->global that must be modified in the caller of this function also
-#define CALLSTACKCHANGELOCALE 8  // value is the value of jt->global before it was modified by the called function
-#define CALLSTACKPOPLOCALEFIRST 16  // set in the POPLOCALE that is added when the first POPFROM is seen
-#define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
-
-// Add an entry to the call stack, and increment the index variable
-#define pushcallstack(i,t,v) (jt->callstack[i].type=(t), jt->callstack[i].value=(v), ++i)
-#define pushcallstack1(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK); pushcallstack(jt->callstacknext,(t),(v));}
-#define pushcallstack1d(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK); pushcallstack(jt->callstacknext,(t),(v));}
-#define pushcallstack1dsuff(t,v,suff) {ASSERTSUFF(jt->callstacknext<jt->fcalln,EVSTACK,suff); pushcallstack(jt->callstacknext,(t),(v));}
-#endif
 
 // NM struct: pointed to by the name field of a symbol, and used for lookups.  Names are allocated with rank 1 (?? but it means first cacheline is unused)
 typedef struct{

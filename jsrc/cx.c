@@ -25,20 +25,12 @@
 #define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); z=0; goto bodyend;}}
 #define BZ(e)          {if(unlikely(!(e))){z=0; goto bodyend;}}
 
-// obsolete #if SY_64
-// obsolete #define CWSOURCEX (tcesx>>32)  // .sentx
-// obsolete #else
-// obsolete #define CWSOURCEX (cw[i].ig.indiv.sentx)
-// obsolete #endif
 #define CWCTX 16  // position of CWCT in flags reg
 #define OBCW (NPGpysfmtdl>>CWCTX)   // out-of-bounds value, ~(#stored cw-1) = -(#stored cw-1)-1 = -#storedcw
 #define CNSTOREDCW (NPGpysfmtdl>>CWCTX)  // negative of # stored CWs, used for indexing components
 
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
 // line-> box 0 - tokens; x->box 1 - A block for control words; n (in flag word)=#control words; cw->array of control-word data, a CW struct for each
-// obsolete #define LINE(sv)       {A x; \
-// obsolete                         hv=AAV(sv->fgh[2])+4*((NPGpysfmtdl>>6)&1);  \
-// obsolete                         line=AAV(hv[0]); x=hv[1]; NPGpysfmtdl&=65535; NPGpysfmtdl|=(AN(x)<<16); cw=(CW*)AV(x);}
 #define LINE(sv) {A x=AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0]; cwsent=CWBASE(x);  NPGpysfmtdl&=((I)1<<CWCTX)-1; NPGpysfmtdl|=-(CWNC(x)<<CWCTX);}
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
@@ -65,7 +57,6 @@
     goto nextline;}
 #define CHECKNOUN(ob) if (unlikely(!(NOUN&AT(t))))NOUNERR(t,tic,ob)   /* error, T block not creating noun */ \
 
-// obsolete  I m=(tcesx>>16)&0xffff;
 
 // run one line.  If we see break request, accept it as ATTN but promote it to BREAK in other cores if debug off
 // if debug mode/perfmon, call parsex which will check for stops and go into suspension on error; turn off debug mode if user clears it
@@ -82,7 +73,6 @@
    if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,ic,0); \
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
-// obsolete  if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(AT(self)&ADV+CONJ)||((UI)(i+1)<(UI)(CNSTOREDCW)&&cw[i+1].tcesx&TCESXCECANT))
 
 // for./select. control structure
 typedef struct CDATA {
@@ -248,8 +238,6 @@ DF2(jtxdefn){
 
  ARGCHK2(a,w);
  A * RESTRICT cwsent;   // Base pointer, to both the cw data (going down) and the sentence words (going up)  Filled in by LINE
-// obsolete  A *line;   // pointer to the words of the definition.  Filled in by LINE
-// obsolete CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
  I NPGpysfmtdl;  // flags: 1=locked 2=debug set(& not locked) 4=tdv->ndx!=0 8 unused 16=(parser frame allocated) 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
              // 64=call is dyadic 128=pm is running    0xff00=(flags byte: mostly debug, but bit 1 from trapping)   >>16=-(#cws in the definition including sentinel)=~#cws
 #if NAMETRACK
@@ -266,7 +254,6 @@ DF2(jtxdefn){
  A locsym;  // local symbol table to use
 
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
-// obsolete  A *hv;  // will hold pointer to the precompiled parts
  A u,v;  // pointers to args
  {  // for name scope only
   NPGpysfmtdl=(w!=self?64:0);  // set if dyad, i. e. dyadic verb or any conjunction.
@@ -419,18 +406,14 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
        // This will affect the current definition and all pyx executions of this definition.  We allow it because
        // it's for debug only.  The symbol table itself persists
        A *base=CWBASE(AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]);
-// obsolete        DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
        DO(AN(AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]),A l=base[i]; if((I)l&QCISLKPNAME){NAV(QCWORD(l))->bucket=0;});
       }
      jt->sitop->dcredef=0;
     }
    }
-// obsolete    IFOB(unlikely)goto bodyend;  // exit if ic is still ob
    tcesx=CWTCESX(cwsent,ic);  // since i may have been updated - not to mention the defn - refetch the line info
   }  // end of overhead for debug/pm
 
-// obsolete   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
-// obsolete   IFOB(unlikely)goto bodyend;  // normal exit at end of definition
   // process the control word according to its type
   // the names cwsent, ic, NPGpysfmtdl, tcesx, t, z, jt, and old fit into the 8 nonvolatile non-SP registers
   // **************** switch by line type ********************
@@ -440,22 +423,16 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
   // if there is nothing but if./while/end. most of the branches are internal
   case CBBLOCK:  // (also BLOCKEND) placed first because likely case for unpredicted first line of definition
-// obsolete  case CBBLOCKEND:
 dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
-// obsolete    if(old!=jt->tnextpushp)tpop(old);    // we must tpop before every sentence because parse may end with tpushes that would make a block eligible for inplaced assignment.  Test is 1 cycle to save 30
    parseline(z,tpop(old);,t=0;);  // *** run user's line *** sets tcesx to thisline/nextline; t=0 so t doesn't have to be preserved over subrt calls
    // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
    if(likely(z!=0)){bic=ic; ic-=(tcesx>>(32+TCESXTYPEX+5))+1;  // advance to next sentence to be executed, which is NSI, or NSI+1 if BBLOCKEND
     // the sequence BBLOCKEND BBLOCKEND indicates that the second BBLOCKEND was originally an END that went to NSI which was BBLOCK, i. e. end. for an if./select. followed by BBLOCK.
-// obsolete     if(!(((tcesx&(0x1f<<TCESXTYPEX))^((CBBLOCK&0x1f)<<TCESXTYPEX))|jt->uflags.trace))goto dobblock;  // if NSI is BBLOCK, run it; if we have BBE BBE BB[E], run BB[E] as bblock 
     if(!(TXOR5(tcesx,CBBLOCK)|jt->uflags.trace))goto dobblock;  // if NSI is BBLOCK, run it; if we have BBE BBE BB[E], skip second BBE (which was an END) - even for debug/pm -  and run BB[E] as bblock 
     if(!(TXORTOP5(tcesx,32+(CIF&CWHILE))|jt->uflags.trace)){--ic; goto knowntblock;}  // if NSI is flagged if./while., skip over it, knowing it is followed by tblock. i was always decremented by 1
     goto nextline;  // not another B block or if./while., dispatch the next location (which might not be in tcesx)
-// obsolete     IFOB(unlikely)goto nextlinetcesx;  // end of definition.  Would be nice to go straight to bodyend but we have to check for ss stop after this line
-// obsolete     if(!(((((tcesx=cw[i].tcesx)>>TCESXTYPEX)^CBBLOCK)&0x1f)|jt->uflags.trace))goto dobblock;  // avoid indirect-branch overhead on the likely case of another B block
-// obsolete (((tcesx>>TCESXTYPEX)^CBBLOCK)&0x1f
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
@@ -477,34 +454,25 @@ dobblock:
 
   case CIF: case CWHILE:
    --ic;  // always step to first line of tblock, which must be in range
-// obsolete    i=cw[i].go;  // Point to the next sentence, whatever it is
-// obsolete    if(unlikely((UI)i>=(UI)(CNSTOREDCW)))goto nextline;  // no fallthrough if line exits
    tcesx=CWTCESX(cwsent,ic); if(unlikely(TXOR5(tcesx,CTBLOCK)|jt->uflags.trace))goto nextlinetcesx;  // redispatch if next is not tblock
    // fall through to...
 
   case CASSERT: case CTBLOCK:
  knowntblock:;  // tcesx may contain the previous line's value in place of TBLOCK - but it won't be ASSERT
-// obsolete tblockcase:
    // execute and parse line as if for B block, except save the result in t
    // If there is a possibility that the previous B result may become the result of this definition,
    // protect it during the frees during the T block.  Otherwise, just free memory
-// obsolete    if(old!=jt->tnextpushp)if(likely(tcesx&TCESXCECANT))tpop(old);else z=gc(z,old);  // must tpop before each user sentence  2 means previous B can't be the result
-// obsolete    if(likely(tcesx&TCESXCECANT))tpop(old);else z=gc(z,old);   //
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(unlikely(TEQ5(tcesx,CASSERT))){
     if(JT(jt,assert)){
      parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
      if(likely(t!=0)){  // assert without error
       t=mtv;  // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while.  So we use a safe permanent value, mtv.  
-// obsolete       --ic; IFOB(unlikely)goto nextlinetcesx; ++ic;  //  // The only way a T-block can run off the end is from an assert.  Check for that
      }
     }else{--ic; goto nextline;}  // if ignored assert, go to NSI
    }else{parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);} // no assert: run the line  resets tcesx to thisline/nextline
    // this is return point from running the line
    if(likely(t!=0)){tic=ic,--ic;  // if no error, continue on.  ++i must be in bounds for a non-assert T block (there must be another control word)
-// obsolete     if(unlikely((UI)i>=(UI)(CNSTOREDCW))){ i=i&0xffff; goto nextline;} // scaf  // exit if end of defn  scaf impossible! tblock cannot end fn
-// obsolete     if(unlikely((((((tcesx=CWTCESX(cwsent,i))>>TCESXTYPEX)^CDO))|jt->uflags.trace)!=0))goto nextline;   // next line not do.; T block extended to more than 1 line (rare)
-// obsolete     tcesx=CWTCESX(cwsent,ic);
     if(unlikely(TXOR5(tcesx,CDO)|jt->uflags.trace))goto nextlinetcesx;   // next line not do.; T block extended to more than 1 line (rare).
    }else{
     // *** the rest is error cases
@@ -543,12 +511,8 @@ dobblock:
    }
    // false cases come here, and a few true ones
  elseifasdo:;  // elseif is like do. with a failing test - probably followed by B.  i is set  case./fcase after the first also come here, to branch to end.
-// obsolete    IFOB(unlikely)goto bodyend;
  safedo:;  // here when we have advanced ic.  If this op is flagged we know the thing at ic is a bblock[end].  tcesx still has the value from the previous ic
-// obsolete    if((I4)tcesx&((I)1<<(TCESXTYPEX+5)))goto dobblock;   // normal case, we know we are continuing with bblock.  No need to fetch it
    if(FLAGGEDNOTRACE(tcesx))goto dobblock;   // normal case, we know we are continuing with bblock.  No need to fetch it
-// obsolete    tcesx=CWTCESX(cwsent,ic);  // 
-// obsolete  if(likely(!(TXOR5(tcesx,CBBLOCK)|jt->uflags.trace)))goto dobblock;  // normal case, continue with B processing
    goto nextline;   // otherwise fetch & redispatch next line
   }
 
@@ -651,7 +615,6 @@ dobblock:
    }
    ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to next sentence, which might be after end., or (for the first case.), the test
    goto elseifasdo;  // case. after the first marks the end of a do. block and is like elseif
-// obsolete    IFNOTOB(likely)if(likely(!((((tcesx=CWTCESX(cwsent,ic))>>TCESXTYPEX)^CTBLOCK)|jt->uflags.trace)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
    // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
@@ -668,8 +631,6 @@ dobblock:
     t=0;
    }
    // the probable next instruction is the bblock if the test was true or the next tblock if the test was false.  No prediction
-// obsolete    IFNOTOB(likely)
-// obsolete    if(likely(!(((((tcesx=CWTCESX(cwsent,ic))>>TCESXTYPEX)^CBBLOCK)&0x1f)|jt->uflags.trace)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    goto nextline;
     
   case CGOTO: case CBREAKS: case CCONTS: case CBREAK: case CCONT: case CBREAKF: case CRETURN: // goto_label. or any break/continue/return.  Close any structures we branch out of
@@ -682,11 +643,9 @@ dobblock:
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
    goto nextline;
-// obsolete    goto checkbreak;   // finish up through BREAK check
 
   default:   //   CELSE CWHILST CEND
    ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to the next sentence, whatever it is
-// obsolete checkbreak:;
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
    if(likely(FLAGGEDNOTRACE(tcesx)))goto dobblock;   // normal case, flagged so we know we are continuing with bblock.  No need to fetch it
@@ -1166,11 +1125,8 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
       // mark the block as PPPP if it will need extra parens: (( )) or noun or non-noun & not invisible modifier, which always has ( ) added
       A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1)); makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
       // Replace the () block with its parse, close up the sentence
-// obsolete , zero the ending area
       lvv[startx]=QCINSTALLTYPE(pfrag,ATYPETOVALTYPE(AT(pfrag))); DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];)
-// obsolete  DP(rparx-startx, lvv[endx+i]=0;) 
       // Adjust the end pointer and the ) position
-// obsolete       cwv[j].ig.indiv.sentn=
       endx-=rparx-startx; rparx=startx;  // back up to account for discarded tokens; resume as if the parse result was at ) position
      }else{RESETERR} // skipping because of error; clear error indic
     }

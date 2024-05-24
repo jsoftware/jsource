@@ -9,14 +9,6 @@ static I jtfdepger(J jt,A w){R 0;
 }
 
 
-// obsolete DF1(jtdfs1){F1PREFIP;A s=jt->parserstackframe.sf,z; RZ(self); df1(z,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; RETF(z);}
-// obsolete DF2(jtdfs2){F2PREFIP;
-// obsolete A s=jt->parserstackframe.sf,z; 
-// obsolete RZ(self); 
-// obsolete df2(z,a,w,jt->parserstackframe.sf=self); jt->parserstackframe.sf=s; 
-// obsolete RETF(z);}    
-// obsolete      /* for monads and dyads that can possibly involve $: */
-// obsolete 
 
 // $: itself
 F1(jtself1){A z; STACKCHKOFL df1(z,  w,jt->parserstackframe.sf); RETF(z);}

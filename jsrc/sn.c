@@ -157,7 +157,7 @@ static F2(jtnlx){A z=mtv;B b;I m=0,*v,x;
  DQ(AN(w), x=*v++; m|=nlmask[BETWEENC(x,0,6)?x:7];); 
  AS(a)[0]=m&RHS; b=1&&AS(a)[0]&RHS;  // AS(a)[0] is used for the type mask   b='type is NOUN/VERB/ADV/CONJ'
  ASSERT(!(m&MARK),EVDOMAIN);
- if(b           )RZ(z=nlxxx(a,jt->global));  // get list of global symbols
+ if(b)RZ(z=nlxxx(a,jt->global));  // get list of global symbols
  if(b&&EXPLICITRUNNING)RZ(z=over(nlxxx(a,jt->locsyms),z));   // if there are local symbols, add them on
  if(m==SYMB     )RZ(z=over(nlsym(a,JT(jt,stloc),0),z));
  R nub(grade2(z,ope(z)));

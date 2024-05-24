@@ -444,9 +444,9 @@ F1(jtjoff){I x;
 // in this routine jt is a thread pointer and jjt is the shared pointer
 static void jtimmexexecct(JJ jt, A x){
  A startloc=jt->global;  // point to current global locale
- if(likely(startloc!=0))INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
+ INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
  jtimmex(jt,x);   // run the sentence
- if(likely(startloc!=0))DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
+ DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
 }
 
 

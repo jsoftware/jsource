@@ -718,7 +718,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx);
  }else{  // not locative assignment
 
-  if(g==jt->global){  // global assignment.  They might both be 0 but that's OK, searches will fail
+  if(g==jt->global){  // global assignment.
    // check for non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
    I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(arloc,ARNAMEADDEDX));   // 0 if bucketx positive (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise

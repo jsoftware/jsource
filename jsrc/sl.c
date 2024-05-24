@@ -585,7 +585,7 @@ F1(jtlocswitch){A g;
 
 F1(jtlocname){A g=jt->global;
  ASSERTMTV(w);
- ASSERT(g!=0,EVLOCALE);
+// obsolete  ASSERT(g!=0,EVLOCALE);
  R boxW(sfn(0,LOCNAME(g)));
 }    /* 18!:5  current locale name */
 
@@ -647,7 +647,7 @@ exitlock:
  R z;
 }
 
-// destroy symbol table g, which must be named or numbered
+// destroy symbol table g, which must be named or numbered and must be 'out of execution' (i. e. execct=0)
 // We cannot simply delete the symbol table, because it may be extant in paths.  So we empty the locale, and clear its path to 0
 // to indicate that it is a zombie.  We reset the Bloom filter to make sure the path doesn't respond to any names.  We also reduce the
 // usecount.  When the locale is no longer in any paths, it will be freed along with its name.
@@ -663,6 +663,9 @@ B jtlocdestroy(J jt,A g){
  LOCBLOOM(g)=0;
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
- if(g==jt->global)SYMSETGLOBAL(jt->locsyms,*JT(jt,zpath));  // if we deleted the global locale, throw us into z locale (which is permanent)
+ // The current implied locale can be deleted only after it leaves execution, i. e. after it returns to immex in all threads where it is current.
+ // We are allowed to change it then because it is not stacked anywhere.  We change to z so that (1) we can be assured jt->global is always valid;
+ // (2) the user doesn't have the disorienting experience of no locale and no path.
+ if(unlikely(g==jt->global))SYMSETGLOBAL(jt->locsyms,*JT(jt,zpath));  // if we deleted the global locale, throw us into z locale (which is permanent)
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

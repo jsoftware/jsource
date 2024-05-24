@@ -393,7 +393,7 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
      // If the most recent stack entry before this entity started is a CALL, that is the name to use (it may have been extracted from an anonymous operator).
      // Otherwise, the call is truly anonymous and we use a name of ''
      NPGpysfmtdl|=128;  // indicate pm running so we flag calls to parser
-     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,jt->global?LOCNAME(jt->global):0,~ic,NPGpysfmtdl&64?VAL2:VAL1);  // scaf should use lev to add >>
+     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,LOCNAME(jt->global),~ic,NPGpysfmtdl&64?VAL2:VAL1);  // scaf should use lev to add >>
     }
 
     // If the executing verb was reloaded during debug, switch over to the modified definition

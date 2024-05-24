@@ -483,7 +483,8 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // ***** this is where the user task is executed *******
    A z=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
    // ***** return from user task and look for next one *****
-   if(likely(jt->global!=0))DECREXECCT(jt->global);  // remove exec-protection from finiishing locale.  This may result in its deletion
+// obsolete    if(likely(jt->global!=0))
+   DECREXECCT(jt->global);  // remove exec-protection from finishing locale.  This may result in its deletion
    // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
    C errcode=0;
    if(unlikely(z==0)){fail:errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualERR(z,goto fail;);}  // realize virtual result before returning it

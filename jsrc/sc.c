@@ -179,7 +179,7 @@ DF2(jtunquote){A z;
    RZSUFF(d=deba(DCCALL,flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs),z=0; goto exitpop;); fs=jt->parserstackframe.sf; d->dcn=(I)fs; d->dcloc=jt->locsyms;   // save executing value for redef checks; init dcloc in case it's a tacit definition; refresh fs
   }
 
-  A execlocname=jt->global?LOCNAME(jt->global):0;  // locale name for logging, known not to change since we haven't popped the executing locale yet
+  A execlocname=LOCNAME(jt->global);  // locale name for logging, known not to change since we haven't popped the executing locale yet
   if(jt->uflags.trace&TRACEPM)pmrecord(jt->curname,execlocname,-1L,flgd0cpC>>FLGMONADX);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
   if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd){

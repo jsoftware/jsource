@@ -361,7 +361,7 @@
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
 #define falikely(x) fa(x)  // when the block will usually be deleted  (not used yet)
-#define faacv(x) {I Zc=AC(x); if(Zc<2){jtfamf(jt,x,AT(x));}else{if(likely(!ACISPERM(Zc)))if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,AT(x));}} // block is known to be ACV and recursive
+#define fanamedacv(x) {I Zc=AC(x); if(likely(!ACISPERM(Zc)))if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,AT(x));} // block is known to be ACV, recursive, AC>0, and almost always AC>1
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x),;)
 // Within jtfamf when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.

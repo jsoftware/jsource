@@ -1878,7 +1878,7 @@ F1(jtnfes){I k;I r;
  r=JT(jt,nfe);
  JT(jt,nfe)=k;
  R sc(r);
-} /* 15!:16 toggle native front end (nfe) state */
+} /* 15!:16 toggle native front end (nfe) state, return previous value */
 
 F1(jtcallbackx){
  ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);

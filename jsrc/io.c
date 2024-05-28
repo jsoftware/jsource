@@ -275,9 +275,9 @@ Similarly, calls to external libraries MUST be preceded by a vzeroupper, to put 
 JS _Initializer(void*);
 extern void dllquit(JJ);
 
-// flags in jt indicate whether display is suppressed.  p is the prompt, s is the text.  suppression of s happens when it is created;
+// flags in jt indicate whether display is suppressed.  p is the prompt, s is the text (whose length is m).  suppression of s happens when it is created;
 // here we control suppression of p; but we suppress all anyway
-void jtwri(JS jt,I type,C*p,I m,C*s){FPREFIP(JS);C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
+void NOINLINE jtwri(JS jt,I type,C*p,I m,C*s){FPREFIP(JS);C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
  if(!((I)jtinplace&JTPRNOSTDOUT)){  // if the prompt is not suppressed...
   c=strlen(p);            /* prompt      */
   e=strlen(t);            /* end-of-line */
@@ -336,10 +336,15 @@ void breakclose(JS jt);
 #define ENABLEATTN JT(jt,adbreakr)=JT(jt,adbreak);
 #define WITHATTNDISABLED(s) {DISABLEATTN s ENABLEATTN}
 
+// alternative input prompt
+// s is a NUL-terminated sentence that does the prompt (usually 'input_jfe_ prompt-string')
+// result is NUL-terminated string which is on the tstack
+// We echo the string before returning
 static C* nfeinput(JS jt,C* s){A y;
- WITHATTNDISABLED(y=jtexec1(MDTHREAD(jt),jtcstr(MDTHREAD(jt),s),ds(CEXEC));)  // exec the sentence with break interrupts disabled
+ WITHATTNDISABLED(y=jtstr0(MDTHREAD(jt),jtexec1(MDTHREAD(jt),jtcstr(MDTHREAD(jt),s),ds(CEXEC)));)  // exec the sentence with break interrupts disabled to get the string;  NUL-terminate
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
- jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
+// obsolete  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
+ jtwri(jt,MTYOLOG,"",AN(y)-1,CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
  // the value y is still on the tpop stack
 }
@@ -604,13 +609,13 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
 // Run sentence; result is jt->jerr
+// If JE(jt,nfe), loop forever reading sentences scaf this is a kludge, should be a call parameter to engage loop (to allow recursive calls)
 CDPROC int _stdcall JDo(JS jt, C* lp){int r;
  SETJTJM(jt,jm)
+
  // Move to next state.  If we are not interruptible, that's an error
  I origrstate=jm->recurstate;   // save initial state
  if(unlikely(origrstate&RECSTATERUNNING))R EVCTRL;  // running: reentrance not alllowed
- jm->recurstate|=RECSTATERUNNING;  // if we were from console, this goes to running.  If we are running already, we must be at a recursion point that set RENT
-
  // set the stacklimits to use.  Normally we keep the same stackpointer throughout, but (1) if the FE is multithreaded, we check for a new one on each call and restore it after a reentrant call
  UI savcstackmin=0, savcstackinit, savqtstackinit;
  if(JT(jt,cstacktype)==2){
@@ -622,17 +627,34 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r;
   }
  }
 
- MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,lp);)
- if(unlikely(savcstackmin!=0))jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // if stack pointers were saved, retire them
- jm->recurstate=origrstate;   // restore original idle/rent state
+
  A *old=jm->tnextpushp;  // For JHS we call nfeinput, which comes back with a string address, perhaps after considerable processing.  We need to clean up the stack
   // after nfeinput, but we dare not until the sentence has been executed, lest we deallocate the unexecuted sentence.  Also we have to suppress the pops while there is a
   // pm debug stack.  We take advantage of the fact that the popto point doesn't change, save that here, and suppress the pop during pm
- while(JT(jt,nfe)){  // nfe normally loops here forever
-  MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));) // use jt to force output in nfeinput
+ while(1){   // normal console runs 1 sentence; for comp ease JHS loops forever bere executing sentences
+  jm->recurstate|=RECSTATERUNNING;  // if we were from console, this goes to running.  If we are running already, we must be at a recursion point that set RENT
+  MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,lp);)
+  jm->recurstate=origrstate;   // restore original idle/rent state
+
+  if(!JT(jt,nfe))break;  // normal exit: return to host
+  if(jm->recurstate&RECSTATERENT)break;  // if the call was a recursion, don't prompt again
+  if(jm->jerr==EVEXIT)break;  // if user terminated J, terminate this loop also
+
+  // falling through here is for JHS
   // If there is a postmortem stack active, jdo has frozen tpops and we have to honor that here, to keep the stack data allocated.
   if(likely(jm->pmttop==0))jttpop(jm,old,jm->tnextpushp);  // when the stack has been tpopped it is safe for us to resume
+  jm->recurstate|=RECSTATERENT;  // This is a prompt spot.  Any new call is an allowed recursion
+  lp=nfeinput(jt,"input_jfe_'   '");  // JHS: get next input.  This is a prompt spot
+  jm->recurstate=origrstate;  // after prompt, return to idle
  }
+
+ if(unlikely(savcstackmin!=0))jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // if stack pointers were saved, retire them
+
+// obsolete  while(JT(jt,nfe)){  // nfe normally loops here forever
+// obsolete   MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));) // use jt to force output in nfeinput
+// obsolete   // If there is a postmortem stack active, jdo has frozen tpops and we have to honor that here, to keep the stack data allocated.
+// obsolete   if(likely(jm->pmttop==0))jttpop(jm,old,jm->tnextpushp);  // when the stack has been tpopped it is safe for us to resume
+// obsolete  }
  R r;
 } 
 

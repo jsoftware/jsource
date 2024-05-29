@@ -88,8 +88,11 @@ sum=: +/
 
 NB. Going through locatives leaves global path unchanged
 a_z_ =: a =: 1 : 0
-xxx =. u. f.
-1
+try.
+  xxx =. u. f.
+  1
+catch. 0
+end.
 )
 + a
 f =: ((coname '') -: coname)
@@ -103,7 +106,7 @@ ff =. ((coname '') -: coname)
 assert. f a
 assert. ff a
 assert. ((coname '') -: coname) g
-assert. f g
+assert. 0 = f g  NB. f not defined in z
 assert. ff g
 1
 )

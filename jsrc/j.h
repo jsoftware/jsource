@@ -2082,7 +2082,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define SYMSETGLOBALINLOCAL(l,g) (AKGST(l)=(g))  // l is jt->locsyms, g is new global value
 #define SYMSETGLOBAL(l,g) (jt->global=(g), SYMSETGLOBALINLOCAL(l,jt->global))  // l is jt->locsyms, g is new global value
 #define SYMRESTOREFROMLOCAL(l) (jt->locsyms=(l), jt->global=AKGST(jt->locsyms))  // go to stacked local l
-#define SYMSWAPTOLOCAL(l,lsave) (lsave=jt->locsyms, SYMRESTOREFROMLOCAL(l))  // go to stacked local l, save current in lsave
+// unused#define SYMSWAPTOLOCAL(l,lsave) (lsave=jt->locsyms, SYMRESTOREFROMLOCAL(l))  // go to stacked local l, save current in lsave
 #define SYMSETLOCAL(l) (jt->locsyms=(l), AKGST(jt->locsyms)=jt->global)  // change the locals to l
 #define SYMPUSHLOCAL(l) (AM(l)=(I)jt->locsyms, SYMSETLOCAL(l))  // push l onto locals stack
 #define SYMORIGIN JT(jt,sympv)  // the origin of the global symbol table

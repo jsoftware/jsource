@@ -86,6 +86,10 @@ sum=: +/
 (5!:5 <'g1') -: '+/ (',(5!:5 <'G1'),')'
 (5!:5 <'g2') -: '+/ (',(5!:5 <'G2'),')'
 
+NB. u. must be verb
+a =: {{ u. y }}
+'domain error' -: 2 a etx 5
+
 NB. Going through locatives leaves global path unchanged
 a_z_ =: a =: 1 : 0
 try.

@@ -27,8 +27,8 @@ DF2(jtunquote){A z;
 #define FLGPSEUDO ((I)1<<FLGPSEUDOX)
 #define FLGCACHEDX 12  // operation is cached, not requiring lookup
 #define FLGCACHED ((I)1<<FLGCACHEDX)
-#define FLGLOCPUSHEDX 13  // this call is to a new locale & must incr/decr execcts
-#define FLGLOCPUSHED ((I)1<<FLGLOCPUSHEDX)
+#define FLGLOCINCRDECRX 13  // this call is to a new locale & must incr/decr execcts
+#define FLGLOCINCRDECR ((I)1<<FLGLOCINCRDECRX)
 #define FLGLOCCHANGEDX 14  // the caller of this function has previously encountered cocurrent
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
 // next 7 bits must be 0
@@ -38,7 +38,7 @@ DF2(jtunquote){A z;
 #define FLGDYAD ((I)1<<FLGDYADX)
  I flgd0cpC=((I)jt&JTFLAGMSK)+(FLGMONAD<<(w!=self));  // save flag bits to pass through to function; set MONAD/DYAD
  F2PREFIP;  // We check inplaceability of the called function.  jtinplace unused
- A explocale;  // locale to execute in.  Not used unless LOCPUSHED set
+ A explocale;  // locale to execute in.  Not used unless LOCINCRDECR set
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
 #if C_AVX2 || EMU_AVX2
@@ -53,12 +53,13 @@ DF2(jtunquote){A z;
   if((fs=FAV(self)->localuse.lu1.cachedref)!=0){
    // There is a cached lookup for this nameref - use it
    // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
-   if(unlikely(((A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave explocale=global
+   if(unlikely(((A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave global unchanged
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
      RZSUFF(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find/create locale  scaf why create?
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time
     }
-    flgd0cpC|=(explocale!=jt->global)<<FLGLOCPUSHEDX;  // remember that there is a change of locale
+    flgd0cpC|=((explocale!=jt->global)&~(AC(explocale)>>ACPERMANENTX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale
+    jt->global=explocale;   // set where we're going
    }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
   }else{
@@ -68,7 +69,7 @@ DF2(jtunquote){A z;
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
     if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check t0 see
     fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
-    // leave LOCPUSHED unset
+    // leave LOCINCRDECR unset and jt->global unchnged
    deflocal:;
    }else{  // locative or u./v.
     // there are subroutine calls here; we refresh thisname sometimes so the compiler won't carry it in a register
@@ -82,13 +83,14 @@ DF2(jtunquote){A z;
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
-     if(fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)){
+     if(fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)){  // look only in local symbols
       // u/v, assigned by xdefn.  Implied locative.  Switch locals and globals to caller's environment
       jt->locsyms=(A)AM(jt->locsyms); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
       raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
      }
     }
-    flgd0cpC|=(explocale!=jt->global)<<FLGLOCPUSHEDX;  // remember if there is a change of locale
+    flgd0cpC|=((explocale!=jt->global)&~(AC(explocale)>>ACPERMANENTX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
+    jt->global=explocale;  // set where we're going 
    }
    // Common path for named functions after lookup is finished.  fs has QCNAMED semantics
    // explocale is the locale we are calling into
@@ -142,7 +144,7 @@ DF2(jtunquote){A z;
   // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
   // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
   // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We set a flag to indicate the case
-  // Leave LOCPUSHED unset
+  // Leave LOCINCRDECR unset and jt->global unchanged
  }
  // value of fs has been ra()d unless it was cached or pseudo.  We must undo that if there is error
 #if NAMETRACK
@@ -152,7 +154,7 @@ DF2(jtunquote){A z;
  mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN+' ');  // clear name & locale
  UI wx=0, wlen;   // index/len we will write to
  wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; MC(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name
- A locnm=LOCNAME(jt->global);  // name of current global locale
+ A locnm=LOCNAME(stack.global);  // name of global locale before call
  wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; MC(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
  if((flgd0cpC&(FLGCACHED|FLGPSEUDO))==0){  // there is a name to look up
   A sna; I snx;
@@ -167,7 +169,10 @@ DF2(jtunquote){A z;
  // Move to the destination locale.  The question is, What to do when the locale doesn't change?  The INCREXECCT is a single
  // lock inc instruction, but suppose all the cores are executing names in base?  The contention for the base locale will
  // be horrid.  To avoid that, we update execct only during a change
- if(flgd0cpC&FLGLOCPUSHED){jt->global=explocale; INCREXECCT(explocale);}  // incr execct in newly-starting locale
+ // at this point jt->global is the new locale to use (possibly inherited).  If LOCINCRDECR is set,
+ // explocale also holds that value.  LOCINCRDECR is set if we should incr/decr explocale, which is true if it changes
+ // to a non-permanent locale (we don't want executions in z to hammer the z count)
+ if(flgd0cpC&FLGLOCINCRDECR){INCREXECCT(explocale);}  // incr execct in newly-starting locale
  // scaf if someone deletes the locale before we start it, we are toast
  // ************** from here on errors must (optionally) decr explocale  and unra() before exiting
  w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
@@ -235,7 +240,7 @@ exitpop: ;
   }else if(jt->uflags.bstkreqd)DECREXECCT(jt->global)   // if we started with a locative and then had cocurrent, we must close the final change of locale
  }
  jt->uflags.bstkreqd=(C)(flgd0cpC>>FLGLOCCHANGEDX);  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used either by the next call of the return from this caller
- if(unlikely(flgd0cpC&FLGLOCPUSHED))DECREXECCT(explocale)  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
+ if(unlikely(flgd0cpC&FLGLOCINCRDECR))DECREXECCT(explocale)  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
  // ************** errors OK now
 exitfa:
  // this is an RFO cycle that will cause trouble if there are many cores running the same names

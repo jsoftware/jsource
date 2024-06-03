@@ -613,6 +613,24 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 }    /* 18!:_1 locale map */
 F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
+ // recalculate Bloom filter in table w
+ SYMWALK(jtaccumbloom,B,B01,0,0,(LOCBLOOM(w)|=BLOOMMASK(NAV(d->name)->hash))&&0,;)
+
+// 18!:6 reset Bloom filter.  Result=old filter.
+F1(jtresetbloom){A g;
+ ARGCHK1(w);
+ if(!(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)){  // atomic integer/bool is OK as is
+  // not a numeric atom.  perform boxxopen
+  if(((AN(w)-1)|SGNIF(AT(w),BOXX))>=0)RZ(w=box(w));  // if not empty & not boxed, box it
+  ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
+ }
+ RZ(g=locale(0,w));   // point to locale, if no error
+ I oldbloom=LOCBLOOM(g); LOCBLOOM(g)=0;  // get old value of Bloom filter, init new
+ jtaccumbloom(jt,0,g);  // roll up all Bloom filters
+ RETF(sc(oldbloom));  // return old Bloom
+}
+
+
  SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef((zv,mark),d->val)))
      /* check for redefinition (erasure) of entire symbol table. */
 

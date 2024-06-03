@@ -14,7 +14,7 @@
 /* PROCESS - processing on a selected name                      */
 
 // The created function is called as f(jt,a,w).  Within SELECT and PROCESS, L* d is the symbol being processed
-// w is the symbol table to be traversed, a is unused in the macro
+// w is the symbol table to be traversed, a is unused in the macro and can be used for a result
 
 #define SYMWALK(f,T,TYPE,COUNT,COL,SELECT,PROCESS)  \
  F2(f){A z;LX *e,j,k;I i,m=0,n;L*d;T*zv;                         \
@@ -23,9 +23,9 @@
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,GACOPYSHAPE0,R 0);                \
   if(1<(COL)){AS(z)[0]=(COUNT); AS(z)[1]=(COL);}             \
   zv=(T*)AV(z);                                              \
-  for(i=SYMLINFOSIZE;i<n;++i){                  \
+  for(i=SYMLINFOSIZE;i<n;++i){  /* for each symbol chain */                \
    k=SYMNEXT(*e++);  /* initial symbol index */  \
-   while(j=k){                         \
+   while(j=k){      /* chase the chain */                   \
    d=j+SYMORIGIN;                                            \
    k=SYMNEXT(d->next);                                                \
    if((d->name)&&(d->val)&&(SELECT)){                        \

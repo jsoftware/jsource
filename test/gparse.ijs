@@ -140,21 +140,16 @@ y
 if. do. 5 end.
 )
 
-5 -: + (1 : 0) 
+
+{{
+try.
+ {{)a
 +
-5
-)
-
-swd =: 1 : 0
-+ if. 0 do. return. end.
-u if. 0 do. return. end.
-& if. 0 do. return. end.
-/ if. 0 do. return. end.
-undefname if. 0 do. return. end.
-5
-)
-5 -: + swd
-
+5 }}
+catch.
+1
+end.
+}} ''
 
 
 NB. Verify noun assignments to all parts of speech are honored
@@ -164,7 +159,11 @@ _6 = ('aa'=: -) 6
 1 2 3 -: 'aa' =: 1 2 3
 
 NB. check uv must be assigned if used in explicit defs, but xymn ok
-3 : 'x ] y&(4!:55 <''y'') ] m ] n if. do. end. 1' 4
+(5) 4 : 'x if. do. end. 1' 4
+(5) 4 : 'y if. do. end. 1' 4
+'noun result was required' -: 3 : 'x if. do. end. 1' etx 4
+'noun result was required' -:(5) 4 : 'm if. do. end. 1' etx 4
+'noun result was required' -:(5) 4 : 'n if. do. end. 1' etx 4
 'value error' -: 3 : '* u' etx 4
 'value error' -: 3 : '* v' etx 4
 'noun result was required' -: 3 : 'zz&(4!:55 <''y'')' etx 4

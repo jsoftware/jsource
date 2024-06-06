@@ -403,7 +403,7 @@ typedef struct JSTstruct {
 // Cacheline 7: startup (scripts and deprecmsgs), essentially read-only
  C _cl7[0];
  A slist;            // boxed list of filenames used in right arg to 0!:, the entries made in sn field of L blocks are indexes into this.  AM has # valid entries
- A deprecex;  // list of INTs of messages not to display
+ A deprecex;  // list of INTs of messages not to display  // scaf could be a short mask
  I4 deprecct;  // number of deprecation  errors to display, -1 to emsg
  S startlock;        // lock for slist
  // rest of cacheline used only in exceptional paths

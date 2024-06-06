@@ -70,9 +70,10 @@
  if(likely(!(attnval+(NPGpysfmtdl&128+16))))z=parsea(queue,m); \
  else {if(jt->sitop&&jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL)jt->sitop->dclnk->dcix=~ic; z=parsex(queue,m,CWSOURCE(cwsent,CNSTOREDCW,ic),(NPGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))NPGpysfmtdl&=~2;} \
  {asgstmt} if(likely(z!=0)){I zasgn=PARSERASGN(z); z=PARSERVALUE(z); if(unlikely(!((AT(z)|zasgn)&NOUN))){if(!(NPGpysfmtdl&8)||(tcesx&TCESXCECANT)) \
-   if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)NOUNERR(z,ic,0); \
+   NOUNERR(z,ic,1); \
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
+// obsolete if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)
 
 // for./select. control structure
 typedef struct CDATA {

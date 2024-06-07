@@ -58,7 +58,7 @@ DF2(jtunquote){A z;
      RZSUFF(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find/create locale  scaf why create?
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time
     }
-    flgd0cpC|=((explocale!=jt->global)&~(AC(explocale)>>ACPERMANENTX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale
+    flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale
     jt->global=explocale;   // set where we're going
    }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
@@ -89,7 +89,7 @@ DF2(jtunquote){A z;
       raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
      }
     }
-    flgd0cpC|=((explocale!=jt->global)&~(AC(explocale)>>ACPERMANENTX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
+    flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
     jt->global=explocale;  // set where we're going 
    }
    // Common path for named functions after lookup is finished.  fs has QCNAMED semantics

@@ -613,29 +613,48 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 }    /* 18!:_1 locale map */
 F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
- // recalculate Bloom filter in table w
- SYMWALK(jtaccumbloom,B,B01,0,0,(LOCBLOOM(w)|=BLOOMMASK(NAV(d->name)->hash))&&0,;)
+// recalculate Bloom filter in table w
+SYMWALK(jtaccumbloom,B,B01,0,0,(LOCBLOOM(w)|=BLOOMMASK(NAV(d->name)->hash))&&0,;)
 
 // 18!:6 reset Bloom filter.  Result=old filter.
 F1(jtresetbloom){A g;
  ARGCHK1(w);
- if(!(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)){  // atomic integer/bool is OK as is
-  // not a numeric atom.  perform boxxopen
-  if(((AN(w)-1)|SGNIF(AT(w),BOXX))>=0)RZ(w=box(w));  // if not empty & not boxed, box it
-  ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
- }
+ ASSERT(!(((AR(w)-1) & -(AT(w)&(INT|B01)))<0),EVDOMAIN)   // always error (numbered locale)
+ // not a numeric atom.  perform boxxopen
+ if(((AN(w)-1)|SGNIF(AT(w),BOXX))>=0)RZ(w=box(w));  // if not empty & not boxed, box it
+ ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
  RZ(g=locale(0,w));   // point to locale, if no error
+ ASSERT(AR(g)&ARNAMED,EVDOMAIN)  // locale must be named
  I oldbloom=LOCBLOOM(g); LOCBLOOM(g)=0;  // get old value of Bloom filter, init new
  jtaccumbloom(jt,0,g);  // roll up all Bloom filters
  RETF(sc(oldbloom));  // return old Bloom
 }
+
+// 18!:7 make locale permanent
+F1(jtsetpermanent){A g;
+ ARGCHK1(w);
+ ASSERT(!(((AR(w)-1) & -(AT(w)&(INT|B01)))<0),EVDOMAIN)   // always error (numbered locale)
+ // not a numeric atom.  perform boxxopen
+ if(((AN(w)-1)|SGNIF(AT(w),BOXX))>=0)RZ(w=box(w));  // if not empty & not boxed, box it
+ ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
+ RZ(g=locale(0,w));   // point to locale, if no error
+ ASSERT(AR(g)&ARNAMED,EVDOMAIN)  // locale must be named
+ LXAV0(g)[SYMLEXECCT]=EXECCTPERM+10000;  // mark the execct as never to be modified, with some slop in case there are execct deletions coming
+ RETF(mtm);  // empty return
+}
+
 
 
  SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef((zv,mark),d->val)))
      /* check for redefinition (erasure) of entire symbol table. */
 
 // 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale
-F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
+// if x is 271828, do the 
+F2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
+ if(unlikely(AT(w)&NOUN)){  // dyadic call
+  I x; x=i0(a); if(jt->jerr){RESETERR; ASSERT(0,EVVALENCE)} ASSERT(x==271828,EVVALENCE)  // if not 271828, valence error
+  // leave a non0 to indicate dyadic call
+ }else{w=a; a=0;}  // a=0 normally
  RZ(vlocnl(1,w));
  if(ISDENSETYPE(AT(w),B01))RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
  n=AN(w); wv=AAV(w); 
@@ -651,13 +670,15 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
    if(AT(y)&(INT|B01)){g = findnl(BIV0(y));  // boxed integer, look up numbered locale
    }else{
     m=AN(y); u=CAV(y);
-    ASSERTGOTO(m<256,EVLIMIT,exitlock);
+    ASSERTSUFF(m<256,EVLIMIT,z=0; goto exitlock;);
     if('9'>=*u){g = findnl(strtoI10s(m,u));}  // boxed numeric string, look up numbered
     else {A v=jtprobestlock((J)((I)jt+m),u,(UI4)nmhash(m,u)); if(v)g=v;}  // g is locale block for named locale
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
-   DELEXECCT(g)  // say that the user doesn't want this locale any more.  Paths etc. still might.
+   if(a){ASSERTSUFF(*JT(jt,zpath)!=g,EVRO,z=0; goto exitlock;) LXAV0(g)[SYMLEXECCT]=0; locdestroy(g);  // forced delete, clear execct/del ct & do it
+    // ignore the deletion if the locale is PERMANENT.  The execct is unreliable then
+   }else if(!(AC(g)&ACPERMANENT))DELEXECCT(g)  // say that the user doesn't want this locale any more.  Paths, execs, etc. still might.
   }
  }
 exitlock:

@@ -864,6 +864,8 @@ typedef DST* DC;
 
 // Macros to incr/decr execct of a locale
 #define EXECCTNOTDELD 0x1000000   // This bit is set when a locale is created, and removed when the user asks to delete it.  Lower bits are the exec count.  The locale is half-deleted when exec ct goes to 0
+#define EXECCTPERMX 25  // set to mark the locale permanent, execcts not tracked
+#define EXECCTPERM ((I)1<<EXECCTPERMX)
 #if PYXES
 #define INCREXECCT(l) __atomic_fetch_add(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL);
 #define DECREXECCT(l) if(unlikely(__atomic_sub_fetch(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL)==0))locdestroy(l);

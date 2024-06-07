@@ -588,6 +588,15 @@ ldestroy (0&".@>) (lcreate'') , (lcreate'')
 
 18!:55 ;:'a b loca locb'
 
+1: cocreate<'a'
+18!:7 <'a'  NB. set permanent
+18!:55<'a'
+(<,'a') e. 18!:1 [0
+271828 (18!:55)<'a'
+-. (<,'a') e. 18!:1 [0
+'read-only data' -:271828 (18!:55) etx <'z'
+
+
 'domain error'    -: ldestroy etx 0 1 0
 'domain error'    -: ldestroy etx 'abc'
 'domain error'    -: ldestroy etx 2 3.4

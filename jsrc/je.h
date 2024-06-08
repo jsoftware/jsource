@@ -224,7 +224,6 @@ extern DF2(jtlrx2);
 extern F1(jtltrim);
 extern DF1(jtludecomp);
 extern F1(jtresetbloom);
-extern F1(jtsetpermanent);
 // extern F1(jtmag);
 extern F1(jtmap);
 extern F1(jtmat);

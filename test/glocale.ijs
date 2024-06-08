@@ -503,6 +503,8 @@ x=: spnow ''
 a_ex1_=: i.1e5
 extract_ex1_=: 1e4$'pericope'
 (<'ex1') e. 18!:1 [0
+18!:55 <'ex1'   NB. no effect
+(<'ex1') e. 18!:1 [0
 (271828) 18!:55 <'ex1'
 -.(<'ex1') e. 18!:1 [0
 y=: spnow ''

@@ -216,6 +216,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
    AR(g)=ARNAMED;   // set rank to indicate named locale
+   LXAV0(g)[SYMLEXECCT]=EXECCTPERM;  // mark all named locales permanent
    break;
   case 1:  // numbered locale - we have no lock
    AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
@@ -631,6 +632,7 @@ F1(jtresetbloom){A g;
  RETF(sc(oldbloom));  // return old Bloom
 }
 
+#if 0  // withdrawn
 // 18!:7 make locale permanent
 F1(jtsetpermanent){A g;
  ARGCHK1(w);
@@ -643,6 +645,7 @@ F1(jtsetpermanent){A g;
  LXAV0(g)[SYMLEXECCT]=EXECCTPERM+10000;  // mark the execct as never to be modified, with some slop in case there are execct deletions coming
  RETF(mtm);  // empty return
 }
+#endif
 
 
 

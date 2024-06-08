@@ -19,7 +19,7 @@ NB.  z=. z+7!:5 <'p' [ p=. 18!:2 y   NB. leave out the path since it's other loc
 )
 
 sp_z_=: 7!:5
-18!:55 lc=: <'abcdefghijklmno0x13578x0'
+(271828) 18!:55 lc=: <'abcdefghijklmno0x13578x0'
 (lc) -: (h=:4) (18!:3) lc
 foot__lc=: i.3 4
 charboil__lc=: 123$'x'
@@ -27,7 +27,7 @@ jajabinks__lc =: !100x
 (p=: ;:'z base j') 18!:2 lc
 (7!:6 lc) -: h spl lc,<'__lc'
 18!:55 lc
-18!:55 <'abc'
+(271828) 18!:55 <'abc'
 (<'abc') -: (h=:3) (18!:3) <'abc'
 foot_abc_=: i.3 4
 charboil_abc_=: 123$'x'
@@ -35,8 +35,8 @@ jajabinks_abc_ =: !100x
 (p=: ;:'z base j') 18!:2 <'abc'
 NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/ 24+sp_abc_ nl_abc_ ''
 (7!:6 <'abc') -: h spl 'abc' ; '_abc_'
-18!:55 <'abc'
-18!:55 <'abcdefghijklmno'
+(271828) 18!:55 <'abc'
+(271828) 18!:55 <'abcdefghijklmno'
 (<'abcdefghijklmno') -: (h=:3) (18!:3) <'abcdefghijklmno'
 foot_abcdefghijklmno_=: i.3 4
 charboil_abcdefghijklmno_=: 123$'x'
@@ -44,7 +44,7 @@ jajabinks_abcdefghijklmno_ =: !100x
 (p=: ;:'z base j') 18!:2 <'abcdefghijklmno'
 NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/ 24+sp_abc_ nl_abc_ ''
 (7!:6 <'abcdefghijklmno') -: h spl 'abcdefghijklmno' ; '_abcdefghijklmno_'
-18!:55 <'abcdefghijklmno'
+(271828) 18!:55 <'abcdefghijklmno'
 
 
 'locale error'    -: 7!:6 etx <'nonexistent'

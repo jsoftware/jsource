@@ -86,7 +86,7 @@ x -: a__k [ k=: <'huh'
 'ill-formed name' -: ex 'ab__k' [ k=: <'ab_xyz_'
 'ill-formed name' -: ex 'ab__k' [ k=: <'ab__xyz'
 
-18!:55 ;:'baker charlie huh xyz'
+(271828) 18!:55 ;:'baker charlie huh xyz'
 
 dd =: > d =: 0&".&.> c =: 18!:3 ''
 a__c =: 5
@@ -112,7 +112,6 @@ NB. 18!:0 ---------------------------------------------------------------
 
 lnc     =: 18!:0
 lcreate =: 18!:3
-ldestroy=: 18!:55
 
 0     -: lnc <'base'
 0 0   -: lnc <;._1 ' base z'
@@ -120,7 +119,7 @@ ldestroy=: 18!:55
 _1 _1 -: lnc 'nonsuch123';'99999999'
 _2 _2 -: lnc '!!#*@';'01abc'
 
-ldestroy {:x
+18!:55 {:x
 
 'domain error'  -: lnc etx 0 1 0
 'domain error'  -: lnc etx 'abc'
@@ -315,7 +314,6 @@ after  =. 7!:0 ''
 NB. 18!:3 ---------------------------------------------------------------
 
 lcreate =: 18!:3
-ldestroy=: 18!:55
 spnow   =: 7!:0
 
 x=: 12345
@@ -341,7 +339,7 @@ x=: spnow ''
 x_asdf_=: i.1e4
 'locale error'  -: 5 lcreate etx <'asdf'
 
-18!:55 <'asdf'
+(271828) 18!:55 <'asdf'
 
 'domain error'  -: lcreate etx 0 1
 'domain error'  -: lcreate etx 234
@@ -367,7 +365,7 @@ x_asdf_=: i.1e4
 
 'limit error'   -: 256 lcreate etx <'asdf'
 
-18!:55 e,f
+NB. obsolete 18!:55 e,f
 
 
 NB. 18!:4 accessible only through cocurrent ---------------------------------------------------------------
@@ -444,7 +442,7 @@ assert. a -: 5.4
 cocurrent__ <'base'
 assert. _1 -: 4!:0 <'a'
 
-18!:55 ;:'a b c asdf NonExxistent2'
+(271828) 18!:55 ;:'a b c asdf NonExxistent2'
 18!:55 e
 0 = e e. 18!:1 (1)  NB. Deleted because not on stack
 }}
@@ -496,7 +494,7 @@ NB. 18!:55 --------------------------------------------------------------
 
 lcreate =: 18!:3
 lname   =: 18!:5
-ldestroy=: 18!:55
+ldestroy =: 18!:55
 spnow   =: 7!:0
 
 x=: y=: spnow ''
@@ -505,7 +503,7 @@ x=: spnow ''
 a_ex1_=: i.1e5
 extract_ex1_=: 1e4$'pericope'
 (<'ex1') e. 18!:1 [0
-ldestroy <'ex1'
+(271828) 18!:55 <'ex1'
 -.(<'ex1') e. 18!:1 [0
 y=: spnow ''
 (200*1+IF64) > |x-y
@@ -516,7 +514,7 @@ k=: lcreate ''
 k e. 18!:1 [1
 a__k=: i.1e5
 extract__k=: 1e4$'pericope'
-ldestroy k
+18!:55 k
 -. k e. 18!:1 [1
 'locale error' -: ex '#a__k'
 'locale error' -: ex 'a__k=: i.12'
@@ -526,74 +524,74 @@ y=: spnow ''
 
 x=: spnow ''
 k=: lcreate"1 i.20 0
-ldestroy k
+18!:55 k
 4!:55 <'k'
 y=: spnow ''
 (513*1+IF64) > |x-y  NB. the numbered hashtable may grow; this will handle the first doubling
 
-1 -: ldestroy <'NoNoSuchLocale'
+1 -: (271828) 18!:55 <'NoNoSuchLocale'
 
 k=: lcreate ''
 a__k=: i.12
-ldestroy k
+18!:55 k
 'locale error' -: ex 'a__k=: i.9'
 
-'' -: ldestroy ''
-'' -: ldestroy i.0
-'' -: ldestroy 0$<''
+'' -: 18!:55 ''
+'' -: 18!:55 i.0
+'' -: 18!:55 (0$<'')
 
-g_a_=: 3 : 0
- z=.   (<,'a') e. 18!:1 [0
- ldestroy_base_ <'a'
- z=. z,(<,'a') e. 18!:1 [0
+loca_z_ =: lcreate''
+locb_z_ =: lcreate''
+g__loca=: 3 : 0
+ z=.   loca e. 18!:1 [1
+ ldestroy_base_ loca
+ z=. z,loca e. 18!:1 [1
 )
 
-g_a_ 0
--. (<,'a') e. 18!:1 [0
+g__loca 0
+-. loca e. 18!:1 [1
 
 
-g_b_=: 3 : 0
+g__locb=: 3 : 0
  z=. ''
- asdf_b_=: x=. ?.1000$1000
- ldestroy_base_ <'b'
- z=.   (<,'b') -: 18!:5 ''
+ asdf__locb=: x=. ?.1000$1000
+ ldestroy_base_ locb
+ z=.   locb -: 18!:5 ''
  z=. z,x -: ?.1000$1000
  z=. z,0 -: 4!:0 <'asdf'
- z=. z,0 -: 4!:0 <'asdf_b_'
+ z=. z,0 -: 4!:0 <'asdf__locb'
 )
 
-h_b_ =: 3 : 0
- top_b_=: 'cacophemistic'
- z=.  3 0 -: 4!:0 ;:'g_b_ top_b_'
- z=.z,(<,'b') e. 18!:1 [0
- g_b_ 0
- z=.z,3 0 -: 4!:0 ;:'g_b_ top_b_'
- z=.z,(<,'b') e. 18!:1 [0
+h__locb =: 3 : 0
+ top__locb=: 'cacophemistic'
+ z=.  3 0 -: 4!:0 ;:'g__locb top__locb'
+ z=.z,locb e. 18!:1 [1
+ g__locb 0
+ z=.z,3 0 -: 4!:0 ;:'g__locb top__locb'
+ z=.z,locb e. 18!:1 [1
 )
 
-h_b_ 0
--. (<,'b') e. 18!:1 [0
-_1 -: 18!:0 <'b'
-_1 _1 _1 -: 4!:0  ;:'g_b_ top_b_ h_b_'
+h__locb 0
+-. locb e. 18!:1 [1
+_1 -: 18!:0 locb
+_2 _2 _2 -: 4!:0  ;:'g__locb top__locb h__locb'
 
-f0_loca_ =: 18!:5@i.@0: @ (18!:55)
-(;:'base loca') -: (18!:5 ''),f0_loca_ <'loca'
-_1 -: 18!:0 <'loca'
 
-f1_locb_ =: 18!:1@i.@2: @ (18!:55)
-(<'locb') e. f1_locb_ <'locb'
-_1 -: 18!:0 <'locb'
+loca_z_ =: lcreate''
+locb_z_ =: lcreate''
+
+f0__loca =: 18!:5@i.@0: @ (18!:55)
+(loca,~<'base') -: (18!:5 ''),f0__loca loca
+_1 -: 18!:0 loca
+
+f1__locb =: 18!:1@i.@2: @ (18!:55)
+locb e. f1__locb locb
+_1 -: 18!:0 locb
 
 ldestroy (0&".@>) (lcreate'') , (lcreate'')
 
-18!:55 ;:'a b loca locb'
+(271828) 18!:55 ;:'a b'
 
-1: cocreate<'a'
-18!:7 <'a'  NB. set permanent
-18!:55<'a'
-(<,'a') e. 18!:1 [0
-271828 (18!:55)<'a'
--. (<,'a') e. 18!:1 [0
 'read-only data' -:271828 (18!:55) etx <'z'
 
 
@@ -636,7 +634,8 @@ k=: 18!:3 ''
 sum__k=: +/
 x=: 4!:5 [1
 4!:5 [0
-18!:55 k,<'baker'
+18!:55 k
+(271828) 18!:55 <'baker'
 x -: /:~ ('sum_',(":>k),'_');;:'a_baker_ k_base_ xy_z_'
 
 NB. Numeric locale allocation.  Works only when not many locales have been allocated
@@ -733,7 +732,7 @@ xy_z_  =: 1:
 nonlocale =. 5
 assert. xy_nonlocale_ ''
 
-18!:55 ;:'nonlocale'
+(271828) 18!:55 ;:'nonlocale'
 coclass 'nonlocale'
 dhs2liso=: ]
 f =: _1 (1 : '] dhs2liso_nonlocale_ ]')  NB. ref in non-verb messed up lookup
@@ -749,31 +748,22 @@ c_abcpristloc_ =: 11
 assert. c = a + b
 assert. 5 = a_nonlocale_
 coclass 'base'
-18!:55 ;:'abcpristloc'  NB. now zombie  usecount 1
+(271828) 18!:55 ;:'abcpristloc'  NB. now zombie  usecount 1
 coclass 'abcpristloc'  NB. revive: check reinited  usecount 2
 assert. _1 = 4!:0 ;:'a0 a b c a_nonlocale_'
 coclass 'base'  NB. take abcpristloc out of execution
-18!:55 ;:'abcpristloc'  NB. now zombie  NB. usecount 1
+(271828) 18!:55 ;:'abcpristloc'  NB. now zombie  NB. usecount 1
 s1 =: 7!:0''
 ('base';'z') copath 'nonlocale'  NB. frees abcpristloc
 assert. s1 > 7!:0''
 }}
 f ''
 
-1: 0 : 0 NB. Can't test deleting the running locale because it requires dropping back to immex
-4!:55 <'a_base_'
-18!:55 <'a' [ cocurrent 'a'
-'locale error' -: 18!:5 etx__ ''  NB. no current locale
-a__ =: 5   NB. assignments OK
-a__ = 5
-)
-
-
 
 4!:55 ;:'a a_z_ ab c d dd dhs2liso dhs2liso_nonlocale_ e ee f '
 4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath'
 4!:55 ;:'not_a_locative s1 s2 s3 spnow t test x xx xy_z_ xy_nonlocale_ y '
-18!:55 ;:'abcpristloc nonlocale'
+(271828) 18!:55 ;:'abcpristloc nonlocale'
 
 
 

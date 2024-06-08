@@ -360,7 +360,7 @@ NB. special forms detected properly
 
 
 
-18!:55 ;:'loc'
+(271828) 18!:55 ;:'loc'
 
 
 4!:55 ;:'a adot1 adot2 sdot0 b c D Da Nt Expand ar cap eps eq f f1 f2 f_g '

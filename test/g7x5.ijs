@@ -202,7 +202,7 @@ NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
 1 [ unmap_jmf_ 'a'
 1!:55 ::1: <f
 
-18!:55 <'jmf'
+(271828) 18!:55 <'jmf'
 
 4!:55 ;:'adot1 adot2 fmapped gmapped sdot0 bp f g q sp x a foo goo'
 randfini''

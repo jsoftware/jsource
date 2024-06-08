@@ -132,7 +132,7 @@ jdata -: ((<.(#x)%10),2 5)$x
 
 ferase f
 
-18!:55 <'jmf'
+(271828) 18!:55 <'jmf'
 
 
 4!:55 ;:'f f0 fdir ferase fread fwrite i jdata t x '

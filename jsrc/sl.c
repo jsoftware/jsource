@@ -557,6 +557,7 @@ static F1(jtloccrenum){C s[20];I k,p;A x;
  R boxW(cstr(s));  // result is boxed string of name
 }    /* create a numbered locale with hash table size n */
 
+// 18!:3 create locale w, or numbered locale is w is empty
 F1(jtloccre1){
  ARGCHK1(w);
  if(AN(w))R rank2ex0(mark,vlocnl(2+1,w),DUMMYSELF,jtloccre);  // if arg not empty, it is a list of locale names

@@ -357,7 +357,7 @@ erase ;:'exec_foo_ xy_foo_ ces__'
 
 NB. 'nonce error'     -: 3 : 'abc_d_ =. 17' etx 17
 
-18!:55 ;:'asdf foo locale'
+(271828) 18!:55 ;:'asdf foo locale'
 
 
 NB. z locale ------------------------------------------------------------
@@ -387,7 +387,7 @@ jnl_z_ =: jnl f.
 (<'sum') e. jnl_z_ 3
 erase ;:'abc abc_z_ ces_exist_ sum_z_'
 
-18!:55 ;:'exist nonexist'
+(271828) 18!:55 ;:'exist nonexist'
 
 NB. Script lists --------------------------------------------------------
 

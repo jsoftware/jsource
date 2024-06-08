@@ -57,7 +57,7 @@ f 15
 
 nch 0
 
-18!:55 ;:'bar'
+(271828) 18!:55 ;:'bar'
 
 4!:55 ;:'abc boo erase f foo nch t'
 

@@ -155,7 +155,7 @@ NB. 'catcht cc'       -: main5 6
 NB. 'catcht d'        -: main5 99
 NB. '10 not cut back' -: main5 10
 
-18!:55 <'jthrow'
+(271828) 18!:55 <'jthrow'
 
 
 4!:55 ;:'f main main1 main2 main3 main4 main5 sub t'
@@ -316,7 +316,7 @@ NB. 'catcht cc'       -: main5 6
 NB. 'catcht d'        -: main5 99
 NB. '10 not cut back' -: main5 10
 
-18!:55 <'jthrow'
+(271828) 18!:55 <'jthrow'
 
 
 4!:55 ;:'f main main1 main2 main3 main4 main5 sub t'

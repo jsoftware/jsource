@@ -90,7 +90,8 @@ junk_asdf_ =: 400$'foo'
 
 pcheck 18!:_2 ''
 
-18!:55 k,<'asdf'
+18!:55 k
+(271828) 18!:55 <'asdf'
 
 f=: 3 : 0
  a=. 12
@@ -106,7 +107,7 @@ pcheck 18!:_2 ''
 pcheck 18!:_2 ''
 (<'asdf') -: 5 (18!:3) <'asdf'
 pcheck 18!:_2 ''
-18!:55 <'asdf'
+(271828) 18!:55 <'asdf'
 
 
 4!:55 ;:'a adv b f h i k li m oktypes p pcheck perm s sum t x y yy'

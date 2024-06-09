@@ -389,7 +389,6 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  __atomic_store_n(&jt->cstackmin,jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
  // Note: we use cstackmin as an indication that this thread is ready to use.
  JOBQ *jobq=&(*JT(jt,jobqueue))[jt->threadpoolno];   // The jobq block for the threadpool we are in - never changes
- jt->uflags.bstkreqd=1;   // init so that every top-level change of locale is reflected in startcounts.  That way we can decr the global locale at end-of-job
 
  // loop forever executing tasks.  First time through, the thread-creation code holds the job lock until the initialization finishes
 nexttask: ; 
@@ -473,7 +472,8 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
-   if(likely(startloc!=0)){INCREXECCT(startloc); fa(startloc);}  // raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
+// obsolete    if(likely(startloc!=0)){INCREXECCTIF(startloc); fa(startloc);}  // raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
+   jt->uflags.bstkreqd=1; INCREXECCTIF(startloc); fa(startloc);  // start new exec chain; raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
    A arg1=job->user.args[0],arg2=job->user.args[1],arg3=job->user.args[2];
    fa(UNvoidAV1(job));  // job is no longer needed
    I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; arg3=dyad?arg3:0;  // the call is either noun self x or noun noun self.  See which and select self.  Set arg3 to 0 if monad.
@@ -484,7 +484,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    A z=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
    // ***** return from user task and look for next one *****
 // obsolete    if(likely(jt->global!=0))
-   DECREXECCT(jt->global);  // remove exec-protection from finishing locale.  This may result in its deletion
+   DECREXECCTIF(jt->global);  // remove exec-protection from finishing exec chain.  This may result in its deletion
    // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
    C errcode=0;
    if(unlikely(z==0)){fail:errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualERR(z,goto fail;);}  // realize virtual result before returning it

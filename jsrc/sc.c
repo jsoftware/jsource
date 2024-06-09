@@ -223,23 +223,23 @@ DF2(jtunquote){A z;
 exitpop: ;
  // LSB of z is set in the return iff what we just called was cocurrent
  // jt->global here is always the same as before the call
- if(unlikely(((C)(I)z|jt->uflags.bstkreqd)&1)){  // cocurrent OR return after cocurrent?
+ if(unlikely(((C)(I)z|jt->uflags.bstkreqd)&1)){  // cocurrent OR return after some earlier cocurrent?
   if((C)(I)z&1){  // was successful call to cocurrent?
    // here the name we called was cocurrent, possibly through a locative.  This is where we change jt->global in the caller
    // The incr/decrs here are on behalf of the caller of cocurrent.  We always incr the locale we move to; we decr a locale
    // only if a previous cocurrent moved to it; the first time we don't know whether it was incrd, and we leave
    // the decr to the caller of cocurrent
-   z=(A)((I)z&~1); INCREXECCT(z);  // z has the locale to switch to.  clear flag bit; indicate new execution starting in the locale we switch to
+   z=(A)((I)z&~1); INCREXECCTIF(z);  // z has the locale to switch to.  clear flag bit; indicate new execution starting in the locale we switch to
    // we temporarily started an execution for the locative (now jt->global).  We will close that below in common code
-   if(flgd0cpC&FLGLOCCHANGED)DECREXECCT(stack.global)   // if the caller's locale was moved to by cocurrent (i.e. this is the second cocurrent in the calling function), it must be replaced by z.  No DECR is performed for the FIRST cocurrent, so if that was entered by a locative
+   if(flgd0cpC&FLGLOCCHANGED)DECREXECCTIF(stack.global)   // if the caller's locale was moved to by cocurrent (i.e. this is the second+ cocurrent in the calling function), it must be replaced by z.  No DECR is performed for the FIRST cocurrent, so if that was entered by a locative
          // it will be owed a DECR.  We can't DECR the first call because it might be in execution higher in the stack and already have a delete outstanding
    SYMSETGLOBALINLOCAL(jt->locsyms,z);   // install new globals pointer into the locsyms (if any)...
    stack.global=z;  // ... and into the area we will pop from, thus storing through to the caller
    z=mtm;  // we have switched; this will be the result of cocurrent
    flgd0cpC|=FLGLOCCHANGED; // leave bstkreqd set as a flag indicating next function's caller has encountered cocurrent
-  }else if(jt->uflags.bstkreqd)DECREXECCT(jt->global)   // if we started with a locative and then had cocurrent, we must close the final change of locale
+  }else if(jt->uflags.bstkreqd)DECREXECCTIF(jt->global)   // we are returning from this function, which called cocurrent.  Close the final change of locale
  }
- jt->uflags.bstkreqd=(C)(flgd0cpC>>FLGLOCCHANGEDX);  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used either by the next call of the return from this caller
+ jt->uflags.bstkreqd=(C)(flgd0cpC>>FLGLOCCHANGEDX);  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used by either the next call or the return from this caller
  if(unlikely(flgd0cpC&FLGLOCINCRDECR))DECREXECCT(explocale)  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
  // ************** errors OK now
 exitfa:

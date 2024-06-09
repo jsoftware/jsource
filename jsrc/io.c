@@ -443,15 +443,14 @@ F1(jtjoff){I x;
  R 0;
 }
 
-// wrapper to raise the execct of the starting locale while an immex is running
-// If the global locale changes during execution, we must have called cocurrent or 18!:4 directly.  If cocurrent, there will be a
-// POPFIRST on the stack (which is otherwise empty).  If there is a POPFIRST we need to decrement the current global locale.
-// in this routine jt is a thread pointer and jjt is the shared pointer
+// wrapper to put a new exec chain into play
+// set bstkreqd, incr the starting locale, decr the final locale.  unquote will EXECCTIF all changes 
 static void jtimmexexecct(JJ jt, A x){
- A startloc=jt->global;  // point to current global locale
- INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
- jtimmex(jt,x);   // run the sentence
- DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
+// obsolete  A startloc=jt->global;  // point to current global locale
+// obsolete  INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
+// obsolete  jtimmex(jt,x);   // run the sentence
+// obsolete  DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
+ jt->uflags.bstkreqd=1; INCREXECCTIF(jt->global); jtimmex(jt,x); DECREXECCTIF(jt->global);  // execution of the sentence may change jt->global
 }
 
 
@@ -459,7 +458,7 @@ static void jtimmexexecct(JJ jt, A x){
 // in this routine jt is a thread pointer and jjt is the shared pointer
 static void runiep(JS jjt,JJ jt,A *old){
  while(1){
- // if there is an immex phrase, protect it during its execution
+  // if there is an immex phrase, protect it during its execution
   A iep=0; if(jt->iepdo&1){READLOCK(jjt->felock) if((iep=jjt->iep)!=0)ra(iep); READUNLOCK(jjt->felock)}
   if(iep==0)break;
   // run the IEP and clean up after.  We leave iepdo set to 'running' during the exec to suppress postmortem debugging while IEPs are about
@@ -487,7 +486,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
    // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order.  ra() the self for each block - necessary in case they are reassigned while on the stack
    DC s=jm->pmstacktop, sp=0; while(s){DC sn=s->dclnk; s->dclnk=sp; if(s->dctype==DCCALL&&s->dcpflags==1)ra(s->dcf) sp=s; s=sn;} jm->sitop=sp; jm->pmstacktop=0;  // reverse pmstack, move it to debug stack
    if(sp)sp->dcsusp=1;   // debug discards lines before the suspension, so we have to mark the stack-top as starting suspension
-   lp="'Use y___1 to look inside top stack frame; see code.jsoftware.com/wiki/Debug/Stack#irefs' [ dbg_z_ 513";  // change the sentence to one that starts the debug window with no TRACEDBSUSCLEAR flag
+   lp="'dbr 0 to end inspection; use y___1 to look inside top stack frame (see code.jsoftware.com/wiki/Debug/Stack#irefs)' [ dbg_z_ 513";  // change the sentence to one that starts the debug window with no TRACEDBSUSCLEAR flag
   }
  }
 
@@ -514,10 +513,13 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  e=jm->jerr; MODESRESET(jm)  // save error on sentence to be our return code
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
  RESETERRT(jm)
- // if there is an immex latent expression (9!:27), execute it before prompting
+ // if there is an immex latent expression (9!:27), execute it before prompting.  It runs in the same state as the user sentence
  // All these immexes run with result-display enabled (jt flags=0)
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
+ // we could do this in a loop back through exexct, but we choose not to
  if(likely(!(jm->recurstate&RECSTATERENT)))runiep(jt,jm,old);  // IEP does not display its errors
+
+ // user's sentence and iep if any are finished.  e has the return code.  Return to user
  if(likely(wasidle)){  // returning to immex in the FE
   jtclrtaskrunning(jm);  //  clear running state in case other tasks are running and need system lock - but not if recursion
   // since we are returning to user-prompt level, we might as well take user think time to trim up memory

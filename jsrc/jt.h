@@ -99,10 +99,11 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
                                    // debug flags are also used for dbuser
                    // ************************************** here starts the area that is initialized to 0 when task starts 0x14
    C init0area[0]; // label for initializing.  We overcopy to a full I, then back up to copy 0
-   C bstkreqd;   // init to 1 at thread startup.  cleared at the start of each function call.  Set at the end of a function call if (1) the function was cocurrent or (2) bstkreqd was set just before the function was called.  Taken together, these conditions
-                // mean that bstkreqd is set at the end of a function af that function or any preceding functions with the same caller changed the implied locale.  When a function ends, it looks at bstkreqd.  If it is set,
-                // the running locale has been changed by a called function and must be reset.  bstkreqd is set to 1 initially, which causes each change of locale before the first named call to incr/decr both locale counts, thus
-                // housekeeping the counts as if there were a named call to begin with.
+   C bstkreqd;   // cleared at the start of each function call.  Set at the end of a function call if (1) the function was cocurrent or (2) bstkreqd was set just before the function was called.  Taken together, these conditions
+                // mean that bstkreqd is set at the end of a function if that function or any preceding functions with the same caller changed the implied locale.  When a function ends, it looks at bstkreqd.  If it is set,
+                // the running locale has been changed by a called function and must be reset.  When a name is called, bstkreqd means that a previous name called by the same caller changes the locale.
+                // this is important because the FIRST change of locale skips some processing.  When starting an execution, such as from the console or in a thread: set bstkreqd to 1, INCREXECCTIF the starting thread, DECREXECCTIF at end of exec.
+                // This will guarantee raising the usecount of each executing thread
    union {
     US spflag; // access as short
     struct {

@@ -231,7 +231,7 @@ f =: 0&".&.> y =: 18!:3 ''
 (i.0 0) -: (i.0) lpath <'asdf'
 (i.0 0) -: (0$a:)lpath <'asdf'
 
-18!:55 ;:'a abc asdf bc cool d first new NonExistent NonExistentLocale'
+(271828) 18!:55 ;:'a abc asdf bc cool d first new NonExistent NonExistentLocale'
 18!:55 e
 18!:55 >f
 
@@ -241,7 +241,7 @@ after =. 00 + 00
 before =. 7!:0 ''
 1: 18!:3 <'a'
 ('a';'a';'a';'a';'a';'a';'a';'a';'a';'a';'a') 18!:2 <'a'
-18!:55 <'a'
+(271828) 18!:55 <'a'
 after  =. 7!:0 ''
 64 >: after - before
 

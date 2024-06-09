@@ -183,8 +183,8 @@ static B jtconsinitt(J jt){
  jt->cct= 1.0-FUZZ;
  jt->xmode=XMEXACT;
  // create an initial stack, so that stack[-1] can be used for saving error messages
- jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return
- jt->uflags.bstkreqd=1;   // indicate that cocurrent has been called at this level.  This forces unquote to incr/decr execcts for every cocurrent, leaving only one active at final return
+ jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return (start off the end)
+// obsolete  jt->uflags.bstkreqd=1;   // indicate that cocurrent has been called at this level.  This forces unquote to incr/decr execcts for every cocurrent, leaving only one active at final return
  R 1;
 }
 

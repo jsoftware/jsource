@@ -875,6 +875,9 @@ typedef DST* DC;
 #define DECREXECCT(l) if(--LXAV0(l)[SYMLEXECCT]==0)locdestroy(l);
 #define DELEXECCT(l) if((LXAV0(l)[SYMLEXECCT]&=~EXECCTNOTDELD)==0)locdestroy(l);
 #endif
+#define INCREXECCTIF(l) {if(unlikely(!(LXAV0(l)[SYMLEXECCT]&EXECCTPERM)))INCREXECCT(l)}
+#define DECREXECCTIF(l) {if(unlikely(!(LXAV0(l)[SYMLEXECCT]&EXECCTPERM)))DECREXECCT(l)}
+#define DELEXECCTIF(l) {if(likely(!(LXAV0(l)[SYMLEXECCT]&EXECCTPERM)))DELEXECCT(l)}
 
 typedef struct {
  A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)

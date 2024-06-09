@@ -192,7 +192,7 @@ A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 // For k=0 or 1, we have made sure there are 2-k symbols reserved (for the assignments we make).  Not required for k=2, which is not assigned
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
  // allocate the symbol table itself: we have to give exactly what the user asked for so that cloned tables will hash identically; but a minimum of 1 chain field so hashes can always run
- GATV0(g,SYMB,MAX(p,SYMLINFOSIZE+1),0); AFLAGORLOCAL(g,SYMB) LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  //  All SYMB tables are born recursive.  Init EXECCT to 'in use'
+ GATV0(g,SYMB,MAX(p,SYMLINFOSIZE+1),0); AFLAGORLOCAL(g,SYMB)  //  All SYMB tables are born recursive.
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag;
  // (it is queried by 18!:_2)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
@@ -216,7 +216,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
    AR(g)=ARNAMED;   // set rank to indicate named locale
-   LXAV0(g)[SYMLEXECCT]=EXECCTPERM;  // mark all named locales permanent
+   LXAV0(g)[SYMLEXECCT]=EXECCTPERM+EXECCTNOTDELD;  // mark all named locales permanent
    break;
   case 1:  // numbered locale - we have no lock
    AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
@@ -233,11 +233,13 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
    LOCNAME(g)=x;  // set name pointer in SYMLINFO
    ACINITZAP(x);   // now that we know we will succeed, transfer ownership to name to the locale
    AR(g)=0;   // set rank to indicate numbered locale
+   LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  // numbered locales are nondeleted but not permanent
    break;
   case 2:  // local symbol table - we have no lock and we don't assign
    AR(g)=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
    // The first hashchain is not used as a symbol pointer - it holds xy bucket info
    // Bloom filter not used for local symbol tables (the field is a chain for the stack of active defs)
+   // local symbol tables don't have execcts
    break;
  }
  R g;
@@ -316,7 +318,8 @@ A jtstfind(J jt,I n,C*u,I bucketx){
 
 
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
-#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
+// this happens only if we force-deleted a permanent localce, so retore it to permanent
+#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=EXECCTPERM+EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
          // we should check whether the path in non0 but that would only matter if two threads created the locale simultaneously AND set a path, and the only loss would be that the path would leak
 static F2(jtloccre);
 
@@ -653,7 +656,7 @@ F1(jtsetpermanent){A g;
      /* check for redefinition (erasure) of entire symbol table. */
 
 // 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale
-// if x is 271828, do the 
+// if x is 271828, do the deletion even if on a permanent locale
 F2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
  if(unlikely(AT(w)&NOUN)){  // dyadic call
   I x; x=i0(a); if(jt->jerr){RESETERR; ASSERT(0,EVVALENCE)} ASSERT(x==271828,EVVALENCE)  // if not 271828, valence error
@@ -681,8 +684,8 @@ F2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
   }
   if(g){I k;  // if the specified locale exists in the system...
    if(a){ASSERTSUFF(*JT(jt,zpath)!=g,EVRO,z=0; goto exitlock;) LXAV0(g)[SYMLEXECCT]=0; locdestroy(g);  // forced delete, clear execct/del ct & do it
-    // ignore the deletion if the locale is PERMANENT.  The execct is unreliable then
-   }else if(!(AC(g)&ACPERMANENT))DELEXECCT(g)  // say that the user doesn't want this locale any more.  Paths, execs, etc. still might.
+    // ignore the deletion if the locale is execct-permanent.  The execct is unreliable then
+   }else DELEXECCTIF(g)  // say that the user doesn't want this locale any more.  Paths, execs, etc. still might.
   }
  }
 exitlock:

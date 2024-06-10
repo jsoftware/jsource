@@ -340,6 +340,9 @@ x_asdf_=: i.1e4
 'locale error'  -: 5 lcreate etx <'asdf'
 
 (271828) 18!:55 <'asdf'
+1: _5 lcreate <'asdf'  NB. nonpermanent
+18!:55 <'asdf'
+-. (<'asdf') e. 18!:1 ] 0
 
 'domain error'  -: lcreate etx 0 1
 'domain error'  -: lcreate etx 234
@@ -356,14 +359,14 @@ x_asdf_=: i.1e4
 'domain error'  -: lcreate etx <2r4
 'domain error'  -: lcreate etx <23x
 
-'domain error'  -: _34 lcreate etx <'asdf'
 'domain error'  -: 3.4 lcreate etx <'asdf'
 'domain error'  -: 3j4 lcreate etx <'asdf'
 'domain error'  -: 3r4 lcreate etx <'asdf'
 'domain error'  -: '4' lcreate etx <'asdf'
 'domain error'  -: (<4)lcreate etx <'asdf'
 
-'limit error'   -: 256 lcreate etx <'asdf'
+'limit error'   -: _16 lcreate etx <'asdf'
+'limit error'   -: 15 lcreate etx <'asdf'
 
 NB. obsolete 18!:55 e,f
 

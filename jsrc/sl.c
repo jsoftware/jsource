@@ -180,7 +180,7 @@ A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 
 #endif
 
-// Create symbol table: k is 0 for named, 1 for numbered, 2 for local; p is the number of exact number of hash entries desired (including SYMLINFOSIZE);
+// Create symbol table: k is -1/0 for nonperm named/named, 1 for numbered, 2 for local; p is the exact number of hash entries desired (including SYMLINFOSIZE);
 // n is length of name (or locale# to allocate, for numbered locales), u->name
 // Result is SYMB type for the symbol table.  For global tables only, ras() has been executed
 // on the result and on the name and path
@@ -190,14 +190,14 @@ A jtindexnl(J jt,I n) {A z=(A)IAV1(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // 
 // The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others, plus other flags
 // For k=0, we have a write lock on stlock which we must hold throughout.
 // For k=0 or 1, we have made sure there are 2-k symbols reserved (for the assignments we make).  Not required for k=2, which is not assigned
-A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
+A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
  // allocate the symbol table itself: we have to give exactly what the user asked for so that cloned tables will hash identically; but a minimum of 1 chain field so hashes can always run
  GATV0(g,SYMB,MAX(p,SYMLINFOSIZE+1),0); AFLAGORLOCAL(g,SYMB)  //  All SYMB tables are born recursive.
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag;
  // (it is queried by 18!:_2)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
-  case 0:  // named locale - we have a write lock on stloc->lock
+  case -1: case 0:  // named locale - we have a write lock on stloc->lock
    AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
    v=symnew(&LXAV0(g)[SYMLINFO],0);    // put new block into locales table, allocate at head of chain without non-PERMANENT marking,  The symbol must be available
    v->flag|=LINFO;  // mark as not having a value
@@ -216,7 +216,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;L*v;
    LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
    AR(g)=ARNAMED;   // set rank to indicate named locale
-   LXAV0(g)[SYMLEXECCT]=EXECCTPERM+EXECCTNOTDELD;  // mark all named locales permanent
+   LXAV0(g)[SYMLEXECCT]=((k+1)<<EXECCTPERMX)+EXECCTNOTDELD;  // mark permanent unless k is _1
    break;
   case 1:  // numbered locale - we have no lock
    AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
@@ -318,8 +318,8 @@ A jtstfind(J jt,I n,C*u,I bucketx){
 
 
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
-// this happens only if we force-deleted a permanent localce, so retore it to permanent
-#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=EXECCTPERM+EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
+// this happens only if we deleted a nonpermanent locale, so restore it to nonpermanent
+#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
          // we should check whether the path in non0 but that would only matter if two threads created the locale simultaneously AND set a path, and the only loss would be that the path would leak
 static F2(jtloccre);
 
@@ -520,9 +520,10 @@ noextend: ;
 }    /* 18!:2  set locale path */
 
 // create named locale
+// a is MARK (default size, permanent) or combined size/perm flag
 static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
  ARGCHK2(a,w);
- if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
+ if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(BETWEENC(p,-15,14),EVLIMIT);}
  y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
  SYMRESERVE(2)  // make sure we have symbols to insert, for the locale itself
  A op=0;  // old path, if there is one
@@ -542,8 +543,9 @@ static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
   REINITZOMBLOC(g);  // bring the dead locale back to life: clear chains, set path, clear Bloom filter
  }else{
   // new named locale needed
-  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
-  if(unlikely(stcreate(0,p,n,s)==0))goto exit;   // create the locale, but if error, cause this routine to exit with failure
+  I type=REPSGN(p);  // -1 if impermanent, 0 if permanent
+  FULLHASHSIZE(1LL<<((REPSGN(p)^p)+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
+  if(unlikely(stcreate(type,p,n,s)==0))goto exit;   // create the locale, but if error, cause this routine to exit with failure
  }
  z=y;  // good return
 exit:
@@ -656,7 +658,7 @@ F1(jtsetpermanent){A g;
      /* check for redefinition (erasure) of entire symbol table. */
 
 // 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale
-// if x is 271828, do the deletion even if on a permanent locale
+// if x is 271828, do the deletion even if on a permanent locale (for testcases only)
 F2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
  if(unlikely(AT(w)&NOUN)){  // dyadic call
   I x; x=i0(a); if(jt->jerr){RESETERR; ASSERT(0,EVVALENCE)} ASSERT(x==271828,EVVALENCE)  // if not 271828, valence error

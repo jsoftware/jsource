@@ -909,7 +909,7 @@ extern A        jtsprank2(J,A,A,A,I,I,AF);
 extern A        jtssingleton(J,A,A,I);
 extern A        jtssingleton1(J,A,I);
 extern void     jtstackepilog(J,I4);
-extern A        jtstcreate(J,C,I,I,C*);
+extern A        jtstcreate(J,I1,I,I,C*);
 extern F        jtstdf(J,A);
 extern A        jtstfind(J,I,C*,I);
 extern A        jtstfindcre(J,I,C*,I);

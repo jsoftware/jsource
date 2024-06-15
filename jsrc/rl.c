@@ -327,6 +327,17 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
 static F1X(jtlcolon){F1PREFIP;A*v,x,y;C*s,*s0;I m,n;
  RZ(y=jtunparsem(jtinplace,num(1),w));   // extract the valences of w, run together: a list of boxes
  n=AN(y); v=AAV(y); RZ(x=lrr(C(VAV(w)->fgh[0])));  // n=#lines, v->line 0, get x=linear rep for m (string form of a digit)
+ if((I)jtinplace&JTPRFORSCREEN && FAV(w)->flag&VISDD){A z;  // defn was {{ }} and we are printing it to screen
+  // we can display the defn as a DD.
+  C hdr[5]; I hdrl=0; hdr[hdrl++]='{'; hdr[hdrl++]='{'; // install {{
+  if(FAV(w)->flag&VDDHASCTL){   // user gave ')?'
+    hdr[hdrl++]=')';  // install in hdr
+    C pos='v'; pos=FAV(w)->valencefns[0]==jtvalenceerr?'d':pos; pos=FAV(w)->valencefns[1]==jtvalenceerr?'m':pos; // type, if verb
+    pos=AT(w)&ADV?'a':pos; pos=AT(w)&CONJ?'c':pos;   // override if not verb
+    hdr[hdrl++]=pos; hdr[hdrl++]=CLF;  // install type, giving {{)tLF
+  }else hdr[hdrl++]=' ';  // ordinary DD: {{SP
+  R raze(over(df2(z,box(str(hdrl,hdr)),ravel(stitch(box(scc(CLF)),y)),amend(num(0))),box(str(2,"}}"))));  //  ; ((<hdr) 0} , (<LF) ,. y) ,  <tlr
+ }
  if(!((I)jtinplace&JTEXPVALENCEOFF)&&(2>n||2==n&&1==AN(v[0])&&':'==CAV(C(v[0]))[0])){  // if all valences requested, and only one line, or monadic valence empty (i. e. first line is ':')
   // return one-line definition m : 'string'.  m will come from x
   if(!n)R over(x,str(5L," : \'\'"));  // empty string, return m : ''

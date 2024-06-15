@@ -123,7 +123,8 @@ DF1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
 // _9: to 9: and _:, return the saved value.  If we can inplace the operation (i. e. 0:"0), do so for DIRECT types, preserving the existing precision
 DF1(jtnum1){F1PREFIP;A z=0;
  ARGCHK2(w,self); RANKT rank=(RANKT)jt->ranks; rank=rank>AR(w)?AR(w):rank; A a=FAV(self)->fgh[2];  // fetch value to store: always an INT/boolean, but if boolean the high-order bytes are 0, so 0 is valid INT/FL and 1 a valid INT
- if(rank==AR(w))R a;  // at infinite rank, just return the value
+ if(rank==AR(w))R a;  // at infinite rank, just return the value.  Because VFATOP[LR] puns with comparison flags,
+   // it is possible that inplacing flags are set; so we must handle infinite rank before looking at inplacing
  // rank given, must replicate the value.  if rank 0, we can do it inplace
  I natoms;  // number of atoms to allocate
  I k=bplg(AT(a));  // lg2 of size of atoms moved

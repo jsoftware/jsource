@@ -358,7 +358,7 @@ DF1(jtarx){F1RANK(0,  jtarx,self); R arep(  symbrdlocknovalerr(nfb(w)));}  // 5!
 DF1(jtdrx){F1RANK(0,  jtdrx,self); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
 DF1(jttrx){F1RANK(0,  jttrx,self); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
 DF1(jtlrx1){F1RANK(0,  jtlrx1,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5 monad
-DF2(jtlrx2){F2RANK(0, 0, jtlrx2,self); I mask; RE(mask=i0(a)); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) R jtlrep((J)((I)jt|((~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF)),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt
+DF2(jtlrx2){ASSERT(AR(w)==0,EVRANK) I mask=0; if(AN(a)==0)mask=JTPRFORSCREEN;else{RE(mask=i0(a)); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) mask=(~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF;}  R jtlrep((J)((I)jt|mask),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt; in x empty, print as if for screen
 DF1(jtprx){F1RANK(0,  jtprx,self); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
 
 DF2(jtxrx){F2RANK(0,0,jtxrx,self); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7

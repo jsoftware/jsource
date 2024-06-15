@@ -274,7 +274,7 @@ DF2(jtxdefn){
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
   locsym=AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+3];  // fetch pointer to preallocated symbol table
-  ASSERT(locsym!=0,EVVALENCE);  // if the valence is not defined, give valence error
+// checked already  ASSERT(locsym!=0,EVVALENCE);  // if the valence is not defined, give valence error
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){NPGpysfmtdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -734,7 +734,7 @@ static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt
 DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
- ff=fdef(0,CCOLON,VERB, jtxdefn,jtxdefn, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags
+ ff=fdef(0,CCOLON,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags
  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
 
@@ -1203,7 +1203,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  R z;
 }
 
-F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
+F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  ARGCHK2(a,w);PROLOG(778);
  A z; fdefallo(z)
  if(VERB&AT(a)){  // v : v case
@@ -1214,86 +1214,97 @@ F2(jtcolon){F2PREFIP;A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
   fdeffill(z,0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) R z; // derived verb is ASGSAFE if both parents are 
  }
  ASSERT(AT(w)&NOUN,EVDOMAIN);   // noun : verb is an error
- RE(n=i0(a));  // m : n; set n=value of a argument
+ RE(m=i0(a));  // m : n; set m=value of a argument
  I col0;  // set if it was m : 0
- if(col0=equ(w,num(0))){RZ(w=colon0(n)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
- if(n==0){ra0(w); RCA(w);}  // noun - it's a string, return it.  Give it recursive usecount
+ if(col0=equ(w,num(0))){RZ(w=colon0(m)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
+ if(m==0){ra0(w); RCA(w);}  // noun - it's a string, return it.  Give it recursive usecount
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  I splitloc=-1;   // will hold line number of : line
- if(10<n){ASSERT(AT(w)&LIT,EVDOMAIN) s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
+ A v1, v2;  // pointers to monad and dyad forms
+
+ if(10<m){ASSERT(AT(w)&LIT,EVDOMAIN) s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
  else{  // not tacit translator - preparse the body
   // we want to get all forms to a common one: boxed string(s) rank<2.  If we went through m : 0, we are in that form
   // already.
-  if(!col0)if(BOX&AT(w)){RZ(w=sent12b(C(w)))  // list of boxes - convert to character, no analysis
-  }else{  // character
-   RZ(w=jtsent12c(jt,w,n)) // if this is NOT 9 : w, cause a one-line definition to be scanned for {{ }}.  9 : strings have already been scanned
+  if(!col0){
+   if(BOX&AT(w)){RZ(w=sent12b(C(w)))  // list of boxes - convert to character, no analysis
+   }else{  // character
+    RZ(w=jtsent12c(jt,w,m)) // if this is NOT 9 : w, cause a one-line definition to be scanned for {{ }}.  9 : strings have already been scanned
+   }
   }
-  // If there is a control line )x at the top of the definition, parse it now and discard it from m
-  if(likely(AN(w)!=0))if(unlikely(AN(C(AAV(w)[0]))&&CAV(C(AAV(w)[0]))[0]==')')){
-   // there is a control line.  parse it.  Cut to words
-   A cwds=wordil(C(AAV(w)[0])); RZ(cwds); ASSERT(AM(cwds)==2,EVDOMAIN);  // must be exactly 2 words: ) and type
-   ASSERT(((IAV(cwds)[1]-IAV(cwds)[0])|(IAV(cwds)[3]-IAV(cwds)[2]))==1,EVDOMAIN);  // the ) and the next char must be 1-letter words  
-   C ctltype=CAV(C(AAV(w)[0]))[IAV(cwds)[2]];  // look at the second char, which must be one of acmdv*  (n is handled in ddtokens)
-   I newn=-1; newn=ctltype=='a'?1:newn; newn=ctltype=='c'?2:newn; newn=ctltype=='m'?3:newn; newn=ctltype=='d'?4:newn; newn=ctltype=='v'?3:newn; newn=ctltype=='*'?9:newn;  // choose type based on char
-   ASSERT(newn>=0,EVDOMAIN);  // error if invalid char
-   n=newn;  // accept the type the user specified
-   // discard the control line
-   RZ(w=beheadW(w));
-   // Noun DD was converted to a string, possibly containing LF, and doesn't come through here
+  // If there is a control line )x at the top of the definition, parse it now and discard it from n
+  if(m==9){
+   flag|=VISDD;  // indicate this defn was created by a DD
+   if(likely(AN(w)!=0))if(unlikely(AN(C(AAV(w)[0]))&&CAV(C(AAV(w)[0]))[0]==')')){
+    // there is a control line.  parse it.  Cut to words
+    flag|=VDDHASCTL;  // indicate that the DD had a control line
+    A cwds=wordil(C(AAV(w)[0])); RZ(cwds); ASSERT(AM(cwds)==2,EVDOMAIN);  // must be exactly 2 words: ) and type
+    ASSERT(((IAV(cwds)[1]-IAV(cwds)[0])|(IAV(cwds)[3]-IAV(cwds)[2]))==1,EVDOMAIN);  // the ) and the next char must be 1-letter words  
+    C ctltype=CAV(C(AAV(w)[0]))[IAV(cwds)[2]];  // look at the second char, which must be one of acmdv*  (n is handled in ddtokens)
+    I newm=-1; newm=ctltype=='a'?1:newm; newm=ctltype=='c'?2:newm; newm=ctltype=='m'?3:newm; newm=ctltype=='d'?4:newm; newm=ctltype=='v'?3:newm; newm=ctltype=='*'?9:newm;  // choose type based on char
+    ASSERT(newm>=0,EVDOMAIN);  // error if invalid char
+    m=newm;  // accept the type the user specified
+    // discard the control line
+    RZ(w=beheadW(w));
+    // Noun DD was converted to a string, possibly containing LF, and doesn't come through here
+   }
   }
   // find the location of the ':' divider line, if any.  But don't recognize : on the last line, since it could
   // conceivably be the return value from a modifier
-  A *wv=AAV(w); DO(AN(w)-1, I st=0; A wvc=C(*wv); 
+  A *wv=AAV(w);  // pointer to lines
+  DO(AN(w)-1, I st=0; A wvc=C(*wv); 
     DO(AN(wvc), I c=CAV(wvc)[i]; if(c!=':'&&c!=' '){st=0; break;} if(c!=' ')if(st==1){s=0; break;}else st=1;)
     if(st==1){splitloc=wv-AAV(w); break;} ++wv;)
   // split the definition into monad and dyad.
   I mn=splitloc<0?AN(w):splitloc; I nn=splitloc<0?0:AN(w)-splitloc-1;
-  RZ(m=take(sc(mn),w)); RZ(d=take(sc(-nn),w));
-  INCORP(m); INCORP(d);  // we are incorporating them into hv[]
-  if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
-  GAT0(h,BOX,2*HN,1); hv=AAV(h);
-  if(n){B b;  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
-   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=JT(jt,retcomm)?m:mtv;
-   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=JT(jt,retcomm)?d:mtv;
+  if(splitloc<0){v1=w; v2=mtv;}else{RZ(v1=take(sc(splitloc),w)); RZ(v2=drop(sc(splitloc+1),w));}
+  INCORP(v1); INCORP(v2);  // we are incorporating them into hv[]
+  if(4==m){if((-AN(v1)&(AN(v2)-1))<0)v2=v1; v1=mtv;}  //  for 4 :, make the single def given the dyadic one
+  GAT0(h,BOX,2*HN,1); hv=AAV1(h);
+  if(m){B b;  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
+   RE(b=preparse(v1,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=JT(jt,retcomm)?v1:mtv;
+   RE(b=preparse(v2,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=JT(jt,retcomm)?v2:mtv;
   }
  }
  // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
  // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
- if((1LL<<n)&0x206){  // types 1, 2, 9
+ if((1LL<<m)&0x206){  // types 1, 2, 9
   I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 8=mu 4=nv 2=x 1=y, combined for both valences
   // for 9 : n, figure out best type after looking at n
-  if(n==9){
-   I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; n=CTLZI(defflg); n=(0x2143>>(n<<2))&0xf; // replace 9 by value depending on what was seen; if : seen, ignore x
-   if(n==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
-  } 
-  if(n<=2){  // adv or conj after autodetection
+  if(m==9){
+   I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; m=CTLZI(defflg); m=(0x2143>>(m<<2))&0xf; // replace 9 by value depending on what was seen; if : seen, ignore x
+   if(m==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
+  }
+  if(m<=2){  // adv or conj after autodetection
     flag|=REPSGN(-(fndflag&3))&VXOPR;   // if this def refers to xy, set VXOPR
    // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a non-operator conjunction: the operands will be the two verbs;
    // (2) it is an operator with a reference to x
-   if(((-AN(m))&(AN(d)-1)&((SGNIFNOT(flag,VXOPRX)&(1-n))|(SGNIF(flag,VXOPRX)&SGNIF(fndflag,1))))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
+   if(((-AN(v1))&(AN(v2)-1)&((SGNIFNOT(flag,VXOPRX)&(1-m))|(SGNIF(flag,VXOPRX)&SGNIF(fndflag,1))))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
    // for adv/conj, flag has operator status from here on
   }
  }
- flag|=VFIX;  // ensures that f. will not look inside n : n
+ flag|=VFIX;  // ensures that f. will not look inside m : n
  // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
  // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
- if(4>=n) {
+ if(4>=m) {I hnofst=0;
   // explicit definitions.  Create local symbol table, pppp, and compile into internal form
-  I hnofst=0; do{  // for each valence
-   // Don't bother to create a symbol table for an empty definition, since it is a domain error
+  do{  // for each valence
+   // Don't bother to create a symbol table for an empty definition, since it is a valence error
    if(AN(hv[hnofst+1])){
-    RZ(hv[hnofst+3] = incorp(crelocalsyms(hv[hnofst+0], hv[hnofst+1],n,!!hnofst,flag)));  // words,cws,type,dyad,flag
+    RZ(hv[hnofst+3] = incorp(crelocalsyms(hv[hnofst+0], hv[hnofst+1],m,!!hnofst,flag)));  // words,cws,type,dyad,flag
     I ppr; WITHDEBUGOFF(ppr=pppp(jt, hv[hnofst+0], hv[hnofst+1]);) RZ(ppr);  // words,cws.  Suppress messages during pppp
     RZ(hv[hnofst+0]=incorp(compiledefn(jt, hv[hnofst+0], hv[hnofst+1]))) hv[hnofst+1]=0;  // join cw and sent together, lose sent
    }
   }while((hnofst+=HN)<=HN);
  }
- switch(n){
- case 3:  fdeffill(z,0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 1:  fdeffill(z,0,CCOLON, ADV,  flag&VXOPR?jtxop2:jtxdefn,jtvalenceerr,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 2:  fdeffill(z,0,CCOLON, CONJ, jtvalenceerr,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 4:  fdeffill(z,0,CCOLON, VERB, jtxdefn,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+ AF okv1=hv[3]?(AF)jtxdefn:(AF)jtvalenceerr, okv2=hv[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr;
+ AF modfn=flag&VXOPR?jtxop2:jtxdefn;
+ switch(m){
+ case 3:  fdeffill(z,0,CCOLON, VERB, okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+ case 1:  fdeffill(z,0,CCOLON, ADV,  modfn,jtvalenceerr, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 2:  fdeffill(z,0,CCOLON, CONJ, jtvalenceerr,modfn, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 4:  fdeffill(z,0,CCOLON, VERB, jtvalenceerr,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
  case 13: z=vtrans(w); break;
  default: ASSERT(0,EVDOMAIN);
  }

@@ -728,13 +728,16 @@ static DF2(xv2){A z; R dfv2(z,a,w,FAV(self)->fgh[1]);}
 static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}  // debug or pm, and CALL type.  sitop may be 0 if deb/pm turned on in the middle of a sentence
 
 // This handles adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, and copy the flags
+// bivalent adv/conj
 // point g in the derived verb to the original self
 // If we have to add a name for debugging purposes, do so
 // Flag the operator with VOPR, and remove VFIX for it so that the compound can be fixed
+// self->flag always has VXOP+VFIX+VJTFLGOK[12]
 DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
- ff=fdef(0,CCOLON,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags
+// obsolete  ff=fdef(0,CCOLON,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags
+ ff=fdef(0,CCOLON,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags, incl JTFLGOK[12]
  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
 
@@ -1218,11 +1221,12 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  I col0;  // set if it was m : 0
  if(col0=equ(w,num(0))){RZ(w=colon0(m)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
  if(m==0){ra0(w); RCA(w);}  // noun - it's a string, return it.  Give it recursive usecount
+ ASSERT(((UI)m&-16)<((0x221f>>m)&1),EVDOMAIN)  // m must be one of 0 1 2 3 4 9 13
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  I splitloc=-1;   // will hold line number of : line
  A v1, v2;  // pointers to monad and dyad forms
 
- if(10<m){ASSERT(AT(w)&LIT,EVDOMAIN) s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
+ if(10<m){ASSERT(AT(w)&LIT,EVDOMAIN) s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s)); z=vtrans(w);}  // if tacit form, discard trailing LF & 
  else{  // not tacit translator - preparse the body
   // we want to get all forms to a common one: boxed string(s) rank<2.  If we went through m : 0, we are in that form
   // already.
@@ -1259,35 +1263,35 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   I mn=splitloc<0?AN(w):splitloc; I nn=splitloc<0?0:AN(w)-splitloc-1;
   if(splitloc<0){v1=w; v2=mtv;}else{RZ(v1=take(sc(splitloc),w)); RZ(v2=drop(sc(splitloc+1),w));}
   INCORP(v1); INCORP(v2);  // we are incorporating them into hv[]
-  if(4==m){if((-AN(v1)&(AN(v2)-1))<0)v2=v1; v1=mtv;}  //  for 4 :, make the single def given the dyadic one
+  if(4==m){if((-AN(v1)&(AN(v2)-1))<0)v2=v1; v1=mtv;}  //  for 4 :, make the single def given the dyadic one, leave monadic empty
   GAT0(h,BOX,2*HN,1); hv=AAV1(h);
   if(m){B b;  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
    RE(b=preparse(v1,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=JT(jt,retcomm)?v1:mtv;
    RE(b=preparse(v2,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=JT(jt,retcomm)?v2:mtv;
   }
- }
- // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
- // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
- if((1LL<<m)&0x206){  // types 1, 2, 9
-  I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 8=mu 4=nv 2=x 1=y, combined for both valences
-  // for 9 : n, figure out best type after looking at n
-  if(m==9){
-   I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; m=CTLZI(defflg); m=(0x2143>>(m<<2))&0xf; // replace 9 by value depending on what was seen; if : seen, ignore x
-   if(m==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
-  }
-  if(m<=2){  // adv or conj after autodetection
+  // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
+  // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
+  if((1LL<<m)&0x206){  // types 1, 2, 9
+   I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 8=mu 4=nv 2=x 1=y, combined for both valences
+   // for 9 : n, figure out best type after looking at n
+   if(m==9){
+    I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; m=CTLZI(defflg); m=(0x2143>>(m<<2))&0xf; // replace 9 by value depending on what was seen; if : seen, ignore x
+    if(m==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
+   }
+   if(m<=2){  // adv or conj after autodetection
     flag|=REPSGN(-(fndflag&3))&VXOPR;   // if this def refers to xy, set VXOPR
-   // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a non-operator conjunction: the operands will be the two verbs;
-   // (2) it is an operator with a reference to x
-   if(((-AN(v1))&(AN(v2)-1)&((SGNIFNOT(flag,VXOPRX)&(1-m))|(SGNIF(flag,VXOPRX)&SGNIF(fndflag,1))))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
-   // for adv/conj, flag has operator status from here on
+    // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a non-operator conjunction: the operands will be the two verbs;
+    // (2) it is an operator with a reference to x
+    if(((-AN(v1))&(AN(v2)-1)&((SGNIFNOT(flag,VXOPRX)&(1-m))|(SGNIF(flag,VXOPRX)&SGNIF(fndflag,1))))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
+    // for adv/conj, flag has operator status from here on
+   }
   }
- }
- flag|=VFIX;  // ensures that f. will not look inside m : n
- // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
- // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
- // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
- if(4>=m) {I hnofst=0;
+  // at this point m is in 1..4
+  flag|=VFIX;  // ensures that f. will not look inside m : n
+  // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
+  // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
+  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
+  I hnofst=0;
   // explicit definitions.  Create local symbol table, pppp, and compile into internal form
   do{  // for each valence
    // Don't bother to create a symbol table for an empty definition, since it is a valence error
@@ -1297,17 +1301,22 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
     RZ(hv[hnofst+0]=incorp(compiledefn(jt, hv[hnofst+0], hv[hnofst+1]))) hv[hnofst+1]=0;  // join cw and sent together, lose sent
    }
   }while((hnofst+=HN)<=HN);
- }
- AF okv1=hv[3]?(AF)jtxdefn:(AF)jtvalenceerr, okv2=hv[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr;
- AF modfn=flag&VXOPR?jtxop2:jtxdefn;
- switch(m){
- case 3:  fdeffill(z,0,CCOLON, VERB, okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 1:  fdeffill(z,0,CCOLON, ADV,  modfn,jtvalenceerr, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 2:  fdeffill(z,0,CCOLON, CONJ, jtvalenceerr,modfn, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 4:  fdeffill(z,0,CCOLON, VERB, jtvalenceerr,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 13: z=vtrans(w); break;
- default: ASSERT(0,EVDOMAIN);
- }
+  // get routine addresses.  For verbs, xdef/valenceerr depending on which valences are given
+  AF okv1=hv[3]?(AF)jtxdefn:(AF)jtvalenceerr, okv2=hv[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr;
+  AF modfn=flag&VXOPR?jtxop2:jtxdefn;  // for modifiers, xop2 if defn refers to x/y, xdefn if not
+  I ft=VERB;  // type to use, default to verb
+  ft=m==1?ADV:ft; okv1=m==1?modfn:okv1; okv2=m==1?jtvalenceerr:okv2;  // adv goes to modfn/valenceerr
+  ft=m==2?CONJ:ft; okv1=m==2?jtvalenceerr:okv1; okv2=m==2?modfn:okv2;  // conj goes to valenceerr/modfn
+  fdeffill(z,0,CCOLON, ft, okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
+// obsolete   switch(m){
+// obsolete   case 3:  fdeffill(z,0,CCOLON, VERB, okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+// obsolete   case 1:  fdeffill(z,0,CCOLON, ADV,  modfn,jtvalenceerr, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;
+// obsolete   case 2:  fdeffill(z,0,CCOLON, CONJ, jtvalenceerr,modfn, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;
+// obsolete   case 4:  fdeffill(z,0,CCOLON, VERB, jtvalenceerr,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+// obsolete   }
+ }  // tacit form joins the explicit here
+// obsolete  case 13:  break;
+// obsolete  default: ASSERT(0,EVDOMAIN);
  // EPILOG is called for because of the allocations we made, but it is essential to make sure the pfsts created during crelocalsyms get deleted.  They have symbols with no value
  // that will cause trouble if 18!:_2 is executed before they are expunged.  As a nice side effect, all explicit definitions are recursive.
  EPILOG(z);

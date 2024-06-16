@@ -346,12 +346,13 @@ static F1X(jtlcolon){F1PREFIP;A*v,x,y;C*s,*s0;I m,n;
   R over(over(x,str(3L," : ")),lcpx(y));  // m : 'string'
  }
  // multiline definition (or single valence requested).  Append the body to ltext, return the (m : 0) as the main result
- m=0; DO(n, m+=AN(v[i]););   // add up string lengths
- GATV0(y,LIT,2+n+m,1);    // allocate
- s=s0=CAV(y);   // point to start of result area
- DO(n, *s++=CLF; y=C(v[i]); m=AN(y); MC(s,CAV(y),m); s+=m;);  // copy each line as a new line starting with LF
- *s++=CLF; *s++=')';   // append ) line to end definition
- RZ(y=str(s-s0,s0));   // append new lines to ltext
+ RZ(y=apip(raze(stitch(box(scc(CLF)),y)),str(2,"\n)")))   // (; ((<LF) ,. y)) , LF,')'
+// obsolete  m=0; DO(n, m+=AN(v[i]););   // add up string lengths
+// obsolete  GATV0(y,LIT,2+n+m,1);    // allocate
+// obsolete  s=s0=CAV(y);   // point to start of result area
+// obsolete  DO(n, *s++=CLF; y=C(v[i]); m=AN(y); MC(s,CAV(y),m); s+=m;);  // copy each line as a new line starting with LF
+// obsolete  *s++=CLF; *s++=')';   // append ) line to end definition
+// obsolete  RZ(y=str(s-s0,s0));   // append new lines to ltext
  *ltext=*ltext?over(*ltext,y):y;
  R over(x,str(4L," : 0"));   // result is m : 0
 }

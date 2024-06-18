@@ -753,7 +753,7 @@ static I jtxop(J jt,A w){I i,k;
  // Loop over each word, starting at beginning where the references are more likely
  for(i=0;i<in;++i) {
   A w=QCWORD(wv[i]);  // w is box containing a queue value.  If it's a name, we inspect it
-  if(AT(w)&NAME){
+  if((I)wv[i]&QCISLKPNAME){   // look for names NOT followed by =. since it is only initial arguments that we care about
    // Get length/string pointer
    I n=AN(w); C *s=NAV(w)->s;
    if(n){
@@ -1221,7 +1221,8 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  I col0;  // set if it was m : 0
  if(col0=equ(w,num(0))){RZ(w=colon0(m)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
  if(m==0){ra0(w); RCA(w);}  // noun - it's a string, return it.  Give it recursive usecount
- ASSERT(((UI)m&-16)<((0x221f>>m)&1),EVDOMAIN)  // m must be one of 0 1 2 3 4 9 13
+ // the rest is non-noun cases
+ ASSERT(((UI)m&-16)<((0x221f>>m)&1),EVDOMAIN)  // m must be one of 1 2 3 4 9 13
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  I splitloc=-1;   // will hold line number of : line
  A v1, v2;  // pointers to monad and dyad forms
@@ -1264,11 +1265,13 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   if(splitloc<0){v1=w; v2=mtv;}else{RZ(v1=take(sc(splitloc),w)); RZ(v2=drop(sc(splitloc+1),w));}
   INCORP(v1); INCORP(v2);  // we are incorporating them into hv[]
   if(4==m){if((-AN(v1)&(AN(v2)-1))<0)v2=v1; v1=mtv;}  //  for 4 :, make the single def given the dyadic one, leave monadic empty
+  // preparse to create the control-word structures
   GAT0(h,BOX,2*HN,1); hv=AAV1(h);
-  if(m){B b;  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
-   RE(b=preparse(v1,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=JT(jt,retcomm)?v1:mtv;
-   RE(b=preparse(v2,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=JT(jt,retcomm)?v2:mtv;
-  }
+  DO(2, A vv=i?v2:v1; I b; RE(b=(I)preparse(vv,&hv[HN*i+0],&hv[HN*i+1])); flag|=(b*VTRY1)<<i; hv[HN*i+2]=JT(jt,retcomm)?vv:mtv;)
+// obsolete   if(m){B b;  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
+// obsolete    RE(b=preparse(v1,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=JT(jt,retcomm)?v1:mtv;
+// obsolete    RE(b=preparse(v2,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=JT(jt,retcomm)?v2:mtv;
+// obsolete   }
   // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
   // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
   if((1LL<<m)&0x206){  // types 1, 2, 9
@@ -1304,10 +1307,10 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   // get routine addresses.  For verbs, xdef/valenceerr depending on which valences are given
   AF okv1=hv[3]?(AF)jtxdefn:(AF)jtvalenceerr, okv2=hv[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr;
   AF modfn=flag&VXOPR?jtxop2:jtxdefn;  // for modifiers, xop2 if defn refers to x/y, xdefn if not
-  I ft=VERB;  // type to use, default to verb
-  ft=m==1?ADV:ft; okv1=m==1?modfn:okv1; okv2=m==1?jtvalenceerr:okv2;  // adv goes to modfn/valenceerr
-  ft=m==2?CONJ:ft; okv1=m==2?jtvalenceerr:okv1; okv2=m==2?modfn:okv2;  // conj goes to valenceerr/modfn
-  fdeffill(z,0,CCOLON, ft, okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
+  I ft=VERBX;  // type to use, default to verb
+  ft=m==1?ADVX:ft; okv1=m==1?modfn:okv1; okv2=m==1?jtvalenceerr:okv2;  // adv goes to modfn/valenceerr
+  ft=m==2?CONJX:ft; okv1=m==2?jtvalenceerr:okv1; okv2=m==2?modfn:okv2;  // conj goes to valenceerr/modfn
+  fdeffill(z,0,CCOLON, ((I)1<<ft), okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
 // obsolete   switch(m){
 // obsolete   case 3:  fdeffill(z,0,CCOLON, VERB, okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
 // obsolete   case 1:  fdeffill(z,0,CCOLON, ADV,  modfn,jtvalenceerr, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;

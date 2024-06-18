@@ -1277,7 +1277,7 @@ finrle: ;
       lvv+=BLKSZ*BLKSZ;  // advance loop pointer/counter
      }while(--ndp);
      --nruns;
-    };
+    }
    // ****************** end of O(n^3) part **************************
    // combine the accumulators into the 0 side
     a00=_mm256_add_pd(a00,a10); a01=_mm256_add_pd(a01,a11); a02=_mm256_add_pd(a02,a12); a03=_mm256_add_pd(a03,a13);  // this finishes the 16 dot-products

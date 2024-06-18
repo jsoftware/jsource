@@ -385,7 +385,7 @@ typedef I SI;
                                     //
                                     // NOTE that this definition of pyx doesn't match the user docs.  For the user, the pyx is the box enclosing what we have defined here as the true pyx.
                                     // This user-pyx can be passed as an argument, and is resolved when opened.  We document it this way because the user thinks of an array of 5 boxes
-                                    // a being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
+                                    // as being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
 // new types.  We could encode these as length+attributes, saving several bits, but since one-hot is good enough for now, we stay with it.
 // The best encoded form I found is
 // LEN1 LEN2 LEN4 CHAR LEN16/FL x SBT x   x C2T C4T     with the option of deleting C2T/C4T and turning on CHAR
@@ -794,6 +794,7 @@ typedef DST* DC;
 
 // LSB codes in value pointers.  Set by enqueue() and symbis(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
 // type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
+// in the words of an explicit definition the words have QCNAMELKP semantics in bit 4:
 #define QCMASK 0x1fLL   // all the LSB flags
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part
@@ -823,7 +824,7 @@ typedef DST* DC;
 #define QCISLKPNAME 0x10   // name requires lookup (i. e. not assigned)
 #define QCNAMEBYVALUE 0x01   // combining flag - name is mnuvxy type
 #define QCNAMEABANDON 0x08 // combining flag - name has :: - set only if not assigned
-// In the LSBs returned by syrd()  (stored by symbis()), bit 4 and the higher code points are as follows:
+// In the LSBs returned by syrd()  (stored by symbis()), bit 4 and the higher code points have QCGLOBAL semantics:
 #define QCGLOBALX 4
 #define QCGLOBAL 0x10  // set if the name was found in a global table
 #define SETGLOBAL(w) (A)((I)(w)|QCGLOBAL)
@@ -831,10 +832,10 @@ typedef DST* DC;
 #define VALTYPENAMELESS ((SYMBX-LASTNOUNX)+1) // 6 set in nameless non-locative ACV, to suppress reference creation.
 #define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse.  Has bit 0 set, as befits a noun
 #define NAMELESSQCTOTYPEDQC(q) q=QCWORD(q), q=(A)((I)q+ATYPETOVALTYPEACV(AT(q)));  // q is name of NAMELESS QC; result has QC type for t
-// In the LSBs returned by syrd1() bit 4 means:
+// In the LSBs returned by syrd1() bit 4 have QCNAMED semantics:
 #define QCNAMEDX 4  // set if the value was found in a named locale, clear if numbered
 #define QCNAMED ((I)1<<QCNAMEDX)  // set if the value was found in a named locale, clear if numbered
-// After the named value has been processed, bit 4 changes meaning to:
+// After the named value has been processed, bit 4 changes meaning to QCFAOWED semantics:
 #define QCFAOWEDX 4
 #define QCFAOWED 0x10  // when this bit is set in an address returned from lookup, it means that the value was ra()d when it was stacked and must be fa()d when it leaves execution
 #define SETFAOWED(w) (A)((I)(w)|QCFAOWED)

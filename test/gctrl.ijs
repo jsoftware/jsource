@@ -220,6 +220,14 @@ y
 y}}
 )
 
+NB. Assigned vbl not detected as auto
+f0 =. {{ x =. y }}
+'valence error' -: 3 f0 etx 5
+f0 =. {{ m =. y }}
+3 = 4!:0 <'f0'
+ 
+
+
 
 
 NB. Nameref caching  -------------------------------------------------------------------------------

@@ -561,7 +561,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
        if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table
        if((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // see if there is a local symbol, using the buckets.  If not, restore y
-       raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // value found in local table.  ra() the value to match syrd
+       raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // value found in local table.  ra() the value to match syrd  would be good to avoid this
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
 rdglob: ;  // here when we tried the buckets and failed

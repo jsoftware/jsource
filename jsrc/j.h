@@ -2333,7 +2333,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #if C_AVX2
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
 #define PDEP(s,m) _pdep_u64((UI)(s),(UI)(m))
-// #define BZHI(s,i) _bzhi_u64(s,i)
+#define BZHI(s,i) _bzhi_u64(s,i)
 #else
 // these emulations require that m be a sequence of 1 bits with no imbedded 0s
 // #define PEXT(s,m) (((s)>>CTTZI(m))&((m)>>CTTZI(m)))

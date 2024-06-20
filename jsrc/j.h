@@ -2338,8 +2338,8 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 // these emulations require that m be a sequence of 1 bits with no imbedded 0s
 // #define PEXT(s,m) (((s)>>CTTZI(m))&((m)>>CTTZI(m)))
 // #define PDEP(s,m) (((s)&((m)>>CTTZI(m)))<<CTTZI(m))
-#define PEXT(s,m) _pext_u32(s,m)
-#define PDEP(s,m) _pdep_u32(s,m)
+// requires special insts#define PEXT(s,m) _pext_u32(s,m)
+// requires special insts#define PDEP(s,m) _pdep_u32(s,m)
 #endif
 
 #ifndef offsetof

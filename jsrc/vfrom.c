@@ -280,7 +280,7 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   JMCSETMASK(endmask,celllen,0)  // allow overcopy
   axflags|=0b100;  // size 100 means 'use move'
  }
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
  __m256i al=_mm256_set1_epi64x(axes[r].lenaxis), al1, sgnbit;  // in all lanes: axis len
 #endif
  axflags=axes[r].nsel<0?0b00111:axflags;   // for complementary axis, use single block-copying routine 0b00111
@@ -293,13 +293,13 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   --r;  // remove the last axis
   ns=axes[r].nsel;  // ns now has the length of the axis taken in full
   axflags&=0b00011;  // select the copy-in-full code for the appropriate length of cell
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
   // if gather is supported, change nl to distance between gathers
   nl<<=(celllen>>LGSZI)<<(LGLGNPAR);  // nl becomes the stride in atoms between groups of gathers, 4*length of last axis
 #endif
   // al still holds the length of the last axis
  }
-#if C_AVX2  // WARNING!!! this conditional starts with else
+#if C_AVX2 || EMU_AVX2  // WARNING!!! this conditional starts with else
 else{   // normal last axis
  axflags=(((axflags^0b11011)+((I)zbase&(SZI-1)))==0)?0b11111:axflags; // For 8-byte aligned cell, switch to the routine using gather.  it is conceivable that we could have an unaligned 8-byte cell if somebody reshaped a cell of irregular boundary
  // init vars needed for gather.  It is faster to set these than to test for whether we need to
@@ -316,7 +316,7 @@ else{   // normal last axis
   case 0b11010: fcopyNI4 break; case 0b10010: fcopy4 break; case 0b01010: fcopyN4 break;
   case 0b11011: fcopyNI8 break; case 0b10011: fcopy8 break; case 0b01011: fcopyN8 break;
   case 0b11100: fcopyNIv(0) break; case 0b10100: fcopyv(0) break; case 0b01100: fcopyNv(0) break;
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
   case 0b11111: fcopygather8(fcopyvalNI) axflags-=AXFCKST0; break; case 0b10111: fcopygather8(fcopyval) break; case 0b01111: fcopygather8(fcopyvalN) break;
     // carry on with fewer audits if gather repeated
   case 0b00011: fcopygatherinfull break;  // scaf should have non-AVX version for 1/2/4-byte
@@ -689,7 +689,7 @@ DF2(jtfetch){A*av, z;I n;F2PREFIP;
  RETF(z);   // Mark the box as non-inplaceable, as above
 }
 
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 // everything we need for one core's execution - shared by all cores
 struct __attribute__((aligned(CACHELINESIZE))) mvmctx {
  // returned section
@@ -1186,7 +1186,7 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
   I *amv=amv0+wtofst; D *avv=avv0+wtofst;  // number of sparse atoms in each row; pointer to first col#; pointer to first weight
   __m256i qkt0_4=_mm256_set1_epi64x((I)qkt0), qkrowstride_4=_mm256_set1_epi32(qktrowstride<<LGSZD);
   for(avx=0;avx<an;avx+=NPAR){  // for each block of input... (this overfetches but that's OK since we map enough for one 32-byte final fetch)
-   __m256i mv4=_mm256_loadu_si256((__m256i_u *)&amv[avx]);   // read next group of 4 row#s
+   __m256i mv4=_mm256_loadu_si256((__m256i *)&amv[avx]);   // read next group of 4 row#s
    __m256d av4=_mm256_loadu_pd(&avv[avx]);   // read next group of 4 values
    mv4=_mm256_add_epi64(qkt0_4,_mm256_mul_epu32(mv4,qkrowstride_4));  // row#*row size + base of Qkt, for each row.  There may be garbage at the end
    // We have 4 row-pointers and 4 values.  Write them out
@@ -1435,7 +1435,7 @@ return4:;  // we have a preemptive result.  store and set minimp =-inf to cut of
  WRITEUNLOCK(ctx->ctxlock)
  R 0;
 }
-#endif //C_AVX2
+#endif //C_AVX2 || EMU_AVX2
 
 // 128!:9 matrix times sparse vector with optional early exit
 // one column + SPR mode: (qp dotproduct)
@@ -1484,7 +1484,7 @@ return4:;  // we have a preemptive result.  store and set minimp =-inf to cut of
 //  
 // Rank is infinite
 F1(jtmvmsparse){PROLOG(832);
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
  if(AN(w)==0){
   // empty arg just returns stats; none defined yet
   R mtv;
@@ -1590,7 +1590,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
   }else{
    // the initial allocation can be followed by allocations of size ressize2.  Allocate half the rows in the initial allocation
    ressize=((nbndbatches>>1)/nthreads)<<LGBNDROWBATCH;  // half the total batches, evened out per thread.  There must be at least 1
-ASSERTSYS(ressize>0,"ressize")
+   ASSERTSYS(ressize>0,"ressize")
    ressize=MIN(ressize,32768-BNDROWBATCH);  // init alloc must fit into a US
   }
   ressize=((nthreads-2)&(ninclfk-32768))<0?ninclfk:ressize;  // if just 1 thread and length fits in a US, allocate it all at the beginning
@@ -1635,7 +1635,7 @@ ASSERTSYS(ressize>0,"ressize")
 #endif
 }
 
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 // everything we need for one core's execution
 struct __attribute__((aligned(CACHELINESIZE))) ekctx {
  I rowsperthread;  // number of rows of prx for each thread to handle
@@ -1682,7 +1682,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     __m256i prn0x;  // indexes of nonzero values in row
     // get the mask of valid values, fetch pivotrow values, fetch the Qk indexes to modify
     if(coln-colx>=NPAR){  // all lanes valid
-     prn0x=_mm256_loadu_si256((__m256i_u*)(colxv+colx));  // load the indexes into Qk
+     prn0x=_mm256_loadu_si256((__m256i*)(colxv+colx));  // load the indexes into Qk
      prowdh=_mm256_loadu_pd(prn0v+colx);  // load next 4 non0 values in pivotrow
     if(likely(dpflag&4))prowdl=_mm256_loadu_pd(prn0v+coln+colx);  // and low part if present
     }else{
@@ -1885,7 +1885,7 @@ struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newr
 F2(jtekupdate){ASSERT(0,EVNONCE);}
 #endif
 
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 // everything we need for one core's execution
 struct __attribute__((aligned(CACHELINESIZE))) sprctx {
  I rowsperthread;  // number of rows of prx for each thread to handle

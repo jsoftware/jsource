@@ -441,7 +441,7 @@ end.
 delth''  NB. make sure we end with an empty system
 
 1
-}}^:(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1
+}}^:(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'') 1
 
 NB.  128!:13 ck[;bk;colthresh,bkthresh] ------------------------
 {{
@@ -547,7 +547,7 @@ assert. 'length error' -: (128!:13) etx (1.,:0.);(0,1.,:0.);1. 1.
 assert. 'length error' -: (128!:13) etx (1.,:0.);(1.,:0.);0 1. 1.
 
 1
-}}^:(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 1
+}}^:(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'') 1
 
 
 NB. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk ------------------------
@@ -570,7 +570,7 @@ f =: 1:`({{
  end.
  while. 1 T. '' do. 55 T. '' end.
  r 
-}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+}}"0)@.(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'')
 f i. 65
 
 NB. quad precision Qk but dp row and col - no longer used
@@ -603,7 +603,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
  end.
  while. 1 T. '' do. 55 T. '' end.
  1
-}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+}}"0)@.(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'')
 
 
 NB. quad precision everything, also testing batch mode
@@ -639,7 +639,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
  end.
  while. 1 T. '' do. 55 T. '' end.
  1
-}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+}}"0)@.(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'')
 
 
 f i. 65
@@ -659,7 +659,7 @@ NB. obsolete smoutput 0j_20 ": {. Qk
 NB. obsolete smoutput 0j_20 ": expQkhi
 NB. obsolete smoutput 0j_20 ": ({.Qk)-expQkhi
 (1 1 1 0 *./ 0 0 1 1) -: 0.={. Qk
-}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'') 0
+}}"0)@.(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'') 0
 
 
 NB. avoid repeated indexes
@@ -676,7 +676,7 @@ f =: 1:`({{
  ck =. (00;prcr;(,1.);(prcl #"01 newrownon0);(mplr)) 128!:12 ck
  if. -. r =. 1e_13 > >./ , | ck - expck do. 13!:8]4 [ ' prcr__  newrownon0__  expck__ preck__ ck__' =: prcr;newrownon0;expck;preck;ck end.
  1
-}})@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+}})@.(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'')
 f ''
 
 
@@ -693,7 +693,7 @@ f =: 1:`({{
  bk =. (00;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 bk
  if. -. r =. 1e_13 > >./ , | bk - expbk do. 13!:8]4 [ 'pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expbk__ prebk__ bk__' =: pcx;pivotcolnon0;newrownon0;absfuzz;expbk;prebk;bk end.
  r 
-}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+}}"0)@.(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'')
 f i. 65
 
 NB. quad precision
@@ -719,7 +719,7 @@ f =: 1:`({{
  bk =. (00;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 bk
  if. -. 1e_30 > >./ re =. , | (+/  expbk epsub bk) % (| +/ bk) >. (| +/ prebk) >. (| +/ expbk) do. 13!:8]4 [ 'r__ c__ re__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expbk__ prebk__ bk__' =: r;c;re;pcx;pivotcolnon0;newrownon0;absfuzz;expbk;prebk;bk end.
  1
-}}"0)@.(+./ ('avx2';'avx512') +./@:E.&> <9!:14'')
+}}"0)@.(+./ ('avx2';'avx512';'j64arm') +./@:E.&> <9!:14'')
 
 f i. 65
 

@@ -437,7 +437,13 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  // one.
  if(unlikely(AR(g)&ARLOCALTABLE)){bloom=0; v=(A*)&iotavec-IOTAVECBEGIN+0;}  // no bloom, empty path
  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
-                         if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res); res=(A)(((I)res&~QCNAMED)+(((I)AR(g)&ARNAMED)<<(QCNAMEDX-ARNAMEDX))); READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMED   pdep_u64 opportunity
+                         if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res);
+#if C_AVX2
+                         res=(A)(((I)res&~QCNAMED)+PDEP((I)AR(g)>>ARNAMEDX,(I)1<<(QCNAMEDX-ARNAMEDX)));
+#else
+                         res=(A)(((I)res&~QCNAMED)+(((I)AR(g)&ARNAMED)<<(QCNAMEDX-ARNAMEDX)));
+#endif
+                         READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMED
                          READUNLOCK(g->lock)} g=gn;
             }while(g);  // return when name found.
  R 0;  // fall through: not found

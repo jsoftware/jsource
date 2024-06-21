@@ -368,24 +368,6 @@ typedef I SI;
 #define RATX 7
 #define RAT             ((I)1L<<RATX)           // Q  rational number
 #define RATSIZE sizeof(Q)
-#define PYXX 8
-#define PYX          ((I)1L<<PYXX)  // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
-                                    // Task creation returns an atomic box (which is NOT a pyx) that CONTAINS a pyx.  A pyx itself never becomes a result or argument, because
-                                    // the value of a pyx may not be accessed except through C(pyx), which will return the address of the contents.  An A block pointing to the pyx (necessarily of BOX type)
-                                    // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that pyxes MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
-                                    // but they WILL NOT be passed as arguments into any other kind of routine.  The practical effect of this rule is that when a routine pulls the address of a box out of
-                                    // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the pyx,  requires C(pyx).
-                                    // If the address of the pyx is being copied into another block, there is no need for C().  In particular, the pyx may be ra()'d if it is put into a recursive block.
-                                    // ra() on a pyx will affect the usecount of the pyx itself but NOT of the contents, because a pyx is always marked recursive.
-                                    // The pyx looks like an atomic box but it actually holds a PYXBLOK where the data would be.  The PYXBLOK begins with the result value, so that when
-                                    // the pyx is freed the result will be also.  The AN of the 'atomic' pyx is initialized to 1, and AAV[0] to 0.  When the pyx is resolved, the address of the
-                                    // result A block is stored into AAV[0], error code is saved in the PYXBLOK, and the executing thread field of the PYXBLOK is set to -1.
-                                    // When a pyx is created, ownership is transferred to the enclosing box via zap.  The enclosing box is active in the creating task.  The PYXBLOK is ra()d
-                                    // before it is passed to the executing task; the task fa()s it after it is filled in.
-                                    //
-                                    // NOTE that this definition of pyx doesn't match the user docs.  For the user, the pyx is the box enclosing what we have defined here as the true pyx.
-                                    // This user-pyx can be passed as an argument, and is resolved when opened.  We document it this way because the user thinks of an array of 5 boxes
-                                    // as being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
 // new types.  We could encode these as length+attributes, saving several bits, but since one-hot is good enough for now, we stay with it.
 // The best encoded form I found is
 // LEN1 LEN2 LEN4 CHAR LEN16/FL x SBT x   x C2T C4T     with the option of deleting C2T/C4T and turning on CHAR
@@ -479,6 +461,26 @@ typedef I SI;
 #define RPARX 30
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
+#define PYXX 30  // overlaps RPAR.  We want the bare PYX bit to be enough to indicate a PYX when the contents of a box are interrogated with C().  RPAR
+                         // is safe because it does not appear anywhere else except in sentences.  ADV/CONJ/VERB may appear in boxes in internal results, and LPAR may be
+                         // set as a flag there
+#define PYX          ((I)1L<<PYXX)  // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
+                                    // Task creation returns an atomic box (which is NOT a pyx) that CONTAINS a pyx.  A pyx itself never becomes a result or argument, because
+                                    // the value of a pyx may not be accessed except through C(pyx), which will return the address of the contents.  An A block pointing to the pyx (necessarily of BOX type)
+                                    // can be freely stored into boxed arrays or returned as a result.  Our coding rule is that pyxes MAY be passed as a/w arguments, and may be stored unresolved in compounds; 
+                                    // but they WILL NOT be passed as arguments into any other kind of routine.  The practical effect of this rule is that when a routine pulls the address of a box out of
+                                    // an AAV area, any reference to the box's contents (AN, AR, AC, AT, AS, AK), or the value of the pyx,  requires C(pyx).
+                                    // If the address of the pyx is being copied into another block, there is no need for C().  In particular, the pyx may be ra()'d if it is put into a recursive block.
+                                    // ra() on a pyx will affect the usecount of the pyx itself but NOT of the contents, because a pyx is always marked recursive.
+                                    // The pyx looks like an atomic box but it actually holds a PYXBLOK where the data would be.  The PYXBLOK begins with the result value, so that when
+                                    // the pyx is freed the result will be also.  The AN of the 'atomic' pyx is initialized to 1, and AAV[0] to 0.  When the pyx is resolved, the address of the
+                                    // result A block is stored into AAV[0], error code is saved in the PYXBLOK, and the executing thread field of the PYXBLOK is set to -1.
+                                    // When a pyx is created, ownership is transferred to the enclosing box via zap.  The enclosing box is active in the creating task.  The PYXBLOK is ra()d
+                                    // before it is passed to the executing task; the task fa()s it after it is filled in.
+                                    //
+                                    // NOTE that this definition of pyx doesn't match the user docs.  For the user, the pyx is the box enclosing what we have defined here as the true pyx.
+                                    // This user-pyx can be passed as an argument, and is resolved when opened.  We document it this way because the user thinks of an array of 5 boxes
+                                    // as being 5 containers, whereas really it is one BOX with pointers to 5 contents (which are true pyxes).
 
 // Upper bits of a type can be used as flags, since we use CTTZ(AT) to indicate what the type is.  Usually we avoid these in NOUN types to
 // make testing easier; but see BOXMULTIASSIGN which is never an argument
@@ -560,7 +562,7 @@ typedef I SI;
 #define TYPESLT(x,y)    ((UI)(x)<(UI)(y))  // type x < type y
 #define TYPESGT(x,y)    ((UI)(x)>(UI)(y)) // type x > type y
 
-#define PARTOFSPEECHEQ(x,y) (((((x)|(LPAR&-((x)&NOUN)))^((y)|(LPAR&-((y)&NOUN))))&LPAR+CONJ+VERB+ADV)==0)  // using RPAR to hold NOUN status, verify parts-of-speech the same
+#define PARTOFSPEECHEQ(x,y) (((((x)|(LPAR&-((x)&NOUN)))^((y)|(LPAR&-((y)&NOUN))))&LPAR+CONJ+VERB+ADV)==0)  // using LPAR to hold NOUN status, verify parts-of-speech the same
 #define PARTOFSPEECHEQACV(x,y) ((((x)^(y))&CONJ+VERB+ADV)==0)  // verify known-nonnoun parts-of-speech the same
 
 // Utility: keep the lowest 1 only

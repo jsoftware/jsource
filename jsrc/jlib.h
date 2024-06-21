@@ -49,7 +49,7 @@ typedef struct AREP_RECORD {
 #define BOX             ((I)1L<<5)           // A  boxed
 #define XNUM            ((I)1L<<6)           // X  extended precision integer
 #define RAT             ((I)1L<<7)           // Q  rational number
-#define PYX             ((I)1L<<8) // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
+#define PYX             ((I)1L<<30) // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
 #define SBT             ((I)1L<<16)          // SB symbol
 #define C2T             ((I)1L<<17)          // C2 unicode (2-byte characters)
 #define C4T             ((I)1L<<18)          // C4 unicode (4-byte characters)

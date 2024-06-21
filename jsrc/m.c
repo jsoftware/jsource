@@ -418,8 +418,8 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
   ASSERT(LIT&AT(x),EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   ASSERT(vnm(m,s),EVILNAME);
-  RZ(y=symbrd(nfs(m,s))); 
-  zv[i]=spfor1(C(y));
+  RZ(y=symbrd(nfs(m,s)));   // get value for name (protected by tpush)
+  zv[i]=spfor1(y);  // get size
  }
  RETF(z);
 }    /* 7!:5 space for named object; w is <'name' */

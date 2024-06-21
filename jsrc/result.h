@@ -280,7 +280,8 @@ do{
      I diff;  // Will be set to 0 if we are unable to report the # items
 #if PYXES
      // If the returned result is a pyx, we can't look into it to get its type/len.  We could see if the pyx has been resolved, but we don't
-     if(likely(!(diff=(AT(z)&BOX+PYX)==BOX+PYX))){  // if the result is a pyx that can't be inspected, skip it
+// obsolete      if(likely(!(diff=(AT(z)&BOX+PYX)==BOX+PYX))){  // if the result is a pyx that can't be inspected, skip it
+     if(likely(!(diff=(AT(z)&PYX)))){  // if the result is a pyx, which can't be inspected, skip it
 #else
      {
 #endif

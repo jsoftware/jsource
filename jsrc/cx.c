@@ -698,8 +698,9 @@ bodyend: ;  // we branch to here to exit with z set to result
  if(unlikely(z==0))if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
   // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that are are about to pop over.  Only x and y are possible
   UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
-  // For each of [xy], realize if UNINCORPABLE and replace the value with the realized version.  If error, the name will lose its value; that's OK.
-  while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv; if((rv=realize(ybuckptr->val))!=0)ACINITZAP(rv); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}} yxbucks>>=16;}
+  // For each of [xy], reassign the value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.
+// obsolete   while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv; if((rv=realize(ybuckptr->val))!=0)ACINITZAP(rv); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}} yxbucks>>=16;}
+  while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val)symbis(ybuckptr->name,ybuckptr->val,locsym);} yxbucks>>=16;}
   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self); RETF(0);  // push a debug frame for this error.  We know we didn't free locsym
  }
 

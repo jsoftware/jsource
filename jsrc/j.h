@@ -1017,7 +1017,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CERR(x) CCOMMON(x,,R jt->jerr)  // return error code on error
 #define CNOERR(x) CCOMMON(x,,)  // value has been resolved before & there cannot be an error
 #define CNULL(x) CCOMMON(x,if(likely(res!=0)),R 0)  // if x is 0, keep it 0; return 0 if resolves to error
-#define CNULLNOERR(x) CCOMMON(x,if(likely(res!=0)),)  // if x is 0, keep it 0; ignore error
+#define CNULLNOERR(x) CCOMMON(x,if(likely(res!=0))if(AT(x)&BOX),)  // if x is 0, keep it 0; ignore error
 // CALL[12] is an eformat point if we have a valid self.  AT is 0 in an invalid self
 #define CALL1COMMON(f,w,fs,j,pop)   ({A carg1=(w), carg3=(A)(fs), cargz; cargz=(f)(j,carg1,carg3,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,0,0);} cargz;})
 #define CALL1(f,w,fs)   CALL1COMMON(f,w,fs,jt,)

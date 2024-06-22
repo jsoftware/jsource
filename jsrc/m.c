@@ -379,7 +379,9 @@ static D jtspfor1(J jt, A w){D tot=0.0;
   case BOXX:
    if(!ISSPARSE(AT(w))){  // I don't know why we don't account for space in sparse box
     if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
-     {DO(AN(w), if(wv[i])tot+=spfor1(C(QCWORD(wv[i]))););}
+     {DO(AN(w), if(wv[i])tot+=spfor1(QCWORD(wv[i])););}  // No C() for the value!  If a pyx is not ready, we don't
+           // wait for it, giving it a space of 0.  If ready, we use its size.  Also, we may be processing any type
+           // of internal value here, so if we did check for a pyx, we would need to check for PYX+BOX
     }
     break;
    }
@@ -449,7 +451,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
   tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each hashchain in the locale
-   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+SYMORIGIN; tot+=spfor1(u->name); tot+=spfor1(C(u->val));}  // add in the size of the name itself and the value, and the L block for the name
+   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+SYMORIGIN; tot+=spfor1(u->name); tot+=spfor1(u->val);}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=tot;
  }

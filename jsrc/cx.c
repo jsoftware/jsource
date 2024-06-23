@@ -693,14 +693,14 @@ bodyend: ;  // we branch to here to exit with z set to result
  A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain of for./select. blocks, whose contents have been unstacked
 
  // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
- // We don't do this if jt->jerr is set: that's the special result for comming out of debug; or when WSFULL, since there may be no memory.  Also, suppress pmdebug
+ // We don't do this if jt->jerr is set: that's the special result for coming out of debug; or when WSFULL, since there may be no memory.  Also, suppress pmdebug
  // if an immex phrase is running or has been requested, because those would be confusing and also they call tpop
  if(unlikely(z==0))if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
   // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that are are about to pop over.  Only x and y are possible
   UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
-  // For each of [xy], reassign the value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.
+  // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.
 // obsolete   while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv; if((rv=realize(ybuckptr->val))!=0)ACINITZAP(rv); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}} yxbucks>>=16;}
-  while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val)symbis(ybuckptr->name,ybuckptr->val,locsym);} yxbucks>>=16;}
+  while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE)symbis(ybuckptr->name,ybuckptr->val,locsym);} yxbucks>>=16;}
   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self); RETF(0);  // push a debug frame for this error.  We know we didn't free locsym
  }
 

@@ -2114,7 +2114,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 
 #if C_AVX2 || EMU_AVX2
 
-#if HASFMA
+#if HASFMA || 1  // fma emulated
 // create quad-precision product of double-precision inputs.  outhi must not be an input; outlo can
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
 #define TWOPROD1(in0,in1,outhi,outlo) {__m256d hhh=_mm256_set1_pd(in0); __m256d lll=_mm256_set1_pd(in1); __m256d ohhh,olll; TWOPROD(hhh,lll,ohhh,olll) outlo=_mm256_cvtsd_f64(olll); outhi=_mm256_cvtsd_f64(ohhh);} 
@@ -2161,6 +2161,8 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #ifndef TWOPROD1  // if FMA version not available for TWOPROD1, use slow way
 #define TWOSPLIT1(a,x,y) y=(a)*134217729.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
 #define TWOPROD1(in0,in1,outhi,outlo) {D i00, i01, i10, i11; TWOSPLIT1(in0,i00,i01) TWOSPLIT1(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);}  // must avoid compiler tuning 
+#define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
+#define TWOPRODQD(qp0,qp1,dp,outhi,outlo) TWOPROD(qp0,dp,outhi,outlo) outlo=_mm256_fmadd_pd(qp1,dp,outlo);
 #endif
 
 #define TWOSUM1(in0,in1,outhi,outlo) {D t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;}  //  in0 and outhi might be identical

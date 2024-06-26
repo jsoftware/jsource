@@ -49,7 +49,7 @@ typedef struct rngdata {
  RNGPARMS rngparms0[5];  // parms for RNG 0
  } RNG;  // 342 bytes
 
-#if PYXES
+#if PYXES || 1
 typedef struct jobstruct JOB;
 // job queue for each threadpool.  ht[0] is used as the job lock, so we align to cacheline boundary to avoid false sharing
 typedef struct __attribute__((aligned(CACHELINESIZE))) {
@@ -413,7 +413,7 @@ typedef struct JSTstruct {
  US cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores, in multiples of 4KB
  C oleop;            /* com flag to capture output                    */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
-#if PYXES
+#if PYXES || 1
  JOBQ (*jobqueue)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
  I filler7[1];
 #else

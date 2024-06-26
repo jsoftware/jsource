@@ -977,7 +977,7 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
  R 1;
 }
 
-#if (C_AVX2 || EMU_AVX2) & HASFMA
+#if C_AVX2 || EMU_AVX2
 // +/@:*"1 for QP, with IRS by hand
 static DF2(jtsumattymes1E){
  if(unlikely((I)((1-AR(a))|(1-AR(w)))<0)){I lr=MIN((RANKT)jt->ranks,AR(a)); I rr=MIN(jt->ranks>>RANKTX,AR(w)); R rank2ex(a,w,(A)self,1,1,lr,rr,jtsumattymes1E);}  // if multiple results needed, do rank loop
@@ -1028,7 +1028,7 @@ DF2(jtsumattymes1){
  // if an argument is empty, sparse, or not a fast arithmetic type, or only one arg has rank 0, revert to the code for f/@:g atomic
  if(((-((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|((acr-1)^(wcr-1)))<0) { // test for all unusual cases
   ASSERT(fit!=2,EVNONCE)  // user expected 2 atoms per result, but we don't support that for repeated atomic arg
-#if (C_AVX2 || EMU_AVX2) & HASFMA   // high-perf QP only on 64-bit
+#if C_AVX2 || EMU_AVX2    // high-perf QP only on 64-bit
   if(ISDENSETYPE(AT(a)|AT(w),QP)&&((AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))>=0){
    // QP dot-product.  Transfer to that code with rank still set
    if(unlikely(!(AT(a)&QP)))RZ(a=cvt(QP,a)) else if(unlikely(!(AT(w)&QP)))RZ(w=cvt(QP,w))  // convert lower arg to qp
@@ -1095,7 +1095,7 @@ DF2(jtsumattymes1){
  }else{
   // here for +/@:*"1!.[01], double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
   NAN0;
-#if C_AVX2 || (EMU_AVX2 && !defined(__x86_64__))  // emulation bug
+#if C_AVX2 || EMU_AVX2
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,y) TWOSUM(acc##n,h,acc##n,q) c##n=_mm256_add_pd(_mm256_add_pd(q,y),c##n);
   __m256i endmask; /* length mask for the last word */
   __m256d idreg=_mm256_setzero_pd();

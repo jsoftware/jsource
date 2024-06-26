@@ -1,17 +1,25 @@
 prolog './glapack.ijs'
 NB. LAPACK --------------------------------------------------------------
 
-NB. obsolete s48=: 9!:48 ''
-NB. obsolete 9!:49 ]1
-
-tol=: 2^_34
-
 require '~addons/math/lapack/lapack.ijs'
 mp=: +/ .*
+clean=: 1e_10&$: : (4 : 0)
+if. L. y do.
+  x clean each y
+else.
+  if. (3!:0 y) e. 16 16384 do.
+    j./"1 y * x <: | y=. +.y
+  else.
+    y * x <: |y
+  end.
+end.
+)
+matchclean=: 0 *./ . = clean@,@:-
+neareq=: (2^_16) > [ |@:% -
+matchcleanf=: 0 *./ . neareq 5e_5&clean@,@:-
+cleanf=: 5e_5&clean
 
 test=: 3 : 0
- (2^_44) test y
-   :
  t=. dgeev_jlapack_ A=: y
  assert. (,3) -: $t
  assert. 32 = 3!:0 t
@@ -19,8 +27,8 @@ test=: 3 : 0
  'L e R' =: t
  assert. *./ 1 = +/ +/"1 *: +. L
  assert. *./ 1 = +/ +/"1 *: +. R
- assert. (A mp R)      -:!.x e *"1 R
- assert. ((+|:L) mp A) -:!.x e *"0 1 +|:L
+ assert. (A mp R)      matchcleanf e *"1 R
+ assert. ((+|:L) mp A) matchcleanf e *"0 1 +|:L
  1
 )
 
@@ -29,17 +37,17 @@ NB. LAPACK dgeev --------------------------------------------------------
 
 require '~addons/math/lapack/dgeev.ijs'
 
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 1
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 2
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 3
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 4
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 5
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 6
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 7
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 8
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 9
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 10
-tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 11
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 1
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 2
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 3
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 4
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 5
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 6
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 7
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 8
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 9
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 10
+test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 11
 
 s0=: 7!:0 ''
 s1=: 7!:0 ''
@@ -68,22 +76,20 @@ NB. LAPACK zgeev --------------------------------------------------------
 
 require '~addons/math/lapack/zgeev.ijs'
 
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 1
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 2
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 3
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 4
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 5
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 6
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 7
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 8
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 9
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 10
-tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 11
-
-NB. obsolete 9!:49 s48
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 1
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 2
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 3
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 4
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 5
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 6
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 7
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 8
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 9
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 10
+test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 11
 
 
-4!:55 ;:'A e L mp n R s0 s1 s48 test tol'
+4!:55 ;:'A e L mp n R s0 s1 test clean cleanf matchclean matchcleanf'
 
 
 

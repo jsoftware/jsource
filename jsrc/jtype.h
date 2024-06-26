@@ -137,9 +137,11 @@ typedef AD *A;
 // following bit is used in sort/grade to indicate sort direction
 #define JTDESCENDX      2   // direction of sort
 #define JTDESCEND       (((I)1)<<JTDESCENDX)
-// following 2 bits used as input to jtsymbis only
+// following 2 bits used as input/return for jtsymbis only
 #define JTFINALASGNX    0   // turn this on in jt to indicate that the assignment is final and does not have to worry about protecting the input value
 #define JTFINALASGN     (((I)1)<<JTFINALASGNX)
+#define JTASGNWASLOCALX  1   // in return from symbis, set if assignment was to local symbol table
+#define JTASGNWASLOCAL     (((I)1)<<JTASGNWASLOCALX)
 // following bits are used in thorn for boxes
 #define JTTHORNYX       2  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: horiz
 #define JTTHORNY    (((I)3)<<JTTHORNYX)

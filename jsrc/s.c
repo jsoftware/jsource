@@ -346,16 +346,16 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  }
 }
 
-// a is A for name; result is L* address of the symbol-table entry in the local symbol table (which must exist)
+// a is A for name; result is L* address of the symbol-table entry in the local symbol table lsym (which must exist)
 // If not found, one is created
 // We know that the name block DOES NOT have a direct symbol number, because we have checked that if there was a chance (if the name block was synthetic there is no chance)
 // May call probeis which takes a lock on the local table; if so we release the lock
-L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
+L *jtprobeislocal(J jt,A a,A lsym){NM*u;I bx;L *sympv=SYMORIGIN;
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
  I4 b=u->bucket;
  if((likely(b!=0))){
-  LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
+  LX lx = LXAV0(lsym)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
    // positive bucketx (now negative); that means skip that many items and then do name search
    // Even if we know there have been no names assigned we have to spin to the end of the chain (for insertion purposes)
@@ -371,9 +371,9 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
     tx = lx; lx = l->next;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx.  Make it non-PERMANENT
-   SYMRESERVE(1) l=symnew(&LXAV0(jt->locsyms)[b],tx|SYMNONPERM); 
+   SYMRESERVE(1) l=symnew(&LXAV0(lsym)[b],tx|SYMNONPERM); 
    ra(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
-   AR(jt->locsyms)|=ARNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
+   AR(lsym)|=ARNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
    R l;
   } else {L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
@@ -384,9 +384,9 @@ L *jtprobeislocal(J jt,A a){NM*u;I bx;L *sympv=SYMORIGIN;
   // No bucket information, do full search. We do have to reserve a symbol in case the name is new
   // We don't need a lock, because this is a local table; but this path is rare - only for computed names, and for assignments
   // during creation of the local symbol tables, where we will keep the lock once we take it
-  SYMRESERVE(1) L *l=probeis(a,jt->locsyms); WRITEUNLOCK(jt->locsyms->lock);  // release the unneeded lock
+  SYMRESERVE(1) L *l=probeis(a,lsym); WRITEUNLOCK(lsym->lock);  // release the unneeded lock
   RZ(l);
-  AR(jt->locsyms)|=((~l->flag)&LPERMANENT)<<(ARNAMEADDEDX-LPERMANENTX);  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
+  AR(lsym)|=((~l->flag)&LPERMANENT)<<(ARNAMEADDEDX-LPERMANENTX);  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
   R l;
  }
 }
@@ -703,7 +703,6 @@ A jtprobequiet(J jt,A a){A g;
 // assign symbol: assign name a in symbol table g to the value w (but g is ignored if a is a locative)
 // Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage
 // flags set in jt: bit 0=this is a final assignment;
-// if g is marked as having local symbols, we assume that it is equal to jt->locsyms (especially in subroutines)
 I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  ARGCHK2(a,w);
  I anmf=NAV(a)->flag; // fetch flags for the name
@@ -717,7 +716,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  rifv(w); // must realize any virtual
  if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
- I arloc=AR(jt->locsyms);  // rank of local symbols is a flag
+// obsolete  I arloc=AR(jt->locsyms);  // rank of local symbols is a flag
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately zombieval doesn't give us the symbol table
@@ -727,7 +726,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   if(g==jt->global){  // global assignment.
    // check for non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
-   I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(arloc,ARNAMEADDEDX));   // 0 if bucketx positive (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
+   I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(AR(jt->locsyms),ARNAMEADDEDX));   // 0 if bucketx positive (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
    localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def); now non0 if valid & known to have no assignment
    ASSERTSUFF(localnexist||!probelocal(a,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
@@ -748,9 +747,9 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
  // the name was invalid anyway and is subject to having the value removed
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
- if((AR(g)&ARLOCALTABLE)!=0){  // if local table
+ if((AR(g)&ARLOCALTABLE)!=0){  // if assignment to a local table (which might not be jt->locsyms)
   I4 symx=NAV(a)->symx;
-  e=likely((SGNIF(arloc,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
+  e=likely((SGNIF(AR(g),ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=0;   // indicate we have no lock to clear
  }else{  // global table
   SYMRESERVE(1)
@@ -815,13 +814,13 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   x=0;  // indicate no further fa needed
  }
  // x here is the value that needs to be freed
- if(g!=0)WRITEUNLOCK(g->lock)else jtinplace=(J)((I)jtinplace|2);  // if global, release lock; else indic local in return 
+ if(g!=0)WRITEUNLOCK(g->lock)else jtinplace=(J)((I)jtinplace|JTASGNWASLOCAL);  // if global, release lock; else indic local in return 
  // ************* we have released the write lock
  // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
  // in case the new value was being protected by the old (ex: n =. >n).
  // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
  SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock (subroutine call)
- R jtinplace;   // good return, with bit 0 set if final assignment, bit 1 if local
+ R (I)jtinplace;   // good return, with bit 0 set if final assignment, bit 1 if local
 exitlock:  // error exit
  if(g!=0)WRITEUNLOCK(g->lock)
  R 0;

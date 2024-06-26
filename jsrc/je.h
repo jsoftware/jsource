@@ -848,7 +848,7 @@ extern A       jtprobe(J,C*,UI4,A);
 extern L*       jtprobedel(J,C*,UI4,A);
 extern L*       jtprobeis(J, A, A);
 extern L*       jtprobeisres(J, A, A);
-extern L*       jtprobeislocal(J,A);
+extern L*       jtprobeislocal(J,A,A);
 extern A      jtprobequiet(J, A);
 extern A       jtprobelocal(J,A,A);
 extern A       probelocalbuckets(L*,A,LX,I);

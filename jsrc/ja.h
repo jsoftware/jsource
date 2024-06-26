@@ -869,7 +869,7 @@ extern void jfree4gmp(void*,size_t);
 #define primitive(x)                jtprimitive(jt,(x))
 #define probeis(x,y)                jtprobeis(jt,(x),(y))
 #define probeisres(x,y)             jtprobeisres(jt,(x),(y))
-#define probeislocal(x)             jtprobeislocal(jt,(x))
+#define probeislocal(x,y)           jtprobeislocal(jt,(x),(y))
 #define probequiet(x)             jtprobequiet(jt,(x))
 #define probelocal(x,y)             jtprobelocal(jt,(x),(y))
 #define probenum(x,y)               jtprobenum(jt,(x),(y))  

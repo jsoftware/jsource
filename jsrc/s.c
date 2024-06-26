@@ -748,11 +748,12 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  // we don't have e, look it up.  NOTE: this temporarily undefines the name, which will have a null value pointer.  We accept this, because any reference to
  // the name was invalid anyway and is subject to having the value removed
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
- if((AR(g)&ARLOCALTABLE)!=0){
+ if((AR(g)&ARLOCALTABLE)!=0){  // if local table
   I4 symx=NAV(a)->symx;
   e=likely((SGNIF(arloc,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=0;   // indicate we have no lock to clear
- }else{SYMRESERVE(1)
+ }else{  // global table
+  SYMRESERVE(1)
   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
   valtype|=QCGLOBAL;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the table
@@ -814,13 +815,13 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   x=0;  // indicate no further fa needed
  }
  // x here is the value that needs to be freed
- if(g!=0)WRITEUNLOCK(g->lock)
+ if(g!=0)WRITEUNLOCK(g->lock)else jtinplace=(J)((I)jtinplace|2);  // if global, release lock; else indic local in return 
  // ************* we have released the write lock
  // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
  // in case the new value was being protected by the old (ex: n =. >n).
  // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
  SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock (subroutine call)
- R (I)jtinplace+2*(g==0);   // good return, with bit 0 set if final assignment, bit 1 if local
+ R jtinplace;   // good return, with bit 0 set if final assignment, bit 1 if local
 exitlock:  // error exit
  if(g!=0)WRITEUNLOCK(g->lock)
  R 0;

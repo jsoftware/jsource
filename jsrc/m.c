@@ -773,7 +773,7 @@ A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined 
 // tpop() processes the stack up to a given point.  The usecount is decremented; if it goes to 0 the block is freed by mf() if not recursible, or by fa() if recursible.
 //       The fa() will free the descendants.
 // ga*() allocates a block and does an initial tpush()
-// mf() frees a block.  If what if freed is a symbol table, all the symbols are freed first.
+// mf() frees a block.  If what is freed is a symbol table, all the symbols are freed first.
 
 // mark w incorporated, reassigning if necessary.  Return the address of the block.  Used when w is an rvalue
 A jtincorp(J jt, A w) {ARGCHK1(w); INCORP(w); R w;}
@@ -982,7 +982,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
      // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };
-  if(np=QCWORD(np)){ra(np);}  // handle last one
+  if(np=QCWORD(np)){racontents(np);}  // handle last one
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   // If it is a nameref, clear the bucket info.  Explanation in nameref()

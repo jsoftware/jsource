@@ -490,8 +490,6 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
   }
  }
 
- // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
- // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
  __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here

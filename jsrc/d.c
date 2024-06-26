@@ -154,7 +154,7 @@ static void jtseeparse(J jt,DC d){A*v;
 A jtunparse(J jt,A w,I nflag){A*v,z;
  ARGCHK1(w);
  jt->etxn=0;
- v=AAV(w); DO(AN(w), nflag=disp(QCWORD(v[i]),nflag);); z=str(jt->etxn,jt->etxinfo->etx);
+ v=AAV(w); DO(AN(w), nflag=disp(QCWORD(v[i]),nflag);); z=str(jt->etxn,jt->etxinfo->etx);  // No C(): messages and sentences may contain LPAR/PYX
  jt->etxn=0;
  R z;
 }

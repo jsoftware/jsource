@@ -224,7 +224,8 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
 
 // w is an A holding a pyx value.  Return its value when it has been resolved, or 0 if error, with error code set.
 // EVTIME if timeout
-A jtpyxval(J jt,A pyx){ UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx); 
+A jtpyxval(J jt,A pyx){UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
+// obsolete if(!(AT(pyx)&PYX+BOX==PYX+BOX))SEGFAULT;  // scaf
  if(PYXFULL==(state=lda((C*)&blok->seqstate)))goto done; // if pyx already full, return result
  {C dummy=PYXEMPTY;casa(state!=PYXEMPTY?&dummy:(C*)&blok->seqstate,&dummy,PYXWAIT);}  // if pyx is EMPTY, move it to WAIT.  Avoid excess contention on hot pyxes
  UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);}); // figure out how long to wait

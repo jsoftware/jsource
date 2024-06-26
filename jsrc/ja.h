@@ -411,7 +411,7 @@ ffflui0; ffflui1;  /* local-use fields - store last in case it overwrites an ear
 /* do the INCORPs last to allow reg vbls to be stored first */ \
 A fffasg=(ffffs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[0]=fffasg;  /* incorp fs and install as f */ \
 fffasg=(fffgs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[1]=fffasg;  /* incorp gs and install as g */ \
-fffasg=(fffhs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[2]=fffasg;  /* incorp hs/otfher stuff and install as h */ \
+fffasg=(fffhs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[2]=fffasg;  /* incorp hs/other stuff and install as h */ \
 AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wait till here so audits of the incomplete block don't fail if realize happens */ \
 }
 // fdeffill replaces the original fdef, which did not know about localuse

@@ -688,7 +688,8 @@ bodyend: ;  // we branch to here to exit with z set to result
  // blocks in the for./select. stack are zapped when allocated and reused as needed; must be freed en bloc on completion
  A freechn=cdata.fchn; while(freechn){A nextchn=((CDATA*)voidAV0(freechn))->fchn; fa(freechn); freechn=nextchn;}   // free the allocated chain of for./select. blocks, whose contents have been unstacked
 
- SYMSETLOCAL((A)AM(locsym));    // Pop the stack of private symbol tables, before the old one is freed
+ SYMSETLOCAL((A)AM(locsym));    // Pop the stack of private symbol tables, before the old one is freed.  Propagate any change to jt->global up the line
+
  if(likely(z!=0)){  // normal case with no error
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  If error, leave stack to be freed at restart point
  }else{  // there was error
@@ -700,18 +701,18 @@ bodyend: ;  // we branch to here to exit with z set to result
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
 // obsolete   while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv; if((rv=realize(ybuckptr->val))!=0)ACINITZAP(rv); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}} yxbucks>>=16;}
-   while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE)symbis(ybuckptr->name,ybuckptr->val,locsym);} yxbucks>>=16;}
+   while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE)symbisdel(ybuckptr->name,ybuckptr->val,locsym);} yxbucks>>=16;}
    deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self);  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
   }
  }
 
- // locsym may have been freed now, if it was cloned and there was no error
-
- // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
+ // locsym may have been freed now, if it was cloned and there was no error.
+ // OTOH, if we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
  // We detect original symbol table by rank flag ARLSYMINUSE - other symbol tables are assigned rank 0.
  // Tables are born with ARNAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear ARNAMEADDED
  if(likely(NPGpysfmtdl&32)){symfreeha(locsym); __atomic_store_n(&AR(locsym),ARLOCALTABLE,__ATOMIC_RELEASE);}
+
  // Now that we have deleted all the local symbols, we can see if we were returning one.
  // See if EPILOG pushed a pointer to the block we are returning.  If it did, and the usecount we are returning is 1, set this
  // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  If the usecount is inplaceable 1,

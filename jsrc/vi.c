@@ -1330,7 +1330,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
     case IIFBEPS:               ztype=PREHRESIVN; break; // integer vector with length check
    }
    xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fn; xv[5]=ztype; 
-   zv[0]=incorp(x); zv[1]=incorp(h); zv[2]=hi;
+   zv[0]=incorp(x); zv[1]=incorp(h); zv[2]=incorp(hi);
   }
  }  // end of 'not sequential comparison' which means we need a hashtable
  RZ(z=EPILOGNORET(z));
@@ -1347,7 +1347,7 @@ DF2(jtcombineeps){ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7)
 A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt,ztype;
  ARGCHK3(a,w,hs);
- // hv is (info vector);(hashtable);(byte index valididty)
+ // hv is (info vector);(hashtable);(byte index validity)
  hv=AAV(hs); x=hv[0]; h=hv[1]; hi=hv[2];  
  // get the info from the info vector
  xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; jt->min=xv[3]; fn=(AF)xv[4]; ztype=xv[5]; 

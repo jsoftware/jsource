@@ -500,7 +500,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   }
   fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
   R z;
-#else
+#else   // obsolete
 
  switch(CONJCASE(a,w)){
  case NV:

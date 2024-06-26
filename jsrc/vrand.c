@@ -514,7 +514,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
    RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MRI].rngI))); RZ(*zv++=incorp(vec(INT,MRN,jt->rngdata->rngparms0[MRI].rngV)));
 #else
    u=(D*)jt->rngdata->rngparms0[MRI].rngV; GAT0(x,INT,MRN,1); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
-   RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MRI].rngI))); *zv++=x;
+   RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MRI].rngI))); *zv++=incorp(x);
 #endif
    R z;
   case GBI: n=GBN; v=jt->rngdata->rngv; break;

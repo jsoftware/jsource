@@ -982,8 +982,8 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
      // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents
    np=np0;  // advance to next box
   };
-// should be   if((np=QCWORD(np))!=0){if(AC(np)<0)SEGFAULT; racontents(np);}  // handle last one  scaf
- if((np=QCWORD(np))!=0){ra(np);}  // handle last one  scaf
+  if((np=QCWORD(np))!=0){if(AC(np)<0)SEGFAULT; racontents(np);}  // handle last one  scaf
+// obsolete  if((np=QCWORD(np))!=0){ra(np);}  // handle last one  scaf
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   // If it is a nameref, clear the bucket info.  Explanation in nameref()

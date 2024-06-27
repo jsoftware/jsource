@@ -1018,57 +1018,57 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 // recursive created the need to traverse, and that must be honored.  Ex: create - ra - fa - tpop.  The t argument is
 // AFLAG(wd)&RECURSIBLE, from which we can see the type and recursive status
 static void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
-  if((t&BOX+SPARSE)>0){AD* np;
-   // boxed.  Loop through each box, recurring if called for.
-   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-   if(likely(--n>=0)){  // skip everything if no boxes
-    np=*wv;  // prefetch first box
-    NOUNROLL do{AD* np0;  // n is always >0 to start.  Loop for n-1 times
-     np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
-     // NOTE that we do not use C() here, so that we free pyxes as well as contents.  The usecount of the pyx will protect it until its
-     // value has been installed.  Thus we ensure that fa() never causes a system lock.
-     PREFETCH((C*)np0);   // prefetch the next box while ra() is running
+ if((t&BOX+SPARSE)>0){AD* np;
+  // boxed.  Loop through each box, recurring if called for.
+  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+  if(likely(--n>=0)){  // skip everything if no boxes
+   np=*wv;  // prefetch first box
+   NOUNROLL do{AD* np0;  // n is always >0 to start.  Loop for n-1 times
+    np0=*++wv;  // fetch next box.  This fetch settles while the ra() is running
+    // NOTE that we do not use C() here, so that we free pyxes as well as contents.  The usecount of the pyx will protect it until its
+    // value has been installed.  Thus we ensure that fa() never causes a system lock.
+    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 runout:;  // 
-     // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
-     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
-      if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
-      else{I c=AC(np);
-       // virtual block.  Must be the contents of a WILLBEOPENED, but it may have other aliases so the usecount must be checked
-       if(--c<=0){
-        A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
-       }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
-      }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
-     }
-     np=np0;  // advance to next box
-    }while(--n>0);
-    if(n==0)goto runout;  // skip prefetch last time.  Maybe not needed.  This will alternate branch prediction except when n was 1.  Saves I1$
-   }
-  } else if(t&NAME){A ref;
-   if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference
-    // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
-    // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
-    // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we return without freeing the reference
-    if(AC(ref)<=1){FAV(ref)->fgh[0]=0; rc=0;  // cachedref going away - clear the pointer to prevent refree
-    }else{  // cachedref survives - modify its NM block to break the loop
-     NAV(wd)->cachedref=0; ACSET(wd,1) rc=1; // clear ref to leave name only, set count so it will free when reference is freed, prevent free of wd
+    // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
+    if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
+     if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
+     else{I c=AC(np);
+      // virtual block.  Must be the contents of a WILLBEOPENED, but it may have other aliases so the usecount must be checked
+      if(--c<=0){
+       A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
+      }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
+     }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
     }
-    fana(ref);  // free, now that nm is unlooped
-    if(rc)R;  // avoid free if that is called for
-   }
-  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
-   // ACV.
-   fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
-  // SYMB must free as a monolith, with the symbols returned when the hashtables are
-  }else if(t&SYMB){wd=jtfreesymtab(jt,wd,AR(wd));  // SYMB is used as a flag; we test here AFTER NAME and ADV which are lower bits
-  }else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
-   // single-level indirect forms.  handle each block
-   DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
-  }else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
-   fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
-   // for sparse, decrement the usecount
-   I c=AC(wd); if(--c>0){AC(wd)=c; R;}  // if sparse block not going away, just decr the usecount
+    np=np0;  // advance to next box
+   }while(--n>0);
+   if(n==0)goto runout;  // skip prefetch last time.  Maybe not needed.  This will alternate branch prediction except when n was 1.  Saves I1$
   }
- mf(wd);
+ } else if(t&NAME){A ref;
+  if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference
+   // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
+   // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
+   // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we return without freeing the reference
+   if(AC(ref)<=1){FAV(ref)->fgh[0]=0; rc=0;  // cachedref going away - clear the pointer to prevent refree
+   }else{  // cachedref survives - modify its NM block to break the loop
+    NAV(wd)->cachedref=0; ACSET(wd,1) rc=1; // clear ref to leave name only, set count so it will free when reference is freed, prevent free of wd
+   }
+   fana(ref);  // free, now that nm is unlooped
+   if(rc)R;  // avoid free if that is called for
+  }
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
+  // ACV.
+  fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
+ // SYMB must free as a monolith, with the symbols returned when the hashtables are
+ }else if(t&SYMB){wd=jtfreesymtab(jt,wd,AR(wd));  // SYMB is used as a flag; we test here AFTER NAME and ADV which are lower bits
+ }else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+  // single-level indirect forms.  handle each block
+  DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
+ }else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
+  fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
+  // for sparse, decrement the usecount
+  I c=AC(wd); if(--c>0){AC(wd)=c; R;}  // if sparse block not going away, just decr the usecount
+ }
+ mf(wd);  // free the block after all contents have been decremented
 }
 // Entry point to free after optional traversal.  clang gets this just right: if not TRAVERSIBLE, it inlines jtmf and pushes/pops no registers.
 void jtfamf(J jt,AD* RESTRICT wd,I t){

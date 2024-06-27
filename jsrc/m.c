@@ -1017,7 +1017,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 // is separately on the tpop stack.  However, we DO traverse a recursible block when its count goes to 0: making the block
 // recursive created the need to traverse, and that must be honored.  Ex: create - ra - fa - tpop.  The t argument is
 // AFLAG(wd)&RECURSIBLE, from which we can see the type and recursive status
-void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
+static void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   if((t&BOX+SPARSE)>0){AD* np;
    // boxed.  Loop through each box, recurring if called for.
    A* RESTRICT wv=AAV(wd);  // pointer to box pointers

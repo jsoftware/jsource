@@ -7,6 +7,20 @@
 #include "vasm.h"
 #include "gemm.h"
 
+#if C_AVX2 || EMU_AVX2
+#if defined(__AVX2__) || defined(__aarch64__)
+#define _MM256_FMADD_PD _mm256_fmadd_pd
+#else
+static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b, __emu__m256d c)
+{
+    __emu__m256d A;
+    A.__emu_m128[ 0 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
+    A.__emu_m128[ 1 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
+    return A;
+}
+#endif
+#endif
+
 // Analysis for inner product
 // a,w are arguments
 // zt is type of result
@@ -1366,11 +1380,11 @@ finrle: ;
      tmp=_mm256_loadu_pd(&uinv[0][0]);  // row 0 of U^-1
      a00=_mm256_mul_pd(_mm256_set1_pd(lmem[0][0]),tmp); a01=_mm256_mul_pd(_mm256_set1_pd(lmem[1][0]),tmp); a02=_mm256_mul_pd(_mm256_set1_pd(lmem[2][0]),tmp); a03=_mm256_mul_pd(_mm256_set1_pd(lmem[3][0]),tmp); 
      tmp=_mm256_loadu_pd(&uinv[1][0]);  // row 1 of U^-1
-     a00=_mm256_fmadd_pd(_mm256_set1_pd(lmem[0][1]),tmp,a00); a01=_mm256_fmadd_pd(_mm256_set1_pd(lmem[1][1]),tmp,a01); a02=_mm256_fmadd_pd(_mm256_set1_pd(lmem[2][1]),tmp,a02); a03=_mm256_fmadd_pd(_mm256_set1_pd(lmem[3][1]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][1]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][1]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][1]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][1]),tmp,a03); 
      tmp=_mm256_loadu_pd(&uinv[2][0]);  // row 2 of U^-1
-     a00=_mm256_fmadd_pd(_mm256_set1_pd(lmem[0][2]),tmp,a00); a01=_mm256_fmadd_pd(_mm256_set1_pd(lmem[1][2]),tmp,a01); a02=_mm256_fmadd_pd(_mm256_set1_pd(lmem[2][2]),tmp,a02); a03=_mm256_fmadd_pd(_mm256_set1_pd(lmem[3][2]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][2]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][2]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][2]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][2]),tmp,a03); 
      tmp=_mm256_loadu_pd(&uinv[3][0]);  // row 3 of U^-1
-     a00=_mm256_fmadd_pd(_mm256_set1_pd(lmem[0][3]),tmp,a00); a01=_mm256_fmadd_pd(_mm256_set1_pd(lmem[1][3]),tmp,a01); a02=_mm256_fmadd_pd(_mm256_set1_pd(lmem[2][3]),tmp,a02); a03=_mm256_fmadd_pd(_mm256_set1_pd(lmem[3][3]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][3]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][3]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][3]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][3]),tmp,a03); 
      // block created; advance pointers 
      llv=prechv; lbv0+=((nr+63)>>6)+2; if(r0!=r-1){prechv+=nr;}  // repeat U col; advance L row including bitmap; advance prefetch but if next col of U is the last, prefetch it again
      scv+=nr;  // move output south, to the next L block

@@ -7,20 +7,6 @@
 #include "vasm.h"
 #include "gemm.h"
 
-#if C_AVX2 || EMU_AVX2
-#if defined(__AVX2__) || defined(__aarch64__)
-#define _MM256_FMADD_PD _mm256_fmadd_pd
-#else
-static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b, __emu__m256d c)
-{
-    __emu__m256d A;
-    A.__emu_m128[ 0 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
-    A.__emu_m128[ 1 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
-    return A;
-}
-#endif
-#endif
-
 // Analysis for inner product
 // a,w are arguments
 // zt is type of result

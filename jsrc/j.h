@@ -1636,7 +1636,19 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MODIFIABLE(x)   (x)   // indicates that we modify the result, and it had better not be read-only
 // define multiply-add
 #if C_AVX2 || EMU_AVX2
+#if HASFMA
+#define _MM256_FMADD_PD _mm256_fmadd_pd
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
+#else
+static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b, __emu__m256d c)
+{
+    __emu__m256d A;
+    A.__emu_m128[ 0 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
+    A.__emu_m128[ 1 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
+    return A;
+}
+#define MUL_ACC _MM256_FMADD_PD
+#endif
 #elif defined(__SSE2__)
 #define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))
 #endif

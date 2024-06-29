@@ -4,9 +4,9 @@ NB. +/ . * ------------------------------------------------------------------
 NB. **************************************** matrix product **********************************
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
+1: {{0 T.0}}^:] 0 >. (1&T.'') -~  <: <./ 8&T.''
 
 3 : 0''
-{{0 T.0}}^:] 0 >. (1&T.'') -~  <: <./ 8&T.''
 if. 0=4!:0<'liblapack' do. '' return. end.
 if. (<UNAME)e.'Linux';'FreeBSD';'OpenBSD' do.
   liblapack=: 'liblapack.so.3'
@@ -54,7 +54,9 @@ c1-:c2
 c1-:c3
 c1-:c4
 
-4!:55 ;:'c1 c2 c3 c4 dgemm liblapack t1'
+delth''  NB. make sure we start with an empty system
+
+4!:55 ;:'c1 c2 c3 c4 delth dgemm liblapack t1'
 
 epilog''
 

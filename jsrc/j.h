@@ -1647,7 +1647,7 @@ static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b,
     A.__emu_m128[ 1 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
     return A;
 }
-#define MUL_ACC _MM256_FMADD_PD
+#define MUL_ACC(addend,mplr1,mplr2) _MM256_FMADD_PD(mplr1,mplr2,addend)
 #endif
 #elif defined(__SSE2__)
 #define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))

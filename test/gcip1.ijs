@@ -15,6 +15,8 @@ elseif. UNAME-:'Darwin' do.
     if. -.fexist liblapack do.
       liblapack=: '/System/Library/Frameworks/vecLib.framework/vecLib'
     end.
+elseif. UNAME-:'Win' do.
+ liblapack=: dquote jpath '~addons/math/lapack/jlapack',(IF64#'64'),'.dll'
 elseif. do.
  'not supported' assert 0
 end.
@@ -30,6 +32,7 @@ c=: (k,k)$17.2
 
 
 N=: 2044 [ 4088
+N=: IF64{200,N
 
 'A B'=:0?@$~2,,~N
  

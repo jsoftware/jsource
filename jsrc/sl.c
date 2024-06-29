@@ -318,8 +318,8 @@ A jtstfind(J jt,I n,C*u,I bucketx){
 
 
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
-// this happens only if we deleted a nonpermanent locale, so restore it to nonpermanent
-#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
+// set permanent status as set in the cocreate request
+#define REINITZOMBLOC(g,perm) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=(perm)?EXECCTNOTDELD+EXECCTPERM:EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
          // we should check whether the path in non0 but that would only matter if two threads created the locale simultaneously AND set a path, and the only loss would be that the path would leak
 static F2(jtloccre);
 
@@ -332,7 +332,7 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
  while(1){
   A v = stfind(n,u,bucketx);  // lookup.  NOTE another thread could delete the locale while we're looking at it - could always zombie it?
   if(likely(v!=0)){  // name found
-   if(unlikely(LOCPATH(v)==0)){ra(v); WRITELOCK(JT(jt,stloc)->lock) REINITZOMBLOC(v) WRITEUNLOCK(JT(jt,stloc)->lock)}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
+   if(unlikely(LOCPATH(v)==0)){ra(v); WRITELOCK(JT(jt,stloc)->lock) REINITZOMBLOC(v,1) WRITEUNLOCK(JT(jt,stloc)->lock)}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
     // setting a path must be accompanied by raising the usecount, because a locale is liable to be erased when its path is nonnull and it must survive as a zombie then
    R v;  // return the locale found
   }
@@ -540,7 +540,7 @@ static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
   }else{
    ra(g);  // going from zombie to valid adds to the usecount
   }
-  REINITZOMBLOC(g);  // bring the dead locale back to life: clear chains, set path, clear Bloom filter
+  REINITZOMBLOC(g,p>=0);  // bring the dead locale back to life: clear chains, set path, clear Bloom filter
  }else{
   // new named locale needed
   I type=REPSGN(p);  // -1 if impermanent, 0 if permanent
@@ -685,9 +685,9 @@ F2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
-   if(a){ASSERTSUFF(*JT(jt,zpath)!=g,EVRO,z=0; goto exitlock;) LXAV0(g)[SYMLEXECCT]=0; locdestroy(g);  // forced delete, clear execct/del ct & do it
+   if(a){ASSERTSUFF(*JT(jt,zpath)!=g,EVRO,z=0; goto exitlock;) LXAV0(g)[SYMLEXECCT]=0; locdestroy(g);  // forced delete, clear execct/del ct & do it (but error if deleting z)
     // ignore the deletion if the locale is execct-permanent.  The execct is unreliable then
-   }else DELEXECCTIF(g)  // say that the user doesn't want this locale any more.  Paths, execs, etc. still might.
+   }else DELEXECCTIF(g)  // Delete if execct allows (never if permanent).  Say that the user doesn't want this locale any more.  Paths, execs, etc. still might.
   }
  }
 exitlock:

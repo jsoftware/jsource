@@ -238,7 +238,7 @@
 #define detr(x)                     jtdetr(jt,(x))
 #define detxm(x,y)                  jtdetxm(jt,(x),(y))
 #define detz(x)                     jtdetz(jt,(x))
-#define dfv1(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])(jt,(x),r,r):r))  // y is self, always a verb; if not 0, execute (x,self,self).  Put result into r, set r 0 if self=0.
+// obsolete #define dfv1(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])(jt,(x),r,r):r))  // y is self, always a verb; if not 0, execute (x,self,self).  Put result into r, set r 0 if self=0.
 #define df1(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])((J)((I)jt|(AT(r)&(ADV|CONJ)?JTXDEFMODIFIER:0)),(x),r,r):r))  // y is self; if not 0, execute (x,self,self).  Put result into r, set r 0 if self=0.
                                               //  r must not = x.  self is evaluated only once.  If we call a modifier, set that flag
 #define dfv2(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])(jt,(x),(y),r):r))  // z is self, always a verb  Put result into r, set r 0 if self=0.  r must not = x or y.  self is evaluated only once

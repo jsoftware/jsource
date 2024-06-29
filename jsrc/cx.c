@@ -260,8 +260,8 @@ DF2(jtxdefn){
   NPGpysfmtdl=(w!=self?64:0);  // set if dyad, i. e. dyadic verb or any conjunction.
   if(likely(((I)jtinplace&JTXDEFMODIFIER)==0)){
    // we are executing a verb.  It may be an operator
-    w=NPGpysfmtdl&64?w:a; a=NPGpysfmtdl&64?a:0;  // a w self = [x] y verb
-   if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v.  flags don't change
+   w=NPGpysfmtdl&64?w:a; a=NPGpysfmtdl&64?a:0;  // a w self = [x] y verb
+   if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v and self for orig defn.  flags don't change
   }else{
    // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
    v=NPGpysfmtdl&64?w:0; u=a; a=w=0; NPGpysfmtdl|=8; // a w self = u [v] mod; remember that we are a modifier
@@ -473,7 +473,7 @@ dobblock:
     }else{--ic; goto nextline;}  // if ignored assert, go to NSI
    }else{parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);} // no assert: run the line  resets tcesx to thisline/nextline
    // this is return point from running the line
-   if(likely(t!=0)){tic=ic,--ic;  // if no error, continue on.  ++i must be in bounds for a non-assert T block (there must be another control word)
+   if(likely(t!=0)){tic=ic,--ic;  // if no error, continue on.  --ic must be in bounds for a non-assert T block (there must be another control word)
     if(unlikely(TXOR5(tcesx,CDO)|jt->uflags.trace))goto nextlinetcesx;   // next line not do.; T block extended to more than 1 line (rare).
    }else{
     // *** the rest is error cases
@@ -723,10 +723,14 @@ bodyend: ;  // we branch to here to exit with z set to result
  RETF(z);
 }
 
+#if 0 // obsolete
 // execution of u : v, selecting the version of self to use based on valence
 static DF1(xv1){A z; R dfv1(z,  w,FAV(self)->fgh[0]);}  // scaf make bivalent
 static DF2(xv2){A z; R dfv2(z,a,w,FAV(self)->fgh[1]);}
-
+#else
+// execution of u : v, selecting the version of self & function to use based on valence.  Bivalent, called only from parse with w,self,self or a,w,self
+static DF2(xv12){I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; R (FAV(self)->valencefns[dyad])(jt,a,w,self);}
+#endif
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are
@@ -1218,9 +1222,10 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  if(VERB&AT(a)){  // v : v case
   ASSERT(AT(w)&VERB,EVDOMAIN);   // v : noun is an error
   // If nested v : v, prune the tree
-  if(CCOLON==FAV(a)->id&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0])&&VERB&AT(FAV(a)->fgh[1]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
-  if(CCOLON==FAV(w)->id&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0])&&VERB&AT(FAV(w)->fgh[1]))w=FAV(w)->fgh[1];
-  fdeffill(z,0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) R z; // derived verb is ASGSAFE if both parents are 
+  if(unlikely(CCOLON==FAV(a)->id)&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
+  if(unlikely(CCOLON==FAV(w)->id)&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0]))w=FAV(w)->fgh[1];
+  fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) // derived verb is ASGSAFE if both parents are 
+   R z;
  }
  ASSERT(AT(w)&NOUN,EVDOMAIN);   // noun : verb is an error
  RE(m=i0(a));  // m : n; set m=value of a argument

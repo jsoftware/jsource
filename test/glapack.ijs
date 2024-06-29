@@ -88,8 +88,10 @@ test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 9
 test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 10
 test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 11
 
+delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
+delth''  NB. make sure we start with an empty system
 
-4!:55 ;:'A e L mp n R s0 s1 test clean cleanf matchclean matchcleanf'
+4!:55 ;:'A e L mp n R s0 s1 test clean cleanf matchclean matchcleanf delth'
 
 
 

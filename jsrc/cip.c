@@ -1366,11 +1366,11 @@ finrle: ;
      tmp=_mm256_loadu_pd(&uinv[0][0]);  // row 0 of U^-1
      a00=_mm256_mul_pd(_mm256_set1_pd(lmem[0][0]),tmp); a01=_mm256_mul_pd(_mm256_set1_pd(lmem[1][0]),tmp); a02=_mm256_mul_pd(_mm256_set1_pd(lmem[2][0]),tmp); a03=_mm256_mul_pd(_mm256_set1_pd(lmem[3][0]),tmp); 
      tmp=_mm256_loadu_pd(&uinv[1][0]);  // row 1 of U^-1
-     a00=_mm256_fmadd_pd(_mm256_set1_pd(lmem[0][1]),tmp,a00); a01=_mm256_fmadd_pd(_mm256_set1_pd(lmem[1][1]),tmp,a01); a02=_mm256_fmadd_pd(_mm256_set1_pd(lmem[2][1]),tmp,a02); a03=_mm256_fmadd_pd(_mm256_set1_pd(lmem[3][1]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][1]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][1]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][1]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][1]),tmp,a03); 
      tmp=_mm256_loadu_pd(&uinv[2][0]);  // row 2 of U^-1
-     a00=_mm256_fmadd_pd(_mm256_set1_pd(lmem[0][2]),tmp,a00); a01=_mm256_fmadd_pd(_mm256_set1_pd(lmem[1][2]),tmp,a01); a02=_mm256_fmadd_pd(_mm256_set1_pd(lmem[2][2]),tmp,a02); a03=_mm256_fmadd_pd(_mm256_set1_pd(lmem[3][2]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][2]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][2]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][2]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][2]),tmp,a03); 
      tmp=_mm256_loadu_pd(&uinv[3][0]);  // row 3 of U^-1
-     a00=_mm256_fmadd_pd(_mm256_set1_pd(lmem[0][3]),tmp,a00); a01=_mm256_fmadd_pd(_mm256_set1_pd(lmem[1][3]),tmp,a01); a02=_mm256_fmadd_pd(_mm256_set1_pd(lmem[2][3]),tmp,a02); a03=_mm256_fmadd_pd(_mm256_set1_pd(lmem[3][3]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][3]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][3]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][3]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][3]),tmp,a03); 
      // block created; advance pointers 
      llv=prechv; lbv0+=((nr+63)>>6)+2; if(r0!=r-1){prechv+=nr;}  // repeat U col; advance L row including bitmap; advance prefetch but if next col of U is the last, prefetch it again
      scv+=nr;  // move output south, to the next L block

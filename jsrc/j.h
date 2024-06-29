@@ -842,7 +842,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define xchga(p,n) __atomic_exchange_n(p,n,__ATOMIC_ACQ_REL)
 
 // Tuning options for cip.c
-#if ((C_AVX2 || EMU_AVX2) && PYXES) || !defined(_OPENMP)
+#if defined(__aarch64__)
+#define IGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
+#define ZGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
+#elif ((C_AVX2 || EMU_AVX2) && PYXES) || !defined(_OPENMP)
 #define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
@@ -1636,7 +1640,19 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MODIFIABLE(x)   (x)   // indicates that we modify the result, and it had better not be read-only
 // define multiply-add
 #if C_AVX2 || EMU_AVX2
+#if HASFMA
+#define _MM256_FMADD_PD _mm256_fmadd_pd
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
+#else
+static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b, __emu__m256d c)
+{
+    __emu__m256d A;
+    A.__emu_m128[ 0 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
+    A.__emu_m128[ 1 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
+    return A;
+}
+#define MUL_ACC(addend,mplr1,mplr2) _MM256_FMADD_PD(mplr1,mplr2,addend)
+#endif
 #elif defined(__SSE2__)
 #define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))
 #endif

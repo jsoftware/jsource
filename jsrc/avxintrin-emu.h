@@ -1655,10 +1655,10 @@ static __emu_inline __emu__m256d __emu_mm256_i64gather_pd(double const *addr, __
  A = index;
  __emu_int64_t *idx = (__emu_int64_t*) &A;
  double *p = (double*) &B;
- p[0] = *(double*)((int8_t*)(double*)addr + idx[0] * scale);
- p[1] = *(double*)((int8_t*)(double*)addr + idx[1] * scale);
- p[2] = *(double*)((int8_t*)(double*)addr + idx[2] * scale);
- p[3] = *(double*)((int8_t*)(double*)addr + idx[3] * scale);
+ p[0] = *(double*)((int8_t*)addr + idx[0] * scale);
+ p[1] = *(double*)((int8_t*)addr + idx[1] * scale);
+ p[2] = *(double*)((int8_t*)addr + idx[2] * scale);
+ p[3] = *(double*)((int8_t*)addr + idx[3] * scale);
  return B;
 }
 

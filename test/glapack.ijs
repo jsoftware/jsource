@@ -3,7 +3,7 @@ NB. LAPACK --------------------------------------------------------------
 
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
-1: {{0 T.0}}^:] 0 >. (1&T.'') -~  <: <./ 8&T.''
+empty {{0 T.0}}^:] 0 >. (1&T.'') -~  <: <./ 8&T.''
 
 require '~addons/math/lapack/lapack.ijs'
 mp=: +/ .*

@@ -4,7 +4,7 @@ NB. +/ . * ------------------------------------------------------------------
 NB. **************************************** matrix product **********************************
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
-1: {{0 T.0}}^:] 0 >. (1&T.'') -~  <: <./ 8&T.''
+empty {{0 T.0}}^:] 0 >. (1&T.'') -~  <: <./ 8&T.''
 
 3 : 0''
 if. 0=4!:0<'liblapack' do. '' return. end.
@@ -36,6 +36,8 @@ N=: IF64{20,N
 
 'A B'=:0?@$~2,,~N
  
+thr=: (9!:58)"0 i.3
+
 NB. system default blas
 t1=: 6!:2'c1=: A+/ .*B'
 echo ' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
@@ -48,6 +50,8 @@ _1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
 t1=: 6!:2'c3=: A+/ .*B'
 echo ' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
 
+empty thr (9!:58)"0 i.3
+
 t1=: 6!:2'c4=: A mm B'
 echo ' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
 
@@ -59,7 +63,7 @@ c1-:c4
 
 delth''  NB. make sure we start with an empty system
 
-4!:55 ;:'c1 c2 c3 c4 delth dgemm liblapack t1'
+4!:55 ;:'c1 c2 c3 c4 delth dgemm liblapack t1 thr'
 
 epilog''
 

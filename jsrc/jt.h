@@ -186,7 +186,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl2[0];
 // parser stack & others
 // *** start of fixed block for unquote.  stackframe.fs and 3 words following are saved at the
-// start, representing sf, global, curname which are all restored on exit
+// start, representing sf, global, curname, locsyms which are all restored on exit
  PFRAME parserstackframe;  // 4 words    sf field initialized at task-start
  A global;           // global symbol table inherit for task, but not for job
  A curname;          // current name, an A block containing an NM

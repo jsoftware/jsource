@@ -59,7 +59,7 @@ DF2(jtunquote){A z;
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time
     }
     flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale
-    jt->global=explocale;   // set where we're going
+    SYMSETGLOBAL(jt->locsyms,explocale);   // set where we're going
    }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
   }else{
@@ -90,7 +90,7 @@ DF2(jtunquote){A z;
      }
     }
     flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
-    jt->global=explocale;  // set where we're going 
+    SYMSETGLOBAL(jt->locsyms,explocale);   // set where we're going
    }
    // Common path for named functions after lookup is finished.  fs has QCNAMED semantics
    // explocale is the locale we are calling into
@@ -221,8 +221,11 @@ DF2(jtunquote){A z;
  // To prevent half-deletion while the locale is running, we increment the execution count when an execution (including the first) switches into the locale, and decrement the
  // execution count when that execution completes (either by a switch back to the previous locale or a successive 18!:4).
 exitpop: ;
+// obsolete   not if u./v. if(jt->locsyms!=stack.locsyms)SEGFAULT; // scaf
+// obsolete if(jt->global!=AKGST(jt->locsyms))SEGFAULT; // scaf
  // LSB of z is set in the return iff what we just called was cocurrent
- // jt->global here is always the same as before the call
+ // jt->locsyms here is always the same as before the call (but may have been changed previously for u./v.)
+ // jt->global may have changed, if the called function executed cocurrent
  if(unlikely(((C)(I)z|jt->uflags.bstkreqd)&1)){  // cocurrent OR return after some earlier cocurrent?
   if((C)(I)z&1){  // was successful call to cocurrent?
    // here the name we called was cocurrent, possibly through a locative.  This is where we change jt->global in the caller
@@ -233,7 +236,7 @@ exitpop: ;
    // we temporarily started an execution for the locative (now jt->global).  We will close that below in common code
    if(flgd0cpC&FLGLOCCHANGED)DECREXECCTIF(stack.global)   // if the caller's locale was moved to by cocurrent (i.e. this is the second+ cocurrent in the calling function), it must be replaced by z.  No DECR is performed for the FIRST cocurrent, so if that was entered by a locative
          // it will be owed a DECR.  We can't DECR the first call because it might be in execution higher in the stack and already have a delete outstanding
-   SYMSETGLOBALINLOCAL(jt->locsyms,z);   // install new globals pointer into the locsyms (if any)...
+// obsolete   SYMSETGLOBALINLOCAL(jt->locsyms,z);   // install new globals pointer into the locsyms (if any)...
    stack.global=z;  // ... and into the area we will pop from, thus storing through to the caller
    z=mtm;  // we have switched; this will be the result of cocurrent
    flgd0cpC|=FLGLOCCHANGED; // leave bstkreqd set as a flag indicating next function's caller has encountered cocurrent
@@ -241,16 +244,18 @@ exitpop: ;
  }
  jt->uflags.bstkreqd=(C)(flgd0cpC>>FLGLOCCHANGEDX);  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used by either the next call or the return from this caller
  if(unlikely(flgd0cpC&FLGLOCINCRDECR))DECREXECCT(explocale)  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
+ SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed even in the deletion; make sure locsyms matches
  // ************** errors OK now
-exitfa:
+if(0){exitfa: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);}  // error point for errors after symbol res.  In case we put jt->global into jt->locsyms, undo that
  // this is an RFO cycle that will cause trouble if there are many cores running the same names
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){fanamedacv(fs);}  // unra the name if it was looked up from the symbol tables
-exitname:
+if(0){exitname: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);}  // error point for name errors.  In case we put jt->global into jt->locsyms, undo that
 #if C_AVX2 || EMU_AVX2
  _mm256_storeu_si256((__m256i *)&jt->parserstackframe.sf,_mm256_loadu_si256((__m256i *)&stack));
 #else
  memcpy(&jt->parserstackframe.sf,&stack,sizeof(stack));  // restore sf/globals/curname/locals
 #endif
+// obsolete if(jt->global!=AKGST(jt->locsyms))SEGFAULT; // scaf
 RETF(z);
 }
 

@@ -101,9 +101,13 @@ end.
 + a
 f =: ((coname '') -: coname)
 f a
+4!:55<'g'
+g_z_ =: a
++ g
+f g  NB. a runs in base
 g =: a_z_
 + g
-f g
+0 = f g  NB. now a runs in z and doesn't find f
 3 : 0 ''
 assert. + a
 ff =. ((coname '') -: coname)
@@ -271,7 +275,7 @@ assert. 101 -: 100 [&.c 0
 )
 f ''
 
-4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ dou F f F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nm nn sum v'
+4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ g_z_ j j_xxx_ dou F f F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nm nn sum v'
 (271828) 18!:55 ;:'xxx yyy'
 
 

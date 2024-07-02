@@ -555,7 +555,7 @@ test2 <'c'
 test2 <'test1'
 test2 <'test2'
 
-NB. trains
+NB. trains incl Modifier trains
 
 testeq=: 2 : 0
  (ar <'u') -: ar(<'v')
@@ -694,6 +694,38 @@ assert. (ar <'newy') -: ar <'asdf'
 1
 }}"1
 (1 2 3 4 5 6) (testlr @:({."1))"0 _ ({~   [: (#: i.@:(*/)) 6 # #) ;: '+ [. 3 ]: ( )'
+
+NB. Verify all modifier trains valid
+
+ar=:+1[.
+ar=:]:]:]:
+ar=:[.]:]:
+ar=:]:]:+
+ar=:]:]:
+ar=:]:[.[.
+ar=:]:[.]:
+ar=:]:[.1
+ar=:]:[.
+ar=:]:[.+
+ar=:]:+
+ar=:]:++
+ar=:[.[.
+ar=:[.]:
+ar=:[.[.]:
+ar=:[.[.1
+ar=:[.[.+
+ar=:[.+[.
+ar=:[.++
+ar=:1[.]:
+ar=:1[.[.
+ar=:1[.
+ar=:1+[.
+ar=:[.1
+ar=:[.+
+ar=:+[.]:
+ar=:+[.[.
+ar=:+[.
+ar=:++[.
 
 
 NB. 5!:5 on "real" examples ---------------------------------------------

@@ -194,7 +194,7 @@ static DF1(tcNV){F1PREFIP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
 static DF2(tcc){F2PREFIP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,mark);}  // conj C C
 
 static DF1(taaa){F1PREFIP;TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
-static DF2(tvvc){F2PREFIP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
+static DF2(tNVvc){F2PREFIP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
 static DF2(tcVCc){F2PREFIP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
 static DF2(taav){F2PREFIP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
 static DF2(tcaa){F1PREFIP;TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
@@ -278,13 +278,13 @@ static struct {
  I type;  // the part of speech it produces
 } tridents[64] = {
  [TYPE3(NOUN,VERB,NOUN)]={0, NOUN},      [TYPE3(VERB,VERB,VERB)]={0, MARK},    // MARK means fork
- [TYPE3(NOUN,VERB,VERB)]={0, MARK},      [TYPE3(ADV,ADV,ADV)]={taaa, ADV},       [TYPE3(ADV,ADV,VERB)]={taav, CONJ},    [TYPE3(VERB,VERB,CONJ)]={tvvc, CONJ},
+ [TYPE3(NOUN,VERB,VERB)]={0, MARK},      [TYPE3(ADV,ADV,ADV)]={taaa, ADV},       [TYPE3(ADV,ADV,VERB)]={taav, CONJ},    [TYPE3(VERB,VERB,CONJ)]={tNVvc, CONJ}, [TYPE3(NOUN,VERB,CONJ)]={tNVvc, CONJ},
  [TYPE3(ADV,VERB,VERB)]={taVCNV, ADV},   [TYPE3(CONJ,VERB,VERB)]={tcVCNV, CONJ}, [TYPE3(CONJ,VERB,CONJ)]={tcVCc, CONJ}, [TYPE3(CONJ,ADV,ADV)]={tcaa, CONJ},
  [TYPE3(NOUN,CONJ,NOUN)]={0, VERB},      [TYPE3(NOUN,CONJ,VERB)]={0, VERB},      [TYPE3(VERB,CONJ,NOUN)]={0, VERB},     [TYPE3(VERB,CONJ,VERB)]={0, VERB},
  [TYPE3(NOUN,CONJ,ADV)]={tNVca, ADV},    [TYPE3(VERB,CONJ,ADV)]={tNVca, ADV},    [TYPE3(NOUN,CONJ,CONJ)]={tNVcc, CONJ}, [TYPE3(VERB,CONJ,CONJ)]={tNVcc, CONJ},
  [TYPE3(ADV,CONJ,NOUN)]={taVCNV, ADV},   [TYPE3(ADV,CONJ,VERB)]={taVCNV, ADV},   [TYPE3(ADV,CONJ,ADV)]={taca, CONJ},    [TYPE3(ADV,CONJ,CONJ)]={tacc, CONJ},
  [TYPE3(CONJ,CONJ,VERB)]={tcVCNV, CONJ}, [TYPE3(CONJ,CONJ,NOUN)]={tcVCNV, CONJ}, [TYPE3(CONJ,CONJ,ADV)]={tcca, CONJ},   [TYPE3(CONJ,CONJ,CONJ)]={tcVCc, CONJ},
-};
+ };
 
 // This handles all bident/tridents except N/V V V forks.  If h is CAVN, we have a trident
 A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;

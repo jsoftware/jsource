@@ -16,8 +16,8 @@ DF2(jtunquote){A z;
  // is changed by cocurrent).  The layout in JTT must match the layout here
  struct unqstack {
   A sf;  // $:
+  A curname;  // the executing name  sf/curname must stay together for stacking
   A global;  //  implied locale
-  A curname;  // the executing name
   A locsyms;  // local symbol table
  } stack;
 
@@ -141,10 +141,10 @@ DF2(jtunquote){A z;
   ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;); // make sure the name's value is given also
   flgd0cpC|=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
   ASSERTSUFF(TYPESEQ(AT(self),AT(fs)),EVDOMAIN,z=0; goto exitfa;);   // make sure its part of speech has not changed since the name was parsed
-  // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
-  // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
-  // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We set a flag to indicate the case
-  // Leave LOCINCRDECR unset and jt->global unchanged
+  // The pseudo-named function was created under debug/pm mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
+  // implications: anonymous verbs do not restore locales.  To preserve that behavior, we divert the call to the slow path and then skip restoring the locale
+  // at the return
+  jt->uflags.spfreeneeded|=0x80;  //  force this call through the long path
  }
  // value of fs has been ra()d unless it was cached or pseudo.  We must undo that if there is error
 #if NAMETRACK
@@ -195,7 +195,7 @@ DF2(jtunquote){A z;
   A execlocname=LOCNAME(jt->global);  // locale name for logging, known not to change since we haven't popped the executing locale yet
   if(jt->uflags.trace&TRACEPM){pmrecord(jt->curname,execlocname,-1L,flgd0cpC>>FLGMONADX); fs=jt->parserstackframe.sf;}  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
-  if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd){   // scaf why PSEUDO?
+  if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd){   // don't clear bstkreqd if we are going to ignore changes of locale
    // The caller has called encountered cocurrent.  If it does again, it will have to change locale counts.  Remember that  
    flgd0cpC|=FLGLOCCHANGED; jt->uflags.bstkreqd=0;    // remember locale already changed; remove slow mode for the next level
   }
@@ -206,10 +206,11 @@ DF2(jtunquote){A z;
    if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
   }
   if(jt->uflags.trace&TRACEPM)pmrecord(jt->curname,execlocname,-2L,flgd0cpC>>FLGMONADX);  // record the return from call
+  if(d)debz();  // release stack frame if allocated
+  if(unlikely(flgd0cpC&FLGPSEUDO)){jt->uflags.spfreeneeded&=~0x80; goto exitanon;}  // if this was an anonymous explicit verb, skip over locale restoration (it can't be cocurrent)
   if(jt->uflags.spflag){                        // Need to do some form of space reclamation?
    if(jt->uflags.sprepatneeded)jtrepatrecv(jt); // repatriate first, because we might reclaim enough memory to need to gc
-   if(jt->uflags.spfreeneeded)spfree();}        // if garbage collection required, do it
-  if(d)debz();  // release stack frame if allocated
+   if(jt->uflags.spfreeneeded&1)spfree();}        // if garbage collection required, do it
  }
  // the call has returned, long way or short way
 
@@ -244,18 +245,23 @@ exitpop: ;
  }
  jt->uflags.bstkreqd=(C)(flgd0cpC>>FLGLOCCHANGEDX);  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used by either the next call or the return from this caller
  if(unlikely(flgd0cpC&FLGLOCINCRDECR))DECREXECCT(explocale)  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
- SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed even in the deletion; make sure locsyms matches
  // ************** errors OK now
-if(0){exitfa: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);}  // error point for errors after symbol res.  In case we put jt->global into jt->locsyms, undo that
+exitfa:;  // error point for errors after symbol res. 
+// obsolete if(0){exitfa: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);} In case we put jt->global into jt->locsyms, undo that
  // this is an RFO cycle that will cause trouble if there are many cores running the same names
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){fanamedacv(fs);}  // unra the name if it was looked up from the symbol tables
-if(0){exitname: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);}  // error point for name errors.  In case we put jt->global into jt->locsyms, undo that
+// obsolete if(0){exitname: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);}  // error point for name errors.  In case we put jt->global into jt->locsyms, undo that
+exitname:; // error point for name errors.
+ SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed even in the deletion; make sure locsyms matches
 #if C_AVX2 || EMU_AVX2
  _mm256_storeu_si256((__m256i *)&jt->parserstackframe.sf,_mm256_loadu_si256((__m256i *)&stack));
 #else
- memcpy(&jt->parserstackframe.sf,&stack,sizeof(stack));  // restore sf/globals/curname/locals
+ memcpy(&jt->parserstackframe.sf,&stack,sizeof(stack));  // restore sf/curname/globals/locals
 #endif
 // obsolete if(jt->global!=AKGST(jt->locsyms))SEGFAULT; // scaf
+RETF(z);
+exitanon:;  // exit point for anonymous pseudo-named verbs, which must not restore locales so that they act like other anonymous verbs
+memcpy(&jt->parserstackframe.sf,&stack,2*sizeof(A));  // restore sf/curname only
 RETF(z);
 }
 

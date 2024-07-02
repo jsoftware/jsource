@@ -1464,7 +1464,7 @@ void jtrepatrecv(J jt){
   jt->bytes-=count;  // remove repats from byte count.  Not worth testing whether couting enabled
   for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):nextp){  // send the blocks to their various queues
    I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
-   if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0)) __atomic_store_n(&jt->uflags.spfreeneeded,1,__ATOMIC_RELEASE);  // if we have freed enough to call for garbage collection, do
+   if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0))jt->uflags.spfreeneeded=1;  // if we have freed enough to call for garbage collection, do
    AFCHAIN(p)=jt->mempool[blockx];  // chain new block at head of queue
    jt->mempool[blockx]=p;}}
 #endif

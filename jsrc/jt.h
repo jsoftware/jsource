@@ -107,7 +107,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
    union {
     US spflag; // access as short
     struct {
-     B spfreeneeded;  // When set, we should perform a garbage-collection pass  persistent
+     B spfreeneeded;  // When set, we should perform a garbage-collection pass.  Touched only by this thread.   unquote uses a flag bit temporarily  persistent
      B sprepatneeded; // When low bit set, we should reclaim repat blocks.  Needs synchronisation, but rarely touched by other threads so this can stay in M/E
     };
    };
@@ -186,10 +186,10 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl2[0];
 // parser stack & others
 // *** start of fixed block for unquote.  stackframe.fs and 3 words following are saved at the
-// start, representing sf, global, curname, locsyms which are all restored on exit
+// start, representing sf, curname, global, locsyms which are all (or part) restored on exit
  PFRAME parserstackframe;  // 4 words    sf field initialized at task-start
- A global;           // global symbol table inherit for task, but not for job
  A curname;          // current name, an A block containing an NM
+ A global;           // global symbol table inherit for task, but not for job
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
 // *** end of fixed block
  I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around

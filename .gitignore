@@ -30,6 +30,7 @@ test*.txt
 *.ilk
 *.pdb
 *.exp
+.vs
 
 # following are no longer required and prevent template folders
 # **/jconsole/**/

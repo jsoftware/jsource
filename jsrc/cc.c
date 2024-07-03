@@ -1256,7 +1256,7 @@ static DF1(jttess1){A s;I m,r,*v;
 // TODO: use with user-defined verb?  u t.'';.n ok--preserves semantics, since t. executions are unordered--but what if user wants an open result?  ;@:(u t.'';.n) ok, but bulky & annoying;
 // maybe infer purity of u or have user explicitly declare it with something like u pure.;.n ('pure.' strawman adverb name)--a general solution is warranted, since none of the issues are specific to ;.
 // TODO: better to compute fret counts per chunk ahead-of-time?  That's probably bandwidth-bound, so no reason to bother tying up cores for it
-#if C_AVX2 && PYXES
+#if C_AVX2 && PYXES  // _bzhi_u32 not available in non-avx2
 typedef struct {
  I prefend; //prefix end; index of the first fret within the chunk.  If -1, then the chunk contained no frets and contents/suffstart are undefined
  A contents; //list of boxes.  Potentially null => empty

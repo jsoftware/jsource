@@ -24,13 +24,11 @@ test*.txt
 *.sdf
 *.opensdf
 *.suo
-**/jconsole/.vs/
-**/jdll/**/.vs/
-**/tsdll/**/.vs/
 *.ilk
 *.pdb
 *.exp
 .vs
+**/.vs/**
 
 # following are no longer required and prevent template folders
 # **/jconsole/**/

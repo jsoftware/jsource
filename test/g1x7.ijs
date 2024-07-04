@@ -12,7 +12,7 @@ erase =: 1!:55
 
 unix  =: (9!:12 '') e. 5 7
 nn    =: unix{3 9
-wsl   =: 1 e. 'WSL' E. ":2!:0 ::0: 'cat /proc/version'
+wsl   =: 1 e. 'WSL' E. ":2!:0 ::0: 'cat /proc/version 2>/dev/null'
 wslhack =: (nn$0 0,wsl) +. ]
 
 

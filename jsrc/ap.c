@@ -280,7 +280,7 @@ PREFIXPFX( pluspfxB, I, B,  PLUS, plusIB , R EVOK; )
 AHDRP(pluspfxD,D,D){I i;
  NAN0;
  if(d==1){
-#if C_AVX2  // this version is not faster in emulation
+#if C_AVX2 || (EMU_AVX2 && defined(__aarch64__))  // this version is not faster in emulation
   DQ(m,
   AVXATOMLOOPEVENODD(2,  // unroll not needed; need maskload to load 0s after valid area
     neut=_mm256_setzero_pd();
@@ -367,7 +367,7 @@ PREALTNAN(  divpfxD, D, D,  DIVPA  )
 PREALTNAN(  divpfxZ, Z, Z,  DIVPZ  )
 
 PREFIXPFX(  maxpfxI, I, I,  MAX , maxII   ,R EVOK;)
-#if C_AVX2 // not better in emulation
+#if C_AVX2 || (EMU_AVX2 && defined(__aarch64__))   // not better in emulation
 PREFIXPFXAVX2(maxpfxD,infm,MAX,maxDD,_mm256_max_pd,R EVOK;)
 #else
 PREFIXPFX(  maxpfxD, D, D,  MAX , maxDD   ,R EVOK;)
@@ -377,7 +377,7 @@ PREFIXPFX(  maxpfxQ, Q, Q,  QMAX, maxQQ   ,R EVOK;)
 PREFIXPFX(  maxpfxS, SB,SB, SBMAX, maxSS  ,R EVOK;)
 
 PREFIXPFX(  minpfxI, I, I,  MIN, minII    ,R EVOK;)
-#if C_AVX2 // not better in emulation
+#if C_AVX2 || (EMU_AVX2 && defined(__aarch64__))   // not better in emulation
 PREFIXPFXAVX2(minpfxD,inf,MIN,minDD,_mm256_min_pd,R EVOK;)
 #else
 PREFIXPFX(  minpfxD, D, D,  MIN, minDD    ,R EVOK;)

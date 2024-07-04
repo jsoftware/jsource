@@ -438,7 +438,7 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  if(unlikely(AR(g)&ARLOCALTABLE)){bloom=0; v=(A*)&iotavec-IOTAVECBEGIN+0;}  // no bloom, empty path
  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
                          if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res);
-#if C_AVX2
+#ifdef PDEP
                          res=(A)(((I)res&~QCNAMED)+PDEP((I)AR(g)>>ARNAMEDX,(I)1<<(QCNAMEDX-ARNAMEDX)));
 #else
                          res=(A)(((I)res&~QCNAMED)+(((I)AR(g)&ARNAMED)<<(QCNAMEDX-ARNAMEDX)));

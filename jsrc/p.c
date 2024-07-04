@@ -117,16 +117,18 @@ PT cases[] = {
 // Remove bits 8-9
 // Distinguish PSN from PS by not having PSN in stack[3] support line 0 (OK since it must be preceded by NAME and thus will run line 7)
 // Put something distinctive into LPAR that can be used to create line 8
-// We distinguish local and global assignments by having local assignments enable line 6 (hook) which must be rejected in jthook
+// We distinguish local and global assignments with a flag; the local version enables line 6 (hook) erroneously, which must be rejected in jthook
+// in all these bit 24 must be set in anything that isn't a name, and bit 27 in anything but LPAR
 #define PTNOUN 0xDFC17CBE
-#define PTMARK 0xC900007F
+#define PTMARKFRONT 0x0900007F  // matches only pos 0 - bit 24 set to not look like assign to name, 27 for not LPAR
+#define PTMARKBACK (UI4)0xC9000000  // matches only pos 3
 #define PTLPAR 0x0100007F
-#define PTRPAR 0xC9000000
+#define PTRPAR (UI4)0xC9000000
 // table for translating AT type to QC type flags
 static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [LASTNOUNX-LASTNOUNX] = PTNOUN,  // PN
 [NAMEX-LASTNOUNX] = 0xC9200080,  // PNM assigned: high 16 bits immaterial because this MUST match line 7 which will delete it
-[MARKX-LASTNOUNX] = PTMARK,  // PM
+[MARKX-LASTNOUNX] = 0x0,  // PM cannot occur in a sentence
 [ADVX-LASTNOUNX] = 0xC9C8403E,  // PA
 // gap[ASGNX-LASTNOUNX]   must be left open in enqueue() tokens to avoid messing up the pull queue
 [VALTYPENAMELESS-1] = 0xC9C8403E, // gap [SYMBX-LASTNOUNX]  only in syrd() results, i. e. from symbol
@@ -146,9 +148,11 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 #define PTISCAVNX 23  // this flag used in a register here
 #define PTISCAVN(pt) ((pt)&(1LL<<PTISCAVNX))
 #define PTISRPAR0(pt) ((pt)&0x7fff)
-#define PTISM(s)  ((s).pt==PTMARK)
-#define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
-#define PTNAMEIFASGN(pt)  ((pt)<<(NAMEX-15))   // we compare against the NAMEX bit
+#define PTISMARKBACKORRPAR(s)  (((s).pt&0xffff0000)==(PTRPAR&0xffff0000))  // s.pt is ) or MARK
+_Static_assert((PTRPAR^PTMARKBACK&0xffff0000)==0,"MARKBACK must equal RPAR for end purposes");
+#define PTISMARKFRONT(pt)  (((pt)&0xff000000)==(PTMARKFRONT&0xff000000))  // pt is MARKFRONT
+// obsolete #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARKBACK))==0)  // t2 is CAVN and t3 is MARK
+// obsolete #define PTNAMEIFASGN(pt)  ((pt)<<(NAMEX-15))   // we compare against the NAMEX bit
 #define PTISNOTASGNNAME(pt)  ((pt)&0x1000000)  // bit must be >= VJTFLGOK2X because we compare them > to find valid named assignments
 #define PTASGNLOCALX 22  // set in the type-code for local assignment
 #define PTASGNLOCAL (1LL<<PTASGNLOCALX)
@@ -159,12 +163,11 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 // converting type field to pt, store in z
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&(((1LL<<(LASTNOUNX+1))-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
 
-
 // multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 // We flag all multiple assignments as final because the value is protected in the source
 static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,self),ABACK(self))); R num(0);} 
 
-// assignment, single or multiple
+// assignment other than name =[.:], single or multiple
 // jt has flag set for final assignment (passed into symbis)
 // The return must be 0 for bad, otherwise good with bit 0=final assignment, bit 1 = local assignment (never set)
 static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
@@ -431,7 +434,6 @@ I infererrtok(J jt){I errtok;
 }
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
- // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 #define PSTACKRSV 1  // number of stack frames used for holding sentence error info
 // Parse a J sentence.  Input is the queue of tokens
@@ -509,13 +511,14 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
   y=*(volatile A*)queue;  // unroll y once
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
-  PSTK *stackend1=stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
+  PSTK *stackend1=stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, pointing to first of 3 marks
 
   // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
 
   // We have the initial stack pointer.  Grow the stack down from there
-  stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused  // scaf store with 32-byte store
+  stack[0].pt = PTMARKBACK;  // install 1 mark, whose 0s will protect the other 2 mark-slots
+// obsolete  = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
   while(1){  // till no more matches possible...
 
     // no executable fragment, pull from the queue.  Bits 31-29 of pt0ecam indicate how many we can safely pull before we
@@ -643,7 +646,7 @@ endname: ;
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If have not yet signaled the (virtual) mark, do so; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
-     if(GETSTACK0PT!=PTMARK){SETSTACK0PT(PTMARK) stack[0].pt=PTMARK; break;}  // first time, realize the virtual mark and use it.  e and ca flags immaterial.  We store the mark only so infererrtok can look at it
+     if(!PTISMARKFRONT(GETSTACK0PT)){SETSTACK0PT(PTMARKFRONT) stack[0].pt=PTMARKFRONT; break;}  // first time, realize the virtual mark and use it.  e and ca flags immaterial.  We store the mark only so infererrtok can look at it
      EP(0)       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
      // never fall through here
     }
@@ -686,7 +689,7 @@ endname: ;
       // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
       if(pmask&7){  // lines 0 1 2, verb execution
        // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
-       I notfinalexec=!PTISM(fsa[2]);  // set if there is something on the stack after the result of this exec.  Used after verb exec.  fsa[2] is close to the critical path
+       I notfinalexec=!PTISMARKBACKORRPAR(fsa[2]);  // set if there is something on the stack after the result of this exec that could modify the value before assignment.  Used after verb exec.  fsa[2] is close to the critical path
        jt->parserstackframe.sf=fs;  // set new recursion point for $:; this frees fs
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
        jt->fillv=(C*)__atomic_load_n(&FAV(fs)->valencefns[pmask>>2],__ATOMIC_RELAXED);  // the routine we will execute.  If we do this after the assignment block, jt gets spilled and we have 3 back-to-back dependent loads,
@@ -1027,7 +1030,8 @@ failparse:
    // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
    // fa() any blocks left on the stack that have FAOWED - but not the mark, which has a garbage address
-   for(;stack!=stackend1;++stack)if(stack[0].pt!=PTMARK&&ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
+// obsolete    for(;stack!=stackend1;++stack)if(stack[0].pt!=PTMARK&&ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
+   for(;stack!=stackend1;++stack)if(ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
   }
 #if MEMAUDIT&0x2
   audittstack(jt);

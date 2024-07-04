@@ -145,6 +145,9 @@ DF2(jtunquote){A z;
   // implications: anonymous verbs do not restore locales.  To preserve that behavior, we divert the call to the slow path and then skip restoring the locale
   // at the return
   jt->uflags.spfreeneeded|=0x80;  //  force this call through the long path
+  // NOTE: we will update the $: recursion point during this call, because recursion doesn't go through a name.  But what about a pseudo-name?  It doesn't matter,
+  // because a pseudo-name is a call to jtxdefn, and that will progress only by starting a new parse, which will override the $: stack value.  So
+  // we can put anything these for a pseudo-name, as long as we restore on the way out.
  }
  // value of fs has been ra()d unless it was cached or pseudo.  We must undo that if there is error
 #if NAMETRACK

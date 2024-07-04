@@ -968,6 +968,19 @@ y =. y
 )
 (dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
+NB. Assignment ending in ) is inplaceable
+f3 =: 3 : 0
+(y =. '2' 0} y)
+y =. (y =. '2' 0} y) , '5'
+y =. (y =. '2' 0} y) , '5'
+y =. (y =. '2' 0} y) , '5'
+(y =. 'b' ,~ y =. '3' 0} y)
+(y =. (y =. '3' 0} y) ,  '5')
+5
+)
+(dbq'') +. 140000 > 7!:2 '(f3 130000 # ''a'')'
+
+
 NB. Inplaceable result of explicit definition stays inplaceable after exit
 f3 =: 3 : '10000 # a'
 (dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'

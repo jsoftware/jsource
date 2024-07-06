@@ -121,8 +121,8 @@ PT cases[] = {
 // in all these bit 24 must be set in anything that isn't a name, and bit 27 in anything but LPAR
 #define PTNOUN 0xDFC17CBE
 #define PTMARKFRONT 0x0900007F  // matches only pos 0 - bit 24 set to not look like assign to name, 27 for not LPAR
-#define PTMARKBACK (UI4)0xC9004000  // matches only pos 3, but with a flag set to not match PTISRPAR0
-#define PTLPAR 0x0100007F
+#define PTMARKBACK (UI4)0xC9000040  // matches only pos 3, but with a flag set to not match PTISRPAR0 - in pos 0, which this can never be in
+#define PTLPAR 0x0100007F  // flagged to be not a name
 #define PTRPAR (UI4)0xC9000000
 // table for translating AT type to QC type flags
 static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {

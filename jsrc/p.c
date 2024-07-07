@@ -148,7 +148,8 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 #define PTISCAVNX 23  // this flag used in a register here
 #define PTISCAVN(pt) ((pt)&(1LL<<PTISCAVNX))
 #define PTISRPAR0(pt) ((pt)&0x7fff)
-#define PTISMARKBACKORRPAR(s)  (((s).pt&0xffff0000)==(PTRPAR&0xffff0000))  // s.pt is ) or MARK
+// clang17 wastes an instruction #define PTISMARKBACKORRPAR(s)  (((s).pt>>16)==(PTRPAR>>16))  // s.pt is ) or MARK.
+#define PTISMARKBACKORRPAR(s)  ((((US*)&(s).pt)[1])==(PTRPAR>>16))  // s.pt is ) or MARK.
 _Static_assert((PTRPAR^PTMARKBACK&0xffff0000)==0,"MARKBACK must equal RPAR for end purposes");
 #define PTISMARKFRONT(pt)  (((pt)&0xff000000)==(PTMARKFRONT&0xff000000))  // pt is MARKFRONT
 // obsolete #define PTOKEND(t2,t3) (((PTISCAVN(~(t2).pt))+((t3).pt^PTMARKBACK))==0)  // t2 is CAVN and t3 is MARK
@@ -667,15 +668,19 @@ endname: ;
     // and finally returning the new front-of-stack pointer
     // First, create the bitmask of parser lines that are eligible to execute
     // register pressure is severe where we do subroutine calls below
-    I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 0-2 are enough to detect a match on line 0
-    pmask&=GETSTACK0PT;  // finish 1st 3 columns of parse, which are enough to decide bit 0
-    PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4
+    I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 2 is enough to detect bit 0 if result is 0-4
+    PSTK *fsa=(PSTK*)((I)stack+((2*sizeof(PSTK))>>((I)((C*)&stack[2].pt)[2]&1)));  // pointer to stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
+    A fs=QCWORD(__atomic_load_n(&fsa->a,__ATOMIC_ACQUIRE));  // the action to be executed if lines 0-4.  Must read early: dependency is pmask[0]->fsa->fs->fsflag to settle before we check assignments
+    pmask&=GETSTACK0PT;  // finish 1st 3 columns of parse
+// obsolete     PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
+// obsolete   not in J32  PSTK *fsa=(PSTK *)((I)&stack[2]+((pmask<<(BW-1))>>(BW-4)));  // pointer to stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
+// clang creates a branch!     PSTK *fsa=&stack[2], *fsa1=&stack[1]; fsa=pmask&1?fsa1:fsa;  // pointer to stack slot for the CAV to be executed, for lines 0-2  1 2 2
     pmask&=(I)((C*)&stack[3].pt)[3];  // finish 3d column of parse
-    A fs1=QCWORD(stack[1].a);  // in case of line 1 V0 V1 N2, we will need the flags from V1.  path is fs1,fs->fs1flag to settle before the second assignment check
-    A fs=QCWORD(fsa->a);  // the action to be executed if lines 0-4.  Must read early: dependency is pmask[0]->fsa->fs->fsflag to settle before we check assignments
+    A fs1=QCWORD(__atomic_load_n(&stack[1].a,__ATOMIC_ACQUIRE));  // in case of line 1 V0 V1 N2, we will need the flags from V1.  path is fs1,fs->fs1flag to settle before the second assignment check
     pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PMASKSAVEX));   // clear all the flags we will use
     
-    if(pmask){  // If all 0, nothing is dispatchable, go push next word after checking for (
+    if(likely(pmask!=0)){  // If all 0, nothing is dispatchable, go push next word after checking for (
+       // likely is an overstatement, but without it the calculation of fsa is deferred
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
@@ -728,9 +733,11 @@ endname: ;
         pmask=(pt0ecam>>PMASKSAVEX)&7;  // restore after calls
        }
        AF actionfn=(AF)__atomic_load_n(&jt->fillv,__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
-       A arg1=stack[(pmask+1)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
-// clang17 fans        A arg1=stack[((2*pmask+2)&6)>>1].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
-       A arg2=stack[(pmask>>=1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)    pmask shifted right 1
+// obsolete        A arg1=stack[(pmask+1)&3].a;    (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
+       PSTK *arga=fsa; arga=pmask&4?stack:arga; A arg1=arga[1].a;// 1st arg, monad or left dyad  2 3 1
+         // this requires fsa to survive over the assignment, but it's faster than the alternative
+// obsolete        A arg2=stack[(pmask>>=1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)    pmask shifted right 1
+       arga=pmask&4?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
        // Create what we need to free arguments after the execution.  We keep the information needed to two registers so they can persist over the call as they are needed right away on return
        // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  Those can be freed right away, returning them to the
 //     // pool and allowing their cache space to be reused.  But there is a problem:
@@ -742,7 +749,7 @@ endname: ;
        // The calculation of tpopa/w will run to completion while the expected indirect-branch misprediction is being processed
        A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopa=ISSTKFAOWED(arg1)?(A*)arg1:tpopa;
         // Note: this line must come before the next one, to free up the reg holding ZAPLOC0
-       A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0; tpopw=(I)arg2&(pmask>>=(1-STKFAOWEDX))?(A*)arg2:tpopw;
+       A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0; tpopw=(I)arg2&(pmask>>=(2-STKFAOWEDX))?(A*)arg2:tpopw;
               // point to pointer to arg2 (if it is inplace) - only if dyad
        // pmask is now original pmask>>2
               // tpopa/tpopw are:  monad: w fs  dyad: a w

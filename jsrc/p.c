@@ -83,15 +83,15 @@ end.
 
 // the parsing table, used by the tacit translator only
 PT cases[] = {
- EDGE,      VERB,      NOUN, ANY,       0,  jtvmonad, 1,2,1,
- EDGE+AVN,  VERB,      VERB, NOUN,      0,  jtvmonad, 2,3,2,
- EDGE+AVN,  NOUN,      VERB, NOUN,      0,  jtvdyad,  1,3,2,
- EDGE+AVN,  VERB+NOUN, ADV,  ANY,       0,  jtvadv,   1,2,1,
- EDGE+AVN,  VERB+NOUN, CONJ, VERB+NOUN, 0,  jtvconj,  1,3,1,
- EDGE+AVN,  VERB+NOUN, VERB, VERB,      0,  jtvfolk,  1,3,1,
- EDGE,      CAVN,      CAVN, ANY,       0,  jtvhook,  1,2,1,
- NAME+NOUN, ASGN,      CAVN, ANY,       0,  jtvis,    0,2,1,
- LPAR,      CAVN,      RPAR, ANY,       0,  jtvpunc,  0,2,0,
+ EDGE,      VERB,      NOUN, ANY,       0,  jtvmonad, 1,2,1,  // 0
+ EDGE+AVN,  VERB,      VERB, NOUN,      0,  jtvmonad, 2,3,2,  // 1
+ EDGE+AVN,  NOUN,      VERB, NOUN,      0,  jtvdyad,  1,3,2,  // 2
+ EDGE+AVN,  VERB+NOUN, ADV,  ANY,       0,  jtvadv,   1,2,1,  // 3
+ EDGE+AVN,  VERB+NOUN, CONJ, VERB+NOUN, 0,  jtvconj,  1,3,1,  // 4
+ EDGE+AVN,  VERB+NOUN, VERB, VERB,      0,  jtvfolk,  1,3,1,  // 5
+ EDGE,      CAVN,      CAVN, ANY,       0,  jtvhook,  1,2,1,  // 6
+ NAME+NOUN, ASGN,      CAVN, ANY,       0,  jtvis,    0,2,1,  // 7
+ LPAR,      CAVN,      RPAR, ANY,       0,  jtvpunc,  0,2,0,  // 8
 };
 #define PN 0
 #define PA 1
@@ -680,10 +680,11 @@ endname: ;
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
      jt->parserstackframe.parserstkend1=stack;    // Save the stackpointer in case there are calls to parse in the names we execute
-     if(pmask&0x1F){  // if lines 0-4
+     I pmask567=pmask;  // save before we mask high bits
+     if(pmask&=0x1F){  // if lines 0-4: decodes are mutually exclusive (i. e. one hot)
       I fs1flag=FAV(fs1=pmask&2?fs1:fs)->flag;  // if line 1, fetch V0 flags; otherwise harmless refetch of fs flags.  If line 1 matches, line 0 cannot
       I fsflag=FAV(fs)->flag;  // fetch flags early - we always need them in lines 0-2
-      pmask=LOWESTBIT(pmask);   // leave only one bit
+// obsolete       pmask=LOWESTBIT(pmask);   // leave only one bit
       // Here for lines 0-4, which execute the entity pointed to by fs
       // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
       // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
@@ -728,6 +729,7 @@ endname: ;
        }
        AF actionfn=(AF)__atomic_load_n(&jt->fillv,__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[(pmask+1)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
+// clang17 fans        A arg1=stack[((2*pmask+2)&6)>>1].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)     0 1 2 -> 1 2 3 + 1 1 2 -> 2 3 5 -> 2 3 1
        A arg2=stack[(pmask>>=1)+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)    pmask shifted right 1
        // Create what we need to free arguments after the execution.  We keep the information needed to two registers so they can persist over the call as they are needed right away on return
        // (1) When the args return from the verb, we will check to see if any were inplaceable and unused.  Those can be freed right away, returning them to the
@@ -902,7 +904,7 @@ RECURSIVERESULTSCHECK
       // Here for lines 5-7 (fork/hook/assign), which branch to a canned routine
       // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
       // We avoid the indirect branch, which is very expensive
-      if(pmask&0b10000000){  // assign - can't be fork/hook
+      if(pmask567&0b10000000){  // assign - can't be fork/hook
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
@@ -933,7 +935,7 @@ RECURSIVERESULTSCHECK
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word(s)
       }else{
-       if(pmask&0b100000){  // fork NVV or VVV
+       if(pmask567&0b100000){  // fork NVV or VVV
         A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
         A yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
         // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,

@@ -565,7 +565,7 @@ typedef I SI;
 #define TYPESGT(x,y)    ((UI)(x)>(UI)(y)) // type x > type y
 
 #define PARTOFSPEECHEQ(x,y) (((((x)|(LPAR&-((x)&NOUN)))^((y)|(LPAR&-((y)&NOUN))))&LPAR+CONJ+VERB+ADV)==0)  // using LPAR to hold NOUN status, verify parts-of-speech the same
-#define PARTOFSPEECHEQACV(x,y) ((((x)^(y))&CONJ+VERB+ADV)==0)  // verify known-nonnoun parts-of-speech the same
+#define PARTOFSPEECHEQACV(x,y) ((((x)^(y))&CONJ+VERB+ADV)==0)  // verify known-nonnoun parts-of-speech the same - enough is either value known to be ACV
 
 // Utility: keep the lowest 1 only
 #define LOWESTBIT(x)    ((x)&-(x))

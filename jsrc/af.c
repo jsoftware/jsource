@@ -124,12 +124,14 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
  case CVDOT:
   R REFIXA(ai,JT(jt,implocref)[1]);
  case CTILDE:
-  if(f&&NAME&AT(f)){
+  if(f&&NAME&AT(f)){  // f is the name in name~
    RZ(y=sfn(0,f));
    if(all1(eps(box(y),(A)IAV0(aa)[1])))R w;  // break out of loop if recursive name lookup
    ASSERT(AN((A)IAV0(aa)[1])<248,EVLIMIT);  // error if too many names in expansion
    // recursion check finished.  Now replace the name with its value
    if(x=symbrdlock(f)){   // locked returns a ref to the same name
+    // since the name is supposed to be executable, we have to guard against a type pun on the name
+    ASSERT(PARTOFSPEECHEQACV(AT(w),AT(x)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
     if(unlikely(AFLAG(x)&AFRO))R w;  // If name has readonly value (like cocurrent), leave it as a reference
     // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
     // The value we get from the lookup must be interpreted in the environment of the higher level

@@ -530,8 +530,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
     // pt0ecam is settling from pt0 but it will be ready soon
    
    do{
-      // to make the compiler keep queue in regs, you have to convince it that the path back to this loop is common enough
-      // to give it priority.  likelys at the end of the line 0-2 code are key
 
     if(likely((US)pt0ecam!=0)){  //      if there is another valid token...
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
@@ -678,14 +676,14 @@ endname: ;
     A fs1=__atomic_load_n(&stack[1].a,__ATOMIC_ACQUIRE);  // in case of line 1 V0 V1 N2, we will need the flags from V1.  Could be garbage
     pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PMASKSAVEX));   // clear all the flags we will use
     
-    if(likely(pmask!=0)){  // If all 0, nothing is dispatchable, go push next word after checking for ( .  likely is an overstatement but it gives better register usage
+    if(withprob(pmask!=0,0.8)){  // If all 0, nothing is dispatchable, go push next word after checking for ( .  likely is an overstatement but it gives better register usage
      fs1=QCWORD(fs1);  // clear flags from address
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
      jt->parserstackframe.parserstkend1=stack;    // Save the stackpointer in case there are calls to parse in the names we execute
      I pmask567=pmask;  // save before we mask high bits
-     if(pmask&=0x1F){  // if lines 0-4: decodes are mutually exclusive (i. e. one hot)
+     if(withprob(pmask&=0x1F,0.7)){  // if lines 0-4: decodes are mutually exclusive (i. e. one hot)
       I fs1flag=FAV(fs1=pmask&2?fs1:fs)->flag;  // if line 1, fetch V0 flags; otherwise harmless refetch of fs flags.  If line 1 matches, line 0 cannot
       I fsflag=FAV(fs)->flag;  // fetch flags early - we always need them in lines 0-2
 // obsolete       pmask=LOWESTBIT(pmask);   // leave only one bit
@@ -715,7 +713,7 @@ endname: ;
        // execution.  That will then execute as (name' + +) creating a fork that will assign to name.  So we can inplace any execution, because
        // it always produces a noun and the only things executable from the stack are tridents
 // obsolete        if(unlikely((UI)fsflag>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(notfinalexec<<NOTFINALEXECX)+(~fs1flag&VASGSAFE)))){A zval; 
-       if(unlikely((UI)fsflag>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(~fs1flag&VASGSAFE)))){A zval; 
+       if(withprob((UI)fsflag>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(~fs1flag&VASGSAFE)),0.1)){A zval; 
           // The values on the left are good: function that understands inplacing.
           // The values on the right are bad, and all bits > the good bits.  They are: not assignment to name;
           // ill-behaved function (may change locales).  The > means 'good and no bads', that is, inplaceable assignment

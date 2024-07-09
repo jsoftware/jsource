@@ -286,9 +286,11 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #if (defined(__has_builtin) && __has_builtin(__builtin_expect_with_probability)) || (!defined(__clang__) && __GNUC__ >= 9)
 #define common(x) __builtin_expect_with_probability(!!(x),1,0.6)
 #define uncommon(x) __builtin_expect_with_probability(!!(x),1,0.4)
+#define withprob(x,p) __builtin_expect_with_probability(!!(x),1,(p))
 #else
 #define common(x) likely(x)
 #define uncommon(x) unlikely(x)
+#define withprob(x,p) x
 #endif
 #else
 #define common(x) likely(x)

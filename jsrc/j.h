@@ -290,17 +290,19 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #else
 #define common(x) likely(x)
 #define uncommon(x) unlikely(x)
-#define withprob(x,p) x
+#define withprob(x,p) (x)
 #endif
 #else
 #define common(x) likely(x)
 #define uncommon(x) unlikely(x)
+#define withprob(x,p) (x)
 #endif
 #else
 #define likely(x) (!!(x))
 #define unlikely(x) (!!(x))
 #define common(x) (!!(x))
 #define uncommon(x) (!!(x))
+#define withprob(x,p) (x)
 #endif
 
 #include <stdint.h>

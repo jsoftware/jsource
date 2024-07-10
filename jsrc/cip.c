@@ -1123,7 +1123,7 @@ DF1(jtludecompg){F1PREFIP;PROLOG(823);
 }
 
 
-// 128!:10 LU decomposition for square real arrays LU=A
+// 128!:10 LU decomposition for square real arrays LUP=A
 // returns permutation ; L+U-I (Doolittle form)
 // the ith element of the permutation is the original row of row i of LU
 DF1(jtludecomp){F1PREFIP;PROLOG(823);
@@ -1132,8 +1132,8 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
  // and the U blocks are ordered in transpose form to speed up the dot-product operations.
  // For each row of A, we subtract the matrix product of (preceding U) * (preceding L) to get the new U row and the first L entry L0.
  // Then we go down the column of A, multiplying by 1/L0, to get the new L column.  Repeat for each gamma-shaped LU row/col.
- // Processing in 4x4 blocks means we have one block for the first 4x4 (the corner) and another for the rest of the row/column.  The
- // code to multiply (preceding U) * (preceding L) is common between the two
+ // Processing in 4x4 blocks means we have one code for the first 4x4 (the corner), another for L blocks, a third for U.  The
+ // code to multiply (preceding U) * (preceding L) is common between all three.
  // Allocate area for the cacheblocks of L and U
 #define BLKSZ 4  // size of cache block
 #define LGBLKSZ 2  // lg(BLKSZ)
@@ -1151,7 +1151,7 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
  I nr=(wn+BLKSZ-1)>>LGBLKSZ;  // nr=total # blocks on a side (including partial ones)
 #define CORNERBLOCK(rc) (cb+(rc)*(nr+1))  // address of corner cblock in row&col rc
 #define LBLOCK(r,c) (cb+(r)*nr+(c))  // address of L cblock for row r col c (0<=c<r)
-#define UBLOCK(r,c) (cb+(nr-(c))*nr - (c) + (r)) // address of U cblock for row r col c (0<=r<c) - transposed order
+#define UBLOCK(r,c) (cb+(nr-(c))*nr - (c) + (r)) // address of U cblock for row r col c (0<=r<c) - transposed order going left-to-right, starting after corner block
 #define LBIT(r,c) (lb + (((nr+63)>>6)+2)*(r) + ((c)>>6))  // address of 64-bit word containing L bitmask bit for (r,c) (0<=c<r)  stride of ((nr+63)>>6)+2, advances east
 #define LBITX(r,c) ((c)&(BW-1))  //  index of bit (r,c) in selected word
 #define UBIT(r,c) (ub - (((nr+63)>>6)+2)*(c) - ((r)>>6))  // address of 64-bit word containing U bitmask bit for (r,c) (0<=r<c)  stride of -(((nr+63)>>6)+2), advances west
@@ -1163,13 +1163,13 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
 
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-wn)&(BLKSZ-1))));   // mask for storing last block in a row
  __m256d ones = _mm256_set1_pd(1.0);   // numerator of reciprocals, or value for an identity matrix
- D (*scv0)[BLKSZ][BLKSZ]=LBLOCK(0,0), (*suv0)[BLKSZ][BLKSZ]=UBLOCK(0,1);   // store pointers for blocks in the upcoming ring
+ D (*scv0)[BLKSZ][BLKSZ]=LBLOCK(0,0), (*suv1)[BLKSZ][BLKSZ]=UBLOCK(0,1);   // store pointers for blocks in the upcoming ring
  D *wclv=DAV(w);  // pointer to corner block of the input
  I r;  // size-1 of ring being processed.  The ring has 2r-1 cblocks.  The corner block is (nr-1-r,nr-1-r)
  for(r=nr-1;r>=0;--r){
   __m256d a00,a01,a02,a03,a10,a11,a12,a13,nexta0,nexta1,nexta2,nexta3,recips;  // double accumulators for the 4x4 block; staging area for A data; reciprocals to use to propagate down the column of L
-  // process one ring: the corner block, a row of U, a column of L
-  D (*scv)[BLKSZ][BLKSZ]=suv0;  // start pointer for storing cblocks: cl going south, u going northeast
+  // process one ring: the corner block, a column of L, a row of U
+  D (*scv)[BLKSZ][BLKSZ]=scv0;  // start pointer for storing blocks: c/l going south, u going northwest
   D __attribute__((aligned(CACHELINESIZE))) linv[BLKSZ][BLKSZ], uinv[BLKSZ][BLKSZ];  // 'inverses' of the corner block, used to calculate L and U blocks 
   // initialize A[nr-1-r,nr-1-r] (pointed to by wclv) into nexta0..3
   if(r>0){
@@ -1187,12 +1187,14 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
   // zero blocks.  Since each zero block zaps multiple dot-product blocks, it doesn't take many to be worthwhile
   lookfor0blocks=nzeroblocks*64>(nr-1-r)*(2*r+1);    // # blocks so far is (nr-1-r) * (2nr-1-2*(nr-1-r)).  If 1 in 64 is 0, look for it.  But never first time
   nzeroblocks|=(lookfor0blocks|((nr-1-r)!=10))-1;    // on the 10th ring, disable zero checks if we aren't using them
-  D *wluv=wclv; I wlustride=BLKSZ;  // pointer to next input values in A, and offset to next.  We start going east
-  D (*llv)[BLKSZ][BLKSZ]=LBLOCK(nr-1-r,0), (*luv)[BLKSZ][BLKSZ]=UBLOCK(0,nr-1-r), (*prechv)[BLKSZ][BLKSZ]=luv-(nr+1);  // start point of dot-products, startpoint of next dot-product
+  D *wluv=wclv; I wlustride=BLKSZ*wn;  // pointer to next input values in A, and offset to next.  We start going south
+  D (*llv)[BLKSZ][BLKSZ]=LBLOCK(nr-1-r,0), (*luv)[BLKSZ][BLKSZ]=UBLOCK(0,nr-1-r), (*prechv)[BLKSZ][BLKSZ]=llv+nr;  // start point of dot-products (both going L-to-R), startpoint of next dot-product (first L block)
   UI *lbv0=LBIT(nr-1-r,0), *ubv0=UBIT(0,nr-1-r);  // point to the bit vectors for the corner position.  These pointers are advanced after we finish each block, to handle the dot-product for the next block
   I r0;  // index of corner-, L- or U-block being processed: -r for corner, -r+1..0 for U, 1..r for L
-  D *nextfetchaddr=wclv;  // the address of the block being fetched into nexta0..3
-  for(r0=-r;r0<=r;++r0){
+  D *nextfetchaddr=wclv;  // the address of the block being fetched into nexta0..3.  Init to the corner which we just prefetched
+  for(r0=-r;r0<=r;++r0){  // corner then L then U
+   __m256d perma[7];  // for perm calc, we save the good values from previous rows in the first up to 3 locations, and new candidates in the next 4 locs
+   I ngoodperma;  // number of good values in perma.  Used only on corner blocks
    // move the next A block into the accumulators a00..a03
    a00=nexta0; a01=nexta1; a02=nexta2; a03=nexta3;
    D *currfetchaddr=nextfetchaddr;  // the source address of the block being processed now.  We will store back into the same relative position in the result
@@ -1203,14 +1205,14 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
     wluv+=wlustride;  // advance to beginning of next block
     nextfetchaddr=wluv;  // remember addr being fetched
     // Since the corner block was handled first, the block we are fetching can go out on only one side.  We fill with zeros
-    if(unlikely(r0==-1)){  // fetching the LAST block in the U row
+    if(unlikely(r0==r-1)){  // fetching the LAST block in the U row
      nexta0=_mm256_maskload_pd(wluv,endmask); nexta1=_mm256_maskload_pd(wluv+1*wn,endmask); nexta2=_mm256_maskload_pd(wluv+2*wn,endmask); nexta3=_mm256_maskload_pd(wluv+3*wn,endmask);
-     wluv=wclv; wlustride=BLKSZ*wn;  // reset to corner and change direction for the next prefetch, which will start on L
-    }else if(unlikely(r0==r-1)){  // fetching the LAST block in the L column
+    }else if(unlikely(r0==-1)){  // fetching the LAST block in the L column
      nexta0=_mm256_loadu_pd(wluv);
      nexta1=((wn-1)&(BLKSZ-1))>0?_mm256_loadu_pd(wluv+1*wn):_mm256_setzero_pd();
      nexta2=((wn-1)&(BLKSZ-1))>1?_mm256_loadu_pd(wluv+2*wn):_mm256_setzero_pd();
      nexta3=((wn-1)&(BLKSZ-1))>2?_mm256_loadu_pd(wluv+3*wn):_mm256_setzero_pd();
+     wluv=wclv; wlustride=BLKSZ;  // reset to corner and change direction for the next prefetch to east, which will start on U
     }else{
      // normal fetch of full block
      nexta0=_mm256_loadu_pd(wluv); nexta1=_mm256_loadu_pd(wluv+1*wn); nexta2=_mm256_loadu_pd(wluv+2*wn); nexta3=_mm256_loadu_pd(wluv+3*wn);
@@ -1225,7 +1227,7 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
     // Create & use sparse sections
     // we go through the sparse maps and convert the OR of the rows & columns into a sequence of (#non0,#0) pairs which we process later
     UI4 *runv=rleb;  // pointer to next run
-    if(lookfor0blocks){  // if we think it's worthwhile to skip over zero blocks... 
+    if(lookfor0blocks){  // if we think it's worthwhile to skip over zero blocks...
      UI *lbv=lbv0, *ubv=ubv0;  // point to the start of the bit vectors
      UI polarity=~0;  // 00.00 if we are looking for 0s, 11..11 if we are looking for 1s.  We start looking for skipped blocks (1s)
      I bitsleft=nr-1-r, lensofar=0, bitsinstack;  // number of bits left to process, length carried over from previous maskword
@@ -1255,7 +1257,7 @@ finrle: ;
     // The full read bandwidth of L1 is taken with reading arguments, and the full write bandwidth is taken by the prefetch
     // *llv is the horizontal L-strip, *luv is the horizontal U-strip, *prechv is the first block to prefetch.  We prefetch one block
     // for each block we process
-    // To avoid lots of casting we use D* in this loop.  Each loop handles BLKSZ^2 atoms stored in rwo-major order
+    // To avoid lots of casting we use D* in this loop.  Each loop handles BLKSZ^2 atoms stored in row-major order
     // establish pointers & offsets for the args.  We increment only the L pointer & use indexes for the rest
     D *lvv=(D*)llv; I uofst=(D*)luv-lvv, pofst=(D*)prechv-lvv;  // the 2 args+prefetch: one pointer, 2 offsets
     a10=_mm256_setzero_pd(); a11=_mm256_setzero_pd(); a12=_mm256_setzero_pd(); a13=_mm256_setzero_pd(); // clear the uninitialized accumulators
@@ -1285,7 +1287,7 @@ finrle: ;
    }  // end of dot-product block, executed except first time
    // A[x,y]-L*U (product over nr-1-r blocks) is now in the register block on the 0 side
 
-   // We are solving L(x,0..n-1)*U(0..n-1,y)=A(x,y) for L(x,nr-1-r) and/or U(nr-1-r,y) where xy>=nr-1-r.  Because of the triangularity of L and U,
+   // We are solving L(x,0..n-1)*U(0..n-1,y)=A(x,y) for L(x,nr-1-r) and/or U(nr-1-r,y) where x,y>=nr-1-r and one is equal.  Because of the triangularity of L and U,
    // this reduces to
    // L(nr-1-r,0..nr-1-r-1)*U(0..nr-1-r-1,y) + L(nr-1-r,nr-1-r)*U(nr-1-r,y)=A(x,y)   for the row of U
    // L(x,0..nr-1-r-1)*U(0..x-1,nr-1-r) + L(x,nr-1-r)*U(nr-1-r,nr-1-r)=A(x,y)  for the column of L
@@ -1299,8 +1301,16 @@ finrle: ;
    // For x>nr-1-r we calculate L(x,r) = D * U-1(nr-1-r,nr-1-r), doing the matrix multiply
    //
    // When we calculate the corner block we also write out coefficients that will ne needed to calculate the other blocks of L and U.
+   D (*scvi)[BLKSZ][BLKSZ]=scv;  // save output address before update - we will store to it
    if(r0==-r){
-    // corner block.  First row of U is set.  Alternate creating columns of L and rows of U
+    // corner block.
+
+    // First row of U is set.  Alternate creating columns of L and rows of U
+
+    // We have to check for dangerous pivots and exchange rows if we find any.  For each row of U, if the |pivot| is too small, rotate that row with the rows following
+    // until we get a nondangerous pivot.  This will usually find a permutation within the 4-row block.  If not, save the goof rows and loop back to dot-products on another
+    // 4 rows to search
+
    __m256d tmp;  // where we build inverse lines to write out
     recips=_mm256_div_pd(ones,a00);  // 1/U00 x x x
 
@@ -1322,7 +1332,7 @@ finrle: ;
     a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a02,_mm256_permute4x64_pd(a03,0b010101010),a03),0b1000);  // a03 is A3x-L30*A0x-L31*U1x-L32*U3x = L30 L31 L32 U33
     recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a03),0b1000);  // 1/U00 1/U11 1/U22 1/U33
 
-    _mm256_storeu_pd(&scv0[0][0][0],a00); _mm256_storeu_pd(&scv0[0][1][0],a01); _mm256_storeu_pd(&scv0[0][2][0],a02); _mm256_storeu_pd(&scv0[0][3][0],a03);  // Store the 4x4 in the corner
+// obsolete     _mm256_storeu_pd(&scv[0][0][0],a00); _mm256_storeu_pd(&scv[0][1][0],a01); _mm256_storeu_pd(&scv[0][2][0],a02); _mm256_storeu_pd(&scv[0][3][0],a03);  // Store the 4x4 in the corner
 
     // Now calculate uinv, the inverse of the remaining U matrix.  Do this by backsubstitution up the line.  Leave register a00-a03 holding the block result
     a13=_mm256_blend_pd(_mm256_setzero_pd(),recips,0b1000);
@@ -1337,14 +1347,16 @@ finrle: ;
     _mm256_storeu_pd(&uinv[0][0],a10);  // row 0 is I00=1/U00 I01 I02 I03
 
     // block created; advance input pointers.  Output pointer still set to initial value
-    luv=prechv; prechv-=(nr+1);  // repeat L row; advance U column
-    ubv0-=((nr+63)>>6)+2;  // back up to bitvector for next column
+// obsolete     luv=prechv; prechv-=(nr+1);  // repeat L row; advance U column
+// obsolete     ubv0-=((nr+63)>>6)+2;  // back up to bitvector for next column
+    llv=prechv; prechv+=nr;  // advance L row; repeat U column
+    lbv0+=((nr+63)>>6)+2;  // advance bitvector for next row
+    scv+=nr;  // move output south, to the first L block
     // the bitmask for a corner block is never used
    }else{  // U or L block, not corner
-    D (*scvi)[BLKSZ][BLKSZ]=scv;  // save output address before update
     UI *bma; I bmx;  // address and bit# of the bitmap address to store all-0 status into
     // We build the result in place in a00..a03
-    if(r0<=0){
+    if(r0>0){
      // U block.  Simulate L^-1 * D.  Subtract multiples of each row from all the following rows, cumulatively
      a01=_mm256_fnmadd_pd(a00,_mm256_set1_pd(linv[0][0]),a01);  // a1-=-a0*U10/U00
      a02=_mm256_fnmadd_pd(a00,_mm256_set1_pd(linv[1][0]),a02);  // a2-=-a0*U20/U00
@@ -1354,8 +1366,9 @@ finrle: ;
      a03=_mm256_fnmadd_pd(a02,_mm256_set1_pd(linv[2][2]),a03);  // a3-=-a2*U32/U22
      // block created; advance output and input pointers
      scv-=nr+1;  // move output northwest, to the next U block
-     luv=prechv; ubv0-=((nr+63)>>6)+2; if(r0<-1){prechv-=(nr+1);}else{prechv=llv+nr;}  // repeat L row; advance U column and bitmap; advance prefetch but if next col of U is the last, move prefetch to L
-     if(unlikely(r0==0)){scv=scv0+nr; llv+=nr; prechv+=nr; luv=UBLOCK(0,nr-1-r); ubv0=UBIT(0,nr-1-r); lbv0+=((nr+63)>>6)+2;}  // last col of U: L store/load point to 2d row; U load point to first col; proceed down the L rows
+// obsolete      luv=prechv; ubv0-=((nr+63)>>6)+2; if(r0<-1){prechv-=(nr+1);}else{prechv=llv+nr;}  // repeat L row; advance U column and bitmap; advance prefetch but if next col of U is the last, move prefetch to L
+// obsolete      if(unlikely(r0==0)){scv=scv0+nr; llv+=nr; prechv+=nr; luv=UBLOCK(0,nr-1-r); ubv0=UBIT(0,nr-1-r); lbv0+=((nr+63)>>6)+2;}  // last col of U: L store/load point to 2d row; U load point to first col; proceed down the L rows
+     luv=prechv; ubv0-=((nr+63)>>6)+2; if(r0!=r-1){prechv-=nr+1;}  // (repeat L row); advance U northwest including bitmap; advance prefetch but if next col of U is the last, prefetch it again
      // get the address of the bitmask for this block, in the U bitmap
      bma=UBIT(nr-1-r,r0+nr-1); bmx=UBITX(nr-1-r,r0+nr-1);  // point to the bit to store all-0 status to.  col is (nr-1-r)+(r0-(-r))
     }else{
@@ -1371,12 +1384,20 @@ finrle: ;
      a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][2]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][2]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][2]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][2]),tmp,a03); 
      tmp=_mm256_loadu_pd(&uinv[3][0]);  // row 3 of U^-1
      a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][3]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][3]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][3]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][3]),tmp,a03); 
-     // block created; advance pointers 
-     llv=prechv; lbv0+=((nr+63)>>6)+2; if(r0!=r-1){prechv+=nr;}  // repeat U col; advance L row including bitmap; advance prefetch but if next col of U is the last, prefetch it again
-     scv+=nr;  // move output south, to the next L block
+     // block created; advance pointers
+     if(r0!=0){   // if not last line of L...
+      llv=prechv; lbv0+=((nr+63)>>6)+2; if(r0<-1){prechv+=nr;}else{prechv=luv-(nr+1);}  // repeat U col; advance L row and bitmap; advance prefetch to next row of L but if next row of L is the last, move prefetch to U
+      scv+=nr;  // move output south, to the next L block
+     }else{  // last line of L, we must switch to U (if r==1, precharge has not been switched and should be made to refetch U; otherwise prefetch should continue in U)
+// obsolete       scv=suv1; luv=prechv; prechv-=nr+1; llv=UBLOCK(nr-1-r,0); lbv0=LBIT(nr-1-r,0); ubv0-=((nr+63)>>6)+2;}  // last row of L: U store/load point to 1st ele; L load point to first col; its accordingly
+      scv=suv1; luv-=nr+1; prechv=r==1?luv:luv-(nr+1); llv=LBLOCK(nr-1-r,0); lbv0=LBIT(nr-1-r,0); ubv0-=((nr+63)>>6)+2;  // last row of L: U store/load point to col 1; L load point to first row; bits accordingly
+     }
+// obsolete      llv=prechv; lbv0+=((nr+63)>>6)+2; if(r0!=r-1){prechv+=nr;}  // repeat U col; advance L row including bitmap; advance prefetch but if next row of L is the last, prefetch it again
      // get the address of the bitmask for this block, in the U bitmap
      bma=LBIT((nr-1-r)+r0,nr-1-r); bmx=LBITX((nr-1-r)+r0,nr-1-r);  // point to the bit to store all-0 status to    row is (nr-1-r)+r0
     }
+
+    // update sparse bitmap
     if(nzeroblocks>=0){   // if we haven't given up on sparse checking
      // check for all-zero block, and update the sparse bitmap
      a10=_mm256_or_pd(a01,a00); a11=_mm256_or_pd(a02,a03); a10=_mm256_or_pd(a11,a10);  // OR of all values
@@ -1384,18 +1405,19 @@ finrle: ;
      *bma=((*bma)&~(1LL<<bmx))|(blkis0<<bmx);  //  set bit to (all values are not NE)
      nzeroblocks+=blkis0;  // increment count of zero blocks
     }
-    // write the block to the result address from before update
-    _mm256_storeu_pd(&scvi[0][0][0],a00); _mm256_storeu_pd(&scvi[0][1][0],a01); _mm256_storeu_pd(&scvi[0][2][0],a02); _mm256_storeu_pd(&scvi[0][3][0],a03);  // Store the 4x4 in the corner
-
    }
+
+   // write the block to the result address from before update
+   _mm256_storeu_pd(&scvi[0][0][0],a00); _mm256_storeu_pd(&scvi[0][1][0],a01); _mm256_storeu_pd(&scvi[0][2][0],a02); _mm256_storeu_pd(&scvi[0][3][0],a03);  // Store the 4x4 in the corner
+
    // write the block result to the overall result area.  We do this now because it's going to be a cache miss and we want to dribble out the data during the processing.  Also, the data is in registers now so we don't have to read it
    // the output area has the same relative offset in the output as the read area in the input
    D *resultaddr=(D*)((C*)currfetchaddr+resultoffset);  // place to store result
    if(r>0){
     // not the bottom-right corner.
-    if(r0==0){     // last block of U - truncated on the right
+    if(r0==r){     // last block of U - truncated on the right
      _mm256_maskstore_pd(resultaddr,endmask,a00); _mm256_maskstore_pd(resultaddr+wn,endmask,a01); _mm256_maskstore_pd(resultaddr+2*wn,endmask,a02); _mm256_maskstore_pd(resultaddr+3*wn,endmask,a03);
-    }else if(r0==r){     // last block of L - truncated at bottom
+    }else if(r0==0){     // last block of L - truncated at bottom
      _mm256_storeu_pd(resultaddr,a00); if(((wn-1)&(BLKSZ-1))>0){_mm256_storeu_pd(resultaddr+wn,a01); if(((wn-1)&(BLKSZ-1))>1){_mm256_storeu_pd(resultaddr+2*wn,a02); if(((wn-1)&(BLKSZ-1))>2){_mm256_storeu_pd(resultaddr+3*wn,a03); }}}
     }else{     // normal full block
      _mm256_storeu_pd(resultaddr,a00);  _mm256_storeu_pd(resultaddr+wn,a01);  _mm256_storeu_pd(resultaddr+2*wn,a02);  _mm256_storeu_pd(resultaddr+3*wn,a03); 
@@ -1405,7 +1427,7 @@ finrle: ;
    }
   }
   wclv+=BLKSZ*(wn+1);  // move input pointer to corner block of next ring
-  scv0+=nr+1; suv0-=nr;  // advance storage pointers to next ring.
+  scv0+=nr+1; suv1-=nr;  // advance storage pointers to next ring.
  }
  EPILOG(jlink(IX(wn),z));
 #endif

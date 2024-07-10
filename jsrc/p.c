@@ -654,7 +654,7 @@ endname: ;
    pt0ecam|=(((CONJ>>QCADV)|(CONJ>>QCVERB)|(CONJ>>QCNOUN)|(CONJ>>QCISLKPNAME)|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE))|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
       <<(QCTYPE(y)))&CONJ;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull).
 
-#define NEXTY ((volatile A *)queue)[0]
+#define NEXTY queue[0]
 
   // Now execute fragments as long as there is one to execute.
    while(1) {
@@ -671,7 +671,6 @@ endname: ;
     pmask&=GETSTACK0PT;  // finish 1st 3 columns of parse
 // obsolete     PSTK *fsa=&stack[2-(pmask&1)];  // pointer to stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
 // obsolete   not in J32  PSTK *fsa=(PSTK *)((I)&stack[2]+((pmask<<(BW-1))>>(BW-4)));  // pointer to stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
-// clang creates a branch!     PSTK *fsa=&stack[2], *fsa1=&stack[1]; fsa=pmask&1?fsa1:fsa;  // pointer to stack slot for the CAV to be executed, for lines 0-2  1 2 2
     pmask&=(I)((C*)&stack[3].pt)[3];  // finish 4th column of parse
     A fs1=__atomic_load_n(&stack[1].a,__ATOMIC_ACQUIRE);  // in case of line 1 V0 V1 N2, we will need the flags from V1.  Could be garbage
     pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PMASKSAVEX));   // clear all the flags we will use
@@ -864,6 +863,7 @@ RECURSIVERESULTSCHECK
         }
        }else{
         // if LPAR, the usual next thing is ( CAVN ) and we will catch that here, to avoid going through fragment search (questionable)
+        // the only other plausible case is ( V N ) resulting from line 1, and we can do no better than execute it
         if(PTISRPAR0(stack[2].pt)==0){stack[2]=stack[1]; stack[2].t=stack[0].t; SETSTACK0PT(PTNOUN); stack+=2;}  // ( CAVN ).  Handle it
        }
        // If EDGE on line 1, we must rescan for EDGE V V N
@@ -897,17 +897,21 @@ RECURSIVERESULTSCHECK
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
        ramkrecursv(yy);  // force recursive y
-       A freep=stack[1].a; I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-       freep=stack[pmask+1].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-       freep=arg3; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+       A freep=stack[1].a;
+// obsolete  I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+       freep=stack[pmask+1].a;
+// obsolete  freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+       freep=arg3;
+// obsolete  freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
 
        y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
        PTFROMTYPE(stack[1].pt,AT(QCWORD(yy))) stack[1].t=restok; stack[1].a=yy;   // save result, move token#, recalc parsetype
+       // quite often there is another execution so we don't try to avoid it
       }
      }else{
       // Here for lines 5-7 (fork/hook/assign), which branch to a canned routine
@@ -953,13 +957,16 @@ RECURSIVERESULTSCHECK
         // errors during fork execution are formatted there.  The only error on the fork itself is syntax, for which the terse error is enough
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
-        A freep=stack[1].a; I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-        freep=stack[2].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-        freep=stack[3].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
         y=NEXTY;  // refetch next-word to save regs
+        A freep=stack[1].a;
+// obsolete  I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+        freep=stack[2].a;
+// obsolete  freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+        freep=stack[3].a;
+// obsolete  freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
@@ -976,12 +983,15 @@ RECURSIVERESULTSCHECK
         // errors inside hook are formatted there.  The only error on the hook itself is syntax, for which the terse error is enough
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
-        A freep=stack[1].a; I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-        freep=stack[2].a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
-        freep=arg3; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,freepc,freept);}
+        A freep=stack[1].a;
+// obsolete  I freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+        freep=stack[2].a;
+// obsolete  freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+        freep=arg3;
+// obsolete  freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
+        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
         y=NEXTY;  // refetch next-word to save regs
         PTFROMTYPE(stack[trident].pt,AT(QCWORD(yy))) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack

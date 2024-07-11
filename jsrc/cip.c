@@ -1137,8 +1137,10 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
  // Allocate area for the cacheblocks of L and U
 #define BLKSZ 4  // size of cache block
 #define LGBLKSZ 2  // lg(BLKSZ)
+ D minpivot=1e-6;  // minimum acceptable pivot value
  I nzeroblocks=0;  // number of zero blocks created.  If negative, we have given up on zero blocks
  B lookfor0blocks;  // set if we think it's worthwhile to check for sparse array
+ D diagvals[6]={0,0,0,1,0,0};  // used to load identity values into extended parts of A
  F1RANK(2,jtludecomp,self)  // if rank > 2, call rank loop
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
@@ -1146,7 +1148,18 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
  if(unlikely(!(AT(w)&FL)))RZ(w=cvt(FL,w));
  I wn=AS(w)[0];  // n=size of square matrix
  // Allocate the result (possibly inplace)
- A z; GA(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R jlink(mtv,z);  // if empty result, return fast.  Now nr must be >0
+ A z; GATV(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R jlink(mtv,z);  // if empty result, return fast.  Now nr must be >0
+// todo:
+// fix 0 bitmaps
+// use perm during fetch of a
+// store a to fixed loc
+// permute L
+ // Allocate the result permutation, an index vector
+ A aresultperm; RZ(aresultperm=apvwr(wn,0,1)); I *resultperm=IAV1(aresultperm);  // we overstore the permutation to a BLKSZ bdy, but that's ok, it's allocated
+ // Allocate the areas where we calculate the permutations: one for input, one for output
+ A apermin, apermout; GAT0(apermin,INT,8,1)  GAT0(apermout,INT,8,1) I *permin=IAV1(apermin), *permout=IAV1(apermout);
+  // When we first encounter a block that needs a permutation, we initialize in and out to the indexes of the values that must be swapped.
+  // If there are further blocks, we add their in values and swap the out values.  We eventually convert to cycle form for the swap
  I resultoffset=CAV(z)-CAV(w);  // distance between result & input data areas
  I nr=(wn+BLKSZ-1)>>LGBLKSZ;  // nr=total # blocks on a side (including partial ones)
 #define CORNERBLOCK(rc) (cb+(rc)*(nr+1))  // address of corner cblock in row&col rc
@@ -1158,11 +1171,13 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
 #define UBITX(r,c) ((r)&(BW-1))  //  index of bit (r,c) in selected word
  // Allocate the cblock/bitmap area, rank 1 so it stays cache-aligned
  A cba; GA10(cba,FL,nr*nr*BLKSZ*BLKSZ+nr*(((nr+63)>>6)+2)+nr) D (*cb)[BLKSZ][BLKSZ]=(D (*)[BLKSZ][BLKSZ])DAV(cba);  // cb=pointer to start of cblock area
- UI *lb=(I*)(cb+nr*nr); UI *ub=lb+(((nr+63)>>6)+2)*(nr)-1;  // lb=pointer to L bitmap; ub=pointer to U bitmap
+ UI *lb=(I*)(cb+nr*nr); UI *ub=lb+(((nr+63)>>6)+2)*(nr)-1;  // lb=pointer to L bitmap; ub=pointer to (end of) U bitmap
  UI4 *rleb=(UI4 *)(ub+1);  // rleb is the workarea where we build (#on,#off) run-lengths for each dot-product
 
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-wn)&(BLKSZ-1))));   // mask for storing last block in a row
  __m256d ones = _mm256_set1_pd(1.0);   // numerator of reciprocals, or value for an identity matrix
+ __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);  // sign bit
+ __m256d maxrecip=_mm256_set1_pd(1/minpivot);   // largest reciprocal we allow for a pivot
  D (*scv0)[BLKSZ][BLKSZ]=LBLOCK(0,0), (*suv1)[BLKSZ][BLKSZ]=UBLOCK(0,1);   // store pointers for blocks in the upcoming ring
  D *wclv=DAV(w);  // pointer to corner block of the input
  I r;  // size-1 of ring being processed.  The ring has 2r-1 cblocks.  The corner block is (nr-1-r,nr-1-r)
@@ -1172,16 +1187,6 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
   D (*scv)[BLKSZ][BLKSZ]=scv0;  // start pointer for storing blocks: c/l going south, u going northwest
   D __attribute__((aligned(CACHELINESIZE))) linv[BLKSZ][BLKSZ], uinv[BLKSZ][BLKSZ];  // 'inverses' of the corner block, used to calculate L and U blocks 
   // initialize A[nr-1-r,nr-1-r] (pointed to by wclv) into nexta0..3
-  if(r>0){
-   // normal case when A(nr-1-r,nr-1-r) is a full block
-   nexta0=_mm256_loadu_pd(wclv); nexta1=_mm256_loadu_pd(wclv+1*wn); nexta2=_mm256_loadu_pd(wclv+2*wn); nexta3=_mm256_loadu_pd(wclv+3*wn);  // lots of cache misses here
-  }else{
-   // last block, containing 1-4 rows/cols.  Read in the valid bits, replacing the others with an identity matrix so we don't get a pivot failure causing a NaN
-   nexta0=_mm256_maskload_pd(wclv,endmask); 
-   if(((wn-1)&(BLKSZ-1))>0){nexta1=_mm256_maskload_pd(wclv+1*wn,endmask);}else{nexta1=_mm256_setzero_pd(); nexta1=_mm256_blend_pd(nexta1,ones,0b0010);}
-   if(((wn-1)&(BLKSZ-1))>1){nexta2=_mm256_maskload_pd(wclv+2*wn,endmask);}else{nexta2=_mm256_setzero_pd(); nexta2=_mm256_blend_pd(nexta2,ones,0b0100);}
-   if(((wn-1)&(BLKSZ-1))>2){nexta3=_mm256_maskload_pd(wclv+3*wn,endmask);}else{nexta3=_mm256_setzero_pd(); nexta3=_mm256_blend_pd(nexta3,ones,0b1000);}
-  }
   // on every corner block, decide the status of sparse checking.  For the first few rings, we look for zero blocks and count them.
   // We also make a decision before each ring whether it is worthwhile to look for zeros.  After a few rings, we give up on counting if we haven't seen many
   // zero blocks.  Since each zero block zaps multiple dot-product blocks, it doesn't take many to be worthwhile
@@ -1190,11 +1195,26 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
   D *wluv=wclv; I wlustride=BLKSZ*wn;  // pointer to next input values in A, and offset to next.  We start going south
   D (*llv)[BLKSZ][BLKSZ]=LBLOCK(nr-1-r,0), (*luv)[BLKSZ][BLKSZ]=UBLOCK(0,nr-1-r), (*prechv)[BLKSZ][BLKSZ]=llv+nr;  // start point of dot-products (both going L-to-R), startpoint of next dot-product (first L block)
   UI *lbv0=LBIT(nr-1-r,0), *ubv0=UBIT(0,nr-1-r);  // point to the bit vectors for the corner position.  These pointers are advanced after we finish each block, to handle the dot-product for the next block
-  I r0;  // index of corner-, L- or U-block being processed: -r for corner, -r+1..0 for U, 1..r for L
   D *nextfetchaddr=wclv;  // the address of the block being fetched into nexta0..3.  Init to the corner which we just prefetched
+
+ restartring:; // *** restart point after permutation has been updated.  We restart the ring at the corner, which will now succeed
+  // fetch the corner block from A
+  if(r>0){
+   // normal case when A(nr-1-r,nr-1-r) is a full block
+   nexta0=_mm256_loadu_pd(wclv); nexta1=_mm256_loadu_pd(wclv+1*wn); nexta2=_mm256_loadu_pd(wclv+2*wn); nexta3=_mm256_loadu_pd(wclv+3*wn);  // lots of cache misses here
+  }else{
+   // last block, containing 1-4 rows/cols.  Read in the valid bits, replacing the others with an identity matrix so we don't get a pivot failure causing a NaN
+   nexta0=_mm256_maskload_pd(wclv,endmask); 
+   if(((wn-1)&(BLKSZ-1))>0){nexta1=_mm256_maskload_pd(wclv+1*wn,endmask);}else{nexta1=_mm256_loadu_pd(&diagvals[2]);}
+   if(((wn-1)&(BLKSZ-1))>1){nexta2=_mm256_maskload_pd(wclv+2*wn,endmask);}else{nexta2=_mm256_loadu_pd(&diagvals[1]);}
+   if(((wn-1)&(BLKSZ-1))>2){nexta3=_mm256_maskload_pd(wclv+3*wn,endmask);}else{nexta3=_mm256_loadu_pd(&diagvals[0]);}
+  }
+  I permblkofst=0;  // number of perm blocks that we processed without finding BLKSZ pivots
+  I ngoodperma=0;  // number of good values in perma.  Used only on corner blocks
+  I r0;  // index of corner-, L- or U-block being processed: -r for corner, -r+1..0 for U, 1..r for L
   for(r0=-r;r0<=r;++r0){  // corner then L then U
    __m256d perma[7];  // for perm calc, we save the good values from previous rows in the first up to 3 locations, and new candidates in the next 4 locs
-   I ngoodperma;  // number of good values in perma.  Used only on corner blocks
+nextperm:;  // *** loopback point to continue search for pivots in the next column down.  permblkofst and ngoodperma are set to indicate where we are in the search, and perma holds values inherited from earlier blocks
    // move the next A block into the accumulators a00..a03
    a00=nexta0; a01=nexta1; a02=nexta2; a03=nexta3;
    D *currfetchaddr=nextfetchaddr;  // the source address of the block being processed now.  We will store back into the same relative position in the result
@@ -1209,9 +1229,9 @@ DF1(jtludecomp){F1PREFIP;PROLOG(823);
      nexta0=_mm256_maskload_pd(wluv,endmask); nexta1=_mm256_maskload_pd(wluv+1*wn,endmask); nexta2=_mm256_maskload_pd(wluv+2*wn,endmask); nexta3=_mm256_maskload_pd(wluv+3*wn,endmask);
     }else if(unlikely(r0==-1)){  // fetching the LAST block in the L column
      nexta0=_mm256_loadu_pd(wluv);
-     nexta1=((wn-1)&(BLKSZ-1))>0?_mm256_loadu_pd(wluv+1*wn):_mm256_setzero_pd();
-     nexta2=((wn-1)&(BLKSZ-1))>1?_mm256_loadu_pd(wluv+2*wn):_mm256_setzero_pd();
-     nexta3=((wn-1)&(BLKSZ-1))>2?_mm256_loadu_pd(wluv+3*wn):_mm256_setzero_pd();
+     nexta1=((wn-1)&(BLKSZ-1))>0?_mm256_loadu_pd(wluv+1*wn):_mm256_loadu_pd(&diagvals[2]);
+     nexta2=((wn-1)&(BLKSZ-1))>1?_mm256_loadu_pd(wluv+2*wn):_mm256_loadu_pd(&diagvals[1]);
+     nexta3=((wn-1)&(BLKSZ-1))>2?_mm256_loadu_pd(wluv+3*wn):_mm256_loadu_pd(&diagvals[0]);
      wluv=wclv; wlustride=BLKSZ;  // reset to corner and change direction for the next prefetch to east, which will start on U
     }else{
      // normal fetch of full block
@@ -1307,31 +1327,108 @@ finrle: ;
 
     // First row of U is set.  Alternate creating columns of L and rows of U
 
-    // We have to check for dangerous pivots and exchange rows if we find any.  For each row of U, if the |pivot| is too small, rotate that row with the rows following
-    // until we get a nondangerous pivot.  This will usually find a permutation within the 4-row block.  If not, save the goof rows and loop back to dot-products on another
-    // 4 rows to search
+    // We handle permutation in two steps.  First, we check all 24 permutations of the a0x rows to see if there is one that works on all 4 columns.
+    // if so, we use it, marking its permutation.  We are so thorough because it saves our doing another dot-product.
 
-   __m256d tmp;  // where we build inverse lines to write out
-    recips=_mm256_div_pd(ones,a00);  // 1/U00 x x x
+    // If no permutation of these 4 rows works, we keep as many as do work (0-3 rows) and go back to get 4 more to try
+    // perma is the list of values inherited from earlier blocks in this column
+    // ngoodperma is the number of values in perma inherited from earlier blocks
+    
+    UI permx=0; C perm=0xE4;  // index of perm we are using, and that perm
+    C static perms8[25] = {0xE4,0xB4,0xD8,0x78,0x9C,0x6C,0xE1,0xB1,0xC9,0x39,0x8D,0x2D,0xD2,0x72,0xC6,0x36,0x4E,0x1E,0x93,0x63,0x87,0x27,0x4B,0x1B,~0x1B};   // perms in order of reversed bitpos, i. e. 3 2 1 0 first
+    I bestnperma=ngoodperma; C bestperm=perm;  // best incomplete value so far
 
-    a01=_mm256_blend_pd(a01,_mm256_mul_pd(a01,recips),0b0001);  // a01 is L10 A11 A12 A13
-    _mm256_storeu_pd(&linv[0][0],a01);    // write out U10/U00 x x x for calculating U
-    a01=_mm256_blend_pd(a01,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(a01,0b00000000),a01),0b1110);  // a01 is A1x-L10*A0x = L10 U11 U12 U13
-    recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a01),0b0010);  // 1/U00 1/U11 x x
+    // loop till we find a valid permutation
+    while(1){
+     _mm256_storeu_pd((D*)&perma[ngoodperma],a00); _mm256_storeu_pd((D*)&perma[ngoodperma+1],a01); _mm256_storeu_pd((D*)&perma[ngoodperma+2],a02); _mm256_storeu_pd((D*)&perma[ngoodperma+3],a03);  // save the input for possible perm calc
+     if(likely(ngoodperma+permx==0)){
+      // the usual case of the first shot at a corner block.  a00..a03 are ready to go
+      recips=_mm256_div_pd(ones,a00);  // 1/U00 x x x  // start the first reciprocal
+      if(_mm256_cvtsd_f64(_mm256_andnot_pd(sgnbit,a00))<minpivot)goto pivotmiss0;  // nothing else to do while waiting for recip, so check for quick exit
+     }else{
+      // we are looking for a permutation.  a00..a03 must be reloaded.  The first ngoodperma regs are loaded from perma[0..2]; the rest come from ngoodperma+(permutation value)
+      I permtemp=permx;  // 
+      I findex; findex=(permtemp&3)+ngoodperma; findex=ngoodperma>0?0:findex; permtemp=ngoodperma>0?permtemp:permtemp>>2; a00=_mm256_loadu_pd((D*)&perma[findex]);
+      recips=_mm256_div_pd(ones,a00);  // 1/U00 x x x  // start the first reciprocal
+      if(_mm256_cvtsd_f64(_mm256_andnot_pd(sgnbit,a00))<minpivot)goto pivotmiss0;  // check for quick exit - while loads are completing
+      findex=(permtemp&3)+ngoodperma; findex=ngoodperma>1?1:findex; permtemp=ngoodperma>1?permtemp:permtemp>>2; a01=_mm256_loadu_pd((D*)&perma[findex]);
+      findex=(permtemp&3)+ngoodperma; findex=ngoodperma>2?2:findex; permtemp=ngoodperma>2?permtemp:permtemp>>2; a02=_mm256_loadu_pd((D*)&perma[findex]);
+      findex=(permtemp&3)+ngoodperma; a03=_mm256_loadu_pd((D*)&perma[findex]);
+//       a01=_mm256_loadu_pd(&perma[1]); a02=_mm256_loadu_pd(&perma[2]); a03=_mm256_loadu_pd(&perma[3]);  // if there are inherited values, start with them
+     }
 
-    a02=_mm256_blend_pd(a02,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(_mm256_mul_pd(a02,recips),0b00000000),a02),0b1110);  // a02 is A20 (A21..A23 - L20*U01..U03)
-    a02=_mm256_blend_pd(a02,_mm256_mul_pd(a02,recips),0b0011);  // a02 is L20 L21 A22 A23
-    _mm256_storeu_pd(&linv[1][0],a02);    // write out U20/U00 U21/U11 x x for calculating U
-    a02=_mm256_blend_pd(a02,_mm256_fnmadd_pd(a01,_mm256_permute4x64_pd(a02,0b01010101),a02),0b1100);  // a02 is A2x-L20*A0x-L21*U1x = L20 L21 U22 U23
-    recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a02),0b0100);  // 1/U00 1/U11 1/U22 x
+     // This is the core calculation for the corner block/linv ***
+     a01=_mm256_blend_pd(a01,_mm256_mul_pd(a01,recips),0b0001);  // a01 is L10 A11 A12 A13
+     _mm256_storeu_pd(&linv[0][0],a01);    // write out U10/U00 x x x for calculating U
+     a01=_mm256_blend_pd(a01,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(a01,0b00000000),a01),0b1110);  // a01 is A1x-L10*A0x = L10 U11 U12 U13
+     recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a01),0b0010);  // 1/U00 1/U11 x x
 
-    a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(_mm256_mul_pd(a03,recips),0b00000000),a03),0b1110);  // a03 is A30 (A31..A33 - L30*U01..U03)
-    a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a01,_mm256_permute4x64_pd(_mm256_mul_pd(a03,recips),0b01010101),a03),0b1100);  // a03 is A30 (A31..A33 - L31*U11..U13)
-    a03=_mm256_blend_pd(a03,_mm256_mul_pd(a03,recips),0b0111);  // a03 is L30 L31 L32 A33''
-    _mm256_storeu_pd(&linv[2][0],a03);    // write out U30/U00 U31/U11 U32/U22 for calculating U
-    a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a02,_mm256_permute4x64_pd(a03,0b010101010),a03),0b1000);  // a03 is A3x-L30*A0x-L31*U1x-L32*U3x = L30 L31 L32 U33
-    recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a03),0b1000);  // 1/U00 1/U11 1/U22 1/U33
+     a02=_mm256_blend_pd(a02,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(_mm256_mul_pd(a02,recips),0b00000000),a02),0b1110);  // a02 is A20 (A21..A23 - L20*U01..U03)
+     a02=_mm256_blend_pd(a02,_mm256_mul_pd(a02,recips),0b0011);  // a02 is L20 L21 A22' A23'
+     _mm256_storeu_pd(&linv[1][0],a02);    // write out U20/U00 U21/U11 x x for calculating U
+     a02=_mm256_blend_pd(a02,_mm256_fnmadd_pd(a01,_mm256_permute4x64_pd(a02,0b01010101),a02),0b1100);  // a02 is A2x-L20*A0x-L21*U1x = L20 L21 U22 U23
+     recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a02),0b0100);  // 1/U00 1/U11 1/U22 x
 
+     a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a00,_mm256_permute4x64_pd(_mm256_mul_pd(a03,recips),0b00000000),a03),0b1110);  // a03 is A30 (A31..A33 - L30*U01..U03)
+     a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a01,_mm256_permute4x64_pd(_mm256_mul_pd(a03,recips),0b01010101),a03),0b1100);  // a03 is A30 (A31..A33 - L31*U11..U13)
+     a03=_mm256_blend_pd(a03,_mm256_mul_pd(a03,recips),0b0111);  // a03 is L30 L31 L32 A33''
+     _mm256_storeu_pd(&linv[2][0],a03);    // write out U30/U00 U31/U11 U32/U22 for calculating U
+     a03=_mm256_blend_pd(a03,_mm256_fnmadd_pd(a02,_mm256_permute4x64_pd(a03,0b010101010),a03),0b1000);  // a03 is A3x-L30*A0x-L31*U1x-L32*U3x = L30 L31 L32 U33
+     recips=_mm256_blend_pd(recips,_mm256_div_pd(ones,a03),0b1000);  // 1/U00 1/U11 1/U22 1/U33
+     // end of corner-block calc ***
+
+     // if the current permutation is valid, exit to process using it
+     __m256d recipbad=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,recips),maxrecip,_CMP_GT_OQ);  // where we build inverse lines to write out
+     if(_mm256_testz_pd(recipbad,sgnbit))break;  // testz is 1 if all comparisons false, i. e. all recips in range
+       // we wait to test until we have all the reciprocals because we expect few permutations.  If there are 0 pivots they may generate NaNs in the L values, but not in recips
+
+     // falling through, we didn't get all the pivots: we must search for a permutation
+
+     // if the current permutation is a new best, remember it
+     I ngood=CTTZI(_mm256_movemask_pd(recipbad));  // number of leading OK pivots
+     bestperm=ngood>bestnperma?perm:bestperm; bestnperma=ngood>bestnperma?ngood:bestnperma;  // if new best, remember perm & how many good pivots
+
+     if(0){pivotmiss0: ngood=0;}  // come here when the first column is invalid as a pivot
+     // advance to next permutation.   skip anything that repeats the first failing index, since that will fail in the same place
+     do{++permx;}while(((perms8[permx]^perm)>>(2*ngood)&3)==0); perm=perms8[permx];  // find first perm that doesn't repeat the failure
+     if(permx<sizeof(perms8)/sizeof(perms8[0])-1)continue;  // if there is another permutation to check, go try it
+
+     // here we were unable to find a full set of pivots with any ordering of the input block.  Update the permutation for the pivots we did find, and go back to dot-product to get the next batch of rows.
+     if(permblkofst==0){
+      // The first block is special because it may have cycles within itself as the corner is permuted.  Subsequent blocks all swap pairs of (corner row,outside row)
+      // for the first block, init the in to the 4 input values and the out to the positions after permutation.  All 4 rows are in the perm, but the number of valid pivots can be 0-3
+      DO(BLKSZ, permin[i]=(nr-1-r)*BLKSZ+i; permout[i]=(nr-1-r)*BLKSZ+(bestperm&3); bestperm>>=2;) AN(apermin)=AN(apermout)=BLKSZ;  // init to the entire perm
+     }else{
+      // for subsequent blocks, add the new value to the end of in and swap the incumbent in out to the end
+      for(bestperm>>=(2*ngoodperma);ngoodperma<bestnperma;++ngoodperma,bestperm>>=2){
+       permout[++AN(apermout)]=permout[ngoodperma]; permin[++AN(apermin)]=permout[ngoodperma]=(nr-1-r+permblkofst)*BLKSZ+ngoodperma; // swap the replaced pivot with the replacing row from the later block
+      }
+     } 
+     ++permblkofst;  // step south to try the next 'corner' block
+     // if there are no more rows, fail
+     ASSERT(permblkofst<r+1,EVDOMAIN)  // if we run out of rows without finding pivots, it's a singular matrix
+     goto nextperm;  // recalculate next 'corner' from the next L block.  ngoodperma is set
+    }
+
+    // success - we found pivots, using permutation (perm).
+    if(unlikely(ngoodperma+permx!=0)){
+     // the permutation is not identity. store the part that was added here, apply it to the rows of L, and restart the ring
+     if(permblkofst==0){
+      // The first block is special because it may have cycles within itself as the corner is permuted.  Subsequent blocks all swap pairs of (corner row,outside row)
+      // for the first block, init the in to the 4 input values and the out to the positions after permutation.  All 4 rows are in the perm, but the number of valid pivots can be 0-3
+      DO(BLKSZ, permin[i]=(nr-1-r)*BLKSZ+i; permout[i]=(nr-1-r)*BLKSZ+(bestperm&3); bestperm>>=2;) AN(apermin)=AN(apermout)=BLKSZ;  // init to the entire perm
+     }else{
+      // for subsequent blocks, add the new value to the end of in and swap the incumbent in out to the end
+      for(perm>>=(2*ngoodperma);ngoodperma<BLKSZ;++ngoodperma,perm>>=2){
+       permout[++AN(apermout)]=permout[ngoodperma]; permin[++AN(apermin)]=permout[ngoodperma]=(nr-1-r+permblkofst)*BLKSZ+ngoodperma; // swap the replaced pivot with the replacing row from the later block
+      }
+     }
+    // permute rows of L, and the result permutation, so that processing L in order matches processing A in permuted order.  We will subsequently fetch L sequentially, A through permutation
+    A cycleperm; RZ(cycleperm=cdot1(indexof(apermin,apermout)));
+    goto restartring;  // rerun the permuted ring, which is known to succeed
+    }
+
+    // falling through, the permutation is right & we can process L & U to completion for this ring
 // obsolete     _mm256_storeu_pd(&scv[0][0][0],a00); _mm256_storeu_pd(&scv[0][1][0],a01); _mm256_storeu_pd(&scv[0][2][0],a02); _mm256_storeu_pd(&scv[0][3][0],a03);  // Store the 4x4 in the corner
 
     // Now calculate uinv, the inverse of the remaining U matrix.  Do this by backsubstitution up the line.  Leave register a00-a03 holding the block result
@@ -1370,7 +1467,8 @@ finrle: ;
 // obsolete      if(unlikely(r0==0)){scv=scv0+nr; llv+=nr; prechv+=nr; luv=UBLOCK(0,nr-1-r); ubv0=UBIT(0,nr-1-r); lbv0+=((nr+63)>>6)+2;}  // last col of U: L store/load point to 2d row; U load point to first col; proceed down the L rows
      luv=prechv; ubv0-=((nr+63)>>6)+2; if(r0!=r-1){prechv-=nr+1;}  // (repeat L row); advance U northwest including bitmap; advance prefetch but if next col of U is the last, prefetch it again
      // get the address of the bitmask for this block, in the U bitmap
-     bma=UBIT(nr-1-r,r0+nr-1); bmx=UBITX(nr-1-r,r0+nr-1);  // point to the bit to store all-0 status to.  col is (nr-1-r)+(r0-(-r))
+// obsolete      bma=UBIT(nr-1-r,r0+nr-1); bmx=UBITX(nr-1-r,r0+nr-1);  // point to the bit to store all-0 status to.  col is (nr-1-r)+(r0-(-r))
+     bma=UBIT(nr-1-r,(nr-1-r)+r0); bmx=UBITX(nr-1-r,(nr-1-r)+r0);  // point to the bit to store all-0 status to.  col is (nr-1-r)+r0
     }else{
      // L block.  Take D * U^-1.  Fastest way is to dump to memory so we can use broadcast to replicate the L values across the row
      D __attribute__((aligned(CACHELINESIZE))) lmem[BLKSZ][BLKSZ];     // memory workarea
@@ -1394,7 +1492,7 @@ finrle: ;
      }
 // obsolete      llv=prechv; lbv0+=((nr+63)>>6)+2; if(r0!=r-1){prechv+=nr;}  // repeat U col; advance L row including bitmap; advance prefetch but if next row of L is the last, prefetch it again
      // get the address of the bitmask for this block, in the U bitmap
-     bma=LBIT((nr-1-r)+r0,nr-1-r); bmx=LBITX((nr-1-r)+r0,nr-1-r);  // point to the bit to store all-0 status to    row is (nr-1-r)+r0
+     bma=LBIT(r0+nr-1,nr-1-r); bmx=LBITX(r0+nr-1,nr-1-r);  // point to the bit to store all-0 status to    row is (nr-1-r)+(r0-(-r))
     }
 
     // update sparse bitmap

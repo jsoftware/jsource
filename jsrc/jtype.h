@@ -936,9 +936,9 @@ typedef struct{
  I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local
 //   0 if chain index not known or name is a locative
  UI4 hash;  // hash for non-locale part of name
- UC m; // length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
+ UC m; // length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)  scaf should move to second cacheline
  C flag, // string part of full name (1 to ?? characters, including locale of assignment if given)
- s[1];  // up to 24 chars fit in a 128B allo
+ s[1];  // up to 34 chars fit in a 128B allo
 } NM;
 
 // values in flag:

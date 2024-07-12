@@ -58,9 +58,9 @@ assert. 2 <: 1 T. ''
 NB. verify that tasks go to different threads if possible.  We can ensure this only for as many threads as there are cores
 setth nwthreads=. 1 >. <: 0 { 8 T. ''  NB. one worker thread per core, -1
 wthr nwthreads
-assert. GITHUBCI +. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
+assert. (0[GITHUBCI) +. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
 wthr nwthreads
-assert. GITHUBCI +. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
+assert. (0[GITHUBCI) +. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
 wthr nwthreads
 assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
 wthr nwthreads
@@ -131,14 +131,14 @@ techo^:chk 'gtdot3 a32b'
 NB. the following line hang on freebsd
 assert. 1 = 11 T. mtx;2.0
 techo^:chk 'gtdot3 a32c'
-assert. GITHUBCI +. (2.3 > dly) *. (2-granularity) <: dly =. tod-~6!:1''  NB. verify delay
+assert. (0[GITHUBCI) +. (2.3 > dly) *. (2-granularity) <: dly =. tod-~6!:1''  NB. verify delay
 techo^:chk 'gtdot3 a32d'
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0.1
-assert. GITHUBCI +. (0.3 > dly) *. (0.1-granularity) <: dly =. tod-~6!:1''  NB. verify delay
+assert. (0[GITHUBCI) +. (0.3 > dly) *. (0.1-granularity) <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0
-assert. GITHUBCI +. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
+assert. (0[GITHUBCI) +. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
 mtx=.10 T. 1  NB. recursive
 assert. 0 = 11 T. mtx
 assert. 0 = 11 T. mtx  NB. lock count=2

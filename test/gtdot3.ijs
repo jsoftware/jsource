@@ -46,6 +46,7 @@ assert. remote_stuff=3
 
 f =: 3 : 0
 chk=. ('FreeBSD'-:UNAME)
+granularity=. 2e_13
 try.
 while. 2 > 1 T. '' do. 0 T. '' end.  NB. make sure we have 2 worker threads
 catch.
@@ -130,11 +131,11 @@ techo^:chk 'gtdot3 a32b'
 NB. the following line hang on freebsd
 assert. 1 = 11 T. mtx;2.0
 techo^:chk 'gtdot3 a32c'
-assert. GITHUBCI +. (2.3 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
+assert. GITHUBCI +. (2.3 > dly) *. (2-granularity) <: dly =. tod-~6!:1''  NB. verify delay
 techo^:chk 'gtdot3 a32d'
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0.1
-assert. GITHUBCI +. (0.3 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay
+assert. GITHUBCI +. (0.3 > dly) *. (0.1-granularity) <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0
 assert. GITHUBCI +. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay

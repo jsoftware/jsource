@@ -47,10 +47,11 @@ F1(jtimmex){F1PREFJT;A z;
  if(!w)R A0;  // if no string, return error
  if(unlikely(JT(jt,adbreak)[1])!=0)jtsystemlockaccept(jt,LOCKALL);  // if a systemlock has been requested, accept it.
  // When we start a sentence, we need to establish AKGST in locsyms as a shadow of jt->global, because that's
- // the normal condition and u./v. will rely on it.  This is not needed for a recursive call, but it doesn't hurt either,
- // because if AKGST has been set it will already hold jt->global.  Of course, any event code must restore everything
- // to its previous state, including locales
- AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
+ // the normal condition and u./v. will rely on it.  During execution of a sentence, jt->global may differ from AKGST
+ // (if the sentence calls a modifier through a locative, in which case AKGST holds the pre-locative locale), so recursive calls may not
+ // change AKGST.  Of course, any event code must restore everything to its previous state, including locales
+ // immex sentences are always directed to the master thread
+ if(!(jt->recurstate&RECSTATERENT))AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL z=parse(AT(w)&BOX?w:tokens(w,1+!!EXPLICITRUNNING));
  if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr((J)((I)jtinplace|JTPRFORSCREEN),z);   // z not 0 && LSB of z is 0 && Result is not for debug
  RETF(z);

@@ -94,8 +94,13 @@ NB. Going through locatives leaves global path unchanged
 a_z_ =: a =: 1 : 0
 try.
   xxx =. u. f.
-  1
-catch. 0
+  r =. 1
+catch. r =.0
+end.
+try.
+  xxx =. u f.
+  r , 1
+catch. r , 0
 end.
 )
 + a
@@ -107,15 +112,15 @@ g_z_ =: a
 f g  NB. a runs in base
 g =: a_z_
 + g
-0 = f g  NB. now a runs in z and doesn't find f
+1 0 -: f g  NB. now a runs in z and doesn't find f through u, but does through u.
 3 : 0 ''
 assert. + a
 ff =. ((coname '') -: coname)
 assert. f a
-assert. ff a
+assert. 1 0 -: ff a
 assert. ((coname '') -: coname) g
-assert. 0 = f g  NB. f not defined in z
-assert. ff g
+assert. 1 0 -: f g  NB. f not defined in z
+assert. 1 0 -: ff g
 1
 )
 4!:55 ;:'a a_z_'  NB. names used below
@@ -287,7 +292,7 @@ _3 -:+ {{ 0 + v. }} - ]3
 NB. call to modifier through locative keeps u./v. info
 f_a_ =: {{ u. 5 }}
 f =: *:
-NB. new 25 = f f_a_
+25 = f f_a_
 
 
 4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ g_z_ j j_xxx_ dou F f f_a_ F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nm nn sum v'

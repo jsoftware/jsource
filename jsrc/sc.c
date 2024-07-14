@@ -59,7 +59,7 @@ DF2(jtunquote){A z;
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time
     }
     flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale
-    SYMSETGLOBAL(jt->locsyms,explocale);   // set where we're going
+    SYMSETGLOBAL(explocale);   // switch to the (possibly new) locale.
    }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
   }else{
@@ -90,7 +90,9 @@ DF2(jtunquote){A z;
      }
     }
     flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
-    SYMSETGLOBAL(jt->locsyms,explocale);   // set where we're going
+    SYMSETGLOBAL(explocale);   // switch to the (possibly new) locale.  We DO NOT change AKGST because if we are calling a non-operator modifier we need the old locale if the modifier calls u./v. .
+        // AKGST changes only from cocurrent.  This leads to a divergence between jt->global and AKGST if a non-operator modifier calls an anonymous explicit that issues cocurrent.  BFD.  The divergence
+        // is removed by the next named call
    }
    // Common path for named functions after lookup is finished.  fs has QCNAMED semantics
    // explocale is the locale we are calling into

@@ -135,7 +135,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
     if(unlikely(AFLAG(x)&AFRO))R w;  // If name has readonly value (like cocurrent), leave it as a reference
     // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
     // The value we get from the lookup must be interpreted in the environment of the higher level
-    A savloc=jt->locsyms;  // initial locales
+    A savloc=jt->locsyms, savglob=jt->global;  // initial locales
     A thisname=v->fgh[0];// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
     if(thisname){ // name given
      NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
@@ -145,7 +145,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
        // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement
        if(aif&FIXALOCSONLYLOWEST)R x;  // return looked-up value once we hit one
        // If we have to continue after the replacement, we must do so in the environment of the implicit locative.
-       SYMRESTOREFROMLOCAL((A)AM(jt->locsyms));
+       SYMSWITCHTOLOCAL((A)AM(jt->locsyms));
        // NO FAILURES ALLOWED FROM HERE TO RESTORE
       }
      }
@@ -160,7 +160,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
     if(z=REFIXA(na,x)){
      if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
     }
-    SYMRESTOREFROMLOCAL(savloc);  // make sure we restore current symbols
+    SYMRESTORELOCALGLOBAL(savloc,savglob);  // make sure we restore current symbols
     AN((A)IAV0(aa)[1])=AS((A)IAV0(aa)[1])[0]=initn;   // restore name count
     RZ(z);
    }

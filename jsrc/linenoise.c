@@ -2955,7 +2955,7 @@ notinserted:
         return 0;
     }
     if (history == NULL) {
-        history = (char **)calloc(sizeof(char*), history_max_len);
+        history = (char **)calloc(history_max_len, sizeof(char*));
     }
 
     /* do not insert duplicate lines into history */
@@ -2988,7 +2988,7 @@ int linenoiseHistorySetMaxLen(int len) {
     if (history) {
         int tocopy = history_len;
 
-        newHistory = (char **)calloc(sizeof(char*), len);
+        newHistory = (char **)calloc(len, sizeof(char*));
 
         /* If we can't copy everything, free the elements we'll not use. */
         if (len < tocopy) {

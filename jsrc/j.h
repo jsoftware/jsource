@@ -2102,8 +2102,10 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 // At all times we keep the k field of locsyms as a copy of jt->global so that if we need it for u./v. we know what the symbol tables were.  We could remove jt->global but that would cost
 // some load instructions sometimes.  AM(local table) points to the previous local table in the stack, looping to self at end
 #define SYMSETGLOBALINLOCAL(l,g) (AKGST(l)=(g))  // l is jt->locsyms, g is new global value
-#define SYMSETGLOBAL(l,g) (jt->global=(g), SYMSETGLOBALINLOCAL(l,jt->global))  // l is jt->locsyms, g is new global value
-#define SYMRESTOREFROMLOCAL(l) (jt->locsyms=(l), jt->global=AKGST(jt->locsyms))  // go to stacked local l
+#define SYMSETGLOBAL(g) (jt->global=(g))  // g is new global value.  Do not disturb AKGST
+#define SYMSETGLOBALS(l,g) (jt->global=(g), SYMSETGLOBALINLOCAL(l,jt->global))  // l is jt->locsyms, g is new global value
+#define SYMSWITCHTOLOCAL(l) (jt->locsyms=(l), jt->global=AKGST(jt->locsyms))  // go to stacked local l
+#define SYMRESTORELOCALGLOBAL(l,g) (jt->locsyms=(l), jt->global=(g))  // set locsyms/global but leave AKGST unchanged
 // unused#define SYMSWAPTOLOCAL(l,lsave) (lsave=jt->locsyms, SYMRESTOREFROMLOCAL(l))  // go to stacked local l, save current in lsave
 #define SYMSETLOCAL(l) (jt->locsyms=(l), AKGST(jt->locsyms)=jt->global)  // change the locals to l
 #define SYMPUSHLOCAL(l) (AM(l)=(I)jt->locsyms, SYMSETLOCAL(l))  // push l onto locals stack

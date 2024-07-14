@@ -472,7 +472,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
    memset(&jt->uflags.init0area,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.init0area));    // clear what should be cleared - up to locsyms
    A startloc=(UNvoidAV1(job))->kchain.global;   // extract the globals pointer from the job
-   jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBAL(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
+   jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
 // obsolete    if(likely(startloc!=0)){INCREXECCTIF(startloc); fa(startloc);}  // raise execcount of current locale to protect it while running; remove the protection installed in taskrun()

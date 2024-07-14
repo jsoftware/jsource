@@ -714,6 +714,6 @@ B jtlocdestroy(J jt,A g){
  // The current implied locale can be deleted only after it leaves execution, i. e. after it returns to immex in all threads where it is current.
  // We are allowed to change it then because it is not stacked anywhere.  We change to z so that (1) we can be assured jt->global is always valid;
  // (2) the user doesn't have the disorienting experience of no locale and no path.
- if(unlikely(g==jt->global))SYMSETGLOBAL(jt->locsyms,*JT(jt,zpath));  // if we deleted the global locale, throw us into z locale (which is permanent)
+ if(unlikely(g==jt->global))SYMSETGLOBALS(jt->locsyms,*JT(jt,zpath));  // if we deleted the global locale, throw us into z locale (which is permanent)
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

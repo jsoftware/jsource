@@ -45,7 +45,7 @@ assert. remote_stuff=3
 )
 
 f =: 3 : 0
-chk=. ('FreeBSD'-:UNAME)
+granularity=. 2e_13
 try.
 while. 2 > 1 T. '' do. 0 T. '' end.  NB. make sure we have 2 worker threads
 catch.
@@ -57,9 +57,9 @@ assert. 2 <: 1 T. ''
 NB. verify that tasks go to different threads if possible.  We can ensure this only for as many threads as there are cores
 setth nwthreads=. 1 >. <: 0 { 8 T. ''  NB. one worker thread per core, -1
 wthr nwthreads
-assert. GITHUBCI +. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
+assert. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
 wthr nwthreads
-assert. GITHUBCI +. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
+assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
 wthr nwthreads
 assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
 wthr nwthreads
@@ -71,38 +71,30 @@ pyx =. 6!:3 t. ''"0 N # 1.0  NB. fill up with delaying threads
 NB. Verify forcetask arg
 t0 =. 6!:1''
 assert. 1. = >pyx
-techo^:chk 'gtdot3 a13'
 NB. Verify forcetask arg
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a1' NB. master should not wait
-techo^:chk 'gtdot3 a13a'
 wthr nwthreads
-techo^:chk 'gtdot3 a13b'
 pyx =. 6!:3 t. ''"0 (>:N) # 1.0  NB. fill up with delaying threads
-techo^:chk 'gtdot3 a13c'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) > 6!:1''  [ 'a2' NB. master should wait
 wthr nwthreads
 pyx =. 6!:3 t. 'worker'"0 (>:N) # 1.0  NB. fill up with delaying threads
-techo^:chk 'gtdot3 a13d'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a3' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker') "0 (>:N) # 1.0  NB. fill up with delaying threads
-techo^:chk 'gtdot3 a13e'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a4' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';1) "0 (>:N) # 1.0  NB. fill up with delaying threads
-techo^:chk 'gtdot3 a13f'
 t0 =. 6!:1''
 assert. 1. = >pyx
 NB. assert. (t0 + 0.5) < 6!:1''  [ 'a5' NB. master should not wait
 wthr nwthreads
 pyx =. 6!:3 t. (<'worker';0) "0 (>:N) # 1.0  NB. fill up with delaying threads
-techo^:chk 'gtdot3 a13g'
 t0 =. 6!:1''
 1. = >pyx
 NB. assert. (t0 + 0.5) > 6!:1''  [ 'a6' NB. master should wait
@@ -122,22 +114,17 @@ mtx =. 10 T. 0
 assert. 0 = 11 T. mtx
 'domain error' -: 11 T. etx >:&.> mtx
 mtx =. 10 T. 0
-techo^:chk 'gtdot3 a32'
 tod =. 6!:1''
-techo^:chk 'gtdot3 a32a'
 assert. 0 = >{{11 T. y}}t.''mtx  NB. boxed mtx OK
-techo^:chk 'gtdot3 a32b'
 NB. the following line hang on freebsd
 assert. 1 = 11 T. mtx;2.0
-techo^:chk 'gtdot3 a32c'
-assert. GITHUBCI +. (2.3 > dly) *. 2 <: dly =. tod-~6!:1''  NB. verify delay
-techo^:chk 'gtdot3 a32d'
+assert. (2.3 > dly) *. (2-granularity) <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0.1
-assert. GITHUBCI +. (0.3 > dly) *. 0.1 <: dly =. tod-~6!:1''  NB. verify delay
+assert. (0.3 > dly) *. (0.1-granularity) <: dly =. tod-~6!:1''  NB. verify delay
 tod =. 6!:1''
 assert. 1 = 11 T. mtx;0
-assert. GITHUBCI +. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
+assert. (0.3 > dly) *. 0 <: dly =. tod-~6!:1''  NB. verify no delay
 mtx=.10 T. 1  NB. recursive
 assert. 0 = 11 T. mtx
 assert. 0 = 11 T. mtx  NB. lock count=2

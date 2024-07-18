@@ -69,6 +69,15 @@ ckmat =. {{ if. 1e_10 < err =. x (>./@:,@:|@:- 1&{::@(128!:10)) y do. 13!:8 (4) 
 NB. assert. 1e_14 > >./ (ckmat lrtoa)@:((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.01 * *:)"0 ] 500 + i. 50
 NB. assert. 1e_14 > >./ (ckmat lrtoa)@:((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.1 * *:)"0 ] 500 + i. 50
 assert. 1e_10 > >./ (ckmat lrtoa)@:((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.001 * *:)"0 ] 500 + 10 ?@$ 50
+
+NB. permutation
+for_dim. 2 + 20 ?@$ 40 do.
+  'l r' =.  (10 * (2#dim) ?@$ 0) ((*-.) ,: *) t =. <:/~ i. dim
+  l =. 1. todiag l * 0.5 > ($l) ?@$ 0
+  a =. ({~ ?~@#) l +/ . * r
+  'p lr' =. (1 0.01 1e_6 0) 128!:10 perma=: a
+  assert. 1e_9 > >./ | , (p { a) - lrtoa lr
+end.
 1
 }}^:IF64 1 NB. all J64 support EMU_AVX2 true fma
 NB. LU rational
@@ -83,7 +92,7 @@ dm =.lrtoa@:(1.&todiag)@:(0.01&*)@:(0 ?@$~ ,~) 1000
 )
 
 
-4!:55 ;:'a i q qr r todiag lrtoa lrin out128 s x'
+4!:55 ;:'a i q qr r todiag lrtoa lrin out128 perma s x'
 
 
 

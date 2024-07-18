@@ -344,7 +344,7 @@ void jtforeigninit(J jt){UI i;
  MN(128,6) XPRIM(VERB, jtshasum1,    jtshasum2,    VASGSAFE,VF2NONE,1,1,RMAX);
  MN(128,7) XPRIM(VERB, 0,            jtaes2,       VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(128,8) XPRIM(VERB, jtqhash12,    jtqhash12,    VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE,RMAX,RMAX,RMAX);  
- MN(128,10) XPRIM(VERB, jtludecomp,         0,     VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(128,10) XPRIM(VERB, jtludecomp,   jtludecomp,     VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(18,6)  XPRIM(VERB, jtresetbloom,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
 #if 0  // withdrawn
  MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);

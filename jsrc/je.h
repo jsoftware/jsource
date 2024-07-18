@@ -222,7 +222,7 @@ extern F1(jtlrep);
 extern DF1(jtlrx1);
 extern DF2(jtlrx2);
 extern F1(jtltrim);
-extern DF1(jtludecomp);
+extern DF2(jtludecomp);
 extern F1(jtresetbloom);
 // extern F1(jtmag);
 extern F1(jtmap);

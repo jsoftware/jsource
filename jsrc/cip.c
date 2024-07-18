@@ -1128,6 +1128,8 @@ DF1(jtludecompg){F1PREFIP;PROLOG(823);
 // the ith element of the permutation is the original row of row i of LU
 // Bivalent.  a, if given, is the sequence of thresholds to try
 DF2(jtludecomp){F1PREFIP;PROLOG(823);
+ static D pthresh[2]={1e-6,0}, *pivotthresh; I npivotthresh, curpivotthreshx=0;  // list of successive thresholds for pivots, last one usually 0.0
+ if(AT(w)&NOUN){ASSERT(AR(a)<=1,EVRANK); ASSERT(AN(a)>0,EVLENGTH) if(unlikely(!(AT(a)&FL)))RZ(a=cvt(FL,a)); pivotthresh=DAV(a); npivotthresh=AN(a);}else{w=a; pivotthresh=pthresh; npivotthresh=sizeof(pthresh)/sizeof(pthresh[0]);}
 #if C_AVX2 || EMU_AVX2
  // We operate on 4x4 blocks of A, which we transform into 4x4 blocks of LU.  The ravel of each LU block is stored for cache ease,
  // and the U blocks are ordered in transpose form to speed up the dot-product operations.
@@ -1140,8 +1142,6 @@ DF2(jtludecomp){F1PREFIP;PROLOG(823);
 #define LGBLKSZ 2  // lg(BLKSZ)
  I nzeroblocks=0;  // number of zero blocks created.  If negative, we have given up on zero blocks
  B lookfor0blocks;  // set if we think it's worthwhile to check for sparse array
- static D pthresh[2]={1e-6,0}, *pivotthresh; I npivotthresh, curpivotthreshx=0;  // list of successive thresholds for pivots, last one usually 0.0
- if(AT(w)&NOUN){ASSERT(AR(a)<=1,EVRANK); ASSERT(AN(a)>0,EVLENGTH) if(unlikely(!(AT(a)&FL)))RZ(a=cvt(FL,a)); pivotthresh=DAV(a); npivotthresh=AN(a);}else{w=a; pivotthresh=pthresh; npivotthresh=sizeof(pthresh)/sizeof(pthresh[0]);}
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
  if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w,DUMMYSELF);  // if not real float type, use general version

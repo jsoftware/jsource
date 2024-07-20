@@ -1190,7 +1190,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
    // remember inplace-conversions (i. e. conversions to smaller precisions, which can be handled in place).  Conversions to larger precisions, or to other types, were handled above.
    // Here we see if a conversion will be needed and add it to the list of inplace conversions
-   CDASSERT(ISDENSETYPE(xt,B01+LIT+C2T+C4T+INT+INT2+INT4+FL+CMPX),per);  // verify J type is DIRECT  scaf not needed, impossible
+// obsolete    CDASSERT(ISDENSETYPE(xt,B01+LIT+C2T+C4T+INT+INT2+INT4+FL+CMPX),per);  // verify J type is a C native type
    if(unlikely(xlgsz>clgsz)){  // x is bigger than needed (ignoring cases of LIT buffers)
     cip[cipcount].v=xv; cip[cipcount].n=xn; cip[cipcount].t=ctype; cip[cipcount].cxlgsz=4*clgsz+xlgsz;   // save conversion info
     ++cipcount;

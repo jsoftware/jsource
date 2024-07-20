@@ -1128,7 +1128,7 @@ DF1(jtludecompg){F1PREFIP;PROLOG(823);
 // the ith element of the permutation is the original row of row i of LU
 // Bivalent.  a, if given, is the sequence of thresholds to try
 DF2(jtludecomp){F1PREFIP;PROLOG(823);
- static D pthresh[2]={1e-6,0}, *pivotthresh; I npivotthresh, curpivotthreshx=0;  // list of successive thresholds for pivots, last one usually 0.0
+ static D pthresh[2]={1e-6,0}, *pivotthresh; I npivotthresh, curpivotthreshx;  // list of successive thresholds for pivots, last one usually 0.0
  if(AT(w)&NOUN){ASSERT(AR(a)<=1,EVRANK); ASSERT(AN(a)>0,EVLENGTH) if(unlikely(!(AT(a)&FL)))RZ(a=cvt(FL,a)); pivotthresh=DAV(a); npivotthresh=AN(a);}else{w=a; pivotthresh=pthresh; npivotthresh=sizeof(pthresh)/sizeof(pthresh[0]);}
 #if C_AVX2 || EMU_AVX2
  // We operate on 4x4 blocks of A, which we transform into 4x4 blocks of LU.  The ravel of each LU block is stored for cache ease,
@@ -1191,6 +1191,7 @@ DF2(jtludecomp){F1PREFIP;PROLOG(823);
 // obsolete   D *wluv=wclv; I wlustride=BLKSZ*wn;  // pointer to next input values in A, and offset to next.  We start going south
 // obsolete   D *nextfetchaddr=wclv;  // the address of the block being fetched into nexta0..3.  Init to the corner which we just prefetched
   scv=LBLOCK(nr-1-r,nr-1-r);   // start store at corner block.  It will not advance until pivots have been found
+  curpivotthreshx=0;  // start every ring looking for large pivots, even if we had to relax the criterion for an earlier ring
 
  restartring:; // *** restart point after permutation has been updated.  We restart the ring at the corner, which will succeed
 // obsolete   D (*llv)[BLKSZ][BLKSZ]=LBLOCK(nr-1-r,0), (*luv)[BLKSZ][BLKSZ]=UBLOCK(0,nr-1-r), (*prechv)[BLKSZ][BLKSZ]=llv+nr;  // start point of dot-products (both going L-to-R), startpoint of next dot-product (first L block)

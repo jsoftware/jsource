@@ -164,7 +164,7 @@ DF1(jticap){A a,e;I n;P*p;
  R likely((B01&AT(w))!=0) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }
 
-DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];  // scaf should inplace w
+DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
  A x=FAV(FAV(self)->fgh[2])->fgh[0], y=FAV(self)->fgh[0];  // extract translation tables
  RZ(w&&x&&y);
  if(!(LIT&AT(w)))R from(indexof(x,w),y);

@@ -615,9 +615,9 @@ typedef I SI;
 #define ACSETPERM(x)    {AC(x)=ACPERMANENT+100000; __atomic_fetch_or(&AFLAG(x),(AT(x)&RECURSIBLE),__ATOMIC_ACQ_REL);}  // Make a block permanent from now on.  In case other threads have committed to changing the usecount, make it permanent with a margin of safety
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // s is an expression that is neg if it's OK to inplace
-#define ASGNINPLACENEG(s,w)  ((s)&(AC(w)|SGNIF(jt->zombieval==w,0)))   // neg if OK to inplace ordinary operation
-#define ASGNINPLACESGN(s,w)  (ASGNINPLACENEG(s,w)<0)   // OK to inplace ordinary operation
-#define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
+#define ASGNINPLACENEG(s,w)  ((s)&(AC(w)|SGNIF(jt->zombieval==w,0)))   // neg if OK to inplace ordinary operation, either because the block is inplaceable or because it's an assignment to zombie
+#define ASGNINPLACESGN(s,w)  (ASGNINPLACENEG(s,w)<0)
+#define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)
 // define virtreqd and set it to 0 to start
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
 #define EXTENDINPLACENJA(a,w) \

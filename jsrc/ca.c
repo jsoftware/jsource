@@ -115,7 +115,7 @@ static DF2(jtupon20atom){F2PREFIP; if(unlikely((AN(a)|AN(w))>1&&JT(jt,deprecct)!
 
 // special lightweight case for u@[ and u@].
 static DF1(onright1){F1PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])(jtinplace,w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // pass straight through.  All we do here is set self.  Leave inplaceability unchanged
-static DF2(onleft2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))),a,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // move inplaceable a to w
+static DF2(onleft2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))),a,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // move inplaceable a to w, pass other JT flags
 static DF2(onright2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)((I)jtinplace&~JTINPLACEA),w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // keep inplaceable w
 
 // u@n
@@ -319,7 +319,7 @@ F2(jtatco){F2PREFIP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m
   case CQUERY&0x3f:  if((d&~1)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;  // x ?@:# y or x ?@:$ y
   case CQRYDOT&0x3f: if((d&~1)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // x ?.@:# y or x ?.@:$ y
   case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@:~: y  I.@:(~:!.0) y  x I.@:E. y
-  case CAMP&0x3f:    {m=(e&~2)==CIOTA?e:m; I j=-1; j=g==num(0)?0:j;  j=g==num(1)?1:j; m|=j; break;}   // i.@0/1@:g    i:@0/1@:g
+  case CAMP&0x3f:    {m=(e&~2)==CIOTA?e:m; I j=-1; j=g==num(0)?0:j;  j=g==num(1)?1:j; m|=j; break;}   // i.&0/1@:g    i:&0/1@:g   note 0/1 must be boolean SDTs
   case CSLASH&0x3f:  //  f/@:g where f is not a gerund
    if(FAV(f)->flag&FAV(w)->flag&VISATOMIC2){f2=jtfslashatg;}  // f/@:g when f and g are both atomic
    if(d==CCOMMA){f1=jtredravel;}
@@ -494,8 +494,10 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
     mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=FAV(va)->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
     {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
-   }else if(unlikely((c^visa)==CWORDS)){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1;   // m&;:
-   }else if(unlikely((c^visa)==CIBEAM)){if(FAV(w)->localuse.lu1.foreignmn[0]==128&&FAV(w)->localuse.lu1.foreignmn[1]==3){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; } // m&128!:3  scaf use rtn addr
+ // obsolete    }else if(unlikely((c^visa)==CWORDS)){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1;   // m&;:
+   }else if(unlikely(FAV(w)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1;   // m&;:
+ // obsolete   }else if(unlikely((c^visa)==CIBEAM)){if(FAV(w)->localuse.lu1.foreignmn[0]==128&&FAV(w)->localuse.lu1.foreignmn[1]==3){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; } // m&128!:3
+   }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; // m&128!:3
    }
   }
   fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);

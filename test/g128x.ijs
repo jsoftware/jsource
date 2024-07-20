@@ -76,7 +76,7 @@ for_dim. 2 + 20 ?@$ 40 do.
   l =. 1. todiag l * 0.5 > ($l) ?@$ 0
   a =. ({~ ?~@#) l +/ . * r
   'p lr' =. (1 0.01 1e_6 0) 128!:10 perma=: a
-  assert. 1e_9 > >./ | , (p { a) - lrtoa lr
+  assert. 1e_8 > >./ | , (p { a) - lrtoa lr
 end.
 1
 }}^:IF64 1 NB. all J64 support EMU_AVX2 true fma

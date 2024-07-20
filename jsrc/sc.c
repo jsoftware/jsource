@@ -55,10 +55,10 @@ DF2(jtunquote){A z;
    // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
    if(unlikely(((A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave global unchanged
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
-     RZSUFF(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find/create locale  scaf why create?
+     RZSUFF(explocale=stfind(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find locale, which must exist
      FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time
     }
-    flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale
+    flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale, but not if it is permanent
     SYMSETGLOBAL(explocale);   // switch to the (possibly new) locale.
    }
    flgd0cpC|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
@@ -176,7 +176,7 @@ DF2(jtunquote){A z;
  // be horrid.  To avoid that, we update execct only during a change
  // at this point jt->global is the new locale to use (possibly inherited).  If LOCINCRDECR is set,
  // explocale also holds that value.  LOCINCRDECR is set if we should incr/decr explocale, which is true if it changes
- // to a non-permanent locale (we don't want executions in z to hammer the z count)
+ // to a non-permanent locale (we don't want executions in z/base/... to hammer the z count)
  if(flgd0cpC&FLGLOCINCRDECR){INCREXECCT(explocale);}  // incr execct in newly-starting locale
  // scaf if someone deletes the locale before we start it, we are toast
  // ************** from here on errors must (optionally) decr explocale  and unra() before exiting
@@ -263,7 +263,8 @@ exitfa:;  // error point for errors after symbol res.
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){fanamedacv(fs);}  // unra the name if it was looked up from the symbol tables
 // obsolete if(0){exitname: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);}  // error point for name errors.  In case we put jt->global into jt->locsyms, undo that
 exitname:; // error point for name errors.
- SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed early or as late as the deletion; make sure locsyms matches
+ SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed early or as late as the deletion; make sure locsyms matches.  global and AKGST always match for the named explicit routine that is running.
+    // if an explicit routine calls a tacit name via locative, globals and AKGST will diverge while the tacit verb runs; if the tacit verb then calls a (possibly named) explicit, the explicit's u. will be from the earlier explicit, not the intervening tacit.
 #if C_AVX2 || EMU_AVX2
  _mm256_storeu_si256((__m256i *)&jt->parserstackframe.sf,_mm256_loadu_si256((__m256i *)&stack));
 #else

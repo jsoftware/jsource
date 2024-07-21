@@ -1462,7 +1462,7 @@ finrle: ;
      if(_mm256_testz_pd(recipbad,sgnbit))break;  // testz is 1 if all comparisons false, i. e. all recips in range
        // we wait to test until we have all the reciprocals because we expect few permutations.  If there are 0 pivots they may generate NaNs in the L values, but not in recips
 
-     // falling through, we didn't get all the pivots: we must search for a permutation.  scaf The only one that matters takes the largest pivot for each column, in order
+     // falling through, we didn't get all the pivots: we must search for a permutation.
 
      // if the current permutation is a new best, remember it
      I ngood=CTTZI(_mm256_movemask_pd(recipbad));  // number of leading OK pivots

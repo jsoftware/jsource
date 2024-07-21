@@ -680,7 +680,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 }    // a <./ w
 
 
-static DF2(jtkeytally);
+F2(jtkeytally);
 
 static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  ARGCHK1(w);
@@ -691,14 +691,15 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  e=SPA(p,e); k=i0(e); // k is the sparse element in the rep of i.~ w
  j=0; DO(c, if(k<=u[i])break; if(u[i]==v[i])++j;);  // j = # unique values in w before the first fill element
  RZ(b=ne(e,x));  // b = mask of values in x that are different from the sparse element
- RZ(x=repeat(b,x)); RZ(x=keytally(x,x,mark)); u=AV(x); d=AN(x);  // u now -> #/.~ of the non-sparse items, d=count thereof
+// obsolete  RZ(x=repeat(b,x)); RZ(x=keytally(x,x,mark)); u=AV(x); d=AN(x);  // u now -> #/.~ of the non-sparse items, d=count thereof
+ RZ(x=repeat(b,x)); RZ(x=keytally(x,x)); u=AV(x); d=AN(x);  // u now -> #/.~ of the non-sparse items, d=count thereof
  I nfills=SETIC(w,k)-bsum(c,BAV(b));  // number of cells of fill
  GATV0(z,INT,d+(nfills!=0),1); v=AV(z);  // allocate result: one for each unique non-fill, plus one for the fills if any
  DQ(j, *v++=*u++;); if(nfills)*v++=nfills; DQ(d-j, *v++=*u++;);  // copy in the counts
  EPILOG(z);
 }    /* x #/.y , sparse x */
 
-static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
+F2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
  ARGCHK2(a,w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); at=AT(a);
  ASSERT(n==SETIC(w,k),EVLENGTH);
@@ -816,7 +817,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
    }
   }
  }else{  // no special processing
-  RZ(q=indexof(a,a)); x=repeat(eq(q,IX(n)),w); y=keytally(q,q,0L); z=stitch(b?x:y,b?y:x);  // (((i.~a) = i. # a) # w) ,. (#/.~ i.~ a)   for ({. , #)
+  RZ(q=indexof(a,a)); x=repeat(eq(q,IX(n)),w); y=keytally(q,q); z=stitch(b?x:y,b?y:x);  // (((i.~a) = i. # a) # w) ,. (#/.~ i.~ a)   for ({. , #)
  }
  EPILOG(z);
 }    /* x ({.,#)/.y or x (#,{.)/. y */

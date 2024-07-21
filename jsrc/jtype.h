@@ -1144,7 +1144,7 @@ typedef struct {
 // NOTE: comparison type e. is type 7.  If u&n sees bits 0-2=111 in u, it will generate a hashtable.  To prevent this from
 // happening incorrectly, leave bit 2=0.
 #define VFCOMPCOMP      0xff  // flag bits for comparison compounds, also used for other purposes
-// NOTE: comparison flags pun with VFATOP[RL] in (comp i[.:] [01]:) but that's OK because the constant verbs don't inplace thus they ignore the punned flags  scaf this is wrong
+// NOTE: comparison flags pun with VFATOP[RL] in (comp i[.:] [01]:) but that's OK because if the function reverts, it turns off inplacing
 // for other types, they are defined as follows:
 #define VFATOPL         JTINPLACEW     // (in execution of forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
 #define VFATOPR         JTINPLACEA     // (in execution of forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h

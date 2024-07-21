@@ -101,15 +101,17 @@ static B forinitnames(J jt,CDATA*cv,I cwtype,A line,I i, I go){  // i and go are
  cv->w=cwtype;  // remember type of control struct
  cv->i=i, cv->go=go;  // remember start/end line#s of control struct
  if(cwtype==CFOR){
-  // for for_xyz., get the symbol indexes for xyz & xyz_index   scaf are these preallocated, or should be?
+  // for for_xyz., get the symbol indexes for xyz & xyz_index.  We lookup, though we could put the symbol#s into the CW
   I k=AN(line)-5;  /* length of item name; -1 if omitted (for.; for_. not allowed) */
+  ASSERT(k<=255-6,EVILNAME);  // max name length is 255, and we must append _index
   if(k>0){A x;  // if it is a for_xyz.
-   // We need a string buffer for "xyz_index".  Use the stack if the name is short
-   C ss[20], *s; if(unlikely(k>(I)(sizeof(ss)-6))){GATV0(x,LIT,k+6,1); s=CAV1(x);}else s=ss;  // s point to buffer
+   C ss[255], *s=ss;  // We need a string buffer for "xyz_index"; s points to buffer
+// obsolete  if(unlikely(k>(I)(sizeof(ss)-6))){GATV0(x,LIT,k+6,1); s=CAV1(x);}else s=ss;
    MC(s,CAV(line)+4,k);  MC(s+k,"_index",6L);  // move "xyz_index" into *s
-   cv->itemsym=(probeislocal(nfs(k,s),jt->locsyms))-SYMORIGIN;  // get index of symbol in table, which must have been preallocated
-   cv->indexsym=(probeislocal(nfs(k+6,s),jt->locsyms))-SYMORIGIN;  // also symbol for xyz_index
-   if(unlikely(k>(I)(sizeof(ss)-6))){ACINITZAP(x); fr(x);}  // remove tpop and free, now that we're done.  We may be in a loop 
+   A indexnm; RZ(indexnm=nfs(k+6,s)) ASSERT(!(NAV(indexnm)->flag&NMLOC+NMILOC),EVILNAME) cv->indexsym=(probeislocal(indexnm,jt->locsyms))-SYMORIGIN;   // get name, verify not locative get (preallocated) index of symbol xyz_index in table
+   RZ(indexnm=nfs(k,s)) ASSERT(!(NAV(indexnm)->flag&NMLOC+NMILOC),EVILNAME) cv->itemsym=(probeislocal(indexnm,jt->locsyms))-SYMORIGIN;   // get name, verify not locative get (preallocated) index of symbol xyz in table
+// obsolete    NAV(indexnm)->m-=6; cv->itemsym=(probeislocal(nfs(k,s),jt->locsyms))-SYMORIGIN;  // also symbol for xyz
+// obsolete    if(unlikely(k>(I)(sizeof(ss)-6))){ACINITZAP(x); fr(x);}  // remove tpop and free, now that we're done.  We may be in a loop 
   }else{cv->itemsym=cv->indexsym=0;}  // if not for_xyz., indicate with 0 indexes
  }
  R 1;  // normal return

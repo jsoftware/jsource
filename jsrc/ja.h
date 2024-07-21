@@ -641,7 +641,7 @@ extern void jfree4gmp(void*,size_t);
 #define keyi(x,y,z)                 jtkeyi(jt,(x),(y),(z))
 #define keysp(x,y,z)                jtkeysp(jt,(x),(y),(z))
 #define keyrs(x,y)                  jtkeyrs(jt,(x),(y))
-#define keytally(x,y,z)             jtkeytally(jt,(x),(y),(z))
+#define keytally(x,y)             jtkeytally(jt,(x),(y))
 #define keytallysp(x)               jtkeytallysp(jt,(x))
 #define laguerre(x,y,z)             jtlaguerre(jt,(x),(y),(z))
 #define lamin1(x)                   jtlamin1(jt,(x))  

@@ -608,7 +608,7 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
 // Run sentence; result is jt->jerr
-// If JE(jt,nfe), loop forever reading sentences scaf this is a kludge, should be a call parameter to engage loop (to allow recursive calls)
+// If JE(jt,nfe), loop forever reading sentences (but not if this is a recursive call)
 CDPROC int _stdcall JDo(JS jt, C* lp){int r;
  SETJTJM(jt,jm)
 

@@ -5,23 +5,25 @@
 
 #include "j.h"
 
-// <.@ >.@ and the like, monad 
+// [><].@[:]*  monad 
 static DF1(jtonf1){PROLOG(0021);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  PREF1(jtonf1);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;  // scaf avoid repeated primitive calls inside rank
- if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
- RZ(z=CALL1(f1,CALL1(g1,w,gs),fs));
- jt->xmode=m;
- EPILOG(z);
+ if(RAT&AT(w))RZSUFF(w=pcvt(XNUM,w), z=0; goto restore;);
+ z=CALL1(f1,CALL1(g1,w,gs),fs);  // no RZ...
+restore:;
+ jt->xmode=m;  // ...we must restore xmode...
+ EPILOG(z);  // ...and EPILOG will do nothing
 }
 
 // <.@ >.@ and the like, dyad 
 static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  ARGCHK2(a,w);
- if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;  // scaf avoid repeated primitive calls inside rank
- if(RAT&AT(a))RZ(a=pcvt(XNUM,a));
- if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
- RZ(z=INT&AT(a)&AT(w)&&FAV(gs)->id==CDIV?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs));
+ if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
+ if(RAT&AT(a))RZSUFF(a=pcvt(XNUM,a), z=0; goto restore;);
+ if(RAT&AT(w))RZSUFF(w=pcvt(XNUM,w), z=0; goto restore;);
+ z=INT&AT(a)&AT(w)&&FAV(gs)->id==CDIV?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs);  // no RZ, see above
+restore:;
  jt->xmode=m;
  EPILOG(z);
 }
@@ -92,8 +94,8 @@ static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jt
 
 // #@> y
 static DF1(jttallyatopopen){F1PREFIP; A z; ARGCHK1(w); I an=AN(w); GATV(z,INT,an,AR(w),AS(w)) I *zv=IAV(z);
- if(likely(AT(w)&BOX)){A *wv=AAV(w); DO(an, A wc=C(wv[i]); I ic; SETIC(wc,ic); zv[i]=ic;)}
- else{mvc(an*SZI, zv, SZI, (iotavec-IOTAVECBEGIN+1));}
+ if(likely(AT(w)&BOX)){A *wv=AAV(w); DO(an, A wc=C(wv[i]); I ic; SETIC(wc,ic); zv[i]=ic;)}  // boxed w, copy item counts
+ else{mvc(an*SZI, zv, SZI, (iotavec-IOTAVECBEGIN+1));}  // all other like 1:"0
  RETF(z);
 }
 
@@ -149,7 +151,7 @@ DF2(atcomp){A z;AF f;
   z=f(jt,a,w,self);
   // postprocessing needed: 0x=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
   if(likely(z!=0)){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
- }else z=(FAV(self)->fgh[2]?jtfolk2:jtupon2)(jt,a,w,self);   // revert if can't use special code
+ }else z=(FAV(self)->fgh[2]?jtfolk2:jtupon2)(jt,a,w,self);   // revert if can't use special code - not inplace
  POPCCT
  RETF(z);
 }
@@ -198,7 +200,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the  // monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  fdeffill(z,flag2,CAT,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); R z;  // scaf ra not needed on w
+  fdeffill(z,flag2,CAT,VERB, onright1,d&1?onright2:onleft2, a,0,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
@@ -209,7 +211,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
 #define IDBIT(c) ((UI8)1<<((c)&0x3f))   // mask for c
 #define SPECAT (IDBIT(CBOX)|IDBIT(CNOT)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR)|IDBIT(CSLDOT)|IDBIT(CQQ)|IDBIT(CEXP))  // mask for all special cases
  if((I)(SPECAT>>(c&0x3f))&BETWEENC(c,CNOT,CQQ)){
-  switch(c&0x3f){
+  switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECAT test above! ****
   case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT&0x3f:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;
   case CGRADE&0x3f:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;
@@ -307,7 +309,7 @@ F2(jtatco){F2PREFIP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m
  flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VJTFLGOK1|VJTFLGOK2));
 #define SPECATCO (IDBIT(CEXP)|IDBIT(CBOX)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CSEMICO)|IDBIT(CNOT)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR))  // mask for all special cases
  if(unlikely((I)(SPECATCO>>(c&0x3f))&BETWEENC(c,CNOT,CPOUND))){
-  switch(c&0x3f){
+  switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECATCO test above! ****
   case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f
 #if SLEEF && (C_AVX2 || EMU_AVX2)
   case CEXP&0x3f:    if(d==CPOLY){f2=jtpoly2; flag+=VIRS2+(VFATOPPOLYEXP<<VFATOPPOLYX);} break;   // ^@:p.

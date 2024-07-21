@@ -319,7 +319,7 @@ else{   // normal last axis
 #if C_AVX2 || EMU_AVX2
   case 0b11111: fcopygather8(fcopyvalNI) axflags-=AXFCKST0; break; case 0b10111: fcopygather8(fcopyval) break; case 0b01111: fcopygather8(fcopyvalN) break;
     // carry on with fewer audits if gather repeated
-  case 0b00011: fcopygatherinfull break;  // scaf should have non-AVX version for 1/2/4-byte
+  case 0b00011: fcopygatherinfull break;
 #else
   case 0b00011: fcopyinfull(I) break;
 #endif

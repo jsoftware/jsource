@@ -23,7 +23,7 @@ static DF1(jtscfn){
 // AM(self) is the block for u
 static DF1(jtlev1){
  ARGCHK1(w);  // self is never 0
- if(levelle(jt,w,FAV(self)->localuse.lslevels[2])){A z, fs=(A)AM(self); RZ(z=CALL1(FAV(fs)->valencefns[0],w,fs)); if(FAV(self)->id!=CSCAPCO)RETF(z); R scfn(z,self);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack  scaf if inplaceable, could have a version of every that replaces boxes in place
+ if(levelle(jt,w,FAV(self)->localuse.lslevels[2])){A z, fs=(A)AM(self); RZ(z=CALL1(FAV(fs)->valencefns[0],w,fs)); if(FAV(self)->id!=CSCAPCO)RETF(z); R scfn(z,self);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack  scaf if abandoned inplaceable, could have a version of every that replaces boxes in place
 }
 
 // Like monad, but AT(self) is left trigger level, AC(self) is the right trigger level 
@@ -61,7 +61,7 @@ static DF2(jtlscapco12){PROLOG(556);A z;
 
  C type=FAV(self)->id; FAV(recurself)->id=type; // type of call, L: or S:
  if(type==CSCAPCO){A x; GAT0(x,INT,54,1); ACINITZAP(x) AKASA(recurself)=x; AS(x)[0]=0;}    // for S:, allocate place to save results & fill into self.  This will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
-// scaf could we allo first block on stack (shorter) and not free it?
+      // we could allo the first block on the stack but s: is quite rare & the bookkeeping isn't worth it
  // recurself->kchain will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
  // things is to zap the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.

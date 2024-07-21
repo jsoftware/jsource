@@ -59,7 +59,6 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
   // f will be INCORPed by fdef
   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
   fline=5;  // set left argtype
-// obsolete   if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only boolean 0
   if(f==num(0)&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only SDT boolean 0
   if(LIT&AT(f)&&1==AR(f)&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==ID(gv->fgh[0])){
    x=hv->fgh[0];

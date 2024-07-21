@@ -716,7 +716,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  rifv(w); // must realize any virtual
  if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
-// obsolete  I arloc=AR(jt->locsyms);  // rank of local symbols is a flag
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately zombieval doesn't give us the symbol table

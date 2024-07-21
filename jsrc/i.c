@@ -169,7 +169,6 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
  INITJT(jjt,igemm_thres)=FLOATTOFLOAT16(IGEMM_THRES);   // tuning parameters for cip.c
  INITJT(jjt,dgemm_thres)=FLOATTOFLOAT16(DGEMM_THRES);
  INITJT(jjt,zgemm_thres)=FLOATTOFLOAT16(ZGEMM_THRES);
- // obsolete INITJT(jjt,deprecex)=num(7);  // scaf suppress msg 7 for the nonce
  jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
  MTHREAD(jjt)->threadpoolno=-1; // the master thread is in no pool, ever
@@ -184,7 +183,6 @@ static B jtconsinitt(J jt){
  jt->xmode=XMEXACT;
  // create an initial stack, so that stack[-1] can be used for saving error messages
  jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return (start off the end)
-// obsolete  jt->uflags.bstkreqd=1;   // indicate that cocurrent has been called at this level.  This forces unquote to incr/decr execcts for every cocurrent, leaving only one active at final return
  R 1;
 }
 

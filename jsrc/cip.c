@@ -227,7 +227,7 @@ typedef struct {
  I flgs;   // complex, triangular processing flags
  I nbigtasks[2];  // number of tasks using taskm[0]; number of tasks that are not in the shortened tail
  I4 taskm[2];  // number of rows in leading tasks, unshortened trailing tasks
- I nanerr; // nonzero whenever a nan was encountered; could indicate we should throw an error (_+__) or a case where we disagree with ieee (_*0)
+// obsolete  I nanerr; // nonzero whenever a nan was encountered; could indicate we should throw an error (_+__) or a case where we disagree with ieee (_*0)
 // scaf should deal with this case better; for the former case, should abort immediately (ideally siglonjmp or so but...); for the latter case, don't fall back to +/@(*"1 _), but rather recalculate the block with extra checks, maybe tell other threads about row/col containing inf/0
 } CACHEMMSTATE;
 #define OPHEIGHTX 2
@@ -260,9 +260,10 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
  // Small problems should use a multiplier that does not use full cacheblock.  For jobs, we make the decision for each task
  if(((((50-m)&(50-n)&(16-pstored)&((DCACHED_THRES-1)-m*n*pnom))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
   // blocked algorithm.  there is no size limit on the blocks
-  I ok=blockedmmult(jt,av,wv,zv,m,n,pnom,pstored,flgs);  // blockedmult uses normal JE return of 0=error
-  if(unlikely(!ok))__atomic_fetch_add(&pd->nanerr,1,__ATOMIC_RELAXED);  //could be _fetch_or, but x86 has lock xadd
-  R 0;  // scaf should return nonzero to abort if error
+// obsolete   I ok=blockedmmult(jt,av,wv,zv,m,n,pnom,pstored,flgs);  // blockedmult uses normal JE return of 0=error
+  R blockedmmult(jt,av,wv,zv,m,n,pnom,pstored,flgs)?0:EVNAN;  // blockedmmult uses normal JE return of 0=error; we return job semantics, 0=OK
+// obsolete   if(unlikely(!ok))__atomic_fetch_add(&pd->nanerr,1,__ATOMIC_RELAXED);  //could be _fetch_or, but x86 has lock xadd
+// obsolete   R 0;  // scaf should return nonzero to abort if error
  }
 
  D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
@@ -521,8 +522,9 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
    flgs&=~(FLGZFIRST|FLGZLAST);  // we have finished a 16x64 cache section.  That touched all the columns of z.  For the remaining sections we must accumulate into the z values.  If this was the last pass, clear that flag too, since we're finished
   }  // end of loop for each 16x64 section of w
  }  // end of loop for each 64-col slice of w
- if(unlikely(NANTEST))__atomic_fetch_add(&pd->nanerr,1,__ATOMIC_RELAXED);//could be _fetch_or, but x86 has lock xadd
- R 0;  // scaf should return nonzero to abort if error
+// obsolete  if(unlikely(NANTEST))__atomic_fetch_add(&pd->nanerr,1,__ATOMIC_RELAXED);//could be _fetch_or, but x86 has lock xadd
+ R unlikely(NANTEST)?EVNAN:0;  // return job semantics, 0=OK
+// obsolete  R 0;  // scaf should return nonzero to abort if error
 }
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
@@ -559,8 +561,9 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  }
  CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs,.nbigtasks={nfulltasks,nfulltasks+nremnant},.taskm={fulltasksize,endtasksize}};
    // number of full tasks, followed by number that have size 'endtasksize'.  Later tasks have size endtasksize-CACHEHEIGHT
- jtjobrun(jt,cachedmmultx,&ctx,nfulltasks+tailtasks,0);  // go run the tasks - default to threadpool 0
- R !ctx.nanerr;}
+ R !jtjobrun(jt,cachedmmultx,&ctx,nfulltasks+tailtasks,0);  // go run the tasks - default to threadpool 0.  Switch return from job semantice to JE error samantics - 0 if error, 1 if OK
+// obsolete  R !ctx.nanerr;
+}
 
 #else
 // cache-blocking code
@@ -1153,7 +1156,6 @@ DF2(jtludecomp){F1PREFIP;PROLOG(823);
  A aresultperm; RZ(aresultperm=apvwr(wn,0,1)); I *resultperm=IAV1(aresultperm);  // we overstore the permutation to a BLKSZ bdy, but that's ok, it's allocated
  // Allocate the areas where we calculate the permutations: one for input, one for output
  A asrclines; GAT0(asrclines,INT,4,1) I *srclines=IAV1(asrclines);  // accumulates the source lines that are permuted into the next block; AN() and AS[0] tell how many are needed
-// obsolete  I resultoffset=CAV(z)-CAV(w);  // distance between result & input data areas
  A acalcperm; RZ(acalcperm=eval("(~.@, ,: ~.@,@|.)@(#\"1~ ~:/)@,:"))   // verb to calculate src/dest lines#s for permutation
  I nr=(wn+BLKSZ-1)>>LGBLKSZ;  // nr=total # blocks on a side (including partial ones)
 #define CORNERBLOCK(rc) (cb+(rc)*(nr+1))  // address of corner cblock in row&col rc
@@ -1171,12 +1173,10 @@ DF2(jtludecomp){F1PREFIP;PROLOG(823);
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-wn)&(BLKSZ-1))));   // mask for storing last block in a row
  __m256d ones = _mm256_set1_pd(1.0);   // numerator of reciprocals, or value for an identity matrix
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);  // sign bit
-// obsolete  __m256d expa[4]; I expflag=0;  // scaf
  D maxoobpivot;  // maximum unacceptable pivot value
  __m256d minoobrecip=_mm256_set1_pd(1/(maxoobpivot=pivotthresh[0]));   // smallest out-of-bounds reciprocal for a pivot
  D *wv=DAV(w), *zv=DAV(z);  // pointer to corner block of the input
  I r;  // size-1 of ring being processed.  The ring has 2r+1 cblocks.  The corner block is (nr-1-r,nr-1-r)
-// obsolete  __m256d scafa0, scafa1, scafa2, scafa3;
  for(r=nr-1;r>=0;--r){
   __m256d a00,a01,a02,a03,a10,a11,a12,a13,nexta0,nexta1,nexta2,nexta3,recips;  // double accumulators for the 4x4 block; staging area for A data; reciprocals to use to propagate down the column of L
   // process one ring: the corner block, a column of L, a row of U
@@ -1188,20 +1188,15 @@ DF2(jtludecomp){F1PREFIP;PROLOG(823);
   // zero blocks.  Since each zero block zaps multiple dot-product blocks, it doesn't take many to be worthwhile
   lookfor0blocks=nzeroblocks*64>(nr-1-r)*(2*r+1);    // # blocks so far is (nr-1-r) * (2nr-1-2*(nr-1-r)).  If 1 in 64 is 0, look for it.  But never first time
   nzeroblocks|=(lookfor0blocks|((nr-1-r)!=10))-1;    // on the 10th ring, disable zero checks if we aren't using them
-// obsolete   D *wluv=wclv; I wlustride=BLKSZ*wn;  // pointer to next input values in A, and offset to next.  We start going south
-// obsolete   D *nextfetchaddr=wclv;  // the address of the block being fetched into nexta0..3.  Init to the corner which we just prefetched
   scv=LBLOCK(nr-1-r,nr-1-r);   // start store at corner block.  It will not advance until pivots have been found
   curpivotthreshx=0;  // start every ring looking for large pivots, even if we had to relax the criterion for an earlier ring
 
  restartring:; // *** restart point after permutation has been updated.  We restart the ring at the corner, which will succeed
-// obsolete   D (*llv)[BLKSZ][BLKSZ]=LBLOCK(nr-1-r,0), (*luv)[BLKSZ][BLKSZ]=UBLOCK(0,nr-1-r), (*prechv)[BLKSZ][BLKSZ]=llv+nr;  // start point of dot-products (both going L-to-R), startpoint of next dot-product (first L block)
-// obsolete   UI *lbv0=LBIT(nr-1-r,0), *ubv0=UBIT(0,nr-1-r);  // point to the bit vectors for the corner position.  These pointers are advanced after we finish each block, to handle the dot-product for the next block
   D (*llv)[BLKSZ][BLKSZ], (*luv)[BLKSZ][BLKSZ], (*prechv)[BLKSZ][BLKSZ];  // start point of dot-products (both going L-to-R), startpoint of next dot-product (first L block)
   UI *lbv0, *ubv0;  // point to the bit vectors for the corner position.  These pointers are advanced after we finish each block, to handle the dot-product for the next block
   // fetch the corner block from A using permutation, row and col are nr-1-r
   if(r>0){
    // normal case when A(nr-1-r,nr-1-r) is a full block
-// obsolete    nexta0=_mm256_loadu_pd(wclv); nexta1=_mm256_loadu_pd(wclv+1*wn); nexta2=_mm256_loadu_pd(wclv+2*wn); nexta3=_mm256_loadu_pd(wclv+3*wn);  // lots of cache misses here
    nexta0=_mm256_loadu_pd(wv+resultperm[(nr-1-r)*BLKSZ]*wn+(nr-1-r)*BLKSZ); nexta1=_mm256_loadu_pd(wv+resultperm[(nr-1-r)*BLKSZ+1]*wn+(nr-1-r)*BLKSZ); nexta2=_mm256_loadu_pd(wv+resultperm[(nr-1-r)*BLKSZ+2]*wn+(nr-1-r)*BLKSZ); nexta3=_mm256_loadu_pd(wv+resultperm[(nr-1-r)*BLKSZ+3]*wn+(nr-1-r)*BLKSZ);  // lots of cache misses here
   }else{
    // last block, containing 1-4 rows/cols.  Read in the valid bits, replacing the others with 0 so they don't get selected as pivots
@@ -1211,13 +1206,6 @@ DF2(jtludecomp){F1PREFIP;PROLOG(823);
    nexta3=((wn-1)&(BLKSZ-1))>2?_mm256_maskload_pd(wv+resultperm[(nr-1-r)*BLKSZ+3]*wn+(nr-1-r)*BLKSZ,endmask):_mm256_setzero_pd();
    AN(asrclines)=AS(asrclines)[0]=((wn-1)&(BLKSZ-1))+1;   // in last ring, we need fewer pivots
   }
-// obsolete if(JT(jt,peekdata)){I jj,kk;
-// obsolete printf("fetch from corner of A, col %lld, rows %lld %lld %lld %lld\n",nr-1-r,resultperm[(nr-1-r)*BLKSZ],resultperm[(nr-1-r)*BLKSZ+1],resultperm[(nr-1-r)*BLKSZ+2],resultperm[(nr-1-r)*BLKSZ+3]);
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&nexta0)[0],((D*)&nexta0)[1],((D*)&nexta0)[2],((D*)&nexta0)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&nexta1)[0],((D*)&nexta1)[1],((D*)&nexta1)[2],((D*)&nexta1)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&nexta2)[0],((D*)&nexta2)[1],((D*)&nexta2)[2],((D*)&nexta2)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&nexta3)[0],((D*)&nexta3)[1],((D*)&nexta3)[2],((D*)&nexta3)[3]);  // scaf
-// obsolete } // scaf
 
   I wrappedcorner=0;  // set if we have tried all 'corner' blocks once and are looking at them again for the same pivots
   I permblkofst=0;  // number of perm blocks that we processed without finding BLKSZ pivots
@@ -1229,14 +1217,10 @@ DF2(jtludecomp){F1PREFIP;PROLOG(823);
 nextperm:;  // *** loopback point to continue search for pivots in the next column down.  permblkofst and ngoodperma are set to indicate where we are in the search, and perma holds values inherited from earlier blocks
    // move the next A block into the accumulators a00..a03
    a00=nexta0; a01=nexta1; a02=nexta2; a03=nexta3;
-// obsolete    D *currfetchaddr=nextfetchaddr;  // the source address of the block being processed now.  We will store back into the same relative position in the result
    // unroll fetching the FOLLOWING block of A, using permutation.  This has to be there for the dot-product for the next block
    // This is the only time we fetch from A, so it will probably miss to L3.  No matter, because we have a whole block of processing before we get back around
    // advance to following block and fetch it.
-// obsolete     wluv+=wlustride;  // advance to beginning of next block
-// obsolete     nextfetchaddr=wluv;  // remember addr being fetched
    // Since the corner block was fetched first, the block we are fetching can go out on only one side.  We fill with zeros on the right, identity diagonals down (in case the block is used as a coner block in pivot search)
-// obsolete     if(unlikely(r0==r-1)){  // fetching the LAST block in the U row
    if(r0==-r){  // searching for pivots, including the case of r=0
     // we are about to process a 'corner' block, possibly in the search for pivots.  The next block to fetch will always be an L block, possibly incomplete, and possibly wrapped around
     // if we process the first corner block successfully, we continue on with the first row of L.  If there is a permutation we will restart and discard the last prefetch.
@@ -1255,13 +1239,6 @@ nextperm:;  // *** loopback point to continue search for pivots in the next colu
     llv=LBLOCK(nr-1-r+permblkofst,0); luv=UBLOCK(0,nr-1-r), prechv=LBLOCK(nr-1-r+nextpermblkofst,0);  // start point of dot-products (both going L-to-R), prefetch point of next dot-product (next L block)
     lbv0=LBIT(nr-1-r+permblkofst,0); ubv0=UBIT(0,nr-1-r);  // point to the bit vectors for the 'corner' position.
 
-// obsolete if(JT(jt,peekdata)){I jj,kk;
-// obsolete printf("prefetch from A, col %lld, rows %lld %lld %lld %lld\n",nr-1-r,resultperm[(nr+r0+nextpermblkofst-1)*BLKSZ],resultperm[(nr+r0+nextpermblkofst-1)*BLKSZ+1],resultperm[(nr+r0+nextpermblkofst-1)*BLKSZ+2],resultperm[(nr+r0+nextpermblkofst-1)*BLKSZ+3]);
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&nexta0)[0],((D*)&nexta0)[1],((D*)&nexta0)[2],((D*)&nexta0)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&nexta1)[0],((D*)&nexta1)[1],((D*)&nexta1)[2],((D*)&nexta1)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&nexta2)[0],((D*)&nexta2)[1],((D*)&nexta2)[2],((D*)&nexta2)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&nexta3)[0],((D*)&nexta3)[1],((D*)&nexta3)[2],((D*)&nexta3)[3]);  // scaf
-// obsolete } // scaf
    }else if(r0<=0){  // L blocks
     llv=prechv; lbv0+=((nr+63)>>6)+2; scv+=nr;  // advance to the prefetched (possibly partial) L block, 1 row down.  Advance store pointer down too
     if(r0<-1){   // processing L row with 2 later L rows.  prefetch next full L block, which is row (nr-1-r) + r0-(-r) + 1, col (nr-1-r)
@@ -1337,18 +1314,6 @@ finrle: ;
      lvv+=*runv++*BLKSZ*BLKSZ;  // skip over the zeros.
      UI4 ndp=*runv++;  // get the length of the run
      do{
-// obsolete if(JT(jt,peekdata)){I jj,kk;
-// obsolete printf("L block input to dotprod\n");
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",lvv[0],lvv[1],lvv[2],lvv[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",lvv[4],lvv[5],lvv[6],lvv[7]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",lvv[8],lvv[9],lvv[10],lvv[11]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",lvv[12],lvv[13],lvv[14],lvv[15]);  // scaf
-// obsolete printf("U block input to dotprod\n");
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",lvv[uofst+0],lvv[uofst+1],lvv[uofst+2],lvv[uofst+3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",lvv[uofst+4],lvv[uofst+5],lvv[uofst+6],lvv[uofst+7]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",lvv[uofst+8],lvv[uofst+9],lvv[uofst+10],lvv[uofst+11]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",lvv[uofst+12],lvv[uofst+13],lvv[uofst+14],lvv[uofst+15]);  // scaf
-// obsolete } // scaf
       __m256d tmp;  // where we save a row of U to multiply by 4 scalars from L
       tmp=_mm256_loadu_pd(lvv+uofst);  // read U00-U03
       a00=_mm256_fnmadd_pd(_mm256_set1_pd(lvv[0]),tmp,a00); a01=_mm256_fnmadd_pd(_mm256_set1_pd(lvv[4]),tmp,a01); a02=_mm256_fnmadd_pd(_mm256_set1_pd(lvv[8]),tmp,a02); a03=_mm256_fnmadd_pd(_mm256_set1_pd(lvv[12]),tmp,a03);
@@ -1367,13 +1332,6 @@ finrle: ;
    // ****************** end of O(n^3) part **************************
    // combine the accumulators into the 0 side
     a00=_mm256_add_pd(a00,a10); a01=_mm256_add_pd(a01,a11); a02=_mm256_add_pd(a02,a12); a03=_mm256_add_pd(a03,a13);  // this finishes the 16 dot-products
-// obsolete if(JT(jt,peekdata)){I jj,kk;
-// obsolete printf("dot-product result\n");
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&a00)[0],((D*)&a00)[1],((D*)&a00)[2],((D*)&a00)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&a01)[0],((D*)&a01)[1],((D*)&a01)[2],((D*)&a01)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&a02)[0],((D*)&a02)[1],((D*)&a02)[2],((D*)&a02)[3]);  // scaf
-// obsolete printf("%9.4f %9.4f %9.4f %9.4f\n",((D*)&a03)[0],((D*)&a03)[1],((D*)&a03)[2],((D*)&a03)[3]);  // scaf
-// obsolete } // scaf
     // now a10..3 are free
    }  // end of dot-product block, executed except first time
    // A[x,y]-L*U (product over nr-1-r blocks) is now in the register block on the 0 side
@@ -1392,7 +1350,6 @@ finrle: ;
    // For x>nr-1-r we calculate L(x,r) = D * U-1(nr-1-r,nr-1-r), doing the matrix multiply
    //
    // When we calculate the corner block we also write out coefficients that will ne needed to calculate the other blocks of L and U.
-// obsolete    D (*scvi)[BLKSZ][BLKSZ]=scv;  // save output address before update - we will store to it
    if(r0==-r){
     // corner block.
 
@@ -1411,10 +1368,6 @@ finrle: ;
 
     // loop till we find a valid permutation
     _mm256_storeu_pd((D*)&perma[ngoodperma],a00); _mm256_storeu_pd((D*)&perma[ngoodperma+1],a01); _mm256_storeu_pd((D*)&perma[ngoodperma+2],a02); _mm256_storeu_pd((D*)&perma[ngoodperma+3],a03);  // save the input for possible perm calc
-// obsolete if(expflag){for(expflag=0;expflag<AN(asrclines);++expflag)if(!_mm256_testz_pd(sgnbit,_mm256_cmp_pd(perma[expflag],expa[expflag],_CMP_NEQ_OQ)))
-// obsolete {ASSERT(0,EVSYSTEM)
-// obsolete }
-// obsolete expflag=0;}  // scaf
     if(unlikely(wrappedcorner)){
      // Our search for pivots has wrapped around to the original corner.  We are looking at corners for a second time.  In that rare situation we must take steps to ensure that we
      // do not repeat a row, because roundoff may cause it to be reselected (even though it is dependent).  To avoid that we zero the row completely if it has been used before. 
@@ -1430,7 +1383,6 @@ finrle: ;
       I permtemp=perm;  // 
       I findex; findex=(permtemp&3)+ngoodperma; findex=ngoodperma>0?0:findex; permtemp=ngoodperma>0?permtemp:permtemp>>2; a00=_mm256_loadu_pd((D*)&perma[findex]);
       recips=_mm256_div_pd(ones,a00);  // 1/U00 x x x  // start the first reciprocal
-// obsolete must be OK      if(_mm256_cvtsd_f64(_mm256_andnot_pd(sgnbit,a00))<minpivot)goto pivotmiss0;  // check for quick exit - while loads are completing
       findex=(permtemp&3)+ngoodperma; findex=ngoodperma>1?1:findex; permtemp=ngoodperma>1?permtemp:permtemp>>2; a01=_mm256_loadu_pd((D*)&perma[findex]);
       findex=(permtemp&3)+ngoodperma; findex=ngoodperma>2?2:findex; permtemp=ngoodperma>2?permtemp:permtemp>>2; a02=_mm256_loadu_pd((D*)&perma[findex]);
       findex=(permtemp&3)+ngoodperma; a03=_mm256_loadu_pd((D*)&perma[findex]);
@@ -1492,20 +1444,10 @@ finrle: ;
     // success - we found pivots, using permutation (perm).
     if(unlikely(permblkofst+ngoodperma+permx!=0)){  // identity perm is match on the first shot at the threshold: first corner block in this column, no pivots from earlier blocks, no permutation in this corner block
      // the permutation is not identity. store the part that was added here, apply it to the rows of L, and restart the ring
-// obsolete I jj; for(jj=0;jj<ngoodperma;++jj)expa[jj]=perma[jj]; for(jj=ngoodperma;jj<AN(asrclines);++jj)expa[jj]=perma[ngoodperma+((perm>>(2*(jj-ngoodperma)))&3)]; expflag=1;  // scaf
      for(;ngoodperma<AN(asrclines);++ngoodperma,perm>>=2){srclines[ngoodperma]=(nr-1-r+permblkofst)*BLKSZ+(perm&3); } // install the source of each found row
-// obsolete if(JT(jt,peekdata)){I jj,kk;
-// obsolete printf("L lines going into perm\n"); for(jj=0;jj<4;++jj){printf("line %03lld (%lld,%lld): ", srclines[jj],srclines[jj]>>LGBLKSZ,srclines[jj]&(BLKSZ-1));
-// obsolete for(kk=0;kk<4;++kk)printf("%9.4f ",(*LBLOCK(srclines[jj]>>LGBLKSZ,0))[srclines[jj]&(BLKSZ-1)][kk]); printf("\n");} printf("\n");
-// obsolete } // scaf
-// obsolete if(JT(jt,peekdata)){I jj,kk;
-// obsolete printf("\nL result lines before perm\n"); for(jj=0;jj<4;++jj){printf("line %03lld (%lld,%lld): ", (nr-1-r)*BLKSZ+jj,(nr-1-r),jj);
-// obsolete for(kk=0;kk<4;++kk)printf("%9.4f ",(*LBLOCK((nr-1-r),0))[jj][kk]); printf("\n");} printf("\n");
-// obsolete } // scaf
      // permute rows of L, and the result permutation, so that processing L in order matches processing A in permuted order.  We will subsequently fetch L sequentially, A through permutation
      // src (~.@, ,: ~.@,@|.)@(#"1~ ~:/)@,: dest is 2xn array of (values to read,:values to write), up to 8 values
      A arwindexes; RZ(df2(arwindexes,asrclines,apv(AN(asrclines),(nr-1-r)*BLKSZ,1),acalcperm))
-// obsolete if(JT(jt,peekdata)){printf("nr=%lld r=%lld r0=%lld permblkofst=%lld perm: ",nr,r,r0,permblkofst); DO(AN(arwindexes), printf("%lld ",IAV(arwindexes)[i]);) printf("\n");} // scaf
      // apply the permutation: to resultperm, the internal L blocks, and the values already written to the output area
      I permtemp[8]; I *pv=IAV(arwindexes); DO(AS(arwindexes)[1], permtemp[i]=resultperm[*pv++];) DO(AS(arwindexes)[1], resultperm[*pv++]=permtemp[i];)   // apply perm to resultperm
      D ltemp[8][4]; DO(nr-1-r, D (*lcol)[BLKSZ][BLKSZ]=(D (*)[BLKSZ][BLKSZ])LBLOCK(0,i); D *rescol=zv+BLKSZ*i; I *pv=IAV(arwindexes);  // for each column, point to tops of columns and also to permutation
@@ -1514,21 +1456,12 @@ finrle: ;
       DO(AS(arwindexes)[1], I pvv=*pv++;
        _mm256_storeu_pd(lcol[(pvv>>LGBLKSZ)*nr][pvv&(BLKSZ-1)],_mm256_loadu_pd(ltemp[i])); _mm256_storeu_pd(&rescol[pvv*wn],_mm256_loadu_pd(ltemp[i]));  // copy permuted values back in, to both destinations
        if(!_mm256_testc_si256(_mm256_castpd_si256(sgnbit),_mm256_castpd_si256(_mm256_loadu_pd(ltemp[i]))))*(LBIT(pvv>>LGBLKSZ,i))&=~(1LL<<LBITX(pvv>>LGBLKSZ,i));  //  if the block contains a non0, cleat the 'block is 0' bit for it
-// obsolete if(JT(jt,peekdata)){I jj,kk;
-// obsolete printf("ltemp[%lld]: %9.4f %9.4f %9.4f %9.4f\n",i,ltemp[i][0], ltemp[i][1], ltemp[i][2], ltemp[i][3]);  // scaf
-// obsolete } // scaf
       )
      )
-// obsolete if(JT(jt,peekdata)){I jj,kk;
-// obsolete printf("\nL lines coming out of perm\n"); for(jj=0;jj<4;++jj){printf("line %03lld (%lld,%lld): ", (nr-1-r)*BLKSZ+jj,(nr-1-r),jj);
-// obsolete for(kk=0;kk<4;++kk)printf("%9.4f ",(*LBLOCK((nr-1-r),0))[jj][kk]); printf("\n");} printf("\n");
-// obsolete } // scaf
-// obsolete if(JT(jt,peekdata))printf("\nrestartring\n");  // scaf
      goto restartring;  // rerun the permuted ring, which is known to succeed
     }
 
     // falling through, the permutation is right & we can process L & U to completion for this ring
-// obsolete     _mm256_storeu_pd(&scv[0][0][0],a00); _mm256_storeu_pd(&scv[0][1][0],a01); _mm256_storeu_pd(&scv[0][2][0],a02); _mm256_storeu_pd(&scv[0][3][0],a03);  // Store the 4x4 in the corner
 
     // Now calculate uinv, the inverse of the remaining U matrix.  Do this by backsubstitution up the line.  Leave register a00-a03 holding the block result
     a13=_mm256_blend_pd(_mm256_setzero_pd(),recips,0b1000);
@@ -1543,11 +1476,6 @@ finrle: ;
     _mm256_storeu_pd(&uinv[0][0],a10);  // row 0 is I00=1/U00 I01 I02 I03
 
     // block created; advance input pointers.  Output pointer still set to initial value
-// obsolete     luv=prechv; prechv-=(nr+1);  // repeat L row; advance U column
-// obsolete     ubv0-=((nr+63)>>6)+2;  // back up to bitvector for next column
-// obsolete      llv=prechv; prechv+=nr;  // advance L row; repeat U column
-// obsolete      lbv0+=((nr+63)>>6)+2;  // advance bitvector for next row
-// obsolete     scv+=nr;  // move output south, to the first L block
     // the bitmask for a corner block is never used
    }else{  // U or L block, not corner
     UI *bma; I bmx;  // address and bit# of the bitmap address to store all-0 status into
@@ -1561,12 +1489,7 @@ finrle: ;
      a03=_mm256_fnmadd_pd(a01,_mm256_set1_pd(linv[2][1]),a03);  // a3-=-a1*U31/U11
      a03=_mm256_fnmadd_pd(a02,_mm256_set1_pd(linv[2][2]),a03);  // a3-=-a2*U32/U22
      // block created; advance output and input pointers
-// obsolete      scv-=nr+1;  // move output northwest, to the next U block
-// obsolete      luv=prechv; ubv0-=((nr+63)>>6)+2; if(r0<-1){prechv-=(nr+1);}else{prechv=llv+nr;}  // repeat L row; advance U column and bitmap; advance prefetch but if next col of U is the last, move prefetch to L
-// obsolete      if(unlikely(r0==0)){scv=scv0+nr; llv+=nr; prechv+=nr; luv=UBLOCK(0,nr-1-r); ubv0=UBIT(0,nr-1-r); lbv0+=((nr+63)>>6)+2;}  // last col of U: L store/load point to 2d row; U load point to first col; proceed down the L rows
-// obsolete      luv=prechv; ubv0-=((nr+63)>>6)+2; if(r0!=r-1){prechv-=nr+1;}  // (repeat L row); advance U northwest including bitmap; advance prefetch but if next col of U is the last, prefetch it again
      // get the address of the bitmask for this block, in the U bitmap
-// obsolete      bma=UBIT(nr-1-r,r0+nr-1); bmx=UBITX(nr-1-r,r0+nr-1);  // point to the bit to store all-0 status to.  col is (nr-1-r)+(r0-(-r))
      bma=UBIT(nr-1-r,(nr-1-r)+r0); bmx=UBITX(nr-1-r,(nr-1-r)+r0);  // point to the bit to store all-0 status to.  col is (nr-1-r)+r0
     }else{
      // L block.  Take D * U^-1.  Fastest way is to dump to memory so we can use broadcast to replicate the L values across the row
@@ -1582,15 +1505,6 @@ finrle: ;
      tmp=_mm256_loadu_pd(&uinv[3][0]);  // row 3 of U^-1
      a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][3]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][3]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][3]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][3]),tmp,a03); 
      // block created; advance pointers
-// obsolete      if(r0!=0){   // if not last line of L...
-// obsolete       llv=prechv; lbv0+=((nr+63)>>6)+2; if(r0<-1){prechv+=nr;}else{prechv=luv-(nr+1);}  // repeat U col; advance L row and bitmap; advance prefetch to next row of L but if next row of L is the last, move prefetch to U
-// obsolete       scv+=nr;  // move output south, to the next L block
-// obsolete      }else{  // last line of L, we must switch to U (if r==1, precharge has not been switched and should be made to refetch U; otherwise prefetch should continue in U)
-// obsolete       scv=suv1; luv=prechv; prechv-=nr+1; llv=UBLOCK(nr-1-r,0); lbv0=LBIT(nr-1-r,0); ubv0-=((nr+63)>>6)+2;}  // last row of L: U store/load point to 1st ele; L load point to first col; its accordingly
-// obsolete       scv=suv1;
-// obsolete  luv-=nr+1; prechv=r==1?luv:luv-(nr+1); llv=LBLOCK(nr-1-r,0); lbv0=LBIT(nr-1-r,0); ubv0-=((nr+63)>>6)+2;  // last row of L: U store/load point to col 1; L load point to first row; bits accordingly
-// obsolete      }
-// obsolete      llv=prechv; lbv0+=((nr+63)>>6)+2; if(r0!=r-1){prechv+=nr;}  // repeat U col; advance L row including bitmap; advance prefetch but if next row of L is the last, prefetch it again
      // get the address of the bitmask for this block, in the L bitmap
      bma=LBIT(r0+nr-1,nr-1-r); bmx=LBITX(r0+nr-1,nr-1-r);  // point to the bit to store all-0 status to    row is (nr-1-r)+(r0-(-r))
     }
@@ -1600,7 +1514,6 @@ finrle: ;
      // check for all-zero block, and update the sparse bitmap
      a10=_mm256_or_pd(a01,a00); a11=_mm256_or_pd(a02,a03); a10=_mm256_or_pd(a11,a10);  // OR of all values
      I blkis0=_mm256_testc_si256(_mm256_castpd_si256(sgnbit),_mm256_castpd_si256(a10))==1;   // testc is 1 if all values are +-0
-// obsolete      a10=_mm256_cmp_pd(a10,_mm256_setzero_pd(),_CMP_NEQ_OQ); I blkis0=_mm256_testz_pd(a10,a10)==1;  // see if block is all 0
      *bma=((*bma)&~(1LL<<bmx))|(blkis0<<bmx);  //  set bit to (all values are not NE)
      nzeroblocks+=blkis0;  // increment count of zero blocks
     }
@@ -1625,8 +1538,6 @@ finrle: ;
     _mm256_maskstore_pd(resultaddr,endmask,a00); if(((wn-1)&(BLKSZ-1))>0){_mm256_maskstore_pd(resultaddr+wn,endmask,a01); if(((wn-1)&(BLKSZ-1))>1){_mm256_maskstore_pd(resultaddr+2*wn,endmask,a02); if(((wn-1)&(BLKSZ-1))>2){_mm256_maskstore_pd(resultaddr+3*wn,endmask,a03); }}}
    }
   }
-// obsolete   wclv+=BLKSZ*(wn+1);  // move input pointer to corner block of next ring
-// obsolete   scv0+=nr+1; suv1-=nr;  // advance storage pointers to next ring.
  }
  EPILOG(jlink(aresultperm,z));
 #endif

@@ -1003,7 +1003,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define BOTHEQ8(x,y,X,Y) ( BOTHASUS(x,y) == BOTHASUS(X,Y) )
 #define BOTHEQUS(x,y,us) ( BOTHASUS(x,y) == us )
 #if PYXES
-// obsolete #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely(AT(res)&PYX))if(unlikely(AT(res)&BOX))if(unlikely((res=jtpyxval(jt,res))==0))err; res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
 #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely((AT(res)&PYX)!=0)){if(unlikely((res=jtpyxval(jt,res))==0))err;} res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
      // since most uses of contents check the type first, it would be good to have the type loaded at any finish.  But the compiler doesn't do that.
 #define READLOCK(lock) {S prev; if(unlikely(((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))&(S)-WLOCKBIT)!=0))readlock(&lock,prev);}

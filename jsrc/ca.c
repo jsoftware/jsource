@@ -5,15 +5,20 @@
 
 #include "j.h"
 
+// [><].@[:]*  monad inner loop
+static DF1(jtonf1cell){PROLOG(0021);DECLFG;
+ PREF1(jtonf1cell);
+ if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
+ A z=CALL1(f1,CALL1(g1,w,gs),fs);
+ EPILOG(z);
+}
+
 // [><].@[:]*  monad 
-static DF1(jtonf1){PROLOG(0021);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
- PREF1(jtonf1);
- if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;  // scaf avoid repeated primitive calls inside rank
- if(RAT&AT(w))RZSUFF(w=pcvt(XNUM,w), z=0; goto restore;);
- z=CALL1(f1,CALL1(g1,w,gs),fs);  // no RZ...
-restore:;
+static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
+ if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
+ A z=jtonf1cell(jt,w,self);
  jt->xmode=m;  // ...we must restore xmode...
- EPILOG(z);  // ...and EPILOG will do nothing
+ RETF(z);
 }
 
 // <.@ >.@ and the like, dyad 
@@ -22,7 +27,7 @@ static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(a))RZSUFF(a=pcvt(XNUM,a), z=0; goto restore;);
  if(RAT&AT(w))RZSUFF(w=pcvt(XNUM,w), z=0; goto restore;);
- z=INT&AT(a)&AT(w)&&FAV(gs)->id==CDIV?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs);  // no RZ, see above
+ z=INT&AT(a)&AT(w)&&FAV(gs)->id==CDIV?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs);  // no RZ
 restore:;
  jt->xmode=m;
  EPILOG(z);
@@ -426,7 +431,6 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
  ARGCHK2(a,w);
  D cct;  // cct that was used for this comparison compound, if any
  A z; fdefallo(z)
-#if 1
  if(AT(a)&AT(w)&VERB){
   // u&v
   f1=on1; f2=on2;
@@ -444,7 +448,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
 #define SPECAND (IDBIT(CCOMMA)|IDBIT(CBOX)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE))  // mask for all special cases
   if(unlikely((I)(SPECAND>>(c&0x3f))&BETWEENC(c,CCOMMA,CPOUND))){
    if(unlikely(BOTHEQ8(FAV(a)->id,c,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
-   else switch(FAV(a)->id&0x3f){
+   else switch(FAV(a)->id&0x3f){   // **** DO NOT add to this switch without updating SPECAND above ****
    case CBOX&0x3f:   flag |= VF2BOXATOP1; break;  // <&u mark this as <@f for the monad
    case CGRADE&0x3f: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y
    case CSLASH&0x3f: if(c==CCOMMA){f1=jtredravel; } break;   // f/&, y
@@ -496,105 +500,10 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
     mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=FAV(va)->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
     {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
- // obsolete    }else if(unlikely((c^visa)==CWORDS)){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1;   // m&;:
    }else if(unlikely(FAV(w)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1;   // m&;:
- // obsolete   }else if(unlikely((c^visa)==CIBEAM)){if(FAV(w)->localuse.lu1.foreignmn[0]==128&&FAV(w)->localuse.lu1.foreignmn[1]==3){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; } // m&128!:3
    }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; // m&128!:3
    }
   }
   fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
   R z;
-#else   // obsolete
-
- switch(CONJCASE(a,w)){
- case NV:
-  f1=withl; v=FAV(w); c=v->id;
-  // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
-  flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-  // a will be INCORPed by fdef
-
-  if((-AN(a)&-AR(a))<0){  // a is not atomic and not empty
-    // c holds the pseudochar for the v op.  If v is u!.0, replace c with the pseudochar for n
-    // Also set b on any u!.n
-   if(unlikely(b=c==CFIT))c=FAV(v->fgh[0])->id;
-   if((c&~2)==CIOTA){if(b)cct=v->localuse.lu1.cct; mode=c==CIOTA?IIDOT:IICO;}
-  }
-  if(unlikely(0<=mode)){
-   {PUSHCCTIF(cct,b) h=indexofsub(mode,a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
-  }else switch(c){
-   case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1; break;
-   case CIBEAM: if(FAV(w)->localuse.lu1.foreignmn[0]==128&&FAV(w)->localuse.lu1.foreignmn[1]==3){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1;} break;
-  }
-  fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
-  R z;
- case VN: 
-  f1=withr; v=FAV(a);
-  // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
-  // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
-  flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-  // w will be INCORPed by fdef
-  if((-AN(w)&-AR(w))<0){
-    // 
-    // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
-    // Also set b if the fit is !.n
-    c=v->id;p=v->flag;if(unlikely(b=c==CFIT)){cct=v->localuse.lu1.cct; p=FAV(v->fgh[0])->flag;}
-   if(unlikely(7==(p&7))){
-    mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
-    if(mode==IINTER){cct=v->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
-    {PUSHCCTIF(cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
-   }
-  }
-  fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
-  R z;
- case VV:
-  // u&v
-  f1=on1; f2=on2;
-  v=FAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
-  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
-  flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
-  if(unlikely((c&~4)==CFORK)){C d=CLEFT;  // u&(FORK/&)
-   if(c==CFORK)d=ID(v->fgh[2]);  // d is CLEFT if &, 0 if capped fork, otherwise from h of fork
-   if(CIOTA==FAV(v->fgh[1])->id&&(d&~1)==CLEFT&&equ(ds(CALP),v->fgh[0])){  // (FORK/&) is a.&i. or (a. i. ][)
-    d=FAV(a)->id;
-    if(BETWEENC(d,CEQ,CGT)){f2=jtcharfn2; flag&=~VJTFLGOK2;}  // any comparison - comp&(a.&i. or (a. i. ][))
-   }
-  }
-  switch(FAV(a)->id){
-  case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
-  case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y
-  case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;   // f/&, y
-  case CCOMMA: if(c==CBOX){f2=jtjlink; linktype=ACINPLACE;} break;  // x ,&< y   supports IP 
-  case CPOUND: f1=c==COPE?jttallyatopopen:f1; break;    //  #&>
-  case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VJTFLGOK1; break;  // >.&g
-  case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;   // <.&g
-  case CRAZE:  // detect ;@(<@(f/\));.
-   if(c==CCUT&&boxatop(w)){  // w is <@g;.k
-    if((((I)1)<<(v->localuse.lu1.gercut.cutn+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-     A wf=v->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
-     if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
-      A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
-      if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-       f1=jtrazecut1; flag&=~(VJTFLGOK1);
-      }
-     }
-    }
-   }
-   break;
-  }
-  if(c==COPE)flag2|=flag2&VF2BOXATOP1?VF2ATOPOPEN2A|VF2ATOPOPEN2W:VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W;  // &>, but not <&> which would be confused with &.>
-
-  // Copy the monad open/raze status from v into u&v
-  flag2 |= v->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
-
-  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
-  // If the compound has rank 0, switch to the loop for that; if infinite rank, avoid the loop
-  // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
-  if(f1==on1){flag2|=VF2RANKATOP1; f1=r==RMAX?on1cell:f1; f1=r==0?jton10:f1;}
-  if(f2==on2){flag2|=VF2RANKATOP2; f2=r==RMAX?on2cell:f2; f2=r==0?on20:f2;}
-  fdeffillall(z,flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype);
-  R z;
- default: ASSERTSYS(0,"amp");
- case NN: ASSERT(0,EVDOMAIN);
- }
-#endif
 }

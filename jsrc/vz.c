@@ -27,7 +27,6 @@ ZF1(jtztrend){D a,b,t;Z z;
  a=v.re; b=v.im;
  if(ZOV(v)){a/=2; b/=2;}
  t=hypoth(a,b); 
-// obsolete  if(t<inf){if(!t)++t; z.re=a/t; z.im=b/t;}
  if(t<inf){if(t){z.re=a/t; z.im=b/t;}else{z.re=a; z.im=b;}}  // clang17-18 fail on if(!t)++t..., doing the divide too early
  else switch((INF(a)?2:0)+INF(b)){
   case 1: z.re=0.0;    z.im=(D)SGN(b); break;

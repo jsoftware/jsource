@@ -204,11 +204,6 @@ DF2(jtunquote){A z;
   // But: if this is a pseudo-named function, we need to skip the save/restore of locales, so we skip the update
   flgd0cpC|=jt->uflags.bstkreqd<<FLGLOCCHANGEDX;  // remember the flag.  If pseudo, this will be unused
   jt->uflags.bstkreqd&=flgd0cpC>>FLGPSEUDOX;  // clear bstk for next level (if not pseudo)
-// obsolete   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
-// obsolete   if(!(flgd0cpC&FLGPSEUDO) && jt->uflags.bstkreqd){   // don't clear bstkreqd if we are going to ignore changes of locale
-// obsolete    // The caller has called encountered cocurrent.  If it does again, it will have to change locale counts.  Remember that  
-// obsolete    flgd0cpC|=FLGLOCCHANGED; jt->uflags.bstkreqd=0;    // remember locale already changed; remove slow mode for the next level
-// obsolete   }
   // call the function, as above
   if((jt->uflags.trace&TRACEDB)&&!(jt->glock||VLOCK&FAV(fs)->flag)&&!(jt->recurstate&RECSTATERENT)){  // The verb is locked if it is marked as locked, or if the script is locked; don't debug/pm any recursion
    z=jtdbunquote((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
@@ -233,8 +228,6 @@ DF2(jtunquote){A z;
  // To prevent half-deletion while the locale is running, we increment the execution count when an execution (including the first) switches into the locale, and decrement the
  // execution count when that execution completes (either by a switch back to the previous locale or a successive 18!:4).
 exitpop: ;
-// obsolete   not if u./v. if(jt->locsyms!=stack.locsyms)SEGFAULT; // scaf
-// obsolete if(jt->global!=AKGST(jt->locsyms))SEGFAULT; // scaf
  // LSB of z is set in the return iff what we just called was cocurrent
  // jt->locsyms here is always the same as before the call (but may have been changed previously for u./v.)
  // jt->global may have changed, if the called function executed cocurrent
@@ -248,7 +241,6 @@ exitpop: ;
    // we temporarily started an execution for the locative (now jt->global).  We will close that below in common code
    if(flgd0cpC&FLGLOCCHANGED)DECREXECCTIF(stack.global)   // if the caller's locale was moved to by cocurrent (i.e. this is the second+ cocurrent in the calling function), it must be replaced by z.  No DECR is performed for the FIRST cocurrent, so if that was entered by a locative
          // it will be owed a DECR.  We can't DECR the first call because it might be in execution higher in the stack and already have a delete outstanding
-// obsolete   SYMSETGLOBALINLOCAL(jt->locsyms,z);   // install new globals pointer into the locsyms (if any)...
    stack.global=z;  // ... and into the area we will pop from, thus storing through to the caller
    z=mtm;  // we have switched; this will be the result of cocurrent
    flgd0cpC|=FLGLOCCHANGED; // leave bstkreqd set as a flag indicating next function's caller has encountered cocurrent
@@ -258,10 +250,8 @@ exitpop: ;
  if(unlikely(flgd0cpC&FLGLOCINCRDECR))DECREXECCT(explocale)  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
  // ************** errors OK now
 exitfa:;  // error point for errors after symbol res. 
-// obsolete if(0){exitfa: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);} In case we put jt->global into jt->locsyms, undo that
  // this is an RFO cycle that will cause trouble if there are many cores running the same names
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){fanamedacv(fs);}  // unra the name if it was looked up from the symbol tables
-// obsolete if(0){exitname: SYMSETGLOBALINLOCAL(jt->locsyms,stack.global);}  // error point for name errors.  In case we put jt->global into jt->locsyms, undo that
 exitname:; // error point for name errors.
  SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed early or as late as the deletion; make sure locsyms matches.  global and AKGST always match for the named explicit routine that is running.
     // if an explicit routine calls a tacit name via locative, globals and AKGST will diverge while the tacit verb runs; if the tacit verb then calls a (possibly named) explicit, the explicit's u. will be from the earlier explicit, not the intervening tacit.
@@ -270,7 +260,6 @@ exitname:; // error point for name errors.
 #else
  memcpy(&jt->parserstackframe.sf,&stack,sizeof(stack));  // restore sf/curname/globals/locals
 #endif
-// obsolete if(jt->global!=AKGST(jt->locsyms))SEGFAULT; // scaf
 RETF(z);
 exitanon:;  // exit point for anonymous pseudo-named verbs, which must not restore locales so that they act like other anonymous verbs
 memcpy(&jt->parserstackframe.sf,&stack,2*sizeof(A));  // restore sf/curname only

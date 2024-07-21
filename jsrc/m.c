@@ -983,7 +983,6 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
    np=np0;  // advance to next box
   };
   if((np=QCWORD(np))!=0){racontents(np);}  // handle last one
-// obsolete  if((np=QCWORD(np))!=0){ra(np);}  // handle last one  scaf
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   // If it is a nameref, clear the bucket info.  Explanation in nameref()

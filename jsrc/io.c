@@ -343,7 +343,6 @@ void breakclose(JS jt);
 static C* nfeinput(JS jt,C* s){A y;
  WITHATTNDISABLED(y=jtstr0(MDTHREAD(jt),jtexec1(MDTHREAD(jt),jtcstr(MDTHREAD(jt),s),ds(CEXEC)));)  // exec the sentence with break interrupts disabled to get the string;  NUL-terminate
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
-// obsolete  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  jtwri(jt,MTYOLOG,"",AN(y)-1,CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
  // the value y is still on the tpop stack
@@ -445,10 +444,6 @@ F1(jtjoff){I x;
 // wrapper to put a new exec chain into play
 // set bstkreqd, incr the starting locale, decr the final locale.  unquote will EXECCTIF all changes 
 static void jtimmexexecct(JJ jt, A x){
-// obsolete  A startloc=jt->global;  // point to current global locale
-// obsolete  INCREXECCT(startloc);  // raise usecount of current locale to protect it while running
-// obsolete  jtimmex(jt,x);   // run the sentence
-// obsolete  DECREXECCT(startloc);  // remove protection from executed locale.  This may result in its deletion
  jt->uflags.bstkreqd=1; INCREXECCTIF(jt->global); jtimmex(jt,x); DECREXECCTIF(jt->global);  // execution of the sentence may change jt->global
 }
 
@@ -649,11 +644,6 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r;
 
  if(unlikely(savcstackmin!=0))jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // if stack pointers were saved, retire them
 
-// obsolete  while(JT(jt,nfe)){  // nfe normally loops here forever
-// obsolete   MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));) // use jt to force output in nfeinput
-// obsolete   // If there is a postmortem stack active, jdo has frozen tpops and we have to honor that here, to keep the stack data allocated.
-// obsolete   if(likely(jm->pmttop==0))jttpop(jm,old,jm->tnextpushp);  // when the stack has been tpopped it is safe for us to resume
-// obsolete  }
  R r;
 } 
 

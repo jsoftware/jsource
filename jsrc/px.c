@@ -32,9 +32,7 @@ DF1(jtexec1){A z;
  if(AT(w)&NAME){z=nameref(w,jt->locsyms);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
   F1RANK(1,jtexec1,self);
-// obsolete   A savself = jt->parserstackframe.sf;  // in case we are in a recursion, preserve the restart point
   STACKCHKOFL z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+!!EXPLICITRUNNING)));  // replace DDs, but require that they be complete within the string (no jgets)
-// obsolete  jt->parserstackframe.sf=savself;
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
 }

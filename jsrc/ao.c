@@ -691,7 +691,6 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  e=SPA(p,e); k=i0(e); // k is the sparse element in the rep of i.~ w
  j=0; DO(c, if(k<=u[i])break; if(u[i]==v[i])++j;);  // j = # unique values in w before the first fill element
  RZ(b=ne(e,x));  // b = mask of values in x that are different from the sparse element
-// obsolete  RZ(x=repeat(b,x)); RZ(x=keytally(x,x,mark)); u=AV(x); d=AN(x);  // u now -> #/.~ of the non-sparse items, d=count thereof
  RZ(x=repeat(b,x)); RZ(x=keytally(x,x)); u=AV(x); d=AN(x);  // u now -> #/.~ of the non-sparse items, d=count thereof
  I nfills=SETIC(w,k)-bsum(c,BAV(b));  // number of cells of fill
  GATV0(z,INT,d+(nfills!=0),1); v=AV(z);  // allocate result: one for each unique non-fill, plus one for the fills if any

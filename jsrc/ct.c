@@ -225,7 +225,6 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
 // w is an A holding a pyx value.  Return its value when it has been resolved, or 0 if error, with error code set.
 // EVTIME if timeout
 A jtpyxval(J jt,A pyx){UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
-// obsolete if(!(AT(pyx)&PYX+BOX==PYX+BOX))SEGFAULT;  // scaf
  if(PYXFULL==(state=lda((C*)&blok->seqstate)))goto done; // if pyx already full, return result
  {C dummy=PYXEMPTY;casa(state!=PYXEMPTY?&dummy:(C*)&blok->seqstate,&dummy,PYXWAIT);}  // if pyx is EMPTY, move it to WAIT.  Avoid excess contention on hot pyxes
  UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);}); // figure out how long to wait
@@ -475,7 +474,6 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
-// obsolete    if(likely(startloc!=0)){INCREXECCTIF(startloc); fa(startloc);}  // raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
    jt->uflags.bstkreqd=1; INCREXECCTIF(startloc); fa(startloc);  // start new exec chain; raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
    A arg1=job->user.args[0],arg2=job->user.args[1],arg3=job->user.args[2];
    fa(UNvoidAV1(job));  // job is no longer needed
@@ -486,7 +484,6 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // ***** this is where the user task is executed *******
    A z=(FAV(uarg3)->valencefns[dyad])(jt,arg1,uarg2,uarg3);  // execute the u in u t. v
    // ***** return from user task and look for next one *****
-// obsolete    if(likely(jt->global!=0))
    DECREXECCTIF(jt->global);  // remove exec-protection from finishing exec chain.  This may result in its deletion
    // put the result into the result block.  If there was an error, use the error code as the result.  But make sure the value is non0 so the pyx doesn't wait forever
    C errcode=0;
@@ -587,6 +584,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
 // execute an internal job made up of n tasks.  f is the function to run, end is the function to call at end, ctx is parms to pass to each task
 // poolno is the threadpool to use.  Tasks are run on this thread and the worker threads
+// Result is 0 for OK, else jerr.h error code
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1;  job->initthread=THREADID(jt); job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
@@ -615,7 +613,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  UI4 i=0; C err=0;  // the number of the block we are working on, and the current error status
  while(1){  // at top of loop mutex is free, i is the task# to take, err is error status so far
-  // run the user's function on one thread.  If there are errors, we skip after the first
+  // run the user's function on one thread.  If there are errors, we skip after the first.  Return from thread is 0 if OK, else error code
   if(!err){   //  If an error has been signaled, skip over it and immediately mark it finished
    if(unlikely((err=f(jt,ctx,i))!=0))__atomic_compare_exchange_n(&job->internal.err,&(C){0},err,0,__ATOMIC_ACQ_REL,__ATOMIC_RELAXED);  // keep the first error for use by later blocks
   }
@@ -737,7 +735,6 @@ F2(jttcapdot2){A z;
  case 4: { // rattle the boxes of y and return status of each
   ASSERT((SGNIF(AT(w),BOXX)|(AN(w)-1))<0,EVDOMAIN)   // must be boxed or empty
   GATV(z,FL,AN(w),AR(w),AS(w)) D *zv=DAV(z); A *wv=AAV(w); // allocate result, zv->result area, wv->input boxes
-// obsolete   DONOUNROLL(AN(w), if(unlikely(!((AT(wv[i])&BOX+PYX)==BOX+PYX)))zv[i]=-1001;  // not pyx: _1001
   DONOUNROLL(AN(w), if(unlikely(!(AT(wv[i])&PYX)))zv[i]=-1001;  // not pyx: _1001
                     else if(((PYXBLOK*)AAV0(wv[i]))->pyxorigthread>=0)zv[i]=((PYXBLOK*)AAV0(wv[i]))->pyxorigthread;  // running pyx: the running thread
                     else if(((PYXBLOK*)AAV0(wv[i]))->pyxorigthread==-2)zv[i]=inf; // not yet started; thread not yet known: _
@@ -758,7 +755,6 @@ ASSERT(0,EVNONCE)
 #if PYXES
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
-// obsolete   ASSERT((AT(pyx)&BOX+PYX)==BOX+PYX,EVDOMAIN)
   ASSERT((AT(pyx)&BOX)!=0,EVDOMAIN)
   ASSERT(jtsetpyxval(jt,pyx,val,0)!=0,EVRO)  // install value.  Will fail if previously set
   z=mtm;  // good quiet value
@@ -771,7 +767,6 @@ ASSERT(0,EVNONCE)
   // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
-// obsolete   ASSERT((AT(pyx)&BOX+PYX)==BOX+PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
   ASSERT((AT(pyx)&PYX)!=0,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
   ASSERT(jtsetpyxval(jt,pyx,0,err)!=0,EVRO)  // install error value.  Will fail if previously set
   z=mtm;  // good quiet value

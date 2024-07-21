@@ -73,7 +73,6 @@
    NOUNERR(z,ic,1); \
  }} /* puns that ASGN flag is a NOUN type.  Err if can't be result, or if this is not a modifier */ \
  }
-// obsolete if(jtdeprecmsg(jt,~7,"(007) noun result was required\n")==0)
 
 // for./select. control structure
 typedef struct CDATA {
@@ -106,12 +105,9 @@ static B forinitnames(J jt,CDATA*cv,I cwtype,A line,I i, I go){  // i and go are
   ASSERT(k<=255-6,EVILNAME);  // max name length is 255, and we must append _index
   if(k>0){A x;  // if it is a for_xyz.
    C ss[255], *s=ss;  // We need a string buffer for "xyz_index"; s points to buffer
-// obsolete  if(unlikely(k>(I)(sizeof(ss)-6))){GATV0(x,LIT,k+6,1); s=CAV1(x);}else s=ss;
    MC(s,CAV(line)+4,k);  MC(s+k,"_index",6L);  // move "xyz_index" into *s
    A indexnm; RZ(indexnm=nfs(k+6,s)) ASSERT(!(NAV(indexnm)->flag&NMLOC+NMILOC),EVILNAME) cv->indexsym=(probeislocal(indexnm,jt->locsyms))-SYMORIGIN;   // get name, verify not locative get (preallocated) index of symbol xyz_index in table
    RZ(indexnm=nfs(k,s)) ASSERT(!(NAV(indexnm)->flag&NMLOC+NMILOC),EVILNAME) cv->itemsym=(probeislocal(indexnm,jt->locsyms))-SYMORIGIN;   // get name, verify not locative get (preallocated) index of symbol xyz in table
-// obsolete    NAV(indexnm)->m-=6; cv->itemsym=(probeislocal(nfs(k,s),jt->locsyms))-SYMORIGIN;  // also symbol for xyz
-// obsolete    if(unlikely(k>(I)(sizeof(ss)-6))){ACINITZAP(x); fr(x);}  // remove tpop and free, now that we're done.  We may be in a loop 
   }else{cv->itemsym=cv->indexsym=0;}  // if not for_xyz., indicate with 0 indexes
  }
  R 1;  // normal return
@@ -396,7 +392,7 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
      // If the most recent stack entry before this entity started is a CALL, that is the name to use (it may have been extracted from an anonymous operator).
      // Otherwise, the call is truly anonymous and we use a name of ''
      NPGpysfmtdl|=128;  // indicate pm running so we flag calls to parser
-     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,LOCNAME(jt->global),~ic,NPGpysfmtdl&64?VAL2:VAL1);  // scaf should use lev to add >>
+     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,LOCNAME(jt->global),~ic,NPGpysfmtdl&64?VAL2:VAL1);
     }
 
     // If the executing verb was reloaded during debug, switch over to the modified definition
@@ -702,7 +698,6 @@ bodyend: ;  // we branch to here to exit with z set to result
    // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that are are about to pop over.  Only x and y are possible
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
-// obsolete   while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; if(ybuckptr->val&&AFLAG(ybuckptr->val)&AFUNINCORPABLE){A rv; if((rv=realize(ybuckptr->val))!=0)ACINITZAP(rv); SYMVALFA(*ybuckptr) ybuckptr->val=rv;}} yxbucks>>=16;}
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=ybuckptr->val; if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){ybuckptr->val=0; symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
    deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self);  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
@@ -725,14 +720,8 @@ bodyend: ;  // we branch to here to exit with z set to result
  RETF(z);
 }
 
-#if 0 // obsolete
-// execution of u : v, selecting the version of self to use based on valence
-static DF1(xv1){A z; R dfv1(z,  w,FAV(self)->fgh[0]);}  // scaf make bivalent
-static DF2(xv2){A z; R dfv2(z,a,w,FAV(self)->fgh[1]);}
-#else
-// execution of u : v, selecting the version of self & function to use based on valence.  Bivalent, called only from parse with w,self,self or a,w,self
+// execution of u : v, selecting the version of self & function to use based on valence.  Bivalent, called only from parse/unquote with w,self,self or a,w,self
 static DF2(xv12){I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; R (FAV(self)->valencefns[dyad])(jt,a,w,self);}
-#endif
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are
@@ -748,7 +737,6 @@ static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt
 DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
-// obsolete  ff=fdef(0,CCOLON,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags
  ff=fdef(0,CCOLON,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags, incl JTFLGOK[12]
  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
@@ -1281,10 +1269,6 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   // preparse to create the control-word structures
   GAT0(h,BOX,2*HN,1); hv=AAV1(h);
   DO(2, A vv=i?v2:v1; I b; RE(b=(I)preparse(vv,&hv[HN*i+0],&hv[HN*i+1])); flag|=(b*VTRY1)<<i; hv[HN*i+2]=JT(jt,retcomm)?vv:mtv;)
-// obsolete   if(m){B b;  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
-// obsolete    RE(b=preparse(v1,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=JT(jt,retcomm)?v1:mtv;
-// obsolete    RE(b=preparse(v2,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=JT(jt,retcomm)?v2:mtv;
-// obsolete   }
   // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
   // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
   if((1LL<<m)&0x206){  // types 1, 2, 9
@@ -1324,15 +1308,7 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   ft=m==1?ADVX:ft; okv1=m==1?modfn:okv1; okv2=m==1?jtvalenceerr:okv2;  // adv goes to modfn/valenceerr
   ft=m==2?CONJX:ft; okv1=m==2?jtvalenceerr:okv1; okv2=m==2?modfn:okv2;  // conj goes to valenceerr/modfn
   fdeffill(z,0,CCOLON, ((I)1<<ft), okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
-// obsolete   switch(m){
-// obsolete   case 3:  fdeffill(z,0,CCOLON, VERB, okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
-// obsolete   case 1:  fdeffill(z,0,CCOLON, ADV,  modfn,jtvalenceerr, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;
-// obsolete   case 2:  fdeffill(z,0,CCOLON, CONJ, jtvalenceerr,modfn, num(m),0L,h, flag, RMAX,RMAX,RMAX); break;
-// obsolete   case 4:  fdeffill(z,0,CCOLON, VERB, jtvalenceerr,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
-// obsolete   }
  }  // tacit form joins the explicit here
-// obsolete  case 13:  break;
-// obsolete  default: ASSERT(0,EVDOMAIN);
  // EPILOG is called for because of the allocations we made, but it is essential to make sure the pfsts created during crelocalsyms get deleted.  They have symbols with no value
  // that will cause trouble if 18!:_2 is executed before they are expunged.  As a nice side effect, all explicit definitions are recursive.
  EPILOG(z);

@@ -145,7 +145,7 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
 #endif
 
 #if !defined(__linux__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) //no native waken on other platforms
-void jfutex_waken(UI4 *p,UI4 n){jfutex_wakea(p);} //scaf/TUNE: should DO(n,jfutex_wake1(p)) depending on n and the #threads waiting on p
+void jfutex_waken(UI4 *p,UI4 n){jfutex_wakea(p);} // TUNE: should DO(n,jfutex_wake1(p)) depending on n and the #threads waiting on p
 #endif
 
 //values for mutex->v.  The upper 16 bits are a wait counter; the state is the low 16 bits, as follows

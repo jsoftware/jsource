@@ -592,7 +592,6 @@ F1(jtlocswitch){A g;
 
 F1(jtlocname){A g=jt->global;
  ASSERTMTV(w);
-// obsolete  ASSERT(g!=0,EVLOCALE);
  R boxW(sfn(0,LOCNAME(g)));
 }    /* 18!:5  current locale name */
 

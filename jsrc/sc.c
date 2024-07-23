@@ -83,11 +83,11 @@ DF2(jtunquote){A z;
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
-     if(fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)){  // look only in local symbols
+     if(likely((fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms))!=0)){  // look only in local symbols
       // u/v, assigned by xdefn.  Implied locative.  Switch locals and globals to caller's environment
       jt->locsyms=(A)AM(jt->locsyms); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
       raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
-     }
+     }else explocale=jt->global;  // explocale must be defined for flgd0cpC
     }
     flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
     SYMSETGLOBAL(explocale);   // switch to the (possibly new) locale.  We DO NOT change AKGST because if we are calling a non-operator modifier we need the old locale if the modifier calls u./v. .
@@ -101,7 +101,6 @@ DF2(jtunquote){A z;
    // ** as of here we know there is a value for the name, and it has been ra()d.  We must not take an error exit without fa
    ASSERTSUFF(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN,z=0; fa(fs); goto exitname;);   // make sure its part of speech has not changed since the name was parsed; if error must use general fa
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
-   // we have to wait till here to 
    if(unlikely((FAV(self)->flag2>>(VF2CACHEABLEX-QCNAMEDX))&namedloc)){   // cacheable nameref, and value found in a named locale
     thisname=jt->curname;  // refresh thisname
     // the nameref is cachable.  Fill it in.  Happens the first time a cachable reference is encountered.

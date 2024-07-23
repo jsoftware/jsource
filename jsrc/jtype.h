@@ -531,7 +531,7 @@ typedef I SI;
 #define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB|SPARSE)
 // Allow recursive usecount in one of these types
 // A recursive block is flagged by having the recursible type bit copied into the AFLAG.  But note: the block is not recursible unless the same bit is set in both
-// the type and the flag, where something like (0$a:) + 0$0 might reuse an argument block and leave the flags showing boxed when the type is B01.  scaf should fix this?
+// the type and the flag, where something like (0$a:) + 0$0 might reuse an argument block and leave the flags showing boxed when the type is B01.
 // We know that any block that has been ra()d is recursive, and therefore that fa() can assume recursibility for any recursible type
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB)  // sparse box not allowed
 // SYMB is TRAVERSIBLE so that fa() will call to free the symbols, and RECURSIBLE so that fanapop will pass the type-flag.  To ensure that a SYMB is always freed when
@@ -1219,7 +1219,7 @@ typedef struct {
 #define VF2WILLOPEN1X      4   // This verb will open y as its first act, or will discard y.  No boxed contents in y can appear in the result (they may be virtual).  Monad case only.  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
 // must leave a gap for WILLBEOPENED in result.h
-// 6 free
+// 5-6 free
 // next flag must be same as JTCOUNTITEMS
 #define VF2USESITEMCOUNT1X 7   // This verb can make use of an item count stored in m.  Monad case only
 #define VF2USESITEMCOUNT1  ((I)(((I)1)<<VF2USESITEMCOUNT1X))
@@ -1251,10 +1251,10 @@ typedef struct {
 #define VF2WILLOPEN2A       ((I)(((I)1)<<VF2WILLOPEN2AX))
 #define VF2USESITEMCOUNT2WX 19   // This verb can make use of an item count stored in m.  This becomes the COUNTITEMS flag in jt
 #define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
-#define VF2USESITEMCOUNT2AX 21   // This verb can make use of an item count stored in m.  This becomes the COUNTITEMS flag in jt
-#define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 #define VF2IMPLOCX 20   // This verb is one of u. v.
 #define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))
+#define VF2USESITEMCOUNT2AX 21   // This verb can make use of an item count stored in m.  This becomes the COUNTITEMS flag in jt
+#define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 #define VF2CACHEABLEX 21   // In a nameref, indicates the nameref is cacheable
 #define VF2CACHEABLE  ((I)(((I)1)<<VF2CACHEABLEX))
 #define VF2PRIMX 22   // Set in primitive ACV

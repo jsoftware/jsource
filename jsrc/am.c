@@ -616,7 +616,7 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
     if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,1,"(001) (x (<\"0 array)} y): consider using (<<array)}\n"));
     goto doubleboxednumeric;  // the boxes were created with <"0 array.  That is the same as <<array now
    }else if(AR(ind0)==indr+1){
-    if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,2,"(002) (x (<\"1 array)} y): consider using <array} or array}\n"));
+    if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,2,"(002) (x (<\"1 array)} y): consider using (<array)} or array}\n"));
     goto boxednumeric;  // the boxes were created with  <"1 array, which is like <array now
    }else ASSERT(0,EVRANK)  // error if not <"0 or <"1
   }else{

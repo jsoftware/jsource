@@ -404,15 +404,16 @@ typedef struct JSTstruct {
 // Cacheline 7: startup (scripts and deprecmsgs), essentially read-only
  C _cl7[0];
  A slist;            // boxed list of filenames used in right arg to 0!:, the entries made in sn field of L blocks are indexes into this.  AM has # valid entries
- A deprecex;  // list of INTs of messages not to display  // scaf could be a short mask
  I4 deprecct;  // number of deprecation  errors to display, -1 to emsg
  S startlock;        // lock for slist
+ US deprecex;  // bitmask of messages not to display
  // rest of cacheline used only in exceptional paths
+ US cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores, in multiples of 4KB
  C bx[11];               /* box drawing characters                          */
  UC disp[7];          // # different verb displays, followed by list thereof in order of display  could be 15 bits
- US cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores, in multiples of 4KB
  C oleop;            /* com flag to capture output                    */
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
+// 6 bytes free
 #if PYXES || 1
  JOBQ (*jobqueue)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
  I filler7[1];

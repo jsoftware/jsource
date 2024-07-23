@@ -86,6 +86,9 @@ sum=: +/
 (5!:5 <'g1') -: '+/ (',(5!:5 <'G1'),')'
 (5!:5 <'g2') -: '+/ (',(5!:5 <'G2'),')'
 
+'value error' -: v. etx 1.1
+'value error' -: u. etx 1.1
+
 NB. u. must be verb
 a =: {{ u. y }}
 'domain error' -: 2 a etx 5

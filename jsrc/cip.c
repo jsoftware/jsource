@@ -227,8 +227,6 @@ typedef struct {
  I flgs;   // complex, triangular processing flags
  I nbigtasks[2];  // number of tasks using taskm[0]; number of tasks that are not in the shortened tail
  I4 taskm[2];  // number of rows in leading tasks, unshortened trailing tasks
-// obsolete  I nanerr; // nonzero whenever a nan was encountered; could indicate we should throw an error (_+__) or a case where we disagree with ieee (_*0)
-// scaf should deal with this case better; for the former case, should abort immediately (ideally siglonjmp or so but...); for the latter case, don't fall back to +/@(*"1 _), but rather recalculate the block with extra checks, maybe tell other threads about row/col containing inf/0
 } CACHEMMSTATE;
 #define OPHEIGHTX 2
 #define OPHEIGHT ((I)1<<OPHEIGHTX)  // height of outer-product block
@@ -260,10 +258,7 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
  // Small problems should use a multiplier that does not use full cacheblock.  For jobs, we make the decision for each task
  if(((((50-m)&(50-n)&(16-pstored)&((DCACHED_THRES-1)-m*n*pnom))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
   // blocked algorithm.  there is no size limit on the blocks
-// obsolete   I ok=blockedmmult(jt,av,wv,zv,m,n,pnom,pstored,flgs);  // blockedmult uses normal JE return of 0=error
   R blockedmmult(jt,av,wv,zv,m,n,pnom,pstored,flgs)?0:EVNAN;  // blockedmmult uses normal JE return of 0=error; we return job semantics, 0=OK
-// obsolete   if(unlikely(!ok))__atomic_fetch_add(&pd->nanerr,1,__ATOMIC_RELAXED);  //could be _fetch_or, but x86 has lock xadd
-// obsolete   R 0;  // scaf should return nonzero to abort if error
  }
 
  D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
@@ -522,9 +517,7 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
    flgs&=~(FLGZFIRST|FLGZLAST);  // we have finished a 16x64 cache section.  That touched all the columns of z.  For the remaining sections we must accumulate into the z values.  If this was the last pass, clear that flag too, since we're finished
   }  // end of loop for each 16x64 section of w
  }  // end of loop for each 64-col slice of w
-// obsolete  if(unlikely(NANTEST))__atomic_fetch_add(&pd->nanerr,1,__ATOMIC_RELAXED);//could be _fetch_or, but x86 has lock xadd
  R unlikely(NANTEST)?EVNAN:0;  // return job semantics, 0=OK
-// obsolete  R 0;  // scaf should return nonzero to abort if error
 }
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
@@ -562,7 +555,6 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs,.nbigtasks={nfulltasks,nfulltasks+nremnant},.taskm={fulltasksize,endtasksize}};
    // number of full tasks, followed by number that have size 'endtasksize'.  Later tasks have size endtasksize-CACHEHEIGHT
  R !jtjobrun(jt,cachedmmultx,&ctx,nfulltasks+tailtasks,0);  // go run the tasks - default to threadpool 0.  Switch return from job semantice to JE error samantics - 0 if error, 1 if OK
-// obsolete  R !ctx.nanerr;
 }
 
 #else

@@ -77,11 +77,11 @@ F1(jtevms){A t,*tv,*wv;
  ASSERT(1==AR(w),EVRANK);
  ASSERT(NEVM==AN(w),EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
+ ASSERT(THREADID(jt)==0,EVRO);  // allow setting messages only in master thread
  GAT0(t,BOX,1+NEVM,1); tv=AAV(t); 
  *tv++=mtv;
  wv=AAV(w);
  DQ(NEVM, RZ(*tv=incorp(ca(vs(C(*wv))))); ACINITZAP(*tv) CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room.  ZAP since it's going into recursive box
- // scaf should quiesce the system here since we want no locks on evm
  ACINITZAPRECUR(t,BOX); fa(JT(jt,evm)); JT(jt,evm)=t;  // ras to protect contents
  R mtv;
 }
@@ -246,7 +246,8 @@ F1(jtasgzombs){I k;
 // return 0 to signal error, 1 to continue
 I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  READLOCK(JT(jt,startlock))
- A okmsg; if(JT(jt,deprecex)){RZGOTO(okmsg=eps(sc(absmno),JT(jt,deprecex)),exiterr); if(BAV(okmsg)[0]!=0)goto exitok;}  // unless this msg excluded, continue
+// obsolete  A okmsg; if(JT(jt,deprecex)){RZGOTO(okmsg=eps(sc(absmno),JT(jt,deprecex)),exiterr); if(BAV(okmsg)[0]!=0)goto exitok;}  // unless this msg excluded, continue
+ if(JT(jt,deprecex)&&(JT(jt,deprecex)&((US)1<<absmno)))goto exitok;  // unless this msg excluded, continue
  if(mno>=0){if(JT(jt,deprecct)==0)goto exitok;}else{JT(jt,deprecct)+=JT(jt,deprecct)==0;}  // if msgs disabled, return; but force msg out if neg
  // code to write output line copied from jtpr1
  // extract the output type buried in jt
@@ -275,17 +276,20 @@ F1(jtdeprecxs){A ct, excl;
  RZ(excl=vi(excl));  // excl mst be integral
  ASSERT(AR(excl)<2,EVRANK);  // and atomic or list
  // install values
- INCORP(w);
+ US exv=0x8000; DO(AN(excl), if(IAV(excl)[i]<16)exv|=(US)1<<IAV(excl)[i];)  // convert list to bitmask
+// obsolete  INCORP(w);
  WRITELOCK(JT(jt,startlock))
- JT(jt,deprecct)=cti; ra(excl); fa(JT(jt,deprecex)); JT(jt,deprecex)=excl;
+// obsolete  JT(jt,deprecct)=cti; ra(excl); fa(JT(jt,deprecex)); JT(jt,deprecex)=excl;
+ JT(jt,deprecct)=cti; JT(jt,deprecex)=exv;
  WRITEUNLOCK(JT(jt,startlock))
  R mtm;
 }
 
 //9!:54
-F1(jtdeprecxq){
+F1(jtdeprecxq){A zd;
+ GAT0(zd,INT,16,1); I zdi=0; DO(15, if((JT(jt,deprecex)>>i)&1)IAV(zd)[zdi++]=i;) AN(zd)=AS(zd)[0]=zdi;  // create vector of exclusions
  READLOCK(JT(jt,startlock))
- A z=jlink(sc(JT(jt,deprecct)),JT(jt,deprecex)?JT(jt,deprecex):mtv);  // return current status
+ A z=jlink(sc(JT(jt,deprecct)),zd);  // return current status
  READUNLOCK(JT(jt,startlock))
  RETF(z);
 }

@@ -286,9 +286,6 @@ void jtforeigninit(J jt){UI i;
  MN(9,57)  XPRIM(VERB, jtaudittdisab, 0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,58)  XPRIM(VERB, jtgemmtune, jtgemmtune2,    VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,59)  XPRIM(VERB, jtemsglevel, 0,    VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,60)  XPRIM(VERB, jtleakblockread, 0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,61)  XPRIM(VERB, jtleakblockreset, 0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,63)  XPRIM(VERB, jtshowinplacing1, jtshowinplacing2,  VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,66)  XPRIM(VERB, jtcheckcompfeatures, 0,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,0)  XPRIM(VERB, jtdbc,        0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,1)  XPRIM(VERB, jtdbstack,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
@@ -346,12 +343,15 @@ void jtforeigninit(J jt){UI i;
  MN(128,8) XPRIM(VERB, jtqhash12,    jtqhash12,    VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE,RMAX,RMAX,RMAX);  
  MN(128,10) XPRIM(VERB, jtludecomp,   jtludecomp,     VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(18,6)  XPRIM(VERB, jtresetbloom,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
-#if 0  // withdrawn
+#if 0  // obsolete 
  MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
 #endif
 
  MN(0,-1) XPRIM(VERB, jtskipinscript,            0, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(5,-1)  XPRIM(VERB, 0,            jtoutstr,     VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-1)  XPRIM(VERB, jtleakblockread, 0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-2)  XPRIM(VERB, jtleakblockreset, 0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-3)  XPRIM(VERB, jtshowinplacing1, jtshowinplacing2,  VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-1) XPRIM(VERB, 0,            jtfindrange,  VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-2) XPRIM(VERB, 0,            jtfindrange4, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-3) XPRIM(VERB, 0,            jtfindrange2, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);

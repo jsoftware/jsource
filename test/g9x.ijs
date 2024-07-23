@@ -400,7 +400,7 @@ NB. 9!:54 and 9!:55
 (271827;'') -: 9!:54''
 9!:55 (271828;1)   NB. suppress test
 1: 0 ((2;2 3);<3 2;4)} i. 10 10
-(271828;1) -: 9!:54''
+(271828;,1) -: 9!:54''
 NB. used only to debug error stop 9!:55 (_1)   NB. allow error
 NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10 10
 )
@@ -410,13 +410,13 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 (271827;'') -: 9!:54''
 9!:55 (271828;2)   NB. suppress test
 1: 0  (<"1 (2 2$2 2 3 3))} i. 10 10
-(271828;2) -: 9!:54''
+(271828;,2) -: 9!:54''
 9!:55 (271828)   NB. suppress msg but test
 1: 0 (<"0 (2 2$2 2 3 3))} i. 10 10  NB. multiple boxed selectors
 (271827;'') -: 9!:54''
 9!:55 (271828;1)   NB. suppress test
 1: 0  (<"0 (2 2$2 2 3 3))} i. 10 10
-(271828;1) -: 9!:54''
+(271828;,1) -: 9!:54''
 
 1: 0 : 0   NB. axes containing table now OK
 9!:55 (271828)   NB. suppress msg but test
@@ -424,7 +424,7 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 (271827;'') -: 9!:54''
 9!:55 (271828;3)   NB.
 1: 0 (<1;<i. 2 2)} i. 10 10 
-(271828;3) -: 9!:54''
+(271828;,3) -: 9!:54''
 )
 
 1: 0 : 0   NB. m}"r is now OK
@@ -433,7 +433,7 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 (271827;'') -: 9!:54''
 9!:55 (271828;4)   NB.
 1: 0 (2})"1 i. 10 10 
-(271828;4) -: 9!:54''
+(271828;,4) -: 9!:54''
 )
 
 9!:55 (271828)   NB. suppress msg but test
@@ -441,21 +441,21 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 (271827;'') -: 9!:54''
 9!:55 (271828;5)   NB.
 1: *@+: 3 4
-(271828;5) -: 9!:54''
+(271828;,5) -: 9!:54''
 
 9!:55 (271828)   NB. suppress msg but test
 1: 6 *@+ 3 4  NB. f@atomic dyad
 (271827;'') -: 9!:54''
 9!:55 (271828;6)   NB.
 1: 6 *@+ 3 4
-(271828;6) -: 9!:54''
+(271828;,6) -: 9!:54''
 
 9!:55 (271828)   NB. suppress msg but test
 1: ". '+/@*'  NB. f@atomic dyad
 (271827;'') -: 9!:54''
 9!:55 (271828;8)   NB.
 1: ". '+/@*'  NB. f@atomic dyad
-(271828;8) -: 9!:54''
+(271828;,8) -: 9!:54''
 
 9!:55 (0)  NB. reset
 

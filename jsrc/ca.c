@@ -482,6 +482,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   if(likely(f2==on2)){flag2|=VF2RANKATOP2; f2=r==RMAX?on2cell:f2; f2=r==0?on20:f2;}
   fdeffillall(z,flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype);
   R z;
+
  }else ASSERT((AT(a)|AT(w))&VERB,EVDOMAIN)  // m&n not allowed
   // continuing must be m&v or u&n
   A va=AT(a)&VERB?a:w, na=AT(a)&VERB?w:a;
@@ -489,6 +490,9 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
   p=FAV(va)->flag; flag=((p&(VJTFLGOK2|VIRS2))>>1)+(FAV(va)->flag&VASGSAFE);
   // the noun will be INCORPed by fdef
+
+  // take WILLOPEN/COUNT for the monad from the appropriate side of the dyadic verb.
+  flag2=((FAV(va)->flag2)>>(AT(a)&VERB?VF2WILLOPEN2AX-VF2WILLOPEN1X:VF2WILLOPEN2WX-VF2WILLOPEN1X))&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
 
   // look for supported forms: comparison, i.-family, 128!:3.  But not if the arg is atomic or empty - no value in that
   if((-AN(na)&-AR(na))<0){  // noun is not atomic and not empty
@@ -504,6 +508,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
    }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; // m&128!:3
    }
   }
-  fdeffillall(z,0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
+
+  fdeffillall(z,flag2,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
   R z;
 }

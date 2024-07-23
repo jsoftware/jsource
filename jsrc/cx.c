@@ -155,10 +155,9 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
 // result is address of cv after stack popped
 static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
  if(cv->w==CFOR){
-  if(cv->t){A svb;  // if for_xyz. that has processed forinit ...
+  if(cv->t){A svb;  // if for_xyz. that has processed forinit ...  svb=the virtual block for the item
    SYMORIGIN[cv->indexsym].flag&=~LREADONLY;  // set xyz_index is no longer readonly.  It is still available for inspection
    // If xyz still points to the virtual block, we must be exiting the loop early: the value must remain, so realize it
-   ;  // the virtual block for the item
    if(likely((svb=cv->item)!=0)){   // if the svb was allocated...
     if(unlikely(SYMORIGIN[cv->itemsym].val==svb)){A newb;   // svb was allocated, loop did not complete, and xyz has not been reassigned
      fa(svb);   // remove svb from itemsym.val.  Safe, because it can't be the last free
@@ -526,7 +525,7 @@ dobblock:
     tdv->trap=PUSHTRYSTK;
     // turn off debugging UNLESS there is a catchd; then keep on only if user set debug mode
     // if debugging is already off, it stays off
-    if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if((NPGpysfmtdl&16)&&isd)jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}  // scaf avoid branches
+    if(unlikely(jt->uflags.trace&TRACEDB)){jt->uflags.trace&=~TRACEDB; if(unlikely(NPGpysfmtdl&(isd<<4)))jt->uflags.trace|=TRACEDB1&(JT(jt,dbuser));}  // isd&&(flag&16)
     // debugging is now off if we are trapping.  In that case, indicate that we are trapping errors, to prevent holding them for debug
     jt->emsgstate|=(~jt->uflags.trace&TRACEDB1)<<EMSGSTATETRAPPINGX;  // turn on trapping if not now debug
     // We allow verbose messages in case the catch. wants to display them.  This is different from u :: v
@@ -594,9 +593,10 @@ dobblock:
    tcesx&=~(32<<TCESXTYPEX);  // the flag for DOF is for the loop, but we are exiting, so turn off the flag
   case CENDSEL:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
-   // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-   // (scaf this is no longer needed since names are not deleted but the result case is rare)
-   if(unlikely(!(tcesx&TCESXCECANT)))BZ(z=rat(z)); cv=unstackcv(cv,1);
+// obsolete    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
+// obsolete    // (this is no longer needed since names are not deleted but the result case is rare)
+// obsolete    if(unlikely(!(tcesx&TCESXCECANT)))BZ(z=rat(z)); 
+   cv=unstackcv(cv,1);  // This leaves xyz[_index] defined, so there is no need to rat() z
    if(FLAGGEDNOTRACE(tcesx)){--ic; goto dobblock;}  // if flagged (must be ENDSEL), NSI is bblock, go do it without reading
    ic=CWGO(cwsent,CNSTOREDCW,ic);    // continue at new location
    goto nextline;

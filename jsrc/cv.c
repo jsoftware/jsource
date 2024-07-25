@@ -35,7 +35,7 @@ static A jtfitct(J jt,A a,A w,I cno,A z){V*sv;
  // Handle i.!.1 specially; otherwise drop i. back to normal
  if(unlikely(cno==3))if(d==1.0){d=1.0-jt->cct; if(!SY_64)cno=0;}else cno=0;   // i.!.1 is special on 64-bit systems; others just specify fit
  ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);  // can't be greater than 2^_34
- fdeffillall(z,0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1|VFCOMPCOMP),(I)(sv->mr),lrv(sv),rrv(sv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
+ fdeffillall(z,0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1|VFCOMPCOMP|VASGSAFE),(I)(sv->mr),lrv(sv),rrv(sv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
  R z;
 }
 
@@ -105,7 +105,7 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
   case CROT: case CDOLLAR:  // these allow an empty array 
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
-   fdeffill(z,0L,CFIT,VERB,jtfitfill1,jtfitfill2,a,w,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2),m,l,r) RETF(z);  // ^!.f
+   fdeffill(z,0L,CFIT,VERB,jtfitfill1,jtfitfill2,a,w,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VASGSAFE),m,l,r) RETF(z);  // ^!.f
   case CTHORN:
    RE(w=sc(k=i0(w)));
    ASSERT(0<k,EVDOMAIN);

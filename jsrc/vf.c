@@ -84,23 +84,32 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  EPILOG(z);
 }    /* a|."r w on sparse arrays */
 
-#define ROF(r) if((I )(r<-n)|(I )(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
-#define ROT(r) if((I )(r<-n)|(I )(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
-
+// set k=length that wraps, ks=offset to it in source, kd=offset to it in dest, js=source offset to part that doesn't wrap, kd=offset to it in dest
+// obsolete #define ROF(r) if((I )(r<-n)|(I )(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
+// obsolete #define ROT(r) if((I )(r<-n)|(I )(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
+#define ROTF I ar=ABS(r); if(unlikely((UI)ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABS(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;   // UI in case ABS(IMIN)
+// obsolete #define ROF(r) ar=ABS(r); ar=MIN(ar,n); ROTFCOMMON
+// obsolete #define ROT(r) ar=ABS(r); if(unlikely(ar>n)){r=r%n; ar=ABS(r);} ROTFCOMMON
 // m=#cells d=#atoms per item  n=#items per cell
-static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y;
+static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,r,x,y,kd,ks,jd,js;
  e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item
- if(jt->fill){
-  if(p<=1){r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;);}
-  else{DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;);}
- }else{
-  if(p<=1){r=p?*av:0;     ROT(r); DQ(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
-  else{DO(m, r=av[i]; ROT(r);       MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
- }
+// obsolete  if(jt->fill){
+// obsolete   if(p<=1){r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;);}
+// obsolete   else{DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;);}
+// obsolete   if(p<=1){r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;);}
+// obsolete   else{DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;);}
+// obsolete  }else{
+// obsolete   if(p<=1){r=p?*av:0;     ROT(r); DQ(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
+// obsolete   else{DO(m, r=av[i]; ROT(r);       MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
+ if(p<=1){r=p?*av:0;     ROTF(r); DQ(m, MC(v+jd,u+js,e-k);  if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,atomsize,jt->fillv); u+=e; v+=e;);}  // move fill last in case inplace
+ else{DO(m, r=av[i]; ROTF(r);       MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,atomsize,jt->fillv);  u+=e; v+=e;);}
+// obsolete  }
 }
 
+
+
 /* m   # cells
-   c   # atoms in each cell
+   d   # atoms in each cell
    n   # items in each cell
    k   # bytes in each atom
    p   length of av
@@ -116,17 +125,28 @@ F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(a=vi(a));
  // special case: if a is atomic 0, and cells of w are not atomic
  if((wcr!=0)&(((ar|IAV(a)[0])==0)))R RETARG(w);   // 0 |. y, return y
- if(((1-acr)|((-af)&(-acr|(wf-1))))<0)R rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtrotate);  // if multiple a-lists per cell, or a has frame and (a cell is not an atom or w has no frame) handle rank by using " for it
+ // We support IRS in a limited way.  We revert to the rank loop if:
+ // 1 cell-rank of a>1  (we have to replicate w)
+ // 2 a has frame, if: cell-rank of a > 0  (we have to match cells of a)
+ //                OR  frame of w does not equal frame of a (agreement has already been checked in the caller, if IRS)
+ //                   (in the case where a and w frames are equal, we apply each atom of a to one cell of w since a cell-rank is 0)
+ if(((1-acr)|((-af)&(-acr|-(af^wf))))<0)R rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtrotate);  // revert if we can't match a and w easily
  if(((wcr-1)&(1-p))<0){RZ(w=reshape(apip(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
  ASSERT(((-wcr)&(wcr-p))>=0,EVLENGTH);    // !wcr||p<=wcr  !(wcr&&p>wcr)
- av=AV(a);
- RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));  // set fill value if given
- GA(z,AT(w),wn,wr,s); v=CAV(z);
+ av=AV(a); z=0;   // init no result allocated
+ if(jt->fill){
+  // if there is fill, we can do the rotate inplace
+  RZ(w=setfv(w,w));  // set fill value if given
+  z=ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)?w:z;  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
+ }
+ u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));
+ if(z==0)GA(z,AT(w),wn,wr,s); v=CAV(z);   // allocate result area, unless we are inplacing into w
  if(!wn)R z;
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
- rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);
+ rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);  // rotate first axis
  if(1<p){
-  GA(y,AT(w),wn,wr,s); u=CAV(y); 
+  // more than 1 axis: we ping-pong between buffers as we go down the axes
+  GA(y,AT(w),wn,wr,s); u=CAV(y);   // scaf not needed if there is fill
   b=0; s+=wf;
   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame
   z=b?y:z;

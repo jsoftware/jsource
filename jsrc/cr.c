@@ -647,6 +647,8 @@ static DF1(rank1in){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested r
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
+
+// dyadic forms also check agreement wrt the given ranks
 static DF2(rank2i){F2PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
  I ar=sv->localuse.lu1.srank[1]; ar=ar>=AR(a)?RMAX:ar; I af=AR(a)-ar;   // left rank
  I wr=sv->localuse.lu1.srank[2]; wr=wr>=AR(w)?RMAX:wr; I wf=AR(w)-wr;   // right rank

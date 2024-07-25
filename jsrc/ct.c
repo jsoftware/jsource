@@ -533,7 +533,7 @@ static I jtthreadcreate(J jt,I n){
  R 1;
 }
 
-// execute the user's task.  Result is an ordinary array or a pyx.  Bivalent
+// execute the user's task.  Result is an ordinary array or a pyx.  Bivalent (a,w,self) or (w,self,self) called from unquote or parse
 static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  ARGCHK2(arg1,arg2);  // the verb is not the issue
  RZ(pyx=jtcreatepyx(jt,-2,inf));
@@ -549,7 +549,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
   // or if it is UNINCORPABLE (in which case we only need to clone the nonrecursive block).  After that, ra() the arguments to protect them until the task completes.
   // It would be nice to be able to free the virtual before the task completes, but we don't have a way to (we could realize/fa in the worker, but why?).  The virtual backer will be tied up during the task, but we
   // won't have to copy the data here and then transfer it in the task
-  if(dyad){ra(arg3);}   // arg3 is x/self, so never virtual; just ra
+  ASSERT(ISDENSE(AT(arg1)),EVNONCE) if(dyad){ASSERT(ISDENSE(AT(arg2)),EVNONCE) ra(arg3);}   // Don't allow sparse args since we can't box them; arg3 is self, so never virtual; just ra
   if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} ra(arg1);
   if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block

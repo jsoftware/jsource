@@ -184,7 +184,7 @@ DF2(jtunquote){A z;
  jt->parserstackframe.sf=fs; // as part of starting the name we set the new recursion point
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
  if(likely(!(jt->uflags.ui4))) {
-  // No special processing. Just run the entity
+  // No special processing. Just run the entity as (a,w,self) or (w,self,self)
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through if the call supports inplacing
   z=(*actionfn)((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),a,w,fs);  // keep MODIFIER flag always, and others too if verb supports it 
   if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point

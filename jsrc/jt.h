@@ -220,7 +220,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C fillv0[sizeof(Z)];/* default fill value                              */
  RNG *rngdata;    // separately allocated block for RNG
 // seldom-used fields
- I malloctotalhwmk;  // highest value since most recent 7!:1
+ I filler5[1];
 // end of cacheline 5
 
  C _cl6[0];
@@ -237,7 +237,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
            // perhaps something like an lru cache of threads recently freed to?  Do a linear scan of the first k entries (maybe w/short simd if the first is a miss), and if they all miss, then fall back to--snmalloc trick, or sort buffer, or something else
            // Or maybe a fixed-size cache, and anything that falls out of it gets immediately flushed?  I like that, because it helps prevent singleton allocations from getting lost
  DC sitop;            /* pointer to top of SI stack                                 */
- A *pmttop;  // tstack top to free to when releasing the postmortem stack.  Non0 indicates pm debugging session is active
+ A *pmttop;  // tstack top to free to when releasing the postmortem stack.  Non0 indicates pm debugging session is active  Could move to JST
 // end of cacheline 6
 
  C _cl7[0];
@@ -246,7 +246,10 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
  I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
  UI cstackinit;       // C stack pointer at beginning of execution
- I filler7[4];
+ I mfreegenalloremote;        // Amount allocated through malloc but freed by other threads (frees only, so always negative)
+ I malloctotalremote;    // net total of malloc/free performed in m.c only but freed by other threads (frees only, so always negative)
+ I malloctotalhwmk;  // highest value since most recent 7!:1
+ I filler7[1];
 // end of cacheline 7
  C _cl8[0];
 
@@ -343,8 +346,10 @@ typedef struct JSTstruct {
 #if MEMAUDIT & 2
  C audittstackdisabled;   // set to 1 to disable auditing
 #endif
-// 2-3 byte free
+// 0-1 byte free
  // rest of cacheline used only in exceptional paths
+ C oleop;            /* com flag to capture output                    */
+ UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
  I filler3[4];
@@ -411,14 +416,11 @@ typedef struct JSTstruct {
  US cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores, in multiples of 4KB
  C bx[11];               /* box drawing characters                          */
  UC disp[7];          // # different verb displays, followed by list thereof in order of display  could be 15 bits
- C oleop;            /* com flag to capture output                    */
- UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
-// 6 bytes free
 #if PYXES || 1
  JOBQ (*jobqueue)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
- I filler7[1];
-#else
  I filler7[2];
+#else
+ I filler7[3];
 #endif
 // end of cacheline 7
  C _cl8[0];

@@ -69,7 +69,7 @@ F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}  //  7!:0
 // Return (current allo),(max since reset)
 // If arg is an atom, reset hwmk to it
 F1(jtsphwmk){
-  I curr = jt->malloctotal; I hwmk = jt->malloctotalhwmk;
+  I curr = jt->malloctotal+jt->malloctotalremote; I hwmk = jt->malloctotalhwmk;
   if(AN(w)){I new; RE(new=i0(w)); jt->malloctotalhwmk=new;}
   R v2(curr,hwmk);
 }

@@ -18,6 +18,13 @@ f&> c [ q=: 2 3$?2e6
 f&> c [ q=: 2 1 3$o.?2e6
 f&> c [ q=: 2 1 1 3$j./?2$2e6
 
+1000 > {{ a =. 500 ?@$ 100
+b =. 550 ?@$ 100
+sp =. $. 110 100 ?@$ 2
+stsp =. 7!:0''
+for. i. 20 do. (<a;b) { sp end.
+stsp -~ 7!:0'' }} ''   NB. At one point this leaked memory
+
 'nonce error'  -: ($.i.2 3)        { etx 'abcdef'
 'nonce error'  -: ($.i.2 3)        { etx u:'abcdef'
 'nonce error'  -: ($.i.2 3)        { etx 10&u:'abcdef'

@@ -364,6 +364,10 @@ B jtspfree(J jt){I i;A p;
    // adding the bytes for those blocks to mfreebgenallo
    jt->mfreegenallo-=SBFREEB - (jt->memballo[i] & ~MFREEBCOUNTING);  // subtract diff between current mfreeb[] and what it will be set to
    jt->memballo[i] = SBFREEB + (jt->memballo[i] & MFREEBCOUNTING);  // set so we trigger rescan when we have allocated another SBFREEB bytes
+
+   // transfer bytes freed in other threads back to the totals for this thread
+   I xfct=jt->malloctotalremote; jt->malloctotal+=xfct; __atomic_fetch_sub(&jt->malloctotalremote,xfct,__ATOMIC_ACQ_REL);  // remote mods must be atomic
+   xfct=jt->mfreegenalloremote; jt->mfreegenallo+=xfct; __atomic_fetch_sub(&jt->mfreegenalloremote,xfct,__ATOMIC_ACQ_REL);  // remote mods must be atomic
   }
  }
  jt->uflags.spfreeneeded = 0;  // indicate no check needed yet
@@ -471,17 +475,16 @@ F1(jtmmaxs){I j,m=MLEN,n;
 }    /* 9!:21 space limit set */
 
 
-// Get total # bytes in use.  That's total allocated so far, minus the bytes in the free lists and the blocks to be repatriated.
+// Get total # bytes in use in the current thread.  That's total allocated so far, minus the bytes in the free lists and the blocks to be repatriated.
 // mfreeb[] is a negative count of blocks in the free list, and biased so the value goes negative
-// when garbage-collection is required.  All non-pool allocations are accounted for in
-// mfreegenallo
+// when garbage-collection is required.  All non-pool allocations are accounted for in mfreegenallo
 // At init, each mfreeb indicates SBFREEB bytes. mfreegenallo is negative to match that total,
 // indicating nothing has really been allocated; that's (PLIML-PMINL+1)*SBFREEB to begin with.  When a block
 // is allocated, mfreeb[] increases; when a big block is allocated, mfreegenallo increases by the
 // amount of the allocation, and mfree[-PMINL+n] decreases by the amount in all the blocks that are now
 // on the free list.
 // At coalescing, mfreeb is set back to indicate SBFREEB bytes, and mfreegenallo is decreased by the amount of the setback.
-I jtspbytesinuse(J jt){I i,totalallo = jt->mfreegenallo&~MFREEBCOUNTING;  // start with bias value
+I jtspbytesinuse(J jt){I i,totalallo = (jt->mfreegenallo&~MFREEBCOUNTING)+jt->mfreegenalloremote;  // start with bias value
  if(jt->repatq)totalallo-=AC(jt->repatq);  // bytes awaiting gc should not be considered inuse
  for(i=PMINL;i<=PLIML;++i){totalallo+=jt->memballo[-PMINL+i]&~MFREEBCOUNTING;}  // add all the allocations
  R totalallo;
@@ -910,16 +913,19 @@ A jtgc(J jt,A w,A* old){
  // calls where w is the oldest thing on the tpush stack are not uncommon.  In that case we don't need to do ra/tpop/fa/repair-inplacing.  We can also save the repair if we KNOW w will be freed during the tpop
  A *pushp=jt->tnextpushp;  // top of tstack
  if(old==pushp){if(AC(w)>=0){ra(w); tpush(w);}   // if nothing to pop: (a) if inplaceable, make no change (value must be protected up the tstack); (b) otherwise protect the value on the tstack 
- }else if(*old==w){   // does the start of tstack point to w?
-  // w is the first element on the tstack.  If it is the ONLY element, we can stand pat; no need to make w recursive
-  if(old!=pushp-1){
-   // there are other elements on tstack, we have to make w recursive because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
-   radescend(w); A *old1=old+1; if(likely(((UI)old1&(NTSTACKBLOCK-1))!=0))tpop(old1); else{*old=0; tpop(old); tpush(w);}  // make w recursive; if we can back up to all but the first stack element, do that, leaving w on stack as before; otherwise reinstall
-  }  // raise descendants.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
- }else if(((UI)REPSGN(AC(w))&(UI)AZAPLOC(w))>=(UI)old && likely((((UI)old^(UI)pushp)&-NTSTACKBLOCK)==0)){  // inplaceable zaploc>=old - but that is valid only when we know pushp and old are in the same stack block
-  // We can see that w is abandoned and is about to be freed.  Swap it with *old and proceed
-  radescend(w); *AZAPLOC(w)=*old; *old=w; AZAPLOC(w)=old; tpop(old+1);  // update ZAPLOC to point to new position in stack
+ }else if(likely(ISDENSE(AT(w)))){  // sparse blocks cannot simply be left in *old because the contents are farther down the stack and would have to be protected too
+  if(*old==w){   // does the start of tstack point to w?
+   // w is the first element on the tstack.  If it is the ONLY element, we can stand pat; no need to make w recursive
+   if(old!=pushp-1){
+    // there are other elements on tstack, we have to make w recursive because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
+    radescend(w); A *old1=old+1; if(likely(((UI)old1&(NTSTACKBLOCK-1))!=0))tpop(old1); else{*old=0; tpop(old); tpush(w);}  // make w recursive; if we can back up to all but the first stack element, do that, leaving w on stack as before; otherwise reinstall
+   }  // raise descendants.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
+  }else if(((UI)REPSGN(AC(w))&(UI)AZAPLOC(w))>=(UI)old && likely((((UI)old^(UI)pushp)&-NTSTACKBLOCK)==0)){  // inplaceable zaploc>=old - but that is valid only when we know pushp and old are in the same stack block
+   // We can see that w is abandoned and is about to be freed.  Swap it with *old and proceed
+   radescend(w); *AZAPLOC(w)=*old; *old=w; AZAPLOC(w)=old; tpop(old+1);  // update ZAPLOC to point to new position in stack
+  }else goto general;  // no applicable special case, do the ra/tpop sequence
  }else{
+general:;
   // general case, w not freed or not abandoned
   ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount (unless sparse).
    // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
@@ -1130,9 +1136,9 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
 
 // back the tpush stack up to the previous allocation.  We have just popped off the last element of the current allocation
 // (that is, we have moved tnextpushp to the chain field at the start of the allocation)
-// we keep one allocation in hand in tstacknext to avoid hysteresis.  If there is one already there
+// we keep one allocation in hand in tstacknext to avoid hysteresis.  If there is one already there we free it
 void freetstackallo(J jt){
- if(jt->tstacknext){FREECHK(jt->tstacknext); __atomic_fetch_sub(&jt->malloctotal,NTSTACK+NTSTACKBLOCK,__ATOMIC_ACQ_REL);}   // account for malloc'd memory
+ if(jt->tstacknext){FREECHK(jt->tstacknext); jt->malloctotal-=NTSTACK+NTSTACKBLOCK;}   // account for malloc'd memory
  // We will set the block we are vacating as the next-to-use.  We keep only 1 such; if there is one already, free it
  jt->tstacknext=jt->tstackcurr;  // save the next-to-use, after removing bias
  jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
@@ -1239,7 +1245,8 @@ __attribute__((noinline)) A jtgafallopool(J jt){
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
  I blockx=(I)jt&63; jt=(J)((I)jt&-64);
- I nt=jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
+ jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
+ I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
  jt->mfreegenallo+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;   // add to total from OS
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
@@ -1280,7 +1287,8 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
   I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
  }
- I nt=jt->malloctotal+=n;
+ jt->malloctotal+=n;  // add to our allocations
+ I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  MOREINIT(z);  // init allocating thread# and clear the lock
@@ -1553,11 +1561,22 @@ printf("%p-\n",w);
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
 #if PYXES
-  jt=JTFORTHREAD1(jt,w->origin);  // for space accounting, switch to the thread the block came from  *** this modifies jt ***
-#endif
+  J jtremote=JTFORTHREAD1(jt,w->origin);
+  if(likely(jtremote==jt)){  // normal case of freeing in the allocating thread: avoid atomics
+// obsolete   jt=JTFORTHREAD1(jt,w->origin);  // for space accounting, switch to the thread the block came from  *** this modifies jt ***
+   jt->malloctotal-=allocsize;
+   jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
+  }else{  // the block was allocate in another thread.  Account for its free there
+   __atomic_fetch_sub(&jtremote->malloctotalremote,allocsize,__ATOMIC_ACQ_REL);
+   __atomic_fetch_sub(&jtremote->mfreegenalloremote,allocsize,__ATOMIC_ACQ_REL);
+  }
+  if(unlikely(jtremote->mfreegenallo&MFREEBCOUNTING))__atomic_fetch_sub(&jtremote->bytes,allocsize,__ATOMIC_ACQ_REL);  // keep track of total allocation, needed only if enabled
+#else
   jt->malloctotal-=allocsize;
   jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
-  if(unlikely(jt->mfreegenallo&MFREEBCOUNTING))jt->bytes-=allocsize;  // keep track of total allocation, needed only if enabled
+  if(unlikely(jt->mfreegenallo&MFREEBCOUNTING))__atomic_fetch_sub(&jt->bytes,allocsize,__ATOMIC_ACQ_REL);  // keep track of total allocation, needed only if enabled
+#endif
+ 
 #if ALIGNTOCACHE
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else

@@ -339,7 +339,9 @@ static DF1(jtsunder){F1PREFIP;PROLOG(777);
   // we do that we have to remove any virtual blocks created here so that they don't raise y
   rifv(uz);  // if uz is a virtual, realize it in case it is backed by y
   RZ(uz=EPILOGNORET(uz));  // free any virtual blocks we created
-  if(negifipw<0)ACRESET(w,origacw)  // usecount of y has been restored; restore inplaceability
+  if((origacw&negifipw&(AC(w)-2))<0)ACRESET(w,origacw)  // usecount of y has been restored; restore inplaceability.  The use of origacw is subtle.  In a multithreaded system you mustn't reset the usecount lest another thread
+      // has raised it.  So, we reset AC to ACINPLACE only in the case where it was originally inplaceable, because then we can be sure the same block is not in use in another thread.
+      // Also, if AC(w) is above 1, it has escaped and must no longer be inplaced.  If it isn't above 1, it must be confined to here
   // do the inverse
   if(FAV(v)->id==CCOMMA){RZ(z=reshape(shape(w),uz));  // inv for , is ($w)&($,)
   }else{RZ(z=jtamendn2(jtinplace,uz,w,FAV(v)->fgh[0],ds(CAMEND)));   // inv for m&{ is m}&w

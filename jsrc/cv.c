@@ -62,16 +62,19 @@ static DF1(jtfitpp1){DECLFG;A z;
 static DF1(jtfitf1){V*sv=FAV(self); A z; R df1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n
 static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
 
-// Fit conjunction u!.n
+// Fit conjunction u!.v
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
 // Preserve VISATOMIC1 from u (applies only to numeric atomic ops)
 // Preserve comparison-combination flags for tolerance fit, in case this is a fit-allowing primitive that uses them
 F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
- ASSERTVN(a,w);  // a must be a verb, w a noun
- sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
+//  ASSERTVN(a,w);  // a must be a verb, w a noun
+ ASSERT(AT(a)&VERB,EVDOMAIN)  // a must be a verb
  A z; fdefallo(z)
- I cno=0;
- switch(sv->id){I wval;
+ sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
+ if(likely(!(AT(w)&VERB))){  // is v a noun?
+  // Noun v.
+  I cno=0;
+  switch(sv->id){I wval;
   case CIOTA: ++cno;  // i.!.1 supported only in viavx.c
   case CSLDOT: case CSLDOTDOT: ++cno;   case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: ++cno;
   case CMATCH: case CEPS:    case CICO:      case CNUB:     case CSTAR:  
@@ -92,20 +95,26 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
   case CPOLY:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
    fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitpoly2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);  // p.!.f
+
+  case CHOOK:   // only ($,)
+   if(sv->valencefns[1]==jtreshape)goto fillreshape;
+   break;
   case CPOWOP:  // support for #^:_1!.n
    if(sv->fgh[1]!=num(-1))R jtfitct(jt,a,w,0,z);
    f=sv->fgh[0]; c=ID(f);
    if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);}  // #^:_1!.f
    ASSERT(c==CAMP,EVDOMAIN);
    f=FAV(f)->fgh[1]; ASSERT(CPOUND==ID(f),EVDOMAIN);
-   // fall through for x&#^:_1!.f
-  // fill atoms:
+    // fall through for x&#^:_1!.f
+   // fill atoms:
   case CPOUND:  case CTAKE:  case CTAIL: case CCOMMA:  case CCOMDOT: case CLAMIN: case CRAZE:
    ASSERT(!AR(w),EVRANK);  /* fall thru */
   case CROT: case CDOLLAR:  // these allow an empty array 
+fillreshape:;
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
-   fdeffill(z,0L,CFIT,VERB,jtfitfill1,jtfitfill2,a,w,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VASGSAFE),m,l,r) RETF(z);  // ^!.f
+   fdeffill(z,0L,CFIT,VERB,jtfitfill1,jtfitfill2,a,w,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VASGSAFE),m,l,r) RETF(z);  // various allowing empty fill
+
   case CTHORN:
    RE(w=sc(k=i0(w)));
    ASSERT(0<k,EVDOMAIN);
@@ -117,7 +126,14 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
   case CTILDE:   // noun~!.n - what in the world is that?
    ASSERT(NOUN&AT(sv->fgh[0]),EVDOMAIN);
    fdeffill(z,0L,CFIT,VERB,jtfitf1,jtfitf2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);
-  default:
-   ASSERT(0,EVDOMAIN);
-}}
+  // other cases continue on to error
+  }
+ }else{
+  // v is a verb.  Supported now only in $[!.n]!.v or ($,)[!.n]!.v
+  AF rtn1=sv->valencefns[1]; if(rtn1==jtfitfill2)rtn1=FAV(sv->fgh[0])->valencefns[1];  // what routine will process?  (if fit, look back to underlying function)
+  if(rtn1==jtreshape||rtn1==jtreitem)
+   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtreshapeblankfn,a,w,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VASGSAFE),m,l,r) FAV(z)->localuse.lu1.fittype=rtn1==jtreitem; RETF(z);  // fittype tells whether ($,) or $
+ }
+ ASSERT(0,EVDOMAIN);
+} 
 

@@ -1084,7 +1084,7 @@ typedef struct {
     A cachedref;  //  for namerefs ('name'~), the cached value, or 0 if not cached
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
     I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
-    I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block
+    I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block; for $!.v, 0 if the ultimate routine is ($,), 1 if $
     I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
     UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
     S foreignmn[2];  // in m!:n, the arguments

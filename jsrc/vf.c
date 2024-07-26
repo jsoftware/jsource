@@ -261,6 +261,19 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  R z;
 }    /* a ($,)"wcr w for sparse w and scalar or vector a */
 
+// x is floating-point left side of x $ y, w is right side.  Result is INT x, but if x contains _, replace _ with the number needed to use up y exactly.
+// Give rndfn a chance to adjust the number.  nlens is #axes before inner  cell: wcr for ($,) 1 for $   wcr is cell-rank of w, if "r given
+static A jtreshapeblank(J jt, A a, A w, A rndfn, I nlens, I wcr){
+ RZ(a=vib(a)); RZ(a=mkwris(a)) // convert to int, converting _ to IMAX; make it writable since we will change _
+ I upos=IMAX, xprod=1; DO(AN(a), I xval=IAV(a)[i]; I nupos=xval==IMAX?i:upos; xval=xval==IMAX?1:xval; ASSERT(nupos<=upos,EVDOMAIN) upos=nupos; DPMULD(xprod,xval,xprod,ASSERT(0,EVLIMIT));)  // multiple non-_, error if overflow of >1 _
+ if(upos==IMAX)R a;  // if x didn't contain _, just use it as is
+ ASSERT(xprod!=0,EVDOMAIN);  // if result is empty, we cannot calculate a value
+ I nw; PRODX(nw,nlens,AS(w)+AR(w)-wcr,1)   // calculate # cells in a wcr-cell of w: use all axes or just the first
+ A nblank; df1(nblank,divide(sc(nw),sc(xprod)),rndfn); RZ(nblank);  // rndfn */ (x-._) % */ $`#@.isitem y
+ ASSERT(AR(nblank)==0,EVRANK) if(!(AT(nblank)&INT))RZ(nblank=cvt(INT,nblank))  // nblank must be stomic
+ IAV(a)[upos]=IAV(nblank)[0]; R a;  // replace _ with calculated value and return new x
+}
+
 F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wcr,wf,wr,* RESTRICT ws,zn;
  F2PREFIP;
  ARGCHK2(a,w);
@@ -268,7 +281,8 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; ws=AS(w); RESETRANK;
  if((I )(1<acr)|(I )(acr<ar)){z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreshape); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity
  // now a is an atom or a list.  w can have any rank
- RZ(a=vip(a)); r=AN(a); u=AV(a);   // r=length of a   u->values of a
+ if(unlikely(AT(a)&FL))RZ(a=jtreshapeblank(jt,a,w,ds(CRIGHT),wcr,wcr)) else RZ(a=vip(a));  // convert a to integer & audit; if FL, also check for _ and handle
+ r=AN(a); u=AV(a);   // r=length of a   u->values of a
  if(unlikely(ISSPARSE(AT(w)))){RETF(reshapesp(a,w,wf,wcr));}
  PRODX(m,r,u,1)  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  CPROD(,c,wf,ws); CPROD(,n,wcr,wf+ws);
@@ -311,12 +325,29 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
  fauxblockINT(yfaux,4,1);
  if(1>=wcr)y=a;  // y is atom or list: $ is the same as ($,)
  else{   // rank y > 1: append the shape of an item of y to x
-  RZ(a=vi(a)); an=AN(a); acr=1;  // if a was an atom, now it is a list
+// obsolete   RZ(a=vi(a));
+  if(unlikely(AT(a)&FL))RZ(a=jtreshapeblank(jt,a,w,ds(CRIGHT),MIN(1,wcr),wcr)) else RZ(a=vip(a));  // convert a to integer & audit; if FL, also check for _ and handle
+  an=AN(a); acr=1;  // if a was an atom, now it is a list
   fauxINT(y,yfaux,an+r,1) v=AV(y);
   MCISH(v,AV(a),an); MCISH(v+an,AS(w)+wr-r,r);
  }
- R wr==wcr?jtreshape(jtinplace,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z);  // Since a has no frame, we dont have to check agreement
+ R wr==wcr?jtreshape(jtinplace,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z);  // Since a has no frame, we don't have to check agreement
 }    /* a $"r w */
+
+// x $[!.n]!.v y or x ($,)[!.n]!.v y which uses fn v if needed to resolve _ in x
+DF2(jtreshapeblankfn){I acr,ar,r,wcr,wr;
+ F2PREFIP;
+ ARGCHK2(a,w);
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;   RESETRANK;
+ if((I )(1<acr)|(I )(acr<ar)){A z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreshapeblankfn); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity
+ A fs=FAV(self)->fgh[0]; AF reshapefn=FAV(fs)->valencefns[1];  // next routine to call, $ ($,) or !.n
+ if(likely(AT(a)&FL)){  // if there might be _, check for it
+  I nlens=FAV(self)->localuse.lu1.fittype?1:wcr; nlens=wcr<nlens?wcr:nlens;  // # axes to use for counting result cells: the w-cell, or 1 item thereof
+  RZ(a=jtreshapeblank(jt,a,w,FAV(self)->fgh[1],nlens,wcr))  // replace the blank, applying function in g
+ }
+ RETF((*reshapefn)(jtinplace,a,w,fs))   // do the reshape, with _ replaced
+}
 
 #define EXPAND(T)  \
   {T*u=(T*)wv,*v=(T*)zv,x;                                                \

@@ -652,6 +652,7 @@ extern DF2(jtpolymult);
 extern DF2(jtpowop);
 extern DF2(jtrazecut0);
 extern DF2(jtrazecut2);
+extern DF2(jtreshapeblankfn);
 extern DF2(jtrollk);
 extern F2(jtrollksub);
 extern DF2(jtrollkx);

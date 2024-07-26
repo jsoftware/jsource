@@ -117,7 +117,7 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,r,x,y,k
    u   source data area 
    v   target data area      */
 
-F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
+F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  F2PREFIP;ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(w))))R rotsp(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?AS(a)[af]:1;  // p=#axes to rotate
@@ -144,12 +144,15 @@ F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  if(!wn)R z;
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);  // rotate first axis
- if(1<p){
-  // more than 1 axis: we ping-pong between buffers as we go down the axes
-  GA(y,AT(w),wn,wr,s); u=CAV(y);   // scaf not needed if there is fill
-  b=0; s+=wf;
-  DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame
-  z=b?y:z;
+ if(1<p){A y=z;
+  // more than 1 axis: we ping-pong between buffers as we go down the axes.
+  //   Start here with input in z/v; put output in y/u so result will be in z at end of loop
+  if(!jt->fill)GA(y,AT(w),wn,wr,s); C *u=CAV(y);   // if fill, z is always inplaceable and we keep using it
+// obsolete   b=0;
+  s+=wf;   // skip over w frame to get to the cell.  We will start 1 axis in
+// obsolete   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame
+  DO(p-1, m*=n; n=*++s; A ta=z; z=y; y=ta; C *ct=u; u=v; v=ct; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,u,v););  // do axes, with ping-pong, leaving result in z/v
+// obsolete   z=b?y:z;
  } 
  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill
  PRISTXFERFIF(z,origw,jt->fill==0)  // transfer pristinity if there is no fill

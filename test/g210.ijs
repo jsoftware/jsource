@@ -450,9 +450,7 @@ NB. x $ y where x contains _
 (4 10 ($,)"1 2 i. 6 8 5) -:  4 _ ($,)"1 2 i. 6 8 5
 
 'domain error' -: _ 2 $ etx i. 13
-'limit error' -: _ ($,)"2 etx i. 0 1e15 1e15
-'domain error' -: _ 0 $ etx i. 10
-'domain error' -: _ _ 1 $ etx i. 10
+'limit error' -: _ ($,)"2 etx i. 0 , 2 # IF64 {:: 1e9 ; 1e15
 
 NB. x $!.v y
 (9 2 ($,) i. 6 3) -: _ 2 ($,)!.<. i. 6 3

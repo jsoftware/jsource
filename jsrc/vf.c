@@ -137,7 +137,7 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  if(jt->fill){
   // if there is fill, we can do the rotate inplace
   RZ(w=setfv(w,w));  // set fill value if given
-  z=ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)?w:z;  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
+  z=0&&ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)?w:z;  //  could inplace if source & target of unfilled area don't overlap.  Better to try extension a la apip
  }
  u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));
  if(z==0)GA(z,AT(w),wn,wr,s); v=CAV(z);   // allocate result area, unless we are inplacing into w
@@ -147,7 +147,8 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  if(1<p){A y=z;
   // more than 1 axis: we ping-pong between buffers as we go down the axes.
   //   Start here with input in z/v; put output in y/u so result will be in z at end of loop
-  if(!jt->fill)GA(y,AT(w),wn,wr,s); C *u=CAV(y);   // if fill, z is always inplaceable and we keep using it
+// obsolete   if(1||!jt->fill)  // if fill, z is always inplaceable and we keep using it
+  GA(y,AT(w),wn,wr,s); C *u=CAV(y); // before ping-pong, y/u is the previous input, i. e. the new output
 // obsolete   b=0;
   s+=wf;   // skip over w frame to get to the cell.  We will start 1 axis in
 // obsolete   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame
@@ -265,7 +266,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
 // Give rndfn a chance to adjust the number.  nlens is #axes before inner  cell: wcr for ($,) 1 for $   wcr is cell-rank of w, if "r given
 static A jtreshapeblank(J jt, A a, A w, A rndfn, I nlens, I wcr){
  RZ(a=vib(a)); RZ(a=mkwris(a)) // convert to int, converting _ to IMAX; make it writable since we will change _
- I upos=IMAX, xprod=1; DO(AN(a), I xval=IAV(a)[i]; I nupos=xval==IMAX?i:upos; xval=xval==IMAX?1:xval; ASSERT(nupos<=upos,EVDOMAIN) upos=nupos; DPMULD(xprod,xval,xprod,ASSERT(0,EVLIMIT));)  // multiple non-_, error if overflow of >1 _
+ I upos=IMAX, xprod=1; DO(AN(a), DPMULDDECLS I xval=IAV(a)[i]; I nupos=xval==IMAX?i:upos; xval=xval==IMAX?1:xval; ASSERT(nupos<=upos,EVDOMAIN) upos=nupos; DPMULD(xprod,xval,xprod,ASSERT(0,EVLIMIT));)  // multiple non-_, error if overflow of >1 _
  if(upos==IMAX)R a;  // if x didn't contain _, just use it as is
  ASSERT(xprod!=0,EVDOMAIN);  // if result is empty, we cannot calculate a value
  I nw; PRODX(nw,nlens,AS(w)+AR(w)-wcr,1)   // calculate # cells in a wcr-cell of w: use all axes or just the first

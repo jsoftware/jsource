@@ -140,9 +140,12 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
   z=0&&ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)?w:z;  //  could inplace if source & target of unfilled area don't overlap.  Better to try extension a la apip
  }
  u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));
+ PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
+ // Check for inplacing.  There are 3 cases: (1) r negative, with enough extra space at the end of the block to hold the wrapped part;
+ // (2) r positive, with enough extra space at the front to hold the wrapped part; (3) jt->fill and the wrapped part is >= half the
+ // size of w
  if(z==0)GA(z,AT(w),wn,wr,s); v=CAV(z);   // allocate result area, unless we are inplacing into w
  if(!wn)R z;
- PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);  // rotate first axis
  if(1<p){A y=z;
   // more than 1 axis: we ping-pong between buffers as we go down the axes.
@@ -266,9 +269,10 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
 // Give rndfn a chance to adjust the number.  nlens is #axes before inner  cell: wcr for ($,) 1 for $   wcr is cell-rank of w, if "r given
 static A jtreshapeblank(J jt, A a, A w, A rndfn, I nlens, I wcr){
  RZ(a=vib(a)); RZ(a=mkwris(a)) // convert to int, converting _ to IMAX; make it writable since we will change _
- I upos=IMAX, xprod=1; DO(AN(a), DPMULDDECLS I xval=IAV(a)[i]; I nupos=xval==IMAX?i:upos; xval=xval==IMAX?1:xval; ASSERT(nupos<=upos,EVDOMAIN) upos=nupos; DPMULD(xprod,xval,xprod,ASSERT(0,EVLIMIT));)  // multiple non-_, error if overflow of >1 _
+ I upos=IMAX, xprod=1, oflo=0;  // index of _ if any, */ x -. _, oflo flag
+ DO(AN(a), DPMULDDECLS I xval=IAV(a)[i]; oflo=xval==0?xval:oflo; I nupos=xval==IMAX?i:upos; xval=xval==IMAX?1:xval; ASSERT(nupos<=upos,EVDOMAIN) upos=nupos; DPMULD(xprod,xval,xprod,oflo=1;);)  // multiple non-_, error if overflow of >1 _
  if(upos==IMAX)R a;  // if x didn't contain _, just use it as is
- ASSERT(xprod!=0,EVDOMAIN);  // if result is empty, we cannot calculate a value
+ ASSERT(!oflo,EVLIMIT) ASSERT(xprod!=0,EVDOMAIN);  // detect overflow; if result is empty, we cannot calculate a value
  I nw; PRODX(nw,nlens,AS(w)+AR(w)-wcr,1)   // calculate # cells in a wcr-cell of w: use all axes or just the first
  A nblank; df1(nblank,divide(sc(nw),sc(xprod)),rndfn); RZ(nblank);  // rndfn */ (x-._) % */ $`#@.isitem y
  ASSERT(AR(nblank)==0,EVRANK) if(!(AT(nblank)&INT))RZ(nblank=cvt(INT,nblank))  // nblank must be stomic

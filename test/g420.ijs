@@ -159,7 +159,7 @@ insert =: 1 : '{. ` ({. u $:@}.) @. (1&<@#)'     NB. one or more items
 (,/t) -: ,insert t=:?2 0 7 3$1000
 (,/t) -: ,insert t=:r.?7 2 3 1 1$10000
 
-'limit error' -: ,/ etx (>IF64{2e5 1.5e4 0;2e13 1e7  0) $ 0
+'limit error' -: ,/ etx (>IF64{2e5 1.5e4 0;2.1e13 1e7  0) $ 0
 'limit error' -: ,/ etx (>IF64{1e9 1e9   0;4e18 4e18 0) $ 0
 
 

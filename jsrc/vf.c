@@ -87,7 +87,7 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
 // set k=length that wraps, ks=offset to it in source, kd=offset to it in dest, js=source offset to part that doesn't wrap, kd=offset to it in dest
 // obsolete #define ROF(r) if((I )(r<-n)|(I )(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
 // obsolete #define ROT(r) if((I )(r<-n)|(I )(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
-#define ROTF I ar=ABS(r); if(unlikely((UI)ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABS(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;   // UI in case ABS(IMIN)
+#define ROTF(r) {I ar=ABS(r); if(unlikely((UI)ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABS(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
 // obsolete #define ROF(r) ar=ABS(r); ar=MIN(ar,n); ROTFCOMMON
 // obsolete #define ROT(r) ar=ABS(r); if(unlikely(ar>n)){r=r%n; ar=ABS(r);} ROTFCOMMON
 // m=#cells d=#atoms per item  n=#items per cell
@@ -117,45 +117,53 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,r,x,y,k
    u   source data area 
    v   target data area      */
 
-F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
+F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  F2PREFIP;ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(w))))R rotsp(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?AS(a)[af]:1;  // p=#axes to rotate
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  RZ(a=vi(a));
- // special case: if a is atomic 0, and cells of w are not atomic
- if((wcr!=0)&(((ar|IAV(a)[0])==0)))R RETARG(w);   // 0 |. y, return y
  // We support IRS in a limited way.  We revert to the rank loop if:
  // 1 cell-rank of a>1  (we have to replicate w)
  // 2 a has frame, if: cell-rank of a > 0  (we have to match cells of a)
  //                OR  frame of w does not equal frame of a (agreement has already been checked in the caller, if IRS)
  //                   (in the case where a and w frames are equal, we apply each atom of a to one cell of w since a cell-rank is 0)
  if(((1-acr)|((-af)&(-acr|-(af^wf))))<0)R rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtrotate);  // revert if we can't match a and w easily
- if(((wcr-1)&(1-p))<0){RZ(w=reshape(apip(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
+ if(unlikely(((wcr-1)&(1-p))<0)){RZ(w=reshape(apip(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
+ if(unlikely(AN(a)==0))R RETARG(w);  // no axes to rotate, return fast (helps later loop)
+ // special case: if a is atomic 0, and cells of w are not atomic
+ I *av=IAV(a); I av0=*av;  // scan pointer through rotation counts; first or only rotation count
+ if((wcr!=0)&(((ar|av0)==0)))R RETARG(w);   // 0 |. y, return y
  ASSERT(((-wcr)&(wcr-p))>=0,EVLENGTH);    // !wcr||p<=wcr  !(wcr&&p>wcr)
- av=AV(a); z=0;   // init no result allocated
- if(jt->fill){
-  // if there is fill, we can do the rotate inplace
-  RZ(w=setfv(w,w));  // set fill value if given
-  z=0&&ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)?w:z;  //  could inplace if source & target of unfilled area don't overlap.  Better to try extension a la apip
- }
- u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));
+ wn=AN(w); if(!wn)R RETARG(w);  // if empty w, no need to rotate
+ I negifragged=(p-2)&(1-AN(a));  // neg if p<=1 and AN(a)>1, meaning different rotations for each cell
+ z=0;   // init no result allocated
+ if(jt->fill)RZ(w=setfv(w,w));  // set fill value if given
+ u=CAV(w); wn=AN(w); s=AS(w); I klg=bplg(AT(w));
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
- // Check for inplacing.  There are 3 cases: (1) r negative, with enough extra space at the end of the block to hold the wrapped part;
- // (2) r positive, with enough extra space at the front to hold the wrapped part; (3) jt->fill and the wrapped part is >= half the
- // size of w
+ I e=(n*d)<<klg; I dk=d<<klg; // e=#bytes per cell  dk=bytes per item
+ I kd,ks,jd,js; ROTF(av0)
+ if(((-acr|p-2)&ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w))<0){  // a does not differ between cells and w allows inplacing: a has rank 1 or #atoms in a is 0-1
+  // Check for inplacing.  There are 3 cases: (1) r negative, with enough extra space at the end of the block to hold the wrapped part;
+  // (2) r positive, with enough extra space at the front to hold the wrapped part; (3) jt->fill and the wrapped part is >= half the
+  // size of w
+ }
  if(z==0)GA(z,AT(w),wn,wr,s); v=CAV(z);   // allocate result area, unless we are inplacing into w
- if(!wn)R z;
- rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);  // rotate first axis
- if(1<p){A y=z;
+// obsolete  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);  // rotate first axis
+ I ii=m; while(1){MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; if(withprob(negifragged<0,0.1)){av0=*++av; ROTF(av0)} u+=e; v+=e;}
+
+ if(1<p){A y=z; C *nextu=CAV(z);
   // more than 1 axis: we ping-pong between buffers as we go down the axes.
-  //   Start here with input in z/v; put output in y/u so result will be in z at end of loop
+  //   Start here with input  in z/v; put output in y/u so result will be in z at end of loop
 // obsolete   if(1||!jt->fill)  // if fill, z is always inplaceable and we keep using it
-  GA(y,AT(w),wn,wr,s); C *u=CAV(y); // before ping-pong, y/u is the previous input, i. e. the new output
+  GA(y,AT(w),wn,wr,s); I uvtotal=(I)CAV(y)+nextu; // before ping-pong, y/u is the previous input, i. e. the new output
 // obsolete   b=0;
   s+=wf;   // skip over w frame to get to the cell.  We will start 1 axis in
 // obsolete   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame
-  DO(p-1, m*=n; n=*++s; A ta=z; z=y; y=ta; C *ct=u; u=v; v=ct; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,u,v););  // do axes, with ping-pong, leaving result in z/v
+  DO(p-1, m*=n; n=*++s; A ta=z; z=y; y=ta; u=nextu; v=nextu=(C*)(uvtotal-(I)u); PROD(d,wr-wf-i-2,s+1); e=(n*d)<<klg; dk=d<<klg;
+// obsolete     rot(m,d,n,(I)1<<klg,1L,av+i+1,u,v);
+ I ii=m; while(1){ROTF(av[i+1]) MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; u+=e; v+=e;}
+  );  // do axes, with ping-pong, leaving result in z/v
 // obsolete   z=b?y:z;
  } 
  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill

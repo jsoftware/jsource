@@ -269,6 +269,85 @@ x -: '' |. x=: 3 4 5 6 $ 10&u:'deipnosophist'
 x -: '' |. x=: 3 4 5 6 $ s:@<"0 'deipnosophist'
 x -: '' |. x=: ? 12$1000
 
+NB. repeat inplace
+NB. Boolean
+(_50+?100) ((|. memu) -: rot) 1=?50 2 3$2
+(_50+?100) ((|. memu) -: rot) 1=?1 100$2
+(_50+?100) ((|. memu) -: rot) 1=?100 0$2
+(_50+?100) ((|. memu) -: rot) 1
+
+NB. literal
+(_50+?100) ((|. memu) -: rot) (?45 1 2 2$#a){a=:'foo upon thee 1=?10 20$2'
+(_50+?100) ((|. memu) -: rot) (?400 1 1$#a){a
+(_50+?100) ((|. memu) -: rot) (?0 10 2$#a){a
+(_50+?100) ((|. memu) -: rot) 'a'
+(_50+?100) ((|. memu) -: rot) ''
+
+NB. literal2
+(_50+?100) ((|. memu) -: rot) (?45 1 2 2$#a){a=:u:'foo upon thee 1=?10 20$2'
+(_50+?100) ((|. memu) -: rot) (?400 1 1$#a){a
+(_50+?100) ((|. memu) -: rot) (?0 10 2$#a){a
+(_50+?100) ((|. memu) -: rot) u:'a'
+(_50+?100) ((|. memu) -: rot) u:''
+
+NB. literal4
+(_50+?100) ((|. memu) -: rot) (?45 1 2 2$#a){a=:10&u:'foo upon thee 1=?10 20$2'
+(_50+?100) ((|. memu) -: rot) (?400 1 1$#a){a
+(_50+?100) ((|. memu) -: rot) (?0 10 2$#a){a
+(_50+?100) ((|. memu) -: rot) 10&u:'a'
+(_50+?100) ((|. memu) -: rot) 10&u:''
+
+NB. symbol
+(_50+?100) ((|. memu) -: rot) (?45 1 2 2$#a){a=:s:@<"0 'foo upon thee 1=?10 20$2'
+(_50+?100) ((|. memu) -: rot) (?400 1 1$#a){a
+(_50+?100) ((|. memu) -: rot) (?0 10 2$#a){a
+(_50+?100) ((|. memu) -: rot) s:@<"0 'a'
+(_50+?100) ((|. memu) -: rot) s:''
+
+NB. integer
+(_50+?100) ((|. memu) -: rot) ?25 2 2 2$212341
+(_50+?100) ((|. memu) -: rot) ?400 1$123541
+(_50+?100) ((|. memu) -: rot) ?0 1000$123456
+(_50+?100) ((|. memu) -: rot) _4
+(_50+?100) ((|. memu) -: rot) i.0
+
+NB. floating point
+(_50+?100) ((|. memu) -: rot) o.?35 3 5$212341
+(_50+?100) ((|. memu) -: rot) o.?1 40$123541
+(_50+?100) ((|. memu) -: rot) o.?100 0$123456
+(_50+?100) ((|. memu) -: rot) 3.4
+(_50+?100) ((|. memu) -: rot) ,_3.4
+
+NB. complex
+(_50+?100) ((|. memu) -: rot) ^0j1*?30 2 5$21234
+(_50+?100) ((|. memu) -: rot) ^0j1*?1 256$1235
+(_50+?100) ((|. memu) -: rot) ^0j1*?127 0$1234
+(_50+?100) ((|. memu) -: rot) 3j4
+(_50+?100) ((|. memu) -: rot) 0$3j4
+
+NB. boxed
+(_50+?100) ((|. memu) -: rot) (?30 2 1 1 1$#x){x=:;:'Cogit, ergo $212 341 CBC News'
+(_50+?100) ((|. memu) -: rot) (?30 2 1 1 1$#x){x=:(u:&.>) ;:'Cogit, ergo $212 341 CBC News'
+(_50+?100) ((|. memu) -: rot) (?30 2 1 1 1$#x){x=:(10&u:&.>) ;:'Cogit, ergo $212 341 CBC News'
+(_50+?100) ((|. memu) -: rot) (?255 1$#x){x
+(_50+?100) ((|. memu) -: rot) (?0 0$#x){x
+(_50+?100) ((|. memu) -: rot) <i.2 3
+(_50+?100) ((|. memu) -: rot) ,<i.2 3
+
+(1 1 1  $'a') -: 1 2 3  (|. memu)'a'
+(1 1 1  $'a') -: 1 2 3  (|. memu)u:'a'
+(1 1 1  $'a') -: 1 2 3  (|. memu)10&u:'a'
+(1 1 1  $s:@<"0 'a') -: 1 2 3  (|. memu)s:@<"0 'a'
+(1 1 1 1$4  ) -: (?4$10)(|. memu)4
+
+x -: '' (|. memu) x=: ? 2 3 4$2
+x -: '' (|. memu) x=: 3 4 5 6 $ 'deipnosophist'
+x -: '' (|. memu) x=: 3 4 5 6 $ u:'deipnosophist'
+x -: '' (|. memu) x=: 3 4 5 6 $ 10&u:'deipnosophist'
+x -: '' (|. memu) x=: 3 4 5 6 $ s:@<"0 'deipnosophist'
+x -: '' (|. memu) x=: ? 12$1000
+
+
 'domain error' -: 'abc'|. etx i.4 3 2
 'domain error' -: (u:'abc')|. etx i.4 3 2
 'domain error' -: (10&u:'abc')|. etx i.4 3 2
@@ -308,6 +387,25 @@ _2 _3 (|. -: f1) j./?2 3 4$1000
 (?3$10) (|."1 _1 -: f1"1 _1) x
 (?4$10) (|."1 _1 -: f1"1 _1) x
 
+NB. Repeat inplace
+2   3 ((|. memu) -: f1) ?4 5 6$10000
+2  _3 ((|. memu) -: f1) a.{~?4 5 6$#a.
+2  _3 ((|. memu) -: f1) adot1{~?4 5 6$#adot1
+2  _3 ((|. memu) -: f1) adot2{~?4 5 6$#adot2
+_2  3 ((|. memu) -: f1) o.?4 5$100
+_2 _3 ((|. memu) -: f1) j./?2 3 4$1000
+
+(?1$10) ((|. memu) -: f1) x=:?7 6 5 4 3$10000
+(?2$10) ((|. memu) -: f1) x
+(?3$10) ((|. memu) -: f1) x
+(?4$10) ((|. memu) -: f1) x
+(?5$10) ((|. memu) -: f1) x
+
+(?1$10) ((|. memu)"1 _1 -: f1"1 _1) x=:?7 6 5 4 3$10000
+(?2$10) ((|. memu)"1 _1 -: f1"1 _1) x
+(?3$10) ((|. memu)"1 _1 -: f1"1 _1) x
+(?4$10) ((|. memu)"1 _1 -: f1"1 _1) x
+
 'length error' -: 2 3   |. etx i.5
 'length error' -: 2 3 4 |. etx 2 3$'a'
 'length error' -: 2 3 4 |. etx 2 3$u:'a'
@@ -340,6 +438,32 @@ NB. x|.!.f y ------------------------------------------------------------
 (i.0)          -: 9  |.!.99  i.0
 
 (1 1 1$9) -: 1 2 3|.!.9 [4
+
+NB. repeat inplace
+' abcdef' -: |.!.'' memu 'abcdefg'
+' abcdef' -: |.!.'' memu u:'abcdefg'
+' abcdef' -: |.!.'' memu 10&u:'abcdefg'
+(({.s:''),s:@<"0 'abcdef') -: |.!.'' memu s:@<"0 'abcdefg'
+0 4 5 6   -: |.!.'' memu 4 5 6 7
+(i.0 4 5) -: |.!.'' memu i.0 4 5
+
+(9,i.2 4)      -: _1 |.!.9   memu i.3 4
+'ito, ergoXXX' -: 3  |.!.'X' memu 'Cogito, ergo'
+'XXXXXXXXXXXX' -: 99 |.!.'X' memu 'Cogito, ergo'
+'XXXXXXXXXXXX' -: _29|.!.'X' memu 'Cogito, ergo'
+'ito, ergoXXX' -: 3  |.!.'X' memu u:'Cogito, ergo'
+'XXXXXXXXXXXX' -: 99 |.!.'X' memu u:'Cogito, ergo'
+'XXXXXXXXXXXX' -: _29|.!.'X' memu u:'Cogito, ergo'
+'ito, ergoXXX' -: 3  |.!.'X' memu 10&u:'Cogito, ergo'
+'XXXXXXXXXXXX' -: 99 |.!.'X' memu 10&u:'Cogito, ergo'
+'XXXXXXXXXXXX' -: _29|.!.'X' memu 10&u:'Cogito, ergo'
+(s:@<"0 'ito, ergoXXX') -: 3  |.!.(s:@<"0 'X') memu s:@<"0 'Cogito, ergo'
+(s:@<"0 'XXXXXXXXXXXX') -: 99 |.!.(s:@<"0 'X') memu s:@<"0 'Cogito, ergo'
+(s:@<"0 'XXXXXXXXXXXX') -: _29|.!.(s:@<"0 'X') memu s:@<"0 'Cogito, ergo'
+(i.0)          -: 9  |.!.99  memu i.0
+
+(1 1 1$9) -: 1 2 3|.!.9 memu [4
+
 
 'domain error' -: 2   |.!.4    etx 'abcdef'
 'domain error' -: 2   |.!.4    etx u:'abcdef'
@@ -401,6 +525,43 @@ _2 3 (|."1 2 -: rot"1 2) j./?2 2 3 7$1000
 0 1 2 3  (|."0 1 -: {{ x |. y }}"0 1) i. 4 5 6
 (2 2 1$0 1 2 3) (|."0 1 -: {{ x |. y }}"0 1) i. 2 6
 
+NB. Repeat inplace
+1 2 3 ((|."0 1  memu)-: rot"0 1) ?3 7$2
+1 2 3 ((|."0 1  memu)-: rot"0 1) a.{~?3 7$#a.
+1 2 3 ((|."0 1  memu)-: rot"0 1) adot1{~?3 7$#adot1
+1 2 3 ((|."0 1  memu)-: rot"0 1) adot2{~?3 7$#adot2
+1 2 3 ((|."0 1  memu)-: rot"0 1) sdot0{~?3 7$#sdot0
+1 2 3 ((|."0 1  memu)-: rot"0 1) ?3 7$1000
+1 2 3 ((|."0 1  memu)-: rot"0 1) o.?3 7$1000
+1 2 3 ((|."0 1  memu)-: rot"0 1) j./?2 3 7$1000
+
+_3 ((|."0 1  memu)-: rot"0 1) ?3 7$2
+_3 ((|."0 1  memu)-: rot"0 1) a.{~?3 7$#a.
+_3 ((|."0 1  memu)-: rot"0 1) adot1{~?3 7$#adot1
+_3 ((|."0 1  memu)-: rot"0 1) adot2{~?3 7$#adot2
+_3 ((|."0 1  memu)-: rot"0 1) sdot0{~?3 7$#sdot0
+_3 ((|."0 1  memu)-: rot"0 1) ?3 7$1000
+_3 ((|."0 1  memu)-: rot"0 1) o.?3 7$1000
+_3 ((|."0 1  memu)-: rot"0 1) j./?2 3 7$1000
+
+_2 3 ((|."1 2  memu)-: rot"1 2) ?2 3 7$2
+_2 3 ((|."1 2  memu)-: rot"1 2) a.{~?2 3 7$#a.
+_2 3 ((|."1 2  memu)-: rot"1 2) adot1{~?2 3 7$#adot1
+_2 3 ((|."1 2  memu)-: rot"1 2) adot2{~?2 3 7$#adot2
+_2 3 ((|."1 2  memu)-: rot"1 2) sdot0{~?2 3 7$#sdot0
+_2 3 ((|."1 2  memu)-: rot"1 2) ?2 3 7$1000
+_2 3 ((|."1 2  memu)-: rot"1 2) o.?2 3 7$1000
+_2 3 ((|."1 2  memu)-: rot"1 2) j./?2 2 3 7$1000
+
+1 2 3 ((|."0 _  memu)-: rot"0 _) ?20$10000
+(2 3,:4 5) ((|."1 2  memu)-: rot"1 2) ?2 3 4$1000
+(2 3,:4 5) ((|.  memu)-: rot) ?7 9$1000
+(?2 3 2$10) ((|."2  memu)-: rot"2) ?2 3 4$1000
+
+0 1 2 3  ((|."0 1  memu)-: {{ x |. y }}"0 1) i. 4 5 6
+(2 2 1$0 1 2 3) ((|."0 1  memu)-: {{ x |. y }}"0 1) i. 2 6
+
+
 1: 0 : 0
 NB. Inplace if fill
 a =: i. 1e6
@@ -448,6 +609,40 @@ _2 3 (|.!.f"1 2 -: rot"1 2) j./?2 2 3 7$1000 [ f=:0
 
 0 1 2 3  (|.!.99"0 1 -: 99 {{ x |.!.m y }}"0 1) i. 4 5 6
 (2 2 1$0 1 2 3) (|.!.99"0 1 -: 99 {{ x |.!.m y }}"0 1) i. 2 6
+
+NB. repeat inplace
+1 2 3 ((|.!.f"0 1  memu)-: rot"0 1) ?3 7$2          [ f=:0
+1 2 3 ((|.!.f"0 1  memu)-: rot"0 1) a.{~?3 7$#a.    [ f=:'*'
+1 2 3 ((|.!.f"0 1  memu)-: rot"0 1) adot1{~?3 7$#adot1    [ f=:'*'
+1 2 3 ((|.!.f"0 1  memu)-: rot"0 1) adot2{~?3 7$#adot2    [ f=:'*'
+1 2 3 ((|.!.f"0 1  memu)-: rot"0 1) sdot0{~?3 7$#sdot0     [ f=:s:@<"0 '*'
+1 2 3 ((|.!.f"0 1  memu)-: rot"0 1) ?3 7$1000       [ f=:1
+1 2 3 ((|.!.f"0 1  memu)-: rot"0 1) o.?3 7$1000     [ f=:3.56
+1 2 3 ((|.!.f"0 1  memu)-: rot"0 1) j./?2 3 7$1000  [ f=:3j4
+
+_3 ((|.!.f"0 1  memu)-: rot"0 1) ?3 7$2             [ f=:2
+_3 ((|.!.f"0 1  memu)-: rot"0 1) a.{~?3 7$#a.       [ f=:'@'
+_3 ((|.!.f"0 1  memu)-: rot"0 1) adot1{~?3 7$#adot1       [ f=:'@'
+_3 ((|.!.f"0 1  memu)-: rot"0 1) adot2{~?3 7$#adot2       [ f=:'@'
+_3 ((|.!.f"0 1  memu)-: rot"0 1) sdot0{~?3 7$#sdot0       [ f=:s:@<"0 '@'
+_3 ((|.!.f"0 1  memu)-: rot"0 1) ?3 7$1000          [ f=:3.4
+_3 ((|.!.f"0 1  memu)-: rot"0 1) o.?3 7$1000        [ f=:0
+_3 ((|.!.f"0 1  memu)-: rot"0 1) j./?2 3 7$1000     [ f=:2.5
+
+_2 3 ((|.!.f"1 2  memu)-: rot"1 2) ?2 3 7$2         [ f=:3j4
+_2 3 ((|.!.f"1 2  memu)-: rot"1 2) a.{~?2 3 7$#a.   [ f=:' '
+_2 3 ((|.!.f"1 2  memu)-: rot"1 2) adot1{~?2 3 7$#adot1   [ f=:' '
+_2 3 ((|.!.f"1 2  memu)-: rot"1 2) adot2{~?2 3 7$#adot2   [ f=:' '
+_2 3 ((|.!.f"1 2  memu)-: rot"1 2) sdot0{~?2 3 7$#sdot0   [ f=:s:@<"0 ' '
+_2 3 ((|.!.f"1 2  memu)-: rot"1 2) ?2 3 7$1000      [ f=:999
+_2 3 ((|.!.f"1 2  memu)-: rot"1 2) o.?2 3 7$1000    [ f=:3j4
+_2 3 ((|.!.f"1 2  memu)-: rot"1 2) j./?2 2 3 7$1000 [ f=:0
+
+1 2 3 ((|.!.f"0 _  memu)-: rot"0 _) ?20$10000       [ f=:9
+
+0 1 2 3  ((|.!.99"0 1  memu)-: 99 {{ x |.!.m y }}"0 1) i. 4 5 6
+(2 2 1$0 1 2 3) ((|.!.99"0 1  memu)-: 99 {{ x |.!.m y }}"0 1) i. 2 6
+
 
 4!:55 ;:'a adot1 adot2 sdot0 f f1 rank rev rot x'
 randfini''

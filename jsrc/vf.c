@@ -84,15 +84,11 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  EPILOG(z);
 }    /* a|."r w on sparse arrays */
 
-// set k=length that wraps, ks=offset to it in source, kd=offset to it in dest, js=source offset to part that doesn't wrap, kd=offset to it in dest
-// obsolete #define ROF(r) if((I )(r<-n)|(I )(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
-// obsolete #define ROT(r) if((I )(r<-n)|(I )(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
-#define ROTF(r) {I ar=ABS(r); if(unlikely((UI)ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABS(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
 // obsolete #define ROF(r) ar=ABS(r); ar=MIN(ar,n); ROTFCOMMON
 // obsolete #define ROT(r) ar=ABS(r); if(unlikely(ar>n)){r=r%n; ar=ABS(r);} ROTFCOMMON
-// m=#cells d=#atoms per item  n=#items per cell
-static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,r,x,y,kd,ks,jd,js;
- e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item
+// obsolete // m=#cells d=#atoms per item  n=#items per cell
+// obsolete static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,r,x,y,kd,ks,jd,js;
+// obsolete  e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item
 // obsolete  if(jt->fill){
 // obsolete   if(p<=1){r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;);}
 // obsolete   else{DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;);}
@@ -101,10 +97,10 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,r,x,y,k
 // obsolete  }else{
 // obsolete   if(p<=1){r=p?*av:0;     ROT(r); DQ(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
 // obsolete   else{DO(m, r=av[i]; ROT(r);       MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
- if(p<=1){r=p?*av:0;     ROTF(r); DQ(m, MC(v+jd,u+js,e-k);  if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,atomsize,jt->fillv); u+=e; v+=e;);}  // move fill last in case inplace
- else{DO(m, r=av[i]; ROTF(r);       MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,atomsize,jt->fillv);  u+=e; v+=e;);}
+// obsolete  if(p<=1){r=p?*av:0;     ROTF(r); DQ(m, MC(v+jd,u+js,e-k);  if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,atomsize,jt->fillv); u+=e; v+=e;);}  // move fill last in case inplace
+// obsolete  else{DO(m, r=av[i]; ROTF(r);       MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,atomsize,jt->fillv);  u+=e; v+=e;);}
 // obsolete  }
-}
+// obsolete }
 
 
 
@@ -116,6 +112,12 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,r,x,y,k
    av  rotation amount(s)
    u   source data area 
    v   target data area      */
+// set k=length that wraps (dk * shift), ks=offset to it in source, kd=offset to it in dest, js=source offset to part that doesn't wrap, kd=offset to it in dest
+// obsolete #define ROF(r) if((I )(r<-n)|(I )(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
+// obsolete #define ROT(r) if((I )(r<-n)|(I )(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
+// for left shift (ar positive) ks=0, js=dk*shift, kd=e-k, jd=0
+// for right shift              ks=dk*shift, js=0, kd=0, jd=e-k
+#define ROTF(r) {I ar=ABS(r); if(unlikely((UI)ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABS(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
 
 F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  F2PREFIP;ARGCHK2(a,w);
@@ -138,25 +140,37 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  wn=AN(w); if(!wn)R RETARG(w);  // if empty w, no need to rotate
  I negifragged=(p-2)&(1-AN(a));  // neg if p<=1 and AN(a)>1, meaning different rotations for each cell
  z=0;   // init no result allocated
- if(jt->fill)RZ(w=setfv(w,w));  // set fill value if given
+ I notrightfill=-1;  // sign set if this is not right shift with fill
+ if(jt->fill){RZ(w=setfv(w,w)); notrightfill=~av0;}  // set fill value if given; remember if right shift
  u=CAV(w); wn=AN(w); s=AS(w); I klg=bplg(AT(w));
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  I e=(n*d)<<klg; I dk=d<<klg; // e=#bytes per cell  dk=bytes per item
  I kd,ks,jd,js; ROTF(av0)
- if(((-acr|p-2)&ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w))<0){  // a does not differ between cells and w allows inplacing: a has rank 1 or #atoms in a is 0-1
+ I backslack=0;   // amount that can be added at end without overfill
+ if((notrightfill&((AFLAG(w)&(AFVIRTUAL+AFNJA+AFRO+RECURSIBLE))-1)&~negifragged&ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w))<0){  // a does not differ between cells and w allows inplacing: a has rank 1 or #atoms in a is 0-1; header size is valid
   // Check for inplacing.  There are 3 cases: (1) r negative, with enough extra space at the end of the block to hold the wrapped part;
   // (2) r positive, with enough extra space at the front to hold the wrapped part; (3) jt->fill and the wrapped part is >= half the
   // size of w
+  I wallo=FHRHSIZE(AFHRH(w));  //  allocated size of w
+  I backslack=(wallo-AK(w)-(AN(w)<<klg))&-SZI;
+  if(ks+js<backslack){   // can the front section fit in the slack?
+   // we can inplace the first axis.  Advance AK(w), which shifts left.  We will do the copies from back to front
+   // since cells overlap.  u=v will signal that the first block doesn't get copied
+   AK(w)+=ks+js; k=av0<0?ks:k;  // for <<, len is len of wrap; for >>, len of nonwrap
+   ks=0; kd=e; u+=(m-1)*e; v=u; e=-e;  // fix up to move only k-part
+   backslack=(backslack-(ks+js))&-SZI;  // remember amount of slack after first axis
+   z=w;
+  }
  }
- if(z==0)GA(z,AT(w),wn,wr,s); v=CAV(z);   // allocate result area, unless we are inplacing into w
+ if(z==0){GA(z,AT(w),wn,wr,s); v=CAV(z);}   // allocate result area, unless we are inplacing into w
 // obsolete  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);  // rotate first axis
- I ii=m; while(1){MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; if(withprob(negifragged<0,0.1)){av0=*++av; ROTF(av0)} u+=e; v+=e;}
+ I ii=m; while(1){if(u!=v)MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; if(withprob(negifragged<0,0.1)){av0=*++av; ROTF(av0)} u+=e; v+=e;}
 
  if(1<p){A y=z; C *nextu=CAV(z);
   // more than 1 axis: we ping-pong between buffers as we go down the axes.
   //   Start here with input  in z/v; put output in y/u so result will be in z at end of loop
 // obsolete   if(1||!jt->fill)  // if fill, z is always inplaceable and we keep using it
-  GA(y,AT(w),wn,wr,s); I uvtotal=(I)CAV(y)+nextu; // before ping-pong, y/u is the previous input, i. e. the new output
+  GA(y,AT(w),wn,wr,s); I uvtotal=(I)CAV(y)+(I)nextu; // before ping-pong, y/u is the previous input, i. e. the new output
 // obsolete   b=0;
   s+=wf;   // skip over w frame to get to the cell.  We will start 1 axis in
 // obsolete   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame

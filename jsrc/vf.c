@@ -156,7 +156,7 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
   // more than 1 axis: we ping-pong between buffers as we go down the axes.
   //   Start here with input  in z/v; put output in y/u so result will be in z at end of loop
 // obsolete   if(1||!jt->fill)  // if fill, z is always inplaceable and we keep using it
-  GA(y,AT(w),wn,wr,s); I uvtotal=(I)CAV(y)+nextu; // before ping-pong, y/u is the previous input, i. e. the new output
+  GA(y,AT(w),wn,wr,s); I uvtotal=(I)(intptr_t)CAV(y)+nextu; // before ping-pong, y/u is the previous input, i. e. the new output
 // obsolete   b=0;
   s+=wf;   // skip over w frame to get to the cell.  We will start 1 axis in
 // obsolete   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame

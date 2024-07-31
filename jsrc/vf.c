@@ -9,6 +9,7 @@
 // if jt->fill is set, we use that value instead
 // we put one atom of fill into jt->fillv0 and point jt->fillv to that atom
 // if w is not the same type as the fill, convert it.  The user has to handle a.
+// if w and a have the same type, w will not be converted
 F2(jtsetfv){A q=jt->fill;I t;
  ARGCHK2(a,w);
  q=q?q:mtv;  // if no fill given, use empty vector
@@ -146,38 +147,54 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  I e=(n*d)<<klg; I dk=d<<klg; // e=#bytes per cell  dk=bytes per item
  I kd,ks,jd,js; ROTF(av0)
- I backslack=0;   // amount that can be added at end without overfill
- if((notrightfill&((AFLAG(w)&(AFVIRTUAL+AFNJA+AFRO+RECURSIBLE))-1)&~negifragged&ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w))<0){  // a does not differ between cells and w allows inplacing: a has rank 1 or #atoms in a is 0-1; header size is valid
-  // Check for inplacing.  There are 3 cases: (1) r negative, with enough extra space at the end of the block to hold the wrapped part;
-  // (2) r positive, with enough extra space at the front to hold the wrapped part; (3) jt->fill and the wrapped part is >= half the
-  // size of w
-  I wallo=FHRHSIZE(AFHRH(w));  //  allocated size of w
-  I backslack=(wallo-AK(w)-(AN(w)<<klg))&-SZI;
-  if(ks+js<backslack){   // can the front section fit in the slack?
-   // we can inplace the first axis.  Advance AK(w), which shifts left.  We will do the copies from back to front
-   // since cells overlap.  u=v will signal that the first block doesn't get copied
-   AK(w)+=ks+js; k=av0<0?ks:k;  // for <<, len is len of wrap; for >>, len of nonwrap
-   ks=0; kd=e; u+=(m-1)*e; v=u; e=-e;  // fix up to move only k-part
-   backslack=(backslack-(ks+js))&-SZI;  // remember amount of slack after first axis
-   z=w;
+ I yztotal=0;  // sum of ping-pong buffer A addresses
+ if((((AFLAG(w)&(AFVIRTUAL+AFNJA+AFRO+RECURSIBLE))-1)&ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w))<0){  // w allows inplacing, header size is valid
+  if((notrightfill&~negifragged)<0){  // a does not differ between cells and is not right fill
+   // Check for inplacing.  We can if the rotate, after converted to positive shift value, fits in the slack
+   I wallo=FHRHSIZE(AFHRH(w));  //  allocated size of w
+   I backslack=(wallo-AK(w)-(AN(w)<<klg))&-SZI;
+   if(ks+js<backslack){   // can the front section fit in the slack?
+    // we can inplace the first axis.  Advance AK(w), which shifts left.  We will do the copies from back to front
+    // since cells overlap.  u=v will signal that the first block doesn't get copied
+    AK(w)+=ks+js; k=av0<0?ks:k;  // for <<, len is len of wrap; for >>, len of nonwrap
+    ks=0; kd=e; u+=(m-1)*e; v=u; e=-e;  // fix up to move only k-part
+    z=w;
+   }
   }
+  yztotal=(I)w;  // if w was inplaceable but we don't inplace because of size, remember that w is available as a ping-pong buffer
  }
- if(z==0){GA(z,AT(w),wn,wr,s); v=CAV(z);}   // allocate result area, unless we are inplacing into w
+ if(z==0){GA(z,AT(w),wn,wr,s); v=CAV(z); yztotal+=(I)z;}   // allocate result area, unless we are inplacing into w
 // obsolete  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);  // rotate first axis
  I ii=m; while(1){if(u!=v)MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; if(withprob(negifragged<0,0.1)){av0=*++av; ROTF(av0)} u+=e; v+=e;}
 
- if(1<p){A y=z; C *nextu=CAV(z);
+ if(1<p){I i;
   // more than 1 axis: we ping-pong between buffers as we go down the axes.
-  //   Start here with input  in z/v; put output in y/u so result will be in z at end of loop
+  //   Start here with input in z
 // obsolete   if(1||!jt->fill)  // if fill, z is always inplaceable and we keep using it
-  GA(y,AT(w),wn,wr,s); I uvtotal=(I)CAV(y)+(I)nextu; // before ping-pong, y/u is the previous input, i. e. the new output
+// obsolete   GA(y,AT(w),wn,wr,s); I uvtotal=(I)CAV(y)+(I)nextu; // before ping-pong, y/u is the previous input, i. e. the new output
 // obsolete   b=0;
   s+=wf;   // skip over w frame to get to the cell.  We will start 1 axis in
 // obsolete   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame
-  DO(p-1, m*=n; n=*++s; A ta=z; z=y; y=ta; u=nextu; v=nextu=(C*)(uvtotal-(I)u); PROD(d,wr-wf-i-2,s+1); e=(n*d)<<klg; dk=d<<klg;
+  for(i=0;i<p-1;++i){
+   m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); e=(n*d)<<klg; dk=d<<klg;  // update cell sizes
+   ROTF(av[i+1])  // calculate offsets
+   u=CAV(z);   // we saved where the previous output went; it is the input
+   // z here is always inplaceable.  See if it has extra room.
+   I backslack=(FHRHSIZE(AFHRH(z))-((I)u+(AN(z)<<klg)))&-SZI;  // slack space at end
+   if(ks+js<backslack&&!((I)jt->fill&REPSGN(av[i+1]))){   // can the front section fit in the slack, and not right-shift w/fill?
+    // we can inplace the first axis.  Still copy back to front
+    AK(z)+=ks+js; k=av0<0?ks:k;  // for <<, len is len of wrap; for >>, len of nonwrap
+    ks=0; kd=e; u+=(m-1)*e; v=u; e=-e;  // fix up to move only k-part
+    // leave z unchanged for next axis
+   }else{  // can't inplace
+    if((I)z==yztotal){A y; GA(y,AT(z),AN(z),AR(z),AS(z)); yztotal+=(I)y;} // if there is only 1 buffer allocate a second
+    z=(A)(yztotal-(I)z); v=CAV(z);  // ping-pong
+   }
+   // we have the buffer pointers, move the data
+// obsolete  A ta=z; z=y; y=ta; u=nextu; v=nextu=(C*)(uvtotal-(I)u);
 // obsolete     rot(m,d,n,(I)1<<klg,1L,av+i+1,u,v);
- I ii=m; while(1){ROTF(av[i+1]) MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; u+=e; v+=e;}
-  );  // do axes, with ping-pong, leaving result in z/v
+   I ii=m; while(1){MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; u+=e; v+=e;}
+  }  // do axes, with ping-pong, leaving result in z/v
 // obsolete   z=b?y:z;
  } 
  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill

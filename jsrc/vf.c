@@ -180,10 +180,10 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
    ROTF(av[i+1])  // calculate offsets
    u=CAV(z);   // we saved where the previous output went; it is the input
    // z here is always inplaceable.  See if it has extra room.
-   I backslack=(FHRHSIZE(AFHRH(z))-((I)u+(AN(z)<<klg)))&-SZI;  // slack space at end
+   I backslack=(FHRHSIZE(AFHRH(z))-(AK(z)+(AN(z)<<klg)))&-SZI;  // slack space at end
    if(ks+js<backslack&&!((I)jt->fill&REPSGN(av[i+1]))){   // can the front section fit in the slack, and not right-shift w/fill?
     // we can inplace the first axis.  Still copy back to front
-    AK(z)+=ks+js; k=av0<0?ks:k;  // for <<, len is len of wrap; for >>, len of nonwrap
+    AK(z)+=ks+js; k=av[i+1]<0?ks:k;  // for <<, len is len of wrap; for >>, len of nonwrap
     ks=0; kd=e; u+=(m-1)*e; v=u; e=-e;  // fix up to move only k-part
     // leave z unchanged for next axis
    }else{  // can't inplace

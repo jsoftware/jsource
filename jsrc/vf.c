@@ -193,7 +193,7 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
    // we have the buffer pointers, move the data
 // obsolete  A ta=z; z=y; y=ta; u=nextu; v=nextu=(C*)(uvtotal-(I)u);
 // obsolete     rot(m,d,n,(I)1<<klg,1L,av+i+1,u,v);
-   I ii=m; while(1){MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; u+=e; v+=e;}
+   I ii=m; while(1){if(u!=v)MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; u+=e; v+=e;}
   }  // do axes, with ping-pong, leaving result in z/v
 // obsolete   z=b?y:z;
  } 

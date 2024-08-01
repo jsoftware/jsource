@@ -117,7 +117,7 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
 // obsolete #define ROF(r) if((I )(r<-n)|(I )(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
 // obsolete #define ROT(r) if((I )(r<-n)|(I )(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
 // for left shift (ar positive) ks=0, js=dk*shift, kd=e-k, jd=0
-// for right shift              ks=dk*shift, js=0, kd=0, jd=e-k
+// for right shift              ks=e-k, js=0, kd=0, jd=dk*shift
 #define ROTF(r) {I ar=ABS(r); if(unlikely((UI)ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABS(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
 
 F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
@@ -148,11 +148,10 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  I e=(n*d)<<klg; I dk=d<<klg; // e=#bytes per cell  dk=bytes per item
  I kd,ks,jd,js; ROTF(av0)
  I yztotal=0;  // sum of ping-pong buffer A addresses
- if((((AFLAG(w)&(AFVIRTUAL+AFNJA+AFRO+RECURSIBLE))-1)&ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w))<0){  // w allows inplacing, header size is valid
+ if((((AFLAG(w)&(AFVIRTUAL|AFNJA|AFRO|RECURSIBLE))-1)&ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w))<0){  // w allows inplacing, header size is valid
   if((notrightfill&~negifragged)<0){  // a does not differ between cells and is not right fill
    // Check for inplacing.  We can if the rotate, after converted to positive shift value, fits in the slack
-   I wallo=FHRHSIZE(AFHRH(w));  //  allocated size of w
-   I backslack=(wallo-AK(w)-(AN(w)<<klg))&-SZI;
+   I backslack=(FHRHSIZE(AFHRH(w))-AK(w)-(AN(w)<<klg))&-SZI;  //  allocated size of w, which is known to be allocated by J, MINUS the offset to the data and the length of the data
    if(ks+js<backslack){   // can the front section fit in the slack?
     // we can inplace the first axis.  Advance AK(w), which shifts left.  We will do the copies from back to front
     // since cells overlap.  u=v will signal that the first block doesn't get copied
@@ -179,13 +178,23 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
    m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); e=(n*d)<<klg; dk=d<<klg;  // update cell sizes
    ROTF(av[i+1])  // calculate offsets
    u=CAV(z);   // we saved where the previous output went; it is the input
-   // z here is always inplaceable.  See if it has extra room.
+   // z here is always inplaceable.  See if it has extra room.  Since we might have added front slack on the first axis, we have the option of backing up
    I backslack=(FHRHSIZE(AFHRH(z))-(AK(z)+(AN(z)<<klg)))&-SZI;  // slack space at end
-   if(ks+js<backslack&&!((I)jt->fill&REPSGN(av[i+1]))){   // can the front section fit in the slack, and not right-shift w/fill?
-    // we can inplace the first axis.  Still copy back to front
-    AK(z)+=ks+js; k=av[i+1]<0?ks:k;  // for <<, len is len of wrap; for >>, len of nonwrap
-    ks=0; kd=e; u+=(m-1)*e; v=u; e=-e;  // fix up to move only k-part
-    // leave z unchanged for next axis
+   I frontslack=AK(z)-AKXR(AR(z));  // slack space at front
+   backslack=(ks+js-backslack)&~(jt->fill?REPSGN(av[i+1]):0);  // backslack is neg if we can move AK right, EXCEPT when right-shift with fill
+   frontslack=(e-(ks+js)-frontslack)&(jt->fill?REPSGN(av[i+1]):-1);  // frontslack is neg if we can move AK left, EXCEPT when left-shift with fill
+   if((backslack|frontslack)<0){   // there is room for inplacing, front or back
+ // obsolete   if(ks+js<backslack&&!((I)jt->fill&REPSGN(av[i+1]))){   // can the front section fit in the slack, and not right-shift w/fill?
+    if(((e-(ks+js))&REPSGN(backslack))>((ks+js)&REPSGN(frontslack))){  // choose the allowed direction that has the smaller wrapped area.  The unwrapped area will stay in place
+     // inplace, adding to AK.  Still copy back to front
+     AK(z)+=ks+js; k=av[i+1]<0?ks:k;  // move AK right, which shifts the buffer left.  If k was calculated from <<, the wrap length is correct.  If from >>, take other side
+     ks=0; kd=e; u+=(m-1)*e; e=-e;  // adjust offsets, copy back to front
+     // leave z unchanged for next axis
+    }else{  // inplace subtracting from AK.  copy front to back
+     AK(z)-=e-(ks+js); k=av[i+1]<0?k:kd;    // move AK left, which shifts the buffer right,  If k was calculated from >>, the wrap length is correct.  If from <<, take other side
+     u-=e-(ks+js); ks=e; kd=0;  // adjust offsets; back u to start of wrapped area
+    }
+    v=u;   // this suppresses the copy of j
    }else{  // can't inplace
     if((I)z==yztotal){A y; GA(y,AT(z),AN(z),AR(z),AS(z)); yztotal+=(I)y;} // if there is only 1 buffer allocate a second
     z=(A)(yztotal-(I)z); v=CAV(z);  // ping-pong

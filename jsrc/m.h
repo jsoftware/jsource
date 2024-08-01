@@ -65,13 +65,19 @@
 //
 // the lower bits encode the size of the block, by the position of the lowest 1 bit, and in the upper bits either (1) the full size of the block for large allocations
 // (2) the offset of the block from the root, for pool allocations.  The following macros define the field
+// For GMP allocations, h has a special value and we free them through mfgmp
+#define FHRHISGMP 0x4000  // this block was allocated by GMP
+#define FHRHBINISGMP 14  // this block was allocated by GMP
 #define FHRHPOOLBIN(h) CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
 #define FHRHBINISPOOL(h) ((h)&((2LL<<(PLIML-PMINL))-1))      // true is this is a pool allo, false if system (h is mask from block)
+#define FHRHBININPOOL(bin) ((bin)<PLIML-PMINL+1)      // true is this is a pool allo, false if system or GMP (h is bin#)
 #define ALLOJISPOOL(j) ((j)<=PLIML)     // true if pool allo, false if system (j is lg2(requested size))
 #define ALLOJBIN(j) ((j)-PMINL)   // convert j (=lg2(size)) to pool bin#
 #define FHRHPOOLBINSIZE(h) (LOWESTBIT(h)<<PMINL)        // convert hmask to size for pool bin#
+#define FHRHPOOLBINTOSIZE(bin) (PMIN<<(bin))        // convert hmask to size for pool bin#
 #define FHRHSYSSIZE(h) (((I)1)<<((h)>>(PLIML-PMINL+2)))        // convert h to size for system alloc
-#define FHRHSIZE(h) ((FHRHBINISPOOL(h) ? FHRHPOOLBINSIZE(h) : FHRHSYSSIZE(h)))
+// obsolete #define FHRHSIZEscaf(h) ((FHRHBINISPOOL(h) ? FHRHPOOLBINSIZE(h) : FHRHSYSSIZE(h)))
+#define FHRHSIZE(h) ({I lbit=LOWESTBIT(h)&((2LL<<(PLIML-PMINL))-1); I hbit=lbit==0; (lbit<<PMINL)+((hbit<<((h)>>(PLIML-PMINL+2)))); })
 #define FHRHSYSJHDR(j) ((2*(j)+1)<<(PLIML-PMINL+1))        // convert j (=lg(size)) to h format for a system allo
 #define FHRHBININCR(b) ((I)2<<(b))      // when garbage-collecting bin b, add this much to the root for each free block encountered.  This is also the amount by which the h values of successive blocks in an allocation differ
 #define FHRHBLOCKOFFSETMASK(b) (FHRHROOTFREE - FHRHBININCR(b))  // for blocks in pool b, mask to use to extract offset to root
@@ -84,4 +90,3 @@
 
 // the size of the total allocation of the block for w, always a power of 2
 #define alloroundsize(w)  (ISGMP(w) ?XHSZ+AN(w) :FHRHSIZE(AFHRH(w)))
-

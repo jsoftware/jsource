@@ -423,8 +423,8 @@ static DF1(ixfixedleft){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofp
 // Here for compounds like (i.&0@:e.)&n  e.&n -.&n that compute a prehashed table from w
 static DF1(ixfixedright){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT R z;}
 
-
-static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
+// obsolete 
+// obsolete static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 
 // u&v
 F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
@@ -509,6 +509,6 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
    }
   }
 
-  fdeffillall(z,flag2,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
+  fdeffillall(z,flag2,CAMP,VERB, f1,jtvalenceerr, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
   R z;
 }

@@ -59,6 +59,9 @@ echo \# jplatform $jplatform
 
 if [ $jplatform = "darwin" ]; then
 
+# copy libgmp to bin
+cp ../mpir/apple/macos/libgmp.dylib ../jlibrary/bin/libgmp.dylib
+
 # macos 64-bit
 if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jconsole" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jconsole" ]; then
 # fat binary

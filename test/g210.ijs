@@ -363,6 +363,13 @@ f 2 3 4$(10&u:&.>) ;:'Cogito, ergo sum. sui generis'
 f 2 3 4$s:@<"0&.> ;:'Cogito, ergo sum. sui generis'
 f 2 3 4$<"0@s: ;:'Cogito, ergo sum. sui generis'
 
+NB. Verify virtuals created properly
+0 = 2 | 5 { 13!:_4 ] 0 $ memu i. 7 8  NB. self-virtual, detected by blocksize>64
+0 = 4 | 5 { 13!:_4 ] 2 $ memu i. 20 8  NB. self-virtual, detected by blocksize>128
+131072 = 1 { 13!:_4 ] 32 $ i. 64  NB. virtual, detected by flag bit (uses MINVIRTSIZE)
+0 = 1 { 13!:_4 ] 31 $ i. 64  NB. not virtual, detected by flag bit
+
+
 NB. x$!.f y -------------------------------------------------------------
 
 (2 3 4$2 3 4 5,   20$0  ) -: 2 3 4$!.'' 2 3 4 5

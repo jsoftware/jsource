@@ -221,12 +221,12 @@ assert. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:_4@[ 0:) <"boxr 
 NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 < ckprist 0 0 0 0 ] 5
 <"0 ckprist 0 0 0 0 ] 5
-'4' $ ckprist 1 0 0 0 ] 5   NB. produces virtual not pristine
-'6' $ ckprist 0 0 0 0 ] 5
-'4' $"1 ckprist 0 0 0 0 ] 4 5
+'32' $ ckprist 1 0 0 0 ] 36   NB. produces virtual not pristine len >= MINVIRTSIZE
+'36' $ ckprist 0 0 0 0 ] 35
+'32' $"1 ckprist 0 0 0 0 ] 4 36
 '6' $"1 ckprist 0 0 0 0 ] 4 5
-'4' ($,) ckprist 1 0 0 0 ] 5   NB. produces virtual not pristine
-'6' ($,) ckprist 0 0 0 0 ] 5
+'32' ($,) ckprist 1 0 0 0 ] 36   NB. produces virtual not pristine
+'36' ($,) ckprist 0 0 0 0 ] 35
 ~. ckprist 0 1 0 0 ] 5
 ~. ckprist 0 1 0 0 ] 4 5
 |. ckprist 0 1 0 0 ] 5
@@ -256,11 +256,11 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '<"0 i. 5' ,. ckprist 0 0 0 0 ] 5  NB. with frame we don't track pristinity - we could
 '<{. i. 1' ,. ckprist 0 1 0 0 ] _1  NB. no frame
 '<"0 i. 5' ,: ckprist 0 0 0 0 ] 5
-'<i. 1000' ,: ckprist 3 0 0 0 ] _1  NB. on atoms, produces virtual result of intermediate value
-,: ckprist 1 0 0 0 ] _1
-,: ckprist 1 0 0 0 ] 4 5
-,: ckprist 1 0 0 0 ] 3 4 5
-,: ckprist 1 0 0 0 ] 5
+'<i. 1000' ,: ckprist 0 0 0 0 ] _1  NB. not virtual - too short
+,: ckprist 0 0 0 0 ] _1
+,: ckprist 0 0 0 0 ] 4 5
+,: ckprist 1 0 0 0 ] 3 4 5  NB. this is long enough
+,: ckprist 0 0 0 0 ] 5
 '<"0 i. 5' ,: ckprist 0 0 0 0 ] 4 5
 '<"0 i. 4 5' ,: ckprist 0 0 0 0 ] 4 5
 ]@]"1 ckprist 0 0 ] 4 5   NB. Not prist because virtual boxed doesn't inplace

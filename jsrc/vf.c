@@ -345,13 +345,13 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
   if(c==1) {  // if there is only 1 cell of w...
    // If no fill required, we can probably use a virtual result, or maybe even an inplace one.  Check for inplace first.  Mustn't inplace an indirect that shortens the data,
    // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those).  Since it must be DIRECT, there's no question about PRISTINE, but that would be OK to transfer if inplaceable
-   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
+   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right, equal atom count if not DIRECT
     // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
     AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISH(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
    }
-   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory (to avoid making the virtual NJA backed unmodifiable)
-// correct   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
-   if((SGNIF(AFLAG(w),AFNJAX)|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISH(zs,ws,wf) MCISH(zs+wf,u,r) RETF(z);}
+   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory (to avoid making the virtual NJA backer unmodifiable).  Don't virtual unless m >= MINVIRTSIZE
+// obsolete correct   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
+   if((SGNIF(AFLAG(w),AFNJAX)|((t&(DIRECT|RECURSIBLE))-1)|(m-MINVIRTSIZE))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISH(zs,ws,wf) MCISH(zs+wf,u,r) RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code
   }
  }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill

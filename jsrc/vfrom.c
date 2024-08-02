@@ -188,17 +188,8 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   I nsel=axes[r].nsel;  // #selectors, neg if complementary
   I lenaxis=axes[r].lenaxis;  // length of last axis
   DPMULDE(zn,nsel^REPSGN(nsel),zn);  // * last-axis size, gives result size
-#define MINVIRTSIZE 32  // must have this many atoms to be virtual
   if(((nunitsels-r)|(zn-MINVIRTSIZE))>=0){  // if there is only one axis left, and result is big enough
    // There is only one application of the last axis.  If the indexes are sequential, we can make the result virtual
-   // Whether we should do so is a tricky question.  Surely, if the argument is big, since we may save a large indexed copy.
-   // If the argument is small, the virtual is still better if it doesn't have to be realized; but it might be
-   // realized in effect if it is unavailable for inplacing.  OTOH, if the argument is indirect the virtual does
-   // not require individual usecounting of the atoms.
-   //
-   // It would be good if we could know if the result is going to be assigned, perhaps jt->zombieval=1.  We could
-   // suppress the virtual then.
-   //
    // We allow virtualing even for NJA blocks. 
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
    I *sels=axes[r].sels;  // pointer to selectors of last axis

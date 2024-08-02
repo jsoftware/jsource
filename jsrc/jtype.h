@@ -530,8 +530,7 @@ typedef I SI;
 // Don't traverse for ra/fa unless one of these bits is set
 #define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB|SPARSE)
 // Allow recursive usecount in one of these types
-// A recursive block is flagged by having the recursible type bit copied into the AFLAG.  But note: the block is not recursible unless the same bit is set in both
-// the type and the flag, where something like (0$a:) + 0$0 might reuse an argument block and leave the flags showing boxed when the type is B01.
+// A recursive block is flagged by having the recursible type bit copied into the AFLAG.  Presencve of a RECURSIBLE bit in the flag suffices to show that the block is recursive
 // We know that any block that has been ra()d is recursive, and therefore that fa() can assume recursibility for any recursible type
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB)  // sparse box not allowed
 // SYMB is TRAVERSIBLE so that fa() will call to free the symbols, and RECURSIBLE so that fanapop will pass the type-flag.  To ensure that a SYMB is always freed when

@@ -15,12 +15,13 @@
 #define STATEDYADKEYSMALLRANGE (((I)1)<<STATEDYADKEYSMALLRANGEX)
 
 
-
+// f;.0 w
 static DF1(jtcut01){DECLF;A h,x,z;
  RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));
  if(VGERL&sv->flag){h=sv->fgh[2]; R df1(z,x,AAV(h)[0]);}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
 
+// a f;.0 w
 static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);I cger[128/SZI];
  ARGCHK2(a,w);
 #define ZZFLAGWORD state
@@ -56,6 +57,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
  // otherwise general case, one axis at a time
  ws=AS(w);
 #define ZZDECL
+#define ZZPOPNEVER 1  // since an incorpable arg is used to create a result, we must ensure the result is not freed in the result loop
 #include "result.h"
  // If there is only one column, we will be using  a virtual block to access the subarray, so allocate it here
  //  (if the subarray is reversed, we won't need the block, but that's rare)

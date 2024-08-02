@@ -93,7 +93,7 @@
 #define ZZSTARTATEND 0  // user defines as 1 to build result starting at the end
 #endif
 #ifndef ZZPOPNEVER
-#define ZZPOPNEVER 0  // user defines as 1 to force us to NEVER tpop in the loop
+#define ZZPOPNEVER 0  // user defines as 1 to force us to NEVER tpop/zap in the loop.  Used if INCORPABLE args used to create result
 #endif
 #ifndef ZZASSUMEBOXATOP  // set to cause us to put the result of the user's function into the result without boxing
 #define ZZASSUMEBOXATOP 0
@@ -105,7 +105,7 @@
 //*********** storing results *************
 
 #ifdef ZZBODY
-// result is in z.
+// result is in z.  The arguments to the verb that produced the result must be UNINCORPABLE to prevent the result from premature free: or else ZZPOPNEVER must be set
 
 // process according to state.  Ordering is to minimize branch misprediction
 do{

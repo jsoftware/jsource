@@ -1,29 +1,7 @@
 prolog './gstack.ijs'
 NB. stack issues (function call limit) ----------------------------------
 
-0 0 $  0 : 0
-The recursion limit is constrained by the stack size available to 
-the J executable file. Crashes due to stack errors can be overcome 
-by increasing the stack size. Under Windows, the stack size can be 
-queried and set as follows:
 
-   dumpbin /headers       c:\j601\j.exe
-   editbin /stack:6000000 c:\j601\j.exe
-
-The stack size is called "size of stack reserve" in the dumpbin output. 
-The stack space can also be interrogated in J as follows:
-
-   ss=: 256 #. a. i. +&3 2 1 0@[ { 1!:1@]
-   368 ss <'c:\j601\j.exe'
-5000000
-   360 ss <'c:\j504\j.exe'
-5000000
-
-The right argument to ss is the name of the J executable file; the left 
-argument is the location in the file of the 4-byte word that specifies 
-the stack size.  (The location varies with the file, and the word is in 
-reverse byte order for Windows.)
-)
 NB. f=: 3 : 'f c=:>:y'
 'stack error' -: (f=: 3 : 'f y'         ) etx 0
 'stack error' -: (f=: 3 : '0!:0 ''f 0''') etx 0

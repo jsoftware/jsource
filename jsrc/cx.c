@@ -30,7 +30,7 @@
 #define CNSTOREDCW (NPGpysfmtdl>>CWCTX)  // negative of # stored CWs, used for indexing components
 
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
-// line-> box 0 - tokens; x->box 1 - A block for control words; n (in flag word)=#control words; cw->array of control-word data, a CW struct for each
+// line-> box 0 - executable words/control words/go/tcesx; n (in flag word)=#control words; cwsent->array of control-word data, a CW struct for each
 #define LINE(sv) {A x=AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0]; cwsent=CWBASE(x);  NPGpysfmtdl&=((I)1<<CWCTX)-1; NPGpysfmtdl|=-(CWNC(x)<<CWCTX);}
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
@@ -254,19 +254,21 @@ DF2(jtxdefn){
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
  A u,v;  // pointers to args
  {  // for name scope only
-  NPGpysfmtdl=(w!=self?64:0);  // set if dyad, i. e. dyadic verb or any conjunction.
+  NPGpysfmtdl=(w!=self?64:0);  // set if dyad, i. e. dyadic verb or non-operator conjunction.
+  // Set up for operation type (monad dyad, operator/verb)
+  // If the verb contains try., allocate a try-stack area for it.  Remember debug/trapping state coming in so we can restore on exit
   if(likely(((I)jtinplace&JTXDEFMODIFIER)==0)){
    // we are executing a verb.  It may be an operator
+   if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v and self from orig defn.  flags don't change
    w=NPGpysfmtdl&64?w:a; a=NPGpysfmtdl&64?a:0;  // a w self = [x] y verb
-   if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v and self for orig defn.  flags don't change
+   if(unlikely(sflg&VTRY1+VTRY2))if(sflg&(NPGpysfmtdl&64?VTRY2:VTRY1)){A td; GAT0(td,LIT,(NTD+1)*sizeof(TD),1); tdv=(TD*)AV(td); tdv[0].ndx=0; NPGpysfmtdl|=PUSHTRYSTK<<8;}  // if TRY in this valence, allocate a stack
   }else{
    // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
    v=NPGpysfmtdl&64?w:0; u=a; a=w=0; NPGpysfmtdl|=8; // a w self = u [v] mod; remember that we are a modifier
+   if(unlikely(sflg&VTRY1+VTRY2)){A td; GAT0(td,LIT,(NTD+1)*sizeof(TD),1); tdv=(TD*)AV(td); tdv[0].ndx=0; NPGpysfmtdl|=PUSHTRYSTK<<8;}  // the unused valence has a VTRY flag, but we assume it's 0.  If TRY seen, allocate a stack
   }
   NPGpysfmtdl|=SGNTO0(-(jt->glock|(sflg&VLOCK)));  // init flags: 1=lock bit, whether from locked script or locked verb
   LINE(sv);  // Read the info for the parsed definition, including control table and number of lines
-  // If the verb contains try., allocate a try-stack area for it.  Remember debug/trapping state coming in so we can restore on exit
-  if(unlikely(sflg&VTRY1+VTRY2)){A td; GAT0(td,LIT,(NTD+1)*sizeof(TD),1); tdv=(TD*)AV(td); tdv[0].ndx=0; NPGpysfmtdl|=PUSHTRYSTK<<8;}
 
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
@@ -327,8 +329,9 @@ DF2(jtxdefn){
   // Do the other assignments, which occur less frequently, with symbis, without the special treatment of virtuals
   // We may not call these final assignments because that might back tpushptr before an outstanding 'old'
   if(unlikely(((I)u|(I)v)!=0)){
-   if(u){(symbis(mnuvxynam[2],u,locsym)); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym); }  // assign u, and m if u is a noun
-   if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // errors here are impossible: the value exists and the names are known valid and allocated
+// obsolete    if(u){( ) }
+   symbis(mnuvxynam[2],u,locsym); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym);  // assign u, and m if u is a noun.  u musat be defined
+   if(v){symbis(mnuvxynam[3],v,locsym); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // errors here are impossible: the value exists and the names are known valid and allocated
   }
  }  // for name scope only
  // remember tnextpushp.  We will tpop after every few sentences, to free blocks.  Do this AFTER any memory
@@ -593,9 +596,6 @@ dobblock:
    tcesx&=~(32<<TCESXTYPEX);  // the flag for DOF is for the loop, but we are exiting, so turn off the flag
   case CENDSEL:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
-// obsolete    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-// obsolete    // (this is no longer needed since names are not deleted but the result case is rare)
-// obsolete    if(unlikely(!(tcesx&TCESXCECANT)))BZ(z=rat(z)); 
    cv=unstackcv(cv,1);  // This leaves xyz[_index] defined, so there is no need to rat() z
    if(FLAGGEDNOTRACE(tcesx)){--ic; goto dobblock;}  // if flagged (must be ENDSEL), NSI is bblock, go do it without reading
    ic=CWGO(cwsent,CNSTOREDCW,ic);    // continue at new location
@@ -690,7 +690,7 @@ bodyend: ;  // we branch to here to exit with z set to result
 
  if(likely(z!=0)){  // normal case with no error
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  If error, leave stack to be freed at restart point
- }else{  // there was error
+ }else{  // there was error.  Prepare for postmortem debug
   // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
   // We don't do this if jt->jerr is clear: that's the special result for coming out of debug; or when WSFULL, since there may be no memory.  Also, suppress pmdebug
   // if an immex phrase is running or has been requested, because those would be confusing and also they call tpop
@@ -1276,13 +1276,14 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
    // for 9 : n, figure out best type after looking at n
    if(m==9){
     I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; m=CTLZI(defflg); m=(0x2143>>(m<<2))&0xf; // replace 9 by value depending on what was seen; if : seen, ignore x
-    if(m==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
+    if(m==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=((flag&~VTRY2)+VTRY1)&~VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad.  Clear TRY1 to avoid spurious activity
    }
    if(m<=2){  // adv or conj after autodetection
-    flag|=REPSGN(-(fndflag&3))&VXOPR;   // if this def refers to xy, set VXOPR
+// obsolete     flag|=REPSGN(-(fndflag&3))&VXOPR;   // if this def refers to xy, set VXOPR
+    flag|=!!(fndflag&3)<<VXOPRX;   // if this def refers to xy, set VXOPR
     // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a non-operator conjunction: the operands will be the two verbs;
-    // (2) it is an operator with a reference to x
-    if(((-AN(v1))&(AN(v2)-1)&((SGNIFNOT(flag,VXOPRX)&(1-m))|(SGNIF(flag,VXOPRX)&SGNIF(fndflag,1))))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
+    // (2) it is an operator with a reference to x.  Move the TRY flag to the dyad too
+    if(((-AN(v1))&(AN(v2)-1)&((SGNIFNOT(flag,VXOPRX)&(1-m))|(SGNIF(flag,VXOPRX)&SGNIF(fndflag,1))))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;); flag=((flag&~VTRY2)+VTRY1)&~VTRY1;}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
     // for adv/conj, flag has operator status from here on
    }
   }

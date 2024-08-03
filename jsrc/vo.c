@@ -684,7 +684,6 @@ F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape
   zu=CAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying the data into sequential output positions.  pyx impossible
-// obsolete   DO(n, y=v[i]; d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;)
   DO(n, y=v[i]; d=AN(y)<<klg; JMC(zu,AV(y),d,0); zu+=d;)   // copy the items
  }
 

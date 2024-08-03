@@ -1532,10 +1532,9 @@ printf("%p-\n",w);
 #if PYXES
   J jtremote=JTFORTHREAD1(jt,w->origin);
   if(likely(jtremote==jt)){  // normal case of freeing in the allocating thread: avoid atomics
-// obsolete   jt=JTFORTHREAD1(jt,w->origin);  // for space accounting, switch to the thread the block came from  *** this modifies jt ***
    jt->malloctotal-=allocsize;
    jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
-  }else{  // the block was allocate in another thread.  Account for its free there
+  }else{  // the block was allocated in another thread.  Account for its free there
    __atomic_fetch_sub(&jtremote->malloctotalremote,allocsize,__ATOMIC_ACQ_REL);
    __atomic_fetch_sub(&jtremote->mfreegenalloremote,allocsize,__ATOMIC_ACQ_REL);
   }
@@ -1543,7 +1542,7 @@ printf("%p-\n",w);
 #else
   jt->malloctotal-=allocsize;
   jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
-  if(unlikely(jt->mfreegenallo&MFREEBCOUNTING))__atomic_fetch_sub(&jt->bytes,allocsize,__ATOMIC_ACQ_REL);  // keep track of total allocation, needed only if enabled
+  if(unlikely(jt->mfreegenallo&MFREEBCOUNTING))jt->bytes-=allocsize;  // keep track of total allocation, needed only if enabled
 #endif
  
 #if ALIGNTOCACHE

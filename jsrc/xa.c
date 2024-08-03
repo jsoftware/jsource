@@ -246,7 +246,6 @@ F1(jtasgzombs){I k;
 // return 0 to signal error, 1 to continue
 I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  READLOCK(JT(jt,startlock))
-// obsolete  A okmsg; if(JT(jt,deprecex)){RZGOTO(okmsg=eps(sc(absmno),JT(jt,deprecex)),exiterr); if(BAV(okmsg)[0]!=0)goto exitok;}  // unless this msg excluded, continue
  if(JT(jt,deprecex)&&(JT(jt,deprecex)&((US)1<<absmno)))goto exitok;  // unless this msg excluded, continue
  if(mno>=0){if(JT(jt,deprecct)==0)goto exitok;}else{JT(jt,deprecct)+=JT(jt,deprecct)==0;}  // if msgs disabled, return; but force msg out if neg
  // code to write output line copied from jtpr1
@@ -277,9 +276,7 @@ F1(jtdeprecxs){A ct, excl;
  ASSERT(AR(excl)<2,EVRANK);  // and atomic or list
  // install values
  US exv=0x8000; DO(AN(excl), if(IAV(excl)[i]<16)exv|=(US)1<<IAV(excl)[i];)  // convert list to bitmask
-// obsolete  INCORP(w);
  WRITELOCK(JT(jt,startlock))
-// obsolete  JT(jt,deprecct)=cti; ra(excl); fa(JT(jt,deprecex)); JT(jt,deprecex)=excl;
  JT(jt,deprecct)=cti; JT(jt,deprecex)=exv;
  WRITEUNLOCK(JT(jt,startlock))
  R mtm;

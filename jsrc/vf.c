@@ -85,25 +85,6 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  EPILOG(z);
 }    /* a|."r w on sparse arrays */
 
-// obsolete #define ROF(r) ar=ABS(r); ar=MIN(ar,n); ROTFCOMMON
-// obsolete #define ROT(r) ar=ABS(r); if(unlikely(ar>n)){r=r%n; ar=ABS(r);} ROTFCOMMON
-// obsolete // m=#cells d=#atoms per item  n=#items per cell
-// obsolete static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,r,x,y,kd,ks,jd,js;
-// obsolete  e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item
-// obsolete  if(jt->fill){
-// obsolete   if(p<=1){r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;);}
-// obsolete   else{DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;);}
-// obsolete   if(p<=1){r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;);}
-// obsolete   else{DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;);}
-// obsolete  }else{
-// obsolete   if(p<=1){r=p?*av:0;     ROT(r); DQ(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
-// obsolete   else{DO(m, r=av[i]; ROT(r);       MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
-// obsolete  if(p<=1){r=p?*av:0;     ROTF(r); DQ(m, MC(v+jd,u+js,e-k);  if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,atomsize,jt->fillv); u+=e; v+=e;);}  // move fill last in case inplace
-// obsolete  else{DO(m, r=av[i]; ROTF(r);       MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,atomsize,jt->fillv);  u+=e; v+=e;);}
-// obsolete  }
-// obsolete }
-
-
 
 /* m   # cells
    d   # atoms in each cell
@@ -114,8 +95,6 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
    u   source data area 
    v   target data area      */
 // set k=length that wraps (dk * shift), ks=offset to it in source, kd=offset to it in dest, js=source offset to part that doesn't wrap, kd=offset to it in dest
-// obsolete #define ROF(r) if((I )(r<-n)|(I )(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
-// obsolete #define ROT(r) if((I )(r<-n)|(I )(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
 // for left shift (ar positive) ks=0, js=dk*shift, kd=e-k, jd=0
 // for right shift              ks=e-k, js=0, kd=0, jd=dk*shift
 #define ROTF(r) {I ar=ABS(r); if(unlikely((UI)ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABS(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
@@ -163,17 +142,12 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
   yztotal=(I)w;  // if w was inplaceable but we don't inplace because of size, remember that w is available as a ping-pong buffer
  }
  if(z==0){GA(z,AT(w),wn,wr,s); v=CAV(z); yztotal+=(I)z;}   // allocate result area, unless we are inplacing into w
-// obsolete  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);  // rotate first axis
  I ii=m; while(1){if(u!=v)MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; if(withprob(negifragged<0,0.1)){av0=*++av; ROTF(av0)} u+=e; v+=e;}
 
  if(1<p){I i;
   // more than 1 axis: we ping-pong between buffers as we go down the axes.
   //   Start here with input in z
-// obsolete   if(1||!jt->fill)  // if fill, z is always inplaceable and we keep using it
-// obsolete   GA(y,AT(w),wn,wr,s); I uvtotal=(I)CAV(y)+(I)nextu; // before ping-pong, y/u is the previous input, i. e. the new output
-// obsolete   b=0;
   s+=wf;   // skip over w frame to get to the cell.  We will start 1 axis in
-// obsolete   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame
   for(i=0;i<p-1;++i){
    m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); e=(n*d)<<klg; dk=d<<klg;  // update cell sizes
    ROTF(av[i+1])  // calculate offsets
@@ -184,7 +158,6 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
    backslack=(ks+js-backslack)&~(jt->fill?REPSGN(av[i+1]):0);  // backslack is neg if we can move AK right, EXCEPT when right-shift with fill
    frontslack=(e-(ks+js)-frontslack)&(jt->fill?REPSGN(av[i+1]):-1);  // frontslack is neg if we can move AK left, EXCEPT when left-shift with fill
    if((backslack|frontslack)<0){   // there is room for inplacing, front or back
- // obsolete   if(ks+js<backslack&&!((I)jt->fill&REPSGN(av[i+1]))){   // can the front section fit in the slack, and not right-shift w/fill?
     if(((e-(ks+js))&REPSGN(backslack))>((ks+js)&REPSGN(frontslack))){  // choose the allowed direction that has the smaller wrapped area.  The unwrapped area will stay in place
      // inplace, adding to AK.  Still copy back to front
      AK(z)+=ks+js; k=av[i+1]<0?ks:k;  // move AK right, which shifts the buffer left.  If k was calculated from <<, the wrap length is correct.  If from >>, take other side
@@ -200,11 +173,8 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
     z=(A)(yztotal-(I)z); v=CAV(z);  // ping-pong
    }
    // we have the buffer pointers, move the data
-// obsolete  A ta=z; z=y; y=ta; u=nextu; v=nextu=(C*)(uvtotal-(I)u);
-// obsolete     rot(m,d,n,(I)1<<klg,1L,av+i+1,u,v);
    I ii=m; while(1){if(u!=v)MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; u+=e; v+=e;}
   }  // do axes, with ping-pong, leaving result in z/v
-// obsolete   z=b?y:z;
  } 
  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill
  PRISTXFERFIF(z,origw,jt->fill==0)  // transfer pristinity if there is no fill
@@ -350,7 +320,6 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
     AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISH(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
    }
    // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory (to avoid making the virtual NJA backer unmodifiable).  Don't virtual unless m >= MINVIRTSIZE
-// obsolete correct   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
    if((SGNIF(AFLAG(w),AFNJAX)|((t&(DIRECT|RECURSIBLE))-1)|(m-MINVIRTSIZE))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISH(zs,ws,wf) MCISH(zs+wf,u,r) RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code
   }
@@ -378,7 +347,6 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
  fauxblockINT(yfaux,4,1);
  if(1>=wcr)y=a;  // y is atom or list: $ is the same as ($,)
  else{   // rank y > 1: append the shape of an item of y to x
-// obsolete   RZ(a=vi(a));
   if(unlikely(AT(a)&FL))RZ(a=jtreshapeblank(jt,a,w,ds(CRIGHT),MIN(1,wcr),wcr)) else RZ(a=vip(a));  // convert a to integer & audit; if FL, also check for _ and handle
   an=AN(a); acr=1;  // if a was an atom, now it is a list
   fauxINT(y,yfaux,an+r,1) v=AV(y);

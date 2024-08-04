@@ -15,3 +15,7 @@ copy %S%\jdll\j32.dll %B%\j.dll
 
 copy %S%\tsdll\tsdll.dll %A%\.
 copy %S%\tsdll\tsdll32.dll %B%\tsdll.dll
+
+copy %S%\mpir\windows\x64\mpir.dll %A%\.
+copy %S%\pthreads4w\bin\pthreadVC3.dll %A%\.
+copy %S%\pcre2\windows\x64\jpcre2.dll %A%\.

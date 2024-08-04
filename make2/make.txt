@@ -72,3 +72,5 @@ j64x=j64avx2 ./build_all.sh
 USE_WASM=1 CC=emcc AR=emar ./build_libj.sh
 # output file libj.a under the bin/wasm/j32 folder
 
+**************************************************************************
+to run test suite, copy platform dependent libgmp from the mpir folder to ~bin (the folder containing jconsole)

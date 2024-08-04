@@ -559,7 +559,7 @@ case $jplatform64 in
 
  darwin/j64arm*) # darwin arm
   TARGET=libj.dylib
-  CFLAGS="$common $macmin $common -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
+  CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDOPENMP $LDTHREAD $macmin "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
@@ -570,7 +570,7 @@ case $jplatform64 in
 
  darwin/j64iphoneos) # iphone
   TARGET_a=libj.a
-  CFLAGS="$common $macmin $common -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
+  CFLAGS="$common $macmin -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDOPENMP $LDTHREAD $macmin "
   LDFLAGS_a=" -static -o "
   OBJS_AESARM=" aes-arm.o "
@@ -582,7 +582,7 @@ case $jplatform64 in
 
  darwin/j64iphonesimulator) # iphone simulator
   TARGET_a=libj.a
-  CFLAGS="$common $macmin $common -D IMPORTGMPLIB -DC_CRC32C=1 "
+  CFLAGS="$common $macmin -D IMPORTGMPLIB -DC_CRC32C=1 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDOPENMP $LDTHREAD $macmin "
   LDFLAGS_a=" -static -o "
   OBJS_AESNI=" aes-ni.o "

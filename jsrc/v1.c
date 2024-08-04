@@ -11,13 +11,13 @@
 #pragma warning(disable: 4244)
 #endif
 
-// To reduce parameter overhead, we call matchsub with trailing parameters omitted if x==0.  This is fine for clang.  In MSVC, the parameter area
-// is used as a workarea by the routine, and thus omitting the parms makes for a segfault.
-#if defined(__clang__)&&SY_64
-#define MATCHSUBDEFAULTS
-#else
-#define MATCHSUBDEFAULTS ,0,0,1,1,1
-#endif
+// obsolete // To reduce parameter overhead, we call matchsub with trailing parameters omitted if x==0.  This is fine for clang.  In MSVC, the parameter area
+// obsolete // is used as a workarea by the routine, and thus omitting the parms makes for a segfault.
+// obsolete #if defined(__clang__)&&SY_64
+// obsolete #define MATCHSUBDEFAULTS
+// obsolete #else
+// obsolete #endif
+#define MATCHSUBDEFAULTS ,0,0,1,1,1   // parms not needed if x==0.  We have to pass them anyway because the called function may use them as a workarea, expected to be initialized by the caller
 static B jtmatchsub(J,A,A,B* RESTRICT,I,I,I,I,I);
 static F2(jtmatchs);
 
@@ -321,21 +321,38 @@ B jtequ0(J jt,A a,A w){
  PUSHCCT(1.0) B res=equ(a,w); POPCCT R res;
 }
 
+// Test name equality, looking only at name strings
+static B eqname(A a,A w){
+ if(TYPESXOR(AT(a),AT(w)))R 0;   // both must be names
+ if(AN(a)!=AN(w))R 0;  // full namelen matches
+ if(NAV(a)->m!=NAV(w)->m)R 0;  // len of simplename
+ R !memcmp(NAV(a)->s,NAV(w)->s,AN(a));  // compare name itself
+}
+
 // Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
-static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
+B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  if(TYPESXOR(AT(a),AT(w))+(u->id^v->id))R 0;   // must match on type and id
- p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
- p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
- p=u->fgh[2]; q=v->fgh[2];    R (p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS));
+ p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||(p==0)==(q==0)&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
+ p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||(p==0)==(q==0)&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
+ if(u->id==CCOLON&&AT(u->fgh[0])&NOUN){
+  // explicit definition.  Compare equal if first h box in each valence matches.  It must match in all its boxes, plus the
+  // tcesx data before the boxes.  If h[0] matches, the only differences must be comments
+                if(!(AT(v->fgh[0])&NOUN))R 0;  // both must be explicit
+  DO(2, p=AAV1(u->fgh[2])[HN*i+0]; q=AAV1(v->fgh[2])[HN*i+0];
+   if(p!=q){if((p==0)!=(q==0))R 0; if(!((B (*)())jtmatchsub)(jt,p,q,0  MATCHSUBDEFAULTS))R 0; if(AK(p)!=AK(q))R 0; if(memcmp(CAV1(p),CAV1(q),AK(p)-AKXR(1)))R 0;}  // check boxes and tcesx.  the table is allocated with rank 0.
+  )
+  R 1;  // if no differences, call them equal
+ }else {p=u->fgh[2]; q=v->fgh[2];    R (p==q||(p==0)==(q==0)&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS));}
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
+// In case the boxes have QC flags (possible if we are comparing functions), mask off the flags
 #ifndef BOXEDSPARSE
 #define EQA(a,w) \
- ((-(C(a)!=C(w))&((AN(C(a))^AN(C(w)))-1))>=0?(C(a)==C(w)):((B (*)())jtmatchsub)(jt,C(a),C(w),0   MATCHSUBDEFAULTS))
+ ({ A ma=QCWORD(C(a)), mw=QCWORD(C(w)); ((-(ma!=mw)&((AN(ma)^AN(mw))-1))>=0?(ma==mw):((B (*)())jtmatchsub)(jt,ma,mw,0   MATCHSUBDEFAULTS)); })
 #else
 #define EQA(a,w) \
- (((!ISSPARSE(AT(C(a))|AT(C(w))))&&((-(C(a)!=C(w))&((AN(C(a))^AN(C(w)))-1))>=0))?(C(a)==C(w)):((B (*)())jtmatchsub)(jt,C(a),C(w),0   MATCHSUBDEFAULTS))
+ ({ A ma=QCWORD(C(a)), mw=QCWORD(C(w)); (((!ISSPARSE(AT(ma)|AT(mw)))&&((-(ma!=mw)&((AN(ma)^AN(mw))-1))>=0))?(ma==mw):((B (*)())jtmatchsub)(jt,ma,mw,0   MATCHSUBDEFAULTS)); })
 #endif
 // compare rationals
 #define EQQ(a,w)  (equx(a.n,w.n)&&equx(a.d,w.d))
@@ -391,7 +408,8 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
 
  // If we're comparing functions, return that result
  t=at;  //  in case types identical, pick one
- if(t&FUNC)R (!eqf(a,w))^(x==0?1:b1);  // true value, but switch if return is not 'match'
+ if(unlikely(t&FUNC))R (!eqf(a,w))^(x==0?1:b1);  // true value, but switch if return is not 'match'
+ if(unlikely(t&NAME))R (!eqname(a,w))^(x==0?1:b1);  // true value, but switch if return is not 'match'
 #ifdef BOXEDSPARSE
  if(unlikely(ISSPARSE(at|wt)))R num(1)==matchs(a,w);
 #endif

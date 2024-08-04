@@ -54,7 +54,7 @@ DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
   d->dcdyad=(t>>7)&1;  // remember if dyadic verb execution
   d->dca=jt->curname;  // save executing name, if any
   d->dcstop=-2;  // ??
-  d->dcj=jt->jerr;  // save error# - not really needed
+  d->dcj=jt->jerr;  // save error# - not really needed - used to see if in suspension
   tt=DCCALL; d->dcpflags=1;  // turn DCPM into DCCALL with pflags set
  }
  d->dctype=tt;  // install type, which might have been modified

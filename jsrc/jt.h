@@ -328,7 +328,8 @@ typedef struct JSTstruct {
  // rest of cacheline used only in exceptional paths
  S locdellock;  // lock to serialize user request to delete locale
  US promptthread;  // The thread that is allowed to prompt from keyboard.  0=master normally, but set to debug thread during suspension.  Host sentences are sent to this thread
-// 2 bytes free
+ C sidamage;  // set during debugging when an executing entity is changed.  This invalidates the stack and should end suspension
+// 1 byte free
 // front-end interface info
  C *capture;          // capture output for python->J etc.
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */

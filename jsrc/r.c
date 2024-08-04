@@ -309,7 +309,8 @@ F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  wv=VAV(w); h=wv->fgh[2]; hv=AAV(h);  // h[2][HN] is preparsed def
  mc=hv[0];    ms=hv[2];    m=mn=CWNC(mc)-1;  // mc->control words ms->commented text  m,mn = #control words
  dc=hv[0+HN]; ds=hv[2+HN]; n=dn=CWNC(dc)-1;
- m=AR(mc)==1?-1:m; n=AR(dc)==1?-1:n;  // mc is normally a compiled defn, but it can also be an empty list of boxes if the valence is not defined.  Make mc=-1 in that case.
+// obsolete  m=AR(mc)==1?-1:m; n=AR(dc)==1?-1:n;  // mc is normally a compiled defn (boxed rank 1), but it can also be an empty list of boxes if the valence is not defined.  Make mc/nc=-1 in that case.
+ m=AN(mc)==0?-1:m; n=AN(dc)==0?-1:n;  // mc is normally a compiled defn (boxed rank 1), but it can also be an empty list of boxes if the valence is not defined.  Make mc/nc=-1 in that case.
  p=!((I)jtinplace&JTEXPVALENCEOFF)&&(n>=0)&&((m>=0)||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
  if(equ(mtv,hv[2])&&equ(mtv,hv[2+HN])){
   // no comments: recover the original by unparsing
@@ -339,7 +340,7 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  wv=FAV(w); h=wv->fgh[2];
  if(!(h&&CCOLON==wv->id))R reshape(v2(0L,3L),ds(CACE)); 
  hv=AAV(h);
- x=hv[j]; v=CWBASE(x); n=AR(x)==1?0:CWNC(x)-1;
+ x=hv[j]; v=CWBASE(x); n=AN(x)==0?0:CWNC(x)-1;  // empty x is not formatted control words
  GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;
  zv=AAV(z);
  UI4 prevorigt=0;  // we must revert the change of BBEND END BB[END] to BBEND BBEND BB[END]

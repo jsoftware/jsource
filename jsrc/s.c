@@ -659,31 +659,32 @@ F1(jtsymbrdlock){A y;
 }
 
 
-// w is a value, v is the value about to be reassigned
-// Called only in debug mode.  If we redefine an executing name, it would invalidate
-// the debug stack.  Fail if any redefinition would change part of speech or the id of the executing function.
+// w is a value to be assigned, v is the incumbent value in that name
+// Called only in debug mode.  If we redefine an executing name with a different value, it would invalidate
+// the debug stack.  It is OK to reassign if the value doesn't change.  Fail if any redefinition would change part of speech or the id of the executing function.
 // If the currently-executing definition is reloaded, mark the stack entry: xdefn will pick it up when debug is on
 // as modified - xdefn will try to hot-swap to the new definition between lines
 // If the modified name is executing higher on the stack, fail
 // returns v for OK to allow the assignment to proceed, 0 if error
 A jtredef(J jt,A w,A v){A f;DC c,d;
- // find the most recent DCCALL with error, exit if none
- d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R v;
+ d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R v;   // find the most recent DCCALL with error, exit if none
+ // Now d->stack entry of executing entity, which is in suspension
  if(v==(A)d->dcn){  // if we reassign any name whose value equals the executing value, we treat it as a reassignment of the executing name.  This is for comp ease
   // attempted reassignment of the executing name
   // insist that the redefinition have the same type, and the same explicit character
-  f=d->dcf;
+  f=d->dcf;  // the executing function
   ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSIDAMAGE,d->dca);  // the executing value MUST have a name, otherwise we couldn't modify it
-  d->dcf=w;
+  d->dcf=w; d->dcn=(I)w;  // dcf is used by redef code in xdefn; dcn is the stacked addr of executing fn, which we must now update so we can see if it is changed again later
   // If we are redefining the executing explicit definition during debug, remember that.
   // debug will switch over to the new definition before the next line is executed.
   // Reassignment outside of debug continues executing the old definition
-  if(CCOLON==FAV(w)->id){d->dcredef=1;}
+  if(CCOLON==FAV(w)->id&&!jteqf(jt,w,v)){d->dcredef=1;}  // don't call redef if value doesn't change
   // Erase any stack entries after the redefined call, except for SCRIPT type which must be preserved for linf
   c=jt->sitop; NOUNROLL while(c&&DCCALL!=c->dctype){if(DCSCRIPT!=c->dctype)c->dctype=DCJUNK; c=c->dclnk;}
  }
- // Don't allow redefinition of a name that is suspended higher up on the stack
- c=d; NOUNROLL while(c=c->dclnk){ ASSERTN(!(DCCALL==c->dctype&&v==(A)c->dcn),EVSIDAMAGE,c->dca);}
+
+ // Don't allow redefinition of a name that is suspended higher up on the stack, possibly many times.   If the definition doesn't change, that's OK but we must point the stack to the new value
+ c=d; NOUNROLL while(c=c->dclnk){if(DCCALL==c->dctype&&v==(A)c->dcn){c->dcn=(I)w; if(!jteqf(jt,w,v))JT(jt,sidamage)=1; ASSERTN(jteqf(jt,w,v),EVSIDAMAGE,c->dca);}}   // scaf assert
  R v;   // good return: recycle v to save a register
 }    /* check for changes to stack */
 

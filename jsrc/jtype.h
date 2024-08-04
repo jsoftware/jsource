@@ -736,9 +736,11 @@ typedef I SI;
 // tcesx values (NC UI4 values, accessed from the end)
 // words of the sentence, counting up  <-- data pointer is at the beginning of this part
 //
+// the block is allocated at rank 1 so the compare in jtredef works 
+//
 // macros to access the parts: nc is -(#cw+1) = ~#cw
-#define CWBASE(x) AAV(x) // pointer to start of the sentence words
-#define CWNC(x) ((CAV(x)-(C*)((I)x+AKXR(0)))>>3)  // number of CWs including the sentinel at the end
+#define CWBASE(x) AAV(x) // pointer to start of the sentence words (also the end of tcesx)  - using AK
+#define CWNC(x) ((CAV(x)-(C*)((I)x+AKXR(1)))>>3)  // number of CWs including the sentinel at the end
 #define CWTCESX(base,ci) (((UI4*)base)[ci]) // UI4 value containing tcesx
 #define CWTCESX2(base,ci) *(UI8 *)((UI4*)base+ci-1) // UI8 value containing low half=tcesx for ~i+1, high half=tcesx for ~i
 #define CWGO(base,nc,ci) ((S*)((UI4*)base+(nc)))[ci] // S value containing ~go value for ~i
@@ -750,7 +752,7 @@ UI4 tcesx;  // cw type/canend/number of first word in the line
 #define TCESXCEX 24  // canend bits 24-25
 #define TCESXCECAN ((UI4)1<<TCESXCEX)  // set if this result can become the result of the defn
 #define TCESXCECANT ((UI4)2<<TCESXCEX)  // set if this result cannot become the result of the defn
-#define TCESXSXMSK 0xffffff  // mask of line-number bits
+#define TCESXSXMSK 0xffffff  // mask of word-number bits
  US go;  // line number.  Depends on type; can be loop-to point, failing-branch point, or error handler
  US source;  // source line number
 } CW;

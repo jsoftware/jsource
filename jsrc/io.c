@@ -630,8 +630,9 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r;
   MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,lp);)
   jm->recurstate=origrstate;   // restore original idle/rent state
 
-  if(!JT(jt,nfe))break;  // normal exit: return to host
   if(jm->recurstate&RECSTATERENT)break;  // if the call was a recursion, don't prompt again
+  else JT(jt,sidamage)=0;  // when any non-recursion goes to prompt level, clear sidamage (backstop - usually suspension does this)
+  if(!JT(jt,nfe))break;  // normal exit: return to host
   if(jm->jerr==EVEXIT)break;  // if user terminated J, terminate this loop also
 
   // falling through here is for JHS

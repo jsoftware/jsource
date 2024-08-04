@@ -732,6 +732,7 @@ extern B        jtecvtinit(J);
 extern I        jtforeignassigninit(J);
 extern A        jteformat(J,A,A,A,A);
 extern A        jtenqueue(J,A,A,I);
+extern B        jteqf(J,A,A);
 extern B        jtequ(J,A,A);
 extern B        jtequx(J,X,X);
 extern B        jtequ0(J,A,A);

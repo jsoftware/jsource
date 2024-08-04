@@ -31,7 +31,7 @@
 
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
 // line-> box 0 - executable words/control words/go/tcesx; n (in flag word)=#control words; cwsent->array of control-word data, a CW struct for each
-#define LINE(sv) {A x=AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0]; cwsent=CWBASE(x);  NPGpysfmtdl&=((I)1<<CWCTX)-1; NPGpysfmtdl|=-(CWNC(x)<<CWCTX);}
+#define LINE(sv) {A x=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0]; cwsent=CWBASE(x);  NPGpysfmtdl&=((I)1<<CWCTX)-1; NPGpysfmtdl|=-(CWNC(x)<<CWCTX);}  // h allocated at rank 1
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
@@ -272,8 +272,8 @@ DF2(jtxdefn){
 
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
-  locsym=AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+3];  // fetch pointer to preallocated symbol table
-// checked already  ASSERT(locsym!=0,EVVALENCE);  // if the valence is not defined, give valence error
+  locsym=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+3];  // fetch pointer to preallocated symbol table
+// obsolete checked already  ASSERT(locsym!=0,EVVALENCE);  // if the valence is not defined, give valence error
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){NPGpysfmtdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -372,7 +372,7 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
       lvl=self!=callframe->dcf; lvl=callframe->dcc!=0?2:lvl;  // calculate name decoration according to table above
      }
      if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember.  lvl init to 0 for other cases
-     callframe->dcloc=locsym; callframe->dcc=AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)];  // install info about the exec for use in debug
+     callframe->dcloc=locsym; callframe->dcc=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)];  // install info about the exec for use in debug
 
      // always allocate the parse frame
      DC thisframe=deba(DCPARSE,0L,0L,0L);  // if deba fails it will be before it modifies sitop.  Remember our stack frame
@@ -402,12 +402,12 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
     if(NPGpysfmtdl&16){
       if(jt->sitop->dcredef&&(siparent=jt->sitop->dclnk)&&siparent->dctype==DCCALL&&siparent->dcc!=0&&siparent->dcnmlev==0&&self!=siparent->dcf){A *hv;  // must be DCCALL; dcc not0 and lvl 0 means direct call
        // the top-of-stack (a PARSE entry) indicates redefined, and it is a direct named call to here
-       self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=AAV(sv->fgh[2])[4*((NPGpysfmtdl>>6)&1)];  // LINE sets pointers for subsequent line lookups
+       self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0];  // LINE sets pointers for subsequent line lookups
        // Clear all local bucket info in the definition, since it doesn't match the symbol table now
        // This will affect the current definition and all pyx executions of this definition.  We allow it because
        // it's for debug only.  The symbol table itself persists
-       A *base=CWBASE(AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]);
-       DO(AN(AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]),A l=base[i]; if((I)l&QCISLKPNAME){NAV(QCWORD(l))->bucket=0;});
+       A *base=CWBASE(AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0]);
+       DO(AN(AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]),A l=base[i]; if((I)l&QCISLKPNAME){NAV(QCWORD(l))->bucket=0;});
       }
      jt->sitop->dcredef=0;
     }
@@ -699,7 +699,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=ybuckptr->val; if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){ybuckptr->val=0; symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
-   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self);  // push a debug frame for this error.  We know we didn't free locsym
+   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self);  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
   }
  }
@@ -1150,7 +1150,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
 static A compiledefn(J jt, A sw, A cw){A z;
  I nsw=AN(sw); I ncw=AN(cw)+1;  // number of sentence words and control words including the extra word with total len
  I alloamtA=nsw+ncw*(8/sizeof(A));  // number of As needed to hold the sentences plus 8 bytes per cw 
- GATV0(z,BOX,alloamtA,0) AK(z)+= 8*ncw; AN(z)=nsw;  // allo block; point AK past the cw data; AN=# sentence words (for when we free them)
+ GATV0(z,BOX,alloamtA,1) AK(z)+= 8*ncw; AS(z)[0]=AN(z)=nsw;  // allo block; point AK past the cw data; AN=# sentence words (for when we free them).  Must allo at rank 1 to make compare in jtredef work
  A * RESTRICT base=CWBASE(z);  // point to start of sent/end+1 of tcesx
  JMC(base,AAV(sw),nsw*sizeof(A),0)  // copy in the sentence words
  CW * RESTRICT cwv=(CW *)voidAV(cw);  // point to control words
@@ -1267,7 +1267,7 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   INCORP(v1); INCORP(v2);  // we are incorporating them into hv[]
   if(4==m){if((-AN(v1)&(AN(v2)-1))<0)v2=v1; v1=mtv;}  //  for 4 :, make the single def given the dyadic one, leave monadic empty
   // preparse to create the control-word structures
-  GAT0(h,BOX,2*HN,1); hv=AAV1(h);
+  GAT0(h,BOX,2*HN,1); hv=AAV1(h);   // always allocated at rank 1
   DO(2, A vv=i?v2:v1; I b; RE(b=(I)preparse(vv,&hv[HN*i+0],&hv[HN*i+1])); flag|=(b*VTRY1)<<i; hv[HN*i+2]=JT(jt,retcomm)?vv:mtv;)
   // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
   // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive

@@ -327,7 +327,8 @@ static DF1(jtsunder){F1PREFIP;PROLOG(777);
   AFLAG(vz)|=AFUNINCORPABLE; ACSETLOCAL(vz,ACINPLACE+ACUC1);
  }
  negifipw=vz!=w?negifipw:0;  // if we pass y into  u, clear flag that allows us to restore usecount of y
- A u=FAV(self)->fgh[0]; A uz; RZ(uz=(FAV(u)->valencefns[0])((J)((I)jt+(vz!=w?JTINPLACEW:0)),vz,u,u)); negifip=uz==vz?negifip:0;     // execute u rv; rv is inplaceable unless it was passthrough
+ A u=FAV(self)->fgh[0]; I ipok=vz!=w?JTINPLACEW:0; ipok=FAV(u)->flag&VJTFLGOK1?ipok:0;
+ A uz; RZ(uz=(FAV(u)->valencefns[0])((J)((I)jt+ipok),vz,u,u)); negifip=uz==vz?negifip:0;     // execute u rv; rv is inplaceable unless it was passthrough
  if(negifip<0){  // u inplaced and didn't change the rank or item count
   // if u returned the block backed by originally-inplaceable y, it must have run inplace, and we can return the original y, restored to inplaceability.  tpop the virtual result of v first
   // NOTE that jtvirtual will not virtual-in-place an UNINCORPABLE block, which vz must be; so we can be sure the shape didn't change

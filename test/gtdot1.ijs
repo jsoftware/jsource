@@ -226,7 +226,7 @@ y=. STRIDE * y                 NB. offset of file name
 z=. 1                          NB. initialize result
 for_xno. i.x do.
  f=. 'dat',~ jpath '~temp/tdot/f',":y+xno        NB. unique file name for each task
- l=. ?1000<.MINLEN             NB. file length at least MINLEN
+ l=. >: ?1000<.MINLEN             NB. file length 1..1000
  p=. ?MINLEN                   NB. random index position
  (f;p) 1!:12~ a=. l#'a'        NB. write l#'a' at position p
  z=. z *. a -: 1!:11 f;p,l     NB. assert each read is successful
@@ -299,7 +299,7 @@ fs=. ''                        NB. file name list
 fns=. 0$0                      NB. file number list
 for_xno. i.x do.
  fs=. fs, <f=. winpathsep^:IFWIN 'dat',~ jpath '~temp/tdot/f',":y+xno    NB. unique file name for each task
- l=. ?MINLEN                   NB. file length at least MINLEN
+ l=. >: ?MINLEN                   NB. file length 1..MINLEN
  p=. ?MINLEN                   NB. random index position
  1!:55 ::1:<f                  NB. erase file if exist
  fns=. fns, fn=. 1!:21 <f      NB. open file
@@ -369,7 +369,7 @@ fs=. ''                        NB. file name list
 fns=. 0$0                      NB. file number list
 for_xno. i.x do.
  fs=. fs, <f=. winpathsep^:IFWIN 'dat',~ jpath '~temp/tdot/f',":y+xno       NB. unique file name for each task
- l=. ?MINLEN                   NB. file length at least MINLEN
+ l=. >: ?MINLEN                   NB. file length 1..MINLEN
  p=. ?MINLEN                   NB. random index position
  1!:55 ::1:<f                  NB. erase file if exist
  fns=. fns, fn=. 1!:21 <f      NB. open file

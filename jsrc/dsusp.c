@@ -152,6 +152,9 @@ static A jtsusp(J jt){A z;
   }
   // Execute one sentence from the user
   if((inp=jgets("      "))==0){z=0; break;} inp=jtddtokens(jt,inp,1+!!EXPLICITRUNNING); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
+  if(unlikely(JT(jt,sidamage))){  // If there was SI damage (changing an executing function), execute 13!:0 (1) to clear the stack and exit suspension
+   if(likely(JT(jt,dbuser)&TRACEDB1))jsto(JJTOJ(jt),MTYOER,"Debug suspension ended because an executing name was changed.  Debug is still enabled."); JT(jt,sidamage)=0; z=jtdbc(jt,sc(JT(jt,dbuser)&TRACEDB1));  // give msg unless user has already cleared debug (very rare)
+  }
   // If the result came from a suspension-ending command, get out of suspension
   // Kludge: 13!:0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doesn't properly route the result of these to the
   // suspension result and we would lose them.  Fortunately they have no arguments.  debugmux also eats the result of 13!:0]0
@@ -340,7 +343,7 @@ F1(jtdbc){I k;
  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the stack to allow suspension commands room to run
- if(likely(!(k&TRACEDBDEBUGENTRY)))JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into debug, suppress this so we don't immediately come out of debug
+ if(likely(!(k&TRACEDBDEBUGENTRY)))JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug, suppress this so we don't immediately come out of debug
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

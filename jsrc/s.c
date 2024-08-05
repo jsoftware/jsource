@@ -673,7 +673,8 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
   // attempted reassignment of the executing name
   // insist that the redefinition have the same type, and the same explicit character
   f=d->dcf;  // the executing function
-  ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSIDAMAGE,d->dca);  // the executing value MUST have a name, otherwise we couldn't modify it
+// obsolete   ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSIDAMAGE,d->dca);  // the executing value MUST have a name, otherwise we couldn't modify it
+  if(unlikely(!(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id))))JT(jt,sidamage)=1;  // the executing value MUST have a name, otherwise we couldn't modify it.  If type/id changed, pull the plug
   d->dcf=w; d->dcn=(I)w;  // dcf is used by redef code in xdefn; dcn is the stacked addr of executing fn, which we must now update so we can see if it is changed again later
   // If we are redefining the executing explicit definition during debug, remember that.
   // debug will switch over to the new definition before the next line is executed.
@@ -684,7 +685,8 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
  }
 
  // Don't allow redefinition of a name that is suspended higher up on the stack, possibly many times.   If the definition doesn't change, that's OK but we must point the stack to the new value
- c=d; NOUNROLL while(c=c->dclnk){if(DCCALL==c->dctype&&v==(A)c->dcn){c->dcn=(I)w; if(!jteqf(jt,w,v))JT(jt,sidamage)=1; ASSERTN(jteqf(jt,w,v),EVSIDAMAGE,c->dca);}}   // scaf assert
+ c=d; NOUNROLL while(c=c->dclnk){if(DCCALL==c->dctype&&v==(A)c->dcn){c->dcn=(I)w; if(!jteqf(jt,w,v))JT(jt,sidamage)=1;}}
+// obsolete  ASSERTN(jteqf(jt,w,v),EVSIDAMAGE,c->dca);   // 
  R v;   // good return: recycle v to save a register
 }    /* check for changes to stack */
 
@@ -762,9 +764,10 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  // ****** if g is a global table, we have a write lock on the locale, which we must release in any error paths.  g=0 otherwise *******
 
  // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
- if(unlikely(jt->uflags.trace&TRACEDB))if(e->val!=0&&((e->valtype&QCNOUN)==0))RZGOTO(redef(w,e->val),exitlock);  // could move outside of lock, but it's only for debug
- // *** this is the last subroutine call till the end - registers available ***
  A x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
+// obsolete  if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&((e->valtype&QCNOUN)==0))RZGOTO(x=redef(w,x),exitlock);  // could move outside of lock, but it's only for debug
+ if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&((e->valtype&QCNOUN)==0))x=redef(w,x);  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
+ // *** this is the last subroutine call till the end - registers available ***
 
  I xaf;  // holder for nvr/free flags
  {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x

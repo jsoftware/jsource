@@ -379,7 +379,7 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
      if(unlikely(thisframe==0)){if(lvl!=0)debz(); BZ(0);}  // if failure, remove first deba by hand
      NPGpysfmtdl|=16;  // indicate we have a debug frame
      old=jt->tnextpushp;  // protect the stack frame against free
-     if(iotavec[-IOTAVECBEGIN]){forcetomemory(&tdv); forcetomemory(&cv); forcetomemory(&bic); forcetomemory(&tic);}  // force little-used names to memory
+     if(unlikely(iotavec[-IOTAVECBEGIN])){forcetomemory(&tdv); forcetomemory(&cv); forcetomemory(&bic); forcetomemory(&tic);}  // force little-used names to memory
     }
 
     if(jt->uflags.trace&TRACEDB){   // if debug is on, or coming on
@@ -656,7 +656,7 @@ dobblock:
 bodyend: ;  // we branch to here to exit with z set to result
  //  z may be 0 here and may become 0 before we exit
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
- // if we did not get an error, the try. and for./select. stacks must be clear
+ // if we did not get an error, the try. and for./select. stacks must be clear and they will be freed from the tstack
 
  // check for pee
  if(likely(z!=0)){
@@ -728,9 +728,8 @@ static DF2(xv12){I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; R (FA
 // executing PARSE or other, we must be executing a truly anonymous operator, and we return 0
 static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}  // debug or pm, and CALL type.  sitop may be 0 if deb/pm turned on in the middle of a sentence
 
-// This handles adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, and copy the flags
+// This handles adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, self as g, and copy the flags
 // bivalent adv/conj
-// point g in the derived verb to the original self
 // If we have to add a name for debugging purposes, do so
 // Flag the operator with VOPR, and remove VFIX for it so that the compound can be fixed
 // self->flag always has VXOP+VFIX+VJTFLGOK[12]
@@ -738,7 +737,7 @@ DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
  ff=fdef(0,CCOLON,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags, incl JTFLGOK[12]
- R (x=xopcall(0))?namerefop(x,ff):ff;
+ R (x=xopcall(0))?namerefop(x,ff):ff;  // install a nameref only if we are debugging and the original modifier was named
 }
 
 
@@ -769,8 +768,8 @@ static I jtxop(J jt,A w){I i,k;
   if(AT(w)&VERB){
     if((FAV(w)->id&-2)==CUDOT)fndflag|=(4<<(FAV(w)->id&1));  // u./v.
   }
-  // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
-  if(fndflag>=8+4+2)R fndflag;
+  // exit if we have seen enough: nv plus x.  No need to wait for y or mu.  If we have seen only y, keep looking for x
+  if((fndflag&8+2)==8+2)R fndflag;
  }  // loop for each word
  R fndflag;  // return what we found
 }

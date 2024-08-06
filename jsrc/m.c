@@ -1433,16 +1433,17 @@ void jtrepatsend(J jt){
 void jtrepatrecv(J jt){
 #if PYXES
  A p=xchga(&jt->repatq,0);   // dequeue the current repatq; remember head pointer (p) and set repatq empty
+ __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
  if(likely(p)){  // if anything to repat here...
   // this duplicates mf() and perhaps should just call there instead
   I count=AC(p);
-  __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
   jt->bytes-=count;  // remove repats from byte count.  Not worth testing whether couting enabled
   for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):nextp){  // send the blocks to their various queues
    I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
    if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0))jt->uflags.spfreeneeded=1;  // if we have freed enough to call for garbage collection, do
    AFCHAIN(p)=jt->mempool[blockx];  // chain new block at head of queue
-   jt->mempool[blockx]=p;}}
+   jt->mempool[blockx]=p;}
+  }
 #endif
 }
 

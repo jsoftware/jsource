@@ -668,18 +668,18 @@ F1(jtsymbrdlock){A y;
 // returns v for OK to allow the assignment to proceed, 0 if error
 A jtredef(J jt,A w,A v){A f;DC c,d;
  d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R v;   // find the most recent DCCALL with error, exit if none
- // Now d->stack entry of executing entity, which is in suspension
+ // Now d->stack entry of executing entity, which is in suspension at an error
  if(v==(A)d->dcn){  // if we reassign any name whose value equals the executing value, we treat it as a reassignment of the executing name.  This is for comp ease
   // attempted reassignment of the executing name
-  // insist that the redefinition have the same type, and the same explicit character
+  // insist that the redefinition have the same type, and the same explicitness
   f=d->dcf;  // the executing function
 // obsolete   ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSIDAMAGE,d->dca);  // the executing value MUST have a name, otherwise we couldn't modify it
-  if(unlikely(!(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id))))JT(jt,sidamage)=1;  // the executing value MUST have a name, otherwise we couldn't modify it.  If type/id changed, pull the plug
+  if(unlikely(!(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id&&AT(FAV(f)->fgh[0])&NOUN)==(CCOLON==FAV(w)->id&&AT(FAV(w)->fgh[0])&NOUN))))JT(jt,sidamage)=1;  // the executing value MUST have a name, otherwise we couldn't modify it.  If type/id changed, pull the plug
   d->dcf=w; d->dcn=(I)w;  // dcf is used by redef code in xdefn; dcn is the stacked addr of executing fn, which we must now update so we can see if it is changed again later
   // If we are redefining the executing explicit definition during debug, remember that.
   // debug will switch over to the new definition before the next line is executed.
   // Reassignment outside of debug continues executing the old definition
-  if(CCOLON==FAV(w)->id&&!jteqf(jt,w,v)){d->dcredef=1;}  // don't call redef if value doesn't change
+  if(CCOLON==FAV(w)->id&&AT(FAV(w)->fgh[0])&NOUN&&!jteqf(jt,w,v)){d->dcredef=1;}  // don't call for redef if value doesn't change in explicit defn
   // Erase any stack entries after the redefined call, except for SCRIPT type which must be preserved for linf
   c=jt->sitop; NOUNROLL while(c&&DCCALL!=c->dctype){if(DCSCRIPT!=c->dctype)c->dctype=DCJUNK; c=c->dclnk;}
  }

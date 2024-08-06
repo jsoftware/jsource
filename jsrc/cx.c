@@ -500,12 +500,12 @@ dobblock:
    I nextic=CWGO(cwsent,CNSTOREDCW,ic+1);  // next inst if false
    while(1){  // 2 loops if sparse
     if(likely(AT(tt)&INT+B01)){ic=BIV0(tt)?ic:nextic; break;} // INT and B01 are most common
-    if(AT(tt)&FL){ic=DAV(tt)[0]?ic:nextic; break;}
+    if(AT(tt)&FL+QP){ic=DAV(tt)[0]?ic:nextic; break;}    // QP is bigendian
     if(AT(tt)&INT2){ic=I2AV(tt)[0]?ic:nextic; break;}
     if(AT(tt)&INT4){ic=I4AV(tt)[0]?ic:nextic; break;}
     if(AT(tt)&CMPX){ic=DAV(tt)[0]||DAV(tt)[1]?ic:nextic; break;}
-    if(AT(tt)&(RAT|XNUM)){ic=!ISX0(XAV(tt)[0])?ic:nextic; break;}
-    if(AT(tt)&QP){ic=EAV(tt)[0].hi?ic:nextic; break;}
+    if(AT(tt)&RAT+XNUM){ic=!ISX0(XAV(tt)[0])?ic:nextic; break;}
+// obsolete     if(AT(tt)&QP){ic=EAV(tt)[0].hi?ic:nextic; break;}
     if(!(AT(tt)&NOUN)){NOUNERR(tt,tic,1)}  // will take error exit
     if(!ISSPARSE(AT(tt)))break;     // nonnumeric types (BOX, char) test true: i is set for that
     BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
@@ -513,7 +513,7 @@ dobblock:
    // false cases come here, and a few true ones
  elseifasdo:;  // elseif is like do. with a failing test - probably followed by B.  i is set  case./fcase after the first also come here, to branch to end.
  safedo:;  // here when we have advanced ic.  If this op is flagged we know the thing at ic is a bblock[end].  tcesx still has the value from the previous ic
-   if(FLAGGEDNOTRACE(tcesx))goto dobblock;   // normal case, we know we are continuing with bblock.  No need to fetch it
+   if(likely(FLAGGEDNOTRACE(tcesx)))goto dobblock;   // normal case, we know we are continuing with bblock.  No need to fetch it
    goto nextline;   // otherwise fetch & redispatch next line
   }
 
@@ -695,7 +695,7 @@ bodyend: ;  // we branch to here to exit with z set to result
   // We don't do this if jt->jerr is clear: that's the special result for coming out of debug; or when WSFULL, since there may be no memory.  Also, suppress pmdebug
   // if an immex phrase is running or has been requested, because those would be confusing and also they call tpop
   if(jt->jerr && jt->jerr!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
-   // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that are are about to pop over.  Only x and y are possible
+   // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that we are about to pop over.  Only x and y are possible
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=ybuckptr->val; if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){ybuckptr->val=0; symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)

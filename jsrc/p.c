@@ -636,7 +636,7 @@ endname: ;
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type
      // *** here is where we exit stacking to do execution ***
      if(!(tmpes&(0b111LL<<CONJX)))break;  // exit stack phase when no more to do, leaving es=0
-     // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shiting it down and shortening it if we pulled ADV
+     // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shifting it down and shortening it if we pulled ADV
      pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;  // bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 2 more to request for 1 more by clearing bit 30.
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If have not yet signaled the (virtual) mark, do so; otherwise we are finished

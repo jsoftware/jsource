@@ -26,7 +26,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;I c,it,j,k,m,r,*s,t,*u,*wi,*z
 #if !SY_64
 D*wd=(D*)wc,*zd=(D*)zc;
 #endif
- I kx=k; kx=0b1101&(1LL<<k)?kx:2;  // set atom length to 2 if not one of 1 4 8
+ I kx=k; kx=0b1101&(1LL<<k)?kx:1;  // set atom length to 2 if not one of 1 4 8
 // obsolete  switch(MCASE(CTTZ(it),k)){
  switch(MCASE(it,kx)){
  case MCASE(B01,LGSZI): DO(c,         *zi++=wi[i+c*(I)*b++];); break;

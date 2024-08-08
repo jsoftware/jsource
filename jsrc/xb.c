@@ -164,22 +164,22 @@ static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
 /* du: 1 iff u is 64-bit         */
 static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
  switch((dv?8:0)+(du?4:0)+(bv?2:0)+bu){
-  case MVCS(0,0,0,0): MC(v,u,n*4);                             break;
-  case MVCS(0,0,0,1): DO(n, DO(4, v[3-i]=u[i];); v+=4; u+=4;); break;
-  case MVCS(0,0,1,0): DO(n, DO(4, v[3-i]=u[i];); v+=4; u+=4;); break;
-  case MVCS(0,0,1,1): MC(v,u,n*4);                             break;
-  case MVCS(0,1,0,0): DO(n, c=127<(UC)u[0]?CFF:C0; DO(4, ASSERT(c==u[  i],EVLIMIT); v[i]=u[4+i];); v+=4; u+=8;); break;
-  case MVCS(0,1,0,1): DO(n, c=127<(UC)u[7]?CFF:C0; DO(4, ASSERT(c==u[7-i],EVLIMIT); v[i]=u[3-i];); v+=4; u+=8;); break;
-  case MVCS(0,1,1,0): DO(n, c=127<(UC)u[0]?CFF:C0; DO(4, ASSERT(c==u[3-i],EVLIMIT); v[i]=u[7-i];); v+=4; u+=8;); break;
-  case MVCS(0,1,1,1): DO(n, c=127<(UC)u[7]?CFF:C0; DO(4, ASSERT(c==u[4+i],EVLIMIT); v[i]=u[  i];); v+=4; u+=8;); break;
-  case MVCS(1,0,0,0): DO(n, c=127<(UC)u[0]?CFF:C0; DO(4, v[  i]=c; v[4+i]=u[i];); v+=8; u+=4;); break;
-  case MVCS(1,0,0,1): DO(n, c=127<(UC)u[3]?CFF:C0; DO(4, v[3-i]=c; v[7-i]=u[i];); v+=8; u+=4;); break;
-  case MVCS(1,0,1,0): DO(n, c=127<(UC)u[0]?CFF:C0; DO(4, v[7-i]=c; v[3-i]=u[i];); v+=8; u+=4;); break;
-  case MVCS(1,0,1,1): DO(n, c=127<(UC)u[3]?CFF:C0; DO(4, v[4+i]=c; v[  i]=u[i];); v+=8; u+=4;); break;
-  case MVCS(1,1,0,0): MC(v,u,n*8);                             break;
-  case MVCS(1,1,0,1): DO(n, DO(8, v[7-i]=u[i];); v+=8; u+=8;); break;
-  case MVCS(1,1,1,0): DO(n, DO(8, v[7-i]=u[i];); v+=8; u+=8;); break;
-  case MVCS(1,1,1,1): MC(v,u,n*8);                             break;
+ case MVCS(0,0,0,0): MC(v,u,n*4);                             break;
+ case MVCS(0,0,0,1): DO(n, DO(4, v[3-i]=u[i];); v+=4; u+=4;); break;
+ case MVCS(0,0,1,0): DO(n, DO(4, v[3-i]=u[i];); v+=4; u+=4;); break;
+ case MVCS(0,0,1,1): MC(v,u,n*4);                             break;
+ case MVCS(0,1,0,0): DO(n, c=127<(UC)u[0]?CFF:C0; DO(4, ASSERT(c==u[  i],EVLIMIT); v[i]=u[4+i];); v+=4; u+=8;); break;
+ case MVCS(0,1,0,1): DO(n, c=127<(UC)u[7]?CFF:C0; DO(4, ASSERT(c==u[7-i],EVLIMIT); v[i]=u[3-i];); v+=4; u+=8;); break;
+ case MVCS(0,1,1,0): DO(n, c=127<(UC)u[0]?CFF:C0; DO(4, ASSERT(c==u[3-i],EVLIMIT); v[i]=u[7-i];); v+=4; u+=8;); break;
+ case MVCS(0,1,1,1): DO(n, c=127<(UC)u[7]?CFF:C0; DO(4, ASSERT(c==u[4+i],EVLIMIT); v[i]=u[  i];); v+=4; u+=8;); break;
+ case MVCS(1,0,0,0): DO(n, c=127<(UC)u[0]?CFF:C0; DO(4, v[  i]=c; v[4+i]=u[i];); v+=8; u+=4;); break;
+ case MVCS(1,0,0,1): DO(n, c=127<(UC)u[3]?CFF:C0; DO(4, v[3-i]=c; v[7-i]=u[i];); v+=8; u+=4;); break;
+ case MVCS(1,0,1,0): DO(n, c=127<(UC)u[0]?CFF:C0; DO(4, v[7-i]=c; v[3-i]=u[i];); v+=8; u+=4;); break;
+ case MVCS(1,0,1,1): DO(n, c=127<(UC)u[3]?CFF:C0; DO(4, v[4+i]=c; v[  i]=u[i];); v+=8; u+=4;); break;
+ case MVCS(1,1,0,0): MC(v,u,n*8);                             break;
+ case MVCS(1,1,0,1): DO(n, DO(8, v[7-i]=u[i];); v+=8; u+=8;); break;
+ case MVCS(1,1,1,0): DO(n, DO(8, v[7-i]=u[i];); v+=8; u+=8;); break;
+ case MVCS(1,1,1,1): MC(v,u,n*8);                             break;
  }
  R 1;
 }    /* move n words from u to v */
@@ -474,7 +474,8 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   j=vv[2]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j),!!(t&XNUM+RAT)));
   j=vv[3]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j),!!(t&XNUM+RAT)));
   j=vv[4]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,x,unbinr(b,d,pre601,m    -j,(A)(u+j),!!(t&XNUM+RAT)));
- }else if(n)switch(CTTZNOFLAG(t)){
+ }else if(n)
+  switch(CTTZNOFLAG(t)){
   case B01X:  {B c,*zv=BAV(z); DO(n, c=v[i]; ASSERT(c==C0||c==C1,EVDOMAIN); zv[i]=c;);} break; 
   case SBTX:
   case INTX:  RZ(mvw(CAV(z),v,n,  BU,b,SY_64,d)); break;
@@ -487,7 +488,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
    } else {
     MC(CAV(z),v,e);
    }
- }
+  }
  if (unlikely(g)) { // container is XNUM or RAT
   if (INT==t) { // old style XNUM format
    A xbase= scx(XgetI(10000)); RZ(xbase); // FIXME: make xbase a jgmpinit constant, use here and in vrand.c
@@ -512,10 +513,10 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
  ASSERT(m>=8,EVLENGTH);
  q=(A)AV(w);
  switch(CAV(w)[0]){
-  case (C)0xe0: R unbinr(0,0,0,m,q,0);
-  case (C)0xe1: R unbinr(1,0,0,m,q,0);
-  case (C)0xe2: R unbinr(0,1,0,m,q,0);
-  case (C)0xe3: R unbinr(1,1,0,m,q,0);
+ case (C)0xe0: R unbinr(0,0,0,m,q,0);
+ case (C)0xe1: R unbinr(1,0,0,m,q,0);
+ case (C)0xe2: R unbinr(0,1,0,m,q,0);
+ case (C)0xe3: R unbinr(1,1,0,m,q,0);
  }
  /* code to handle pre 601 headers */
  d=1; v=8+CAV(w); DQ(8, if(CFF!=*v++){d=0; break;});       /* detect 64-bit        */
@@ -554,17 +555,18 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  else   {m=n>>p; zt=INT; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
  GA10(z,zt,m); v=AV(z); x=AV(w); 
  switch(j){
-  default: ASSERT(0,EVDOMAIN);
-  case -4: y1=(UI4*)x;    DQ(m, *v++=    *y1++;); {RETF(z);}
-  case  4: y1=(UI4*)v;    DQ(n, *y1++=(UI4)*x++;); {RETF(z);}
-  case -3: ICPY(v,x,m); {RETF(z);}
-  case  3: MC(v,x,m);   {RETF(z);}
-  case -2: y=(I4*)x;      DQ(m, *v++=    *y++;); {RETF(z);}
-  case  2: y=(I4*)v;      DQ(n, *y++=(I4)*x++;); {RETF(z);}
-  case -1: s=(S*)x;       DQ(m, *v++=    *s++;); {RETF(z);}
-  case  1: s=(S*)v;       DQ(n, *s++=(S) *x++;); {RETF(z);}
-  case  0: u=(U short*)x; DQ(m, *v++=    *u++;); {RETF(z);}
-}}
+ default: ASSERT(0,EVDOMAIN);
+ case -4: y1=(UI4*)x;    DQ(m, *v++=    *y1++;); {RETF(z);}
+ case  4: y1=(UI4*)v;    DQ(n, *y1++=(UI4)*x++;); {RETF(z);}
+ case -3: ICPY(v,x,m); {RETF(z);}
+ case  3: MC(v,x,m);   {RETF(z);}
+ case -2: y=(I4*)x;      DQ(m, *v++=    *y++;); {RETF(z);}
+ case  2: y=(I4*)v;      DQ(n, *y++=(I4)*x++;); {RETF(z);}
+ case -1: s=(S*)x;       DQ(m, *v++=    *s++;); {RETF(z);}
+ case  1: s=(S*)v;       DQ(n, *s++=(S) *x++;); {RETF(z);}
+ case  0: u=(U short*)x; DQ(m, *v++=    *u++;); {RETF(z);}
+ }
+}
 
 // 3!:5
 F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
@@ -577,12 +579,13 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  else   {m=n>>p; zt=FL; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
  GA10(z,zt,m); v=DAV(z); x=DAV(w);
  switch(j){
-  default: ASSERT(0,EVDOMAIN);
-  case -2: MC(v,x,n); {RETF(z);}
-  case  2: MC(v,x,m); {RETF(z);}
-  case -1: s=(float*)x; DQ(m, *v++=       *s++;); {RETF(z);}
-  case  1: s=(float*)v; DQ(n, *s++=(float)*x++;); {RETF(z);}
-}}
+ default: ASSERT(0,EVDOMAIN);
+ case -2: MC(v,x,n); {RETF(z);}
+ case  2: MC(v,x,m); {RETF(z);}
+ case -1: s=(float*)x; DQ(m, *v++=       *s++;); {RETF(z);}
+ case  1: s=(float*)v; DQ(n, *s++=(float)*x++;); {RETF(z);}
+ }
+}
 
 // a  0: tolower  1: toupper
 // w  only process LIT C2T C4T

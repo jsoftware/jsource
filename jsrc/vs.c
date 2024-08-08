@@ -144,11 +144,12 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  if(cm){I d,e,k,q,*sn,*yv;
   k=cn-1; cv+=cn; yv=AN(y)+AV(y); sn=s+n; d=sn[-1]; e=sn[-2];
   switch(n){
-   case 1:  cv=BAV(c); yv=AV(y); DO(cn, if(*cv++)*yv++=i;); break;
-   case 2:  DO(cn, if(*--cv){q=k-i;                  *--yv=q%d; *--yv=q/d;}); break;
-   case 3:  DO(cn, if(*--cv){q=k-i; *--yv=q%d; q/=d; *--yv=q%e; *--yv=q/e;}); break;
-   default: DO(cn, if(*--cv){q=k-i; u=sn; DQ(n, d=*--u; *--yv=q%d; q/=d;);});
- }}
+  case 1:  cv=BAV(c); yv=AV(y); DO(cn, if(*cv++)*yv++=i;); break;
+  case 2:  DO(cn, if(*--cv){q=k-i;                  *--yv=q%d; *--yv=q/d;}); break;
+  case 3:  DO(cn, if(*--cv){q=k-i; *--yv=q%d; q/=d; *--yv=q%e; *--yv=q/e;}); break;
+  default: DO(cn, if(*--cv){q=k-i; u=sn; DQ(n, d=*--u; *--yv=q%d; q/=d;);});
+  }
+ }
  SPB(p,i,y);
  SPB(p,x,b?reshape(sc(cm),num(1)):repeat(c,x));
  EPILOG(z);

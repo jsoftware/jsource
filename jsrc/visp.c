@@ -13,11 +13,12 @@ static I jtioev(J jt,I mode,A a){A ae,ax,ay,p;B*pv;I j,k,m,n,*yv;P*ap;
  ax=SPA(ap,x); m=k=AN(ax); n=j=AS(a)[0]; 
  RZ(p=eq(ax,ae)); pv=BAV(p);
  switch((AN(ay)?2:0)+(I )(1==mode)){
-  case 0:  DO(m,           if(          pv[i])R i;); R m;
-  case 1:  DQ(m,      --k; if(          pv[k])R k;); R n-!m;
-  case 2:  DO(m,           if(i!=yv[i]||pv[i])R i;); R m;
-  default: DQ(m, --j; --k; if(j!=yv[k]||pv[k])R j;); R m==n?n:n-m-1;
-}}   /* index of sparse element */
+ case 0:  DO(m,           if(          pv[i])R i;); R m;
+ case 1:  DQ(m,      --k; if(          pv[k])R k;); R n-!m;
+ case 2:  DO(m,           if(i!=yv[i]||pv[i])R i;); R m;
+ default: DQ(m, --j; --k; if(j!=yv[k]||pv[k])R j;); R m==n?n:n-m-1;
+ }
+}   /* index of sparse element */
 
 A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
  at=AT(a); if(ISSPARSE(at)){at=DTYPE(at); ap=PAV(a);}
@@ -156,11 +157,11 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
  c=-1; RZ(iopart(a,ar-1,mm,&c,&ai,&aj,&ax));
  if(aw)RZ(iopart(w,ar-1,mm,&c,&wi,&wj,&wx));
  switch(aw?(FL+CMPX&maxtype(AT(ax),AT(wx))?3:1):FL+CMPX&AT(ax)?2:0){
-  case 0: x=stitch(aj,ax);                           break;
-  case 1: x=stitch(aj,ax); y=stitch(wj,wx);          break;
-  case 2: x=stitch(aj,1.0!=jt->cct?iocol(mode,ax,ax):ifdz(ax)); break;
-  case 3: x=stitch(aj,1.0!=jt->cct?iocol(mode,ax,ax):ifdz(ax)); 
-          y=stitch(wj,1.0!=jt->cct?iocol(mode,ax,wx):ifdz(wx));
+ case 0: x=stitch(aj,ax);                           break;
+ case 1: x=stitch(aj,ax); y=stitch(wj,wx);          break;
+ case 2: x=stitch(aj,1.0!=jt->cct?iocol(mode,ax,ax):ifdz(ax)); break;
+ case 3: x=stitch(aj,1.0!=jt->cct?iocol(mode,ax,ax):ifdz(ax)); 
+         y=stitch(wj,1.0!=jt->cct?iocol(mode,ax,wx):ifdz(wx));
  }
  RZ(x=indexofsub(mode,x,aw?y:x)); u=AV(x);
  m=AS(ai)[0]; v=AV(ai); 

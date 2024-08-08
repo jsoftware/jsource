@@ -437,43 +437,44 @@ B valueisint; // set if the value we are processing is really an int
   // We have read a number, either as an int or a float.  Analyze the stopper character
   switch(*v){
    case ',':
-    // comma.  We will remove commas from the number and then rescan it.
-    b=u==v; x=v;   // b='first character was comma'; x is output pointer for the copy
-    NOUNROLL while(d=*++v)if(','!=d)*x++=d;   // copy to end-of-field, discarding commas
-    if(b||','==v[-1]){INSDEFAULT u=v;}else{NOUNROLL while(v>x)*x++=C0;}  // if first or last character is comma, use default and continue, skipping the field;
-       // otherwise put \0 over the characters after the last copied one, and go back to rescan the number
-    continue;
-   case '-':
-    // hyphen (remember, we converted _ to hyphen to begin with).  It wasn't interpreted as a sign, so it must
-    // be an infinity, if it is valid.
-    e=u==v; v++; d=*v++; b=e&&C0==*v;  // e means 'first character was -'; d is character after the hyphen;
-       // b is set if the - was the first character and the third character is end-of-field
-    if     (e&& C0==d){zv[k]=inf;}   // -<end> infinity: take it
-    else if(b&&'-'==d){zv[k]=infm;}   // --<end> neginfinity
-    else if(b&&'.'==d){zv[k]=jnan;}  // -.<end> NaN
-    else{INSDEFAULT --v; while(C0!=*v++); u=v;continue;}   // NOTA; invalid including - in the middle, use default; advance to end-of-field
-    // the non-error cases fall through to process the input value...
-   case C0:
-    // \0 (normal end-of-field), or fallthrough from '-' non-error.  Either way it's a number.  Accept the number and continue.  But if this is the
-    // first float that forces us to switch to floats, we have to do that
-    if (valueisint != tryingint) {
-     // We hit a float.  Forget about ints
-     tryingint = 0;
-     // Convert the default value to float if it isn't already
-     if(AT(a)&INT)a0=(D)IAV(a)[0];
-     // Convert all previously-read values to float.  Also converted the default value above
-     // We have to use pointer aliasing to read the value in zv as an int
-     DO(k, zv[i] = (D)((I *)zv)[i];)
-    }
-    k++; u=v; continue;   // move to the next input number
-   case 'a':  case 'b':  case 'j':  case 'p':  case 'r':  case 'x':
-    // case requiring analysis for complex numbers - switch over to that code, abandoning our work here
-    if(u!=v)R exec2z(a,w,n,m,c);
-    // but if special character at beginning of field, that's not a valid complex number, fall through to...
-   default:
-    // Other stopper character, that's invalid, use default, skip the field
-    INSDEFAULT NOUNROLL while(C0!=*++v); u=v;
- }}
+   // comma.  We will remove commas from the number and then rescan it.
+   b=u==v; x=v;   // b='first character was comma'; x is output pointer for the copy
+   NOUNROLL while(d=*++v)if(','!=d)*x++=d;   // copy to end-of-field, discarding commas
+   if(b||','==v[-1]){INSDEFAULT u=v;}else{NOUNROLL while(v>x)*x++=C0;}  // if first or last character is comma, use default and continue, skipping the field;
+      // otherwise put \0 over the characters after the last copied one, and go back to rescan the number
+   continue;
+  case '-':
+   // hyphen (remember, we converted _ to hyphen to begin with).  It wasn't interpreted as a sign, so it must
+   // be an infinity, if it is valid.
+   e=u==v; v++; d=*v++; b=e&&C0==*v;  // e means 'first character was -'; d is character after the hyphen;
+      // b is set if the - was the first character and the third character is end-of-field
+   if     (e&& C0==d){zv[k]=inf;}   // -<end> infinity: take it
+   else if(b&&'-'==d){zv[k]=infm;}   // --<end> neginfinity
+   else if(b&&'.'==d){zv[k]=jnan;}  // -.<end> NaN
+   else{INSDEFAULT --v; while(C0!=*v++); u=v;continue;}   // NOTA; invalid including - in the middle, use default; advance to end-of-field
+   // the non-error cases fall through to process the input value...
+  case C0:
+   // \0 (normal end-of-field), or fallthrough from '-' non-error.  Either way it's a number.  Accept the number and continue.  But if this is the
+   // first float that forces us to switch to floats, we have to do that
+   if (valueisint != tryingint) {
+    // We hit a float.  Forget about ints
+    tryingint = 0;
+    // Convert the default value to float if it isn't already
+    if(AT(a)&INT)a0=(D)IAV(a)[0];
+    // Convert all previously-read values to float.  Also converted the default value above
+    // We have to use pointer aliasing to read the value in zv as an int
+    DO(k, zv[i] = (D)((I *)zv)[i];)
+   }
+   k++; u=v; continue;   // move to the next input number
+  case 'a':  case 'b':  case 'j':  case 'p':  case 'r':  case 'x':
+   // case requiring analysis for complex numbers - switch over to that code, abandoning our work here
+   if(u!=v)R exec2z(a,w,n,m,c);
+   // but if special character at beginning of field, that's not a valid complex number, fall through to...
+  default:
+   // Other stopper character, that's invalid, use default, skip the field
+   INSDEFAULT NOUNROLL while(C0!=*++v); u=v;
+  }
+ }
  // All done.  If we ended still looking for ints, the whole result must be int, so flag it as such
  if(tryingint)AT(z) = INT;
  R z;

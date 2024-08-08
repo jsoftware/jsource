@@ -75,10 +75,10 @@ F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
   RZ(zv[2]=sc((I)d->dcss));
   RZ(zv[3]=d->dctype==DCCALL?sc(lnumsi(d)):mtv);
   switch(d->dctype){
-   case DCPARSE:  RZ(zv[4]=unparse(d->dcy)); break;
-   case DCCALL:   RZ(zv[4]=d->dca?sfn(0,d->dca):mtv);   break;
-   case DCSCRIPT: zv[4]=d->dcy;              break;
-   case DCJUNK:   zv[4]=mtv;                 break; 
+  case DCPARSE:  RZ(zv[4]=unparse(d->dcy)); break;
+  case DCCALL:   RZ(zv[4]=d->dca?sfn(0,d->dca):mtv);   break;
+  case DCSCRIPT: zv[4]=d->dcy;              break;
+  case DCJUNK:   zv[4]=mtv;                 break; 
   }
   zv+=c; d=d->dclnk;
  }

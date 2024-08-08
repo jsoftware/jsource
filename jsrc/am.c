@@ -6,13 +6,14 @@
 #include "j.h"
 #include "ve.h"
 
-#define MCASE(t,k)  ((t)+4*(k))
+// obsolete #define MCASE(t,k)  ((t)+4*(k))
+#define MCASE(t,k)  (((t)&INT)+(k))   // t is B01 or INT, k is lg(size of item) if one of 0 2 3,  1 otherwise
 #define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT(BETWEENO(j,0,m),EVINDEX);}
 
 // m} y
 static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
  ARGCHK2(w,ind);
- r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); SETIC(w,m); c=aii(w);  // m = # items of w
+ r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bplg(t); SETIC(w,m); c=aii(w);  // m = # items of w
  ASSERT(!ISSPARSE(t),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERTAGREE(s,AS(ind),r);
@@ -25,19 +26,21 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;I c,it,j,k,m,r,*s,t,*u,*wi,*z
 #if !SY_64
 D*wd=(D*)wc,*zd=(D*)zc;
 #endif
- switch(MCASE(CTTZ(it),k)){
-  case MCASE(B01X,sizeof(I)): DO(c,         *zi++=wi[i+c*(I)*b++];); break;
-  case MCASE(B01X,sizeof(C)): DO(c,         *zc++=wc[i+c*(I)*b++];); break;
+ I kx=k; kx=0b1101&(1LL<<k)?kx:2;  // set atom length to 2 if not one of 1 4 8
+// obsolete  switch(MCASE(CTTZ(it),k)){
+ switch(MCASE(it,kx)){
+ case MCASE(B01,LGSZI): DO(c,         *zi++=wi[i+c*(I)*b++];); break;
+ case MCASE(B01,0): DO(c,         *zc++=wc[i+c*(I)*b++];); break;
 #if !SY_64
-  case MCASE(B01X,sizeof(D)): DO(c,         *zd++=wd[i+c*(I)*b++];); break;
+ case MCASE(B01,LGSZD): DO(c,         *zd++=wd[i+c*(I)*b++];); break;
 #endif
-  case MCASE(INTX,sizeof(C)): DO(c, MINDEX; *zc++=wc[i+c*j];); break;
-  case MCASE(INTX,sizeof(I)): DO(c, MINDEX; *zi++=wi[i+c*j];); break;
+ case MCASE(INT,0): DO(c, MINDEX; *zc++=wc[i+c*j];); break;
+ case MCASE(INT,LGSZI): DO(c, MINDEX; *zi++=wi[i+c*j];); break;
 #if !SY_64
-  case MCASE(INTX,sizeof(D)): DO(c, MINDEX; *zd++=wd[i+c*j];); break;
+ case MCASE(INT,LGSZD): DO(c, MINDEX; *zd++=wd[i+c*j];); break;
 #endif  
-  default: if(it&B01)DO(c,         MC(zc,wc+k*(i+c*(I)*b++),k); zc+=k;)
-           else      DO(c, MINDEX; MC(zc,wc+k*(i+c*j     ),k); zc+=k;); break;
+ default: if(it&B01)DO(c,         MC(zc,wc+((i+c*(I)*b++)<<k),1LL<<k); zc+=1LL<<k;)
+          else      DO(c, MINDEX; MC(zc,wc+((i+c*j     )<<k),1LL<<k); zc+=1LL<<k;); break;
  }
  // We modified w which is now not pristine.
  PRISTCLRF(w)

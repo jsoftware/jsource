@@ -349,21 +349,21 @@ static D jtspfor1(J jt, A w){D tot=0.0;
  if(unlikely(w==0))R 0.0;
  // recur on contents,  to get their total size
  switch(CTTZ(AT(w))){
-  case BOXX:
-   if(!ISSPARSE(AT(w))){  // I don't know why we don't account for space in sparse box
-    if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
-     {DO(AN(w), if(wv[i])tot+=spfor1(QCWORD(wv[i])););}  // No C() for the value!  If a pyx is not ready, we don't
-           // wait for it, giving it a space of 0.  If ready, we use its size.  Also, we may be processing any type
-           // of internal value here, so if we did check for a pyx, we would need to check for PYX+BOX
-    }
-    break;
+ case BOXX:
+  if(!ISSPARSE(AT(w))){  // I don't know why we don't account for space in sparse box
+   if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
+    {DO(AN(w), if(wv[i])tot+=spfor1(QCWORD(wv[i])););}  // No C() for the value!  If a pyx is not ready, we don't
+          // wait for it, giving it a space of 0.  If ready, we use its size.  Also, we may be processing any type
+          // of internal value here, so if we did check for a pyx, we would need to check for PYX+BOX
    }
-  case B01X: case INTX: case FLX: case CMPXX: case LITX:  // has contents if sparse
-   if(ISSPARSE(AT(w))){P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
-  case VERBX: case ADVX:  case CONJX: 
-   {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(C(v->fgh[0])); if(v->fgh[1])tot+=spfor1(C(v->fgh[1])); if(v->fgh[2])tot+=spfor1(C(v->fgh[2]));} break;
-  case RATX: case XNUMX:
-   {A*v=AAV(w); DQ(AN(w)<<(!!(AT(w)&RAT)), if(*v)tot+=spfor1((*v)); ++v;);} break;  // no QCWORD on XNUM/RAT
+   break;
+  }
+ case B01X: case INTX: case FLX: case CMPXX: case LITX:  // has contents if sparse
+  if(ISSPARSE(AT(w))){P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
+ case VERBX: case ADVX:  case CONJX: 
+  {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(C(v->fgh[0])); if(v->fgh[1])tot+=spfor1(C(v->fgh[1])); if(v->fgh[2])tot+=spfor1(C(v->fgh[2]));} break;
+ case RATX: case XNUMX:
+  {A*v=AAV(w); DQ(AN(w)<<(!!(AT(w)&RAT)), if(*v)tot+=spfor1((*v)); ++v;);} break;  // no QCWORD on XNUM/RAT
  }
  // done with contents; now get the size of w itself
  if(!ACISPERM(AC(w))) {  // permanent blocks add nothing to size

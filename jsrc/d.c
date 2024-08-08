@@ -418,28 +418,29 @@ F1(jtdbetx){
 A jtjerrno(J jt){
 #if !SY_WINCE
  switch(errno){
-  case EMFILE:
-  case ENFILE: jsignal(EVLIMIT  ); R 0;
-  case ENOENT: jsignal(EVFNAME  ); R 0;
-  case EBADF:  jsignal(EVFNUM   ); R 0;
-  case EACCES: jsignal(EVFACCESS); R 0;
+ case EMFILE:
+ case ENFILE: jsignal(EVLIMIT  ); R 0;
+ case ENOENT: jsignal(EVFNAME  ); R 0;
+ case EBADF:  jsignal(EVFNUM   ); R 0;
+ case EACCES: jsignal(EVFACCESS); R 0;
 #else /* WINCE: */
  switch(GetLastError()){
-  case ERROR_DISK_FULL:
-  case ERROR_FILENAME_EXCED_RANGE:
-  case ERROR_NO_MORE_FILES:
-  case ERROR_NOT_ENOUGH_MEMORY:
-  case ERROR_NOT_ENOUGH_QUOTA:
-  case ERROR_TOO_MANY_OPEN_FILES:    jsignal(EVLIMIT  ); R 0;
-  case ERROR_BAD_PATHNAME:
-  case ERROR_INVALID_NAME:           jsignal(EVDOMAIN ); R 0;
-  case ERROR_ALREADY_EXISTS:
-  case ERROR_FILE_EXISTS:
-  case ERROR_PATH_NOT_FOUND:
-  case ERROR_FILE_NOT_FOUND:         jsignal(EVFNAME  ); R 0;
-  case ERROR_ACCESS_DENIED:
-  case ERROR_WRITE_PROTECT:
-  case ERROR_SHARING_VIOLATION:      jsignal(EVFACCESS); R 0;
+ case ERROR_DISK_FULL:
+ case ERROR_FILENAME_EXCED_RANGE:
+ case ERROR_NO_MORE_FILES:
+ case ERROR_NOT_ENOUGH_MEMORY:
+ case ERROR_NOT_ENOUGH_QUOTA:
+ case ERROR_TOO_MANY_OPEN_FILES:    jsignal(EVLIMIT  ); R 0;
+ case ERROR_BAD_PATHNAME:
+ case ERROR_INVALID_NAME:           jsignal(EVDOMAIN ); R 0;
+ case ERROR_ALREADY_EXISTS:
+ case ERROR_FILE_EXISTS:
+ case ERROR_PATH_NOT_FOUND:
+ case ERROR_FILE_NOT_FOUND:         jsignal(EVFNAME  ); R 0;
+ case ERROR_ACCESS_DENIED:
+ case ERROR_WRITE_PROTECT:
+ case ERROR_SHARING_VIOLATION:      jsignal(EVFACCESS); R 0;
 #endif
-  default:     jsignal(EVFACE); R 0;
-}}   /* see <errno.h> / <winerror.h> */
+ default:     jsignal(EVFACE); R 0;
+ }
+}   /* see <errno.h> / <winerror.h> */

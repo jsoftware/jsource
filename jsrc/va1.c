@@ -214,19 +214,19 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  }else{
   I m=REPSGN((wt&XNUM+RAT)-1);   // -1 if not XNUM/RAT
   switch(VA1CASE(jt->jerr,FAV(self)->lc-VA1ORIGIN)){
-   default:     R 0;  // unknown type - error must have come from previous verb
-   // all these cases are needed because sparse code may fail over to them
-   case VA1CASE(EWOV,  VA1CMIN-VA1ORIGIN): cv=VD;       ado=floorD;               break;
-   case VA1CASE(EWOV,  VA1CMAX-VA1ORIGIN): cv=VD;       ado=ceilD;                break;
-   case VA1CASE(EWOV,  VA1CSTILE-VA1ORIGIN): cv=VD+VDD;   ado=absD;                 break;
-   case VA1CASE(EWIRR, VA1CROOT-VA1ORIGIN): cv=VD+VDD;   ado=sqrtD;                break;
-   case VA1CASE(EWIRR, VA1CEXP-VA1ORIGIN): cv=VD+VDD;   ado=expD;                 break;
-   case VA1CASE(EWIRR, VA1CBANG-VA1ORIGIN): cv=VD+VDD;   ado=factD;                break;
-   case VA1CASE(EWIRR, VA1CLOG-VA1ORIGIN): cv=VD+(VDD&m); ado=m?(VA1F)logD:(VA1F)logXD; break;
-   case VA1CASE(EWIMAG,VA1CROOT-VA1ORIGIN): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
-   case VA1CASE(EWIMAG,VA1CLOG-VA1ORIGIN): cv=VZ+(VZZ&m); ado=m?(VA1F)logZ:wt&XNUM?(VA1F)logXZ:(VA1F)logQZ; break;   // singleton code fails over to this too
-   case VA1CASE(EWRAT,VA1CMIN-VA1ORIGIN): cv=VQ; ado=floorQQ; break;   // must be <. _
-   case VA1CASE(EWRAT,VA1CMAX-VA1ORIGIN): cv=VQ; ado=ceilQQ; break;   // must be >. _
+  default:     R 0;  // unknown type - error must have come from previous verb
+  // all these cases are needed because sparse code may fail over to them
+  case VA1CASE(EWOV,  VA1CMIN-VA1ORIGIN): cv=VD;       ado=floorD;               break;
+  case VA1CASE(EWOV,  VA1CMAX-VA1ORIGIN): cv=VD;       ado=ceilD;                break;
+  case VA1CASE(EWOV,  VA1CSTILE-VA1ORIGIN): cv=VD+VDD;   ado=absD;                 break;
+  case VA1CASE(EWIRR, VA1CROOT-VA1ORIGIN): cv=VD+VDD;   ado=sqrtD;                break;
+  case VA1CASE(EWIRR, VA1CEXP-VA1ORIGIN): cv=VD+VDD;   ado=expD;                 break;
+  case VA1CASE(EWIRR, VA1CBANG-VA1ORIGIN): cv=VD+VDD;   ado=factD;                break;
+  case VA1CASE(EWIRR, VA1CLOG-VA1ORIGIN): cv=VD+(VDD&m); ado=m?(VA1F)logD:(VA1F)logXD; break;
+  case VA1CASE(EWIMAG,VA1CROOT-VA1ORIGIN): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
+  case VA1CASE(EWIMAG,VA1CLOG-VA1ORIGIN): cv=VZ+(VZZ&m); ado=m?(VA1F)logZ:wt&XNUM?(VA1F)logXZ:(VA1F)logQZ; break;   // singleton code fails over to this too
+  case VA1CASE(EWRAT,VA1CMIN-VA1ORIGIN): cv=VQ; ado=floorQQ; break;   // must be <. _
+  case VA1CASE(EWRAT,VA1CMAX-VA1ORIGIN): cv=VQ; ado=ceilQQ; break;   // must be >. _
   }
   RESETERR;
  }

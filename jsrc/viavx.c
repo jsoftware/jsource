@@ -776,17 +776,17 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
    I witems=ws[0]; witems=wr>r?witems:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
    SETICFR(a,af,acr,m);  f0=MAX(0,f1); DPMULDE(prod(f,s),prod(f0,ws+wf),zn)
    switch(mode&IIOPMSK){
-    case IIDOT:  
-    case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
-    case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAV(z),1,MEMSET00); R z;  // mustn't overfetch s
-    case ILESS:                              RCA(w);
-    case IINTER:                             R take(zeroionei(0),w);
-    case IIFBEPS:                            R mtv;
-    case IANYEPS: case IALLEPS: case II0EPS: R num(0);
-    case ISUMEPS:                            R sc(0L);
-    case II1EPS:  case IJ1EPS:               R sc(witems);
-    case IJ0EPS:                             R sc(witems-1);
-    case INUBSV:  case INUB:    case INUBI:  ASSERTSYS(0,"indexofsub"); // impossible 
+   case IIDOT:  
+   case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
+   case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAV(z),1,MEMSET00); R z;  // mustn't overfetch s
+   case ILESS:                              RCA(w);
+   case IINTER:                             R take(zeroionei(0),w);
+   case IIFBEPS:                            R mtv;
+   case IANYEPS: case IALLEPS: case II0EPS: R num(0);
+   case ISUMEPS:                            R sc(0L);
+   case II1EPS:  case IJ1EPS:               R sc(witems);
+   case IJ0EPS:                             R sc(witems-1);
+   case INUBSV:  case INUB:    case INUBI:  ASSERTSYS(0,"indexofsub"); // impossible 
    }
   }
  }
@@ -799,9 +799,9 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   if(1>=acr)R af?sprank2(a,w,NOEMSGSELF,acr,RMAX,jtindexof):ISSPARSE(wt)?iovxs(mode,a,w):iovsd(mode,a,w);
   if(af|wf)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtindexof);
   switch((ISSPARSE(at)?2:0)+(ISSPARSE(wt)?1:0)){
-   case 1: z=indexofxx(mode,a,w); break;
-   case 2: z=indexofxx(mode,a,w); break;
-   case 3: z=indexofss(mode,a,w); break;
+  case 1: z=indexofxx(mode,a,w); break;
+  case 2: z=indexofxx(mode,a,w); break;
+  case 3: z=indexofss(mode,a,w); break;
   }
   EPILOG(z);
  }
@@ -1177,14 +1177,14 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
 
  // allocate enough space for the result, depending on the type of the operation
  switch(mode&IIOPMSK){
-  // Some types that do not produce correct results if the result of e. has rank >1.  We give nonce error if that happens
-  default: GATV(z,INT,c,f1,ws); break;
-  case ILESS: case IINTER: GA(z,t,AN(w),MAX(1,wr),wr==0?&AN(w):ws); break;
-  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,f1,ws); break;
-  case IEPS: GATV(z,B01,c,f1,ws); break;
-  case IANYEPS: case IALLEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,B01,1,0); break;
-  case II0EPS:  case II1EPS: case IJ0EPS:  case IJ1EPS: if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
-  case ISUMEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,INT,1,0); break;
+ // Some types that do not produce correct results if the result of e. has rank >1.  We give nonce error if that happens
+ default: GATV(z,INT,c,f1,ws); break;
+ case ILESS: case IINTER: GA(z,t,AN(w),MAX(1,wr),wr==0?&AN(w):ws); break;
+ case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,f1,ws); break;
+ case IEPS: GATV(z,B01,c,f1,ws); break;
+ case IANYEPS: case IALLEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,B01,1,0); break;
+ case II0EPS:  case II1EPS: case IJ0EPS:  case IJ1EPS: if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
+ case ISUMEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,INT,1,0); break;
  }
  // save info used by the routines
  // noavx jt->hin=AN(hi); jt->hiv=AV(hi);
@@ -1395,9 +1395,9 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  // call routine based on types.  Only float and CMPX are supported
  UIL ctmask;
  switch(t){
-  default:   ASSERT(0,EVNONCE);     
-  case FL:   fn=mode==IICO?jtjocold:jtiocold; ctmask=calcctmask(jt->cct); break;
-  case CMPX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask=calcctmask(jt->cct); break;
+ default:   ASSERT(0,EVNONCE);     
+ case FL:   fn=mode==IICO?jtjocold:jtiocold; ctmask=calcctmask(jt->cct); break;
+ case CMPX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask=calcctmask(jt->cct); break;
  }
  fn(jt,m,c,d,a,w,z,h,ctmask);
  R z;

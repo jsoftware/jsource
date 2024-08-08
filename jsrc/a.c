@@ -47,21 +47,24 @@ static DF2(jtbdot2){R from(plusA(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]
 
 static DF1(jtbdot1){R bdot2(num(0),w,self);}
 
+// (a b.) w
 static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
  F1RANK(0,jtbasis1,self);
  RZ(w=vi(w));
- switch(AV(w)[0]){
-  case 0:
-   GAT0(z,FL,3,1); x=DAV(z); v=FAV(fs);
-   j=v->mr; x[0]=j<=-RMAX?-inf:j>=RMAX?inf:j;
-   j=lrv(v); x[1]=j<=-RMAX?-inf:j>=RMAX?inf:j;
-   j=rrv(v); x[2]=j<=-RMAX?-inf:j>=RMAX?inf:j;
-   R pcvt(INT,z);
-  case -1: R lrep(inv (fs));
-  case  1: R lrep(iden(fs));
-  default: ASSERT(0,EVDOMAIN);
-}}
+ switch(AV(w)[0]){   // switch on arg
+ case 0:  // rank
+  GAT0(z,FL,3,1); x=DAV(z); v=FAV(fs);
+  j=v->mr; x[0]=j<=-RMAX?-inf:j>=RMAX?inf:j;
+  j=lrv(v); x[1]=j<=-RMAX?-inf:j>=RMAX?inf:j;
+  j=rrv(v); x[2]=j<=-RMAX?-inf:j>=RMAX?inf:j;
+  R pcvt(INT,z);
+ case -1: R lrep(inv (fs));  // inverse
+ case  1: R lrep(iden(fs));  // neutral element
+ default: ASSERT(0,EVDOMAIN);
+ }
+}
 
+// a b.
 F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
  ARGCHK1(w);
  A z; fdefallo(z)

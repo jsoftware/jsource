@@ -33,23 +33,23 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
  if(AT(w)&NOUN+NAME)R 0;
  v=FAV(w);
  switch(v->id){
-  default:     
-   DO(3, if(v->fgh[i]&&hasimploc(v->fgh[i]))R 1;) break;
-  case CUDOT: case CVDOT:
-   R 1;  // these are always implicit locatives
-  case CTILDE: ;
-   A thisname=v->fgh[0];  // the A block for the name of the function (holding an NM) - unless it's a pseudo-name
-   if(!thisname)R 0;  // no name
-   if(AT(thisname)&VERB)R hasimploc(thisname);  // if v~, go look at v
-   if(AT(thisname)&NOUN)R 0;   // if noun~, leave as is
-   NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-   if(!(thisnameinfo->flag&NMIMPLOC))R 0; // not NMDOT
-   if(!(probelocal(thisname,jt->locsyms)))R 0;  // assigned value does not exist
-   R 1;
-  case CATDOT:
-  case CGRCO:
-   if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(hasimploc(u[i]))R 1;);}
-   R 0;
+ default:     
+  DO(3, if(v->fgh[i]&&hasimploc(v->fgh[i]))R 1;) break;
+ case CUDOT: case CVDOT:
+  R 1;  // these are always implicit locatives
+ case CTILDE: ;
+  A thisname=v->fgh[0];  // the A block for the name of the function (holding an NM) - unless it's a pseudo-name
+  if(!thisname)R 0;  // no name
+  if(AT(thisname)&VERB)R hasimploc(thisname);  // if v~, go look at v
+  if(AT(thisname)&NOUN)R 0;   // if noun~, leave as is
+  NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
+  if(!(thisnameinfo->flag&NMIMPLOC))R 0; // not NMDOT
+  if(!(probelocal(thisname,jt->locsyms)))R 0;  // assigned value does not exist
+  R 1;
+ case CATDOT:
+ case CGRCO:
+  if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(hasimploc(u[i]))R 1;);}
+  R 0;
  }
  R 0;
 }

@@ -17,13 +17,14 @@ static A jtcongotoblk(J jt,I n,CW*con){A z;CW*d=con;I i,j,k,*u,*v;
  for(i=j=0;i<n;++i,++d){
   *u++=-1; *u++=-1; 
   switch(d->tcesx>>TCESXTYPEX){
-   case CEND: 
-    v[k]=i; while(0<k&&0<v[k])k-=2; break;
-   case CCASE: case CCATCH: case CDO: case CELSE: case CELSEIF: case CFCASE:
-    v[k]=i;  /* fall thru */
-   case CFOR: case CIF: case CSELECT: case CTRY: case CWHILE: case CWHILST:
-    v[j]=i; k=1+j; j+=2;
- }}
+  case CEND: 
+   v[k]=i; while(0<k&&0<v[k])k-=2; break;
+  case CCASE: case CCATCH: case CDO: case CELSE: case CELSEIF: case CFCASE:
+   v[k]=i;  /* fall thru */
+  case CFOR: case CIF: case CSELECT: case CTRY: case CWHILE: case CWHILST:
+   v[j]=i; k=1+j; j+=2;
+  }
+ }
  R z;
 }    /* compute blocks for goto checking */
 
@@ -295,36 +296,37 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
 
 A jtspellcon(J jt,I c){
  switch(c){
-  default:      ASSERTSYS(0,"spellcon");
-  case CASSERT: R cstr("assert.");
-  case CBBLOCK: case CBBLOCKEND: R cstr("bblock.");
-  case CBREAK: case CBREAKF:  case CBREAKS: R cstr("break.");
-  case CCASE:   R cstr("case.");
-  case CCATCH:  R cstr("catch.");
-  case CCATCHD: R cstr("catchd.");
-  case CCATCHT: R cstr("catcht.");
-  case CCONT: case CCONTS: R cstr("continue.");
-  case CDO:
-  case CDOF:    
-  case CDOSEL:  R cstr("do.");
-  case CELSE:   R cstr("else.");
-  case CELSEIF: R cstr("elseif.");
-  case CEND:    
-  case CENDSEL: R cstr("end.");
-  case CFCASE:  R cstr("fcase.");
-  case CFOR:    R cstr("for.");
-  case CGOTO:   R cstr("goto_.");
-  case CIF:     R cstr("if.");
-  case CLABEL:  R cstr("label_.");
-  case CRETURN: R cstr("return.");
-  case CSELECTN:
-  case CSELECT: R cstr("select.");
-  case CTBLOCK: R cstr("tblock.");
-  case CTHROW:  R cstr("throw.");
-  case CTRY:    R cstr("try.");
-  case CWHILE:  R cstr("while.");
-  case CWHILST: R cstr("whilst.");
-}}
+ default:      ASSERTSYS(0,"spellcon");
+ case CASSERT: R cstr("assert.");
+ case CBBLOCK: case CBBLOCKEND: R cstr("bblock.");
+ case CBREAK: case CBREAKF:  case CBREAKS: R cstr("break.");
+ case CCASE:   R cstr("case.");
+ case CCATCH:  R cstr("catch.");
+ case CCATCHD: R cstr("catchd.");
+ case CCATCHT: R cstr("catcht.");
+ case CCONT: case CCONTS: R cstr("continue.");
+ case CDO:
+ case CDOF:    
+ case CDOSEL:  R cstr("do.");
+ case CELSE:   R cstr("else.");
+ case CELSEIF: R cstr("elseif.");
+ case CEND:    
+ case CENDSEL: R cstr("end.");
+ case CFCASE:  R cstr("fcase.");
+ case CFOR:    R cstr("for.");
+ case CGOTO:   R cstr("goto_.");
+ case CIF:     R cstr("if.");
+ case CLABEL:  R cstr("label_.");
+ case CRETURN: R cstr("return.");
+ case CSELECTN:
+ case CSELECT: R cstr("select.");
+ case CTBLOCK: R cstr("tblock.");
+ case CTHROW:  R cstr("throw.");
+ case CTRY:    R cstr("try.");
+ case CWHILE:  R cstr("while.");
+ case CWHILST: R cstr("whilst.");
+ }
+}
 
 static I jtconword(J jt,I n,C*s){
  I c1=s[n-1]; c1=n<3?0:c1; if(c1!='.')R 0;  // if not 3+ chars ending with '.', it's not a control word

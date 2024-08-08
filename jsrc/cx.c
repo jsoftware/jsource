@@ -355,7 +355,7 @@ nextline:;  // here to look at next line, whose cw number is ic (which must be v
   tcesx=CWTCESX(cwsent,ic);  // fetch info for the next line
 nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly with high-order garbage
   // Check for debug and other modes
-  if(unlikely(jt->uflags.trace)){  // fast check to see if we have overhead functions to perform
+  if(unlikely(jt->uflags.trace!=0)){  // fast check to see if we have overhead functions to perform
    // here to handle debug jump, perf monitor, or any other unusual cases
    if(!(NPGpysfmtdl&1)&&!(jt->recurstate&RECSTATERENT)){  // only if not locked and not recursive
     if(unlikely(!(NPGpysfmtdl&16))){  // if we have never allocated debug stack

@@ -91,12 +91,12 @@ static D jtdbin(J jt,D x,D y){D c,d,e,h=1.0,p,q,r;I k=0;
  d=y-x; if(0<=d)q=jfloor(d); else{k+=2; ++d; q=jfloor(-d);}
  e=x;   if(0<=e)r=jfloor(e); else{k+=1; ++e; r=jfloor(-e);}
  switch(k){
-  case 0: h=pq(h,q,&c,&d); h=pq(h,r,&c,&e);                break;
-  case 1: h=pq(h,p,&c,&d); h=pq(h,r,&e,&d);           --e; break;
-  case 2: h=pq(h,p,&c,&e); h=pq(h,q,&d,&e);      --d;      break;
-  case 5: h=pq(h,p,&e,&c); h=pq(h,q,&e,&d); --c;      --e; break;
-  case 6: h=pq(h,p,&d,&c); h=pq(h,r,&d,&e); --c; --d;      break;
-  case 7: h=pq(h,q,&d,&c); h=pq(h,r,&e,&c); --c; --d; --e; break;
+ case 0: h=pq(h,q,&c,&d); h=pq(h,r,&c,&e);                break;
+ case 1: h=pq(h,p,&c,&d); h=pq(h,r,&e,&d);           --e; break;
+ case 2: h=pq(h,p,&c,&e); h=pq(h,q,&d,&e);      --d;      break;
+ case 5: h=pq(h,p,&e,&c); h=pq(h,q,&e,&d); --c;      --e; break;
+ case 6: h=pq(h,p,&d,&c); h=pq(h,r,&d,&e); --c; --d;      break;
+ case 7: h=pq(h,q,&d,&c); h=pq(h,r,&e,&c); --c; --d; --e; break;
  }
  if(!h)R 0; 
  if(h==inf||h==infm)R inf*signf(x)*signf(y)*signf(y-x);
@@ -147,16 +147,17 @@ static Z jtbinzz(J jt,Z x,Z y){B id,ix,iy;D rd,rx,ry;Z d;
  rx=x.re; ix=rx==jfloor(rx)&&0==x.im; 
  ry=y.re; iy=ry==jfloor(ry)&&0==y.im;
  switch(4*(I )(ix&&0>rx)+2*(I )(iy&&0>ry)+(I )(id&&0>rd)){
-  default: ZASSERT(0,EVSYSTEM);
-  case 5: /* 1 0 1 */  /* Impossible */
-  case 0: /* 0 0 0 */
-  case 2: /* 0 1 0 */  R zbin(x,y);
-  case 3: /* 0 1 1 */  R zrj0((MOD2(rx)?-1:1)*ibin(rx,rx-ry-1));
-  case 6: /* 1 1 0 */  R zrj0((MOD2(rd)?-1:1)*ibin(-1-ry,-1-rx));
-  case 1: /* 0 0 1 */ 
-  case 4: /* 1 0 0 */ 
-  case 7: /* 1 1 1 */  R zeroZ;
-}}
+ default: ZASSERT(0,EVSYSTEM);
+ case 5: /* 1 0 1 */  /* Impossible */
+ case 0: /* 0 0 0 */
+ case 2: /* 0 1 0 */  R zbin(x,y);
+ case 3: /* 0 1 1 */  R zrj0((MOD2(rx)?-1:1)*ibin(rx,rx-ry-1));
+ case 6: /* 1 1 0 */  R zrj0((MOD2(rd)?-1:1)*ibin(-1-ry,-1-rx));
+ case 1: /* 0 0 1 */ 
+ case 4: /* 1 0 0 */ 
+ case 7: /* 1 1 1 */  R zeroZ;
+ }
+}
 
 
 APFX(binDD, D,D,D, bindd,NAN0;,HDR1JERRNAN)

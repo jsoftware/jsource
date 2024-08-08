@@ -365,9 +365,9 @@ static F1(jtthxqe){
  A t; GATV0(t,BOX,n,1); A*tv=AAV(t);
  A d; RZ(d=apvwr(c,1L,0L)); I*dv=AV(d); A*v=tv;
  switch(CTTZ(AT(w))){A y;
-  case XNUMX:{X*u=(X*)wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
-  case RATX: {Q*u=(Q*)wv; DO(m, DO(c, RZ(*v++=y=thq1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
-  default: {ASSERT(0,EVNONCE);}
+ case XNUMX:{X*u=(X*)wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
+ case RATX: {Q*u=(Q*)wv; DO(m, DO(c, RZ(*v++=y=thq1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
+ default: {ASSERT(0,EVNONCE);}
  }
  --dv[c-1];
  I p=0; DO(c, p+=++dv[i];);
@@ -579,11 +579,11 @@ static A jtthbox(J jt,A w,A prxthornuni){A z;static UC ctrl[]=" \001\002\003\004
  // (NUL, BS, TAB, LF, CR) with space
  // Three versions of replacement, depending on datatype of the array
  switch(CTTZ(AT(z))){
-  case LITX: {UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);} break; // byte
+ case LITX: {UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);} break; // byte
  // For wide-chars don't replace NUL following >=0x1100, since NUL is used to stand for a zero-width character paired with
  // a double-wide character for spacing purposes.  This NUL will be removed at final output, or for display
-  case C2TX: {US *s=USAV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // wide char
-  default: {C4 *s=C4AV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // must be literal4
+ case C2TX: {US *s=USAV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // wide char
+ default: {C4 *s=C4AV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // must be literal4
  }
  R z;
 }
@@ -610,7 +610,8 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
  ARGCHK1(w);
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
  else if(ISSPARSE(AT(w)))z=ths(w);
- else switch(CTTZ(AT(w))){
+ else
+  switch(CTTZ(AT(w))){
   case INT2X: case INT4X: case INTX:  case FLX: case CMPXX:  case QPX:
              z=thn(w);                    break;
 #ifdef UNDER_CE
@@ -658,12 +659,13 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
   case ASGNX: z=spellout(CAV(w)[0]);         break;
   case VERBX: case ADVX:  case CONJX:
    switch((JT(jt,disp))[1]){
-    case 1: z=thorn1main(arep(w),prxthornuni); break;
-    case 2: z=thorn1main(drep(w),prxthornuni); break;
-    case 4: z=thorn1main(trep(w),prxthornuni); break;
-    case 5: z=thorn1main(lrep(w),prxthornuni); break;
-    case 6: z=thorn1main(prep(w),prxthornuni); break;
- }}
+   case 1: z=thorn1main(arep(w),prxthornuni); break;
+   case 2: z=thorn1main(drep(w),prxthornuni); break;
+   case 4: z=thorn1main(trep(w),prxthornuni); break;
+   case 5: z=thorn1main(lrep(w),prxthornuni); break;
+   case 6: z=thorn1main(prep(w),prxthornuni); break;
+  }
+ }
  EPILOG(z);
 }
 
@@ -741,10 +743,10 @@ static I scaneol(I t, C*v,I n){I m=0;
  // previous char was CR: then we subtract 1.  So for CRLF we end up adding nothing, while
  // other occurrences of CR or LF add 1 each.
  switch(t){
-  case 1: {C e,x=0; DQ(n, e=x; x=*v++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)} break;
+ case 1: {C e,x=0; DQ(n, e=x; x=*v++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)} break;
 // this is better if we can test it  case 1: {C e,x=0; DQ(n, x=*v++; m+=(x==CCR); m+=(x==CLF)-2*(e&(x==CLF)); e=(x==CCR);)} break;
-  case 2: {US e,x=0,*u=(US*)v; DQ(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;
-  default: {C4 e,x=0,*u=(C4*)v; DQ(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;  // must be C4T
+ case 2: {US e,x=0,*u=(US*)v; DQ(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;
+ default: {C4 e,x=0,*u=(C4*)v; DQ(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;  // must be C4T
  }
  R m;
 }
@@ -965,12 +967,15 @@ F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
   if(!((I)jtinplace&JTPRNOSTDOUT)){
    // for each representation selected by the user, create the representation and type it
    n=*JT(jt,disp); v=1+JT(jt,disp);
-   for(i=0;i<n;++i)switch(*v++){
+   for(i=0;i<n;++i)
+    switch(*v++){
     case 1: RZ(jpr1(arep(y))); break;
     case 2: RZ(jpr1(drep(y))); break;
     case 4: RZ(jpr1(trep(y))); break;
     case 5: RZ(jpr1(jtlrep((J)((I)jtinplace&~JTEXPVALENCEOFF),y))); break;  // set parm bits, leaving FORSCREEN
     case 6: RZ(jpr1(prep(y))); break;
- }}}
+   }
+  } 
+ }
  R mtm;
 }

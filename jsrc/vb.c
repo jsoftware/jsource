@@ -78,19 +78,19 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
   // 4*the size of the search area seems big enough; but not more than what a single memory allocation supports.  The size
   // is measured in Is.  The 100 is to account for memory-manager overhead.  Minimum value must be > 0 for the <= test below
  switch(CTTZNOFLAG(t)){
-  // calculate the number of distinct values in the range of the two operands.
-  // for strings, we just assume the worst (all codes)
-  // for ints, actually look at the data to get the range (min and #values+1).  If the min is > 0, and
-  // the range can be extended to cover 0..d-1 without exceeding the bound on d, do so to make
-  // the SUB0 and SUB1 expressions into EBLOOP simpler
-  // We allocate an array for each result in range, so we have to get c and d right
-  case C2TX:
-  case LITX:
-  case B01X: rng.min=0; rng.range=65536; rng.range=t&B01?2:rng.range; rng.range=t&LIT?256:rng.range; break;
-  case INTX: case SBTX: rng = condrange(AV(a),m,IMAX,IMIN,memlimit);
-             if(rng.range){rng = condrange(AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
-  case C4TX: rng = condrange4(C4AV(a),m,-1,0,memlimit);
-             if(rng.range){rng = condrange4(C4AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
+ // calculate the number of distinct values in the range of the two operands.
+ // for strings, we just assume the worst (all codes)
+ // for ints, actually look at the data to get the range (min and #values+1).  If the min is > 0, and
+ // the range can be extended to cover 0..d-1 without exceeding the bound on d, do so to make
+ // the SUB0 and SUB1 expressions into EBLOOP simpler
+ // We allocate an array for each result in range, so we have to get c and d right
+ case C2TX:
+ case LITX:
+ case B01X: rng.min=0; rng.range=65536; rng.range=t&B01?2:rng.range; rng.range=t&LIT?256:rng.range; break;
+ case INTX: case SBTX: rng = condrange(AV(a),m,IMAX,IMIN,memlimit);
+            if(rng.range){rng = condrange(AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
+ case C4TX: rng = condrange4(C4AV(a),m,-1,0,memlimit);
+            if(rng.range){rng = condrange4(C4AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
  }
  if(0<rng.min&&rng.range&&rng.min+rng.range<=memlimit){rng.range+=rng.min; rng.min=0;}  // Extend lower bound to 0 if that doesn't make range too big
  *zc=rng.min;  // Now that we know c, return it

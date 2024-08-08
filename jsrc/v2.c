@@ -267,14 +267,15 @@ static F1(jtprimetest){A x;I t;
  t=AT(w);
  if((UI)SGNIF(t,B01X)>=(UI)AN(w))R reshape(shape(w),num(0));  // AN is 0, or t is boolean
  switch(CTTZ(t)){
-  case INT2X: case INT4X: RZ(w=cvt(INT,w))  // convert I2, I4 to long int & fall through to I
-  case INTX:           R iprimetest(w);
-  default:             ASSERT(0,EVDOMAIN);
-  case RATX: case XNUMX: R xprimetest(w);
-  case FLX:  case CMPXX: case QPX:
-   {PUSHCCT(1.0-FUZZ) x=eq(t&FL?w:conjug(w),floor1(w)); POPCCT}
-   R xprimetest(cvt(XNUM,tymes(w,x))); 
-}}   /* primality test */
+ case INT2X: case INT4X: RZ(w=cvt(INT,w))  // convert I2, I4 to long int & fall through to I
+ case INTX:           R iprimetest(w);
+ default:             ASSERT(0,EVDOMAIN);
+ case RATX: case XNUMX: R xprimetest(w);
+ case FLX:  case CMPXX: case QPX:
+  {PUSHCCT(1.0-FUZZ) x=eq(t&FL?w:conjug(w),floor1(w)); POPCCT}
+  R xprimetest(cvt(XNUM,tymes(w,x))); 
+ }
+}   /* primality test */
 
 
 static F1(jtnextprime){
@@ -389,17 +390,18 @@ F2(jtpco2){A z;B*b;I k;
  RZ(init4792(jt));
  RE(k=i0(a));
  switch(k){
-  default: ASSERT(0,EVDOMAIN);
-  case -4: R prevprime(w);
-  case -1: R plt(w);
-  case  0: R notW(primetest(w));
-  case  1: R primetest(w);
-  case  2: R qco2(scf(infm),w);
-  case  3: R factor(w);
-  case  4: R nextprime(w);
-  case  5: R totient(w);
-  case  6: R detmr(w);
-}}   /* a p: w */
+ default: ASSERT(0,EVDOMAIN);
+ case -4: R prevprime(w);
+ case -1: R plt(w);
+ case  0: R notW(primetest(w));
+ case  1: R primetest(w);
+ case  2: R qco2(scf(infm),w);
+ case  3: R factor(w);
+ case  4: R nextprime(w);
+ case  5: R totient(w);
+ case  6: R detmr(w);
+ }
+}   /* a p: w */
 
 static A jtqco2x(J jt,I m,A w){A y;I c,*dv,i,*pv,*yv;X d,q,r,x;
  RZ(init4792(jt));

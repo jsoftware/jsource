@@ -362,11 +362,13 @@ F1(jtdx_test){I j=jt->rngdata->rng,x;
 #define MRM1 4294944443UL  /* _22853+2^32 */
 
 static UI jtmr_next31(J jt){I d,j,*v=jt->rngdata->rngv,x,y;
- switch(j=jt->rngdata->rngi){
-  case 0: x=1403580*v[1]-810728*v[0]; y=527612*v[5]-1370589*v[3]; jt->rngdata->rngi=1; break;
-  case 1: x=1403580*v[2]-810728*v[1]; y=527612*v[3]-1370589*v[4]; jt->rngdata->rngi=2; break;
-  case 2: x=1403580*v[0]-810728*v[2]; y=527612*v[4]-1370589*v[5]; jt->rngdata->rngi=0;
- }
+// obsolete  switch(j=jt->rngdata->rngi){
+// obsolete  case 0: x=1403580*v[1]-810728*v[0]; y=527612*v[5]-1370589*v[3]; jt->rngdata->rngi=1; break;
+// obsolete  case 1: x=1403580*v[2]-810728*v[1]; y=527612*v[3]-1370589*v[4]; jt->rngdata->rngi=2; break;
+// obsolete  case 2: x=1403580*v[0]-810728*v[2]; y=527612*v[4]-1370589*v[5]; jt->rngdata->rngi=0;
+// obsolete  }
+ j=jt->rngdata->rngi; jt->rngdata->rngi=j+1; jt->rngdata->rngi=j==2?0:jt->rngdata->rngi;  // j = 0 1 2  rngi = 1 2 0  3+j=3 4 5   6-j-rngi=5 3 4
+ x=1403580*v[jt->rngdata->rngi]-810728*v[j]; y=527612*v[6-j-jt->rngdata->rngi]-1370589*v[3+j];
  x%=MRM0; if(x<0)x+=MRM0; v[j  ]=x;
  y%=MRM1; if(y<0)y+=MRM1; v[j+3]=y;
  d=(x-y)%MRM0; if(d<0)d+=MRM0;
@@ -386,11 +388,13 @@ static UI jtmr_next(J jt){UI a,b,c;
 #define MRM1 4294944443.0  /* _22853+2^32 */
 
 static UI jtmr_next(J jt){D d,*v=(D*)jt->rngdata->rngv,x,y;I j,k;
- switch(j=jt->rngdata->rngi){
-  case 0: x=1403580.0*v[1]-810728.0*v[0]; y=527612.0*v[5]-1370589.0*v[3]; jt->rngdata->rngi=1; break;
-  case 1: x=1403580.0*v[2]-810728.0*v[1]; y=527612.0*v[3]-1370589.0*v[4]; jt->rngdata->rngi=2; break;
-  case 2: x=1403580.0*v[0]-810728.0*v[2]; y=527612.0*v[4]-1370589.0*v[5]; jt->rngdata->rngi=0;
- }
+// obsolete  switch(j=jt->rngdata->rngi){
+// obsolete  case 0: x=1403580.0*v[1]-810728.0*v[0]; y=527612.0*v[5]-1370589.0*v[3]; jt->rngdata->rngi=1; break;
+// obsolete  case 1: x=1403580.0*v[2]-810728.0*v[1]; y=527612.0*v[3]-1370589.0*v[4]; jt->rngdata->rngi=2; break;
+// obsolete  case 2: x=1403580.0*v[0]-810728.0*v[2]; y=527612.0*v[4]-1370589.0*v[5]; jt->rngdata->rngi=0;
+// obsolete  }
+ j=jt->rngdata->rngi; jt->rngdata->rngi=j+1; jt->rngdata->rngi=j==2?0:jt->rngdata->rngi;  // j = 0 1 2  rngi = 1 2 0  3+j=3 4 5   6-j-rngi=5 3 4
+ x=1403580*v[jt->rngdata->rngi]-810728*v[j]; y=527612*v[6-j-jt->rngdata->rngi]-1370589*v[3+j];
  k=(I)(x/MRM0); x-=k*MRM0; if(x<0.0)x+=MRM0; v[j  ]=x;
  k=(I)(y/MRM1); y-=k*MRM1; if(y<0.0)y+=MRM1; v[j+3]=y;
  d=x-y; 
@@ -475,10 +479,10 @@ static B jtrngga(J jt,I i,struct rngparms*vv){
  if(vv[i].rngV){jt->rngdata->rngv=vv[i].rngV; jt->rngdata->rngi=jt->rngdata->rngparms[i].rngI;}
  else{A x;I n,t;void(*f)(); 
   switch(i){
-   case GBI: t=INT; n=GBN; f=jtgb_init; break;
-   case MTI: t=INT; n=MTN; f=jtmt_init; break;
-   case DXI: t=INT; n=DXN; f=jtdx_init; break;
-   case MRI: t=FL;  n=MRN; f=jtmr_init; break;
+  case GBI: t=INT; n=GBN; f=jtgb_init; break;
+  case MTI: t=INT; n=MTN; f=jtmt_init; break;
+  case DXI: t=INT; n=DXN; f=jtdx_init; break;
+  case MRI: t=FL;  n=MRN; f=jtmr_init; break;
   }
   GA10(x,t,n); ACINITZAP(x); vv[i].rngV=jt->rngdata->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
   f(jt,jt->rngdata->rngparms[i].rngS); jt->rngdata->rngparms[i].rngI=jt->rngdata->rngi;
@@ -491,12 +495,12 @@ F1(jtrngselects){I i;struct rngparms*vv=jt->rngdata->rngparms;
  ASSERT(BETWEENO(i,0,NRNG),EVDOMAIN);
  jt->rngdata->rngparms[jt->rngdata->rng].rngI=jt->rngdata->rngi;
  switch(jt->rngdata->rng=i){
-  case SMI: vv=jt->rngdata->rngparms0;      jt->rngdata->rngw=SY_64?64:32;
-            RZ(rngga(GBI,vv)); RZ(rngga(MTI,vv)); RZ(rngga(DXI,vv)); RZ(rngga(MRI,vv)); break;
-  case GBI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; break;
-  case MTI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:32; break; 
-  case DXI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:30; break;
-  case MRI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; break;
+ case SMI: vv=jt->rngdata->rngparms0;      jt->rngdata->rngw=SY_64?64:32;
+           RZ(rngga(GBI,vv)); RZ(rngga(MTI,vv)); RZ(rngga(DXI,vv)); RZ(rngga(MRI,vv)); break;
+ case GBI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; break;
+ case MTI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:32; break; 
+ case DXI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:30; break;
+ case MRI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; break;
  }
  R mtv;
 }
@@ -551,16 +555,16 @@ F1(jtrngstates){A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
  RZ(rngselects(C(wv[0])));  /* changes jt->rngdata->rng */
  ASSERT(AN(w)==(jt->rngdata->rng?3:9),EVLENGTH);
  switch(jt->rngdata->rng){
-  case SMI: vv=jt->rngdata->rngparms0;
+ case SMI: vv=jt->rngdata->rngparms0;
             RE(k=i0(C(wv[1]))); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); jt->rngdata->rngparms0[GBI].rngI=k;  // We accept 0-55 even though we never produce 55 ourselves
             RE(k=i0(C(wv[3]))); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[4]),0)); jt->rngdata->rngparms0[MTI].rngI=k;
             RE(k=i0(C(wv[5]))); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[6]),1)); jt->rngdata->rngparms0[DXI].rngI=k;
             RE(k=i0(C(wv[7]))); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[8]),0)); jt->rngdata->rngparms0[MRI].rngI=k;
             break;
-  case GBI: RE(k=i0(C(wv[1]))); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); break;  // We accept 0-55 even though we never produce 55 ourselves
-  case MTI: RE(k=i0(C(wv[1]))); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[2]),0)); break;
-  case DXI: RE(k=i0(C(wv[1]))); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[2]),1)); break;
-  case MRI: RE(k=i0(C(wv[1]))); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[2]),0)); break;
+ case GBI: RE(k=i0(C(wv[1]))); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); break;  // We accept 0-55 even though we never produce 55 ourselves
+ case MTI: RE(k=i0(C(wv[1]))); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[2]),0)); break;
+ case DXI: RE(k=i0(C(wv[1]))); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[2]),1)); break;
+ case MRI: RE(k=i0(C(wv[1]))); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[2]),0)); break;
  }
  R mtv;
 }
@@ -580,11 +584,11 @@ F1(jtrngseeds){I k,r;
   mt_init_by_array(AV(w),AN(w));
  }else switch(jt->rngdata->rng){
   // atomic w.  We can use that for any generator.  Choose the current one.
-  case SMI: ASSERT(k!=0,EVDOMAIN); sm_init(k);     break;
-  case GBI:                     gb_init(k);     break;
-  case MTI:                     mt_init((UI)k); break;
-  case DXI: ASSERT(k!=0,EVDOMAIN); dx_init(k);     break;
-  case MRI: ASSERT(k!=0,EVDOMAIN); mr_init(k); break;
+ case SMI: ASSERT(k!=0,EVDOMAIN); sm_init(k);     break;
+ case GBI:                     gb_init(k);     break;
+ case MTI:                     mt_init((UI)k); break;
+ case DXI: ASSERT(k!=0,EVDOMAIN); dx_init(k);     break;
+ case MRI: ASSERT(k!=0,EVDOMAIN); mr_init(k); break;
  }
  jt->rngdata->rngparms[jt->rngdata->rng].rngS=k;  // Save first value, in case k is atomic
  if(!r&&MTI==jt->rngdata->rng&&jt->rngdata->rngseed){fa(jt->rngdata->rngseed); jt->rngdata->rngseed=0;}   // If k is atomic, discard jt->rngdata->rngseed if there is one
@@ -875,11 +879,12 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngda
   if(k&&(1LL<<k)==m){  /* m=2^k but is not 1 or 2 */
    p=jt->rngdata->rngw/k; q=n/p; r=n%p; mk=m-1;
    switch((s?2:0)+(1<p)){
-    case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;
-    case 1: DQ(q,           t=NEXT;   DQ(p, *u++=mk&t; t>>=k;);); break;
-    case 2: DQ(q, NOUNROLL while(s<=(t=NEXT));       *u++=mk&t;         ); break;
-    case 3: DQ(q, NOUNROLL while(s<=(t=NEXT)); DQ(p, *u++=mk&t; t>>=k;););
-  }}
+   case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;
+   case 1: DQ(q,           t=NEXT;   DQ(p, *u++=mk&t; t>>=k;);); break;
+   case 2: DQ(q, NOUNROLL while(s<=(t=NEXT));       *u++=mk&t;         ); break;
+   case 3: DQ(q, NOUNROLL while(s<=(t=NEXT)); DQ(p, *u++=mk&t; t>>=k;););
+   }
+  }
   if(r&&s)DQ(r, NOUNROLL while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
  }
  R z;

@@ -196,23 +196,23 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
  cc=0; uu=CAV(a); vv=CAV(a)+(c*(n-1)<<bplg(at));
  // first decide if the input array is ascending or descending, comparing the first & last items atom by atom
  switch(CTTZ(at)){
-  case INTX:  COMPVLOOP(I, c);           break;
-  default:   ASSERT(0,EVNONCE);
-  case B01X:  COMPVLOOP(B, c);           break;
-  case LITX:  COMPVLOOP(UC,c);           break;
-  case FLX:   COMPVLOOP(D, c);           break;
-  case QPX:
-  case CMPXX: COMPVLOOP(D, c+c);         break;
-  case C2TX:  COMPVLOOP(US,c);           break;
-  case C4TX:  COMPVLOOP(C4,c);           break;
-  case INT2X: COMPVLOOP(I2,c);           break;
-  case INT4X: COMPVLOOP(I4,c);           break;
-  case SBTX:  COMPVLOOF(SB,c, SBCOMP  ); break;
-  case XNUMX: COMPVLOOF(X, c, xcompare); break;
-  case RATX:  COMPVLOOF(Q, c, qcompare); break;
-  case BOXX:  
-   av=AAV(a); wv=AAV(w);
-   DO(c, if(cc=compare(C(av[i]),C(av[i+c*(n-1)])))break;);
+ case INTX:  COMPVLOOP(I, c);           break;
+ default:   ASSERT(0,EVNONCE);
+ case B01X:  COMPVLOOP(B, c);           break;
+ case LITX:  COMPVLOOP(UC,c);           break;
+ case FLX:   COMPVLOOP(D, c);           break;
+ case QPX:
+ case CMPXX: COMPVLOOP(D, c+c);         break;
+ case C2TX:  COMPVLOOP(US,c);           break;
+ case C4TX:  COMPVLOOP(C4,c);           break;
+ case INT2X: COMPVLOOP(I2,c);           break;
+ case INT4X: COMPVLOOP(I4,c);           break;
+ case SBTX:  COMPVLOOF(SB,c, SBCOMP  ); break;
+ case XNUMX: COMPVLOOF(X, c, xcompare); break;
+ case RATX:  COMPVLOOF(Q, c, qcompare); break;
+ case BOXX:  
+  av=AAV(a); wv=AAV(w);
+  DO(c, if(cc=compare(C(av[i]),C(av[i+c*(n-1)])))break;);
  }
  ge=cc; gt=-ge;
  if(unlikely(t&JCHAR+SBT)){

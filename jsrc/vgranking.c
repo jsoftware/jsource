@@ -76,21 +76,21 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
  for(i=0;i<m;++i){
   mvc(rng.range*sizeof(*yv),yv,1,MEMSET00);
   switch(k){
-   case sizeof(I): if(wt&INT){RANKINGLOOP(I); break;}
+  case sizeof(I): if(wt&INT){RANKINGLOOP(I); break;}
 #if SY_64
-   case sizeof(C4):
+  case sizeof(C4):
 #endif
-    RANKINGLOOP(C4); break;
-   case sizeof(C):   RANKINGLOOP(UC); break;
+   RANKINGLOOP(C4); break;
+  case sizeof(C):   RANKINGLOOP(UC); break;
 #if C_LE
-   case sizeof(S):
-    if(wt&IS1BYTE){I c,d,s,t;US*v;TTYPE *u;
-     v=(US*)wv; DQ(n, ++yu[*v++];);
-     s=0;       DO(256, c=0; d=i; DQ(256, u=yv+(c+d); c+=256; if(*u){t=*u; *u=(TTYPE)s; s+=t;}););
-     v=(US*)wv; DQ(n, *zv++=yu[*v++]++;);
-    }else RANKINGLOOP(US);
+  case sizeof(S):
+   if(wt&IS1BYTE){I c,d,s,t;US*v;TTYPE *u;
+    v=(US*)wv; DQ(n, ++yu[*v++];);
+    s=0;       DO(256, c=0; d=i; DQ(256, u=yv+(c+d); c+=256; if(*u){t=*u; *u=(TTYPE)s; s+=t;}););
+    v=(US*)wv; DQ(n, *zv++=yu[*v++]++;);
+   }else RANKINGLOOP(US);
 #else
-   case sizeof(S):   RANKINGLOOP(US);
+  case sizeof(S):   RANKINGLOOP(US);
 #endif
   }
   wv+=n*k;

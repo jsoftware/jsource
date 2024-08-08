@@ -117,15 +117,16 @@ F2(jtuco2){I j;
  ARGCHK2(a,w);
  RE(j=i0(a));
  switch(j){
-  case 1: R toc1(1,w);
-  case 2: R toc2(w);
-  case 3: R ifc2(w);
-  case 4: R c2fi(w);
-  case 5: R toc1(0,w);
-  case 6: R toc2e(w);
-  case 7: R toutf16(w);
-  case 8: R toutf8(w);
-  case 9: R toutf32(w);
-  case 10: R tou32(w);
-  default: ASSERT(0,EVDOMAIN);
-}}
+ case 1: R toc1(1,w);
+ case 2: R toc2(w);
+ case 3: R ifc2(w);
+ case 4: R c2fi(w);
+ case 5: R toc1(0,w);
+ case 6: R toc2e(w);
+ case 7: R toutf16(w);
+ case 8: R toutf8(w);
+ case 9: R toutf32(w);
+ case 10: R tou32(w);
+ default: ASSERT(0,EVDOMAIN);
+ }
+}

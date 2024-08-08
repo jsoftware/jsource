@@ -249,33 +249,33 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
  if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE)&&!virtok)SEGFAULT;
  if(AT(w)==(I)0xdeadbeefdeadbeef)SEGFAULT;
  switch(CTTZ(AT(w))){
-  case RATX:  
-   {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
-  case XNUMX:
-   {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
-  case BOXX:
-   if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
+ case RATX:  
+  {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
+ case XNUMX:
+  {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
+ case BOXX:
+  if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
    DO(AN(w), if(wv[i]&&(AC(C(wv[i]))<0))SEGFAULT;)
    I acbias=(AFLAG(w)&BOX)!=0;  // subtract 1 if recursive
    if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(!((AT(C(wv[i]))&DIRECT)>0))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
    {DO(AN(w), auditblock(jt,C(wv[i]),nonrecur,0););}
-   }
-   break;
-  case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(w); auditblock(jt,C(v->fgh[0]),nonrecur,0);
-    auditblock(jt,C(v->fgh[1]),nonrecur,0);
-    auditblock(jt,C(v->fgh[2]),nonrecur,0);} break;
-  case B01X: case INTX: case FLX: case CMPXX: case QPX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX: case INT2X: case INT4X:  // direct forms, but possibly sparse
-   if(ISSPARSE(AT(w))){P*v=PAV(w);  A x;
-    if(!scheck(w))SEGFAULT;
-    x = SPA(v,a); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,e); if(!((AT(x)&DIRECT)>0))SEGFAULT; x = SPA(v,i); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,x); if(!(AT(x)&DIRECT))SEGFAULT;
-    auditblock(jt,SPA(v,a),nonrecur,0); auditblock(jt,SPA(v,e),nonrecur,0); auditblock(jt,SPA(v,i),nonrecur,0); auditblock(jt,SPA(v,x),nonrecur,0);
-   }else if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))SEGFAULT;
-   break;
-  case ASGNX: break;
-  default: break; SEGFAULT;
- }
+  }
+  break;
+ case VERBX: case ADVX:  case CONJX: 
+  {V*v=VAV(w); auditblock(jt,C(v->fgh[0]),nonrecur,0);
+   auditblock(jt,C(v->fgh[1]),nonrecur,0);
+   auditblock(jt,C(v->fgh[2]),nonrecur,0);} break;
+ case B01X: case INTX: case FLX: case CMPXX: case QPX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX: case INT2X: case INT4X:  // direct forms, but possibly sparse
+  if(ISSPARSE(AT(w))){P*v=PAV(w);  A x;
+   if(!scheck(w))SEGFAULT;
+   x = SPA(v,a); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,e); if(!((AT(x)&DIRECT)>0))SEGFAULT; x = SPA(v,i); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,x); if(!(AT(x)&DIRECT))SEGFAULT;
+   auditblock(jt,SPA(v,a),nonrecur,0); auditblock(jt,SPA(v,e),nonrecur,0); auditblock(jt,SPA(v,i),nonrecur,0); auditblock(jt,SPA(v,x),nonrecur,0);
+  }else if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))SEGFAULT;
+  break;
+ case ASGNX: break;
+ default: break; SEGFAULT;
 }
+
 #endif
 
 #if 0  // for debugging

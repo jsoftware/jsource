@@ -118,17 +118,17 @@ static __inline int Vcompare(J jt,I a,I b){I m,n;SBU*u,*v;UC*s,*t;US*p,*q;C4*f,*
 //         u   s   m                        v   t   n
  switch((SBC4&u->flag?6:SBC2&u->flag?3:0)+(SBC4&v->flag?2:SBC2&v->flag?1:0)){
 // u LIT
-  case 0: {                                DQ(MIN(m,n), if(*s!=*t)R *s<*t; ++s; ++t;);} break;
-  case 1: {          q=(US*)t;       n>>=1; DQ(MIN(m,n), if(*s!=*q)R *s<*q; ++s; ++q;);} break;
-  case 2: {          g=(C4*)t;       n>>=2; DQ(MIN(m,n), if(*s!=*g)R *s<*g; ++s; ++g;);} break;
+ case 0: {                                DQ(MIN(m,n), if(*s!=*t)R *s<*t; ++s; ++t;);} break;
+ case 1: {          q=(US*)t;       n>>=1; DQ(MIN(m,n), if(*s!=*q)R *s<*q; ++s; ++q;);} break;
+ case 2: {          g=(C4*)t;       n>>=2; DQ(MIN(m,n), if(*s!=*g)R *s<*g; ++s; ++g;);} break;
 // u C2T
-  case 3: {p=(US*)s;           m>>=1;       DQ(MIN(m,n), if(*p!=*t)R *p<*t; ++p; ++t;);} break;
-  case 4: {p=(US*)s; q=(US*)t; m>>=1; n>>=1; DQ(MIN(m,n), if(*p!=*q)R *p<*q; ++p; ++q;);} break;
-  case 5: {p=(US*)s; g=(C4*)t; m>>=1; n>>=2; DQ(MIN(m,n), if(*p!=*g)R *p<*g; ++p; ++g;);} break;
+ case 3: {p=(US*)s;           m>>=1;       DQ(MIN(m,n), if(*p!=*t)R *p<*t; ++p; ++t;);} break;
+ case 4: {p=(US*)s; q=(US*)t; m>>=1; n>>=1; DQ(MIN(m,n), if(*p!=*q)R *p<*q; ++p; ++q;);} break;
+ case 5: {p=(US*)s; g=(C4*)t; m>>=1; n>>=2; DQ(MIN(m,n), if(*p!=*g)R *p<*g; ++p; ++g;);} break;
 // u C4T
-  case 6: {f=(C4*)s;           m>>=2;       DQ(MIN(m,n), if(*f!=*t)R *f<*t; ++f; ++t;);} break;
-  case 7: {f=(C4*)s; q=(US*)t; m>>=2; n>>=1; DQ(MIN(m,n), if(*f!=*q)R *f<*q; ++f; ++q;);} break;
-  case 8: {f=(C4*)s; g=(C4*)t; m>>=2; n>>=2; DQ(MIN(m,n), if(*f!=*g)R *f<*g; ++f; ++g;);} break;
+ case 6: {f=(C4*)s;           m>>=2;       DQ(MIN(m,n), if(*f!=*t)R *f<*t; ++f; ++t;);} break;
+ case 7: {f=(C4*)s; q=(US*)t; m>>=2; n>>=1; DQ(MIN(m,n), if(*f!=*q)R *f<*q; ++f; ++q;);} break;
+ case 8: {f=(C4*)s; g=(C4*)t; m>>=2; n>>=2; DQ(MIN(m,n), if(*f!=*g)R *f<*g; ++f; ++g;);} break;
  }
  R m<n;
 }
@@ -482,11 +482,11 @@ F1(jtsb1){
  clo=clock();
  ARGCHK1(w);
  switch(CTTZ(AT(w))){
-  default:  ASSERT(0,EVDOMAIN);
-  case C2TX:
-  case C4TX:
-  case LITX: abc=(1>=AR(w)?sbunstr(-1L,w):sbunlit(' ',w)); break;
-  case BOXX: abc=(sbunbox(w));
+ default:  ASSERT(0,EVDOMAIN);
+ case C2TX:
+ case C4TX:
+ case LITX: abc=(1>=AR(w)?sbunstr(-1L,w):sbunlit(' ',w)); break;
+ case BOXX: abc=(sbunbox(w));
  }  
  clo-=clock();
  R abc;
@@ -495,12 +495,13 @@ F1(jtsb1){
 F1(jtsb1){
  ARGCHK1(w);
  switch(CTTZ(AT(w))){
-  default:  ASSERT(0,EVDOMAIN);
-  case C2TX:
-  case C4TX:
-  case LITX: R 1>=AR(w)?sbunstr(-1L,w):sbunlit(' ',w);
-  case BOXX: R sbunbox(w);
-}}   /* monad s: main control */
+ default:  ASSERT(0,EVDOMAIN);
+ case C2TX:
+ case C4TX:
+ case LITX: R 1>=AR(w)?sbunstr(-1L,w):sbunlit(' ',w);
+ case BOXX: R sbunbox(w);
+ }
+}   /* monad s: main control */
 #endif
 
 
@@ -799,79 +800,79 @@ F2(jtsb2){A z;I j,k,n;
  RE(j=i0(a)); n=AN(w);
  ASSERT(!BETWEENC(j,1,7)||!n||SBT&AT(w),EVDOMAIN);
  switch(j){
-  default:   ASSERT(0,EVDOMAIN);
-  case 0:
-   RE(k=i0(w));
-   switch(k){
-    default: ASSERT(0,EVDOMAIN);
-    case 0:  R sc(AM(JT(jt,sbu)));
-    case 1:  R sc(AM(STRINGTABLE));
-    case 2: ;
-     READLOCK(JT(jt,sblock))
-     I sfill=FILLFACTOR; I sgap=GAP; I sroot=ROOT; A ssbs=STRINGTABLE; A ssbh=HASHTABLE;  // save fields
-     AK(JT(jt,sbu))=AKXR(4); AR(JT(jt,sbu))=2; AS(JT(jt,sbu))[1]=sizeof(SBU)/SZI; AS(JT(jt,sbu))[2]=1; AS(JT(jt,sbu))[3]=1; AN(JT(jt,sbu))=AS(JT(jt,sbu))[0]*AS(JT(jt,sbu))[1];  // reconstruct fields for extend
-     z=ca(JT(jt,sbu));
-     FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh); AR(JT(jt,sbu))=4;  // restore
-     READUNLOCK(JT(jt,sblock))
-     R z;
-    case 3:  READLOCK(JT(jt,sblock)) z=ca(STRINGTABLE); READUNLOCK(JT(jt,sblock)) R z;
-    case 4:  READLOCK(JT(jt,sblock)) z=ca(HASHTABLE); READUNLOCK(JT(jt,sblock)) R z;
-    case 5:  R sc(ROOT);
-    case 6:  R sc(FILLFACTOR);
-    case 7:  R sc(GAP);
-    case 10: R sbgetdata(num(0));
-    case 11: R sbcheck(num(0));
-    case 12: R sbhashstat(num(0));
-   }
-  case  1:   R sbstr(1L,w);
-  case -1:   R sbunstr(-1L,w);
-  case  2:   R sbstr(2L,w);
-  case -2:   R sbunstr(-2L,w);
-  case  3:   R sblit(C0,w);
-  case -3:   R sbunlit(C0,w);
-  case  4:   R sblit(' ',w);
-  case -4:   R sbunlit(' ',w);
-  case  5:   R sbbox(w);
-  case -5:   R sbunbox(w);
-  case  6:   RZ(z=ca(w)); AT(z)=INT; R z;
-  case -6:   R sbunind(w);
-  case  7:   R sborder(w);
-  case 10:   R sbsetdata(w);
-  case 16:   GAP = 4;                                       R sc(GAP);
-  case 17:   GAP++;         ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(GAP);
-  case 18:   GAP--;                                         R sc(GAP);
-  case 19:   FILLFACTOR=1024;                               R sc(FILLFACTOR);
-  case 20:   FILLFACTOR*=2;                                 R sc(FILLFACTOR);
-  case 21:   FILLFACTOR>>=1; ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(FILLFACTOR);
+ default:   ASSERT(0,EVDOMAIN);
+ case 0:
+  RE(k=i0(w));
+  switch(k){
+  default: ASSERT(0,EVDOMAIN);
+  case 0:  R sc(AM(JT(jt,sbu)));
+  case 1:  R sc(AM(STRINGTABLE));
+  case 2: ;
+   READLOCK(JT(jt,sblock))
+   I sfill=FILLFACTOR; I sgap=GAP; I sroot=ROOT; A ssbs=STRINGTABLE; A ssbh=HASHTABLE;  // save fields
+   AK(JT(jt,sbu))=AKXR(4); AR(JT(jt,sbu))=2; AS(JT(jt,sbu))[1]=sizeof(SBU)/SZI; AS(JT(jt,sbu))[2]=1; AS(JT(jt,sbu))[3]=1; AN(JT(jt,sbu))=AS(JT(jt,sbu))[0]*AS(JT(jt,sbu))[1];  // reconstruct fields for extend
+   z=ca(JT(jt,sbu));
+   FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh); AR(JT(jt,sbu))=4;  // restore
+   READUNLOCK(JT(jt,sblock))
+   R z;
+  case 3:  READLOCK(JT(jt,sblock)) z=ca(STRINGTABLE); READUNLOCK(JT(jt,sblock)) R z;
+  case 4:  READLOCK(JT(jt,sblock)) z=ca(HASHTABLE); READUNLOCK(JT(jt,sblock)) R z;
+  case 5:  R sc(ROOT);
+  case 6:  R sc(FILLFACTOR);
+  case 7:  R sc(GAP);
+  case 10: R sbgetdata(num(0));
+  case 11: R sbcheck(num(0));
+  case 12: R sbhashstat(num(0));
+  }
+ case  1:   R sbstr(1L,w);
+ case -1:   R sbunstr(-1L,w);
+ case  2:   R sbstr(2L,w);
+ case -2:   R sbunstr(-2L,w);
+ case  3:   R sblit(C0,w);
+ case -3:   R sbunlit(C0,w);
+ case  4:   R sblit(' ',w);
+ case -4:   R sbunlit(' ',w);
+ case  5:   R sbbox(w);
+ case -5:   R sbunbox(w);
+ case  6:   RZ(z=ca(w)); AT(z)=INT; R z;
+ case -6:   R sbunind(w);
+ case  7:   R sborder(w);
+ case 10:   R sbsetdata(w);
+ case 16:   GAP = 4;                                       R sc(GAP);
+ case 17:   GAP++;         ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(GAP);
+ case 18:   GAP--;                                         R sc(GAP);
+ case 19:   FILLFACTOR=1024;                               R sc(FILLFACTOR);
+ case 20:   FILLFACTOR*=2;                                 R sc(FILLFACTOR);
+ case 21:   FILLFACTOR>>=1; ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(FILLFACTOR);
 #ifdef TMP
-  case 22:
-    GAT0(z,INT,10,1); zv=AV(z);
-    zv[0] = tmp_lr      = 0;
-    zv[1] = tmp_rr      = 0;
-    zv[2] = tmp_lt      = 0;
-    zv[3] = tmp_while   = 0;
-    zv[4] = tmp_node    = 0;
-    zv[5] = tmp_reorder = 0;
-    zv[6] = tmp_moves   = 0;
-    zv[7] = tmp_imax    = 0;
-    zv[8] = tmp_lhit;
-    zv[9] = tmp_rhit;
-    R z;
-  case 23:
-    GAT0(z,INT,10,1);
-    zv[0] = tmp_lr;
-    zv[1] = tmp_rr;
-    zv[2] = tmp_lt;
-    zv[3] = tmp_while;
-    zv[4] = tmp_node;
-    zv[5] = tmp_reorder;
-    zv[6] = tmp_moves;
-    zv[7] = tmp_imax;
-    zv[8] = tmp_lhit;
-    zv[9] = tmp_rhit;
-    R z;
-  case 24:   R sc((I)clo);
-  case 25:   R scf(tickk);
+ case 22:
+  GAT0(z,INT,10,1); zv=AV(z);
+  zv[0] = tmp_lr      = 0;
+  zv[1] = tmp_rr      = 0;
+  zv[2] = tmp_lt      = 0;
+  zv[3] = tmp_while   = 0;
+  zv[4] = tmp_node    = 0;
+  zv[5] = tmp_reorder = 0;
+  zv[6] = tmp_moves   = 0;
+  zv[7] = tmp_imax    = 0;
+  zv[8] = tmp_lhit;
+  zv[9] = tmp_rhit;
+  R z;
+ case 23:
+  GAT0(z,INT,10,1);
+  zv[0] = tmp_lr;
+  zv[1] = tmp_rr;
+  zv[2] = tmp_lt;
+  zv[3] = tmp_while;
+  zv[4] = tmp_node;
+  zv[5] = tmp_reorder;
+  zv[6] = tmp_moves;
+  zv[7] = tmp_imax;
+  zv[8] = tmp_lhit;
+  zv[9] = tmp_rhit;
+  R z;
+ case 24:   R sc((I)clo);
+ case 25:   R scf(tickk);
 #endif
  }
 }

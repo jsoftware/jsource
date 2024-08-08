@@ -253,12 +253,13 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    bv=BAV(b); p=0; DO(bn, p+=bv[i];); 
    GATV0(t,INT,p,1); u=AV(t); xv[i]=incorp(t);
    GATV0(t,INT,p,1); v=AV(t); yv[i]=incorp(t); j=-1;
-   if(p)switch(q){
+   if(p)
+    switch(q){
     case  1: DO(bn, if(bv[i]){*u++=i  ; if(0<=j)*v++=i-j  ; j=i;}); *v=bn-j;   break;
     case -1: DO(bn, if(bv[i]){*u++=i+1; if(0<=j)*v++=i-j-1; j=i;}); *v=bn-j-1; break;
     case  2: DO(bn, if(bv[i]){*u++=j+1;         *v++=i-j  ; j=i;}); break;
     case -2: DO(bn, if(bv[i]){*u++=j+1;         *v++=i-j-1; j=i;}); break;
-   }
+    }
   }
  }
  RZ(x=ope(catalog(x)));
@@ -270,46 +271,46 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
 // this macro is used only for sparse matrices
 #define CUTSWITCH(EACHC)  \
  switch(id){A z,*za;C id1,*v1,*zc;I d,i,j,ke,q,*zi,*zs;                 \
-  case CPOUND:                                                               \
-   GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;); R z;                          \
-  case CDOLLAR:                                                              \
-   GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;);                               \
-   A zz,zw; RZ(zw=vec(INT,MAX(0,r-1),1+s)); IRS2(z,zw,NOEMSGSELF,0L,1L,jtover,zz); RETF(zz);  \
-  case CHEAD:                                                                \
-   GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
-   EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1,k); zc+=k;);                            \
-   R z;                                                                      \
-  case CTAIL:                                                                \
-   GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
-   EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1+k*(d-1),k); zc+=k;);                    \
-   R z;                                                                      \
-  case CCOMMA:                                                               \
-  case CLEFT:                                                                \
-  case CRIGHT:                                                               \
-   e-=e&&neg; DPMULDE(m*c,e,d);                                             \
-   GA(z,t,d,id==CCOMMA?2:1+r,s-1); zc=CAV(z); fillv0(t), mvc(d<<bplg(t),zc,(I)1<<bplg(t),jt->fillv0);                 \
-   zs=AS(z); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;                        \
-   EACHC(MC(zc,v1,d*k);  zc+=ke;);                                           \
-   R z;                                                                      \
-  case CBOX:                                                                 \
-   GA10(z,m?BOX:B01,m); za=AAV(z);                                         \
-   EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); *za++=incorp(y););             \
-   R z;                                                                      \
-  case CAT: case CATCO: case CAMP: case CAMPCO:                              \
-   if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),((id1&~1)==CBEHEAD))){           \
-    GA10(z,m?BOX:B01,m); za=AAV(z);                                        \
-    EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=incorp(y););               \
-    R z;                                                                     \
-   }                                                                         \
-   /* note: fall through */                                                  \
-  default:                                                                   \
-   if(!m){y=reitem(zeroionei(0),w); R iota(over(zeroionei(0),shape(h?df1(z,y,*hv):CALL1(f1,y,fs))));}                            \
-   GATV0(z,BOX,m,1); za=AAV(z); j=0;                                          \
-   if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; incorp(Zz); *za++=Zz;); \
-   }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); incorp(Zz); *za++=Zz; ); \
-   }                                                                         \
-   z=jtopenforassembly(jt,z);                                                                 \
-   {EPILOG(z);}                                                                \
+ case CPOUND:                                                               \
+  GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;); R z;                          \
+ case CDOLLAR:                                                              \
+  GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;);                               \
+  A zz,zw; RZ(zw=vec(INT,MAX(0,r-1),1+s)); IRS2(z,zw,NOEMSGSELF,0L,1L,jtover,zz); RETF(zz);  \
+ case CHEAD:                                                                \
+  GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
+  EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1,k); zc+=k;);                            \
+  R z;                                                                      \
+ case CTAIL:                                                                \
+  GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
+  EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1+k*(d-1),k); zc+=k;);                    \
+  R z;                                                                      \
+ case CCOMMA:                                                               \
+ case CLEFT:                                                                \
+ case CRIGHT:                                                               \
+  e-=e&&neg; DPMULDE(m*c,e,d);                                             \
+  GA(z,t,d,id==CCOMMA?2:1+r,s-1); zc=CAV(z); fillv0(t), mvc(d<<bplg(t),zc,(I)1<<bplg(t),jt->fillv0);                 \
+  zs=AS(z); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;                        \
+  EACHC(MC(zc,v1,d*k);  zc+=ke;);                                           \
+  R z;                                                                      \
+ case CBOX:                                                                 \
+  GA10(z,m?BOX:B01,m); za=AAV(z);                                         \
+  EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); *za++=incorp(y););             \
+  R z;                                                                      \
+ case CAT: case CATCO: case CAMP: case CAMPCO:                              \
+  if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),((id1&~1)==CBEHEAD))){           \
+   GA10(z,m?BOX:B01,m); za=AAV(z);                                        \
+   EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=incorp(y););               \
+   R z;                                                                     \
+  }                                                                         \
+  /* note: fall through */                                                  \
+ default:                                                                   \
+  if(!m){y=reitem(zeroionei(0),w); R iota(over(zeroionei(0),shape(h?df1(z,y,*hv):CALL1(f1,y,fs))));}                            \
+  GATV0(z,BOX,m,1); za=AAV(z); j=0;                                          \
+  if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; incorp(Zz); *za++=Zz;); \
+  }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); incorp(Zz); *za++=Zz; ); \
+  }                                                                         \
+  z=jtopenforassembly(jt,z);                                                                 \
+  {EPILOG(z);}                                                                \
  }
 
 #define EACHCUTSP(stmt)  \
@@ -353,10 +354,10 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
  GATV0(yy,INT,yn+1,1); yu=AV(yy); *yu++=p=pfx?n:-1;
  switch(pfx+(I )(((id&~1)==CLEFT)||id==CCOMMA?2:0)){  // [ ] ,
-  case 0:          DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
-  case 1: v+=yn-1; DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
-  case 2:          DQ(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,p-d);} ++v;); break;
-  case 3: v+=yn-1; DQ(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,d-p);} --v;);
+ case 0:          DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
+ case 1: v+=yn-1; DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
+ case 2:          DQ(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,p-d);} ++v;); break;
+ case 3: v+=yn-1; DQ(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,d-p);} --v;);
  }
  yu=AV(yy); p=pfx?yu[m]:0;
  if(!ISSPARSE(t)){C*wv;I c,k,r,*s;
@@ -372,53 +373,53 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
   RZ(ww=cps(w)); wwp=PAV(ww);
   GATV0(z,BOX,m,1); za=AAV(z);
   switch(AN(a)&&AV(a)[0]?2+pfx:pfx){
-   case 0:
-    p=yu[0]; DO(r, if(p<=yv[c*i]){p=i; break;});
-    for(i=1;i<=m;++i){
-     j=yu[i]; DO(q=r-p, if(j<yv[c*(p+i)]){q=i; break;}); qn=q;
-     if(neg)DO(qn=r-p, if(j-1<yv[c*(p+i)]){qn=i; break;});
-     AS(ww)[0]=(yu[i]-yu[i-1])-neg; 
-     SPB(wwp,i,sely(y,qn,p,1+yu[i-1]));
-     SPB(wwp,x,selx(x,qn,p));
-     RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     // reallocate ww if it was used, which we detect by seeing the usecount incremented.  This requires that everything that
-     // touches a buffer either copy it or rat().  So that ] doesn't have to rat(), we also detect reuse here if the same buffer
-     // is returned to us
-     p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
-     *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
-    }
-    break;
-   case 1:
-    p=yu[m]; DO(r, if(p<=yv[c*i]){p=i; break;});
-    for(i=m;i>=1;--i){
-     j=yu[i-1]; DO(q=r-p, if(j<=yv[c*(p+i)]){q=i; break;}); qn=q;
-     if(neg){j=yu[i]; qn=0; DO(r-p, if(j<yv[c*(p+i)]){qn=q-i; break;});}
-     AS(ww)[0]=(yu[i-1]-yu[i])-neg; 
-     SPB(wwp,i,sely(y,qn,p+q-qn,yu[i]+neg));
-     SPB(wwp,x,selx(x,qn,p+q-qn));
-     RZ(zz=h?df1(z0,ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
-     *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
-    }
-    break;
-   case 2:
-    for(i=1;i<=m;++i){
-     q=yu[i]-yu[i-1]; AS(ww)[0]=q-neg;
-     SPB(wwp,x,irs2(apv(q-neg,p,1L),x,0L,1L,-1L,jtfrom));
-     RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
-     *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
-    }
-    break;
-   case 3:
-    for(i=m;i>=1;--i){
-     q=yu[i-1]-yu[i]; AS(ww)[0]=q-neg;
-     SPB(wwp,x,irs2(apv(q-neg,p+neg,1L),x,0L,1L,-1L,jtfrom));
-     RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
-     *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
-    }
-    break;
+  case 0:
+   p=yu[0]; DO(r, if(p<=yv[c*i]){p=i; break;});
+   for(i=1;i<=m;++i){
+    j=yu[i]; DO(q=r-p, if(j<yv[c*(p+i)]){q=i; break;}); qn=q;
+    if(neg)DO(qn=r-p, if(j-1<yv[c*(p+i)]){qn=i; break;});
+    AS(ww)[0]=(yu[i]-yu[i-1])-neg; 
+    SPB(wwp,i,sely(y,qn,p,1+yu[i-1]));
+    SPB(wwp,x,selx(x,qn,p));
+    RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+    // reallocate ww if it was used, which we detect by seeing the usecount incremented.  This requires that everything that
+    // touches a buffer either copy it or rat().  So that ] doesn't have to rat(), we also detect reuse here if the same buffer
+    // is returned to us
+    p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+    *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
+   }
+   break;
+  case 1:
+   p=yu[m]; DO(r, if(p<=yv[c*i]){p=i; break;});
+   for(i=m;i>=1;--i){
+    j=yu[i-1]; DO(q=r-p, if(j<=yv[c*(p+i)]){q=i; break;}); qn=q;
+    if(neg){j=yu[i]; qn=0; DO(r-p, if(j<yv[c*(p+i)]){qn=q-i; break;});}
+    AS(ww)[0]=(yu[i-1]-yu[i])-neg; 
+    SPB(wwp,i,sely(y,qn,p+q-qn,yu[i]+neg));
+    SPB(wwp,x,selx(x,qn,p+q-qn));
+    RZ(zz=h?df1(z0,ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
+    p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+    *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
+   }
+   break;
+  case 2:
+   for(i=1;i<=m;++i){
+    q=yu[i]-yu[i-1]; AS(ww)[0]=q-neg;
+    SPB(wwp,x,irs2(apv(q-neg,p,1L),x,0L,1L,-1L,jtfrom));
+    RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+    p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+    *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
+   }
+   break;
+  case 3:
+   for(i=m;i>=1;--i){
+    q=yu[i-1]-yu[i]; AS(ww)[0]=q-neg;
+    SPB(wwp,x,irs2(apv(q-neg,p+neg,1L),x,0L,1L,-1L,jtfrom));
+    RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+    p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+    *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
+   }
+   break;
   }
   z=jtopenforassembly(jt,z);
   EPILOG(z);
@@ -1395,15 +1396,16 @@ F2(jtcut){F2PREFIP;A h=0;I flag=0,k;
  A z; fdefallo(z)
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
  switch(k){
- case 0:          if(FAV(a)->id==CBOX){   // <;.0
-  fdeffillall(z,0,CCUT,VERB, jtcut01,jtboxcut0, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX,FAV(z)->localuse.boxcut0.parm=~0, FAV(z)->localuse.boxcut0.func=jtcut02);
-  R z;
+ case 0: 
+  if(FAV(a)->id==CBOX){   // <;.0
+   fdeffillall(z,0,CCUT,VERB, jtcut01,jtboxcut0, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX,FAV(z)->localuse.boxcut0.parm=~0, FAV(z)->localuse.boxcut0.func=jtcut02);
+   R z;
   }
   fdeffillall(z,0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  case 2: case -2:
 #if 0 && C_AVX2 && PYXES //temp. disabled; broken scaf
- if(FAV(a)->id==CBOX){ //<;._2
-  fdeffillall(z,0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
+   if(FAV(a)->id==CBOX){ //<;._2
+   fdeffillall(z,0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  }
 #endif
 // fall through to...

@@ -112,27 +112,27 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
   ASSERT(BOX&AT(y),EVDOMAIN);
  }
  switch(id){
-  case CHOOK:
-   ASSERT(2==n,EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF.  fall through...
-  case CADVF:  // yv must have been set
-   // invisible bident/trident except for N/V V V fork
-   ASSERT(2==(n&-2),EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF
-   A h3=(n==3)?fx(C(yv[2])):mark;  // if 3d parm not given, use mark
-   R hook(fx(C(yv[0])),fx(C(yv[1])),h3);
-  case CFORK:
-   ASSERT(3==n,EVLENGTH);   // yv must have been set
-   RZ(f=fx(C(yv[0]))); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
-   RZ(g=fx(C(yv[1]))); ASSERT(AT(g)&VERB,     EVSYNTAX);
-   RZ(h=fx(C(yv[2]))); ASSERT(AT(h)&VERB,     EVSYNTAX);
-   R folk(f,g,h);
-  default:
-   if(id)fs=ds(id);
-   ASSERT(fs&&RHS&AT(fs),EVDOMAIN);
-   if(!n)R fs;
-   ASSERT(1==n&&ADV&AT(fs)||2==n&&CONJ&AT(fs),EVLENGTH);  // after this test, yv is known set
-   if(0<n){RZ(p=fx(C(yv[0]))); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
-   if(1<n){RZ(q=fx(C(yv[1]))); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
-   R 1==n ? df1(g,p,fs) : df2(g,p,q,fs);
+ case CHOOK:
+  ASSERT(2==n,EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF.  fall through...
+ case CADVF:  // yv must have been set
+  // invisible bident/trident except for N/V V V fork
+  ASSERT(2==(n&-2),EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF
+  A h3=(n==3)?fx(C(yv[2])):mark;  // if 3d parm not given, use mark
+  R hook(fx(C(yv[0])),fx(C(yv[1])),h3);
+ case CFORK:
+  ASSERT(3==n,EVLENGTH);   // yv must have been set
+  RZ(f=fx(C(yv[0]))); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
+  RZ(g=fx(C(yv[1]))); ASSERT(AT(g)&VERB,     EVSYNTAX);
+  RZ(h=fx(C(yv[2]))); ASSERT(AT(h)&VERB,     EVSYNTAX);
+  R folk(f,g,h);
+ default:
+  if(id)fs=ds(id);
+  ASSERT(fs&&RHS&AT(fs),EVDOMAIN);
+  if(!n)R fs;
+  ASSERT(1==n&&ADV&AT(fs)||2==n&&CONJ&AT(fs),EVLENGTH);  // after this test, yv is known set
+  if(0<n){RZ(p=fx(C(yv[0]))); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
+  if(1<n){RZ(q=fx(C(yv[1]))); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
+  R 1==n ? df1(g,p,fs) : df2(g,p,q,fs);
  }
 }
 
@@ -265,12 +265,12 @@ A jtunDD(J jt, A w){F1PREFIP;
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  // for BBLOCK/TBLOCK types, convert the lines to displayable by displaying them as if for error messages, and copying the result
  switch(t=(c->tcesx>>TCESXTYPEX)&31){
-  case CBBLOCK: case CBBLOCKEND: case CTBLOCK: RZ(z=unparse(x));  break;
-  case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV(z); 
-                              MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
-  case CLABEL:  case CGOTO:   RZ(z=ca(AAV(x)[0])); break;
-  case CFOR:                  RZ(z=(c[1].tcesx-c[0].tcesx)&TCESXSXMSK?AAV(x)[0]:spellcon(t)); break;
-  default:                    RZ(z=spellcon(t)); break;
+ case CBBLOCK: case CBBLOCKEND: case CTBLOCK: RZ(z=unparse(x));  break;
+ case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV(z); 
+                             MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
+ case CLABEL:  case CGOTO:   RZ(z=ca(AAV(x)[0])); break;
+ case CFOR:                  RZ(z=(c[1].tcesx-c[0].tcesx)&TCESXSXMSK?AAV(x)[0]:spellcon(t)); break;
+ default:                    RZ(z=spellcon(t)); break;
  }
  // if the CW we processed comes from the same source line, append it and return the combination; otherwise return the new
  if(j==c->source){

@@ -151,7 +151,7 @@ F2(jtevger){F2PREFIP;A hs;I k;
  RE(k=i0(w)); 
  if(k==GTRAIN)R exg(a);
  RZ(hs=fxeachv(RMAX,a));
-#if 0
+#if 0  // obsolete 
  switch(k){
   case GAPPEND:
    R fdef(0,CGRCO,VERB, jtcon1,jtcon2, a,w,hs, VGERL, RMAX,RMAX,RMAX);

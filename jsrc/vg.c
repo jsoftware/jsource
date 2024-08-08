@@ -745,16 +745,16 @@ F2(jtdgrade2){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2
 
 #define SORT4   \
  switch(n){                                                  \
-  case 2:                                                    \
-   if(OSGT(0,1))XC(0,1); break;                              \
-  case 3:                                                    \
-   if(OSGT(0,1))XC(0,1);                                     \
-   if(OSGT(1,2))if(OSGT(0,2))P3(2,0,1) else XC(1,2); break;  \
-  case 4:                                                    \
-   if(OSGT(0,1))XC(0,1);                                     \
-   if(OSGT(2,3))XC(2,3);                                     \
-   if(OSGT(1,3)){XC(0,2); XC(1,3);}                          \
-   if(OSGT(1,2))if(OSGT(0,2))P3(2,0,1) else XC(1,2);         \
+ case 2:                                                    \
+  if(OSGT(0,1))XC(0,1); break;                              \
+ case 3:                                                    \
+  if(OSGT(0,1))XC(0,1);                                     \
+  if(OSGT(1,2))if(OSGT(0,2))P3(2,0,1) else XC(1,2); break;  \
+ case 4:                                                    \
+  if(OSGT(0,1))XC(0,1);                                     \
+  if(OSGT(2,3))XC(2,3);                                     \
+  if(OSGT(1,3)){XC(0,2); XC(1,3);}                          \
+  if(OSGT(1,2))if(OSGT(0,2))P3(2,0,1) else XC(1,2);         \
  }
 
 #define NRANDS 36  // must be even

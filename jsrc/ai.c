@@ -383,10 +383,11 @@ F1(jtiden){A f,g,x=0;V*u,*v;
  case CMIN:    x=ainf; break;
  case CUNDER:  ; A t; df1(x,df1(t,mtv,iden(f)),inv(g)); break;
  case CAT:
-  if(CAMP==ID(f)&&(u=FAV(f),NOUN&AT(u->fgh[0])&&!AR(u->fgh[0])&&CSTILE==ID(u->fgh[1])))switch(ID(g)){
-  case CSTAR: case CEXP: x=num(1);  break;
-  case CPLUS:            x=num(0);
-  }
+  if(CAMP==ID(f)&&(u=FAV(f),NOUN&AT(u->fgh[0])&&!AR(u->fgh[0])&&CSTILE==ID(u->fgh[1])))
+   switch(ID(g)){
+   case CSTAR: case CEXP: x=num(1);  break;
+   case CPLUS:            x=num(0);
+   }
   break;
  case CBDOT: ;  // canned inverses for (bt b.)
   I bt=i0(g);

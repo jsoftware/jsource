@@ -390,18 +390,18 @@ F2(jtexpand){A z;B*av;C*wv,*zv;I an,i,k,p,wc,wk,wt,zn;
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats
  PRISTCLRF(w)   // this destroys w
  switch(wk){
-  case sizeof(I): EXPAND(I); break;
-  case sizeof(C): EXPAND(C); break;
-  case sizeof(S): EXPAND(S); break;
+ case sizeof(I): EXPAND(I); break;
+ case sizeof(C): EXPAND(C); break;
+ case sizeof(S): EXPAND(S); break;
 #if SY_64
-  case sizeof(int): EXPAND(int); break;
+ case sizeof(int): EXPAND(int); break;
 #endif
-  default:  
-   mvc(k*zn,zv,k,jt->fillv); // here we are trying to minimize calls to MC
-   for(i=p=0;i<an;++i)
-    if(*av++)p+=wk; 
-    else{if(p){MC(zv,wv,p); wv+=p; zv+=p; p=0;} zv+=wk;}
-   if(p){MC(zv,wv,p);}
+ default:  
+  mvc(k*zn,zv,k,jt->fillv); // here we are trying to minimize calls to MC
+  for(i=p=0;i<an;++i)
+   if(*av++)p+=wk; 
+   else{if(p){MC(zv,wv,p); wv+=p; zv+=p; p=0;} zv+=wk;}
+  if(p){MC(zv,wv,p);}
  }
  RETF(z);
 }    /* a&#^:_1 w or a&#^:_1!.f w */

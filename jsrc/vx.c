@@ -75,15 +75,16 @@ B jtxdivrem(J jt,X a,X w,X*qz,X*rz){ // a (<.@%,|~) w
 X jtxdiv(J jt,X a,X w,I mode){ // a mode@% w NB. X a, w // mode is <. or >. or ] 
  RZ(a&&w&&!jt->jerr); if(ISX0(a))R X0;ASSERT(XSGN(w), EWRAT); // infinity requres RAT
  switch(mode) {
-  case XMFLR/* a<.@%w*/: R Xfdiv_qXX(a, w);
-  case XMCEIL/*a>.@%w*/: R Xcdiv_qXX(a, w);
-  case XMEXACT/*  a%w*/: {
-    mpX(a); mpX(w); mpX0(z); mpX0(r);
-    jmpz_fdiv_qr(mpz, mpr, mpa, mpw); 
-    X z= Xmp(z); X r= Xmp(r);
-    ASSERT(0==XSGN(r), EWRAT);
-    R z;
-   }
+ case XMFLR/* a<.@%w*/: R Xfdiv_qXX(a, w);
+ case XMCEIL/*a>.@%w*/: R Xcdiv_qXX(a, w);
+ case XMEXACT/*  a%w*/:
+  {
+   mpX(a); mpX(w); mpX0(z); mpX0(r);
+   jmpz_fdiv_qr(mpz, mpr, mpa, mpw); 
+   X z= Xmp(z); X r= Xmp(r);
+   ASSERT(0==XSGN(r), EWRAT);
+   R z;
+  }
  }
  SEGFAULT; R0; // this should never happen
 }
@@ -144,12 +145,13 @@ static X jtIrootX(J jt, UI a, X w) { // a %:w NB. optionally with <. or >.
  PROLOG(0114);
  ASSERT(1&a||0<=XSGN(w), EWIRR);
  mpX(w); mpX0(z); I exact= jmpz_root(mpz, mpw, a); GEMP0;
- if (!exact) switch(jt->xmode){
-   default: ASSERTSYS(0,"xsqrt");
-   case XMEXACT: jmpz_clear(mpz); ASSERT(0,EWIRR);
-   case XMFLR: break;
-   case XMCEIL: jmpz_add_ui(mpz, mpz, 1);
- }
+ if(!exact)
+  switch(jt->xmode){
+  default: ASSERTSYS(0,"xsqrt");
+  case XMEXACT: jmpz_clear(mpz); ASSERT(0,EWIRR);
+  case XMFLR: break;
+  case XMCEIL: jmpz_add_ui(mpz, mpz, 1);
+  }
  R Xmp(z);
 }
 
@@ -206,11 +208,12 @@ XF2(jtxroota){ // a %: w (optionally with <. or >.)
   ASSERT(0<XSGN(w0), EWIMAG); // test/gx132.ijs wants imaginary cube roots
   I ia0= IgetXor(a0, ASSERT(0, EWIRR)); mpX(w0); mpX0(z0); // really want EWFL here
   I exact= jmpz_root(mpz0, mpw0, ia0); GEMP0;
-  if (!exact) switch(jt->xmode) {
-    case XMEXACT: ASSERT(0, EWIRR);
-    case XMFLR: if (mpz0->_mp_size<0) jmpz_sub(mpz0, mpz0, mpX1); break;
-    case XMCEIL: if (mpz0->_mp_size>0) jmpz_add(mpz0, mpz0, mpX1); break;
-  }
+  if (!exact)
+   switch(jt->xmode) {
+   case XMEXACT: ASSERT(0, EWIRR);
+   case XMFLR: if (mpz0->_mp_size<0) jmpz_sub(mpz0, mpz0, mpX1); break;
+   case XMCEIL: if (mpz0->_mp_size>0) jmpz_add(mpz0, mpz0, mpX1); break;
+   }
   z0= Xmp(z0);
  }
  A z;GA(z,XNUM,1L,0L,0L); *XAV(z)= z0;
@@ -264,17 +267,17 @@ static XF2(jtxbinp){PROLOG(0118);
 XF2(jtxbin){X d,z;PROLOG(0119);
  RZ(d=XsubXX(w,a));
  switch(4*(I)(0>XSGN(a))+2*(I)(0>XSGN(w))+(I)(0>XSGN(d))){
-  default:             ASSERTSYS(0,"xbin");
-  case 2: /* 0 1 0 */  /* Impossible */
-  case 5: /* 1 0 1 */  /* Impossible */
-  case 1: /* 0 0 1 */ 
-  case 4: /* 1 0 0 */ 
-  case 7: /* 1 1 1 */  R X0;
-  case 0: /* 0 0 0 */  R rifvsdebug(xbinp(a,w));
-  case 3: /* 0 1 1 */  
-   z=xbinp(a,XsubXX(a,XaddXX(w,X1))); RZ(z);    EPILOG(rifvsdebug(AV(a)[0]&1?XnegX(z):z));
-  case 6: /* 1 1 0 */  
-   z=xbinp(XsubXX(X_1,w),XsubXX(X_1,a)); RZ(z); EPILOG(rifvsdebug(AV(d)[0]&1?XnegX(z):z));
+ default:             ASSERTSYS(0,"xbin");
+ case 2: /* 0 1 0 */  /* Impossible */
+ case 5: /* 1 0 1 */  /* Impossible */
+ case 1: /* 0 0 1 */ 
+ case 4: /* 1 0 0 */ 
+ case 7: /* 1 1 1 */  R X0;
+ case 0: /* 0 0 0 */  R rifvsdebug(xbinp(a,w));
+ case 3: /* 0 1 1 */  
+  z=xbinp(a,XsubXX(a,XaddXX(w,X1))); RZ(z);    EPILOG(rifvsdebug(AV(a)[0]&1?XnegX(z):z));
+ case 6: /* 1 1 0 */  
+  z=xbinp(XsubXX(X_1,w),XsubXX(X_1,a)); RZ(z); EPILOG(rifvsdebug(AV(d)[0]&1?XnegX(z):z));
  }
 }
 

@@ -93,7 +93,8 @@ static A jtattv(J jt,U x){A z;C*s;
 static S jtattu(J jt,A w){C*s;I i,n;S z=0;
  RZ(w=vslit(w)); 
  n=AN(w); s=CAV(w);
- for(i=0;i<n;++i)switch(s[i]){
+ for(i=0;i<n;++i)
+  switch(s[i]){
   case 'r': z^=_A_RDONLY; break;
   case 'h': z^=_A_HIDDEN; break;
   case 's': z^=_A_SYSTEM; break;
@@ -102,7 +103,7 @@ static S jtattu(J jt,A w){C*s;I i,n;S z=0;
   case 'a': z^=_A_ARCH;   break;
   case '-':               break;
   default:  ASSERT(0,EVDOMAIN);
- }
+  }
  R z;
 }    /* convert from 6-element string into 16-bit attributes */
 
@@ -290,16 +291,16 @@ static C*modebuf(mode_t m,C* b){C c;I t=m;
  if(t&S_ISGID)b[6]=(b[6]=='x')?'s':'S';
  if(t&S_ISVTX)b[9]=(b[9]=='x')?'t':'T';
  switch(t&S_IFMT){
-  case S_IFBLK:  b[0]='b'; break;
-  case S_IFCHR:  b[0]='c'; break;
-  case S_IFDIR:  b[0]='d'; break;
+ case S_IFBLK:  b[0]='b'; break;
+ case S_IFCHR:  b[0]='c'; break;
+ case S_IFDIR:  b[0]='d'; break;
 #if !(SYS & SYS_UNIX)
-  case S_IFFIFO: b[0]='f'; break;    /*IVL */
+ case S_IFFIFO: b[0]='f'; break;    /*IVL */
 #endif
-  case S_IFLNK:  b[0]='l'; break;
-  case S_IFSOCK: b[0]='s'; break;
-  case S_IFREG:  b[0]='-'; break;
-  default:       b[0]='?';
+ case S_IFLNK:  b[0]='l'; break;
+ case S_IFSOCK: b[0]='s'; break;
+ case S_IFREG:  b[0]='-'; break;
+ default:       b[0]='?';
  }
  R b;
 }

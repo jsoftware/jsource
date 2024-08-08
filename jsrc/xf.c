@@ -198,10 +198,10 @@ DF1(jtjfsize){B b;F f;I m;
 static F jtixf(J jt,A w){F f;
  ASSERT(2<=AN(w),EVLENGTH);
  switch(CTTZNOFLAG(AT(w))){
-  default:  ASSERT(0,EVDOMAIN);
-  case B01X: ASSERT(0,EVFNUM);
-  case BOXX: ASSERT(2==AN(w),EVLENGTH); f=stdf(head(w)); break; 
-  case INTX: f=(F)AV(w)[0]; ASSERT(2<(UI)f,EVFNUM);
+ default:  ASSERT(0,EVDOMAIN);
+ case B01X: ASSERT(0,EVFNUM);
+ case BOXX: ASSERT(2==AN(w),EVLENGTH); f=stdf(head(w)); break; 
+ case INTX: f=(F)AV(w)[0]; ASSERT(2<(UI)f,EVFNUM);
  }
  R f?vfn(f):f;
 }
@@ -398,30 +398,30 @@ int rmdir2(const char *dir)
 
  while ((curr=fts_read(ftsp))) {
   switch (curr->fts_info) {
-   case FTS_NS:
-   case FTS_DNR:
-   case FTS_ERR:
+  case FTS_NS:
+  case FTS_DNR:
+  case FTS_ERR:
 //   fprintf(stderr, "%s: fts_read error: %s\n", curr->fts_accpath, strerror(curr->fts_errno));
-   break;
+  break;
 
-   case FTS_DC:
-   case FTS_DOT:
-   case FTS_NSOK:
-   // Not reached unless FTS_LOGICAL, FTS_SEEDOT, or FTS_NOSTAT were
-   // passed to fts_open()
-   break;
+  case FTS_DC:
+  case FTS_DOT:
+  case FTS_NSOK:
+  // Not reached unless FTS_LOGICAL, FTS_SEEDOT, or FTS_NOSTAT were
+  // passed to fts_open()
+  break;
 
-   case FTS_D:
-   // Do nothing. Need depth-first search, so directories are deleted
-   // in FTS_DP
-   break;
+  case FTS_D:
+  // Do nothing. Need depth-first search, so directories are deleted
+  // in FTS_DP
+  break;
 
-   case FTS_DP:
-   case FTS_F:
-   case FTS_SL:
-   case FTS_SLNONE:
-   case FTS_DEFAULT:
-    if (remove(curr->fts_accpath) < 0) {
+  case FTS_DP:
+  case FTS_F:
+  case FTS_SL:
+  case FTS_SLNONE:
+  case FTS_DEFAULT:
+   if (remove(curr->fts_accpath) < 0) {
 //    fprintf(stderr, "%s: Failed to remove: %s\n", curr->fts_path, strerror(errno));
     ret=-1;
    }

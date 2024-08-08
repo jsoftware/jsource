@@ -192,12 +192,13 @@ F1(jtseclevs){I k;
 F1(jtsysparmq){I k;
  RE(k=i0(w));
  switch(k){
-  default: ASSERT(0,EVINDEX);
-  case 0:  R sc(jt->fdepn);
-  case 1:  R sc(jt->fdepi);
-  case 2:  R sc(jt->fcalln);
-  case 3:  R sc(jt->callstacknext);
-}}
+ default: ASSERT(0,EVINDEX);
+ case 0:  R sc(jt->fdepn);
+ case 1:  R sc(jt->fdepi);
+ case 2:  R sc(jt->fcalln);
+ case 3:  R sc(jt->callstacknext);
+ }
+}
 
 F1(jtsysparms){A*wv;I k,m;
  ARGCHK1(w);
@@ -207,11 +208,11 @@ F1(jtsysparms){A*wv;I k,m;
  wv=AAV(w); 
  RE(k=i0(wv[0]));
  switch(k){
-  default: ASSERT(0,EVINDEX);
-  case 0:  RE(m=i0(wv[1])); jt->fdepn =(I4)m; break;
-  case 1:  ASSERT(0,EVDOMAIN);  /* jt->fdepi  can not be set */
-  case 2:  RE(m=i0(wv[1])); jt->fcalln=(I4)m; break;
-  case 3:  ASSERT(0,EVDOMAIN);  /* jt->fcalli can not be set */
+ default: ASSERT(0,EVINDEX);
+ case 0:  RE(m=i0(wv[1])); jt->fdepn =(I4)m; break;
+ case 1:  ASSERT(0,EVDOMAIN);  /* jt->fdepi  can not be set */
+ case 2:  RE(m=i0(wv[1])); jt->fcalln=(I4)m; break;
+ case 3:  ASSERT(0,EVDOMAIN);  /* jt->fcalli can not be set */
  }
  R mtm;
 }
@@ -220,12 +221,12 @@ F1(jtsysparms){A*wv;I k,m;
 F1(jtsysq){I j;
  ASSERTMTV(w);
  switch(SYS){
-  case SYS_PC:        j=0;                break;
-  case SYS_PC386:     j=1;                break;
-  case SYS_PCWIN:     j=SY_WIN32 ? (SY_WINCE ? 7 : 6) : 2; break;
-  case SYS_MACINTOSH: j=3;                break;
-  case SYS_OS2:       j=4;                break;
-  default:            j=SYS&SYS_UNIX ? 5 : -1;
+ case SYS_PC:        j=0;                break;
+ case SYS_PC386:     j=1;                break;
+ case SYS_PCWIN:     j=SY_WIN32 ? (SY_WINCE ? 7 : 6) : 2; break;
+ case SYS_MACINTOSH: j=3;                break;
+ case SYS_OS2:       j=4;                break;
+ default:            j=SYS&SYS_UNIX ? 5 : -1;
  }
  R sc(j);
 }

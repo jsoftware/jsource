@@ -240,19 +240,20 @@ static F1X(jtlnoun0){F1PREFIP;A s,x;B r1;
  ARGCHK1(w);
  r1=1==AR(w); RZ(s=thorn1(shape(w)));
  switch(CTTZ(AT(w))){
-  default:    R apip(s,cstr("$00"    ));  // over(cstr("i."),s);
-  case LITX:  x=cstr(   "''"); R r1?x:apip(apip(s,scc('$')),x);
-  case C2TX:  x=cstr("u: ''"); R r1?x:apip(apip(s,scc('$')),x);
-  case C4TX:  x=cstr("10&u: ''"); R r1?x:apip(apip(s,scc('$')),x);
-  case BOXX:  R apip(s,cstr("$a:"    ));
-  case B01X:  R apip(s,cstr("$0"     ));
-  case FLX:   R apip(s,cstr("$0."    ));
-  case CMPXX: R apip(s,cstr("$0j0"   ));
-  case QPX:   R apip(s,cstr("$0fq"   ));
-  case XNUMX: R apip(s,cstr("$0x"    ));
-  case RATX:  R apip(s,cstr("$0r0"   ));
-  case SBTX:  R apip(s,cstr("$s: ' '"));
-}}   /* empty dense array */
+ default:    R apip(s,cstr("$00"    ));  // over(cstr("i."),s);
+ case LITX:  x=cstr(   "''"); R r1?x:apip(apip(s,scc('$')),x);
+ case C2TX:  x=cstr("u: ''"); R r1?x:apip(apip(s,scc('$')),x);
+ case C4TX:  x=cstr("10&u: ''"); R r1?x:apip(apip(s,scc('$')),x);
+ case BOXX:  R apip(s,cstr("$a:"    ));
+ case B01X:  R apip(s,cstr("$0"     ));
+ case FLX:   R apip(s,cstr("$0."    ));
+ case CMPXX: R apip(s,cstr("$0j0"   ));
+ case QPX:   R apip(s,cstr("$0fq"   ));
+ case XNUMX: R apip(s,cstr("$0x"    ));
+ case RATX:  R apip(s,cstr("$0r0"   ));
+ case SBTX:  R apip(s,cstr("$s: ' '"));
+ }
+}   /* empty dense array */
 
 
 static F1X(jtlnoun){F1PREFIP;I t;
@@ -299,26 +300,26 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
  if(2<=n){g=C(av[1]); t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CADVF):((BETWEENC(id,CHOOK,CADVF))|lp(g))>0;}  // g: paren any invisible modifier
  if(3<=n){h=C(av[2]); t=hs; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK:((BETWEENC(id,CHOOK,CADVF)&&!b)|lp(h))>0;}  // h: in verb fork, paren hook; in trident, paren any train
  switch(!(b||BETWEENC(id,CHOOK,CADVF))?id:2==n?CHOOK:CFORK){  // if operator or invisible, ignore the type and space based on length
-  case CADVF:
-  case CHOOK:
-   GAT0(y,BOX,3,1); u=AAV(y);
-   u[0]=f=parfn(jtinplace,ft||lnn(f,g),f);
-   u[2]=g=parfn(jtinplace,gt||b,       g);
-   u[1]=str(' '==CAV(g)[0]||id==CADVF&&!laa(f,g)&&!((lp(f)>0)&&(lp(g)>0))?0L:1L," ");
-   RE(0); R raze(y);
-  case CFORK:
-   GAT0(y,BOX,5,1); u=AAV(y);
-   RZ(u[0]=f=parfn(jtinplace,ft||lnn(f,g),   f));
-   RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==CAV(g)[0]?0L:1L," "));
-   RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==CAV(h)[0]?0L:1L," "));
-   R raze(y);
-  default:
-   t0=parfn(jtinplace,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&(lp(f)>0),f);
-   t1=lsymb(id,w);
-   y=over(t0,laa(t0,t1)?over(chrspace,t1):t1);
-   if(1==n)R y;
-   t2=lcpx(g);
-   R over(y,laa(y,t2)?over(chrspace,t2):t2);
+ case CADVF:
+ case CHOOK:
+  GAT0(y,BOX,3,1); u=AAV(y);
+  u[0]=f=parfn(jtinplace,ft||lnn(f,g),f);
+  u[2]=g=parfn(jtinplace,gt||b,       g);
+  u[1]=str(' '==CAV(g)[0]||id==CADVF&&!laa(f,g)&&!((lp(f)>0)&&(lp(g)>0))?0L:1L," ");
+  RE(0); R raze(y);
+ case CFORK:
+  GAT0(y,BOX,5,1); u=AAV(y);
+  RZ(u[0]=f=parfn(jtinplace,ft||lnn(f,g),   f));
+  RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==CAV(g)[0]?0L:1L," "));
+  RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==CAV(h)[0]?0L:1L," "));
+  R raze(y);
+ default:
+  t0=parfn(jtinplace,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&(lp(f)>0),f);
+  t1=lsymb(id,w);
+  y=over(t0,laa(t0,t1)?over(chrspace,t1):t1);
+  if(1==n)R y;
+  t2=lcpx(g);
+  R over(y,laa(y,t2)?over(chrspace,t2):t2);
  }
 }
 

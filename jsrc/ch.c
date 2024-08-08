@@ -20,10 +20,10 @@ static A jthgv(J jt,B b,I n,A w,A self){A c,d,e,h,*hv,j,y;V*sv=FAV(self);
  RZ(d=hparm(j,sv->fgh[1],C(hv[1])));
  e=shift1(divide(w,apv(n,1L,1L)));
  switch((VERB&AT(sv->fgh[0])?2:0)+(VERB&AT(sv->fgh[1])?1:0)){
-  case 0: y=ascan(CSTAR,divide(tymes(c,e),d)); break;
-  case 1: y=divide(ascan(CSTAR,tymes(c,e)),d); break;
-  case 2: y=divide(tymes(c,ascan(CSTAR,e)),ascan(CSTAR,d)); break;
-  case 3: y=divide(tymes(c,ascan(CSTAR,e)),d);
+ case 0: y=ascan(CSTAR,divide(tymes(c,e),d)); break;
+ case 1: y=divide(ascan(CSTAR,tymes(c,e)),d); break;
+ case 2: y=divide(tymes(c,ascan(CSTAR,e)),ascan(CSTAR,d)); break;
+ case 3: y=divide(tymes(c,ascan(CSTAR,e)),d);
  }
  R b?over(num(0),ascan(CPLUS,y)):aslash(CPLUS,y);
 }    /* verb or complex cases */
@@ -98,11 +98,12 @@ DF1(jthgcoeff){PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=FAV(self);
   c=hparm(j,sv->fgh[0],hv0);
   d=hparm(j,sv->fgh[1],hv1);
   switch((VERB&AT(sv->fgh[0])?2:0)+(VERB&AT(sv->fgh[1])?1:0)){
-   case 0: y=ascan(CSTAR,divide(c,d)); break;
-   case 1: y=divide(ascan(CSTAR,c),d); break;
-   case 2: y=divide(c,ascan(CSTAR,d)); break;
-   case 3: y=divide(c,d);
- }}
+  case 0: y=ascan(CSTAR,divide(c,d)); break;
+  case 1: y=divide(ascan(CSTAR,c),d); break;
+  case 2: y=divide(c,ascan(CSTAR,d)); break;
+  case 3: y=divide(c,d);
+  }
+ }
  RZ(z=from(w,over(zeroionei(1),y)));
  EPILOG(z);
 }    /* coefficients indexed by w excluding !j */

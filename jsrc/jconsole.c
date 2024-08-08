@@ -45,9 +45,9 @@ static void sigint2(int k){jeinterrupt();}
 static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType){
  switch (fdwCtrlType){
 // Handle the CTRL-C signal.
-  case CTRL_C_EVENT:
-   jeinterrupt(); return TRUE;
-  default: return FALSE;
+ case CTRL_C_EVENT:
+  jeinterrupt(); return TRUE;
+ default: return FALSE;
  }
 }
 #endif

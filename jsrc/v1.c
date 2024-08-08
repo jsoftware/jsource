@@ -32,23 +32,24 @@ static F2(jtmatchs);
  {T h,* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;                                                   \
   q=k/sizeof(T);                                                             \
   switch(MCS(q,af,wf)){                                                      \
-   case MCS(1,0,1): h=*u; if(b1)DQ(mn, *x++=h   ==*v++;) else DQ(mn, *x++=h   !=*v++;)  break;  \
-   case MCS(1,1,0): h=*v; if(b1)DQ(mn, *x++=*u++==h;   ) else DQ(mn, *x++=*u++!=h;   ); break;  \
-   case MCS(1,1,1): if(b1){                                                  \
-                     if(1==n)      DQ(m,               *x++=*u++==*v++;  )   \
-                     else if(af<wf)DQ(m, h=*u++; DQ(n, *x++=h   ==*v++;);)   \
-                     else          DQ(m, h=*v++; DQ(n, *x++=*u++==h;   ););  \
-                    }else{                                                   \
-                     if(1==n)      DQ(m,               *x++=*u++!=*v++;  )   \
-                     else if(af<wf)DQ(m, h=*u++; DQ(n, *x++=h   !=*v++;);)   \
-                     else          DQ(m, h=*v++; DQ(n, *x++=*u++!=h;   ););  \
-                    } break;                                                 \
-   case MCS(2,0,1): DQ(mn, QLOOP;       v+=q;); break;                       \
-   case MCS(2,1,0): DQ(mn, QLOOP; u+=q;      ); break;                       \
-   case MCS(2,1,1): if(1==n)      DQ(m,       QLOOP; u+=q;   v+=q;)          \
-                    else if(af<wf)DQ(m, DQ(n, QLOOP; v+=q;); u+=q;)          \
-                    else          DQ(m, DQ(n, QLOOP; u+=q;); v+=q;); break;  \
- }}
+  case MCS(1,0,1): h=*u; if(b1)DQ(mn, *x++=h   ==*v++;) else DQ(mn, *x++=h   !=*v++;)  break;  \
+  case MCS(1,1,0): h=*v; if(b1)DQ(mn, *x++=*u++==h;   ) else DQ(mn, *x++=*u++!=h;   ); break;  \
+  case MCS(1,1,1): if(b1){                                                  \
+                    if(1==n)      DQ(m,               *x++=*u++==*v++;  )   \
+                    else if(af<wf)DQ(m, h=*u++; DQ(n, *x++=h   ==*v++;);)   \
+                    else          DQ(m, h=*v++; DQ(n, *x++=*u++==h;   ););  \
+                   }else{                                                   \
+                    if(1==n)      DQ(m,               *x++=*u++!=*v++;  )   \
+                    else if(af<wf)DQ(m, h=*u++; DQ(n, *x++=h   !=*v++;);)   \
+                    else          DQ(m, h=*v++; DQ(n, *x++=*u++!=h;   ););  \
+                   } break;                                                 \
+  case MCS(2,0,1): DQ(mn, QLOOP;       v+=q;); break;                       \
+  case MCS(2,1,0): DQ(mn, QLOOP; u+=q;      ); break;                       \
+  case MCS(2,1,1): if(1==n)      DQ(m,       QLOOP; u+=q;   v+=q;)          \
+                   else if(af<wf)DQ(m, DQ(n, QLOOP; v+=q;); u+=q;)          \
+                   else          DQ(m, DQ(n, QLOOP; u+=q;); v+=q;); break;  \
+  } \
+ }
 
 // comparison function for non-float arrays, in chunks of size k, storing match results into *x and
 // returning the first one as the result (nothing special about first, could be any one)

@@ -19,29 +19,29 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  if(TYPESNE(t,wt)){RZ(x=cvt(t,x)); RZ(e=cvt(t,e));}
  j=k=0; DO(f, if(b[i])++j; else ++k;);
  switch(2*b[f]+!equ(a,e)){
-  case 0:  /* dense and a equal e */
-   RZ(y=ca(y)); 
-   RZ(x=p?irs2(x,a,DUMMYSELF,AR(x)-(1+k),0L,jtover):irs2(a,x,DUMMYSELF,0L,AR(x)-(1+k),jtover)); 
-   break;
-  case 1:  /* dense and a not equal to e */
-   GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); RZ(q=odom(2L,c,v));
-   if(AN(q)>=AN(y)){
-    RZ(z=shape(x)); *AV(z)=AS(q)[0]; 
-    RZ(x=from(grade1(over(y,less(q,y))),over(x,reshape(z,e))));
-    y=q;
-   }
-   RZ(x=p?irs2(x,a,DUMMYSELF,AR(x)-(1+k),0L,jtover):irs2(a,x,DUMMYSELF,0L,AR(x)-(1+k),jtover));
-   break;
-  case 2:  /* sparse and a equals e */
-   RZ(y=ca(y)); 
-   if(!p){v=j+AV(y); DQ(m, ++*v; v+=c;);} 
-   break;
-  case 3:  /* sparse and a not equal to e */
-   GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); v[j]=1; RZ(q=odom(2L,c,v)); n=AS(q)[0];
-   if(p){RZ(y=over(y,q)); v=AV(y)+j+m*c; d=ws[f]; DQ(n, *v=d; v+=c;);}
-   else {RZ(y=over(q,y)); v=AV(y)+j+n*c;          DQ(m, ++*v; v+=c;);}
-   RZ(q=shape(x)); *AV(q)=n; RZ(q=reshape(q,a)); RZ(x=p?over(x,q):over(q,x));
-   if(f){RZ(q=grade1(y)); RZ(y=from(q,y)); RZ(x=from(q,x));}
+ case 0:  /* dense and a equal e */
+  RZ(y=ca(y)); 
+  RZ(x=p?irs2(x,a,DUMMYSELF,AR(x)-(1+k),0L,jtover):irs2(a,x,DUMMYSELF,0L,AR(x)-(1+k),jtover)); 
+  break;
+ case 1:  /* dense and a not equal to e */
+  GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); RZ(q=odom(2L,c,v));
+  if(AN(q)>=AN(y)){
+   RZ(z=shape(x)); *AV(z)=AS(q)[0]; 
+   RZ(x=from(grade1(over(y,less(q,y))),over(x,reshape(z,e))));
+   y=q;
+  }
+  RZ(x=p?irs2(x,a,DUMMYSELF,AR(x)-(1+k),0L,jtover):irs2(a,x,DUMMYSELF,0L,AR(x)-(1+k),jtover));
+  break;
+ case 2:  /* sparse and a equals e */
+  RZ(y=ca(y)); 
+  if(!p){v=j+AV(y); DQ(m, ++*v; v+=c;);} 
+  break;
+ case 3:  /* sparse and a not equal to e */
+  GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); v[j]=1; RZ(q=odom(2L,c,v)); n=AS(q)[0];
+  if(p){RZ(y=over(y,q)); v=AV(y)+j+m*c; d=ws[f]; DQ(n, *v=d; v+=c;);}
+  else {RZ(y=over(q,y)); v=AV(y)+j+n*c;          DQ(m, ++*v; v+=c;);}
+  RZ(q=shape(x)); *AV(q)=n; RZ(q=reshape(q,a)); RZ(x=p?over(x,q):over(q,x));
+  if(f){RZ(q=grade1(y)); RZ(y=from(q,y)); RZ(x=from(q,x));}
  }
  GASPARSE(z,STYPE(t),1,zr,ws); 
  if(r)++AS(z)[f]; else AS(z)[wr]=2;
@@ -96,9 +96,9 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
    else if(j==n)cmp=-1;
    else         {cmp=0; DO(c, if(u[i]!=v[i]){cmp=u[i]<v[i]?-1:1; break;});}
    switch(cmp){
-    case -1: ICPY(yv,u,c); u+=c; ++i; MC(xv,   av,ak); av+=ak; break;
-    case  0: ICPY(yv,u,c); u+=c; ++i; MC(xv,   av,ak); av+=ak; ++p;  /* fall thru */
-    case  1: ICPY(yv,v,c); v+=c; ++j; MC(xv+ak,wv,wk); wv+=wk;
+   case -1: ICPY(yv,u,c); u+=c; ++i; MC(xv,   av,ak); av+=ak; break;
+   case  0: ICPY(yv,u,c); u+=c; ++i; MC(xv,   av,ak); av+=ak; ++p;  /* fall thru */
+   case  1: ICPY(yv,v,c); v+=c; ++j; MC(xv+ak,wv,wk); wv+=wk;
    }
    yv+=c; xv+=xk;
   }

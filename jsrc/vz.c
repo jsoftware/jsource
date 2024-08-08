@@ -28,11 +28,12 @@ ZF1(jtztrend){D a,b,t;Z z;
  if(ZOV(v)){a/=2; b/=2;}
  t=hypoth(a,b); 
  if(t<inf){if(t){z.re=a/t; z.im=b/t;}else{z.re=a; z.im=b;}}  // clang17-18 fail on if(!t)++t..., doing the divide too early
- else switch((INF(a)?2:0)+INF(b)){
+ else
+  switch((INF(a)?2:0)+INF(b)){
   case 1: z.re=0.0;    z.im=(D)SGN(b); break;
   case 2: z.re=(D)SGN(a); z.im=0.0;    break;
   case 3: ZASSERT(0,EVNAN);
- }
+  }
  R z;
 }
 
@@ -243,21 +244,22 @@ ZF2(jtzcir){D r;I x;Z z;
  x=(I)jround(r);
  ZASSERT(BETWEENC(x,-12,12)&&FFEQ(x,r)&&!u.im,EVDOMAIN);  // x must be integer
  switch(x){
-  default: ZASSERT(0,EVDOMAIN);
-  case  0: R zsqrt(ztymes(zplus(z1,v),zminus(z1,v)));
-  case  1: R zsin(v);           case  -1: R zasin(v);
-  case  2: R zcos(v);           case  -2: R zacos(v);
-  case  3: R ztan(v);           case  -3: R zatan(v);
-  case  4: R zp4(v);            case  -4: R zm4(v);
-  case  5: R zsinh(v);          case  -5: R zasinh(v);
-  case  6: R zcosh(v);          case  -6: R zacosh(v);
-  case  7: R ztanh(v);          case  -7: R zatanh(v);
-  case  8: R zp8(v);            case  -8: R znegate(zp8(v));
-  case  9: z.re=v.re;    R z;   case  -9: R v;
-  case 10: z.re=zmag(v); R z;   case -10: R zconjug(v);
-  case 11: z.re=v.im;    R z;   case -11: R zjx(v);
-  case 12: R zarc(v);           case -12: R zexp(zjx(v));
-}}
+ default: ZASSERT(0,EVDOMAIN);
+ case  0: R zsqrt(ztymes(zplus(z1,v),zminus(z1,v)));
+ case  1: R zsin(v);           case  -1: R zasin(v);
+ case  2: R zcos(v);           case  -2: R zacos(v);
+ case  3: R ztan(v);           case  -3: R zatan(v);
+ case  4: R zp4(v);            case  -4: R zm4(v);
+ case  5: R zsinh(v);          case  -5: R zasinh(v);
+ case  6: R zcosh(v);          case  -6: R zacosh(v);
+ case  7: R ztanh(v);          case  -7: R zatanh(v);
+ case  8: R zp8(v);            case  -8: R znegate(zp8(v));
+ case  9: z.re=v.re;    R z;   case  -9: R v;
+ case 10: z.re=zmag(v); R z;   case -10: R zconjug(v);
+ case 11: z.re=v.im;    R z;   case -11: R zjx(v);
+ case 12: R zarc(v);           case -12: R zexp(zjx(v));
+ }
+}
 
 B jtztridiag(J jt,I n,A a,A x){I i,j,n1=n-1;Z*av,d,p,*xv;
  av=ZAV(a); xv=ZAV(x); d=xv[0];

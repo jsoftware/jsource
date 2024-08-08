@@ -1036,8 +1036,7 @@ static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  I k=1,i,n;
  char gn[256];
 
- switch(CTTZNOFLAG(*jtype))
- {
+ switch(CTTZNOFLAG(*jtype)){
  case LITX:
  case B01X:
   n = sizeof(char);

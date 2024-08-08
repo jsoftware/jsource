@@ -223,10 +223,10 @@ static KF1(jtDfromE){D *zv=yv; E *wv=EAV(w);
 
 static X jtxd1(J jt, D p, I mode) {PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  switch(mode){
-  case XMFLR:   p=e;                            break;
-  case XMCEIL:  p=jceil(p);                     break;
-  case XMEXACT: ASSERT(TEQ(p,e),EVDOMAIN); p=e; break;
-  case XMEXMT:  if(!TEQ(p,e))R vec(INT,0L,&iotavec[-IOTAVECBEGIN]);
+ case XMFLR:   p=e;                            break;
+ case XMCEIL:  p=jceil(p);                     break;
+ case XMEXACT: ASSERT(TEQ(p,e),EVDOMAIN); p=e; break;
+ case XMEXMT:  if(!TEQ(p,e))R vec(INT,0L,&iotavec[-IOTAVECBEGIN]);
  }
  ASSERT(p!= inf, EWRAT);
  ASSERT(p!=-inf, EWRAT);
@@ -852,13 +852,13 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
   ASSERT(!((t|wt)&(SBT+XD+XZ+NUMERIC+BOX)),EVDOMAIN);  // No conversions for these types
 #define CVCASECHAR(a,b) ((2*(C2T>>(a))+(C2T>>(b))))  // distinguish character cases - note last case is impossible (equal types)
   switch (CVCASECHAR(CTTZ(t),CTTZ(wt))){
-   case CVCASECHAR(LITX, C2TX): R C1fromC2(w, yv);
-   case CVCASECHAR(LITX, C4TX): R C1fromC4(w, yv);
-   case CVCASECHAR(C2TX, LITX): R C2fromC1(w, yv);
-   case CVCASECHAR(C2TX, C4TX): R C2fromC4(w, yv);
-   case CVCASECHAR(C4TX, LITX): R C4fromC1(w, yv);
-   case CVCASECHAR(C4TX, C2TX): R C4fromC2(w, yv);
-   default:                ASSERT(0, EVDOMAIN);
+  case CVCASECHAR(LITX, C2TX): R C1fromC2(w, yv);
+  case CVCASECHAR(LITX, C4TX): R C1fromC4(w, yv);
+  case CVCASECHAR(C2TX, LITX): R C2fromC1(w, yv);
+  case CVCASECHAR(C2TX, C4TX): R C2fromC4(w, yv);
+  case CVCASECHAR(C4TX, LITX): R C4fromC1(w, yv);
+  case CVCASECHAR(C4TX, C2TX): R C4fromC2(w, yv);
+  default:                ASSERT(0, EVDOMAIN);
   }
  }
  // types here must both be among B01 INT FL CMPX XNUM RAT INT2 INT4 SP QP  0 2 3 4 6 7 9 10 12 13
@@ -1046,18 +1046,19 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  ASSERT(!ISSPARSE(t),EVNONCE);
  RE(j=i0(a));
  switch(j){
-  case -2: R aslash1(CDIV,w);
-  case -1: R bcvt(1,w);
-  case  1: R xco1(w);
-  case  2: 
-   if(!(t&RAT))RZ(w=cvt(RAT,w));
-   GATV0(z,XNUM,2*n,r+1); MCISH(AS(z),AS(w),r) AS(z)[r]=2;  // don't overfetch from AS(w)
-   MC(AV(z),AV(w),2*n*SZI);
-   R z;
-  default:
-   ASSERT(20<=j,EVDOMAIN);
-   ASSERT(0,EVNONCE);
-}}
+ case -2: R aslash1(CDIV,w);
+ case -1: R bcvt(1,w);
+ case  1: R xco1(w);
+ case  2: 
+  if(!(t&RAT))RZ(w=cvt(RAT,w));
+  GATV0(z,XNUM,2*n,r+1); MCISH(AS(z),AS(w),r) AS(z)[r]=2;  // don't overfetch from AS(w)
+  MC(AV(z),AV(w),2*n*SZI);
+  R z;
+ default:
+  ASSERT(20<=j,EVDOMAIN);
+  ASSERT(0,EVNONCE);
+ }
+}
 
 // 9!:23 audit indices
 // x is indexes (may be sparse)

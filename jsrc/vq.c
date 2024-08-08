@@ -22,12 +22,13 @@
 QF1(jtqstd){ // canonical form for w: 1155r210 -> 11r2
  if (unlikely(!w.n || !w.d)) RQ0; // quick exit for jsignal from an xnum routine
  if (ISQ0(w)) RQ0;
- if (ISQinf(w)) switch (QSGN(w)) { // libgmp does not handle infinity
-   case -1: w.n= X_1; R w;
-   case 0: jsignal(EVNAN); RQ0;
-   case 1: w.n= X1; R w;
-   default: SEGFAULT; // numerator of infinity must be magnitude 1
- }
+ if (ISQinf(w))
+  switch (QSGN(w)) { // libgmp does not handle infinity
+  case -1: w.n= X_1; R w;
+  case 0: jsignal(EVNAN); RQ0;
+  case 1: w.n= X1; R w;
+  default: SEGFAULT; // numerator of infinity must be magnitude 1
+  }
  if (!ISQINT(w)) {
   X gcd= XgcdXX(w.n, w.d);
   if (0>XSGN(w.d)) XSGN(gcd)= -XSGN(gcd); // gcd is not shared

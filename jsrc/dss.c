@@ -36,10 +36,10 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  ASSERT(d!=0,EVDOMAIN);                        /* must have a call                */
  if(a)RE(n=lnumcw(i0(a),d->dcc));           // for dyad, source line # to cw line #
  switch(c){
-  case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line (executing it), then stop in this function
-  case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line(executing it), then stop in any function
-  case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;  // rerun stop line, stop in calling function
-  case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) jt->jerr=EVCUTSTACK; break;  // terminate current verb, resume previous fn, stop after executing there.  Set jerr which will fail sentence and set z=0
+ case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line (executing it), then stop in this function
+ case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line(executing it), then stop in any function
+ case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;  // rerun stop line, stop in calling function
+ case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) jt->jerr=EVCUTSTACK; break;  // terminate current verb, resume previous fn, stop after executing there.  Set jerr which will fail sentence and set z=0
  }
  // Return a suspension-ending value.  Kludge we also set a flag to process the step because the labs can't route the value correctly
  JT(jt,dbuser)|=TRACEDBSUSSS;  // indicate single-step pending.  This is non-reentrant and may have multithread issues

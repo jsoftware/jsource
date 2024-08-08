@@ -65,19 +65,19 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
   if(unlikely(TYPESNE(t,wt)))RZ(w=cvt(t,w));
   av=CAV(a); wv=CAV(w);
   switch(CTTZ(t)){
-   case INTX:  COMPLOOQ (I, m  );         break;
-   default:   COMPLOOQ (UC,m  );         break;
-   case C2TX:  COMPLOOQ (US,m  );         break;
-   case C4TX:  COMPLOOQ (C4,m  );         break;
-   case SBTX:  COMPLOOS (SB,m  );         break;
-   case FLX:   COMPLOOQ (D, m  );         break;
-   case QPX:
-   case CMPXX: COMPLOOQ (D, m+m);         break;
-   case XNUMX: COMPLOOQG(X, m, xcompare); break;
-   case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
-   case INT2X:  COMPLOOQ (I2, m  );         break;
-   case INT4X:  COMPLOOQ (I4, m  );         break;
-   case BOXX:  {COMPDCLQ(A);I j; DO(m, if(j=jtcompare(jtinplace,x[i],y[i]))R j;);} break;
+  case INTX:  COMPLOOQ (I, m  );         break;
+  default:   COMPLOOQ (UC,m  );         break;
+  case C2TX:  COMPLOOQ (US,m  );         break;
+  case C4TX:  COMPLOOQ (C4,m  );         break;
+  case SBTX:  COMPLOOS (SB,m  );         break;
+  case FLX:   COMPLOOQ (D, m  );         break;
+  case QPX:
+  case CMPXX: COMPLOOQ (D, m+m);         break;
+  case XNUMX: COMPLOOQG(X, m, xcompare); break;
+  case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
+  case INT2X:  COMPLOOQ (I2, m  );         break;
+  case INT4X:  COMPLOOQ (I4, m  );         break;
+  case BOXX:  {COMPDCLQ(A);I j; DO(m, if(j=jtcompare(jtinplace,x[i],y[i]))R j;);} break;
   }
  }
  if(1>=ar)R an==wn?0:RETGT(an>wn);   // all compared items matched.  If they weren't the same length, the longer is bigger
@@ -96,15 +96,15 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
   ib=tv[b]; nb=tv[1+b]; xb=xv+xc*ib;                                                                     \
   while(1){                                                                                              \
    switch((ia<na?2:0)+(I )(ib<nb)){                                                                          \
-    case 0: R a<b;                                                                                  \
-    case 1: c= 1; break;                                                                                 \
-    case 2: c=-1; break;                                                                                 \
-    case 3: c= 0; ya=yv+yc*ia; yb=yv+yc*ib; DO(p, if(c=ya[i]-yb[i]){c=0>c?-1:1; break;});                \
+   case 0: R a<b;                                                                                  \
+   case 1: c= 1; break;                                                                                 \
+   case 2: c=-1; break;                                                                                 \
+   case 3: c= 0; ya=yv+yc*ia; yb=yv+yc*ib; DO(p, if(c=ya[i]-yb[i]){c=0>c?-1:1; break;});                \
    }                                                                                                     \
    switch(c){                                                                                            \
-    case -1: DO(xc, if(xa[i] <(esel))R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >(esel))R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia;               break;  \
-    case  1: DO(xc, if((esel)<xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if((esel)>xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1););               xb+=xc; ++ib; break;  \
-    case  0: DO(xc, if(xa[i] <xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;         \
+   case -1: DO(xc, if(xa[i] <(esel))R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >(esel))R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia;               break;  \
+   case  1: DO(xc, if((esel)<xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if((esel)>xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1););               xb+=xc; ++ib; break;  \
+   case  0: DO(xc, if(xa[i] <xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;         \
  }}}
 
 #define COMPSPDS(f,T,e1init,esel)  \
@@ -118,15 +118,15 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
   ib=tv[b]; nb=tv[1+b]; xb=xv+xc*ib;                                                                     \
   while(1){                                                                                              \
    switch((ia<na?2:0)+(I )(ib<nb)){                                                                          \
-    case 0: R a<b;                                                                                  \
-    case 1: c= 1; break;                                                                                 \
-    case 2: c=-1; break;                                                                                 \
-    case 3: c= 0; ya=yv+yc*ia; yb=yv+yc*ib; DO(p, if(c=ya[i]-yb[i]){c=0>c?-1:1; break;});                \
+   case 0: R a<b;                                                                                  \
+   case 1: c= 1; break;                                                                                 \
+   case 2: c=-1; break;                                                                                 \
+   case 3: c= 0; ya=yv+yc*ia; yb=yv+yc*ib; DO(p, if(c=ya[i]-yb[i]){c=0>c?-1:1; break;});                \
    }                                                                                                     \
    switch(c){                                                                                            \
-    case -1: DO(n, if(xa[i] <(esel))R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >(esel))R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia;               break;   \
-    case  1: DO(n, if((esel)<xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if((esel)>xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1););               xb+=xc; ++ib; break;   \
-    case  0: DO(n, if(xa[i] <xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;          \
+   case -1: DO(n, if(xa[i] <(esel))R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >(esel))R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia;               break;   \
+   case  1: DO(n, if((esel)<xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if((esel)>xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1););               xb+=xc; ++ib; break;   \
+   case  0: DO(n, if(xa[i] <xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;          \
  }}}
 
 COMPSPDS(compspdsB,B,0,                   (e1,e)       )

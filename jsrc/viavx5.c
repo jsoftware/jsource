@@ -94,28 +94,29 @@ IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
   // m1=index of last item-1, which may be less than m-1 if there were discarded duplicates (signaled by last index <0)
   s=hv[bk?1-asct:asct-1]; m1=0>s?~s:asct-1; hu=hv-m1*bk;
   switch(md){
-   // self-indexes
-   case IIDOT|IIMODREFLEX:        BSLOOPAA(1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
-   case IFORKEY|IIMODREFLEX: {I nuniq=0;BSLOOPAA(1,++nuniq;zv[p]=p+1,zv[q]=p;zv[p]++,++nuniq;zv[q]=(p=q)+1); zv+=asct; AM(h)=nuniq;     break;}
-   case IICO|IIMODREFLEX:         BSLOOPAA(-1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
-   case INUBSV|IIMODREFLEX:       BSLOOPAA(1,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=asct;     break;
-   case INUB|IIMODREFLEX:         BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
-   case INUBI|IIMODREFLEX:        BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i])*zi++=i;);                  ZISHAPE; break;
-   // searches, by binary search
-   case IIDOT:        BSLOOPAW(*zv++=-2==q?hu[j]:asct);                       break;
-   case IICO:         BSLOOPAW(*zv++=-2==q?hu[j]:asct);                       break;
-   case IEPS:         BSLOOPAW(*zb++=-2==q);                               break;
-   case ILESS:        BSLOOPAW(if(-2< q){MC(zc,u,k); zc+=k;}); ZCSHAPE;    break;
-   case IINTER:       BSLOOPAW(if(!(-2< q)){MC(zc,u,k); zc+=k;}); ZCSHAPE;    break;
-   case II0EPS:  s=asct; BSLOOPAW(if(-2< q){s=i; break;});        *zi++=s;    break;
-   case IJ0EPS:  s=asct; BSLOOQAW(if(-2< q){s=i; break;});        *zi++=s;    break;
-   case II1EPS:  s=asct; BSLOOPAW(if(-2==q){s=i; break;});        *zi++=s;    break;
-   case IJ1EPS:  s=asct; BSLOOQAW(if(-2==q){s=i; break;});        *zi++=s;    break;
-   case IANYEPS: s=0; BSLOOPAW(if(-2==q){s=1; break;});        *zb++=(B)s; break;
-   case IALLEPS: s=1; BSLOOPAW(if(-2< q){s=0; break;});        *zb++=(B)s; break;
-   case ISUMEPS: s=0; BSLOOPAW(if(-2==q)++s);                  *zi++=s;    break;
-   case IIFBEPS:      BSLOOPAW(if(-2==q)*zi++=i);              ZISHAPE;    break;
- }}
+  // self-indexes
+  case IIDOT|IIMODREFLEX:        BSLOOPAA(1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
+  case IFORKEY|IIMODREFLEX: {I nuniq=0;BSLOOPAA(1,++nuniq;zv[p]=p+1,zv[q]=p;zv[p]++,++nuniq;zv[q]=(p=q)+1); zv+=asct; AM(h)=nuniq;     break;}
+  case IICO|IIMODREFLEX:         BSLOOPAA(-1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
+  case INUBSV|IIMODREFLEX:       BSLOOPAA(1,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=asct;     break;
+  case INUB|IIMODREFLEX:         BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
+  case INUBI|IIMODREFLEX:        BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i])*zi++=i;);                  ZISHAPE; break;
+  // searches, by binary search
+  case IIDOT:        BSLOOPAW(*zv++=-2==q?hu[j]:asct);                       break;
+  case IICO:         BSLOOPAW(*zv++=-2==q?hu[j]:asct);                       break;
+  case IEPS:         BSLOOPAW(*zb++=-2==q);                               break;
+  case ILESS:        BSLOOPAW(if(-2< q){MC(zc,u,k); zc+=k;}); ZCSHAPE;    break;
+  case IINTER:       BSLOOPAW(if(!(-2< q)){MC(zc,u,k); zc+=k;}); ZCSHAPE;    break;
+  case II0EPS:  s=asct; BSLOOPAW(if(-2< q){s=i; break;});        *zi++=s;    break;
+  case IJ0EPS:  s=asct; BSLOOQAW(if(-2< q){s=i; break;});        *zi++=s;    break;
+  case II1EPS:  s=asct; BSLOOPAW(if(-2==q){s=i; break;});        *zi++=s;    break;
+  case IJ1EPS:  s=asct; BSLOOQAW(if(-2==q){s=i; break;});        *zi++=s;    break;
+  case IANYEPS: s=0; BSLOOPAW(if(-2==q){s=1; break;});        *zb++=(B)s; break;
+  case IALLEPS: s=1; BSLOOPAW(if(-2< q){s=0; break;});        *zb++=(B)s; break;
+  case ISUMEPS: s=0; BSLOOPAW(if(-2==q)++s);                  *zi++=s;    break;
+  case IIFBEPS:      BSLOOPAW(if(-2==q)*zi++=i);              ZISHAPE;    break;
+  }
+ }
  R h;
 }    /* a i.!.0 w on boxed a,w by grading and binary search */
 #endif

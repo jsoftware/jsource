@@ -197,50 +197,50 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
  // (it is queried by 18!:_2)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
-  case -1: case 0:  // named locale - we have a write lock on stloc->lock
-   AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
-   v=symnew(&LXAV0(g)[SYMLINFO],0);    // put new block into locales table, allocate at head of chain without non-PERMANENT marking,  The symbol must be available
-   v->flag|=LINFO;  // mark as not having a value
-   RZ(x=nfs(n,u));  // this fills in the hash for the name
-   // Install name and path.  Path is 'z'. correct for all but z locale itself, which is overwritten at initialization
-   LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);   // zpath is permanent.
-   // Assign this name in the locales symbol table to point to the allocated SYMB block
-   // This does ras() on g
-   // Put the locale name into stloc.  We can't use symbis etc because we have to keep the continuous lock on stlock to prevent multiple assignment of a named locale
-   // (and so we don't really need to ra/fa when adding/removing from stloc) 
-   // We know the name is not in the table; we spin to the end of the chain on the theory that most-used locales will be loaded first
-   UI4 hsh=NAV(x)->hash; L *sympv=SYMORIGIN;  // hash of name; origin of symbol tables
-   LX *hv=LXAV0(JT(jt,stloc))+SYMHASH(hsh,AN(JT(jt,stloc))-SYMLINFOSIZE);  // get hashchain base in stloc
-   LX tx=SYMNEXT(*hv); if(tx!=0)NOUNROLL while(SYMNEXT(sympv[tx].next)!=0)tx=SYMNEXT(sympv[tx].next);  // tx->last in chain, or 0 if chain empty
-   v=symnew(hv,tx); v->name=x; v->val=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; save value; ZAP to match store of value
-   LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
-   ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
-   AR(g)=ARNAMED;   // set rank to indicate named locale
-   LXAV0(g)[SYMLEXECCT]=((k+1)<<EXECCTPERMX)+EXECCTNOTDELD;  // mark permanent unless k is _1
-   break;
-  case 1:  // numbered locale - we have no lock
-   AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
-   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0));   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
-   v->flag|=LINFO;  // mark as not having a value (for diags.  value is used for locnum)
-   // Put this locale into the in-use list at an empty location.  ras(g) at that time
-   RZ(x=nfs(20,&CAV(ds(CALP))['a']))  // create the name block before lock.  The hash will be meaningless
-   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0);   // put the locale into the numbered list; exit if error (with lock removed); zap g
-   I nmlen=sprintf(NAV(x)->s,FMTI,n); AN(x)=nmlen; NAV(x)->m=nmlen;  // install true locale number and length of name
-   LOCNUMW(g)=(A)n; // save locale# in SYMLINFO
-   LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'.  Must be after installnl
-   LOCPATH(g)=JT(jt,zpath);  // zpath is permanent, no ras needed  Must be after installnl
-   WRITEUNLOCK(JT(jt,stlock))
-   LOCNAME(g)=x;  // set name pointer in SYMLINFO
-   ACINITZAP(x);   // now that we know we will succeed, transfer ownership to name to the locale
-   AR(g)=0;   // set rank to indicate numbered locale
-   LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  // numbered locales are nondeleted but not permanent
-   break;
-  case 2:  // local symbol table - we have no lock and we don't assign
-   AR(g)=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
-   // The first hashchain is not used as a symbol pointer - it holds xy bucket info
-   // Bloom filter not used for local symbol tables (the field is a chain for the stack of active defs)
-   // local symbol tables don't have execcts
-   break;
+ case -1: case 0:  // named locale - we have a write lock on stloc->lock
+  AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
+  v=symnew(&LXAV0(g)[SYMLINFO],0);    // put new block into locales table, allocate at head of chain without non-PERMANENT marking,  The symbol must be available
+  v->flag|=LINFO;  // mark as not having a value
+  RZ(x=nfs(n,u));  // this fills in the hash for the name
+  // Install name and path.  Path is 'z'. correct for all but z locale itself, which is overwritten at initialization
+  LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);   // zpath is permanent.
+  // Assign this name in the locales symbol table to point to the allocated SYMB block
+  // This does ras() on g
+  // Put the locale name into stloc.  We can't use symbis etc because we have to keep the continuous lock on stlock to prevent multiple assignment of a named locale
+  // (and so we don't really need to ra/fa when adding/removing from stloc) 
+  // We know the name is not in the table; we spin to the end of the chain on the theory that most-used locales will be loaded first
+  UI4 hsh=NAV(x)->hash; L *sympv=SYMORIGIN;  // hash of name; origin of symbol tables
+  LX *hv=LXAV0(JT(jt,stloc))+SYMHASH(hsh,AN(JT(jt,stloc))-SYMLINFOSIZE);  // get hashchain base in stloc
+  LX tx=SYMNEXT(*hv); if(tx!=0)NOUNROLL while(SYMNEXT(sympv[tx].next)!=0)tx=SYMNEXT(sympv[tx].next);  // tx->last in chain, or 0 if chain empty
+  v=symnew(hv,tx); v->name=x; v->val=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; save value; ZAP to match store of value
+  LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
+  ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
+  AR(g)=ARNAMED;   // set rank to indicate named locale
+  LXAV0(g)[SYMLEXECCT]=((k+1)<<EXECCTPERMX)+EXECCTNOTDELD;  // mark permanent unless k is _1
+  break;
+ case 1:  // numbered locale - we have no lock
+  AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
+  RZ(v=symnew(&LXAV0(g)[SYMLINFO],0));   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
+  v->flag|=LINFO;  // mark as not having a value (for diags.  value is used for locnum)
+  // Put this locale into the in-use list at an empty location.  ras(g) at that time
+  RZ(x=nfs(20,&CAV(ds(CALP))['a']))  // create the name block before lock.  The hash will be meaningless
+  WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0);   // put the locale into the numbered list; exit if error (with lock removed); zap g
+  I nmlen=sprintf(NAV(x)->s,FMTI,n); AN(x)=nmlen; NAV(x)->m=nmlen;  // install true locale number and length of name
+  LOCNUMW(g)=(A)n; // save locale# in SYMLINFO
+  LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'.  Must be after installnl
+  LOCPATH(g)=JT(jt,zpath);  // zpath is permanent, no ras needed  Must be after installnl
+  WRITEUNLOCK(JT(jt,stlock))
+  LOCNAME(g)=x;  // set name pointer in SYMLINFO
+  ACINITZAP(x);   // now that we know we will succeed, transfer ownership to name to the locale
+  AR(g)=0;   // set rank to indicate numbered locale
+  LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  // numbered locales are nondeleted but not permanent
+  break;
+ case 2:  // local symbol table - we have no lock and we don't assign
+  AR(g)=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
+  // The first hashchain is not used as a symbol pointer - it holds xy bucket info
+  // Bloom filter not used for local symbol tables (the field is a chain for the stack of active defs)
+  // local symbol tables don't have execcts
+  break;
  }
  R g;
 }    /* create locale, named (0==k) or numbered (1==k) */

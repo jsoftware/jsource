@@ -176,14 +176,15 @@ DF1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
  if(!add2(pz[1],pz[2],s)){fclose(pz[1]);fclose(pz[2]);
                                CL(fi);CL(fo);}
  switch(r=fork()){
-  case -1:CL(fi);CL(fo);ASSERT(0,EVFACE);
-  case 0:close(0);{int i=dup(fo[0]);};close(1);{int i=dup(fi[1]);};CL(fi);CL(fo);
+ case -1:CL(fi);CL(fo);ASSERT(0,EVFACE);
+ case 0:close(0);{int i=dup(fo[0]);};close(1);{int i=dup(fi[1]);};CL(fi);CL(fo);
 #ifdef ANDROID
-         execl("/system/bin/sh","/system/bin/sh","-c",s,NULL); exit(-1);
+  execl("/system/bin/sh","/system/bin/sh","-c",s,NULL); exit(-1);
 #else
-         execl("/bin/sh","/bin/sh","-c",s,NULL); exit(-1);
+  execl("/bin/sh","/bin/sh","-c",s,NULL); exit(-1);
 #endif
- }close(fo[0]);close(fi[1]);
+ }
+ close(fo[0]);close(fi[1]);
  add2(NULL,NULL,NULL); pz[0]=(F)(intptr_t)r;
  R z;
 }

@@ -84,17 +84,17 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
   case CQQ: ;
    RE(wval=i0(w)); ASSERT(BETWEENC(wval,0,1),EVDOMAIN);  // only f"r!.[01] is supported
    ASSERT(sv->valencefns[1]==jtsumattymes1,EVDOMAIN)  // Must be +/@:*"1!.[01]
-   fdeffillall(z,0L,CFIT,VERB,jtvalenceerr,jtsumattymes1,a,w,0L,VIRS2,m,l,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.fittype=wval) RETF(z);  // supports IRS
+   fdeffillall(z,0L,CFIT,VERB,jtvalenceerr,jtsumattymes1,a,w,0L,sv->flag&(VIRS2|VJTFLGOK2|VFCOMPCOMP|VASGSAFE),m,l,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.fittype=wval) RETF(z);  // supports IRS
   case CSLASH: ;
    RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
    ASSERT(FAV(sv->fgh[0])->id==CPLUS,EVDOMAIN)  // Must be +/!.0
-   fdeffill(z,0L,CFIT,VERB,jtcompsum,jtvalenceerr,a,w,0L,VIRS1,m,l,r) RETF(z);  // supports IRS
+   fdeffill(z,0L,CFIT,VERB,jtcompsum,jtvalenceerr,a,w,0L,VIRS1+VASGSAFE,m,l,r) RETF(z);  // supports IRS
   case CEXP:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
-   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitexp2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);  // ^!.f
+   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitexp2,a,w,0L,VFLAGNONE+VASGSAFE,m,l,r) RETF(z);  // ^!.f
   case CPOLY:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
-   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitpoly2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);  // p.!.f
+   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitpoly2,a,w,0L,VFLAGNONE+VASGSAFE,m,l,r) RETF(z);  // p.!.f
 
   case CHOOK:   // only ($,)
    if(sv->valencefns[1]==jtreshape)goto fillreshape;
@@ -102,7 +102,7 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
   case CPOWOP:  // support for #^:_1!.n
    if(sv->fgh[1]!=num(-1))R jtfitct(jt,a,w,0,z);
    f=sv->fgh[0]; c=ID(f);
-   if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill2,a,w,0L,VFLAGNONE,m,l,r) RETF(z);}  // #^:_1!.f
+   if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill2,a,w,0L,VFLAGNONE+VASGSAFE,m,l,r) RETF(z);}  // #^:_1!.f
    ASSERT(c==CAMP,EVDOMAIN);
    f=FAV(f)->fgh[1]; ASSERT(CPOUND==ID(f),EVDOMAIN);
     // fall through for x&#^:_1!.f

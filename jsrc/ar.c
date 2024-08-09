@@ -1004,17 +1004,19 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
 static DF2(jtoprod){A z; R df2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
 
 
-F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;I flag=0;
+F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;
  ARGCHK1(w);
  if(NOUN&AT(w))R evger(w,sc(GINSERT));  // treat m/ as m;.6.  This means that a node with CSLASH never contains gerund u
+ // falling through w is a verb
  A z; fdefallo(z)
  v=FAV(w); 
+ I flag=v->flag&VASGSAFE;  // if u is asgsafe, so is u/
  switch(v->id){  // select the monadic case
-  case CCOMMA:  f1=jtredcat; flag=VJTFLGOK1;   break;
-  case CCOMDOT: f1=jtredstitch; flag=0; break;
-  case CSEMICO: f1=jtredsemi; flag=0; break;
-  case CUNDER:  f1=jtreduce; if(COPE==ID(v->fgh[1])){c=ID(v->fgh[0]); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} flag=0; break;
-  default: f1=jtreduce; flag=(v->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); break;  // monad is inplaceable if the dyad for u is
+ case CCOMMA:  f1=jtredcat; flag|=VJTFLGOK1;   break;
+ case CCOMDOT: f1=jtredstitch; break;
+ case CSEMICO: f1=jtredsemi; break;
+ case CUNDER:  f1=jtreduce; if(COPE==ID(v->fgh[1])){c=ID(v->fgh[0]); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} break;
+ default: f1=jtreduce; flag|=(v->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
  fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VISATOMIC2?((VA*)((I)va+v->localuse.lu1.uavandx[1]))->rps:&rpsnull);

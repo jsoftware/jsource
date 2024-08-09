@@ -92,16 +92,17 @@ static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
 // self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value, and leave adv/conj ARs looking like nouns
 DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ARGCHK1(w);
- // if string, handle that special case (verb/primitive)
+ // if string, handle that special case (name/primitive)
  if(LIT&AT(w))R fxchar(w,self);
  // otherwise, it had better be boxed with rank 0 or 1, and 1 or 2 atoms
  m=AN(w);   // m=#atoms
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
- ASSERT((UI)(m-1)<=(UI)(2-1),EVLENGTH);
+ ASSERT(BETWEENC(m,1,2),EVLENGTH);
  wv=AAV(w); y=C(wv[0]);  // set wv->box pointers, y->first box
  // If the first box contains boxes, they are ARs - go expand them and save as fs
  // id will contains the type of the AR: 0=another AR, '0'=noun, other=id of primitive or hook/fork
+ ASSERT(AN(y)!=0,EVLENGTH)  // empty not allowed
  if(BOX&AT(y)){RZ(fs=fx(y)); id=0;}
  else{RZ(y=vs(y)); ASSERT(id=spellin(AN(y),CAV(y)),EVSPELL);}
  if(1<m){

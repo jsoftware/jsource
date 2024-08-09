@@ -1226,6 +1226,8 @@ NB. selections from empties
 'index error' -: (<1 1 ,: 1 2) { etx i. 2 2 0
 'index error' -: (<1 1 ,: 1 _3) { etx i. 2 2 0
 
+(,<,'+') -: a: { +`''  NB. gerund is not converted to verb
+
 NB. i{y integer indices -------------------------------------------------
 
 fr =: 4 : '((x**/s)+/i.s=.}.$y){,y'

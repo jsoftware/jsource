@@ -95,6 +95,7 @@ static US spellouttab[256] = {
 // *s is a string with length n representing a primitive.  Convert the primitive to
 // a 1-byte pseudocharacter number.  Return value of 0 means error.  This is called to audit ARs & thus must work with unverified input
 C spellin(I n,C*s){
+ if(unlikely(n<=0))R 0;  // handle empty input
  C p=s[0];  // fetch the base character.  Must be displayable ASCII
  if(n<3){
   // 1- and 2-byte strings, with no data-dependent branches.  The dominant case

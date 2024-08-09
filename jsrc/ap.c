@@ -750,18 +750,18 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
  SETIC(w,p); p-=m; wt=AT(w); c=aii(w);
  switch(((wt>>(INTX-1))&6)+avg){
-  case 0:       MOVSUMAVG(B,I,INT,I,INT,x,  SETZ ); break;
-  case 1:       MOVSUMAVG(B,I,INT,D,FL, x/d,SETZD); break;
-  case 2: 
-   // start min at 0 so range is max+1; make sure all totals fit in an int; use integer code if so
-   {I maxval = (I)((D)IMAX/(D)MAX(2,m))-1;
-   CR rng=condrange(AV(w),AN(w),0,0,maxval<<1);
-   if(rng.range && MAX(rng.range,-rng.min)<maxval){
-    MOVSUMAVG(I,I,INT,I,INT,x,  SETZ )
-   }else{MOVSUMAVG(I,D,FL, D,FL, x,  SETZ );} break;}
-  case 3:       MOVSUMAVG(I,D,FL, D,FL, x/d,SETZD); break;
-  case 4: NAN0; MOVSUMAVG(D,D,FL, D,FL, x,  SETZ ); NAN1; break;
-  case 5: NAN0; MOVSUMAVG(D,D,FL, D,FL, x/d,SETZD); NAN1; break;
+ case 0:       MOVSUMAVG(B,I,INT,I,INT,x,  SETZ ); break;
+ case 1:       MOVSUMAVG(B,I,INT,D,FL, x/d,SETZD); break;
+ case 2: 
+  // start min at 0 so range is max+1; make sure all totals fit in an int; use integer code if so
+  {I maxval = (I)((D)IMAX/(D)MAX(2,m))-1;
+  CR rng=condrange(AV(w),AN(w),0,0,maxval<<1);
+  if(rng.range && MAX(rng.range,-rng.min)<maxval){
+   MOVSUMAVG(I,I,INT,I,INT,x,  SETZ )
+  }else{MOVSUMAVG(I,D,FL, D,FL, x,  SETZ );} break;}
+ case 3:       MOVSUMAVG(I,D,FL, D,FL, x/d,SETZD); break;
+ case 4: NAN0; MOVSUMAVG(D,D,FL, D,FL, x,  SETZ ); NAN1; break;
+ case 5: NAN0; MOVSUMAVG(D,D,FL, D,FL, x/d,SETZD); NAN1; break;
  }
  RETF(z);
 }    /* m +/\w or (if 0=avg) m (+/%#)\w (if 1=avg); bool or integer or float; 0<m */
@@ -826,12 +826,12 @@ static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
  GA(z,AT(w),c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  switch(max + ((wt>>(INTX-1))&6)){
 // no max sym now  case 0: MOVMINMAXS(SB,SBT,SBUV4(JT(jt,sbu))[0].down,SBLE); break;
-  case 0: MOVMINMAXS(SB,SBT,0,SBLE); break;
-  case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
-  case 2: MOVMINMAX(I,INT,IMAX,<=); break;
-  case 3: MOVMINMAX(I,INT,IMIN,>=); break;
-  case 4: MOVMINMAX(D,FL, inf ,<=); break;
-  case 5: MOVMINMAX(D,FL, infm,>=); break;
+ case 0: MOVMINMAXS(SB,SBT,0,SBLE); break;
+ case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
+ case 2: MOVMINMAX(I,INT,IMAX,<=); break;
+ case 3: MOVMINMAX(I,INT,IMIN,>=); break;
+ case 4: MOVMINMAX(D,FL, inf ,<=); break;
+ case 5: MOVMINMAX(D,FL, infm,>=); break;
  }
  RETF(z);
 }    /* a <./\w (0=max) or a >./\ (1=max); vector w; integer/float/symbol; 0<m */
@@ -865,10 +865,10 @@ static A jtmovbwandor(J jt,I m,A w,A fs,B or){A z;I c,p,*s,*t,*u,x,*zv;
  GATV(z,INT,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=AV(z); u=AV(w);
  if(c)switch(or+(1==c?0:2)){
-  case 0: DQ(1+p, x=*u++; t=u; DQ(m-1, x&=*t++;); *zv++=x;); break;
-  case 1: DQ(1+p, x=*u++; t=u; DQ(m-1, x|=*t++;); *zv++=x;); break;
-  case 2: DQ(1+p, ICPY(zv,u,c); t=u+=c; DQ(m-1, s=zv; DQ(c, *s++&=*t++;);); zv+=c;); break;
-  case 3: DQ(1+p, ICPY(zv,u,c); t=u+=c; DQ(m-1, s=zv; DQ(c, *s++|=*t++;);); zv+=c;); break;
+ case 0: DQ(1+p, x=*u++; t=u; DQ(m-1, x&=*t++;); *zv++=x;); break;
+ case 1: DQ(1+p, x=*u++; t=u; DQ(m-1, x|=*t++;); *zv++=x;); break;
+ case 2: DQ(1+p, ICPY(zv,u,c); t=u+=c; DQ(m-1, s=zv; DQ(c, *s++&=*t++;);); zv+=c;); break;
+ case 3: DQ(1+p, ICPY(zv,u,c); t=u+=c; DQ(m-1, s=zv; DQ(c, *s++|=*t++;);); zv+=c;); break;
  }
  RETF(z);
 }    /* a 17 b./\w (0=or) or a 23 b./\ (1=or); integer w; 0<m */
@@ -879,10 +879,10 @@ static A jtmovneeq(J jt,I m,A w,A fs,B eq){A y,z;B*s,*u,*v,x,*yv,*zv;I c,p;
  zv=BAV(z); u=v=BAV(w);
  if(1<c){GATV0(y,B01,c,1); s=yv=BAV(y); DQ(c, *s++=eq;);}
  switch(eq+(1<c?2:0)){
-  case 0: DQ(m,                   x   ^=   *v++;  ); *zv++=x; DQ(p,                   *zv++=x   ^=   *u++^ *v++;  ); break;
-  case 1: DQ(m,                   x    =x==*v++;  ); *zv++=x; DQ(p,                   *zv++=x    =x==*u++==*v++;  ); break;
-  case 2: DQ(m, s=yv; DQ(c,       *s++^=   *v++;);); SETZ;    DQ(p, s=yv; DQ(c,       *zv++=*s++^=   *u++^ *v++;);); break;
-  case 3: DQ(m, s=yv; DQ(c, x=*s; *s++ =x==*v++;);); SETZ;    DQ(p, s=yv; DQ(c, x=*s; *zv++=*s++ =x==*u++==*v++;););
+ case 0: DQ(m,                   x   ^=   *v++;  ); *zv++=x; DQ(p,                   *zv++=x   ^=   *u++^ *v++;  ); break;
+ case 1: DQ(m,                   x    =x==*v++;  ); *zv++=x; DQ(p,                   *zv++=x    =x==*u++==*v++;  ); break;
+ case 2: DQ(m, s=yv; DQ(c,       *s++^=   *v++;);); SETZ;    DQ(p, s=yv; DQ(c,       *zv++=*s++^=   *u++^ *v++;);); break;
+ case 3: DQ(m, s=yv; DQ(c, x=*s; *s++ =x==*v++;);); SETZ;    DQ(p, s=yv; DQ(c, x=*s; *zv++=*s++ =x==*u++==*v++;););
  }
  RETF(z);
 }    /* m ~:/\w (0=eq) or m =/\ (1=eq); boolean w; 0<m */
@@ -893,10 +893,10 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  zv=AV(z); u=v=AV(w);
  if(1<c){GATV0(y,INT,c,1); s=yv=AV(y); DQ(c, *s++=x;);}
  switch(eq+(1<c?2:0)){
-  case 0: DQ(m,                   x   ^=    *v++ ;  ); *zv++=x; DQ(p,                   *zv++=x   ^=      *u++^*v++  ;  ); break;
-  case 1: DQ(m,                   x    =~(x^*v++);  ); *zv++=x; DQ(p,                   *zv++=x    =~(x^~(*u++^*v++));  ); break;
-  case 2: DQ(m, s=yv; DQ(c,       *s++^=    *v++ ;);); SETZ;    DQ(p, s=yv; DQ(c,       *zv++=*s++^=      *u++^*v++  ;);); break;
-  case 3: DQ(m, s=yv; DQ(c, x=*s; *s++ =~(x^*v++););); SETZ;    DQ(p, s=yv; DQ(c, x=*s; *zv++=*s++ =~(x^~(*u++^*v++));););
+ case 0: DQ(m,                   x   ^=    *v++ ;  ); *zv++=x; DQ(p,                   *zv++=x   ^=      *u++^*v++  ;  ); break;
+ case 1: DQ(m,                   x    =~(x^*v++);  ); *zv++=x; DQ(p,                   *zv++=x    =~(x^~(*u++^*v++));  ); break;
+ case 2: DQ(m, s=yv; DQ(c,       *s++^=    *v++ ;);); SETZ;    DQ(p, s=yv; DQ(c,       *zv++=*s++^=      *u++^*v++  ;);); break;
+ case 3: DQ(m, s=yv; DQ(c, x=*s; *s++ =~(x^*v++););); SETZ;    DQ(p, s=yv; DQ(c, x=*s; *zv++=*s++ =~(x^~(*u++^*v++));););
  }
  RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
@@ -912,15 +912,15 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if(wt&B01){id=id==CMIN?CSTARDOT:id; id=id==CMAX?CPLUSDOT:id;}
  if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)AV(x)[0];
  switch(AR(w)&&BETWEENC(m0,0,AS(w)[0])?id:0){
-  case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
-  case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;
-  case CMAX:     if(wt&SBT+INT+FL)R movminmax(m,w,self,1); break;
-  case CSTARDOT: if(wt&B01       )R  movandor(m,w,self,0); break;
-  case CPLUSDOT: if(wt&B01       )R  movandor(m,w,self,1); break;
-  case CNE:      if(wt&B01       )R   movneeq(m,w,self,0); break;
-  case CEQ:      if(wt&B01       )R   movneeq(m,w,self,1); break;
-  case CBW1001:  if(wt&    INT   )R movbwneeq(m,w,self,1); break;
-  case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
+ case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
+ case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;
+ case CMAX:     if(wt&SBT+INT+FL)R movminmax(m,w,self,1); break;
+ case CSTARDOT: if(wt&B01       )R  movandor(m,w,self,0); break;
+ case CPLUSDOT: if(wt&B01       )R  movandor(m,w,self,1); break;
+ case CNE:      if(wt&B01       )R   movneeq(m,w,self,0); break;
+ case CEQ:      if(wt&B01       )R   movneeq(m,w,self,1); break;
+ case CBW1001:  if(wt&    INT   )R movbwneeq(m,w,self,1); break;
+ case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
  }
  VARPS adocv;
  varps(adocv,self,wt,0); if(!adocv.f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
@@ -945,20 +945,22 @@ F1(jtbslash){F1PREFIP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(
  ARGCHK1(w);
  A z; fdefallo(z)
  if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fixw, VGERL|flag, RMAX,0L,RMAX); RETF(z);}
+ // falling through, w is verb
  v=FAV(w);  // v is the u in u\ y
+ flag|=v->flag&VASGSAFE;  // if u is asgsafe, so is u\ y
  switch(v->id){
-  case CSLASH: ;  // never gerund/ which is coded as GRCO
-   A u=v->fgh[0];  // the u in u/\ y
-   if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
-   f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
-  case CPOUND:
-   f1=jtiota1; break;
-  case CLEFT: case CRIGHT: case CCOMMA:
-   f2=jtinfixd; break;
-  case CFORK:  
-   if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
-  default:
-   flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
+ case CSLASH: ;  // never gerund/ which is coded as GRCO
+  A u=v->fgh[0];  // the u in u/\ y
+  if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
+  f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan; flag|=VJTFLGOK1;} break;
+ case CPOUND:
+  f1=jtiota1; break;
+ case CLEFT: case CRIGHT: case CCOMMA:
+  f2=jtinfixd; break;
+ case CFORK:  
+  if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
+ default:
+  flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
  }
  fdeffillall(z,0,CBSLASH,VERB,f1,f2,w,0L,0L,flag,RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .   f is nonnull if f/\ .

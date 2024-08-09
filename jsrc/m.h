@@ -76,7 +76,6 @@
 #define FHRHPOOLBINSIZE(h) (LOWESTBIT(h)<<PMINL)        // convert hmask to size for pool bin#
 #define FHRHPOOLBINTOSIZE(bin) (PMIN<<(bin))        // convert hmask to size for pool bin#
 #define FHRHSYSSIZE(h) (((I)1)<<((h)>>(PLIML-PMINL+2)))        // convert h to size for system alloc
-// obsolete #define FHRHSIZEscaf(h) ((FHRHBINISPOOL(h) ? FHRHPOOLBINSIZE(h) : FHRHSYSSIZE(h)))
 #define FHRHSIZE(h) ({I lbit=LOWESTBIT(h)&((2LL<<(PLIML-PMINL))-1); I hbit=lbit==0; (lbit<<PMINL)+((hbit<<((h)>>(PLIML-PMINL+2)))); })
 #define FHRHSYSJHDR(j) ((2*(j)+1)<<(PLIML-PMINL+1))        // convert j (=lg(size)) to h format for a system allo
 #define FHRHBININCR(b) ((I)2<<(b))      // when garbage-collecting bin b, add this much to the root for each free block encountered.  This is also the amount by which the h values of successive blocks in an allocation differ

@@ -6,7 +6,6 @@
 #include "j.h"
 #include "ve.h"
 
-// obsolete #define MCASE(t,k)  ((t)+4*(k))
 #define MCASE(t,k)  (((t)&INT)+(k))   // t is B01 or INT, k is lg(size of item) if one of 0 2 3,  1 otherwise
 #define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT(BETWEENO(j,0,m),EVINDEX);}
 
@@ -27,7 +26,6 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;I c,it,j,k,m,r,*s,t,*u,*wi,*z
 D*wd=(D*)wc,*zd=(D*)zc;
 #endif
  I kx=k; kx=0b1101&(1LL<<k)?kx:1;  // set atom length to 2 if not one of 1 4 8
-// obsolete  switch(MCASE(CTTZ(it),k)){
  switch(MCASE(it,kx)){
  case MCASE(B01,LGSZI): DO(c,         *zi++=wi[i+c*(I)*b++];); break;
  case MCASE(B01,0): DO(c,         *zc++=wc[i+c*(I)*b++];); break;

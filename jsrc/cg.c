@@ -151,21 +151,9 @@ F2(jtevger){F2PREFIP;A hs;I k;
  RE(k=i0(w)); 
  if(k==GTRAIN)R exg(a);
  RZ(hs=fxeachv(RMAX,a));
-#if 0  // obsolete 
- switch(k){
-  case GAPPEND:
-   R fdef(0,CGRCO,VERB, jtcon1,jtcon2, a,w,hs, VGERL, RMAX,RMAX,RMAX);
-  case GINSERT:
-   ASSERT(1>=AR(a),EVRANK);
-   R fdef(0,CGRCO,VERB, jtinsert,jtvalenceerr,   a,w,hs, VGERL, RMAX,0L,0L);
-  default:
-   ASSERT(0,EVDOMAIN);
- }
-#else
  ASSERT(BETWEENC(k^1,GAPPEND^1,GINSERT^1),EVDOMAIN)   // require valid type
  AF f1=k==GAPPEND?(AF)jtcon1:(AF)jtinsert; AF f2=k==GAPPEND?(AF)jtcon2:(AF)jtvalenceerr; I r2=k==GAPPEND?RMAX:0;  // variable parts
  R fdef(0,CGRCO,VERB, f1,f2,   a,w,hs, VGERL, RMAX,r2,r2);
-#endif
 }
 
 // u`v.  Allow append-in-place to m

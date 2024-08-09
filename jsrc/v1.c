@@ -11,12 +11,6 @@
 #pragma warning(disable: 4244)
 #endif
 
-// obsolete // To reduce parameter overhead, we call matchsub with trailing parameters omitted if x==0.  This is fine for clang.  In MSVC, the parameter area
-// obsolete // is used as a workarea by the routine, and thus omitting the parms makes for a segfault.
-// obsolete #if defined(__clang__)&&SY_64
-// obsolete #define MATCHSUBDEFAULTS
-// obsolete #else
-// obsolete #endif
 #define MATCHSUBDEFAULTS ,0,0,1,1,1   // parms not needed if x==0.  We have to pass them anyway because the called function may use them as a workarea, expected to be initialized by the caller
 static B jtmatchsub(J,A,A,B* RESTRICT,I,I,I,I,I);
 static F2(jtmatchs);

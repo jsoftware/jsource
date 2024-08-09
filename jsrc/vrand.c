@@ -362,11 +362,6 @@ F1(jtdx_test){I j=jt->rngdata->rng,x;
 #define MRM1 4294944443UL  /* _22853+2^32 */
 
 static UI jtmr_next31(J jt){I d,j,*v=jt->rngdata->rngv,x,y;
-// obsolete  switch(j=jt->rngdata->rngi){
-// obsolete  case 0: x=1403580*v[1]-810728*v[0]; y=527612*v[5]-1370589*v[3]; jt->rngdata->rngi=1; break;
-// obsolete  case 1: x=1403580*v[2]-810728*v[1]; y=527612*v[3]-1370589*v[4]; jt->rngdata->rngi=2; break;
-// obsolete  case 2: x=1403580*v[0]-810728*v[2]; y=527612*v[4]-1370589*v[5]; jt->rngdata->rngi=0;
-// obsolete  }
  j=jt->rngdata->rngi; jt->rngdata->rngi=j+1; jt->rngdata->rngi=j==2?0:jt->rngdata->rngi;  // j = 0 1 2  rngi = 1 2 0  3+j=3 4 5   6-j-rngi=5 3 4
  x=1403580*v[jt->rngdata->rngi]-810728*v[j]; y=527612*v[6-j-jt->rngdata->rngi]-1370589*v[3+j];
  x%=MRM0; if(x<0)x+=MRM0; v[j  ]=x;
@@ -388,11 +383,6 @@ static UI jtmr_next(J jt){UI a,b,c;
 #define MRM1 4294944443.0  /* _22853+2^32 */
 
 static UI jtmr_next(J jt){D d,*v=(D*)jt->rngdata->rngv,x,y;I j,k;
-// obsolete  switch(j=jt->rngdata->rngi){
-// obsolete  case 0: x=1403580.0*v[1]-810728.0*v[0]; y=527612.0*v[5]-1370589.0*v[3]; jt->rngdata->rngi=1; break;
-// obsolete  case 1: x=1403580.0*v[2]-810728.0*v[1]; y=527612.0*v[3]-1370589.0*v[4]; jt->rngdata->rngi=2; break;
-// obsolete  case 2: x=1403580.0*v[0]-810728.0*v[2]; y=527612.0*v[4]-1370589.0*v[5]; jt->rngdata->rngi=0;
-// obsolete  }
  j=jt->rngdata->rngi; jt->rngdata->rngi=j+1; jt->rngdata->rngi=j==2?0:jt->rngdata->rngi;  // j = 0 1 2  rngi = 1 2 0  3+j=3 4 5   6-j-rngi=5 3 4
  x=1403580*v[jt->rngdata->rngi]-810728*v[j]; y=527612*v[6-j-jt->rngdata->rngi]-1370589*v[3+j];
  k=(I)(x/MRM0); x-=k*MRM0; if(x<0.0)x+=MRM0; v[j  ]=x;

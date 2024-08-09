@@ -273,7 +273,6 @@ DF2(jtxdefn){
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
   locsym=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+3];  // fetch pointer to preallocated symbol table
-// obsolete checked already  ASSERT(locsym!=0,EVVALENCE);  // if the valence is not defined, give valence error
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){NPGpysfmtdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -329,7 +328,6 @@ DF2(jtxdefn){
   // Do the other assignments, which occur less frequently, with symbis, without the special treatment of virtuals
   // We may not call these final assignments because that might back tpushptr before an outstanding 'old'
   if(unlikely(((I)u|(I)v)!=0)){
-// obsolete    if(u){( ) }
    symbis(mnuvxynam[2],u,locsym); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym);  // assign u, and m if u is a noun.  u musat be defined
    if(v){symbis(mnuvxynam[3],v,locsym); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // errors here are impossible: the value exists and the names are known valid and allocated
   }
@@ -505,7 +503,6 @@ dobblock:
     if(AT(tt)&INT4){ic=I4AV(tt)[0]?ic:nextic; break;}
     if(AT(tt)&CMPX){ic=DAV(tt)[0]||DAV(tt)[1]?ic:nextic; break;}
     if(AT(tt)&RAT+XNUM){ic=!ISX0(XAV(tt)[0])?ic:nextic; break;}
-// obsolete     if(AT(tt)&QP){ic=EAV(tt)[0].hi?ic:nextic; break;}
     if(!(AT(tt)&NOUN)){NOUNERR(tt,tic,1)}  // will take error exit
     if(!ISSPARSE(AT(tt)))break;     // nonnumeric types (BOX, char) test true: i is set for that
     BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
@@ -1278,7 +1275,6 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
     if(m==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=((flag&~VTRY2)+VTRY1)&~VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad.  Clear TRY1 to avoid spurious activity
    }
    if(m<=2){  // adv or conj after autodetection
-// obsolete     flag|=REPSGN(-(fndflag&3))&VXOPR;   // if this def refers to xy, set VXOPR
     flag|=!!(fndflag&3)<<VXOPRX;   // if this def refers to xy, set VXOPR
     // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a non-operator conjunction: the operands will be the two verbs;
     // (2) it is an operator with a reference to x.  Move the TRY flag to the dyad too

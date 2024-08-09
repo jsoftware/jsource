@@ -907,8 +907,6 @@ RECURSIVERESULTSCHECK
 #endif
        CLEARZOMBIE   // in case zombieval was set, clear it until next use
        FPZ(rc)
-// obsolete          if(unlikely(jt->jerr==EVSIDAMAGE))jteformat(jt,0,str(strlen("Only the topmost suspended name can be redefined.  Issue 'dbr 0' and retry"),"Only the topmost suspended name can be redefined.  Issue 'dbr 0' and retry"),0,0);
-// obsolete        )  // fail if error, possibly with a message
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.
        if(likely((US)pt0ecam==0))EP(rc)  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged

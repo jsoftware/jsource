@@ -2004,8 +2004,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define PUSHCCTIF(value,cond) D cctstack = jt->cct; if(cond)jt->cct=(value);   // declare the stacked value where it can be popped
 #define POPCCT jt->cct=cctstack;
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
-// data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
-// (which means the user is fooling around at the keyboard & performance is not as important as transparency)
+// data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0
 #define CLEARZOMBIE     {jt->zombieval=0;}  // Used when we know there shouldn't be an zombieval, just in case
 #define PUSHZOMB A savasginfo = jt->zombieval; if(unlikely(JT(jt,asgzomblevel)==0)){CLEARZOMBIE}
 #define POPZOMB {jt->zombieval=savasginfo;}
@@ -2506,7 +2505,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,z))){s}
 #define DPMULDDECLS
-#define DPMULD(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,&z))){s}
+#define DPMULD(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,&z))){s}  // x*y -> z
 #define DPMULDZ(x,y,z) z=__builtin_smulll_overflow(x,y,&z)?0:z;
 #define DPMULDE(x,y,z) ASSERT(!__builtin_smulll_overflow(x,y,&z),EVLIMIT)
 #define DPUMUL(x,y,z,h) {__int128 _t; _t=(__int128)(x)*(__int128)(y); z=(I)_t; h=(I)(_t>>64);}  // product in z and h

@@ -466,8 +466,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
   if(likely(!(((I)jtinplace&JTRETRY)+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args
    // Here for the fast and important case, where the arguments are both dense B01/INT/FL
    VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
-   // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
-   aadocv=&vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
+// obsolete    // The index into va is atype*3 + wtype, calculated sneakily.  We
+// obsolete    aadocv=&vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
+   aadocv=&vainfo->p2[(at*3+(wt&INT+FL))>>INTX];   // test here to avoid the call overhead
   }else{
 
    // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
@@ -507,7 +508,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    fr=allranks>>(3*RANKTX); UI shortr=(allranks>>(2*RANKTX))&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
-   if(likely(jtinplace!=0)){
+   if(likely(jtinplace!=0)){  // nonsparse
     I an=AN(a); m=zn=AN(w);
     I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
     zn=raminusw<0?zn:an; m=raminusw<0?an:m;  // zn=# atoms in bigger operand, m=#atoms in smaller
@@ -620,23 +621,23 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     // 1: m=1 and n=1: move mf->m, nf->n, and complement n if ak==0 (i. e. x arg is repeated) example:  list *"0 _ atom
     // 2: n=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 (shape 4 5 or 1 4 5)
     // 3: m=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 0 (shape 5)
-    if(unlikely(((nf==1)+(n==1)+(m==1))>1)){  // 2 values=1, can lose a loop
+    I migrmf=mf;
+    DPMULDE(nf,mf,mf);  // mf is total # iterations
+    DPMULDE(zn,mf,zn)  // total # atoms in result
+    if(unlikely(((C)(nf==1)+(C)(n==1)+(C)(m==1))>(C)1)){  // 2 values=1, can lose a loop
      // migration is possible
-     n=(n*nf)^REPSGN(SGNIF(jtinplace,VIPWFLONGX)&(1-nf)); m*=mf;   // propagate mf and nf down; if n is not 1, complement if af<wf
-     DPMULDE(nf,mf,mf);  // mf is total # iterations
-     DPMULDE(zn,mf,zn)  // total # atoms in result
+     n=(n*nf)^REPSGN(SGNIF(jtinplace,VIPWFLONGX)&(1-nf)); m*=migrmf;   // propagate mf and nf down; if n is not 1, complement if af<wf
      mf=1;  // no outer loops.  nf immaterial.  zk does not need to change since it will not be used
-    }else{
-     // normal case
-     DPMULDE(nf,mf,mf); --nf; // mf is total # iterations; nf is outer loop repeat count-1
-     DPMULDE(zn,mf,zn)  // total # atoms in result
-    }
-   }else{
+    }else{--nf;}   // All 4 loops (normal case since rank given).nf is outer loop repeat count-1
+// obsolete      DPMULDE(nf,mf,mf);
+// obsolete      DPMULDE(zn,mf,zn)  // total # atoms in result
+// obsolete     }
+   }else{  // sparse case
     I af=acr>>(RANKTX), wf=wcr>>(RANKTX); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af; fr+=(f<<RANKTX)+f; aawwzk[0]=acr; aawwzk[1]=wcr; mf=af; nf=wf;
+    // For sparse, repurpose aawwzk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
+    // Note: this code passed the test suite even when fr was garbage
    }
-   // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
-   // Note: this code passed the test suite even when fr was garbage
   }
  }
 
@@ -1331,7 +1332,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
  // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
  // for it, and return.
- if(!jt->jerr){
+ if(likely(!jt->jerr)){
   // Normal case where we are not retrying: here for numeric arguments
   // vaptr converts the character pseudocode into an entry in va;
   // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
@@ -1342,9 +1343,11 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
   if(!((t=(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
-   // The index into va is atype*3 + wtype, calculated sneakily
-   R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
-  }else if(!(t&(NOUN&~NUMERIC))) {
+// obsolete    // The index into va is atype*3 + wtype, calculated sneakily
+// obsolete    R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
+   R vainfo->p2[(at*3+(wt&INT+FL))>>INTX];
+
+  }else if(likely(!(t&(NOUN&~NUMERIC)))) {
    // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
    //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F    10   // priorities
@@ -1359,7 +1362,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    selva2.cv|=cvtflgs;
    R selva2;
   }else{
-   // Normal case, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
+   // No retry, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
    VA2 retva2;  retva2.cv=VB; // where we build the return value   cv indicates no input conversion, boolean result
    if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
     // = or ~:, possibly inhomogeneous

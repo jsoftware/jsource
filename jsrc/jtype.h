@@ -114,9 +114,9 @@ typedef AD *A;
 // following bit used as arg to jtover
 #define JTALLOWRETARGX    2   // allow jtover to return an argument if empty appended to it
 #define JTALLOWRETARG      (((I)1)<<JTALLOWRETARGX)
-// following bit is used on input to jtcvt only
-#define JTNOFUZZX       1   // comparison on legal float conversion should be exact
-#define JTNOFUZZ        (((I)1)<<JTNOFUZZX)
+// obsolete // following bit is used on input to jtcvt only
+// obsolete #define JTNOFUZZX       1   // comparison on legal float conversion should be exact
+// obsolete #define JTNOFUZZ        (((I)1)<<JTNOFUZZX)
 // following bits is used inside/input to jtlrep only
 #define JTNORESETERRX   0   // 
 #define JTNORESETERR        (((I)1)<<JTNORESETERRX)
@@ -493,7 +493,7 @@ typedef I SI;
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type except ASGN
 // ** NOUN types can have the following informational bits set
-#define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt arg only: if set, convert only the #atoms given in the parameter   Aliases with SYMB
+// obsolete #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt arg only: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 #define SPARSEX 31  // NOTE this extends to the sign bit
 #if defined(_WIN64)||defined(__LP64__)
 #define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */
@@ -509,12 +509,16 @@ typedef I SI;
 #define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
 // Restriction: CONW must be reserved for use as ASGNTONAME because of how parser tests for it
 // Restriction: MARK must be reserved for use as BOXMULTIASSIGN because of how parser tests for it
-// ** NOTE!! bits 28-30 are used in the call to cvt() (arg only) to override the conversion type for XNUMs
+// ** NOTE!! bits 22/24/26 are used in the call to cvt() (arg only) to override the conversion type for XNUMs
 // MARK and ASGN hold the 2-bit rounding mode
-#define XCVTXNUMORIDEMSK  (MARK+ASGN+CONW)   // in cvt(), the override to use if XCVTXNUMORIDEX is set, otherwise 00
-#define XCVTXNUMORIDEX  CONWX   // in cvt(), indicates that forced precision for result is present
+#define XCVTXNUMORIDEMSK  (MARK+ASGN+CONW)   // in ccvt(), the override to use if XCVTXNUMORIDEX is set, otherwise 00
+#define XCVTXNUMORIDEX  CONWX   // in ccvt(), indicates that forced precision for result is present
 #define XMODETOCVT(x) (((((x)+2)&5)<<MARKX)|CONW)  // convert XMODE to a request to cvt to convert to that mode
 #define CVTTOXMODE(x) ((((x)+MARK)>>(MARKX+1))&3) // convert cvt request back to xmode
+// ** NOTE!! bit 28 are used in the call to cvt() (arg only) to indicate NOFUZZ
+#define CVTNOFUZZX    LPARX     // 28 set if the name is one of u v u. v. that is always passed by value, never by reference
+#define CVTNOFUZZ     ((I)1L<<CVTNOFUZZX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name
+
 
 
 #define ANY             -1L

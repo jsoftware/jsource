@@ -712,7 +712,7 @@ extern A        jtcreatecycliciterator(J,A,A);
 extern A        jtcrelocalsyms(J,A,A,I,I,I);
 extern A        jtcstr(J,C*);
 extern A        jtcvt(J,I,A);
-extern B        jtccvt(J,I,A,A*);
+extern A        jtccvt(J,I,A,I);
 extern A        jtcvz(J,I,A);
 extern A        jtdaxis(J,I,A);
 extern A        jtddtokens(J,A,I);

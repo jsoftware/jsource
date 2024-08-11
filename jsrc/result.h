@@ -140,12 +140,12 @@ do{
       }else{I zzatomshift=CTTZ(bpnoun(zzt)); I zexpshift = CTTZ(bpnoun(zt))-zzatomshift;  // convert zz from type zzt to type zt.  shift for size of atom; expansion factor of the conversion, as shift amount
        // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
 #if !ZZSTARTATEND
-       zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
+       zatomct=(zzcellp>>zzatomshift)+1;   // get # atoms that have been filled in, offset by 1
 #else
-       zatomct=((zzcellp+zzcelllen)>>zzatomshift)-AN(zz);   // get # atoms that have been filled in, not including what we haven't filled yet in this cell
-                   // make negative to tell ccvt that the value to change are at the end of the block
+       zatomct=(((zzcellp+zzcelllen)>>zzatomshift)-AN(zz))-1;   // get 1s comp of # atoms that have been filled in, not including what we haven't filled yet in this cell (neg indicates trailing items)
 #endif
-       RZ(ccvt(zt|NOUNCVTVALIDCT,zz,(A*)&zatomct)); zz=(A)zatomct;  // flag means convert only # atoms given in zatomct
+// obsolete        RZ(ccvt(zt|NOUNCVTVALIDCT,zz,(A*)&zatomct)); zz=(A)zatomct;  // flag means convert only # atoms given in zatomct
+       RZ(zz=ccvt(zt,zz,zatomct));  // flag means convert only # atoms given in zatomct
        // change the strides to match the new cellsize
        if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}
        // if the new type is recursible, make sure zz is recursive.  This simplifies logic below

@@ -782,12 +782,12 @@ static KF1(jtZfromD){
 }
 
 // Convert the data in w to the type t.  w and t must be noun types.  A new buffer is always created (with a
-// copy of the data if w is already of the right type), and returned in *y.  Result is
-// 0 if error, 1 if success.  If the conversion loses precision, error is returned
+// copy of the data if w is already of the right type), and is the result (0 if error, which includes loss of significance)
+// if natoms is non0, it indicates that only the first n-1 (if n>1) or last ~n (if n<0) atoms should be converted
+// XCVTXNUMORIDE is set to force rounding mode for XNUM/RAT conversions
 // Calls through bcvt are tagged with a flag in jt, indicating to set fuzz=0
 // For sparse arguments, this function calls other J verbs and must clear the ranks in that case only
-// kludge this interface sucks - why not return the A block of the result?  We could expunge jtcvt() 
-B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&(NOUN|SPARSE);
+A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflagged&(NOUN|SPARSE);
  ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); n=AN(w);
  if(unlikely(((t|wt)&SPARSE+BOX+SBT+FUNC)!=0)){
@@ -798,15 +798,15 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
    RANK2T oqr=jt->ranks; RESETRANK; 
    switch((ISSPARSE(t)?2:0)+(ISSPARSE(AT(w))?1:0)){I t1;P*wp,*yp;
    case 1: RZ(w=denseit(w)); break;  // sparse to dense
-   case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); jt->ranks=oqr; R 1;  // dense to sparse; convert type first (even if same dtype)
+   case 2: RZ(z=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); jt->ranks=oqr; R z;  // dense to sparse; convert type first (even if same dtype)
    case 3: // sparse to sparse
     t1=DTYPE(t);
-    GASPARSE(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);
+    GASPARSE(z,t,1,r,s); yp=PAV(z); wp=PAV(w);
     SPB(yp,a,ca(SPA(wp,a)));
     SPB(yp,i,ca(SPA(wp,i)));
     SPB(yp,e,cvt(t1,SPA(wp,e)));
     SPB(yp,x,cvt(t1,SPA(wp,x)));
-    jt->ranks=oqr; R 1;
+    jt->ranks=oqr; R z;
    }
    // must be sparse to dense.  Carry on now that w is dense
    jt->ranks=oqr;
@@ -818,31 +818,32 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  }
  // Now known to be non-sparse, and numeric or literal except when empty or BOX or SBT not being changed
  // If type is already correct, return a clone - used to force a copy.  Should get rid of this kludge
- if(unlikely(TYPESEQ(t,AT(w)))){RZ(*y=ca(w)); R 1;}
+ if(unlikely(TYPESEQ(t,AT(w)))){RZ(z=ca(w)); R z;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
- // Kludge on behalf of result assembly: we want to be able to stop converting after the valid cells.  If NOUNCVTVALIDCT is set in the type,
- // we use the input *y as as override on the # cells to convert.  We use it to replace n (for use here) and yv, and AK(w) and AN(w) for the subroutines.
+ // Kludge on behalf of result assembly: we want to be able to stop converting after the valid cells.  If natoms is set
+ // it is an override on the # cells to convert.  We use it to replace n (for use here) and yv, and AK(w) and AN(w) for the subroutines.
  // If NOUNCVTVALIDCT is set, w is modified: the caller must restore AN(w) and AK(w) if it needs it
  // TODO: same-length conversion could be done in place
  GA(d,t,n,r,s);  // allocate the same # atoms, even if we will convert fewer
  if(unlikely(t&CMPX+QP))AK(d)=(AK(d)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
  yv=voidAV(d);   // address of target area
 
- if(unlikely(tflagged&NOUNCVTVALIDCT)){
-  I inputn=*(I*)y;  // fetch input, in case it is called for
-  if(inputn>0){  // if converting the leading values, just update the counts
-   n=inputn;  // set the counts for local use, and in the block to be converted
-  }else{  // if converting trailing values...
-   I offset=(n+inputn)<<bplg(t);  // byte offset to start of data
-   AK(w)+=(n+inputn)<<bplg(wt); yv=(I*)((C*)yv+((n+inputn)<<bplg(t)));  // advance input and output pointers to new area
-   n=-inputn;  // get positive # atoms to convert
+// obsolete  if(unlikely(tflagged&NOUNCVTVALIDCT)){
+ if(unlikely(natoms!=0)){
+// obsolete   I inputn=natoms;  // fetch input, in case it is called for
+  if(natoms>0){  // if converting the leading values, just update the counts
+   n=natoms-1;  // set the counts for local use, and in the block to be converted
+  }else{  // if converting trailing values (natoms is 1s comp of # trailing values)...
+   I offset=(n-~natoms)<<bplg(t);  // byte offset to start of data
+   AK(w)+=(n-~natoms)<<bplg(wt); yv=(I*)((C*)yv+((n-~natoms)<<bplg(t)));  // advance input and output pointers to new area
+   n=~natoms;  // get positive # atoms to convert
   }
   AN(w)=n;  // change atomct of w to # atoms to convert
  }
  // If n and AN have been modified, it doesn't matter for rank-1 arguments whether the shape of the result is listed as n or s[0] since only n atoms will
  // be used.  For higher ranks, we need the shape from s.  So it's just as well that we take the shape from s now
- *y=d;  wv=voidAV(w); // return the address of the new block
- if(unlikely(!n))R 1;
+ z=d;  wv=voidAV(w); // return the address of the new block
+ if(unlikely(!n))R z;
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the literal conversions into one block, and
  // the rest in another
@@ -852,12 +853,12 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
   ASSERT(!((t|wt)&(SBT+XD+XZ+NUMERIC+BOX)),EVDOMAIN);  // No conversions for these types
 #define CVCASECHAR(a,b) ((2*(C2T>>(a))+(C2T>>(b))))  // distinguish character cases - note last case is impossible (equal types)
   switch (CVCASECHAR(CTTZ(t),CTTZ(wt))){
-  case CVCASECHAR(LITX, C2TX): R C1fromC2(w, yv);
-  case CVCASECHAR(LITX, C4TX): R C1fromC4(w, yv);
-  case CVCASECHAR(C2TX, LITX): R C2fromC1(w, yv);
-  case CVCASECHAR(C2TX, C4TX): R C2fromC4(w, yv);
-  case CVCASECHAR(C4TX, LITX): R C4fromC1(w, yv);
-  case CVCASECHAR(C4TX, C2TX): R C4fromC2(w, yv);
+  case CVCASECHAR(LITX, C2TX): R (C1fromC2(w, yv))?z:0;
+  case CVCASECHAR(LITX, C4TX): R (C1fromC4(w, yv))?z:0;
+  case CVCASECHAR(C2TX, LITX): R (C2fromC1(w, yv))?z:0;
+  case CVCASECHAR(C2TX, C4TX): R (C2fromC4(w, yv))?z:0;
+  case CVCASECHAR(C4TX, LITX): R (C4fromC1(w, yv))?z:0;
+  case CVCASECHAR(C4TX, C2TX): R (C4fromC2(w, yv))?z:0;
   default:                ASSERT(0, EVDOMAIN);
   }
  }
@@ -865,115 +866,114 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
 #define CVNUMTYPE(a) ((0xff98f76f54f321f0LL>>(CTTZ(a)<<2))&0xf)
  #define CVCASE(a,b)     (CVNUMTYPE(a)*10+CVNUMTYPE(b))
  switch (CVCASE(t,wt)){  // to,from
- case CVCASE(INT, B01): R jtIfromB(jt, w, yv);
- case CVCASE(XNUM, B01): R XfromB(w, yv);
- case CVCASE(RAT, B01): GATV(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
- case CVCASE(FL, B01): R jtDfromB(jt, w, yv);
- case CVCASE(CMPX, B01): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x->im=0.0; x++->re = *v++;); } R 1;
- case CVCASE(INT2,B01): R jtI2fromB(jt, w, yv);
- case CVCASE(INT4,B01): R jtI4fromB(jt, w, yv);
-// case CVCASE(SP,B01): R jtDSfromB(jt, w, yv);
- case CVCASE(QP,B01): R jtEfromB(jt, w, yv);
- case CVCASE(B01, INT): R BfromI(w, yv);
- case CVCASE(XNUM, INT): R XfromI(w, yv);
- case CVCASE(RAT, INT): GATV(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
- case CVCASE(FL, INT): R jtDfromI(jt, w, yv);
- case CVCASE(CMPX, INT): {Z*x = (Z*)yv; I*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
- case CVCASE(INT2,INT): R jtI2fromI(jt, w, yv);
- case CVCASE(INT4,INT): R jtI4fromI(jt, w, yv);
-// case CVCASE(SP,INT): R jtDSfromI(jt, w, yv);
- case CVCASE(QP,INT): R jtEfromI(jt, w, yv);
- case CVCASE(B01, FL): R BfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(INT, FL): R IfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(XNUM, FL): R XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
- case CVCASE(RAT, FL): R QfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
- case CVCASE(CMPX, FL): R ZfromD(w, yv);
- case CVCASE(INT2, FL): R jtI2fromD(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(INT4, FL): R jtI4fromD(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-// case CVCASE(SP,FL): R jtDSfromD(jt, w, yv);
- case CVCASE(QP,FL): R jtEfromD(jt, w, yv);
- case CVCASE(B01, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R BfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(INT, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R IfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(XNUM, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
- case CVCASE(RAT, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
- case CVCASE(FL, CMPX): R DfromZ(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(INT2, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R jtI2fromD(jt, d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(INT4, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R jtI4fromD(jt, d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
-// case CVCASE(SP,CMPX): R jtDSfromZ(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
- case CVCASE(QP,CMPX): R jtEfromZ(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(B01, XNUM): R BfromX(w, yv);
- case CVCASE(INT, XNUM): R IfromX(w, yv);
- case CVCASE(RAT, XNUM): R QfromX(w, yv);
- case CVCASE(FL, XNUM): R DfromX(w, yv);
- case CVCASE(CMPX, XNUM): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ZfromD(d, yv);
- case CVCASE(INT2, XNUM): R jtI2fromX(jt, w, yv);
- case CVCASE(INT4, XNUM): R jtI4fromX(jt, w, yv);
-// case CVCASE(SP,XNUM): R jtDSfromX(jt, w, yv);
- case CVCASE(QP,XNUM): R jtEfromX(jt, w, yv);
- case CVCASE(B01, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R BfromX(d, yv);
- case CVCASE(INT, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R IfromX(d, yv);
- case CVCASE(XNUM, RAT): R XfromQ(w, yv);
- case CVCASE(FL, RAT): R DfromQ(w, yv);
- case CVCASE(CMPX, RAT): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ZfromD(d, yv);
- case CVCASE(INT2, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R jtI2fromX(jt, d, yv);
- case CVCASE(INT4, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R jtI4fromX(jt, d, yv);
-// case CVCASE(SP,RAT): R jtDSfromQ(jt, w, yv);
- case CVCASE(QP,RAT): R jtEfromQ(jt, w, yv);
- case CVCASE(B01, INT2): R jtBfromI2(jt, w, yv);
- case CVCASE(INT,INT2): R jtIfromI2(jt, w, yv);
- case CVCASE(FL, INT2): R jtDfromI2(jt, w, yv);
- case CVCASE(XNUM, INT2): R jtXfromI2(jt, w, yv);
- case CVCASE(RAT, INT2): GATV(d, XNUM, n, r, s); R jtXfromI2(jt, w, AV(d)) && QfromX(d, yv);
- case CVCASE(CMPX, INT2): {Z*x = (Z*)yv; I2*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
- case CVCASE(INT4,INT2): R jtI4fromI2(jt, w, yv);
-// case CVCASE(SP,INT2): R jtDSfromI2(jt, w, yv);
- case CVCASE(QP,INT2): R jtEfromI2(jt, w, yv);
- case CVCASE(B01, INT4): R jtBfromI4(jt, w, yv);
- case CVCASE(INT,INT4): R jtIfromI4(jt, w, yv);
- case CVCASE(FL, INT4): R jtDfromI4(jt, w, yv);
- case CVCASE(XNUM, INT4): R jtXfromI4(jt, w, yv);
- case CVCASE(RAT, INT4): GATV(d, XNUM, n, r, s); R jtXfromI4(jt, w, AV(d)) && QfromX(d, yv);
- case CVCASE(CMPX, INT4): {Z*x = (Z*)yv; I4*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
- case CVCASE(INT2,INT4): R jtI2fromI4(jt, w, yv);
-// case CVCASE(SP,INT4): R jtDSfromI4(jt, w, yv);
- case CVCASE(QP,INT4): R jtEfromI4(jt, w, yv);
- case CVCASE(B01,SP): R jtBfromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
- case CVCASE(INT,SP): R jtIfromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
- case CVCASE(FL,SP): R jtDfromDS(jt, w, yv);
- case CVCASE(CMPX,SP): R jtZfromDS(jt, w, yv);
- case CVCASE(XNUM, SP): R jtXfromDS(jt, w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged));
- case CVCASE(RAT,SP): R jtQfromDS(jt, w, yv);
- case CVCASE(INT2,SP): R jtI2fromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
- case CVCASE(INT4,SP): R jtI4fromDS(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZDS);
- case CVCASE(QP,SP): R jtEfromDS(jt, w, yv);
- case CVCASE(B01,QP): R jtBfromE(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(INT,QP): R jtIfromE(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(FL,QP): R jtDfromE(jt, w, yv);
- case CVCASE(CMPX,QP): R jtZfromE(jt, w, yv);
- case CVCASE(XNUM,QP): R jtXfromE(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(RAT,QP): R jtQfromE(jt, w, yv);
- case CVCASE(INT2,QP): R jtI2fromE(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(INT4,QP): R jtI4fromE(jt, w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
- case CVCASE(SP,QP): R jtDSfromE(jt, w, yv);
+ case CVCASE(INT, B01): R (jtIfromB(jt, w, yv))?z:0;
+ case CVCASE(XNUM, B01): R (XfromB(w, yv))?z:0;
+ case CVCASE(RAT, B01): GATV(d, XNUM, n, r, s); R (XfromB(w, AV(d)) && QfromX(d, yv))?z:0;
+ case CVCASE(FL, B01): R (jtDfromB(jt, w, yv))?z:0;
+ case CVCASE(CMPX, B01): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x->im=0.0; x++->re = *v++;); } R z;
+ case CVCASE(INT2,B01): R (jtI2fromB(jt, w, yv))?z:0;
+ case CVCASE(INT4,B01): R (jtI4fromB(jt, w, yv))?z:0;
+// case CVCASE(SP,B01): R (jtDSfromB(jt, w, yv))?z:0;
+ case CVCASE(QP,B01): R (jtEfromB(jt, w, yv))?z:0;
+ case CVCASE(B01, INT): R (BfromI(w, yv))?z:0;
+ case CVCASE(XNUM, INT): R (XfromI(w, yv))?z:0;
+ case CVCASE(RAT, INT): GATV(d, XNUM, n, r, s); R (XfromI(w, AV(d)) && QfromX(d, yv))?z:0;
+ case CVCASE(FL, INT): R (jtDfromI(jt, w, yv))?z:0;
+ case CVCASE(CMPX, INT): {Z*x = (Z*)yv; I*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R z;
+ case CVCASE(INT2,INT): R (jtI2fromI(jt, w, yv))?z:0;
+ case CVCASE(INT4,INT): R (jtI4fromI(jt, w, yv))?z:0;
+// case CVCASE(SP,INT): R (jtDSfromI(jt, w, yv))?z:0;
+ case CVCASE(QP,INT): R (jtEfromI(jt, w, yv))?z:0;
+ case CVCASE(B01, FL): R (BfromD(w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(INT, FL): R (IfromD(w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(XNUM, FL): R (XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged)))?z:0;
+ case CVCASE(RAT, FL): R (QfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged)))?z:0;
+ case CVCASE(CMPX, FL): R (ZfromD(w, yv))?z:0;
+ case CVCASE(INT2, FL): R (jtI2fromD(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(INT4, FL): R (jtI4fromD(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+// case CVCASE(SP,FL): R (jtDSfromD(jt, w, yv))?z:0;
+ case CVCASE(QP,FL): R (jtEfromD(jt, w, yv))?z:0;
+ case CVCASE(B01, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), tflagged&CVTNOFUZZ?0.0:FUZZ)))R 0; R (BfromD(d, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(INT, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), tflagged&CVTNOFUZZ?0.0:FUZZ)))R 0; R (IfromD(d, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(XNUM, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), tflagged&CVTNOFUZZ?0.0:FUZZ)))R 0; R (XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged)))?z:0;
+ case CVCASE(RAT, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), tflagged&CVTNOFUZZ?0.0:FUZZ)))R 0; R (QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged)))?z:0;
+ case CVCASE(FL, CMPX): R (DfromZ(w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(INT2, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), tflagged&CVTNOFUZZ?0.0:FUZZ)))R 0; R (jtI2fromD(jt, d, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(INT4, CMPX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), tflagged&CVTNOFUZZ?0.0:FUZZ)))R 0; R (jtI4fromD(jt, d, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+// case CVCASE(SP,CMPX): R (jtDSfromZ(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZDS))?z:0;
+ case CVCASE(QP,CMPX): R (jtEfromZ(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(B01, XNUM): R (BfromX(w, yv))?z:0;
+ case CVCASE(INT, XNUM): R (IfromX(w, yv))?z:0;
+ case CVCASE(RAT, XNUM): R (QfromX(w, yv))?z:0;
+ case CVCASE(FL, XNUM): R (DfromX(w, yv))?z:0;
+ case CVCASE(CMPX, XNUM): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R (ZfromD(d, yv))?z:0;
+ case CVCASE(INT2, XNUM): R (jtI2fromX(jt, w, yv))?z:0;
+ case CVCASE(INT4, XNUM): R (jtI4fromX(jt, w, yv))?z:0;
+// case CVCASE(SP,XNUM): R (jtDSfromX(jt, w, yv))?z:0;
+ case CVCASE(QP,XNUM): R (jtEfromX(jt, w, yv))?z:0;
+ case CVCASE(B01, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R (BfromX(d, yv))?z:0;
+ case CVCASE(INT, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R (IfromX(d, yv))?z:0;
+ case CVCASE(XNUM, RAT): R (XfromQ(w, yv))?z:0;
+ case CVCASE(FL, RAT): R (DfromQ(w, yv))?z:0;
+ case CVCASE(CMPX, RAT): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R (ZfromD(d, yv))?z:0;
+ case CVCASE(INT2, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R (jtI2fromX(jt, d, yv))?z:0;
+ case CVCASE(INT4, RAT): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R (jtI4fromX(jt, d, yv))?z:0;
+// case CVCASE(SP,RAT): R (jtDSfromQ(jt, w, yv))?z:0;
+ case CVCASE(QP,RAT): R (jtEfromQ(jt, w, yv))?z:0;
+ case CVCASE(B01, INT2): R (jtBfromI2(jt, w, yv))?z:0;
+ case CVCASE(INT,INT2): R (jtIfromI2(jt, w, yv))?z:0;
+ case CVCASE(FL, INT2): R (jtDfromI2(jt, w, yv))?z:0;
+ case CVCASE(XNUM, INT2): R (jtXfromI2(jt, w, yv))?z:0;
+ case CVCASE(RAT, INT2): GATV(d, XNUM, n, r, s); R (jtXfromI2(jt, w, AV(d)) && QfromX(d, yv))?z:0;
+ case CVCASE(CMPX, INT2): {Z*x = (Z*)yv; I2*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R z;
+ case CVCASE(INT4,INT2): R (jtI4fromI2(jt, w, yv))?z:0;
+// case CVCASE(SP,INT2): R (jtDSfromI2(jt, w, yv))?z:0;
+ case CVCASE(QP,INT2): R (jtEfromI2(jt, w, yv))?z:0;
+ case CVCASE(B01, INT4): R (jtBfromI4(jt, w, yv))?z:0;
+ case CVCASE(INT,INT4): R (jtIfromI4(jt, w, yv))?z:0;
+ case CVCASE(FL, INT4): R (jtDfromI4(jt, w, yv))?z:0;
+ case CVCASE(XNUM, INT4): R (jtXfromI4(jt, w, yv))?z:0;
+ case CVCASE(RAT, INT4): GATV(d, XNUM, n, r, s); R (jtXfromI4(jt, w, AV(d)) && QfromX(d, yv))?z:0;
+ case CVCASE(CMPX, INT4): {Z*x = (Z*)yv; I4*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R z;
+ case CVCASE(INT2,INT4): R (jtI2fromI4(jt, w, yv))?z:0;
+// case CVCASE(SP,INT4): R (jtDSfromI4(jt, w, yv))?z:0;
+ case CVCASE(QP,INT4): R (jtEfromI4(jt, w, yv))?z:0;
+ case CVCASE(B01,SP): R (jtBfromDS(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZDS))?z:0;
+ case CVCASE(INT,SP): R (jtIfromDS(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZDS))?z:0;
+ case CVCASE(FL,SP): R (jtDfromDS(jt, w, yv))?z:0;
+ case CVCASE(CMPX,SP): R (jtZfromDS(jt, w, yv))?z:0;
+ case CVCASE(XNUM, SP): R (jtXfromDS(jt, w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|CVTTOXMODE(tflagged)))?z:0;
+ case CVCASE(RAT,SP): R (jtQfromDS(jt, w, yv))?z:0;
+ case CVCASE(INT2,SP): R (jtI2fromDS(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZDS))?z:0;
+ case CVCASE(INT4,SP): R (jtI4fromDS(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZDS))?z:0;
+ case CVCASE(QP,SP): R (jtEfromDS(jt, w, yv))?z:0;
+ case CVCASE(B01,QP): R (jtBfromE(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(INT,QP): R (jtIfromE(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(FL,QP): R (jtDfromE(jt, w, yv))?z:0;
+ case CVCASE(CMPX,QP): R (jtZfromE(jt, w, yv))?z:0;
+ case CVCASE(XNUM,QP): R (jtXfromE(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(RAT,QP): R (jtQfromE(jt, w, yv))?z:0;
+ case CVCASE(INT2,QP): R (jtI2fromE(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(INT4,QP): R (jtI4fromE(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
+ case CVCASE(SP,QP): R (jtDSfromE(jt, w, yv))?z:0;
  default:                ASSERT(0, EVDOMAIN);
  }
 }
 
-// clear rank before calling ccvt - needed for sparse arrays only but returns the block as the result
-A jtcvt(J jt,I t,A w){A y;B b; 
- b=ccvt(t,w,&y);
- if(0==b) { // used to be x:_ could be NUMX, now must be RAT
-  if(jt->jerr==EWIRR) {RESETERR; b=ccvt(RAT,w,&y);}
-  ASSERT(b!=0,EVDOMAIN);
+A jtcvt(J jt,I t,A w){
+ A z=ccvt(t,w,0);
+ if(unlikely(0==z)) { // used to be x:_ could be XNUM, now must be RAT
+  if(jt->jerr==EWIRR) {RESETERR; z=ccvt(RAT,w,0);}
+  ASSERT(z!=0,EVDOMAIN);
  }
- R y;
+ R z;
 }
 
 // Convert numeric type to lowest precision that fits.  Push fuzz/rank onto a stack,
 // and use 'exact' and 'no rank' for them.  If mode=0, do not promote XNUM/RAT to fixed-length types.
 // If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL; if mode bit 3 is set, minimum precision is CMPX 
 // Result is a new buffer, always
-A jtbcvt(J jt,C mode,A w){FPREFIP(J); A y,z=w;
+A jtbcvt(J jt,C mode,A w){FPREFIP(J); A z=w;
  ARGCHK1(w);
 #ifdef NANFLAG
  // there may be values (especially b types) that were nominally CMPX but might actually be integers.  Those were
@@ -1001,11 +1001,17 @@ A jtbcvt(J jt,C mode,A w){FPREFIP(J); A y,z=w;
  // for all numerics, try Boolean/int/float in order, stopping when we find one that holds the data
  if(mode&1||!(AT(w)&XNUM+RAT)){  // if we are not stopping at XNUM/RAT
   // To avoid a needless copy, suppress conversion to B01 if type is B01, to INT if type is INT, etc
-  // set the NOFUZZ flag in jt to insist on an exact match so we won't lose precision
-  jtinplace=(J)((I)jt+JTNOFUZZ);  // demand exact match
-  z=!(mode&14)&&jtccvt(jtinplace,B01,w,&y)?y:
-    (y=w,ISDENSETYPE(AT(w),INT)||(!(mode&12)&&jtccvt(jtinplace,INT,w,&y)))?y:
-    (y=w,ISDENSETYPE(AT(w),FL)||(!(mode&8)&&jtccvt(jtinplace,FL,w,&y)))?y:w;  // convert to enabled modes one by one, stopping when one works
+  // set the NOFUZZ flag in t to insist on an exact match so we won't lose precision
+// obsolete   jtinplace=(J)((I)jt+JTNOFUZZ);  // demand exact match
+// obsolete   z=!(mode&14)&&jtccvt(jtinplace,B01,w,&y)?y:
+// obsolete     (y=w,ISDENSETYPE(AT(w),INT)||(!(mode&12)&&jtccvt(jtinplace,INT,w,&y)))?y:
+// obsolete     (y=w,ISDENSETYPE(AT(w),FL)||(!(mode&8)&&jtccvt(jtinplace,FL,w,&y)))?y:w;  // convert to enabled modes one by one, stopping when one works
+  if(!(mode&14)&&(z=jtccvt(jtinplace,B01|CVTNOFUZZ,w,0)));  // if OK to try B01, and it fits, keep B01
+  else if(ISDENSETYPE(AT(w),INT))z=w;   // if w is INT, we can't improve
+  else if(!(mode&12)&&(z=jtccvt(jtinplace,INT|CVTNOFUZZ,w,0)));  //  OK to try INT and it fits, keep B01
+  else if(ISDENSETYPE(AT(w),FL))z=w;   // if w if FL, we can't improve
+  else if(!(mode&8)&&(z=jtccvt(jtinplace,FL|CVTNOFUZZ,w,0)));  // if to try FL and it fits, keep FL
+  else z=w;  // no lower precision available, keep as is
  }
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
@@ -1021,10 +1027,10 @@ F1(jticvt){A z;D*v,x;I i,n,*u;
  R z;
 }
 
-A jtpcvt(J jt,I t,A w){A y;B b;RANK2T oqr=jt->ranks;
- RESETRANK; b=ccvt(t,w,&y); jt->ranks=oqr;
- R b?y:w;
-}    /* convert w to type t, if possible, otherwise just return w */
+A jtpcvt(J jt,I t,A w){B b;RANK2T oqr=jt->ranks;
+ RESETRANK; A z=ccvt(t,w,0); jt->ranks=oqr;
+ R z?z:w;
+}    /* convert w to type t, if possible, otherwise just return w.  Leave ranks unaffected */
 
 #if !C_CRC32C
 F1(jtcvt0){I n,t;D *u;

@@ -48,7 +48,7 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
   v[0]=ztymes(d,v[0]);
   if(p&&d.im)if(b^=1)c=u[j]; else if(p=ZCJ(c,u[j])){t=v; DQ(2+j, t++->im=0.0;);}
  }
- R p>b?cvt(FL,z):z;
+ R p>b?ccvt(FL,z,0):z;
 }
 
 static F1(jtcfr){A c,r,*wv;I t;
@@ -189,7 +189,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
    // We don't use the roots we find here - we just have to make some progress
    // before the next iteration
  }}
- AN(z)=AS(z)[0]=j; *zz=z; RZ(*ww=cvt(FL,q));
+ AN(z)=AS(z)[0]=j; *zz=z; RZ(*ww=ccvt(FL,q,0));
  R 1;
 }    /* roots from coefficients, degree m is 2 or more */
 
@@ -213,12 +213,12 @@ static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
   }
   if(bb){A x1;D*u;
    // If we failed on an iteration, perturb the highest coefficient a little bit and see if we can solve that instead.
-   if(real){RZ(x1=cvt(FL,vec(CMPX,1+m,xv))); u=  DAV(x1)+m-1;      if(*u)*u*=1+1e-12; else *u=1e-12;}
+   if(real){RZ(x1=ccvt(FL,vec(CMPX,1+m,xv),0)); u=  DAV(x1)+m-1;      if(*u)*u*=1+1e-12; else *u=1e-12;}
    else    {RZ(x1=       vec(CMPX,1+m,xv) ); u=&(ZAV(x1)+m-1)->re; if(*u)*u*=1+1e-12; else *u=1e-12;}
    STACKCHKOFL RZ(z=rfcz(m,x1)); zv=ZAV(z);
    DO(m, zv[i]=newt(m,xv,zv[i],10L););
  }}
- if(real){B b=1; DO(m, if(zv[i].im){b=0; break;}); if(b)z=cvt(FL,z);}
+ if(real){B b=1; DO(m, if(zv[i].im){b=0; break;}); if(b)z=ccvt(FL,z,0);}
  RETF(z);
 }    /* roots from coefficients, degree m is 2 or more */
 

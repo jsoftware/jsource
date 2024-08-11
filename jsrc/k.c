@@ -11,7 +11,7 @@
 #define KF2(f)          B f(J jt,A w,void*yv,I mode)
 static KF1(jtC1fromC2){UC*x;US c,*v;
  v=USAV(w); x=(C*)yv;
- DQ(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
+ DQ(AN(w), c=*v++; ASSERT((256>c),EVDOMAIN) *x++=(UC)c;);
  R 1;
 }
 
@@ -23,13 +23,13 @@ static KF1(jtC2fromC1){UC*v;US*x;
 
 static KF1(jtC1fromC4){UC*x;C4 c,*v;
  v=C4AV(w); x=(C*)yv;
- DQ(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
+ DQ(AN(w), c=*v++; ASSERT((256>c),EVDOMAIN) *x++=(UC)c;);
  R 1;
 }
 
 static KF1(jtC2fromC4){US*x;C4 c,*v;
  v=C4AV(w); x=(US*)yv;
- DQ(AN(w), c=*v++; if(!(65536>c))R 0; *x++=(US)c;);
+ DQ(AN(w), c=*v++; ASSERT((65536>c),EVDOMAIN) *x++=(US)c;);
  R 1;
 }
 
@@ -116,8 +116,8 @@ static KF1(jtEfromDS){E *zv=yv; DS *wv=DSAV(w);
 
 static KF1F(jtEfromZ){D d;I n;Z*v; E*x;
  n=AN(w); v=ZAV(w); x=(E*)yv;
- if(fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=fuzz*ABS(v->re)){x->hi=v->re; x->lo=x->hi*0.; ++x; v++;} else R 0;)
- else        DQ(n, d=    v->im ; if(!d                            ){x->hi=v->re; x->lo=x->hi*0.; ++x; v++;} else R 0;);
+ if(fuzz)DQ(n, d=ABS(v->im); ASSERT(d!=inf&&d<=fuzz*ABS(v->re),EVDOMAIN) x->hi=v->re; x->lo=x->hi*0.; ++x; v++;)
+ else        DQ(n, d=    v->im ; ASSERT(!d,EVDOMAIN) x->hi=v->re; x->lo=x->hi*0.; ++x; v++;);
  R 1;
 }
 
@@ -143,8 +143,8 @@ static KF1(jtEfromI){
 
 static KF1F(jtBfromE){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
- DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
-  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; if(val==2)R 0; *x++=(B)val; )
+ DQ(n, p=*v++; ASSERT(!(p<-2||2<p),EVDOMAIN)   // handle infinities
+  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; ASSERT(val!=2,EVDOMAIN) *x++=(B)val; )
  R 1;
 }
 
@@ -153,16 +153,16 @@ static KF1F(jtIfromE){D p,q; E*v;I i,k=0,n,*x;
 #if SY_64
  for(i=0;i<n;++i){
   p=v[i].hi; q=jround(p);
-  if(!ISFTOIOKFZ(p,q,fuzz))R 0;  // error if value not tolerably integral
-  p=v[i].lo; if(fuzz==0.&&p!=jround(p))R 0;  // error only if intolerant and nonintegral
+  ASSERT(ISFTOIOKFZ(p,q,fuzz),EVDOMAIN)  // error if value not tolerably integral
+  p=v[i].lo; ASSERT(!(fuzz==0.&&p!=jround(p)),EVDOMAIN)   // error only if intolerant and nonintegral
   *x++=(I)q+(I)p;  // if tolerantly integral, store it.  Overflow not possible
  }
 #else  // treat like D
  q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
- DO(n, p=v[i].hi; if(p<q||r<p)R 0;);
+ DO(n, p=v[i].hi; ASSERT(!(p<q||r<p),EVDOMAIN));
  for(i=0;i<n;++i){
   p=v[i].hi; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I)(1+q);}
  }
 #endif
  R 1;
@@ -171,10 +171,10 @@ static KF1F(jtIfromE){D p,q; E*v;I i,k=0,n,*x;
 static KF1F(jtI2fromE){D p,q; E*v;I i,k=0,n; I2 *x;
  n=AN(w); v=EAV(w); x=(I2*)yv;
  q=-0x8000*(1+fuzz); D r=0x7fff*(1+fuzz);
- DO(n, p=v[i].hi; if(p<q||r<p)R 0;);
+ DO(n, p=v[i].hi; ASSERT(!(p<q||r<p),EVDOMAIN) );
  for(i=0;i<n;++i){
   p=v[i].hi; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I2)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I2)(1+q);}
  }
  R 1;
 }
@@ -182,10 +182,10 @@ static KF1F(jtI2fromE){D p,q; E*v;I i,k=0,n; I2 *x;
 static KF1F(jtI4fromE){D p,q; E*v;I i,k=0,n; I4 *x;
  n=AN(w); v=EAV(w); x=(I4*)yv;
  q=-0x80000000*(1+fuzz); D r=0x7fffffff*(1+fuzz);
- DO(n, p=v[i].hi; if(p<q||r<p)R 0;);
+ DO(n, p=v[i].hi; ASSERT(!(p<q||r<p),EVDOMAIN) );
  for(i=0;i<n;++i){
   p=v[i].hi; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I4)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I4)(1+q);};
  }
  R 1;
 }
@@ -209,7 +209,7 @@ static KF1F(jtXfromE){
  X *x= yv; E *wv=EAV(w);
  DO(AN(w), 
    mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo);  jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
-   if(!ISQINT(z))R0; *x++= z.n;   // Verify that the denominator is 1; install the numerator into *x
+   ASSERT(ISQINT(z),EVDOMAIN) *x++= z.n;   // Verify that the denominator is 1; install the numerator into *x
  ); 
  R 1;
 }
@@ -252,8 +252,8 @@ static KF1(jtDSfromE){DS *zv=yv; E *wv=EAV(w);
 
 static KF1F(jtDSfromZ){D d;I n;Z*v; DS*x;
  n=AN(w); v=ZAV(w); x=(DS*)yv;
- if(fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=fuzz*ABS(v->re)){*x=v->re; ++x; v++;} else R 0;)
- else        DQ(n, d=    v->im ; if(!d                            ){*x=v->re; ++x; v++;} else R 0;);
+ if(fuzz)DQ(n, d=ABS(v->im); ASSERT(d!=inf&&d<=fuzz*ABS(v->re),EVDOMAIN) *x=v->re; ++x; v++;)
+ else        DQ(n, d=    v->im ; ASSERT(!d,EVDOMAIN) *x=v->re; ++x; v++;);
  R 1;
 }
 
@@ -287,8 +287,8 @@ static KF1(jtDSfromI){
 
 static KF1F(jtBfromDS){B*x;DS p,*v;I n;
  n=AN(w); v=DSAV(w); x=(B*)yv;
- DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
-  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; if(val==2)R 0; *x++=(B)val; )
+ DQ(n, p=*v++; ASSERT(!(p<-2||2<p),EVDOMAIN)   // handle infinities
+  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; ASSERT(!(val==2),EVDOMAIN) *x++=(B)val; )
  R 1;
 }
 
@@ -297,15 +297,15 @@ static KF1F(jtIfromDS){D p,q; DS*v;I i,k=0,n,*x;
 #if SY_64
  for(i=0;i<n;++i){
   p=v[i]; q=jround(p);
-  if(!ISFTOIOKFZ(p,q,fuzz))R 0;  // error if value not tolerably integral
+  ASSERT(ISFTOIOKFZ(p,q,fuzz),EVDOMAIN)  // error if value not tolerably integral
   *x++=(I)q;  // if tolerantly integral, store it.  Overflow not possible
  }
 #else  // treat like D
  q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
- DO(n, p=v[i]; if(p<q||r<p)R 0;);
+ DO(n, p=v[i]; ASSERT(!(p<q||r<p),EVDOMAIN) );
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I)(1+q);}
  }
 #endif
  R 1;
@@ -314,10 +314,10 @@ static KF1F(jtIfromDS){D p,q; DS*v;I i,k=0,n,*x;
 static KF1F(jtI2fromDS){D p,q; DS*v;I i,k=0,n; I2*x;
  n=AN(w); v=DSAV(w); x=(I2*)yv;
  q=-0x8000*(1+fuzz); D r=0x7fff*(1+fuzz);
- DO(n, p=v[i]; if(p<q||r<p)R 0;);
+ DO(n, p=v[i]; ASSERT(!(p<q||r<p),EVDOMAIN));
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I2)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I2)(1+q);}
  }
  R 1;
 }
@@ -325,10 +325,10 @@ static KF1F(jtI2fromDS){D p,q; DS*v;I i,k=0,n; I2*x;
 static KF1F(jtI4fromDS){D p,q; DS*v;I i,k=0,n; I4*x;
  n=AN(w); v=DSAV(w); x=(I4*)yv;
  q=-0x80000000*(1+fuzz); D r=0x7fffffff*(1+fuzz);
- DO(n, p=v[i]; if(p<q||r<p)R 0;);
+ DO(n, p=v[i]; ASSERT(!(p<q||r<p),EVDOMAIN) );
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I4)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I4)(1+q);}
  }
  R 1;
 }
@@ -359,7 +359,7 @@ static KF2(jtXfromDS){ // array content yv as X from array w of D
 
 static KF1(jtBfromI2){B*x;I2 p,*v;I n;
  n=AN(w); v=I2AV(w); x=(B*)yv;
- DQ(n, p=*v++; if(unlikely(p&~1))R 0;  *x++=(B)p; )  // err if non-boolean
+ DQ(n, p=*v++; ASSERT(!(p&~1),EVDOMAIN)  *x++=(B)p; )  // err if non-boolean
  R 1;
 }
 
@@ -410,7 +410,7 @@ static KF1(jtEfromI2){E *zv=yv; I2 *wv=I2AV(w);
 
 static KF1(jtBfromI4){B*x;I4 p,*v;I n;
  n=AN(w); v=I4AV(w); x=(B*)yv;
- DQ(n, p=*v++; if(unlikely(p&~1))R 0;  *x++=(B)p; )  // err if non-boolean
+ DQ(n, p=*v++; ASSERT(!(p&~1),EVDOMAIN)  *x++=(B)p; )  // err if non-boolean
  R 1;
 }
 
@@ -442,7 +442,7 @@ static KF1(jtQfromI4){
 }
 
 static KF1(jtI2fromI4){I2 *zv=yv; I4 *wv=I4AV(w);
- I n=AN(w); DO(n, I2 v=wv[i]; if(unlikely(v!=wv[i]))R 0; zv[i]=v;)
+ I n=AN(w); DO(n, I2 v=wv[i]; ASSERT(v==wv[i],EVDOMAIN) zv[i]=v;)
  R 1;
 }
 
@@ -517,19 +517,19 @@ R 1;
 
 static KF1(jtBfromI){B*x;I n,p,*v;
  n=AN(w); v=AV(w); x=(B*)yv;
- DQ(n, p=*v++; *x++=(B)p; if(p&-2)R 0;);
+ DQ(n, p=*v++; *x++=(B)p; ASSERT(!(p&-2),EVDOMAIN));
  R 1;
 }
 
 
 static KF1(jtI2fromI){I2 *zv=yv; I *wv=IAV(w);
- I n=AN(w); DO(n, I2 v=wv[i]; if(unlikely(v!=wv[i]))R 0; zv[i]=v;)
+ I n=AN(w); DO(n, I2 v=wv[i]; ASSERT(v==wv[i],EVDOMAIN) zv[i]=v;)
  R 1;
 }
 
 
 static KF1(jtI4fromI){I4 *zv=yv; I *wv=IAV(w);
- I n=AN(w); DO(n, I4 v=wv[i]; if(unlikely(v!=wv[i]))R 0; zv[i]=v;)
+ I n=AN(w); DO(n, I4 v=wv[i]; ASSERT(v==wv[i],EVDOMAIN) zv[i]=v;)
  R 1;
 }
 
@@ -537,8 +537,8 @@ static KF1(jtI4fromI){I4 *zv=yv; I *wv=IAV(w);
 
 static KF1F(jtBfromD){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
- DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
-  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; if(val==2)R 0; *x++=(B)val; )
+ DQ(n, p=*v++; ASSERT(!(p<-2||2<p),EVDOMAIN)   // handle infinities
+  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; ASSERT(val!=2,EVDOMAIN) *x++=(B)val; )
  R 1;
 }
 
@@ -547,15 +547,15 @@ static KF1F(jtIfromD){D p,q,*v;I i,k=0,n,*x;
 #if SY_64
  for(i=0;i<n;++i){
   p=v[i]; q=jround(p);
-  if(!ISFTOIOKFZ(p,q,fuzz))R 0;  // error if value not tolerably integral
+  ASSERT(ISFTOIOKFZ(p,q,fuzz),EVDOMAIN)  // error if value not tolerably integral
   *x++=(I)q;  // if tolerantly integral, store it
  }
 #else
  q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
- DO(n, p=v[i]; if(p<q||r<p)R 0;);
+ DO(n, p=v[i]; ASSERT(!(p<q||r<p),EVDOMAIN) );
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I)(1+q);}
  }
 #endif
  R 1;
@@ -564,10 +564,10 @@ static KF1F(jtIfromD){D p,q,*v;I i,k=0,n,*x;
 static KF1F(jtI2fromD){D p,q,*v;I i,n; I2 *x;
  n=AN(w); v=DAV(w); x=(I2*)yv;
  q=-0x8000*(1+fuzz); D r=0x7fff*(1+fuzz);
- DO(n, p=v[i]; if(p<q||r<p)R 0;);
+ DO(n, p=v[i]; ASSERT(!(p<q||r<p),EVDOMAIN) );
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I)(1+q);}
  }
  R 1;
 }
@@ -575,10 +575,10 @@ static KF1F(jtI2fromD){D p,q,*v;I i,n; I2 *x;
 static KF1F(jtI4fromD){D p,q,*v;I i,n; I4 *x;
  n=AN(w); v=DAV(w); x=(I4*)yv;
  q=-0x80000000*(1+fuzz); D r=0x7fffffff*(1+fuzz);
- DO(n, p=v[i]; if(p<q||r<p)R 0;);
+ DO(n, p=v[i]; ASSERT(!(p<q||r<p),EVDOMAIN) );
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else{ASSERT(FIEQ(p,1+q,fuzz),EVDOMAIN) *x++=(I)(1+q);}
  }
  R 1;
 }
@@ -587,8 +587,8 @@ static KF1F(jtI4fromD){D p,q,*v;I i,n; I4 *x;
 
 static KF1F(jtDfromZ){D d,*x;I n;Z*v;
  n=AN(w); v=ZAV(w); x=(D*)yv;
- if(fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=fuzz*ABS(v->re)){*x++=v->re; v++;} else R 0;)
- else        DQ(n, d=    v->im ; if(!d                            ){*x++=v->re; v++;} else R 0;);
+ if(fuzz)DQ(n, d=ABS(v->im); ASSERT(d!=inf&&d<=fuzz*ABS(v->re),EVDOMAIN) *x++=v->re; v++;)
+ else        DQ(n, d=    v->im ; ASSERT(!d,EVDOMAIN) *x++=v->re; v++;);
  R 1;
 }
 
@@ -618,11 +618,10 @@ static KF2(jtXfromD){ // array content yv as X from array w of D
 static KF1(jtBfromX){ // array content yv as B from array w of X
  B*y= yv; I wn= AN(w); X*wv= XAV(w); 
  DO(wn, X W= wv[i];
-  if (0>XSGN(W)) R0;
-  if (1<XSGN(W)) R0;
+  ASSERT(!(0>XSGN(W)),EVDOMAIN)
+  ASSERT(!(1<XSGN(W)),EVDOMAIN)
   if (0==XSGN(W)) *y++= 0;
-  else if (1==XLIMB0(W)) *y++= 1;
-  else R0;
+  else {ASSERT(1==XLIMB0(W),EVDOMAIN) *y++= 1;}
  );
  R 1;
 }
@@ -632,9 +631,9 @@ static KF1(jtIfromX){
  DO(AN(w), X W= wv[i]; UI val;
   if(unlikely(0==XSGN(W)))val=0;  // 0 limbs = 0 value
   else{
-   if(unlikely(((XSGN(W)-REPSGN(XSGN(W)))&~1)!=0))R 0;  // if limb count not 1 or -1, error
+   ASSERT(!(((XSGN(W)-REPSGN(XSGN(W)))&~1)!=0),EVDOMAIN)  // if limb count not 1 or -1, error
    val=XLIMB0(W);  // fetch |value|, which may be > IMAX
-   if(unlikely(val>(UI)IMAX-REPSGN(XSGN(W))))R 0;  // if positive > IMAX, or negative > IMIN, error
+   ASSERT(!(val>(UI)IMAX-REPSGN(XSGN(W))),EVDOMAIN)  // if positive > IMAX, or negative > IMIN, error
    val=(val^REPSGN(XSGN(W)))-REPSGN(XSGN(W));  // value in range.  take 2's comp if negative
   }
   *y++=(I)val;  // store the values
@@ -647,9 +646,9 @@ static KF1(jtI2fromX){
  DO(AN(w), X W= wv[i]; UI val;
   if(unlikely(0==XSGN(W)))val=0;  // 0 limbs = 0 value
   else{
-   if(unlikely(((XSGN(W)-REPSGN(XSGN(W)))&~1)!=0))R 0;  // if limb count not 1 or -1, error
+   ASSERT(!(((XSGN(W)-REPSGN(XSGN(W)))&~1)!=0),EVDOMAIN)  // if limb count not 1 or -1, error
    val=XLIMB0(W);  // fetch |value|, which may be > IMAX
-   if(unlikely(val>(UI)0x7fff-REPSGN(XSGN(W))))R 0;  // if positive > IMAX, or negative > IMIN, error
+   ASSERT(!(val>(UI)0x7fff-REPSGN(XSGN(W))),EVDOMAIN)  // if positive > IMAX, or negative > IMIN, error
    val=(val^REPSGN(XSGN(W)))-REPSGN(XSGN(W));  // value in range.  take 2's comp if negative
   }
   *y++=(I2)val;  // store the values
@@ -662,9 +661,9 @@ static KF1(jtI4fromX){
  DO(AN(w), X W= wv[i]; UI val;
   if(unlikely(0==XSGN(W)))val=0;  // 0 limbs = 0 value
   else{
-   if(unlikely(((XSGN(W)-REPSGN(XSGN(W)))&~1)!=0))R 0;  // if limb count not 1 or -1, error
+   ASSERT(!(((XSGN(W)-REPSGN(XSGN(W)))&~1)!=0),EVDOMAIN)  // if limb count not 1 or -1, error
    val=XLIMB0(W);  // fetch |value|, which may be > IMAX
-   if(unlikely(val>(UI)0x7fffffff-REPSGN(XSGN(W))))R 0;  // if positive > IMAX, or negative > IMIN, error
+   ASSERT(!(val>(UI)0x7fffffff-REPSGN(XSGN(W))),EVDOMAIN)  // if positive > IMAX, or negative > IMIN, error
    val=(val^REPSGN(XSGN(W)))-REPSGN(XSGN(W));  // value in range.  take 2's comp if negative
   }
   *y++=(I4)val;  // store the values
@@ -773,7 +772,7 @@ static KF1(jtDfromQ){
 
 static KF1(jtXfromQ){
  GMP; X*x=yv; Q*v= QAV(w);
- DQ(AN(w), if (!ISQINT(*v)) R0;; *x++= v++->n;);
+ DQ(AN(w), ASSERT(ISQINT(*v),EVDOMAIN) *x++= v++->n;);
  R 1;
 }
 
@@ -960,11 +959,12 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
  }
 }
 
+// check for errors converting FL/CMPX to XNUM/INT.  Flags in t will be passed through
 A jtcvt(J jt,I t,A w){
- A z=ccvt(t,w,0);
+ A z=ccvt(t,w,0);  // attempt the conversion, set error if any
  if(unlikely(0==z)) { // used to be x:_ could be XNUM, now must be RAT
-  if(jt->jerr==EWIRR) {RESETERR; z=ccvt(RAT,w,0);}
-  ASSERT(z!=0,EVDOMAIN);
+  if(jt->jerr==EWIRR) {RESETERR; z=ccvt(RAT,w,0);}  // retry if soft failure
+// obsolete   ASSERT(z!=0,EVDOMAIN);
  }
  R z;
 }
@@ -1012,7 +1012,9 @@ A jtbcvt(J jt,C mode,A w){FPREFIP(J); A z=w;
   else if(ISDENSETYPE(AT(w),FL))z=w;   // if w if FL, we can't improve
   else if(!(mode&8)&&(z=jtccvt(jtinplace,FL|CVTNOFUZZ,w,0)));  // if to try FL and it fits, keep FL
   else z=w;  // no lower precision available, keep as is
+  RESETERR;   // some conversions might have failed
  }
+
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 
@@ -1029,7 +1031,7 @@ F1(jticvt){A z;D*v,x;I i,n,*u;
 
 A jtpcvt(J jt,I t,A w){B b;RANK2T oqr=jt->ranks;
  RESETRANK; A z=ccvt(t,w,0); jt->ranks=oqr;
- R z?z:w;
+ RESETERR; R z?z:w;
 }    /* convert w to type t, if possible, otherwise just return w.  Leave ranks unaffected */
 
 #if !C_CRC32C
@@ -1066,7 +1068,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  }
 }
 
-// 9!:23 audit indices
+// 9!:23 audit indices, used by eformat
 // x is indexes (may be sparse)
 // y is type;parms
 // type is 0 (normal), 1 (treat complex as 2 separate reals), 2 allow _ as imin/imax
@@ -1099,6 +1101,7 @@ F2(jtindaudit){PROLOG(365);
   // value fetched, see if in range
   if(!BETWEENC(ival,min,max)){errtype=3; break;}  // exit loop if index not in range, with appropriate error type
  }
+ RESETERR;  // any error was informational; clear it
  A z;  // result
  if(findex==indn)z=jlink(zeroionei(0),mtv);  // normal return with no error
  else{

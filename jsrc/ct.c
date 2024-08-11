@@ -744,7 +744,7 @@ F2(jttcapdot2){A z;
   break;}
  case 5: { // create a user pyx.  y is the timeout in seconds
 #if PYXES
-  ASSERT(AN(w)==1,EVLENGTH) w=cvt(FL,w); D atimeout=*DAV(w); // get the timeout value
+  ASSERT(AN(w)==1,EVLENGTH) w=ccvt(FL,w,0); D atimeout=*DAV(w); // get the timeout value
   ASSERT(atimeout==inf||atimeout<=9e9,EVLIMIT); // 9e9 is approx 63 bits of ns.  This leaves ~300y; should be ok
   z=box(jtcreatepyx(jt,THREADID(jt),atimeout));  // create the recursive pyx, owned by this thread
 #else
@@ -798,7 +798,7 @@ ASSERT(0,EVNONCE)
 #if PYXES
 #define MAXLINGER 0.1  //  maximum time we will allow for lingering
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // arg is threadpool# keepwarm
-  if(AT(w)!=FL)RZ(w=cvt(FL,w));  // make arg float type
+  if(AT(w)!=FL)RZ(w=ccvt(FL,w,0));  // make arg float type
   D dpoolno=DAV(w)[0]; I poolno=(I)dpoolno; ASSERT((D)poolno==dpoolno,EVDOMAIN) ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
   D oldval=jobq->keepwarmns*1e-9;
@@ -903,7 +903,7 @@ ASSERT(0,EVNONCE)
 #if PYXES
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=2,EVLENGTH)
   A mutex=AN(w)==1?w:C(AAV(w)[0]); D timeout=inf; I lockfail=0;
-  if(AN(w)==2){A tob=C(AAV(w)[1]); ASSERT(AR(tob)<=1,EVRANK) ASSERT(AN(tob)==1,EVLENGTH) if(!(AT(tob)&FL))RZ(tob=cvt(FL,tob)) timeout=DAV(tob)[0];}  // pull out timeout
+  if(AN(w)==2){A tob=C(AAV(w)[1]); ASSERT(AR(tob)<=1,EVRANK) ASSERT(AN(tob)==1,EVLENGTH) if(!(AT(tob)&FL))RZ(tob=ccvt(FL,tob,0)) timeout=DAV(tob)[0];}  // pull out timeout
   ASSERT(AT(mutex)&BOX,EVDOMAIN) ASSERT(AR(mutex)==0,EVRANK) mutex=AAV(mutex)[0];  // mutex is a box protecting the actual mutex: open it
   ASSERT(AT(mutex)&INT,EVDOMAIN); ASSERT(AM(mutex)==CREDMUTEX,EVDOMAIN);  // verify valid mutex
   if(timeout==inf){  // is there a max timeout?

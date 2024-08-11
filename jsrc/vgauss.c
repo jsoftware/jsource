@@ -110,7 +110,7 @@ F1(jtgaussdet){A z;I*s;
   case FLX:   z=detd(ca(w));      break;
   default:   ASSERT(0,EVDOMAIN);
   case B01X:
-  case INTX:  R detd(cvt(FL,w));
+  case INTX:  R detd(ccvt(FL,w,0));
   case CMPXX: z=detz(ca(w));      break;
   case XNUMX: z=detr(cvt(RAT,w)); break;
   case RATX:  z=detr(ca(w));

@@ -544,7 +544,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
       ASSERT(!(AR(x)&&AT(x)&NUMERIC),EVRANK);});
   A z; R df2(z,reitem(shape(w),a),w,amp(foreign(num(8),num(0)), ds(COPE)));
  } else {
-  if(ISDENSETYPE(AT(w),XNUM+RAT+CMPX))RZ(w=cvt(FL,w));
+  if(ISDENSETYPE(AT(w),XNUM+RAT+CMPX))RZ(w=ccvt(FL,w,0));
   *omode=mode;
   R fmtallcol(fmtprecomp(rank1ex0(a,DUMMYSELF,jtfmtparse),w),w,mode);
 }} /* 8!:x internals */

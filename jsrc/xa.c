@@ -42,7 +42,7 @@ F1(jtctq){ASSERTMTV(w); R scf(1.0-jt->cct);}
 // 9!:19
 F1(jtcts){D d;
  ASSERT(!AR(w),EVRANK);
- RZ(w=cvt(FL,w)); d=DAV(w)[0];
+ RZ(w=ccvt(FL,w,0)); d=DAV(w)[0];
  ASSERT(0<=d,EVDOMAIN); 
  ASSERT(d<=5.820766091e-11,EVDOMAIN);
  jt->cct=1.0-d;

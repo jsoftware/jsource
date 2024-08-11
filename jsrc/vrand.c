@@ -695,7 +695,7 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
  if(c){D*d;I mk,sh;
   INITD;
-  RZ(z=cvt(FL,z)); d=DAV(z); v=XAV(w);
+  RZ(z=ccvt(FL,z,0)); d=DAV(z); v=XAV(w);
   DQ(n, x=*v++; if(!XSGN(x))*d=sh?NEXTD1:NEXTD0; ++d;);
  } 
  R z;
@@ -917,7 +917,7 @@ static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
  if(c){D*d;I mk,sh;
   INITD;
-  RZ(z=cvt(FL,z)); d=DAV(z); v=XAV(w);
+  RZ(z=ccvt(FL,z,0)); d=DAV(z); v=XAV(w);
   DQ(n, x=*v++; if(!XSGN(x))*d=sh?NEXTD1:NEXTD0; ++d;);
  } 
  R z;

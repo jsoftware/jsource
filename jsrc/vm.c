@@ -531,9 +531,9 @@ F2(jtroot){A z;I t;
  if(!(t&XNUM))R expn2(mw,recip(ma));  // not inplaceable - could be IMAG
  z=rank2ex0(ma,mw,DUMMYSELF,jtxroota);
  switch(jt->jerr){
- case EWIMAG: RESETERR; R expn2(cvt(CMPX,w),recip(cvt(CMPX,a)));
+ case EWIMAG: RESETERR; R expn2(ccvt(CMPX,w,0),recip(ccvt(CMPX,a,0)));
  case EWRAT: 
- case EWIRR:  RESETERR; R expn2(cvt(FL,  w),recip(cvt(FL,  a)));
+ case EWIRR:  RESETERR; R expn2(ccvt(FL,  w,0),recip(ccvt(FL,  a,0)));
  default:     R z;
  }
 }
@@ -545,7 +545,7 @@ F2(jtjdot2){
  if((~(SGNIFSPARSE(at)|SGNIFSPARSE(wt))&-(at&B01+INT+FL)&-(wt&B01+INT+FL))<0){A z;  // if both args real and not sparse
   I ar=AR(a), wr=AR(w);
   ASSERTAGREE(AS(a),AS(w),MIN(ar,wr))  // verify agreement
-  if(!(at&FL))RZ(a=cvt(FL,a)) if(!(wt&FL))RZ(w=cvt(FL,w))  // convert to FL if needed
+  if(!(at&FL))RZ(a=ccvt(FL,a,0)) if(!(wt&FL))RZ(w=ccvt(FL,w,0))  // convert to FL if needed
   RZ(IRS2(a,w,DUMMYSELF,0,0,jtover,z)) makewritable(z) AN(z)>>=1; AR(z)=MAX(AR(a),AR(w)); AT(z)=CMPX;  // z=a ,"0 w, then switch to CMPX
   R z;
  }

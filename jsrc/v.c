@@ -110,7 +110,7 @@ DF1(jtiota){A z;I m,n,*v;
 // i: w
 DF1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
  F1RANK(0,jtjico1,self);
- RZ(y=cvt(FL,rect(w))); v=DAV(y); d=*v;  // convert to complex, d=real part of value
+ RZ(y=ccvt(FL,rect(w),0)); v=DAV(y); d=*v;  // convert to complex, d=real part of value
  RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num(2))));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
  ASSERT(0<m||!m&&0==d,EVDOMAIN);  // error if imag part was negative, or 0 unless d is also 0
  n=(I)jround(d); b=FFIEQ(d,n); c=(2*ABS(n))/(m?m:1);   // try as integer
@@ -133,7 +133,7 @@ DF1(jtnum1){F1PREFIP;A z=0;
   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&-(AT(w)&B01+INT+FL)&~((AT(w)&B01+INT+FL)-(AT(a)&B01+INT+FL)),w)){  // inplaceable, and direct numeric and type of a is not bigger than that of w
    // inplace: we will cast the atom of a to the (never smaller) size of w.  This is OK because a is never a bigger type
    // 0 can be used for any w; boolean 1 can be used as is for boolean/INT w; other values must be converted in FL.  So, if result is FL, nonzero values must be converted
-   if((AT(w)>>FLX)&(IAV0(a)[0]!=0))RZ(a=cvt(FL,a));  // make value conform to existing type
+   if((AT(w)>>FLX)&(IAV0(a)[0]!=0))RZ(a=ccvt(FL,a,0));  // make value conform to existing type
    z=w; k=bplg(AT(w));  // copy to the existing output area, 
   }
  }else{

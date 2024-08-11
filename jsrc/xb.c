@@ -575,7 +575,7 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  n=AN(w);
  RE(j=i0(a));
  p=2==j||-2==j?LGSZD:2;
- if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),FL))RZ(w=cvt(FL,w));}
+ if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),FL))RZ(w=ccvt(FL,w,0));}
  else   {m=n>>p; zt=FL; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
  GA10(z,zt,m); v=DAV(z); x=DAV(w);
  switch(j){

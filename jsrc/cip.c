@@ -790,7 +790,7 @@ oflo2:
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-     if((UI)probsize < (UI)FLOAT16TOFLOAT(JT(jt,igemm_thres))){RZ(a=cvt(FL,a)); RZ(w=cvt(FL,w)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}  // Do our matrix multiply - converting   TUNE
+     if((UI)probsize < (UI)FLOAT16TOFLOAT(JT(jt,igemm_thres))){RZ(a=ccvt(FL,a,0)); RZ(w=ccvt(FL,w,0)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}  // Do our matrix multiply - converting   TUNE
      else {
       // for large problem, use BLAS
       mvc(m*n*sizeof(D),DAV(z),1,MEMSET00);
@@ -1124,7 +1124,7 @@ DF1(jtludecompg){F1PREFIP;PROLOG(823);
 // Bivalent.  a, if given, is the sequence of thresholds to try
 DF2(jtludecomp){F1PREFIP;PROLOG(823);
  static D pthresh[2]={1e-6,0}, *pivotthresh; I npivotthresh, curpivotthreshx;  // list of successive thresholds for pivots, last one usually 0.0
- if(AT(w)&NOUN){ASSERT(AR(a)<=1,EVRANK); ASSERT(AN(a)>0,EVLENGTH) if(unlikely(!(AT(a)&FL)))RZ(a=cvt(FL,a)); pivotthresh=DAV(a); npivotthresh=AN(a);}else{w=a; pivotthresh=pthresh; npivotthresh=sizeof(pthresh)/sizeof(pthresh[0]);}
+ if(AT(w)&NOUN){ASSERT(AR(a)<=1,EVRANK); ASSERT(AN(a)>0,EVLENGTH) if(unlikely(!(AT(a)&FL)))RZ(a=ccvt(FL,a,0)); pivotthresh=DAV(a); npivotthresh=AN(a);}else{w=a; pivotthresh=pthresh; npivotthresh=sizeof(pthresh)/sizeof(pthresh[0]);}
 #if C_AVX2 || EMU_AVX2
  // We operate on 4x4 blocks of A, which we transform into 4x4 blocks of LU.  The ravel of each LU block is stored for cache ease,
  // and the U blocks are ordered in transpose form to speed up the dot-product operations.
@@ -1140,7 +1140,7 @@ DF2(jtludecomp){F1PREFIP;PROLOG(823);
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
  if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w,DUMMYSELF);  // if not real float type, use general version
- if(unlikely(!(AT(w)&FL)))RZ(w=cvt(FL,w));
+ if(unlikely(!(AT(w)&FL)))RZ(w=ccvt(FL,w,0));
  I wn=AS(w)[0];  // n=size of square matrix
  // Allocate the result
  A z; GATV(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R jlink(mtv,z);  // if empty result, return fast.  Now nr must be >0

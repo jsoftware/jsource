@@ -594,7 +594,7 @@ F1(jtvib){A z;I i,n,*zv;
  if(unlikely(ISSPARSE(AT(w))!=0))RZ(w=denseit(w));
  switch(AT(w)){
  default:
-  if(!ISDENSETYPE(AT(w),FL))RZ(w=cvt(FL,w));
+  if(!ISDENSETYPE(AT(w),FL))RZ(w=ccvt(FL,w,0));
   n=AN(w);
   GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
   for(i=0;i<n;++i){I cval;

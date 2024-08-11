@@ -258,7 +258,7 @@ F1(jttsit1){R tsit2(num(1),w);}
 
 // 6!:3
 F1(jtdl){D m,n,*v;UINT ms,s;
- RZ(w=cvt(FL,w));
+ RZ(w=ccvt(FL,w,0));
  n=0; v=DAV(w); DQ(AN(w), m=*v++; ASSERT(0<=m,EVDOMAIN); n+=m;);
 #if PYXES
  C sr=jtjsleep(jt,(UI)jfloor(n*1e9));ASSERT(!sr,sr);

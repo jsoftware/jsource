@@ -412,7 +412,7 @@ B valueisint; // set if the value we are processing is really an int
  if(!mc)R z;  // If no fields at all, exit with empty result (avoids infinite loop below)
  // Convert the default to float, unless we are trying big integers.  We try ints if the default is int or infinite,
  // but only on 64-bit systems where int and float have the same size
- if(!(tryingint = sizeof(D)==sizeof(I) && (ISDENSETYPE(AT(a),B01+INT) || (fillreqd>=0 && ISDENSETYPE(AT(a),FL))))){RZ(a=cvt(FL,a));}
+ if(!(tryingint = sizeof(D)==sizeof(I) && (ISDENSETYPE(AT(a),B01+INT) || (fillreqd>=0 && ISDENSETYPE(AT(a),FL))))){RZ(a=ccvt(FL,a,0));}
  else if(ISDENSETYPE(AT(a),B01))RZ(a=cvt(INT,a));  // If we are trying ints, we must promote Bool to int
  // Get the default value; supposedly a (D) but if we are trying ints it might be really an (I)
  a0=DAV(a)[0];

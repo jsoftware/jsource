@@ -175,7 +175,7 @@ F1(jtprime){PROLOG(0061);A z;B b=1;I n,t;
   // so that full range compares against PMAX
   if(condrange(AV(w),n,0,IMIN,PMAX).range){b=0; RZ(z=prime1(w));}
  }
- if(b)RZ(z=prime1d(ISDENSETYPE(AT(w),FL)?w:cvt(FL,w)));
+ if(b)RZ(z=prime1d(ISDENSETYPE(AT(w),FL)?w:ccvt(FL,w,0)));
  if(t&XNUM+RAT)RZ(z=cvt(XNUM,z));
  EPILOG(z);
 }    /* p:"r w */
@@ -293,7 +293,7 @@ static F1(jtnextprime){
   RZ(w=cvt(XNUM,w));
  }
  if(ISDENSETYPE(AT(w),FL+RAT+QP))RZ(w=cvt(XNUM,floor1(maximum(num(0),w))));
- if(ISDENSETYPE(AT(w),CMPX))RZ(w=cvt(XNUM,floor1(maximum(num(0),cvt(FL,w)))));
+ if(ISDENSETYPE(AT(w),CMPX))RZ(w=cvt(XNUM,floor1(maximum(num(0),ccvt(FL,w,0)))));
  A x;GATV(x,XNUM,n,AR(w),AS(w)); X*xv=XAV(x);X*wv=XAV(w);
 #define oddnext(Y) 1>XSGN(Y) ?X2 :XaddXX(y,(1&XLIMB0(Y))&&(2<XSGN(Y)||2<XLIMB0(Y)) ?X2 :X1)
  DQ(n,X y=*wv++;*xv++= oddnext(y);); // smallest candidate for next prime
@@ -311,7 +311,7 @@ static F1(jtprevprime){
   R rank1ex0(x,fs,FAV(fs)->valencefns[0]);
  }
  if(ISDENSETYPE(AT(w),FL+RAT+QP))RZ(w=cvt(XNUM,ceil1(w)));
- if(ISDENSETYPE(AT(w),CMPX))RZ(w=cvt(XNUM,ceil1(cvt(FL,w))));
+ if(ISDENSETYPE(AT(w),CMPX))RZ(w=cvt(XNUM,ceil1(ccvt(FL,w,0))));
  A x;GATV(x,XNUM,n,AR(w),AS(w));X*xv=XAV(x);X*wv=XAV(w);
  DQ(n,
   A y=*wv++;
@@ -596,7 +596,7 @@ static B jtranec(J jt,X w,X*zg,X*za,X*zb,X*zx,X*zy){A mm,t;I*tv;X a,aa,b,bb,g,x,
 
 static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[3],*v,*zv;
  s[0]=n; s[1]=2; GATVR(z,INT,2*n,2,s); zv=v=AV(z);
- RZ(t=cvt(FL,scx(w))); d=DAV(t)[0]; 
+ RZ(t=ccvt(FL,scx(w),0)); d=DAV(t)[0]; 
  lg=log(d); c=log(sqrt(d)); r=exp(sqrt(0.5)+sqrt(c*log(c)))/lg;
  DO(n, c=lg*pow(r,i/n1); p=c*log(c); if(p>=2147483647)break; *v++=(I)jfloor(c); *v++=(I)p;);
  m=(v-zv)>>1; ASSERT(m!=0,EVLIMIT);

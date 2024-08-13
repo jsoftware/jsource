@@ -373,7 +373,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  // From here on, execution on a single cell of a (on matching cell(s) of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
  if(unlikely(!ISDENSETYPE(AT(a),INT))){
-  if(AR(a)<(AT(a)&B01))a=zeroionei(BAV(a)[0]);else{RZ(a=cvt(INT,a)); jtinplace=(J)((I)jtinplace|JTINPLACEA);}  // convert boolean or other arg to int, with special check for scalar boolean.  Allocated result is always eligible to inplace
+  if(AR(a)<(AT(a)&B01))a=zeroionei(BAV(a)[0]);else{RZ(a=ccvt(INT,a,0)); jtinplace=(J)((I)jtinplace|JTINPLACEA);}  // convert boolean or other arg to int, with special check for scalar boolean.  Allocated result is always eligible to inplace
  }
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
@@ -406,7 +406,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
 // wf is length of the frame
 A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  ARGCHK2(a,w)
- if(unlikely(!(AT(a)&INT)))RZ(a=cvt(INT,a));  // integral indexes required
+ if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0));  // integral indexes required
  I *as=AS(a); I af=AR(a)-1; I naxa=as[af]; naxa=af>=0?naxa:1; af=af>=0?af:0;  // naxa is length of the index list, i. e. number of axes of w that disappear during indexing
  I nia; PROD(nia,af,as);     // number of 1-cells of a
  I wr=AR(w); I *ws=AS(w); I wcr=wr-wf;
@@ -503,7 +503,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
    aa=AAV0(aa)[0];  // fetch the triple-boxed contents
    ASSERT(AR(aa)<=1,EVRANK)  // which must be atom/list
    if(unlikely(!ISDENSETYPE(AT(aa),INT))){  // and must be numeric
-    if(AR(aa)<(AT(aa)&B01))aa=zeroionei(BAV(aa)[0]);else RZ(aa=cvt(INT,aa));  // convert boolean or other arg to int, with special check for scalar boolean
+    if(AR(aa)<(AT(aa)&B01))aa=zeroionei(BAV(aa)[0]);else RZ(aa=ccvt(INT,aa,0));  // convert boolean or other arg to int, with special check for scalar boolean
    }
    if(AN(aa)==0){
     // axis taken in full.  fill it in that way
@@ -529,7 +529,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
   }else{
    // normal axis.
    if(unlikely(!ISDENSETYPE(AT(aa),INT))){
-    if(AR(aa)<(AT(aa)&B01))aa=zeroionei(BAV(aa)[0]);else RZ(aa=cvt(INT,aa));  // convert boolean or other arg to int, with special check for scalar boolean
+    if(AR(aa)<(AT(aa)&B01))aa=zeroionei(BAV(aa)[0]);else RZ(aa=ccvt(INT,aa,0));  // convert boolean or other arg to int, with special check for scalar boolean
    }
    axes[i].nsel=AN(aa); axes[i].sels=IAV(aa); axes[i].sel0=0; axes[i].indsubx.ind=aa;
    // audit and translate first index to speed reset
@@ -622,7 +622,7 @@ F2(jtsfrom){
   if(likely(i==0)){z=a;  // If all indexes OK, return the original block
   }else{
    // There was a negative index.  Allocate a new block for a and copy to it.  It must be writable
-   RZ(z=ISDENSETYPE(t,INT)?ca(a):cvt(INT,a)); v=AV(z);
+   RZ(z=ISDENSETYPE(t,INT)?ca(a):ccvt(INT,a,0)); v=AV(z);
    DQ(n, DO(c, SETNDXRW(k,*v,ws[i]) ++v;););  // convert indexes to nonnegative & check for in-range
   }
   R frombsn(z,w,0L);  // handle the special case
@@ -1187,9 +1187,9 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
 
  //   parms is #cols,maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,[MinSPR],[PriRow]
  __m256d col0thresh=_mm256_set1_pd(parms[2]);  //  minimum value considered valid for a column value (smaller are considered 0)
- __m256d bkovershoot=_mm256_set1_pd(parms[8]);  //  maximum amount a pivot is allowed to make bk overshoot
- __m256d bk0thresh=_mm256_set1_pd(parms[7]);  // smallest bk value considered nonzero
- I prirow=(I)parms[10];  //  priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so.  Set to LOW_VALUE if no priority row
+ __m256d bkovershoot=_mm256_set1_pd(parms[9]);  //  maximum amount a pivot is allowed to make bk overshoot
+ __m256d bk0thresh=_mm256_set1_pd(parms[8]);  // smallest bk value considered nonzero
+ I prirow=(I)parms[11];  //  priority row (usually a virtual row) - if it can be pivoted out, we choose the column that does so.  Set to LOW_VALUE if no priority row
  I nqkrows=ABS(nbasiswfk);  // number of rows of qk including any Fk
  I nhasfk=REPSGN(nbasiswfk); // -(Fk is an extra row)
  frowbatchx=(nqkrows-1)&-NPAR; frowbatchx|=~nhasfk;  // batch# containing last row (might be by itself); if there is no fk, batch is ~0, i. e. never
@@ -1346,7 +1346,7 @@ if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharedspr,bnddotproducth)),cgt
       // no improvement, we will miss the limitrowx that is set here, and the pivot will be marked dangerous unless a different nondangerous nonimproving pivot
       // is found elsehere.  This can happen only once per thread, because once SPR=0 it is impossible to get low-or-tie unless bk=0.  We ignore the possibility,
       // because the column value would have to be HUGE to underflow to 0.
-     }else{sharedspr=_mm256_setzero_pd(); if(parms[9]==0.0){limitrowx=-2; goto return4;} zv=(D*)((I)zv|ZVSPR0); goto startspr0;}   // FIRST 0 SPR: switch modes, change sharedspr to look for max column value; abort if SPR>0 needed; process through 0-SPR path
+     }else{sharedspr=_mm256_setzero_pd(); if(parms[10]==0.0){limitrowx=-2; goto return4;} zv=(D*)((I)zv|ZVSPR0); goto startspr0;}   // FIRST 0 SPR: switch modes, change sharedspr to look for max column value; abort if SPR>0 needed; process through 0-SPR path
             // we don't check for column aborts from other threads because the juice isn't worth the squeeze
     }
    }else{
@@ -1438,13 +1438,14 @@ return4:;  // we have a preemptive result.  store and set minimp =-inf to cut of
 //   bk is the current bk (must include a 0 corresponding to Fk and then MUST BE 0-EXTENDED to a batch boundary) 
 //   z is the result area for the requested column - qp, and must be able to handle overstore to a full batch, including the Fk value if any
 //   ndx is the atomic column# of NTT requested
-//   parms is #cols,x,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,[MinSPR],[PriRow]
+//   parms is #cols,x,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivotImp,ColOkPivotNonImp,Bk0Threshold,BkOvershoot,[MinSPR],[PriRow]
 //    #cols is number of columns in the Ek portion of Qk; if Fk present as a row, value is 1s-comp
 //    maxAx is the length of the longest dot-product
 //    Col0Threshold is minimum |value| considered non0 for a column value
 //    Store0Thresh: if |column value| is less than this, force it to 0
 //    ColDangerPivot is the smallest allowed pivot, but is dangerous
-//    ColOkPivot is the smallest pivot value considered non-dangerous
+//    ColOkPivotImp is the smallest improving pivot value considered non-dangerous
+//    ColOkPivotNonImp is the smallest improving pivot value considered non-dangerous
 //    Bk0Threshold is the smallest bk value considered nonzero
 //    BkOvershoot is the maximum excursion into negative bk that we will allow on a pivot
 //    MinSPR is the largest SPR that will abort this column (set to __ to allow any SPR, to 0. to require improvement)
@@ -1455,12 +1456,12 @@ return4:;  // we have a preemptive result.  store and set minimp =-inf to cut of
 //   multiplied by -1 if the column is enforcing
 //  Do the product in quad precision
 //  the column data is written to z
-//  result is rc,pivotrow,#cols processed,#rows processed,smallest SPR
+//  result is rc,pivotrow,#cols processed,#rows processed,(smallest SPR if >0,neg of largest col value if SPR=0 (nonimproving pivot))
 //   rc is 0 (normal), 1 (dangerous), 2 (nonimproving), 3 (nonimproving and dangerous), 4 (preemptive result: SPR was less than MinSPR (SPR=0, row=-2); unbounded (SPR=inf, row=-1) )
 // gradient mode: (dp dotproduct)
 //  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list
 //   cutoffinfo is internal stored state saved between gradient-mode calls; shape n,2
-//   parms is #cols,maxAx,x,x,MinGradient/MinGradImp,x
+//   parms is #cols,maxAx,x,x,MinGradient/MinGradImp,x...
 //    MinGradient is normally 0.
 //      if positive, we do NOT share gradient values, and we finish up gradient calculation in any column that has a larger |gradient|, storing the len/sumsq in cutoffinfo
 //      if negative, cut off a column when its gradient cannot beat the best-so-far by more than a factor of 1/(1-MinGradImp), i. e. MinGradImp=(min OK grad/actual max grad)-1
@@ -1548,7 +1549,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
   I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);
   opctx.u.spr.zv=(D*)(((I)DAV(box)&~7)|((colrvt&ZVNEGATECOL)<<ZVNEGATECOLX));  // flags: enforcing column requiring negation, abort on nonimproving row
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"column result is not on cacheline bdy")  // we store along rows; insist on data alignment
-  ASSERT(BETWEENC(nparms,10,11),EVLENGTH)  // SPR has lots of parms
+  ASSERT(BETWEENC(nparms,10,12),EVLENGTH)  // SPR has lots of parms
   box=C(AAV(w)[10]); ASSERT(BETWEENC(AR(box),1,2),EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AS(box)[AR(box)-1]==bkzstride,EVLENGTH) opctx.u.spr.bkbeta=DAV(box);  // beta values corresponding to bk; we use only high part
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"bkbeta is not on cacheline bdy")  // we fetch along rows; insist on data alignment
   opctx.u.spr.zstride=bkzstride;   // use the agreed stride
@@ -1616,7 +1617,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
    rv[0]=spr<0?2.:0.;  // rc if not dangerous: negative shared value is the reciprocal of the column value when SPR=0.  This is a nonimproving pivot, rc=2 then
    if(BETWEENO(retinfo,0,ninclfk)){  // normal nonswap row found
     D colval=ABS(remflgs(opctx.u.spr.zv)[retinfo]);  // the value in the SPR row of the column.  If neg, we will swap before pivot, so use |value|
-    if(unlikely(colval<parms[6]))rv[0]+=1.0;  // flag if dangerous
+    if(unlikely(colval<parms[spr<0?7:6]))rv[0]+=1.0;  // flag if dangerous, with threshold depending on improving status
    }  // if nonbasic swap row found, we will take the swap willy-nilly because its dangerousness doesn't hurt anything
   }
  }

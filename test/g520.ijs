@@ -16,7 +16,8 @@ if. '' -: $ colx =. 8 {::y do.
   NB. here RVT is chars and must be converted to mask, same for bndrowmask
   NB. We expect bkbeta to have the correct result item count - extended to batch boundary including Fk if present
   'Ax Am Av Qk rvt bndrowmask bk ndx parms bkbeta' =. 0 1 2 3 4 5 6 8 9 10 { y  NB. don't reassign z lest it lose KNOWNNAMED
-  NB.   parms is #cols in Qk(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  NB.   parms is #cols in Qk(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot[Imp,ColOkPivotNonImp],Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  if. 11=#parms do. parms =. (2 (6}) 11$01) # parms end.  NB. if test omits NonImp, make it equal Imp
   origparms =: parms  NB. debug
   nflagged =. 0{parms  NB. # rows of Qk, with fk flag
   nrows =. 1{$Qk    NB. calculate all rows of result including Fk if any
@@ -320,6 +321,14 @@ NB. put nothing here! savy is carried over to the next line
   assert. 3 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(1e_6 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. dangerous pivot
   assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. nondangerous pivot
   assert. 2 2 1 8 _1e4 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);((1+1e_13) 2} bkbeta);beta  NB. nondangerous pivot
+  NB. Repeat with different Imp/NonImp thresholds
+  NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivotImp,ColOkPivotNonImp,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6           1e_13           1e_12         0.       __   _1.
+  assert. 2 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. nondangerous nonimp pivot
+  assert. 3 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(_1e_6 (<0 1)} bk);'';00;(1e_3 (7}) parms);bkbeta;beta  NB. nondangerous pivot
+  NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
+  parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       __   _1.
+
 
   NB. column audit
   cutoffinfo =. (2 ,~ #rvt) $ 0.

@@ -83,6 +83,33 @@ typedef I4                LX;  // index of an L block in SYMORIGIN
 typedef struct AD AD;
 typedef AD *A;
 
+typedef struct {A a,t;}TA;
+typedef A                (*AF)();
+typedef UI               (*UF)();
+typedef I                (*VF)();  // action verb for atomic dyad
+typedef I                (*VA1F)();  // action verb for atomic monad
+typedef void             (*VARPSF)();  // action verb for atomic reduce/prefix/suffix routine
+typedef B                (*CMP)();    /* comparison function in sort     */
+typedef A                  X;
+typedef struct {X n,d;}    Q;
+typedef struct {D re,im;}  Z;
+typedef struct {D hi,lo;}  E;  // bigendian for sort purposes
+typedef union {D d;UINT i[2];UI ui;} DI;
+
+#if (SYS & SYS_PC+SYS_MACINTOSH)        /* for use by the session manager  */
+typedef S SI;
+#else
+typedef I SI;
+#endif
+
+
+// *************************Flag bits in the low-order part of jt - used only if the function being called understands inplacing ************************
+
+#define JTINPLACEWX     0   // turn this on in jt to indicate that w can be inplaced
+#define JTINPLACEW      (((I)1)<<JTINPLACEWX)
+#define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
+#define JTINPLACEA      (((I)1)<<JTINPLACEAX)
+
 // Flags in hook/fork and rank loops, therefore destroyed for any verb using F?RANK
 // Bit 3 in JT is unused, to allow for carry from PROP to WILLOPEN
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
@@ -91,17 +118,10 @@ typedef AD *A;
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
 #define JTRETRYX        6  // in va2, this bit is set to indicate that the current execution is a retry
 #define JTRETRY         (((I)1)<<JTRETRYX)
-
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
 #define JTCOUNTITEMS    (((I)1)<<JTCOUNTITEMSX)
 
-
-// Flag bits in the low-order part of jt - used only if the function being called understands inplacing
-#define JTINPLACEWX     0   // turn this on in jt to indicate that w can be inplaced
-#define JTINPLACEW      (((I)1)<<JTINPLACEWX)
-#define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
-#define JTINPLACEA      (((I)1)<<JTINPLACEAX)
 // following bit used as arg to parse
 #define JTFROMEXECX    0   // parser call from ". - makes some features unavailable
 #define JTFROMEXEC      (((I)1)<<JTFROMEXECX)
@@ -114,9 +134,6 @@ typedef AD *A;
 // following bit used as arg to jtover
 #define JTALLOWRETARGX    2   // allow jtover to return an argument if empty appended to it
 #define JTALLOWRETARG      (((I)1)<<JTALLOWRETARGX)
-// obsolete // following bit is used on input to jtcvt only
-// obsolete #define JTNOFUZZX       1   // comparison on legal float conversion should be exact
-// obsolete #define JTNOFUZZ        (((I)1)<<JTNOFUZZX)
 // following bits is used inside/input to jtlrep only
 #define JTNORESETERRX   0   // 
 #define JTNORESETERR        (((I)1)<<JTNORESETERRX)
@@ -127,7 +144,8 @@ typedef AD *A;
 #define JTEXPVALENCEOFF  (((I)3)<<JTEXPVALENCEOFFX)
 #define JTEXPVALENCEOFFM  (((I)1)<<JTEXPVALENCEOFFX)  // monad flag
 #define JTEXPVALENCEOFFD  (((I)2)<<JTEXPVALENCEOFFX)  // dyad flag
-// bit 4 also used as FORSCREEN
+
+
 // following bits are passed into jpr/jpr1/immex/immea/showerr/wri; bit 4 also to jtlrep
 #define JTPRTYO         7  // mask for output class, see MTYO*
 #define JTPRNOSTDOUTX   3   // set to suppress typing sentence result on stdout (as in scripts)
@@ -216,25 +234,7 @@ struct AD {
  I s[1];   // shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
   // when AFUNIFORMITEMS is set, s[0] holds the number of items in the raze of the block
 };
-
-typedef struct {A a,t;}TA;
-typedef A                (*AF)();
-typedef UI               (*UF)();
-typedef I                (*VF)();  // action verb for atomic dyad
-typedef I                (*VA1F)();  // action verb for atomic monad
-typedef void             (*VARPSF)();  // action verb for atomic reduce/prefix/suffix routine
-typedef B                (*CMP)();    /* comparison function in sort     */
-typedef A                  X;
-typedef struct {X n,d;}    Q;
-typedef struct {D re,im;}  Z;
-typedef struct {D hi,lo;}  E;  // bigendian for sort purposes
-typedef union {D d;UINT i[2];UI ui;} DI;
-
-#if (SYS & SYS_PC+SYS_MACINTOSH)        /* for use by the session manager  */
-typedef S SI;
-#else
-typedef I SI;
-#endif
+// header fits in 7 words
 
 /* Fields of type A                                                        */
 
@@ -339,7 +339,7 @@ typedef I SI;
 #define BIV0(w) (IAV(w)[0]&(((INT-1)-AT(w))>>1))  // the first (presumably only) value in w, when w is an INT or B01 type
 #endif
 
-/* Types for AT(x) field of type A                                         */
+// *************************************** Types for AT(x) field of type A ********************************/
 /* Note: BOOL name conflict with ???; SCHAR name conflict with sqltypes.h  */
 
 // NOTE!! the length of NOUN types must be power-of-2 multiples because of jtamend2
@@ -520,6 +520,7 @@ typedef I SI;
 #define CVTNOFUZZ     ((I)1L<<CVTNOFUZZX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name
 
 
+// ***************************** flag combinations and macros ******************************
 
 #define ANY             -1L
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+INT2+INT4+SP+QP)
@@ -580,7 +581,8 @@ typedef I SI;
 #define STYPE(t)        ((t)|SPARSE)
 #define DTYPE(t)        ((t)&~SPARSE)
 
-// Flags in the count field of type A
+// ********************** Flags in the count field of type A **************************
+
 #define ACINPLACEX      (BW-1)
 #define ACINPLACE       ((I)((UI)1<<ACINPLACEX))  // set when this block CAN be used in inplace operations.  Always the sign bit.
 #define ACPERMANENTX    (BW-2)
@@ -633,7 +635,8 @@ typedef I SI;
     )  /* OK to inplace assignment/virtual */ \
   )
 
-/* Values for AFLAG(x) field of type A                                     */
+// ************************************ Values for AFLAG(x) field of type A ***********************************
+
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
 
 #define AFRO            (I)1            /* read only; can't change data  matches B01    */
@@ -732,13 +735,15 @@ typedef I SI;
 #define AFHRH(a) ((a)->h)    // the workarea
 
 
+// ********************* explicit dedfinition block *************************
+
 // the compiled form of an explicit definition is an A block with rank 0 with AK pointing into the middle so that only the As are freed.
 // The number of words is AN, while the number of control words+1 (NC) is AK-s (counting 4-byte values)
 // the sequence is
-// sentence numbers (NC US values, accessed from the end)
-// go values (NC US values, accessed from the end)
+// source line numbers (NC US values, accessed from the end - read only on error)
+// go values (NC US values, accessed from the end) - cw# to go to on error, or in if./for./try./select construct
 // tcesx values (NC UI4 values, accessed from the end)
-// words of the sentence, counting up  <-- data pointer is at the beginning of this part
+// words of the sentence, counting up, no gap between words of adjacent cws  <-- data pointer is at the beginning of this part
 //
 // the block is allocated at rank 1 so the compare in jtredef works 
 //
@@ -751,7 +756,7 @@ typedef I SI;
 #define CWSOURCE(base,nc,ci) ((US*)((UI4*)base+(nc)))[ci+(nc)] // US value containing original sentence number for ~i
 typedef struct {
 UI4 tcesx;  // cw type/canend/number of first word in the line
-#define TCESXTYPEX 26  // top field, 6 bits, is control-word type
+#define TCESXTYPEX 26  // top field, 6 bits, is control-word type (from w.h)
 #define TCESXTYPE ((UI4)0x3f<<TCESXTYPEX)  // mask for field
 #define TCESXCEX 24  // canend bits 24-25
 #define TCESXCECAN ((UI4)1<<TCESXCEX)  // set if this result can become the result of the defn
@@ -761,14 +766,7 @@ UI4 tcesx;  // cw type/canend/number of first word in the line
  US source;  // source line number
 } CW;
 
-/* control word (always has corresponding token string)                             */
-/* type   - as specified in w.h                                            */
-// go     - line number to go to on error, or the next component of try. or select. struct
-/* source - source line number                                             */
-/* i      - beginning index of token string                                */
-/* n      - length          of token string                                */
-// canend - Indicates that the most-recent B-block result can (1) or can't (2) become the result of the running definition.  0 means we don't know yet.
-
+// ***************** debug stack frame *********************
 
 #define DCPARSE  1      /* sentence for parser                                          */
 #define DCSCRIPT 2      /* script              -- line()                                */
@@ -800,6 +798,8 @@ typedef struct DS{      /* 1 2 3 5                                              
 } DST;
 
 typedef DST* DC;
+
+// ************************ parsing flags **************************
 
 // LSB codes in value pointers.  Set by enqueue() and symbis(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
 // type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
@@ -859,7 +859,7 @@ typedef DST* DC;
 #define ISSTKFAOWED(w) ((I)(w)&STKFAOWED)  // is fa() required?
 
 
-
+// *********************** symbol table for names ***********************
 
 #define SYMLINFO 0  // index of LINFO entry
 #define SYMLEXECCT 1  // index of EXECCT for the locale
@@ -871,6 +871,44 @@ typedef DST* DC;
 #define SYMNONPERM (I4)(1L<<SYMNONPERMX)   // flag set if next is non-permanent, or if an LX is invalid
 #define SYMNEXT(s) ((s)&~SYMNONPERM)  // address of next symbol
 #define SYMNEXTISPERM(s) ((s)>0)  // true if next symbol is permanent
+
+typedef struct {
+ A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
+ A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned.  In LINFO, the number of a numbered locale, unused otherwise
+ C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
+ C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCGLOBAL is set in global tables
+ S sn;  // script index the name was defined in.  Not used for LINFO
+ LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT.  Not used in LINFO
+} L;  // name must come first because of the way we use validitymask[11]
+
+// FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table, AM() points to the calling local symbol table.
+// In all local symbol tables, the first 'hashchain' has the chain numbers for y/x; they are the first symbols in those chains, always permanent
+
+// flags in L->flag
+#define LCH             (I)1            /* changed since last exec of 4!:5 */
+#define LPERMANENTX  1
+#define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name is a local name assigned in the definition; these names are never deleted - the value is cleared instead
+#define LINFO           (I)4            // Indicates the symbol-table entry is info only and the value is not a valid pointer (diags only)
+#define LWASABANDONEDX  4
+#define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
+                                    // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
+                                    // immediately
+                                    // This value passes into AFLAGS and must not overlap anything there
+#define LHASNAME        (I)32      // name is nonnull - this value is not used internally; it appears in the result of 18!:_2
+#define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:_2
+#define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
+
+// ********************************** fields in Global symbol tables (aka locale ***************************
+// In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
+// The first L block in a symbol table is used to point to the locale-name rather than hash chains
+#define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
+#define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)  // locale number, for numbered locales
+#define LOCNUM(g) (I)LOCNUMW(g)
+#define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted.  The path runs from LOCPATH backwards
+                        // to end with the ending 0 at AAV1()[0]
+#define LOCBLOOM(x) AM(x)
+#define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
+
 
 // Macros to incr/decr execct of a locale
 #define EXECCTNOTDELD 0x1000000   // This bit is set when a locale is created, and removed when the user asks to delete it.  Lower bits are the exec count.  The locale is half-deleted when exec ct goes to 0
@@ -889,43 +927,9 @@ typedef DST* DC;
 #define DECREXECCTIF(l) {if(unlikely(!(LXAV0(l)[SYMLEXECCT]&EXECCTPERM)))DECREXECCT(l)}
 #define DELEXECCTIF(l) {if(likely(!(LXAV0(l)[SYMLEXECCT]&EXECCTPERM)))DELEXECCT(l)}
 
-typedef struct {
- A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
- A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned.  In LINFO, the number of a numbered locale, unused otherwise
- C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
- C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCGLOBAL is set in global tables
- S sn;  // script index the name was defined in.  Not used for LINFO
- LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT.  Not used in LINFO
-} L;  // name must come first because of the way we use validitymask[11]
-
-// FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table, AM() points to the calling local symbol table.
-// In all local symbol tables, the first 'hashchain' has the chain numbers for y/x; they are the first symbols in those chains, always permanent
-
-#define LCH             (I)1            /* changed since last exec of 4!:5 */
-#define LPERMANENTX  1
-#define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name is a local name assigned in the definition; these names are never deleted - the value is cleared instead
-#define LINFO           (I)4            // Indicates the symbol-table entry is info only and the value is not a valid pointer (diags only)
-#define LWASABANDONEDX  4
-#define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
-                                    // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
-                                    // immediately
-                                    // This value passes into AFLAGS and must not overlap anything there
-#define LHASNAME        (I)32      // name is nonnull - this value is not used internally; it appears in the result of 18!:_2
-#define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:_2
-#define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
-
-// In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
-// The first L block in a symbol table is used to point to the locale-name rather than hash chains
-#define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
-#define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)  // locale number, for numbered locales
-#define LOCNUM(g) (I)LOCNUMW(g)
-#define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted.  The path runs from LOCPATH backwards
-                        // to end with the ending 0 at AAV1()[0]
-#define LOCBLOOM(x) AM(x)
-#define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
 
 
-// Definition of callstack
+// *********************** name block ************************
 
 // NM struct: pointed to by the name field of a symbol, and used for lookups.  Names are allocated with rank 1 (?? but it means first cacheline is unused)
 typedef struct{
@@ -957,6 +961,7 @@ typedef struct{
 #define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup
 
 
+// ************************ sparse-array header ************************
 typedef struct {I a,e,i,x;} P;
 
 /* value fields of sparse array types                                      */
@@ -970,7 +975,7 @@ typedef struct {I a,e,i,x;} P;
 #define SPBV(p,a,v,x)      {RZ(v = (x)); INCORP(v); (p)->a=(C*)v-(C*)(p);}  // store x into component (a); return if x is 0.  a is one of aeix.  Result in v
 #define SPB(p,ZWa,x)      {A ZWo = (x); SPBV((p),ZWa,ZWo,(x))}  // store x into component (a); return if x is 0.  a is one of aeix
 
-// Header for hashtables used in i.
+// ****************************************** Header for hashtables used in i. *****************************************
 // This sits at the beginning of the allocated block, holding info about the stored values
 typedef struct {
  I datasize;   // number of bytes in the data area
@@ -1004,7 +1009,7 @@ typedef struct {
  I range;  // max+1-min, or 0 if range exceeds max given
 } CR;
 
-/* performance monitoring stuff */
+// *********************************** performance monitoring ********************************************
 
 typedef struct{
  A name;                /* verb/adverb/conjunction name                    */
@@ -1030,6 +1035,7 @@ typedef struct{
 } PM0;
 
 
+// ***************************** red/black balanced trees ****************************
 /* each unique symbol has a row in JT(jt,sbu)                                 */
 /* a row is interpreted per SBU                                            */
 /* for best results make sizeof(SBU) a multiple of sizeof(I)               */
@@ -1060,6 +1066,7 @@ typedef struct {I nprec; VARPS actrtns[];} VARPSA;
 typedef struct {VA2 p2[17];VARPSA *rps;} VA;  // 9 main types, CMPX, XNUM, RAT, SBT, SP, QP, INT2, INT4
 typedef struct {VA1 p1[10];} UA;  // B01, INT, FL, CMPX, XNUM, RAT, SP, QP, INT2, INT4
 
+// ********************** layout of a FUNC (starts at AS[0]) ************************************
 typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.
  union {
@@ -1141,7 +1148,6 @@ typedef struct {
 #define ID(f)  FAV(AT(f?f:FUNCTYPE0)&FUNC?f:FUNCID0)->id  // can be branchless, if compiler can manage it
 #define VFLAGNONE 0L
 #define VRTNNONE ((A)0)
-  
                                         /* type V flag values              */
 // bits 0-6 are used in comparison compounds to encode the type of compound, see vcompsc.c
 // They must have this setting when the verb is fit u!.n or -. ([ -. -.) i. i: e. or a comparison compound

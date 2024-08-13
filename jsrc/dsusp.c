@@ -148,7 +148,7 @@ static A jtsusp(J jt){A z;
    jt->iepdo=2; z=immex(iep); fa(iep); jt->iepdo&=~2;  // reset request flag, set to 'running'; run sentence & force typeout; undo the ra() that protected the immex sentence; clear running
    // this is tricky.  After every sentence we have to check to see if debug has been cleared, because we might get a second level of suspension running immex, and when it returns here
    // the suspension-ending values will have been cleared
-   if(!(jt->uflags.trace&TRACEDB1)){z=0; JT(jt,dbuser)|=TRACEDBSUSCLEAR; break;}  // if we are clearing the stack (13!:0), we exit all suspensions.  z could have anything, so we clear it to prevent it from being analyzed as a suspension.  Force CLEAR
+   if(!(jt->uflags.trace&TRACEDB1)){z=0; break;}  // if we are clearing the stack (13!:0), we exit all suspensions.  z could have anything, so we clear it to prevent it from being analyzed as a suspension.
    if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS)break;  // dbr 0/1 forces end of suspension, as does single-step request
    if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
    tpop(old);  // if we don't need the result for the caller here, free up the space
@@ -161,7 +161,7 @@ static A jtsusp(J jt){A z;
   // If the result came from a suspension-ending command, get out of suspension
   // Kludge: 13!:0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doesn't properly route the result of these to the
   // suspension result and we would lose them.  Fortunately they have no arguments.  debugmux also eats the result of 13!:0]0
-  if(!(jt->uflags.trace&TRACEDB1)){z=0; JT(jt,dbuser)|=TRACEDBSUSCLEAR; break;}  // if we are clearing the stack (13!:0), we exit all suspensions.  z could have anything, so we clear it to prevent it from being analyzed as a suspension.  Force CLEAR
+  if(!(jt->uflags.trace&TRACEDB1)){z=0; break;}  // if we are clearing the stack (13!:0), we exit all suspensions.  z could have anything, so we clear it to prevent it from being analyzed as a suspension.
   if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS)break;  // dbr 0/1 forces immediate end of suspension, as does single-step request
   if(z&&AFLAG(z)&AFDEBUGRESULT&&IAV(C(AAV(z)[0]))[0]==SUSTHREAD){  // (0;0) {:: z; is this T. y?
    J newjt=JTFORTHREAD(jt,IAV(C(AAV(z)[1]))[0]);  // T. y - switch to the indicated thread
@@ -205,8 +205,10 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  A savname=jt->curname; z=susp(); jt->curname=savname;  // suspension starts as anonymous
  // Process the end-of-suspension.  There are several different ending actions
  // The end block is a list of boxes, where the first box, an integer atom, contains the operation type
+ // If we end because user has exited debug, z is 0
  I susact;   // requested action
- if(!z||AN(z)==0||JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS){susact=JT(jt,dbuser)&TRACEDBSUSCLEAR?SUSCLEAR:SUSSS; JT(jt,dbuser)&=~(TRACEDBSUSCLEAR+TRACEDBSUSSS);}  // if error in suspension, exit debug mode; empty arg or DBSUSCLEAR is always 13!:0; give CLEAR priority over SS
+ if(!z||AN(z)==0)JT(jt,dbuser)|=TRACEDBSUSCLEAR;   // general exit from debug without an suspension-ending result; synthesize a 'clear' result
+ if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS){susact=JT(jt,dbuser)&TRACEDBSUSCLEAR?SUSCLEAR:SUSSS; JT(jt,dbuser)&=~(TRACEDBSUSCLEAR+TRACEDBSUSSS);}  // give CLEAR priority over SS
  else susact=IAV(C(AAV(z)[0]))[0];  // (0;0) {:: z
  // susact describes what is to be done; it has already been stored into dcss
  switch(susact){

@@ -487,7 +487,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
  __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
- x=jtinpl(jm,0,(I)strlen(lp),lp);
+ x=jtinpl(jm,0,(I)strlen(lp),lp);   // convert user's line to an A block
  I wasidle=jtsettaskrunning(jm);  // We must mark the master thread as 'running' so that a system lock started in another task will include the master thread in the sync.
       // but if the master task is already running, this is a recursion, and just stay in running state
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
@@ -500,7 +500,6 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
    {JJ jt=jm; DC s=jm->sitop; while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} fa(s->dcf);} s=s->dclnk;} jm->sitop=0;}
    old=jm->pmttop; jm->pmttop=0;  // back up the tpop pointer to the pm error and remove request for it
   }
-  JT(jt,dbuser)&=~(TRACEDBSUSCLEAR);  // always turn off flag
  }
  e=jm->jerr; MODESRESET(jm)  // save error on sentence to be our return code
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors
@@ -509,7 +508,10 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  // All these immexes run with result-display enabled (jt flags=0)
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
  // we could do this in a loop back through exexct, but we choose not to
- if(likely(!(jm->recurstate&RECSTATERENT)))runiep(jt,jm,old);  // IEP does not display its errors
+ if(likely(!(jm->recurstate&RECSTATERENT))){   // if line to be executed was from the user...
+  JT(jt,dbuser)&=~(TRACEDBSUSCLEAR);  // SUSCLEAR must clear all levels of suspension.  When we get back to user-prompt, it is safe to remove it
+  runiep(jt,jm,old);  // IEP does not display its errors
+ }
 
  // user's sentence and iep if any are finished.  e has the return code.  Return to user
  if(likely(wasidle)){  // returning to immex in the FE

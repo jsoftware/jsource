@@ -207,8 +207,8 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  // The end block is a list of boxes, where the first box, an integer atom, contains the operation type
  // If we end because user has exited debug, z is 0
  I susact;   // requested action
- if(!z||AN(z)==0)JT(jt,dbuser)|=TRACEDBSUSCLEAR;   // general exit from debug without an suspension-ending result; synthesize a 'clear' result
- if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS){susact=JT(jt,dbuser)&TRACEDBSUSCLEAR?SUSCLEAR:SUSSS; JT(jt,dbuser)&=~(TRACEDBSUSCLEAR+TRACEDBSUSSS);}  // give CLEAR priority over SS
+ if(!z||AN(z)==0)JT(jt,dbuser)|=TRACEDBSUSCLEAR;   // general exit from debug without a suspension-ending result; synthesize a 'clear' result
+ if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS){susact=JT(jt,dbuser)&TRACEDBSUSCLEAR?SUSCLEAR:SUSSS; JT(jt,dbuser)&=~TRACEDBSUSSS;}  // give CLEAR priority over SS.  SS applies to one level; CLEAR applies to all suspensions and is turned off only at user level
  else susact=IAV(C(AAV(z)[0]))[0];  // (0;0) {:: z
  // susact describes what is to be done; it has already been stored into dcss
  switch(susact){

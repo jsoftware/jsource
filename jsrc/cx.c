@@ -354,6 +354,7 @@ nextline:;  // here to look at next line, whose cw number is ic (which must be v
 nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly with high-order garbage
   // Check for debug and other modes
   if(unlikely(jt->uflags.trace!=0)){  // fast check to see if we have overhead functions to perform
+nextlinedebug:;
    // here to handle debug jump, perf monitor, or any other unusual cases
    if(!(NPGpysfmtdl&1)&&!(jt->recurstate&RECSTATERENT)){  // only if not locked and not recursive
     if(unlikely(!(NPGpysfmtdl&16))){  // if we have never allocated debug stack
@@ -380,11 +381,13 @@ nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly w
      if(unlikely(iotavec[-IOTAVECBEGIN])){forcetomemory(&tdv); forcetomemory(&cv); forcetomemory(&bic); forcetomemory(&tic);}  // force little-used names to memory
     }
 
-    if(jt->uflags.trace&TRACEDB){   // if debug is on, or coming on
+    // take any new program counter requested by user (including suspension exit)
+    if(jt->uflags.trace&TRACEDB){   // if debug is on, or coming on  kludge uses SUSCLEAR even when debug is turned off
      NPGpysfmtdl|=2;  // if this is coming from debug, indicate debug mode
      ic=~debugnewi(~ic,jt->sitop,self);  // get possibly-changed execution line#
     }
     IFOB() goto bodyend;  // if defn is exiting, avoid a PM record for an invalid line
+    if(unlikely(z==0))z=mtm;  // We might have kept going after an error to see if the user asked for continuation.  If we don't exit, ensure z has a valid value that can be ra'd
 
     // if performance monitor is on, collect data for it
     if((jt->uflags.trace&TRACEPM)&&C1==((PM0*)CAV1(JT(jt,pma)))->rec){
@@ -437,9 +440,11 @@ dobblock:
     // this means the switch will learn to go to the if.
    // *** the rest is error cases
    }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){ic=OBCW; goto nextlinetcesx;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
-   }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
+   }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Check for it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-    z=mtm,bic=ic,ic=~debugnewi(~ic+1,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+// obsolete     z=mtm,
+    bic=ic;goto nextlinedebug;   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode.  We must go through debug to clear z
+// obsolete ,ic=~debugnewi(~ic+1,jt->sitop,self)
    }else if(unlikely(jt->jerr==EVTHROW)){
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     if(NPGpysfmtdl&4){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);!TEQ5(CWTCESX(cwsent,j),CEND)&&!TEQ6(CWTCESX(cwsent,j),CBBLOCKEND);j=CWGO(cwsent,CNSTOREDCW,j))if(TEQ5(CWTCESX(cwsent,j),CCATCHT)){ic=j-1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // z might not be protected if we hit error
@@ -478,7 +483,9 @@ dobblock:
     if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){ic=OBCW; goto nextlinetcesx;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
     }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
      if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-     z=mtm,bic=ic,ic=~debugnewi(~ic,jt->sitop,self);   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+// obsolete      z=mtm,
+     bic=ic;goto nextlinedebug;   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode.  Must go through nextline to set z non0
+// obsolete ,ic=~debugnewi(~ic,jt->sitop,self)
     }else if(unlikely(EVTHROW==jt->jerr)){if(NPGpysfmtdl&4){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);!TEQ5(CWTCESX(cwsent,j),CEND)&&!TEQ6(CWTCESX(cwsent,j),CBBLOCKEND);j=CWGO(cwsent,CNSTOREDCW,j))if(TEQ5(CWTCESX(cwsent,j),CCATCHT)){ic=j-1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // if throw., and there is a catch., do so
     }else{bic=ic; ic=CWGO(cwsent,CNSTOREDCW,ic); IFNOTOB(){RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.

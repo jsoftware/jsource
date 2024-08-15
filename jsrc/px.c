@@ -51,11 +51,11 @@ F1(jtimmex){F1PREFJT;A z;
  // immex sentences are always directed to the master thread
  if(!(jt->recurstate&RECSTATERENT))AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL z=parse(AT(w)&BOX?w:tokens(w,1+!!EXPLICITRUNNING));
- if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr((J)((I)jtinplace|JTPRFORSCREEN),z);   // z not 0 && LSB of z is 0 && Result is not for debug
+ if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr((J)((I)jtinplace|JTPRFORSCREEN),z);   // print if z not 0 && LSB of z is 0 && Result is not for debug
  RETF(z);
 }
 
-// execute for assert during script: check result for all 1
+// execute for assert during script: check result for not assigned or no error or non-noun or all 1
 // jt has typeout flags, pass through to immex
 // Result has assignment flag
 F1(jtimmea){F1PREFJT;A t,z,z1;

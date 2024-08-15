@@ -778,7 +778,7 @@ typedef struct DS{      /* 1 2 3 5                                              
  struct DS*dclnk;       /* x x x x   link to next stack entry                              */
  A dcy;                 /* x x x    &tokens; text       ; right argument                  */
  I dcn;                 /* x x x    #tokens; line #     ; ptr to executing value               */
- I dcix;                // x x x x  index ; next index  ; cw# in exp def being executed, or to be exec next
+ I dcix;                // x x x x  index ; next index (neg to abort)  ; cw# in exp def being executed, or to be exec next
  I dcj;                 /* x x x x  error#; prev index  ; error #                         */
  C dctype;              /* x x x x  type of entry (see #define DC*)                       */
  B dcsusp;              /* x   x x  1 iff begins a debug suspension or pm session                      */

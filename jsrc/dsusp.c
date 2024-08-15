@@ -124,9 +124,6 @@ static A jtsusp(J jt){A z;
  // if it holds error information.  So, we create an empty frame to take the store from immex.  This frame has no display.
  RZ(deba(DCJUNK,0,0,0)); // create spacer frame
  A *old=jt->tnextpushp;  // fence must be after we have allocated our stack block
- // If the failure happened while a script was being loaded, we have to take jgets() out of script mode so we can prompt the user.  We will restore on exit
- DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
- if(d&&!(JT(jt,dbuser)&TRACEDBSUSFROMSCRIPT))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
  JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // when we start a new suspension, wait for a new clear
  // Make sure we have a decent amount of stack space left to run sentences in suspension
  // ****** no errors till end of routine, where jt and stacks have been restored *******
@@ -156,7 +153,7 @@ static A jtsusp(J jt){A z;
   // Execute one sentence from the user
   if((inp=jgets("      "))==0){z=0; break;} inp=jtddtokens(jt,inp,1+!!EXPLICITRUNNING); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   if(unlikely(JT(jt,sidamage))){  // If there was SI damage (changing an executing function), execute 13!:0 (oldvalue) to clear the stack and exit suspension
-   if(likely(JT(jt,dbuser)&TRACEDB1))jsto(JJTOJ(jt),MTYOER,"Debug suspension ended because an executing name was changed.  Debug is still enabled."); JT(jt,sidamage)=0; z=jtdbc(jt,sc(JT(jt,dbuser)&TRACEDB1));  // give msg unless user has already cleared debug (very rare)
+   if(likely(JT(jt,dbuser)&TRACEDB1))jsto(JJTOJ(jt),MTYOER,"Debug suspension ended because an executing name was changed.  Debug is still enabled."); JT(jt,sidamage)=0; z=jtdbc(jt,num(JT(jt,dbuser)&TRACEDB1));  // give msg unless user has already cleared debug (very rare)
   }
   // If the result came from a suspension-ending command, get out of suspension
   // Kludge: 13!:0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doesn't properly route the result of these to the
@@ -185,7 +182,6 @@ static A jtsusp(J jt){A z;
   jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
  }
  debz(); 
- if(d)d->dcss=1;  // restore jgets() state if there is an active script
  R z;
 }    /* user keyboard loop while suspended */
 
@@ -201,6 +197,10 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
  e=jt->jerr;
  jt->jerr=0;
+ // If the failure happened while a script was being loaded, we have to take jgets() out of script mode so we can prompt the user.  We will restore on exit
+ DC sf; for(sf=jt->sitop; sf&&sf->dctype!=DCSCRIPT; sf=sf->dclnk);  // sf-> last SCRIPT type, if any
+ C superdebug=JT(jt,dbuser)&TRACEDBSUSFROMSCRIPT;   // remember if we have to keep scripts reading for debug
+ if(sf&&!superdebug)sf->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
  // Suspend.  execute from the keyboard until a suspension-ending result is seen.  Clear the current name to start the suspension
  A savname=jt->curname; z=susp(); jt->curname=savname;  // suspension starts as anonymous
  // Process the end-of-suspension.  There are several different ending actions
@@ -219,14 +219,39 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
   DGOTO(d,-1)   z=C(AAV(z)[1]); break;
  case SUSJUMP:  // goto line number.  Result not given, use i. 0 0
   DGOTO(d,lnumcw(IAV(C(AAV(z)[1]))[0],d->dcc)) z=mtm; break;
- case SUSCLEAR:  // exit from debug
-  jt->jerr=e; z=mtm;  // in case no error, give empty result
-  NOUNROLL for(c=jt->sitop;c;c=c->dclnk){if(DCCALL==c->dctype){DGOTO(c,-1) c->dcsusp=0;} }break;   // exit from all functions, clearing suspensions; back to immed mode with clear debug stack
+ case SUSCLEAR:  // exit from debug, which is achieved by returning through all levels up to user prompt.  We come here once for each suspension level
+  jt->jerr=e; z=0;   // Restore the error that threw us into debug; set z=0 to check for GOTO at all levels
+  I scriptbyp=0;  // set when we find a 
+  NOUNROLL for(c=jt->sitop;c;c=c->dclnk){
+   switch(c->dctype){
+   case DCCALL: DGOTO(c,-1) c->dcsusp=0; break;   // exit from all functions, clearing suspensions; back to immed mode with clear debug stack
+   case DCSCRIPT: if(!superdebug)c->dcix=-1; break;   // set line# in script to 'EOF' to suppress reading - but if we continue reading testcase lines, leave it open
+   }
+  }
+  break;
+// obsolete   I msgowed=0, nsusp=0;  // will be set if we have to tell the user about interrupted scripts; suspension level (# suspensions above c)
+// obsolete   NOUNROLL for(c=jt->sitop;c;c=c->dclnk){  // go through the stack...
+// obsolete    nsusp+=c->dcsusp;   // update susp level for the marked frame, stopping before the next marked frame
+// obsolete    switch(c->dctype){
+// obsolete    case DCCALL: DGOTO(c,-1) c->dcsusp=0; break; // turn off all suspensions and force every explicit definition to its exit line; track suspension level
+// obsolete    case DCSCRIPT:   // check running scripts
+// obsolete     if(c->dcss){   // if script is reading from file/string (should always be set)
+// obsolete      if(jt->uflags.trace&TRACEDB1){msgowed=1;  // dbr 1: allow all scripts to continue, with one msg
+// obsolete      }else if(nsusp<2){c->dcix=-1; msgowed=1;  // dbr 0: turn off scripts in first suspension (we will give one message per suspension)
+// obsolete      }
+// obsolete     }
+// obsolete      break;
+// obsolete    }
+// obsolete   }
+// obsolete   if(msgowed)jsto(JJTOJ(jt),MTYOER,jt->uflags.trace&TRACEDB1?"Interrupted script load resumes\n":"Interrupted script load aborted\n");
+// obsolete   break;   // exit from all functions, clearing suspensions; back to immed mode with clear debug stack
  case SUSNEXT:  // continue execution on next line
  case SUSSS:  // single-step continuation
   z=mtm; break;  // pick up wherever it left off; no result
  }
  d->dcsusp=0;   // Mark the current definition as no longer suspended
+ if(sf)sf->dcss=1;  // restore jgets() state if there is an active script
+
  // If there is an error, set z=0; if not, make sure z is nonzero (use i. 0 0)
  if(jt->jerr){z=0; jt->emsgstate|=EMSGSTATEFORMATTED;} // return z=0 to cause us to look for resumption address.  any message is for a long-gone self; don't call eformat for it.  If no message, allow the next one to be formatted
  R z;
@@ -347,8 +372,10 @@ F1(jtdbc){I k;
  // turn debugging on/off in all threads
  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
- jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the stack to allow suspension commands room to run
+ jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the C stack to allow suspension commands room to run
  if(likely(!(k&TRACEDBDEBUGENTRY)))JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug, suppress this so we don't immediately come out of debug
+ suspset(jt->sitop);   // If we aren't in suspension, there might be a debug stack, perhaps from Dissect or a Lab that is about to debug something.  In that case, we mark the current top of stack as suspended
+                       // to prevent Cut Back commands from overstepping the sentence being debugged.  We do this willy-nilly since if we are in suspension the stack is about to be cleared anyway
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

@@ -348,7 +348,7 @@ static C* nfeinput(JS jt,C* s){A y;
  // the value y is still on the tpop stack
 }
 
-// type NUL-terminated prompt string p, read 1 line, & return
+// type NUL-terminated prompt string p, read 1 line, & return A block for the line
 // if *p is (C)1 (which comes from m : 0), the request is for unprocessed 'literal input'
 // otherwise processed in inpl
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
@@ -361,7 +361,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   while(1){
    ++d->dcn; j=d->dcix; // increment line# and fetch current start index
    y=d->dcy; n=AN(y); s=UAV(y);
-   if(!(j<n)){jt->scriptskipbyte=0; R 0;}  // return 0 for EOF
+   if(!BETWEENO(j,0,n)){jt->scriptskipbyte=0; R 0;}  // return 0 for EOF or aborted read (dcix<0)
    d->dcj=k=j;  // k=start index
    d->dcix=j=advl(j,n,s);  // j=end+1 index
    if(unlikely(jt->scriptskipbyte!=0)){if(j-k>=4&&s[k]=='N'&&s[k+1]=='B'&&s[k+2]=='.'&&s[k+3]==jt->scriptskipbyte)jt->scriptskipbyte=0; else continue;}  // if skipping in script, skip if not end marker
@@ -509,7 +509,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
  // we could do this in a loop back through exexct, but we choose not to
  if(likely(!(jm->recurstate&RECSTATERENT))){   // if line to be executed was from the user...
-  JT(jt,dbuser)&=~(TRACEDBSUSCLEAR);  // SUSCLEAR must clear all levels of suspension.  When we get back to user-prompt, it is safe to remove it
+  JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // SUSCLEAR must clear all levels of suspension.  When we get back to user-prompt, it is safe to remove it
   runiep(jt,jm,old);  // IEP does not display its errors
  }
 

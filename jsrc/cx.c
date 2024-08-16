@@ -442,9 +442,7 @@ dobblock:
    }else if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){ic=OBCW; goto nextlinetcesx;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
    }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Check for it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-// obsolete     z=mtm,
     bic=ic;goto nextlinedebug;   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode.  We must go through debug to clear z
-// obsolete ,ic=~debugnewi(~ic+1,jt->sitop,self)
    }else if(unlikely(jt->jerr==EVTHROW)){
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     if(NPGpysfmtdl&4){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);!TEQ5(CWTCESX(cwsent,j),CEND)&&!TEQ6(CWTCESX(cwsent,j),CBBLOCKEND);j=CWGO(cwsent,CNSTOREDCW,j))if(TEQ5(CWTCESX(cwsent,j),CCATCHT)){ic=j-1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // z might not be protected if we hit error
@@ -483,9 +481,7 @@ dobblock:
     if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT)){ic=OBCW; goto nextlinetcesx;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
     }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
      if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
-// obsolete      z=mtm,
      bic=ic;goto nextlinedebug;   // Remember the line w/error; fetch continuation line#. it is OK to have jerr set if we are in debug mode.  Must go through nextline to set z non0
-// obsolete ,ic=~debugnewi(~ic,jt->sitop,self)
     }else if(unlikely(EVTHROW==jt->jerr)){if(NPGpysfmtdl&4){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);!TEQ5(CWTCESX(cwsent,j),CEND)&&!TEQ6(CWTCESX(cwsent,j),CBBLOCKEND);j=CWGO(cwsent,CNSTOREDCW,j))if(TEQ5(CWTCESX(cwsent,j),CCATCHT)){ic=j-1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // if throw., and there is a catch., do so
     }else{bic=ic; ic=CWGO(cwsent,CNSTOREDCW,ic); IFNOTOB(){RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.

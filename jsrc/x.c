@@ -311,6 +311,7 @@ void jtforeigninit(J jt){UI i;
  MN(13,21) XPRIM(VERB, jtdbstepinto1,jtdbstepinto2,VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,22) XPRIM(VERB, jtdbstepout1, jtdbstepout2, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,23) XPRIM(VERB, jtdbpasss, jtdbpasss, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(13,24) XPRIM(VERB, jtdbisolatestk, 0,           VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,5)  XPRIM(VERB, jtcdf,        0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,7)  XPRIM(VERB, jtdllsymset,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);   
  MN(15,8)  XPRIM(VERB, jtgh15,       0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);

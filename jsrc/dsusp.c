@@ -97,14 +97,29 @@ I lnumsi(DC d){A c;I i;
 
 }    /* source line number from DCCALL-type stack entry */
 
-
+// set suspension flag on the most recent execution.  Called before going into suspension, and always with debug turned on.
+// The flag is set in the most recent PARSE frame, if any; if the most recent thing is a tacit CALL, use that.  If the most
+// recent frame is explicit CALL (no PARSE), that's weird: xdefn must have died aborning, do nothing
 static DC suspset(DC d){DC e=0;
- NOUNROLL while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  // find topmost call, e=previous ele
- if(!(d&&DCCALL==d->dctype))R 0;                /* don't suspend if no such call     */
+ NOUNROLL while(d&&d->dctype!=DCCALL){if(!e&&d->dctype==DCPARSE)e=d; d=d->dclnk;}  // find topmost call, e=first PARSE
+ if(!d)R 0;                /* don't suspend if no such call     */
  if(d->dcc){RZQ(e); e->dcsusp=1;}               // if explicit, set susp on line - there should always be a following frame, but if not do nothing
  else      d->dcsusp=1;                         /* if not explicit, set susp on call */
  R d;
-}    /* find topmost call and set suspension flag */
+}
+
+// 13!:24 Isolate the current suspension on the stack.  Valid only when debug on.
+// we find the CALL for the w-most suspended frame, and set suspension in the PREVIOUS stack frame, thus cutting off
+// any stack frames before the one that triggered suspension
+// Result is i.0
+F1(jtdbisolatestk){
+ ASSERT(jt->uflags.trace&TRACEDB1,EVNONCE);  // debug must be on
+ I n; RZ(n=i0(w)); ASSERT(n>0,EVDOMAIN);  // get # lines to isolate, audit positive
+ DC d; while(d&&!d->dcsusp)d=d->dclnk; // d->end of topmost suspension
+ for(;d&&n;d=d->dclnk)n-=d->dctype==DCCALL;  // d->stack frame before the nth call
+ if(d)d->dcsusp=1;  // install suspension
+ R mtv;
+}
 
 static B jterrcap(J jt){A y,*yv;
  GAT0(y,BOX,4,1); yv=AAV(y);
@@ -229,22 +244,6 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
    }
   }
   break;
-// obsolete   I msgowed=0, nsusp=0;  // will be set if we have to tell the user about interrupted scripts; suspension level (# suspensions above c)
-// obsolete   NOUNROLL for(c=jt->sitop;c;c=c->dclnk){  // go through the stack...
-// obsolete    nsusp+=c->dcsusp;   // update susp level for the marked frame, stopping before the next marked frame
-// obsolete    switch(c->dctype){
-// obsolete    case DCCALL: DGOTO(c,-1) c->dcsusp=0; break; // turn off all suspensions and force every explicit definition to its exit line; track suspension level
-// obsolete    case DCSCRIPT:   // check running scripts
-// obsolete     if(c->dcss){   // if script is reading from file/string (should always be set)
-// obsolete      if(jt->uflags.trace&TRACEDB1){msgowed=1;  // dbr 1: allow all scripts to continue, with one msg
-// obsolete      }else if(nsusp<2){c->dcix=-1; msgowed=1;  // dbr 0: turn off scripts in first suspension (we will give one message per suspension)
-// obsolete      }
-// obsolete     }
-// obsolete      break;
-// obsolete    }
-// obsolete   }
-// obsolete   if(msgowed)jsto(JJTOJ(jt),MTYOER,jt->uflags.trace&TRACEDB1?"Interrupted script load resumes\n":"Interrupted script load aborted\n");
-// obsolete   break;   // exit from all functions, clearing suspensions; back to immed mode with clear debug stack
  case SUSNEXT:  // continue execution on next line
  case SUSSS:  // single-step continuation
   z=mtm; break;  // pick up wherever it left off; no result
@@ -374,8 +373,6 @@ F1(jtdbc){I k;
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the C stack to allow suspension commands room to run
  if(likely(!(k&TRACEDBDEBUGENTRY)))JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug, suppress this so we don't immediately come out of debug
- suspset(jt->sitop);   // If we aren't in suspension, there might be a debug stack, perhaps from Dissect or a Lab that is about to debug something.  In that case, we mark the current top of stack as suspended
-                       // to prevent Cut Back commands from overstepping the sentence being debugged.  We do this willy-nilly since if we are in suspension the stack is about to be cleared anyway
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

@@ -144,7 +144,6 @@ do{
 #else
        zatomct=(((zzcellp+zzcelllen)>>zzatomshift)-AN(zz))-1;   // get 1s comp of # atoms that have been filled in, not including what we haven't filled yet in this cell (neg indicates trailing items)
 #endif
-// obsolete        RZ(ccvt(zt|NOUNCVTVALIDCT,zz,(A*)&zatomct)); zz=(A)zatomct;  // flag means convert only # atoms given in zatomct
        RZ(zz=ccvt(zt,zz,zatomct));  // flag means convert only # atoms given in zatomct
        // change the strides to match the new cellsize
        if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}

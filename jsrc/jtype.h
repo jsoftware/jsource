@@ -493,7 +493,6 @@ struct AD {
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type except ASGN
 // ** NOUN types can have the following informational bits set
-// obsolete #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt arg only: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 #define SPARSEX 31  // NOTE this extends to the sign bit
 #if defined(_WIN64)||defined(__LP64__)
 #define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */

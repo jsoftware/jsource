@@ -276,7 +276,6 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   if(TYPESNE(zft,zzt)){I zzatomshift=CTTZ(bpnoun(zzt)); I zexpshift = CTTZ(bpnoun(zft))-zzatomshift;  // shift for size of atom; expansion factor of the conversion, as shift amount
    // here the old values in zz must change.  Convert them.  Tell cvt tp converts only as many atoms as given
    I zatomct=(zzcellp>>zzatomshift)-(startatend&(AN(zz)-(zzcelllen>>zzatomshift)))+1;   // get # atoms that have been filled in, offset by 1
-// obsolete    ASSERT(ccvt(zft|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert zcellct atoms.  Not worth checking for empty
    ASSERT(zz=ccvt(zft,zz,zatomct),EVDOMAIN);  // flag means convert zcellct atoms.  Not worth checking for empty
    // change the strides to match the new cellsize
    if(likely(zexpshift>=0)){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}

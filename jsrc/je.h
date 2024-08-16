@@ -460,6 +460,7 @@ extern F2(jtdbstepinto2);
 extern F2(jtdbstepout2);
 extern F2(jtdbstepover2);
 extern F2(jtdbpasss);
+extern F1(jtdbisolatestk);
 extern DF2(jtdeal);
 extern DF2(jtdealx);
 extern F2(jtdex);

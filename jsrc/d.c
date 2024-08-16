@@ -320,13 +320,14 @@ A jtjsignale(J jt,I eflg,A line,I info){
      // start with terse message [: name]
      A msg=eflg&EMSGLINEISTERSE?line:AAV(JT(jt,evm))[e];  // jsignal/jsignal3/13!:8 dyad.  Use the terse string except for 13!:8
      jteputlnolf(jt,msg);  // header of first line: terse string
-     // decide what name, if any, to show.  By default, the name of the executing entity
-     A nameblok=jt->curname;
-     // If there is a debug stack, we look for the topmost CALL.  If this is from a non-pm explicit entity, it will be followed by a PARSE entry.
-     // If the PARSE (or the CALL if there is no parse) is NOT suspended, show the name (it must be the first time, and the suspension hans't been set yet).  If suspended, it's an error during suspension, suppress the name
+     // Decide what name, if any, to show.  By default, the name of the executing entity, but if no name has started after the last suspension,
+     // it means the user has typed a failing sentence like (1 + 'a') into suspension: it is not part of the suspended name and should not be so decorated.
+     // If there is no suspension, we type the name, but this is trickier than it appears: during superdebug we may turn off debug while a SCRIPT type is
+     // supplying the sentence lines, and that script will keep running, preventing the clear-suspension message from being passed up the line to clear
+     // the debug stack.  
+     DC d; for(d=jt->sitop;d;d=d->dclnk){if(d->dctype==DCSCRIPT)break; if(d->dcsusp)break; if(d->dctype==DCCALL)break; }  // stop on EOC, SCRIPT/CALL, or suspension
+     A nameblok=(d&&d->dctype!=DCSCRIPT&&!d->dcsusp)?0:jt->curname;  // use name unless we reached suspension without seeing a CALL
      // Value error, which may come up after the stack is long gone, set EMSGLINEISNAME to override the name
-     DC d,expd=0; NOUNROLL for(d=jt->sitop;d&&DCCALL!=d->dctype;d=d->dclnk){expd=d;}  // find topmost call, e=following ele if any (always set if not tacit/pm)
-     d=d&&d->dcc&&d->dcpflags==0?expd:d; if(d&&d->dcsusp)nameblok=0;  // if non-pm explicit, look for dcsusp in explicit block.  If suspension already set,  don't show the old name again
      nameblok=eflg&EMSGLINEISNAME?line:nameblok;  // if caller overrides the name, use the caller's name
      if(nameblok){if(!jt->glock){eputs(": "); ep(AN(nameblok),NAV(nameblok)->s);}}  // ...followed by name of running entity
      if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such

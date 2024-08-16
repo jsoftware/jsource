@@ -466,8 +466,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
   if(likely(!(((I)jtinplace&JTRETRY)+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args
    // Here for the fast and important case, where the arguments are both dense B01/INT/FL
    VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
-// obsolete    // The index into va is atype*3 + wtype, calculated sneakily.  We
-// obsolete    aadocv=&vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
    aadocv=&vainfo->p2[(at*3+(wt&INT+FL))>>INTX];   // test here to avoid the call overhead
   }else{
 
@@ -629,9 +627,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
      n=(n*nf)^REPSGN(SGNIF(jtinplace,VIPWFLONGX)&(1-nf)); m*=migrmf;   // propagate mf and nf down; if n is not 1, complement if af<wf
      mf=1;  // no outer loops.  nf immaterial.  zk does not need to change since it will not be used
     }else{--nf;}   // All 4 loops (normal case since rank given).nf is outer loop repeat count-1
-// obsolete      DPMULDE(nf,mf,mf);
-// obsolete      DPMULDE(zn,mf,zn)  // total # atoms in result
-// obsolete     }
    }else{  // sparse case
     I af=acr>>(RANKTX), wf=wcr>>(RANKTX); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af; fr+=(f<<RANKTX)+f; aawwzk[0]=acr; aawwzk[1]=wcr; mf=af; nf=wf;
@@ -1343,8 +1338,6 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
   if(!((t=(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
-// obsolete    // The index into va is atype*3 + wtype, calculated sneakily
-// obsolete    R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
    R vainfo->p2[(at*3+(wt&INT+FL))>>INTX];
 
   }else if(likely(!(t&(NOUN&~NUMERIC)))) {

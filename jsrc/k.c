@@ -827,9 +827,7 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
  if(unlikely(t&CMPX+QP))AK(d)=(AK(d)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
  yv=voidAV(d);   // address of target area
 
-// obsolete  if(unlikely(tflagged&NOUNCVTVALIDCT)){
  if(unlikely(natoms!=0)){
-// obsolete   I inputn=natoms;  // fetch input, in case it is called for
   if(natoms>0){  // if converting the leading values, just update the counts
    n=natoms-1;  // set the counts for local use, and in the block to be converted
   }else{  // if converting trailing values (natoms is 1s comp of # trailing values)...
@@ -964,7 +962,6 @@ A jtcvt(J jt,I t,A w){
  A z=ccvt(t,w,0);  // attempt the conversion, set error if any
  if(unlikely(0==z)) { // used to be x:_ could be XNUM, now must be RAT
   if(jt->jerr==EWIRR) {RESETERR; z=ccvt(RAT,w,0);}  // retry if soft failure
-// obsolete   ASSERT(z!=0,EVDOMAIN);
  }
  R z;
 }
@@ -1002,10 +999,6 @@ A jtbcvt(J jt,C mode,A w){FPREFIP(J); A z=w;
  if(mode&1||!(AT(w)&XNUM+RAT)){  // if we are not stopping at XNUM/RAT
   // To avoid a needless copy, suppress conversion to B01 if type is B01, to INT if type is INT, etc
   // set the NOFUZZ flag in t to insist on an exact match so we won't lose precision
-// obsolete   jtinplace=(J)((I)jt+JTNOFUZZ);  // demand exact match
-// obsolete   z=!(mode&14)&&jtccvt(jtinplace,B01,w,&y)?y:
-// obsolete     (y=w,ISDENSETYPE(AT(w),INT)||(!(mode&12)&&jtccvt(jtinplace,INT,w,&y)))?y:
-// obsolete     (y=w,ISDENSETYPE(AT(w),FL)||(!(mode&8)&&jtccvt(jtinplace,FL,w,&y)))?y:w;  // convert to enabled modes one by one, stopping when one works
   if(!(mode&14)&&(z=jtccvt(jtinplace,B01|CVTNOFUZZ,w,0)));  // if OK to try B01, and it fits, keep B01
   else if(ISDENSETYPE(AT(w),INT))z=w;   // if w is INT, we can't improve
   else if(!(mode&12)&&(z=jtccvt(jtinplace,INT|CVTNOFUZZ,w,0)));  //  OK to try INT and it fits, keep B01

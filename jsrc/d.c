@@ -326,8 +326,8 @@ A jtjsignale(J jt,I eflg,A line,I info){
      // supplying the sentence lines, and that script will keep running, preventing the clear-suspension message from being passed up the line to clear
      // the debug stack.  
      DC d; for(d=jt->sitop;d;d=d->dclnk){if(d->dctype==DCSCRIPT)break; if(d->dcsusp)break; if(d->dctype==DCCALL)break; }  // stop on EOC, SCRIPT/CALL, or suspension
-     A nameblok=(d&&d->dctype!=DCSCRIPT&&!d->dcsusp)?0:jt->curname;  // use name unless we reached suspension without seeing a CALL
-     // Value error, which may come up after the stack is long gone, set EMSGLINEISNAME to override the name
+     A nameblok=(d&&d->dctype!=DCCALL&&d->dcsusp)?0:jt->curname;  // use name unless we reached suspension without seeing a CALL
+     // Value error, which may come up after the stack is long gone, sets EMSGLINEISNAME to override the name
      nameblok=eflg&EMSGLINEISNAME?line:nameblok;  // if caller overrides the name, use the caller's name
      if(nameblok){if(!jt->glock){eputs(": "); ep(AN(nameblok),NAV(nameblok)->s);}}  // ...followed by name of running entity
      if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such

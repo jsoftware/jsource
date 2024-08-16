@@ -108,16 +108,12 @@ static DC suspset(DC d){DC e=0;
  R d;
 }
 
-// 13!:24 Isolate the current suspension on the stack.  Valid only when debug on.
-// we find the CALL for the w-most suspended frame, and set suspension in the PREVIOUS stack frame, thus cutting off
-// any stack frames before the one that triggered suspension
+// 13!:24 Install suspension at the end of the debug stack.  Valid only when debug on.
 // Result is i.0
 F1(jtdbisolatestk){
  ASSERT(jt->uflags.trace&TRACEDB1,EVNONCE);  // debug must be on
- I n; RZ(n=i0(w)); ASSERT(n>0,EVDOMAIN);  // get # lines to isolate, audit positive
- DC d; while(d&&!d->dcsusp)d=d->dclnk; // d->end of topmost suspension
- for(;d&&n;d=d->dclnk)n-=d->dctype==DCCALL;  // d->stack frame before the nth call
- if(d)d->dcsusp=1;  // install suspension
+ ASSERTMTV(w)  // no arg
+ if(jt->sitop)jt->sitop->dcsusp=1;  // install suspension
  R mtv;
 }
 

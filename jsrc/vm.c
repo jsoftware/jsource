@@ -10,11 +10,32 @@ static int64_t m7f = 0x7fffffffffffffffLL;
 #define COMMA ,
 #endif
 
-D jtintpow(J jt,D x,I n){D r=1;
- if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}  // kludge use r=x; n=-1-n;
- while(n){if(1&n)r*=x; x*=x; n>>=1;}
- R r;
-}    /* x^n where x is real and n is integral */
+/* x ^ n where x is real and n is integer */
+D jtintpow(J jt, D x, I n) {
+  D r;
+
+  if (x == 2) {
+    if (n > INT_MAX) n = INT_MAX;
+    if (n < INT_MIN) n = INT_MIN;
+    R ldexp(1, n);
+  }
+  
+  if (n >= 0) {
+    r = 1;
+  } else {
+    r = x = 1 / x;
+    if (n == IMIN) n = IMAX;
+    else n = -1 - n;
+  }
+
+  while (n) {
+    if (1 & n) r *= x;
+    x *= x;
+    n >>= 1;
+  }
+
+  R r;
+}
 
 D jtpospow(J jt,D x,D y){
  if(unlikely(0==y))R 1.0;

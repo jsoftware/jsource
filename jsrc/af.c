@@ -165,7 +165,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
     RZ(z);
    }
    RE(z);
-   ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVDOMAIN);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
+   ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVTYPECHG);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
    R z;
   }else R df1(z,REFIXA(2,f),wf);
 // bug ^: and m} should process gerund args

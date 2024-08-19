@@ -141,7 +141,7 @@ DF2(jtunquote){A z;
   fs=FAV(self)->fgh[2];  // point to the actual executable
   ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;); // make sure the name's value is given also
   flgd0cpC|=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
-  ASSERTSUFF(TYPESEQ(AT(self),AT(fs)),EVDOMAIN,z=0; goto exitfa;);   // make sure its part of speech has not changed since the name was parsed
+  ASSERTSUFF(TYPESEQ(AT(self),AT(fs)),EVTYPECHG,z=0; goto exitfa;);   // make sure its part of speech has not changed since the name was parsed - that's a pun in type
   // The pseudo-named function was created under debug/pm mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
   // implications: anonymous verbs do not restore locales.  To preserve that behavior, we divert the call to the slow path and then skip restoring the locale
   // at the return

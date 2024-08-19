@@ -50,7 +50,8 @@
 #define EVDEADLOCK      44    // action would deadlock the system
 #define EVASSEMBLY      45    // inhomogeneous results during assembly (i. e. result.h) - converted to EVDOMAIN after eformat
 #define EVOFLO          46    // overflow of a fixed-size type (INT[124])
-#define NEVM            46      /* number of event codes       */
+#define EVTYPECHG       47    // type pun: name changed type while in use
+#define NEVM            47      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */

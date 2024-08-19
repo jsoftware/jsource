@@ -128,7 +128,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){
   AM(hasht)=AM(results); // set # entries in hash
  }
  // install args and result in the next slot.  It is possible that two threads might store the same value; that's OK
- ra(z); AAV0(results)[AM(results)]=z;  // ra because ht3 is recursive
+ INCORPRA(z); AAV0(results)[AM(results)]=z;  // ra because ht3 is recursive
  v[AM(keys)][0]=y; v[AM(keys)][1]=x;   // install arg values
 
  I hi=INITHASH(hasht,x,y); while(0<=hv[hi]){if(unlikely(--hi<0))hi+=AN(hasht);}           // init and find the insertion point

@@ -10,11 +10,19 @@ static int64_t m7f = 0x7fffffffffffffffLL;
 #define COMMA ,
 #endif
 
-D jtintpow(J jt,D x,I n){D r=1;
- if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}  // kludge use r=x; n=-1-n;
- while(n){if(1&n)r*=x; x*=x; n>>=1;}
+// x ^ n where x is real and n is integer
+D jtintpow(J jt,D x,I n){D r;
+ if(x==2){ // special case x=2. Faster implementation of ldexp(double,int) from math.h.
+   UI8 ires;  // where bit-pattern of result will be built
+   if(likely(BETWEENC(n,-1022,1023)))ires=(n+1023)<<52;  // normal range
+   else if(n>1023)ires=0x7ff0000000000000;   // infinity
+   else{n=MAX(n,-1023-53); ires=0x0008000000000000>>(-1023-n);}  // denorm and zero.  n=-1023 is the largest denorm
+   R *(D*)&ires;  // return bit-pattern as a D
+ }
+ if(0>n){r=x=1/x; n=~n;}else r=1;  // convert neg power to power of reciprocal; power to 1s-comp (=-n-1); init result
+ while(n){if(1&n)r*=x; x*=x; n>>=1;}  // take power by repeated squaring.  0^0=1
  R r;
-}    /* x^n where x is real and n is integral */
+}
 
 D jtpospow(J jt,D x,D y){
  if(unlikely(0==y))R 1.0;

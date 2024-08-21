@@ -18,12 +18,12 @@ D jtintpow(J jt, D x, I n) { D r;
   // n = n > INT_MAX ? INT_MAX : (n < INT_MIN ? INT_MIN : n);
   // R ldexp(1, n);
   UI8 ires; // where bit-pattern of result will be built
-  if(likely(BETWEENC(n, -1022, 1023))) ires = (n + 1023) << 52; // normal range
-  else if (n > 1023) ires = (I)((1 << 11) - 1) << 52; // infinity
+  if(likely(BETWEENC(n, -1022, 1023))) ires = (UI8)(n + 1023) << 52; // normal range
+  else if (n > 1023) ires = (UI8)((1 << 11) - 1) << 52; // infinity
   else {
    // denorm and zero. n = -1023 is the largest denorm
    n = MAX(n, -1023 - 53);
-   ires = ((I)1 << 51) >> (-1023 - n);
+   ires = ((UI8)1 << 51) >> (-1023 - n);
   }
   R *(D*)&ires;  // return bit-pattern as a D
  }

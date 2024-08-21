@@ -865,7 +865,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   // no need to turn off pristinity in w, because we handle only DIRECT types here
   VARPS adocv; varps(adocv,fs,wt,0);  // qualify the operation, returning action routine and conversion info
   if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...  z0 will hold a neutral if we have to calculate one
-   zt=rtype(adocv.cv);
+   zt=rtypew(adocv.cv,wt);
 #if SY_64
    GA(zz,zt,m*wcn,r,AS(w)); AS(zz)[0]=m; 
 #else
@@ -993,8 +993,8 @@ DF2(jtrazecut2){A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p
  r=MAX(1,AR(w)); s=AR(w)?AS(w):&AN(w); wv=CAV(w); PROD(d,AR(w)-1,AS(w)+1) k=d<<bplg(wt);  // d=#atoms in an item of w.  If w is an atom point shape to AN to get the correct item count
  if(pfx){u=v+wi; while(u>v&&sep!=*v)++v; p=u-v;}
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
- if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
- zt=rtype(adocv.cv); zk=d<<bplg(zt);
+ if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w); wt=t;}
+ zt=rtypew(adocv.cv,wt); zk=d<<bplg(zt);
  GA(z,zt,AN(w),r,s); zv=CAV(z); // allocate size of w, which is as big as it can get if there are no discarded items
  I rc=EVOK;
  while(p){I n;

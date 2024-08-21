@@ -324,7 +324,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
  // The rest handles primitives with fast suffix scans
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
+ if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtypew(adocv.cv,t),wn,wr,ws);
  I rc=((AHDRSFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
  if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))R z; jsignal(rc); R jt->jerr>=EWOV?IRS1(w,self,r,jtsscan,z):0;} else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */

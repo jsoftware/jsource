@@ -833,13 +833,13 @@ F1(jtsldot){F1PREFIP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2
  case CBOX: f2=jtkeybox; break;  // </.
  case CPOUND: f2=jtkeytally; break;
  case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){ // f//.  if f is atomic2
-  f1=jtobqfslash; flag&=~VJTFLGOK1;
-  // dyad f//. is special for f=+ >. <.   we set flags to indicate the operation and the allowed types
+   f1=jtobqfslash; flag&=~VJTFLGOK1;
+   // dyad f//. is special for f=+ >. <.   we set flags to indicate the operation and the allowed types
 #define keyslashvalues(w)CCM(w,CPLUS)+CCM(w,CMIN)+CCM(w,CMAX)
    CCMWDS(keyslash) CCMCAND(keyslash,cand,FAV(v->fgh[0])->id) if(CCMTST(cand,FAV(v->fgh[0])->id)){
-    I op=FAV(v->fgh[0])->id&1; op=FAV(v->fgh[0])->id==CPLUS?2:op;  // 0=<. 1=>. 2=+
-    flag += (((((2<<VFKEYSLASHFX)+((FL+B01)<<VFKEYSLASHTX))<<16) + (((1<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX))<<8) + ((0<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX))) >> (op<<3)) & (VFKEYSLASHT+VFKEYSLASHF);   // get flag bits
-   }
+   I op=FAV(v->fgh[0])->id&1; op=FAV(v->fgh[0])->id==CPLUS?2:op;  // 0=<. 1=>. 2=+
+   flag += (((((2<<VFKEYSLASHFX)+((FL+B01)<<VFKEYSLASHTX))<<16) + (((1<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX))<<8) + ((0<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX))) >> (op<<3)) & (VFKEYSLASHT+VFKEYSLASHF);   // get flag bits
+  }
 
   } break;
  case CFORK:  if(v->valencefns[0]==(AF)jtmean){flag+=(3<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX);  // (+/%#)/., treated as f//.

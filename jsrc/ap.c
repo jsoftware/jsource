@@ -699,7 +699,7 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  I d,m; PROD(m,f,ws); PROD(d,r-1,ws+f+1);   // m=#scans, d=#atoms in a cell of each scan
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
+ if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtypew(adocv.cv,t),wn,wr,ws);
  I rc=((AHDRPFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
  if(unlikely((255&~EVNOCONV)&rc)){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
@@ -926,7 +926,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  varps(adocv,self,wt,0); if(!adocv.f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
  PROD(d,AR(w)-1,AS(w)+1) b=0>m0&&zi*m!=p;   // b='has shard'
- zt=rtype(adocv.cv); RESETRANK;
+ zt=rtypew(adocv.cv,wt); RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); AS(z)[0]=zi;
  if(d*zi==0){RETF(z);}  // mustn't call adocv on empty arg!
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}

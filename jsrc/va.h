@@ -60,6 +60,7 @@
 
 // Extract the result type from cv coming from the table
 #define rtype(x) (((x)>>VRESX)&(VRESMSK>>VRESX))
+#define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
 
 #define NOT(v) ((v)^VALIDBOOLEAN)
 

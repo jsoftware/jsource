@@ -866,7 +866,8 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  PROD(m,f,ws);
  RESETRANK;   // clear rank now that we've used it - not really required here?
  // Allocate the result area
- zt=rtype(adocv.cv); zt=(adocv.cv&VRESMSK)==0?wt:zt;  // Use specified type if given, otherwise use type of argument
+ zt=rtypew(adocv.cv,wt);  // Use specified type if given, otherwise use type of argument
+// obsolete  zt=(adocv.cv&VRESMSK)==0?wt:zt;
  GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
  if(m*d==0){RETF(z);}  // mustn't call the function on an empty argument!
  // Convert inputs if needed 

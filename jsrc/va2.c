@@ -1190,7 +1190,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  if(unlikely((SGNIFDENSE(at|wt)&-an&-wn&(3-nn)&(3-zn))>=0)){R jtupon2cell(jtinplace,a,w,self);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
  y=FAV(fs)->fgh[0];  // look at f/
  adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);  // get type info on g
- adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);   // get type info on f/
+ adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtypew(adocvf.cv,yt);   // get type info on f/
  // Also, don't use special code if g is inplaceable.  There's no gain then, because f/ is always inplaceable.  The gain comes when g can be split into small pieces with small overall cache footprint
  if(((JTINPLACEA*((r==ar)&SGNTO0(AC(a)))+((r==wr)&SGNTO0(AC(w))))&(I)jtinplace&(adocv.cv>>VIPOKWX)))R jtupon2cell(jtinplace,a,w,self);  // if inplaceable, revert
  if(unlikely(!TYPESEQ(yt,zt)))R jtupon2cell(jtinplace,a,w,self);  // if the result of f (which feeds through f/) isn't the same type as the result of g, revert

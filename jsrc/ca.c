@@ -22,16 +22,18 @@ static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
 }
 
 // <.@(2&^.) monad
-static DF1(jtintfloorlog2) {A z; I wn, wr, *ws, *wv;
+static DF1(jtintfloorlog2) {A z;
  ARGCHK1(w);
- wn = AN(w); wr = AR(w); ws = AS(w); wv = IAV(w);
- GATV(z, INT, wn, wr, ws); I *zv = IAV(z); // zv points to allocated result area
+ I *wv = IAV(w); I wn=AN(w);
+ GATV(z, INT, wn, AR(w), AS(w)); I *zv = IAV(z); // zv points to allocated result area
  if (INT & AT(w)) {
-  for (I i = wn - 1; i >= 0; --i, ++wv, ++zv) { // loop over all atoms of w
-   I d = *wv;
-   if (d > 0) *zv = CTLZI(d); // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).
-   else R onf1(w, self); // When d < 1 then stop and reexecute by hand for whole w.
-  }
+  // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).  failover to by hand if d<=0
+  DO(wn, I d=wv[i]; if(unlikely(d<=0))R onf1(w,self); zv[i]=CTLZI(d);)
+// obsolete   for (I i = wn - 1; i >= 0; --i, ++wv, ++zv) { // loop over all atoms of w
+// obsolete    I d = *wv;
+// obsolete    if (d > 0) *zv = CTLZI(d); // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).
+// obsolete    else R onf1(w, self); // When d < 1 then stop and reexecute by hand for whole w.
+// obsolete   }
  } else R onf1(w, self);
  R z;
 }

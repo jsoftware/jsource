@@ -21,6 +21,37 @@ static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
  RETF(z);
 }
 
+// <.@(2&^.) monad
+static DF1(jtintfloorlog2) {A z; I wn, wr, *ws, *wv;
+ ARGCHK1(w);
+ wn = AN(w); wr = AR(w); ws = AS(w); wv = IAV(w);
+ GATV(z, INT, wn, wr, ws); I *zv = IAV(z); // zv points to allocated result area
+ if (INT & AT(w)) {
+  for (I i = wn - 1; i >= 0; --i, ++wv, ++zv) { // loop over all atoms of w
+   I d = *wv;
+   if (d > 0) *zv = CTLZI(d); // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).
+   else R onf1(w, self); // When d < 1 then stop and reexecute by hand for whole w.
+  }
+ } else R onf1(w, self);
+ R z;
+}
+
+// >.@(2&^.) monad
+static DF1(jtintceillog2) {A z; I wn, wr, *ws, *wv;
+ ARGCHK1(w);
+ if (INT & AT(w)) {
+  wn = AN(w); wr = AR(w); ws = AS(w); wv = IAV(w);
+  GATV(z, INT, wn, wr, ws); I *zv = IAV(z);
+  for (I i = wn - 1; i >= 0; --i, wv++, zv++) {
+   I d = *wv;
+   // Similar to the above case with floor, but when d is not a power of 2 then add 1. Only powers of 2 have exactly one 1-bit, so count 1-bits in d (CT1I).
+   if (d > 0) *zv = CTLZI(d) + (CT1I(d) > 1);
+   else R onf1(w, self);
+  }
+ } else R onf1(w, self);
+ R z;
+}
+
 // <.@ >.@ and the like, dyad 
 static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  ARGCHK2(a,w);
@@ -227,8 +258,14 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    break;
   case CPOUND&0x3f:  f1=d==CCOMMA?jtnatoms:f1; f1=d==CDOLLAR?jtrank:f1; f1=d==COPE?jttallyatopopen:f1; break;    // #@,  #@$    #@>
   case CSTAR&0x3f:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
-  case CCEIL&0x3f:   f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
-  case CFLOOR&0x3f:  f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2);  break;
+  case CCEIL&0x3f:
+   if(unlikely(d==CAMP) && wv->fgh[0]==num(2) && AT(wv->fgh[1])&VERB && FAV(wv->fgh[1])->id==CLOG)f1=jtintceillog2;  // >.@(2&^.)  2 must be SDT
+   else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other >.@v
+   break;
+  case CFLOOR&0x3f:
+   if(unlikely(d==CAMP) && wv->fgh[0]==num(2) && AT(wv->fgh[1])&VERB && FAV(wv->fgh[1])->id==CLOG)f1=jtintfloorlog2;  // <.@(2&^.)  2 must be SDT
+   else{f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other <.@v
+   break;
   case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
   case CQUERY&0x3f:  if((d&-2)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;} break;  // # $
   case CQRYDOT&0x3f: if((d&-2)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // # $

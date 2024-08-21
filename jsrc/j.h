@@ -2339,6 +2339,8 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 
 // CTLZ(I) returns the bit position of the highest 1-bit
 
+// CT1I returns the number of 1-bits.
+
 #ifdef __GNUC__
 #define CTTZ(w) __builtin_ctzl((UINT)(w))
 #if SY_64
@@ -2348,6 +2350,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #else
 #define CTLZI(w) (63-__builtin_clzll((UI)(w)))
 #endif
+#define CT1I(w) __builtin_popcountll((UI)w)
 #else
 #define CTTZI(w) __builtin_ctzl((UINT)(w))
 #if (!C_AVX2) && (defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86))
@@ -2355,6 +2358,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #else
 #define CTLZI(w) (31-__builtin_clzl((UI)(w)))
 #endif
+#define CT1I(w) __builtin_popcountl((UI)w)
 #endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))   // use this if we need 32 when w=0
 #endif

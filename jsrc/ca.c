@@ -38,7 +38,7 @@ static DF1(jtintfloorlog2) {
     // Infs and NaN are the only floats that have all 1-bits in exponent. D_EXP_MSK represents +Inf, but is also used to check NaN and denorms.
     if (unlikely(wv[i] <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self); // Failover to by hand if d <= 0 or d is +Inf or NaN.
     zv[i] = ((~d) & D_EXP_MSK) == D_EXP_MSK // Denorms are the only floats (except 0 which was eliminated earlier) that have all 0-bits in exponent.
-     ? CTLZI(d) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with CTLZI.
+     ? 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
      : ((d & D_EXP_MSK) >> D_MANT_BITS_N) - D_EXP_MAX; // Normal. Result is exponent.
    )
   }
@@ -63,8 +63,8 @@ static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewr
     UI8 d = *(UI8*)&wv[i];
     if (unlikely(wv[i] <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
     zv[i] = ((~d) & D_EXP_MSK) == D_EXP_MSK
-     ? CTLZI(d) + (CT1I(d) > 1) - D_MANT_BITS_N + D_EXP_MIN // Denorm.
-     : ((d & D_EXP_MSK) >> D_MANT_BITS_N) - D_EXP_MAX + (CT1I(d & D_MANT_MSK) > 1); // Normal.
+     ? 63 - __builtin_clzll(d) + (__builtin_popcountll(d) > 1) - D_MANT_BITS_N + D_EXP_MIN // Denorm.
+     : ((d & D_EXP_MSK) >> D_MANT_BITS_N) - D_EXP_MAX + (__builtin_popcountll(d & D_MANT_MSK) > 1); // Normal.
    )
   }
   R z;

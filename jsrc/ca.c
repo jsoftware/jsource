@@ -22,36 +22,54 @@ static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
 }
 
 // <.@(2&^.) monad
-static DF1(jtintfloorlog2) {A z;
+static DF1(jtintfloorlog2) {
  ARGCHK1(w);
- I *wv = IAV(w); I wn=AN(w);
- GATV(z, INT, wn, AR(w), AS(w)); I *zv = IAV(z); // zv points to allocated result area
- if (INT & AT(w)) {
-  // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).  failover to by hand if d<=0
-  DO(wn, I d=wv[i]; if(unlikely(d<=0))R onf1(w,self); zv[i]=CTLZI(d);)
-// obsolete   for (I i = wn - 1; i >= 0; --i, ++wv, ++zv) { // loop over all atoms of w
-// obsolete    I d = *wv;
-// obsolete    if (d > 0) *zv = CTLZI(d); // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).
-// obsolete    else R onf1(w, self); // When d < 1 then stop and reexecute by hand for whole w.
-// obsolete   }
- } else R onf1(w, self);
- R z;
+ if ((INT | FL) & AT(w)) { // Special cases only for integers and floats ([<>].@f for extended integers is handled in vx.c).
+  A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w); I *wv = IAV(w); // GATV documentation advises using variables for arguments.
+  GATV(z, INT, wn, wr, ws); I *zv = IAV(z); // zv points to allocated result area.
+  if (INT & AT(w)) { // Case with integers.
+   DO(wn,
+    I d = wv[i]; if (unlikely(d <= 0)) R onf1(w, self); // Failover to by hand if d <= 0.
+    zv[i] = CTLZI(d); // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).
+   )
+  } else { // Case with floats.
+   DO(wn,
+    UI8 d = *(UI8*)&wv[i];
+    // Infs and NaN are the only floats that have all 1-bits in exponent. D_EXP_MSK represents +Inf, but is also used to check NaN and denorms.
+    if (unlikely(wv[i] <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self); // Failover to by hand if d <= 0 or d is +Inf or NaN.
+    zv[i] = ((~d) & D_EXP_MSK) == D_EXP_MSK // Denorms are the only floats (except 0 which was eliminated earlier) that have all 0-bits in exponent.
+     ? CTLZI(d) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with CTLZI.
+     : ((d & D_EXP_MSK) >> D_MANT_BITS_N) - D_EXP_MAX; // Normal. Result is exponent.
+   )
+  }
+  R z;
+ }
+ R onf1(w, self);
 }
 
 // >.@(2&^.) monad
-static DF1(jtintceillog2) {A z; I wn, wr, *ws, *wv;
+static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewritten, but inner loops differ).
  ARGCHK1(w);
- if (INT & AT(w)) {
-  wn = AN(w); wr = AR(w); ws = AS(w); wv = IAV(w);
+ if ((INT | FL) & AT(w)) {
+  A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w); I *wv = IAV(w);
   GATV(z, INT, wn, wr, ws); I *zv = IAV(z);
-  for (I i = wn - 1; i >= 0; --i, wv++, zv++) {
-   I d = *wv;
-   // Similar to the above case with floor, but when d is not a power of 2 then add 1. Only powers of 2 have exactly one 1-bit, so count 1-bits in d (CT1I).
-   if (d > 0) *zv = CTLZI(d) + (CT1I(d) > 1);
-   else R onf1(w, self);
+  if (INT & AT(w)) { // Case with integers.
+   DO(wn,
+    I d = wv[i]; if (unlikely(d <= 0)) R onf1(w, self);
+    zv[i] = CTLZI(d) + (CT1I(d) > 1); // When d is not a power of 2 then add 1. Only powers of 2 have exactly one 1-bit, so count 1-bits in d (CT1I).
+   )
+  } else { // Case with floats.
+   DO(wn,
+    UI8 d = *(UI8*)&wv[i];
+    if (unlikely(wv[i] <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
+    zv[i] = ((~d) & D_EXP_MSK) == D_EXP_MSK
+     ? CTLZI(d) + (CT1I(d) > 1) - D_MANT_BITS_N + D_EXP_MIN // Denorm.
+     : ((d & D_EXP_MSK) >> D_MANT_BITS_N) - D_EXP_MAX + (CT1I(d & D_MANT_MSK) > 1); // Normal.
+   )
   }
- } else R onf1(w, self);
- R z;
+  R z;
+ }
+ R onf1(w, self);
 }
 
 // <.@ >.@ and the like, dyad 

@@ -25,21 +25,23 @@ static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
 static DF1(jtintfloorlog2) {
  ARGCHK1(w);
  if ((INT | FL) & AT(w)) { // Special cases only for integers and floats ([<>].@f for extended integers is handled in vx.c).
-  A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w); I *wv = IAV(w); // GATV documentation advises using variables for arguments.
+  A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w); // GATV documentation advises using variables for arguments.
   GATV(z, INT, wn, wr, ws); I *zv = IAV(z); // zv points to allocated result area.
   if (INT & AT(w)) { // Case with integers.
+   I *wv = IAV(w);
    DO(wn,
     I d = wv[i]; if (unlikely(d <= 0)) R onf1(w, self); // Failover to by hand if d <= 0.
     zv[i] = CTLZI(d); // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).
    )
   } else { // Case with floats.
+   I8 *wv = I8AV(w);
    DO(wn,
-    UI8 d = *(UI8*)&wv[i];
+    I8 d = wv[i];
     // Infs and NaN are the only floats that have all 1-bits in exponent. D_EXP_MSK represents +Inf, but is also used to check NaN and denorms.
-    if (unlikely(wv[i] <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self); // Failover to by hand if d <= 0 or d is +Inf or NaN.
-    zv[i] = ((~d) & D_EXP_MSK) == D_EXP_MSK // Denorms are the only floats (except 0 which was eliminated earlier) that have all 0-bits in exponent.
+    if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self); // Failover to by hand if d <= 0 (incl -0) or d is +Inf or NaN.
+    zv[i] = unlikely((d & D_EXP_MSK) == 0) // Denorms are the only floats (except 0 which was eliminated earlier) that have all 0-bits in exponent.
      ? 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
-     : ((d & D_EXP_MSK) >> D_MANT_BITS_N) - D_EXP_MAX; // Normal. Result is exponent.
+     : (d >> D_MANT_BITS_N) + D_EXP_MIN-1; // Normal. Result is exponent.   Exponent of 0001 means D_EXP_MIN
    )
   }
   R z;
@@ -51,20 +53,22 @@ static DF1(jtintfloorlog2) {
 static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewritten, but inner loops differ).
  ARGCHK1(w);
  if ((INT | FL) & AT(w)) {
-  A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w); I *wv = IAV(w);
+  A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w);
   GATV(z, INT, wn, wr, ws); I *zv = IAV(z);
   if (INT & AT(w)) { // Case with integers.
+   I *wv = IAV(w);
    DO(wn,
     I d = wv[i]; if (unlikely(d <= 0)) R onf1(w, self);
     zv[i] = CTLZI(d) + (CT1I(d) > 1); // When d is not a power of 2 then add 1. Only powers of 2 have exactly one 1-bit, so count 1-bits in d (CT1I).
    )
   } else { // Case with floats.
+   I8 *wv = I8AV(w);
    DO(wn,
-    UI8 d = *(UI8*)&wv[i];
-    if (unlikely(wv[i] <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
-    zv[i] = ((~d) & D_EXP_MSK) == D_EXP_MSK
+    I8 d = wv[i];
+    if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
+    zv[i] = unlikely((d & D_EXP_MSK) == 0)
      ? 63 - __builtin_clzll(d) + (__builtin_popcountll(d) > 1) - D_MANT_BITS_N + D_EXP_MIN // Denorm.
-     : ((d & D_EXP_MSK) >> D_MANT_BITS_N) - D_EXP_MAX + (__builtin_popcountll(d & D_MANT_MSK) > 1); // Normal.
+     : ((d+D_MANT_MSK) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal.  Exponent of 0001 means D_EXP_MIN
    )
   }
   R z;

@@ -299,6 +299,7 @@ struct AD {
 #define I1AV(x)         ( (I1*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define I2AV(x)         ( (I2*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define I4AV(x)         ( (I4*)((C*)(x)+AK(x)))  /* pointer to ravel        */
+#define I8AV(x)         ( (I8*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define UIAV1(x)         ((UI*)((C*)(x)+AKXR(1)))  // unsigned integer "limb" in an X (or Q) value
 #define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1 - used for internal tables that need alignment or need AS[0])

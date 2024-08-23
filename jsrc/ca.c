@@ -23,7 +23,7 @@ static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
 
 // <.@(2&^.) monad
 static DF1(jtintfloorlog2) {
- ARGCHK1(w);
+ ARGCHK1(w);F1PREFIP;
  if ((INT | FL) & AT(w)) { // Special cases only for integers and floats ([<>].@f for extended integers is handled in vx.c).
   A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w); // GATV documentation advises using variables for arguments.
   GATV(z, INT, wn, wr, ws); I *zv = IAV(z); // zv points to allocated result area.
@@ -52,7 +52,7 @@ static DF1(jtintfloorlog2) {
 
 // >.@(2&^.) monad
 static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewritten, but inner loops differ).
- ARGCHK1(w);
+ ARGCHK1(w);F1PREFIP;
  if ((INT | FL) & AT(w)) {
   A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w);
   GATV(z, INT, wn, wr, ws); I *zv = IAV(z);

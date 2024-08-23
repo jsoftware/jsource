@@ -67,7 +67,7 @@ static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewr
     I8 d = wv[i];
     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
     zv[i] = unlikely((d & D_EXP_MSK) == 0)
-     ? 63 - __builtin_clzll(d) + (__builtin_popcountll(d) > 1) - D_MANT_BITS_N + D_EXP_MIN // Denorm.
+     ? 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN // Denorm, after rounding up (d is not 0)
      : ((d+D_MANT_MSK) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal.  Exponent of 0001 means D_EXP_MIN
    )
   }

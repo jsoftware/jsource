@@ -35,6 +35,7 @@ static DF1(jtintfloorlog2) {
    )
   } else { // Case with floats.
    I8 *wv = I8AV(w);
+   I8 *ctv=(I8*)&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?(I8*)&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv; I8 cct=*ctv;  // cct, in binary, taken from !.f or default
    DO(wn,
     I8 d = wv[i];
     // Infs and NaN are the only floats that have all 1-bits in exponent. D_EXP_MSK represents +Inf, but is also used to check NaN and denorms.
@@ -63,6 +64,7 @@ static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewr
    )
   } else { // Case with floats.
    I8 *wv = I8AV(w);
+   I8 *ctv=(I8*)&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?(I8*)&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv; I8 cct=*ctv;  // cct, in binary, taken from !.f or default
    DO(wn,
     I8 d = wv[i];
     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
@@ -269,8 +271,8 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
  // special cases of u
  UI mrecip=0;  // used only for m&|@^, where it is non0
 #define IDBIT(c) ((UI8)1<<((c)&0x3f))   // mask for c
-#define SPECAT (IDBIT(CBOX)|IDBIT(CNOT)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR)|IDBIT(CSLDOT)|IDBIT(CQQ)|IDBIT(CEXP))  // mask for all special cases
- if((I)(SPECAT>>(c&0x3f))&BETWEENC(c,CNOT,CQQ)){
+#define SPECAT (IDBIT(CFIT)|IDBIT(CBOX)|IDBIT(CNOT)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR)|IDBIT(CSLDOT)|IDBIT(CQQ)|IDBIT(CEXP))  // mask for all special cases
+ if((I)(SPECAT>>(c&0x3f))&BETWEENC(c,CFIT,CQQ)){
   switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECAT test above! ****
   case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT&0x3f:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;
@@ -282,6 +284,11 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    break;
   case CPOUND&0x3f:  f1=d==CCOMMA?jtnatoms:f1; f1=d==CDOLLAR?jtrank:f1; f1=d==COPE?jttallyatopopen:f1; break;    // #@,  #@$    #@>
   case CSTAR&0x3f:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
+  case CFIT&0x3f:
+   if(unlikely(d==CAMP) && wv->fgh[0]==num(2) && AT(wv->fgh[1])&VERB && FAV(wv->fgh[1])->id==CLOG && (FAV(av->fgh[0])->id&~1)==CFLOOR){
+    f1=FAV(av->fgh[0])->id==CCEIL?jtintceillog2:jtintfloorlog2;  //  [<>].!.f@(2&^.)
+   }
+   break;
   case CCEIL&0x3f:
    if(unlikely(d==CAMP) && wv->fgh[0]==num(2) && AT(wv->fgh[1])&VERB && FAV(wv->fgh[1])->id==CLOG)f1=jtintceillog2;  // >.@(2&^.)  2 must be SDT
    else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other >.@v

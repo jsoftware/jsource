@@ -30,8 +30,8 @@ B nameless(A w){A f,g,h;C id;V*v;
 B jtprimitive(J jt,A w){A x=w;V*v;
  ARGCHK1(w);
  v=VAV(w);
- if(CTILDE==v->id&&NOUN&AT(v->fgh[0]))RZ(x=fix(w,zeroionei(0)));
- R((I)VAV(x)->fgh[0]==0&&v->id!=CFORK);   // fork has f=0 as a flag
+ if(CTILDE==v->id&&NOUN&AT(v->fgh[0]))RZ(x=fix(w,zeroionei(0)));  // fix any name reference
+ R((I)VAV(x)->fgh[0]==0&&v->id!=CFORK);   // capped fork has f=0 as a flag
 }    /* 1 iff w is a primitive, detected as having no f */
 
 // w is a conj, f C n

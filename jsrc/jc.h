@@ -59,7 +59,7 @@
 // . %. C. | r. %: ! b.
 
 // 0 reserved for 'invalid'
-#define CFIT       (C)0x03  // !.
+#define CFIT       (C)0x03  // !.   is beginning of switch in u@v
 #define CPOWOP     (C)0x04  // ^:
 #define CBASE      (C)0x05  // #.
 #define CBEHEAD    (C)0x06  // }.
@@ -128,15 +128,15 @@
 #define CCOLON     (C)0x3d  // :
 #define CUDOT      (C)0x3e  // u.  must be paired v.
 #define CVDOT      (C)0x3f  // v.
-#define CTAIL      (C)0x40  // {:
-#define CTAKE      (C)0x41  // {.
-#define CHEAD      (C)0x41  // {.
+#define CSLDOT     (C)0x40  // /.
+#define CQQ        (C)0x41  // "    double quote  is end of switch in u@v
 #define CPOUND     (C)0x42  // #  must pair with $
 #define CDOLLAR    (C)0x43  // $
 #define CTILDE     (C)0x44  // ~
-#define CSLDOT     (C)0x45  // /.
-#define CADVERSE   (C)0x46  // ::
-#define CQQ        (C)0x47  // "    double quote
+#define CADVERSE   (C)0x45  // ::
+#define CTAIL      (C)0x46  // {:
+#define CTAKE      (C)0x47  // {.
+#define CHEAD      (C)0x47  // {.
 #define CIOTA      (C)0x48  // i. i. and i: must be 2 apart.  low digit is combining code
 #define CABASE     (C)0x49  // #:
 #define CICO       (C)0x4a  // i:

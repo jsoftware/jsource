@@ -351,17 +351,19 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 
 /* IEEE 754 constants that are not defined in float.h */
 // D_MANT_BITS_N is number of bits of mantissa in bit representation.
-// Its value is DBL_MANT_DIG - 1, because the first digit does not occur in bit represention (always 1 for normalized numbers).
+// Its value is DBL_MANT_DIG - 1, because the first digit does not occur in bit representation (always 1 for normalized numbers).
 #define D_MANT_BITS_N   52
 // D_EXP_BITS_N is number of bits of exponent in bit representation.
 #define D_EXP_BITS_N    11
 // 1 - D_EXP_MAX <= exponent <= D_EXP_MAX. In bit representation sum of exponent and D_EXP_MAX is stored which is positive. D_EXP_MAX = DBL_MAX_EXP - 1.
 #define D_EXP_MAX       1023
 // D_EXP_MIN = 1 - D_EXP_MAX
-#define D_EXP_MIN       -1022
+#define D_EXP_MIN       (-1022)
 // Bit mask of exponent is (UI8)((1 << D_EXP_BITS_N) - 1) << D_MANT_BITS_N. This is also bit representation of +Inf.
 #define D_EXP_MSK       0x7ff0000000000000LL
 #define D_MANT_MSK      0x000fffffffffffffLL
+// Bit mask of double 1 (mantissa is 0 and exponent is D_EXP_MAX).
+#define D_ONE_MSK       0x3ff0000000000000LL
 
 
 #if SY_64

@@ -22,6 +22,13 @@ static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
 }
 
 // <.@(2&^.) monad
+// Produces an integer result, and we can do it without adding any error at all. Therefore we have done our duty if we apply the tolerance to y. If y is tolerantly equal to 2^n, <.@(2&^.) y should be n.
+/*
+   (=!.(2^_34) -&1e_6) 2 ^ 12   NB. No tolerant equality, so the result of <.@(2&^.) will be 11.
+0
+   <.!.(2^_34) 2&^. -&1e_6 [ 2 ^ 12   NB. Standard approach returns 12.
+12
+*/
 static DF1(jtintfloorlog2) {
  ARGCHK1(w);F1PREFIP;
  if ((INT | FL) & AT(w)) { // Special cases only for integers and floats ([<>].@f for extended integers is handled in vx.c).
@@ -35,14 +42,14 @@ static DF1(jtintfloorlog2) {
    )
   } else { // Case with floats.
    I8 *wv = I8AV(w);
-   I8 *ctv=(I8*)&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?(I8*)&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv; I8 cct=*ctv;  // cct, in binary, taken from !.f or default
+   I8 *ctv=(I8*)&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?(I8*)&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv; I8 mantct=-(*ctv) & D_MANT_MSK;  // mantissa of 1 - cct or 0 if cct = 1, in binary, taken from !.f or default
    DO(wn,
     I8 d = wv[i];
     // Infs and NaN are the only floats that have all 1-bits in exponent. D_EXP_MSK represents +Inf, but is also used to check NaN and denorms.
     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self); // Failover to by hand if d <= 0 (incl -0) or d is +Inf or NaN.
     zv[i] = unlikely((d & D_EXP_MSK) == 0) // Denorms are the only floats (except 0 which was eliminated earlier) that have all 0-bits in exponent.
-     ? 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
-     : (d >> D_MANT_BITS_N) + D_EXP_MIN-1; // Normal. Result is exponent.   Exponent of 0001 means D_EXP_MIN
+     ? 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d). We always use intolerant floor.
+     : ((d + mantct) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal. Result is exponent for intolerant floor. Exponent of 0001 means D_EXP_MIN. For tolerant floor (cct != 1) add 1 if mantissa of d is greater than mantissa of cct, which is done by d + mantct (trick).
    )
   }
   R z;
@@ -68,9 +75,17 @@ static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewr
    DO(wn,
     I8 d = wv[i];
     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
-    zv[i] = unlikely((d & D_EXP_MSK) == 0)
-     ? 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN // Denorm, after rounding up (d is not 0)
-     : ((d+D_MANT_MSK) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal.  Exponent of 0001 means D_EXP_MIN
+    if (unlikely((d & D_EXP_MSK) == 0)) {
+     zv[i] = 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN; // Denorm, after rounding up (d is not 0).
+    } else {
+     I8 imantd = (d & D_MANT_MSK) | D_ONE_MSK;
+     I8 imantcct = (cct & D_MANT_MSK) | D_ONE_MSK;
+     D dmantd = *(D*)&imantd;
+     D dmantcct = *(D*)&imantcct;
+     B isnotpow2 = __builtin_popcountll(d & D_MANT_MSK) > 1;
+     zv[i] = (d >> D_MANT_BITS_N) + D_EXP_MIN - 1 + isnotpow2 // Normal. Exponent of 0001 means D_EXP_MIN.
+      - ((cct & D_ONE_MSK) != D_ONE_MSK && isnotpow2 && 2 > dmantd * dmantcct); // For tolerant ceiling (cct != 1) substract 1 if these conditions hold (cct != 1, y is not power of 2, 2^n > y * cct where n is (intolerant meaning exact) floor of log2(y)). The last condition in the comment is taken from definition of tolerant equality and is equivalent to 2 > dmantd * dmantcct (simplify inequality on paper).
+    }
    )
   }
   R z;

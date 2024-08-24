@@ -71,21 +71,28 @@ static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewr
    )
   } else { // Case with floats.
    I8 *wv = I8AV(w);
-   I8 *ctv=(I8*)&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?(I8*)&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv; I8 cct=*ctv;  // cct, in binary, taken from !.f or default
+   D *ctv=&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv;
+   // A value x should round to l+1 if x*cct > 2^l, i. e. x > 2^l / (1-ct)  The multiplier 1/(1-ct) expands to 1 + ct - ct^2 +... (terms ignored because ct<2^_34)
+   D ctd=*ctv*(1.-*ctv); I8 mantct=*(I8*)&ctd & D_MANT_MSK;   // The rounding point (in binary): ct-ct^2.  Exponents larger than this round up
+   mantct=mantct==0?D_MANT_MSK:mantct;  // 0 ct means add max frac
    DO(wn,
     I8 d = wv[i];
     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
-    if (unlikely((d & D_EXP_MSK) == 0)) {
-     zv[i] = 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN; // Denorm, after rounding up (d is not 0).
-    } else {
-     I8 imantd = (d & D_MANT_MSK) | D_ONE_MSK;
-     I8 imantcct = (cct & D_MANT_MSK) | D_ONE_MSK;
-     D dmantd = *(D*)&imantd;
-     D dmantcct = *(D*)&imantcct;
-     B isnotpow2 = __builtin_popcountll(d & D_MANT_MSK) > 1;
-     zv[i] = (d >> D_MANT_BITS_N) + D_EXP_MIN - 1 + isnotpow2 // Normal. Exponent of 0001 means D_EXP_MIN.
-      - ((cct & D_ONE_MSK) != D_ONE_MSK && isnotpow2 && 2 > dmantd * dmantcct); // For tolerant ceiling (cct != 1) substract 1 if these conditions hold (cct != 1, y is not power of 2, 2^n > y * cct where n is (intolerant meaning exact) floor of log2(y)). The last condition in the comment is taken from definition of tolerant equality and is equivalent to 2 > dmantd * dmantcct (simplify inequality on paper).
-    }
+    zv[i] = unlikely((d & D_EXP_MSK) == 0) // Denorms are the only floats (except 0 which was eliminated earlier) that have all 0-bits in exponent.
+     ? 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d). We always use intolerant floor.
+     : ((d + mantct) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal. Result is exponent for intolerant floor. Exponent of 0001 means D_EXP_MIN. For tolerant floor (cct != 1) add 1 if mantissa of d is greater than mantissa of cct, which is done by d + mantct (trick).
+// obsolete     if (unlikely((d & D_EXP_MSK) == 0)) {
+// obsolete      zv[i] = 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN; // Denorm, after rounding up (d is not 0).
+// obsolete     } else {
+// obsolete      I8 imantd = (d & D_MANT_MSK) | D_ONE_MSK;
+// obsolete      I8 imantcct = (cct & D_MANT_MSK) | D_ONE_MSK;
+// obsolete      D dmantd = *(D*)&imantd;
+// obsolete      D dmantcct = *(D*)&imantcct;
+// obsolete      B isnotpow2 = __builtin_popcountll(d & D_MANT_MSK) > 1;
+// obsolete      zv[i] = (d >> D_MANT_BITS_N) + D_EXP_MIN - 1 + isnotpow2 // Normal. Exponent of 0001 means D_EXP_MIN.
+// obsolete       - ((cct & D_ONE_MSK) != D_ONE_MSK && isnotpow2 && 2 > dmantd * dmantcct); // For tolerant ceiling (cct != 1) substract 1
+// obsolete            // if these conditions hold (cct != 1, y is not power of 2, 2^n > y * cct where n is (intolerant meaning exact) floor of log2(y)). The last condition in the comment is taken from definition of tolerant equality and is equivalent to 2 > dmantd * dmantcct (simplify inequality on paper).
+// obsolete     }
    )
   }
   R z;

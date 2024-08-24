@@ -13,7 +13,7 @@ static DF1(jtonf1cell){PROLOG(0021);DECLFG;
  EPILOG(z);
 }
 
-// [><].@[:]*  monad 
+// [><].@[:]*  monad
 static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  A z=jtonf1cell(jt,w,self);
@@ -42,14 +42,19 @@ static DF1(jtintfloorlog2) {
    )
   } else { // Case with floats.
    I8 *wv = I8AV(w);
-   I8 *ctv=(I8*)&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?(I8*)&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv; I8 mantct=-(*ctv) & D_MANT_MSK;  // mantissa of 1 - cct or 0 if cct = 1, in binary, taken from !.f or default
+   I8 *ctv=(I8*)&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?(I8*)&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv;
+   I8 cct = *ctv;
+   I8 mantct = -cct & D_MANT_MSK;  // mantissa of 1 - cct or 0 if cct = 1, in binary, taken from !.f or default
    DO(wn,
     I8 d = wv[i];
     // Infs and NaN are the only floats that have all 1-bits in exponent. D_EXP_MSK represents +Inf, but is also used to check NaN and denorms.
     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self); // Failover to by hand if d <= 0 (incl -0) or d is +Inf or NaN.
-    zv[i] = unlikely((d & D_EXP_MSK) == 0) // Denorms are the only floats (except 0 which was eliminated earlier) that have all 0-bits in exponent.
-     ? 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d). We always use intolerant floor.
-     : ((d + mantct) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal. Result is exponent for intolerant floor. Exponent of 0001 means D_EXP_MIN. For tolerant floor (cct != 1) add 1 if mantissa of d is greater than mantissa of cct, which is done by d + mantct (trick).
+    if (unlikely((d & D_EXP_MSK) == 0)) {
+     zv[i] = 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
+     zv[i] += (cct & D_ONE_MSK) != D_ONE_MSK && (((cct & D_MANT_MSK) | ((I8)1 << 52)) >> -(zv[i] + 1022)) < d; // For tolerant floor.
+    } else {
+     zv[i] = ((d + mantct) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal. Result is exponent for intolerant floor. Exponent of 0001 means D_EXP_MIN. For tolerant floor (cct != 1) add 1 if mantissa of d is greater than mantissa of cct, which is done by d + mantct (trick).
+    }
    )
   }
   R z;
@@ -72,27 +77,19 @@ static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewr
   } else { // Case with floats.
    I8 *wv = I8AV(w);
    D *ctv=&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv;
-   // A value x should round to l+1 if x*cct > 2^l, i. e. x > 2^l / (1-ct)  The multiplier 1/(1-ct) expands to 1 + ct - ct^2 +... (terms ignored because ct<2^_34)
-   D ctd=*ctv*(1.-*ctv); I8 mantct=*(I8*)&ctd & D_MANT_MSK;   // The rounding point (in binary): ct-ct^2.  Exponents larger than this round up
-   mantct=mantct==0?D_MANT_MSK:mantct;  // 0 ct means add max frac
+   D invctv = 1 / *ctv;
+   I8 invcct=*(I8*)&invctv;  // 1 / cct, in binary, taken from !.f or default
+   I8 mantinvcct = invcct & D_MANT_MSK;
    DO(wn,
     I8 d = wv[i];
     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
-    zv[i] = unlikely((d & D_EXP_MSK) == 0) // Denorms are the only floats (except 0 which was eliminated earlier) that have all 0-bits in exponent.
-     ? 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d). We always use intolerant floor.
-     : ((d + mantct) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal. Result is exponent for intolerant floor. Exponent of 0001 means D_EXP_MIN. For tolerant floor (cct != 1) add 1 if mantissa of d is greater than mantissa of cct, which is done by d + mantct (trick).
-// obsolete     if (unlikely((d & D_EXP_MSK) == 0)) {
-// obsolete      zv[i] = 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN; // Denorm, after rounding up (d is not 0).
-// obsolete     } else {
-// obsolete      I8 imantd = (d & D_MANT_MSK) | D_ONE_MSK;
-// obsolete      I8 imantcct = (cct & D_MANT_MSK) | D_ONE_MSK;
-// obsolete      D dmantd = *(D*)&imantd;
-// obsolete      D dmantcct = *(D*)&imantcct;
-// obsolete      B isnotpow2 = __builtin_popcountll(d & D_MANT_MSK) > 1;
-// obsolete      zv[i] = (d >> D_MANT_BITS_N) + D_EXP_MIN - 1 + isnotpow2 // Normal. Exponent of 0001 means D_EXP_MIN.
-// obsolete       - ((cct & D_ONE_MSK) != D_ONE_MSK && isnotpow2 && 2 > dmantd * dmantcct); // For tolerant ceiling (cct != 1) substract 1
-// obsolete            // if these conditions hold (cct != 1, y is not power of 2, 2^n > y * cct where n is (intolerant meaning exact) floor of log2(y)). The last condition in the comment is taken from definition of tolerant equality and is equivalent to 2 > dmantd * dmantcct (simplify inequality on paper).
-// obsolete     }
+    if (unlikely((d & D_EXP_MSK) == 0)) {
+     zv[i] = 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
+     zv[i] -= __builtin_popcountll(d) > 1 && d < ((mantinvcct | ((I8)1 << 52)) >> -(zv[i] + 1021)); // For tolerant ceiling.
+    } else {
+     zv[i] = ((d+D_MANT_MSK) >> D_MANT_BITS_N) + D_EXP_MIN - 1;
+     zv[i] -= __builtin_popcountll(d & D_MANT_MSK) > 1 && (d & D_MANT_MSK) < mantinvcct; // For tolerant ceiling.
+    }
    )
   }
   R z;
@@ -100,7 +97,7 @@ static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewr
  R onf1(w, self);
 }
 
-// <.@ >.@ and the like, dyad 
+// <.@ >.@ and the like, dyad
 static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  ARGCHK2(a,w);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
@@ -145,16 +142,16 @@ static UI imodpow(UI x,I n,UI m,UI mrecip){
  R z;
 }
 static DF2(jtmodpow2){A h;B b,c;I m,n,x,z;
- h=FAV(self)->fgh[2]; 
+ h=FAV(self)->fgh[2];
  if(unlikely(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)){  // convert any non-INT arg to INT if it can be done exactly
-  if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a)); 
+  if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a));
   if(RAT&AT(w))RZ(w=pcvt(XNUM,w)) else if(!(AT(w)&INT+XNUM))RZ(w=pcvt(INT,w));
   if(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)R residue(h,expn2(a,w));  // if not (both args INT and power positive) revert to long form
  }
  // both args are integral, but possibly extended
  PREF2(jtmodpow2);
  if(((AT(h)|AT(a)|AT(w))&XNUM)&&!((AT(a)|AT(w))&(NOUN&~(XNUM+INT)))){A z;  // if all values are integral and one is XNUM, process as extended
-  z=xmodpow(a,w,h); if(!jt->jerr)R z; RESETERR; R residue(h,expn2(a,w)); 
+  z=xmodpow(a,w,h); if(!jt->jerr)R z; RESETERR; R residue(h,expn2(a,w));
  }
  // all values are INT
  n=AV(w)[0];
@@ -191,7 +188,7 @@ DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}  // pass inplaceability through
 FORK2(jtupon2cell,0x1c0)
 DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}  // pass inplaceability through
 
-// special case for rank 0.  Transfer to loop.  
+// special case for rank 0.  Transfer to loop.
 // if there is only one cell, process it through on1, which understands this type
 static DF1(jton10){R jtrank1ex0(jt,w,self,on1cell);}  // pass inplaceability through
 static DF2(jtupon20){R jtrank2ex0(jt,a,w,self,jtupon2cell);}  // pass inplaceability through
@@ -296,7 +293,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
 #define SPECAT (IDBIT(CFIT)|IDBIT(CBOX)|IDBIT(CNOT)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR)|IDBIT(CSLDOT)|IDBIT(CQQ)|IDBIT(CEXP))  // mask for all special cases
  if((I)(SPECAT>>(c&0x3f))&BETWEENC(c,CFIT,CQQ)){
   switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECAT test above! ****
-  case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
+  case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f
   case CNOT&0x3f:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;
   case CGRADE&0x3f:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;
   case CSLASH&0x3f:  if(d==CCOMMA)f1=jtredravel; if(d==CDOLLAR&&FAV(av->fgh[0])->id==CSTAR)f1=jtnatoms;  // f/@, */@$
@@ -338,7 +335,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
   case CSLDOT&0x3f:  if(d==CSLASH&&AT(wv->fgh[0])&VERB&&FAV(wv->fgh[0])->flag&VISATOMIC2 && CSLASH==ID(av->fgh[0])&&AT(FAV(av->fgh[0])->fgh[0])&VERB&&FAV(FAV(av->fgh[0])->fgh[0])->flag&VISATOMIC2){f2=jtpolymult; flag&=~VJTFLGOK2;} break;  // f//.@(g/) for atomic fg
   case CQQ&0x3f:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&av->fgh[1]==num(0)){f1=jtdigits10; flag&=~VJTFLGOK1;} break;  // "."0@":
   case CEXP&0x3f:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;   // ^@o.
-  case CAMP&0x3f: 
+  case CAMP&0x3f:
    x=av->fgh[0];
    if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
    if((d==CEXP||d==CAMP&&CEXP==ID(wv->fgh[1]))&&AT(x)&INT+XNUM&&!AR(x)&&CSTILE==ID(av->fgh[1])){  // m&|@^ and m&|@(n&^) where m is atomic INT/XNUM
@@ -489,13 +486,13 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
   }
  }
  else if(unlikely(BOTHEQ8(c,d,CGRADE,CGRADE))){f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}  // /:&:/: monad
- else if(unlikely(BOTHEQ8(c,d,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
+ else if(unlikely(BOTHEQ8(c,d,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP
 
  // Copy the monad open/raze status from v into u&:v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
+ flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2;
  fdeffillall(z,flag2,CAMPCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype) R z;
 }
 
@@ -534,7 +531,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   // the special cases, except for ,&<, are very rare because it is idiomatic to use @ for monads
 #define SPECAND (IDBIT(CCOMMA)|IDBIT(CBOX)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE))  // mask for all special cases
   if(unlikely((I)(SPECAND>>(c&0x3f))&BETWEENC(c,CCOMMA,CPOUND))){
-   if(unlikely(BOTHEQ8(FAV(a)->id,c,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
+   if(unlikely(BOTHEQ8(FAV(a)->id,c,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP
    else switch(FAV(a)->id&0x3f){   // **** DO NOT add to this switch without updating SPECAND above ****
    case CBOX&0x3f:   flag |= VF2BOXATOP1; break;  // <&u mark this as <@f for the monad
    case CGRADE&0x3f: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y

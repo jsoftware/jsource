@@ -76,19 +76,27 @@ static DF1(jtintceillog2) { // Similar to the above case with floor (almost rewr
    )
   } else { // Case with floats.
    I8 *wv = I8AV(w);
-   D *ctv=&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv;
-   D invctv = 1 / *ctv;
-   I8 invcct=*(I8*)&invctv;  // 1 / cct, in binary, taken from !.f or default
-   I8 mantinvcct = invcct & D_MANT_MSK;
+   I8 *ctv=(I8*)&jt->cct; ctv=FAV(FAV(self)->fgh[0])->id==CFIT?(I8*)&FAV(FAV(self)->fgh[0])->localuse.lu1.cct:ctv;  // &cct
+   // A value x should round to l+1 if x*cct > 2^l, i. e. x > 2^l / (1-ct).  The multiplier 1/(1-ct) expands to 1 + ct + ct^2 +... (ignored terms)
+   // since ct<2^_34, ct^2 is below the LSB and can be ignored, giving a threshold slightly too small.  Thus, if the mantissa of x is > ct x should
+   // be rounded up.  To achieve this, we add (2^52 - ct) - 1 = cct-1 to the mantissa, which will carry into the exponent if roundup is needed.
+   // Happily, this also gives the right value (all 1s) when cct=1.0
+   I8 mantcct=(((*ctv&D_MANT_MSK)>>1)+((*ctv)&((I8)1<<(D_MANT_BITS_N-1)))-1)&D_MANT_MSK;  // rounding value.  cct has exponent -1 and we need the bits for exponent 0, so we must >>1 with sign fill for 1.0
+   I8 mantct=(~mantcct)&(D_MANT_MSK+((I8)1<<D_MANT_BITS_N));  // 1.0+ct, mantissa with exponent 0
+// obsolete    D invctv = 1 / *ctv;
+// obsolete    I8 invcct=*(I8*)&invctv;  // 1 / cct, in binary, taken from !.f or default
+// obsolete    I8 mantinvcct = invcct & D_MANT_MSK;
    DO(wn,
     I8 d = wv[i];
     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK)) R onf1(w, self);
     if (unlikely((d & D_EXP_MSK) == 0)) {
-     zv[i] = 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
-     zv[i] -= __builtin_popcountll(d) > 1 && d < ((mantinvcct | ((I8)1 << 52)) >> -(zv[i] + 1021)); // For tolerant ceiling.
+// obsolete      zv[i] = 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
+// obsolete      zv[i] -= __builtin_popcountll(d) > 1 && d < ((mantinvcct | ((I8)1 << 52)) >> -(zv[i] + 1021)); // For tolerant ceiling.
+     zv[i] = 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
+     zv[i] += d > (mantct >> (D_EXP_MIN-zv[i]));  // Ex: d has 1s in bits 51 & 10.  zv[i]=EXPMIN-1.  The shift puts 1 in bit 51 (to wipe out the MSB of d)
+       // and shifts ct >> 1.  Round up if the rest of d exceeds MSB*ct.
     } else {
-     zv[i] = ((d+D_MANT_MSK) >> D_MANT_BITS_N) + D_EXP_MIN - 1;
-     zv[i] -= __builtin_popcountll(d & D_MANT_MSK) > 1 && (d & D_MANT_MSK) < mantinvcct; // For tolerant ceiling.
+     zv[i] = ((d+mantcct) >> D_MANT_BITS_N) + D_EXP_MIN - 1;   // apply rounding, then extract exponent
     }
    )
   }

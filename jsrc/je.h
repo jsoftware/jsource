@@ -801,6 +801,8 @@ extern A        jtindexofprehashed(J,A,A,A,A);
 extern A        jtindexofss(J,I,A,A);
 extern A        jtindexofsub(J,I,A,A);
 extern A        jtindexofxx(J,I,A,A);
+extern A        jtintceillog2cap(J,A,A);
+extern A        jtintfloorlog2cap(J,A,A);
 extern A        jtiocol(J,I,A,A);
 extern A        jtiovsd(J,I,A,A);
 extern A        jtiovxs(J,I,A,A);

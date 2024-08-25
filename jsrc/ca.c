@@ -49,9 +49,9 @@ static A jtintfloorlog2(J jt, A w, A compself) {  // compself is the floor/ceil 
    I8 denormcct1 = (cct & D_MANT_MSK)+((I8)1<<D_MANT_BITS_N); denormcct1=cct==0?D_MANT_MSK<<1:denormcct1;   // 1-ct, with exponent -1; all 1s if ct=0
    DO(wn,
     I8 d = wv[i];
-    if(likely((UI)(d-0x0010000000000000)<(UI)(0x7ff0000000000000-0x0010000000000000))){  // normal case
+    if(likely((UI8)(d-0x0010000000000000)<(UI8)(0x7ff0000000000000-0x0010000000000000))){  // normal case
      zv[i] = ((d + mantct) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal.  Add rounding point to mantissa to round exponent up.  Exponent of 0001->D_EXP_MIN.  Could fold D_EXP_MIN - 1 into mantct
-    }else if(likely((UI)(d-1)<(UI)(0x0010000000000000-1))){   // positive denorm (1..D_MANT_MSK)
+    }else if(likely((UI8)(d-1)<(UI8)(0x0010000000000000-1))){   // positive denorm (1..D_MANT_MSK)
      zv[i] = 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
      zv[i] += d > (denormcct1 >> (D_EXP_MIN-zv[i]));  // Ex: d has 1s in bits 51..10.  zv[i]=EXPMIN-1.  The shift puts 1 in bit 51 (to wipe out the MSB of d), down to bit 11
 // obsolete     if (unlikely((d & D_EXP_MSK) == 0)) {
@@ -92,9 +92,9 @@ static A jtintceillog2(J jt, A w, A compself) { // Similar to the above case wit
 // obsolete    I8 mantinvcct = invcct & D_MANT_MSK;
    DO(wn,
     I8 d = wv[i];
-    if(likely((UI)(d-0x0010000000000000)<(UI)(0x7ff0000000000000-0x0010000000000000))){  // normal case
+    if(likely((UI8)(d-0x0010000000000000)<(UI8)(0x7ff0000000000000-0x0010000000000000))){  // normal case
      zv[i] = ((d+mantcct) >> D_MANT_BITS_N) + D_EXP_MIN - 1;   // apply rounding, then extract exponent
-    }else if(likely((UI)(d-1)<(UI)(0x0010000000000000-1))){   // positive denorm
+    }else if(likely((UI8)(d-1)<(UI8)(0x0010000000000000-1))){   // positive denorm
      zv[i] = 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
      zv[i] += d > (mantct >> (D_EXP_MIN-zv[i]));  // Ex: d has 1s in bits 51 & 10.  zv[i]=EXPMIN-1.  The shift puts 1 in bit 51 (to wipe out the MSB of d)
        // and shifts ct >> 1.  Round up if the rest of d exceeds MSB*ct.

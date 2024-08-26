@@ -1197,9 +1197,9 @@ typedef struct {
 #define VLOCK           (I)0x10000        /* function is locked              */
 // bit 17 free
 #define VFIX            (I)0x40000       /* f. applied                      */
-#define VXOPRX          19
-#define VXOPR           ((I)1<<VXOPRX)       /* : defn with u. and x.           */
-#define VXOP            (I)0x100000      /* : defn derived fn               */
+#define VXOPRX          19                // the definition is a modifier that refers to x or y
+#define VXOPR           ((I)1<<VXOPRX)
+#define VXOP            (I)0x100000      // this is the result of giving [u]/v args to a defn that had VXOPR set.  u and v are in fgh[0/2]
 #define VTRY1           (I)0x200000      /* monad contains try.             */
 #define VTRY2           (I)0x400000      /* dyad  contains try.  must be just above VTRY1           */
 // bits VJTFLGOK1/VJTFLGOK2/VASGSAFE are wired into a flag reg in parser

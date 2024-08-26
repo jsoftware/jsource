@@ -731,8 +731,8 @@ static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt
 // This handles adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, self as g, and copy the flags
 // bivalent adv/conj
 // If we have to add a name for debugging purposes, do so
-// Flag the operator with VOPR, and remove VFIX for it so that the compound can be fixed
-// self->flag always has VXOP+VFIX+VJTFLGOK[12]
+// Flag the resulting operator with VXOP, and remove VFIX for it so that the compound can be fixed
+// self->flag always has VXOPR+VFIX+VJTFLGOK[12]
 DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
@@ -1211,8 +1211,8 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  if(VERB&AT(a)){  // v : v case
   ASSERT(AT(w)&VERB,EVDOMAIN);   // v : noun is an error
   // If nested v : v, prune the tree
-  if(unlikely(CCOLON==FAV(a)->id)&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
-  if(unlikely(CCOLON==FAV(w)->id)&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0]))w=FAV(w)->fgh[1];
+  if(unlikely(CCOLON==FAV(a)->id)&&!(FAV(a)->flag&VXOP)&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0]))a=FAV(a)->fgh[0];  // look for (v : imm) : (imm : v); don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
+  if(unlikely(CCOLON==FAV(w)->id)&&!(FAV(w)->flag&VXOP)&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0]))w=FAV(w)->fgh[1];
   fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) // derived verb is ASGSAFE if both parents are 
    R z;
  }

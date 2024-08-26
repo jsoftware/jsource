@@ -343,6 +343,11 @@ f =: -
 NB. Embedded VT converted to LF
 'domain error' -: ". etx '3 : >'
 
+f =: (%@%{{ u y [ echo 'aaa' }}  ) : ]  NB. don't prune operator arg to v : v
+'%@% (1 : ''u y [ echo ''''aaa'''' '') :]' -: 5!:5<'f'
+f =: ] : (%@%{{ u y [ echo 'aaa' }}  )  NB. don't prune operator arg to v : v
+'] :(%@% (1 : ''u y [ echo ''''aaa'''' ''))' -: 5!:5<'f'
+
 NB. obsolete svxy =: 9!:48''
 NB. obsolete 9!:49 (1)
 NB. obsolete c =: 2 : 0

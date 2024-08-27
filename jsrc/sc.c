@@ -326,7 +326,7 @@ F1(jtcreatecachedref){F1PREFIP;A z;
 F2(jtnamerefop){V*v;
  ARGCHK2(a,w);
  v=FAV(w);
- R fdef(0,CCOLON,VERB,  jtunquote,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
+ R fdef(0,CCOLONE,VERB,  jtunquote,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
 }    
 
 /* namerefop() is used by explicit defined operators when: */

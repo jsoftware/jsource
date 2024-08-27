@@ -133,7 +133,7 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);} 
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL){RETF(trr(hs));}
- xop=id==CCOLON&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
+ xop=id==CCOLONE&&VXOP&fl; ex=id==CCOLONE&&hs&&!xop;
  m=(I )!!fs+(I )(gs||ex)+(I )(id==CFORK||xop&&hs);
  if(!m){RETF(tleaf(spella(w)));}
  if(evoke(w)){RZ(w=sfne(w)); RETF((AT(w)&FUNC?jttrr:jttleaf)(jt,w));}

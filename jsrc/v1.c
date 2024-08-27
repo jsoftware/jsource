@@ -329,10 +329,12 @@ B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  if(TYPESXOR(AT(a),AT(w))+(u->id^v->id))R 0;   // must match on type and id
  p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||(p==0)==(q==0)&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
  p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||(p==0)==(q==0)&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
- if(u->id==CCOLON&&AT(u->fgh[0])&NOUN){
-  // explicit definition.  Compare equal if first h box in each valence matches.  It must match in all its boxes, plus the
+// obsolete  if(u->id==CCOLON&&AT(u->fgh[0])&NOUN){
+ if(u->id==CCOLONE&&!(u->flag&VXOP)&&u->fgh[0]!=0){
+  // explicit definition (original, not filled in with operands, not nameless).  Compare equal if first h box in each valence matches.  It must match in all its boxes, plus the
   // tcesx data before the boxes.  If h[0] matches, the only differences must be comments
-                if(!(AT(v->fgh[0])&NOUN))R 0;  // both must be explicit
+// obsolete                 if(!(AT(v->fgh[0])&NOUN))R 0;  // both must be explicit
+  if(!(v->id==CCOLONE&&!(v->flag&VXOP)&&v->fgh[0]!=0))R 0;  // both must be explicit
   DO(2, p=AAV1(u->fgh[2])[HN*i+0]; q=AAV1(v->fgh[2])[HN*i+0];
    if(p!=q){if((p==0)!=(q==0))R 0; if(!((B (*)())jtmatchsub)(jt,p,q,0  MATCHSUBDEFAULTS))R 0; if(AK(p)!=AK(q))R 0; if(memcmp(CAV1(p),CAV1(q),AK(p)-AKXR(1)))R 0;}  // check boxes and tcesx.  the table is allocated with rank 0.
   )

@@ -291,7 +291,7 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
  ARGCHK2(a,w);
  n=AN(a); av=AAV(a);  
  v=VAV(w); id=v->id;
- b=id==CCOLON&&VXOP&v->flag;  // b if operator, which is spaced as if a hook/fork: u body [v]
+ b=id==CCOLONE&&VXOP&v->flag;  // b if operator, which is spaced as if a hook/fork: u body [v]
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CNULL(v->fgh[fndx]); A gs=CNULL(v->fgh[fndx^1]); A hs=CNULL(v->fgh[2]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);}  // scb to simplify display
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
@@ -367,10 +367,10 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  hs=CNULL(v->fgh[2]); fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R lrr(hs);   // pseudo-named entity created during debug of operator.  The defn is in h
- m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
+ m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLONE&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
  if(!m)R lsymb(id,w);  // if none, it's a primitive, out it
  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
- if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R jtlcolon(jtinplace,w,ltext);  // x : with boxed h - must be explicit defn, for which we might suppress a valence
+ if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLONE)R jtlcolon(jtinplace,w,ltext);  // x : with boxed h - must be explicit defn, for which we might suppress a valence
  // display of a single valence applies only to an explicit definition.  It wouldn't be a bad idea for others, but that would require inspecting the op to see
  // which valences are active on each side.  For the nonce we display everything
  jtinplace=(J)((I)jtinplace&~JTEXPVALENCEOFF);  // display both valences of compounds

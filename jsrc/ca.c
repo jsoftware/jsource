@@ -53,7 +53,7 @@ static A jtintfloorlog2(J jt, A w, A compself) {  // compself is the floor/ceil 
      zv[i] = ((d + mantct) >> D_MANT_BITS_N) + D_EXP_MIN - 1; // Normal.  Add rounding point to mantissa to round exponent up.  Exponent of 0001->D_EXP_MIN.  Could fold D_EXP_MIN - 1 into mantct
     }else if(likely((UI8)(d-1)<(UI8)(0x0010000000000000-1))){   // positive denorm (1..D_MANT_MSK)
      zv[i] = 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
-     zv[i] += d > (denormcct1 >> (D_EXP_MIN-zv[i]));  // Ex: d has 1s in bits 51..10.  zv[i]=EXPMIN-1.  The shift puts 1 in bit 51 (to wipe out the MSB of d), down to bit 11
+     zv[i] += d > (((denormcct1 >> (D_EXP_MIN-zv[i]-1))+1)>>1);  // Ex: d has 1s in bits 51..10.  zv[i]=EXPMIN-1.  The shifts puts 1 in bit 51 (to wipe out the MSB of d), down to bit 11.  Split shift is for rounding
 // obsolete     if (unlikely((d & D_EXP_MSK) == 0)) {
 // obsolete      zv[i] += (cct & D_ONE_MSK) != D_ONE_MSK && (((cct & D_MANT_MSK) | ((I8)1 << 52)) >> -(zv[i] + 1022)) < d; // For tolerant floor.
 // obsolete     } else {
@@ -96,7 +96,7 @@ static A jtintceillog2(J jt, A w, A compself) { // Similar to the above case wit
      zv[i] = ((d+mantcct) >> D_MANT_BITS_N) + D_EXP_MIN - 1;   // apply rounding, then extract exponent
     }else if(likely((UI8)(d-1)<(UI8)(0x0010000000000000-1))){   // positive denorm
      zv[i] = 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
-     zv[i] += d > (mantct >> (D_EXP_MIN-zv[i]));  // Ex: d has 1s in bits 51 & 10.  zv[i]=EXPMIN-1.  The shift puts 1 in bit 51 (to wipe out the MSB of d)
+     zv[i] += d > (((mantct >> (D_EXP_MIN-zv[i]-1))+1)>>1);  // Ex: d has 1s in bits 51 & 10.  zv[i]=EXPMIN-1.  The shift puts 1 in bit 51 (to wipe out the MSB of d).  Round below ULP
        // and shifts ct >> 1.  Round up if the rest of d exceeds MSB*ct.
     }else goto revert;  // neg, inf, NaN, 0 - failover to by hand
 // obsolete     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK))goto revert;

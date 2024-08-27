@@ -204,7 +204,8 @@
 #define CIDENT     (C)0x86  // ]:
 #define CDUMMY     (C)0x87  // no graphic - holds DUMMYSELF, which is used for flags only.  Must be >= 0x80 so will not look like a character
 #define CENQUEUE   (C)0x88  // no graphic - when used in AR, produces a single space.  Used to create recognizable AR to send to eformat from enqueue
-// 88-af free
+#define CCOLONE    (C)0x89  // : for explicit definition (noun m)
+// 8a-af free
 #define CEXEC      (C)0xb0       /* 176 260 b0 ".                           */
 #define CGRDOT     (C)0xb2       /* 178 262 b2 `.                           */
 

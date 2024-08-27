@@ -728,7 +728,7 @@ static DF2(xv12){I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; R (FA
 // executing PARSE or other, we must be executing a truly anonymous operator, and we return 0
 static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}  // debug or pm, and CALL type.  sitop may be 0 if deb/pm turned on in the middle of a sentence
 
-// This handles adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, self as g, and copy the flags
+// This handles explicit adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, self as g, and copy the flags
 // bivalent adv/conj
 // If we have to add a name for debugging purposes, do so
 // Flag the resulting operator with VXOP, and remove VFIX for it so that the compound can be fixed
@@ -736,7 +736,7 @@ static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt
 DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
- ff=fdef(0,CCOLON,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags, incl JTFLGOK[12]
+ ff=fdef(0,CCOLONE,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags, incl JTFLGOK[12]
  R (x=xopcall(0))?namerefop(x,ff):ff;  // install a nameref only if we are debugging and the original modifier was named
 }
 
@@ -1211,8 +1211,10 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  if(VERB&AT(a)){  // v : v case
   ASSERT(AT(w)&VERB,EVDOMAIN);   // v : noun is an error
   // If nested v : v, prune the tree
-  if(unlikely(CCOLON==FAV(a)->id)&&!(FAV(a)->flag&VXOP)&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0]))a=FAV(a)->fgh[0];  // look for (v : imm) : (imm : v); don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
-  if(unlikely(CCOLON==FAV(w)->id)&&!(FAV(w)->flag&VXOP)&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0]))w=FAV(w)->fgh[1];
+// obsolete   if(unlikely(CCOLON==FAV(a)->id)&&!(FAV(a)->flag&VXOP)&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0]))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v); don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
+// obsolete   if(unlikely(CCOLON==FAV(w)->id)&&!(FAV(w)->flag&VXOP)&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0]))w=FAV(w)->fgh[1];
+  if(unlikely(CCOLON==FAV(a)->id))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v); don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
+  if(unlikely(CCOLON==FAV(w)->id))w=FAV(w)->fgh[1];
   fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) // derived verb is ASGSAFE if both parents are 
    R z;
  }
@@ -1286,7 +1288,7 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
    }
   }
   // at this point m is in 1..4
-  flag|=VFIX;  // ensures that f. will not look inside m : n
+  flag|=VFIX;  // ensures that f. will not look inside m : n itself.  It will look into an operator that has the operands, which will have VXOP set: there it just fixes each operand
   // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
   // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
   // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
@@ -1306,7 +1308,7 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   I ft=VERBX;  // type to use, default to verb
   ft=m==1?ADVX:ft; okv1=m==1?modfn:okv1; okv2=m==1?jtvalenceerr:okv2;  // adv goes to modfn/valenceerr
   ft=m==2?CONJX:ft; okv1=m==2?jtvalenceerr:okv1; okv2=m==2?modfn:okv2;  // conj goes to valenceerr/modfn
-  fdeffill(z,0,CCOLON, ((I)1<<ft), okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
+  fdeffill(z,0,CCOLONE, ((I)1<<ft), okv1,okv2, num(m),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
  }  // tacit form joins the explicit here
  // EPILOG is called for because of the allocations we made, but it is essential to make sure the pfsts created during crelocalsyms get deleted.  They have symbols with no value
  // that will cause trouble if 18!:_2 is executed before they are expunged.  As a nice side effect, all explicit definitions are recursive.

@@ -23,7 +23,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);} 
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R drr(hs);
- xop=id==CCOLON&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;  // xop=explicit operator, for which f=u, [h=v], g=the definition;  ex=explicit non-operator, for which f=defn type, g=text, h=processed text 
+ xop=id==CCOLONE&&VXOP&fl; ex=id==CCOLONE&&!xop;  // xop=explicit operator, for which f=u, [h=v], g=the definition;  ex=explicit non-operator, for which f=defn type, g=text, h=processed text 
  b=BETWEENC(id,CHOOK,CADVF); c=id==CFORK||(id==CADVF&&hs!=0); b&=1^c;  // c if invisible trident (FORK or ADVF); b = invisible bident (HOOK or ADVF)
  m=!!fs+(gs||ex);   // m=# components of combination: test fs and gs, but in explicit definition the definition is in h, so we take that as surrogate g
  if(!m)R spella(w);  // if no components, it must be a primitive, out it
@@ -53,9 +53,9 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
   if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
   if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);} 
-  if(id==CCOLON&&VXOPCALL&v->flag)R aro(hs);
-  xop=id==CCOLON&&VXOP&v->flag;
-  ex=hs&&id==CCOLON&&!xop;
+  if(id==CCOLONE&&VXOPCALL&v->flag)R aro(hs);  // if nameref, take aro of value
+  xop=id==CCOLONE&&VXOP&v->flag;  // xop = this is  an operator
+  ex=hs&&id==CCOLONE&&!xop;   // ex = this is a non-operator explicit defn
   m=BETWEENC(id,CFORK,CADVF)&&hs?3:!!fs+(ex||xop&&hs||!xop&&gs);  // number of components: if invisible, 2 or 3; otherwise count f g h
   if(!m)R spella(w);
   if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=aro(w); R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
@@ -338,7 +338,7 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  RE(j=i0(a)); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
  ASSERT(AT(w)&VERB+ADV+CONJ,EVDOMAIN);
  wv=FAV(w); h=wv->fgh[2];
- if(!(h&&CCOLON==wv->id))R reshape(v2(0L,3L),ds(CACE)); 
+ if(!(h&&CCOLONE==wv->id))R reshape(v2(0L,3L),ds(CACE));   // if not explicit defn or no body, return empty
  hv=AAV(h);
  x=hv[j]; v=CWBASE(x); n=AN(x)==0?0:CWNC(x)-1;  // empty x is not formatted control words
  GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;

@@ -673,12 +673,14 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
   // attempted reassignment of the executing name
   // insist that the redefinition have the same type, and the same explicitness
   f=d->dcf;  // the executing function
-  if(unlikely(!(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id&&AT(FAV(f)->fgh[0])&NOUN)==(CCOLON==FAV(w)->id&&AT(FAV(w)->fgh[0])&NOUN))))JT(jt,sidamage)=1;  // the executing value MUST have a name, otherwise we couldn't modify it.  If type/id changed, pull the plug
+// obsolete   if(unlikely(!(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id&&AT(FAV(f)->fgh[0])&NOUN)==(CCOLON==FAV(w)->id&&AT(FAV(w)->fgh[0])&NOUN))))JT(jt,sidamage)=1;  // the executing value MUST have a name, otherwise we couldn't modify it.  If type/id changed, pull the plug
+  if(unlikely(!(TYPESEQ(AT(f),AT(w))&&(FAV(f)->id==CCOLONE)==(FAV(w)->id==CCOLONE)&&(FAV(f)->flag&VXOP+VXOPR)==(FAV(w)->flag&VXOP+VXOPR))))JT(jt,sidamage)=1;  // the executing value MUST have a name, otherwise we couldn't modify it.  If type/id changed, pull the plug
   d->dcf=w; d->dcn=(I)w;  // dcf is used by redef code in xdefn; dcn is the stacked addr of executing fn, which we must now update so we can see if it is changed again later
   // If we are redefining the executing explicit definition during debug, remember that.
   // debug will switch over to the new definition before the next line is executed.
   // Reassignment outside of debug continues executing the old definition
-  if(CCOLON==FAV(w)->id&&AT(FAV(w)->fgh[0])&NOUN&&!jteqf(jt,w,v)){d->dcredef=1;}  // don't call for redef if value doesn't change in explicit defn
+// obsolete   if(CCOLON==FAV(w)->id&&AT(FAV(w)->fgh[0])&NOUN&&!jteqf(jt,w,v)){d->dcredef=1;}  // don't call for redef if value doesn't change in explicit defn
+  if(FAV(w)->id==CCOLONE&&!jteqf(jt,w,v)){d->dcredef=1;}  // don't call for redef if value doesn't change in explicit defn
   // Erase any stack entries after the redefined call, except for SCRIPT type which must be preserved for linf
   c=jt->sitop; NOUNROLL while(c&&DCCALL!=c->dctype){if(DCSCRIPT!=c->dctype)c->dctype=DCJUNK; c=c->dclnk;}
  }

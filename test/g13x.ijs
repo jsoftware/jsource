@@ -470,6 +470,11 @@ g =: {{ y + x }}
 '|valence error in g|explicit definition has no monadic valence|       g 3' f 'g 3'
 '|valence error in f|[: must be part of a capped fork|   5.7    ([:;]<@(+/\);.2)i.5' f '5.7 ([:;]<@(+/\);.2) i. 5'
 
+NB. 11!:n
+NB. The only thing we can test is error, since gconsole soen't support it
+'interface error' -: 11!:2500 etx 2
+'domain error' -: 11!:2500 etx 2j2
+
 4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '
 4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x original '
 

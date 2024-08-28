@@ -574,7 +574,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   4=use smpoll to get last result
 //   8=multithreaded
 // smdowd = function pointer to Jwd, if NULL nothing will be called
-  ASSERT(IJT(jt,smdowd),EVDOMAIN);
+  ASSERT(IJT(jt,smdowd),EVFACE);  // error if no handler in the host
   I origstate=jt->recurstate; jt->recurstate|=RECSTATERENT; jt->recurstate&=~RECSTATERUNNING;  // indic reenterable, and a console task is running
   if(SMOPTLOCALE&IJT(jt,smoption)) {
 // pass locale as parameter of callback

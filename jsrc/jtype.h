@@ -1207,7 +1207,7 @@ typedef struct {
 #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
 #define VJTFLGOK2X    24    // dyad can  handle flags in jt
 #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
-#define VXOPCALL       (I)0x2000000      // 25 : defn derived fn call overlaps SYMB/ASGNLOCAL
+#define VXOPCALL       (I)0x2000000      // 25 this verb is a namerefop, interposed to hang a name for debugging onto an anyymous verb.  f is 0, the name is in g, the actual verb in h     overlaps SYMB/ASGNLOCAL
 #define VASGSAFEX     26
 #define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path.  Must be > VJTFLGOK2 for parser comparisons
 // 27 free   it appears that u !: n forms were envisaged

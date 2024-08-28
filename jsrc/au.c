@@ -25,7 +25,7 @@ B nameless(A w){A f,g,h;C id;V*v;
  v=FAV(w);
  id=v->id; f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2];
 // obsolete  R !(id==CCOLON&&f&&NOUN&AT(f)) && !(id==CTILDE&&f&&NAME&AT(f)) && nameless(f) && nameless(g) && (id==CFORK&&h?nameless(h):1);  // h only if uncapped fork
- R !(id==CCOLONE&&f!=0) && !(id==CTILDE&&f&&NAME&AT(f)) && nameless(f) && nameless(g) && (id==CFORK&&h?nameless(h):1);  // h only if uncapped fork
+ R !(id==CCOLONE) && !(id==CTILDE&&f&&NAME&AT(f)) && nameless(f) && nameless(g) && (id==CFORK&&h?nameless(h):1);  // h only if uncapped fork
 }
 
 B jtprimitive(J jt,A w){A x=w;V*v;

@@ -321,7 +321,7 @@ noparse: ;
 A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
  sv=FAV(self); t=sv->fgh[0]; 
 // obsolete  if(CCOLON==sv->id&&(sv->flag&VXOP||t&&NOUN&AT(t))){  // : and executable body: either OP (adv/conj now with noun operands) or m : n
- if(sv->id==CCOLONE&&t!=0){  // : explicit and not anonymous (?)
+ if(sv->id==CCOLONE&&t!=0){  // : explicit and not anonymous (if anonymous, it goes to unquote which will reexecute the vebr with a name)
   ras(self); a?df2ip(z,a,w,self):df1ip(z,w,self);   if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);  // we have self, so this can be a format point
  }else{                              /* tacit    */
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 

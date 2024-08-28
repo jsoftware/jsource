@@ -345,10 +345,10 @@ DF2(jtxdefn){
  I4 tic;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
  UI8 tcesx;  // combined line#/flags/type for cw being executed - sometimes with the next line's too
 
- {  // this is a loop, but we always branch to one of the start points
+ {  // this is a loop, always continued by branching to one of the start points
   // **************** top of main dispatch loop ********************
   // Inside the loop we must use BZ and BASSERT or continue for errors; these will break out of the loop and run the ending code
-  // i holds the control-word number of the current control word
+  // ic holds 1s comp of the control-word number of the current control word
 nextline:;  // here to look at next line, whose cw number is ic (which must be valid, though possibly at end+1)
   tcesx=CWTCESX(cwsent,ic);  // fetch info for the next line
 nextlinetcesx:;   // here when we have the next tcesx already loaded, possibly with high-order garbage
@@ -373,7 +373,7 @@ nextlinedebug:;
      if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember.  lvl init to 0 for other cases
      callframe->dcloc=locsym; callframe->dcc=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)];  // install info about the exec for use in debug
 
-     // always allocate the parse frame
+     // allocate the parse frame
      DC thisframe=deba(DCPARSE,0L,0L,0L);  // if deba fails it will be before it modifies sitop.  Remember our stack frame
      if(unlikely(thisframe==0)){if(lvl!=0)debz(); BZ(0);}  // if failure, remove first deba by hand
      NPGpysfmtdl|=16;  // indicate we have a debug frame
@@ -511,7 +511,7 @@ dobblock:
     BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
    }
    // false cases come here, and a few true ones
- elseifasdo:;  // elseif is like do. with a failing test - probably followed by B.  i is set  case./fcase after the first also come here, to branch to end.
+ elseifasdo:;  // elseif is like do. with a failing test - probably followed by B.  ic is set  case./fcase after the first also come here, to branch to end.
  safedo:;  // here when we have advanced ic.  If this op is flagged we know the thing at ic is a bblock[end].  tcesx still has the value from the previous ic
    if(likely(FLAGGEDNOTRACE(tcesx)))goto dobblock;   // normal case, we know we are continuing with bblock.  No need to fetch it
    goto nextline;   // otherwise fetch & redispatch next line
@@ -716,7 +716,7 @@ bodyend: ;  // we branch to here to exit with z set to result
  // we don't do this, because it is possible that the AM slot was inherited from higher up the stack.
  // Note that we know we are not returning a virtual block here, so it is OK to write to AM
  // BUT: SPARSE value must NEVER be inplaceable, because the children aren't handled correctly during assignment; and READONLY values must never be inplaceable
- if(likely(z!=0))if(likely(((_ttop!=jt->tnextpushp)==AC(z))&(~AFLAG(z)>>AFROX))){ACRESET(z,(ACINPLACE&~AT(z))|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere
+ if(likely(z!=0))if(likely(((_ttop!=jt->tnextpushp)==AC(z))&(~AFLAG(z)>>AFROX))){ACRESET(z,(ACINPLACE&~AT(z))|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere. AT is for sparse
  RETF(z);
 }
 
@@ -736,13 +736,12 @@ static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt
 DF2(jtxop2){F2PREFIP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
- ff=fdef(0,CCOLONE,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w,  (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags, incl JTFLGOK[12]
- R (x=xopcall(0))?namerefop(x,ff):ff;  // install a nameref only if we are debugging and the original modifier was named
+ ff=fdef(0,CCOLONE,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w, (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags, incl JTFLGOK[12]
+ R unlikely(x=xopcall(0))?namerefop(x,ff):ff;  // install a nameref only if we are debugging and the original modifier was named
 }
 
-
 // w is a box containing enqueued words for the sentences of a definition, jammed together
-// 8: nv found 4: mu found 2: x found 1: y found.  u./v. count as u./v.
+// 8: nv found 4: mu found 2: x found 1: y found.  u./v. count as u/v
 static I jtxop(J jt,A w){I i,k;
  // init flags to 'not found'
  I fndflag=0;
@@ -759,7 +758,7 @@ static I jtxop(J jt,A w){I i,k;
     // Set flags if this is a special name, or an indirect locative referring to a special name in the last position, or u./v.
     if(n==1||(n>=3&&s[n-3]=='_'&&s[n-2]=='_')){
      if(s[n-1]=='n'||s[n-1]=='v')fndflag|=8;
-     if(s[n-1]=='m'||s[n-1]=='u')fndflag|=4;
+     else if(s[n-1]=='m'||s[n-1]=='u')fndflag|=4;
      else if(s[n-1]=='x')fndflag|=2;
      else if(s[n-1]=='y')fndflag|=1;
     }   // 'one-character name'
@@ -768,7 +767,7 @@ static I jtxop(J jt,A w){I i,k;
   if(AT(w)&VERB){
     if((FAV(w)->id&-2)==CUDOT)fndflag|=(4<<(FAV(w)->id&1));  // u./v.
   }
-  // exit if we have seen enough: nv plus x.  No need to wait for y or mu.  If we have seen only y, keep looking for x
+  // exit if we have seen enough: nv plus x.  No need to wait for y or mu.  If we have seen only y/u, keep looking for x/v
   if((fndflag&8+2)==8+2)R fndflag;
  }  // loop for each word
  R fndflag;  // return what we found
@@ -925,8 +924,8 @@ EVERYFS(onmself,jtonm,0,0,VFLAGNONE)  // create self to pass into every
 // is used; values are filled in as they are defined & removed at the end of execution (but the symbol-table
 // entries for them are not removed).  If
 // a definition is recursive, it will create a new symbol table, starting it off with the
-// permanent entries from this one (with no values).  We create this table with rank 0, and we set
-// the rank to 1 while it is in use, to signify that it must be cloned rather than used inplace.
+// permanent entries from this one (with no values).  We create this table with rank 0, and we use
+// the rank to hold flags, including whether the table is a clone.
 
 // l is the A block for all the words/queues used in the definition
 // c is the table of control-word info used in the definition
@@ -962,10 +961,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   if((AT(QCWORD(lv[j]))&ASGN+ASGNLOCAL)==(ASGN+ASGNLOCAL)) {  // local assignment
    if(AT(QCWORD(lv[j]))&ASGNTONAME){    // preceded by name?
     // Lookup the name, which will create the symbol-table entry for it
-    // name:: causes a little trouble.  The name carries with it the :: flag, but we will eventually replace all refs with the shared ref from
-    // this table.  That means we have to remove the :: flag from the stored value, lest every reference appear flagged just because the last one was.
+    // name_: causes a little trouble.  The name carries with it the _: flag, but we will eventually replace all refs with the shared ref from
+    // this table.  That means we have to remove the _: flag from the stored value, lest every reference appear flagged just because the last one was.
     // Note that we are here looking only before =., so we are specifically checking for name:: =. ... .  This should be an error, and we might catch
-    // it when executed; but we are just making sure that it doesn't make the refs invalid.  name:: also sets NAMEXY, and we have to leave that because
+    // it when executed; but we are just making sure that it doesn't make the refs invalid.  name_: also sets NAMEXY, and we have to leave that because
     // any valid ref to mnuvxy will need that set; so there is a chance that name:: =. will result in an ordinary reference to the name's having the NAMEXY
     // flag.  That won't hurt anything significant.
     L *nml; RZ(nml=probeisres(t,pfst)); AT(nml->name)&=~NAMEABANDON;   // put name in symbol table, with ABANDON flag cleared
@@ -1005,20 +1004,23 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  }
 
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes in the definition.
- // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
+ // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb.  Only synthetic names will get looked up
+ // The hash uses closed addressing so it is OK to have fewer buckets than symbols 
  I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=SYMORIGIN;
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx),pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.  The chains have MSB flag, which must be removed
  }
 
- asgct = asgct + ((asgct+6)>>1); // leave just 33% empty space because buckets & symbol addresses do most of the work
- RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
+// obsolete  asgct = asgct + ((asgct+6)>>1); // leave just 33% empty space because buckets & symbol addresses do most of the work
+ I symct = asgct>>1; asgct = asgct + (asgct>>2); symct = likely(type>=3 || flags&VXOPR)?symct:asgct; symct=MAX(symct,4);  // Hash size is 50% of # assigned symbols, in hopes that the number per chain evens out to 2 to help branch prediction during the free.
+     // but if we will have no bucket#s (see below), allocate to avoid collisions.  Min of 4 buckets needed to make sure x and y hash to different buckets
+ RZ(actst=stcreate(2,symct,0L,0L));  // Allocate the symbol table we will use
  ((UI4*)LXAV0(actst))[0]=(UI4)((SYMHASH(NAV(mnuvxynam[4])->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(mnuvxynam[5])->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
  // So we add them by hand - just y and possibly x.  They will be added later too, perhaps
- RZ(probeisres(ca(mnuvxynam[5]),actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeisres(ca(mnuvxynam[4]),actst));}
+ RZ(probeisres(ca(mnuvxynam[5]),actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeisres(ca(mnuvxynam[4]),actst));}  // always PERMANENT & thus cloned
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=SYMORIGIN[pfx].next){L *newsym;
    A nm=SYMORIGIN[pfx].name;

@@ -332,7 +332,8 @@ v=:1+10^-i
 
 'domain error' -: ex '= !.''a''  '
 'limit error' -: ex '~:!.1      '
-'domain error' -: ex '> !.3j4    '
+(,0) -: $ ex '> !.3j4    '  NB. on > error is deferred to execution
+'domain error' -: ex '< !.3j4    '
 'domain error' -: ex '<:!.(<3 4) '
 'limit error' -: ex '= !.1e_7   '
 

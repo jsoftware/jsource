@@ -8,10 +8,14 @@
 // 9!:22 read current fill, or i. 0 0 if none.  Clear fill after reading it
 F1(jtqfill){PROLOG(976); ASSERTMTV(w); A z=jt->fill; z=z?z:mtm; jt->fill=0; EPILOG(z);}
 
+// here to set jt->fill over the execution of u
+static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
+static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
 
 static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
 
-#define fitctvector(name,vector) DF2(name){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
+#define fitctvector(name,vector) DF2(name){DECLFG;F2PREFIP;A z; ASSERT(0<=1.0-FAV(self)->localuse.lu1.cct&&1.0-FAV(self)->localuse.lu1.cct<5.82076609134675e-11,EVLIMIT) PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
+   // we muct audit ct again in case bivalent >!.f was used
 static fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
 fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 // Note: it is OK to call eformat before popping ct because ct cannot possibly introduce error
@@ -20,22 +24,26 @@ fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 static DF2(jtfitctkey){DECLFG;R jtkeyct(jt,a,w,fs,FAV(self)->localuse.lu1.cct);}  // inplace is OK, since we don't use jt
 
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
-static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey
+static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey,
 #if SY_64
- ,jtsfu   // only in viavx.c
+ jtsfu,   // only in viavx.c
+#else
+ 0,
 #endif
 };
-// cno is 3 for i., 2 for f/.[.], 1 for comparison, 0 otherwise
+// cno is 5 for >, 3 for i., 2 for f/.[.], 1 for atomic2 comparison, 0 otherwise (indirect branch)
 static A jtfitct(J jt,A a,A w,I cno,A z){V*sv;
  ARGCHK2(a,w);
  ASSERT(!AR(w),EVRANK);
  sv=FAV(a);
- // Get the tolerance, as a float
- D d; if(likely(w==num(0)))d=0.0; else{if(!ISDENSETYPE(AT(w),FL))RZ(w=ccvt(FL,w,0)); d=DAV(w)[0];}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0
- // Handle i.!.1 specially; otherwise drop i. back to normal
- if(unlikely(cno==3))if(d==1.0){d=1.0-jt->cct; if(!SY_64)cno=0;}else cno=0;   // i.!.1 is special on 64-bit systems; others just specify fit
- ASSERT(0<=d&&d<5.82076609134675e-11,EVLIMIT);  // can't be greater than 2^_34
- fdeffillall(z,0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1|VFCOMPCOMP|VASGSAFE),(I)(sv->mr),lrv(sv),rrv(sv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
+ D d=1.0; A dw=w; // ct, when that's what we have (init to invalid); w converted to float
+ if(likely(w==num(0)))d=0.0; else{if(!ISDENSETYPE(AT(w),FL))dw=ccvt(FL,w,0); if(dw)d=DAV(dw)[0]; RESETERR}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0  It's not a hard error
+ // Handle i.!.1 specially; otherwise drop i. back to normal for i.!.0 of i.!.f
+ if(unlikely(cno==3)){if(d==1.0){d=1.0-jt->cct; if(!SY_64)cno=0;}else cno=0;}   // i.!.1 is special on 64-bit systems; others just specify fit
+ // u!.ct, unless u is > in which case it could be anything
+ if(cno!=5){ASSERT(dw,EVDOMAIN) ASSERT(0<=d&&d<5.82076609134675e-11,EVLIMIT)}  // fit is ct, must be float and can't be greater than 2^_34
+  // >!.f   we can't audit till we get the valence.  If error converting to float, make d give a runtime error.  Any w is OK for fill
+ fdeffillall(z,0,CFIT,VERB,cno==5?(AF)(jtfitfill1):(AF)(jtfitct1),aff2[cno&~4],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1|VFCOMPCOMP|VASGSAFE),(I)(sv->mr),lrv(sv),rrv(sv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
  R z;
 }
 
@@ -49,9 +57,6 @@ static DF2(jtfitpoly2){I j;
  F2RANK(1,0,jtfitpoly2,self);
  A z; R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(z,IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
-
-static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
-static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
 
 // print precision, just the number of fractional digits requested from sprintf
 static DF1(jtfitpp1){DECLFG;A z;
@@ -75,8 +80,9 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
   // Noun v.
   I cno=0;
   switch(sv->id){I wval;
+  case CGT: cno+=2;  //  >!.f
   case CIOTA: ++cno;  // i.!.1 supported only in viavx.c
-  case CSLDOT: case CSLDOTDOT: ++cno;   case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: ++cno;
+  case CSLDOT: case CSLDOTDOT: ++cno;   case CLE: case CLT: case CGE: case CNE: case CEQ: ++cno;
   case CMATCH: case CEPS:    case CICO:      case CNUB:     case CSTAR:  
   case CFLOOR: case CCEIL:  case CSTILE: case CPLUSDOT:  case CSTARDOT: case CABASE:
   case CNOT:   case CXCO:   case CSPARSE:   case CEBAR:

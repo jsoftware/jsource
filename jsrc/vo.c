@@ -242,8 +242,10 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
    z += sizes[1];   // advance z to next output
   }
  }
- // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell).  If fillv0len is 0, that means we are not allowed to fill; then set fillv0len to -1 as a flag that this happened
- if(likely(jt->fillv0len>0))mvc(endoffill-z,z,jt->fillv0len,jt->fillv0); else jt->fillv0len=-1;  // use atom size of default fill
+ // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell).
+// obsolete   If fillv0len is 0, that means we are not allowed to fill; then set fillv0len to -1 as a flag that this happened
+// obsolete  if(likely(jt->fillv0len>0))mvc(endoffill-z,z,jt->fillv0len,jt->fillv0); else jt->fillv0len=-1;  // use atom size of default fill
+ mvc(endoffill-z,z,jt->fillv0len,jt->fillv0);    // use atom size of default fill
  R w;
 }
 
@@ -500,11 +502,11 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // if (all shapes equal, taking omitted shape as 1), there is no fill
  //
  // We could keep track of whether the low 2 axes require fill, but fill overhead just isn't that high
- I *shapeptr; I maxshape0=0; I maxshape1=0; r=0; q=RMAX;  // max axis_1, max axis _2, max rank, min rank
+ I *shapeptr; I maxshape0=0; I maxshape1=0; r=0; q=RMAX; I natoms=0;  // max axis_1, max axis _2, max rank, min rank, total number of atoms in input
  I te=0; I t=0;  // te=all types including empties; t=nonempty types.  If t!=0, te is immaterial
  for(i=0;i<n;++i){I s;
   y=C(v[i]); r=MAX(r,AR(y)); q=MIN(q,AR(y));  // could do this with shift if rank limited to 63
-  if(likely(AN(y)!=0))t|=AT(y); te|=AT(y);  // accumulate types, either nonempty or empty.  Probably all the same AN, so use branch
+  natoms+=AN(y); if(likely(AN(y)!=0))t|=AT(y); te|=AT(y);  // count atoms.  accumulate types, either nonempty or empty.  Probably all the same AN, so use branch
   // accumulate max shape.  Extend short shapes with 1
   shapeptr=&AS(y)[AR(y)-1]; shapeptr=AR(y)>0?shapeptr:&oneone[1]; s=*shapeptr; maxshape0=MAX(maxshape0,s);
   --shapeptr; shapeptr=AR(y)>1?shapeptr:&oneone[1]; s=*shapeptr; maxshape1=MAX(maxshape1,s);
@@ -520,15 +522,15 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is contiguous for each cell and we just copy into the result area
  if(likely(t!=0)){
   // no mixed nonempties: t is homo num/char or all boxed or all symbol.
-  ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVDOMAIN)
+  ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVINHOMO)
   ASSERT(((t^SPARSE)&SPARSE+XNUM+RAT)<=0,EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
  }
  I tsparse=te&SPARSE; te&=~SPARSE; // remove sparse flag
  t=te&-te; NOUNROLL while(te&=(te-1)){RE(t=maxtypedne(t,te&-te));}  // get highest-priority type
- t|=tsparse; ASSERT((t&(SPARSE|SPARSABLE))!=SPARSE,EVDOMAIN);  // error is result is unsparsanle type
+ t|=tsparse; ASSERT((t&(SPARSE|SPARSABLE))!=SPARSE,EVDOMAIN);  // error if result is unsparsable type
  // allocate place to build shape of result-cell;
- fauxblockINT(csfaux,5,1); I klg=bplg(t); I m;  // m is # atoms in cell
+ fauxblockINT(csfaux,5,1); I m;  // m is # atoms in cell
  if(likely((SGNIFSPARSE(t)|(1-r))>=0)){
   // Not sparse, and cell ranks were all < 2.  We know the max shape
   u=csfaux+2; u[r-1]=maxshape0; u[r-2]=maxshape1;  // u->cell shape; fill in the ranks we know
@@ -546,10 +548,20 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  }
  // u->shape of cell, m=#atoms in cell.  Allocate result area & copy in shape (= frame followed by result-cell shape)
  DPMULDE(n,m,zn);  // Get total # results atoms now that we know result-cell size
- GA00(z,t,zn,r+AR(w)); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape
+ // now we know the number of atoms in the result.  If this differs from the number of input atoms, there is fill
+ if(zn!=natoms){   // will there be fill?
+  // there is fill
+  ASSERT(!((I)jtinplace&JTNOFILL),EVASSEMBLY)  // error if fill not allowed
+  if(unlikely(jt->fill)){A f=jt->fill;
+   // user fill specified.  Install it, perhaps converting
+   if(TYPESNE(t,AT(f))){ASSERT(HOMO(t,AT(f)),EVINHOMO) t=maxtypedne(t,AT(f)); if(AT(f)!=t)RZ(f=ccvt(t,f,0))}  // include fill in the type calc, and convert it if needed
+   jt->fillv0len=bpnoun(t); MC(&jt->fillv0,CAV(f),jt->fillv0len);  // install 1 fill into fillv0
+  }else fillv0(t);  // default fill.  Go install it
+ }
+ I klg=bplg(t); GA00(z,t,zn,r+AR(w)); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape   klg=size of 1 atom
  x=CAV(z);  // x=output pointer, init to 1st cell
   // fill is (or may be) needed: create fill area, and convert cell-shape to cell-size vector needed by copyresultcell
- if(likely(!((I)jtinplace&JTNOFILL)))fillv0(t); else jt->fillv0len=0;  // create 16 bytes of fill, if allowed.  If not allowed, set that indicator
+// obsolete   remove fillv0len test    if(likely(!((I)jtinplace&JTNOFILL)))fillv0(t); else jt->fillv0len=0;  // create 16 bytes of fill, if allowed.  If not allowed, set that indicator
  I zfs=(I)1<<klg; u[r]=zfs; DQ(r, u[i]=zfs*=u[i];)  // convert each atom of result-cell shape to the length in bytes of the corresponding cell; u->first length
  // Now move the results.  They may need conversion or fill
  JMCDECL(endmask) JMCSETMASK(endmask,m<<klg,0)
@@ -563,7 +575,7 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
   else copyresultcell(jt,x,CAV(y),u,rescellrarg(zcs,r,AS(y),AR(y)),AS(y));
   x+=m<<klg;  // advance output pointer by cell length
  }
- ASSERT(jt->fillv0len>=0,EVASSEMBLY)  // if fill length<0, there must have been a disallowed fill
+// obsolete  ASSERT(jt->fillv0len>=0,EVASSEMBLY)  // if fill length<0, there must have been a disallowed fill
  EPILOG(z);
 }
 

@@ -222,7 +222,8 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
     // we infer an agreement error from EVLENGTH, or an error in opening from EVDOMAIN
     char* emsg=0; I msglen;
     emsg=jt->jerr==EVLENGTH?"number of assigned names does not match number of values":emsg;  // infer agreement error from EVLENGTH
-    emsg=(((jt->jerr==EVDOMAIN)|(jt->jerr==EVSPELL)))&ger?"error evaluating atomic representation for assignment":emsg;   // if error evaluating gerund
+    emsg=(((jt->jerr==EVDOMAIN)|(jt->jerr==EVSPELL)|(jt->jerr==EVINHOMO)))&ger?"error evaluating atomic representation for assignment":emsg;   // if error evaluating gerund
+    emsg=(jt->jerr==EVINHOMO)&!ger?"mixed types encountered while opening an item for assignment":emsg;  // otherwise must be domain error on open
     emsg=(jt->jerr==EVDOMAIN)&!ger?"error opening an item for assignment":emsg;  // otherwise must be domain error on open
     if(emsg)jteformat(jt,0,str(strlen(emsg),emsg),0,0);
    }

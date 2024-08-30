@@ -284,7 +284,7 @@ xco:
  case CSPARSE:  R fdef(0,CPOWOP,VERB,jtdenseit,jtvalenceerr, w,num(-1),0L, VFLAGNONE, RMAX,RMAX,RMAX);
  case CICAP:    R fdef(0,CPOWOP,VERB,jticapdotinv,jtvalenceerr, w,num(-1),0L, VFLAGNONE, RMAX,RMAX,RMAX);
  case CPCO:     R fdef(0,CPOWOP,VERB,jtplt,    jtvalenceerr, w,num(-1),0L, 0L, 0L,  0L,  0L  );
- case CQCO:     R eval("*/");
+ case CQCO:     R eval("*/\"1");   // primes, inverse is prime factors
  case CUCO:     R amp(num(3),w);
  case CUNDER:   R under(invrecur(f),g);
  case CFORK:    R invfork(w);

@@ -172,8 +172,8 @@ DF2(jtunquote){A z;
  STACKCHKOFLSUFF(z=0; goto exitfa;)  // this could be in an infinite-reursion loop; check
  // Move to the destination locale.  The question is, What to do when the locale doesn't change?  The INCREXECCT is a single
  // lock inc instruction, but suppose all the cores are executing names in base?  The contention for the base locale will
- // be horrid.  To avoid that, we update execct only during a change
- // at this point jt->global is the new locale to use (possibly inherited).  If LOCINCRDECR is set,
+ // be horrid.  To avoid that, we update execct only during a change.
+ // At this point jt->global is the new locale to use (possibly inherited).  If LOCINCRDECR is set,
  // explocale also holds that value.  LOCINCRDECR is set if we should incr/decr explocale, which is true if it changes
  // to a non-permanent locale (we don't want executions in z/base/... to hammer the z count)
  if(flgd0cpC&FLGLOCINCRDECR){INCREXECCT(explocale);}  // incr execct in newly-starting locale

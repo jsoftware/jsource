@@ -336,7 +336,7 @@ static F1(jttotient){A b,x,z;B*bv,p=0;I k,n,t;
   RZ(x=cvt(XNUM,w)); xv=XAV(x);
   DO(n, y=xv[i]; k=XSGN(y); ASSERT(0<=k,EVDOMAIN); if(k)*bv++=1; else{*bv++=0; xv[i]=X1; p=1;});
  }
- A z0; z=cvt(AT(x),df1(z0,x,eval("(- ~:)&.q:"))); 
+ A z0; z=cvt(AT(x),df1(z0,x,eval("(- ~:)&.q:\"0"))); 
  R p?tymesW(b,z):z;
 }
 
@@ -437,7 +437,7 @@ F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  }else{
   GATV0(z,INT,wn*m,1+wr); MCISH(AS(z),AS(w),wr) AS(z)[wr]=m; zv=AV(z);  // avoid overfetch of AS(w)
   mvc(AN(z)*SZI,zv,1,MEMSET00);
-  j=0; c=AS(q)[wr]; DQ(wn, DQ(c, if(qv[j]&&m>yv[j])++zv[yv[j]]; ++j;); zv+=m;);
+  j=0; c=AS(q)[wr]; DQ(wn, DQ(c, if(qv[j]>1&&m>yv[j])++zv[yv[j]]; ++j;); zv+=m;);  // ignore values of 0 or 1, which are fill
   RETF(AT(w)&XNUM+RAT?cvt(XNUM,z):z);
 }}   /* a q: w for array w */
 
@@ -454,7 +454,7 @@ F1(jtfactor){PROLOG(0063);A y,z;
   else{RZ(y=pcvt(XNUM,xco1(w))); ASSERT(XNUM&AT(y),EVDOMAIN); R pcvt(INT,xfactor(y));}
  }
  if(unlikely(AT(w)&INT2+INT4))RZ(w=cvt(INT,w))
- F1RANK(0,jtfactor,DUMMYSELF);
+ F1RANKSUFF(0,jtfactor,DUMMYSELF,R maximum(z,zeroionei(1)););
  // from here on we are operating on a single atom in w
  RZ(w=vi(w));
  I nn=BIV0(w); ASSERT(nn>0,EVDOMAIN)  // n=value to factor

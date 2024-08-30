@@ -191,7 +191,7 @@ PRIM primtab[256] = {
  /*  p. */  PRIMACV(CPOLY,   VERB, jtpoly1,   jtpoly2,  1,   1,   0   ,VASGSAFE|VIRS2|VJTFLGOK2,VF2NONE|VF2PRIM),
  /*  p..*/  PRIMACV(CPDERIV, VERB, jtpderiv1, jtpderiv2,1,   0,   1   ,VASGSAFE,VF2NONE|VF2PRIM),
  /*  p: */  PRIMACV(CPCO,    VERB, jtprime,   jtpco2,   0,   RMAX,RMAX,VISATOMIC1|VIRS1|VASGSAFE,VF2NONE|VF2PRIM),
- /*  q: */  PRIMACV(CQCO,    VERB, jtfactor,  jtqco2,   0,   0,   0   ,VISATOMIC1|VASGSAFE,VF2NONE|VF2PRIM),
+ /*  q: */  PRIMACV(CQCO,    VERB, jtfactor,  jtqco2,   RMAX,   0,   0   ,VISATOMIC1|VASGSAFE,VF2NONE|VF2PRIM),
  /*  r. */  PRIMACV(CRDOT,   VERB, jtrdot1,   jtrdot2,  0,   0,   0   ,VISATOMIC1|VASGSAFE,VF2NONE|VF2PRIM),
  /*  s: */  PRIMACV(CSCO,    VERB, jtsb1,     jtsb2,    RMAX,RMAX,RMAX,VASGSAFE,VF2NONE|VF2PRIM),
  /*  S: */  PRIMACV(CSCAPCO, CONJ, jtvalenceerr, jtscapco, 0,   0,   0   ,VFLAGNONE,VF2NONE|VF2PRIM|VF2NAMELESS),

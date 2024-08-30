@@ -148,7 +148,7 @@ testx=: 2 : '(u b._1)-:lr<''v'''
 ". test ":
 C. test C.
 p. test p.
-*/ test q:
+q: testx (*/"1)
 
 ({=) test (i."1&1)
 

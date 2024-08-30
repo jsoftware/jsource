@@ -34,7 +34,7 @@ static A jtfitct(J jt,A a,A w,I cno,A z){V*sv;
  D d; if(likely(w==num(0)))d=0.0; else{if(!ISDENSETYPE(AT(w),FL))RZ(w=ccvt(FL,w,0)); d=DAV(w)[0];}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0
  // Handle i.!.1 specially; otherwise drop i. back to normal
  if(unlikely(cno==3))if(d==1.0){d=1.0-jt->cct; if(!SY_64)cno=0;}else cno=0;   // i.!.1 is special on 64-bit systems; others just specify fit
- ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);  // can't be greater than 2^_34
+ ASSERT(0<=d&&d<5.82076609134675e-11,EVLIMIT);  // can't be greater than 2^_34
  fdeffillall(z,0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1|VFCOMPCOMP|VASGSAFE),(I)(sv->mr),lrv(sv),rrv(sv),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
  R z;
 }
@@ -67,7 +67,7 @@ static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroione
 // Preserve VISATOMIC1 from u (applies only to numeric atomic ops)
 // Preserve comparison-combination flags for tolerance fit, in case this is a fit-allowing primitive that uses them
 F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;V*sv;
-//  ASSERTVN(a,w);  // a must be a verb, w a noun
+//  ASSERTVN(a,w);  // a must be a verb, w a noun (except for $!.v)
  ASSERT(AT(a)&VERB,EVDOMAIN)  // a must be a verb
  A z; fdefallo(z)
  sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);

@@ -91,7 +91,7 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
  if(v.hi<0){v.hi=-v.hi; v.lo=-v.lo;}  // take absolute value
  // our canonical form for qp values has the low part with its own sign bit.  For comp ease here we convert the low part to have the same sign as the high part,
  // by transferring 1 ULP from high to low if the signs differ.  This loses 1 ULP of the low part.
- // This is complicated by the fact that the transfer is done in floating-point it might reduce the exponent of the high
+ // This is complicated by the fact that if the transfer is done in floating-point it might reduce the exponent of the high
  // part, leading to overlap between the high and low.  So, we transfer the ULP from the high in fixed point, after
  // we have restored the hidden bit, below.  Because the canonical form is [-1/2,1/2) in low part, adding 1 ULP cannot
  // move the binary point of the low by enough to overlap the high  WRONG! if the lower part is small enough, it may be rounded away,
@@ -99,8 +99,8 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
  IL iulp=*(IL*)&v.hi&0xfff0000000000000&REPSGN(*(IL*)&v.hi^*(IL*)&v.lo); D ulp=*(D*)&iulp*2.22044604925031308e-16;  // 2^_52=1 ULP
  D val[2]={v.hi,v.lo+ulp};  // decrement of v.hi deferred
  if(unlikely(val[1]==ulp&&ulp!=0))val[1]=ulp=0.0;  // Handle case of exponent operlap
- I i; I nextexp;   // loop counter, sequential exponent tracker
- for(i=0;i<2;++i){  // scaf we could exit these loops when bits==0 rather than processing every bit
+ IL i; I nextexp;   // loop counter, sequential exponent tracker
+ for(i=0;i<2;++i){
   // fetch descriptor of the bits we will format from this D
   UIL dbits=*(UIL*)&val[i];  // the bits of the float, high part first
   IL exp=(dbits&0x7ff0000000000000)>>52;  // exponent, excess-3ff
@@ -127,6 +127,7 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
   if(unlikely(ndig==0)){++dp; buf[0]=0;}  // make an empty numeric have an overflow location - and clear it from 5 to 0
   while(currbit>=0){
    // The next bit is fractional.  If it is nonzero, add its fractional rep
+      if(bits<i)goto finish;  // if no more fractional significance (must be in low part), stop 
    if(nextexp==currexp&&((bits>>currbit)&1)){  // non-skipped 1 bit
     I nadd=MIN(fbuflen,bsz-(dp-fbufdp));  // dp-fbufdp is MSD of where the significance of fbuf will be added in.  Truncate the add to buffer size
     if(nadd<=0)goto finish;  //  if the significance of the fraction is too small, stop

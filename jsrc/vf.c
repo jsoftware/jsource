@@ -10,6 +10,7 @@
 // we put one atom of fill into jt->fillv0 and point jt->fillv to that atom
 // if w is not the same type as the fill, convert it.  The user has to handle a.
 // if w and a have the same type, w will not be converted
+// Result is possibly-converted w
 F2(jtsetfv){A q=jt->fill;I t;
  ARGCHK2(a,w);
  q=q?q:mtv;  // if no fill given, use empty vector

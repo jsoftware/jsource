@@ -331,10 +331,10 @@ v=:1+10^-i
 1 0 0 0 0 -: __ =!.0 ] __ 1 2 3 _
 
 'domain error' -: ex '= !.''a''  '
-'domain error' -: ex '~:!.1      '
+'limit error' -: ex '~:!.1      '
 'domain error' -: ex '> !.3j4    '
 'domain error' -: ex '<:!.(<3 4) '
-'domain error' -: ex '= !.1e_7   '
+'limit error' -: ex '= !.1e_7   '
 
 'rank error'   -: ex '>:!.1e_14 0'
 

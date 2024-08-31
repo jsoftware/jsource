@@ -424,7 +424,7 @@ NB. Handle environment-dependent and non-execution errors
 select. e
 case. EVATTN do. emsg =. 'the executing entity was interrupted by user action'
 case. EVBREAK do. emsg =. 'the executing sentence was aborted by user action'
-case. EVFACE do. emsg =. 'file system error'
+case. EVFACE do. emsg =. ('11!:' -: 4 {. eflinearself selfar) {:: 'file system error';'host does not support wd'
 case. EVLIMIT do. emsg =. 'a system limit was exceeded'
 case. EVSTACK do.  emsg =. 'infinite recursion'
 case. EVFACCESS do. emsg =. 'nonexistent file or missing permissions'

@@ -1057,7 +1057,7 @@ static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplace
  R z;
 }
 
-// entry point for monad and dyad F. F.. F.: F: F:. F::
+// u F. F.. F.: F: F:. F:: v
 DF2(jtfold){F2PREFIP;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  A foldconj; ASSERT(foldconj=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","Foldr_j_",CONJ),EVNONCE);
@@ -1074,13 +1074,12 @@ DF2(jtfold){F2PREFIP;
  R derivvb;
 }
 
-// x Z: y
+// [x] Z: y, bivalent
 DF2(jtfoldZ){
  ASSERT(jt->foldrunning,EVSYNTAX);  // If fold not running, fail.  Should be a semantic error rather than syntax
  // The name FoldZ_j_ should have been loaded at startup.  If not, fail
  A foldvb; ASSERT(foldvb=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","FoldZ_j_",VERB),EVNONCE)   // error if undefined or not verb
- // Apply FoldZ_j_ to the input arguments, creating a derived verb to do the work
- A z=unquote(a,w,foldvb);
+ A z=unquote(a,AT(w)&VERB?foldvb:w,foldvb); // Apply FoldZ_j_ to the input arguments, creating a derived verb to do the work.  If monad, overwrite w
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
  if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
  R z;

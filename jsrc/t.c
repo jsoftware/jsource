@@ -207,7 +207,7 @@ PRIM primtab[256] = {
  /*  F:  */  PRIMACV(CFCO,  CONJ, jtvalenceerr, jtfold,  0,   0,   0   ,VFLAGNONE,VF2NONE|VF2PRIM|VF2NAMELESS),
  /*  F:. */  PRIMACV(CFCODOT,  CONJ, jtvalenceerr, jtfold,  0,   0,   0   ,VFLAGNONE,VF2NONE|VF2PRIM|VF2NAMELESS),
  /*  F:: */  PRIMACV(CFCOCO,  CONJ, jtvalenceerr, jtfold,  0,   0,   0   ,VFLAGNONE,VF2NONE|VF2PRIM|VF2NAMELESS),
- /*  Z:  */  PRIMACV(CZCO,  VERB,  jtvalenceerr, jtfoldZ,  RMAX,   RMAX,   RMAX   ,VFLAGNONE,VF2NONE|VF2PRIM),
+ /*  Z:  */  PRIMACV(CZCO,  VERB,  jtfoldZ, jtfoldZ,  RMAX,   RMAX,   RMAX   ,VFLAGNONE,VF2NONE|VF2PRIM),
  // sequences supported as atomics.  The vaid is used only for ss and to reserve a slot in ds
 
  /*  DUMMY*/ PRIMACV(CDUMMY,   VERB, 0, 0,  0,   0,   0   ,VFLAGNONE,VF2NONE),  // DUMMYSELF, used for flags only

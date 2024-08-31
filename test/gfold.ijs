@@ -99,6 +99,7 @@ NB. empty result
 'domain error' -: ([   _2 Z: 51 = {:) F: (, -:`(1 3&p.)@.(2&|)@{:) etx 102
 'domain error' -: ([   _2 Z: 51 = {:) F. (, -:`(1 3&p.)@.(2&|)@{:) etx 102
 
+NB. x Z: y
 a =: 3 : 0
 t =: t + 1
 _3 Z: 1000
@@ -107,6 +108,13 @@ _3 Z: 1000
 )
 'fold limit' -: ] F. a etx t =: 0
 t -: 1000  NB. quit after 1000 tries
+
+NB. Z: y for stats
+3 2 1 -: ((Z:@0 , Z:@1 , Z:@2) [ 1 Z: 3 = Z:@0) F.. (_1 Z: 1 >: Z:@0) i. 10   NB. u stops after 3 vs; v skips first u.  Result Z:@2 is before final result added
+(2 1 0,:3 2 1) -: ((Z:@0 , Z:@1 , Z:@2) [ 1 Z: 3 = Z:@0) F:. (_1 Z: 1 >: Z:@0) i. 10   NB. same as multiple
+
+
+
 
 4!:55 ;:'a t'
 

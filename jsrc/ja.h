@@ -945,7 +945,7 @@ extern void jfree4gmp(void*,size_t);
 #define ravelW(x)                   jtravel((J)((I)jt|JTINPLACEW),(x))   
 #define raze(x)                     jtraze(jt,(x))    
 #define razecut2(x,y,z)             jtrazecut2(jt,(x),(y),(z))    
-#define razeg(x0,x1,x2,x3,x4,x5)    jtrazeg(jt,(x0),(x1),(x2),(x3),(x4),(x5))
+#define razeg(x0,x1,x2,x3,x4)    jtrazeg(jt,(x0),(x1),(x2),(x3),(x4))
 #define razeh(x)                    jtrazeh(jt,(x))    
 #define rc(x,y,z,t)                 jtrc(jt,(x),(y),(z),(t)) 
 #define rca(x)                      jtrca(jt,(x))

@@ -135,7 +135,7 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  I negifragged=(p-2)&(1-AN(a));  // neg if p<=1 and AN(a)>1, meaning different rotations for each cell
  z=0;   // init no result allocated
  I notrightfill=-1;  // sign set if this is not right shift with fill
- if(jt->fill){RZ(w=jtsetfv1(jt,w,AT(w))); notrightfill=~av0;}  // set fill value if given; remember if right shift
+ if(jt->fill){RZ(w=jtsetfv1(jt,w,AT(w))); notrightfill=~av0;}  // set fill value if given (and convert w if needed); remember if right shift
  u=CAV(w); wn=AN(w); s=AS(w); I klg=bplg(AT(w));
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  I e=(n*d)<<klg; I dk=d<<klg; // e=#bytes per cell  dk=bytes per item
@@ -323,7 +323,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  if(unlikely(ISSPARSE(AT(w)))){RETF(reshapesp(a,w,wf,wcr));}
  PRODX(m,r,u,1)  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  CPROD(,c,wf,ws); CPROD(,n,wcr,wf+ws);
- ASSERT(n||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
+ ASSERT(likely(n!=0)||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
  t=AT(w); filling = 0;
  if(m<=n){  // no wraparound
   if(c==1) {  // if there is only 1 cell of w...
@@ -394,7 +394,7 @@ F2(jtexpand){A z;B*av;C*wv,*zv;I an,i,k,p,wc,wk,wt,zn;
  ARGCHK2(a,w);
  if(!ISDENSETYPE(AT(a),B01))RZ(a=cvt(B01,a));
  ASSERT(1==AR(a),EVRANK);
- RZ(w=jtsetfv1(jt,w,AT(w))); 
+ RZ(w=jtsetfv1(jt,w,AT(w)));   // surely fill is needed; maybe cvt w
  if(!AR(w))R from(a,take(num(-2),w));  // atomic w, use a { _2 {. w
  av=BAV(a); an=AN(a);
  ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once

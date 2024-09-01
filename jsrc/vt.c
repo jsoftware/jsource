@@ -78,7 +78,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  ARGCHK2(a,w); I wt = AT(w);  // wt=type of w
  acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
  if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  //if a is empty this destroys jt->ranks
- if(likely(!ISSPARSE(wt)))RZ(w=jtsetfv1(jt,w,AT(w))); 
+ if(likely(!ISSPARSE(wt)))RZ(w=jtsetfv1(jt,w,AT(w)));   // pity to do this before we know we need fill
  ar=AR(a); acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=wr<wcr?wr:wcr; wf=wr-wcr;
  if(((af-1)&(acr-2))>=0){

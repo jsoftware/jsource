@@ -214,7 +214,7 @@ static I rescellrarg(I *zs, I zr, I *s, I r){
 // rf (bits 1-15) is the number of axes of w requiring fill (lower axes are taken in full)
 // rf (bit 0) is set if what is being moved is boxed pointers that need ra()
 // s is the shape of w, *s being the length of the first axis after the leading appended 1s
-// jt->fillv is set up, expanded to 16 bytes
+// jt->fillv0 and fillv0len are set up
 // result is the new position in w after the move
 static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>1;
  // if the entire w matches z, just copy it without fill
@@ -580,8 +580,9 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
 }
 
 // ; y general case, where rank > 1 (therefore items are not atoms)
-// w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
-static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;I p;
+// w is the data to raze (boxed), t is type of nonempties (or empties/fill if there are no nonempties), n=#,w, r=max rank of contents of w, v->w data,
+static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;I p;
+// obsolete ,I nonempt
  // Calculate the shape of a result-cell (it has rank r-1); c, the number of result-cells
  fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); mvc(r*SZI,s,1,MEMSET00);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  I sigman=0, sigmascalars=0;  // total # atoms, # scalars
@@ -675,16 +676,15 @@ F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   // the result or not.  In a case like (0 2$a:),'' the '' will contribute, but the (0 2$a:) will
   // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
   // So, we don't check compatibility for empty boxes.
-  i=t;  // save indicator of nonempties
-  if(t){
+// obsolete   i=t;  // save indicator of nonempties
+  if(t){  // there was a nonempty
    ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVDOMAIN)  // no mixed nonempties: t is homo num/char or all boxed or all symbol
    te=t;  // te holds the type to use
-  }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given.
-  t=te&-te; NOUNROLL while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type
+  }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given; otherwise keep te as combined empty types
+  t=te&-te; NOUNROLL while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type among all the set bits in either (all empties) or (all nonempties) or (fill)
   // t is the type to use.  i is 0 if there were no nonempties
-  // if there are only empties, t is the type to use
   // if the cell-rank was 2 or higher, there may be reshaping and fill needed - go to the general case
-  if(1<r)R razeg(w,t,n,r,v,i);
+  if(1<r)R razeg(w,t,n,r,v);
   // fall through for boxes containing lists and atoms, where the result is a list.  No fill possible, but if all inputs are
   // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
 

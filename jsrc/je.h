@@ -890,6 +890,7 @@ extern B        jtscheck(J,A);
 extern A        jtscx(J,X);
 extern A        jtscib(J,I);
 extern B        jtsesminit(JS,I);
+extern A        jtsetfv1(J,A,I);
 #if PYXES
 extern I jtsettaskrunning(J);
 extern void jtclrtaskrunning(J);

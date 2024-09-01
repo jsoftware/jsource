@@ -1215,7 +1215,7 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   // If nested v : v, prune the tree
 // obsolete   if(unlikely(CCOLON==FAV(a)->id)&&!(FAV(a)->flag&VXOP)&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0]))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v); don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
 // obsolete   if(unlikely(CCOLON==FAV(w)->id)&&!(FAV(w)->flag&VXOP)&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0]))w=FAV(w)->fgh[1];
-  if(unlikely(CCOLON==FAV(a)->id))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v); don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
+  if(unlikely(CCOLON==FAV(a)->id))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v)
   if(unlikely(CCOLON==FAV(w)->id))w=FAV(w)->fgh[1];
   fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) // derived verb is ASGSAFE if both parents are 
    R z;

@@ -581,23 +581,27 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
 
 // ; y general case, where rank > 1 (therefore items are not atoms)
 // w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
-static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;UI p;
- // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
+static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;I p;
+ // Calculate the shape of a result-cell (it has rank r-1); c, the number of result-cells
  fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); mvc(r*SZI,s,1,MEMSET00);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
+ I sigman=0, sigmascalars=0;  // total # atoms, # scalars
  for(i=0;i<n;++i){   // loop over all contents
   // y->A block for contents of w[i]; yr=rank of y; ys->shape of y
   // if contents has the same rank as result, it is an array of result-cells, and each item adds
   // to c, the total # items in result; otherwise it is a single cell that will be promoted in rank to
   // become one result-cell.  Error if overflow (should be impossible).  j=#leading length-1 axes that need to be added
   y=C(v[i]); yr=AR(y); ys=AS(y); I nitems=ys[0]; j=r-yr; nitems=j==0?nitems:1; c+=nitems; ASSERT(0<=c,EVLIMIT); 
-  if(!yr)continue;   // do not perform rank extension of atoms
+  sigman+=AN(y);  // accumulate #atoms
+  if(!yr){++ sigmascalars; continue;}   // do not perform rank extension of scalars, but count them
   // here we find the max cell size in *(s+1). *s is not used.  The maximum shape is taken
   // over extension axes of length 1, followed by the actual shape of the contents
   DO(j,  s[i]=MAX(1,    s[i]);     ); 
   DO(yr, s[j]=MAX(ys[i],s[j]); ++j;);
  }
- // Install the number of result items in s; m=total #result atoms
- *s=c; PRODX(m,r,s,1); PROD(p,r-1,s+1);
+ // Install the number of result items in s; m=total #result atoms; p=#atoms in 1 cell
+ *s=c; PROD(p,r-1,s+1); DPMULDE(p,c,m);
+// obsolete  PRODX(m,r,s,1);
+#if 0 // obsolete
  // Now that we know the shape of the result-cell, we can decide, for each box, whether the
  // box contributes to the result, and whether it will be filled.  This matters only if a fill-cell has been specified.
  // If fill has been specified, we include its type in the result-type (a) only if some block gets filled
@@ -614,12 +618,15 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
     for(yr=yr-1,k=r-1;yr>=0&&ys[yr]==s[k];--yr,--k);  // see if unextended cell-shape matches
     if(yr<0){NOUNROLL while(k>0&&s[k]==1)--k;}   // if all that match, check to see if extended cell-shape==1
     if(k>0) {   // If we compared all the way back to the entire rank or one short (since we only care about CELL shape), there will be no fill
-     ASSERT(HOMO(t,AT(jt->fill)),EVDOMAIN); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
+     ASSERT(HOMO(t,AT(jt->fill)),EVINHOMO); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
      break;  // one fill is enough
     }    
    }
   }
  }
+#else
+ if(unlikely(jt->fill))if(m>sigman+sigmascalars*(p-1)){ASSERT(HOMO(t,AT(jt->fill)),EVINHOMO); t = maxtyped(t, AT(jt->fill));}  // If there is fill and #atoms out>#atoms in, include fill in the result-type.  It better fit in with the others
+#endif
 
  // Now we know the type of the result.  Create the result.
  k=bpnoun(t); p*=k;  // k=#bytes in atom of result; p=#bytes/result cell

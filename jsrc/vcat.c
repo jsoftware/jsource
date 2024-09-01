@@ -125,19 +125,23 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
 
 static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  ARGCHK2(a,w);
- I origwt=AT(w); RZ(w=setfv(a,w));
- if(AT(a)!=(t=AT(w))){t=maxtypedne(AT(a)|(AN(a)==0),t|(((t^origwt)+AN(w))==0)); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty.  If fill changed w, don't do B01 for it
+ // scaf most of this should move back to the caller so it can be outside the rank loop
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
- RZ(s=r?vec(INT,r,AS(r==ar?a:w)):num(2)); sv=AV(s);   // Allocate list for shape of composite item
+ RZ(s=r?vec(INT,r,AS(r==ar?a:w)):num(2)); sv=AV(s);   // Allocate list for shape of composite item, init to longer shape; but if both are atoms, just the number 2, which we will not modify
  // Calculate the shape of the result: the shape of the item, max of input shapes
- if(m=MIN(ar,wr)){
-  as=ar+AS(a); ws=wr+AS(w); k=r;
-  DQ(m, --as; --ws; sv[--k]=MAX(*as,*ws);); 
-  DO(r-m, sv[i]=MAX(1,sv[i]););
+ if(m=MIN(ar,wr)){   // m=lower rank.  If either arg is a scalar, it wiil be replicated, so no need to check item size then
+  as=ar+AS(a); ws=wr+AS(w); k=r;  // as, ws point past end of shape, k indexes past end of combined shape
+  DQ(m, --as; --ws; sv[--k]=MAX(*as,*ws););   // set sv to max len of each axis, for the common rank
+  DO(r-m, sv[i]=MAX(1,sv[i]););   // continue with the frame, where the shorter frame extends its item shape with 1s
  }
- PRODX(c,r-1,1+sv,1); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // verify composite item not too big
- DPMULDE(c,m+n,zn); ASSERT(0<=m+n,EVLIMIT);
- GA(z,AT(a),zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(AT(a));
+ PRODX(c,r-1,1+sv,1); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // c=#atoms in result item; m, n=#items in each arg (1 if arg has lower rank)
+ DPMULDE(c,m+n,zn);  // get total # atoms in result
+// obsolete  ASSERT(0<=m+n,EVLIMIT);
+ // Now that we have figured out the result shape we can decide whether we need fill
+ I origwt=AT(w); if(unlikely(((AN(a)+AN(w)-zn)&(-MIN(ar,wr)))<0))RZ(w=setfv(a,w));  // set fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate)
+ if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|(AN(a)==0),t|(((t^origwt)+AN(w))==0)); t=LOWESTBIT(t); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty.  If fill changed w, don't do B01 for it
+// obsolete  GA(z,AT(a),zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(AT(a));
+ GA(z,t,zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(t);  // allocate result with composite item shape; install #items; get len of an atom
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
  RETF(z);
@@ -372,9 +376,9 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // result would increase, and there's no room in the shape)
    // jt->ranks is ~0 unless there are operand cells, which disqualify us.  There are some cases where it
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
-   // OK to use type as proxy for size, since indirect types are excluded
+   // We use type priority to decide whether a would have to be converted
    I zt=maxtyped(at,AT(w));  // the type of the result
-   if((((an-1)|(at-zt))>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
+   if((((an-1)|-(at^zt))>=0)&&(!jt->fill||(TYPESEQ(at,AT(jt->fill))))){  // a not empty, atype = resulttype.  And never if fill specified with a different type
     //  Check the item sizes.  Set p<0 if the
     // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
     // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis
@@ -407,7 +411,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
       // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
       // copy fill to the output area.  Start the copy after the area that will be filled in by w
       I wlen = k*AN(w); // the length in bytes of the data in w
-      if((-wr&(1+wr-ar))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
+// obsolete       if((-wr&(1+wr-ar))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
+      if((-wr&(wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
       AFLAGRESET(a,aflag&=wprist|~AFPRISTINE)  // clear pristine flag in a if w is not also (a must not be virtual)
       // Copy in the actual data, replicating if w is atomic
       if(wr){JMC(av,wv,wlen,1)} else mvc(wk,av,k,wv);  // no overcopy because there could be fill

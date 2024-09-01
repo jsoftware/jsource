@@ -317,7 +317,6 @@ static F1(jtii){ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 // Result is always an UNSAFE type
 // this code is repeated in result.h
 I jtmaxtype(J jt,I s,I t){
- // If values differ and are both nonzero...
  I resultbit = PRIORITYTYPE(MAX(TYPEPRIORITY(s),TYPEPRIORITY(t)));  // Get the higher-priority type
  if(unlikely(ISSPARSE(s|t))){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R SPARSE|((I)1 << resultbit);}  // If either operand sparse, return sparse version
  R (I)1 << resultbit;   // otherwise, return normal version

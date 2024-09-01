@@ -24,6 +24,19 @@ F2(jtsetfv){A q=jt->fill;I t;
  if(w==0&&jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; // if we got an error here (always called DOMAIN), show it as EVHOMO when we eformat
  R w;
 }
+// simpler version when there is only w.  We make AT(w) an argument to save a fetch
+A jtsetfv1(J jt, A w, I t){A q=jt->fill;
+ ARGCHK1(w);
+ q=q?q:mtv;  // if no fill given, use empty vector.  No fill type specified
+ if(unlikely(AN(q)!=0)){ // fill specified
+  t=AN(w)?t:B01; // if w empty, give it the lowest priority
+  RE(t=maxtype(t,AT(q))); // get type needed for fill
+  if(TYPESNE(t,AT(q))){if(unlikely((q=cvt(t,q))==0)){if(jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; R 0;}}  // convert the user's type if needed; call it INHOMO if incompatible
+  else if(unlikely(TYPESNE(t,AT(w)))){if(unlikely((w=cvt(t,w))==0)){if(jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; R 0;}}  // note if w is boxed and nonempty this won't change it
+  jt->fillv=CAV(q);   // jt->fillv points to the fill atom, which may have been allocated here & will be freed when the caller exits
+ }else{fillv0(t); jt->fillv=jt->fillv0;}    // default fill.  create std fill in fillv0 and point jt->fillv at it   scaf fillv0 should just point, not move
+ R w;
+}
 
 // Allocate a block for an atom of fill with type same as w, and move in the fill value.  Used to create a fill-cell
 F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA00(z,wt,1,0);
@@ -40,7 +53,7 @@ F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA00(z,wt,1,0);
 void jtfillv0(J jt,I t){I fillvalue0;
  jt->fillv0len=bpnoun(t);  // save the minimum fill-cell size
  if(likely(t&B01+LIT+INT+INT2+INT4+FL+CMPX+QP+SBT+BOX)){  // normal case - direct num or LIT, or BOX
-  fillvalue0=t&LIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX?(I)mtv:fillvalue0;  // get SP or 0, of mtv for box
+  fillvalue0=t&LIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX?(I)mtv:fillvalue0;  // get SP or 0, or a: for box
   *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue0;  // copy to output
 #if !SY_64
   *(I*)&jt->fillv0[2*SZI]=fillvalue0; *(I*)&jt->fillv0[3*SZI]=fillvalue0;
@@ -122,7 +135,7 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  I negifragged=(p-2)&(1-AN(a));  // neg if p<=1 and AN(a)>1, meaning different rotations for each cell
  z=0;   // init no result allocated
  I notrightfill=-1;  // sign set if this is not right shift with fill
- if(jt->fill){RZ(w=setfv(w,w)); notrightfill=~av0;}  // set fill value if given; remember if right shift
+ if(jt->fill){RZ(w=jtsetfv1(jt,w,AT(w))); notrightfill=~av0;}  // set fill value if given; remember if right shift
  u=CAV(w); wn=AN(w); s=AS(w); I klg=bplg(AT(w));
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  I e=(n*d)<<klg; I dk=d<<klg; // e=#bytes per cell  dk=bytes per item
@@ -324,7 +337,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
    if((SGNIF(AFLAG(w),AFNJAX)|((t&(DIRECT|RECURSIBLE))-1)|(m-MINVIRTSIZE))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISH(zs,ws,wf) MCISH(zs+wf,u,r) RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code
   }
- }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
+ }else if(filling=jt->fill!=0){RZ(w=jtsetfv1(jt,w,AT(w))); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
  k=bpnoun(t); p=k*m; q=k*n;
  DPMULDE(c,m,zn);
  GA00(z,t,zn,r+wf); s=AS(z); MCISH(s,ws,wf); MCISH(s+wf,u,r);
@@ -381,7 +394,7 @@ F2(jtexpand){A z;B*av;C*wv,*zv;I an,i,k,p,wc,wk,wt,zn;
  ARGCHK2(a,w);
  if(!ISDENSETYPE(AT(a),B01))RZ(a=cvt(B01,a));
  ASSERT(1==AR(a),EVRANK);
- RZ(w=setfv(w,w)); 
+ RZ(w=jtsetfv1(jt,w,AT(w))); 
  if(!AR(w))R from(a,take(num(-2),w));  // atomic w, use a { _2 {. w
  av=BAV(a); an=AN(a);
  ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once

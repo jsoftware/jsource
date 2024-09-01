@@ -78,7 +78,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  ARGCHK2(a,w); I wt = AT(w);  // wt=type of w
  acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
  if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  //if a is empty this destroys jt->ranks
- if(likely(!ISSPARSE(wt)))RZ(w=setfv(w,w)); 
+ if(likely(!ISSPARSE(wt)))RZ(w=jtsetfv1(jt,w,AT(w))); 
  ar=AR(a); acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=wr<wcr?wr:wcr; wf=wr-wcr;
  if(((af-1)&(acr-2))>=0){
@@ -185,7 +185,7 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ws=AS(w);
  RZ(x=vec(INT,wr-1,ws)); MCISH(wf+AV(x),ws+wf+1,wcr-1);
- RZ(w=setfv(w,w)); GA00(y,AT(w),1,0); MC(AV(y),jt->fillv,bpnoun(AT(w)));
+ RZ(w=jtsetfv1(jt,w,AT(w))); GA00(y,AT(w),1,0); MC(AV(y),jt->fillv,bpnoun(AT(w)));
  R reshape(x,y);
  // not pristine
 }

@@ -138,8 +138,9 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  DPMULDE(c,m+n,zn);  // get total # atoms in result
 // obsolete  ASSERT(0<=m+n,EVLIMIT);
  // Now that we have figured out the result shape we can decide whether we need fill
- I origwt=AT(w); if(unlikely(((AN(a)+AN(w)-zn)&(-MIN(ar,wr)))<0))RZ(w=setfv(a,w));  // set fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate)
- if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|(AN(a)==0),t|(((t^origwt)+AN(w))==0)); t=LOWESTBIT(t); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty.  If fill changed w, don't do B01 for it
+ I origwt=AT(w); if(unlikely(((AN(a)+AN(w)-zn)&(-MIN(ar,wr)))<0))RZ(w=setfv(a,w));  // set fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate).  cvt w if needed
+// obsolete  if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|(AN(a)==0),t|(((t^origwt)+AN(w))==0)); t=LOWESTBIT(t); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty.  If fill changed w, don't do B01 for it
+ if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|(AN(a)==0),t|(((t^origwt)+AN(w))==0)); t=LOWESTBIT(t); I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty.  If fill changed w, don't do B01 for it
 // obsolete  GA(z,AT(a),zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(AT(a));
  GA(z,t,zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(t);  // allocate result with composite item shape; install #items; get len of an atom
  RZ(x=ovgmove(k,c,m,s,a,x,z));
@@ -223,7 +224,8 @@ DF2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  // convert args to compatible precisions, changing a and w if needed.  Treat empty arg as boolean if the other is non-Boolean
- if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}
+// obsolete  if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}
+ if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t); I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}
  ar=AR(a); wr=AR(w);
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape

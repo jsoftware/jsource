@@ -61,7 +61,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  wk=wcn<<bplg(AT(w));
 
  A zz=0;  // place where we will build up the homogeneous result cells
- if(mn){I i0;
+ if(likely(mn!=0)){I i0;
   // Normal case where there are cells.
   // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
   // The base pointer AK advances through the source argument. 

@@ -120,7 +120,7 @@ extern F1(jtexg);
 // extern F1(jtfact);
 extern F1(jtfactor);
 extern F1(jtfh15);
-extern F1(jtfiller);
+extern A jtfiller(J,I,I,I*);
 extern DF1(jtfix);
 // extern F1(jtfloor1);
 extern F1(jtfmt01);
@@ -1129,6 +1129,7 @@ extern I disttosign[4];  // bit between (bit 0 of byte) and sign bit of lane
 extern I Ivalidboolean;  // masks 
 extern I Iimin;
 extern I Iimax;
+extern I4 charfill;
 extern I fortesting;
 
 #if CRASHLOG // debugging

@@ -464,7 +464,8 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
   // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
   r=AR(w); rr=MAX(1,r); GATV0(s,INT,rr,1); if(r)MCISH(AV(s),AS(w),r); AV(s)[0]=0>m?0:m==IMAX?1+SETIC(w,r):m;
   // Create fill-cell of shape s; apply u to it
-  RZ(df1(x,reshape(s,filler(w)),fs));
+// obsolete   reshape(s,filler(w)),fs));
+  RZ(df1(x,jtfiller(jt,AT(w),rr,AS(s)),fs));
   // Prepend leading axis of 0 to the result
   z=reshape(over(zeroionei(0),shape(x)),x);
  } 
@@ -487,7 +488,8 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
   R jtopenforassembly(jt,z);
  }else{A s;
   RZ(s=AR(w)?shape(w):ca(iv0)); AV(s)[0]=ABS(m);
-  RZ(df1(x,reshape(s,filler(w)),C(*hv)));
+// obsolete   RZ(df1(x,reshape(s,filler(w)),C(*hv)));
+  RZ(df1(x,jtfiller(jt,AT(w),AR(s),AS(s)),C(*hv)));
   R reshape(over(zeroionei(0),shape(x)),x);
 }}
 
@@ -724,7 +726,8 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  I katom=(I)1<<bplg(wt); k=c<<bplg(wt);   // k=#bytes in a cell of result
  if(likely(AN(z)!=0)){
   if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q,0) DQ(d, JMCR(x,y,q,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
-  }else{JMC(x,y,n*k,0)  fillv0(wt); mvc(q*k,x+n*k,katom,jt->fillv0);    // nonoverlapping: copy en bloc and fill
+// obsolete   }else{JMC(x,y,n*k,0)  fillv0(wt); mvc(q*k,x+n*k,katom,jt->fillv);    // nonoverlapping: copy en bloc and fill
+  }else{JMC(x,y,n*k,0)  fillv0(wt); mvc(q*k,x+n*k,jt->fillvlen,jt->fillv);    // nonoverlapping: copy en bloc and fill
   }
  }
  RETF(z);

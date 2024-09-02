@@ -18,8 +18,9 @@ F2(jtsetfv){A q=jt->fill;I t;
  if(unlikely(AN(q)!=0)){ // fill specified
   RE(t=t?maxtype(t,AT(q)):AT(q)); // get type needed for fill
   if(TYPESNE(t,AT(q))){if((q=cvt(t,q))==0){if(jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; R 0;}}  // convert the user's type if needed; call it INHOMO if incompatible
-  jt->fillv=CAV(q);   // jt->fillv points to the fill atom
- }else{if(!t)t=AT(w); fillv0(t); jt->fillv=jt->fillv0;}    // empty fill.  create std fill in fillv0 and point jt->fillv at it
+  jt->fillv=CAV(q); jt->fillvlen=bpnoun(t);  // jt->fillv points to the fill atom
+ }else{if(!t)t=AT(w); fillv0(t);}    // empty or no fill.  create std fill in fillv0 and point jt->fillv at it
+// obsolete  jt->fillv=jt->fillv0;
  w=TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed and nonempty this won't change it
  if(w==0&&jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; // if we got an error here (always called DOMAIN), show it as EVHOMO when we eformat
  R w;
@@ -33,12 +34,14 @@ A jtsetfv1(J jt, A w, I t){A q=jt->fill;
   RE(t=maxtype(t,AT(q))); // get type needed for fill
   if(TYPESNE(t,AT(q))){if(unlikely((q=cvt(t,q))==0)){if(jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; R 0;}}  // convert the user's type if needed; call it INHOMO if incompatible
   else if(unlikely(TYPESNE(t,AT(w)))){if(unlikely((w=cvt(t,w))==0)){if(jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; R 0;}}  // note if w is boxed and nonempty this won't change it
-  jt->fillv=CAV(q);   // jt->fillv points to the fill atom, which may have been allocated here & will be freed when the caller exits
- }else{fillv0(t); jt->fillv=jt->fillv0;}    // default fill.  create std fill in fillv0 and point jt->fillv at it   scaf fillv0 should just point, not move
+  jt->fillv=CAV(q); jt->fillvlen=bpnoun(t);   // jt->fillv points to the fill atom, which may have been allocated here & will be freed when the caller exits
+ }else{fillv0(t);}    // default fill.   point jt->fillv at it
+// obsolete  jt->fillv=jt->fillv0;
  R w;
 }
 
-// Allocate a block for an atom of fill with type same as w, and move in the fill value.  Used to create a fill-cell
+#if 0  // obsolete 
+// Allocate a block for an atom of fill with type same as w, and move in the fill value.  Used to create an A block that can be reshaped to a cell of fills
 F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA00(z,wt,1,0);
 #if SY_64
  IAV0(z)[0]=*(I*)&jt->fillv0[0]; if(unlikely(wt&CMPX+RAT+QP))IAV0(z)[1]=*(I*)&jt->fillv0[SZI];  // first word always fits; maybe not the second
@@ -47,8 +50,12 @@ F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA00(z,wt,1,0);
 #endif
  R z;
 }
+#else
+// Create a cell of fill for empty execution, type wt, rank r, shape *s.  Copy in the data.  The cell is NOT recursive
+A jtfiller(J jt, I wt, I r, I* s){A z; I n,klg; CPROD(1,n,r,s); klg=bplg(wt); fillv0(wt); GA(z,wt,n,r,s); mvc(n<<klg,CAV(z),jt->fillvlen,jt->fillv); R z;}
+#endif
 
-
+#if 0  // obsolete
 // Put at least 1 default fill of type t into jt->fillv0, and put its size into jt->fillv0len
 void jtfillv0(J jt,I t){I fillvalue0;
  jt->fillv0len=bpnoun(t);  // save the minimum fill-cell size
@@ -67,6 +74,16 @@ void jtfillv0(J jt,I t){I fillvalue0;
 #endif
  }
 }
+#else
+// Point jt->fillv to fill(s) of type t, and the # bytes of them into jt->fillv0len
+void jtfillv0(J jt,I t){
+ if(likely(t&B01+INT+INT2+INT4+FL+CMPX+HP+SP+QP+SBT)){jt->fillv=NUMERIC0; jt->fillvlen=4*SZI;}  // numeric & symbols that fill with 0
+ else{
+  jt->fillvlen=bpnoun(t);  // for others, just 1 atom of fill
+  void *fill=&charfill; fill=t&BOX?voidAV0(ds(CACE)):fill; fill=t&XNUM+RAT?&Q0:fill; jt->fillv=fill;  // point to 1 atom of fill for the type
+ }
+}
+#endif
 
 
 static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,*s,*v,wcr,wf,wr;P*wp,*zp;

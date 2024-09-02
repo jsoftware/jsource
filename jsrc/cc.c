@@ -288,7 +288,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  case CLEFT:                                                                \
  case CRIGHT:                                                               \
   e-=e&&neg; DPMULDE(m*c,e,d);                                             \
-  GA(z,t,d,id==CCOMMA?2:1+r,s-1); zc=CAV(z); fillv0(t), mvc(d<<bplg(t),zc,(I)1<<bplg(t),jt->fillv0);                 \
+  GA(z,t,d,id==CCOMMA?2:1+r,s-1); zc=CAV(z); fillv0(t), mvc(d<<bplg(t),zc,jt->fillvlen,jt->fillv);                 \
   zs=AS(z); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;                        \
   EACHC(MC(zc,v1,d*k);  zc+=ke;);                                           \
   R z;                                                                      \
@@ -859,7 +859,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   // remove pristinity from w since a contents is escaping
   PRISTCLRF(w)   // destroys w
   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m; fillv0(wt);
-  EACHCUT(if(d)MC(zc,id==CHEAD?v1:v1+k*(d-1),k); else mvc(k,zc,bpnoun(wt),jt->fillv0); zc+=k;);
+  EACHCUT(if(d)MC(zc,id==CHEAD?v1:v1+k*(d-1),k); else mvc(k,zc,jt->fillvlen,jt->fillv); zc+=k;);
   break;
  case CSLASH: ;
   // no need to turn off pristinity in w, because we handle only DIRECT types here

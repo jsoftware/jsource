@@ -158,7 +158,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 
  C persistarea[0];  // end of area set at task startup
 // ************************************** everything after here persists over the life of the thread
- I1 fillv0len;   // length of fill installed in fillv0 (max 16).  0 means fill not allowed; _1 means invalid fill attempted
+ I1 fillvlen;   // length of fill pointed to by fillv (max 16).
  C taskstate;  // task state: modified by other tasks on a system lock or jbreak
 #define TASKSTATERUNNINGX 0   // This thread has started running a task
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
@@ -216,11 +216,11 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A idothash0;        // 2-byte hash table for use by i.
  A idothash1;        // 4-byte hash table for use by i.
  A fill;             // user fill atom
- C* fillv;            // fill value, during primitive execution - used during parsing to hold pointer to routine to execute
- C fillv0[sizeof(Z)];/* default fill value                              */
+ void* fillv;            // fill value, during primitive execution - used during parsing to hold pointer to routine to execute
+// obsolete C fillv0[sizeof(Z)];/* default fill value                              */
  RNG *rngdata;    // separately allocated block for RNG
 // seldom-used fields
- I filler5[1];
+ I filler5[3];
 // end of cacheline 5
 
  C _cl6[0];

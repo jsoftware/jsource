@@ -560,7 +560,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  // If the result has gaps, fill the entire result area with fills
  // (this could be better: just copy the gap, as part of ENGAP; check k above in case of leading unit axes)
  I klg=bplg(t);
- if(2<r){fillv0(t); mvc(zn<<bplg(t),x,(I)1<<klg,jt->fillv0);}
+ if(2<r){fillv0(t); mvc(zn<<bplg(t),x,jt->fillvlen,jt->fillv);}
  // for each 2-cell, leave a gap if required, then copy in the 2-cell.  Change c to size in bytes; qc=size of 2-cell
  if(zn){c<<=klg; DPMULDE(q,c,qc); DO(m, ENGAP(i*q,r,s,x+=c;); MC(x,v,qc); x+=qc; v+=qc;);}
  R z;

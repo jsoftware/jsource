@@ -245,7 +245,7 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
  // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell).
 // obsolete   If fillv0len is 0, that means we are not allowed to fill; then set fillv0len to -1 as a flag that this happened
 // obsolete  if(likely(jt->fillv0len>0))mvc(endoffill-z,z,jt->fillv0len,jt->fillv0); else jt->fillv0len=-1;  // use atom size of default fill
- mvc(endoffill-z,z,jt->fillv0len,jt->fillv0);    // use atom size of default fill
+ mvc(endoffill-z,z,jt->fillvlen,jt->fillv);    // use size of default fill
  R w;
 }
 
@@ -270,7 +270,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   I *zzcs=AS(zzcellshape);  // zzcs->shape of padded result cell (may be a faux A block) AS[] is shape, AR is rank, AN is allocation
   I zzcr=AR(zzcellshape);  // zzcr=rank of result cell
   zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=((I)1)<<(PRIORITYTYPE(zzresultpri&255));  // zft=highest precision encountered
-  fillv0(zft);  // create 16 bytes of fill.
+  fillv0(zft);  // create default fill.
 
   I zfs=bpnoun(zft); zzcs[zzcr]=zfs;  // length of 0-cell is byte-length of atom - store after the shape - we know there's room.  zfs is byte=length of 1 atom of result type
 
@@ -555,7 +555,8 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
   if(unlikely(jt->fill)){A f=jt->fill;
    // user fill specified.  Install it, perhaps converting
    if(TYPESNE(t,AT(f))){ASSERT(HOMO(t,AT(f)),EVINHOMO) t=maxtypedne(t,AT(f)); if(AT(f)!=t)RZ(f=ccvt(t,f,0))}  // include fill in the type calc, and convert it if needed
-   jt->fillv0len=bpnoun(t); MC(&jt->fillv0,CAV(f),jt->fillv0len);  // install 1 fill into fillv0
+   jt->fillvlen=bpnoun(t); jt->fillv=voidAV(f);  // use the specified single fill atom
+// obsolete  MC(&jt->fillv0,CAV(f),jt->fillv0len);  // install 1 fill into fillv0
   }else fillv0(t);  // default fill.  Go install it
  }
  I klg=bplg(t); GA00(z,t,zn,r+AR(w)); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape   klg=size of 1 atom

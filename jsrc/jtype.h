@@ -1279,6 +1279,7 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 // Canned blocks
 // NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that
 // validitymask[15] will be 0 on any platform
+#define NUMERIC0 ((C*)(validitymask+12))  // 0 0 0 0 for numeric fill
 #define FUNCTYPE0 ((A)(validitymask+12))  // 0 0 0 0, which has a 0 in the AT field
 #define FUNCID0 ((A)(validitymask-4*(!SY_64)))  // 0 in index [15] ([19] for 32-bit), which has a 0 in the id field of V
 #define SYMVAL0 ((L*)(validitymask+12))  // 0 0, which has a 0 in the val field of L

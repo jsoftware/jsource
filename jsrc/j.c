@@ -142,6 +142,7 @@ I disttosign[4]={C_AVX2?63-0:0x1,C_AVX2?63-8:0x100,C_AVX2?63-16:0x10000,C_AVX2?6
 I Ivalidboolean=VALIDBOOLEAN;  // masks 
 I Iimin=IMIN;
 I Iimax=IMAX;
+I4 charfill=0x20;  // SP, used for filling LIT/C2T/C4T
 
 // global const end 
 

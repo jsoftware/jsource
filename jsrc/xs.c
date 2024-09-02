@@ -145,7 +145,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->cu
  z=line(x,i,ce,tso); 
  jt->currslistx=oldi;  // pop script#
 #if SYS & SYS_PCWIN
- if(lk)mvc(AN(x),AV(x),1,MEMSET00);  /* security paranoia */
+ if(lk)mvc(AN(x),AV(x),MEMSET00LEN,MEMSET00);  /* security paranoia */
 #endif
  R z;
 }

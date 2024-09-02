@@ -140,13 +140,13 @@ AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
    x=(B*)v; DQ(r1, s+=*x++;); 
    *z++=s;
  }}else{A t;UI*tv;
-  dw=(d+SZI-1)>>LGSZI; p=dw*SZI; mvc(m*d*SZI,z,1,MEMSET00);
+  dw=(d+SZI-1)>>LGSZI; p=dw*SZI; mvc(m*d*SZI,z,MEMSET00LEN,MEMSET00);
   q=n/255; r=n%255;
   GA10(t,INT,dw); if(!t)R;
   tu=UAV(t); tv=(UI*)tu; v=(UI*)x;
   for(i=0;i<m;++i,z+=d){
-   DO(q, mvc(p,tv,1,MEMSET00); DO(255, DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];));
-         mvc(p,tv,1,MEMSET00); DO(r,   DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];) ;
+   DO(q, mvc(p,tv,MEMSET00LEN,MEMSET00); DO(255, DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];));
+         mvc(p,tv,MEMSET00LEN,MEMSET00); DO(r,   DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];) ;
 }}}  /* +/"r w on boolean w, originally by Roger Moore */
 #endif
 
@@ -403,7 +403,7 @@ DF1(jtcompsum){
 // the launch rate of 2 cycles per iteration.  This requires spilling results to memory, which will add more latency, but it's still better than unrolling only 4.
 // Unfortunately, clang goes nuts trying to handle this loop, and ends up doing 14 loads and 14 stores for every iteration.  So we have to unroll it
 // by hand using an array to hold the state
-   mvc(sizeof(accc),accc,1,MEMSET00);
+   mvc(sizeof(accc),accc,MEMSET00LEN,MEMSET00);
    UI nlp=(n-1)>>LGNPAR; 
    for(;nlp;--nlp){KAHANA(_mm256_loadu_pd(wv),nlp&7) wv+=NPAR;}
    KAHANA(_mm256_maskload_pd(wv,endmask),7) wv+=((n-1)&(NPAR-1))+1;
@@ -449,7 +449,7 @@ DF1(jtcompsum){
      if((n0-=4)>0)goto label1;
     }
 #else
-    mvc(sizeof(accc),accc,1,MEMSET00);
+    mvc(sizeof(accc),accc,MEMSET00LEN,MEMSET00);
     UI nlp=n; 
     for(;nlp;--nlp){KAHANA(_mm256_loadu_pd(wv0),nlp&7) wv0+=d;}
 #endif
@@ -474,7 +474,7 @@ DF1(jtcompsum){
     if((n0-=4)>0)goto label2;
    }
 #else
-    mvc(sizeof(accc),accc,1,MEMSET00);
+    mvc(sizeof(accc),accc,MEMSET00LEN,MEMSET00);
     UI nlp=n; 
     for(;nlp;--nlp){KAHANA(_mm256_maskload_pd(wv0,endmask),nlp&7) wv0+=d;}
 #endif
@@ -640,7 +640,7 @@ static B jtredspsprep(J jt,C id,I f,I zt,A a,A e,A x,A y,I*zm,I**zdv,B**zpv,I**z
  v=AS(y); yr=v[0]; yc=v[1]; yr1=yr-1;
  RZ(d=grade1(eq(a,sc(f)))); dv=AV(d); 
  DO(AN(a), if(i!=dv[i]){RZ(q=grade1p(d,y)); qv=AV(q); break;});
- GATV0(p,B01,yr,1); pv=BAV(p); mvc(yr,pv,1,MEMSET00);
+ GATV0(p,B01,yr,1); pv=BAV(p); mvc(yr,pv,MEMSET00LEN,MEMSET00);
  u=yv=AV(y); m=mm=0; j=-1; if(qv)v=yv+yc*qv[0];
  for(k=0;k<yr1;++k){
   if(qv){u=v; v=yv+yc*qv[1+k];}else v=u+yc;

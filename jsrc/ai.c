@@ -75,7 +75,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); 
  if(1>=wr)R raze(w);
  if(!wn)R iota(reshape(sc(wr),num(0)));
- GATV0(x,INT,wr,1); u=AV(x); mvc(wr*SZI,u,1,MEMSET00);
+ GATV0(x,INT,wr,1); u=AV(x); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
  GATV0(x,INT,wr,1); v=(I**)AV(x);
  DO(wr, m=ws[i]; GATV0(x,INT,m,1); mvc(m*SZI,v[i]=AV(x),1,MEMSETFF););
  for(i=0;i<wn;++i){
@@ -90,7 +90,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
   GATVR(z,BOX,wn,2,ws); zv=AAV(z);
   GATV0(h,INT,wr,1); hv=AV(h);
 // obsolete   GA10(f,t,1);
-  RZ(f=jtfiller(jt,t,0,0)); mvc(wr*SZI,u,1,MEMSET00);
+  RZ(f=jtfiller(jt,t,0,0)); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
   for(i=0;i<wn;++i){
    zv[i]=x=C(wv[i]);
    if(2>AR(x)){DO(wr, hv[i]=v[i][u[i]];); RZ(zv[i]=diag(x,reshape(h,f)));}
@@ -244,7 +244,7 @@ static DF1(jticapdotinv){
  CR rng=condrange(wv,wn,0,IMIN,IMAX);  // Get the range
  ASSERT(rng.min==0,EVDOMAIN)  // negative values not allowed
  A z; GATV0(z,INT,rng.range,1) I *zv=IAV(z);   // allocate result area
- mvc(rng.range<<LGSZI,zv,1,MEMSET00);  // clear all accumulators to 0
+ mvc(rng.range<<LGSZI,zv,MEMSET00LEN,MEMSET00);  // clear all accumulators to 0
  DO(wn, ++zv[wv[i]];)  // increment the accumulator for each word
  RETF(z);
 }

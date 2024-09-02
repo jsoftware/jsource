@@ -761,7 +761,7 @@ B jtcdinit(JS jjt){A x;JJ jt=MTHREAD(jjt);
  RZ(x=exta(BOX,0L,1L,100L )); ACINITZAP(x) INITJT(jjt,cdarg)=x;  // allocate indirect pointers to CCT blocks
  RZ(INITJT(jjt,cdhash) =cdgahash(4*AN(INITJT(jjt,cdarg))));  // start with 4x allocation for the strings.  We will reallocate when it gets to 2x.
  RZ(INITJT(jjt,cdhashl)=cdgahash(NLIBS+16));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
- RZ(x=exta(LIT,0L,1L,         5000L)); ACINITZAP(x) mvc(AN(x),AV(x),1,MEMSET00); INITJT(jjt,cdstr)=x;  //  Do this last; it indicates validity for all
+ RZ(x=exta(LIT,0L,1L,         5000L)); ACINITZAP(x) mvc(AN(x),AV(x),MEMSET00LEN,MEMSET00); INITJT(jjt,cdstr)=x;  //  Do this last; it indicates validity for all
  AM(INITJT(jjt,cdstr))=AM(INITJT(jjt,cdarg))=AM(INITJT(jjt,cdhash))=AM(INITJT(jjt,cdhashl))=0;  // init all tables to empty
  R 1;
 }
@@ -1389,7 +1389,7 @@ void dllquit(J jt){I j,*v;
  if(!JT(jt,cdstr))R;   // if we never initialized, don't free
  A *av=AAV0(JT(jt,cdarg));  // point to A blocks for CCTs
  DQ(AM(JT(jt,cdarg)), if(((CCT*)IAV0(av[i]))->hloaded)FREELIB(((CCT*)IAV0(av[i]))->h); fr(av[i]));   // unload all libraries, and free the CCT blocks
- mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),1,MEMSET00);
+ mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),MEMSET00LEN,MEMSET00);
  mvc(SZI*AN(JT(jt,cdhash)),CAV(JT(jt,cdhash)),1,MEMSETFF); mvc(SZI*AN(JT(jt,cdhashl)),CAV(JT(jt,cdhashl)),1,MEMSETFF); 
  AM(JT(jt,cdstr))=AM(JT(jt,cdarg))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // reset all tables to empty
  // leave the tables allocated
@@ -1486,7 +1486,7 @@ F2(jtmemw){C*u;I m,n,t,*v;
 #endif
  I mvlen=AN(a)<<bplg(t);
  MC(u,AV(a),mvlen);   // copy the valid bytes of a
- if(m>AN(a))mvc(1LL<<bplg(t),u+mvlen,1,MEMSET00);  // append zero if called for
+ if(m>AN(a))mvc(1LL<<bplg(t),u+mvlen,MEMSET00LEN,MEMSET00);  // append zero if called for
  R mtm;
 }    /* 15!:2  memory write */
 

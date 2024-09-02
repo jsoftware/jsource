@@ -121,7 +121,7 @@ static A jtscubc(J jt,A z,A i1,A p){A a,q,s,y,y1;B*qv;I c,d,h,j=-1,m,n,*sv,*u,*v
  RZ(y=repeat(p,SPA(zp,i))); m=AS(y)[0];
  RZ(y1=take(v2(m,n),y)); v=AV(y1);
  GATV0(q,B01,m,1); qv=BAV(q);
- if(m){mvc(m,qv,1,MEMSET00); DO(m-1, if(ICMP(v,v+n,n)){if(d>i-j)qv[i]=1; j=i;} v+=n;); if(d>(m-1)-j)qv[m-1]=1;}
+ if(m){mvc(m,qv,MEMSET00LEN,MEMSET00); DO(m-1, if(ICMP(v,v+n,n)){if(d>i-j)qv[i]=1; j=i;} v+=n;); if(d>(m-1)-j)qv[m-1]=1;}
  RZ(y1=repeat(q,y1)); c=AS(y1)[0];
  if(!c)R mtm;
  R less(stitch(repeat(sc(d),y1),reitem(sc(c*d),odom(2L,h,sv))),y);

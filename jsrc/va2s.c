@@ -57,7 +57,7 @@ static B jtvaspeqprep(J jt,A a,A w,I t,I f,I r,A*ae,A*ay,A*ax,A*we,A*wy,A*wx,A*z
      A aa,e,q,x,wa;B*b,sa,sw;I n,*v;P*p;
  sa=ISSPARSE(AT(a)); 
  sw=ISSPARSE(AT(w)); n=f+r;
- GATV0(x,B01,n,1); b=BAV(x); mvc(n,b,1,MEMSET00);
+ GATV0(x,B01,n,1); b=BAV(x); mvc(n,b,MEMSET00LEN,MEMSET00);
  if(sa){p=PAV(a); aa=SPA(p,a); v=AV(aa); DO(AN(aa), b[v[i]]=1;);}
  if(sw){p=PAV(w); wa=SPA(p,a); v=AV(wa); DO(AN(wa), b[v[i]]=1;);}
  q=ifb(n,b); makewritable(q) *za=q;  // avoid readonly result

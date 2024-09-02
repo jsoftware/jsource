@@ -30,7 +30,7 @@ void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserstkb
 // DCPM: t=(line#<<8)+(dyadic<<7)+type  x=&local symbols   y=&control words  fs=self
 DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
  {A q; GAT0(q,LIT,sizeof(DST),1); d=(DC)AV(q);}
- mvc(sizeof(DST),d,1,MEMSET00);
+ mvc(sizeof(DST),d,MEMSET00LEN,MEMSET00);
  I tt=t&0xf;  // type is low bits
  if(jt->sitop&&t<DCJUNK)moveparseinfotosi(jt);  // if we are creating a space between normal and suspension, don't modify the normal stack
  DC *root=tt==DCPM?&jt->pmstacktop:&jt->sitop;  // choose chain to add to

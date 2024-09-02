@@ -162,8 +162,8 @@ static SF(jtsortb){F1PREFJT;A z;B up,*u,*v;I i,s;
  up=(~(I)jtinplace>>JTDESCENDX)&1;  u=BAV(w);
  for(i=0;i<m;++i){
   s=bsum(n,u);
-  if(up){mvc(n-s,v,1,MEMSET00); mvc(s  ,v+n-s,1,MEMSET01);}
-  else  {mvc(s  ,v,1,MEMSET01); mvc(n-s,v+s,1,MEMSET00);}
+  if(up){mvc(n-s,v,MEMSET00LEN,MEMSET00); mvc(s  ,v+n-s,1,MEMSET01);}
+  else  {mvc(s  ,v,1,MEMSET01); mvc(n-s,v+s,MEMSET00LEN,MEMSET00);}
   u+=n; v+=n;
  }
  R z;
@@ -174,7 +174,7 @@ static SF(jtsortb2){F1PREFJT;A z;B up;I i,ii,yv[4];US*v,*wv;
  wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
  I startfill=0;
  for(i=0;i<m;++i){
-  mvc(sizeof(yv),yv,1,MEMSET00);
+  mvc(sizeof(yv),yv,MEMSET00LEN,MEMSET00);
   DQ(n, IND2(*wv++); ++yv[ii];);
   DO(4, ii=i^((up-1)&3); US b2=(ii+(ii<<9)); b2=(b2>>1)&0x0101; mvc(yv[ii]*2,v+startfill,2,&b2); startfill+=yv[ii];)
  }
@@ -186,7 +186,7 @@ static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,yv[16];UINT*v,*wv;
  wv=(UINT*)AV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
  I startfill=0;
  for(i=0;i<m;++i){
-  mvc(sizeof(yv),yv,1,MEMSET00);
+  mvc(sizeof(yv),yv,MEMSET00LEN,MEMSET00);
   DQ(n, IND4(*wv++); ++yv[ii];);
   DO(16, ii=i^((up-1)&15); UINT b4=(ii+(ii<<9)); b4=(b4+(b4<<18)); b4=(b4>>3)&0x01010101; mvc(yv[ii]*4,v+startfill,4,&b4); startfill+=yv[ii];)
  }
@@ -198,7 +198,7 @@ static SF(jtsortc){F1PREFJT;A z;B up;I i,ii,yv[256];UC*v,*wv;
  wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1; I p=LIT&AT(w)?256:2; 
  I startfill=0;
  for(i=0;i<m;++i){
-  mvc(p*SZI,yv,1,MEMSET00);
+  mvc(p*SZI,yv,MEMSET00LEN,MEMSET00);
   DQ(n, ++yv[*wv++];);
   DO(p, ii=i^((up-1)&(p-1)); mvc(yv[ii],v+startfill,1,&ii); startfill+=yv[ii];)
  }
@@ -210,7 +210,7 @@ static SF(jtsortc2){F1PREFJT;A z;B up;I i,yv[65536];US*v,*wv;
  wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
  I startfill=0; I sct=AT(w)&C2T?0:8;  // C2T is littleendian, 2 chars are bigendian
  for(i=0;i<m;++i){
-  mvc(65536*SZI,yv,1,MEMSET00);
+  mvc(65536*SZI,yv,MEMSET00LEN,MEMSET00);
   DQ(n, ++yv[*wv++];);
   DO(65536, US ii=i^((up-1)&(65536-1)); ii=(ii<<sct)|(ii>>sct); mvc(yv[ii]*2,v+startfill,2,&ii); startfill+=yv[ii];)  // scaf could exit early when startfill goes to end
  }
@@ -329,7 +329,7 @@ static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  zv=AV(z);
  // clear all totals to 0, then bias address of area so the data fits
  for(i=0;i<m;++i){  // for each list...
-  mvc(rng.range*sizeof(UI4),yv+rng.min,1,MEMSET00); 
+  mvc(rng.range*sizeof(UI4),yv+rng.min,MEMSET00LEN,MEMSET00); 
   DQ(n, ++yv[*wv++];);  // increment total for each input atom
   // run through the totals, copying in the requisite # repetitions of each value
   // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
@@ -354,7 +354,7 @@ static SF(jtsortu){F1PREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
  for(i=0;i<m;++i){
-  mvc(rng.range*sizeof(UI4),yv+rng.min,1,MEMSET00); 
+  mvc(rng.range*sizeof(UI4),yv+rng.min,MEMSET00LEN,MEMSET00); 
   DQ(n, ++yv[*wv++];);
   I incr = 1-(((I)jtinplace>>(JTDESCENDX-1))&2); j=(C4)(rng.min+(REPSGN(incr)&(rng.range-1)));
   DQ(rng.range, s=yv[j]; DQ(s, *zv++=j;) j+=(C4)incr;)

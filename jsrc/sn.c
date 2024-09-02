@@ -172,7 +172,7 @@ F1(jtnl1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01); R nlx(a,w);}
 F2(jtnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
- A tmp; GAT0(tmp,B01,256,1) mvc(256L,CAV1(tmp),1,MEMSET00);
+ A tmp; GAT0(tmp,B01,256,1) mvc(256L,CAV1(tmp),MEMSET00LEN,MEMSET00);
  u=UAV(a); DQ(AN(a),CAV1(a=tmp)[*u++]=1;);
  R nlx(tmp,w);
 }    /* 4!:1  name list */

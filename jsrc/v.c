@@ -169,7 +169,7 @@ DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
  RZ(w&&x&&y);
  if(!(LIT&AT(w)))R from(indexof(x,w),y);
  I yn=AN(y); wn=AN(w); n=MIN(AN(x),yn); u=n+UAV(x); v=n+UAV(y);
- k=256; mvc(256,bb,1,MEMSET00); if(n<yn) mvc(256,zz,1,iotavec-IOTAVECBEGIN+UAV(y)[n]);   // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
+ k=256; mvc(256,bb,MEMSET00LEN,MEMSET00); if(n<yn) mvc(256,zz,1,iotavec-IOTAVECBEGIN+UAV(y)[n]);   // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
  DQ(n, c=*--u; zz[c]=*--v; k-=(I)bb[c]^1; bb[c]=1;);   // mark characters in x, and count down to see if we hit all 256.  Note earliest mapped character for each.  Surplus chars of x ignored
  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w; else{GATV(z,LIT,wn,AR(w),AS(w));} v=UAV(z); u=UAV(w);  // alloc block unless inplace and no possible error; point to input & output strings
  if(unlikely(((k-1)|(n-yn))>=0)){   // NOT(all codes mapped OR #x<#y, meaning no error possible): index error possible on {

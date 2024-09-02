@@ -84,7 +84,7 @@ static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s
 struct fmtbuf fmtlong(struct fmtbuf fb, E v){
  I bsz=fb.ndig;  // size of buffer
  C *buf=fb.buf, *fbuf=fb.fbuf;  // pointer to MSD result loc, and frac workarea
- mvc(bsz,buf,1,MEMSET00);  // clear field to 0.5
+ mvc(bsz,buf,MEMSET00LEN,MEMSET00);  // clear field to 0.5
  C ndig=0;  //  # valid digits
  I dp=0;  // initial location of decimal point
  I fbufdp=0, fbuflen=1; fbuf[0]=5;  // init fraction to 0.0
@@ -326,7 +326,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SB
 //                 `   utf8    col max - disp width  space
                zv+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
 // change trailing padding space to NUL, all NUL will be removed in jtprx
-               if(i==c-1)mvc(p-((zv-zv1)-1),zv,1,MEMSET00);
+               if(i==c-1)mvc(p-((zv-zv1)-1),zv,MEMSET00LEN,MEMSET00);
                j++;););
   }else{
    c=s[r-1]; m=n/c; RZ(d=apvwr(c,0L,0L)); dv=AV(d);

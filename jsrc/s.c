@@ -50,7 +50,7 @@ A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
  xn=m*symcol;             // xn=#Is to allo
  GATV0(x,INT,xn,0); v=(I*)LAV0(x);    // allo the array; v->new symbol 0
  if(SYMORIGIN!=0)ICPY(v,LAV0(y),yn);             // if extension, copy old data to new block
- mvc(SZI*(xn-yn),v+yn,1,MEMSET00);               /* 0 unused area for safety  kludge  */
+ mvc(SZI*(xn-yn),v+yn,MEMSET00LEN,MEMSET00);               /* 0 unused area for safety  kludge  */
  // dice the added area into symbols, chain them together, add to free chain
  u=n+(L*)v; j=1+n;    // u->start of new area  j=sym# of (1st new sym+1), will always chain each symbol to the next
 DQ(m-n-1, u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0

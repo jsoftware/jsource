@@ -2278,8 +2278,8 @@ B jtecvtinit(J jt) {A x; struct dtoa_info *di;
  di=(struct dtoa_info*)AV(x); 
  di->_p5s=0;
  di->_pmem_next=di->_private_mem;
- mvc(sizeof(di->_private_mem),di->_private_mem,1,MEMSET00);
- mvc( sizeof(di->_freelist),di->_freelist,1,MEMSET00);
+ mvc(sizeof(di->_private_mem),di->_private_mem,MEMSET00LEN,MEMSET00);
+ mvc( sizeof(di->_freelist),di->_freelist,MEMSET00LEN,MEMSET00);
  di->jt=jt;  // remember thread pointer in case further ga() needed
  jt->dtoa=di;
  R 1;

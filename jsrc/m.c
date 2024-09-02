@@ -173,7 +173,7 @@ F1(jtmemhistoq){
 
 F1(jtmemhistos){I k;
  ASSERTMTV(w); 
- mvc(sizeof(jt->memhisto),jt->memhisto,1,MEMSET00);
+ mvc(sizeof(jt->memhisto),jt->memhisto,MEMSET00LEN,MEMSET00);
  R mtm;
 }
 
@@ -186,7 +186,7 @@ F1(jtmemhashq){
 }
 F1(jtmemhashs){
  ASSERTMTV(w); 
- mvc(sizeof(histarea,histarea,1,MEMSET00));
+ mvc(sizeof(histarea,histarea,MEMSET00LEN,MEMSET00));
  R mtm;
 }
 
@@ -1402,7 +1402,7 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
  AT(z)=type; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
- if(unlikely(!((type&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),1,MEMSET00);}
+ if(unlikely(!((type&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),MEMSET00LEN,MEMSET00);}
  R z;
 }
 #endif
@@ -1621,7 +1621,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
  if(b){ACINITZAP(z); mf(w);}          // 1=b iff w is permanent.  This frees up the old block but not the contents, which were transferred as is
  AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */
- if(!((t&DIRECT)>0))mvc(k*(m1-m),CAV(z)+m*k,1,MEMSET00);  // if non-DIRECT type, zero out new values to make them NULL
+ if(!((t&DIRECT)>0))mvc(k*(m1-m),CAV(z)+m*k,MEMSET00LEN,MEMSET00);  // if non-DIRECT type, zero out new values to make them NULL
  R z;
 }
 
@@ -1629,7 +1629,7 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I m1;
  GA00(z,t,m*c,r); 
  I k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
- if(!((t&DIRECT)>0))mvc(k*AN(z),AV(z),1,MEMSET00);
+ if(!((t&DIRECT)>0))mvc(k*AN(z),AV(z),MEMSET00LEN,MEMSET00);
  R z;
 }    /* "optimal" allocation for type t rank r, c atoms per item, >=m items */
 

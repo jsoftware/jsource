@@ -1307,7 +1307,7 @@ F1(jtsquare){ARGCHK1(w); R tymes(w,w);}   // leave inplaceable in w only  ?? nev
 // recip moved to va1
 F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
 
-static AHDR2(zeroF,B,void,void){mvc(m*(n^REPSGN(n)),z,1,MEMSET00);R EVOK;}
+static AHDR2(zeroF,B,void,void){mvc(m*(n^REPSGN(n)),z,MEMSET00LEN,MEMSET00);R EVOK;}
 static AHDR2(oneF,B,void,void){mvc(m*(n^REPSGN(n)),z,1,MEMSET01);R EVOK;}
 
 // table of routines to handle = ~:

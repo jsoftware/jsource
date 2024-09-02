@@ -89,7 +89,7 @@ void jterasenl(J jt, I n){
 // Runs in master thread
 static A jtinitnl(J jt){A q;
  I s; FULLHASHSIZE(5*1,INTSIZE,0,0,s);  // at least 5 slots, so we always have at least 2 empties
- GATV0(q,INT,s,1); mvc(s*SZI,IAV(q),1,MEMSET00);  // allocate hashtable and clear to 0.  Init no 
+ GATV0(q,INT,s,1); mvc(s*SZI,IAV(q),MEMSET00LEN,MEMSET00);  // allocate hashtable and clear to 0.  Init no 
  JT(jt,stnum)=q;  // save address of block
  AS(JT(jt,stnum))[0]=0;  // set next number to allocate
  AM(JT(jt,stnum))=0;  // set number in use
@@ -319,7 +319,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){
 
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
 // set permanent status as set in the cocreate request
-#define REINITZOMBLOC(g,perm) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,1,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=(perm)?EXECCTNOTDELD+EXECCTPERM:EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
+#define REINITZOMBLOC(g,perm) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+SYMLINFOSIZE,MEMSET00LEN,MEMSET00); LOCBLOOM(g)=0; LXAV0(g)[SYMLEXECCT]=(perm)?EXECCTNOTDELD+EXECCTPERM:EXECCTNOTDELD; LOCPATH(g)=JT(jt,zpath);
          // we should check whether the path in non0 but that would only matter if two threads created the locale simultaneously AND set a path, and the only loss would be that the path would leak
 static F2(jtloccre);
 
@@ -431,7 +431,7 @@ F1(jtlochdr){
 F2(jtlocnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
- A tmp; GAT0(tmp,B01,256,1) mvc(256L,CAV1(tmp),1,MEMSET00);
+ A tmp; GAT0(tmp,B01,256,1) mvc(256L,CAV1(tmp),MEMSET00LEN,MEMSET00);
  u=UAV(a); DQ(AN(a),CAV1(tmp)[*u++]=1;);
  R locnlx(tmp,w,0); 
 }    /* 18!:1 locale name list */

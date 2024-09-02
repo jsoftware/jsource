@@ -336,14 +336,14 @@ void mvc(I m,void*z,I n,void*w){
  if((((n&-n&(2*NPAR*SZI-1))^n)+((m&(n-1))&(REPSGN(-(((I)z|m)&(SZI-1))))))==0){  // n is power of 2, and not > 32, and (result area is a multiple of cells OR is I-aligned in address and length)
   __m256i endmask, wd; UI wdi;  // replicated data
   // replicate the input as needed to word size, then on up to 32-byte size
-  if(n<=SZI){
-   wdi=*(I*)w; wdi<<=(SZI-n)<<LGBB; wdi>>=(SZI-n)<<LGBB;  // zero out bits above the size
-   I shiftamt=n<<LGBB; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB)));  // replicate to word size
+  if(n==4*SZI){wd=_mm256_loadu_si256((__m256i*)w);  // 32 bytes, load em.  First place because of MEMSET and all numeric fill
+  }else if(n<=SZI){  // <=8 bytes to begin with: LIT C2T C4T
+   wdi=*(UI*)w&((UI)-1LL>>((SZI-n)<<LGBB));  // fetch fill and mask to valid bytes
+   wdi*=(UI)((((0x0101010101010101<<1)+(0x0001000100010001<<2)+(0x0000000100000001<<4)+(0x1<<8))>>n)&VALIDBOOLEAN);  // replicate based on size
+// obsolete    wdi=*(I*)w; wdi<<=(SZI-n)<<LGBB; wdi>>=(SZI-n)<<LGBB;  // zero out bits above the size
+// obsolete    I shiftamt=n<<LGBB; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB)));  // replicate to word size
    wd=_mm256_set1_epi64x(wdi);  // further replicate to 32-byte size
-  }else if(n==2*SZI){  // 16 bytes to begin with
-   wd=_mm256_castpd_si256(_mm256_broadcast_pd((__m128d*)w));  // load em
-  }else{  // 32 bytes to begin with
-   wd=_mm256_loadu_si256((__m256i*)w);  // load em
+  }else{wd=_mm256_castpd_si256(_mm256_broadcast_pd((__m128d*)w));  // 16 bytes to begin with, load em - only CMPX/RAT
   }
   // if the operation is long, move 2 blocks to align the store pointer
   I misalign=(I)z&(NPAR*SZI-1);

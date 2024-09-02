@@ -467,7 +467,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of ai
   ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
   // allocate a tally area and clear it.  Could use narrower table perhaps, with ramifications in ;. .  Use FL+INT to indicate smallrange
-  A ftbl; GATV0(ftbl,FL+INT,p,1); I *ftblv=IAV1(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSET00);  // rank 1 to match result of self-classify, so that ai always has rank 1
+  A ftbl; GATV0(ftbl,FL+INT,p,1); I *ftblv=IAV1(ftbl); mvc(p<<LGSZI,ftblv,MEMSET00LEN,MEMSET00);  // rank 1 to match result of self-classify, so that ai always has rank 1
   // pass through the inputs, counting the negative of the number of slots mapped to each index
   I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
   ftblv-=datamin;  // bias starting addr so that values hit the table

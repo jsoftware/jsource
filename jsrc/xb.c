@@ -319,7 +319,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){
     // Make sure there is a zero byte if the string is empty
     // * an exception is that LIT is also used for libgmp pseudo-arrays, without LAST0
     I suffsize = MIN(4*SZI,origzv+blksize-zv);  // len of area to clear to 0 
-    mvc(suffsize,(origzv+blksize)-suffsize,1,MEMSET00);   // clear suffix
+    mvc(suffsize,(origzv+blksize)-suffsize,MEMSET00LEN,MEMSET00);   // clear suffix
     MC(zv,u,n<<klg);           // copy the valid part of the data
    } else {
     jtmvgmp(jt,zv,u,llabs(XSGN(w))*SZI,b,BU,d,C_64); // copy the valid part of the data
@@ -740,7 +740,7 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  if (t&FL){v=DAV(w); DQ(n, *u++=_isnan(*v++););}  // float - check each atom
  else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(v[0])|_isnan(v[1]); v+=2;);}  // complex - check each half
  else if(t&BOX){wv=AAV(w); DO(n, *u++=isnanq(C(wv[i]));); RE(0);}  // boxed - check contents
- else mvc(n,u,1,MEMSET00);  // other types are never NaN
+ else mvc(n,u,MEMSET00LEN,MEMSET00);  // other types are never NaN
  RETF(z);
 }
 

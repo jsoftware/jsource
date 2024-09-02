@@ -407,7 +407,7 @@ static A jtqco2x(J jt,I m,A w){A y;I c,*dv,i,*pv,*yv;X d,q,r,x;
  RZ(init4792(jt));
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  x=XAV(w)[0]; pv=AV(JT(jt,p4792)); RZ(d=xc(2L)); dv=AV(d);
- GATV0(y,INT,m,1); yv=AV(y); mvc(m*SZI,yv,1,MEMSET00);
+ GATV0(y,INT,m,1); yv=AV(y); mvc(m*SZI,yv,MEMSET00LEN,MEMSET00);
  for(i=0;i<m;++i){
   c=0; *dv=pv[i];
   while(1){RZ(xdivrem(x,d,&q,&r)); if(!ISX0(r))break; ++c; x=q;}
@@ -436,7 +436,7 @@ F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
   R lamin2(nub(q),df2(z,q,q,sldot(ds(CPOUND))));
  }else{
   GATV0(z,INT,wn*m,1+wr); MCISH(AS(z),AS(w),wr) AS(z)[wr]=m; zv=AV(z);  // avoid overfetch of AS(w)
-  mvc(AN(z)*SZI,zv,1,MEMSET00);
+  mvc(AN(z)*SZI,zv,MEMSET00LEN,MEMSET00);
   j=0; c=AS(q)[wr]; DQ(wn, DQ(c, if(qv[j]>1&&m>yv[j])++zv[yv[j]]; ++j;); zv+=m;);  // ignore values of 0 or 1, which are fill
   RETF(AT(w)&XNUM+RAT?cvt(XNUM,z):z);
 }}   /* a q: w for array w */

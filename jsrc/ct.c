@@ -45,7 +45,7 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
   if(AR(z)>1){itemsize=AN(obuf)/AS(obuf)[0]; AS(z)[0]=alloatoms/itemsize; AN(z)=AS(z)[0]*itemsize; DONOUNROLL(AR(z)-1, AS(z)[i+1]=AS(obuf)[i+1];)
   }else{itemsize=1; AN(z)=alloatoms; AS(z)[0]=flags&8?AS(obuf)[0]:alloatoms;}  // if rank=1, AS[0] may be a user field.  If rank=0 it will be overwritten
   // if the type is boxed, and we extended the allocation, we had better clear the added atoms in case we ever free the block elsewhere
-  if(unlikely(t&BOX))mvc((AN(z)-2*oldn)*BOXSIZE,AAV(z)+2*oldn,1,MEMSET00);
+  if(unlikely(t&BOX))mvc((AN(z)-2*oldn)*BOXSIZE,AAV(z)+2*oldn,MEMSET00LEN,MEMSET00);
   if(flags&1){
    // If the block is a hashtable, it will be rebuilt from scratch and we just initialize it to -1 pointers
    mvc(datasize,voidAV(z),1,(flags&4)?MEMSET00:MEMSETFF);  // fill the entire table

@@ -93,7 +93,7 @@ I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
    UI clrpt = MIN(p, hh->invalidhi);   // get index to clear to
    I nclrhsh = clrpt - hh->invalidlo;  // get number of hash entries to clear
    if(nclrhsh>0){   // if there is something to clear
-    mvc((nclrhsh<<hh->hashelelgsize),hh->data.UC+(hh->invalidlo<<hh->hashelelgsize),1,MEMSET00);  // clear the region to 0
+    mvc((nclrhsh<<hh->hashelelgsize),hh->data.UC+(hh->invalidlo<<hh->hashelelgsize),MEMSET00LEN,MEMSET00);  // clear the region to 0
     if(p<=clrpt){startx=hh->currentindexofst;hh->currentindexend=MAX(asct,hh->currentindexofst);}  // If we cleared the whole left side, we can back the left-side pointer to match the right
     hh->invalidlo=clrpt;  // Indicate that we have cleared this region
    }
@@ -127,7 +127,7 @@ I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
    // Not FORCE0: we are clearing because we have to.  Clear everything.  But we can save clearing the right side if it's already clear.
    I clrtopoint=(hh->previousindexend!=1)?hh->datasize:hh->currenthi<<hh->hashelelgsize;  // high+1 entry to clear
    I clrfrompoint=p<<hh->hashelelgsize;  // offset to clear from
-   if(likely((clrtopoint-=clrfrompoint)>0)){mvc( clrtopoint,hh->data.UC+clrfrompoint,1,MEMSET00);}  // clear the region to 0
+   if(likely((clrtopoint-=clrfrompoint)>0)){mvc( clrtopoint,hh->data.UC+clrfrompoint,MEMSET00LEN,MEMSET00);}  // clear the region to 0
    hh->currenthi=p;   // set return value (starting position) and partition
    hh->currentindexend=asct;  // set return value (starting index) and allocated index space.  Leave 0 for 'not found'
    hh->previousindexend=1;  // Init right side unused (but with the 0s representing initialized values)
@@ -778,7 +778,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
    switch(mode&IIOPMSK){
    case IIDOT:  
    case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
-   case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAV(z),1,MEMSET00); R z;  // mustn't overfetch s
+   case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAV(z),MEMSET00LEN,MEMSET00); R z;  // mustn't overfetch s
    case ILESS:                              RCA(w);
    case IINTER:                             R take(zeroionei(0),w);
    case IIFBEPS:                            R mtv;

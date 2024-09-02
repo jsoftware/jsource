@@ -42,7 +42,7 @@ A jtpaxis(J jt,I r,A a){A y,z;B*b;I j,*u,*v;
  if(!ISDENSETYPE(AT(a),INT))RZ(a=cvt(INT,a));
  u=AV(a);
  GATV0(y,B01,r,1); b=BAV(y); 
- mvc(r,b,1,MEMSET00); DO(AN(a), j=u[i]; b[0>j?j+r:j]=1;);
+ mvc(r,b,MEMSET00LEN,MEMSET00); DO(AN(a), j=u[i]; b[0>j?j+r:j]=1;);
  GATV0(z,INT,r,1); v= AV(z); 
  DO(r, if( b[i])*v++=i;);
  DO(r, if(!b[i])*v++=i;);
@@ -53,7 +53,7 @@ static A jtvaxis(J jt,I r,A a){A y;B*b;I j,n,*v;
  RZ(a=cvt(INT,a)); 
  n=AN(a); v=AV(a); 
  ASSERT(1>=AR(a),EVRANK);
- GATV0(y,B01,r,1); b=BAV(y); mvc(r,b,1,MEMSET00);
+ GATV0(y,B01,r,1); b=BAV(y); mvc(r,b,MEMSET00LEN,MEMSET00);
  DO(n, j=v[i]; if(0>j)j+=r; ASSERT(0<=j&&j<r&&!b[j],EVINDEX); b[j]=1;);
  R mkwris(ifb(r,b));   // ensure result writable
 }    /* standardize axes to be non-negative, sorted */

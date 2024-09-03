@@ -204,10 +204,12 @@ static A jtsusp(J jt){A z;
 static A jtdebug(J jt){A z=0;C e;DC c,d;
   __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);  // Now that we know all threads have gone into debug, we must clear ATTN/BREAK in case we start an explicit definition
  c=jt->sitop; NOUNROLL while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
- RZ(d=suspset(jt->sitop));  // find the topmost CALL frame and mark it as suspended
- if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
- e=jt->jerr;
- jt->jerr=0;
+ d=suspset(jt->sitop);  // find the topmost CALL frame and mark it as suspended
+ if(unlikely(d==0)||unlikely(d->dcix<0)){   // if we cannot suspend, either because stack is malformed or because the verb has finished, abort back to console level as if dbr 1 entered
+  jsto(JJTOJ(jt),MTYOER,"Debug suspension ended by program logic error.    Debug is still enabled.");  // Tell the user we had a problem
+  NOUNROLL for(c=jt->sitop;c;c=c->dclnk){if(c->dctype==DCCALL){DGOTO(c,-1) c->dcsusp=0;}} R 0;  // exit from all explicit defns; return error, with jt->err unchanged
+ }
+ e=jt->jerr; jt->jerr=0;  // remember error and reset it, possibly to be restored later
  // If the failure happened while a script was being loaded, we have to take jgets() out of script mode so we can prompt the user.  We will restore on exit
  DC sf; for(sf=jt->sitop; sf&&sf->dctype!=DCSCRIPT; sf=sf->dclnk);  // sf-> last SCRIPT type, if any
  C superdebug=JT(jt,dbuser)&TRACEDBSUSFROMSCRIPT;   // remember if we have to keep scripts reading for debug
@@ -232,7 +234,6 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
   DGOTO(d,lnumcw(IAV(C(AAV(z)[1]))[0],d->dcc)) z=mtm; break;
  case SUSCLEAR:  // exit from debug, which is achieved by returning through all levels up to user prompt.  We come here once for each suspension level
   jt->jerr=e; z=0;   // Restore the error that threw us into debug; set z=0 to check for GOTO at all levels
-  I scriptbyp=0;  // set when we find a 
   NOUNROLL for(c=jt->sitop;c;c=c->dclnk){
    switch(c->dctype){
    case DCCALL: DGOTO(c,-1) c->dcsusp=0; break;   // exit from all functions, clearing suspensions; back to immed mode with clear debug stack

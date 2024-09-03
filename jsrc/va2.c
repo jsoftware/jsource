@@ -1020,10 +1020,17 @@ DF2(jtsumattymes1){
    // we do this before we generate failures
 
  I fit=0; if(unlikely(FAV(self)->id==CFIT))fit=1+FAV(self)->localuse.lu1.fittype;  // fit 0=normal, 1=!.0, 2=!.1
+ I *as=AS(a), *ws=AS(w);
 
  // if an argument is empty, sparse, or not a fast arithmetic type, or only one arg has rank 0, revert to the code for f/@:g atomic
  if(((-((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|((acr-1)^(wcr-1)))<0) { // test for all unusual cases
-  ASSERT(fit!=2,EVNONCE)  // user expected 2 atoms per result, but we don't support that for repeated atomic arg
+  if(unlikely(fit==2)){
+   if((((AN(a)-1)|(AN(w)-1))&~((acr-1)^(wcr-1)))<0){  // if there is an empty and both ranks are 0 or both >0
+    ASSERT(unlikely(acr==0)||as[ar-1]==ws[wr-1],EVLENGTH)  // ensure last axis agrees
+    A z; df2(z,a,w,eval("0 0\"1")); R z;  // !.2 with an empty argument.  Implement as 0 0"1
+   }
+   ASSERT(0,EVNONCE)  // user expected 2 atoms per result, but we don't support that for repeated atomic arg.
+  }
 #if C_AVX2 || EMU_AVX2    // high-perf QP only on 64-bit
   if(ISDENSETYPE(AT(a)|AT(w),QP)&&((AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))>=0){
    // QP dot-product.  Transfer to that code with rank still set
@@ -1037,8 +1044,7 @@ DF2(jtsumattymes1){
  }
  // We can handle it here, and both ranks are at least 1 or both are rank 0.
 
- I *as=AS(a), *ws=AS(w);
- if(acr==0){A t;
+ if(unlikely(acr==0)){A t;
   // cell-ranks are 0: append a length-1 trailing axis to the shape and add to the rank
   ++ar; RZ(t=vec(INT,ar,as)); as=IAV(t); as[ar-1]=1; acr=1;  // ,"0 a
   ++wr; RZ(t=vec(INT,wr,ws)); ws=IAV(t); ws[wr-1]=1; wcr=1;  // ,"0 w
@@ -1051,15 +1057,16 @@ DF2(jtsumattymes1){
  // Exchange if needed to make the cell-rank of a no greater than that of w.  That way we know that w will never repeat in the inner loop
  if(acr>wcr){A t=w; w=a; a=t; I tr=wr; wr=ar; ar=tr; I tcr=wcr; wcr=acr; acr=tcr; I *ts=as; as=ws; ws=ts;}
 
- // Convert arguments as required
- I it=MAX(AT(a),AT(w)); it=fit!=0?FL:it;   // if input types are dissimilar, convert to the larger.  For +/@:*"1!.[01], convert everything to float
- if(unlikely(it!=(AT(w)|AT(a)))){
-  if(TYPESNE(it,AT(a))){RZ(a=cvt(it,a));}  // convert to common input type
-  if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
- }
-
  // Verify inner frames match
  ASSERTAGREE(as+ar-acr, ws+wr-wcr, acr-1) ASSERT(as[ar-1]==ws[wr-1],EVLENGTH);  // agreement error if not prefix match
+
+ // Convert arguments as required
+// obsolete  I it=MAX(AT(a),AT(w)); it=fit!=0?FL:it;   // if input types are dissimilar, convert to the larger.  For +/@:*"1!.[01], convert everything to float
+ I it=maxtyped(AT(a),AT(w)); it=fit!=0?FL:it;   // if input types are dissimilar, convert to the larger.  For +/@:*"1!.[01], convert everything to float
+ if(unlikely(it!=(AT(w)|AT(a)))){   // except when both types equal the desired type...
+  if(TYPESNE(it,AT(a))){RZ(a=cvt(it,a));}  // ...convert to common input type
+  if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
+ }
 
  // calculate inner repeat amounts and result shape
  I dplen = as[ar-1];  // number of atoms in 1 dot-product

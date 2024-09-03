@@ -705,9 +705,9 @@ extern void jfree4gmp(void*,size_t);
 #define maxdenom(x,y)               jtmaxdenom(jt,(x),(y))
 #define maximum(x,y)                jtatomic2(jt,(x),(y),ds(CMAX))
 #define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
-#define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
+#define maxtype(x,y)                (likely((x)==(y))?(x):maxtypene(x,y))
 #define maxtypedne(x,y)             (TYPEPRIORITY(x)>TYPEPRIORITY(y)?(x):(y))  // d means 'dense'
-#define maxtyped(x,y)               (((x)==(y))?(x):maxtypedne(x,y))
+#define maxtyped(x,y)               (likely((x)==(y))?(x):maxtypedne(x,y))
 #define typeged(x,y)                (TYPEPRIORITY(x)>=TYPEPRIORITY(y))
 // For sparse types, we encode here the corresponding dense type
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y)) // FIXME: invalid

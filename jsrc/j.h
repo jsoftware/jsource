@@ -1575,19 +1575,20 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
   /* copy up till last section */ \
   if(likely((ll-=SZI)>=0)||(bytelen==0)){  /* reduce ll (=len-1) by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
    /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
+   UI backoff=DUFFBACKOFF(ll>>LGSZI,2); \
    UI n2=DUFFLPCT(ll>>LGSZI,2);  /* # turns through duff loop */ \
-   if(n2>0){ \
-    UI backoff=DUFFBACKOFF(ll>>LGSZI,2); \
-    dst=(C*)dst+(backoff+1)*NPAR*SZI; src=(C*)src+(backoff+1)*NPAR*SZI; \
-    switch(backoff){ \
-    do{ \
-    case -1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); \
-    case -2: _mm256_storeu_si256((__m256i*)((C*)dst+1*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+1*NPAR*SZI))); \
-    case -3: _mm256_storeu_si256((__m256i*)((C*)dst+2*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+2*NPAR*SZI))); \
-    case -4: _mm256_storeu_si256((__m256i*)((C*)dst+3*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+3*NPAR*SZI))); \
-    dst=(C*)dst+4*NPAR*SZI; src=(C*)src+4*NPAR*SZI; \
-    }while(--n2>0); \
-    } \
+   backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
+   dst=(C*)dst+(backoff+1)*NPAR*SZI; src=(C*)src+(backoff+1)*NPAR*SZI; \
+   switch(backoff){ \
+   case 0: dst=(C*)dst-1*NPAR*SZI; src=(C*)src-1*NPAR*SZI; if(0){ \
+   do{ \
+   case -1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); \
+   case -2: _mm256_storeu_si256((__m256i*)((C*)dst+1*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+1*NPAR*SZI))); \
+   case -3: _mm256_storeu_si256((__m256i*)((C*)dst+2*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+2*NPAR*SZI))); \
+   case -4: _mm256_storeu_si256((__m256i*)((C*)dst+3*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+3*NPAR*SZI))); \
+   dst=(C*)dst+4*NPAR*SZI; src=(C*)src+4*NPAR*SZI; \
+   }while(--n2>0); \
+   } \
    } \
    /* copy last section, 1-4 Is. ll bits 00->4 Is, 01->3 Is, etc  Do last so that previous loop doesn't have back-to-back branches  */ \
    _mm256_maskstore_epi64((I*)dst,mskname,_mm256_maskload_epi64((I*)src,mskname)); \
@@ -1745,31 +1746,32 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
  } \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
  if(!((parms)&1)){ \
+  UI backoff=DUFFBACKOFF(n0-1,3); \
   UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
-  if(n2>0){ \
-   UI backoff=DUFFBACKOFF(n0-1,3); \
-   x+=(backoff+1)*NPAR; z+=(backoff+1)*NPAR; \
-   switch(backoff){ \
-   do{ \
-   case -1: \
-    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u);  \
-   case -2: \
-    u=_mm256_loadu_pd(x+1*NPAR); loopbody _mm256_storeu_pd(z+1*NPAR, u);  \
-   case -3: \
-    u=_mm256_loadu_pd(x+2*NPAR); loopbody _mm256_storeu_pd(z+2*NPAR, u);  \
-   case -4: \
-    u=_mm256_loadu_pd(x+3*NPAR); loopbody _mm256_storeu_pd(z+3*NPAR, u);  \
-   case -5: \
-    u=_mm256_loadu_pd(x+4*NPAR); loopbody _mm256_storeu_pd(z+4*NPAR, u);  \
-   case -6: \
-    u=_mm256_loadu_pd(x+5*NPAR); loopbody _mm256_storeu_pd(z+5*NPAR, u);  \
-   case -7: \
-    u=_mm256_loadu_pd(x+6*NPAR); loopbody _mm256_storeu_pd(z+6*NPAR, u);  \
-   case -8: \
-    u=_mm256_loadu_pd(x+7*NPAR); loopbody _mm256_storeu_pd(z+7*NPAR, u);  \
-   x+=8*NPAR; z+=8*NPAR; \
-   }while(--n2!=0); \
-   } \
+  backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
+  x+=(backoff+1)*NPAR; z+=(backoff+1)*NPAR; \
+  switch(backoff){ \
+  case 0: x+=-1*NPAR; z+=-1*NPAR; if(0){ \
+  do{ \
+  case -1: \
+   u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u);  \
+  case -2: \
+   u=_mm256_loadu_pd(x+1*NPAR); loopbody _mm256_storeu_pd(z+1*NPAR, u);  \
+  case -3: \
+   u=_mm256_loadu_pd(x+2*NPAR); loopbody _mm256_storeu_pd(z+2*NPAR, u);  \
+  case -4: \
+   u=_mm256_loadu_pd(x+3*NPAR); loopbody _mm256_storeu_pd(z+3*NPAR, u);  \
+  case -5: \
+   u=_mm256_loadu_pd(x+4*NPAR); loopbody _mm256_storeu_pd(z+4*NPAR, u);  \
+  case -6: \
+   u=_mm256_loadu_pd(x+5*NPAR); loopbody _mm256_storeu_pd(z+5*NPAR, u);  \
+  case -7: \
+   u=_mm256_loadu_pd(x+6*NPAR); loopbody _mm256_storeu_pd(z+6*NPAR, u);  \
+  case -8: \
+   u=_mm256_loadu_pd(x+7*NPAR); loopbody _mm256_storeu_pd(z+7*NPAR, u);  \
+  x+=8*NPAR; z+=8*NPAR; \
+  }while(--n2!=0); \
+  } \
   } \
  }else{ \
   UI i=(n0+NPAR-1)>>LGNPAR;  \
@@ -1793,20 +1795,21 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
   loopbody0 _mm256_maskstore_pd(z, endmask, u); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
  } \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
-  UI n2=DUFFLPCT(n0-1,1);  /* # turns through duff loop */ \
-  if(n2>0){ \
-   UI backoff=DUFFBACKOFF(n0-1,1); \
-   x+=(backoff+1)*NPAR; z+=(backoff+1)*NPAR; \
-   switch(backoff){ \
-   do{ \
-   case -1: \
-    u=_mm256_loadu_pd(x); loopbody0 _mm256_storeu_pd(z, u);  \
-   case -2: \
-    u=_mm256_loadu_pd(x+1*NPAR); loopbody1 _mm256_storeu_pd(z+1*NPAR, u);  \
-   x+=2*NPAR; z+=2*NPAR; \
-   }while(--n2!=0); \
-   } \
-  } \
+ UI backoff=DUFFBACKOFF(n0-1,1); \
+ UI n2=DUFFLPCT(n0-1,1);  /* # turns through duff loop */ \
+ backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
+ x+=(backoff+1)*NPAR; z+=(backoff+1)*NPAR; \
+ switch(backoff){ \
+ case 0: x+=-1*NPAR; z+=-1*NPAR; if(0){ \
+ do{ \
+ case -1: \
+  u=_mm256_loadu_pd(x); loopbody0 _mm256_storeu_pd(z, u);  \
+ case -2: \
+  u=_mm256_loadu_pd(x+1*NPAR); loopbody1 _mm256_storeu_pd(z+1*NPAR, u);  \
+ x+=2*NPAR; z+=2*NPAR; \
+ }while(--n2!=0); \
+ } \
+ } \
  u=_mm256_maskload_pd(x,endmask);  loopbody0 _mm256_maskstore_pd(z, endmask, u); \
  x+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
  postloop

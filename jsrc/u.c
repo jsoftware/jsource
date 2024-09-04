@@ -266,16 +266,17 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
 #define IFB64(offset) b0=_mm256_loadu_si256((__m256i *)(bx+offset*(SZI*NPAR*2))); b1=_mm256_loadu_si256((__m256i *)(bx+offset*(SZI*NPAR*2)+NPAR*SZI)); bor=_mm256_or_si256(b0,b1); if(!_mm256_testz_si256(bor,bor)){ \
   b64=((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(b1,zero))<<32)+(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(b0,zero)); zbase=bx-b+offset*(SZI*NPAR*2); do{*zv++=zbase+CTTZI(b64); b64&=b64-1;}while(b64);}
 
+ I backoff=DUFFBACKOFFV(n-1,2,LGSZI+LGNPAR+1);
  UI n2=DUFFLPCTV(n-1,2,LGSZI+LGNPAR+1);  // # turns through duff loop - each one 64 bytes
- if(n2>0){
-  I backoff=DUFFBACKOFFV(n-1,2,LGSZI+LGNPAR+1);
-  bx += (backoff+1)*(SZI*NPAR*2);
-  switch(backoff){
-  do{
-  case -1: IFB64(0) case -2: IFB64(1) case -3: IFB64(2) case -4: IFB64(3)
-  bx +=4*(SZI*NPAR*2);
-  }while(--n2!=0);
-  }
+ backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
+ bx += (backoff+1)*(SZI*NPAR*2);
+ switch(backoff){
+ case 0: bx += -1*(SZI*NPAR*2); if(0){
+ do{
+ case -1: IFB64(0) case -2: IFB64(1) case -3: IFB64(2) case -4: IFB64(3)
+ bx +=4*(SZI*NPAR*2);
+ }while(--n2!=0);
+ }
  }
  // handle last batch of 64.  Create masks
  n=(n-1)&(2*SZI*NPAR-1);  // get n-1 of remnant
@@ -373,32 +374,35 @@ void mvc(I m,void*z,I n,void*w){
    if(unlikely((m&=-SZI)==0))R; --m;  // account for bytes moved; return if we have moved all; keep m as count-1
   }
   // store 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do
+  UI backoff=DUFFBACKOFF(m>>LGSZI,2);
   UI n2=DUFFLPCT(m>>LGSZI,2);  /* # turns through duff loop */
-  if(n2>0){
-   UI backoff=DUFFBACKOFF(m>>LGSZI,2);
-   z=(C*)z+(backoff+1)*NPAR*SZI;
-   if(likely(m<L3CACHESIZE)){
-    // Normal case: not a huge copy
-    switch(backoff){
-    do{ ;
-    case -1: _mm256_storeu_si256((__m256i*)z,wd);
-    case -2: _mm256_storeu_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
-    case -3: _mm256_storeu_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
-    case -4: _mm256_storeu_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
-    z=(C*)z+4*NPAR*SZI;
-    }while(--n2>0);
-    }
-   }else{
-   // The copy length is bigger than L3 cache: use non-temporal stores to avoid excessive cache traffic
-    switch(backoff){
-    do{ ;
-    case -1: _mm256_stream_si256((__m256i*)z,wd);
-    case -2: _mm256_stream_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
-    case -3: _mm256_stream_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
-    case -4: _mm256_stream_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
-    z=(C*)z+4*NPAR*SZI;
-    }while(--n2>0);
-    }
+  backoff=n2?backoff:0; /* handle n2=0 case through case 0 */
+  z=(C*)z+(backoff+1)*NPAR*SZI;
+  if(likely(m<L3CACHESIZE)){
+   // Normal case: not a huge copy
+   switch(backoff){
+   case 0: z=(C*)z+-1*NPAR*SZI; if(0){
+   do{ ;
+   case -1: _mm256_storeu_si256((__m256i*)z,wd);
+   case -2: _mm256_storeu_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
+   case -3: _mm256_storeu_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
+   case -4: _mm256_storeu_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
+   z=(C*)z+4*NPAR*SZI;
+   }while(--n2>0);
+   }
+   }
+  }else{
+  // The copy length is bigger than L3 cache: use non-temporal stores to avoid excessive cache traffic
+   switch(backoff){
+   case 0: z=(C*)z+-1*NPAR*SZI; if(0){
+   do{ ;
+   case -1: _mm256_stream_si256((__m256i*)z,wd);
+   case -2: _mm256_stream_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
+   case -3: _mm256_stream_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
+   case -4: _mm256_stream_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
+   z=(C*)z+4*NPAR*SZI;
+   }while(--n2>0);
+   }
    }
   }
   // copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc

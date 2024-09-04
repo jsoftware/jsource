@@ -34,19 +34,19 @@
 // the short loop is never used here
 #define CPRMDUFF(name,zzop,xy,fz,len,lpmsk,inv) \
      if(!((fz)&(lpmsk))){ \
+      backoff=DUFFBACKOFF((len)-1,3); \
       orign2=n2=DUFFLPCT((len)-1,3);  /* # turns through duff loop */ \
+      backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
       orign2<<=3; \
-      if(n2>0){ \
-       backoff=DUFFBACKOFF((len)-1,3); \
-       orign2+=backoff+1;  \
-       CPRMINCR(xy,fz,(backoff+1)*NPAR) \
-       switch(backoff){ \
-       do{ \
-       case -1: CPRMDO(name,zzop,xy,fz,0,inv) case -2: CPRMDO(name,zzop,xy,fz,1,inv) case -3: CPRMDO(name,zzop,xy,fz,2,inv) case -4: CPRMDO(name,zzop,xy,fz,3,inv) \
-       case -5: CPRMDO(name,zzop,xy,fz,4,inv) case -6: CPRMDO(name,zzop,xy,fz,5,inv) case -7: CPRMDO(name,zzop,xy,fz,6,inv) case -8: CPRMDO(name,zzop,xy,fz,7,inv) \
-       CPRMINCR(xy,fz,8*NPAR) \
-       }while(--n2!=0); \
-       } \
+      orign2+=backoff+1; CPRMINCR(xy,fz,(backoff+1)*NPAR) \
+      switch(backoff){ \
+      case 0: orign2+=-1; CPRMINCR(xy,fz,-1*NPAR) if(0){ \
+      do{ \
+      case -1: CPRMDO(name,zzop,xy,fz,0,inv) case -2: CPRMDO(name,zzop,xy,fz,1,inv) case -3: CPRMDO(name,zzop,xy,fz,2,inv) case -4: CPRMDO(name,zzop,xy,fz,3,inv) \
+      case -5: CPRMDO(name,zzop,xy,fz,4,inv) case -6: CPRMDO(name,zzop,xy,fz,5,inv) case -7: CPRMDO(name,zzop,xy,fz,6,inv) case -8: CPRMDO(name,zzop,xy,fz,7,inv) \
+      CPRMINCR(xy,fz,8*NPAR) \
+      }while(--n2!=0); \
+      } \
       } \
      }else{orign2=n2=(len-1)>>LGNPAR; \
       if(n2!=0){NOUNROLL do{CPRMDO(name,zzop,4+(xy),fz,0,inv) CPRMINCR(xy,fz,NPAR)}while(--n2!=0);}  \

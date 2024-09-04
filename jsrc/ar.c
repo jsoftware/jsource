@@ -188,24 +188,23 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
  DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; __m256d acc4=idreg; __m256d acc5=idreg; __m256d acc6=idreg; __m256d acc7=idreg; \
-  UI backoff=DUFFBACKOFF(n-1,3); \
   UI n2=DUFFLPCT(n-1,3);  /* # turns through duff loop */ \
-  backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
-  x+=(backoff+1)*NPAR; \
-  switch(backoff){ \
-  case 0: x+=-1*NPAR; if(0){ \
-  do{ \
-  case -1: acc0=prim(acc0,_mm256_loadu_pd(x)); \
-  case -2: acc1=prim(acc1,_mm256_loadu_pd(x+1*NPAR)); \
-  case -3: acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); \
-  case -4: acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); \
-  case -5: acc4=prim(acc4,_mm256_loadu_pd(x+4*NPAR)); \
-  case -6: acc5=prim(acc5,_mm256_loadu_pd(x+5*NPAR)); \
-  case -7: acc6=prim(acc6,_mm256_loadu_pd(x+6*NPAR)); \
-  case -8: acc7=prim(acc7,_mm256_loadu_pd(x+7*NPAR)); \
-  x+=(1LL<<3)*NPAR; \
-  }while(--n2!=0); \
-  } \
+  if(n2>0){ \
+   UI backoff=DUFFBACKOFF(n-1,3); \
+   x+=(backoff+1)*NPAR; \
+   switch(backoff){ \
+   do{ \
+   case -1: acc0=prim(acc0,_mm256_loadu_pd(x)); \
+   case -2: acc1=prim(acc1,_mm256_loadu_pd(x+1*NPAR)); \
+   case -3: acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); \
+   case -4: acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); \
+   case -5: acc4=prim(acc4,_mm256_loadu_pd(x+4*NPAR)); \
+   case -6: acc5=prim(acc5,_mm256_loadu_pd(x+5*NPAR)); \
+   case -7: acc6=prim(acc6,_mm256_loadu_pd(x+6*NPAR)); \
+   case -8: acc7=prim(acc7,_mm256_loadu_pd(x+7*NPAR)); \
+   x+=(1LL<<3)*NPAR; \
+   }while(--n2!=0); \
+   } \
   } \
   acc0=prim(acc0,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
   acc1=prim(acc1,acc5); acc2=prim(acc2,acc6); acc3=prim(acc3,acc7); acc0=prim(acc0,acc4); \

@@ -833,18 +833,17 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    acc000=_mm256_setzero_pd(); acc010=acc000; acc100=acc000; acc110=acc000; \
    if(dplen<=NPAR)goto label##9; \
    acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
-   I backoff=DUFFBACKOFF((dplen)-1,3); \
    UI n2=DUFFLPCT((dplen)-1,3);  /* # turns through duff loop */ \
-   backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
-   av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; wv1+=(backoff+1)*NPAR; \
-   switch(backoff){ \
-   case 0: av+=-1*NPAR; wv+=-1*NPAR; wv1+=-1*NPAR; if(0){ \
-   do{ \
-   case -1: mid2x2(0,0)  case -2: mid2x2(1,1)  case -3: mid2x2(2,0)  case -4: mid2x2(3,1)  \
-   case -5: mid2x2(4,1)  case -6: mid2x2(5,1)  case -7: mid2x2(6,0)  case -8: mid2x2(7,1)  \
-   av+=8*NPAR; wv+=8*NPAR; wv1+=8*NPAR; \
-   }while(--n2!=0); \
-   } \
+   if(n2>0){ \
+    I backoff=DUFFBACKOFF((dplen)-1,3); \
+    av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; wv1+=(backoff+1)*NPAR; \
+    switch(backoff){ \
+    do{ \
+    case -1: mid2x2(0,0)  case -2: mid2x2(1,1)  case -3: mid2x2(2,0)  case -4: mid2x2(3,1)  \
+    case -5: mid2x2(4,1)  case -6: mid2x2(5,1)  case -7: mid2x2(6,0)  case -8: mid2x2(7,1)  \
+    av+=8*NPAR; wv+=8*NPAR; wv1+=8*NPAR; \
+    }while(--n2!=0); \
+    } \
    } \
    acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
    label##9: last2x2  \
@@ -877,18 +876,17 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    acc000=_mm256_setzero_pd(); if(dplen<=NPAR)goto label##9; \
    acc010=acc000; acc100=acc000; acc110=acc000; \
    acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
-   I backoff=DUFFBACKOFF((dplen)-1,3); \
    UI n2=DUFFLPCT((dplen)-1,3);  /* # turns through duff loop */ \
-   backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
-   av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; \
-   switch(backoff){ \
-   case 0: av+=-1*NPAR; wv+=-1*NPAR; if(0){ \
-   do{ \
-   case -1: mid1x1(0,000)  case -2: mid1x1(1,001)  case -3: mid1x1(2,010)  case -4: mid1x1(3,011)  \
-   case -5: mid1x1(4,100)  case -6: mid1x1(5,101)  case -7: mid1x1(6,110)  case -8: mid1x1(7,111)  \
-   av+=8*NPAR; wv+=8*NPAR; \
-   }while(--n2!=0); \
-   } \
+   if(n2>0){ \
+    I backoff=DUFFBACKOFF((dplen)-1,3); \
+    av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; \
+    switch(backoff){ \
+    do{ \
+    case -1: mid1x1(0,000)  case -2: mid1x1(1,001)  case -3: mid1x1(2,010)  case -4: mid1x1(3,011)  \
+    case -5: mid1x1(4,100)  case -6: mid1x1(5,101)  case -7: mid1x1(6,110)  case -8: mid1x1(7,111)  \
+    av+=8*NPAR; wv+=8*NPAR; \
+    }while(--n2!=0); \
+    } \
    } \
    acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
    acc000=_mm256_add_pd(acc000,acc010); acc100=_mm256_add_pd(acc100,acc110); \
@@ -914,24 +912,23 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
  __m256d idreg=_mm256_setzero_pd(); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
  __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
- I backoff=DUFFBACKOFF((dplen)-1,3); \
  UI n2=DUFFLPCT((dplen)-1,3);  /* # turns through duff loop */ \
- backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
- av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; \
- switch(backoff){ \
- case 0: av+=-1*NPAR; wv+=-1*NPAR; if(0){ \
- do{ \
- case -1: acc0=MUL_ACC(acc0,_mm256_loadu_pd(av),_mm256_loadu_pd(wv)); \
- case -2: acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR)); \
- case -3: acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR)); \
- case -4: acc3=MUL_ACC(acc3,_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR)); \
- case -5: acc0=MUL_ACC(acc0,_mm256_loadu_pd(av+4*NPAR),_mm256_loadu_pd(wv+4*NPAR)); \
- case -6: acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+5*NPAR),_mm256_loadu_pd(wv+5*NPAR)); \
- case -7: acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+6*NPAR),_mm256_loadu_pd(wv+6*NPAR)); \
- case -8: acc3=MUL_ACC(acc3,_mm256_loadu_pd(av+7*NPAR),_mm256_loadu_pd(wv+7*NPAR)); \
- av+=8*NPAR; wv+=8*NPAR; \
- }while(--n2!=0); \
- } \
+ if(n2>0){ \
+  I backoff=DUFFBACKOFF((dplen)-1,3); \
+  av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; \
+  switch(backoff){ \
+  do{ \
+  case -1: acc0=MUL_ACC(acc0,_mm256_loadu_pd(av),_mm256_loadu_pd(wv)); \
+  case -2: acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR)); \
+  case -3: acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR)); \
+  case -4: acc3=MUL_ACC(acc3,_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR)); \
+  case -5: acc0=MUL_ACC(acc0,_mm256_loadu_pd(av+4*NPAR),_mm256_loadu_pd(wv+4*NPAR)); \
+  case -6: acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+5*NPAR),_mm256_loadu_pd(wv+5*NPAR)); \
+  case -7: acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+6*NPAR),_mm256_loadu_pd(wv+6*NPAR)); \
+  case -8: acc3=MUL_ACC(acc3,_mm256_loadu_pd(av+7*NPAR),_mm256_loadu_pd(wv+7*NPAR)); \
+  av+=8*NPAR; wv+=8*NPAR; \
+  }while(--n2!=0); \
+  } \
  } \
  acc3=MUL_ACC(acc3,_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask)); av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
  acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2); /* combine accumulators vertically */ \
@@ -1118,20 +1115,19 @@ DF2(jtsumattymes1){
       __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
       __m256d c0=idreg; __m256d c1=idreg; __m256d c2=idreg; __m256d c3=idreg;  // error terms
       __m256d h; __m256d y; __m256d q; __m256d t;   // new input value, temp to hold high part of sum
-      UI backoff=DUFFBACKOFF(dplen-1,2);
       UI n2=DUFFLPCT(dplen-1,2);  /* # turns through duff loop */
-      backoff=n2?backoff:0; /* handle n2=0 case through case 0 */
-      av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR;
-      switch(backoff){
-      case 0: av+=-1*NPAR; wv+=-1*NPAR; if(0){
-      do{
-      case -1: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),0)
-      case -2: OGITA(_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR),1)
-      case -3: OGITA(_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR),2)
-      case -4: OGITA(_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR),3)
-      av+=4*NPAR; wv+=4*NPAR;
-      }while(--n2>0);
-      }
+      if(n2>0){
+       UI backoff=DUFFBACKOFF(dplen-1,2);
+       av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR;
+       switch(backoff){
+       do{
+       case -1: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),0)
+       case -2: OGITA(_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR),1)
+       case -3: OGITA(_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR),2)
+       case -4: OGITA(_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR),3)
+       av+=4*NPAR; wv+=4*NPAR;
+       }while(--n2>0);
+       }
       }
       OGITA(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask),0) av+=((dplen-1)&(NPAR-1))+1; wv+=((dplen-1)&(NPAR-1))+1;  // the remnant at the end
       c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result

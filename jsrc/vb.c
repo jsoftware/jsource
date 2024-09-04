@@ -137,17 +137,16 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
 #define EBAR1(offset)  {ws=_mm256_loadu_si256((__m256i*)(wv+offset*32)); match0 = ((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)))*2+(match0>>32); \
  matchmsk=match0&_mm256_movemask_epi8(_mm256_cmpeq_epi8(a1,ws)); if(unlikely(matchmsk!=0)){wv+=offset*32; goto matchfnd;}}
 
-  I backoff=DUFFBACKOFFV((wvend-wv)+32,2,LGSZI+LGNPAR);
   UI n2=DUFFLPCTV((wvend-wv)+32,2,LGSZI+LGNPAR);  /* # turns through duff loop */
-  backoff=n2?backoff:0; /* handle n2=0 case through case 0 */
-  wv += (backoff+1)*(SZI*NPAR);
-  switch(backoff){
-  case 0: wv += -1*(SZI*NPAR); if(0){
-  do{
-  case -1: EBAR1(0) case -2: EBAR1(1) case -3: EBAR1(2) case -4: EBAR1(3)
-  wv +=4*(SZI*NPAR);
-  }while(--n2!=0);
-  }
+  if(n2>0){
+   I backoff=DUFFBACKOFFV((wvend-wv)+32,2,LGSZI+LGNPAR);
+   wv += (backoff+1)*(SZI*NPAR);
+   switch(backoff){
+   do{
+   case -1: EBAR1(0) case -2: EBAR1(1) case -3: EBAR1(2) case -4: EBAR1(3)
+   wv +=4*(SZI*NPAR);
+   }while(--n2!=0);
+   }
   }
   break;  // if no start found, exit loop.  Back wv to the 1st character, because we haven't checked that position yet
 matchfnd: ;

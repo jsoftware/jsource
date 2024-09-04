@@ -32,20 +32,19 @@ A jtpind(J jt,I n,A w){A z;I j,*v;
  I *pv=IAV(z);  // pointer to input
  __m256i endmask=_mm256_loadu_si256((__m256i*)(validitymask+((-AN(z))&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */
  __m256i u,eacc=_mm256_setzero_si256(),nacc=_mm256_setzero_si256(),maxvalid=_mm256_set1_epi64x(n-1);  // read into u; accumulate neg/errors; maximum valid value (maxvalid-u is neg if too high)
- I backoff=DUFFBACKOFF(AN(z)-1,3);
  UI n2=DUFFLPCT(AN(z)-1,3);  // # turns through duff loop - each one 8x4 indexes
- backoff=n2?backoff:0; /* handle n2=0 case through case 0 */
- pv += (backoff+1)*NPAR;
+ if(n2>0){
+  I backoff=DUFFBACKOFF(AN(z)-1,3);
+  pv += (backoff+1)*NPAR;
 #define INDLD(n) u=_mm256_loadu_si256((__m256i*)(pv+(n)*NPAR));
 #define INDCHK nacc=_mm256_or_si256(nacc,u); eacc=_mm256_or_si256(eacc,_mm256_sub_epi64(maxvalid,u));
 #define INDCASE(n) case ~(n): INDLD(n) INDCHK
- switch(backoff){
- case 0: pv += -1*NPAR; if(0){
- do{
- INDCASE(0) INDCASE(1) INDCASE(2) INDCASE(3) INDCASE(4) INDCASE(5) INDCASE(6) INDCASE(7) 
- pv +=8*NPAR;
- }while(--n2!=0);
- }
+  switch(backoff){
+  do{
+  INDCASE(0) INDCASE(1) INDCASE(2) INDCASE(3) INDCASE(4) INDCASE(5) INDCASE(6) INDCASE(7) 
+  pv +=8*NPAR;
+  }while(--n2!=0);
+  }
  }
  // handle remnant
  u=_mm256_maskload_epi64(pv,endmask); INDCHK

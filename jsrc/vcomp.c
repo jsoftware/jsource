@@ -97,18 +97,17 @@ APFX(gtSS, B,SB,SB, SBGT,, R EVOK;)
 #define PCOMPINCR(ct,xy) if(xy&2)x+=(ct); if(xy&1)y+=(ct); z+=(ct);
 
 #define PCOMPDUFF(zzop,len,xy,LOADFN) \
-      UI backoff=DUFFBACKOFF((len)-1,3); \
       UI n2=DUFFLPCT((len)-1,3);  /* # turns through duff loop */ \
-      backoff=n2?backoff:0; /* handle n2=0 case through case 0 */ \
-      PCOMPINCR((backoff+1)*NPAR,xy) \
-      switch(backoff){ \
-      case 0: PCOMPINCR(-1*NPAR,xy) if(0){ \
-      do{ \
-      case -1: PCOMPDO(zzop,xy,0,LOADFN) case -2: PCOMPDO(zzop,xy,1,LOADFN) case -3: PCOMPDO(zzop,xy,2,LOADFN) case -4: PCOMPDO(zzop,xy,3,LOADFN) \
-      case -5: PCOMPDO(zzop,xy,4,LOADFN) case -6: PCOMPDO(zzop,xy,5,LOADFN) case -7: PCOMPDO(zzop,xy,6,LOADFN) case -8: PCOMPDO(zzop,xy,7,LOADFN) \
-      PCOMPINCR(8*NPAR,xy) \
-      }while(--n2!=0); \
-      } \
+      if(n2>0){ \
+       UI backoff=DUFFBACKOFF((len)-1,3); \
+       PCOMPINCR((backoff+1)*NPAR,xy) \
+       switch(backoff){ \
+       do{ \
+       case -1: PCOMPDO(zzop,xy,0,LOADFN) case -2: PCOMPDO(zzop,xy,1,LOADFN) case -3: PCOMPDO(zzop,xy,2,LOADFN) case -4: PCOMPDO(zzop,xy,3,LOADFN) \
+       case -5: PCOMPDO(zzop,xy,4,LOADFN) case -6: PCOMPDO(zzop,xy,5,LOADFN) case -7: PCOMPDO(zzop,xy,6,LOADFN) case -8: PCOMPDO(zzop,xy,7,LOADFN) \
+       PCOMPINCR(8*NPAR,xy) \
+       }while(--n2!=0); \
+       } \
       } 
 
 

@@ -166,6 +166,8 @@ extern F1(jtimmea);
 extern F1(jtimmex);
 extern F1(jtincrem);
 extern A jtintmod2(J,A,I);
+extern DF1(jtintfloorlog2cap);
+extern DF1(jtintceillog2cap);
 extern F1(jtinttoe);
 extern F1(jtetoint);
 extern DF1(jtiota);

@@ -499,7 +499,7 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
    ASSERT(hash<0,EVLOCALE)    // if index not now negative, it was too high
 neglocnum:;
    I issusp;  //   issusp='we have hit a suspension frame'
-   for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dctype==DCCALL&&s->dcsusp; if(issusp&&s->dctype==DCCALL&&hash==-1)break; hash+=issusp&&s->dctype==DCCALL;} ASSERT(s,EVLOCALE); // step to requested stack frame; error if # too low
+   for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dcsusp; if(issusp&&s->dctype==DCCALL&&hash==-1)break; hash+=issusp&&s->dctype==DCCALL;} ASSERT(s,EVLOCALE); // skip to suspension; step to requested stack frame; error if # too low
    g=s->dcloc;  // fetch locale to use for the lookup
   }
  }

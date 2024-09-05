@@ -84,13 +84,18 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
    flag2|=((hv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLOPEN1PROPX)));
   }
   switch(fi){
-  case CCAP:
+  case CCAP:  // [: g h
    // capped fork.
-   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
    f1=on1cell; f2=jtupon2cell;
-   if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
-   if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
-               break; /* [: g h */
+   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
+   else if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
+   else if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
+   else if(unlikely(hv->fgh[0]==num(2)) && BOTHEQ8(gi,hi,CFIT,CAMP) && FAV(hv->fgh[1])->id==CLOG && (FAV(gv->fgh[0])->id&~1)==CFLOOR){  // if h is 2&v, v must be a verb
+    f1=FAV(gv->fgh[0])->id==CCEIL?jtintceillog2cap:jtintfloorlog2cap; flag|=VIRS1;  //  [: [<>].!.f 2&^.
+   }else if(unlikely(hv->fgh[0]==num(2)) && hi==CAMP && FAV(hv->fgh[1])->id==CLOG && (gi&~1)==CFLOOR){  // if h is 2&v, v must be a verb
+    f1=gi==CCEIL?jtintceillog2cap:jtintfloorlog2cap; flag|=VIRS1;  //  [: [<>].!.f 2&^.
+   }
+   break;
   case CSLASH: if(BOTHEQ8(gi,hi,CDIV,CPOUND)&&CPLUS==FAV(fv->fgh[0])->id){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
   case CAT: case CATCO:    /* <"1@[ { ]  or <"1@:[ { ]  */
    if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
@@ -372,7 +377,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork
   if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
   // if the unexecutable trident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.
-  I flag2=VF2NAMELESS; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));  // CPLUS to make bouns look primitive
+  I flag2=VF2NAMELESS; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));  // CPLUS to make nouns look primitive
                          ta=w; ta=AT(w)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));
                          ta=h; ta=AT(h)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));
   fdeffill(z,flag2,CADVF, t, rtn,rtn, a,w,h, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used

@@ -735,7 +735,7 @@ struct AD {
 #define AFHRH(a) ((a)->h)    // the workarea
 
 
-// ********************* explicit dedfinition block *************************
+// ********************* explicit definition block *************************
 
 // the compiled form of an explicit definition is an A block with rank 0 with AK pointing into the middle so that only the As are freed.
 // The number of words is AN, while the number of control words+1 (NC) is AK-s (counting 4-byte values)

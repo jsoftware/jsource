@@ -1176,7 +1176,7 @@ extern void jfree4gmp(void*,size_t);
 #define summag(x)                   jtsummag(jt,(x))
 #define sup(x,y)                    jtsup(jt,(x),(y))
 #define suq(x,y)                    jtsuq(jt,(x),(y))
-#define susp()                      jtsusp(jt)
+#define susp(x)                     jtsusp(jt,(x))
 #define swap(x)                     jtswap(jt,(x)) 
 #define swapc(x)                    jtswapc(jt,(x)) 
 #define symbis(x,y,z)               jtsymbis(jt,(x),(y),(z))

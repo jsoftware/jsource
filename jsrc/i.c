@@ -156,7 +156,7 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
  INITJT(jjt,disp)[0]=1; INITJT(jjt,disp)[1]=5;
  INITJT(jjt,outmaxafter)=ITOFLOAT16(222);
  INITJT(jjt,outmaxlen)=ITOFLOAT16(256);
- INITJT(jjt,retcomm)=1;
+// obsolete  INITJT(jjt,retcomm)=1;
  INITJT(jjt,transposeflag)=1;
 // INITJT(jjt,int64rflag)=0;
  MC(INITJT(jjt,baselocale),"base",sizeof(INITJT(jjt,baselocale)));   // establish value & hash of "base"

@@ -128,7 +128,8 @@ static B jterrcap(J jt){A y,*yv;
 }    /* error capture */
 
 // suspension.  Loop on keyboard input.  Keep executing sentences until something changes dbsusact.
-static A jtsusp(J jt){A z;
+// superdebug is set if we are reading the lines from a script
+static A jtsusp(J jt, C superdebug){A z;
  // normally we run with an empty stack frame which is always ready to hold the display of the next sentence
  // to execute; the values are filled in when there is an error.  We are about to call immex to run sentences,
  // and it will create a stack frame for its result.  CREATION of this stack frame will overwrite the current top-of-stack
@@ -149,6 +150,11 @@ static A jtsusp(J jt){A z;
  while(1){A  inp;   // this is the loop that repeatedly executes user commands from keyboard
   jt->jerr=0;   // not needed
   A iep=0;
+  // We use TRACEDBSUSCLEAR up & down to indicate that we are clearing the debug stack & stopping all running explicits.
+  // When it is set, we don't allow reentry into debug, and it remains set until we get to immediate level.  In other words,
+  // it lasts until all suspensions are cleared.  BUT if we are reading suspension info from a script (for debug), we don't get back
+  // to immediate level.  In that case we have to clear TRACEDBSUSCLEAR so that script lines can reenter suspension 
+  if(unlikely(superdebug))JT(jt,dbuser)&=~(TRACEDBSUSCLEAR+TRACEDBSUSSS);
   // if there is an immex phrase, protect it during its execution
   if(jt->iepdo&1){READLOCK(JT(jt,felock)) if((iep=JT(jt,iep))!=0)ra(iep); READUNLOCK(JT(jt,felock))}
   if(iep){
@@ -215,7 +221,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  C superdebug=JT(jt,dbuser)&TRACEDBSUSFROMSCRIPT;   // remember if we have to keep scripts reading for debug
  if(sf&&!superdebug)sf->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
  // Suspend.  execute from the keyboard until a suspension-ending result is seen.  Clear the current name to start the suspension
- A savname=jt->curname; z=susp(); jt->curname=savname;  // suspension starts as anonymous
+ A savname=jt->curname; z=susp(superdebug); jt->curname=savname;  // suspension starts as anonymous
  // Process the end-of-suspension.  There are several different ending actions
  // The end block is a list of boxes, where the first box, an integer atom, contains the operation type
  // If we end because user has exited debug, z is 0
@@ -275,8 +281,8 @@ A jtpee(J jt,A *queue,UI8 tcesx2,I err,I lk,DC c){A z=0;
  jt->parserstackframe.parserstkbgn=&newparseinfo[1]; jt->parserstackframe.parseroridetok=0; // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  jt->parserstackframe=oframe;  // restore to the executing sentence
- // enter debug mode if that is enabled
- if(c&&(jt->uflags.trace&TRACEDB)){jt->sitop->dcj=jt->jerr; z=jtdebugmux(jt); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ // enter debug mode if that is enabled, provided we are not on the way out of debug
+ if(c&&(jt->uflags.trace&TRACEDB)&&!(JT(jt,dbuser)&TRACEDBSUSCLEAR)){jt->sitop->dcj=jt->jerr; z=jtdebugmux(jt); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
@@ -302,7 +308,8 @@ A jtparsex(J jt,A* queue,I m,I source,DC c){A z,parsez;
 noparse: ;
  // If we hit a stop or ATTN, or if we hit an error (outside of try./catch., which turns debug off), enter debug suspension if enabled.  But if debug mode is off now, we must have just
  // executed 13!:0]0 or a suspension-ending command, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
- if(!z&&c&&(jt->uflags.trace&TRACEDB)){
+ // Also, if we just executed dbr 0/1 or its equivalent (which set SUSCLEAR to clear back to immediate mode), don't reenter debug
+ if(!z&&c&&(jt->uflags.trace&TRACEDB)&&!(JT(jt,dbuser)&TRACEDBSUSCLEAR)){
   if(jt->jerr==EVCUTSTACK){
   // If the line failed with EVCUTSTACK, it must be the caller's line that called the function where Cut Stack ran (the Cut Stack was returned from suspension).  This frame has already been
   // set up to restart on the same line, so all we have to do is clear the error and return 0 so that debugnewi restarts the line
@@ -313,7 +320,7 @@ noparse: ;
   }
  }
  // we have come out of suspension (if we went into it).  parsez has the value to return to execution.  It may have a value created by the user, or the value from the non-failing sentence.
- // Or, it may be 0, in which case the definition will fail.  In this case the error-code matters: the error will be printed when the failure reaches console level (in the master thread).  An error code of
+ // Or, it may be 0, in which case the definition will look for a restart.  In this case the error-code matters: the error will be printed when the failure reaches console level (in the master thread).  An error code of
  // EVDEBUGEND is used to force quiet failure all the way back to console level (usually in a task); an error code of 0, normal in a single-task system, will cause the failure to go back to
  // the first try./catch. or starting level and then print nothing.
  R parsez;
@@ -332,7 +339,8 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
    else              {ras(self); a?df2ip(z,a,w,self):df1ip(z,w,self); if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:0]0, and we should continue on outside of debug mode.  The debug stack frames are still on the stack, but they have been unchained from the root
-   if(!z&&(jt->uflags.trace&TRACEDB)){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(jt->sitop!=0)self=jt->sitop->dcf;}
+   // Don't reenter debug if we are on the way out of it
+   if(!z&&(jt->uflags.trace&TRACEDB)&&!(JT(jt,dbuser)&TRACEDBSUSCLEAR)){d->dcj=jt->jerr; movecurrtoktosi(jt); z=jtdebugmux(jt); if(jt->sitop!=0)self=jt->sitop->dcf;}
    if(!(d->dcnewlineno&&d->dcix!=-1))break;  // if 'run' specified (by jump not to -1), loop again.  Otherwise exit with result given
    // for 'run', the value of z gives the argument(s) to set; but if no args given, leave them unchanged
    if(AN(z)){w=C(AAV(z)[0]); a=AN(z)==2?C(AAV(z)[1]):0;}  // extract new args if there are any
@@ -370,7 +378,7 @@ F1(jtdbc){I k;
  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the C stack to allow suspension commands room to run
- if(likely(!(k&TRACEDBDEBUGENTRY)))JT(jt,dbuser)|=TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug, suppress this so we don't immediately come out of debug
+ JT(jt,dbuser)|=TRACEDBSUSCLEAR; if(unlikely((k&TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT)))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug or running, suppress so don't immediately come out of debug; also if staying in script mode
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

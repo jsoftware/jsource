@@ -174,9 +174,11 @@ F1(jtpps){I k;
  R mtv;
 }
 
-F1(jtretcommq){ASSERTMTV(w); R scb(JT(jt,retcomm));}  // 9!:40
+F1(jtretcommq){ASSERTMTV(w); R num(1);}  // 9!:40 - always on
+// obsolete scb(JT(jt,retcomm));
 
-F1(jtretcomms){B b; RE(b=b0(w)); JT(jt,retcomm)=b; R mtm;}   // 9!:41
+F1(jtretcomms){B b; R mtm;}   // 9!:41 - unused
+// obsolete  RE(b=b0(w)); JT(jt,retcomm)=b;
 
 F1(jtseclevq){ASSERTMTV(w); R sc(JT(jt,seclev));}   // 9!:24  security level
 

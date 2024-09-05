@@ -999,12 +999,14 @@ A jtbcvt(J jt,C mode,A w){FPREFIP(J); A z=w;
  if(mode&1||!(AT(w)&XNUM+RAT)){  // if we are not stopping at XNUM/RAT
   // To avoid a needless copy, suppress conversion to B01 if type is B01, to INT if type is INT, etc
   // set the NOFUZZ flag in t to insist on an exact match so we won't lose precision
+  PUSHNOMSGS  // no need to format the messages for failed conversions
   if(!(mode&14)&&(z=jtccvt(jtinplace,B01|CVTNOFUZZ,w,0)));  // if OK to try B01, and it fits, keep B01
   else if(ISDENSETYPE(AT(w),INT))z=w;   // if w is INT, we can't improve
   else if(!(mode&12)&&(z=jtccvt(jtinplace,INT|CVTNOFUZZ,w,0)));  //  OK to try INT and it fits, keep B01
   else if(ISDENSETYPE(AT(w),FL))z=w;   // if w if FL, we can't improve
   else if(!(mode&8)&&(z=jtccvt(jtinplace,FL|CVTNOFUZZ,w,0)));  // if to try FL and it fits, keep FL
   else z=w;  // no lower precision available, keep as is
+  POPMSGS   // restore error handling
   RESETERR;   // some conversions might have failed
  }
 

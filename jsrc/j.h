@@ -2223,6 +2223,9 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
+#define PUSHNOMSGS C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATEFORMATTED;  // turn off message formatting by pretending we've already done it
+#define POPMSGS jt->emsgstate=_e;  // restore previous state
+#define WITHMSGSOFF(stmt) {PUSHNOMSGS stmt POPMSGS}  // execute stmt with msgs off
 #define MAYBEWITHDEBUG(dbg,jt,stmt) if(dbg){stmt}else{UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
  C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end

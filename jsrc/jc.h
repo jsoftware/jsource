@@ -59,7 +59,7 @@
 // . %. C. | r. %: ! b.
 
 // 0 reserved for 'invalid'
-#define CFIT       (C)0x03  // !.   is beginning of switch in u@v
+#define CFIT       (C)0x03  // !.   is beginning of switch in u@v, u@:v
 #define CPOWOP     (C)0x04  // ^:
 #define CBASE      (C)0x05  // #.
 #define CBEHEAD    (C)0x06  // }.
@@ -109,7 +109,7 @@
 #define CEBAR      (C)0x2c  // E.  must pair with e.
 #define CEPS       (C)0x2d  // e.
 #define CMIN       (C)0x2e  // <.
-#define CFLOOR     (C)0x2e  // <.
+#define CFLOOR     (C)0x2e  // <. must be paired with >.
 #define CMAX       (C)0x2f  // >. must be paired with <. as upper of pair
 #define CCEIL      (C)0x2f  // >. 20-2f used in cip.c and ar.c
 #define CNOUN      (C)0x30  // '0' - used in AR for noun

@@ -128,8 +128,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define EMSGSTATETRAPPINGX 6  // set if we are in a trapping construct, u :: v or try.
 #define EMSGSTATETRAPPING (1<<EMSGSTATETRAPPINGX)
 #define EMSGSTATEFORMATTED 0x80  // line has been through eformat - do not call again until errors reset
-// 1 byte free
- I bytesmax;         // high-water mark of "bytes" - used only during 7!:1
+ I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line
  S etxn1;            // last non-zero etxn
  B foldrunning;      // 1 if fold is running (allows Z:)
@@ -142,6 +141,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A xmod;             // extended integer: the m in m&|@f
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  C initnon0area[0];
+ void* fillv;            // &fill value, during primitive execution - used during parsing to hold pointer to routine to execute - init immaterial
  US ranks;            // low half: rank of w high half: rank of a; for IRS. init for task to 3F3F
  C filler0[6];
 // end of cacheline 0, heavily used
@@ -158,7 +158,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 
  C persistarea[0];  // end of area set at task startup
 // ************************************** everything after here persists over the life of the thread
- I1 fillvlen;   // length of fill pointed to by fillv (max 16).
  C taskstate;  // task state: modified by other tasks on a system lock or jbreak
 #define TASKSTATERUNNINGX 0   // This thread has started running a task
 #define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
@@ -173,14 +172,13 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
  C scriptskipbyte;  // when not NUL, reading script discards lines up till the first one that starts NB. followed by skipbyte
- US symfreect[2];  // number of symbols in main and overflow local symbol free chains
-// 2 bytes free
- LX symfreehead[2];   // head of main and overflow symbol free chains
- UI cstackmin;        // red warning for C stack pointer
+// 7 bytes free
+ DC pmstacktop;  // Top (i. e. end) of the postmortem stack.  The pm stack is just the chain of private SYMB namespaces.  When there is an error that will go all the way back to console, the namespaces are preserved.  If the next
+           // keyboard command turns on debug, they will be converted into a debug stack and moved out of this field.  They are deleted when debug mode is turned off or the stack is deleted by 13!:0.
  UI4 *futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate
  A* tstacknext;       // if not 0, points to the recently-used tstack allocation, whose first entry points to the current allocation  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
- A filler1[1];
+ A filler1[2];
 // end of cacheline 1 - not heavily used
 
  C _cl2[0];
@@ -197,8 +195,10 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 
  C _cl3[0];
 // things needed by name lookup (unquote)
- C filler3a[12]; // 12 bytes free
+ LX symfreehead[2];   // head of main and overflow symbol free chains
  LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
+ US symfreect[2];  // number of symbols in main and overflow local symbol free chains
+// obsolete  C filler3a[12]; // 12 bytes free
 // things needed for memory allocation
  A mempool[-PMINL+PLIML+1];             // pointer to first free block in each pool.  ends at binary boundary (no longer needed)
 // end of cacheline 3
@@ -206,9 +206,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl4[0];
  I memballo[-PMINL+PLIML+1];              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
  A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
- DC pmstacktop;  // Top (i. e. end) of the postmortem stack.  The pm stack is just the chain of private SYMB namespaces.  When there is an error that will go all the way back to console, the namespaces are preserved.  If the next
-           // keyboard command turns on debug, they will be converted into a debug stack and moved out of this field.  They are deleted when debug mode is turned off or the stack is deleted by 13!:0.
- I bytes;            // bytes currently in use - used only during 7!:1
+ UI cstackmin;        // red warning for C stack pointer
+ I filler4[1];
 // end of cacheline 4
 
  C _cl5[0];
@@ -216,11 +215,12 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A idothash0;        // 2-byte hash table for use by i.
  A idothash1;        // 4-byte hash table for use by i.
  A fill;             // user fill atom
- void* fillv;            // fill value, during primitive execution - used during parsing to hold pointer to routine to execute
 // obsolete C fillv0[sizeof(Z)];/* default fill value                              */
  RNG *rngdata;    // separately allocated block for RNG
 // seldom-used fields
- I filler5[3];
+ I bytes;            // bytes currently in use - used only during 7!:1
+ I bytesmax;         // high-water mark of "bytes" - used only during 7!:1
+ I filler5[2];
 // end of cacheline 5
 
  C _cl6[0];
@@ -301,7 +301,10 @@ typedef struct JSTstruct {
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result  scaf remove?
  B assert;           // 1 iff evaluate assert. statements     
  UC seclev;           /* security level                                  */
-// 4 bytes free
+ UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
+ B sesm;             /* whether there is a session manager             */
+ C nfe;              /* 1 for J native front end                    */
+// 1 byte free
  A *zpath;         // path 'z', used for all initial paths.  *JT(jt,zpath) is the z locale itself
 // end of cacheline 0
 
@@ -343,7 +346,7 @@ typedef struct JSTstruct {
  A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
  S stlock;           // r/w lock for stnum.  stloc is never modified, so we use the ->lock field of stloc to lock that table
  C locsize[2];       /* size indices for named and numbered locales     */
- UC dbuser;           // user-entered value for db, 0 or 1 if bit 7 set, take debug continuation from script.  TRACEDB* flags above are set here
+ UC dbuser;           // user-entered value for db, 0 or 1; if bit 7 set, take debug continuation from script.  TRACEDB* flags above are set here
 #if MEMAUDIT & 2
  C audittstackdisabled;   // set to 1 to disable auditing
 #endif
@@ -383,10 +386,8 @@ typedef struct JSTstruct {
  S sblock;           // r/w lock for sbu
  S felock;           // r/w lock for host functions, accessed only at start/end of immex
  // rest of cacheline used only in exceptional paths
- B retcomm;          /* 1 iff retain comments and redundant spaces      */
- UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
- B sesm;             /* whether there is a session manager             */
- C nfe;              /* 1 for J native front end                    */
+ // obsolete B retcomm;          /* 1 iff retain comments and redundant spaces      */
+// 4 bytes free
  I peekdata;         /* our window into the interpreter                 */
  A iep;              /* immediate execution phrase                      */
  A pma;              /* perf. monitor: data area                        */

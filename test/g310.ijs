@@ -115,7 +115,7 @@ p -: x
 
 NB. : treatment of comments and white space -----------------------------
 
-ws=: 9!:40 ''
+NB. obsolete ws=: 9!:40 ''
 9!:41 ]1  NB. retain comments and whitespace
 
 f1 =: 3 : 0
@@ -170,6 +170,7 @@ x=: ];._1 '//  11  NB. aaaa/  12  NB. b///  15  NB. cc///://  21  NB. ddd///  24
 (5!:2 <'f3') -: 3;(,':');x
 (5!:5 <'f3') -: '3 : 0',nln,nln,'  11  NB. aaaa',nln,'  12  NB. b',nln,nln,nln,'  15  NB. cc',nln,nln,nln,':',nln,nln,'  21  NB. ddd',nln,nln,nln,'  24  NB. e',nln,'      NB. ff',nln,')'
 
+1: {{)n
 9!:41 ]0  NB. discard comments and white space
 
 f1 =: 3 : 0
@@ -225,7 +226,7 @@ x=: ];._1 '//11/12///15/://21///24'
 (5!:5 <'f3') -: '3 : 0',nln,nln,'11',nln,'12',nln,nln,nln,'15',nln,':',nln,nln,'21',nln,nln,nln,'24',nln,')'
 
 9!:41 ]1  NB. retain comments and white space
-
+}}
 
 NB. : -------------------------------------------------------------------
 
@@ -364,11 +365,11 @@ NB. obsolete f =: -
 NB. obsolete 2 -: 7 (<'base') c [: 5
 
 NB. obsolete 9!:49 svxy
-9!:41 ws
+NB. obsolete !:41 ws
 
 4!:55 ;:'a ar c det dyad eq f f0 f1 f2 f3 f4'
 4!:55 ;:'f4a f5 f5a f6 f6a f6b f6c f7'
-4!:55 ;:'minors monad nln p q svxy Tv ws x'
+4!:55 ;:'minors monad nln p q svxy Tv x'
 
 
 

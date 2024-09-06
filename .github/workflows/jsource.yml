@@ -73,6 +73,7 @@ jobs:
      with:
        name: dist
        path: testlinux.txt
+       overwrite: true
 
 # linux gcc ------------------------------------------------------------
  jelinux-gcc:
@@ -131,6 +132,7 @@ jobs:
      with:
        name: dist
        path: testlinuxgcc.txt
+       overwrite: true
 
 # macOS ----------------------------------------------------------------
  jemacos:
@@ -185,6 +187,7 @@ jobs:
      with:
        name: dist
        path: testdarwin.txt
+       overwrite: true
 
 # rpi64 ----------------------------------------------------------------
  jerpi64:
@@ -245,6 +248,7 @@ jobs:
      with:
        name: dist
        path: testrpi64.txt
+       overwrite: true
 
 # rpi32 ----------------------------------------------------------------
  jerpi32:
@@ -307,6 +311,7 @@ jobs:
      with:
        name: dist
        path: testrpi32.txt
+       overwrite: true
 
 # openbsd --------------------------------------------------------------
  jeopenbsd:
@@ -374,6 +379,7 @@ jobs:
      with:
       name: dist
       path: testopenbsd.txt
+      overwrite: true
 
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
@@ -441,6 +447,7 @@ jobs:
      with:
       name: dist
       path: testopenbsd.txt
+      overwrite: true
 
 # openbsd arm64 --------------------------------------------------------
 # too slow, comment out   script/testga.sh openbsd || exit 1
@@ -506,6 +513,7 @@ jobs:
      with:
       name: dist
       path: testopenbsdarm64.txt
+      overwrite: true
 
 # freebsd --------------------------------------------------------------
  jefreebsd:
@@ -573,6 +581,7 @@ jobs:
      with:
       name: dist
       path: testfreebsd.txt
+      overwrite: true
 
 # freebsd --------------------------------------------------------------
  jefreebsd2:
@@ -641,6 +650,7 @@ jobs:
      with:
       name: dist
       path: testfreebsd.txt
+      overwrite: true
 
 # freebsdarm64  --------------------------------------------------------------
  jefreebsdarm64:
@@ -709,6 +719,7 @@ jobs:
      with:
       name: dist
       path: testfreebsdarm64.txt
+      overwrite: true
 
 # android --------------------------------------------------------------
  jeandroid:
@@ -813,8 +824,9 @@ jobs:
    - name: Copy Test (Windows)
      uses: actions/upload-artifact@v4
      with:
-       name: dist
-       path: testwin.txt
+      name: dist
+      path: testwin.txt
+      overwrite: true
 
 # windows --------------------------------------------------------------
  jewin32:
@@ -855,8 +867,9 @@ jobs:
    - name: Copy Test (Windows 32)
      uses: actions/upload-artifact@v4
      with:
-       name: dist
-       path: testwin32.txt
+      name: dist
+      path: testwin32.txt
+      overwrite: true
 
 # get tests ------------------------------------------------------------
  tests:

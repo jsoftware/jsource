@@ -255,61 +255,66 @@ _1022 _1023 -: >.!.(2e_11)@(2&^.) +&1e_318 1e_319 ] 2 ^ _1023
 _1022 _1022 -: >.!.0@(2&^.) +&1e_318 1e_319 ] 2 ^ _1023
 _1069 _1070 -: >.@(2&^.) +&1e_323 0 ] 2 ^ _1070
 
-NB. Alternative forms of <.@(2&^.) and >.@(2&^.)
-b =: 2
-t =: 1024 - 2^_32
+NB. Alternative forms of <.@(2&^.) and >.@(2&^.)  This tests recognition of the forms, which are recognized when b is integer 2 and not when float
+{{
+for_bx. 2.;2 do.
+t =. 1024 - 2^_32  NB. point between the rounding thresholds for <. and <.@(2&^.)
+b =. > bx
 
 NB. <.[!.f]@:(2&^.) y
-9 -: <.@:(b&^.) t
-9 -: <.!.(1e_13)@:(b&^.) t
+assert. (10 - bx_index) -: <.@:(b&^.) t
+assert. (10 - bx_index) -: <.!.(1e_13)@:(b&^.) t
 NB. [: <.[!.f] (2&^.) y
-9 -: ([: <. (b&^.)) t
-9 -: ([: <.!.(1e_13) (b&^.)) t
+assert. (10 - bx_index) -: ([: <. (b&^.)) t
+assert. (10 - bx_index) -: ([: <.!.(1e_13) (b&^.)) t
 NB. [x] <.[!.f]@[:](2 ^. [) y
-9 -: <.@(b ^. [) t
-9 -: <.@:(b ^. [) t
-9 -: <.!.(1e_13)@(b ^. [) t
-9 -: <.!.(1e_13)@:(b ^. [) t
-9 -: t <.@(b ^. [) >. t
-9 -: t <.@:(b ^. [) >. t
-9 -: t <.!.(1e_13)@(b ^. [) >. t
-9 -: t <.!.(1e_13)@:(b ^. [) >. t
+assert. (10 - bx_index) -: <.@(b ^. [) t
+assert. (10 - bx_index) -: <.@:(b ^. [) t
+assert. (10 - bx_index) -: <.!.(1e_13)@(b ^. [) t
+assert. (10 - bx_index) -: <.!.(1e_13)@:(b ^. [) t
+assert. (10 - bx_index) -: t <.@(b ^. [) >. t
+assert. (10 - bx_index) -: t <.@:(b ^. [) >. t
+assert. (10 - bx_index) -: t <.!.(1e_13)@(b ^. [) >. t
+assert. (10 - bx_index) -: t <.!.(1e_13)@:(b ^. [) >. t
 NB. [x] <.[!.f]@[:](2 ^. ]) y
-9 -: <.@(b ^. ]) t
-9 -: <.@:(b ^. ]) t
-9 -: <.!.(1e_13)@(b ^. ]) t
-9 -: <.!.(1e_13)@:(b ^. ]) t
-9 -: (>. t) <.@(b ^. ]) t
-9 -: (>. t) <.@:(b ^. ]) t
-9 -: (>. t) <.!.(1e_13)@(b ^. ]) t
-9 -: (>. t) <.!.(1e_13)@:(b ^. ]) t
+assert. (10 - bx_index) -: <.@(b ^. ]) t
+assert. (10 - bx_index) -: <.@:(b ^. ]) t
+assert. (10 - bx_index) -: <.!.(1e_13)@(b ^. ]) t
+assert. (10 - bx_index) -: <.!.(1e_13)@:(b ^. ]) t
+assert. (10 - bx_index) -: (>. t) <.@(b ^. ]) t
+assert. (10 - bx_index) -: (>. t) <.@:(b ^. ]) t
+assert. (10 - bx_index) -: (>. t) <.!.(1e_13)@(b ^. ]) t
+assert. (10 - bx_index) -: (>. t) <.!.(1e_13)@:(b ^. ]) t
 
-t =: 1024 + 2^_32
+t =. 1024 + 2^_32  NB. point between the rounding thresholds for >. and >.@(2&^.)
 
 NB. >.[!.f]@:(2&^.) y
-11 -: >.@:(b&^.) t
-11 -: >.!.(1e_13)@:(b&^.) t
+assert. (10 + bx_index) -: >.@:(b&^.) t
+assert. (10 + bx_index) -: >.!.(1e_13)@:(b&^.) t
 NB. [: >.[!.f] (2&^.) y
-11 -: ([: >. (b&^.)) t
-11 -: ([: >.!.(1e_13) (b&^.)) t
+assert. (10 + bx_index) -: ([: >. (b&^.)) t
+assert. (10 + bx_index) -: ([: >.!.(1e_13) (b&^.)) t
 NB. [x] >.[!.f]@[:](2 ^. [) y
-11 -: >.@(b ^. [) t
-11 -: >.@:(b ^. [) t
-11 -: >.!.(1e_13)@(b ^. [) t
-11 -: >.!.(1e_13)@:(b ^. [) t
-11 -: t >.@(b ^. [) <. t
-11 -: t >.@:(b ^. [) <. t
-11 -: t >.!.(1e_13)@(b ^. [) <. t
-11 -: t >.!.(1e_13)@:(b ^. [) <. t
+assert. (10 + bx_index) -: >.@(b ^. [) t
+assert. (10 + bx_index) -: >.@:(b ^. [) t
+assert. (10 + bx_index) -: >.!.(1e_13)@(b ^. [) t
+assert. (10 + bx_index) -: >.!.(1e_13)@:(b ^. [) t
+assert. (10 + bx_index) -: t >.@(b ^. [) <. t
+assert. (10 + bx_index) -: t >.@:(b ^. [) <. t
+assert. (10 + bx_index) -: t >.!.(1e_13)@(b ^. [) <. t
+assert. (10 + bx_index) -: t >.!.(1e_13)@:(b ^. [) <. t
 NB. [x] >.[!.f]@[:](2 ^. ]) y
-11 -: >.@(b ^. ]) t
-11 -: >.@:(b ^. ]) t
-11 -: >.!.(1e_13)@(b ^. ]) t
-11 -: >.!.(1e_13)@:(b ^. ]) t
-11 -: (<. t) >.@(b ^. ]) t
-11 -: (<. t) >.@:(b ^. ]) t
-11 -: (<. t) >.!.(1e_13)@(b ^. ]) t
-11 -: (<. t) >.!.(1e_13)@:(b ^. ]) t
+assert. (10 + bx_index) -: >.@(b ^. ]) t
+assert. (10 + bx_index) -: >.@:(b ^. ]) t
+assert. (10 + bx_index) -: >.!.(1e_13)@(b ^. ]) t
+assert. (10 + bx_index) -: >.!.(1e_13)@:(b ^. ]) t
+assert. (10 + bx_index) -: (<. t) >.@(b ^. ]) t
+assert. (10 + bx_index) -: (<. t) >.@:(b ^. ]) t
+assert. (10 + bx_index) -: (<. t) >.!.(1e_13)@(b ^. ]) t
+assert. (10 + bx_index) -: (<. t) >.!.(1e_13)@:(b ^. ]) t
+end.
+1
+}} ''
 
 NB. 0^0 -----------------------------------------------------------------
 

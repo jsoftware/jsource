@@ -134,7 +134,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  B foldrunning;      // 1 if fold is running (allows Z:)
  UC jerr;             // error number (0 means no error)
  UC jerr1;            // last non-zero jerr
- C namecaching;     // 1=for script 2=on
+ C namecaching;     // 0=off 1=(either 2 or 4 set) 2=for script 4=on
  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
             // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval only to compare
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.

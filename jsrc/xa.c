@@ -50,10 +50,10 @@ F1(jtcts){D d;
 }
 
 // 9!:4 and 9!:5 name caching
-F1(jtnmcacheq){ASSERTMTV(w); R sc(jt->namecaching);}
+F1(jtnmcacheq){ASSERTMTV(w); R sc(jt->namecaching>>1);}
 F1(jtnmcaches){
- I arg=i0(w); RE(0); ASSERT(BETWEENC(arg,0,3),EVDOMAIN);  // arg must be 0, 1, or 2
- jt->namecaching|=(C)arg; if(arg==0)jt->namecaching=0; R mtv;  // save bits separately, clear if both 0, return empty vec
+ I arg=i0(w); RE(0); ASSERT(BETWEENO(arg,0,3),EVDOMAIN);  // arg must be 0, 1, or 2
+ jt->namecaching|=(C)((arg<<1)+!!arg); if(arg==0)jt->namecaching=0; R mtv;  // save bits separately, clear if both 0, return empty vec
 }
 
 F1(jtdispq){A z; ASSERTMTV(w); GATV0(z,INT,*JT(jt,disp),1); ICPY(AV(z),1+JT(jt,disp),*JT(jt,disp)); R z;}

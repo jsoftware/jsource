@@ -757,7 +757,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
      DQ(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
 
  */
-   // INT product is problematic, because it is used for many internal purposes, such as #. and indexing of { and m} .  For these uses,
+   // INT product is problematic, because it is used for many internal purposes, such as #., indexing of { and m}, and constants with a base.  For these uses,
    // one argument (usually w) has only one item, a list that is reused.  So, we check for that case; if found we go through faster code that just
    // performs vector inner products, accumulating in registers.  And we have multiple versions of that: one when the totals can't get close to
    // overflow, and other belt-and-suspenders variants for arbitrary inputs

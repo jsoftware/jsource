@@ -68,7 +68,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
   si=-1; tso=0;  // if locked, keep shtum about internals
  }
  // similarly for namecaching.  We push the per-script status and let the on/off status run independently
- C oldnmcachescript=jt->namecaching&1;  // save the per-script part of the status
+ C oldnmcachescript=jt->namecaching&2;  // save the per-script part of the status
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));   //  ************** no errors allowed till debz ******************
  d->dcpflags=(!(tso&&!JT(jt,seclev)))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
  J jtinplace=(J)((I)jt|d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
@@ -95,7 +95,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  }
   debz();   // *************** errors allowed now *********************
  jt->emsgstate&=se|~EMSGSTATETRAPPING;  // retore original TRAPPING status.  We only set it higher here
- jt->namecaching&=~1; jt->namecaching|=oldnmcachescript;  // pop the per-script part
+ jt->namecaching&=~(2+1); jt->namecaching|=oldnmcachescript; jt->namecaching|=!!jt->namecaching;  // pop the per-script part, reestablish LSB
  jt->glock=oldk; // pop lock status
  if(3==ce){z=num(jt->jerr==0); RESETERR; R z;}else RNE(mtm);
 }

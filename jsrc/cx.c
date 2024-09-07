@@ -643,12 +643,18 @@ dobblock:
 // obsolete    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
 // obsolete      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
 // obsolete    goto nextline;
-   goto checkbreak0;  // finish through break check & presumed bblock
+   goto checkbreak0;  // some of these may be backward branches; finish through break check & presumed bblock
 
-  default:   //   CELSE CWHILST CEND
+  case CELSE: case CWHILST:
+   // forward-only branches, no need to check JBREAK
+   ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to the next sentence, whatever it is
+   goto checkbblock;
+
+  default:   //   CEND
    ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to the next sentence, whatever it is
   checkbreak0: ;
    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);}      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
+  checkbblock: ;
    if(likely(FLAGGEDNOTRACE(tcesx)))goto dobblock;   // normal case, flagged so we know we are continuing with bblock.  No need to fetch it
    goto nextline;
 
@@ -1161,7 +1167,7 @@ static A compiledefn(J jt, A sw, A cw){A z;
  // Convert BBEND (END going to NSI) BB[END] to BBEND BBEND BB[END]
  // set 32 flag in
  //  if./while. followed by tblock
- //  else./elseif./whilst./end./case./fcase. where go is a bblock[end]
+ //  else./elseif./whilst./end./case./fcase. where go is a bblock[end] (for case./fcase., all but the first case)
  //  do. for if./while. where both NSI and go are bblock[end]
  //  for./select. followed by tblock 
  //  case./fcase with go=NSI, followed by tblock (first case)

@@ -72,7 +72,7 @@ const retPtr = Module._malloc(byteCount);
 Module.stringToUTF8(ret, retPtr, byteCount);
 return retPtr;
 })
-endif
+#endif
 
 // 2!:0
 DF1(jthost){A z;

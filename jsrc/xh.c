@@ -55,6 +55,25 @@ if(getCpuFeatures()&CPU_X86_FEATURE_AVX2)   R cstr("avx2");
 R cstr("");
 }
 
+//don't yet know how to do this for wasmer target
+#if HTML
+EM_JS(char *, execHost, (const char* ptr), {
+var cmd = Module.UTF8ToString(ptr);
+//console.log('code is: \n-----\n' + cmd + '\n--------');
+//catch errors and make sure we exit cleanly
+try {
+  var ret = eval(cmd) || " ";
+} catch (e) {
+  console.log(e);
+  var ret = "error";
+}
+const byteCount = (Module.lengthBytesUTF8(ret) + 1);
+const retPtr = Module._malloc(byteCount);
+Module.stringToUTF8(ret, retPtr, byteCount);
+return retPtr;
+})
+endif
+
 // 2!:0
 DF1(jthost){A z;
  ASSERT(!JT(jt,seclev),EVSECURE)
@@ -70,6 +89,15 @@ DF1(jthost){A z;
  const char*ftmp=getenv("TMPDIR");  /* android always define TMPDIR in jeload */
 #endif
  n=AN(w);
+#if HTML
+ GATV0(t,LIT,n,1); s=CAV(t);
+ MC(s,AV(w),n);
+ s[n]='\0';
+ char * ret = execHost(s);
+ //should this be unlinked?
+ unlink(s);
+ return cstr(ret);
+#endif
  GATV0(t,LIT,n+5+L_tmpnam+1,1); s=CAV(t);  // +1 for trailing nul
  fn=5+n+s; MC(s,AV(w),n);
  MC(n+s,"   > ",5L);

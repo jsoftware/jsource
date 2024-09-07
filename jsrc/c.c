@@ -14,7 +14,8 @@ static DF2(obv2){PREF2(obv2cell); R obv2cell(jt,a,w,self);}
 // Set ASGSAFE from a&w; set INPLACE from a
 F2(jtobverse){F2PREFIP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)+(FAV(a)->flag&(VJTFLGOK1|VJTFLGOK2))),mr(a),lr(a),rr(a));}
 
-// Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun)
+// Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun).  Bivalent  a,w,self or w,self,self
+#if 0   // obsolete 
 static DF1(ad1){DECLFG;A z;
  ARGCHK1(w); A *old=jt->tnextpushp;
  WITHDEBUGOFF(z=CALL1(f1,  w,fs);)
@@ -26,19 +27,21 @@ static DF1(ad1){DECLFG;A z;
  tpop(old);  // the error exit leaves the stack unpopped
  R AT(gs)&NOUN?gs:CALL1(g1,  w,gs);
 }
+#endif
 
-static DF2(ad2){DECLFG;A z;
+static DF2(ad12){A z;
  ARGCHK2(a,w); A *old=jt->tnextpushp;
- WITHDEBUGOFF(z=CALL2(f2,a,w,fs);)
+ A childself=FAV(self)->fgh[0]; I dyad=!!(AT(w)&NOUN); w=dyad?w:childself;  // Set w for bivalent call 
+ WITHDEBUGOFF(z=CALL2(FAV(childself)->valencefns[dyad],a,w,childself);)
  if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.
  if(unlikely(jt->jerr==EVEXIT))R 0;  // EXIT is never caught
  if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN  // if the error was ATTN/BREAK, clear the source of the error
  RESETERR;
  if(likely(z))RETF(z);  // normal return
  tpop(old);  // the error exit leaves the stack unpopped
- R AT(gs)&NOUN?gs:CALL2(g2,a,w,gs);
+ childself=FAV(self)->fgh[1];  w=dyad?w:childself; R AT(childself)&NOUN?childself:CALL2(FAV(childself)->valencefns[dyad],a,dyad?w:childself,childself);
 }
 
 // Set ASGSAFE from operands.  Noun operand is always safe
-F2(jtadverse){F2PREFIP;ASSERTVVn(a,w); R fdef(0L,CADVERSE,VERB,ad1,ad2,a,w ,0L,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
+F2(jtadverse){F2PREFIP;ASSERTVVn(a,w); R fdef(0L,CADVERSE,VERB,ad12,ad12,a,w ,0L,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
 

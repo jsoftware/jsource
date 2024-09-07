@@ -534,6 +534,7 @@ dobblock:
     // We allow verbose messages in case the catch. wants to display them.  This is different from u :: v
     ++tdv; NPGpysfmtdl|=4;  // bump tdv pointer, install index of next entry, set flag
     --ic;  // continue with NSI
+    if(likely(FLAGGEDNOTRACE(tcesx)))goto dobblock;   // normal case, flagged so we know we are continuing with bblock.  No need to fetch it
    }
    goto nextline;
   case CCATCH: case CCATCHD: case CCATCHT:
@@ -639,14 +640,15 @@ dobblock:
    cv=forpopgoto(jt,cv,ic,1);   // if the branch takes us outside a control structure, pop the for/select stack
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(unlikely(NPGpysfmtdl&4)){tdv=trypopgoto(jt,tdv,ic); NPGpysfmtdl^=tdv->ndx?0:4;}
-   if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
-     // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
-   goto nextline;
+// obsolete    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
+// obsolete      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
+// obsolete    goto nextline;
+   goto checkbreak0;  // finish through break check & presumed bblock
 
   default:   //   CELSE CWHILST CEND
    ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to the next sentence, whatever it is
-   if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
-     // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
+  checkbreak0: ;
+   if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);}      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
    if(likely(FLAGGEDNOTRACE(tcesx)))goto dobblock;   // normal case, flagged so we know we are continuing with bblock.  No need to fetch it
    goto nextline;
 
@@ -1116,6 +1118,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
      // The ) was matched and the () can be processed.
      // See if the () block was a (( )) block.  If it is, we will execute it even if it contains verbs
      I doublep = (rparx+1<endx) && (AT(QCWORD(lvv[rparx+1]))==RPAR) && (startx>0) && (AT(QCWORD(lvv[startx-1]))==LPAR);  // is (( ))?
+     I parseok=doublep;  // indic OK to run parse
      if(doublep){--startx, ++rparx;  // (( )), expand the look to include outer ()
      }else{
       // Not (( )).  We have to make sure no verbs in the fragment will be executed.  They might have side effects, such as increased space usage.
@@ -1123,9 +1126,9 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
       if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
       DO(rparx-startx-1, fragv[i]=AT(QCWORD(lvv[startx+i+1]))&VERB?QCINSTALLTYPE(ds(CCAP),QCVERB):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
       // parse the temp for error, which will usually be an attempt to execute a verb
-      WITHMSGSOFF(parsea(fragv,rparx-startx-1);)    // trial parse, no msg formatting needed
+      WITHMSGSOFF(parseok=(I)parsea(fragv,rparx-startx-1);)    // trial parse, no msg formatting needed.   Remember if it was OK
      }
-     if(jt->jerr==0){
+     if(parseok){
       // no error: parse the actual () block, which should not fail
       // mark the block as PPPP if it will need extra parens: (( )) or noun or non-noun & not invisible modifier, which always has ( ) added
       A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1)); makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
@@ -1163,12 +1166,13 @@ static A compiledefn(J jt, A sw, A cw){A z;
  //  for./select. followed by tblock 
  //  case./fcase with go=NSI, followed by tblock (first case)
  //  end. for select. or do. for for.   followed by bblock
- // could have others, for break./continue. etc.
+ //  goto./break./continue. where go is bblock[end]
+ //  try. where NSI is bblock
 #define CWMB(x) ((I)1<<(x))
 #define CWIS1(msk,x) ((msk)>>(((x)>>TCESXTYPEX)&31))
 #define CWFLGNSITBLOCK (CWMB(CIF)+CWMB(CWHILE)+CWMB(CFOR)+CWMB(CSELECT)+CWMB(CSELECTN))
-#define CWFLGNSIBBLOCK (CWMB(CENDSEL)+CWMB(CDOF))
-#define CWFLGGOBBLOCK (CWMB(CELSE)+CWMB(CELSEIF)+CWMB(CWHILST)+CWMB(CEND)+CWMB(CCASE)+CWMB(CFCASE))
+#define CWFLGNSIBBLOCK (CWMB(CENDSEL)+CWMB(CDOF)+CWMB(CTRY))
+#define CWFLGGOBBLOCK (CWMB(CELSE)+CWMB(CELSEIF)+CWMB(CWHILST)+CWMB(CEND)+CWMB(CCASE)+CWMB(CFCASE)+CWMB(CGOTO)+CWMB(CBREAKS)+CWMB(CBREAK)+CWMB(CCONT)+CWMB(CBREAKF)+CWMB(CCONTS)+CWMB(CRETURN))
 #define CWFLGNSIGOBBLOCK (CWMB(CDO))
 #define CWFLGGOEQNSITBLOCK (CWMB(CCASE)+CWMB(CFCASE))
  UI4 prevt=0;

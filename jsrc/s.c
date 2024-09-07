@@ -771,8 +771,8 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  I xaf;  // holder for nvr/free flags
  {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x
  e->sn=jt->currslistx;  // Save the script in which this name was defined
- if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
  ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only name (xxx_index), fail
+ if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
 
  if(likely(!(AFNJA&xaf))){
   // Normal case of non-memory-mapped assignment.

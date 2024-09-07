@@ -304,8 +304,8 @@ A jteformat(J jt,A self,A a,A w,A m){
 A jtjsignale(J jt,I eflg,A line,I info){
  // if a message has already been stored, ignore any subsequent one
  if(jt->jerr==0){
-  C e=eflg&EMSGE; jt->jerr=e;   // extract error# & save it.  Even if eformat is running we need to set the error to cut off invalid internal paths
-  if(!(jt->emsgstate&EMSGSTATEFORMATTED)){   // if not first error or formatting the line is in progress, ignore: clear error-name and continue
+  if(!(jt->emsgstate&EMSGSTATEFORMATTED)){   // if not first error or formatting the line is in progress, ignore altogether.  Also used when we expect an error and don't need jt->jerr set
+   C e=eflg&EMSGE; jt->jerr=e;   // extract error# & save it.  Even if eformat is running we need to set the error to cut off invalid internal paths
    jt->jerr1=e;   // remember error for later user testing
    if(jt->etxn>=0){  // if the error line is frozen, don't touch it
     jt->etxn=0;  // clear error-message area indicating message not installed yet
@@ -354,10 +354,10 @@ A jtjsignale(J jt,I eflg,A line,I info){
     }
     jt->etxn1=jt->etxn;  // save length of finished message
    }
+   // if this error was forwarded from a pyx or 13!:8, we can't eformat it - we have no self/arguments.  Set that we have tried formatting already to suppress further formatting
+   if(unlikely(eflg&EMSGNOEFORMAT))jt->emsgstate|=EMSGSTATEFORMATTED;
   }
  }
- // if this error was forwarded from a pyx or 13!:8, we can't eformat it - we have no self/arguments.  Set that we have tried formatting already to suppress further formatting
- if(eflg&EMSGNOEFORMAT)jt->emsgstate|=EMSGSTATEFORMATTED;
  R 0;
 }
 

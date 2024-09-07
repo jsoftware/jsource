@@ -127,7 +127,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define EMSGSTATEPARENPOSR (4<<EMSGSTATEPARENX)  // location of extra paren: to right or exactly at the error
 #define EMSGSTATETRAPPINGX 6  // set if we are in a trapping construct, u :: v or try.
 #define EMSGSTATETRAPPING (1<<EMSGSTATETRAPPINGX)
-#define EMSGSTATEFORMATTED 0x80  // line has been through eformat - do not call again until errors reset
+#define EMSGSTATEFORMATTED 0x80  // line has been through eformat - do not call again until errors reset.  This is the fastest way to turn off all error detection and remembrance
  I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line
  S etxn1;            // last non-zero etxn

@@ -2225,10 +2225,10 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
 #define PUSHNOMSGS C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATEFORMATTED;  // turn off message formatting by pretending we've already done it
 #define POPMSGS jt->emsgstate=_e;  // restore previous state
-#define WITHMSGSOFF(stmt) {PUSHNOMSGS stmt POPMSGS}  // execute stmt with msgs off
+#define WITHMSGSOFF(stmt) {PUSHNOMSGS stmt POPMSGS}  // execute stmt with msgs off - we don't even set jt->jerr.  Use only around internal functions
 #define MAYBEWITHDEBUG(dbg,jt,stmt) if(dbg){stmt}else{UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
  C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
- stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end
+ stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
 #define WITHDEBUGOFF(stmt) MAYBEWITHDEBUG(0,jt,stmt)
 #define WITHEFORMATDEFERRED(stmt) {WITHDEBUGOFF(stmt) if(unlikely(jt->jerr!=0)){UC _d=jt->jerr; RESETERR ASSERT(0,_d)}}  // execute stmt with debug/eformat turned off; at end, if there is an error, re-signal it
 // If the abandoned value we want to ra is likely the last thing on the tstack, look to see if it is.  If so, just back up the tstack (if that backs over to the chain field, that will never match

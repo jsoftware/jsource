@@ -110,8 +110,8 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
 
 // self blocks to pass into every and thence into jtfx.  AK holds the parm into jtfx
 PRIM jtfxself[2]={
-{{0,0,0,0,0,0,0},{{.valencefns={jtfx,0},.fgh={0,0,0},.localuse=0,.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lc=0}}} ,
-{{1,0,0,0,0,0,0},{{.valencefns={jtfx,0},.fgh={0,0,0},.localuse=0,.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lc=0}}}
+{{0,0,0,0,0,0,0},{{.valencefns={jtfx,0},.fgh={0,0,0},.localuse=0,.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lu2.lc=0}}} ,
+{{1,0,0,0,0,0,0},{{.valencefns={jtfx,0},.fgh={0,0,0},.localuse=0,.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lu2.lc=0}}}
 };
 
 // run jtfx on each box in w, turning AR into an A block

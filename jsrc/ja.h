@@ -240,6 +240,8 @@
 #define detz(x)                     jtdetz(jt,(x))
 #define df1(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])((J)((I)jt|(AT(r)&(ADV|CONJ)?JTXDEFMODIFIER:0)),(x),r,r):r))  // y is self; if not 0, execute (x,self,self).  Put result into r, set r 0 if self=0.
                                               //  r must not = x.  self is evaluated only once.  If we call a modifier, set that flag
+#define dfv1(r,x,y)                 (r=((r=(y))?(FAV(r)->valencefns[0])(jt,(x),r,r):r))  // z is self, always a verb
+                                              //  r must not = x.  self is evaluated only once.  If we call a modifier, set that flag
 #define dfv2(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])(jt,(x),(y),r):r))  // z is self, always a verb  Put result into r, set r 0 if self=0.  r must not = x or y.  self is evaluated only once
 #define df2(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])((J)((I)jt|(AT(r)&(ADV|CONJ)?JTXDEFMODIFIER:0)),(x),(y),r):r))  // z is self; if not 0, execute self on x and y.  Put result into r, set r 0 if self=0.  r must not = x or y.  self is evaluated only once
 #define df1ip(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])((J)(((I)jtinplace&~JTXDEFMODIFIER)|(AT(r)&(ADV|CONJ)?JTXDEFMODIFIER:0)),(x),r,r):r))

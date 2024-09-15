@@ -135,10 +135,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  UC jerr;             // error number (0 means no error)
  UC jerr1;            // last non-zero jerr
  C namecaching;     // 0=off 1=(either 2 or 4 set) 2=for script 4=on
- A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
-            // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval only to compare
-            // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
  A xmod;             // extended integer: the m in m&|@f
+ struct foldstatus *afoldinfo;  // nonzero if fold is running, and points to current fold info 
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  C initnon0area[0];
  void* fillv;            // &fill value, during primitive execution - used during parsing to hold pointer to routine to execute - init immaterial
@@ -207,7 +205,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I memballo[-PMINL+PLIML+1];              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
  A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
  UI cstackmin;        // red warning for C stack pointer
- I filler4[1];
+ A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
+            // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval only to compare
+            // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
 // end of cacheline 4
 
  C _cl5[0];
@@ -395,14 +395,16 @@ typedef struct JSTstruct {
 // end of cacheline 5
 
 // Cacheline 6: debug, which is written so seldom that it can have read-only data
+// BUT: fnasgnct is read frequently by every core and modified fairly often, so nothing else
+// of importance should go here since it might have to wait for a false share
  C _cl6[0];
  A dbstops;          /* stops set by the user                           */
  A dbtrap;           // trap sentence, execute when going into suspension
+ I4 fnasgnct;        // number of assignments to ACV, change to locale path, etc.  Lookups of ACVs are cached and
+                     // reused as long as one of these cache-invalidating actions has happened.
  S dblock;           // lock on dbstops/dbtrap
  // rest of cacheline is essentially read-only
- FLOAT16 igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
- FLOAT16 dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
- FLOAT16 zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
+ // 2 bytes free
  A evm;              // message text for the EVxxx codes
  I (*emptylocale)[MAXTHREADS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per task, because they are modified
  I filler6[3];
@@ -418,11 +420,15 @@ typedef struct JSTstruct {
  US cachesizes[3];  // [0]: size of fastest cache  [1]: size of largest cache private to each core  [2]: size of largest cache shared by all cores, in multiples of 4KB
  C bx[11];               /* box drawing characters                          */
  UC disp[7];          // # different verb displays, followed by list thereof in order of display  could be 15 bits
+ FLOAT16 igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
+ FLOAT16 dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
+ FLOAT16 zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
+//  2 bytes free
 #if PYXES || 1
  JOBQ (*jobqueue)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
- I filler7[2];
+ I filler7[1];
 #else
- I filler7[3];
+ I filler7[2];
 #endif
 // end of cacheline 7
  C _cl8[0];

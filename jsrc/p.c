@@ -139,9 +139,9 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 [RPARX-LASTNOUNX] = PTRPAR,  // PR
 // the LOCAL and ASGNTONAME flags are passed into PT.  They can cause line 6 to be matched when stack[2] is ASGN 
 [QCASGN-1] = 0xC900807F,
-[QCASGN+QCASGNISLOCAL-1] = 0xC940807F,
+[QCASGN+QCASGNISLOCAL-1] = 0xC940807F,  // this has PTASGNLOCAL set
 [QCASGN+QCASGNISTONAME-1] = 0xC800807F,
-[QCASGN+QCASGNISLOCAL+QCASGNISTONAME-1] = 0xC840807F
+[QCASGN+QCASGNISLOCAL+QCASGNISTONAME-1] = 0xC840807F  // this has PTASGNLOCAL set
 };
 
 // tests for pt types

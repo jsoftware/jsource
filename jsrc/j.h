@@ -1489,7 +1489,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // compare names.  We assume the names are usually short & avoid subroutine call, which ties up registers.  Names are overfetched
 #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len))){ \
          if((len)<=5){stmt}  /*  len 5 or less, hash is enough */ \
-         else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL do{lzz-=SZI; I t=*(I*)(c0+lzz)^*(I*)(c1+lzz); if(t&(~0<<(REPSGN(lzz)&-lzz)))break;}while(lzz>0); \
+         else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL do{lzz-=SZI; I t=*(I*)(c0+lzz)^*(I*)(c1+lzz); if(t>>(REPSGN(lzz)&(BW-(lzz<<LGBB))))break;}while(lzz>0); \
           if(likely(lzz<=0)){stmt} \
          } \
         }
@@ -1538,7 +1538,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtinplace,a,w,fs,l,r,f2,z)
 // no longer used #define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
-#define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lc=FAV(ds(cxx))->lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
+#define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
 // memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args.  l may be 0
 // if bytelen is 1, the arg may be of any length; if 0, will be lengthened to be a multiple of Is; full words only are moved

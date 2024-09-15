@@ -618,6 +618,26 @@ l =. 1000 + i. 100
 r =: 1e6 ?@$ 0
 (7!:2 'l f0 r') < 0.5 * (7!:2 'l f0 r')
 
+
+
+fp=: ([ C."1 C.) :. ([ C.^:_1"1 C.^:_1)
+
+tmonad=: 2 : 0
+  '`vgety vgeto'=. n
+  argy=. vgety y
+  t=. timex 'ret=. ' , m , ' argy'
+  NB. this line crashes JE
+  out=. vgeto ret
+  42
+)
+
+testhetrf=: 3 : 0
+  calcA=: fp^:_1
+  log=. (']' tmonad ((1&{::)`calcA)) 1 ;< 1;2;3
+1
+)
+testhetrf''
+
 NB. PPPP
 4!:55 ;:'f0 f1 f3'
 f0 =. 1000
@@ -649,7 +669,7 @@ f0 =. {{ (u. f. b. 0) }}   NB. u. does not invoke PPPP
 9!:41(1)
 }}
 
-4!:55 ;:'f0 f1 f2 f3 g0 g1 g1__ g2 g3 g4 g5 gvb l numloc1 numloc2 r test vb__ vb_z_'
+4!:55 ;:'calcA f0 f1 f2 f3 fp g0 g1 g1__ g2 g3 g4 g5 gvb l numloc1 numloc2 r test tmonad testhetrf vb__ vb_z_'
 
 
 

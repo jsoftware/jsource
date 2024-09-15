@@ -498,15 +498,16 @@ DF1(jtcompsum){
   DQ(m, D *wv0; DQ(d, wv0=wv; D acc=0.0; D c=0.0; DQ(n, y=*wv0-c; t=acc+y; acc=t-acc; c=acc-y; acc=t; wv0+=d;) *zv++=acc; ++wv;) wv=wv0-(d-1); )
  }
 #endif
- if(unlikely(NANTEST))R reduce(w,FAV(self)->fgh[0]);  // in NaN error, fail over to normal summation.  Infinities can cause it.  Ranks still set
+ if(unlikely(NANTEST))R reduce(w,FAV(self)->fgh[0]);  // if NaN error, fail over to normal summation.  Infinities can cause it.  Ranks still set
 
  RETF(z);
 }
 
-static DF1(jtred0){DECLF;A x,z;I f,r,wr,*s;
+// w is an array with 0 items, self is f, result is frame $ ,: identity-verb cell-shape $ atom-of-type
+static DF1(jtred0){A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
- if(likely(!ISSPARSE(AT(w)))){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
- R reitem(vec(INT,f,s),lamin1(df1(z,x,(AT(w)&SBT)?idensb(fs):iden(fs))));
+ if(likely(!ISSPARSE(AT(w)))){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}  // x exists only for type and shape
+ R reitem(vec(INT,f,s),lamin1(df1(z,x,(AT(w)&SBT)?idensb(self):iden(self))));
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
@@ -717,7 +718,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
  g=VAV(self)->fgh[0];  // g is the f in f/
- if(!n)R red0(w,self);  // red0 uses ranks, and resets them
+ if(!n)R red0(w,g);  // red0 uses ranks, and resets them
  C id; if(AT(g)&VERB){id=FAV(g)->id; id=FAV(g)->flag&VISATOMIC2?id:0;}else id=0;
  VARPS adocv; varps(adocv,self,wt,0);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
@@ -835,7 +836,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
 
  if(unlikely(n<=2)){
   if(unlikely(n==1))R head(w);   // 1 item: the result is the item.  Rank is still set
-  if(unlikely(n==0))R red0(w,self);  // 0 item: return a neutral
+  if(unlikely(n==0))R red0(w,FAV(self)->fgh[0]);  // 0 item: return a neutral using shape and rank.  Rank is still set
   if(unlikely(r==1))if(likely(wt&B01+LIT+INT+FL+SBT+C2T+C4T)){  // 2 items: special processing only if the operation is on rank 1: then we avoid loop overheads
    C id=FAV(FAV(self)->fgh[0])->id; 
    if(unlikely(BETWEENC(id,CSTARCO,CMAX))){  // only boolean results are supported
@@ -1047,7 +1048,7 @@ static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplace
  I foldflag=((~AT(w))>>(VERBX-3))&8;  // flags: dyad mult fwd rev  if w is not conj, this must be a dyad call
  self=foldflag?self:w; w=foldflag?w:a; a=foldflag?a:mtv; // if monad, it's w self garbage,  move to '' w self
  // get the rest of the flags from the original ID byte, which was moved to lc
- foldflag|=FAV(self)->lc-CFDOT;  // this sets mult fwd rev
+ foldflag|=FAV(self)->lu2.lc-CFDOT;  // this sets mult fwd rev
  // define the flags as the special global
  RZ(jtsymbis((J)((I)jt|JTFINALASGN),nfs(11,"Foldtype_j_"),sc(foldflag),jt->locsyms));
  // execute the Fold.  While it is running, set the flag to allow Z:
@@ -1060,6 +1061,7 @@ static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplace
 // u F. F.. F.: F: F:. F:: v
 DF2(jtfold){F2PREFIP;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
+ ASSERTVV(a,w)   // nouns not allowed
  A foldconj; ASSERT(foldconj=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","Foldr_j_",CONJ),EVNONCE);
  A derivvb; RZ(derivvb=jtunquote((J)((I)jt|JTXDEFMODIFIER),a,w,foldconj));
  // If the returned verb has VXOPCALL set, that means we are in debug and a namerefop has been interposed for Foldr_j_.  We don't want that - get the real verb
@@ -1068,7 +1070,7 @@ DF2(jtfold){F2PREFIP;
  FAV(derivvb)->localuse.lu1.foldfn=FAV(derivvb)->valencefns[1];
  FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtfoldx;
  // Tell the stub what the original fold type was
- FAV(derivvb)->lc=FAV(self)->id;
+ FAV(derivvb)->lu2.lc=FAV(self)->id;
  // For display purposes, give the fold the spelling of the original
  FAV(derivvb)->id=FAV(self)->id;
  R derivvb;
@@ -1087,28 +1089,40 @@ DF2(jtfoldZ){
 
 #if 0
  // execute fold on input arguments, creating a derived verb to do the work
+#define STATEREVX 16   // reverse fold
+#define STATEREV ((I)1<<STATEREVX)
+#define STATEFWDX 17   // forward fold
+#define STATEFWD ((I)1<<STATEFWDX)
+#define STATEMULTX 18   // multiple fold
+#define STATEMULT ((I)1<<STATEMULTX)
+#define STATEDYADX 19   // call is dyadic.  Must be the MSB of the flags
+#define STATEDYAD ((I)1<<STATEDYADX)
 static DF2(jtfoldx){F2PREFIP;A z;
- struct foldstatus {
-  I nvstarts;  // #times v has started
-  I nustarts;  // #times u has started
-  I nvalues;  // # values added to result
-  I4 status;   // flags: 1=suppress output 2=stop after this iteration
-  I4 zstatus;   // nonzero if Z: was applied, with bit flags 0-4 = z: codes _3..1
- } foldinfo={0,0,0,0};  // fold status shared between F: and Z:
+ struct foldstatus foldinfo={0,0,0,0};  // fold status shared between F: and Z:
  ARGCHK2(a,w);
  I dyad=!!(AT(w)&NOUN); self=dyad?self:w; w=dyad?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
- I dmfr=8*dyad+FAV(self)->lc-CFDOT;  // operation flags: dyad mult fwd rev
+#define ZZFLAGWORD dmfr
+ I dmfr=ZZFLAGINITSTATE+((8*dyad+FAV(self)->lu2.lc-CFDOT)<<STATEREVX);  // init flags, including zz flags
  struct foldstatus *stkfoldinfo=jt->afoldinfo; jt->afoldinfo=&foldinfo;  // push fold status, init to zeros
- if(dmfr&2+1){
+ if(dmfr&STATEFWD+STATEREV){
   // fwd/reverse fold
-  I nitems; SETIC(w,nitems); nitems+=dmfr>>3;  // # items including x if given
+  I nitems; SETIC(w,nitems); nitems+=dmfr>>STATEDYADX;  // # items including x if given
   if(unlikely(nitems<2)){  // < 2 items
    // < 2 items total.  We can't run v on items of input.
+   // Create the cell to run u on: one given argument or a cell of fills
+   if(dmfr&STATEDYAD){
    if(nitems==1){
     // 1 item.  Could come from x (if y is empty) or y.  Apply u to it, to give the final result
-
+    dfv1(z,dmfr&STATEDYAD?a:head(w),uself)
+    if(unlikely(z==0))goto errfinish;
+check foldinfo.zstatus
    }else{
-    // 0 items.  Create a neutral for v., and apply u. to it
+    // 0 items (necessarily monadic).  Create a neutral for v from an item of y, and apply u to it
+    A fillcell=jtred0(jt,a,vself);  // an item of y, as a cell of fills
+    if(unlikely(z==0))goto errfinish;
+    dfv1(z,fillcell,uself)
+    if(unlikely(z==0))goto errfinish;
+check foldinfo.zstatus
    }
   }else{
    // At least 2 items.  Run the fold loop.
@@ -1120,6 +1134,8 @@ static DF2(jtfoldx){F2PREFIP;A z;
 
  jt->afoldinfo=stkfoldinfo;
 }
+
+
 FoldZv_j_ =: 00 0 0 0  NB. isfold, (#times v has started),(#times u has started),(# values added to result)
 NB. Fold.  Foldtype_j_ is set by caller
 Foldr_j_ =: 2 : 0

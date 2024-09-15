@@ -314,10 +314,12 @@ A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[buc
 // a is A for name; result is addr/0/flags for name (i. e. QCGLOBAL semantics), or 0 if not found
 // If the value is empty, return 0 for not found
 // Take no locks because local
+// Use buckets if present: was are called only if buckets will be valid, i. e. 
 A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
  if(likely((b = u->bucket)!=0)){
+#if 0 // obsolete 
   L *sympv=SYMORIGIN;  // base of symbol array
   // we don't check for primary symbol index because that is normally picked up in parsea; when called to verify no local name we expect the index to be 0 anyway
   if(0 > (bx = ~u->bucketx)){
@@ -340,7 +342,10 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    if(unlikely(bx>0)){NOUNROLL do{l = l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
    R (A)((I)l->val+l->valtype);
   }
- } else {
+#else
+  R probelocalbuckets(SYMORIGIN,a,LXAV0(locsyms)[b],u->bucketx);  // look up using bucket info
+#endif
+ }else{
   // No bucket information, do full search.  This includes names that don't come straight from words in an explicit definition
   R jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms);
  }
@@ -525,11 +530,11 @@ A jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){A val;
   // If there is a local symbol table, search it first
-  if(val=probelocal(a,locsyms)){rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCGLOBAL semantics
+  if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCGLOBAL semantics
   g=jt->global;  // Continue with the current locale
  }else{A val;  // locative
   RZ(g=sybaseloc(a));  // find the starting locale for the name lookup
-  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=probelocal(a,g)){rapos(QCWORD(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
+  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){rapos(QCWORD(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
  }
  A res=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
  if(likely(res!=0))res=SETGLOBAL(res);  // mark found in global, if found
@@ -540,7 +545,7 @@ A jtsyrdforlocale(J jt,A a){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first
-  if(probelocal(a,jt->locsyms)){R jt->locsyms;}  // return flagging the result if local
+  if(jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){R jt->locsyms;}  // return flagging the result if local
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));
  R jtsyrd1forlocale((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
@@ -730,7 +735,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
    I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(AR(jt->locsyms),ARNAMEADDEDX));   // 0 if bucketx positive (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
    localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def); now non0 if valid & known to have no assignment
-   ASSERTSUFF(localnexist||!probelocal(a,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
+   ASSERTSUFF(localnexist||!jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
  }
  RZ(g)  // g has the locale we are writing to

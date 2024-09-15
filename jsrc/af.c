@@ -44,7 +44,7 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
   if(AT(thisname)&NOUN)R 0;   // if noun~, leave as is
   NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
   if(!(thisnameinfo->flag&NMIMPLOC))R 0; // not NMDOT
-  if(!(probelocal(thisname,jt->locsyms)))R 0;  // assigned value does not exist
+  if(!(jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)))R 0;  // assigned value does not exist
   R 1;
  case CATDOT:
  case CGRCO:
@@ -141,7 +141,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
     if(thisname){ // name given
      NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
      if(thisnameinfo->flag&NMIMPLOC){     //  implicit locative
-      if((probelocal(thisname,jt->locsyms))){  // name is defined
+      if((jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms))){  // name is defined
        // If our ONLY mission is to replace implicit locatives, we are finished after replacing this locative IF
        // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement
        if(aif&FIXALOCSONLYLOWEST)R x;  // return looked-up value once we hit one

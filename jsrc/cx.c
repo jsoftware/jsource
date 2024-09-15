@@ -982,7 +982,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
     s=CAV(t);   // s->1st character; remember if it is `
     if(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t)){I kk;  // convert to words (discarding leading ` if present)
      I wdsn=AN(wds); A *wdsv = AAV(wds), wnm;
-     for(kk=0;kk<wdsn;++kk) {
+     for(kk=0;kk<wdsn;++kk) {  // Process each word in string
       // Convert word to NAME; if local name, add to symbol table
       if((wnm=onm(wdsv[kk]))) {
        if(!(NAV(wnm)->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeisres(wnm,pfst)); AT(nml->name)&=~NAMEABANDON;}  // see above

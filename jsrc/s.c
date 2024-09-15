@@ -741,7 +741,8 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  RZ(g)  // g has the locale we are writing to
  I valtype=ATYPETOVALTYPE(wt);  // value to install.  It will have QCGLOBAL semantics
 
- if(unlikely((wt&NOUN)==0)){
+ if(unlikely((wt&NOUN)==0)){  // writing to ACV
+  ACVCACHECLEAR; // invalidate all previous ACV lookups
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS
   // NOTE that the value may be in use elsewhere; may even be a primitive.
 

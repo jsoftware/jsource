@@ -1328,8 +1328,10 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // gives errors in some versions #define ALLOBLOCK(n) MAX(PMINL-1,(31-__builtin_clzl((UI4)(n))))    // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
+#define ACVCACHECLEAR __atomic_fetch_add(&JT(jt,fnasgnct),1,__ATOMIC_ACQ_REL)  // incr the cache counter for ACVs
+#define ACVCACHEREAD __atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE)  // read the current cache counter
 // Support for int-to-float, in parallel.  Input is u, 64-bit int with a type of float; result is 64-bit floats.  Define DECLS first.
-// we use initecho() to initialize zero and oned because the compiler moves the initialization to inside the loop
+// we use initecho() to initialize zero and one because the compiler moves the initialization to inside the loop
 #define CVTEPI64DECLS  __m256i magic_i_lo = _mm256_castpd_si256(_mm256_broadcast_sd(&two_52)); /* 2^52 */ \
       __m256i magic_i_hi32 = _mm256_castpd_si256(_mm256_broadcast_sd(&two_84_63)); /* 2^84+2^63 */  \
       __m256i magic_i_all  = _mm256_castpd_si256(_mm256_broadcast_sd(&two_84_63_52)); /* 2^84 + 2^63 + 2^52 */ \

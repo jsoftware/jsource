@@ -464,6 +464,7 @@ static A jtnullsyslock(JTT* jt){R (A)1;}
 
 DF2(jtlocpath2){A g,h; AD * RESTRICT x;
  F2RANK(1,0,jtlocpath2,self);
+ ACVCACHECLEAR;  // changing any path invalidates all lookups
  RZ(g=locale(1,w));
  // The path is a recursive boxed list where each box is a SYMB type.  The usecount of each SYMB is incremented when it is added to the path.
  // When a locale is in a path the raised usecount prevents it from ever being deleted.  It has its Bloom filter zeroed so that it never searches for names
@@ -579,6 +580,7 @@ F2(jtloccre2){
 }    /* 18!:3  create locale with specified hash table size */
 
 
+// 18!:4 cocurrent/coclass.  Called only from unquote.  We return a flag requesting a change of locale
 F1(jtlocswitch){A g;
  ARGCHK1(w);
  if(!(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)){  // atomic integer/bool is OK as is
@@ -588,8 +590,7 @@ F1(jtlocswitch){A g;
  }
  RZ(g=locale(1,w));   // point to locale, if no error
  R (A)((I)g|1);  // set LSB as flag to unquote that we ran cocurrent
-}    /* 18!:4  switch locale */
-
+}
 F1(jtlocname){A g=jt->global;
  ASSERTMTV(w);
  R boxW(sfn(0,LOCNAME(g)));
@@ -659,6 +660,7 @@ F1(jtsetpermanent){A g;
 // 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale
 // if x is 271828, do the deletion even if on a permanent locale (for testcases only)
 F2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
+ ACVCACHECLEAR;  // destroying a locale invalidates all lookups
  if(unlikely(AT(w)&NOUN)){  // dyadic call
   I x; x=i0(a); if(jt->jerr){RESETERR; ASSERT(0,EVVALENCE)} ASSERT(x==271828,EVVALENCE)  // if not 271828, valence error
   // leave a non0 to indicate dyadic call

@@ -176,7 +176,7 @@ DF2(jtunquote){A z;
  // At this point jt->global is the new locale to use (possibly inherited).  If LOCINCRDECR is set,
  // explocale also holds that value.  LOCINCRDECR is set if we should incr/decr explocale, which is true if it changes
  // to a non-permanent locale (we don't want executions in z/base/... to hammer the z count)
- if(flgd0cpC&FLGLOCINCRDECR){INCREXECCT(explocale);}  // incr execct in newly-starting locale
+ if(flgd0cpC&FLGLOCINCRDECR){ACVCACHECLEAR; INCREXECCT(explocale);}  // incr execct in newly-starting locale
  // scaf if someone deletes the locale before we start it, we are toast
  // ************** from here on errors must (optionally) decr explocale  and unra() before exiting
  w=flgd0cpC&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
@@ -231,6 +231,7 @@ exitpop: ;
  // jt->locsyms here is always the same as before the call (but may have been changed previously for u./v.)
  // jt->global may have changed, if the called function executed cocurrent
  if(unlikely(((C)(I)z|jt->uflags.bstkreqd)&1)){  // cocurrent OR return when called function changed locale?
+  ACVCACHECLEAR;  // either way we have to clear ACV cache
   if((C)(I)z&1){  // was successful call to cocurrent?
    // here the name we called was cocurrent, possibly through a locative.  This is where we change jt->global in the caller
    // The incr/decrs here are on behalf of the caller of cocurrent.  We always incr the locale we move to; we decr a locale
@@ -246,7 +247,7 @@ exitpop: ;
   }else if(jt->uflags.bstkreqd)DECREXECCTIF(jt->global)   // we are returning from this function, which called cocurrent.  Close the final change of locale
  }
  jt->uflags.bstkreqd=(C)(flgd0cpC>>FLGLOCCHANGEDX);  // bstkreqd is set after the return if the CALLER OF THE EXITING ROUTINE has seen cocurrent.  This was passed into the exiting routine as FLGLOCCHANGED.  bstkreqd is set to be used by either the next call or the return from this caller
- if(unlikely(flgd0cpC&FLGLOCINCRDECR))DECREXECCT(explocale)  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
+ if(unlikely(flgd0cpC&FLGLOCINCRDECR)){ACVCACHECLEAR; DECREXECCT(explocale)}  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
  // ************** errors OK now
 exitfa:;  // error point for errors after symbol res. 
  // this is an RFO cycle that will cause trouble if there are many cores running the same names

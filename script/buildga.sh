@@ -200,7 +200,7 @@ else
  j64x=j64 USE_PYXES=1 ./build_jamalgam.sh
  fi
 fi
-if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] ; then
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] || [ "$1" = "darwin" ] ; then
 ./clean.sh
 j64x=j64avx2 USE_PYXES=1 ./build_libj.sh
 ./clean.sh

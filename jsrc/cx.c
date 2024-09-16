@@ -682,6 +682,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so we replace only the
    // first locative in each branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
+   ACVCACHECLEAR;  // if a reference is returned, its cache must be invalidated since it may be freed here
   }else{pee(cwsent,CWTCESX2(cwsent,bic),EVNONNOUN,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error, or final exit from suspension

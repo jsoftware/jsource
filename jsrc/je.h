@@ -854,7 +854,7 @@ extern D        jtpospow(J,D,D);
 extern B        jtpreparse(J,A,A*,A*);
 extern B        jtprimitive(J,A);
 extern A       jtprobe(J,C*,UI4,A);
-extern L*       jtprobedel(J,C*,UI4,A);
+extern B       jtprobedel(J,C*,UI4,A);
 extern L*       jtprobeis(J, A, A);
 extern L*       jtprobeisres(J, A, A);
 extern L*       jtprobeislocal(J,A,A);

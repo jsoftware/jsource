@@ -50,8 +50,16 @@ DF2(jtunquote){A z;
  if(likely(thisname!=0)){  // normal names, not pseudo
   jt->curname=thisname;  // set failing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
   // normal path for named functions
-  if((fs=FAV(self)->localuse.lu1.cachedref)!=0){
-   // There is a cached lookup for this nameref - use it
+  fs=FAV(self)->localuse.lu1.cachedref;  // fetch the most recent lookup, which may be reused
+  if(FAV(self)->flag2&VF2CACHED){
+   // The previous lookup can be reused, either because the whole nameref is cached or there have been no assignments
+   if(!(FAV(self)->flag2&VF2CACHED)){   // if not cached reference
+    // the reference is a recent one that can be reused.
+    raposgblqcgsv(QCWORD(fs),QCPTYPE(fs),fs); // ra to match syrd1
+    if(likely(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC))))goto locative;  // simple name, and not u./v.
+    else goto finlookup;  // all other names
+   }
+   // continuing, the reference is cached
    // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
    if(unlikely(((A)(I)(NAV(thisname)->flag&NMLOC))!=0)){  // most verbs aren't locatives. if no direct locative, leave global unchanged
     if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
@@ -70,8 +78,10 @@ DF2(jtunquote){A z;
     if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check t0 see
     fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
     // leave LOCINCRDECR unset and jt->global unchnged
-   deflocal:;
+    FAV(self)->localuse.lu1.cachedref=fs; FAV(self)->lu2.refvalidtime=ACVCACHEREAD;  // update value and time of lookup
+    deflocal:;
    }else{  // locative or u./v.
+ locative:;
     // there are subroutine calls here; we refresh thisname sometimes so the compiler won't carry it in a register
     I nmflgs=NAV(thisname)->flag;
     if(likely(!(nmflgs&NMIMPLOC))){  // not implicit locative...
@@ -94,6 +104,7 @@ DF2(jtunquote){A z;
         // AKGST changes only from cocurrent.  This leads to a divergence between jt->global and AKGST if a non-operator modifier calls an anonymous explicit that issues cocurrent.  BFD.  The divergence
         // is removed by the next named call
    }
+finlookup:;  // scaf should bypass type test, which should not use AT
    // Common path for named functions after lookup is finished.  fs has QCNAMED semantics
    // explocale is the locale we are calling into
    ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;);  // name must be defined
@@ -103,16 +114,18 @@ DF2(jtunquote){A z;
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
    if(unlikely((FAV(self)->flag2>>(VF2CACHEABLEX-QCNAMEDX))&namedloc)){   // cacheable nameref, and value found in a named locale
     thisname=jt->curname;  // refresh thisname
-    // the nameref is cachable.  Fill it in.  Happens the first time a cachable reference is encountered.
+    // ************* the nameref is cachable.  Fill it in.  Happens the first time a cachable reference is encountered.
     // point the nameref to the lookup result.  This prevents further changes to the lookup
     WRITELOCK(fs->lock);  // we want to cache a name only once
-    if(FAV(self)->localuse.lu1.cachedref==0){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
+// obsolete     if(FAV(self)->localuse.lu1.cachedref==0){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
+    if(!(FAV(self)->flag2&VF2CACHED)){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
      FAV(self)->localuse.lu1.cachedref=fs;  // store cached address, with FAOWED semantics (not owed)
      ACSETPERM(fs);  // make the cached value immortal
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
      // to use the flags.  If we do PPPP, this will be too late
      FAV(self)->flag=FAV(fs)->flag&(VIRS1+VIRS2+VJTFLGOK1+VJTFLGOK2+VASGSAFE);  // combining flags, do not require looking into id
      FAV(self)->flag2=FAV(fs)->flag2&(VF2WILLOPEN1+VF2USESITEMCOUNT1+VF2WILLOPEN2W+VF2WILLOPEN2A+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A);  // combining flags, do not require looking into id
+     FAV(self)->flag2|=VF2CACHED;  // indicate cached has been filled in
 // flag2: if we look through name(s) when replacing f[12] and fs, we could support VF2BOXATOP1+VF2BOXATOP2+VF2ATOPOPEN1+VF2ATOPOPEN2W+VF2ATOPOPEN2A+
 //  and we might be able to use VF2RANKATOP1+VF2RANKATOP2+VF2RANKONLY1+VF2RANKONLY2+  but we haven't checked the loops yet
       // we could mark the lookup as cached, but if debug is on we want to display the lookup value first time through    ???
@@ -289,10 +302,12 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // if there is an error at this point, we must be working on an undefined mnuvxy.  In that case, keep the error and don't allocate a block
  // if the nameref is cachable, either because the name is cachable or name caching is enabled now, mark it cacheable
  // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name
+ // In any case we install the current asgnct and the looked-up value (with QCGLOBAL semantics).  We will know that the cached value is not a pun in type
  I flag2=(!!(NAV(a)->flag&NMCACHED) | (jt->namecaching & !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<VF2CACHEABLEX;  // enable caching if called for
  A z=fdefnoerr(flag2,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
  if(likely(val!=0))fa(QCWORD(val))else val=(A)QCVERB;  // release the value, now that we don't need it.  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // abort if reference not allocated
+ FAV(z)->localuse.lu1.cachedref=val; FAV(z)->lu2.refvalidtime=ACVCACHEREAD;  // install cachelet of lookup
  R (A)((I)z|QCPTYPE(val));  // Give the result the part of speech of the input.  no FAOWED since we freed val
 }
 
@@ -317,7 +332,7 @@ F1(jtcreatecachedref){F1PREFIP;A z;
  A val=QCWORD(syrd(nm,(A)(*JT(jt,emptylocale))[THREADID(jt)]));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
  ASSERT(val!=0,EVVALUE);  // return if error or name not defined
  ASSERT(!(AT(val)&NOUN),EVDOMAIN)
- z=fdef(0,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));// create reference
+ z=fdef(VF2CACHED,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));// create reference
  FAV(z)->localuse.lu1.cachedref=val;  // install cached address of value
  ACSETPERM(val);  // now that the value is cached, it lives forever
  RETF(z);

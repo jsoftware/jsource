@@ -233,11 +233,11 @@ exit: ;
 }    /* 18!:_2 symbol pool */
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table  l is encoded in low bits of jt
-// the symbol is deleted if found.  Return address of deleted symbol if it was cached - caller must then take responsibility for the name
+// the symbol is deleted if found.  Return 1 if the value was an ACV
 // if the symbol is PERMANENT, it is not deleted but its value is removed
 // if the symbol is CACHED, it is removed from the chain but otherwise untouched, leaving the symbol abandoned.  It is the caller's responsibility to handle the name
-// We take no locks on g.  They are the user's responsibility
-L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
+// We take no locks on g.  They are necessary, but are the user's responsibility
+B jtprobedel(J jt,C*string,UI4 hash,A g){A ret;
  F1PREFIP;
  L *sympv=SYMORIGIN;  // base of symbol pool
  LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
@@ -250,6 +250,7 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){L *ret;
   if(likely(!(AFLAG(sym->name)&AFRO))){   // ignore request to delete readonly name (cocurrent)
    IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
      {
+      ret=sym->val==0?0:~(I)sym->valtype&QCNOUN;  // return value: value was defined & not a noun
       SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
       if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
        *asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol

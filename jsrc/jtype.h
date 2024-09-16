@@ -1274,6 +1274,8 @@ typedef struct {
 #define VF2PRIM  ((I)(((I)1)<<VF2PRIMX))
 #define VF2NAMELESSX 23   // Indicates value should be stacked instead of nameref
 #define VF2NAMELESS  ((I)(((I)1)<<VF2NAMELESSX))
+#define VF2CACHEDX 24   // In a nameref, indicates the nameref is cached, i. e. cacheable and filled in
+#define VF2CACHED  ((I)(((I)1)<<VF2CACHEDX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit

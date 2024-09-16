@@ -2,7 +2,7 @@
 #
 # test linux/macOS on github actions
 #
-# argument is linux|darwin|raspberry|openbsd|freebsd
+# argument is linux|darwin|darwinarm|raspberry|openbsd|freebsd
 # openbsd/freebsd is experimental
 #
 # current Linux github builder supports avx512
@@ -17,7 +17,7 @@ if [ $1 = "linux" ]; then
   ext="so"
 elif [ $1 = "raspberry" ]; then
   ext="so"
-elif [ "$1" = "darwin" ]; then
+elif [ "$1" = "darwin" ] || [ "$1" = "darwinarm" ] ; then
   ext="dylib"
 elif [ $1 = "openbsd" ]; then
   ext="so"
@@ -26,7 +26,7 @@ elif [ $1 = "freebsd" ]; then
 elif [ $1 = "wasm" ]; then
   ext=""
 else
-  echo "argument is linux|darwin|raspberry|openbsd|freebsd|wasm"
+  echo "argument is linux|darwin|darwinarm|raspberry|openbsd|freebsd|wasm"
   exit 1
 fi
 if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
@@ -38,7 +38,7 @@ fi
 else
  m64=0
 fi
-if [ "$1" = "darwin" ]; then
+if [ "$1" = "darwin" ] || [ "$1" = "darwinarm" ] ; then
 sysctl -a | grep cpu
 elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
 grep -i cpu /var/run/dmesg.boot
@@ -56,7 +56,11 @@ fi
 
 if [ $m64 -eq 1 ]; then
 ls -l j64
+if [ $1 = "darwinarm" ]; then
+LC_ALL=fr_FR.UTF-8 arch -arm64 APPLEM1=APPLEM1 j64/jconsole -lib libjavx512.$ext testga.ijs
+else
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
+fi
 else
 ls -l j32
 LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs
@@ -68,6 +72,8 @@ fi
 if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
  LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
 fi
+elif [ $1 = "darwinarm" ]; then
+LC_ALL=fr_FR.UTF-8 arch -x86_64 APPLEM1=APPLEM1 j64/jconsole -lib libj.$ext testga.ijs
 elif [ $1 = "linux" ]; then
 if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
   LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs

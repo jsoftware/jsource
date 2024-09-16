@@ -6,6 +6,7 @@ os=: (('Linux';'Darwin';'OpenBSD';'FreeBSD') i. <UNAME) pick ;:'linux darwin ope
 os=: ((IF64{::'rpi32';'rpi64')"_)^:IFRASPI os
 os=: ((IF64{::'win32';'win')"_)^:IFWIN os
 os=: os, ((<os)e.'openbsd';'freebsd')#(('arm64'-:9!:56'cpu'){::'';'arm64')
+os=: os, ((<os)e.<'darwin')#('APPLEM1'-:2!:5'APPLEM1'){::'';'arm'
 testres=: 'test',os,'.txt'
 
 0!:0 <testpath,'tsu.ijs'

@@ -189,6 +189,57 @@ jobs:
        path: testdarwin.txt
        overwrite: true
 
+# macOS arm64 ----------------------------------------------------------
+ jemacosarm:
+  name: JE (macOS arm64)
+  runs-on: macos-14
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+#   - name: Setup Environment (macOS)
+
+   - name: Build JE (macOS arm64)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh darwin || exit 1
+
+   - name: Test JE (macOS arm64)
+     run: |
+      script/testga.sh darwinwin || exit 1
+      rm -rf j64/jconsole.dSYM
+      rm -rf j64/libj.dylib.dSYM
+      rm -rf j64/libtsdll.dylib.dSYM
+      rm -rf j64/jamalgam.dSYM
+      ls -l j64
+      zip -r m64armd.zip j64
+      cd j64
+      strip -S jconsole
+      strip -S libj.dylib
+      strip -S libtsdll.dylib
+      strip -S jamalgam || true
+      cd -
+      ls -l j64
+      zip -r m64arm.zip j64
+
+   - name: Release JE (macOS arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "m64arm.zip,m64armd.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (macOS arm64)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testdarwinarm.txt
+       overwrite: true
+
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
@@ -876,7 +927,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-20.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jemacos, jemacosarm, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

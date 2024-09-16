@@ -57,7 +57,7 @@ fi
 if [ $m64 -eq 1 ]; then
 ls -l j64
 if [ $1 = "darwinarm" ]; then
-LC_ALL=fr_FR.UTF-8 arch -arm64 APPLEM1=APPLEM1 j64/jconsole -lib libjavx512.$ext testga.ijs
+LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 j64/jconsole -lib libjavx512.$ext testga.ijs
 else
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
 fi
@@ -73,7 +73,7 @@ if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "j64/lib
  LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
 fi
 elif [ $1 = "darwinarm" ]; then
-LC_ALL=fr_FR.UTF-8 arch -x86_64 APPLEM1=APPLEM1 j64/jconsole -lib libj.$ext testga.ijs
+LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 j64/jconsole -lib libj.$ext testga.ijs
 elif [ $1 = "linux" ]; then
 if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
   LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs

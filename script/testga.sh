@@ -57,7 +57,7 @@ fi
 if [ $m64 -eq 1 ]; then
 ls -l j64
 if [ $1 = "darwinarm" ]; then
-LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 j64/jconsole -lib libjavx512.$ext testga.ijs
+LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 j64/jconsole -lib libj.$ext testga.ijs
 else
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
 fi

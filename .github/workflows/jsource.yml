@@ -208,7 +208,7 @@ jobs:
 
    - name: Test JE (macOS arm64)
      run: |
-      script/testga.sh darwinwin || exit 1
+      script/testga.sh darwinarm || exit 1
       rm -rf j64/jconsole.dSYM
       rm -rf j64/libj.dylib.dSYM
       rm -rf j64/libtsdll.dylib.dSYM

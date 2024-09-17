@@ -439,7 +439,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
-  runs-on: macos-13
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -508,7 +508,7 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  runs-on: macos-14
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -710,7 +710,7 @@ jobs:
 # freebsdarm64  --------------------------------------------------------------
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
-  runs-on: macos-14
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -779,7 +779,7 @@ jobs:
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
-  runs-on: macos-14
+  runs-on: macos-13
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

@@ -241,7 +241,7 @@ vb y
 )
 9!:5 (2)
 g1 =. 3 : 0
-vb y
+vb y  NB. This ref should be cached
 )
 9!:5 (0)
 

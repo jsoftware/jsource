@@ -256,7 +256,6 @@ B jtprobedel(J jt,C*string,UI4 hash,A g){A ret;
        *asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
        jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains
       }  // add to symbol free list
-      ret=0;  // normal return
       break;  // name match - return
      }
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)

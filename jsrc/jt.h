@@ -400,7 +400,7 @@ typedef struct JSTstruct {
  C _cl6[0];
  A dbstops;          /* stops set by the user                           */
  A dbtrap;           // trap sentence, execute when going into suspension
- I4 fnasgnct;        // number of assignments to ACV, change to locale path, etc.  Lookups of ACVs are cached and
+ UI4 fnasgnct;        // number of assignments to ACV, change to locale path, etc.  Lookups of ACVs are cached and
                      // reused as long as one of these cache-invalidating actions has happened.
  S dblock;           // lock on dbstops/dbtrap
  // rest of cacheline is essentially read-only

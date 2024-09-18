@@ -939,15 +939,15 @@ typedef struct{
 //   (for direct locatives) the hash of the locative - if numbered, the number itself.
 //   (for indirect locatives) hash of the last indirect name
 //   (for locale names in SYMLINFO of a numbered locale) the locale number
- A cachedref; // (only for cachable NAME blocks): the value to be used for this name entry, if it is not a noun.  Has QCFAOWED semantics (with FAOWED always off).  It may be (1) in a nameless modifier, the A block for the value, which has PERMANENT AC
+ A cachedref; // (only for cachable NAME blocks): the value to be used for this name entry, if it is not a noun.  Non-QC semantics.  It may be (1) in a nameless modifier, the A block for the value, which has PERMANENT AC
                // (2) otherwise, the nameref for the name block, which may or may not have the pointer to the looked-up value.  This nameref is not PERMANENT AC and must be deleted when the name is deleted
  LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table
  I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local
 //   0 if chain index not known or name is a locative
  UI4 hash;  // hash for non-locale part of name
  UC m; // length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)  scaf should move to second cacheline
- C flag, // string part of full name (1 to ?? characters, including locale of assignment if given)
- s[1];  // up to 34 chars fit in a 128B allo
+ C flag; //  flags for name
+ C s[1];  // string part of full name (1 to ?? characters, including locale of assignment if given) up to 34 chars fit in a 128B allo
 } NM;
 
 // values in flag:
@@ -1093,7 +1093,7 @@ typedef struct {
     AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
-    A cachedref;  //  for namerefs ('name'~), the cached value, or 0 if not cached
+    A cachedlkp;  //  for namerefs ('name'~), the cached value, or 0 if not cached.   No QC semantics
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
     I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block; for $!.v, 0 if the ultimate routine is ($,), 1 if $
@@ -1112,7 +1112,7 @@ typedef struct {
  C id;  // pseudochar for the function encoded here
 union{
  C lc;  // lc is a local-use byte.  Used in atomic verbs to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
- I4 refvalidtime;  // for namerefs, the value of JT(jt,fnasgnct) when the cached value was looked up
+ UI4 refvalidtime;  // for namerefs, the value of JT(jt,fnasgnct) when the cached value was looked up
 } lu2;
 } V;  // two cachelines in 64-bit (16 Is); 20 I4s in 32-bit
 // The AN and AR fields of functions are not used
@@ -1131,7 +1131,7 @@ typedef struct {
     AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
-    A cachedref;  //  for namerefs ('name'~), the cached value, or 0 if not cached
+    A cachedlkp;  //  for namerefs ('name'~), the cached value, or 0 if not cached
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
     I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
  } lu1;  // this is the high-use stuff in the second cacheline

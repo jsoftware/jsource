@@ -570,7 +570,7 @@ rdglob: ;  // here when we tried the buckets and failed
         y=NAV(y)->cachedref; // use the cached address/flags, which has QCFAOWED semantics
         goto endname; // take its type, proceed.  We skip the FAOWED issues (FAOWED must be clear in the cached addr)
        }
-       y=syrdnobuckets(y);    // do full symbol lookup, knowing that we have checked for buckets already.  Error if not defined
+       y=syrdnobuckets(y);    // do full symbol lookup, knowing that we have checked for buckets already.  Error if not defined.  Result has QCGLOBAL semantics
        if(unlikely(y==0))goto undefname;
       }
       // end of looking at local/global symbol tables.
@@ -600,9 +600,10 @@ rdglob: ;  // here when we tried the buckets and failed
         y=SETFAOWED(y);
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the name.  But if the value IS a reference, use the value if possible to avoid the extra lookup
         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
+// scaf bug: y has QCGLOBAL semantics, need QCWORD; change to FAOWED
         if(unlikely(FAV(y)->valencefns[0]==jtunquote && !(NAV(origname)->flag&(NMLOC|NMILOC|NMIMPLOC)))){  // reference is as reference does
          // the value is a non-locative reference to another reference.  It is safe to skip over it.  Leave y holding the value
-        }else{y=namerefacv(origname, y);}   // Replace other acv with reference, and fa() looked-up y value
+        }else{y=namerefacv(origname,y);}   // Replace other acv with reference, and fa() looked-up y value.  y starts with QCGLOBAL semantics, returns with QCFAOWED
         FPSZ(y)
        }
       }else{

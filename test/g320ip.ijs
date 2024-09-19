@@ -361,8 +361,9 @@ f =: 3 : 0"0 '123'
 
 NB. Remember, 9!:53 has different effects on explicit sentences vs console!
 NB. Create unsafe name
-1: 4!:55 ;:'unsafename undefinedname'
-unsafename =: undefinedname
+1: 4!:55 ;:'unsafename undefinedname undefinedname2'
+unsafename =: undefinedname2  NB. first name-to-name ref is swallowed
+undefinedname2 =: undefinedname
 undefinedname =: ]
 
 NB. Verify inplacing works in forks, including nvv forks

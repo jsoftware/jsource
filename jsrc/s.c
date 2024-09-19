@@ -237,7 +237,7 @@ exit: ;
 // if the symbol is PERMANENT, it is not deleted but its value is removed
 // if the symbol is CACHED, it is removed from the chain but otherwise untouched, leaving the symbol abandoned.  It is the caller's responsibility to handle the name
 // We take no locks on g.  They are necessary, but are the user's responsibility
-B jtprobedel(J jt,C*string,UI4 hash,A g){A ret;
+B jtprobedel(J jt,C*string,UI4 hash,A g){B ret;
  F1PREFIP;
  L *sympv=SYMORIGIN;  // base of symbol pool
  LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain

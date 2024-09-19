@@ -564,9 +564,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
      // jtinplace VIPWFLONG set if wf>af, bit VIPWCRLONG set if wcr>acr
     zn=(I)jtinplace&VIPWCRLONG?wk:ak;    // zn=#atoms in cell with larger rank
     m=(I)jtinplace&VIPWCRLONG?ak:wk;  // m=#atoms in common inner cell, i. e. the smaller
-    I wt=AT(w); I cvt=rtype((I)jtinplace);  // if rtype=0, we use the arg type
-    aawwzk[4]=zn<<bplg(cvt==0?wt:cvt);  // calc result-cell size and move it out of registers
-    ak<<=bplg(AT(a)); wk<<=bplg(wt);  // convert cell sizes to bytes
+    I at=AT(a); I wt=AT(w); I cvt=rtype((I)jtinplace);  // if rtype=0, we use the arg type of w
+    aawwzk[4]=zn<<bplg(cvt!=0?cvt:(I)jtinplace&VCOPYA?at:wt);  // calc result-cell size and move it out of registers
+    ak<<=bplg(at); wk<<=bplg(wt);  // convert cell sizes to bytes
     aawwzk[0]=ak; aawwzk[2]=wk; ak=((I)jtinplace&VIPWFLONG)?0:ak; wk=((I)jtinplace&VIPWFLONG)?wk:0; aawwzk[1]=ak; aawwzk[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
     I shortr=wcr>>(((I)jtinplace>>(VIPWCRLONGX-LGRANK2TX))&(VIPWCRLONG>>(VIPWCRLONGX-LGRANK2TX))); fr=wcr>>((((I)jtinplace>>(VIPWCRLONGX-LGRANK2TX))&(VIPWCRLONG>>(VIPWCRLONGX-LGRANK2TX)))^RANK2TX); // shortr=frame(short cell)/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
     shortr&=RANKTMSK; fr&=RANK2TMSK; // cellrank(short cell)
@@ -650,12 +650,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    //
    // Because of the priority of errors we mustn't check the type until we have verified agreement above
    if(unlikely(((I)jtinplace&VARGMSK)!=0))if(likely(zn>0)){  // input conversion required (rare), and the result is not empty
-    I at=AT(a), wt=AT(w), t=atype((I)jtinplace); t=(I)jtinplace&VCOPYA?at:t; t=(I)jtinplace&VCOPYW?wt:t;  // get shared input type, which might be from one of the inputs
+    I at=AT(a), wt=AT(w), t=atype((I)jtinplace); t=(I)jtinplace&VCOPYA?at:t; t=(I)jtinplace&VCOPYW?wt:t; I bt=bplg(t);  // get shared input type, which might be from one of the inputs
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
     // bits 2-3 of jtinplace indicate whether inplaceability is allowed by the op, the ranks, and the addresses
-    if(TYPESNE(t,at)){aawwzk[0]=(aawwzk[0]>>bplg(at))<<bplg(t); aawwzk[1]=(aawwzk[1]>>bplg(AT(a)))<<bplg(t); RZ(a=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
-    if(TYPESNE(t,wt)){aawwzk[2]=(aawwzk[2]>>bplg(wt))<<bplg(t); aawwzk[3]=(aawwzk[3]>>bplg(AT(w)))<<bplg(t); RZ(w=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
+    if(TYPESNE(t,at)){I ba=bplg(at); aawwzk[0]=(aawwzk[0]>>ba)<<bt; aawwzk[1]=(aawwzk[1]>>ba)<<bt; RZ(a=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
+    if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzk[2]=(aawwzk[2]>>bw)<<bt; aawwzk[3]=(aawwzk[3]>>bw)<<bt; RZ(w=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
    }  // It might be better to do the conversion earlier, and defer the error
       // until here.  We will have to look at the generated code when we can use all the registers
 

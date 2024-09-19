@@ -580,7 +580,7 @@ rdglob: ;  // here when we tried the buckets and failed
       // ra() has been issued for the value.  If we don't undo that, we must set FAOWED in y to indicate that fact.  The value will stay protected until
       // the execution that uses this y has completed and the result has been made recursive, so that we know the input value has been RA()d if it has been used
       if(likely(1)){
-       // The name is defined.  If it's a noun, use its value (the common & fast case)
+       // The name is defined with QCGLOBAL semantics.  If it's a noun, use its value (the common & fast case)
        // Or, for special names (x. u. etc) that are always stacked by value, keep the value
        // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.  nameless was detected on assignment.
@@ -600,9 +600,9 @@ rdglob: ;  // here when we tried the buckets and failed
         y=SETFAOWED(y);
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the name.  But if the value IS a reference, use the value if possible to avoid the extra lookup
         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
-// scaf bug: y has QCGLOBAL semantics, need QCWORD; change to FAOWED
-        if(unlikely(FAV(y)->valencefns[0]==jtunquote && !(NAV(origname)->flag&(NMLOC|NMILOC|NMIMPLOC)))){  // reference is as reference does
+        if(unlikely(FAV(QCWORD(y))->valencefns[0]==jtunquote && !(NAV(origname)->flag&(NMLOC|NMILOC|NMIMPLOC)))){  // reference is as reference does
          // the value is a non-locative reference to another reference.  It is safe to skip over it.  Leave y holding the value
+         y=SETFAOWED(y);  // convert to QCFAOWED semantics
         }else{y=namerefacv(origname,y);}   // Replace other acv with reference, and fa() looked-up y value.  y starts with QCGLOBAL semantics, returns with QCFAOWED
         FPSZ(y)
        }

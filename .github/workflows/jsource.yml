@@ -189,6 +189,61 @@ jobs:
        path: testdarwin.txt
        overwrite: true
 
+# macOS arm64 ----------------------------------------------------------
+ jemacosarm:
+  name: JE (macOS arm64)
+  runs-on: macos-14
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+#   - name: Setup Environment (macOS)
+
+   - name: Build JE (macOS arm64)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+     run: |
+      script/buildga.sh darwin || exit 1
+
+   - name: Test JE (macOS arm64)
+     run: |
+      script/testga.sh darwin || exit 1
+      rm -rf j64/jconsole.dSYM
+      rm -rf j64/libj.dylib.dSYM
+      rm -rf j64/libjavx2.dylib.dSYM
+      rm -rf j64/libjavx512.dylib.dSYM
+      rm -rf j64/libtsdll.dylib.dSYM
+      rm -rf j64/jamalgam.dSYM
+      ls -l j64
+      zip -r m64armd.zip j64
+      cd j64
+      strip -S jconsole
+      strip -S libj.dylib
+      strip -S libjavx2.dylib || true
+      strip -S libjavx512.dylib || true
+      strip -S libtsdll.dylib
+      strip -S jamalgam || true
+      cd -
+      ls -l j64
+      zip -r m64arm.zip j64
+
+   - name: Release JE (macOS arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "m64arm.zip,m64armd.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (macOS arm64)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testdarwinarm.txt
+       overwrite: true
+
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
@@ -317,13 +372,13 @@ jobs:
  jeopenbsd:
   name: JE (OpenBSD vmactions)
   if: ${{ false }}
-  runs-on: macos-12
+  runs-on: macos-13
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD)
-     uses: vmactions/openbsd-vm@v0
+     uses: vmactions/openbsd-vm@v1
      with:
       usesh: true
       sync: sshfs
@@ -384,13 +439,13 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
-  runs-on: macos-12
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD)
-     uses: cross-platform-actions/action@v0.23.0
+     uses: cross-platform-actions/action@v0.25.0
      with:
       operating_system: openbsd
       architecture: x86-64
@@ -453,13 +508,13 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.23.0
+     uses: cross-platform-actions/action@v0.25.0
      with:
       operating_system: openbsd
       architecture: arm64
@@ -519,13 +574,13 @@ jobs:
  jefreebsd:
   name: JE (FreeBSD vmactions)
   if: ${{ false }}
-  runs-on: macos-12
+  runs-on: macos-13
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD)
-     uses: vmactions/freebsd-vm@v0
+     uses: vmactions/freebsd-vm@v1
      with:
       usesh: true
       sync: sshfs
@@ -592,7 +647,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD)
-     uses: cross-platform-actions/action@v0.23.0
+     uses: cross-platform-actions/action@v0.25.0
      with:
       operating_system: freebsd
       architecture: x86-64
@@ -661,7 +716,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD arm64)
-     uses: cross-platform-actions/action@v0.23.0
+     uses: cross-platform-actions/action@v0.25.0
      with:
       operating_system: freebsd
       architecture: arm64
@@ -724,7 +779,7 @@ jobs:
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
-  runs-on: macos-12
+  runs-on: macos-13
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -876,7 +931,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-20.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jemacos, jemacosarm, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

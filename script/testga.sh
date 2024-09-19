@@ -17,7 +17,7 @@ if [ $1 = "linux" ]; then
   ext="so"
 elif [ $1 = "raspberry" ]; then
   ext="so"
-elif [ "$1" = "darwin" ]; then
+elif [ "$1" = "darwin" ] ; then
   ext="dylib"
 elif [ $1 = "openbsd" ]; then
   ext="so"
@@ -38,7 +38,7 @@ fi
 else
  m64=0
 fi
-if [ "$1" = "darwin" ]; then
+if [ "$1" = "darwin" ] ; then
 sysctl -a | grep cpu
 elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
 grep -i cpu /var/run/dmesg.boot
@@ -56,7 +56,12 @@ fi
 
 if [ $m64 -eq 1 ]; then
 ls -l j64
+if [ $1 = "darwin" ] && [ "`uname -m`" = "arm64" ] ; then
+LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 j64/jconsole -lib libj.$ext testga.ijs
+LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 j64/jconsole -lib libj.$ext testga.ijs
+else
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
+fi
 else
 ls -l j32
 LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs

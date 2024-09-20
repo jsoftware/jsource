@@ -1365,7 +1365,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
                                       if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_loadu_pd(ad); }
 #define LDOBID(z,ad,n,commute,id,bi,bd) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(OFFSETBID(ad,n,commute,id,bi,bd))); \
                                       if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_loadu_pd(OFFSETBID(ad,n,commute,id,bi,bd))); }
-// load 4 atoms. masking.  For boolean each lane looks at a different byte
+// load 4 atoms, masking.  For boolean each lane looks at a different byte
 #define LDBIDM(z,ad,commute,id,bi,bd,endmask) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(ad); \
                                                if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_maskload_pd(ad,endmask); }
 // load 1 atom into all lanes
@@ -1733,52 +1733,55 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 #define LGLGNPAR 1  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input (as D*), z->result (as D*), u=input atom4 and result
 //                                                                                                  __SSE2__    atom2
-// loop advances x and y to end +1 of region
+// loop advances x and z to end +1 of region
 // parms: bit0=suppress unrolling, bit1=use maskload for any aligning fetch
 #define AVXATOMLOOP(parms,preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
  preloop \
  I n0=n; \
  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
- if((-alignreq&(NPAR-n0))<0){ \
+ if((-alignreq&(NPAR-n0))<0){ /* alignment needed, in Is, only if >NPAR atoms to do */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask)); \
   loopbody _mm256_maskstore_pd(z, endmask, u); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
  } \
- endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
  if(!((parms)&1)){ \
+  UI backoff=DUFFBACKOFF(n0-1,3); \
   UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
-  if(n2>0){ \
-   UI backoff=DUFFBACKOFF(n0-1,3); \
-   x+=(backoff+1)*NPAR; z+=(backoff+1)*NPAR; \
-   switch(backoff){ \
-   do{ \
-   case -1: \
-    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u);  \
-   case -2: \
-    u=_mm256_loadu_pd(x+1*NPAR); loopbody _mm256_storeu_pd(z+1*NPAR, u);  \
-   case -3: \
-    u=_mm256_loadu_pd(x+2*NPAR); loopbody _mm256_storeu_pd(z+2*NPAR, u);  \
-   case -4: \
-    u=_mm256_loadu_pd(x+3*NPAR); loopbody _mm256_storeu_pd(z+3*NPAR, u);  \
-   case -5: \
-    u=_mm256_loadu_pd(x+4*NPAR); loopbody _mm256_storeu_pd(z+4*NPAR, u);  \
-   case -6: \
-    u=_mm256_loadu_pd(x+5*NPAR); loopbody _mm256_storeu_pd(z+5*NPAR, u);  \
-   case -7: \
-    u=_mm256_loadu_pd(x+6*NPAR); loopbody _mm256_storeu_pd(z+6*NPAR, u);  \
-   case -8: \
-    u=_mm256_loadu_pd(x+7*NPAR); loopbody _mm256_storeu_pd(z+7*NPAR, u);  \
-   x+=8*NPAR; z+=8*NPAR; \
-   }while(--n2!=0); \
-   } \
+  backoff=n2?backoff:0;  /* bypass loop (but not switch) if duff=0 */ \
+  z=(D*)((I)z-(I)x); x+=(backoff+1)*NPAR; /* cvrt z to offset, advance x to duff position */ \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
+  switch(backoff){ \
+  case 0: x-=NPAR; if(0){ \
+  do{ \
+  case -1: \
+   u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd((D*)((I)x+(I)z), u);  \
+  case -2: \
+   u=_mm256_loadu_pd(x+1*NPAR); loopbody _mm256_storeu_pd((D*)((I)x+(I)z)+1*NPAR, u);  \
+  case -3: \
+   u=_mm256_loadu_pd(x+2*NPAR); loopbody _mm256_storeu_pd((D*)((I)x+(I)z)+2*NPAR, u);  \
+  case -4: \
+   u=_mm256_loadu_pd(x+3*NPAR); loopbody _mm256_storeu_pd((D*)((I)x+(I)z)+3*NPAR, u);  \
+  case -5: \
+   u=_mm256_loadu_pd(x+4*NPAR); loopbody _mm256_storeu_pd((D*)((I)x+(I)z)+4*NPAR, u);  \
+  case -6: \
+   u=_mm256_loadu_pd(x+5*NPAR); loopbody _mm256_storeu_pd((D*)((I)x+(I)z)+5*NPAR, u);  \
+  case -7: \
+   u=_mm256_loadu_pd(x+6*NPAR); loopbody _mm256_storeu_pd((D*)((I)x+(I)z)+6*NPAR, u);  \
+  case -8: \
+   u=_mm256_loadu_pd(x+7*NPAR); loopbody _mm256_storeu_pd((D*)((I)x+(I)z)+7*NPAR, u);  \
+  x+=8*NPAR; \
+  }while(--n2!=0); \
+  } \
   } \
  }else{ \
-  UI i=(n0+NPAR-1)>>LGNPAR;  \
-  NOUNROLL while(--i!=0){ u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;} \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
+  z=(D*)((I)z-(I)x); UI i=(n0+NPAR-1)>>LGNPAR;  /* convert z to offset; # loops */ \
+  NOUNROLL while(--i!=0){ u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd((D*)((I)x+(I)z), u); x+=NPAR;} \
  } \
- u=_mm256_maskload_pd(x,endmask);  loopbody _mm256_maskstore_pd(z, endmask, u); \
- x+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
+ u=_mm256_maskload_pd(x,endmask);  loopbody _mm256_maskstore_pd((D*)((I)x+(I)z), endmask, u); \
+ x+=((n0-1)&(NPAR-1))+1; \
+ z=(D*)((I)x+(I)z); /* convert z back to address */ \
  postloop
 
 // this version to alternate between two code blocks.  block0 is always executed last; block 0 or 1 may be executed first

@@ -145,7 +145,6 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 )
 13!:3''  NB. clear stops
 13!:4''  NB. get out of suspension
-
 NB. Redefine goo* to test cut-back with error
 goo =: 3 : 0
 goo2 =: 5
@@ -184,15 +183,13 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 )
 13!:4 ''   NB. finish sentences, test result
 foo =: foo , goo2 -: 5  NB. the sentence is aborted before assignment
-
 NB. Verify task not started during suspension
-1:`{{ while. 1 < 1 T. '' do. 55 T. '' end.
+(i. 0 0)"_`{{ while. 1 < 1 T. '' do. 55 T. '' end.
 assert. 1 = 1 T. ''
 foo =: foo , 1.5 < (6!:1'') - (6!:1'') ([  >@:(6!:3 t. ''"0)) 1 1
 foo =: foo , 'stack error' -: 0 T. etx ''   NB. can't create thread during suspension
 i. 0 0
 }}@.(1<{:8&T.'') ''
-
 NB. Verify monad/dyad forms shown in stack
 goo2 =: {{
 2 goo2 y
@@ -230,7 +227,6 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 |     | | | |                                     ||+-+  |+-+-+| |
 +-----+-+-+-+-------------------------------------++-----+-----+-+
 )
-
 
 
 13!:0 ] 0  NB. Revert suspension input back to prompt

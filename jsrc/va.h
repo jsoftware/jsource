@@ -327,28 +327,30 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
    if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
    zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
    len-=alignreq;  /* leave remlen>0 */ \
-  } \
-  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+  }
 
 
 #define PRMDUFF(zzop,xy,fz,len,lpmsk) \
      if(!((fz)&(lpmsk))){ \
+      UI backoff=DUFFBACKOFF(len-1,3); \
       UI n2=DUFFLPCT(len-1,3);  /* # turns through duff loop */ \
-      if(n2>0){ \
-       UI backoff=DUFFBACKOFF(len-1,3); \
-       PRMINCR(xy,fz,(backoff+1)*NPAR) \
-       switch(backoff){ \
-       do{ \
-       case -1: PRMDO(zzop,xy,fz,0) case -2: PRMDO(zzop,xy,fz,1) case -3: PRMDO(zzop,xy,fz,2) case -4: PRMDO(zzop,xy,fz,3) case -5: PRMDO(zzop,xy,fz,4) case -6: PRMDO(zzop,xy,fz,5) case -7: PRMDO(zzop,xy,fz,6) case -8: PRMDO(zzop,xy,fz,7) \
-       PRMINCR(xy,fz,8*NPAR) \
-       }while(--n2!=0); \
-       } \
+      backoff=n2?backoff:n2;  /* handle case of 0 turns in loop */ \
+      PRMINCR(xy,fz,(backoff+1)*NPAR) \
+      endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+      switch(backoff){ \
+      case 0: PRMINCR(xy,fz,-1*NPAR) if(0){ \
+      do{ \
+      case -1: PRMDO(zzop,xy,fz,0) case -2: PRMDO(zzop,xy,fz,1) case -3: PRMDO(zzop,xy,fz,2) case -4: PRMDO(zzop,xy,fz,3) case -5: PRMDO(zzop,xy,fz,4) case -6: PRMDO(zzop,xy,fz,5) case -7: PRMDO(zzop,xy,fz,6) case -8: PRMDO(zzop,xy,fz,7) \
+      PRMINCR(xy,fz,8*NPAR) \
+      }while(--n2!=0); \
+      } \
       } \
      }else{ \
+      endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
       DQNOUNROLL((len-1)>>LGNPAR, \
        PRMDO(zzop,xy,fz,0) PRMINCR(xy,fz,NPAR)  \
       ) \
-     } \
+     }
 
 #define PRMMASK(zzop,xy,fz) if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \

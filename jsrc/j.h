@@ -1748,7 +1748,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
  if(!((parms)&1)){ \
   UI backoff=DUFFBACKOFF(n0-1,3); \
   UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
-  backoff=n2?backoff:0;  /* bypass loop (but not switch) if duff=0 */ \
+  backoff=n2?backoff:n2;  /* bypass loop (but not switch) if duff=0 */ \
   z=(D*)((I)z-(I)x); x+=(backoff+1)*NPAR; /* cvrt z to offset, advance x to duff position */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
   switch(backoff){ \

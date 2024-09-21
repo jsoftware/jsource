@@ -308,17 +308,22 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // bit12 this is a comparison combination
 // 
 
+#define XBYT(fz) ((fz)&0x140)
+#define YBYT(fz) ((fz)&0x280)
+#define XAD(fz) (XBYT(fz)?(x):(z+(I)x))  // addr: relative to z if same length
+#define YAD(fz) (YBYT(fz)?(y):(z+(I)y))  // addr: relative to z if same length
+
 // do one computation. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x.  lineno is the offset to the row being worked on
-#define PRMDO(zzop,xy,fz,lineno)  if(xy&2)LDBID(xx,OFFSETBID(x,lineno*NPAR,fz,0x8,0x40,0x100),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,OFFSETBID(y,lineno*NPAR,fz,0x10,0x80,0x200),fz,0x10,0x80,0x200)  \
+#define PRMDO(zzop,xy,fz,lineno)  if(xy&2)LDBID(xx,OFFSETBID(XAD(fz),lineno*NPAR,fz,0x8,0x40,0x100),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,OFFSETBID(YAD(fz),lineno*NPAR,fz,0x10,0x80,0x200),fz,0x10,0x80,0x200)  \
      if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
      zzop; _mm256_storeu_pd(OFFSETBID(z,lineno*NPAR,0,0,0,0), zz);
 
-#define PRMINCR(xy,fz,ct) if(xy&2)INCRBID(x,ct,fz,0x8,0x40,0x100) if(xy&1)INCRBID(y,ct,fz,0x10,0x80,0x200) INCRBID(z,ct,0,0,0,0)
+#define PRMINCR(xy,fz,ct) if(xy&2&&XBYT(fz))x=OFFSETBID(x,ct,fz,0x8,0x40,0x100); if(xy&1&&YBYT(fz))y=OFFSETBID(y,ct,fz,0x10,0x80,0x200); z=OFFSETBID(z,ct,0,0,0,0);
 
 #define PRMALIGN(zzop,xy,fz,len)  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
   if((-alignreq&(8*NPAR-len))<0){ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-   if(xy&2)LDBID(xx,x,fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,y,fz,0x10,0x80,0x200)  \
+   if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
    if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
    zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
    len-=alignreq;  /* leave remlen>0 */ \
@@ -345,7 +350,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
       ) \
      } \
 
-#define PRMMASK(zzop,xy,fz) if(xy&2)LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
+#define PRMMASK(zzop,xy,fz) if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
   if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
   if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
@@ -360,15 +365,17 @@ AHDR2(name,void,void,void){ \
  if(n-1==0){ \
   /* vector-to-vector of length m, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
+  if(!XBYT(fz))x-=(I)z; if(!YBYT(fz))y-=(I)z;  /* convert x/y to offset if same len as z */ \
   PRMALIGN(zzop,3,fz,m)  /* this changes m */ \
   PRMDUFF(zzop,3,fz,m,32+16+8) \
   PRMMASK(zzop,3,fz) /* runout, using mask */ \
  }else{ \
   if(!((fz)&1)&&n-1<0){n=~n; \
    /* m applications of atom+vector of length ~n (never used if commutative) */ \
+   if(!YBYT(fz))y-=(I)z;  /* convert y to offset if same len as z */ \
    DQNOUNROLL(m, \
-    if(unlikely((fz)&0x140 && (((fz)&0x400 && z==y && *(C*)x!=0) || ((fz)&0x800 && z==y && *(C*)x==0)))){ \
-     INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(y,n,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
+    if(unlikely((fz)&0x140 && (((fz)&0x400 && y==0 && *(C*)x!=0) || ((fz)&0x800 && y==0 && *(C*)x==0)))){ /* inplace and op leaves value unchanged */ \
+     INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(z,n,fz,0,0,0) \
     }else{ \
      LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
      I n0=n; \
@@ -380,10 +387,11 @@ AHDR2(name,void,void,void){ \
    ) \
   }else{ \
    /* m applications of vector of length n+atom */ \
-   if((fz)&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);} \
+   if((fz)&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);}  /* swap commutatives as needed */ \
+   if(!XBYT(fz))x-=(I)z;  /* convert x to offset if same len as z */ \
    DQNOUNROLL(m, \
-    if(unlikely((fz)&0x280 && (((fz)&0x400 && z==x && *(C*)y!=0) || ((fz)&0x800 && z==x && *(C*)y==0)))){ \
-     INCRBID(x,n,fz,0x8,0x40,0x100) INCRBID(y,1,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
+    if(unlikely((fz)&0x280 && (((fz)&0x400 && x==0 && *(C*)y!=0) || ((fz)&0x800 && x==0 && *(C*)y==0)))){ \
+     INCRBID(y,1,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
     }else { \
      LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,1,fz,0x10,0x80,0x200) \
      I n0=n; \

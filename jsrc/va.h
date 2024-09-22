@@ -320,14 +320,16 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 
 #define PRMINCR(xy,fz,ct) if(xy&2&&XBYT(fz))x=OFFSETBID(x,ct,fz,0x8,0x40,0x100); if(xy&1&&YBYT(fz))y=OFFSETBID(y,ct,fz,0x10,0x80,0x200); z=OFFSETBID(z,ct,0,0,0,0);
 
-#define PRMALIGN(zzop,xy,fz,len)  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
-  if((-alignreq&(8*NPAR-len))<0){ \
-   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-   if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
-   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-   zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
-   len-=alignreq;  /* leave remlen>0 */ \
-  }
+// align stores. We do this always to avoid a misbranch.  We calculate the amount of alignment needed
+// as 0-4 words, but never more than the total length-1
+#define PRMALIGN(zzop,xy,fz,len) \
+  I alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
+  alignreq=alignreq>len-1?len-1:alignreq;   /* never more than len-1 */ \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=0000, 01=1000, 10=1100, 11=1110, 100=1111 */ \
+  if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
+  if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+  zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
+  len-=alignreq;  /* leave remlen>0 */
 
 
 #define PRMDUFF(zzop,xy,fz,len,lpmsk) \

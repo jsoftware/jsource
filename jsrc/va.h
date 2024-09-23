@@ -298,7 +298,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // conclusion: unroll by 4 on 1address , by 2 on 2-3 address
 // This was done with poor choice of address modes; needs to be rerun
 
-// fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
+// fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with 1 (for fdiv NaN),
 // bit3 set for int-to-float on x, bit4 for int-to-float on y
 // bit5 set to suppress loop-unrolling
 // bit6 set for bool-to-int on x, bit7 for bool-to-int on y
@@ -332,26 +332,19 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   len-=alignreq;  /* leave remlen>0 */
 
 
-#define PRMDUFF(zzop,xy,fz,len,lpmsk) \
-     if(!((fz)&(lpmsk))){ \
-      UI backoff=DUFFBACKOFF(len-1,3); \
-      UI n2=DUFFLPCT(len-1,3);  /* # turns through duff loop */ \
-      backoff=n2?backoff:n2;  /* handle case of 0 turns in loop */ \
-      PRMINCR(xy,fz,(backoff+1)*NPAR) \
-      endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-      switch(backoff){ \
-      case 0: PRMINCR(xy,fz,-1*NPAR) if(0){ \
-      do{ \
-      case -1: PRMDO(zzop,xy,fz,0) case -2: PRMDO(zzop,xy,fz,1) case -3: PRMDO(zzop,xy,fz,2) case -4: PRMDO(zzop,xy,fz,3) case -5: PRMDO(zzop,xy,fz,4) case -6: PRMDO(zzop,xy,fz,5) case -7: PRMDO(zzop,xy,fz,6) case -8: PRMDO(zzop,xy,fz,7) \
-      PRMINCR(xy,fz,8*NPAR) \
-      }while(--n2!=0); \
-      } \
-      } \
-     }else{ \
-      endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-      DQNOUNROLL((len-1)>>LGNPAR, \
-       PRMDO(zzop,xy,fz,0) PRMINCR(xy,fz,NPAR)  \
-      ) \
+#define PRMDUFF(zzop,xy,fz,len) \
+     UI backoff=DUFFBACKOFF(len-1,3); \
+     UI n2=DUFFLPCT(len-1,3);  /* # turns through duff loop */ \
+     backoff=n2?backoff:n2;  /* handle case of 0 turns in loop */ \
+     PRMINCR(xy,fz,(backoff+1)*NPAR) \
+     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+     switch(backoff){ \
+     case 0: PRMINCR(xy,fz,-1*NPAR) if(0){ \
+     do{ \
+     case -1: PRMDO(zzop,xy,fz,0) case -2: PRMDO(zzop,xy,fz,1) case -3: PRMDO(zzop,xy,fz,2) case -4: PRMDO(zzop,xy,fz,3) case -5: PRMDO(zzop,xy,fz,4) case -6: PRMDO(zzop,xy,fz,5) case -7: PRMDO(zzop,xy,fz,6) case -8: PRMDO(zzop,xy,fz,7) \
+     PRMINCR(xy,fz,8*NPAR) \
+     }while(--n2!=0); \
+     } \
      }
 
 #define PRMMASK(zzop,xy,fz) if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
@@ -360,19 +353,35 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz);
 
+// version to save I-cache
+#define PRMMASKLP(zzop,xy,fz,n) { \
+  I n0=n, prevl=0, thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* rem len, align len 1-4, clamped at len */ \
+  NOUNROLL do { \
+   thisl=thisl>n0?n0:thisl; if(thisl!=prevl){if((xy)==2&&(fz)&0b110)yy=xysav; if((xy)==1&&(fz)&0b110)xx=xysav; endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl));} \
+   if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
+   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+   if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+   if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+   zzop; _mm256_maskstore_pd(z, endmask, zz); \
+   PRMINCR(xy,fz,thisl) prevl=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \
+  }while(n0-=prevl); \
+  }
+
 #define primop256(name,fz,pref,zzop,suff) \
 AHDR2(name,void,void,void){ \
  __m256d xx,yy,zz; \
  __m256i endmask; /* length mask for the last word */ \
-   /* will be removed except for divide */ \
+ __m256d xysav;  \
  CVTEPI64DECLS pref \
  if(n-1==0){ \
   /* vector-to-vector of length m, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
   if(!XBYT(fz))x-=(I)z; if(!YBYT(fz))y-=(I)z;  /* convert x/y to offset if same len as z */ \
-  PRMALIGN(zzop,3,fz,m)  /* this changes m */ \
-  PRMDUFF(zzop,3,fz,m,32+16+8) \
-  PRMMASK(zzop,3,fz) /* runout, using mask */ \
+  if(!((fz)&32+16+8)){   /* unrolled mode */ \
+   PRMALIGN(zzop,3,fz,m)  /* this changes m */ \
+   PRMDUFF(zzop,3,fz,m) \
+   PRMMASK(zzop,3,fz) /* runout, using mask */ \
+  }else PRMMASKLP(zzop,3,fz,m)   /* one loop using maskload */ \
  }else{ \
   if(!((fz)&1)&&n-1<0){n=~n; \
    /* m applications of atom+vector of length ~n (never used if commutative) */ \
@@ -382,11 +391,14 @@ AHDR2(name,void,void,void){ \
      INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(z,n,fz,0,0,0) \
     }else{ \
      LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
-     I n0=n; \
-     PRMALIGN(zzop,1,fz,n0) /* changes n0 */\
-     PRMDUFF(zzop,1,fz,n0,32+16) \
-     PRMMASK(zzop,1,fz) /* runout, using mask */ \
-     PRMINCR(1,fz,((n0-1)&(NPAR-1))+1)  \
+     if((fz)&0b110)xysav=xx;  /* MASKLP needs to save orig xx */ \
+     if(!((fz)&32+16)){   /* unrolled mode */ \
+      I n0=n; \
+      PRMALIGN(zzop,1,fz,n0) /* changes n0 */\
+      PRMDUFF(zzop,1,fz,n0) \
+      PRMMASK(zzop,1,fz) /* runout, using mask */ \
+      PRMINCR(1,fz,((n0-1)&(NPAR-1))+1)  \
+     }else PRMMASKLP(zzop,1,fz,n)   /* one loop using maskload */ \
     } \
    ) \
   }else{ \
@@ -398,11 +410,14 @@ AHDR2(name,void,void,void){ \
      INCRBID(y,1,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
     }else { \
      LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,1,fz,0x10,0x80,0x200) \
-     I n0=n; \
-     PRMALIGN(zzop,2,fz,n0) /* changes n0 */ \
-     PRMDUFF(zzop,2,fz,n0,32+8) \
-     PRMMASK(zzop,2,fz) /* runout, using mask */ \
-     PRMINCR(2,fz,((n0-1)&(NPAR-1))+1)  \
+     if((fz)&0b110)xysav=yy;  /* MASKLP needs to save orig yy */ \
+     if(!((fz)&32+8)){   /* unrolled mode */ \
+      I n0=n; \
+      PRMALIGN(zzop,2,fz,n0) /* changes n0 */ \
+      PRMDUFF(zzop,2,fz,n0) \
+      PRMMASK(zzop,2,fz) /* runout, using mask */ \
+      PRMINCR(2,fz,((n0-1)&(NPAR-1))+1)  \
+     }else PRMMASKLP(zzop,2,fz,n)   /* one loop using maskload */ \
     } \
    ) \
   } \

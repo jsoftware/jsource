@@ -1736,39 +1736,43 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 // loop advances x and z to end +1 of region
 // parms: bit0=suppress unrolling, bit1=use neutral in any unfetched alignment word
 // We always do the alignment step, 0-4 words
-#define AVAC(c,loopbody) case c: u=_mm256_loadu_pd(x+(-1-(c))*NPAR); loopbody _mm256_storeu_pd((D*)((I)x+(I)z)+(-1-(c))*NPAR, u);
+#define AVAC(c,loopbody) case c: u=_mm256_loadu_pd((D*)((I)x+(I)z)+(-1-(c))*NPAR); loopbody _mm256_storeu_pd(z+(-1-(c))*NPAR, u);
 #define AVXATOMLOOP(parms,preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
  preloop \
  I n0=n; \
- I alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
- alignreq=alignreq>n-1?n-1:alignreq; n0-=alignreq;   /* never more than len-1; leave remlen>0 */ \
- endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
- u=_mm256_maskload_pd(x,endmask); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask)); \
- loopbody _mm256_maskstore_pd(z, endmask, u); \
- z=(D*)((I)z-(I)x); x+=alignreq;  /* convert z to offset from x */ \
  if(!((parms)&1)){ \
+  I alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
+  alignreq=alignreq>n-1?n-1:alignreq; n0-=alignreq;   /* never more than len-1; leave remlen>0 */ \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  u=_mm256_maskload_pd(x,endmask); x=(D*)((I)x-(I)z); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask));  /* convert x to offset from z */\
+  loopbody _mm256_maskstore_pd(z, endmask, u); \
+  z+=alignreq;  \
   UI backoff=DUFFBACKOFF(n0-1,3); \
   UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
   backoff=n2?backoff:n2;  /* bypass loop (but not switch) if duff=0 */ \
-  x+=(backoff+1)*NPAR; /* cvrt z to offset, advance x to duff position */ \
+  z+=(backoff+1)*NPAR; /* cvrt z to offset, advance z to duff position */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
   switch(backoff){ \
-  case 0: x-=NPAR; if(0){ \
+  case 0: z-=NPAR; if(0){ \
   do{ \
    AVAC(-1,loopbody) AVAC(-2,loopbody) AVAC(-3,loopbody) AVAC(-4,loopbody) AVAC(-5,loopbody) AVAC(-6,loopbody) AVAC(-7,loopbody) AVAC(-8,loopbody) \
-   x+=8*NPAR; \
+   z+=8*NPAR; \
   }while(--n2!=0); \
   } \
   } \
+  u=_mm256_maskload_pd((D*)((I)x+(I)z),endmask);  loopbody _mm256_maskstore_pd(z, endmask, u); \
+  z+=((n0-1)&(NPAR-1))+1; /* advance z over final remnant */  \
  }else{ \
-  UI i=(n0+NPAR-1)>>LGNPAR;  /* # loops */ \
-  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
-  NOUNROLL while(--i!=0){ u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd((D*)((I)x+(I)z), u); x+=NPAR;} \
+  x=(D*)((I)x-(I)z);  /* convert x to offset */ \
+  I prevl=0, thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* align len 1-4, clamped at len */ \
+  NOUNROLL do { \
+   thisl=thisl>n0?n0:thisl; if(thisl!=prevl)endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl)); \
+   u=_mm256_maskload_pd((D*)((I)x+(I)z),endmask);  loopbody _mm256_maskstore_pd(z, endmask, u); \
+   z+=thisl; prevl=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \
+  }while(n0-=prevl); \
  } \
- u=_mm256_maskload_pd(x,endmask);  loopbody _mm256_maskstore_pd((D*)((I)x+(I)z), endmask, u); \
- x+=((n0-1)&(NPAR-1))+1; /* advance x over final remnant */  \
- z=(D*)((I)x+(I)z); /* convert z back to address */ \
+ x=(D*)((I)x+(I)z); /* convert x back to address */ \
  postloop
 
 // this version to alternate between two code blocks.  block0 is always executed last; block 0 or 1 may be executed first

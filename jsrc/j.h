@@ -1740,7 +1740,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 #define AVXATOMLOOP(parms,preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
  preloop \
- I n0=n; \
+ UI n0=n; \
  if(!((parms)&1)){ \
   I alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
   alignreq=alignreq>n-1?n-1:alignreq; n0-=alignreq;   /* never more than len-1; leave remlen>0 */ \
@@ -1765,12 +1765,15 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
   z+=((n0-1)&(NPAR-1))+1; /* advance z over final remnant */  \
  }else{ \
   x=(D*)((I)x-(I)z);  /* convert x to offset */ \
-  I prevl=0, thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* align len 1-4, clamped at len */ \
+  UI thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* align len 1-4, clamped at len */ \
   NOUNROLL do { \
-   thisl=thisl>n0?n0:thisl; if(thisl!=prevl)endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl)); \
-   u=_mm256_maskload_pd((D*)((I)x+(I)z),endmask);  loopbody _mm256_maskstore_pd(z, endmask, u); \
-   z+=thisl; prevl=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \
-  }while(n0-=prevl); \
+   thisl=thisl>n0?n0:thisl; \
+   if(thisl==NPAR)u=_mm256_loadu_pd((D*)((I)x+(I)z));  /* no way to fetch mask early without a misbranch, and we only fetch twice */ \
+   else{endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl)); u=_mm256_maskload_pd((D*)((I)x+(I)z),endmask);} \
+   loopbody \
+   if(thisl==NPAR)_mm256_storeu_pd(z, u); else _mm256_maskstore_pd(z, endmask, u); \
+   z+=thisl; n0-=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \
+  }while(n0); \
  } \
  x=(D*)((I)x+(I)z); /* convert x back to address */ \
  postloop

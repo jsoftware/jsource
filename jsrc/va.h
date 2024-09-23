@@ -353,18 +353,27 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz);
 
-// version to save I-cache
+// version to save I-cache, with only one instance of zzop
 #define PRMMASKLP(zzop,xy,fz,n) { \
-  I n0=n, prevl=0, thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* rem len, align len 1-4, clamped at len */ \
+  UI n0=n, thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* rem len, align len 1-4, clamped at len */ \
   NOUNROLL do { \
-   thisl=thisl>n0?n0:thisl; if(thisl!=prevl){if((xy)==2&&(fz)&0b110)yy=xysav; if((xy)==1&&(fz)&0b110)xx=xysav; endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl));} \
-   if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
-   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-   if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-   if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
-   zzop; _mm256_maskstore_pd(z, endmask, zz); \
-   PRMINCR(xy,fz,thisl) prevl=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \
-  }while(n0-=prevl); \
+   thisl=thisl>n0?n0:thisl; /* don't overrun input */ \
+   if(thisl==NPAR){ /* fetch args, with conversion if needed */ \
+    if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
+    if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+   }else{ \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl)); \
+    if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
+    if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+    if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+    if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+   } \
+   zzop;  /* the function */ \
+   if(thisl==NPAR){_mm256_storeu_pd(z,zz); /* store the result */ \
+   }else{_mm256_maskstore_pd(z,endmask,zz); if((xy)==2&&(fz)&0b110)yy=xysav; if((xy)==1&&(fz)&0b110)xx=xysav; \
+   } \
+   PRMINCR(xy,fz,thisl) n0-=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \
+  }while(n0); \
   }
 
 #define primop256(name,fz,pref,zzop,suff) \

@@ -735,6 +735,7 @@ struct AD {
 #define AFHRH(a) ((a)->h)    // the workarea
 
 
+
 // ********************* explicit definition block *************************
 
 // the compiled form of an explicit definition is an A block with rank 0 with AK pointing into the middle so that only the As are freed.

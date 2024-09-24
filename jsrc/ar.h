@@ -16,8 +16,8 @@
      \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){I rc;                                    \
-    Tx* RESTRICT y=x; x-=d; if(255&(rc=vecfn1(1,d,x,y,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;        \
-    DQ(n-2,    if(255&(rc=vecfnn(1,d,x,z,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);        \
+    Tx* RESTRICT y=x; x-=d; if(255&(rc=vecfn1(AH2ANP_x1(d,x,y,z,jt)), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;        \
+    DQ(n-2,    if(255&(rc=vecfnn(AH2ANP_x1(d,x,z,z,jt)), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);        \
   }}R EVOK;}
 
 
@@ -28,8 +28,8 @@
      \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){                                    \
-    Tx* RESTRICT y=x; x-=d; vecfn(1,d,x,y,z,jt); x-=d;        \
-    DQ(n-2,    vecfn(1,d,x,z,z,jt); x-=d;);        \
+    Tx* RESTRICT y=x; x-=d; vecfn(AH2ANP_x1(d,x,y,z,jt)); x-=d;        \
+    DQ(n-2,    vecfn(AH2ANP_x1(d,x,z,z,jt)); x-=d;);        \
   }}R EVOK;}
 
 // used on idempotent verbs, using 4 accumulators but using the 256-bit instructions if available
@@ -51,8 +51,8 @@
      \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){I rc;                                    \
-    Tx* RESTRICT y=x; x-=d; if(255&(rc=vecfn(1,d,x,y,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;        \
-    DQ(n-2,    if(255&(rc=vecfn(1,d,x,z,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);        \
+    Tx* RESTRICT y=x; x-=d; if(255&(rc=vecfn(AH2ANP_x1(d,x,y,z,jt)), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;        \
+    DQ(n-2,    if(255&(rc=vecfn(AH2ANP_x1(d,x,z,z,jt)), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);        \
   }}                                                               \
   R NANTEST?EVNAN:EVOK;                                                          \
 }

@@ -341,8 +341,8 @@ I plusinsE(I d,I n,I m,E* RESTRICTI x,E* RESTRICTI z,J jt){I i;  // m is # cells
    }
   }else{z+=(m-1)*d; x+=(m*n-1)*d;                                       
    for(i=0;i<m;++i,z-=d){I rc;                                   
-    E* RESTRICT y=x; x-=d; if(255&(rc=plusEE(1,d,x,y,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;       
-    DQ(n-2,    if(255&(rc=plusEE(1,d,x,z,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);       
+    E* RESTRICT y=x; x-=d; if(255&(rc=plusEE AH2A_x1(d,x,y,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;       
+    DQ(n-2,    if(255&(rc=plusEE AH2A_x1(d,x,z,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);       
   }
  }
  R EVOK;

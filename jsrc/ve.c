@@ -593,7 +593,7 @@ AHDR2(remII,I,I,I){I u,v;
   DQ(m, u=*x++;
     // take abs(x); handle negative x in a postpass
    UI ua=-u>=0?-u:u;  // abs(x)
-   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II(n,1,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
+   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II AH2A_v(n,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
    }else{
     // calculate 1/abs(x) to 53-bit precision.  Remember, x is at least 3, so the MSB will never have signed significance
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
@@ -630,7 +630,7 @@ AHDR2(remI2I2,I2,I2,I2){I u,v;
 #if SY_64 && C_USEMULTINTRINSIC
   DQ(m, u=*x++;
    UI ua=-u>=0?-u:u;  // abs(x)
-   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II(n,1,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
+   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II AH2A_v(n,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
    }else{
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
     I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)
@@ -657,7 +657,7 @@ AHDR2(remI4I4,I4,I4,I4){I u,v;
 #if SY_64 && C_USEMULTINTRINSIC
   DQ(m, u=*x++;
    UI ua=-u>=0?-u:u;  // abs(x)
-   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II(n,1,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
+   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II AH2A_v(n,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
    }else{
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
     I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)

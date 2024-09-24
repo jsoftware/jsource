@@ -183,7 +183,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; A irst=sc(SZI); RZ(*p=IRS2(irst,*p,0L,0L,0L,jtrepeat,zz));} // a atom, w atom, or multiple of SZI
  else                      ado=bwC[j];
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
- ado(n,m,AV(x),AV(y),AV(z),jt); 
+ ado AH2A_nm(AV(x),AV(y),AV(z),jt); 
  CAV(z)[zn]=0;
  RETF(z);
 }
@@ -201,8 +201,8 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* a
  else if(i==255  ){c=j; ado=(AHDR2FN*)bw1011II;}
  else R 0;
  pv=(UC*)&p; DO(SZI, pv[i]=c;);
- ado((I)(256/SZI),(I)1,AV(ds(CALP)),pv,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
- ado((n+SZI-1)>>LGSZI,(I)1,wv,pv,zv,jt); zv[n]=0;  // if we found the function, apply it wordwise
+ ado AH2A((I)(256/SZI),(I)1,AV(ds(CALP)),pv,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
+ ado AH2A((n+SZI-1)>>LGSZI,(I)1,wv,pv,zv,jt); zv[n]=0;  // if we found the function, apply it wordwise
  R 1;
 }  // kludge this should be scrapped in favor of wordlong ops
 

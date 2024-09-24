@@ -16,7 +16,7 @@
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
    DQ(d, *--z=    *--x;);                                        \
-   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(1,d,x,y,z,jt););                     \
+   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(AH2ANP_x1(d,x,y,z,jt)););                     \
  }}retstmt}
 
 #define SUFFIXNAN(f,Tz,Tx,pfx,vecfn)  \
@@ -26,7 +26,7 @@
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
    DQ(d, *--z=    *--x;);                                        \
-   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(1,d,x,y,z,jt););                     \
+   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(AH2ANP_x1(d,x,y,z,jt)););                     \
   }}                                                                   \
   R NANTEST?EVNAN:EVOK;                                                              \
  }
@@ -127,7 +127,7 @@ AHDRS(plussfxD,D,D){I i;
  }else{
   for(i=0;i<m;++i){
    DQ(d, *--z=    *--x;);
-   DQ(n-1, D *y=z; z-=d; x-=d; plusDD(1,d,x,y,z,jt););
+   DQ(n-1, D *y=z; z-=d; x-=d; plusDD AH2A_x1(d,x,y,z,jt););
   }
  }
  R NANTEST?EVNAN:EVOK;
@@ -381,7 +381,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
   adocv=var(x,t,t); // analyze the u operand
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
   MC(zv,AV(s),kc);                     // first cell is {.s, i. e. all but the first infix
-  rc=(1<d)?((AHDR2FN*)adocv.f)((I)1,c*(d-1),AV(p),kc+CAV(s),zv+kc,jt):EVOK; rc=rc<0?EWOVIP+EWOVIPMULII:rc;  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
+  rc=(1<d)?((AHDR2FN*)adocv.f)AH2A_x1(c*(d-1),AV(p),kc+CAV(s),zv+kc,jt):EVOK; rc=rc<0?EWOVIP+EWOVIPMULII:rc;  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix
   // If there was overflow on the ado, we have to redo the operation as a float.
   // We also have to redo if the types of p and s were different (for example, if one overflowed to float and the other didn't)

@@ -19,14 +19,14 @@ B jtvnm(J jt,I n,C *s){C c,t;I j;
   R 1^((t&1)|(cn=='_'));  // 1- or 2-char name, OK if char(s) OK & doesn't end with _
  }
  {C prevcu0; C cu0=cn^'_';  // cu0 = 0 iff cn=='_'
-  j=-1;  // Init no indirect locative found
-  DQU(n-2, prevcu0=cu0; t|=ctype[(UC)(c=s[i+1])]; cu0=c^'_'; j=(cu0|prevcu0)?j:i;)
+  j=0;  // Init no indirect locative found
+  DQU(n-2, prevcu0=cu0; t|=ctype[(UC)(c=s[i])]; cu0=c^'_'; j=(cu0|prevcu0)?j:i;) --j;  // check 1..n-1
  }
- // Now t is the mask of invalidity, and j is the index of the first __ (-1 if no __)
+ // Now t is the mask of invalidity, and j is the index before the leftmost _ of the first __ (-1 if no __)
  if((t&1)+((cn!='_')&SGNTO0(j)))R 1^(t&1);   // Return if accumulated error, or if not trailing '_' and no __ (normal return)
  // If the last char is _, any ind loc is invalid (but not trailing __); scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
  if(cn=='_'){if(j>=0)R j==n-3; j=n-3; NOUNROLL do{if(s[j]=='_')R((ctype[(UC)s[j+1]]&CA)||vlocnm(n-j-2,s+j+1));}while(--j>0); R 0;}  // return if any __, including at end; find last '_', which cannot be in the last 2 chars; see if valid locale name; if no '_', error
- // Here last char was not _, and j is still pointed after __ if any
+ // Here last char was not _, and j is still pointed before __ if any
  // There is an indirect locative.  Scan all of them, verifying first char of each name is alphabetic (all chars were verified alphameric above)
  // Also verify that any _ is preceded or followed by _
  // First handle the special case of trailing numeric indirect locative, which refers to the debug stack.

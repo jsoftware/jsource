@@ -930,6 +930,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #include "jr0.h" // #define ASSERT(b,e) {if(unlikely(!(b))){jsignal(e); R 0;}}
+
 #define ASSERTF(b,e,s...)     {if(unlikely(!(b))){jsignal(e); R 0;}}
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
@@ -1084,7 +1085,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define DQNOUNROLL(n,stm...)  {UI i=(n); if((I)i>0){--i; NOUNROLL do{stm}while(i--);}}  // i runs from n-1 downto 0 (fastest when you don't need i).  i is UI
 #define DOU(n,stm...)         {I _n=(n); I i=0; do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
 #define DPU(n,stm...)         {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
-#define DQU(n,stm...)         {I i=(I)(n)-1;  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
+#define DQU(n,stm...)         {UI i=(I)(n);  do{stm}while(--i!=0);}  // i runs from n-1 downto 0, always at least once
 #define DOSTEP(n,step,stm...) {I _n=(n); I i=0; for(;_n;i++,_n-=(step)){stm}}  // i runs from 0 to n-1, but _n counts down
 
 // C suffix indicates that the count is one's complement
@@ -1697,7 +1698,6 @@ static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b,
 #define NAN1            {if(unlikely(_SW_INVALID&_clearfp())){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(unlikely(_SW_INVALID&_clearfp())){jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_clearfp())
-#define OP1XYZ(name,Tz,Tx,Ty,pfx) I name##1##Tx##Ty##Tz(I one, I d, Tx *x, Ty *y, Tz *z, J jt){DO(d, z[i]=pfx(x[i],y[i]);) R EVOK;}
 
 // for debug only
 // #define NAN1            {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R 0;}}
@@ -2324,12 +2324,53 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #endif
 
 #define J struct JSTstruct *
+
+
 #include "ja.h" 
 #include "jc.h" 
 #include "jtype.h" 
 #include "jerr.h" 
 #include "m.h"
 #include "jt.h" 
+
+// ************* primitive function declarations **********************
+
+typedef I AHDR1FN(J RESTRICT jt,I n,void* z,void* x);  // negative return is offset to failure point in >. or <.
+typedef I AHDR2FN(I n,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y,J jt);  // negative return is failure point for integer multiply
+// We experiment with argument ordering into AHDR2FNs.  Originally the order was n,m,x,y,z,jt and we reorder it to match the declaration.
+// z is needed early for alignment.  The stacked value (y now) is being calculated during the call and then has to be pushed and popped before use, which
+// might make it the limiting factor up till the end of alignment.  Alternative is to put n on the stack, in the hope that it will predict correctly
+// & not be needed, but it will delay misprediction detection.  Final idea is to encode n=1 as negative m, which would detect the misprediction immediately & not 
+// need to fetch n at all
+#define AHDR2(f,Tz,Tx,Ty)       I f(I n,I m,Tz* RESTRICTI z,Tx* RESTRICTI x,Ty* RESTRICTI y,J jt)  // must match VF, AHDR2FN  n is #repeats of arg; if n neg, repeat x ~n times.  m is # times to repeat an n-cell
+#define AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt) ahn,ahm,ahz,ahx,ahy,ahjt
+#define AH2A(ahn,ahm,ahx,ahy,ahz,ahjt) (AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt))
+#define AH2ANP_v(ahn,ahx,ahy,ahz,ahjt) ahn,1,ahz,ahx,ahy,ahjt
+#define AH2A_v(ahn,ahx,ahy,ahz,ahjt) (AH2ANP_v(ahn,ahx,ahy,ahz,ahjt))
+#define AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt) 1,ahm,ahz,ahx,ahy,ahjt
+#define AH2A_x1(ahm,ahx,ahy,ahz,ahjt) (AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt))
+#define AH2ANP_nm(ahx,ahy,ahz,ahjt) n,m,ahz,ahx,ahy,ahjt
+#define AH2A_nm(ahx,ahy,ahz,ahjt) (AH2ANP_nm(ahx,ahy,ahz,ahjt))
+
+// following must match AHDR2FN
+#define OP1XYZ(name,Tz,Tx,Ty,pfx) I name##1##Tx##Ty##Tz(I one, I d, Tz *z,  Tx *x, Ty *y,J jt){DO(d, z[i]=pfx(x[i],y[i]);) R EVOK;}
+typedef I AHDRPFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);  // these 3 must be the same for now, for VARPS.  The return is never negative
+typedef I AHDRRFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
+typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
+
+  // Calculate m: #cells of w to operate on; d: #atoms in an item of a cell of w (a cell to which u is applied);
+ // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
+#define AHDRP(f,Tz,Tx)          I f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
+#define AHDRR(f,Tz,Tx)          I f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
+#define AHDRS(f,Tz,Tx)          I f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
+
+
+#define AHDR1(f,Tz,Tx)          I f(J RESTRICT jt,I n,Tz* z,Tx* x)   // must match VA1F, AHDR1FN
+#define AMON(f,Tz,Tx,stmt)      AHDR1(f,Tz,Tx){DQ(n, {stmt} ++z; ++x;); R EVOK;}
+#define AMONPS(f,Tz,Tx,prefix,stmt,suffix)      AHDR1(f,Tz,Tx){prefix DQ(n, {stmt} ++z; ++x;) suffix}
+#define HDR1JERR I rc=jt->jerr; jt->jerr=0; R rc?rc:EVOK;   // translate no error to no-error value
+#define HDR1JERRNAN I rc=jt->jerr; rc=NANTEST?EVNAN:rc; jt->jerr=0; R rc?rc:EVOK;   // translate no error to no-error value
+
 #include "mt.h"
 #include "jlib.h"
 #include "je.h" 

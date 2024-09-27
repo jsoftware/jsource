@@ -123,9 +123,9 @@ AHDR2(name,B,D,D){ \
  __m256i endmask; /* length mask for the last word */ \
  __m256d u,v,cct,ctop,eq; /* args, ct, eq result and also main result */ \
  decls \
- if(jt->cct!=1.0){ \
+ if(jt->cct!=1.0){  /* tolerant */ \
   cct=_mm256_broadcast_sd(&jt->cct); \
-  if(n-1==0){ \
+  if(m<0){m=~m; \
    /* vector op vector, no repetitions */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    DQ((m-1)>>LGNPAR, \
@@ -140,13 +140,13 @@ AHDR2(name,B,D,D){ \
    eq=tolres; \
    STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
   }else{ \
-   if(n-1<0){n=~n; \
+   if(m&1){m>>=1; \
     /* atom op vector */ \
-    if(m==1 && *x==0.0)goto name##av0;  /* if comparing against 0, switch to intolerant */ \
-    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-    DQ(m, u=_mm256_broadcast_sd(x); ++x; \
+    if(n==1 && *x==0.0)goto name##av0;  /* if comparing against 0, switch to intolerant */ \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1)))); \
+    DQU(n, u=_mm256_broadcast_sd(x); ++x; \
       ctop=_mm256_mul_pd(u,cct); \
-      DQ((n-1)>>LGNPAR, \
+      DQ((m-1)>>LGNPAR, \
         v=LOADFN(_mm256_loadu_pd(y)); \
         eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,ctop,_CMP_LE_OQ)); \
         eq=tolres; \
@@ -155,15 +155,15 @@ AHDR2(name,B,D,D){ \
       v=LOADFN(_mm256_maskload_pd(y,endmask)); \
       eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,ctop,_CMP_LE_OQ)); \
       eq=tolres; \
-      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
-      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
-   }else{ \
+      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
+      y+=((m-1)&(NPAR-1))+1; z+=((m-1)&(NPAR-1))+1;) \
+   }else{m>>=1; \
     /* vector op atom */ \
-    if(m==1 && *y==0.0)goto name##va0;  /* if comparing against 0, switch to intolerant */ \
-    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-    DQ(m, v=LOADFN(_mm256_broadcast_sd(y)); ++y; \
+    if(n==1 && *y==0.0)goto name##va0;  /* if comparing against 0, switch to intolerant */ \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1)))); \
+    DQU(n, v=LOADFN(_mm256_broadcast_sd(y)); ++y; \
       ctop=_mm256_mul_pd(v,cct); \
-      DQ((n-1)>>LGNPAR, \
+      DQ((m-1)>>LGNPAR, \
         u=_mm256_loadu_pd(x); \
         eq=_mm256_xor_pd(_mm256_cmp_pd(u,ctop,_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
         eq=tolres; \
@@ -172,32 +172,32 @@ AHDR2(name,B,D,D){ \
       u=_mm256_maskload_pd(x,endmask); \
       eq=_mm256_xor_pd(_mm256_cmp_pd(u,ctop,_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
       eq=tolres; \
-      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
-      x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
+      x+=((m-1)&(NPAR-1))+1; z+=((m-1)&(NPAR-1))+1;) \
    } \
   } \
- }else{ \
-  if(n-1==0){ \
+ }else{  /* intolerant */ \
+  if(m<0){m=~m; \
    /* vector op!.0 vector, no repetitions */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    PCOMPDUFF(intolres,m,3,LOADFN) \
    PCOMPMASK(intolres,3,m,LOADFN) /* runout, using mask */ \
   }else{ \
-   if(n-1<0){n=~n; \
+   if(m&1){m>>=1; \
     name##av0: /* atom op!.0 vector */ \
-    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-    DQ(m, u=_mm256_broadcast_sd(x); ++x; \
-     PCOMPDUFF(intolres,n,1,LOADFN) \
-     PCOMPMASK(intolres,1,n,LOADFN) /* runout, using mask */ \
-     PCOMPINCR(((n-1)&(NPAR-1))+1,1) \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1)))); \
+    DQU(n, u=_mm256_broadcast_sd(x); ++x; \
+     PCOMPDUFF(intolres,m,1,LOADFN) \
+     PCOMPMASK(intolres,1,m,LOADFN) /* runout, using mask */ \
+     PCOMPINCR(((m-1)&(NPAR-1))+1,1) \
     ) \
-   }else{ \
+   }else{m>>=1; \
     name##va0: /* vector op!.0 atom */ \
-    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-    DQ(m, v=LOADFN(_mm256_broadcast_sd(y)); ++y; \
-     PCOMPDUFF(intolres,n,2,LOADFN) \
-     PCOMPMASK(intolres,2,n,LOADFN) /* runout, using mask */ \
-     PCOMPINCR(((n-1)&(NPAR-1))+1,2) \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1)))); \
+    DQU(n, v=LOADFN(_mm256_broadcast_sd(y)); ++y; \
+     PCOMPDUFF(intolres,m,2,LOADFN) \
+     PCOMPMASK(intolres,2,m,LOADFN) /* runout, using mask */ \
+     PCOMPINCR(((m-1)&(NPAR-1))+1,2) \
     ) \
    } \
   } \
@@ -223,7 +223,7 @@ AHDR2(name,B,I,I){ \
  __m256i endmask; /* length mask for the last word */ \
  __m256i u,v,eq; /* args, ct, main result */ \
  decls \
- if(n-1==0){ \
+ if(m<0){m=~m; \
   /* vector-to-vector, no repetitions */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   DQ((m-1)>>LGNPAR, \
@@ -236,32 +236,32 @@ AHDR2(name,B,I,I){ \
   eq=result; \
   STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(eq),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
  }else{ \
-  if(n-1<0){n=~n; \
+  if(m&1){m>>=1; \
    /* atom+vector */ \
-   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-   DQ(m,; u=_mm256_castpd_si256(_mm256_broadcast_sd((D*)x)); ++x; \
-     DQ((n-1)>>LGNPAR, \
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1)))); \
+   DQU(n,; u=_mm256_castpd_si256(_mm256_broadcast_sd((D*)x)); ++x; \
+     DQ((m-1)>>LGNPAR, \
        v=_mm256_loadu_si256((__m256i*)y); \
        eq=result; \
        *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(eq); \
        y+=NPAR; z+=NPAR;) \
      v=_mm256_maskload_epi64(y,endmask); \
      eq=result; \
-     STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(eq),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
-     y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
-  }else{ \
+     STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(eq),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
+     y+=((m-1)&(NPAR-1))+1; z+=((m-1)&(NPAR-1))+1;) \
+  }else{m>>=1; \
    /* vector+atom */ \
-   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-   DQ(m, v=_mm256_castpd_si256(_mm256_broadcast_sd((D*)y)); ++y; \
-     DQ((n-1)>>LGNPAR, \
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1)))); \
+   DQU(n, v=_mm256_castpd_si256(_mm256_broadcast_sd((D*)y)); ++y; \
+     DQ((m-1)>>LGNPAR, \
        u=_mm256_loadu_si256((__m256i*)x); \
        eq=result; \
        *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(eq); \
        x+=NPAR; z+=NPAR;) \
      u=_mm256_maskload_epi64(x,endmask); \
      eq=result; \
-     STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(eq),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
-     x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+     STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(eq),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
+     x+=((m-1)&(NPAR-1))+1; z+=((m-1)&(NPAR-1))+1;) \
   } \
  } \
  R EVOK; \

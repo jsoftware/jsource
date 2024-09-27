@@ -247,9 +247,9 @@
 // exp takes u and v, sets zz
 #define AEXP(f,Tz,Tx,Ty,exp)  \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;Tz zz;                            \
-  if(n-1==0)  DQ(m, u=*x++; v=*y++; exp  *z++=zz; )   \
-  else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y++; exp  *z++=zz;))   \
-  else      DQ(m, v=*y++; DQ(n, u=*x++; exp  *z++=zz;   ));  \
+  if(m<0)  DQUC(m, u=*x++; v=*y++; exp  *z++=zz; )   \
+  else if(m&1)DQU(n, u=*x++; DQU(m>>1, v=*y++; exp  *z++=zz;))   \
+  else      DQU(n, v=*y++; DQU(m>>1, u=*x++; exp  *z++=zz;   ));  \
   R EVOK; \
  }
 
@@ -260,9 +260,9 @@
 #define APFXL(f,Tz,Tx,Ty,ldfn,pfx,pref,suff)   \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
   pref \
-  if(n-1==0)  DQ(m, u=ldfn(*x++); v=ldfn(*y++); *z++=pfx(u,v); )   \
-  else if(n-1<0)DQ(m, u=ldfn(*x++); DQC(n, v=ldfn(*y++); *z++=pfx(u,v);))   \
-  else      DQ(m,  v=ldfn(*y++); DQ(n, u=ldfn(*x++); *z++=pfx(u, v);    ));  \
+  if(m<0)  DQUC(m, u=ldfn(*x++); v=ldfn(*y++); *z++=pfx(u,v); )   \
+  else if(m&1)DQU(n, u=ldfn(*x++); DQU(m>>1, v=ldfn(*y++); *z++=pfx(u,v);))   \
+  else      DQU(n,  v=ldfn(*y++); DQU(m>>1, u=ldfn(*x++); *z++=pfx(u, v);    ));  \
   suff \
  }
 
@@ -303,27 +303,32 @@
 // align stores. We do this always to avoid a misbranch.  We calculate the amount of alignment needed
 // as 0-4 words, but never more than the total length-1
 #define PRMALIGN(zzop,xy,fz,len) \
-  I alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
+  UI alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
   alignreq=alignreq>len-1?len-1:alignreq;   /* never more than len-1 */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=0000, 01=1000, 10=1100, 11=1110, 100=1111 */ \
-  if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
+  if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+  if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+  else yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
+  if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+  else xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); /* init incomplaete fetch */ \
   zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
+  if((xy)==2)yy=xysav; if((xy)==1)xx=xysav; \
   len-=alignreq;  /* leave remlen>0 */
 
 
 #define PRMDUFF(zzop,xy,fz,len) \
-     UI backoff=DUFFBACKOFF(len-1,3); \
-     UI n2=DUFFLPCT(len-1,3);  /* # turns through duff loop */ \
-     backoff=n2?backoff:n2;  /* handle case of 0 turns in loop */ \
+     UI backoff=DUFFBACKOFF((len)-1,3); \
+     UI m2=DUFFLPCT((len)-1,3);  /* # turns through duff loop */ \
+     backoff=m2?backoff:m2;  /* handle case of 0 turns in loop */ \
      PRMINCR(xy,fz,(backoff+1)*NPAR) \
-     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-(len))&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
      switch(backoff){ \
      case 0: PRMINCR(xy,fz,-1*NPAR) if(0){ \
      do{ \
      case -1: PRMDO(zzop,xy,fz,0) case -2: PRMDO(zzop,xy,fz,1) case -3: PRMDO(zzop,xy,fz,2) case -4: PRMDO(zzop,xy,fz,3) case -5: PRMDO(zzop,xy,fz,4) case -6: PRMDO(zzop,xy,fz,5) case -7: PRMDO(zzop,xy,fz,6) case -8: PRMDO(zzop,xy,fz,7) \
      PRMINCR(xy,fz,8*NPAR) \
-     }while(--n2!=0); \
+     }while(--m2!=0); \
      } \
      }
 
@@ -334,10 +339,10 @@
   zzop; _mm256_maskstore_pd(z, endmask, zz);
 
 // version to save I-cache, with only one instance of zzop
-#define PRMMASKLP(zzop,xy,fz,n) { \
-  UI n0=n, thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* rem len, align len 1-4, clamped at len */ \
+#define PRMMASKLP(zzop,xy,fz) { \
+  UI thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* rem len, align len 1-4, clamped at len */ \
   NOUNROLL do { \
-   thisl=thisl>n0?n0:thisl; /* don't overrun input */ \
+   thisl=thisl>m0?m0:thisl; /* don't overrun input */ \
    if(thisl==NPAR){ /* fetch args, with conversion if needed */ \
     if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
     if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
@@ -352,8 +357,8 @@
    if(thisl==NPAR){_mm256_storeu_pd(z,zz); /* store the result */ \
    }else{_mm256_maskstore_pd(z,endmask,zz); if((xy)==2&&(fz)&0b110)yy=xysav; if((xy)==1&&(fz)&0b110)xx=xysav; \
    } \
-   PRMINCR(xy,fz,thisl) n0-=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \
-  }while(n0); \
+   PRMINCR(xy,fz,thisl) m0-=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \
+  }while(m0); \
   }
 
 #define primop256(name,fz,pref,zzop,suff) \
@@ -362,51 +367,51 @@ AHDR2(name,void,void,void){ \
  __m256i endmask; /* length mask for the last word */ \
  __m256d xysav;  \
  CVTEPI64DECLS pref \
- if(n-1==0){ \
+ if(m<0){m=~m; n=1; UI m0=m; \
   /* vector-to-vector of length m, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
   if(!XBYT(fz))x-=(I)z; if(!YBYT(fz))y-=(I)z;  /* convert x/y to offset if same len as z */ \
   if(!((fz)&32+16+8)){   /* unrolled mode */ \
-   PRMALIGN(zzop,3,fz,m)  /* this changes m */ \
-   PRMDUFF(zzop,3,fz,m) \
+   PRMALIGN(zzop,3,fz,m0)  /* this changes m0 */ \
+   PRMDUFF(zzop,3,fz,m0) \
    PRMMASK(zzop,3,fz) /* runout, using mask */ \
-  }else PRMMASKLP(zzop,3,fz,m)   /* one loop using maskload */ \
+  }else PRMMASKLP(zzop,3,fz)   /* one loop using maskload */ \
  }else{ \
-  if(!((fz)&1)&&n-1<0){n=~n; \
-   /* m applications of atom+vector of length ~n (never used if commutative) */ \
-   if(!YBYT(fz))y-=(I)z;  /* convert y to offset if same len as z */ \
-   DQNOUNROLL(m, \
+  if(!((fz)&1)&&m&1){ \
+   /* n applications of atom+vector of length m>>1 (never used if commutative) */ \
+   m>>=1; if(!YBYT(fz))y-=(I)z;  /* convert y to offset if same len as z */ \
+   DQNOUNROLL(n, \
     if(unlikely((fz)&0x140 && (((fz)&0x400 && y==0 && *(C*)x!=0) || ((fz)&0x800 && y==0 && *(C*)x==0)))){ /* inplace and op leaves value unchanged */ \
-     INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(z,n,fz,0,0,0) \
+     INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(z,m,fz,0,0,0) \
     }else{ \
+     UI m0=m; \
      LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
-     if((fz)&0b110)xysav=xx;  /* MASKLP needs to save orig xx */ \
+     xysav=xx;  /* MASKLP & ALIGN need to save orig xx */ \
      if(!((fz)&32+16)){   /* unrolled mode */ \
-      I n0=n; \
-      PRMALIGN(zzop,1,fz,n0) /* changes n0 */\
-      PRMDUFF(zzop,1,fz,n0) \
+      PRMALIGN(zzop,1,fz,m0) /* changes m0 */\
+      PRMDUFF(zzop,1,fz,m0) \
       PRMMASK(zzop,1,fz) /* runout, using mask */ \
-      PRMINCR(1,fz,((n0-1)&(NPAR-1))+1)  \
-     }else PRMMASKLP(zzop,1,fz,n)   /* one loop using maskload */ \
+      PRMINCR(1,fz,((m0-1)&(NPAR-1))+1)  \
+     }else PRMMASKLP(zzop,1,fz)   /* one loop using maskload */ \
     } \
    ) \
   }else{ \
-   /* m applications of vector of length n+atom */ \
-   if((fz)&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);}  /* swap commutatives as needed */ \
-   if(!XBYT(fz))x-=(I)z;  /* convert x to offset if same len as z */ \
-   DQNOUNROLL(m, \
+   /* n applications of vector of length m>>1+atom */ \
+   if((fz)&1){I taddr=(I)x^(I)y; x=m&1?y:x; y=(D*)((I)x^taddr);}  /* swap commutatives as needed */ \
+   m>>=1; if(!XBYT(fz))x-=(I)z;  /* convert x to offset if same len as z */ \
+   DQNOUNROLL(n, \
     if(unlikely((fz)&0x280 && (((fz)&0x400 && x==0 && *(C*)y!=0) || ((fz)&0x800 && x==0 && *(C*)y==0)))){ \
-     INCRBID(y,1,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
+     INCRBID(y,1,fz,0x10,0x80,0x200) INCRBID(z,m,fz,0,0,0) \
     }else { \
+     UI m0=m; \
      LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,1,fz,0x10,0x80,0x200) \
-     if((fz)&0b110)xysav=yy;  /* MASKLP needs to save orig yy */ \
+     xysav=yy;  /* MASKLP and ALIGN need to save orig yy */ \
      if(!((fz)&32+8)){   /* unrolled mode */ \
-      I n0=n; \
-      PRMALIGN(zzop,2,fz,n0) /* changes n0 */ \
-      PRMDUFF(zzop,2,fz,n0) \
+      PRMALIGN(zzop,2,fz,m0) /* changes m0 */ \
+      PRMDUFF(zzop,2,fz,m0) \
       PRMMASK(zzop,2,fz) /* runout, using mask */ \
-      PRMINCR(2,fz,((n0-1)&(NPAR-1))+1)  \
-     }else PRMMASKLP(zzop,2,fz,n)   /* one loop using maskload */ \
+      PRMINCR(2,fz,((m0-1)&(NPAR-1))+1)  \
+     }else PRMMASKLP(zzop,2,fz)   /* one loop using maskload */ \
     } \
    ) \
   } \
@@ -428,13 +433,13 @@ AHDR2(name,void,void,void){ \
 AHDR2(name,CET,CET,CET){ \
  __m256d z0, z1, x0, x1, y0, y1, in0, in1; \
  cepref \
- /* convert vector args, which are the same size as z, to offsets from z; flag atom args */ \
- if(likely(n-1==0)){x=(CET*)((C*)x-(C*)z); y=(CET*)((C*)y-(C*)z);  /* vector op vector, both args offset */ \
- }else{  /* one arg is atom - flag addr and fetch repeated value.  m is #atom-vec loops, n is length of each and switch flag */ \
-  {I taddr=(I)x^(I)y; x=n-1>0?y:x; y=(CET*)((I)x^taddr);}  /* if repeated vector op atom, exchange to be atom op vector for ease of fetch */ \
+ /* convert vector args, which are the same size as z, to offsets from z; flag atom args. */ \
+ if(likely(m<0)){n=1; m=~m; x=(CET*)((C*)x-(C*)z); y=(CET*)((C*)y-(C*)z);  /* vector op vector, both args offset */ \
+ }else{  /* one arg is atom - flag addr and fetch repeated value.  n is #atom-vec loops, m>>1 is length of each and switch flag */ \
+  {I taddr=(I)x^(I)y; x=m&1?x:y; y=(CET*)((I)x^taddr);}  /* if repeated vector op atom, exchange to be atom op vector for ease of fetch */ \
   y=(CET*)((C*)y-(C*)z);  /* convert the full-sized y arg to offset form */ \
-  x=(CET*)((I)x+1); if(fz&1){x=(CET*)((I)x+(~REPSGN(n)&2));}  /* flag x: atom in bit 0, swapped in bit 1 */ \
-  I t=m; m=n^REPSGN(n); n=t; /* convert vec len to positive, move to m; move outer loop count to n */ \
+  x=(CET*)((I)x+1); if(fz&1){x=(CET*)((I)x+(2*(~m&1)));}  /* flag x: atom in bit 0, swapped in bit 1    n=#outer loops, m=length of inner loop*/ \
+  m>>=1; /* adjust vec len */ \
 atomveclp: ;  /* come back here to do next atom op vector loop, with z running */ \
   /* read the repeated value and convert to internal form */ \
   if(!(fz&1)){  /* commutative value */ \
@@ -534,22 +539,22 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
 /* Embedded visual tools v3.0 fails perform the z++ on all wince platforms. -KBI */
 #define ACMP(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
-  if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
-  else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; *z=pfx(u,v); z++;))    \
-  else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
+  if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
+  else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; *z=pfx(u,v); z++;))    \
+  else      DQU(n, v=(D)*y++; DQU(m>>1, u=(D)*x++; *z=pfx(u,v); z++;));   \
   R EVOK; \
  }
 
 #define ACMP0T(f,Tz,Tx,Ty,Txy,pfx,pfx0)   \
  AHDR2(f,B,Tx,Ty){Txy u; Txy v;                                             \
   if(jt->cct!=1.0){ \
-   if(n-1==0)  DQ(m, u=*x++;       v=*y++; *z=pfx(u,v); z++; )    \
-   else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y++; *z=pfx(u,v); z++;))    \
-   else      DQ(m, v=*y++; DQ(n, u=*x++; *z=pfx(u,v); z++;));   \
+   if(m<0)  DQUC(m, u=*x++;       v=*y++; *z=pfx(u,v); z++; )    \
+   else if(m&1)DQU(n, u=*x++; DQU(m>>1, v=*y++; *z=pfx(u,v); z++;))    \
+   else      DQU(n, v=*y++; DQU(m>>1, u=*x++; *z=pfx(u,v); z++;));   \
   }else{ \
-   if(n-1==0)  DQ(m, u=*x++;       v=*y++; *z=pfx0(u,v); z++; )    \
-   else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y++; *z=pfx0(u,v); z++;))    \
-   else      DQ(m, v=*y++; DQ(n, u=*x++; *z=pfx0(u,v); z++;));   \
+   if(m<0)  DQUC(m, u=*x++;       v=*y++; *z=pfx0(u,v); z++; )    \
+   else if(m&1)DQU(n, u=*x++; DQU(m>>1, v=*y++; *z=pfx0(u,v); z++;))    \
+   else      DQU(n, v=*y++; DQU(m>>1, u=*x++; *z=pfx0(u,v); z++;));   \
   } \
   R EVOK; \
  }
@@ -557,13 +562,13 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
 #define ACMP0(f,Tz,Tx,Ty,pfx,pfx0)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
   if(jt->cct!=1.0){ \
-   if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
-   else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; *z=pfx(u,v); z++;))    \
-   else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
+   if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
+   else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; *z=pfx(u,v); z++;))    \
+   else      DQU(n, v=(D)*y++; DQU(m>>1, u=(D)*x++; *z=pfx(u,v); z++;));   \
   }else{ \
-   if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; *z=u pfx0 v; z++; )    \
-   else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; *z=u pfx0 v; z++;))    \
-   else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=u pfx0 v; z++;));   \
+   if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; *z=u pfx0 v; z++; )    \
+   else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; *z=u pfx0 v; z++;))    \
+   else      DQU(n, v=(D)*y++; DQU(m>>1, u=(D)*x++; *z=u pfx0 v; z++;));   \
   } \
   R EVOK; \
  }
@@ -571,13 +576,13 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
 #define ACMP0ABS(f,Tz,Tx,Ty,pfx,pfx0)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
   if(jt->cct!=1.0){ \
-   if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++; )    \
-   else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++;))    \
-   else      DQ(m, v=(D)*y++; v=ABS(v); DQ(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
+   if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++; )    \
+   else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++;))    \
+   else      DQU(n, v=(D)*y++; v=ABS(v); DQU(m>>1, u=(D)*x++; *z=pfx(u,v); z++;));   \
   }else{ \
-   if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++; )    \
-   else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++;))    \
-   else      DQ(m, v=(D)*y++; v=ABS(v); DQ(n, u=(D)*x++; *z=u pfx0 v; z++;));   \
+   if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++; )    \
+   else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++;))    \
+   else      DQU(n, v=(D)*y++; v=ABS(v); DQU(m>>1, u=(D)*x++; *z=u pfx0 v; z++;));   \
   } \
   R EVOK; \
  }
@@ -588,20 +593,20 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
 #define BPFXNOAVX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
 AHDR2(f,void,void,void){ I u,v;       \
  decls \
- if(n-1==0){                                             \
+ if(m<0){m=~m;                                             \
   DQ(((m-1)>>LGSZI), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);           \
   u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
- }else if(n-1<0){n=~n;                      \
-  DQ(m, \
+ }else if(m&1){m>>=1;                      \
+  DQU(n, \
    REPLBYTETOW(*(C*)x,u); x=(C*)x+1; \
-   DQ(((n-1)>>LGSZI), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
-   v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); y=(I*)((UC*)y+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
+   DQ(((m-1)>>LGSZI), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
+   v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1)); y=(I*)((UC*)y+(((m-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((m-1)&(SZI-1))+1)); \
   ) \
- }else{  \
-  DQ(m, \
+ }else{m>>=1;  \
+  DQU(n, \
    REPLBYTETOW(*(C*)y,v); y=(C*)y+1; \
-   DQ(((n-1)>>LGSZI), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
-   u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); x=(I*)((UC*)x+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
+   DQ(((m-1)>>LGSZI), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
+   u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1)); x=(I*)((UC*)x+(((m-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((m-1)&(SZI-1))+1)); \
   ) \
  } \
  R EVOK; \
@@ -611,37 +616,37 @@ AHDR2(f,void,void,void){ I u,v;       \
 #define BPFX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
 AHDR2(f,void,void,void){ I u,v;       \
  decls  \
- if(n-1==0){                                             \
-  if((m-1)>>(LGSZI+LGNPAR)){__m256d u256,v256; decls256 \
-   DQU((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_pd(x); v256=_mm256_loadu_pd(y); \
+ if(m<0){m=~m;                                             \
+  {__m256d u256,v256; decls256 \
+   DQ((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_pd(x); v256=_mm256_loadu_pd(y); \
     _mm256_storeu_pd(z, fuv); x=(C*)x+NPAR*SZI; y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
    ) \
   } \
-  DQ(((m-1)>>LGSZI)&(NPAR-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);           \
+  DQ(((m-1)>>LGSZI)&(NPAR-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);   \
   u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
- }else if(n-1<0){n=~n;                      \
-  DQ(m, \
+ }else if(m&1){m>>=1;                      \
+  DQU(n, \
    __m256d u256;__m256d v256; u256=_mm256_castsi256_pd(_mm256_set1_epi8(*(C*)x)); \
-   if((n-1)>>(LGSZI+LGNPAR)){decls256 \
-    DQU((n-1)>>(LGSZI+LGNPAR), v256=_mm256_loadu_pd(y); \
+   {decls256 \
+    DQ((m-1)>>(LGSZI+LGNPAR), v256=_mm256_loadu_pd(y); \
      _mm256_storeu_pd(z, fuv); y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
     ) \
    } \
    u=_mm_extract_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(u256)),0); x=(C*)x+1; \
-   DQ(((n-1)>>LGSZI)&(NPAR-1), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
-   v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); y=(I*)((UC*)y+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
+   DQ(((m-1)>>LGSZI)&(NPAR-1), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
+   v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1)); y=(I*)((UC*)y+(((m-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((m-1)&(SZI-1))+1)); \
   ) \
- }else{  \
-  DQ(m, \
+ }else{m>>=1;  \
+  DQU(n, \
    __m256d u256;__m256d v256; v256=_mm256_castsi256_pd(_mm256_set1_epi8(*(C*)y)); \
-   if((n-1)>>(LGSZI+LGNPAR)){decls256 \
-    DQU((n-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_pd(x); \
+   {decls256 \
+    DQ((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_pd(x); \
      _mm256_storeu_pd(z, fuv); x=(C*)x+NPAR*SZI; z=(C*)z+NPAR*SZI; \
     ) \
    } \
    v=_mm_extract_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(v256)),0); y=(C*)y+1; \
-   DQ(((n-1)>>LGSZI)&(NPAR-1), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
-   u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); x=(I*)((UC*)x+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
+   DQ(((m-1)>>LGSZI)&(NPAR-1), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
+   u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1)); x=(I*)((UC*)x+(((m-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((m-1)&(SZI-1))+1)); \
   ) \
  } \
  R EVOK; \

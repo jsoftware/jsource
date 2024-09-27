@@ -308,7 +308,7 @@ REDUCEPFX( plusinsX, X, X, xplus, plusXX, plusXX )
 
 static OP1XYZ(plus,I,I2,I2,pfxplus)
 OP1XYZ(plus,I,I2,I,pfxplus)
-REDUCEPFX( plusinsI2, I, I2, pfxplus, plus1I2I2I, plus1I2II )
+REDUCEPFX(plusinsI2, I, I2, pfxplus, plus1I2I2I, plus1I2II )
 static OP1XYZ(plus,I,I4,I4,pfxplus)
 OP1XYZ(plus,I,I4,I,pfxplus)
 REDUCEPFX( plusinsI4, I, I4, pfxplus, plus1I4I4I, plus1I4II )
@@ -341,8 +341,8 @@ I plusinsE(I d,I n,I m,E* RESTRICTI x,E* RESTRICTI z,J jt){I i;  // m is # cells
    }
   }else{z+=(m-1)*d; x+=(m*n-1)*d;                                       
    for(i=0;i<m;++i,z-=d){I rc;                                   
-    E* RESTRICT y=x; x-=d; if(255&(rc=plusEE AH2A_x1(d,x,y,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;       
-    DQ(n-2,    if(255&(rc=plusEE AH2A_x1(d,x,z,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);       
+    E* RESTRICT y=x; x-=d; if(255&(rc=plusEE AH2A_v(d,x,y,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;       
+    DQ(n-2,    if(255&(rc=plusEE AH2A_v(d,x,z,z,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc))R rc; x-=d;);       
   }
  }
  R EVOK;

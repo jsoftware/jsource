@@ -711,7 +711,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
      // m is the number of outer loops the caller will run
      // n is the number of times the inner-loop atom is repeated for each outer loop: n=1 means no inner loop needed; n>1 means each atom of y is repeated n times; n<0 means each atom of x is repeated ~n times.  n*m cannot=0. 
     I i=mf; I jj=nf;
-    lp000: {I lrc=((AHDR2FN*)aadocv->f)AH2A_nm(av,wv,zv,jt);    // run one section.  Result of 0 means error
+    lp000: {I lrc=((AHDR2FN*)aadocv->f)AH2A_nm(n,m,av,wv,zv,jt);    // run one section.  Result of 0 means error
      if(unlikely(lrc!=EVOK)){
       // section did not complete normally.
       if(unlikely(lrc<0)){mulofloloc=(mf-i)*m*(n^REPSGN(n))+~lrc; rc=EWOVIP+EWOVIPMULII; goto lp000e;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
@@ -764,7 +764,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
       // we must multiply out the repeat to leave n=1.
       av=CAV(nipw?w:a);  // point to the not-in-place argument
       I nsgn=SGNTO0(n); n^=REPSGN(n); if(nipw==nsgn){m *= n; n = 1;} n^=-nipw;  // force n to <=1; make n flag indicate whether args were switched
-      I i=mf; I jj=nf; NOUNROLL while(1){((AHDR2FN*)adocv.f)AH2A_nm(av,zv,zzv,jt); if(!--i)break; zv+=aawwzk[4]; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[2*nipw+1+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
+      I i=mf; I jj=nf; NOUNROLL while(1){((AHDR2FN*)adocv.f)AH2A(n,m,av,zv,zzv,jt); if(!--i)break; zv+=aawwzk[4]; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[2*nipw+1+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
      }
     }
     R zz;  // Return the result after overflow has been corrected
@@ -1221,9 +1221,9 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
   z=nn&1?z:z1;  // If the number of items is odd, the final result is in original zv, otherwise original zu
  }
  I rc;  // accumulate error returns
- rc=((AHDR2FN*)adocv.f)AH2A_nm(av,wv,zv,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // create first result-cell of g
- DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)AH2A_nm(av,wv,yv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
-    lrc=((AHDR2FN*)adocvf.f)AH2A_x1(zn,yv,zv,zu,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc; {C* ztemp=zu; zu=zv; zv=ztemp;});  // p==1 means result goes to ping buffer zv
+ rc=((AHDR2FN*)adocv.f)AH2A_nm(n,m,av,wv,zv,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // create first result-cell of g
+ DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)AH2A_nm(n,m,av,wv,yv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
+    lrc=((AHDR2FN*)adocvf.f)AH2A_v(zn,yv,zv,zu,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc; {C* ztemp=zu; zu=zv; zv=ztemp;});  // p==1 means result goes to ping buffer zv
  if(NEVM<(rc&255)){z=jtupon2cell(jtinplace,a,w,self);}else{if(rc&255)jsignal(rc);}  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
@@ -1314,8 +1314,8 @@ F1(jtsquare){ARGCHK1(w); R tymes(w,w);}   // leave inplaceable in w only  ?? nev
 // recip moved to va1
 F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
 
-static AHDR2(zeroF,B,void,void){mvc(m*(n^REPSGN(n)),z,MEMSET00LEN,MEMSET00);R EVOK;}
-static AHDR2(oneF,B,void,void){mvc(m*(n^REPSGN(n)),z,1,MEMSET01);R EVOK;}
+static AHDR2(zeroF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,MEMSET00LEN,MEMSET00);R EVOK;}
+static AHDR2(oneF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,1,MEMSET01);R EVOK;}
 
 // table of routines to handle = ~:
 static VF eqnetbl[2][16] = {

@@ -199,10 +199,11 @@ AHDR1(logD,D,D) {  AVXATOMLOOP(1,
 }
 
 AHDR2(powDI,D,D,I) {I v;
- if(n-1==0)  DQ(m,               *z++=intpow(*x,*y); x++; y++; )
- else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
+ if(m<0)  DQUC(m,               *z++=intpow(*x,*y); x++; y++; )
+ else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=intpow( u,*y);      y++;))
  else{  // repeated exponent: use parallel instructions
-  DQ(m, v=*y++;  // for each exponent
+  DQU(n, v=*y++;  // for each exponent
+   n=m>>1;  // n must hold #atoms
    AVXATOMLOOP(1, // build result in u, which is also the input
     __m256d one = _mm256_broadcast_sd(&zone.real);
    ,
@@ -224,14 +225,15 @@ AHDR2(powDI,D,D,I) {I v;
 }
 
 AHDR2(powDD,D,D,D) {D v;
- if(n-1==0) DQ(m, *z++=pospow(*x,*y); x++; y++; )
- else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=pospow( u,*y); y++;))
+ if(m<0) DQUC(m, *z++=pospow(*x,*y); x++; y++; )
+ else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=pospow( u,*y); y++;))
  else{  // repeated exponent: use parallel instructions
-  DQ(m, v=*y++;  // for each exponent
-   if(v==0){DQ(n, *z++=1.0;) x+=n;}
-   else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
+  DQU(n, v=*y++;  // for each exponent
+   if(v==0){DQU(m>>1, *z++=1.0;) x+=m>>1;}
+   else if(ABS(v)==inf){DQU(m>>1, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
-    AVXATOMLOOP(1,  // build result in u, which is also the input
+    n=m>>1;  // n has # atoms
+    AVXATOMLOOP(1,  // build result in u, which is also the input; advance pointers
       __m256d zero = _mm256_setzero_pd();
       __m256d vv = _mm256_broadcast_sd(&v);  // 4 copies of exponent  (2 if __SSE2__)
      ,
@@ -258,10 +260,11 @@ AHDR1(logD,D,D) {  AVXATOMLOOP(1,
 }
 
 AHDR2(powDI,D,D,I) {I v;
- if(n-1==0)  DQ(m,               *z++=intpow(*x,*y); x++; y++; )
- else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
+ if(m<0)  DQUC(m,               *z++=intpow(*x,*y); x++; y++; )
+ else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=intpow( u,*y);      y++;))
  else{  // repeated exponent: use parallel instructions
-  DQ(m, v=*y++;  // for each exponent
+  DQU(n, v=*y++;  // for each exponent
+   n=m>>1;  // n has atom count
    AVXATOMLOOP(1,  // build result in u, which is also the input
     float64x2_t one = {1.0 COMMA 1.0};
    ,
@@ -283,13 +286,14 @@ AHDR2(powDI,D,D,I) {I v;
 }
 
 AHDR2(powDD,D,D,D) {D v;
- if(n-1==0) DQ(m, *z++=pospow(*x,*y); x++; y++; )
- else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=pospow( u,*y); y++;))
+ if(m<0) DQUC(m, *z++=pospow(*x,*y); x++; y++; )
+ else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=pospow( u,*y); y++;))
  else{  // repeated exponent: use parallel instructions
-  DQ(m, v=*y++;  // for each exponent
-   if(v==0){DQ(n, *z++=1.0;) x+=n;}
-   else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
+  DQU(n, v=*y++;  // for each exponent
+   if(v==0){DQU(m>>1, *z++=1.0;) x+=n;}
+   else if(ABS(v)==inf){DQU(m>>1, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
+    n=m>>1;  // n is the atom count
     AVXATOMLOOP(1,  // build result in u, which is also the input
       float64x2_t zero = {0.0 COMMA 0.0};
       float64x2_t vv = {v COMMA v};  // 4 copies of exponent  (2 if __SSE2__)
@@ -504,21 +508,23 @@ static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
  R EVOK;
 }
 
-AHDR2(cirBD,D,B,D){ASSERTWR(n<=1&&1==m,EWIMAG); n^=REPSGN(n); R cirx(n,   (I)*x,z,y);}
-AHDR2(cirID,D,I,D){ASSERTWR(n<=1&&1==m,EWIMAG); n^=REPSGN(n); R cirx(n,   *x,z,y);}
+AHDR2(cirBD,D,B,D){n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EWIMAG); n=REPSGN(m)^(m>>SGNTO0(~m)); R cirx(n,(I)*x,z,y);} // retry if not atom o. atom/vector
+AHDR2(cirID,D,I,D){n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EWIMAG); n=REPSGN(m)^(m>>SGNTO0(~m)); R cirx(n,*x,z,y);}
 
 AHDR2(cirDD,D,D,D){I k=(I)jround(*x);
  ASSERTWR(k==*x,EVDOMAIN); 
- ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
- n^=REPSGN(n);   // convert complementary n to nonneg
- R cirx(n,k,z,y);
+// obsolete  ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
+// obsolete  n^=REPSGN(n);   // convert complementary n to nonneg
+ n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EWIMAG); 
+ n=REPSGN(m)^(m>>SGNTO0(~m)); R cirx(n,k,z,y);
 }
 
 AHDR2(cirEE,E,E,E){I k=(I)jround(x->hi);
  ASSERTWR(k==x->hi,EVDOMAIN); 
- ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
- n^=REPSGN(n);   // convert complementary n to nonneg
- R jtcire(jt,n,k,z,y);
+// obsolete  ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
+// obsolete  n^=REPSGN(n);   // convert complementary n to nonneg
+ n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EWIMAG); 
+ n=REPSGN(m)^(m>>SGNTO0(~m)); R jtcire(jt,n,k,z,y);
 }
 
 static E jtpospowE(J jt,E x,E y){

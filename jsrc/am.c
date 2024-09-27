@@ -384,7 +384,7 @@ do{ \
  scan0+=4;  /* advance pointers */ \
 }while(--i0);
 // cells of arbitrary size
-#define CP1xvneg case 0b101111: DQNOUNROLL(n0, av=base+cellsize**scan0++; minusDD AH2A_v(~(cellsize>>LGSZD),(D*)&dzero,(D*)av,(D*)av,jt);)  // complement all of each cell
+#define CP1xvneg case 0b101111: DQNOUNROLL(n0, av=base+cellsize**scan0++; minusDD AH2A(1,2*(cellsize>>LGSZD)+1,(D*)&dzero,(D*)av,(D*)av,jt);)  // complement all of each cell
  
 // macros for copying axis -1
 // cases 0ll...: ll is lg2(atom length) 0-3

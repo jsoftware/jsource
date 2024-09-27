@@ -943,7 +943,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTSYSV(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s);}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
-#define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
+#define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}  // exit primitive with error code in return
 
 // verify that shapes *x and *y match for l axes using AVX for rank<=vector size, memcmp otherwise
 #if C_AVX512
@@ -1094,7 +1094,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define DQC(n,stm...)    {I i=-2-(I)(n);    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0 (fastest when you don't need i)
 #define DOUC(n,stm...)   {I i=0,_n=~(n); do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
 #define DPUC(n,stm...)   {I i=(n)+1;    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
-#define DQUC(n,stm...)   {I i=-2-(I)(n);  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
+#define DQUC(n,stm...)   {UI i=~(UI)(n);  do{stm}while(--i!=0);}  // i runs from n downto 1, always at least once
 #define ds(c)            (A)&primtab[(UC)(c)]
 #define DUMMYSELF        ds(CDUMMY)  // harmless value to use for self in calls to rank loops
 #define NOEMSGSELF       DUMMYSELF  // harmless value to use for self - no eformat
@@ -2342,18 +2342,18 @@ typedef I AHDR2FN(I n,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y,
 // might make it the limiting factor up till the end of alignment.  Alternative is to put n on the stack, in the hope that it will predict correctly
 // & not be needed, but it will delay misprediction detection.  Final idea is to encode n=1 as negative m, which would detect the misprediction immediately & not 
 // need to fetch n at all
-#define AHDR2(f,Tz,Tx,Ty)       I f(I n,I m,Tz* RESTRICTI z,Tx* RESTRICTI x,Ty* RESTRICTI y,J jt)  // must match VF, AHDR2FN  n is #repeats of arg; if n neg, repeat x ~n times.  m is # times to repeat an n-cell
-#define AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt) ahn,ahm,ahz,ahx,ahy,ahjt
+#define AHDR2(f,Tz,Tx,Ty)       I f(I m,Tz* RESTRICTI z,Tx* RESTRICTI x,Ty* RESTRICTI y,I n,J jt)  // must match VF, AHDR2FN  n is #repeats of arg; if n neg, repeat x ~n times.  m is # times to repeat an n-cell
+#define AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt) ahm,ahz,ahx,ahy,ahn,ahjt
 #define AH2A(ahn,ahm,ahx,ahy,ahz,ahjt) (AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt))
-#define AH2ANP_v(ahn,ahx,ahy,ahz,ahjt) ahn,1,ahz,ahx,ahy,ahjt
+#define AH2ANP_v(ahn,ahx,ahy,ahz,ahjt) AH2ANP(0,~(ahn),ahx,ahy,ahz,ahjt)  // vector op vector, length n
 #define AH2A_v(ahn,ahx,ahy,ahz,ahjt) (AH2ANP_v(ahn,ahx,ahy,ahz,ahjt))
-#define AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt) 1,ahm,ahz,ahx,ahy,ahjt
+#define AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt) AH2ANP(1,2*(ahm),ahx,ahy,ahz,ahjt)  // vector op atom, length m
 #define AH2A_x1(ahm,ahx,ahy,ahz,ahjt) (AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt))
-#define AH2ANP_nm(ahx,ahy,ahz,ahjt) n,m,ahz,ahx,ahy,ahjt
-#define AH2A_nm(ahx,ahy,ahz,ahjt) (AH2ANP_nm(ahx,ahy,ahz,ahjt))
+#define AH2ANP_nm(ahn,ahm,ahx,ahy,ahz,ahjt) AH2ANP(ahm,(ahn)==1?~(ahm):2*((ahn)^REPSGN(ahn))+SGNTO0(ahn),ahx,ahy,ahz,ahjt)
+#define AH2A_nm(ahn,ahm,ahx,ahy,ahz,ahjt) (AH2ANP_nm(n,m,ahx,ahy,ahz,ahjt))
 
 // following must match AHDR2FN
-#define OP1XYZ(name,Tz,Tx,Ty,pfx) I name##1##Tx##Ty##Tz(I one, I d, Tz *z,  Tx *x, Ty *y,J jt){DO(d, z[i]=pfx(x[i],y[i]);) R EVOK;}
+#define OP1XYZ(name,Tz,Tx,Ty,pfx) I name##1##Tx##Ty##Tz AH2A(I n, I m, Tx *x, Ty *y, Tz *z, J jt){DO(~m, z[i]=pfx(x[i],y[i]);) R EVOK;}
 typedef I AHDRPFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);  // these 3 must be the same for now, for VARPS.  The return is never negative
 typedef I AHDRRFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);

@@ -71,7 +71,7 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
  // Handle the special cases where the number of bytes to compare is a standard type.  Vector to the routine for comparing the type
  if(k==((k&-k)&(2*SZI-1))){
   // length is 1, 2, 4, or 8.  There's a routine for that, for = or ~:
-  compfn[CTTZI(k)][b1]AH2A_nm(wv,av,z,0);  // no jt for these routines.  Swap wv/av because n is positive, which will mean repeat the first arg
+  compfn[CTTZI(k)][b1]AH2A_nm(n,m,wv,av,z,0);  // no jt for these routines.  Swap wv/av because n is positive, which will mean repeat the first arg
   R 0;  // return value immaterial
 }
  I n0=(k-1)>>LGSZI;  // number of Is to process (after we skip the first 1-8 chars); later, # repeat count in inner loop
@@ -219,7 +219,7 @@ static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z
  // Handle the special cases where the number of bytes to compare is a standard type.  Vector to the routine for comparing the type
  if(k==1){
   // individual floats.  call the routine for that
-  (b1?eqDD:neDD)AH2A_nm(wv,av,z,jt);  // Swap wv/av because n is positive, which will mean repeat the first arg
+  (b1?eqDD:neDD)AH2A_nm(n,m,wv,av,z,jt);  // Swap wv/av because n is positive, which will mean repeat the first arg
   R 0;  // return value immaterial
  }
  __m256d u,v;

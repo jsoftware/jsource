@@ -26,7 +26,7 @@
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    DO(d, z[i]=    x[i];); x+=d;                                        \
-   DQ(n-1, vecfn(AH2ANP_x1(d,z,x,z+d,jt)); z+=d; x+=d; ); z+=d;                     \
+   DQ(n-1, vecfn(AH2ANP_v(d,z,x,z+d,jt)); z+=d; x+=d; ); z+=d;                     \
  }}retstmt}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx,vecfn)  \
@@ -35,7 +35,7 @@
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    MC(z,x,d*sizeof(Tx)); x+=d;                                        \
-   DQ(n-1, vecfn(AH2ANP_x1(d,z,x,z+d,jt)); z+=d; x+=d; ); z+=d;                     \
+   DQ(n-1, vecfn(AH2ANP_v(d,z,x,z+d,jt)); z+=d; x+=d; ); z+=d;                     \
   }}                                                                   \
   R NANTEST?EVNAN:EVOK;                                                             \
  }   /* for associative functions only */
@@ -307,7 +307,7 @@ AHDRP(pluspfxD,D,D){I i;
  }else{
   for(i=0;i<m;++i){                                              
    MC(z,x,d*sizeof(D)); x+=d; 
-   DQ(n-1, plusDD AH2A_x1(d,z,x,z+d,jt); z+=d; x+=d;); z+=d;
+   DQ(n-1, plusDD AH2A_v(d,z,x,z+d,jt); z+=d; x+=d;); z+=d;
   }
  }
  R NANTEST?EVNAN:EVOK;
@@ -338,7 +338,7 @@ AHDRP(fn,D,D){I i; \
  }else{ \
   for(i=0;i<m;++i){ \
    MC(z,x,d*sizeof(D)); x+=d;  \
-   DQ(n-1, vecfn(AH2ANP_x1(d,z,x,z+d,jt)); z+=d; x+=d;); z+=d; \
+   DQ(n-1, vecfn(AH2ANP_v(d,z,x,z+d,jt)); z+=d; x+=d;); z+=d; \
   } \
  } \
  ending \

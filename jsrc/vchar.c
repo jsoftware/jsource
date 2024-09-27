@@ -43,6 +43,6 @@ DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
  b=ar<=wr; zn=b?wn:an; m=b?an:wn; I r=b?wr:ar; I *s=b?ws:as; I rs=b?ar:wr; PROD(n,r-rs,s+rs);
  GA(z,zt,zn,r,s); if(!zn)R z;
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
- ((AHDR2FN*)ado)AH2A_nm(CAV(a),CAV(w),CAV(z),jt);
+ ((AHDR2FN*)ado)AH2A_nm(n,m,CAV(a),CAV(w),CAV(z),jt);
  RETF(z);
 }

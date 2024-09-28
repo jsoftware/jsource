@@ -1025,10 +1025,10 @@ failparsestack: // here we encountered an error during stacking.  The error was 
 failparseeformat:
    jteformat(jt,ds(CENQUEUE),mtv,zeroionei(0),0);  // recreate the error with the correct spacing
 failparse:
-   // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first
+   // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first, and also the virtual since it has no flags
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
    // fa() any blocks left on the stack that have FAOWED - but not the mark, which has a garbage address
-   for(;stack!=stackend1;++stack)if(ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
+   for(;stack!=stackend1;++stack)if(!PTISMARKFRONT(stack->pt)&&ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
   }
 #if MEMAUDIT&0x2
   audittstack(jt);

@@ -2336,13 +2336,13 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 // ************* primitive function declarations **********************
 
 typedef I AHDR1FN(J RESTRICT jt,I n,void* z,void* x);  // negative return is offset to failure point in >. or <.
-typedef I AHDR2FN(I n,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y,J jt);  // negative return is failure point for integer multiply
+typedef I AHDR2FN(I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y,I n,J jt);  // negative return is failure point for integer multiply
 // We experiment with argument ordering into AHDR2FNs.  Originally the order was n,m,x,y,z,jt and we reorder it to match the declaration.
 // z is needed early for alignment.  The stacked value (y now) is being calculated during the call and then has to be pushed and popped before use, which
 // might make it the limiting factor up till the end of alignment.  Alternative is to put n on the stack, in the hope that it will predict correctly
 // & not be needed, but it will delay misprediction detection.  Final idea is to encode n=1 as negative m, which would detect the misprediction immediately & not 
 // need to fetch n at all
-#define AHDR2(f,Tz,Tx,Ty)       I f(I m,Tz* RESTRICTI z,Tx* RESTRICTI x,Ty* RESTRICTI y,I n,J jt)  // must match VF, AHDR2FN  n is #repeats of arg; if n neg, repeat x ~n times.  m is # times to repeat an n-cell
+#define AHDR2(f,Tz,Tx,Ty) I f(I m,Tz* RESTRICTI z,Tx* RESTRICTI x,Ty* RESTRICTI y,I n,J jt)  // must match VF, AHDR2FN  n is #repeats of arg; if n neg, repeat x ~n times.  m is # times to repeat an n-cell
 #define AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt) ahm,ahz,ahx,ahy,ahn,ahjt
 #define AH2A(ahn,ahm,ahx,ahy,ahz,ahjt) (AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt))
 #define AH2ANP_v(ahn,ahx,ahy,ahz,ahjt) AH2ANP(0,~(ahn),ahx,ahy,ahz,ahjt)  // vector op vector, length n

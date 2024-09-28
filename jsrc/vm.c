@@ -304,8 +304,8 @@ AHDR2(powDD,D,D,D) {D v;
       u=Sleef_exp2d4(u);
      ,
     )
-   )
-  }
+   }
+  )
  }      
  HDR1JERR
 }

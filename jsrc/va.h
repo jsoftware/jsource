@@ -12,7 +12,7 @@
 #define VII             (INT<<VARGX)         /* convert arguments to I 6             */
 #define VDD             (FL<<VARGX)          /* convert arguments to D 7             */
 #define VZZ             (CMPX<<VARGX)        /* convert arguments to Z 8             */
-#define VIPWCRLONGX     9  // internal use in va2, overlaps BOX 9
+#define VIPWCRLONGX     9  // internal use in va2, overlaps BOX 9 means 'w has longer cell-rank, so x is repeated'
 #define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
 #define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM 10           */
 #define VQQ             (RAT<<VARGX)         /* convert arguments to RAT  11          */
@@ -33,7 +33,7 @@
 #define VCOPYW          ((I)1<<VCOPYWX)
 #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
 #define VCOPYA          ((I)1<<VCOPYAX)
-#define VIPWFLONGX     17  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX
+#define VIPWFLONGX     17  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX  Means 'w has longer frame, so x is repeated in outer loops'
 #define VIPWFLONG      ((I)1<<VIPWFLONGX)
 #define VIPOKWX         20      // This routine can put its result over W
 #define VIPOKW          ((I)1<<VIPOKWX)

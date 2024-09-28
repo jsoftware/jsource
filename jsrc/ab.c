@@ -175,7 +175,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  x=a;
  y=w;
  if((-AN(a)&-AN(w)&-(AT(a)&AT(w))&LIT)>=0)R from(df2(z,indexof(ds(CALP),a),indexof(ds(CALP),w),fs),ds(CALP));  // empty or not LIT
- b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;
+ b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;  // b = 'x is repeated'
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
  j=i0(VAV(fs)->fgh[1])-16;
  GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
@@ -186,7 +186,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  ado AH2A_nm(n,m,AV(x),AV(y),AV(z),jt); 
  CAV(z)[zn]=0;
  RETF(z);
-}
+}  // scaf use wordlong ops
 
 /* compute z=: t{~ a.i.w if t=: c&(m b.) a.                             */
 /* http://www.jsoftware.com/jwiki/Essays/Bitwise_Functions_on_Characters */
@@ -204,9 +204,9 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* a
  pv=(UC*)&p; DO(SZI, pv[i]=c;);  // scaf slow
  ado AH2A(1,2*(256/SZI)+0,AV(ds(CALP)),pv,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
  ado AH2A(1,2*((n+SZI-1)>>LGSZI)+0,wv,pv,zv,jt);  // if we found the function, apply it wordwise
-// obsolere  zv[n]=0;
+ zv[n]=0;  // scaf not needed
  R 1;
-}  // kludge this should be scrapped in favor of wordlong ops
+}  // scaf kludge this should be scrapped in favor of wordlong ops
 
 
 static AHDRRFN* bwinsC[16]={(AHDRRFN*)bw0000insC,(AHDRRFN*)bw0001insC,(AHDRRFN*)bw0010insC,(AHDRRFN*)bw0011insC, (AHDRRFN*)bw0100insC,(AHDRRFN*)bw0101insC,(AHDRRFN*)bw0110insC,(AHDRRFN*)bw0111insC,

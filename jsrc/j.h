@@ -2350,7 +2350,7 @@ typedef I AHDR2FN(I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y,I n,
 #define AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt) AH2ANP(1,2*(ahm),ahx,ahy,ahz,ahjt)  // vector op atom, length m
 #define AH2A_x1(ahm,ahx,ahy,ahz,ahjt) (AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt))
 #define AH2ANP_nm(ahn,ahm,ahx,ahy,ahz,ahjt) AH2ANP(ahm,(ahn)==1?~(ahm):2*((ahn)^REPSGN(ahn))+SGNTO0(ahn),ahx,ahy,ahz,ahjt)
-#define AH2A_nm(ahn,ahm,ahx,ahy,ahz,ahjt) (AH2ANP_nm(n,m,ahx,ahy,ahz,ahjt))
+#define AH2A_nm(ahn,ahm,ahx,ahy,ahz,ahjt) (AH2ANP_nm(ahn,ahm,ahx,ahy,ahz,ahjt))
 
 // following must match AHDR2FN
 #define OP1XYZ(name,Tz,Tx,Ty,pfx) I name##1##Tx##Ty##Tz AH2A(I n, I m, Tx *x, Ty *y, Tz *z, J jt){DO(~m, z[i]=pfx(x[i],y[i]);) R EVOK;}

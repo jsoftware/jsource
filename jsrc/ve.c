@@ -187,7 +187,7 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
 // BI multiply, using clear/copy
 AHDR2(tymesBI,I,B,I){I v;
  if(m<0)  DQUC(m, I u=*x; *z++=*y&-u; x++; y++; )
- else if(m&1){DQU(n, B u=*x++; if(u){if(z!=y)MC(z,y,(m<<1)<<LGSZI);}else{mvc((m>>1)<<LGSZI,z,MEMSET00LEN,MEMSET00);} z+=m>>1; y+=m>>1;)}
+ else if(m&1){DQU(n, B u=*x++; if(u){if(z!=y)MC(z,y,(m>>1)<<LGSZI);}else{mvc((m>>1)<<LGSZI,z,MEMSET00LEN,MEMSET00);} z+=m>>1; y+=m>>1;)}
  else DQU(n, v=*y++; DQU(m>>1, I u=*x; *z++=v&-u; x++;))
  R EVOK;
 }

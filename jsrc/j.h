@@ -1381,7 +1381,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
                             else z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(dts,_mm256_and_si256(dts,_mm256_castpd_si256(u)))); \
                             z=_mm256_blendv_pd(zero,oned,z); \
                         } }
-// convert a LDBID1 to D or I.  z is garbage except for low byte.  0x400 turns -1 to 1, for multiplication
+// convert a LDBID1 to D or I.  z is garbage except for low byte.  0x400 turns B1 to I-1, for multiplication
 #define  CVTBID1(z,u,commute,id,bi,bd) \
                         { if((commute)&(id)){ CVTEPI64(z,u) \
                           }else if((commute)&(bi)){ \

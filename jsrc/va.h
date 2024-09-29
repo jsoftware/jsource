@@ -371,7 +371,7 @@ AHDR2(name,void,void,void){ \
   /* vector-to-vector of length m, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
   if(!XBYT(fz))x-=(I)z; if(!YBYT(fz))y-=(I)z;  /* convert x/y to offset if same len as z */ \
-  if(!((fz)&32+16+8)){   /* unrolled mode */ \
+  if(!((fz)&0x38)){   /* unrolled mode if not suppressed, and no int->dec conversion */ \
    PRMALIGN(zzop,3,fz,m0)  /* this changes m0 */ \
    PRMDUFF(zzop,3,fz,m0) \
    PRMMASK(zzop,3,fz) /* runout, using mask */ \
@@ -387,7 +387,7 @@ AHDR2(name,void,void,void){ \
      UI m0=m; \
      LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
      xysav=xx;  /* MASKLP & ALIGN need to save orig xx */ \
-     if(!((fz)&32+16)){   /* unrolled mode */ \
+     if(!((fz)&0x30)){   /* unrolled mode if not suppressed, and no int->dec conversion on unrepeated y */ \
       PRMALIGN(zzop,1,fz,m0) /* changes m0 */\
       PRMDUFF(zzop,1,fz,m0) \
       PRMMASK(zzop,1,fz) /* runout, using mask */ \
@@ -406,7 +406,7 @@ AHDR2(name,void,void,void){ \
      UI m0=m; \
      LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,1,fz,0x10,0x80,0x200) \
      xysav=yy;  /* MASKLP and ALIGN need to save orig yy */ \
-     if(!((fz)&32+8)){   /* unrolled mode */ \
+     if(!((fz)&0x28)){   /* unrolled mode if not suppressed, and no int->dec conversion on unrepeated x */ \
       PRMALIGN(zzop,2,fz,m0) /* changes m0 */ \
       PRMDUFF(zzop,2,fz,m0) \
       PRMMASK(zzop,2,fz) /* runout, using mask */ \

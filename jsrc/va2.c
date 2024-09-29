@@ -1361,7 +1361,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // then [17-25] are for verb/, with precisions B I D Z X Q Symb INT2 INT4
   // [26-34] for verb\, and [35-43] for verb\.
   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
-  if(!((t=(at|wt))&(NOUN&~(B01|INT|FL)))){
+  if(withprob(!((t=(at|wt))&(NOUN&~(B01|INT|FL))),0.1)){  // the normal case was tested for in va2()
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    R vainfo->p2[(at*3+(wt&INT+FL))>>INTX];
 

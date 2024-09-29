@@ -18,16 +18,17 @@
 #define TYMESDD(u,v)  TYMES(u,v)
 
 // commutative function sharing.  We can share only if the function produces no error codes, because sparse code doesn't know how to run recovery
-AHDR2(plusID,D,I,D){R plusDI(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(plusBD,D,B,D){R plusDB(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(minID,D,I,D){R minDI(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(minBD,D,B,D){R minDB(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(minBI,I,B,I){R minIB(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(maxID,D,I,D){R maxDI(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(maxBD,D,B,D){R maxDB(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(maxBI,I,B,I){R maxIB(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(tymesID,D,I,D){R tymesDI(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(tymesBD,D,B,D){R tymesDB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(plusID,PVD,PVI,PVD){R plusDI(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(plusBD,PVD,PVB,PVD){R plusDB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(plusBI,PVI,PVB,PVI){R EVOK==plusIB(m^1^SGNTO0(m),z,y,x,n,jt)?EVOK:EWOVIP+EWOVIPPLUSBI;}
+AHDR2(minID,PVD,PVI,PVD){R minDI(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(minBD,PVD,PVB,PVD){R minDB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(minBI,PVI,PVB,PVI){R minIB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(maxID,PVD,PVI,PVD){R maxDI(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(maxBD,PVD,PVB,PVD){R maxDB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(maxBI,PVI,PVB,PVI){R maxIB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(tymesID,PVD,PVI,PVD){R tymesDI(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(tymesBD,PVD,PVB,PVD){R tymesDB(m^1^SGNTO0(m),z,y,x,n,jt);}  // does tymesII too
 
 
 
@@ -64,9 +65,9 @@ primop256(plusDB,0xa00,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusII,0x21,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
-primop256(plusBI,0x860,__m256d oflo=_mm256_setzero_pd();,
- zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(yy),_mm256_castpd_si256(zz))));,
- R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSBI:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
+// commutative primop256(plusBI,0x860,__m256d oflo=_mm256_setzero_pd();,
+// commutative zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(yy),_mm256_castpd_si256(zz))));,
+// commutative R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSBI:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
 primop256(plusIB,0x8a0,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(zz))));,
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSIB:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
@@ -175,20 +176,19 @@ APFX(  maxII, I,I,I, MAX,,R EVOK;)
 // commutative APFX(  maxBI, I,B,I, MAX,,R EVOK;)
 // commutative APFX(  maxBD, D,B,D, MAX,,R EVOK;)    
 // BI add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
-AHDR2(plusBI,I,B,I){I u;I v;I oflo=0;
- if(m<0)  DQUC(m, u=(I)*x; v=*y; if(v==IMAX)oflo+=u; v=u+v; *z++=v; x++; y++; )
- else if(m&1){m>>=1; DQU(n, u=(I)*x++; if(u){DQU(m, v=*y; if(v==IMAX)oflo=1; v=v+1; *z++=v; y++;)}else{if(z!=y)MC(z,y,(m)<<LGSZI); z+=(m); y+=(m);})}
- else{m>>=1; DQU(n, v=*y++; DQU(m, u=(I)*x; if(v==IMAX)oflo+=u; u=u+v; *z++=u; x++;))}
- R oflo?EWOVIP+EWOVIPPLUSBI:EVOK;
-}
 // IB add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
-// scaf could call plusBI, but watch for overflow
 AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
  if(m<0)  DQUC(m, u=*x; v=(I)*y; if(u==IMAX)oflo+=v; u=u+v; *z++=u; x++; y++; )
  else if(m&1){m>>=1; DQU(n, u=*x++; DQU(m, v=(I)*y; if(u==IMAX)oflo+=v; v=u+v; *z++=v; y++;))}
  else{m>>=1; DQU(n, v=(I)*y++; if(v){DQU(m, u=*x; if(u==IMAX)oflo=1; u=u+1; *z++=u; x++;)}else{if(z!=x)MC(z,x,(m)<<LGSZI); z+=m; x+=m;})}
  R oflo?EWOVIP+EWOVIPPLUSIB:EVOK;
 }
+// commutative AHDR2(plusBI,I,B,I){I u;I v;I oflo=0;
+// commutative  if(m<0)  DQUC(m, u=(I)*x; v=*y; if(v==IMAX)oflo+=u; v=u+v; *z++=v; x++; y++; )
+// commutative  else if(m&1){m>>=1; DQU(n, u=(I)*x++; if(u){DQU(m, v=*y; if(v==IMAX)oflo=1; v=v+1; *z++=v; y++;)}else{if(z!=y)MC(z,y,(m)<<LGSZI); z+=(m); y+=(m);})}
+// commutative  else{m>>=1; DQU(n, v=*y++; DQU(m, u=(I)*x; if(v==IMAX)oflo+=u; u=u+v; *z++=u; x++;))}
+// commutative  R oflo?EWOVIP+EWOVIPPLUSBI:EVOK;
+// commutative }
 // BI subtract, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(minusBI,I,B,I){I u;I v;I w;I oflo=0;
  if(m<0)  DQUC(m, u=(I)*x; v=*y; u=u-v; if((v&u)<0)++oflo; *z++=u; x++; y++; )

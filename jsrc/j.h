@@ -1734,25 +1734,27 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input (as D*), z->result (as D*), u=input atom4 and result
 //                                                                                                  __SSE2__    atom2
 // loop advances x and z to end +1 of region
-// parms: bit0=suppress unrolling, bit1=use neutral in any unfetched alignment word
-// We always do the alignment step, 0-4 words
+// parms: bit0=suppress unrolling
+// obsolete , bit1=use neutral in any unfetched alignment word
+// We always do the alignment step, 0-4 words (0 only if initial length=1)
 #define AVAC(c,loopbody) case c: u=_mm256_loadu_pd((D*)((I)x+(I)z)+(-1-(c))*NPAR); loopbody _mm256_storeu_pd(z+(-1-(c))*NPAR, u);
 #define AVXATOMLOOP(parms,preloop,loopbody,postloop) \
- __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
+ __m256i endmask;  __m256d u;  \
  preloop \
  UI n0=n; \
- if(!((parms)&1)){ \
+ if(!((parms)&1)){ /* Duff loop called for */ \
   I alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
-  alignreq=alignreq>n-1?n-1:alignreq; n0-=alignreq;   /* never more than len-1; leave remlen>0 */ \
+  alignreq=alignreq>n-1?n-1:alignreq;  /* never more than len-1; leave remlen>0 */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  u=_mm256_maskload_pd(x,endmask); x=(D*)((I)x-(I)z); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask));  /* convert x to offset from z */\
-  loopbody _mm256_maskstore_pd(z, endmask, u); \
-  z+=alignreq;  \
+  u=_mm256_and_pd(_mm256_castsi256_pd(endmask),_mm256_loadu_pd(x));  /*  fetch 1st NPAR words.  >=1 must be valid, and the rest mapped  init invalid lanes, esp. for SLEEF */ \
+  x=(D*)((I)x-(I)z);   /* convert x to offset from z */\
+  loopbody _mm256_maskstore_pd(z, endmask, u); /* store aligning result */ \
+  z+=alignreq; n0-=alignreq; /* step over aligned values */ \
   UI backoff=DUFFBACKOFF(n0-1,3); \
   UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
   backoff=n2?backoff:n2;  /* bypass loop (but not switch) if duff=0 */ \
   z+=(backoff+1)*NPAR; /* cvrt z to offset, advance z to duff position */ \
-  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); /* fetch mask for ending remnant */ \
   switch(backoff){ \
   case 0: z-=NPAR; if(0){ \
   do{ \
@@ -1763,13 +1765,14 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
   } \
   u=_mm256_maskload_pd((D*)((I)x+(I)z),endmask);  loopbody _mm256_maskstore_pd(z, endmask, u); \
   z+=((n0-1)&(NPAR-1))+1; /* advance z over final remnant */  \
- }else{ \
+ }else{ /* Use single loop to minimize Icache footprint */ \
   x=(D*)((I)x-(I)z);  /* convert x to offset */ \
   UI thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* align len 1-4, clamped at len */ \
   NOUNROLL do { \
    thisl=thisl>n0?n0:thisl; \
-   if(thisl==NPAR)u=_mm256_loadu_pd((D*)((I)x+(I)z));  /* no way to fetch mask early without a misbranch, and we only fetch twice */ \
-   else{endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl)); u=_mm256_maskload_pd((D*)((I)x+(I)z),endmask);} \
+   u=_mm256_loadu_pd((D*)((I)x+(I)z));  /* overfetch the last word */ \
+   /* no way to fetch mask early without a misbranch, and we only fetch twice */ \
+   if(thisl!=NPAR){endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl)); u=_mm256_and_pd(_mm256_castsi256_pd(endmask),u);}  /* clear out-of-bounds values, which are always mapped */ \
    loopbody \
    if(thisl==NPAR)_mm256_storeu_pd(z, u); else _mm256_maskstore_pd(z, endmask, u); \
    z+=thisl; n0-=thisl; thisl=NPAR;  /* advance ptrs, decr len */ \

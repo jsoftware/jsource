@@ -18,6 +18,7 @@
 #define TYMESDD(u,v)  TYMES(u,v)
 
 // commutative function sharing.  We can share only if the function produces no error codes, because sparse code doesn't know how to run recovery
+// We swap the x & y args and switch the specification of repeated arg if there is one
 AHDR2(plusID,PVD,PVI,PVD){R plusDI(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(plusBD,PVD,PVB,PVD){R plusDB(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(plusBI,PVI,PVB,PVI){R EVOK==plusIB(m^1^SGNTO0(m),z,y,x,n,jt)?EVOK:EWOVIP+EWOVIPPLUSBI;}
@@ -28,9 +29,7 @@ AHDR2(maxID,PVD,PVI,PVD){R maxDI(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(maxBD,PVD,PVB,PVD){R maxDB(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(maxBI,PVI,PVB,PVI){R maxIB(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(tymesID,PVD,PVI,PVD){R tymesDI(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(tymesBD,PVD,PVB,PVD){R tymesDB(m^1^SGNTO0(m),z,y,x,n,jt);}  // does tymesII too
-
-
+AHDR2(tymesBD,PVD,PVB,PVD){R tymesDB(m^1^SGNTO0(m),z,y,x,n,jt);}  // does tymesBI too
 
 #if C_AVX2 || EMU_AVX2
 #define ORIGMN I nsav=n; if(msav>=0){n=m; m=nsav; nsav^=-(msav&1);}  // restore old-style mn from modified mn and msav.  If msav<0, OK already, otherwise swap & transfer flag to nsav

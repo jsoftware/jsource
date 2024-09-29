@@ -248,8 +248,8 @@
 #define AEXP(f,Tz,Tx,Ty,exp)  \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;Tz zz;                            \
   if(m<0)  DQUC(m, u=*x++; v=*y++; exp  *z++=zz; )   \
-  else if(m&1)DQU(n, u=*x++; DQU(m>>1, v=*y++; exp  *z++=zz;))   \
-  else      DQU(n, v=*y++; DQU(m>>1, u=*x++; exp  *z++=zz;   ));  \
+  else if(m&1){m>>=1; DQU(n, u=*x++; DQU(m, v=*y++; exp  *z++=zz;))}   \
+  else{m>>=1; DQU(n, v=*y++; DQU(m, u=*x++; exp  *z++=zz;   ))}  \
   R EVOK; \
  }
 
@@ -260,9 +260,9 @@
 #define APFXL(f,Tz,Tx,Ty,ldfn,pfx,pref,suff)   \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
   pref \
-  if(m<0)  DQUC(m, u=ldfn(*x++); v=ldfn(*y++); *z++=pfx(u,v); )   \
-  else if(m&1)DQU(n, u=ldfn(*x++); DQU(m>>1, v=ldfn(*y++); *z++=pfx(u,v);))   \
-  else      DQU(n,  v=ldfn(*y++); DQU(m>>1, u=ldfn(*x++); *z++=pfx(u, v);    ));  \
+  if(m<0)DQUC(m, u=ldfn(*x++); v=ldfn(*y++); *z++=pfx(u,v); )   \
+  else if(m&1){m>>=1; DQU(n, u=ldfn(*x++); DQU(m, v=ldfn(*y++); *z++=pfx(u,v);))}   \
+  else{m>>=1; DQU(n,  v=ldfn(*y++); DQU(m, u=ldfn(*x++); *z++=pfx(u, v);    ))}  \
   suff \
  }
 
@@ -378,7 +378,7 @@ AHDR2(name,void,void,void){ \
   }else PRMMASKLP(zzop,3,fz)   /* one loop using maskload */ \
  }else{ \
   if(!((fz)&1)&&m&1){ \
-   /* n applications of atom+vector of length m>>1 (never used if commutative) */ \
+   /* n applications of atom+vector of length m (never used if commutative) */ \
    m>>=1; if(!YBYT(fz))y-=(I)z;  /* convert y to offset if same len as z */ \
    DQNOUNROLL(n, \
     if(unlikely((fz)&0x140 && (((fz)&0x400 && y==0 && *(C*)x!=0) || ((fz)&0x800 && y==0 && *(C*)x==0)))){ /* inplace and op leaves value unchanged */ \
@@ -396,7 +396,7 @@ AHDR2(name,void,void,void){ \
     } \
    ) \
   }else{ \
-   /* n applications of vector of length m>>1+atom */ \
+   /* n applications of vector of length m+atom */ \
    if((fz)&1){I taddr=(I)x^(I)y; x=m&1?y:x; y=(D*)((I)x^taddr);}  /* swap commutatives as needed */ \
    m>>=1; if(!XBYT(fz))x-=(I)z;  /* convert x to offset if same len as z */ \
    DQNOUNROLL(n, \
@@ -435,7 +435,7 @@ AHDR2(name,CET,CET,CET){ \
  cepref \
  /* convert vector args, which are the same size as z, to offsets from z; flag atom args. */ \
  if(likely(m<0)){n=1; m=~m; x=(CET*)((C*)x-(C*)z); y=(CET*)((C*)y-(C*)z);  /* vector op vector, both args offset */ \
- }else{  /* one arg is atom - flag addr and fetch repeated value.  n is #atom-vec loops, m>>1 is length of each and switch flag */ \
+ }else{  /* one arg is atom - flag addr and fetch repeated value.  n is #atom-vec loops, m is length of each and switch flag */ \
   {I taddr=(I)x^(I)y; x=m&1?x:y; y=(CET*)((I)x^taddr);}  /* if repeated vector op atom, exchange to be atom op vector for ease of fetch */ \
   y=(CET*)((C*)y-(C*)z);  /* convert the full-sized y arg to offset form */ \
   x=(CET*)((I)x+1); if(fz&1){x=(CET*)((I)x+(2*(~m&1)));}  /* flag x: atom in bit 0, swapped in bit 1    n=#outer loops, m=length of inner loop*/ \
@@ -540,8 +540,8 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
 #define ACMP(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
   if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
-  else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; *z=pfx(u,v); z++;))    \
-  else      DQU(n, v=(D)*y++; DQU(m>>1, u=(D)*x++; *z=pfx(u,v); z++;));   \
+  else if(m&1){m>>=1; DQU(n, u=(D)*x++; DQU(m, v=(D)*y++; *z=pfx(u,v); z++;))}    \
+  else{m>>=1; DQU(n, v=(D)*y++; DQU(m, u=(D)*x++; *z=pfx(u,v); z++;))}   \
   R EVOK; \
  }
 
@@ -549,12 +549,12 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
  AHDR2(f,B,Tx,Ty){Txy u; Txy v;                                             \
   if(jt->cct!=1.0){ \
    if(m<0)  DQUC(m, u=*x++;       v=*y++; *z=pfx(u,v); z++; )    \
-   else if(m&1)DQU(n, u=*x++; DQU(m>>1, v=*y++; *z=pfx(u,v); z++;))    \
-   else      DQU(n, v=*y++; DQU(m>>1, u=*x++; *z=pfx(u,v); z++;));   \
+   else if(m&1){m>>=1; DQU(n, u=*x++; DQU(m, v=*y++; *z=pfx(u,v); z++;))}    \
+   else{m>>=1; DQU(n, v=*y++; DQU(m, u=*x++; *z=pfx(u,v); z++;))}   \
   }else{ \
    if(m<0)  DQUC(m, u=*x++;       v=*y++; *z=pfx0(u,v); z++; )    \
-   else if(m&1)DQU(n, u=*x++; DQU(m>>1, v=*y++; *z=pfx0(u,v); z++;))    \
-   else      DQU(n, v=*y++; DQU(m>>1, u=*x++; *z=pfx0(u,v); z++;));   \
+   else if(m&1){m>>=1; DQU(n, u=*x++; DQU(m, v=*y++; *z=pfx0(u,v); z++;))}    \
+   else{m>>=1; DQU(n, v=*y++; DQU(m, u=*x++; *z=pfx0(u,v); z++;))}   \
   } \
   R EVOK; \
  }
@@ -563,12 +563,12 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
   if(jt->cct!=1.0){ \
    if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
-   else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; *z=pfx(u,v); z++;))    \
-   else      DQU(n, v=(D)*y++; DQU(m>>1, u=(D)*x++; *z=pfx(u,v); z++;));   \
+   else if(m&1){m>>=1; DQU(n, u=(D)*x++; DQU(m, v=(D)*y++; *z=pfx(u,v); z++;))}    \
+   else{m>>=1; DQU(n, v=(D)*y++; DQU(m, u=(D)*x++; *z=pfx(u,v); z++;))}   \
   }else{ \
    if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; *z=u pfx0 v; z++; )    \
-   else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; *z=u pfx0 v; z++;))    \
-   else      DQU(n, v=(D)*y++; DQU(m>>1, u=(D)*x++; *z=u pfx0 v; z++;));   \
+   else if(m&1){m>>=1; DQU(n, u=(D)*x++; DQU(m, v=(D)*y++; *z=u pfx0 v; z++;))}    \
+   else{m>>=1; DQU(n, v=(D)*y++; DQU(m, u=(D)*x++; *z=u pfx0 v; z++;))}   \
   } \
   R EVOK; \
  }
@@ -577,12 +577,12 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
   if(jt->cct!=1.0){ \
    if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++; )    \
-   else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++;))    \
-   else      DQU(n, v=(D)*y++; v=ABS(v); DQU(m>>1, u=(D)*x++; *z=pfx(u,v); z++;));   \
+   else if(m&1){m>>=1; DQU(n, u=(D)*x++; DQU(m, v=(D)*y++; v=ABS(v); *z=pfx(u,v); z++;))}    \
+   else{m>>=1; DQU(n, v=(D)*y++; v=ABS(v); DQU(m, u=(D)*x++; *z=pfx(u,v); z++;))}   \
   }else{ \
    if(m<0)  DQUC(m, u=(D)*x++;       v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++; )    \
-   else if(m&1)DQU(n, u=(D)*x++; DQU(m>>1, v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++;))    \
-   else      DQU(n, v=(D)*y++; v=ABS(v); DQU(m>>1, u=(D)*x++; *z=u pfx0 v; z++;));   \
+   else if(m&1){m>>=1; DQU(n, u=(D)*x++; DQU(m, v=(D)*y++; v=ABS(v); *z=u pfx0 v; z++;))}    \
+   else{m>>=1; DQU(n, v=(D)*y++; v=ABS(v); DQU(m, u=(D)*x++; *z=u pfx0 v; z++;))}   \
   } \
   R EVOK; \
  }

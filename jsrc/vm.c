@@ -200,10 +200,10 @@ AHDR1(logD,D,D) {  AVXATOMLOOP(1,
 
 AHDR2(powDI,D,D,I) {I v;
  if(m<0)  DQUC(m,               *z++=intpow(*x,*y); x++; y++; )
- else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=intpow( u,*y);      y++;))
- else{  // repeated exponent: use parallel instructions
+ else if(m&1){m>>=1; DQU(n, D u=*x++; DQU(m, *z++=intpow( u,*y);      y++;))}
+ else{m>>=1;   // repeated exponent: use parallel instructions
   DQU(n, v=*y++;  // for each exponent
-   n=m>>1;  // n must hold #atoms
+   n=m;  // n must hold #atoms
    AVXATOMLOOP(1, // build result in u, which is also the input
     __m256d one = _mm256_broadcast_sd(&zone.real);
    ,
@@ -226,13 +226,13 @@ AHDR2(powDI,D,D,I) {I v;
 
 AHDR2(powDD,D,D,D) {D v;
  if(m<0) DQUC(m, *z++=pospow(*x,*y); x++; y++; )
- else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=pospow( u,*y); y++;))
- else{  // repeated exponent: use parallel instructions
+ else if(m&1){m>>=1; DQU(n, D u=*x++; DQU(m, *z++=pospow( u,*y); y++;))}
+ else{m>>=1;   // repeated exponent: use parallel instructions
   DQU(n, v=*y++;  // for each exponent
-   if(v==0){DQU(m>>1, *z++=1.0;) x+=m>>1;}
-   else if(ABS(v)==inf){DQU(m>>1, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
+   if(v==0){DQU(m, *z++=1.0;) x+=m;}
+   else if(ABS(v)==inf){DQU(m, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
-    n=m>>1;  // n has # atoms
+    n=m;  // n has # atoms
     AVXATOMLOOP(1,  // build result in u, which is also the input; advance pointers
       __m256d zero = _mm256_setzero_pd();
       __m256d vv = _mm256_broadcast_sd(&v);  // 4 copies of exponent  (2 if __SSE2__)
@@ -261,10 +261,10 @@ AHDR1(logD,D,D) {  AVXATOMLOOP(1,
 
 AHDR2(powDI,D,D,I) {I v;
  if(m<0)  DQUC(m,               *z++=intpow(*x,*y); x++; y++; )
- else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=intpow( u,*y);      y++;))
- else{  // repeated exponent: use parallel instructions
+ else if(m&1){m>>=1; DQU(n, D u=*x++; DQU(m, *z++=intpow( u,*y); y++;))}
+ else{m>>=1;   // repeated exponent: use parallel instructions
   DQU(n, v=*y++;  // for each exponent
-   n=m>>1;  // n has atom count
+   n=m;  // n has atom count
    AVXATOMLOOP(1,  // build result in u, which is also the input
     float64x2_t one = {1.0 COMMA 1.0};
    ,
@@ -287,13 +287,13 @@ AHDR2(powDI,D,D,I) {I v;
 
 AHDR2(powDD,D,D,D) {D v;
  if(m<0) DQUC(m, *z++=pospow(*x,*y); x++; y++; )
- else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=pospow( u,*y); y++;))
- else{  // repeated exponent: use parallel instructions
+ else if(m&1){m>>=1; DQU(n, D u=*x++; DQU(m, *z++=pospow( u,*y); y++;))}
+ else{m>>=1;   // repeated exponent: use parallel instructions
   DQU(n, v=*y++;  // for each exponent
-   if(v==0){DQU(m>>1, *z++=1.0;) x+=m>>1;}
-   else if(ABS(v)==inf){DQU(m>>1, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
+   if(v==0){DQU(m, *z++=1.0;) x+=m;}
+   else if(ABS(v)==inf){DQU(m, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
-    n=m>>1;  // n is the atom count
+    n=m;  // n is the atom count
     AVXATOMLOOP(1,  // build result in u, which is also the input
       float64x2_t zero = {0.0 COMMA 0.0};
       float64x2_t vv = {v COMMA v};  // 4 copies of exponent  (2 if __SSE2__)

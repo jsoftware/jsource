@@ -137,8 +137,8 @@ AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
  // overflow is (input signs equal) and (result sign differs from one of them)
  // If u==0, v^=u is always 0 & therefore no overflow
  if(m<0) DQUC(m, u=*x; v=*y; w= ~u; u+=v; *z=u; ++x; ++y; ++z; w^=v; v^=u; if(XANDY(w,v)<0)++oflo;)
- else if(m&1)DQU(n, u=*x++; I thresh = IMIN-u; if (u<=0){DQU(m>>1, v=*y; if(v<thresh)++oflo; v=u+v; *z++=v; y++;)}else{DQU(m>>1, v=*y; if(v>=thresh)++oflo; v=u+v; *z++=v; y++;)})
- else      DQU(n, v=*y++; I thresh = IMIN-v; if (v<=0){DQU(m>>1, u=*x; if(u<thresh)++oflo; u=u+v; *z++=u; x++;)}else{DQU(m>>1, u=*x; if(u>=thresh)++oflo; u=u+v; *z++=u; x++;)})
+ else if(m&1){m>>=1; DQU(n, u=*x++; I thresh = IMIN-u; if (u<=0){DQU(m, v=*y; if(v<thresh)++oflo; v=u+v; *z++=v; y++;)}else{DQU(m, v=*y; if(v>=thresh)++oflo; v=u+v; *z++=v; y++;)})}
+ else{m>>=1; DQU(n, v=*y++; I thresh = IMIN-v; if (v<=0){DQU(m, u=*x; if(u<thresh)++oflo; u=u+v; *z++=u; x++;)}else{DQU(m, u=*x; if(u>=thresh)++oflo; u=u+v; *z++=u; x++;)})}
  R oflo?EWOVIP+EWOVIPPLUSII:EVOK;
 // II subtract, noting overflow and leaving it, possibly in place
 }
@@ -146,9 +146,9 @@ AHDR2(minusII,I,I,I){I u;I v;I w;I oflo=0;
  // overflow is (input signs differ) and (result sign differs from minuend sign)
  if(m<0)  {DQUC(m, u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; v^=u; u^=w; if(XANDY(u,v)<0)++oflo;)}
 // if u<0, oflo if u-v < IMIN => v > u-IMIN; if u >=0, oflo if u-v>IMAX => v < u+IMIN+1 => v <= u+IMIN => v <= u-IMIN
- else if(m&1)DQU(n, u=*x++; I thresh = u-IMIN; if (u<0){DQU(m>>1, v=*y; if(v>thresh)++oflo; w=u-v; *z++=w; y++;)}else{DQU(m>>1, v=*y; if(v<=thresh)++oflo; w=u-v; *z++=w; y++;)})
+ else if(m&1){m>>=1; DQU(n, u=*x++; I thresh = u-IMIN; if (u<0){DQU(m, v=*y; if(v>thresh)++oflo; w=u-v; *z++=w; y++;)}else{DQU(m, v=*y; if(v<=thresh)++oflo; w=u-v; *z++=w; y++;)})}
  // if v>0, oflo if u-v < IMIN => u < v+IMIN = v-IMIN; if v<=0, oflo if u-v > IMAX => u>v+IMAX => u>v-1-IMIN => u >= v-IMIN
- else      DQU(n, v=*y++; I thresh = v-IMIN; if (v<=0){DQU(m>>1, u=*x; if(u>=thresh)++oflo; u=u-v; *z++=u; x++;)}else{DQU(m>>1, u=*x; if(u<thresh)++oflo; u=u-v; *z++=u; x++;)})
+ else{m>>=1; DQU(n, v=*y++; I thresh = v-IMIN; if (v<=0){DQU(m, u=*x; if(u>=thresh)++oflo; u=u-v; *z++=u; x++;)}else{DQU(m, u=*x; if(u<thresh)++oflo; u=u-v; *z++=u; x++;)})}
  R oflo?EWOVIP+EWOVIPMINUSII:EVOK;
 }
 APFX(  minII, I,I,I, MIN,,R EVOK;)
@@ -158,58 +158,58 @@ APFX(  maxBD, D,B,D, MAX,,R EVOK;)
 // BI add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(plusBI,I,B,I){I u;I v;I oflo=0;
  if(m<0)  DQUC(m, u=(I)*x; v=*y; if(v==IMAX)oflo+=u; v=u+v; *z++=v; x++; y++; )
- else if(m&1){DQU(n, u=(I)*x++; if(u){DQU(m>>1, v=*y; if(v==IMAX)oflo=1; v=v+1; *z++=v; y++;)}else{if(z!=y)MC(z,y,(m>>1)<<LGSZI); z+=(m>>1); y+=(m>>1);})}
- else      DQU(n, v=*y++; DQU(m>>1, u=(I)*x; if(v==IMAX)oflo+=u; u=u+v; *z++=u; x++;))
+ else if(m&1){m>>=1; DQU(n, u=(I)*x++; if(u){DQU(m, v=*y; if(v==IMAX)oflo=1; v=v+1; *z++=v; y++;)}else{if(z!=y)MC(z,y,(m)<<LGSZI); z+=(m); y+=(m);})}
+ else{m>>=1; DQU(n, v=*y++; DQU(m, u=(I)*x; if(v==IMAX)oflo+=u; u=u+v; *z++=u; x++;))}
  R oflo?EWOVIP+EWOVIPPLUSBI:EVOK;
 }
 // IB add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
-// scaf could call plusBI
+// scaf could call plusBI, but watch for overflow
 AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
  if(m<0)  DQUC(m, u=*x; v=(I)*y; if(u==IMAX)oflo+=v; u=u+v; *z++=u; x++; y++; )
- else if(m&1)DQU(n, u=*x++; DQU(m>>1, v=(I)*y; if(u==IMAX)oflo+=v; v=u+v; *z++=v; y++;))
- else      DQU(n, v=(I)*y++; if(v){DQU(m>>1, u=*x; if(u==IMAX)oflo=1; u=u+1; *z++=u; x++;)}else{if(z!=x)MC(z,x,(m>>1)<<LGSZI); z+=m>>1; x+=m>>1;})
+ else if(m&1){m>>=1; DQU(n, u=*x++; DQU(m, v=(I)*y; if(u==IMAX)oflo+=v; v=u+v; *z++=v; y++;))}
+ else{m>>=1; DQU(n, v=(I)*y++; if(v){DQU(m, u=*x; if(u==IMAX)oflo=1; u=u+1; *z++=u; x++;)}else{if(z!=x)MC(z,x,(m)<<LGSZI); z+=m; x+=m;})}
  R oflo?EWOVIP+EWOVIPPLUSIB:EVOK;
 }
 // BI subtract, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(minusBI,I,B,I){I u;I v;I w;I oflo=0;
  if(m<0)  DQUC(m, u=(I)*x; v=*y; u=u-v; if((v&u)<0)++oflo; *z++=u; x++; y++; )
- else if(m&1)DQU(n, u=(I)*x++; DQU(m>>1, v=*y; w=u-v; if((v&w)<0)++oflo; *z++=w; y++;))
- else      DQU(n, v=*y++; DQU(m>>1, u=(I)*x; u=u-v; if((v&u)<0)++oflo; *z++=u; x++;))
+ else if(m&1){m>>=1; DQU(n, u=(I)*x++; DQU(m, v=*y; w=u-v; if((v&w)<0)++oflo; *z++=w; y++;))}
+ else{m>>=1; DQU(n, v=*y++; DQU(m, u=(I)*x; u=u-v; if((v&u)<0)++oflo; *z++=u; x++;))}
  R oflo?EWOVIP+EWOVIPMINUSBI:EVOK;
 }
 // IB subtract, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
  if(m<0)  DQUC(m, u=*x; v=(I)*y; if(u==IMIN)oflo+=v; u=u-v; *z++=u; x++; y++; )
- else if(m&1)DQU(n, u=*x++; DQU(m>>1, v=(I)*y; if(u==IMIN)oflo+=v; w=u-v; *z++=w; y++;))
- else      DQU(n, v=(I)*y++; if(v){DQU(m>>1, u=*x; if(u==IMIN)oflo=1; u=u-1; *z++=u; x++;)}else{if(z!=x)MC(z,x,(m>>1)<<LGSZI); z+=m>>1; x+=m>>1;})
+ else if(m&1){m>>=1; DQU(n, u=*x++; DQU(m, v=(I)*y; if(u==IMIN)oflo+=v; w=u-v; *z++=w; y++;))}
+ else{m>>=1; DQU(n, v=(I)*y++; if(v){DQU(m, u=*x; if(u==IMIN)oflo=1; u=u-1; *z++=u; x++;)}else{if(z!=x)MC(z,x,(m)<<LGSZI); z+=m; x+=m;})}
  R oflo?EWOVIP+EWOVIPMINUSIB:EVOK;
 }
 // BI multiply, using clear/copy
 AHDR2(tymesBI,I,B,I){I v;
  if(m<0)  DQUC(m, I u=*x; *z++=*y&-u; x++; y++; )
- else if(m&1){DQU(n, B u=*x++; if(u){if(z!=y)MC(z,y,(m>>1)<<LGSZI);}else{mvc((m>>1)<<LGSZI,z,MEMSET00LEN,MEMSET00);} z+=m>>1; y+=m>>1;)}
- else DQU(n, v=*y++; DQU(m>>1, I u=*x; *z++=v&-u; x++;))
+ else if(m&1){m>>=1; DQU(n, B u=*x++; if(u){if(z!=y)MC(z,y,(m)<<LGSZI);}else{mvc((m)<<LGSZI,z,MEMSET00LEN,MEMSET00);} z+=m; y+=m;)}
+ else{m>>=1;  DQU(n, v=*y++; DQU(m, I u=*x; *z++=v&-u; x++;))}
  R EVOK;
 }
 // IB multiply, using clear/copy
 AHDR2(tymesIB,I,I,B){I u;
  if(m<0)  DQUC(m, I v=*y; *z++=*x&-v; x++; y++; )
- else if(m&1)DQU(n, u=*x++; DQU(m>>1, I v=*y; *z++=u&-v; y++;))
- else DQU(n, B v=*y++; if(v){if(z!=x)MC(z,x,(m>>1)<<LGSZI);}else{mvc((m>>1)<<LGSZI,z,MEMSET00LEN,MEMSET00);} z+=m>>1; x+=m>>1;)
+ else if(m&1){m>>=1; DQU(n, u=*x++; DQU(m, I v=*y; *z++=u&-v; y++;))}
+ else{m>>=1; DQU(n, B v=*y++; if(v){if(z!=x)MC(z,x,(m)<<LGSZI);}else{mvc((m)<<LGSZI,z,MEMSET00LEN,MEMSET00);} z+=m; x+=m;)}
  R EVOK;
 }
 // BD multiply, using clear/copy
 AHDR2(tymesBD,D,B,D){
  if(m<0)  DQUC(m, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++; y++; )
- else if(m&1){DQU(n, B u=*x++; if(u){if(z!=y)MC(z,y,(m>>1)*sizeof(D));}else{mvc((m>>1)*sizeof(D),z,MEMSET00LEN,MEMSET00);} z+=m>>1; y+=m>>1;)}
- else DQU(n, DQU(m>>1, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++;) ++y;)
+ else if(m&1){m>>=1; DQU(n, B u=*x++; if(u){if(z!=y)MC(z,y,(m)*sizeof(D));}else{mvc((m)*sizeof(D),z,MEMSET00LEN,MEMSET00);} z+=m; y+=m;)}
+ else{m>>=1; DQU(n, DQU(m, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++;) ++y;)}
  R EVOK;
 }
 // DB multiply, using clear/copy
 AHDR2(tymesDB,D,D,B){
  if(m<0)  DQUC(m, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; x++; y++; )
- else if(m&1)DQU(n, DQU(m>>1, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; y++;) ++x;)
- else DQU(n, B v=*y++; if(v){if(z!=x)MC(z,x,(m>>1)*sizeof(D));}else{mvc((m>>1)*sizeof(D),z,MEMSET00LEN,MEMSET00);} z+=m>>1; x+=m>>1;)
+ else if(m&1){m>>=1; DQU(n, DQU(m, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; y++;) ++x;)}
+ else{m>>=1; DQU(n, B v=*y++; if(v){if(z!=x)MC(z,x,(m)*sizeof(D));}else{mvc((m)*sizeof(D),z,MEMSET00LEN,MEMSET00);} z+=m; x+=m;)}
  R EVOK;
 }
 AIFX( plusBD, D,B,D, +   )
@@ -247,8 +247,8 @@ AEXP(tymesI4I4, I4,I4,I4,OFOPTEST(mul))
 // II multiply, in double precision.  Always return error code so we can clean up
 AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;I *zi=z;   // could use a side channel to avoid having main loop look at rc
  if(m<0) DQUC(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo;) z++; x++; y++; )
- else if(m&1)DQU(n, u=*x; DQU(m>>1, v=*y; DPMUL(u,v,z, goto oflo;) z++; y++;) x++;)
- else      DQU(n, v=*y; DQU(m>>1, u=*x; DPMUL(u,v,z, goto oflo;) z++; x++;) y++;)
+ else if(m&1){m>>=1; DQU(n, u=*x; DQU(m, v=*y; DPMUL(u,v,z, goto oflo;) z++; y++;) x++;)}
+ else{m>>=1; DQU(n, v=*y; DQU(m, u=*x; DPMUL(u,v,z, goto oflo;) z++; x++;) y++;)}
  R EVOK;
 oflo: *x=u; *y=v; R ~(z-zi);  // back out the last store, in case it's in-place; gcc stores before overflow.  Return complement of overflow offset as special signal
 }
@@ -590,12 +590,12 @@ I remii(I a,I b){I r; R (a!=REPSGN(a))?(r=b%a,0<a?r+(a&REPSGN(r)):r+(a&REPSGN(-r
 
 AHDR2(remII,I,I,I){I u,v;
  if(m<0){DQUC(m,*z++=remii(*x,*y); x++; y++; )
- }else if(m&1){   // repeated x.  Handle special cases and avoid integer divide
+ }else if(m&1){m>>=1;   // repeated x.  Handle special cases and avoid integer divide
 #if SY_64 && C_USEMULTINTRINSIC
   DQU(n, u=*x++;
     // take abs(x); handle negative x in a postpass
    UI ua=-u>=0?-u:u;  // abs(x)
-   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II AH2A_x1(m>>1,y,&umsk,z,jt); z+=m>>1; y+=m>>1;   // x is a power of 2, including 0
+   if(!(ua&(ua-1))){ I umsk = ua-1; bw0001II AH2A_x1(m,y,&umsk,z,jt); z+=m; y+=m;   // x is a power of 2, including 0
    }else{
     // calculate 1/abs(x) to 53-bit precision.  Remember, x is at least 3, so the MSB will never have signed significance
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
@@ -607,76 +607,76 @@ AHDR2(remII,I,I,I){I u,v;
     // low by at most 1; we correct it if it is
     // The computations here are unsigned, because if signed the binary point gets offset and the upper significance requires a 128-bit shift.
     // Since negative arguments are unusual, we use 1 branch to handle them.  This may mispredict.
-    DQU(m>>1, I yv=*y;
+    DQU(m, I yv=*y;
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
       // 2's-complement adjust for negative y; to make the result still always on the low side, subtract an extra 1.
       DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range
-   if(u<-1){I *zt=z; DQU(m>>1, I t=*--zt; t=t>0?t-ua:t; *zt=t;)}
+   if(u<-1){I *zt=z; DQU(m, I t=*--zt; t=t>0?t-ua:t; *zt=t;)}
   )
 #else
   DQU(n, u=*x++;
-   if(0<=u&&!(u&(u-1))){--u; DQU(m>>1, *z++=u&*y++;);}
-   else DQU(m>>1, *z++=remii( u,*y);      y++;)
+   if(0<=u&&!(u&(u-1))){--u; DQU(m, *z++=u&*y++;);}
+   else DQU(m, *z++=remii( u,*y);      y++;)
   )
 #endif
- }else      DQU(n, v=*y++; DQU(m>>1, *z++=remii(*x, v); x++;     ));  // repeated y
+ }else{m>>=1; DQU(n, v=*y++; DQU(m, *z++=remii(*x, v); x++;     ))}  // repeated y
  R EVOK;
 }
 
 AHDR2(remI2I2,I2,I2,I2){I u,v;
  if(m<0){DQUC(m,*z++=remii(*x,*y); x++; y++; )
- }else if(m&1){   // repeated x.  Handle special cases and avoid integer divide
+ }else if(m&1){m>>=1;    // repeated x.  Handle special cases and avoid integer divide
 #if SY_64 && C_USEMULTINTRINSIC
   DQU(n, u=*x++;
    UI ua=-u>=0?-u:u;  // abs(x)
-   if(!(ua&(ua-1))){I umsk = ua-1; DOU(m>>1, z[i]=y[i]&umsk;) z+=m>>1; y+=m>>1;   // x is a power of 2, including 0
+   if(!(ua&(ua-1))){I umsk = ua-1; DOU(m, z[i]=y[i]&umsk;) z+=m; y+=m;   // x is a power of 2, including 0
    }else{
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
     I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)
     UI himul; DPUMULH(uarecip,(UI)deficitprec,himul); uarecip=deficitprec<0?0:uarecip; uarecip+=himul;   // now we have 63 bits of uarecip
-    DQU(m>>1, I yv=*y;
+    DQU(m, I yv=*y;
       DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
      y++;)
    }
-   if(u<-1){I2 *zt=z; DQU(m>>1, I2 t=*--zt; t=t>0?t-ua:t; *zt=t;)}
+   if(u<-1){I2 *zt=z; DQU(m, I2 t=*--zt; t=t>0?t-ua:t; *zt=t;)}
   )
 #else
   DQU(n, u=*x++;
-   if(0<=u&&!(u&(u-1))){--u; DQU(m>>1, *z++=u&*y++;);}
-   else DQU(m>>1, *z++=remii( u,*y);      y++;)
+   if(0<=u&&!(u&(u-1))){--u; DQU(m, *z++=u&*y++;);}
+   else DQU(m, *z++=remii( u,*y);      y++;)
   )
 #endif
- }else      DQU(n, v=*y++; DQU(m>>1, *z++=remii(*x, v); x++;     ));  // repeated y
+ }else{m>>=1; DQU(n, v=*y++; DQU(m, *z++=remii(*x, v); x++;     ))}  // repeated y
  R EVOK;
 }
 
 AHDR2(remI4I4,I4,I4,I4){I u,v;
  if(m<0){DQUC(m,*z++=remii(*x,*y); x++; y++; )
- }else if(m&1){   // repeated x.  Handle special cases and avoid integer divide
+ }else if(m&1){m>>=1;    // repeated x.  Handle special cases and avoid integer divide
 #if SY_64 && C_USEMULTINTRINSIC
   DQU(n, u=*x++;
    UI ua=-u>=0?-u:u;  // abs(x)
-   if(!(ua&(ua-1))){I umsk = ua-1; DOU(m>>1, z[i]=y[i]&umsk;) z+=m>>1; y+=m>>1;   // x is a power of 2, including 0
+   if(!(ua&(ua-1))){I umsk = ua-1; DOU(m, z[i]=y[i]&umsk;) z+=m; y+=m;   // x is a power of 2, including 0
    }else{
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
     I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)
     UI himul; DPUMULH(uarecip,(UI)deficitprec,himul); uarecip=deficitprec<0?0:uarecip; uarecip+=himul;   // now we have 63 bits of uarecip
-    DQU(m>>1, I yv=*y;
+    DQU(m, I yv=*y;
       DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
      y++;)
    }
-   if(u<-1){I4 *zt=z; DQU(m>>1, I4 t=*--zt; t=t>0?t-ua:t; *zt=t;)}
+   if(u<-1){I4 *zt=z; DQU(m, I4 t=*--zt; t=t>0?t-ua:t; *zt=t;)}
   )
 #else
   DQU(n, u=*x++;
-   if(0<=u&&!(u&(u-1))){--u; DQU(m>>1, *z++=u&*y++;);}
-   else DQU(m>>1, *z++=remii( u,*y);      y++;)
+   if(0<=u&&!(u&(u-1))){--u; DQU(m, *z++=u&*y++;);}
+   else DQU(m, *z++=remii( u,*y);      y++;)
   )
 #endif
- }else      DQU(n, v=*y++; DQU(m>>1, *z++=remii(*x, v); x++;     ));  // repeated y
+ }else{m>>=1; DQU(n, v=*y++; DQU(m, *z++=remii(*x, v); x++;))}  // repeated y
  R EVOK;
 }
 

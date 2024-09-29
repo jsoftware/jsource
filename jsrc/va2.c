@@ -384,6 +384,10 @@ VA va[]={
   &rpsplus},
 
 /* 2a *  */ {
+#if SY_64  // boolean multiply is the same for float and double if value length the same
+#define tymesBI tymesBD
+#define tymesIB tymesDB
+#endif
  {{(VF)andBB,VCVTIP+VB+VIP}, {(VF)tymesBI,VCVTIP+VI+VIPOKW}, {(VF)tymesBD,VCVTIP+VD+VIPOKW},
   {(VF)tymesIB,VCVTIP+VI+VIPOKA}, {(VF)tymesII,VCVTIP+VI+VIP}, {(VF)tymesID,VCVTIP+VD+VIPID},
   {(VF)tymesDB,VCVTIP+VD+VIPOKA}, {(VF)tymesDI,VCVTIP+VD+VIPDI}, {(VF)tymesDD,VCVTIP+VD+VIP}, 

@@ -17,6 +17,19 @@
 #define TYMESDI(u,v)  (   v?u*v:0)
 #define TYMESDD(u,v)  TYMES(u,v)
 
+// commutative function sharing.  We can share only if the function produces no error codes, because sparse code doesn't know how to run recovery
+AHDR2(plusID,D,I,D){R plusDI(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(plusBD,D,B,D){R plusDB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(minID,D,I,D){R minDI(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(minBD,D,B,D){R minDB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(minBI,I,B,I){R minIB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(maxID,D,I,D){R maxDI(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(maxBD,D,B,D){R maxDB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(maxBI,I,B,I){R maxIB(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(tymesID,D,I,D){R tymesDI(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(tymesBD,D,B,D){R tymesDB(m^1^SGNTO0(m),z,y,x,n,jt);}
+
+
 
 #if C_AVX2 || EMU_AVX2
 primop256(plusDD,1,NAN0;,zz=_mm256_add_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
@@ -45,9 +58,9 @@ APFX( maxEE, E,E,E, MAXE,,R EVOK;)
 
 #if C_AVX2 || EMU_AVX2
 primop256(plusDI,16,,zz=_mm256_add_pd(xx,yy),R EVOK;)
-primop256(plusID,8,,zz=_mm256_add_pd(xx,yy),R EVOK;)
+// commutative primop256(plusID,8,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusDB,0xa00,,zz=_mm256_add_pd(xx,yy),R EVOK;)
-primop256(plusBD,0x900,,zz=_mm256_add_pd(xx,yy),R EVOK;)
+// commutative primop256(plusBD,0x900,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusII,0x21,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
@@ -75,43 +88,43 @@ primop256(minusIB,0x8a2,__m256d oflo=_mm256_setzero_pd();,
 primop256(minusBB,0xe0,,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,R EVOK;)
 primop256(minDI,16,,zz=_mm256_min_pd(xx,yy),R EVOK;)
-primop256(minID,8,,zz=_mm256_min_pd(xx,yy),R EVOK;)
-primop256(minBD,0x100,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+// commutative primop256(minID,8,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+// commutative primop256(minBD,0x100,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 primop256(minDB,0x200,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 #if C_AVX512
 primop256(minII,1,,   zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
-primop256(minBI,0x40,,zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
 primop256(minIB,0x80,,zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+// commutative primop256(minBI,0x40,,zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
 #else
 primop256(minII,1,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
-primop256(minBI,0x40,,
- zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+// commutative primop256(minBI,0x40,,
+// commutative  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(minIB,0x80,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 #endif
 primop256(maxDI,16,,zz=_mm256_max_pd(xx,yy),R EVOK;)
-primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
-primop256(maxBD,0x100,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(maxDB,0x200,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+// commutative primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+// commutative primop256(maxBD,0x100,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 #if C_AVX512
 primop256(maxII,1,,   zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
-primop256(maxBI,0x40,,zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
 primop256(maxIB,0x80,,zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+// commutative primop256(maxBI,0x40,,zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
 #else
 primop256(maxII,1,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
-primop256(maxBI,0x40,,
- zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(maxIB,0x80,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+// commutative primop256(maxBI,0x40,,
+// commutative  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 #endif
 primop256(tymesDI,16,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(unlikely(NANTEST)){z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
 primop256(tymesDB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;)
-primop256(tymesIB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;) // duplicated fn
-primop256(tymesID,8,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(unlikely(NANTEST)){z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
-primop256(tymesBD,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)
-primop256(tymesBI,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)  // duplicated fn
+// commutative primop256(tymesID,8,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(unlikely(NANTEST)){z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
+// commutative primop256(tymesBD,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)
+// obsolete primop256(tymesBI,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)  // duplicated fn
+// obsolete primop256(tymesIB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;) // duplicated fn
 primop256(divDI,0x14,D *zsav=z; D *xsav=x; D *ysav=y; I msav=m;NAN0;,zz=_mm256_div_pd(xx,yy),
   if(unlikely(NANTEST)){ORIGMN z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*xsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divII,0x1c,D *zsav=z; D *xsav=x; D *ysav=y; I msav=m;NAN0;,zz=_mm256_div_pd(xx,yy),
@@ -129,9 +142,15 @@ primop256(divBD,0x104,D *zsav=z; C *bsav=(C*)x; I msav=m;NAN0;,zz=_mm256_div_pd(
 primop256(divBI,0x134,D *zsav=z; C *bsav=(C*)x; I msav=m;NAN0;,zz=_mm256_div_pd(xx,yy),  // x B->D, y I->D, no unroll, 0s at end
   if(unlikely(NANTEST)){ORIGMN z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*bsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 #else
-AIFX(minusDI, D,D,I, -) AIFX(minusID, D,I,D, -    ) APFX(  minID, D,I,D, MIN,,R EVOK;)   APFX(  minDI, D,D,I, MIN,,R EVOK;) APFX(  maxID, D,I,D, MAX,,R EVOK;)  APFX(  maxDI, D,D,I, MAX,,R EVOK;) 
-APFX(tymesID, D,I,D, TYMESID,,R EVOK;) APFX(tymesDI, D,D,I, TYMESDI,,R EVOK;) APFX(  divID, D,I,D, DIV,,R EVOK;) APFX(  divDI, D,D,I, DIVI,,R EVOK;) 
- AIFX( plusDI, D,D,I, +) AIFX( plusID, D,I,D, +   )
+AIFX(minusDI, D,D,I, -) AIFX(minusID, D,I,D, -    ) 
+// commutative APFX(  minID, D,I,D, MIN,,R EVOK;)
+APFX(  minDI, D,D,I, MIN,,R EVOK;)
+// commutative  APFX(  maxID, D,I,D, MAX,,R EVOK;)
+APFX(  maxDI, D,D,I, MAX,,R EVOK;) 
+// commutative APFX(tymesID, D,I,D, TYMESID,,R EVOK;)
+APFX(tymesDI, D,D,I, TYMESDI,,R EVOK;) APFX(  divID, D,I,D, DIV,,R EVOK;) APFX(  divDI, D,D,I, DIVI,,R EVOK;) 
+ AIFX( plusDI, D,D,I, +)
+// commutative  AIFX( plusID, D,I,D, +   )
 // II add, noting overflow and leaving it, possibly in place
 AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
  // overflow is (input signs equal) and (result sign differs from one of them)
@@ -153,8 +172,8 @@ AHDR2(minusII,I,I,I){I u;I v;I w;I oflo=0;
 }
 APFX(  minII, I,I,I, MIN,,R EVOK;)
 APFX(  maxII, I,I,I, MAX,,R EVOK;)
-APFX(  maxBI, I,B,I, MAX,,R EVOK;)
-APFX(  maxBD, D,B,D, MAX,,R EVOK;)    
+// commutative APFX(  maxBI, I,B,I, MAX,,R EVOK;)
+// commutative APFX(  maxBD, D,B,D, MAX,,R EVOK;)    
 // BI add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(plusBI,I,B,I){I u;I v;I oflo=0;
  if(m<0)  DQUC(m, u=(I)*x; v=*y; if(v==IMAX)oflo+=u; v=u+v; *z++=v; x++; y++; )
@@ -184,6 +203,21 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
  else{m>>=1; DQU(n, v=(I)*y++; if(v){DQU(m, u=*x; if(u==IMIN)oflo=1; u=u-1; *z++=u; x++;)}else{if(z!=x)MC(z,x,(m)<<LGSZI); z+=m; x+=m;})}
  R oflo?EWOVIP+EWOVIPMINUSIB:EVOK;
 }
+// commutative // BD multiply, using clear/copy
+// commutative AHDR2(tymesBD,D,B,D){
+// commutative  if(m<0)  DQUC(m, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++; y++; )
+// commutative  else if(m&1){m>>=1; DQU(n, B u=*x++; if(u){if(z!=y)MC(z,y,(m)*sizeof(D));}else{mvc((m)*sizeof(D),z,MEMSET00LEN,MEMSET00);} z+=m; y+=m;)}
+// commutative  else{m>>=1; DQU(n, DQU(m, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++;) ++y;)}
+// commutative  R EVOK;
+// commutative }
+// DB multiply, using clear/copy
+AHDR2(tymesDB,D,D,B){
+ if(m<0)  DQUC(m, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; x++; y++; )
+ else if(m&1){m>>=1; DQU(n, DQU(m, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; y++;) ++x;)}
+ else{m>>=1; DQU(n, B v=*y++; if(v){if(z!=x)MC(z,x,(m)*sizeof(D));}else{mvc((m)*sizeof(D),z,MEMSET00LEN,MEMSET00);} z+=m; x+=m;)}
+ R EVOK;
+}
+#if !SY_64  // boolean multiply is the same for float and double
 // BI multiply, using clear/copy
 AHDR2(tymesBI,I,B,I){I v;
  if(m<0)  DQUC(m, I u=*x; *z++=*y&-u; x++; y++; )
@@ -198,30 +232,17 @@ AHDR2(tymesIB,I,I,B){I u;
  else{m>>=1; DQU(n, B v=*y++; if(v){if(z!=x)MC(z,x,(m)<<LGSZI);}else{mvc((m)<<LGSZI,z,MEMSET00LEN,MEMSET00);} z+=m; x+=m;)}
  R EVOK;
 }
-// BD multiply, using clear/copy
-AHDR2(tymesBD,D,B,D){
- if(m<0)  DQUC(m, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++; y++; )
- else if(m&1){m>>=1; DQU(n, B u=*x++; if(u){if(z!=y)MC(z,y,(m)*sizeof(D));}else{mvc((m)*sizeof(D),z,MEMSET00LEN,MEMSET00);} z+=m; y+=m;)}
- else{m>>=1; DQU(n, DQU(m, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++;) ++y;)}
- R EVOK;
-}
-// DB multiply, using clear/copy
-AHDR2(tymesDB,D,D,B){
- if(m<0)  DQUC(m, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; x++; y++; )
- else if(m&1){m>>=1; DQU(n, DQU(m, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; y++;) ++x;)}
- else{m>>=1; DQU(n, B v=*y++; if(v){if(z!=x)MC(z,x,(m)*sizeof(D));}else{mvc((m)*sizeof(D),z,MEMSET00LEN,MEMSET00);} z+=m; x+=m;)}
- R EVOK;
-}
-AIFX( plusBD, D,B,D, +   )
+#endif
+// commutative AIFX( plusBD, D,B,D, +   )
 AIFX( plusDB, D,D,B, +     )       /* plusDD */
 AIFX(minusBD, D,B,D, -    )
 AIFX(minusDB, D,D,B, -     )        /* minusDD */
 APFX(  divBD, D,B,D, DIV,,R EVOK;)
 APFX(  divDB, D,D,B, DIVI ,,R EVOK;)         /* divDD */
-APFX(  minBI, I,B,I, MIN,,R EVOK;)
-APFX(  minBD, D,B,D, MIN,,R EVOK;)    
 APFX(  minIB, I,I,B, MIN,,R EVOK;)     /* minII */                   
 APFX(  minDB, D,D,B, MIN,,R EVOK;)           /* minDD */
+// commutative APFX(  minBI, I,B,I, MIN,,R EVOK;)
+// commutative APFX(  minBD, D,B,D, MIN,,R EVOK;)    
 APFX(  maxIB, I,I,B, MAX,,R EVOK;)     /* maxII */                    
 APFX(  maxDB, D,D,B, MAX,,R EVOK;)            /* maxDD */
 APFX(  divBB, D,B,B, DIVBB,,R EVOK;) 

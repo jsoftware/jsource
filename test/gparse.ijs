@@ -176,6 +176,8 @@ a ]:
 'syntax error' -: ". etx 'Oc)'
 'syntax error' -: ". etx 'Oc('
 
+'syntax error' -:   10  {{y[x)}} etx 0 1  NB. corrupted memory freeing the mark
+
 NB. display of decorated constants
 a =: 'a'
 '|domain error: efx|   a    +1.' -:&(}.~ i:&'|') efx 'a +  1.'

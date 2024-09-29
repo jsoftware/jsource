@@ -290,7 +290,7 @@ AHDR2(powDD,D,D,D) {D v;
  else if(m&1)DQU(n, D u=*x++; DQU(m>>1, *z++=pospow( u,*y); y++;))
  else{  // repeated exponent: use parallel instructions
   DQU(n, v=*y++;  // for each exponent
-   if(v==0){DQU(m>>1, *z++=1.0;) x+=n;}
+   if(v==0){DQU(m>>1, *z++=1.0;) x+=m>>1;}
    else if(ABS(v)==inf){DQU(m>>1, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
     n=m>>1;  // n is the atom count

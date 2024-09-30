@@ -148,7 +148,8 @@ APFX(  minDI, D,D,I, MIN,,R EVOK;)
 // commutative  APFX(  maxID, D,I,D, MAX,,R EVOK;)
 APFX(  maxDI, D,D,I, MAX,,R EVOK;) 
 APFX(tymesID, D,I,D, TYMESID,,R EVOK;)
-// commutative APFX(tymesDI, D,D,I, TYMESDI,,R EVOK;) APFX(  divID, D,I,D, DIV,,R EVOK;) APFX(  divDI, D,D,I, DIVI,,R EVOK;) 
+// commutative APFX(tymesDI, D,D,I, TYMESDI,,R EVOK;)
+ APFX(  divID, D,I,D, DIV,,R EVOK;) APFX(  divDI, D,D,I, DIVI,,R EVOK;) 
  AIFX( plusDI, D,D,I, +)
 // commutative  AIFX( plusID, D,I,D, +   )
 // II add, noting overflow and leaving it, possibly in place
@@ -174,7 +175,6 @@ APFX(  minII, I,I,I, MIN,,R EVOK;)
 APFX(  maxII, I,I,I, MAX,,R EVOK;)
 // commutative APFX(  maxBI, I,B,I, MAX,,R EVOK;)
 // commutative APFX(  maxBD, D,B,D, MAX,,R EVOK;)    
-// BI add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 // IB add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
  if(m<0)  DQUC(m, u=*x; v=(I)*y; if(u==IMAX)oflo+=v; u=u+v; *z++=u; x++; y++; )
@@ -182,6 +182,7 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
  else{m>>=1; DQU(n, v=(I)*y++; if(v){DQU(m, u=*x; if(u==IMAX)oflo=1; u=u+1; *z++=u; x++;)}else{if(z!=x)MC(z,x,(m)<<LGSZI); z+=m; x+=m;})}
  R oflo?EWOVIP+EWOVIPPLUSIB:EVOK;
 }
+// commutative // BI add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 // commutative AHDR2(plusBI,I,B,I){I u;I v;I oflo=0;
 // commutative  if(m<0)  DQUC(m, u=(I)*x; v=*y; if(v==IMAX)oflo+=u; v=u+v; *z++=v; x++; y++; )
 // commutative  else if(m&1){m>>=1; DQU(n, u=(I)*x++; if(u){DQU(m, v=*y; if(v==IMAX)oflo=1; v=v+1; *z++=v; y++;)}else{if(z!=y)MC(z,y,(m)<<LGSZI); z+=(m); y+=(m);})}

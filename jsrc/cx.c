@@ -1081,6 +1081,7 @@ static A *jtscanandmoveppp(J jt, I isparen, A *ppp, A **in, I inl, A **fragv, I 
    }else{lpara=ppp; A *pstart=&(*in)[1]; RZ(ppp=jtscanandmoveppp(jt,1,ppp,&pstart,inend-pstart,fragv,fragl))
    }
    // ( ... ) processed.  If the result was a single word
+// scaf finish PPP
   }
  }
  R 0;

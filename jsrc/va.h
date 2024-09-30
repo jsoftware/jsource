@@ -278,7 +278,8 @@
 // conclusion: unroll by 4 on 1address , by 2 on 2-3 address
 // This was done with poor choice of address modes; needs to be rerun
 
-// fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with 1 (for fdiv NaN),
+// fz=bit0 = commutative,
+// bits 1-2=incomplete argument filling: 00=none, 01=incomplete y must be filled with 0 (to avoid isub oflo), 10=incomplete x must be filled with 1 (for fdiv NaN), 11=both x & y must be filled with 0
 // bit3 set for int-to-float on x, bit4 for int-to-float on y
 // bit5 set to suppress loop-unrolling
 // bit6 set for bool-to-int on x, bit7 for bool-to-int on y
@@ -293,7 +294,7 @@
 #define XAD(fz) (XBYT(fz)?(x):(z+(I)x))  // addr: relative to z if same length
 #define YAD(fz) (YBYT(fz)?(y):(z+(I)y))  // addr: relative to z if same length
 
-// do one computation. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x.  lineno is the offset to the row being worked on
+// do one computation, all lanes valid. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x.  lineno is the offset to the row being worked on
 #define PRMDO(zzop,xy,fz,lineno)  if(xy&2)LDBID(xx,OFFSETBID(XAD(fz),lineno*NPAR,fz,0x8,0x40,0x100),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,OFFSETBID(YAD(fz),lineno*NPAR,fz,0x10,0x80,0x200),fz,0x10,0x80,0x200)  \
      if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
      zzop; _mm256_storeu_pd(OFFSETBID(z,lineno*NPAR,0,0,0,0), zz);
@@ -308,8 +309,8 @@
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=0000, 01=1000, 10=1100, 11=1110, 100=1111 */ \
   if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-  yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
-  if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+  if((fz)&2)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
+  if((fz)&4)if((fz)&2)xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); else xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   else xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); /* init incomplete fetch */ \
   zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
   if((xy)==2)yy=xysav; if((xy)==1)xx=xysav; \
@@ -333,24 +334,22 @@
 
 #define PRMMASK(zzop,xy,fz) if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-  if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-  if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+  if((fz)&2)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
+  if((fz)&4)if((fz)&2)xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); else xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz);
 
-// version to save I-cache, with only one instance of zzop
+// version to save I-cache, with only one instance of zzop and load
 #define PRMMASKLP(zzop,xy,fz) { \
   UI thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* rem len, align len 1-4, clamped at len */ \
   NOUNROLL do { \
    thisl=thisl>m0?m0:thisl; /* don't overrun input */ \
-   if(thisl==NPAR){ /* fetch args, with conversion if needed */ \
-    if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
-    if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-   }else{ \
+   /* fetch args, with conversion if needed */ \
+   if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
+   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+   if(withprob(thisl!=NPAR,0.1)){ \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-thisl)); \
-    if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
-    if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-    if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-    if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+    if((fz)&2)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
+    if((fz)&4)if((fz)&2)xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); else xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
    } \
    zzop;  /* the function */ \
    if(thisl==NPAR){_mm256_storeu_pd(z,zz); /* store the result */ \
@@ -379,7 +378,7 @@ AHDR2(name,void,void,void){ \
   if(!((fz)&1)&&m&1){ \
    /* n applications of atom+vector of length m (never used if commutative) */ \
    m>>=1; if(!YBYT(fz))y-=(I)z;  /* convert y to offset if same len as z */ \
-   DQNOUNROLL(n, \
+   DQU(n, \
     if(unlikely((fz)&0x140 && (((fz)&0x400 && y==0 && *(C*)x!=0) || ((fz)&0x800 && y==0 && *(C*)x==0)))){ /* inplace and op leaves value unchanged */ \
      INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(z,m,fz,0,0,0) \
     }else{ \
@@ -398,7 +397,7 @@ AHDR2(name,void,void,void){ \
    /* n applications of vector of length m+atom */ \
    if((fz)&1){I taddr=(I)x^(I)y; x=m&1?y:x; y=(D*)((I)x^taddr);}  /* swap commutatives as needed */ \
    m>>=1; if(!XBYT(fz))x-=(I)z;  /* convert x to offset if same len as z */ \
-   DQNOUNROLL(n, \
+   DQU(n, \
     if(unlikely((fz)&0x280 && (((fz)&0x400 && x==0 && *(C*)y!=0) || ((fz)&0x800 && x==0 && *(C*)y==0)))){ \
      INCRBID(y,1,fz,0x10,0x80,0x200) INCRBID(z,m,fz,0,0,0) \
     }else { \

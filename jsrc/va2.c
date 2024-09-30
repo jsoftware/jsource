@@ -630,7 +630,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     DPMULDE(nf,mf,mf);  // mf is total # iterations
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
     I flagorign=((I)jtinplace>>VIPWCRLONGX)&(n!=1);  // if n was not 1 before migration, it must be flagged if WCRLONG is set; in this case nf must be 1 and there is no further flagging
-    if(unlikely(((C)(nf!=1)+(C)(n!=1)+(C)(m!=1))<(C)2)){  // 2 values=1, can lose a loop
+    if(unlikely(((C)(nf!=1)+(C)(n!=1)-(C)(m==1))<=(C)0)){  // 2 values=1, can lose a loop
      // migration is possible
      flagorign|=((I)jtinplace>>VIPWFLONGX)&(nf!=1);  // repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus nop flag set yet
      m*=migrmf; n*=nf;   // propagate mf and nf down

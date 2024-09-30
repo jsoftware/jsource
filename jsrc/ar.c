@@ -1130,7 +1130,7 @@ check foldinfo.zstatus
  }else{
   // nondirectional fold
  }
-
+// scaf finish coding fold
 
  jt->afoldinfo=stkfoldinfo;
 }

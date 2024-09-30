@@ -9,21 +9,35 @@
 #include "ve.h"
 #include "ar.h"
 
+// commutative functions
+AHDR2(bw0100II,BID,BID,BID){R bw0010II(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0101II,BID,BID,BID){R bw0011II(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1100II,BID,BID,BID){R bw1010II(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1101II,BID,BID,BID){R bw1011II(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0100I2I2,UI2,UI2,UI2){R bw0010I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0101I2I2,UI2,UI2,UI2){R bw0011I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1100I2I2,UI2,UI2,UI2){R bw1010I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1101I2I2,UI2,UI2,UI2){R bw1011I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0100I4I4,UI4,UI4,UI4){R bw0010I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0101I4I4,UI4,UI4,UI4){R bw0011I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1100I4I4,UI4,UI4,UI4){R bw1010I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1101I4I4,UI4,UI4,UI4){R bw1011I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
+
 #if C_AVX2 || EMU_AVX2
 primop256(bw0000II,1,,zz=_mm256_setzero_pd(),R EVOK;)
 primop256(bw0001II,1,,zz=_mm256_and_pd(xx,yy),R EVOK;)
 primop256(bw0010II,0,,zz=_mm256_andnot_pd(yy,xx),R EVOK;)
 primop256(bw0011II,0,,zz=xx,R EVOK;)
-primop256(bw0100II,0,,zz=_mm256_andnot_pd(xx,yy),R EVOK;)
-primop256(bw0101II,0,,zz=yy,R EVOK;)
+// commutative primop256(bw0100II,0,,zz=_mm256_andnot_pd(xx,yy),R EVOK;)
+// commutative primop256(bw0101II,0,,zz=yy,R EVOK;)
 primop256(bw0110II,1,,zz=_mm256_xor_pd(xx,yy),R EVOK;)
 primop256(bw0111II,1,,zz=_mm256_or_pd(xx,yy),R EVOK;)
 primop256(bw1000II,1,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,_mm256_or_pd(xx,yy)),R EVOK;)
 primop256(bw1001II,1,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,_mm256_xor_pd(xx,yy)),R EVOK;)
 primop256(bw1010II,0,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,yy),R EVOK;)
 primop256(bw1011II,0,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,_mm256_andnot_pd(xx,yy)),R EVOK;)
-primop256(bw1100II,0,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,xx),R EVOK;)
-primop256(bw1101II,0,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,_mm256_andnot_pd(yy,xx)),R EVOK;)
+// commutative primop256(bw1100II,0,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,xx),R EVOK;)
+// commutative primop256(bw1101II,0,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,_mm256_andnot_pd(yy,xx)),R EVOK;)
 primop256(bw1110II,1,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=_mm256_xor_pd(ones,_mm256_and_pd(xx,yy)),R EVOK;)
 primop256(bw1111II,1,__m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones)));,zz=ones,R EVOK;)
 #else
@@ -31,16 +45,16 @@ APFX(bw0000II, UI,UI,UI, BW0000,, R EVOK;)
 APFX(bw0001II, UI,UI,UI, BW0001,, R EVOK;) 
 APFX(bw0010II, UI,UI,UI, BW0010,, R EVOK;)
 APFX(bw0011II, UI,UI,UI, BW0011,, R EVOK;)
-APFX(bw0100II, UI,UI,UI, BW0100,, R EVOK;)
-APFX(bw0101II, UI,UI,UI, BW0101,, R EVOK;)
+// commutative APFX(bw0100II, UI,UI,UI, BW0100,, R EVOK;)
+// commutative APFX(bw0101II, UI,UI,UI, BW0101,, R EVOK;)
 APFX(bw0110II, UI,UI,UI, BW0110,, R EVOK;)
 APFX(bw0111II, UI,UI,UI, BW0111,, R EVOK;)
 APFX(bw1000II, UI,UI,UI, BW1000,, R EVOK;)
 APFX(bw1001II, UI,UI,UI, BW1001,, R EVOK;)
 APFX(bw1010II, UI,UI,UI, BW1010,, R EVOK;)
 APFX(bw1011II, UI,UI,UI, BW1011,, R EVOK;)
-APFX(bw1100II, UI,UI,UI, BW1100,, R EVOK;)
-APFX(bw1101II, UI,UI,UI, BW1101,, R EVOK;)
+// commutative APFX(bw1100II, UI,UI,UI, BW1100,, R EVOK;)
+// commutative APFX(bw1101II, UI,UI,UI, BW1101,, R EVOK;)
 APFX(bw1110II, UI,UI,UI, BW1110,, R EVOK;)
 APFX(bw1111II, UI,UI,UI, BW1111,, R EVOK;)
 #endif
@@ -48,16 +62,16 @@ APFX(bw0000I2I2, UI2,UI2,UI2, BW0000,, R EVOK;)
 APFX(bw0001I2I2, UI2,UI2,UI2, BW0001,, R EVOK;) 
 APFX(bw0010I2I2, UI2,UI2,UI2, BW0010,, R EVOK;)
 APFX(bw0011I2I2, UI2,UI2,UI2, BW0011,, R EVOK;)
-APFX(bw0100I2I2, UI2,UI2,UI2, BW0100,, R EVOK;)
-APFX(bw0101I2I2, UI2,UI2,UI2, BW0101,, R EVOK;)
+// commutative APFX(bw0100I2I2, UI2,UI2,UI2, BW0100,, R EVOK;)
+// commutative APFX(bw0101I2I2, UI2,UI2,UI2, BW0101,, R EVOK;)
 APFX(bw0110I2I2, UI2,UI2,UI2, BW0110,, R EVOK;)
 APFX(bw0111I2I2, UI2,UI2,UI2, BW0111,, R EVOK;)
 APFX(bw1000I2I2, UI2,UI2,UI2, BW1000,, R EVOK;)
 APFX(bw1001I2I2, UI2,UI2,UI2, BW1001,, R EVOK;)
 APFX(bw1010I2I2, UI2,UI2,UI2, BW1010,, R EVOK;)
 APFX(bw1011I2I2, UI2,UI2,UI2, BW1011,, R EVOK;)
-APFX(bw1100I2I2, UI2,UI2,UI2, BW1100,, R EVOK;)
-APFX(bw1101I2I2, UI2,UI2,UI2, BW1101,, R EVOK;)
+// commutative APFX(bw1100I2I2, UI2,UI2,UI2, BW1100,, R EVOK;)
+// commutative APFX(bw1101I2I2, UI2,UI2,UI2, BW1101,, R EVOK;)
 APFX(bw1110I2I2, UI2,UI2,UI2, BW1110,, R EVOK;)
 APFX(bw1111I2I2, UI2,UI2,UI2, BW1111,, R EVOK;)
 
@@ -65,20 +79,20 @@ APFX(bw0000I4I4, UI4,UI4,UI4, BW0000,, R EVOK;)
 APFX(bw0001I4I4, UI4,UI4,UI4, BW0001,, R EVOK;) 
 APFX(bw0010I4I4, UI4,UI4,UI4, BW0010,, R EVOK;)
 APFX(bw0011I4I4, UI4,UI4,UI4, BW0011,, R EVOK;)
-APFX(bw0100I4I4, UI4,UI4,UI4, BW0100,, R EVOK;)
-APFX(bw0101I4I4, UI4,UI4,UI4, BW0101,, R EVOK;)
+// commutative APFX(bw0100I4I4, UI4,UI4,UI4, BW0100,, R EVOK;)
+// commutative APFX(bw0101I4I4, UI4,UI4,UI4, BW0101,, R EVOK;)
 APFX(bw0110I4I4, UI4,UI4,UI4, BW0110,, R EVOK;)
 APFX(bw0111I4I4, UI4,UI4,UI4, BW0111,, R EVOK;)
 APFX(bw1000I4I4, UI4,UI4,UI4, BW1000,, R EVOK;)
 APFX(bw1001I4I4, UI4,UI4,UI4, BW1001,, R EVOK;)
 APFX(bw1010I4I4, UI4,UI4,UI4, BW1010,, R EVOK;)
 APFX(bw1011I4I4, UI4,UI4,UI4, BW1011,, R EVOK;)
-APFX(bw1100I4I4, UI4,UI4,UI4, BW1100,, R EVOK;)
-APFX(bw1101I4I4, UI4,UI4,UI4, BW1101,, R EVOK;)
+// commutative APFX(bw1100I4I4, UI4,UI4,UI4, BW1100,, R EVOK;)
+// commutative APFX(bw1101I4I4, UI4,UI4,UI4, BW1101,, R EVOK;)
 APFX(bw1110I4I4, UI4,UI4,UI4, BW1110,, R EVOK;)
 APFX(bw1111I4I4, UI4,UI4,UI4, BW1111,, R EVOK;)
 
-
+// scaf rewrite all these
        static APFX(bw0000CC, UC,UC,UC, BW0000,, R EVOK;)
        static APFX(bw0001CC, UC,UC,UC, BW0001,, R EVOK;)
        static APFX(bw0010CC, UC,UC,UC, BW0010,, R EVOK;)

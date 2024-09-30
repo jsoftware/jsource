@@ -1763,7 +1763,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
   }while(--n2!=0); \
   } \
   } \
-  u=_mm256_maskload_pd((D*)((I)x+(I)z),endmask);  loopbody _mm256_maskstore_pd(z, endmask, u); \
+  u=_mm256_and_pd(_mm256_castsi256_pd(endmask),_mm256_loadu_pd((D*)((I)x+(I)z)));  loopbody  _mm256_maskstore_pd(z, endmask, u); \
   z+=((n0-1)&(NPAR-1))+1; /* advance z over final remnant */  \
  }else{ /* Use single loop to minimize Icache footprint */ \
   x=(D*)((I)x-(I)z);  /* convert x to offset */ \

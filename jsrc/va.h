@@ -332,7 +332,7 @@
      } \
      }
 
-#define PRMMASK(zzop,xy,fz) if(xy&2)LDBIDM(xx,XAD(fz),fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,YAD(fz),fz,0x10,0x80,0x200,endmask)  \
+#define PRMMASK(zzop,xy,fz) if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
   if((fz)&2)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
   if((fz)&4)if((fz)&2)xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); else xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \

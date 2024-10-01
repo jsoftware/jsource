@@ -42,7 +42,7 @@
 #define CPRMDUFF(zzop,xy,fz,len,lpmsk,inv) \
      if(!((fz)&(lpmsk))){ \
       orign2=n2=DUFFLPCT((len)-1,3);  /* # turns through duff loop */ \
-      if(n2>0){ \
+      if(likely(n2>0)){ \
        backoff=DUFFBACKOFF((len)-1,3); \
        CPRMINCR(xy,fz,(backoff+1)*NPAR) \
        switch(backoff){ \
@@ -58,7 +58,7 @@
       if(n2!=0){NOUNROLL do{CPRMDO(zzop,4+(xy),fz,0,inv) CPRMINCR(xy,fz,NPAR)}while(--n2!=0);}  \
      } \
 
-#define CPRMMASK(zzop,xy,fz,inv) if((xy)&2)LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) if((xy)&1)LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
+#define CPRMMASK(zzop,xy,fz,inv) if((xy)&2)LDBID(xx,x,fz,0x8,0x40,0x100) if((xy)&1)LDBID(yy,y,fz,0x10,0x80,0x200)  \
   if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
   zzop; if((fz)&0x2000){acc7=_mm256_add_epi64(acc7,_mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz))); goto outs1;} \
   else{maskatend=inv?_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz)):_mm256_movemask_pd(_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz)); goto outs0;}

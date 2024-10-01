@@ -306,23 +306,22 @@
 #define PRMALIGN(zzop,xy,fz,len) \
   UI alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
   alignreq=alignreq>len-1?len-1:alignreq;   /* never more than len-1 */ \
+  len-=alignreq;  /* leave remlen>0 */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=0000, 01=1000, 10=1100, 11=1110, 100=1111 */ \
   if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
   if((fz)&2)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
   if((fz)&4)if((fz)&2)xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); else xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
-  else xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); /* init incomplete fetch */ \
   zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
-  if((xy)==2)yy=xysav; if((xy)==1)xx=xysav; \
-  len-=alignreq;  /* leave remlen>0 */
+  if((xy)==2)yy=xysav; if((xy)==1)xx=xysav; /* restore repeated arg, which would have been masked */ \
 
 
 #define PRMDUFF(zzop,xy,fz,len) \
      UI backoff=DUFFBACKOFF((len)-1,3); \
+     backoff=(len)>NPAR?backoff:0;  /* handle case of 0 turns in loop */ \
      UI m2=DUFFLPCT((len)-1,3);  /* # turns through duff loop */ \
-     backoff=m2?backoff:m2;  /* handle case of 0 turns in loop */ \
-     PRMINCR(xy,fz,(backoff+1)*NPAR) \
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-(len))&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+     PRMINCR(xy,fz,(backoff+1)*NPAR) \
      switch(backoff){ \
      case 0: PRMINCR(xy,fz,-1*NPAR) if(0){ \
      do{ \
@@ -365,7 +364,7 @@ AHDR2(name,void,void,void){ \
  __m256i endmask; /* length mask for the last word */ \
  __m256d xysav;  \
  CVTEPI64DECLS pref \
- if(m<0){m=~m; n=1; UI m0=m; \
+ if(m<0){m=~m; UI m0=m; /* clang weirdly doesn't do the ~ immediately */ \
   /* vector-to-vector of length m, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
   if(!XBYT(fz))x-=(I)z; if(!YBYT(fz))y-=(I)z;  /* convert x/y to offset if same len as z */ \
@@ -374,6 +373,7 @@ AHDR2(name,void,void,void){ \
    PRMDUFF(zzop,3,fz,m0) \
    PRMMASK(zzop,3,fz) /* runout, using mask */ \
   }else PRMMASKLP(zzop,3,fz)   /* one loop using maskload */ \
+  if((fz)&4||((fz)==0xa)){n=1;} /* set n value in case needed for recovery (divide or tymes) */ \
  }else{ \
   if(!((fz)&1)&&m&1){ \
    /* n applications of atom+vector of length m (never used if commutative) */ \

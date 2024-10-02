@@ -410,7 +410,7 @@ DF2(jtreshapeblankfn){I acr,ar,r,wcr,wr;
 F2(jtexpand){A z;B*av;C*wv,*zv;I an,i,k,p,wc,wk,wt,zn;
  ARGCHK2(a,w);
  if(!ISDENSETYPE(AT(a),B01))RZ(a=cvt(B01,a));
- ASSERT(1==AR(a),EVRANK);
+ ASSERT(1>=AR(a),EVRANK);  // x must be atom or list
  RZ(w=jtsetfv1(jt,w,AT(w)));   // surely fill is needed; maybe cvt w
  if(!AR(w))R from(a,take(num(-2),w));  // atomic w, use a { _2 {. w
  av=BAV(a); an=AN(a);

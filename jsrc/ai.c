@@ -166,7 +166,7 @@ xco:
   R fdef(0,CPOWOP,VERB, jtexpandg,jtvalenceerr, w,num(-1),0L, VFLAGNONE, RMAX,0L,0L);
  case CPOUND:
   ASSERT(nf!=0,EVDOMAIN);
-  ASSERT(1==AR(x),EVRANK);
+  ASSERT(1>=AR(x),EVRANK);
   R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, w,num(-1),0L, VFLAGNONE, RMAX,0L,0L);
   break;
  case CPOWOP:

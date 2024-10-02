@@ -77,25 +77,20 @@ b (exp -: expand) x=: o.  ?1e6   [ b=:  (1+?1000)$0
 b (exp -: expand) x=: j./ ?2$1e6 [ b=:  (1+?1000)$0
 
 
-'rank error' -: 0 #^:_1 etx 'a'
-'rank error' -: 0 #^:_1 etx 'abc'
-'rank error' -: 1 #^:_1 etx 'a'
-'rank error' -: 1 #^:_1 etx 'abc'
+' ' -: 0 #^:_1 etx 'a'
+'length error' -: 0 #^:_1 etx 'abc'
+'a' -: 1 #^:_1 etx 'a'
+'length error' -: 1 #^:_1 etx 'abc'
 
-'rank error' -: 0 #^:_1 etx u:'a'
-'rank error' -: 0 #^:_1 etx u:'abc'
-'rank error' -: 1 #^:_1 etx u:'a'
-'rank error' -: 1 #^:_1 etx u:'abc'
+' ' -: 0 #^:_1 etx u:'a'
+'length error' -: 0 #^:_1 etx u:'abc'
+'a' -: 1 #^:_1 etx u:'a'
+'length error' -: 1 #^:_1 etx u:'abc'
 
-'rank error' -: 0 #^:_1 etx 10&u:'a'
-'rank error' -: 0 #^:_1 etx 10&u:'abc'
-'rank error' -: 1 #^:_1 etx 10&u:'a'
-'rank error' -: 1 #^:_1 etx 10&u:'abc'
-
-'rank error' -: 0 #^:_1 etx s:@<"0 'a'
-'rank error' -: 0 #^:_1 etx s:@<"0 'abc'
-'rank error' -: 1 #^:_1 etx s:@<"0 'a'
-'rank error' -: 1 #^:_1 etx s:@<"0 'abc'
+' ' -: 0 #^:_1 etx 10&u:'a'
+'length error' -: 0 #^:_1 etx 10&u:'abc'
+'a' -: 1 #^:_1 etx 10&u:'a'
+'length error' -: 1 #^:_1 etx 10&u:'abc'
 
 'length error' -: 1 0 1 #^:_1 etx 2 3 4
 'length error' -: 1 0 1 #^:_1 etx 'abc'

@@ -74,6 +74,7 @@ EVDEADLOCK
 EVASSEMBLY
 EVOFLO
 EVTYPECHG
+EVNORESULT
 )
 
 NB. x and y are strings to be joined.  We insert a space if not doing so would change the words
@@ -866,6 +867,7 @@ if. (0=#emsg) *. e=EVOFLO do. hdr , 'an operation on fixed-size integers does no
 if. (0=#emsg) *. e=EVNAN do. hdr , 'you have calculated the equivalent of _-_ or _%_' return. end.
 if. (0=#emsg) *. e=EVNONCE do. hdr , 'this computation is not yet supported' return. end.
 if. (0=#emsg) *. e=EVTYPECHG do. hdr , 'a name changed part of speech since definition, usually because an undefined name was taken to be a verb' return. end.
+if. (0=#emsg) *. e=EVNORESULT do. hdr , 'a fold did not execute anything that could contribute to the result' return. end.
 (}:^:(0=#emsg) hdr) , emsg return.  NB. if we have a line, return it; otherwise remove LF from hdr to avoid empty line
 }}
 

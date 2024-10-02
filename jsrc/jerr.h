@@ -51,7 +51,8 @@
 #define EVASSEMBLY      45    // inhomogeneous results during assembly (i. e. result.h) - converted to EVDOMAIN after eformat
 #define EVOFLO          46    // overflow of a fixed-size type (INT[124])
 #define EVTYPECHG       47    // type pun: name changed type while in use
-#define NEVM            47      /* number of event codes       */
+#define EVNORESULT      48    // Fold had no results to collect
+#define NEVM            48      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */

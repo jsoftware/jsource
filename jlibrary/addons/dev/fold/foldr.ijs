@@ -16,7 +16,7 @@ if. fwd+rev do.  NB. if forward or reverse...
       emptycell =. 0 # (,:x) [^:init y  NB. fillcell: empty array of x or (item of y)
       FoldZv_j_ =: FoldZv_j_ + 00 0 1 1
       try. res =. u. v./ emptycell  NB. get the neutral for the empty cell, and try applying u to it
-      catcht. 13!:8 (3)  NB. Z: on empty is domain error
+      catcht. 13!:8 (48) [ FoldZv_j_ =. fzv  NB. Z: on empty is domain error
       end.
     end.
     if. mult do. res =. (<: nitems) # ,: res end.  NB. Single result is x/y/neutral, Multiple result is array of them (error if no items)
@@ -39,7 +39,7 @@ if. fwd+rev do.  NB. if forward or reverse...
       NB. continuing iteration.  cellres is the u result, vres is the boxed v result
       if. ({.FoldZv_j_) e. 0 2 do. res =. res ,^:mult <vres [ FoldZv_j_ =: FoldZv_j_ + 00 0 0 1 else. FoldZv_j_ =. FoldZv_j_ 18 b. 01 0 0 0 end.
     end.
-    if. 32 ~: 3!:0 res do. 13!:8 (3) [ FoldZv_j_ =. fzv end.  NB. If nothing produced result, error
+    if. 32 ~: 3!:0 res do. 13!:8 (48) [ FoldZv_j_ =. fzv end.  NB. If nothing produced result, error
     res =. > res
   end.
 else.  NB. repeated iteration on y, not related to items
@@ -59,7 +59,7 @@ else.  NB. repeated iteration on y, not related to items
     NB. continuing iteration.  cellres is the u result, vres is the boxed v result
     if. ({.FoldZv_j_) e. 0 2 do. res =. res ,^:mult <vres [ FoldZv_j_ =: FoldZv_j_ + 00 0 0 1 else. FoldZv_j_ =. FoldZv_j_ 18 b. 01 0 0 0 end.
   end.
-  if. 32 ~: 3!:0 res do. 13!:8 (3) [ FoldZv_j_ =. fzv end.  NB. no results is domain error
+  if. 32 ~: 3!:0 res do. 13!:8 (48) [ FoldZv_j_ =. fzv end.  NB. no results is domain error
   res =. >res
 end. 
 res [ FoldZv_j_ =. fzv

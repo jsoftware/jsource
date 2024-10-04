@@ -885,11 +885,14 @@ A jtgc(J jt,A w,A* old){
  if(old==pushp){if(AC(w)>=0){ra(w); tpush(w);}   // if nothing to pop: (a) if inplaceable, make no change (value must be protected up the tstack); (b) otherwise protect the value on the tstack 
  }else if(likely(ISDENSE(AT(w)))){  // sparse blocks cannot simply be left in *old because the contents are farther down the stack and would have to be protected too
   if(*old==w){   // does the start of tstack point to w?
-   // w is the first element on the tstack.  If it is the ONLY element, we can stand pat; no need to make w recursive
-   if(old!=pushp-1){
-    // there are other elements on tstack, we have to make w recursive because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
-    radescend(w); A *old1=old+1; if(likely(((UI)old1&(NTSTACKBLOCK-1))!=0))tpop(old1); else{*old=0; tpop(old); tpush(w);}  // make w recursive; if we can back up to all but the first stack element, do that, leaving w on stack as before; otherwise reinstall
-   }  // raise descendants.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
+   // w is the first element on the tstack.  
+   A *old1=old+1; if(unlikely(((UI)old1&(NTSTACKBLOCK-1))==0)){A *curblk=pushp; while(((A*)*(curblk=(A*)((UI)curblk&-NTSTACKBLOCK))!=old))curblk=(A*)*curblk; old1=curblk+1;}  // old1=next element in stack (must exist)
+   if(unlikely(old1==pushp));  //  If w is the ONLY element, we can stand pat; no need to make w recursive.  But why did the user bother to call us?
+   else{radescend(w); tpop(old1);}   // there are other elements on tstack, we have to make w recursive (if not already) because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
+// obsolete    if(old!=pushp-1){
+// obsolete     // there are other elements on tstack, we have to make w recursive because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
+// obsolete     radescend(w); A *old1=old+1; if(likely(((UI)old1&(NTSTACKBLOCK-1))!=0))tpop(old1); else{*old=0; tpop(old); tpush(w); *old=w;}  // make w recursive; if we can back up to all but the first stack element, do that, leaving w on stack as before; otherwise reinstall
+// obsolete    }  // raise descendants.  Descendants were raised only when w turned from nonrecursive to recursive.  Sparse w also descends, but always recurs in tpush
   }else if(((UI)REPSGN(AC(w))&(UI)AZAPLOC(w))>=(UI)old && likely((((UI)old^(UI)pushp)&-NTSTACKBLOCK)==0)){  // inplaceable zaploc>=old - but that is valid only when we know pushp and old are in the same stack block
    // We can see that w is abandoned and is about to be freed.  Swap it with *old and proceed, leaving it unpopped on the stack
    radescend(w); *AZAPLOC(w)=*old; *old=w; AZAPLOC(w)=old; tpop(old+1);  // update ZAPLOC to point to new position in stack

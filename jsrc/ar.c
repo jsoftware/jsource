@@ -827,7 +827,7 @@ TW3(INTX,CEQ)+TW3(INTX,CLT)+TW3(INTX,CLE)+TW3(INTX,CGT)+TW3(INTX,CGE)+TW3(INTX,C
 #endif
 static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  F1PREFIP;ARGCHK1(w);
- if(unlikely(ISSPARSE(AT(w))))R reducesp(w,self);  // If sparse, go handle it
+ if(unlikely(ISSPARSE(AT(w))))RETF(reducesp(w,self));  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
  r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK
@@ -835,8 +835,8 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  I wt=AT(w); wt=AN(w)?wt:B01;   // Treat empty as Boolean type
 
  if(unlikely(n<=2)){
-  if(unlikely(n==1))R head(w);   // 1 item: the result is the item.  Rank is still set
-  if(unlikely(n==0))R red0(w,FAV(self)->fgh[0]);  // 0 item: return a neutral using shape and rank.  Rank is still set
+  if(unlikely(n==1))RETF(head(w));   // 1 item: the result is the item.  Rank is still set
+  if(unlikely(n==0))RETF(red0(w,FAV(self)->fgh[0]));  // 0 item: return a neutral using shape and rank.  Rank is still set
   if(unlikely(r==1))if(likely(wt&B01+LIT+INT+FL+SBT+C2T+C4T)){  // 2 items: special processing only if the operation is on rank 1: then we avoid loop overheads
    C id=FAV(FAV(self)->fgh[0])->id; 
    if(unlikely(BETWEENC(id,CSTARCO,CMAX))){  // only boolean results are supported
@@ -844,7 +844,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
 #if !SY_64
     cwd=(cv>>LGBW)==2?TWV2:cwd; cwd=(cv>>LGBW)==3?TWV3:cwd;
 #endif
-    if(likely(((1LL<<(cv&(BW-1)))&cwd)!=0))R jtreduce2(jt,w,cv,f);
+    if(likely(((1LL<<(cv&(BW-1)))&cwd)!=0))RETF(jtreduce2(jt,w,cv,f));
    }
   }  // fall through for 2 items that can't be handled specially
  }
@@ -857,7 +857,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  // Normal processing for multiple items.  Get the routine & flags to process it
  VARPS adocv; varps(adocv,self,wt,0);
  // If there is no special routine, go perform general reduce
- if(!adocv.f)R redg(w,self);  // jt->ranks is still set.  redg will clear the ranks
+ if(!adocv.f)RETF(redg(w,self));  // jt->ranks is still set.  redg will clear the ranks
  // Here for primitive reduce handled by special code.
  // Calculate m: #cells of w to operate on; d: #atoms in an item of a cell of w (a cell to which u is applied);
  // zn: #atoms in result
@@ -874,11 +874,11 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  // Convert inputs if needed 
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  // call the selected reduce routine.
-  I rc=((AHDRRFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
+ I rc=((AHDRRFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
  // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
  // have to do is change the type of the result.
- if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))R z; if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF((adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z);}
+ if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))RETF(z); if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF((adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z);}
 }    /* f/"r w main control */
 
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;

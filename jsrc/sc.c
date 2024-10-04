@@ -60,7 +60,6 @@ DF2(jtunquote){A z;
      if(((A)(I)(NAV(thisname)->flag&NMLOC)!=0)){  // most verbs aren't locatives. if no direct locative, leave global unchanged
 #if 0 // obsolete 
       if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
-SEGFAULT; // scaf
        RZSUFF(explocale=stfind(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find locale, which must exist
        FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time
       }

@@ -763,6 +763,7 @@ RECURSIVERESULTSCHECK
        auditblock(jt,y,1,1);
 #endif
 #if MEMAUDIT&0x2
+       audittstack(jt);
        if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
 #endif           
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,

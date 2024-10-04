@@ -94,7 +94,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
-   realizeifvirtual(x); razap(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
+   realizeifvirtual(x); razaptstackend(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
      // razap OK, because if the result is inplaceable it must be newly created or an input from here; in either case the value is not up the tstack
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
@@ -168,7 +168,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // Verify agreement
   ASSERTAGREE(AS(a),AS(w),cf);  // frames must agree
   // Allocate result
-  GATV(z,BOX,natoms,lr,AS(la)); if(unlikely(!natoms))R z; zv=AAV(z);  // make sure we don't fetch outside empty arg
+  GATV(z,BOX,natoms,lr,AS(la)); if(unlikely(!natoms))RETF(z) zv=AAV(z);  // make sure we don't fetch outside empty arg
  }
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags|=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AT(a)&BOX)<<1);
@@ -222,7 +222,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   I acbefore=AC(virta);if(((AC(virta)-(flags&ACPERMANENT))&ACINPLACE)<0){ACIPYESLOCAL(virta);AZAPLOC(virta)=av;}  // note uses different flag
 
   if(unlikely((x=CALL2IP(f2,virta,virtw,fs))==0)){ // run the user's verb
-   if(likely(flags&BOX))if(likely((I)*wv!=0))ACIPNO(virtw); if(likely(flags&(BOX<<1)))if(likely((I)*av!=0))ACIPNO(virta); R0;  // error: restore noninplaceability before we exit
+   if(likely(flags&BOX))if(likely((I)*wv!=0))ACIPNO(virtw); if(likely(flags&(BOX<<1)))if(likely((I)*av!=0))ACIPNO(virta);  R0;  // error: restore noninplaceability before we exit
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
   if(likely((AT(x)&DIRECT)>0)){
@@ -244,11 +244,10 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   }
   if(likely(flags&(BOX<<1)))if(likely((I)*av!=0)){ACIPNO(virta); flags|=(((acbefore!=AC(virta))|(x==virta))<<(AFPRISTINEX+1));}
   
-
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
-   realizeifvirtual(x); razap(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
+   realizeifvirtual(x); razaptstackend(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
@@ -274,7 +273,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  // was captured externally could have been repeated in both places.  This is not needed if WILLBEOPENED but it doesn't hurt
  I xfernoprist = flags&(flags>>AFPRISTINEX); xfernoprist|=xfernoprist>>1;   // low 2 bits are repeat flags, then combine them
  AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE&~(xfernoprist<<AFPRISTINEX))   // could synthesize rather than loading from z
-R z;
+ RETF(z);
 }
 
 // apply f2 on items of a or w against the entirety of the other argument.  Pass on rank of f2 to reduce rank nesting

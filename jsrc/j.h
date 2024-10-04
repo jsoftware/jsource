@@ -735,7 +735,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #ifndef MEMAUDIT
-#define MEMAUDIT 0x00 // Bitmask for memory audits: 
+#define MEMAUDIT 0x00   // Bitmask for memory audits: 
 //        1:  make sure chains are valid (check headers)
 //        2:  full audit of tpush/tpop
 //            detect double-frees before they happen,
@@ -2052,8 +2052,9 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define RE(exp)         RZ(((exp),jt->jerr==0))  // execute exp, then return if error
 #define RZGOTO(exp,lbl) RZSUFF(exp,goto lbl;)
 #define RNE(exp)        {R unlikely(jt->jerr!=0)?0:(exp);}  // always return, with exp if no error, 0 if error
-#if MEMAUDIT&0xc
-#define DEADARG(x)      (((I)(x)&~3)?(AFLAG((A)((I)(x)&~3))&LPAR?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 
+#define AUDITZAP(x)        if(((I)x&~3) && !(AFLAG((A)((I)x&~3))&AFVIRTUAL) && AC((A)((I)x&~3))<0 && *AZAPLOC((A)((I)x&~3))!=((A)((I)x&~3)))SEGFAULT;  // any inplaceable block should have a ZAPLOC that points back to it
+#if MEMAUDIT&0xe
+#define DEADARG(x)      (((I)(x)&~3)?(AFLAG((A)((I)(x)&~3))&LPAR?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt);
 #define ARGCHK1D(x)     ARGCHK1(x)  // these not needed normally, but useful for debugging
 #define ARGCHK2D(x,y)   ARGCHK2(x,y)
 #else
@@ -2074,10 +2075,10 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 
 // RETF is the normal function return.  For debugging we hook into it
 #if AUDITEXECRESULTS && (FORCEVIRTUALINPUTS==2)
-#define RETF(exp)       A ZZZz = (exp); if (!ZZZz && !jt->jerr) SEGFAULT; auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
+#define RETF(exp)       A ZZZz = (exp); if (!ZZZz && !jt->jerr) SEGFAULT; auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz;
 #else
-#if MEMAUDIT&0xc
-#define RETF(exp)       {A ZZZz = (exp); DEADARG(ZZZz); R ZZZz;}
+#if MEMAUDIT&0xe
+#define RETF(exp)       {A ZZZz = (exp); DEADARG(ZZZz); AUDITZAP(ZZZz) R ZZZz;}
 #else
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
 #define RETF(exp)       {A ZZZz = (exp); if(ZZZz==0)R0 R ZZZz;}

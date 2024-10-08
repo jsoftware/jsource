@@ -1349,10 +1349,7 @@ typedef struct {
 
 // info for a fold
  struct foldstatus {
-  I nvstarts;  // #times v has started
-  I nustarts;  // #times u has started
-  I nvalues;  // # values added to result
-  I4 status;   // flags: 1=suppress output 2=stop after this iteration
-  I4 zstatus;   // nonzero if Z: was applied, with bit flags 0-4 = z: codes _3..1
+  I exestats[3]; // #times v has started, #times u has started, # values added to result
+  I4 zstatus;   // nonzero if Z: was applied, with bit flags 0-4 = z: codes _3..1: fold limit; abort; abort iteration; quiet iteration; halt after current
  };  // fold status shared between F: and Z:
 

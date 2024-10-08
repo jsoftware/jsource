@@ -388,9 +388,10 @@
 // and must be marked recursive if it is of such a type so that if we fa() the block we will not try to recur
 // PRISTINE is inherited from the backer (this is not done in virtual(), perhaps it should), because we know the block will never be inplaced unless it was inplaceable at the time this fauxblock was
 // created, which means it is not extant anywhere it could be assigned or extracted from.
-#define fauxvirtual(z,v,w,r,c) {if(likely((r)<=4)){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); \
+#define fauxvirtualcommon(z,v,w,r,c,err) {if(likely((r)<=4)){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); \
                               AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE); ABACK((A)(v))=z; z=(A)(v); ACFAUX(z,(c))} \
-                              else{RZ(z=virtual((w),0,(r))); AFLAGORLOCAL(z,AFUNINCORPABLE) if((c)!=ACUC1)ACINIT(z,(c))} }
+                              else{if(unlikely((z=virtual((w),0,(r)))==0))err; AFLAGORLOCAL(z,AFUNINCORPABLE) if((c)!=ACUC1)ACINIT(z,(c))} }
+#define fauxvirtual(z,v,w,r,c) fauxvirtualcommon(z,v,w,r,c,R 0)
 // for function definition we don't call a subroutine, because that results in pushing all the arguments, popping them, and storing them back.
 // furthermore, we do better to allocate the block early, before the fill has been calculated so that (1) values can be dropped in as they are calculated (2) there is no
 // register-destroying subroutine call at the end of the function using fdef

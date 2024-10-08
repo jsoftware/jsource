@@ -1543,7 +1543,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
-// memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args.  l may be 0
+// memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args.  l, the length in bytes, may be 0
 // if bytelen is 1, the arg may be of any length; if 0, will be lengthened to be a multiple of Is; full words only are moved
 // address may be identical but otherwise should not overlap
 // Normal use allowing overcopy: JMC(d,s,l,0)

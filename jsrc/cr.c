@@ -74,11 +74,10 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // Calculate inplaceability.  Since the inplaceability of f1 was passed into f"r, we don't need to look it up: we just pass the original
   // jtinplace through, except that we remove WILLOPEN status which we are picking up at this level
   jtinplace = (J)((I)jtinplace & ~(JTWILLBEOPENED+JTCOUNTITEMS));
-  // Mark the virtual block as inplaceable only if w is fully inplaceable.  We have to turn of inplaceability in the virtual block so that
+  // Mark the virtual block as inplaceable only if w is fully inplaceable.  We have to turn off inplaceability in the virtual block so that
   // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>
   state |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
-  // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
 #define ZZDECL
 #include "result.h"
   ZZPARMS(wf,mn,1)

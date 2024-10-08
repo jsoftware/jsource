@@ -96,9 +96,9 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
   f=REFIXA(1,f); g=REFIXA(na,g); R df2(z,f,g,wf);  // rerun the compound after fixing the args
  case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
   f=REFIXA(na,f); g=REFIXA(1,g); R df2(z,f,g,wf);
- case CFDOT: case CFDOTDOT: case CFDOTCO: case CFCO: case CFCOCO: case CFCODOT: 
-  // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h
-  f=REFIXA(na,f); h=REFIXA(1,h); R df2(z,f,h,wf);
+// obsolete  case CFDOT: case CFDOTDOT: case CFDOTCO: case CFCO: case CFCOCO: case CFCODOT: 
+// obsolete   // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h
+// obsolete   f=REFIXA(na,f); h=REFIXA(1,h); R df2(z,f,h,wf);
  case CCOLONE:  // Original m : n had VFIX set & never gets here.  We must be an operator with operands (VXOP)
 // obsolete   if(v->flag&VXOPR){
   if(unlikely(!f)){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h

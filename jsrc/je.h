@@ -490,6 +490,8 @@ extern F2(jtfmt02);
 extern F2(jtfmt12);
 extern F2(jtfmt22);
 extern DF2(jtfold);
+extern DF1(jtfoldZ1);
+extern DF2(jtfoldZ2);
 extern DF2(jtfoldZ);
 extern DF2(jtfolk2);
 extern F2(jtforeign);

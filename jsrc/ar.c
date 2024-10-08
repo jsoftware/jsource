@@ -1042,6 +1042,7 @@ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
  RETF(w);
 }    // (+/%#)"r w, implemented as +/"r % cell-length
 
+#if 0   // keep as example of coding a primitive as an addon
 // entry point to execute monad/dyad Fold after the noun arguments are supplied
 static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplaces
  // see if this is monad or dyad
@@ -1087,148 +1088,198 @@ DF2(jtfoldZ){
  R z;
 }
 
-#if 0
+#else
+#define ZZDEFN
+#include "result.h"
+
  // execute fold on input arguments, creating a derived verb to do the work
-#define STATEREVX 16   // reverse fold
+// bit 24 is PRISTINE
+#define STATEREVX 26   // reverse fold
 #define STATEREV ((I)1<<STATEREVX)
-#define STATEFWDX 17   // forward fold
+#define STATEFWDX 27   // forward fold
 #define STATEFWD ((I)1<<STATEFWDX)
-#define STATEMULTX 18   // multiple fold
+#define STATEMULTX 28   // multiple fold
 #define STATEMULT ((I)1<<STATEMULTX)
-#define STATEDYADX 19   // call is dyadic.  Must be the MSB of the flags
+#define STATEDYADX 29   // call is dyadic.  Must be the MSB of the flags
 #define STATEDYAD ((I)1<<STATEDYADX)
-static DF2(jtfoldx){F2PREFIP;A z;
- struct foldstatus foldinfo={0,0,0,0};  // fold status shared between F: and Z:
+static DF2(jtfoldx){F2PREFIP;A z,vz;
+ struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z:   zstatus: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);
  I dyad=!!(AT(w)&NOUN); self=dyad?self:w; w=dyad?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
+ if(unlikely(a==w))jtinplace=(J)((I)jtinplace&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
 #define ZZFLAGWORD dmfr
  I dmfr=ZZFLAGINITSTATE+((8*dyad+FAV(self)->lu2.lc-CFDOT)<<STATEREVX);  // init flags, including zz flags
  struct foldstatus *stkfoldinfo=jt->afoldinfo; jt->afoldinfo=&foldinfo;  // push fold status, init to zeros
- if(dmfr&STATEFWD+STATEREV){
-  // fwd/reverse fold
-  I nitems; SETIC(w,nitems); nitems+=dmfr>>STATEDYADX;  // # items including x if given
+ // allocate result, always boxes.  For Multiple, it will be a list of boxes; for Single, it will be an atomic box.  It is recursive, so that we are allowed
+ // to tpop everything that comes after.  We will open it at the end
+ I wr=AR(w); I wcr=wr-SGNTO0(-wr);  // rank of w, rank of an item of w
+ I zzalloc=dmfr&STATEMULT?64-(AKXR(1)>>LGSZI):1;  // a fair-sized initial allocation.  zzalloc is #boxes in zz; AN(zz) is # valid
+ A zz; GATV0E(zz,INT,zzalloc,dmfr&STATEMULT?1:0,goto exitpop;) AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE; AN(zz)=0;   // alloc result area.  avoid init of BOX area
+ UI nitems;  // loop controls: number of turns through loop
+ A virtw;  // virtual block for items of y, if needed
+ I wstride;  // dist between items of y, in bytes, pos/neg/0 based on fwd/rev
+ if(likely((dmfr&STATEFWD+STATEREV)!=0)){
+  // fwd/reverse fold, the usual case
+  UI wni; SETIC(w,wni); nitems=wni+(dmfr>>STATEDYADX);  // #items of y; # items to process into u including x if given
   if(unlikely(nitems<2)){  // < 2 items
    // < 2 items total.  We can't run v on items of input.
    // Create the cell to run u on: one given argument or a cell of fills
-   if(dmfr&STATEDYAD){
    if(nitems==1){
     // 1 item.  Could come from x (if y is empty) or y.  Apply u to it, to give the final result
-    dfv1(z,dmfr&STATEDYAD?a:head(w),uself)
-    if(unlikely(z==0))goto errfinish;
-check foldinfo.zstatus
+    ++foldinfo.exestats[0]; foldinfo.zstatus=0; dfv1(z,dmfr&STATEDYAD?a:head(w),uself);
    }else{
-    // 0 items (necessarily monadic).  Create a neutral for v from an item of y, and apply u to it
-    A fillcell=jtred0(jt,a,vself);  // an item of y, as a cell of fills
-    if(unlikely(z==0))goto errfinish;
-    dfv1(z,fillcell,uself)
-    if(unlikely(z==0))goto errfinish;
-check foldinfo.zstatus
+    // 0 items (necessarily monadic).  Error if fold multiple.  Create a neutral for v from an item of y, and apply u to it
+    ASSERT(!(dmfr&STATEMULT),EVDOMAIN)  // empty multiple fold is < 0 applications of v, error
+    A fillcell=jtred0(jt,w,vself);  // a neutral with the shape of an item of y
+    ASSERTGOTO(fillcell!=0,EVDOMAIN,exitpop)   // error if v has no neutral
+    ++foldinfo.exestats[0]; foldinfo.zstatus=0; dfv1(z,fillcell,uself);
    }
+   // we have applied u to the single cell.
+   ASSERTGOTO(!(foldinfo.zstatus&0b01111),EVNORESULT,exitpop)  // z stopped iteration and no result was created: that's a no result error
+   if(z==0)goto errfinish;
+   // no error, return the single result.  If multiple, prepend a leading 0 axis
+   ++foldinfo.exestats[2];
+// obsolete    realizeifvirtual(z); razaptstackend(z);   // realize z and ra it
+// obsolete    AAV(zz)[0]=z; AN(zz)=1-((dmfr>>STATEMULTX)&1);  // install the value; if multiple, set shape to empty
+   if(dmfr&STATEMULT)z=reshape(over(zeroionei(0),shape(z)),z);  // if multiple, z =. (00,$z) ($,) z
+   zz=z; goto abortexit;  // return z
   }else{
    // At least 2 items.  Run the fold loop.
-  }
- }else{
-  // nondirectional fold
- }
-// scaf finish coding fold
+   // Track the items of y (x arg into v) using a virtual arg
+   fauxblock(virtwfaux);
+   // if the original block was direct inplaceable, make the virtual block inplaceable.  (We can't do this for indirect blocks because a virtual block is not marked recursive - rather it increments
+   // the usecount of the entire backing block - and modifying the virtual contents would leave the usecounts invalid since the backing block is always recursive (having been ra'd).  Maybe could do this if it isn't?)
+   I wcn; PROD(wcn,wcr,AS(w)+1);   // number of atoms in a cell
+   fauxvirtualcommon(virtw,virtwfaux,w,wcr,ACUC1,goto exitpop) MCISH(AS(virtw),AS(w)+1,wcr); AN(virtw)=wcn;  // note: no self-virtual
+   I wk=bplg(AT(w));  // number of bytes in an atom of w
+   I item0nofst=(wni-1)*(wcn&REPSGN(SGNIF(dmfr,STATEREVX)));  // offset to first/last element of y, in atoms
+   wstride=((wcn<<wk)^REPSGN(SGNIF(dmfr,STATEREVX)))-(REPSGN(SGNIF(dmfr,STATEREVX)));  // dist between items of y, in bytes, pos/neg based on rev
+   AK(virtw)+=(item0nofst<<wk)+(dmfr&STATEDYAD?0:wstride);  // point to first item (if dyad) or second (if monad) as the first x arg
+   // Mark the virtual block as inplaceable only if w is fully inplaceable.  We have to turn off inplaceability in the virtual block so that
+   // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>   dmfr |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&-((AT(w)&TYPEVIPOK)&AC(w)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
+   // vz will be the previous full result of v, usually inplaceable; init to x or first item of y
+   if(dmfr&STATEDYAD){vz=a; dmfr|=((I)jtinplace&JTINPLACEA)<<(ZZFLAGVIRTAINPLACEX-JTINPLACEAX); // x given, use it as first input and use its inplaceability
+   }else{
+    vz=virtualip(w,item0nofst,wcr); if(unlikely(vz==0))goto exitpop; AN(vz)=wcn; MCISH(AS(vz),AS(w)+1,wcr);  // create a virtual block to the first item, possibly self-virtual, fill in
+    if(dmfr&ZZFLAGVIRTAINPLACE)ACRESET(vz,ACUC1+ACINPLACE);  // inplaceability of w might have changed: if it was originally inplaceable, make this virtual inplaceable
+   }
+
+   // Install initial inplaceability.  Since the inplaceability of v was used for F., we can assume that any inplaceability shown is allowed for v.
+   // Remove WILLOPEN status which we are ignoring.  Values were calculated above
+   jtinplace = (J)(((I)jtinplace & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|((dmfr>>ZZFLAGVIRTWINPLACEX)&(JTINPLACEW+JTINPLACEA)));
+
+   --nitems;  // convert #items to # executions of loop
+  }
+ }else{  // here for unlimited fold
+  nitems=0;  // convert to infinite loop
+  jtinplace = (J)((I)jtinplace & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA));  // never inplace x, which repeats if given; pass along original inplaceability of y
+  virtw=a; vz=w;  // v starts on w and then reapplies to the result; save a reg by moving a to virtw
+ }
+ A *_old=jt->tnextpushp;  // pop back to here to clear everything except the result & any early allocation
+
+ I zstatus;  // combined Z: results from this exec of v/u
+ // Loop executing u/v
+ do{
+  A tz;   // will hold result from v while we are deciding whether to keep it
+  zstatus=0;  // saved zstatus for this turn through the loop
+  ++foldinfo.exestats[0]; foldinfo.zstatus=0;  // incr stats for exec
+  // ************* run v
+  if(dmfr&STATEFWD+STATEREV){
+   if(dmfr&ZZFLAGVIRTAINPLACE)ACRESET(virtw,ACUC1+ACINPLACE);  // in case it was modified, restore inplaceability to the UNINCORPABLE block
+   tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // fwd/rev.  newitem v vz   a is inplaceable if y was (set above).  w is inplaceable first time based on initial-item status
+   AK(virtw)+=wstride;  // advance item pointer to next/prev
+   jtinplace=(J)((I)jtinplace|JTINPLACEW);  // w inplaceable on all iterations after the first
+  }else if(dmfr&STATEDYAD){tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // directionless dyad  x v vz
+  }else tz=CALL1IP(FAV(vself)->valencefns[0],vz,vself);   // directionless monad   v vz
+
+  zstatus|=foldinfo.zstatus;  // remember termination flags from zstatus
+  if(unlikely(zstatus&0b00011))goto errfinish;  // z stopped iteration: finish up
+  vz=tz!=0?tz:vz;   //  if v ran to completion, use its result for the next iteration
+  if(likely(!(zstatus&0b00100))){  // is 'abort iteration'? (has z=0).  If so, skip u & result store
+   if(unlikely(tz==0))goto errfinish;   // error in v, exit
+   // ************** run u
+   ++foldinfo.exestats[1]; foldinfo.zstatus=0; z=CALL1(FAV(uself)->valencefns[0],tz,uself);  // never inplace
+   zstatus|=foldinfo.zstatus;  // remember termination flags from zstatus
+   if(unlikely(zstatus&0b00011))goto errfinish;  // z stopped iteration: finish up
+   if(likely(!(zstatus&0b00100))){  // is 'abort iteration'? (has z=0)  if so, skip result store
+    if(unlikely(z==0))goto errfinish;   // error in u, exit
+    if(!(zstatus&0b01000)){  // if store of result not suppressed... */
+     // ******************** the u result is to be added to the total (possibly replacing it)
+     ++foldinfo.exestats[2]; realizeifvirtual(z); razaptstackend(z);  // we are adding uz to a recursible block, with transfer of ownership using zap if possible.  If uz is abandoned it is safe to zap even if it is x.  Sets new uz
+     if(dmfr&STATEMULT){   // is Fold Multiple?
+      // Fold Multiple.  Add the new value to the result array
+      I newslot=AN(zz);  // where the new value will go
+      if(newslot==zzalloc){  // current alloc full?
+       // current alloc is full.  Double the allocation, swap it with zz (transferring ownership), and copy the data
+       zzalloc=2*zzalloc+(AKXR(1)>>LGSZI);  // new allocation, cacheline multiple
+       A zznew; GATV0(zznew,INT,zzalloc,1) A *zznewzap=AZAPLOC(zznew); A *zzzap=AZAPLOC(zz);  // allocate, & get pointers to tstack slots old & new
+       JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) AT(zz)=INT; AFLAG(zz)=0; *zzzap=zznew; *zznewzap=zz; zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it, neutering zz, setting zz to be freed
+       AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks
+      }
+      AAV1(zz)[newslot]=z; AN(zz)=newslot+1;  // install the new value & account for it in len
+     }else{
+      // Fold Single.  Replace the value in zz
+      if(AN(zz)!=0){fa(AAV0(zz)[0]);} else{AN(zz)=1;}  // free old value if any, mark value now valid
+      AAV0(zz)[0]=z;  // install new value
+     }
+    }
+   }else RESETERR  // 'abort iteration' from u: clear error for next time
+  }else RESETERR  // 'abort iteration' from v: clear error for next time
+  // ready for next iteration, whether the previous one completed or not
+  if(unlikely(zstatus&0b10000))break;  // if early termination, exit loop
+  if(unlikely((vz=gc(vz,_old))==0))goto exitpop;  // pop back everything but vz, result & virtuals (removing z at least)
+ }while(--nitems);
+loopend:;
+
+ASSERTGOTO(AN(zz)!=0,EVNORESULT,exitpop)  // error if we never added to the result
+if(dmfr&STATEMULT)AS(zz)[0]=AN(zz); zz=ope(zz);  // set AS(0) right; open zz to give unboxed result
+
+abortexit:;  // exit, returning whatever is in zz
  jt->afoldinfo=stkfoldinfo;
+ RETF(zz);
+
+errfinish:;  // come here when we have to abort the loop
+ if(zstatus&0b00001){zz=0; goto abortexit;}  // _3&Z: gives immediate error, so leave the code, which is 'fold limit'
+ if(zstatus&0b00010){RESETERR; goto loopend;}  // _2&Z: gives immediate error: clear it. zz must not be 0; return whatever is in it
+exitpop:;   // here to abort on error, after popping stack
+ zz=0; goto abortexit;  // otherwise, must be error in u or v, which will have been previously signaled - keep the error
+}
+// u F. F.. F.: F: F:. F:: v
+DF2(jtfold){F2PREFIP;
+ ASSERTVV(a,w);  // must be verb ops
+ A z; fdefallo(z);   // allocate verb result
+ I flag = (FAV(w)->flag&(VJTFLGOK1|VJTFLGOK2));  // there is never a need to inplace u.  Inplace v if possible
+ fdeffillall(z,0,FAV(self)->id,VERB, jtfoldx,jtfoldx, a,w,0L, flag, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
+ R z;
+}
+
+// Z: y
+DF1(jtfoldZ1){
+ ARGCHK1(w)
+ ASSERT(jt->afoldinfo,EVSYNTAX);  // If fold not running, fail.  scaf Should be a semantic error rather than syntax
+ I type; RE(type=i0(w));  // verify atomic integer
+ ASSERT(BETWEENC(type,0,2),EVINDEX)  //  requested stat index must be in range
+ RETF(sc(jt->afoldinfo->exestats[type]));  // return the value
+}
+// x Z: y
+DF2(jtfoldZ2){
+ ARGCHK2(a,w)
+ ASSERT(jt->afoldinfo,EVSYNTAX);  // If fold not running, fail.  scaf Should be a semantic error rather than syntax
+ I type; RE(type=i0(a));  // verify atomic integer
+ ASSERT(BETWEENC(type,-3,1),EVINDEX)  //  requested action index must be in range
+ I y;
+ if(type==-3){RE(y=i0(w)); y=jt->afoldinfo->exestats[0]>=y;  // set y if current v count high enough
+ }else RE(y=b0(w));  // verify boolean
+ if(y){
+  I ymask=1<<(type-(-3));  // convert type to one-hot
+  jt->afoldinfo->zstatus|=ymask;  // accumulate zstatus
+  ASSERT(type>=0,type==-3?EVFOLDLIMIT:EVFOLDTHROW)  // if abort of any kind requested, make it 'fold error' (which is signaling) for -3, FOLDTHROW (nonsignaling) for others
+ }
+ RETF(mtv);  // return harmless value
 }
 
 
-FoldZv_j_ =: 00 0 0 0  NB. isfold, (#times v has started),(#times u has started),(# values added to result)
-NB. Fold.  Foldtype_j_ is set by caller
-Foldr_j_ =: 2 : 0
-'init mult fwd rev' =. 2 2 2 2 #: Foldtype_j_
-4!:55 <'Foldtype_j_'
-fzv =. FoldZv_j_  NB. stack fold info
-FoldZv_j_ =. 00 0 0 0
-FoldThrow_j_ =: $0  NB. If nonempty, set to throw type
-if. fwd+rev do.  NB. if forward or reverse...
-  nitems =. init + #y  NB. total # items, including init if any
-  if. nitems<2 do.
-    if. nitems=1 do.
-      FoldZv_j_ =: FoldZv_j_ + 00 0 1 1
-      res =. u. x [^:init {. y   NB. Just one item, apply u to it
-    else.  NB. x not given and y is empty - fill-cell needed
-      emptycell =. 0 # (,:x) [^:init y  NB. fillcell: empty array of x or (item of y)
-      FoldZv_j_ =: FoldZv_j_ + 00 0 1 1
-      try. res =. u. v./ emptycell  NB. get the neutral for the empty cell, and try applying u to it
-      catcht. 13!:8 (3)  NB. Z: on empty is domain error
-      end.
-    end.
-    if. mult do. res =. (<: nitems) # ,: res end.  NB. Single result is x/y/neutral, Multiple result is array of them (error if no items)
-  else.  NB. at least 2 cells.  We will run the loop
-    if. init do. cellres =. x else. cellres =. (-rev) { y end.  NB. cellres=first cell, either 0 (fwd) or _1 (rev)
-    cellx =. -init  NB. 1 less than index of first cell for left side
-    res =. ''   NB. init list of results - to nonboxed empty
-    while. (({.FoldZv_j_)<:1) *. (cellx=.>:cellx) < #y do.
-      FoldZv_j_ =: FoldZv_j_ + 00 1 0 0  NB. increment number of times we started u (used by Z:)
-      try.
-        cellres =. ((24 b.^:rev cellx) { y) v. cellres  NB. 1s-comp of cellx if rev
-        FoldZv_j_ =: FoldZv_j_ + 00 0 1 0  NB. increment number of times we started u (used by Z:)
-        vres =. u. cellres
-      catcht.
-        FoldThrow_j_ =: $0 [ ft =. FoldThrow_j_  NB. save & clear signaling vbl
-        if. 43 -: ft do. break. end.  NB. abort iteration and end
-        if. 44 -: ft do. continue. end.  NB. abort iteration and continue
-        13!:8 (35) [ FoldZv_j_ =. fzv  NB. not an iteration control, pass the throw. along
-      end.
-      NB. continuing iteration.  cellres is the u result, vres is the boxed v result
-      if. ({.FoldZv_j_) e. 0 2 do. res =. res ,^:mult <vres [ FoldZv_j_ =: FoldZv_j_ + 00 0 0 1 else. FoldZv_j_ =. FoldZv_j_ 18 b. 01 0 0 0 end.
-    end.
-    if. 32 ~: 3!:0 res do. 13!:8 (3) [ FoldZv_j_ =. fzv end.  NB. If nothing produced result, error
-    res =. > res
-  end.
-else.  NB. repeated iteration on y, not related to items
-  res =. '' [ cellres =. y   NB. no results, and 
-  while. (({.FoldZv_j_)<:1) do.
-    FoldZv_j_ =: FoldZv_j_ + 00 1 0 0  NB. increment number of times we started u (used by Z:)
-    try.
-      if. init do. cellres =. x v. cellres else. cellres =. v. cellres end.
-      FoldZv_j_ =: FoldZv_j_ + 00 0 1 0
-      vres =. u. cellres
-    catcht.
-      FoldThrow_j_ =: $0 [ ft =. FoldThrow_j_  NB. save & clear signaling vbl
-      if. 43 -: ft do. break. end.  NB. abort iteration and end
-      if. 44 -: ft do. continue. end.  NB. abort iteration and continue
-      13!:8 (35) [ FoldZv_j_ =. fzv  NB. not an iteration control, pass the throw. along
-    end.
-    NB. continuing iteration.  cellres is the u result, vres is the boxed v result
-    if. ({.FoldZv_j_) e. 0 2 do. res =. res ,^:mult <vres [ FoldZv_j_ =: FoldZv_j_ + 00 0 0 1 else. FoldZv_j_ =. FoldZv_j_ 18 b. 01 0 0 0 end.
-  end.
-  if. 32 ~: 3!:0 res do. 13!:8 (3) [ FoldZv_j_ =. fzv end.  NB. no results is domain error
-  res =. >res
-end. 
-res [ FoldZv_j_ =. fzv
-)
-
-   
-FoldZ_j_ =: 3 : 0
-if. 0~:#@$ y do. 13!:8(3) end.
-if. -. y e. 0 1 2 do. 13!:8(3) end.
-(1+y) { FoldZv_j_   NB. return the requested statistic
-:
-if. 0~:#@$ y do. 13!:8(3) end.
-if. 0~:#@$ x do. 13!:8(3) end.
-if. y do.
-  select. x
-  case. _3 do.
-    if. y <: 1 { FoldZv_j_ do. 13!:8 ] 36 end.
-  case. _2 do.
-    FoldThrow_j_ =: 43 throw.  NB. break
-  case. _1 do.
-    FoldThrow_j_ =: 44 throw.  NB. continue
-  case. 0 do.
-  FoldZv_j_ =: FoldZv_j_ 23 b. 01 0 0 0  NB. suppress output
-  case. 1 do.
-  FoldZv_j_ =: FoldZv_j_ 23 b. 02 0 0 0 NB. stop after this
-  case. do.
-    13!:8{3}  NB. unknown x argument
-  end.
-end.
-$0
-)
 #endif
 
       

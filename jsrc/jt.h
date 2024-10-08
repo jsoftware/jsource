@@ -131,10 +131,11 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line
  S etxn1;            // last non-zero etxn
- B foldrunning;      // 1 if fold is running (allows Z:)
+// obsolete  B foldrunning;      // 1 if fold is running (allows Z:)   scaf will go away
  UC jerr;             // error number (0 means no error)
  UC jerr1;            // last non-zero jerr
  C namecaching;     // 0=off 1=(either 2 or 4 set) 2=for script 4=on
+// 1 byte free
  A xmod;             // extended integer: the m in m&|@f
  struct foldstatus *afoldinfo;  // nonzero if fold is running, and points to current fold info 
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized

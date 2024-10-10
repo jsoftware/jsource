@@ -1106,21 +1106,21 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
  struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z:   zstatus: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);
  I dyad=!!(AT(w)&NOUN); self=dyad?self:w; w=dyad?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
- if(unlikely((a==w)&dyad))jtinplace=(J)((I)jtinplace&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
+ if(unlikely(((UI)a^(UI)w)<(UI)dyad))jtinplace=(J)((I)jtinplace&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
 #define ZZFLAGWORD dmfr
  I dmfr=ZZFLAGINITSTATE+((8*dyad+FAV(self)->lu2.lc-CFDOT)<<STATEREVX);  // init flags, including zz flags
  struct foldstatus *stkfoldinfo=jt->afoldinfo; jt->afoldinfo=&foldinfo;  // push fold status, init to zeros
+ //  ***** no error returns allowed!  This push must be matched *******
  // allocate result, always boxes.  For Multiple, it will be a list of boxes; for Single, it will be an atomic box.  It is recursive, so that we are allowed
  // to tpop everything that comes after.  We will open it at the end
  I wr=AR(w); I wcr=wr-SGNTO0(-wr);  // rank of w, rank of an item of w
- I zzalloc=dmfr&STATEMULT?64-(AKXR(1)>>LGSZI):1;  // a fair-sized initial allocation.  zzalloc is #boxes in zz; AN(zz) is # valid
+ UI wni; SETIC(w,wni); UI nitems=wni+(dmfr>>STATEDYADX);  // #items of y; # items to process into u including x if given; number of turns through loop
+ UI zzalloc=64-(AKXR(1)>>LGSZI); zzalloc=MIN(nitems,zzalloc); zzalloc=dmfr&STATEFWD+STATEREV?zzalloc:16-(AKXR(1)>>LGSZI); zzalloc=dmfr&STATEMULT?zzalloc:1;  // initial result allo.  zzalloc is #boxes in zz; AN(zz) is # valid
  A zz; GATV0E(zz,INT,zzalloc,dmfr&STATEMULT?1:0,goto exitpop;) AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE; AN(zz)=0;   // alloc result area.  avoid init of BOX area
- UI nitems;  // loop controls: number of turns through loop
  A virtw;  // virtual block for items of y, if needed
  I wstride;  // dist between items of y, in bytes, pos/neg/0 based on fwd/rev
  if(likely((dmfr&STATEFWD+STATEREV)!=0)){
   // fwd/reverse fold, the usual case
-  UI wni; SETIC(w,wni); nitems=wni+(dmfr>>STATEDYADX);  // #items of y; # items to process into u including x if given
   if(unlikely(nitems<2)){  // < 2 items
    // < 2 items total.  We can't run v on items of input.
    // Create the cell to run u on: one given argument or a cell of fills
@@ -1155,7 +1155,7 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
    I item0nofst=(wni-1)*(wcn&REPSGN(SGNIF(dmfr,STATEREVX)));  // offset to first/last element of y, in atoms
    wstride=((wcn<<wk)^REPSGN(SGNIF(dmfr,STATEREVX)))-(REPSGN(SGNIF(dmfr,STATEREVX)));  // dist between items of y, in bytes, pos/neg based on rev
    AK(virtw)+=(item0nofst<<wk)+(dmfr&STATEDYAD?0:wstride);  // point to first item (if dyad) or second (if monad) as the first x arg
-   // Mark the virtual block as inplaceable only if w is fully inplaceable.  We have to turn off inplaceability in the virtual block so that
+   // Mark the virtual block (coming into v as a) as inplaceable only if input y is fully inplaceable.  We have to turn off inplaceability in the virtual block so that
    // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>
    dmfr |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&(-(AT(w)&TYPEVIPOK)&AC(w)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
@@ -1211,11 +1211,11 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
      ++foldinfo.exestats[2]; realizeifvirtual(z); razaptstackend(z);  // we are adding uz to a recursible block, with transfer of ownership using zap if possible.  If uz is abandoned it is safe to zap even if it is x.  Sets new uz
      if(dmfr&STATEMULT){   // is Fold Multiple?
       // Fold Multiple.  Add the new value to the result array
-      I newslot=AN(zz);  // where the new value will go
-      if(newslot==zzalloc){  // current alloc full?
+      UI newslot=AN(zz);  // where the new value will go
+      if(withprob(newslot==zzalloc,0.03)){  // current alloc full?
        // current alloc is full.  Double the allocation, swap it with zz (transferring ownership), and copy the data
        zzalloc=2*zzalloc+(AKXR(1)>>LGSZI);  // new allocation, cacheline multiple
-       A zznew; GATV0(zznew,INT,zzalloc,1) A *zznewzap=AZAPLOC(zznew); A *zzzap=AZAPLOC(zz);  // allocate, & get pointers to tstack slots old & new
+       A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) A *zznewzap=AZAPLOC(zznew); A *zzzap=AZAPLOC(zz);  // allocate, & get pointers to tstack slots old & new
        JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) AT(zz)=INT; AFLAG(zz)=0; *zzzap=zznew; *zznewzap=zz; zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it, neutering zz, setting zz to be freed
        AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks
       }

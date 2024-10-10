@@ -114,7 +114,7 @@ NB. Z: y for stats
 (2 1 0,:3 2 1) -: ((Z:@0 , Z:@1 , Z:@2) [ 1 Z: 3 = Z:@0) F:. (_1 Z: 1 >: Z:@0) i. 10   NB. same as multiple
 
 NB. inplacing
-a1 =: memu a =: 5 100 100 ?@$ 100
+a1 =: memu a =: 1. + 5 100 100 ?@$ 100  NB. FL so always inplaceable
 r =: (+/@, F:: + a)
 a1 -: a
 r -: (+/@, F:: + memu a)

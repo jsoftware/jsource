@@ -1217,7 +1217,7 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
        zzalloc=2*zzalloc+(AKXR(1)>>LGSZI);  // new allocation, cacheline multiple
        A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) A *zznewzap=AZAPLOC(zznew); A *zzzap=AZAPLOC(zz);  // allocate, & get pointers to tstack slots old & new
        JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) AT(zz)=INT; AFLAG(zz)=0; *zzzap=zznew; *zznewzap=zz; zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it, neutering zz, setting zz to be freed
-       AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks
+       AZAPLOC(zz)=zzzap; AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks and to its dedicated zaploc
       }
       AAV1(zz)[newslot]=z; AN(zz)=newslot+1;  // install the new value & account for it in len
      }else{

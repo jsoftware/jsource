@@ -1106,7 +1106,7 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
  struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z:   zstatus: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);
  I dyad=!!(AT(w)&NOUN); self=dyad?self:w; w=dyad?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
- if(unlikely(a==w))jtinplace=(J)((I)jtinplace&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
+ if(unlikely((a==w)&dyad))jtinplace=(J)((I)jtinplace&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
 #define ZZFLAGWORD dmfr
  I dmfr=ZZFLAGINITSTATE+((8*dyad+FAV(self)->lu2.lc-CFDOT)<<STATEREVX);  // init flags, including zz flags
  struct foldstatus *stkfoldinfo=jt->afoldinfo; jt->afoldinfo=&foldinfo;  // push fold status, init to zeros
@@ -1156,13 +1156,14 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
    wstride=((wcn<<wk)^REPSGN(SGNIF(dmfr,STATEREVX)))-(REPSGN(SGNIF(dmfr,STATEREVX)));  // dist between items of y, in bytes, pos/neg based on rev
    AK(virtw)+=(item0nofst<<wk)+(dmfr&STATEDYAD?0:wstride);  // point to first item (if dyad) or second (if monad) as the first x arg
    // Mark the virtual block as inplaceable only if w is fully inplaceable.  We have to turn off inplaceability in the virtual block so that
-   // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>   dmfr |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&-((AT(w)&TYPEVIPOK)&AC(w)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+   // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>
+   dmfr |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&(-(AT(w)&TYPEVIPOK)&AC(w)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
    // vz will be the previous full result of v, usually inplaceable; init to x or first item of y
-   if(dmfr&STATEDYAD){vz=a; dmfr|=((I)jtinplace&JTINPLACEA)<<(ZZFLAGVIRTAINPLACEX-JTINPLACEAX); // x given, use it as first input and use its inplaceability
+   if(dmfr&STATEDYAD){vz=a; dmfr|=((I)jtinplace&JTINPLACEA)<<(ZZFLAGVIRTWINPLACEX-JTINPLACEAX); // x given, use it as first input and use its inplaceability
    }else{
     vz=virtualip(w,item0nofst,wcr); if(unlikely(vz==0))goto exitpop; AN(vz)=wcn; MCISH(AS(vz),AS(w)+1,wcr);  // create a virtual block to the first item, possibly self-virtual, fill in
-    if(dmfr&ZZFLAGVIRTAINPLACE)ACRESET(vz,ACUC1+ACINPLACE);  // inplaceability of w might have changed: if it was originally inplaceable, make this virtual inplaceable
+    if(dmfr&ZZFLAGVIRTAINPLACE){ACRESET(vz,ACUC1+ACINPLACE); dmfr|=ZZFLAGVIRTWINPLACE;} // inplaceability of w might have changed: if it was originally inplaceable, make this virtual inplaceable
    }
 
    // Install initial inplaceability.  Since the inplaceability of v was used for F., we can assume that any inplaceability shown is allowed for v.
@@ -1188,7 +1189,8 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
   if(dmfr&STATEFWD+STATEREV){
    if(dmfr&ZZFLAGVIRTAINPLACE)ACRESET(virtw,ACUC1+ACINPLACE);  // in case it was modified, restore inplaceability to the UNINCORPABLE block
    tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // fwd/rev.  newitem v vz   a is inplaceable if y was (set above).  w is inplaceable first time based on initial-item status
-   AK(virtw)+=wstride;  // advance item pointer to next/prev
+   if(unlikely(tz==virtw)){if(unlikely((tz=clonevirtual(tz))==0))goto exitpop;}
+   AK(virtw)+=wstride;  // advance item pointer to next/prev if there is one
    jtinplace=(J)((I)jtinplace|JTINPLACEW);  // w inplaceable on all iterations after the first
   }else if(dmfr&STATEDYAD){tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // directionless dyad  x v vz
   }else tz=CALL1IP(FAV(vself)->valencefns[0],vz,vself);   // directionless monad   v vz
@@ -1228,6 +1230,8 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
   }else RESETERR  // 'abort iteration' from v: clear error for next time
   // ready for next iteration, whether the previous one completed or not
   if(unlikely(zstatus&0b10000))break;  // if early termination, exit loop
+  // it is possible that virtw has been passed through to vz.  In that case, we have to copy it
+  // because we are about to relocate virtw.  It is OK to keep vz virtual.
   if(unlikely((vz=gc(vz,_old))==0))goto exitpop;  // pop back everything but vz, result & virtuals (removing z at least)
  }while(--nitems);
 loopend:;

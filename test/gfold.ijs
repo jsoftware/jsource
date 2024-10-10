@@ -113,10 +113,31 @@ NB. Z: y for stats
 3 2 1 -: ((Z:@0 , Z:@1 , Z:@2) [ 1 Z: 3 = Z:@0) F.. (_1 Z: 1 >: Z:@0) i. 10   NB. u stops after 3 vs; v skips first u.  Result Z:@2 is before final result added
 (2 1 0,:3 2 1) -: ((Z:@0 , Z:@1 , Z:@2) [ 1 Z: 3 = Z:@0) F:. (_1 Z: 1 >: Z:@0) i. 10   NB. same as multiple
 
+NB. inplacing
+a1 =: memu a =: 5 100 100 ?@$ 100
+r =: (+/@, F:: + a)
+a1 -: a
+r -: (+/@, F:: + memu a)
+a1 -: a
+3000 > (7!:2 '+/@, F:: + memu a')  -  7!:2 'memu a' 
+t1 =: memu t =: {. a
+r =: (t1 +/@, F:: + a)
+a1 -: a
+t1 -: t
+r -: ((memu t) +/@, F:: + a)
+a1 -: a
+t1 -: t
+r -: (t +/@, F:: + memu a)
+a1 -: a
+t1 -: t
+r -: ((memu t) +/@, F:: + memu a)
+a1 -: a
+t1 -: t
+3000 > (7!:2 '(memu t) +/@, F:: + memu a')  -  7!:2 '(memu t) [ memu a' 
 
 
 
-4!:55 ;:'a t'
+4!:55 ;:'a a1 t t1'
 
 
 epilog''

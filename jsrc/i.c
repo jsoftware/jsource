@@ -130,8 +130,9 @@ static B jtevinit(JS jjt){A q,*v;JJ jt=MTHREAD(jjt);
  v[EVDEADLOCK  ]=INCORPNA(cstr("would deadlock"));
  v[EVASSEMBLY  ]=INCORPNA(cstr("domain error"));
  v[EVOFLO  ]=INCORPNA(cstr("fixed-precision overflow"));
- v[EVTYPECHG  ]=v[EVDOMAIN];ras(v[EVDOMAIN]);
+ v[EVFOLDTHROW  ]=INCORPNA(cstr("Z: throw"));
  v[EVNORESULT  ]=INCORPNA(cstr("no result"));
+ v[EVTYPECHG  ]=v[EVDOMAIN];ras(v[EVDOMAIN]);
  ACINITZAPRECUR(q,BOX); INITJT(jjt,evm)=q;   // q and its contents are not on tstack; this way the contents are freed on assignment
  if(jt->jerr){printf("evinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }

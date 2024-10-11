@@ -1278,7 +1278,9 @@ DF2(jtfoldZ2){
  if(y){
   I ymask=1<<(type-(-3));  // convert type to one-hot
   jt->afoldinfo->zstatus|=ymask;  // accumulate zstatus
-  ASSERT(type>=0,type==-3?EVFOLDLIMIT:EVFOLDTHROW)  // if abort of any kind requested, make it 'fold error' (which is signaling) for -3, FOLDTHROW (nonsignaling) for others
+  ASSERT(type!=-3,EVFOLDLIMIT) // if failure, make it 'fold error' (which is signaling)
+  if(type<0){jt->jerr=EVFOLDTHROW; jt->emsgstate|=EMSGSTATEFORMATTED; R 0;}   // if abort, set err to cause us to fail up to the Fold; no need to format this since it's not an error
+  // types 0 & 1 set zflags but do not abort execution orset error
  }
  RETF(mtv);  // return harmless value
 }

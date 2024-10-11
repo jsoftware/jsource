@@ -50,9 +50,10 @@
 #define EVDEADLOCK      44    // action would deadlock the system
 #define EVASSEMBLY      45    // inhomogeneous results during assembly (i. e. result.h) - converted to EVDOMAIN after eformat
 #define EVOFLO          46    // overflow of a fixed-size type (INT[124])
-#define EVTYPECHG       47    // type pun: name changed type while in use
+#define EVFOLDTHROW     47  // EVEXIT+32 set when Z: requests termination of a fold; an error, but not for postmortem
 #define EVNORESULT      48    // Fold had no results to collect
-#define NEVM            48      /* number of event codes       */
+#define EVTYPECHG       49    // type pun: name changed type while in use
+#define NEVM            49      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */
@@ -76,7 +77,6 @@
 #define EWOVFLOOR1      69   // major oflo in <./>., must be converted to FL
 #define EVCUTSTACK      76  // set when Cut Stack executed; passed into caller to force its termination; intercepted when terminated line finishes, to revert to suspension
 #define EVDEBUGEND      79  // EVEXIT+64 set when debug wants to fail all avoiding all try blocks
-#define EVFOLDTHROW     86  // EVWSFULL+64 set when Z: requests termination of a fold; an error, but not for postmortem
 #define EVNOCONV        128  // must be power of 2 and higher than other errors.  Set when a FL has lost precision and must not be converted to INT
 #define EVSUPPRESS      255  // turn off error reporting: don't change anything.  Not used
 #define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors

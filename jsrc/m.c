@@ -363,7 +363,7 @@ static D jtspfor1(J jt, A w){D tot=0.0;
  case VERBX: case ADVX:  case CONJX: 
   {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(C(v->fgh[0])); if(v->fgh[1])tot+=spfor1(C(v->fgh[1])); if(v->fgh[2])tot+=spfor1(C(v->fgh[2]));} break;
  case RATX: case XNUMX:
-  {A*v=AAV(w); DQ(AN(w)<<(!!(AT(w)&RAT)), if(*v)tot+=spfor1((*v)); ++v;);} break;  // no QCWORD on XNUM/RAT
+  {A*v=AAV(w); DQ(AN(w)<<(AT(w)>>RATX), if(*v)tot+=spfor1((*v)); ++v;);} break;  // no QCWORD on XNUM/RAT
  }
  // done with contents; now get the size of w itself
  if(!ACISPERM(AC(w))) {  // permanent blocks add nothing to size

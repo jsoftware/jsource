@@ -581,7 +581,7 @@ rdglob: ;  // here when we tried the buckets and failed
       // the execution that uses this y has completed and the result has been made recursive, so that we know the input value has been RA()d if it has been used
       if(likely(1)){
        // The name is defined with QCGLOBAL semantics.  If it's a noun, use its value (the common & fast case)
-       // Or, for special names (x. u. etc) that are always stacked by value, keep the value
+       // Or, for special names (x u etc) that are always stacked by value, keep the value
        // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.  nameless was detected on assignment.
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
@@ -590,7 +590,7 @@ rdglob: ;  // here when we tried the buckets and failed
         if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)}  // if name_:, go delete the name, leaving the value to be deleted later
         else y=SETFAOWED(y);
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
-        // nameless modifier, and not a locative.  This handles 'each', u m. n, and the like.  Don't create a reference; maybe cache the value
+        // nameless modifier, and not a locative.  This handles 'each' and the like.  Don't create a reference; maybe cache the value
         A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags
         NAMELESSQCTOTYPEDQC(y)  // convert type to normal adverb, which the parser looks for
         if(NAV(origy)->flag&NMCACHED){  // nameless mod is cachable - replace it by its value in the name

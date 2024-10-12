@@ -230,7 +230,7 @@ AHDR2(powDD,D,D,D) {D v;
  else{m>>=1;   // repeated exponent: use parallel instructions
   DQU(n, v=*y++;  // for each exponent
    if(v==0){DQU(m, *z++=1.0;) x+=m;}
-   else if(ABS(v)==inf){DQU(m, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
+   else if(ABS(v)==inf){DQU(m, D u=*x++; ASSERTWR(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
     n=m;  // n has # atoms
     AVXATOMLOOP(1,  // build result in u, which is also the input; advance pointers
@@ -291,7 +291,7 @@ AHDR2(powDD,D,D,D) {D v;
  else{m>>=1;   // repeated exponent: use parallel instructions
   DQU(n, v=*y++;  // for each exponent
    if(v==0){DQU(m, *z++=1.0;) x+=m;}
-   else if(ABS(v)==inf){DQU(m, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
+   else if(ABS(v)==inf){DQU(m, D u=*x++; ASSERTWR(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{*z=(v>0)^(u>1.0)?0.0:inf;} ++z;)}
    else{
     n=m;  // n is the atom count
     AVXATOMLOOP(1,  // build result in u, which is also the input

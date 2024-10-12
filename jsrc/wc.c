@@ -408,7 +408,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    w0=v[j];                             // w0 is A block for sentence j
    RZ(w1=wordil(w0)); ASSERT(AM(w1)>=0,EVOPENQ)  // w1 is A block for (# words), (index,end+1) pairs
    s=CAV(str0(w0));                           // s->start of sentence after appending final NUL,  why?
-   k=conword(AV(w1)[1]-AV(w1)[0],s);         // classify first word, using its length.  0 means 'not CW', otherwise control type
+   k=conword(AV(w1)[1]-AV(w1)[0],s); RE(0)         // classify first word, using its length.  0 means 'not CW', otherwise control type.  Abort if error
    if(k==CTRY)try=1;                    // remember if we see a try.
    if(k==CASSERT){ASSERTCW(!as,i  ); as=1;}   // if assert., verify not preceded by assert.; go to post-assert. state
    else if(1==as){ASSERTCW(!k, i); as=2; --n;}   // verify assert. not followed by cw; back up to overwrite assert. block; go to post-post-assert. state

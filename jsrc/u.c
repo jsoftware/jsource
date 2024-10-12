@@ -224,7 +224,7 @@ I jtisravelix(J jt,A w){
  R 1;  // return 1 if all match
 }
 
-// Extract the integer value from w, return it.  Set error if non-integral or non-atomic.  Values whose abs > IMAX are converted to IMAX/-IMAX
+// Extract the integer value from w, return it.  Set error if non-integral or non-atomic (and return 0).  Values whose abs > IMAX are converted to IMAX/-IMAX
 I jti0(J jt,A w){ARGCHK1(w);
  if(likely(ISDENSETYPE(AT(w),INT+B01))){ASSERT(!AR(w),EVRANK); R BIV0(w);}  // INT/B01 quickly
  if(likely(ISDENSETYPE(AT(w),FL))){I cval;  // FL also "quickly"

@@ -157,7 +157,7 @@ F1(jtscriptstring){
  R jtaddscriptname(jt,w);   // add name if new; return index to name
 }
 
-// 4!:7 set script name to use and return previous value
+// 4!:7 set script number to use and return previous value
 F1(jtscriptnum){
  I i=i0(w);  // fetch index
  READLOCK(JT(jt,startlock)) I scriptn=AM(JT(jt,slist)); READUNLOCK(JT(jt,startlock))   // no problem if we lose lock since list only grows

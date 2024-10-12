@@ -502,7 +502,7 @@ struct AD {
 #endif
 // ** NAME type can have the following information flags set
 #define NAMEBYVALUEX    MARKX     // set if the name is one of u v u. v. that is always passed by value, never by reference
-#define NAMEBYVALUE     ((I)1L<<NAMEBYVALUEX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name
+#define NAMEBYVALUE     ((I)1L<<NAMEBYVALUEX)
 #define NAMEABANDONX SYMBX
 #define NAMEABANDON            ((I)1L<<NAMEABANDONX)     // name is name::, which will be deassigned after the value is stacked.  NAMEBYVALUE must also be set
 // ** BOX type can have the following informational flags set
@@ -956,7 +956,7 @@ typedef struct{
 #define NMSHAREDX    2
 #define NMSHARED     (1LL<<NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
 #define NMILOC          2       // indirect locale abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
-#define NMDOT           128       // one of the names m. n. u. v. x. y.      */
+#define NMDOT           128       // one of the names m n u v x y, which originally carried a . inflection 
 #define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
 #define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup

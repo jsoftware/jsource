@@ -32,8 +32,8 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  if(1>=n)R recip(w);  // if an atom, inverse = reciprocal.  Must be CMPX/RAT/QP
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
- ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp);  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
- di=jtrinvip(jt,drop(v2(m,m),w),n-m,ncomp);  // take inverse of w11
+ RZ(ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp))  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
+ RZ(di=jtrinvip(jt,drop(v2(m,m),w),n-m,ncomp))  // take inverse of w11
  RZ(bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di))));  // -w00^_1 mp w01 mp w11^_1
  if(ISSPARSE(AT(w))){z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
  }else{

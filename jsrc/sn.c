@@ -90,7 +90,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
 // if b&SFNSIMPLEONLY, return only the simple name
 A jtsfn(J jt,B b,A w){NM*v; ARGCHK1(w); v=NAV(w); R str(b&SFNSIMPLEONLY?v->m:AN(w),v->s);}
 
-// string from name evocation: returns string for name UNLESS the name was an NMDOT type; in that case it returns w f. which will be a verb
+// string from name evocation: returns string for name UNLESS the name is u/v which is always by value; in that case it returns w f. which will be a verb
 A jtsfne(J jt,A w){ARGCHK1(w); A wn=FAV(w)->fgh[0]; if(AT(wn)&NAMEBYVALUE)R fix(w,zeroionei(0)); R sfn(0,wn);}
 
 
@@ -109,14 +109,15 @@ F1(jtstdnm){C*s;I j,n,p,q;
  if(!(w=vs(w)))R 0;  // convert to ASCII
  n=AN(w); s=CAV(w);  // n = #characters, s->string
  if(!(n))R 0;
- j=0;   DQ(n, if(' '!=s[j++])break;); p=j-1;
+ j=0;   DQ(n, if(' '!=s[j++])break;); p=j-1;  // remove leading/trailing blanks from name
  j=n-1; DQ(n, if(' '!=s[j--])break;); q=(n-2)-j;
  if(!(vnm(n-(p+q),p+s)))R 0;   // Validate name
  R nfs(n-(p+q),p+s);   // Create NAME block for name
 }    /* 0 result means error or invalid name */
 
 // x is a (possibly) boxed string; result is NAME block for name x, error if invalid name
-F1(jtonm){A x,y; RZ(x=ope(w)); y=stdnm(x); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); R y;}
+// if stdnm has already set an error, leave it, because the name might not be ASCII
+F1(jtonm){A x,y; RZ(x=ope(w)); RE(y=stdnm(x)); ASSERTN(y!=0,EVILNAME,nfs(AN(x),CAV(x))); R y;}
 
 // w is array of boxed strings; result is name class for each
 F1(jtnc){A*wv,x,y,z;I i,n,t,*zv; 

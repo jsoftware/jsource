@@ -43,7 +43,7 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
   if(AT(thisname)&VERB)R hasimploc(thisname);  // if v~, go look at v
   if(AT(thisname)&NOUN)R 0;   // if noun~, leave as is
   NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-  if(!(thisnameinfo->flag&NMIMPLOC))R 0; // not NMDOT
+  if(!(thisnameinfo->flag&NMIMPLOC))R 0; // not u./v.
   if(!(jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)))R 0;  // assigned value does not exist
   R 1;
  case CATDOT:

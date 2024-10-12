@@ -433,7 +433,7 @@ void breakclose(JS jt)
 // 2!:55 retcode
 F1(jtjoff){I x;
  ARGCHK1(w);
- x=i0(w);
+ x=i0(w);  // use 0 for any nonnumeric arg
  jt->jerr=EVEXIT; jt->etxn=0; // clear old errors, replacing with the higher-priority EVEXIT
  if(IJT(jt,sesm))jsto(JJTOJ(jt), MTYOEXIT,(C*)x); else JFree(JJTOJ(jt));
  // let front-end handle exit.

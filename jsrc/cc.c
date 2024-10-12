@@ -795,7 +795,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   pd0=a;  // &first block of frets
   pd=CUTFRETFRETS(a);  // &first fret
   CUTFRETCHAIN(a)=0;  // indicate only 1 block in use.  Note this overlaps with AK & thus cannot be set until pd extracted
-  // NOTE!!! is the operation is retried, m must be restored into CUTFRETCOUNT
+  // NOTE!!! if the operation is retried, m must be restored into CUTFRETCOUNT
   v1=wv;  // we always start with the first cell
      // CUTFRETEND in input block is set by caller
   pfx=1; neg=0;  // This is a ;.1 cut
@@ -1364,7 +1364,7 @@ DF1(jtboxcutm21){
   if(common(ctx->c[i].prefend!=-1)){
    A t;GA10(t,LIT,ctx->c[i].prefend-ss+incfretp);ACINITZAP(t);MC(CAV1(t),CAV(w)+ss,ctx->c[i].prefend-ss+incfretp);
    *zv++=t;ss=ctx->c[i].suffstart;
-   if(common(!!ctx->c[i].contents)){
+   if(common(ctx->c[i].contents!=0)){
     MC(zv,AAV0(ctx->c[i].contents),AN(ctx->c[i].contents)*SZA); zv+=AN(ctx->c[i].contents); fa(ctx->c[i].contents);}}}
  EPILOG(z);
 #else

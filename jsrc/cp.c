@@ -239,8 +239,9 @@ static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
 // We catch the special cases 0  & 1 here, mostly for branch-prediction purposes.  All results of g1/g2 will be nouns, while
 // most instances of u^:v (run through powop) have v as verb
 
+#if 0  // obsolete
 // here for u^:v y
-DF1(jtpowv1cell){F1PREFIP;DECLFG;A z;PROLOG(0108);
+static DF1(jtpowv1cell){F1PREFIP;DECLFG;A z;PROLOG(0108);
 A u; A v; RZ(u=CALL1(g1,  w,gs));  /* execute v */
 if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs,fs):w;}
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
@@ -254,6 +255,7 @@ if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[1])
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
 z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);}
 EPILOG(z);}
+
 // here for x u@:]^:v y and x u@]^:v y
 static DF2(jtpowv2acell){F2PREFIP;DECLFG;A z;PROLOG(0110);
 jtinplace=(J)((I)jtinplace&~JTINPLACEA); /* monads always have IP2 clear */
@@ -262,6 +264,39 @@ if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
 z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u,u);}
 EPILOG(z);}
+
+// here for x u@:]^:v y and x u@]^:v y
+static DF2(jtpowv2acell){F2PREFIP;A z;PROLOG(0110);
+ A u; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(FAV(self)->fgh[0])->fgh[0]; AF uf=FAV(fs)->valencefns[0]; // fetch uself, which we always need, and uf, which we will need in the fast path, from the u@]
+ J sjtip=(J)((I)jtinplace&~JTINPLACEA); jtinplace=(J)((I)jtinplace&~JTINPLACEW); // monads always have IP2 clear; v must not inplace y
+ RZ(u=CALL2IP(FAV()->valencefns[1],a,w,gs));  // execute v, inplace on x only
+ if(likely(!AR(u)) && likely(ISDENSETYPE(AT(u),INT+B01)) && likely(!((u0=BIV0(u))&~1))){  // v result is 0/1
+  if(u0){jtinplace=FAV(u)->flag&VJTFLGOK1?sjtip:jt; z=CALL1IP(uf,w,fs);  // if u result is atomic INT/B01 0/1, execute forthwith, inplace if possible (y only)
+  }else{z=w;}
+ }else{  // not a simple if statement
+  RZ(u=powop(fs,u,(A)1)); jtinplace=FAV(u)->flag&VJTFLGOK1?sjtip:jt; // create u^:n form of powop (without @]); can it inplace?
+  z=CALL1IP(FAV(u)->valencefns[0],w,u);  // execute the power, inplace
+ }
+ EPILOG(z);
+}
+
+#else
+// [x] u^:v y, fast when result of v is 0 or 1 (=if statement)
+static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
+ w=AT(w)&VERB?0:w;  // w is 0 for monad
+ A u; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
+ RZ(u=CALL12(w,FAV(gs)->valencefns[!!w],a,w,gs));  // execute v, not inplace
+ if(likely(!AR(u)) && likely(ISDENSETYPE(AT(u),INT+B01)) && likely(!((u0=BIV0(u))&~1))){  // v result is 0/1
+  if(u0){jtinplace=FAV(fs)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt; z=CALL12IP(w,uf,a,w,fs);  // if u result is atomic INT/B01 0/1, execute forthwith, inplace if possible
+  }else{z=w?w:a;}
+ }else{  // not a simple if statement
+  RZ(u=powop(fs,u,(A)1)); jtinplace=FAV(u)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt; // create u^:n form of powop; can it inplace?
+  z=CALL12IP(w,FAV(u)->valencefns[!!w],a,w,u);  // execute the power, inplace
+ }
+ EPILOG(z);
+}
+#endif
+
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
 // contains verb v or gerund v, it executes v on the xy arguments and then calls jtpowop
@@ -276,9 +311,11 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  A z; fdefallo(z)  // allocate normal result area
  if(AT(w)&VERB){
   // u^:v.  Create derived verb to handle it.
-  v=FAV(a); b=((v->id&~1)==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v  (or @:)
+// obsolete   v=FAV(a); b=((v->id&~1)==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v  (or @:)
+  v=FAV(a);
+// obsolete  b=v->valencefns[1]==jtonright12;   // detect u@]^:v  (or @:)
   // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
-  fdeffill(z,0L,CPOWOP,VERB,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,a,w,0L,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX)
+  fdeffill(z,0L,CPOWOP,VERB,jtpowv12cell,jtpowv12cell,a,w,0L,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX)
   RETF(z);
  }
  // u^:n.  Check for special types.

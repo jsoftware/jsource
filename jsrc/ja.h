@@ -589,7 +589,7 @@ extern void jfree4gmp(void*,size_t);
 #define intpow(x,y)                 jtintpow(jt,(x),(y))
 #define inv(x)                      jtinv(jt,(x),0)
 #define invrecur(x)                 jtinv(jt,(x),1)  // call inv(), indicating recursive call
-#define invamp(x)                   jtinvamp(jt,(x))
+// obsolete #define invamp(x,y)                 jtinvamp(jt,(x),(y))
 #define invfork(x)                  jtinvfork(jt,(x))
 #define iocol(x,y,z)                jtiocol(jt,(x),(y),(z))
 #define ioe(x,y)                    jtioe(jt,(x),(y))

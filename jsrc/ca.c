@@ -224,13 +224,15 @@ static DF1(jton10atom){F1PREFIP; if(unlikely(AN(w)>1&&JT(jt,deprecct)!=0))RZ(jtd
 static DF2(jtupon20atom){F2PREFIP; if(unlikely((AN(a)|AN(w))>1&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,6,"(006) f@atomic executed on multiple cells; use f\"0@:atomic (or f@:atomic if f has 0 rank)\n")); R jtrank2ex0(jt,a,w,self,jtupon2cell);}  // pass inplaceability through
 
 // special lightweight case for u@[ and u@].
-static DF1(onright1){F1PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])(jtinplace,w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // pass straight through.  All we do here is set self.  Leave inplaceability unchanged
-static DF2(onleft2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))),a,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // move inplaceable a to w, pass other JT flags
-static DF2(onright2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)((I)jtinplace&~JTINPLACEA),w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // keep inplaceable w
+// obsolete static DF1(onright1){F1PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])(jtinplace,w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // pass straight through.  All we do here is set self.  Leave inplaceability unchanged
+// obsolete static DF2(onleft2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))),a,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // move inplaceable a to w, pass other JT flags
+static DF2(onleft2){F2PREFIP; jtinplace=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],a,fs);}  // move inplaceable a to w, pass other JT flags
+// obsolete DF2(onright12){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)((I)jtinplace&~JTINPLACEA),VERB&AT(w)?a:w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // keep inplaceability of w
+DF2(jtonright12){F2PREFIP; jtinplace=(J)((I)jtinplace&~JTINPLACEA); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],VERB&AT(w)?a:w,fs);}  // keep inplaceability of w; turn a off for monad
 
 // u@n
-static DF1(onconst1){DECLFG;R CALL1(f1,gs,fs);}
-static DF2(onconst2){DECLFG;R CALL1(f1,gs,fs);}
+// obsolete static DF1(onconst1){DECLFG;R CALL1(f1,gs,fs);}
+static DF2(onconst12){DECLFG;R CALL1(FAV(FAV(self)->fgh[0])->valencefns[0],FAV(self)->fgh[1],FAV(self)->fgh[0]);}
 
 
 // x u&v y
@@ -300,16 +302,16 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    // We give the w the strange flagging of NAME AND ALSO LIT - it will be handled as a name when executed, but as a string for representations
    if(AR(w)<=1 && (g=tokens(vs(w),1)) && AN(g)==1 && AT(AAV(g)[0])&NAME){w=rifvs(AAV(g)[0]); AT(w)|=LIT;}
   }
-  fdeffill(z,0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX); R z;
+  fdeffill(z,0,CAT,VERB, onconst12,onconst12, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX); R z;
  }
- // The rest is u@v
+ // The rest is u@v verbs
  wv=FAV(w); d=wv->id;
  if((d&~1)==CLEFT){
   // the very common case u@] and u@[.  Take ASGSAFE and inplaceability from u.  No IRS.
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the  // monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  fdeffill(z,flag2,CAT,VERB, onright1,d&1?onright2:onleft2, a,0,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
+  fdeffill(z,flag2,CAT,VERB, jtonright12,d&1?jtonright12:onleft2, a,0,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
@@ -425,7 +427,7 @@ F2(jtatco){F2PREFIP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  fdeffill(z,flag2,CATCO,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); R z;  // must go through onright1 to set self
+  fdeffill(z,flag2,CATCO,VERB, jtonright12,d&1?jtonright12:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); R z;  // must go through onright1 to set self
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace

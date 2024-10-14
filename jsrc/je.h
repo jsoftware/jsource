@@ -557,6 +557,7 @@ extern F2(jtnouninfo2);
 extern F2(jtobverse);
 // extern F2(jtodd);
 extern I jtoldsize(J,X);
+extern DF2(jtonright12);
 extern F2(jtordstat);
 extern F2(jtordstati);
 extern F2(jtoutstr);

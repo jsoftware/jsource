@@ -4,7 +4,7 @@
 /* Debug                                                                   */
 
 
-// values returned in box 0 of an AFDEBUGRESULT value - big enough to be an integer
+// values returned in box 0 of a boxed AFDEBUGRESULT value - big enough to be an integer
 
 #define SUSCLEAR    7       /* clear stack                                  */
 #define SUSRUN      2       /* run again                                    */

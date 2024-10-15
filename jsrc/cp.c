@@ -25,12 +25,12 @@ A jtopenforassembly(J jt, A x){
             else if(!HOMO(jt->etxinfo->asseminfo.assemorigt,AT(AAV(x)[i]))){jt->etxinfo->asseminfo.assemwreckt=AT(AAV(x)[i]); jt->etxinfo->asseminfo.assemwreckofst=i; break;}}
   )
   jt->etxinfo->asseminfo.assemshape[0]=AS(x)[0];  // results were in a list
-  jt->jerr=EVASSEMBLY;  // switch t o assembly error type
+  jt->jerr=EVASSEMBLY;  // switch to assembly error type
  }
  R z;
 }
 
-static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
+static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n; // scaf make bivalent & use zap
  ARGCHK1(w);
  RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); INCORP(w); *zv++=x=w;
  i=1; n=AN(z);

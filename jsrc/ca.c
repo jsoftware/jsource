@@ -228,7 +228,7 @@ static DF2(jtupon20atom){F2PREFIP; if(unlikely((AN(a)|AN(w))>1&&JT(jt,deprecct)!
 // obsolete static DF2(onleft2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))),a,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // move inplaceable a to w, pass other JT flags
 static DF2(onleft2){F2PREFIP; jtinplace=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],a,fs);}  // move inplaceable a to w, pass other JT flags
 // obsolete DF2(onright12){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)((I)jtinplace&~JTINPLACEA),VERB&AT(w)?a:w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // keep inplaceability of w
-DF2(jtonright12){F2PREFIP; jtinplace=(J)((I)jtinplace&~JTINPLACEA); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],VERB&AT(w)?a:w,fs);}  // keep inplaceability of w; turn a off for monad
+static DF2(jtonright12){F2PREFIP; jtinplace=(J)((I)jtinplace&~JTINPLACEA); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],VERB&AT(w)?a:w,fs);}  // keep inplaceability of w; turn a off for monad
 
 // u@n
 // obsolete static DF1(onconst1){DECLFG;R CALL1(f1,gs,fs);}

@@ -281,20 +281,23 @@ static DF2(jtpowv2acell){F2PREFIP;A z;PROLOG(0110);
 }
 
 #else
-// [x] u^:v y, fast when result of v is 0 or 1 (=if statement)
+// [x] u^:v y, fast when result of v is 0 or 1 (=if statement).  jtflagging is that required by u
 static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
  w=AT(w)&VERB?0:w;  // w is 0 for monad
- A u; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
+  A u; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
  RZ(u=CALL12(w,FAV(gs)->valencefns[!!w],a,w,gs));  // execute v, not inplace
- if(likely(!AR(u)) && likely(ISDENSETYPE(AT(u),INT+B01)) && likely(!((u0=BIV0(u))&~1))){  // v result is 0/1
-  if(u0){jtinplace=FAV(fs)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt; z=CALL12IP(w,uf,a,w,fs);  // if u result is atomic INT/B01 0/1, execute forthwith, inplace if possible
-  }else{z=w?w:a;}
- }else{  // not a simple if statement
-  RZ(u=powop(fs,u,(A)1)); jtinplace=FAV(u)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt; // create u^:n form of powop; can it inplace?
+// obsolete  if(likely(!AR(u)) && likely(ISDENSETYPE(AT(u),INT+B01)) && likely(!((u0=BIV0(u))&~1))){  // v result is 0/1
+ if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)){  // v result is bool/int 0/1 (if statement)  overfetch possible but harmless
+  if(u0){z=CALL12IP(w,uf,a,w,fs);}else{z=w?w:a;}  // if v result is atomic INT/B01 0/1, execute forthwith or bypass, inplace if possible
+ }else{RZ(u=powop(fs,u,(A)1));  // not a simple if statement: create u^:n form of powop;
+  jtinplace=FAV(u)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt;   // u might have been a gerund so there is no telling what the inplaceability of the new u is; refresh it
   z=CALL12IP(w,FAV(u)->valencefns[!!w],a,w,u);  // execute the power, inplace
  }
  EPILOG(z);
 }
+
+// obsolete jtinplace=FAV(fs)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt; 
+// obsolete 
 #endif
 
 
@@ -337,7 +340,8 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  }
  // fall through for unboxed n.
  // handle the very important case of scalar   int/boolean   n of 0/1
- if(likely(((-(AT(w)&B01+INT))&((AR(w)|((UI)BIV0(w)>>1))-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
+// obsolete  if(likely(((-(AT(w)&B01+INT))&((AR(w)|((UI)BIV0(w)>>1))-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
+ if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
  RZ(hs=vib(w));   // hs=n coerced to integer
  AF f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
  I flag=0;  // flags for the verb we build

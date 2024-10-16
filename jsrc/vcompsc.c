@@ -20,7 +20,7 @@
 #include "ve.h"
 #include "vcomp.h"
 
-// fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
+// fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), (bit 2 not needed for NaN since all fp compares are quiet)
 // bit3 set for int-to-float on x, bit4 for int-to-float on y
 // bit5 set to suppress loop-unrolling
 // bit6 set for bool-to-int on x, bit7 for bool-to-int on y

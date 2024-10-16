@@ -33,10 +33,10 @@ AHDR2(tymesDB,PVD,PVD,PVB){R tymesBD(m^1^SGNTO0(m),z,y,x,n,jt);}  // does tymesB
 
 #if C_AVX2 || EMU_AVX2
 #define ORIGMN I nsav=n; if(msav>=0){n=m; m=nsav; nsav^=-(msav&1);}  // restore old-style mn from modified mn and msav.  If msav<0, OK already, otherwise swap & transfer flag to nsav
-primop256(plusDD,0x3,NAN0;,zz=_mm256_add_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
-primop256(minusDD,0x2,NAN0;,zz=_mm256_sub_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
-primop256(minDD,1,,zz=_mm256_min_pd(xx,yy),R EVOK;)
-primop256(maxDD,1,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+primop256(plusDD,0x7,NAN0;,zz=_mm256_add_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
+primop256(minusDD,0x6,NAN0;,zz=_mm256_sub_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
+primop256(minDD,0x7,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+primop256(maxDD,0x7,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(tymesDD,0x7,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(unlikely(NANTEST)){z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
 // div can fail from 0%0 (which we turn to 0) or inf%inf (which we fail)
 primop256(divDD,4,D *zsav=z; D *xsav=x; D *ysav=y; I msav=m;NAN0;,zz=_mm256_div_pd(xx,yy),
@@ -57,9 +57,9 @@ APFX( minEE, E,E,E, MINE,,R EVOK;)
 APFX( maxEE, E,E,E, MAXE,,R EVOK;)
 
 #if C_AVX2 || EMU_AVX2
-primop256(plusDI,0x10,,zz=_mm256_add_pd(xx,yy),R EVOK;)
+primop256(plusDI,0x16,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 // commutative primop256(plusID,8,,zz=_mm256_add_pd(xx,yy),R EVOK;)
-primop256(plusDB,0xa00,,zz=_mm256_add_pd(xx,yy),R EVOK;)
+primop256(plusDB,0xa06,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 // commutative primop256(plusBD,0x900,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusII,0x23,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
@@ -70,12 +70,12 @@ primop256(plusII,0x23,__m256d oflo=_mm256_setzero_pd();,
 primop256(plusIB,0x882,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(zz))));,
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSIB:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
-primop256(plusBB,0xc0,,
+primop256(plusBB,0xc1,,
 zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,R EVOK;)
-primop256(minusDI,0x10,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
-primop256(minusID,0x8,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
-primop256(minusDB,0xa00,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
-primop256(minusBD,0x100,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
+primop256(minusDI,0x16,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
+primop256(minusID,0xa,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
+primop256(minusDB,0xa06,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
+primop256(minusBD,0x102,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
 primop256(minusII,0x22,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_and_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPMINUSII:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
@@ -87,10 +87,10 @@ primop256(minusIB,0x882,__m256d oflo=_mm256_setzero_pd();,
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPMINUSIB:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
 primop256(minusBB,0xc0,,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,R EVOK;)
-primop256(minDI,0x10,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+primop256(minDI,0x16,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 // commutative primop256(minID,8,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 // commutative primop256(minBD,0x100,,zz=_mm256_min_pd(xx,yy),R EVOK;)
-primop256(minDB,0x200,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+primop256(minDB,0x206,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 #if C_AVX512
 primop256(minII,1,,   zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
 primop256(minIB,0x80,,zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
@@ -103,8 +103,8 @@ primop256(minII,1,,
 primop256(minIB,0x80,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 #endif
-primop256(maxDI,0x10,,zz=_mm256_max_pd(xx,yy),R EVOK;)
-primop256(maxDB,0x200,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+primop256(maxDI,0x16,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+primop256(maxDB,0x206,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 // commutative primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 // commutative primop256(maxBD,0x100,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 #if C_AVX512

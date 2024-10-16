@@ -279,7 +279,7 @@
 // This was done with poor choice of address modes; needs to be rerun
 
 // fz=bit0 = commutative,
-// bits 1-2=incomplete argument filling: 00=none, 01=incomplete y must be filled with 0 (to avoid isub oflo), 10=incomplete x must be filled with 1 (for fdiv NaN), 11=both x & y must be filled with 0
+// bits 1-2=incomplete argument filling: 00=none, 01=incomplete y must be filled with 0 (to avoid isub oflo), 10=incomplete x must be filled with 1.0, y with 0 (for fdiv NaN), 11=both x & y must be filled with 0
 // bit3 set for int-to-float on x, bit4 for int-to-float on y
 // bit5 set to suppress loop-unrolling
 // bit6 set for bool-to-int on x, bit7 for bool-to-int on y
@@ -310,7 +310,7 @@
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=0000, 01=1000, 10=1100, 11=1110, 100=1111 */ \
   if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-  if((fz)&2)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
+  if((fz)&6)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch, also in PRIMMASK */ \
   if((fz)&4)if((fz)&2)xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); else xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
   if((xy)==2)yy=xysav; if((xy)==1)xx=xysav; /* restore repeated arg, which would have been masked */ \
@@ -333,7 +333,7 @@
 
 #define PRMMASK(zzop,xy,fz) if(xy&2)LDBID(xx,XAD(fz),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,YAD(fz),fz,0x10,0x80,0x200)  \
   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-  if((fz)&2)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
+  if((fz)&6)yy=_mm256_and_pd(_mm256_castsi256_pd(endmask),yy); /* init incomplete fetch */ \
   if((fz)&4)if((fz)&2)xx=_mm256_and_pd(_mm256_castsi256_pd(endmask),xx); else xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz);
 

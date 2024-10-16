@@ -24,6 +24,15 @@ x return.
 x + y
 )
 
+1: 0 : 0 NB. would be nice to verify that this crash is fixed, but 13!:0 takes us up to immed level
+13!:0 (129)
+foo =: 3 : 'y'
+13!:3 'foo *:*;'
+foo 7
+13!:0 (129) NB. Used to crash
+13!:0 (0)
+)
+
 foo =: 0$0  NB. will accumulate results executed during suspension
 13!:0 ] 0
 13!:3 'goo 0'
@@ -306,6 +315,7 @@ NB. stops ---------------------------------------------------------------
 1 [ 13!:3 'sum *'
 'sum *' -: 13!:2 ''
 1 [ 13!:3 ''
+
 
 
 NB. error text ----------------------------------------------------------

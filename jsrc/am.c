@@ -783,7 +783,7 @@ static DF2(jtamnegate){F2PREFIP;
 
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
-static DF2(amccv2){F2PREFIP;DECLF; 
+static DF2(amccv2){F2PREFIP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
  ARGCHK2(a,w); 
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // u} not supported for sparse
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
@@ -796,7 +796,7 @@ static DF2(amccv2){F2PREFIP;DECLF;
 
 
 static DF1(mergn1){A ind,z; z=merge1(w,ind=VAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
-static DF1(mergv1){DECLF; A ind,z; z=merge1(w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
+static DF1(mergv1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z; z=merge1(w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
 
 // called from m}, m is usually NOT a gerund
 static B ger(J jt,A w){A*wv,x;

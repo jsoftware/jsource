@@ -184,7 +184,7 @@ static AHDR2FN* bwI[16]={(AHDR2FN*)bw0000II,(AHDR2FN*)bw0001II,(AHDR2FN*)bw0010I
 /* a m b.&.(a.i.]) w */
 /* m e. 16+i.16      */
 
-DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
+DF2(jtbitwisechar){A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  ARGCHK2(a,w);
  x=a;
  y=w;

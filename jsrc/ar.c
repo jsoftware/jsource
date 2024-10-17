@@ -511,7 +511,7 @@ static DF1(jtred0){A x,z;I f,r,wr,*s;
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
+static DF1(jtredg){F1PREFIP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; AD * RESTRICT a;I i,n,r,wr;
  ARGCHK1(w);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank

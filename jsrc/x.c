@@ -207,7 +207,7 @@ void jtforeigninit(J jt){UI i;
  MN(5,4)   XPRIM(VERB, jttrx,        0,            VASGSAFE,VF2NONE,0,   RMAX,RMAX);
  MN(5,5)   XPRIM(VERB, jtlrx1,        jtlrx2,        VASGSAFE,VF2NONE,0,   RMAX,RMAX);
  MN(5,6)   XPRIM(VERB, jtprx,        0,            VASGSAFE,VF2NONE,0,   RMAX,RMAX);
- MN(5,7)   XPRIM(VERB, 0,            jtxrx,        VASGSAFE,VF2NONE,RMAX,0,   0   );
+ MN(5,7)   XPRIM(VERB, 0,            jtxrx,        VASGSAFE,VF2NONE,RMAX,0,   0   );  // explicit defn info
  MN(6,2)   XPRIM(VERB, jttsit1,      jttsit2,      VFLAGNONE,VF2NONE,1,   0,   1   );
  MN(6,3)   XPRIM(VERB, jtdl,         0,            VASGSAFE,VF2NONE,0,   RMAX,RMAX);
  MN(6,4)   XPRIM(VERB, jtparsercalls,0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);

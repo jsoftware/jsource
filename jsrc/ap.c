@@ -397,7 +397,7 @@ PREFIXPFX(bw1111pfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 // This old prefix support is needed for sparse matrices
 
-static DF1(jtprefix){DECLF;I r;
+static DF1(jtprefix){A fs=FAV(self)->fgh[0]; I r;
  ARGCHK1(w);
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtprefix);}
  R eachl(apv(SETIC(w,r),1L,1L),w,atop(fs,ds(CTAKE)));
@@ -446,7 +446,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 }
 
 // Entry point for infix.  a is x, w is y, fs points to u
-static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m; 
+static DF2(jtinfix){PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m; 
  F2RANK(0,RMAX,jtinfix,self); // Handle looping over rank.  This returns here for each cell (including this test)
  // The rest of this verb handles a single cell
  // If length is infinite, convert to large integer

@@ -17,7 +17,7 @@
 // x is a block that contains cell results.  We open it; if that creates domain error we track down the error and change it to assembly error
 A jtopenforassembly(J jt, A x){
  ARGCHK1(x);  // if error on x, abort this
- A z=ope(x);
+ A z=ope(x);   // open x
  if(z==0&&jt->jerr==EVDOMAIN){  // domain error on open can only be assembly
   jt->etxinfo->asseminfo.assemframelen=1;  // len of frame of error
   jt->etxinfo->asseminfo.assemorigt=jt->etxinfo->asseminfo.assemwreckt=0;  // init dissimilar types not found
@@ -30,21 +30,7 @@ A jtopenforassembly(J jt, A x){
  R z;
 }
 
-static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n; // scaf make bivalent & use zap
- ARGCHK1(w);
- RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); INCORP(w); *zv++=x=w;
- i=1; n=AN(z);
- NOUNROLL while(1){
-  if(n==i){RZ(z=ext(0,z)); zv=i+AAV(z); n=AN(z);}
-  A z0; RZ(x=df1(z0,y=x,self)); INCORP(x); *zv++=x;
-  if(equ(x,y)){AN(z)=AS(z)[0]=i; break;}
-  ++i;
- }
- z=jtopenforassembly(jt,z);
- EPILOG(z);
-}    /* f^:(<_) w */
-
-// AR(a) is 1 and AN(w)!=0
+// AR(a)<=1 and AN(w)!=0
 static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
  ARGCHK2(a,w);
  wt=AT(w); wn=AN(w); wr=AR(w);
@@ -72,18 +58,41 @@ static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
  RETF(z);
 }    /* {&a^:(<_) w */
 
-static DF1(jtindexseqlim1){A fs;
- ARGCHK1(w); 
- fs=FAV(self)->fgh[0];  // {&x
- R AN(w)&&AT(w)&B01+INT?tclosure(FAV(fs)->fgh[1],w):powseqlim(w,fs);
-}    /* {&x^:(<_) w */
+#if 1  // obsolete
+static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n; // scaf make bivalent & use zap
+ ARGCHK1(w);
+ RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); INCORP(w); *zv++=x=w;
+ i=1; n=AN(z);
+ NOUNROLL while(1){
+  if(n==i){RZ(z=ext(0,z)); zv=i+AAV(z); n=AN(z);}
+  A z0; RZ(x=df1(z0,y=x,self)); INCORP(x); *zv++=x;
+  if(equ(x,y)){AN(z)=AS(z)[0]=i; break;}
+  ++i;
+ }
+ z=jtopenforassembly(jt,z);
+ EPILOG(z);
+}    /* f^:(<_) w */
 
-static DF2(jtindexseqlim2){
- ARGCHK2(a,w);
- R 1==AR(a)&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT?tclosure(a,w):powseqlim(w,amp(ds(CFROM),a));
-}    /* a {~^:(<_) w */
+// u^:_ w  Bivalent, called as w,fs or a,w,fs
+static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be preserved for comparison, & a for reuse
+ I i=0;
+ I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;  // the call shows the dyad; if it's really a monad, w->self, leave arg in a
+ A fs=FAV(self)->fgh[0]; w=ismonad?fs:w;   // for monad, fs->w
+ AF f=FAV(fs)->valencefns[1-ismonad];
+ while(1){
+  RZ(z=CALL2(f,a,w,fs));  // call the fn, either monadic or dyadic
+  A oldw=w; oldw=ismonad?a:oldw; w=ismonad?w:z; a=ismonad?z:a;  // oldw=input w to f; save result for next loop overwriting a(monad) or w(dyad)
+  I isend=equ(z,oldw);  // remember if result is same as input
+  if(!((isend-1)&++i&7)) {  // every so often, but always when we leave...
+   JBREAK0;   // check for user interrupt, in case the function doesn't allocate memory
+   RZ(z=EPILOGNORET(z));  // free up allocated blocks, but keep z.  If z is virtual it will be realized
+   if(isend){RETF(z);}  // return at end
+  }
+    // make the new result the starting value for next loop, replacing w wherever it is
+ }
+}
 
-// u^:(<n) If n negative, take inverse of u; if v infinite, go to routine that checks for no change.  Otherwise convert to u^:(i.|n) and restart
+// u^:(<n) If n negative, take inverse of u; if n infinite, go to routine that checks for no change.  Otherwise convert to u^:(i.|n) and restart
 static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  ARGCHK1(w);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];
@@ -107,6 +116,38 @@ static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
  RETF(z);
 // }
 }
+#else
+// [a] u^:atom a and [a] u^:<atom/'' w, bivalent.
+static DF2(jtfpowatom){A fs,z;AF f1;I n;V*sv;A *old;
+ // w will be power result; a=0 if monad
+ // zz=result array if multiple results, 0 if single.  If zz!=0, install w as first result
+ // n is power count
+ // if n<0, convert u to u^:_1 or x&u^:_1
+ // set n to # iterations (-1 if +-infinite)
+ // set inplaceability: on w, only if not infinite
+ while(n>0){
+  // execute wnew = [a] u w
+  // if infinite iteration, break if result repeated
+  // if multiple results, extend result if needed, save the result using zap
+  // if not infinite & not multiple, inplace further w
+  // w=wnew
+  // call gc(w): every time if not multiple; if multiple, every so often since the results values are saved
+ }
+ // if multiple, assemble the results
+}
+
+#endif
+
+static DF1(jtindexseqlim1){A fs;
+ ARGCHK1(w); 
+ fs=FAV(self)->fgh[0];  // {&x
+ R AN(w)&&AT(w)&B01+INT?tclosure(FAV(fs)->fgh[1],w):powseqlim(w,fs);
+}    /* {&x^:(<_) w */
+
+static DF2(jtindexseqlim2){
+ ARGCHK2(a,w);
+ R AR(a)<=1&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT?tclosure(a,w):powseqlim(w,amp(ds(CFROM),a));
+}    /* a {~^:(<_) w */
 
 // general u^:n w where n is any integer array or finite atom.  If atom, it will be negative
 static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
@@ -191,25 +232,6 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
  if(!jtisravelix(jt,n))RZ(zz=fromA(indexof(p,rn),zz));   // if n is not i. #,n already, put zz into order of p i. ,n
  if(AR(n)!=1)zz=reitem(shape(n),zz);  // if n is an array, use its shape
  EPILOG(zz);
-}
-
-// u^:_ w  Bivalent, called as w,fs or a,w,fs
-static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be preserved for comparison, & a for reuse
- I i=0;
- I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;  // the call shows the dyad; if it's really a monad, w->self, leave arg in a
- A fs=FAV(self)->fgh[0]; w=ismonad?fs:w;   // for monad, fs->w
- AF f=FAV(fs)->valencefns[1-ismonad];
- while(1){
-  RZ(z=CALL2(f,a,w,fs));  // call the fn, either monadic or dyadic
-  A oldw=w; oldw=ismonad?a:oldw; w=ismonad?w:z; a=ismonad?z:a;  // oldw=input w to f; save result for next loop overwriting a(monad) or w(dyad)
-  I isend=equ(z,oldw);  // remember if result is same an input
-  if(!((isend-1)&++i&7)) {  // every so often, but always when we leave...
-   JBREAK0;   // check for user interrupt, in case the function doesn't allocate memory
-   RZ(z=EPILOGNORET(z));  // free up allocated blocks, but keep z.  If z is virtual it will be realized
-   if(isend){RETF(z);}  // return at end
-  }
-    // make the new result the starting value for next loop, replacing w wherever it is
- }
 }
 
 static DF1(jtinv1){F1PREFIP;DECLFG;A z; ARGCHK1(w);A i; RZ(i=inv((fs))); WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);) RETF(z);}  // was invrecur(fix(fs))
@@ -324,17 +346,18 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  // u^:n.  Check for special types.
  if(BOX&AT(w)){A x,y;AF f1,f2;
   // Boxed v.  It could be <n or [v0`]v1`v2 or <''.
-  if(!AR(w)&&(x=C(AAV(w)[0]),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
+  if(!AR(w)&&(x=C(AAV(w)[0]),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){  // scalar box whose contents are numeric atom or empty list
    // here for <n or <''.  That will be handled by special code.
    f1=jtpowseq; f2=jtply2; v=FAV(a);
    // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
    if((!AN(x)||FL&AT(x)&&inf==DAV(x)[0])){
-    if(CAMP==v->id&&(CFROM==ID(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:_ y
-    else if(CTILDE==v->id&&CFROM==ID(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:_ y
+    if(CAMP==v->id&&(CFROM==ID(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:a: y
+    else if(CTILDE==v->id&&CFROM==ID(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:a: y
    }
    fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)
    RETF(z);
   }
+  // falling through for other boxed type
 //    ASSERT(self!=0,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
   R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2
  }

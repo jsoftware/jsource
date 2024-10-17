@@ -180,7 +180,7 @@ SUFFIXPFX(bw1110sfxI, UI,UI, BW1110, bw1110II,R EVOK;)
 SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 
-static DF1(jtsuffix){DECLF;I r;
+static DF1(jtsuffix){A fs=FAV(self)->fgh[0]; I r;
  ARGCHK1(w);
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtsuffix);
  R eachl(IX(SETIC(w,r)),w,atop(fs,ds(CDROP)));
@@ -348,7 +348,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  R jtopenforassembly(jt,z);
 }
 
-static DF2(jtoutfix){F2PREFIP;PROLOG(117);DECLF ;A z; F2RANK(0,RMAX,jtoutfix,self) z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}
+static DF2(jtoutfix){F2PREFIP;PROLOG(117);A fs=FAV(self)->fgh[0]; A z; F2RANK(0,RMAX,jtoutfix,self) z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}
 
 static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANKW(0,RMAX,jtofxinv,self);

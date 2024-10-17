@@ -6,7 +6,7 @@
 #include "j.h"
 
 // [><].@[:]*  monad inner loop
-static DF1(jtonf1cell){PROLOG(0021);DECLFG;
+static DF1(jtonf1cell){PROLOG(0021);A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A gs=FAV(self)->fgh[1]; AF g1=FAV(gs)->valencefns[0];
  PREF1(jtonf1cell);
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
  A z=CALL1(f1,CALL1(g1,w,gs),fs);
@@ -14,7 +14,7 @@ static DF1(jtonf1cell){PROLOG(0021);DECLFG;
 }
 
 // [><].@[:]*  monad
-static DF1(jtonf1){PROLOG(0021);DECLFG;I flag=sv->flag,m=jt->xmode;
+static DF1(jtonf1){A gs=FAV(self)->fgh[1]; PROLOG(0021);I flag=FAV(self)->flag,m=jt->xmode;
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  A z=jtonf1cell(jt,w,self);
  jt->xmode=m;  // ...we must restore xmode...
@@ -124,8 +124,8 @@ DF1(jtintceillog2cap) {F1PREFIP; R jtintceillog2(jt,w,FAV(self)->fgh[1]);}  // [
 static DF2(jtintceillog2left) {F2PREFIP; self=AT(w)&VERB?w:self;  R jtintceillog2(jt,a,FAV(self)->fgh[0]);} // >.[!.f]@[:](2 ^. [)   bivalent
 static DF2(jtintceillog2right) {F2PREFIP; self=AT(w)&VERB?w:self; a=AT(w)&VERB?a:w;  R jtintceillog2(jt,a,FAV(self)->fgh[0]);} // >.[!.f]@[:](2 ^. ])   bivalent
 
-// <.@ >.@ and the like, dyad
-static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
+// <.@ >.@ and the like, dyad   scaf make bivalent
+static DF2(jtuponf2){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; PROLOG(0022);A z;I flag=FAV(self)->flag,m=jt->xmode;
  ARGCHK2(a,w);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(a))RZSUFF(a=pcvt(XNUM,a), z=0; goto restore;);
@@ -232,7 +232,7 @@ static DF2(jtonright12){F2PREFIP; jtinplace=(J)((I)jtinplace&~JTINPLACEA); A fs=
 
 // u@n
 // obsolete static DF1(onconst1){DECLFG;R CALL1(f1,gs,fs);}
-static DF2(onconst12){DECLFG;R CALL1(FAV(FAV(self)->fgh[0])->valencefns[0],FAV(self)->fgh[1],FAV(self)->fgh[0]);}
+static DF2(onconst12){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];R CALL1(FAV(fs)->valencefns[0],FAV(self)->fgh[1],FAV(self)->fgh[0]);}
 
 
 // x u&v y
@@ -550,8 +550,8 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 // This supports IRS so that it can pass the rank on to the called function; no need to revalidate here
 // We pass the WILLOPEN flags through
-static DF1(withl){F1PREFIP;DECLFG; A z; I r=(RANKT)jt->ranks; IRSIP2(fs,w,gs,RMAX,(RANKT)jt->ranks,g2,z); RETF(z);}
-static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z; I r=(RANKT)jt->ranks; IRSIP2(w,gs,fs,(RANKT)jt->ranks,RMAX,f2,z); RETF(z);}
+static DF1(withl){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; F1PREFIP;A z; I r=(RANKT)jt->ranks; IRSIP2(fs,w,gs,RMAX,(RANKT)jt->ranks,g2,z); RETF(z);}
+static DF1(withr){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; F1PREFIP; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z; I r=(RANKT)jt->ranks; IRSIP2(w,gs,fs,(RANKT)jt->ranks,RMAX,f2,z); RETF(z);}
 
 // Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the precision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash

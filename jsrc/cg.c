@@ -377,11 +377,6 @@ F2(jtagendai){F2PREFIP;I flag;
 //                gs=sv->fgh[1] (the A block for the g operand); g1=f1 in sv->fgh[1] (0 if sv->fgh[1]==0); g2=f2 in sv->fgh[1] (0 if sv->fgh[1]==0)
 
 
-static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
- STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id));
- RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
-}
-
 // this is u^:gerund y
 // Here, f1 is the original u and g1 is the original v; hs points to the gerund
 // First, we run hv[1]->valencefns[0] on y (this is gerund v1, the selector/power);
@@ -390,17 +385,22 @@ static DF1(jtgcl1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
 //     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
 // then we execute gerund v2 on y (with self set to v2)
 // then we execute ff on the result of (v2 y), with self set to ff
-static DF1(jtgcr1){DECLFG;A ff,z0,z1,*hv=AAV(sv->fgh[2]);
+static DF1(jtgcl1){V* RESTRICT sv=FAV(self); A gs=sv->fgh[1]; A ff,z0,z1,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id));
+ RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
+}
+
+static DF1(jtgcr1){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; A ff,z0,z1,*hv=AAV(sv->fgh[2]);
  STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id));
  RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
 }
 
-static DF2(jtgcl2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
+static DF2(jtgcl2){V* RESTRICT sv=FAV(self); A gs=sv->fgh[1]; A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
  STACKCHKOFL RZ(df2(z0,a,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id));
  RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
 }
 
-static DF2(jtgcr2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
+static DF2(jtgcr2){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
  STACKCHKOFL RZ(df2(z0,a,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id));
  RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
 }
@@ -421,7 +421,7 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
 }
 
 // verb executed for v0`v1`v2} y
-static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
+static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
@@ -433,7 +433,7 @@ static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
 }
 
 // verb executed for x v0`v1`v2} y
-DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
+DF2(jtgav2){F2PREFIP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
 A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }

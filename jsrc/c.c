@@ -16,7 +16,7 @@ F2(jtobverse){F2PREFIP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,
 
 // Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun).  Bivalent  a,w,self or w,self
 #if 0   // obsolete 
-static DF1(ad1){DECLFG;A z;
+static DF1(ad1){A z;
  ARGCHK1(w); A *old=jt->tnextpushp;
  WITHDEBUGOFF(z=CALL1(f1,  w,fs);)
  if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.

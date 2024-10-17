@@ -16,9 +16,9 @@
 
 
 // f;.0 w
-static DF1(jtcut01){DECLF;A h,x,z;
+static DF1(jtcut01){A h,x,z;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; 
  RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));
- if(VGERL&sv->flag){h=sv->fgh[2]; R df1(z,x,AAV(h)[0]);}else R CALL1(f1,x,fs);
+ if(VGERL&FAV(self)->flag){h=FAV(self)->fgh[2]; R df1(z,x,AAV(h)[0]);}else{ R CALL1(f1,x,fs);}
 }    /* f;.0 w */
 
 // a f;.0 w
@@ -343,7 +343,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
  R z;
 }    /* ((i+i.r){y)-"1 ({:$y){.j */
 
-static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
+static DF2(jtcut2sx){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(0024);A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx); SETIC(w,n); t=AT(w); m=(I)sv->localuse.lu1.gercut.cutn; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
  RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):!ISSPARSE(AT(a))?sparse1(a):a);
  ASSERT(n==AS(a)[0],EVLENGTH);
@@ -1065,7 +1065,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   A za, zw; RZ(za=cant1(tymesW(head(a),cant1(abase2(p,iota(p)))))); RZ(zw=tail(a));
   RETF(cut02(IRS2(za, zw,self,1L,1L,jtlamin2,z),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w    the self is for error display
  }
- DECLF;  // get the function pointers
+ V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->valencefns[0];   // get the function pointers
  fauxblockINT(xfaux,5,1); // declare xpose arg where it has scope
  I *ws=AS(w);  // ws-> shape of w
  // get address of end+1 of the source data, so we can avoid out-of-bounds

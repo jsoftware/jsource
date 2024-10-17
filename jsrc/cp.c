@@ -234,14 +234,14 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
  EPILOG(zz);
 }
 
-static DF1(jtinv1){F1PREFIP;DECLFG;A z; ARGCHK1(w);A i; RZ(i=inv((fs))); WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);) RETF(z);}  // was invrecur(fix(fs))
+static DF1(jtinv1){A fs=FAV(self)->fgh[0]; F1PREFIP;A z; ARGCHK1(w);A i; RZ(i=inv((fs))); WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);) RETF(z);}  // was invrecur(fix(fs))
   // we defer eformat till the caller so that the user doesn't see the description of the inverse, which might be unrecognizable
-static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs); RETF(z);}
-static DF2(jtinv2){DECLFG;A z; ARGCHK2(a,w); WITHEFORMATDEFERRED(df1(z,w,inv(amp(a,fs)));) STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
+static DF1(jtinvh1){A hs=FAV(self)->fgh[2]; F1PREFIP;A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs); RETF(z);}
+static DF2(jtinv2){A fs=FAV(self)->fgh[0]; A z; ARGCHK2(a,w); WITHEFORMATDEFERRED(df1(z,w,inv(amp(a,fs)));) STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
 // old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
-DF2(jtply2){PROLOG(107);DECLFG;A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}
+DF2(jtply2){PROLOG(107);A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}
 
 
 static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
@@ -263,7 +263,7 @@ static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
 
 #if 0  // obsolete
 // here for u^:v y
-static DF1(jtpowv1cell){F1PREFIP;DECLFG;A z;PROLOG(0108);
+static DF1(jtpowv1cell){F1PREFIP;A z;PROLOG(0108);
 A u; A v; RZ(u=CALL1(g1,  w,gs));  /* execute v */
 if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs,fs):w;}
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
@@ -271,7 +271,7 @@ z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u,u);}
 EPILOG(z);
 }
 // here for x u^:v y 
-static DF2(jtpowv2cell){F2PREFIP;DECLFG;A z;PROLOG(0109);
+static DF2(jtpowv2cell){F2PREFIP;A z;PROLOG(0109);
 A u; A v; RZ(u=CALL2(g2,a,w,gs));  /* execute v */
 if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[1])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,a,w,fs):w;}
 else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
@@ -279,7 +279,7 @@ z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);}
 EPILOG(z);}
 
 // here for x u@:]^:v y and x u@]^:v y
-static DF2(jtpowv2acell){F2PREFIP;DECLFG;A z;PROLOG(0110);
+static DF2(jtpowv2acell){F2PREFIP;A z;PROLOG(0110);
 jtinplace=(J)((I)jtinplace&~JTINPLACEA); /* monads always have IP2 clear */
 A u; A v; fs=FAV(fs)->fgh[0]; RZ(u=CALL2(g2,a,w,gs));  /* execute v */
 if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs,fs):w;}

@@ -213,7 +213,7 @@ static DF2(tcca){F2PREFIP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df1(tt,w,hs));
 
 
 
-static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
+static DF1(jthkiota){A a,e;I n;P*p;
  ARGCHK1(w);
  SETIC(w,n);
  if((AT(w)&SPARSE+B01)==SPARSE+B01&&1==AR(w)){
@@ -223,10 +223,10 @@ static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  R B01&AT(w)&&1>=AR(w) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }    /* special code for (# i.@#) */
 
-static DF1(jthkodom){DECLFG;B b=0;I n,*v;
+static DF1(jthkodom){B b=0;I n,*v;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1];
  ARGCHK1(w);
  if(INT&AT(w)&&1==AR(w)){n=AN(w); v=AV(w); DO(n, if(b=0>v[i])break;); if(!b)R odom(2L,n,v);}
- R CALL2(f2,w,CALL1(g1,w,gs),fs);
+ R CALL2(FAV(fs)->valencefns[1],w,CALL1(FAV(gs)->valencefns[0],w,gs),fs);
 }    /* special code for (#: i.@(* /)) */
 
 static DF1(jthkindexofmaxmin){
@@ -256,12 +256,12 @@ static exeV cmpabsblk[6] = {
 
 
 // (compare |) dyadic, reverting if not float
-static DF2(jthkcmpabs){DECLFG;F2PREFIP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
+static DF2(jthkcmpabs){F2PREFIP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
  z=jtatomic2(jtinplace,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
  RETF(z);
 }
 // (compare!.n |) dyadic, reverting if not float
-static DF2(jthkcmpfitabs){DECLFG;F2PREFIP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
+static DF2(jthkcmpfitabs){F2PREFIP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
  PUSHCCT(FAV(FAV(self)->fgh[0])->localuse.lu1.cct) z=jtatomic2(jtinplace,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
  POPCCT RETF(z);
 }

@@ -557,6 +557,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
  EPILOG(zz);
 }
 
+// This code has been superseded by rank[12](i|in) and is called only by sparse routines
 // Call a function that has Integrated Rank Support
 // The function may leave the rank set on exit; we clear it
 /* f knows how to compute f"r                           */
@@ -581,7 +582,6 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I wr;
  RETF(z);
 }
 
-// This code has been superseded by rank[12](i|in) and is called only by sparse routines
 // IRS setup for dyads x op y.  This routine sets jt->ranks and calls the verb, which loops if it needs to
 // a is x, w is y
 // fs is the f field of the verb (the verb to be applied repeatedly) - or 0 if none (if we are called internally)
@@ -608,25 +608,25 @@ static DF1(cons1a){R FAV(self)->fgh[0];}
 static DF2(cons2a){R FAV(self)->fgh[0];}
 
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
-static DF1(cons1){V*sv=FAV(self);
+static DF1(cons1){
  ARGCHK1(w);
- I mr; efr(mr,AR(w),(I)sv->localuse.lu1.srank[0]);
+ I mr; efr(mr,AR(w),(I)FAV(self)->localuse.lu1.srank[0]);
  R rank1ex(w,self,mr,cons1a);
 }
-static DF2(cons2){V*sv=FAV(self);
+static DF2(cons2){
  ARGCHK2(a,w);
- I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)sv->localuse.lu1.srank[2]);
+ I lr2,rr2; efr(lr2,AR(a),(I)FAV(self)->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)FAV(self)->localuse.lu1.srank[2]);
  R rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a);
 }
 
 // cyclic-gerund verbs for m"n create an iterator from the gerund and pass that into rank processing, looping over cells
-static DF1(cycr1){V*sv=FAV(self);I cger[128/SZI];
+static DF1(cycr1){V*sv=FAV(self); I cger[128/SZI];
  ARGCHK1(w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I mr; efr(mr,AR(w),(I)sv->localuse.lu1.srank[0]);
  R rank1ex(w,self,mr,FAV(self)->valencefns[0]);  // callback is to the cyclic-execution function
 }
-static DF2(cycr2){V*sv=FAV(self);I cger[128/SZI];
+static DF2(cycr2){V*sv=FAV(self); I cger[128/SZI];
  ARGCHK2(a,w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)sv->localuse.lu1.srank[2]);
@@ -637,32 +637,32 @@ static DF2(cycr2){V*sv=FAV(self);I cger[128/SZI];
 
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
-static DF1(rank1i){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
- I m=sv->localuse.lu1.srank[0]; m=m>=AR(w)?RMAX:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
+static DF1(rank1i){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];F1PREFIP;ARGCHK1(w);  // this version when requested rank is positive
+ I m=FAV(self)->localuse.lu1.srank[0]; m=m>=AR(w)?RMAX:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
-static DF1(rank1in){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is negative
- I m=sv->localuse.lu1.srank[0]+AR(w); m=m<0?0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
+static DF1(rank1in){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];F1PREFIP;ARGCHK1(w);   // this version when requested rank is negative
+ I m=FAV(self)->localuse.lu1.srank[0]+AR(w); m=m<0?0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 
-// dyadic forms also check agreement wrt the given ranks
-static DF2(rank2i){F2PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
- I ar=sv->localuse.lu1.srank[1]; ar=ar>=AR(a)?RMAX:ar; I af=AR(a)-ar;   // left rank
- I wr=sv->localuse.lu1.srank[2]; wr=wr>=AR(w)?RMAX:wr; I wf=AR(w)-wr;   // right rank
+// dyadic forms also check agreement wrt the given ranks   scaf combine neg form?
+static DF2(rank2i){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; F2PREFIP;ARGCHK1(w);  // this version when requested rank is positive
+ I ar=FAV(self)->localuse.lu1.srank[1]; ar=ar>=AR(a)?RMAX:ar; I af=AR(a)-ar;   // left rank
+ I wr=FAV(self)->localuse.lu1.srank[2]; wr=wr>=AR(w)?RMAX:wr; I wf=AR(w)-wr;   // right rank
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)));  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
-static DF2(rank2in){F2PREFIP;ARGCHK1(w);DECLF;  // this version when a requested rank is negative
- I wr=AR(w); I r=sv->localuse.lu1.srank[2]; r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
- I ar=AR(a); r=sv->localuse.lu1.srank[1];   r=r>=ar?RMAX:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
+static DF2(rank2in){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; F2PREFIP;ARGCHK1(w);  // this version when a requested rank is negative
+ I wr=AR(w); I r=FAV(self)->localuse.lu1.srank[2]; r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
+ I ar=AR(a); r=FAV(self)->localuse.lu1.srank[1];   r=r>=ar?RMAX:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)))  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
@@ -672,9 +672,9 @@ static DF2(rank2in){F2PREFIP;ARGCHK1(w);DECLF;  // this version when a requested
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
 // This routine supports jtflags by not touching jt - pass it through
-static DF1(rank1){DECLF;I m,wr;
+static DF1(rank1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; I m,wr;
  ARGCHK1(w);
- wr=AR(w); efr(m,wr,(I)sv->localuse.lu1.srank[0]);
+ wr=AR(w); efr(m,wr,(I)FAV(self)->localuse.lu1.srank[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
  // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank  scaf should consume anyway, let user control?
  if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
@@ -710,7 +710,7 @@ static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceabil
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 
 // This routine supports jtflags by not touching jt - pass it through
-static DF2(rank2){DECLF;I ar,l=sv->localuse.lu1.srank[1],r=sv->localuse.lu1.srank[2],wr;
+static DF2(rank2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; I ar,l=FAV(self)->localuse.lu1.srank[1],r=FAV(self)->localuse.lu1.srank[2],wr;
  ARGCHK2(a,w);
  ar=AR(a); efr(l,ar,l);
  wr=AR(w); efr(r,wr,r);  // now l<=ar, r<=wr

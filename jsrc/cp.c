@@ -150,14 +150,14 @@ static DF2(jtindexseqlim2){
 }    /* a {~^:(<_) w */
 
 // general u^:n w where n is any integer array or finite atom.  If atom, it will be negative
-static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
+static DF1(jtply1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(0040);A zz=0;
 #define ZZWILLBEOPENEDNEVER 1  // can't honor willbeopened because the results are recycled as inputs
 #define ZZPOPNEVER 1  // can't pop the inputs - 
 #define ZZDECL
 #include "result.h"
  I state=ZZFLAGINITSTATE;  // flags for result.h
  // p =. ~. sn=.(gn=./:,n) { ,n   which gives the list of distinct powers
- A n=sv->fgh[2]; A rn; RZ(rn=ravel(n));  // n is powers, rn is ravel of n
+ A n=FAV(self)->fgh[2]; A rn; RZ(rn=ravel(n));  // n is powers, rn is ravel of n
  A gn; RZ(gn=grade1(rn)); A p; RZ(p=nub(fromA(gn,rn)));  // gn is grade of power, p is sorted list of unique powers we want
  // find index of first nonneg power, remember, set scan pointer, set direction forward.  Set current power to 0.  Indic read of power needed
  I *pv=IAV(p); I np=AN(p);  // base of array of powers, and the number of them

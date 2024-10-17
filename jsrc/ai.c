@@ -5,10 +5,10 @@
 
 #include "j.h"
 
-
+// return 1 if w (which is known to be .) is encoding c/ . d
 static B ip(A w,C c,C d){A f,g;V*v;
  v=FAV(w); f=v->fgh[0]; g=v->fgh[1];
- R CSLASH==ID(f)&&c==ID(FAV(f)->fgh[0])&&d==ID(g);
+ R CSLASH==ID(f)&&c==IDD(FAV(f)->fgh[0])&&d==FAV(g)->id;
 }
 
 static B jtconsf(J jt,A w){C c;
@@ -106,17 +106,17 @@ static A jtinvamp(J jt, A f, A g, A fampg){A ff,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,
 // obsolete  f=v->fgh[0];
  nf=!!(NOUN&AT(f));  // nf  is 1 if m&v
 // obsolete  g=v->fgh[1];
- ng=!!(NOUN&AT(g));  // ng is 1 if u&n
+// obsolete  ng=!!(NOUN&AT(g));  // ng is 1 if u&n
  h=nf?g:f; x=nf?f:g; c=ID(h); u=VAV(h);   // h=verb arg, x=noun arg. c is ID of the verb.  u is VB struct for the verb
  switch(c){
  case CPLUS:    R amp(negate(x),h);
  case CSTAR:    R amp(recip(x), h);
-// obsolete  case CMINUS:   R nf?w:amp(x,ds(CPLUS));
-// obsolete  case CDIV:     R nf?w:amp(x,ds(CSTAR));
- case CMINUS:   R amp(x,ds(nf?CMINUS:CPLUS));
- case CDIV:     R amp(x,ds(nf?CDIV:CSTAR));
+ case CMINUS:   R nf?fampg?fampg:amp(f,g):amp(x,ds(CPLUS));
+ case CDIV:     R nf?fampg?fampg:amp(f,g):amp(x,ds(CSTAR));
+// obsolete  case CMINUS:   R amp(x,ds(nf?CMINUS:CPLUS));
+// obsolete  case CDIV:     R amp(x,ds(nf?CDIV:CSTAR));
  case CROOT:    R amp(ds(nf?CEXP:CLOG),x);
- case CEXP:     R ng&&equ(x,num(2))?ds(CROOT):amp(x,ds(nf?CLOG:CROOT));
+ case CEXP:     R !nf&&equ(x,num(2))?ds(CROOT):amp(x,ds(nf?CLOG:CROOT));
  case CLOG:     R nf?amp(x,ds(CEXP)):amp(ds(CROOT),x);
  case CJDOT:    R nf?atop(invrecur(ds(CJDOT)),amp(ds(CMINUS),x)):amp(ds(CMINUS),jdot1(x));
  case CRDOT:    R nf?atop(invrecur(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));
@@ -183,7 +183,7 @@ xco:
   R AR(x) ? amp(x,ds(CABASE)) : 
    obverse(evc(x,mag(x),"$&u@>:@(v&(<.@^.))@(1&>.)@(>./)@:|@, #: ]"),fampg?fampg:amp(f,g));
  case CATOMIC:
-  if(ng){ASSERT(equ(x,nub(x)),EVDOMAIN); R obverse(atop(f,amp(x,ds(CIOTA))),fampg?fampg:amp(f,g));}  // fall through to common obverse (?)
+  if(!nf){ASSERT(equ(x,nub(x)),EVDOMAIN); R obverse(atop(f,amp(x,ds(CIOTA))),fampg?fampg:amp(f,g));}  // fall through to common obverse (?)
  case CCYCLE:
   if(nf&&AR(x)<=(c==CCYCLE))R obverse(eva(fampg?fampg:amp(f,g),"/:@u@(i.@#) { ]"),fampg?fampg:amp(f,g)); break;
  case CDROP:
@@ -206,7 +206,7 @@ xco:
   }
   break;
  case CQQ:
-  if(ng&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ),mark);
+  if(!nf&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ),mark);
   break;
  case CBSLASH:
   if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT
@@ -224,7 +224,7 @@ xco:
   RE(n=i0(x));
   switch(i0(FAV(h)->fgh[1])){
   case 22: case 25:          R fampg?fampg:amp(f,g);
-  case 19: case 28:          if(ng)R fampg?fampg:amp(f,g); break;
+  case 19: case 28:          if(!nf)R fampg?fampg:amp(f,g); break;
   case 21: case 26:          if(nf)R fampg?fampg:amp(f,g); break;
   case 32: case 33: case 34: ASSERT(nf!=0,EVDOMAIN); R amp(negate(x),h);
   }

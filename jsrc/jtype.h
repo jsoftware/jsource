@@ -1147,8 +1147,8 @@ typedef struct {
 // 3 bytes free
 } exeV;  //one cacheline
 
-
-#define ID(f)  FAV(AT(f?f:FUNCTYPE0)&FUNC?f:FUNCID0)->id  // can be branchless, if compiler can manage it
+#define IDD(f) FAV(AT(f)&FUNC?(f):FUNCID0)->id  // id of a value known to be defined but possibly not an ACV
+#define ID(f)  FAV(AT((f)?(f):FUNCTYPE0)&FUNC?(f):FUNCID0)->id  // id of possibly 0 value
 #define VFLAGNONE 0L
 #define VRTNNONE ((A)0)
                                         /* type V flag values              */

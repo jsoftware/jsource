@@ -1245,12 +1245,17 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
     // Noun DD was converted to a string, possibly containing LF, and doesn't come through here
    }
   }
-  // find the location of the ':' divider line, if any.  But don't recognize : on the last line, since it could
+  // find the location of the ':' divider line, if any.  Only spaces are allowed besides the ':'  But don't recognize : on the last line, since it could
   // conceivably be the return value from a modifier
   A *wv=AAV(w);  // pointer to lines
-  DO(AN(w)-1, I st=0; A wvc=C(*wv); 
-    DO(AN(wvc), I c=CAV(wvc)[i]; if(c!=':'&&c!=' '){st=0; break;} if(c!=' ')if(st==1){s=0; break;}else st=1;)
-    if(st==1){splitloc=wv-AAV(w); break;} ++wv;)
+// obsolete   DO(AN(w)-1, I st=0; A wvc=C(*wv); 
+// obsolete     DO(AN(wvc), I c=CAV(wvc)[i]; if(c!=':'&&c!=' '){st=0; break;} if(c!=' ')if(st==1){s=0; break;}else st=1;)
+// obsolete     if(st==1){splitloc=wv-AAV(w); break;} ++wv;)
+  DO(AN(w)-1, A wva=C(wv[i]); I j; C *wvac=CAV(wva); I wvan=AN(wva);  // init line pointers & len
+   for(j=0;j<wvan&&wvac[j]==' ';++j); if(j==wvan||wvac[j]!=':')continue;  // skip spaces; if no next char or next char is not :, advance to next line
+   while(++j<wvan&&wvac[j]==' ');  // scan trailing characters, stop if nonspace found
+   if(j==wvan){splitloc=i; break;}  // if all chars scanned, that is the split line
+  )
   // split the definition into monad and dyad.
   I mn=splitloc<0?AN(w):splitloc; I nn=splitloc<0?0:AN(w)-splitloc-1;
   if(splitloc<0){v1=w; v2=mtv;}else{RZ(v1=take(sc(splitloc),w)); RZ(v2=drop(sc(splitloc+1),w));}

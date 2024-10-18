@@ -46,7 +46,7 @@ I boxat(A x, I m, I l, I r){C c;V*v;
  if(!x)R 0;
  v=FAV(x); c=v->id;   // x->fgh[0], v->value, c=id of f
  if(!COMPOSE(c))R 0;  // Return if not @ @: & &:
- if(CBOX==ID(v->fgh[0])) {  // if u is <...
+ if(CBOX==FAV(v->fgh[0])->id) {  // if u is <...
    if(c==CATCO) R 3; if(c==CAMPCO) R 1;  // @: is always good, and &: for monad
    I res = 0;
    if(v->fgh[1]&&VERB&AT(v->fgh[1])){

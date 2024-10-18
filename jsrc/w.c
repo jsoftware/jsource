@@ -120,7 +120,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 
 #define TNAME(i)    (NAME&AT(QCWORD(v[i])))
 #define TASGN(i)    (ASGN&AT(QCWORD(v[i])))
-//#define TVERB(i,c)  (y=v[i], c      ==ID(y))  // true if this word is the given verb
+// obsolete #define TVERB(i,c)  (y=v[i], c      ==ID(y))  // true if this word is the given verb
 #define TVERB(i,c)  (QCWORD(v[i])==ds(c))  // true if this word is the given verb
 #define TRBRACE(i)  TVERB(i,CRBRACE)  // true if given word is }
 #define TAIA(i,j)   (TASGN(1) && TNAME(j) && AN(QCWORD(v[i]))==AN(QCWORD(v[j)]) && TNAME(i) && \

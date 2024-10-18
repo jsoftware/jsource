@@ -17,6 +17,7 @@
 #define VN              CONJCASET(VERB,NOUN)               /* VERB NOUN                       */
 #define VV              CONJCASET(VERB,VERB)               /* VERB VERB                       */
 
+#if 0  // obsolete 
 #define DECLF            V* RESTRICT sv=FAV(self); AD * RESTRICT fs=sv->fgh[0];  \
                         AF f1=fs?FAV(fs)->valencefns[0]:0,f2=fs?FAV(fs)->valencefns[1]:0
 
@@ -28,6 +29,7 @@
 
 #define DECLFGH         DECLFG;        AD * RESTRICT hs=sv->fgh[2];  \
                         AF h1=hs?FAV(hs)->valencefns[0]:0,h2=hs?FAV(hs)->valencefns[1]:0
+#endif
 
 // If there are multiple cells, loop over them & call back; otherwise fall through to handle to single cell
 // Use PREF[12] when you don't know the rank; otherwise F[12]RANK(IP) directly
@@ -40,6 +42,7 @@
 #define CDERIVF(id,f1,f2,flag,flag2,m,l,r)  fdef(flag2,id,VERB,(f1)?(AF)(f1):(AF)jtvalenceerr,(f2)?(AF)(f2):(AF)jtvalenceerr,a,w ,0L,(flag),(I)(m),(I)(l),(I)(r))
 #define CDERIV(id,f1,f2,flag,m,l,r)  CDERIVF(id,f1,f2,flag,0,m,l,r)
 
+// Assertions in conjunctions, to check operand types
 #define ASSERTVV(a,w)   ARGCHK2(a,w); ASSERT(VERB&AT(a)&AT(w),EVDOMAIN)
 #define ASSERTVVn(a,w)  ARGCHK2(a,w); ASSERT(VERB&AT(a),EVDOMAIN)
 #define ASSERTVN(a,w)   ARGCHK2(a,w); ASSERT((VERB&AT(a))>(VERB&AT(w)),EVDOMAIN)

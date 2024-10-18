@@ -106,10 +106,10 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;
    break;
   case CPOWOP:  // support for #^:_1!.n
    if(FAV(a)->fgh[1]!=num(-1))R jtfitct(jt,a,w,0,z);
-   f=FAV(a)->fgh[0]; c=ID(f);
+   f=FAV(a)->fgh[0]; c=FAV(f)->id;
    if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill2,a,w,0L,VFLAGNONE+VASGSAFE,m,l,r) RETF(z);}  // #^:_1!.f
    ASSERT(c==CAMP,EVDOMAIN);
-   f=FAV(f)->fgh[1]; ASSERT(CPOUND==ID(f),EVDOMAIN);
+   f=FAV(f)->fgh[1]; ASSERT(CPOUND==IDD(f),EVDOMAIN);
     // fall through for x&#^:_1!.f
    // fill atoms:
   case CPOUND:  case CTAKE:  case CTAIL: case CCOMMA:  case CCOMDOT: case CLAMIN: case CRAZE:

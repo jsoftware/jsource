@@ -351,8 +351,8 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
    f1=jtpowseq; f2=jtply2; v=FAV(a);
    // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
    if((!AN(x)||FL&AT(x)&&inf==DAV(x)[0])){
-    if(CAMP==v->id&&(CFROM==ID(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:a: y
-    else if(CTILDE==v->id&&CFROM==ID(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:a: y
+    if(CAMP==v->id&&(CFROM==IDD(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:a: y
+    else if(CTILDE==v->id&&CFROM==IDD(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:a: y
    }
    fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)
    RETF(z);

@@ -1017,7 +1017,7 @@ F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;
  case CCOMMA:  f1=jtredcat; flag|=VJTFLGOK1;   break;
  case CCOMDOT: f1=jtredstitch; break;
  case CSEMICO: f1=jtredsemi; break;
- case CUNDER:  f1=jtreduce; if(COPE==ID(v->fgh[1])){c=ID(v->fgh[0]); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} break;
+ case CUNDER:  f1=jtreduce; if(COPE==IDD(v->fgh[1])){c=FAV(v->fgh[0])->id; if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} break;
  default: f1=jtreduce; flag|=(v->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad

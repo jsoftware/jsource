@@ -12,7 +12,7 @@ static B ip(A w,C c,C d){A f,g;V*v;
 }
 
 static B jtconsf(J jt,A w){C c;
- c=ID(w);
+ c=IDD(w);
  if(c==CFCONS||c==CQQ&&(NUMERIC&AT(FAV(w)->fgh[0]))&&(FAV(w)->localuse.lu1.srank[0]==RMAX)&&(FAV(w)->localuse.lu1.srank[1]==RMAX)&&(FAV(w)->localuse.lu1.srank[2]==RMAX))R 1;  // 9: or m"_
  if(c==CFORK&&FAV(w)->fgh[2])R jtconsf(jt,unname(FAV(w)->fgh[0]))&&jtconsf(jt,unname(FAV(w)->fgh[2]));  //constant g constant
  R 0;
@@ -22,7 +22,7 @@ static F2(jtfong){A f;C c;V*v;
  ARGCHK2(a,w);
  v=FAV(a); c=v->id; f=v->fgh[0]; A g=v->fgh[1];  A h=v->fgh[2];
  if(c==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}   // reconsitute capped fork 
- R (c&~1)==CLEFT ? w : c==CFORK&&(NOUN&AT(f)||CCAP==ID(f)) ? folk(f,g,fong(h,w)) : folk(ds(CCAP),a,w);
+ R (c&~1)==CLEFT ? w : c==CFORK&&(NOUN&AT(f)||CCAP==FAV(f)->id) ? folk(f,g,fong(h,w)) : folk(ds(CCAP),a,w);
 }   // [: f g  with simplifications: [: ][ w -> w;  [: (N/[: x y) w -> N/[: x [: y w   and y omitted if ][
 
 static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
@@ -30,13 +30,13 @@ static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  v=FAV(w);
  // extract fgh; replace nameref with value in fh
  if(v->fgh[2]){RZ(f=unname(v->fgh[0])); g=v->fgh[1]; RZ(h=unname(v->fgh[2]));}else{f=ds(CCAP); g=v->fgh[0]; RZ(h=unname(v->fgh[1]));}  // reconsitute capped fork
- if(CCAP==ID(f))R fong(invrecur(h),invrecur(g));  //  [: g h => h^:_1 @: g^:-1, simplified
+ if(CCAP==IDD(f))R fong(invrecur(h),invrecur(g));  //  [: g h => h^:_1 @: g^:-1, simplified
  c=1&&NOUN&AT(f); b=c||jtconsf(jt,f);  // c if NVV fork; b if NVV or f is 9: = 'f is constant'
  ASSERT(b!=jtconsf(jt,h),EVDOMAIN);  // must have a const, but not 2 - no verb to invert then
  RZ(k=c?f:df1(gi,num(0),b?f:h));  // evaluate the constant on atomic 0
  RZ(gi=invrecur(b?amp(k,g):amp(g,k)));  // if f const get const&g^_1; if h const g&const^:_1
  RZ(fi=invrecur(b?h:f));  // invert the non-const arg
- if(CAMP==ID(gi)){
+ if(CAMP==IDD(gi)){
   v=FAV(gi); 
   if     (NOUN&AT(v->fgh[0]))RZ(gi=folk(v->fgh[0],     v->fgh[1], ds(CRIGHT)))
   else if(NOUN&AT(v->fgh[1]))RZ(gi=folk(v->fgh[1],swap(v->fgh[0]),ds(CRIGHT)));
@@ -107,7 +107,7 @@ static A jtinvamp(J jt, A f, A g, A fampg){A ff,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,
  nf=!!(NOUN&AT(f));  // nf  is 1 if m&v
 // obsolete  g=v->fgh[1];
 // obsolete  ng=!!(NOUN&AT(g));  // ng is 1 if u&n
- h=nf?g:f; x=nf?f:g; c=ID(h); u=VAV(h);   // h=verb arg, x=noun arg. c is ID of the verb.  u is VB struct for the verb
+ h=nf?g:f; x=nf?f:g; c=FAV(h)->id; u=FAV(h);   // h=verb arg, x=noun arg. c is ID of the verb.  u is VB struct for the verb
  switch(c){
  case CPLUS:    R amp(negate(x),h);
  case CSTAR:    R amp(recip(x), h);
@@ -163,8 +163,8 @@ xco:
   }
   break;
  case CFIT:
-  if(nf&&CXCO==ID(FAV(g)->fgh[0]))goto xco; // m&(x:!.n)^:_1 is (-m)&(x:!.n)
-  ASSERT(nf&&CPOUND==ID(FAV(g)->fgh[0]),EVDOMAIN);
+  if(nf&&CXCO==FAV(FAV(g)->fgh[0])->id) goto xco; // m&(x:!.n)^:_1 is (-m)&(x:!.n)
+  ASSERT(nf&&CPOUND==FAV(FAV(g)->fgh[0])->id,EVDOMAIN);
   ASSERT(1==AR(x),EVRANK);
   R fdef(0,CPOWOP,VERB, jtexpandg,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VFLAGNONE, RMAX,0L,0L);
  case CPOUND:
@@ -209,7 +209,7 @@ xco:
   if(!nf&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ),mark);
   break;
  case CBSLASH:
-  if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT
+  if(nf&&(n=i0(x),0>n)&&(d=IDD(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT
   break;
  case CIBEAM:  // h is x!:y
   if(likely(nf!=0)){   // n&(x!:y)
@@ -265,7 +265,7 @@ static const C simpleinv[128] = {
 A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
  ARGCHK1(w); STACKCHKOFL  // make sure we don't have a recursion loop through inv
  ASSERT(VERB&AT(w),EVDOMAIN); 
- id=ID(w); v=FAV(w);  // id=pseudochar for w, v->verb info
+ id=FAV(w)->id; v=FAV(w);  // id=pseudochar for w, v->verb info
 #define simpleinvvalues(w) CCM(w,CDIV)+CCM(w,CPLUS)+CCM(w,CMINUS)+CCM(w,CLEFT)+CCM(w,CRIGHT)+CCM(w,CREV)+CCM(w,CCANT)+CCM(w,CPOLY)+ \
  CCM(w,CNOT)+CCM(w,CGRADE)+CCM(w,CCYCLE)+CCM(w,CDOMINO)+CCM(w,COPE)+CCM(w,CLOG)+CCM(w,CBOX)+CCM(w,CEXP)+ \
  CCM(w,CGE)+CCM(w,CLE)+CCM(w,CHALVE)+CCM(w,CPLUSCO)+CCM(w,CSQRT)+CCM(w,CSTARCO)+CCM(w,CHEAD)+CCM(w,CLAMIN)+ \
@@ -296,11 +296,11 @@ xco:
  case CAT:      if(vf&&vg)R atop(invrecur(g),invrecur(f));   break;
  case CAMPCO:
  case CATCO:    if(vf&&vg)R atco(invrecur(g),invrecur(f));   break;
- case CSLASH:   if(CSTAR==ID(f))R ds(CQCO);                  break;
+ case CSLASH:   if(CSTAR==IDD(f))R ds(CQCO);                  break;
  case CQQ:      if(vf)R qq(invrecur(f),g);                   break;
  case COBVERSE: if(vf&&vg)R obverse(g,f);                    break;  // if defined obverse, return it
  case CSCO:     R amp(num(5),w);
- case CFIT:     if(CXCO==ID(f))goto xco; //_1 x:!.n y is the same as _1 x: y, and n was already verified to be valid, so treat this the same as plain x:
+ case CFIT:     if(CXCO==IDD(f))goto xco; //_1 x:!.n y is the same as _1 x: y, and n was already verified to be valid, so treat this the same as plain x:
   // otherwise fall through to...
  case CPOWOP:   
   if(vf&&ng){RE(p=i0(g)); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}
@@ -308,7 +308,7 @@ xco:
   break;
  case CTILDE:
   if(nf)R invrecur(symbrd(f));  // name~ - resolve name & try again
-  switch(ID(f)){   // inverses for reflexive monads
+  switch(IDD(f)){   // inverses for reflexive monads
   case CPLUS:  R ds(CHALVE);
   case CSTAR:  R ds(CSQRT);
   case CJDOT:  R eval("0.5j_0.5&*");
@@ -320,9 +320,9 @@ xco:
   break;
  case CBSLASH:
  case CBSDOT:
-  if(CSLASH==ID(f)&&(ff=FAV(f)->fgh[0],ff&&VERB&AT(ff))){  //  ff/\  or ff/\.
+  if(CSLASH==IDD(f)&&(ff=FAV(f)->fgh[0],ff&&VERB&AT(ff))){  //  ff/\  or ff/\.
    b=id==CBSDOT;
-   switch(ID(ff)){
+   switch(FAV(ff)->id){
    case CPLUS: R obverse(eval(b?"- 1&(|.!.0)":" - |.!.0"),w);
    case CSTAR: R obverse(eval(b?"% 1&(|.!.1)":" % |.!.1"),w);
    case CEQ:   R obverse(eval(b?"= 1&(|.!.1)":" = |.!.1"),w);
@@ -333,13 +333,13 @@ xco:
   }
   break;
  case CCUT:
-  if(CBOX==ID(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,VFLAGNONE, RMAX,RMAX,RMAX);
+  if(CBOX==IDD(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,VFLAGNONE, RMAX,RMAX,RMAX);
   break;   // inverse of 3!:1/3 is 3!:2; inverse of 3!:2 is 3!:1
  case CIBEAM:
   if(FAV(w)->localuse.lu1.foreignmn[0]==3 && BETWEENC(FAV(w)->localuse.lu1.foreignmn[1],1,3))R foreign(num(3),num((FAV(w)->localuse.lu1.foreignmn[1]&1)+1));  // 1 2 3 -> 2 1 2
   break;
  case CHOOK:
-  if(BOTHEQ8(ID(f),ID(g),CFROM,CEQ))R eval("i.\"1&1");   // ({ =)
+  if(BOTHEQ8(FAV(f)->id,FAV(g)->id,CFROM,CEQ))R eval("i.\"1&1");   // ({ =)
   break;
  }
  // Failure - no inverse found.  If there are names in w, try fixing w and try on that.
@@ -387,8 +387,8 @@ F1(jtiden){A f,g,x=0;V*u,*v;
  case CMIN:    x=ainf; break;
  case CUNDER:  ; A t; df1(x,df1(t,mtv,iden(f)),inv(g)); break;
  case CAT:
-  if(CAMP==ID(f)&&(u=FAV(f),NOUN&AT(u->fgh[0])&&!AR(u->fgh[0])&&CSTILE==ID(u->fgh[1])))
-   switch(ID(g)){
+  if(CAMP==FAV(f)->id&&(u=FAV(f),NOUN&AT(u->fgh[0])&&!AR(u->fgh[0])&&CSTILE==FAV(u->fgh[1])->id))
+   switch(IDD(g)){
    case CSTAR: case CEXP: x=num(1);  break;
    case CPLUS:            x=num(0);
    }

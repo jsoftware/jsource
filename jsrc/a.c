@@ -162,7 +162,8 @@ static I jtint0(J jt,A w){A x;
  R w&&INT+B01&AT(w)?BIV0(w):IMIN;
 }
 
-static DF1(jtmemo1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A z;I x,y;  // scaf make bivalent
+#if 0  // obsolete
+static DF1(jtmemo1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A z;I x,y;
  ARGCHK1(w);
  x=IMIN; y=int0(w);
  if(y==IMIN)R CALL1(FAV(fs)->valencefns[0],w,fs);  // if unmemoable, just run the function off-hash
@@ -175,6 +176,14 @@ static DF2(jtmemo2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A z;I x
  if(MIN(x,y)==IMIN)R CALL2(FAV(fs)->valencefns[1],a,w,fs);  // IMIN is unmemoable, run fn
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL2(f2,a,w,fs));  // if memo lookup returns empty, run the function and remember the result
 }
+#endif
+
+static DF2(jtmemo12){w=AT(w)&VERB?0:w; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w];A z;I x,y;   // w is 0 for monad
+ ARGCHK2(a,w);
+ x=int0(a); y=w&&x!=IMIN?int0(w):x;  // get arg value, IMIN if not memoable; for monad let y=x
+ if(MIN(x,y)==IMIN)R CALL12(w,f12,a,w,fs);  // IMIN is unmemoable, run fn
+ R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL12(w,f12,a,w,fs));  // if memo lookup returns empty, run the function and remember the result
+}
 
 // Create the memoed verb.  We create an h argument of hashtable;key;value, as described above
 F1(jtmemo){F1PREFIP;PROLOG(300);A h,*hv;I m;
@@ -185,7 +194,7 @@ F1(jtmemo){F1PREFIP;PROLOG(300);A h,*hv;I m;
  // the tables are standard extendible, with # items in AM, thus must be zapped
  // So, we defer initializing them until they have been made recursive inside fdef
  GAT0(hv[0],INT,m,0) ACINITZAP(hv[0]) GAT0(hv[1],INT,2*(m>>1),2) ACINITZAP(hv[1]) GAT0(hv[2],BOX,m>>1,0) ACINITZAP(hv[2])  // allo hash/keys/results
- A z=fdef(0,CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,lrv(v),rrv(v));
+ A z=fdef(0,CMCAP,VERB,jtmemo12,jtmemo12,w,0L,h,0L,v->mr,lrv(v),rrv(v));
  AM(hv[0])=0; mvc(m*SZI,AAV0(hv[0]),1,MEMSETFF);  // clear hash table
  AM(hv[1])=0; AS(hv[1])[0]=m>>1;  // init empty key table, 2 INTs each row
  AM(hv[2])=0;   // init empty result table, recursive

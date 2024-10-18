@@ -9,8 +9,9 @@
 F1(jtqfill){PROLOG(976); ASSERTMTV(w); A z=jt->fill; z=z?z:mtm; jt->fill=0; EPILOG(z);}
 
 // here to set jt->fill over the execution of u  scaf make bivalent
-static DF1(jtfitfill1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; F1PREFIP;A z; jt->fill=FAV(self)->fgh[1]; z=CALL1IP(f1,w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
-static DF2(jtfitfill2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; F2PREFIP;A z; jt->fill=FAV(self)->fgh[1]; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
+// obsolete static DF1(jtfitfill1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; F1PREFIP;A z; jt->fill=FAV(self)->fgh[1]; z=CALL1IP(f1,w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
+// obsolete static DF2(jtfitfill2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; F2PREFIP;A z; jt->fill=FAV(self)->fgh[1]; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
+static DF2(jtfitfill12){w=AT(w)&VERB?0:w; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w]; F2PREFIP;A z; jt->fill=FAV(self)->fgh[1]; z=CALL12IP(w,f12,a,w,fs); jt->fill=0; RETF(z);}
 
 static DF1(jtfitct1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
 
@@ -42,7 +43,7 @@ static A jtfitct(J jt,A a,A w,I cno,A z){
  // u!.ct, unless u is > in which case it could be anything
  if(cno!=5){ASSERT(dw,EVDOMAIN) ASSERT(0<=d&&d<5.82076609134675e-11,EVLIMIT)}  // fit is ct, must be float and can't be greater than 2^_34
   // >!.f   we can't audit till we get the valence.  If error converting to float, make d give a runtime error.  Any w is OK for fill
- fdeffillall(z,0,CFIT,VERB,cno==5?(AF)(jtfitfill1):(AF)(jtfitct1),aff2[cno&~4],a,w ,0L,FAV(a)->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1|VFCOMPCOMP|VASGSAFE),(I)(FAV(a)->mr),lrv(FAV(a)),rrv(FAV(a)),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
+ fdeffillall(z,0,CFIT,VERB,cno==5?(AF)(jtfitfill12):(AF)(jtfitct1),aff2[cno&~4],a,w ,0L,FAV(a)->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1|VFCOMPCOMP|VASGSAFE),(I)(FAV(a)->mr),lrv(FAV(a)),rrv(FAV(a)),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
  R z;
 }
 
@@ -107,7 +108,7 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;
   case CPOWOP:  // support for #^:_1!.n
    if(FAV(a)->fgh[1]!=num(-1))R jtfitct(jt,a,w,0,z);
    f=FAV(a)->fgh[0]; c=FAV(f)->id;
-   if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill2,a,w,0L,VFLAGNONE+VASGSAFE,m,l,r) RETF(z);}  // #^:_1!.f
+   if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill12,a,w,0L,VFLAGNONE+VASGSAFE,m,l,r) RETF(z);}  // #^:_1!.f
    ASSERT(c==CAMP,EVDOMAIN);
    f=FAV(f)->fgh[1]; ASSERT(CPOUND==IDD(f),EVDOMAIN);
     // fall through for x&#^:_1!.f
@@ -118,7 +119,7 @@ F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;
 fillreshape:;
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
-   fdeffill(z,0L,CFIT,VERB,jtfitfill1,jtfitfill2,a,w,0L,FAV(a)->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VASGSAFE),m,l,r) RETF(z);  // various allowing empty fill
+   fdeffill(z,0L,CFIT,VERB,jtfitfill12,jtfitfill12,a,w,0L,FAV(a)->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VASGSAFE),m,l,r) RETF(z);  // various allowing empty fill
 
   case CTHORN:
    RE(w=sc(k=i0(w)));
@@ -135,7 +136,7 @@ fillreshape:;
   }
  }else{
   // v is a verb.  Supported now only in $[!.n]!.v or ($,)[!.n]!.v
-  AF rtn1=FAV(a)->valencefns[1]; if(rtn1==jtfitfill2)rtn1=FAV(FAV(a)->fgh[0])->valencefns[1];  // what routine will process?  (if fit, look back to underlying function)
+  AF rtn1=FAV(a)->valencefns[1]; if(rtn1==jtfitfill12)rtn1=FAV(FAV(a)->fgh[0])->valencefns[1];  // what routine will process?  (if fit, look back to underlying function)
   if(rtn1==jtreshape||rtn1==jtreitem)
    fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtreshapeblankfn,a,w,0L,FAV(a)->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VASGSAFE),m,l,r) FAV(z)->localuse.lu1.fittype=rtn1==jtreitem; RETF(z);  // fittype tells whether ($,) or $
  }

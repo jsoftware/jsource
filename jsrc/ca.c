@@ -21,6 +21,19 @@ static DF1(jtonf1){A gs=FAV(self)->fgh[1]; PROLOG(0021);I flag=FAV(self)->flag,m
  RETF(z);
 }
 
+// <.@ >.@ and the like, dyad   scaf make bivalent
+static DF2(jtuponf2){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; PROLOG(0022);A z;I flag=FAV(self)->flag,m=jt->xmode;
+ ARGCHK2(a,w);
+ if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
+ if(RAT&AT(a))RZSUFF(a=pcvt(XNUM,a), z=0; goto restore;);
+ if(RAT&AT(w))RZSUFF(w=pcvt(XNUM,w), z=0; goto restore;);
+ z=INT&AT(a)&AT(w)&&FAV(gs)->id==CDIV?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs);  // no RZ
+restore:;
+ jt->xmode=m;
+ EPILOG(z);
+}
+
+
 // <.@(2&^.) monad
 // Produces an integer result, and we can do it without adding any error at all. Therefore we have done our duty if we apply the tolerance to y. If y is tolerantly equal to 2^n, <.@(2&^.) y should be n.
 /*
@@ -123,18 +136,6 @@ static DF1(jtintceillog2at) {F1PREFIP; R jtintceillog2(jt,w,FAV(self)->fgh[0]);}
 DF1(jtintceillog2cap) {F1PREFIP; R jtintceillog2(jt,w,FAV(self)->fgh[1]);}  // [: >.[!.f] [:](2&^.)
 static DF2(jtintceillog2left) {F2PREFIP; self=AT(w)&VERB?w:self;  R jtintceillog2(jt,a,FAV(self)->fgh[0]);} // >.[!.f]@[:](2 ^. [)   bivalent
 static DF2(jtintceillog2right) {F2PREFIP; self=AT(w)&VERB?w:self; a=AT(w)&VERB?a:w;  R jtintceillog2(jt,a,FAV(self)->fgh[0]);} // >.[!.f]@[:](2 ^. ])   bivalent
-
-// <.@ >.@ and the like, dyad   scaf make bivalent
-static DF2(jtuponf2){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; PROLOG(0022);A z;I flag=FAV(self)->flag,m=jt->xmode;
- ARGCHK2(a,w);
- if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
- if(RAT&AT(a))RZSUFF(a=pcvt(XNUM,a), z=0; goto restore;);
- if(RAT&AT(w))RZSUFF(w=pcvt(XNUM,w), z=0; goto restore;);
- z=INT&AT(a)&AT(w)&&FAV(gs)->id==CDIV?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs);  // no RZ
-restore:;
- jt->xmode=m;
- EPILOG(z);
-}
 
 static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
  if(!(XNUM&AT(a)))RZ(a=cvt(XNUM,a));

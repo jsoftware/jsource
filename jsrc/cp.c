@@ -59,7 +59,7 @@ static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
 }    /* {&a^:(<_) w */
 
 #if 1  // obsolete
-static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n; // scaf make bivalent & use zap
+static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
  ARGCHK1(w);
  RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); INCORP(w); *zv++=x=w;
  i=1; n=AN(z);

@@ -25,7 +25,7 @@
 //NOTE: alignment to cache is now required because of LSB flags in enqueue()
 #define ALIGNTOCACHE 1   // set to 1 to align each OS-allocated block block to cache-line boundary.  Will reduce cache usage for headers
 #define ALIGNPOOLTOCACHE 1   // set to 1 to align each pool block to cache-line boundary.  Will reduce cache usage for headers
-#define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last byte doesn't run off into unallocated memory
+#define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last+1 byte doesn't run off into unallocated memory
 
 #define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
 #define SBFREEBLG (14+PMINL)   // lg2(SBFREEB)

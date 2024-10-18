@@ -945,51 +945,48 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}  // put error code into jerr, but signal only if nonretryable
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}  // exit primitive with error code in return
 
-// verify that shapes *x and *y match for l axes using AVX for rank<=vector size, memcmp otherwise
-#if C_AVX512
-// We would like to use these AVX versions because they generate fewest instructions.
+// obsolete #if C_AVX512
+// obsolete // We would like to use these AVX versions because they generate fewest instructions.
 // Avoid call to memcmp to save registers
+// obsolete #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
+// obsolete  {I *aaa=(x), *aab=(y); I aai=(l); \
+// obsolete   if(likely(aai<=4)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
+// obsolete    endmask=_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); \
+// obsolete    ASTYPE(!endmask,EVLENGTH); \
+// obsolete   }else{NOUNROLL do{--aai; ASTYPE(aaa[aai]==aab[aai],EVLENGTH)}while(aai);} \
+// obsolete  }
+// obsolete #define TESTDISAGREE(r,x,y,l) \
+// obsolete  {I *aaa=(x), *aab=(y); I aai=(l); \
+// obsolete   if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
+// obsolete    r=!!_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
+// obsolete   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
+// obsolete  }
+// obsolete #define TESTXITEMSMALL(r,x,y,l) \
+// obsolete  {I *aaa=(x), *aab=(y); I aai=(l); \
+// obsolete   if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
+// obsolete    r=!!_mm256_cmpgt_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
+// obsolete   }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]>aab[aai])){r=1; break;}}while(aai);} \
+// obsolete  }
+#if C_AVX2 || EMU_AVX2
+// verify that shapes *x and *y match for l axes using AVX for rank<=vector size, loop otherwise
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
- {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=4)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
-   endmask=_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); \
-   ASTYPE(!endmask,EVLENGTH); \
-  }else{NOUNROLL do{--aai; ASTYPE(aaa[aai]==aab[aai],EVLENGTH)}while(aai);} \
+ {I *aaa=(I*)(x), *aab=(I*)(y); I aai=(l); \
+  if(likely(aai<=NPAR)){ \
+   ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai))),EVLENGTH); /* result is 1 if all match */ \
+  }else{NOUNROLL do{--aai; ASTYPE(((I*)aaa)[aai]==((I*)aab)[aai],EVLENGTH)}while(aai);} \
  }
 // set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
-   r=!!_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
-  }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
+  if(likely(aai<=NPAR)){ \
+   r=!(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)))); /* test result is 1 if all match */ \
+  }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]!=aab[aai])){r=1; break;}}while(aai);} \
  }
 // set r nonzero if a value in x shape is bigger than corresponding one in y shape
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
-   r=!!_mm256_cmpgt_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
-  }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]>aab[aai])){r=1; break;}}while(aai);} \
- }
-#elif C_AVX2 || EMU_AVX2
-#define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
- {I *aaa=(I*)(x), *aab=(I*)(y); I aai=(l); \
-  if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
-   endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
-   ASTYPE(_mm256_testz_si256(endmask,endmask),EVLENGTH); /* result is 1 if all match */ \
-  }else{NOUNROLL do{--aai; ASTYPE(((I*)aaa)[aai]==((I*)aab)[aai],EVLENGTH)}while(aai);} \
- }
-#define TESTDISAGREE(r,x,y,l) \
- {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
-   endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
-   r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
-  }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]!=aab[aai])){r=1; break;}}while(aai);} \
- }
-#define TESTXITEMSMALL(r,x,y,l) \
- {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
-   endmask=_mm256_cmpgt_epi64(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
-   r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
+  if(likely(aai<=NPAR)){ \
+   r=!(_mm256_testz_si256(_mm256_cmpgt_epi64(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)))); /* test result is 1 if all match */ \
   }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]>aab[aai])){r=1; break;}}while(aai);} \
  }
 #else

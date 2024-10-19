@@ -306,7 +306,7 @@ static DF2(jtpowv2acell){F2PREFIP;A z;PROLOG(0110);
 // [x] u^:v y, fast when result of v is 0 or 1 (=if statement).  jtflagging is that required by u
 static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
  w=AT(w)&VERB?0:w;  // w is 0 for monad
-  A u; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
+ A u; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
  RZ(u=CALL12(w,FAV(gs)->valencefns[!!w],a,w,gs));  // execute v, not inplace
 // obsolete  if(likely(!AR(u)) && likely(ISDENSETYPE(AT(u),INT+B01)) && likely(!((u0=BIV0(u))&~1))){  // v result is 0/1
  if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)){  // v result is bool/int 0/1 (if statement)  overfetch possible but harmless

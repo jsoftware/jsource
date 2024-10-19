@@ -178,8 +178,8 @@ static DF2(jtmemo2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A z;I x
 }
 #endif
 
-static DF2(jtmemo12){w=AT(w)&VERB?0:w; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w];A z;I x,y;   // w is 0 for monad
- ARGCHK2(a,w);
+static DF2(jtmemo12){A fs=FAV(self)->fgh[0];A z;I x,y;   // w is 0 for monad
+ ARGCHK2(a,w); w=AT(w)&VERB?0:w; AF f12=FAV(fs)->valencefns[!!w];
  x=int0(a); y=w&&x!=IMIN?int0(w):x;  // get arg value, IMIN if not memoable; for monad let y=x
  if(MIN(x,y)==IMIN)R CALL12(w,f12,a,w,fs);  // IMIN is unmemoable, run fn
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL12(w,f12,a,w,fs));  // if memo lookup returns empty, run the function and remember the result

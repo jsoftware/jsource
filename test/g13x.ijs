@@ -251,6 +251,7 @@ foo   NB. Test results of stack/result checks
 'domain error' -: 13!:13 etx o. 0 3 2
 
 13!:0 ] 1
+h =: - # 13!:13 ''  NB. in case we are in debug, get initial stack size to ignore later
 a_z_ =: {{ b y }}
 b_loc_ =: {{ c y }}
 c_z_ =: d_loc2_

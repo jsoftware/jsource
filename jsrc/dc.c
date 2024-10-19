@@ -35,6 +35,7 @@ static B jtdrow(J jt,DC si,DC s0,A*zv,UI ncollist,I* collist){A fs,q,*qv,y,z;C c
    RZ(*zv++=incorp(jtlrep((J)((I)jt|(JTEXPVALENCEOFFD>>si->dcdyad)),fs)));  // 4 linear rep, but only the correct valence
    break;
   case 5:
+   {
    I scriptx=-1; A snm; if(si->dca&&AN(si->dca)&&((snm=box(sfn(0,si->dca)))!=0)){  // name exists, is nonempty, & well formed
     RZ(snm=scind(snm)); scriptx=IAV(snm)[0];  // get script index from the symbol, -1 if not found
     READLOCK(JT(jt,startlock))   // lock the slist table while we refer to it
@@ -43,6 +44,7 @@ static B jtdrow(J jt,DC si,DC s0,A*zv,UI ncollist,I* collist){A fs,q,*qv,y,z;C c
    }else snm=mtv;   // missing name, use empty string for it
    *zv++=incorp(snm);  // 5 script name
    break;
+   }
   case 6:
    RZ(*zv++=incorp(q));                                  /* 6 argument list            */
    break;

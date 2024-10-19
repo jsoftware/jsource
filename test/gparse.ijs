@@ -196,6 +196,12 @@ a =: 'a'
 '|domain error: efx|   a    +__ _1' -:&(}.~ i:&'|') efx 'a +  __ _1.'
 '|domain error: efx|   a    +_. _1' -:&(}.~ i:&'|') efx 'a +  _. _1.'
 
+NB. { followed by {. adds space
+'|domain error: efx|   { {.2    +a:' -:&(}.~ i:&'|') efx '{ {. 2 + a:'
+'|domain error: efx|   { {.2    +a:' -:&(}.~ i:&'|') efx '{  {. 2 + a:'
+'|domain error: efx|   {+2    +a:' -:&(}.~ i:&'|') efx '{ + 2 + a:'
+
+
 4!:55 ;:'a aa bc locnm multi swd t '
 
 

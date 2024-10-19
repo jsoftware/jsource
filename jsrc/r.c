@@ -342,15 +342,15 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  if(!(h&&CCOLONE==wv->id))R reshape(v2(0L,3L),ds(CACE));   // if not explicit defn or no body, return empty
  hv=AAV(h);
  x=hv[j]; v=CWBASE(x); n=AN(x)==0?0:CWNC(x)-1;  // empty x is not formatted control words
- GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;
+ GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;   // allocate result area
  zv=AAV(z);
  UI4 prevorigt=0;  // we must revert the change of BBEND END BB[END] to BBEND BBEND BB[END]
- for(i=0;i<n;++i){
+ for(i=0;i<n;++i){  // loop over each line of the definition
   UI4 tcesx=CWTCESX(v,~i); I newt=tcesx>>TCESXTYPEX; if(prevorigt==CBBLOCKEND&&newt==CBBLOCKEND){newt=CEND; tcesx^=(CBBLOCKEND^CEND)<<TCESXTYPEX;} prevorigt=newt;  // undo the BBLOCKEND swap
   CW u[2]; u[0].tcesx=tcesx; u[0].go=~CWGO(v,-(n+1),~i);  u[0].source=CWSOURCE(v,-(n+1),~i); u[1].tcesx=CWTCESX(v,~(i+1));   // create CW to use
-  RZ(*zv++=incorp(sc(i)));
-  q[0]=u->tcesx>>TCESXTYPEX; q[1]=u->go; q[1]=q[1]>=CWMAX?65535:q[1]; q[2]=u->source; RZ(*zv++=incorp(vec(INT,3L,q)));  // 65535 for testcases
-  RZ(*zv++=incorp(unparse1(u,vec(BOX,(u[1].tcesx-u[0].tcesx)&TCESXSXMSK,&v[u[0].tcesx&TCESXSXMSK]),-1L,0L)));
+  RZ(*zv++=incorp(sc(i)));   // box 0: line#
+  q[0]=u->tcesx>>TCESXTYPEX; q[1]=u->go; q[1]=q[1]>=CWMAX?65535:q[1]; q[2]=u->source; RZ(*zv++=incorp(vec(INT,3L,q)));  // Box 1: cwtype, go, source line.  65535 for testcases
+  RZ(*zv++=incorp(unparse1(u,vec(BOX,(u[1].tcesx-u[0].tcesx)&TCESXSXMSK,&v[u[0].tcesx&TCESXSXMSK]),-1L,0L)));  // box 2: line text
  }
  R z;
 }    /* explicit representation -- h parameter for : definitions */

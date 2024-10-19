@@ -63,14 +63,15 @@ void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
 
 static I jtdisp(J jt,A w,I nflag);
 // format one non-noun entity into the error line
-// nflags contains display flags: 1=space before number, 2=parens around non-primitive
+// nflag contains display flags: 1=space before number, 2=parens around non-primitive, 4=space before {
 // The entity came from a single sentence but may be compound.  Display it on a single line
+// returns new nflag, which is 4 if the primitive was { alone (the 1 and 2 flags must be 0 after primitive output)
 // maintenance note: don't use GA().  This gets called after jbreak, which causes all memory requests to fail.
-static void jtdspell(J jt,C id,A w,I nflag){C c,s[5];
+static I jtdspell(J jt,C id,A w,I nflag){C c,s[5];
  // constant verbs require looking at h
- if(id==CFCONS){if((nflag&1))eputc(' '); eputv(FAV(w)->fgh[2]); eputc(':');}
- else{
-  // get fgh if any.  Format f if any, then the primitive, then g if any.  fgh are present only in ACV type (ASGN doesn't have them at all)
+ if(id==CFCONS){if((nflag&1))eputc(' '); eputv(FAV(w)->fgh[2]); eputc(':'); nflag=0;
+ }else{
+  // get fgh if any.  Format f if any, then the primitive, then g if any.  fgh are present only in ACV type (ASGN doesn't have them at all), and not in primitives
   A f,g,h;
   if(AT(w)&VERB+ADV+CONJ){f=FAV(w)->fgh[0], g=id==CBOX?0:FAV(w)->fgh[1], h=FAV(w)->fgh[2];}else{f=g=h=0;}  // plain value for fgh; ignore g field in BOX, which is there to resemble <@]
   if(id==CFORK){if(h==0){h=g; g=f; f=ds(CCAP);}}else h=0;  // reconstitute [: g h; otherwise we display h only for fork
@@ -80,25 +81,27 @@ static void jtdspell(J jt,C id,A w,I nflag){C c,s[5];
   I parenhere=(g||h)&&(invisiblemod||nflag&2);  // set if we need parens around our value
   if(parenhere)eputc('(');
   if(f)nflag=disp(f,0);  // display left side if any
-  // display the primitive, with a leading space if it begins with inflection or a digit.  Don't display the code for an invisible modifier - that's used only for ARs
+  // display the primitive, with a leading space if it begins with inflection, a digit, or {.  Don't display the code for an invisible modifier - that's used only for ARs
   if(!invisiblemod){
    s[0]=' '; s[4]=0;
    spellit(id,1+s);
    c=s[1]; 
-   eputs(s+!(c==CESC1||c==CESC2||(nflag&1)&&((ctype[(UC)c]&~CA)==0)));
+   eputs(s+!(c==CESC1||c==CESC2||(nflag&4)&&c=='{'||(nflag&1)&&((ctype[(UC)c]&~CA)==0)));
   }
-  if(g)nflag=disp(g,2);  // display right side if any
-  if(h)nflag=disp(h,2);  // display end of fork/trident if any
+  nflag=(id==CFROM)<<2;  // set flag bit 2 if { bare
+  if(g)nflag=disp(g,2|nflag);  // display right side if any
+  if(h)nflag=disp(h,2|nflag);  // display end of fork/trident if any
   if(parenhere)eputc(')');
  }
+ R nflag;
 }
 
 static F1(jtsfn0){R sfn(0,w);}  // return string form of full name for a NAME block
 EVERYFS(sfn0overself,jtsfn0,jtover,0,VFLAGNONE)
 
-// print a noun; nflag if space needed before name/numeric; return new value of nflag
+// print a word; nflag bits if (space needed before name/numeric),(parens needed),(space before { needed); return new value of nflag
 // maintenance note: don't use GA().  This gets called after jbreak, which causes all memory requests to fail.
-static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
+static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;   // b if this is name or numeric, which needs a space before the next name/numeric
  // if this is a noun from a (( )) block, we have to take its linear rep, since it might not be displayable in 1 line
  if(AFLAG(w)&AFDPAREN&&AT(w)&NOUN){
   // linear rep may fail, or parts of it may fail; so we must reset errors.  We set etxn neg to indicate that the error line is frozen
@@ -107,7 +110,7 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  }
  // If this is a PPPP, enclose it in ()
  if(AFLAG(w)&AFDPAREN)eputc('(');  // leading ( of PPPP
- if(b&&(nflag&1))eputc(' ');
+ if(b&&(nflag&1))eputc(' ');  // if prev was name/numeric and this is too, put in the space
  switch(CTTZ(AT(w))){
  case B01X:
  case INTX: case INT2X: case INT4X: 
@@ -119,16 +122,16 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
   if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!(nflag&1)); break;}
   // If this is an array of names, turn it back into a character string with spaces between
   // we can't do this by simply executing }: (string&.> names) ,&.> ' ' because if we are out of memory we need to get the string out.  So we do it by hand
-  eputc('\''); DO(AN(w), if(i!=0)eputc(' '); A b=AAV(w)[i]; ep(AN(b),NAV(b)->s);) eputc('\''); break;
+  eputc('\''); DO(AN(w), if(i!=0)eputc(' '); A bx=AAV(w)[i]; ep(AN(bx),NAV(bx)->s);) eputc('\''); break;
  case LITX:  eputq(w,(nflag&1));                break;
  case NAMEX: ep(AN(w),NAV(w)->s); if(unlikely((AT(w)&NAMEABANDON)!=0)){ep(2,"_:");}     break;
  case LPARX: eputc('(');              break;
  case RPARX: eputc(')');              break;
  case ASGNX: dspell(CAV(w)[0],w,(nflag&1));       break;
  case MARKX:                          break;
- default:   dspell(FAV(w)->id,w,(nflag&1)|(AFLAG(w)&AFDPAREN?0:2));     break;  // force parens on non-primitive if not PPPP
+ default:   b|=dspell(FAV(w)->id,w,(nflag&5)|(AFLAG(w)&AFDPAREN?0:2));     break;  // VERB comes here - force parens on non-primitive if not PPPP, and pass space-before-{ flag in & out
  }
- if(AFLAG(w)&AFDPAREN)eputc(')');  // trailing ) of PPPP
+ if(AFLAG(w)&AFDPAREN){eputc(')'); b&=~4;}  // trailing ) of PPPP, which extinguishes the need for space before {
  R b;  // new nflag
 }
 

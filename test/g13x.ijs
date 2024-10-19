@@ -60,6 +60,9 @@ foo =: foo , (];._2 (0 : 0)) -: ": h }. a: 5}"1 (13!:13)''
 |   |  | | |                               ||+-+|+-+-+| |
 +---+--+-+-+-------------------------------++---+-----+-+
 )
+(13!:13 -: ({"1 (13!:13)@'')) 3 2 1  NB. verify that selecting columns of 13!:13 works
+(13!:13 -: ({"1 (13!:13)@'')) 0 2 8  NB. verify that selecting columns of 13!:13 works
+
 (13!:23) 13!:21''  NB. Into on line with no call
 foo =: foo , (];._2 (0 : 0)) -: ": h }. a: 5}"1 (13!:13)''
 +---+--+-+-+-------------------------------++---+-----+-+
@@ -243,6 +246,30 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 i. 0 0 [ 9!:7 original
 foo   NB. Test results of stack/result checks
 
+'index error' -: 13!:13 etx 8 9 10  NB. invalid column
+'rank error' -: 13!:13 etx i. 2 2
+'domain error' -: 13!:13 etx o. 0 3 2
+
+13!:0 ] 1
+a_z_ =: {{ b y }}
+b_loc_ =: {{ c y }}
+c_z_ =: d_loc2_
+d_loc2_ =: {{ 13!:13 ] 0 1 9 }}
+(];._2 (0 : 0)) -: ": h }. a_loc_ ''
++-------+-+----+
+|d_loc2_|0|loc2|
++-------+-+----+
+|b      |0|loc |
++-------+-+----+
+|a_loc_ |0|loc |
++-------+-+----+
+)
+13!:0 ] 0
+4!:55 ;:'a_z_ b_loc_ c_z_ d_loc2_'
+18!:55 ;:'loc loc2'
+
+
+
 foo       =: foo_loc1_
 foo_loc1_ =: foo_loc2_ /
 foo_loc2_ =: foo_loc3_ ~
@@ -308,6 +335,7 @@ x -: 13!:11 ''
 f=: 3 : '''my error'' assert 0'
 'assertion failure' -: f etx 0
 '|my error' ([ -: #@[ {. ]) 13!:12''  NB. User's error is stored even in adverse
+
 
 NB. stops ---------------------------------------------------------------
 

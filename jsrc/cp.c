@@ -241,10 +241,10 @@ static DF2(jtinv2){A fs=FAV(self)->fgh[0]; A z; ARGCHK2(a,w); WITHEFORMATDEFERRE
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
 // old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
-DF2(jtply2){PROLOG(107);A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}
+DF2(jtply2){PROLOG(107);A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}  // scaf remove
 
 
-static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
+static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}  // scaf bivalent
 static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
 
 // When u^:v is encountered, we replace it with a verb that comes to one of these.

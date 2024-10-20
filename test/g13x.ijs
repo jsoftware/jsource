@@ -243,7 +243,6 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 h }. (13!:13)''
 
 13!:0 ] 0  NB. Revert suspension input back to prompt
 13!:0 [1
-i. 0 0 [ 9!:7 original
 foo   NB. Test results of stack/result checks
 
 'index error' -: 13!:13 etx 8 9 10  NB. invalid column
@@ -266,6 +265,7 @@ d_loc2_ =: {{ 13!:13 ] 0 1 9 }}
 +-------+-+----+
 )
 13!:0 ] 0
+i. 0 0 [ 9!:7 original
 4!:55 ;:'a_z_ b_loc_ c_z_ d_loc2_'
 18!:55 ;:'loc loc2'
 

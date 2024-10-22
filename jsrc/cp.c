@@ -134,9 +134,8 @@ static DF2(jtfpowatom){
   // negative power not _1.  This is a path not worth much attention.  Create the inverse of u
   A uinv; WITHMSGSOFF(if((uinv=inv(fs)==0){if((a!=0&&(uinv=invamp(a,fs,0))!=0))a=0;}) ASSERT(uinv!=0,EVDOMAIN) fs=uinv;  // try inverse, monad then possibly dyad
  }
- A *old=jt->tnextpushp;  // save tpop pointer, so as to leave zz and the inverse untouched
+ A *old=jt->tnextpushp;  // save tpop pointer, so as to leave untouched zz and anything related to the inverse
  AF f12=FAV(fs)->valencefns[!!a];  // action routine for u
- // set inplaceability: on w, only if not infinite & not multiple
  jtinplace=(J)((I)jtinplace&~(JTINPLACEA|(poweratom&(IMIN+POWERAMULT)?0:JTINPLACEW)|(a=w)));  // never inplace a; pass inplacing of w only if !multiple & !infinite, and not same as a
  for(;poweratom&-(1<<POWERABSX);poweratom-=1<<POWERABSX){  // for all requested powers
   A wnew=CALL12IP(a,f12,a?a:w,w,fs);  // execute the verb, monad or dyad

@@ -1091,7 +1091,7 @@ typedef struct {
     } gercut;
     VARPSA *redfn;  // for reductions (u/ u/\ u/\.) address of rps block (may be dummy block)
     US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
-    AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
+// obsolete     AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
     A cachedlkp;  //  for namerefs ('name'~), the cached value, or 0 if not cached.   No QC semantics
@@ -1102,6 +1102,7 @@ typedef struct {
     UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
     S foreignmn[2];  // in m!:n, the arguments
     I poweratom;  // for u^:atom or u^:<any, the encoded arg status: bit0=multiple (i. e. boxed n) bit1=nonneg power bits2-31=|power|
+    AF bondfn;  // for m&v u&n, the dyad entry point for u/v
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

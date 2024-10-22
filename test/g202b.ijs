@@ -34,9 +34,9 @@ spleak=: 3 : 0
 spleak '>:   ^:(<1000)  1x'
 spleak '>:&.>^:(<1000) <1 '
 
-'domain error' -: >:^:(<2.5) etx 1
-'domain error' -: >:^:(<2j5) etx 1
-'domain error' -: >:^:(<2r5) etx 1
+'domain error' -: ex '>:^:(<2.5)'
+'domain error' -: ex '>:^:(<2j5)'
+'domain error' -: ex '>:^:(<2r5)'
 
 
 f=: 1 : '] [ echo@(m ; < )'

@@ -2238,6 +2238,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 // the ZAP pointer and we will not modify tpushnext).  Otherwise ZAP the block
 // It would be a disaster to back the tstack to in front of a valid 'old' pointer held somewhere.  The subsequent tpop would never end.  The case cannot occur, because we set 'old'
 // only before sentence execution, and there is no way for an abandoned value to come from a higher level (name:_ pushes a stack entry at the current level).
+// We do one store: either back up tnextpushp by 1, or zap w
 #define ZAPTSTACKEND(w) {A *modloc=AZAPLOC(w); I modval=(I)(jt->tnextpushp-1); modloc=(I)AZAPLOC(w)==modval?(A*)&jt->tnextpushp:modloc; modval=(I)AZAPLOC(w)==modval?modval:0; *modloc=(A)modval;}
 
 #if C_LE

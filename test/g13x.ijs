@@ -32,7 +32,6 @@ foo 7
 13!:0 (129) NB. Used to crash
 13!:0 (0)
 )
-
 foo =: 0$0  NB. will accumulate results executed during suspension
 13!:0 ] 0
 13!:3 'goo 0'
@@ -60,9 +59,8 @@ foo =: foo , (];._2 (0 : 0)) -: ": h }. a: 5}"1 (13!:13)''
 |   |  | | |                               ||+-+|+-+-+| |
 +---+--+-+-+-------------------------------++---+-----+-+
 )
-(13!:13 -: ({"1 (13!:13)@'')) 3 2 1  NB. verify that selecting columns of 13!:13 works
-(13!:13 -: ({"1 (13!:13)@'')) 0 2 8  NB. verify that selecting columns of 13!:13 works
-
+foo =: foo , (13!:13 -: ({"1 (13!:13)@'')) 3 2 1  NB. verify that selecting columns of 13!:13 works
+foo =: foo , (13!:13 -: ({"1 (13!:13)@'')) 0 2 8  NB. verify that selecting columns of 13!:13 works
 (13!:23) 13!:21''  NB. Into on line with no call
 foo =: foo , (];._2 (0 : 0)) -: ": h }. a: 5}"1 (13!:13)''
 +---+--+-+-+-------------------------------++---+-----+-+

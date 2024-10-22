@@ -1101,6 +1101,7 @@ typedef struct {
     I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
     UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
     S foreignmn[2];  // in m!:n, the arguments
+    I poweratom;  // for u^:atom or u^:<any, the encoded arg status: bit0=multiple (i. e. boxed n) bit1=nonneg power bits2-31=|power|
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

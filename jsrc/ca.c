@@ -550,9 +550,10 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
 // be repeated; preserve the inplacing of the argument given (i. e. move w to a for u&n).  Bit 1 of jtinplace is always 0 for monad.
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 // This supports IRS so that it can pass the rank on to the called function; no need to revalidate here
-// We pass the WILLOPEN flags through
+// We pass the WILLOPEN flags through  scaf don't need full IRS2 because jt->ranks is known to be OK for the monad
 static DF1(withl){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; F1PREFIP;A z; I r=(RANKT)jt->ranks; IRSIP2(fs,w,gs,RMAX,(RANKT)jt->ranks,g2,z); RETF(z);}
 static DF1(withr){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; F1PREFIP; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z; I r=(RANKT)jt->ranks; IRSIP2(w,gs,fs,(RANKT)jt->ranks,RMAX,f2,z); RETF(z);}
+// obsolete #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
 
 // Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the precision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
@@ -633,13 +634,13 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
    if(unlikely(b=c==CFIT)){c=FAV(FAV(va)->fgh[0])->id; p=FAV(FAV(va)->fgh[0])->flag;}  // if verb is u1!.n1, replace the id and flag with that of u1, and remember cct from n1
    // check the supported cases one by one
    if(unlikely((c&(visa^~2))==CIOTA)){  // m&i.   m&i:
-    PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(IIDOT+((c&(CIOTA^CICO))>>1),a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; flag&=~VJTFLGOK1; RZ(h)  // m&i[.:][!.f], and remember cct when we created the table
+    PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(IIDOT+((c&(CIOTA^CICO))>>1),a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; flag&=~(VJTFLGOK1+VIRS1); RZ(h)  // m&i[.:][!.f], and remember cct when we created the table
    }else if(unlikely(visa==((7^~2)^(p&7)))){  // e.-compound&n  p=7 & a is verb
     mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=FAV(va)->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
-    {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
-   }else if(unlikely(FAV(w)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1;   // m&;:
-   }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1; // m&128!:3
+    {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~(VJTFLGOK1+VIRS1); RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
+   }else if(unlikely(FAV(w)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~(VJTFLGOK1+VIRS1);   // m&;:
+   }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~(VJTFLGOK1+VIRS1); // m&128!:3
    }
   }
 

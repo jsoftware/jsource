@@ -524,6 +524,7 @@ struct AD {
 
 #define ANY             -1L
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+INT2+INT4+SP+QP)
+#define EXACTNUMERIC    (B01+INT+XNUM+RAT+INT2+INT4)
 #define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+INT2+INT4+SP+QP+CONW)|SPARSE)  // AND must be >0
 #define JCHAR           (LIT+C2T+C4T)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBT)

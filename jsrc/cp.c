@@ -58,7 +58,7 @@ static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
  RETF(z);
 }    /* {&a^:(<_) w */
 
-#if 1  // obsolete
+#if 0  // obsolete
 static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
  ARGCHK1(w);
  RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); INCORP(w); *zv++=x=w;
@@ -118,35 +118,53 @@ static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
 }
 #else
 // [a] u^:atom w and [a] u^:<(atom or '') w, bivalent.
-static DF2(jtfpowatom){
- I wt=AT(w); w=AT(w)&VERB?a:w; a=AT(w)&VERB?0:a;  // w arg will be power result; a=0 if monad
+static DF2(jtpowatom12){F1PREFIP;
+ I wt=AT(w); w=wt&VERB?a:w; a=wt&VERB?0:a;  // w arg will be power result; a=0 if monad
  I poweratom=FAV(self)->localuse.lu1.poweratom;  // multiple/neg/power field
- A fs=FAV(self->fgh[0];  // the verb u
+#define POWERAMULT (I)1   // set if power was boxed
+#define POWERANEG (I)2   // set if power is negative
+#define POWERABSX 2  // bits 2&up=|power|, which makes poweratom negative for infinite power
+ A fs=FAV(self)->fgh[0];  // the verb u
  PROLOG(0);  // 
  A zz=0; // zz=result array if multiple results, 0 if single. 
  UI zzalloc;  // if zz!=0, the #atoms in the area allocated in zz
  if(poweratom&POWERAMULT){
-  zzalloc==poweratom>>POWERABSX; zzalloc=poweratom<0?32-(AKXR(1)>>LGSZI):zzalloc;   // allocate correct length, or a block of 28 if unknown size
-  GATV0(zz,INT,zzalloc,dmfr&STATEMULT?1:0) AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;   // alloc result area.  avoid init of BOX area
-  INCORP(w); AN(zz)=1; AAV1(zz)[0]=w;   // install w as first result (fill in AS later)
+  zzalloc=(poweratom>>POWERABSX)+1; zzalloc=poweratom<0?32-(AKXR(1)>>LGSZI):zzalloc;   // allocate correct length, or a block of 28 if unknown size
+  GATV0(zz,INT,zzalloc,1) AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;   // alloc result area.  avoid init of BOX area
+  INCORPRA(w); AN(zz)=1; AAV1(zz)[0]=w;   // install w as first result (fill in AS later)
  }
  if(unlikely(poweratom&POWERANEG)){
   // negative power not _1.  This is a path not worth much attention.  Create the inverse of u
-  A uinv; WITHMSGSOFF(if((uinv=inv(fs)==0){if((a!=0&&(uinv=invamp(a,fs,0))!=0))a=0;}) ASSERT(uinv!=0,EVDOMAIN) fs=uinv;  // try inverse, monad then possibly dyad
+  A uinv; WITHMSGSOFF(uinv=a?invamp(a,fs,0):inv(fs);) ASSERT(uinv!=0,EVDOMAIN) a=0; fs=uinv;  // try inverse, monad or dyad
  }
  A *old=jt->tnextpushp;  // save tpop pointer, so as to leave untouched zz and anything related to the inverse
  AF f12=FAV(fs)->valencefns[!!a];  // action routine for u
- jtinplace=(J)((I)jtinplace&~(JTINPLACEA|(poweratom&(IMIN+POWERAMULT)?0:JTINPLACEW)|(a=w)));  // never inplace a; pass inplacing of w only if !multiple & !infinite, and not same as a
- for(;poweratom&-(1<<POWERABSX);poweratom-=1<<POWERABSX){  // for all requested powers
+ I allowinplace=((FAV(fs)->flag>>(VJTFLGOK1X+!!a-JTINPLACEW))&(poweratom&IMIN+POWERAMULT?0:JTINPLACEW))|~JTINPLACEW;  // suppress all inplacing if verb doesn't support it, or this is convergence or multiple results
+ jtinplace=(J)((I)jtinplace&allowinplace&~(JTINPLACEA|(a==w)));  // never inplace a; pass inplacing of w only if !multiple & !infinite, and not same as a
+// obsolete  I allowinplace=(FAV(fs)->flag>>(VJTFLGOK1X+!!a-JTINPLACEW))&~SGNTO0(poweratom);  // suppress all inplacing if verb doesn't support it, or this is convergence
+// obsolete  jtinplace=(J)((I)jtinplace&~(JTINPLACEA|(poweratom&(IMIN+POWERAMULT)?0:JTINPLACEW)|(a==w)));  // never inplace a; pass inplacing of w only if !multiple & !infinite, and not same as a
+ poweratom>>=POWERABSX;  // convert powerabs to iteration counter
+ for(;poweratom!=0;poweratom--){  // for all requested powers
   A wnew=CALL12IP(a,f12,a?a:w,w,fs);  // execute the verb, monad or dyad
   RZ(wnew);  // exit if error
-  if(poweratom<0&&equ(wnew,w))break;  // if infinite iteration, break if w=wnew - the fixed point
-  // Turn on inplacing if it is possible after the initial execution.  Never if infinite, since the old block is needed for comparison; N/C for multiple,
+  if(poweratom<0){   // convergence search
+   if(equ(wnew,w)){
+    // infinite iteration that matches
+    if(zz!=0)break;   // if multiple results, stop without storing the repetition
+    if(AT(wnew)&EXACTNUMERIC)break;   // if perfect match, keep the value
+    // match on inexact value.  Start a counter; after a few matches, take what we have.
+    // We are probably doing Newton polishing and we should go one more cycle after the first match
+    if((poweratom<<1)<0)poweratom=IMIN+2;  // first match: start counter, which ends after 1 cycle
+    else if((poweratom<<1)==0){w=wnew; break;}  // after counter, keep the last matching value
+   }else{if((poweratom<<1)>=0)break;}  // no match: if we have had a match, keep the last match (w)
+   w=wnew;  // remember the last value
+  }
+  // Turn on inplacing if it is possible after the initial execution.  Never if infinite, since the old block is needed for comparison; or if verb is not inplaceable.  N/C for multiple,
   // since the old block will be INCORPed anyway; OK for single UNLESS w could not be inplaced and u returned w as its result.  Once a chain of returning w has been broken
   // it cannot be resumed unless w has been marked noninplaceable.
-  jtinplace=(J)((I)jtinplace|((wnew!=w)&(wnew!=a)&~SGNTO0(poweratom)));  // make sure we don't inplace a repeated arg
+  jtinplace=(J)((I)jtinplace|((wnew!=w)&(wnew!=a)&allowinplace));  // make sure we don't inplace a repeated arg
   w=wnew;  // advance the result to be the new w
-  if(poweratom&POWERAMULT){
+  if(zz!=0){
    // multiple results.  incorp the result into zz, extending zz if needed
    UI newslot=AN(zz);  // where the new value will go
    if(withprob(newslot==zzalloc,0.03)){  // current alloc full?
@@ -159,26 +177,23 @@ static DF2(jtfpowatom){
    realizeifvirtual(w); razaptstackend(w);  // realize w if needed for store.  Since zz has taken over protection of w, it is OK to zap w whenever its tstack entry is in this stack frame
    AAV1(zz)[newslot]=w; AN(zz)=newslot+1;  // install the new value & account for it in len
    if((newslot&7)==0)tpop(old);  // u shouldn't leave much lying around, but we clean up every so often
-  }else{RZ(w=gc(w,old)}   // single result.  It stays in w but we need to free the old w
+  }else{RZ(w=gc(w,old))}   // single result.  It stays in w but we need to free the old w
  }
- if(poweratom&POWERAMULT){RZ(w=openforassembly(zz));}   // if multiple, assemble the results
+ if(zz!=0){AS(zz)[0]=AN(zz); RZ(w=jtopenforassembly(jt,zz));}   // if multiple, assemble the results
  EPILOG(w)  // return the result
 }
 
 #endif
-#define POWERAMULT (I)1   // set if power was boxed
-#define POWERANEG (I)2   // set if power is negative
-#define POWERABSX 2  // bits 2&up=|power|, which makes poweratom negative for infinite power
 
 static DF1(jtindexseqlim1){A fs;
  ARGCHK1(w); 
  fs=FAV(self)->fgh[0];  // {&x
- R AN(w)&&AT(w)&B01+INT?tclosure(FAV(fs)->fgh[1],w):powseqlim(w,fs);
+ R AN(w)&&AT(w)&B01+INT?tclosure(FAV(fs)->fgh[1],w):jtpowatom12(jt,w,self,self);
 }    /* {&x^:(<_) w */
 
 static DF2(jtindexseqlim2){
  ARGCHK2(a,w);
- R AR(a)<=1&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT?tclosure(a,w):powseqlim(w,amp(ds(CFROM),a));
+ R AR(a)<=1&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT?tclosure(a,w):jtpowatom12(jt,a,w,self);
 }    /* a {~^:(<_) w */
 
 // general u^:n w where n is any integer array or finite atom.  If atom, it will be negative
@@ -376,13 +391,15 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
   RETF(z);
  }
  // u^:n.  Check for special types.
- I n;  // the power
- if(BOX&AT(w)){A x,y;AF f1,f2;
+ I n; AF f1,f2; // the power, the functions
+ if(BOX&AT(w)){A x,y;
   // Boxed v.  It could be <n or [v0`]v1`v2 or <''.
   if(!AR(w)&&(x=C(AAV(w)[0]),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){  // scalar box whose contents are numeric atom or empty list
    // here for <n or <''.  That will be handled by special code.
    n=AN(x)?i0(x):IMAX; RE(0);  // get power, using _ for <''
-   f1=jtpowseq; f2=jtply2; v=FAV(a);
+   ASSERT(n!=0,EVDOMAIN);  // <0 arg not allowed: would be nothing
+// obsolete    f1=jtpowseq; f2=jtply2; v=FAV(a);
+   f1=f2=jtpowatom12; v=FAV(a);
    // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
 // obsolete    if((!AN(x)||FL&AT(x)&&inf==DAV(x)[0])){
    if(n==IMAX){
@@ -390,7 +407,7 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
     else if(CTILDE==v->id&&CFROM==IDD(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:a: y
    }
    fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)
-   FAV(z)->localuse.lu1.poweratom=(IMAX&(ABS(n)<<POWERABSX))+(n<0?POWERANEG:0)+POWERAMULT;  // save the power, in flagged form
+   FAV(z)->localuse.lu1.poweratom=((ABS(n)-1)<<POWERABSX)+(n<0?POWERANEG:0)+POWERAMULT;  // save the power, in flagged form.  count is # powers to evaluate, which is n-1
    RETF(z);
   }
   // falling through for other boxed type
@@ -402,28 +419,31 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
 // obsolete  if(likely(((-(AT(w)&B01+INT))&((AR(w)|((UI)BIV0(w)>>1))-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
  if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
  RZ(hs=vib(w));   // hs=n coerced to integer
- AF f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
+ f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
  I flag=0;  // flags for the verb we build
  if(!AR(w)){  // input is an atom
+  A h=0; f1=f2=jtpowatom12;   // inverse, if we can calculate it
   // Handle the 4 important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), and _ (converge/do while)
   n=IAV(hs)[0];  // the exponent n
   if(!(n&~1))R a=n?a:ds(CRIGHT);  //  the if statement: u^:0 is like ],  u^:1 is like u 
   if((n<<1)==-2){  //  u^:_1 or u^:_
-   A h=0; AF f2;   // inverse, if we can calculate it
    if(n<0){  // u^:_1
     // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
     // must wait until we get arguments
     f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr;})} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
     flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
    }else{  // u^:_
-    f1=f2=jtpinf12; flag=VFLAGNONE;  // scaf allow inplace
+// obsolete     f1=f2=jtpinf12;
+    flag=VFLAGNONE;  // scaf allow inplace
 // obsolete      fdeffill(z,0,CPOWOP,VERB,jtpinf12,jtpinf12,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
    }
-   fdeffill(z,0,CPOWOP,VERB,f1,f2,a,w,h,flag,RMAX,RMAX,RMAX);
-   FAV(z)->localuse.lu1.poweratom=(IMAX&(ABS(n)<<POWERABSX))+(n<0?POWERANEG:0);  // save the power, in flagged form
-   RETF(z);
+// obsolete    fdeffill(z,0,CPOWOP,VERB,f1,f2,a,w,h,flag,RMAX,RMAX,RMAX);
+// obsolete    FAV(z)->localuse.lu1.poweratom=(IMAX&(ABS(n)<<POWERABSX))+(n<0?POWERANEG:0);  // save the power, in flagged form
   }
-  if(IAV(hs)[0]>=0){f1=jtfpown; flag=FAV(a)->flag&VJTFLGOK1;}  // if nonneg atom, go to special routine for that, which supports inplace
+  fdeffill(z,0,CPOWOP,VERB,f1,f2,a,w,h,flag,RMAX,RMAX,RMAX);
+  FAV(z)->localuse.lu1.poweratom=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0);  // save the power, in flagged form
+  RETF(z);
+// obsolete   if(IAV(hs)[0]>=0){f1=jtfpown; flag=FAV(a)->flag&VJTFLGOK1;}  // if nonneg atom, go to special routine for that, which supports inplace
  }
  // If not special case, fall through to handle general case
  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0

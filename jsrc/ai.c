@@ -100,7 +100,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
 
 // find inverse of f&g when one arg is a noun and the other a verb
 // if f&g is known, it is in fampg, otherwise fampg is 0
-static A jtinvamp(J jt, A f, A g, A fampg){A ff,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
+A jtinvamp(J jt, A f, A g, A fampg){A ff,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  ARGCHK2(f,g);
 // obsolete  v=FAV(w);
 // obsolete  f=v->fgh[0];

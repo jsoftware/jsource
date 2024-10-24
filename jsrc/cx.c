@@ -371,7 +371,7 @@ nextlinedebug:;
       lvl=self!=callframe->dcf; lvl=callframe->dcc!=0?2:lvl;  // calculate name decoration according to table above
      }
      if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember.  lvl init to 0 for other cases
-     callframe->dcloc=locsym; callframe->dcc=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)];  // install info about the exec for use in debug
+     callframe->dcloc=locsym; callframe->dcc=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0];  // install info about the exec for use in debug
 
      // allocate the parse frame
      DC thisframe=deba(DCPARSE,0L,0L,0L);  // if deba fails it will be before it modifies sitop.  Remember our stack frame

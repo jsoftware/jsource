@@ -144,6 +144,9 @@ typedef I SI;
 #define JTEXPVALENCEOFF  (((I)3)<<JTEXPVALENCEOFFX)
 #define JTEXPVALENCEOFFM  (((I)1)<<JTEXPVALENCEOFFX)  // monad flag
 #define JTEXPVALENCEOFFD  (((I)2)<<JTEXPVALENCEOFFX)  // dyad flag
+// following is passed from ^:_. to u^:v which is the only thing ^:_. can call
+#define JTDOWHILEX 2   // bits 2-3, bit turn on to suppress display of valence
+#define JTDOWHILE  (((I)3)<<JTDOWHILEX)
 
 
 // following bits are passed into jpr/jpr1/immex/immea/showerr/wri; bit 4 also to jtlrep

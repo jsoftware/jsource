@@ -60,12 +60,16 @@ static B jtdrow(J jt,DC si,DC s0,A*zv,UI ncollist,I* collist){A fs,q,*qv,y,z;C c
    y=si->dcloc?sfn(0,LOCNAME(AKGST(si->dcloc))):mtv; y=y?y:mtv;  // get implied locale from the stack frame
    RZ(*zv++=incorp(y));                         /* 8 * if begins a suspension */
    break;
+  case 10:
+   y=si->dcc?cw57rep(jt,si->dcc):mtv; y=y?y:mtv;  // get implied locale from the stack frame
+   RZ(*zv++=incorp(y));                         /* 8 * if begins a suspension */
+   break;
   }
  }
  R 1;
 }    /* construct one row of function stack- called only for DCCALL type */
 
-F1(jtdbcall){A y,*yv,z,zz,*zv;DC si,s0=0;I c=10,m=0,*s;  // c is # columns
+F1(jtdbcall){A y,*yv,z,zz,*zv;DC si,s0=0;I c=11,m=0,*s;  // c is # columns
  UI *collist, ncollist;   // arrays of columns, and its length
  ASSERT(AR(w)<2,EVRANK);  // must be atom or list
  if(AN(w)==0){collist=&iotavec[-IOTAVECBEGIN]; ncollist=9;  // default is IX(9)

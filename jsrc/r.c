@@ -333,17 +333,11 @@ F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  R z;
 }    /* convert h parameter for : definitions; open if a is 0 */
 
-// 5!:7
-static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
- ARGCHK2(a,w);
- RE(j=i0(a)); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
- ASSERT(AT(w)&VERB+ADV+CONJ,EVDOMAIN);
- wv=FAV(w); h=wv->fgh[2];
- if(!(h&&CCOLONE==wv->id))R reshape(v2(0L,3L),ds(CACE));   // if not explicit defn or no body, return empty
- hv=AAV(h);
- x=hv[j]; v=CWBASE(x); n=AN(x)==0?0:CWNC(x)-1;  // empty x is not formatted control words
- GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;   // allocate result area
- zv=AAV(z);
+// Create 5!:7 form for the given control-word block x
+A cw57rep(J jt, A x){I i, q[3];
+ A *v=CWBASE(x); I n=AN(x)==0?0:CWNC(x)-1;  // empty x is not formatted control words
+ A z; GATV0(z,BOX,3*n,2); I *s=AS(z); s[0]=n; s[1]=3;   // allocate result area
+ A *zv=AAV(z);
  UI4 prevorigt=0;  // we must revert the change of BBEND END BB[END] to BBEND BBEND BB[END]
  for(i=0;i<n;++i){  // loop over each line of the definition
   UI4 tcesx=CWTCESX(v,~i); I newt=tcesx>>TCESXTYPEX; if(prevorigt==CBBLOCKEND&&newt==CBBLOCKEND){newt=CEND; tcesx^=(CBBLOCKEND^CEND)<<TCESXTYPEX;} prevorigt=newt;  // undo the BBLOCKEND swap
@@ -353,6 +347,18 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
   RZ(*zv++=incorp(unparse1(u,vec(BOX,(u[1].tcesx-u[0].tcesx)&TCESXSXMSK,&v[u[0].tcesx&TCESXSXMSK]),-1L,0L)));  // box 2: line text
  }
  R z;
+}
+
+// 5!:7
+static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
+ ARGCHK2(a,w);
+ RE(j=i0(a)); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
+ ASSERT(AT(w)&VERB+ADV+CONJ,EVDOMAIN);
+ wv=FAV(w); h=wv->fgh[2];
+ if(!(h&&CCOLONE==wv->id))R reshape(v2(0L,3L),ds(CACE));   // if not explicit defn or no body, return empty
+// obsolete  hv=AAV(h);
+// obsolete  x=hv[j];
+ R cw57rep(jt,AAV(h)[j]);
 }    /* explicit representation -- h parameter for : definitions */
 
 

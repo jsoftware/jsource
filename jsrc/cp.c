@@ -123,7 +123,13 @@ static DF2(jtpowatom12){F1PREFIP;
  I poweratom=FAV(self)->localuse.lu1.poweratom;  // multiple/neg/power field
 #define POWERAMULT (I)1   // set if power was boxed
 #define POWERANEG (I)2   // set if power is negative
-#define POWERABSX 2  // bits 2&up=|power|, which makes poweratom negative for infinite power
+#define POWERADOWHILEX 2  // When this bit is set in an infinite power, we are running ^:_.
+#define POWERADOWHILE ((I)1<<POWERADOWHILEX)
+_Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
+#define POWERABSX 3  // bits 2&up=|power|, which makes poweratom negative for infinite power
+#define POWERABS ((I)1<<POWERABSX)
+#define POWERAEXTX (BW-2)   // when this bit is CLEAR in an infinite power, we have advanced to the runout polishing stage
+#define POWERAEXT ((I)1<<POWERAEXTX)
  A fs=FAV(self)->fgh[0];  // the verb u
  PROLOG(0);  // 
  A zz=0; // zz=result array if multiple results, 0 if single. 
@@ -141,22 +147,24 @@ static DF2(jtpowatom12){F1PREFIP;
  AF f12=FAV(fs)->valencefns[!!a];  // action routine for u
  I allowinplace=((FAV(fs)->flag>>(VJTFLGOK1X+!!a-JTINPLACEW))&(poweratom&IMIN+POWERAMULT?0:JTINPLACEW))|~JTINPLACEW;  // suppress all inplacing if verb doesn't support it, or this is convergence or multiple results
  jtinplace=(J)((I)jtinplace&allowinplace&~(JTINPLACEA|(a==w)));  // never inplace a; pass inplacing of w only if !multiple & !infinite, and not same as a
+ jtinplace=(J)((I)jtinplace|(poweratom&JTDOWHILE));  // set flag to indicate ^:_.
 // obsolete  I allowinplace=(FAV(fs)->flag>>(VJTFLGOK1X+!!a-JTINPLACEW))&~SGNTO0(poweratom);  // suppress all inplacing if verb doesn't support it, or this is convergence
 // obsolete  jtinplace=(J)((I)jtinplace&~(JTINPLACEA|(poweratom&(IMIN+POWERAMULT)?0:JTINPLACEW)|(a==w)));  // never inplace a; pass inplacing of w only if !multiple & !infinite, and not same as a
  poweratom>>=POWERABSX;  // convert powerabs to iteration counter
  for(;poweratom!=0;poweratom--){  // for all requested powers
   A wnew=CALL12IP(a,f12,a?a:w,w,fs);  // execute the verb, monad or dyad
   RZ(wnew);  // exit if error
-  if(poweratom<0){   // convergence search
-   if(equ(wnew,w)){
-    // infinite iteration that matches
+  if(poweratom<0){   // convergence/dowhile search
+   if((I)jtinplace&JTDOWHILE){if(wnew==(A)1)break;  // exit dowhile when v returns false, signaled to us by a special result
+   }else if(equ(wnew,w)){   // otherwise, we are testing for convergence
+    // convergence iteration that matches
     if(zz!=0)break;   // if multiple results, stop without storing the repetition
     if(AT(wnew)&EXACTNUMERIC)break;   // if perfect match, keep the value
     // match on inexact value.  Start a counter; after a few matches, take what we have.
     // We are probably doing Newton polishing and we should go one more cycle after the first match
     if((poweratom<<1)<0)poweratom=IMIN+2;  // first match: start counter, which ends after 1 cycle
     else if((poweratom<<1)==0){w=wnew; break;}  // after counter, keep the last matching value
-   }else{if((poweratom<<1)>=0)break;}  // no match: if we have had a match, keep the last match (w)
+   }else{if((poweratom<<1)>=0)break;}  // convergence search, no match: if we have had a match, stop with the last match (w)
    w=wnew;  // remember the last value
   }
   // Turn on inplacing if it is possible after the initial execution.  Never if infinite, since the old block is needed for comparison; or if verb is not inplaceable.  N/C for multiple,
@@ -358,7 +366,7 @@ static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
 // obsolete  if(likely(!AR(u)) && likely(ISDENSETYPE(AT(u),INT+B01)) && likely(!((u0=BIV0(u))&~1))){  // v result is 0/1
  if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)){  // v result is bool/int 0/1 (if statement)  overfetch possible but harmless
   if(u0){jtinplace=(J)((I)jtinplace&~(a==w?JTDOWHILE+JTINPLACEA+JTINPLACEW:JTDOWHILE)); z=CALL12IP(w,uf,a,w,fs);}   // v result is atomic INT/B01 1: execute u, inplace if possible - but suppress the DOWHILE flag, and all inplacing if a=w
-  else{z=w?w:a; z=(I)jtinplace&JTDOWHILE?(A)1:z;}  // v result is atomic INT/B01 0: bypass.  If ^:_. return 1 to indicate u returned 0
+  else{z=w?w:a; if((I)jtinplace&JTDOWHILE)R (A)1;}  // v result is atomic INT/B01 0: bypass.  If ^:_. return 1 to indicate u returned 0: skips EPILOG but powatom12 will soon do one
  }else{ASSERT(!((I)jtinplace&JTDOWHILE),EVDOMAIN) RZ(u=powop(fs,u,(A)1));  // not a simple if statement: fail if called from ^:_.; create u^:n form of powop;
   jtinplace=FAV(u)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt;   // u might have been a gerund so there is no telling what the inplaceability of the new u is; refresh it
   z=CALL12IP(w,FAV(u)->valencefns[!!w],a,w,u);  // execute the power, inplace
@@ -419,13 +427,20 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  // handle the very important case of scalar   int/boolean   n of 0/1
 // obsolete  if(likely(((-(AT(w)&B01+INT))&((AR(w)|((UI)BIV0(w)>>1))-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
  if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
- RZ(hs=vib(w));   // hs=n coerced to integer
+ if(w==ds(CUSDOT)){   // power is _.
+  ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs
+  n=IMIN;  // set _. value in n
+ }else{   // normal power, not _.
+  RZ(hs=vib(w));   // hs=n coerced to integer
+  ASSERT(AN(hs)!=0,EVDOMAIN);  // empty power is error
+  n=IAV(hs)[0];  // the exponent n (if atomic)
+  n=n==IMIN?-IMAX:n;  // exponent IMIN reserved for ^:_.
+ }
  f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
- I flag=0;  // flags for the verb we build
+ I flag=VFLAGNONE;  // flags for the verb we build
  if(!AR(w)){  // input is an atom
   A h=0; f1=f2=jtpowatom12;   // inverse, if we can calculate it
-  // Handle the 4 important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), and _ (converge/do while)
-  n=IAV(hs)[0];  // the exponent n
+  // Handle the important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), _ (converge), _. (dowhile)
   if(!(n&~1))R a=n?a:ds(CRIGHT);  //  the if statement: u^:0 is like ],  u^:1 is like u 
   if((n<<1)==-2){  //  u^:_1 or u^:_
    if(n<0){  // u^:_1
@@ -442,13 +457,13 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
 // obsolete    FAV(z)->localuse.lu1.poweratom=(IMAX&(ABS(n)<<POWERABSX))+(n<0?POWERANEG:0);  // save the power, in flagged form
   }
   fdeffill(z,0,CPOWOP,VERB,f1,f2,a,w,h,flag,RMAX,RMAX,RMAX);
-  FAV(z)->localuse.lu1.poweratom=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0);  // save the power, in flagged form
+  I encn=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0); encn=n==IMIN?((I)-1*POWERABS)+POWERADOWHILE:encn;  // save the power, in flagged form
+  FAV(z)->localuse.lu1.poweratom=encn;
   RETF(z);
 // obsolete   if(IAV(hs)[0]>=0){f1=jtfpown; flag=FAV(a)->flag&VJTFLGOK1;}  // if nonneg atom, go to special routine for that, which supports inplace
  }
  // If not special case, fall through to handle general case
  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
- ASSERT(m!=0,EVDOMAIN);  // empty power is error
  fdeffill(z,0,CPOWOP,VERB, f1,jtply2, a,w,hs,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
  RETF(z);
 }

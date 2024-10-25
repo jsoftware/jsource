@@ -82,7 +82,7 @@ CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), 
 // minimal CBAIVAL(INT,10), CBAIVAL(INT,11), CBAIVAL(INT,12), CBAIVAL(INT,13), CBAIVAL(INT,14), CBAIVAL(INT,15), CBAIVAL(INT,16), CBAIVAL(INT,17), CBAIVAL(INT,18), CBAIVAL(INT,19)
 };
 
-struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[] = {  // floating-point -0, 1, 2, 0.5 used for constants
+struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[] = {  // floating-point -0, 1, 2, used for constants
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},-0.0}, //used for -y; -y is _0.0 - y.  Data value also used as a mask
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},1.0},
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0},

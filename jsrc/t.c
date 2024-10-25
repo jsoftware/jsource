@@ -40,6 +40,7 @@ static __attribute__((aligned(CACHELINESIZE))) const C alp[256]={
 0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,0xe9,0xea,0xeb,0xec,0xed,0xee,0xef,0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfa,0xfb,0xfc,0xfd,0xfe,0xff};
 
 #define PRIMNOUN(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primint=val} }
+#define PRIMNOUNFL(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primfl=val} }
 #define PRIMALL(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) \
  [idda]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
 #define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=0,0,rm,rl,rr,vflg,vflg2,0,0,0)
@@ -65,6 +66,7 @@ PRIM primtab[256] = {
  /*  =: */  PRIMNOUN(CGASGN,ASGN,1,0,CGASGN),
  /*  a: */  PRIMNOUN(CACE,BOX,1,0,(I)mtv),
  /*  a. */  PRIMNOUN(CALP,LIT,NALP,1,0),   // this gets modified at init time
+ /*  _.  */  PRIMNOUNFL(CUSDOT,FL,1,0,NAN),
 
  /*  bw */  PRIMATOMIC2(CBW0000,CBW0000, VERB, jtbitwise1,  jtatomic2,   RMAX,0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),
  /*  bw */  PRIMATOMIC2(CBW0001,CBW0001, VERB, jtbitwise1,  jtatomic2,   RMAX,0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),

@@ -145,8 +145,8 @@ typedef I SI;
 #define JTEXPVALENCEOFFM  (((I)1)<<JTEXPVALENCEOFFX)  // monad flag
 #define JTEXPVALENCEOFFD  (((I)2)<<JTEXPVALENCEOFFX)  // dyad flag
 // following is passed from ^:_. to u^:v which is the only thing ^:_. can call
-#define JTDOWHILEX 2   // bits 2-3, bit turn on to suppress display of valence
-#define JTDOWHILE  (((I)3)<<JTDOWHILEX)
+#define JTDOWHILEX 2   // return A(1) if v returns false
+#define JTDOWHILE  (((I)1)<<JTDOWHILEX)
 
 
 // following bits are passed into jpr/jpr1/immex/immea/showerr/wri; bit 4 also to jtlrep
@@ -1285,7 +1285,7 @@ typedef struct {
 #define VF2CACHED  ((I)(((I)1)<<VF2CACHEDX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
-typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
+typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; D primfl; } prim; } PRIM;  // two cachelines exactly in 64-bit
 
 // Canned blocks
 // NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that

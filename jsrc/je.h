@@ -1044,9 +1044,9 @@ extern I        memcmpne(void*, void*, I);
 #define memcmpne(s,t,l) (!!memcmp((s),(t),(l)))
 #endif
 
-struct Bi1 {I hdr[AKXR(0)/SZI]; I v[1];};  // data is one integer atom
-struct Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};  // data is one float atom
-struct Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // data for the multi-word atom is aligned to cacheline
+struct __attribute__((aligned(CACHELINESIZE))) Bi1 {I hdr[AKXR(0)/SZI]; I v[1];};  // data is one integer atom
+struct __attribute__((aligned(CACHELINESIZE))) Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};  // data is one float atom
+struct __attribute__((aligned(CACHELINESIZE))) Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // data for the multi-word atom is aligned to cacheline
 extern struct Bd2 Ba0j1;
 #define a0j1 ((A)&Ba0j1)
 extern struct Bd1 Bainf;

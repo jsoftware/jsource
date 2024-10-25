@@ -10,7 +10,7 @@
 #pragma warning(disable : 4056)  // negative infinity overflow
 
 // globals start - set by globinit in initialization
-#define CREBLOCKATOMV2(name,t,v1,v2) struct Bd2 __attribute__((aligned(CACHELINESIZE))) B##name={{AKXR(1),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1,v2}};
+#define CREBLOCKATOMV2(name,t,v1,v2) struct Bd2 B##name={{AKXR(1),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1,v2}};
 CREBLOCKATOMV2(a0j1,CMPX,0.0,1.0)  // 0j1
 #if SY_64
 #define CBAIVALM(t,v,m) {7*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,(v)}
@@ -23,7 +23,7 @@ struct Bxnum0 {I hdr[AKXR(0)/SZI]; X v[1];};
 #define CREBLOCKVEC0(name,t) I __attribute__((aligned(CACHELINESIZE))) B##name[8]={8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
 CREBLOCKVEC0(aqq,LIT)  // ''
 CREBLOCKVEC0(mtv,B01)  // i.0 boolean
-#define CREBLOCKATOMV1(name,t,v1) struct Bd1 __attribute__((aligned(CACHELINESIZE))) B##name={{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1}};
+#define CREBLOCKATOMV1(name,t,v1) struct Bd1 B##name={{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1}};
 CREBLOCKATOMV1(onehalf,FL,0.5)  // 0.5
 CREBLOCKATOMV1(ainf,FL,INFINITY)  // _
 CREBLOCKATOMV1(pie,FL,PI)  // PI as float
@@ -49,7 +49,7 @@ CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special val
 CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
-struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bmarkd[3]={{{AKXR(0),QP&TRAVERSIBLE,0,QP,ACPERMANENT,-1,0},{0.}},{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,-1,0},{0.}},{{AKXR(0),CMPX&TRAVERSIBLE,0,CMPX,ACPERMANENT,-1,0},{0.}}};  // weird double mark: atomic FL with AN<0.  Used to indicate a special case
+struct Bd1 Bmarkd[3]={{{AKXR(0),QP&TRAVERSIBLE,0,QP,ACPERMANENT,-1,0},{0.}},{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,-1,0},{0.}},{{AKXR(0),CMPX&TRAVERSIBLE,0,CMPX,ACPERMANENT,-1,0},{0.}}};  // weird double mark: atomic FL with AN<0.  Used to indicate a special case
     // order is QP,FL,CMPX
 #define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
 CREBLOCKVEC1I(iv0,INT,0)    /* ,0                                                          */
@@ -82,19 +82,19 @@ CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), 
 // minimal CBAIVAL(INT,10), CBAIVAL(INT,11), CBAIVAL(INT,12), CBAIVAL(INT,13), CBAIVAL(INT,14), CBAIVAL(INT,15), CBAIVAL(INT,16), CBAIVAL(INT,17), CBAIVAL(INT,18), CBAIVAL(INT,19)
 };
 
-struct Bd1 __attribute__((aligned(CACHELINESIZE))) Bnumvr[] = {  // floating-point -0, 1, 2, used for constants
+struct Bd1 Bnumvr[] = {  // floating-point -0, 1, 2, used for constants
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},-0.0}, //used for -y; -y is _0.0 - y.  Data value also used as a mask
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},1.0},
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0},
 };
 
-struct Bi1 __attribute__((aligned(CACHELINESIZE))) Bnumi2[] = {  // I2 0, 1, 2 used for constants
+struct Bi1 Bnumi2[] = {  // I2 0, 1, 2 used for constants
 {{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},0}, //used for -y
 {{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},1}, //
 {{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},2}, //
 };
 
-struct Bi1 __attribute__((aligned(CACHELINESIZE))) Bnumi4[] = {  // I4 0, 1, 2 used for constants
+struct Bi1 Bnumi4[] = {  // I4 0, 1, 2 used for constants
 {{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},0}, //used for -y
 {{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},1}, //
 {{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},2}, //

@@ -134,7 +134,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
  PROLOG(0);  // 
  A zz=0; // zz=result array if multiple results, 0 if single. 
  UI zzalloc;  // if zz!=0, the #atoms in the area allocated in zz
- if(poweratom&POWERAMULT){
+ if(unlikely(poweratom&POWERAMULT)){   // multiple results, which we flag here as unlikely
   zzalloc=(poweratom>>POWERABSX)+1; zzalloc=poweratom<0?32-(AKXR(1)>>LGSZI):zzalloc;   // allocate correct length, or a block of 28 if unknown size
   GATV0(zz,INT,zzalloc,1) AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;   // alloc result area.  avoid init of BOX area
   INCORPRA(w); AN(zz)=1; AAV1(zz)[0]=w;   // install w as first result (fill in AS later)
@@ -162,7 +162,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
     if(AT(wnew)&EXACTNUMERIC)break;   // if perfect match, keep the value
     // match on inexact value.  Start a counter; after a few matches, take what we have.
     // We are probably doing Newton polishing and we should go one more cycle after the first match
-    if((poweratom<<1)<0)poweratom=IMIN+2;  // first match: start counter, which ends after 1 cycle
+    if((poweratom<<1)<0)poweratom=IMIN+2;  // first match: start counter, which ends after 2 further polishing iterations
     else if((poweratom<<1)==0){w=wnew; break;}  // after counter, keep the last matching value
    }else{if((poweratom<<1)>=0)break;}  // convergence search, no match: if we have had a match, stop with the last match (w)
    w=wnew;  // remember the last value
@@ -172,7 +172,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
   // it cannot be resumed unless w has been marked noninplaceable.
   jtinplace=(J)((I)jtinplace|((wnew!=w)&(wnew!=a)&allowinplace));  // make sure we don't inplace a repeated arg
   w=wnew;  // advance the result to be the new w
-  if(zz!=0){
+  if(unlikely(zz!=0)){
    // multiple results.  incorp the result into zz, extending zz if needed
    UI newslot=AN(zz);  // where the new value will go
    if(withprob(newslot==zzalloc,0.03)){  // current alloc full?
@@ -429,7 +429,7 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
  if(w==ds(CUSDOT)){   // power is _.
   ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs
-  n=IMIN;  // set _. value in n
+  n=IMIN;  // set _. value in n  scaf allow inplace
  }else{   // normal power, not _.
   RZ(hs=vib(w));   // hs=n coerced to integer
   ASSERT(AN(hs)!=0,EVDOMAIN);  // empty power is error

@@ -319,7 +319,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
  if(t!=INT)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);  // read the values as larger-than-int
  if(t!=QP)z=bcvt(bcvtmask,z); // never squish QP
  // if we have a permanent constant block allocated for the value, we might as well use it.  These are the D atomic values 1., 2. 0.5, _. and integer 00 01.  Single digits _9..9 were handled above
- if(((AT(z)>>FLX)&1)>AR(z)){D zv=DAV(z)[0]; z=zv==DAV0(onehalf)[0]?onehalf:z; z=zv==DAV0((A)&Bnumvr[1])[0]?(A)&Bnumvr[1]:z; z=zv==DAV0((A)&Bnumvr[2])[0]?(A)&Bnumvr[2]:z; z=*(I*)&zv==IAV0(ds(CUSDOT))[0]?ds(CUSDOT):z;}  // nan always fails fl comparison
+ if(((AT(z)>>FLX)&1)>AR(z)){D zv=DAV(z)[0]; z=zv==DAV0(onehalf)[0]?onehalf:z; z=zv==DAV0((A)&Bnumvr[1])[0]?(A)&Bnumvr[1]:z; z=zv==DAV0((A)&Bnumvr[2])[0]?(A)&Bnumvr[2]:z; z=*(UI8*)&zv==*(UI8*)&DAV0(ds(CUSDOT))[0]?ds(CUSDOT):z;}  // nan always fails fl comparison
  else if(((AT(z)>>INTX)&1)>AR(z)){I zv=IAV(z)[0]; z=zv&~1?z:zeroionei(zv);}  // int 0 & 1
  EPILOG(z);
 }

@@ -160,8 +160,9 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
     // convergence iteration that matches
     if(zz!=0)break;   // if multiple results, stop without storing the repetition
     if(AT(wnew)&EXACTNUMERIC)break;   // if perfect match, keep the value
+    if(FAV(fs)->id==CPOWOP)break;  // u^:v^:_ is old-style DoWhile.  For compatibility, stop after the first match, which might have been triggered by v.  We could perhaps check this explicitly?
     // match on inexact value.  Start a counter; after a few matches, take what we have.
-    // We are probably doing Newton polishing and we should go one more cycle after the first match
+    // We are probably doing Newton polishing and we should go a couple more cycles after the first match
     if((poweratom<<1)<0)poweratom=IMIN+2;  // first match: start counter, which ends after 2 further polishing iterations
     else if((poweratom<<1)==0){w=wnew; break;}  // after counter, keep the last matching value
    }else{if((poweratom<<1)>=0)break;}  // convergence search, no match: if we have had a match, stop with the last match (w)
@@ -361,12 +362,12 @@ static DF2(jtpowv2acell){F2PREFIP;A z;PROLOG(0110);
 // [x] u^:v y, fast when result of v is 0 or 1 (=if statement).  jtflagging is that required by u.  JTDOWHILE can be set to indicate that this is called from ^:_. in which case we return (A)1 if u was 0
 static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
  w=AT(w)&VERB?0:w;  // w is 0 for monad
- A u; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
+ A u,uc; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
  RZ(u=CALL12(w,FAV(gs)->valencefns[!!w],a,w,gs));  // execute v, not inplace
 // obsolete  if(likely(!AR(u)) && likely(ISDENSETYPE(AT(u),INT+B01)) && likely(!((u0=BIV0(u))&~1))){  // v result is 0/1
- if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)){  // v result is bool/int 0/1 (if statement)  overfetch possible but harmless
+ if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)||(AR(u)==0&&(uc=cvt(INT,u))!=0&&!((u0=IAV(uc)[0])&~1))){  // v result is atomic bool/int 0/1 (if statement)  overfetch possible but harmless
   if(u0){jtinplace=(J)((I)jtinplace&~(a==w?JTDOWHILE+JTINPLACEA+JTINPLACEW:JTDOWHILE)); z=CALL12IP(w,uf,a,w,fs);}   // v result is atomic INT/B01 1: execute u, inplace if possible - but suppress the DOWHILE flag, and all inplacing if a=w
-  else{z=w?w:a; if((I)jtinplace&JTDOWHILE)R (A)1;}  // v result is atomic INT/B01 0: bypass.  If ^:_. return 1 to indicate u returned 0: skips EPILOG but powatom12 will soon do one
+  else{z=w?w:a; if((I)jtinplace&JTDOWHILE)R (A)1;}  // v result is atomic INT/B01 0: bypass.  If ^:_. return 1 to indicate u returned 0 - skips EPILOG but powatom12 will soon do one
  }else{ASSERT(!((I)jtinplace&JTDOWHILE),EVDOMAIN) RZ(u=powop(fs,u,(A)1));  // not a simple if statement: fail if called from ^:_.; create u^:n form of powop;
   jtinplace=FAV(u)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt;   // u might have been a gerund so there is no telling what the inplaceability of the new u is; refresh it
   z=CALL12IP(w,FAV(u)->valencefns[!!w],a,w,u);  // execute the power, inplace

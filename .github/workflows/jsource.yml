@@ -926,6 +926,50 @@ jobs:
       path: testwin32.txt
       overwrite: true
 
+# windows --------------------------------------------------------------
+ jewinarm64:
+  name: JE (Windows arm64)
+  if: ${{ false }}
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows arm64)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64_arm64
+
+   - name: Build JE (Windows arm64)
+     shell: cmd
+     run: |
+      script\buildga.cmd arm64
+
+   - name: Test JE (Windows arm64)
+     shell: cmd
+     run: |
+      script\testga.cmd arm64
+
+   - name: Compress Files (Windows arm64)
+     shell: pwsh
+     run: Compress-Archive jarm64 warm64.zip
+
+   - name: Release JE (Windows arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "warm64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Windows arm64)
+     uses: actions/upload-artifact@v4
+     with:
+      name: dist
+      path: testwinarm64.txt
+      overwrite: true
+
 # get tests ------------------------------------------------------------
  tests:
   name: Test Results

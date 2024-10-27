@@ -8,7 +8,11 @@ FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 !endif
 
-!if "1"=="$(x64)"
+!if "1"=="$(JARM64)"
+CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
+CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) -target arm64-pc-windows-msvc /DEMU_AVX2=1 /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS= $(LDEBUG) /STACK:0xc00000 /MACHINE:ARM64 /SUBSYSTEM:CONSOLE,5.02
+!elseif "1"=="$(x64)"
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
 CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) /DEMU_AVX2=1 /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
@@ -38,7 +42,9 @@ LD=lld-link
 .c.o:
 	$(CC) $(CFLAGS) $(CFLAGSLN) /Fo$@ /c $<
 
-!if "1"=="$(x64)"
+!if "1"=="$(JARM64)"
+TARGET= jconsolearm64.exe
+!elseif "1"=="$(x64)"
 TARGET= jconsole.exe
 !else
 TARGET= jconsole32.exe

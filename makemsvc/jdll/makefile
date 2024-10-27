@@ -1,35 +1,37 @@
 ifeq (1,$(JAVX512))
 FAVX512= /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=skylake-avx512 -mno-vzeroupper
-else
-ifeq (1,$(JAVX2))
+else ifeq (1,$(JAVX2))
 FAVX2= /DC_AVX2=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=haswell -mno-vzeroupper
-endif
 endif
 ifeq (1,$(USE_OPENMP))
 FOPENMP= -Xclang -fopenmp
-ifeq (1,$(x64))
+ifeq (1,$(JARM64))
+OBJS_OPENMP=../../openmp/obj/windows/libomparm64.lib
+else ifeq (1,$(x64))
 OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
 else
 OBJS_OPENMP=../../openmp/obj/windows/libomp32.lib
 endif
 endif
 USE_SLEEF=1
-ifeq (1,$(x64))
+ifeq (1,$(JARM64))
+FSLEEF= /DSLEEF=1 /DENABLE_ADVSIMD /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+else ifeq (1,$(x64))
 ifeq (1,$(JAVX512))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-else
-ifeq (1,$(JAVX2))
+else ifeq (1,$(JAVX2))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-endif
 endif
 else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 endif
 ifeq (1,$(USE_PYXES))
 PTHREADINC = -I../../pthreads4w/include -DPYXES=1
-ifeq (1,$(x64))
+ifeq (1,$(JARM64))
+PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-arm64.lib
+else ifeq (1,$(x64))
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
 else
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
@@ -37,7 +39,9 @@ endif
 endif
 MPIRINC = -I../../mpir/include
 
-ifeq (1,$(x64))
+ifeq (1,$(JARM64))
+# MPIRLIB = ../../mpir/dll/arm64/mpir.lib
+else ifeq (1,$(x64))
 # MPIRLIB = ../../mpir/dll/x64/mpir.lib
 else
 # MPIRLIB = ../../mpir/dll/win32/mpir.lib
@@ -54,7 +58,12 @@ ifeq (1,$(USE_BOXEDSPARSE))
 FBOXEDSPARSE = /DBOXEDSPARSE
 endif
 
-ifeq (1,$(x64))
+ifeq (1,$(JARM64))
+CF1= -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
+CFLAGS= $(FDEBUG) -target arm64-pc-windows-msvc /D_JDLL /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS= $(LDEBUG) /DLL /MACHINE:ARM64 /SUBSYSTEM:WINDOWS,10.0
+ASMFLAGS= /Cx
+else ifeq (1,$(x64))
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
 CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
@@ -249,8 +258,14 @@ OBJS=  \
 
 ifdef NO_SHA_ASM
 CFLAGS1= /DNO_SHA_ASM
-else
-ifeq (1,$(x64))
+else ifeq (1,$(JARM64))
+OBJS_ASM= \
+ ../../openssl-asm/md5-aarch64-nasm.o \
+ ../../openssl-asm/keccak1600-armv8-nasm.o \
+ ../../openssl-asm/sha1-armv8-nasm.o \
+ ../../openssl-asm/sha256-armv8-nasm.o \
+ ../../openssl-asm/sha512-armv8-nasm.o "
+else ifeq (1,$(x64))
 OBJS_ASM= \
  ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -264,7 +279,6 @@ OBJS_ASM= \
  ../../openssl-asm/sha1-586-nasm.o \
  ../../openssl-asm/sha256-586-nasm.o \
  ../../openssl-asm/sha512-586-nasm.o
-endif
 endif
 
 ifeq (1,$(USE_SLEEF))
@@ -302,15 +316,15 @@ endif
 %.o: %.asm
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
-ifeq (1,$(x64))
+ifeq (1,$(JARM64))
+TARGET= jarm64.exe
+else ifeq (1,$(x64))
 ifeq (1,$(JAVX512))
 TARGET= javx512.dll
-else
-ifeq (1,$(JAVX2))
+else ifeq (1,$(JAVX2))
 TARGET= javx2.dll
 else
 TARGET= j.dll
-endif
 endif
 else
 TARGET= j32.dll

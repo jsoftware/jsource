@@ -17,7 +17,6 @@ jobs:
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)
-  if: ${{ false }}
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
@@ -79,7 +78,6 @@ jobs:
 # linux gcc ------------------------------------------------------------
  jelinux-gcc:
   name: JE (Linux gcc)
-  if: ${{ false }}
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
@@ -139,7 +137,6 @@ jobs:
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)
-  if: ${{ false }}
   runs-on: macos-13
   steps:
    - name: Checkout Git repository
@@ -195,7 +192,6 @@ jobs:
 # macOS arm64 ----------------------------------------------------------
  jemacosarm:
   name: JE (macOS arm64)
-  if: ${{ false }}
   runs-on: macos-14
   steps:
    - name: Checkout Git repository
@@ -251,7 +247,6 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
-  if: ${{ false }}
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
@@ -313,7 +308,6 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-  if: ${{ false }}
   runs-on: ubuntu-20.04
   steps:
    - name: Checkout Git repository
@@ -378,7 +372,6 @@ jobs:
  jeopenbsd:
   name: JE (OpenBSD vmactions)
   if: ${{ false }}
-#  if: ${{ false }}
   runs-on: macos-13
   steps:
    - name: Checkout Git repository
@@ -446,7 +439,6 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -516,7 +508,6 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd || exit 1
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -583,7 +574,6 @@ jobs:
  jefreebsd:
   name: JE (FreeBSD vmactions)
   if: ${{ false }}
-#  if: ${{ false }}
   runs-on: macos-13
   steps:
    - name: Checkout Git repository
@@ -651,7 +641,6 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -721,7 +710,6 @@ jobs:
 # freebsdarm64  --------------------------------------------------------------
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -791,7 +779,6 @@ jobs:
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
-  if: ${{ false }}
   runs-on: macos-13
   steps:
    - name: Checkout Git repository
@@ -824,7 +811,6 @@ jobs:
 # wasm -----------------------------------------------------------------
  jewasm:
   name: JE (wasm)
-  if: ${{ false }}
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -857,7 +843,6 @@ jobs:
 # windows --------------------------------------------------------------
  jewin:
   name: JE (Windows)
-  if: ${{ false }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -901,7 +886,6 @@ jobs:
 # windows --------------------------------------------------------------
  jewin32:
   name: JE (Windows 32)
-  if: ${{ false }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -945,6 +929,7 @@ jobs:
 # windows --------------------------------------------------------------
  jewinarm64:
   name: JE (Windows arm64)
+  if: ${{ false }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -988,7 +973,6 @@ jobs:
 # get tests ------------------------------------------------------------
  tests:
   name: Test Results
-  if: ${{ false }}
   runs-on: ubuntu-20.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   needs: [jelinux, jelinux-gcc, jemacos, jemacosarm, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsdarm64 ]
@@ -1015,7 +999,6 @@ jobs:
 
  webhook:
   name: Run Webhook
-  if: ${{ false }}
   runs-on: ubuntu-22.04
   needs: tests
   steps:

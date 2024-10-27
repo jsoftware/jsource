@@ -378,7 +378,7 @@ jobs:
  jeopenbsd:
   name: JE (OpenBSD vmactions)
   if: ${{ false }}
-  if: ${{ false }}
+#  if: ${{ false }}
   runs-on: macos-13
   steps:
    - name: Checkout Git repository
@@ -583,7 +583,7 @@ jobs:
  jefreebsd:
   name: JE (FreeBSD vmactions)
   if: ${{ false }}
-  if: ${{ false }}
+#  if: ${{ false }}
   runs-on: macos-13
   steps:
    - name: Checkout Git repository

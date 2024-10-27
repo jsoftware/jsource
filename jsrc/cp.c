@@ -387,86 +387,95 @@ static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
 // kibosh on it by setting self (otherwise unused, and set to nonzero in the initial invocation
 // from parse) to 0 in all calls resulting from execution of gerund v.  Then we fail any gerund
 // if self is 0.
-DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
+DF2(jtpowop){F2PREFIP;B b;V*v;
  ARGCHK2(a,w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  A z; fdefallo(z)  // allocate normal result area
+ AF f1,f2;   // derived-verb handler
+ I flag=VFLAGNONE;  // flags for the verb we build
+ A h;  // A block for the power list converted to integer (initially, remaining for jtply1 only); u^:_1 (for jtinv[12]); 0 for others
+ I encn;  // the encoded form of the integer power to be passed to pow12n
  if(AT(w)&VERB){
   // u^:v.  Create derived verb to handle it.
 // obsolete   v=FAV(a); b=((v->id&~1)==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v  (or @:)
   v=FAV(a);
 // obsolete  b=v->valencefns[1]==jtonright12;   // detect u@]^:v  (or @:)
   // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
-  fdeffill(z,0L,CPOWOP,VERB,jtpowv12cell,jtpowv12cell,a,w,0L,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX)
-  RETF(z);
- }
- // u^:n.  Check for special types.
- I n; AF f1,f2; // the power, the functions
- if(BOX&AT(w)){A x,y;
-  // Boxed v.  It could be <n or [v0`]v1`v2 or <''.
-  if(!AR(w)&&(x=C(AAV(w)[0]),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){  // scalar box whose contents are numeric atom or empty list
-   // here for <n or <''.  That will be handled by special code.
-   n=AN(x)?i0(x):IMAX; RE(0);  // get power, using _ for <''
-   ASSERT(n!=0,EVDOMAIN);  // <0 arg not allowed: would be nothing
+  f1=f2=jtpowv12cell; h=0; flag=(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2));
+// obsolete   fdeffill(z,0L,CPOWOP,VERB,jtpowv12cell,jtpowv12cell,a,w,0L,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX)
+// obsolete   RETF(z);
+ }else{
+  // u^:n.  Check for special types.
+  I n; // the power, the functions
+  if(unlikely(BOX&AT(w))){A x,y;
+   // Boxed v.  It could be <n or [v0`]v1`v2 or <''.
+   if(!AR(w)&&(x=C(AAV(w)[0]),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){  // scalar box whose contents are numeric atom or empty list   <numatom or a:
+    // here for <numatom or a: .  That will be handled as an integer power with multiple results, usually
+    n=AN(x)?i0(x):IMAX; RE(0);  // get power, using _ for <''
+    ASSERT(n!=0,EVDOMAIN);  // <0 arg not allowed: would be nothing
 // obsolete    f1=jtpowseq; f2=jtply2; v=FAV(a);
-   f1=f2=jtpowatom12; v=FAV(a);
-   // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
+    f1=f2=jtpowatom12; v=FAV(a);   // use atomic-power handler
+    // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
 // obsolete    if((!AN(x)||FL&AT(x)&&inf==DAV(x)[0])){
-   if(n==IMAX){
-    if(CAMP==v->id&&(CFROM==IDD(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:a: y
-    else if(CTILDE==v->id&&CFROM==IDD(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:a: y
-   }
-   fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)  // never allow inplacing when there are multiple results
-   FAV(z)->localuse.lu1.poweratom=((ABS(n)-1)<<POWERABSX)+(n<0?POWERANEG:0)+POWERAMULT;  // save the power, in flagged form.  count is # powers to evaluate, which is n-1
-   RETF(z);
-  }
-  // falling through for other boxed type
+    if(n==IMAX){
+     if(CAMP==v->id&&(CFROM==IDD(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:a: y
+     else if(CTILDE==v->id&&CFROM==IDD(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:a: y
+    }
+// obsolete     fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)  // never allow inplacing when there are multiple results
+    encn = FAV(z)->localuse.lu1.poweratom=((ABS(n)-1)<<POWERABSX)+(n<0?POWERANEG:0)+POWERAMULT;  // save the power, in flagged form.  count is # powers to evaluate, which is n-1
+// obsolete     RETF(z);
+   }else R gconj(a,w,CPOWOP);  // not <numatom or a: .  Create the derived verb for [v0`]v1`v2, return that
 //    ASSERT(self!=0,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
-  R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2
- }
- // fall through for unboxed n.
- // handle the very important case of scalar   int/boolean   n of 0/1
-// obsolete  if(likely(((-(AT(w)&B01+INT))&((AR(w)|((UI)BIV0(w)>>1))-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
- if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
- I flag=VFLAGNONE;  // flags for the verb we build
- if(w==ds(CUSDOT)){   // power is _.
-  ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs
-  n=IMIN;  // set _. value in n
-  flag = FAV(a)->flag&VASGSAFE+VJTFLGOK2+VJTFLGOK1;  // u^:v^:_. inherits inplaceability from u^:v
- }else{   // normal power, not _.
-  RZ(hs=vib(w));   // hs=n coerced to integer
-  ASSERT(AN(hs)!=0,EVDOMAIN);  // empty power is error
-  n=IAV(hs)[0];  // the exponent n (if atomic)
-  n=n==IMIN?-IMAX:n;  // exponent IMIN reserved for ^:_.
- }
- f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
- if(!AR(w)){  // input is an atom
-  A h=0; f1=f2=jtpowatom12;   // inverse, if we can calculate it
-  // Handle the important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), _ (converge), _. (dowhile)
-  if(!(n&~1))R a=n?a:ds(CRIGHT);  //  the if statement: u^:0 is like ],  u^:1 is like u 
-  if((n<<1)==-2){  //  u^:_1 or u^:_
-   if(n<0){  // u^:_1
-    // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
-    // must wait until we get arguments
-    f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr;})} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-    flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse (monad only)
+   // falling through for boxed numeric to fill in the result
+   h=0;  // must be 0 if unused
+  }else{
+   // unboxed n.
+   // handle the very important case of scalar   int/boolean   n of 0/1
+ // obsolete  if(likely(((-(AT(w)&B01+INT))&((AR(w)|((UI)BIV0(w)>>1))-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
+   if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
+   if(w==ds(CUSDOT)){   // power is _.
+    ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs
+    n=IMIN;  // set _. value in n
+    flag = FAV(a)->flag&VASGSAFE+VJTFLGOK2+VJTFLGOK1;  // u^:v^:_. inherits inplaceability from u^:v
+   }else{   // normal power, not _.
+    RZ(h=vib(w));   // hs=n coerced to integer
+    ASSERT(AN(h)!=0,EVDOMAIN);  // empty power is error
+    n=IAV(h)[0];  // the exponent n (if atomic)
+    n=n==IMIN?-IMAX:n;  // exponent IMIN reserved for ^:_.
+   }
+   if(likely(!AR(w))){  // input is an atom
+    // Handle the important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), _ (converge), _. (dowhile)
+    if(!(n&~1))R a=n?a:ds(CRIGHT);  //  the if statement: u^:0 is like ],  u^:1 is like u 
+    f1=f2=jtpowatom12;   // init to handler for atomic power
+    h=0;    // inverse, if we can calculate it (we no longer need the list of powers)
+    if((n<<1)==-2){  //  u^:_1 or u^:_
+     if(n<0){  // u^:_1
+      // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
+      // must wait until we get arguments
+      f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr;})} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
+      flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse (monad only)
 // obsolete else{  // u^:_
 // obsolete     f1=f2=jtpinf12;
 // obsolete     flag=VFLAGNONE;
 // obsolete      fdeffill(z,0,CPOWOP,VERB,jtpinf12,jtpinf12,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
-   }
-   // if u^:_, never allow inplacing since we are converging
+     }
+     // Note: negative powers other than _1 are resolved in the action routine
+     // if u^:_, never allow inplacing since we are converging
 // obsolete    fdeffill(z,0,CPOWOP,VERB,f1,f2,a,w,h,flag,RMAX,RMAX,RMAX);
 // obsolete    FAV(z)->localuse.lu1.poweratom=(IMAX&(ABS(n)<<POWERABSX))+(n<0?POWERANEG:0);  // save the power, in flagged form
-  }
-  fdeffill(z,0,CPOWOP,VERB,f1,f2,a,w,h,flag,RMAX,RMAX,RMAX);
-  I encn=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0); encn=n==IMIN?((I)-1*POWERABS)+POWERADOWHILE:encn;  // save the power, in flagged form
-  FAV(z)->localuse.lu1.poweratom=encn;
-  RETF(z);
+    }
+// obsolete     fdeffill(z,0,CPOWOP,VERB,f1,f2,a,w,h,flag,RMAX,RMAX,RMAX);
+    encn=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0); encn=n==IMIN?((I)-1*POWERABS)+POWERADOWHILE:encn;  // save the power, in flagged form
+// obsolete     FAV(z)->localuse.lu1.poweratom=encn;
+// obsolete     RETF(z);
 // obsolete   if(IAV(hs)[0]>=0){f1=jtfpown; flag=FAV(a)->flag&VJTFLGOK1;}  // if nonneg atom, go to special routine for that, which supports inplace
- }
- // If not special case, fall through to handle general case
- I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
- fdeffill(z,0,CPOWOP,VERB, f1,jtply2, a,w,hs,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
+   }else{f1=jtply1; f2=jtply2;}  // non-atomic power: handle general case
+   // fall through to create result
+  }  // end of 'u^:numeric'
+ }  // end of 'u^:n'
+// obsolete  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
+// obsolete  fdeffill(z,0,CPOWOP,VERB, f1,jtply2, a,w,hs,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
+ fdeffill(z,0,CPOWOP,VERB, f1,f2, a,w,h,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
+ FAV(z)->localuse.lu1.poweratom=encn;   // pass power info for powatom12, garbage for others
  RETF(z);
 }

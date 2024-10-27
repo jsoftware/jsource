@@ -1,9 +1,7 @@
 ifeq (1,$(JAVX512))
 FAVX512= /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=skylake-avx512 -mno-vzeroupper
-else
-ifeq (1,$(JAVX2))
+else ifeq (1,$(JAVX2))
 FAVX2= /DC_AVX2=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=haswell -mno-vzeroupper
-endif
 endif
 ifeq (1,$(USE_OPENMP))
 FOPENMP= -Xclang -fopenmp
@@ -17,12 +15,10 @@ USE_SLEEF=1
 ifeq (1,$(x64))
 ifeq (1,$(JAVX512))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-else
-ifeq (1,$(JAVX2))
+else ifeq (1,$(JAVX2))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-endif
 endif
 else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
@@ -249,8 +245,7 @@ OBJS=  \
 
 ifdef NO_SHA_ASM
 CFLAGS1= /DNO_SHA_ASM
-else
-ifeq (1,$(x64))
+else ifeq (1,$(x64))
 OBJS_ASM= \
  ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -264,7 +259,6 @@ OBJS_ASM= \
  ../../openssl-asm/sha1-586-nasm.o \
  ../../openssl-asm/sha256-586-nasm.o \
  ../../openssl-asm/sha512-586-nasm.o
-endif
 endif
 
 ifeq (1,$(USE_SLEEF))
@@ -305,12 +299,10 @@ endif
 ifeq (1,$(x64))
 ifeq (1,$(JAVX512))
 TARGET= javx512.dll
-else
-ifeq (1,$(JAVX2))
+else ifeq (1,$(JAVX2))
 TARGET= javx2.dll
 else
 TARGET= j.dll
-endif
 endif
 else
 TARGET= j32.dll

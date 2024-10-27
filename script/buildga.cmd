@@ -53,8 +53,8 @@ nmake -f makefile.win CC=clang-cl x64=0
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L04C
 :L04B
-nmake -f makefile.win CC=clang-cl x64=1 JARM64=1 clean
-nmake -f makefile.win CC=clang-cl x64=1 JARM64=1
+nmake -f makefile.win CC=clang-cl JARM64=1 clean
+nmake -f makefile.win CC=clang-cl JARM64=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L04C
 
@@ -73,8 +73,8 @@ nmake -f makefile.win CC=clang-cl x64=0 USE_PYXES=0
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L02C
 :L02B
-nmake -f makefile.win CC=clang-cl x64=1 JARM64=1 USE_PYXES=1 clean
-nmake -f makefile.win CC=clang-cl x64=1 JARM64=1 USE_PYXES=1
+nmake -f makefile.win CC=clang-cl JARM64=1 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl JARM64=1 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L02C
 
@@ -99,8 +99,8 @@ nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=0
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L03C
 :L03B
-nmake -f makefile.win CC=clang-cl x64=1 JARM64=1 USE_OPENMP=0 USE_PYXES=0 clean
-nmake -f makefile.win CC=clang-cl x64=1 JARM64=1 USE_OPENMP=0 USE_PYXES=0
+nmake -f makefile.win CC=clang-cl JARM64=1 NO_SHA_ASM=1 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl JARM64=1 NO_SHA_ASM=1 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L03C
 
@@ -119,8 +119,8 @@ nmake -f makefile.win CC=clang-cl x64=0 USE_OPENMP=0 USE_PYXES=0
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L05C
 :L05B
-nmake -f makefile.win CC=clang-cl x64=1 JARM64=1 USE_OPENMP=0 USE_PYXES=0 clean
-nmake -f makefile.win CC=clang-cl x64=1 JARM64=1 USE_OPENMP=0 USE_PYXES=0
+nmake -f makefile.win CC=clang-cl JARM64=1 NO_SHA_ASM=1 USE_OPENMP=0 USE_PYXES=1 clean
+nmake -f makefile.win CC=clang-cl JARM64=1 NO_SHA_ASM=1 USE_OPENMP=0 USE_PYXES=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L05C
 

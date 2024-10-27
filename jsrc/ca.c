@@ -550,7 +550,7 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
 // be repeated; preserve the inplacing of the argument given (i. e. move w to a for u&n).  Bit 1 of jtinplace is always 0 for monad.
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 // This supports IRS so that it can pass the rank on to the called function; no need to revalidate here.  jt is inplaceable but we don't use it except to fiddle with flags
-// We pass the WILLOPEN flags through  scaf don't need full IRS2 because jt->ranks is known to be OK for the monad
+// We pass the WILLOPEN flags through. We don't need full IRS2 because jt->ranks is known to be OK for the monad
 // obsolete static DF1(withl){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; F1PREFIP;A z; I r=(RANKT)jt->ranks; IRSIP2(fs,w,gs,RMAX,(RANKT)jt->ranks,g2,z); RETF(z);}
 // obsolete static DF1(withr){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; F1PREFIP; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z; I r=(RANKT)jt->ranks; IRSIP2(w,gs,fs,(RANKT)jt->ranks,RMAX,f2,z); RETF(z);}
 static DF1(withl){AF f2=FAV(self)->localuse.lu1.bondfn; F1PREFIP; ((C*)&jt->ranks)[1]=RMAX; A z=f2(jtinplace,FAV(self)->fgh[0],w,FAV(self)->fgh[1]); RETF(z);}  // m&v.  Leave inplacing of w

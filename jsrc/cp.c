@@ -299,10 +299,10 @@ static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible mon
 // old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
 DF2(jtply2){PROLOG(107);A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}  // scaf remove
 
-
-static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}  // scaf bivalent
-static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
-
+// obsolete 
+// obsolete static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
+// obsolete static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
+// obsolete 
 // When u^:v is encountered, we replace it with a verb that comes to one of these.
 // This creates a verb, jtpowxx, which calls jtdf1 within a PROLOG/EPILOG pair, after creating several names:
 // sv->self data; fs=sv->fgh[0] (the A block for the f operand); f1=f1 in sv->fgh[0] (0 if sv->fgh[0]==0); f2=f2 in sv->fgh[0] (0 if sv->fgh[0]==0);
@@ -475,7 +475,7 @@ DF2(jtpowop){F2PREFIP;B b;V*v;
  }  // end of 'u^:n'
 // obsolete  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
 // obsolete  fdeffill(z,0,CPOWOP,VERB, f1,jtply2, a,w,hs,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
- fdeffill(z,0,CPOWOP,VERB, f1,f2, a,w,h,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
+ fdeffill(z,0,CPOWOP,VERB, f1,f2, a,w,h,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers or inverse as h
  FAV(z)->localuse.lu1.poweratom=encn;   // pass power info for powatom12, garbage for others
  RETF(z);
 }

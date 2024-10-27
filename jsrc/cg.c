@@ -116,7 +116,7 @@ PRIM jtfxself[2]={
 
 // run jtfx on each box in w, turning AR into an A block
 // self is a parm passed through to jtfx, coming from jtfxself above.  if AK(self) is nonzero, we return nouns as is
-// Result claims to be an array of boxes, but each box holds a function
+// Result claims to be an array of boxes, but each box holds an A with possibly a function type
 DF1(jtfxeach){RETF(every(w,self));}
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
@@ -384,7 +384,7 @@ F2(jtagendai){F2PREFIP;I flag;
 //     sv->id is the original conjunction, executed a second time now that we have the selector/power
 //     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
 // then we execute gerund v2 on y (with self set to v2)
-// then we execute ff on the result of (v2 y), with self set to ff
+// then we execute ff on the result of (v2 y), with self set to ff  scaf combine all 4 into 1
 static DF1(jtgcl1){V* RESTRICT sv=FAV(self); A gs=sv->fgh[1]; A ff,z0,z1,*hv=AAV(sv->fgh[2]);
  STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id));
  RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
@@ -416,7 +416,8 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  ASSERT(1>=AR(y),EVRANK);
  ASSERT((n&-2)==2,EVLENGTH);  // length is 2 or 3
  ASSERT(BOX&AT(y),EVDOMAIN);
- RZ(hs=fxeach(3==n?y:jlink(scc(CLBKTC),y),(A)&jtfxself[0]));
+// obsolete  RZ(hs=fxeach(3==n?y:jlink(scc(CLBKTC),y),(A)&jtfxself[0]));
+ RZ(hs=fxeachv(1,3==n?y:jlink(scc(CLBKTC),y)));
  R fdef(0,id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
 }
 

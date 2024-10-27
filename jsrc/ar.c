@@ -1237,7 +1237,9 @@ static DF2(jtfoldx){F2PREFIP;A z,vz;
 loopend:;
 
 ASSERTGOTO(AN(zz)!=0,EVNORESULT,exitpop)  // error if we never added to the result
-if(dmfr&STATEMULT)AS(zz)[0]=AN(zz); zz=ope(zz);  // set AS(0) right; open zz to give unboxed result  scaf need PRISTINE flag
+if(dmfr&STATEMULT)AS(zz)[0]=AN(zz); zz=ope(zz);  // set AS(0) right; open zz to give unboxed result
+ // if zz is boxed, it might be PRISTINE.  We take the trouble to check, because there's a good chance the user is going to use &.> next
+ if(AT(zz)&BOX){DO(AN(zz), A c=C(AAV(zz)[i]); if(!(AT(c)&DIRECT)||AC(c)>ACUC1)goto noprist;) AFLAGORLOCAL(zz,AFPRISTINE); noprist:;}
 
 abortexit:;  // exit, returning whatever is in zz
  jt->afoldinfo=stkfoldinfo;

@@ -145,7 +145,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
  }
  A *old=jt->tnextpushp;  // save tpop pointer, so as to leave untouched zz and anything related to the inverse
  AF f12=FAV(fs)->valencefns[!!a];  // action routine for u
- I allowinplace=((FAV(fs)->flag>>(VJTFLGOK1X+!!a-JTINPLACEW))&(poweratom&IMIN+POWERAMULT?0:JTINPLACEW))|~JTINPLACEW;  // suppress all inplacing if verb doesn't support it, or this is convergence or multiple results
+ I allowinplace=((FAV(fs)->flag>>(VJTFLGOK1X+!!a-JTINPLACEWX))&((poweratom&IMIN+POWERADOWHILE)==IMIN?0:JTINPLACEW))|~JTINPLACEW;  // suppress all inplacing if verb doesn't support it, or this is convergence (or multiple results, where jt is always 0)
  jtinplace=(J)((I)jtinplace&allowinplace&~(JTINPLACEA|(a==w)));  // never inplace a; pass inplacing of w only if !multiple & !infinite, and not same as a
  jtinplace=(J)((I)jtinplace|(poweratom&JTDOWHILE));  // set flag to indicate ^:_.
 // obsolete  I allowinplace=(FAV(fs)->flag>>(VJTFLGOK1X+!!a-JTINPLACEW))&~SGNTO0(poweratom);  // suppress all inplacing if verb doesn't support it, or this is convergence
@@ -365,7 +365,7 @@ static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
  A u,uc; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
  RZ(u=CALL12(w,FAV(gs)->valencefns[!!w],a,w,gs));  // execute v, not inplace
 // obsolete  if(likely(!AR(u)) && likely(ISDENSETYPE(AT(u),INT+B01)) && likely(!((u0=BIV0(u))&~1))){  // v result is 0/1
- if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)||(AR(u)==0&&(uc=cvt(INT,u))!=0&&!((u0=IAV(uc)[0])&~1))){  // v result is atomic bool/int 0/1 (if statement)  overfetch possible but harmless
+ if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)||(AR(u)==0&&AT(u)&NUMERIC&&(uc=cvt(INT,u))!=0&&!((u0=IAV(uc)[0])&~1))){  // v result is atomic bool/int 0/1 (if statement)  overfetch possible but harmless
   if(u0){jtinplace=(J)((I)jtinplace&~(a==w?JTDOWHILE+JTINPLACEA+JTINPLACEW:JTDOWHILE)); z=CALL12IP(w,uf,a,w,fs);}   // v result is atomic INT/B01 1: execute u, inplace if possible - but suppress the DOWHILE flag, and all inplacing if a=w
   else{z=w?w:a; if((I)jtinplace&JTDOWHILE)R (A)1;}  // v result is atomic INT/B01 0: bypass.  If ^:_. return 1 to indicate u returned 0 - skips EPILOG but powatom12 will soon do one
  }else{ASSERT(!((I)jtinplace&JTDOWHILE),EVDOMAIN) RZ(u=powop(fs,u,(A)1));  // not a simple if statement: fail if called from ^:_.; create u^:n form of powop;
@@ -416,7 +416,7 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
     if(CAMP==v->id&&(CFROM==IDD(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:a: y
     else if(CTILDE==v->id&&CFROM==IDD(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:a: y
    }
-   fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)
+   fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)  // never allow inplacing when there are multiple results
    FAV(z)->localuse.lu1.poweratom=((ABS(n)-1)<<POWERABSX)+(n<0?POWERANEG:0)+POWERAMULT;  // save the power, in flagged form.  count is # powers to evaluate, which is n-1
    RETF(z);
   }
@@ -428,9 +428,11 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
  // handle the very important case of scalar   int/boolean   n of 0/1
 // obsolete  if(likely(((-(AT(w)&B01+INT))&((AR(w)|((UI)BIV0(w)>>1))-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
  if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
+ I flag=VFLAGNONE;  // flags for the verb we build
  if(w==ds(CUSDOT)){   // power is _.
   ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs
-  n=IMIN;  // set _. value in n  scaf allow inplace
+  n=IMIN;  // set _. value in n
+  flag = FAV(a)->flag&VASGSAFE+VJTFLGOK2+VJTFLGOK1;  // u^:v^:_. inherits inplaceability from u^:v
  }else{   // normal power, not _.
   RZ(hs=vib(w));   // hs=n coerced to integer
   ASSERT(AN(hs)!=0,EVDOMAIN);  // empty power is error
@@ -438,7 +440,6 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
   n=n==IMIN?-IMAX:n;  // exponent IMIN reserved for ^:_.
  }
  f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
- I flag=VFLAGNONE;  // flags for the verb we build
  if(!AR(w)){  // input is an atom
   A h=0; f1=f2=jtpowatom12;   // inverse, if we can calculate it
   // Handle the important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), _ (converge), _. (dowhile)
@@ -448,12 +449,13 @@ DF2(jtpowop){F2PREFIP;A hs;B b;V*v;
     // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
     // must wait until we get arguments
     f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr;})} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-    flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
-   }else{  // u^:_
+    flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse (monad only)
+// obsolete else{  // u^:_
 // obsolete     f1=f2=jtpinf12;
-    flag=VFLAGNONE;  // scaf allow inplace
+// obsolete     flag=VFLAGNONE;
 // obsolete      fdeffill(z,0,CPOWOP,VERB,jtpinf12,jtpinf12,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
    }
+   // if u^:_, never allow inplacing since we are converging
 // obsolete    fdeffill(z,0,CPOWOP,VERB,f1,f2,a,w,h,flag,RMAX,RMAX,RMAX);
 // obsolete    FAV(z)->localuse.lu1.poweratom=(IMAX&(ABS(n)<<POWERABSX))+(n<0?POWERANEG:0);  // save the power, in flagged form
   }

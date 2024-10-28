@@ -771,16 +771,6 @@ exitra:
 }
 static A jtamendn2c(J jt,A a,A w,A self){R jtamendn2(jt,a,w,VAV(self)->fgh[0],self);}  // entry point from normal compound
 
-// Execution of x -@:{`[`]}"r y
-static DF2(jtamnegate){F2PREFIP;
- ARGCHK2(a,w); 
- // if y is CMPX/FL/QP, execute markd x} y which means negate
- if(AT(w)&FL+CMPX+QP)R jtamendn2(jtinplace,markd((AT(w)>>FLX)&(FL+CMPX>>FLX)),w,a,self);
- // otherwise, revert to x -@:{`[`]}"r y, processed by jtgav2
- US ranks=jt->ranks; RESETRANK;
- R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);
-}
-
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
 static DF2(amccv2){F2PREFIP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
@@ -851,13 +841,87 @@ B jtgerexact(J jt, A w){A*wv;
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
+// this is [x] u^:gerund y and [x] gerund} y
+// Here, f1 is the original u and g1 is the original v; hs points to the gerund
+// First, we run hv[1]->valencefns[0] on y (this is gerund v1, the selector/power);
+// then we run (sv->id)->valencefns[1] on fs (the original u) and the result of selector/power (with self set to (sv->id):
+//     sv->id is the original conjunction, executed a second time now that we have the selector/power
+//     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
+// then we execute gerund v2 on y (with self set to v2)
+// then we execute ff on the result of (v2 y), with self set to ff  scaf combine all 4 into 1
+
+// verb executed for v0`v1`v2} y
+static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
+ // first, get the indexes to use.  Since this is going to call m} again, we protect against
+ // stack overflow in the loop in case the generated ff generates a recursive call to }
+ // If the AR is a noun, just leave it as is
+ df1(ffm,w,hv[1]);  // x v1 y - no inplacing
+ RZ(ffm);
+// obsolete if(sv->id!=CAMEND)SEGFAULT;  // scaf
+// obsolete  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (v1 y)}
+ RZ(ff=amend(ffm));  // now ff represents (v1 y)}.  scaf avoid this call, go straight to mergn1
+ if(AT(hv[2])&NOUN){ffx=hv[2];}else{RZ(df1(ffx,w,hv[2]))}
+ R df1(ffm,ffx,ff);
+}
+
+// verb executed for x v0`v1`v2} y
+static DF2(jtgav2){F2PREFIP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
+A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
+ // first, get the indexes to use.  Since this is going to call m} again, we protect against
+ // stack overflow in the loop in case the generated ff generates a recursive call to }
+ // If the AR is a noun, just leave it as is
+ df2(ffm,a,w,C(hv[1]));  // x v1 y - no inplacing.
+ RZ(ffm);
+// obsolete if(sv->id!=CAMEND)SEGFAULT;  // scaf
+// obsolete  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (x v1 y)}  .  Alas, ffm can no longer be virtual
+ RZ(ff=amend(ffm));  // now ff represents(x v1 y)} .  scaf avoid this call, go straight to mergn1
+ // Protect any input that was returned by v1 (must be ][)
+ if(a==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEW);
+ PUSHZOMB
+ // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
+ // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
+ RZ(ffy = (FAV(C(hv[2]))->valencefns[1])(a!=w&&(FAV(C(hv[2]))->flag&VJTFLGOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,C(hv[2])));  // flag self about f, since flags may be needed in f
+ // x v0 y - can inplace any unprotected argument
+ RZ(ffx = (FAV(C(hv[0]))->valencefns[1])((FAV(C(hv[0]))->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,C(hv[0])));
+ // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
+ POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
+}
+
+// handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive
+// The id is the pseudocharacter for the function, which is passed in as the pchar for the derived verb
+static A jtgadv(J jt,A w){A hs;I n;
+ ARGCHK1(w);
+ ASSERT(BOX&AT(w),EVDOMAIN);
+// obsolete  n=AN(w);
+// obsolete  ASSERT(1>=AR(w),EVRANK);
+ ASSERT(BETWEENC(AN(w),2,3),EVLENGTH);  // verify 2-3 gerunds
+// obsolete  ASSERT(BOX&AT(w),EVDOMAIN);
+// obsolete  RZ(hs=fxeach(3==n?w:behead(reshape(num(4),w)),(A)(&jtfxself[0])));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
+ RZ(hs=fxeachv(1,3==AN(w)?w:behead(reshape(num(4),w))));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
+ // hs is a BOX array, but its elements are ARs
+ // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
+// obsolete  ASSERT(AT(C(AAV(hs)[0]))&AT(C(AAV(hs)[1]))&AT(C(AAV(hs)[2]))&VERB,EVDOMAIN);
+ I alr=atoplr(C(AAV(hs)[0]));   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
+ I flag=(FAV(C(AAV(hs)[0]))->flag&FAV(C(AAV(hs)[1]))->flag&FAV(C(AAV(hs)[2]))->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+(alr-2>0?alr-2:alr);
+ R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
+}
+
+// Execution of x -@:{`[`]}"r y
+static DF2(jtamnegate){F2PREFIP;
+ ARGCHK2(a,w); 
+ // if y is CMPX/FL/QP, execute markd x} y which means negate
+ if(AT(w)&FL+CMPX+QP)R jtamendn2(jtinplace,markd((AT(w)>>FLX)&(FL+CMPX>>FLX)),w,a,self);
+ // otherwise, revert to x -@:{`[`]}"r y, processed by jtgav2
+ US ranks=jt->ranks; RESETRANK;
+ R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);
+}
 
 // u} handling.  This is not inplaceable but the derived verb is
 F1(jtamend){F1PREFIP;
  ARGCHK1(w);
  if(VERB&AT(w)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
  else if(ger(jt,w)){A z;
-  RZ(z=gadv(w,CRBRACE))   // get verbs for v0`v1`v2}, as verbs
+  RZ(z=gadv(w))   // get verbs for v0`v1`v2}, as verbs
   A *hx=AAV(FAV(z)->fgh[2]);
   if((FAV(hx[0])->id&~1)==CATCO&&FAV(FAV(hx[0])->fgh[0])->id==CMINUS&&AT(FAV(hx[0])->fgh[1])&VERB&&FAV(FAV(hx[0])->fgh[1])->id==CFROM&&FAV(hx[1])->id==CLEFT&&FAV(hx[2])->id==CRIGHT){
    FAV(z)->valencefns[1]=jtamnegate;    // if gerund is -@[:]{`[`], change the dyad function pointer to the special code

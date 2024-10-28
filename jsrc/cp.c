@@ -303,19 +303,6 @@ DF2(jtply2){PROLOG(107);A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A z, zz;
 // obsolete static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
 // obsolete static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
 // obsolete 
-// When u^:v is encountered, we replace it with a verb that comes to one of these.
-// This creates a verb, jtpowxx, which calls jtdf1 within a PROLOG/EPILOG pair, after creating several names:
-// sv->self data; fs=sv->fgh[0] (the A block for the f operand); f1=f1 in sv->fgh[0] (0 if sv->fgh[0]==0); f2=f2 in sv->fgh[0] (0 if sv->fgh[0]==0);
-//                gs=sv->fgh[1] (the A block for the g operand); g1=f1 in sv->fgh[1] (0 if sv->fgh[1]==0); g2=f2 in sv->fgh[1] (0 if sv->fgh[1]==0)
-// Here, f1 is the original u and g1 is the original v
-// We call g1 (=original v), passing in y (and gs as self).  This returns v y
-// We then call powop(original u,result of v y), which is the VN case for u^:(v y) and creates a derived verb to perform that function 
-// Finally df1 treats the powop result as self, calling self/powop->valencefns[0] (the appropriate power case based on v y)
-//   with the y arg as the w operand (and self/powop included to provide access to the original u)
-// We allow v to create a gerund, but we do not allow a gerund to create a gerund.
-
-// We catch the special cases 0  & 1 here, mostly for branch-prediction purposes.  All results of g1/g2 will be nouns, while
-// most instances of u^:v (run through powop) have v as verb
 
 #if 0  // obsolete
 // here for u^:v y
@@ -359,7 +346,8 @@ static DF2(jtpowv2acell){F2PREFIP;A z;PROLOG(0110);
 }
 
 #else
-// [x] u^:v y, fast when result of v is 0 or 1 (=if statement).  jtflagging is that required by u.  JTDOWHILE can be set to indicate that this is called from ^:_. in which case we return (A)1 if u was 0
+// [x] u^:v y, fast when result of v is 0 or 1 (=if statement).  jtflagging is that required by u.  JTDOWHILE can be set to indicate that this is called from ^:_. in which case we return (A)1 if v returned 0
+// if result of v is not 0/1, we reexecute [x] u^:n y  where n is ([x] v y)
 static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
  w=AT(w)&VERB?0:w;  // w is 0 for monad
  A u,uc; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
@@ -374,10 +362,57 @@ static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
  }
  EPILOG(z);
 }
-
 // obsolete jtinplace=FAV(fs)->flag&(VJTFLGOK1<<(!!w))?jtinplace:jt; 
 // obsolete 
 #endif
+
+#if 0 // obsolete 
+static DF1(jtgcl1){V* RESTRICT sv=FAV(self); A gs=sv->fgh[1]; A ff,z0,z1,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id));
+ RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
+}
+
+static DF2(jtgcl2){V* RESTRICT sv=FAV(self); A gs=sv->fgh[1]; A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL RZ(df2(z0,a,w,C(hv[1]))) df2(ff,z0,gs,ds(sv->id));
+ RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
+}
+
+#endif
+#if 1  // obsolete
+static DF1(jtgcr1){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; A ff,z0,z1,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id));
+ RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
+}
+
+static DF2(jtgcr2){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL RZ(df2(z0,a,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id));
+ RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
+}
+#else
+// execution of [x] gerund} y and [x] u^:gerund y
+// Apply the gerunds to xy, then  apply u^:n  scaf combine the above, support inplacing
+static DF2(jtgrl12){
+}
+#endif
+
+// called for ^:(v0`v1`v2) forms.
+// Creates a verb that will run jtgc[rl][12] to execute the gerunds on the xy arguments, and
+// then execute the operation
+// a is the original u (a verb), w is the original n (boxed)
+// obsolete A jtgconj(J jt,A a,A w,C id){A hs;
+static A jtgconj(J jt,A a,A w){A hs;
+ ARGCHK2(a,w);
+// obsolete  ASSERT(((AT(a)|AT(w))&(VERB|BOX))==(VERB|BOX),EVDOMAIN);  // v`box or box`v
+// obsolete  na=ISDENSETYPE(AT(a),BOX); y=na?a:w; n=AN(y);  // na is 1 for gerund}; y is the gerund
+// obsolete  ASSERT(1>=AR(w),EVRANK);
+ ASSERT((AN(w)&-2)==2,EVLENGTH);  // length is 2 or 3
+// obsolete  ASSERT(BOX&AT(y),EVDOMAIN);
+// obsolete  RZ(hs=fxeach(3==n?y:jlink(scc(CLBKTC),y),(A)&jtfxself[0]));
+ RZ(hs=fxeachv(1,3==AN(w)?w:jlink(scc(CLBKTC),w)));  // convert gerund to aray of A blocks, each verified to be a verb
+// obsolete  R fdef(0,id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
+ R fdef(0,CPOWOP,VERB, jtgcr1,jtgcr2, a,w,hs, VGERR, RMAX,RMAX,RMAX);
+}
+
 
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
@@ -424,7 +459,7 @@ DF2(jtpowop){F2PREFIP;B b;V*v;
 // obsolete     fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)  // never allow inplacing when there are multiple results
     encn = FAV(z)->localuse.lu1.poweratom=((ABS(n)-1)<<POWERABSX)+(n<0?POWERANEG:0)+POWERAMULT;  // save the power, in flagged form.  count is # powers to evaluate, which is n-1
 // obsolete     RETF(z);
-   }else R gconj(a,w,CPOWOP);  // not <numatom or a: .  Create the derived verb for [v0`]v1`v2, return that
+   }else R gconj(a,w);  // not <numatom or a: .  Create the derived verb for [v0`]v1`v2, return that
 //    ASSERT(self!=0,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
    // falling through for boxed numeric to fill in the result
    h=0;  // must be 0 if unused

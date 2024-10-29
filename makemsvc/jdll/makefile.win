@@ -298,9 +298,9 @@ OBJS_SIMDUTF8= \
 DEF= ../../dllsrc/jdll.def
 RCS= ../../dllsrc/jdll.rc
 
-# !ifndef LD
+!ifndef LD
 LD=lld-link
-# !endif
+!endif
 
 .c.o:
 	$(CC) $(CFLAGS) $(CFLAGS1) /Fo$@ /c $<

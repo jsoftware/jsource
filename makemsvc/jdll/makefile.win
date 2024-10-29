@@ -315,7 +315,7 @@ LD=lld-link
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
 !if "ARM64"=="$(TARGET_CPU)"
-TARGET= jarm64.exe
+TARGET= jarm64.dll
 !elseif "x64"=="$(TARGET_CPU)"
 !if "1"=="$(JAVX512)"
 TARGET= javx512.dll

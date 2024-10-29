@@ -9,7 +9,7 @@ os=: os, ((<os)e.'openbsd';'freebsd')#(('arm64'-:9!:56'cpu'){::'';'arm64')
 os=: os, ((<os)e.<'darwin')#('APPLEM1'-:2!:5'APPLEM1'){::'';'arm'
 os=: os, ((<os)e.<'win')#(('arm64'-:9!:56'cpu'){::'';'arm64')
 testres=: 'test',os,'.txt'
-IFWINARM64=: IFWIN *. ('arm64'-:9!:56'cpu')
+IFWA64=: IFWIN*.'arm64'-:9!:56'cpu'
 
 0!:0 <testpath,'tsu.ijs'
 GITHUBCI=: 1       NB. testing on github
@@ -19,8 +19,8 @@ stdout LF ,~ 9!:14''
 
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gstack.ijs' NB. temporarily disable
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. temporarily disable
-ddall=: ~. ddall ,~ (-.IFWINARM64)#(IF64*.(<UNAME)e.<'Win')#(<testpath),each <'gcip1.ijs'
-ddall=: ~. ddall ,~ (-.IFWINARM64)#((<UNAME)e.'Win';'Darwin')#(<testpath),each <'glapack.ijs'
+ddall=: ~. ddall ,~ (-.IFWA64)#(IF64*.(<UNAME)e.<'Win')#(<testpath),each <'gcip1.ijs'
+ddall=: ~. ddall ,~ (-.IFWA64)#((<UNAME)e.'Win';'Darwin')#(<testpath),each <'glapack.ijs'
 
 NB. smoke test
 NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.ijs'

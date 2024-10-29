@@ -1,15 +1,15 @@
 # READLINE=1
-ifeq (1,$(USE_PYXES))
+!if "1"=="$(USE_PYXES)"
 PTHREADINC = -I../../pthreads4w/include
 DPYXES = /DPYXES=1
-else
+!else
 DPYXES = /DPYXES=0
-endif
+!endif
 MPIRINC = -I../../mpir/include
-ifeq (1,$(_DEBUG))
+!if "1"=="$(_DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
-endif
+!endif
 
 !if "ARM64"=="$(TARGET_CPU)"
 CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor

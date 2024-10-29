@@ -80,7 +80,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
 
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(wf,mn,1)
+  ZZPARMS(wf,mn,1,1)
 #define ZZINSTALLFRAME(optr) MCISHd(optr,AS(w),wf)
   for(i0=mn;i0;--i0){
    ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
@@ -353,7 +353,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){
 
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(lof+lif,mn,2)
+  ZZPARMS(lof+lif,mn,2,2)
 #define ZZINSTALLFRAME(optr) MCISHd(optr,los,lof) MCISHd(optr,lis,lif)
 
   for(i0=outerframect;i0;--i0){

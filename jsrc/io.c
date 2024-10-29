@@ -461,11 +461,11 @@ static void runiep(JS jjt,JJ jt,A *old){
  }
 }
 
-// execute the given sentence.  Result is 0 if OK, otherwise error code
+// execute the given sentence.  Result is 0 if OK, otherwise error code.  The low 9 bits of jtflagged are available as flags
 // We handle postmortem debugging here.
 // The sentence may have components that require prompting (m : 0 or {{ }}), which we allow from console only
 // at end, if sentence was from console, execute iep if any before returning
-static I jdo(JS jt, C* lp){I e;A x;JJ jm=MDTHREAD(jt);  // get address of thread struct we are executing in (the master/debug thread)
+static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ jm=MDTHREAD(jt);  // get address of thread struct we are executing in (the master/debug thread)
  jm->jerr=0; jm->etxn=0; /* clear old errors */
  // if the previous console sentence ended with error, and the user replies with ENTER (i. e. empty string), treat that as a request to debug.
  // on any other reply, free up the values and allocations made by the failing sentence
@@ -606,8 +606,9 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
 // Run sentence; result is jt->jerr
+// the low bits of jt are available as flags
 // If JE(jt,nfe), loop forever reading sentences (but not if this is a recursive call)
-CDPROC int _stdcall JDo(JS jt, C* lp){int r;
+CDPROC int _stdcall JDo(JS jtflagged, C* lp){int r;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);
  SETJTJM(jt,jm)
 
  // Move to next state.  If we are not interruptible, that's an error
@@ -630,7 +631,7 @@ CDPROC int _stdcall JDo(JS jt, C* lp){int r;
   // pm debug stack.  We take advantage of the fact that the popto point doesn't change, save that here, and suppress the pop during pm
  while(1){   // normal console runs 1 sentence; for comp ease JHS loops forever bere executing sentences
   jm->recurstate|=RECSTATERUNNING;  // if we were from console, this goes to running.  If we are running already, we must be at a recursion point that set RENT
-  MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jt,lp);)
+  MAYBEWITHDEBUG(!(origrstate&RECSTATERENT),jm,r=(int)jdo(jtflagged,lp);)
   jm->recurstate=origrstate;   // restore original idle/rent state
 
   if(jm->recurstate&RECSTATERENT)break;  // if the call was a recursion, don't prompt again

@@ -12,6 +12,8 @@
 #define STATEINFINITEPOW (((I)1)<<STATEINFINITEPOWX)
 #define STATENEEDNEWPOWX 15
 #define STATENEEDNEWPOW (((I)1)<<STATENEEDNEWPOWX)
+#define STATEMONADX VERBX  // 27 set 
+#define STATEMONAD (((I)1)<<STATEMONADX)
 #define ZZFLAGWORD state
 
 // x is a block that contains cell results.  We open it; if that creates domain error we track down the error and change it to assembly error
@@ -187,6 +189,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
    AAV1(zz)[newslot]=w; AN(zz)=newslot+1;  // install the new value & account for it in len
    if((newslot&7)==0)tpop(old);  // u shouldn't leave much lying around, but we clean up every so often
   }else{RZ(w=gc(w,old))}   // single result.  It stays in w but we need to free the old w
+  JBREAK0   // allow ATTN to break into the loop
  }
  if(zz!=0){AS(zz)[0]=AN(zz); RZ(w=jtopenforassembly(jt,zz));}   // if multiple, assemble the results
  EPILOG(w)  // return the result
@@ -194,24 +197,39 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
 
 #endif
 
-static DF1(jtindexseqlim1){A fs;
+#if 0 // obsolete
+static DF1(jtindexseqlim1){A fs;   // scaf combine
  ARGCHK1(w); 
  fs=FAV(self)->fgh[0];  // {&x
  R AN(w)&&AT(w)&B01+INT?tclosure(FAV(fs)->fgh[1],w):jtpowatom12(jt,w,self,self);
-}    /* {&x^:(<_) w */
+}    /*  */
 
 static DF2(jtindexseqlim2){
  ARGCHK2(a,w);
  R AR(a)<=1&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT?tclosure(a,w):jtpowatom12(jt,a,w,self);
+}    /*  */
+#else
+// {&x^:a: w   or  a {~^:a: w, bivalent
+static DF2(jtindexseqlim12){
+ ARGCHK2(a,w);
+ A origa=a, origw=w;  // in case we revert
+ if(unlikely(AT(w)&VERB)){if(FAV(FAV(self)->fgh[0])->id!=CAMP)goto revert; w=a; a=FAV(FAV(self)->fgh[0])->fgh[1];  // monad, verify {&x^:a:, use the x
+ }else{if(FAV(FAV(self)->fgh[0])->id==CAMP)goto revert;}  // dyad, verify {~^:a:
+ if(AR(a)<=1&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT)R tclosure(a,w);
+revert:;
+ R jtpowatom12(jt,origa,origw,self);
 }    /* a {~^:(<_) w */
+#endif
 
-// general u^:n w where n is any integer array or finite atom.  If atom, it will be negative
-static DF1(jtply1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(0040);A zz=0;
+// general u^:n w where n is any integer array or finite atom.  If atom, it will be negative.  Bivalent
+static DF2(jtply12){A fs=FAV(self)->fgh[0]; PROLOG(0040);A zz=0;
 #define ZZWILLBEOPENEDNEVER 1  // can't honor willbeopened because the results are recycled as inputs
 #define ZZPOPNEVER 1  // can't pop the inputs - 
 #define ZZDECL
 #include "result.h"
  I state=ZZFLAGINITSTATE;  // flags for result.h
+ I wt=AT(w); state|=wt&VERB; w=wt&VERB?a:w;  // set MONAD flag, w=correct w, a=a or garbage
+ AF f12=FAV(fs)->valencefns[!(wt&VERB)]; // fetch routine for positive powers
  // p =. ~. sn=.(gn=./:,n) { ,n   which gives the list of distinct powers
  A n=FAV(self)->fgh[2]; A rn; RZ(rn=ravel(n));  // n is powers, rn is ravel of n
  A gn; RZ(gn=grade1(rn)); A p; RZ(p=nub(fromA(gn,rn)));  // gn is grade of power, p is sorted list of unique powers we want
@@ -224,11 +242,11 @@ static DF1(jtply1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(
  state|=STATEPOSITIVEPOW|STATENEEDNEWPOW;  // start in positive direction
  // remember if there is an infinite power in this direction
  state|=(pv[np-1]==IMAX)<<STATEINFINITEPOWX;   // infinities are now +/- IMAX
- ZZPARMS(1,np,1)
+ A invfs; if(pv[0]<0){RZ(invfs=state&STATEMONAD?inv(fs):invamp(a,fs,0)); state&=~ZZFLAGBOXATOP;}   // if inverse, look it up outside the tpop loop, and ignore <@ optimization that won't be in the inverse
+ ZZPARMS(1,np,12,!(state&STATEMONAD))
 #define ZZINSTALLFRAME(optr) *optr++=np;
  // loop for each result power:
  I neededpow;  // the next power we are looking for
- A invfs; if(pv[0]<0)RZ(invfs=inv(fs));   // if there is an inverse, look it up outside the loop so we don't free it
  A *stkfreept=jt->tnextpushp;  // stack-free pointer: we will free non-result values back to this point
  while(1){
   // pscan points to the next power to read - could be out of bounds.  But we might not be reading yet
@@ -242,7 +260,7 @@ static DF1(jtply1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(
       state|=(pv[0]==-IMAX)<<STATEINFINITEPOWX;  // set if there is a __ power
       z=w;  // start back on the initial arg
       zpow=0;  // reset the power corresponding to z
-      fs=invfs; f1=FAV(fs)->valencefns[0];  // switch over to the inverse function
+      fs=invfs; f12=FAV(fs)->valencefns[0];  // switch over to the inverse function
      }
     }
     if(!BETWEENO(pscan,0,np))break;  // when we exhaust the powers, quit the loop
@@ -258,7 +276,7 @@ static DF1(jtply1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(
    state|=STATENEEDNEWPOW;   // once we store a power we need the next one
   }else{  // don't execute the verb willy-nilly because the store we just made may be the last  (we could check pscan and execute if we know another power is needed - but don't execute if zpow is infinite)
    // else execute verb, increment current power.  If there is an infinite power, see if result matches input, set current power to infinite if so
-   A oldz=z; RZ(z=CALL1(f1,z,fs));  // run the verb
+   A oldz=z; RZ(z=CALL12(!(state&STATEMONAD),f12,state&STATEMONAD?z:a,z,fs));  // run the verb
    zpow+=state&STATEPOSITIVEPOW?1:-1;  // increment the power corresponding to z
    if(state&STATEINFINITEPOW){if(equ(oldz,z))zpow=state&STATEPOSITIVEPOW?IMAX:-IMAX;}  // if no change, make z apply to everything.  Don't check unless _ power given
    if(!(zpow&7)){
@@ -290,15 +308,18 @@ static DF1(jtply1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(
  EPILOG(zz);
 }
 
-static DF1(jtinv1){A fs=FAV(self)->fgh[0]; F1PREFIP;A z; ARGCHK1(w);A i; RZ(i=inv((fs))); WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);) RETF(z);}  // was invrecur(fix(fs))
+// action routines for u^:_1: general case
+static DF1(jtinv1){A fs=FAV(self)->fgh[0]; F1PREFIP; A z; ARGCHK1(w);A i; RZ(i=inv(fs)); WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i,i);) RETF(z);}
   // we defer eformat till the caller so that the user doesn't see the description of the inverse, which might be unrecognizable
-static DF1(jtinvh1){A hs=FAV(self)->fgh[2]; F1PREFIP;A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs); RETF(z);}
-static DF2(jtinv2){A fs=FAV(self)->fgh[0]; A z; ARGCHK2(a,w); WITHEFORMATDEFERRED(df1(z,w,inv(amp(a,fs)));) STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
-static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
+static DF2(jtinv2){ A fs=FAV(self)->fgh[0]; F2PREFIP; A z; ARGCHK2(a,w); A i; RZ(i=invamp(a,fs,0)); STACKCHKOFL WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?(J)((I)jtinplace&~JTINPLACEA):jt,w,i,i);) RETF(z); }  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
+// obsolete static DF2(jtinv2){A fs=FAV(self)->fgh[0]; A z; ARGCHK2(a,w); WITHEFORMATDEFERRED(df1(z,w,inv(amp(a,fs)));) STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
+// if u has no names:
+static DF1(jtinvh1){A hs=FAV(self)->fgh[2]; F1PREFIP;A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs); RETF(z);}  // monadic inverse was already looked up in h
+static DF1(jtinverr){ASSERT(0,EVDOMAIN);}  // uninvertible monad: come here if inverse invoked as a monad (x&u^:_1 might be OK as a dyad) 
 
-// old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
-DF2(jtply2){PROLOG(107);A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}  // scaf remove
-
+// obsolete old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
+// obsolete DF2(jtply2){PROLOG(107);A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}  // scaf remove; don't reexecute powop
+// obsolete 
 // obsolete 
 // obsolete static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
 // obsolete static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
@@ -378,7 +399,7 @@ static DF2(jtgcl2){V* RESTRICT sv=FAV(self); A gs=sv->fgh[1]; A ff,z0,z1,z2,*hv=
 }
 
 #endif
-#if 1  // obsolete
+#if 0  // obsolete
 static DF1(jtgcr1){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; A ff,z0,z1,*hv=AAV(sv->fgh[2]);
  STACKCHKOFL RZ(df1(z0,w,C(hv[1]))) df2(ff,fs,z0,ds(sv->id));
  RZ(df1(z1,w,C(hv[2]))) R df1(z0,z1,ff);
@@ -389,9 +410,39 @@ static DF2(jtgcr2){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; A ff,z0,z1,z2,*hv=
  RZ(df2(z1,a,w,C(hv[0]))) RZ(df2(z2,a,w,C(hv[2]))) R df2(z0,z1,z2,ff);
 }
 #else
-// execution of [x] gerund} y and [x] u^:gerund y
-// Apply the gerunds to xy, then  apply u^:n  scaf combine the above, support inplacing
-static DF2(jtgrl12){
+// execution of [x] u^:gerund y as (x v0 y) u^:(x v1 y) (x v2 y)   or  u^:(v1 y) (v2 y)
+// if v1 evaluates to 0, avoid evaluating v0
+// Apply the gerunds to xy, then  apply u^:n
+static DF2(jtgcr12){F2PREFIP;PROLOG(0);
+ w=AT(w)&VERB?0:w;  // throughout this bivalent routine a is w/a w is 0/w  (monad/dyad) w!=0 is the dyad flag
+ jtinplace=(J)((I)jtinplace&((a==w)?~(JTINPLACEA+JTINPLACEW):~0));  // cannot inplace a/w if they are equal
+ I origjtinplace=(I)jtinplace;  // remember initial inplacing status of args - after equality check
+ A *hv=AAV(FAV(self)->fgh[2]); I hn=AN(FAV(self)->fgh[2]);  // hv->v0`v1`v2.  These cannot be pyxes.  hn is their number
+ STACKCHKOFL     // unless we prevent it, the gerund might return a gerund, creating an infinite loop
+ A ff;   // the routine for the function -  u or u^:newpower
+ A z0; RZ(z0=CALL12(w,FAV(hv[hn-2])->valencefns[!!w],a,w,hv[hn-2]))  // z=.[x] v1 y  which is the power to use
+ A uc; I u0; if(likely(((AT(z0)&~(B01+INT))|AR(z0)|((u0=BIV0(z0))&~1))==0)||(AR(z0)==0&&AT(z0)&NUMERIC&&(uc=cvt(INT,z0))!=0&&!((u0=IAV(uc)[0])&~1))){  // v1 result is atomic bool/int 0/1 (if statement)
+  ff=FAV(self)->fgh[0]; ff=u0?ff:0;  // we will execute u or nothing; ff tells which
+ }else{  // v1 returned something other than 0/1
+  RZ(ff=powop(FAV(self)->fgh[0],z0,(A)1))  // ff=.u^:power, a verb to execute.  Any arg used in ff will no longer be inplaceable
+  u0=1;  // indicate we will execute ff
+ }
+ A v2=hv[hn-1];  // the verb for v2
+ if(w&&3-hn<u0){   // execute v0 if dyad, but only if we are going to execute u and v0 was given (i. e. hn=3 and u0=1)
+  RZ(z0=CALL12(w,FAV(hv[0])->valencefns[1],a,w,hv[0]))  // z0=[x] v0 y  if this is a dyad
+  jtinplace=(J)((I)jtinplace&~(JTINPLACEA*(z0==a)+JTINPLACEW*(z0==w)));  // if v0 returned an argument, remove v2 inplacing for that argument
+ }else z0=w?a:0;  // if dyad, set v0 result to x for omitted v0; if monad, set z0=0 as a flag
+ jtinplace=(FAV(v2)->flag&(VJTFLGOK1<<!!z0))?jtinplace:jt;  // turn off inplacing if v2 doesn't support it
+ A z; RZ(z=CALL12IP(w,FAV(v2)->valencefns[!!z0],a,w,v2))  // z=[x] v2 y  inplacing if supported
+ if(ff){  // if the power was 0, keep the y value as the result, otherwise...
+  // we allow inplacing z0 and z UNLESS they match an input x/y that was not inplaceable
+  I zipno=(((z==w)&~origjtinplace) | ((z==a)&~(origjtinplace>>!!z0)));  // if z=w, it must be dyadic & we look at original w.  If z=a it could be either & we look at dyad/monad depending
+  I z0ipno=!!z0 & (((z0==w)&~origjtinplace) | ((z0==a)&~(origjtinplace>>!!z0)));  // same for z0, but never if monad
+  jtinplace=(J)((I)jt+((JTINPLACEA+JTINPLACEW)^(JTINPLACEA*z0ipno+JTINPLACEW*zipno)));  // inplace unless copied.  If monad, z0=w=0
+  jtinplace=(FAV(ff)->flag&(VJTFLGOK1<<!!z0))?jtinplace:jt;  // turn off inplacing if v2 doesn't support it
+  z=CALL12IP(z0,FAV(ff)->valencefns[!!z0],z0?z0:z,z,ff);  // z=[z0] u^:power z
+ }
+ EPILOG(z);
 }
 #endif
 
@@ -408,9 +459,10 @@ static A jtgconj(J jt,A a,A w){A hs;
  ASSERT((AN(w)&-2)==2,EVLENGTH);  // length is 2 or 3
 // obsolete  ASSERT(BOX&AT(y),EVDOMAIN);
 // obsolete  RZ(hs=fxeach(3==n?y:jlink(scc(CLBKTC),y),(A)&jtfxself[0]));
- RZ(hs=fxeachv(1,3==AN(w)?w:jlink(scc(CLBKTC),w)));  // convert gerund to aray of A blocks, each verified to be a verb
+// obsolete  RZ(hs=fxeachv(1,3==AN(w)?w:jlink(scc(CLBKTC),w)));  // convert gerund to aray of A blocks, each verified to be a verb.  If v0 omitted, use [ so (x [ y) is x
+ RZ(hs=fxeachv(1,w));  // convert gerund to aray of A blocks, each verified to be a verb.
 // obsolete  R fdef(0,id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
- R fdef(0,CPOWOP,VERB, jtgcr1,jtgcr2, a,w,hs, VGERR, RMAX,RMAX,RMAX);
+ R fdef(0,CPOWOP,VERB, jtgcr12,jtgcr12, a,w,hs, VGERR+VJTFLGOK1+VJTFLGOK2, RMAX,RMAX,RMAX);
 }
 
 
@@ -428,7 +480,7 @@ DF2(jtpowop){F2PREFIP;B b;V*v;
  A z; fdefallo(z)  // allocate normal result area
  AF f1,f2;   // derived-verb handler
  I flag=VFLAGNONE;  // flags for the verb we build
- A h;  // A block for the power list converted to integer (initially, remaining for jtply1 only); u^:_1 (for jtinv[12]); 0 for others
+ A h;  // A block for the power list converted to integer (initially, remaining for jtply12 only); u^:_1 (for jtinv[12]); 0 for others
  I encn;  // the encoded form of the integer power to be passed to pow12n
  if(AT(w)&VERB){
   // u^:v.  Create derived verb to handle it.
@@ -453,15 +505,15 @@ DF2(jtpowop){F2PREFIP;B b;V*v;
     // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
 // obsolete    if((!AN(x)||FL&AT(x)&&inf==DAV(x)[0])){
     if(n==IMAX){
-     if(CAMP==v->id&&(CFROM==IDD(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:a: y
-     else if(CTILDE==v->id&&CFROM==IDD(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:a: y
+     if(CAMP==v->id&&(CFROM==IDD(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim12;}  // {&b^:a: y
+     else if(CTILDE==v->id&&CFROM==IDD(v->fgh[0])){f2=jtindexseqlim12;}   // x {~^:a: y
     }
 // obsolete     fdeffill(z,0L,CPOWOP,VERB,f1,f2,a,w,0L,VFLAGNONE, RMAX,RMAX,RMAX)  // never allow inplacing when there are multiple results
     encn = FAV(z)->localuse.lu1.poweratom=((ABS(n)-1)<<POWERABSX)+(n<0?POWERANEG:0)+POWERAMULT;  // save the power, in flagged form.  count is # powers to evaluate, which is n-1
 // obsolete     RETF(z);
    }else R gconj(a,w);  // not <numatom or a: .  Create the derived verb for [v0`]v1`v2, return that
 //    ASSERT(self!=0,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
-   // falling through for boxed numeric to fill in the result
+   // falling through for <numatom or a: to fill in the result
    h=0;  // must be 0 if unused
   }else{
    // unboxed n.
@@ -486,9 +538,9 @@ DF2(jtpowop){F2PREFIP;B b;V*v;
     if((n<<1)==-2){  //  u^:_1 or u^:_
      if(n<0){  // u^:_1
       // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
-      // must wait until we get arguments
-      f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr;})} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-      flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse (monad only)
+      // must wait until we get arguments.  We can't trust the inverse to be ASGSAFE
+      f2=jtinv2; f1=jtinv1; I jtf=VJTFLGOK1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;jtf=FAV(h)->flag&VJTFLGOK1;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
+      flag|=jtf;  // inv1 inplaces and calculates ip for next step; invh has ip from inverse (monad only)
 // obsolete else{  // u^:_
 // obsolete     f1=f2=jtpinf12;
 // obsolete     flag=VFLAGNONE;
@@ -504,7 +556,7 @@ DF2(jtpowop){F2PREFIP;B b;V*v;
 // obsolete     FAV(z)->localuse.lu1.poweratom=encn;
 // obsolete     RETF(z);
 // obsolete   if(IAV(hs)[0]>=0){f1=jtfpown; flag=FAV(a)->flag&VJTFLGOK1;}  // if nonneg atom, go to special routine for that, which supports inplace
-   }else{f1=jtply1; f2=jtply2;}  // non-atomic power: handle general case
+   }else{f1=f2=jtply12;}  // non-atomic power: handle general case
    // fall through to create result
   }  // end of 'u^:numeric'
  }  // end of 'u^:n'

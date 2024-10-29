@@ -579,7 +579,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
   // loop over the infixes
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(1,zi,1)
+  ZZPARMS(1,zi,1,1)
 #define ZZINSTALLFRAME(optr) *optr++=zi;
 
   // Allocate a virtual block for the argument, and give it initial shape and atomcount

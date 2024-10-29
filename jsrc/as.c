@@ -259,7 +259,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
 #define ZZSTARTATEND 1   // build result from bottom up
 #include "result.h"
 
-  ZZPARMS(1,n,2)
+  ZZPARMS(1,n,2,2)
 #define ZZINSTALLFRAME(optr) *optr++=n;
 
  AD * RESTRICT zz=0;

@@ -82,7 +82,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
    // We honor BOXATOP if the verb can operate on a cell of w in its entirety
    state |= STATENEEDSASSEMBLY;  // force us to go through the assembly code
    ZZFLAGWORD |= ((FAV(fs)->mr>=wr?VF2BOXATOP1:0)&(FAV(fs)->flag2))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.
-   ZZPARMS(m,n,1)
+   ZZPARMS(m,n,1,1)
 #define ZZINSTALLFRAME(optr) MCISHd(optr,as,m)
  }
  I gerundx=0; q=0;  // initialize to first gerund; we haven't allocated the input to {
@@ -912,7 +912,7 @@ skipspecial:;
 #define ZZDECL
 #define f2 f1
 #include "result.h"
-   if(unlikely((state&STATEDYADKEY)!=0)){ZZPARMS(1,m,2)}else {ZZPARMS(1,m,1)}
+   if(unlikely((state&STATEDYADKEY)!=0)){ZZPARMS(1,m,2,2)}else {ZZPARMS(1,m,1,1)}
 #undef f2
 
 #define ZZINSTALLFRAME(optr) *optr++=m;
@@ -1192,7 +1192,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 #define ZZDECL
 #include "result.h"
  I mn=rs[0]*rs[1];  // number of cells in the result
-  ZZPARMS(axisproc,mn,1)
+  ZZPARMS(axisproc,mn,1,1)
 #define ZZINSTALLFRAME(optr) *optr++=rs[axisproc-1];if(axisproc>1)*optr++=rs[0];  // Note the 2-axis result is transposed, so shape is reversed here for that case
 
  for(hi=rs[1];hi;--hi){C *svv, *dvv;  // pointers within the lower-right corner, starting at the top-left of the corner.  Before that we use them to advance through top-right

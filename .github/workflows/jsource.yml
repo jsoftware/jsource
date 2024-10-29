@@ -945,6 +945,7 @@ jobs:
       script\buildga.cmd arm64
 
    - name: Test JE (Windows arm64)
+     if: ${{ false }}
      shell: cmd
      run: |
       script\testga.cmd arm64

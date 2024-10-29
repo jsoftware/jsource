@@ -41,7 +41,7 @@ ifeq (ARM64,$(TARGET_CPU))
 else ifeq (x64,$(TARGET_CPU))
 # MPIRLIB = ../../mpir/dll/x64/mpir.lib
 else
-# MPIRLIB = ../../mpir/dll/win32/mpir.lib
+# MPIRLIB = ../../mpir/dll/x86/mpir.lib
 endif
 
 ifeq (1,$(NOSYNCHLIB))

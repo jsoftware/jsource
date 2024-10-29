@@ -140,8 +140,8 @@ copy tsdll\tsdll32.dll ..\j32\tsdll.dll
 copy jamalgam\jamalgam32.exe ..\j32\jamalgam.exe
 GOTO L06C
 :L06B
-copy jconsole\jconsolearm64.exe ..\jarm64\jconsole.exe
+copy jconsole\jconsole-arm64.exe ..\jarm64\jconsole.exe
 copy jdll\jarm64.dll ..\jarm64\j.dll
 copy tsdll\tsdllarm64.dll ..\jarm64\tsdll.dll
-copy jamalgam\jamalgamarm64.exe ..\jarm64\jamalgam.exe
+copy jamalgam\jamalgam-arm64.exe ..\jarm64\jamalgam.exe
 :L06C

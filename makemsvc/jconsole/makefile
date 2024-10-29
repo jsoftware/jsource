@@ -46,7 +46,7 @@ endif
 	$(CC) $(CFLAGS) $(CFLAGSLN) /Fo$@ /c $<
 
 ifeq (ARM64,$(TARGET_CPU))
-TARGET= jconsolearm64.exe
+TARGET= jconsole-arm64.exe
 else ifeq (x64,$(TARGET_CPU))
 TARGET= jconsole.exe
 else

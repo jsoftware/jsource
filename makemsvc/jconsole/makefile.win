@@ -46,7 +46,7 @@ LD=lld-link
 	$(CC) $(CFLAGS) $(CFLAGSLN) /Fo$@ /c $<
 
 !if "ARM64"=="$(TARGET_CPU)"
-TARGET= jconsolearm64.exe
+TARGET= jconsole-arm64.exe
 !elseif "x64"=="$(TARGET_CPU)"
 TARGET= jconsole.exe
 !else

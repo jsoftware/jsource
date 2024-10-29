@@ -2829,7 +2829,7 @@ FORCE_INLINE __m256d _mm256_maskload_pd(double const* mem_addr, __m256i mask)
 {
     __m256d ret;
    int i;
-   int64_t sign_bit = 1L << (8*sizeof( int64_t ) - 1);
+   int64_t sign_bit = 1LL << (8*sizeof( int64_t ) - 1);
 
     for (i=0; i<2; i++){
       if (sign_bit & mask.vect_s64[0][i])
@@ -2850,7 +2850,7 @@ FORCE_INLINE __m256d _mm256_maskload_pd(double const* mem_addr, __m256i mask)
 FORCE_INLINE void _mm256_maskstore_pd(double * mem_addr, __m256i mask, __m256d a)
 {
    int i;
-   int64_t sign_bit = 1L << (8*sizeof( int64_t ) - 1);
+   int64_t sign_bit = 1LL << (8*sizeof( int64_t ) - 1);
     for (i=0; i<2; i++){
       if (sign_bit & mask.vect_s64[0][i])
          mem_addr[i] = a.vect_f64[0][i];

@@ -60,7 +60,7 @@ EXPORT uint64_t Sleef_currentTimeMicros() {
 }
 #endif // #if defined(_WIN32)
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86))
 #include <intrin.h>
 EXPORT void Sleef_x86CpuID(int32_t out[4], uint32_t eax, uint32_t ecx) {
   __cpuidex(out, eax, ecx);
@@ -75,7 +75,7 @@ EXPORT void Sleef_x86CpuID(int32_t out[4], uint32_t eax, uint32_t ecx) {
 #endif
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_MSC_VER)
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
 static char x86BrandString[256];
 
 EXPORT char *Sleef_getCpuIdString() {

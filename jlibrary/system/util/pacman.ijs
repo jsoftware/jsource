@@ -994,7 +994,6 @@ case. do.
 end.
 i.0 0
 )
-
 linux=: 3 : 0
 'type bin icon arg'=. y
 n=. type,N
@@ -1012,9 +1011,9 @@ else.
     e=. '"',c,'"'
   else.
     if. 'gnome-terminal' -: TermEmu=. get_terminal'' do.
-      e=. '<T> -- "\"<C>\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
+      e=. '<T> -- "\\"<C>\\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
     else.
-      e=. '<T> -e "\"<C>\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
+      e=. '<T> -e "\\"<C>\\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
     end.
   end.
 end.
@@ -1783,7 +1782,7 @@ if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
   arch=. (#.IF64,~'x86'-:3{.9!:56'cpu'){::'arm';'aarch64';'i386';'x86_64'
   z=. libname,~ (tolower UNAME),'/',arch,'/'
 elseif. IFWIN do.
-  z=. libname,~ IF64{::'windows/win32/';'windows/x64/'
+  z=. libname,~ (IF64+IFWA64){::'windows/x86/';'windows/x64/';'windows/arm64/'
 elseif. do.
   z=. libname,~ 'apple/macos/'
 end.

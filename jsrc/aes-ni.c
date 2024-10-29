@@ -5,6 +5,8 @@
 
 #include "j.h"
 
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
+
 #include <stdint.h>
 #include <wmmintrin.h>
 #ifndef __USE_XOPEN2K
@@ -360,3 +362,5 @@ int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* ivec,UC* out,I len)
 
   R 0;  // success
 }
+
+#endif

@@ -5,18 +5,11 @@ FAVX2= /DC_AVX2=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=haswell -mno-vzer
 endif
 ifeq (1,$(USE_OPENMP))
 FOPENMP= -Xclang -fopenmp
-ifeq (1,$(JARM64))
-OBJS_OPENMP=../../openmp/obj/windows/libomparm64.lib
-else ifeq (1,$(x64))
-OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
-else
-OBJS_OPENMP=../../openmp/obj/windows/libomp32.lib
-endif
 endif
 USE_SLEEF=1
-ifeq (1,$(JARM64))
+ifeq (ARM64,$(TARGET_CPU))
 FSLEEF= /DSLEEF=1 /DENABLE_ADVSIMD /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 ifeq (1,$(JAVX512))
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else ifeq (1,$(JAVX2))
@@ -28,23 +21,27 @@ else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 endif
 ifeq (1,$(USE_PYXES))
-PTHREADINC = -I../../pthreads4w/include -DPYXES=1
-ifeq (1,$(JARM64))
+PTHREADINC = -I../../pthreads4w/include
+DPYXES = /DPYXES=1
+ifeq (ARM64,$(TARGET_CPU))
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-arm64.lib
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
 else
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
 endif
+else
+PTHREADINC = 
+DPYXES = /DPYXES=0
 endif
 MPIRINC = -I../../mpir/include
 
-ifeq (1,$(JARM64))
+ifeq (ARM64,$(TARGET_CPU))
 # MPIRLIB = ../../mpir/dll/arm64/mpir.lib
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 # MPIRLIB = ../../mpir/dll/x64/mpir.lib
 else
-# MPIRLIB = ../../mpir/dll/win32/mpir.lib
+# MPIRLIB = ../../mpir/dll/x86/mpir.lib
 endif
 
 ifeq (1,$(NOSYNCHLIB))
@@ -58,21 +55,21 @@ ifeq (1,$(USE_BOXEDSPARSE))
 FBOXEDSPARSE = /DBOXEDSPARSE
 endif
 
-ifeq (1,$(JARM64))
+ifeq (ARM64,$(TARGET_CPU))
 CF1= -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
-CFLAGS= $(FDEBUG) -target arm64-pc-windows-msvc /D JAMALGAM /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(FDEBUG) $(DPYXES) -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto /DHAVE_NEON64=1 /D JAMALGAM /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:ARM64 /SUBSYSTEM:CONSOLE,5.02
 ASMFLAGS= /Cx
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
-CFLAGS= $(FDEBUG) /D JAMALGAM /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(FDEBUG) $(DPYXES) /D JAMALGAM /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
 ASMFLAGS= /Cx
 else
 CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= $(FDEBUG) /D JAMALGAM $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(FDEBUG) $(DPYXES) /D JAMALGAM $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) psapi.lib /NOLOGO /STACK:0xc00000 /MACHINE:X86 /SUBSYSTEM:CONSOLE,5.01
 ASMFLAGS= /Cx /coff
 endif
@@ -84,6 +81,7 @@ OBJS=  \
  ../../jsrc/jeload.o \
  ../../jsrc/a.o \
  ../../jsrc/ab.o \
+ ../../jsrc/aes-arm.o \
  ../../jsrc/aes-c.o \
  ../../jsrc/aes-ni.o \
  ../../jsrc/aes-sse2.o \
@@ -260,14 +258,14 @@ OBJS=  \
 
 ifdef NO_SHA_ASM
 CFLAGS1= /DNO_SHA_ASM
-else ifeq (1,$(JARM64))
+else ifeq (ARM64,$(TARGET_CPU))
 OBJS_ASM= \
  ../../openssl-asm/md5-aarch64-nasm.o \
  ../../openssl-asm/keccak1600-armv8-nasm.o \
  ../../openssl-asm/sha1-armv8-nasm.o \
  ../../openssl-asm/sha256-armv8-nasm.o \
  ../../openssl-asm/sha512-armv8-nasm.o "
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 OBJS_ASM= \
  ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -320,9 +318,9 @@ endif
 %.o: %.asm
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
-ifeq (1,$(JARM64))
+ifeq (ARM64,$(TARGET_CPU))
 TARGET= jamalgam-arm64.exe
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 ifeq (1,$(JAVX2))
 TARGET= jamalgam-avx2.exe
 else
@@ -338,8 +336,8 @@ else
 SYNCLIB= synchronization.lib
 endif
 
-$(TARGET) : $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) jconsole.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) $(PTHREADLIB) $(MPIRLIB) jconsole.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
+$(TARGET) : $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) $(PTHREADLIB) jconsole.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) $(PTHREADLIB) $(MPIRLIB) jconsole.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
 
 jconsole.res : $(RCS)
 	$(RC) /L 0x409 /D _USING_V110_SDK71_ -R -FO$@ $(RCS)

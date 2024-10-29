@@ -2,11 +2,11 @@ ifeq (1,$(_DEBUG))
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 endif
-ifeq (1,$(JARM64))
+ifeq (ARM64,$(TARGET_CPU))
 CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(FDEBUG) -target arm64-pc-windows-msvc /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(FDEBUG) -target arm64-pc-windows-msvc -march=armv8-a+crc /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /DLL /MACHINE:ARM64 /SUBSYSTEM:WINDOWS,5.02
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
 CFLAGS= $(FDEBUG) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
@@ -29,9 +29,9 @@ endif
 %.o: %.c
 	$(CC) $(CFLAGS) /I "$(JAVA_HOME)/include" /I "$(JAVA_HOME)/include/win32" /Fo$@ /c $<
 
-ifeq (1,$(JARM64))
+ifeq (ARM64,$(TARGET_CPU))
 TARGET= jnativearm64.dll
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 TARGET= jnative.dll
 else
 TARGET= jnative32.dll

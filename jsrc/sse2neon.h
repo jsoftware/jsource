@@ -160,7 +160,7 @@ FORCE_INLINE int64_t sse2neon_recast_f64_s64(double f64)
 #include <windows.h>
 #endif
 
-#if !defined(__cplusplus) && (!defined(__clang__))
+#if !defined(__cplusplus) && !defined(_MSC_VER)
 #error SSE2NEON only supports C++ compilation with this compiler
 #endif
 

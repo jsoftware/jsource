@@ -5,18 +5,18 @@ FAVX2= /DC_AVX2=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=haswell -mno-vzer
 !endif
 !if "1"=="$(USE_OPENMP)"
 FOPENMP= -Xclang -fopenmp
-!if "1"=="$(JARM64)"
+!if "ARM64"==$(TARGET_CPU)"
 OBJS_OPENMP=../../openmp/obj/windows/libomparm64.lib
-!elseif "1"=="$(x64)"
+!elseif "x64"==$(TARGET_CPU)"
 OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
 !else
 OBJS_OPENMP=../../openmp/obj/windows/libomp32.lib
 !endif
 !endif
 USE_SLEEF=1
-!if "1"=="$(JARM64)"
+!if "ARM64"==$(TARGET_CPU)"
 FSLEEF= /DSLEEF=1 /DENABLE_ADVSIMD /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
-!elseif "1"=="$(x64)"
+!elseif "x64"==$(TARGET_CPU)"
 !if "1"=="$(JAVX512)"
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 !elseif "1"=="$(JAVX2)"
@@ -29,9 +29,9 @@ FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/s
 !endif
 !if "1"=="$(USE_PYXES)"
 PTHREADINC = -I../../pthreads4w/include -DPYXES=1
-!if "1"=="$(JARM64)"
+!if "ARM64"==$(TARGET_CPU)"
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-arm64.lib
-!elseif "1"=="$(x64)"
+!elseif "x64"==$(TARGET_CPU)"
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
 !else
 PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
@@ -39,9 +39,9 @@ PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
 !endif
 MPIRINC = -I../../mpir/include
 
-!if "1"=="$(JARM64)"
+!if "ARM64"==$(TARGET_CPU)"
 # MPIRLIB = ../../mpir/dll/arm64/mpir.lib
-!elseif "1"=="$(x64)"
+!elseif "x64"==$(TARGET_CPU)"
 # MPIRLIB = ../../mpir/dll/x64/mpir.lib
 !else
 # MPIRLIB = ../../mpir/dll/win32/mpir.lib
@@ -58,12 +58,12 @@ LDEBUG = /DEBUG
 FBOXEDSPARSE = /DBOXEDSPARSE
 !endif
 
-!if "1"=="$(JARM64)"
+!if "ARM64"==$(TARGET_CPU)"
 CF1= -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
 CFLAGS= $(FDEBUG) -target arm64-pc-windows-msvc /D JAMALGAM /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:ARM64 /SUBSYSTEM:CONSOLE,5.02
 ASMFLAGS= /Cx
-!elseif "1"=="$(x64)"
+!elseif "x64"==$(TARGET_CPU)"
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
 CFLAGS= $(FDEBUG) /D JAMALGAM /DC_NA=0 /DEMU_AVX2=1 $(FAVX2) $(FAVX512) $(FOPENMP) $(FSLEEF) $(FNOSYNCHLIB) $(FBOXEDSPARSE) $(PTHREADINC) $(MPIRINC) /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
@@ -261,14 +261,14 @@ OBJS=  \
 
 !ifdef NO_SHA_ASM
 CFLAGS1= /D NO_SHA_ASM
-!elseif "1"=="$(JARM64)"
+!elseif "ARM64"==$(TARGET_CPU)"
 OBJS_ASM= \
  ../../openssl-asm/md5-aarch64-nasm.o \
  ../../openssl-asm/keccak1600-armv8-nasm.o \
  ../../openssl-asm/sha1-armv8-nasm.o \
  ../../openssl-asm/sha256-armv8-nasm.o \
  ../../openssl-asm/sha512-armv8-nasm.o "
-!elseif "1"=="$(x64)"
+!elseif "x64"==$(TARGET_CPU)"
 OBJS_ASM= \
  ../../openssl-asm/md5-x86_64-nasm.o \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -321,9 +321,9 @@ LD=link
 .asm.o:
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
-!if "1"=="$(JARM64)"
+!if "ARM64"==$(TARGET_CPU)"
 TARGET= jamalgam-arm64.exe
-!elseif "1"=="$(x64)"
+!elseif "x64"==$(TARGET_CPU)"
 !if "1"=="$(JAVX2)"
 TARGET= jamalgam-avx2.exe
 !else

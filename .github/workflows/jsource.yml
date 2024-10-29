@@ -929,7 +929,6 @@ jobs:
 # windows --------------------------------------------------------------
  jewinarm64:
   name: JE (Windows arm64)
-  if: ${{ false }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -975,7 +974,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-20.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jemacos, jemacosarm, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jemacos, jemacosarm, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

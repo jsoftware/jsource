@@ -1,6 +1,9 @@
 # READLINE=1
 ifeq (1,$(USE_PYXES))
-PTHREADINC = -I../../pthreads4w/include -DPYXES=1
+PTHREADINC = -I../../pthreads4w/include
+DPYXES = /DPYXES=1
+else
+DPYXES = /DPYXES=0
 endif
 MPIRINC = -I../../mpir/include
 ifeq (1,$(_DEBUG))
@@ -8,17 +11,17 @@ FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 endif
 
-ifeq (1,$(JARM64))
+ifeq (ARM64,$(TARGET_CPU))
 CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) -target arm64-pc-windows-msvc /DEMU_AVX2=1 /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) $(DPYXES) -target arm64-pc-windows-msvc /DEMU_AVX2=1 /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /STACK:0xc00000 /MACHINE:ARM64 /SUBSYSTEM:CONSOLE,5.02
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) /DEMU_AVX2=1 /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) $(DPYXES) /DEMU_AVX2=1 /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
 else
 CF1= -m32 -msse2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) $(DPYXES) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /STACK:0xc00000 /MACHINE:X86 /SUBSYSTEM:CONSOLE,5.01
 endif
 
@@ -42,9 +45,9 @@ endif
 %.o: %.c
 	$(CC) $(CFLAGS) $(CFLAGSLN) /Fo$@ /c $<
 
-ifeq (1,$(JARM64))
+ifeq (ARM64,$(TARGET_CPU))
 TARGET= jconsolearm64.exe
-else ifeq (1,$(x64))
+else ifeq (x64,$(TARGET_CPU))
 TARGET= jconsole.exe
 else
 TARGET= jconsole32.exe

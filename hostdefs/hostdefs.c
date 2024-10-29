@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <winsock.h>
-#include "../regex/rxposix.h"
+#include "pcre2posix.h"
 #endif
 #include <sys/types.h>
 #include <fcntl.h>

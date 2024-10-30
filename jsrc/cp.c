@@ -313,9 +313,9 @@ static DF1(jtinv1){A fs=FAV(self)->fgh[0]; F1PREFIP; A z; ARGCHK1(w);A i; RZ(i=i
   // we defer eformat till the caller so that the user doesn't see the description of the inverse, which might be unrecognizable
 static DF2(jtinv2){ A fs=FAV(self)->fgh[0]; F2PREFIP; A z; ARGCHK2(a,w); A i; RZ(i=invamp(a,fs,0)); STACKCHKOFL WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?(J)((I)jtinplace&~JTINPLACEA):jt,w,i,i);) RETF(z); }  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 // obsolete static DF2(jtinv2){A fs=FAV(self)->fgh[0]; A z; ARGCHK2(a,w); WITHEFORMATDEFERRED(df1(z,w,inv(amp(a,fs)));) STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
-// if u has no names:
+// if u has no names, meaning we can take the inverse early:
 static DF1(jtinvh1){A hs=FAV(self)->fgh[2]; F1PREFIP;A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs); RETF(z);}  // monadic inverse was already looked up in h
-static DF1(jtinverr){ASSERT(0,EVDOMAIN);}  // uninvertible monad: come here if inverse invoked as a monad (x&u^:_1 might be OK as a dyad) 
+static DF1(jtinverr){F1PREFIP; ASSERT(0,EVDOMAIN);}  // uninvertible monad: come here if inverse invoked as a monad (x&u^:_1 might be OK as a dyad) 
 
 // obsolete old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
 // obsolete DF2(jtply2){PROLOG(107);A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A z, zz; z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}  // scaf remove; don't reexecute powop
@@ -427,7 +427,7 @@ static DF2(jtgcr12){F2PREFIP;PROLOG(0);
   RZ(ff=powop(FAV(self)->fgh[0],z0,(A)1))  // ff=.u^:power, a verb to execute.  Any arg used in ff will no longer be inplaceable
   u0=1;  // indicate we will execute ff
  }
- A v2=hv[hn-1];  // the verb for v2
+ A v2=hv[hn-1];  // the verb for v2 (frees hv over call)
  if(w&&3-hn<u0){   // execute v0 if dyad, but only if we are going to execute u and v0 was given (i. e. hn=3 and u0=1)
   RZ(z0=CALL12(w,FAV(hv[0])->valencefns[1],a,w,hv[0]))  // z0=[x] v0 y  if this is a dyad
   jtinplace=(J)((I)jtinplace&~(JTINPLACEA*(z0==a)+JTINPLACEW*(z0==w)));  // if v0 returned an argument, remove v2 inplacing for that argument
@@ -460,7 +460,7 @@ static A jtgconj(J jt,A a,A w){A hs;
 // obsolete  ASSERT(BOX&AT(y),EVDOMAIN);
 // obsolete  RZ(hs=fxeach(3==n?y:jlink(scc(CLBKTC),y),(A)&jtfxself[0]));
 // obsolete  RZ(hs=fxeachv(1,3==AN(w)?w:jlink(scc(CLBKTC),w)));  // convert gerund to aray of A blocks, each verified to be a verb.  If v0 omitted, use [ so (x [ y) is x
- RZ(hs=fxeachv(1,w));  // convert gerund to aray of A blocks, each verified to be a verb.
+ RZ(hs=fxeachv(1,w));  // convert gerund to array of A blocks, each verified to be a verb.
 // obsolete  R fdef(0,id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
  R fdef(0,CPOWOP,VERB, jtgcr12,jtgcr12, a,w,hs, VGERR+VJTFLGOK1+VJTFLGOK2, RMAX,RMAX,RMAX);
 }

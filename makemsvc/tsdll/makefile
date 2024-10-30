@@ -45,7 +45,10 @@ jddll.res : $(RCS)
 
 all: $(TARGET)
 
+noclean:
+	#
+
 clean:
 	rm -f *.lib *.exp *.res $(OBJS)
 
-.PHONY: all clean
+.PHONY: all clean noclean

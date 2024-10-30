@@ -32,6 +32,7 @@ A jtopenforassembly(J jt, A x){
  R z;
 }
 
+#if 0   // obsolete
 // AR(a)<=1 and AN(w)!=0
 static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
  ARGCHK2(a,w);
@@ -58,7 +59,34 @@ static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
  }
  AS(z)[0]=d; AN(z)=d*wn; MCISH(1+AS(z),AS(w),wr); 
  RETF(z);
-}    /* {&a^:(<_) w */
+}    /*  */
+#else
+// chase the chain for transitive closure, starting at indexes[start].  length of indexes is n.  Result is list of indexes, or LIMIT error if cycle
+static A jttclosure1(J jt, I start, I n, I *indexes){
+ I c=start;
+// should be if((UI)c>=(UI)n){c+=n; ASSERT((UI)c<(UI)n,EVINDEX);} I c0=c;   // c=current index, brought into range
+// should be  I rn=0,p,c0=c; do{p=c; c=indexes[c]; if((UI)c>=(UI)n){c+=n; ASSERT((UI)c<(UI)n,EVINDEX);} ASSERT(rn<=n,EVLIMIT) ++rn;}while(c!=p);  // p is prev; rn is # loops, including the one that ends with the repeat
+// should be  A z; GATV0(z,INT,rn,1) I *zv=IAV(z); c=c0; DO(rn, zv[i]=c; c=indexes[c]; if((UI)c>=(UI)n)c+=n;);  // allocate the result and retraverse, copying
+ // as implemented a final negative index is emitted even if it repeates the previous positive index - too late to change
+ I rn=0,p,c0=c; do{p=c; if((UI)c>=(UI)n){c+=n; ASSERT((UI)c<(UI)n,EVINDEX);} ASSERT(rn<=n,EVLIMIT) ++rn; c=indexes[c];}while(c!=p);  // p is prev; rn is # loops, including the one that ends with the repeat
+ A z; GATV0(z,INT,rn,1) I *zv=IAV(z); c=c0; DO(rn, zv[i]=c; if((UI)c>=(UI)n)c+=n; c=indexes[c];);  // allocate the result and retraverse, copying
+ R z; 
+}
+// {&a^:(<_) w
+// AR(a)<=1 and AN(w)!=0
+static F2(jttclosure){
+ ARGCHK2(a,w);
+ I wt=AT(w); if(B01&wt)RZ(w=cvt(INT,w)); I wn=AN(w); I wr=AR(w); I *wv=AV(w);  // convert w to int, get n/t/r/data
+ I *av=AV(a); I an=AN(a);
+ if(likely(wr==0))R jttclosure1(jt,wv[0],an,av);  // single chain, return it
+ // falling through for rare case of multiple chains
+ PROLOG(0);
+ A z; GATV(z,BOX,wn,wr,AS(w)) A *zv=AAV(z); // allocate one box per chain, point zv to boxes
+ DO(wn, RZ(zv[i]=jttclosure1(jt,wv[i],an,av)) )  // fill in the boxes
+ z=ev1(z,"((i.@#@$) |: (([ , (-#)~ # {:@[)&> >./@:(#@>)))");  // pad each box with repetitions of the last ele
+ EPILOG(z);
+}
+#endif
 
 #if 0  // obsolete
 static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
@@ -209,7 +237,7 @@ static DF2(jtindexseqlim2){
  R AR(a)<=1&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT?tclosure(a,w):jtpowatom12(jt,a,w,self);
 }    /*  */
 #else
-// {&x^:a: w   or  a {~^:a: w, bivalent
+// {&x^:a: w   or  a {~^:a: w, bivalent.  Each supports 1 valence; we revert for the other, or in not integer args
 static DF2(jtindexseqlim12){
  ARGCHK2(a,w);
  A origa=a, origw=w;  // in case we revert
@@ -218,7 +246,7 @@ static DF2(jtindexseqlim12){
  if(AR(a)<=1&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT)R tclosure(a,w);
 revert:;
  R jtpowatom12(jt,origa,origw,self);
-}    /* a {~^:(<_) w */
+}
 #endif
 
 // general u^:n w where n is any integer array or finite atom.  If atom, it will be negative.  Bivalent
@@ -428,7 +456,7 @@ static DF2(jtgcr12){F2PREFIP;PROLOG(0);
   u0=1;  // indicate we will execute ff
  }
  A v2=hv[hn-1];  // the verb for v2 (frees hv over call)
- if(w&&3-hn<u0){   // execute v0 if dyad, but only if we are going to execute u and v0 was given (i. e. hn=3 and u0=1)
+ if(w&&3-hn<u0){   // execute v0 if dyad, but only if we are going to execute u and v0 was given (i. e. hn=3 and u0=1)  could use MIN and UI
   RZ(z0=CALL12(w,FAV(hv[0])->valencefns[1],a,w,hv[0]))  // z0=[x] v0 y  if this is a dyad
   jtinplace=(J)((I)jtinplace&~(JTINPLACEA*(z0==a)+JTINPLACEW*(z0==w)));  // if v0 returned an argument, remove v2 inplacing for that argument
  }else z0=w?a:0;  // if dyad, set v0 result to x for omitted v0; if monad, set z0=0 as a flag

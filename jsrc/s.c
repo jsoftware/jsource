@@ -319,32 +319,7 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
  if(likely((b = u->bucket)!=0)){
-#if 0 // obsolete 
-  L *sympv=SYMORIGIN;  // base of symbol array
-  // we don't check for primary symbol index because that is normally picked up in parsea; when called to verify no local name we expect the index to be 0 anyway
-  if(0 > (bx = ~u->bucketx)){
-   // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition
-   // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-   if(likely(!(AR(locsyms)&ARNAMEADDED)))R 0;
-   LX lx = LXAV0(locsyms)[b];  // index of first block if any
-   I m=u->m; C* s=u->s; UI4 hsh=u->hash; // length/addr of name from name block, and hash
-   if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
-   // Now lx is the index of the first name that might match.  Do the compares
-   NOUNROLL while(lx=SYMNEXT(lx)) {L* l = lx+sympv;  // symbol entry
-    IFCMPNAME(NAV(l->name),s,m,hsh,R (A)((I)l->val+l->valtype);)
-    lx = l->next;
-   }
-   R 0;  // no match.
-  } else {
-   LX lx = LXAV0(locsyms)[b];  // index of first block if any
-   L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
-   // negative bucketx (now positive); skip that many items, and then you're at the right place
-   if(unlikely(bx>0)){NOUNROLL do{l = l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
-   R (A)((I)l->val+l->valtype);
-  }
-#else
   R probelocalbuckets(SYMORIGIN,a,LXAV0(locsyms)[b],u->bucketx);  // look up using bucket info
-#endif
  }else{
   // No bucket information, do full search.  This includes names that don't come straight from words in an explicit definition
   R jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms);
@@ -678,13 +653,11 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
   // attempted reassignment of the executing name
   // insist that the redefinition have the same type, and the same explicitness
   f=d->dcf;  // the executing function
-// obsolete   if(unlikely(!(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id&&AT(FAV(f)->fgh[0])&NOUN)==(CCOLON==FAV(w)->id&&AT(FAV(w)->fgh[0])&NOUN))))JT(jt,sidamage)=1;  // the executing value MUST have a name, otherwise we couldn't modify it.  If type/id changed, pull the plug
   if(unlikely(!(TYPESEQ(AT(f),AT(w))&&(FAV(f)->id==CCOLONE)==(FAV(w)->id==CCOLONE)&&(FAV(f)->flag&VXOP+VXOPR)==(FAV(w)->flag&VXOP+VXOPR))))JT(jt,sidamage)=1;  // the executing value MUST have a name, otherwise we couldn't modify it.  If type/id changed, pull the plug
   d->dcf=w; d->dcn=(I)w;  // dcf is used by redef code in xdefn; dcn is the stacked addr of executing fn, which we must now update so we can see if it is changed again later
   // If we are redefining the executing explicit definition during debug, remember that.
   // debug will switch over to the new definition before the next line is executed.
   // Reassignment outside of debug continues executing the old definition
-// obsolete   if(CCOLON==FAV(w)->id&&AT(FAV(w)->fgh[0])&NOUN&&!jteqf(jt,w,v)){d->dcredef=1;}  // don't call for redef if value doesn't change in explicit defn
   if(FAV(w)->id==CCOLONE&&!jteqf(jt,w,v)){d->dcredef=1;}  // don't call for redef if value doesn't change in explicit defn
   // Erase any stack entries after the redefined call, except for SCRIPT type which must be preserved for linf
   c=jt->sitop; NOUNROLL while(c&&DCCALL!=c->dctype){if(DCSCRIPT!=c->dctype)c->dctype=DCJUNK; c=c->dclnk;}
@@ -746,7 +719,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS
   // NOTE that the value may be in use elsewhere; may even be a primitive.
 
-// obsolete   if(unlikely((((NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT)-1)&SGNIF(FAV(w)->flag2,VF2NAMELESSX))<0))valtype=VALTYPENAMELESS;   // nameless & non-locative, so indicate
   if(unlikely((((NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC)-1)&SGNIF(FAV(w)->flag2,VF2NAMELESSX))<0))valtype=VALTYPENAMELESS;   // nameless & non-locative, so indicate
   if(unlikely(jt->glock!=0))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
   if((AR(g)&ARLOCALTABLE)!=0)AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up

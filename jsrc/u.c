@@ -340,8 +340,6 @@ void mvc(I m,void*z,I n,void*w){
   }else if(n<=SZI){  // <=8 bytes to begin with: LIT C2T C4T
    wdi=*(UI*)w&((UI)-1LL>>((SZI-n)<<LGBB));  // fetch fill and mask to valid bytes
    wdi*=(UI)((((0x0101010101010101<<1)+(0x0001000100010001<<2)+(0x0000000100000001<<4)+(0x1<<8))>>n)&VALIDBOOLEAN);  // replicate based on size
-// obsolete    wdi=*(I*)w; wdi<<=(SZI-n)<<LGBB; wdi>>=(SZI-n)<<LGBB;  // zero out bits above the size
-// obsolete    I shiftamt=n<<LGBB; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB)));  // replicate to word size
    wd=_mm256_set1_epi64x(wdi);  // further replicate to 32-byte size
   }else{wd=_mm256_castpd_si256(_mm256_broadcast_pd((__m128d*)w));  // 16 bytes to begin with, load em - only CMPX/RAT
   }

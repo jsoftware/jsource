@@ -243,8 +243,6 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
   }
  }
  // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell).
-// obsolete   If fillv0len is 0, that means we are not allowed to fill; then set fillv0len to -1 as a flag that this happened
-// obsolete  if(likely(jt->fillv0len>0))mvc(endoffill-z,z,jt->fillv0len,jt->fillv0); else jt->fillv0len=-1;  // use atom size of default fill
  mvc(endoffill-z,z,jt->fillvlen,jt->fillv);    // use size of default fill
  R w;
 }
@@ -556,13 +554,11 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
    // user fill specified.  Install it, perhaps converting
    if(TYPESNE(t,AT(f))){ASSERT(HOMO(t,AT(f)),EVINHOMO) t=maxtypedne(t,AT(f)); if(AT(f)!=t)RZ(f=ccvt(t,f,0))}  // include fill in the type calc, and convert it if needed
    jt->fillvlen=bpnoun(t); jt->fillv=voidAV(f);  // use the specified single fill atom
-// obsolete  MC(&jt->fillv0,CAV(f),jt->fillv0len);  // install 1 fill into fillv0
   }else fillv0(t);  // default fill.  Go install it
  }
  I klg=bplg(t); GA00(z,t,zn,r+AR(w)); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape   klg=size of 1 atom
  x=CAV(z);  // x=output pointer, init to 1st cell
   // fill is (or may be) needed: create fill area, and convert cell-shape to cell-size vector needed by copyresultcell
-// obsolete   remove fillv0len test    if(likely(!((I)jtinplace&JTNOFILL)))fillv0(t); else jt->fillv0len=0;  // create 16 bytes of fill, if allowed.  If not allowed, set that indicator
  I zfs=(I)1<<klg; u[r]=zfs; DQ(r, u[i]=zfs*=u[i];)  // convert each atom of result-cell shape to the length in bytes of the corresponding cell; u->first length
  // Now move the results.  They may need conversion or fill
  JMCDECL(endmask) JMCSETMASK(endmask,m<<klg,0)
@@ -576,14 +572,12 @@ F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
   else copyresultcell(jt,x,CAV(y),u,rescellrarg(zcs,r,AS(y),AR(y)),AS(y));
   x+=m<<klg;  // advance output pointer by cell length
  }
-// obsolete  ASSERT(jt->fillv0len>=0,EVASSEMBLY)  // if fill length<0, there must have been a disallowed fill
  EPILOG(z);
 }
 
 // ; y general case, where rank > 1 (therefore items are not atoms)
 // w is the data to raze (boxed), t is type of nonempties (or empties/fill if there are no nonempties), n=#,w, r=max rank of contents of w, v->w data,
 static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;I p;
-// obsolete ,I nonempt
  // Calculate the shape of a result-cell (it has rank r-1); c, the number of result-cells
  fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); mvc(r*SZI,s,MEMSET00LEN,MEMSET00);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  I sigman=0, sigmascalars=0;  // total # atoms, # scalars
@@ -602,33 +596,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,
  }
  // Install the number of result items in s; m=total #result atoms; p=#atoms in 1 cell
  *s=c; PROD(p,r-1,s+1); DPMULDE(p,c,m);
-// obsolete  PRODX(m,r,s,1);
-#if 0 // obsolete
- // Now that we know the shape of the result-cell, we can decide, for each box, whether the
- // box contributes to the result, and whether it will be filled.  This matters only if a fill-cell has been specified.
- // If fill has been specified, we include its type in the result-type (a) only if some block gets filled
- // (this will cause all input-blocks to convert to the precision needed; any fill will be promoted to that type)
- // (b) all the blocks are empty (which can be detected because t has not been set yet)
- if(jt->fill) {  // if it was ;!.f
-  if(nonempt&&m) {  // Check cell-contents only if there are some nonempty contents, and if the result-cell is nonempty
-     // these are different, eg for 0 1$4 which has no cells but they are nonempty, or 1 0 1$4 which has an empty result-cell
-   for(i=0;i<n;++i) {   // for each box of contents
-    y=C(v[i]); yr=AR(y);   // y-> A block for contents of w[i]; yr = its rank
-    if(!yr)continue; ys=AS(y);   // atoms are replicated, never filled; otherwise point to shape
-    if(r==yr&&0==ys[0])continue;  // if y is unextended and has no cells, it will not contribute, no matter what the cell-shape
-    // see if the shape of y-cell (after rank extension) matches the shape of result-cell.  If not, there will be fill
-    for(yr=yr-1,k=r-1;yr>=0&&ys[yr]==s[k];--yr,--k);  // see if unextended cell-shape matches
-    if(yr<0){NOUNROLL while(k>0&&s[k]==1)--k;}   // if all that match, check to see if extended cell-shape==1
-    if(k>0) {   // If we compared all the way back to the entire rank or one short (since we only care about CELL shape), there will be no fill
-     ASSERT(HOMO(t,AT(jt->fill)),EVINHOMO); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
-     break;  // one fill is enough
-    }    
-   }
-  }
- }
-#else
  if(unlikely(jt->fill))if(m>sigman+sigmascalars*(p-1)){ASSERT(HOMO(t,AT(jt->fill)),EVINHOMO); t = maxtyped(t, AT(jt->fill));}  // If there is fill and #atoms out>#atoms in, include fill in the result-type.  It better fit in with the others
-#endif
 
  // Now we know the type of the result.  Create the result.
  k=bpnoun(t); p*=k;  // k=#bytes in atom of result; p=#bytes/result cell
@@ -677,7 +645,6 @@ F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   // the result or not.  In a case like (0 2$a:),'' the '' will contribute, but the (0 2$a:) will
   // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
   // So, we don't check compatibility for empty boxes.
-// obsolete   i=t;  // save indicator of nonempties
   if(t){  // there was a nonempty
    ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVDOMAIN)  // no mixed nonempties: t is homo num/char or all boxed or all symbol
    te=t;  // te holds the type to use

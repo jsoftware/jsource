@@ -945,28 +945,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}  // put error code into jerr, but signal only if nonretryable
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}  // exit primitive with error code in return
 
-// obsolete #if C_AVX512
-// obsolete // We would like to use these AVX versions because they generate fewest instructions.
 // Avoid call to memcmp to save registers
-// obsolete #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
-// obsolete  {I *aaa=(x), *aab=(y); I aai=(l); \
-// obsolete   if(likely(aai<=4)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
-// obsolete    endmask=_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); \
-// obsolete    ASTYPE(!endmask,EVLENGTH); \
-// obsolete   }else{NOUNROLL do{--aai; ASTYPE(aaa[aai]==aab[aai],EVLENGTH)}while(aai);} \
-// obsolete  }
-// obsolete #define TESTDISAGREE(r,x,y,l) \
-// obsolete  {I *aaa=(x), *aab=(y); I aai=(l); \
-// obsolete   if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
-// obsolete    r=!!_mm256_cmpneq_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
-// obsolete   }else{NOUNROLL do{--aai; r=0; if(aaa[aai]!=aab[aai]){r=1; break;}}while(aai);} \
-// obsolete  }
-// obsolete #define TESTXITEMSMALL(r,x,y,l) \
-// obsolete  {I *aaa=(x), *aab=(y); I aai=(l); \
-// obsolete   if(likely(aai<=8)){__mmask8 endmask=_bzhi_u32(0xf,aai); \
-// obsolete    r=!!_mm256_cmpgt_epi64_mask(_mm256_maskz_loadu_epi64(endmask,aaa),_mm256_maskz_loadu_epi64(endmask,aab)); /* result is nonzero if any mismatch */ \
-// obsolete   }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]>aab[aai])){r=1; break;}}while(aai);} \
-// obsolete  }
 #if C_AVX2 || EMU_AVX2
 // verify that shapes *x and *y match for l axes using AVX for rank<=vector size, loop otherwise
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
@@ -1735,7 +1714,6 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
 //                                                                                                  __SSE2__    atom2
 // loop advances x and z to end +1 of region
 // parms: bit0=suppress unrolling
-// obsolete , bit1=use neutral in any unfetched alignment word
 // We always do the alignment step, 0-4 words (0 only if initial length=1)
 #define AVAC(c,loopbody) case c: u=_mm256_loadu_pd((D*)((I)x+(I)z)+(-1-(c))*NPAR); loopbody _mm256_storeu_pd(z+(-1-(c))*NPAR, u);
 #define AVXATOMLOOP(parms,preloop,loopbody,postloop) \

@@ -857,8 +857,6 @@ static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // If the AR is a noun, just leave it as is
  df1(ffm,w,hv[1]);  // x v1 y - no inplacing
  RZ(ffm);
-// obsolete if(sv->id!=CAMEND)SEGFAULT;  // scaf
-// obsolete  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (v1 y)}
  RZ(ff=amend(ffm));  // now ff represents (v1 y)}.  scaf avoid this call, go straight to mergn1
  if(AT(hv[2])&NOUN){ffx=hv[2];}else{RZ(df1(ffx,w,hv[2]))}
  R df1(ffm,ffx,ff);
@@ -872,8 +870,6 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  // If the AR is a noun, just leave it as is
  df2(ffm,a,w,C(hv[1]));  // x v1 y - no inplacing.
  RZ(ffm);
-// obsolete if(sv->id!=CAMEND)SEGFAULT;  // scaf
-// obsolete  RZ(df1(ff,ffm,ds(sv->id)));   // now ff represents (x v1 y)}  .  Alas, ffm can no longer be virtual
  RZ(ff=amend(ffm));  // now ff represents(x v1 y)} .  scaf avoid this call, go straight to mergn1
  // Protect any input that was returned by v1 (must be ][)
  if(a==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEW);
@@ -892,15 +888,10 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
 static A jtgadv(J jt,A w){A hs;I n;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
-// obsolete  n=AN(w);
-// obsolete  ASSERT(1>=AR(w),EVRANK);
  ASSERT(BETWEENC(AN(w),2,3),EVLENGTH);  // verify 2-3 gerunds
-// obsolete  ASSERT(BOX&AT(w),EVDOMAIN);
-// obsolete  RZ(hs=fxeach(3==n?w:behead(reshape(num(4),w)),(A)(&jtfxself[0])));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
  RZ(hs=fxeachv(1,3==AN(w)?w:behead(reshape(num(4),w))));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
  // hs is a BOX array, but its elements are ARs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
-// obsolete  ASSERT(AT(C(AAV(hs)[0]))&AT(C(AAV(hs)[1]))&AT(C(AAV(hs)[2]))&VERB,EVDOMAIN);
  I alr=atoplr(C(AAV(hs)[0]));   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  I flag=(FAV(C(AAV(hs)[0]))->flag&FAV(C(AAV(hs)[1]))->flag&FAV(C(AAV(hs)[2]))->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+(alr-2>0?alr-2:alr);
  R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb

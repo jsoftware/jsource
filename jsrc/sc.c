@@ -52,20 +52,12 @@ DF2(jtunquote){A z;
   jt->curname=thisname;  // set executing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
   // normal path for named functions
   if(likely((fs=FAV(self)->localuse.lu1.cachedlkp)!=0)){  // fetch the most recent lookup, which may be reused. no QC
-// obsolete  if(FAV(self)->flag2&VF2CACHED){
    if(FAV(self)->flag2&VF2CACHEABLE){  // cacheable?  (test first because test suite expects it)
     if(likely(FAV(self)->flag2&VF2CACHED)){  // cached already?
      // the reference is cached.  Switch to it immediately.
      // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
      if(((A)(I)(NAV(thisname)->flag&NMLOC)!=0)){  // most verbs aren't locatives. if no direct locative, leave global unchanged
-#if 0 // obsolete 
-      if(unlikely((explocale=FAV(self)->localuse.lu0.cachedloc)==0)){  // if we have looked it up before, keep the lookup
-       RZSUFF(explocale=stfind(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx),z=0; goto exitname;);  //  extract locale string, find locale, which must exist
-       FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time
-      }
-#else
       explocale=FAV(self)->localuse.lu0.cachedloc;  // it's a direct locative, so we must have looked it up when we cached the ref
-#endif
       flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale, but not if it is permanent
       SYMSETGLOBAL(explocale);   // switch to the (possibly new) locale.
      }
@@ -148,9 +140,7 @@ DF2(jtunquote){A z;
     thisname=jt->curname;  // refresh thisname
     // point the nameref to the lookup result.
     WRITELOCK(fs->lock);  // we want to cache a name only once
-// obsolete     if(FAV(self)->localuse.lu1.cachedref==0){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
     if(!(FAV(self)->flag2&VF2CACHED)){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
-// obsolete     FAV(self)->localuse.lu1.cachedref=fs;  // store cached address, with FAOWED semantics (not owed)
      ACSETPERM(fs);  // make the cached value immortal
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
      // to use the flags.  If we do PPPP, this will be too late

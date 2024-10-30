@@ -131,7 +131,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line
  S etxn1;            // last non-zero etxn
-// obsolete  B foldrunning;      // 1 if fold is running (allows Z:)
  UC jerr;             // error number (0 means no error)
  UC jerr1;            // last non-zero jerr
  C namecaching;     // 0=off 1=(either 2 or 4 set) 2=for script 4=on
@@ -197,7 +196,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  LX symfreehead[2];   // head of main and overflow symbol free chains
  LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
  US symfreect[2];  // number of symbols in main and overflow local symbol free chains
-// obsolete  C filler3a[12]; // 12 bytes free
 // things needed for memory allocation
  A mempool[-PMINL+PLIML+1];             // pointer to first free block in each pool.  ends at binary boundary (no longer needed)
 // end of cacheline 3
@@ -216,7 +214,6 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A idothash0;        // 2-byte hash table for use by i.
  A idothash1;        // 4-byte hash table for use by i.
  A fill;             // user fill atom
-// obsolete C fillv0[sizeof(Z)];/* default fill value                              */
  RNG *rngdata;    // separately allocated block for RNG
 // seldom-used fields
  I bytes;            // bytes currently in use - used only during 7!:1
@@ -387,7 +384,6 @@ typedef struct JSTstruct {
  S sblock;           // r/w lock for sbu
  S felock;           // r/w lock for host functions, accessed only at start/end of immex
  // rest of cacheline used only in exceptional paths
- // obsolete B retcomm;          /* 1 iff retain comments and redundant spaces      */
 // 4 bytes free
  I peekdata;         /* our window into the interpreter                 */
  A iep;              /* immediate execution phrase                      */

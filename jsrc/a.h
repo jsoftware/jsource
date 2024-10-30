@@ -17,20 +17,6 @@
 #define VN              CONJCASET(VERB,NOUN)               /* VERB NOUN                       */
 #define VV              CONJCASET(VERB,VERB)               /* VERB VERB                       */
 
-#if 0  // obsolete 
-#define DECLF            V* RESTRICT sv=FAV(self); AD * RESTRICT fs=sv->fgh[0];  \
-                        AF f1=fs?FAV(fs)->valencefns[0]:0,f2=fs?FAV(fs)->valencefns[1]:0
-
-#define DECLG           V* RESTRICT sv=FAV(self);AD * RESTRICT gs=sv->fgh[1];  \
-                        AF g1=gs?FAV(gs)->valencefns[0]:0,g2=gs?FAV(gs)->valencefns[1]:0
-
-#define DECLFG          DECLF;         AD * RESTRICT gs=sv->fgh[1];  \
-                        AF g1=gs?FAV(gs)->valencefns[0]:0,g2=gs?FAV(gs)->valencefns[1]:0
-
-#define DECLFGH         DECLFG;        AD * RESTRICT hs=sv->fgh[2];  \
-                        AF h1=hs?FAV(hs)->valencefns[0]:0,h2=hs?FAV(hs)->valencefns[1]:0
-#endif
-
 // If there are multiple cells, loop over them & call back; otherwise fall through to handle to single cell
 // Use PREF[12] when you don't know the rank; otherwise F[12]RANK(IP) directly
 #define PREF1(f)        {I m=mr(self);            F1RANK(  m,f,self);}

@@ -554,7 +554,6 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  // It is possible to overflow if the 2-cell is empty but the number of 2-cells overflows.
  if(b)k=m=0; else{k=2<r?2-r:0; DO(r-2, DPMULDE(m,s[i],m); k+=m;);}
  // set p=total # lines: number of lines in each 2-cell, plus the added blanks (unless there are no lines to display)
-// obsolete  DPMULDE(m,q,p) p+=k*!!q; DPMULDE(p,c,zn);  // zn=total # atoms
  DPMULDE(m,q,p) p+=k&REPSGN(-q); DPMULDE(p,c,zn);  // zn=total # atoms
  // Allocate the result table, set shape to (p,c); x->data area
  GA00(z,t,zn,2); AS(z)[0]=p; AS(z)[1]=c; x=CAV(z);

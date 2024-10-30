@@ -1095,7 +1095,6 @@ typedef struct {
     } gercut;
     VARPSA *redfn;  // for reductions (u/ u/\ u/\.) address of rps block (may be dummy block)
     US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
-// obsolete     AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
     A cachedlkp;  //  for namerefs ('name'~), the cached value, or 0 if not cached.   No QC semantics

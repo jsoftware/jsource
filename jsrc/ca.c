@@ -67,9 +67,6 @@ static A jtintfloorlog2(J jt, A w, A compself) {  // compself is the floor/ceil 
     }else if(likely((UI8)(d-1)<(UI8)(0x0010000000000000-1))){   // positive denorm (1..D_MANT_MSK)
      zv[i] = 63 - __builtin_clzll(d) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
      zv[i] += d > (((denormcct1 >> (D_EXP_MIN-zv[i]-1))+1)>>1);  // Ex: d has 1s in bits 51..10.  zv[i]=EXPMIN-1.  The shifts puts 1 in bit 51 (to wipe out the MSB of d), down to bit 11.  Split shift is for rounding
-// obsolete     if (unlikely((d & D_EXP_MSK) == 0)) {
-// obsolete      zv[i] += (cct & D_ONE_MSK) != D_ONE_MSK && (((cct & D_MANT_MSK) | ((I8)1 << 52)) >> -(zv[i] + 1022)) < d; // For tolerant floor.
-// obsolete     } else {
     }else goto revert;  // neg, inf, NaN, or 0 - failover to by hand
    )
   }
@@ -100,9 +97,6 @@ static A jtintceillog2(J jt, A w, A compself) { // Similar to the above case wit
    I8 mantcct=((*ctv&D_MANT_MSK)>>1)+((*ctv)&((I8)1<<(D_MANT_BITS_N-1)));  // rounding value.  cct has exponent -1 and we need the bits for exponent 0, so we must >>1 with sign fill for 1.0
    mantcct=mantcct==0?D_MANT_MSK:mantcct;  // result of above is 0 for ct=0; we need max
    I8 mantct=(~mantcct)&(D_MANT_MSK+((I8)1<<D_MANT_BITS_N));  // 1.0+ct, mantissa with exponent 0
-// obsolete    D invctv = 1 / *ctv;
-// obsolete    I8 invcct=*(I8*)&invctv;  // 1 / cct, in binary, taken from !.f or default
-// obsolete    I8 mantinvcct = invcct & D_MANT_MSK;
    DO(wn,
     I8 d = wv[i];
     if(likely((UI8)(d-0x0010000000000000)<(UI8)(0x7ff0000000000000-0x0010000000000000))){  // normal case
@@ -112,12 +106,6 @@ static A jtintceillog2(J jt, A w, A compself) { // Similar to the above case wit
      zv[i] += d > (((mantct >> (D_EXP_MIN-zv[i]-1))+1)>>1);  // Ex: d has 1s in bits 51 & 10.  zv[i]=EXPMIN-1.  The shift puts 1 in bit 51 (to wipe out the MSB of d).  Round below ULP
        // and shifts ct >> 1.  Round up if the rest of d exceeds MSB*ct.
     }else goto revert;  // neg, inf, NaN, 0 - failover to by hand
-// obsolete     if (unlikely(d <= 0 || (d & D_EXP_MSK) == D_EXP_MSK))goto revert;
-// obsolete     if (unlikely((d & D_EXP_MSK) == 0)) {
-// obsolete      zv[i] = 63 - __builtin_clzll(2*d-1) - D_MANT_BITS_N + D_EXP_MIN; // Denorm. Position of the highest 1-bit in d (which is in fraction part) is found with 63 - __builtin_clzll(d).
-// obsolete      zv[i] -= __builtin_popcountll(d) > 1 && d < ((mantinvcct | ((I8)1 << 52)) >> -(zv[i] + 1021)); // For tolerant ceiling.
-// obsolete     } else {
-// obsolete     }
    )
   }
   R z;
@@ -225,14 +213,10 @@ static DF1(jton10atom){F1PREFIP; if(unlikely(AN(w)>1&&JT(jt,deprecct)!=0))RZ(jtd
 static DF2(jtupon20atom){F2PREFIP; if(unlikely((AN(a)|AN(w))>1&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,6,"(006) f@atomic executed on multiple cells; use f\"0@:atomic (or f@:atomic if f has 0 rank)\n")); R jtrank2ex0(jt,a,w,self,jtupon2cell);}  // pass inplaceability through
 
 // special lightweight case for u@[ and u@].
-// obsolete static DF1(onright1){F1PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])(jtinplace,w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // pass straight through.  All we do here is set self.  Leave inplaceability unchanged
-// obsolete static DF2(onleft2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))),a,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // move inplaceable a to w, pass other JT flags
 static DF2(onleft2){F2PREFIP; jtinplace=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],a,fs);}  // move inplaceable a to w, pass other JT flags
-// obsolete DF2(onright12){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)((I)jtinplace&~JTINPLACEA),VERB&AT(w)?a:w,FAV(self)->fgh[0],FAV(self)->fgh[0]);}  // keep inplaceability of w
 static DF2(jtonright12){F2PREFIP; jtinplace=(J)((I)jtinplace&~JTINPLACEA); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],VERB&AT(w)?a:w,fs);}  // keep inplaceability of w; turn a off for monad
 
 // u@n
-// obsolete static DF1(onconst1){DECLFG;R CALL1(f1,gs,fs);}
 static DF2(onconst12){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];R CALL1(FAV(fs)->valencefns[0],FAV(self)->fgh[1],FAV(self)->fgh[0]);}
 
 
@@ -551,11 +535,8 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 // This supports IRS so that it can pass the rank on to the called function; no need to revalidate here.  jt is inplaceable but we don't use it except to fiddle with flags
 // We pass the WILLOPEN flags through. We don't need full IRS2 because jt->ranks is known to be OK for the monad
-// obsolete static DF1(withl){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; F1PREFIP;A z; I r=(RANKT)jt->ranks; IRSIP2(fs,w,gs,RMAX,(RANKT)jt->ranks,g2,z); RETF(z);}
-// obsolete static DF1(withr){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; F1PREFIP; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z; I r=(RANKT)jt->ranks; IRSIP2(w,gs,fs,(RANKT)jt->ranks,RMAX,f2,z); RETF(z);}
 static DF1(withl){AF f2=FAV(self)->localuse.lu1.bondfn; F1PREFIP; ((C*)&jt->ranks)[1]=RMAX; A z=f2(jtinplace,FAV(self)->fgh[0],w,FAV(self)->fgh[1]); RETF(z);}  // m&v.  Leave inplacing of w
 static DF1(withr){AF f2=FAV(self)->localuse.lu1.bondfn; F1PREFIP; jt->ranks=(jt->ranks<<RANKTX)+RMAX; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z=f2(jtinplace,w,FAV(self)->fgh[1],FAV(self)->fgh[0]); RETF(z);}  // u&n.  Move inplacing of w to a
-// obsolete #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
 
 // Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the precision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash

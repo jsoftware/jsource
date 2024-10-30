@@ -479,7 +479,6 @@ dobblock:
    }else{
     // *** the rest is error cases
     if(unlikely((jt->jerr&~0x60)==EVEXIT)){ic=OBCW; goto nextlinetcesx;  // EXIT/DEBUGEND/FOLDTHROW always pass up the line
- // obsolete    if(unlikely((jt->jerr&(EVEXIT^EVDEBUGEND))==EVEXIT||jt->jerr==EVFOLDTHROW)){ic=OBCW; goto nextlinetcesx;  // if 2!:55 requested, honor it regardless of debug status; also EVDEBUGEND which silently cuts everything back in that thread
     }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
      if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
      bic=ic;ic=~CWMAX;goto nextlinedebug;   // Remember the line w/error; fetch continuation line# (but exit if no line# given, should not occur). it is OK to have jerr set if we are in debug mode.  Must go through nextline to set z non0
@@ -641,9 +640,6 @@ dobblock:
    cv=forpopgoto(jt,cv,ic,1);   // if the branch takes us outside a control structure, pop the for/select stack
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(unlikely(NPGpysfmtdl&4)){tdv=trypopgoto(jt,tdv,ic); NPGpysfmtdl^=tdv->ndx?0:4;}
-// obsolete    if(unlikely(2<=__atomic_load_n(JT(jt,adbreakr),__ATOMIC_ACQUIRE))) {BASSERT(0,EVBREAK);} 
-// obsolete      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
-// obsolete    goto nextline;
    goto checkbreak0;  // some of these may be backward branches; finish through break check & presumed bblock
 
   case CELSE: case CWHILST:
@@ -1021,7 +1017,6 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx),pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.  The chains have MSB flag, which must be removed
  }
 
-// obsolete  asgct = asgct + ((asgct+6)>>1); // leave just 33% empty space because buckets & symbol addresses do most of the work
  I symct = asgct>>1; asgct = asgct + (asgct>>2); symct = likely(type>=3 || flags&VXOPR)?symct:asgct; symct=MAX(symct,4);  // Hash size is 50% of # assigned symbols, in hopes that the number per chain evens out to 2 to help branch prediction during the free.
      // but if we will have no bucket#s (see below), allocate to avoid collisions.  Min of 4 buckets needed to make sure x and y hash to different buckets
  RZ(actst=stcreate(2,symct,0L,0L));  // Allocate the symbol table we will use
@@ -1200,8 +1195,6 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  if(VERB&AT(a)){  // v : v case
   ASSERT(AT(w)&VERB,EVDOMAIN);   // v : noun is an error
   // If nested v : v, prune the tree
-// obsolete   if(unlikely(CCOLON==FAV(a)->id)&&!(FAV(a)->flag&VXOP)&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0]))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v); don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
-// obsolete   if(unlikely(CCOLON==FAV(w)->id)&&!(FAV(w)->flag&VXOP)&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0]))w=FAV(w)->fgh[1];
   if(unlikely(CCOLON==FAV(a)->id))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v)
   if(unlikely(CCOLON==FAV(w)->id))w=FAV(w)->fgh[1];
   fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) // derived verb is ASGSAFE if both parents are 
@@ -1248,9 +1241,6 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   // find the location of the ':' divider line, if any.  Only spaces are allowed besides the ':'  But don't recognize : on the last line, since it could
   // conceivably be the return value from a modifier
   A *wv=AAV(w);  // pointer to lines
-// obsolete   DO(AN(w)-1, I st=0; A wvc=C(*wv); 
-// obsolete     DO(AN(wvc), I c=CAV(wvc)[i]; if(c!=':'&&c!=' '){st=0; break;} if(c!=' ')if(st==1){s=0; break;}else st=1;)
-// obsolete     if(st==1){splitloc=wv-AAV(w); break;} ++wv;)
   DO(AN(w)-1, A wva=C(wv[i]); I j; C *wvac=CAV(wva); I wvan=AN(wva);  // init line pointers & len
    for(j=0;j<wvan&&wvac[j]==' ';++j); if(j==wvan||wvac[j]!=':')continue;  // skip spaces; if no next char or next char is not :, advance to next line
    while(++j<wvan&&wvac[j]==' ');  // scan trailing characters, stop if nonspace found
@@ -1263,7 +1253,6 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   if(4==m){if((-AN(v1)&(AN(v2)-1))<0)v2=v1; v1=mtv;}  //  for 4 :, make the single def given the dyadic one, leave monadic empty
   // preparse to create the control-word structures
   GAT0(h,BOX,2*HN,1); hv=AAV1(h);   // always allocated at rank 1
-// obsolete   DO(2, A vv=i?v2:v1; I b; RE(b=(I)preparse(vv,&hv[HN*i+0],&hv[HN*i+1])); flag|=(b*VTRY1)<<i; hv[HN*i+2]=JT(jt,retcomm)?vv:mtv;)
   DO(2, A vv=i?v2:v1; I b; RE(b=(I)preparse(vv,&hv[HN*i+0],&hv[HN*i+1])); flag|=(b*VTRY1)<<i; hv[HN*i+2]=vv;)
   // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text);(local symbol table)
   // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive

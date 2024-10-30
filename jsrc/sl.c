@@ -448,7 +448,6 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale for each name */
 
 // 18!:2 y  return boxed locale path.  y is locale name/number
-// obsolete DF1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,self); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,C(w)));
 DF1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,self); RZ(vlocnl(1,w)); RZ(g=locale(1,C(w)));
  A *gp=LOCPATH(g);  // the path for the current locale.  It must be non0 normally, but if another deleted the locale while we are running it might be 0
  if(gp==0)RETF(mtv)   // if locale has been deleted, return something

@@ -218,7 +218,6 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* a
  pv=(UC*)&p; DO(SZI, pv[i]=c;);  // scaf slow
  ado AH2A(1,2*(256/SZI)+0,AV(ds(CALP)),pv,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
  ado AH2A(1,2*((n+SZI-1)>>LGSZI)+0,wv,pv,zv,jt);  // if we found the function, apply it wordwise
-// obsolete  zv[n]=0;
  R 1;
 }  // scaf kludge this should be scrapped in favor of wordlong ops
 

@@ -231,7 +231,6 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   RESETERR;
  }
  zt=rtypew(cv,wt);  // Extract output type; if none given, means 'keep same type'
-// obsolete zt=zt==0?wt:zt
  if(unlikely(ado==0)){  // the function is an identity function
   if(((zt^AT(w))&NUMERIC)==0)RCA(w);  // if the argument has the correct type, return the argument
   GA(z,zt,n,AR(w),AS(w)); RETF(z);  // if not, must be empty, make an appropriate empty and return it

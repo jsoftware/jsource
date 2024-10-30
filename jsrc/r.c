@@ -30,7 +30,6 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  m+=!b&&!xop||hs&&xop;   // if operator, add component for v if conjunction; if not operator, add component UNLESS w is an invisible bident: for w itself or for h
  if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep, which is the result
  if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));  // recursively take rep of 1st component
-// obsolete  gs=(BETWEENC(id,CFDOT,CFCODOT))?hs:gs;  // when we emulate Fold, we have to get the conjunction value from h
  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));  // ... and second
  if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any
  GATV0(z,BOX,m,1); x=AAV(z);
@@ -64,7 +63,6 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  if(NOUN&AT(w)){RZ(x[0]=incorp(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); RZ(x[1]=INCORPNA(w)); RETF(z);}  // if name, must be ".@'name', format name as string
  GATV0(y,BOX,m,1); u=AAV(y);
  if(0<m)RZ(u[0]=incorp(aro(fs)));
-// obsolete  if(1<m)RZ(u[1]=incorp(aro(ex?unparsem(num(0),w):xop?hs:BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));
  if(1<m)RZ(u[1]=incorp(aro(ex?unparsem(num(0),w):xop?hs:gs)));
  if(2<m)RZ(u[2]=incorp(aro(hs)));
  s=xop?aro(gs):spellout(id);
@@ -356,8 +354,6 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  ASSERT(AT(w)&VERB+ADV+CONJ,EVDOMAIN);
  wv=FAV(w); h=wv->fgh[2];
  if(!(h&&CCOLONE==wv->id))R reshape(v2(0L,3L),ds(CACE));   // if not explicit defn or no body, return empty
-// obsolete  hv=AAV(h);
-// obsolete  x=hv[j];
  R cw57rep(jt,AAV(h)[j]);
 }    /* explicit representation -- h parameter for : definitions */
 

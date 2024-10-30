@@ -377,8 +377,6 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  GATV0(t,BOX,m,1); tv=AAV(t);
  if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
-// obsolete  // we emulate Fold in an explicit defn which has the parts of f and h: in that case we pull g from h
-// obsolete  if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtinplace,fxeach(BETWEENC(id,CFDOT,CFCODOT)?hs:gs,(A)&jtfxself[!!self]),ltext):lrr(BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));  // fill in g if present
  if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtinplace,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(0&&BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));  // fill in g if present
  if(0<m)RZ(tv[0]=incorp(fl&VGERL?tiefn(jtinplace,fxeach(fs,(A)&jtfxself[!!self]),ltext):lrr(fs)));  // fill in f (always present)
  R linsert(t,w);

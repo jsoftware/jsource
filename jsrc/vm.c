@@ -513,16 +513,12 @@ AHDR2(cirID,D,I,D){n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EWIM
 
 AHDR2(cirDD,D,D,D){I k=(I)jround(*x);
  ASSERTWR(k==*x,EVDOMAIN); 
-// obsolete  ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
-// obsolete  n^=REPSGN(n);   // convert complementary n to nonneg
  n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EWIMAG); 
  n=REPSGN(m)^(m>>SGNTO0(~m)); R cirx(n,k,z,y);
 }
 
 AHDR2(cirEE,E,E,E){I k=(I)jround(x->hi);
  ASSERTWR(k==x->hi,EVDOMAIN); 
-// obsolete  ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
-// obsolete  n^=REPSGN(n);   // convert complementary n to nonneg
  n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EWIMAG); 
  n=REPSGN(m)^(m>>SGNTO0(~m)); R jtcire(jt,n,k,z,y);
 }

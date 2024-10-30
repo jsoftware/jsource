@@ -87,7 +87,6 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  if(!z){A f,h,*zv;I*hv;
   GATVR(z,BOX,wn,2,ws); zv=AAV(z);
   GATV0(h,INT,wr,1); hv=AV(h);
-// obsolete   GA10(f,t,1);
   RZ(f=jtfiller(jt,t,0,0)); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
   for(i=0;i<wn;++i){
    zv[i]=x=C(wv[i]);
@@ -102,19 +101,13 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
 // if f&g is known, it is in fampg, otherwise fampg is 0
 A jtinvamp(J jt, A f, A g, A fampg){A ff,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  ARGCHK2(f,g);
-// obsolete  v=FAV(w);
-// obsolete  f=v->fgh[0];
  nf=!!(NOUN&AT(f));  // nf  is 1 if m&v
-// obsolete  g=v->fgh[1];
-// obsolete  ng=!!(NOUN&AT(g));  // ng is 1 if u&n
  h=nf?g:f; x=nf?f:g; c=FAV(h)->id; u=FAV(h);   // h=verb arg, x=noun arg. c is ID of the verb.  u is VB struct for the verb
  switch(c){
  case CPLUS:    R amp(negate(x),h);
  case CSTAR:    R amp(recip(x), h);
  case CMINUS:   R nf?fampg?fampg:amp(f,g):amp(x,ds(CPLUS));
  case CDIV:     R nf?fampg?fampg:amp(f,g):amp(x,ds(CSTAR));
-// obsolete  case CMINUS:   R amp(x,ds(nf?CMINUS:CPLUS));
-// obsolete  case CDIV:     R amp(x,ds(nf?CDIV:CSTAR));
  case CROOT:    R amp(ds(nf?CEXP:CLOG),x);
  case CEXP:     R !nf&&equ(x,num(2))?ds(CROOT):amp(x,ds(nf?CLOG:CROOT));
  case CLOG:     R nf?amp(x,ds(CEXP)):amp(ds(CROOT),x);

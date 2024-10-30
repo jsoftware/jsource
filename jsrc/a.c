@@ -162,22 +162,6 @@ static I jtint0(J jt,A w){A x;
  R w&&INT+B01&AT(w)?BIV0(w):IMIN;
 }
 
-#if 0  // obsolete
-static DF1(jtmemo1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A z;I x,y;
- ARGCHK1(w);
- x=IMIN; y=int0(w);
- if(y==IMIN)R CALL1(FAV(fs)->valencefns[0],w,fs);  // if unmemoable, just run the function off-hash
- R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL1(f1,w,fs));
-}
-
-static DF2(jtmemo2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];A z;I x,y; 
- ARGCHK2(a,w);
- x=int0(a); y=int0(w);
- if(MIN(x,y)==IMIN)R CALL2(FAV(fs)->valencefns[1],a,w,fs);  // IMIN is unmemoable, run fn
- R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL2(f2,a,w,fs));  // if memo lookup returns empty, run the function and remember the result
-}
-#endif
-
 static DF2(jtmemo12){A fs=FAV(self)->fgh[0];A z;I x,y;   // w is 0 for monad
  ARGCHK2(a,w); w=AT(w)&VERB?0:w; AF f12=FAV(fs)->valencefns[!!w];
  x=int0(a); y=w&&x!=IMIN?int0(w):x;  // get arg value, IMIN if not memoable; for monad let y=x

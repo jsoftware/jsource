@@ -378,6 +378,8 @@ neg p
 )
 'value error' -: q etx ''
 
+1: ?~ 6  NB. deal random #s.  Change if we hit a bad spot
+
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first global global1 global2 global3'
 4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r s second sscript gval_z_'

@@ -333,7 +333,7 @@ DF2(jtpowop){F2PREFIP;B b;V*v;
     ASSERT(n!=0,EVDOMAIN);  // <0 arg not allowed: would be nothing
     f1=f2=jtpowatom12; v=FAV(a);   // use atomic-power handler
     // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
-    if(n==IMAX){
+    if(likely(n==IMAX)){
      if(CAMP==v->id&&(CFROM==IDD(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim12;}  // {&b^:a: y
      else if(CTILDE==v->id&&CFROM==IDD(v->fgh[0])){f2=jtindexseqlim12;}   // x {~^:a: y
     }
@@ -345,7 +345,7 @@ DF2(jtpowop){F2PREFIP;B b;V*v;
   }else{
    // unboxed n.
    // handle the very important case of scalar   int/boolean   n of 0/1
-   if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
+   if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
    // falling through for other cases (including non-B01/INT)
    if(w==ds(CUSDOT)){   // power is _.
     ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs

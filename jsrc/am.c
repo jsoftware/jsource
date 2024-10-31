@@ -855,20 +855,22 @@ static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
- df1(ffm,w,hv[1]);  // x v1 y - no inplacing
+ I hn=AN(sv->fgh[2]);  // hn=# gerunds in h
+ df1(ffm,w,hv[hn-2]);  // x v1 y - no inplacing
  RZ(ffm);
  RZ(ff=amend(ffm));  // now ff represents (v1 y)}.  scaf avoid this call, go straight to mergn1
- if(AT(hv[2])&NOUN){ffx=hv[2];}else{RZ(df1(ffx,w,hv[2]))}
+// obsolete  if(AT(hv[2])&NOUN){ffx=hv[2];}else{
+ RZ(df1(ffx,w,hv[hn-1]))
  R df1(ffm,ffx,ff);
 }
 
 // verb executed for x v0`v1`v2} y
 static DF2(jtgav2){F2PREFIP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
-A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
+ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
+ I hn=AS(sv->fgh[2])[0];  // hn=# gerunds in h
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
- // If the AR is a noun, just leave it as is
- df2(ffm,a,w,C(hv[1]));  // x v1 y - no inplacing.
+ df2(ffm,a,w,hv[1]);  // x v1 y - no inplacing.
  RZ(ffm);
  RZ(ff=amend(ffm));  // now ff represents(x v1 y)} .  scaf avoid this call, go straight to mergn1
  // Protect any input that was returned by v1 (must be ][)
@@ -876,24 +878,27 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
  // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- RZ(ffy = (FAV(C(hv[2]))->valencefns[1])(a!=w&&(FAV(C(hv[2]))->flag&VJTFLGOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,C(hv[2])));  // flag self about f, since flags may be needed in f
+ if(hn>=3){RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w&&(FAV(hv[2])->flag&VJTFLGOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ }else{ffy=w;}  // if v2 omitted or ], just use y directly
  // x v0 y - can inplace any unprotected argument
- RZ(ffx = (FAV(C(hv[0]))->valencefns[1])((FAV(C(hv[0]))->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,C(hv[0])));
+ RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
  // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
  POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive
-// The id is the pseudocharacter for the function, which is passed in as the pchar for the derived verb
 static A jtgadv(J jt,A w){A hs;I n;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
- ASSERT(BETWEENC(AN(w),2,3),EVLENGTH);  // verify 2-3 gerunds
- RZ(hs=fxeachv(1,3==AN(w)?w:behead(reshape(num(4),w))));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
- // hs is a BOX array, but its elements are ARs
+ I wn=AN(w); ASSERT(BETWEENC(wn,2,3),EVLENGTH);  // verify 2-3 gerunds
+// obsolete RZ(hs=fxeachv(1,3==AN(w)?w:behead(reshape(num(4),w))));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
+ RZ(hs=fxeachv(1,w));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
+ // hs is a BOX array, but its elements are ARs and cannot be pyxes
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
- I alr=atoplr(C(AAV(hs)[0]));   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
- I flag=(FAV(C(AAV(hs)[0]))->flag&FAV(C(AAV(hs)[1]))->flag&FAV(C(AAV(hs)[2]))->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+(alr-2>0?alr-2:alr);
+ I alr=atoplr(AAV(hs)[0]);   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
+ I flag=VASGSAFE;  // where we will build verb flags, inited as if wn<3
+ if(wn==3){if(FAV(AAV(hs)[2])->id==CRIGHT)AS(hs)[0]=2; else flag=FAV(AAV(hs)[2])->flag;}  // 3 is scaf if v2=], remove it from gerund count in shape (leave in AN for free); if 3 gerunds, init from v2
+ flag=(flag&FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+(alr-2>0?alr-2:alr);  // wn may be 2 or 3
  R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 

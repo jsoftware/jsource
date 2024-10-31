@@ -507,7 +507,7 @@ DF1(jtcompsum){
 static DF1(jtred0){A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
  if(likely(!ISSPARSE(AT(w)))){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}  // x exists only for type and shape
- R reitem(vec(INT,f,s),lamin1(df1(z,x,(AT(w)&SBT)?idensb(self):iden(self))));
+ R reitem(vec(INT,f,s),lamin1(dfv1(z,x,(AT(w)&SBT)?idensb(self):iden(self))));
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
@@ -1002,7 +1002,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  RETF(z);
 }    /* ,&.>/"r w */
 
-static DF2(jtoprod){A z; R df2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
+static DF2(jtoprod){A z; R dfv2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
 
 
 F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;
@@ -1025,9 +1025,9 @@ F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;
  R z;
 }
 
-A jtaslash (J jt,C c,    A w){RZ(   w); A z; R df1(z,  w,   slash(ds(c))     );}
-A jtaslash1(J jt,C c,    A w){RZ(   w); A z; R df1(z,  w,qq(slash(ds(c)),zeroionei(1)));}
-A jtatab   (J jt,C c,A a,A w){ARGCHK2(a,w); A z; R df2(z,a,w,   slash(ds(c))     );}
+A jtaslash (J jt,C c,    A w){RZ(   w); A z; R dfv1(z,  w,   slash(ds(c))     );}
+A jtaslash1(J jt,C c,    A w){RZ(   w); A z; R dfv1(z,  w,qq(slash(ds(c)),zeroionei(1)));}
+A jtatab   (J jt,C c,A a,A w){ARGCHK2(a,w); A z; R dfv2(z,a,w,   slash(ds(c))     );}
 
 DF1(jtmean){
  ARGCHK1(w);

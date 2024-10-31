@@ -11,10 +11,10 @@ static I jtfdepger(J jt,A w){R 0;
 
 
 // $: itself
-F1(jtself1){A z; STACKCHKOFL df1(z,  w,jt->parserstackframe.sf); RETF(z);}
-F2(jtself2){A z; STACKCHKOFL df2(z,a,w,jt->parserstackframe.sf); RETF(z);}
+F1(jtself1){A z; STACKCHKOFL dfv1(z,  w,jt->parserstackframe.sf); RETF(z);}   // scaf combine, allow inplacing
+F2(jtself2){A z; STACKCHKOFL dfv2(z,a,w,jt->parserstackframe.sf); RETF(z);}
 
-A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
+A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}  // scaf where used?
 A jtac2(J jt,AF f){R fdef(0,0,VERB, jtvalenceerr,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 
 F1(jtvalenceerr){F1PREFIP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:

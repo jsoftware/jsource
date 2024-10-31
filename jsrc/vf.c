@@ -288,7 +288,7 @@ static A jtreshapeblank(J jt, A a, A w, A rndfn, I nlens, I wcr){
  if(upos==IMAX)R a;  // if x didn't contain _, just use it as is
  ASSERT(!oflo,EVLIMIT) ASSERT(xprod!=0,EVDOMAIN);  // detect overflow; if result is empty, we cannot calculate a value
  I nw; PRODX(nw,nlens,AS(w)+AR(w)-wcr,1)   // calculate # cells in a wcr-cell of w: use all axes or just the first
- A nblank; df1(nblank,divide(sc(nw),sc(xprod)),rndfn); RZ(nblank);  // rndfn */ (x-._) % */ $`#@.isitem y
+ A nblank; dfv1(nblank,divide(sc(nw),sc(xprod)),rndfn); RZ(nblank);  // rndfn */ (x-._) % */ $`#@.isitem y
  ASSERT(AR(nblank)==0,EVRANK) if(!(AT(nblank)&INT))RZ(nblank=cvt(INT,nblank))  // nblank must be stomic
  IAV(a)[upos]=IAV(nblank)[0]; R a;  // replace _ with calculated value and return new x
 }

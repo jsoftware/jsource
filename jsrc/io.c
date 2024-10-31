@@ -593,7 +593,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 // callback result z is a rank-1 literal array 
 // literal array will be cut into rank-1 box array here using  <;._2 
 // and then reshape into rank-2  ((n%2),2)$
-    A x=z; RZ(df1(z,x,cut(ds(CBOX),num(-2))));
+    A x=z; RZ(dfv1(z,x,cut(ds(CBOX),num(-2))));
     RETF(reshape(v2(AN(z)>>1,2L),z));
   } else {RETF(z);}      // no need to fix anything
 }

@@ -906,7 +906,7 @@ end:
 }    /* <.@% or >.@% on integers */
 
 
-static F2(jtweight){ARGCHK2(a,w); A z; R df1(z,behead(over(AR(w)?w:reshape(a,w),num(1))),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
+static F2(jtweight){ARGCHK2(a,w); A z; R dfv1(z,behead(over(AR(w)?w:reshape(a,w),num(1))),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
 
 F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;PROLOG(889);
  ARGCHK1(w);
@@ -942,7 +942,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  if((-n&SGNIFNOT(t,B01X))>=0)R reshape(apip(shape(w),zeroionei(n!=0)),w);
  if(!(t&INT)){
   // Not integer.  Calculate # digits-1 as d = 2 <.@^. >./ | , w  
-  df2(d,num(2),maximum(zeroionei(1),aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
+  dfv2(d,num(2),maximum(zeroionei(1),aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
   // Calculate z = ((1+d)$2) #: w
   RZ(z=abase2(reshape(increm(d),num(2)),w));
   // If not float, result is exact or complex; either way, keep it

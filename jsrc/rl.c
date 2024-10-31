@@ -180,7 +180,7 @@ static F1X(jtlnum1){F1PREFIP;A z,z0;I t;
  ARGCHK1(w);
  t=AT(w);
  // use full for float values not going to screen; otherwise the default 
- RZ(z=(t&FL+CMPX+QP)&&!((I)jtinplace&JTPRFORSCREEN)?df1(z0,w,fit(ds(CTHORN),sc((I)(t&QP?35:18)))):thorn1(w));
+ RZ(z=(t&FL+CMPX+QP)&&!((I)jtinplace&JTPRFORSCREEN)?dfv1(z0,w,fit(ds(CTHORN),sc((I)(t&QP?35:18)))):thorn1(w));
  R decorate(z,t);
 }    /* dense non-empty numeric vector */
 
@@ -337,7 +337,7 @@ static F1X(jtlcolon){F1PREFIP;A*v,x,y;C*s,*s0;I m,n;
     pos=AT(w)&ADV?'a':pos; pos=AT(w)&CONJ?'c':pos;   // override if not verb
     hdr[hdrl++]=pos; hdr[hdrl++]=CLF;  // install type, giving {{)tLF
   }else hdr[hdrl++]=' ';  // ordinary DD: {{SP
-  R raze(over(df2(z,box(str(hdrl,hdr)),ravel(stitch(box(scc(CLF)),y)),amend(num(0))),box(str(2,"}}"))));  //  ; ((<hdr) 0} , (<LF) ,. y) ,  <tlr
+  R raze(over(dfv2(z,box(str(hdrl,hdr)),ravel(stitch(box(scc(CLF)),y)),amend(num(0))),box(str(2,"}}"))));  //  ; ((<hdr) 0} , (<LF) ,. y) ,  <tlr
  }
  if(!((I)jtinplace&JTEXPVALENCEOFF)&&(2>n||2==n&&1==AN(v[0])&&':'==CAV(C(v[0]))[0])){  // if all valences requested, and only one line, or monadic valence empty (i. e. first line is ':')
   // return one-line definition m : 'string'.  m will come from x

@@ -622,7 +622,7 @@ extern F2(jtxlog2a);
 extern F2(jtxroota);
 extern DF2(jtxrx);
 
-extern F1(jtamend);
+extern DF1(jtamend);
 extern DF1(jtbitwise1);
 extern DF1(jtbitwiseinsertchar);
 extern DF1(jtcrcfixedleft);

@@ -21,7 +21,7 @@
 
 A jteval(J jt,C*s){R PARSERVALUE(parseforexec(tokens(cstr(s),1+!!EXPLICITRUNNING)));}
 
-A jtev1(J jt,    A w,C*s){A z; R df1(z,  w,eval(s));}  // parse *s and apply to w
+A jtev1(J jt,    A w,C*s){A z; R df1(z,  w,eval(s));}  // parse *s and apply to w  // scaf check is always verb.  If so, combine
 A jtev2(J jt,A a,A w,C*s){A z; R df2(z,a,w,eval(s));}  // parse *s and apply to a and w
 A jteva(J jt,    A w,C*s){A z; R df1(z,  w,colon(num(1),   cstr(s)));}  // parse to adverb
 A jtevc(J jt,A a,A w,C*s){A z; R df2(z,a,w,colon(num(2),cstr(s)));}  // parse to conjunction

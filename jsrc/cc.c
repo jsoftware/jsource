@@ -1394,7 +1394,8 @@ F2(jtcut){F2PREFIP;A h=0;I flag=0,k;
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RE(k=i0(w));
  A z; fdefallo(z)
- if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
+// obsolete  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
+ if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(BETWEENC(k,-2,2),EVNONCE);}
  switch(k){
  case 0: 
   if(FAV(a)->id==CBOX){   // <;.0

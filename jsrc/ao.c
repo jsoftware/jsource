@@ -117,7 +117,7 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  f=v->fgh[0]; g=v->fgh[1];
  c=FAV(FAV(FAV(f)->fgh[0])->fgh[0])->id;   // id of f     f//. f/ f
  d=FAV(FAV(g)->fgh[0])->id;   // id of g     g/ g
- if((-m&(AR(a)-2)&-n&(AR(w)-2))>=0)R obqfslash(df2(z,a,w,g),f);  // if empty, or not atoms/lists, do general code.  Never happens.
+ if((-m&(AR(a)-2)&-n&(AR(w)-2))>=0)R obqfslash(dfv2(z,a,w,g),f);  // if empty, or not atoms/lists, do general code.  Never happens.
  // from here on polymult on nonempty lists
  if(t&FL+CMPX)NAN0;
  switch(PMCASE(CTTZ(t),c,d)){
@@ -158,7 +158,7 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
   }
  }
  if(t&FL+CMPX)NAN1; RE(0);
- if(!b)R obqfslash(df2(z,a,w,g),f);
+ if(!b)R obqfslash(dfv2(z,a,w,g),f);
  RETF(z);
 }    /* f//.@(g/) for atomic f, g */
 
@@ -172,7 +172,7 @@ static DF2(jtkeyi){PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
  RZ(j=grade1(a)); jv=AV(j);  // get grading permutation for the self-indexes.  This groups the partitions
  GATV0(p,B01,n,1); pv=BAV(p);   // allocate boolean fret mask
  DO(n, c=d; d=av[*jv++]; *pv++=c<d;);  // d=self-index of current output value (always ascending).  When the value changes, that's a fret
- df2(z,p,from(j,w),cut(VAV(self)->fgh[0],zeroionei(1)));  // z = frets u;.1 j{w
+ dfv2(z,p,from(j,w),cut(VAV(self)->fgh[0],zeroionei(1)));  // z = frets u;.1 j{w
  EPILOG(z);
 }    /* a f/. w where a is i.~x for dense x  */
 
@@ -192,7 +192,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
   // Create a partition for the sparse cells.  We create a sparse vector with 1 as the sparse element
   GASPARSE0(q,B01,1,1); AS(q)[0]=n;  /* q=: 0 by}1$.n;0;1 */
   p=PAV(q); SPB(p,a,iv0); SPB(p,e,num(1)); SPB(p,i,by); SPB(p,x,reshape(tally(by),num(0)));  // q is a mask: all 1s, but 0 on the non-sparse elements of w
-  RZ(z=over(df1(b,repeat(q,w),VAV(self)->fgh[0]),z));  // (u q#(fill ele for w)) , (result on non-sparse)  ?? bug if u result has rank too high, the call to C. will fail with agreement
+  RZ(z=over(dfv1(b,repeat(q,w),VAV(self)->fgh[0]),z));  // (u q#(fill ele for w)) , (result on non-sparse)  ?? bug if u result has rank too high, the call to C. will fail with agreement
   z=j?ccapdot2(box(IX(1+j)),z):z;  // Use C. to rotate the sparse result into proper position
  }
  EPILOG(z);

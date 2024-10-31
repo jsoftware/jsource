@@ -192,7 +192,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,drop(sc(i),w),C(hv[imod]))); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,drop(sc(i),w),C(hv[imod]))); ++imod;);
  R jtopenforassembly(jt,z);
 }    /* g\."r w for gerund g */
 
@@ -344,7 +344,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  SETIC(x,n);
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,repeat(from(sc(i),x),w),C(hv[imod]))); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,repeat(from(sc(i),x),w),C(hv[imod]))); ++imod;);
  R jtopenforassembly(jt,z);
 }
 
@@ -354,7 +354,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANKW(0,RMAX,jtofxinv,self);
  fs=FAV(self)->fgh[0]; f=FAV(fs)->fgh[0]; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||((c&-2)==CEQ)&&t&B01))R outfix(a,w,self);  // if not +/\. or m b./\. or =/\. or ~:/\.
- A z0,z1; z=irs2(df1(z0,w,fs),df2(z1,a,w,bslash(fs)),c==CPLUS?ds(CMINUS):f, RMAX,-1L,jtatomic2);
+ A z0,z1; z=irs2(dfv1(z0,w,fs),dfv2(z1,a,w,bslash(fs)),c==CPLUS?ds(CMINUS):f, RMAX,-1L,jtatomic2);
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
 }    /* a f/\. w where f has an "undo" */
 
@@ -367,8 +367,8 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  else     {d=(m-1)/c; RZ(i=apv(d,c-1,c )); RZ(j=apv(d,c,c ));}
  // d is (number of result cells)-1; i is indexes of last item of the excluded infix for cells AFTER the first
  // j is indexes of first item AFTER the excluded infix for cells BEFORE the last
- RZ(p=fromA(i,df1(z,w,bslash(f)))); // p is i { u\ w; that is, the totals of the prefixes after the first
- RZ(s=fromA(j,df1(z,w,bsdot(f))));  // s is j { u\. w; totals of suffixes except the last
+ RZ(p=fromA(i,dfv1(z,w,bslash(f)))); // p is i { u\ w; that is, the totals of the prefixes after the first
+ RZ(s=fromA(j,dfv1(z,w,bsdot(f))));  // s is j { u\. w; totals of suffixes except the last
  // We need to make sure that p, s, and (p f s) all have the same type.  This is problematic, since we don't actually see
  // the type of (p f s) which is encoded in cv below.  But since this case is limited to atomic associative verbs, we
  // know that if p and s have the same type, p f s will also, except that it might overflow, which we will detect after we

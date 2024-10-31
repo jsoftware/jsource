@@ -13,7 +13,7 @@ F1(jtisempty){ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R eps(zeroionei(0),shape(
 F1(jtisnotempty){ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
 F1(jtisitems){ARGCHK1(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
 F1(jtrank){F1PREFIP; ARGCHK1(w); R sc(AR(w));}  // #@$
-F1(jtnatoms){F1PREFIP; A z; ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R df1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
+F1(jtnatoms){F1PREFIP; A z; ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R dfv1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
 
 // ,y and ,"r y - producing virtual blocks
 F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;

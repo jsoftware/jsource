@@ -211,7 +211,7 @@ F1(jtdbstackz){A y,z;
  RE(dbstack(w)); 
  RZ(y=str(jt->etxn,jt->etxinfo->etx)); 
  jt->etxn=0; 
- R df1(z,y,cut(ds(CLEFT),num(-2)));
+ R dfv1(z,y,cut(ds(CLEFT),num(-2)));
 }    /* 13!:18  SI stack as result */
 
 // ratify the current emsg and call eformat_j_ to give a full message

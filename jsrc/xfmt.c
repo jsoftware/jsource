@@ -530,7 +530,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
  ARGCHK2(a,w); *omode=0;
  if(unlikely(ISSPARSE(AT(w))))RZ(w=denseit(w));
  if(!AN(w))       RZ(w=reshape(shape(w),chrspace));
- if(JCHAR&AT(w))  R df1(a,w,qq(atop(ds(CBOX),ds(CCOMMA)),num(1)));
+ if(JCHAR&AT(w))  R dfv1(a,w,qq(atop(ds(CBOX),ds(CCOMMA)),num(1)));
  ASSERT(1>=AR(a), EVRANK); 
  ASSERT(!AN(a) || JCHAR+BOX&AT(a), EVDOMAIN);
  if(JCHAR&AT(a)||!AN(a)) RZ(a=fmtbfc(a));
@@ -542,7 +542,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
   ASSERT(1>=lvl, EVDOMAIN);
   DO(AN(w), x=C(wv[i]); ASSERT(1>=AR(x),EVRANK); if(AN(x)){ASSERT(AT(x)&JCHAR+NUMERIC,EVDOMAIN);
       ASSERT(!(AR(x)&&AT(x)&NUMERIC),EVRANK);});
-  A z; R df2(z,reitem(shape(w),a),w,amp(foreign(num(8),num(0)), ds(COPE)));
+  A z; R dfv2(z,reitem(shape(w),a),w,amp(foreign(num(8),num(0)), ds(COPE)));
  } else {
   if(ISDENSETYPE(AT(w),XNUM+RAT+CMPX))RZ(w=ccvt(FL,w,0));
   *omode=mode;
@@ -560,7 +560,7 @@ F2(jtfmt12){A z;I mode,r,j;
  RZ(z=fmtxi(a,w,1,&mode));
  if(mode==1)R z;
  r=AR(z);
- A t; df1(t,cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num(1)));
+ A t; dfv1(t,cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num(1)));
  R ravel(t);
 } /* 8!:1 dyad */
 
@@ -570,7 +570,7 @@ F2(jtfmt22){A z;I mode,r,j;
  RZ(z=fmtxi(a,w,2,&mode));
  if(mode==2)R z;
  r=AR(z);
- A t; df1(t,cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num(1)));
+ A t; dfv1(t,cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num(1)));
  RZ(z=ravel(t));
  R AS(z)[0]?razeh(z):lamin1(z);
 } /* 8!:2 dyad */

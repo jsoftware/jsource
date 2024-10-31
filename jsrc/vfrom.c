@@ -413,7 +413,7 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  ASSERT(naxa<=wcr,EVLENGTH)  // the number of axes must not exceed the length of a major cell
  if(unlikely((-AN(a)&-AN(w))>=0)){A z;  // empty array, either a or w
   // if empty a, return w in full, one copy per 1-cell of a, as w"_"1 a   (}:$a) $ ,:w .  "_ needed to prevent w from being construed as a gerund
-  if(unlikely(AN(a)==0))R df1(z,a,qq(qq(w,ainf),zeroionei(1)));
+  if(unlikely(AN(a)==0))R dfv1(z,a,qq(qq(w,ainf),zeroionei(1)));
   // empty w.  We must verify the indexes of a do not exceed w's shape
   I *ad=IAV(a); DO(nia, DO(naxa, ASSERT((*ad^REPSGN(*ad))<ws[i],EVINDEX); ++ad;) ) 
   // allocate empty result, move in shape: frame of w, frame of a, shape of item
@@ -465,7 +465,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
   // Since the native rank of a is 0, if w has only one cell we can loop over boxes of a
   R wr==wcr?rank2ex(a,w,DUMMYSELF,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
     // If both a and w have cells, we must match them up by boxing
-      df2(t0,IRS1(a,0L,acr,jtbox,t1),IRS1(w,0L,wcr,jtbox,t2),amp(ds(CLBRACE),ds(COPE)));  // > (<"arank a) {&> <"wrank w
+      dfv2(t0,IRS1(a,0L,acr,jtbox,t1),IRS1(w,0L,wcr,jtbox,t2),amp(ds(CLBRACE),ds(COPE)));  // > (<"arank a) {&> <"wrank w
  }
  // a is an atomic box.  Open it
  A c=C(AAV(a)[0]);  // contents of a

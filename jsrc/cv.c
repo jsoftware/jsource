@@ -48,12 +48,12 @@ static A jtfitct(J jt,A a,A w,I cno,A z){
 static DF2(jtfitexp2){
  F2RANK(0,0,jtfitexp2,self);
  ASSERT(0<=i0(w)&&!jt->jerr,EVDOMAIN);
- A z; R aslash(CSTAR,plus(a,df2(z,iota(w),FAV(self)->fgh[1],slash(ds(CSTAR)))));
+ A z; R aslash(CSTAR,plus(a,dfv2(z,iota(w),FAV(self)->fgh[1],slash(ds(CSTAR)))));
 }    /* a ^!.s w */
 
 static DF2(jtfitpoly2){I j;
  F2RANK(1,0,jtfitpoly2,self);
- A z; R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(z,IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
+ A z; R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,dfv2(z,IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
 // print precision, just the number of fractional digits requested from sprintf
@@ -62,8 +62,8 @@ static DF1(jtfitpp1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A z;
  RETF(z);
 }
 
-static DF1(jtfitf1){V*sv=FAV(self); A z; R df1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n
-static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
+static DF1(jtfitf1){V*sv=FAV(self); A z; R dfv1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n scaf combine?  Who calls?
+static DF2(jtfitf2){V*sv=FAV(self); A z; R dfv2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
 
 // Fit conjunction u!.v
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)

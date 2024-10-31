@@ -410,7 +410,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,take(sc(1+i),w),C(hv[imod]))); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,take(sc(1+i),w),hv[imod])); ++imod;);
  R jtopenforassembly(jt,z);
 }    /* g\"r w for gerund g */
 
@@ -464,7 +464,7 @@ static DF2(jtinfix){PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m;
   // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
   r=AR(w); rr=MAX(1,r); GATV0(s,INT,rr,1); if(r)MCISH(AV(s),AS(w),r); AV(s)[0]=0>m?0:m==IMAX?1+SETIC(w,r):m;
   // Create fill-cell of shape s; apply u to it
-  RZ(df1(x,jtfiller(jt,AT(w),rr,AS(s)),fs));
+  RZ(dfv1(x,jtfiller(jt,AT(w),rr,AS(s)),fs));
   // Prepend leading axis of 0 to the result
   z=reshape(over(zeroionei(0),shape(x)),x);
  } 
@@ -487,7 +487,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
   R jtopenforassembly(jt,z);
  }else{A s;
   RZ(s=AR(w)?shape(w):ca(iv0)); AV(s)[0]=ABS(m);
-  RZ(df1(x,jtfiller(jt,AT(w),AR(s),AS(s)),C(*hv)));
+  RZ(dfv1(x,jtfiller(jt,AT(w),AR(s),AS(s)),C(*hv)));
   R reshape(over(zeroionei(0),shape(x)),x);
 }}
 
@@ -967,4 +967,4 @@ F1(jtbslash){F1PREFIP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(
  RETF(z);
 }
 
-A jtascan(J jt,C c,A w){ARGCHK1(w); A z; R df1(z,w,bslash(slash(ds(c))));}
+A jtascan(J jt,C c,A w){ARGCHK1(w); A z; R dfv1(z,w,bslash(slash(ds(c))));}

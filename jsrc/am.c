@@ -856,12 +856,12 @@ static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
  I hn=AN(sv->fgh[2]);  // hn=# gerunds in h
- df1(ffm,w,hv[hn-2]);  // x v1 y - no inplacing
+ dfv1(ffm,w,hv[hn-2]);  // x v1 y - no inplacing
  RZ(ffm);
- RZ(ff=amend(ffm));  // now ff represents (v1 y)}.  scaf avoid this call, go straight to mergn1
+ RZ(ff=jtamend(jt,ffm,0));  // now ff represents (v1 y)}.  scaf avoid this call, go straight to mergn1
 // obsolete  if(AT(hv[2])&NOUN){ffx=hv[2];}else{
- RZ(df1(ffx,w,hv[hn-1]))
- R df1(ffm,ffx,ff);
+ RZ(dfv1(ffx,w,hv[hn-1]))
+ R dfv1(ffm,ffx,ff);
 }
 
 // verb executed for x v0`v1`v2} y
@@ -870,9 +870,9 @@ static DF2(jtgav2){F2PREFIP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(s
  I hn=AS(sv->fgh[2])[0];  // hn=# gerunds in h
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
- df2(ffm,a,w,hv[1]);  // x v1 y - no inplacing.
+ dfv2(ffm,a,w,hv[1]);  // x v1 y - no inplacing.
  RZ(ffm);
- RZ(ff=amend(ffm));  // now ff represents(x v1 y)} .  scaf avoid this call, go straight to mergn1
+ RZ(ff=jtamend(jt,ffm,0));  // now ff represents(x v1 y)} .  0 indicates this recursive call into powop, which will cause nonce error if v1 returns another gerund
  // Protect any input that was returned by v1 (must be ][)
  if(a==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEW);
  PUSHZOMB
@@ -883,7 +883,8 @@ static DF2(jtgav2){F2PREFIP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(s
  // x v0 y - can inplace any unprotected argument
  RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
  // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
- POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
+// obsolete  POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
+ POPZOMB; R ((AF)jtamendn2c)(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive
@@ -912,15 +913,16 @@ static DF2(jtamnegate){F2PREFIP;
  R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);
 }
 
-// u} handling.  This is not inplaceable but the derived verb is
-F1(jtamend){F1PREFIP;
+// u} handling.  This is not inplaceable but the derived verb is.  Self can be 0 to indicate this is a recursive call from a subroutine of jtamend
+DF1(jtamend){F1PREFIP;
  ARGCHK1(w);
  if(VERB&AT(w)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
  else if(ger(jt,w)){A z;
+  ASSERT(self!=0,EVNONCE);  // execute exception if gerund returns gerund
   RZ(z=gadv(w))   // get verbs for v0`v1`v2}, as verbs
   A *hx=AAV(FAV(z)->fgh[2]);
-  if((FAV(hx[0])->id&~1)==CATCO&&FAV(FAV(hx[0])->fgh[0])->id==CMINUS&&AT(FAV(hx[0])->fgh[1])&VERB&&FAV(FAV(hx[0])->fgh[1])->id==CFROM&&FAV(hx[1])->id==CLEFT&&FAV(hx[2])->id==CRIGHT){
-   FAV(z)->valencefns[1]=jtamnegate;    // if gerund is -@[:]{`[`], change the dyad function pointer to the special code
+  if((FAV(hx[0])->id&~1)==CATCO&&FAV(FAV(hx[0])->fgh[0])->id==CMINUS&&AT(FAV(hx[0])->fgh[1])&VERB&&FAV(FAV(hx[0])->fgh[1])->id==CFROM&&FAV(hx[1])->id==CLEFT&&(AS(FAV(z)->fgh[2])[0]<3||FAV(hx[2])->id==CRIGHT)){
+   FAV(z)->valencefns[1]=jtamnegate;    // if gerund is -@[:]{`[[`]], change the dyad function pointer to the special code
    FAV(z)->flag|=VIRS2;  // also support IRS for this case
   }
   R z;

@@ -137,7 +137,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
 static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  ARGCHK1(w);
  SETIC(w,n); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
- if(!n)R df1(z,w,iden(C(*hv)));
+ if(!n)R dfv1(z,w,iden(C(*hv)));
  RZ(z=from(num(-1),w));
  old=jt->tnextpushp;
  --m; DQ(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
@@ -374,8 +374,8 @@ F2(jtagendai){F2PREFIP;I flag;
 
 
 
-static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,C(AAV(h)[0]));}
-static DF2(jtgf2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,C(AAV(h)[0]));}
+static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R dfv1(z,  w,C(AAV(h)[0]));}  // scaf combine
+static DF2(jtgf2){A z,h=FAV(self)->fgh[2]; R dfv2(z,a,w,C(AAV(h)[0]));}
 
 A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(x=a?a:w);

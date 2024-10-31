@@ -1110,8 +1110,8 @@ F2(jtindaudit){PROLOG(365);
    RZ(z=shape(origind)); // z=$ind
    P *p=PAV(origind); A sparseaxes=SPA(p,a); A denseaxes=box(box(box(sparseaxes)));  // the list of sparse axes
    A id; RZ(id=abase2(over(zeroionei(0),from(denseaxes,z)),sc(findex)))     // id =.(0 , (<<<2$.ind) { $ind) #: findex  nonsparse indexes are in blocks of fixed size.  convert to block# , index list in block
-   A r; RZ(df2(r,from(head(id),SPA(p,i)),z,amend(sparseaxes)))  // r =. (({.id) { 4$.ind) (2$.ind)} z   convert block# to index list of sparse axes, save those axes in result
-   RZ(df2(z,behead(id),r,amend(denseaxes))) // z =. (}. id)  (<<<2$.ind)} r   insert index list in block into result
+   A r; RZ(dfv2(r,from(head(id),SPA(p,i)),z,amend(sparseaxes)))  // r =. (({.id) { 4$.ind) (2$.ind)} z   convert block# to index list of sparse axes, save those axes in result
+   RZ(dfv2(z,behead(id),r,amend(denseaxes))) // z =. (}. id)  (<<<2$.ind)} r   insert index list in block into result
   }
   z=jlink(sc(errtype),z);  // return error type and location
  }

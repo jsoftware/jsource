@@ -336,7 +336,7 @@ static F1(jttotient){A b,x,z;B*bv,p=0;I k,n,t;
   RZ(x=cvt(XNUM,w)); xv=XAV(x);
   DO(n, y=xv[i]; k=XSGN(y); ASSERT(0<=k,EVDOMAIN); if(k)*bv++=1; else{*bv++=0; xv[i]=X1; p=1;});
  }
- A z0; z=cvt(AT(x),df1(z0,x,eval("(- ~:)&.q:\"0"))); 
+ A z0; z=cvt(AT(x),dfv1(z0,x,eval("(- ~:)&.q:\"0"))); 
  R p?tymesW(b,z):z;
 }
 
@@ -426,14 +426,14 @@ F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  bb=equ(a,ainf);  // bb: a is _ or __
  if(b&bb){ /* __ q: w */
   RZ(y=ne(q,curtail(over(zeroionei(0),q))));
-  R lamin2(repeat(y,q),df1(z,y,cut(ds(CPOUND),zeroionei(1))));
+  R lamin2(repeat(y,q),dfv1(z,y,cut(ds(CPOUND),zeroionei(1))));
  }
  RZ(y=vi(plt(q))); yv=AV(y);
  k=-1; DO(AN(y), if(k<yv[i])k=yv[i];); ++k;
  if(bb)m=k; else RE(m=i0(a));
  if(b){
   q=repeat(ge(y,sc(k-m)),q);
-  R lamin2(nub(q),df2(z,q,q,sldot(ds(CPOUND))));
+  R lamin2(nub(q),dfv2(z,q,q,sldot(ds(CPOUND))));
  }else{
   GATV0(z,INT,wn*m,1+wr); MCISH(AS(z),AS(w),wr) AS(z)[wr]=m; zv=AV(z);  // avoid overfetch of AS(w)
   mvc(AN(z)*SZI,zv,MEMSET00LEN,MEMSET00);
@@ -445,7 +445,7 @@ static F1(jtxfactor);
 
 F1(jtfactor){PROLOG(0063);A y,z;
  ARGCHK1(w);
- if(unlikely(AN(w)==0)){R df1(z,w,qq(mtv,zeroionei(0)));}  // if w empty return an empty list for each value
+ if(unlikely(AN(w)==0)){R dfv1(z,w,qq(mtv,zeroionei(0)));}  // if w empty return an empty list for each value
  RZ(init4792(jt));
  if(AT(w)&XNUM+RAT)R xfactor(w);  // if XNUM, use elliptic routines
  if(ISDENSETYPE(AT(w),FL+CMPX+QP)){  //  only integers can be factored

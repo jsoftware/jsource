@@ -73,7 +73,7 @@ static A jtintfloorlog2(J jt, A w, A compself) {  // compself is the floor/ceil 
   R z;
  }
 revert:;  // must do by hand
-  A z; R df1(z,jtlogar2(jt,num(2),w),compself);   // lg, then [<>].[!.f]
+  A z; R dfv1(z,jtlogar2(jt,num(2),w),compself);   // lg, then [<>].[!.f]
 }
 
 // >.@(2&^.) monad with variants <.  !.f  2^][
@@ -111,7 +111,7 @@ static A jtintceillog2(J jt, A w, A compself) { // Similar to the above case wit
   R z;
  }
 revert:;  // must do by hand
-  A z; R df1(z,jtlogar2(jt,num(2),w),compself);   // lg, then [<>].[!.f]
+  A z; R dfv1(z,jtlogar2(jt,num(2),w),compself);   // lg, then [<>].[!.f]
 }
 
 // variant entry points

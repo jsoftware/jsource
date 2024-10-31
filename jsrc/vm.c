@@ -579,7 +579,7 @@ F1(jtrdot1){R expn1(jdot1(w));}
 F2(jtrdot2){R tymes(a,rdot1(w));}
 
 
-F1(jtpolar){ARGCHK1(w); A z; R cvt((AT(w)&SPARSE)+FL,df2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
+F1(jtpolar){ARGCHK1(w); A z; R cvt((AT(w)&SPARSE)+FL,dfv2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
 
 DF1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
  ARGCHK1(w); 

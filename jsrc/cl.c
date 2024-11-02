@@ -53,7 +53,8 @@ static I jtefflev(J jt,I n,A x){I t; R n>=0?n:(t=level(jt,x),MAX(0,n+t));}
 // better served by &.> .  Thus, we just mark the inputs as non-pristinable.
 static DF2(jtlscapco12){PROLOG(556);A z;
  ARGCHK2(a,w);
- I wt=AT(w); self=wt&VERB?w:self;  // find the verb
+ I wt=AT(w);
+// obsolete  self=wt&VERB?w:self;  // find the verb
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with.  Next fill in fields needed by every and jtlev[12]
  AM(recurself)=(I)FAV(self)->fgh[0];  // fill in the pointer to u
  AT(recurself)=VERB;  // must mark type so bivalent check works
@@ -66,7 +67,7 @@ static DF2(jtlscapco12){PROLOG(556);A z;
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
  // things is to zap the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
 
- if(wt&VERB){  // monad (use a to refer to the actual w)
+ if(EPMONAD){  // monad (use a to refer to the actual w)
   FAV(recurself)->localuse.lslevels[2]=efflev(FAV(self)->localuse.lslevels[2],a);  // fill in the trigger levels
   FAV(recurself)->valencefns[0]=jtlev1; PRISTCLR(a) z=lev1(a,recurself);  // set recursion pointer and pristinity and start recursion
  }else{  // dyad

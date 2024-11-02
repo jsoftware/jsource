@@ -429,11 +429,11 @@ static DF2(jtmodopexttimes){A z;PROLOG(000);
 // modular reciprocal/divide on extendeds, one atom.  Bivalent. 0%0=0
 static DF2(jtmodopextdiv){A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
- self=AT(w)&VERB?w:self;  // if monad, take self from w
- X xw=XAV(AT(w)&VERB?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
+// obsolete  self=AT(w)&VERB?w:self;  // if monad, take self from w
+ X xw=XAV(EPMONAD?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
  xw=XinvertXX(xw,n); // take inverse of divisor, returning 0 if coprime
  X xz;  // will hold result
- if(!(AT(w)&VERB)){xz=XAV(a)[0]; if(unlikely(icmpXX(xz,n)>0))xz=XmodXX(xz,n); if(XSGN(xz)!=0){ASSERT(xw!=0,EVDOMAIN) xz=XmodXX(XmulXX(xz,xw),n);}}else{ASSERT(xw!=0,EVDOMAIN) xz=xw;}   // perform multiply and modulus if dyad
+ if(!EPMONAD){xz=XAV(a)[0]; if(unlikely(icmpXX(xz,n)>0))xz=XmodXX(xz,n); if(XSGN(xz)!=0){ASSERT(xw!=0,EVDOMAIN) xz=XmodXX(XmulXX(xz,xw),n);}}else{ASSERT(xw!=0,EVDOMAIN) xz=xw;}   // perform multiply and modulus if dyad
  if(unlikely(XSGN(n)<0&&XSGN(xz)>0))xz=XsubXX(xz,n); // mod ignores sign of n; if n negative, move result to range -n.._1
  GAT0(z,XNUM,1,0); XAV0(z)[0]=xz; EPILOG(z);  // return atomic XNUM
 }
@@ -508,16 +508,16 @@ static DF2(jtmodopinttimes){PROLOG(000);
 // bivalent
 static DF2(jtmodopintdiv){PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // bivalent must test here if empty args
- self=AT(w)&VERB?w:self;  // if monad, take self from w
+// obsolete  self=AT(w)&VERB?w:self;  // if monad, take self from w
  // fetch n from h and nrecip from self
  X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
  I nsign=XSGN(hx0); UI n=XLIMB0(hx0); UI nrecip=FAV(self)->localuse.lu1.mrecip;
  // fetch [x(mod n)] and y(mod n)
- UI y=modarg(!(AT(w)&VERB)?w:a,n,nrecip);
+ UI y=modarg(!EPMONAD?w:a,n,nrecip);
  // Take modular inverse of y
  y=mod_inv(y,n); // modular inverse, ~0 if inverse not defined
  UI z;  // will hold result
- if(!(AT(w)&VERB)){z=modarg(a,n,nrecip); if(z!=0){ASSERT((I)y>=0,EVDOMAIN); z*=y; z=modn(z);}}else{ASSERT((I)y>=0,EVDOMAIN) z=y;}   // multiply and take modulus if dyad 0%0=0
+ if(!EPMONAD){z=modarg(a,n,nrecip); if(z!=0){ASSERT((I)y>=0,EVDOMAIN); z*=y; z=modn(z);}}else{ASSERT((I)y>=0,EVDOMAIN) z=y;}   // multiply and take modulus if dyad 0%0=0
  // correct for negative n
  A zzz; RZ(zzz=sc(z-(REPSGN(nsign&-z)&n)));  // if m neg, move result to range -m+1..0
  // if modulus was XNUM, make result extended

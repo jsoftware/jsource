@@ -841,15 +841,6 @@ B jtgerexact(J jt, A w){A*wv;
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
-// this is [x] u^:gerund y and [x] gerund} y
-// Here, f1 is the original u and g1 is the original v; hs points to the gerund
-// First, we run hv[1]->valencefns[0] on y (this is gerund v1, the selector/power);
-// then we run (sv->id)->valencefns[1] on fs (the original u) and the result of selector/power (with self set to (sv->id):
-//     sv->id is the original conjunction, executed a second time now that we have the selector/power
-//     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
-// then we execute gerund v2 on y (with self set to v2)
-// then we execute ff on the result of (v2 y), with self set to ff  scaf combine all 4 into 1
-
 // verb executed for v0`v1`v2} y
 static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
@@ -872,7 +863,7 @@ static DF2(jtgav2){F2PREFIP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(s
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  dfv2(ffm,a,w,hv[1]);  // x v1 y - no inplacing.
  RZ(ffm);
- RZ(ff=jtamend(jt,ffm,0));  // now ff represents(x v1 y)} .  0 indicates this recursive call into powop, which will cause nonce error if v1 returns another gerund
+ RZ(ff=jtamend(jt,ffm,0));  // now ff represents(x v1 y)} .  0 indicates this recursive call into powop, which will cause nonce error if v1 returned another gerund
  // Protect any input that was returned by v1 (must be ][)
  if(a==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEW);
  PUSHZOMB

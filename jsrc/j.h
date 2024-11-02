@@ -941,8 +941,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jtjsignale(jt,(e)|EMSGLINEISNAME|EMSGNOMSGLINE,(nm),0); R 0;}}  // signal error, overriding the running name with a different one
 #define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){jtjsignale(jt,(e)|EMSGLINEISNAME|EMSGNOMSGLINE,(nm),0); goto lbl;}}  // same, but without the exit
 #define ASSERTPYX(e)   {jsignal((e)|(EMSGFROMPYX|EMSGNOEFORMAT)); R 0;}
-#define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); R 0;}}
-#define ASSERTSYSV(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s);}}
+#define ASSERTSYSCOMMON(b,s,stmt)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); stmt}}
+#define ASSERTSYS(b,s)  ASSERTSYSCOMMON(b,s,R 0;)
+#define ASSERTSYSV(b,s) ASSERTSYSCOMMON(b,s,)
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}  // put error code into jerr, but signal only if nonretryable
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}  // exit primitive with error code in return
 
@@ -1086,6 +1087,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define STACKPOS ({D stackpos; (uintptr_t)&stackpos;})
 #define STACKCHKOFL {D stackpos; ASSERT(STACKPOS>=jt->cstackmin,EVSTACK);}
 #define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF(STACKPOS>=jt->cstackmin,EVSTACK,suff);}
+#define EPDYAD (w!=self)  // for any call (i. e. verb or modifier), true if w is an operand
+#define EPMONAD (w==self)  // for any call (i. e. verb or modifier), true if w is self, not an operand
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VJTFLGOK1+VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
 // fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
 #define FUZZ            0.000000000000056843418860808015   // tolerance

@@ -1493,7 +1493,7 @@ F2(jtmemw){C*u;I m,n,t,*v;
 
 // 15!:18 memalign: return block with data portion aligned to cache.  Bivalent.  If x given, it is shape to use.  Fill result with copies of y
 DF2(jtmemalign){I *s, n, r;  // shape and rank
- if(AT(w)&VERB){  // monad
+ if(EPMONAD){  // monad
   if(unlikely(ISSPARSE(AT(w))))R RETARG(a);  // we cannot align sparse blocks
   if((((I)a+AK(a))&(CACHELINESIZE-1))==0)R RETARG(a);  // if the current value is already aligned, keep it unchanged
   w=a; s=AS(w); r=AR(w); n=AN(w);  // monad: take rank/shape from w

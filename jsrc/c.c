@@ -6,7 +6,7 @@
 #include "j.h"
 
 // obv1 and obv2 merely pass the call to f.  Since we took the inplace flags for the compound from the original a, we can pass them on too
-static DF2(obv12cell){w=AT(w)&VERB?0:w; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w];F2PREFIP;A z;PROLOG(0103); z=CALL12IP(w,f12,a,w,fs); EPILOG(z);}
+static DF2(obv12cell){w=EPDYAD?w:0; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w];F2PREFIP;A z;PROLOG(0103); z=CALL12IP(w,f12,a,w,fs); EPILOG(z);}
 static DF1(obv1){PREF1(obv12cell); R obv12cell(jt,w,self,self);}
 static DF2(obv2){PREF2(obv12cell); R obv12cell(jt,a,w,self);}
 

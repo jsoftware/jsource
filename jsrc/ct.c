@@ -477,7 +477,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    jt->uflags.bstkreqd=1; INCREXECCTIF(startloc); fa(startloc);  // start new exec chain; raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
    A arg1=job->user.args[0],arg2=job->user.args[1],arg3=job->user.args[2];
    fa(UNvoidAV1(job));  // job is no longer needed
-   I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; arg3=dyad?arg3:0;  // the call is either noun self x or noun noun self.  See which and select self.  Set arg3 to 0 if monad.
+   I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; arg3=dyad?arg3:0;  // the call is either noun self self or noun noun self.  See which and select self.  Set arg3 to 0 if monad (we use it to free later)
    // Get the arg2/arg3 to use for u .  These will be the self of u, possibly repeated if there is no a
    A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;  // get self, positioned after the last noun arg
    jt->parserstackframe.sf=self;  // each thread starts a new recursion point
@@ -493,7 +493,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // we must also fa the backer.  This is different from the case of virtual args to explicit defns: there we know that the virtual arg is on the stack in the caller,
    // and will be freed from the stack, and thus that there is no chance that a virtual will be freed.  Here the caller has continued, and there may be nothing but this
    // virtual to hold the backer.  So, unlike in all other fa()s, we fa the backer if the virtual is freed.
-   faafterrav(arg1); faafterrav(arg2); if(arg3)fa(arg3);  // unprotect args only after they have been safely installed
+   faafterrav(arg1); faafterrav(arg2); if(arg3)fa(arg3);  // unprotect args only after result has been safely installed
    jtrepatsend(jt); // send our freed blocks back to where they were allocated.  That will include the args just freed
    __atomic_store_n(&JTFORTHREAD(jt,initthread)->uflags.sprepatneeded,1,__ATOMIC_RELEASE);  // signal the originator to repat the freed blocks.  We force this now in case some were virtual and have large backers.  The repat may be delayed a while.
    jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)

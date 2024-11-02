@@ -1081,7 +1081,7 @@ DF2(jtfoldZ){
  ASSERT(jt->foldrunning,EVSYNTAX);  // If fold not running, fail.  Should be a semantic error rather than syntax
  // The name FoldZ_j_ should have been loaded at startup.  If not, fail
  A foldvb; ASSERT(foldvb=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","FoldZ_j_",VERB),EVNONCE)   // error if undefined or not verb
- A z=unquote(a,AT(w)&VERB?foldvb:w,foldvb); // Apply FoldZ_j_ to the input arguments, creating a derived verb to do the work.  If monad, overwrite w
+ A z=unquote(a,EPMONAD?foldvb:w,foldvb); // Apply FoldZ_j_ to the input arguments, creating a derived verb to do the work.  If monad, overwrite w
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
  if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
  R z;

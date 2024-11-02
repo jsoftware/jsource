@@ -161,14 +161,15 @@ F2(jttie){F2PREFIP;ARGCHK2(a,w); R jtapip(jtinplace,VERB&AT(a)?arep(a):a,VERB&AT
 
 
 // m@.:v y.  Execute the verbs at high rank if the operands are large
-// Bivalent entry point: called as (jt,w,self) or (jt,a,w,self)
+// Bivalent entry point: called as (jt,w,self,self) or (jt,a,w,self)
 static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  F1PREFIP; ARGCHK2(a,w);
  PROLOG(997);
  // see if we were called as monad or dyad.  If monad, fix up w and self
- ZZFLAGWORD=AT(w)&VERB?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
+ ZZFLAGWORD=EPMONAD?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
  jtinplace=(J)((I)jtinplace&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad
- self=AT(w)&VERB?w:self; w=AT(w)&VERB?a:w;  // if monad, a==w
+// obsolete  self=AT(w)&VERB?w:self;
+ w=EPMONAD?a:w;  // if monad, a==w
  I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank
  // Execute v at infinite rank
  vres=FAV(self)->fgh[1];   // temp: verb to execute
@@ -315,7 +316,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     // inhomogeneous types or shapes.  Instantiate the entire result and then shuffle it into place
     // first, install the actual number of boxes of result, which might differ from the calculated maximum
     AN(zz)=AS(zz)[0]=nblkscreated;  // # valid boxes
-    zz=ev2(gradepm,zz,"(/:~   >@:;@:((<\"_1)&.>))");  // (> ; <"_1&.> zz) /: gradepm
+    zz=ev12(gradepm,zz,"(/:~   >@:;@:((<\"_1)&.>))");  // (> ; <"_1&.> zz) /: gradepm
     if(unlikely(zz==0&&jt->jerr==EVDOMAIN))goto assemblyerror;   // domain error here must be incompatible types
    }
    // If the original input had structure, rearrange the result to match it
@@ -372,9 +373,9 @@ F2(jtagendai){F2PREFIP;I flag;
 
 
 
+#if 0 // obsolete 
 
-
-static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R dfv1(z,  w,C(AAV(h)[0]));}  // scaf combine
+static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R dfv1(z,  w,C(AAV(h)[0]));}
 static DF2(jtgf2){A z,h=FAV(self)->fgh[2]; R dfv2(z,a,w,C(AAV(h)[0]));}
 
 A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
@@ -383,3 +384,4 @@ A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(h=fxeachv(1L,x)); hv=AAV(h); v=VAV(C(*hv));
  R fdef(0,id,VERB, jtgf1,jtgf2, x,a?w:0L, h, VGERL, (I)v->mr,lrv(v),rrv(v));
 }    /* verify and define 2-element gerund */
+#endif

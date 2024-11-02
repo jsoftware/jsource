@@ -745,7 +745,7 @@ F2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
 DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
  ARGCHK2(a,w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); wt=AT(w);
- if(likely((AT(w)&NOUN)!=0)){
+ if(likely(EPDYAD)){
   // dyad: </.
   ASSERT(n==SETIC(w,k),EVLENGTH);  // verify agreement
   f=FAV(self)->fgh[0];  // f->({.,#)
@@ -757,7 +757,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
  if(unlikely((SGNIFDENSE(AT(a))&((I)AR(w)-2)&(-n)&(-AN(a)))>=0))R wt&VERB?jthook1cell(jt,a,w):key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no atoms, revert, to monad/dyad.  w=self for monad
  av=AV(a);
  f=FAV(f)->fgh[0]; b=CHEAD==FAV(f)->id;  // f-> left tine of (#,{.)  b is 1 for {.,#  0 for #,{.  i. e. index of tally
- if(unlikely((AT(a)&B01)!=0))if(1>=AR(a)&&!(wt&VERB)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom, for which we can handle all types (except VERB)
+ if(unlikely((AT(a)&B01)!=0))if(1>=AR(a)&&!(wt&VERB)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom, for which we can handle all types (except VERB, which was a monad call)
   B *c=memchr(p,1^*p,n); i=c-p; i=c?i:0; j=i; i=*p?0:i; j=*p?j:0;  // i=index of first 1, j=index of first 0 (0 if not found)
   k=bsum(n,p); m=i+j?1:0;  // k=# 1s  m is 1 if there are 0s and 1s
   GATV0(x,INT,m+1,1); v=AV(x); v[m]=i+j; v[0]=0;  // 0=index of first item (always 0); 1 if it exists is the other

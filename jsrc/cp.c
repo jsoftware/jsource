@@ -54,13 +54,13 @@ static F2(jttclosure){
  PROLOG(0);
  A z; GATV(z,BOX,wn,wr,AS(w)) A *zv=AAV(z); // allocate one box per chain, point zv to boxes
  DO(wn, RZ(zv[i]=jttclosure1(jt,wv[i],an,av)) )  // fill in the boxes
- z=ev1(z,"((i.@#@$) |: (([ , (-#)~ # {:@[)&> >./@:(#@>)))");  // pad each box with repetitions of the last ele, unbox, transpose last axis to first
+ z=ev12(z,0,"((i.@#@$) |: (([ , (-#)~ # {:@[)&> >./@:(#@>)))");  // pad each box with repetitions of the last ele, unbox, transpose last axis to first
  EPILOG(z);
 }
 
 // [a] u^:atom w and [a] u^:<(atom or '') w, bivalent.
 static DF2(jtpowatom12){F1PREFIP;
- I wt=AT(w); w=wt&VERB?a:w; a=wt&VERB?0:a;  // w arg will be power result; a=0 if monad
+ {A na=EPMONAD?0:a; w=EPMONAD?a:w; a=na;}  // w arg will be power result; a=0 if monad
  I poweratom=FAV(self)->localuse.lu1.poweratom;  // multiple/neg/power field
 #define POWERAMULT (I)1   // set if power was boxed
 #define POWERANEG (I)2   // set if power is negative
@@ -136,7 +136,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
 static DF2(jtindexseqlim12){
  ARGCHK2(a,w);
  A origa=a, origw=w;  // in case we revert
- if(unlikely(AT(w)&VERB)){if(FAV(FAV(self)->fgh[0])->id!=CAMP)goto revert; w=a; a=FAV(FAV(self)->fgh[0])->fgh[1];  // monad, verify {&x^:a:, use the x
+ if(unlikely(EPMONAD)){if(FAV(FAV(self)->fgh[0])->id!=CAMP)goto revert; w=a; a=FAV(FAV(self)->fgh[0])->fgh[1];  // monad, verify {&x^:a:, use the x
  }else{if(FAV(FAV(self)->fgh[0])->id==CAMP)goto revert;}  // dyad, verify {~^:a:
  if(AR(a)<=1&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT)R tclosure(a,w);
 revert:;
@@ -150,8 +150,8 @@ static DF2(jtply12){A fs=FAV(self)->fgh[0]; PROLOG(0040);A zz=0;
 #define ZZDECL
 #include "result.h"
  I state=ZZFLAGINITSTATE;  // flags for result.h
- I wt=AT(w); state|=wt&VERB; w=wt&VERB?a:w;  // set MONAD flag, w=correct w, a=a or garbage
- AF f12=FAV(fs)->valencefns[!(wt&VERB)]; // fetch routine for positive powers
+ state|=EPMONAD<<VERBX; w=EPMONAD?a:w;  // set MONAD flag, w=correct w, a=a or garbage
+ AF f12=FAV(fs)->valencefns[!(state&VERB)]; // fetch routine for positive powers
  // p =. ~. sn=.(gn=./:,n) { ,n   which gives the list of distinct powers
  A n=FAV(self)->fgh[2]; A rn; RZ(rn=ravel(n));  // n is powers, rn is ravel of n
  A gn; RZ(gn=grade1(rn)); A p; RZ(p=nub(fromA(gn,rn)));  // gn is grade of power, p is sorted list of unique powers we want
@@ -243,7 +243,7 @@ static DF1(jtinverr){F1PREFIP; ASSERT(0,EVDOMAIN);}  // uninvertible monad: come
 // [x] u^:v y, fast when result of v is 0 or 1 (=if statement).  jtflagging is that required by u.  JTDOWHILE can be set to indicate that this is called from ^:_. in which case we return (A)1 if v returned 0
 // if result of v is not 0/1, we reexecute [x] u^:n y  where n is ([x] v y)
 static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
- w=AT(w)&VERB?0:w;  // w is 0 for monad
+ w=EPMONAD?0:w;  // w is 0 for monad
  A u,uc; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
  RZ(u=CALL12(w,FAV(gs)->valencefns[!!w],a,w,gs));  // execute v, not inplace
  if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)||(AR(u)==0&&AT(u)&NUMERIC&&(uc=cvt(INT,u))!=0&&!((u0=IAV(uc)[0])&~1))){  // v result is atomic bool/int 0/1 (if statement)  overfetch possible but harmless
@@ -260,7 +260,7 @@ static DF2(jtpowv12cell){F2PREFIP;A z;PROLOG(0110);
 // if v1 evaluates to 0, avoid evaluating v0
 // Apply the gerunds to xy, then  apply u^:n
 static DF2(jtgcr12){F2PREFIP;PROLOG(0);
- w=AT(w)&VERB?0:w;  // throughout this bivalent routine a is w/a w is 0/w  (monad/dyad) w!=0 is the dyad flag
+ w=EPMONAD?0:w;  // throughout this bivalent routine a is w/a w is 0/w  (monad/dyad) w!=0 is the dyad flag
  jtinplace=(J)((I)jtinplace&((a==w)?~(JTINPLACEA+JTINPLACEW):~0));  // cannot inplace a/w if they are equal
  I origjtinplace=(I)jtinplace;  // remember initial inplacing status of args - after equality check
  A *hv=AAV(FAV(self)->fgh[2]); I hn=AN(FAV(self)->fgh[2]);  // hv->v0`v1`v2.  These cannot be pyxes.  hn is their number

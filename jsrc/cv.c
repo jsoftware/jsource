@@ -9,7 +9,7 @@
 F1(jtqfill){PROLOG(976); ASSERTMTV(w); A z=jt->fill; z=z?z:mtm; jt->fill=0; EPILOG(z);}
 
 // here to set jt->fill over the execution of u
-static DF2(jtfitfill12){w=AT(w)&VERB?0:w; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w]; F2PREFIP;A z; jt->fill=FAV(self)->fgh[1]; z=CALL12IP(w,f12,a,w,fs); jt->fill=0; RETF(z);}
+static DF2(jtfitfill12){w=EPMONAD?0:w; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w]; F2PREFIP;A z; jt->fill=FAV(self)->fgh[1]; z=CALL12IP(w,f12,a,w,fs); jt->fill=0; RETF(z);}
 
 static DF1(jtfitct1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
 

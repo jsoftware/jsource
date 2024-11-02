@@ -45,7 +45,10 @@ jddll.res : $(RCS)
 
 all: $(TARGET)
 
+noclean:
+	#
+
 clean:
 	erase /q *.lib *.exp *.res ..\..\jsrc\tsdll.o
 
-.PHONY: all clean
+.PHONY: all clean noclean

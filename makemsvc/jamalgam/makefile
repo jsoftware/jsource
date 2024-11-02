@@ -5,6 +5,7 @@ FAVX2= /DC_AVX2=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=haswell -mno-vzer
 endif
 ifeq (1,$(USE_OPENMP))
 FOPENMP= -Xclang -fopenmp
+LOPENMP= libomp.lib
 endif
 USE_SLEEF=1
 ifeq (ARM64,$(TARGET_CPU))
@@ -337,14 +338,17 @@ SYNCLIB= synchronization.lib
 endif
 
 $(TARGET) : $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) $(PTHREADLIB) jconsole.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) $(PTHREADLIB) $(MPIRLIB) jconsole.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB)
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) $(PTHREADLIB) $(MPIRLIB) jconsole.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) $(LOPENMP)
 
 jconsole.res : $(RCS)
 	$(RC) /L 0x409 /D _USING_V110_SDK71_ -R -FO$@ $(RCS)
 
 all: $(TARGET)
 
+noclean:
+	#
+
 clean:
 	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(OBJSLN) $(OBJS_SLEEF) $(SRC_ASM)
 
-.PHONY: all clean
+.PHONY: all clean nonclean

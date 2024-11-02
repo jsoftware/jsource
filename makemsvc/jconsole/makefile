@@ -61,7 +61,10 @@ jconsole.res : $(RCS)
 
 all: $(TARGET)
 
+noclean:
+	#
+
 clean:
 	rm -f *.res *.ilk *.pdb $(OBJS) $(OBJSLN)
 
-.PHONY: all clean
+.PHONY: all clean noclean

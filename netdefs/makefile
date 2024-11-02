@@ -33,7 +33,10 @@ $(TARGET) : $(OBJS)
 
 all: $(TARGET)
 
+noclean:
+	#
+
 clean:
 	rm -f *.res *.ilk *.pdb $(OBJS)
 
-.PHONY: all clean
+.PHONY: all clean noclean

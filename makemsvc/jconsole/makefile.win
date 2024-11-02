@@ -61,7 +61,10 @@ jconsole.res : $(RCS)
 
 all: $(TARGET)
 
+noclean:
+	#
+
 clean:
 	erase /q *.res *.ilk *.pdb ..\..\jsrc\jconsole.o ..\..\jsrc\jeload.o ..\..\jsrc\linenoise.o
 
-.PHONY: all clean
+.PHONY: all clean noclean

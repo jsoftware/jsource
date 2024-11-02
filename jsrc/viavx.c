@@ -1226,7 +1226,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
  at=AT(a); ar=AR(a); 
  wr=AR(w); r=MAX(1,ar); I wn=AN(w);
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
- if(unlikely(wn==0))RCA(a);  // if w is empty, there's nothing to remove, return a
+ if(unlikely(MIN(AN(a),wn)==0))RCA(a);  // if either arg empty, there's nothing to remove, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
@@ -1244,7 +1244,7 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws;
  at=AT(a); ar=AR(a); 
  wr=AR(w); r=MAX(1,ar); I wn=AN(w);
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
- if(unlikely(MIN(AN(a),wn)==0))R take(zeroionei(0),a);  // if either arg is empty is empty, nothing can be common, return no items
+ if(unlikely(MIN(AN(a),wn)==0))R take(zeroionei(0),a);  // if either arg is empty, nothing can be common, return no items
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // comparison tolerance may be encoded in h - apply it if so

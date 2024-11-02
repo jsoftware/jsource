@@ -245,6 +245,7 @@ NB. comparison tolerance
 
 s =: i. 10000 5  NB. removing empty is lean
 3000 > 7!:2 's -. i. 0 5' 
+3000 > 7!:2 's -.~ i. 0 5' 
 
 NB. x ([ -. -.) y  set intersection ----------------------------------------------------------------
 

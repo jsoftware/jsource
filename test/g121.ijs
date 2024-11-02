@@ -243,6 +243,9 @@ NB. comparison tolerance
 0 = # (1 + 1e_15 * i. 10) -. 1
 9 = # (1 + 1e_15 * i. 10) (-.!.0) 1
 
+s =: i. 10000 5  NB. removing empty is lean
+3000 > 7!:2 's -. i. 0 5' 
+
 NB. x ([ -. -.) y  set intersection ----------------------------------------------------------------
 
 rank =: #@$
@@ -452,6 +455,10 @@ NB. Verify -.!.0 in the middle is treated like -.
 yy =: 1e6 $ 1.0
 10000 > (7!:2 'yy ([ -. -.) 1') - (7!:2 'yy ([ -.!.0 -.) 1')
 (-.IF64) +. (7!:2 'yy ([ -.!.1e_12 -.) 1') > 1.5 * (7!:2 'yy ([ -.!.0 -.) 1')
+
+s =: i. 10000 5  NB. empty arg is lean
+4000 > 7!:2 's ([ -. -.) i. 0 5' 
+4000 > 7!:2 's ([ -. -.)~ i. 0 5' 
 
 
 4!:55 ;:'adot1 adot2 sdot0 dr f intersect less not rank res s t x xx yy'

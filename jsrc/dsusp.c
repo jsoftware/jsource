@@ -139,7 +139,7 @@ static A jtsusp(J jt, C superdebug){A z;
  JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // when we start a new suspension, wait for a new clear
  // Make sure we have a decent amount of stack space left to run sentences in suspension
  // ****** no errors till end of routine, where jt and stacks have been restored *******
- jt->cstackmin=MAX(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),jt->cstackmin-CSTACKSIZE/10);
+ jt->cstackmin=MIN(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),MAX(STACKPOS,jt->cstackinit-CSTACKSIZE+CSTACKDEBUGRESERVE)-CSTACKDEBUGRESERVE);
  // if there is a 13!:15 sentence (latent expression) to execute before going into debug, do it
  A trap=0; READLOCK(JT(jt,dblock)) if((trap=JT(jt,dbtrap))!=0)ra(trap); READUNLOCK(JT(jt,dblock))  // fetch trap sentence and protect it
  if(trap){RESETERR; immex(trap); fa(trap); tpop(old);}  // execute with force typeout, remove protection
@@ -194,11 +194,12 @@ ASSERTSYS(0,"debug thread"); continue;  // scaf
  if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
  jt=jtold;  // Reset to original debug thread.  NOTE that old is no longer valid, so don't tpop
  // Reset stack
- if(JT(jt,dbuser)&TRACEDB1){
-  jt->cstackmin+=CSTACKSIZE/10;
- } else {
-  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
- }
+  if(!(JT(jt,dbuser)&TRACEDB1))jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // set stacklim to normal if we are exiting debug
+// obsolete   if(JT(jt,dbuser)&TRACEDB1)jt->cstackmin=MIN(jt->cstackmin,MAX(STACKPOS,jt->cstackinit-CSTACKSIZE+CSTACKDEBUGRESERVE)-CSTACKDEBUGRESERVE); // if still debug, leave debug space
+// obsolete  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
+// obsolete   jt->cstackmin+=CSTACKSIZE/10;
+// obsolete  } else {
+// obsolete  }
  debz(); 
  R z;
 }    /* user keyboard loop while suspended */

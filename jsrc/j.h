@@ -621,7 +621,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CSTACKSIZE      (SY_64?7946240:1015808)  // OS default stack size 8MB, aligned to 16k system page size
 #endif
 #endif
-#define CSTACKRESERVE   100000  // amount we allow for slop before we sample the stackpointer, and after the last check
+#define CSTACKDEBUGRESERVE (SY_64?100000:50000)   // amount to allow for debugger
+#define CSTACKRESERVE   (SY_64?200000:10000)  // amount we allow for slop before we sample the stackpointer, and after the last check
 #endif
 //The named-function stack is intelligent
 // and stacks only when there is a locale change or deletion; it almost never limits unless locatives are used to an extreme degree.
@@ -1082,8 +1083,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // define fs block used in every/every2.  It is the self for the f in f&.>, and contains only function pointers, an optional param in AK, and the flag field
 #define EVERYFS(name,f0,f1,akparm,flg) PRIM name={{akparm,0,0,0,0,0,0},{.primvb={.valencefns={f0,f1},.flag=flg}}};
 
-#define STACKCHKOFL {D stackpos; ASSERT((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK);}
-#define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK,suff);}
+#define STACKPOS ({D stackpos; (uintptr_t)&stackpos;})
+#define STACKCHKOFL {D stackpos; ASSERT(STACKPOS>=jt->cstackmin,EVSTACK);}
+#define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF(STACKPOS>=jt->cstackmin,EVSTACK,suff);}
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VJTFLGOK1+VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
 // fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
 #define FUZZ            0.000000000000056843418860808015   // tolerance

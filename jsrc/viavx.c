@@ -1225,8 +1225,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
  F2PREFIP;ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
-if(ai==10001)printf("ai=%d wi=%d ar=%d\n",(int)ai,(int)wi,(int)ar);  // scaf
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
+if(AS(a)[0]==10001)printf("ai=%d wi=%d ar=%d\n",(int)ai,(int)wi,(int)ar);  // scaf
  if(unlikely((MIN(ai,wi)==0)&&(ar!=0))){printf("returning a\n"); RCA(a);}  // scaf if either arg empty, there's nothing to remove, return a, but atom must become a list
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here

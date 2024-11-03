@@ -1091,7 +1091,7 @@ DF2(jtfoldZ){
 #define ZZDEFN
 #include "result.h"
 
- // execute fold on input arguments, creating a derived verb to do the work
+ // execute fold on input arguments, creating a derived verb to do the work.  Bivalent
 // bit 24 is PRISTINE
 #define STATEREVX 26   // reverse fold
 #define STATEREV ((I)1<<STATEREVX)
@@ -1101,10 +1101,11 @@ DF2(jtfoldZ){
 #define STATEMULT ((I)1<<STATEMULTX)
 #define STATEDYADX 29   // call is dyadic.  Must be the MSB of the flags
 #define STATEDYAD ((I)1<<STATEDYADX)
-static DF2(jtfoldx){F2PREFIP;A z,vz;
+static DF2(jtfold12){F2PREFIP;A z,vz;
  struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z:   zstatus: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);
- I dyad=!!(AT(w)&NOUN); self=dyad?self:w; w=dyad?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
+ I dyad=EPDYAD; w=EPDYAD?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
+// obsolete self=dyad?self:w;
  if(unlikely(((UI)a^(UI)w)<(UI)dyad))jtinplace=(J)((I)jtinplace&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
 #define ZZFLAGWORD dmfr
  I dmfr=ZZFLAGINITSTATE+((8*dyad+FAV(self)->lu2.lc-CFDOT)<<STATEREVX);  // init flags, including zz flags
@@ -1253,7 +1254,7 @@ DF2(jtfold){F2PREFIP;
  ASSERTVV(a,w);  // must be verb ops
  A z; fdefallo(z);   // allocate verb result
  I flag = (FAV(w)->flag&(VJTFLGOK1|VJTFLGOK2));  // there is never a need to inplace u.  Inplace v if possible
- fdeffillall(z,0,FAV(self)->id,VERB, jtfoldx,jtfoldx, a,w,0L, flag, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
+ fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, flag, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
  R z;
 }
 

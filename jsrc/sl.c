@@ -658,10 +658,10 @@ F1(jtsetpermanent){A g;
      /* check for redefinition (erasure) of entire symbol table. */
 
 // 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale
-// if x is 271828, do the deletion even if on a permanent locale (for testcases only)
-F2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
+// Bivalent: if x is 271828, do the deletion even if on a permanent locale (for testcases only)
+DF2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
  ACVCACHECLEAR;  // destroying a locale invalidates all lookups
- if(unlikely(AT(w)&NOUN)){  // dyadic call
+ if(unlikely(EPDYAD)){  // dyadic call
   I x; x=i0(a); if(jt->jerr){RESETERR; ASSERT(0,EVVALENCE)} ASSERT(x==271828,EVVALENCE)  // if not 271828, valence error
   // leave a non0 to indicate dyadic call
  }else{w=a; a=0;}  // a=0 normally

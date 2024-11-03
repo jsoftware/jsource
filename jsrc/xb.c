@@ -1020,11 +1020,11 @@ F1(jtetoint){
 // Bivalent.  left arg is 3 characters, one to use as the decimal point, one to store just after the value (usually ' ' or 'Z'),
 // one for result precision ('d'=date only, '0'-'9' give # fractional digits)
 // Default is '. 0'
-F2(jtetoiso8601){UC decimalpt,zuluflag;I prec;
+DF2(jtetoiso8601){UC decimalpt,zuluflag;I prec;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
- if(AT(w)&NOUN){  // dyad
+ if(EPDYAD){  // dyad
   ASSERT(AT(a)&LIT,EVDOMAIN);
   ASSERT(AN(a)==3,EVLENGTH);
   ASSERT(AR(a)==1,EVRANK);  // a must be a 3-character list
@@ -1041,11 +1041,11 @@ F2(jtetoiso8601){UC decimalpt,zuluflag;I prec;
 // Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
 // optional second box of x is #seconds to local timezone, i. e 180 for GMT+03; if given all UTC times will be
 // converted to local time
-F2(jtiso8601toe){A z;I prec;I local;
+DF2(jtiso8601toe){A z;I prec;I local;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
- if(AT(w)&NOUN){  // dyad
+ if(EPDYAD){  // dyad
   A aprec=a, alocal=zeroionei(0);  // precision and local timezone args
   if(AT(a)&BOX){ASSERT(AR(a)==1,EVRANK) ASSERT(BETWEENC(AN(a),1,2),EVLENGTH) aprec=AAV(a)[0]; if(AN(a)==2)alocal=AAV(a)[1];}
   ASSERT(AT(aprec)&LIT,EVDOMAIN); ASSERT(AN(aprec)==1,EVLENGTH); ASSERT(AR(aprec)<=1,EVRANK);  // a must be a 1-character list or atom
@@ -1171,11 +1171,11 @@ static A efstring(J jt,A w,I prec){
 
 // 6!:18 convert a block of strings to nanosecond times.  Result has one INT for each string
 // Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
-F2(jtstringtoe){A z;I prec;
+DF2(jtstringtoe){A z;I prec;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
- if(AT(w)&NOUN){  // dyad
+ if(EPDYAD){  // dyad
   ASSERT(AT(a)&LIT,EVDOMAIN);
   ASSERT(AN(a)==1,EVLENGTH);
   ASSERT(AR(a)<=1,EVRANK);  // a must be a 1-character list or atom

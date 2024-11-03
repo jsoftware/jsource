@@ -66,9 +66,9 @@ DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
 #ifndef CRC32L
 #define CRC32L(acc,in) (0xffffffff&((acc*15015)^(in)))   // if no hardware CRC (rare), mix the bits a little
 #endif
-F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
+DF2(jtqhash12){F2PREFIP; I hsiz; UI crc;
  ARGCHK2(a,w);
- if(AT(w)&NOUN){RE(hsiz=i0(vib(a)));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
+ if(EPDYAD){RE(hsiz=i0(vib(a)));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
  ASSERT(hsiz>=0,EVDOMAIN);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // not sparse for now
  if((AT(w)&DIRECT)>0){ // Direct value, calculate CRC of atoms
@@ -77,7 +77,7 @@ F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
   crc=-1;  // where we accumulate CRC
   I lpct=AN(w)<<((AT(w)>>RATX)&1);  // number of component values
   A *av=AAV(w);  // pointer to subvalues
-  DQ(lpct, crc=CRC32L(crc,i0(jtqhash12(jt,zeroionei(0),C(*av)))); ++av;)  // recur
+  DQ(lpct, crc=CRC32L(crc,i0(jtqhash12(jt,zeroionei(0),C(*av),self))); ++av;)  // recur
  }
 #if SY_64
  if(hsiz)crc=(crc*(UI)hsiz)>>32;   // convert hash to user's range

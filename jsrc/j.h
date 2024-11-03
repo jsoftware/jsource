@@ -1138,6 +1138,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // @: &: is 160
 #define RZEFCALL(resval,call,callself,calla,callw) {if(unlikely((resval=call)==0))R jteformat(jt,callself,calla,callw,0);}  // resval=call, as a format point since we have self
 
+// FORK1 and FORK2 are NOT bivalent
 #define FORK1(name,opt) \
 DF1(name){F1PREFIP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
 AF fghfn; A fs, gs, hs; \
@@ -1196,6 +1197,8 @@ if(opt&0x40){ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); \
 RETF(z); \
 }
+
+// FORK1 and FORK2 are NOT bivalent
 
 // opt is a bitmask of variants
 // bit0=h is [ bit1=h is ] bit2=h is @[ bit3=h is @]

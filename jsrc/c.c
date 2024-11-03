@@ -14,10 +14,11 @@ static DF2(obv2){PREF2(obv12cell); R obv12cell(jt,a,w,self);}
 // Set ASGSAFE from a&w; set INPLACE from a
 F2(jtobverse){F2PREFIP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)+(FAV(a)->flag&(VJTFLGOK1|VJTFLGOK2))),mr(a),lr(a),rr(a));}
 
-// Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun).  Bivalent  a,w,self or w,self
+// Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun).  Bivalent  a,w,self or w,self,self
 static DF2(ad12){A z; A childself=FAV(self)->fgh[0]; 
  ARGCHK2(a,w); A *old=jt->tnextpushp;
- I dyad=!!(AT(w)&NOUN); self=dyad?self:w; w=dyad?w:childself;  // Set w for bivalent call 
+ I dyad=EPDYAD; w=EPDYAD?w:childself;  // Set w for bivalent call 
+// obsolete  self=dyad?self:w;
  WITHDEBUGOFF(z=CALL2(FAV(childself)->valencefns[dyad],a,w,childself);)
  if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.
  if(unlikely(jt->jerr==EVEXIT))R 0;  // EXIT is never caught

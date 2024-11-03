@@ -178,7 +178,7 @@ static A jtsusp(J jt, C superdebug){A z;
   if(!(jt->uflags.trace&TRACEDB1)){z=0; break;}  // if we are clearing the stack (13!:0), we exit all suspensions.  z could have anything, so we clear it to prevent it from being analyzed as a suspension.
   if(JT(jt,dbuser)&TRACEDBSUSCLEAR+TRACEDBSUSSS)break;  // dbr 0/1 forces immediate end of suspension, as does single-step request
   if(z && AFLAG(z)&AFDEBUGRESULT && AT(z)&BOX && IAV(C(AAV(z)[0]))[0]==SUSTHREAD){  // (0;0) {:: z; is this T. y?
-ASSERTSYS(0,"debug thread"); continue;  // scaf
+// obsolete ASSERTSYS(0,"debug thread"); continue;  // scaf
    J newjt=JTFORTHREAD(jt,IAV(C(AAV(z)[1]))[0]);  // T. y - switch to the indicated thread
    if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
    savcstackmin=newjt->cstackmin; newjt->cstackmin=jtold->cstackmin; jt=newjt;  // switch to new jt, but keep our original stack limit

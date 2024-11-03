@@ -247,6 +247,7 @@ s =: i. 10000 5  NB. removing empty is lean
 smoutput $ s -. i. 0 5
 smoutput $ s -.~ i. 0 5
 s -: s -. i. 0 5
+smoutput 7!:2 's -. i. 0 5'
 4000 > 7!:2 's -. i. 0 5' 
 4000 > 7!:2 's -.~ i. 0 5' 
 

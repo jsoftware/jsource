@@ -545,23 +545,23 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
 DF2(jtfrom){A z;
  F2PREFIP;
  ARGCHK2(a,w);
- I at=AT(a), wt=AT(w);
+ I at=AT(a), wt=AT(w), ar=AR(a), wr=AR(w);
  if(likely(!ISSPARSE(at|wt))){
-  // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable, incorpable, and DIRECT, use it
+  // Handle the simple case of B01|INT|FL atom { INT|FL|BOX array, and no frame: just pluck the value.  If a is inplaceable, incorpable, and DIRECT, use it
   // We allow FL only if it is the same size as INT
   // We don't process NJA through here because it might create a virtual block & we don't want NJAs rendered unmodifiable by virtual blocks
-  if(!((at&(NOUN&~(B01|INT|(SY_64*FL))))+(wt&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){
+  if(!((at&(NOUN&~(B01|INT|(SY_64*FL))))+(wt&(NOUN&~(INT|(SY_64*FL)|BOX)))+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1))))+(AFLAG(w)&AFNJA))){
    I av;  // selector value
    if(likely(!SY_64||at&(B01|INT))){av=BIV0(a);  // INT index
    }else{  // FL index
     D af=DAV(a)[0], f=jround(af); av=(I)f;
     ASSERT(ISFTOIOK(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)
    }
-   I wr1=AR(w)-1;
+   I wr1=wr-1;
    if(wr1<=0){  // w is atom or list, result is atom
     // Get the area to use for the result: the a input if possible (inplaceable, incorpable, DIRECT), else an INT atom. a=w OK!
-    // We can't get away with changing the type for an INT atom a to BOX.  It would work if the a is not contents, but if it is pristine contents it will have
-    // been made to appear inplaceable.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
+    // We can't get away with changing the type for an INT atom a to BOX.  It would work if the a is not contents, but if it is pristine contents it may have
+    // been made to appear inplaceable in jtevery.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
     // of being contents.  It's not a good trade to check for recursiveness of contents in tpop (currently implied).
     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+BOX)-1))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
@@ -578,6 +578,10 @@ DF2(jtfrom){A z;
     AN(z)=m; MCISH(AS(z),ws+1,wr1)
     // When we create a virtual block we do not actually copy anything out of w, so it remains pristine.  The result is not.
    }
+  }else if(unlikely(AN(a)==0&&!((jt->ranks-((ar<<RANKTX)+wr))&(((RMAX+1)<<RANKTX)+(RMAX+1))))){  // scaf handle other empty-result cases too
+   // The case of (empty array) { y.  Result is (($x),(}.^:(32~:3!:0 x) $y)) ($,) y.  Doesn't happen often but we save big when it does
+   I zr=AR(w)-1+SGNTO0(SGNIF(at,BOXX)); zr=zr<0?0:zr; zr+=AR(a);  // rank. $ (i.0 0) { (i. 4 5)  is 0 0 5;  $ (0 0$a:) { (i. 4 5) is 0 0 4 5.  $ (0$a:) { 5  is  $ (0$0) { 5  is 0
+   GA00(z,wt,0,zr); MCISH(AS(z),AS(a),ar) MCISH(AS(z)+ar,AS(w)+wr-(zr-ar),zr-ar)
   }else{
    // not atom{array.  Process according to type of a
     RANK2T origranks=jt->ranks;  // remember original ranks in case of error
@@ -588,9 +592,9 @@ DF2(jtfrom){A z;
    // Since there may have been duplicates, we cannot mark z as pristine.  We overwrite w because it is no longer in use
    if(!(AFLAG(z)&AFVIRTUAL))PRISTCLRF(w)
   }
- }else if(ISSPARSE(at&wt)){z=fromss(a,w);}  // sparse cases
- else if(ISSPARSE(wt)){z=at&BOX?frombs(a,w) : fromis(a,w);}
- else{z=fromsd(a,w);}
+ }else if(ISSPARSE(at&wt)){z=fromss(a,w);  // sparse cases
+ }else if(ISSPARSE(wt)){z=at&BOX?frombs(a,w) : fromis(a,w);
+ }else{z=fromsd(a,w);}
  RETF(z);
 }   /* a{"r w main control */
 

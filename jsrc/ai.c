@@ -137,7 +137,8 @@ xco:
   R amp(sc(-(1^(-n))),h);
  case CCANT:    
   ASSERT(nf!=0,EVDOMAIN); 
-  R obverse(eva(x,"] |:~ u C.^:_1 i.@#@$"),fampg?fampg:amp(f,g));
+// obsolete   R obverse(eva(x,"] |:~ u C.^:_1 i.@#@$"),fampg?fampg:amp(f,g));
+  R obverse(ev12(x,0,"(]: C.^:_1 i.@#@$) |: ]"),fampg?fampg:amp(f,g));
  case CPCO:
   if(nf){
    RE(n=i0(x));
@@ -174,11 +175,13 @@ xco:
  case CBASE:   
   if(!nf)break;
   R AR(x) ? amp(x,ds(CABASE)) : 
-   obverse(evc(x,mag(x),"$&u@>:@(v&(<.@^.))@(1&>.)@(>./)@:|@, #: ]"),fampg?fampg:amp(f,g));
+// obsolete    obverse(evc(x,mag(x),"$&u@>:@(v&(<.@^.))@(1&>.)@(>./)@:|@, #: ]"),fampg?fampg:amp(f,g));
+  obverse(ev12(x,0,"($&]:@>:@<. ([.@((^.~|)&].)))@(1&>.)@(>./)@:|@, #: ]"),fampg?fampg:amp(f,g));
  case CATOMIC:
   if(!nf){ASSERT(equ(x,nub(x)),EVDOMAIN); R obverse(atop(f,amp(x,ds(CIOTA))),fampg?fampg:amp(f,g));}  // fall through to common obverse (?)
  case CCYCLE:
-  if(nf&&AR(x)<=(c==CCYCLE))R obverse(eva(fampg?fampg:amp(f,g),"/:@u@(i.@#) { ]"),fampg?fampg:amp(f,g)); break;
+// obsolete   if(nf&&AR(x)<=(c==CCYCLE))R obverse(eva(fampg?fampg:amp(f,g),"/:@u@(i.@#) { ]"),fampg?fampg:amp(f,g)); break;
+  if(nf&&AR(x)<=(c==CCYCLE))R obverse(ev12(fampg?fampg:amp(f,g),0,"/:@]:@(i.@#) { ]"),fampg?fampg:amp(f,g)); break;
  case CDROP:
   if(!(nf&&1>=AR(x)))break;
   RZ(x=cvt(INT,x));

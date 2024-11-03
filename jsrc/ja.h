@@ -239,7 +239,7 @@
 #define detxm(x,y)                  jtdetxm(jt,(x),(y))
 #define detz(x)                     jtdetz(jt,(x))
 #define df1(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])((J)((I)jt|(AT(r)&(ADV|CONJ)?JTXDEFMODIFIER:0)),(x),r,r):r))  // y is self; if not 0, execute (x,self,self).  Put result into r, set r 0 if self=0.
-                                              //  r must not = x.  self is evaluated only once.  If we call a modifier, set that flag  scaf should replace with df[mv][12] forms
+                                              //  r must not = x.  self is evaluated only once.  If we call a modifier, set that flag
 #define dfv1(r,x,y)                 (r=((r=(y))?(FAV(r)->valencefns[0])(jt,(x),r,r):r))  // z is self, always a verb
                                               //  r must not = x.  self is evaluated only once.  If we call a modifier, set that flag
 #define dfv2(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])(jt,(x),(y),r):r))  // z is self, always a verb  Put result into r, set r 0 if self=0.  r must not = x or y.  self is evaluated only once
@@ -325,9 +325,9 @@
 #define etc(x)                      jtetc(jt,(x))
 #define ev12(x,y,z)                 jtev12(jt,(x),(y),(z))
 // obsolete #define ev2(x,y,z)                  jtev2(jt,(x),(y),(z))
-#define eva(x,y)                    jteva(jt,(x),(y))
+// obsolete #define eva(x,y)                    jteva(jt,(x),(y))
 #define eval(x)                     jteval(jt,(x))
-#define evc(x,y,z)                  jtevc(jt,(x),(y),(z))
+// obsolete #define evc(x,y,z)                  jtevc(jt,(x),(y),(z))
 #define even(x,y)                   jteven(jt,(x),(y))  
 #define every(x,y)                  jtevery(jt,(x),(y)) 
 #define every2(x0,x1,x2)            jtevery2(jt,(x0),(x1),(x2)) 

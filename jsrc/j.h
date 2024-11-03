@@ -607,7 +607,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
 // Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
-#if defined(CSTACKSIZE)
+#if defined(CSTACKSIZE)  // some builds explicitly override the stacksize
 #if !defined(CSTACKRESERVE)
 #error CSTACKSIZE and CSTACKRESERVE must be defined together
 #endif
@@ -621,9 +621,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CSTACKSIZE      (SY_64?7946240:1015808)  // OS default stack size 8MB, aligned to 16k system page size
 #endif
 #endif
-#define CSTACKDEBUGRESERVE (SY_64?100000:50000)   // amount to allow for debugger
 #define CSTACKRESERVE   (SY_64?200000:10000)  // amount we allow for slop before we sample the stackpointer, and after the last check
 #endif
+#define CSTACKDEBUGRESERVE (CSTACKRESERVE>>1)   // minimum to allow for debugger
 //The named-function stack is intelligent
 // and stacks only when there is a locale change or deletion; it almost never limits unless locatives are used to an extreme degree.
 // The depth of the C stack will normally limit stack use.

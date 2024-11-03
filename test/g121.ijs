@@ -243,7 +243,7 @@ NB. comparison tolerance
 0 = # (1 + 1e_15 * i. 10) -. 1
 9 = # (1 + 1e_15 * i. 10) (-.!.0) 1
 
-s =: i. 10000 5  NB. removing empty is lean
+s =: i. 10001 5  NB. removing empty is lean
 smoutput $ s -. i. 0 5
 smoutput $ s -.~ i. 0 5
 s -: s -. i. 0 5

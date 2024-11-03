@@ -243,13 +243,10 @@ NB. comparison tolerance
 0 = # (1 + 1e_15 * i. 10) -. 1
 9 = # (1 + 1e_15 * i. 10) (-.!.0) 1
 
-s =: i. 10001 5  NB. removing empty is lean
-smoutput $ s -. i. 0 5
-smoutput $ s -.~ i. 0 5
+s =: i. 10000 5  NB. removing empty is lean - viavx only
 s -: s -. i. 0 5
-smoutput 7!:2 's -. i. 0 5'
-4000 > 7!:2 's -. i. 0 5' 
-4000 > 7!:2 's -.~ i. 0 5' 
+(-.IF64) +. 4000 > 7!:2 's -. i. 0 5' 
+(-.IF64) +. 4000 > 7!:2 's -.~ i. 0 5' 
 
 NB. x ([ -. -.) y  set intersection ----------------------------------------------------------------
 
@@ -462,8 +459,8 @@ yy =: 1e6 $ 1. 2.
 (-.IF64) +. (7!:2 'yy ([ -.!.1e_12 -.) 1') > 1.5 * (7!:2 'yy ([ -.!.0 -.) 1')
 
 s =: i. 10000 5  NB. empty arg is lean
-4000 > 7!:2 's ([ -. -.) i. 0 5' 
-4000 > 7!:2 's ([ -. -.)~ i. 0 5' 
+(-.IF64) +. 4000 > 7!:2 's ([ -. -.) i. 0 5' 
+(-.IF64) +. 4000 > 7!:2 's ([ -. -.)~ i. 0 5' 
 
 
 4!:55 ;:'adot1 adot2 sdot0 dr f intersect less not rank res s t x xx yy'

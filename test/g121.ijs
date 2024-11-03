@@ -244,8 +244,11 @@ NB. comparison tolerance
 9 = # (1 + 1e_15 * i. 10) (-.!.0) 1
 
 s =: i. 10000 5  NB. removing empty is lean
-3000 > 7!:2 's -. i. 0 5' 
-3000 > 7!:2 's -.~ i. 0 5' 
+smoutput $ s -. i. 0 5
+smoutput $ s -.~ i. 0 5
+s -: s -. i. 0 5
+4000 > 7!:2 's -. i. 0 5' 
+4000 > 7!:2 's -.~ i. 0 5' 
 
 NB. x ([ -. -.) y  set intersection ----------------------------------------------------------------
 

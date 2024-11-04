@@ -323,10 +323,11 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '<"0 i. 5' ]"0 ckprist 0 1 1 1 ] 5  NB. passes y through unmodified
 '<"0 i. 5' ["0 ckprist 0 1 1 1 ] 5  NB. passes x through unmodified
 '<"0 i. 5' ["0 ckprist 0 0 2 ] 5 2  NB. y arg ignored - x is marked as repeated
-'2' { ckprist 1 1  ] 4 5   NB. virtual+pristine because this goes through virtualip
-'1' { ckprist 1 1  ] 4 5
+'2' { ckprist 0 1  ] 4 5   NB. pristine because too short for virtual
+'2' { ckprist 1 1  ] 4 64   NB. virtual+pristine because this goes through virtualip
+'1' { ckprist 1 1  ] 4 64
 '1 3' { ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated
-'2 3' { ckprist 0 0  ] 4 5   NB. virtual+pristine because this goes through virtualip
+'2 3' { ckprist 0 0  ] 4 5   NB. pristine because too short for virtual
 '2 3' { ckprist 1 1  ] 4 50   NB. virtual+pristine because this goes through virtualip
 '<1' { ckprist 1 1  ] 4 50   NB. virtual block, does not clear w prist
 '<1' { ckprist 0 0  ] 4 1   NB. nonvirtual block, clears w prist

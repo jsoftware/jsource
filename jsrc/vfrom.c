@@ -547,43 +547,64 @@ DF2(jtfrom){A z;
  ARGCHK2(a,w);
  I at=AT(a), wt=AT(w), ar=AR(a), wr=AR(w);
  if(likely(!ISSPARSE(at|wt))){
-  // Handle the simple case of B01|INT|FL atom { INT|FL|BOX array, and no frame: just pluck the value.  If a is inplaceable, incorpable, and DIRECT, use it
-  // We allow FL only if it is the same size as INT
+  // Handle the simple case of unboxed atom { array, and no frame: single cell
   // We don't process NJA through here because it might create a virtual block & we don't want NJAs rendered unmodifiable by virtual blocks
-  if(!((at&(NOUN&~(B01|INT|(SY_64*FL))))+(wt&(NOUN&~(INT|(SY_64*FL)|BOX)))+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1))))+(AFLAG(w)&AFNJA))){
+// obsolete   if(!((at&(NOUN&~(B01|INT|(SY_64*FL))))+(wt&(NOUN&~(INT|(SY_64*FL)|BOX)))+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1))))+(AFLAG(w)&AFNJA))){
+  if(!((at&BOX)+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1))))+(AFLAG(w)&AFNJA))){   // if AR is unboxed atom and w has no frame
    I av;  // selector value
-   if(likely(!SY_64||at&(B01|INT))){av=BIV0(a);  // INT index
-   }else{  // FL index
-    D af=DAV(a)[0], f=jround(af); av=(I)f;
-    ASSERT(ISFTOIOK(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)
-   }
-   I wr1=wr-1;
-   if(wr1<=0){  // w is atom or list, result is atom
+   if(likely(at&(B01|INT))){av=BIV0(a);  // B01/INT index.  We don't set at=INT for B01 because we aren't sure it's OK to overwrite a, which might be NJA.  Questionable analysis.
+   }else{
+    if(likely(at&FL)){  // FL index
+     D af=DAV(a)[0], f=jround(af); av=(I)f; if(SY_64)at=INT;  // av=index; if INT atom can hold FL atom, pretend a is INT so we can 
+     ASSERT(ISFTOIOK(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)
+    }else{RZ(a=cvt(INT,a)) av=IAV(a)[0]; at=INT;}  // other index - must be convertible to INT, do so
+   }  // now av is the index
+   I wr1=wr-1; wr1-=REPSGN(wr1);  // rank of cell of w
+   if((SGNIF(at,INTX)&-(wt&INT+(SY_64*FL)+BOX)&(wr-2))<0){  // w is atom or list whose atomsize is SZI; a is atom of same size, result is atom
+    // here moving SZI-sized atoms, which means we can put the result on top of a if a is direct inplaceable abandoned
+    // We focus on SZI-sized atoms because we move them without a loop and can inplace into a.  If we can't inplace into a we could revert to general 1-cell code below, but we skip quite a bit here
+    I j; SETNDX(j,av,AN(w));  // fetch and audit index into j
     // Get the area to use for the result: the a input if possible (inplaceable, incorpable, DIRECT), else an INT atom. a=w OK!
     // We can't get away with changing the type for an INT atom a to BOX.  It would work if the a is not contents, but if it is pristine contents it may have
     // been made to appear inplaceable in jtevery.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
     // of being contents.  It's not a good trade to check for recursiveness of contents in tpop (currently implied).
-    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+BOX)-1))<0)z=a; else{GAT0(z,INT,1,0)}
+    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+AFNJA+BOX)-1))<0){z=a; AT(z)=wt;} else{GA00(z,wt,1,0)}  // NJA=LIT, ok
     // Move the value and transfer the block-type
-    I j; SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=wt;   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
-    // Here we transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
+    IAV(z)[0]=IAV(w)[j];   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
+    // We transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
     PRISTXFERF(z,w)  // this destroys w
    }else{
-    // rank of w > 1, return virtual cell
-    I *ws=AS(w);  // shape of w
+    // Not SZI-sized items.  w is not INT/FL/BOX or has rank >1, return single cell, possibly virtual
+    I *ws=AS(w); I wi; SETIC(w,wi); // shape of w, number of items in w
     I m; PROD(m,wr1,ws+1);  // number of atoms in a cell
-    I j; SETNDX(j,av,ws[0]);  // j=positive index
-    RZ(z=virtualip(w,j*m,wr1));   // if w is rank 2, could reuse inplaceable a for this virtual block
-    // fill in shape and number of atoms.  ar can be anything.
-    AN(z)=m; MCISH(AS(z),ws+1,wr1)
+// obsolete     I j; SETNDX(j,av,ws[0]);  // j=positive index
+    I j; SETNDX(j,av,wi);  // j=positive index, audited
+    if(m<MINVIRTSIZE){  // if cell too small for virtual, allocate & fill here
+     I k=bplg(wt); GA(z,wt,m,wr1,ws+1) JMC(CAV(z),CAV(w)+j*(m<<k),m<<k,0);  // copy in the data, possibly overstoring up to 7 bytes.  Nonrecursive block
+     // We transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
+     PRISTXFERF(z,w)  // this destroys w
+    }else{
+     RZ(z=virtualip(w,j*m,wr1));   // if w is rank 2, could reuse inplaceable a for this virtual block
+     // fill in shape and number of atoms.  ar can be anything.
+     AN(z)=m; MCISH(AS(z),ws+1,wr1)
     // When we create a virtual block we do not actually copy anything out of w, so it remains pristine.  The result is not.
+    }
    }
-  }else if(unlikely(AN(a)==0&&!((jt->ranks-((ar<<RANKTX)+wr))&(((RMAX+1)<<RANKTX)+(RMAX+1))))){  // scaf handle other empty-result cases too
-   // The case of (empty array) { y.  Result is (($x),(}.^:(32~:3!:0 x) $y)) ($,) y.  Doesn't happen often but we save big when it does
-   I zr=AR(w)-1+SGNTO0(SGNIF(at,BOXX)); zr=zr<0?0:zr; zr+=AR(a);  // rank. $ (i.0 0) { (i. 4 5)  is 0 0 5;  $ (0 0$a:) { (i. 4 5) is 0 0 4 5.  $ (0$a:) { 5  is  $ (0$0) { 5  is 0
-   GA00(z,wt,0,zr); MCISH(AS(z),AS(a),ar) MCISH(AS(z)+ar,AS(w)+wr-(zr-ar),zr-ar)
+  }else if(unlikely(AN(a)==0)){  // a is empty, so the result must be also
+   I zr=AR(w)-1+SGNTO0(SGNIF(at,BOXX));  // rank of w, -1 if a is not boxed
+   if(!(jt->ranks-((ar<<RANKTX)+wr))&(((RMAX+1)<<RANKTX)+(RMAX+1))){  // is there frame?
+    // The case of (empty array) { y (no frame).  Result is (($x),(}.^:(32~:3!:0 x) $y)) ($,) y.  Doesn't happen often but we save big when it does
+    zr=zr<0?0:zr; zr+=AR(a);  // rank. $ (i.0 0) { (i. 4 5)  is 0 0 5;  $ (0 0$a:) { (i. 4 5) is 0 0 4 5.  $ (0$a:) { 5  is  $ (0$0) { 5  is 0
+    GA00(z,wt,0,zr); MCISH(AS(z),AS(a),ar) MCISH(AS(z)+ar,AS(w)+wr-(zr-ar),zr-ar)  // scaf if zr=0 we might reuse a, possibly changing type if abandoned
+   }else{
+    // There is frame.  We have to check agreement.  shape is (long frame),(a cell shape),(w cell shape possibly beheaded)
+    I af=ar-(jt->ranks>>RANKTX); af=af<0?0:af; I wf=wr-(RANKT)jt->ranks; wf=wf<0?0:wf; I lf=af<wf?wf:af; A la=af<wf?w:a;  // af, wf=len of outer frame; lf=len of long frame; la->longer frame
+    I cf=af+wf-lf; ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // cf=common frame; verify common frames agree
+    zr-=wf; zr=zr<0?0:zr;  // remove the w frame from w rank to get the cell-rank
+    GA00(z,wt,0,lf+ar-af+zr); MCISH(AS(z),AS(la),lf) MCISH(AS(z)+lf,AS(a)+af,ar-af) MCISH(AS(z)+lf+ar-af,AS(w)+wr-zr,zr) // allocate the empty array & move in shape
+   }
   }else{
-   // not atom{array.  Process according to type of a
+   // not (atom/empty){array.  Process according to type of a
     RANK2T origranks=jt->ranks;  // remember original ranks in case of error
    if(!(at&BOX))z=jtifrom(jtinplace,a,w);else z=jtafrom(jtinplace,a,w);
    // If there was an error, call eformat while we still have the ranks.  convert default rank back to R2MAX to avoid "0 0 in msg

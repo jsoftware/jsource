@@ -723,7 +723,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define TOOMANYATOMSX 47  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
-#define MINVIRTSIZE 32  // must have this many atoms to be virtual.  This is just a suggestion, and not honoroed everywhere
+#define MINVIRTSIZE 32  // must have this many atoms to be virtual.  This is just a suggestion, and not honored everywhere
    // Whether we should do so is a tricky question.  Surely, if the argument is big, since we may save a large indexed copy.
    // If the argument is small, the virtual is still better if it doesn't have to be realized; but it might be
    // realized in effect if it is unavailable for inplacing.  OTOH, if the argument is indirect the virtual does

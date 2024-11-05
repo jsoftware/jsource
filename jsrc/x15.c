@@ -65,7 +65,7 @@ typedef unsigned char       BYTE;
 #include <wchar.h>
 #include <complex.h>
 #undef I
-#if defined(_WIN32) && !defined(__GNUC__)
+#if defined(_WIN32)
 typedef _Fcomplex float_complex;
 typedef _Dcomplex double_complex;
 #else
@@ -701,7 +701,7 @@ static void convertdown(void *pi,I n,C t,C sizes){
  case -1+0b0001:{C*pt=(C*)pi; C2*ps=(C2*)pi; DO(n, pt[i]=(C)ps[i];);} break;
  // complex case
  case 4+0b1011:
-#if defined(_WIN32) && !defined(__GNUC__)
+#if defined(_WIN32)
   {float_complex*pt=(float_complex*)pi;D*ps=(D*)pi; DO(n, pt[i]=_FCOMPLEX_((float)ps[2*i],(float)ps[1+2*i]););} break;
 #else
  {float_complex*pt=(float_complex*)pi;D*ps=(D*)pi; DO(n, pt[i]=(float)ps[2*i]+_Complex_I*(float)ps[1+2*i];);} break;

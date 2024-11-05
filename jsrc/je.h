@@ -1052,6 +1052,8 @@ extern I Baqq[];
 #define aqq ((A)&Baqq)
 extern I Bmtv[];
 #define mtv ((A)&Bmtv)
+extern I Bmtvi[];
+#define mtvi ((A)&Bmtvi)
 extern I Bmtm[];
 #define mtm ((A)&Bmtm)
 extern I Basgnlocsimp[];

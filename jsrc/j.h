@@ -2211,7 +2211,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define VAL1            '\001'
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
-#define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
+#define VECI(z,n,v) {if(n==0)z=mtvi; else{GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}}
 #define PUSHNOMSGS C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATEFORMATTED;  // turn off message formatting by pretending we've already done it
 #define POPMSGS jt->emsgstate=_e;  // restore previous state
 #define WITHMSGSOFF(stmt) {PUSHNOMSGS stmt POPMSGS}  // execute stmt with msgs off - we don't even set jt->jerr.  Use only around internal functions

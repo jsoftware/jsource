@@ -76,7 +76,8 @@ I jtaii(J jt,A w){I m; PROD(m,AR(w)-1,1+AS(w)); R m;}
 // return A-block for b+m*i.n
 A jtapv(J jt,I n,I b,I m){A z;
  // see if we can use the canned ascending integers
- if(m==1 && b>=IOTAVECBEGIN && b+n<=IOTAVECLEN+IOTAVECBEGIN) {
+ if((m==1) & (b>=IOTAVECBEGIN) & (b+n<=IOTAVECLEN+IOTAVECBEGIN)) {
+  if(unlikely((b|(n&~1))==0)){z=n?iv0:mtvi; R z;}  // i. 0/1, INT type
   GAT0(z,INT,0,1); AS(z)[0]=n; AN(z)=n; AK(z)=(C*)(iotavec+b-IOTAVECBEGIN)-(C*)z; ACINIT(z,ACUC1) AFLAGINIT(z,AFRO)  // mark block readonly and not inplaceable
   R z;
  }

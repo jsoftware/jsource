@@ -1789,6 +1789,14 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 (,<0) -: ([ 0:&.> (_1+{:"1)&.>   ({&.><) zb"_) z =. ,00 [ zb=. ,<,00  NB. formerly corrupted memory
 (,<0) -: ([ 0:&.> (_1+{:"1)&.>   ({&.><) zb"_) z =. ,00 [ zb=. ,<,00
 
+
+({&1 2 (= 15!:19)~ 15!:19) $0   NB. empty { list can reuse a of same type
+({&1 2 (= 15!:19)~ 15!:19) memu $0
+({&1. 2 (= 15!:19)~ 15!:19) memu $0   NB. even if wrong type, if a is inplaceable
+({&1x 2 (= 15!:19)~ 15!:19) memu $0   NB. 
+({&(11 c. 1 2) (= 15!:19)~ 15!:19) memu $0   NB.
+({&1. 2 (~: 15!:19)~ 15!:19) $0    NB. If a is not inplaceable, we cannot change its type
+
  
 4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom res run128_9 savx savy savref savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y z zb '

@@ -396,7 +396,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  // if no frame, w cell-rank is 1, a is inplaceable, and an atom of w is the same size as an atom of a, preserve inplaceability of a (.ind is already filled in)
  // since inplacing may change the type, we further require that the block not be UNINCORPABLE, and the result also must be DIRECT since
  // the copy may be interrupted by index error and be left with invalid atoms, and if boxed may be to a recursive block.  Also, a must not be the same block as w
- jtinplace=(J)((I)jtinplace&~((((a!=w)&SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT)))<=(UI)(wf|(wcr^1)|(SZI^(1LL<<bplg(AT(w))))))<<JTINPLACEAX));
+// obsolete  jtinplace=(J)((I)jtinplace&~((((a!=w)&SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT)))<=(UI)(wf|(wcr^1)|(SZI^(1LL<<bplg(AT(w))))))<<JTINPLACEAX));
+ jtinplace=(J)((I)jtinplace&~((((a!=w)&SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT)))<=(UI)(wf|(wcr^1)|(LGSZI^bplg(AT(w)))))<<JTINPLACEAX));
  RETF(jtaxisfrom(jtinplace,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
 }    /* a{"r w for numeric a */
 
@@ -542,6 +543,7 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
  RETF(jtaxisfrom((J)((I)jtinplace&~JTINPLACEA),w,axes,(wncr<<24)+(wf<<16)+(zr<<8)+(hasr<<7)+r))  // move the values and return the result
 }    /* a{"r w for boxed index a */
 
+// a{"r w  We handle the fast cases (atom{array) and (empty{"r array) here.  For others we go to a type-dependent processor for a that will build index lists
 DF2(jtfrom){A z;
  F2PREFIP;
  ARGCHK2(a,w);
@@ -558,7 +560,7 @@ DF2(jtfrom){A z;
      D af=DAV(a)[0], f=jround(af); av=(I)f; if(SY_64)at=INT;  // av=index; if INT atom can hold FL atom, pretend a is INT so we can 
      ASSERT(ISFTOIOK(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)
     }else{RZ(a=cvt(INT,a)) av=IAV(a)[0]; at=INT;}  // other index - must be convertible to INT, do so
-   }  // now av is the index
+   }  // now av is the index and at has been modified, perhaps, to allow inplacing of converted a
    I wr1=wr-1; wr1-=REPSGN(wr1);  // rank of cell of w
    if((SGNIF(at,INTX)&-(wt&INT+(SY_64*FL)+BOX)&(wr-2))<0){  // w is atom or list whose atomsize is SZI; a is atom of same size, result is atom
     // here moving SZI-sized atoms, which means we can put the result on top of a if a is direct inplaceable abandoned
@@ -591,15 +593,19 @@ DF2(jtfrom){A z;
     }
    }
   }else if(unlikely(AN(a)==0)){  // a is empty, so the result must be also
-   I zr=AR(w)-1+SGNTO0(SGNIF(at,BOXX));  // rank of w, -1 if a is not boxed
-   if(!(jt->ranks-((ar<<RANKTX)+wr))&(((RMAX+1)<<RANKTX)+(RMAX+1))){  // is there frame?
+   I zr=wr-1+SGNTO0(SGNIF(at,BOXX));  // rank of w, -1 if a is not boxed
+   if(!((jt->ranks-((ar<<RANKTX)+wr))&(((RMAX+1)<<RANKTX)+(RMAX+1)))){  // is there frame?
     // The case of (empty array) { y (no frame).  Result is (($x),(}.^:(32~:3!:0 x) $y)) ($,) y.  Doesn't happen often but we save big when it does
-    zr=zr<0?0:zr; zr+=AR(a);  // rank. $ (i.0 0) { (i. 4 5)  is 0 0 5;  $ (0 0$a:) { (i. 4 5) is 0 0 4 5.  $ (0$a:) { 5  is  $ (0$0) { 5  is 0
-    GA00(z,wt,0,zr); MCISH(AS(z),AS(a),ar) MCISH(AS(z)+ar,AS(w)+wr-(zr-ar),zr-ar)  // scaf if zr=0 we might reuse a, possibly changing type if abandoned
+    // $ (i.0 0) { (i. 4 5)  is 0 0 5;  $ (0 0$a:) { (i. 4 5) is 0 0 4 5.  $ (0$a:) { 5  is  $ (0$0) { 5  is 0
+    zr=zr<0?0:zr;  // rank of cell of w
+    // if result is empty, we can use a as the return element if it is incorpable and abandoned inplaceable or it is an empty of the right type
+    if(((zr-1)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&((AC(a)&SGNIF(jtinplace,JTINPLACEAX))|-(at&wt&NOUN)))<0){z=a; I *tv=&AT(a); tv=at&wt&NOUN?&jt->shapesink[0]:tv; *tv=wt;
+    }else{GA00(z,wt,0,zr+ar); MCISH(AS(z),AS(a),ar) MCISH(AS(z)+ar,AS(w)+wr-zr,zr)  // if we can't reuse a, allocate & fill in
+    }
    }else{
     // There is frame.  We have to check agreement.  shape is (long frame),(a cell shape),(w cell shape possibly beheaded)
-    I af=ar-(jt->ranks>>RANKTX); af=af<0?0:af; I wf=wr-(RANKT)jt->ranks; wf=wf<0?0:wf; I lf=af<wf?wf:af; A la=af<wf?w:a;  // af, wf=len of outer frame; lf=len of long frame; la->longer frame
-    I cf=af+wf-lf; ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // cf=common frame; verify common frames agree
+    I af=ar-(jt->ranks>>RANKTX); af=af<0?0:af; I wf=wr-(RANKT)jt->ranks; wf=wf<0?0:wf; I lf=af<wf?wf:af; I cf=af<wf?af:wf; A la=af<wf?w:a;  // af, wf=lens of outer frame; lf=len of long frame; la->longer frame
+    ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // cf=common frame; verify common frames agree
     zr-=wf; zr=zr<0?0:zr;  // remove the w frame from w rank to get the cell-rank
     GA00(z,wt,0,lf+ar-af+zr); MCISH(AS(z),AS(la),lf) MCISH(AS(z)+lf,AS(a)+af,ar-af) MCISH(AS(z)+lf+ar-af,AS(w)+wr-zr,zr) // allocate the empty array & move in shape
    }

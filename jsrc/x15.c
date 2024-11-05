@@ -65,7 +65,7 @@ typedef unsigned char       BYTE;
 #include <wchar.h>
 #include <complex.h>
 #undef I
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
 typedef _Fcomplex float_complex;
 typedef _Dcomplex double_complex;
 #else
@@ -200,8 +200,10 @@ typedef struct {
  } starlett[NCDARGS];   // flag/letter per arg
 } CCT;
 
-#if SY_64 && SY_WIN32
+#if SY_64 && SY_WIN32 && !defined(__aarch64__)
 extern void double_trick(D,D,D,D);
+#elseif SY_64 && SY_WIN32 && defined(__aarch64__)
+extern void double_trick(D,D,D,D,D,D,D,D);
 #endif
 
 #if SYS & (SYS_MACOSX | SYS_LINUX | SYS_FREEBSD | SYS_OPENBSD)
@@ -241,8 +243,10 @@ static void double_trick(double*v, I n){I i=0;
 /*
 #if SYS & SYS_MACOSX
  #define dtrick double_trick(dd,dcnt);
-#elif SY_64 && SY_WIN32
+#elif SY_64 && SY_WIN32 && !defined(__aarch64__)
  #define dtrick {D*pd=(D*)d; double_trick(pd[0],pd[1],pd[2],pd[3]);}
+#elif SY_64 && SY_WIN32 && defined(__aarch64__)
+ #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
 #elif SY_64 && SY_LINUX
  #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
 #elif 1
@@ -251,8 +255,10 @@ static void double_trick(double*v, I n){I i=0;
 */
 
 #if SY_64
- #if SY_WIN32
+ #if SY_WIN32 && !defined(__aarch64__)
   #define dtrick {D*pd=(D*)d; double_trick(pd[0],pd[1],pd[2],pd[3]);}
+ #elseif SY_WIN32 && defined(__aarch64__)
+  #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
  #elif SY_UNIX64
   #ifdef __PPC64__
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12]);
@@ -695,7 +701,7 @@ static void convertdown(void *pi,I n,C t,C sizes){
  case -1+0b0001:{C*pt=(C*)pi; C2*ps=(C2*)pi; DO(n, pt[i]=(C)ps[i];);} break;
  // complex case
  case 4+0b1011:
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
   {float_complex*pt=(float_complex*)pi;D*ps=(D*)pi; DO(n, pt[i]=_FCOMPLEX_((float)ps[2*i],(float)ps[1+2*i]););} break;
 #else
  {float_complex*pt=(float_complex*)pi;D*ps=(D*)pi; DO(n, pt[i]=(float)ps[2*i]+_Complex_I*(float)ps[1+2*i];);} break;

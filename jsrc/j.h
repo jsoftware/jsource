@@ -1596,6 +1596,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(unlikely(JT(jt,adbreakr)[0]!=0)){jsignal(EVATTN); R 0;}}   // requests orderly termination at start of sentence
 #define JBREAK0         {if(unlikely(2<=JT(jt,adbreakr)[0])){jsignal(EVBREAK); R 0;}}  // requests immediate stop
+#define JNAN  (DAV0(ds(CUSDOT))[0])  // system-supplied NAN has trouble in Windows SDKs.  We wire one into _. and refer to it this way
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))

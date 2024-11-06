@@ -1088,7 +1088,7 @@ extern I Biv0[];
 #define iv0 ((A)&Biv0)
 extern I Biv1[];
 #define iv1 ((A)&Biv1)
-extern D        jnan;           /* "nan" name conflict under Solaris       */
+// obsolete extern D        jnan;           /* "nan" name conflict under Solaris       */
 extern A        mnuvxynam[6];
 extern void     moveparseinfotosi(J);
 extern I Bnum[][8*(2-SY_64)];

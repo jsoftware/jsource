@@ -37,7 +37,7 @@ static NUMH(jtnumfd){C c,*t;D*v,x,y;
   else{
    c=s[1];
    if('-'==c){*v=infm; R 1;}
-   else if('.'==c){*v=jnan; R 1;}
+   else if('.'==c){*v=JNAN; R 1;}
   }
  }
  x=strtod(s,(char**)&t);
@@ -61,7 +61,7 @@ static NUMH(jtnumfq){E *v;D sgn=1.0;
   if(1==n){v->hi=inf; R 1;}
   else{
    if('-'==s[1]){v->hi=infm; R 1;}
-   else if('.'==s[1]){v->hi=jnan; R 1;}}}
+   else if('.'==s[1]){v->hi=JNAN; R 1;}}}
  if(*s=='-'){sgn=-1.0;s++;n--;}
  // there is almost certainly a better way to do this.  For now, parse as RAT and then convert to E
  X r;I ex=0; // result; exponent of 10
@@ -453,7 +453,7 @@ B valueisint; // set if the value we are processing is really an int
       // b is set if the - was the first character and the third character is end-of-field
    if     (e&& C0==d){zv[k]=inf;}   // -<end> infinity: take it
    else if(b&&'-'==d){zv[k]=infm;}   // --<end> neginfinity
-   else if(b&&'.'==d){zv[k]=jnan;}  // -.<end> NaN
+   else if(b&&'.'==d){zv[k]=JNAN;}  // -.<end> NaN
    else{INSDEFAULT --v; while(C0!=*v++); u=v;continue;}   // NOTA; invalid including - in the middle, use default; advance to end-of-field
    // the non-error cases fall through to process the input value...
   case C0:

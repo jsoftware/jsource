@@ -103,7 +103,7 @@ struct Bi1 Bnumi4[] = {  // I4 0, 1, 2 used for constants
 
 D   inf=INFINITY;                // _
 D   infm=-INFINITY;              // __
-D   jnan=NAN;                    // _.
+// obsolete D   jnan=NAN;                    // _.
 D   pf=0;                        // performance frequency
 Z   zeroZ={0,0};                 // 0j0; also used for QP zero and Sleef QP 0
 /*

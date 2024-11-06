@@ -570,8 +570,8 @@ DF2(jtfrom){A z;
     // We can't get away with changing the type for an INT atom a to BOX.  It would work if the a is not contents, but if it is pristine contents it may have
     // been made to appear inplaceable in jtevery.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
     // of being contents.  It's not a good trade to check for recursiveness of contents in tpop (currently implied).
-    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+AFNJA+BOX)-1))<0){z=a; AT(z)=wt;} else{GA00(z,wt,1,0)}  // NJA=LIT, ok
-    // Move the value and transfer the block-type
+    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+AFNJA+BOX)-1))<0){z=a; AT(z)=wt;} else{GA00(z,wt,1,0)}  // NJA=LIT, ok.  transfer the block-type if we reuse a
+    // Move the value
     IAV(z)[0]=IAV(w)[j];   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
     // We transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
     PRISTXFERF(z,w)  // this destroys w
@@ -589,13 +589,13 @@ DF2(jtfrom){A z;
      RZ(z=virtualip(w,j*m,wr1));   // if w is rank 2, could reuse inplaceable a for this virtual block
      // fill in shape and number of atoms.  ar can be anything.
      AN(z)=m; MCISH(AS(z),ws+1,wr1)
-    // When we create a virtual block we do not actually copy anything out of w, so it remains pristine.  The result is not.
+     // When we create a virtual block we do not actually copy anything out of w, so it remains pristine.  The result is not.
     }
    }
-  }else if(unlikely(AN(a)==0)){  // a is empty, so the result must be also
+  }else if(unlikely(AN(a)==0)){  // a is empty, so the result must be also.  Doesn't happen often but we save big when it does
    I zr=wr-1+SGNTO0(SGNIF(at,BOXX));  // rank of w, -1 if a is not boxed
    if(!((jt->ranks-((ar<<RANKTX)+wr))&(((RMAX+1)<<RANKTX)+(RMAX+1)))){  // is there frame?
-    // The case of (empty array) { y (no frame).  Result is (($x),(}.^:(32~:3!:0 x) $y)) ($,) y.  Doesn't happen often but we save big when it does
+    // The case of (empty array) { y (no frame).  Result is (($x),(}.^:(32~:3!:0 x) $y)) ($,) y.
     // $ (i.0 0) { (i. 4 5)  is 0 0 5;  $ (0 0$a:) { (i. 4 5) is 0 0 4 5.  $ (0$a:) { 5  is  $ (0$0) { 5  is 0
     zr=zr<0?0:zr;  // rank of cell of w
     // if result is empty, we can use a as the return element if it is incorpable and abandoned inplaceable or it is an empty of the right type

@@ -790,7 +790,7 @@ static DF1(mergv1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z;
 
 // called from m}, m is usually NOT a gerund
 static B ger(J jt,A w){A*wv,x;
- if(!(BOX&AT(w))||!AN(w))R 0;
+ if(likely(!(BOX&AT(w))||!AN(w)))R 0;
  wv=AAV(w); 
  DO(AN(w), x=C(wv[i]); if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=C(AAV(x)[0]); if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
  R 1;
@@ -808,12 +808,12 @@ static B gerar(J jt, A w){A x; C c;
    UC p = spellin(n,stg);
    R (p>>7)|!!ds(p);  // return if valid primitive (all non-ASCII are valid primitives, but 0: is not in pst[] so force that in)
   }
- } else if(AT(w)&BOX) {A *wv;I bmin=0,bmax=0;
+ } else if(likely(AT(w)&BOX)) {A *wv;I bmin=0,bmax=0;
   // boxed contents.  There must be exactly 2 boxes.  The first one may be a general AR; or the special cases singleton 0, 2, 3, or 4
   // Second may be anything for special case 0 (noun); otherwise must be a valid gerund, 1 or 2 boxes if first box is general AR, 2 boxes if special case
   // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
   // 
-  if(!(n==2))R 0;  // verify 2 boxes
+  if(unlikely(!(n==2)))R 0;  // verify 2 boxes
   wv=AAV(w);  x=C(wv[0]); // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
   if((SGNIF(AT(x),LITX)&(AR(x)-2)&((AN(x)^1)-1))<0){ // LIT, rank<2, AN=1
@@ -823,19 +823,19 @@ static B gerar(J jt, A w){A x; C c;
    bmin=BETWEENC(c,'2','4')?oride:bmin; bmax=BETWEENC(c,'2','4')?oride:bmax; 
   }
   // If the first box is not a special case, it had better be a valid AR; and it will take 1 or 2 operands
-  if(bmin==0){if(!(gerar(jt,x)))R 0; bmin=1,bmax=2;}
+  if(bmin==0){if(unlikely(!(gerar(jt,x))))R 0; bmin=1,bmax=2;}
   // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
   x=C(wv[1]);   // point to second box
-  if((SGNIF(AT(x),BOXX) & ((AR(x)^1)-1))>=0)R 0;   // verify it contains a list of boxes
-  if(!BETWEENC(AN(x),bmin,bmax))R 0;  // verify correct number of boxes
+  if(unlikely((SGNIF(AT(x),BOXX) & ((AR(x)^1)-1))>=0))R 0;   // verify it contains a list of boxes
+  if(unlikely(!BETWEENC(AN(x),bmin,bmax)))R 0;  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
  } else R 0;
  R 1;
 }
 
 B jtgerexact(J jt, A w){A*wv;
- if(!(BOX&AT(w)))R 0;   // verify gerund is boxed
- if(!(AN(w)))R 0;   // verify there are boxes
+ if(unlikely(!(BOX&AT(w))))R 0;   // verify gerund is boxed
+ if(unlikely(!(AN(w))))R 0;   // verify there are boxes
  wv=AAV(w);   // point to pointers to contents
  DO(AN(w), if(!(gerar(jt, C(wv[i]))))R 0;);   // fail if any box contains a non-gerund
  R 1;
@@ -907,13 +907,13 @@ static DF2(jtamnegate){F2PREFIP;
 // u} handling.  This is not inplaceable but the derived verb is.  Self can be 0 to indicate this is a recursive call from a subroutine of jtamend
 DF1(jtamend){F1PREFIP;
  ARGCHK1(w);
- if(VERB&AT(w)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
- else if(ger(jt,w)){A z;
+ if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
+ else if(AT(w)&BOX&&ger(jt,w)){A z;
   ASSERT(self!=0,EVNONCE);  // execute exception if gerund returns gerund
   RZ(z=gadv(w))   // get verbs for v0`v1`v2}, as verbs
   A *hx=AAV(FAV(z)->fgh[2]);
   if((FAV(hx[0])->id&~1)==CATCO&&FAV(FAV(hx[0])->fgh[0])->id==CMINUS&&AT(FAV(hx[0])->fgh[1])&VERB&&FAV(FAV(hx[0])->fgh[1])->id==CFROM&&FAV(hx[1])->id==CLEFT&&(AS(FAV(z)->fgh[2])[0]<3||FAV(hx[2])->id==CRIGHT)){
-   FAV(z)->valencefns[1]=jtamnegate;    // if gerund is -@[:]{`[[`]], change the dyad function pointer to the special code
+   FAV(z)->valencefns[1]=jtamnegate;    // if gerund is -@[:]{`[ [`]], change the dyad function pointer to the special code
    FAV(z)->flag|=VIRS2;  // also support IRS for this case
   }
   R z;

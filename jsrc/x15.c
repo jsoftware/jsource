@@ -97,7 +97,11 @@ return (void*)((uintptr_t)((dvc)+((align)-1)) & ~((align)-1));
 }
 */
 
-#define SY_UNIX64 (SY_64 && (defined(__aarch64__) || SY_LINUX || SY_MAC || SY_FREEBSD || SY_OPENBSD))
+#if defined(__aarch64__)
+#define SY_UNIX64 1
+#else
+#define SY_UNIX64 (SY_64 && (SY_LINUX || SY_MAC || SY_FREEBSD || SY_OPENBSD))
+#endif
 
 #if SY_WINCE
 #define HINSTANCE_ERROR 0

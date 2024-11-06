@@ -66,7 +66,7 @@ PRIM primtab[256] = {
  /*  =: */  PRIMNOUN(CGASGN,ASGN,1,0,CGASGN),
  /*  a: */  PRIMNOUN(CACE,BOX,1,0,(I)mtv),
  /*  a. */  PRIMNOUN(CALP,LIT,NALP,1,0),   // this gets modified at init time
- /*  _.  */  PRIMNOUN(CUSDOT,FL,1,0,0x7ff8000000000000),  // quiet NaN, since NAN caused trouble in Windows SDKs
+ /*  _.  */  PRIMNOUNFL(CUSDOT,FL,1,0,0x7ff8000000000000),  // quiet NaN, since NAN caused trouble in Windows SDKs
 
  /*  bw */  PRIMATOMIC2(CBW0000,CBW0000, VERB, jtbitwise1,  jtatomic2,   RMAX,0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),
  /*  bw */  PRIMATOMIC2(CBW0001,CBW0001, VERB, jtbitwise1,  jtatomic2,   RMAX,0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE|VF2PRIM),

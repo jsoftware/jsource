@@ -245,6 +245,7 @@ static void double_trick(double*v, I n){I i=0;
  #define dtrick double_trick(dd,dcnt);
 #elif SY_64 && SY_WIN32 && !defined(__aarch64__)
  #define dtrick {D*pd=(D*)d; double_trick(pd[0],pd[1],pd[2],pd[3]);}
+#error windows arm64
 #elif SY_64 && SY_WIN32 && defined(__aarch64__)
  #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
 #elif SY_64 && SY_LINUX

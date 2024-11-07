@@ -97,6 +97,7 @@ return (void*)((uintptr_t)((dvc)+((align)-1)) & ~((align)-1));
 }
 */
 
+/* windows arm64 also uses generic arm64 abi like other *nix */
 #if defined(__aarch64__)
 #define SY_UNIX64 1
 #else
@@ -249,9 +250,7 @@ static void double_trick(double*v, I n){I i=0;
  #define dtrick double_trick(dd,dcnt);
 #elif SY_64 && SY_WIN32 && !defined(__aarch64__)
  #define dtrick {D*pd=(D*)d; double_trick(pd[0],pd[1],pd[2],pd[3]);}
-#elif SY_64 && SY_WIN32 && defined(__aarch64__)
- #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
-#elif SY_64 && SY_LINUX
+#elif SY_UNIX64
  #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
 #elif 1
  #define dtrick ;
@@ -1279,7 +1278,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #if SY_MACPPC
           dd[dcnt++]=(float)*(D*)xv;
 #endif
-#if SY_64 && (SY_LINUX  || SY_MAC || SY_FREEBSD || SY_OPENBSD)
+#if SY_UNIX64
   #if defined(__PPC64__)
      /* +1 put the float in low bits in dv, but dd has to be D */
    #if C_LE

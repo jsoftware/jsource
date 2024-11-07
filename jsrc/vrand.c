@@ -57,7 +57,7 @@ static void lcg(I n,I*v,I seed){D c=16807.0,p=2147483647.0,x=(D)seed;
 
 F1(jtlcg_test){A x;I n=1597,*v;
  ASSERTMTV(w);
- GATV0(x,INT,n,1); v=AV(x);
+ GATV0(x,INT,n,1); v=AV1(x);
  lcg(n,v,1L);
  ASSERTSYS(v[   0]==     16807L, "lcg_test 0");
  ASSERTSYS(v[   1]== 282475249L, "lcg_test 1");
@@ -441,7 +441,7 @@ static void jtsm_init(J jt,UI s){
 F1(jtrngraw){A z;I n,*v;SETNEXT
  RE(n=i0(w));
  ASSERT(0<=n,EVDOMAIN);
- GATV0(z,INT,n,1); v=AV(z);
+ GATV0(z,INT,n,1); v=AV1(z);
  DQ(n, *v++=NEXT;);
  R z;
 }
@@ -499,7 +499,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
  ASSERTMTV(w);
  switch(jt->rngdata->rng){
   case SMI: 
-   GAT0(z,BOX,9,1); zv=AAV(z);
+   GAT0(z,BOX,9,1); zv=AAV1(z);
    RZ(*zv++=num(0));
    RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[GBI].rngI))); RZ(*zv++=incorp(vec(INT,GBN,jt->rngdata->rngparms0[GBI].rngV)));
    RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MTI].rngI))); RZ(*zv++=incorp(vec(INT,MTN,jt->rngdata->rngparms0[MTI].rngV)));
@@ -507,7 +507,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #if SY_64
    RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MRI].rngI))); RZ(*zv++=incorp(vec(INT,MRN,jt->rngdata->rngparms0[MRI].rngV)));
 #else
-   u=(D*)jt->rngdata->rngparms0[MRI].rngV; GAT0(x,INT,MRN,1); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
+   u=(D*)jt->rngdata->rngparms0[MRI].rngV; GAT0(x,INT,MRN,1); v=AV1(x); DO(MRN, v[i]=(UI)u[i];);
    RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MRI].rngI))); *zv++=incorp(x);
 #endif
    R z;
@@ -517,10 +517,10 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #if SY_64
   case MRI: n=MRN; v=jt->rngdata->rngv; break;
 #else
-  case MRI: n=MRN; u=(D*)jt->rngdata->rngv; GATV0(x,INT,n,1); v=AV(x); DO(n, v[i]=(UI)u[i];); break;
+  case MRI: n=MRN; u=(D*)jt->rngdata->rngv; GATV0(x,INT,n,1); v=AV1(x); DO(n, v[i]=(UI)u[i];); break;
 #endif
  }
- GAT0(z,BOX,3,1); zv=AAV(z);
+ GAT0(z,BOX,3,1); zv=AAV1(z);
  RZ(*zv++=incorp(sc(jt->rngdata->rng))); RZ(*zv++=incorp(sc(jt->rngdata->rngi))); RZ(*zv++=incorp(vec(INT,n,v)));
  R z;
 }
@@ -591,7 +591,7 @@ F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngpar
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
- GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
+ GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AVn(an,z);
  if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}  // floating-point output
  else if(2==m){I nslice; I j;
   // binary output
@@ -689,7 +689,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);
 static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to numeric
  n=AN(w); v=XAV(w);
- GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
+ I zr=AR(w); GATV(z,XNUM,n,AR(w),AS(w)); u=XAVn(zr,z);
  // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
  DQ(n, x=*v++; d=XSGN(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=xrand(x)) else{*u++=X0; c=1;});
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
@@ -704,7 +704,7 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
 
 static F1(jtrollbool){A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
  n=AN(w); v=BAV(w); INITD;
- GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
+ I zr=AR(w); GATV(z,FL,n,AR(w),AS(w)); u=DAVn(zr,z);
  if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
  else  DQ(n, *u++=*v++?0.0:NEXTD0;)
  R z;
@@ -729,7 +729,7 @@ static A jtroll2(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
 #else
   mk=0x01010101;
 #endif
- GATV(z,B01,n,AR(w),AS(w)); zv=(UI*)AV(z);  // Allocate result area
+ I zr=AR(w); GATV(z,B01,n,AR(w),AS(w)); zv=(UI*)AVn(zr,z);  // Allocate result area
  // Loop to output all the p-size blocks
  for(j=0;j<q;++j){
   t=NEXT;
@@ -760,7 +760,7 @@ static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->rng
 
 static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  *b=0; n=AN(w); v=AV(w); INITD;
- GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
+ I zr=AR(w); GATV(z,FL,n,AR(w),AS(w)); u=DAVn(zr,z);
  for(j=0;j<n;++j){
   m1=*v++; ASSERT(0<=m1,EVDOMAIN); m=m1;
   if(0==m)*u++=sh?NEXTD1:NEXTD0; 
@@ -799,9 +799,9 @@ DF2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata
   if(unlikely(n==IMAX&&XNUM&AT(w))){A h= plus(num(2),a); NOUNROLL do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m);R take(a,z);}
   A h,y; I d,*hv,i,i1,p,q,*v,*yv;
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
-  GATV0(h,INT,p,1); hv=AV(h); DO(p, hv[i]=0;);
-  GATV0(y,INT,2+2*m,1); yv=AV(y); d=2;
-  GATV0(z,INT,m,1); zv=AV(z);
+  GATV0(h,INT,p,1); hv=AV1(h); DO(p, hv[i]=0;);
+  GATV0(y,INT,2+2*m,1); yv=AV1(y); d=2;
+  GATV0(z,INT,m,1); zv=AV1(z);
   I qp=0; GMOF2(c,x,s,sq);
   for(i=0;i<m;++i){
    if(s<GMOTHRESH)GMOF2(c,x,s,sq);
@@ -841,7 +841,7 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngda
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
- GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
+ GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AVn(an,z);
  if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}
  else if(2==m){I nslice; I j;
   p = (BW/8) * (nslice = (8 - (BW-jt->rngdata->rngw)));  // #bits/slice, times number of slices
@@ -896,7 +896,7 @@ static X jtxranddot(J jt,X x){PROLOG(0090); // A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  // CONSTRAINT NO LONGER VALID: if (unlikely(!ISGMP(x))) SEGFAULT; // x must be an extended integer -- anything else is a coding error
  if (unlikely(1>(XSGN(x)))) SEGFAULT; // x must be positive -- anything else is a coding error
  I n= oldsize(x); // number of "old big digits" to represent x
- A q; GATV0(q,INT,n,1); I*qv= AV(q); // range of values which might appear at each digit position
+ A q; GATV0(q,INT,n,1); I*qv= AV1(q); // range of values which might appear at each digit position
  A xbase= scx(XgetI(XBASE)); RZ(xbase);
  // loop to roll random values until we get one that is less than x
  DO(n-1, qv[i]= XBASE;); qv[n-1]= IgetX(Xfdiv_qXX(x, XpowUU(XBASE, n-1)));
@@ -911,7 +911,7 @@ static X jtxranddot(J jt,X x){PROLOG(0090); // A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
 static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to integer
  n=AN(w); v=XAV(w);
- GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
+ I zr=AR(w); GATV(z,XNUM,n,AR(w),AS(w)); u=XAVn(zr,z);
  // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
  DQ(n, x=*v++; d=XSGN(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=X0; c=1;});
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
@@ -927,7 +927,7 @@ static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
 #define rollbool(w) jtrollbooldot(jt,(w))
 static F1(jtrollbooldot){A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
  n=AN(w); v=BAV(w); INITD;
- GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
+ I zr=AR(w); GATV(z,FL,n,AR(w),AS(w)); u=DAVn(zr,z);
  if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
  else  DQ(n, *u++=*v++?0.0:NEXTD0;)
  R z;
@@ -954,7 +954,7 @@ static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
 #else
   mk=0x01010101;
 #endif
- GATV(z,B01,n,AR(w),AS(w)); zv=(UI*)AV(z);  // Allocate result area
+ I zr=AR(w); GATV(z,B01,n,AR(w),AS(w)); zv=(UI*)AVn(zr,z);  // Allocate result area
  // Loop to output all the p-size blocks
  for(j=0;j<q;++j){
   t=NEXT;
@@ -989,7 +989,7 @@ static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->
 #define rollany(w,b) jtrollanydot(jt,(w),(b))
 static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  *b=0; n=AN(w); v=AV(w); INITD;
- GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
+ I zr=AR(w); GATV(z,FL,n,AR(w),AS(w)); u=DAVn(zr,z);
  for(j=0;j<n;++j){
   m1=*v++; ASSERT(0<=m1,EVDOMAIN); m=m1;
   if(0==m)*u++=sh?NEXTD1:NEXTD0; 
@@ -1026,9 +1026,9 @@ static DF2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
-  GATV0(h,INT,p,1); hv=AV(h); DO(p, hv[i]=0;);
-  GATV0(y,INT,2+2*m,1); yv=AV(y); d=2;
-  GATV0(z,INT,m,1); zv=AV(z);
+  GATV0(h,INT,p,1); hv=AV1(h); DO(p, hv[i]=0;);
+  GATV0(y,INT,2+2*m,1); yv=AV1(y); d=2;
+  GATV0(z,INT,m,1); zv=AV1(z);
   for(i=0;i<m;++i){
    s=GMOF(c,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} j=i+t%c--;
    q=i%p; NOUNROLL while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
@@ -1048,7 +1048,7 @@ static DF2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t
 
 #define FXSDECL     A z;I i,j=jt->rngdata->rng;UI*v=jt->rngdata->rngparms[GBI].rngV;
 #define FXSDO       {i=j==GBI?jt->rngdata->rngi:jt->rngdata->rngparms[GBI].rngI;                                \
-                     if(!jt->rngdata->rngfxsv){GAT0(z,INT,GBN,1); ACINITZAP(z); jt->rngdata->rngfxsv=AV(z);}  \
+                     if(!jt->rngdata->rngfxsv){GAT0(z,INT,GBN,1); ACINITZAP(z); jt->rngdata->rngfxsv=AV1(z);}  \
                      jt->rngdata->rngparms[GBI].rngV=jt->rngdata->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
 #define FXSOD       {jt->rngdata->rngparms[GBI].rngV=v; jt->rngdata->rngparms[GBI].rngI=jt->rngdata->rngi=i; I e=jt->jerr; jt->jerr=0; rngselects(sc(j)); jt->jerr=e;}  // rngselects doesn't function if there is error
 
@@ -1065,7 +1065,7 @@ static F1(jtroll){A z;D rl=jt->rl;static D dm=16807,p=2147483647L;I c,n,*v,*x;
  if(ICMP(v,x,n))
   DQ(n, c=*v++; ASSERT(0<c,EVDOMAIN); rl=fmod(rl*dm,p); *x++=(I)jfloor(rl*c/p);)
  else{B*x;D q=p/2;
-  GATV(z,B01,n,AR(w),AS(w)); x=BAV(z);
+  I zr=AR(w); GATV(z,B01,n,AR(w),AS(w)); x=BAVn(zr,z);
   DQ(n, rl=fmod(rl*dm,p); *x++=rl>q;);
  }
  jt->rl=(I)rl;

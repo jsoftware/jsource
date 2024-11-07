@@ -154,7 +154,7 @@ static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,
 // n is number of control words, con points to them
 static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack,tb=0,top=0,wb=0;
  // We process the words through a stack to match up control sequences.  Initialize to empty
- GATV0(y,INT,n,1); stack=AV(y);
+ GATV0(y,INT,n,1); stack=AV1(y);
  for(i=0;i<n;++i){
   // top is the top of the stack (i. e. the place to add the next entry)
   // b, c, d -> con entries, p, q, r are cw-types   for current cw, previous cw on stack, 2d-previous cw on stack
@@ -367,7 +367,7 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  RZ(y=wordil(w)); ASSERT(AM(y)>=0,EVOPENQ) // split string into words - result block has special format
  v=AV(y);   // v-> (index,end+1) for each word; #words neg if last is NB.
  n=AM(y)<<1;  // number of words not including any final NB., times 2 to get  # start/end+1 slots
- GATV0(z,BOX,n>>1,1); z0=zv=AAV(z);  // allocate one box per word
+ GATV0(z,BOX,n>>1,1); z0=zv=AAV1(z);  // allocate one box per word
  s=CAV(w);                         // s-> original text
  for(i=0;i<n;i+=2){     // for each word...
   j=v[i]; m=v[1+i]-j;         // j=index, m=length of word

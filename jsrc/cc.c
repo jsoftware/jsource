@@ -112,8 +112,8 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
      }
      break;  // this is the loop exit
     }else{  // we have not allocated the input to {; do so now
-     GATV0(q,BOX,c,1); INCORP(q); qv=AAV(q);   // allocate a vector of boxes, which will contain the selectors
-     GAT0(qq,BOX,1,0); AAV(qq)[0]=q;  // enclose that vector of boxes in a box to pass into {
+     GATV0(q,BOX,c,1); INCORP(q); qv=AAV1(q);   // allocate a vector of boxes, which will contain the selectors
+     GAT0(qq,BOX,1,0); AAV0(qq)[0]=q;  // enclose that vector of boxes in a box to pass into {
     }
    }while(1);
    RZ(z=from(qq,w));
@@ -227,7 +227,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  // audits passed and we have counted the items.  Allocate the result and copy
  I wcn; PROD(wcn,AR(w)-1,AS(w)+1);  // number of atoms per cell of w
  I zn; DPMULDE(wcn,nitems,zn);  // number of atoms in result
- GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=nitems; zv=CAV(z);  // allocate a list of items of w, fill in length.  zv is running output pointer
+ I zr=AR(w); GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=nitems; zv=CAVn(zr,z);  // allocate a list of items of w, fill in length.  zv is running output pointer
  // copy em in.  We use MC because the strings are probably long and unpredictable - think HTML parsing
  I wcb=wcn<<bplg(wt);  // number of bytes in a cell of w
  DO(m, j=av[i][0]; k=av[i][1]; I jj=j+n; jj=(j>=0)?j:jj; j=n-jj; k=k>j?j:k; k*=wcb; JMC(zv,wv+jj*wcb,k,0); zv+=k;)
@@ -240,8 +240,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  q=(I)FAV(self)->localuse.lu1.gercut.cutn;  // fetch the n in the original u;.n
  an=AN(a); av=AAV(a);  ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
- GATV0(x,BOX,an,1); xv=AAV(x);  // could be faux
- GATV0(y,BOX,an,1); yv=AAV(y);
+ GATV0(x,BOX,an,1); xv=AAV1(x);  // could be faux
+ GATV0(y,BOX,an,1); yv=AAV1(y);
  for(i=0;i<an;++i){
   b=C(av[i]); bn=AN(b); m=ws[i];
   ASSERT(1>=AR(b),EVRANK);
@@ -251,8 +251,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    if(!AR(b)){if(BAV(b)[0]){RZ(xv[i]=incorp(IX(m))); RZ(yv[i]=incorp(reshape(sc(m),num(0<q))));}else xv[i]=yv[i]=mtv; continue;}
    ASSERT(bn==m,EVLENGTH);
    bv=BAV(b); p=0; DO(bn, p+=bv[i];); 
-   GATV0(t,INT,p,1); u=AV(t); xv[i]=incorp(t);
-   GATV0(t,INT,p,1); v=AV(t); yv[i]=incorp(t); j=-1;
+   GATV0(t,INT,p,1); u=AV1(t); xv[i]=incorp(t);
+   GATV0(t,INT,p,1); v=AV1(t); yv[i]=incorp(t); j=-1;
    if(p)
     switch(q){
     case  1: DO(bn, if(bv[i]){*u++=i  ; if(0<=j)*v++=i-j  ; j=i;}); *v=bn-j;   break;
@@ -272,42 +272,42 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
 #define CUTSWITCH(EACHC)  \
  switch(id){A z,*za;C id1,*v1,*zc;I d,i,j,ke,q,*zi,*zs;                 \
  case CPOUND:                                                               \
-  GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;); R z;                          \
+  GATV0(z,INT,m,1); zi=AV1(z); EACHC(*zi++=d;); R z;                          \
  case CDOLLAR:                                                              \
-  GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;);                               \
+  GATV0(z,INT,m,1); zi=AV1(z); EACHC(*zi++=d;);                               \
   A zz,zw; RZ(zw=vec(INT,MAX(0,r-1),1+s)); IRS2(z,zw,NOEMSGSELF,0L,1L,jtover,zz); RETF(zz);  \
  case CHEAD:                                                                \
-  GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
+  GA(z,t,m*c,r,s); zc=CAVn(r,z); AS(z)[0]=m;                                     \
   EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1,k); zc+=k;);                            \
   R z;                                                                      \
  case CTAIL:                                                                \
-  GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
+  GA(z,t,m*c,r,s); zc=CAVn(r,z); AS(z)[0]=m;                                     \
   EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1+k*(d-1),k); zc+=k;);                    \
   R z;                                                                      \
  case CCOMMA:                                                               \
  case CLEFT:                                                                \
  case CRIGHT:                                                               \
   e-=e&&neg; DPMULDE(m*c,e,d);                                             \
-  GA(z,t,d,id==CCOMMA?2:1+r,s-1); zc=CAV(z); fillv0(t), mvc(d<<bplg(t),zc,jt->fillvlen,jt->fillv);                 \
+  GA(z,t,d,id==CCOMMA?2:1+r,s-1); zc=CAVn(id==CCOMMA?2:1+r,z); fillv0(t), mvc(d<<bplg(t),zc,jt->fillvlen,jt->fillv);                 \
   zs=AS(z); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;                        \
   EACHC(MC(zc,v1,d*k);  zc+=ke;);                                           \
   R z;                                                                      \
  case CBOX:                                                                 \
   GA10(z,m?BOX:B01,m); za=AAV(z);                                         \
-  EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); *za++=incorp(y););             \
+  EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AVn(r,y),v1,d*k); *za++=incorp(y););             \
   R z;                                                                      \
  case CAT: case CATCO: case CAMP: case CAMPCO:                              \
   if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),((id1&~1)==CBEHEAD))){           \
    GA10(z,m?BOX:B01,m); za=AAV(z);                                        \
-   EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=incorp(y););               \
+   EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AVn(r,y),id1==CBEHEAD?v1+k:v1,d*k); *za++=incorp(y););               \
    R z;                                                                     \
   }                                                                         \
   /* note: fall through */                                                  \
  default:                                                                   \
   if(!m){y=reitem(zeroionei(0),w); R iota(over(zeroionei(0),shape(h?df1(z,y,*hv):CALL1(f1,y,fs))));}                            \
-  GATV0(z,BOX,m,1); za=AAV(z); j=0;                                          \
-  if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; incorp(Zz); *za++=Zz;); \
-  }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); incorp(Zz); *za++=Zz; ); \
+  GATV0(z,BOX,m,1); za=AAV1(z); j=0;                                          \
+  if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AVn(r,y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; incorp(Zz); *za++=Zz;); \
+  }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AVn(r,y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); incorp(Zz); *za++=Zz; ); \
   }                                                                         \
   z=jtopenforassembly(jt,z);                                                                 \
   {EPILOG(z);}                                                                \
@@ -352,7 +352,7 @@ static DF2(jtcut2sx){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->v
  vf=VAV(fs);
  if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
- GATV0(yy,INT,yn+1,1); yu=AV(yy); *yu++=p=pfx?n:-1;
+ GATV0(yy,INT,yn+1,1); yu=AV1(yy); *yu++=p=pfx?n:-1;
  switch(pfx+(I )(((id&~1)==CLEFT)||id==CCOMMA?2:0)){  // [ ] ,
  case 0:          DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
  case 1: v+=yn-1; DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
@@ -364,14 +364,14 @@ static DF2(jtcut2sx){V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->v
   r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c<<bplg(t); 
   CUTSWITCH(EACHCUTSP)
  }else if(id==CPOUND){A z;I i,*zi; 
-  GATV0(z,INT,m,1); zi=AV(z); 
+  GATV0(z,INT,m,1); zi=AV1(z); 
   if(pfx)for(i=m;i>=1;--i)*zi++=(yu[i-1]-yu[i  ])-neg;
   else   for(i=1;i<=m;++i)*zi++=(yu[i  ]-yu[i-1])-neg;
   EPILOG(z);
  }else{A a,ww,x,y,z,*za,zz,z0;I c,i,j,q,qn,r;P*wp,*wwp;
   wp=PAV(w); a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); yv=AV(y); r=AS(y)[0]; c=AS(y)[1];
   RZ(ww=cps(w)); wwp=PAV(ww);
-  GATV0(z,BOX,m,1); za=AAV(z);
+  GATV0(z,BOX,m,1); za=AAV1(z);
   switch(AN(a)&&AV(a)[0]?2+pfx:pfx){
   case 0:
    p=yu[0]; DO(r, if(p<=yv[c*i]){p=i; break;});
@@ -838,7 +838,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     // boxes will be in AAV(z), in order.  Details of hijacking tnextpushp are discussed in jtbox().
     A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(zz);  // save tstack info before allocation
     // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
-    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; ACINIT(z,ACUC1) JMC(CAV(z),v1,d*k,0) ra00(z,wt););    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  make recursive (cannot be sparse).  Put allocated addr into *jt->tnextpushp++
+    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; ACINIT(z,ACUC1) JMC(CAVn(r,z),v1,d*k,0) ra00(z,wt););    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  make recursive (cannot be sparse).  Put allocated addr into *jt->tnextpushp++
     // restore the allocation system
     jt->tnextpushp=pushxsave;   // restore tstack pointer
     // **** ALLOCATION SYSTEM OK NOW ****
@@ -849,16 +849,16 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   }
   break;
  case CPOUND:  // quickly calculate #;.n
-  GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); 
+  GATV0(zz,INT,m,1); zi=AV1(zz); EACHCUT(*zi++=d;); 
   break;
  case CDOLLAR:   // calculate as #;.n ,"0 1 }. $ w
-  GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); A zw=vec(INT,MAX(0,r-1),AS(w)+1);  // could use virt block
+  GATV0(zz,INT,m,1); zi=AV1(zz); EACHCUT(*zi++=d;); A zw=vec(INT,MAX(0,r-1),AS(w)+1);  // could use virt block
   R IRS2(zz,zw,NOEMSGSELF,0L,1L,jtover,z);
  case CTAIL:
  case CHEAD: ;
   // remove pristinity from w since a contents is escaping
   PRISTCLRF(w)   // destroys w
-  GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m; fillv0(wt);
+  GA(zz,wt,m*wcn,r,AS(w)); zc=CAVn(r,zz); AS(zz)[0]=m; fillv0(wt);
   EACHCUT(if(d)MC(zc,id==CHEAD?v1:v1+k*(d-1),k); else mvc(k,zc,jt->fillvlen,jt->fillv); zc+=k;);
   break;
  case CSLASH: ;
@@ -995,7 +995,7 @@ DF2(jtrazecut2){A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w); wt=t;}
  zt=rtypew(adocv.cv,wt); zk=d<<bplg(zt);
- GA(z,zt,AN(w),r,s); zv=CAV(z); // allocate size of w, which is as big as it can get if there are no discarded items
+ GA(z,zt,AN(w),r,s); zv=CAVn(r,z); // allocate size of w, which is as big as it can get if there are no discarded items
  I rc=EVOK;
  while(p){I n;
   if(u=memchr(v+pfx,sep,p-pfx))u+=pfx^1; else{if(!pfx)break; u=v+p;}
@@ -1020,7 +1020,7 @@ static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
  ARGCHK2(a,w);
  axisct=c=AS(a)[1]; av=AV(a); ws=AS(w);
  if(pv){c=(c>2)?2:c; p=0; // if more than 2 axes requested, limit the return to that
- }else{GATV0(p,INT,c,1); pv=AV(p); AS(p)[0]=c;}  // all requested, make an A block for it
+ }else{GATV0(p,INT,c,1); pv=AV1(p); AS(p)[0]=c;}  // all requested, make an A block for it
  if(n>0)DO(axisct, m=av[i]; s=ws[i]; if(!((I)p|(m = m?(s+m-1)/m:1&&s)))pv[0]=0; if(i<c)pv[i]=m;)  // ;.3, calculate # sections
  else   DO(axisct, m=av[i]; k=av[axisct+i]; s=ws[i]-ABS(k); if(!((I)p|(m = 0>s?0:m?(I )(k||s%m)+s/m:1)))pv[0]=0; if(i<c)pv[i]=m;);
  R p;

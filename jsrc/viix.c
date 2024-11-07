@@ -38,7 +38,7 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
 static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv,x,y;
  av=AV(a); wv=AV(w);
  p=av[0]; q=av[n-1]; ascend=p<=q; if(!ascend){x=p; p=q; q=x;}
- GATV0(t,INT,1+q-p,1); v=AV(t); tv=v-p;   // v->buffer; tv->virtual buffer origin, where p=0; vv->buffer end
+ GATV0(t,INT,1+q-p,1); v=AV1(t); tv=v-p;   // v->buffer; tv->virtual buffer origin, where p=0; vv->buffer end
   // This could be recoded to allocate slots for <p and >q, but it would be better only if those cases were common
  if(ascend){u=av;     x=*u++; *v++=j=0; DQ(n-1, ++j; y=*u++; ASSERT(BETWEENC(y,x,q),EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
  else      {u=av+n-1; x=*u--;      j=n; DQ(n-1, --j; y=*u--; ASSERT(BETWEENC(y,x,q),EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
@@ -177,7 +177,7 @@ DF2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,
  ASSERTAGREE(as+ar-r,ws+wr-r,r)
  ASSERT((POSIFHOMO(at,wt)&-AN(a)&-AN(w))>=0,EVINHOMO); ASSERT(!ISSPARSE(at|wt),EVNONCE); // if no empties, verify agreement & non-sparse
  CPROD(AN(w),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);  // m=#atoms in result   c=# atoms in a cell of w
- GATV(z,INT,m,wr-r,ws); zv=AV(z);
+ GATV(z,INT,m,wr-r,ws); zv=AVn(wr-r,z);
  if(((m-1)|(n-1)|(c-1))<0){DQ(m, *zv++=0;); R z;}  // exit with zeros for empty args
  t=maxtyped(at,wt);
  if(1==c){  // the search is for atoms

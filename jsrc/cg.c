@@ -103,7 +103,7 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ASSERT(r>=AR(w),EVRANK);  // max rank allowed
  ASSERT(n!=0,EVLENGTH);  // gerund must not be empty
  ASSERT(BOX&AT(w),EVDOMAIN);   // must be boxed
- GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);  // allocate one box per gerund
+ I zr=AR(w); GATV(z,BOX,n,AR(w),AS(w)); zv=AAVn(zr,z);  // allocate one box per gerund
  DO(n, RZ(zv[i]=x=incorp(fx(C(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
  R z;
 }
@@ -121,14 +121,14 @@ DF1(jtfxeach){RETF(every(w,self));}
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
- GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
+ I zr=AR(h); GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAVn(zr,z);
  DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(C(*hv))->valencefns[0],  w,C(*hv)))); ++hv;);
  R jtopenforassembly(jt,z);
 }
 
 static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
- GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
+ I zr=AR(h); GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAVn(zr,z);
  DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(C(*hv))->valencefns[1],a,w,C(*hv)))); ++hv;);
  R jtopenforassembly(jt,z);
 }
@@ -354,7 +354,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
  else{
   ASSERT(BOX&AT(a),EVDOMAIN);
   n=AN(a); av=AAV(a); 
-  GATV0(z,BOX,n,1); v=AAV(z);
+  GATV0(z,BOX,n,1); v=AAV1(z);
   DO(n, RZ(*v++=incorp(gerfrom(C(av[i]),w))););
   R z;
 }}

@@ -409,7 +409,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
- GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
+ GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,take(sc(1+i),w),hv[imod])); ++imod;);
  R jtopenforassembly(jt,z);
 }    /* g\"r w for gerund g */
@@ -462,7 +462,7 @@ static DF2(jtinfix){PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m;
   // create a block containing the shape of the fill-cell.  The fill-cell is a list of items of y,
   // with the number of items being the infix-size if positive, or 0 if negative
   // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
-  r=AR(w); rr=MAX(1,r); GATV0(s,INT,rr,1); if(r)MCISH(AV(s),AS(w),r); AV(s)[0]=0>m?0:m==IMAX?1+SETIC(w,r):m;
+  r=AR(w); rr=MAX(1,r); GATV0(s,INT,rr,1); if(r)MCISH(AV1(s),AS(w),r); AV1(s)[0]=0>m?0:m==IMAX?1+SETIC(w,r):m;
   // Create fill-cell of shape s; apply u to it
   RZ(dfv1(x,jtfiller(jt,AT(w),rr,AS(s)),fs));
   // Prepend leading axis of 0 to the result
@@ -482,7 +482,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
  RZ(x=ifxi(m,w));
  h=VAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
  if(SETIC(x,n)){
-  GATV0(z,BOX,n,1); zv=AAV(z);
+  GATV0(z,BOX,n,1); zv=AAV1(z);
   DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),C(hv[i%d]))););
   R jtopenforassembly(jt,z);
  }else{A s;
@@ -719,7 +719,7 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
   fauxblockINT(afaux,4,1); fauxINT(z,afaux,r,1) s=IAV1(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);  // allocate and copy shape
   R reshape(z,w);  // return the reshaped w
  }
- GA00(z,wt,d*p*c,r); x=CAV(z); y=CAV(w);   // allocate result, set x=output pointer y=input pointer
+ GA00(z,wt,d*p*c,r); x=CAVn(r,z); y=CAV(w);   // allocate result, set x=output pointer y=input pointer
  s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);   // install shape
  I katom=(I)1<<bplg(wt); k=c<<bplg(wt);   // k=#bytes in a cell of result
  if(likely(AN(z)!=0)){
@@ -742,7 +742,7 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
    DQ(m, x+=*v++;); *zv++=xd;                                  \
    DQ(p, x+=(Ty)*v++-(Ty)*u++; *zv++=xd;);                     \
   }else{                                                       \
-   GATVS(y,ty,c,1,0,ty##SIZE,GACOPYSHAPE0,R 0); s=yv=(Ty*)AV(y); DQ(c, *s++=0;);            \
+   GATVS(y,ty,c,1,0,ty##SIZE,GACOPYSHAPE0,R 0); s=yv=(Ty*)AV1(y); DQ(c, *s++=0;);            \
    DQ(m, s=yv; DQ(c, *s+++=*v++;);); SET;                      \
    DQ(p, s=yv; DQ(c, x=*s+++=(Ty)*v++-(Ty)*u++; *zv++=xd;););  \
  }}
@@ -789,7 +789,7 @@ static DF2(jtmovavg){I m,j;
     if(d CMP x)x=d; else if(e==x){x=d; t=u; DQ(m-1, e=*t++; if(e CMP x)x=e;);}  \
     *zv++=x;                                                   \
   }}else{                                                      \
-   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV(y); DQ(c, *s++=ie;);          \
+   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV1(y); DQ(c, *s++=ie;);          \
    DQ(m, s=yv; DQ(c, d=*v++; if(d CMP *s)*s=d; ++s;);); SETZ; /* should store to sink instead of branching */ \
    for(i=0;i<p;++i){                                           \
     for(j=0,s=yv;j<c;++j,++s){                                 \
@@ -810,7 +810,7 @@ static DF2(jtmovavg){I m,j;
     if(CMP(d,x))x=d; else if(e==x){x=d; t=u; DQ(m-1, e=*t++; if(CMP(e,x))x=e;);}  \
     *zv++=x;                                                   \
   }}else{                                                      \
-   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV(y); DQ(c, *s++=ie;);          \
+   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV1(y); DQ(c, *s++=ie;);          \
    DQ(m, s=yv; DQ(c, d=*v++; if(CMP(d,*s))*s=d; ++s;);); SETZ;  /* should store to sink instead of branching */ \
    for(i=0;i<p;++i){                                           \
     for(j=0,s=yv;j<c;++j,++s){                                 \
@@ -847,7 +847,7 @@ static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,
    if(d==b1)x=d; else if(e==b1){x=d; t=u; DQ(m-1, if(b1==*t++){x=b1; break;});}
    *zv++=x;
  }}else{
-  GATV0(y,B01,c,1); s=yv=BAV(y); DQ(c, *s++=b0;);
+  GATV0(y,B01,c,1); s=yv=BAV1(y); DQ(c, *s++=b0;);
   DQ(m, s=yv; DQ(c, if(b1==*v++)*s=b1; ++s;);); SETZ;
   for(i=0;i<p;++i){
    for(j=0,s=yv;j<c;++j,++s){
@@ -877,7 +877,7 @@ static A jtmovneeq(J jt,I m,A w,A fs,B eq){A y,z;B*s,*u,*v,x,*yv,*zv;I c,p;
  SETIC(w,p); p-=m; c=aii(w); x=eq;
  GATV(z,B01,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=BAV(z); u=v=BAV(w);
- if(1<c){GATV0(y,B01,c,1); s=yv=BAV(y); DQ(c, *s++=eq;);}
+ if(1<c){GATV0(y,B01,c,1); s=yv=BAV1(y); DQ(c, *s++=eq;);}
  switch(eq+(1<c?2:0)){
  case 0: DQ(m,                   x   ^=   *v++;  ); *zv++=x; DQ(p,                   *zv++=x   ^=   *u++^ *v++;  ); break;
  case 1: DQ(m,                   x    =x==*v++;  ); *zv++=x; DQ(p,                   *zv++=x    =x==*u++==*v++;  ); break;
@@ -891,7 +891,7 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  SETIC(w,p); p-=m; c=aii(w); x=eq?-1:0;
  GATV(z,INT,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=AV(z); u=v=AV(w);
- if(1<c){GATV0(y,INT,c,1); s=yv=AV(y); DQ(c, *s++=x;);}
+ if(1<c){GATV0(y,INT,c,1); s=yv=AV1(y); DQ(c, *s++=x;);}
  switch(eq+(1<c?2:0)){
  case 0: DQ(m,                   x   ^=    *v++ ;  ); *zv++=x; DQ(p,                   *zv++=x   ^=      *u++^*v++  ;  ); break;
  case 1: DQ(m,                   x    =~(x^*v++);  ); *zv++=x; DQ(p,                   *zv++=x    =~(x^~(*u++^*v++));  ); break;

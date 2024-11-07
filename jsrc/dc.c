@@ -13,7 +13,7 @@ static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=incorp(sfn(0,d->name))); RZ(*zv++=in
 
 static B jtdrow(J jt,DC si,DC s0,A*zv,UI ncollist,I* collist){A fs,q,*qv,y,z;C c;UI col;
  fs=si->dcf;
- GATV0(q,BOX,!!si->dcx+!!si->dcy,1); qv=AAV(q);  // allo place to store arg list
+ GATV0(q,BOX,!!si->dcx+!!si->dcy,1); qv=AAV1(q);  // allo place to store arg list
  if(si->dcx)RZ(*qv++=incorp(dfrep(si->dcx)));   // fill in x if any
  if(si->dcy)RZ(*qv++=incorp(dfrep(si->dcy)));  // fill in y if any
 

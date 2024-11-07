@@ -122,7 +122,7 @@ ARGCHK1(w);
    // The L* result is
    // sqrt(P00)   P01/sqrt(P00)
    // 0           sqrt(P11 - (P01^2)/P00)
-   GAT0(y,FL,4,2); AS(y)[0]=AS(y)[1]=2; D *yv=DAV(y);
+   GAT0(y,FL,4,2); AS(y)[0]=AS(y)[1]=2; D *yv=DAV2(y);
    D P00=ipa[0]; D P01=ipa[1]; D P11=ipa[3]; D R00=sqrt(P00); D det=P00*P11 - P01*P01;
    ipa[0]=(1/R00); ipa[1]=0; ipa[2]=-P01*(1/R00)*(1/sqrt(det)); ipa[3]=R00*(1/sqrt(det));  // as above
    yv[0]=R00; yv[1]=P01*(1/R00); yv[2]=0; yv[3]=sqrt(det)*(1/R00);  // as above
@@ -151,7 +151,7 @@ ARGCHK1(w);
  if(AT(w)&FL && (m<50 || m*m*cl<(64*64*64))){
   // floating-point w that isn't larger than L2 cache.  (1) use inner-products to calculate w1 q0* (2) use blockedmmult to calculate final product
   if((m*(rw-m))>(int)(sizeof(ipa)/sizeof(ipa[0]))){
-   GATV0(y,FL,m*(rw-m),2); ipv=DAV(y);
+   GATV0(y,FL,m*(rw-m),2); ipv=DAV2(y);
   }else{  // avoid allocating short y
    ipv=ipa; y=q0; AN(y)=m*(rw-m); AK(y)=(C*)ipa-(C*)y;
   }
@@ -170,7 +170,7 @@ ARGCHK1(w);
  RZ(l1=jtltqip(jt,q1));  //  get QR of   w1 - (w1 q0*) q0  
  // copy in the pieces, line by line
  I leftlen = m<<bplg(AT(w)); I rightlen=(rw-m)<<bplg(AT(w));
- GA(z,AT(w),rw*rw,2,AS(w)); AS(z)[1]=rw; void *zr=voidAV(z);  // allocate result, set pointer to output
+ GA(z,AT(w),rw*rw,2,AS(w)); AS(z)[1]=rw; void *zr=voidAV2(z);  // allocate result, set pointer to output
  // copy top part: l0*,. (w1 q0*)*
  void *leftr=voidAV(l0), *rightr=voidAV(conjug(cant1(y)));  // input pointers
  DQ(m, MC(zr,leftr,leftlen); zr=(C*)zr+leftlen; leftr=(C*)leftr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)

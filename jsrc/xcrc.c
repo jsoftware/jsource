@@ -45,7 +45,7 @@ F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
 
 F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
  ARGCHK1(w);
- GAT0(h,BOX,2,1); hv=AAV(h);
+ GAT0(h,BOX,2,1); hv=AAV1(h);
  RE(z=crcvalidate(w,crctab));
  RZ(hv[0]=incorp(vec(LIT,sizeof(crctab),crctab)));  // Save the table.  We don't have any other good type to use
  RZ(hv[1]=incorp(sc((I)z)));
@@ -97,7 +97,7 @@ DF1(jttobase64){
  I n3=AN(w)/3; I ne=AN(w)%3;
  I zn=n3+SGNTO0(-ne);  // total # result 4-byte groups
  // Allocate result
- A z; GATV0(z,LIT,zn<<2,1); UI4 *zv=UI4AV(z);  // result block, pointer into it
+ A z; GATV0(z,LIT,zn<<2,1); UI4 *zv=UI4AV1(z);  // result block, pointer into it
  C *wv=CAV(w);  // input pointer
 #if defined(__wasm__)  // superseded by library
  // Handle each 3-byte group, producing a 4-byte result.  We load 3 bytes at a time, so we may read into the padding area, but never

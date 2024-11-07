@@ -32,7 +32,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));  // recursively take rep of 1st component
  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));  // ... and second
  if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any
- GATV0(z,BOX,m,1); x=AAV(z);
+ GATV0(z,BOX,m,1); x=AAV1(z);
  RZ(x[0]=incorp(df));  // always out f first
  RZ(x[1]=incorp(b||c||xop?dg:spellout(id)));  // if invisible or operator, out dg, which is g or the explicit body; otherwise out the primitive w
  if(2<m)RZ(x[2]=incorp(c||xop?drr(hs):dg));  // if there is a 3d box, out it from h if operator or trident; otherwise from g
@@ -59,9 +59,9 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   if(!m)R spella(w);
   if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=aro(w); R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  }
- GAT0(z,BOX,2,1); x=AAV(z);
+ GAT0(z,BOX,2,1); x=AAV1(z);
  if(NOUN&AT(w)){RZ(x[0]=incorp(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); RZ(x[1]=INCORPNA(w)); RETF(z);}  // if name, must be ".@'name', format name as string
- GATV0(y,BOX,m,1); u=AAV(y);
+ GATV0(y,BOX,m,1); u=AAV1(y);
  if(0<m)RZ(u[0]=incorp(aro(fs)));
  if(1<m)RZ(u[1]=incorp(aro(ex?unparsem(num(0),w):xop?hs:gs)));
  if(2<m)RZ(u[2]=incorp(aro(hs)));
@@ -238,7 +238,7 @@ A jtunDD(J jt, A w){F1PREFIP;
     // If the string doesn't end with LF, we use a one-line form; otherwise multiline
     // We could try to reduce number of copies, but this just isn't very common.  Unfortunately the nounDD form is bigger than the quoted form
     // length of the revised string is 6 ({{)n}}) plus len+finalLF-2-numqu
-    A neww; GATV0(neww,LIT,AN(w)+6-2-numqu+finalLF,1); C *newwv=CAV(neww);
+    A neww; GATV0(neww,LIT,AN(w)+6-2-numqu+finalLF,1); C *newwv=CAV1(neww);
     MC(newwv,wv,stringstartx); newwv+=stringstartx;  // pre-string, moving newwv to start of dequoted section
     MC(newwv,"{{)n\n",5); newwv+=4+finalLF;  // write the header of the nounDD, possibly starting with LF
     for(++stringstartx;stringstartx<scan;++stringstartx){  // skip the leading quote
@@ -266,7 +266,7 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  // for BBLOCK/TBLOCK types, convert the lines to displayable by displaying them as if for error messages, and copying the result
  switch(t=(c->tcesx>>TCESXTYPEX)&31){
  case CBBLOCK: case CBBLOCKEND: case CTBLOCK: RZ(z=unparse(x));  break;
- case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV(z); 
+ case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV1(z); 
                              MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
  case CLABEL:  case CGOTO:   RZ(z=ca(AAV(x)[0])); break;
  case CFOR:                  RZ(z=(c[1].tcesx-c[0].tcesx)&TCESXSXMSK?AAV(x)[0]:spellcon(t)); break;
@@ -274,7 +274,7 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  }
  // if the CW we processed comes from the same source line, append it and return the combination; otherwise return the new
  if(j==c->source){
-  GATV0(q,LIT,1+AN(y)+AN(z),1); s=CAV(q); 
+  GATV0(q,LIT,1+AN(y)+AN(z),1); s=CAV1(q); 
   MC(s,CAV(y),AN(y)); s+=AN(y); *s++=' '; MC(s,CAV(z),AN(z)); 
   z=q;
  }
@@ -316,14 +316,14 @@ F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
   // if there is a definition (even if there are no control words), set mn to the inferred #source lines
   if(m>=0)mn=1+CWSOURCE(CWBASE(mc),-CWNC(mc),~(CWNC(mc)-2));else mn=0; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
   if(n>=0)dn=1+CWSOURCE(CWBASE(dc),-CWNC(dc),~(CWNC(dc)-2));else dn=0; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
-  GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV(z);   // allocate the inferred #lines
+  GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV1(z);   // allocate the inferred #lines
   RZ(zv=unparse1a(MAX(m,0),hv,   zv)); if(p)RZ(*zv++=chrcolon);
   RZ(zv=unparse1a(MAX(n,0),hv+HN,zv));
   ASSERTSYS(AN(z)==zv-zu,"unparsem zn");
  }else{
   // commented text found.  Use it
   mn=AN(ms); dn=AN(ds); mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;  // length of text; clear suppressed valence
-  GATV0(z,BOX,p+mn+dn,1); zv=AAV(z);
+  GATV0(z,BOX,p+mn+dn,1); zv=AAV1(z);
   DO(mn, *zv++=jtunDD(jt,AAV(ms)[i]);); if(p)RZ(*zv++=chrcolon);
   DO(dn, *zv++=jtunDD(jt,AAV(ds)[i]););
  }

@@ -45,7 +45,7 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
  ap=PAV(a); y=SPA(ap,i); yv=AV(y); s[0]=n=AS(y)[0]; s[1]=1;
  GATVR(yj,INT,n,2,s);
  if(!ISSPARSE(AT(w))){
-  GATVR(yi,INT,n,2,s); u=AV(yi); AR(yj)=1; v=AV(yj);
+  GATVR(yi,INT,n,2,s); u=AV2(yi); AR(yj)=1; v=AV(yj);
   DQ(n, *u++=*yv++; *v++=*yv++;);
   ax=SPA(ap,x); RZ(wx=from(yj,w));
  }else{
@@ -53,7 +53,7 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
   DQ(n, yv++; *v++=*yv++;);
   wp=PAV(w); RZ(b=eps(yj,SPA(wp,i))); bv=BAV(b); 
   AN(yj)=AS(yj)[0]=*s=m=bsum(n,bv); v=AV(yj); yv=AV(y);
-  GATVR(yi,INT,m,2,s); u=AV(yi);
+  GATVR(yi,INT,m,2,s); u=AV2(yi);
   DQ(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
   RZ(ax=repeat(b,SPA(ap,x))); RZ(wx=from(indexof(SPA(wp,i),yj),SPA(wp,x))); 
  }
@@ -72,16 +72,16 @@ static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u
  ARGCHK2(a,w);
  wp=PAV(w); y=SPA(wp,i); yv=AV(y); s[0]=n=AS(y)[0]; s[1]=1;
  if(!ISSPARSE(AT(a))){
-  GATVR(yj,INT,n,2,s); v=AV(yj); 
+  GATVR(yj,INT,n,2,s); v=AV2(yj); 
   av=DAV(a); x=SPA(wp,x); wv=DAV(x);
-  GATV0(x,FL,n,1); xv=DAV(x);
+  GATV0(x,FL,n,1); xv=DAV1(x);
   DQ(n, c=av[*yv++]; *v++=*yv++; d=*wv++; *xv++=c&&d?c*d:0;);
  }else{
-  GATVR(yi,INT,n,2,s); u=AV(yi);
+  GATVR(yi,INT,n,2,s); u=AV2(yi);
   DQ(n, *u++=*yv++; yv++;);
   ap=PAV(a); RZ(b=eps(yi,SPA(ap,i))); bv=BAV(b); 
   AN(yi)=AS(yi)[0]=*s=m=bsum(n,bv); u=AV(yi); yv=AV(y);
-  GATVR(yj,INT,m,2,s); v=AV(yj);
+  GATVR(yj,INT,m,2,s); v=AV2(yj);
   DQ(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
   RZ(ax=from(indexof(SPA(ap,i),yi),SPA(ap,x))); RZ(wx=repeat(b,SPA(wp,x)));
   RZ(x=tymes(ax,wx));
@@ -108,7 +108,7 @@ static B jtmmprep(J jt,P*p,I*n,I**iv,I*m,I**nv,D**xv){A x;I j,k,q,*u,*v;
  x=SPA(p,i); *iv=u=AV(x); *n=AN(x);
  if(m&&nv){
   q=AS(x)[0]; k=q?2+u[(q-1)<<1]-*u:1;
-  GATV0(x,INT,k,1); *nv=v=AV(x);
+  GATV0(x,INT,k,1); *nv=v=AV1(x);
   k=-1; DO(q, j=*u++; u++; if(j>k){*v++=i; k=j;});
   *v++=q; AN(x)=AS(x)[0]=k=v-*nv; *m=k-1;
  }
@@ -137,7 +137,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
  ARGCHK2(a,w);
  RZ(mmprep(PAV(a),&m,&aiv,0L ,0L  ,&axv)); aivm=m+aiv;
  RZ(mmprep(PAV(w),&m,&wiv,&wm,&wnv,&wxv));
- GATV0(zy,FL,AS(w)[1],1); zyv=DAV(zy); mvc(AN(zy)*sizeof(D),zyv,MEMSET00LEN,MEMSET00);
+ GATV0(zy,FL,AS(w)[1],1); zyv=DAV1(zy); mvc(AN(zy)*sizeof(D),zyv,MEMSET00LEN,MEMSET00);
  old=jt->tnextpushp; 
  RZ(zj=exta(INT,1L,1L,1000L)); zjv0=AV(zj);
  RZ(zi=exta(INT,2L,2L,1000L));

@@ -37,10 +37,10 @@ static A jttclosure1(J jt, I start, I n, I *indexes){
  I c=start;
 // should be if((UI)c>=(UI)n){c+=n; ASSERT((UI)c<(UI)n,EVINDEX);} I c0=c;   // c=current index, brought into range
 // should be  I rn=0,p,c0=c; do{p=c; c=indexes[c]; if((UI)c>=(UI)n){c+=n; ASSERT((UI)c<(UI)n,EVINDEX);} ASSERT(rn<=n,EVLIMIT) ++rn;}while(c!=p);  // p is prev; rn is # loops, including the one that ends with the repeat
-// should be  A z; GATV0(z,INT,rn,1) I *zv=IAV(z); c=c0; DO(rn, zv[i]=c; c=indexes[c]; if((UI)c>=(UI)n)c+=n;);  // allocate the result and retraverse, copying
+// should be  A z; GATV0(z,INT,rn,1) I *zv=IAV1(z); c=c0; DO(rn, zv[i]=c; c=indexes[c]; if((UI)c>=(UI)n)c+=n;);  // allocate the result and retraverse, copying
  // as implemented a final negative index is emitted even if it repeates the previous positive index - too late to change in the field
  I rn=0,p,c0=c; do{p=c; if((UI)c>=(UI)n){c+=n; ASSERT((UI)c<(UI)n,EVINDEX);} ASSERT(rn<=n,EVLIMIT) ++rn; c=indexes[c];}while(c!=p);  // p is prev; rn is # loops, including the one that ends with the repeat
- A z; GATV0(z,INT,rn,1) I *zv=IAV(z); c=c0; DO(rn, zv[i]=c; if((UI)c>=(UI)n)c+=n; c=indexes[c];);  // allocate the result and retraverse, copying
+ A z; GATV0(z,INT,rn,1) I *zv=IAV1(z); c=c0; DO(rn, zv[i]=c; if((UI)c>=(UI)n)c+=n; c=indexes[c];);  // allocate the result and retraverse, copying
  R z; 
 }
 // {&a^:(<_) w
@@ -52,7 +52,7 @@ static F2(jttclosure){
  if(likely(wr==0))R jttclosure1(jt,wv[0],an,av);  // single chain, return it
  // falling through for rare case of multiple chains
  PROLOG(0);
- A z; GATV(z,BOX,wn,wr,AS(w)) A *zv=AAV(z); // allocate one box per chain, point zv to boxes
+ A z; GATV(z,BOX,wn,wr,AS(w)) A *zv=AAVn(wr,z); // allocate one box per chain, point zv to boxes
  DO(wn, RZ(zv[i]=jttclosure1(jt,wv[i],an,av)) )  // fill in the boxes
  z=ev12(z,0,"((i.@#@$) |: (([ , (-#)~ # {:@[)&> >./@:(#@>)))");  // pad each box with repetitions of the last ele, unbox, transpose last axis to first
  EPILOG(z);

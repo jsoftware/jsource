@@ -809,7 +809,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
  bk=mode==IICO||mode==IJ0EPS||mode==IJ1EPS||mode==IPHICO||mode==IPHJ0EPS||mode==IPHJ1EPS;
  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUB||mode==INUBSV||mode==INUBI||mode==IFORKEY); 
- if(mode==INUB||mode==INUBI){GATV0(y,B01,m,1); yb=BAV(y);}
+ if(mode==INUB||mode==INUBI){GATV0(y,B01,m,1); yb=BAV1(y);}
  md=w==mark?-1:mode<IPHOFFSET?mode:mode-IPHOFFSET;
  av=AAV(a);  acn=ak/sizeof(A);
  wv=AAV(w);  wcn=wk/sizeof(A);
@@ -1025,8 +1025,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode){
     case IIDOT:  
-    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;
-    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAV(z),MEMSET00LEN,MEMSET00); R z;
+    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AVn(f+f0,z); DQ(zn, *v++=m;); R z;
+    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAVn(f+f0,z),MEMSET00LEN,MEMSET00); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R num(0);
@@ -1303,11 +1303,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
    // exact types (including intolerant comparison of FL/CMPX)
    // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
    // should get rid of this - cheaper to hash than to check for need-to-hash
-   GATV0(x,B01,k,1); b=BAV(x); memset(b,C1,k);
+   GATV0(x,B01,k,1); b=BAV1(x); memset(b,C1,k);
    q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
    DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
    // Convert the mask of varying bytes into the list of indexes of varying bytes, and set a pointer to that list for use in the indexing routine
-   if(q){jt->hin=k-q; GATV0(hi,INT,k-q,1); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
+   if(q){jt->hin=k-q; GATV0(hi,INT,k-q,1); jt->hiv=d=AV1(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
   }
 
   // Call the routine to perform the operation
@@ -1317,8 +1317,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
    // The caller must ras() this result to protect it, if it is going to be saved
-   GAT0(z,BOX,3,1); zv=AAV(z);
-   GAT0(x,INT,6,1); xv=AV(x);
+   GAT0(z,BOX,3,1); zv=AAV1(z);
+   GAT0(x,INT,6,1); xv=AV1(x);
 // should use a lookup
    switch(mode&IIOPMSK){
     default:                    ztype=PREHRESIV; break;  /* integer vector      */

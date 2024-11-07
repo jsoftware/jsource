@@ -9,7 +9,7 @@
 static A jtvaspc(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I af,I acr,I wf,I wcr,I f,I r){A q;I*as,*v,*ws;
  as=AS(a);
  ws=AS(w);
- GATV0(q,INT,f+r,1); v=AV(q);
+ GATV0(q,INT,f+r,1); v=AV1(q);
  if(r>acr){ICPY(v,wf+ws,r); RZ(a=irs2(vec(INT,r-acr,acr+v),a,0L,1L,0L,jtreshape));}
  if(r>wcr){ICPY(v,af+as,r); RZ(w=irs2(vec(INT,r-wcr,wcr+v),w,0L,1L,0L,jtreshape));}
  R vasp(a,w,id,ado,cv,t,zt,af,r,wf,r,f,r);
@@ -42,7 +42,7 @@ static A jtvasp0(J jt,A a,A w,VF ado,I cv,I t,I zt){A e,x,xx,y,z,ze,zx;B b;I n;P
   if(TYPESNE(t,AT(x))){RZ(x=cvt(t,x)); RZ(e=cvt(t,e));} 
   if(TYPESNE(t,AT(y))) RZ(y=cvt(t,y));
  }
- GA00(ze,zt,1,0); I rc;     ASSERT(((EVOK|EVNOCONV)&(rc=((AHDR2FN*)ado)AH2A_v(1,b?AV(e):AV(y),b?AV(y):AV(e),AV(ze),jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc)),rc);
+ GA00(ze,zt,1,0); I rc;     ASSERT(((EVOK|EVNOCONV)&(rc=((AHDR2FN*)ado)AH2A_v(1,b?AV(e):AV(y),b?AV(y):AV(e),AV0(ze),jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc)),rc);
  GA(zx,zt,n,AR(x),AS(x)); if(n)ASSERT(((EVOK|EVNOCONV)&(rc=((AHDR2FN*)ado)AH2A(1,2*n+1-b,b?AV(x):AV(y),b?AV(y):AV(x),AV(zx),jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc)),rc);  // was !b
  if(cv&VRI+VRD&&rc!=EVNOCONV){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
  GASPARSE(z,STYPE(AT(zx)),1,AR(xx),AS(xx)); zp=PAV(z);
@@ -57,7 +57,7 @@ static B jtvaspeqprep(J jt,A a,A w,I t,I f,I r,A*ae,A*ay,A*ax,A*we,A*wy,A*wx,A*z
      A aa,e,q,x,wa;B*b,sa,sw;I n,*v;P*p;
  sa=ISSPARSE(AT(a)); 
  sw=ISSPARSE(AT(w)); n=f+r;
- GATV0(x,B01,n,1); b=BAV(x); mvc(n,b,MEMSET00LEN,MEMSET00);
+ GATV0(x,B01,n,1); b=BAV1(x); mvc(n,b,MEMSET00LEN,MEMSET00);
  if(sa){p=PAV(a); aa=SPA(p,a); v=AV(aa); DO(AN(aa), b[v[i]]=1;);}
  if(sw){p=PAV(w); wa=SPA(p,a); v=AV(wa); DO(AN(wa), b[v[i]]=1;);}
  q=ifb(n,b); makewritable(q) *za=q;  // avoid readonly result
@@ -93,8 +93,8 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
  aev=CAV(ae); axv=CAV(ax); ak=xc<<bplg(AT(ax));
  wev=CAV(we); wxv=CAV(wx); wk=xc<<bplg(AT(wx));
  d=zcount(ay,wy,ab,wb);
- GA(zx,zt, d*xc,AR(ax),AS(ax)); AS(zx)[0]=d; zxv=CAV(zx); zk=xc<<bplg(zt);
- GATVR(zy,INT,d*yc,2,AS(ay)); AS(zy)[0]=d; zyv= AV(zy);
+ I zxr=AR(ax); GA(zx,zt, d*xc,AR(ax),AS(ax)); AS(zx)[0]=d; zxv=CAVn(zxr,zx); zk=xc<<bplg(zt);
+ GATVR(zy,INT,d*yc,2,AS(ay)); AS(zy)[0]=d; zyv= AV2(zy);
  i=j=d=0; u=AV(ay); v=AV(wy);
  while(m>i&&n>j){
   c=0; DO(yc, if(c=u[i]-v[i])break;);
@@ -105,7 +105,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
  FLUSH;
  if     (wb&&m>i){c=m-i; ICPY(zyv,u,c*yc); I lrc=((AHDR2FN*)ado)AH2A(1,2*c*xc,axv,wev,zxv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;}
  else if(ab&&n>j){c=n-j; ICPY(zyv,v,c*yc); I lrc=((AHDR2FN*)ado)AH2A(1,2*c*xc+1,aev,wxv,zxv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;}
- GA00(ze,zt,1,0); I lrc=((AHDR2FN*)ado)AH2A_v(1,aev,wev,AV(ze),jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
+ GA00(ze,zt,1,0); I lrc=((AHDR2FN*)ado)AH2A_v(1,aev,wev,AV0(ze),jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
  ASSERT((rc&(255&~EVNOCONV))==0,rc);
  if(cv&VRI+VRD&&rc!=EVNOCONV){A e,x; RZ(e=cvz(cv,ze)); RZ(x=cvz(cv,zx)); if(TYPESEQ(AT(e),AT(x))){ze=e; zx=x;}}
  GASPARSE(z,STYPE(AT(zx)),1,AR(a),AS(a));

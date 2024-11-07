@@ -193,7 +193,7 @@ static B jtnumb(J jt,I n,C*s,Z*v,Z b){A c,d,y;I k;
  if(!(d=indexof(str(m,(C*)dig),str(n,s))))R 0;
  if(!(all0(eps(sc(m),d))))R 0;
  k=sizeof(Z);
- GAT0(c,CMPX,1,0); MC(AV(c),&b,k); if(!(y=base2(c,d)))R 0; MC(v,AV(y),k);
+ GAT0(c,CMPX,1,0); MC(AV0(c),&b,k); if(!(y=base2(c,d)))R 0; MC(v,AV(y),k);
  R 1;
 }
 
@@ -300,7 +300,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
  if(1==n)                {if(k=s[0]-'0',(UI)k<=(UI)9)R num( k); else R ainf;}  // single digit - a number or _
  else if(2==n&&CSIGN==*s){if(k=s[1]-'0',(UI)k<=(UI)9)R num(-k);}
  RZ(y=mkwris(str(1+n,s))); s=v=CAV(y); s[n]=0;  // s->null-terminated string in (possibly) new copy, which we will modify
- GATV0(y,INT,1+n,1); yv=AV(y);  // allocate area for start/end positions
+ GATV0(y,INT,1+n,1); yv=AV1(y);  // allocate area for start/end positions
  C bcvtmask=0;  // bit 1 set to suppress B01, bit 2 to suppress INT
  DO(n, c=*v; c=c==CSIGN?'-':c; c=(c==CTAB)|(c==' ')?C0:c; *v++=c; B b=C0==c; bcvtmask=bcvtmask|(4*(c=='.')+2*((p|b)^1)); yv[d]=i; d+=p^b; p=b;);  // replace _ with -, whitespace with \0; and record start and end positions
    // if we encounter '.', make sure the result is at least FL; if we encounter two non-whitespace in a row, make sure result is at least INT
@@ -311,10 +311,10 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
  bcvtmask|=(tt&CMPX+LIT)==CMPX?8:0; // flag to force complex if we have j but not b
  f=jtnumfd; t=FL;  f=tt&QP?jtnumfq:f; t=tt&QP?QP:t;  f=tt&INT?jtnumi:f; t=tt&INT?INT:t;  f=tt&CMPX+LIT?jtnumbpx:f; t=tt&CMPX+LIT?CMPX:t;  f=tt&XNUM?jtnumx:f; t=tt&XNUM?XNUM:t;  f=tt&RAT?jtnumq:f; t=tt&RAT?RAT:t;  // routine to use, and type of result
  k=bpnoun(t);   // size in bytes of 1 result value
- GA0(z,t,m,1!=m); v=CAV(z);
+ GA0(z,t,m,1!=m); v=CAVn(1!=m,z);
  if(t==INT){  // if we think the values are ints, see if they really are
   DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){t=FL; break;} v+=k;);  // read all values, stopping if a value overflows
-  if(t!=INT){f=jtnumfd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAV(z);}  // if there was overflow, repurpose/allocate the input with enough space for floats
+  if(t!=INT){f=jtnumfd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAVn(1!=m,z);}  // if there was overflow, repurpose/allocate the input with enough space for floats
  }
  if(t!=INT)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);  // read the values as larger-than-int
  if(t!=QP)z=bcvt(bcvtmask,z); // never squish QP
@@ -411,7 +411,7 @@ B valueisint; // set if the value we are processing is really an int
  // Rank of result is rank of w, unless the rows have only 1 value; make rows atoms then, removing them from rank
  r=AR(w)-(I )(1==c); r=MAX(0,r); 
  // Allocate the result array, as floats.  If the last atom of shape was not removed, replace it with c, the output length per list
- GATV(z,FL,mc,r,AS(w)); if(0<r&&1!=c)AS(z)[r-1]=c; zv=DAV(z);
+ GATV(z,FL,mc,r,AS(w)); if(0<r&&1!=c)AS(z)[r-1]=c; zv=DAVn(r,z);
  if(!mc)R z;  // If no fields at all, exit with empty result (avoids infinite loop below)
  // Convert the default to float, unless we are trying big integers.  We try ints if the default is int or infinite,
  // but only on 64-bit systems where int and float have the same size

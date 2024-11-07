@@ -133,7 +133,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
  // allocate the merge work area, large enough to hold one sort.  In case this turns out to be the final result,
  // make the shape the same as the result shape (if there is more than one sort, this shape will be wrong, but that
  // won't matter, since the shape will never be used elsewhere)
- GA(x,t,n*api,AR(w),AS(w)); void * RESTRICT xv=voidAV(x);  /* work area for msmerge() */
+ I xr=AR(w); GA(x,t,n*api,AR(w),AS(w)); void * RESTRICT xv=voidAVn(x,xr);  /* work area for msmerge() */
  DO(m,   // sort each cell
   void *sortres=(*sortfunc)(cmpfunc,cpi,n,bpi,(void*)zv,(void*)xv,wv);
   if(m==1){
@@ -158,7 +158,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
 /* w - array to be graded                  */
 
 static SF(jtsortb){F1PREFJT;A z;B up,*u,*v;I i,s;
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=BAV(z);
+ I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=BAVn(zr,z);
  up=(~(I)jtinplace>>JTDESCENDX)&1;  u=BAV(w);
  for(i=0;i<m;++i){
   s=bsum(n,u);
@@ -170,7 +170,7 @@ static SF(jtsortb){F1PREFJT;A z;B up,*u,*v;I i,s;
 }    /* w grade"1 w on boolean */
 
 static SF(jtsortb2){F1PREFJT;A z;B up;I i,ii,yv[4];US*v,*wv;
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
+ I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAVn(zr,z);
  wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
  I startfill=0;
  for(i=0;i<m;++i){
@@ -182,7 +182,7 @@ static SF(jtsortb2){F1PREFJT;A z;B up;I i,ii,yv[4];US*v,*wv;
 }    /* w grade"r w on 2-byte boolean items */
 
 static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,yv[16];UINT*v,*wv;
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=(UINT*)AV(z);
+ I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=(UINT*)AVn(zr,z);
  wv=(UINT*)AV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
  I startfill=0;
  for(i=0;i<m;++i){
@@ -194,7 +194,7 @@ static SF(jtsortb4){F1PREFJT;A z;B up;I i,ii,yv[16];UINT*v,*wv;
 }    /* w grade"r w on 4-byte boolean items */
 
 static SF(jtsortc){F1PREFJT;A z;B up;I i,ii,yv[256];UC*v,*wv;
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=UAV(z);
+ I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=UAVn(zr,z);
  wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1; I p=LIT&AT(w)?256:2; 
  I startfill=0;
  for(i=0;i<m;++i){
@@ -206,7 +206,7 @@ static SF(jtsortc){F1PREFJT;A z;B up;I i,ii,yv[256];UC*v,*wv;
 }    /* w grade"1 w on boolean or character */
 
 static SF(jtsortc2){F1PREFJT;A z;B up;I i,yv[65536];US*v,*wv;
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
+ I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAVn(zr,z);
  wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
  I startfill=0; I sct=AT(w)&C2T?0:8;  // C2T is littleendian, 2 chars are bigendian
  for(i=0;i<m;++i){
@@ -220,12 +220,12 @@ static SF(jtsortc2){F1PREFJT;A z;B up;I i,yv[65536];US*v,*wv;
 
 // We are known to have 1 atom per item
 static SF(jtsorti1){F1PREFJT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
- GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
+ I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AVn(zr,z);
  wv=AV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
- GATV0(x,INT,n,1); xv=AV(x);
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV1(y);}
+ GATV0(x,INT,n,1); xv=AV1(x);
  for(i=0;i<m;++i){I colflags;
   colflags=grcol(65536,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    INTLSBWDX+(US*)wv,4+((~(I)jtinplace>>(JTDESCENDX-1))&2));  // 'sort', and move 'up' to bit 1
 #if SY_64
@@ -324,7 +324,7 @@ static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
   }
 #endif
  // allocate area for the data, and result area
- GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;  // yv->totals area
+ GATV0(y,C4T,rng.range,1); yv=C4AV1(y)-rng.min;  // yv->totals area
  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
  zv=AV(z);
  // clear all totals to 0, then bias address of area so the data fits
@@ -351,8 +351,8 @@ static SF(jtsortu){F1PREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
  }else rng.range=0;
  if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jtinplace,m,1,n,w);  // TUNE
- GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;
- GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
+ GATV0(y,C4T,rng.range,1); yv=C4AV1(y)-rng.min;
+ I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AVn(zr,z);
  for(i=0;i<m;++i){
   mvc(rng.range*sizeof(UI4),yv+rng.min,MEMSET00LEN,MEMSET00); 
   DQ(n, ++yv[*wv++];);
@@ -368,8 +368,8 @@ static SF(jtsortu1){F1PREFJT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
  wv=C4AV(w); zu=C4AV(z);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
- GATV0(x,C4T,n,1); xu=C4AV(x);
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV1(y);}
+ GATV0(x,C4T,n,1); xu=C4AV1(x);
  for(i=0;i<m;++i){I colflags;
   colflags=grcol(65536, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),INTLSBWDX+0*WDINC+(US*)wv,4+((~(I)jtinplace>>(JTDESCENDX-1))&2));  // 'sort' + 'up' moved to bit 1
   grcol(65536, 0L, yv,n,(UI*)xu, (UI*)zu,sizeof(C4)/sizeof(US),INTLSBWDX+1*WDINC+(US*)xu ,colflags);
@@ -416,8 +416,8 @@ static SF(jtsortd){F1PREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  wv=DAV(w); zu=DAV(z);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
- GATV0(x,FL, n,1); xu=DAV(x);
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV1(y);}
+ GATV0(x,FL, n,1); xu=DAV1(x);
  for(i=0;i<m;++i){I colflags;  // for each cell to be sorted...
   g=wv; nneg=0; DQ(n, nneg+=(0>*g++);); b=0<nneg&&nneg<n;
   g=b?xu:zu; h=b?zu:xu;  // select correct alignment to end with result in zv

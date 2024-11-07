@@ -46,7 +46,7 @@ static A jtintfloorlog2(J jt, A w, A compself) {  // compself is the floor/ceil 
  ARGCHK1(w);F1PREFIP;
  if ((INT | FL) & AT(w)) { // Special cases only for integers and floats ([<>].@f for extended integers is handled in vx.c).
   A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w); // GATV documentation advises using variables for arguments.
-  GATV(z, INT, wn, wr, ws); I *zv = IAV(z); // zv points to allocated result area.
+  GATV(z, INT, wn, wr, ws); I *zv = IAVn(wr,z); // zv points to allocated result area.
   if (INT & AT(w)) { // Case with integers.
    I *wv = IAV(w);
    DO(wn,
@@ -81,7 +81,7 @@ static A jtintceillog2(J jt, A w, A compself) { // Similar to the above case wit
  ARGCHK1(w);F1PREFIP;
  if ((INT | FL) & AT(w)) {
   A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w);
-  GATV(z, INT, wn, wr, ws); I *zv = IAV(z);
+  GATV(z, INT, wn, wr, ws); I *zv = IAVn(wr,z);
   if (INT & AT(w)) { // Case with integers.
    I *wv = IAV(w);
    DO(wn,
@@ -131,7 +131,7 @@ static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  if(!(XNUM&AT(h)))RZ(h=cvt(XNUM,h));
  ox=jt->xmod; jt->xmod=h;
- GAT0(z,XNUM,1,0); XAV(z)[0]=xpow(XAV(a)[0],XAV(w)[0]);
+ GAT0(z,XNUM,1,0); XAV0(z)[0]=xpow(XAV(a)[0],XAV(w)[0]);
  jt->xmod=ox;
  RNE(z);
 }
@@ -191,7 +191,7 @@ static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jt
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
 // #@> y
-static DF1(jttallyatopopen){F1PREFIP; A z; ARGCHK1(w); I an=AN(w); GATV(z,INT,an,AR(w),AS(w)) I *zv=IAV(z);
+static DF1(jttallyatopopen){F1PREFIP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV(z,INT,an,AR(w),AS(w)) I *zv=IAVn(zr,z);
  if(likely(AT(w)&BOX)){A *wv=AAV(w); DO(an, A wc=C(wv[i]); I ic; SETIC(wc,ic); zv[i]=ic;)}  // boxed w, copy item counts
  else{mvc(an*SZI, zv, SZI, (iotavec-IOTAVECBEGIN+1));}  // all other like 1:"0
  RETF(z);

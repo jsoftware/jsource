@@ -34,8 +34,8 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  if(c){A j;C*xv,*yv;I d,i,*iv,*jv,k,n,t;
   d=0; t=AT(x); k=aii(x)<<bplg(t);
   q=SPA(wp,i); SETIC(q,n);
-  GATV(j,INT,AN(q),AR(q),AS(q)); jv= AV(j); iv= AV(q);
-  GA(y,t,  AN(x),AR(x),AS(x)); yv=CAV(y); xv=CAV(x);
+  I jr=AR(q); GATV(j,INT,AN(q),AR(q),AS(q)); jv= AVn(jr,j); iv= AV(q);
+  I yr=AR(x); GA(y,t,  AN(x),AR(x),AS(x)); yv=CAVn(yr,y); xv=CAV(x);
   for(i=0;i<n;++i){
    c=0; DO(m, t=u[i]; if(c=0>t?iv[i]<t+s[i]:iv[i]>=t)break;);
    if(!c){++d; MC(yv,xv,k); yv+=k; DO(m, t=u[i]; *jv++=0>t?iv[i]-(t+s[i]):iv[i];);}
@@ -185,7 +185,7 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ws=AS(w);
  RZ(x=vec(INT,wr-1,ws)); MCISH(wf+AV(x),ws+wf+1,wcr-1);
- RZ(w=jtsetfv1(jt,w,AT(w))); GA00(y,AT(w),1,0); MC(AV(y),jt->fillv,bpnoun(AT(w)));
+ RZ(w=jtsetfv1(jt,w,AT(w))); GA00(y,AT(w),1,0); MC(AV0(y),jt->fillv,bpnoun(AT(w)));
  R reshape(x,y);
  // not pristine
 }

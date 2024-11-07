@@ -326,7 +326,7 @@ static A wtownull(J jt,A w){US *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
  // If no padding is needed, no copy is required
  if(!naddednulls)R w;
  // Allocate result and copy the string, adding null padding where needed
- GATV0(z,C2T,n+naddednulls,1); zv=USAV(z);
+ GATV0(z,C2T,n+naddednulls,1); zv=USAV1(z);
  nignulls = 0;
  for(i=0;i<n;++i){
   if(nignulls && (--nignulls,wv[i]==0));  // If an added null is already present, skip the copy
@@ -347,7 +347,7 @@ static A utounull(J jt,A w){C4 *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
  // If no padding is needed, no copy is required
  if(!naddednulls)R w;
  // Allocate result and copy the string, adding null padding where needed
- GATV0(z,C4T,n+naddednulls,1); zv=C4AV(z);
+ GATV0(z,C4T,n+naddednulls,1); zv=C4AV1(z);
  nignulls = 0;
  for(i=0;i<n;++i){
   if(nignulls && (--nignulls,wv[i]==0));  // If an added null is already present, skip the copy
@@ -501,14 +501,14 @@ I stringdisplaywidth(J jt, I c2, void*src, I nsrc){I n=nsrc,q;A c4;C4*u;
  default:
   q=mtousize(src,nsrc);
   q=(q<0)?-q:q;
-  GATV0(c4,C4T,q,1); u=C4AV(c4);
+  GATV0(c4,C4T,q,1); u=C4AV1(c4);
   mtou(src,nsrc,u);
   n=q; DO(q, if(u[i])n+=extrawidth(u[i]);else n--;);
   break;
  case 1:
   q=wtousize(src,nsrc);
   q=(q<0)?-q:q;
-  GATV0(c4,C4T,q,1); u=C4AV(c4);
+  GATV0(c4,C4T,q,1); u=C4AV1(c4);
   wtou(src,nsrc,u);
   n=q; DO(q, if(u[i])n+=extrawidth(u[i]);else n--;);
   break;

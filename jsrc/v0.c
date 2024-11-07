@@ -15,7 +15,7 @@
 #define CFR(f,T,TYPE,fplus,ftymes,fnegate)  \
  F2(f){PROLOG(0060);A z;I j,n;T d,*t,*u,*v;            \
   n=AN(w); u=(T*)AV(w);                          \
-  GATVS(z,TYPE,1+n,1,0,TYPE##SIZE,GACOPYSHAPE0,R 0); v=(T*)AV(z); *v=*(T*)AV(a);  \
+  GATVS(z,TYPE,1+n,1,0,TYPE##SIZE,GACOPYSHAPE0,R 0); v=(T*)AV1(z); *v=*(T*)AV(a);  \
   for(j=0;j<n;++j){                              \
    d=fnegate(u[j]); t=j+v; t[1]=*t;            \
    DQ(j, *t=fplus(t[-1],ftymes(d,*t)); --t;);   \
@@ -41,7 +41,7 @@ static F1(jtrsort){A t,z;
 static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
  RZ(w=rsort(w)); 
  n=AN(w); u=ZAV(w); 
- GATV0(z,CMPX,1+n,1); v=ZAV(z); v[0]=c=ZAV(a)[0]; p=!c.im;
+ GATV0(z,CMPX,1+n,1); v=ZAV1(z); v[0]=c=ZAV(a)[0]; p=!c.im;
  for(j=0;j<n;++j){
   d=znegate(u[j]); t=j+v; t[1]=t[0]; 
   DQ(j, t[0]=zplus(t[-1],ztymes(d,t[0])); --t;); 
@@ -156,7 +156,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
  RZ(x=cvt(CMPX,w)); xv=ZAV(x); // set x = complex form of w, xv->first complex coeff
  RZ(y=take(sc(1+m),x)); makewritable(y); yv=ZAV(y);  // y = complex form with degree m, yv->first coeff.  These are modified by deflate[q]() and must not be virtual
  RZ(q=take(sc(1+m),w)); makewritable(q); qv=QAV(q);  // q = rational form with degree m, qv->first coeff
- GATV0(z,RAT,m,1); zv=QAV(z);        // allocate space for exact rational roots, zv->first result location
+ GATV0(z,RAT,m,1); zv=QAV1(z);        // allocate space for exact rational roots, zv->first result location
  i=j=0;
  // loop to find each root by Laguerre's method
  while(i<m){
@@ -195,8 +195,8 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
 
 static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
  real=!ISDENSETYPE(AT(w),CMPX); RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
- GATV0(y,CMPX,1+m,1); yv=ZAV(y); MC(yv,xv,(1+m)*sizeof(Z));
- GATV0(z,CMPX,  m,1); zv=ZAV(z);
+ GATV0(y,CMPX,1+m,1); yv=ZAV1(y); MC(yv,xv,(1+m)*sizeof(Z));
+ GATV0(z,CMPX,  m,1); zv=ZAV1(z);
  if(2==m){Z a2,b,c,d,z2={2,0};
   a2=ztymes(z2,xv[2]); b=znegate(xv[1]); c=xv[0]; 
   d=zsqrt(zminus(ztymes(b,b),ztymes(z2,ztymes(a2,c))));
@@ -266,7 +266,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
  ARGCHK1(w);
  if(BOX&AT(w)){
   n=AN(w); wv=AAV(w);  RZ(s=sc(m));
-  GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
+  I zr=AR(w); GATV(z,BOX,n,AR(w),AS(w)); zv=AAVn(zr,z);
   for(i=0;i<n;++i){
    x=C(wv[i]); r=AR(x); 
    ASSERT(1>=r,EVRANK); 

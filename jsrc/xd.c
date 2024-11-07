@@ -80,7 +80,7 @@ char *toascbuf(wchar_t *src)
                          _A_SUBDIR+_A_ARCH)
 
 static A jtattv(J jt,U x){A z;C*s;
- GAT0(z,LIT,6,1); s=CAV(z);
+ GAT0(z,LIT,6,1); s=CAV1(z);
  s[0]=x&_A_RDONLY?'r':'-';
  s[1]=x&_A_HIDDEN?'h':'-';
  s[2]=x&_A_SYSTEM?'s':'-';
@@ -132,7 +132,7 @@ DF1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
  RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  p=USAV(fn); q=p+AN(fn)-3;
- GAT0(z,LIT,3,1); s=CAV(z);
+ GAT0(z,LIT,3,1); s=CAV1(z);
  x=_waccess(p,R_OK); if(0>x)R jerrno();
  s[0]=x?'-':'r';
  s[1]=_waccess(p,W_OK)?'-':'w';
@@ -162,7 +162,7 @@ DF1(jtjfperm1){A y,z;C*p,*q,*s;F f; DWORD attr;
  F1RANK(0,jtjfperm1,self);
  RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
  p=CAV(y); q=p+AN(y)-3;
- GAT0(z,LIT,3,1); s=CAV(z);
+ GAT0(z,LIT,3,1); s=CAV1(z);
  if((attr=GetFileAttributes(tounibuf(p)))==0xFFFFFFFF)R jerrno();
  s[0]='r';
  s[1]=attr&FILE_ATTRIBUTE_READONLY?'-':'w';
@@ -203,7 +203,7 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
  rwx[0]='r';
  rwx[1]=f->dwFileAttributes & FILE_ATTRIBUTE_READONLY ?'-':'w';
  rwx[2]=strcmp(t,"exe")&&strcmp(t,"bat")&&strcmp(t,"com")?'-':'x';
- GAT0(z,BOX,5,1); zv=AAV(z);
+ GAT0(z,BOX,5,1); zv=AAV1(z);
  RZ(zv[0]=incorp(str(n,s))); 
  RZ(zv[1]=incorp(vec(INT,6L,ts)));
 #if SY_64
@@ -222,7 +222,7 @@ F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C f
  RZ(w=vslit(!AR(w)&&BOX&AT(w)?ope(w):w));
  RZ(fn=jttoutf16x(jt,w)); USAV(fn)[AN(fn)]=0;
  fh=FindFirstFileW(USAV(fn),&f);
- GATV0(z,BOX,n,1); zv=AAV(z);  // allocate result area
+ GATV0(z,BOX,n,1); zv=AAV1(z);  // allocate result area
  if (fh!=INVALID_HANDLE_VALUE) {
   do {
    jttoutf8w(jt,fnbuffer,sizeof fnbuffer,f.cFileName);
@@ -343,7 +343,7 @@ static A jtdir1(J jt,struct dirent64*f,struct_stat64 *dirstatbuf,C *diratts, C *
  ts[0]=1900+tm->tm_year; ts[1]=1+tm->tm_mon; ts[2]=tm->tm_mday;
  ts[3]=tm->tm_hour; ts[4]=tm->tm_min; ts[5]=tm->tm_sec;
  s=f->d_name; n=strlen(s);
- GAT0(z,BOX,6,1); zv=AAV(z);
+ GAT0(z,BOX,6,1); zv=AAV1(z);
  RZ(zv[0]=incorp(vec(LIT,n,s))); 
  RZ(zv[1]=incorp(vec(INT,6L,ts)));
  sz=dirstatbuf[0].st_size;
@@ -380,7 +380,7 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
   * so we use less efficient but portable code.
   */
  sprintf(dirnamebuf,"%s/",dir); C *dirbase=dirnamebuf+strlen(dirnamebuf); f=readdir64(DP);
- GATV0(z,BOX,n,1); zv=AAV(z);
+ GATV0(z,BOX,n,1); zv=AAV1(z);
  while(f){
   if(ismatch(jt,pat,f->d_name,dirstatbuf,diratts,dirmode,dirrwx,dirnamebuf,dirbase)){
    if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}

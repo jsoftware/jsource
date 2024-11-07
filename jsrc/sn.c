@@ -124,7 +124,7 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);   // n=#names  wv->first box
  ASSERT(!n||BOX&AT(w),EVDOMAIN);   // verify boxed input (unless empty)
- GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
+ I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); zv=AVn(zr,z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
   RE(y=stdnm(C(wv[i])));  // point to name, audit for validity
   if(y){if(x=QCWORD(syrd(y,jt->locsyms))){t=AT(x); fa(x);}else{if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
@@ -191,7 +191,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
     if(b){
      if(m==AN(ch)){RZ(ch=ext(0,ch)); v=m+AAV(ch);}
      x=d->name; k=NAV(x)->m;
-     GATV0(y,LIT,k+2+p,1); yv=CAV(y); 
+     GATV0(y,LIT,k+2+p,1); yv=CAV1(y); 
      MC(yv,NAV(x)->s,k); MC(1+k+yv,s,p); yv[k]=yv[1+k+p]='_';
      *v++=incorp(y); ++m;
     }
@@ -232,7 +232,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); 
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
- GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
+ I zr=AR(w); GATV(z,B01,n,AR(w),AS(w)); zv=BAVn(zr,z);
  for(i=0;i<n;++i){
   RE(y=stdnm(C(wv[i])));
   zv[i]=1&&y;

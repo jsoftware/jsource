@@ -191,7 +191,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
- GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
+ GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,drop(sc(i),w),C(hv[imod]))); ++imod;);
  R jtopenforassembly(jt,z);
 }    /* g\."r w for gerund g */
@@ -343,7 +343,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  SETIC(x,n);
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
- GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
+ GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,repeat(from(sc(i),x),w),C(hv[imod]))); ++imod;);
  R jtopenforassembly(jt,z);
 }
@@ -379,7 +379,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  if(!TYPESEQ(AT(p),AT(s))){rc=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
   r=AR(p); PROD(c,AR(p)-1,AS(p)+1) t=AT(p); klg=bplg(t); kc=c<<klg;
   adocv=var(x,t,t); // analyze the u operand
-  GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
+  GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAVn(r,z);  // allocate result assuming no overflow
   MC(zv,AV(s),kc);                     // first cell is {.s, i. e. all but the first infix
   rc=(1<d)?((AHDR2FN*)adocv.f)AH2A_v(c*(d-1),AV(p),kc+CAV(s),zv+kc,jt):EVOK; rc=rc<0?EWOVIP+EWOVIPMULII:rc;  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix

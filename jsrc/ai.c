@@ -73,9 +73,9 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); 
  if(1>=wr)R raze(w);
  if(!wn)R iota(reshape(sc(wr),num(0)));
- GATV0(x,INT,wr,1); u=AV(x); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
- GATV0(x,INT,wr,1); v=(I**)AV(x);
- DO(wr, m=ws[i]; GATV0(x,INT,m,1); mvc(m*SZI,v[i]=AV(x),1,MEMSETFF););
+ GATV0(x,INT,wr,1); u=AV1(x); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
+ GATV0(x,INT,wr,1); v=(I**)AV1(x);
+ DO(wr, m=ws[i]; GATV0(x,INT,m,1); mvc(m*SZI,v[i]=AV1(x),1,MEMSETFF););
  for(i=0;i<wn;++i){
   x=C(wv[i]); r=AR(x); s=AS(x);
   if(AN(x)){if(!t)t=AT(x); ASSERT(HOMO(t,AT(x)),EVDOMAIN);}
@@ -85,8 +85,8 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
   j=wr; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}
  }
  if(!z){A f,h,*zv;I*hv;
-  GATVR(z,BOX,wn,2,ws); zv=AAV(z);
-  GATV0(h,INT,wr,1); hv=AV(h);
+  GATVR(z,BOX,wn,2,ws); zv=AAV2(z);
+  GATV0(h,INT,wr,1); hv=AV1(h);
   RZ(f=jtfiller(jt,t,0,0)); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
   for(i=0;i<wn;++i){
    zv[i]=x=C(wv[i]);
@@ -242,7 +242,7 @@ static DF1(jticapdotinv){
  I *wv=IAV(w), wn=AN(w);  // 
  CR rng=condrange(wv,wn,0,IMIN,IMAX);  // Get the range
  ASSERT(rng.min==0,EVDOMAIN)  // negative values not allowed
- A z; GATV0(z,INT,rng.range,1) I *zv=IAV(z);   // allocate result area
+ A z; GATV0(z,INT,rng.range,1) I *zv=IAV1(z);   // allocate result area
  mvc(rng.range<<LGSZI,zv,MEMSET00LEN,MEMSET00);  // clear all accumulators to 0
  DO(wn, ++zv[wv[i]];)  // increment the accumulator for each word
  RETF(z);
@@ -409,8 +409,8 @@ F1(jtidensb){A x=0,w0=w;V*v;
  v=FAV(w);
  switch(v->id){
  default:      R iden(w0);
- case CMAX:    GATV0(x,SBT,1,0);SBAV(x)[0]=0; break;
-// no max symbol  case CMIN:    GATV0(x,SBT,1,0);SBAV(x)[0]=SBUV4(JT(jt,sbu))[0].down; break;
+ case CMAX:    GATV0(x,SBT,1,0);SBAV0(x)[0]=0; break;
+// no max symbol  case CMIN:    GATV0(x,SBT,1,0);SBAV0(x)[0]=SBUV4(JT(jt,sbu))[0].down; break;
  }
  ASSERT(x!=0,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));

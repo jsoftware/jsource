@@ -261,11 +261,11 @@ DF2(jtxdefn){
    // we are executing a verb.  It may be an operator
    if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v and self from orig defn.  flags don't change
    w=NPGpysfmtdl&64?w:a; a=NPGpysfmtdl&64?a:0;  // a w self = [x] y verb
-   if(unlikely(sflg&VTRY1+VTRY2))if(sflg&(NPGpysfmtdl&64?VTRY2:VTRY1)){A td; GAT0(td,LIT,(NTD+1)*sizeof(TD),1); tdv=(TD*)AV(td); tdv[0].ndx=0; NPGpysfmtdl|=PUSHTRYSTK<<8;}  // if TRY in this valence, allocate a stack
+   if(unlikely(sflg&VTRY1+VTRY2))if(sflg&(NPGpysfmtdl&64?VTRY2:VTRY1)){A td; GAT0(td,LIT,(NTD+1)*sizeof(TD),1); tdv=(TD*)AV1(td); tdv[0].ndx=0; NPGpysfmtdl|=PUSHTRYSTK<<8;}  // if TRY in this valence, allocate a stack
   }else{
    // modifier. it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
    v=NPGpysfmtdl&64?w:0; u=a; a=w=0; NPGpysfmtdl|=8; // a w self = u [v] mod; remember that we are a modifier
-   if(unlikely(sflg&VTRY1+VTRY2)){A td; GAT0(td,LIT,(NTD+1)*sizeof(TD),1); tdv=(TD*)AV(td); tdv[0].ndx=0; NPGpysfmtdl|=PUSHTRYSTK<<8;}  // the unused valence has a VTRY flag, but we assume it's 0.  If TRY seen, allocate a stack
+   if(unlikely(sflg&VTRY1+VTRY2)){A td; GAT0(td,LIT,(NTD+1)*sizeof(TD),1); tdv=(TD*)AV1(td); tdv[0].ndx=0; NPGpysfmtdl|=PUSHTRYSTK<<8;}  // the unused valence has a VTRY flag, but we assume it's 0.  If TRY seen, allocate a stack
   }
   NPGpysfmtdl|=SGNTO0(-(jt->glock|(sflg&VLOCK)));  // init flags: 1=lock bit, whether from locked script or locked verb
   LINE(sv);  // Read the info for the parsed definition, including control table and number of lines
@@ -862,7 +862,7 @@ static A jtsent12c(J jt,A w,I userm){C*p,*q,*r,*s,*x;A z;
 static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); 
- GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
+ I yr=AR(w); GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAVn(yr,y);
  DO(AN(w), RZ(yv[i]=incorp(vs(C(wv[i])))); )
  // We honor LF as end-of-line even in the middle of a sentence.
  R y;

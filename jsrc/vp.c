@@ -67,8 +67,8 @@ A jtpind(J jt,I n,A w){A z;I j,*v;
 // if w has negative indexes, they are first made positive
 A jtpfill(J jt,I n,A w){PROLOG(0081);A b,z;B*bv;I*wv,*zv;
  RZ(w=pind(n,w));  wv=AV(w);  // convert to positive indexes, wv-> indexes
- GATV0(z,INT,n,1); zv=AV(z);  // allocate result area
- GATV0(b,B01,n,1); bv=BAV(b); mvc(n,bv,1,MEMSET01);   // binary vector, init to 1
+ GATV0(z,INT,n,1); zv=AV1(z);  // allocate result area
+ GATV0(b,B01,n,1); bv=BAV1(b); mvc(n,bv,1,MEMSET01);   // binary vector, init to 1
  DO(AN(w), bv[wv[i]]=0;);  // clear flag in indexes that appear
  DO(n, *zv=i; zv+=bv[i];); ASSERT((zv-AV(z))+AN(w)==n,EVINDEXDUP); ICPY(zv,wv,AN(w));  // prefix result with missing indexes; verify the result accounts for all indexes
  EPILOG(z);
@@ -78,13 +78,13 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  ARGCHK1(w);
  if(c=ISDENSETYPE(AT(w),INT)){
   n=AN(w); v=AV(w);
-  GATV0(b,B01,1+n,1); bv=BAV(b); mvc(n,bv,MEMSET00LEN,MEMSET00);
+  GATV0(b,B01,1+n,1); bv=BAV1(b); mvc(n,bv,MEMSET00LEN,MEMSET00);
   DO(n, j=v[i]; if((UI)j>=(UI)n||bv[j]){c=0; break;} bv[j]=1;);
  }
  if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GATV0(b,B01,1+n,1);}
  bv=BAV(b); mvc(1+n,bv,MEMSET00LEN,MEMSET00); ++bv;
  i=0; j=n-1; zn=(I)(log((D)n)+1.6); 
- GATV0(q,INT,n, 1); qv= AV(q);
+ GATV0(q,INT,n, 1); qv= AV1(q);
  GATV0(z,BOX,zn,1); zv=AAV1(z);  // always rank 1
  while(1){
   while(bv[j])--j; if(0>j)break;
@@ -101,7 +101,7 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
 static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
  RE(n); ARGCHK1(w);
  ASSERT(0<=n,EVINDEX);
- GATV0(b,B01,n,1); bv=BAV(b); mvc(n,bv,1,MEMSET01);
+ GATV0(b,B01,n,1); bv=BAV1(b); mvc(n,bv,1,MEMSET01);
  RZ(z=apvwr(n,0L,1L)); x=AV(z);
  wv=AAV(w); 
  for(j=AN(w)-1;0<=j;j--){
@@ -127,7 +127,7 @@ DF2(jtccapdot2){A p;I k;
 F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
  RZ(x=cvt(INT,w)); makewritable(x);   // we ALWAYS create a copy of w, because we modify it here
  r=AR(x); s=AS(x); n=AS(x)[r-1]; n=r?n:1; PRODX(m,r-1,s,1); v=AV(x);
- GATV0(y,B01,n,1); u=BAV(y);
+ GATV0(y,B01,n,1); u=BAV1(y);
  GATV(z,INT,m,r-((UI)r>0),s); zv=AV(z);
  for(i=0;i<m;++i){
   j=0; p=1; mvc(n,u,1,MEMSET01);
@@ -143,7 +143,7 @@ F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
 static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
  ARGCHK1(w);
  n=AS(w)[AR(w)-1]; PROD(m,AR(w)-1,AS(w)); v=AV(w);  // n=length of each permutation, m=#permutations
- GATV(z,INT,AN(w),AR(w),AS(w)); x=AV(z);
+ I zr=AR(w); GATV(z,INT,AN(w),AR(w),AS(w)); x=AVn(zr,z);
  for(i=0;i<m;++i){   // for each permutation
   DO(n, x[i]=i;);  // initialize an identity permutation
   DO(n-1, j=i; c=x[j+v[j]]; DO(1+v[j], d=x[j+i]; x[j+i]=c; c=d;););   // within the length-j suffix of the permutation, right-rotate the first v[j] elements 

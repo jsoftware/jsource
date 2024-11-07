@@ -85,7 +85,7 @@ A jtapv(J jt,I n,I b,I m){A z;
 }    /* b+m*i.n */
 // same, but never return a readonly block
 A jtapvwr(J jt,I n,I b,I m){A z;
- GATV0(z,INT,n,1); I *x=AV(z);
+ GATV0(z,INT,n,1); I *x=AV1(z);
   DO(n, x[i]=b; b+=m;)
  R z;
 }    /* b+m*i.n writable */
@@ -97,7 +97,7 @@ B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(likely(ISDENSETYPE(AT(w)
 
 // NOTE: the caller modifies this result inplace, so it must not be shared or readonly
 B*jtbfi(J jt,I n,A w,B p){A t;B* RESTRICT b;I* RESTRICT v;
- GATV0(t,B01,n+1,1); b=BAV(t);  // allo n+1 slots
+ GATV0(t,B01,n+1,1); b=BAV1(t);  // allo n+1 slots
  mvc((n|(SZI-1))+1,b,1,iotavec-IOTAVECBEGIN+(p^1)); v=AV(w); DO(AN(w), b[v[i]]=p;);
  R b;
 }    // boolean mask from integers: p=(i.>:n)e.w  where *./w<n
@@ -257,7 +257,7 @@ I jti0(J jt,A w){ARGCHK1(w);
 A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv; 
  p=bsum(n,b); 
  if(p==n)R IX(n);
- GATV0(z,INT,p,1); zv=AV(z);
+ GATV0(z,INT,p,1); zv=AV1(z);
 #if C_AVX2 || EMU_AVX2
  if(unlikely(p==0))R z;
  // do 64 bits at a time
@@ -480,28 +480,28 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-A jtsc(J jt,I k)     {A z; if(BETWEENC(k,NUMMIN,NUMMAX)){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // always return I
-A jtscib(J jt,I k)   {A z; if(BETWEENC(k,NUMMIN,NUMMAX))R num(k); GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // return b if 0 or 1, else I
-A jtsc4(J jt,I t,I v){A z; GA00(z,t,1,0); IAV(z)[0]=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
+A jtsc(J jt,I k)     {A z; if(BETWEENC(k,NUMMIN,NUMMAX)){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); IAV0(z)[0]=k;     RETF(z);}  // always return I
+A jtscib(J jt,I k)   {A z; if(BETWEENC(k,NUMMIN,NUMMAX))R num(k); GAT0(z,INT, 1,0); IAV0(z)[0]=k;     RETF(z);}  // return b if 0 or 1, else I
+A jtsc4(J jt,I t,I v){A z; GA00(z,t,1,0); IAV0(z)[0]=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
 A jtscb(J jt,B b)    {R num(b);}   // A block for boolean
-A jtscc(J jt,C c)    {A z; GAT0(z,LIT, 1,0); CAV(z)[0]=c;     RETF(z);}  // create scalar character
-A jtscf(J jt,D x)    {A z; GAT0(z,FL,  1,0); DAV(z)[0]=x;     RETF(z);}   // scalar float
-A jtscx(J jt,X x)    {A z; GAT0(z,XNUM,1,0); XAV(z)[0]=ca(x); RETF(z);}  // scalar extended
+A jtscc(J jt,C c)    {A z; GAT0(z,LIT, 1,0); CAV0(z)[0]=c;     RETF(z);}  // create scalar character
+A jtscf(J jt,D x)    {A z; GAT0(z,FL,  1,0); DAV0(z)[0]=x;     RETF(z);}   // scalar float
+A jtscx(J jt,X x)    {A z; GAT0(z,XNUM,1,0); XAV0(z)[0]=ca(x); RETF(z);}  // scalar extended
 
 // return A-block for the string *s with length n
-A jtstr(J jt,I n,C*s){A z; GATV0(z,LIT,n,1); MC(AV(z),s,n); RETF(z);}
+A jtstr(J jt,I n,C*s){A z; GATV0(z,LIT,n,1); MC(AV1(z),s,n); RETF(z);}
 
 // return A-block for the string *s with length n, enclosed in quotes and quotes doubled
-A jtstrq(J jt,I n,C*s){A z; I qc=2; DO(n, qc+=s[i]=='\'';) GATV0(z,LIT,n+qc,1); C *zv=CAV(z); *zv++='\''; DO(n, C c=s[i]; if(c=='\'')*zv++=c; *zv++=c;) *zv='\''; RETF(z);}
+A jtstrq(J jt,I n,C*s){A z; I qc=2; DO(n, qc+=s[i]=='\'';) GATV0(z,LIT,n+qc,1); C *zv=CAV1(z); *zv++='\''; DO(n, C c=s[i]; if(c=='\'')*zv++=c; *zv++=c;) *zv='\''; RETF(z);}
 
 // w is a LIT string; result is a new block with the same string, with terminating NUL added
-F1(jtstr0){A z;C*x;I n; ARGCHK1(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV0(z,LIT,n+1,1); x=CAV(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
+F1(jtstr0){A z;C*x;I n; ARGCHK1(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV0(z,LIT,n+1,1); x=CAV1(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
 
 // return A-block for a 2-atom integer vector containing a,b
-A jtv2(J jt,I a,I b){A z;I*x; GAT0(z,INT,2,1); x=AV(z); *x++=a; *x=b; RETF(z);}
+A jtv2(J jt,I a,I b){A z;I*x; GAT0(z,INT,2,1); x=AV1(z); *x++=a; *x=b; RETF(z);}
 
 // return A-block for singleton integer list whose value is k
-A jtvci(J jt,I k){A z; GAT0(z,INT,1,1); IAV(z)[0]=k; RETF(z);}
+A jtvci(J jt,I k){A z; GAT0(z,INT,1,1); IAV1(z)[0]=k; RETF(z);}
 
 // return A-block for list of type t, length n, and values *v
 // MUST NOT return virtual or fixed block, because we often modify the returned area
@@ -594,7 +594,7 @@ F1(jtvib){A z;I i,n,*zv;
  default:
   if(!ISDENSETYPE(AT(w),FL))RZ(w=ccvt(FL,w,0));
   n=AN(w);
-  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
+  I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); zv=AVn(zr,z);
   for(i=0;i<n;++i){I cval;
    D d=DAV(w)[i];  // fetch value
    if(ABS(d)<-(D)IMIN){

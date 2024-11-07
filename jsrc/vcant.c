@@ -14,7 +14,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  zr=AR(z); zp=PAV(z);
  ASSERT(wr==zr,EVNONCE);
  RZ(b=bfi(wr,a1,1));
- GATV0(q,B01,wr,1); c=BAV(q); u=AV(a); DO(wr, c[i]=b[u[i]];);
+ GATV0(q,B01,wr,1); c=BAV1(q); u=AV(a); DO(wr, c[i]=b[u[i]];);
  A bvec=ifb(wr,c); makewritable(bvec)
  SPB(zp,a,bvec);  // avoid readonly
  SPB(zp,e,ca(SPA(wp,e)));
@@ -59,9 +59,9 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
  zr=-1; DO(wr, zr=MAX(zr,av[i]);); ++zr;  // zr = result rank: largest axis number in a + 1 (0 if a is atomic)
  if((zr|wr)<=(I)(sizeof(ms)/sizeof(ms[0])))mv=ms, sv=ss, tv=ts;
  else{  // if rank of array is large, allocate space for rank.  Otherwise use stack areas
-  GATV0(m,INT,zr,1); mv=AV(m);  // mv[i] is distance (in cells) to move in w corresponding to move of 1 in axis i of the result
-  GATV0(s,INT,zr,1); sv=AV(s);  // sv[i] is the length of axis i in the result
-  GATV0(t,INT,wr,1); tv=AV(t);  // tv[i] starts as # atoms in an i-cell of w
+  GATV0(m,INT,zr,1); mv=AV1(m);  // mv[i] is distance (in cells) to move in w corresponding to move of 1 in axis i of the result
+  GATV0(s,INT,zr,1); sv=AV1(s);  // sv[i] is the length of axis i in the result
+  GATV0(t,INT,wr,1); tv=AV1(t);  // tv[i] starts as # atoms in an i-cell of w
  }
  // calculate */\. ws, and simultaneously discard trailing axes that are unchanged in the transpose.  We detect these only
  // for transposes that do not include axes run together, i. e. a contains all the indexes.  [If there is an axis run together we
@@ -189,7 +189,7 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
  if(((q-2)&(AR(a)-q-1))>=0){t=rank2ex(a,w,DUMMYSELF,MIN(q,1),r,q,r,jtcant2); PRISTCLRF(w) RETF(t);} // rank loop on a.  Loses pristinity
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);
-  GATV0(p,INT,AN(y),1); pv=AV(p);
+  GATV0(p,INT,AN(y),1); pv=AV1(p);
   m=AN(a); n=AN(t); av=AAV(a); 
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(C(av[i])); DQ(k,pv[*v++]=j;); j+=(k!=0););
  }else RZ(p=pinv(pfill(r,a)));

@@ -29,7 +29,7 @@ void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserstkb
 // DCJUNK: N/A
 // DCPM: t=(line#<<8)+(dyadic<<7)+type  x=&local symbols   y=&control words  fs=self
 DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
- {A q; GAT0(q,LIT,sizeof(DST),1); d=(DC)AV(q);}
+ {A q; GAT0(q,LIT,sizeof(DST),1); d=(DC)AV1(q);}
  mvc(sizeof(DST),d,MEMSET00LEN,MEMSET00);
  I tt=t&0xf;  // type is low bits
  if(jt->sitop&&t<DCJUNK)moveparseinfotosi(jt);  // if we are creating a space between normal and suspension, don't modify the normal stack
@@ -67,7 +67,7 @@ void jtdebz(J jt){if(jt->sitop!=0)jt->sitop=jt->sitop->dclnk;}  // stack may van
 F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
  ASSERTMTV(w);
  n=0; d=jt->sitop; NOUNROLL while(d){++n; d=d->dclnk;}
- GATV0(z,BOX,c*n,2); s=AS(z); s[0]=n; s[1]=c; zv=AAV(z);
+ GATV0(z,BOX,c*n,2); s=AS(z); s[0]=n; s[1]=c; zv=AAV2(z);
  d=jt->sitop;
  while(d){
   RZ(zv[0]=sc(d->dctype));
@@ -118,7 +118,7 @@ F1(jtdbisolatestk){
 }
 
 static B jterrcap(J jt){A y,*yv;
- GAT0(y,BOX,4,1); yv=AAV(y);
+ GAT0(y,BOX,4,1); yv=AAV1(y);
  RZ(yv[0]=sc(jt->jerr1));
  RZ(yv[1]=str(jt->etxn1,jt->etxinfo->etx));
  RZ(yv[2]=dbcall(mtv));

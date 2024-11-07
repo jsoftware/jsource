@@ -190,10 +190,10 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
  READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock))
- GAT0E(z,BOX,4,1,goto exit;); zv=AAV(z);
+ GAT0E(z,BOX,4,1,goto exit;); zv=AAV1(z);
  n=AN((A)((I)SYMORIGIN-AKXR(0)))/symcol; pv=SYMORIGIN;
- GATV0E(x,INT,n*6,2,goto exit;); AS(x)[0]=n; AS(x)[1]=6; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
- GATV0E(y,BOX,n,  1,goto exit;);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
+ GATV0E(x,INT,n*6,2,goto exit;); AS(x)[0]=n; AS(x)[1]=6; xv= AV2(x); zv[0]=incorp(x);  // box 0: sym info
+ GATV0E(y,BOX,n,  1,goto exit;);                         yv=AAV1(y); zv[1]=incorp(y);  // box 1: 
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
   *xv++=(!(pv->flag&LINFO)&&pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  In LINFO, val may be locale#.  Must allow SYMB through
@@ -204,7 +204,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZGOTO(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv,exit);  // simple name
  }
  // Allocate box 2: locale name
- GATV0E(y,BOX,n,1,goto exit;); yv=AAV(y); zv[2]=incorp(y);
+ GATV0E(y,BOX,n,1,goto exit;); yv=AAV1(y); zv[2]=incorp(y);
  DO(n, yv[i]=mtv;);
  n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc));   // v->locale chains
  for(i=0;i<n;++i){  // for each chain-base in locales pool
@@ -224,7 +224,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZGOTO(q=sympoola(jt->locsyms),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  // box 3: # free symbols for each thread
- GATV0E(x,INT,JT(jt,wthreadhwmk)+1,1,goto exit;); xv=AV(x); zv[3]=incorp(x);  // box 0: sym info
+ GATV0E(x,INT,JT(jt,wthreadhwmk)+1,1,goto exit;); xv=AV1(x); zv[3]=incorp(x);  // box 0: sym info
  DO(JT(jt,wthreadhwmk)+1, J jt0=JTFORTHREAD(jt,i); I nfreesym=0; DO(2, for(j=jt0->symfreehead[i];j=SYMNEXT(j),j;j=SYMORIGIN[j].next)++nfreesym;) xv[i]=nfreesym;)
  zz=z;
 exit: ;
@@ -592,7 +592,7 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); 
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
+ I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); zv=AVn(zr,z); 
  NOUNROLL for(i=0;i<n;++i){
   x=C(wv[i]);
   I val;  // value of requested component

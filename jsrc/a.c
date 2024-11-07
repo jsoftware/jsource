@@ -53,7 +53,7 @@ static DF1(jtbasis1){A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
  RZ(w=vi(w));
  switch(AV(w)[0]){   // switch on arg
  case 0:  // rank
-  GAT0(z,FL,3,1); x=DAV(z); v=FAV(fs);
+  GAT0(z,FL,3,1); x=DAV1(z); v=FAV(fs);
   j=v->mr; x[0]=j<=-RMAX?-inf:j>=RMAX?inf:j;
   j=lrv(v); x[1]=j<=-RMAX?-inf:j>=RMAX?inf:j;
   j=rrv(v); x[2]=j<=-RMAX?-inf:j>=RMAX?inf:j;
@@ -74,7 +74,7 @@ F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
  if(1==n){j=*v; ASSERT(BETWEENC(j,-16,34),EVINDEX);}
  else DQ(n, j=*v++; ASSERT(BETWEENC(j,-16,15),EVINDEX););  // j must be initialized because the loop might not run
  if(j<16){
-  GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV(b),booltab,64L);
+  GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV2(b),booltab,64L);
   RZ(h=rifvs(cant2(IX(AR(w)),from(w,b))));  // h is an array representing b.  One cell for each atom of b; cell is 4 values
   fdeffill(z,0,CBDOT,VERB, jtbdot1,jtbdot2, 0L,w,h, VFLAGNONE, RMAX,0L,0L); RETF(z);
  }else{

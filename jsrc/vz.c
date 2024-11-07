@@ -282,7 +282,7 @@ DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
  v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;  // take exp of real part, set y=imaginary part
  th=y-2*(I)(y/2); k=(I)(2*th); if(k!=2*th)k=-1; else if(b&&k)k=4-k;
  if(!((UI)k<=(UI)3))R expn1(pix(w));   // if k is not an exact multiple of 0.5, revert - what good is that???
- GAT0(z,CMPX,1,0); ZAV(z)[0].re=ZAV(z)[0].im=0; DAV(z)[k&1]=r*(1-(k&2));  // set result to 0, then store into real or imag, possibly changing sign
+ GAT0(z,CMPX,1,0); ZAV0(z)[0].re=ZAV0(z)[0].im=0; DAV0(z)[k&1]=r*(1-(k&2));  // set result to 0, then store into real or imag, possibly changing sign
  R z;
 }    /* special code for ^@o. */
 

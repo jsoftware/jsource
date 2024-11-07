@@ -243,7 +243,7 @@ static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
 static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt;
  n=AN(w); r=AR(w); s=AS(w);
  thcase(AT(w),&wd,&fmt);  // get default field width and routine address
- GATV0(t,LIT,wd*(1+n),1); tv=CAV(t);
+ GATV0(t,LIT,wd*(1+n),1); tv=CAV1(t);
  if(1>=r){p=thv(w,AN(t),tv); ASSERTSYS(p,"thn"); AN(t)=AS(t)[0]=p; z=t;}   // rank<2, just format one string of characters, separated by 1 space
  else{ 
   c=s[r-1]; m=n/c; k=bpnoun(AT(w));  // c=length of row, m=#rows, k=size in bytes of atom
@@ -251,7 +251,7 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt;
   RZ(d=apvwr(c,1L,0L)); dv=AV(d);
   DO(m, DO(c, fmt(jt,y+=wd,x+=k); p=strlen(y); dv[i]=MAX(dv[i],p);););  // convert each number, remember max len in each column
   --dv[c-1]; p=0; DO(c, p+=++dv[i];);
-  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');  // allocate final result, fill with blanks
+  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; zv=CAVn(r+!r,z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');  // allocate final result, fill with blanks
   y=tv; DO(m, DO(c, zv+=dv[i]; p=strlen(y); MC(zv-p-(I )(c>1+i),y,p); y+=wd;););  // copy each string after alignment
  }
  RETF(z);
@@ -292,7 +292,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SB
   c=n; 
   RZ(d=apvwr(c,0L,0L)); dv=AV(d);
   p=2*n-1; DO(c, p+=dv[i]=sbtou8size(jt,SBUV(*x++),0););
-  GATV0(z,LIT,  p,1); zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');
+  GATV0(z,LIT,  p,1); zv=CAV1(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');
         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=2+dv[i];);
  }else{
   if(BAV(prxthornuni)[0]&2){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;  // jprx flag, set when result going to display
@@ -319,7 +319,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SB
                j++;););
 // second pass real work
    p-=q==IMAX?0:q;
-   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' '); AS(z)[AR(z)-1]=p;
+   GATV(z,LIT,m*p,r+!r,s); zv=CAVn(r+!r,z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' '); AS(z)[AR(z)-1]=p;
    j=0;
    DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row
          DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
@@ -332,7 +332,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SB
    c=s[r-1]; m=n/c; RZ(d=apvwr(c,0L,0L)); dv=AV(d);
    DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),0); dv[i]=MAX(dv[i],p);););
    p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
-   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' '); AS(z)[AR(z)-1]=p;
+   GATV(z,LIT,m*p,r+!r,s); zv=CAVn(r+!r,z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' '); AS(z)[AR(z)-1]=p;
    DO(m, DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=dv[i];););
   }
  }
@@ -363,7 +363,7 @@ static F1(jtthx1){
 static F1(jtthxqe){
  I n=AN(w), r=AR(w), *s=AS(w), *wv=AV(w), c;
  SHAPEN(w,r-1,c); I m=n/c; // m: # rows, c: # columns
- A t; GATV0(t,BOX,n,1); A*tv=AAV(t);
+ A t; GATV0(t,BOX,n,1); A*tv=AAV1(t);
  A d; RZ(d=apvwr(c,1L,0L)); I*dv=AV(d); A*v=tv;
  switch(CTTZ(AT(w))){A y;
  case XNUMX:{X*u=(X*)wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
@@ -372,7 +372,7 @@ static F1(jtthxqe){
  }
  --dv[c-1];
  I p=0; DO(c, p+=++dv[i];);
- A z;GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; C*zv=CAV(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');
+ A z;GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; C*zv=CAVn(r+!r,z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');
  v=tv; DO(m, DO(c, zv+=dv[i]; A y=*v++; p=AN(y); MC(zv-p-(I )(c>1+i),AV(y),p);));
  R z;
 }
@@ -556,7 +556,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  // set p=total # lines: number of lines in each 2-cell, plus the added blanks (unless there are no lines to display)
  DPMULDE(m,q,p) p+=k&REPSGN(-q); DPMULDE(p,c,zn);  // zn=total # atoms
  // Allocate the result table, set shape to (p,c); x->data area
- GA00(z,t,zn,2); AS(z)[0]=p; AS(z)[1]=c; x=CAV(z);
+ GA00(z,t,zn,2); AS(z)[0]=p; AS(z)[1]=c; x=CAV2(z);
  // If the result has gaps, fill the entire result area with fills
  // (this could be better: just copy the gap, as part of ENGAP; check k above in case of leading unit axes)
  I klg=bplg(t);
@@ -819,7 +819,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // If the input is another type, there can be no UTF-8 in the string
  nbx=0; if(ch||AT(w)&BOX+SPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
  // Now we can allocate the result array.  Set zu,zv->beginning of the data area
- GATV0(z,LIT,zn,1); zu=zv=CAV(z);
+ GATV0(z,LIT,zn,1); zu=zv=CAV1(z);
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number
  h=lba<nq+(q?p:0)?lb:IMAX;
  // Loop for each line of output.  lc gives number of lines emitted so far, including ones called for by EOL inside character data

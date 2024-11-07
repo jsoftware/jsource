@@ -255,7 +255,7 @@ F1(jtcheckfreepool){
 
 F1(jtspcount){A z;I c=0,i,j,*v;A x;
  ASSERTMTV(w);
- GATV0(z,INT,2*(-PMINL+PLIML+1),2); v=AV(z);
+ GATV0(z,INT,2*(-PMINL+PLIML+1),2); v=AV2(z);
  for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mempool[-PMINL+i]); NOUNROLL while(x){x=AFCHAIN(x); ++j;} if(j){++c; *v++=(I)1<<i; *v++=j;}}
  v=AS(z); v[0]=c; v[1]=2; AN(z)=2*c;
  RETF(z);
@@ -387,7 +387,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
+ I zr=AR(w); GATV(z,FL,n,AR(w),AS(w)); zv=DAVn(zr,z); 
  for(i=0;i<n;++i){
   x=C(wv[i]); m=AN(x); s=CAV(x);
   ASSERT(LIT&AT(x),EVDOMAIN);
@@ -403,7 +403,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
+ I zr=AR(w); GATV(z,FL,n,AR(w),AS(w)); zv=DAVn(zr,z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
   x=C(wv[i]);  // x is the name/number
   I bucketx;  // will be hash/number for the locale

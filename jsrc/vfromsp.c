@@ -13,23 +13,23 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
  // That axis is replaced by axes coming from the shape of ind.  Set h to the index of the sparse axis that is being selected on
  a=SPA(wp,a); an=AN(a); av=AV(a); DO(an, if(wf==av[i]){h=i; break;});  // an=#sparse axes
  y=SPA(wp,i); RZ(q=eps(fromr(sc(h),y),ravel(ind))); RZ(y=repeat(q,y)); RZ(x=repeat(q,SPA(wp,x)));  // (h{"_ 1 indexes) e. ,ind
- GATV0(a1,INT,r+an-1,1); v=AV(a1); SPB(zp,a,a1);
+ GATV0(a1,INT,r+an-1,1); v=AV1(a1); SPB(zp,a,a1);
  k=av[h]; u=av; DQ(h, *v++=*u++;); DQ(r, *v++=k++;); u++; DQ(an-1-h, *v++=*u+++r-1;);
  if(!r) 
-  if(AR(z)){GATV0(q,INT,an-1,1); v=AV(q); DO(an, if(i!=h)*v++=i;); SPB(zp,i,fromr(q,y)); SPB(zp,x,x); R z;}
+  if(AR(z)){GATV0(q,INT,an-1,1); v=AV1(q); DO(an, if(i!=h)*v++=i;); SPB(zp,i,fromr(q,y)); SPB(zp,x,x); R z;}
   else R reshape(mtv,AN(x)?x:SPA(zp,e));
  if(h){q=grade1(fromr(sc(h),y)); RZ(y=ifrom(q,y)); RZ(x=ifrom(q,x));}
  RZ(q=odom(2L,r,AS(ind))); iv=AV(q);
  m=AS(y)[0]; s=0; j=-1; u=h+AV(y); v=u+an;
- GATV0(p,INT,m,1); pv=AV(p); mvc(SZI*m,pv,1,MEMSETFF);
- GATV0(q,INT,m,1); qu=AV(q);
- GATV0(q,INT,m,1); qv=AV(q);
+ GATV0(p,INT,m,1); pv=AV1(p); mvc(SZI*m,pv,1,MEMSETFF);
+ GATV0(q,INT,m,1); qu=AV1(q);
+ GATV0(q,INT,m,1); qv=AV1(q);
  DO(m-1, if(*u!=*v){pv[s]=*u; qu[s]=1+j; qv[s++]=i-j; j=i;} u=v; v+=an;); 
  if(m){i=m-1;       pv[s]=*u; qu[s]=1+j; qv[s++]=i-j;}
  RZ(j1=indexof(p,ind)); jv=AV(j1);
  c=0; DO(n, if(s>jv[i])c+=qv[jv[i]];); i=aii(x); xk=i<<bplg(AT(x)); d=AN(a1);
- GATV0(y1,INT,  c*d,2); v=AS(y1); v[0]=c; v[1]=d; yv= AV(y1); yu= AV(y);
- GA(x1,AT(x),c*i,AR(x),AS(x)); AS(x1)[0]=c; xv=CAV(x1); xu=CAV(x);
+ GATV0(y1,INT,  c*d,2); v=AS(y1); v[0]=c; v[1]=d; yv= AV2(y1); yu= AV(y);
+ I x1r=AR(x); GA(x1,AT(x),c*i,AR(x),AS(x)); AS(x1)[0]=c; xv=CAVn(x1r,x1); xu=CAV(x);
  for(i=0;i<n;++i){
   k=jv[i]; 
   if(s>k){
@@ -68,7 +68,7 @@ F2(jtfromis){A ind,x,z;B*b;I acr,af,an,ar,*av,k,m,*v,wcr,wf,wr,*ws,wt;P*wp,*zp;
 static A jtaaxis(J jt,A w,I wf,A a,I r,I h,I*pp,I*qq,I*rr){A q;B*b,*c,*d;I wr,x,y,z,zr;
  wr=AR(w); zr=wr+r-h;
  RZ(b=bfi(wr,a,1));
- GATV0(q,B01,zr,1); c=BAV(q); 
+ GATV0(q,B01,zr,1); c=BAV1(q); 
  x=y=z=0; d=b; DQ(wf, if(*d++)++x;); DQ(h, if(*d++)++y;); DQ(wr-wf-h, if(*d++)++z;);
  *pp=x; *qq=y; *rr=z;
  MC(c,b,wf); mvc(r,c+wf,1,iotavec-IOTAVECBEGIN+(y?C1:C0)); MC(c+wf+r,b+wf+h,wr-wf-h);
@@ -93,15 +93,15 @@ A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;
  if(!all1(q)){RZ(ys=repeat(q,ys)); RZ(y=repeat(q,y)); RZ(x=repeat(q,x));}
  if(wf){q=grade1(ys); RZ(ys=ifrom(q,ys)); RZ(y=ifrom(q,y)); RZ(x=ifrom(q,x));}
  m=AS(y)[0];
- GATV0(p,INT,m,1); pv=AV(p);
- GATV0(q,INT,m,1); qv=AV(q);
+ GATV0(p,INT,m,1); pv=AV1(p);
+ GATV0(q,INT,m,1); qv=AV1(q);
  s=0; j=-1; u=AV(ys); v=u+h;
  DO(m-1, if(ICMP(u,v,h)){pv[s]=1+j; qv[s++]=i-j; j=i;} u=v; v+=h;); if(m){pv[s]=1+j; qv[s++]=m-1-j;}
  RZ(j1=indexof(ifrom(vec(INT,s,pv),ys),ind)); jv=AV(j1);
  c=0; DO(n, if(s>jv[i])c+=qv[jv[i]];); 
  i=aii(x); j=AN(SPA(zp,a)); xk=i<<bplg(AT(x));
- GATV0(y1,INT,  c*j,2); v=AS(y1); v[0]=c; v[1]=j; yv= AV(y1); yu= AV(y);
- GA(x1,AT(x),c*i,AR(x),AS(x)); AS(x1)[0]=c; xv=CAV(x1); xu=CAV(x);
+ GATV0(y1,INT,  c*j,2); v=AS(y1); v[0]=c; v[1]=j; yv= AV2(y1); yu= AV(y);
+ I x1r=AR(x); GA(x1,AT(x),c*i,AR(x),AS(x)); AS(x1)[0]=c; xv=CAVn(x1r,x1); xu=CAV(x);
  for(i=0;i<n;++i){
   k=jv[i]; iv+=r;
   if(s>k){
@@ -148,7 +148,7 @@ A jtaindex(J jt,A a,A w,I wf){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=C(av[0]); c=AN(q);   // q=addr, c=length of first box
  if(!c)R (A)1;  // if first box is empty, return error to revert to the slow way
  ASSERT(c<=AR(w)-wf,EVLENGTH);
- GATV0(z,INT,an*c,1+ar); MCISH(AS(z),AS(a),ar) AS(z)[ar]=c; v=AV(z);  // allocate array for result.  Mustn't copy shape from AS(a) - it overfetches
+ GATV0(z,INT,an*c,1+ar); MCISH(AS(z),AS(a),ar) AS(z)[ar]=c; v=AVn(1+ar,z);  // allocate array for result.  Mustn't copy shape from AS(a) - it overfetches
  for(j=0;j<an;++j){
   q=C(av[j]); t=AT(q);
   if(t&BOX)R (A)1;   // if any contents is boxed, error
@@ -206,13 +206,13 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  x=SPA(ap,a); if(ar>AN(x)){RZ(a=reaxis(IX(ar),a)); ap=PAV(a);}
  x=SPA(wp,a); n=AN(x); RZ(b=bfi(wr,x,1));
  if(wcr&&!b[wf]){b[wf]=1; ++n; RZ(w=reaxis(ifb(wr,b),w)); wp=PAV(w);}
- GATV0(x,INT,ar+n-!!wcr,1); v=AV(x);
+ GATV0(x,INT,ar+n-!!wcr,1); v=AV1(x);
  DO(wf, if(b[i])*v++=i;); DO(ar, *v++=wf+i;); DO(wcr-1, if(b[i+wf+1])*v++=wf+ar+i;);
  SPB(zp,a,x);
  RZ(x=irs2(SPA(ap,x),w,NOEMSGSELF, RMAX,wcr,jtfrom)); xp=PAV(x); 
  y=SPA(xp,i); u=AV(y); c=AS(y)[1]; m=AS(y)[0]; k=0; DO(wf, if(b[i])++k;);
  y=SPA(ap,i); v=AV(y); d=AS(y)[1]; n=c+d-1; p=c-(1+k);
- GATV0(y,INT,m*n,2); AS(y)[0]=m; AS(y)[1]=n; yv=AV(y);
+ GATV0(y,INT,m*n,2); AS(y)[0]=m; AS(y)[1]=n; yv=AV2(y);
  DQ(m, if(k)ICPY(yv,u,k); ICPY(yv+k,v+d*u[k],d); if(p)ICPY(yv+k+d,u+1+k,p); yv+=n; u+=c;);
  SPB(zp,i,y);
  SPB(zp,x,SPA(xp,x));

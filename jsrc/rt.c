@@ -14,7 +14,7 @@ static F1(jttrc){A bot,p,*v,x,y;B b;C*bv,c,ul,ll,*pv;I j,k,m,*s,xn,*xv,yn,*yv;
  xn=s[0]; RZ(x=apvwr(xn,0L,0L)); xv=AV(x);
  yn=s[1]; RZ(y=apvwr(yn,0L,0L)); yv=AV(y);
  j=0; DO(xn, xv[i]=SETIC(C(v[j]),k); j+=yn;);
- GATV0(bot,LIT,yn,1); bv=CAV(bot);
+ GATV0(bot,LIT,yn,1); bv=CAV1(bot);
  ul=JT(jt,bx)[0]; ll=JT(jt,bx)[6];
  for(j=b=0;j<xn;++j,b=0<j)
   for(k=0;k<yn;++k){
@@ -47,7 +47,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
  x=C(u[0]); xn=AN(x); xv=AV(x); m=0; DO(xn,m+=xv[i];);
  y=C(u[1]); yn=AN(y); yv=AV(y);
  RZ(p=v2(0L,0L));  pv=AV(p);
- GATV0(z,BOX,yn,1); zv=AAV(z);
+ GATV0(z,BOX,yn,1); zv=AAV1(z);
  u=AAV(w);
  for(j=0;j<yn;++j){
   DPMULDE(m,yv[j],k); GATV0(q,LIT,k,2); s=AS(q); *s=m; *++s=yv[j];
@@ -61,7 +61,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
   v=CAV(t);         DO(m, if(' '!=*v){j=i;   break;} v+=n;);
   v=CAV(t)+AN(t)-n; DO(m, if(' '!=*v){k=m-i; break;} v-=n;);
   d=k-j;
-  GATV0(p,LIT,m,1); v=CAV(p); mvc(m,v,1,iotavec-IOTAVECBEGIN+' ');
+  GATV0(p,LIT,m,1); v=CAV1(p); mvc(m,v,1,iotavec-IOTAVECBEGIN+' ');
   if(1==d)*(v+j)=JT(jt,bx)[10]; else{ mvc(d,v+j,1,iotavec-IOTAVECBEGIN+JT(jt,bx)[9]); v[j]=*JT(jt,bx); v[k-1]=JT(jt,bx)[6];}
  }
  RZ(zv[0]=incorp(stitch(p,t)));
@@ -79,7 +79,7 @@ RE(zn=mult(m,n));
 static F2(jttroot){A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
  ARGCHK2(a,w);
  m=AN(a); u=CAV(a); b=!m||1==m&&BETWEENC(*u,'0','9');
- GATV0(x,LIT,b?1:4+m,1); v=CAV(x);
+ GATV0(x,LIT,b?1:4+m,1); v=CAV1(x);
  *v=JT(jt,bx)[10]; if(!b){v[3+m]=JT(jt,bx)[10]; v[1]=v[2+m]=' '; MC(2+v,u,m);}
  t=C(AAV(w)[0]); s=AS(t); m=s[0]; n=s[1];
  u=CAV(t);         DO(m, if(' '!=*u){j=i; break;} u+=n;);
@@ -92,7 +92,7 @@ static F1(jttleaf){A t,z;C*v;I n,*s;
  n=AN(w);
  GATV0(t,LIT,2+n,2); s=AS(t); s[0]=1; s[1]=2+n;
  v=CAV(t); v[0]=JT(jt,bx)[10]; v[1]=' '; MC(2+v,AV(w),n);
- GAT0(z,BOX,1,1); AAV(z)[0]=incorp(t);
+ GAT0(z,BOX,1,1); AAV1(z)[0]=incorp(t);
  R z;
 }
 
@@ -100,7 +100,7 @@ static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); y=C(wv[0]); m=AS(y)[0];
  e=0; DO(n,e+=AS(C(wv[i]))[1];);
- DPMULDE(m,e,zn); GATVR(z,LIT,zn,2,AS(y)); AS(z)[1]=e; zv=CAV(z);
+ DPMULDE(m,e,zn); GATVR(z,LIT,zn,2,AS(y)); AS(z)[1]=e; zv=CAV2(z);
  for(i=0;i<n;++i){
   y=C(wv[i]); q=AS(y)[1]; yv=CAV(y);
   if(i){
@@ -137,7 +137,7 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  m=(I )!!fs+(I )(gs||ex)+(I )(id==CFORK||xop&&hs);
  if(!m){RETF(tleaf(spella(w)));}
  if(evoke(w)){RZ(w=sfne(w)); RETF((AT(w)&FUNC?jttrr:jttleaf)(jt,w));}
- GATV0(t,BOX,m,1); x=AAV(t);
+ GATV0(t,BOX,m,1); x=AAV1(t);
  if(0<m)RZ(x[0]=incorp(fl&VGERL?treach(fxeach(fs,(A)&jtfxself[0])):trr(fs)));
  if(1<m)RZ(x[1]=incorp(fl&VGERR?treach(fxeach(gs,(A)&jtfxself[0])):ex?trr(unparsem(num(0),w)):trr(gs)));
  if(2<m)RZ(x[2]=incorp(trr(hs)));

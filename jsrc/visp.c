@@ -71,7 +71,7 @@ A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
  if(s){p=PAV(a); m=ar; n=wr;}
  else {p=PAV(w); m=wr; n=ar;}
  RZ(b=bfi(m,SPA(p,a),1)); b[0]=1;
- GATV0(x,B01,n,1); c=BAV(x);
+ GATV0(x,B01,n,1); c=BAV1(x);
  DO(ABS(d), c[i]=s;);  // initialize unfilled part of c
  j=0; DQ(MIN(ar,wr), ++j; c[n-j]=b[m-j];);
  R indexofss(mode,s?a:reaxis(ifb(n,c),a),s?reaxis(ifb(n,c),w):w);
@@ -125,11 +125,11 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
  RZ(b=not(irs2(wx,reshape(vec(INT,n,1+AS(wx)),SPA(wp,e)),0L,n,n,jtmatch)));
  if(!all1(b)){RZ(wx=repeat(b,wx)); RZ(wy=repeat(b,wy));}
  v=AV(wy); m=AS(wy)[0]; n=AS(wy)[1]; nd=n-d;
- GATV0(b,B01,m,1); bv=BAV(b);
+ GATV0(b,B01,m,1); bv=BAV1(b);
  if     (0==d){mvc(m,bv,MEMSET00LEN,MEMSET00); if(m)*bv=1;}
  else if(1==d){j=-1; DO(m, bv[i]=j!=*v; j=*v; v+=n;);}
  else{
-  GATV0(x,INT,d,1); xv=AV(x); *xv=-1;
+  GATV0(x,INT,d,1); xv=AV1(x); *xv=-1;
   DO(m, bv[i]=0; DO(d, if(xv[i]!=v[i]){bv[i]=1; j=i; DQ(d-j, xv[j]=v[j]; ++j;); break;}); v+=n;)
  }
  if(m){RZ(f=cut(ds(CCOMMA),num(1))); RZ(df2(y,b,dropr(d,wy),f)); RZ(df2(x,b,wx,f));}
@@ -186,7 +186,7 @@ F1(jtnubsievesp){A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;D rkblk[16];
  x=SPA(p,x); v=AV(x);
  e=SPA(p,e); j=*AV(e); m=j<n;
  DO(c, m+=u[i]==v[i];);
- GATV0(y,INT,m,2); s=AS(y); s[0]=m; s[1]=1; vv=yv=AV(y);
+ GATV0(y,INT,m,2); s=AS(y); s[0]=m; s[1]=1; vv=yv=AV2(y);
  if(c)DO(c, if(u[i]==v[i]){if(j<u[i]){*vv++=j; j=n;} *vv++=u[i];})
  if(m&&vv<yv+m)*vv=j;
  GASPARSE(z,B01,1,1,&n); p=PAV(z);

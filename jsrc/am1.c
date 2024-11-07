@@ -17,7 +17,7 @@ static A jtistd1(J jt,A z,A ind){A*iv,j,*jv,x;I d,i,n,r,*s;
  s=AS(z); n=AN(ind); iv=AAV(ind); 
  ASSERT(n<=AR(z),EVINDEX);
  DQ(n, x=C(iv[i]); if(!equ(x,ds(CACE)))break;--n;);
- GATV0(j,BOX,n,1); jv=AAV(j);
+ GATV0(j,BOX,n,1); jv=AAV1(j);
  for(i=0;i<n;++i){
   x=C(iv[i]); d=s[i];
   if(BOX&AT(x)){
@@ -34,8 +34,8 @@ static A jtastd1(J jt,A a,A z,A ind){A*iv,q,r,s,s1,*sv,x;B b;I ar,*as,d,j,m,n,*r
  zr=AR(z); zs=AS(z); zp=PAV(z);
  if(!ar)R a;
  n=AN(ind); iv=AAV(ind); 
- GATV0(r,INT,zr,1); rv= AV(r);
- GATV0(s,BOX,zr,1); sv=AAV(s);
+ GATV0(r,INT,zr,1); rv= AV1(r);
+ GATV0(s,BOX,zr,1); sv=AAV1(s);
  m=0; j=n;
  DO(n, x=C(iv[i]); b=x==ds(CACE); m+=rv[i]=b?1:AR(x); RZ(sv[i]=b?sc(zs[i]):shape(x));); 
  DQ(zr-n, rv[j]=1; RZ(sv[j]=sc(zs[j])); ++j;);
@@ -51,8 +51,8 @@ static A jtssel(J jt,A z,A ind){A a,*iv,p,q,x,y;B*b;I*av,c,i,j,m,n,*u,*v,*yv;P*z
  zp=PAV(z);
  y=SPA(zp,i); v=AS(y); m=v[0]; c=v[1]; yv=AV(y); 
  a=SPA(zp,a); n=AN(a); av=AV(a); 
- GATV0(p,B01,m,1); b=BAV(p); mvc(m,b,1,MEMSET01);
- GATV0(q,INT,m,1); v=AV(q); iv=AAV(ind);  
+ GATV0(p,B01,m,1); b=BAV1(p); mvc(m,b,1,MEMSET01);
+ GATV0(q,INT,m,1); v=AV1(q); iv=AAV(ind);  
  for(i=0;i<n;++i){
   j=av[i]; if(j>=AN(ind))break;
   x=C(iv[j]);
@@ -67,8 +67,8 @@ static B jtipart(J jt,A z,A ind,A*i1,A*i2){A*iv,p,*pv,q,*qv,x;B*b;I c,d,n;P*zp;
  n=AN(ind); iv=AAV(ind);  zp=PAV(z);
  RZ(b=bfi(AR(z),SPA(zp,a),1));
  c=0; DO(n, if(b[i])++c;); d=n-c;
- GATV0(p,BOX,c,1); pv=AAV(p); *i1=p;
- GATV0(q,BOX,d,1); qv=AAV(q); *i2=q;
+ GATV0(p,BOX,c,1); pv=AAV1(p); *i1=p;
+ GATV0(q,BOX,d,1); qv=AAV1(q); *i2=q;
  DO(n, x=C(iv[i]); if(b[i])*pv++=x; else *qv++=x;);
  R 1;
 }    /* partition index into sparse and dense parts */
@@ -107,7 +107,7 @@ static A jtscubb(J jt,A z,A i1){A a,q,x,y;I c,d,h,j,*s,*v,*xv;P*zp;
  c=AS(q)[1]; d=AS(y)[1]; h=d-c;
  if(c==d)R less(q,y);
  RZ(q=less(q,taker(c,y)));
- GATV0(x,INT,h,1); xv=AV(x); j=c; DO(h, xv[i]=s[v[j++]];);
+ GATV0(x,INT,h,1); xv=AV1(x); j=c; DO(h, xv[i]=s[v[j++]];);
  RZ(x=odom(2L,h,xv));
  c=AS(q)[0]; d=AS(x)[0];
  R stitch(repeat(sc(d),q),reitem(sc(c*d),x));
@@ -116,11 +116,11 @@ static A jtscubb(J jt,A z,A i1){A a,q,x,y;I c,d,h,j,*s,*v,*xv;P*zp;
 static A jtscubc(J jt,A z,A i1,A p){A a,q,s,y,y1;B*qv;I c,d,h,j=-1,m,n,*sv,*u,*v;P*zp;
  zp=PAV(z); a=SPA(zp,a); n=AN(i1); h=AN(a)-n;
  if(!h)R mtm;
- GATV0(s,INT,h,1); sv=AV(s); 
+ GATV0(s,INT,h,1); sv=AV1(s); 
  d=1; u=AS(z); v=AV(a); DO(h, d*=sv[i]=u[v[n+i]];);
  RZ(y=repeat(p,SPA(zp,i))); m=AS(y)[0];
  RZ(y1=take(v2(m,n),y)); v=AV(y1);
- GATV0(q,B01,m,1); qv=BAV(q);
+ GATV0(q,B01,m,1); qv=BAV1(q);
  if(m){mvc(m,qv,MEMSET00LEN,MEMSET00); DO(m-1, if(ICMP(v,v+n,n)){if(d>i-j)qv[i]=1; j=i;} v+=n;); if(d>(m-1)-j)qv[m-1]=1;}
  RZ(y1=repeat(q,y1)); c=AS(y1)[0];
  if(!c)R mtm;
@@ -140,13 +140,13 @@ static A jtiindx(J jt,A z,A i1){A q,j,j1,y;I c,d,e,h,i,*jv,m,n,*qv,*v,*yv;P*zp;
  RZ(j=indexof(y,scuba(z,i1,0)));  /* j: group indices           */
  n= AN(j); jv=AV(j);
  m=AS(y)[0]; yv=AV(y);
- GATV0(q,INT,n,1); qv=AV(q);          /* q: # members in each group */
+ GATV0(q,INT,n,1); qv=AV1(q);          /* q: # members in each group */
  for(i=h=0;i<n;++i){
   e=1; d=jv[i]; v=yv+c*d;
   DQ(m-d-1, if(ICMP(v,v+c,c))break; ++e; v+=c;);
   qv[i]=e; h+=e;
  }
- GATV0(j1,INT,h,1); v=AV(j1);
+ GATV0(j1,INT,h,1); v=AV1(j1);
  DO(n, e=qv[i]; d=jv[i]; DQ(e, *v++=d++;););
  R j1;
 }    /* index of index list in the index matrix of z */

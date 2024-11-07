@@ -761,7 +761,7 @@ static void convertup(void *pi,I n,C t,C sizes){
 // allocate hashtable, fill with -1.  Result is address
 static A jtcdgahash(J jt,I n){A z;I hn;
  FULLHASHSIZE(n,INTSIZE,0,0,hn);
- GATV0(z,INT,hn,0); ACINITZAP(z); mvc(hn*SZI,AV(z),1,MEMSETFF);  // no rank - use all words for table
+ GATV0(z,INT,hn,0); ACINITZAP(z); mvc(hn*SZI,AV0(z),1,MEMSETFF);  // no rank - use all words for table
  R z;
 }
 
@@ -1165,7 +1165,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    xlgsz=bplg(xt);  // lg(actual atom len)
    boxatomsgn=-star&(xr-1)&SGNIF(xt,BOXX);  // neg if boxed atom used as pointer
    CDASSERT(xv!=0,per);   // abort if conversion failed
-   if(zbx){GA00(y,t,1,0); MC(AV(y),xv,bpnoun(t)); *zv=incorp(y);}  // must never install inplaceable block; move value into a box
+   if(zbx){GA00(y,t,1,0); MC(AV0(y),xv,bpnoun(t)); *zv=incorp(y);}  // must never install inplaceable block; move value into a box
   }
   xlgsz=xt&CMPX?3:xlgsz;  // the length for CMPX is the length of an atom
 
@@ -1338,7 +1338,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 
  DO(cipcount, convertdown(cip[i].v,cip[i].n,cip[i].t,cip[i].cxlgsz););  /* convert I to s and int and d to f as required */
  // allocate the result area and point to it
- if(zbx){GA00(x,cc->zt,1,0); xv=AV(x); *(A*)zv0=incorp(x);}else xv=(I*)zv0;  // must not box an inplaceable.  xv points to where the function will store its result: in zv or in a fresh box
+ if(zbx){GA00(x,cc->zt,1,0); xv=AV0(x); *(A*)zv0=incorp(x);}else xv=(I*)zv0;  // must not box an inplaceable.  xv points to where the function will store its result: in zv or in a fresh box
  // get the address of the function
  if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp!=0,DEBADFN);}else fp=cc->fp;
 

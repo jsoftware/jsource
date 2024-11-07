@@ -25,7 +25,7 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
  m=AS(y)[0]; yv=AV(y);  // m=#sparse items, yv->first sparse-index list (only columns indexed by ind)
  RZ(ai=IX(h));   // ai=i. #indexed sparse axes
  RZ(as=less(IX(AR(z)),a)); u=AV(as); n=AN(as);  // as=nonsparse axes of x, n=number of them, u->first
- GATV0(t,INT,n,1); v=AV(t);    // t=place to build lengths of indexed nonsparse zxes
+ GATV0(t,INT,n,1); v=AV1(t);    // t=place to build lengths of indexed nonsparse zxes
  e=0; d=1; DO(n, if(h>u[i])v[e++]=s[i]; else d*=s[i];);  // move the lengths of the indexed nonsparse axes to t; accumulate d=cell-size of nonindexed axes; e=#indexed nonsparse axes
  RZ(*i2=jj=tymes(sc(d),base2(vec(INT,e,v),repeatr(eps(ai,as),ind))));  // jj= (len of nonindexed part) * (shape of indexed axes) #: (ai e. as) #"_ 1 ind  i. e. offset to the start of the cell in the data area.
      // note that this cell is noncontiguous: parts of it may be indexed by ind.  We are at the place where all nonindexed axes are 0
@@ -39,14 +39,14 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
  RZ(*i1=ii=indexof(y,repeatr(eps(ai,a),ind)));   // ii=y i. (sparse axes of ind), i. e. the cell-indexes of z that are indexed by ind
  if(c==AN(a))R 1;  // if all sparse axes are indexed by ind, finish, leave i1 and i2 as is
  n=AN(ii); iv=AV(ii); jv=AV(jj);   // n=#indexed cells in y  iv->index-list of first cell  jv->data offset for each row of ind
- GATV0(q,INT,n,1); qv=AV(q);    // q=work area, qv->location 0
+ GATV0(q,INT,n,1); qv=AV1(q);    // q=work area, qv->location 0
  for(i=h=0;i<n;++i){  // for each indexed cell in y...
   e=1; d=iv[i]; v=yv+c*d;  // d=index in y of row i of ind; v->index list in y
   DQ(m-d-1, if(ICMP(v,v+c,c))break; ++e; v+=c;);   // count e=consecutive # identical rows of y (#rows of y touched by a single row of ind) 
   qv[i]=e; h+=e;  // for each row of ind, qv[i] is # rows of y that ind covers; h is the total#
  }
- GATV0(t,INT,h,1); u=AV(t); *i1=t;  // allocate result areas
- GATV0(t,INT,h,1); v=AV(t); *i2=t;
+ GATV0(t,INT,h,1); u=AV1(t); *i1=t;  // allocate result areas
+ GATV0(t,INT,h,1); v=AV1(t); *i2=t;
  DO(n, e=qv[i]; d=iv[i]; p=jv[i]; DQ(e, *u++=d++; *v++=p;););  // for each row of ind, see how many rows of y it touches; copy out the index lists; repeat the start of the data cell
  R 1;
 }    /* index i1 (in index matrix) and address i2 (in data array) from index array */
@@ -96,14 +96,14 @@ static A jtastdn(J jt,A a,A z,A ind){A a1,q,r,s;B*b;I ar,*as,*av,d,ir,n,n1,*v,zr
  zr=AR(z); zs=AS(z); 
  if(!ar)R a;
  ir=AR(ind); n=AS(ind)[ir-1]; d=(ir-1)+(zr-n); ASSERT(ar<=d,EVRANK);  // n=shape of item of i; d is # unindexed axes
- GATV0(s,INT,d,1); v=AV(s); MCISH(v,AS(ind),ir-1); MCISH(v+ir-1,zs+n,zr-n);
+ GATV0(s,INT,d,1); v=AV1(s); MCISH(v,AS(ind),ir-1); MCISH(v+ir-1,zs+n,zr-n);
  ASSERTAGREE(as,AV(s)+d-ar,ar);
  if(ar<d)RZ(a=reshape(s,a));
  zp=PAV(z); a1=SPA(zp,a); av=AV(a1); n1=n-1;
- GATV0(s,B01,zr,1); b=BAV(s); 
+ GATV0(s,B01,zr,1); b=BAV1(s); 
  mvc(zr,b,MEMSET00LEN,MEMSET00); DO(AN(a1), b[av[i]]=1;); mvc(n,b,1,iotavec-IOTAVECBEGIN+(!memchr(b,C1,n)?C0:C1)); 
 
- GATV0(r,INT,zr-n1,1); v=AV(r); *v++=ar-(zr-n); DQ(zr-n, *v++=1;);
+ GATV0(r,INT,zr-n1,1); v=AV1(r); *v++=ar-(zr-n); DQ(zr-n, *v++=1;);
  RZ(q=dgrade1(repeat(r,vec(B01,zr-n1,b+n1))));
  R equ(q,IX(ar))?a:cant2(q,a);
 }    /* convert replacement array a into standard form relative to index array ind */
@@ -143,7 +143,7 @@ A jtamnsp(J jt,A a,A z,A ind,B ip){A i1,i2,t;C*ev,*u,*v,*vv;I c,*dv,i,*iv,j,*jv,
  t=SPA(ap,e); ev=CAV(t);
  t=SPA(ap,x); u =CAV(t);
  t=SPA(zp,x); v =CAV(t); k=bpnoun(AT(t)); zk=k*aii(t);
- GATV0(t,INT,r,1); dv=AV(t); mvc(SZI*r,dv,MEMSET00LEN,MEMSET00); dv[r-1]=-1;
+ GATV0(t,INT,r,1); dv=AV1(t); mvc(SZI*r,dv,MEMSET00LEN,MEMSET00); dv[r-1]=-1;
  for(i=0;i<n;++i){
   vv=v+zk*iv[i]+k*jv[i];
   for(j=0;j<c;++j){

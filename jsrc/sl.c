@@ -72,7 +72,7 @@ void jterasenl(J jt, I n){
  
  // return list of active numbered locales, using namelist mask
  static A jtactivenl(J jt){A y;
-  GATV0(y,INT,AN(JT(jt,stnum)),1); I *yv=IAV(y);   // allocate place to hold numbers of active locales
+  GATV0(y,INT,AN(JT(jt,stnum)),1); I *yv=IAV1(y);   // allocate place to hold numbers of active locales
   I nloc=0; DO(AN(JT(jt,stnum)), if(jtfindnl(jt,i)){yv[nloc]=i; ++nloc;})
   R every(take(sc(nloc),y),ds(CTHORN));  // ".&.> nloc{.y
  }
@@ -89,7 +89,7 @@ void jterasenl(J jt, I n){
 // Runs in master thread
 static A jtinitnl(J jt){A q;
  I s; FULLHASHSIZE(5*1,INTSIZE,0,0,s);  // at least 5 slots, so we always have at least 2 empties
- GATV0(q,INT,s,1); mvc(s*SZI,IAV(q),MEMSET00LEN,MEMSET00);  // allocate hashtable and clear to 0.  Init no 
+ GATV0(q,INT,s,1); mvc(s*SZI,IAV1(q),MEMSET00LEN,MEMSET00);  // allocate hashtable and clear to 0.  Init no 
  JT(jt,stnum)=q;  // save address of block
  AS(JT(jt,stnum))[0]=0;  // set next number to allocate
  AM(JT(jt,stnum))=0;  // set number in use
@@ -168,7 +168,7 @@ exit: ;
 // return list of active numbered locales, using namelist mask
 static A jtactivenl(J jt){A y;
  READLOCK(JT(jt,stlock))
- GATV0E(y,INT,AN(JT(jt,stnum)),1, {READUNLOCK(JT(jt,stlock));R0}); I *yv=IAV(y);   // allocate place to hold numbers of active locales
+ GATV0E(y,INT,AN(JT(jt,stnum)),1, {READUNLOCK(JT(jt,stlock));R0}); I *yv=IAV1(y);   // allocate place to hold numbers of active locales
  I nloc=0; DO(AN(JT(jt,stnum)), if(IAV1(JT(jt,stnum))[i]&&(LOCPATH((A)IAV1(JT(jt,stnum))[i]))){yv[nloc]=LOCNUM((A)IAV1(JT(jt,stnum))[i]); ++nloc;})
  READUNLOCK(JT(jt,stlock))
  R every(take(sc(nloc),y),ds(CTHORN));  // ":&.> nloc{.y
@@ -374,7 +374,7 @@ I strtoI10s(I l,C* p) {I z; strtoI10(p,l,z); R z; }
 F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RZ(vlocnl(0,w));
  n=AN(w); wv=AAV(w); 
- GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
+ I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); zv=AVn(zr,z);
  if(!n)R z;  // if no input, return empty before handling numeric-atom case
  if(AT(w)&(INT|B01)){IAV(z)[0]=(y=findnl(BIV0(w)))&&LOCPATH(y)?1:-1; RETF(z);}  // if integer, must have been atomic or empty.  Handle the one value
  for(i=0;i<n;++i){
@@ -612,10 +612,10 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  RZ(q=locmap1(g)); qv=AV(q);
  m=AS(q)[0];
  // split the q result between two boxes
- GATVR(x,INT,m*3,2,AS(q)); xv= AV(x);
- GATV0(y,BOX,m,  1); yv=AAV(y);
+ GATVR(x,INT,m*3,2,AS(q)); xv= AV2(x);
+ GATV0(y,BOX,m,  1); yv=AAV1(y);
  DQ(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=incorp((A)*qv++););
- GAT0(z,BOX,2,1); zv=AAV(z); zv[0]=incorp(x); zv[1]=incorp(y);
+ GAT0(z,BOX,2,1); zv=AAV1(z); zv[0]=incorp(x); zv[1]=incorp(y);
  R z;
 }    /* 18!:_1 locale map */
 F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
@@ -668,7 +668,7 @@ DF2(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;
  RZ(vlocnl(1,w));
  if(ISDENSETYPE(AT(w),B01))RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
  n=AN(w); wv=AAV(w); 
- GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);  // result area, all 1s
+ I zr=AR(w); GATV(z,B01,n,AR(w),AS(w)); zv=BAVn(zr,z);  // result area, all 1s
  // Do this in a critical region since others may be deleting as well.  Any lock will do.  We don't
  // use stloc->lock because most deletions are of numbered locales & we want to keep stloc available for named
  WRITELOCK(JT(jt,locdellock))

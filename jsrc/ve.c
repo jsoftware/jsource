@@ -792,7 +792,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w); b=ar>=wr; r=b?wr:ar; s=b?as:ws;
  ASSERTAGREE(as,ws,r);
  if(an&&wn){PROD(m,r,s); PROD(n,b?ar-r:wr-r,r+s);}else m=n=0; 
- GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AV(z);
+ GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AVn(b?ar:wr,z);
  d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;  // p is abs(divisor), p1 is p-1 unless d=IMIN; IMIN then
  if(!wr&&p&&!(p&p1)){  // divisor is power of 2, perhaps negative
   k=CTTZI(p);  // bit# of the sole 1 bit
@@ -1011,8 +1011,8 @@ DF2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
  {PROLOG(0070);A y,*zv;C*u,*yv;I k;
   F2RANK(1,0,jtabase2,self);
   k=bpnoun(at); u=an*k+CAV(a);
-  GA00(y,at,1,0); yv=CAV(y);
-  GATV0(z,BOX,an,1); zv=an+AAV(z);
+  GA00(y,at,1,0); yv=CAV0(y);
+  GATV0(z,BOX,an,1); zv=an+AAV1(z);
   DQ(an, MC(yv,u-=k,k); A tt; RZ(w=divide(minus(w,tt=residue(y,w)),y)); INCORP(tt); *--zv=tt;);
   z=ope(z);
   EPILOG(z);

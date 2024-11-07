@@ -76,7 +76,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
   while(n--){
    if(!((I)jtinplace&JTWILLBEOPENED)){
-    GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k,0,endmask); INCORPRAZAPPED(y,wt);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+    GAE(y,wt,m,r,f+ws,break); JMCR(CAVn(r,y),wv,k,0,endmask); INCORPRAZAPPED(y,wt);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
    }else{
     // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead
     if((y=gafv(SZI*(NORMAH+wr)-1))==0)break;  // allocate the block, abort loop if error
@@ -412,7 +412,7 @@ static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
 
 static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m=0,n,*v,wcr;P*p;
  n=AN(w); wcr=AN(cs); wv=AAV(w);
- GATV0(x,B01,wcr,1); b=BAV(x); mvc(wcr,b,MEMSET00LEN,MEMSET00);
+ GATV0(x,B01,wcr,1); b=BAV1(x); mvc(wcr,b,MEMSET00LEN,MEMSET00);
  for(i=0;i<n;++i)
   if(q=C(wv[i]),ISSPARSE(AT(q))){
    p=PAV(q); x=SPA(p,x); m+=AS(x)[0];
@@ -453,12 +453,12 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  GASPARSE0(z,zt,1,wr+wcr); zs=AS(z); MCISH(zs,AS(w),wr); MCISH(zs+wr,AV(cs),wcr);
  zp=PAV(z); c=wcr-an; yc=wr+an;
  SPB(zp,e,cvt(dt,e)); e = SPA(zp,e);  // in case of reassignment by SPB
- GATV0(t,INT,yc, 1L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
- GATV0(sh,INT,1+c,1L); s=AV(sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
+ GATV0(t,INT,yc, 1L); v=AVn(1L,t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
+ GATV0(sh,INT,1+c,1L); s=AVn(1L,sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
  RE(xc=prod(c,1+s)); xk=xc*dk;
- GATV0(d,INT,wr,1); dv=AV(d); mvc(wr*SZI,dv,MEMSET00LEN,MEMSET00);
- DPMULDE(m,xc,i) GA(x,dt,i,1+c,s); xv=CAV(x); mvc(m*xk,xv,dk,AV(e));
- DPMULDE(m,yc,i) GATV0(y,INT,i,2L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); mvc(SZI*i,yv,MEMSET00LEN,MEMSET00);
+ GATV0(d,INT,wr,1); dv=AV1(d); mvc(wr*SZI,dv,MEMSET00LEN,MEMSET00);
+ DPMULDE(m,xc,i) GA(x,dt,i,1+c,s); xv=CAVn(1+c,x); mvc(m*xk,xv,dk,AV(e));
+ DPMULDE(m,yc,i) GATV0(y,INT,i,2L); v=AS(y); *v=m; v[1]=yc; yv=AVn(2L,y); mvc(SZI*i,yv,MEMSET00LEN,MEMSET00);
  for(i=p=0;i<n;++i){
   RZ(opes2(&x1,&y1,b,a,e,C(wv[i]),wcr)); v=AS(y1); m1=v[0]; k=v[1];
   if(m<p+m1){

@@ -464,15 +464,15 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  if(ar>acr||wr>wcr)R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtmatchs);
  if(ar!=wr||memcmpne(AS(a),AS(w),r*SZI)||!HOMO(AT(a),AT(w)))R num(0);
- GATV0(x,B01,r,1L); b=BAV(x); mvc(r,b,MEMSET00LEN,MEMSET00);
+ GATV0(x,B01,r,1L); b=BAVn(1L,x); mvc(r,b,MEMSET00LEN,MEMSET00);
  if(ISSPARSE(AT(a))){ap=PAV(a); x=SPA(ap,a); v=AV(x); an=AN(x); DO(an, b[v[i]]=1;);}
  if(ISSPARSE(AT(w))){wp=PAV(w); x=SPA(wp,a); v=AV(x); wn=AN(x); DO(wn, b[v[i]]=1;);} 
  c=0; DO(r, c+=b[i];);
  if(an<c||!ISSPARSE(AT(a)))RZ(a=reaxis(ifb(r,b),a)); ap=PAV(a); ae=SPA(ap,e); ax=SPA(ap,x); m=AS(ax)[0];
  if(wn<c||!ISSPARSE(AT(w)))RZ(w=reaxis(ifb(r,b),w)); wp=PAV(w); we=SPA(wp,e); wx=SPA(wp,x); n=AS(wx)[0];
  RZ(x=indexof(SPA(ap,i),SPA(wp,i))); v=AV(x);
- GATV0(p,B01,m,1); pv=BAV(p);
- GATV0(q,B01,n,1); qv=BAV(q); 
+ GATV0(p,B01,m,1); pv=BAV1(p);
+ GATV0(q,B01,n,1); qv=BAV1(q); 
  mvc(m,pv,1,MEMSET01); DO(n, j=*v++; if(j<m)pv[j]=qv[i]=0; else qv[i]=1;);
  if(memchr(pv,C1,m)&&!all1(eq(we,repeat(p,ax))))R num(0);
  if(memchr(qv,C1,n)&&!all1(eq(ae,repeat(q,wx))))R num(0);
@@ -501,7 +501,7 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
   // The compare for each cell is 1 if the cell-shapes are the same
   p=AR(a)-af; b=p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
   // Allocate & return result
-  GATV(z,B01,mn,wf,AS(w)); mvc(mn,BAV(z),1,iotavec-IOTAVECBEGIN+(b^eqis0)); R z;
+  GATV(z,B01,mn,wf,AS(w)); mvc(mn,BAVn(wf,z),1,iotavec-IOTAVECBEGIN+(b^eqis0)); R z;
  }
  // There are atoms.  If there is only 1 cell to compare, do it quickly
  if(wf==0){
@@ -512,7 +512,7 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
  // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
  PROD(m,af,AS(w)); PROD(n,wf-af,AS(w)+af);
  mn=m*n;  // total number of matches to do, i. e. # results
- GATV(z,B01,mn,wf,AS(w)); matchsub(a,w,BAV(z),af,wf,m,n,eqis0^1);  // matchsub stores, and we ignore the result
+ GATV(z,B01,mn,wf,AS(w)); matchsub(a,w,BAVn(wf,z),af,wf,m,n,eqis0^1);  // matchsub stores, and we ignore the result
  // We do not check for a==w here & thus will compare them
  RETF(z);
 }    /* a -:"r w */

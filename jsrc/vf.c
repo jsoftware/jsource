@@ -39,7 +39,7 @@ A jtsetfv1(J jt, A w, I t){A q=jt->fill;
 }
 
 // Create a cell of fill for empty execution, type wt, rank r, shape *s.  Copy in the data.  The cell is NOT recursive
-A jtfiller(J jt, I wt, I r, I* s){A z; I n,klg; CPROD(1,n,r,s); klg=bplg(wt); fillv0(wt); GA(z,wt,n,r,s); mvc(n<<klg,CAV(z),jt->fillvlen,jt->fillv); R z;}
+A jtfiller(J jt, I wt, I r, I* s){A z; I n,klg; CPROD(1,n,r,s); klg=bplg(wt); fillv0(wt); GA(z,wt,n,r,s); mvc(n<<klg,CAVn(r,z),jt->fillvlen,jt->fillv); R z;}
 
 // Point jt->fillv to fill(s) of type t, and the # bytes of them into jt->fillv0len
 void jtfillv0(J jt,I t){
@@ -60,7 +60,7 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  if(!wcr&&1<p){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}
  ASSERT(!wcr||p<=wcr,EVLENGTH);
  s=AS(w);
- GATV0(q,INT,wr,1L); qv=AV(q); mvc(wr*SZI,qv,MEMSET00LEN,MEMSET00); 
+ GATV0(q,INT,wr,1L); qv=AVn(1L,q); mvc(wr*SZI,qv,MEMSET00LEN,MEMSET00); 
  RZ(a=vi(a)); v=AV(a); 
  DO(p, k=v[i]; d=s[wf+i]; qv[wf+i]=!d?0:0<k?k%d:k==IMIN?d-(-d-k)%d:d-(-k)%d;);
  wp=PAV(w); a=SPA(wp,a); RZ(y=ca(SPA(wp,i))); SETIC(y,m);
@@ -137,7 +137,7 @@ F2(jtrotate){A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
   }
   yztotal=(I)w;  // if w was inplaceable but we don't inplace because of size, remember that w is available as a ping-pong buffer
  }
- if(z==0){GA(z,AT(w),wn,wr,s); v=CAV(z); yztotal+=(I)z;}   // allocate result area, unless we are inplacing into w
+ if(z==0){GA(z,AT(w),wn,wr,s); v=CAVn(wr,z); yztotal+=(I)z;}   // allocate result area, unless we are inplacing into w
  I ii=m; while(1){if(u!=v)MC(v+jd,u+js,e-k); if(!jt->fill)MC(v+kd,u+ks,k); else mvc(k,v+kd,(I)1<<klg,jt->fillv); if(--ii<=0)break; if(withprob(negifragged<0,0.1)){av0=*++av; ROTF(av0)} u+=e; v+=e;}
 
  if(1<p){I i;
@@ -239,7 +239,7 @@ static A jtreshapesp0(J jt,A a,A w,I wf,I wcr){A e,p,x,y,z;B*b,*pv;I c,d,r,*v,wr
  if(!wf){if(r&&c){v=AV(y); DO(c, if(v[i])R e;);} R AN(x)?reshape(mtv,x):e;}
  GASPARSE(z,AT(w),1,wf,ws);
  zp=PAV(z); SPB(zp,e,e); A bvec=ifb(wf,b); makewritable(bvec) SPB(zp,a,bvec);  // avoid readonly
- GATV0(p,B01,r,1); pv=BAV(p);
+ GATV0(p,B01,r,1); pv=BAV1(p);
  v=AV(y); 
  DO(r, *pv=1; DO(c-d, if(v[d+i]){*pv=0; break;}); ++pv; v+=c;);
  SPB(zp,i,repeat(p,taker(d,y)));
@@ -260,19 +260,19 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  ASSERT(!jt->fill,EVDOMAIN);
  GASPARSE(z,AT(w),1,wf+an,ws); MCISH(wf+AS(z),av,an);
  zp=PAV(z); SPB(zp,e,e);  
- GATV0(t,INT,c+d*b[wf],1); v=AV(t); 
+ GATV0(t,INT,c+d*b[wf],1); v=AV1(t); 
  DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DQ(wcr, if(b[j])*v++=d+j; ++j;);
  SPB(zp,a,t);
  if(b[wf]){I n,q,r,*v0;   /* sparse */
   if(wf!=*AV(a1))R rank2ex(a,w,DUMMYSELF,MIN(AR(a),1),wcr,MIN(AR(a),1),wcr,jtreshape);
   RE(m=prod(1+d,av)); SETIC(y,n); if(ws[wf]){q=n*(m/ws[wf]); r=m%ws[wf];} else {q=0; r=0;}
   v=AV(y); DQ(n, if(r<=*v)break; ++q; v+=c;);
-  GATV0(t,INT,q,1); u=AV(t); v=v0=AV(y);
+  GATV0(t,INT,q,1); u=AV1(t); v=v0=AV(y);
   m=j=0; DO(q, u[i]=m+*v; v+=c; ++j; if(j==n){j=0; v=v0; m+=ws[wf];});
   SPB(zp,i,stitch(abase2(vec(INT,1+d,av),t),reitem(sc(q),dropr(1L,y))));
   SPB(zp,x,reitem(sc(q),x));
  }else{                   /* dense  */
-  GATV0(t,INT,an,1); v=AV(t); MCISH(v,av,d); m=d; j=wf; DO(wcr, if(!b[j++])v[m++]=av[i+d];);
+  GATV0(t,INT,an,1); v=AV1(t); MCISH(v,av,d); m=d; j=wf; DO(wcr, if(!b[j++])v[m++]=av[i+d];);
   SPB(zp,i,ca(y));
   SPB(zp,x,irs2(vec(INT,m,v),x,0L,1L,wcr-(an-m),jtreshape));
  }
@@ -382,7 +382,7 @@ F2(jtexpand){A z;B*av;C*wv,*zv;I an,i,k,p,wc,wk,wt,zn;
  ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once
  wv=CAV(w); PROD(wc,AR(w)-1,AS(w)+1) wt=AT(w); k=bpnoun(wt); wk=k*wc;  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
  DPMULDE(an,wc,zn);
- GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=an; zv=CAV(z);
+ I zr=AR(w); GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=an; zv=CAVn(zr,z);
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats
  PRISTCLRF(w)   // this destroys w
  switch(wk){

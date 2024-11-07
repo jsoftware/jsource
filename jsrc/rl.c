@@ -38,7 +38,7 @@ static I jtlp(J jt,A w){F1PREFIP;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
 // add () when user asks for normal ()
 static A jtlcpa(J jt,B b,A w){F1PREFIP;A z=w;C*zv;I n;
  ARGCHK1(w);
- if(b){n=AN(w); GATV0(z,LIT,2+n,1); zv=CAV(z); *zv='('; MC(1+zv,AV(w),n); zv[1+n]=')';}
+ if(b){n=AN(w); GATV0(z,LIT,2+n,1); zv=CAV1(z); *zv='('; MC(1+zv,AV(w),n); zv[1+n]=')';}
  R z;
 }    /* if b then (w) otherwise just w */
 
@@ -53,7 +53,7 @@ static A jtlcpb(J jt,B b,A w){F1PREFIP;A z=w;B p;C c,*v,*wv,*zv;I n;
   else          DQ(n-1, c=      *++v ; if(!(c==CESC1||c==CESC2)){b=1; break;});
   if(b&&vnm(n,wv))b=0;
  }
- if(b){GATV0(z,LIT,2+n,1); zv=CAV(z); *zv='('; MC(1+zv,wv,n); zv[1+n]=')';}
+ if(b){GATV0(z,LIT,2+n,1); zv=CAV1(z); *zv='('; MC(1+zv,wv,n); zv[1+n]=')';}
  R z;
 }
 
@@ -63,7 +63,7 @@ static A jtlcpx(J jt,A w){F1PREFIP;ARGCHK1(w); R parfn(jtinplace,lp(w)>0,w);}
 static F1X(jtltiea){F1PREFIP;A t,*v,*wv,x,y;B b;C c;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
- GATV0(y,BOX,n+n,1); v=AAV(y);
+ GATV0(y,BOX,n+n,1); v=AAV1(y);
  DO(n, *v++=i?t:mtv; x=C(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
      b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtinplace,b,x)););
  R raze(y);
@@ -73,8 +73,8 @@ static F1X(jtltiea){F1PREFIP;A t,*v,*wv,x,y;B b;C c;I n;
 static F1X(jtltieb){F1PREFIP;A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
- GATV0(y,BOX,n+n,1); v=AAV(y);
- if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
+ GATV0(y,BOX,n+n,1); v=AAV1(y);
+ if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV1(x); DQ(n-2, *s++='(';);}
  DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=C(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
      b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtinplace,b,x)););
  R raze(y);
@@ -115,7 +115,7 @@ static F1X(jtlchar){F1PREFIP;A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
   R lp(y)?over(cstr("a.{~"),y):over(y,cstr("{a.")); 
  }
  // out the enquoted string, preceded the the shape if repeated or not a list
- GATV0(y,LIT,n+j,1); v=CAV(y);
+ GATV0(y,LIT,n+j,1); v=CAV1(y);
  v[0]=v[n+j-1]=CQUOTE; ++v;
  if(2==j)MC(v,u,n); else DQ(n, *v++=c=*u++; if(c==CQUOTE)*v++=c;);
  R over(b?lsh(w):lshape(w),y);
@@ -126,7 +126,7 @@ static F1X(jtlbox){F1PREFIP;A p,*v,*vv,*wv,x,y;B b=0;I n;
  if(equ(ds(CACE),w)&&B01&AT(AAV(w)[0]))R cstr("a:");
  n=AN(w); wv=AAV(w); 
  DO(n, x=C(wv[i]); if(BOX&AT(x)){b=1; break;}); b|=1==n;
- GATV0(y,BOX,n+n-(1^b),1); v=vv=AAV(y);
+ GATV0(y,BOX,n+n-(1^b),1); v=vv=AAV1(y);
  if(b){
   RZ(p=cstr("),(<"));
   DO(n, x=C(wv[i]); *v++=p; RZ(*v++=lnoun(x)););
@@ -140,7 +140,7 @@ static F1X(jtlbox){F1PREFIP;A p,*v,*vv,*wv,x,y;B b=0;I n;
   DQ(AN(x), c[*s++]=0;);
   if(c[CQUOTE]&&equ(w,words(x)))R over(cstr(";:"),lchar(x));
   if(c[d=' ']||c[d='|']||c[d='/']||c[d=',']||c[d=';']){
-   GATV0(y,LIT,n+AN(x),1); t=CAV(y);
+   GATV0(y,LIT,n+AN(x),1); t=CAV1(y);
    DO(n, x=C(wv[i]); *t++=d; MC(t,AV(x),AN(x)); t+=AN(x););
    RZ(y=lchar(y));
    R over(lshape(w),over(cstr(isdigit(CAV(y)[0])?"<;.(_1) ":"<;._1 "),y));
@@ -193,7 +193,7 @@ static F1X(jtlnum){F1PREFIP;A b,d,t,*v,y;B p;I n;
   p=equ(t,plus(b,tymes(d,IX(n))));
   if(p){
    if(equ(d,num(0)))R over(lsh(w),lnum1(b));
-   GAT0(y,BOX,6,1); v=AAV(y); v[0]=v[1]=v[2]=v[3]=mtv;
+   GAT0(y,BOX,6,1); v=AAV1(y); v[0]=v[1]=v[2]=v[3]=mtv;
    if(p=!(equ(b,sc(n-1))&&equ(d,num(-1)))){
     if     (!equ(b,num(0)   )){v[0]=lnum1(b); v[1]=spellout(CPLUS);}
     if     ( equ(d,num(-1))) v[1]=spellout(CMINUS);
@@ -302,13 +302,13 @@ static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I 
  switch(!(b||BETWEENC(id,CHOOK,CADVF))?id:2==n?CHOOK:CFORK){  // if operator or invisible, ignore the type and space based on length
  case CADVF:
  case CHOOK:
-  GAT0(y,BOX,3,1); u=AAV(y);
+  GAT0(y,BOX,3,1); u=AAV1(y);
   u[0]=f=parfn(jtinplace,ft||lnn(f,g),f);
   u[2]=g=parfn(jtinplace,gt||b,       g);
   u[1]=str(' '==CAV(g)[0]||id==CADVF&&!laa(f,g)&&!((lp(f)>0)&&(lp(g)>0))?0L:1L," ");
   RE(0); R raze(y);
  case CFORK:
-  GAT0(y,BOX,5,1); u=AAV(y);
+  GAT0(y,BOX,5,1); u=AAV1(y);
   RZ(u[0]=f=parfn(jtinplace,ft||lnn(f,g),   f));
   RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==CAV(g)[0]?0L:1L," "));
   RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==CAV(h)[0]?0L:1L," "));
@@ -374,7 +374,7 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  // display of a single valence applies only to an explicit definition.  It wouldn't be a bad idea for others, but that would require inspecting the op to see
  // which valences are active on each side.  For the nonce we display everything
  jtinplace=(J)((I)jtinplace&~JTEXPVALENCEOFF);  // display both valences of compounds
- GATV0(t,BOX,m,1); tv=AAV(t);
+ GATV0(t,BOX,m,1); tv=AAV1(t);
  if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
  if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtinplace,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(0&&BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));  // fill in g if present

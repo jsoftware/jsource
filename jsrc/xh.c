@@ -90,7 +90,7 @@ DF1(jthost){A z;
 #endif
  n=AN(w);
 #if HTML
- GATV0(t,LIT,n,1); s=CAV(t);
+ GATV0(t,LIT,n,1); s=CAV1(t);
  MC(s,AV(w),n);
  s[n]='\0';
  char * ret = execHost(s);
@@ -98,7 +98,7 @@ DF1(jthost){A z;
  unlink(s);
  return cstr(ret);
 #endif
- GATV0(t,LIT,n+5+L_tmpnam+1,1); s=CAV(t);  // +1 for trailing nul
+ GATV0(t,LIT,n+5+L_tmpnam+1,1); s=CAV1(t);  // +1 for trailing nul
  fn=5+n+s; MC(s,AV(w),n);
  MC(n+s,"   > ",5L);
 #ifdef MMSC_VER
@@ -197,7 +197,7 @@ DF1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
  fii[0]=fi[0];fii[1]=fi[1];foi[0]=fo[0];foi[1]=fo[1];
  F1RANK(1,jthostio,self);
  RZ(w=vs(w));
- s=CAV(str0(w)); GAT0(z,INT,3,1); pz=(F*)AV(z);
+ s=CAV(str0(w)); GAT0(z,INT,3,1); pz=(F*)AV1(z);
  if((r=pipe(fii))==-1||pipe(foi)==-1){if(r!=-1)CL(fi); ASSERT(0,EVFACE);}
  if(!((pz[1]=fdopen(fi[0],"r"))&&(pz[2]=fdopen(fo[1],"w")))){
   if(pz[1])fclose(pz[1]); CL(fi);CL(fo);}

@@ -77,7 +77,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
 IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
  md=mode&IIOPMSK;  // just the operation bits
  I bk=1&(((1<<IICO)|(1<<IJ0EPS)|(1<<IJ1EPS))>>md);  // set if the dup-scan is reverse direction
- if(mode==INUB||mode==INUBI){GATV0(y,B01,asct,1); yb=BAV(y);}
+ if(mode==INUB||mode==INUBI){GATV0(y,B01,asct,1); yb=BAV1(y);}
  av=AAV(a);  acn=ak>>LGSZI;
  wv=AAV(w);  wcn=wk>>LGSZI;
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;

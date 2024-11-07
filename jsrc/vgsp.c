@@ -20,8 +20,8 @@ static B jtspsscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;B b;
  u0=AV(y); u=u0+n; 
  v0=u0+wf; v=v0+n;
  if(!m){*zt=*zc=mtv; R 1;}
- GATV0(t,INT,2+2*m,1); tv=AV(t); tv[0]=tv[1]=0; tn=2;
- GATV0(c,INT,  2*m,2); cv=AV(c); cv[0]=0;       cn=0; AS(c)[1]=2;
+ GATV0(t,INT,2+2*m,1); tv=AV1(t); tv[0]=tv[1]=0; tn=2;
+ GATV0(c,INT,  2*m,2); cv=AV2(c); cv[0]=0;       cn=0; AS(c)[1]=2;
  for(j=1;j<m;++j){
   b=1;
   for(k=0;k<wf;++k)
@@ -79,7 +79,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,d,t,x,y,z;I cn,*cv,*dv,i,n
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c); 
- GATV0(x,INT,2+n,1);   xv=AV(x);  /* work area for msmerge() */
+ GATV0(x,INT,2+n,1);   xv=AV1(x);  /* work area for msmerge() */
  RZ(d=apvwr(wf,0L,0L)); dv=AV(d);  /* odometer for frame      */
  for(i=0;i<cn;i+=2){
   spblok.stv=u=tv+cv[i]; n1=cv[1+i]-1;
@@ -113,8 +113,8 @@ static B jtspdscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;I*cv,m,n,p,*s,tn,*tv,
  y=SPA(wp,i); s=AS(y); m=s[0]; n=s[1];
  v0=AV(y); v=v0+n; 
  if(!m){*zt=*zc=mtv; R 1;}
- GATV0(t,INT,2+m,1); tv=AV(t); tv[0]=tv[1]=0; tn=2;
- GAT0(c,INT,2,  2); cv=AV(c); cv[0]=0;       AS(c)[1]=2;
+ GATV0(t,INT,2+m,1); tv=AV1(t); tv[0]=tv[1]=0; tn=2;
+ GAT0(c,INT,2,  2); cv=AV2(c); cv[0]=0;       AS(c)[1]=2;
  DO(m-1, if(*v0!=*v){tv[tn++]=1+i; v0=v;} v+=n;);
  tv[tn++]=m; tv[tn++]=m; cv[1]=tn;
  if(p==tn){++cv[0]; cv[1]-=2;}
@@ -138,7 +138,7 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z;I*cv,m,n,n1,p,*tv,
  RZ(spdscell(w,wf,wcr,&c,&t));
  if(!AN(c)){DO(m, DO(n, zv[i]=i;); zv+=n;); R z;}
  cv=AV(c); n1=cv[1]-1; spblok.stv=tv=cv[0]+AV(t);
- GATV0(x,INT,MAX(n,1+n1),1); xv=AV(x);  /* work area for msmerge() */
+ GATV0(x,INT,MAX(n,1+n1),1); xv=AV1(x);  /* work area for msmerge() */
  if(cv[0])DO(m, spblok.si=i; DO(n1, zv[i]=i;); msort(&sortblok,n1,(void**)zv,(void**)xv,(I)&sortblok);                                 zv+=n;)
  else     DO(m, spblok.si=i; DO(n1, xv[i]=i;); msort(&sortblok,n1,(void**)xv,(void**)zv,(I)&sortblok); sp1merge0(n,n1,yc,zv,xv,yv,tv); zv+=n;);
  R z;
@@ -216,8 +216,8 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z,zy;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c);
  m=0; j=1; DQ(cn, m=MAX(m,cv[j]); j+=2;);
- GATV0(x,INT,m,1); xu=AV(x);  /* work area for msmerge() */
- GATV0(x,INT,m,1); xv=AV(x);  /* work area for msmerge() */
+ GATV0(x,INT,m,1); xu=AV1(x);  /* work area for msmerge() */
+ GATV0(x,INT,m,1); xv=AV1(x);  /* work area for msmerge() */
  zy=SPA(zp,i); zyv=AV(zy);
  for(i=0;i<cn;i+=2){
   spblok.stv=u=tv+cv[i]; n1=cv[1+i]-1; m=0;

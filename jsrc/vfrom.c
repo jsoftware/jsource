@@ -14,11 +14,11 @@ DF1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv
  DO(n, x=C(wv[i]); if(likely(AN(x))){p=AT(x); t=t?t:p; ASSERTF(!ISSPARSE(p),EVNONCE,"sparse arrays not supported"); ASSERT(HOMO(t,p),EVINHOMO); RE(t=maxtype(t,p));});  // use vector maxtype; establish type of result
  t=t?t:B01; k=bpnoun(t);  // if all empty, use boolean for result
  GA10(b,t,n);      bv=CAV(b);  // allocate place to build each item of result - one atom from each box.  bv->item 0
- GATV0(x,INT,n,1);    qv=AV(x);   // allocate vector of max-indexes for each box - only the address is used  qv->max-index 0
- GATV0(x,BOX,n,1);    pv=(C**)AV(x);  // allocate vector of pointers to each box's data  pv->box-data-base 0
+ GATV0(x,INT,n,1);    qv=AV1(x);   // allocate vector of max-indexes for each box - only the address is used  qv->max-index 0
+ GATV0(x,BOX,n,1);    pv=(C**)AV1(x);  // allocate vector of pointers to each box's data  pv->box-data-base 0
  RZ(x=apvwr(n,0L,0L)); cv=AV(x);   // allocate vector of current indexes, init to 0  cv->current-index 0
  DO(n, x=C(wv[i]); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); DPMULDE(m,p,m); pv[i]=CAV(x););  // fill in *qv and *pv; calculate r=+/ #@$@> w, m=*/ */@$@> w
- GATV0(z,BOX,m,r);    zv=AAV(z); s=AS(z);   // allocate result area
+ GATV0(z,BOX,m,r);    zv=AAVn(r,z); s=AS(z);   // allocate result area
  // There is no need to turn off pristinity of w, because nothing was copied out by pointer (everything was copied & then cloned)
  // The result is certainly pristine if it is DIRECT
  AFLAGORLOCAL(z,(-(t&DIRECT))&AFPRISTINE)  // set result pristine if boxes DIRECT
@@ -582,7 +582,7 @@ DF2(jtfrom){A z;
 // obsolete     I j; SETNDX(j,av,ws[0]);  // j=positive index
     I j; SETNDX(j,av,wi);  // j=positive index, audited
     if(m<MINVIRTSIZE){  // if cell too small for virtual, allocate & fill here
-     I k=bplg(wt); GA(z,wt,m,wr1,ws+1) JMC(CAV(z),CAV(w)+j*(m<<k),m<<k,0);  // copy in the data, possibly overstoring up to 7 bytes.  Nonrecursive block
+     I k=bplg(wt); GA(z,wt,m,wr1,ws+1) JMC(CAVn(wr1,z),CAV(w)+j*(m<<k),m<<k,0);  // copy in the data, possibly overstoring up to 7 bytes.  Nonrecursive block
      // We transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
      PRISTXFERF(z,w)  // this destroys w
     }else{
@@ -1204,7 +1204,7 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
   // decision variable.  convert the column indexes into pointers into Qkt, and interleave them with the values
   an=axv[colx][1]; I wtofst=axv[colx][0];   // number of weights in column, offset to them
   I ntoalloc=(an+1+NPAR-1)&-NPAR;  // block that can hold all the pointers/weights
-  A wts; GATV0(wts,INT,2*ntoalloc,1)  mv0=voidAV(wts); vv0=(D*)(mv0+ntoalloc);   // place to hold the addresses/weights of the columns being combined
+  A wts; GATV0(wts,INT,2*ntoalloc,1)  mv0=voidAV1(wts); vv0=(D*)(mv0+ntoalloc);   // place to hold the addresses/weights of the columns being combined
   I *amv=amv0+wtofst; D *avv=avv0+wtofst;  // number of sparse atoms in each row; pointer to first col#; pointer to first weight
   __m256i qkt0_4=_mm256_set1_epi64x((I)qkt0), qkrowstride_4=_mm256_set1_epi32(qktrowstride<<LGSZD);
   for(avx=0;avx<an;avx+=NPAR){  // for each block of input... (this overfetches but that's OK since we map enough for one 32-byte final fetch)
@@ -1632,7 +1632,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
  jtjobrun(jt,actionrtn,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
  // atomic sync operation on the job queue guarantee that we can use regular loads from opctx
 
- A r; GAT0(r,FL,5,1); D *rv=DAV(r);  // return area
+ A r; GAT0(r,FL,5,1); D *rv=DAV1(r);  // return area
  I retinfo=rv[1]=opctx.retinfo; rv[2]=(UI4)opctx.nimpandcols; rv[3]=opctx.ndotprods;
  if(isgradmode){
   // gradient mode.  We were minimizing 1/gradient^2; convert to gradient
@@ -1984,7 +1984,7 @@ static unsigned char jtfindsprx(J jt,struct sprctx* const ctx,UI4 ti){
  // In QP, the true SPR may be up to 1.5 DP ULP greater than calculated value.  Go back and get the list of row#s that overlap with that
  // create the column NPAR values at a time
  allmin=_mm256_mul_pd(allmin,_mm256_set1_pd(1.0000000000000003));  // add 2 ULPs in DP
- A conten; GA0(conten,INT,m,0) I *conten0=IAV(conten), conteni=0;  // get address of place to store contenders
+ A conten; GA0(conten,INT,m,0) I *conten0=IAV0(conten), conteni=0;  // get address of place to store contenders
  for(i=i0;i<i0e;i+=NPAR){
   // get the validity mask and process: leave as ones until the end of the column
   __m256d ck4, bk4;  // values we are working on

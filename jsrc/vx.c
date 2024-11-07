@@ -192,7 +192,7 @@ static XF2(jtxlog2){
  else R XgetI(e+(XMCEIL==jt->xmode)); // our estimate was low
 }
 
-F2(jtxlog2a){A z; GAT0(z,XNUM,1L,0L); XAV(z)[0]=rifvsdebug(xlog2(XAV(a)[0],XAV(w)[0])); RNE(z);}
+F2(jtxlog2a){A z; GAT0(z,XNUM,1L,0L); XAVn(0L,z)[0]=rifvsdebug(xlog2(XAV(a)[0],XAV(w)[0])); RNE(z);}
 
 XF2(jtxroota){ // a %: w (optionally with <. or >.)
  PROLOG(0115);
@@ -216,7 +216,7 @@ XF2(jtxroota){ // a %: w (optionally with <. or >.)
    }
   z0= Xmp(z0);
  }
- A z;GA(z,XNUM,1L,0L,0L); *XAV(z)= z0;
+ A z;GA(z,XNUM,1L,0L,0L); XAVn(0L,z)[0]= z0;
  EPILOG(z);
 }
 XF1(jtxfact){ // !w
@@ -248,7 +248,7 @@ F1(jtdigits10){ // "."0@":
    if(0<=XSGN(w)){
     C*s= SgetX(w);
     I n= strlen(s); // maybe better to use AN(UNvoidAV1(s))-1 ??
-    A z; GATV0(z,INT,n,1); I*zv= AV(z);
+    A z; GATV0(z,INT,n,1); I*zv= AV1(z);
     DQ(n, zv[i]= s[i]-'0';);  // convert ASCII to integer
     EPILOG(z);
    }
@@ -282,7 +282,7 @@ XF2(jtxbin){X d,z;PROLOG(0119);
 }
 
 static A jtpiev(J jt,I n,X b){A e;I ek,i,n1=n-1;X bi,e0,e1,*ev,t;
- GATV0(e,XNUM,n,1); ev=XAV(e);
+ GATV0(e,XNUM,n,1); ev=XAV1(e);
  bi=e0=e1=iv1;
  for(i=0,ek=1;i<n1;++i,ek+=3){
   ev[i]=xtymes(e0,xtymes(XCUBE(e1),bi));

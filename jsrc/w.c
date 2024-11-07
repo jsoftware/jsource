@@ -58,7 +58,7 @@ static const ST state[SDDD+1][16]={
 // If there are mismatched quotes, AM(z) is set to -1 and the number of valid tokens is in AS(z)[0]
 F1(jtwordil){A z;I s,i,m,n,*x;UC*v;
  ARGCHK1(w);  // if no string, could be empty line from keyboard; return null A in that case
- n=AN(w); v=UAV(w); GATV0(z,INT,n+n,3); x=AV(z); AS(z)[1]=2; AS(z)[2]=1;  // get count of characters n and address v; turn into suitable shape for ;.0 (x 2 1)
+ n=AN(w); v=UAV(w); GATV0(z,INT,n+n,3); x=AVn(3,z); AS(z)[1]=2; AS(z)[2]=1;  // get count of characters n and address v; turn into suitable shape for ;.0 (x 2 1)
   // allocate absolute worst-case output area (each char is 1 word); point x to output indexes
  s=SE(SS,0);
  for(i=0;i<n;++i){   // run the state machine
@@ -94,7 +94,7 @@ A jtunwordil(J jt, A wil, A w, I opts){A z;
  I n=AS(wil)[0]; I (* RESTRICT wilv)[2]=voidAV(wil); C * RESTRICT wv=CAV(w);  // n=#words; wilv->start,end pairs; wv->chars
  I cc=0; DO(n, cc-=wilv[i][0]; cc+=wilv[i][1];)  // cc=# characters in all words
  I buflen=(cc<<(opts&1))+((opts&1)<<1)+((opts&2)<<1);  // len to get: one byte per word for delimiter, plus # chars (doubled if we are doubling quotes), plus 2 if enclosing in quotes, plus 4 if requested
- GATV0(z,LIT,buflen,1); C *zv0=CAV(z), *zv=zv0;  // allocate the buffer, point to beginning, set scan pointer
+ GATV0(z,LIT,buflen,1); C *zv0=CAV1(z), *zv=zv0;  // allocate the buffer, point to beginning, set scan pointer
  UI dupchar=(opts&1)?'\'':256; *zv='\''; zv+=(opts&1);  // if dup requested, set to look for quotes and install leading quote
  DO(n, C *w0=wv+wilv[i][0]; C *wend=wv+wilv[i][1]; while(w0!=wend){C c=*w0++; *zv++=c; if(c==dupchar)*zv++=c;})  // copy all words, duplicating where needed
  AS(z)[0]=AN(z)=zv-zv0;  // install length of result
@@ -113,7 +113,7 @@ DF1(jtwords){A t,*x,z;C*s;I k,n,*y;
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
  p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; m+=(b^1)|p; p=((b^1)|p)^1;);  // should just take half the # '
  if(0==m)R aqq; 
- GATV0(z,LIT,m,1!=m); x=CAV(z);
+ GATV0(z,LIT,m,1!=m); x=CAVn(1!=m,z);
  p=0; t=s; DQ(n-2, *x=c=*++t; b=c==CQUOTE; x+=(b^1)|p; p=((b^1)|p)^1;);  // This may overstore by 1 character but that's OK because LIT types have allocated space at the end
  R z;
 }
@@ -138,7 +138,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  ARGCHK2(a,w);
  s=CAV(w); u=AV(a);
  n=AM(a);  // get # words not including any final NB.
- GATV0(z,BOX,n,1); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
+ GATV0(z,BOX,n,1); x=v=AAV1(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
   wl=u[1]-u[0]; wi=u[0]+s; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b=there are inflections, init to false
@@ -211,8 +211,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     // The sentence is abc =: CCASEV (new argument)
     // The new argument is (the list of names), then
     // (_3) the name pqr, (_2) the position if any of abc in the right-hand list (-1 if absent), (_1) the parsed queue before this replacement
-    GAT0(z1,BOX,4,1); x=AAV(z1);   // Allocate the sentence, point to its data
-    GATV0(y,BOX,m+3,1); yv=AAV(y);   // Allocate the argument
+    GAT0(z1,BOX,4,1); x=AAV1(z1);   // Allocate the sentence, point to its data
+    GATV0(y,BOX,m+3,1); yv=AAV1(y);   // Allocate the argument
     c=-1; k=AN(QCWORD(v[0])); s=NAV(QCWORD(v[0]))->s;   // get length and address of abc
     j=4; DO(m, yv[i]=p=QCWORD(v[j]); j+=2; if(AN(p)==k&&!memcmpne(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
     yv[m]=QCWORD(v[2]); RZ(yv[m+1]=incorp(sc(c))); yv[m+2]=incorp(z);    // add the 3 ending elements
@@ -353,7 +353,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
   ASSERT(c==AN(ds(CALP)),EVLENGTH);
   RZ(m=vi(m)); v=AV(m); DO(c, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););
  }else ASSERT(BOX&AT(m),EVDOMAIN);
- GAT0(z,BOX,4,1); zv=AAV(z);
+ GAT0(z,BOX,4,1); zv=AAV1(z);
  RZ(zv[0]=incorp(sc(f))); RZ(zv[1]=incorp(s)); RZ(zv[2]=incorp(m)); RZ(zv[3]=incorp(vec(INT,4L,ijrd)));
  EPILOG(z);
 }    /* check left argument of x;:y */
@@ -376,7 +376,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
   ASSERT(BOX&AT(m),EVDOMAIN);  // otherwise m must be boxes
   RZ(y=raze(m)); r=AR(y); k=AS(y)[0];  // y = all the input values run together, k=# input values
   ASSERT((UI)(r-AR(w))<=(UI)1,EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
-  GATV0(x,INT,1+k,1); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
+  GATV0(x,INT,1+k,1); v=AV1(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
   DO(c, j=i; t=mv[i]; if((-r&((r^AR(t))-1))<0)DQ(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
   if(b){RZ(m=from(indexof(y,ds(CALP)),x)); v=AV(m); DO(AN(ds(CALP)), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}  // for ASCII input, translate & check size
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}  // # columns of machine must be at least c+1; look up the rest

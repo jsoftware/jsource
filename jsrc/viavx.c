@@ -337,7 +337,7 @@ static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I t;
   IH *hh=IHAV(h); I minimum=hh->datamin; p=hh->datarange; I maximum=minimum+p; \
   /* if the hashtable for i./i: exceeds the cache size, allocate a packed-bit version of it. \
   We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
-  UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV0(hvpa,INT,3+(p>>LGBW),0); hvp=UCAV(hvpa)-BYTENO(minimum)+SZI;} \
+  UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV0(hvpa,INT,3+(p>>LGBW),0); hvp=UCAV0(hvpa)-BYTENO(minimum)+SZI;} \
   \
   md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
@@ -777,8 +777,8 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
    SETICFR(a,af,acr,m);  f0=MAX(0,f1); DPMULDE(prod(f,s),prod(f0,ws+wf),zn)
    switch(mode&IIOPMSK){
    case IIDOT:  
-   case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
-   case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAV(z),MEMSET00LEN,MEMSET00); R z;  // mustn't overfetch s
+   case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AVn(f+f0,z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
+   case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAVn(f+f0,z),MEMSET00LEN,MEMSET00); R z;  // mustn't overfetch s
    case ILESS:                              RCA(w);
    case IINTER:                             R take(zeroionei(0),w);
    case IIFBEPS:                            R mtv;
@@ -1120,8 +1120,8 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   // If w was omitted (indicating prehashing), return the information for that special case
   // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
   // The caller must ras() this result to protect it, if it is going to be saved
-  GAT0(z,BOX,2,1); zv=AAV(z);
-  GAT0(x,INT,6,1); xv=AV(x);
+  GAT0(z,BOX,2,1); zv=AAV1(z);
+  GAT0(x,INT,6,1); xv=AV1(x);
   xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[FNTABLEPREFIX+fnx][bighash]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */
   zv[0]=incorp(x); zv[1]=incorp(h);
  }

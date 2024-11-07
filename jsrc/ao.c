@@ -33,7 +33,7 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
 #define OBQLOOP(Tw,Tz,zt,init,expr)  \
  {Tw* RESTRICT u,*v,*ww=(Tw*)wv;Tz x,* RESTRICT zz;                  \
   b=1; k=n1;                                     \
-  GA(z,zt,d*c,r-1,1+s); AS(z)[0]=d; zz=(Tz*)AV(z); \
+  GA(z,zt,d*c,r-1,1+s); AS(z)[0]=d; zz=(Tz*)AVn(r-1,z); \
   DO(n,  v=ww+i;      u=v+n1*MIN(i,m1);     init; while(v<=(u-=n1))expr; *zz++=x;);  \
   DO(m1, v=ww+(k+=n); u=v+n1*MIN(m-i-2,n1); init; while(v<=(u-=n1))expr; *zz++=x;);  \
  }
@@ -46,7 +46,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,n,n1,r,*s,wt;
  y=FAV(self)->fgh[0]; y=FAV(y)->fgh[0]; id=FAV(y)->id;
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; d=m+n-1; PROD(c,r-2,2+s);
- if(((1-m)&(1-n))>=0){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}  // m=1 or n=1, return item of input
+ if(((1-m)&(1-n))>=0){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AVn(r-1,z),wv,AN(w)<<bplg(wt)); R z;}  // m=1 or n=1, return item of input
  if(wt&FL+CMPX)NAN0;
  if(1==c)switch(OBQCASE(CTTZ(wt),id)){
   case OBQCASE(FLX,  CPLUS   ): OBQLOOP(D,D,wt,x=*u, x+=*u        ); break;
@@ -99,7 +99,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,n,n1,r,*s,wt;
 
 #define PMLOOP(Tw,Tz,zt,expr0,expr)  \
  {Tw*aa=(Tw*)av,* RESTRICT u,* RESTRICT v,*ww=(Tw*)wv;Tz x,* RESTRICT zv;  \
-  b=1; GATVS(z,zt,zn,1,0,zt##SIZE,GACOPYSHAPE0,R 0); zv=(Tz*)AV(z);       \
+  b=1; GATVS(z,zt,zn,1,0,zt##SIZE,GACOPYSHAPE0,R 0); zv=(Tz*)AV1(z);       \
   for(i=0;i<zn;++i){                         \
    j=MIN(i,m1); u=aa+j; v=ww+i-j;            \
    p=MIN(1+i,zn-i); p=MIN(p,k);              \
@@ -144,9 +144,9 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
   {A a1,y;I*aa,i,*u,*ww=(I*)wv,*v,*yv,*zv;VA2 adocv; VARPS adocvsum;
    b=1;
    adocv=var(ds(CSTAR),at,wt); varps(adocvsum,FAV(f)->fgh[0],wt,0);  // get sum routine from f/, which is +/
-   GATV0(a1,INT,m,1); aa=AV(a1); u=m+(I*)av; DO(m, aa[i]=*--u;);
-   GATV0(y,INT,MIN(m,n),1); yv=AV(y);
-   GATV0(z,INT,zn,1); zv=AV(z);
+   GATV0(a1,INT,m,1); aa=AV1(a1); u=m+(I*)av; DO(m, aa[i]=*--u;);
+   GATV0(y,INT,MIN(m,n),1); yv=AV1(y);
+   GATV0(z,INT,zn,1); zv=AV1(z);
    for(i=0;i<zn;++i){
     j=MIN(i,m1); u=aa+m1-j; v=ww+i-j;
     p=MIN(1+i,zn-i); p=MIN(p,k);
@@ -170,7 +170,7 @@ static DF2(jtkeyi){PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
  ARGCHK2(a,w);
  SETIC(a,n); av=AV(a);
  RZ(j=grade1(a)); jv=AV(j);  // get grading permutation for the self-indexes.  This groups the partitions
- GATV0(p,B01,n,1); pv=BAV(p);   // allocate boolean fret mask
+ GATV0(p,B01,n,1); pv=BAV1(p);   // allocate boolean fret mask
  DO(n, c=d; d=av[*jv++]; *pv++=c<d;);  // d=self-index of current output value (always ascending).  When the value changes, that's a fret
  dfv2(z,p,from(j,w),cut(VAV(self)->fgh[0],zeroionei(1)));  // z = frets u;.1 j{w
  EPILOG(z);
@@ -327,7 +327,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
     ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item in bytes, smallest item, range+1
     // allocate a tally area and clear it to ~0
-    A ftbl; GATV0(ftbl,INT,p,1); void **ftblv=voidAV(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
+    A ftbl; GATV0(ftbl,INT,p,1); void **ftblv=voidAV1(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
     // pass through the inputs, setting ftblv to 0 if there is a partition, and counting the number of partitions
     I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
     ftblv-=datamin;  // bias starting addr so that values hit the table
@@ -620,7 +620,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of ai
   ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
   // allocate a tally area and clear it.  Could use narrower table perhaps
-  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=IAV(ftbl);
+  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=IAV1(ftbl);
   // pass through the inputs, counting the number of slots mapped to each index
   // This is tricky, because we want the slot to hold either the number of slots (i. e. size of box) or the next address to store into for the slot.
   // But the address can be anything - ah, but not quite.  The address can't be inside an allocated block, for example it can't be inside a.
@@ -693,7 +693,7 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  RZ(b=ne(e,x));  // b = mask of values in x that are different from the sparse element
  RZ(x=repeat(b,x)); RZ(x=keytally(x,x)); u=AV(x); d=AN(x);  // u now -> #/.~ of the non-sparse items, d=count thereof
  I nfills=SETIC(w,k)-bsum(c,BAV(b));  // number of cells of fill
- GATV0(z,INT,d+(nfills!=0),1); v=AV(z);  // allocate result: one for each unique non-fill, plus one for the fills if any
+ GATV0(z,INT,d+(nfills!=0),1); v=AV1(z);  // allocate result: one for each unique non-fill, plus one for the fills if any
  DQ(j, *v++=*u++;); if(nfills)*v++=nfills; DQ(d-j, *v++=*u++;);  // copy in the counts
  EPILOG(z);
 }    /* x #/.y , sparse x */
@@ -715,7 +715,7 @@ F2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
   // we should do small-range processing.  Extract the info
   ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item in bytes, smallest item, range+1
   // allocate a tally area and clear it to 0
-  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
+  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV1(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
   // pass through the inputs, setting ftbl to tally-1, and counting the number of partitions
   I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
   ftblv-=datamin;  // bias starting addr so that values hit the table
@@ -760,8 +760,8 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
  if(unlikely((AT(a)&B01)!=0))if(1>=AR(a)&&!(wt&VERB)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom, for which we can handle all types (except VERB, which was a monad call)
   B *c=memchr(p,1^*p,n); i=c-p; i=c?i:0; j=i; i=*p?0:i; j=*p?j:0;  // i=index of first 1, j=index of first 0 (0 if not found)
   k=bsum(n,p); m=i+j?1:0;  // k=# 1s  m is 1 if there are 0s and 1s
-  GATV0(x,INT,m+1,1); v=AV(x); v[m]=i+j; v[0]=0;  // 0=index of first item (always 0); 1 if it exists is the other
-  GATV0(y,INT,m+1,1); v=AV(y); j=n-k; k=i?j:k; k&=-m; v[0]=k; v[m]=n-k;  // if 1st value is 0, complement k; if only 1 value, clear k
+  GATV0(x,INT,m+1,1); v=AV1(x); v[m]=i+j; v[0]=0;  // 0=index of first item (always 0); 1 if it exists is the other
+  GATV0(y,INT,m+1,1); v=AV1(y); j=n-k; k=i?j:k; k&=-m; v[0]=k; v[m]=n-k;  // if 1st value is 0, complement k; if only 1 value, clear k
   if(!(wt&VERB))RZ(x=fromA(x,w)); w=x; x=b?x:y; y=b?y:w; R stitch(x,y);  // select using index (unless i.@#, then keep index); set order & ,.
  }
  // for other types of a, we handle it quickly only if w is B01/INT/FL or i.@# which has type of VERB
@@ -776,7 +776,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
    // we should do small-range processing.  Extract the info
    ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item in bytes, smallest item, range+1
    // allocate a tally area and clear it to 0
-   A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
+   A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV1(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
    // pass through the inputs, setting ftbl to tally-1, and counting the number of partitions
    I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
    ftblv-=datamin;  // bias starting addr so that values hit the table

@@ -168,7 +168,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // Verify agreement
   ASSERTAGREE(AS(a),AS(w),cf);  // frames must agree
   // Allocate result
-  GATV(z,BOX,natoms,lr,AS(la)); if(unlikely(!natoms))RETF(z) zv=AAV(z);  // make sure we don't fetch outside empty arg
+  GATV(z,BOX,natoms,lr,AS(la)); if(unlikely(!natoms))RETF(z) zv=AAVn(lr,z);  // make sure we don't fetch outside empty arg
  }
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags|=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AT(a)&BOX)<<1);
@@ -310,7 +310,7 @@ static DF1(jtunderai1){A fs=FAV(self)->fgh[0]; A x,y,z;B b;I j,n,*u,*v;UC f[256]
  }         
  if(!b)R from(dfv1(z,indexof(ds(CALP),w),fs),ds(CALP));
  n=AN(w);
- GATV(z,LIT,n,AR(w),AS(w)); zv=UAV(z); wv=UAV(w);
+ I zr=AR(w); GATV(z,LIT,n,AR(w),AS(w)); zv=UAVn(zr,z); wv=UAV(w);
  if(!bitwisecharamp(f,n,wv,zv))DQ(n, *zv++=f[*wv++];); 
  RETF(z);
 }    /* f&.(a.&i.) w */

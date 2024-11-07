@@ -155,7 +155,7 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DQ(m, DQ(d,
   av=(I*)AV(a);                          \
   wv=(T*)AV(w);                 \
   ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));                      \
-  GATV(z,INT,AN(AR(a)>AR(w)?a:w),MAX(AR(a),AR(w)),AS(AR(a)>AR(w)?a:w)); zv=(T*)AV(z);                  \
+  I zr=MAX(AR(a),AR(w)); GATV(z,INT,AN(AR(a)>AR(w)?a:w),zr,AS(AR(a)>AR(w)?a:w)); zv=(T*)AVn(zr,z);                  \
   if(!AN(z))R z;                                                       \
   if     (AR(a)==AR(w))DQ(AN(a), x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
   else if(AR(a)< AR(w))DQ(AN(a), x=*av++; DQ(AN(w)/AN(a), y=*wv++; *zv++=op(x,y););)  \
@@ -248,7 +248,7 @@ DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN
   case  1: case 6: case 7: case 9: ado=(AHDRRFN*)bwinsI[j]; n=n>>LGSZI;  // this gets # full words in the list arg.  Handle as ints.  Remnant handled below
   }
  else if(0==(d&(SZI-1))){ado=(AHDRRFN*)bwinsI[j]; d>>=LGSZI;}  //if #atoms are a word multiple, switch to handling ints
- GATV(z,LIT,zatoms,wr-1,1+AS(w)); zv=CAV(z);
+ GATV(z,LIT,zatoms,wr-1,1+AS(w)); zv=CAVn(wr-1,z);
  ado(d,n,1L,wv,zv,jt);
  if(1==wr){
   r=wn-(n<<LGSZI); u=wv+(n<<LGSZI); x=*zv; v=1+zv; 

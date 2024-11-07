@@ -181,7 +181,7 @@ static A jtva1(J,A,A);
 static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P*wp,*zp;
  t=atype(cv); zt=rtype(cv);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); c=t&&TYPESNE(t,AT(e));
- if(c)RZ(e=cvt(t,e)); GA00(ze,zt,1,0); oprc=((AHDR1FN*)ado)(jt,1L,AV(ze),AV(e));
+ if(c)RZ(e=cvt(t,e)); GA00(ze,zt,1,0); oprc=((AHDR1FN*)ado)(jt,1L,AV0(ze),AV(e));
  if(c)RZ(e=cvt(t,x)); n=AN(x); if(oprc==EVOK){GA(zx,zt,n,AR(x),AS(x)); if(n){oprc=((AHDR1FN*)ado)(jt,n, AV(zx),AV(x));}}
  // sparse does not do inplace repair.  Always retry, and never inplace.
  oprc=oprc<0?EWOV:oprc;  //   If a restart is required, turn the result to EWOV (must be floor/ceil)
@@ -249,7 +249,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   // integer abs: convert everything to float, changing IMIN to IMAX+1
   if(ado==absI){A zz=z; if(VIP64){MODBLOCKTYPE(zz,FL)}else{GATV(zz,FL,n,AR(z),AS(z))}; I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, if(unlikely(*zv<0))*zzv=-(D)*zv;else*zzv=(D)*zv; ++zv; ++zzv;) RETF(zz);}
   // float sqrt: reallocate as complex, scan to make positive results real and negative ones imaginary
-  if(ado==sqrtD){A zz; GATV(zz,CMPX,n,AR(z),AS(z)); D *zv=DAV(z); Z *zzv=ZAV(zz); DQ(n, if(*zv>=0){zzv->re=*zv;zzv->im=0.0;}else{zzv->im=-*zv;zzv->re=0.0;} ++zv; ++zzv;) RETF(zz);}
+  if(ado==sqrtD){A zz; I zzr=AR(z); GATV(zz,CMPX,n,AR(z),AS(z)); D *zv=DAV(z); Z *zzv=ZAVn(zzr,zz); DQ(n, if(*zv>=0){zzv->re=*zv;zzv->im=0.0;}else{zzv->im=-*zv;zzv->re=0.0;} ++zv; ++zzv;) RETF(zz);}
   // QP sqrt: like D but no need to reallocate, just change the result type.  This puns on the fact that E and Z types overlap perfectly
   if(ado==sqrtE){AT(z)=CMPX; E *zv=EAV(z); DQ(n, if(zv->hi>=0){zv->lo=0.0;}else{zv->lo=-zv->hi;zv->hi=0.0;} ++zv;) RETF(z);}
   // float floor: unconvertable cases are stored with bit 63 and bit 62 unlike; restore the float value by setting bit 62.

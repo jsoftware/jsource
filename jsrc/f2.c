@@ -278,7 +278,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first,A*cellbuf){PROLOG
  // Set q=nominal length of field: the length given, if m!=0; otheriwse based on type.  p=length of allocated buffer
  q=m?m:t&B01?3:t&INT?12:17; p=n*q;
   // Allocate space for all results; set shape to (n,q); zv->result area
- GATV0(z,LIT,p,2); AS(z)[0]=n; AS(z)[1]=q; zv=CAV(z);
+ GATV0(z,LIT,p,2); AS(z)[0]=n; AS(z)[1]=q; zv=CAV2(z);
  // If field length is fixed, format the column to that width & return it
  if(m){th2c(e,m,d,s,n,t,wk,wv,m,zv,cellbuf); R z;}
  // Otherwise, field has variable width.  Format the values one by one.
@@ -334,10 +334,10 @@ static A jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
  if(r)RZ(a=cvt(INT,a));  // this detects invalid type for a
  an=AN(a); au=ZAV(a); av=AV(a);  // an=#atoms of a, au->a data (if complex), av->a data (if real)
  // Allocate output arrays, set return value, set ?v->first value of output area
- GATV0(ea,B01,an,   1); *ep=ea; ev=BAV(ea);  // exponential flag, Boolean list
- GATV0(ma,INT,an,   1); *mp=ma; mv= AV(ma);  // field width, integer list
- GATV0(da,INT,an,   1); *dp=da; dv= AV(da);  // #decimal places, integer list
- GATV0(s, LIT,an*sk,2); *sp=s;  sv=CAV(s); AS(s)[0]=an; AS(s)[1]=sk;  // spritf string, set as nx(sk) table
+ GATV0(ea,B01,an,   1); *ep=ea; ev=BAV1(ea);  // exponential flag, Boolean list
+ GATV0(ma,INT,an,   1); *mp=ma; mv= AV1(ma);  // field width, integer list
+ GATV0(da,INT,an,   1); *dp=da; dv= AV1(da);  // #decimal places, integer list
+ GATV0(s, LIT,an*sk,2); *sp=s;  sv=CAV2(s); AS(s)[0]=an; AS(s)[1]=sk;  // spritf string, set as nx(sk) table
  // Look at each atom of a
  for(i=0;i<an;++i){
   // Split a into field-width m and #decimal places d, and x as a flag, negative to indicate exponential form
@@ -381,13 +381,13 @@ DF2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,cellbuf,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I
  if(zk||!AN(w)){
   // We know the width, or there is nothing to format.  Create the lines one by one
   if(1==an)zk*=c;   // If only one atom in a, replicate it to match a line of w
-  GATV(z,LIT,n*zk,r?r:1,ws); AS(z)[AR(z)-1]=zk; zv=CAV(z);  // Allocate table for result; init shape to shape of w; replace 1-cell length with length of line; zv->result area
+  GATV(z,LIT,n*zk,r?r:1,ws); AS(z)[AR(z)-1]=zk; zv=CAVn(r?r:1,z);  // Allocate table for result; init shape to shape of w; replace 1-cell length with length of line; zv->result area
   // Format the fields one by one, appending the new string to the accumulated old.  We process each field specifier for the entire
   // w before moving to the next field.
   DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} th2c(e,m,d,sv+=sk,n,t,wk,wv+=k,zk,zv,&cellbuf); zv+=m;);  // Set e,m,d (if atomic a, keep the same values each time
  }else{
   // The width is unknown.  Build up the result one field at a time.  Each field becomes a box in this intermediate result
-  GATV0(y,BOX,c,1); yv=AAV(y);  // Allocate boxed array, one box per field
+  GATV0(y,BOX,c,1); yv=AAV1(y);  // Allocate boxed array, one box per field
   // Format each field into its own box
   DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} RZ(yv[i]=th2a(e,m,d,sv+=sk,n,t,wk,wv+=k,(B)!i,&cellbuf)););
   // Join the fields of each line to produce an nxc table of characters, one row per 1-cell of w

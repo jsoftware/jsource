@@ -71,7 +71,7 @@ static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
   else if(s=strchr(pp,c)){t=1; p=c; q=qq[s-pp];}
  }
  ASSERT(!t,EVDOMAIN);
- GATV0(z,BOX,m,1<m); u=AAV(z);
+ GATV0(z,BOX,m,1<m); u=AAVn(1<m,z);
  for(i=0;i<n;++i){
   c=wv[i]; 
   if(t){if(c==q)t=0;}
@@ -136,7 +136,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*
      I fb,i,j,mi,n,n1,p,q,vals[3]={-1,-1,0};
  ARGCHK1(w);
  w=C(AAV(w)[0]); n=AN(w);
- GAT0(z,BOX,1+NMODVALS,1); zv=AAV(z); 
+ GAT0(z,BOX,1+NMODVALS,1); zv=AAV1(z); 
  DO(NMODVALS, zv[1+i]=mtv;);
  if(n&&(C2T+C4T)&AT(w))RZ(w=uco2(num(5),w));
  ASSERT(1>=AR(w),EVRANK);
@@ -266,8 +266,8 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  if(1<nf){GATV0(base,INT,nf*4,2); s=AS(base); *s++=nf; *s=4;}else GATV0(base,INT,3+nc,1);
  GATV0(strs,BOX,nf*NMODVALS,2); s=AS(strs); *s++=nf; *s=NMODVALS;
  GATV(len, INT,n,wr,ws); 
- GATV(fb,  B01,n,wr,ws); mvc(n,BAV(fb),MEMSET00LEN,MEMSET00);
- GAT0(z,BOX,4,1); u=AAV(z); *u++=incorp(base); *u++=incorp(strs); *u++=incorp(len); *u++=incorp(fb); 
+ GATV(fb,  B01,n,wr,ws); mvc(n,BAVn(wr,fb),MEMSET00LEN,MEMSET00);
+ GAT0(z,BOX,4,1); u=AAV1(z); *u++=incorp(base); *u++=incorp(strs); *u++=incorp(len); *u++=incorp(fb); 
  ib=AV(base); as=AAV(strs); u=AAV(a);
  if(1==nf){MC(ib,AV(C(*u)),SZI*3); mvc(SZI*nc,ib+3,MEMSET00LEN,MEMSET00); DO(NMODVALS, *as++=incorp(C(u[i+1]));)}
  else DQ(nf, MC(ib,AV(C(*u)),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(C(u[1])); ++u;) ++u; )
@@ -409,7 +409,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
  nf=1==AR(base)?1:AS(base)[0];
  switch(mode){
  case 0:
-  GATV(x, BOX, n, wr, ws); a1v=AAV(x); il=AV(len);
+  GATV(x, BOX, n, wr, ws); a1v=AAVn(wr,x); il=AV(len);
   ib=AV(base);
   imod=1;
   DO(n, 
@@ -421,8 +421,8 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
   );
   break;
  case 1:
-  GATV0(x, BOX, nc, 1); a1v=AAV(x); ib=AV(base); zs[0]=prod(wr-1,ws);
-  GATV0(v, LIT, nc*SZA, 1); cvv=(C**)AV(v); 
+  GATV0(x, BOX, nc, 1); a1v=AAV1(x); ib=AV(base); zs[0]=prod(wr-1,ws);
+  GATV0(v, LIT, nc*SZA, 1); cvv=(C**)AV1(v); 
   DO(nc,
    if(0<ib[0]) zs[1]=ib[0]; 
    else zs[1]=ib[3+(1<nf?0:i)]; 

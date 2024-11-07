@@ -78,7 +78,7 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
  ASSERT(1>=AR(w),EVRANK);
  if(VERB&AT(w))R w;
  ASSERT(BOX&AT(w),EVDOMAIN);
- GATV0(z,BOX,n,1); v=AAV(z);
+ GATV0(z,BOX,n,1); v=AAV1(z);
  DO(n, x=C(wv[i]); RZ(y=(y=cex(x,jtfx,0L))?y:exg(x)); *v++=QCINSTALLTYPE(y,ATYPETOVALTYPE(AT(y)));)  // if the AR can be converted to an A, do so; otherwise it should be a list of ARs, recur on each
  R PARSERVALUE(parseforexec(z));
 }

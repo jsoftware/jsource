@@ -12,12 +12,12 @@
  static A jtinitnl(J jt){A q;
   GATV0(q,INT,1,1);
   JT(jt,stnum)=q;  // save address of block
-  jt->numloctbl=IAV(q);  // address of locale vector
+  jt->numloctbl=IAV1(q);  // address of locale vector
   jt->numlocsize=1;  // length of locale vector
-  jt->numlocdelqh=IAV(q);  // pointer to first locale number to allocate
+  jt->numlocdelqh=IAV1(q);  // pointer to first locale number to allocate
   jt->numlocdelqn=1;  // init 1 value to allocate
-  jt->numlocdelqt=IAV(q);  // pointer to end of queue (queue is never empty - it starts at 1 and never allocates unless there are DELAYBEFOREREUSE empties
-  *jt->numlocdelqh=(I)IAV(q);  // Make the sole locale the end-of-chain by looping its chain to itself.  This is never needed as end-of-chain but it does ensure relocation
+  jt->numlocdelqt=IAV1(q);  // pointer to end of queue (queue is never empty - it starts at 1 and never allocates unless there are DELAYBEFOREREUSE empties
+  *jt->numlocdelqh=(I)IAV1(q);  // Make the sole locale the end-of-chain by looping its chain to itself.  This is never needed as end-of-chain but it does ensure relocation
   R q;  // return no error
  }
  

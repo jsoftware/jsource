@@ -51,7 +51,7 @@ F1(jtlock1){A z; C* p; C* src;
  maxc2=max(33,c2);
  r=4+4+SK+LOCKEXTRA+maxc1+len+SK+maxc2+2*SERIALNUMSIZE; /* result len */
  GATV0(z,LIT,r,1);
- p=CAV(z);
+ p=CAV1(z);
 #if !(SYS & SYS_LILENDIAN)
  xlen=swapint(len);
 #endif

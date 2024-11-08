@@ -1304,8 +1304,8 @@ success:;
  //Note: if ce-ch<32 then we will definitely set lf to ce-32 in the tail, so there is no danger of overreading from it, unless zl==0, which we handle below
  if(!zl){ PBOXCUTCHUNK t={pe,0,pe+1};c->c[ti]=t; R 0; } //only a prefix (and potentially suffix)
  GAE0(z,INT,zl,0,R jt->jerr);
- /*GATV0(z,BOX,zl,1);*/ACINITZAP(z);
- A *zv=AAV0/*AAV1*/(z);
+ ACINITZAP(z);
+ A *zv=AAV0(z);
  A *ze=zv+zl;
  {UI4 m=_mm256_movemask_epi8(_mm256_cmpeq_epi8(fret,LOADV32I(lf)));
   ce=lf+31-__builtin_clz(m); ss=ce-chb+1;}
@@ -1379,7 +1379,7 @@ DF1(jtboxcutm21){
  for(I j=0;j<wn;j++){
   if(wv[j]==fret){
    A t;GA10(t,LIT,j-i,1);ACINITZAP(t);
-   MC(CAV(t),wv+i,j-i);
+   MC(CAV1(t),wv+i,j-i);
    *zv++=t;
    i=j+1;}}
  EPILOG(z);

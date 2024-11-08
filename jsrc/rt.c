@@ -51,7 +51,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
  u=AAV(w);
  for(j=0;j<yn;++j){
   DPMULDE(m,yv[j],k); GATV0(q,LIT,k,2); s=AS(q); *s=m; *++s=yv[j];
-  v=CAV(q); mvc(AN(q),v,1,iotavec-IOTAVECBEGIN+' ');
+  v=CAV2(q); mvc(AN(q),v,1,iotavec-IOTAVECBEGIN+' ');
   pv[1]=yv[j]; k=j-yn; DO(xn, *pv=xv[i]; RE(v+=pad(p,C(u[k+yn]),v)); k+=yn;);
   zv[j]=incorp(q);
  }
@@ -71,8 +71,8 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
 static A jtcenter(J jt,A a,I j,I k,I m){A z;C*x;I n,*s,zn;
  ARGCHK1(a);
  n=AN(a); DPMULDE(m,n,zn); GATV0(z,LIT,zn,2); s=AS(z); *s=m; *++s=n;
-RE(zn=mult(m,n));
- x=CAV(z); mvc(AN(z),x,1,iotavec-IOTAVECBEGIN+' '); MC(x+n*(j+((m-(j+k))>>1)),AV(a),n);
+ RE(zn=mult(m,n));
+ x=CAV2(z); mvc(AN(z),x,1,iotavec-IOTAVECBEGIN+' '); MC(x+n*(j+((m-(j+k))>>1)),AV(a),n);
  R z;
 }
 
@@ -91,7 +91,7 @@ static F1(jttleaf){A t,z;C*v;I n,*s;
  ARGCHK1(w);
  n=AN(w);
  GATV0(t,LIT,2+n,2); s=AS(t); s[0]=1; s[1]=2+n;
- v=CAV(t); v[0]=JT(jt,bx)[10]; v[1]=' '; MC(2+v,AV(w),n);
+ v=CAV2(t); v[0]=JT(jt,bx)[10]; v[1]=' '; MC(2+v,AV(w),n);
  GAT0(z,BOX,1,1); AAV1(z)[0]=incorp(t);
  R z;
 }

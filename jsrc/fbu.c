@@ -421,13 +421,13 @@ A RoutineA(J jt,A w,A prxthornuni){A z;I n,t,q,q1,b=0; UC* wv;
 }
 
 A RoutineB(J jt,A w,A prxthornuni){A z;I n,t,q,b=0; US* c2v; C4* c4v;
- ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
+ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); I wr=AR(w);
  ASSERT(t&C2T,EVDOMAIN);
- if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty C2T list 
+ if(!n) {GATV(z,C2T,n,wr,AS(w)); R z;}; // empty C2T list 
  q=wtousize(USAV(w),n);
  if(q<0||q!=n){
-  GATV(z,C4T,n,AR(w),AS(w));
-  c4v=C4AV(z);
+  GATV(z,C4T,n,wr,AS(w));
+  c4v=C4AVn(wr,z);
   c2v=USAV(w);
   DQ(n, *c4v++=(C4)*c2v++;);
   R RoutineC(jt,z,prxthornuni);
@@ -444,7 +444,7 @@ A RoutineC(J jt,A w,A prxthornuni){A z;I n,t,q,b=0; C4* wv;
  if(b){
  q=utousize(C4AV(w),n);
  GATV0(z,C4T,q,1);
- utou(C4AV(w),n,C4AV(z));
+ utou(C4AV(w),n,C4AV1(z));
  if(BAV(prxthornuni)[0]&1)R utounull(jt,z); else R z;
  }
  if(BAV(prxthornuni)[0]&1)R utounull(jt,w);
@@ -463,14 +463,14 @@ if(t&C4T)
  if(BAV(prxthornuni)[0]&1){
  q=utomnullsize(C4AV(w),n);
  GATV0(z,LIT,q,1);
- utomnull(C4AV(w),n,UAV(z));
+ utomnull(C4AV(w),n,UAV1(z));
  }
  else
  {
  q=utomsize(C4AV(w),n);
  q=(q<0)?(-q):q;
  GATV0(z,LIT,q,1);
- utom(C4AV(w),n,UAV(z));
+ utom(C4AV(w),n,UAV1(z));
  }
 }
 else
@@ -478,14 +478,14 @@ else
  if(BAV(prxthornuni)[0]&1){
  q=wtomnullsize(USAV(w),n);
  GATV0(z,LIT,q,1);
- wtomnull(USAV(w),n,UAV(z));
+ wtomnull(USAV(w),n,UAV1(z));
  }
  else
  {
  q=wtomsize(USAV(w),n);
  q=(q<0)?(-q):q;
  GATV0(z,LIT,q,1);
- wtom(USAV(w),n,UAV(z));
+ wtom(USAV(w),n,UAV1(z));
  }
 }
 R z;

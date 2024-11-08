@@ -210,7 +210,7 @@ do{
       I zcsr=AR(zzcellshape);  // z cell rank
       if(zr>zcsr){  // the new shape is longer than what was stored.  We have to extend the old shape with 1s
        I *zcsold=AS(zzcellshape)+zcsr;  // save pointer to end+1 of current cell size
-       if(zr>=AN(zzcellshape)){GATV0(zzcellshape,INT,zr+3,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  >= to leave 1 extra for later
+       if(unlikely(zr>=AN(zzcellshape))){GATV0(zzcellshape,INT,zr+3,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  >= to leave 1 extra for later
        AR(zzcellshape)=(RANKT)zr;   // set the new result-cell rank
        I *zcsnew=AS(zzcellshape)+zr;  // pointer to end+1 of new cell size
        DQ(zcsr, *--zcsnew=*--zcsold;) DQ(zr-zcsr, *--zcsnew=1;)   // move the old axes, followed by 1s for extra axes
@@ -238,7 +238,7 @@ do{
       // We DO NOT make zzbox recursive, so there will be no overhead on the usecount when zzbox is freed.  Also, if WILLBEOPENED is set we may put
       // virtual blocks into the result; and virtuals are freed only by tpop and shouldn't have their usecounts messed with
       GATV0(zzbox,BOX,nboxes,0);   // rank/shape immaterial
-      zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
+      zzboxp=AAV0(zzbox);  // init pointer to filled boxes, will be the running storage pointer
 #if ZZSTARTATEND
       zzboxp+=nboxes-1;  // when running backwards, start at end
 #endif

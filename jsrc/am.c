@@ -20,7 +20,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;I c,it,j,k,m,r,*s,t,*u,*wi,*z
  if(!ISDENSETYPE(AT(ind),B01+INT))RZ(ind=cvt(INT,ind));
  it=AT(ind); u=AV(ind); b=(B*)u;
  ASSERT((-c&(m-2))>=0||(!c||(m==1&&!memchr(b,C1,c))),EVINDEX);  // unless items are empty, m must have items.  if m is 1 all selectors must be 0.  INT will be checked individually, so we just look at the first c bytes
- zi=AV(z); zc=(C*)zi;
+ zi=AVn(r,z); zc=(C*)zi;
  wi=AV(w); wc=(C*)wi;
 #if !SY_64
 D*wd=(D*)wc,*zd=(D*)zc;

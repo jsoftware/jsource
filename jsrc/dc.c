@@ -78,7 +78,7 @@ F1(jtdbcall){A y,*yv,z,zz,*zv;DC si,s0=0;I c=11,m=0,*s;  // c is # columns
  si=jt->sitop;
  NOUNROLL while(si){if(DCCALL==si->dctype)++m; si=si->dclnk;}  // count # rows in result
  GATV0(z,BOX,m*ncollist,2); s=AS(z); s[0]=m; s[1]=ncollist;  // allocate result, install shape
- si=jt->sitop; zv=AAV(z);
+ si=jt->sitop; zv=AAV2(z);
  NOUNROLL while(si){if(DCCALL==si->dctype){RZ(jtdrow(jt,si,s0,zv,ncollist,collist)); zv+=ncollist;} s0=si; si=si->dclnk;}  // create one row for each CALL, in z
  RETF(z);
 }    /* 13!:13 function stack */

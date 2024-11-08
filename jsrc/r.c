@@ -335,7 +335,7 @@ F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
 A cw57rep(J jt, A x){I i, q[3];
  A *v=CWBASE(x); I n=AN(x)==0?0:CWNC(x)-1;  // empty x is not formatted control words
  A z; GATV0(z,BOX,3*n,2); I *s=AS(z); s[0]=n; s[1]=3;   // allocate result area
- A *zv=AAV(z);
+ A *zv=AAV2(z);
  UI4 prevorigt=0;  // we must revert the change of BBEND END BB[END] to BBEND BBEND BB[END]
  for(i=0;i<n;++i){  // loop over each line of the definition
   UI4 tcesx=CWTCESX(v,~i); I newt=tcesx>>TCESXTYPEX; if(prevorigt==CBBLOCKEND&&newt==CBBLOCKEND){newt=CEND; tcesx^=(CBBLOCKEND^CEND)<<TCESXTYPEX;} prevorigt=newt;  // undo the BBLOCKEND swap

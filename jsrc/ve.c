@@ -960,7 +960,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  DQ(n, p=*v++; x|=(UI)(p>0?p:-p););  // overflow happens on IMIN, no prob
  for(c=0;x;x>>=1){++c;}  // count # bits in result
  GATV0(z,B01,n*c,1+r); MCISH(AS(z),AS(w),r) AS(z)[r]=c;  // Allocate result area, install shape
- v=n+AV(w); zv=AN(z)+BAV(z);  // v->last input location (prebiased), zv->last result location (prebiased)
+ v=n+AV(w); zv=AN(z)+BAVn(1+r,z);  // v->last input location (prebiased), zv->last result location (prebiased)
  DQ(n, x=*--v; DQ(c, *--zv=(B)(x&1); x>>=1;));  // copy in the bits, starting with the LSB
  RETF(z);
 }
@@ -979,7 +979,7 @@ DF2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
   for(zv=av, d=an;d&&*--zv==1;--d);
   if(d&&*zv==-1){zv=wv; DQ(wn, if(*--zv==IMIN){d=0; break;}) if(!d){RZ(a=cvt(FL,a)); R abase2(a,w);}}
   DPMULDE(an,wn,zn); GATV0(z,INT,zn,1+wr); MCISH(AS(z),AS(w),wr) AS(z)[wr]=an;  // allocate result area
-  zv=zn+AV(z);
+  zv=zn+AVn(1+wr,z);
   if((((2^an)-1)&(av[-2]-1)&-(d=av[-1]))<0){I d1,k;
    // Special case: a is (0,d) where d is positive
    if((d&(d1=d-1))==0){

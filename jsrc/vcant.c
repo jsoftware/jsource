@@ -84,7 +84,7 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
  if(unlikely(ISSPARSE(AT(w)))){GASPARSE(z,AT(w),1,zr,sv); R cants(a,w,z);}  // if sparse, go to sparse transpose code.
  GA(z,AT(w),zn,zr,sv); if(!zn)R z;  // allocate result.  If result is empty, return it now
  // now run the transpose
- zv=CAV(z); wv=CAV(w);
+ zv=CAVn(zr,z); wv=CAV(w);
  mvc(r*SZI,tv,MEMSET00LEN,MEMSET00);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter
  switch(cellsizeb){
  case sizeof(I): CANTB(I, *u++=*(I*)v;); break;
@@ -120,7 +120,7 @@ DF1(jtcant1){I r; A z;
   I wstride1=(n&1)*SZI, wstride3=3*wstride1;  // stride between rows of w
   I zstride1=(m&1)*SZI, zstride3=3*zstride1;  // stride between rows of z
   void*wv=DAV(w);
-  void*zv=DAV(z);  // pointers to beginning of result area
+  void*zv=DAV2(z);  // pointers to beginning of result area
   void *wv0=wv, *zv0=zv;  // running pointers to beginning of stripe
   if(likely(m4!=0)){  // if there are blocks to do...
    NOUNROLL for(n0=n;n0>=4;n0-=4){  // for each full vertical strip

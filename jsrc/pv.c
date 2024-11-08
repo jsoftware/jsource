@@ -29,7 +29,7 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
  RZ(t=tokens(vs(w),0)); n=AN(t); y=AAV(t);
  I tmonad=1; 
  GATV0(z,BOX,WTA*(5+n),2); s=AS(z); *s++=5+n; *s=WTA;
- x=(TA*)AV(z);
+ x=(TA*)AV2(z);
  x->a=mark; x->t=0; ++x;
  DQ(n, x->a=t=QCWORD(*y++); x->t=0; ++x; if(AT(t)&NAME&&NAV(t)->flag&NMDOT&&NAV(t)->s[0]=='x')tmonad=0;);  // clear monad flag if x seen
  x->a=mark; x->t=0; ++x;

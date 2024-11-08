@@ -581,7 +581,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   // convenient time to INCORPRA the new contents.  So instead we leave the outer box non-recursive, and rely on the EPILOG to make
   // it recursive, including recurring on the contents of the boxes.  To make this work we install an AC of 0 in the allocated
   // boxes, because they have no tpop outstanding.  The EPILOG will raise that to 1.
-  pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+  pushxsave = jt->tnextpushp; jt->tnextpushp=AAV1(z);  // save tstack info before allocation
   // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
 
   // pass through the input, incrementing each reference
@@ -601,7 +601,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
     avvalue-=i;  // length of partition
     GAE(y,wt,cellatoms*avvalue,yr,AS(w),break); ACINIT(y,0) AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
-    partitionptr=IAV(y);  // start of partition: in the data area of the block
+    partitionptr=IAVn(yr,y);  // start of partition: in the data area of the block
     avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
    }
 
@@ -636,7 +636,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   GATV0(z,BOX,nboxes,1); if(nboxes==0){RETF(z);} // allocate result, and exit if empty for comp ease below
   // boxes will be in AAV(z), in order.  Details discussed in jtbox().
   // We will later make the block recursive usecount, and we will set all the initial usecounts to 1 since they are not on the tpop stack
-  pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+  pushxsave = jt->tnextpushp; jt->tnextpushp=AAV1(z);  // save tstack info before allocation
   // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
   // pass through the inputs again.  If we encounter a frequency value, allocate the next box.  Copy the next item and advance
   // that partition's pointer
@@ -654,7 +654,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
     avvalue=avvalue-freqminval+1;  // length of partition
     GAE(y,wt,cellatoms*avvalue,yr,AS(w),break); ACINIT(y,0) AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
-    partitionptr=(I*)IAV(y);  // start the data for the partition at the beginning of the allocated box's data
+    partitionptr=(I*)IAVn(yr,y);  // start the data for the partition at the beginning of the allocated box's data
    }
 
    // copy the data to the end of its partition and advance the partition pointer
@@ -725,7 +725,7 @@ F2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
   // allocate result area
   GATV0(z,INT,nparts,1);  // output area: one per partition
   // pass the input again, copying out the values.  Use branches to avoid the long carried dependency
-  av=IAV(a); I *zv=AV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){*zv++=of+1; if(--nparts==0)break;} av=(I*)((I)av+k);}
+  av=IAV(a); I *zv=AV1(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){*zv++=of+1; if(--nparts==0)break;} av=(I*)((I)av+k);}
   EPILOG(z);
  }
 
@@ -735,7 +735,7 @@ F2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
  // allocate the result area
  GATV0(z,INT,nparts,1);   // avoid calls with empty args
  // pass through the table, writing out every value that starts a new partition.  The partition size is encoded in the value
- I i=0; I *av=IAV(ai);I *zv=IAV(z); while(1){I a0=*av++; if(a0-i>=0){*zv++=a0-i; if(--nparts==0)break;} ++i;}
+ I i=0; I *av=IAV(ai);I *zv=IAV1(z); while(1){I a0=*av++; if(a0-i>=0){*zv++=a0-i; if(--nparts==0)break;} ++i;}
  EPILOG(z);
 
 }    /* x #/.y main control & dense x */
@@ -788,13 +788,13 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
    // pass the input again, copying out the values.  Use branches to avoid the long carried dependency
    I i=0; av=IAV(a);   // item index and input scan pointer
    if(wt&INT){
-    I *wv=IAV(w); I *zv=IAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
+    I *wv=IAV(w); I *zv=IAV2(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
    }else if(wt&B01){
-    B *wv=BAV(w); I *zv=IAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
+    B *wv=BAV(w); I *zv=IAV2(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
    }else if(wt&FL){  // FL
-    D *wv=DAV(w); D *zv=DAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=(D)(of+1); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
+    D *wv=DAV(w); D *zv=DAV2(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=(D)(of+1); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
    }else{  // i.@#
-    I *zv=IAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=i; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
+    I *zv=IAV2(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=i; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
    }
   }else{
 
@@ -806,13 +806,13 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
    // pass through the table, writing out every value that starts a new partition.  The partition size is encoded in the value
    I i=0; I *av=IAV(ai);   // item index and input scan pointer
    if(wt&INT){
-    I *wv=IAV(w); I *zv=IAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
+    I *wv=IAV(w); I *zv=IAV2(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
    }else if(wt&B01){
-    B *wv=BAV(w); I *zv=IAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
+    B *wv=BAV(w); I *zv=IAV2(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
    }else if(wt&FL){  // FL
-    D *wv=DAV(w); D *zv=DAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=(D)(a0-i); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
+    D *wv=DAV(w); D *zv=DAV2(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=(D)(a0-i); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
    }else{  // i.@#
-    I *zv=IAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=i; if(--nparts==0)break; zv+=2;} ++i;}
+    I *zv=IAV2(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=i; if(--nparts==0)break; zv+=2;} ++i;}
    }
   }
  }else{  // no special processing

@@ -457,7 +457,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
    ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
    I allo = MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
    GATV0(y,B01,allo,1);
-   currstk=(PSTK*)CAV(y);   // save start of data area, leaving space for all the marks
+   currstk=(PSTK*)CAV1(y);   // save start of data area, leaving space for all the marks
    // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
    jt->parserstackframe.parserstkend1=(PSTK*)(CAV(y)+allo);  // point to the end+1 of the allocation
   }  // We could worry about hysteresis to avoid reallocation of every call

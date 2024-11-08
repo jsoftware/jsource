@@ -303,7 +303,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first,A*cellbuf){PROLOG
  // Allocate final result area, an nxm table of characters.  Install shape
  GATV0(y,LIT,n*m,2); AS(y)[0]=n; AS(y)[1]=m;
  // Clear result area to spaces.  Set yv-> first result string, u->first intermediate formatted string
- yv=CAV(y); mvc(AN(y),yv,1,iotavec-IOTAVECBEGIN+' ');  u=zv;
+ yv=CAV2(y); mvc(AN(y),yv,1,iotavec-IOTAVECBEGIN+' ');  u=zv;
  // Copy the strings from the formatting area (u->) to the result area (yv->)
  // For exponential fields, start copying from the left, leaving one space if there is a negative sign somewhere else
  // in the column but not in this value; advance to next input & output

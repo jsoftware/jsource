@@ -1132,7 +1132,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
 static A compiledefn(J jt, A sw, A cw){A z;
  I nsw=AN(sw); I ncw=AN(cw)+1;  // number of sentence words and control words including the extra word with total len
  I alloamtA=nsw+ncw*(8/sizeof(A));  // number of As needed to hold the sentences plus 8 bytes per cw 
- GATV0(z,BOX,alloamtA,1) AK(z)+= 8*ncw; AS(z)[0]=AN(z)=nsw;  // allo block; point AK past the cw data; AN=# sentence words (for when we free them).  Must allo at rank 1 to make compare in jtredef work
+ GATV0(z,BOX,alloamtA,1) AK(z)+=8*ncw; AS(z)[0]=AN(z)=nsw;  // allo block; point AK past the cw data; AN=# sentence words (for when we free them).  Must allo at rank 1 to make compare in jtredef work
  A * RESTRICT base=CWBASE(z);  // point to start of sent/end+1 of tcesx
  JMC(base,AAV(sw),nsw*sizeof(A),0)  // copy in the sentence words
  CW * RESTRICT cwv=(CW *)voidAV(cw);  // point to control words

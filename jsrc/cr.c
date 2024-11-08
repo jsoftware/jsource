@@ -107,7 +107,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // indication that anything unusual happened.  So fail then
   WITHDEBUGOFF(z=CALL1(f1,virtw,fs);)
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
-  GA00(zz,AT(z),0L,wf+AR(z)); zzs=AS(zz); MCISH(zzs,AS(w),wf); MCISH(zzs+wf,AS(z),AR(z));
+  I zr=AR(z); GA00(zz,AT(z),0L,wf+zr); zzs=AS(zz); MCISH(zzs,AS(w),wf); MCISH(zzs+wf,AS(z),zr);
  }
 
 // result is now in zz
@@ -221,7 +221,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    // jmf.ijs unknowingly takes advantage of this fact, and would crash if executed on an empty cell
    z=ds(CACE);  // cell 'returned' a:
   }
-  GA00(zz,AT(z),0L,AR(w)+AR(z)); zzs=AS(zz); MCISH(zzs,AS(w),AR(w)); MCISH(zzs+AR(w),AS(z),AR(z));
+  I zr=AR(z),wr=AR(w); GA00(zz,AT(z),0L,wr+zr); zzs=AS(zz); MCISH(zzs,AS(w),wr); MCISH(zzs+wr,AS(z),zr);
  }
 
 // result is now in zz
@@ -405,8 +405,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){
   auditblock(jt,z,1,1);
 #endif
   if(unlikely(jt->jerr!=0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
-  GA00(zz,AT(z),0L,lof+lif+AR(z)); zzs=AS(zz);
-  MCISH(zzs,los,lof); MCISH(zzs+lof,lis,lif); MCISH(zzs+lof+lif,AS(z),AR(z));
+  I zr=AR(z); GA00(zz,AT(z),0L,lof+lif+zr); zzs=AS(zz);
+  MCISH(zzs,los,lof); MCISH(zzs+lof,lis,lif); MCISH(zzs+lof+lif,AS(z),zr);
  }
 
 // result is now in zz
@@ -547,7 +547,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
    // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
    z=ds(CACE);  // cell 'returned' a:
   }
-  GA00(zz,AT(z),0L,ar+AR(z)); zzs=AS(zz); MCISH(zzs,as,ar); MCISH(zzs+ar,AS(z),AR(z));  // allocate result, copy frame and shape
+  I zr=AR(z); GA00(zz,AT(z),0L,ar+zr); zzs=AS(zz); MCISH(zzs,as,ar); MCISH(zzs+ar,AS(z),zr);  // allocate result, copy frame and shape
  }
 
 // result is now in zz

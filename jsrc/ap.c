@@ -441,7 +441,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  GATV0(z,INT,2*d,2); AS(z)[0]=d; AS(z)[1]=2;
  // x->result area; k=stride between infixes; j=starting index (prebiased); copy (index,length) for each infix;
  // repair last length if it runs off the end
- x=AV(z); k=0>m?p:1; j=-k; DQ(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);
+ x=AV2(z); k=0>m?p:1; j=-k; DQ(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);
  R z;
 }
 

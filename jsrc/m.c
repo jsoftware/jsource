@@ -810,10 +810,10 @@ A jtrealize(J jt, A w){A z; I t;
  ARGCHK1(w);
  t=AT(w);
  AFLAGPRISTNO(ABACK(w))  // clear PRISTINE in the backer, since its contents are escaping
- GA(z,t,AN(w),AR(w),AS(w));
+ I zr=AR(w); GA(z,t,AN(w),zr,AS(w));
  // new block is not VIRTUAL, not RECURSIBLE
 // copy the contents.
- MC(AV(z),AV(w),AN(w)<<bplg(t));
+ MC(AVn(zr,z),AV(w),AN(w)<<bplg(t));
  R z;
 }
 
@@ -1614,9 +1614,9 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  ARGCHK1(w);                               /* assume AR(w)&&AN(w)    */
  m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1);
  t=AT(w); I bpt=bp(t); k=c*bpt;
- GA00(z,t,2*AN(w)+(AN(w)?0:c),AR(w));  // ensure we allocate SOMETHING to make progress
+ I zr=AR(w); GA00(z,t,2*AN(w)+(AN(w)?0:c),zr);  // ensure we allocate SOMETHING to make progress
  m1=allosize(z)/k;  // start this divide before the copy
- MC(AV(z),AV(w),AN(w)*bpt);                 /* copy old contents      */
+ MC(AVn(zr,z),AV(w),AN(w)*bpt);                 /* copy old contents      */
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
  if(b){ACINITZAP(z); mf(w);}          // 1=b iff w is permanent.  This frees up the old block but not the contents, which were transferred as is
  AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */
@@ -1628,7 +1628,7 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I m1;
  GA00(z,t,m*c,r); 
  I k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
- if(!((t&DIRECT)>0))mvc(k*AN(z),AV(z),MEMSET00LEN,MEMSET00);
+ if(!((t&DIRECT)>0))mvc(k*AN(z),AVn(r,z),MEMSET00LEN,MEMSET00);
  R z;
 }    /* "optimal" allocation for type t rank r, c atoms per item, >=m items */
 

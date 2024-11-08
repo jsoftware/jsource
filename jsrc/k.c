@@ -981,13 +981,14 @@ A jtbcvt(J jt,C mode,A w){FPREFIP(J); A z=w;
  if((((AN(w)-1)|(AT(w)&CMPX)-1))>=0){  // not empty AND complex
   I allflag=1, anyflag=0; Z *wv = ZAV(w); DO(AN(w), I isflag=*(I*)&wv[i].im==NANFLAG; allflag&=isflag; anyflag|=isflag;)
   if(anyflag){
+   I zr=AR(w);
    I ipok=SGNIF(jtinplace,JTINPLACEWX) & AC(w);  // both sign bits set (<0) if inplaceable
    if(allflag){
-    if(ipok>=0)GATV(z,INT,AN(w),AR(w),AS(w));
+    if(ipok>=0)GATV(z,INT,AN(w),zr,AS(w));
     I *zv=IAV(z);  // output area
     DO(AN(w), zv[i]=*(I*)&wv[i].re;)  // copy the results as integers
    }else{
-    if(ipok>=0)GATV(z,CMPX,AN(w),AR(w),AS(w));
+    if(ipok>=0)GATV(z,CMPX,AN(w),zr,AS(w));
     Z *zv=ZAV(z);  // output area
     DO(AN(w), if(*(I*)&wv[i].im==NANFLAG){zv[i].re=(D)*(I*)&wv[i].re; zv[i].im=0.0;}else{zv[i]=wv[i];})  // copy floats, and converts any integers back to float
    }
@@ -1055,7 +1056,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  case  2: 
   if(!(t&RAT))RZ(w=cvt(RAT,w));
   GATV0(z,XNUM,2*n,r+1); MCISH(AS(z),AS(w),r) AS(z)[r]=2;  // don't overfetch from AS(w)
-  MC(AV(z),AV(w),2*n*SZI);
+  MC(AVn(r+1,z),AV(w),2*n*SZI);
   R z;
  default:
   ASSERT(20<=j,EVDOMAIN);

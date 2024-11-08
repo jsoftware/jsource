@@ -123,17 +123,17 @@ static struct {
 static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
  t=AT(w);
  // Create putative output area, same size as input.  If there is more than one cell in result, this will always be the result.
- GA(z,AT(w),AN(w),AR(w),AS(w));
+ I zr=AR(w); GA(z,AT(w),AN(w),zr,AS(w)); void * RESTRICT zv=voidAVn(z,zr);
  I cpi=api+(t&CMPX+QP?api:0);  // compares per item on a sort
  I bpi=api<<bplg(t);  // bytes per item of a sort
  I bps=bpi*n;  // bytes per sort
- void * RESTRICT wv=voidAV(w); void * RESTRICT zv=voidAV(z);
+ void * RESTRICT wv=voidAV(w);
  CMP cmpfunc=sortroutines[CTTZ(t)][(~(I)jtinplace>>JTDESCENDX)&1].comproutine;
  void *(*sortfunc)() = sortroutines[CTTZ(t)][(~(I)jtinplace>>JTDESCENDX)&1].sortfunc;
  // allocate the merge work area, large enough to hold one sort.  In case this turns out to be the final result,
  // make the shape the same as the result shape (if there is more than one sort, this shape will be wrong, but that
  // won't matter, since the shape will never be used elsewhere)
- I xr=AR(w); GA(x,t,n*api,AR(w),AS(w)); void * RESTRICT xv=voidAVn(x,xr);  /* work area for msmerge() */
+ GA(x,t,n*api,zr,AS(w)); void * RESTRICT xv=voidAVn(x,zr);  /* work area for msmerge() */
  DO(m,   // sort each cell
   void *sortres=(*sortfunc)(cmpfunc,cpi,n,bpi,(void*)zv,(void*)xv,wv);
   if(m==1){
@@ -364,8 +364,8 @@ static SF(jtsortu){F1PREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
 
 // We are known to have 1 atom per item
 static SF(jtsortu1){F1PREFJT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
- GA(z,AT(w),AN(w),AR(w),AS(w));
- wv=C4AV(w); zu=C4AV(z);
+ I zr=AR(w); GA(z,AT(w),AN(w),zr,AS(w)); zu=C4AVn(zr,z);
+ wv=C4AV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV1(y);}
@@ -412,8 +412,8 @@ static SF(jtsortd){F1PREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
 // {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  (1.e8) * y ?@$ 0}}"0 <.&.(%&4) 100 * 10 ^ 10 %~ i. 41  NB. tuning not including smallrange: qsort merge radix.  range up to 1e9
 #endif
  // falling through for radix sort
- GA(z,AT(w),AN(w),AR(w),AS(w));
- wv=DAV(w); zu=DAV(z);
+ I zr=AR(w); GA(z,AT(w),AN(w),zr,AS(w)); zu=DAVn(zr,z);
+ wv=DAV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV1(y);}

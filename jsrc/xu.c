@@ -757,7 +757,7 @@ F1(jttoutf16){A z;I n,n1,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   q=utowsize(C4AV(c4),AN(c4));
   q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
   GATV0(z,C2T,q,1);
-  utow(C4AV(c4),AN(c4),USAV(z));
+  utow(C4AV(c4),AN(c4),USAV1(z));
  }
  else if(LIT&t) // u16 from u8
  {
@@ -768,11 +768,11 @@ F1(jttoutf16){A z;I n,n1,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   GATV0(z,C2T,q,1);
 #if C_AVX512
   if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
-   utf8_to_utf16le_avx512(USAV(z),UAV(w),(size_t)n,(size_t*)&n1);
+   utf8_to_utf16le_avx512(USAV1(z),UAV(w),(size_t)n,(size_t*)&n1);
   else
-   mtow(UAV(w),n,USAV(z));
+   mtow(UAV(w),n,USAV1(z));
 #else
-  mtow(UAV(w),n,USAV(z));
+  mtow(UAV(w),n,USAV1(z));
 #endif
  }
  else if(C2T&t)
@@ -781,7 +781,7 @@ F1(jttoutf16){A z;I n,n1,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   DQ(n, if(127<*c2v++){b=1;break;});
   if(b)RCA(w); // u16 unchanged
   GATV0(z,LIT,n,1);
-  wv=UAV(z);
+  wv=UAV1(z);
   c2v=USAV(w);
   DQ(n, *wv++=(UC)*c2v++;);   // fallback to ascii
  }
@@ -793,12 +793,12 @@ F1(jttoutf16){A z;I n,n1,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   q=utowsize(C4AV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV0(z,C2T,q,1);
-  utow(C4AV(w),n,USAV(z));
+  utow(C4AV(w),n,USAV1(z));
   }
   else
   {
   GATV0(z,LIT,n,1);
-  wv=UAV(z);
+  wv=UAV1(z);
   c4v=C4AV(w);
   DQ(n, *wv++=(char)*c4v++;);   // fallback to ascii
   }
@@ -821,11 +821,11 @@ q=(q<0)?(-q):q;
 GATV0(z,LIT,q,1);
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
- utf16le_to_utf8_avx512(UAV(z),USAV(w),(size_t)n,(size_t*)&n1);
+ utf16le_to_utf8_avx512(UAV1(z),USAV(w),(size_t)n,(size_t*)&n1);
 else
- wtom(USAV(w),n,UAV(z));
+ wtom(USAV(w),n,UAV1(z));
 #else
-wtom(USAV(w),n,UAV(z));
+wtom(USAV(w),n,UAV1(z));
 #endif
 }
 else
@@ -833,7 +833,7 @@ else
 q=utomsize(C4AV(w),n);
 q=(q<0)?(-q):q;
 GATV0(z,LIT,q,1);
-utom(C4AV(w),n,UAV(z));
+utom(C4AV(w),n,UAV1(z));
 }
 EPILOG(z);
 }    // called by monad ":
@@ -854,14 +854,14 @@ DQ(n, j=*v++; ASSERT((UI)j<=(UI)0x10ffff,EVINDEX); *c4v++=(C4)j;);
 q=utomsize(C4AV(c4),AN(c4));
 q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
 GATV0(z,LIT,q,1);
-utom(C4AV(c4),AN(c4),UAV(z));
+utom(C4AV(c4),AN(c4),UAV1(z));
 }
 else if(t&C4T)
 {
 q=utomsize(C4AV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV0(z,LIT,q,1);
-utom(C4AV(w),n,UAV(z));
+utom(C4AV(w),n,UAV1(z));
 }
 else
 {
@@ -870,11 +870,11 @@ ASSERT(q>=0,EVDOMAIN);
 GATV0(z,LIT,q,1);
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
- utf16le_to_utf8_avx512(UAV(z),USAV(w),(size_t)n,(size_t*)&n1);
+ utf16le_to_utf8_avx512(UAV1(z),USAV(w),(size_t)n,(size_t*)&n1);
 else
- wtom(USAV(w),n,UAV(z));
+ wtom(USAV(w),n,UAV1(z));
 #else
-wtom(USAV(w),n,UAV(z));
+wtom(USAV(w),n,UAV1(z));
 #endif
 }
 EPILOG(z);
@@ -892,7 +892,7 @@ if(t&C4T)
 q=utowsize(C4AV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV0(z,C2T,q,1);
-utow(C4AV(w),n,USAV(z));
+utow(C4AV(w),n,USAV1(z));
 }
 else // u16 from u8
 {
@@ -901,11 +901,11 @@ ASSERT(q>=0,EVDOMAIN);
 GATV0(z,C2T,q,1);
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
- utf8_to_utf16le_avx512(USAV(z),UAV(w),(size_t)n,(size_t*)&n1);
+ utf8_to_utf16le_avx512(USAV1(z),UAV(w),(size_t)n,(size_t*)&n1);
 else
- mtow(UAV(w),n,USAV(z));
+ mtow(UAV(w),n,USAV1(z));
 #else
-mtow(UAV(w),n,USAV(z));
+mtow(UAV(w),n,USAV1(z));
 #endif
 }
 EPILOG(z);
@@ -951,7 +951,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   q=mtousize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV0(z,C4T,q,1);
-  mtou(UAV(w),n,C4AV(z));
+  mtou(UAV(w),n,C4AV1(z));
  }
  else if(C2T&t)
  {
@@ -961,12 +961,12 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   q=wtousize(USAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV0(z,C4T,q,1);
-  wtou(USAV(w),n,C4AV(z));
+  wtou(USAV(w),n,C4AV1(z));
   }
   else
   {
   GATV0(z,LIT,n,1);
-  wv=UAV(z);
+  wv=UAV1(z);
   c2v=USAV(w);
   DQ(n, *wv++=(char)*c2v++;);
   }
@@ -978,7 +978,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   if(b){
    q=utousize(C4AV(w),n);
    GATV0(z,C4T,q,1);
-   utou(C4AV(w),n,C4AV(z));
+   utou(C4AV(w),n,C4AV1(z));
   }
   else
   {
@@ -1036,7 +1036,7 @@ ASSERT(t&LIT,EVDOMAIN);
 q=mtowsize(wv,n);
 if(q<0)RCA(w);
 GATV0(z,C2T,q,1);
-c2v=USAV(z);
+c2v=USAV1(z);
 #if C_AVX512
 if(getCpuFeatures()&CPU_X86_FEATURE_AVX512VBMI2)
  utf8_to_utf16le_avx512(c2v,wv,(size_t)n,(size_t*)&n1);
@@ -1048,17 +1048,17 @@ mtow(wv,n,c2v);
 // promote wchar to literal4
 // change 0 to its over long version
 GATV0(z1,C4T,q,1);
-c4v=C4AV(z1);
+c4v=C4AV1(z1);
 if(cnul){
  DQ(q, if(*c2v)*c4v++=(C4)*c2v++;else{*c4v++=(C4)0xc080;c2v++;});
 }else{
  DQ(q, *c4v++=(C4)*c2v++;);
 }
 // convert to utf-8
-q=utomsize(C4AV(z1),AN(z1));
+q=utomsize(C4AV1(z1),AN(z1));
 q=(q<0)?(-q):q;
 GATV0(z,LIT,q,1);
-utom(C4AV(z1),AN(z1),UAV(z));
+utom(C4AV1(z1),AN(z1),UAV1(z));
 EPILOG(z);
 }
 

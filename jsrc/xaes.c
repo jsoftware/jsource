@@ -81,7 +81,7 @@ DF2(jtaes2)
   }
   ASSERT(0==(n%16),EVDOMAIN);
   GATV0(z,LIT,n,1);
-  out=UAV(z);
+  out=UAV1(z);
   if(!n)R z;
   MC(out,CAV(w),AN(w));
   if(!decrypt) {

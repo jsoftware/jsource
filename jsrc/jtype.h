@@ -1040,6 +1040,7 @@ typedef struct {
  } data;
 } IH;
 #define IHAV(x)         ((IH*)((C*)(x)+AK(x)))  //  how to refer to the header area
+#define IHAV0(x)         ((IH*)((C*)(x)+AKXR(0)))  //  how to refer to the header area when it has rank 0
 
 // Return value from condrange
 typedef struct {

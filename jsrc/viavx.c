@@ -1011,7 +1011,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
     if(unlikely((REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)(h=jt->idothash0))==0)){   // precalc, or  small table doesn't exist
      GATV0(h,INT,((SMALLHASHMAX*sizeof(US)+SZI+(SZI-1))>>LGSZI),0);  // size too big for GAT
      // Fill in the header
-     hh=IHAV(h);  // point to the header
+     hh=IHAV0(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=1;  // hash entries are 2 bytes long
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
@@ -1039,7 +1039,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
      // allocate the new one and fill it in
      GATV0(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0);
      // Fill in the header
-     hh=IHAV(h);  // point to the header
+     hh=IHAV0(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=2;  // hash entries are 4 bytes long
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set

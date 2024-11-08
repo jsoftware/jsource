@@ -71,7 +71,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // inplaceable with a free on the tstack.
   // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
-  A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+  A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAVn(f,z);  // save tstack info before allocation
   JMCDECL(endmask) JMCSETMASK(endmask,k,0)   // set mask for JMCR - OK to copy SZIs
   A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
   while(n--){
@@ -602,7 +602,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,
  k=bpnoun(t); p*=k;  // k=#bytes in atom of result; p=#bytes/result cell
  fauxblockINT(h1faux,4,1); fauxINT(h1,h1faux,r,1) v1=AV(h1);  // create place to hold shape of cell after rank extension
  GA(z,t,m,r,s);    // create result area, shape s; zrel now is relocation offset for result
- zu=CAV(z);  // output pointers
+ zu=CAVn(r,z);  // output pointers
  // loop through each contents and copy to the result area
  for(i=0;i<n;++i){
   y=C(v[i]);  // y->address of A block for v[i]
@@ -656,8 +656,8 @@ F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   // fall through for boxes containing lists and atoms, where the result is a list.  No fill possible, but if all inputs are
   // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
 
-  GA0(z,t,m,r);  // allocate the result area (rank 1)
-  zu=CAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
+  GA0(z,t,m,1);  // allocate the result area (rank 1)
+  zu=CAV1(z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying
   for(i=0;i<n;++i){
    y=C(v[i]); if(AN(y)){if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;}
@@ -669,7 +669,7 @@ F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   PROD(m,r-1,wws+1);  // get #atoms in an item of w
   I nitems=AS(w)[0];  // total # result items is stored in w
   GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape
-  zu=CAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
+  zu=CAVn(r,z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying the data into sequential output positions.  pyx impossible
   DO(n, y=v[i]; d=AN(y)<<klg; JMC(zu,AV(y),d,0); zu+=d;)   // copy the items
  }
@@ -690,7 +690,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
   z=jtra(w,BOX,z); AFLAGORLOCAL(z,BOX)
   PRISTCLRF(w);   // contents have escaped.  w is no longer used
  }
- zv=CAV(z); ck=c*k;  // ck is length of one row in bytes
+ zv=CAV2(z); ck=c*k;  // ck is length of one row in bytes
  for(i=0;i<n;++i){
   // zv is the start of the next output position in the first row
   y=C(wv[i]); dk=1==AR(y)?k:k*AS(y)[1];  // y is contents of this box; dk is # atoms in each row of THIS Input box;

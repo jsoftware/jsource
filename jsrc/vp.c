@@ -82,7 +82,7 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
   DO(n, j=v[i]; if((UI)j>=(UI)n||bv[j]){c=0; break;} bv[j]=1;);
  }
  if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GATV0(b,B01,1+n,1);}
- bv=BAV(b); mvc(1+n,bv,MEMSET00LEN,MEMSET00); ++bv;
+ bv=BAV1(b); mvc(1+n,bv,MEMSET00LEN,MEMSET00); ++bv;
  i=0; j=n-1; zn=(I)(log((D)n)+1.6); 
  GATV0(q,INT,n, 1); qv= AV1(q);
  GATV0(z,BOX,zn,1); zv=AAV1(z);  // always rank 1

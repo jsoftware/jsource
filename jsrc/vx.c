@@ -236,7 +236,7 @@ F1(jtdigits10){ // "."0@":
   case INTX: 
    if(0<=AV(w)[0]){  // must be nonnegative
     A z; GATV0(z,INT,SY_64?19:10,1);  // allocate a max-sized string
-    I c= AV(w)[0], *zv= AV(z), *zv0=zv;
+    I c= AV(w)[0], *zv= AV1(z), *zv0=zv;
     do{*zv++=c%10;}while(c/=10);  // create digits in reverse order
     I n= AN(z)= AS(z)[0]= zv-zv0;   // install length
     zv=zv0; I*v=zv+n-1; DQ(n>>1, c=*zv; *zv++=*v; *v--=c;); /* reverse in place */

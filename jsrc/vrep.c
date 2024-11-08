@@ -65,8 +65,8 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  if(!ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
-  GA00(z,AT(w),zn,AR(w)); MCISH(AS(z),AS(w),AR(w)) // allocate result
-  zvv=voidAV(z);  // point to the output area
+  I zr=AR(w); GA00(z,AT(w),zn,zr); MCISH(AS(z),AS(w),zr) // allocate result
+  zvv=voidAVn(z,zr);  // point to the output area
   // if blocks abandoned, pristine status can be transferred to the result, because we know we are not repeating any cells
   AFLAGORLOCAL(z,PRISTFROMW(w))  // result pristine if inplaceable input was - w prist cleared later
 #if C_AVX2 || EMU_AVX2
@@ -224,8 +224,8 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;A z;
 #define itemsize 0
 #endif
   // If we are moving 8-byte items, we extend the allocation so that we can overstore up to 4 words.  This allows us to avoid remnant handling
-  GA00(z,AT(w),zn+(itemsize<<LGNPAR),AR(w)+!wcr); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=p; AN(z)=zn;  // allo result, copy shape but replace the lengthened axis, which may be added
-  C *zv=CAV(z);  // output fill pointer
+  I zr=AR(w)+!wcr; GA00(z,AT(w),zn+(itemsize<<LGNPAR),zr); MCISH(AS(z),AS(w),zr) AS(z)[wf]=p; AN(z)=zn;  // allo result, copy shape but replace the lengthened axis, which may be added
+  C *zv=CAVn(zr,z);  // output fill pointer
   C *wv=CAV(w);  // input item pointer, increments over input cells
   for(;ncells;--ncells){  // for each result cell
    // make x[j] copies of item wv[j]
@@ -302,9 +302,9 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  }
  DPMULDE(p,n,q);  // q=length of result item  axis.  +/a copies, each of length n
  DPMULDE(p,AN(w),zn);
- GA00(z,AT(w),zn,AR(w)+!wcr); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=q;
+ I zr=AR(w)+!wcr; GA00(z,AT(w),zn,zr); MCISH(AS(z),AS(w),zr) AS(z)[wf]=q;
  if(!zn)R z;
- wv=CAV(w); zv=CAV(z);
+ wv=CAV(w); zv=CAVn(zr,z);
  PROD(c,wf+(I )(wcr!=0),ws); PROD(k,wcr-1,ws+wf+1); k <<=bplg(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
  zk=p*k;  // # bytes to fill per item
  DQ(c, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);

@@ -2101,9 +2101,9 @@ F1(jtfindspr){F1PREFIP;
           t0=_mm256_sub_pd(_mm256_sub_pd(_mm256_set1_pd(1.0),prodh),prodl);  // - (amount the product is too high).  1-prodh gives exact result, commensurate with prodl
           t0=_mm256_fmadd_pd(reciphi,t0,reciplo); t1=reciphi; TWOSUMBS(t1,t0,reciphi,reciplo)  // -(toohigh)*recip(hi) gives correction to recip: add it in
    )
-   DAV(z)[1]=_mm256_cvtsd_f64(reciplo);  // lower recip
-  }else DAV(z)[1]=0.0;
-  DAV(z)[0]=_mm256_cvtsd_f64(reciphi);  // always write upper/only recip
+   DAV1(z)[1]=_mm256_cvtsd_f64(reciplo);  // lower recip
+  }else DAV1(z)[1]=0.0;
+  DAV1(z)[0]=_mm256_cvtsd_f64(reciphi);  // always write upper/only recip
   RETF(z);  // return qp reciprocal
  }else{
   // search for the best SPR

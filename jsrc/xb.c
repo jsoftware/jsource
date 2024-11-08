@@ -353,7 +353,7 @@ static A jtbrep(J jt,B b,B d,A w){
  I t=AT(w); 
  if(unlikely(ISSPARSE(t)))R breps(b,d,w);  // sparse separately
  A y;I sz=bsizer(jt,d,1,w);GATV0(y,LIT,sz,1); // allocate entire result
- RZ(jtbrepfill(jt,b,d,w,CAV(y)));   // fill it
+ RZ(jtbrepfill(jt,b,d,w,CAV1(y)));   // fill it
  R y;  // return it
 }
 
@@ -361,7 +361,7 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
  RZ(y=brep(b,d,w));
  n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
  GATVR(z,LIT,2*n,2,s);  
- u=CAV(y); v=CAV(z); 
+ u=CAV(y); v=CAV2(z); 
  DQ(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
  RETF(z);
 }
@@ -458,7 +458,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  } else {ASSERT(j==n,EVLENGTH);}
  A y; I *vv; if(t&BOX+XNUM+RAT+SPARSE){                // y: locator for values in v
   GATV0(y,INT,e,1);
-  vv=AV(y);                                            // vv: y's offsets
+  vv=AV1(y);                                            // vv: y's offsets
   RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
  if(t&BOX+XNUM+RAT){
   RZ(y=indexof(y,y));                                  // now y is indices in v[]

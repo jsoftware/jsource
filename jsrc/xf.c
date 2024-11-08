@@ -344,7 +344,7 @@ DF1(jtjgetenv){
   us=_wgetenv(USAV(z));
   if(!us)R num(0);
   GATV0(z,C2T,wcslen(us),1);
-  MC(USAV(z),us,2*wcslen(us));
+  MC(USAV1(z),us,2*wcslen(us));
   R toutf8(z);
  }
 #endif

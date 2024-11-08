@@ -164,7 +164,7 @@ DF1(jtfrombase64){
  // process the input in full 4-byte groups.  We may overread the input AND overwrite the result, but we will always stay in the padding area,
  // which is OK because we allocated the result here
 #if defined(__wasm__)  // superseded by library
- UI4 *wv4=UI4AV(w); C *zv=CAV(z);  // write result as bytes, to avoid requiring heroic action in the write combiners
+ UI4 *wv4=UI4AV(w); C *zv=CAV1(z);  // write result as bytes, to avoid requiring heroic action in the write combiners
  for(wn-=3;wn>0;wn-=4){  // for each block of 4, not counting an incomplete last one
   // translate the UTF8 via table lookup.  We could avoid the table reads if we didn't feel the need to validate the input
   UI4 bytes4=*wv4++; I ba=base64invtab[bytes4&0xff]; I bb=base64invtab[(bytes4>>8)&0xff];  I bc=base64invtab[(bytes4>>16)&0xff];  I bd=base64invtab[(bytes4>>24)&0xff];
@@ -183,7 +183,7 @@ DF1(jtfrombase64){
  }
 #else
 size_t zlen=AN(z);
-int rc=base64_decode(CAV(w), AN(w), CAV(z), &zlen, B64CODEC );
+int rc=base64_decode(CAV(w), AN(w), CAV1(z), &zlen, B64CODEC );
 ASSERT(rc==1&&(I)zlen==AN(z),EVDOMAIN);  // make sure no invalid input bytes
 #endif
  R z;

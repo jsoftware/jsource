@@ -1514,7 +1514,7 @@ DF2(jtmemalign){I *s, n, r;  // shape and rank
  I t=AT(w);
  A z; GA00(z,t,n,neededrank) AR(z)=r; MCISH(AS(z),s,r)  // allocate result with data on boundary; fill in correct rank
  I k=bplg(t);
- mvc(n<<k,voidAV(z),AN(w)<<k,voidAV(w));  // copy the data block in full
+ mvc(n<<k,voidAVn(z,neededrank),AN(w)<<k,voidAV(w));  // copy the data block in full
  R z;
 }
 

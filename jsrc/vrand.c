@@ -749,8 +749,8 @@ static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->rng
  if(n){v=AV(w); m1=*v++; j=1; DQ(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
  else{
-  GATV(z,INT,n,AR(w),AS(w));
-  v=AV(w); u=AV(z);
+  I zr=AR(w); GATV(z,INT,n,zr,AS(w)); u=AVn(zr,z);
+  v=AV(w);
   for(j=0;j<n;++j){
    m1=*v++; if(!m1)R mark; ASSERT(0<=m1,EVDOMAIN); m=m1;
    s=GMOF(m,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} *u++=t%m;
@@ -976,8 +976,8 @@ static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->
  if(n){v=AV(w); m1=*v++; j=1; DQ(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
  else{
-  GATV(z,INT,n,AR(w),AS(w));
-  v=AV(w); u=AV(z);
+  I zr=AR(w); GATV(z,INT,n,zr,AS(w)); u=AVn(zr,z);
+  v=AV(w);
   for(j=0;j<n;++j){
    m1=*v++; if(!m1)R mark; ASSERT(0<=m1,EVDOMAIN); m=m1;
    s=GMOF(m,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} *u++=t%m;

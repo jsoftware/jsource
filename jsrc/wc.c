@@ -13,7 +13,7 @@
 // create v[n][2], the start/end of control structures that must not be crossed by goto
 static A jtcongotoblk(J jt,I n,CW*con){A z;CW*d=con;I i,j,k,*u,*v;
  GATV0(z,INT,2*n,2); v=AS(z); v[0]=n; v[1]=2;
- u=v=AV(z);
+ u=v=AV2(z);
  for(i=j=0;i<n;++i,++d){
   *u++=-1; *u++=-1; 
   switch(d->tcesx>>TCESXTYPEX){

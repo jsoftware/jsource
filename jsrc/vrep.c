@@ -66,7 +66,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
   I zr=AR(w); GA00(z,AT(w),zn,zr); MCISH(AS(z),AS(w),zr) // allocate result
-  zvv=voidAVn(z,zr);  // point to the output area
+  zvv=voidAVn(zr,z);  // point to the output area
   // if blocks abandoned, pristine status can be transferred to the result, because we know we are not repeating any cells
   AFLAGORLOCAL(z,PRISTFROMW(w))  // result pristine if inplaceable input was - w prist cleared later
 #if C_AVX2 || EMU_AVX2

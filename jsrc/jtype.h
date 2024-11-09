@@ -362,11 +362,11 @@ struct AD {
 #define SBAV1(x)        ((SB*)((C*)(x)+AKXR(1)))  // local symbol list
 #define SBUV4(x)        ((SBU*)((C*)(x)+AKXR(4)))  // symbol, nonvirtual rank 4
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
-#define voidAVn(x,n)     ((void*)((C*)(x)+AKXR(n)))  // unknown, but rank is known
-#define voidAV0(x)       voidAVn(x,0)  // unknown, but scalar
-#define voidAV1(x)       voidAVn(x,1)  // unknown, but list
-#define voidAV2(x)       voidAVn(x,2)  // unknown, but table
-#define voidAVCACHE(x)   voidAVn(x,RCALIGN)  // unknown, aligned to cache
+#define voidAVn(n,x)     ((void*)((C*)(x)+AKXR(n)))  // unknown, but rank is known
+#define voidAV0(x)       voidAVn(0,x)  // unknown, but scalar
+#define voidAV1(x)       voidAVn(1,x)  // unknown, but list
+#define voidAV2(x)       voidAVn(2,x)  // unknown, but table
+#define voidAVCACHE(x)   voidAVn(RCALIGN,x)  // unknown, aligned to cache
 #define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
 #define UNvoidAV0(x)     ((A)((I)(x)-AKXR(0)))   // go from a pointer to *AV0 back to the base of the A block
 #define UNvoidAV1(x)     ((A)((I)(x)-AKXR(1)))   // go from a pointer to *AV1 back to the base of the A block

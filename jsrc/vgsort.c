@@ -123,7 +123,7 @@ static struct {
 static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
  t=AT(w);
  // Create putative output area, same size as input.  If there is more than one cell in result, this will always be the result.
- I zr=AR(w); GA(z,AT(w),AN(w),zr,AS(w)); void * RESTRICT zv=voidAVn(z,zr);
+ I zr=AR(w); GA(z,AT(w),AN(w),zr,AS(w)); void * RESTRICT zv=voidAVn(zr,z);
  I cpi=api+(t&CMPX+QP?api:0);  // compares per item on a sort
  I bpi=api<<bplg(t);  // bytes per item of a sort
  I bps=bpi*n;  // bytes per sort
@@ -133,7 +133,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
  // allocate the merge work area, large enough to hold one sort.  In case this turns out to be the final result,
  // make the shape the same as the result shape (if there is more than one sort, this shape will be wrong, but that
  // won't matter, since the shape will never be used elsewhere)
- GA(x,t,n*api,zr,AS(w)); void * RESTRICT xv=voidAVn(x,zr);  /* work area for msmerge() */
+ GA(x,t,n*api,zr,AS(w)); void * RESTRICT xv=voidAVn(zr,x);  /* work area for msmerge() */
  DO(m,   // sort each cell
   void *sortres=(*sortfunc)(cmpfunc,cpi,n,bpi,(void*)zv,(void*)xv,wv);
   if(m==1){

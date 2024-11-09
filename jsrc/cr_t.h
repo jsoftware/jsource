@@ -50,7 +50,7 @@
  if(!mn||yt&DIRECT&&RFLAG){I zn;
   RARG1; RE(zn=mult(mn,yn));   // Reallocate y? if needed; zn=number of atoms in all result cells (if they stay homogeneous)
   GA(z,yt,zn,p+yr,0L); ICPY(AS(z),s,p); ICPY(p+AS(z),ys,yr);  // allocate output area, move in long frame followed by result-shape
-  if(mn){zv=CAV(z); MC(zv,AV(y),k);}   // If there was a first cell, copy it in
+  if(mn){zv=CAVn(p+yr,z); MC(zv,AV(y),k);}   // If there was a first cell, copy it in
   // Establish the point we will free to after each call.  This must be after the allocated result area, and
   // after the starting result cell.  After we call the verb we will free up what it allocated, until we have to
   // reallocate the result cell; then we would be wiping out a cell that we ourselves allocated, so we stop
@@ -72,7 +72,7 @@
   // For each previous result, put it into a box and store the address in the result area
   if(j){
    zv=CAV(z)-k;
-   DO(j, GA(q,AT(y0),AN(y0),AR(y0),AS(y0)); MC(AV(q),zv+=k,k); *x++=q;);  // We know the type/shape/rank of y0 matches them all
+   DO(j, I qr=AR(y0); GA(q,AT(y0),AN(y0),qr,AS(y0)); MC(AVn(qr,q),zv+=k,k); *x++=q;);  // We know the type/shape/rank of y0 matches them all
   }
   *x++=y;   // move in the result that caused the wreck
   DO(mn-j-1, RARG; RZ(y=RCALL); *x++=y;);   // for all the rest, execute the cells and move pointer to output area

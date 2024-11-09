@@ -23,7 +23,7 @@ A jtssingleton1(J jt, A w,I caseno){A z;void *zv;
  // Inplaceable if: count=2 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE.  No inplace if on NVR stack (AM is NVR and count>0)
  I wipok = ((w==jt->zombieval)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO);
 // Allocate the result area
- if(wipok){ z=w; zv=voidAV(w); } else if(likely(ar==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,ar); zv=voidAVn(z,ar);}
+ if(wipok){ z=w; zv=voidAV(w); } else if(likely(ar==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,ar); zv=voidAVn(ar,z);}
 
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  I wiv=IAV(w)[0],ziv;

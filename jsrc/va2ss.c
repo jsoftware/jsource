@@ -53,7 +53,7 @@ A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
  z=(ac&SGNIF(ipcaserank,24+JTINPLACEAX))<0?a:z; z=(wc&SGNIF(ipcaserank,24+JTINPLACEWX))<0?w:z;  // block is contextually inplaceable
  if(z&&!(AFLAG(z)&AFUNINCORPABLE+AFRO))if(likely((RANKT)ipcaserank==AR(z)))goto getzv;  // not disallowed and correct rasnk, take it
  // no inplacing, allocate the result, usually an atom
- if(likely((RANKT)ipcaserank==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,(RANKT)ipcaserank); zv=voidAVn(z,(RANKT)ipcaserank);}
+ if(likely((RANKT)ipcaserank==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,(RANKT)ipcaserank); zv=voidAVn((RANKT)ipcaserank,z);}
  goto nozv;
 getzv:;  // here when we are operating inplace on z
  zv=voidAV(z);  // get addr of value

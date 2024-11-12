@@ -295,6 +295,9 @@ IGNOREIFFVI 2000 > 7!:2 'a =: a , <b'
 IGNOREIFFVI 40000 < 7!:2 'a =: a , <a'  NB. Would loop, not inplace
 IGNOREIFFVI 40000 < 7!:2 'a =: a , <<<<a'  NB. Would loop, not inplace
 
+0 = 16777216 (17 b.) 1 { 13!:_4 (<"0 i. 2 5) , <memu 100   NB. scalar replication removes pristinity
+0 = 16777216 (17 b.) 1 { 13!:_4 (<"0 i. 2 5) ,!.(<memu 100) <"0 i. 3  NB. installing user fill loses pristinity
+
 NB. Verify that virtual extension inplaces
 a =: i. 1e6
 2000 > 7!:2 '_5 {. a , _1'

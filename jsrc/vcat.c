@@ -332,12 +332,12 @@ DF2(jtlamin2){A z;I ar,p,q,wr;
 }    /* a,:"r w */
 
 // Append, including tests for append-in-place
-A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
+A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
  ARGCHK2(a,w);
  // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
  // here we require no frame as well
- I at=AT(a), ar=AR(a), wr=AR(w), aflag=AFLAG(a), ac=AC(a), an=AN(a), jtrm=(I)jt->ranks-(I)R2MAX;  // unchanging values
+ I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), jtrm=(I)jt->ranks-(I)R2MAX;  // unchanging values
  I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
  if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)-jtrm))){  // appending empty to nonempty, no frame, equal rank (not 0), no rank given
   if(likely(!ISSPARSE(at|AT(w)))){   // sparse blocks have weird shape - we can't handle them
@@ -354,7 +354,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  if((SGNIF((I)jtinplace,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
-  // would push a over a power-of-2 boundary, skip  the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)
+  // would push a over a power-of-2 boundary, skip the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)
   if(EXTENDINPLACENJA(a,w) && ((at&(DIRECT|BOX))|(AT(w)&SPARSE))>0) {
    // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
    // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
@@ -376,43 +376,52 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // We use type priority to decide whether a would have to be converted
    I zt=maxtyped(at,AT(w));  // the type of the result
-   if((((an-1)|-(at^zt))>=0)&&(!jt->fill||(TYPESEQ(at,AT(jt->fill))))){  // a not empty, atype = resulttype.  And never if fill specified with a different type
+   if((((an-1)|-(at^zt))>=0)){  // a not empty, atype = resulttype.
     //  Check the item sizes.  Set p<0 if the
     // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
     // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis
     // of a, because the first axis of a tells how many items there are - that number doesn't matter, it's the
     // shape of an item of result that matters
-    I naxes = MIN(wr,ar); u=ar+(AS(a))-naxes; v=wr+(AS(w))-naxes;  // point to the axes to compare
-    // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
-    // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
-    // items of w (after its conversion to the precision of a)
-    k=bpnoun(at); ak=k*an; wm=AS(w)[0]; wm=ar==wr?wm:1; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; wk=k*wn;  // We don't need this yet but we start the computation early
-    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
-    p=0; DQ(naxes, p |= *u++-*v++;);
+// obsolete     I naxes = MIN(wr,ar); u=ar+(AS(a))-naxes; v=wr+(AS(w))-naxes;  // point to the axes to compare
+    I *u=(AS(a))+ar, *v=(AS(w))+wr, mnaxes = -MIN(wr,ar-1); v=mnaxes>=0?u:v;  // point past the end of axes.  mnaxes is -#axes to compare, i. e. >=0 if next values SHOULD NOT be compared.  If none, set v=u to lways compare =
+    I p=u[-1]-v[-1]; ++mnaxes; u+=REPSGN(mnaxes); v+=REPSGN(mnaxes);  // compare last axis; advance if there is another
+    p|=u[-1]-v[-1]; if(unlikely(mnaxes++<0))do{ --u; --v; p|=u[-1]-v[-1];}while(++mnaxes<0);  // compare axis -2, and then any others
+// obsolete    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
+// obsolete    p=0; DQ(naxes, p |= *u++-*v++;);
     // Now p<0 if ANY axis of a needs extension - can't inplace then
-    if(p>=0) {
+    if(likely(p==0)||p>0&&(!jt->fill||(TYPESEQ(at,AT(jt->fill))))){  // if there is fill, for comp ease we demand it have the type of a
+      // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
+      // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
+      // items of w (after its conversion to the precision of a)
+     I wm=AS(w)[0], wn; wm=ar==wr?wm:1; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; I k=bpnoun(at), ak=k*an, wk=k*wn;
      // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
-     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((aflag&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
+ // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
+     if(allosize(a)>=((ak+wk+(SZI-1))&-SZI)){    // leave extra SZI-1 if !NJA 
       // We have passed all the tests.  Inplacing is OK.
       // If w must change precision, do.  This is where we catch domain errors.
       if(unlikely(TYPESNE(at,AT(w))))RZ(w=cvt(at,w));
-      // result is pristine if a and w both are, and they are not the same block, and there is no fill, and w is inplaceable (of course we know a is)
-      I wprist = (((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)))<<AFPRISTINEX) & AFLAG(w);  // set if w qualifies as pristine
+      // result is pristine if a and w both are, and they are not the same block, and there is no fill, w is abandoned and not atomic
+      jtinplace = (J)((((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)&-wr))<<AFPRISTINEX)&AFLAG(w));  // repurpose jtinplace: set if w qualifies as pristine before extension
       // If the items of w must be padded to the result item-size, do so.
       // If the items of w are items of the result, we simply extend each to the shape of
       // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
       // item of the result, and it is extended to the rank/size of an item of a.  The extra
-      // rank is implicit in the shape of a.
+      // rank is implicit in the shape of a.  BUT never pad an atomic w.  If we add user fill, we must remove pristinity on the result
       // The take relies on the fill value
-      if(p){h=vec(INT,wr,AS(a)+ar-wr); makewritable(h); if(ar==wr)AV(h)[0]=AS(w)[0]; RZ(w=take(h,w)); wr=AR(w);}  // should use faux block for h
-      av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
-      // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
-      // copy fill to the output area.  Start the copy after the area that will be filled in by w
-      I wlen = k*AN(w); // the length in bytes of the data in w
-      if((-wr&(wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
-      AFLAGRESET(a,aflag&=wprist|~AFPRISTINE)  // clear pristine flag in a if w is not also (a must not be virtual)
+      I wlen;  // length of w data
+      if(unlikely((-p&-wr)<0)){  // if w cell must be expanded, and not by scalar replication
+       h=vec(INT,wr,AS(a)+ar-wr); makewritable(h); if(ar==wr)AV(h)[0]=AS(w)[0]; RZ(w=take(h,w)); wr=AR(w);  // scaf use faux block for h
+       av=ak+CAV(a);   // av->end of a data
+// obsolete  wv=CAV(w);, wv->w data
+       // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
+       // copy fill to the output area.  Start the copy after the area that will be filled in by w
+       wlen = k*AN(w); // the length in bytes of the data in w
+       if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,k,jt->fillv);}
+       jtinplace=jt->fill?0:jtinplace;  // we are filling.  If the fill for box is not the default a:, remove pristinity from w and thus from a
+      }else{av=ak+CAV(a); wlen = k*AN(w);} // av->end of a data; the length in bytes of the data in w
+      AFLAGRESET(a,AFLAG(a)&((I)jtinplace|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
       // Copy in the actual data, replicating if w is atomic
-      if(wr){JMC(av,wv,wlen,1)} else mvc(wk,av,k,wv);  // no overcopy because there could be fill
+      if(wr){JMC(av,CAV(w),wlen,1)} else mvc(wk,av,k,CAV(w));  // no overcopy because there could be fill
       // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
       if(likely(!virtreqd)){
        // Normal append-in-place.
@@ -420,7 +429,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
        AS(a)[0]+=wm; AN(a)+=wn;
        // if a has recursive usecount, increment the usecount of the added data - including any fill
        // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
-       if(unlikely(UCISRECUR(a))){wn*=k>>LGSZI; A* aav=(A*)av; DO(wn, ra(aav[i]);)}
+       if(UCISRECUR(a)){wn*=k>>LGSZI; A* aav=(A*)av; DO(wn, ra(aav[i]);)}
       }else{
        // virtual extension.  Allocate a virtual block, which will extend past the original block.  Fill in AN and AS for the block
        A oa=a; RZ(a=virtual(a,0,ar)); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],AR(oa)-1);
@@ -428,7 +437,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
       // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
       PRISTCLRF(w)
       RETF(a);
-     }else ASSERT(!(aflag&AFNJA),EVALLOC)  // if we failed only because the new value wouldn't fit, signal EVALLOC if NJA, to avoid creating a huge unassignable value
+     }else ASSERT(!(AFLAG(a)&AFNJA),EVALLOC)  // if we failed only because the new value wouldn't fit, signal EVALLOC if NJA, to avoid creating a huge unassignable value
     }  // end 'items of a are big enough'
    }  // end 'a and w compatible in rank and type'
   }   // end 'inplaceable usecount'

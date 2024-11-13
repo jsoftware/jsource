@@ -429,6 +429,12 @@ x =: x ,!.__ y
 (memu i. 1) (15!:19@, = 15!:19@[) i. 7
 (memu i. 1) (15!:19@, ~: 15!:19@[) i. 8
 
+(memu 10$'a') (15!:19@, = 15!:19@[) 20$'ab'
+(memu 55$'a') (15!:19@, = 15!:19@[) 'b'
+(memu 56$'a') (15!:19@, = 15!:19@[) 'b'  NB. one atom in last word OK
+(memu 57$'a') (15!:19@, ~: 15!:19@[) 'b'  NB. two atoms not
+
+
 11 5 1 1 -: $ (memu i. 10 1 1 1) , i. 5 1 1
 
 0 = 16777216 (17 b.) 1 { 13!:_4 (<"0 i. 2 5) , <memu 100   NB. scalar replication removes pristinity

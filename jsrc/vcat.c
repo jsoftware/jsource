@@ -407,16 +407,17 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
 // obsolete    p=0; DQ(naxes, p |= *u++-*v++;);
     // Now p<0 if ANY axis of a needs extension - can't inplace then.  If p>0, transfer a flag for that to fgwd
     if(likely(p==0)||p>0&&(fgwd&=~(FGWNOFILL+FGWNOCELLFILL),!jt->fill||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill))))){  // if there is fill, for comp ease we demand it have the type of a; if user fill, turn off pristinity of result
-      AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
-      // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
-      // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
-      // items of w (after its conversion to the precision of a)
-        I wm=AS(w)[0],wn; wm=fgwd&FGARMINUSWR?1:wm; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);
+     AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
+     // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
+     // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
+     // items of w (after its conversion to the precision of a)
+     I wm=AS(w)[0],wn; wm=fgwd&FGARMINUSWR?1:wm; PROD(wn,ar-1,AS(a)+1) wn*=wm; I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);
      // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
  // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
-     if(likely(allosize(a)>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address
+     I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
+     if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address
       // We have passed all the tests.  Inplacing is OK.
-      // If w must change precision, do.  This is where we catch domain errors.
+      // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case w should be converted to the type of user fill (in jtover)
       if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}
       // If the items of w must be padded to the result item-size, do so.
       // If the items of w are items of the result, we simply extend each to the shape of
@@ -429,9 +430,9 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}  // scaf use faux block for h
        av=ak+CAV(a);   // av->end of a data
 // obsolete  wv=CAV(w);, wv->w data
-       // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
+       // If an item of a is bigger than the entire w (except when w is an atom, which gets replicated),
        // copy fill to the output area.  Start the copy after the area that will be filled in by w
-       wlen = AN(w)<<(fgwd&FGLGK); // the length in bytes of the data in w
+       wlen = AN(w)<<(fgwd&FGLGK); // the length in bytes of the data in w after fill to item size
        if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
 // obsolete        jtinplace=jt->fill?0:jtinplace;  // we are filling.  If the fill for box is not the default a:, remove pristinity from w and thus from a
       }else{av=ak+CAV(a); wlen = AN(w)<<(fgwd&FGLGK);} // av->end of a data; the length in bytes of the data in w

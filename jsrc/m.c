@@ -141,7 +141,7 @@ logfirsttime=0; logparm=svlogparm;
 // The allocation size depends on the type of allocation.  The block must not be read-only
 I allosize(A y) {
  if(AFLAG(y)&AFVIRTUAL)R 0;  // if this block is virtual, you can't append to the data, so don't ask about the length
- if(!(AFLAG(y)&(AFNJA))) {
+ if(likely(!(AFLAG(y)&(AFNJA)))) {
   // normal block, or SMM.  Get the size from the power-of-2 used to allocate it
   R alloroundsize(y) + (C*)y - CAV(y);  // allocated size
  }

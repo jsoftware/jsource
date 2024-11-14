@@ -458,7 +458,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
       // If w must change precision, do.  This is where we catch domain errors.
       if(unlikely(TYPESNE(at,AT(w))))RZ(w=cvt(at,w));
       // result is pristine if a and w both are, and they are not the same block, and there is no fill, and w is inplaceable (of course we know a is)
-     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
+      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
+     if(allosize>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
 
 #endif
        // If the items of w must be padded to the result item-size, do so.

@@ -415,7 +415,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
      // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
  // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
-     if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address
+     if(likely(allosize>=(ak+wk+8+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // scaf ensure a SZI can be fetched/stored at the last valid atom's address
       // We have passed all the tests.  Inplacing is OK.
       // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case w should be converted to the type of user fill (in jtover)
       if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}

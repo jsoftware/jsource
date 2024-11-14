@@ -417,10 +417,6 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
      // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
      // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
      // items of w (after its conversion to the precision of a)
-     I wn; PROD(wn,ar-1,AS(a)+1) fgwd&=((wn>AN(w))?~FGWNOFILL:~0);  // wn starts as size of cell of a; if w is smaller than that, it will have to fill, either internal or external
-     if(likely(fgwd&FGWNOFILL)||likely(!jt->fill)||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill)))){  // OK if we won't fill, or there is no user fill; if user fill, must not change precision of a
-      I wm=AS(w)[0]; wm=fgwd&FGARMINUSWR?1:wm; wn*=wm;  // if ar=wr, wm=#w and wn=#atoms in w cells of a; if ar>wr, wm=1 and wn=#atoms in 1 cell of a
-      I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);  // get length of a and w in bytes
       // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
  // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
       I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
@@ -430,15 +426,27 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)
        if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}
 #else
+#if 0
     I naxes = MIN(wr,ar); I *u=ar+(AS(a))-naxes; I *v=wr+(AS(w))-naxes;  // point to the axes to compare
     // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
     // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
     // items of w (after its conversion to the precision of a)
-    I k=bpnoun(at),ak,wm,wn,wk; ak=k*an; wm=AS(w)[0]; wm=ar==wr?wm:1; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; wk=k*wn;  // We don't need this yet but we start the computation early
     // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
     I p=0; DQ(naxes, p |= *u++-*v++;);
     // Now p<0 if ANY axis of a needs extension - can't inplace then
     if(p>=0) {
+    I k=bpnoun(at),ak,wm,wn,wk; ak=k*an; wm=AS(w)[0]; wm=ar==wr?wm:1; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; wk=k*wn;  // We don't need this yet but we start the computation early
+#else
+    I k=bpnoun(at); I *u=(AS(a))+ar, *v=(AS(w))+wr, mnaxes = -MIN(wr,ar-1); v=mnaxes>=0?u:v;  // point past the end of axes.  mnaxes is -#axes to compare, i. e. >=0 if next values SHOULD NOT be compared.  If none, set v=u to always compare =
+    I p=u[-1]-v[-1]; ++mnaxes; u+=REPSGN(mnaxes); v+=REPSGN(mnaxes);  // compare last axis; advance if there is another
+    p|=u[-1]-v[-1]; if(unlikely(mnaxes++<0))do{ --u; --v; p|=u[-1]-v[-1];}while(++mnaxes<0);  // compare axis -2, and then any others
+    // Now p<0 if ANY axis of a needs extension - can't inplace then
+    if(p>=0) {
+     I wn; PROD(wn,ar-1,AS(a)+1)  // wn starts as size of cell of a; if w is smaller than that, it will have to fill, either internal or external
+ //    if(likely(fgwd&FGWNOFILL)||likely(!jt->fill)||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill)))){  // OK if we won't fill, or there is no user fill; if user fill, must not change precision of a
+      I wm=AS(w)[0]; wm=ar-wr?1:wm; wn*=wm;  // if ar=wr, wm=#w and wn=#atoms in w cells of a; if ar>wr, wm=1 and wn=#atoms in 1 cell of a
+      I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);  // get length of a and w in bytes
+#endif
      // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
      if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
       // We have passed all the tests.  Inplacing is OK.

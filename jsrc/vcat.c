@@ -441,7 +441,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
     if(p>=0) {
     I k=bpnoun(at),ak,wm,wn,wk; ak=k*an; wm=AS(w)[0]; wm=ar==wr?wm:1; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; wk=k*wn;  // We don't need this yet but we start the computation early
      // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
-     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
+      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
+      if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address
 #else
     I k=bpnoun(at); I *u=(AS(a))+ar, *v=(AS(w))+wr, mnaxes = -MIN(wr,ar-1); v=mnaxes>=0?u:v;  // point past the end of axes.  mnaxes is -#axes to compare, i. e. >=0 if next values SHOULD NOT be compared.  If none, set v=u to always compare =
     I p=u[-1]-v[-1]; ++mnaxes; u+=REPSGN(mnaxes); v+=REPSGN(mnaxes);  // compare last axis; advance if there is another
@@ -457,8 +458,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
       // If w must change precision, do.  This is where we catch domain errors.
       if(unlikely(TYPESNE(at,AT(w))))RZ(w=cvt(at,w));
       // result is pristine if a and w both are, and they are not the same block, and there is no fill, and w is inplaceable (of course we know a is)
-      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
-      if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address
+     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
 
 #endif
        // If the items of w must be padded to the result item-size, do so.

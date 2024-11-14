@@ -393,14 +393,18 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // We use type priority to decide whether a would have to be converted
    I zt=maxtyped(at,AT(w));  // the type of the result
+#if 0  // scaf
    if((((an-1)|-(at^zt))>=0)){  // a not empty, atype = resulttype.
+#else
+   if((((an-1)|-(at^zt))>=0)&&(!jt->fill||(TYPESEQ(at,AT(jt->fill))))){  // a not empty, atype = resulttype.  And never if fill specified with a different type
+#endif
     //  Check the item sizes.  Set p<0 if the
     // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require internal fill
     // If there are extra axes in a, they are greated as unit axes of w with no action needed.  Check the axes of w that are beyond the first axis
     // of a, because the first axis of a tells how many items there are - that number doesn't matter, it's the
     // shape of an item of result that matters
 // obsolete     I naxes = MIN(wr,ar); u=ar+(AS(a))-naxes; v=wr+(AS(w))-naxes;  // point to the axes to compare
-#if 1  // scaf
+#if 0  // scaf
     I *u=(AS(a))+ar, *v=(AS(w))+wr, mnaxes = -MIN(wr,ar-1); v=mnaxes>=0?u:v;  // point past the end of axes.  mnaxes is -#axes to compare, i. e. >=0 if next values SHOULD NOT be compared.  If none, set v=u to always compare =
     I p=u[-1]-v[-1]; ++mnaxes; u+=REPSGN(mnaxes); v+=REPSGN(mnaxes);  // compare last axis; advance if there is another
     p|=u[-1]-v[-1]; if(unlikely(mnaxes++<0))do{ --u; --v; p|=u[-1]-v[-1];}while(++mnaxes<0);  // compare axis -2, and then any others
@@ -442,7 +446,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        // item of the result, and it is extended to the rank/size of an item of a.  The extra
        // rank is implicit in the shape of a.  BUT never pad an atomic w.  If we add user fill, we must remove pristinity on the result
        // The take relies on the fill value
-#if 1   // scaf
+#if 0   // scaf
        I wlen;  // length of w data
        if(unlikely((fgwd&FGWATOMIC+FGWNOFILL)==0)){  // if w cell must be expanded, whether by leading or internal axis, but not by scalar replication
         if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}  // scaf use faux block for h

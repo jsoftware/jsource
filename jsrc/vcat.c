@@ -410,17 +410,6 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
     p|=u[-1]-v[-1]; if(unlikely(mnaxes++<0))do{ --u; --v; p|=u[-1]-v[-1];}while(++mnaxes<0);  // compare axis -2, and then any others
 // obsolete    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
 // obsolete    p=0; DQ(naxes, p |= *u++-*v++;);
-#else
-    I naxes = MIN(wr,ar); I *u=ar+(AS(a))-naxes; I *v=wr+(AS(w))-naxes;  // point to the axes to compare
-    // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
-    // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
-    // items of w (after its conversion to the precision of a)
-    I k=bpnoun(at),ak,wm,wn,wk; ak=k*an; wm=AS(w)[0]; wm=ar==wr?wm:1; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; wk=k*wn;  // We don't need this yet but we start the computation early
-    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
-    I p=0; DQ(naxes, p |= *u++-*v++;);
-    // Now p<0 if ANY axis of a needs extension - can't inplace then
-
-#endif
     // Now p<0 if ANY axis of a needs extension - can't inplace then.  If p>0, transfer a flag for that to fgwd
  // obsolete    if(likely(p==0)||p>0&&(fgwd&=~(FGWNOFILL+FGWNOCELLFILL),!jt->fill||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill))))){  // if there is fill, for comp ease we demand it have the type of a; if user fill, turn off pristinity of result
     if(likely(p>=0)){  // if a can be left in place...
@@ -440,6 +429,24 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        // We have passed all the tests.  Inplacing is OK.
        // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)
        if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}
+#else
+    I naxes = MIN(wr,ar); I *u=ar+(AS(a))-naxes; I *v=wr+(AS(w))-naxes;  // point to the axes to compare
+    // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
+    // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
+    // items of w (after its conversion to the precision of a)
+    I k=bpnoun(at),ak,wm,wn,wk; ak=k*an; wm=AS(w)[0]; wm=ar==wr?wm:1; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; wk=k*wn;  // We don't need this yet but we start the computation early
+    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
+    I p=0; DQ(naxes, p |= *u++-*v++;);
+    // Now p<0 if ANY axis of a needs extension - can't inplace then
+    if(p>=0) {
+     // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
+     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
+      // We have passed all the tests.  Inplacing is OK.
+      // If w must change precision, do.  This is where we catch domain errors.
+      if(unlikely(TYPESNE(at,AT(w))))RZ(w=cvt(at,w));
+      // result is pristine if a and w both are, and they are not the same block, and there is no fill, and w is inplaceable (of course we know a is)
+
+#endif
        // If the items of w must be padded to the result item-size, do so.
        // If the items of w are items of the result, we simply extend each to the shape of
        // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
@@ -459,8 +466,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
 // obsolete        jtinplace=jt->fill?0:jtinplace;  // we are filling.  If the fill for box is not the default a:, remove pristinity from w and thus from a
        }else{av=ak+CAV(a); wlen = AN(w)<<(fgwd&FGLGK);} // av->end of a data; the length in bytes of the data in w
 #else
-      I wprist = (((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)))<<AFPRISTINEX) & AFLAG(w);  // set if w qualifies as pristine
-      if(p){h=vec(INT,wr,AS(a)+ar-wr); makewritable(h); if(ar==wr)AV(h)[0]=AS(w)[0]; RZ(w=take(h,w)); wr=AR(w);}  // should use faux block for h
+      I wprist = (((a!=w)&(wr!=0)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)))<<AFPRISTINEX) & AFLAG(w);  // set if w qualifies as pristine
+      if(p){if(jt->fill)wprist=0; h=vec(INT,wr,AS(a)+ar-wr); makewritable(h); if(ar==wr)AV(h)[0]=AS(w)[0]; RZ(w=take(h,w)); wr=AR(w);}  // should use faux block for h
       av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
       // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
       // copy fill to the output area.  Start the copy after the area that will be filled in by w
@@ -486,7 +493,9 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        }
        RETF(a);
       }else ASSERT(!(AFLAG(a)&AFNJA),EVALLOC)  // if we failed only because the new value wouldn't fit, signal EVALLOC if NJA, to avoid creating a huge unassignable value
+#if 0  // scaf
      } // end 'no fill required with dissimilar type'
+#endif
     }  // end 'items of a are big enough'
    }  // end 'a and w compatible in rank and type'
   }   // end 'inplaceable usecount'

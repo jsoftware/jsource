@@ -425,6 +425,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
       // item of the result, and it is extended to the rank/size of an item of a.  The extra
       // rank is implicit in the shape of a.  BUT never pad an atomic w.  If we add user fill, we must remove pristinity on the result
       // The take relies on the fill value
+#if 0   // scaf
       I wlen;  // length of w data
       if(unlikely((fgwd&FGWATOMIC+FGWNOFILL)==0)){  // if w cell must be expanded, whether by leading or internal axis, but not by scalar replication
        if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}  // scaf use faux block for h
@@ -436,6 +437,16 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
 // obsolete        jtinplace=jt->fill?0:jtinplace;  // we are filling.  If the fill for box is not the default a:, remove pristinity from w and thus from a
       }else{av=ak+CAV(a); wlen = AN(w)<<(fgwd&FGLGK);} // av->end of a data; the length in bytes of the data in w
+#else
+      I k=bpnoun(at); I wprist = (((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)))<<AFPRISTINEX) & AFLAG(w);  // set if w qualifies as pristine
+      if(p){h=vec(INT,wr,AS(a)+ar-wr); makewritable(h); if(ar==wr)AV(h)[0]=AS(w)[0]; RZ(w=take(h,w)); wr=AR(w);}  // should use faux block for h
+      av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
+      // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
+      // copy fill to the output area.  Start the copy after the area that will be filled in by w
+      I wlen = k*AN(w); // the length in bytes of the data in w
+      if((-wr&(wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
+      AFLAGRESET(a,AFLAG(a)&=wprist|~AFPRISTINE)  // clear pristine flag in a if w is not also (a must not be virtual)
+#endif
       // Copy in the actual data, replicating if w is atomic
       if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1)} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill
       // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is

@@ -359,10 +359,6 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
   if(EXTENDINPLACENJA(a,w) && ((at&(DIRECT|BOX))|(AT(w)&SPARSE))>0) {
    // collect some values into a flags register
 #define FGLGK 0x7
-#define FGARMINUSWRX 25    // ar minus wr, never negative.  Must be highest field
-#define FGARMINUSWR (0x3fLL<<FGARMINUSWRX)
-#define FGWPRISTX AFPRISTINEX  // if w and inplacing do not prevent keeping a pristine
-#define FGWPRIST (1LL<<FGWPRISTX)
 #define FGVIRTREQDX 3    // if virtual extension required
 #define FGVIRTREQD (1LL<<FGVIRTREQDX)
 #define FGWATOMICX 8     // if w is atomic - higher than highest bit of rank
@@ -371,6 +367,10 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
 #define FGWNOFILL (1LL<<FGWNOFILLX)
 #define FGWNOCELLFILLX 10 // if w has an interior axis that requires fill, i. e. take
 #define FGWNOCELLFILL (1LL<<FGWNOCELLFILLX)
+#define FGWPRISTX AFPRISTINEX  // 24 if w and inplacing do not prevent keeping a pristine
+#define FGWPRIST (1LL<<FGWPRISTX)
+#define FGARMINUSWRX 25    // ar minus wr, never negative.  Must be highest field
+#define FGARMINUSWR (RMAX<<FGARMINUSWRX)
    I fgwd= ((ar-wr)<<FGARMINUSWRX) + FGWNOCELLFILL + (ar-wr>1?0:FGWNOFILL) + ((wr-1)&FGWATOMIC) + (virtreqd<<FGVIRTREQDX) + lgk;  // collect flags.  If item of a has higher rank than w, force fill
    // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
    // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
@@ -415,7 +415,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
      // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
  // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
-     if(likely(allosize>=(ak+wk+8+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // scaf ensure a SZI can be fetched/stored at the last valid atom's address
+     if(likely(allosize>=(ak+wk+16+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // scaf ensure a SZI can be fetched/stored at the last valid atom's address
       // We have passed all the tests.  Inplacing is OK.
       // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case w should be converted to the type of user fill (in jtover)
       if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}

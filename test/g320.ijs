@@ -421,7 +421,6 @@ x =: x ,!.__ y
 (5 3 $ 100 1 10 101 2 20 102 3 30 102 5 __ 100 4 __) -: x
 (5 3 $ (>: i. 9) ,  0 1 5 2 3 5) -: (>: i. 3 3) ,!.5. i. 2 2
 
-1: 0 : 0
 (memu i. 10000 4) (15!:19@, = 15!:19@[) i. 3
 (memu i. 10000 4) (15!:19@(,!.0) ~: 15!:19@[) i. 3
 (memu i. 10000 4) (15!:19@(,!.00) = 15!:19@[) i. 3  NB. inplaces because same precision for fill
@@ -435,9 +434,12 @@ x =: x ,!.__ y
 (memu (IF64{27 55)$'a') (15!:19@, = 15!:19@[) 'b'
 (memu (IF64{28 56)$'a') (15!:19@, = 15!:19@[) 'b'  NB. one atom in last word OK
 (memu (IF64{29 57)$'a') (15!:19@, ~: 15!:19@[) 'b'  NB. two atoms not
-)  NB. scaf
 
 11 5 1 1 -: $ (memu i. 10 1 1 1) , i. 5 1 1
+
+79 = >./ , (memu i. 10 2 2 2) ,!.0.5 i. 2   NB. heterogeneous fill not inplace
+(memu i. 10 2 2 2) (15!:19@(,!.0.5) ~: 15!:19@[) i. 2  NB. detected on external extension
+(memu i. 40 1 1 2) (15!:19@(,!.0.5) = 15!:19@[) i. 2  NB. ignored if no external extension
 
 0 = 16777216 (17 b.) 1 { 13!:_4 (<"0 i. 2 5) , <memu 100   NB. scalar replication removes pristinity
 

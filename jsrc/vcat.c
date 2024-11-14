@@ -371,7 +371,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
 #define FGWPRIST (1LL<<FGWPRISTX)
 #define FGARMINUSWRX 25    // ar minus wr, never negative.  Must be highest field
 #define FGARMINUSWR (RMAX<<FGARMINUSWRX)
-   I fgwd= ((ar-wr)<<FGARMINUSWRX) + FGWNOCELLFILL + (ar-wr>1?0:FGWNOFILL) + ((wr-1)&FGWATOMIC) + (virtreqd<<FGVIRTREQDX) + lgk;  // collect flags.  If item of a has higher rank than w, force fill
+      I fgwd= ((ar-wr)<<FGARMINUSWRX) + FGWNOCELLFILL + FGWNOFILL + ((wr-1)&FGWATOMIC) + (virtreqd<<FGVIRTREQDX) + lgk;  // collect flags.  If item of a has higher rank than w, force fill
    // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
    // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
    // crawl through w looking for a.
@@ -400,45 +400,62 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
     // of a, because the first axis of a tells how many items there are - that number doesn't matter, it's the
     // shape of an item of result that matters
 // obsolete     I naxes = MIN(wr,ar); u=ar+(AS(a))-naxes; v=wr+(AS(w))-naxes;  // point to the axes to compare
+#if 1  // scaf
     I *u=(AS(a))+ar, *v=(AS(w))+wr, mnaxes = -MIN(wr,ar-1); v=mnaxes>=0?u:v;  // point past the end of axes.  mnaxes is -#axes to compare, i. e. >=0 if next values SHOULD NOT be compared.  If none, set v=u to always compare =
     I p=u[-1]-v[-1]; ++mnaxes; u+=REPSGN(mnaxes); v+=REPSGN(mnaxes);  // compare last axis; advance if there is another
     p|=u[-1]-v[-1]; if(unlikely(mnaxes++<0))do{ --u; --v; p|=u[-1]-v[-1];}while(++mnaxes<0);  // compare axis -2, and then any others
 // obsolete    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
 // obsolete    p=0; DQ(naxes, p |= *u++-*v++;);
+#else
+    I naxes = MIN(wr,ar); I *u=ar+(AS(a))-naxes; I *v=wr+(AS(w))-naxes;  // point to the axes to compare
+    // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
+    // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
+    // items of w (after its conversion to the precision of a)
+    I k=bpnoun(at),ak,wm,wn,wk; ak=k*an; wm=AS(w)[0]; wm=ar==wr?wm:1; PROD(wn,AR(a)-1,AS(a)+1) wn*=wm; wk=k*wn;  // We don't need this yet but we start the computation early
+    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
+    I p=0; DQ(naxes, p |= *u++-*v++;);
+    // Now p<0 if ANY axis of a needs extension - can't inplace then
+
+#endif
     // Now p<0 if ANY axis of a needs extension - can't inplace then.  If p>0, transfer a flag for that to fgwd
-    if(likely(p==0)||p>0&&(fgwd&=~(FGWNOFILL+FGWNOCELLFILL),!jt->fill||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill))))){  // if there is fill, for comp ease we demand it have the type of a; if user fill, turn off pristinity of result
-     AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
+ // obsolete    if(likely(p==0)||p>0&&(fgwd&=~(FGWNOFILL+FGWNOCELLFILL),!jt->fill||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill))))){  // if there is fill, for comp ease we demand it have the type of a; if user fill, turn off pristinity of result
+    if(likely(p>=0)){  // if a can be left in place...
+     fgwd&=p>0?~(FGWNOFILL+FGWNOCELLFILL):~0;  // if cell of a has an axis bigger than w, w will require internal fill
      // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
      // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
      // items of w (after its conversion to the precision of a)
-     I wm=AS(w)[0],wn; wm=fgwd&FGARMINUSWR?1:wm; PROD(wn,ar-1,AS(a)+1) wn*=wm; I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);
-     // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
+     I wn; PROD(wn,ar-1,AS(a)+1) fgwd&=((wn>AN(w))?~FGWNOFILL:~0);  // wn starts as size of cell of a; if w is smaller than that, it will have to fill, either internal or external
+     if(likely(fgwd&FGWNOFILL)||likely(!jt->fill)||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill)))){  // OK if we won't fill, or there is no user fill; if user fill, must not change precision of a
+      I wm=AS(w)[0]; wm=fgwd&FGARMINUSWR?1:wm; wn*=wm;  // if ar=wr, wm=#w and wn=#atoms in w cells of a; if ar>wr, wm=1 and wn=#atoms in 1 cell of a
+      I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);  // get length of a and w in bytes
+      // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
  // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
-     I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
-     if(likely(allosize>=(ak+wk+16+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // scaf ensure a SZI can be fetched/stored at the last valid atom's address
-      // We have passed all the tests.  Inplacing is OK.
-      // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case w should be converted to the type of user fill (in jtover)
-      if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}
-      // If the items of w must be padded to the result item-size, do so.
-      // If the items of w are items of the result, we simply extend each to the shape of
-      // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
-      // item of the result, and it is extended to the rank/size of an item of a.  The extra
-      // rank is implicit in the shape of a.  BUT never pad an atomic w.  If we add user fill, we must remove pristinity on the result
-      // The take relies on the fill value
-#if 0   // scaf
-      I wlen;  // length of w data
-      if(unlikely((fgwd&FGWATOMIC+FGWNOFILL)==0)){  // if w cell must be expanded, whether by leading or internal axis, but not by scalar replication
-       if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}  // scaf use faux block for h
-       av=ak+CAV(a);   // av->end of a data
+      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
+      if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address
+       AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
+       // We have passed all the tests.  Inplacing is OK.
+       // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)
+       if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}
+       // If the items of w must be padded to the result item-size, do so.
+       // If the items of w are items of the result, we simply extend each to the shape of
+       // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
+       // item of the result, and it is extended to the rank/size of an item of a.  The extra
+       // rank is implicit in the shape of a.  BUT never pad an atomic w.  If we add user fill, we must remove pristinity on the result
+       // The take relies on the fill value
+#if 1   // scaf
+       I wlen;  // length of w data
+       if(unlikely((fgwd&FGWATOMIC+FGWNOFILL)==0)){  // if w cell must be expanded, whether by leading or internal axis, but not by scalar replication
+        if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}  // scaf use faux block for h
+        av=ak+CAV(a);   // av->end of a data
 // obsolete  wv=CAV(w);, wv->w data
-       // If an item of a is bigger than the entire w (except when w is an atom, which gets replicated),
-       // copy fill to the output area.  Start the copy after the area that will be filled in by w
-       wlen = AN(w)<<(fgwd&FGLGK); // the length in bytes of the data in w after fill to item size
-       if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
+        // If an item of a is bigger than the entire w (except when w is an atom, which gets replicated),
+        // copy fill to the output area.  Start the copy after the area that will be filled in by w
+        wlen = AN(w)<<(fgwd&FGLGK); // the length in bytes of the data in w after fill to item size
+        if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
 // obsolete        jtinplace=jt->fill?0:jtinplace;  // we are filling.  If the fill for box is not the default a:, remove pristinity from w and thus from a
-      }else{av=ak+CAV(a); wlen = AN(w)<<(fgwd&FGLGK);} // av->end of a data; the length in bytes of the data in w
+       }else{av=ak+CAV(a); wlen = AN(w)<<(fgwd&FGLGK);} // av->end of a data; the length in bytes of the data in w
 #else
-      I k=bpnoun(at); I wprist = (((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)))<<AFPRISTINEX) & AFLAG(w);  // set if w qualifies as pristine
+      I wprist = (((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)))<<AFPRISTINEX) & AFLAG(w);  // set if w qualifies as pristine
       if(p){h=vec(INT,wr,AS(a)+ar-wr); makewritable(h); if(ar==wr)AV(h)[0]=AS(w)[0]; RZ(w=take(h,w)); wr=AR(w);}  // should use faux block for h
       av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
       // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
@@ -447,24 +464,25 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
       if((-wr&(wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
       AFLAGRESET(a,AFLAG(a)&=wprist|~AFPRISTINE)  // clear pristine flag in a if w is not also (a must not be virtual)
 #endif
-      // Copy in the actual data, replicating if w is atomic
-      if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1)} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill
-      // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
-      PRISTCLRF(w)  // this destroys w!
-      // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
-      if(likely(!(fgwd&FGVIRTREQD))){
-       // Normal append-in-place.
-       // Update the # items in a, and the # atoms
-       AS(a)[0]+=wm; AN(a)+=wn;
-       // if a has recursive usecount, increment the usecount of the added data - including any fill
-       // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
-       if(UCISRECUR(a)){wn<<=((fgwd&FGLGK)-LGSZI); A* aav=(A*)av; DO(wn, ra(aav[i]);)}
-      }else{
-       // virtual extension.  Allocate a virtual block, which will extend past the original block.  Fill in AN and AS for the block
-       A oa=a; ar=AR(a); RZ(a=virtual(a,0,ar)); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],ar-1);
-      }
-      RETF(a);
-     }else ASSERT(!(AFLAG(a)&AFNJA),EVALLOC)  // if we failed only because the new value wouldn't fit, signal EVALLOC if NJA, to avoid creating a huge unassignable value
+       // Copy in the actual data, replicating if w is atomic
+       if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1)} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill
+       // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
+       PRISTCLRF(w)  // this destroys w!
+       // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
+       if(likely(!(fgwd&FGVIRTREQD))){
+        // Normal append-in-place.
+        // Update the # items in a, and the # atoms
+        AS(a)[0]+=wm; AN(a)+=wn;
+        // if a has recursive usecount, increment the usecount of the added data - including any fill
+        // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
+        if(UCISRECUR(a)){wn<<=((fgwd&FGLGK)-LGSZI); A* aav=(A*)av; DO(wn, ra(aav[i]);)}
+       }else{
+        // virtual extension.  Allocate a virtual block, which will extend past the original block.  Fill in AN and AS for the block
+        A oa=a; ar=AR(a); RZ(a=virtual(a,0,ar)); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],ar-1);
+       }
+       RETF(a);
+      }else ASSERT(!(AFLAG(a)&AFNJA),EVALLOC)  // if we failed only because the new value wouldn't fit, signal EVALLOC if NJA, to avoid creating a huge unassignable value
+     } // end 'no fill required with dissimilar type'
     }  // end 'items of a are big enough'
    }  // end 'a and w compatible in rank and type'
   }   // end 'inplaceable usecount'

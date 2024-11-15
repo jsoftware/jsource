@@ -393,7 +393,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // We use type priority to decide whether a would have to be converted
    I zt=maxtyped(at,AT(w));  // the type of the result
-#if 0  // scaf
+#if 1  // scaf
    if((((an-1)|-(at^zt))>=0)){  // a not empty, atype = resulttype.
 #else
    if((((an-1)|-(at^zt))>=0)&&(!jt->fill||(TYPESEQ(at,AT(jt->fill))))){  // a not empty, atype = resulttype.  And never if fill specified with a different type
@@ -404,7 +404,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
     // of a, because the first axis of a tells how many items there are - that number doesn't matter, it's the
     // shape of an item of result that matters
 // obsolete     I naxes = MIN(wr,ar); u=ar+(AS(a))-naxes; v=wr+(AS(w))-naxes;  // point to the axes to compare
-#if 0  // scaf
+#if 1  // scaf
     I *u=(AS(a))+ar, *v=(AS(w))+wr, mnaxes = -MIN(wr,ar-1); v=mnaxes>=0?u:v;  // point past the end of axes.  mnaxes is -#axes to compare, i. e. >=0 if next values SHOULD NOT be compared.  If none, set v=u to always compare =
     I p=u[-1]-v[-1]; ++mnaxes; u+=REPSGN(mnaxes); v+=REPSGN(mnaxes);  // compare last axis; advance if there is another
     p|=u[-1]-v[-1]; if(unlikely(mnaxes++<0))do{ --u; --v; p|=u[-1]-v[-1];}while(++mnaxes<0);  // compare axis -2, and then any others
@@ -424,7 +424,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
       // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
  // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
       I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
-      if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address
+ // obsolete       if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address, adding 7, 6, 4, 0
+      if(likely(allosize>=(ak+wk+(((SZI-1)<<(fgwd&FGLGK))&(SZI-1))))){    // ensure a SZI can be fetched/stored at the last valid atom's address
        AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
        // We have passed all the tests.  Inplacing is OK.
        // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)
@@ -468,7 +469,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        // item of the result, and it is extended to the rank/size of an item of a.  The extra
        // rank is implicit in the shape of a.  BUT never pad an atomic w.  If we add user fill, we must remove pristinity on the result
        // The take relies on the fill value
-#if 0   // scaf
+#if 1   // scaf
        I wlen;  // length of w data
        if(unlikely((fgwd&FGWATOMIC+FGWNOFILL)==0)){  // if w cell must be expanded, whether by leading or internal axis, but not by scalar replication
         if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}  // scaf use faux block for h
@@ -509,7 +510,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        }
        RETF(a);
       }else ASSERT(!(AFLAG(a)&AFNJA),EVALLOC)  // if we failed only because the new value wouldn't fit, signal EVALLOC if NJA, to avoid creating a huge unassignable value
-#if 0  // scaf
+#if 1  // scaf
      } // end 'no fill required with dissimilar type'
 #endif
     }  // end 'items of a are big enough'

@@ -393,7 +393,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // We use type priority to decide whether a would have to be converted
    I zt=maxtyped(at,AT(w));  // the type of the result
-#if 1  // scaf
+#if 0  // scaf
    if((((an-1)|-(at^zt))>=0)){  // a not empty, atype = resulttype.
 #else
    if((((an-1)|-(at^zt))>=0)&&(!jt->fill||(TYPESEQ(at,AT(jt->fill))))){  // a not empty, atype = resulttype.  And never if fill specified with a different type

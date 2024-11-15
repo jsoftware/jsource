@@ -660,7 +660,7 @@ struct AD {
 #define ASGNINPLACENEG(s,w)  ((s)&(AC(w)|SGNIF(jt->zombieval==w,0)))   // neg if OK to inplace ordinary operation, either because the block is inplaceable or because it's an assignment to zombie
 #define ASGNINPLACESGN(s,w)  (ASGNINPLACENEG(s,w)<0)
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)
-// define virtreqd and set it to 0 to start
+// define virtreqd and set it to 0 to start, and lgatomsini to lg(#atoms of type in an I)
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
 #define EXTENDINPLACENJA(a,w) \
   ( ((AC(a)&((((AN(a)+((NORMAH+1)<<lgatomsini)-1)+AN(w))^(AN(a)+((NORMAH+1)<<lgatomsini)-1))-(AN(a)+((NORMAH+1)<<lgatomsini)-1)))<0) || /* inplaceable value that will probably fit */ \

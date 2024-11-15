@@ -393,7 +393,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // We use type priority to decide whether a would have to be converted
    I zt=maxtyped(at,AT(w));  // the type of the result
-#if 0  // scaf
+#if 1  // scaf
    if((((an-1)|-(at^zt))>=0)){  // a not empty, atype = resulttype.
 #else
    if((((an-1)|-(at^zt))>=0)&&(!jt->fill||(TYPESEQ(at,AT(jt->fill))))){  // a not empty, atype = resulttype.  And never if fill specified with a different type
@@ -411,7 +411,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
 // obsolete    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
 // obsolete    p=0; DQ(naxes, p |= *u++-*v++;);
     // Now p<0 if ANY axis of a needs extension - can't inplace then.  If p>0, transfer a flag for that to fgwd
- // obsolete    if(likely(p==0)||p>0&&(fgwd&=~(FGWNOFILL+FGWNOCELLFILL),!jt->fill||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill))))){  // if there is fill, for comp ease we demand it have the type of a; if user fill, turn off pristinity of result
+// obsolete    if(likely(p==0)||p>0&&(fgwd&=~(FGWNOFILL+FGWNOCELLFILL),!jt->fill||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill))))){  // if there is fill, for comp ease we demand it have the type of a; if user fill, turn off pristinity of result
     if(likely(p>=0)){  // if a can be left in place...
      fgwd&=p>0?~(FGWNOFILL+FGWNOCELLFILL):~0;  // if cell of a has an axis bigger than w, w will require internal fill
      // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
@@ -422,10 +422,11 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
       I wm=AS(w)[0]; wm=fgwd&FGARMINUSWR?1:wm; wn*=wm;  // if ar=wr, wm=#w and wn=#atoms in w cells of a; if ar>wr, wm=1 and wn=#atoms in 1 cell of a
       I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);  // get length of a and w in bytes
       // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
- // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
-  // obsolete      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
- // obsolete       if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address, adding 7, 6, 4, 0
-      if(likely(allosize(a)>=(ak+wk+(((SZI-1)<<(fgwd&FGLGK))&(SZI-1))))){    // ensure a SZI can be fetched/stored at the last valid atom's address
+// obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
+// obsolete       if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address, adding 7, 6, 4, 0
+if(ISGMP(a))SEGFAULT;  // scaf
+      I allosize; if(likely(!(AFLAG(a)&AFNJA+AFVIRTUAL)))allosize=FHRHSIZE(AFHRH(a))-AK(a); else allosize=AFLAG(a)&AFVIRTUAL?0:AM(a);  // a can't be GMP; inline the computation of blocksize
+      if(likely(allosize>=(ak+wk+(((SZI-1)<<(fgwd&FGLGK))&(SZI-1))))){    // ensure a SZI can be fetched/stored at the last valid atom's address
        AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
        // We have passed all the tests.  Inplacing is OK.
        // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)

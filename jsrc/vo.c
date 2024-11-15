@@ -6,6 +6,10 @@
 #define ZZDEFN
 #include "result.h"
 
+#ifdef BOXEDSPARSE
+extern UC fboxedsparse;
+#endif
+
 I level(J jt,A w){A*wv;I d,j;
  ARGCHK1(w);
  if((-AN(w)&-(AT(w)&BOX))>=0)R 0;
@@ -31,6 +35,8 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  F1PREFIP;ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
 #ifndef BOXEDSPARSE
  ASSERTF(!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");
+#else
+ ASSERTF(fboxedsparse||!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");
 #endif
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(likely(!f)){
@@ -54,7 +60,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  } else {
   // <"r
 #ifdef BOXEDSPARSE
- ASSERTF(!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");    // <"r not implemented
+ ASSERTF(fboxedsparse||!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");    // <"r not implemented
 #endif
   ws=AS(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
@@ -125,6 +131,8 @@ F2PREFIP;ARGCHK2(a,w);
 #endif
 #ifndef BOXEDSPARSE
  ASSERTF(!ISSPARSE(AT(a)|AT(w)),EVNONCE,"can't box sparse arrays");
+#else
+ ASSERTF(fboxedsparse||!ISSPARSE(AT(a)|AT(w)),EVNONCE,"can't box sparse arrays");
 #endif
  I optype=FAV(self)->localuse.lu1.linkvb;  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
  optype|=((I)jtinplace&JTWILLBEOPENED)<<(BOXX-JTWILLBEOPENEDX);  // fold in BOX flag that tells us to allow virtual boxed results

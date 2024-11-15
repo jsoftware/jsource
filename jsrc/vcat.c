@@ -423,9 +423,9 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
       I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);  // get length of a and w in bytes
       // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
  // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
-      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
+  // obsolete      I allosize=likely(!(AFLAG(a)&AFNJA))?FHRHSIZE(AFHRH(a))-AK(a) : AM(a);  // since a can't be virtual or GMP, inline the computation of blocksize
  // obsolete       if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address, adding 7, 6, 4, 0
-      if(likely(allosize>=(ak+wk+(((SZI-1)<<(fgwd&FGLGK))&(SZI-1))))){    // ensure a SZI can be fetched/stored at the last valid atom's address
+      if(likely(allosize(a)>=(ak+wk+(((SZI-1)<<(fgwd&FGLGK))&(SZI-1))))){    // ensure a SZI can be fetched/stored at the last valid atom's address
        AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
        // We have passed all the tests.  Inplacing is OK.
        // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)

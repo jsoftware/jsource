@@ -43,7 +43,7 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
 static F1(jtcfn){I j; R !AR(w)&&INT&AT(w)&&(j=AV(w)[0],-9<=j&&j<=9)?FCONS(w):qq(w,ainf);}
      /* constant function with value w */
 
-static A jttine(J jt,A w,I tmonad){V*v; R w&&tmonad&&(v=FAV(w),v->id==CFORK&&(v->fgh[2]?v->fgh[0]:CP)==CP&&RT==(v->fgh[2]?v->fgh[2]:v->fgh[1]))?(v->fgh[2]?v->fgh[1]:v->fgh[0]):w;}
+static A jttine(J jt,A w,I tmonad){V*v; R w&&AT(w)&VERB&&tmonad&&(v=FAV(w),v->id==CFORK&&(v->fgh[2]?v->fgh[0]:CP)==CP&&RT==(v->fgh[2]?v->fgh[2]:v->fgh[1]))?(v->fgh[2]?v->fgh[1]:v->fgh[0]):w;}
      /* if monad and w = [: g ], then g; else just w itself */
 
 // type of special verb coded as n"_1 where n>TC; returns n-TC if special, otherwise _1

@@ -332,7 +332,7 @@ DF2(jtlamin2){A z;I ar,p,q,wr;
 }    /* a,:"r w */
 
 // Append, including tests for append-in-place
-A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
+A jtapip(J jt, A a, A w){F2PREFIP;A h;
  ARGCHK2(a,w);
  // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
@@ -353,7 +353,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
  // Allow only DIRECT and BOX types, to simplify usecounting
  if((SGNIF((I)jtinplace,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
-  I lgk=bplg(at); I lgatomsini=MAX(LGSZI-lgk,0);  // lg of size of atom of a; number of atoms in an I (0 if <1)
+  I lgk=bplg(at); I lgatomsini=MAX(LGSZI-lgk,0);  // lg of size of atom of a; lg of number of atoms in an I (0 if <1)
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
   // would push a over a power-of-2 boundary, skip the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)
   if(EXTENDINPLACENJA(a,w) && ((at&(DIRECT|BOX))|(AT(w)&SPARSE))>0) {
@@ -411,15 +411,15 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
      // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
      // items of w (after its conversion to the precision of a)
      I wn; PROD(wn,ar-1,AS(a)+1) fgwd&=((wn>AN(w))?~FGWNOFILL:~0);  // wn starts as size of cell of a; if w is smaller than that, it will have to fill, either internal or external
-     // There will be a delay in settling the value of fgwd.  To reduce the latency if fill is required we could movesome computation here.  But the compiler would defer it anyway
+     // There will be a delay in settling the value of fgwd.  To reduce the latency if fill is required we could move some computation here.  But the compiler would defer it anyway
      if(likely(fgwd&FGWNOFILL)||likely(!jt->fill)||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill)))){  // OK if we won't fill, or there is no user fill; if user fill, must not change precision of a
       I wm=AS(w)[0]; wm=fgwd&FGARMINUSWR?1:wm; wn*=wm;  // if ar=wr, wm=#w and wn=#atoms in w cells of a; if ar>wr, wm=1 and wn=#atoms in 1 cell of a
       I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);  // get length of a and w in bytes
-      // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
+      // See if there is room in a to fit w (including trailing pad to ensure a SZI can be fetched/stored at the last valid atom's address- but no pad for NJA blocks, to allow appending to the limit)
 // obsolete     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((AFLAG(a)&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
 // obsolete       if(likely(allosize>=(ak+wk+MAX(SZI-(1LL<<(fgwd&FGLGK)),0)))){    // ensure a SZI can be fetched/stored at the last valid atom's address, adding 7, 6, 4, 0
-      I allosize; if(likely(!(AFLAG(a)&AFNJA+AFVIRTUAL)))allosize=FHRHSIZE(AFHRH(a))-AK(a)-(((SZI-1)<<(fgwd&FGLGK))&(SZI-1)); else allosize=AFLAG(a)&AFVIRTUAL?0:AM(a);  // a can't be GMP; inline the computation of allosize.  VIRTUAL must be UNINCORPABLE - pity to have to wait so long
-      if(likely(allosize>=ak+wk)){    // ensure a SZI can be fetched/stored at the last valid atom's address
+      I extrasize; if(likely(!(AFLAG(a)&AFNJA+AFVIRTUAL)))extrasize=FHRHSIZE(AFHRH(a))-AK(a)-(((SZI-1)<<(fgwd&FGLGK))&(SZI-1)); else extrasize=AFLAG(a)&AFVIRTUAL?-1:AM(a);  // a can't be GMP; inline the computation of allosize.  VIRTUAL must be UNINCORPABLE - pity to have to wait so long
+      if(likely(extrasize>=ak+wk)){    // if free space is sufficient...
        // We have passed all the tests.  Inplacing is OK.
        AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
        // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)
@@ -431,17 +431,20 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;
        // rank is implicit in the shape of a.  BUT never pad an atomic w.  If we add user fill, we must remove pristinity on the result
        // The take relies on the fill value
        I wlen;  // length of w data
-       if(unlikely((fgwd&FGWATOMIC+FGWNOFILL)==0)){  // if w cell must be expanded, whether by leading or internal axis, but not by scalar replication
-        if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}  // scaf use faux block for h
-        av=ak+CAV(a);   // av->end of a data
+       C *av=ak+CAV(a);   // av->end of a data
+       if(likely((fgwd&FGWATOMIC+FGWNOFILL)!=0)){wlen=AN(w)<<(fgwd&FGLGK); // no fill: av->end of a data; the length in bytes of the data in w
+  // if w cell must be expanded, whether by leading or internal axis, but not by scalar replication
+       }else{
+        // fill required, and no atomic replication.  First expand the entire w as needed, then framing fill as needed for extra axes
+        if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}
 // obsolete  wv=CAV(w);, wv->w data
         // If an item of a is bigger than the entire (possibly expanded) nonatomic w,
         // copy fill to the output area.  Start the copy after the area that will be filled in by w
         wlen=AN(w)<<(fgwd&FGLGK); // the length in bytes of the data in w after fill to item size
         if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
+       }
 // obsolete        jtinplace=jt->fill?0:jtinplace;  // we are filling.  If the fill for box is not the default a:, remove pristinity from w and thus from a
-       }else{av=ak+CAV(a); wlen=AN(w)<<(fgwd&FGLGK);} // av->end of a data; the length in bytes of the data in w
-       // Copy in the actual data, replicating if w is atomic
+       // Fill has been installed.  Copy in the actual data, replicating if w is atomic
        if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1)} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill
        // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
        PRISTCLRF(w)  // this destroys w!

@@ -206,6 +206,12 @@ isnum=: 13 : '{:0,nn~:(nn=._1)".y'
 0 = isnum 'abc'
 1 = isnum '1.234e7'
 
+NB. the following used to corrupt memory
+ar=: 13 : ' ''There are '',(":#  y ),'' Mutation_States on this plate.'''	
+ar=: 13 : ' ''There are '',(":#  y ),'' Mutation_States on this plate.'''	
+ar=: 13 : ' ''There are '',(":#  y ),'' Mutation_States on this plate.'''	
+ar=: 13 : ' ''There are '',(":#  y ),'' Mutation_States on this plate.'''	
+
 
 4!:55 ;:'a ar eq eq1 eq12 eq2 eqx isnum'
 

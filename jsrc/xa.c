@@ -698,7 +698,7 @@ F2(jtgemmtune2){I j,k;
 // 9!:65 0/1
 F1(jtboxedsparse){I k;
 #ifndef BOXEDSPARSE
- ASSERT(0,ENONCE);
+ ASSERT(0,EVNONCE);
 #else
  ARGCHK1(w);
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);

@@ -1818,6 +1818,11 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_xor_pd __emu_mm256_xor_pd
 #define _mm256_xor_ps __emu_mm256_xor_ps
 
+/* clang 19 defines these macro */
+#undef _mm_cmp_pd
+#undef _mm_cmp_ps
+#undef _mm_cmp_sd
+#undef _mm_cmp_ss
 
 #define _mm_cmp_pd __emu_mm_cmp_pd
 #define _mm256_cmp_pd __emu_mm256_cmp_pd

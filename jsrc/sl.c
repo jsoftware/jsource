@@ -603,6 +603,7 @@ static SYMWALK(jtlocmap1,I,INT,18,3,1,
      zc=t==SYMB?6:zc; zc=t&(NOUN|VERB|ADV|CONJ|SYMB)?zc:-2;
      *zv++=zc;
      *zv++=(I)rifvs(sfn(SFNSIMPLEONLY,d->name));})  // this is going to be put into a box
+     // produces a table of chain#,name class 0-3, 6 for symbol, _2 for other, pointer to name 
 
 static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  ARGCHK1(w);
@@ -611,7 +612,7 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  ASSERT(g!=0,EVLOCALE);
  RZ(q=locmap1(g)); qv=AV(q);
  m=AS(q)[0];
- // split the q result between two boxes
+ // split the q result between two boxes: first box is table of chain#,sym# in chain,class; second box is list of boxed names
  GATVR(x,INT,m*3,2,AS(q)); xv= AV2(x);
  GATV0(y,BOX,m,  1); yv=AAV1(y);
  DQ(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=incorp((A)*qv++););

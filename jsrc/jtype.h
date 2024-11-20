@@ -1328,6 +1328,7 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 #define FUNCID0 ((A)(validitymask-4*(!SY_64)))  // 0 in index [15] ([19] for 32-bit), which has a 0 in the id field of V
 #define SYMVAL0 ((L*)(validitymask+12))  // 0 0, which has a 0 in the val field of L
 #define AFLAG0 ((A)(validitymask+12))  // 0 0, which has a 0 in the flag field of A
+#define ACLEN0 ((A)(validitymask+12-4))  // x x x x 0 0, which has a 0 in the AC field
 #define ZAPLOC0 ((A*)(validitymask+12))  // 0 used as a pointer to a null tpop-stack value
 #define PSTK2NOTFINALASGN ((PSTK*)(validitymask+12)-2)  // 0 in position [2], signifying NOT final assignment (used for errors)
 #define BREAK0 ((C*)(validitymask+12))  // 0 to indicate no ATTN requested

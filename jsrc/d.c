@@ -353,6 +353,8 @@ A jtjsignale(J jt,I eflg,A line,I info){
       }
       // last line is the failing line, with spaces before the error point
       debsi1(jt->sitop);
+      // if the line was echoed from a pyx, append the message for the pyx
+      if(eflg&EMSGFROMPYX){eputs("emsg in pyx:\n"); ep(AN(line),CAV(line)); eputc(CLF);}  // finish with the original message
      }
     }
     jt->etxn1=jt->etxn;  // save length of finished message

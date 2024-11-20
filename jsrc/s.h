@@ -23,7 +23,7 @@
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,GACOPYSHAPE0,R 0);                \
   if(1<(COL)){AS(z)[0]=(COUNT); AS(z)[1]=(COL);}             \
   zv=(T*)AV(z);                                              \
-  for(i=SYMLINFOSIZE;i<n;++i){  /* for each symbol chain */                \
+  for(i=SYMLINFOSIZE;i<n;++i){  /* for each symbol chain, i is chain# */                \
    k=SYMNEXT(*e++);  /* initial symbol index */  \
    while(j=k){      /* chase the chain */                   \
    d=j+SYMORIGIN;                                            \

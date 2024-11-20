@@ -940,7 +940,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jtjsignale(jt,(e)|EMSGLINEISNAME|EMSGNOMSGLINE,(nm),0); R 0;}}  // signal error, overriding the running name with a different one
 #define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){jtjsignale(jt,(e)|EMSGLINEISNAME|EMSGNOMSGLINE,(nm),0); goto lbl;}}  // same, but without the exit
-#define ASSERTPYX(e)   {jsignal((e)|(EMSGFROMPYX|EMSGNOEFORMAT)); R 0;}
+#define ASSERTPYX(e,line)   {jtjsignale(jt,(e)|(EMSGFROMPYX|EMSGNOEFORMAT|EMSGNOMSGLINE),line,0); R 0;}
 #define ASSERTSYSCOMMON(b,s,stmt)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); stmt}}
 #define ASSERTSYS(b,s)  ASSERTSYSCOMMON(b,s,R 0;)
 #define ASSERTSYSV(b,s) ASSERTSYSCOMMON(b,s,)

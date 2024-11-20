@@ -1423,9 +1423,9 @@ void jtrepatsend(J jt){
  jt->repato=0;  // clear repato to empty
  jt=JTFORTHREAD1(jt,origthread1); // switch to the thread the chain must return to
  I zero=0,exsize;
- // Add chain of new blocks to repatq.  AC(repatq) has total alloc size in repatq
- A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AC(repato)=allocsize+(exsize=*(expval?&AC(expval):&zero)); } while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
- if(common(((exsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_store_n(&jt->uflags.sprepatneeded,1,__ATOMIC_RELEASE); // if amt freed crosses boundary, request reclamation in the home thread
+ // Add chain of new blocks to repatq.  AC(repatq) has total alloc size in repatq.  This code fails if ABA happens in repatq (the count is wrong), but that is vanishingly unlikely
+ A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AC(repato)=allocsize+(exsize=AC(expval?expval:ACLEN0)); } while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
+ if(common(((allocsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_store_n(&jt->uflags.sprepatneeded,1,__ATOMIC_RELEASE); // if amt freed crosses boundary, request reclamation in the home thread
 #endif
 }
 
@@ -1442,8 +1442,9 @@ void jtrepatrecv(J jt){
    I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
    if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0))jt->uflags.spfreeneeded=1;  // if we have freed enough to call for garbage collection, do
    AFCHAIN(p)=jt->mempool[blockx];  // chain new block at head of queue
-   jt->mempool[blockx]=p;}
+   jt->mempool[blockx]=p;
   }
+ }
 #endif
 }
 

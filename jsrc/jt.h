@@ -222,32 +222,33 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // end of cacheline 5
 
  C _cl6[0];
-// seldom used,  but contended during system lock 
+// seldom used, but contended during system lock.  Also used for intertask communication of memory allocation
  ETXDATA *etxinfo;  // error display string and other info
  void *dtoa;             /* use internally by dtoa.c                        */
  PSTK initparserstack[1];  // 2 words stack used for messages when we don't have a real one Only .a and .t are used, leaving 6 bytes free (.pt and .filler)
+ //   initparserstack[0].filler is the lock for repatq.  The lock is taken by eack task to send data back, and by this task when we receive the data
+ A repatq;  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  Same format as repato above.  TODO would something with splay be more memory friendly than a straight chain?
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
+ A *pmttop;  // tstack top to free to when releasing the postmortem stack.  Non0 indicates pm debugging session is active  Could move to JST
+ I filler6[1];
+// end of cacheline 6
+
+ C _cl7[0];
+ // Rarely-used stuff, and intertask communication
  A repato; // outgoing repatriation chain; chain of objects which all belong to the same thread.  AAV0(repato) points to the last link in the chain, and AC(repato) is the cumulative #bytes in the chain
            // rationale: it's common to free many objects from the same thread at once (in particular, release boxed list from a pyx), so this amortises that work
            // it would be good to have a more general outgoing repatriation queue to handle better the case when you free objects from different threads; logic is more annoying there because you have to route the objects to their right destinations
            // snmalloc has a slick design but it sometimes 'repatriates' blocks to the wrong thread, so they may sometimes take multiple hops to get home, which is annoying.  An alternative is to use a fixed-sized array, and sort it once it fills up
            // perhaps something like an lru cache of threads recently freed to?  Do a linear scan of the first k entries (maybe w/short simd if the first is a miss), and if they all miss, then fall back to--snmalloc trick, or sort buffer, or something else
            // Or maybe a fixed-size cache, and anything that falls out of it gets immediately flushed?  I like that, because it helps prevent singleton allocations from getting lost
- DC sitop;            /* pointer to top of SI stack                                 */
- A *pmttop;  // tstack top to free to when releasing the postmortem stack.  Non0 indicates pm debugging session is active  Could move to JST
-// end of cacheline 6
-
- C _cl7[0];
- // Area used for intertask communication of memory allocation, and rarely-used stuff
- A repatq;  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  Same format as repato above.  TODO would something with splay be more memory friendly than a straight chain?
  I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
  I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
+ I malloctotalhwmk;  // highest value since most recent 7!:1
  UI cstackinit;       // C stack pointer at beginning of execution
  I mfreegenalloremote;        // Amount allocated through malloc but freed by other threads (frees only, so always negative)
  I malloctotalremote;    // net total of malloc/free performed in m.c only but freed by other threads (frees only, so always negative)
- I malloctotalhwmk;  // highest value since most recent 7!:1
- I filler7[1];
+ DC sitop;            /* pointer to top of SI stack                                 */
 // end of cacheline 7
  C _cl8[0];
 

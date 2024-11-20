@@ -181,8 +181,8 @@ I jtsystemlockaccept(J jt, I priority){
 
 typedef struct pyxcondmutex{
  // The PYXBLOK is the first thing is a BOX block with AN=1.  Thus the first field in the PYXBLOK
- // must be the vallue, which will be freed when the PYXBLOK is freed
- A pyxvalue;  // the A block of the pyx, when it is filled in.  It is 0 until then.
+ // must be the value, which will be freed when the PYXBLOK is freed
+ A pyxvalue;  // the A block of the pyx/emsg, when it is filled in.  It is 0 until then.
  float pyxmaxwt;  // max time to wait for this pyx in seconds
  S pyxorigthread;  // thread number that is working on this pyx, or _1 if the value is available
  C errcode;  // 0 if no error, or error code
@@ -198,12 +198,19 @@ enum{  // pyx state is low byte of seqstate.  High 3 bytes are the wakeup sequen
 
 // Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.  fa() the pyx to indicate that the thread has released the pyx
 // If the value has been previously installed (invalid, and possible only with user pyxes), return abort code 0, otherwise 1
+// if errcode!=0, change z to be an A block for the error message in this thread
 static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  S prevthread=__atomic_exchange_n(&((PYXBLOK*)AAV0(pyx))->pyxorigthread,-1,__ATOMIC_ACQ_REL);  // set pyx no longer running
  if(unlikely(prevthread<0))R 0;  // the pyx is read-only once written
- __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->errcode,errcode,__ATOMIC_RELEASE);  // copy failure code.  Must be non0 - if not that is itself an error
- if(likely(z!=0))ra(z);  // since the pyx is recursive, we must ra the result we store into it.  Could zap if inplaceable
- __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result value
+ ASSERTSYS(((UI)z|(UI)errcode)!=0,"error pyx with no errorcode");
+// obsolete  if(likely(z!=0)){ra(z)  Could zap if inplaceable
+ if(unlikely(z==0)){
+  // error.  Remember the entire message that has been formatted into etx, and pass that string as the result value.  The error code will indicate the semantics
+  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->errcode,errcode,__ATOMIC_RELEASE);  // copy failure code.  Must be non0 - if not that is itself an error above
+  z=str(jt->etxn,jt->etxinfo->etx);   // previous error text
+ }
+ razap(z);    // since the pyx is recursive, we must ra the result/emsg we store into it.  We transfer ownership to the pyx
+ __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result/emsg value
  // broadcast to wake up any tasks waiting for the result
  if(PYXWAIT==xchga((C*)&((PYXBLOK*)AAV0(pyx))->seqstate,PYXFULL))jfutex_wakea(&((PYXBLOK*)AAV0(pyx))->seqstate);
  // unprotect pyx.  It was raised when it was assigned to this owner; now it belongs to the system
@@ -254,8 +261,8 @@ A jtpyxval(J jt,A pyx){UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
  // and then wait until system lock is over
  CLRFUTEXWT;   // clear the futex wait till no one is using it
 done:  // pyx has been filled in.  jt->futexwt must be 0
- if(likely(blok->pyxvalue!=NULL))R blok->pyxvalue; // valid value, use it
- ASSERTPYX(blok->errcode); // if error, return the error code, noting that it was extenally generated
+ if(likely(blok->errcode==0))R blok->pyxvalue; // valid value, use it
+ ASSERTPYX(blok->errcode,blok->pyxvalue); // error: signal the error in the reader, noting that it was externally generated
 fail:
  CLRFUTEXWT;ASSERT(0,err);}
 

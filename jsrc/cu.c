@@ -6,6 +6,9 @@
 #include "j.h"
 #include "ve.h"
 
+#ifdef BOXEDSPARSE
+extern UC fboxedsparse;
+#endif
 
 static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
  ARGCHK1(w);
@@ -124,6 +127,8 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   }
 #ifndef BOXEDSPARSE
   ASSERT(!ISSPARSE(AT(x)),EVNONCE);
+#else
+  ASSERT(fboxedsparse||!ISSPARSE(AT(x)),EVNONCE);
 #endif
   // Store result & advance to next cell
   *zv++=x;

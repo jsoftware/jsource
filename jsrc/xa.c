@@ -11,6 +11,10 @@ extern uint64_t g_cpuFeatures;
 extern uint64_t g_cpuFeatures2;
 extern int numberOfCores;
 
+#ifdef BOXEDSPARSE
+extern UC fboxedsparse;
+#endif
+
 #include <string.h>
 #ifdef _WIN32
 #define strncasecmp _strnicmp
@@ -313,7 +317,7 @@ F1(jtstackfault){C stackbyte,buf[80],*stackptr=&stackbyte;
  R 0;
 }
 
-// 9!:56  undocumented
+// 9!:56
 // query/override cpu feature
 F1(jtcpufeature){
  ARGCHK1(w);
@@ -686,6 +690,25 @@ F2(jtgemmtune2){I j,k;
  else if(k==1) JT(jt,dgemm_thres)=j16;
  else JT(jt,zgemm_thres)=j16;
  R sc(1);
+}
+
+// 9!:65  undocumented
+// set boxed sparse array capacity  0 disable  1 enable
+
+// 9!:65 0/1
+F1(jtboxedsparse){I k;
+#ifndef BOXEDSPARSE
+ ASSERT(0,EVNONCE);
+#else
+ ARGCHK1(w);
+ ASSERT(AT(w)&(B01+INT),EVDOMAIN);
+ ASSERT(1==AN(w),EVLENGTH);
+ ASSERT(1>=AR(w),EVRANK);
+ RE(k=i0(w));  // get arg
+ ASSERT(k==0||k==1,EVDOMAIN);
+ fboxedsparse=k;
+ R mtv;
+#endif
 }
 
 // enable/disable tstack auditing, since some testcases run too long with it enabled

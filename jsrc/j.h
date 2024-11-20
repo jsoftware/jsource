@@ -145,6 +145,8 @@
 
 #if defined(__aarch64__)||defined(_M_ARM64)
 #if EMU_AVX2
+#undef SSE2NEON_SUPPRESS_WARNINGS
+#define SSE2NEON_SUPPRESS_WARNINGS
 #include <stdint.h>
 #include <string.h>
 #include "sse2neon.h"

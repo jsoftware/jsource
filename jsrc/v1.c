@@ -7,6 +7,10 @@
 #include "vcomp.h"
 #include "ve.h"
 
+#ifdef BOXEDSPARSE
+extern UC fboxedsparse;
+#endif
+
 #ifdef MMSC_VER
 #pragma warning(disable: 4244)
 #endif
@@ -405,7 +409,7 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  if(unlikely(t&FUNC))R (!eqf(a,w))^(x==0?1:b1);  // true value, but switch if return is not 'match'
  if(unlikely(t&NAME))R (!eqname(a,w))^(x==0?1:b1);  // true value, but switch if return is not 'match'
 #ifdef BOXEDSPARSE
- if(unlikely(ISSPARSE(at|wt)))R num(1)==matchs(a,w);
+ if(fboxedsparse) if(unlikely(ISSPARSE(at|wt)))R num(1)==matchs(a,w);
 #endif
  // If the types mismatch, convert as needed to the common (unsafe) type calculated earlier
  if(at!=wt) {

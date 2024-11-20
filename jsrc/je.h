@@ -27,6 +27,7 @@ extern F1(jtbehead);
 extern F1(jtbinrep1);
 // extern F1(jtbitadv);
 extern F1(jtbox);
+extern F1(jtboxedsparse);
 extern F1(jtboxopen);
 extern F1(jtboxq);
 extern F1(jtboxs);

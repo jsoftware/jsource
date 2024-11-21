@@ -1,3 +1,3 @@
 // set version info for github build
 // a new distribution is made when the version is updated
-#define jversion "9.6.0-beta23"  
+#define jversion "9.6.0-beta24"  

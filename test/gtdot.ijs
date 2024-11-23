@@ -309,6 +309,24 @@ delth''
 0 -: 1 T. ''
 (8 {. 0 0 */ 1 0 1) -: 2 T."0 i. 8 [ 6!:3 (0.2)
 
+0 T. ''
+f =: {{ 1 + y }}
+{{)n
+|domain error (from pyx)
+|       >f t.'worker'y
+emsg in pyx:
+|domain error in f, executing dyad +
+|y is character
+
+}} -:&('|' taketo&.|. ]) {{
+try.
+> f t. 'worker' y
+catch.
+13!:12''
+end.
+}} ' '   NB. verify message from pyx is passed through
+
+delth''
 
 
 
@@ -326,6 +344,8 @@ delth''
 'limit error' -: 0 T. etx 8
 'limit error' -: 2 T. etx 8
 'limit error' -: ". etx '] t. 8'
+
+
 
 4!:55 ;:'allowlongjobs amv chk delth N N1 N2 f f1 f2 g g1 pyx sleep wthr'
 

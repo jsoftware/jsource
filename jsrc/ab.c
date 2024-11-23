@@ -184,42 +184,48 @@ static AHDR2FN* bwI[16]={(AHDR2FN*)bw0000II,(AHDR2FN*)bw0001II,(AHDR2FN*)bw0010I
 /* a m b.&.(a.i.]) w */
 /* m e. 16+i.16      */
 
-DF2(jtbitwisechar){A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
+DF2(jtbitwisechar){A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I b;I j,m,n,zn;AHDR2FN* ado;
  ARGCHK2(a,w);
- x=a;
- y=w;
- if((-AN(a)&-AN(w)&-(AT(a)&AT(w))&LIT)>=0)R from(dfv2(z,indexof(ds(CALP),a),indexof(ds(CALP),w),fs),ds(CALP));  // empty or not LIT
- b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;  // b = 'x is repeated'
+ A x=a, y=w; I an=AN(a), wn=AN(w);
+ if((-an&-wn&-(AT(a)&AT(w))&LIT)>=0)R from(dfv2(z,indexof(ds(CALP),a),indexof(ds(CALP),w),fs),ds(CALP));  // empty or not LIT
+ b=AR(a)<=AR(w); zn=b?wn:an; m=b?an:wn; n=zn/m;  // b = 'x is repeated'  m=length of low-rank arg n=#repeats of low-rank arg 
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
- j=i0(VAV(fs)->fgh[1])-16;
+ j=i0(VAV(fs)->fgh[1])-16;  // fetch boolean fn #
  GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
- if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}
- else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; A irst=sc(SZI); RZ(*p=IRS2(irst,*p,0L,0L,0L,jtrepeat,zz));} // a atom, w atom, or multiple of SZI
+ if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}  // for single loop we overwrite.  This means no inplacing
+// obsolete  else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(num(SZI),*p,0L,0L,0L,jtrepeat,zz));} // a atom or w atom, or multiple of SZI.  Replicate bytes to words in repeated arg
+ else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; A zz; RZ(p=IRS2(num(SZI),b?x:y,0L,0L,0L,jtrepeat,zz)); x=b?p:x; y=b?y:p;} // a atom or w atom, or multiple of SZI.  Replicate bytes to words in repeated arg
  else                      ado=bwC[j];
- n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
- ado AH2A_nm(n,m,AV(x),AV(y),AV(z),jt); 
- CAV(z)[zn]=0;
+// obsolete  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
+// obsolete  ado AH2A_nm(n,m,AV(x),AV(y),AV(z),jt); 
+ ado AH2A(m,n==1?~m:2*(n^-b)+b,AV(x),AV(y),AV(z),jt);  // convert m to encoded length/repct
+// obsolete  CAV(z)[zn]=0;  // install trailing NUL
  RETF(z);
-}  // scaf use wordlong ops
+}
 
 /* compute z=: t{~ a.i.w if t=: c&(m b.) a.                             */
 /* http://www.jsoftware.com/jwiki/Essays/Bitwise_Functions_on_Characters */
 
-B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* ado;
+B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){UC i,j,s[256];
  if(n==0)R 1;  // Can't handle empty
  i=t[0]; j=t[255];  // by spot-checking a few spots, see if the table might represent AND, ], OR, XOR, NAND
- if     (i==0    ){c=j; ado=(AHDR2FN*)bw0001II;}
- else if(j==i    ){c=i; ado=(AHDR2FN*)bw0011II;}
- else if(j==255  ){c=i; ado=(AHDR2FN*)bw0111II;}
- else if(j==255-i){c=i; ado=(AHDR2FN*)bw0110II;}
- else if(j==0    ){c=i; ado=(AHDR2FN*)bw0010II;}
- else if(i==255  ){c=j; ado=(AHDR2FN*)bw1011II;}
- else R 0;
- pv=(UC*)&p; DO(SZI, pv[i]=c;);  // scaf slow
- ado AH2A(1,2*(256/SZI)+0,AV(ds(CALP)),pv,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
- ado AH2A(1,2*((n+SZI-1)>>LGSZI)+0,wv,pv,zv,jt);  // if we found the function, apply it wordwise
+ I p=i; AHDR2FN* ado=0;   // init the inferred char-arg p, and the inferred function
+ p=i==0?j:p; ado=i==0?(AHDR2FN*)bw0001II:ado; p=i==255?j:p; ado=i==255?(AHDR2FN*)bw1011II:ado;
+ ado=i==j?(AHDR2FN*)bw0011II:ado; ado=j==255?(AHDR2FN*)bw0111II:ado; ado=j==255-i?(AHDR2FN*)bw0110II:ado; ado=j==0?(AHDR2FN*)bw0010II:ado; // make the inference
+// obsolete  if     (i==0    ){c=j; ado=(AHDR2FN*)bw0001II;}
+// obsolete  else if(j==i    ){c=i; ado=(AHDR2FN*)bw0011II;}
+// obsolete  else if(j==255  ){c=i; ado=(AHDR2FN*)bw0111II;}
+// obsolete  else if(j==255-i){c=i; ado=(AHDR2FN*)bw0110II;}
+// obsolete  else if(j==0    ){c=i; ado=(AHDR2FN*)bw0010II;}
+// obsolete  else if(i==255  ){c=j; ado=(AHDR2FN*)bw1011II;}
+// obsolete  else R 0;
+ RZ(ado);  // if no inference fits, return error
+ p=(p<<BB)|p; p=(p<<(2*BB))|p; p=(p<<((SZI/2)*BB))|p;  // replicate character to word-width
+// obsolete  pv=(UC*)&p; DO(SZI, pv[i]=c;);  // scaf slow
+ ado AH2A(1,2*(256/SZI)+0,AV(ds(CALP)),&p,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
+ ado AH2A(1,2*((n+SZI-1)>>LGSZI)+0,wv,&p,zv,jt);  // if we found the function, apply it wordwise
  R 1;
-}  // scaf kludge this should be scrapped in favor of wordlong ops
+}
 
 
 static AHDRRFN* bwinsC[16]={(AHDRRFN*)bw0000insC,(AHDRRFN*)bw0001insC,(AHDRRFN*)bw0010insC,(AHDRRFN*)bw0011insC, (AHDRRFN*)bw0100insC,(AHDRRFN*)bw0101insC,(AHDRRFN*)bw0110insC,(AHDRRFN*)bw0111insC,
@@ -258,7 +264,8 @@ DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN
   case 7: DQ(SZI-1, x=BW0111(x,*v); ++v;); DQ(r, x=BW0111(x,*u); ++u;); break;
   case 9: DQ(SZI-1, x=BW1001(x,*v); ++v;); DQ(r, x=BW1001(x,*u); ++u;); break;
   }
-  *(I*)zv=0; *zv=x;
+// obsolete   *(I*)zv=0;  // install NULs at end
+  *zv=x;
  }
  R z;
 }

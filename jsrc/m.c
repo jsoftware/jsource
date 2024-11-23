@@ -216,17 +216,17 @@ B jtmeminitt(JJ jt){I k;
  R 1;}
 
 // Audit all memory chains to detect overrun
-#if SY_64
-#define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefdeadbeefLL:0)
+#if SY_64   // define optional audits.
+#define AUDITFILL   // obsolete  ||((MEMAUDIT&0x4)?AM(Wx)!=(I)0xdeadbeefdeadbeefLL:0)
 #else
-#define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefL:0)
+#define AUDITFILL   // obsolete ||((MEMAUDIT&0x4)?AM(Wx)!=(I)0xdeadbeefL:0)
 #endif
 // your code for which the warning gets suppressed 
 void jtauditmemchains(J jt){
 #if MEMAUDIT&0x30
  F1PREFIP; I Wi,Wj;A Wx,prevWx=0; forcetomemory(&prevWx);  if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdata))){
  for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mempool[-PMINL+Wi]);
- NOUNROLL while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
+ NOUNROLL while(Wx){if(Wx->origin!=THREADID1(jt)||FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
 }
 #endif
 }

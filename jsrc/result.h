@@ -252,7 +252,7 @@ do{
     }while(1);
    }
   }else{
-   // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless WILLBEOPENED is set
+   // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless WILLBEOPENED is set.  Wrecks are impossible
    ASSERT(!ISSPARSE(AT(z)),EVNONCE);
    // If z is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
    ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&(-(AT(z)&DIRECT)))|~ZZFLAGPRISTINE;
@@ -260,7 +260,7 @@ do{
     // normal case where we are creating the result box.  Must incorp the result.  Can't see an advantage is storing the virtual temporarily, and that would require testing for UNINCORP block
     realizeifvirtual(z); razaptstackend(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine flagging (above) =INCORPRA.  We trouble to see if we can shorten tstack, since that is likely
     *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
-   } else {
+   }else{
     // The result of this verb will be opened next, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might
     // be reusing in this loop.  The user flags those UNINCORPABLE.  Rather than realize it we just make a virtual clone, since realizing might be expensive.
     // That is, if z is one of the virtual blocks we use to track subarrays, we mustn't incorporate it, so we clone it.  These subarrays can be inputs to functions
@@ -273,21 +273,20 @@ do{
     // box code all over assumes that contents are never inplaceable, and since we go through here only when we are going through box code next, we honor that
     ACIPNO(z); *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
     if(unlikely((ZZFLAGWORD&ZZFLAGCOUNTITEMS)!=0)){
-     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
+     // the result will be razed next.  We will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
      // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
      // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
-     I diff;  // Will be set to 0 if we are unable to report the # items
+     I diff;  // Will be set to non0 if we are unable to report the # items
 #if PYXES
      // If the returned result is a pyx, we can't look into it to get its type/len.  We could see if the pyx has been resolved, but we don't
-     if(unlikely(diff=(AT(z)&PYX))){ZZFLAGWORD&=~ZZFLAGCOUNTITEMS;  // if the result is a pyx, which can't be inspected, skip it, which makes the item count invalid
-     }else{
-#else
-     {
+     if(likely((diff=(AT(z)&PYX))==0))   // if the result is a pyx, which can't be inspected, set diff to non0 (which makes the item count invalid) and skip the shape test
 #endif
+     {   // this brace may be part of the previous line!
+      // not a pyx - we can count the items
 #if !ZZSTARTATEND  // going forwards
-       A result0=AAV(zz)[0];   // fetch pointer to the first 
+      A result0=AAV(zz)[0];   // fetch pointer to the first 
 #else
-       A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
+      A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
 #endif
       // see if the items of the new match the old, and increment the number of items
       I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
@@ -296,7 +295,7 @@ do{
       I nitems=zs[0]; nitems=(zr==0)?1:nitems; zzcounteditems+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
 #endif
      }
-     ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if we can't say the items are homogeneous
+     ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit (which must be set now) if we can't say the items are homogeneous
     }
     // Note: by checking COUNTITEMS inside WILLBEOPENED we suppress support for COUNTITEMS in \. which sets WILLBEOPENEDNEVER.  It would be safe to
     // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
@@ -316,8 +315,9 @@ do{
   // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.
   // Get the rank/type to allocate for the presumed result
   // Get the type to allocate
-  I natoms=AN(z);  // number of atoms per result cell
-  I zzt=AT(z); I zzr=AR(z); zzt=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
+  I natoms=AN(z); I zzt=AT(z); I zzr=AR(z);   // number of atoms per result cell; type and rank of first result cell
+  // Type of zz is that of z, except for BOXATOP: then it's BOX.  The value can be a pyx only if BOXATOP is set, so we know zz can't itself be a pyx
+  zzt=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
   zzcelllen=natoms<<bplg(zzt);  // number of bytes in one cell.
   JMCSETMASK(zzendmask,zzcelllen,ZZSTARTATEND)   // set mask for JMCR
 

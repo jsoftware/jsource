@@ -30,7 +30,22 @@ stime =: 6!:1''
 stime =: 6!:1''
 1 = > 6!:3 t. 1"0 ] 6 # 1
 (5-granularity) < stime -~ 6!:1''
+delth''
 
+NB. Test mixtures of pyxes and non-pyxes
+1: 0 T. ''
+1: 0 T. ''
+1: 0 T. ''
+1: 0 T. ''  NB. create threads
+
+a =: i.&.> (20 ?@$ 10)
+(;a) -: ; (0.30 > (#a) ?@$ 0) >@] t.'worker'^:["0 a
+(;a) -: ; >@] t.'worker'"0 a
+(;a) -: ;@:((0.30 > (#a) ?@$ 0) >@] t.'worker'^:["0 ]) a
+(;a) -: ;@:(>@] t.'worker'"0) a
+
+
+delth''
 4!:55 ;:'delth granularity stime'
 
 epilog''

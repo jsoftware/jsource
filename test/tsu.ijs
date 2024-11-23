@@ -50,7 +50,7 @@ blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gm
 blacklist=: blacklist, (-. (<UNAME)e.<'Darwin')#(<testpath),each <'gcip1.ijs'
 blacklist=: blacklist, (IFRASPI<(IF64<UNAME-:'Linux')+.(IFWIN>IF64)+.IFIOS+.(UNAME-:'Wasm'))#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
-blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. require multithreading
+blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. require multithreading
 blacklist=: blacklist, (-.15!:23'')#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs'  NB. 15!:0 unavailable
 blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each <'gstack.ijs'  NB. crash
 blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp422.ijs';'gsp432.ijs'  NB. crash
@@ -475,7 +475,7 @@ allorcmdline=: 3 :0
       NB. fail
     end.
   else.
-    ddall-.((testpath,'g') , ,&'.ijs')&.>;:'131 cip 520 sp 7x tdot1 3x tdot2 tdot3 tdot4 tdot t' NB. temporarily ignore threading
+    ddall-.((testpath,'g') , ,&'.ijs')&.>;:'131 cip 520 sp 7x tdot1 3x tdot2 tdot3 tdot4 tdot5 tdot t' NB. temporarily ignore threading
   end.
 )
 

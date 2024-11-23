@@ -1128,7 +1128,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
  RZ(z=EPILOGNORET(z));
  // Since EPILOG may have rewritten AM, and IFORKEY never returns to the parser, we can store the FORKEY result in AM.
  *((mode&IIOPMSK)==IFORKEY?(I*)&AM(z):(I*)&jt->shapesink)=forkeyresult;
- RETF(z);
+ R z;  // Not RETF, which may audit the AM field which we just modified
 }    /* a i."r w main control */
 
 // verb to vector combine@e. compounds.  The i. code is in the self

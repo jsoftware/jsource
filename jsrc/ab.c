@@ -209,9 +209,9 @@ DF2(jtbitwisechar){A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I b;I j
 B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){UC i,j,s[256];
  if(n==0)R 1;  // Can't handle empty
  i=t[0]; j=t[255];  // by spot-checking a few spots, see if the table might represent AND, ], OR, XOR, NAND
- I p=i; AHDR2FN* ado=0;   // init the inferred char-arg p, and the inferred function
- p=i==0?j:p; ado=i==0?(AHDR2FN*)bw0001II:ado; p=i==255?j:p; ado=i==255?(AHDR2FN*)bw1011II:ado;
- ado=i==j?(AHDR2FN*)bw0011II:ado; ado=j==255?(AHDR2FN*)bw0111II:ado; ado=j==255-i?(AHDR2FN*)bw0110II:ado; ado=j==0?(AHDR2FN*)bw0010II:ado; // make the inference
+ AHDR2FN* ado=0;   // init the inferred char-arg p, and the inferred function
+ ado=i==255?(AHDR2FN*)bw1011II:ado; I p=j;        ado=j==0?(AHDR2FN*)bw0010II:ado; p=j==0?i:p; ado=j==255-i?(AHDR2FN*)bw0110II:ado; p=j==255-i?i:p;
+ ado=j==255?(AHDR2FN*)bw0111II:ado; p=j==255?i:p; ado=i==j?(AHDR2FN*)bw0011II:ado; p=i==j?i:p; ado=i==0?(AHDR2FN*)bw0001II:ado; p=i==0?j:p;    // make the inference
 // obsolete  if     (i==0    ){c=j; ado=(AHDR2FN*)bw0001II;}
 // obsolete  else if(j==i    ){c=i; ado=(AHDR2FN*)bw0011II;}
 // obsolete  else if(j==255  ){c=i; ado=(AHDR2FN*)bw0111II;}
@@ -223,7 +223,7 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){UC i,j,s[256];
  p=(p<<BB)|p; p=(p<<(2*BB))|p; p=(p<<((SZI/2)*BB))|p;  // replicate character to word-width
 // obsolete  pv=(UC*)&p; DO(SZI, pv[i]=c;);  // scaf slow
  ado AH2A(1,2*(256/SZI)+0,AV(ds(CALP)),&p,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
- ado AH2A(1,2*((n+SZI-1)>>LGSZI)+0,wv,&p,zv,jt);  // if we found the function, apply it wordwise
+ ado AH2A(1,2*((n+SZI-1)>>LGSZI)+0,wv,&p,zv,jt);  // if we found the function, apply it wordwise, overwriting result
  R 1;
 }
 

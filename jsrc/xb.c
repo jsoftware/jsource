@@ -725,7 +725,7 @@ F1(jtltrim){I stride,ln,lh,n,ar,*pi;A z=0;C *u,*v;I as[63];
 // w is a box, result is 1 if it contains a  NaN
 static B jtisnanq(J jt,A w){
  ARGCHK1(w);
- if(AT(w)&FL+CMPX){D *v=DAV(w); DQ(AN(w)<<((AT(w)>>CMPXX)&1), if(_isnan(v[i]))R 1;);}  // if there might be a NaN, return if there is one
+ if(AT(w)&FL+CMPX+QP){D *v=DAV(w); I stride=AT(w)&QP?2:1; DQ(AN(w)<<((AT(w)>>CMPXX)&1), if(_isnan(*v))R 1; v+=stride;);}  // if there might be a NaN, return if there is one
  else if(AT(w)&BOX){A *v=AAV(w); STACKCHKOFL DQ(AN(w), if(isnanq(C(v[i])))R 1;);}  // if boxed, check each one recursively; ensure no stack overflow
  // other types never have NaN
  R 0;  // if we get here, there must be no NaN
@@ -737,7 +737,7 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  n=AN(w); t=AT(w);
  ASSERT(!ISSPARSE(t),EVNONCE);
  I zr=AR(w); GATV(z,B01,n,AR(w),AS(w)); u=BAVn(zr,z);
- if (t&FL){v=DAV(w); DQ(n, *u++=_isnan(*v++););}  // float - check each atom
+ if (t&FL+QP){v=DAV(w); I stride=t&FL?1:2;  DQ(n, *u++=_isnan(*v); v+=stride;);}  // float/qp - check each atom (high part for qp)
  else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(v[0])|_isnan(v[1]); v+=2;);}  // complex - check each half
  else if(t&BOX){wv=AAV(w); DO(n, *u++=isnanq(C(wv[i]));); RE(0);}  // boxed - check contents
  else mvc(n,u,MEMSET00LEN,MEMSET00);  // other types are never NaN

@@ -225,7 +225,7 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){UC i,j,s[256];
  ado AH2A(1,2*(256/SZI)+0,AV(ds(CALP)),&p,s,jt); if(memcmpne(s,t,256L))R 0;  // see if the table we are given exactly matches the function we inferred.  If not, abort
  ado AH2A(1,2*((n+SZI-1)>>LGSZI)+0,wv,&p,zv,jt);  // if we found the function, apply it wordwise, overwriting result
  R 1;
-}
+}  // scaf this isn't worth the test since the user could have just bitwise
 
 
 static AHDRRFN* bwinsC[16]={(AHDRRFN*)bw0000insC,(AHDRRFN*)bw0001insC,(AHDRRFN*)bw0010insC,(AHDRRFN*)bw0011insC, (AHDRRFN*)bw0100insC,(AHDRRFN*)bw0101insC,(AHDRRFN*)bw0110insC,(AHDRRFN*)bw0111insC,

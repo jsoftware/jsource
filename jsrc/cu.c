@@ -310,7 +310,7 @@ static DF1(jtunderai1){A fs=FAV(self)->fgh[0]; A x,y,z;B b;I j,n,*u,*v;UC f[256]
         dfv1(x,iota(v2(128L, 2L)),fs); b=x&&256==AN(x)&&NUMERIC&AT(x);  // try f i. 128 2; does it return 256 numbers?
   if(b){dfv1(y,iota(v2(  8L,32L)),fs); b=y&&256==AN(y)&&NUMERIC&AT(y);}  // if so, try f i. 8 32; does it return 256 numbers?
   if(b){x=vi(x); y=vi(y); b=x&&y;}   // verify both results integer, set b if so
-  if(b){u=AV(x); v=AV(y); DO(256, j=*u++; if(j==*v++&&BETWEENO(j,-255,256))f[i]=(UC)(j&255); else{b=0; break;});}  // verify both results the same & in bounds
+  if(b){u=AV(x); v=AV(y); DO(256, j=*u++; if(j==*v++&&BETWEENO(j,-256,256))f[i]=(UC)(j&255); else{b=0; break;});}  // verify both results the same & in bounds
   if(jt->jerr)RESETERR;
  }         
  if(!b)R from(dfv1(z,indexof(ds(CALP),w),fs),ds(CALP));  // if not boolean-like result or not literal, revert to long way
@@ -318,7 +318,7 @@ static DF1(jtunderai1){A fs=FAV(self)->fgh[0]; A x,y,z;B b;I j,n,*u,*v;UC f[256]
  I zr=AR(w); GATV(z,LIT,n,AR(w),AS(w)); zv=UAVn(zr,z); wv=UAV(w);  // allocate result
  if(!bitwisecharamp(f,n,wv,zv))DQ(n, *zv++=f[*wv++];); // if f is a known logic function, do it wordwise; otherwise do it here, bytewise
  RETF(z);
-}    /* f&.(a.&i.) w */
+}    /* f&.(a.&i.) w */  // scaf remove charamp
 
 // structural under, i. e. u&.v when v is a special noninvertible form that we recognize.  Currently only , and m&{ are recognized
 static DF1(jtsunder){F1PREFIP;PROLOG(777);

@@ -280,6 +280,8 @@ do{
 #if PYXES
      // If the returned result is a pyx, we can't look into it to get its type/len.  We could see if the pyx has been resolved, but we don't
      if(likely((diff=(AT(z)&PYX))==0))   // if the result is a pyx, which can't be inspected, set diff to non0 (which makes the item count invalid) and skip the shape test
+#else
+     diff=0;  // if no pyxes, init to no change
 #endif
      {   // this brace may be part of the previous line!
       // not a pyx - we can count the items

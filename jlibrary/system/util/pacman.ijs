@@ -1722,9 +1722,9 @@ y=. (*#y){::0;y
 
 smoutput 'Installing Qt library...'
 if. IFWIN do.
-  z=. 'qt65-win',((y-:'slim')#'-slim'),'.zip'
+  z=. 'qt68-win',((y-:'slim')#'-slim'),'.zip'
 else.
-  z=. 'qt65-mac',((y-:'slim')#'-slim'),'.zip'
+  z=. 'qt68-mac',((y-:'slim')#'-slim'),'.zip'
 end.
 'rc p'=. httpget_jpacman_ www,'/qtlib/',z
 if. rc do.

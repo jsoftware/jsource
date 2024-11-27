@@ -1008,7 +1008,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #else
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); \
- for(--aai;aai>=0;--aai)if(aaa[i]!=aab[i])break; \
+ for(--aai;aai>=0;--aai)if(aaa[aai]!=aab[aai])break; \
  aai<0;  /* return 1 if all matched */ \
  })
 #endif

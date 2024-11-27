@@ -1006,7 +1006,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
  }
 #else
-#define TESTAGREE(r,x,y,l) \
+#define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); \
  for(--aai;aai>=0;--aai)if(aaa[i]!=aab[i])break; \
  aai<0;  /* return 1 if all matched */ \

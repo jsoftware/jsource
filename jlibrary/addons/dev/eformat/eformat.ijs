@@ -442,7 +442,6 @@ case. EVSPELL do. if. selfar -: <'".' do. emsg =. check_spelling_j_ a
                   elseif. selfar -: <,':' do. emsg=. check_spelling_j_ w 5!:0 end.
                   if. 0-:#emsg do. emsg =. 'words with . or : inflections must be J primitive words' end.
 case. EVMISSINGGMP do. emsg =. 'extended-precision library not found.  Run  install ''gmp''  or refer to your installation instructions'
-case. EVSIDAMAGE do. if. prim -.@-: ;:'T.' do. emsg =. 'you must turn debugging off before you redefine an entity other than the one at the top of the execution stack' end.  NB. obsolete 
 case. EVDEADLOCK do. emsg =. 'this action would deadlock the system'
 end.
 if. #emsg do. hdr , emsg return. end.  NB. pee

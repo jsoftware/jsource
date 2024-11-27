@@ -35,7 +35,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
   RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.
  }
  if(FAV(fs)->mr>=AR(w)){
-  // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
+  // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assembly path
   state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
@@ -44,12 +44,14 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
 
  I wr=AR(w);  // rank of w
  RZ(a=vib(a));  // audit for valid integers
- if(1>=AR(a))RZ(a=lamin2(zeroionei(0),a));   // default list to be lengths starting at origin
+ if(unlikely(1>=AR(a)))RZ(a=lamin2(zeroionei(0),a));   // default list to be lengths starting at origin
  as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # 2-cells in a, c = #axes of subarray given, m is index of next-last axis of a, u->1st atom of a
  ASSERT((-(as[m]^2)|(wr-c))>=0,EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of w
- if(!n){  /* empty result; figure out result type */
-  z=CALL1(f1,w,fs);
-  if(z==0)z=zeroionei(0);  // use zero as fill result if error
+ if(unlikely(!n)){  /* empty result; figure out result type */
+  WITHDEBUGOFF(z=CALL1(f1,w,fs);)   // normal execution on fill-cell
+  if(unlikely(z==0)){if(unlikely(EMSK(jt->jerr)&EXIGENTERROR))RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
+// obsolete   z=CALL1(f1,w,fs);
+// obsolete   if(z==0)z=zeroionei(0);  // use zero as fill result if error
   GA00(zz,AT(z),n,m+AR(z)); I *zzs=AS(zz); I *zs=AS(z); 
   MCISH(zzs,as,m) MCISH(zzs+m,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
@@ -223,7 +225,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  // pass through a, counting result items.  abort if there is a reversal - too rare to bother with in the fast path
  RZ(a=vib(a)); av=(I(*)[2])AV(a); I nitems=0;
  // verify starting value in range (unless length=0); truncate length if overrun
- DO(m, j=av[i][0]; k=av[i][1]; if(k<0)R jtspecialatoprestart(jt,a,w,self); I jj=j+n; jj=(j>=0)?j:jj; ASSERT(((jj^(jj-n))|(k-1))<0,EVINDEX); j=n-jj; k=k>j?j:k; nitems+=k; ASSERT(nitems>=0,EVLIMIT))
+ DO(m, j=av[i][0]; k=av[i][1]; if(k<0)R jtspecialatoprestart(jt,a,w,self); I jj=j+n; jj=(j>=0)?j:jj; ASSERT(((jj^(jj-n))|(k-1))<0,EVINDEX); j=n-jj; k=k>j?j:k; nitems+=k; ASSERT(nitems>=0,EVINDEX))
  // audits passed and we have counted the items.  Allocate the result and copy
  I wcn; PROD(wcn,AR(w)-1,AS(w)+1);  // number of atoms per cell of w
  I zn; DPMULDE(wcn,nitems,zn);  // number of atoms in result
@@ -958,7 +960,7 @@ skipspecial:;
    // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell).  The call is non-inplaceable
    RZ(z=reitem(zeroionei(0),w));  // create 0 items of the type of w
    if(state&STATEDYADKEY){RZ(zz=reitem(zeroionei(0),a)); WITHDEBUGOFF(zz=CALL2(f1,zz,z,fs);)}else{WITHDEBUGOFF(zz=CALL1(f1,z,fs);)}
-   if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
+   if(unlikely(zz==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;}
    RZ(zz=reshape(over(zeroionei(0),shape(zz?zz:mtv)),zz?zz:zeroionei(0)));
   }
  }

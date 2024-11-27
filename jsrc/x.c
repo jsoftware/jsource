@@ -328,7 +328,7 @@ void jtforeigninit(J jt){UI i;
  MN(15,16) XPRIM(VERB, jtnfes,       0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,17) XPRIM(VERB, jtcallbackx,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,18) XPRIM(VERB, jtmemalign,   jtmemalign,   VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(15,19) XPRIM(VERB, jtdllvaladdr, 0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(15,19) XPRIM(VERB, jtdllvaladdr, 0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);  // address of header
  MN(15,20) XPRIM(VERB, jtcddlopen,   0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,21) XPRIM(VERB, 0,            jtcddlsym,    VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,22) XPRIM(VERB, jtcddlclose,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);

@@ -106,7 +106,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
   WITHDEBUGOFF(z=CALL1(f1,virtw,fs);)
-  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
+  if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
   I zr=AR(z); GA00(zz,AT(z),0L,wf+zr); zzs=AS(zz); MCISH(zzs,AS(w),wf); MCISH(zzs+wf,AS(z),zr);
  }
 
@@ -215,7 +215,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   // indication that anything unusual happened.  So fail then
   if(!(FAV(fs)->flag2&VF2BOXATOP1)){
    WITHDEBUGOFF(z=CALL1(f1,virtw,fs);)   // normal execution on fill-cell
-   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
+   if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
   }else{
    // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
    // jmf.ijs unknowingly takes advantage of this fact, and would crash if executed on an empty cell
@@ -404,7 +404,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){
 #if AUDITEXECRESULTS
   auditblock(jt,z,1,1);
 #endif
-  if(unlikely(jt->jerr!=0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
+  if(unlikely(unlikely(z==0))){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
   I zr=AR(z); GA00(zz,AT(z),0L,lof+lif+zr); zzs=AS(zz);
   MCISH(zzs,los,lof); MCISH(zzs+lof,lis,lif); MCISH(zzs+lof+lif,AS(z),zr);
  }
@@ -542,7 +542,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
    if(!AN(a)){RZ(virta=jtfiller(jt,AT(a),0,0));}else{virta = virtual(a,0,0); AN(virta)=1;}  // if there are cells, use first atom; else fill atom
    if(!AN(w)){RZ(virtw=jtfiller(jt,AT(w),0,0));}else{virtw = virtual(w,0,0); AN(virtw)=1;}
    WITHDEBUGOFF(z=CALL2(f2,virta,virtw,fs);)   // normal execution on fill-cell
-   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
+   if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
   }else{
    // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
    z=ds(CACE);  // cell 'returned' a:

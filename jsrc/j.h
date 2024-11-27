@@ -954,10 +954,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // verify that shapes *x and *y match for l axes using AVX for rank<=vector size, loop otherwise
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {I *aaa=(I*)(x), *aab=(I*)(y); I aai=(l); \
-  if(likely(aai<=NPAR)){ \
-   ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai))),EVLENGTH); /* result is 1 if all match */ \
-  }else{NOUNROLL do{--aai; ASTYPE(((I*)aaa)[aai]==((I*)aab)[aai],EVLENGTH)}while(aai);} \
+  if(unlikely(aai>NPAR)){NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR]))),_mm256_loadu_si256((__m256i*)validitymask)),EVLENGTH)}while((aai-=NPAR)>NPAR);} \
+  ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai))),EVLENGTH) /* result is 1 if all match */ \
  }
+#if 0   // obsolete 
 // set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -965,6 +965,22 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    r=!(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)))); /* test result is 1 if all match */ \
   }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]!=aab[aai])){r=1; break;}}while(aai);} \
  }
+#else
+// result is true if shapes agree.  Modify only aai
+#define TESTAGREE(x,y,l) \
+ ({I *aaa=(x), *aab=(y); I aai=(l); __m256i aaaa,aaab,aaam; \
+  if(unlikely(aai>NPAR)){ \
+   aaam=_mm256_loadu_si256((__m256i*)(validitymask)); /* start testing all words */ \
+   do{ \
+    aaaa=_mm256_loadu_si256((__m256i *)&aaa[aai-NPAR]); aaab=_mm256_loadu_si256((__m256i *)&aab[aai-NPAR]); \
+    if(!_mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam))break; \
+   }while((aai-=NPAR)>NPAR); \
+   if(likely(aai<=NPAR)){aaaa=_mm256_loadu_si256((__m256i *)aaa); aaab=_mm256_loadu_si256((__m256i *)aab); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai));}  /* if error, stay on it; otherwise back to beginning (would be OK to leave mask) */ \
+  }else{aaaa=_mm256_loadu_si256((__m256i *)aaa); aaab=_mm256_loadu_si256((__m256i *)aab); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai));  /* normal case, fetch beginning and mask */ \
+  } \
+  _mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam); /* test result is 1 if all match */ \
+ })
+#endif
 // set r nonzero if a value in x shape is bigger than corresponding one in y shape
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -980,7 +996,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    ASTYPE(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH); \
   }else{ASTYPE(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
  }
-  
+
+#if 0 // obsolete 
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
@@ -988,6 +1005,13 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    r=((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))!=0;  \
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
  }
+#else
+#define TESTAGREE(r,x,y,l) \
+ ({I *aaa=(x), *aab=(y); I aai=(l); \
+ for(--aai;aai>=0;--aai)if(aaa[i]!=aab[i])break; \
+ aai<0;  /* return 1 if all matched */ \
+ })
+#endif
 
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); r=0; \
@@ -1476,13 +1500,14 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // Item count given frame and rank: AS(f) unless r is 0; then 1 
 #define SETICFR(w,f,r,targ) (targ=(I)(AS(w)+f), targ=(r)?targ:(I)I1mem, targ=*(I*)targ)
 // Shape item s, but 1 if index is < 0
-#define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
+#define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)   // scaf need quicker path when used for rank
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
-// compare names.  We assume the names are usually short & avoid subroutine call, which ties up registers.  Names are overfetched
+// compare names.  We assume the names are usually short & avoid subroutine call, which ties up registers.  Names are overfetched, back to front
 #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len))){ \
-         if((len)<=5){stmt}  /*  len 5 or less, hash is enough */ \
-         else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL do{lzz-=SZI; I t=*(I*)(c0+lzz)^*(I*)(c1+lzz); if(t>>(REPSGN(lzz)&(BW-(lzz<<LGBB))))break;}while(lzz>0); \
-          if(likely(lzz<=0)){stmt} \
+         if((len)<=5)goto match;  /*  len 5 or less, hash is enough */ \
+         else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL do{lzz-=SZI; I t=*(I*)(c0+lzz)^*(I*)(c1+lzz); if((t>>(REPSGN(lzz)&(BW-(lzz<<LGBB))))!=0)goto nomatch;}while(lzz>0); \
+          match: {stmt} \
+          nomatch:; \
          } \
         }
 

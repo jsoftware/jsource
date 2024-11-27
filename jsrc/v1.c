@@ -392,8 +392,9 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  // Do all the tests for miscompare and combine the results at the end
  // We assume the caller checked for a==w and handled it, so we don't.
  I shapediff=p;  // see if ranks differ
- p=q<p?q:p; q^=shapediff; TESTDISAGREE(shapediff,af+AS(a),wf+AS(w),p); // now p is smaller rank; q=ranks differ; shapediff=shapes differ
- shapediff|=q;  // shapes or ranks differ
+// obsolete  p=q<p?q:p; q^=shapediff; TESTDISAGREE(shapediff,af+AS(a),wf+AS(w),p); // now p is smaller rank; q=ranks differ; shapediff=shapes differ
+// obsolete   shapediff|=q;  // shapes or ranks differ
+ p=q<p?q:p; shapediff^=q; shapediff=TESTAGREE(af+AS(a),wf+AS(w),p)?shapediff:1; // now p is smaller rank; q=ranks differ; shapediff=shapes or ranks differ
  PROD(c,p,af+AS(a));  // get c=length of a cell in atoms
  at=AT(a); wt=AT(w);   // save types, now that register pressure is over
  p=NEGIFHOMO(at,wt);  // now p= neg if homogeneous args
@@ -503,7 +504,7 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
   // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
   PRODX(mn,wf,AS(w),1)
   // The compare for each cell is 1 if the cell-shapes are the same
-  p=AR(a)-af; b=p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
+  p=AR(a)-af; b=p==(AR(w)-wf)&&TESTAGREE(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
   // Allocate & return result
   GATV(z,B01,mn,wf,AS(w)); mvc(mn,BAVn(wf,z),1,iotavec-IOTAVECBEGIN+(b^eqis0)); R z;
  }

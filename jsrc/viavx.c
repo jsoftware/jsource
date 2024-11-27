@@ -539,7 +539,7 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  R ret;
 fail: ret.min=ret.range=0; R ret;
 }
-// Same for 4-bytes types, such as C4T
+// Same for 4-byte types, such as C4T
 CR condrange4(C4 *s,I n,I min,I max,I maxrange){CR ret;I i; C4 min0,min1,max0,max1;C4 x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
@@ -731,6 +731,7 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 // mode indicates the type of operation, defined in j.h
+// scaf support inplacing
 A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,klg,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  ARGCHK2(a,w);
@@ -752,15 +753,28 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   // The comparison uses the fact that cct can never go above 1.0, which is 0x3ff0000000000000 in double precision.  To avoid integer-float conversions, we just strip out the bit that signifies
   // 1.0.  The expression then means 'tolerance=1.0 or intolerant comparison'
   // If the problem is small, use sequential search to save analysis and hashing time
+  // Excess setup for the rest of this routine: 100 cycles (plus 0.5 cycles/atom of a if INT, for small-range testing)
+  // For the hash: time to clear, plus time to add (hash+search): ~12 clocks per atom of a
+  // For the hash lookup: ~10 clocks per atom of w
+  // For the sequential search: 1/2 clock per a*w
+  I seqtime; DPMULD(an,wn,seqtime,seqtime=IMAX;);
   // TUNE  From testing 5/2021 on SkylakeX.  Hard to tell, since the data is brought into cache
-#define SEQSEARCHIFALT 100  // use sequential search if a shorter than this
-#define SEQSEARCHIFWLT 12  // use sequential search if w shorter than this
-#define SEQSEARCHIFAWLT 200  // use sequential search if a+w shorter than this
-  if((((an-SEQSEARCHIFALT)|(wn-SEQSEARCHIFWLT)|(an+wn-SEQSEARCHIFAWLT))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(-((acr^1)|(wr^wcr)))|(an-1)|(wn-1))>=0)){
+#define HASHTIMEA (12*2)  // hashing time for a
+#define HASHTIMEW (10*2)  // hashing time for w
+#define HASHSETUP (100*2)  // setup time here in excess of setup for seqlsch
+// obsolete   if((((an-SEQSEARCHIFALT)|(wn-SEQSEARCHIFWLT)|(an+wn-SEQSEARCHIFAWLT))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(-((acr^1)|(wr^wcr)))|(an-1)|(wn-1))>=0)){
+  if((seqtime<HASHSETUP+an*HASHTIMEA+wn*HASHTIMEW)&&((ar^1)+TYPESXOR(at,wt)+(acr^1)+(wr^wcr))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(an-1)|(wn-1))>=0)){
    // Fast path for (vector i./i:/e./key atom or short vector) - if not prehashing.  Do sequential search
-   I zt=((mode&IIOPMSK)==IEPS)?B01:INT;  // the result type depends on the operation.
-   A z; GA(z,zt,wn,wr,ws);
+   I zt; A z;  // type of result to allocate; address of block
+   if((mode&IIOPMSK)==IEPS)zt=B01;
+   else{
+    if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&(I)jtinplace)){z=w; goto inplace;}  // scaf if inplaceable (not including assignment) and items have the right size
+    zt=INT;  // the result type depends on the operation.
+   }
+   GA(z,zt,wn,wr,ws);  // allocate result area
+inplace:;
    jtiosc(jt,mode,1,an,wn,1,1,a,w,z); // simple sequential search without hashing.
+   *(z==w?&AT(z):(I*)jt->shapesink)=INT;  // if inplace, force result to INT (op must not be EPS)
    RETF(z);
   }
 
@@ -769,8 +783,9 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   // prehash is set if w argument is omitted (we are just prehashing the a arg)
   f=af?af:wf; s=af?as:ws; r=acr-((UI)acr>0); f1=wcr-r;  // see below.  f1<0 here means cell of w has rank smaller than the item of a-cell, thus there are no matches possible
         // f1 is length of frame in w
-  I f1clamp=REPSGN(f1); I disagree; TESTDISAGREE(disagree,as+af+1,ws+wf+(~f1clamp&f1),r)
-  if(unlikely(f1clamp<disagree)){I f0,*v;A z;   // true if f1<0 OR disagree!=0
+// obsolete  I f1clamp=REPSGN(f1); I disagree; TESTDISAGREE(disagree,as+af+1,ws+wf+(~f1clamp&f1),r)
+// obsolete   if(unlikely(f1clamp<disagree)){I f0,*v;A z;   // true if f1<0 OR disagree!=0
+  if(unlikely(f1<0)||unlikely(!TESTAGREE(as+af+1,ws+wf+f1,r))){I f0,*v;A z;   // true if f1<0 OR disagree!=0
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
    if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
    I witems=ws[0]; witems=wr>r?witems:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
@@ -847,19 +862,15 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
  // Choose the function to use for performing the operation, in 'fnx'
  // fnx starts negative and is set to nonnegative when we know what function to use.
  // While fnx is negative, bit 0 means 'intolerant comparison'
- // If fnx is still negative at the end of the function search, it means either 'sequential search' (-1),
- // 'empty' (-2), or 'inhomo' (-3)
- // See if we should simply do sequential search.    We do this only for i./i:/e./key, only when w-cells match with a-cells or w has a single repeated cell
- // The cost of such a search is (4 inst per loop, at 1/2 cycle each) and the expected number of loops is half of
- // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
- // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
- // Here we just use the empirical observations that worked for atoms  TUNE
+ // If fnx is still negative at the end of the function search, it means either 'sequential file update' (-1), 'sequential search' (-2), 'empty' (-3), or 'inhomo' (-4)
+ // See if we should simply do sequential search.    We do this only for i./i:/e./key, only when w-cells match with a-cells or w has a single repeated cell.  Analysis above  TUNE
  if(unlikely(mode&ISFU)){fnx=fnx<0?fnx:1; fnx-=2;    // i.!.1 (qualified earlier for rank & type) - use special function, no hashtable.  But preserve codes -3 & -4 for inhomo/empty
- }else if((((((I)m-SEQSEARCHIFALT)|(zn-SEQSEARCHIFWLT)|((I)m+zn-SEQSEARCHIFAWLT)|fnx)<0)) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo
+// obsolete  }else if((((((I)m-SEQSEARCHIFALT)|(zn-SEQSEARCHIFWLT)|((I)m+zn-SEQSEARCHIFAWLT)|fnx)<0)) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo
+ }else if(({I seqtime; DPMULD(m,zn,seqtime,seqtime=IMAX;); (seqtime|REPSGN(fnx))<HASHSETUP+an*HASHTIMEA+zn*HASHTIMEW;}) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo; and always if fnx neg
           //  small enough operation, or  empty/inhomo   test size first because partially checked already & failed TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   fnx-=2;  // now fnx is -4 for inhomo, -3 for empty, -1 for SFU, -2 for sequential.  This is ready for lookup.
-//  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
+// obsolete  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
  }else{
 
 #define SMALLHASHCACHE L2CACHESIZE/sizeof(US)  // number of US entries that fit in L2
@@ -982,13 +993,13 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
     if(likely((h=jt->idothash1)!=0)){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
     // always allow a little bit larger than the range of a, to make sure we expand the hashtable if a little more would be enough.
     // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
-    if(common(k==8)){
+    if(common(k==SZI)){
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUI4,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
      crres = condrange(AV(w),(AN(w)<<klg)>>LGSZI,datamin,datamin+p-1,allowrange);
-    }else if(uncommon(k==4)){
+    }else if(uncommon(k==SZUI4)){
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUI4,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange4(UI4AV(w),(AN(w)<<klg)>>LGSZS,datamin,datamin+p-1,allowrange);
-    }else{ //2
+     crres = condrange4(UI4AV(w),(AN(w)<<klg)>>LGSZUI4,datamin,datamin+p-1,allowrange);
+    }else{ // k==SZS (2)
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUS,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
      crres = condrange2(USAV(w),(AN(w)<<klg)>>LGSZS,datamin,datamin+p-1,allowrange);
     }
@@ -1112,7 +1123,7 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
 
  // Call the routine to perform the operation
  RZ(h=ifn(jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
-//  RZ(h=fntbl[fnx](jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
+// obsolete  RZ(h=fntbl[fnx](jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
  // If the call was IFORKEY, the number of partitions was stored in AM(h).  Move it to AM(z) whence it will be returned.
  I forkeyresult=AM(h);  // save # partitions
 
@@ -1158,7 +1169,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
  // for LESS/INTER types, an item of w must have the shape of an item in the hash; otherwise revert
  // for other types (which can be only IEPS/IIDOT/IICO), an item of w can have larger rank
  if(likely((c&=REPSGN(~f1))>0)){  // revert if w has higher rank than a cell of a
-  c=ICMP(as+ar-r,ws+f1,r)?0:c;  // verify agreement in cell-shape, set c=0 if not
+  c=TESTAGREE(as+ar-r,ws+f1,r)?c:0;  // verify agreement in cell-shape, set c=0 if not
   if(((I)1<<(mode&IIOPMSK))&(((I)1<<ILESS)|((I)1<<IINTER))){
    if(f1<(wr!=0)||f1>1){
     // LESS/INTER where the hashtable has the wrong cell-rank.  Revert
@@ -1192,13 +1203,22 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
  R z;
 }
 
+// a. i. w when  w is LIT
 // Now, support for the primitives that use indexof
+static F1(jtadotidot){
+ A z; I wn=AN(w), wr=AR(w); GATV(z,INT,wn,wr,AS(w)); C *wv=CAV(w); I *zv=IAVn(wr,z);
+ DO(wn, zv[i]=wv[i];)  // copy each atom
+ RETF(z);
+}
 
-// x i. y
-F2(jtindexof){R indexofsub(IIDOT,a,w);}
+// x i. y, supports inplacing
+F2(jtindexof){
+ if(unlikely(((UI)a^(UI)ds(CALP))<(UI)(AT(w)&LIT))&&likely(!ISSPARSE(AT(w)))){F2PREFIP; R jtadotidot(jt,w);}
+ R indexofsub(IIDOT,a,w);
+}
      /* a i."r w */
 
-// x i: y
+// x i: y, supports inplacing (in subroutine)
 F2(jtjico2){R indexofsub(IICO,a,w);}
      /* a i:"r w */
 

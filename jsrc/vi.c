@@ -1387,11 +1387,11 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,hi,*hv,x,z;AF fn;I ar,*as,at,
 // Now, support for the primitives that use indexof
 
 // x i. y
-F2(jtindexof){R indexofsub(IIDOT,a,w);}
+F2(jtindexof){F2PREFIP; R indexofsub(IIDOT,a,w);}
      /* a i."r w */
 
 // x i: y
-F2(jtjico2){R indexofsub(IICO,a,w);}
+F2(jtjico2){F2PREFIP; R indexofsub(IICO,a,w);}
      /* a i:"r w */
 
 // ~: y

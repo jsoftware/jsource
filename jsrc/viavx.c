@@ -732,19 +732,18 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 
 // mode indicates the type of operation, defined in j.h
 // scaf support inplacing
-A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
-    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,klg,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
+A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
+    I ac,ak,datamin,f,f1,k,klg,n,r,*s,t,wc,wk,zn;UI c,m,p;
  ARGCHK2(a,w);
-
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // prehash is set if w argument is omitted (we are just prehashing the a arg)
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
- as=AS(a); at=AT(a); an=AN(a);
- ws=AS(w); wt=AT(w); wn=AN(w);
+ I ar=AR(a); I acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+ I wr=AR(w); I wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;  // note: mark is an atom
+ I at=AT(a); I an=AN(a); I wt=AT(w); I wn=AN(w);
+  I af=ar-acr;I wf=wr-wcr; I *as=AS(a); I *ws=AS(w);
  // NOTE: from here on we may add modifiers to mode, indicating FULL/BITS/PACK etc.  These flags are needed in the action routine, and must be
  // preserved if the resulting hashtable is saved as part of a prehash.  They are not valid on input to this routine.
- if(unlikely(w==mark)){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
+ if(unlikely(w==mark)){mode|=IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given.  (i. e. not prehash)
   // IIOREPS indicates i./i:/e./key, which are candidates for reversed search and sequential search.  key will never cause a reversed search, but
   // it must not use sequential search if the comparison is inexact, because then it would conflict with nub and just generally fail because values not in
@@ -757,21 +756,24 @@ A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfa
   // For the hash: time to clear, plus time to add (hash+search): ~12 clocks per atom of a
   // For the hash lookup: ~10 clocks per atom of w
   // For the sequential search: 1/2 clock per a*w
+  // units below are #atoms of sequential search per hash
   I seqtime; DPMULD(an,wn,seqtime,seqtime=IMAX;);
   // TUNE  From testing 5/2021 on SkylakeX.  Hard to tell, since the data is brought into cache
-#define HASHTIMEA (12*2)  // hashing time for a
-#define HASHTIMEW (10*2)  // hashing time for w
-#define HASHSETUP (100*2)  // setup time here in excess of setup for seqlsch
+#define HASHTIMEA (5)  // hashing time for a
+#define HASHTIMEW (4)  // hashing time for w
+#define HASHSETUP (150)  // setup time here in excess of setup for seqlsch  from (10000 1 ?@$ 1e9) -. ,4
 // obsolete   if((((an-SEQSEARCHIFALT)|(wn-SEQSEARCHIFWLT)|(an+wn-SEQSEARCHIFAWLT))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(-((acr^1)|(wr^wcr)))|(an-1)|(wn-1))>=0)){
-  if((seqtime<HASHSETUP+an*HASHTIMEA+wn*HASHTIMEW)&&((ar^1)+TYPESXOR(at,wt)+(acr^1)+(wr^wcr))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(an-1)|(wn-1))>=0)){
-   // Fast path for (vector i./i:/e./key atom or short vector) - if not prehashing.  Do sequential search
+  if((seqtime<HASHSETUP+an*HASHTIMEA+wn*HASHTIMEW)&&((ar^1)+TYPESXOR(at,wt)+af+wf+((mode&ISFU+IIOREPS)^IIOREPS))==0&&((SGNIFSPARSE(at|wt)|(an-1)|(wn-1))>=0)){
+     // small, a is list, types =, no frame, not SFU, i./i:/e./key, not sparse, not empty.  Empty might not be worth testing on w
+// obsolete (1-wr)|(SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|
+   // Fast path for (vector i./i:/e./key short noun) - if not prehashing.  Do sequential search
    I zt; A z;  // type of result to allocate; address of block
    if((mode&IIOPMSK)==IEPS)zt=B01;
    else{
     if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&(I)jtinplace)){z=w; goto inplace;}  // scaf if inplaceable (not including assignment) and items have the right size
     zt=INT;  // the result type depends on the operation.
    }
-   GA(z,zt,wn,wr,ws);  // allocate result area
+   GA(z,zt,wn,wr,AS(w));  // allocate result area
 inplace:;
    jtiosc(jt,mode,1,an,wn,1,1,a,w,z); // simple sequential search without hashing.
    *(z==w?&AT(z):(I*)jt->shapesink)=INT;  // if inplace, force result to INT (op must not be EPS)
@@ -986,7 +988,7 @@ inplace:;
    // be spent range-checking w) and BASE0 (which clears the hashtable, at a cost of 1 cycle per 2/4 entries, or 4x that if we use fast instructions)
    // First check FULL, which is always the right decision if possible - except for self-classify which assumes FULL, or prehash which doesn't go through w at all
    // Don't bother to check if the decision has already been made (this will be set for full hashes, which ignore this bit and require FORCE0)
-   if(unlikely(a!=w&&!(mode&(IIMODFULL|IPHCALC|IREVERSED)))){CR crres;
+   if(likely(a!=w)&&unlikely(!(mode&(IIMODFULL|IPHCALC|IREVERSED)))){CR crres;
     // We can get here only if IIMODFULL is off, which happens only if fmods is 0, which means we are doing a forward small-range hash.  In addition, the
     // number of bytes in an item will be 2 or SZI.  We must convert the # atoms to a # of 2- or SZI-sized pieces
     I allowrange;  // where we will build the max allowed range of w

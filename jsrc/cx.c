@@ -305,7 +305,7 @@ DF2(jtxdefn){
    ybuckptr->val=w; ybuckptr->valtype=ATYPETOVALTYPE(AT(w)); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCGLOBAL semantics
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
-   if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
+   if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX))){
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
     ramkrecursv(w);  // make the block recursive
@@ -321,7 +321,7 @@ DF2(jtxdefn){
    L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    xbuckptr->val=a; xbuckptr->valtype=ATYPETOVALTYPE(AT(a)); xbuckptr->sn=jt->currslistx;
-   if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
+   if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX))){
     AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(a); ramkrecursv(a);
    }else{ra(a);}
   }

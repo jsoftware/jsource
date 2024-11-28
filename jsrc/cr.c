@@ -404,7 +404,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){
 #if AUDITEXECRESULTS
   auditblock(jt,z,1,1);
 #endif
-  if(unlikely(unlikely(z==0))){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
+  if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
   I zr=AR(z); GA00(zz,AT(z),0L,lof+lif+zr); zzs=AS(zz);
   MCISH(zzs,los,lof); MCISH(zzs+lof,lis,lif); MCISH(zzs+lof+lif,AS(z),zr);
  }

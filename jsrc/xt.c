@@ -240,10 +240,11 @@ F1(jttss){ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 DF2(jttsit2){A z;D t;I n;
  F2RANK(0,1,jttsit2,self);
  RE(n=i0(a));
+ RZ(w=ddtokens(vs(w),4+1+!!EXPLICITRUNNING));   // tokenize outside of timer
  t=qpc(); 
- A *old=jt->tnextpushp; DQ(n, z=exec1(w); if(!z)break; tpop(old););  // no tpop on error
- RZ(z);
+ A *old=jt->tnextpushp; DQ(n, STACKCHKOFL z=PARSERVALUE(parseforexec(w)); if(!z)break; tpop(old););  // no tpop on error
  t=qpc()-t;
+ RZ(z);
  R scf(n?t/(n*pf):0);
 }
 

@@ -57,7 +57,8 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   ex=hs&&id==CCOLONE&&!xop;   // ex = this is a non-operator explicit defn
   m=BETWEENC(id,CFORK,CADVF)&&hs?3:!!fs+(ex||xop&&hs||!xop&&gs);  // number of components: if invisible, 2 or 3; otherwise count f g h
   if(!m)R spella(w);
-  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=aro(w); R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
+  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w)){A wi=w; if(wi==(w=aro(w)))ASSERT(0,EVVALUE)} R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
+     // taking AR of undefined uv results in an infinite loop.  We break it here, with an error
  }
  GAT0(z,BOX,2,1); x=AAV1(z);
  if(NOUN&AT(w)){RZ(x[0]=incorp(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); RZ(x[1]=INCORPNA(w)); RETF(z);}  // if name, must be ".@'name', format name as string

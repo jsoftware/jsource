@@ -1205,14 +1205,6 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
  R z;
 }
 
-// a. i. w when  w is LIT
-// Now, support for the primitives that use indexof
-static F1(jtadotidot){
- A z; I wn=AN(w), wr=AR(w); GATV(z,INT,wn,wr,AS(w)); C *wv=CAV(w); I *zv=IAVn(wr,z);
- DO(wn, zv[i]=wv[i];)  // copy each atom
- RETF(z);
-}
-
 // x i. y, supports inplacing
 F2(jtindexof){
  if(unlikely(((UI)a^(UI)ds(CALP))<(UI)(AT(w)&LIT))&&likely(!ISSPARSE(AT(w)))){F2PREFIP; R jtadotidot(jt,w);}

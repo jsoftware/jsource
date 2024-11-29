@@ -220,7 +220,6 @@ static DF2(jtonright12){F2PREFIP; jtinplace=(J)((I)jtinplace&~JTINPLACEA); A fs=
 // u@n
 static DF2(onconst12){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];R CALL1(FAV(fs)->valencefns[0],FAV(self)->fgh[1],FAV(self)->fgh[0]);}
 
-
 // x u&v y
 FORK2(on2cell,0x148)
 
@@ -539,6 +538,38 @@ F2(jtampco){F2PREFIP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*
 static DF1(withl){AF f2=FAV(self)->localuse.lu1.bondfn; F1PREFIP; ((C*)&jt->ranks)[1]=RMAX; A z=f2(jtinplace,FAV(self)->fgh[0],w,FAV(self)->fgh[1]); RETF(z);}  // m&v.  Leave inplacing of w
 static DF1(withr){AF f2=FAV(self)->localuse.lu1.bondfn; F1PREFIP; jt->ranks=(jt->ranks<<RANKTX)+RMAX; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z=f2(jtinplace,w,FAV(self)->fgh[1],FAV(self)->fgh[0]); RETF(z);}  // u&n.  Move inplacing of w to a
 
+
+// a.&i., {&a.
+
+// a. i. w when  w is LIT
+// Now, support for the primitives that use indexof
+F1(jtadotidot){
+ A z; I wn=AN(w), wr=AR(w); GATV(z,INT,wn,wr,AS(w)); C *wv=CAV(w); I *zv=IAVn(wr,z);
+ DO(wn, zv[i]=wv[i];)  // copy each atom
+ RETF(z);
+}
+// a. i. w for general w.  Test for LIT then revert
+static DF1(jtadotidotifchar){F1PREFIP;
+ ARGCHK1(w);
+ if(unlikely(!(ISDENSETYPE(AT(w),LIT))))R withl(jt,w,self);  // revert if arg not LIT
+ RETF(jtadotidot(jt,w))
+}
+
+// y {"r a. for general w.  Convert to integer type
+static DF1(jtfromadotifchar){F1PREFIP;
+ ARGCHK1(w); I wt=AT(w);
+ if(unlikely((SGNIF(wt,BOXX)|SGNIFSPARSE(wt))<0))R withr(jt,w,self);  // revert if arg sparse or boxed
+ if(unlikely(!(wt&INT+INT1+INT2+INT4))){RZ(w=cvt(INT2,w)) wt=INT2;}    // ensure integer form, the smaller the better.  INT1 should just copy
+ A z; I wn=AN(w), wr=AR(w); GATV(z,LIT,wn,wr,AS(w)) if(unlikely(wn==0))RETF(z); C *zv=CAVn(wr,z);   // allocate result, exit if empty, point to data
+ I uppersig=0; void *wv=voidAV(w);
+#define FADCOPY(T,t) if(wt&t){T *wvv=wv; DQUI(wn, I v=wvv[i]; zv[i]=v; uppersig|=v+0x100;)}  // convert to 1-byte & remember upper sig
+ FADCOPY(I,INT+(!SY_64*INT4)) else FADCOPY(I2,INT2) else FADCOPY(I4,INT4)   // copy low byte to the output
+ ASSERT((uppersig&-0x200)==0,EVINDEX)  // if any input was out of range, fail
+ RETF(z)
+}
+
+
+
 // Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the precision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
 static DF1(ixfixedleft){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT R z;}  // must use the ct when table was created
@@ -605,7 +636,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
  }else ASSERT((AT(a)|AT(w))&VERB,EVDOMAIN)  // m&n not allowed
   // continuing must be m&v or u&n
   A va=AT(a)&VERB?a:w, na=AT(a)&VERB?w:a;
-  f1=AT(a)&VERB?withr:withl; I visa=AT(a)&VERB?~2:0; c=FAV(va)->id;  // visa is ~2 if a is verb, 0 if w
+  f1=AT(a)&VERB?withr:withl; I visa=AT(a)&VERB?~2:0; c=FAV(va)->id;  // visa is ~2 if a is verb, 0 if w.  c is ID of the verb
   AF vbf2=FAV(va)->valencefns[1]; cct=0.0;  // address of the function for the verb, for simple bonded fn; cct to 0.  These will be added!!
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
   p=FAV(va)->flag; flag=((p&(VJTFLGOK2|VIRS2))>>1)+(FAV(va)->flag&VASGSAFE);
@@ -617,8 +648,12 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   if((-AN(na)&-AR(na))<0){  // noun is not atomic and not empty
    if(unlikely(b=c==CFIT)){c=FAV(FAV(va)->fgh[0])->id; p=FAV(FAV(va)->fgh[0])->flag;}  // if verb is u1!.n1, replace the id and flag with that of u1, and remember cct from n1
    // check the supported cases one by one
-   if(unlikely((c&(visa^~2))==CIOTA)){  // m&i.   m&i:
-    PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(IIDOT+((c&(CIOTA^CICO))>>1),a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; vbf2=0; flag&=~(VJTFLGOK1+VIRS1); RZ(h)  // m&i[.:][!.f], and remember cct when we created the table
+   if(unlikely((c&~3)==CIOTA)){  // verb is i. i: { #:
+    if(unlikely((c&(visa^~2))==CIOTA)){  // m&i.   m&i:  
+     if(unlikely(na==ds(CALP))){f1=jtadotidotifchar;  // a.&i., keep IRS  (must be a., not some equal value)
+     }else{PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(IIDOT+((c&(CIOTA^CICO))>>1),a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; vbf2=0; flag&=~(VJTFLGOK1+VIRS1); RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
+    }else if(unlikely((c&(visa|2))==CLBRACE)&&na==ds(CALP)){f1=jtfromadotifchar;   // {&a., keep IRS  (must be a., not some equal value)
+    }
    }else if(unlikely(visa==((7^~2)^(p&7)))){  // e.-compound&n  p=7 & a is verb
     mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=FAV(va)->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default

@@ -141,7 +141,7 @@
 #define CABASE     (C)0x49  // #:
 #define CICO       (C)0x4a  // i:
 #define CLBRACE    (C)0x4b  // {
-#define CFROM      (C)0x4b  // {
+#define CFROM      (C)0x4b  // {  48-4b are tested for en bloc in u&v
 #define CHALVE     (C)0x4c  // -:
 #define CMATCH     (C)0x4c  // -:
 #define CNUB       (C)0x4d  // ~.

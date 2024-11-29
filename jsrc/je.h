@@ -7,6 +7,7 @@
 extern DF2(atcomp);
 extern F1(jtabase1);
 extern DF1(jtadot1);
+extern F1(jtadotidot);
 extern F1(jtarep);
 extern F1(jtaro);
 extern DF1(jtarx);

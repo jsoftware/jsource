@@ -1780,6 +1780,25 @@ abcdefghijabcdefghijabcdefghij001 -: 6
 abcdefghijabcdefghijabcdefghij0000 -: 7
 abcdefghijabcdefghijabcdefghij0001 -: 8
 
+NB. {&a. y -------------------------------------------------------------------------------------
+'567' -: {&a. a. i. '567'
+'567' -: {&a."0 a. i. '567'
+a2 =. 6 c. a4 =. 7 c. a =: _256 + 10000 ?@$ 512
+(a { a.) -: {&a. a
+20000 > 7!:2 '{&a. a'
+20000 > 7!:2 '{&a. a4'
+20000 > 7!:2 '{&a. a2'
+20000 > 7!:2 '{&a."0 a2'
+20000 > 7!:2 '{&a."1 a2'
+20000 > 7!:2 '{&a."2 a2'
+({&a. -: a. {"{~ ]) 1 2 3
+({&a. -: a. {"{~ ]) 1 2 3 255
+({&a. -: a. {"{~ ]) 1 2 3 _256
+'index error' -: {&a. etx 1 2 3 256
+'index error' -: {&a. etx 1 2 3 _257
+
+
+NB. -----------------
  (2 0 0 0 0 1 { 2 0 0 0 0 1) -: {~ memu 2 0 0 0 0 1  NB. don't inplace when a and w are identical blocks
 
 (,40) -: $ _2 { memu i. 5 40  NB. self-inplacing failed on LIT

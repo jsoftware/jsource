@@ -1092,7 +1092,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define DQNOUNROLL(n,stm...)  {UI i=(n); if((I)i>0){--i; NOUNROLL do{stm}while(i--);}}  // i runs from n-1 downto 0 (fastest when you don't need i).  i is UI
 #define DOU(n,stm...)         {I _n=(n); I i=0; do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
 #define DPU(n,stm...)         {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
-#define DQU(n,stm...)         {UI i=(I)(n);  do{stm}while(--i!=0);}  // i runs from n-1 downto 0, always at least once
+#define DQU(n,stm...)         {UI i=(I)(n);  do{stm}while(--i!=0);}  // i runs from n downto 01 always at least once
+#define DQUI(n,stm...)         {I i=(I)((n)-1);  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
 #define DOSTEP(n,step,stm...) {I _n=(n); I i=0; for(;_n;i++,_n-=(step)){stm}}  // i runs from 0 to n-1, but _n counts down
 
 // C suffix indicates that the count is one's complement

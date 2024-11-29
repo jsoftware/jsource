@@ -59,10 +59,9 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
   // f will be INCORPed by fdef
   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
   fline=5;  // set left argtype
-  if(f==num(0)&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only SDT boolean 0
-  if(LIT&AT(f)&&1==AR(f)&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==IDD(gv->fgh[0])){
-   x=hv->fgh[0];
-   if(LIT&AT(x)&&1==AR(x)&&CIOTA==FAV(hv->fgh[1])->id&&CRIGHT==FAV(hv->fgh[2])->id){f1=jtcharmap;}  // (N {~ N i. ])  supports inplacing
+  if(unlikely(f==num(0))&&unlikely(BOTHEQ8(gi,hi,CEPS,CDOLLAR)))f1=jtisempty;  // 0 e. $, accepting only SDT boolean 0
+  if(unlikely(LIT&AT(f))&&unlikely(1==AR(f))&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==IDD(gv->fgh[0])){   // lit-list x~ fork...
+   if(LIT&AT(hv->fgh[0])&&1==AR(hv->fgh[0])&&CIOTA==FAV(hv->fgh[1])->id&&CRIGHT==FAV(hv->fgh[2])->id){f1=jtcharmap;}  // (N {~ N i. ])  supports inplacing
   }
  }else{
   // not nvv
@@ -88,17 +87,17 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
    // capped fork.
    f1=on1cell; f2=jtupon2cell;
    if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
-   else if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
-   else if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
+   else if(unlikely(BOTHEQ8(gi,hi,CSLASH,CDOLLAR))&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
+   else if(unlikely(gi==CPOUND)){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
    else if(unlikely(hv->fgh[0]==num(2)) && BOTHEQ8(gi,hi,CFIT,CAMP) && FAV(hv->fgh[1])->id==CLOG && (FAV(gv->fgh[0])->id&~1)==CFLOOR){  // if h is 2&v, v must be a verb
     f1=FAV(gv->fgh[0])->id==CCEIL?jtintceillog2cap:jtintfloorlog2cap; flag|=VIRS1;  //  [: [<>].!.f 2&^.
    }else if(unlikely(hv->fgh[0]==num(2)) && hi==CAMP && FAV(hv->fgh[1])->id==CLOG && (gi&~1)==CFLOOR){  // if h is 2&v, v must be a verb
     f1=gi==CCEIL?jtintceillog2cap:jtintfloorlog2cap; flag|=VIRS1;  //  [: [<>].!.f 2&^.
    }
    break;
-  case CSLASH: if(BOTHEQ8(gi,hi,CDIV,CPOUND)&&CPLUS==FAV(fv->fgh[0])->id){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
+  case CSLASH: if(unlikely(BOTHEQ8(gi,hi,CDIV,CPOUND))&&CPLUS==FAV(fv->fgh[0])->id){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
   case CAT: case CATCO:    /* <"1@[ { ]  or <"1@:[ { ]  */
-   if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
+   if(unlikely(BOTHEQ8(gi,hi,CLBRACE,CRIGHT))){                                   
     p=fv->fgh[0]; q=fv->fgh[1]; 
     if(CQQ==FAV(p)->id&&CLEFT==IDD(q)&&(CLT==ID(FAV(p)->fgh[0])&&FAV(p)->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
    }
@@ -106,7 +105,8 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
  // special code for x ((<[!.0] |) * ]) y, implemented as if !.0, also if <:
  #if C_AVX2 || EMU_AVX2
   case CHOOK:    // (< |[!.0]) * ]  or  ] * (< |[!.0])
-   if(BOTHEQ8(gi,hi,CSTAR,CRIGHT) || BOTHEQ8(gi,fi,CSTAR,CRIGHT)){        
+   if(unlikely(gi==CSTAR)&&((hi==CRIGHT)||gi==CRIGHT)){
+// obsolete    if(BOTHEQ8(gi,hi,CSTAR,CRIGHT) || BOTHEQ8(gi,fi,CSTAR,CRIGHT)){        
     V *hka=hi==CRIGHT?fv:hv;  // point to the time that must be the hook                           
     p=hka->fgh[0]; q=hka->fgh[1];
     if(FAV(q)->id==CSTILE){
@@ -185,8 +185,7 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
  }else{hcol=-1;}   // select the value we will put into localuse: hcol=-1 means cct, other hcol=routine address of h or h@]
 
  fdeffillall(z,flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,if(hcol<0)FAV(z)->localuse.lu1.cct=cct;else FAV(z)->localuse.lu1.fork2hfn=hcol<=2?hv->valencefns[1]:FAV(hv->fgh[0])->valencefns[0]);
- 
- // set localuse: for intersect or comparison combination, cct; for echt fork, the h routine to call
+    // set localuse: for intersect or comparison combination, cct; for echt fork, the h routine to call
  R z;
 }
 

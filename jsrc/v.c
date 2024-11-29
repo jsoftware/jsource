@@ -164,17 +164,29 @@ DF1(jticap){A a,e;I n;P*p;
  R likely((B01&AT(w))!=0) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }
 
-DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
+DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n;UC c,*u,*v,*yv,zz[256];
+ ARGCHK1(w);
  A x=FAV(FAV(self)->fgh[2])->fgh[0], y=FAV(self)->fgh[0];  // extract translation tables
- RZ(w&&x&&y);
- if(!(LIT&AT(w)))R from(indexof(x,w),y);
- I yn=AN(y); wn=AN(w); n=MIN(AN(x),yn); u=n+UAV(x); v=n+UAV(y);
- k=256; mvc(256,bb,MEMSET00LEN,MEMSET00); if(n<yn) mvc(256,zz,1,iotavec-IOTAVECBEGIN+UAV(y)[n]);   // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
- DQ(n, c=*--u; zz[c]=*--v; k-=(I)bb[c]^1; bb[c]=1;);   // mark characters in x, and count down to see if we hit all 256.  Note earliest mapped character for each.  Surplus chars of x ignored
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w; else{GATV(z,LIT,wn,AR(w),AS(w));} v=UAV(z); u=UAV(w);  // alloc block unless inplace and no possible error; point to input & output strings
- if(unlikely(((k-1)|(n-yn))>=0)){   // NOT(all codes mapped OR #x<#y, meaning no error possible): index error possible on {
-  DO(wn, if(!bb[u[i]])R from(indexof(x,w),y);)} // Check for index error.  If error, abort through the { path to generate the right error message--don't bother trying to make this fast
- DO(wn, *v++=zz[u[i]];)  // no index error, do the translate, possibly inplace
+// obsolete  RZ(w&&x&&y);
+ if(!(LIT&AT(w)))R fork120(jt,w,self);  // revert if not byte args
+// obsolete from(indexof(x,w),y);  // revert using self - also below
+ I yn=AN(y), wn=AN(w);
+ if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w; else{GATV(z,LIT,wn,AR(w),AS(w));}  // alloc block unless inplace and no possible error; point to input & output strings
+ if(x==ds(CALP)){  // x=a.?
+  // special case when x is a.   No need to look up in x
+  u=UAV(w);   // point u to input w chars
+  if(unlikely(yn<256)){DO(wn, if(unlikely(u[i]>=yn))R fork120(jt,w,self);)} // Check for index error.  If error, revert to generate the right error message--don't bother trying to make this fast
+  yv=UAV(y);  // translate using the original y
+ }else{
+  // General x.  bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
+  n=MIN(AN(x),yn); u=n+UAV(x); v=n+UAV(y);
+  k=256; mvc(256,bb,MEMSET00LEN,MEMSET00); if(n<yn) mvc(256,zz,1,iotavec-IOTAVECBEGIN+UAV(y)[n]);   
+  DQ(n, c=*--u; zz[c]=*--v; k-=(I)bb[c]^1; bb[c]=1;);   // mark characters in x, and count down to see if we hit all 256.  Note earliest mapped character for each.  Surplus chars of x ignored
+  if(unlikely(((k-1)|(n-yn))>=0)){   // NOT(all codes mapped OR #x<#y, meaning no error possible): index error possible on {
+   DO(wn, if(!bb[u[i]])R fork120(jt,w,self);)} // Check for index error.  If error, abort through the { path to generate the right error message--don't bother trying to make this fast
+  yv=zz; u=UAV(w);   // translate using the inverted table
+ }
+ v=UAV(z); DO(wn, v[i]=yv[u[i]];)  // no index error, do the translate, possibly inplace
   // Roger's code first checked to see if the translation exactly represented a bitwise op.  That seems like a lot of work for an unlikely case.  If the user wants a bitwise op, he can use
   // m b. &.(a.&i.) where we catch the case
  RETF(z);

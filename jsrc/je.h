@@ -5,6 +5,7 @@
 #include "gemm.h"
 
 extern DF2(atcomp);
+extern DF1(fork120);
 extern F1(jtabase1);
 extern DF1(jtadot1);
 extern F1(jtadotidot);

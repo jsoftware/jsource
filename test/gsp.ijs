@@ -8,9 +8,12 @@ t=: $. y=: 7 3 5 ?@$ 5
 
 (s=t) -: x=y
     
-(bsp{:: (< <0$. s) ;~ 'nonce error') -: < etx s
+3 : 0^:(-.bsp) 1
+'nonce error' -: < etx s
 'nonce error' -: <"0 etx $.1 1$1   NB. <"r not implemented
 'nonce error' -: <"1 etx $.2 2$1   NB. <"r not implemented
+1
+)
 
 (s<t) -: x<y
 

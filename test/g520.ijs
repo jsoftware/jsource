@@ -1783,7 +1783,7 @@ abcdefghijabcdefghijabcdefghij0001 -: 8
 NB. {&a. y -------------------------------------------------------------------------------------
 '567' -: {&a. a. i. '567'
 '567' -: {&a."0 a. i. '567'
-a2 =. 6 c. a4 =. 7 c. a =: _256 + 10000 ?@$ 512
+a2 =: 6 c. a4 =: 7 c. a =: _256 + 10000 ?@$ 512
 (a { a.) -: {&a. a
 20000 > 7!:2 '{&a. a'
 20000 > 7!:2 '{&a. a4'
@@ -1817,7 +1817,7 @@ NB. -----------------
 ({&1. 2 (~: 15!:19)~ 15!:19) $0    NB. If a is not inplaceable, we cannot change its type
 
  
-4!:55 ;:'a adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom res run128_9 savx savy savref savres savspr'
+4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b catalog copy count epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom res run128_9 savx savy savref savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y z zb '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

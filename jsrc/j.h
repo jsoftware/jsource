@@ -1501,7 +1501,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // Item count given frame and rank: AS(f) unless r is 0; then 1 
 #define SETICFR(w,f,r,targ) (targ=(I)(AS(w)+f), targ=(r)?targ:(I)I1mem, targ=*(I*)targ)
 // Shape item s, but 1 if index is < 0
-#define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)   // scaf need quicker path when used for rank
+#define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 // compare names.  We assume the names are usually short & avoid subroutine call, which ties up registers.  Names are overfetched, back to front
 #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len))){ \

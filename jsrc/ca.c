@@ -589,7 +589,7 @@ F2(jtamp){F2PREFIP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;
   flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
   if(unlikely((c&~(CFORK^CAMP))==CFORK)){C d=CLEFT;  // u&(FORK/&)
    if(c==CFORK)d=ID(v->fgh[2]);  // d is CLEFT if &, 0 if capped fork, otherwise from h of fork
-   if(CIOTA==FAV(v->fgh[1])->id&&(d&~1)==CLEFT&&equ(ds(CALP),v->fgh[0])){  // (FORK/&) is a.&i. or (a. i. ][)
+   if(CIOTA==FAV(v->fgh[1])->id&&(d&~1)==CLEFT&&v->fgh[0]==ds(CALP)){  // (FORK/&) is a.&i. or (a. i. ][)  avoid subrt call to equ()
     d=FAV(a)->id;
     if(BETWEENC(d,CEQ,CGT)){f2=jtcharfn2; flag&=~VJTFLGOK2;}  // any comparison - comp&(a.&i. or (a. i. ][))
    }

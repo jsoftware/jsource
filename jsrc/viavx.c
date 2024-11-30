@@ -731,7 +731,6 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 // mode indicates the type of operation, defined in j.h
-// scaf support inplacing
 A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     I ac,ak,datamin,f,f1,k,klg,n,r,*s,t,wc,wk,zn;UI c,m,p;
  ARGCHK2(a,w);
@@ -770,7 +769,7 @@ A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079
    I zt; A z;  // type of result to allocate; address of block
    if((mode&IIOPMSK)==IEPS)zt=B01;
    else{
-    if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&(I)jtinplace)){z=w; goto inplace;}  // scaf if inplaceable (not including assignment) and items have the right size
+    if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&(I)jtinplace)){z=w; goto inplace;}  // if inplaceable (not including assignment) and items have the right size
     zt=INT;  // the result type depends on the operation.
    }
    GA(z,zt,wn,wr,AS(w));  // allocate result area

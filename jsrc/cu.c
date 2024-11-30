@@ -291,8 +291,8 @@ DF2(jteachr){ARGCHK3(a,w,self); I rcr=AR(w)-((UI)AR(w)>0); I rr=rr(self); rr=rcr
 static DF1(jtunder1){F1PREFIP;A fullf; RZ(fullf=atop(invrecur(fix(FAV(self)->localuse.lu1.wvb,sc(FIXASTOPATINV))),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
 static DF2(jtunder2){F2PREFIP;A fullf; RZ(fullf=atop(invrecur(fix(FAV(self)->localuse.lu1.wvb,sc(FIXASTOPATINV))),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
 // underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
-static DF1(jtunderh1){A hs=FAV(self)->fgh[2]; F1PREFIP;R (FAV(hs)->valencefns[0])(jtinplace,w,hs);}
-static DF2(jtunderh2){A hs=FAV(self)->fgh[2]; F2PREFIP;R (FAV(hs)->valencefns[1])(jtinplace,a,w,hs);}
+DF1(jtunderh1){A hs=FAV(self)->fgh[2]; F1PREFIP;R (FAV(hs)->valencefns[0])(jtinplace,w,hs);}
+DF2(jtunderh2){A hs=FAV(self)->fgh[2]; F2PREFIP;R (FAV(hs)->valencefns[1])(jtinplace,a,w,hs);}
 // undco is for when we could not precalculate the inverse
 static DF1(jtundco1){F1PREFIP;A fullf; RZ(fullf=atop(inv(FAV(self)->localuse.lu1.wvb),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
 static DF2(jtundco2){F2PREFIP;A fullf; RZ(fullf=atop(inv(FAV(self)->localuse.lu1.wvb),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
@@ -385,7 +385,8 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
    if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // uid=id of u; b1=u is x/, then uid=id of x      cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
    b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<=32
    C vv=IDD(v->fgh[1]);  // id of g1
-   if(CIOTA==vv&&(!c)&&equ(ds(CALP),v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}   scaf use addr of a.
+// obsolete    if(CIOTA==vv&&(!c)&&equ(ds(CALP),v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)} 
+   if(CIOTA==vv&&(!c)&&v->fgh[0]==ds(CALP)){   // w is  {a.&i.  or  (a. i. ][)}
 // obsolete    f1=b&b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
     f1=b&b1?jtbitwiseinsertchar:f1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
 // obsolete  lose underai1; add {&.(a.&i.)   
@@ -401,7 +402,7 @@ sunder:  // come here for all structural under
  }
  I flag2=(FAV(wvb)->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1))*((VF2WILLOPEN1+VF2WILLOPEN2A+VF2WILLOPEN2W)>>VF2WILLOPEN1X);
  I r=mr(wvb);
- // Create the standard g^:_1 @ (f & g) to use if we have no special processing (not needed if a.&i., but that's rare)
+ // Create the standard g^:_1 @ (f & g) to use if we have no special processing (allows easy reversion)
  // if gerund form, use (f g)"lf mg  for a:`v or (f~ g)~"mg rf for v`a:
  // First, create the part after the inverse
  A h; I rmr=r, rlr, rrr; 

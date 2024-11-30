@@ -50,8 +50,6 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
  if(unlikely(!n)){  /* empty result; figure out result type */
   WITHDEBUGOFF(z=CALL1(f1,w,fs);)   // normal execution on fill-cell
   if(unlikely(z==0)){if(unlikely(EMSK(jt->jerr)&EXIGENTERROR))RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
-// obsolete   z=CALL1(f1,w,fs);
-// obsolete   if(z==0)z=zeroionei(0);  // use zero as fill result if error
   GA00(zz,AT(z),n,m+AR(z)); I *zzs=AS(zz); I *zs=AS(z); 
   MCISH(zzs,as,m) MCISH(zzs+m,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
@@ -1396,7 +1394,6 @@ F2(jtcut){F2PREFIP;A h=0;I flag=0,k;
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RE(k=i0(w));
  A z; fdefallo(z)
-// obsolete  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(BETWEENC(k,-2,2),EVNONCE);}
  switch(k){
  case 0: 

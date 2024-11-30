@@ -714,7 +714,6 @@ static XF1(jtfac_ecm){A tt;I b1,b2,*b1b2,i,m;X a,b,g,q[3];
 // q: on extended numbers
 static F1(jtxfactor){PROLOG(0064);
  F1RANKSUFF(0,jtxfactor,DUMMYSELF,R maximum(z,zeroionei(1)););  // convert 0s added by fill to 1s
-// obsolete  F1RANK(0,jtxfactor,DUMMYSELF);
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  X x=XAV(w)[0];
  // ASSERT(m!=XPINF&&m!=XNINF&&0<m,EVDOMAIN);

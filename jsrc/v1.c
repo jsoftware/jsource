@@ -392,8 +392,6 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  // Do all the tests for miscompare and combine the results at the end
  // We assume the caller checked for a==w and handled it, so we don't.
  I shapediff=p;  // see if ranks differ
-// obsolete  p=q<p?q:p; q^=shapediff; TESTDISAGREE(shapediff,af+AS(a),wf+AS(w),p); // now p is smaller rank; q=ranks differ; shapediff=shapes differ
-// obsolete   shapediff|=q;  // shapes or ranks differ
  p=q<p?q:p; shapediff^=q; shapediff=TESTAGREE(af+AS(a),wf+AS(w),p)?shapediff:1; // now p is smaller rank; q=ranks differ; shapediff=shapes or ranks differ
  PROD(c,p,af+AS(a));  // get c=length of a cell in atoms
  at=AT(a); wt=AT(w);   // save types, now that register pressure is over

@@ -304,22 +304,6 @@ static DF1(jtunderh10){R jtrank1ex0(jt,w,self,jtunderh1);}  // pass inplaceabili
 static DF2(jtunder20){R jtrank2ex0(jt,a,w,self,jtunder2);}  // pass inplaceability through
 static DF2(jtunderh20){R jtrank2ex0(jt,a,w,self,jtunderh2);}  // pass inplaceability through
 
-// obsolete static DF1(jtunderai1){A fs=FAV(self)->fgh[0]; A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
-// obsolete  ARGCHK1(w);
-// obsolete  if(b=LIT&AT(w)&&256<AN(w)){  // b=long literal w.  run on all bytecodes, as i. 128 2  and i. 8 32
-// obsolete         dfv1(x,iota(v2(128L, 2L)),fs); b=x&&256==AN(x)&&NUMERIC&AT(x);  // try f i. 128 2; does it return 256 numbers?
-// obsolete   if(b){dfv1(y,iota(v2(  8L,32L)),fs); b=y&&256==AN(y)&&NUMERIC&AT(y);}  // if so, try f i. 8 32; does it return 256 numbers?
-// obsolete   if(b){x=vi(x); y=vi(y); b=x&&y;}   // verify both results integer, set b if so
-// obsolete   if(b){u=AV(x); v=AV(y); DO(256, j=*u++; if(j==*v++&&BETWEENO(j,-256,256))f[i]=(UC)(j&255); else{b=0; break;});}  // verify both results the same & in bounds
-// obsolete   if(jt->jerr)RESETERR;
-// obsolete  }         
-// obsolete  if(!b)R from(dfv1(z,indexof(ds(CALP),w),fs),ds(CALP));  // if not boolean-like result or not literal, revert to long way
-// obsolete  n=AN(w);
-// obsolete  I zr=AR(w); GATV(z,LIT,n,AR(w),AS(w)); zv=UAVn(zr,z); wv=UAV(w);  // allocate result
-// obsolete  if(!bitwisecharamp(f,n,wv,zv))DQ(n, *zv++=f[*wv++];); // if f is a known logic function, do it wordwise; otherwise do it here, bytewise
-// obsolete  RETF(z);
-// obsolete }    /* f&.(a.&i.) w */  // scaf remove charamp
-// obsolete 
 // structural under, i. e. u&.v when v is a special noninvertible form that we recognize.  Currently only , and m&{ are recognized
 static DF1(jtsunder){F1PREFIP;PROLOG(777);
  I origacw=AC(w);  // preserve original inplaceability of y
@@ -385,11 +369,8 @@ F2(jtunder){F2PREFIP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
    if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // uid=id of u; b1=u is x/, then uid=id of x      cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
    b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<=32
    C vv=IDD(v->fgh[1]);  // id of g1
-// obsolete    if(CIOTA==vv&&(!c)&&equ(ds(CALP),v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)} 
    if(CIOTA==vv&&(!c)&&v->fgh[0]==ds(CALP)){   // w is  {a.&i.  or  (a. i. ][)}
-// obsolete    f1=b&b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
     f1=b&b1?jtbitwiseinsertchar:f1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
-// obsolete  lose underai1; add {&.(a.&i.)   
     f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
     flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
    }

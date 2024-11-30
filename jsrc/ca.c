@@ -118,7 +118,6 @@ revert:;  // must do by hand
 static DF1(jtintfloorlog2at) {F1PREFIP; R jtintfloorlog2(jt,w,FAV(self)->fgh[0]);}  // <.[!.f]@[:](2&^.)
 DF1(jtintfloorlog2cap) {F1PREFIP; R jtintfloorlog2(jt,w,FAV(self)->fgh[1]);}  // [: <.[!.f] [:](2&^.)
 static DF2(jtintfloorlog2left) {F2PREFIP; R jtintfloorlog2(jt,a,FAV(self)->fgh[0]);} // <.[!.f]@[:](2 ^. [)   bivalent
-// obsolete self=AT(w)&VERB?w:self;   multi plcs
 static DF2(jtintfloorlog2right) {F2PREFIP; a=EPMONAD?a:w; R jtintfloorlog2(jt,a,FAV(self)->fgh[0]);} // <.[!.f]@[:](2 ^. ])   bivalent
 
 static DF1(jtintceillog2at) {F1PREFIP; R jtintceillog2(jt,w,FAV(self)->fgh[0]);}  // >.[!.f]@[:](2&^.)

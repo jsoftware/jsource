@@ -168,7 +168,6 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  // see if we were called as monad or dyad.  If monad, fix up w and self
  ZZFLAGWORD=EPMONAD?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
  jtinplace=(J)((I)jtinplace&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad
-// obsolete  self=AT(w)&VERB?w:self;
  w=EPMONAD?a:w;  // if monad, a==w
  I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank
  // Execute v at infinite rank
@@ -183,9 +182,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   // for each unique value, collect the cells for that value and apply the verb to them (could use f/. code?)
   // reorder the results
   ASSERTGOTO(mr>=vr,EVRANK,errorwind);  // there must not be more selectors than atoms in the larger arg
-// obsolete   I disagree; TESTDISAGREE(disagree,AS(vres),AS(w),MIN(vr,wr));
   ASSERTGOTO(TESTAGREE(AS(vres),AS(w),MIN(vr,wr)),EVLENGTH,errorwind)  // shapes must match
-// obsolete   if(ZZFLAGWORD&ZZFLAGISDYAD){TESTDISAGREE(disagree,AS(vres),AS(a),MIN(vr,ar));  ASSERTGOTO(!disagree,EVLENGTH,errorwind)}  // if dyad, check both
   if(ZZFLAGWORD&ZZFLAGISDYAD){ASSERTGOTO(TESTAGREE(AS(vres),AS(a),MIN(vr,ar)),EVLENGTH,errorwind)}  // if dyad, check both
   I ncells; PROD(ncells,AR(vres),AS(vres));  // number of result cells
   I nar=AN(FAV(self)->fgh[2]);  // number of ARs in the gerund
@@ -372,17 +369,3 @@ F2(jtagendai){F2PREFIP;I flag;
  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), RMAX, RMAX, RMAX);
 }
 
-
-
-#if 0 // obsolete 
-
-static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R dfv1(z,  w,C(AAV(h)[0]));}
-static DF2(jtgf2){A z,h=FAV(self)->fgh[2]; R dfv2(z,a,w,C(AAV(h)[0]));}
-
-A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
- RZ(x=a?a:w);
- ASSERT(2==AN(x),EVLENGTH);
- RZ(h=fxeachv(1L,x)); hv=AAV(h); v=VAV(C(*hv));
- R fdef(0,id,VERB, jtgf1,jtgf2, x,a?w:0L, h, VGERL, (I)v->mr,lrv(v),rrv(v));
-}    /* verify and define 2-element gerund */
-#endif

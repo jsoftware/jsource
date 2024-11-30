@@ -217,9 +217,9 @@ B jtmeminitt(JJ jt){I k;
 
 // Audit all memory chains to detect overrun
 #if SY_64   // define optional audits.
-#define AUDITFILL   // obsolete  ||((MEMAUDIT&0x4)?AM(Wx)!=(I)0xdeadbeefdeadbeefLL:0)
+#define AUDITFILL
 #else
-#define AUDITFILL   // obsolete ||((MEMAUDIT&0x4)?AM(Wx)!=(I)0xdeadbeefL:0)
+#define AUDITFILL
 #endif
 // your code for which the warning gets suppressed 
 void jtauditmemchains(J jt){

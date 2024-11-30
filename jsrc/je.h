@@ -340,7 +340,6 @@ extern DF1(jtscy1);
 extern DF1(jtscz1);
 extern F1(jtseclevq);
 extern F1(jtseclevs);
-// obsolete extern F1(jtself1);
 extern F1(jtshape);
 extern F1(jtshapex);
 extern F1(jtshasum1);
@@ -745,11 +744,8 @@ extern B        jtequ(J,A,A);
 extern B        jtequx(J,X,X);
 extern B        jtequ0(J,A,A);
 extern void     jterasenl(J,I);
-// obsolete extern A        jtev1(J,A,C*);
 extern A        jtev12(J,A,A,C*);
-// obsolete extern A        jteva(J,A,C*);
 extern A        jteval(J,C*);
-// obsolete extern A        jtevc(J,A,A,C*);
 extern DF1(jtevery);
 extern DF2(jtevery2);
 extern DF1(jteveryself);
@@ -1091,7 +1087,6 @@ extern I Biv0[];
 #define iv0 ((A)&Biv0)
 extern I Biv1[];
 #define iv1 ((A)&Biv1)
-// obsolete extern D        jnan;           /* "nan" name conflict under Solaris       */
 extern A        mnuvxynam[6];
 extern void     moveparseinfotosi(J);
 extern I Bnum[][8*(2-SY_64)];

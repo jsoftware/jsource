@@ -429,7 +429,6 @@ static DF2(jtmodopexttimes){A z;PROLOG(000);
 // modular reciprocal/divide on extendeds, one atom.  Bivalent. 0%0=0
 static DF2(jtmodopextdiv){A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
-// obsolete  self=AT(w)&VERB?w:self;  // if monad, take self from w
  X xw=XAV(EPMONAD?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
  xw=XinvertXX(xw,n); // take inverse of divisor, returning 0 if coprime
  X xz;  // will hold result
@@ -508,7 +507,6 @@ static DF2(jtmodopinttimes){PROLOG(000);
 // bivalent
 static DF2(jtmodopintdiv){PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // bivalent must test here if empty args
-// obsolete  self=AT(w)&VERB?w:self;  // if monad, take self from w
  // fetch n from h and nrecip from self
  X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
  I nsign=XSGN(hx0); UI n=XLIMB0(hx0); UI nrecip=FAV(self)->localuse.lu1.mrecip;

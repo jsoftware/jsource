@@ -167,9 +167,7 @@ DF1(jticap){A a,e;I n;P*p;
 DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n;UC c,*u,*v,*yv,zz[256];
  ARGCHK1(w);
  A x=FAV(FAV(self)->fgh[2])->fgh[0], y=FAV(self)->fgh[0];  // extract translation tables
-// obsolete  RZ(w&&x&&y);
  if(!(LIT&AT(w)))R fork120(jt,w,self);  // revert if not byte args
-// obsolete from(indexof(x,w),y);  // revert using self - also below
  I yn=AN(y), wn=AN(w);
  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w; else{GATV(z,LIT,wn,AR(w),AS(w));}  // alloc block unless inplace and no possible error; point to input & output strings
  if(x==ds(CALP)){  // x=a.?

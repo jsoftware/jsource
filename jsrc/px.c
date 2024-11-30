@@ -21,12 +21,8 @@
 
 A jteval(J jt,C*s){R PARSERVALUE(parseforexec(tokens(cstr(s),1+!!EXPLICITRUNNING)));}
 
-// obsolete A jtev1(J jt,    A w,C*s){A z; R df1(z,  w,eval(s));}  // parse *s and apply to w  //
-// obsolete A jtev2(J jt,A a,A w,C*s){A z; R df2(z,a,w,eval(s));}  // parse *s and apply to a and w.  If w is 0, use monad
 // parse string s, producing an ACV, and apply the ACV as either a monad or a dyad.  w=0 if monad.  Result can be anything; use only when you control a, w, and s
 A jtev12(J jt,A a,A w,C*s){A z; A fs; RZ(fs=eval(s)); R (FAV(fs)->valencefns[!!w])((J)((I)jt+(AT(fs)&VERB?0:JTXDEFMODIFIER)),a,w?w:fs,fs);}  // if modifier, so flag (for unquote & xdefn, so not needed)
-// obsolete A jteva(J jt,    A w,C*s){A z; R df1(z,  w,colon(num(1),   cstr(s)));}  // parse to adverb
-// obsolete A jtevc(J jt,A a,A w,C*s){A z; R df2(z,a,w,colon(num(2),cstr(s)));}  // parse to conjunction
 
 // ". y
 DF1(jtexec1){A z;

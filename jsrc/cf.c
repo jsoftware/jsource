@@ -106,7 +106,6 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
  #if C_AVX2 || EMU_AVX2
   case CHOOK:    // (< |[!.0]) * ]  or  ] * (< |[!.0])
    if(unlikely(gi==CSTAR)&&((hi==CRIGHT)||gi==CRIGHT)){
-// obsolete    if(BOTHEQ8(gi,hi,CSTAR,CRIGHT) || BOTHEQ8(gi,fi,CSTAR,CRIGHT)){        
     V *hka=hi==CRIGHT?fv:hv;  // point to the time that must be the hook                           
     p=hka->fgh[0]; q=hka->fgh[1];
     if(FAV(q)->id==CSTILE){

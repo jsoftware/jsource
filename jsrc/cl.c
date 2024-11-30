@@ -54,7 +54,6 @@ static I jtefflev(J jt,I n,A x){I t; R n>=0?n:(t=level(jt,x),MAX(0,n+t));}
 static DF2(jtlscapco12){PROLOG(556);A z;
  ARGCHK2(a,w);
  I wt=AT(w);
-// obsolete  self=wt&VERB?w:self;  // find the verb
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with.  Next fill in fields needed by every and jtlev[12]
  AM(recurself)=(I)FAV(self)->fgh[0];  // fill in the pointer to u
  AT(recurself)=VERB;  // must mark type so bivalent check works

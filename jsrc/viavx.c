@@ -761,10 +761,8 @@ A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079
 #define HASHTIMEA (5)  // hashing time for a
 #define HASHTIMEW (4)  // hashing time for w
 #define HASHSETUP (150)  // setup time here in excess of setup for seqlsch  from (10000 1 ?@$ 1e9) -. ,4
-// obsolete   if((((an-SEQSEARCHIFALT)|(wn-SEQSEARCHIFWLT)|(an+wn-SEQSEARCHIFAWLT))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(-((acr^1)|(wr^wcr)))|(an-1)|(wn-1))>=0)){
   if((seqtime<HASHSETUP+an*HASHTIMEA+wn*HASHTIMEW)&&((ar^1)+TYPESXOR(at,wt)+af+wf+((mode&ISFU+IIOREPS)^IIOREPS))==0&&((SGNIFSPARSE(at|wt)|(an-1)|(wn-1))>=0)){
      // small, a is list, types =, no frame, not SFU, i./i:/e./key, not sparse, not empty.  Empty might not be worth testing on w
-// obsolete (1-wr)|(SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|
    // Fast path for (vector i./i:/e./key short noun) - if not prehashing.  Do sequential search
    I zt; A z;  // type of result to allocate; address of block
    if((mode&IIOPMSK)==IEPS)zt=B01;
@@ -784,8 +782,6 @@ inplace:;
   // prehash is set if w argument is omitted (we are just prehashing the a arg)
   f=af?af:wf; s=af?as:ws; r=acr-((UI)acr>0); f1=wcr-r;  // see below.  f1<0 here means cell of w has rank smaller than the item of a-cell, thus there are no matches possible
         // f1 is length of frame in w
-// obsolete  I f1clamp=REPSGN(f1); I disagree; TESTDISAGREE(disagree,as+af+1,ws+wf+(~f1clamp&f1),r)
-// obsolete   if(unlikely(f1clamp<disagree)){I f0,*v;A z;   // true if f1<0 OR disagree!=0
   if(unlikely(f1<0)||unlikely(!TESTAGREE(as+af+1,ws+wf+f1,r))){I f0,*v;A z;   // true if f1<0 OR disagree!=0
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
    if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
@@ -866,12 +862,10 @@ inplace:;
  // If fnx is still negative at the end of the function search, it means either 'sequential file update' (-1), 'sequential search' (-2), 'empty' (-3), or 'inhomo' (-4)
  // See if we should simply do sequential search.    We do this only for i./i:/e./key, only when w-cells match with a-cells or w has a single repeated cell.  Analysis above  TUNE
  if(unlikely(mode&ISFU)){fnx=fnx<0?fnx:1; fnx-=2;    // i.!.1 (qualified earlier for rank & type) - use special function, no hashtable.  But preserve codes -3 & -4 for inhomo/empty
-// obsolete  }else if((((((I)m-SEQSEARCHIFALT)|(zn-SEQSEARCHIFWLT)|((I)m+zn-SEQSEARCHIFAWLT)|fnx)<0)) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo
  }else if(({I seqtime; DPMULD(m,zn,seqtime,seqtime=IMAX;); (seqtime|REPSGN(fnx))<HASHSETUP+an*HASHTIMEA+zn*HASHTIMEW;}) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo; and always if fnx neg
           //  small enough operation, or  empty/inhomo   test size first because partially checked already & failed TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   fnx-=2;  // now fnx is -4 for inhomo, -3 for empty, -1 for SFU, -2 for sequential.  This is ready for lookup.
-// obsolete  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
  }else{
 
 #define SMALLHASHCACHE L2CACHESIZE/sizeof(US)  // number of US entries that fit in L2
@@ -1124,7 +1118,6 @@ inplace:;
 
  // Call the routine to perform the operation
  RZ(h=ifn(jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
-// obsolete  RZ(h=fntbl[fnx](jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
  // If the call was IFORKEY, the number of partitions was stored in AM(h).  Move it to AM(z) whence it will be returned.
  I forkeyresult=AM(h);  // save # partitions
 

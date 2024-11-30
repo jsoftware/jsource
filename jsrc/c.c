@@ -18,7 +18,6 @@ F2(jtobverse){F2PREFIP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,
 static DF2(ad12){A z; A childself=FAV(self)->fgh[0]; 
  ARGCHK2(a,w); A *old=jt->tnextpushp;
  I dyad=EPDYAD; w=EPDYAD?w:childself;  // Set w for bivalent call 
-// obsolete  self=dyad?self:w;
  WITHDEBUGOFF(z=CALL2(FAV(childself)->valencefns[dyad],a,w,childself);)
  if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.
  if(unlikely(jt->jerr==EVEXIT))R 0;  // EXIT is never caught

@@ -957,15 +957,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   if(unlikely(aai>NPAR)){NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR]))),_mm256_loadu_si256((__m256i*)validitymask)),EVLENGTH)}while((aai-=NPAR)>NPAR);} \
   ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai))),EVLENGTH) /* result is 1 if all match */ \
  }
-#if 0   // obsolete 
-// set r nonzero if shapes disagree
-#define TESTDISAGREE(r,x,y,l) \
- {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=NPAR)){ \
-   r=!(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)))); /* test result is 1 if all match */ \
-  }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]!=aab[aai])){r=1; break;}}while(aai);} \
- }
-#else
 // result is true if shapes agree.  Modify only aai
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); __m256i aaaa,aaab,aaam; \
@@ -980,7 +971,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   } \
   _mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam); /* test result is 1 if all match */ \
  })
-#endif
 // set r nonzero if a value in x shape is bigger than corresponding one in y shape
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -997,22 +987,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{ASTYPE(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
  }
 
-#if 0 // obsolete 
-#define TESTDISAGREE(r,x,y,l) \
- {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=2)){ \
-   aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
-   r=((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))!=0;  \
-  }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
- }
-#else
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); \
  for(--aai;aai>=0;--aai)if(aaa[aai]!=aab[aai])break; \
  aai<0;  /* return 1 if all matched */ \
  })
-#endif
-
+o =. 17 b. &.(a.&i.)
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); r=0; \
   DO(l, if(unlikely(aaa[i]>aab[i])){r=1;break;}) \

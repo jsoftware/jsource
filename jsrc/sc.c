@@ -381,9 +381,7 @@ F2(jtnamerefop){V*v;
 // We process this as 'u'~ where the name is flagged as NMIMPLOC
 // Bivalent: called with (a,w,self) or (w,self,self).  We treat as dyad but turn it into monad if input w is not a noun
 DF2(jtimplocref){
-// obsolete self=AT(w)&NOUN?self:w;
  A childself=JT(jt,implocref)[FAV(self)->id&1];  // pull from namerefs for u and v
-// obsolete  w=AT(w)&NOUN?w:childself;  // see whether we're a dyad
  R unquote(a,EPDYAD?w:childself,childself); // call as (w,self,self) or (a,w,self)
 }
 

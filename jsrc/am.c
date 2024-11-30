@@ -850,7 +850,6 @@ static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  dfv1(ffm,w,hv[hn-2]);  // x v1 y - no inplacing
  RZ(ffm);
  RZ(ff=jtamend(jt,ffm,0));  // now ff represents (v1 y)}.  scaf avoid this call, go straight to mergn1
-// obsolete  if(AT(hv[2])&NOUN){ffx=hv[2];}else{
  RZ(dfv1(ffx,w,hv[hn-1]))
  R dfv1(ffm,ffx,ff);
 }
@@ -874,7 +873,6 @@ static DF2(jtgav2){F2PREFIP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(s
  // x v0 y - can inplace any unprotected argument
  RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
  // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
-// obsolete  POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
  POPZOMB; R ((AF)jtamendn2c)(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
@@ -883,7 +881,6 @@ static A jtgadv(J jt,A w){A hs;I n;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  I wn=AN(w); ASSERT(BETWEENC(wn,2,3),EVLENGTH);  // verify 2-3 gerunds
-// obsolete RZ(hs=fxeachv(1,3==AN(w)?w:behead(reshape(num(4),w))));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
  RZ(hs=fxeachv(1,w));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
  // hs is a BOX array, but its elements are ARs and cannot be pyxes
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad

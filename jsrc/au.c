@@ -11,8 +11,6 @@ static I jtfdepger(J jt,A w){R 0;
 
 
 // $: itself
-// obsolete F1(jtself1){A z; STACKCHKOFL dfv1(z,  w,jt->parserstackframe.sf); RETF(z);}   // scaf combine, allow inplacing
-// obsolete F2(jtself2){A z; STACKCHKOFL dfv2(z,a,w,jt->parserstackframe.sf); RETF(z);}
 DF2(jtself12){A z; F2PREFIP; A fs=jt->parserstackframe.sf; I dyad=EPDYAD; jtinplace=FAV(fs)->flag&(VJTFLGOK1<<dyad)?jtinplace:jt; AF f12=FAV(fs)->valencefns[dyad]; STACKCHKOFL RETF((f12)(jtinplace,a,dyad?w:fs,fs));}
 
 // not used A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}

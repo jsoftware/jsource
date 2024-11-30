@@ -203,7 +203,6 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  S prevthread=__atomic_exchange_n(&((PYXBLOK*)AAV0(pyx))->pyxorigthread,-1,__ATOMIC_ACQ_REL);  // set pyx no longer running
  if(unlikely(prevthread<0))R 0;  // the pyx is read-only once written
  ASSERTSYS(((UI)z|(UI)errcode)!=0,"error pyx with no errorcode");
-// obsolete  if(likely(z!=0)){ra(z)  Could zap if inplaceable
  if(unlikely(z==0)){
   // error.  Remember the entire message that has been formatted into etx, and pass that string as the result value.  The error code will indicate the semantics
   __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->errcode,errcode,__ATOMIC_RELEASE);  // copy failure code.  Must be non0 - if not that is itself an error above

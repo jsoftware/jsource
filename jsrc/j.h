@@ -992,7 +992,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
  for(--aai;aai>=0;--aai)if(aaa[aai]!=aab[aai])break; \
  aai<0;  /* return 1 if all matched */ \
  })
-o =. 17 b. &.(a.&i.)
+
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); r=0; \
   DO(l, if(unlikely(aaa[i]>aab[i])){r=1;break;}) \

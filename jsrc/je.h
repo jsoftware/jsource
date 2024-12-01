@@ -517,7 +517,7 @@ extern A jthook(J,A,A,A);
 extern F2(jti1ebar);
 extern F2(jtic2);
 extern DF2(jticap2);
-extern F2(jtifbebar);
+extern DF2(jtifbebar);
 extern F2(jtifrom);
 extern F2(jtindexof);
 extern F2(jtintdiv);

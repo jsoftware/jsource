@@ -214,17 +214,27 @@ static DF2(tcca){F2PREFIP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df1(tt,w,hs));
 static DF1(jthkiota){A a,e;I n;P*p;
  ARGCHK1(w);
  SETIC(w,n);
- if((AT(w)&SPARSE+B01)==SPARSE+B01&&1==AR(w)){
+ if(unlikely((AT(w)&SPARSE+B01)==SPARSE+B01)&&1==AR(w)){   // sparse boolean list
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
-  R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));
+// obsolete   R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n))
+  if(BAV(e)[0]||equ(mtv,a))goto revert;  // revert if no sparse axes or fill ele is not 0
+  R repeat(SPA(p,x),ravel(SPA(p,i)));  // select from the indexes (of nonzeros)
  }
- R B01&AT(w)&&1>=AR(w) ? ifb(n,BAV(w)) : repeat(w,IX(n));
-}    /* special code for (# i.@#) */
+ if(B01&AT(w)&&1>=AR(w))R ifb(n,BAV(w));  // use special code for boolean atom/list
+// obsolete  : repeat(w,IX(n));
+revert: ;
+ R jthook1cell(jt,w,self);
+}    /* special code for (# i.@#) y */
 
-static DF1(jthkodom){B b=0;I n,*v;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1];
+static DF1(jthkodom){I n,*v;
  ARGCHK1(w);
- if(INT&AT(w)&&1==AR(w)){n=AN(w); v=AV(w); DO(n, if(b=0>v[i])break;); if(!b)R odom(2L,n,v);}
- R CALL2(FAV(fs)->valencefns[1],w,CALL1(FAV(gs)->valencefns[0],w,gs),fs);
+ if(INT&AT(w)&&1==AR(w)){
+  n=AN(w); v=AV(w); DO(n, if(v[i]<0)goto revert;)  // revert if not all-nonneg integer list
+  R odom(2L,n,v);
+ }
+revert: ;
+ R jthook1cell(jt,w,self);
+// obsolete  R CALL2(FAV(fs)->valencefns[1],w,CALL1(FAV(gs)->valencefns[0],w,gs),fs);
 }    /* special code for (#: i.@(* /)) */
 
 static DF1(jthkindexofmaxmin){

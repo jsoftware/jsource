@@ -66,12 +66,12 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
  ar=AR(a); at=AT(a); m=AN(a);
  wr=AR(w); wt=AT(w); n=AN(w);
  ASSERT(!ISSPARSE(at|wt),EVNONCE);
- ASSERT(ar==wr||(ar+(wr^1))==0,EVRANK);
+ ASSERT((-(ar!=wr)&(ar+(wr^1)))==0,EVRANK);  // ranks must be =, or a atom and w list
  if(unlikely(!HOMO(at,wt)))if(m&&n)R -1;
  if(1<wr)R 2==wr?-2:-3;
  t=maxtyped(at|(I )(m==0),wt|(I )(n==0)); t&=-t;  // default missing type to B01; if we select one, discard higher bits
- if(TYPESNE(t,at))RZ(a=cvt(t,a));
- if(TYPESNE(t,wt))RZ(w=cvt(t,w));
+ if(unlikely(TYPESNE(t,at)))RZ(a=cvt(t,a));
+ if(unlikely(TYPESNE(t,wt)))RZ(w=cvt(t,w));
  *za=a; *zw=w;
  // The inputs have been converted to common type
  memlimit = MIN(4*n+1,(I)((JT(jt,mmax)-100)>>LGSZI));  // maximum size we will allow our d to reach.  Used only for I type.
@@ -361,7 +361,7 @@ default:
 #define IFB1  \
  {if(zu==zv){I m=zu-AV(z); RZ(z=ext(0,z)); zv=m+AV(z); zu=AN(z)+AV(z);} *zv++=k;}
 
-F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
+DF2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  ARGCHK2(a,w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
@@ -369,7 +369,8 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  if(unlikely(d<0)){
   switch(d){
   case -1: R mtv;
-  case -4: R icap(ebarvec(a,w));
+  case -4: R jtupon2cell(jt,a,w,self);  // revert if recoverable error
+// obsolete R icap(ebarvec(a,w));
   }
  }
  if((-m&-n)>=0){R icap(ebar(a,w));}  // empty argument.

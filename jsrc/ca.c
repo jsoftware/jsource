@@ -335,7 +335,7 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; // >.@(2^][)
    else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other >.@v
    break;
-  case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
+  case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@E.
   case CQUERY&0x3f:  if((d&-2)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;} break;  // # $
   case CQRYDOT&0x3f: if((d&-2)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // # $
   case CRAZE&0x3f:  // detect ;@(<@(f/\));.

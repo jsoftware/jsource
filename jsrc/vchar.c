@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-
+// scaf use wordlong
 static APFX(maxC, UC,UC,UC, MAX,, R EVOK;)
 static APFX(minC, UC,UC,UC, MIN,, R EVOK;)
 

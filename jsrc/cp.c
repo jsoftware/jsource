@@ -182,7 +182,7 @@ static DF2(jtply12){A fs=FAV(self)->fgh[0]; PROLOG(0040);A zz=0;
       state|=(pv[0]==-IMAX)<<STATEINFINITEPOWX;  // set if there is a __ power
       z=w;  // start back on the initial arg
       zpow=0;  // reset the power corresponding to z
-      fs=invfs; f12=FAV(fs)->valencefns[0];  // switch over to the inverse function
+      fs=invfs; f12=FAV(fs)->valencefns[0]; state|=STATEMONAD;  // switch over to the inverse function.  If it was created from x&u, it is monadic
      }
     }
     if(!BETWEENO(pscan,0,np))break;  // when we exhaust the powers, quit the loop

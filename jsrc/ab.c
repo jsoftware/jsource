@@ -92,7 +92,7 @@ APFX(bw1011I4I4, UI4,UI4,UI4, BW1011,, R EVOK;)
 APFX(bw1110I4I4, UI4,UI4,UI4, BW1110,, R EVOK;)
 APFX(bw1111I4I4, UI4,UI4,UI4, BW1111,, R EVOK;)
 
-// scaf rewrite all these
+// scaf rewrite all these and I2/I4 as well
        static APFX(bw0000CC, UC,UC,UC, BW0000,, R EVOK;)
        static APFX(bw0001CC, UC,UC,UC, BW0001,, R EVOK;)
        static APFX(bw0010CC, UC,UC,UC, BW0010,, R EVOK;)

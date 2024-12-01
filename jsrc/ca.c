@@ -162,16 +162,17 @@ static DF2(jtmodpow2){A h;B b,c;I m,n,x,z;
  if(unlikely(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)){  // convert any non-INT arg to INT if it can be done exactly
   if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a));
   if(RAT&AT(w))RZ(w=pcvt(XNUM,w)) else if(!(AT(w)&INT+XNUM))RZ(w=pcvt(INT,w));
-  if(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)R residue(h,expn2(a,w));  // if not (both args INT and power positive) revert to long form
+// obsolete  if(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)R residue(h,expn2(a,w));  // if not (both args INT and power positive) revert to long form
+  if(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)R jtupon2(jt,a,w,self);  // if not (both args INT and power positive) revert to long form
  }
  // both args are integral, but possibly extended
  PREF2(jtmodpow2);
  if(((AT(h)|AT(a)|AT(w))&XNUM)&&!((AT(a)|AT(w))&(NOUN&~(XNUM+INT)))){A z;  // if all values are integral and one is XNUM, process as extended
-  z=xmodpow(a,w,h); if(!jt->jerr)R z; RESETERR; R residue(h,expn2(a,w));
+  z=xmodpow(a,w,h); if(!jt->jerr)R z; RESETERR; R jtupon2(jt,a,w,self);
  }
  // all values are INT
  n=AV(w)[0];
- if(unlikely(n<0))R residue(h,expn2(a,w));  // if negative exponent revert to long form
+ if(unlikely(n<0))R jtupon2(jt,a,w,self);  // if negative exponent revert to long form
  m=AV(h)[0]; x=AV(a)[0];  // m=modulus, x=base
  if(unlikely(!m))R expn2(a,w);   // if 0 divisor, same as infinite modulus
  if(b=0>m)m=-m; if(c=0>x)x=(I)(0-(UI)x);  // b=m neg, c=x neg; take abs of m and x (might be IMIN)

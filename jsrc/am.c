@@ -905,7 +905,7 @@ static DF2(jtamnegate){F2PREFIP;
 DF1(jtamend){F1PREFIP;
  ARGCHK1(w);
  if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
- else if(AT(w)&BOX&&ger(jt,w)){A z;
+ else if(AT(w)&BOX&&unlikely(ger(jt,w))){A z;
   ASSERT(self!=0,EVNONCE);  // execute exception if gerund returns gerund
   RZ(z=gadv(w))   // get verbs for v0`v1`v2}, as verbs
   A *hx=AAV(FAV(z)->fgh[2]);

@@ -641,13 +641,14 @@ F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngpar
 DF2(jtrollk){A g,z;V*sv;
  ARGCHK3(a,w,self);
  sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];   // 2d verb, # or $
- if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(dfv2(z,a,w,g));  // revert if XNUM/RAT or nonatomic w or AR(a)>1 or (?@# with a not a singleton)
+// obsolete  if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(dfv2(z,a,w,g));  // revert if XNUM/RAT or nonatomic w or AR(a)>1 or (?@# with a not a singleton)
+ if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&((g==ds(CDOLLAR))|(1==AN(a)))))R jtupon2cell(jt,a,w,self);  // revert if XNUM/RAT or nonatomic w or AR(a)>1 or (?@# with a not a singleton)
  RETF(rollksub(a,vi(w)));
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 
 static X jtxrand(J jt,X x){PROLOG(0090);
  // CONSTRAINT NO LONGER VALID: if (unlikely(!ISGMP(x))) SEGFAULT; // x must be an extended integer -- anything else is a coding error
- if (unlikely(1>(XSGN(x)))) SEGFAULT; // x must be positive -- anything else is a coding error
+ ASSERTSYS(XSGN(x)>=1,"jtxrand") // x must be positive -- anything else is a coding error
  I n=XLIMBLEN(x), *xv=AV(x);  // number of Digits in x, &first digit
  X q= GAGMP(q, n*SZI); UI*qv= UIAV1(q); // result goes here
  B big= 1; I prev=0; A halflimb= sc(1LL<<SZI*4);

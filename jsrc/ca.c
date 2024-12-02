@@ -199,11 +199,11 @@ static DF1(jttallyatopopen){F1PREFIP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); G
 
 
 // u@v and u@:v
-FORK1(on1cell,0x160)
-DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}  // pass inplaceability through
+FORK1(on1cell,0x160)   // u@:v monad
+DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}  // u@v monad - pass inplaceability through
 
-FORK2(jtupon2cell,0x1c0)
-DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}  // pass inplaceability through
+FORK2(jtupon2cell,0x1c0)  // u@:v monad
+DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}  // u@v dyad -  pass inplaceability through
 
 // special case for rank 0.  Transfer to loop.
 // if there is only one cell, process it through on1, which understands this type

@@ -1279,15 +1279,17 @@ F2(jteps){I l,r;
 }    /* a e."r w */
 
 // I.@~: y   does not have IRS
-F1(jtnubind){
+DF1(jtnubind){
  ARGCHK1(w);
- R ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w);
+// obsolete  R ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w);
+ R unlikely(ISSPARSE(AT(w)))?on1cell(jt,w,self):indexofsub(INUBI,w,w);  // revert for sparse
 }    /* I.@~: w */
 
 // i.@(~:!.0) y     does not have IRS
-F1(jtnubind0){A z;
+DF1(jtnubind0){A z;
  ARGCHK1(w);
- PUSHCCT(1.0) z=ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
+ if(unlikely(ISSPARSE(AT(w))))R on1cell(jt,w,self);  // revert for sparse
+ PUSHCCT(1.0) z=indexofsub(INUBI,w,w); POPCCT  // do operation intolerantly
  R z;
 }    /* I.@(~:!.0) w */
 

@@ -592,10 +592,11 @@ static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m
 
 DF1(jtredravel){A f,x,z;I n;P*wp;
  F1PREFIP;PROLOG(0000);
- ARGCHK1(w);
- f=FAV(self)->fgh[0];  // f/
- if(likely(!ISSPARSE(AT(w)))){RZ(z=reduce(jtravel(jtinplace,w),f));
+// obsolete  if(likely(!ISSPARSE(AT(w)))){RZ(z=reduce(jtravel(jtinplace,w),f));
+ if(likely(!ISSPARSE(AT(w)))){RZ(z=on1cell(jtinplace,w,self));  // reversion is the normal path
  }else{
+  ARGCHK1(w);
+  f=FAV(self)->fgh[0];  // f/
   // The rest is sparse
   wp=PAV(w); x=SPA(wp,x); n=AN(x);
   I rc=EVOK;

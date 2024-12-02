@@ -227,7 +227,7 @@ XF1(jtxfact){ // !w
  mpz_t mpz; jmpz_init(mpz); jmpz_fac_ui(mpz, jmpz_get_si(mpw));
  EPILOG(Xmp(z));
 }
-F1(jtdigits10){ // "."0@":
+DF1(jtdigits10){ // "."0@":
  PROLOG(0117);
  ARGCHK1(w);
  // see if a fast case applies
@@ -253,8 +253,9 @@ F1(jtdigits10){ // "."0@":
     EPILOG(z);
    }
  }
- // if none of the fast cases applies, do it the long way
- EPILOG(rank1ex0(thorn1(w),DUMMYSELF,jtexec1));
+ // if none of the fast cases applies, revert
+// obsolete  EPILOG(rank1ex0(thorn1(w),DUMMYSELF,jtexec1));
+ RETF(on1cell(jt,w,self));
 }
 
 static XF2(jtxbinp){PROLOG(0118);

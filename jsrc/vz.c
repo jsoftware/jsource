@@ -278,12 +278,15 @@ B jtztridiag(J jt,I n,A a,A x){I i,j,n1=n-1;Z*av,d,p,*xv;
 
 DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
  F1RANK(0,jtexppi,self);
- if(!(CMPX&AT(w)))R expn1(pix(w));   // if not complex, revert
- v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;  // take exp of real part, set y=imaginary part
- th=y-2*(I)(y/2); k=(I)(2*th); if(k!=2*th)k=-1; else if(b&&k)k=4-k;
- if(!((UI)k<=(UI)3))R expn1(pix(w));   // if k is not an exact multiple of 0.5, revert - what good is that???
- GAT0(z,CMPX,1,0); ZAV0(z)[0].re=ZAV0(z)[0].im=0; DAV0(z)[k&1]=r*(1-(k&2));  // set result to 0, then store into real or imag, possibly changing sign
+ if(!(CMPX&AT(w)))goto revert;   // if not complex, revert
+ v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;  // take exp of real part, set y=|imaginary part|
+// obsolete  th=y-2*(I)(y/2); k=(I)(2*th); if(k!=2*th)k=-1; else if(b&&k)k=4-k;  // th=|im| (mod 2); k = twice that
+ th=y-2*(I)(y/2); k=(I)(2*th); if(k!=2*th)goto revert; else if(b&&k)k=4-k;  // th=|im| (mod 2); k = twice that; if th is not exact multiple of 0.5, revert
+ if(!((UI)k<=(UI)3))goto revert;   // if k is not an exact multiple of 0.5, revert
+ GAT0(z,CMPX,1,0); ZAV0(z)[0].re=ZAV0(z)[0].im=0; DAV0(z)[k&1]=r*(1-(k&2));  // set result to 0, then store into real or imag, possibly changing sign, with exact 0 for one component (which is the point)
  R z;
+revert:;
+ R on1cell(jt,w,self);  // revert as if ^@:o.
 }    /* special code for ^@o. */
 
 

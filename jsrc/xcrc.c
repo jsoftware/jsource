@@ -52,6 +52,7 @@ F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
  R h;
 }
 
+// CRC where table has been precomputed and stored in h
 DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
  ARGCHK1(w);
  h=FAV(self)->fgh[2]; hv=AAV(h); t=(UINT*)AV(C(hv[0])); z=(UINT)AV(C(hv[1]))[0];

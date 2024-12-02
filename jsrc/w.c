@@ -358,6 +358,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  EPILOG(z);
 }    /* check left argument of x;:y */
 
+// handle x ;: y; if chka=0, x is in intercal fsm form
 static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijrd,k,n,q,*v;
  ARGCHK2(a,w);
  if(chka)RZ(a=fsmvfya(a)); 

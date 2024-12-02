@@ -42,7 +42,7 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
 static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,n,n1,r,*s,wt;
  ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
- if((-AN(w)&(1-r)&SGNIFDENSE(wt))>=0)R oblique(w,self);  // revert to default if rank<2, empty, or sparse.  This implies m/n below are non0
+ if(unlikely((-AN(w)&(1-r)&SGNIFDENSE(wt))>=0))goto revert;  // revert to default if rank<2, empty, or sparse.  This implies m/n below are non0
  y=FAV(self)->fgh[0]; y=FAV(y)->fgh[0]; id=FAV(y)->id;
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; d=m+n-1; PROD(c,r-2,2+s);
@@ -84,7 +84,9 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,n,n1,r,*s,wt;
    break;
  }
  if(wt&FL+CMPX)NAN1; RE(0);
- R b?z:oblique(w,self);  // handle cases not treated specially above
+ if(b)RETF(z);
+revert:;
+ R oblique(w,self);  // revert for cases not treated specially above
 }    /* f//.y for atomic f */
 
 

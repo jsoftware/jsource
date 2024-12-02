@@ -26,15 +26,15 @@ extern B compxd(I,X*,X*);
 extern B compqu(I,Q*,Q*);
 extern B compqd(I,Q*,Q*);
 
-extern int  compspdsB(SORT * RESTRICT,I,I);
-extern int  compspdsD(SORT * RESTRICT,I,I);
-extern int  compspdsI(SORT * RESTRICT,I,I);
-extern int  compspdsZ(SORT * RESTRICT,I,I);
+extern B  compspdsB(SORT * RESTRICT,I,I);
+extern B  compspdsD(SORT * RESTRICT,I,I);
+extern B  compspdsI(SORT * RESTRICT,I,I);
+extern B  compspdsZ(SORT * RESTRICT,I,I);
 
-extern int  compspssB(SORT * RESTRICT,I,I);
-extern int  compspssD(SORT * RESTRICT,I,I);
-extern int  compspssI(SORT * RESTRICT,I,I);
-extern int  compspssZ(SORT * RESTRICT,I,I);
+extern B  compspssB(SORT * RESTRICT,I,I);
+extern B  compspssD(SORT * RESTRICT,I,I);
+extern B  compspssI(SORT * RESTRICT,I,I);
+extern B  compspssZ(SORT * RESTRICT,I,I);
 
 extern I grcol4(I,I,UI4*,I,I*,I*,const I,US*,I);
 extern I grcol2(I,I,US*,I,I*,I*,const I,US*,I);

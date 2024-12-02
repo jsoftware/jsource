@@ -1439,13 +1439,13 @@ F2(jteps){I l,r;
 }    /* a e."r w */
 
 // I.@~: y   does not have IRS
-F1(jtnubind){
+DF1(jtnubind){
  ARGCHK1(w);
  R ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
 // i.@(~:!.0) y     does not have IRS
-F1(jtnubind0){A z;
+DF1(jtnubind0){A z;
  ARGCHK1(w);
  PUSHCCT(1.0) z=ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;

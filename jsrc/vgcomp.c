@@ -26,7 +26,7 @@ B compxd(I n, X *a, X *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->j
 B compqu(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->jt&~JTFLAGMSK); do{if(j=QCOMP(*a,*b))R SGNTO0(j); if(!--n)break; ++a; ++b;}while(1); R a<b;} // QCOMP returns value with same sign as *a-*b
 B compqd(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->jt&~JTFLAGMSK); do{if(j=QCOMP(*b,*a))R SGNTO0(j); if(!--n)break; ++a; ++b;}while(1); R a<b;} // QCOMP returns value with same sign as *a-*b
 
-#define CF(f)            int f(SORT * RESTRICT sortblok,I a,I b)
+#define CF(f)            B f(SORT * RESTRICT sortblok,I a,I b)
 
 // if expr true (1), return 1; if 0, return -1
 #define RETGT(x) (((x)<<1)-1) 

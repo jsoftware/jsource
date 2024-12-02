@@ -1663,6 +1663,9 @@ if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
     z=. 'jqt-',(tolower UNAME),(('arm64'-:9!:56'cpu')#'-arm64'),((y-:'slim')#'-slim'),'.tar.gz'
   end.
   z1=. 'libjqt.',suffix
+elseif. IFWA64 do.
+  z=. 'jqt-win-arm64-slim.zip'
+  z1=. 'jqt.',suffix
 elseif. IFWIN do.
   z=. 'jqt-win',((y-:'slim')#'-slim'),'.zip'
   z1=. 'jqt.',suffix
@@ -1721,9 +1724,11 @@ tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt6Core.dll'
 y=. (*#y){::0;y
 
 smoutput 'Installing Qt library...'
-if. IFWIN do.
+if. IFWA64 do.
+  z=. 'qt68-win-arm64-slim.zip'
+elseif. IFWIN do.
   z=. 'qt68-win',((y-:'slim')#'-slim'),'.zip'
-else.
+elseif. do.
   z=. 'qt68-mac',((y-:'slim')#'-slim'),'.zip'
 end.
 'rc p'=. httpget_jpacman_ www,'/qtlib/',z

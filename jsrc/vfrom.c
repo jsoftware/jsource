@@ -622,7 +622,8 @@ DF2(jtfrom){A z;
  RETF(z);
 }   /* a{"r w main control */
 
-F2(jtsfrom){
+DF2(fork242);
+DF2(jtsfrom){
  if(likely(!ISSPARSE((AT(w))))){
   // not sparse, transfer to code to handle it if nonempty numeric.  If nonnumeric (must be boxed),
   // if the arg is empty, the details are tricky depending on the type and we just revert to boxed code
@@ -657,7 +658,8 @@ F2(jtsfrom){
 mustbox:;
  }
  // If we couldn't handle it as a special case, do it the hard way
- A z; RETF(from(IRS1(a,0L,1L,jtbox,z),w));
+// obsolete  A z; RETF(from(IRS1(a,0L,1L,jtbox,z),w));  // reverting by hand
+ RETF(fork242(jt,a,w,self))  // revert using the fork for (f@[ g ])
 }    /* (<"1 a){w */
 
 static F2(jtmapx);

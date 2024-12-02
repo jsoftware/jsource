@@ -88,7 +88,7 @@ typedef A                (*AF)();
 typedef UI               (*UF)();
 typedef I                (*VF)();  // action verb for atomic dyad
 typedef I                (*VA1F)();  // action verb for atomic monad
-typedef void             (*VARPSF)();  // action verb for atomic reduce/prefix/suffix routine
+typedef I                (*VARPSF)();  // action verb for atomic reduce/prefix/suffix routine
 typedef B                (*CMP)();    /* comparison function in sort     */
 typedef A                  X;
 typedef struct {X n,d;}    Q;

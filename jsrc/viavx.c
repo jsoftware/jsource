@@ -774,7 +774,7 @@ A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079
 inplace:;
    jtiosc(jt,mode,1,an,wn,1,1,a,w,z); // simple sequential search without hashing.
    *(z==w?&AT(z):(I*)jt->shapesink)=INT;  // if inplace, force result to INT (op must not be EPS)
-   RETF(z);
+   R z;  // not RETF because of FORKEY
   }
 
   //  See if we need to abort owing to shapes.
@@ -965,7 +965,7 @@ inplace:;
    // creating and processing the small-range table itself, so we will let it do that.  We return a special short block (LSB=1)
    // that indicates the length of the key (AN) and the start and range of the keys (AK and AM)
    A z; GAT0(z,INT,1,0); AN(z)=k; AK(z)=datamin; AM(z)=p;  // allocate and return
-   RETF((A)((I)z+1));  // return the tagged address
+   R (A)((I)z+1);  // return the tagged address (not RETF)
   }
 // testing  p = (UI)MIN(IMAX-5,(HASHFACTOR*p));  // length we will use for hashtable, if small-range not used
 

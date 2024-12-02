@@ -11,7 +11,7 @@
 #define RANKINGSUMSCAN(p)   \
  {I s=0; TTYPE *u=yv; TTYPE *uend=u+(p); while(u!=uend){t=*u; *u=(TTYPE)s; s+=t; ++u;}}
 // create totals of occurrences in *yv (which is yv biased by min); +/\; then for each input value, copy in ordinal
-// and then increment the ordinal for next time 
+// and then increment the ordinal for next time   scaf use AVX sumscan
 #define RANKINGLOOP(T)   \
  {T*v=(T*)wv;  DQ(n, ++yu[*v++];); RANKINGSUMSCAN(rng.range); v=(T*)wv;  DQ(n, *zv++=yu[*v++]++;);}
 

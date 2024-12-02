@@ -700,7 +700,7 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtypew(adocv.cv,t),wn,wr,ws);
- I rc=((AHDRPFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
+ I rc=(adocv.f)(d,n,m,AV(w),AV(z),jt);
  if(unlikely((255&~EVNOCONV)&rc)){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
@@ -933,8 +933,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  zv=CAV(z); zk=d<<bplg(zt); 
  wv=CAV(w); wk=(0<=m0?d:d*m)<<bplg(wt);
  I rc=EVOK;
- DQ(zi-b, I lrc=((AHDRPFN*)adocv.f)(d,m,(I)1,wv,zv,jt); rc=lrc<rc?lrc:rc; zv+=zk; wv+=wk;);
- if(b){m=p-m*(zi-1); if(m>1){I lrc=((AHDRPFN*)adocv.f)(d,m,(I)1,wv,zv,jt); rc=lrc<rc?lrc:rc;}else{copyTT(zv,wv,d,zt,wt);}}
+ DQ(zi-b, I lrc=(adocv.f)(d,m,(I)1,wv,zv,jt); rc=lrc<rc?lrc:rc; zv+=zk; wv+=wk;);
+ if(b){m=p-m*(zi-1); if(m>1){I lrc=(adocv.f)(d,m,(I)1,wv,zv,jt); rc=lrc<rc?lrc:rc;}else{copyTT(zv,wv,d,zt,wt);}}
  if(255&rc){jsignal(rc); if(rc>=EWOV){RESETERR; R movfslash(a,ccvt(FL,w,0),self);}R0;}else R z;
 }    /* a f/\w */
 

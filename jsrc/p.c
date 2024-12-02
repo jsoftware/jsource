@@ -1024,6 +1024,7 @@ failparsestack: // here we encountered an error during stacking.  The error was 
                 // we call eformat with empty a to indicate 'stacking error'
    {C olderr=jt->jerr; RESETERR jt->parserstackframe.parseroridetok=(US)pt0ecam; jsignal(olderr);}
 failparseeformat:
+   jt->parserstackframe.parserstkend1=stack;  // move stack-end down so eformat doesn't overwrite it
    jteformat(jt,ds(CENQUEUE),mtv,zeroionei(0),0);  // recreate the error with the correct spacing
 failparse:
    // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first, and also the virtual since it has no flags

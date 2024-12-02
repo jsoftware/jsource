@@ -558,8 +558,8 @@ extern F2(jtnouninfo2);
 extern F2(jtobverse);
 // extern F2(jtodd);
 extern I jtoldsize(J,X);
-extern F2(jtordstat);
-extern F2(jtordstati);
+extern DF2(jtordstat);
+extern DF2(jtordstati);
 extern F2(jtoutstr);
 extern DF2(jtover);
 extern F2(jtpco2);
@@ -593,7 +593,7 @@ extern DF2(jtscy2);
 extern DF2(jtscz2);
 extern DF2(jtself12);
 extern F2(jtsetfv);
-extern F2(jtsfrom);
+extern DF2(jtsfrom);
 #if SY_64
 extern F2(jtsfu);
 #endif

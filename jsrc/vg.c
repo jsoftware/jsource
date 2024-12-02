@@ -778,24 +778,25 @@ F2(jtdgrade2){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2
   }  \
  }
 
-F2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
+DF2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  I i=NRANDS-1;  // i points to the next random number to draw
  ARGCHK2(a,w);
  n=AN(w); wt=AT(w); RE(j=i0(a));
- if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R from(a,grade2(w,w));  // if not int/float, or short, or not (atom a and list w), do full grade
+// obsolete  if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R from(a,grade2(w,w));  // if not int/float, or short, or not (atom a and list w), do full grade
+ if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R jthook2cell(jt,a,w,self);  // if not int/float, or short, or not (atom a and list w), do full grade
  if((UI)j>=(UI)n){j+=n; ASSERT((UI)j<(UI)n,EVINDEX);}
  // deal a bunch of random floats to provide pivots.  We reuse them if needed
  RZ(q=jtrollksub(jt,sc(NRANDS),zeroionei(0))); qv=DAV(q);
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */
 
-F2(jtordstati){A t;I n,wt;
+DF2(jtordstati){A t;I n,wt;
  ARGCHK2(a,w);
  n=AN(w); wt=AT(w);
- if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R from(a,grade1(w));
- RZ(t=ordstat(a,w));   // Get the value of the ath order statistic, then look up its index
+ if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R jthook1cell(jt,w,self);  // revert if not int/float, len>4, and (atom a & list w)
+ RZ(t=jtordstat(jt,a,w,0));   // Get the value of the ath order statistic.  No self, because it can't revert (checks are identical)
  I j=0;  // =0 needed to stifle warning
- if(wt&FL){D p=DAV(t)[0],*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}
+ if(wt&FL){D p=DAV(t)[0],*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}  // get index for the value we found
  else     {I p=AV(t)[0],*v= AV(w); DO(n, if(p==*v++){j=i; break;});}
  R sc(j);
 }    /* a {/:w */

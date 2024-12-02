@@ -635,10 +635,11 @@ static float NOOPTIMIZE altcallf(ALTCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
 /* v         - result data area                            */
 /* alternate - whether to use alternate calling convention */
 
-static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alternate){
+static void docall(FARPROC fpi, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alternate){
 #define vdresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'*')+CCM(w,'n')
  CCMWDS(vdres) CCMCAND(vdres,cand,zl)   // see if zl is one of the direct results, which can be moved into the result directly
  ZEROUPPER; // see comment in io.c
+ void *fp=fpi;  // silence compiler by erasing the type of the input function
  if(CCMTST(cand,zl)){I r;
   // result has integer type.  Call with that linkage
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);

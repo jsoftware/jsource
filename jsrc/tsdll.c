@@ -396,6 +396,6 @@ typedef I (_stdcall *PROC)();
 CDPROC I _stdcall objxxx(void* obj,I a,I b){return a+b;}
 CDPROC D _stdcall objddd(void* obj,D a,D b){return a+b;}
 //PROC vtable[]={&(PROC)objxxx,&(PROC)objddd};
-CDPROC PROC vtable[]={(PROC)objxxx,(PROC)objddd};
+CDPROC PROC vtable[]={(PROC)objxxx,(PROC)(void *)objddd};
 CDPROC PROC* object=vtable;
 CDPROC I _stdcall obj_add(){return(I)&object;}

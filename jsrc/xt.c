@@ -23,6 +23,7 @@
 #endif
 
 #include "j.h"
+#include "w.h"
 #include "cpuinfo.h"
 
 #if !SY_WINCE && (SY_WIN32 || (SYS & SYS_UNIX))
@@ -237,16 +238,25 @@ __int64 GetMachineCycleCount()
 F1(jttss){ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 
 // 6!:2 dyad
-DF2(jttsit2){A z;D t;I n;
+DF2(jttsit2){A z;D t;I n;I stackallo=0;
  F2RANK(0,1,jttsit2,self);
  RE(n=i0(a));
- RZ(w=ddtokens(vs(w),4+1+!!EXPLICITRUNNING));   // tokenize outside of timer
- t=qpc(); 
- A *old=jt->tnextpushp; DQ(n, STACKCHKOFL z=PARSERVALUE(parseforexec(w)); if(!z)break; tpop(old););  // no tpop on error
- t=qpc()-t;
- RZ(z);
- R scf(n?t/(n*pf):0);
+ RZ(w=ddtokens(vs(w),4+1+!!EXPLICITRUNNING));   // tokenize outside of timer.  We time as if the sentence were executed in an explicit defn
+ // apply pppp to the sentence.  Create a 1-sentence block of control words
+ A cwa; GAT0(cwa,LIT,2*sizeof(CW),1) AN(cwa)=1; CW *cwv=(CW*)voidAV1(cwa); cwv[0].tcesx=0+(CBBLOCK<<TCESXTYPEX); cwv[1].tcesx=AN(w);  // allo 2 SWs, of which 1 is thr end marker
+ RZ(w=mkwris(w)) RZ(pppp(jt,w,cwa))  // make sure we can write to w, and perform pppp on it
+ I wn=AN(w); A *wv=AAV(w);  // get #words in sentence after pppp, and their address
+ STACKCHKOFL  // in case the sentence calls 7!:2 again, break the loop
+ if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop!=0)){  // We don't need a new stack frame if there is one already and debug is off
+  RZ(deba(DCPARSE,wv,(A)wn,0L)); stackallo=1;
+ }
+ A *old=jt->tnextpushp;
+ t=qpc(); DQ(n, z=PARSERVALUE(parsea(wv,wn)); if(!z)break; tpop(old);); t=qpc()-t; // Run the sentence.  No need to run as exec since the result doesn't escape.  no tpop on error.
+ if(unlikely(stackallo))debz();
+ RZ(z);  // if error, fail the timing request
+ R scf(n?t/(n*pf):0);   // convert processor freq to seconds, get time per iteration
 }
+
 
 // 6!:2 monad
 F1(jttsit1){R tsit2(num(1),w);}

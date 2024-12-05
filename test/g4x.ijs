@@ -208,7 +208,9 @@ assert. b < 1e6+7!:0''
 assert. 1e6 -: # a
 a =. i. 1e6
 b =. 7!:0''
-NB. 1e6 1e6 -: (# a_:) , # a   NB. crashes
+1e6 1e6 -: (# a_:) , # a
+assert. 'value error' -: ". etx 'a + 5'
+a =. i. 1e6
 assert. 2e6 -: # a_: , a   NB. deleted, stack deferred
 a =. i. 1e6
 b =. 7!:0''

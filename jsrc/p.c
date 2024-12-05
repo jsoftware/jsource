@@ -286,12 +286,14 @@ static SYMWALK(jtchkval0k, I,INT,1,1, AT(d->val)&NOUN&&AK(d->val)==0?SEGFAULT:0 
 // Run parser, creating a new debug frame.  Explicit defs, which make other tests first, go through jtparsea except during debug/pm
 // the result has bit 0 set if final assignment
 // JT flags indicate whether call comes from ".
-F1(jtparse){F1PREFIP;A z;
+F1(jtparse){F1PREFIP;A z;I stackallo=0;
  ARGCHK1(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
- RZ(deba(DCPARSE,queue,(A)m,0L));  // We don't need a new stack frame if there is one already and debug is off
+ if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop!=0)){  // We don't need a new stack frame if there is one already and debug is off
+  RZ(deba(DCPARSE,queue,(A)m,0L)); stackallo=1;
+ }
  z=jtparsea(jtinplace,queue,m);
- debz();
+ if(unlikely(stackallo))debz();
  R z;
 }
 
@@ -335,7 +337,7 @@ static A virthook(J jtip, A f, A g){
 // Incoming y is the value attached to the symbol & has QCGLOBAL semantics, result is same value with QCFAOWED semantics
 // result is the value, possibly with FAOWED set
 static A nameundco(J jt, A name, A y){F1PREFIP;
- if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(y);   // in "., we can't do this because the value is not protected by FAOWED, so indic that we need to fa
+ if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(y);   // in "., the result value from ". has not been protected by FAOWED, and might be prematurely freed.  So we don't free here, set FAOWED and return indicating indic that we need to fa
  A locfound=jt->locsyms; if(unlikely(((I)y&QCGLOBAL)!=0))locfound=syrdforlocale(name);  // get locale to use.  This re-looks up global names, but they should be rare in name_:
  WRITELOCK(locfound->lock)
  jtprobedel((J)((I)jt+NAV(name)->m),NAV(name)->s,NAV(name)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
@@ -1080,7 +1082,7 @@ failparse:
       if(unlikely(yflags&QCNAMEABANDON)){
 abandname:;
        sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  sv has QCFAOWED semantics
-       y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // coco will set FAOWED if it didn't fa() the value; transfer that to sv
+       y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // undco will set FAOWED if it didn't fa() the value; transfer that to sv
       }else y=QCWORD(sv);  // not name_:, just use the value
      }else{y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd
     }else{

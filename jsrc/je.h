@@ -1006,6 +1006,7 @@ extern void     mvc(I,void*,I,void*);
 extern B        nameless(A);
 extern I        plus1I2II AH2A(I,I,I2*,I*,I*,J);
 extern I        plus1I4II AH2A(I,I,I4*,I*,I*,J);
+extern I        pppp(J,A,A);
 extern D        qpf(void);
 extern A        relocate(I,A);
 extern I        remii(I,I);

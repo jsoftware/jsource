@@ -1068,7 +1068,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // type is the m operand to m : n, indicating part of speech to be produced
 // We preparse what we can in the definition
 // Return 0 if error
-static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(fragbuf)/sizeof(fragbuf[0])-1;  // leave 1 pad word before frag to allow for overfetch in parsea
+I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(fragbuf)/sizeof(fragbuf[0])-1;  // leave 1 pad word before frag to allow for overfetch in parsea
  // Go through the control-word table, looking at each sentence
  I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
  A *lv=AAV(l);  // address of words in sentences
@@ -1079,7 +1079,6 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=size
    // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
    A *lvv=lv+(cwv[j].tcesx&TCESXSXMSK);  // pointer to sentence words
    I startx=0;   // start and end+1 index of sentence
-
    // loop till we have found all the parens
    while(1){
     // Look forward for )

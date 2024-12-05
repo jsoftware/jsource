@@ -18,7 +18,7 @@
 #include "j.h"
 #include "p.h"
 
-
+// evaluate null-terminated sentence s
 A jteval(J jt,C*s){R PARSERVALUE(parseforexec(tokens(cstr(s),1+!!EXPLICITRUNNING)));}
 
 // parse string s, producing an ACV, and apply the ACV as either a monad or a dyad.  w=0 if monad.  Result can be anything; use only when you control a, w, and s

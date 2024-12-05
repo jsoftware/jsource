@@ -126,7 +126,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   L *asym=&SYMORIGIN[cv->indexsym];   // pointer symbol-table entry, index then item
   ASSERT(!(asym->flag&LREADONLY),EVRO)  // it had better not be readonly now
   fa(asym->val);  // if there is an incumbent value, discard it
-  A xx; GAT0(xx,INT,1,0); IAV0(xx)[0]=-1;  // -1 is the iteration number if there are no iterations
+  A xx; GAT0(xx,INT,1,0); IAV0(xx)[0]=-1; AFLAGINIT(xx,AFRO) // -1 is the iteration number if there are no iterations; mark value RO to prevent xxx_index =: xxx_index + 1 from changing inplace
   ACINITZAP(xx); asym->val=xx; asym->valtype=ATYPETOVALTYPE(INT); // raise usecount, install as value of xyz_index
   rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.  note we can free from a boxed array now
   ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free

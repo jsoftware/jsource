@@ -246,6 +246,8 @@ DF2(jttsit2){A z;D t;I n;I stackallo=0;
  A cwa; GAT0(cwa,LIT,2*sizeof(CW),1) AN(cwa)=1; CW *cwv=(CW*)voidAV1(cwa); cwv[0].tcesx=0+(CBBLOCK<<TCESXTYPEX); cwv[1].tcesx=AN(w);  // allo 2 SWs, of which 1 is thr end marker
  RZ(w=mkwris(w)) RZ(pppp(jt,w,cwa))  // make sure we can write to w, and perform pppp on it
  I wn=AN(w); A *wv=AAV(w);  // get #words in sentence after pppp, and their address
+ // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name to -1
+ if(!EXPLICITRUNNING){DO(wn, if(QCTYPE(wv[i])==QCNAMEASSIGNED && NAV(QCWORD(wv[i]))->flag&NMLOC+NMILOC+NMIMPLOC==0)NAV(QCWORD(wv[i]))->bucket=-1;)}
  STACKCHKOFL  // in case the sentence calls 7!:2 again, break the loop
  if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop!=0)){  // We don't need a new stack frame if there is one already and debug is off
   RZ(deba(DCPARSE,wv,(A)wn,0L)); stackallo=1;

@@ -318,7 +318,7 @@ A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[buc
 A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
- if(likely((b = u->bucket)!=0)){
+ if(likely((b = u->bucket)>0)){  // if there is bucket info, use it
   R probelocalbuckets(SYMORIGIN,a,LXAV0(locsyms)[b],u->bucketx);  // look up using bucket info
  }else{
   // No bucket information, do full search.  This includes names that don't come straight from words in an explicit definition
@@ -334,7 +334,7 @@ L *jtprobeislocal(J jt,A a,A lsym){NM*u;I bx;L *sympv=SYMORIGIN;
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
  I4 b=u->bucket;
- if((likely(b!=0))){
+ if((likely(b>0))){
   LX lx = LXAV0(lsym)[b];  // index of first block if any
   if(unlikely(0 > (bx = ~u->bucketx))){
    // positive bucketx (now negative); that means skip that many items and then do name search
@@ -534,7 +534,7 @@ A jtsyrdnobuckets(J jt,A a){A g,res;
  I fndtblflg;  //  in the rare case of n___1, we have to look to see if the name was local
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(!NAV(a)->bucket))if(res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){rapos(QCWORD(res),res); R res;}  // return if found locally from name
+  if(unlikely(NAV(a)->bucket)<=0)if(res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){rapos(QCWORD(res),res); R res;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
   fndtblflg=0;  // through this path only global tables are found
  } else{RZ(g=sybaseloc(a)); fndtblflg=AR(g);}  // if locative, start in locative locale & remember table type
@@ -706,13 +706,13 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   if(g==jt->global){  // global assignment.
    // check for non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
-   I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(AR(jt->locsyms),ARNAMEADDEDX));   // 0 if bucketx positive (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
-   localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def); now non0 if valid & known to have no assignment
-   ASSERTSUFF(localnexist||!jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
+   I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(AR(jt->locsyms),ARNAMEADDEDX));   // 0 if bucketx nonneg (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
+   localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def) OR if neg (name in sentence for 6!:2); now non0 if valid & known to have no assignment
+   ASSERTSUFF(likely(localnexist!=0)||!jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
  }
  RZ(g)  // g has the locale we are writing to
- I valtype=ATYPETOVALTYPE(wt);  // value to install.  It will have QCGLOBAL semantics
+ I valtype=ATYPETOVALTYPE(wt);  // value flags to install into value block.  It will have QCGLOBAL semantics
 
  if(unlikely((wt&NOUN)==0)){  // writing to ACV
   ACVCACHECLEAR; // invalidate all previous ACV lookups
@@ -729,34 +729,34 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  // the name was invalid anyway and is subject to having the value removed
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
  if((AR(g)&ARLOCALTABLE)!=0){  // if assignment to a local table (which might not be jt->locsyms)
-  I4 symx=NAV(a)->symx;
+  I4 symx=NAV(a)->symx;   // fetch the symbol slot assigned to this name (0 if none)
   e=likely((SGNIF(AR(g),ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=0;   // indicate we have no lock to clear
  }else{  // global table
-  SYMRESERVE(1)
+  SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
   valtype|=QCGLOBAL;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the table
   // if we are writing to a non-local table, update the table's Bloom filter.
   BLOOMOR(g,bloom);  // requires writelock on g
+  // A couple of debugging flags are set during assignment.  We don't bother for local names
+  if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - needed only for globals
+  e->sn=jt->currslistx;  // Save the script in which this name was defined - meaningful only for globals
  }
  // ****** if g is a global table, we have a write lock on the locale, which we must release in any error paths.  g=0 otherwise *******
 
- // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
  A x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
- if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&((e->valtype&QCNOUN)==0))x=redef(w,x);  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
- // *** this is the last subroutine call till the end - registers available ***
+ // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
+ if(likely(x!=w)){
+  // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
+  if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&((e->valtype&QCNOUN)==0))x=redef(w,x);  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
 
- I xaf;  // holder for nvr/free flags
- {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x
- e->sn=jt->currslistx;  // Save the script in which this name was defined
- ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only name (xxx_index), fail
- if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
+  ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only name (xxx_index) with new value, fail
+  I xaf;  // holder for nvr/free flags
+  {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x
 
- if(likely(!(AFNJA&xaf))){
-  // Normal case of non-memory-mapped assignment.
-  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
-  if(likely(x!=w)){
+  if(likely(!(AFNJA&xaf))){
+   // Normal case of non-memory-mapped assignment.
    e->valtype=valtype;  // set the value type of the new value
    e->val=w;  // store the new value to free w before ra()
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
@@ -782,18 +782,18 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
     rarecur(w);  // if zap not allowed, just ra() w, known recursive-if-recursible so this is quick.  Subroutine call.  w may be inplaceable but not zappable so no rapos; may be sparse so we must allow 1 small recursion then
    }
 
-  }else x=0;  // repurpose x to be the value needing fa
- }else{  // x exists, and is either read-only or memory-mapped
-  ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
-  if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
+  }else{  // x exists, is either read-only or memory-mapped, and is not rewriting the previous value
+   ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
+// obsolete    if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
    // no need to store valtype - that can't change from noun (because must be DIRECT below)
    I wt=AT(w); I wn=AN(w); I wr=AR(w); I m=wn<<bplg(wt);  // we will move the flags/data from w to the preallocated area x
    ASSERTGOTO((wt&DIRECT)>0,EVDOMAIN,exitlock);  // boxed, extended, etc can't be assigned to memory-mapped array
    ASSERTGOTO(AM(x)>=m,EVALLOC,exitlock);  // ensure the file area can hold the data.  AM of NJA is allosize
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
+// obsolete    }
+   x=0;  // repurpose x to be the value needing fa - indicate no further fa needed
   }
-  x=0;  // indicate no further fa needed
- }
+ }else x=0;  // repurpose x to be the value needing fa
  // x here is the value that needs to be freed
  if(g!=0)WRITEUNLOCK(g->lock)else jtinplace=(J)((I)jtinplace|JTASGNWASLOCAL);  // if global, release lock; else indic local in return 
  // ************* we have released the write lock

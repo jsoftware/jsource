@@ -859,7 +859,7 @@ typedef DST* DC;
 #define QCVERB  ((VERBX-LASTNOUNX)+1)  // 8
 #define QCLPAR  ((LPARX-LASTNOUNX)+1)  // 9
 #define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10
-#define QCNAMEASSIGNED ((NAMEX-LASTNOUNX)+1) // name followed by copula
+#define QCNAMEASSIGNED ((NAMEX-LASTNOUNX)+1) // 2 name followed by copula
 // bit 4 and code points 12-15 depend on the context.
 // In the words of a sentence, created by enqueue(), they are as follows:
  // the last AT type is RPAR, which is 11 (30-20+1)
@@ -870,7 +870,7 @@ typedef DST* DC;
  // named lookups have bit 4 set, and use other flags to indicate the type of name
 #define QCISLKPNAME 0x10   // name requires lookup (i. e. not assigned)
 #define QCNAMEBYVALUE 0x01   // combining flag - name is mnuvxy type
-#define QCNAMEABANDON 0x08 // combining flag - name has :: - set only if not assigned
+#define QCNAMEABANDON 0x08 // combining flag - name has _: - set only if not assigned
 // In the LSBs returned by syrd()  (stored by symbis()), bit 4 and the higher code points have QCGLOBAL semantics:
 #define QCGLOBALX 4
 #define QCGLOBAL 0x10  // set if the name was found in a global table
@@ -969,7 +969,7 @@ typedef struct {
 
 // *********************** name block ************************
 
-// NM struct: pointed to by the name field of a symbol, and used for lookups.  Names are allocated with rank 1 (?? but it means first cacheline is unused)
+// NM struct: pointed to by the name field of a symbol (NAV(sym->name)), and used for lookups.  Names are allocated with rank 1 (?? but it means first cacheline is unused)
 typedef struct{
  I bucketx; // (for local simple names, only if bucket!=0) the number of chain entries to discard before
 //   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry
@@ -980,7 +980,7 @@ typedef struct{
  A cachedref; // (only for cachable NAME blocks): the value to be used for this name entry, if it is not a noun.  Non-QC semantics.  It may be (1) in a nameless modifier, the A block for the value, which has PERMANENT AC
                // (2) otherwise, the nameref for the name block, which may or may not have the pointer to the looked-up value.  This nameref is not PERMANENT AC and must be deleted when the name is deleted
  LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table
- I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local
+ I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local.  -1 for names in 6!:2 from keyboard, to bypass the check for local names in global assignment
 //   0 if chain index not known or name is a locative
  UI4 hash;  // hash for non-locale part of name
  UC m; // length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)  scaf should move to second cacheline

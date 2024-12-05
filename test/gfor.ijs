@@ -321,7 +321,15 @@ a_index =. a_index
 end.
 0
 )
-'read-only data' -: f etx ''
+0 = f''
+f =: 3 : 0
+for_a. 1 2 3 do.
+a_index =. a_index + y
+end.
+0
+)
+'read-only data' -: f etx 0
+'read-only data' -: f etx 1
 
 NB. xyz not readonly
 f =: 3 : 0

@@ -557,7 +557,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.  Could just treat as undef
        y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCGLOBAL semantics, as y does.
        raposlocalqcgsv(s->val,s->valtype,y);  // ra() the value to match syrd.  type has global flag clear
-      } else if(likely((buck=NAV(QCWORD(y))->bucket)!=0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
+      } else if(likely((buck=NAV(QCWORD(y))->bucket)>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
        I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
        if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table
@@ -719,7 +719,7 @@ endname: ;
         }else zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue)));  // global assignment, get slot address
         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and usecount==2 (or 3 if NJA block) since we have raised the count of this block already if it is named and to be operated on inplace.
-        // The block can be virtual, if it is x/y to xdefn.  We must never inplace to a virtual block
+        // The block can be virtual, if it is x/y to xdefn.  We must never inplace to a virtual block or to readonly (xxx_index_ =: xxx_index_ + 1)
         zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+ACUC2))?zval:0; jt->zombieval=zval;  // compiler should generate BT+ADC
         pmask=(pt0ecam>>(PMASKSAVEX+2))&1;  // restore dyad bit after calls
        }

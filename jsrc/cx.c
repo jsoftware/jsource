@@ -891,9 +891,9 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
   for(k=actstv[bucket];k;++compcount,k=sympv[k].next){  // k chases the chain of symbols in selected bucket
    if(NAV(tv)->m==NAV(sympv[k].name)->m&&!memcmpne(NAV(tv)->s,NAV(sympv[k].name)->s,NAV(tv)->m)){
     // match found.  this is a local name.  Replace it with the shared copy, flag as shared, set negative bucket#
-    // suppress this step if the type is ornamented, i. e. if it is name:: - then we need a flagged copy
+    // suppress this step if the type is ornamented, i. e. if it is name_: - then we need a flagged copy
     A oldtv=tv;
-    if(likely(!(AT(tv)&NAMEABANDON))){  // not name::
+    if(likely(!(AT(tv)&NAMEABANDON))){  // not name_:
      tv=sympv[k].name;  // use shared copy
      if(recur){ras(tv); fana(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old.  No audit on the fa() since tstack is temporarily invalid
      NAV(tv)->flag|=NMSHARED;  // tag the shared copy as shared

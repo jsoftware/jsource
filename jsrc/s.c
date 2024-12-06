@@ -268,7 +268,7 @@ B jtprobedel(J jt,C*string,UI4 hash,A g){B ret;
 }
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table.  l is encoded in low bits of jt
-// result is addr/global/flags for name (i. e. QCGLOBAL semantics), or 0 if not found
+// result is addr/global/flags for value (i. e. QCGLOBAL semantics), or 0 if not found
 // locking is the responsibility of the caller
 A jtprobe(J jt,C*string,UI4 hash,A g){
  RZ(g);
@@ -285,7 +285,7 @@ A jtprobe(J jt,C*string,UI4 hash,A g){
  R 0;  // not found
 }
 
-// a is A for name; result is addr/0/flags for name (i. e. QCGLOBAL semantics), or 0 if not found
+// a is A for name; result is addr/0/flags for value (i. e. QCGLOBAL semantics), or 0 if not found
 // If the value is empty, return 0 for not found
 // We know that there are buckets and that we should search them
 // Take no locks
@@ -311,10 +311,10 @@ A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[buc
  }
 }
 
-// a is A for name; result is addr/0/flags for name (i. e. QCGLOBAL semantics), or 0 if not found
+// a is A for name; result is addr/0/flags for value (i. e. QCGLOBAL semantics), or 0 if not found
 // If the value is empty, return 0 for not found
 // Take no locks because local
-// Use buckets if present: was are called only if buckets will be valid, i. e. 
+// Use buckets if present
 A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block

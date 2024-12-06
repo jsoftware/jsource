@@ -842,7 +842,7 @@ typedef DST* DC;
 // LSB codes in value pointers.  Set by enqueue() and symbis(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
 // type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
 // in the words of an explicit definition the words have QCNAMELKP semantics in bit 4:
-#define QCMASK 0x1fLL   // all the LSB flags
+#define QCMASK 0x3fLL   // all the LSB flags (bit 5 not used yet)
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x

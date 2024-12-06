@@ -246,9 +246,39 @@ DF2(jttsit2){A z;D t;I n;I stackallo=0;
  A cwa; GAT0(cwa,LIT,2*sizeof(CW),1) AN(cwa)=1; CW *cwv=(CW*)voidAV1(cwa); cwv[0].tcesx=0+(CBBLOCK<<TCESXTYPEX); cwv[1].tcesx=AN(w);  // allo 2 SWs, of which 1 is thr end marker
  RZ(w=mkwris(w)) RZ(pppp(jt,w,cwa))  // make sure we can write to w, and perform pppp on it
  I wn=AN(w); A *wv=AAV(w);  // get #words in sentence after pppp, and their address
- // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name to -1
- if(!EXPLICITRUNNING){DO(wn, if(QCTYPE(wv[i])==QCNAMEASSIGNED && NAV(QCWORD(wv[i]))->flag&NMLOC+NMILOC+NMIMPLOC==0)NAV(QCWORD(wv[i]))->bucket=-1;)}
- STACKCHKOFL  // in case the sentence calls 7!:2 again, break the loop
+ // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name;
+ // to whatever is in the current local symbol table, or -1 if there is none
+ DO(wn,
+  if(QCTYPE(wv[i])==QCNAMEASSIGNED || (QCTYPE(wv[i])&QCISLKPNAME)) { //  if a name
+   if((NAV(QCWORD(wv[i]))->flag&NMLOC+NMILOC+NMIMPLOC)==0){  // if locative, leave bucket info empty
+    if(!EXPLICITRUNNING){NAV(QCWORD(wv[i]))->bucket=-1;  // run from keyboard, use -1 for bucket to suppress check for local sym
+    }else{  // we are in an explicit definition
+     // look up the name in the local symbol table
+     UI4 hash=NAV(QCWORD(wv[i]))->hash; A g=jt->locsyms;  // hash, and pointer to (local) symbol table to look in
+     I4 bucket=(I4)SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // bucket number of name hash
+     NAV(QCWORD(wv[i]))->bucket=bucket;  
+     LX symx=LXAV0(g)[bucket];  // get index of start/next of chain.  0 at EOC.  flagged if the item pointed to is not PERMANENT 
+     L *sympv=SYMORIGIN;  // base of symbol table
+     L *sym=sympv+symx;  // first/next symbol address - might be the free root if symx is 0
+     I symno=0;  // # symbols in chain before the one we found
+     NOUNROLL while(SYMNEXTISPERM(symx)){  // loop is unrolled 1 time.  To match calclocalbuckets, we count only the permanent symbols
+      // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
+      IFCMPNAME(NAV(sym->name),NAV(QCWORD(wv[i]))->s,NAV(QCWORD(wv[i]))->m,hash,goto foundsym;)     // (1) exact match - if there is a value, return it.  valtype has QCGLOBAL semantics
+      sym=sympv+(symx=sym->next);  // move to next symbol.  symx becomes invalid after last permanent
+      ++symno;  // advance number of symbol being looked up
+     }
+     NAV(QCWORD(wv[i]))->bucketx=symno; NAV(QCWORD(wv[i]))->symx=0;  // the symbol was not found in the local symbol table.  bucketx will be the # permanent symbols, with no local symbol#
+     if(0){
+foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNEXT(symx) its index, symno the position in chain
+      NAV(QCWORD(wv[i]))->bucketx=~symno;  // install complement of position in chain to indicate found position
+      NAV(QCWORD(wv[i]))->symx=AR(jt->locsyms)&ARLCLONED?0:SYMNEXT(symx);  // install symbol number if this is not a cloned definition
+       // note: we don't have to worry about erasing references because symbols might escape from a modifier: the result of the sentence is unused.  We have slightly better bucket info than usual, no crime
+     }
+    }
+   }
+  }
+ )
+ STACKCHKOFL  // in case the sentence calls 6!:2 again, break the loop
  if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop!=0)){  // We don't need a new stack frame if there is one already and debug is off
   RZ(deba(DCPARSE,wv,(A)wn,0L)); stackallo=1;
  }

@@ -620,6 +620,7 @@ endname: ;
 
      // names have been resolved
      // y has the resolved value, which has the 4-bit QC type with QCFAOWED semantics (QCFAOWED set if a fa is needed on the value)
+     // scaf it would be good to remember LOCAL as part of QCFAOWED so that a local with AC=2 could just decr without RFO cycle
      // Look to see if it is ) or a conjunction,
      // which allow 2 or 1 more pulls from the queue without checking for an executable fragment.
      // Also, dyad executions sometimes allow two pulls if the first one is AVN.

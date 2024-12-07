@@ -138,8 +138,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  ARGCHK2(a,w);
  s=CAV(w); u=AV(a);
  n=AM(a);  // get # words not including any final NB.
- GATV0(z,BOX,n,1); x=v=AAV1(z);   //  allocate list of words; set running word pointer x, and static
-   // beginning-of-list pointer v, to start of list of output pointers
+ GATV0(z,BOX,n,1); x=v=AAV1(z);   //  allocate list of words; set running word pointer x, and static beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
   wl=u[1]-u[0]; wi=u[0]+s; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b=there are inflections, init to false
   if(wl==1||(b=((p!=C9)&(wi[wl-1]==CESC1))|(wi[wl-1]==CESC2)))e=spellin(wl,wi);else e=0;  // set b if inflections; if word has 1 character, or is a--. or ---:, convert to pseudocharacter
@@ -193,7 +192,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
   *x=QCINSTALLTYPE(*x,qct);  // insert the type-code for the word
   u+=2;   // advance to next word
  }
-
+ ASSERT(!(n==1&&!(AT(QCWORD(v[0]))&NAME+CONJ+ADV+VERB+NOUN)),EVSYNTAX)  // single word must not be anything that can't be a result
  // We have created the queue.  Here we check for special in-place forms.  If we find one, we
  // replace the verb/adverb with a version that performs in-place operation.
 

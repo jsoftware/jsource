@@ -1019,7 +1019,7 @@ rejectfrag:;
    // If the value was assigned, we can count on the assigned name to protect it, and we could just fa here.  BUT THAT COULD CRASH if the name is expunged
    // by another thread while we are using the value.  The case is very rare but we test for it, so we have to make it work.
    // If final assignment was local this can't happen, and we do the fa
-   if(unlikely(ISSTKFAOWED(z))){if(pt0ecam&JTASGNWASLOCAL){faowed(QCWORD(z),AC(QCWORD(z)),AT(QCWORD(z)))} else tpushna(QCWORD(z));}  // if the result needs a free, do it, possibly deferred via tpush
+   if(unlikely(ISSTKFAOWED(z))){if(pt0ecam&JTASGNWASLOCAL){faowed(QCWORD(z),AC(QCWORD(z)),AT(QCWORD(z)))} else tpushna(QCWORD(z));}  // if the result needs a free, do it, possibly deferred via tpush  scaf must handle tpush failure!
   }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
 failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.
                 // we set the error word# for the failing word and then resignal the error to get the spacing right and call eformat to annotate it
@@ -1051,17 +1051,11 @@ failparse:
   // NOW it is OK to return.  Insert the final-assignment bit (pt0ecam) into the return
   R (A)((I)QCWORD(z)+(pt0ecam&JTFINALASGN));  // this is the return point from normal parsing
 
- }else{A y;A sv=0;  // m<2.  Happens fairly often, and full parse can be omitted
-  if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it
+ }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
+  if(likely(nwds==1)){A sv=0;  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // 1-word sentence:
    I yflags=(I)queue[0];  // fetch the word, with QCGLOBAL semantics
-   // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
-   // overhead, because it happens enough to notice.  Since we know that a single word can never execute, we don't
-   // need to push the stack: we simply switch to using a stack for this word that points to the sentence
-   PSTK* ostk=jt->parserstackframe.parserstkbgn;  // save caller's stack - rest of parserstackframe is untouched and unused
-   PSTK localstack[PSTACKRSV]={{.a=(A)queue, .t=1}};  // stack to use, containing pointer to the sentence
-   jt->parserstackframe.parserstkbgn=&localstack[PSTACKRSV];  // point to originfo to use, +1
-
+   // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing overhead, because it happens enough to notice (conditions & function results)
    // No ASSERT - must get to the end to pop stack
    y=QCWORD(yflags);  // point y to the start of block
    if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up
@@ -1070,18 +1064,23 @@ failparse:
      if(likely((sv=s->val)!=0)){  // value has been assigned
       // the very likely case of a local name.  This value needs no protection because there is nothing more to happen in the sentence and the local symbol table is sufficient protection.  Skip the ra and the tpush
       I svt=s->valtype;  // type of stored value
-      if(likely((yflags&QCNAMEBYVALUE)|(svt&QCNOUN))){   // if noun or special name, use value
-       if(unlikely(yflags&QCNAMEABANDON)){raposlocal(sv,y); sv=(A)((I)sv+svt); goto abandname;}  // if abandoned, it loses the symbol-table protection and we have to protect it with ra
+      if(likely(svt&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
+       if(unlikely(yflags&QCNAMEABANDON))goto abandname;  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  Since rare, do so by re-looking up the name
        y=sv; // we will use the value we read
-      }else{raposlocal(sv,y); y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  We must ra the value as if it came from syrd.  Flags in sv=0 to ensure flags=0 in return value
+      }else{raposlocal(sv,y); y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  We must ra the value as if it came from syrd.  Flags in sv=s->val=0 to ensure flags=0 in return value
       goto gotlocalval;   // y has the unprotected value read.  We can use that.
      }
     }
+    // falling through here, the name was not local or not assigned.  Resolve it through a full search.  Since errors may happen we have to have a parser stackframe
+    //  Since we know that a single word can never execute, we don't need to push the stack: we simply switch to using a stack for this word that points to the sentence
+abandname:;
+    PSTK* ostk=jt->parserstackframe.parserstkbgn;  // save caller's stack - rest of parserstackframe is untouched and unused
+    PSTK localstack[PSTACKRSV]={{.a=(A)queue, .t=1}};  // stack to use, containing pointer to the sentence
+    jt->parserstackframe.parserstkbgn=&localstack[PSTACKRSV];  // point to originfo to use, +1
     if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it - undefname gives 0 without error
      // The name was found, not in a static local table.  sv has QCGLOBAL semantics
-     if(likely((yflags&QCNAMEBYVALUE)|((I)sv&QCNOUN))){   // if noun or special name, use value
+     if(likely((I)sv&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
       if(unlikely(yflags&QCNAMEABANDON)){
-abandname:;
        sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // undco will set FAOWED if it didn't fa() the value; transfer that to sv
       }else y=QCWORD(sv);  // not name_:, just use the value
@@ -1093,13 +1092,14 @@ abandname:;
      if(yflags&QCNAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error right away if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
      else y=unlikely(jt->jerr)?0:QCWORD(namerefacv(y, 0));    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error; if error already, just keep it
     }
-   }
-   if(likely(y!=0))if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // if not CAVN result, error
-   // If sv!=0, we found the value and ra()d it.  Match the ra with a tpush so that the value stays protected during further execution
-   if(likely(sv!=0)){if(likely(y!=0)){tpush(y);}else fa(sv);}  // undo the ra() in syrd.  In case someone else deletes the value, protect it on the tpop stack till it can be displayed
-gotlocalval:;  // local fetches can skip the tpush.  Value in y
-   jt->parserstackframe.parserstkbgn=ostk;  // restore pointer to caller's stack frame
+    // If sv!=0, we found the value and ra()d it.  Match the ra with a tpush so that the value stays protected during further execution
+    if(likely(sv!=0)){if(likely(y!=0)){tpush(y);}else fa(sv);}  // undo the ra() in syrd.  In case someone else deletes the value, protect it on the tpop stack till it can be displayed scaf handle tpush failure!
+    jt->parserstackframe.parserstkbgn=ostk;  // restore pointer to caller's stack frame
+   }  // any single-word sentence from enqueue must be a name or a CAVN, & thus here a valid CAVN 
+// obsolete else if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // not a name - might be something like =. - if not CAVN, error
+// obsolete if(likely(y!=0))
   }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse.  This result must not be passed into a sentence
+gotlocalval:;  // local fetches can skip the tpush.  Value in y
   R y;  // indicate not a final assignment - and may be 0
  }
 

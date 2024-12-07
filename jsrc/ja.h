@@ -1268,6 +1268,7 @@ extern void jfree4gmp(void*,size_t);
 //  which means that the only nonrecursive blocks that are tpush()ed are nonrecursiblw; and those are all sparse.  Thus, we recur on sparse arguments only
 // We can have an inplaceable but recursible block, if it was gc'd.  We never push a PERMANENT block, so that we won't try to free it
 // NOTE that PERMANENT blocks are always marked traversible if they are of traversible type, so we will not recur on them internally
+// If this fails, the block is not pushed but the system can keep running
 #define tpushcommon(x,cksparse,suffix) {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); \
                               if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(cksparse&&ISSPARSE(tt)))RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
 #define tpush(x)              tpushcommon(x,1,if(MEMAUDIT&2)audittstack(jt);)

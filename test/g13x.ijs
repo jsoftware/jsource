@@ -312,7 +312,13 @@ h  =: 3 : 'y h1 2'
 h1 =: 4 : 'x+y'
 
 f1 =: 3 : '+/'
-f2 =: 3 : '('
+'syntax error' -: ". etx '{{ ( }}'
+'syntax error' -: ". etx '{{ =. }}'
+'syntax error' -: ". etx '{{ =: }}'
+'domain error' -: ". etx '{{ ) }}'
+'syntax error' -: ". etx '{{ ( return. }}'
+'syntax error' -: ". etx '{{ =. return.  }}'
+'syntax error' -: ". etx '{{ =: return. }}'
 
 13!:0 [1
 'domain error' -:   f =: (3 : '%y' ) etx 'asdf'

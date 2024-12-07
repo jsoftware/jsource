@@ -1019,6 +1019,7 @@ rejectfrag:;
    // If the value was assigned, we can count on the assigned name to protect it, and we could just fa here.  BUT THAT COULD CRASH if the name is expunged
    // by another thread while we are using the value.  The case is very rare but we test for it, so we have to make it work.
    // If final assignment was local this can't happen, and we do the fa
+   jt->parserstackframe = oframe;  // pop the parser frame-stack before tpushna, which may fail
    if(unlikely(ISSTKFAOWED(z))){if(pt0ecam&JTASGNWASLOCAL){faowed(QCWORD(z),AC(QCWORD(z)),AT(QCWORD(z)))} else tpushna(QCWORD(z));}  // if the result needs a free, do it, possibly deferred via tpush  scaf must handle tpush failure!
   }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
 failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.
@@ -1031,16 +1032,11 @@ failparseeformat:
    jteformat(jt,ds(CENQUEUE),mtv,zeroionei(0),0);  // recreate the error with the correct spacing
 failparse:
    // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first, and also the virtual since it has no flags
-   stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment
+   stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment on error
    // fa() any blocks left on the stack that have FAOWED - but not the mark, which has a garbage address
    for(;stack!=stackend1;++stack)if(!PTISMARKFRONT(stack->pt)&&ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
+   jt->parserstackframe = oframe;  // pop the parser frame-stack
   }
-#if MEMAUDIT&0x2
-  audittstack(jt);
-#endif
-
-  // Still can't return till frame-stack popped
-  jt->parserstackframe = oframe;
 #if MEMAUDIT&0x2
   audittstack(jt);
 #endif
@@ -1065,7 +1061,7 @@ failparse:
       // the very likely case of a local name.  This value needs no protection because there is nothing more to happen in the sentence and the local symbol table is sufficient protection.  Skip the ra and the tpush
       I svt=s->valtype;  // type of stored value
       if(likely(svt&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
-       if(unlikely(yflags&QCNAMEABANDON))goto abandname;  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  Since rare, do so by re-looking up the name
+       if(unlikely(yflags&QCNAMEABANDON))goto abandname;  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  Since rare (especially for a single word!), do so by re-looking up the name
        y=sv; // we will use the value we read
       }else{raposlocal(sv,y); y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  We must ra the value as if it came from syrd.  Flags in sv=s->val=0 to ensure flags=0 in return value
       goto gotlocalval;   // y has the unprotected value read.  We can use that.
@@ -1092,10 +1088,10 @@ abandname:;
      if(yflags&QCNAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error right away if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
      else y=unlikely(jt->jerr)?0:QCWORD(namerefacv(y, 0));    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error; if error already, just keep it
     }
+    jt->parserstackframe.parserstkbgn=ostk;  // restore pointer to caller's stack frame before the tpush, which might fail
     // If sv!=0, we found the value and ra()d it.  Match the ra with a tpush so that the value stays protected during further execution
-    if(likely(sv!=0)){if(likely(y!=0)){tpush(y);}else fa(sv);}  // undo the ra() in syrd.  In case someone else deletes the value, protect it on the tpop stack till it can be displayed scaf handle tpush failure!
-    jt->parserstackframe.parserstkbgn=ostk;  // restore pointer to caller's stack frame
-   }  // any single-word sentence from enqueue must be a name or a CAVN, & thus here a valid CAVN 
+    if(likely(sv!=0)){if(likely(y!=0)){tpush(y);}else fa(sv);}  // undo the ra() in syrd.  In case someone else deletes the value, protect it on the tpop stack till it can be displayed
+   }  // any single-word sentence from enqueue must be a name or a CAVN
 // obsolete else if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // not a name - might be something like =. - if not CAVN, error
 // obsolete if(likely(y!=0))
   }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse.  This result must not be passed into a sentence

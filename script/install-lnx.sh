@@ -6,3 +6,5 @@ sudo apt-get install -y build-essential gcc-multilib g++-multilib libc6-dev libc
 sudo apt-get install -y nasm
 echo "fr_FR.UTF-8 UTF-8" | sudo tee -a /etc/locale.gen
 sudo locale-gen
+clang --version
+gcc --version

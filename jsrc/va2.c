@@ -560,9 +560,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     wcr+=acr<<2*RANKTX;  // afr/acr/wfr/wcr
 
     PRODRNK(ak,acr, AS(a)+(wcr>>(3*RANKTX))); PRODRNK(wk,wcr,AS(w)+((wcr>>RANKTX)&RANKTMSK));   // left/right #atoms/cell  length is assigned first
-       // note: the prod above orter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks
-    // fr has the longer cell-racan never fail, because it gives the actual # cells of an existing noun  acr free
-    // m=#atoms in cell with shnk
+       // note: the prod above can never fail, because it gives the actual # cells of an existing noun  acr free
+    // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks
+    // fr has the longer cell-rank
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
     // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4+ hold adocv.cv; sign set if ak==0. output type is always set to show non-sparse
@@ -693,15 +693,19 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
       // also turn off inplacing if a==w  or if Boolean with repeated cells   uses B01==1
       // (mf|nf)>1 is a better test than f!=0, because it handles frame of all 1s, but it's slower in the normal case
 
-   // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
-   // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
-  // The ordering here assumes that jtinplace will usually be set
-  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; if(unlikely(TYPESNE(wt,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
-  }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I at=AT(a), zt=rtype((I)jtinplace); zt=zt?zt:at; if(unlikely(TYPESNE(at,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+   // Establish the result area z; if we're reusing an argument, 
+// obsolete    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
+// obsolete   // The ordering here assumes that jtinplace will usually be set
+// obsolete   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; if(unlikely(TYPESNE(wt,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+// obsolete   }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I at=AT(a), zt=rtype((I)jtinplace); zt=zt?zt:at; if(unlikely(TYPESNE(at,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+  I ipw=ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w), zt=rtype((I)jtinplace);  // get type of result; is w inplaceable?
+  if((ipw|ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEAX),a))<0){  // see if either w or a is inplaceable
+   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
+   z=ipw<0?w:a; if(unlikely((AT(z)|zt)!=AT(z)))MODBLOCKTYPE(z,zt)   // z=inplaceable arg; if type changes (zt!=incumbent and zt!=0), change type in block.  zt does not have upper flag bits
+  }else{
+   I wt=AT(w); zt=zt?zt:wt; GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
-  }else{
-   I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area
    MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));  // copy shape
    if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
   } 

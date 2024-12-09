@@ -1634,19 +1634,19 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <5 (<9 on avx512), subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the testing
-// len is # words in shape
+// len is # words in shape  scaf no subrt call
 #if C_AVX512
 #define MCISH(dest,src,n) \
- {void *_d=dest,*_s=src; I _n=n;\
-  if(likely(_n<=8)){__mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));}\
-  else{memmove(_d,_s,_n<<LGSZI);}}
+ {void *_d=(dest),*_s=(src); I _n=(I)(n);\
+  if(unlikely(_n>8))do{_mm512_storeu_si256(_d,_mm512_loadu_si256(_s)); _d+=8; _s+=8;}while((_n-=8)>8); \
+  __mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));\
+  }
 #elif C_AVX2
 #define MCISH(dest,src,n) \
  {I *_d=(I*)(dest), *_s=(I*)(src); I _n=(I)(n); \
-  if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \
-   _mm256_maskstore_epi64(_d,endmask,_mm256_maskload_epi64(_s,endmask)); \
-  }else{memmove(_d,_s,_n<<LGSZI);} \
- }
+ if(unlikely(_n>NPAR))do{_mm256_storeu_si256((__m256i*)_d,_mm256_loadu_si256((__m256i*)_s)); _d+=NPAR; _s+=NPAR;}while((_n-=NPAR)>NPAR); \
+   __m256i endmask=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); _mm256_maskstore_epi64(_d,endmask,_mm256_maskload_epi64(_s,endmask)); \
+  }
 #else
 #define MCISH(dest,src,n) \
  {I *_d=(dest), *_s=(src); I _n=(I)(n); \

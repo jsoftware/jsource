@@ -513,7 +513,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    if(likely(jtinplace!=0)){  // nonsparse
     I an=AN(a); m=zn=AN(w);
     I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
-    zn=raminusw<0?zn:an; aawwzkn[5]=m=raminusw<0?an:m;  // zn=# atoms in bigger operand, m=#atoms in smaller
+    zn=raminusw<0?zn:an; aawwzkn[5]=m=raminusw<0?an:m;  // zn=# atoms in higher-rank operand, m=#atoms in lower-rank
     jtinplace = (J)(((I)jtinplace&3)+aadocv->cv+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags, and VIPWCRLONG if a repeated (safely in the negative part of raminusw)  aadocv free
     mf=REPSGN(raminusw);  // mf=-1 if w has longer frame, means cannot inplace a
     raminusw=-raminusw;   // now wr-ar
@@ -683,13 +683,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
   // Finally, if a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are
   // just not likely to be used reflexively)
   // 
-  // If the # atoms is same as result, each atom must be read only once & can be written after it has been read
-  // This holds true even if the atoms have different types, as long as they have the same size (this is encoded in the IPOK bits of cv)
-  // use the inplacing from the action routine to qualify the caller's inplacing, EXCEPT
-  // for Boolean inputs: since we do the operations a word at a time, they may overrun the output area and
-  // are thus not inplaceable.  The exception is if there is only one loop through the inputs; that's always inplaceable
-// less regs, more comp   {I inplaceallow = (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1) & ((((zn^an)|(ar^(f+r)))==0)*2 + (((zn^wn)|(wr^(f+r)))==0));
-   
       // also turn off inplacing if a==w  or if Boolean with repeated cells   uses B01==1
       // (mf|nf)>1 is a better test than f!=0, because it handles frame of all 1s, but it's slower in the normal case
 
@@ -707,12 +700,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
    MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));  // copy shape
-   if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
+   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
   } 
 //                                     frame loc     shape of long frame             len of long frame  cellshape       longer cellen 
   // fr free
-  if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
-  // zn  NOT USED FROM HERE ON
+  if(unlikely(AN(z)==0)){RETF(z);}  // If the result is empty, the allocated area says it all
+  // zn, zt  NOT USED FROM HERE ON
 
   // End of setup phase.  The execution phase:
 

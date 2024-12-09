@@ -1637,7 +1637,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // len is # words in shape  scaf no subrt call
 #if C_AVX512
 #define MCISH(dest,src,n) \
- {void *_d=(dest),*_s=(src); I _n=(I)(n);\
+ {I *_d=(I*)(dest),*_s=(I*)(src); I _n=(I)(n);\
   if(unlikely(_n>8))do{_mm512_storeu_si512(_d,_mm512_loadu_s512(_s)); _d+=8; _s+=8;}while((_n-=8)>8); \
   __mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));\
   }

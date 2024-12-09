@@ -723,7 +723,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
 
   // The compiler thinks that because ak/wk/zk are used in the loop they should reside in registers.  We do better to keep a and w in registers.  So we
   // force the compiler to spill aawwzkn by using address arithmetic.
-  {I rc=EVOK; I mulofloloc;  // good rc, and number of good results before we hit integer overflow on multiply
+  {I rc=((I)jtinplace&VRI+VRD)+EVOK; I mulofloloc;  // init good rc, and transfer output conversion to it, freeing up inplace (we know that anything needing conversion will not need retries); and number of good results before we hit integer overflow on multiply
    {  // lowest rc from the executed sections
     C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);  // point to the data
     // Call the action routines: nf,mf, etc must be preserved in case of repair
@@ -732,8 +732,8 @@ allocate:;  // come here if no inplaceable block could have the type changed
      // m is the length of the inner loop, with flags: complement=single loop of length ~m, otherwise each loop has length m>>1, and LSB of m is set if a atom is repeated
      // aawwzkn[5] is the number of outer loops, used only if m>0.  n*m cannot=0. 
      // Each release, monitor that clang brings adocvfn into register early to advance the expected misprediction.
-    I i=mf; I jj=nf;
-    lp000: {I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzkn[5],m,av,wv,zv,jt);    // run one section.  Result of 0 means error
+    I i=mf; I jj=nf;  // number of outer-outer loops, number of each outer-inner loop
+    lp000: {I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzkn[5],m,av,wv,zv,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below
      if(unlikely(lrc!=EVOK)){
       // section did not complete normally.
       if(unlikely(lrc<0)){I absn=(m>>1); absn=m<0?1:absn; mulofloloc=(mf-i)*aawwzkn[5]*absn+~lrc; rc=EWOVIP+EWOVIPMULII; goto lp000e;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
@@ -746,8 +746,9 @@ allocate:;  // come here if no inplaceable block could have the type changed
     lp000e: ;
    }
 
-   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary  scaf move VRI+VRD to result flags, to free up jtinplace earlier
-   if(likely(rc&(EVOK|EVNOCONV))){if(unlikely((I)jtinplace&VRI+VRD&&rc!=EVNOCONV))z=cvz((I)jtinplace,z); RETF(z);  // normal return is here.  The rest is error recovery
+   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary  scaf move VRI+VRD to rc, to free up jtinplace earlier
+// obsolete    if(likely(rc&(EVOK|EVNOCONV))){if(unlikely((I)jtinplace&VRI+VRD&&rc!=EVNOCONV))z=cvz((I)jtinplace,z); RETF(z);  // normal return is here.  The rest is error recovery
+   if(likely(rc&(EVOK|EVNOCONV))){if(unlikely(rc&VRI+VRD))z=cvz(rc,z); RETF(z);  // normal return is here.  The rest is error recovery.  If NOCONV happened we lost VRI+VRD
    
 
    // ********* error recovery starts here **********

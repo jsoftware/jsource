@@ -514,7 +514,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     I an=AN(a); m=zn=AN(w);
     I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
     zn=raminusw<0?zn:an; aawwzkn[5]=m=raminusw<0?an:m;  // zn=# atoms in higher-rank operand, m=#atoms in lower-rank
-    jtinplace = (J)(((I)jtinplace&3)+aadocv->cv+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags, and VIPWCRLONG if a repeated (safely in the negative part of raminusw)  aadocv free
+    jtinplace = (J)(((I)jtinplace&3)+aadocv->cv+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags, and VIPWCRLONG if a repeated (safely in the negative part of raminusw)
     mf=REPSGN(raminusw);  // mf=-1 if w has longer frame, means cannot inplace a
     raminusw=-raminusw;   // now wr-ar
     nf=REPSGN(raminusw);  // nf=-1 if a has longer frame, means cannot inplace w
@@ -554,7 +554,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    }
    if(likely(jtinplace!=0)){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.
     jtinplace = (J)((I)jtinplace&3);  // remove all but the inplacing bits
-    jtinplace = (J)((I)jtinplace+aadocv->cv);  // insert flag bits for routine (always has bits 0-3=0xc); set bits 2-3 (converted inplacing bits) aadocv free
+    jtinplace = (J)((I)jtinplace+aadocv->cv);  // insert flag bits for routine (always has bits 0-3=0xc); set bits 2-3 (converted inplacing bits)
 
     jtinplace = (J)((I)jtinplace+(((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)))) & (((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1))))) <<(VIPWCRLONGX-(RANKTX-1))));  // set flag for 'w has longer cell-rank' (VIPWCRLONG) and 'w has longer frame (wrt verb)' (VIPWFLONG)
     wcr+=acr<<2*RANKTX;  // afr/acr/wfr/wcr
@@ -653,6 +653,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
 
  // Signal domain error if appropriate. Must do this after agreement tests
  ASSERT(aadocv->f,EVDOMAIN);
+ VF adocvfn=zn==0?0:aadocv->f;  // extract the function address.  This frees aadocv except in sparse path.  Remember if zn==0 to free zn
  if(likely(jtinplace!=0)){   // if not sparse...
   // Not sparse.
 
@@ -691,21 +692,33 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
 // obsolete   // The ordering here assumes that jtinplace will usually be set
 // obsolete   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; if(unlikely(TYPESNE(wt,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
 // obsolete   }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I at=AT(a), zt=rtype((I)jtinplace); zt=zt?zt:at; if(unlikely(TYPESNE(at,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
-  I ipw=ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w), zt=rtype((I)jtinplace);  // get type of result; is w inplaceable?
-  if((ipw|ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEAX),a))<0){  // see if either w or a is inplaceable
+  I ipw=ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEAX),a), zt=rtype((I)jtinplace);  // get type of result; is w inplaceable?
+  if((ipw|ipa)<0){  // see if either w or a is inplaceable
    // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
-   z=ipw<0?w:a; if(unlikely((AT(z)|zt)!=AT(z)))MODBLOCKTYPE(z,zt)   // z=inplaceable arg; if type changes (zt!=incumbent and zt!=0), change type in block.  zt does not have upper flag bits
+   z=ipw<0?w:a;  // z=inplaceable arg; 
+   if(unlikely((zt&~AT(z))!=0)){   // if type changes (zt!=incumbent and zt!=0)...  zt does not have upper flag bits
+// obsolete MODBLOCKTYPE(z,zt)
+    // the type of inplaceable z must change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
+    // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
+    if(AFLAG(z)&AFUNINCORPABLE){
+     if((ipa&((zt&~AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
+        // we could use a even if it changes type, if it is not UNINCORPABLE.  But if w is UNINCORPABLE and a is inplaceable, it's surely because a is an unrepeated UNINCORPABLE cell in dyad u"n - not worth checking
+     z=a;  // if we can use a as is, do so
+    }else AT(z)=zt;  // OK to change type of z to match the result, do so
+   }
   }else{
+allocate:;  // come here if no inplaceable block could have the type changed
    I wt=AT(w); zt=zt?zt:wt; GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
    MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));  // copy shape
+//                                     frame loc     shape of long frame             len of long frame  cellshape       longer cellen 
    if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
   } 
-//                                     frame loc     shape of long frame             len of long frame  cellshape       longer cellen 
   // fr free
-  if(unlikely(AN(z)==0)){RETF(z);}  // If the result is empty, the allocated area says it all
   // zn, zt  NOT USED FROM HERE ON
+  if(unlikely(adocvfn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
+
 
   // End of setup phase.  The execution phase:
 
@@ -720,7 +733,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
      // m is the length of the inner loop, with flags: complement=single loop of length ~m, otherwise each loop has length m>>1, and LSB of m is set if a atom is repeated
      // aawwzkn[5] is the number of outer loops, used only if m>0.  n*m cannot=0. 
     I i=mf; I jj=nf;
-    lp000: {I lrc=((AHDR2FN*)aadocv->f)AH2A(aawwzkn[5],m,av,wv,zv,jt);    // run one section.  Result of 0 means error
+    lp000: {I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzkn[5],m,av,wv,zv,jt);    // run one section.  Result of 0 means error
      if(unlikely(lrc!=EVOK)){
       // section did not complete normally.
       if(unlikely(lrc<0)){I absn=(m>>1); absn=m<0?1:absn; mulofloloc=(mf-i)*aawwzkn[5]*absn+~lrc; rc=EWOVIP+EWOVIPMULII; goto lp000e;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry

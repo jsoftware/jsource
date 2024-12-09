@@ -653,29 +653,28 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
 
  // Signal domain error if appropriate. Must do this after agreement tests
  ASSERT(aadocv->f,EVDOMAIN);
- VF adocvfn=zn==0?0:aadocv->f;  // extract the function address.  This frees aadocv except in sparse path.  Remember if zn==0 to free zn
  if(likely(jtinplace!=0)){   // if not sparse...
   // Not sparse.
 
-   // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
-   // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
-   // might fail because the type in t is incompatible with the actual type in a.  t is rare.
-   //
-   // Because of the priority of errors we mustn't check the type until we have verified agreement above
-   if(unlikely(((I)jtinplace&VARGMSK)!=0))if(likely(zn>0)){  // input conversion required (rare), and the result is not empty
-    I at=AT(a), wt=AT(w), t=atype((I)jtinplace); t=(I)jtinplace&VCOPYA?at:t; t=(I)jtinplace&VCOPYW?wt:t; I bt=bplg(t);  // get shared input type, which might be from one of the inputs
-    // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
-    // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
-    // bits 2-3 of jtinplace indicate whether inplaceability is allowed by the op, the ranks, and the addresses
-    if(TYPESNE(t,at)){I ba=bplg(at); aawwzkn[0]=(aawwzkn[0]>>ba)<<bt; aawwzkn[1]=(aawwzkn[1]>>ba)<<bt; RZ(a=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
-    if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzkn[2]=(aawwzkn[2]>>bw)<<bt; aawwzkn[3]=(aawwzkn[3]>>bw)<<bt; RZ(w=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
-   }  // It might be better to do the conversion earlier, and defer the error
-      // until here.  We will have to look at the generated code when we can use all the registers
+  // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
+  // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
+  // might fail because the type in t is incompatible with the actual type in a.  t is rare.
+  //
+  // Because of the priority of errors we mustn't check the type until we have verified agreement above
+  if(unlikely(((I)jtinplace&VARGMSK)!=0))if(likely(zn>0)){  // input conversion required (rare), and the result is not empty
+   I at=AT(a), wt=AT(w), t=atype((I)jtinplace); t=(I)jtinplace&VCOPYA?at:t; t=(I)jtinplace&VCOPYW?wt:t; I bt=bplg(t);  // get shared input type, which might be from one of the inputs
+   // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
+   // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
+   // bits 2-3 of jtinplace indicate whether inplaceability is allowed by the op, the ranks, and the addresses
+   if(TYPESNE(t,at)){I ba=bplg(at); aawwzkn[0]=(aawwzkn[0]>>ba)<<bt; aawwzkn[1]=(aawwzkn[1]>>ba)<<bt; RZ(a=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
+   if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzkn[2]=(aawwzkn[2]>>bw)<<bt; aawwzkn[3]=(aawwzkn[3]>>bw)<<bt; RZ(w=cvt(t|((I)jtinplace&XCVTXNUMORIDEMSK),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
+  }  // It might be better to do the conversion earlier, and defer the error
+     // until here.  We will have to look at the generated code when we can use all the registers
 
-   // From here on we have possibly changed the address of a and w, but we are still using shape pointers
-   // in the original input block.  That's OK.
+  // From here on we have possibly changed the address of a and w, but we are still using shape pointers
+  // in the original input block.  That's OK.
 
-   // Allocate a result area of the right type, and copy in its cell-shape after the frame
+  // Allocate a result area of the right type, and copy in its cell-shape after the frame
   // If an argument can be overwritten, use it rather than allocating a new one
   // Argument can be overwritten if: action routine allows it; flagged in jtinplace; usecount 1 or zombie; rank equals (length of longer frame)+(length of longer cell)
   // If the argument has rank that large, and the arguments agree, the argument MUST have the same number of atoms as the result, because all shape is accounted for.
@@ -708,17 +707,17 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
    }
   }else{
 allocate:;  // come here if no inplaceable block could have the type changed
-   I wt=AT(w); zt=zt?zt:wt; GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area
+   I wt=AT(w); zt=zt?zt:wt; GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)
+   if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
    MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));  // copy shape
 //                                     frame loc     shape of long frame             len of long frame  cellshape       longer cellen 
-   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
   } 
   // fr free
+  if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
+  VF adocvfn=aadocv->f;  // extract the function address.  This frees aadocv, and in clang16 brings adocvfn into register early to speed the expected misprediction
   // zn, zt  NOT USED FROM HERE ON
-  if(unlikely(adocvfn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
-
 
   // End of setup phase.  The execution phase:
 
@@ -732,6 +731,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
      // but aawwzkn[1,3] have 0 in a repeated argument.  aawwzkn[1,3] are added for each inner iteration, aawwzk[0,2] at the end of an inner cycle
      // m is the length of the inner loop, with flags: complement=single loop of length ~m, otherwise each loop has length m>>1, and LSB of m is set if a atom is repeated
      // aawwzkn[5] is the number of outer loops, used only if m>0.  n*m cannot=0. 
+     // Each release, monitor that clang brings adocvfn into register early to advance the expected misprediction.
     I i=mf; I jj=nf;
     lp000: {I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzkn[5],m,av,wv,zv,jt);    // run one section.  Result of 0 means error
      if(unlikely(lrc!=EVOK)){
@@ -746,12 +746,12 @@ allocate:;  // come here if no inplaceable block could have the type changed
     lp000e: ;
    }
 
-   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
+   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary  scaf move VRI+VRD to result flags, to free up jtinplace earlier
    if(likely(rc&(EVOK|EVNOCONV))){if(unlikely((I)jtinplace&VRI+VRD&&rc!=EVNOCONV))z=cvz((I)jtinplace,z); RETF(z);  // normal return is here.  The rest is error recovery
    
 
    // ********* error recovery starts here **********
-   }else if(unlikely(rc==EVNOCONV)){RETF(z);  // If conversion suppressed, just keep the unconverted block
+   }else if(unlikely(rc==EVNOCONV)){RETF(z);  // If conversion suppressed, just keep the unconverted block  scaf impossible
    }else if(rc-EWOVIP>=0){A zz;C *zzv;I zzk;
     // Here for overflow that can be corrected in place.  The routines use the old semantics for m and n, so we convert them back
     n=(m>>1)^-(m&1); n=m<0?1:n;  // original n is 1 if m is complementary; otherwise m>>1, complemented if x is repeated
@@ -775,7 +775,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
       }
      }
     } else {   // not multiply repair, but something else to do inplace
-     adocv.f = repairip[(rc-EWOVIP)&3];   // fetch ep from table
+     AHDR2FN *repairfn = (AHDR2FN*)repairip[(rc-EWOVIP)&3];   // fetch ep from table
      I nipw = ((z!=w) & (rc-EWOVIP)) ^ (((rc-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
      // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
      // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
@@ -788,7 +788,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
       // we must multiply out the repeat to leave n=1.
       av=CAV(nipw?w:a);  // point to the not-in-place argument
       I nsgn=SGNTO0(n); n^=REPSGN(n); if(nipw==nsgn){m *= n; n = 1;} n^=-nipw;  // force n to <=1; make n flag indicate whether args were switched
-      I i=mf; I jj=nf; NOUNROLL while(1){((AHDR2FN*)adocv.f)AH2A(n,m,av,zv,zzv,jt); if(!--i)break; zv+=aawwzkn[4]; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzkn[2*nipw+1+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
+      I i=mf; I jj=nf; NOUNROLL while(1){(repairfn)AH2A(n,m,av,zv,zzv,jt); if(!--i)break; zv+=aawwzkn[4]; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzkn[2*nipw+1+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
      }
     }
     R zz;  // Return the result after overflow has been corrected

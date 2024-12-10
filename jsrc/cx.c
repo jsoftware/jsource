@@ -439,7 +439,7 @@ dobblock:
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
    // *** the rest is error cases
-   }else if(unlikely((jt->jerr&~0x60)==EVEXIT)){ic=OBCW; goto nextlinetcesx;  // EXIT/DEBUGEND/FOLDTHROW always pass up the line
+   }else if(unlikely((jt->jerr&~0x60)==EVEXIT)){ic=OBCW; goto nextline;  // EXIT/DEBUGEND/FOLDTHROW always pass up the line
    }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Check for it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     bic=ic;ic=~CWMAX;goto nextlinedebug;   // Remember the line w/error; fetch continuation line# (but exit if no line# given, should not occur). it is OK to have jerr set if we are in debug mode.  We must go through debug to clear z
@@ -478,7 +478,7 @@ dobblock:
     if(unlikely(TXOR5(tcesx,CDO)|jt->uflags.trace))goto nextlinetcesx;   // next line not do.; T block extended to more than 1 line (rare).
    }else{
     // *** the rest is error cases
-    if(unlikely((jt->jerr&~0x60)==EVEXIT)){ic=OBCW; goto nextlinetcesx;  // EXIT/DEBUGEND/FOLDTHROW always pass up the line
+    if(unlikely((jt->jerr&~0x60)==EVEXIT)){ic=OBCW; goto nextline;  // EXIT/DEBUGEND/FOLDTHROW always pass up the line
     }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
      if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
      bic=ic;ic=~CWMAX;goto nextlinedebug;   // Remember the line w/error; fetch continuation line# (but exit if no line# given, should not occur). it is OK to have jerr set if we are in debug mode.  Must go through nextline to set z non0
@@ -698,9 +698,9 @@ bodyend: ;  // we branch to here to exit with z set to result
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  If error, leave stack to be freed at restart point
  }else{  // there was error.  Prepare for postmortem debug
   // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
-  // We don't do this if jt->jerr is clear: that's the special result for coming out of debug; or when WSFULL, since there may be no memory, or if FOLDTHROW which isn't really an error.
+  // We don't do this if jt->jerr is clear: that's the special result for coming out of debug; or when WSFULL, since there may be no memory, or if EXIT/DEBUGEND/FOLDTHROW which isn't really an error.
   // Also, suppress pmdebug if an immex phrase is running or has been requested, because those would be confusing and also they call tpop
-  if(jt->jerr && (jt->jerr&~64)!=EVWSFULL && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
+  if(jt->jerr && jt->jerr!=EVWSFULL && ((jt->jerr&~0x60)!=EVEXIT) && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
    // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that we are about to pop over.  Only x and y are possible
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!

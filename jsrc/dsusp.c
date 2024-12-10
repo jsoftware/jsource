@@ -314,13 +314,15 @@ noparse: ;
   // If the line failed with EVCUTSTACK, it must be the caller's line that called the function where Cut Stack ran (the Cut Stack was returned from suspension).  This frame has already been
   // set up to restart on the same line, so all we have to do is clear the error and return 0 so that debugnewi restarts the line
    RESETERR parsez=0;  // set to branch to the selected line in this frame
+  }else if((jt->jerr&~0x60)==EVEXIT){  // if EXIT/DEBUGEND/FOLDTHROW, it's not an error (it should go either to flush to user prompt or get caught by fold)
+   parsez=0;  // return error to keep failing up the line
   }else{
    // go into suspension
    DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; parsez=jtdebugmux(jt); t->dcj=0; //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
   }
  }
  // we have come out of suspension (if we went into it).  parsez has the value to return to execution.  It may have a value created by the user, or the value from the non-failing sentence.
- // Or, it may be 0, in which case the definition will look for a restart.  In this case the error-code matters: the error will be printed when the failure reaches console level (in the master thread).  An error code of
+ // Or, it may be 0, in which case the running explicit definition will look for a restart.  In this case the error-code matters: the error will be printed when the failure reaches console level (in the master thread).  An error code of
  // EVDEBUGEND is used to force quiet failure all the way back to console level (usually in a task); an error code of 0, normal in a single-task system, will cause the failure to go back to
  // the first try./catch. or starting level and then print nothing.
  R parsez;

@@ -27,10 +27,11 @@
 #define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */   // could use VUNCH if force conversion
 #define VUNCH           (0<<VRESX)  // leave result unchanged
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type - if all 0, take result type from the args
-#define VRD             (0x800<<VRESX) // convert result to D if possible 23
-#define VRI             (0x8000<<VRESX) // convert result to I if possible  27
-#define VRNONEX          25    // This routine can generate an error after it has started
-#define VRNONE           ((I)1<<VRNONEX) // no result conversion
+#define VRMSK           ((I)0x8800<<VRESX) // mask for result-conversion spec 23,27
+#define VRD             ((I)0x800<<VRESX) // convert result to D if possible 23
+#define VRI             ((I)0x8000<<VRESX) // convert result to I if possible  27
+#define VRNONE          ((I)0x8800<<VRESX) // do not convert result 23,27  for now this is only in the atomic dyads - othr leave the field at 00
+#define VRERR           ((I)0x0<<VRESX) // result-conversion removed by error (including EVNOCONV) 23,27
 #define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
 #define VCOPYW          ((I)1<<VCOPYWX)
 #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a

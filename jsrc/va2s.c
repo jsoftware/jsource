@@ -44,7 +44,7 @@ static A jtvasp0(J jt,A a,A w,VF ado,I cv,I t,I zt){A e,x,xx,y,z,ze,zx;B b;I n;P
  }
  GA00(ze,zt,1,0); I rc;     ASSERT(((EVOK|EVNOCONV)&(rc=((AHDR2FN*)ado)AH2A_v(1,b?AV(e):AV(y),b?AV(y):AV(e),AV0(ze),jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc)),rc);
  GA(zx,zt,n,AR(x),AS(x)); if(n)ASSERT(((EVOK|EVNOCONV)&(rc=((AHDR2FN*)ado)AH2A(1,2*n+1-b,b?AV(x):AV(y),b?AV(y):AV(x),AV(zx),jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc)),rc);  // was !b
- if(cv&VRI+VRD&&rc!=EVNOCONV){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
+ if((((cv&VRI+VRD)==VRI)||((cv&VRI+VRD)==VRD))&&rc!=EVNOCONV){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
  GASPARSE(z,STYPE(AT(zx)),1,AR(xx),AS(xx)); zp=PAV(z);
  SPB(zp,a,ca(SPA(p,a)));
  SPB(zp,i,ca(SPA(p,i)));
@@ -107,7 +107,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
  else if(ab&&n>j){c=n-j; ICPY(zyv,v,c*yc); I lrc=((AHDR2FN*)ado)AH2A(1,2*c*xc+1,aev,wxv,zxv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;}
  GA00(ze,zt,1,0); I lrc=((AHDR2FN*)ado)AH2A_v(1,aev,wev,AV0(ze),jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
  ASSERT((rc&(255&~EVNOCONV))==0,rc);
- if(cv&VRI+VRD&&rc!=EVNOCONV){A e,x; RZ(e=cvz(cv,ze)); RZ(x=cvz(cv,zx)); if(TYPESEQ(AT(e),AT(x))){ze=e; zx=x;}}
+ if((((cv&VRI+VRD)==VRI)||((cv&VRI+VRD)==VRD))&&rc!=EVNOCONV){A e,x; RZ(e=cvz(cv,ze)); RZ(x=cvz(cv,zx)); if(TYPESEQ(AT(e),AT(x))){ze=e; zx=x;}}
  GASPARSE(z,STYPE(AT(zx)),1,AR(a),AS(a));
  zp=PAV(z); 
  SPB(zp,a,za); SPB(zp,e,ze); SPB(zp,i,zy); SPB(zp,x,zx);

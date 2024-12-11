@@ -14,7 +14,7 @@
 #define VZZ             (CMPX<<VARGX)        /* convert arguments to Z 8             */
 #define VIPWCRLONGX     9  // internal use in va2, overlaps BOX 9 means 'w has longer cell-rank, so x is repeated'
 #define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
-#define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM 10           */
+#define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM 10  moved to CONW 26 in arg to cvt          */
 #define VQQ             (RAT<<VARGX)         /* convert arguments to RAT  11          */
 #define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ|VCOPYW|VCOPYA)  // mask for argument requested type
 #define VRESX           12           // bit position for result flags
@@ -24,11 +24,13 @@
 #define VZ              (CMPX<<VRESX)/* result type Z bit 16                      */
 #define VX              (XNUM<<VRESX)/* result type XNUM  bit 18                  */
 #define VQ              (RAT<<VRESX) /* result type RAT  bit 19                   */
-#define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */
+#define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */   // could use VUNCH if force conversion
 #define VUNCH           (0<<VRESX)  // leave result unchanged
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type - if all 0, take result type from the args
-#define VRD             (0x800<<VRESX)// convert result to D if possible 23
-#define VRI             (0x8000<<VRESX)// convert result to I if possible  27
+#define VRD             (0x800<<VRESX) // convert result to D if possible 23
+#define VRI             (0x8000<<VRESX) // convert result to I if possible  27
+#define VRNONEX          25    // This routine can generate an error after it has started
+#define VRNONE           ((I)1<<VRNONEX) // no result conversion
 #define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
 #define VCOPYW          ((I)1<<VCOPYWX)
 #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
@@ -39,11 +41,11 @@
 #define VIPOKW          ((I)1<<VIPOKWX)
 #define VIPOKAX         21      // This routine can put its result over A
 #define VIPOKA          ((I)1<<VIPOKAX)
-#define VCANHALTX       25    // This routine can generate an error after it has started
-#define VCANHALT        ((I)1<<VCANHALTX)
-#define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM =CONW
+// obsolete #define VCANHALTX       25    // This routine can generate an error after it has started
+#define VCANHALT        0  // ((I)1<<VCANHALTX) was 25, but no longer used
+#define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
-// the conversion info is in bits 22 and 24:
+// the conversion info for Vxx is in bits 22 and 24:
 #define VXX             (Vxx|XMODETOCVT((I)XMEXACT))  // exact conversion
 #define VXEQ            (Vxx|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */
 #define VXCF            (Vxx|XMODETOCVT((I)XMCEIL))   /* convert to XNUM ceiling/floor       */

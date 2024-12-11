@@ -534,7 +534,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
     n=2*n-mf;  // parm m if there are 2 loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
     m=n>3?n:m;  // if inner-loop len > 1, there are 2 loops, use mf; if inner-loop len=1, use the 1-loop value
-    aawwzknfxrz[6]=IMIN;  // use nf overflow to indicate no outer loop
+    aawwzknfxrz[9]=0;  // stop outer loop after first iteration
 // obsolete     mf=1;  // suppress the outer loop, leaving only the loop over m and n
    }else{
     // Sparse setup: move the block-local variables to longer-lived ones.  We are trying to reduce register pressure
@@ -635,7 +635,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
      flagorign|=((I)jtinplace>>VIPWFLONGX)&(nf!=1);  // repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus nop flag set yet
      m*=migrmf; n*=nf;   // propagate mf and nf down
 // obsolete      mf=1;  // no outer loops.  nf immaterial.  aawwzk does not need to change since it will not be used
-     aawwzknfxrz[6]=IMIN;  // use nf overflow to indicate no outer loop.  aawwzk does not need to change since it will not be used
+     aawwzknfxrz[9]=0;  // Stop after first call  aawwzk does not need to change since it will not be used
     }else{aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];}     // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration
     // Use new semantics for m and n
     aawwzknfxrz[5]=m;  // parm n is orig m, i. e. the length of the inner or only loop.
@@ -674,8 +674,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
   }  // It might be better to do the conversion earlier, and defer the error
      // until here.  We will have to look at the generated code when we can use all the registers
 
-  // From here on we have possibly changed the address of a and w, but we are still using shape pointers
-  // in the original input block.  That's OK.
+  // From here on we have possibly changed the address of a and w
 
   // Allocate a result area of the right type, and copy in its cell-shape after the frame
   // If an argument can be overwritten, use it rather than allocating a new one
@@ -685,8 +684,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allran
   // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
   // Finally, if a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are
   // just not likely to be used reflexively)
-  // 
-   // Establish the result area z; if we're reusing an argument, 
 // obsolete    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
 // obsolete   // The ordering here assumes that jtinplace will usually be set
 // obsolete   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I wt=AT(w), zt=rtype((I)jtinplace); zt=zt?zt:wt; if(unlikely(TYPESNE(wt,zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
@@ -724,11 +721,11 @@ allocate:;  // come here if no inplaceable block could have the type changed
   // The compiler thinks that because ak/wk/zk are used in the loop they should reside in registers.  We do better to keep a and w in registers.  So we
   // force the compiler to spill aawwzknfxrz using forcetomemory.
   {aawwzknfxrz[8]=((I)jtinplace&VRI+VRD)+EVOK; I mulofloloc;  // init good composite rc, and transfer output conversion to it, freeing up inplace (we know that anything needing conversion will not need retries); and number of good results before we hit integer overflow on multiply
-   {C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);  // point to the data
-    aawwzknfxrz[9]+=(I)zv;   // add addr to offset to get addr of last block of z
+   {C *zv=CAV(z);C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine
+    I mend=aawwzknfxrz[9]+(I)zv;   // add addr to offset to get addr of last block of z
     // Call the action routines:
      // aawwzknfxrz[6] is original nf-1, the number of inner outer loops; but IMIN if there are no outer loops.  We do this so that executions with no rank will ratify the branch immediately, reduce misbranch
-     // overhead if there is any.  If there are outer loops, jj counts the inners and aawwzknfxrz[9] has the starting address of the last inner loop of all.  aawwzknfxrz[0,1] are the cell-size of a for the outer loop, aawwzknfxrz[2,3] are for w;
+     // overhead if there is any.  If there are outer loops, jj counts the inners and aawwzknfxrz[9] has the starting offset of the last inner loop of all.  aawwzknfxrz[0,1] are the cell-size of a for the outer loop, aawwzknfxrz[2,3] are for w;
      // but aawwzknfxrz[1,3] have 0 in a repeated argument.  aawwzknfxrz[1,3] are added for each inner iteration, aawwzk[0,2] at the end of an inner cycle
      // m is the length of the inner loop, with flags: complement=single loop of length ~m, otherwise each loop has length m>>1, and LSB of m is set if a atom is repeated
      // aawwzknfxrz[5] is the number of outer inner loops, used only if m>0.  n*m cannot=0. 
@@ -746,8 +743,8 @@ allocate:;  // come here if no inplaceable block could have the type changed
      }
      // instead of using i as a loop counter we could calculate the last value of zv and exit on zv==endvalue.  Worthwhile if it gets m into a register since it's the first thing tested by the action routine; but perhaps not
      // since doing the compare from memory will delay detection of a misbranch by 5 cycles every time there is a change of rank
-     if(likely(__builtin_sub_overflow(jj,1,&jj)))goto lp000e;  // if no outer loop, nf=imin and this overflows
-     if((I)zv==aawwzknfxrz[9])goto lp000e; aawwzknfxrz[7]=jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj];  goto lp000; // jj is -1 on the last inner iter, where we use outer incr
+// obsolete      if(likely(__builtin_sub_overflow(jj,1,&jj)))goto lp000e;  // if no outer loop, nf=imin and this overflows
+     if((I)zv==mend)goto lp000e; aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj];  goto lp000; // jj is -1 on the last inner iter, where we use outer incr
     }
     lp000e: ;
    }
@@ -776,11 +773,11 @@ allocate:;  // come here if no inplaceable block could have the type changed
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      {C *av=CAV(a); C *wv=CAV(w);
 // obsolete       I i=mf; i=jj<0?1:i;
-      I jj=aawwzknfxrz[6]; aawwzknfxrz[9]=(aawwzknfxrz[9]-(I)CAV(z))*(SZD/SZI)+(I)zzv;  // extract offset to end buffer, convert it to D length, relocate to new output area
+      I jj=aawwzknfxrz[6]; I mend=aawwzknfxrz[9]*(SZD/SZI)+(I)zzv;  // extract offset to end buffer, convert it to D length, relocate to new output area
       while(1){
        tymesIIO(n,m,(I*)av,(I*)wv,(D*)zzv,mulofloloc);
 // obsolete  if(!--i)break;
-       mulofloloc-=m*(n^REPSGN(n)); if(__builtin_sub_overflow(jj,1,&jj))break; if((I)zzv==aawwzknfxrz[9])break; aawwzknfxrz[7]=jj; jj=REPSGN(jj); zzv+=zzk; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj];  // jj1 is -1 on the last inner iter, where we use outer incr
+       mulofloloc-=m*(n^REPSGN(n)); if((I)zzv==mend)break; aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zzv+=zzk; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj];  // jj1 is -1 on the last inner iter, where we use outer incr
       }
      }
     } else {   // not multiply repair, but something else to do inplace
@@ -798,8 +795,8 @@ allocate:;  // come here if no inplaceable block could have the type changed
       av=CAV(nipw?w:a);  // point to the not-in-place argument
       I nsgn=SGNTO0(n); n^=REPSGN(n); if(nipw==nsgn){m *= n; n = 1;} n^=-nipw;  // force n to <=1; make n flag indicate whether args were switched
 // obsolete       I i=mf; i=jj<0?1:i; 
-      I jj=aawwzknfxrz[6];
-      NOUNROLL while(1){(repairfn)AH2A(n,m,av,zv,zzv,jt); if(__builtin_sub_overflow(jj,1,&jj))break; if((I)zv==aawwzknfxrz[9])break; aawwzknfxrz[7]=jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; zzv+=zzk; av+=aawwzknfxrz[2*nipw+1+jj]; jj=aawwzknfxrz[7+jj];}  // jj1 is -1 on the last inner iter, where we use outer incr
+      I jj=aawwzknfxrz[6]; I mend=aawwzknfxrz[9]+(I)zv;
+      NOUNROLL while(1){(repairfn)AH2A(n,m,av,zv,zzv,jt); if((I)zv==mend)break; aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; zzv+=zzk; av+=aawwzknfxrz[2*nipw+1+jj]; jj=aawwzknfxrz[7+jj];}  // jj1 is -1 on the last inner iter, where we use outer incr
 // obsolete if(!--i)break; aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; zzv+=zzk; av+=aawwzknfxrz[2*nipw+1+jj]; jj=aawwzknfxrz[7+jj];}  // jj1 is -1 on the last inner iter, where we use outer incr
      }
     }

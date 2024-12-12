@@ -30,7 +30,7 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
  I oldn=AN(*abuf);   // get the previous allocated size
  I t=AT(*abuf);  // get the type of the allocation
  WRITEUNLOCK(*alock);  // relinquish lock while we allocate the new area
- GA0(z,t,2*oldn,AR(*abuf)); ACINITZAP(z); // allocate a new block, bigger than the previous one; make it permanent.  This is the only error exit from this routine
+ GA0(z,t,2*oldn,AR(*abuf)); ACINITUNPUSH(z); // allocate a new block, bigger than the previous one; make it permanent.  This is the only error exit from this routine
  WRITELOCK(*alock);  // reacquire lock
  A obuf=*abuf;  // current buffer after reacquiring lock
  AFLAGINIT(z,AFLAG(obuf));  // preserve the recursive status of the block since we are transferring contents
@@ -543,7 +543,7 @@ static I jtthreadcreate(J jt,I n){
 static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  ARGCHK2(arg1,arg2);  // the verb is not the issue
  RZ(pyx=jtcreatepyx(jt,-2,inf));
- A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // protect the job till it is finished
+ A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITUNPUSH(jobA);  // protect the job till it is finished
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; // the call is either noun self x or noun noun self.  See which, select self.  dyad is 0 or 1
  // extract parms given to t.: threadpool number, worker-only flag
  UI forcetask=((FAV(self)->localuse.lu1.forcetask>>8)&1)-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
@@ -592,7 +592,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 // poolno is the threadpool to use.  Tasks are run on this thread and the worker threads
 // Result is 0 for OK, else jerr.h error code
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
- A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITZAP(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
+ A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITUNPUSH(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1;  job->initthread=THREADID(jt); job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
  I lastqueuedtask=-1;  // if nonneg, the task# of the last task (i. e. n-1).  If this task is taken here we have to leave it in the queue
  if(likely(((lda(&JT(jt,systemlock))-3)&-(I)jobq->nthreads&(1-(I)n))<0)){  // we will take the first task; wake threads only if there are other blocks, and worker threads
@@ -898,7 +898,7 @@ ASSERT(0,EVNONCE)
  case 10: {  // create a mutex.  w indicates recursive status
 #if PYXES
   I recur; RE(recur=i0(w)) ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
-  A zz;GAT0(zz,INT,(sizeof(jtpthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITZAP(zz); AN(zz)=1; AM(zz)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
+  A zz;GAT0(zz,INT,(sizeof(jtpthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITUNPUSH(zz); AN(zz)=1; AM(zz)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
   jtpthread_mutex_init((jtpthread_mutex_t*)IAV0(zz),recur);
   z=box(zz);  // protect in a box in case the mutex is copied
 #else
@@ -944,7 +944,7 @@ ASSERT(0,EVNONCE)
  case 16: {  // create an AMV.  w is initial value
 #if PYXES
   I initval; RE(initval=i0(w))  // recur must be integer
-  A zz; GAT0(zz,INT,1,0);  ACINITZAP(zz); AN(zz)=1; AM(zz)=CREDAMV; IAV0(zz)[0]=initval;  // AMV is a boxed integer atom.  The boxing is needed to protect the value from being virtualized and then realized in a different place
+  A zz; GAT0(zz,INT,1,0);  ACINITUNPUSH(zz); AN(zz)=1; AM(zz)=CREDAMV; IAV0(zz)[0]=initval;  // AMV is a boxed integer atom.  The boxing is needed to protect the value from being virtualized and then realized in a different place
   z=box(zz); 
 #else
   ASSERT(0,EVNONCE)

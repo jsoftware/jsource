@@ -766,7 +766,7 @@ static A jtcdgahash(J jt,I n){A z;I hn;
 }
 
 B jtcdinit(JS jjt){A x;JJ jt=MTHREAD(jjt);
- RZ(x=exta(BOX,0L,1L,100L )); ACINITZAP(x) INITJT(jjt,cdarg)=x;  // allocate indirect pointers to CCT blocks
+ RZ(x=exta(BOX,0L,1L,100L )); ACINITUNPUSH(x) INITJT(jjt,cdarg)=x;  // allocate indirect pointers to CCT blocks
  RZ(INITJT(jjt,cdhash) =cdgahash(4*AN(INITJT(jjt,cdarg))));  // start with 4x allocation for the strings.  We will reallocate when it gets to 2x.
  RZ(INITJT(jjt,cdhashl)=cdgahash(NLIBS+16));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
  RZ(x=exta(LIT,0L,1L,         5000L)); ACINITZAP(x) mvc(AN(x),AV(x),MEMSET00LEN,MEMSET00); INITJT(jjt,cdstr)=x;  //  Do this last; it indicates validity for all
@@ -812,7 +812,7 @@ static HMODULE jtcdlookupl(J jt,C*av){
 // return 0 if error
 static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;A z;I an,hn,k;
  // Make a copy of the valid part of cc where it will reside forever, and point cc to it
- I cclen=offsetof(CCT, starlett)+cc->n*sizeof(cc->starlett[0]); GAT0(z,LIT,cclen,1) ACINITZAP(z)  MC(IAV1(z),cc,cclen); cc= (CCT*)IAV1(z);
+ I cclen=offsetof(CCT, starlett)+cc->n*sizeof(cc->starlett[0]); GAT0(z,LIT,cclen,1) ACINITUNPUSH(z)  MC(IAV1(z),cc,cclen); cc= (CCT*)IAV1(z);
  an=AN(a);
  // add the new string - under lock.  If table extensions are required we perform any necessary allocations outside the lock
  

@@ -684,7 +684,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
     fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
     SYMVALFA(jtsympv[k]);    // free value
-    jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+    jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;  // clear symbol fields for next time (that's Roger's way)
     lastk=k;  // remember end-of-chain
     k=nextk;  // advance to next block in chain
    }while(k);
@@ -696,7 +696,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
 }
 
 // free the symbol table (i. e. locale) w.  AR(w) has been loaded.  We return w so caller doesn't have to save it
-A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined and that will make jtmf() save several more registers
+NOINLINE A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined and that will make jtmf() save several more registers
  if(likely(arw&ARLOCALTABLE)){
   // local tables have no path or name, and are not listed in any index.  Just delete the local names
   freesymb(jt,w);   // delete all the names/values
@@ -963,7 +963,8 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
   // If it is a nameref, clear the bucket info.  Explanation in nameref()
   if(unlikely(v->id==CTILDE))if(v->fgh[0]&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->bucket=0;
   //  Recur on each component
-  raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
+// obsolete   raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
+  DO(3, if(v->fgh[i])ra(v->fgh[i]);)  // ra f, g, h
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);  // not INCRPOS, because EPILOG is used in connum to make invalid blocks recursive (kludge)
@@ -1017,7 +1018,11 @@ runout:;  //
    }while(--n>0);
    if(n==0)goto runout;  // skip prefetch last time.  Maybe not needed.  This will alternate branch prediction except when n was 1.  Saves I1$
   }
- } else if(t&NAME){A ref;
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
+  // ACV.
+// obsolete   fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
+  DO(3, fana(v->fgh[i]);)  // free f, g, h
+ } else if(t&NAME){A ref;   // NAMEs are usually in verb defns and don't get freed
   if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference
    // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
    // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
@@ -1029,9 +1034,6 @@ runout:;  //
    fana(ref);  // free, now that nm is unlooped
    if(rc)R;  // avoid free if that is called for
   }
- } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
-  // ACV.
-  fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
  }else if(t&SYMB){wd=jtfreesymtab(jt,wd,AR(wd));  // SYMB is used as a flag; we test here AFTER NAME and ADV which are lower bits
  }else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
@@ -1099,7 +1101,7 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
   pushp = (A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK));  // get address of aligned block AFTER the first word
  }
  // point the chain of the new block to the end of the previous
- *pushp=(A)prevpushp;
+ *pushp=(A)prevpushp;  // point new block to last entry in previous block
  R pushp+1;  // Return pointer to first usable slot in the allocated block
 }
 
@@ -1115,7 +1117,6 @@ void freetstackallo(J jt){
 
 // measureI tpopscaf[10];  // # tpops requested
 // pop stack,  ending when we have freed the entry with tnextpushp==old.  tnextpushp is left pointing to an empty slot
-// return value is pushp
 // If the block has recursive usecount, decrement usecount in children if we free it
 // stats I totalpops=0, nonnullpops=0, frees=0;
 void jttpop(J jt,A *old,A *pushp){A *endingtpushp;
@@ -1619,7 +1620,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  m1=allosize(z)/k;  // start this divide before the copy
  MC(AVn(zr,z),AV(w),AN(w)*bpt);                 /* copy old contents      */
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
- if(b){ACINITZAP(z); mf(w);}          // 1=b iff w is permanent.  This frees up the old block but not the contents, which were transferred as is
+ if(b){ACINITUNPUSH(z); mf(w);}          // 1=b iff w is permanent.  This frees up the old block but not the contents, which were transferred as is
  AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */
  if(!((t&DIRECT)>0))mvc(k*(m1-m),CAV(z)+m*k,MEMSET00LEN,MEMSET00);  // if non-DIRECT type, zero out new values to make them NULL
  R z;
@@ -1634,4 +1635,4 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I m1;
 }    /* "optimal" allocation for type t rank r, c atoms per item, >=m items */
 
 // forcetomemory does nothing, but it does take an array as argument.  This will spook the compiler out of trying to assign parts of the array to registers.
-void forcetomemory(void * w){R; }
+void forcetomemory(void * w){R;}

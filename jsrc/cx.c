@@ -127,7 +127,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   ASSERT(!(asym->flag&LREADONLY),EVRO)  // it had better not be readonly now
   fa(asym->val);  // if there is an incumbent value, discard it
   A xx; GAT0(xx,INT,1,0); IAV0(xx)[0]=-1; AFLAGINIT(xx,AFRO) // -1 is the iteration number if there are no iterations; mark value RO to prevent xxx_index =: xxx_index + 1 from changing inplace
-  ACINITZAP(xx); asym->val=xx; asym->valtype=ATYPETOVALTYPE(INT); // raise usecount, install as value of xyz_index
+  ACINITUNPUSH(xx); asym->val=xx; asym->valtype=ATYPETOVALTYPE(INT); // raise usecount, install as value of xyz_index
   rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.  note we can free from a boxed array now
   ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free
   asym->flag|=LREADONLY;  // in the loop, the user may not modify xyz_index   LREADONLY is set iff we have cv->t, and cleared then
@@ -178,8 +178,7 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
 // We do not have to change the valtype field, since it never changes
 static A swapitervbl(J jt,A old,A *valloc){
  fa(old);  // discard the old value
- GAT0(old,INT,1,0);
- ACINITZAP(old); *valloc=old;  // raise usecount, install as value of xyz_index
+ GAT0(old,INT,1,0); ACINITUNPUSH(old); *valloc=old;  // raise usecount, install as value of xyz_index
  R old;
 }
 
@@ -225,7 +224,6 @@ static I debugnewi(I i, DC thisframe, A self){
 #define TEQ6(tcesx,val) (((UI4)(tcesx)>>TCESXTYPEX)==(val))  // 6-bit type = val
 #define TXORTOP5(tcesx,val) (((UI4)(tcesx)>>(TCESXTYPEX+1))^((val)>>1))  // 6-bit type ^ val, ignoring LSB
 #define FLAGGEDNOTRACE(x) ((UC)((UI4)(x)>>(TCESXTYPEX+5))>(UC)jt->uflags.trace)  // 32 flag set in tcesx
-
 #define IFOB(likelihood) if(likelihood(ic<=OBCW))  // true if i has gone off the end of the defn)
 #define IFNOTOB(likelihood) if(likelihood(ic>OBCW))  // true if i has not gone off the end of the defn)
 // Processing of explicit definitions, line by line.  Bivalent, called as y vb vb or x y vb.  If JTXDEFMODIFIER is set,
@@ -421,14 +419,13 @@ nextlinedebug:;
   // **************** switch by line type ********************
 
   switch((((tcesx)>>TCESXTYPEX)&31)){  // highest cw is 33, but it aliases to 1 & there is no 32.  32 is used as a multipurpose flag
-
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
   // if there is nothing but if./while/end. most of the branches are internal
   case CBBLOCK:  // (also BLOCKEND) placed first because likely case for unpredicted first line of definition
 dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
-   parseline(z,tpop(old);,t=0;);  // *** run user's line *** sets tcesx to thisline/nextline; t=0 so t doesn't have to be preserved over subrt calls
+   parseline(z,if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)tpop(old);,t=0;);  // *** run user's line *** sets tcesx to thisline/nextline; t=0 so t doesn't have to be preserved over subrt calls
    // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
    if(likely(z!=0)){bic=ic; ic-=(tcesx>>(32+TCESXTYPEX+5))+1;  // advance to next sentence to be executed, which is NSI, or NSI+1 if BBLOCKEND
     // the sequence BBLOCKEND BBLOCKEND indicates that the second BBLOCKEND was originally an END that went to NSI which was BBLOCK, i. e. end. for an if./select. followed by BBLOCK.
@@ -467,12 +464,14 @@ dobblock:
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(unlikely(TEQ5(tcesx,CASSERT))){
     if(JT(jt,assert)){
-     parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
+// obsolete      parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
+     parseline(t,{if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);
+     if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
      if(likely(t!=0)){  // assert without error
       t=mtv;  // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while.  So we use a safe permanent value, mtv.  
      }
     }else{--ic; goto nextline;}  // if ignored assert, go to NSI
-   }else{parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);} // no assert: run the line  resets tcesx to thisline/nextline
+   }else{parseline(t,{if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);} // no assert: run the line  resets tcesx to thisline/nextline
    // this is return point from running the line
    if(likely(t!=0)){tic=ic,--ic;  // if no error, continue on.  --ic must be in bounds for a non-assert T block (there must be another control word)
     if(unlikely(TXOR5(tcesx,CDO)|jt->uflags.trace))goto nextlinetcesx;   // next line not do.; T block extended to more than 1 line (rare).
@@ -553,7 +552,7 @@ dobblock:
    }else if(cv->fchn){cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
    }else{A cd;
     // we have to allocate an element.  cv points to end of current chain
-    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>LGSZI,0,{z=0; goto bodyend;}); ACINITZAP(cd) // allocate, rank 0, exiting with error if allocation failure.  Zap the block because it must persist over subsequent tpops; we will delete by hand
+    GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>LGSZI,0,{z=0; goto bodyend;}); ACINITUNPUSH(cd) // allocate, rank 0, exiting with error if allocation failure.  Zap the block because it must persist over subsequent tpops; we will delete by hand
     cv->fchn=cd;  // forward-chain chain allocated A block to current CDATA block
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block

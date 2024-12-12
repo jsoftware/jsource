@@ -13,7 +13,7 @@
 
 
 B jtxsinit(JS jjt){A x;JJ jt=MTHREAD(jjt);
- GAT0(x,BOX,10,1); ACINITZAP(x); INITJT(jjt,slist)=x; AM(INITJT(jjt,slist))=0;  // init block, set item count to 0.  This block is NOT recursive but becomes one if extended
+ GAT0(x,BOX,10,1); ACINITUNPUSH(x); INITJT(jjt,slist)=x; AM(INITJT(jjt,slist))=0;  // init block, set item count to 0.  This block is NOT recursive but becomes one if extended
  MTHREAD(jjt)->currslistx=-1;  // indicate 'not in script' in master thread
  R 1;
 }

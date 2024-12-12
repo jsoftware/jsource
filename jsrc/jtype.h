@@ -647,9 +647,9 @@ struct AD {
 #define ACSET(a,v)      __atomic_store_n(&AC(a),(v),__ATOMIC_RELEASE);  // used when a might be shared, but atomic not needed
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
-#define ACINITUNPUSH(a)  {A *pushp=jt->tpushnext; --pushp; \
-                          if(unlikely((I)pushp&(NTSTACKBLOCK-1))){A *nextp=(A*)*pushp; if(unlikely(nextp!=pushp-1)){freetstackallo(); pushp=nextp;}} /* check start of block and start of allo */ \
-                          jt->tpushnext=pushp; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by backing the tpush pointer
+#define ACINITUNPUSH(a) {A *pushp=jt->tnextpushp; --pushp; \
+                          if(unlikely(((I)pushp&(NTSTACKBLOCK-1))==0)){A *nextp=(A*)*pushp; if(unlikely(nextp!=pushp-1))freetstackallo(jt); pushp=nextp;} /* check start of block and start of allo */ \
+                          jt->tnextpushp=pushp; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by backing the tpush pointer
 #define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
 #define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0 ACIPNO(x);}else ra(x);}
 #define ACX(a)          {AC(a)=ACPERMANENT; AFLAGORLOCAL(a,AT(a)&RECURSIBLE);}   // used only in initializations
@@ -803,8 +803,10 @@ UI4 tcesx;  // cw type/canend/number of first word in the line
 #define TCESXTYPEX 26  // top field, 6 bits, is control-word type (from w.h)
 #define TCESXTYPE ((UI4)0x3f<<TCESXTYPEX)  // mask for field
 #define TCESXCEX 24  // canend bits 24-25
-#define TCESXCECAN ((UI4)1<<TCESXCEX)  // set if this result can become the result of the defn
-#define TCESXCECANT ((UI4)2<<TCESXCEX)  // set if this result cannot become the result of the defn
+#define TCESXCECANX TCESXCEX
+#define TCESXCECAN ((UI4)1<<TCESXCECANX)  // set if this result can become the result of the defn
+#define TCESXCECANTX (TCESXCEX+1)
+#define TCESXCECANT ((UI4)1<<TCESXCECANTX)  // set if this result cannot become the result of the defn
 #define TCESXSXMSK 0xffffff  // mask of word-number bits
  US go;  // line number.  Depends on type; can be loop-to point, failing-branch point, or error handler
  US source;  // source line number

@@ -21,7 +21,7 @@ B jtxoinit(JS jjt){A x;JJ jt=MTHREAD(jjt);
  _setmode(_fileno(stdout),_O_BINARY);
  _setmode(_fileno(stderr),_O_BINARY);
 #endif
- GAT0(x,INT,8,0);  ACINITZAP(x); INITJT(jjt,fopafl)=x; AM(INITJT(jjt,fopafl))=0;   // AM is # valid files.  Table has rank 0.  We allo as INT but the values are As - we never need to clear to 0
+ GAT0(x,INT,8,0);  ACINITUNPUSH(x); INITJT(jjt,fopafl)=x; AM(INITJT(jjt,fopafl))=0;   // AM is # valid files.  Table has rank 0.  We allo as INT but the values are As - we never need to clear to 0
  R 1;
 }
 

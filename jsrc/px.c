@@ -32,6 +32,9 @@ DF1(jtexec1){A z;
   F1RANK(1,jtexec1,self);
   STACKCHKOFL z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+!!EXPLICITRUNNING)));  // replace DDs, but require that they be complete within the string (no jgets)
  }
+ // we MUST NOT call EPILOG, even though there is trash from ddtokens to clean up.  Local values are not protected by FAOWED but instead by the local symbol table.  If a local-named value is in execution
+ // and the name is deleted (by name_: or 4!:55), we use tpush to defer the fa to the caller.  For this purpose sentences executed by ". are part of the containing sentence in parse, and must not do tpop
+ // before the calling sentence has completed.
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
 }
 

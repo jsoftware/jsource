@@ -36,7 +36,7 @@ FORK2(jtfolk2,0x1000)    // this version used by reversions, where localuse may 
 
 // see if f is defined as [:, as a single name
 static B jtcap(J jt,A x){V*v;
- if(v=VAV(x),CTILDE==v->id&&NAME&AT(v->fgh[0])&&(x=QCWORD(syrd(v->fgh[0],jt->locsyms)))){v=VAV(x); fa(x);}  // don't go through chain of names, since it might loop (on u) and it's ugly to chase the chain   syrd ra()s the value
+ if(v=VAV(x),CTILDE==v->id&&NAME&AT(v->fgh[0])&&(x=syrd(v->fgh[0],jt->locsyms))){v=VAV(QCWORD(x)); if(LOCALRA||ISGLOBAL(x))fa(QCWORD(x));}  // don't go through chain of names, since it might loop (on u) and it's ugly to chase the chain   syrd ra()s the value if global
  R CCAP==v->id;  //
 }
 

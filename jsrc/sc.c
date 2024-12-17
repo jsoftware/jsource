@@ -68,7 +68,7 @@ DF2(jtunquote){A z;
     A cachedlocale=FAV(self)->localuse.lu0.cachedloc; UI4 vtime=FAV(self)->lu2.refvalidtime;  // fetch before we read reftime as atomic
     if(vtime==ACVCACHEREAD){  // is previous lookup still valid
      // The previous lookup can be reused because there have been no assignments
-     raposgblqcgsv(QCWORD(fs),QCPTYPE(fs),fs); // ra to match syrd1
+     raposgblqcgsv(QCWORD(fs),QCPTYPE(fs),fs); // ra to match syrd1  scaf QCWORD not needed
      if(unlikely(NAV(thisname)->flag&NMLOC)){  // is this a (necessarily direct) locative?
       // see if the locale is cached.   public_z_ =: entry_loc_ where entry_loc will have the locale pointer
       if(unlikely((explocale=cachedlocale)==0)){  // use cached locale if there is one (there will be, except first time through)  If not...
@@ -87,12 +87,12 @@ DF2(jtunquote){A z;
   }
   // here the address was not cached, or the cache was stale.  For namerefs caching we go through here to refetch the value because we need QCNAMED semantics
   {
-   // name was not cached.  Look it up.  The calls to the lookup routines all issue ra() (under lock) on the value if found
+   // name was not cached.  Look it up, returning QCNAMED semantics.  The calls to the lookup routines all issue ra() (under lock) on the value if found
    I nmflgs=NAV(thisname)->flag;   // flags from name, before we call subroutines
    if(likely(!(nmflgs&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
-    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check t0 see
+    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=jtprobe(jtx,sx,hashx,jt->locsyms))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check to see.  This is a pun: not-GLOBAL turns into not-NAMED
     fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
     // leave LOCINCRDECR unset and jt->global unchnged
     deflocal:;
@@ -106,7 +106,7 @@ DF2(jtunquote){A z;
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
-     if(likely((fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms))!=0)){  // look only in local symbols
+     if(likely((fs=jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms))!=0)){  // look only in local symbols.  This is a pun: not-GLOBAL turns into not-NAMED
       // u/v, assigned by xdefn.  Implied locative.  Switch locals and globals to caller's environment
       jt->locsyms=(A)AM(jt->locsyms); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
       raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
@@ -117,7 +117,7 @@ DF2(jtunquote){A z;
         // AKGST changes only from cocurrent.  This leads to a divergence between jt->global and AKGST if a non-operator modifier calls an anonymous explicit that issues cocurrent.  BFD.  The divergence
         // is removed by the next named call
    }
-   // Common path for named functions that we looked up here.  fs has QCNAMED semantics.  short-term caches bypass this
+   // Common path for named functions that we looked up here.  fs has QCNAMED semantics.  short-term caches bypass this.  The rare local names have been ra()d
    // explocale is the locale we are calling into
    ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;);  // name must be defined
    I namedloc=(I)fs&QCNAMED; fs=QCWORD(fs);  // extract NAMED flag from fs, clear other flags
@@ -309,13 +309,13 @@ RETF(z);
 // and return that with the part of speech of the value; the name will be resolved when the name~ is executed.
 // If the name is undefined, return a reference to [: (a verb that always fails)
 // This verb also does some processing designed to reduce register usage in the parser:
-//  * if val is not 0, it is freed
+//  * if val is not 0, it is freed if it is not local
 //  * the flags from val are transferred to the result (with QCFAOWED semantics)
 // The value is used only for flags and rank
 // The reference lookup is initialized with QCGLOBAL semantics (0/QCVERB if undefined ref) and the current asngct
 A jtnamerefacv(J jt, A a, A val){A y;V*v;
  y=likely(val!=0)?QCWORD(val):ds(CCAP);  // If there is a value, use it; if not, treat as [: (verb that creates error)
- if(unlikely(((I)val&QCNOUN)!=0))R (A)((I)val|QCFAOWED);  // if noun, keep the flags, and indicate we didn't fa() it
+ if(unlikely(((I)val&QCNOUN)!=0))R LOCALRA?(A)((I)val|QCFAOWED):SYRDGLOBALTOFAOWED(val);  // if noun, keep the flags: if global, indicate it needs eventual fa()
  // This reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: so we clear the bucket info if we ra() the reference
  v=FAV(y);
@@ -330,7 +330,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // In any case we install the current asgnct and the looked-up value (with QCGLOBAL semantics).  We will know that the cached value is not a pun in type
  I flag2=(!!(NAV(a)->flag&NMCACHED) | (jt->namecaching & !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<VF2CACHEABLEX;  // enable caching if called for
  A z=fdefnoerr(flag2,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
- if(likely(val!=0))fa(QCWORD(val))else val=(A)QCVERB;  // release the value, now that we don't need it.  If val was 0, get flags to install into reference to indicate [: is a verb
+ if(likely(val!=0)){if(LOCALRA||ISGLOBAL(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // abort if reference not allocated
  if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val); FAV(z)->lu2.refvalidtime=ACVCACHEREAD;}  // install cachelet of lookup, but never if indirect locative
  R (A)((I)z|QCPTYPE(val));  // Give the result the part of speech of the input.  no FAOWED since we freed val
@@ -343,7 +343,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
 //  if fa is needed, we do it here
 A jtnameref(J jt,A w,A locsyms){A z;
  ARGCHK1(w); z=syrd(w,locsyms);
- RZ(z=namerefacv(w,z));  // make a reference to the name & fa the value
+ RZ(z=namerefacv(w,z));  // make a reference to the name & convert to FAOWED semantics
  if(unlikely((I)z&QCFAOWED)){tpush(QCWORD(z));}  // if free is owed, tpush it & cancel the request
  R QCWORD(z);
 }    /* argument assumed to be a NAME */

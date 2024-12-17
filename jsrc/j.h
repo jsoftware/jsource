@@ -806,6 +806,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define SWMAX 32767   // max # words in a sentence
 #define EXPWMAX 16777215  // max # words in an explicit defn
 
+#define LOCALRA 1  // ra() local names during lookup - must be set, but perhaps we can make it an option in explicit def
+
 // flags for jteformat
 #define EMSGE 0xff  // the error-code part
 #define EMSGNOEVM 0x200  // set to suppress moving the terse message

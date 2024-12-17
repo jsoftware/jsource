@@ -226,7 +226,7 @@ A jteformat(J jt,A self,A a,A w,A m){
  F1PREFIP;
  if(likely(self!=DUMMYSELF)){  // if we are called without a real self, we must be executing something internal.  Format it later when we have a real self
   C e=jt->jerr;
-  if(e!=0 && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if no error, or we have already run eformat on this error, don't do it again
+  if(e!=0 && e!=EVABORTEMPTY && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if no error, or we have already run eformat on this error, don't do it again.  Don't waste time on aborts
    if(!jt->glock && !(jt->emsgstate&EMSGSTATENOEFORMAT)){ // if we are locked, show nothing; if eformat suppressed, leave the error line as is
     A saverr;   // savearea for the initial message
     A *old=jt->tnextpushp;  // we must free all memory that we allocate here
@@ -238,10 +238,12 @@ A jteformat(J jt,A self,A a,A w,A m){
        // we have to reset the state of the error system after saving what we will need
        I pareninfo = (jt->emsgstate&EMSGSTATEPAREN)>>EMSGSTATEPARENX;  // unbalanced-paren info from infererrtok
        RESETERR; jt->emsgstate|=EMSGSTATEFORMATTED; // clear error system; indicate that we are starting to format, so that the error line will not be modified during eformat
-       A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
-       if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
+// obsolete        A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat; if((val=QCWORD(namerefacv(nam,val)))==0)goto noeformat;
+// obsolete        if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.  Undo ra() in syrd
+       A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat;
+       if((val=QCWORD(namerefacv(nam,QCWORD(val))))==0)goto noeformat; if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.   namerefscv will undo ra() in syrd
        // we also have to reset processing state: ranks.  It seems too hard to force eformat to infer the ranks from the args
-       // other internal state (i. e. from !.n) will have been restored before we get here
+       // other internal state (i. e. from !.n) will have been restored before we get here  
        // establish internal-state args: jt->ranks.
        A rnk; if((rnk=v2((I)(B)jt->ranks,(I)(B)(jt->ranks>>RANKTX)))==0)goto noeformat; // cell ranks
        RESETRANK;   //  We have to reset the rank before we call internal functions

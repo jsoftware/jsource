@@ -505,11 +505,11 @@ A jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){A val;
   // If there is a local symbol table, search it first
-  if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCGLOBAL semantics
+  if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(LOCALRA)rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCGLOBAL semantics
   g=jt->global;  // Continue with the current locale
  }else{A val;  // locative
   RZ(g=sybaseloc(a));  // find the starting locale for the name lookup
-  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){rapos(QCWORD(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
+  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){if(LOCALRA)rapos(QCWORD(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
  }
  A res=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
  if(likely(res!=0))res=SETGLOBAL(res);  // mark found in global, if found
@@ -528,13 +528,13 @@ A jtsyrdforlocale(J jt,A a){A g;
 // same as syrd, but we have already checked for buckets
 // look up a name (either simple or locative) using the full name resolution
 // result is addr/global/flags for name (i. e. QCGLOBAL semantics), or 0 if not found
-// If the name/value are found, ra() the value
+// If the name/value are found, ra() the value if global
 A jtsyrdnobuckets(J jt,A a){A g,res;
  ARGCHK1(a);
  I fndtblflg;  //  in the rare case of n___1, we have to look to see if the name was local
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(NAV(a)->bucket)<=0)if(res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){rapos(QCWORD(res),res); R res;}  // return if found locally from name
+  if(unlikely(NAV(a)->bucket)<=0)if(res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){if(LOCALRA)rapos(QCWORD(res),res); R res;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
   fndtblflg=0;  // through this path only global tables are found
  } else{RZ(g=sybaseloc(a)); fndtblflg=AR(g);}  // if locative, start in locative locale & remember table type
@@ -617,7 +617,7 @@ F1(jtscind){R dllsymaddr(w,3);}  // 4!:4 script index
 F1(jtdllvaladdr){ASSERT(!JT(jt,seclev),EVSECURE) R sc((I)w);}  // 15!:19, return address of header of noun w
 
 // look up the name w using full name resolution.  Return the value if found, abort if not found or invalid name
-F1(jtsymbrd){A z; ARGCHK1(w); ASSERTN(z=QCWORD(syrd(w,jt->locsyms)),EVVALUE,w); tpush(z); R z;}   // undo the ra() in syrd
+F1(jtsymbrd){A z; ARGCHK1(w); ASSERTN(QCWORD(z=syrd(w,jt->locsyms)),EVVALUE,w); if(LOCALRA||ISGLOBAL(z))tpush(QCWORD(z)); R QCWORD(z);}   // undo the ra() in syrd
 
 // look up name w, return value unless locked or undefined; then return just the name
 F1(jtsymbrdlocknovalerr){A y;
@@ -628,7 +628,7 @@ F1(jtsymbrdlocknovalerr){A y;
   R nameref(w,jt->locsyms);  // return reference to undefined name
  }
  // no error.  Return the value unless locked function
- tpush(y);  // undo the ra() in syrd
+ if(LOCALRA)tpush(y);  // undo the ra() in syrd
  R FUNC&AT(y)&&(jt->glock||VLOCK&FAV(y)->flag)?nameref(w,jt->locsyms):y;
 }
 

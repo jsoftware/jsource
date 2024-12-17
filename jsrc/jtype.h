@@ -646,7 +646,7 @@ struct AD {
 #define ACSETLOCAL(a,v) AC(a)=(v);  // used when a might be shared, but atomic not needed
 #define ACSET(a,v)      __atomic_store_n(&AC(a),(v),__ATOMIC_RELEASE);  // used when a might be shared, but atomic not needed
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
-#define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
+#define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() after allocation, by zapping: used when we are not sure the most-recent value on the stack is a
 #define ACINITUNPUSH(a) {A *pushp=jt->tnextpushp; --pushp; \
                           if(unlikely(((I)pushp&(NTSTACKBLOCK-1))==0)){A *nextp=(A*)*pushp; if(unlikely(nextp!=pushp-1))freetstackallo(jt); pushp=nextp;} /* check start of block and start of allo */ \
                           jt->tnextpushp=pushp; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by backing the tpush pointer
@@ -882,11 +882,12 @@ typedef DST* DC;
 // In the LSBs returned by syrd()  (stored by symbis()), bit 4 and the higher code points have QCGLOBAL semantics:
 #define QCGLOBALX 4
 #define QCGLOBAL 0x10  // set if the name was found in a global table
+#define ISGLOBAL(w) ((I)w&QCGLOBAL)  // true if global, if w has QCGLOBAL semantics
 #define SETGLOBAL(w) (A)((I)(w)|QCGLOBAL)
 #define CLRGLOBAL(w) (A)((I)(w)&~QCGLOBAL)
 #define VALTYPENAMELESS ((SYMBX-LASTNOUNX)+1) // 6 set in nameless non-locative ACV, to suppress reference creation.
 #define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse.  Has bit 0 set, as befits a noun
-#define NAMELESSQCTOTYPEDQC(q) q=QCWORD(q), q=(A)((I)q+ATYPETOVALTYPEACV(AT(q)));  // q is name of NAMELESS QC; result has QC type for t
+#define NAMELESSQCTOTYPEDQC(q) q=(A)(((I)q&~0xf)+ATYPETOVALTYPEACV(AT(QCWORD(q))));  // q is name of NAMELESS QC; result has QC type for t with unchanged QCGLOBAL semantics
 // In the LSBs returned by syrd1() bit 4 have QCNAMED semantics:
 #define QCNAMEDX 4  // set if the value was found in a named locale, clear if numbered
 #define QCNAMED ((I)1<<QCNAMEDX)  // set if the value was found in a named locale, clear if numbered
@@ -896,6 +897,7 @@ typedef DST* DC;
 #define SETFAOWED(w) (A)((I)(w)|QCFAOWED)
 #define CLRFAOWED(w) (A)((I)(w)&~QCFAOWED)
 #define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?
+#define SYRDGLOBALTOFAOWED(w) (w)  // convert QCGLOBAL semantics of syrd() result to QCFAOWED: FAOWED if GLOBAL
 #define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part, 0-15 for the syntax units including assignment
 // When the value is pushed onto the parser stack, the FAOWED bit moves to bit 0 where it can be distinguished from a tstack pointer
 #define STKFAOWEDX 0

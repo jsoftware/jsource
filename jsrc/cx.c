@@ -281,7 +281,7 @@ DF2(jtxdefn){
   // in preventing it - still not a full fix, since invalid inplacing may have been done already
   CLEARZOMBIE
   // Assign the special names x y m n u v.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
-  // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
+  // For low-rank short verbs, this takes a significant amount of time using symbis, because the name doesn't have bucket info and is
   // not an assignment-in-place
   // So, we short-circuit the process by assigning directly to the name.  We take advantage of the fact that we know the
   // order in which the symbols were defined: y then x; and we know that insertions are made at the end; so we know
@@ -306,7 +306,7 @@ DF2(jtxdefn){
    if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX))){
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
-    ramkrecursv(w);  // make the block recursive
+    ramkrecursv(w);  // make the block recursive by raising contents
    }else{
     // not abandoned; but it could be VIRTUAL and even UNINCORPABLE!  We know that those blocks have valid usecounts inited to 1, so if we
     // keep the usecount right the block will never be freed except when it goes out of scope in the originator

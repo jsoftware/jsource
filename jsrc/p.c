@@ -606,8 +606,7 @@ rdglob: ;  // here when we tried the buckets and failed
          }
 #endif
          FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)
-        }
-        else y=LOCALRA?SETFAOWED(y):SYRDGLOBALTOFAOWED(y) ;  // if global, mark to free later
+        }else y=LOCALRA?SETFAOWED(y):SYRDGLOBALTOFAOWED(y) ;  // if global, mark to free later
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
         // nameless modifier, and not a locative.  This handles 'each' and the like.  Don't create a reference; maybe cache the value
         A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags

@@ -98,7 +98,8 @@ static QF2(jtqgcd){PROLOG(10006); // a+.w
 // a*.w
 static QF2(jtqlcm){PROLOG(10007);
  QASSERT(XSGN(a.d)&&XSGN(w.d), EVNAN)
- Q z= {xlcm(a.n, w.n), X1};
+ // from LdBeth: LCM(a/b , c/d) = LCM(a,c)/GCD(b,d)
+ Q z= {xlcm(a.n, w.n), xgcd(a.d, w.d)};
  QEPILOG(z);
 }
 

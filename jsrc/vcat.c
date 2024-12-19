@@ -113,7 +113,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,I somefill){I d,n,p=c*m;  // p=#
    // z may not be boxed; but if it is, w must be also.
  if(AR(w)){
   n=AN(w); d=AN(s)-AR(w);
-  if((~somefill|(-n&(d-1)))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short (d>0)
+  if((~somefill|(-n&(d-1)))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short (d>0).  Fills unnecessarily if axis was extended with 1s and the other arg needed fill
   if(n){  // nonempty cell, must copy in the data
    if(n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}  // incoming cell smaller than result area: take to result-cell size (uses fill)
    JMC(x,AV(w),k*AN(w),1);  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy

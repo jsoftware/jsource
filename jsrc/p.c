@@ -887,7 +887,7 @@ RECURSIVERESULTSCHECK
        AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
        A arg2=stack[pmask+1].a;   // 2nd arg, fs or right dyad
-       A arg3=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED); arg3=pmask&2?arg3:(A)jt;  // fs, if this is a conjunction, for FAOWED testing.  If not conj, set to jt which has FAOWED clear but allows reads.  Atomic to avoid branch
+       A arg3=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED); arg3=pmask&2?arg3:0;  // fs, if this is a conjunction, for FAOWED testing.  If not conj, set to 0 which has FAOWED clear.  Atomic to avoid branch
        UI4 restok=stack[1].t;  // save token # to use for result
        // We set the MODIFIER flag in the call so that jtxdefn/unquote can know that they are modifiers
        // We mark the inputs inplaceable (the first modifier to support that is u`v) - both always, even for adverbs
@@ -911,12 +911,17 @@ RECURSIVERESULTSCHECK
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
        ramkrecursv(yy);  // force recursive y
-       A freep=stack[1].a;
-       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-       freep=stack[pmask+1].a;
-       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-       freep=arg3;
-       if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+
+       while(1){       // for each stacked value, free the value unless it survives to the result, in which case it inherits the FAOWED.  Only one FAOWED can be passed on this way
+        if(ISSTKFAOWED(arg1)){if(unlikely(QCWORD(arg1)==yy))yy=arg1;else faowed(QCWORD(arg1),__atomic_load_n(&AC(QCWORD(arg1)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(arg1)),__ATOMIC_RELAXED));}
+        if(arg2==0)break; arg1=arg2; arg2=arg3; arg3=0;
+       };
+// obsolete        A freep=stack[1].a;
+// obsolete        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+// obsolete        freep=stack[pmask+1].a;
+// obsolete        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+// obsolete        freep=arg3;
+// obsolete        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
 
        y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
@@ -934,7 +939,7 @@ RECURSIVERESULTSCHECK
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
        I rc;
        if(likely(GETSTACK0PT&PTNAME0))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
-       else rc=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);
+       else rc=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);  // unknown or multiple name, process
 #if MEMAUDIT&0x10
        auditmemchains();
 #endif
@@ -967,12 +972,17 @@ RECURSIVERESULTSCHECK
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
         y=NEXTY;  // refetch next-word to save regs
-        A freep=stack[1].a;
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-        freep=stack[2].a;
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-        freep=stack[3].a;
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+        while(1){        // for each stacked value, free the value unless it survives to the result, in which case it inherits the FAOWED.  Only one FAOWED can be passed on this way
+         if(ISSTKFAOWED(arg1)){if(unlikely(QCWORD(arg1)==yy))yy=arg1;else faowed(QCWORD(arg1),__atomic_load_n(&AC(QCWORD(arg1)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(arg1)),__ATOMIC_RELAXED));}
+         if(arg2==0)break; arg1=arg2; arg2=arg3; arg3=0;
+        };
+
+// obsolete         A freep=stack[1].a;
+// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+// obsolete         freep=stack[2].a;
+// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+// obsolete         freep=stack[3].a;
+// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
@@ -989,12 +999,16 @@ RECURSIVERESULTSCHECK
         // errors inside hook are formatted there.  The only error on the hook itself is syntax, for which the terse error is enough
         RECURSIVERESULTSCHECK
         ramkrecursv(yy);  // force recursive y
-        A freep=stack[1].a;
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-        freep=stack[2].a;
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-        freep=arg3;
-        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+        while(1){       // for each stacked value, free the value unless it survives to the result, in which case it inherits the FAOWED.  Only one FAOWED can be passed on this way
+         if(ISSTKFAOWED(arg1)){if(unlikely(QCWORD(arg1)==yy))yy=arg1;else faowed(QCWORD(arg1),__atomic_load_n(&AC(QCWORD(arg1)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(arg1)),__ATOMIC_RELAXED));}
+         if(arg2==mark)break; arg1=arg2; arg2=arg3; arg3=mark;
+        };
+// obsolete         A freep=stack[1].a;
+// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+// obsolete         freep=stack[2].a;
+// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
+// obsolete         freep=arg3;
+// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
         y=NEXTY;  // refetch next-word to save regs
         PTFROMTYPE(stack[trident].pt,AT(QCWORD(yy))) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
@@ -1110,10 +1124,10 @@ abandname:;
        // If the value is local, we must ra it.
        if(unlikely(!ISGLOBAL(sv)))rapos(QCWORD(sv),sv);  // ra() the new value first
 #endif
-       sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  sv has QCFAOWED semantics
+       sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  returned sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // undco will set FAOWED if it didn't fa() the value; transfer that to sv
       }else{y=QCWORD(sv); if(!LOCALRA)sv=(A)ISGLOBAL(sv);}  // not name_:, just use the value.  sv=non0 if it needs free
-     }else{y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd if global
+     }else{y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd if global, so clear sv to indicate no further fa
     }else{
      // undefined name.  This is very subtle.  We will return a reference to [: as required by the rules (User might execute ".'undefname' which should return empty with no error).
      // This will be formatted for error, if ever, only when returning the value to console level - but at that point the failing sentence has been lost.  That will be OK because ASSERTN

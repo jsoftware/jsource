@@ -899,8 +899,12 @@ typedef DST* DC;
 #define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?
 #define SYRDGLOBALTOFAOWED(w) (w)  // convert QCGLOBAL semantics of syrd() result to QCFAOWED: FAOWED if GLOBAL
 #define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part, 0-15 for the syntax units including assignment
-// When the value is pushed onto the parser stack, the FAOWED bit moves to bit 0 where it can be distinguished from a tstack pointer
-#define STKFAOWEDX 0
+// When the value is pushed onto the parser stack, we use QCFAOWED semantics: QCSTKNAMED is set in any named ref and
+// the FAOWED bit moves to bit 1 where it can be distinguished from a tstack pointer
+#define STKNAMEDX 0
+#define STKNAMED ((I)1<<STKNAMEDX)  // set if the address is the address of the arg (rather than of a tpop slot)
+#define ISSTKNAMED(w) ((I)(w)&STKNAMED)  // is fa() required?
+#define STKFAOWEDX 0  // till we have !LOCALRA, STKFAOWED is the same as STKLOCAL
 #define STKFAOWED ((I)1<<STKFAOWEDX)  // set in parser stack if value needs to be freed
 #define SETSTKFAOWED(w) (A)((I)(w)|STKFAOWED)
 #define CLRSTKFAOWED(w) (A)((I)(w)&~STKFAOWED)

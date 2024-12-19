@@ -1,7 +1,7 @@
 cocurrent <'z'
 3 : 0 ''
 
-JLIB=: '9.6.11'
+JLIB=: '9.6.12'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -356,8 +356,8 @@ Note=: 3 : '0 0 $ 0 : 0' : [
 on=: @:
 pick=: >@{
 rows=: "1
-script=: [: 3 : '0!:0 y [ 4!:55<''y''' jpath_z_ &.: >
-scriptd=: [: 3 : '0!:1 y [ 4!:55<''y''' jpath_z_ &.: >
+script=: [: 3 : '0!:0 y_:' jpath_z_ &.: >
+scriptd=: [: 3 : '0!:1 y_:' jpath_z_ &.: >
 stdout=: 1!:2&4
 stderr=: 1!:2&5
 stdin=: 1!:1@3: :. stdout

@@ -107,14 +107,15 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  RETF(z);
 }    /* a,"r w where a or w or both are sparse */
 
-
-static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
+// k is length of an atom; c is atoms/result item; m is #items to move; s is shape of result item; w->arg to move; x->area to move to; z is A block for output area; somefill is neg if there is any fill
+// result points to end+1 of area filled
+static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,I somefill){I d,n,p=c*m;  // p=#atoms in result
    // z may not be boxed; but if it is, w must be also.
  if(AR(w)){
   n=AN(w); d=AN(s)-AR(w);
-  if((-n&(d-1))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short (d>0)
+  if((~somefill|(-n&(d-1)))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short (d>0)
   if(n){  // nonempty cell, must copy in the data
-   if(n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}  // incoming cell smaller than result area: take to result-cell size
+   if(n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}  // incoming cell smaller than result area: take to result-cell size (uses fill)
    JMC(x,AV(w),k*AN(w),1);  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy
   }
  }else{  // scalar replication
@@ -137,11 +138,12 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  PRODX(c,r-1,1+sv,1); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // c=#atoms in result item; m, n=#items in each arg (1 if arg has lower rank)
  DPMULDE(c,m+n,zn);  // get total # atoms in result
  // Now that we have figured out the result shape we can decide whether we need fill
- I origwt=AT(w); if(unlikely(((AN(a)+AN(w)-zn)&(-MIN(ar,wr)))<0))RZ(w=setfv(a,w));  // set fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate).  cvt w if needed
+ I somefill;  // set if we must have a fill atom
+ I origwt=AT(w); if(unlikely((somefill=((AN(a)+AN(w)-zn)&(-MIN(ar,wr))))<0))RZ(w=setfv(a,w));  // set fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate).  cvt w if needed
  if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|(AN(a)==0),t|(((t^origwt)+AN(w))==0)); t=LOWESTBIT(t); I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty.  If fill changed w, don't do B01 for it
  GA(z,t,zn,r,sv); AS(z)[0]=m+n; x=CAVn(r,z); k=bpnoun(t);  // allocate result with composite item shape; install #items; get len of an atom
- RZ(x=ovgmove(k,c,m,s,a,x,z));
- RZ(x=ovgmove(k,c,n,s,w,x,z));
+ RZ(x=jtovgmove(jt,k,c,m,s,a,x,somefill));
+ RZ(x=jtovgmove(jt,k,c,n,s,w,x,somefill));
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 

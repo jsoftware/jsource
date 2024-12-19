@@ -806,7 +806,7 @@ extern void jfree4gmp(void*,size_t);
 #define osub(x,y)                   jtosub(jt,(x),(y))
 #define outfix(x,y,z)               jtoutfix(jt,(x),(y),(z))
 #define over(x,y)                   jtover(jt,(x),(y),ds(CCOMMA))
-#define ovgmove(x0,x1,x2,x3,x4,x5,x6)               jtovgmove(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))
+#define ovgmove(x0,x1,x2,x3,x4,x5)  jtovgmove(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define ovs(x,y)                    jtovs(jt,(x),(y))
 #define ovs0(x0,x1,x2,x3)           jtovs0(jt,(x0),(x1),(x2),(x3))
 #define pad(x,y,z)                  jtpad(jt,(x),(y),(z))

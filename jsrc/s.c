@@ -402,8 +402,8 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 
 // look up a non-locative name using the locale path
 // g is the current locale, l/string=length/name, hash is the hash for it (l is carried in the low 8 bits of jt)
-// result is  result is addr/named/flags for name (i. e. QCNAMED semantics), or 0 if not found
-// Bit QCNAMED of the result is set iff the name was found in a named locale
+// result is  result is addr/named/flags for name (i. e. QCNAMEDLOC semantics), or 0 if not found
+// Bit QCNAMEDLOC of the result is set iff the name was found in a named locale
 // We must have no locks coming in; we take a read lock on each symbol table we have to search
 // if we find a name, we ra() it under lock.  All we have to do is increment the name since it is known to be recursive if possible
 A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
@@ -419,11 +419,11 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
                          if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res);
 #ifdef PDEP
-                         res=(A)(((I)res&~QCNAMED)+PDEP((I)AR(g)>>ARNAMEDX,(I)1<<(QCNAMEDX-ARNAMEDX)));
+                         res=(A)(((I)res&~QCNAMEDLOC)+PDEP((I)AR(g)>>ARNAMEDX,(I)1<<(QCNAMEDLOCX-ARNAMEDX)));
 #else
-                         res=(A)(((I)res&~QCNAMED)+(((I)AR(g)&ARNAMED)<<(QCNAMEDX-ARNAMEDX)));
+                         res=(A)(((I)res&~QCNAMEDLOC)+(((I)AR(g)&ARNAMED)<<(QCNAMEDLOCX-ARNAMEDX)));
 #endif
-                         READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMED
+                         READUNLOCK(g->lock) R res;}  // change QCGLOBAL semantics to QCNAMEDLOC
                          READUNLOCK(g->lock)} g=gn;
             }while(g);  // return when name found.
  R 0;  // fall through: not found

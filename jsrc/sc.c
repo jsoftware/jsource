@@ -85,9 +85,9 @@ DF2(jtunquote){A z;
     }
    }
   }
-  // here the address was not cached, or the cache was stale.  For namerefs caching we go through here to refetch the value because we need QCNAMED semantics
+  // here the address was not cached, or the cache was stale.  For namerefs caching we go through here to refetch the value because we need QCNAMEDLOC semantics
   {
-   // name was not cached.  Look it up, returning QCNAMED semantics.  The calls to the lookup routines all issue ra() (under lock) on the value if found
+   // name was not cached.  Look it up, returning QCNAMEDLOC semantics.  The calls to the lookup routines all issue ra() (under lock) on the value if found
    I nmflgs=NAV(thisname)->flag;   // flags from name, before we call subroutines
    if(likely(!(nmflgs&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
@@ -117,10 +117,10 @@ DF2(jtunquote){A z;
         // AKGST changes only from cocurrent.  This leads to a divergence between jt->global and AKGST if a non-operator modifier calls an anonymous explicit that issues cocurrent.  BFD.  The divergence
         // is removed by the next named call
    }
-   // Common path for named functions that we looked up here.  fs has QCNAMED semantics.  short-term caches bypass this.  The rare local names have been ra()d
+   // Common path for named functions that we looked up here.  fs has QCNAMEDLOC semantics.  short-term caches bypass this.  The rare local names have been ra()d
    // explocale is the locale we are calling into
    ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;);  // name must be defined
-   I namedloc=(I)fs&QCNAMED; fs=QCWORD(fs);  // extract NAMED flag from fs, clear other flags
+   I namedloc=(I)fs&QCNAMEDLOC; fs=QCWORD(fs);  // extract NAMED flag from fs, clear other flags
    // ** as of here we know there is a value for the name, and it has been ra()d.  We must not take an error exit without fa
    ASSERTSUFF(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN,z=0; fa(fs); goto exitname;);   // make sure its part of speech has not changed since the name was parsed; if error must use general fa
    // *** now that we know the lookup was valid, save it for next time, including locale if any

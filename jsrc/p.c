@@ -656,8 +656,8 @@ endname: ;
      stack[0].t = (US)pt0ecam;  // install the original token number for the word
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // OK to fetch queue[-1]
-     // stack the value, changing it to STKFAOWED semantics
-     stack[0].a = (A)(((I)y&~STKFAOWED)+(((I)y>>(QCFAOWEDX-STKFAOWEDX))&STKFAOWED));   // finish setting the stack entry, with the new word.  The stack entry has STKFAOWED with garbage in other type flags
+     // stack the value, changing it to STKNAMED semantics
+     stack[0].a = (A)(((I)y&~STKFAOWED)+(((I)y>>(QCFAOWEDX-STKFAOWEDX))&STKFAOWED));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with garbage in other type flags
      y=*(volatile A*)queue;   // fetch next value as early as possible
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  
      UI4 tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part (the pull queue)
@@ -761,7 +761,7 @@ endname: ;
        // rely on *arg[12].  But if the value is abandoned, the one thing we CAN count on is that it has a tpop slot.  So we will save
        // the address of the tpop slot IF the arg is abandoned now.  Then after execution we will pick up again, knowing to quit if the tpop slot
        // has been zapped.
-       // (2) If either arg is STKNAMED, it can't be abandoned & we use tpop[aw] to hold it, flagged as STKNAMED (+ possibly STKFAOWED).  After exec if FAOWED we must either fa() the arg, paying the debt, or flag the result as STKFAOWED
+       // (2) If either arg is STKNAMED, it can't be abandoned & we use tpop[aw] to hold it, preserving the STKNAMED/STKFAOWED flags.  After exec if FAOWED we must either fa() the arg, paying the debt, or flag the result as STKFAOWED
        // The calculation of tpopa/w will run to completion while the expected indirect-branch misprediction is being processed
        A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopa=ISSTKNAMED(arg1)?(A*)arg1:tpopa;
         // Note: this line must come before the next one, to free up the reg holding ZAPLOC0
@@ -816,10 +816,10 @@ RECURSIVERESULTSCHECK
        // Those loads will settle during misprediction, reducing the time through A (including its misprediction, if it mispredicts)
        freea=__atomic_load_n((A*)((I)tpopw&-SZI),__ATOMIC_RELAXED);  // load *tpopw before pipeline break if the next test mispredicts.  In case it comes from arg2, round to stay in block
          // we are investing a cycle here to start the load for the path where isstkowed is false.  If isstkowed predicts true, this loads will finish during the pipeline break.  Too bad we can't force that prediction
-       freep=(A)QCWORD(tpopw); freep=ISSTKFAOWED(tpopw)?freep:(A)jt;
+       freep=(A)QCWORD(tpopw); freep=ISSTKNAMED(tpopw)?freep:(A)jt;
        I freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
          // we are investing another cycle to get an early start on the values needed to free an owed block.  This free will usually result in an RFO cycle, which cannot start until the branch is retired
-       if(ISSTKFAOWED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else{INCRSTAT(wfafa/*.98*/) faowed(freep,freepc,freept);}}
+       if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else{INCRSTAT(wfafa/*.98*/) faowed(freep,freepc,freept);}}
        else{
         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
@@ -833,9 +833,9 @@ RECURSIVERESULTSCHECK
        }
        // repeat for a if any
        freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_RELAXED);
-       freep=(A)QCWORD(tpopa); freep=ISSTKFAOWED(tpopa)?freep:(A)jt;
+       freep=(A)QCWORD(tpopa); freep=ISSTKNAMED(tpopa)?freep:(A)jt;
        freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
-       if(ISSTKFAOWED(tpopa)){INCRSTAT(afaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else{INCRSTAT(afafa/*.98*/) faowed(freep,freepc,freept);}}
+       if(ISSTKNAMED(tpopa)){INCRSTAT(afaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else{INCRSTAT(afafa/*.98*/) faowed(freep,freepc,freept);}}
        else{
         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
@@ -848,7 +848,6 @@ RECURSIVERESULTSCHECK
        }
        // repeat for fs, which we extract from the stack to get the FAOWED flag
        PSTK *fsa2=(PSTK*)((I)stack+((2*sizeof(PSTK))>>((pt0ecam>>PMASKSAVEX)&1)));  // pointer to stack slot that was executed   1 2 2 (2 2)
-
        freep=fsa2->a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
        if(ISSTKFAOWED(freep)){faowed(QCWORD(freep),freepc,freept);}   // 1 2 2
 
@@ -1093,7 +1092,7 @@ failparse:
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){A sv=0;  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // 1-word sentence:
-   I yflags=(I)queue[0];  // fetch the word, with QCNAMED semantics
+   I yflags=(I)queue[0];  // fetch the word, with QCNAMEDLOC semantics
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing overhead, because it happens enough to notice (conditions & function results)
    // No ASSERT - must get to the end to pop stack
    y=QCWORD(yflags);  // point y to the start of block

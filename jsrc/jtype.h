@@ -850,7 +850,7 @@ typedef DST* DC;
 // LSB codes in value pointers.  Set by enqueue() and symbis(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
 // type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
 // in the words of an explicit definition the words have QCNAMELKP semantics in bit 4:
-#define QCMASK 0x3fLL   // all the LSB flags (bit 5 not used yet)
+#define QCMASK 0x3fLL   // all the LSB flags
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
@@ -880,26 +880,28 @@ typedef DST* DC;
 #define QCNAMEBYVALUE 0x01   // combining flag - name is mnuvxy type
 #define QCNAMEABANDON 0x08 // combining flag - name has _: - set only if not assigned
 // In the LSBs returned by syrd()  (stored by symbis()), bit 4 and the higher code points have QCGLOBAL semantics:
-#define QCGLOBALX 4
-#define QCGLOBAL 0x10  // set if the name was found in a global table
+#define QCGLOBALX 5
+#define QCGLOBAL ((I)1<<QCGLOBALX)  // set if the name was found in a global table
 #define ISGLOBAL(w) ((I)w&QCGLOBAL)  // true if global, if w has QCGLOBAL semantics
 #define SETGLOBAL(w) (A)((I)(w)|QCGLOBAL)
 #define CLRGLOBAL(w) (A)((I)(w)&~QCGLOBAL)
 #define VALTYPENAMELESS ((SYMBX-LASTNOUNX)+1) // 6 set in nameless non-locative ACV, to suppress reference creation.
 #define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse.  Has bit 0 set, as befits a noun
 #define NAMELESSQCTOTYPEDQC(q) q=(A)(((I)q&~0xf)+ATYPETOVALTYPEACV(AT(QCWORD(q))));  // q is name of NAMELESS QC; result has QC type for t with unchanged QCGLOBAL semantics
-// In the LSBs returned by syrd1() bit 4 have QCNAMED semantics:
-#define QCNAMEDX 4  // set if the value was found in a named locale, clear if numbered
-#define QCNAMED ((I)1<<QCNAMEDX)  // set if the value was found in a named locale, clear if numbered
+// In the LSBs returned by syrd1() bit 4 have QCNAMEDLOC semantics:
+#define QCNAMEDLOCX 4  // set if the value was found in a named locale, clear if numbered
+#define QCNAMEDLOC ((I)1<<QCNAMEDLOCX)  // set if the value was found in a named locale, clear if numbered
 // After the named value has been processed, bit 4 changes meaning to QCFAOWED semantics:
-#define QCFAOWEDX 4
-#define QCFAOWED 0x10  // when this bit is set in an address returned from lookup, it means that the value was ra()d when it was stacked and must be fa()d when it leaves execution
+#define QCNAMEDX 4  // set to indicate that this value came from a name
+#define QCNAMED ((I)1<<QCNAMEDX)
+#define QCFAOWEDX 5  // when this bit is set in an address returned from lookup, it means that the value was ra()d when it was stacked and must be fa()d when it leaves execution.  Should match QCGLOBAL
+#define QCFAOWED ((I)1<<QCFAOWEDX)
 #define SETFAOWED(w) (A)((I)(w)|QCFAOWED)
 #define CLRFAOWED(w) (A)((I)(w)&~QCFAOWED)
 #define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?
 #define SYRDGLOBALTOFAOWED(w) (w)  // convert QCGLOBAL semantics of syrd() result to QCFAOWED: FAOWED if GLOBAL
 #define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part, 0-15 for the syntax units including assignment
-// When the value is pushed onto the parser stack, we use QCFAOWED semantics: QCSTKNAMED is set in any named ref and
+// When the value is pushed onto the parser stack, we use STKNAMED semantics: STKNAMED is set in any named ref and
 // the FAOWED bit moves to bit 1 where it can be distinguished from a tstack pointer
 #define STKNAMEDX 0
 #define STKNAMED ((I)1<<STKNAMEDX)  // set if the address is the address of the arg (rather than of a tpop slot)

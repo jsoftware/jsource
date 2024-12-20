@@ -18,7 +18,7 @@ wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
 
-N=: 24  NB. max # worker threads
+N=: 62  NB. max # worker threads
 
 NB. create all available threads
 1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
@@ -41,7 +41,7 @@ EMPTY
 
 t1=: 3 : 0
 ALL=: 0$0
-pyx=. (p1 t.'')"0  i. 16
+pyx=. (p1 t.'')"0  i. 300
 1:&>pyx
 echo #~.ALL
 echo #/.~ ALL
@@ -50,19 +50,50 @@ EMPTY
 
 t2=: 3 : 0
 ALL=: 0 0$0
-pyx=. (p2 t.'')"0  i. 16
+pyx=. (p2 t.'')"0  i. 300
 1:&>pyx
 echo #~.ALL
 echo #/.~ ALL
 EMPTY
 )
 
+p3=: 3 : 0
+ALL=. 0$0
+for_i. i.100 do.
+ALL=. ALL, (3 T.'')
+end.
+#ALL
+)
+
+p4=: 3 : 0
+ALL=. 0 0$0
+for_i. i.100 do.
+ALL=. ALL, ,~(3 T.'')
+end.
+#ALL
+)
+
+t3=: 3 : 0
+pyx=. (p3 t.'')"0  i. 300
+echo ;pyx
+EMPTY
+)
+
+t4=: 3 : 0
+pyx=. (p4 t.'')"0  i. 300
+echo ;pyx
+EMPTY
+)
+
 t1''
+t3''
+
 t2''
+t4''
 
 delth''
 
-4!:55 ;:'ALL delth N p1 p2 t1 t2 sleep wthr'
+4!:55 ;:'ALL delth N p1 p2 p3 p4 t1 t2 t3 t4 sleep wthr'
 
 epilog''
 

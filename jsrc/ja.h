@@ -355,6 +355,9 @@
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
 // Thus we mark the free as unlikely, and it will usually do the RFO cycle.  The block must be recursive if it is recursible
 #define faowed(x,Zc,tt) {if(unlikely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
+// faifowed does the free only if the block is marked FAOWED in stkf.  These may have been stacked by local names, if the stack was later protected
+#define faifowed(x,Zc,tt,stkf) {if(unlikely(tt<0) || ((((Zc>>(ACPERMANENTX-(STKFAOWEDX+1)))&(4*STKFAOWED-1))<((I)stkf&STKFAOWED)) && unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2)))jtfamf(jt,x,tt);}  // call if sparse or ending; never touch a PERM
+   // FAOWED becomes ..0f0; perm becomes .0p00 where perhaps p00 has +-1 added; 0f0>p00 means 'FAOWED & not PERMANENT'
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted

@@ -122,6 +122,7 @@ PT cases[] = {
 #define PTNOUN 0xDFC17CBE
 #define PTMARKFRONT 0x0900007F  // matches only pos 0 - bit 24 set to not look like assign to name, 27 for not LPAR
 #define PTMARKBACK (UI4)0xC9000040  // matches only pos 3, but with a flag set to not match PTISRPAR0 - in pos 0, which this can never be in
+#define PTVERB 0xF9E67B3E
 #define PTLPAR 0x0100007F  // flagged to be not a name
 #define PTRPAR (UI4)0xC9000000
 // table for translating AT type to QC type flags
@@ -133,7 +134,7 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 // gap[ASGNX-LASTNOUNX]   must be left open in enqueue() tokens to avoid messing up the pull queue
 [VALTYPENAMELESS-1] = 0xC9C8403E, // gap [SYMBX-LASTNOUNX]  only in syrd() results, i. e. from symbol
 [VALTYPESPARSE-1] = PTNOUN,  // gap [CONWX-LASTNOUNX]  only in syrd() results, i. e. from symbol
-[VERBX-LASTNOUNX] = 0xF9E67B3E,  // PV
+[VERBX-LASTNOUNX] = PTVERB,  // PV
 [LPARX-LASTNOUNX] = PTLPAR,  // PL
 [CONJX-LASTNOUNX] = 0xC9D04000,  // PC
 [RPARX-LASTNOUNX] = PTRPAR,  // PR
@@ -442,9 +443,16 @@ I infererrtok(J jt){I errtok;
 
 // Go through the stack issuing ra() for each name that has not been ra()d already.  We do this when we are about to do something that might delete a local name that is in execution, to wit
 // (1) expunging a name; (2) executing ".; (3) assigning a name (with a non-final assignment) when the stack has more than just the value being assigned
-// This must be called before pushing the new stack frame.  The routine that called here must return with a flag bit set in the result to cause the parser to set FAOWED in tpop[aw] if they are STKNAMED
-// ofst tell how many leading stack entries to skip.  Only non-executing stack entries, like names and copulas, should be skipped.
+// This must be called before pushing the new stack frame.  ofst tells how many leading stack entries to skip; if 0, we assume that we are executing a verb from lines 1-3.  We DO NOT
+// protect a value that is in execution, because that would require revisiting tpopa/tpopw after the verb returns to parse.  This means that this routine's caller is responsible for
+// protecting any value it needs, for example 4!:55 dellist =. ;:'dellist other names' should raise y to keep it valid until the deletions are finished.
 void protectlocals(J jt, I ofst){PSTK *stk; A y=0;  // pointer to execution stack
+ if(ofst==0){I fndverb=0;  // no offset given?
+  // no offset given; we are being called from a verb execution, lines 1-3.  Skip over the args by finding the first verb, then the first noun, and skipping the lot
+  for(ofst==1;++ofst;)if(fndverb&&jt->parserstackframe.parserstkend1[ofst].pt==PTNOUN)break; if(jt->parserstackframe.parserstkend1[ofst].pt==PTVERB)fndverb=1;
+  ofst=ofst+1;  // skip over the ending y arg
+ }
+ // ofst now has number of leading values to exempt
  for(stk=jt->parserstackframe.parserstkend1+ofst;stk->pt!=PTMARKBACK;++stk)if(((I)stk->a&STKNAMED+STKFAOWED)==STKNAMED){rapos(QCWORD(stk->a),y); stk->a=SETFAOWED(stk->a);} // if named & unprotected, protect & mark
 }
 
@@ -551,7 +559,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
      // We have the value/typeclass of the next word.  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
      if(!((I)y&QCISLKPNAME)){
       // not a name requiring lookup; turn off FAOWED
-      y=CLRFAOWED(y);  // y is now addr/0/type index
+      y=CLRQCFAOWEDMSK(y);  // y is now addr/00/type index
      }else{  // Replace a name (not to left of ASGN) with its value
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -606,11 +614,12 @@ rdglob: ;  // here when we tried the buckets and failed
          // if name_:, go delete the name, leaving the value to be deleted later.
 #if !LOCALRA
          // If the value is local, we must ra it and any other local pointers on the stack
-         if(unlikely(!ISGLOBAL(y))){
-          rapos(QCWORD(y),y);  // ra() the new value first
+         if(unlikely(!ISGLOBAL(y))){  // if any local copies are on the stack, they will stay there until the local name is expunged
+          rapos(QCWORD(y),y);  // ra() the new value first so that all args to undco have been ra()d
           PSTK *sk;
-          // scan the stack to see if it has been stacked already, setting FAOWED when it is
-          for(sk=stack;sk!=stackend1;++sk){if(QCWORD(y)==QCWORD(sk->a) && !ISSTKFAOWED(sk->a)){rapos(QCWORD(y),y); sk->a=SETSTKFAOWED(sk->a);}}  // if the value we want to use is stacked already, it must be marked non-abondoned
+          // scan the stack to see if it is at large in the stack, setting FAOWED when it is.  We don't call protectlocals because we need to protect just the one value and speed might matter
+          // the stacked value might have been an unflagged non-NAMED result, but after we ra() it we must call it STKNAMED because only STKNAMED values get fa()d when they leave execution
+          for(sk=stack;sk!=stackend1;++sk){if(QCWORD(y)==QCWORD(sk->a) && !ISSTKFAOWED(sk->a)){rapos(QCWORD(y),y); sk->a=SETSTKNAMEDFAOWED(sk->a);}}  // if the value we want to use is stacked already, it must be marked non-abondoned
          }
 #endif
          FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)
@@ -642,6 +651,7 @@ undefname:
        FPSZ(y)   // abort if failure allocating reference, or malformed name
       }
 endname: ;
+      y=SETNAMED(y);  // turn on the flag bit indicating this was NAMED
      }
 
      // names have been resolved
@@ -657,7 +667,8 @@ endname: ;
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // OK to fetch queue[-1]
      // stack the value, changing it to STKNAMED semantics
-     stack[0].a = (A)(((I)y&~STKFAOWED)+(((I)y>>(QCFAOWEDX-STKFAOWEDX))&STKFAOWED));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with garbage in other type flags
+// obsolete      stack[0].a = (A)(((I)y&~STKFAOWED)+(((I)y>>(QCFAOWEDX-STKFAOWEDX))&STKFAOWED));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with garbage in other type flags
+     stack[0].a = (A)(((I)y&~QCMASK)+(((I)y>>(QCNAMEDX-STKNAMEDX))&STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
      y=*(volatile A*)queue;   // fetch next value as early as possible
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  
      UI4 tmpes=pt0ecam;  // pt0ecam is going to be settling because of stack0pt.  To ratify the branch faster we save the relevant part (the pull queue)
@@ -814,12 +825,13 @@ RECURSIVERESULTSCHECK
        // We schedule the loads according to the measured frequencies indicated, which come from the test suite (not including gtdot*.ijs)
        // The rule is: loads that contribute to mispredictable test A should be scheduled before the LAST likely-mispredicted branch leading to A.
        // Those loads will settle during misprediction, reducing the time through A (including its misprediction, if it mispredicts)
+       // We use atomic loads to inhibit the compiler from reordering them
        freea=__atomic_load_n((A*)((I)tpopw&-SZI),__ATOMIC_RELAXED);  // load *tpopw before pipeline break if the next test mispredicts.  In case it comes from arg2, round to stay in block
          // we are investing a cycle here to start the load for the path where isstkowed is false.  If isstkowed predicts true, this loads will finish during the pipeline break.  Too bad we can't force that prediction
-       freep=(A)QCWORD(tpopw); freep=ISSTKNAMED(tpopw)?freep:(A)jt;
+       freep=(A)QCWORD(tpopw); freep=ISSTKNAMED(tpopw)?freep:(A)jt;  // scaf can use tpopw&-SZI  also reuse freepc in lower part
        I freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
          // we are investing another cycle to get an early start on the values needed to free an owed block.  This free will usually result in an RFO cycle, which cannot start until the branch is retired
-       if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else{INCRSTAT(wfafa/*.98*/) faowed(freep,freepc,freept);}}
+       if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else{INCRSTAT(wfafa/*.98*/) faifowed(freep,freepc,freept,tpopw);}}
        else{
         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
@@ -835,7 +847,7 @@ RECURSIVERESULTSCHECK
        freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_RELAXED);
        freep=(A)QCWORD(tpopa); freep=ISSTKNAMED(tpopa)?freep:(A)jt;
        freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
-       if(ISSTKNAMED(tpopa)){INCRSTAT(afaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else{INCRSTAT(afafa/*.98*/) faowed(freep,freepc,freept);}}
+       if(ISSTKNAMED(tpopa)){INCRSTAT(afaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else{INCRSTAT(afafa/*.98*/) faifowed(freep,freepc,freept,tpopa);}}
        else{
         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
@@ -937,6 +949,7 @@ RECURSIVERESULTSCHECK
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
        I rc;
+       if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // if there are stacked values after the value to be assigned, protect them in case we are about to reassign the value.  This should be rare.  The value itself needs no protection
        if(likely(GETSTACK0PT&PTNAME0))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
        else rc=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);  // unknown or multiple name, process
 #if MEMAUDIT&0x10

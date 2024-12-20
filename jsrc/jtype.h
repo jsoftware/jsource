@@ -896,6 +896,9 @@ typedef DST* DC;
 #define QCNAMED ((I)1<<QCNAMEDX)
 #define QCFAOWEDX 5  // when this bit is set in an address returned from lookup, it means that the value was ra()d when it was stacked and must be fa()d when it leaves execution.  Should match QCGLOBAL
 #define QCFAOWED ((I)1<<QCFAOWEDX)
+#define QCFAOWEDMSK (QCNAMED+QCFAOWED)  // the bits in FAOWED semantics (not including the type flags)
+#define CLRQCFAOWEDMSK(w) (A)((I)(w)&~QCFAOWEDMSK)
+#define SETNAMED(w) (A)((I)(w)|QCNAMED)
 #define SETFAOWED(w) (A)((I)(w)|QCFAOWED)
 #define CLRFAOWED(w) (A)((I)(w)&~QCFAOWED)
 #define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?
@@ -906,11 +909,13 @@ typedef DST* DC;
 #define STKNAMEDX 0
 #define STKNAMED ((I)1<<STKNAMEDX)  // set if the address is the address of the arg (rather than of a tpop slot)
 #define ISSTKNAMED(w) ((I)(w)&STKNAMED)  // is fa() required?
-#define STKFAOWEDX 0  // till we have !LOCALRA, STKFAOWED is the same as STKLOCAL
+#define STKFAOWEDX 1  // till we have !LOCALRA, STKFAOWED is the same as STKLOCAL
 #define STKFAOWED ((I)1<<STKFAOWEDX)  // set in parser stack if value needs to be freed
 #define SETSTKFAOWED(w) (A)((I)(w)|STKFAOWED)
 #define CLRSTKFAOWED(w) (A)((I)(w)&~STKFAOWED)
 #define ISSTKFAOWED(w) ((I)(w)&STKFAOWED)  // is fa() required?
+#define STKNAMEDMSK (STKNAMED+STKFAOWED)  // the bits in FAOWED semantics (not including the type flags)
+#define SETSTKNAMEDFAOWED(w) (A)((I)(w)|STKNAMEDMSK)  // set NAMED+FAOWED
 
 
 // *********************** symbol table for names ***********************

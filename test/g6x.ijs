@@ -144,9 +144,9 @@ mean_l6x_=: 3 : 0
 1 [ mean_l6x_ i.12
 0 -: pmctr _1
 t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) 6!:11 ''
-6 7 f t
-(dbq'')+. ({&:>/0 6{t) -: ;:'mean_l6x_ mean_l6x_ sum_foo_ sum_foo_ sum_foo_ mean_l6x_ pmctr'
-(dbq'')+. ({&:>/1 6{t) -: ;:'l6x       l6x       foo      foo      foo      l6x       base'
+8 9 f t
+(dbq'')+. ({&:>/0 6{t) -: ;:'mean_l6x_ mean_l6x_ sum sum_foo_ sum_foo_ sum_foo_ sum mean_l6x_ pmctr'
+(dbq'')+. ({&:>/1 6{t) -: ;:'l6x       l6x       l6x foo      foo      foo      l6x l6x       base'
 
 mean_aa_=: 3 : 0
  sum=. +/

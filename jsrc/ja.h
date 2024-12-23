@@ -834,7 +834,7 @@ extern void jfree4gmp(void*,size_t);
 #define pdtspvmmv01(x,y)            jtpdtspvmmv01(jt,(x),(y))
 #define pdtspvmmv0or1(x,y)          jtpdtspvmmv0or1(jt,(x),(y))
 #define pdtspvv(x,y)                jtpdtspvv(jt,(x),(y))
-#define pee(a,b,c,d,e    )          jtpee(jt,(a),(b),(c),(d),(e))
+#define pee(a,b,c,d)                jtpee(jt,(a),(b),(c),(d))
 #define pfill(x,y)                  jtpfill(jt,(x),(y))
 #define pfxplus(x,y)                ((x)+(y))
 #define piev(x,y)                   jtpiev(jt,(x),(y))
@@ -915,8 +915,8 @@ extern void jfree4gmp(void*,size_t);
 #define rasv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x,sv)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
 #define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
 #define racontents(x)   {I c=AC(x); if(MEMAUDIT!=0&&c<0)SEGFAULT; if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // Used on contents of box, which cannot have AC<0
-// In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount);
-// sv means the last arg is saved/restored through the call; qcg means the name is known to have qcglobal semantics (we use the constituents) uncond means the arg cannot be perm/sparse/need recurson, so just increment
+// In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount); local means local symtab
+// sv means the last arg is saved/restored through the call; qcg supplies the QC type; uncond means the arg cannot be perm/sparse/need recursion, so just increment
 #define rapos(x,sv)   {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(ISSPARSE(AT(x))))sv=jtra((x),SPARSE,sv);}}  // better a misbranch than an atomic instruction if c<0
 #define raposlocal(x,sv)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(ISSPARSE(AT(x))))sv=jtra((x),SPARSE,sv);}}  // better a misbranch than an atomic instruction if c<0
 #define raposacv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);}}  // ACV is guaranteed recursive

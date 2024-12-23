@@ -274,7 +274,7 @@ static A jtdebugmux(J jt){A z;
 
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
-A jtpee(J jt,A *queue,UI8 tcesx2,I err,I lk,DC c){A z=0;
+A jtpee(J jt,A *queue,UI8 tcesx2,I err,I lk){A z=0;
  ASSERT(lk<=0,err);  //  locked fn is totally opaque, with no stack.  Exit with 0 result, indicating error
  // create a parser-stack frame for the old sentence and switch to it
  PFRAME oframe=jt->parserstackframe; PSTK newparseinfo[1]={{.a=(A)(&queue[(tcesx2>>32)&TCESXSXMSK]),.t=(tcesx2-(tcesx2>>32))&TCESXSXMSK}};
@@ -282,7 +282,7 @@ A jtpee(J jt,A *queue,UI8 tcesx2,I err,I lk,DC c){A z=0;
  jsignal(err);   // signal the requested error
  jt->parserstackframe=oframe;  // restore to the executing sentence
  // enter debug mode if that is enabled, provided we are not on the way out of debug
- if(c&&(jt->uflags.trace&TRACEDB)&&!(JT(jt,dbuser)&TRACEDBSUSCLEAR)){jt->sitop->dcj=jt->jerr; z=jtdebugmux(jt); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ if(jt->sitop&&jt->sitop->dclnk&&(jt->uflags.trace&TRACEDB)&&!(JT(jt,dbuser)&TRACEDBSUSCLEAR)){jt->sitop->dcj=jt->jerr; z=jtdebugmux(jt); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 

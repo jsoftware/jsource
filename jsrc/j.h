@@ -806,7 +806,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define SWMAX 32767   // max # words in a sentence
 #define EXPWMAX 16777215  // max # words in an explicit defn
 
-#define LOCALRA 1  // ra() local names during lookup - must be set, but perhaps we can make it an option in explicit def
+#define LOCALRA 0  // ra() local names during lookup - must be set, but perhaps we can make it an option in explicit def
 
 // flags for jteformat
 #define EMSGE 0xff  // the error-code part
@@ -1127,9 +1127,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define F2PREFIP        FPREFIP(J)
 #define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
 #define F2PREFJT        FPREFIP(J)
-#define F1RANKSUFF(m,f,self,suff)    {ARGCHK1(w);A z; if(unlikely(m<AR(w))){if(m==0)z=rank1ex0(w,(A)self,f);else z=rank1ex(  w,(A)self,(I)m,     f); suff}}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Run suff only if rank was called.  Fall through otherwise
+#define F1RANKSUFF(m,f,self,suff)    {ARGCHK1(w);A z; if(likely(m<AR(w))){if(m==0)z=rank1ex0(w,(A)self,f);else z=rank1ex(  w,(A)self,(I)m,     f); suff}}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Run suff only if rank was called.  Fall through otherwise
 #define F1RANK(m,f,self) F1RANKSUFF(m,f,self,R z;)
-#define F2RANKcommon(l,r,f,self,extra)  {ARGCHK2(a,w); extra if(unlikely((I)((l-AR(a))|(r-AR(w)))<0))if((l|r)==0)R rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R rank2ex(a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
+#define F2RANKcommon(l,r,f,self,extra)  {ARGCHK2(a,w); extra if(likely((I)((l-AR(a))|(r-AR(w)))<0))if((l|r)==0)R rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R rank2ex(a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define F2RANK(l,r,f,self)  F2RANKcommon(l,r,f,self,)
 // same, but used when the function may pull an address from w.  In that case, we have to turn pristine off since there may be duplicates in the result
 #define F2RANKW(l,r,f,self) F2RANKcommon(l,r,f,self,PRISTCLR(w))

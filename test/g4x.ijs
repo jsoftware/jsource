@@ -179,6 +179,31 @@ b =. 7!:0''
 b > 2e6+7!:0''
 )
 
+{{ a =. b =. c =. d =. f =. <'abc'
+nm =. ;:'nm a b c d e f'
+4!:55 nm
+}} ''   NB. 4!:55 protects its arg
+
+'xyz' -: {{ a =. 'xyz' [ b =. c =. d =. f =. <'abc'
+nm =. ;:'nm a b c d e f'
+((4!:55 nm) ] ]) a
+}} ''   NB. 4!:55 protects the stack
+
+'4!:55 <''a''' -: {{
+ a =. '4!:55 <''a'''
+ ((". a) ] ]) a }} ''  NB. ". protects its arg
+
+5 -: {{
+ a =. 2+3 [ b =. 2 3
+ ((". 'a =. b') ] ]) a }} ''  NB. ". protects the stack
+
+5 -: {{
+ a =. 2+3 [ b =. 2 3
+ ((a =. b) ] ]) a }} ''  NB. =. protects the stack
+
+
+
+
 NB. name_:
 a =: i. 1e6
 b =: 7!:0''

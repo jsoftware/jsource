@@ -51,7 +51,7 @@
 #define POPIFTRYSTK if(unlikely(NPGpysfmtdl&4)){--tdv; POPTRYSTK(tdv->trap) if(likely(tdv->ndx==0))NPGpysfmtdl&=~4;}  // pop within try. stack; if pop to empty, clear flag
 #define NOUNERR(t,tic,ob)  /* if ob set, check out of bounds & change ic */ \
     /* Signal post-exec error*/ \
-    {t=pee(cwsent,CWTCESX2(cwsent,tic),EVNONNOUN,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); \
+    {t=pee(cwsent,CWTCESX2(cwsent,tic),EVNONNOUN,NPGpysfmtdl<<(BW-2)); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
     if(ob){ic=CWGO(cwsent,CNSTOREDCW,tic); IFNOTOB(unlikely){ RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}else z=0;} \
     goto nextline;}
@@ -300,7 +300,8 @@ DF2(jtxdefn){
   L *sympv=SYMORIGIN;  // bring into local
   L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]];  // pointer to sym block for y, known to exist
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
-   ybuckptr->val=w; ybuckptr->valtype=ATYPETOVALTYPE(AT(w)); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCGLOBAL semantics
+   I vtype=QCNAMED|(LOCALRA?QCGLOBAL:REPSGN(AT(w))&QCGLOBAL)|ATYPETOVALTYPE(AT(w));   // install QCSYMVAL flags
+   ybuckptr->val=w; ybuckptr->valtype=vtype; ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCGLOBAL semantics
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX))){
@@ -318,7 +319,8 @@ DF2(jtxdefn){
   if(a!=0){
    L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
-   xbuckptr->val=a; xbuckptr->valtype=ATYPETOVALTYPE(AT(a)); xbuckptr->sn=jt->currslistx;
+   I vtype=QCNAMED|(LOCALRA?QCGLOBAL:REPSGN(AT(a))&QCGLOBAL)|ATYPETOVALTYPE(AT(a));   // install QCSYMVAL flags
+   xbuckptr->val=a; xbuckptr->valtype=vtype; xbuckptr->sn=jt->currslistx;
    if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX))){
     AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(a); ramkrecursv(a);
    }else{ra(a);}
@@ -466,7 +468,7 @@ dobblock:
     if(JT(jt,assert)){
 // obsolete      parseline(t,{if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
      parseline(t,{if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);
-     if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); // if assert., signal post-execution error if result not all 1s.
+     if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2)); // if assert., signal post-execution error if result not all 1s.
      if(likely(t!=0)){  // assert without error
       t=mtv;  // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while.  So we use a safe permanent value, mtv.  
      }
@@ -679,7 +681,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    // first locative in each branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
    ACVCACHECLEAR;  // if a reference is returned, its cache must be invalidated since it may be freed here
-  }else{pee(cwsent,CWTCESX2(cwsent,bic),EVNONNOUN,NPGpysfmtdl<<(BW-2),jt->sitop->dclnk); z=0;}  // signal error, set z to 'no result'
+  }else{pee(cwsent,CWTCESX2(cwsent,bic),EVNONNOUN,NPGpysfmtdl<<(BW-2)); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error, or final exit from suspension
   cv=forpopgoto(jt,cv,~-1,1);   // clear the for/select stack

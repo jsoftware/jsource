@@ -127,7 +127,7 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;
  I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); zv=AVn(zr,z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
   RE(y=stdnm(C(wv[i])));  // point to name, audit for validity
-  if(y){if(QCWORD(x=syrd(y,jt->locsyms))){t=AT(QCWORD(x)); if(LOCALRA||ISGLOBAL(x))fa(QCWORD(x));}else{if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
+  if(y){if(QCWORD(x=syrd(y,jt->locsyms))){t=AT(QCWORD(x)); if(ISFAOWED(x))fa(QCWORD(x));}else{if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
   // syrd can fail if a numbered locative is retrograde.  Call that an invalid name, rather than an error, here; thus the RESETERR
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
   //   If that were done, we could dispense with the error check here (but invalid locale would be treated as undefined rather than invalid).
@@ -230,18 +230,16 @@ F1(jtnch){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,sy
 
 F1(jtex){A*wv,y,z;B*zv;I i,n;
  ARGCHK1(w);
+ protectlocals(jt,0);  // we must ra() any local names on the current sentence's stack, since we may be about to delete them
  n=AN(w); wv=AAV(w); 
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
  I zr=AR(w); GATV(z,B01,n,AR(w),AS(w)); zv=BAVn(zr,z);
- I anylocal=0;  //  Init no locals found
  for(i=0;i<n;++i){
-  RE(y=stdnm(C(wv[i])));
+  y=stdnm(C(wv[i])); if(unlikely(jt->jerr!=0)){z = 0; break;}
   zv[i]=1&&y;
   // If the name is defined and is an ACV, invalidate all looked-up ACVs
   A locfound;  // get the locale in which the name is defined - must exist.
   if(y&&(locfound=syrdforlocale(y))){
-   // Global values are protected by the FAOWED system.  Local names were not ra()d; we look up the name, ra(), and tpush
-   if(!LOCALRA)anylocal|=AR(locfound);  // remember if any of the symbols were local
    // if debug turned on, see if the value is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.
    if(jt->uflags.trace&TRACEDB){READLOCK(locfound->lock) A v=jtprobe((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); A rres=(A)1; if(v)rres=redef(mark,v); READUNLOCK(locfound->lock) RZ(rres)}
    WRITELOCK(locfound->lock)
@@ -250,6 +248,5 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;
    WRITEUNLOCK(locfound->lock)
   }
  }
- if(unlikely(anylocal&ARLOCALTABLE)){jt->jerr=EVABORTEMPTY; z=0;}  // if we deleted any local symbols, call to abort the sentence
  RETF(z);
 }    /* 4!:55 expunge */

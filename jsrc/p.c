@@ -876,8 +876,9 @@ RECURSIVERESULTSCHECK
 // obsolete          // we start these loads here because the next branch will often mispredict, allowing them to finish.  If we move them earlier we have more work to do with qualifying freea
         if(likely(freea!=0)){INCRSTAT(wpop/*.99*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
 // obsolete           I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
-         I zapok=((I)((UI)AC(freea)>>(freea==y))&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); // if(zapok<0)INCRSTAT(wpopfa/*0.45*/)   // (not return value) and abandoned.  Sparse blocks are never abandoned
-         tpopw=zapok<0?tpopw:(A*)&jt->shapesink; *tpopw=0; if(unlikely((zapok&-(AFLAG(freea)&RECURSIBLE))<0))fanapop(freea,RECURSIBLE);/*0.01*/  // zap the top block; if recursive, fa the contents.  We free tpopw before subroutine
+         I zapok=(AC(freea)&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); zapok=freea==y?0:zapok; // (not return value) and abandoned.  Sparse blocks are never abandoned
+         if(zapok<0){INCRSTAT(wpopfa/*0.45*/) *tpopw=0; fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopw before subroutine
+         }else{INCRSTAT(wpopnull/*0.55*/)}
 // obsolete          }else{INCRSTAT(wpopnull/*0.55*/) }
         }else{INCRSTAT(wnull/*.01*/)}
        }
@@ -901,9 +902,9 @@ RECURSIVERESULTSCHECK
         if(likely(freea!=0)){INCRSTAT(apop/*.95*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
 // obsolete          if(((I)((UI)AC(freea)>>(freea==y))&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.4*/)   // (not return value) and abandoned.  Sparse blocks are never abandoned
 // obsolete           *tpopa=0; if(AFLAG(freea)&RECURSIBLE)INCRSTAT(apoprecur/*.01*/); fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
-         I zapok=((I)((UI)AC(freea)>>(freea==y))&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); // if(zapok<0)INCRSTAT(wpopfa/*0.4*/)   // (not return value) and abandoned.  Sparse blocks are never abandoned
-         tpopa=zapok<0?tpopa:(A*)&jt->shapesink; *tpopa=0; if(unlikely((zapok&-(AFLAG(freea)&RECURSIBLE))<0))fanapop(freea,RECURSIBLE);/*0.01*/  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
-// obsolete          }else{INCRSTAT(apopnull/*0.6*/) }
+         I zapok=(AC(freea)&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); zapok=freea==y?0:zapok; // (not return value) and abandoned.  Sparse blocks are never abandoned
+         if(zapok<0){INCRSTAT(apopfa/*0.4*/) *tpopa=0; fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
+         }else{INCRSTAT(apopnull/*0.6*/)}
         }else{INCRSTAT(anull/*.05*/)}
        }
 

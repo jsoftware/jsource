@@ -179,16 +179,20 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
   // be modified by each use.  The trouble happens only if the definition is not assigned (if it's assigned all the usecounts
   // are incremented).  But just do it for all words in sentences
   ACIPNO(*x);  // mark the stored word not inplaceable
-  // install type flags into the bottom 4 bits of the address of the word.  All names are defaulted to assigned names
-  I qct=ATYPETOVALTYPE(AT(*x));  // get type of the current word
-  if(qct==((ASGNX-LASTNOUNX)+1)){  // non-assignments require repair to previous word
-   qct=QCASGN+((AT(*x)&(ASGNLOCAL|ASGNTONAME))>>ASGNLOCALX);  // assignments must copy the ASGN modifiers to the type
+  // All sentence words that are not ISLKPNAME are flagged as ISNAMED/~FAOWED because if they are verb args this routes them to the faster end-of-action-routine recovery.
+  // In other contexts the ISNAMED is immaterial; they must be ~FAOWED
+  // install type flags into the bottom 4 bits of the address of the word.  All words are defaulted to non-lookup (i. e. NAMED).  All names are defaulted to assigned names
+  I qct=QCNAMED|ATYPETOVALTYPE(AT(*x));  // get type of the current word, set as non-lookup type
+  if(qct==(QCNAMED|((ASGNX-LASTNOUNX)+1))){  // is copula?
+   qct=QCASGN+((AT(*x)&(ASGNLOCAL|ASGNTONAME))>>ASGNLOCALX);  // copulas must copy the ASGN modifiers to the type.  QCNAMED is immaterial
   }else{
    // non-assignment: if previous word is a NAME, switch it to lookup type
    if((i&& AT(QCWORD(x[-1]))&NAME))x[-1]=QCINSTALLTYPE(QCWORD(x[-1]),QCISLKPNAME+((AT(QCWORD(x[-1]))>>NAMEBYVALUEX)&(QCNAMEBYVALUE|QCNAMEABANDON)));
    // if current word is last word and is a name, switch it to lookup type
-   if((i==n-1 && qct==QCNAMEASSIGNED))qct=QCISLKPNAME+((AT(*x)>>NAMEBYVALUEX)&(QCNAMEBYVALUE|QCNAMEABANDON));
+   if((i==n-1 && qct==(QCNAMED|QCNAMEASSIGNED)))qct=QCISLKPNAME+((AT(*x)>>NAMEBYVALUEX)&(QCNAMEBYVALUE|QCNAMEABANDON));
   }
+  // each word in the sentence is marked as a SENTENCEWORD in AFLAG.  This is sufficient to protect the word during parse & it doesn't need FAOWED.
+  AFLAG(*x)|=AFSENTENCEWORD;
   *x=QCINSTALLTYPE(*x,qct);  // insert the type-code for the word
   u+=2;   // advance to next word
  }

@@ -854,7 +854,8 @@ typedef DST* DC;
 // in the words of an explicit definition the words have QCNAMELKP semantics in bit 4-5:
 #define QCMASK 0x3fLL   // all the LSB flags
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
-#define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part
+#define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part plus semantics-dependent bits
+#define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part only, 0-15 for the syntax units including assignment
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
 // values 0-11 are the same in all contexts:
 // the CAVN types are selected for comp ease in the typeval field of an assigned value.  They are indexes into ptcol.
@@ -871,7 +872,7 @@ typedef DST* DC;
 #define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10
 #define QCNAMEASSIGNED ((NAMEX-LASTNOUNX)+1) // 2 name followed by copula
 // bit 4 and code points 12-15 depend on the context.
-// In the words of a sentence, created by enqueue(), they use QCLKPNAME semantics as follows:
+// In the words of a sentence, created by enqueue(), they use QCSENTENCE semantics as follows:
  // the last AT type is RPAR, which is 11 (30-20+1)
  // assignments occupy 12-15, with 4 variants
 #define QCASGN 0x0c // copula.  QCASGNISLOCAL and QCASGNISTONAME are modifiers
@@ -881,6 +882,7 @@ typedef DST* DC;
 #define QCISLKPNAME 0x20   // name requires lookup (i. e. not assigned)
 #define QCNAMEBYVALUE 0x01   // combining flag - name is mnuvxy type
 #define QCNAMEABANDON 0x08 // combining flag - name has _: - set only if not assigned
+#define QCSENTTYPE(x) ((I)(x)&0xf+QCISLKPNAME)  // the meaningful parts of the sentence type.  QCNAMED is set or not for performance reasons
 // Values stored in the symbol table have QCSYMVAL semantics:
 #define QCNAMEDX 4  // set to indicate that this value came from a name
 #define QCNAMED ((I)1<<QCNAMEDX)
@@ -913,7 +915,6 @@ typedef DST* DC;
 #define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?
 #define SETNAMEDFAOWED(w) (A)((I)(w)|QCFAOWED|QCNAMED)
 #define SYMVALTOFAOWED(w) (w)  // convert SYMVAL semantics of syrd() result to QCFAOWED: FAOWED if GLOBAL
-#define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part, 0-15 for the syntax units including assignment
 // When the value is pushed onto the parser stack, we use STKNAMED semantics: STKNAMED is set in any named ref and
 // the FAOWED bit moves to bit 1 where it can be distinguished from a tstack pointer
 #define STKNAMEDX 0

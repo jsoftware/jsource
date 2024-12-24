@@ -858,7 +858,7 @@ typedef DST* DC;
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
 // values 0-11 are the same in all contexts:
 // the CAVN types are selected for comp ease in the typeval field of an assigned value.  They are indexes into ptcol.
-// The value which might also hold VALTYPESPARSE, or VALTYPENAMELESS which is converted to correct type before the lookup).  These types are seen only in valtypes in named blocks, which have QCGLOBAL semantics
+// The value which might also hold VALTYPESPARSE, or VALTYPENAMELESS which is converted to correct type before the lookup).  These types are seen only in valtypes in named blocks, which have QCSYMVAL semantics
 #define ATYPETOVALTYPEACV(t) (CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value'
 #define ATYPETOVALTYPE(t) (((t)&NOUN)?(unlikely(ISSPARSE(t))?VALTYPESPARSE:QCNOUN):ATYPETOVALTYPEACV(t))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value or type not wanted'
 #define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
@@ -893,13 +893,12 @@ typedef DST* DC;
 // value types set when the value is stored into the symbol table:
 #define VALTYPENAMELESS ((SYMBX-LASTNOUNX)+1) // 6 set in nameless non-locative ACV, to suppress reference creation.
 #define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse.  Has bit 0 set, as befits a noun
-#define NAMELESSQCTOTYPEDQC(q) q=(A)(((I)q&~0xf)+ATYPETOVALTYPEACV(AT(QCWORD(q))));  // q is name of NAMELESS QC; result has QC type for t with unchanged QCGLOBAL semantics
-// scaf remove the following
-#define QCGLOBALX 5
-#define QCGLOBAL ((I)1<<QCGLOBALX)  // set if the name was found in a global table
-#define ISGLOBAL(w) ((I)w&QCGLOBAL)  // true if global, if w has QCGLOBAL semantics
-#define SETNAMEDFAOWED(w) (A)((I)(w)|QCGLOBAL|QCNAMED)
-#define CLRGLOBAL(w) (A)((I)(w)&~QCGLOBAL)
+#define NAMELESSQCTOTYPEDQC(q) q=(A)(((I)q&~0xf)+ATYPETOVALTYPEACV(AT(QCWORD(q))));  // q is name of NAMELESS QC; result has QC type for AT(q) with unchanged semantics
+// obsolete // scaf remove the following
+// obsolete #define QCGLOBALX 5
+// obsolete #define QCGLOBAL ((I)1<<QCGLOBALX)  // set if the name was found in a global table
+// obsolete #define ISGLOBAL(w) ((I)w&QCGLOBAL)  // true if global, if w has QCGLOBAL semantics
+// obsolete #define CLRGLOBAL(w) (A)((I)(w)&~QCGLOBAL)
 // In the LSBs returned by syrd1() bit 4 has QCNAMEDLOC semantics (bit 5 is garbage):
 #define QCNAMEDLOCX 4  // set if the value was found in a named locale, clear if numbered
 #define QCNAMEDLOC ((I)1<<QCNAMEDLOCX)  // set if the value was found in a named locale, clear if numbered
@@ -912,7 +911,8 @@ typedef DST* DC;
 #define SETFAOWED(w) (A)((I)(w)|QCFAOWED)
 #define CLRFAOWED(w) (A)((I)(w)&~QCFAOWED)
 #define ISFAOWED(w) ((I)(w)&QCFAOWED)  // is fa() required?
-#define SYMVALTOFAOWED(w) (w)  // convert QCGLOBAL semantics of syrd() result to QCFAOWED: FAOWED if GLOBAL
+#define SETNAMEDFAOWED(w) (A)((I)(w)|QCFAOWED|QCNAMED)
+#define SYMVALTOFAOWED(w) (w)  // convert SYMVAL semantics of syrd() result to QCFAOWED: FAOWED if GLOBAL
 #define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part, 0-15 for the syntax units including assignment
 // When the value is pushed onto the parser stack, we use STKNAMED semantics: STKNAMED is set in any named ref and
 // the FAOWED bit moves to bit 1 where it can be distinguished from a tstack pointer
@@ -949,7 +949,7 @@ typedef struct {
  A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
  A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned.  In LINFO, the number of a numbered locale, unused otherwise
  C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
- C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCGLOBAL is set in global tables
+ C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCSYMVAL semantics
  S sn;  // script index the name was defined in.  Not used for LINFO
  LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT.  Not used in LINFO
 } L;  // name must come first because of the way we use validitymask[11]

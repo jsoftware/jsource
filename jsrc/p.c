@@ -7,8 +7,8 @@
 // with the following implementation details:
 // 1. words must have gone through enqueue, which puts type information into the low 4 bits of each pointer with QCTYPE flags
 // 2. the leading mark is not written before the sentence, but is implied
-// 3. During each symbol lookup the value read is ra()d iff global and the type flags are converted to QCGLOBAL semantics.
-// 4. the stack contains a pointer to the word (converted to QCFAOWED semantics), the token number in the original sentence that will
+// 3. During each symbol lookup the value read (which has QCNAMELKP semantics) is ra()d iff global and the type flags are converted to QCFAOWED semantics.
+// 4. the stack contains a pointer to the word (converted to STKNAMED semantics), the token number in the original sentence that will
 //     be blamed in case of error, and a binary mask indicating which parsing lines the word is recognized in, in
 //     each of the 4 stack popsitions.  The 'search of the parse table' is done by ANDing 4 bytes together.
 // 5. all executions from parsing lines 0-2 are inplaceable
@@ -340,8 +340,8 @@ static A virthook(J jtip, A f, A g){
 // result is the value, possibly with FAOWED set
 static A nameundco(J jt, A name, A y){F1PREFIP;
  A locfound;
- if(unlikely(((I)y&QCGLOBAL)!=0))locfound=syrdforlocale(name);  // get locale to use.  This re-looks up global names, but they should be rare in name_:
- else{locfound=jt->locsyms;  // local name needs protection too over the probedel
+ if(unlikely(((I)y&QCFAOWED)!=0))locfound=syrdforlocale(name);  // get locale to use.  This re-looks up global names, but they should be rare in name_:
+ else{locfound=jt->locsyms;  // if not FAOWED, it must be local, no lookup needed
  }
  if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(y);   // in "., the result value from ". has not been protected by FAOWED, and might be prematurely freed.  So we don't free here, set FAOWED and return indicating indic that we need to fa
  WRITELOCK(locfound->lock)
@@ -566,7 +566,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       // QCFAOWED semantics, in which QCLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED in blocks that are known to need no pretection from deletion:
       // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
       // guarantee that the block is never protected from deletion
-      y=CLRQCFAOWEDMSK(y);  // y is now addr/00/type index   scaf remove
+if((I)y&QCNAMED+QCISLKPNAME)SEGFAULT;      y=CLRQCFAOWEDMSK(y);  // y is now addr/00/type index   scaf remove
      }else{  // Replace a name (not to left of ASGN) with its value
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -584,13 +584,13 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
        L *s=sympv+(I)symx;  // get address of symbol in primary table
        if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.
        y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCSYMVAL semantics, as y does.  scaf move this addition to the assignment
-       if(unlikely(ISGLOBAL(s->valtype)))raposlocalqcgsv(s->val,QCPTYPE(s->valtype),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
+       if(unlikely(ISRAREQD(s->valtype)))raposlocalqcgsv(s->val,QCPTYPE(s->valtype),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
       }else if(likely((buck=NAV(QCWORD(y))->bucket)>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
        I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
        if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
        // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table
        if((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // see if there is a local symbol, using the buckets.  If not, restore y
-       if(unlikely(ISGLOBAL(y)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
+       if(unlikely(ISRAREQD(y)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
 rdglob: ;  // here when we tried the buckets and failed
@@ -617,15 +617,15 @@ rdglob: ;  // here when we tried the buckets and failed
        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
        //
-       // When we finish classifying the name it must have correct QCFAOWED semantics.  Each path must ensure that.  The stored symbol value had QCNAMED set, and QCGLOBAL set
-       // if the value was fa()d by the lookup (i. e. if it was GLOBAL and not PERMANENT) - these flags are set now, and usually we leave them unchanged, the main exception
-       // beig that if we replace a value with a reference, we mark the reference unnamed because it represents a future lookup rather than a looked-up value
+       // When we finish classifying the name it must have correct QCFAOWED semantics.  Each path must ensure that.  The stored symbol value had QCNAMED set, and QCRAREQD set
+       // if the value was to be fa()d by the lookup (i. e. if it was public or sparse) - these flags are set now, and usually we leave them unchanged, the main exception
+       // being that if we replace a value with a reference, we mark the reference unnamed because it represents a future lookup rather than a looked-up value
        if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|((I)y&QCNOUN)){   // use value if noun or special name, or name_:
         if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){  // is name_:?
          // if name_:, go delete the name, leaving the value to be deleted later.
 #if !LOCALRA
          // If the value is local, we must ra it and any other local pointers on the stack
-         if(!ISGLOBAL(y)){  // if the name has been raised already (or is PERMANENT), all stacked copies have been protected
+         if(!ISFAOWED(y)&&!ACISPERM(AC(QCWORD(y)))&&!(AFLAG(QCWORD(y))&AFSENTENCEWORD)){  // if the name has been raised already, all stacked copies have been protected.  If PERMANENT or from the executing sentence, needs no protecting
           rapos(QCWORD(y),y);  // ra() the new value first so that all args to undco have been ra()d
           PSTK *sk;
           // scan the stack to see if it is at large in the stack, setting FAOWED when it is.  We don't call protectlocals because we need to protect just the one value and speed might matter
@@ -635,17 +635,17 @@ rdglob: ;  // here when we tried the buckets and failed
 #endif
          FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)
         }else y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
-        y=SETNAMED(y);  // scaf remove after symbis does it
+if(!((I)y&QCNAMED))SEGFAULT;        y=SETNAMED(y);  // scaf remove after symbis does it
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
         // nameless modifier, and not a locative.  This handles 'each' and the like.  Don't create a reference; maybe cache the value
         A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags
-        NAMELESSQCTOTYPEDQC(y)  // convert type to normal adverb, which the parser looks for.  Leaves QCGLOBAL Intact
+        NAMELESSQCTOTYPEDQC(y)  // convert type to normal adverb, which the parser looks for.  Leaves semantics intact
         y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
         if(NAV(origy)->flag&NMCACHED){  // nameless mod is cachable - replace it by its value in the name
          // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent
          NAV(origy)->cachedref=CLRFAOWED(y); NAV(origy)->bucket=0; ACSETPERM(QCWORD(y)); // clear bucket info so we will skip that search - this name is forever cached with QCFAOWED semantics.  Make the cached value immortal
         }
-        y=SETNAMED(y);  // scaf remove after symbis does it
+if(!((I)y&QCNAMED))SEGFAULT;        y=SETNAMED(y);  // scaf remove after symbis does it
 // obsolete         y=SETFAOWED(y);
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.  But if the value IS a reference, use the value if possible to avoid the extra lookup
         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
@@ -672,7 +672,6 @@ endname: ;
 
      // names have been resolved
      // y has the resolved value, which has the 4-bit QC type with QCFAOWED semantics (QCFAOWED set if a fa is needed on the value)
-     // scaf it would be good to remember LOCAL as part of QCFAOWED so that a local with AC=2 could just decr without RFO cycle
      // Look to see if it is ) or a conjunction,
      // which allow 2 or 1 more pulls from the queue without checking for an executable fragment.
      // Also, dyad executions sometimes allow two pulls if the first one is AVN.
@@ -1167,12 +1166,12 @@ abandname:;
       if(unlikely(yflags&QCNAMEABANDON)){
 // obsolete #if !LOCALRA
        // If the value is local, we must ra it because undco() expects it (questionable)
-       if(unlikely(!ISGLOBAL(sv)))rapos(QCWORD(sv),sv);  // ra() the new value first
+       if(unlikely(!ISRAREQD(sv)))rapos(QCWORD(sv),sv);  // ra() the new value first
 // obsolete #endif
        sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  returned sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // undco will set FAOWED if it didn't fa() the value; transfer that to sv
 // obsolete       }else{y=QCWORD(sv); if(!LOCALRA)sv=(A)ISGLOBAL(sv);}  // not name_:, just use the value.  sv=non0 if it needs free
-      }else{y=QCWORD(sv); sv=(A)ISGLOBAL(sv);}  // not name_:, just use the value.  sv=non0 if it needs free
+      }else{y=QCWORD(sv); sv=(A)ISFAOWED(sv);}  // not name_:, just use the value.  sv=non0 if it needs free
      }else{y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd if global, so clear sv to indicate no further fa
     }else{
      // undefined name.  This is very subtle.  We will return a reference to [: as required by the rules (User might execute ".'undefname' which should return empty with no error).

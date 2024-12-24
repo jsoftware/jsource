@@ -442,7 +442,7 @@ v3 =: 3 : 0
 +/ y
 )
 gname =: 100 100000 $ 4
-50000 > 7!:2 'v1"1 gname'
+100000 > 7!:2 'v1"1 gname'   NB. 7!:2 sometimes gives big values because of lack of free after each sentence in jtxdefn
 v3 =: 3 : 0
 gname =: 100 100000?@$ 8
 +/ y

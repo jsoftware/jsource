@@ -127,7 +127,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   ASSERT(!(asym->flag&LREADONLY),EVRO)  // it had better not be readonly now
   fa(asym->val);  // if there is an incumbent value, discard it
   A xx; GAT0(xx,INT,1,0); IAV0(xx)[0]=-1; AFLAGINIT(xx,AFRO) // -1 is the iteration number if there are no iterations; mark value RO to prevent xxx_index =: xxx_index + 1 from changing inplace
-  ACINITUNPUSH(xx); asym->val=xx; asym->valtype=ATYPETOVALTYPE(INT); // raise usecount, install as value of xyz_index
+  ACINITUNPUSH(xx); asym->val=xx; asym->valtype=SETNAMED(ATYPETOVALTYPE(INT)); // raise usecount, as local name; install as value of xyz_index
   rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.  note we can free from a boxed array now
   ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free
   asym->flag|=LREADONLY;  // in the loop, the user may not modify xyz_index   LREADONLY is set iff we have cv->t, and cleared then
@@ -145,7 +145,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=&asym->val; A svb=virtual(t,0,r); jt->tnextpushp=pushxsave;  // since we can't ZAP a virtual, allocate this offstack to take ownership
   RZ(svb) AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINIT(svb,2); AN(svb)=isz; MCISH(AS(svb),AS(t)+1,r)  // AC=2 since we store in symbol and cv
   // Install the virtual block as xyz, and remember its address
-  cv->item=svb; asym->valtype=ATYPETOVALTYPE(tt);  // save in 2 places (already in asym->val), commensurate with AC of 2
+  cv->item=svb; asym->valtype=SETNAMED(ATYPETOVALTYPE(tt));  // save in 2 places (already in asym->val), commensurate with AC of 2
  }
  R 1;
 }    /* for. do. end. initializations */
@@ -161,7 +161,7 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
    if(likely((svb=cv->item)!=0)){   // if the svb was allocated...
     if(unlikely(SYMORIGIN[cv->itemsym].val==svb)){A newb;   // svb was allocated, loop did not complete, and xyz has not been reassigned
      fa(svb);   // remove svb from itemsym.val.  Safe, because it can't be the last free
-     if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); SYMORIGIN[cv->itemsym].val=newb; SYMORIGIN[cv->itemsym].valtype=ATYPETOVALTYPE(AT(newb)); // realize stored value, raise, make recursive, store in symbol table
+     if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); SYMORIGIN[cv->itemsym].val=newb; SYMORIGIN[cv->itemsym].valtype=SETNAMED(ATYPETOVALTYPE(AT(newb))); // realize stored value, raise, make recursive, store in symbol table
      }else{SYMORIGIN[cv->itemsym].val=0; SYMORIGIN[cv->itemsym].valtype=0;}  // after error, we needn't bother with a value
     }
     // Decrement the usecount to account for being removed from cv - this is the final free of the svb, unless it is a result.  Since this is a virtual block, free the backer also
@@ -300,8 +300,8 @@ DF2(jtxdefn){
   L *sympv=SYMORIGIN;  // bring into local
   L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]];  // pointer to sym block for y, known to exist
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
-   I vtype=QCNAMED|(LOCALRA?QCGLOBAL:REPSGN(AT(w))&QCGLOBAL)|ATYPETOVALTYPE(AT(w));   // install QCSYMVAL flags
-   ybuckptr->val=w; ybuckptr->valtype=vtype; ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCGLOBAL semantics
+   I vtype=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(AT(w))&QCRAREQD)|ATYPETOVALTYPE(AT(w));   // install QCSYMVAL flags
+   ybuckptr->val=w; ybuckptr->valtype=vtype; ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCSYMVAL semantics
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX))){
@@ -319,7 +319,7 @@ DF2(jtxdefn){
   if(a!=0){
    L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
-   I vtype=QCNAMED|(LOCALRA?QCGLOBAL:REPSGN(AT(a))&QCGLOBAL)|ATYPETOVALTYPE(AT(a));   // install QCSYMVAL flags
+   I vtype=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(AT(a))&QCRAREQD)|ATYPETOVALTYPE(AT(a));   // install QCSYMVAL flags
    xbuckptr->val=a; xbuckptr->valtype=vtype; xbuckptr->sn=jt->currslistx;
    if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX))){
     AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(a); ramkrecursv(a);
@@ -585,14 +585,14 @@ dobblock:
      if(unlikely(itemsym->val!=cv->item)){
       // discard & free incumbent, switch to virtual, raise it
       A val=itemsym->val; fa(val) val=cv->item; ra(val) itemsym->val=val;
-      itemsym->valtype=ATYPETOVALTYPE(INT); // also have to set the value type in the symbol, in case it was changed.  Any noun will do
+      itemsym->valtype=SETNAMED(ATYPETOVALTYPE(INT)); // also have to set the value type in the symbol (as a local), in case it was changed.  Any noun will do
      }
      --ic; goto elseifasdo;   // advance to next line and process it; if flagged, we know it's bblock
     }
     // ending the iteration normally.  set xyz to i.0
     {A val=itemsym->val; fa(val)}  // discard & free incumbent, probably the virtual block.  If the virtual block, this is never the final free, which comes in unstackcv
     itemsym->val=mtv;  // after last iteration, set xyz to mtv, which is permanent
-    itemsym->valtype=ATYPETOVALTYPE(INT); // also have to set the value type in the symbol, in case it was changed.  Any noun will do
+    itemsym->valtype=SETNAMED(ATYPETOVALTYPE(INT)); // also have to set the value type in the symbol (as a local), in case it was changed.  Any noun will do
    }else if(likely(cv->j<cv->niter)){--ic; goto elseifasdo;}  // (no for_xyz.) advance to next line and process it; if flagged is bblock
    // if there are no more iterations, fall through...
    tcesx&=~(32<<TCESXTYPEX);  // the flag for DOF is for the loop, but we are exiting, so turn off the flag

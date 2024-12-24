@@ -263,7 +263,7 @@ DF2(jttsit2){A z;D t;I n;I stackallo=0;
      I symno=0;  // # symbols in chain before the one we found
      NOUNROLL while(SYMNEXTISPERM(symx)){  // loop is unrolled 1 time.  To match calclocalbuckets, we count only the permanent symbols
       // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
-      IFCMPNAME(NAV(sym->name),NAV(QCWORD(wv[i]))->s,NAV(QCWORD(wv[i]))->m,hash,goto foundsym;)     // (1) exact match - if there is a value, return it.  valtype has QCGLOBAL semantics
+      IFCMPNAME(NAV(sym->name),NAV(QCWORD(wv[i]))->s,NAV(QCWORD(wv[i]))->m,hash,goto foundsym;)     // (1) exact match - if there is a value, return it.  valtype has QCSYMVAL semantics
       sym=sympv+(symx=sym->next);  // move to next symbol.  symx becomes invalid after last permanent
       ++symno;  // advance number of symbol being looked up
      }

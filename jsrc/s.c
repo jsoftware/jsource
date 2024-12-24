@@ -734,11 +734,11 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   I4 symx=NAV(a)->symx;   // fetch the symbol slot assigned to this name (0 if none)
   e=likely((SGNIF(AR(g),ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=0;   // indicate we have no lock to clear
-  valtype|=QCNAMED|(LOCALRA?QCGLOBAL:REPSGN(wt)&QCGLOBAL);  // enter QCSYMVAL semantics; ra needed is sparse
+  valtype|=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
  }else{  // global table
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
-  valtype|=QCNAMED|QCGLOBAL;  // must flag local/global type in symbol
+  valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the table
   // if we are writing to a non-local table, update the table's Bloom filter.
   BLOOMOR(g,bloom);  // requires writelock on g

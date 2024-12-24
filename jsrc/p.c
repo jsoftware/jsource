@@ -402,9 +402,10 @@ static A nameundco(J jt, A name, A y){F1PREFIP;
 // If jt->zombieval is set, the (necessarily inplaceable) verb may choose to perform an in-place
 // operation.  It will check usecounts and addresses to decide whether to do this
 
-#if 0  // for stats gathering
-I statwfaowed=0, statwfainh=0, statwfafa=0, statwpop=0, statwpopfa=0, statwpopnull=0, statwnull=0;  // 39544103  842114 38701989 27774814 9635796 18139018 34965119
-I statafaowed=0, statafainh=0, statafafa=0, statapop=0, statapopfa=0, statapopnull=0, statanull=0;  // 55080814 4924943 50155871 21204293 6262522 14941771 25998929
+#if 0 // for stats gathering
+I statwfaowed=0, statwfainh=0, statwfafa=0, statwpop=0, statwpopfa=0, statwpopnull=0, statwnull=0, statwpoprecur=0;
+I statafaowed=0, statafainh=0, statafafa=0, statapop=0, statapopfa=0, statapopnull=0, statanull=0, statapoprecur=0;
+I statffaowed=0;
 #define INCRSTAT(type) {__atomic_fetch_add(&stat##type,1,__ATOMIC_ACQUIRE);}
 #else
 #define INCRSTAT(x)
@@ -567,7 +568,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED in blocks that are known to need no pretection from deletion:
       // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
       // guarantee that the block is never protected from deletion
-// obsolete if((I)y&QCNAMED+QCISLKPNAME)SEGFAULT;      y=CLRQCFAOWEDMSK(y);  // y is now addr/00/type index   scaf remove
+// obsolete if((I)y&QCNAMED+QCISLKPNAME)SEGFAULT;      y=CLRQCFAOWEDMSK(y);  // y is now addr/00/type index
      }else{  // Replace a name (not to left of ASGN) with its value
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -636,7 +637,7 @@ rdglob: ;  // here when we tried the buckets and failed
 #endif
          FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)
         }else y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
-// obsolete if(!((I)y&QCNAMED))SEGFAULT;        y=SETNAMED(y);  // scaf remove after symbis does it
+// obsolete if(!((I)y&QCNAMED))SEGFAULT;        y=SETNAMED(y); 
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
         // nameless modifier, and not a locative.  This handles 'each' and the like.  Don't create a reference; maybe cache the value
         A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags
@@ -646,7 +647,7 @@ rdglob: ;  // here when we tried the buckets and failed
          // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent
          NAV(origy)->cachedref=CLRFAOWED(y); NAV(origy)->bucket=0; ACSETPERM(QCWORD(y)); // clear bucket info so we will skip that search - this name is forever cached with QCFAOWED semantics.  Make the cached value immortal
         }
-// obsolete if(!((I)y&QCNAMED))SEGFAULT;        y=SETNAMED(y);  // scaf remove after symbis does it
+// obsolete if(!((I)y&QCNAMED))SEGFAULT;        y=SETNAMED(y);
 // obsolete         y=SETFAOWED(y);
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.  But if the value IS a reference, use the value if possible to avoid the extra lookup
         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
@@ -842,10 +843,10 @@ RECURSIVERESULTSCHECK
         tpopw=(pt0ecam>>(PMASKSAVEX+2))&(I)freea&STKNAMED?(A*)freea:tpopw;  // refresh tpopw if dyad and the y arg was STKNAMED
         tpopa=~(pt0ecam>>(PMASKSAVEX+2))&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
        }
-       fsa2[0]=fsa2[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2
+       fsa2[0]=fsa2[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2(NOP)
        PSTK *fsa0=fsa2-1; fsa0=(pt0ecam&(4<<PMASKSAVEX))?fsa2:fsa0; *fsa0=stack[0];  // fsa0=0 1 1->0 1 2 close up the stack  0->0(NOP)  0->1   0->2  scaf could be better
        stack=fsa2;  // move stack to verb slot for now 1 2 2
-       if(ISSTKFAOWED(freep)){faowed(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}
+       if(unlikely(ISSTKFAOWED(freep))){INCRSTAT(ffaowed)/* 0.0 */; faowed(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}
 
        // (1) free up inputs that are no longer used.  These will be inputs that are still abandoned and were not themselves returned by the execution.
        // We free them right here, and zap their tpop entry to avoid an extra free later.
@@ -856,9 +857,9 @@ RECURSIVERESULTSCHECK
        // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc from BEFORE the call
        // (2) if any of args/fs is FAOWED, the value is now out of execution and must be fa()d.  BUT if the value is y, it remains in execution and we inherit the
-       // FAOWED status into y (but only once per value).  This is mutually exclusive with
+       // FAOWED status into y (but only once per value, because the first such inheritance modifies y). 
        // first the w arg
-       // We schedule the loads according to the measured frequencies indicated, which come from the test suite (not including gtdot*.ijs)
+       // We schedule the loads according to the measured frequencies indicated, which come from the test suite (not including gtdot*.ijs) measured 20241224 on Alder Lake (Skylake compilation)
        // The rule is: loads that contribute to mispredictable test A should be scheduled before the LAST likely-mispredicted branch leading to A.
        // Those loads will settle during misprediction, reducing the time through A (including its misprediction, if it mispredicts)
 // obsolete        // We use atomic loads to inhibit the compiler from reordering them
@@ -867,34 +868,43 @@ RECURSIVERESULTSCHECK
 // obsolete        I freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
 // obsolete          // we are investing another cycle to get an early start on the values needed to free an owed block.  This free will usually result in an RFO cycle, which cannot start until the branch is retired
 // obsolete        if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else {INCRSTAT(wfafa/*.98*/) faifowed(freep,freepc,freept,tpopw);}}
-       if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely((A)QCWORD(tpopw)==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else if(withprob(ISSTKFAOWED(tpopw),0.2)){INCRSTAT(wfafa/*.98*/) faowed((A)QCWORD(tpopw),AC((A)QCWORD(tpopw)),AT((A)QCWORD(tpopw)));}}
-       else{
-        A freeav=freea=*(A*)((I)tpopw&-SZI); freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
-        I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
-         // we start these loads here because the next branch will often mispredict, allowing them to finish.  If we move them earlier we have more work to do with qualifying freea
-        if(unlikely(freea!=0)){INCRSTAT(wpop/*.27*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
-         I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
-         if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(wpopfa/*0.34 local, 0.9 global*/)   // abandoned and not return value.  Sparse blocks are never abandoned
-          *tpopw=0; fanapop(freea,freeaflag);  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
-         }else{INCRSTAT(wpopnull/*0.65 local, 0.18 global*/) }
-        }else{INCRSTAT(wnull/*.34*/)}
+       if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.7*/) if(unlikely((A)QCWORD(tpopw)==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else if(withprob(ISSTKFAOWED(tpopw),0.2)){INCRSTAT(wfafa/*.08*/) faowed((A)QCWORD(tpopw),AC((A)QCWORD(tpopw)),AT((A)QCWORD(tpopw)));}}
+                // if the input is the result, keep the flags from the input, which are set to indicate required frees.  The presence of one of these will suppress matching a also
+       else{ /*0.3*/
+        freea=*tpopw;   // get the tstack pointer, which points back to the arg if it has not been zapped
+// obsolete         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
+// obsolete          // we start these loads here because the next branch will often mispredict, allowing them to finish.  If we move them earlier we have more work to do with qualifying freea
+        if(likely(freea!=0)){INCRSTAT(wpop/*.99*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
+// obsolete           I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
+         I zapok=((I)((UI)AC(freea)>>(freea==y))&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); // if(zapok<0)INCRSTAT(wpopfa/*0.45*/)   // (not return value) and abandoned.  Sparse blocks are never abandoned
+         tpopw=zapok<0?tpopw:(A*)&jt->shapesink; *tpopw=0; if(unlikely((zapok&-(AFLAG(freea)&RECURSIBLE))<0))fanapop(freea,RECURSIBLE);/*0.01*/  // zap the top block; if recursive, fa the contents.  We free tpopw before subroutine
+// obsolete          }else{INCRSTAT(wpopnull/*0.55*/) }
+        }else{INCRSTAT(wnull/*.01*/)}
        }
        // repeat for a if any
 // obsolete        freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_RELAXED);
 // obsolete        freep=(A)QCWORD(tpopa); freep=ISSTKNAMED(tpopa)?freep:(A)jt;
 // obsolete        freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
 // obsolete        if(ISSTKNAMED(tpopa)){INCRSTAT(afaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else{INCRSTAT(afafa/*.98*/) faifowed(freep,freepc,freept,tpopa);}}
-       if(ISSTKNAMED(tpopa)){INCRSTAT(afaowed/*.36*/) if(unlikely((A)QCWORD(tpopa)==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else if(withprob(ISSTKFAOWED(tpopa),0.2)){INCRSTAT(wfafa/*.98*/) faowed((A)QCWORD(tpopa),AC((A)QCWORD(tpopa)),AT((A)QCWORD(tpopa)));}}
-       else{
-        A freeav=freea=*(A*)((I)tpopa&-SZI); freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
+       if(ISSTKNAMED(tpopa)){INCRSTAT(afaowed/*.8*/) if(unlikely((A)QCWORD(tpopa)==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else if(withprob(ISSTKFAOWED(tpopa),0.2)){INCRSTAT(wfafa/*.98*/) faowed((A)QCWORD(tpopa),AC((A)QCWORD(tpopa)),AT((A)QCWORD(tpopa)));}}
+       else{ /*.2*/
+// obsolete         A freeav=freea=*(A*)((I)tpopa&-SZI); freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
 // obsolete         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
-        I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
-        if(unlikely(freea!=0)){INCRSTAT(apop/*.20*/)  // if freea==arg2 this will never load a value requiring action
-         I c=(UI)freeac>>(freea==y);
-         if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.30 local, 0.06 global*/)  // abandoned, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
-          *tpopa=0; fanapop(freea,freeaflag);
-         }else{INCRSTAT(apopnull/*0.70 local, 0.15 global*/)}
-        }else{INCRSTAT(anull/*.25*/)}
+// obsolete         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
+// obsolete         if(unlikely(freea!=0)){INCRSTAT(apop/*.20*/)  // if freea==arg2 this will never load a value requiring action
+// obsolete          I c=(UI)freeac>>(freea==y);
+// obsolete          if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.30 local, 0.06 global*/)  // abandoned, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
+// obsolete           *tpopa=0; if(freeaflag&RECURSIBLE)INCRSTAT(apoprecur); fanapop(freea,freeaflag);
+// obsolete          }else{INCRSTAT(apopnull/*0.70 local, 0.15 global*/)}
+// obsolete         }else{INCRSTAT(anull/*.25*/)}
+        freea=*tpopa;   // get the tstack pointer, which points back to the arg if it has not been zapped
+        if(likely(freea!=0)){INCRSTAT(apop/*.95*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
+// obsolete          if(((I)((UI)AC(freea)>>(freea==y))&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.4*/)   // (not return value) and abandoned.  Sparse blocks are never abandoned
+// obsolete           *tpopa=0; if(AFLAG(freea)&RECURSIBLE)INCRSTAT(apoprecur/*.01*/); fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
+         I zapok=((I)((UI)AC(freea)>>(freea==y))&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); // if(zapok<0)INCRSTAT(wpopfa/*0.4*/)   // (not return value) and abandoned.  Sparse blocks are never abandoned
+         tpopa=zapok<0?tpopa:(A*)&jt->shapesink; *tpopa=0; if(unlikely((zapok&-(AFLAG(freea)&RECURSIBLE))<0))fanapop(freea,RECURSIBLE);/*0.01*/  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
+// obsolete          }else{INCRSTAT(apopnull/*0.6*/) }
+        }else{INCRSTAT(anull/*.05*/)}
        }
 
        // close up the stack and store the result.  We have to wait till here because y may have inherited FAOWED status

@@ -505,11 +505,12 @@ A jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){A val;
   // If there is a local symbol table, search it first
-  if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(ISRAREQD(val))rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics  scaf better ra
+// obsolete   if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(ISRAREQD(val))rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
+  if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
   g=jt->global;  // Continue with the current locale
  }else{A val;  // locative
   RZ(g=sybaseloc(a));  // find the starting locale for the name lookup
-  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){if(ISRAREQD(val))rapos(QCWORD(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals  scaf better ra
+  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
  }
  A res=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g, returning NAMEDLOC semantics which we discard
  if(likely(res!=0))res=SETNAMEDFAOWED(res);  // mark found in global, if found
@@ -533,11 +534,11 @@ A jtsyrdnobuckets(J jt,A a){A g,val;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(NAV(a)->bucket)<=0)if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){if(ISRAREQD(val))rapos(QCWORD(val),val); R val;}  // return if found locally from name  scaf better ra
+  if(unlikely(NAV(a)->bucket)<=0)if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  }else{  // if locative, start in locative locale & remember table type
   RZ(g=sybaseloc(a));
-  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){if(ISRAREQD(val))rapos(QCWORD(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals  scaf better ra
+  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
  }
  val=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g, returning NAMEDLOC semantics which we discard
  if(likely(val!=0))val=SETNAMEDFAOWED(val);  // mark found in global, if found, which switches to QCFAOWED semantics

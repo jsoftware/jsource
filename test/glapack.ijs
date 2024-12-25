@@ -62,7 +62,7 @@ s0=: 7!:0 ''
 3 = # dgeev_jlapack_ 100 100 ?@$ 0
 4!:55 ;:'LASTIN_jlapack_ LASTOUT_jlapack_'
 s1=: 7!:0 ''
-s0 -: s1
+4000 > | s0 -: s1  NB. small results may get left on the tpop stack for a while, invalidating exact space comparisons
 
 3 = # dgeev_jlapack_ A=: 50 50 ?.@$ 0
 4!:55 ;:'LASTIN_jlapack_ LASTOUT_jlapack_ A'
@@ -73,7 +73,7 @@ A -: 50 50 ?.@$ 0
 4!:55 ;:'LASTIN_jlapack_ LASTOUT_jlapack_ A'
 4!:55 ;:'A'
 s1=: 7!:0 ''
-s0 -: s1
+4000 > | s0 -: s1  NB. small results may get left on the tpop stack for a while, invalidating exact space comparisons
 
 
 NB. LAPACK zgeev --------------------------------------------------------

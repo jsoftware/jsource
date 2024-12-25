@@ -2146,7 +2146,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 // split into two parts: the symbol-dependent and not, so we can move the expensive part outside of lock
 #define SYMVALFA1(l,faname) {if(faname!=0){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(faname); if(likely(AC(faname)<2))ACRESET(faname,ACINPLACE|ACUC1); faname=0;}}}
 #define SYMVALFA2(faname) if(faname!=0){faaction(jt,faname,AFLAGCLRKNOWN(faname));}
-#define SYMVALFA(l) {A v=(l).val; SYMVALFA1(l,v) SYMVALFA2(v)}   // l points to the symbol-table entry for the name
+#define SYMVALFA(l) {A v=QCWORD((l).fval); SYMVALFA1(l,v) SYMVALFA2(v)}   // l points to the symbol-table entry for the name
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

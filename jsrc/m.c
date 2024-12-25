@@ -424,7 +424,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
   tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each hashchain in the locale
-   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+SYMORIGIN; tot+=spfor1(u->name); tot+=spfor1(u->val);}  // add in the size of the name itself and the value, and the L block for the name
+   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+SYMORIGIN; tot+=spfor1(u->name); tot+=spfor1(QCWORD(u->fval));}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=tot;
  }
@@ -684,7 +684,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
     fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
     SYMVALFA(jtsympv[k]);    // free value
-    jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;  // clear symbol fields for next time (that's Roger's way)
+    jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;  // clear symbol fields for next time (that's Roger's way)
     lastk=k;  // remember end-of-chain
     k=nextk;  // advance to next block in chain
    }while(k);
@@ -718,7 +718,7 @@ NOINLINE A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be
    // Free the name
    fr(LOCNAME(w));
    // clear the data fields in symbol SYMLINFO   kludge but this is how it was done (should be done in symnew)
-   jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].valtype=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+   jtsympv[k].name=0;jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
    jtsymreturn(jt,k,k,1);  // return symbol to free lists
   }
  }

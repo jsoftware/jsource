@@ -9,7 +9,7 @@
 
 static F1(jtdfrep){ARGCHK1(w); R NOUN&AT(w)?w:lrep(w);}
 
-static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=incorp(sfn(0,d->name))); RZ(*zv++=incorp(dfrep(d->val)));})
+static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=incorp(sfn(0,d->name))); RZ(*zv++=incorp(dfrep(QCWORD(d->fval))));})
 
 static B jtdrow(J jt,DC si,DC s0,A*zv,UI ncollist,I* collist){A fs,q,*qv,y,z;C c;UI col;
  fs=si->dcf;

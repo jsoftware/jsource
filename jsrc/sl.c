@@ -212,7 +212,7 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
   UI4 hsh=NAV(x)->hash; L *sympv=SYMORIGIN;  // hash of name; origin of symbol tables
   LX *hv=LXAV0(JT(jt,stloc))+SYMHASH(hsh,AN(JT(jt,stloc))-SYMLINFOSIZE);  // get hashchain base in stloc
   LX tx=SYMNEXT(*hv); if(tx!=0)NOUNROLL while(SYMNEXT(sympv[tx].next)!=0)tx=SYMNEXT(sympv[tx].next);  // tx->last in chain, or 0 if chain empty
-  v=symnew(hv,tx); v->name=x; v->val=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; save value; ZAP to match store of value
+  v=symnew(hv,tx); v->name=x; v->fval=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; put locale pointer into fval; ZAP to match store of value
   LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
   ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
   AR(g)=ARNAMED;   // set rank to indicate named locale
@@ -597,7 +597,7 @@ F1(jtlocname){A g=jt->global;
 }    /* 18!:5  current locale name */
 
 static SYMWALK(jtlocmap1,I,INT,18,3,1,
-    {I t=AT(d->val);
+    {I t=AT(QCWORD(d->fval));
      *zv++=i; 
      I zc; zc=(((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ(((t&CONJ+ADV+VERB)|(1LL<<31))>>ADVX)))&3;   // ADVX, CONJx, VERBX, and the implied NOUNX=31 must all be >+ 2 bits apart
      zc=t==SYMB?6:zc; zc=t&(NOUN|VERB|ADV|CONJ|SYMB)?zc:-2;
@@ -655,7 +655,7 @@ F1(jtsetpermanent){A g;
 
 
 
- SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef((zv,mark),d->val)))
+ SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef((zv,mark),QCWORD(d->fval))))
      /* check for redefinition (erasure) of entire symbol table. */
 
 // 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale

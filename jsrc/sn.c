@@ -140,10 +140,10 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;
 }    /* 4!:0  name class */
 
 // these functions are called with an a arg that is a 256-char rank-1 boolean map giving the initial characters wanted, and AS(a)[0] is a mask of allowed types
-static SYMWALK(jtnlxxx, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]]&&AS(a)[0]&AT(d->val), 
+static SYMWALK(jtnlxxx, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]]&&AS(a)[0]&AT(QCWORD(d->fval)), 
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
-static SYMWALK(jtnlsymlocked, A,BOX,20,1, LOCPATH(d->val)&&CAV1(a)[((UC*)NAV(d->name)->s)[0]],
+static SYMWALK(jtnlsymlocked, A,BOX,20,1, LOCPATH(QCWORD(d->fval))&&CAV1(a)[((UC*)NAV(d->name)->s)[0]],
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
 static SYMWALK(jtnlsymlockedz, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]],
@@ -186,7 +186,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  for(i=SYMLINFOSIZE;i<wn;++i)if(e[i]){
   d=SYMNEXT(e[i])+SYMORIGIN;
   while(1){
-   if(LCH&d->flag&&d->name&&d->val){
+   if(LCH&d->flag&&d->name&&QCWORD(d->fval)){
     d->flag^=LCH;
     if(b){
      if(m==AN(ch)){RZ(ch=ext(0,ch)); v=m+AAV(ch);}
@@ -213,7 +213,7 @@ static F1(jtnch2){A ch;B b;LX *e;I i,m,n;L*d;
   for(i=SYMLINFOSIZE;i<n;++i,++e)if(*e){  // for each hashchain in locale table
    d=SYMNEXT(*e)+SYMORIGIN;
    NOUNROLL while(1){   // for each locale in the chain
-    RZ(ch=nch1(b,d->val,&m,ch));  // go check each symbol in the locale
+    RZ(ch=nch1(b,d->fval,&m,ch));  // go check each symbol in the locale
     if(!d->next)break;
     d=SYMNEXT(d->next)+SYMORIGIN;
    }

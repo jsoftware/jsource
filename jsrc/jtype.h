@@ -889,7 +889,7 @@ typedef DST* DC;
 #define SETNAMED(w) (A)((I)(w)|QCNAMED)
 #define QCRAREQDX 5   // Value should be ra()d before stacking.  This is any global name or any sparse value.
 #define QCRAREQD ((I)1<<QCRAREQDX)
-#define ISRAREQD(w) ((I)w&QCRAREQD)  // true if value should be ra()d before stacking
+#define ISRAREQD(w) ((I)(w)&QCRAREQD)  // true if value should be ra()d before stacking
 #define SETRAREQD(w) (A)((I)(w)|QCRAREQD)
 #define CLRRAREQD(w) (A)((I)(w)&~QCRAREQD)
 // value types set when the value is stored into the symbol table:
@@ -948,11 +948,12 @@ typedef DST* DC;
 
 typedef struct {
  A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
- A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned.  In LINFO, the number of a numbered locale, unused otherwise
- C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
- C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCSYMVAL semantics
- S sn;  // script index the name was defined in.  Not used for LINFO
+ A fval;  // rhs of assignment with flags (QCSYMVAL semantics), or 0 for PERMANENT symbols that have not yet been assigned.  In LINFO, the number of a numbered locale, unused otherwise
+#define MAKEFVAL(v,f) (A)((I)(v)|(f))  // combine value & flag for fval
  LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT.  Not used in LINFO
+ S sn;  // script index the name was defined in.  Not used for LINFO
+ C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
+// obsolete  C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCSYMVAL semantics
 } L;  // name must come first because of the way we use validitymask[11]
 
 // FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table, AM() points to the calling local symbol table.
@@ -976,7 +977,7 @@ typedef struct {
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
 #define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
-#define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].val)  // locale number, for numbered locales
+#define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].fval)  // locale number, for numbered locales
 #define LOCNUM(g) (I)LOCNUMW(g)
 #define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted.  The path runs from LOCPATH backwards
                         // to end with the ending 0 at AAV1()[0]

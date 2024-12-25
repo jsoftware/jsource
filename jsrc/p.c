@@ -281,7 +281,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
 #endif
 
 #if 0  // for debugging
-static SYMWALK(jtchkval0k, I,INT,1,1, AT(d->val)&NOUN&&AK(d->val)==0?SEGFAULT:0 , ;)
+static SYMWALK(jtchkval0k, I,INT,1,1, AT(QCWORD(d->fval))&NOUN&&AK(QCWORD(d->fval))==0?SEGFAULT:0 , ;)
 #endif
 
 // Run parser, creating a new debug frame.  Explicit defs, which make other tests first, go through jtparsea except during debug/pm
@@ -584,9 +584,9 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       y=QCWORD(y);  // back y up to the NAME block
       if((symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using primary table and there is a symbol stored there...
        L *s=sympv+(I)symx;  // get address of symbol in primary table
-       if(unlikely(s->valtype==0))goto rdglob;  // if value has not been assigned, ignore it.
-       y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCSYMVAL semantics, as y does.  scaf move this addition to the assignment
-       if(unlikely(ISRAREQD(s->valtype)))raposlocalqcgsv(s->val,QCPTYPE(s->valtype),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
+       if(unlikely((s->fval)==0))goto rdglob;  // if value has not been assigned, ignore it.  y has QCSYMVAL semantics
+// obsolete        y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCSYMVAL semantics, as y does.
+       if(unlikely(ISRAREQD(y=s->fval)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
       }else if(likely((buck=NAV(QCWORD(y))->bucket)>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
        I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
        if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
@@ -771,7 +771,7 @@ endname: ;
         if(likely(GETSTACK0PT&PTASGNLOCAL)){L *s;   // only sentences from explicit defns have ASGNLOCAL set
          // local assignment.  First check for primary symbol.  We expect this to succeed.  We fetch the unflagged address of the value
          if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
-          zval=(SYMORIGIN+(I)s)->val;  // get value of symbol in primary table.  There may be no value; that's OK
+          zval=QCWORD((SYMORIGIN+(I)s)->fval);  // get value of symbol in primary table.  There may be no value; that's OK
          }else{zval=QCWORD(jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms));}
          targc=LOCALRA?ACUC2:ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d. which is OK
         }else{zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue))); targc=ACUC2;}  // global assignment, get slot address.  Global names have been ra()d and have AC=2
@@ -1157,9 +1157,9 @@ failparse:
    if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up
     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
-     if(likely((sv=s->val)!=0)){  // value has been assigned
+     if(likely((sv=s->fval)!=0)){  // value has been assigned
       // the very likely case of a local name.  This value needs no protection because there is nothing more to happen in the sentence and the local symbol table is sufficient protection.  Skip the ra and the tpush
-      I svt=s->valtype;  // type of stored value
+      I svt=QCTYPE(sv); sv=QCWORD(sv);  // type of stored value
       if(likely(svt&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
        if(unlikely(yflags&QCNAMEABANDON))goto abandname;  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  Since rare (especially for a single word!), do so by re-looking up the name
        y=sv; // we will use the value we read

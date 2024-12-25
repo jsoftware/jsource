@@ -153,11 +153,11 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     if(!SYMNEXTISPERM(k))break;  // we are about to free k.  exit if it is not permanent
     I nextk=jtsympv[k].next;  // unroll loop 1 time
     aprev=&jtsympv[k].next;  // save last item we processed here
-    if(jtsympv[k].val){
+    if(jtsympv[k].fval){
      // if the value was abandoned to an explicit definition, we took usecount 8..1  -> 1 ; revert that.  Can't change an ACPERMANENT!
      // otherwise decrement the usecount
      SYMVALFA(jtsympv[k]);
-     jtsympv[k].val=0;jtsympv[k].valtype=0;  // clear value - don't clear name
+     jtsympv[k].fval=0;  // clear value - don't clear name
     }
     k=nextk;
    }while(k);
@@ -170,7 +170,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     NOUNROLL do{
      k=SYMNEXT(k);  // remove address flagging
      I nextk=jtsympv[k].next;  // unroll loop once
-     fa(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].valtype=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     fa(jtsympv[k].name);fa(QCWORD(jtsympv[k].fval));jtsympv[k].name=0;jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      lastk=k;  // remember index of last block
      ++nfreed;  // ince count of block in chain-to-free
      k=nextk;
@@ -196,8 +196,8 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  GATV0E(y,BOX,n,  1,goto exit;);                         yv=AAV1(y); zv[1]=incorp(y);  // box 1: 
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
-  *xv++=(!(pv->flag&LINFO)&&pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  In LINFO, val may be locale#.  Must allow SYMB through
-  *xv++=pv->flag+(pv->name?LHASNAME:0)+(!(pv->flag&LINFO)&&pv->val?LHASVALUE:0);  // flag
+  *xv++=(!(pv->flag&LINFO)&&pv->fval)?LOWESTBIT(AT(QCWORD(pv->fval))):0;  // type: only the lowest bit.  In LINFO, val may be locale#.  Must allow SYMB through
+  *xv++=pv->flag+(pv->name?LHASNAME:0)+(!(pv->flag&LINFO)&&pv->fval?LHASVALUE:0);  // flag
   *xv++=pv->sn;    // script index
   *xv++=SYMNEXT(pv->next);  // chain
   *xv++=0;  // for debug, the thread# that allocated the symbol
@@ -209,7 +209,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc));   // v->locale chains
  for(i=0;i<n;++i){  // for each chain-base in locales pool
   for(j=v[i];j=SYMNEXT(j),j;j=SYMORIGIN[j].next){      // j is index to named local entry; process the chain
-   x=SYMORIGIN[j].val;  // x->symbol table for locale
+   x=SYMORIGIN[j].fval;  // x->symbol table for locale
    RZGOTO(yv[j]=yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))),exit);  // install name in the entry for the locale
    RZGOTO(q=sympoola(x),exit); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
   }
@@ -250,8 +250,8 @@ B jtprobedel(J jt,C*string,UI4 hash,A g){B ret;
   if(likely(!(AFLAG(sym->name)&AFRO))){   // ignore request to delete readonly name (cocurrent)
    IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
      {
-      ret=sym->val==0?0:~(I)sym->valtype&QCNOUN;  // return value: value was defined & not a noun
-      SYMVALFA(*sym); sym->val=0; sym->valtype=0;  // decr usecount in value; remove value from symbol
+      ret=sym->fval==0?0:~(I)sym->fval&QCNOUN;  // return value: value was defined & not a noun
+      SYMVALFA(*sym); sym->fval=0;  // decr usecount in value; remove value from symbol
       if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
        *asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
        jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains
@@ -279,7 +279,7 @@ A jtprobe(J jt,C*string,UI4 hash,A g){
  NOUNROLL while(symx){  // loop is unrolled 1 time
   // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
   symnext=sympv+(symx=SYMNEXT(sym->next));
-  IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R (A)((I)sym->val+sym->valtype);)     // (1) exact match - if there is a value, return it.  valtype has QCSYMVAL semantics
+  IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R sym->fval;)     // (1) exact match - if there is a value, return it.  valtype has QCSYMVAL semantics
   sym=symnext;  // advance to value we read
  }
  R 0;  // not found
@@ -299,7 +299,7 @@ A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[buc
   if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
   // Now lx is the index of the first name that might match.  Do the compares
   NOUNROLL while(lx=SYMNEXT(lx)) {L* l = lx+sympv;  // symbol entry
-   IFCMPNAME(NAV(l->name),s,m,hsh, R (A)((I)l->val+l->valtype);)
+   IFCMPNAME(NAV(l->name),s,m,hsh, R l->fval;)
    lx = l->next;
   }
   R 0;  // no match.
@@ -307,7 +307,7 @@ A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[buc
   L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
   // negative bucketx (now positive); skip that many items, and then you're at the right place
   if(unlikely(bx>0)){NOUNROLL do{l = l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
-  R (A)((I)l->val+l->valtype);
+  R l->fval;
  }
 }
 
@@ -555,7 +555,7 @@ static L *jtprobeforsym(J jt,C*string,UI4 hash,A g){
  NOUNROLL while(symx){  // loop is unrolled 1 time
   // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
   symnext=sympv+SYMNEXT(symx=sym->next);
-  IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R sym->val!=0?sym:0;)     // (1) exact match - if there is a value, return the symbol
+  IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R sym->fval!=0?sym:0;)     // (1) exact match - if there is a value, return the symbol
   sym=symnext;  // advance to value we read
  }
  R 0;  // not found
@@ -578,9 +578,9 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
 gotval: ;
  // found: l points to the symbol.  We hold a lock on g, if it is nonzero
  I res=0;
- if(component==0){ASSERTGOTO(NOUN&AT(l->val),EVDOMAIN,exitlock) res=(I)l;}  // 15!:6, symbol address
- else if(component==1){ASSERTGOTO(NOUN&AT(l->val),EVDOMAIN,exitlock) res=(I)voidAV(l->val);}  // 15!:14, data address
- else if(component==2){ASSERTGOTO(NOUN&AT(l->val),EVDOMAIN,exitlock) res=(I)(l->val);}  // 15!:12, header address
+ if(component==0){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)l;}  // 15!:6, symbol address
+ else if(component==1){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)voidAV(QCWORD(l->fval));}  // 15!:14, data address
+ else if(component==2){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)(QCWORD(l->fval));}  // 15!:12, header address
  else{res=l->sn+1;}  // 4!:4, script index
 exitlock:
  if(g)READUNLOCK(g->lock)
@@ -749,20 +749,20 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  }
  // ****** if g is a global table, we have a write lock on the locale, which we must release in any error paths.  g=0 otherwise *******
 
- A x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
+ A x=e->fval;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
- if(likely(x!=w)){
+ if(likely(QCWORD(x)!=w)){
   // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
-  if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&((e->valtype&QCNOUN)==0))x=redef(w,x);  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
-
+  if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&(((I)x&QCNOUN)==0))x=redef(w,x);  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
+  x=QCWORD(x);  // we have no further need for the type that has been reassigned
+  
   ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only name (xxx_index) with new value, fail
   I xaf;  // holder for nvr/free flags
   {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x
 
   if(likely(!(AFNJA&xaf))){
    // Normal case of non-memory-mapped assignment.
-   e->valtype=valtype;  // set the value type of the new value
-   e->val=w;  // store the new value to free w before ra()
+   e->fval=MAKEFVAL(w,valtype);  // store the new flagged value to free w before ra()
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
                    // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
                    // SYMVALFA1 does not call a subroutine

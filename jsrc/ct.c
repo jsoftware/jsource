@@ -609,8 +609,9 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
   oldjob=(oldjob==0)?job:oldjob;   //  Keep old head unless it was empty
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added a job
+  I nwaiters=jobq->waiters;  // see if there are waiting threads
   JOBUNLOCK(jobq,oldjob);  // set head pointer, which unlocks.
-  if(jobq->waiters!=0)jfutex_wakea(&jobq->futex);  // if there are waiting threads, wake them up.  We test in case there are no worker threads
+  if(nwaiters!=0)jfutex_wakea(&jobq->futex);  // if there are waiting threads, wake them up.  We test in case there are no worker threads.  Not really necessary to read under lock, but it silences asan
   lastqueuedtask=n-1;  // if we take this task here, it is special
    // todo scaf: would be nice to wake only as many as we have work for
  }

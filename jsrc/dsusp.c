@@ -20,7 +20,7 @@ void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserstkb
 /*    ASSERT(blah,EVDOMAIN);                             */
 /*    debz()                                             */
 // t is the type of stack entry.  The entry is allocated and filled in
-// the type DCPM is for powt-mortem debugging.  It is like DCCALL but chained on jt->pmstacktop rather than jt->sitop, and chained
+// the type DCPM is for post-mortem debugging.  It is like DCCALL but chained on jt->pmstacktop rather than jt->sitop, and chained
 // in bottom-to-top order that must be reversed when transferred to the debug stack
 // meanings of the args:
 // DCPARSE: x=&tokens  y=#tokens

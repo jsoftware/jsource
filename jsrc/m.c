@@ -836,6 +836,9 @@ A jtrealize(J jt, A w){A z; I t;
 //
 // result is the address of the block, which may have changed if it had to be realized.  result can be 0
 // if the block could not be realized
+//
+// On return tnextpushp will be old or old+1, UNLESS (1) w is 0 - no guarantees then; (2) w is VIRTUALBOXED, where we know
+// the value is going to be opened & we don't want to free any backers
 
 A jtgc(J jt,A w,A* old){
  ARGCHK1(w);  // return if no input (could be error or unfilled box)

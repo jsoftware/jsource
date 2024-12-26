@@ -563,13 +563,9 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
      // value.  m has the index of the word we just moved.  y = *queue
 
      // We have the value/typeclass of the next word (QCSENTENCE semantics).  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
-     if(!((I)y&QCISLKPNAME)){
-      // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
-      // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED in blocks that are known to need no pretection from deletion:
-      // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
-      // guarantee that the block is never protected from deletion
+     if(((I)y&QCISLKPNAME)){
 // obsolete if((I)y&QCNAMED+QCISLKPNAME)SEGFAULT;      y=CLRQCFAOWEDMSK(y);  // y is now addr/00/type index
-     }else{  // Replace a name (not to left of ASGN) with its value
+      // Replace a name (not to left of ASGN) with its value
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
@@ -670,6 +666,13 @@ undefname:
       }
 endname: ;
 // obsolete       y=SETNAMED(y);  // turn on the flag bit indicating this was NAMED
+     }else{
+      // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
+      // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED in blocks that are known to need no pretection from deletion:
+      // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
+      // guarantee that the block is never protected from deletion
+
+      // All this takes no code.
      }
 
      // names have been resolved

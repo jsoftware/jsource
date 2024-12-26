@@ -60,6 +60,14 @@ t -: 3;4   NB. Verify the value fetched from t was non-inplaceable
 'a' -: (0;0) {:: <"0 'abc'
 'a' -: (0;0) {:: <@,"0 'abc'
 
+'nonce error' -: ($. 1 1) {:: etx 6
+'length error' -: (1;2)  {:: etx $. i. 5 6
+'length error' -: (1 2)  {:: etx $. i. 7
+1 2 ((<@[ { ]) etx -: {:: etx) $. 2 3 4 5
+1 2 ((<@[ { ]) -: {::) $. i. 2 3 4 5
+1 2 ((<@[ { ]) -: {::) $. 0. + i. 2 3 4 5
+1 2 ((<@[ { ]) -: {::) $. 1 = i. 2 3 4 5
+
      'spelling error' -: ". etx'}::'
 
 4!:55 ;:'boxed cat map mapp pick S sc spread_temp si sz t'

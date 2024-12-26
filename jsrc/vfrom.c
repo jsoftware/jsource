@@ -686,6 +686,12 @@ static F2(jtquicksel){I index;
 
 DF2(jtfetch){A*av, z;I n;F2PREFIP;
  F2RANKW(1,RMAX,jtfetch,self);  // body of verb applies to rank-1 a, and must turn pristine off if used higher, since there may be repetitions.
+ if(unlikely(ISSPARSE(AT(w)|AT(a)))){   // sparse x or y
+  ASSERT(!ISSPARSE(AT(a)),EVNONCE)  // selector must be dense
+  if(!(AT(a)&BOX))RZ(a=box(a));   // box open a
+  ASSERT(AN(a)==1,EVLENGTH)   // must be a single selector, implement as (boxopen x) { y
+  RETF(from(a,w));
+ }
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
   if(((AT(w)>>BOXX)&1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or list of boxes   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))

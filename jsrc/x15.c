@@ -1534,7 +1534,7 @@ F2(jtmemu2) { ASSERT(!JT(jt,seclev),EVSECURE) RETF(ca(w)); }  // dyad - force co
 F1(jtgh15){A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header
      /* 15!:8  get header */
 
-F1(jtfh15){I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); fr((A)k); R num(0);}
+F1(jtfh15){A k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=(A)i0(w)); ASSERT(AT(k)==LOWESTBIT(AT(k))&&(AT(k)&DIRECT),EVDOMAIN) fr(k); R num(0);}
      /* 15!:9  free header */
 
 // 15!:7.  w has the address of a header.  Put that address in play as an A block

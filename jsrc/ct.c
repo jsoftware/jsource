@@ -396,7 +396,7 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  __atomic_store_n(&jt->cstackinit,(UI)&dummy,__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
  __atomic_store_n(&jt->cstackmin,jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),__ATOMIC_RELEASE);  // use a local as a surrogate for the stack pointer
  // Note: we use cstackmin as an indication that this thread is ready to use.
- JOBQ *jobq=&(*JT(jt,jobqueue))[jt->threadpoolno];   // The jobq block for the threadpool we are in - never changes
+ JOBQ *jobq=&(*JT(jt,jobqueues))[jt->threadpoolno];   // The jobq block for the threadpool we are in - never changes
 
  // loop forever executing tasks.  First time through, the thread-creation code holds the job lock until the initialization finishes
 nexttask: ; 
@@ -547,7 +547,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; // the call is either noun self x or noun noun self.  See which, select self.  dyad is 0 or 1
  // extract parms given to t.: threadpool number, worker-only flag
  UI forcetask=((FAV(self)->localuse.lu1.forcetask>>8)&1)-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
- JOBQ *jobq=&(*JT(jt,jobqueue))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
+ JOBQ *jobq=&(*JT(jt,jobqueues))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
  if((((I)(forcetask&lda(&jobq->nuunfin))-jobq->nthreads)&(lda(&JT(jt,systemlock))-3))<0){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
     // in suspension (systemlock state>2) we do not start any task anywhere
   // we would like to avoid realizing virtual arguments, so that the copy will be done into the core that needs the data.  However, if we leave the block as virtual,
@@ -591,7 +591,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
 // execute an internal job made up of n tasks.  f is the function to run, end is the function to call at end, ctx is parms to pass to each task
 // poolno is the threadpool to use.  Tasks are run on this thread and the worker threads
 // Result is 0 for OK, else jerr.h error code
-C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
+C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueues))[poolno];
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITUNPUSH(jobA);  // we could allocate this (aligned) on the stack, since we wait here for all tasks to finish.  Must never really free!
  JOB *job=(JOB*)AAV1(jobA); job->n=n; job->ns=1;  job->initthread=THREADID(jt); job->internal.f=f; job->internal.ctx=ctx; job->internal.nf=0; job->internal.err=0;  // by hand: allocation is short.  ns=1 because we take the first task in this thread
  I lastqueuedtask=-1;  // if nonneg, the task# of the last task (i. e. n-1).  If this task is taken here we have to leave it in the queue
@@ -788,7 +788,7 @@ ASSERT(0,EVNONCE)
    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   }
-  JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
+  JOBQ *jobq=&(*JT(jt,jobqueues))[poolno];
   GAT0(z,INT,3,1)  // allocate result
   JOB *oldjob=JOBLOCK(jobq);  // lock the jobq to present a consistent picture
   IAV1(z)[0]=jobq->waiters, IAV1(z)[1]=jobq->nuunfin, IAV1(z)[2]=jobq->nthreads;  // don't allocate under lock
@@ -807,7 +807,7 @@ ASSERT(0,EVNONCE)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // arg is threadpool# keepwarm
   if(AT(w)!=FL)RZ(w=ccvt(FL,w,0));  // make arg float type
   D dpoolno=DAV(w)[0]; I poolno=(I)dpoolno; ASSERT((D)poolno==dpoolno,EVDOMAIN) ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
-  JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
+  JOBQ *jobq=&(*JT(jt,jobqueues))[poolno];
   D oldval=jobq->keepwarmns*1e-9;
   D kwtime=DAV(w)[1]; ASSERT(kwtime>=0,EVDOMAIN); if(unlikely(kwtime>MAXLINGER))kwtime=MAXLINGER; I kwtimens=(I)(kwtime*1000000000);  // limit time and convert to ns
   jobq->keepwarmns=kwtimens;  // store new value
@@ -823,7 +823,7 @@ ASSERT(0,EVNONCE)
    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   }
-  JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
+  JOBQ *jobq=&(*JT(jt,jobqueues))[poolno];
   JOB *job=JOBLOCK(jobq);  // must change status under lock for the threadpool
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added work, so that if a waiter finishes its keepwarm it will start another one
   JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads
@@ -875,7 +875,7 @@ ASSERT(0,EVNONCE)
    YIELD  // let other threads run while we wait for the on-deck thread to terminate
   }
   // we have a lock on the overall thread info; and resthread, the slot we want to fill, is idle.  keep the lock while we fill it.  systemlock will not count threads until we have finished adding and starting the new one
-  JOBQ *jobq=&(*JT(jt,jobqueue))[poolno];
+  JOBQ *jobq=&(*JT(jt,jobqueues))[poolno];
   ASSERTSUFF(jobq->nthreads<MAXTHREADSINPOOL,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if threadpool limit exceeded.  OK to CHECK outside of job lock
   // We also have to lock the threadpool before changing nthreads, because jobq->nthreads is used to decide whether to start a job
   JOB *job=JOBLOCK(jobq);  // must modify thread info under lock on the threadpool
@@ -1001,7 +1001,7 @@ ASSERT(0,EVNONCE)
    }
    resthread=THREADIDFORWORKER(resthread);  // convert worker# to thread#
    ASSERTSUFF(resthread>=1,EVLIMIT,WRITEUNLOCK(JT(jt,flock)); R 0;); //  error if no thread to delete
-   jobq=&(*JT(jt,jobqueue))[JTFORTHREAD(jt,resthread)->threadpoolno];
+   jobq=&(*JT(jt,jobqueues))[JTFORTHREAD(jt,resthread)->threadpoolno];
    job=JOBLOCK(jobq);  // must change status under lock for the threadpool
    if(job==0||jobq->nthreads>1)break;  // normal continuation: not last thread in a busy pool.  Wait for that
    JOBUNLOCK(jobq,job);  // We don't add a job - we just kick all the threads

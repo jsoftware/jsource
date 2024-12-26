@@ -423,7 +423,7 @@ typedef struct JSTstruct {
  FLOAT16 zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
 //  2 bytes free
 #if PYXES || 1
- JOBQ (*jobqueue)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
+ JOBQ (*jobqueues)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
  I filler7[1];
 #else
  I filler7[2];
@@ -457,7 +457,7 @@ typedef JST* JS;  // shared part of struct
 #define MTHREAD(jjt) (&jjt->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
 #define MDTHREAD(jjt) (&jjt->threaddata[jjt->promptthread])     // jt for master/debug thread.  jjt is the shared jt pointer
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
-#define THREADID1(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE))  // unique thread #, faster to calculate
+#define THREADID1(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE))  // unique thread #, faster to calculate (is 1+THREADID)
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs
 #define JTFORTHREAD(jt,n) (&(JTTHREAD0(jt)[n]))   // JTT struct for thread n
 #define JTFORTHREAD1(jt,n) (&(JTTHREAD0(jt)[(n)-1]))   // JTT struct for thread# returned from THREADID1

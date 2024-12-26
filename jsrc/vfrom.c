@@ -1533,7 +1533,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
  box=C(AAV(w)[4]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) C *rvtv=CAV(box);  // RVT
  box=C(AAV(w)[5]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) opctx.bndrowmask=DAV(box);  // bndrowmask
  box=C(AAV(w)[8]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN)   // col indexes being evaluated
- I isgradmode; I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;   // non0 if gradient mode; ptr to output if any; #threads available for processing
+ I isgradmode; I nthreads=(*JT(jt,jobqueues))[0].nthreads+1;   // non0 if gradient mode; ptr to output if any; #threads available for processing
  unsigned char (*actionrtn)(JJ, void *, UI4);  // the routine to do the operation
  if(isgradmode=(AR(box)!=0)){ 
   // gradient mode (the dominant case)
@@ -1886,7 +1886,7 @@ F2(jtekupdate){F2PREFIP;
  
  // figure out how many threads to use, how many lines to take in each one
 #define TASKMINATOMS ((2*2000)/10)  // TUNE a cached atom takes 10 clocks to compute; an uncached one takes 15? (2022 Alder Lake).  We don't want to start a task with less than 2000 clocks, so insist on twice that many
- I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
+ I nthreads=(*JT(jt,jobqueues))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
  I rowsperthread=m;  // will be #rows each processor should take
  if(((1-m)&(1-nthreads)&(TASKMINATOMS-m*n))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread
  else{
@@ -2117,7 +2117,7 @@ F1(jtfindspr){F1PREFIP;
   m=AS(ck)[AR(ck)-1];   // length of a column
   // figure out how many threads to use, how many lines to take in each one
 #define TASKMINATOMS ((2*2000)/2)  // TUNE Values will be in cache.  Normal DP comp is 2 clocks per atom.  We don't want to start a task with less than 2000 clocks, so insist on twice that many
-  I nthreads=(*JT(jt,jobqueue))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
+  I nthreads=(*JT(jt,jobqueues))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
   I rowsperthread=m;  // will be #rows each processor should take
   if(((1-nthreads)&(TASKMINATOMS-rowsperthread))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread
   else{

@@ -531,7 +531,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
   R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
  UI nfulltasks, nremnant, tailtasks, endtasksize, fulltasksize;
  // big problem, split into tasks.  The tasks may be either cached or blocked
- UI nthreads=__atomic_load_n(&(*JT(jt,jobqueue))[0].nthreads,__ATOMIC_ACQUIRE)+(jt->threadpoolno!=0);  // get # running threads, just once so we have a consistent view.  We count our thread too, if it's not in pool 0, since it runs tasks for the job
+ UI nthreads=__atomic_load_n(&(*JT(jt,jobqueues))[0].nthreads,__ATOMIC_ACQUIRE)+(jt->threadpoolno!=0);  // get # running threads, just once so we have a consistent view.  We count our thread too, if it's not in pool 0, since it runs tasks for the job
  UI ncache=(m+CACHEHEIGHT-1)>>CACHEHEIGHTX;  // number of cacheblocks of a, including remnant
  // The cached algorithm works on sections that are a multiple of CACHEHEIGHT high, up to MAXAROWS.  For big arguments, we spread the CACHEHEIGHT sections through the threads as evenly as possible.
  // for modest arguments, breaking into CACHEHEIGHT blocks may not allow use of all threads.  In that case, use more threads (each of which will use the blocking algorithm)

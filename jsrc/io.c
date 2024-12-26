@@ -958,7 +958,7 @@ CDPROC int _stdcall JFree(JS jt){
   jm->jerr=0; jm->etxn=0; /* clear old errors */
   dllquit(jm);  // clean up call dll
 #if PYXES
-  aligned_free(JT(jt,jobqueue));
+  aligned_free(JT(jt,jobqueues));
 #endif
   jvmrelease(jt,sizeof(JST)); // free the initial allocation
   ZEROUPPER;

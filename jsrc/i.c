@@ -239,9 +239,9 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
 #endif
  INITJT(jjt,tssbase)=tod();  // starting time for all threads
 #if PYXES
- INITJT(jjt,jobqueue)=aligned_malloc(sizeof(JOBQ[MAXTHREADPOOLS]),CACHELINESIZE); // job queue, cache-line aligned
- memset(INITJT(jjt,jobqueue),0,sizeof(JOBQ[MAXTHREADPOOLS]));
- DO(MAXTHREADPOOLS, (*INITJT(jjt,jobqueue))[i].ht[1]=(JOB *)&(*INITJT(jjt,jobqueue))[i].ht[1];)  // when q is empty, tail points to itself, as a safe NOP store
+ INITJT(jjt,jobqueues)=aligned_malloc(sizeof(JOBQ[MAXTHREADPOOLS]),CACHELINESIZE); // job queue, cache-line aligned
+ memset(INITJT(jjt,jobqueues),0,sizeof(JOBQ[MAXTHREADPOOLS]));
+ DO(MAXTHREADPOOLS, (*INITJT(jjt,jobqueues))[i].ht[1]=(JOB *)&(*INITJT(jjt,jobqueues))[i].ht[1];)  // when q is empty, tail points to itself, as a safe NOP store
 #endif
 // only crashing on startup INITJT(jjt,peekdata)=1;  // wake up auditing
  // Initialize subsystems in order.  Each initializes all threads, if there are thread variables

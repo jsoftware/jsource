@@ -699,7 +699,9 @@ bodyend: ;  // we branch to here to exit with z set to result
   // If, while debug is off, we hit an error in the master thread that is not going to be intercepted, add a debug frame for the private-namespace chain and leave the freeing for later
   // We don't do this if jt->jerr is clear: that's the special result for coming out of debug; or when WSFULL, since there may be no memory, or if EXIT/DEBUGEND/FOLDTHROW which isn't really an error.
   // Also, suppress pmdebug if an immex phrase is running or has been requested, because those would be confusing and also they call tpop
-  if(jt->jerr && jt->jerr!=EVWSFULL && ((jt->jerr&~0x60)!=EVEXIT) && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
+  // Also, disable the pmdebug feature if JHS is running.  pmdebug freezes the tpop stack and expects nothing to happen until the user gives the next sentence.  JHS however uses J calls for input & output to console.
+  // This causes problems (to wit, the test below for _ttop==jt->tnextpushp gives unreliable results) and the easiest temp kludge is to block it
+  if(jt->jerr && jt->jerr!=EVWSFULL && ((jt->jerr&~0x60)!=EVEXIT) && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0 && !JT(jt,nfe)){
    // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that we are about to pop over.  Only x and y are possible
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!

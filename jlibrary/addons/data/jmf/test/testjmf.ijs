@@ -44,18 +44,18 @@ NB. test jmf file with 0/1/2 map types
 map_jmf_ 'abc';F;'';MTRW_jmf_ NB. 0 maptype
 assert 'def'-:abc
 abc=: 'ghi'
-m=. mappings
+m=. mappings_jmf_
 remap_jmf_'abc'
-assert m-:mappings
+assert m-:mappings_jmf_
 unmap_jmf_'abc'
 
 map_jmf_ 'abc';F;'';MTRO_jmf_ NB. RO maptype
 assert 'ghi'-:abc
 try. abc=: 'jkl' catch. end.
 assert 'ghi'-:abc
-m=. mappings
+m=. mappings_jmf_
 remap_jmf_'abc'
-assert m-:mappings
+assert m-:mappings_jmf_
 unmap_jmf_'abc'
 
 map_jmf_ 'abc';F;'';MTCW_jmf_ NB. COW (copy on write) maptype
@@ -65,9 +65,9 @@ assert abc-:'jkl'
 unmap_jmf_'abc'
 map_jmf_ 'abc';F;'';MTRO_jmf_
 assert 'ghi'-:abc NB. verify =: did not change file
-m=. mappings
+m=. mappings_jmf_
 remap_jmf_'abc'
-assert m-:mappings
+assert m-:mappings_jmf_
 unmap_jmf_'abc'
 
 NB. test nonjmf file with 0/1/2 maptypes
@@ -80,18 +80,18 @@ abc=: '6789'
 unmap_jmf_'abc'
 JCHAR map_jmf_ 'abc';F;'';0
 assert '6789'-:abc
-m=. mappings
+m=. mappings_jmf_
 remap_jmf_'abc'
-assert m-:mappings
+assert m-:mappings_jmf_
 unmap_jmf_'abc'
 
 JCHAR map_jmf_ 'abc';F;'';1 NB. RO
 assert '6789'-:abc
 try. abc=: '9999' catch. end.
 assert '6789'-:abc
-m=. mappings
+m=. mappings_jmf_
 remap_jmf_'abc'
-assert m-:mappings
+assert m-:mappings_jmf_
 unmap_jmf_'abc'
 
 JCHAR map_jmf_ 'abc';F;'';2 NB. COW (copy on write) maptype
@@ -101,9 +101,9 @@ assert abc-:'jkl'
 unmap_jmf_'abc'
 JCHAR map_jmf_ 'abc';F;'';0
 assert '6789'-:abc NB. verify =: did not change file
-m=. mappings
+m=. mappings_jmf_
 remap_jmf_'abc'
-assert m-:mappings
+assert m-:mappings_jmf_
 unmap_jmf_'abc'
 echo 'testmaptype end'
 i.0 0

@@ -17,14 +17,14 @@ t=: 100 4 1?@$ 0
 t -: ($t)$15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 (15!:14 <'t') = (15!:12 <'t') +10*SZI
 
-'domain error' -: 15!:_1  etx <'test'
-'domain error' -: 15!:_1  etx ;:'t test'
-'domain error' -: 15!:_1  etx <u:'test'
-'domain error' -: 15!:_1  etx u:&.> ;:'t test'
-'domain error' -: 15!:_1  etx <10&u:'test'
-'domain error' -: 15!:_1  etx 10&u:&.> ;:'t test'
-'domain error' -: 15!:_1  etx s:@<"0&.> <'test'
-'domain error' -: 15!:_1  etx <"0@s: <'test'
+'domain error' -: 15!:12  etx <'test'
+'domain error' -: 15!:12  etx ;:'t test'
+'domain error' -: 15!:12  etx <u:'test'
+'domain error' -: 15!:12  etx u:&.> ;:'t test'
+'domain error' -: 15!:12  etx <10&u:'test'
+'domain error' -: 15!:12  etx 10&u:&.> ;:'t test'
+'domain error' -: 15!:12  etx s:@<"0&.> <'test'
+'domain error' -: 15!:12  etx <"0@s: <'test'
 'domain error' -: 15!:14 etx <'test'
 'domain error' -: 15!:14 etx ;:'t test'
 'domain error' -: 15!:14 etx <u:'test'
@@ -34,8 +34,8 @@ t -: ($t)$15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 'domain error' -: 15!:14 etx s:@<"0&.> <'test'
 'domain error' -: 15!:14 etx <"0@s: <'test'
 
-'value error'  -: 15!:_1  etx <'undefinedname'
-'value error'  -: 15!:_1  etx ;:'t undefinedname'
+'value error'  -: 15!:12  etx <'undefinedname'
+'value error'  -: 15!:12  etx ;:'t undefinedname'
 'value error'  -: 15!:14 etx <'undefinedname'
 'value error'  -: 15!:14 etx ;:'t undefinedname'
 

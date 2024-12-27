@@ -31,7 +31,7 @@ m1=: mean f.
 m1=: 'mean' f.
 (5!:5 <'m1') -: 'mean'
 
-'domain error' -: 15!:_1 etx <'mean'
+'domain error' -: 15!:12 etx <'mean'
 
 1!:55 f
 
@@ -55,7 +55,7 @@ m1=: mean f.
 m1=: 'mean' f.
 (5!:5 <'m1') -: 'mean'
 
-'domain error' -: 15!:_1 etx <'mean'
+'domain error' -: 15!:12 etx <'mean'
 
 
 

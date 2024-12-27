@@ -28,7 +28,15 @@ share name;sharename[;mt] - share 'sharename' as name
 
 MAPNAME,MAPFN,... showmap col indexes 
 )
-memhad_z_=: [: {: [: memr 0 2 4 ,~ (15!:6)@<
+3 : 0''
+try.
+ 15!:12 <'a' [ a=. i.5
+ memhad_z_=: (15!:12)@<
+catch.
+ memhad_z_=: [: {: [: memr 0 2 4 ,~ (15!:6)@<
+end.
+EMPTY
+)
 memdad_z_=: 15!:14@<
 
 0 : 0

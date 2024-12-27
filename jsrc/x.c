@@ -366,7 +366,8 @@ void jtforeigninit(J jt){UI i;
  MN(13,-8) XPRIM(VERB, jtcheckfreepool, 0,         VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-9) XPRIM(VERB, jtsetgetrecurstate, 0,      VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-10) XPRIM(VERB, jtcallJDo,   0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
- MN(15,6)  XPRIM(VERB, jtdllsymget,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(15,6)  XPRIM(VERB, 0,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);  // slated for removal
+ MN(15,-1)  XPRIM(VERB, jtdllsymget,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,-1) XPRIM(VERB, jtlocmap,     0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,-2) XPRIM(VERB, jtsympool,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,-3) XPRIM(VERB, jtlocnlz1,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);

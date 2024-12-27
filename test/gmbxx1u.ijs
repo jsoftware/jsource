@@ -176,10 +176,10 @@ mbxcheck_jmf_ q
 0=memf add
 
 q=: x=: ;:'q'
-(15!:6 x) -: 15!:6 q
+(15!:_1 x) -: 15!:_1 q
 mbxcheck_jmf_ q
 
-'domain error' -: 15!:6 etx <'dcd'
+'domain error' -: 15!:_1 etx <'dcd'
 
 4!:55 ;:'add dcd lib'
 

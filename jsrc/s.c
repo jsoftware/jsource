@@ -578,7 +578,7 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
 gotval: ;
  // found: l points to the symbol.  We hold a lock on g, if it is nonzero
  I res=0;
- if(component==0){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)l;}  // 15!:6, symbol address
+ if(component==0){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)l;}  // 15!:_1, symbol address
  else if(component==1){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)voidAV(QCWORD(l->fval));}  // 15!:14, data address
  else if(component==2){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)(QCWORD(l->fval));}  // 15!:12, header address
  else{res=l->sn+1;}  // 4!:4, script index
@@ -612,9 +612,9 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
  RETF(z);
 }
 
-F1(jtdllsymget){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,0);}  // 15!:6
-F1(jtdllsymdat){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,1);}  // 15!:14
-F1(jtdllsymhdr){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,2);}  // 15!:12
+F1(jtdllsymget){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,0);}  // 15!:_1 deprecated, return address of symbol-table entry
+F1(jtdllsymdat){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,1);}  // 15!:14 address of data area
+F1(jtdllsymhdr){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,2);}  // 15!:12 address of header
 F1(jtscind){R dllsymaddr(w,3);}  // 4!:4 script index
 F1(jtdllvaladdr){ASSERT(!JT(jt,seclev),EVSECURE) R sc((I)w);}  // 15!:19, return address of header of noun w
 

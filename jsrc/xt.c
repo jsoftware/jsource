@@ -283,7 +283,10 @@ foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNE
   RZ(deba(DCPARSE,wv,(A)wn,0L)); stackallo=1;
  }
  A *old=jt->tnextpushp;
- t=qpc(); DQ(n, z=PARSERVALUE(parsea(wv,wn)); if(!z)break; if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)tpop(old);); t=qpc()-t; // Run the sentence.  No need to run as exec since the result doesn't escape.  tpop like jtxdefn.  no tpop on error.
+ t=qpc();  // start time
+ // We attempt to run as if under jtxdefn, so we check ATTN and jt->jerr as a replacement for reading from the word block; and we tpop like jtxdefn
+ DQ(n, z=PARSERVALUE(parsea(wv,wn)); if(unlikely(!z))break; ASSERT((__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE)&3)==0,EVATTN) RE(0) if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)tpop(old););
+ t=qpc()-t; // Run the sentence.  No need to run as exec since the result doesn't escape.  tpop like jtxdefn.  no tpop on error.
  if(unlikely(stackallo))debz();
  RZ(z);  // if error, fail the timing request
  R scf(n?t/(n*pf):0);   // convert processor freq to seconds, get time per iteration

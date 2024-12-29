@@ -3,7 +3,7 @@ prolog './g000.ijs'
 NB. Early in the testing, verify that local assignments relocate the symbol table correctly
 3 : 0 ''
 st =. 0
-st =. 15!:12 <'st'
+st =. 15!:_1 <'st'
 for_l1. 'abcdefghijklmnopqrstuvwxyz' do.
   for_l2. 'abcdefghijklmnopqrstuvwxyz' do.
     (l1,l2) =. 26 #: l1_index,l2_index
@@ -14,7 +14,7 @@ for_l1. 'abcdefghijklmnopqrstuvwxyz' do.
     assert (l1,l2)~ = 26 #: l1_index,l2_index
   end.
 end.
-est =. 15!:12 <'st'
+est =. 15!:_1 <'st'
 NB. This relocates when run early  if. st ~: est do. smoutput 'symbols relocated' end.
 1
 )

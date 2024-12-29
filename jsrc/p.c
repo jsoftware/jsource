@@ -578,16 +578,20 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
       pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
       y=QCWORD(y);  // back y up to the NAME block
-      if((symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using primary table and there is a symbol stored there...
-       L *s=sympv+(I)symx;  // get address of symbol in primary table
+      if((symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using an uncloned table and there is a symbol stored there...
+       // this is the path for all local names as long as we can use the uncloned table
+       L *s=sympv+(I)symx;  // get address of symbol from the primary table
        if(unlikely((s->fval)==0))goto rdglob;  // if value has not been assigned, ignore it.  y has QCSYMVAL semantics
 // obsolete        y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCSYMVAL semantics, as y does.
        if(unlikely(ISRAREQD(y=s->fval)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
-      }else if(likely((buck=NAV(QCWORD(y))->bucket)>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name
+      }else if(likely((buck=NAV(QCWORD(y))->bucket)>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.  We would fetch symx&buck together if we could hand-code it.
+       // public names come through here (with positive pucketx) or 
        I bx=NAVV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
        if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if positive bucketx and no name has been added, skip the search - the usual case if not recursive symtab
-       // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table
-       if((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // see if there is a local symbol, using the buckets.  If not, restore y
+       // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table.  Added name is pretty rare -
+       // should we loop through the buckets on a local name?  Probably - saves a call for every name in a non-primary table
+       if(likely(bx<0)){L* l; for(l=LXAV0(jt->locsyms)[buck]+sympv;++bx<0;l=l->next+sympv); y=l->fval;}  // local name in cloned table.  Get to it without subroutine call
+       else if((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // must be unassigned name and there has been a surprise write to the cloned symtab.  Rare indeed.  If not found, it's global - restore y
        if(unlikely(ISRAREQD(y)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
       }else{
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
@@ -647,7 +651,7 @@ rdglob: ;  // here when we tried the buckets and failed
 // obsolete         y=SETFAOWED(y);
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.  But if the value IS a reference, use the value if possible to avoid the extra lookup
         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
-#if 0  //   obsolete? parhaps too far
+#if 0  //   obsolete  if it's to be done, it should be in unquote
         if(unlikely(FAV(QCWORD(y))->valencefns[0]==jtunquote && !(NAV(origname)->flag&(NMLOC|NMILOC|NMIMPLOC)))){  // reference is as reference does
          // the value is a non-locative reference to another reference.  It is safe to skip over it.  Leave y holding the value
          y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
@@ -666,13 +670,11 @@ undefname:
       }
 endname: ;
 // obsolete       y=SETNAMED(y);  // turn on the flag bit indicating this was NAMED
-     }else{
+     // else
       // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
-      // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED in blocks that are known to need no pretection from deletion:
+      // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED+~FAOWED in blocks that are known to need no pretection from deletion:
       // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
-      // guarantee that the block is never protected from deletion
-
-      // All this takes no code.
+      // guarantee that the block is never protected from deletion.
      }
 
      // names have been resolved
@@ -873,7 +875,7 @@ RECURSIVERESULTSCHECK
 // obsolete        if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else {INCRSTAT(wfafa/*.98*/) faifowed(freep,freepc,freept,tpopw);}}
        if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.7*/) if(unlikely((A)QCWORD(tpopw)==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else if(withprob(ISSTKFAOWED(tpopw),0.2)){INCRSTAT(wfafa/*.08*/) faowed((A)QCWORD(tpopw),AC((A)QCWORD(tpopw)),AT((A)QCWORD(tpopw)));}}
                 // if the input is the result, keep the flags from the input, which are set to indicate required frees.  The presence of one of these will suppress matching a also
-       else{ /*0.3*/
+       else{ /*0.3*/  // tpopw points to the tpop stack, not the argument
         freea=*tpopw;   // get the tstack pointer, which points back to the arg if it has not been zapped
 // obsolete         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
 // obsolete          // we start these loads here because the next branch will often mispredict, allowing them to finish.  If we move them earlier we have more work to do with qualifying freea
@@ -927,7 +929,7 @@ RECURSIVERESULTSCHECK
 
        // Handle early exits from exec loop: (1) line (0, impossible)/1/2 with AVN in pos 0; (2) (line 0/2, not LPAR in pos 0, finalexec).
        // If line 02 and the current word is (C)AVN and the next is also, stack 2
-       // the likelys on the next 2 lines are required to get the compiler to avoid spilling queue or nextat
+       // the likelys on the next 2 lines are to get the compiler to avoid spilling queue or nextat
        if(likely((GETSTACK0PT&PTNOTLPAR)!=0)){
         if(likely(STACK0PTISCAVN>=(pt0ecam&NOTFINALEXEC+(1LL<<(PMASKSAVEX+1))))){   // test is AVN or (NOTFINAL and pmask[1] both 0)
          // not ( and (AVN or !line1 & finalexec)): OK to skip the executable check
@@ -972,7 +974,8 @@ RECURSIVERESULTSCHECK
        ramkrecursv(yy);  // force recursive y
 
        while(1){       // for each stacked value, free the value unless it survives to the result, in which case it inherits the FAOWED.  Only one FAOWED can be passed on this way
-        if(ISSTKFAOWED(arg1)){if(unlikely(QCWORD(arg1)==yy))yy=arg1;else faowed(QCWORD(arg1),__atomic_load_n(&AC(QCWORD(arg1)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(arg1)),__ATOMIC_RELAXED));}
+        if(unlikely(ISSTKFAOWED(arg1))){if(unlikely(QCWORD(arg1)==yy))yy=arg1;else faowed(QCWORD(arg1),__atomic_load_n(&AC(QCWORD(arg1)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(arg1)),__ATOMIC_RELAXED));}
+            // unlikely because modifiers apply usually to primitives
         if(arg2==0)break; arg1=arg2; arg2=arg3; arg3=0;
        };
 // obsolete        A freep=stack[1].a;

@@ -67,8 +67,9 @@ DF2(jtunquote){A z;
    }else{  // if long cacheable, don't allow short caching, else long cache would seldom get used (and it's faster)
     A cachedlocale=FAV(self)->localuse.lu0.cachedloc; UI4 vtime=FAV(self)->lu2.refvalidtime;  // fetch before we read reftime as atomic
     if(vtime==ACVCACHEREAD){  // is previous lookup still valid
-     // The previous lookup can be reused because there have been no assignments
-     raposgblqcgsv(QCWORD(fs),QCPTYPE(fs),fs); // ra to match syrd1  scaf QCWORD not needed
+     // Short caching: the previous lookup can be reused because there have been no assignments
+// obsolete      raposgblqcgsv(QCWORD(fs),QCPTYPE(fs),fs); // ra to match syrd1  scaf QCWORD not needed
+     raposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion
      if(unlikely(NAV(thisname)->flag&NMLOC)){  // is this a (necessarily direct) locative?
       // see if the locale is cached.   public_z_ =: entry_loc_ where entry_loc will have the locale pointer
       if(unlikely((explocale=cachedlocale)==0)){  // use cached locale if there is one (there will be, except first time through)  If not...
@@ -92,7 +93,7 @@ DF2(jtunquote){A z;
    if(likely(!(nmflgs&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
-    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=CLRNAMEDLOC(jtprobe(jtx,sx,hashx,jt->locsyms)))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check to see.  Set not-NAMEDLOC
+    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=CLRNAMEDLOC(jtprobe(jtx,sx,hashx,jt->locsyms)))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check to see.  Set not-NAMEDLOC.  ra to match syrd1
     fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
     // leave LOCINCRDECR unset and jt->global unchnged
     deflocal:;
@@ -121,8 +122,11 @@ DF2(jtunquote){A z;
    // explocale is the locale we are calling into
    ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;);  // name must be defined
    I namedloc=(I)fs&QCNAMEDLOC; fs=QCWORD(fs);  // extract NAMED flag from fs, clear other flags
-   // ** as of here we know there is a value for the name, and it has been ra()d.  We must not take an error exit without fa
+   // ** as of here we know there is a value for the name, and it has been ra()d.  We must not take an error exit without fa.  fs has noQC semantics
    ASSERTSUFF(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN,z=0; fa(fs); goto exitname;);   // make sure its part of speech has not changed since the name was parsed; if error must use general fa
+   // at this point we could short-circuit names that call names (e. g. public =: name_loc_) by checking that the call is to jtunquote and is not a locative.  This would save about half
+   // of this routine.  It's not clear that the frequency is worth the test
+
    // *** now that we know the lookup was valid, save it for next time, including locale if any
    // This is a little different between short- and long-term caches, because of the possibility that the
    // locale is numbered/private.  Such locales are unsuitable for long-term caches since the locale
@@ -130,12 +134,11 @@ DF2(jtunquote){A z;
    if(likely(!(FAV(self)->flag2&VF2CACHEABLE))){  // if only short-term cache is possible
     // for short-term cache, save the lookup, and the locale too if it is a direct locale (either named or numbered).
     if(!(nmflgs&NMILOC+NMIMPLOC)){  // Never cache anything for indirect or implicit locatives
-     FAV(self)->localuse.lu1.cachedlkp=fs;     // save named lookup calc for next time  should ra locale or make permanent?
+     FAV(self)->localuse.lu1.cachedlkp=fs;     // save named lookup calc for next time  should ra locale or make permanent?  no QC
      if(nmflgs&NMLOC)FAV(self)->localuse.lu0.cachedloc=explocale;   // including locale it is was looked up
      __atomic_store_n(&FAV(self)->lu2.refvalidtime,ACVCACHEREAD,__ATOMIC_RELEASE);  // record timestamp of lookup
     }
-   }
-   else if(namedloc && (!(nmflgs&NMLOC) || (LXAV0(explocale)[SYMLEXECCT]&EXECCTPERM))){   // cacheable nameref, and value found in a permanent named locale
+   }else if(namedloc && (!(nmflgs&NMLOC) || (LXAV0(explocale)[SYMLEXECCT]&EXECCTPERM))){   // cacheable nameref, and value found in a permanent named locale
     // ************* the nameref is long-term cachable.  Fill it in.  Happens the first time a cachable reference is encountered.
     thisname=jt->curname;  // refresh thisname
     // point the nameref to the lookup result.
@@ -170,6 +173,7 @@ DF2(jtunquote){A z;
     WRITEUNLOCK(fs->lock);
    }
   }
+
  }else{
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
@@ -188,6 +192,7 @@ DF2(jtunquote){A z;
  }
 finlookup:;  // here when short- or long-term cache hits.  We know that no pun is possible on either cache hit
  // value of fs has been ra()d unless it was refcached or pseudo.  We must undo that if there is error
+
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256];  // will hold name followed by locale and scriptname
@@ -225,8 +230,9 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
   // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through if the call supports inplacing
   z=(*actionfn)((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),a,w,fs);  // keep MODIFIER flag always, and others too if verb supports it 
   if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
- }else{jt=(J)((I)jt+((flgd0cpC+1)&0x200)); fs=jt->parserstackframe.sf;  // jiggle jt to save clang register store, reinit fs
+ }else{
   // Extra processing is required.  Check each option individually
+  jt=(J)((I)jt+((flgd0cpC+1)&0x200)); fs=jt->parserstackframe.sf;  // jiggle jt to save clang register store, reinit fs
   DC d=0;  // pointer to debug stack frame, if one is allocated
   if(jt->uflags.trace){  // debug or pm
    // allocate debug stack frame if we are debugging OR PM'ing.  In PM, we need a way to get the name being executed in an operator
@@ -287,7 +293,7 @@ exitpop: ;
  if(unlikely(flgd0cpC&FLGLOCINCRDECR)){ACVCACHECLEAR; DECREXECCT(explocale)}  // If we used a locative, undo its incr.  If there were cocurrents, the incr was a while back
  // ************** errors OK now
 exitfa:;  // error point for errors after symbol res. 
- // this is an RFO cycle that will cause trouble if there are many cores running the same names
+ // this is an RFO cycle that will cause trouble if there are many cores running the same names without cached lookups
 if(likely(!(flgd0cpC&(FLGCACHED|FLGPSEUDO)))){fanamedacv(fs);}  // unra the name if it was looked up from the symbol tables
 exitname:; // error point for name errors.
  SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed early or as late as the deletion; make sure locsyms matches.  global and AKGST always match for the named explicit routine that is running.
@@ -333,7 +339,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
 // obsolete  if(likely(val!=0)){if(LOCALRA||ISGLOBAL(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  if(likely(val!=0)){if(ISFAOWED(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // abort if reference not allocated
- if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val); FAV(z)->lu2.refvalidtime=ACVCACHEREAD;}  // install cachelet of lookup, but never if indirect locative
+ if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val); FAV(z)->lu2.refvalidtime=ACVCACHEREAD;}  // install cachelet of lookup, but never if indirect locative.  No QC
  R (A)((I)z|QCPTYPE(val));  // Give the result the part of speech of the input.  no FAOWED since we freed val; no NAMED since a reference is not a named value
 }
 
@@ -359,7 +365,7 @@ F1(jtcreatecachedref){F1PREFIP;A z;
  ASSERT(val!=0,EVVALUE);  // return if error or name not defined
  ASSERT(!(AT(val)&NOUN),EVDOMAIN)
  z=fdef(VF2CACHED+VF2CACHEABLE,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (val->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));// create reference
- FAV(z)->localuse.lu1.cachedlkp=val;  // install cached address of value
+ FAV(z)->localuse.lu1.cachedlkp=val;  // install cached address of value, no QC
  ACSETPERM(val);  // now that the value is cached, it lives forever
  RETF(z);
 }

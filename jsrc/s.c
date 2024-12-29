@@ -304,9 +304,9 @@ A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[buc
   }
   R 0;  // no match.
  } else {
-  L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
+  L* l=lx+sympv;  // fetch hashchain headptr, point to L for first symbol
   // negative bucketx (now positive); skip that many items, and then you're at the right place
-  if(unlikely(bx>0)){NOUNROLL do{l = l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
+  if(unlikely(bx>0)){NOUNROLL do{l=l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
   R l->fval;
  }
 }

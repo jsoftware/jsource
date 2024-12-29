@@ -859,13 +859,12 @@ static A jtsent12c(J jt,A w,I userm){C*p,*q,*r,*s,*x;A z;
  R jtboxcut0(jt,wil,w,ds(CWORDS));
 }    /* literal fret-terminated or matrix sentences into monad/dyad */
 
-// Audit w to make sure it contains all strings; convert to LIT if needed.  Also translate LF to VT
+// Audit w to make sure it contains all strings; convert to LIT if needed.  Also honor {{ }} within each line
 static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); 
  I yr=AR(w); GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAVn(yr,y);
- DO(AN(w), RZ(yv[i]=incorp(vs(C(wv[i])))); )
- // We honor LF as end-of-line even in the middle of a sentence.
+ DO(AN(w), RZ(yv[i]=incorp(ddtokens(vs(C(wv[i])),0b1110))); )  // ddtok: return string, no gets, env=explicit
  R y;
 }    /* boxed sentences into monad/dyad */
 

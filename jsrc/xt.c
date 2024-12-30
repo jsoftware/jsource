@@ -238,7 +238,7 @@ __int64 GetMachineCycleCount()
 F1(jttss){ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 
 // 6!:2 dyad
-DF2(jttsit2){A z;D t;I n;I stackallo=0;
+DF2(jttsit2){A z;D t;I n;I stackallo=0,i;
  F2RANK(0,1,jttsit2,self);
  RE(n=i0(a));
  RZ(w=ddtokens(vs(w),4+1+!!EXPLICITRUNNING));   // tokenize outside of timer.  We time as if the sentence were executed in an explicit defn
@@ -248,8 +248,9 @@ DF2(jttsit2){A z;D t;I n;I stackallo=0;
  I wn=AN(w); A *wv=AAV(w);  // get #words in sentence after pppp, and their address
  // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name;
  // to whatever is in the current local symbol table, or -1 if there is none
- DO(wn,
-  if(QCTYPE(wv[i])==QCNAMEASSIGNED || (QCTYPE(wv[i])&QCISLKPNAME)) { //  if a name
+// DO(wn,   scaf
+for(i=0;i<wn;++i){
+  if(QCPTYPE(wv[i])==QCNAMEASSIGNED || (QCTYPE(wv[i])&QCISLKPNAME)) { //  if a name, either assigned or used
    if((NAV(QCWORD(wv[i]))->flag&NMLOC+NMILOC+NMIMPLOC)==0){  // if locative, leave bucket info empty
     if(!EXPLICITRUNNING){NAV(QCWORD(wv[i]))->bucket=-1;  // run from keyboard, use -1 for bucket to suppress check for local sym
     }else{  // we are in an explicit definition
@@ -277,7 +278,8 @@ foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNE
     }
    }
   }
- )
+//  )
+ }
  STACKCHKOFL  // in case the sentence calls 6!:2 again, break the loop
  if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop!=0)){  // We don't need a new stack frame if there is one already and debug is off
   RZ(deba(DCPARSE,wv,(A)wn,0L)); stackallo=1;

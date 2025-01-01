@@ -409,7 +409,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 // We must have no locks coming in; we take a read lock on each symbol table we have to search
 // if we find a name, we ra() it under lock.  All we have to do is increment the name since it is known to be recursive if possible
 A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
- RZ(g);  // make sure there is a locale...
+ RZ(g); F1PREFIP;  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
  I bloom=BLOOMMASK(hash); v=LOCPATH(g); L *sympv=SYMORIGIN;   // Bloom for input block; v->|.locales, with NUL at font; sympv doesn't change here
  // This function is called after local symbols have been found wanting.  Usually g will be the base
@@ -421,11 +421,11 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
  // Because the global tables are grossly overprovisioned for symbol chains, there is a very good chance that a symbol that misses
  // in this table will hit an empty chain.  We check that, and if the chain is empty, we call it a miss without locking the table.
- // That's OK, because the call could have come a few nanoseconds later
+ // That's OK, because this call could have come a few nanoseconds later
  LX *chainbase;  // root of the hashchain for the name
- NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0 && *(chainbase=&LXAV0(g)[SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE)])!=0){  // symbol might be in table, and the chain is not empty...
+ NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0 && *(chainbase=&LXAV0(g)[SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE)])!=0){  // symbol might be in table, and the chain is not empty...   scaf remove Bloom, use 1 bit per chain
                          READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
-                         A res=(probe)((I)jt&255,string,sympv,((UI8)(hash)<<32)+(UI4)*chainbase);  // look up symbol.  We must refetch the chain root in case it was deleted
+                         A res=(probe)((I)jtinplace&255,string,sympv,((UI8)(hash)<<32)+(UI4)*chainbase);  // look up symbol.  We must refetch the chain root in case it was deleted
                          if(res){  // if symbol found...
                           raposgblqcgsv(QCWORD(res),QCPTYPE(res),res);  // ra it
 #ifdef PDEP
@@ -441,8 +441,8 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found, and no ra().  Takes readlock on searched locales.  Return 0 if not found
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){
- RZ(g);  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=probex((I)jt&255,string,SYMORIGIN,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
+ RZ(g); F1PREFIP;  // make sure there is a locale...
+ I bloom=BLOOMMASK(hash); A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=probex((I)jtinplace&255,string,SYMORIGIN,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
  R g;
 }
 

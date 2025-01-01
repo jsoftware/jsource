@@ -80,7 +80,8 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  // fast (no-error) case; and of course if the use-count is only 2 (incremented by the call to symbrd from 1).  But if the assignment is local, we also have to make
  // sure abc is locally defined
  if(p=q&&0<=c&&AC(u[c])<=ACUC2&&!(AFLAG(u[c])&AFRO)) {  // passes quick check: 2-name fast case, reassigned name, modifiable usecount, not read-only
-   p= (!EXPLICITRUNNING) || CAV(QCWORD(AAV(v[m+2])[1]))[0]!=CASGN || jtprobe((J)((I)jt+NAV(QCWORD(AAV(v[m+2])[0]))->m),NAV(QCWORD(AAV(v[m+2])[0]))->s,NAV(QCWORD(AAV(v[m+2])[0]))->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
+// obsolete    p= (!EXPLICITRUNNING) || CAV(QCWORD(AAV(v[m+2])[1]))[0]!=CASGN || jtprobe((J)((I)jt+NAV(QCWORD(AAV(v[m+2])[0]))->m),NAV(QCWORD(AAV(v[m+2])[0]))->s,NAV(QCWORD(AAV(v[m+2])[0]))->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
+   p= (!EXPLICITRUNNING) || CAV(QCWORD(AAV(v[m+2])[1]))[0]!=CASGN || probex(NAV(QCWORD(AAV(v[m+2])[0]))->m,NAV(QCWORD(AAV(v[m+2])[0]))->s,SYMORIGIN,NAV(QCWORD(AAV(v[m+2])[0]))->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
     // Get the pointer to the parsed sentence; go to its data; take pointer for word[1]; go to its (character) data; take first character
     // then look up the symbol entry for word[0]
  }

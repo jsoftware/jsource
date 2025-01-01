@@ -270,16 +270,17 @@ B jtprobedel(J jt,C*string,UI4 hash,A g){B ret;
 // l/string are length/addr of name, hash is hash of the name, g is symbol table.  l is encoded in low bits of jt
 // result is addr/ra/flags for value (i. e. QCSYMVAL semantics), or 0 if not found
 // locking is the responsibility of the caller
-A jtprobe(J jt,C*string,UI4 hash,A g){
- RZ(g);
- F2PREFIP;
- LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
- L *sympv=SYMORIGIN;  // base of symbol table
+// obsolete A jtprobe(J jt,C*string,UI4 hash,A g){
+// obsolete  RZ(g);
+A probe(I len, C *string, L *sympv, UI8 hashsymx){
+ LX symx=(LX)hashsymx; UI4 hash=hashsymx>>32;  // extract args from composite arg
+// obsolete  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
+// obsolete  L *sympv=SYMORIGIN;  // base of symbol table
  L *symnext, *sym=sympv+SYMNEXT(symx);  // first symbol address - might be the free root if symx is 0
  NOUNROLL while(symx){  // loop is unrolled 1 time
   // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
   symnext=sympv+(symx=SYMNEXT(sym->next));
-  IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R sym->fval;)     // (1) exact match - if there is a value, return it.  valtype has QCSYMVAL semantics
+  IFCMPNAME(NAV(sym->name),string,len,hash,R sym->fval;)     // (1) exact match - if there is a value, return it.  valtype has QCSYMVAL semantics
   sym=symnext;  // advance to value we read
  }
  R 0;  // not found
@@ -322,7 +323,8 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
   R probelocalbuckets(SYMORIGIN,a,LXAV0(locsyms)[b],u->bucketx);  // look up using bucket info
  }else{
   // No bucket information, do full search.  This includes names that don't come straight from words in an explicit definition
-  R jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms);
+// obsolete   R jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms);
+  R probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,locsyms);
  }
 }
 
@@ -400,7 +402,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  R v;
 }    /* probe for assignment */
 
-// look up a non-locative name using the locale path
+// look up a non-locative name using the locale path (i. e. skipping the local table)
 // g is the current locale, l/string=length/name, hash is the hash for it (l is carried in the low 8 bits of jt)
 // result is  result is addr/named/flags for name (i. e. QCNAMEDLOC semantics), or 0 if not found
 // Bit QCNAMEDLOC of the result is set iff the name was found in a named locale
@@ -409,29 +411,38 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  RZ(g);  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
- I bloom=BLOOMMASK(hash); v=LOCPATH(g);
+ I bloom=BLOOMMASK(hash); v=LOCPATH(g); L *sympv=SYMORIGIN;   // Bloom for input block; v->|.locales, with NUL at font; sympv doesn't change here
  // This function is called after local symbols have been found wanting.  Usually g will be the base
  // of the implied path.  But if the value is a locative, g is the locative locale to start in, and
  // that might be a local table if name___1 is used.  We hereby define that ___1 searches only in
  // the local table, not the path; and we have to disable the Bloom filter because local tables don't have
  // one.
  if(unlikely(AR(g)&ARLOCALTABLE)){bloom=0; v=(A*)&iotavec-IOTAVECBEGIN+0;}  // no bloom, empty path
- NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
-                         if(res){raposgblqcgsv(QCWORD(res),QCPTYPE(res),res);
+// obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
+ // Because the global tables are grossly overprovisioned for symbol chains, there is a very good chance that a symbol that misses
+ // in this table will hit an empty chain.  We check that, and if the chain is empty, we call it a miss without locking the table.
+ // That's OK, because the call could have come a few nanoseconds later
+ LX *chainbase;  // root of the hashchain for the name
+ NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0 && *(chainbase=&LXAV0(g)[SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE)])!=0){  // symbol might be in table, and the chain is not empty...
+                         READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
+                         A res=(probe)((I)jt&255,string,sympv,((UI8)(hash)<<32)+(UI4)*chainbase);  // look up symbol.  We must refetch the chain root in case it was deleted
+                         if(res){  // if symbol found...
+                          raposgblqcgsv(QCWORD(res),QCPTYPE(res),res);  // ra it
 #ifdef PDEP
-                         res=(A)(((I)res&~QCNAMEDLOC)+PDEP((I)AR(g)>>ARNAMEDX,(I)1<<(QCNAMEDLOCX-ARNAMEDX)));
+                          res=(A)(((I)res&~QCNAMEDLOC)+PDEP((I)AR(g)>>ARNAMEDX,(I)1<<(QCNAMEDLOCX-ARNAMEDX)));  // install QCNAMEDLOC semantics
 #else
-                         res=(A)(((I)res&~QCNAMEDLOC)+(((I)AR(g)&ARNAMED)<<(QCNAMEDLOCX-ARNAMEDX)));
+                          res=(A)(((I)res&~QCNAMEDLOC)+(((I)AR(g)&ARNAMED)<<(QCNAMEDLOCX-ARNAMEDX)));
 #endif
-                         READUNLOCK(g->lock) R res;}  // return QCNAMEDLOC semantics
-                         READUNLOCK(g->lock)} g=gn;
+                          READUNLOCK(g->lock) R res;  // return QCNAMEDLOC semantics
+                         }
+                         READUNLOCK(g->lock)} g=gn;  // not found, advance to next in path
             }while(g);  // return when name found.
  R 0;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found, and no ra().  Takes readlock on searched locales.  Return 0 if not found
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){
  RZ(g);  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=jtprobe(jt,string,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
+ I bloom=BLOOMMASK(hash); A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=probex((I)jt&255,string,SYMORIGIN,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
  R g;
 }
 
@@ -449,7 +460,8 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
   ASSERT(k<256,EVLIMIT);
   if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
    if(likely(g==0)){  // first time through
-    y=QCWORD(jtprobe((J)((I)jt+k),v,(UI4)hash,jt->locsyms));  // look up local first.
+// obsolete     y=QCWORD(jtprobe((J)((I)jt+k),v,(UI4)hash,jt->locsyms));  // look up local first.
+    y=QCWORD(probex(k,v,SYMORIGIN,hash,jt->locsyms));  // look up local first.
     if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y,y);}  // if not local, start in implied locale.  ra to match syrd
    }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
    ASSERTN(y,EVVALUE,nfs(k,v));  // verify found.  If y was found, it has been ra()d
@@ -506,11 +518,12 @@ A jtsyrd(J jt,A a,A locsyms){A g;
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){A val;
   // If there is a local symbol table, search it first
 // obsolete   if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(ISRAREQD(val))rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
-  if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
+// obsolete    if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
+  if(val=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
   g=jt->global;  // Continue with the current locale
  }else{A val;  // locative
   RZ(g=sybaseloc(a));  // find the starting locale for the name lookup
-  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
+  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,g)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
  }
  A res=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g, returning NAMEDLOC semantics which we discard
  if(likely(res!=0))res=SETNAMEDFAOWED(res);  // mark found in global, if found
@@ -521,7 +534,7 @@ A jtsyrdforlocale(J jt,A a){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first
-  if(jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){R jt->locsyms;}  // return flagging the result if local
+  if(probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms)){R jt->locsyms;}  // return flagging the result if local
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));
  R jtsyrd1forlocale((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
@@ -534,11 +547,11 @@ A jtsyrdnobuckets(J jt,A a){A g,val;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(NAV(a)->bucket)<=0)if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return if found locally from name
+  if(unlikely(NAV(a)->bucket)<=0)if(val=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  }else{  // if locative, start in locative locale & remember table type
   RZ(g=sybaseloc(a));
-  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
+  if(unlikely(AR(g)&ARLOCALTABLE)){if(val=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,g)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;} g=AKGST(g);}  // if locative ended with a local table, it must be from debug locative __nn.  Search as local first to avoid Bloom filter, then pick up with that frame's globals
  }
  val=jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g, returning NAMEDLOC semantics which we discard
  if(likely(val!=0))val=SETNAMEDFAOWED(val);  // mark found in global, if found, which switches to QCFAOWED semantics
@@ -680,7 +693,7 @@ A jtprobequiet(J jt,A a){A g;
  I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
  if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale
  else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
- READLOCK(g->lock) A res=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g); READUNLOCK(g->lock)   // return pointer to value, if found
+ READLOCK(g->lock) A res=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,g); READUNLOCK(g->lock)   // return pointer to value, if found
  R res;
 }
 
@@ -711,7 +724,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
    I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(AR(jt->locsyms),ARNAMEADDEDX));   // 0 if bucketx nonneg (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
    localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def) OR if neg (name in sentence for 6!:2); now non0 if valid & known to have no assignment
-   ASSERTSUFF(likely(localnexist!=0)||!jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
+   ASSERTSUFF(likely(localnexist!=0)||!probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
  }
  RZ(g)  // g has the locale we are writing to

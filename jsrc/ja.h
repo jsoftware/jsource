@@ -869,6 +869,7 @@ extern void jfree4gmp(void*,size_t);
 #define prime1d(x)                  jtprime1d(jt,(x)) 
 #define primetest(x)                jtprimetest(jt,(x)) 
 #define primitive(x)                jtprimitive(jt,(x))
+#define probex(x,y,z,a,b)           probe(x,y,z,((UI8)(a)<<32)+(UI4)LXAV0(b)[SYMHASH((UI4)(a),AN(b)-SYMLINFOSIZE)])
 #define probeis(x,y)                jtprobeis(jt,(x),(y))
 #define probeisres(x,y)             jtprobeisres(jt,(x),(y))
 #define probeislocal(x,y)           jtprobeislocal(jt,(x),(y))

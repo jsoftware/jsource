@@ -874,7 +874,7 @@ typedef DST* DC;
 // bit 4 and code points 12-15 depend on the context.
 // In the words of a sentence, created by enqueue(), they use QCSENTENCE semantics as follows:
  // the last AT type is RPAR, which is 11 (30-20+1)
- // assignments occupy 12-15, with 4 variants
+ // copulas occupy 12-15, with 4 variants
 #define QCASGN 0x0c // copula.  QCASGNISLOCAL and QCASGNISTONAME are modifiers
 #define QCASGNISLOCAL 0x1 // =. preceded by nonlocative name
 #define QCASGNISTONAME 0x2  // copula is preceded by name

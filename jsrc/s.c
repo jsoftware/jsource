@@ -35,7 +35,7 @@
 // to the local table in the calling explicit definition
 //
 // within named/numbered locales, AK points to the path (a list of boxes, using AAV0, pointing to the SYMB blocks of the path)
-// and AM is the Bloom filter for the locale.
+// obsolete // and AM is the Bloom filter for the locale.
 
 
 #define symcol ((sizeof(L)+SZI-1)/SZI)
@@ -273,7 +273,7 @@ B jtprobedel(J jt,C*string,UI4 hash,A g){B ret;
 // obsolete A jtprobe(J jt,C*string,UI4 hash,A g){
 // obsolete  RZ(g);
 A probe(I len, C *string, L *sympv, UI8 hashsymx){
- LX symx=(LX)hashsymx; UI4 hash=hashsymx>>32;  // extract args from composite arg
+ LX symx=(LX)hashsymx; UI4 hash=hashsymx>>32;  // extract args from composite arg.  symx may have be flagged
 // obsolete  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
 // obsolete  L *sympv=SYMORIGIN;  // base of symbol table
  L *symnext, *sym=sympv+SYMNEXT(symx);  // first symbol address - might be the free root if symx is 0
@@ -411,21 +411,22 @@ L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
 A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  RZ(g); F1PREFIP;  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
- I bloom=BLOOMMASK(hash); v=LOCPATH(g); L *sympv=SYMORIGIN;   // Bloom for input block; v->|.locales, with NUL at font; sympv doesn't change here
+// obsolete  I bloom=BLOOMMASK(hash);Bloom for input block; 
+ v=LOCPATH(g); L *sympv=SYMORIGIN;   // v->|.locales, with NUL at font; sympv doesn't change here
  // This function is called after local symbols have been found wanting.  Usually g will be the base
  // of the implied path.  But if the value is a locative, g is the locative locale to start in, and
  // that might be a local table if name___1 is used.  We hereby define that ___1 searches only in
- // the local table, not the path; and we have to disable the Bloom filter because local tables don't have
- // one.
- if(unlikely(AR(g)&ARLOCALTABLE)){bloom=0; v=(A*)&iotavec-IOTAVECBEGIN+0;}  // no bloom, empty path
+ // the local table, not the path.  Local filters have a Bloom filter of all 1s
+// obsolete  if(unlikely(AR(g)&ARLOCALTABLE)){bloom=0; v=(A*)&iotavec-IOTAVECBEGIN+0;}  // no bloom, empty path
 // obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
  // Because the global tables are grossly overprovisioned for symbol chains, there is a very good chance that a symbol that misses
- // in this table will hit an empty chain.  We check that, and if the chain is empty, we call it a miss without locking the table.
+ // in this table will hit an empty chain.  This is our Bloom filter.  We check that, and if the chain is empty, we call it a miss without locking the table.
  // That's OK, because this call could have come a few nanoseconds later
- LX *chainbase;  // root of the hashchain for the name
- NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0 && *(chainbase=&LXAV0(g)[SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE)])!=0){  // symbol might be in table, and the chain is not empty...   scaf remove Bloom, use 1 bit per chain
+// obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0 && *(chainbase=&LXAV0(g)[SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE)])!=0){  // symbol might be in table, and the chain is not empty...   scaf remove Bloom, use 1 bit per chain
+ NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE);   // hashchain number, for fetching the Bloom filter and starting the chain search
+                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table, and the chain is not empty...   scaf remove Bloom, use 1 bit per chain
                          READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
-                         A res=(probe)((I)jtinplace&255,string,sympv,((UI8)(hash)<<32)+(UI4)*chainbase);  // look up symbol.  We must refetch the chain root in case it was deleted
+                         A res=(probe)((I)jtinplace&255,string,sympv,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]);  // look up symbol.  We must fetch the chain root in case it was deleted
                          if(res){  // if symbol found...
                           raposgblqcgsv(QCWORD(res),QCPTYPE(res),res);  // ra it
 #ifdef PDEP
@@ -442,7 +443,9 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // same, but return the locale in which the name is found, and no ra().  Takes readlock on searched locales.  Return 0 if not found
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){
  RZ(g); F1PREFIP;  // make sure there is a locale...
- I bloom=BLOOMMASK(hash); A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=probex((I)jtinplace&255,string,SYMORIGIN,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
+// obsolete  I bloom=BLOOMMASK(hash);
+// obsolete  A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE); if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=probex((I)jtinplace&255,string,SYMORIGIN,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
+ A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE); if(BLOOMTEST(BLOOMBASE(g),chainno)){READLOCK(g->lock) y=(probe)((I)jtinplace&255,string,SYMORIGIN,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
  R g;
 }
 
@@ -585,8 +588,10 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
   g=jt->global;  // Continue with the current locale
  } else RZ(g=sybaseloc(a));  // look up locative; error possible in name, return 0
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
- I bloom=BLOOMMASK(hash); A *v=LOCPATH(g);
- NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}while(g);  // exit loop when found
+// obsolete  I bloom=BLOOMMASK(hash);
+ A *v=LOCPATH(g);
+// obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}while(g);  // exit loop when found
+ NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE); if(BLOOMTEST(BLOOMBASE(g),chainno)){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}while(g);  // exit loop when found
  R 0;  // not found, locks released
 gotval: ;
  // found: l points to the symbol.  We hold a lock on g, if it is nonzero
@@ -751,11 +756,13 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   valtype|=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
  }else{  // global table
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
-  I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
+// obsolete   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
+  C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the table
   // if we are writing to a non-local table, update the table's Bloom filter.
-  BLOOMOR(g,bloom);  // requires writelock on g
+// obsolete   BLOOMOR(g,bloom);  // requires writelock on g
+  BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty
   // A couple of debugging flags are set during assignment.  We don't bother for local names
   if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - needed only for globals
   e->sn=jt->currslistx;  // Save the script in which this name was defined - meaningful only for globals

@@ -372,6 +372,7 @@ void jtforeigninit(J jt){UI i;
  MN(18,-2) XPRIM(VERB, jtsympool,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,-3) XPRIM(VERB, jtlocnlz1,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,-4) XPRIM(VERB, jtlochdr,     0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(18,-5) XPRIM(VERB, jtquerybloom,     0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
 //  MN(128,110) XPRIM(VERB, jttest1,    0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
 
 // TUNE printf("avg # probes=%7.3f\n",(double)totprobes/(double)totslots);

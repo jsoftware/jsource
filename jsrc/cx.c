@@ -1165,7 +1165,7 @@ static A compiledefn(J jt, A sw, A cw){A z;
 // result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values, without inspecting any non-PERMANENT ones
 // The rank-flag of the table is 'cloned'
 A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
- RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z); AR(z)|=ARLCLONED;  // allocate the clone; zv->clone hashchains; set flag to indicate cloned
+ RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z); AR(z)|=ARLCLONED;  // allocate the clone, setting its Bloom filter to 1; zv->clone hashchains; set flag to indicate cloned
  // Copy the first hashchain, which has the x/v hashes
  zv[0]=av[0]; // Copy as LX; really it's a UI4
  // We don't need to save all SYMLINFOSIZE slots for local symbol tables

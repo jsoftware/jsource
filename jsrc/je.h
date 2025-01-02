@@ -298,6 +298,7 @@ extern DF1(jtprx);
 extern F1(jtqpctr);
 extern F1(jtqpfreq);
 extern DF1(jtqr);
+extern F1(jtquerybloom);
 extern F1(jtranking);
 extern F1(jtrankle);
 extern F1(jtrat);

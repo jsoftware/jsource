@@ -1007,11 +1007,15 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)((x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
-// The Bloom filter is a bitmask derived from LSBs of the hash.  The LOCBLOOM of a locale holds the OR or all the Bloom masks that
-// have been written.  When a value is looked up, we skip the table if LOCBLOOM doesn't have a 1 in each position presented by the new mask.
-// 32/64 bits is pretty short for a Bloom filter.  We get about the same results from having 1 long section as fewer:
-// 1 bit is actually best over ~30 names, and better than 4 bits over ~20 names
-#define BLOOMMASK(hash) ((0x1LL<<((hash)&(BW-1))))   // Bloom filter for a given hash
+// The Bloom filter is n bits per hashchain for a locale.  Because the locales have so many hashchain currently, we will use just 1 bit
+// per chain.  These bits appear immediately after the chains themselves
+#define BLOOMBASE(l) (C*)(SYMBAV0(l)+AN(l))   // start of the Bloom filter for non-local locale l, 1 bit per chain including SYMLINFO
+#define BLOOMLEN(l) ((((UI)AN(l)+sizeof(LX)*BB-1)/(sizeof(LX)*BB))*sizeof(LX))  // length of Bloom filter in bytes
+#define BLOOMTEST(b,c) ((b)[(c)>>LGBB]&(1<<((c)&BB-1)))   // is Bloom bit c set in b?  If so, name might be in the chain
+#define BLOOMSET(b,c) ((b)[(c)>>LGBB]|=(1<<((c)&BB-1)))   // set Bloom bit c in b.  Requires write lock on the locale
+#define BLOOMCLEAR(l) mvc(BLOOMLEN(l),BLOOMBASE(l),MEMSET00LEN,MEMSET00) // reset Bloom filter to 0s
+#define BLOOMFILL(l) mvc(BLOOMLEN(l),BLOOMBASE(l),MEMSETFFLEN,MEMSETFF) // reset Bloom filter to 1s (for local table)
+// obsolete #define BLOOMMASK(hash) ((0x1LL<<((hash)&(BW-1))))   // Bloom filter for a given hash
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
 #define BOTHASUS(x,y) (((US)(C)(x)<<8)+(US)(C)(y))

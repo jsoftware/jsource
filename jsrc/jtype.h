@@ -194,9 +194,9 @@ struct AD {
  FLAGT flag;
  union {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) in syncos, a credential to allow pthread calls
-        // (3) for SYMB tables for explicit definitions, the address of the calling symbol table; for other SYMB tables,
-        // a Bloom filter of the hashes assigned in the locale (using the low bits of the hash) (4) for the block
-        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
+        // (3) for SYMB tables for explicit definitions (i. e. local SYMB tables), the address of the calling symbol table;
+// obsolete for other SYMB tables, a Bloom filter of the hashes assigned in the locale (using the low bits of the hash)
+        // (4) for the block holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
         // (5) in the return from wordil, holds the number of words if any final NB. is discarded; (6) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (7) in the self block for y L: n and u S: n, the address of the fs block for u; (8) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (9) in the y block internal to pv.c, used for flags (10) in all tables that use extendunderlock, the number of valid entries in the table (AN gives the allocation)
@@ -205,7 +205,7 @@ struct AD {
         // (16) in permuted W block passed from /. to ;., pointer to information on where frets are in a
   A back; // For VIRTUAL blocks, points to backing block
   A jobpyx;    // for user JOB blocks, points to the pyx
-  A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
+  A *zaploc;  // For all blocks allocated by GA, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
   A aarg;  // for /.., the original a arg
 } mback;
@@ -361,6 +361,7 @@ struct AD {
 #define SBAV0(x)        ((SB*)((C*)(x)+AKXR(0)))  // local symbol atom
 #define SBAV1(x)        ((SB*)((C*)(x)+AKXR(1)))  // local symbol list
 #define SBUV4(x)        ((SBU*)((C*)(x)+AKXR(4)))  // symbol, nonvirtual rank 4
+#define SYMBAV0(x)       ((LX*)((C*)(x)+AKXR(0)))  // symbol-table (LX) values (always alliocated at rank 0)
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
 #define voidAVn(n,x)     ((void*)((C*)(x)+AKXR(n)))  // unknown, but rank is known
 #define voidAV0(x)       voidAVn(0,x)  // unknown, but scalar
@@ -974,15 +975,15 @@ typedef struct {
 #define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
 
 // ********************************** fields in Global symbol tables (aka locale ***************************
-// In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
+// In Global symbol tables (including numbered) AK is LOCPATH, and AM is available for use
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
 #define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
 #define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].fval)  // locale number, for numbered locales
 #define LOCNUM(g) (I)LOCNUMW(g)
 #define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted.  The path runs from LOCPATH backwards
                         // to end with the ending 0 at AAV1()[0]
-#define LOCBLOOM(x) AM(x)
-#define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
+// obsolete #define LOCBLOOM(x) AM(x)
+// obsolete #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
 
 
 // Macros to incr/decr execct of a locale
@@ -1369,9 +1370,11 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 #define ZAPLOC0 ((A*)(validitymask+12))  // 0 used as a pointer to a null tpop-stack value
 #define PSTK2NOTFINALASGN ((PSTK*)(validitymask+12)-2)  // 0 in position [2], signifying NOT final assignment (used for errors)
 #define BREAK0 ((C*)(validitymask+12))  // 0 to indicate no ATTN requested
-#define MEMSET00 ((C*)(validitymask+12))  // 32 bytes of 0, for memset
+#define MEMSET00 ((C*)(validitymask+12))  // 4 words bytes of 0, for memset
 #define MEMSET00LEN (4*SZI)  // length of MEMSET00
-#define MEMSETFF ((C*)(iotavec-IOTAVECBEGIN+0xff))  // 1 byte of 0xff, for memset
+#define MEMSETFF ((C*)(validitymask+8))  // 2 words of FF, for memset (only 2 in 32-bit systems)
+#define MEMSETFFLEN (2*SZI)  // length of MEMSETFF
+// obsolete #define MEMSETFF ((C*)(iotavec-IOTAVECBEGIN+0xff))  // 1 byte of 0xff, for memset
 #define MEMSET01 ((C*)(iotavec-IOTAVECBEGIN+1))  // 1 byte of 0x01, for memset
 
 

@@ -109,6 +109,21 @@ pcheck 18!:_2 ''
 pcheck 18!:_2 ''
 (271828) 18!:55 <'asdf'
 
+NB. 18!:_5 y ------------------------------
+a =: ".@> 18!:3 ''
+h =: 18!:_4 a  NB. locale header
+=/ <. 2&^. (0 , #18!:_5 a) + (7*SZI) + (5 { h) * 4  NB. Verify Bloom doesn't exceed allocation
+0 = +/ , #: a. i. 18!:_5 a  NB. starts empty
+nm1__a =: 0
+1 = +/ , #: a. i. 18!:_5 a  NB. add names
+nm2__a =: 1
+2 = +/ , #: a. i. 18!:_5 a
+nm1__a =: 'b'
+2 = +/ , #: a. i. 18!:_5 a
+18!:55 a
+
+
+
 
 4!:55 ;:'a adv b f h i k li m oktypes p pcheck perm s sum t x y yy'
 

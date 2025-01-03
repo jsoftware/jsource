@@ -1014,7 +1014,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define BLOOMTEST(b,c) ((b)[(c)>>LGBB]&(1<<((c)&BB-1)))   // is Bloom bit c set in b?  If so, name might be in the chain
 #define BLOOMSET(b,c) ((b)[(c)>>LGBB]|=(1<<((c)&BB-1)))   // set Bloom bit c in b.  Requires write lock on the locale
 #define BLOOMCLEAR(l) mvc(BLOOMLEN(l),BLOOMBASE(l),MEMSET00LEN,MEMSET00) // reset Bloom filter to 0s
-#define BLOOMFILL(l) mvc(BLOOMLEN(l),BLOOMBASE(l),MEMSETFFLEN,MEMSETFF) // reset Bloom filter to 1s (for local table)
+#define BLOOMFILL(l) {((LX*)BLOOMBASE(l))[0]=-1; if(unlikely((UI)AN(l)>sizeof(LX)*BB))memset(BLOOMBASE(l),0xff,BLOOMLEN(l));} // reset Bloom filter to 1s (for local table) - usually with 1 store (if <=32 chains)
 // obsolete #define BLOOMMASK(hash) ((0x1LL<<((hash)&(BW-1))))   // Bloom filter for a given hash
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously

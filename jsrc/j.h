@@ -1007,8 +1007,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)((x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
-// The Bloom filter is n bits per hashchain for a locale.  Because the locales have so many hashchain currently, we will use just 1 bit
-// per chain.  These bits appear immediately after the chains themselves
+// The Bloom filter is n bits per hashchain for a locale.  Because the locales have so many hashchains currently, we will use just 1 bit
+// per chain.  These bits appear immediately after the chains themselves so that a few cachelines will suffice for any number of names in z that are to be skipped
 #define BLOOMBASE(l) (C*)(SYMBAV0(l)+AN(l))   // start of the Bloom filter for non-local locale l, 1 bit per chain including SYMLINFO
 #define BLOOMLEN(l) ((((UI)AN(l)+sizeof(LX)*BB-1)/(sizeof(LX)*BB))*sizeof(LX))  // length of Bloom filter in bytes
 #define BLOOMTEST(b,c) ((b)[(c)>>LGBB]&(1<<((c)&BB-1)))   // is Bloom bit c set in b?  If so, name might be in the chain

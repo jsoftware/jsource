@@ -682,7 +682,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     k=SYMNEXT(k);
     ++nfreed;  // k is a valid free; count it
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
-    fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
+    fatype(jtsympv[k].name,NAME);jtsympv[k].name=0;  // always release name
     SYMVALFA(jtsympv[k]);    // free value
     jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;  // clear symbol fields for next time (that's Roger's way)
     lastk=k;  // remember end-of-chain
@@ -1585,7 +1585,7 @@ F1(jtca){A z;I t;P*wp,*zp;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,ca(SPA(wp,x)));
  }else{
-  if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
+  if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;AC(z)=ACUC1;}  // GA does not allow NAME type, for speed.  NAME is always non-ip
   else {
    n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for minimum rank, someday
    GA(z,t,n,AR(w),AS(w));

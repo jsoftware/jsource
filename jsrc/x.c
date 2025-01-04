@@ -380,8 +380,10 @@ void jtforeigninit(J jt){UI i;
 
 // called at initialization after memory reset, to assign cocurrent_z_ and coclass_z_.  The 18!:4 block is at the end of foreignA and is a read-only value
 I jtforeignassigninit(J jt){A nm;L *e;
- RZ(nm=nfs(12,"cocurrent_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeis(nm, *JT(jt,zpath)); e->flag|=LREADONLY; WRITEUNLOCK((*JT(jt,zpath))->lock)  // probe takes a lock
- RZ(nm=nfs(10,"coclass_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeis(nm, *JT(jt,zpath)); e->flag|=LREADONLY; WRITEUNLOCK((*JT(jt,zpath))->lock)
+ RZ(nm=nfs(12,"cocurrent_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;
+// obsolete  WRITEUNLOCK((*JT(jt,zpath))->lock)  // probe takes a lock
+ RZ(nm=nfs(10,"coclass_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;
+// obsolete  WRITEUNLOCK((*JT(jt,zpath))->lock)
  R 1;
 }
 

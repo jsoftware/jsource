@@ -328,6 +328,37 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  }
 }
 
+// a is A for name
+// g is symbol table to use
+// result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
+// if not found, one is created.  Caller must ensure that a symbol is reserved
+// Takes a write lock on g and returns holding that lock
+static INLINE L* jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
+ u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
+ LX *hv=LXAV0(g)+SYMHASH(hsh,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
+ WRITELOCK(g->lock);  // write-lock the table before we access it.  Could read-lock until we know we have to modify chains
+ if(tx=SYMNEXT(*hv)){                                 /* !*hv means (0) empty slot    */
+  v=tx+sympv;
+  NOUNROLL while(1){
+   LX lxnext=v->next;  // unroll loop once
+   u=NAV(v->name);  // name cannot be 0
+   IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
+   if(!lxnext)break;                                /* (2) link list end */
+   v=(tx=SYMNEXT(lxnext))+sympv;
+  }
+ }
+ // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
+ if(unlikely(1)){  // this is VERY rare: symbols are allocated only once per name, ever.  
+  v=symnew(hv,tx|SYMNONPERM);   // symbol is non-PERMANENT and known to be available
+  raname(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
+ }
+ R v;
+}    /* probe for assignment */
+
+// Acquire a symbol and then xctl to probeis.  Suitable when the caller needs a symbol AND has no locks
+// May fail if symbol cannot be allocated.  takes and releases a write lock on the symbol table
+L* jtprobeisres(J jt,A a,A g){SYMRESERVE(1) L *z=probeis(a,g); WRITEUNLOCK(g->lock); R z;}
+
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table lsym (which must exist)
 // If not found, one is created
 // We know that the name block DOES NOT have a direct symbol number, because we have checked that if there was a chance (if the name block was synthetic there is no chance)
@@ -353,9 +384,11 @@ L *jtprobeislocal(J jt,A a,A lsym){NM*u;I bx;L *sympv=SYMORIGIN;
     tx = lx; lx = l->next;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx.  Make it non-PERMANENT
-   SYMRESERVE(1) l=symnew(&LXAV0(lsym)[b],tx|SYMNONPERM); 
-   ra(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
-   AR(lsym)|=ARNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
+   if(unlikely(1)){  // this is VERY rare: symbols are allocated only once per name, or 0 if they are preallocated
+    SYMRESERVE(1) l=symnew(&LXAV0(lsym)[b],tx|SYMNONPERM); 
+    raname(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
+    AR(lsym)|=ARNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
+   }
    R l;
   } else {L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
@@ -366,41 +399,13 @@ L *jtprobeislocal(J jt,A a,A lsym){NM*u;I bx;L *sympv=SYMORIGIN;
   // No bucket information, do full search. We do have to reserve a symbol in case the name is new
   // We don't need a lock, because this is a local table; but this path is rare - only for computed names, and for assignments
   // during creation of the local symbol tables, where we will keep the lock once we take it
-  SYMRESERVE(1) L *l=probeis(a,lsym); WRITEUNLOCK(lsym->lock);  // release the unneeded lock
-  RZ(l);
+// obsolete   SYMRESERVE(1) L *l=probeis(a,lsym); WRITEUNLOCK(lsym->lock);  // release the unneeded lock
+  L *l=probeisres(a,lsym); RZ(l);   // search for name, then release lock
   AR(lsym)|=((~l->flag)&LPERMANENT)<<(ARNAMEADDEDX-LPERMANENTX);  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
   R l;
  }
 }
 
-// Acquire a symbol and then xctl to probeis.  Suitable when the caller needs a symbol AND has no locks
-// May fail if symbol cannot be allocated.  takes and releases a write lock on the symbol table
-L* jtprobeisres(J jt,A a,A g){SYMRESERVE(1) L *z=probeis(a,g); WRITEUNLOCK(g->lock); R z;}
-
-// a is A for name
-// g is symbol table to use
-// result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
-// if not found, one is created.  Caller must ensure that a symbol is reserved
-// Takes a write lock on g and returns holding that lock
-L*jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
- u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
- LX *hv=LXAV0(g)+SYMHASH(hsh,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
- WRITELOCK(g->lock);  // write-lock the table before we access it
- if(tx=SYMNEXT(*hv)){                                 /* !*hv means (0) empty slot    */
-  v=tx+sympv;
-  NOUNROLL while(1){
-   LX lxnext=v->next;  // unroll loop once
-   u=NAV(v->name);  // name cannot be 0
-   IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
-   if(!lxnext)break;                                /* (2) link list end */
-   v=(tx=SYMNEXT(lxnext))+sympv;
-  }
- }
- // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
- v=symnew(hv,tx|SYMNONPERM);   // symbol is non-PERMANENT and known to be available
- ra(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
- R v;
-}    /* probe for assignment */
 
 // look up a non-locative name using the locale path (i. e. skipping the local table)
 // g is the current locale, l/string=length/name, hash is the hash for it (l is carried in the low 8 bits of jt)
@@ -424,7 +429,7 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  // That's OK, because this call could have come a few nanoseconds later
 // obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0 && *(chainbase=&LXAV0(g)[SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE)])!=0){  // symbol might be in table, and the chain is not empty...   scaf remove Bloom, use 1 bit per chain
  NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE);   // hashchain number, for fetching the Bloom filter and starting the chain search
-                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table, and the chain is not empty...   scaf remove Bloom, use 1 bit per chain
+                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table...
                          READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
                          A res=(probe)((I)jtinplace&255,string,sympv,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]);  // look up symbol.  We must fetch the chain root in case it was deleted
                          if(res){  // if symbol found...
@@ -728,7 +733,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
    // check for non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
    I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(AR(jt->locsyms),ARNAMEADDEDX));   // 0 if bucketx nonneg (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
-   localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def) OR if neg (name in sentence for 6!:2); now non0 if valid & known to have no assignment
+   localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def) OR if neg (name in sentence for 6!:2 from keyboard); now non0 if valid & known to have no assignment
    ASSERTSUFF(likely(localnexist!=0)||!probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
  }
@@ -759,7 +764,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
 // obsolete   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
   C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
-  e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the table
+  e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the locale
   // if we are writing to a non-local table, update the table's Bloom filter.
 // obsolete   BLOOMOR(g,bloom);  // requires writelock on g
   BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty

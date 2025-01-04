@@ -63,7 +63,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
   R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags/buckets may be added)
  }
  // The name may not be valid, but we will allocate a NAME block for it anyway
- GATV0(z,NAME,n,1); zv=NAV(z);   // the block is cleared to 0
+ GATV0(z,NAME,n,1); AC(z)=ACUC1; zv=NAV(z);   // the block is cleared to 0.  This is the only place where a NAME is allocated (except for cloning).  NAME is always non-ip
  MC(zv->s,s,n); zv->s[n]=0;  // should copy locally, with special dispensation for <4 chars
  f=0; m=n; p=0;
  // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative

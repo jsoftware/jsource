@@ -1281,7 +1281,6 @@ F2(jteps){I l,r;
 // I.@~: y   does not have IRS
 DF1(jtnubind){
  ARGCHK1(w);
-// obsolete  R ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w);
  R unlikely(ISSPARSE(AT(w)))?on1cell(jt,w,self):indexofsub(INUBI,w,w);  // revert for sparse
 }    /* I.@~: w */
 

@@ -68,7 +68,6 @@ DF2(jtunquote){A z;
     A cachedlocale=FAV(self)->localuse.lu0.cachedloc; UI4 vtime=FAV(self)->lu2.refvalidtime;  // fetch before we read reftime as atomic
     if(vtime==ACVCACHEREAD){  // is previous lookup still valid
      // Short caching: the previous lookup can be reused because there have been no assignments
-// obsolete      raposgblqcgsv(QCWORD(fs),QCPTYPE(fs),fs); // ra to match syrd1  scaf QCWORD not needed
      raposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion
      if(unlikely(NAV(thisname)->flag&NMLOC)){  // is this a (necessarily direct) locative?
       // see if the locale is cached.   public_z_ =: entry_loc_ where entry_loc will have the locale pointer
@@ -93,7 +92,6 @@ DF2(jtunquote){A z;
    if(likely(!(nmflgs&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
-// obsolete     if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=CLRNAMEDLOC(jtprobe(jtx,sx,hashx,jt->locsyms)))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check to see.  Set not-NAMEDLOC.  ra to match syrd1
     if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,sx,SYMORIGIN,hashx,jt->locsyms)))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check to see.  Set not-NAMEDLOC.  ra to match syrd1
     fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
     // leave LOCINCRDECR unset and jt->global unchnged
@@ -108,7 +106,6 @@ DF2(jtunquote){A z;
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
-// obsolete      if(likely((fs=CLRNAMEDLOC(jtprobe((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->locsyms)))!=0)){  // look only in local symbols.  Set not-NAMEDLOC
      if(likely((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)))!=0)){  // look only in local symbols.  Set not-NAMEDLOC
       // u/v, assigned by xdefn.  Implied locative.  Switch locals and globals to caller's environment
       jt->locsyms=(A)AM(jt->locsyms); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
@@ -338,7 +335,6 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // In any case we install the current asgnct and the looked-up value (unflagged).  We will know that the cached value is not a pun in type
  I flag2=(!!(NAV(a)->flag&NMCACHED) | (jt->namecaching & !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<VF2CACHEABLEX;  // enable caching if called for
  A z=fdefnoerr(flag2,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
-// obsolete  if(likely(val!=0)){if(LOCALRA||ISGLOBAL(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  if(likely(val!=0)){if(ISFAOWED(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // abort if reference not allocated
  if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val); FAV(z)->lu2.refvalidtime=ACVCACHEREAD;}  // install cachelet of lookup, but never if indirect locative.  No QC

@@ -35,7 +35,6 @@
 // to the local table in the calling explicit definition
 //
 // within named/numbered locales, AK points to the path (a list of boxes, using AAV0, pointing to the SYMB blocks of the path)
-// obsolete // and AM is the Bloom filter for the locale.
 
 
 #define symcol ((sizeof(L)+SZI-1)/SZI)
@@ -270,12 +269,8 @@ B jtprobedel(J jt,C*string,UI4 hash,A g){B ret;
 // l/string are length/addr of name, hash is hash of the name, g is symbol table.  l is encoded in low bits of jt
 // result is addr/ra/flags for value (i. e. QCSYMVAL semantics), or 0 if not found
 // locking is the responsibility of the caller
-// obsolete A jtprobe(J jt,C*string,UI4 hash,A g){
-// obsolete  RZ(g);
 A probe(I len, C *string, L *sympv, UI8 hashsymx){
  LX symx=(LX)hashsymx; UI4 hash=hashsymx>>32;  // extract args from composite arg.  symx may have be flagged
-// obsolete  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
-// obsolete  L *sympv=SYMORIGIN;  // base of symbol table
  L *symnext, *sym=sympv+SYMNEXT(symx);  // first symbol address - might be the free root if symx is 0
  NOUNROLL while(symx){  // loop is unrolled 1 time
   // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
@@ -323,7 +318,6 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
   R probelocalbuckets(SYMORIGIN,a,LXAV0(locsyms)[b],u->bucketx);  // look up using bucket info
  }else{
   // No bucket information, do full search.  This includes names that don't come straight from words in an explicit definition
-// obsolete   R jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms);
   R probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,locsyms);
  }
 }
@@ -399,7 +393,6 @@ L *jtprobeislocal(J jt,A a,A lsym){NM*u;I bx;L *sympv=SYMORIGIN;
   // No bucket information, do full search. We do have to reserve a symbol in case the name is new
   // We don't need a lock, because this is a local table; but this path is rare - only for computed names, and for assignments
   // during creation of the local symbol tables, where we will keep the lock once we take it
-// obsolete   SYMRESERVE(1) L *l=probeis(a,lsym); WRITEUNLOCK(lsym->lock);  // release the unneeded lock
   L *l=probeisres(a,lsym); RZ(l);   // search for name, then release lock
   AR(lsym)|=((~l->flag)&LPERMANENT)<<(ARNAMEADDEDX-LPERMANENTX);  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
   R l;
@@ -416,18 +409,14 @@ L *jtprobeislocal(J jt,A a,A lsym){NM*u;I bx;L *sympv=SYMORIGIN;
 A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  RZ(g); F1PREFIP;  // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
-// obsolete  I bloom=BLOOMMASK(hash);Bloom for input block; 
  v=LOCPATH(g); L *sympv=SYMORIGIN;   // v->|.locales, with NUL at font; sympv doesn't change here
  // This function is called after local symbols have been found wanting.  Usually g will be the base
  // of the implied path.  But if the value is a locative, g is the locative locale to start in, and
  // that might be a local table if name___1 is used.  We hereby define that ___1 searches only in
  // the local table, not the path.  Local filters have a Bloom filter of all 1s
-// obsolete  if(unlikely(AR(g)&ARLOCALTABLE)){bloom=0; v=(A*)&iotavec-IOTAVECBEGIN+0;}  // no bloom, empty path
-// obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) A res=jtprobe(jt,string,hash,g);
  // Because the global tables are grossly overprovisioned for symbol chains, there is a very good chance that a symbol that misses
  // in this table will hit an empty chain.  This is our Bloom filter.  We check that, and if the chain is empty, we call it a miss without locking the table.
  // That's OK, because this call could have come a few nanoseconds later
-// obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0 && *(chainbase=&LXAV0(g)[SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE)])!=0){  // symbol might be in table, and the chain is not empty...   scaf remove Bloom, use 1 bit per chain
  NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE);   // hashchain number, for fetching the Bloom filter and starting the chain search
                         if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table...
                          READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
@@ -448,8 +437,6 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // same, but return the locale in which the name is found, and no ra().  Takes readlock on searched locales.  Return 0 if not found
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){
  RZ(g); F1PREFIP;  // make sure there is a locale...
-// obsolete  I bloom=BLOOMMASK(hash);
-// obsolete  A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE); if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) y=probex((I)jtinplace&255,string,SYMORIGIN,hash,g); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
  A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE); if(BLOOMTEST(BLOOMBASE(g),chainno)){READLOCK(g->lock) y=(probe)((I)jtinplace&255,string,SYMORIGIN,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
  R g;
 }
@@ -468,7 +455,6 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
   ASSERT(k<256,EVLIMIT);
   if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
    if(likely(g==0)){  // first time through
-// obsolete     y=QCWORD(jtprobe((J)((I)jt+k),v,(UI4)hash,jt->locsyms));  // look up local first.
     y=QCWORD(probex(k,v,SYMORIGIN,hash,jt->locsyms));  // look up local first.
     if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y,y);}  // if not local, start in implied locale.  ra to match syrd
    }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
@@ -525,8 +511,6 @@ A jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){A val;
   // If there is a local symbol table, search it first
-// obsolete   if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(ISRAREQD(val))rapos(QCWORD(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
-// obsolete    if(val=jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
   if(val=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return flagging the result if local.  Value pointers in symbols have QCSYMVAL semantics
   g=jt->global;  // Continue with the current locale
  }else{A val;  // locative
@@ -593,9 +577,7 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
   g=jt->global;  // Continue with the current locale
  } else RZ(g=sybaseloc(a));  // look up locative; error possible in name, return 0
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
-// obsolete  I bloom=BLOOMMASK(hash);
  A *v=LOCPATH(g);
-// obsolete  NOUNROLL do{A gn=*v--; if((bloom&~LOCBLOOM(g))==0){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}while(g);  // exit loop when found
  NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE); if(BLOOMTEST(BLOOMBASE(g),chainno)){READLOCK(g->lock) l=jtprobeforsym((J)((I)jt+stringlen),string,hash,g); if(l){goto gotval;} READUNLOCK(g->lock)} g=gn;}while(g);  // exit loop when found
  R 0;  // not found, locks released
 gotval: ;
@@ -761,12 +743,10 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   valtype|=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
  }else{  // global table
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
-// obsolete   I bloom=BLOOMMASK(NAV(a)->hash);  // calculate Bloom mask outside of lock
   C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the locale
   // if we are writing to a non-local table, update the table's Bloom filter.
-// obsolete   BLOOMOR(g,bloom);  // requires writelock on g
   BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty
   // A couple of debugging flags are set during assignment.  We don't bother for local names
   if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - needed only for globals
@@ -813,13 +793,11 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
 
   }else{  // x exists, is either read-only or memory-mapped, and is not rewriting the previous value
    ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
-// obsolete    if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
    // no need to store valtype - that can't change from noun (because must be DIRECT below)
    I wt=AT(w); I wn=AN(w); I wr=AR(w); I m=wn<<bplg(wt);  // we will move the flags/data from w to the preallocated area x
    ASSERTGOTO((wt&DIRECT)>0,EVDOMAIN,exitlock);  // boxed, extended, etc can't be assigned to memory-mapped array
    ASSERTGOTO(AM(x)>=m,EVALLOC,exitlock);  // ensure the file area can hold the data.  AM of NJA is allosize
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
-// obsolete    }
    x=0;  // repurpose x to be the value needing fa - indicate no further fa needed
   }
  }else x=0;  // repurpose x to be the value needing fa

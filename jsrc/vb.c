@@ -370,7 +370,6 @@ DF2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   switch(d){
   case -1: R mtv;
   case -4: R jtupon2cell(jt,a,w,self);  // revert if recoverable error
-// obsolete R icap(ebarvec(a,w));
   }
  }
  if((-m&-n)>=0){R icap(ebar(a,w));}  // empty argument.

@@ -42,7 +42,6 @@
 #define VIPOKW          ((I)1<<VIPOKWX)
 #define VIPOKAX         21      // This routine can put its result over A
 #define VIPOKA          ((I)1<<VIPOKAX)
-// obsolete #define VCANHALTX       25    // This routine can generate an error after it has started
 #define VCANHALT        0  // ((I)1<<VCANHALTX) was 25, but no longer used
 #define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)

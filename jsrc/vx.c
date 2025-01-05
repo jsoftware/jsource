@@ -254,7 +254,6 @@ DF1(jtdigits10){ // "."0@":
    }
  }
  // if none of the fast cases applies, revert
-// obsolete  EPILOG(rank1ex0(thorn1(w),DUMMYSELF,jtexec1));
  RETF(on1cell(jt,w,self));
 }
 

@@ -241,7 +241,6 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;
   A locfound;  // get the locale in which the name is defined - must exist.
   if(y&&(locfound=syrdforlocale(y))){
    // if debug turned on, see if the value is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.
-// obsolete    if(jt->uflags.trace&TRACEDB){READLOCK(locfound->lock) A v=jtprobe((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound); A rres=(A)1; if(v)rres=redef(mark,v); READUNLOCK(locfound->lock) RZ(rres)}
    if(jt->uflags.trace&TRACEDB){READLOCK(locfound->lock) A v=probex(NAV(y)->m,NAV(y)->s,SYMORIGIN,NAV(y)->hash,locfound); A rres=(A)1; if(v)rres=redef(mark,v); READUNLOCK(locfound->lock) RZ(rres)}
    WRITELOCK(locfound->lock)
    if(unlikely(jtprobedel((J)((I)jt+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound)))ACVCACHECLEAR;  // delete the symbol (incl name and value) in the locale in which it is defined

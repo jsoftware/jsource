@@ -658,7 +658,6 @@ DF2(jtsfrom){
 mustbox:;
  }
  // If we couldn't handle it as a special case, do it the hard way
-// obsolete  A z; RETF(from(IRS1(a,0L,1L,jtbox,z),w));  // reverting by hand
  RETF(fork242(jt,a,w,self))  // revert using the fork for (f@[ g ])
 }    /* (<"1 a){w */
 

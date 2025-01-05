@@ -341,7 +341,6 @@ void breakclose(JS jt);
 // result is NUL-terminated string which is on the tstack
 // We echo the string before returning
 static C* nfeinput(JS jt,C* s){A y;
-// obsolete  WITHATTNDISABLED(y=jtstr0(MDTHREAD(jt),jtexec1(MDTHREAD(jt),jtcstr(MDTHREAD(jt),s),ds(CEXEC)));)  // exec the sentence with break interrupts disabled to get the string;  NUL-terminate
  WITHATTNDISABLED(y=jtstr0(MDTHREAD(jt),PARSERVALUE(jtparse((JTT*)((I)MDTHREAD(jt)|JTFROMEXEC),jtddtokens(MDTHREAD(jt),jtcstr(MDTHREAD(jt),s),4+1+0)))););  // replace DDs, but require that they be complete within the string (no jgets); 0 is !!EXPLICITRUNNING; execute, NUL-terminate
 
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */

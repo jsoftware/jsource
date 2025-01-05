@@ -162,7 +162,6 @@ static DF2(jtmodpow2){A h;B b,c;I m,n,x,z;
  if(unlikely(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)){  // convert any non-INT arg to INT if it can be done exactly
   if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a));
   if(RAT&AT(w))RZ(w=pcvt(XNUM,w)) else if(!(AT(w)&INT+XNUM))RZ(w=pcvt(INT,w));
-// obsolete  if(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)R residue(h,expn2(a,w));  // if not (both args INT and power positive) revert to long form
   if(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)R jtupon2(jt,a,w,self);  // if not (both args INT and power positive) revert to long form
  }
  // both args are integral, but possibly extended

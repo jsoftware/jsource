@@ -966,7 +966,6 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
   // If it is a nameref, clear the bucket info.  Explanation in nameref()
   if(unlikely(v->id==CTILDE))if(v->fgh[0]&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->bucket=0;
   //  Recur on each component
-// obsolete   raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
   DO(3, if(v->fgh[i])ra(v->fgh[i]);)  // ra f, g, h
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
@@ -1023,7 +1022,6 @@ runout:;  //
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
-// obsolete   fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
   DO(3, fana(v->fgh[i]);)  // free f, g, h
  } else if(t&NAME){A ref;   // NAMEs are usually in verb defns and don't get freed
   if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference

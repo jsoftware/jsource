@@ -216,12 +216,10 @@ static DF1(jthkiota){A a,e;I n;P*p;
  SETIC(w,n);
  if(unlikely((AT(w)&SPARSE+B01)==SPARSE+B01)&&1==AR(w)){   // sparse boolean list
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
-// obsolete   R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n))
   if(BAV(e)[0]||equ(mtv,a))goto revert;  // revert if no sparse axes or fill ele is not 0
   R repeat(SPA(p,x),ravel(SPA(p,i)));  // select from the indexes (of nonzeros)
  }
  if(B01&AT(w)&&1>=AR(w))R ifb(n,BAV(w));  // use special code for boolean atom/list
-// obsolete  : repeat(w,IX(n));
 revert: ;
  R jthook1cell(jt,w,self);
 }    /* special code for (# i.@#) y */
@@ -234,7 +232,6 @@ static DF1(jthkodom){I n,*v;
  }
 revert: ;
  R jthook1cell(jt,w,self);
-// obsolete  R CALL2(FAV(fs)->valencefns[1],w,CALL1(FAV(gs)->valencefns[0],w,gs),fs);
 }    /* special code for (#: i.@(* /)) */
 
 static DF1(jthkindexofmaxmin){

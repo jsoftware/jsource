@@ -470,7 +470,6 @@ void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A
 A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragement; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
-// obsolete if((I)JT(jt,jobqueues)&63)SEGFAULT;
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // Save info for error typeout.  We save pointers to the sentence, and the executing parser-stack frame for each execution, from which we infer error position
   PFRAME oframe=jt->parserstackframe;   // save all the stack status
@@ -526,7 +525,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 #define ASGNEDGE ((0xfLL<<QCASGN)|(0x1LL<<QCLPAR)|(0xfLL<<(QCNAMED+QCASGN))|(0x1LL<<(QCNAMED+QCLPAR)))  // ASGN+EDGE, ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch  LPAR in [-1] doesn't hurt anything
-// obsolete   I pull4=((~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-1])) & (~((0xfLL<<QCASGN)|(0x1LL<<QCLPAR))>>QCTYPE(queue[-2])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
   I pull4=((~(UI8)ASGNEDGE>>QCTYPE(queue[-1])) & (~(UI8)ASGNEDGE>>QCTYPE(queue[-2])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
                          // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
 
@@ -564,7 +562,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
 
      // We have the value/typeclass of the next word (QCSENTENCE semantics).  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
      if(((I)y&QCISLKPNAME)){
-// obsolete if((I)y&QCNAMED+QCISLKPNAME)SEGFAULT;      y=CLRQCFAOWEDMSK(y);  // y is now addr/00/type index
       // Replace a name (not to left of ASGN) with its value
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -582,7 +579,6 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
        // this is the path for all local names as long as we can use the uncloned table
        L *s=sympv+(I)symx;  // get address of symbol from the primary table
        if(unlikely((s->fval)==0))goto rdglob;  // if value has not been assigned, ignore it.  y has QCSYMVAL semantics
-// obsolete        y=(A)((I)s->val+s->valtype);  //  combine the type and value.  type has QCSYMVAL semantics, as y does.
        if(unlikely(ISRAREQD(y=s->fval)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
       }else if(likely((buck=NAV(QCWORD(y))->bucket)>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.  We would fetch symx&buck together if we could hand-code it.
        // public names come through here (with positive pucketx) or 
@@ -637,7 +633,6 @@ rdglob: ;  // here when we tried the buckets and failed
 #endif
          FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)
         }else y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
-// obsolete if(!((I)y&QCNAMED))SEGFAULT;        y=SETNAMED(y); 
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
         // nameless modifier, and not a locative.  This handles 'each' and the like.  Don't create a reference; maybe cache the value
         A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags
@@ -647,15 +642,12 @@ rdglob: ;  // here when we tried the buckets and failed
          // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent
          NAV(origy)->cachedref=CLRFAOWED(y); NAV(origy)->bucket=0; ACSETPERM(QCWORD(y)); // clear bucket info so we will skip that search - this name is forever cached with QCFAOWED semantics.  Make the cached value immortal
         }
-// obsolete if(!((I)y&QCNAMED))SEGFAULT;        y=SETNAMED(y);
-// obsolete         y=SETFAOWED(y);
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.  But if the value IS a reference, use the value if possible to avoid the extra lookup
         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
 #if 0  //   obsolete  if it's to be done, it should be in unquote
         if(unlikely(FAV(QCWORD(y))->valencefns[0]==jtunquote && !(NAV(origname)->flag&(NMLOC|NMILOC|NMIMPLOC)))){  // reference is as reference does
          // the value is a non-locative reference to another reference.  It is safe to skip over it.  Leave y holding the value
          y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
-// obsolete         y=SETFAOWED(y);  // convert to QCFAOWED semantics
         }else{y=namerefacv(origname,y);}   // Replace other acv with reference, and fa() looked-up y value if global.  y starts with QCGLOBAL semantics, returns with QCFAOWED
 #endif
         y=namerefacv(origname,y);   // Replace acv with reference, and fa() looked-up y value if global.  y starts with QCFAOWED semantics, returns with QCFAOWED
@@ -669,7 +661,6 @@ undefname:
        FPSZ(y)   // abort if failure allocating reference, or malformed name
       }
 endname: ;
-// obsolete       y=SETNAMED(y);  // turn on the flag bit indicating this was NAMED
      // else
       // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
       // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED+~FAOWED in blocks that are known to need no pretection from deletion:
@@ -689,7 +680,6 @@ endname: ;
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // OK to fetch queue[-1]
      // stack the value, changing it to STKNAMED semantics
-// obsolete      stack[0].a = (A)(((I)y&~STKFAOWED)+(((I)y>>(QCFAOWEDX-STKFAOWEDX))&STKFAOWED));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with garbage in other type flags
      stack[0].a = (A)(((I)y&~QCMASK)+(((I)y>>(QCNAMEDX-STKNAMEDX))&STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
      y=*(volatile A*)queue;   // fetch next value as early as possible
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull count es  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  
@@ -712,8 +702,6 @@ endname: ;
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue.
 
-// obsolete    pt0ecam|=(((CONJ>>QCADV)|(CONJ>>QCVERB)|(CONJ>>QCNOUN)|(CONJ>>QCISLKPNAME)|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE))|(CONJ>>(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
-// obsolete       <<(QCTYPE(y)))&CONJ;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull).
    pt0ecam|=(((((UI8)1<<QCADV)|((UI8)1<<QCVERB)|((UI8)1<<QCNOUN)|((UI8)1<<QCISLKPNAME)|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE))|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
       >>(QCTYPE(y)))&(UI8)1)<<CONJX;  // save next-is-CAVN status in CONJ (which will become the request for a 2nd pull).
 
@@ -836,9 +824,6 @@ RECURSIVERESULTSCHECK
        ramkrecursv(y);  // force recursive y
        A freea,freep;  // reg to hold arg we are possibly freeing
        // start with fs, which we extract from the stack to get the FAOWED flag
-// obsolete        PSTK *fsa2=(PSTK*)((I)stack+((2*sizeof(PSTK))>>((pt0ecam>>PMASKSAVEX)&1)));  // pointer to stack slot that was executed   1 2 2 (2 2)
-// obsolete        PSTK *fsa2=(PSTK*)((I)stack+((2*sizeof(PSTK))>>((pt0ecam>>PMASKSAVEX)&1)));  // pointer to stack slot that was executed   1 2 2 (2 2)
-// obsolete        freep=fsa2->a; freepc=__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED);
        PSTK *fsa2=&stack[2+((pt0ecam&((I)1<<PMASKSAVEX))?-1:0)];   // point to verb slot  1 2 2
        freep=fsa2[0].a;  // fetch pointer to verb
        if(unlikely(ISSTKREFRESHRQD(freep))){
@@ -867,46 +852,21 @@ RECURSIVERESULTSCHECK
        // We schedule the loads according to the measured frequencies indicated, which come from the test suite (not including gtdot*.ijs) measured 20241224 on Alder Lake (Skylake compilation)
        // The rule is: loads that contribute to mispredictable test A should be scheduled before the LAST likely-mispredicted branch leading to A.
        // Those loads will settle during misprediction, reducing the time through A (including its misprediction, if it mispredicts)
-// obsolete        // We use atomic loads to inhibit the compiler from reordering them
-// obsolete        freea=__atomic_load_n((A*)((I)tpopw&-SZI),__ATOMIC_RELAXED);  // load *tpopw before pipeline break if the next test mispredicts.  In case it comes from arg2, round to stay in block
-// obsolete        freep=(A)QCWORD(tpopw); freep=ISSTKNAMED(tpopw)?freep:(A)jt;  // scaf can use tpopw&-SZI  also reuse freepc in lower part
-// obsolete        I freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); I freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
-// obsolete          // we are investing another cycle to get an early start on the values needed to free an owed block.  This free will usually result in an RFO cycle, which cannot start until the branch is retired
-// obsolete        if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else {INCRSTAT(wfafa/*.98*/) faifowed(freep,freepc,freept,tpopw);}}
        if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.7*/) if(unlikely((A)QCWORD(tpopw)==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else if(withprob(ISSTKFAOWED(tpopw),0.2)){INCRSTAT(wfafa/*.08*/) faowed((A)QCWORD(tpopw),AC((A)QCWORD(tpopw)),AT((A)QCWORD(tpopw)));}}
                 // if the input is the result, keep the flags from the input, which are set to indicate required frees.  The presence of one of these will suppress matching a also
        else{ /*0.3*/  // tpopw points to the tpop stack, not the argument
         freea=*tpopw;   // get the tstack pointer, which points back to the arg if it has not been zapped
-// obsolete         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
-// obsolete          // we start these loads here because the next branch will often mispredict, allowing them to finish.  If we move them earlier we have more work to do with qualifying freea
         if(likely(freea!=0)){INCRSTAT(wpop/*.99*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
-// obsolete           I c=(UI)freeac>>(freea==y);  // get inplaceability; set off if the arg is the result
          I zapok=(AC(freea)&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); zapok=freea==y?0:zapok; // (not return value) and abandoned.  Sparse blocks are never abandoned
          if(zapok<0){INCRSTAT(wpopfa/*0.45*/) *tpopw=0; fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopw before subroutine
          }else{INCRSTAT(wpopnull/*0.55*/)}
-// obsolete          }else{INCRSTAT(wpopnull/*0.55*/) }
         }else{INCRSTAT(wnull/*.01*/)}
        }
        // repeat for a if any
-// obsolete        freea=__atomic_load_n((A*)((I)tpopa&-SZI),__ATOMIC_RELAXED);
-// obsolete        freep=(A)QCWORD(tpopa); freep=ISSTKNAMED(tpopa)?freep:(A)jt;
-// obsolete        freepc=__atomic_load_n(&AC(freep),__ATOMIC_RELAXED); freept=__atomic_load_n(&AT(freep),__ATOMIC_RELAXED);
-// obsolete        if(ISSTKNAMED(tpopa)){INCRSTAT(afaowed/*.36*/) if(unlikely(freep==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else{INCRSTAT(afafa/*.98*/) faifowed(freep,freepc,freept,tpopa);}}
        if(ISSTKNAMED(tpopa)){INCRSTAT(afaowed/*.8*/) if(unlikely((A)QCWORD(tpopa)==y)){INCRSTAT(afainh/*.02*/) y=(A)tpopa;}else if(withprob(ISSTKFAOWED(tpopa),0.2)){INCRSTAT(wfafa/*.98*/) faowed((A)QCWORD(tpopa),AC((A)QCWORD(tpopa)),AT((A)QCWORD(tpopa)));}}
        else{ /*.2*/
-// obsolete         A freeav=freea=*(A*)((I)tpopa&-SZI); freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
-// obsolete         A freeav=freea; freeav=freeav?freeav:(A)jt;  // make freea valid for reading from
-// obsolete         I freeac=__atomic_load_n(&AC(freeav),__ATOMIC_RELAXED); I freeat=__atomic_load_n(&AT(freeav),__ATOMIC_RELAXED); I freeaflag=__atomic_load_n(&AFLAG(freeav),__ATOMIC_RELAXED);
-// obsolete         if(unlikely(freea!=0)){INCRSTAT(apop/*.20*/)  // if freea==arg2 this will never load a value requiring action
-// obsolete          I c=(UI)freeac>>(freea==y);
-// obsolete          if((c&(-(freeat&DIRECT)|SGNIF(freeaflag,AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.30 local, 0.06 global*/)  // abandoned, not return value, not same as freea, dyad.  Safe to check AC even if freed as freea
-// obsolete           *tpopa=0; if(freeaflag&RECURSIBLE)INCRSTAT(apoprecur); fanapop(freea,freeaflag);
-// obsolete          }else{INCRSTAT(apopnull/*0.70 local, 0.15 global*/)}
-// obsolete         }else{INCRSTAT(anull/*.25*/)}
         freea=*tpopa;   // get the tstack pointer, which points back to the arg if it has not been zapped
         if(likely(freea!=0)){INCRSTAT(apop/*.95*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
-// obsolete          if(((I)((UI)AC(freea)>>(freea==y))&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX)))<0){INCRSTAT(apopfa/*0.4*/)   // (not return value) and abandoned.  Sparse blocks are never abandoned
-// obsolete           *tpopa=0; if(AFLAG(freea)&RECURSIBLE)INCRSTAT(apoprecur/*.01*/); fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
          I zapok=(AC(freea)&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); zapok=freea==y?0:zapok; // (not return value) and abandoned.  Sparse blocks are never abandoned
          if(zapok<0){INCRSTAT(apopfa/*0.4*/) *tpopa=0; fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopa before subroutine
          }else{INCRSTAT(apopnull/*0.6*/)}
@@ -917,7 +877,6 @@ RECURSIVERESULTSCHECK
        stack[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
        y=NEXTY;  // refetch next-word to save regs
        fsa2=stack-1; stack=(pt0ecam&(2<<PMASKSAVEX))?fsa2:stack;  // stack is now 1 1 2
-// obsolete        stack=fsa0; stack=(pt0ecam&(2<<PMASKSAVEX))?stack:fsa2;   // finish relocating stack   1 1 2 (1 2)
 
 
        // Most of the executed fragments are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
@@ -978,12 +937,6 @@ RECURSIVERESULTSCHECK
             // unlikely because modifiers apply usually to primitives
         if(arg2==0)break; arg1=arg2; arg2=arg3; arg3=0;
        };
-// obsolete        A freep=stack[1].a;
-// obsolete        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-// obsolete        freep=stack[pmask+1].a;
-// obsolete        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-// obsolete        freep=arg3;
-// obsolete        if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
 
        y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
@@ -1041,12 +994,6 @@ RECURSIVERESULTSCHECK
          if(arg2==0)break; arg1=arg2; arg2=arg3; arg3=0;
         };
 
-// obsolete         A freep=stack[1].a;
-// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-// obsolete         freep=stack[2].a;
-// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-// obsolete         freep=stack[3].a;
-// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
         stack[3].t = stack[1].t; stack[3].a = yy;  // take err tok from f; save result; no need to set parsertype, since it didn't change
         stack[2]=stack[0]; stack+=2;  // close up stack
        }else{
@@ -1067,12 +1014,6 @@ RECURSIVERESULTSCHECK
          if(ISSTKFAOWED(arg1)){if(unlikely(QCWORD(arg1)==yy))yy=arg1;else faowed(QCWORD(arg1),__atomic_load_n(&AC(QCWORD(arg1)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(arg1)),__ATOMIC_RELAXED));}
          if(arg2==mark)break; arg1=arg2; arg2=arg3; arg3=mark;
         };
-// obsolete         A freep=stack[1].a;
-// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-// obsolete         freep=stack[2].a;
-// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
-// obsolete         freep=arg3;
-// obsolete         if(ISSTKFAOWED(freep)){freep=QCWORD(freep);if(unlikely(freep==yy))yy=SETSTKFAOWED(yy);else faowed(freep,__atomic_load_n(&AC(QCWORD(freep)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(freep)),__ATOMIC_RELAXED));}
         y=NEXTY;  // refetch next-word to save regs
         PTFROMTYPE(stack[trident].pt,AT(QCWORD(yy))) stack[trident].t = stack[trident-1].t; stack[trident].a = yy;  // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
         stack[trident-1]=stack[0]; stack+=trident-1;  // close up stack
@@ -1170,8 +1111,7 @@ failparse:
       if(likely(svt&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
        if(unlikely(yflags&QCNAMEABANDON))goto abandname;  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  Since rare (especially for a single word!), do so by re-looking up the name
        y=sv; // we will use the value we read
- // obsolete      }else{if(LOCALRA)raposlocal(sv,y); y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  We must ra the value as if it came from syrd.  Flags in sv=s->val=0 to ensure flags=0 in return value
-      }else{y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  Flags in sv=s->val=0 to prevent fa() and ensure flags=0 in return value
+       }else{y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  Flags in sv=s->val=0 to prevent fa() and ensure flags=0 in return value
       goto gotlocalval;   // y has the unprotected value read.  We can use that.
      }
     }
@@ -1185,13 +1125,10 @@ abandname:;
      // The name was found, not in a static local table.  sv has QCFAOWED semantics
      if(likely((I)sv&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
       if(unlikely(yflags&QCNAMEABANDON)){
-// obsolete #if !LOCALRA
        // If the value is local, we must ra it because undco() expects it (questionable)
        if(unlikely(!ISRAREQD(sv)))rapos(QCWORD(sv),sv);  // ra() the new value first
-// obsolete #endif
        sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  returned sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // undco will set FAOWED if it didn't fa() the value; transfer that to sv
-// obsolete       }else{y=QCWORD(sv); if(!LOCALRA)sv=(A)ISGLOBAL(sv);}  // not name_:, just use the value.  sv=non0 if it needs free
       }else{y=QCWORD(sv); sv=(A)ISFAOWED(sv);}  // not name_:, just use the value.  sv=non0 if it needs free
      }else{y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd if global, so clear sv to indicate no further fa
     }else{
@@ -1205,8 +1142,6 @@ abandname:;
     // If sv!=0, we found the value and ra()d it.  Match the ra with a tpush so that the value stays protected during further execution
     if(likely(sv!=0)){if(likely(y!=0)){tpush(y);}else fa(sv);}  // undo the ra() in syrd.  In case someone else deletes the value, protect it on the tpop stack till it can be displayed
    }  // any single-word sentence from enqueue must be a name or a CAVN
-// obsolete else if(unlikely(!(AT(y)&CAVN))){jsignal(EVSYNTAX); y=0;}  // not a name - might be something like =. - if not CAVN, error
-// obsolete if(likely(y!=0))
   }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse.  This result must not be passed into a sentence
 gotlocalval:;  // local fetches can skip the tpush.  Value in y
   R y;  // indicate not a final assignment - and may be 0

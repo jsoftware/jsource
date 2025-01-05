@@ -215,7 +215,6 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
   LX *hv=LXAV0(JT(jt,stloc))+SYMHASH(hsh,AN(JT(jt,stloc))-SYMLINFOSIZE);  // get hashchain base in stloc
   LX tx=SYMNEXT(*hv); if(tx!=0)NOUNROLL while(SYMNEXT(sympv[tx].next)!=0)tx=SYMNEXT(sympv[tx].next);  // tx->last in chain, or 0 if chain empty
   v=symnew(hv,tx); v->name=x; v->fval=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; put locale pointer into fval; ZAP to match store of value
-// obsolete   LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
   ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
   AR(g)=ARNAMED;   // set rank to indicate named locale
   LXAV0(g)[SYMLEXECCT]=((k+1)<<EXECCTPERMX)+EXECCTNOTDELD;  // mark permanent unless k is _1
@@ -230,7 +229,6 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0);   // put the locale into the numbered list; exit if error (with lock removed); zap g
   I nmlen=sprintf(NAV(x)->s,FMTI,n); AN(x)=nmlen; NAV(x)->m=nmlen;  // install true locale number and length of name
   LOCNUMW(g)=(A)n; // save locale# in SYMLINFO
-// obsolete   LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'.  Must be after installnl
   LOCPATH(g)=JT(jt,zpath);  // zpath is permanent, no ras needed  Must be after installnl
   WRITEUNLOCK(JT(jt,stlock))
   LOCNAME(g)=x;  // set name pointer in SYMLINFO
@@ -301,7 +299,6 @@ F1(jtlocsizes){I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 // jtprobe, with readlock taken on stlock
-// obsolete static A jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock) A z=jtprobe(jtinplace,u,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}
 static A jtprobestlock(J jt, C *u,UI4 h){F1PREFIP; READLOCK(JT(jt,stloc)->lock) A z=probex((I)jtinplace&255,u,SYMORIGIN,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}
 
 // find the symbol table for locale with name u which has length n and hash/number bucketx
@@ -535,7 +532,6 @@ static F2(jtloccre){A g,y,z=0;C*s;I n,p;A v;
  SYMRESERVE(2)  // make sure we have symbols to insert, for the locale itself
  A op=0;  // old path, if there is one
  WRITELOCK(JT(jt,locdellock)) WRITELOCK(JT(jt,stloc)->lock)  // take a write lock until we have installed the new locale if any.  No errors!  We need both locks, in this order (delete calls symfree, which takes locks in this order)
-// obsolete  if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){
  if(v=probex(n,s,SYMORIGIN,nmhash(n,s),JT(jt,stloc))){
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale block, since it may be out there in paths
   g=v;
@@ -631,7 +627,6 @@ static F1(jtlocmaplocked){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 F1(jtlocmap){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
 // recalculate Bloom filter in table w
-// obsolete SYMWALK(jtaccumbloom,B,B01,0,0,(LOCBLOOM(w)|=BLOOMMASK(NAV(d->name)->hash))&&0,;)
 SYMWALK(jtaccumbloom,B,B01,0,0,BLOOMSET(BLOOMBASE(w),i)&&0,;)  // i is chain#.  For each defined symbol, set the bit
 
 // 18!:_5 return bloom filter, as character string
@@ -646,7 +641,6 @@ F1(jtresetbloom){A g;
  ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
  RZ(g=locale(0,w));   // point to locale, if no error
  ASSERT(AR(g)&ARNAMED,EVDOMAIN)  // locale must be named
-// obsolete  I oldbloom=LOCBLOOM(g); LOCBLOOM(g)=0;  // get old value of Bloom filter, init new
  A oldbloom=str(BLOOMLEN(g),BLOOMBASE(g)); BLOOMCLEAR(g);
  jtaccumbloom(jt,0,g);  // roll up all Bloom filters
  RETF(oldbloom);  // return old Bloom (character string)
@@ -725,7 +719,6 @@ B jtlocdestroy(J jt,A g){
  while(*path)--path; fa(UNvoidAV1(path))   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  BLOOMCLEAR(g);  // clear Bloom filter
-// obsolete  LOCBLOOM(g)=0;
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
  // The current implied locale can be deleted only after it leaves execution, i. e. after it returns to immex in all threads where it is current.

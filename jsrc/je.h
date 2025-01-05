@@ -856,7 +856,6 @@ extern B        jtpreparse(J,A,A*,A*);
 extern B        jtprimitive(J,A);
 extern A        probe(I,C*,L *,UI8);
 extern B       jtprobedel(J,C*,UI4,A);
-// obsolete extern L*       jtprobeis(J, A, A);
 extern L*       jtprobeisres(J, A, A);
 extern L*       jtprobeislocal(J,A,A);
 extern A      jtprobequiet(J, A);

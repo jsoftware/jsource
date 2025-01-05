@@ -195,7 +195,6 @@ struct AD {
  union {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) in syncos, a credential to allow pthread calls
         // (3) for SYMB tables for explicit definitions (i. e. local SYMB tables), the address of the calling symbol table;
-// obsolete for other SYMB tables, a Bloom filter of the hashes assigned in the locale (using the low bits of the hash)
         // (4) for the block holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
         // (5) in the return from wordil, holds the number of words if any final NB. is discarded; (6) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (7) in the self block for y L: n and u S: n, the address of the fs block for u; (8) in the call to jtisf (multiple assignment), holds the
@@ -658,7 +657,6 @@ struct AD {
 #define ACSETPERM(x)    {AC(x)=ACPERMANENT+100000; __atomic_fetch_or(&AFLAG(x),(AT(x)&RECURSIBLE),__ATOMIC_ACQ_REL);}  // Make a block permanent from now on.  In case other threads have committed to changing the usecount, make it permanent with a margin of safety
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // s is an expression that is neg if it's OK to inplace
-// obsolete #define ASGNINPLACENEG(s,w)  ((s)&(AC(w)|SGNIF(jt->zombieval==w,0)))   // neg if OK to inplace ordinary operation, either because the block is inplaceable or because it's an assignment to zombie
 #if SY_64
 // Note: the following will fail if bit 63 of address may differ between jt->zombieval and w.  That will not be in my lifetime.  When it happens, perhaps clang will have fixed the version above not to create a branch
 #define ASGNINPLACENEG(s,w)  ((s)&(AC(w)|(((I)jt->zombieval^(I)w)-1)))   // neg if OK to inplace ordinary operation, either because the block is inplaceable or because it's an assignment to zombie
@@ -897,11 +895,6 @@ typedef DST* DC;
 #define VALTYPENAMELESS ((SYMBX-LASTNOUNX)+1) // 6 set in nameless non-locative ACV, to suppress reference creation.
 #define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse.  Has bit 0 set, as befits a noun
 #define NAMELESSQCTOTYPEDQC(q) q=(A)(((I)q&~0xf)+ATYPETOVALTYPEACV(AT(QCWORD(q))));  // q is name of NAMELESS QC; result has QC type for AT(q) with unchanged semantics
-// obsolete // scaf remove the following
-// obsolete #define QCGLOBALX 5
-// obsolete #define QCGLOBAL ((I)1<<QCGLOBALX)  // set if the name was found in a global table
-// obsolete #define ISGLOBAL(w) ((I)w&QCGLOBAL)  // true if global, if w has QCGLOBAL semantics
-// obsolete #define CLRGLOBAL(w) (A)((I)(w)&~QCGLOBAL)
 // In the LSBs returned by syrd1() bit 4 has QCNAMEDLOC semantics (bit 5 is garbage):
 #define QCNAMEDLOCX 4  // set if the value was found in a named locale, clear if numbered
 #define QCNAMEDLOC ((I)1<<QCNAMEDLOCX)  // set if the value was found in a named locale, clear if numbered
@@ -954,7 +947,6 @@ typedef struct {
  LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT.  Not used in LINFO
  S sn;  // script index the name was defined in.  Not used for LINFO
  C flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
-// obsolete  C valtype;  // if a value is set, this holds the QCxxx type for the word  0 if no value.  QCSYMVAL semantics
 } L;  // name must come first because of the way we use validitymask[11]
 
 // FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table, AM() points to the calling local symbol table.
@@ -982,8 +974,6 @@ typedef struct {
 #define LOCNUM(g) (I)LOCNUMW(g)
 #define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted.  The path runs from LOCPATH backwards
                         // to end with the ending 0 at AAV1()[0]
-// obsolete #define LOCBLOOM(x) AM(x)
-// obsolete #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter.  MUST be done under lock
 
 
 // Macros to incr/decr execct of a locale
@@ -1374,7 +1364,6 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 #define MEMSET00LEN (4*SZI)  // length of MEMSET00
 #define MEMSETFF ((C*)(validitymask+8))  // 2 words of FF, for memset (only 2 in 32-bit systems)
 #define MEMSETFFLEN (2*SZI)  // length of MEMSETFF
-// obsolete #define MEMSETFF ((C*)(iotavec-IOTAVECBEGIN+0xff))  // 1 byte of 0xff, for memset
 #define MEMSET01 ((C*)(iotavec-IOTAVECBEGIN+1))  // 1 byte of 0x01, for memset
 
 

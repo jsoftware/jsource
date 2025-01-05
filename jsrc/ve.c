@@ -421,8 +421,7 @@ primop256CE(tymesEE,0,E,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d 
 APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif
 
-#if 0  // obsolete  this template used to debug primop256CE
-#define fz 0
+#if 0  #define fz 0
 #define CET E
 #define cepref __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff}); NAN0; 
 #define ceprefL PREFNULL  // replaced in main line
@@ -535,8 +534,7 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */
 }
 #endif
 
-#if 0 // obsolete This template used to debug APFX
- I divEE(I n,I m,E* RESTRICTI x,E* RESTRICTI y,E* RESTRICTI z,J jt){E u;E v;
+#if 0  I divEE(I n,I m,E* RESTRICTI x,E* RESTRICTI y,E* RESTRICTI z,J jt){E u;E v;
   NAN0;
   // this supports only scalar op scalar
   u = *x; v=*y;

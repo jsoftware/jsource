@@ -345,8 +345,7 @@ void jtforeigninit(J jt){UI i;
  MN(128,8) XPRIM(VERB, jtqhash12,    jtqhash12,    VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE,RMAX,RMAX,RMAX);  
  MN(128,10) XPRIM(VERB, jtludecomp,  jtludecomp,   VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(18,6)  XPRIM(VERB, jtresetbloom, 0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
-#if 0  // obsolete but not dead
- MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
+#if 0   MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
 #endif
 
  MN(0,-1) XPRIM(VERB, jtskipinscript,     0,       VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
@@ -381,9 +380,7 @@ void jtforeigninit(J jt){UI i;
 // called at initialization after memory reset, to assign cocurrent_z_ and coclass_z_.  The 18!:4 block is at the end of foreignA and is a read-only value
 I jtforeignassigninit(J jt){A nm;L *e;
  RZ(nm=nfs(12,"cocurrent_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;
-// obsolete  WRITEUNLOCK((*JT(jt,zpath))->lock)  // probe takes a lock
  RZ(nm=nfs(10,"coclass_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],0); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;
-// obsolete  WRITEUNLOCK((*JT(jt,zpath))->lock)
  R 1;
 }
 

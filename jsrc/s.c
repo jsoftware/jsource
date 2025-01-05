@@ -327,8 +327,7 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
 // result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
 // if not found, one is created.  Caller must ensure that a symbol is reserved
 // Takes a write lock on g and returns holding that lock
-static L* jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;  // scaf
-// obsolete reversion INLINE
+static INLINE L* jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;  // scaf
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
  LX *hv=LXAV0(g)+SYMHASH(hsh,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
  WRITELOCK(g->lock);  // write-lock the table before we access it.  Could read-lock until we know we have to modify chains
@@ -343,10 +342,10 @@ static L* jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;  //
   }
  }
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
-// obsolete reversion  if(unlikely(1)){  // this is VERY rare: symbols are allocated only once per name, ever.  
+ if(unlikely(1)){  // this is VERY rare: symbols are allocated only once per name, ever.  
   v=symnew(hv,tx|SYMNONPERM);   // symbol is non-PERMANENT and known to be available
   raname(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
-// obsolete reversion  }
+ }
  R v;
 }    /* probe for assignment */
 
@@ -379,11 +378,11 @@ L *jtprobeislocal(J jt,A a,A lsym){NM*u;I bx;L *sympv=SYMORIGIN;
     tx = lx; lx = l->next;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx.  Make it non-PERMANENT
-// obsolete reversion   if(unlikely(1)){  // this is VERY rare: symbols are allocated only once per name, or 0 if they are preallocated
+   if(unlikely(1)){  // this is VERY rare: symbols are allocated only once per name, or 0 if they are preallocated
     SYMRESERVE(1) l=symnew(&LXAV0(lsym)[b],tx|SYMNONPERM); 
     raname(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
     AR(lsym)|=ARNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
-// obsolete reversion    }
+   }
    R l;
   } else {L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place

@@ -644,12 +644,6 @@ rdglob: ;  // here when we tried the buckets and failed
         }
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.  But if the value IS a reference, use the value if possible to avoid the extra lookup
         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
-#if 0  //   obsolete  if it's to be done, it should be in unquote
-        if(unlikely(FAV(QCWORD(y))->valencefns[0]==jtunquote && !(NAV(origname)->flag&(NMLOC|NMILOC|NMIMPLOC)))){  // reference is as reference does
-         // the value is a non-locative reference to another reference.  It is safe to skip over it.  Leave y holding the value
-         y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
-        }else{y=namerefacv(origname,y);}   // Replace other acv with reference, and fa() looked-up y value if global.  y starts with QCGLOBAL semantics, returns with QCFAOWED
-#endif
         y=namerefacv(origname,y);   // Replace acv with reference, and fa() looked-up y value if global.  y starts with QCFAOWED semantics, returns with QCFAOWED
         FPSZ(y)
        }

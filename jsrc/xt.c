@@ -248,8 +248,7 @@ DF2(jttsit2){A z;D t;I n;I stackallo=0,i;
  I wn=AN(w); A *wv=AAV(w);  // get #words in sentence after pppp, and their address
  // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name;
  // to whatever is in the current local symbol table, or -1 if there is none
-// DO(wn,   scaf
-for(i=0;i<wn;++i){
+ for(i=0;i<wn;++i){
   if(QCPTYPE(wv[i])==QCNAMEASSIGNED || (QCTYPE(wv[i])&QCISLKPNAME)) { //  if a name, either assigned or used
    if((NAV(QCWORD(wv[i]))->flag&NMLOC+NMILOC+NMIMPLOC)==0){  // if locative, leave bucket info empty
     if(!EXPLICITRUNNING){NAV(QCWORD(wv[i]))->bucket=-1;  // run from keyboard, use -1 for bucket to suppress check for local sym
@@ -278,7 +277,6 @@ foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNE
     }
    }
   }
-//  )
  }
  STACKCHKOFL  // in case the sentence calls 6!:2 again, break the loop
  if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop!=0)){  // We don't need a new stack frame if there is one already and debug is off

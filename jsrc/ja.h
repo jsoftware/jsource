@@ -362,8 +362,7 @@
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
 #define falikely(x) fa(x)  // when the block will usually be deleted  (not used yet)
-#define fatype(x,tt) fa(x) // scaf
-//obsolete {if(likely(AC(x)<=ACUC1)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(AC(x)))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // when type is known (i. e. NAME)
+#define fatype(x,tt) {if((x)==0)SEGFAULT; if(likely(AC(x)<=ACUC1)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(AC(x)))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // scaf when type is known (i. e. NAME)
 #define fanamedacv(x) {I Zc=AC(x); if(likely(!ACISPERM(Zc)))if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,AT(x));} // block is known to be ACV, recursive, AC>0, and almost always AC>1
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x),;)

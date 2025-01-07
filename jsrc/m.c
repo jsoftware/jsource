@@ -682,7 +682,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     k=SYMNEXT(k);
     ++nfreed;  // k is a valid free; count it
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
-    fatype(jtsympv[k].name,NAME);jtsympv[k].name=0;  // always release name
+    if(jtsympv[k].name!=0)fatype(jtsympv[k].name,NAME);jtsympv[k].name=0;  // always release name
     SYMVALFA(jtsympv[k]);    // free value
     jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;  // clear symbol fields for next time (that's Roger's way)
     lastk=k;  // remember end-of-chain

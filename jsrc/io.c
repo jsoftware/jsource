@@ -498,7 +498,7 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
  if(unlikely(JT(jt,dbuser)&TRACEDBSUSCLEAR)){  // if user executed dbr...
   if(jm->pmttop&&jm->sitop&&jm->sitop->dctype==DCCALL&&jm->sitop->dcpflags==1){   // if there is a pm debug session going, and top-of-stack is from pm, end the session
    // go through the stack, which must all have come from post-mortem.  Free the symbols and the block itself (to match the ra when we moved the pm stack to the debug stack)
-   {JJ jt=jm; DC s=jm->sitop; while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} fa(s->dcf);} s=s->dclnk;} jm->sitop=0;}
+   {JJ jt=jm; DC s=jm->sitop; while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} if(s->dcf!=0)fa(s->dcf);} s=s->dclnk;} jm->sitop=0;}
    old=jm->pmttop; jm->pmttop=0;  // back up the tpop pointer to the pm error and remove request for it
   }
  }

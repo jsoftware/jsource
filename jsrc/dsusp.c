@@ -426,7 +426,7 @@ F1(jtdbtraps){
  RZ(w=vs(w));
  if(AN(w)){RZ(ras(w));}else w=0;  // protect w if it is nonempty; if empty, convert to null
  WRITELOCK(JT(jt,dblock)) A trap=JT(jt,dbtrap); JT(jt,dbtrap)=w; WRITEUNLOCK(JT(jt,dblock))  // swap addresses under lock
- fa(trap);  // undo the ra() done when value was stored - null is ok
+ if(trap!=0)fa(trap);  // undo the ra() done when previous value was stored
  R mtm;
 }
 

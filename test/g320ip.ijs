@@ -603,7 +603,7 @@ f =: 3 : 0
 9!:53 (1)
 a =: 10000#'c'
 for. i. 4 do. 0 end.  NB. ensure tpop
-assert. IGNOREIFFVI 3000 > err =: 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
 a =: 10000#'c'
 for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 > 7!:2 'a =: a ]@, ''b'''

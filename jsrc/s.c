@@ -52,7 +52,7 @@ A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
  mvc(SZI*(xn-yn),v+yn,MEMSET00LEN,MEMSET00);               /* 0 unused area for safety  kludge  */
  // dice the added area into symbols, chain them together, add to free chain
  u=n+(L*)v; j=1+n;    // u->start of new area  j=sym# of (1st new sym+1), will always chain each symbol to the next
-DQ(m-n-1, u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0
+ DQ(m-n-1, u++->next=(LX)(j++););    // for each new symbol except the last, install chain.  Leave last chain 0
  if(SYMORIGIN!=0){u->next=SYMGLOBALROOT; fa(y);}   // if there is an old chain, transfer it to the end of the new chain, then free the old area
  ACINITZAP(x); SYMORIGIN=LAV0(x);           // preserve new array and switch to it
  SYMGLOBALROOT=(LX)n;  // start the new free chain with the first added ele
@@ -169,7 +169,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     NOUNROLL do{
      k=SYMNEXT(k);  // remove address flagging
      I nextk=jtsympv[k].next;  // unroll loop once
-     fa(jtsympv[k].name);fa(QCWORD(jtsympv[k].fval));jtsympv[k].name=0;jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     if(jtsympv[k].name!=0)fa(jtsympv[k].name);if(jtsympv[k].fval!=0)fa(QCWORD(jtsympv[k].fval));jtsympv[k].name=0;jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      lastk=k;  // remember index of last block
      ++nfreed;  // ince count of block in chain-to-free
      k=nextk;
@@ -252,7 +252,7 @@ B jtprobedel(J jt,C*string,UI4 hash,A g){B ret;
       ret=sym->fval==0?0:~(I)sym->fval&QCNOUN;  // return value: value was defined & not a noun
       SYMVALFA(*sym); sym->fval=0;  // decr usecount in value; remove value from symbol
       if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
-       *asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
+       *asymx=sym->next; if(sym->name!=0)fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
        jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains
       }  // add to symbol free list
       break;  // name match - return
@@ -327,7 +327,7 @@ A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
 // result is L* symbol-table entry to use; cannot fail, because symbol has been reserved
 // if not found, one is created.  Caller must ensure that a symbol is reserved
 // Takes a write lock on g and returns holding that lock
-static INLINE L* jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;  // scaf
+static INLINE L* jtprobeis(J jt,A a,A g){C*s;LX tx;I m;L*v;NM*u;L *sympv=SYMORIGIN;
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash;  // m=length of name  s->name  hsh=hash of name
  LX *hv=LXAV0(g)+SYMHASH(hsh,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
  WRITELOCK(g->lock);  // write-lock the table before we access it.  Could read-lock until we know we have to modify chains
@@ -418,7 +418,7 @@ A jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;
  // in this table will hit an empty chain.  This is our Bloom filter.  We check that, and if the chain is empty, we call it a miss without locking the table.
  // That's OK, because this call could have come a few nanoseconds later
  NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE);   // hashchain number, for fetching the Bloom filter and starting the chain search
-                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table...
+                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table (there's a chain for it)...
                          READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
                          A res=(probe)((I)jtinplace&255,string,sympv,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]);  // look up symbol.  We must fetch the chain root in case it was deleted
                          if(res){  // if symbol found...

@@ -120,7 +120,7 @@ F1(jtieps){
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  RZ(ras(w));
  WRITELOCK(JT(jt,felock)) A iep=JT(jt,iep); JT(jt,iep)=w; WRITEUNLOCK(JT(jt,felock))  // swap addresses under lock
- fa(iep);  // undo the ra() done when value was stored - null ok
+ if(iep!=0)fa(iep);  // undo the ra() done when the previous value was stored
  R mtm;
 }
 

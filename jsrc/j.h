@@ -1524,7 +1524,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // true if a has recursive usecount
 #define UCISRECUR(a)    (AFLAG(a)&RECURSIBLE)
 // Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
-// This also guarantees that z has recursive usecount whenever x does, and that z is realized
+// This also guarantees that z has recursive usecount whenever x does, and that z is realized.  xv must be a valid final value, i. e. no 0s in INDIRECT types
 #define INSTALLBOX(x,xv,k,z) rifv(z); if(likely((UCISRECUR(x))!=0)){A zzZ=xv[k]; ra(z); fa(zzZ);} xv[k]=z  // we could be reinstalling the same value, so must ra before fa
 #define INSTALLBOXNF(x,xv,k,z) rifv(z); if(likely((UCISRECUR(x))!=0)){ra(z);} xv[k]=z   // Don't do the free - if we are installing into known 0 or known nonrecursive
 #define INSTALLBOXNVRECUR(xv,k,z) {I zzK=(k); A zzZ=(xv)[zzK]; (xv)[zzK]=(z); ra(z); fa(zzZ);}  // z is known non-virtual.  Don't test - we know we are installing into a recursive block

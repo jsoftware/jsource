@@ -499,7 +499,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // we must also fa the backer.  This is different from the case of virtual args to explicit defns: there we know that the virtual arg is on the stack in the caller,
    // and will be freed from the stack, and thus that there is no chance that a virtual will be freed.  Here the caller has continued, and there may be nothing but this
    // virtual to hold the backer.  So, unlike in all other fa()s, we fa the backer if the virtual is freed.
-   faafterrav(arg1); faafterrav(arg2); if(arg3)fa(arg3);  // unprotect args only after result has been safely installed
+   faafterrav(arg1); faafterrav(arg2); if(arg3!=0)fa(arg3);  // unprotect args only after result has been safely installed
    jtrepatsend(jt); // send our freed blocks back to where they were allocated.  That will include the args just freed
    __atomic_store_n(&JTFORTHREAD(jt,initthread)->uflags.sprepatneeded,1,__ATOMIC_RELEASE);  // signal the originator to repat the freed blocks.  We force this now in case some were virtual and have large backers.  The repat may be delayed a while.
    jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)

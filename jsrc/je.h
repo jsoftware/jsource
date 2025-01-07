@@ -681,6 +681,7 @@ extern void     jtcopyTT(J, void *, void *, I, I,I);
 #endif
 extern A        cw57rep(J,A);
 extern I        infererrtok(J);
+extern I        johnson(I);
 extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);
 extern B        jtadd2(J,F,F,C*);

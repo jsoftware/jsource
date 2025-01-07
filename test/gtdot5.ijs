@@ -41,7 +41,7 @@ EMPTY
 
 t1=: 3 : 0
 ALL=: 0$0
-pyx=. (p1 t.'')"0  i. 300
+pyx=. (p1 t.'')"0  i. 100
 1:&>pyx
 echo #~.ALL
 echo #/.~ ALL
@@ -50,7 +50,7 @@ EMPTY
 
 t2=: 3 : 0
 ALL=: 0 0$0
-pyx=. (p2 t.'')"0  i. 300
+pyx=. (p2 t.'')"0  i. 100
 1:&>pyx
 echo #~.ALL
 echo #/.~ ALL
@@ -74,13 +74,13 @@ end.
 )
 
 t3=: 3 : 0
-pyx=. (p3 t.'')"0  i. 300
+pyx=. (p3 t.'')"0  i. 100
 echo ;pyx
 EMPTY
 )
 
 t4=: 3 : 0
-pyx=. (p4 t.'')"0  i. 300
+pyx=. (p4 t.'')"0  i. 100
 echo ;pyx
 EMPTY
 )

@@ -65,7 +65,7 @@
 // popstmt is used to call tpop if the tpop stack is not empty; asgstmt is issued after the parse, where a variable can be invalidated to prevent it from being saved over calls
 // we call only when the stack has values on it.  We do our best during assignment to retrace the stack rather than zap it. If the stack has any values, we must call to make
 // sure that all assignments-in-place have had the usercount fully restored
-#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); if((UI)jt->tnextpushp!=(UI)old){popstmt} S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
+#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); popstmt S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
  SETTRACK \
  if(likely(!(attnval+(NPGpysfmtdl&128+16))))z=parsea(queue,m); \
  else {if(jt->sitop&&jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL)jt->sitop->dclnk->dcix=~ic; z=parsex(queue,m,CWSOURCE(cwsent,CNSTOREDCW,ic),(NPGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))NPGpysfmtdl&=~2;} \
@@ -125,7 +125,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // an incumbent value, we remove it.  We also zap the value we install, just as in any normal assignment
   L *asym=&SYMORIGIN[cv->indexsym];   // pointer symbol-table entry, index then item
   ASSERT(!(asym->flag&LREADONLY),EVRO)  // it had better not be readonly now
-  fa(QCWORD(asym->fval));  // if there is an incumbent value, discard it
+  if(unlikely(QCWORD(asym->fval)!=0))fa(QCWORD(asym->fval));  // if there is an incumbent value, discard it
   A xx; GAT0(xx,INT,1,0); IAV0(xx)[0]=-1; AFLAGINIT(xx,AFRO) // -1 is the iteration number if there are no iterations; mark value RO to prevent xxx_index =: xxx_index + 1 from changing inplace
   ACINITUNPUSH(xx); asym->fval=SETNAMED(MAKEFVAL(xx,ATYPETOVALTYPE(INT))); // raise usecount, as local name; install as value of xyz_index
   rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.  note we can free from a boxed array now
@@ -138,7 +138,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // We store the block in 2 places: cv and symp.val.  We ra() once for each place
   // If there is an incumbent value, discard it
   asym=&SYMORIGIN[cv->itemsym]; A val=QCWORD(asym->fval);  // stored reference address; incumbent value there
-  fa(val); asym->fval=0;    // free the incumbent if any, clear val in symbol in case of error
+  if(unlikely(val!=0))fa(val); asym->fval=0;    // free the incumbent if any, clear val in symbol in case of error
   // Calculate the item size and save it
   I isz; I r=AR(t)-((UI)AR(t)>0); PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
   // Allocate a virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
@@ -169,7 +169,7 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
    }
   }
  }
- fa(cv->t);  // decr the for/select value, protected at beginning.  NOP if it is 0
+ if(likely(cv->t!=0))fa(cv->t);  // decr the for/select value, protected at beginning.  NOP if it is 0
  cv=cv->bchn;  // go back to previous stack level
  R cv;
 }

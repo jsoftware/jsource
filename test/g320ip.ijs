@@ -602,9 +602,12 @@ IGNOREIFFVI 3000 < 7!:2 'a =: a ]@, ''b'''
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#'c'
-assert. IGNOREIFFVI 3000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
+for. i. 4 do. 0 end.  NB. ensure tpop
+assert. IGNOREIFFVI 3000 > err =: 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
 a =: 10000#'c'
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 > 7!:2 'a =: a ]@, ''b'''
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 < 7!:2 'a =: a unsafename@, ''b'''
 1
 )
@@ -625,9 +628,12 @@ IGNOREIFFVI 3000 < 7!:2 'a =: a ]@:, ''b'''
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#'c'
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
 a =: 10000#'c'
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 > 7!:2 'a =: a ]@:, ''b'''
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 < 7!:2 'a =: a unsafename@:, ''b'''
 1
 )
@@ -644,8 +650,10 @@ IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&([: >@{.@< 5 ,~ ]) a'  NB. realize any vir
 f =: 3 : 0
 9!:53 (1)
 a =: i. 1000
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&([: >@{.@< 5 ,~ ]) a'
 a =: i. 1000
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&([: >@{.@< 5 ,~ unsafename) a'
 1
 )
@@ -661,8 +669,10 @@ IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:([: >@{.@< 5 ,~ ]) a'
 f =: 3 : 0
 9!:53 (1)
 a =: i. 1000
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&:([: >@{.@< 5 ,~ ]) a'
 a =: i. 1000
+for. i. 4 do. 0 end.  NB. ensure tpop
 assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:([: >@{.@< 5 ,~ unsafename) a'
 1
 )

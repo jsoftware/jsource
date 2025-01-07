@@ -1060,7 +1060,7 @@ rejectfrag:;
    // by another thread while we are using the value.  The case is very rare but we test for it, so we have to make it work.
    // If final assignment was local this can't happen, and we do the fa
    jt->parserstackframe = oframe;  // pop the parser frame-stack before tpushna, which may fail
-   if(unlikely(ISSTKFAOWED(z))){if(pt0ecam&JTASGNWASLOCAL){faowed(QCWORD(z),AC(QCWORD(z)),AT(QCWORD(z)))} else tpushna(QCWORD(z));}  // if the result needs a free, do it, possibly deferred via tpush
+   if(unlikely(ISSTKFAOWED(z))){if(pt0ecam&JTASGNWASLOCAL){faowed(QCWORD(z),AC(QCWORD(z)),AT(QCWORD(z)))} else tpushna(QCWORD(z));}   // if the result needs a free, do it, possibly deferred via tpush
   }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
 failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.
                 // we set the error word# for the failing word and then resignal the error to get the spacing right and call eformat to annotate it

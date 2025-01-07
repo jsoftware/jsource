@@ -78,7 +78,7 @@ F1(jtdbstops){
  RZ(w=vs(w));
  if(AN(w)){RZ(ras(w));}else w=0;  // protect w if it is nonempty; if empty, convert to null
  WRITELOCK(JT(jt,dblock)) A stops=JT(jt,dbstops); JT(jt,dbstops)=w; WRITEUNLOCK(JT(jt,dblock))  // swap addresses under lock
- fa(stops);  // undo the ra() done when value was stored - null is ok
+ if(stops!=0)fa(stops);  // undo the ra() done when value was stored
  R mtm;
 }
 

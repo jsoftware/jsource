@@ -1024,12 +1024,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely((AT(res)&PYX)!=0)){if(unlikely((res=jtpyxval(jt,res))==0))err;} res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
      // since most uses of contents check the type first, it would be good to have the type loaded at any finish.  But the compiler doesn't do that.
 #define READLOCK(lock) {S prev; if(unlikely(((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))&(S)-WLOCKBIT)!=0))readlock(&lock,prev);}
+#define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // decrement the read bits
 #if WLOCKBIT==0x8000
 #define WRITELOCK(lock)  {S prev; if(unlikely((prev=__atomic_fetch_or(&lock,(S)WLOCKBIT,__ATOMIC_ACQ_REL))!=0))writelock(&lock,prev);}
 #else
 #define WRITELOCK(lock)  {S prev; if(unlikely((prev=__atomic_fetch_add(&lock,WLOCKBIT,__ATOMIC_ACQ_REL))!=0))writelock(&lock,prev);}
 #endif
-#define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // decrement the read bits
 #define WRITEUNLOCK(lock) __atomic_fetch_and(&lock,WLOCKBIT-1, __ATOMIC_ACQ_REL);  // clear all the write bits
 #else
 #define CCOMMON(x,pref,err) (x)

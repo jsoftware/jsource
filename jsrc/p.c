@@ -621,16 +621,14 @@ rdglob: ;  // here when we tried the buckets and failed
        if((pt0ecam&(NAMEBYVALUE>>(NAMEBYVALUEX-NAMEFLAGSX)))|((I)y&QCNOUN)){   // use value if noun or special name, or name_:
         if(unlikely((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX))))){  // is name_:?
          // if name_:, go delete the name, leaving the value to be deleted later.
-#if !LOCALRA
          // If the value is local, we must ra it and any other local pointers on the stack
          if(!ISFAOWED(y)&&!ACISPERM(AC(QCWORD(y)))&&!(AFLAG(QCWORD(y))&AFSENTENCEWORD)){  // if the name has been raised already, all stacked copies have been protected.  If PERMANENT or from the executing sentence, needs no protecting
           rapos(QCWORD(y),y);  // ra() the new value first so that all args to undco have been ra()d
           PSTK *sk;
-          // scan the stack to see if it is at large in the stack, setting FAOWED when it is.  We don't call protectlocals because we need to protect just the one value and speed might matter
+          // scan the stack to see if the new value is at large in the stack, setting FAOWED when it is.  We don't call protectlocals because we need to protect just the one value and speed might matter
           // the stacked value might have been an unflagged non-NAMED result, but after we ra() it we must call it STKNAMED because only STKNAMED values get fa()d when they leave execution
           for(sk=stack;sk!=stackend1;++sk){if(QCWORD(y)==QCWORD(sk->a) && !ISSTKFAOWED(sk->a)){rapos(QCWORD(y),y); sk->a=SETSTKNAMEDFAOWED(sk->a);}}  // if the value we want to use is stacked already, it must be marked non-abondoned
          }
-#endif
          FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)
         }else y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
@@ -760,7 +758,7 @@ endname: ;
          if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
           zval=QCWORD((SYMORIGIN+(I)s)->fval);  // get value of symbol in primary table.  There may be no value; that's OK
          }else{zval=QCWORD(jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms));}
-         targc=LOCALRA?ACUC2:ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d. which is OK
+         targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d. which is OK
         }else{zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue))); targc=ACUC2;}  // global assignment, get slot address.  Global names have been ra()d and have AC=2
         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and correct usecount: 1 if local, 2 if global since we have raised the count of this block already if it is named and to be operated on inplace; +1 if NJA to account for the mapping reference.

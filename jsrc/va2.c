@@ -1248,7 +1248,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 DF2(jtatomic2){A z;
  F2PREFIP;ARGCHK2(a,w);
  UI ar=AR(a), wr=AR(w); I at=AT(a), wt=AT(w); I af;
- if((ar+wr+((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))))==0){af=0; goto forcess;}  // if args are both atoms, verb rank is immaterial - run as singleton
+ if((ar+wr+((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))))==0){af=0; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
  RANK2T selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
@@ -1288,7 +1288,8 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
    selfranks=jtranks==R2MAX?selfranks:jtranks;
   }
   // self, awr, and selfranks are needed in the retry
- } 
+ }
+ // not singleton, or singleton needing retry
  
  ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
  NOUNROLL while(1){

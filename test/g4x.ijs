@@ -220,15 +220,18 @@ b =: 7!:0''
 1e6 1e6 -: (# a_:) , # a   NB. deleted, stack deferred
 b > 2e6+7!:0''
 'value error' -: ". etx 'a + 5'
+
 1 -: 3 : 0 ''
 a =. i. 1e6
 b =. 7!:0''
 assert. 1e6 -: # a_:
+for. i. 6 do. b end.
 assert. b > 2e6+7!:0''
 assert. 'value error' -: ". etx 'a + 5'
 a =. i. 1e6
 b =. 7!:0''
 assert. 1e6 -: ". '# a_:'  NB. not deleted inside ".
+for. i. 6 do. b end.
 assert. b < 1e6+7!:0''
 assert. 1e6 -: # a
 a =. i. 1e6
@@ -240,6 +243,7 @@ assert. 2e6 -: # a_: , a   NB. deleted, stack deferred
 a =. i. 1e6
 b =. 7!:0''
 assert. 1e6 1e6 -: (# a_:) , , # a   NB. deleted, stack deferred
+for. i. 6 do. b end.
 assert. b > 2e6+7!:0''
 assert. 'value error' -: ". etx 'a + 5'
 a =. 1

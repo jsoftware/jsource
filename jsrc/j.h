@@ -800,13 +800,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
-#define TPOPSLACK 1  // number of stacked blocks to allow before we tpop them (in jtxdefn) - 0 means tpop every time
+#define TPOPSLACKB 1  // number of stacked blocks to allow before we tpop them (in jtxdefn) - 0 means tpop every time - for B blocks
+#define TPOPSLACKT 2  // number of stacked blocks to allow before we tpop them (in jtxdefn) - 0 means tpop every time - for T blocks
 
 #define CWMAX 32766  // max # control words in an explicit defn.  Must fit in signed 15-bit value because we complement it in storage
 #define SWMAX 32767   // max # words in a sentence
 #define EXPWMAX 16777215  // max # words in an explicit defn
-
-#define LOCALRA 0  // ra() local names during lookup - must be set, but perhaps we can make it an option in explicit def
 
 // flags for jteformat
 #define EMSGE 0xff  // the error-code part

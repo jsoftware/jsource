@@ -759,8 +759,8 @@ struct AD {
 #define ARNAMED ((I)1<<ARNAMEDX)   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
 // bit 1 not used
 // the rest of the flags apply only to local symbol tables
-#define ARLCLONEDX NMSHAREDX  // 4 set if this is a cloned local symbol table (in which symbol numbers are invalid)
-#define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
+#define ARLCLONEDX NMSHAREDX  // 4 set if this is a cloned local symbol table (in which symbol numbers are invalid); OR in a global table that suppresses the check for locally-defined names
+#define ARLCLONED (1LL<<ARLCLONEDX)
 #define ARHASACVX 3   // set if this local symbol table contains an ACV
 #define ARHASACV ((I)1<<ARHASACVX)
 #define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
@@ -914,10 +914,10 @@ typedef DST* DC;
 #define STKNAMEDX 0
 #define STKNAMED ((I)1<<STKNAMEDX)  // set if the address is the address of the arg (rather than of a tpop slot)
 #define ISSTKNAMED(w) ((I)(w)&STKNAMED)  // is fa() required?
-#define STKFAOWEDX 1  // till we have !LOCALRA, STKFAOWED is the same as STKLOCAL
-#define STKFAOWED ((I)1<<STKFAOWEDX)  // set in parser stack if value needs to be freed
-#define STKREFRESHRQDX 2  // till we have !LOCALRA, STKFAOWED is the same as STKLOCAL
-#define STKREFRESHRQD ((I)1<<STKREFRESHRQDX)  // set in verb of a line 1-3 exec to indicate that tpop[aw] are stale and must be refreshed from the stack
+#define STKFAOWEDX 1   // set in parser stack if value had ra() performed when it was stacked (or if ra() was performed later while on the stack)
+#define STKFAOWED ((I)1<<STKFAOWEDX)
+#define STKREFRESHRQDX 2  // set in verb of a line 1-3 exec to indicate that tpop[aw] are stale and must be refreshed from the stack
+#define STKREFRESHRQD ((I)1<<STKREFRESHRQDX)
 #define SETSTKFAOWED(w) (A)((I)(w)|STKFAOWED)
 #define CLRSTKFAOWED(w) (A)((I)(w)&~STKFAOWED)
 #define ISSTKFAOWED(w) ((I)(w)&STKFAOWED)  // is fa() required?

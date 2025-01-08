@@ -689,7 +689,8 @@ A jtprobequiet(J jt,A a){A g;
  R res;
 }
 
-// assign symbol: assign name a in symbol table g to the value w (but g is ignored if a is a locative)
+// assign symbol: assign name a in symbol table g to the value w
+// g is always the current local or global symbol table (but g is ignored if a is a locative).  If a is not a locative and g is a local table, 
 // Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage
 // flags set in jt: bit 0=this is a final assignment; bit 1 always 0
 I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
@@ -701,7 +702,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  // It is safe to do the recursive-usecount change here as local, because the value cannot have been released to any other core.  Similarly for
  // virtuals.
  // Find the internal code for the name to be assigned.  Do this before we take the lock.
- I wt=AT(w);
+ I wt=AT(w); I gr=AR(g);  // type of w, rank-flags for g
  rifv(w); // must realize any virtual
  if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
@@ -711,7 +712,8 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx);
  }else{  // not locative assignment
 
-  if(g==jt->global){  // global assignment.
+// obsolete   if(g==jt->global){  // global assignment.
+  if(!(gr&ARLOCALTABLE+ARLCLONED)){  // global assignment, and the symbol table does not suppress the check for local names
    // check for non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
    I localnexist=REPSGN(NAV(a)->bucketx|SGNIF(AR(jt->locsyms),ARNAMEADDEDX));   // 0 if bucketx nonneg (meaning name known but not locally assigned) AND no unknown name has been assigned: i. e. no local def ~0 otherwise
@@ -729,18 +731,18 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
 
   if(unlikely((((NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC)-1)&SGNIF(FAV(w)->flag2,VF2NAMELESSX))<0))valtype=VALTYPENAMELESS;   // nameless & non-locative, so indicate
   if(unlikely(jt->glock!=0))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
-  if((AR(g)&ARLOCALTABLE)!=0)AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up
+  if(unlikely(gr&ARLOCALTABLE))AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up there
  }
 
  L *e;  // the symbol we will use
  // we don't have e, look it up.
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
  // convert valtype to QCSYMVAL semantics: NAMED always, RAREQD if global table or sparse
- if((AR(g)&ARLOCALTABLE)!=0){  // if assignment to a local table (which might not be jt->locsyms)
+ if((gr&ARLOCALTABLE)!=0){  // if assignment to a local table (which might not be jt->locsyms)
   I4 symx=NAV(a)->symx;   // fetch the symbol slot assigned to this name (0 if none)
-  e=likely((SGNIF(AR(g),ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
+  e=likely((SGNIF(gr,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=(A)((I)jtinplace|-JTASGNWASLOCAL);   // indicate local assignment (we have no lock to clear), remember final assignment
-  valtype|=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
+  valtype|=QCNAMED|(REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
  }else{  // global table
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
   C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to

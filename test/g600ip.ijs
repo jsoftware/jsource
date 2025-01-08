@@ -139,6 +139,7 @@ NB. Verify nothing modified in place
 assert. svxy -: 3!:1&.> bx;by;ix;iy;dx;dy
 NB. Make x inplaceable.  Verify correct result
 tx =: 3!:2 (3!:1) bx
+for. i. 3 do. tx end.
 assert. (9;xyzs;allopred) checkallosize 7!:2 'tx =: tx u by'
 assert. r -: tx [ 10 [ 'tx =: tx u by'
 tx =: 3!:2 (3!:1) bx

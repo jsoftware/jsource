@@ -300,7 +300,8 @@ DF2(jtxdefn){
   L *sympv=SYMORIGIN;  // bring into local
   L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]];  // pointer to sym block for y, known to exist
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
-   I vtype=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(AT(w))&QCRAREQD)|ATYPETOVALTYPE(AT(w));   // install QCSYMVAL flags
+// obsolete    I vtype=QCNAMED|(REPSGN(AT(w))&QCRAREQD)|ATYPETOVALTYPE(AT(w));   // install QCSYMVAL flags: named, with type
+   I vtype=unlikely(ISSPARSE(AT(w)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse.  Must be a noun
    ybuckptr->fval=MAKEFVAL(w,vtype); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCSYMVAL semantics
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
@@ -319,7 +320,8 @@ DF2(jtxdefn){
   if(a!=0){
    L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
-   I vtype=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(AT(a))&QCRAREQD)|ATYPETOVALTYPE(AT(a));   // install QCSYMVAL flags
+// obsolete    I vtype=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(AT(a))&QCRAREQD)|ATYPETOVALTYPE(AT(a));   // install QCSYMVAL flags
+   I vtype=unlikely(ISSPARSE(AT(a)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse
    xbuckptr->fval=MAKEFVAL(a,vtype); xbuckptr->sn=jt->currslistx;
    if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX))){
     AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(a); ramkrecursv(a);
@@ -427,7 +429,7 @@ nextlinedebug:;
 dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
-   parseline(z,if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)tpop(old);,t=0;);  // *** run user's line *** sets tcesx to thisline/nextline; t=0 so t doesn't have to be preserved over subrt calls
+   parseline(z,if((UI)jt->tnextpushp-(UI)old>TPOPSLACKB*SZI)tpop(old);,t=0;);  // *** run user's line *** sets tcesx to thisline/nextline; t=0 so t doesn't have to be preserved over subrt calls
    // if there is no error, step to next line.  debug mode has set the value to use if any, or 0 to request a new line
    if(likely(z!=0)){bic=ic; ic-=(tcesx>>(32+TCESXTYPEX+5))+1;  // advance to next sentence to be executed, which is NSI, or NSI+1 if BBLOCKEND
     // the sequence BBLOCKEND BBLOCKEND indicates that the second BBLOCKEND was originally an END that went to NSI which was BBLOCK, i. e. end. for an if./select. followed by BBLOCK.
@@ -466,13 +468,13 @@ dobblock:
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(unlikely(TEQ5(tcesx,CASSERT))){
     if(JT(jt,assert)){
-     parseline(t,{if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);
+     parseline(t,{if((UI)jt->tnextpushp-(UI)old>(0)*SZI)if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);  // 0 to force flushes during testcases
      if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(cwsent,CWTCESX2(cwsent,ic),EVASSERT,NPGpysfmtdl<<(BW-2)); // if assert., signal post-execution error if result not all 1s.
      if(likely(t!=0)){  // assert without error
       t=mtv;  // An assert is an entire T-block and must clear t afterward lest t be freed before it is checked by an empty while.  So we use a safe permanent value, mtv.  
      }
     }else{--ic; goto nextline;}  // if ignored assert, go to NSI
-   }else{parseline(t,{if((UI)jt->tnextpushp-(UI)old>TPOPSLACK*SZI)if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);} // no assert: run the line  resets tcesx to thisline/nextline
+   }else{parseline(t,{if((UI)jt->tnextpushp-(UI)old>(TPOPSLACKT)*SZI)if(likely((tcesx&((UI8)TCESXCECANT<<32))!=0))tpop(old);else z=gc(z,old);},);} // no assert: run the line  resets tcesx to thisline/nextline
    // this is return point from running the line
    if(likely(t!=0)){tic=ic,--ic;  // if no error, continue on.  --ic must be in bounds for a non-assert T block (there must be another control word)
     if(unlikely(TXOR5(tcesx,CDO)|jt->uflags.trace))goto nextlinetcesx;   // next line not do.; T block extended to more than 1 line (rare).

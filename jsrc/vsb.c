@@ -721,7 +721,7 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  ROOT      =AV(C(wv[5]))[0];
  FILLFACTOR=AV(C(wv[6]))[0];
  GAP       =AV(C(wv[7]))[0];
- fa(u); fa(s); fa(h);
+ fana(u); fana(s); fana(h);
  z=num(1);  // passed all tests, good return
 exit: ;
  WRITEUNLOCK(JT(jt,sblock))
@@ -730,7 +730,7 @@ exit: ;
 
 static void resetdata(J jt){
  WRITELOCK(JT(jt,sblock))
- fa(STRINGTABLE); fa(HASHTABLE); fa(JT(jt,sbu)); // free old symbol
+ fana(STRINGTABLE); fana(HASHTABLE); fana(JT(jt,sbu)); // free old symbol
  jtsbtypeinit(JJTOJ(jt));                          // initialization routine
  ras(JT(jt,sbu)); ra(STRINGTABLE); ra(HASHTABLE); // init does not ra(); we do it here
  WRITEUNLOCK(JT(jt,sblock))

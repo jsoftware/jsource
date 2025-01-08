@@ -1032,7 +1032,7 @@ runout:;  //
    }else{  // cachedref survives - modify its NM block to break the loop
     NAV(wd)->cachedref=0; ACSET(wd,1) rc=1; // clear ref to leave name only, set count so it will free when reference is freed, prevent free of wd
    }
-   fana(ref);  // free, now that nm is unlooped
+   fa(ref);  // free, now that nm is unlooped
    if(rc)R;  // avoid free if that is called for
   }
  // SYMB must free as a monolith, with the symbols returned when the hashtables are

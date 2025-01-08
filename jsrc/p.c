@@ -1071,7 +1071,7 @@ failparseeformat:
    jt->parserstackframe.parserstkend1=stack;  // move stack-end down so eformat doesn't overwrite it
    jteformat(jt,ds(CENQUEUE),mtv,zeroionei(0),0);  // recreate the error with the correct spacing
 failparse:
-   // the special error code EVABORTEMPTY causes the sentence to be aborted with no error and an empty result
+   // the special error code EVABORTEMPTY causes the sentence to be aborted with no error and an empty result (not used)
    // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first, and also the virtual since it has no flags
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment on error
    // fa() any blocks left on the stack that have FAOWED - but not the mark, which has a garbage address

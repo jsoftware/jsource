@@ -37,21 +37,26 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
 
-// do singleton operation. ipcaserank bits 0-15=rank of result, 16-23=self->lc code for the operation (with comparisons flagged), 24-25=inplace bits, 26-29 types code
+// do singleton operation. ipcaserank bits 0-7=rank of result, 8-15=self->lc code for the operation (with comparisons flagged),
+// 16-17=abandoned+inplaceable flags, 18-19=assignable flags, 20-23 types code
+// we know that AN=1 in a and w, which are FL/INT/B01 types
 A jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
- z=0; I ac=AC(a); I wc=AC(w);
- // see if we can inplace an assignment.  That is always a good idea, though rare
- if(unlikely(((B)(a==jt->zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX))))+((B)(w==jt->zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))))){
+ z=0;
+ // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
+ // a potential gain if the result can itself be inplaced, but it is a certain loser when deciding where the result is
+ if((ipcaserank&0x80ff)==0x8000)goto nozv;  // comparison rank 0 - leave z=0
+// obsolete  I ac=AC(a); I wc=AC(w);
+ // see if the block is inplaceable in the ordinary way - start loading the z value if it is
+// obsolete  z=(AC(a)&SGNIF(ipcaserank,24+JTINPLACEAX))<0?a:z; z=(AC(w)&SGNIF(ipcaserank,24+JTINPLACEWX))<0?w:z;  // block is contextually inplaceable
+ z=ipcaserank&0x20000?a:z; z=ipcaserank&0x10000?w:z;  // block is contextually inplaceable.  Give priority to w
+ // While z is settling, see if we can inplace an assignment.  That is always a good idea, though rare
+// obsolete  if(unlikely(((B)(a==jt->zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX))))+((B)(w==jt->zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))))){
+ if(unlikely((2*(a==jt->zombieval)+(w==jt->zombieval))&(ipcaserank>>18))){
   if(likely(!(AFLAG(jt->zombieval)&AFVIRTUAL+AFUNINCORPABLE))){
-   z=jt->zombieval; if(likely((RANKT)ipcaserank==AR(z)))goto getzv;
+   if(likely((RANKT)ipcaserank==AR(jt->zombieval))){z=jt->zombieval; goto getzv;}
   }
  }
- // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
- // a potential gain is the result can itself be inplaced, but it is a certain loser when deciding where the result is
- if((ipcaserank&0x80ffff)==0x800000)goto nozv;  // comparison rank 0 - leave z=0
- // see if the block is inplaceable in the ordinary way
- z=(ac&SGNIF(ipcaserank,24+JTINPLACEAX))<0?a:z; z=(wc&SGNIF(ipcaserank,24+JTINPLACEWX))<0?w:z;  // block is contextually inplaceable
- if(z&&!(AFLAG(z)&AFUNINCORPABLE+AFRO))if(likely((RANKT)ipcaserank==AR(z)))goto getzv;  // not disallowed and correct rasnk, take it
+ if(z&&likely(!(AFLAG(z)&AFUNINCORPABLE+AFRO)))if(likely((RANKT)ipcaserank==AR(z)))goto getzv;  // not disallowed and correct rank, take it
  // no inplacing, allocate the result, usually an atom
  if(likely((RANKT)ipcaserank==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,(RANKT)ipcaserank); zv=voidAVn((RANKT)ipcaserank,z);}
  goto nozv;
@@ -74,7 +79,7 @@ nozv:;  // here when we have zv or don't need it
    // fetch args before the case breaks the pipe
  // Huge switch statement to handle every case.  Lump all the booleans together at 0
  I caseno=((ipcaserank>>RANKTX)&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno;
- switch(SSINGCASE(caseno,ipcaserank>>26)){
+ switch(SSINGCASE(caseno,ipcaserank>>20)){
  default: ASSERTSYS(0,"ssing");
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv+(B)wiv,z,INT,I) R z;  // NV because B01 is never virtual inplace
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv+wdv,z,FL,D) R z;

@@ -165,7 +165,7 @@ _Static_assert((PTRPAR^PTMARKBACK&0xffff0000)==0,"MARKBACK must equal RPAR for e
 
 // multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 // We flag all multiple assignments as final because the value is protected in the source
-static DF2(jtisf){RZ(symbisdel(onm(a),CALL1(FAV(self)->valencefns[0],w,self),ABACK(self))); R num(0);} 
+static DF2(jtisf){A am, mw; RZ(am=onm(a)); RZ(mw=CALL1(FAV(self)->valencefns[0],w,self)); RZ(symbisdel(am,mw,ABACK(self))); R num(0);} 
 
 // assignment other than name =[.:], single or multiple
 // jt has flag set for final assignment (passed into symbis)
@@ -179,7 +179,7 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
    // multiple assignment to fixed names
    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
    if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],C(vv[i]),symtab);)}  // v is boxed list
-   else {A *nv=AAV(n); DO(AN(n), jtsymbis((J)((I)jtinplace|JTFINALASGN),nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment since value is not passed on
+   else {A *nv=AAV(n); DO(AN(n), A  vval; RZ(vval=ope(AR(v)?from(sc(i),v):v)); jtsymbis((J)((I)jtinplace|JTFINALASGN),nv[i],vval,symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment since value is not passed on
    goto retstack;
   }
  }
@@ -208,8 +208,8 @@ static I NOINLINE jtis(J jt,A n,A v,A symtab){F1PREFIP;
   // computed name(s), now boxed character strings
   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
   // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
-  if(!AR(n))jtsymbis(jtinplace,onm(n),v,symtab);
-  else {
+  if(!AR(n)){A nnm; RZ(nnm=onm(n)); jtsymbis(jtinplace,nnm,v,symtab);  // just one name
+  }else{
    // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
    // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
    // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form

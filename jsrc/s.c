@@ -690,16 +690,18 @@ A jtprobequiet(J jt,A a){A g;
 }
 
 // assign symbol: assign name a in symbol table g to the value w
-// g is always the current local or global symbol table (but g is ignored if a is a locative).  If a is not a locative and g is a local table, 
+// g is the current local or global symbol table, or possibly a separate local table to simulate assignments in 13 : n.  g is ignored if a is a locative.  If a is not a locative and g is a local table,
+// public assignment is an error if the symbol is defined in the local table, but that test can be disabled by setting ARLCLONED in AR of the table
 // Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage
 // flags set in jt: bit 0=this is a final assignment; bit 1 always 0
 I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
- ARGCHK2(a,w);
+// obsolete  ARGCHK2(a,w);
+if(a==0||w==0||g==0)SEGFAULT;  // scaf
  I anmf=NAV(a)->flag; // fetch flags for the name
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
  // name is NJA or is a reassignment, but since NJAs cannot be non-DIRECT little is lost.  We will be doing an unneeded realize if a virtual [x]y from
  // xdefn is reassigned to itself.  Too bad: we need to make sure we don't hold the lock through an expensive operation.
- // It is safe to do the recursive-usecount change here as local, because the value cannot have been released to any other core.  Similarly for
+ // It is safe to do the recursive-usecount change here as local at the top level, because the value cannot have been released to any other core.  Similarly for
  // virtuals.
  // Find the internal code for the name to be assigned.  Do this before we take the lock.
  I wt=AT(w); I gr=AR(g);  // type of w, rank-flags for g
@@ -710,6 +712,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately zombieval doesn't give us the symbol table
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx);
+  RZ(g);  // abort if error in locale name
  }else{  // not locative assignment
 
 // obsolete   if(g==jt->global){  // global assignment.
@@ -721,7 +724,7 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
    ASSERTSUFF(likely(localnexist!=0)||!probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
  }
- RZ(g)  // g has the locale we are writing to
+// obsolete  RZ(g)  // g has the locale we are writing to
  I valtype=ATYPETOVALTYPE(wt);  // value flags to install into value block.  It will have QCSYMVAL semantics
 
  if(unlikely((wt&NOUN)==0)){  // writing to ACV

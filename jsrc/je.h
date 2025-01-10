@@ -917,7 +917,7 @@ extern B        jtspfree(J);
 extern B        jtspmult(J,A*,A,A,C,I,I,I,I);
 extern A        jtsprank1(J,A,A,I,AF);
 extern A        jtsprank2(J,A,A,A,I,I,AF);
-extern A        jtssingleton(J,A,A,I);
+// obsolete extern A        jtssingleton(J,A,A,I);
 extern A        jtssingleton1(J,A,I);
 extern void     jtstackepilog(J,I4);
 extern A        jtstcreate(J,I1,I,I,C*);

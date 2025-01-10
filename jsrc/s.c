@@ -696,7 +696,7 @@ A jtprobequiet(J jt,A a){A g;
 // flags set in jt: bit 0=this is a final assignment; bit 1 always 0
 I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
 // obsolete  ARGCHK2(a,w);
-if(a==0||w==0||g==0)SEGFAULT;  // scaf
+ // we don't ARGCHK because path is heavily used.  Caller's responsibility.
  I anmf=NAV(a)->flag; // fetch flags for the name
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
  // name is NJA or is a reassignment, but since NJAs cannot be non-DIRECT little is lost.  We will be doing an unneeded realize if a virtual [x]y from

@@ -331,7 +331,7 @@ DF2(jtxdefn){
   // We may not call these final assignments because that might back tpushptr before an outstanding 'old'
   if(unlikely(((I)u|(I)v)!=0)){
    symbis(mnuvxynam[2],u,locsym); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym);  // assign u, and m if u is a noun.  u musat be defined
-   if(v){symbis(mnuvxynam[3],v,locsym); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // errors here are impossible: the value exists and the names are known valid and allocated
+   if(v){symbis(mnuvxynam[3],v,locsym); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym);}  // errors here are impossible: the value exists and the names are known valid and allocated
   }
  }  // for name scope only
  // remember tnextpushp.  We will tpop after every few sentences, to free blocks.  Do this AFTER any memory

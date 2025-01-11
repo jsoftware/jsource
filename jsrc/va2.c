@@ -89,7 +89,7 @@ INLINE static A jtssingleton(J jt,A a,A w,I af,I at,I wt,A self){
 #endif
 // obsolete  if(z&&likely(!(AFLAG(z)&AFUNINCORPABLE+AFRO)))if(likely(af==AR(z)))goto getzv;  // not disallowed and correct rank, take it
  // fall through: no inplacing, allocate the result, usually an atom.  If not atom, make the shape all 1s
- if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call
+ if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call, then freed
  goto nozv;
 getzv:;  // here when we are operating inplace on z
  zv=voidAV(z);  // get addr of value
@@ -165,8 +165,8 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv&(B)wiv,z,B01,B) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv?wdv:0.0,z,FL,D) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDB): SSSTORENV((B)wiv?adv:0.0,z,FL,D) R z;
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGID): {I av=aiv; SSSTORE(av?av*wdv:0.0,z,FL,D) R z;}
- case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDI): {I wv=wiv; SSSTORE(wv?wv*adv:0.0,z,FL,D) R z;}
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGID): SSSTORE(aiv?aiv*wdv:0.0,z,FL,D) R z;
+ case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDI): SSSTORE(wiv?wiv*adv:0.0,z,FL,D) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBI): SSSTORENV((B)aiv?wiv:0,z,INT,I) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGIB): SSSTORENV((B)wiv?aiv:0,z,INT,I) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGII): {
@@ -404,9 +404,9 @@ nozv:;  // here when we have zv or don't need it
   R z;  // Return the value if valid, as integer if possible
 
  bitwiseresult:
+ ziv=(I)FAV(self)->lu2.lc-VA2CBW0000;  // mask describing operation.  We refetch because self is needed in a reg and opcode isn't
  RE(0);  // if error on D arg, make sure we abort
 // obsolete  ziv=((ipcaserank>>RANKTX)&0x7f)-VA2CBW0000;  // mask describing operation
- ziv=opcode-VA2CBW0000;  // mask describing operation
  ziv=((aiv&wiv)&REPSGN(SGNIF(ziv,0)))|((aiv&~wiv)&REPSGN(SGNIF(ziv,1)))|((~aiv&wiv)&REPSGN(SGNIF(ziv,2)))|((~aiv&~wiv)&REPSGN(SGNIF(ziv,3)));
  SSSTORE(ziv,z,INT,I) R z;
 

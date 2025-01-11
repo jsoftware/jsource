@@ -44,29 +44,31 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
 // obsolete   I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w)); awip=(awip&(I)jtinplace)+4*((I)jtinplace&3);  // abandoned flags from aw; make (assignable),(inplaceable) flags
 // obsolete   z=jtssingleton(jt,a,w,af+((I)FAV(self)->lu2.lc<<RANKTX)+(awip<<16)+((3*(at>>INTX)+(wt>>INTX))<<20));  // create portmanteau parm reg
-INLINE static A jtssingleton(J jt,A a,A w,I af,I at, I wt,A self){
+INLINE static A jtssingleton(J jt,A a,A w,I af,I at,I wt,A self){
 // obsolete A INLINE jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
  I opcode=(I)FAV(self)->lu2.lc;  // fetch operation#
- void *av=voidAV(a), *wv=voidAV(w);  // point to the argument values
  I jtinplace=(I)jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);   // save jt as an I, clear low bits
 // obsolete  I zomb=2*(a==jt->zombieval)+(w==jt->zombieval); // see if either arg is being assigned
- A zombv=jt->zombieval;  // fetch address of assignand
+ A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
+ void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result
  I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,SSINGENC(at,wt));  // case # for eventual switch.  Lump all Booleans at 0
- A z=0; void *zv;  // pointer to result location
  // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
  // a potential gain if the result can itself be inplaced, but it is a certain loser when deciding where the result is
- if((opcode>>7)>af)goto nozv;  // true if 0x80 (comparison op) and af=0
+ if((opcode>>7)>af){z=0; goto nozv;}  // true if 0x80 (comparison op) and af=0.  Set z=0 as a flag to return num(result)
  // See if we can inplace.  We let some chances get away because they aren't worth testing for.  There are two main possibilities: assignment (checked above)
  // and abandoned arg (checked presently).  If either passes, it must further be not VIRTUAL if assigned (lest it overwrite the backer of a virtual x/y arg)
- // and not AFRO if bare; and never UNINCORPABLE since we may change the type and we don't want callers to bear the burden of checking that.  It is possible that
- // one arg would be inplaceable as an assignment and the other as abandoned, but we pick one and live with it.
- if(awip&=jtinplace){z=awip&JTINPLACEW?w:a; if(likely((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0))goto getzv;}  // block is abandoned inplaceable, not disallowed and correct rank: inplace to it.  Priority to w
+ // and not AFRO if bare; and never UNINCORPABLE since we may change the type and we don't want callers to bear the burden of checking that.  Assign in place is best,
+ // because it makes the assignment skip the free
  // See if we can inplace an assignment.  That is always a good idea, though rare
- if(unlikely((2*(a==zombv)+(w==zombv))&jtinplace)){   // one of the args is being reassigned
-  if(likely((AFLAG(zombv)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(zombv))==0)){z=zombv; goto getzv;}   // mustn't modify VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
+ if(unlikely((2*(a==z)+(w==z))&jtinplace)){   // one of the args is being reassigned
+  if(likely((AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(z))==0)){goto getzv;}   // mustn't modify VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
 // obsolete    if(likely(af==AR(jt->zombieval))){z=jt->zombieval; goto getzv;}  // the 
 // obsolete   }
+ }
+ if(awip&=jtinplace){z=awip&JTINPLACEW?w:a;   // block is abandoned inplaceable, : pick it.  Priority to w
+  if(likely((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0))goto getzv;  // not disallowed and correct rank: use it
+  if(awip==3){z=a; if(likely((AFLAG(a)&AFUNINCORPABLE+AFRO)+(af^AR(a))==0))goto getzv;}  // if a & w both eligible, check a if w failed
  }
 // obsolete  awip&=jtinplace; z=awip&JTINPLACEA?a:z; z=awip&JTINPLACEW?w:z;  // block is contextually inplaceable and inplaceable by count= abandoned.  Give priority to w
 #if 0 // obsolete
@@ -87,7 +89,7 @@ INLINE static A jtssingleton(J jt,A a,A w,I af,I at, I wt,A self){
 #endif
 // obsolete  if(z&&likely(!(AFLAG(z)&AFUNINCORPABLE+AFRO)))if(likely(af==AR(z)))goto getzv;  // not disallowed and correct rank, take it
  // fall through: no inplacing, allocate the result, usually an atom.  If not atom, make the shape all 1s
- if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAV(z);}  // not voidAVn so that af is not needed
+ if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call
  goto nozv;
 getzv:;  // here when we are operating inplace on z
  zv=voidAV(z);  // get addr of value

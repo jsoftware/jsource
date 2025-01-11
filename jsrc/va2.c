@@ -49,7 +49,9 @@ INLINE static A jtssingleton(J jt,A a,A w,I af,I at, I wt,A self){
  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
  I opcode=(I)FAV(self)->lu2.lc;  // fetch operation#
  void *av=voidAV(a), *wv=voidAV(w);  // point to the argument values
- I jtinplace=(I)jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK); I zomb=2*(a==jt->zombieval)+(w==jt->zombieval);   // save jt as an I, clear low bits, see if either arg is being assigned
+ I jtinplace=(I)jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);   // save jt as an I, clear low bits
+// obsolete  I zomb=2*(a==jt->zombieval)+(w==jt->zombieval); // see if either arg is being assigned
+ A zombv=jt->zombieval;  // fetch address of assignand
  I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,SSINGENC(at,wt));  // case # for eventual switch.  Lump all Booleans at 0
  A z=0; void *zv;  // pointer to result location
  // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
@@ -61,8 +63,8 @@ INLINE static A jtssingleton(J jt,A a,A w,I af,I at, I wt,A self){
  // one arg would be inplaceable as an assignment and the other as abandoned, but we pick one and live with it.
  if(awip&=jtinplace){z=awip&JTINPLACEW?w:a; if(likely((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0))goto getzv;}  // block is abandoned inplaceable, not disallowed and correct rank: inplace to it.  Priority to w
  // See if we can inplace an assignment.  That is always a good idea, though rare
- if(unlikely(zomb&jtinplace)){   // one of the args is being reassigned
-  if(likely((AFLAG(jt->zombieval)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(jt->zombieval))==0)){z=jt->zombieval; goto getzv;}   // mustn't modify VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
+ if(unlikely((2*(a==zombv)+(w==zombv))&jtinplace)){   // one of the args is being reassigned
+  if(likely((AFLAG(zombv)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(zombv))==0)){z=zombv; goto getzv;}   // mustn't modify VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
 // obsolete    if(likely(af==AR(jt->zombieval))){z=jt->zombieval; goto getzv;}  // the 
 // obsolete   }
  }

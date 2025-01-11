@@ -215,7 +215,12 @@ static B jtfmte(J jt,B e,I m,I d,C*s,I t,E*wv,A*cellbuf){
  C *z=CAV(*cellbuf);  // place to build result, which is known to fit
  z[0]=' '; z+=s[0]==' '; z[0]='_'; z+=wv->hi<0;   // advance s past optional leading space and sign 
  if(e){  // %e field, scientific
-  *z++=fmt.buf[0]; if(wdec){*z++='.'; I nfrac=MIN(fmt.ndig-1,wfrac); MC(z,&fmt.buf[1],nfrac); if(unlikely(nfrac<wfrac))mvc(wfrac-nfrac,&z[nfrac],1,"0"); z+=wfrac;}  // move sig digits
+  *z++=fmt.ndig?fmt.buf[0]:'0';  // the digit before decimal point: first digit, but '0' if there are no digits
+  if(wdec){  // if we should display after the decimal point...
+   *z++='.'; I nfrac=MIN(MAX(fmt.ndig,1)-1,wfrac); MC(z,&fmt.buf[1],nfrac);  // move sig digits.  nfrac is # digits left after the (possible) first
+   if(unlikely(nfrac<wfrac))mvc(wfrac-nfrac,&z[nfrac],1,"0");  // extend with 0s if needed
+   z+=wfrac;  // step over all moved digits, to exponent location
+  }
   *z++='e'; z[0]='_'; z+=(exp<0); sprintf(z,"%d",ABS((int)exp));  // move exponent incl trailing NUL
  }else{  // decimal point
   if(fmt.dp>0){MC(z,&fmt.buf[0],fmt.dp); z+=fmt.dp;}else *z++='0';  // if there are integer digits, move them; if not lead with 0.  Advance z to frac

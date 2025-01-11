@@ -84,15 +84,14 @@ static NUMH(jtnumfq){E *v;D sgn=1.0;
  else if(i<n){R 0;}
  // negative exponent; need to make a rational
  if(ex<0){
-  // underflow
-  if(unlikely(ex<-400)){v->hi=v->lo=0*sgn;R 1;}
+  if(unlikely(ex<-400)){v->hi=v->lo=0*sgn;R 1;} // underflow
   RZ(qquad(v,qtymes(((Q){.n=r,.d=X1}),((Q){.n=X1,.d=xpow(xc(10),xc(-ex))}))));}
  else{
   if(ex){
-   // overflow
-   if(unlikely(ex>400)){v->hi=inf*sgn;R 1;}
+   if(unlikely(ex>400)){v->hi=inf*sgn;R 1;}// overflow
    r=xtymes(r,xpow(xc(10),xc(ex)));}
   RZ(xquad(v,r));}
+ v->hi*=sgn; v->lo*=sgn;  // install sign, which does not upset canonical form
  R 1;}
 
 static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;

@@ -147,6 +147,7 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
  finish:;
  if(ndig!=0&&buf[0]==0){++buf; --dp; --ndig;}  // if we added a lead 0 and it is still there, remove it
  DO(ndig, buf[i]+='0';)  // convert the digits to chars
+ dp=ndig==0?1:dp;  // if there are no digits, input must be 0; set decimal point to 1 to match 0. display
  R (struct fmtbuf){buf,fbuf,ndig,dp};
 }
 
@@ -161,7 +162,7 @@ static FMTF(jtfmtE,E){UI i;
  // copy result to output area
  I endx0=MIN(r.ndig,jt->ppn);  // discard excess significance
  I exp0=r.dp;  // number of digits of sig before decimal point.  Can be neg
- s[0]='-'; I sgn0=v->hi<0;  // install - sign just in case; set sgn0 to be # chars of sign needed
+ s[0]='_'; I sgn0=v->hi<0;  // install - sign just in case; set sgn0 to be # chars of sign needed
  if(BETWEENC(exp0,0,endx0)){
   // decimal point within significance: report as decimal
   if(exp0==0)s[sgn0++]='0';  // if no digits before decimal point, add one and add it to count of sign chars

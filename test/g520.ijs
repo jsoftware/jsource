@@ -1761,6 +1761,12 @@ NB. returning w in full as extreme virtualing
 a =: 3 10000 ?@$ 0
 5000 > 7!:2 'a =: 0 1 2 { a'
 
+NB. error checks
+'index error' -: (i. 600) { etx '123';'123'
+'index error' -: (64+i. 5) { etx 64 $<'123'
+'index error' -: (_70+i. 5) { etx 64 $<'123'
+
+
 
 NB. test long names
 abcdefghijabcdefghijabcdefghij0 =. 1

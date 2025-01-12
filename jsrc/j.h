@@ -930,6 +930,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define SGNIFNOT(v,bitno) (~SGNIF((v),(bitno)))  // Clears sign bit if the numbered bit is set
 #define REPSGN(x) ((I)(x)>>(BW-1))  // replicate sign bit of x to entire word
 #define REPSGN4(x) ((I4)(x)>>(32-1))  // replicate sign bit of x to entire I4 - x is forced to I4
+#define REPSGNL(x) ((IL)(x)>>(64-1))  // replicate sign bit of x to entire IL
 #define SGNTO0(x) ((UI)(x)>>(BW-1))  // move sign bit to bit 0, clear other bits
 #define SGNTO0US(x) ((US)(x)>>(16-1))  // move sign bit to bit 0, clear other bits
 
@@ -2220,7 +2221,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define TWOSUMBS1(inbig,insmall,outhi,outlo) outhi=inbig+insmall; outlo=inbig-outhi; outlo=outlo+insmall; //  outhi cannot be an input; outlo can be the same as inbig
 #define DPADD1(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=hi0+hi1; outlo=lo0+lo1;
 #define TWOPRODE1(ein0,ein1) ({D dh0,dh1,dl0,dl1; E t0,t1,t2; TWOPROD1(ein0.hi,ein1.hi,dh0,dl0) dl0+=ein0.hi*ein1.lo; dl0+=ein0.lo*ein1.hi; TWOSUMBS1(dh0,dl0,dh1,dl1) CANONE1(dh1,dl1) })  // return E product
-// convert to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<=lo<1/2ULP (with only same-sign allowed if abs=0, opposite if abs=1/2ULP)
+// finish conversion to canonical form: high & low are already separated in bits, but low must be forced to range -1/2ULP<=lo<1/2ULP (with only same-sign allowed if abs=0, opposite if abs=1/2ULP)
 #define CANONE1(h,l) ({if(unlikely((*(IL*)&l&0x000fffffffffffff)==0)){if(l==0)*(IL*)&l=*(IL*)&h&0x8000000000000000; else if(((*(IL*)&h&~0x000fffffffffffff)-0x0350000000000000)==*(IL*)&l){h+=2*l; l=-l;}} (E){.hi=h,.lo=l}; })
 
 #define VAL1            '\001'

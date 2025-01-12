@@ -191,46 +191,50 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
   if(((nunitsels-r)|(zn-MINVIRTSIZE))>=0){  // if there is only one axis left, and result is big enough
    // There is only one application of the last axis.  If the indexes are sequential, we can make the result virtual
    // We allow virtualing even for NJA blocks. 
-   // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
+   // If the block can be virtual, we create the virtual here and return
    I *sels=axes[r].sels;  // pointer to selectors of last axis
-   I index0, indexn;  // indexes of first & last values, in range if virtual is OK
+   I index0;  // indexes of first item if virtual is OK
    if(nsel>=0){  // normal axis
-    index0 = sels[0]; index0+=REPSGN(index0)&lenaxis; indexn=0;  // index of first item, set last item OK
+    index0=sels[0]; index0+=REPSGN(index0)&lenaxis;  // index of first item, accounting for negative indexing
+    if((UI)index0>=(UI)lenaxis)goto novirtual; if(index0+nsel>lenaxis)goto novirtual;  // if first value out of range, or too many selectors, can't be virtual
+// obsolete  indexn=0;
     // check the last item before checking the middle.
-    DQ(nsel-1, indexn=sels[1+i]; indexn+=REPSGN(indexn)&lenaxis; if(indexn!=index0+1+i){indexn=lenaxis; break;});
+    DQ(nsel-1, I indexn=sels[1+i]; indexn+=REPSGN(indexn)&lenaxis; if(indexn!=index0+1+i){goto novirtual;});  // no virtual if not sequential values
     nsel=AR(axes[r].indsubx.ind)!=1?0:nsel;  // if shape changes, set flag value to suppress returning entire w unchanged
    }else{
     // complementary indexing.  See if the values are consecutive (in-full is impossible)
     // The first index we produce is .sel0, which means that must be the index of the first gap.  Find the width
     // of that gap and see if it accounts for all the indexes
     nsel=~nsel;  // convert nsel to positive length - gives number of surviving 
-    index0=axes[r].sel0; I axn=axes[r].lenaxis; indexn=likely(index0<nsel)?axes[r].sels[index0]:axn;  // start of gap, axis len, end+1 of gap (may be len of axis)
-    index0|=(indexn-index0)-nsel;  // if more cells than gap, turn index0 neg to stop virtual
-    --indexn;  // convert to end-1
+    index0=axes[r].sel0; I axn=axes[r].lenaxis; I indexn=likely(index0<nsel)?axes[r].sels[index0]:axn;  // start of gap, axis len, end+1 of gap (may be len of axis)
+    if(nsel>indexn-index0)goto novirtual;  // if the first gap does not account for all the selectors, we can't make a virtual one
+// obsolete     index0|=(indexn-index0)-nsel;  // if more cells than gap, turn index0 neg to stop virtual
+// obsolete     --indexn;  // convert to end of gap
    }
    // nsel has been modified if shape changes
-   if((index0|(lenaxis-indexn-1))>=0){  // index0>=0 and indexn<=lenaxis-1
-    // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
-    // if the selected length is the axis length, and there is only one axis, we are taking the entire w arg - just return it
-    if(unlikely((r+(nsel^lenaxis))==0))R RETARG(w);
-    I baseadj=base-CAV(w);  // movement of base needed from upper selectors.  Must calculate before virtual in case it self-virtuals and moves w
-    I wr=AR(w);  // get rank of w before it is destroyed by possible self-virtualing
-    RZ(z=virtualip(w,index0*celllen,zr));  // inplace w OK since no cells repeated
-    // fill in shape and number of atoms, and offset the data pointer using base
-    AK(z)+=baseadj;  // move offset from start of w data to the cell selected by upper selectors
-    // shape is 1s for upper axes/last-axis selectors/shape of cell lof last axis
-    AN(z)=zn;
-     I *zs=AS(z)+zr-wcr;  // pointer into result shape, moved around as we calculate; start pointing to cellshape
-    // install the axes for the cell of w: all axes except the frame and the selectors
-    MCISH(zs,AS(w)+wr-wcr,wcr)  // zs->start of cell shape
-    // axes for the last selector
-    if(axes[r].nsel>=0){MCISH(zs-=AR(axes[r].indsubx.ind),AS(axes[r].indsubx.ind),AR(axes[r].indsubx.ind));  // normal, back up to rank and copy
-    }else{*--zs=~axes[r].nsel;  // complementary, treat as list of appropriate length
-    }
-    // install 1s for the rest of the shape
-    if(zs!=AS(z))do{*--zs=1;}while(zs!=AS(z));
-    RETF(z);
+// obsolete    if((index0|(lenaxis-indexn-1))>=0){  // index0>=0 and indexn<=lenaxis-1
+   // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
+   // if the selected length is the axis length, and there is only one axis, we are taking the entire w arg - just return it
+   if(unlikely((r+(nsel^lenaxis))==0))R RETARG(w);
+   I baseadj=base-CAV(w);  // movement of base needed from upper selectors.  Must calculate before virtual in case it self-virtuals and moves w
+   I wr=AR(w);  // get rank of w before it is destroyed by possible self-virtualing
+   RZ(z=virtualip(w,index0*celllen,zr));  // inplace w OK since no cells repeated
+   // fill in shape and number of atoms, and offset the data pointer using base
+   AK(z)+=baseadj;  // move offset from start of w data to the cell selected by upper selectors
+   // shape is 1s for upper axes/last-axis selectors/shape of cell lof last axis
+   AN(z)=zn;
+    I *zs=AS(z)+zr-wcr;  // pointer into result shape, moved around as we calculate; start pointing to cellshape
+   // install the axes for the cell of w: all axes except the frame and the selectors
+   MCISH(zs,AS(w)+wr-wcr,wcr)  // zs->start of cell shape
+   // axes for the last selector
+   if(axes[r].nsel>=0){MCISH(zs-=AR(axes[r].indsubx.ind),AS(axes[r].indsubx.ind),AR(axes[r].indsubx.ind));  // normal, back up to rank and copy
+   }else{*--zs=~axes[r].nsel;  // complementary, treat as list of appropriate length
    }
+   // install 1s for the rest of the shape
+   if(zs!=AS(z))do{*--zs=1;}while(zs!=AS(z));
+   RETF(z);
+// obsolete    }
+novirtual:;  // abort to here if virtual not allowed because indexes are not consecutive
   }
  }else{zn=0;}  // if w empty, z must be empty too, since no nonempty selector is valid on 0-len axis
  // allocate the result, or use a inplace for the result (which must not be unincorpable or DIRECT)

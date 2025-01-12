@@ -200,7 +200,9 @@ static B jtfmte(J jt,B e,I m,I d,C*s,I t,E*wv,A*cellbuf){
  // position the digit buffers in *cellbuf, reallocating if needed
  if(AN(*cellbuf)<2*nsig+10){GATV0(*cellbuf,LIT,2*nsig+10,1)}  // get new buffer if old one is too small
  // convert to decimal with the requested amount of significance
- struct fmtbuf fmt=fmtlong((struct fmtbuf){CAV(*cellbuf)+nsig+8,CAV(*cellbuf),nsig,0},*wv);
+ struct fmtbuf fmt=fmtlong((struct fmtbuf){CAV(*cellbuf)+nsig+8,CAV(*cellbuf)+1,nsig,0},*wv);
+ if(fmt.ndig>nsig&&fmt.buf[nsig]>='5'){++fmt.buf[jt->ppn-1]; DQ(nsig-1, if(fmt.buf[i+1]=='0'+10){++fmt.buf[i]; fmt.buf[i+1]-=10;} else break;)}  // if first omitted digit>=5, round & keep rounding
+ if(fmt.buf[0]=='0'+10){++fmt.ndig; ++fmt.dp; --fmt.buf; fmt.buf[0]='1'; fmt.buf[1]='0';}  // if we round up all the way to the front, add a digit (there is room)
 
  // verify total field width (leading space, sign, exponent if any) allows all significance
  I wsgn=(s[0]==' ')+(wv->hi<0), wint, wdec=d>0, wfrac=d, wexp;  // len of each component of field

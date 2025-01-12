@@ -96,7 +96,7 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
  // we have restored the hidden bit, below.  Because the canonical form is [-1/2,1/2) in low part, adding 1 ULP cannot
  // move the binary point of the low by enough to overlap the high  WRONG! if the lower part is small enough, it may be rounded away,
  // leaving the binary points with a fatal overlap.  If that happens, clear both the low and the ulp to 0
- IL iulp=*(IL*)&v.hi&0xfff0000000000000&REPSGN(*(IL*)&v.hi^*(IL*)&v.lo); D ulp=*(D*)&iulp*2.22044604925031308e-16;  // 2^_52=1 ULP
+ IL iulp=*(IL*)&v.hi&0xfff0000000000000&REPSGNL(*(IL*)&v.hi^*(IL*)&v.lo); D ulp=*(D*)&iulp*2.22044604925031308e-16;  // 2^_52=1 ULP
  D val[2]={v.hi,v.lo+ulp};  // decrement of v.hi deferred
  if(unlikely(val[1]==ulp&&ulp!=0))val[1]=ulp=0.0;  // Handle case of exponent operlap
  IL i; I nextexp;   // loop counter, sequential exponent tracker
@@ -123,7 +123,7 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
   }
   // if the integer part is non0, the fraction will simply continue on, with no possibility of its overflowing into the integer part.
   // If the integer is 0, we will skip over 0 digits but we are liable to find the first significance with a fraction >0.5, which
-  // might then overflow.  To allow for this we start a value<0 with an empty leading digit
+  // might then overflow.  To allow for this we start a value<1 with an empty leading digit
   if(unlikely(ndig==0)){++dp; buf[0]=0;}  // make an empty numeric have an overflow location - and clear it from 5 to 0
   while(currbit>=0){
    // The next bit is fractional.  If it is nonzero, add its fractional rep
@@ -158,7 +158,9 @@ static FMTF(jtfmtE,E){UI i;
  if(!memcmpne(&v->hi,&infm,SZD)){strcpy(s,"__"); R;}
  if(_isnan(v->hi)          ){strcpy(s,"_."); R;}
  if(v->hi==0.){strcpy(s,"0" ); R;}
- C buf0[1+WZ],buf1[1+WZ]; struct fmtbuf r=fmtlong((struct fmtbuf){buf0,buf1,jt->ppn,0},*v);
+ C buf0[1+WZ],buf1[1+WZ]; struct fmtbuf r=fmtlong((struct fmtbuf){buf0+1,buf1+1,MIN(NPP,6+jt->ppn),0},*v);  // truncate 6 digits below requested precision - should be plenty
+ if(r.ndig>jt->ppn&&r.buf[jt->ppn]>='5'){++r.buf[jt->ppn-1]; DQ(jt->ppn-1, if(r.buf[i+1]=='0'+10){++r.buf[i]; r.buf[i+1]-=10;} else break;)}  // if first omitted digit>=5, round & keep rounding
+ if(r.buf[0]=='0'+10){++r.ndig; ++r.dp; --r.buf; r.buf[0]='1'; r.buf[1]='0';}  // if we round up all the way to the front, add a digit (there is room)
  // copy result to output area
  I endx0=MIN(r.ndig,jt->ppn);  // discard excess significance
  I exp0=r.dp;  // number of digits of sig before decimal point.  Can be neg
@@ -172,7 +174,7 @@ static FMTF(jtfmtE,E){UI i;
   // report as scientific
   exp0-=1;  // since we are reporting 1 digit above dp, we must adjust the exponent to match
   s[sgn0]=r.buf[0]; s[1+sgn0]='.'; MC(s+1+sgn0+1,r.buf+1,endx0-1);  // sign+int, . , decimal part
-  endx0+=sgn0; while(s[endx0]=='0')--endx0; s[endx0++ +1]='e'; s[endx0+1]='_'; sprintf(&s[endx0+1+(exp0<0)],"%d",(int)ABS(exp0));  // install exponent and trailing NUL
+  endx0+=sgn0; while(s[endx0]=='0')--endx0; if(s[endx0]=='.')--endx0; s[endx0++ +1]='e'; s[endx0+1]='_'; sprintf(&s[endx0+1+(exp0<0)],"%d",(int)ABS(exp0));  // install exponent and trailing NUL
  }
 }
 

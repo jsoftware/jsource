@@ -258,6 +258,22 @@ u1 =: (u: 16b03c0),'r2'
 
 'index error'  -: (3 10 10 9) 5!:_1 etx 4 5 6
 
+NB. decorations in emsg
+f =: {{
+try. ". y
+catch. }: '|' taketo&.|. 13!:12''
+end.
+}}
+'   a:    +1.5j0' -: f 'a: + 1.5j0'
+'   a:    +1j0' -: f 'a: + 1j0'
+'   a:    +1fq' -: f 'a: + 1fq'
+'   a:    +1.' -: f 'a: + 1.'
+'   a:    +1.5' -: f 'a: + 1.5'
+'   a:    +_2.' -: f 'a: + _2.0'
+'   a:    +_12.' -: f 'a: + _12.0'
+'   a:    +_' -: f 'a: + _'
+'   a:    +__' -: f 'a: + __'
+   
 
 4!:55 ;:'bc cr crlf dtb f g i lf t u1 u2 x'
 

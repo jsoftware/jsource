@@ -222,13 +222,15 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I dec=REPSGN(n);n=n^dec;I
   if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
   else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
   p=y-s;  // total length
-  if(dec&&!ov&&p&&!memchr(s,'.',p)&&!memchr(s,'e',p)&&!memchr(s,'j',p)){  // decoration called for, line not too long, not empty, and doesn't already have telltale ./e/j
-   DO(y-s-1, if(s[i]=='_'&&!BETWEENC(s[i+1],'0','9')){p=0; break;})   // _ not followed by numeric also doesn't need decorating
-   if(p)if(!(ov=n4<(y+2)-s)){if(wt&FL){y[-1]='.';}else{y[-1]='j'; *y++='0';}}  // append . to FL, j0 to CMPX
+  I ejp=0;  // mask of implied decorations in the formatted text
+  if(dec&&!ov&&p){  // if decoration called for, line not too long, not empty
+   ejp|=memchr(s,'.',p)?1:0; ejp|=memchr(s,'e',p)?1:0; ejp|=memchr(s,'j',p)?2:0;    // look for existing telltale ./e/j
+   DO(y-s-1, if(s[i]=='_'&&!BETWEENC(s[i+1],'0','9')){ejp|=1; break;})   // _ not followed by numeric also doesn't need decorating
+   if(!(ov=n4<(y+2)-s)){if(wt&FL&&!(ejp&1)){y[-1]='.';}else if(wt&CMPX&&!(ejp&2)){y[-1]='j'; *y++='0';}else if(wt&QP){y[-1]='f'; *y++='q';}}  // If there is room, append . to FL, j0 to CMPX, fq to QP
   }
   break;
  }
- if(ov){if(' '!=y[-1])*y++=' '; mvc(3L,y,1,iotavec-IOTAVECBEGIN+'.'); y+=3;}  // if line too long, truncate with SP...
+ if(ov){if(' '!=y[-1])*y++=' '; mvc(3L,y,1,iotavec-IOTAVECBEGIN+'.'); y+=3;}  // ensure ending with one SP; if line too long, truncate with SP...
  else if(' '==y[-1])--y; 
  *y=0; R y-s;
 }

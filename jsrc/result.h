@@ -109,7 +109,7 @@
 
 // process according to state.  Ordering is to minimize branch misprediction
 do{
- if(zz){  // if we have allocated the result area, we are into normal processing
+ if(likely(zz!=0)){  // if we have allocated the result area, we are into normal processing
   // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
 
   // The original result z will either be incorporated into zz or its items will be copied.  In either case, that makes z non-PRISTINE.
@@ -123,10 +123,13 @@ do{
    ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&zzzaflag)|~ZZFLAGPRISTINE;
    // first check the shape
    I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzframelen; I zexprank=zzr-zzframelen;
-     // change in rank/shape: a wreck, fail
-   zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
-   DO(zexprank, zexprank+=zs[i]^zzs[i];)  // if shapes don't match, set zexprank
-   if(likely(!((zt&SPARSE) + (zexprank^zr)))){  // if there was no wreck...
+ // obsolete      // change in rank/shape: a wreck, fail
+ // obsolete    zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
+ // obsolete    DO(zexprank, zexprank+=zs[i]^zzs[i];)  // if shapes don't match, set zexprank
+ // obsolete    if(likely(!((zt&SPARSE) + (zexprank^zr)))){  // if there was no wreck...
+   if(unlikely(ISSPARSE(zt)) || unlikely(zexprank!=zr))goto iswreck;  // sparse is a wreck in itself; otherwise wreck if change of rank
+   if(unlikely(!TESTAGREE(zs,zzs,zexprank)))goto iswreck;    // if shapes don't match, it's a wreck
+   if(likely(1)){  // normal case of no wreck
     // rank/shape match the items in zz.  We will copy this value as another item in zz, even if there have been earlier wrecks.
     if(unlikely(TYPESNE(zt,zzt))){  //  What about the type?
      // The type changed.  Convert the types to match.
@@ -197,6 +200,7 @@ do{
 #endif
     // **** z may have been destroyed and must not be used from here on ****
    }else{  // the current cell-result is a wreck
+iswreck:;
     if(unlikely(ISSPARSE(zt))){
      // we encountered a sparse result.  Ecch.  We are going to have to box all the results and open them.  Remember that fact
      ZZFLAGWORD|=ZZFLAGUSEOPEN;

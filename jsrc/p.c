@@ -290,9 +290,14 @@ static SYMWALK(jtchkval0k, I,INT,1,1, AT(QCWORD(d->fval))&NOUN&&AK(QCWORD(d->fva
 F1(jtparse){F1PREFIP;A z;I stackallo=0;
  ARGCHK1(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
- if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop!=0)){  // We don't need a new stack frame if there is one already and debug is off
+ // Get a new stack frame if needed.  This is a holdover from early days when a frame was allocated for every sentence.  Now that we can
+ // parse a sentence in the time it takes to allocate a frame, that is unacceptable overhead.  We come through here for keyboard, script, and ". .
+ // We need a DCPARSE frame to get error messages displayed, but if that PARSE frame is preceded by DCCALL or DCSCRIPT, the preceding frame
+ // is also displayed.  This means that a sentence executing ". will ALWAYS have to push a PARSE frame to prevent the calling sentence's CALL/SCRIPT
+ // info to be displayed.  This sucks.
+ if(1){  // scaf have a flag in the caller's frame indicating '". running'
   RZ(deba(DCPARSE,queue,(A)m,0L)); stackallo=1;
- }
+ }else{jt->sitop->dcy=(A)queue; jt->sitop->dcn=m;}
  z=jtparsea(jtinplace,queue,m);
  if(unlikely(stackallo))debz();
  // It is vital that we NOT issue EPILOG here, in case there are deleted values on the stack that need protection

@@ -265,7 +265,6 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh raspberry || exit 1
-#       script/testga.sh raspberry || exit 1
        ls -l j64
        zip -r rpi64d.zip j64
        cd j64

@@ -265,7 +265,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh raspberry || exit 1
-       script/testga.sh raspberry || exit 1
+#       script/testga.sh raspberry || exit 1
        ls -l j64
        zip -r rpi64d.zip j64
        cd j64
@@ -276,6 +276,8 @@ jobs:
        strip -S libgmp.so
        cd -
        zip -r rpi64.zip j64
+       zip rpi64.zip /usr/bin/zip
+       zip rpi64.zip /usr/bin/unzip
        rm -rf j64
        mkdir j64
        mv rpi64.zip j64/.

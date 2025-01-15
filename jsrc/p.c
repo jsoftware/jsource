@@ -292,14 +292,11 @@ F1(jtparse){F1PREFIP;A z;I stackallo=0;
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
  // Get a new stack frame if needed.  This is a holdover from early days when a frame was allocated for every sentence.  Now that we can
  // parse a sentence in the time it takes to allocate a frame, that is unacceptable overhead.  We come through here for keyboard, script, and ". .
- // We need a DCPARSE frame to get error messages displayed, but if that PARSE frame is preceded by DCCALL or DCSCRIPT, the preceding frame
- // is also displayed.  This means that a sentence executing ". will ALWAYS have to push a PARSE frame to prevent the calling sentence's CALL/SCRIPT
- // info to be displayed.  This sucks.
- if(1){  // scaf have a flag in the caller's frame indicating '". running'
-  RZ(deba(DCPARSE,queue,(A)m,0L)); stackallo=1;
- }else{jt->sitop->dcy=(A)queue; jt->sitop->dcn=m;}
+ // We need a DCPARSE frame to get error messages displayed, but we use the dcm field in it to indicate how many levels of ". are active
+ if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop==0)||unlikely(jt->sitop->dctype!=DCPARSE)){RZ(deba(DCPARSE,queue,(A)m,0L)); stackallo=1;}
+ I oexct=jt->sitop->dcm; jt->sitop->dcm+=((I)jtinplace>>JTFROMEXECX)&1;   // if this is "., raise the exec count in the PARSE frame
  z=jtparsea(jtinplace,queue,m);
- if(unlikely(stackallo))debz();
+ jt->sitop->dcm=oexct; if(unlikely(stackallo))debz();   // remove the exec count, pop stack if pushed
  // It is vital that we NOT issue EPILOG here, in case there are deleted values on the stack that need protection
  R z;
 }

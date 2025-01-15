@@ -189,14 +189,17 @@ void jtdebdisp(J jt,DC d){A*x,y;I e,t;
 }}
 
 // display the current stack frame; if it is PARSE, also display the previous frame if it is SCRIPT or CALL with explicit definition
+// This is where we format the error message that goes to display, 1 or 2 lines.
+// scaf This design requires that error information be preloaded into stack frames before execution.  That requires expensive frames and loading even when there are no errors.
+// Instead, when there is a failure outside of debug, jtxdefn & jtline, & possibly jtunquote (i. e. those places that would have had a CALL or SCRIPT frame)
+// should append their error info as they fail up the line.
 static B jtdebsi1(J jt,DC d){I t;
  RZ(d);
  t=d->dctype;
- debdisp(d); 
- d=d->dclnk;
- RZ(d&&t==DCPARSE);
- t=d->dctype;
- RZ(t==DCSCRIPT||t==DCCALL&&d->dcc);
+ debdisp(d);   // display the top frame, whatever it is
+ RZ(t==DCPARSE&&d->dcm==0);  // continue if this is a PARSE frame not being executed for ". (dcm).  ". breaks the connection between PARSE and the preceding frame
+ d=d->dclnk;  // advance to next frame if any
+ RZ(d&&(d->dctype==DCSCRIPT||(d->dctype==DCCALL&&d->dcc)));  // continue if next frame is SCRIPT or CALL for explicit defn
  debdisp(d);
  R 1;
 }

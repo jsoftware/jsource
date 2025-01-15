@@ -5,7 +5,6 @@
 
 /* Variables for controlling execution                                     */
 /*                                                                         */
-/* B     asgn      1 iff last operation on this line is assignment         */
 /* DC    dcs       ptr to debug stack entry for current script             */
 /* I     etxn      strlen(etx)                                             */
 /* C     etx[]     space for holding error display                         */

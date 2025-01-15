@@ -840,7 +840,7 @@ typedef struct DS{      /* 1 2 3 5                                              
  A dcx;                 /*     x    left argument                                         */
  A dcloc;               /*     x x  local symb table                  */
  A dcc;                 /*     x x  control matrix   (0 if not explicit)                  */
- I dcm;                 /*   x x            ; script index    */
+ I dcm;                 /* x x x    ". nesting level; script index    */
  I dcstop;              /*     x    the last stop in this function                        */
 } DST;
 

@@ -220,7 +220,6 @@ iswreck:;
 // obsolete        I *zcsnew=AS(zzcellshape)+zr;  // pointer to end+1 of new cell size, which might overlap the old
        I *zcsnew=AS(zzcellshape)+zr-zcsr;  // pointer to trailing zcsr atoms of new location of axes, which might overlap the old
        DQNOUNROLL(zcsr, zcsnew[i]=zcsold[i];) zcsnew-=zr-zcsr; DQNOUNROLL(zr-zcsr, zcsnew[i]=1;)   // move the old axes, followed by 1s for extra axes.  The areas may overlap at the beginning, so go back to front
-        // scaf if we aligned the new & old blocks at the end, we wouldn't have to move the incumbent - just extend with 1s
        zcsr=zr;  // now the stored cell has a new rank
       }
       // compare the old against the new, taking the max.  extend new with 1s if short
@@ -253,6 +252,8 @@ iswreck:;
       zzresultpri=0;  // initialize the result type to low-value
       // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AR holds the actual size; AS[] is the data
       // We use a faux-A block to catch most of the cases.  The part before AN is not allocated on the stack and we don't refer to it
+      // The shape starts at AS, and if the rank increases we have to slide the shape down.  If we ended the shape at the and of the allocated area we could just extend it with
+      // 1s in place.  We don't do this because it would add a bit to the shape-comparison time, and rank extensions are very rare - especially a second one.
       if(likely(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK)){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV0(zzcellshape,INT,AR(zz)-zzframelen+3,0);}
       AR(zzcellshape)=(RANKT)(AR(zz)-zzframelen); MCISH(AS(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
       ZZFLAGWORD|=(ZZFLAGBOXALLO);  // indicate we have allocated the boxed area

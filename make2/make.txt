@@ -42,6 +42,11 @@ jplatform=darwin j64x=j64avx2 ./build_libj.sh
 # this will run ./clean.sh and can detect the host platform
 ./build_all.sh
 
+# NOTE: gcc is the standard for cc on linux systems, however
+# updates to gcc may introduce problems. In that case you
+# might prefer
+CC=clang ./build_all.sh
+
 # target apple m1
 j64x=j64arm ./build_all.sh
 

@@ -40,18 +40,18 @@
    if(!(mode&IPHOFFSET)){hashallo(hh,p,asct,mode); if(!(md&IIMODREFLEX)){if(md==IICO)XDQAP(T,TH,hash,exp,stride) else XDOAP(T,TH,hash,exp,stride);} if(wsct==0)break;}  \
    switch(md){ \
     /* i.~ - one-pass operation.  Fill in the table and result as we go */ \
-   case IIDOT|IIMODREFLEX: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=i;},1);} break;      \
-   case IFORKEY|IIMODREFLEX: { I nuniq=0; XDOP(T,TH,hash,exp,stride,{++zv[hj-i]; *zv++=hj;},{++nuniq; *zv++=i+1;},1); AM(h)=nuniq;} break;      \
-   case IICO|IIMODREFLEX: {I *zi=zv+=wsct; XDQP(T,TH,hash,exp,stride,{*--zi=hj;},{*--zi=i;},1) } break;      \
+   case IIDOT|IIMODREFLEX: { XDOP(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=i;},1); zv+=wsct;} break;      \
+   case IFORKEY|IIMODREFLEX: { I nuniq=0; XDOP(T,TH,hash,exp,stride,{++zv[hj]; zv[i]=hj;},{++nuniq; zv[i]=i+1;},1); AM(h)=nuniq;} break;      \
+   case IICO|IIMODREFLEX: {XDQP(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=i;},1) zv+=wsct;} break;      \
     /* normal i./i: - use the table */ \
    case IICO: \
-   case IIDOT: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=hj;},0); }                          break;  \
-   case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDOP(T,TH,hash,exp,stride,{*zb++=0;},{*zb++=1;},1) zv=(I*)zb;} /* IRS - keep zv running */  break;  \
+   case IIDOT: { XDOP(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=hj;},0); zv+=wsct; }                          break;  \
+   case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDOP(T,TH,hash,exp,stride,{zb[i]=0;},{zb[i]=1;},1) zv=(I*)(zb+=wsct);} /* IRS - keep zv running */  break;  \
    case INUB|IIMODREFLEX: { C *zc=(C*)zv;       XMVP(T,TH,hash,exp,stride,1);                ZCSHAPE; }   break;  \
    case ILESS: { C *zc=(C*)zv; XMVP(T,TH,hash,exp,stride,0);                ZCSHAPE; }   break;  \
    case IINTER: { C *zc=(C*)zv; XMVPI(T,TH,hash,exp,stride,0);                ZCSHAPE; }   break;  \
    case INUBI|IIMODREFLEX: {I *zi=zv;  XDOP(T,TH,hash,exp,stride,{},{*zi++=i;},1) ZISHAPE; }   break;  \
-   case IEPS: { B *zb=(B*)zv;  XDOP(T,TH,hash,exp,stride,{*zb++=1;},{*zb++=0;},0) zv=(I*)zb;} /* this has IRS, so zv must be kept right */                       break;  \
+   case IEPS: { B *zb=(B*)zv;  XDOP(T,TH,hash,exp,stride,{zb[i]=1;},{zb[i]=0;},0) zv=(I*)(zb+=wsct);} /* this has IRS, so zv must be kept right */                       break;  \
     /* the rest are f@:e., none of which have IRS */ \
    case II0EPS: { I s; XDOP(T,TH,hash,exp,stride,{},{s=i; goto exit0;},0); s=wsct; exit0: *zv=s; }   break; /* i.&0@:e. */   \
    case II1EPS: { I s; XDOP(T,TH,hash,exp,stride,{s=i; goto exit1;},{},0); s=wsct; exit1: *zv=s; }  break; /* i.&1@:e. */  \

@@ -160,17 +160,17 @@
    }                                                                                            \
    switch(md){                                                                                   \
    /* when we are searching up, we can stop the second search when it gets past the index found in the first search */ \
-   case IIDOT: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
-   case IIDOT|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
-   case IFORKEY|IIMODREFLEX: {T * RESTRICT v=wv; I nuniq=0; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYYKEY,expw,expw,{},hj>=il,il=hj;,nuniq+=i==il;*zi=il;zv[il]++;++zi;); AM(h)=nuniq; zv=zi; } break;  \
-   case IICO:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQXY(T,TH,FXY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
-   case IICO|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQXY(T,TH,FYY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
-   case INUBSV|IIMODREFLEX:{T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FYYKEY,expw,expw,{},hj>=il,il=hj;,*zb++=i==il;); zv=(I*)zb;} break;  /* zv must keep running */  \
+   case IIDOT: {T * RESTRICT v=wv; I j, hj; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,zv[i]=il;); zv+=wsct; } break;  \
+   case IIDOT|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,zv[i]=il;); zv+=wsct; } break;  \
+   case IFORKEY|IIMODREFLEX: {T * RESTRICT v=wv; I nuniq=0; I j, hj; TDOXY(T,TH,FYYKEY,expw,expw,{},hj>=il,il=hj;,nuniq+=i==il;zv[i]=il;zv[il]++;); AM(h)=nuniq; zv+=wsct; } break;  \
+   case IICO:  {T * RESTRICT v=wv; I j, hj; TDQXY(T,TH,FXY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,zv[i]=il;); zv+=wsct;} break;  \
+   case IICO|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; TDQXY(T,TH,FYY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,zv[i]=il;); zv+=wsct;} break;  \
+   case INUBSV|IIMODREFLEX:{T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FYYKEY,expw,expw,{},hj>=il,il=hj;,zb[i]=i==il;); zv=(I*)(zb+=wsct);} break;  /* zv must keep running */  \
    case INUB|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMVY(T,TH,FYYKEY,expw,expw); ZCSHAPE; }    break;  \
    case ILESS: {T * RESTRICT v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMVX(T,TH,FXY,expa,expw); ZCSHAPE; }    break;  \
    case IINTER: {T * RESTRICT v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMVXI(T,TH,FXY,expa,expw); ZCSHAPE; }    break;  \
    case INUBI|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYYKEY,expw,expw,{},hj>=il,il=hj;,*zi=i; zi+=(i==il);); ZISHAPE;} break;  \
-   case IEPS:  {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zb++=(il!=asct);); zv=(I*)zb;} break;   /* zv must keep running */ \
+   case IEPS:  {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,zb[i]=(il!=asct);); zv=(I*)(zb+=wsct);} break;   /* zv must keep running */ \
    case II0EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=i; break;}); *zi=s;} break;  \
    case II1EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct!=il){s=i; break;}); *zi=s;} break;  \
    case IJ0EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDQXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=i; break;}); *zi=s;} break;  \

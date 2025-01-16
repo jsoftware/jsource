@@ -274,14 +274,14 @@ EXTERN Q Q__;            // x: __ NB. _1r0 internal form
 
 // workalike for mpn_neg (could be better optimized)
 // see: https://gmplib.org/manual/Low_002dlevel-Functions
-#define jmpn_neg(z, w, wn) ({mp_ptr Z=z, W=w; mp_size_t N=wn; B r;\
-  while (0 == *W) {                /* find lowest non-zero limb */\
-   *Z= 0;                                            /* -0 is 0 */\
-   if (!--N) {r= 0; goto done;}                   /* all zeros? */\
-   ++Z; ++W;                                         /* next... */\
-  } *Z= GMP_NUMB_MASK&-*W;        /* C's - works on lowest limb */\
-  if (--N) jmpn_com(++Z, ++W, N);   /* complement any remaining */\
-  r= 1; done: r;})
+#define jmpn_neg(z, w, wn) ({mp_ptr Z=z, W=w; mp_size_t N=wn; B r=1;\
+  while (0 == *W) {                  /* find lowest non-zero limb */\
+   *Z= 0;                                              /* -0 is 0 */\
+   if (!--N) {r= 0; break;}                         /* all zeros? */\
+   ++Z; ++W;                                           /* next... */\
+  } *Z= GMP_NUMB_MASK&-*W; /* C's - works on lowest non-zero limb */\
+  if (r&&--N) jmpn_com(++Z, ++W, N);  /* complement any remaining */\
+  r;})
 
 #ifdef _WIN32
 // workalike for mpn_com which mpir does not support

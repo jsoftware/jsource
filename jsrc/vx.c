@@ -32,7 +32,7 @@ I jtxcompare(J jt,X a,X w){ // *a-w  NB. J's *
 XF1(jtxsgn){ // *w NB. X w, X result
  R xc(XSGN(w)<0 ?-1 :XSGN(w)>0);
 }
-XF2(jtxplus){ // a+w  
+XF2(jtxplus){ // a+w  NB. X a, w
  ARGCHK2(a,w);
  if (unlikely(ISX0(a))) R w;
  if (unlikely(ISX0(w))) R a;
@@ -59,7 +59,34 @@ XF2(jtxplus){ // a+w
 }
 XF2(jtxminus){ // a-w  NB. X a, w
  ARGCHK2(a,w);
- R XsubXX(a,w);
+ if (unlikely(ISX0(w))) R a;
+ if (unlikely(ISX0(a))) {
+  X z; mp_size_t n= XLIMBLEN(w);
+  GAX(z, n); mp_ptr zd= voidAV1(z), wd= voidAV1(w);
+  DO(n, {*zd++= *wd++;}); // maybe/eventually should use virtual block here
+  XSGN(z)= -XSGN(w);
+  R z;
+ }
+ // X z= XaddXX(a,w); // XaddXX could become [temporary] syntactic sugar for jtxplus
+ mp_size_t an= XLIMBLEN(a), wn= XLIMBLEN(w); // arg sizes
+ mp_size_t m= MIN(an, wn), n= MAX(an, wn); // result sizes
+ X z; GAX(z, n+1); const mp_ptr zd= voidAV1(z), ad= voidAV1(a), wd= voidAV1(w); // data locations
+ B ap= XSGN(a)>0; B wnp= XSGN(w)<0; // positive or negative?
+ B ax= an>= wn; // when w and a have different lengths, larger should be first arg to mpn_add/mpn_sub
+ if (ap==wnp) { // work with unsigned magnitudes:
+  if (jmpn_add(zd, ax?ad:wd, n, ax?wd:ad, m)) zd[n++]= 1;
+  XSGN(z)= ap ?n :-n; // signs matched, result has sign of both args
+ } else {
+  B zp= ax ?ap :wnp;
+  if (jmpn_sub(zd, ax?ad:wd, n, ax?wd:ad, m)) {
+   zp= 1-zp; // borrow means need to negate result
+   if(unlikely(!jmpn_neg(zd, zd, n))) R X0; /* this X0 presumably never happens */
+  }
+  while (likely(n) && unlikely(!zd[n-1])) n--; /* trim leading zeros */
+  if (unlikely(!n)) R X0;
+  XSGN(z)= zp ?n :-n;
+ }
+ R z;
 }
 XF2(jtxtymes){ // a*w  NB. X a, w
  ARGCHK2(a,w); A z;

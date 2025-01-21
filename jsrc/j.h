@@ -638,13 +638,13 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // modes for indexofsub()
 #define IIOPMSKX        5  // # bits of flags
 #define IIOPMSK         (((I)1<<IIOPMSKX)-1)     // operation bits.  INTER also uses bit 3, which is included as a modifier in the switches
-#define IIOPMSKINIT     0xf  // 
+// obsolete #define IIOPMSKINIT     0xf  // used to mask the op for initializing botmasks.  Then the low-order 4 bits indicate the value to use
 #define IIDOT           0        // IIDOT and IICO must be 0-1
 #define IICO            1
 #define INUBSV          2   // BIT arrays INUBSV-INUBI init to 1 to that out-of-bounds in LESS keeps the value
-#define INUB            3
-#define ILESS           4
-#define INUBI           5
+#define ILESS           3   // -.
+#define INUB            4   // ~.    NUB must be paired with NUBI
+#define INUBI           5   // I.@:~:
 #define IEPS            6   // BIT arrays IEPS and above init to 0 so out-of-bounds means not included
 // the I...EPS values below are wired into the function table at the end of vcompsc.c, where they are combined with a comparison
 #define II0EPS          7  // i.&0@:e.   this must come first; others base on it
@@ -656,9 +656,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define IALLEPS         13  // *./@:e.
 #define IIFBEPS         14   // I.@e.
 #define IFORKEY         15  // special key support: like i.~, but add # values mapped to the index, and return #unique values in AM
-#define IINTER          16  // ([ -. -.)
+#define IINTER          16  // ([ -. -.)   LSBs cause BIT arrays to init to 0 meaning 'don't keep'
+#define INUBIP          0x14  // ~. inplace  LSBs cause BIT arrays to init to 1
 #define IIMODFIELD      ((I)7<<IIOPMSKX)  // bits used to indicate processing options
-#define IIMODPACKX      5
+#define IIMODPACKX      5  // must not exceed 5 since used in a shift
 #define IIMODPACK       (((I)1)<<IIMODPACKX)  // modifier for type.  (small-range search except i./i:) In IIDOT/IICO, indicates reflexive application.  In others, indicates that the
                               // bitmask should be stored as packed bits rather than bytes
 #define IIMODREFLEXX    5   // overlaps IIMODPACK; OK because reflexive i./i: needs to know where the match was & can't use bitmask

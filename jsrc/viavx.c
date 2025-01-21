@@ -34,8 +34,10 @@ I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-  UI fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;  // mvc overfetches, so need full UI
-  mvc(p,hh->data.UI,4,&fillval);  // fill with repeated copies of fillval
+  UI fillval = (((1LL<<INUBSV)|(1LL<<ILESS)|(1LL<<INUB)|(1LL<<INUBI)|(1LL<<INUBIP))>>(md&(IIMODPACK+IIOPMSK)))&1; UI temp=md&IIMODPACK?255:1; fillval=md&IREVERSED?temp:fillval;  // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
+// obsolete   UI fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSKINIT))<=INUBI); // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
+// obsolete  fillval|=fillval<<8; fillval|=fillval<<16; 
+  mvc(p,hh->data.UI,1,&fillval);  // fill with repeated copies of fillval
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
   if(p>hh->invalidhi){
@@ -767,7 +769,7 @@ A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079
    I zt; A z;  // type of result to allocate; address of block
    if((mode&IIOPMSK)==IEPS)zt=B01;
    else{
-    if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&(I)jtinplace)){z=w; goto inplace;}  // if inplaceable (not including assignment) and items have the right size
+    if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))){z=w; goto inplace;}  // if inplaceable (not including assignment) and items have the right size
     zt=INT;  // the result type depends on the operation.
    }
    GA(z,zt,wn,wr,AS(w));  // allocate result area
@@ -1064,22 +1066,33 @@ inplace:;
  AF ifn=fntbl[FNTABLEPREFIX+fnx][bighash];  // get an early start fetching the function we will call
 
  // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. If we are prehashing we skip this.
- // If the conditions are right, perform the operation inplace
- A z;
+ // If the conditions are right, perform the operation inplace.
+ A z;  // will hold result
  switch(mode&(IPHCALC|IIOPMSK)){
  default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
- case IIDOT: case IFORKEY:
- case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
+ case IIDOT:
+ case IICO:
+  // i./i: can run inplace on w if w is abandoned, not the same block as a, rank matches rank needed, item size<=SZI, DIRECT, and (not UNINCORPABLE or same type as result)
+  if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(-(AT(w)&(INT+SY_64*FL))&AC(w)&SGNIF(jtinplace,JTINPLACEWX)&((AR(w)^(f+f1))-1))<0){z=w; AT(z)=INT; break;}  // inplace w if not disqualified
+  // if can't inplace fall through to...
+ case IFORKEY:
+  GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
+ case ILESS: case IINTER:
+  // -./([-.-.) can run inplace if w is abandoned, not the same block as a, rank not 0, DIRECT, not UNINCORPABLE (since we don't want to change shape of an unincorpable)
+  if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(((AT(w)&~DIRECT)-1)&AC(w)&SGNIF(jtinplace,JTINPLACEWX)&-(AR(w)))<0){z=w; break;}  // inplace w if not disqualified
+  ws=wr==0?&AN(w):ws; GA(z,AT(w),AN(w),MAX(1,wr),ws); break;  // if wr is an atom, use 1 for the shape
+ case INUB:
+  // ~. can run inplace if abandoned, rank>0, DIRECT
+  if(likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(((AT(w)&~DIRECT)-1)&AC(w)&SGNIF(jtinplace,JTINPLACEWX)&-(AR(w)))<0){z=w; mode^=INUB^INUBIP; break;}  // inplace w if not disqualified
+    {I q; PRODX(q,AR(a)-1,AS(a)+1,MIN(m,p+1)) GA(z,t,q,MAX(1,wr),ws); break;}  // we speculatively overwrite, possibly 1 more than in a but no more than in w
+ case INUBI:   GATV0(z,INT,MIN(m,p)+1,1); break;  // we speculatively overwrite but never past a full buffer
  case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
- case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,MIN(m,p)+1) GA(z,t,q,MAX(1,wr),ws); break;}  // +1 because we speculatively overwrite.
- case ILESS: case IINTER:   ws=wr==0?&AN(w):ws; GA(z,AT(w),AN(w),MAX(1,wr),ws); break;  // if wr is an atom, use 1 for the shape
  case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
- case INUBI:   GATV0(z,INT,MIN(m,p)+1,1); break;  // +1 because we speculatively overwrite
  // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
  case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
                if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
  // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) come here only if e. produces rank 0 or 1.
- case IIFBEPS: GATV0(z,INT,c+1,1); break;  // +1 because we speculatively overwrite
+ case IIFBEPS: GATV0(z,INT,c,1); break;  // we speculatively overwrite but not past a full buffer
  case IANYEPS: case IALLEPS:
                GAT0(z,B01,1,0); break;
  case ISUMEPS:
@@ -1099,7 +1112,7 @@ inplace:;
   case IFORKEY: {z=reshape(shape(z),take(sc(m),sc(m))); RZ(z=mkwris(z)); AM(z)=!!m; R z;}  // all 0 but the first has the total count.  Must install # partitions=1 if #items>0
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
-  case INUB:    AN(z)=0; AS(z)[0]=m?1:0; R z;
+  case INUB: case INUBIP:    AN(z)=0; AS(z)[0]=m?1:0; R z;
   case ILESS:   if(m&&fnx==-3)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); R z;
   case IINTER:  if(!(m&&fnx==-3))AN(z)=AS(z)[0]=0; R z;  // y has atoms or something is empty, return all of w; otherwise empty
   case IEPS:    R reshape(shape(z),num(m&&(!n||(fnx&1))));  // fnx&1 is true if homo
@@ -1197,7 +1210,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
  R z;
 }
 
-// x i. y, supports inplacing
+// x i. y, supports inplacing (in subroutine)
 F2(jtindexof){
  if(unlikely(((UI)a^(UI)ds(CALP))<(UI)(AT(w)&LIT))&&likely(!ISSPARSE(AT(w)))){F2PREFIP; R jtadotidot(jt,w);}
  R indexofsub(IIDOT,a,w);
@@ -1220,13 +1233,13 @@ F1(jtnubsieve){
 F1(jtnub){ 
  F1PREFIP;ARGCHK1(w);
  if(unlikely((SGNIFSPARSE(AT(w))|SGNIF(AFLAG(w),AFNJAX))<0))R repeat(nubsieve(w),w);    // sparse or NJA
- A z; RZ(z=indexofsub(INUB,w,w));
+ A z; RZ(z=jtindexofsub(jtinplace,INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
  PRISTXFERF(z,w)
  RETF(z);
 }    /* ~.w */
 
-// x -. y.  does not have IRS
+// x -. y.  does not have IRS, support inplacing
 F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
  F2PREFIP;ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
@@ -1237,14 +1250,14 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
- RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(ILESS,x,a):
+ RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtinplace,ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERAF(x,a)
  RETF(x);
 }    /* a-.w */
 
-// x ([ -. -.[!.f]) y.  does not have IRS
+// x ([ -. -.[!.f]) y.  does not have IRS, supports inplacing
 DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws;
  F2PREFIP;ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
@@ -1259,7 +1272,7 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws;
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
  // Don't revert to fork!  localuse.lu1.fork2hfn is not set
- x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(IINTER,x,a):
+ x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtinplace,IINTER,x,a):
      repeat(eps(a,x),a);
  POPCCT
  RZ(x);

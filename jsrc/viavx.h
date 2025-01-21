@@ -61,8 +61,9 @@
 #define HASHSLOT(hash) j=((hash)*p)>>32;
 
 // Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
-#define ZISHAPE    AS(z)[0]=AN(z)=zi-zv
+#define ZISHAPE    AS(z)[0]=AN(z)=zi-zv   // zi must point to a single atom (sc. an index)
 #define ZCSHAPE    AS(z)[0]=(zc-(C*)zv)/k; AN(z)=n*AS(z)[0]
+#define ZCSHAPEI    AN(z)=n*(AS(z)[0]=(zc-zv))   // I *zc points to a SZI-sized cell but might not be an atom
 #define ZUSHAPE(T) AS(z)[0]= zu-(T*)zv;    AN(z)=n*AS(z)[0]
 
 // Calculate the hash slot.  The hash calculation (input parm) relies on the name v and produces the name j.  We have moved v to an xmm register to reduce register pressure
@@ -78,11 +79,12 @@
 // If (store) is 1, the value of i (which is the loop index giving the position within a of the item being processed) is stored into the empty hash slot,
 // only if the hash search does not find a match.  If (store) is 2, the entry that we found is cleared, by setting it to maxcount+1, when we find a match.
 // When (store)=2, we also ignore hash entries containing maxcount+1, treating them as failed compares
+// (store)=3 is ~. inplace: 
 // Independent of (store), (fstmt) is executed if the item is found in the hash table, and (nfstmt) is executed if it is not found.
-#define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) NOUNROLL do{if(hj==hsrc##sct){ \
-  if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
+#define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) NOUNROLL do{ \
+  if(hj==hsrc##sct){if(store==1)hv[name]=(TH)i; if(store==3)hv[name]=wsct; nfstmt break;}  /* this is the not-found case */ \
   if((store!=2||hj<hsrc##sct)&&(v=(T*)_mm_extract_epi64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
-  if(unlikely(--name<0))name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
+  if(unlikely(--name<0))name+=p; hj=hv[name]; /* miscompare, must continue search */ \
   }while(1);
 
 // Traverse the hash table for one argument.  (src) indicates which argument, a or w, we are looping through; (hsrc) indicates which argument provided the hash table.
@@ -92,6 +94,7 @@
 // q+2 is being calculated).
 // The (fstmt,nfstmt,store) arguments indicate what to do when a match/notmatch is resolved.
 // (loopctl) give the stride through the input array, the control for the main loop, and the index of the last value.  These values differ for forward and reverse scans through the input.
+// in the loop i is the index of the item being looked up in the hash (if store is not 0 or 3, that will be the index stored into the hashtable on notfound)
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
  {I i, j, hj; T *v; vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
@@ -100,8 +103,10 @@
 
 // Traverse a in forward direction, adding values to the hash table
 #define XDOAP(T,TH,hash,exp,stride) XSEARCH(T,TH,a,a,hash,exp,stride,{},{},1,0, (i=0;i<asct-2;++i) ,asct-1)
-// Traverse w in forward direction, executing fstmt/nfstmt depending on found/notfound; and adding to the hash if (reflex) is 1, indicating a reflexive operation
+// Traverse w in forward direction, executing fstmt/nfstmt depending on found/notfound; and adding to the hash if (reflex) is 1, indicating a reflexive operation   scaf could save a register if reflexive
 #define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XSEARCH(T,TH,w,a,hash,exp,stride,fstmt,nfstmt,reflex,0, (i=0;i<wsct-2;++i) ,wsct-1)
+// version used for ~. inplace: reflex=3 (controls FINDP), only a is used.  wsct is freed for use as stored-item count
+#define XDOPIP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XSEARCH(T,TH,a,a,hash,exp,stride,fstmt,nfstmt,reflex,0, (i=0;i<asct-2;++i) ,asct-1)
 // same for traversing a/w in reverse
 #define XDQAP(T,TH,hash,exp,stride) XSEARCH(T,TH,a,a,hash,exp,(-(stride)),{},{},1,cn*(asct-1), (i=asct-1;i>1;--i) ,0)
 #define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XSEARCH(T,TH,w,a,hash,exp,(-(stride)),fstmt,nfstmt,reflex,cn*(wsct-1), (i=wsct-1;i>1;--i) ,0)

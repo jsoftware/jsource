@@ -77,7 +77,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
 IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
  md=mode&IIOPMSK;  // just the operation bits
  I bk=1&(((1<<IICO)|(1<<IJ0EPS)|(1<<IJ1EPS))>>md);  // set if the dup-scan is reverse direction
- if(mode==INUB||mode==INUBI){GATV0(y,B01,asct,1); yb=BAV1(y);}
+// obsolete  if(mode==INUB||mode==INUBI){GATV0(y,B01,asct,1); yb=BAV1(y);}   // NUB and NUBI first do a reflexive scan into y, then find nub
+ if((mode&~1)==INUB){GATV0(y,B01,asct,1); yb=BAV1(y);}   // NUB and NUBI first do a reflexive scan into y, then find nub
  av=AAV(a);  acn=ak>>LGSZI;
  wv=AAV(w);  wcn=wk>>LGSZI;
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;
@@ -85,7 +86,7 @@ IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
  if(!(mode&IPHOFFSET)){  // if we are not using a presorted table...
   // look for IIDOT/IICO/INUBSV/INUB/INUBI/IFORKEY - we set IIMODREFLEX if one of those is set.  They don't remove dups.
   // we don't set REFLEX if there is a prehash, because the prehash always removes dups, and we would be left missing some values
-  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md+=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md);
+  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md+=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBIP)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md);
   RZ(h=nodupgrade(a,(I)h,ac,acn,0,n,asct,md,bk));   // h is used to pass in acr
  }
  if(w==mark)R h;
@@ -99,7 +100,7 @@ IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
   case IFORKEY|IIMODREFLEX: {I nuniq=0;BSLOOPAA(1,++nuniq;zv[p]=p+1,zv[q]=p;zv[p]++,++nuniq;zv[q]=(p=q)+1); zv+=asct; AM(h)=nuniq;     break;}
   case IICO|IIMODREFLEX:         BSLOOPAA(-1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
   case INUBSV|IIMODREFLEX:       BSLOOPAA(1,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=asct;     break;
-  case INUB|IIMODREFLEX:         BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
+  case INUB|IIMODREFLEX: case INUBIP|IIMODREFLEX:         BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
   case INUBI|IIMODREFLEX:        BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i])*zi++=i;);                  ZISHAPE; break;
   // searches, by binary search
   case IIDOT:        BSLOOPAW(*zv++=-2==q?hu[j]:asct);                       break;

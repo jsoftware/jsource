@@ -7,13 +7,30 @@
 // Routines to build the hash table from a.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.
 
 // special lookup routines to move the data rather than store its index, used for nub/less
-#define XMVP(T,TH,hash,exp,stride,reflex)      \
- if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
- else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); }
+#if 0  // obsolete 
+#define XMVP(T,TH,hash,exp,stride,reflex) C *zc=(C*)zv;      \
+ if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{printf("i=%lld, (I*)_mm_extract_epi64(vp,1)=%p, wv+i=%p\n",i,(I*)_mm_extract_epi64(vp,1),wv+i); *(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
+ else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); } ZCSHAPE;
+#else
+#define XMVP(T,TH,hash,exp,stride,reflex)    \
+ if(k==SZI){I *zc=zv; XDOP(T,TH,hash,exp,stride,{},{*zc=((I*)wv)[i]; ++zc;},reflex); ZCSHAPEI; }  \
+ else{C *zc=(C*)zv; XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); ZCSHAPE; }
+#endif
 // version for ([ -. -.)
-#define XMVPI(T,TH,hash,exp,stride,reflex)      \
+#if 0  // obsolete 
+#define XMVPI(T,TH,hash,exp,stride,reflex)   C *zc=(C*)zv;    \
  if(k==SZI){XDOP(T,TH,hash,exp,stride,{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},{},reflex); }  \
- else      {XDOP(T,TH,hash,exp,stride,{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},{},reflex); }
+ else      {XDOP(T,TH,hash,exp,stride,{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},{},reflex); } ZCSHAPE;
+#else
+#define XMVPI(T,TH,hash,exp,stride,reflex)    \
+ if(k==SZI){I *zc=zv; XDOP(T,TH,hash,exp,stride,{*zc=((I*)wv)[i]; ++zc;},{},reflex); ZCSHAPEI; }  \
+ else{C *zc=(C*)zv; XDOP(T,TH,hash,exp,stride,{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},{},reflex); ZCSHAPE; }
+#endif
+// version for ~. inplace
+#define XMVPIP(T,TH,hash,exp,stride,reflex)   wsct=0;    \
+ if(k==SZI){XDOPIP(T,TH,hash,exp,stride,{},{zv[wsct]=zv[i]; ++wsct;},reflex); }  \
+ else      {C *zc=(C*)zv; XDOPIP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k; ++wsct;},reflex);  } \
+ AN(z)=n*(AS(z)[0]=wsct);   /* wsct items, but there may be atoms/item */
 
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
 
@@ -32,7 +49,7 @@
   vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI/IFORKEY - we set IIMODREFLEX if one of those is set */ \
-  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
+  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBIP)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
   if(w==mark){wsct=0;}   /* if prehashing, turn off the second half */                          \
   I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv;  \
   for(l=0;l<ac;++l,av+=acn,wv+=--wreps<0?wcn:0,wreps=wreps<0?wrepssv:wreps){                                                 \
@@ -47,9 +64,10 @@
    case IICO: \
    case IIDOT: { XDOP(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=hj;},0); zv+=wsct; }                          break;  \
    case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDOP(T,TH,hash,exp,stride,{zb[i]=0;},{zb[i]=1;},1) zv=(I*)(zb+=wsct);} /* IRS - keep zv running */  break;  \
-   case INUB|IIMODREFLEX: { C *zc=(C*)zv;       XMVP(T,TH,hash,exp,stride,1);                ZCSHAPE; }   break;  \
-   case ILESS: { C *zc=(C*)zv; XMVP(T,TH,hash,exp,stride,0);                ZCSHAPE; }   break;  \
-   case IINTER: { C *zc=(C*)zv; XMVPI(T,TH,hash,exp,stride,0);                ZCSHAPE; }   break;  \
+   case INUBIP|IIMODREFLEX: {       XMVPIP(T,TH,hash,exp,stride,3);              }   break;  \
+   case INUB|IIMODREFLEX: {       XMVP(T,TH,hash,exp,stride,1);              }   break;  \
+   case ILESS: { XMVP(T,TH,hash,exp,stride,0);              }   break;  \
+   case IINTER: { XMVPI(T,TH,hash,exp,stride,0);          }   break;  \
    case INUBI|IIMODREFLEX: {I *zi=zv;  XDOP(T,TH,hash,exp,stride,{},{*zi++=i;},1) ZISHAPE; }   break;  \
    case IEPS: { B *zb=(B*)zv;  XDOP(T,TH,hash,exp,stride,{zb[i]=1;},{zb[i]=0;},0) zv=(I*)(zb+=wsct);} /* this has IRS, so zv must be kept right */                       break;  \
     /* the rest are f@:e., none of which have IRS */ \

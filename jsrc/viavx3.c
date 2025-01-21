@@ -12,12 +12,11 @@
 // nub support, which creates & processes the bit-vector in one pass.  FULL is immaterial.
 // T is the type for the result vector, stmt creates the result
 // unpacked version expects default of 1
-#define SNUB(decl, stmt) I zi=0, zie=asct;  decl  UC* RESTRICT hu=hh->data.UC-min; while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=0;  stmt  ++zi;}
+#define SNUB(decl, stmt) I zi=0, zie=asct;  decl  UC* RESTRICT hu=hh->data.UC-min; while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=0;  stmt  ++zi;}  // fetch input; fetch table value (1 till first match); clear table value; store table value to result; add table value to output ptr
 // packed version.  Default of 0
 #define SNUBP(decl, stmt) I zi=0, zie=asct;  decl  UC* RESTRICT hu=hh->data.UC-BYTENO(min); while(zi!=zie){UC v=hu[BYTENO(wv[zi])]; hu[BYTENO(wv[zi])]|=1<<BITNO(wv[zi]); v >>=BITNO(wv[zi]); v&=1; v^=1; stmt  ++zi;}
 
 // creation of the value vector
-
 // The bitmask was cleared to 0/1 by hashalloc depending on function
 // Boolean/bit hashtables.  Used  where the position doesn't matter, i. e. for all but i./i: 
 // Set TRUE for each value found.  hh->currentlo will always be 0.  zi starts at 0, since values don't matter
@@ -126,10 +125,10 @@
    case INUBSV:            {SNUB (B * RESTRICT zv=BAV(z)+l*asct;  ,  zv[zi]=v;) } break; \
    case IIMODPACK+IIMODFULL+INUBSV: \
    case IIMODPACK+INUBSV:  {SNUBP(B * RESTRICT zv=BAV(z)+l*asct;  ,  zv[zi]=v;) } break; \
-   case IIMODFULL+INUB: \
-   case INUB:              {SNUB (T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) AS(z)[0]=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
-   case IIMODPACK+IIMODFULL+INUB: \
-   case IIMODPACK+INUB:    {SNUBP(T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) AS(z)[0]=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
+   case IIMODFULL+INUB: case IIMODFULL+INUBIP: \
+   case INUB: case INUBIP:              {SNUB (T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) AS(z)[0]=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
+   case IIMODPACK+IIMODFULL+INUB: case IIMODPACK+IIMODFULL+INUBIP: \
+   case IIMODPACK+INUB: case IIMODPACK+INUBIP:   {SNUBP(T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) AS(z)[0]=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
    case IIMODFULL+INUBI: \
    case INUBI:             {SNUB (I * RESTRICT zv=AV(z); I *zv0=zv;   ,   *zv=zi; zv+=v;) AS(z)[0]=AN(z)=zv-zv0; } break;  \
    case IIMODPACK+IIMODFULL+INUBI: \

@@ -40,7 +40,7 @@ DF1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv
 struct __attribute__((aligned(CACHELINESIZE))) faxis {
  I lenaxis;  // the length of the axes (including frame) represented by this faxis struct, in items
  I lencell;  // size of item of this axis in atoms
- I nsel;  // number of selectors.  If negative, axis is complementary and *sels is a bitmask, value is ~len
+ I nsel;  // number of selectors.  If negative, axis is complementary; nsel has ~(# of items to move to result)
  union {
   A ind;  // (up until result allocation) the original block of selectors for this axis, for rank purposes, or 0 if none.
   I subx;   // (for complementary axes only, during the copy) index of next value to skip
@@ -205,8 +205,8 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     // complementary indexing.  See if the values are consecutive (in-full is impossible)
     // The first index we produce is .sel0, which means that must be the index of the first gap.  Find the width
     // of that gap and see if it accounts for all the indexes
-    nsel=~nsel;  // convert nsel to positive length - gives number of surviving 
-    index0=axes[r].sel0; I axn=axes[r].lenaxis; I indexn=likely(index0<nsel)?axes[r].sels[index0]:axn;  // start of gap, axis len, end+1 of gap (may be len of axis)
+    nsel=~nsel;  // convert nsel to positive length - gives number of result slots.  lenaxis-nsel is original # unique complementary indexes 
+    index0=axes[r].sel0; I axn=axes[r].lenaxis; I indexn=likely(index0<lenaxis-nsel)?axes[r].sels[index0]:axn;  // start of gap, axis len, end+1 of gap (or len of axis if there is no next sel)
     if(nsel>indexn-index0)goto novirtual;  // if the first gap does not account for all the selectors, we can't make a virtual one
 // obsolete     index0|=(indexn-index0)-nsel;  // if more cells than gap, turn index0 neg to stop virtual
 // obsolete     --indexn;  // convert to end of gap

@@ -231,6 +231,8 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '36' ($,) ckprist 0 0 0 0 ] 35
 ~. ckprist 0 1 0 0 ] 5
 ~. ckprist 0 1 0 0 ] 4 5
+'<"0 i. 3' -. ckprist 0 1 2 0 ] 5
+'<"0 i. 3' ([-.-.) ckprist 0 0 ] 5
 |. ckprist 0 1 0 0 ] 5
 |.!.a: ckprist 0 0 0 0 ] 5
 '3' |. ckprist 0 1 0 0 ] 5

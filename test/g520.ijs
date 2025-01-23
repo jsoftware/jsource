@@ -1610,6 +1610,18 @@ a =: 2 3 4$;:'+/..*(1 0 1#"2 a)-:(<jot;<<0){a'
 (-: a:&{) 'abc'
 (-: a:&{) o. i. 5 6 7
 
+y=: 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+y=: y, 5 5 5 5 5 5 5 5 5 5 5 5
+y=: y, 1 1 1 1 1 1 1 1 1 1 1 1
+y=: y, 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+5 5 5 5 5 5 5 5 5 5 5 5 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -: (<<<I.1=y){y  NB. incorrectly gave a virtual
+
+{{for. i. y do.
+dels =. (#shp) ?@$~ ndels =. ? shp =. 1 >. ? 40  NB. deal the array and the comp indexes
+assert. (2 ! shp) = (+/~.dels) + +/ (<<<dels) { i. shp
+end.
+1
+}} 10000   NB. Veridy that random deletions work
 
 NB. (<"1 x){y -----------------------------------------------------------
 

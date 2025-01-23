@@ -750,6 +750,7 @@ A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079
   // it must not use sequential search if the comparison is inexact, because then it would conflict with nub and just generally fail because values not in
   // the nub could match later values leaving omitted values
   mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((0x100000&((UI4*)&jt->cct)[1])>=(UI)((at)&(FL|CMPX|BOX)))<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash) /. is OK if a is not float
+  // *************************************** test for linear search *******************************************
   // The comparison uses the fact that cct can never go above 1.0, which is 0x3ff0000000000000 in double precision.  To avoid integer-float conversions, we just strip out the bit that signifies
   // 1.0.  The expression then means 'tolerance=1.0 or intolerant comparison'
   // If the problem is small, use sequential search to save analysis and hashing time
@@ -758,7 +759,7 @@ A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079
   // For the hash lookup: ~10 clocks per atom of w
   // For the sequential search: 1/2 clock per a*w
   // units below are #atoms of sequential search per hash
-  I seqtime; DPMULD(an,wn,seqtime,seqtime=IMAX;);
+  I seqtime; DPMULD(MAX(an,NPAR*2),wn,seqtime,seqtime=IMAX;);   // MAX to account for loop overhead in small a
   // TUNE  From testing 5/2021 on SkylakeX.  Hard to tell, since the data is brought into cache
 #define HASHTIMEA (5)  // hashing time for a
 #define HASHTIMEW (4)  // hashing time for w
@@ -1246,14 +1247,22 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  if(unlikely(MIN(ai,wi)==0)&&(ar!=0))RCA(a);  // if either arg has no items, there's nothing to remove, return a, unless atom must become a list
- // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
- if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
- // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
- // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
- RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtinplace,ILESS,x,a):
-     repeat(not(eps(a,x)),a));
- // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
- PRISTXFERAF(x,a)
+ if(ar==wr+1){  // is just 1 cell of y?
+  // if y has rank 1 less than x, execute as ((x ~: y) # x) if y is atomic or ((x ~.@-:"yr) # x) if y is an array.  Inplace x.  Use IRS and leave comparison tolerance as set
+  J jtipx=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>1)&JTINPLACEW));  // move input inplace-x flag to inplace-w
+  if(wr==0){RZ(x=jtrepeat(jtipx,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
+  }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtipx,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
+  }
+ }else{
+  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
+  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
+  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. y e. x) # x 
+  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
+  RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtinplace,ILESS,x,a):
+      repeat(not(eps(a,x)),a));
+  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
+ }
+ if(unlikely(at&BOX))PRISTXFERAF(x,a)
  RETF(x);
 }    /* a-.w */
 
@@ -1264,22 +1273,23 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws;
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
  if(unlikely(MIN(ai,wi)==0))R take(zeroionei(0),a);  // if either arg is empty, nothing can be common, return no items
+ // scaf consider fast version if y has only one cell
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // comparison tolerance may be encoded in h - apply it if so
  D savcct = jt->cct;
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it
- // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
+ // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
  // Don't revert to fork!  localuse.lu1.fork2hfn is not set
  x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtinplace,IINTER,x,a):
      repeat(eps(a,x),a);
  POPCCT
  RZ(x);
- // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
- PRISTXFERAF(x,a)
+// obsolete  PRISTXFERAF(x,a)
+ if(unlikely(at&BOX)){PRISTCLRF(a) PRISTCLRF(w)} // result is non-pristine, and both a and w also
  RETF(x);
-}    /* a-.w */
+}
 
 // x e. y
 F2(jteps){I l,r;

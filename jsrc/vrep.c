@@ -123,6 +123,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
    I bitstack;  // the bits packed together
    if(n>=2*BSIZE){
     // n>=64, bitpipe0 has the bits to process (and if n>=128 bitpipe1 is in flight).
+    // scaf if all 64 bits are 1s, copy full cachelines to the output.  They will be misaligned, alas
     bitstack=(I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(bitpipe00,i1))
             |((I)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(bitpipe01,i1))<<BSIZE);
    }else{

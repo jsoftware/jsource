@@ -1423,7 +1423,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  RZ(x=!ISSPARSE(at)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
- // We extracted from a, so mark it non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
+ // We extracted from a, so mark it non-pristine.  If a was pristine and abandoned, transfer its pristine status to the result
  PRISTXFERAF(x,a)
  RETF(x);
 }    /* a-.w */

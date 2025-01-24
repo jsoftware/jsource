@@ -128,7 +128,7 @@ end.
 100 test 4 %~ i. 100x
 
 
-4!:55 ;:'b t test xx yy'
+4!:55 ;:'b t test val xx yy'
 
 
 

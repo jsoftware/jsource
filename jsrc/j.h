@@ -1960,7 +1960,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PRISTXFER(z,w) AFLAGORLOCAL(z,PRISTFROMW(w)) PRISTCOMMON(w)
 // transfer pristinity of w to z, destroying w
 #define PRISTXFERF(z,w) AFLAGORLOCAL(z,PRISTFROMW(w)) PRISTCLRF(w)  // use w bit of jtinplace
-#define PRISTXFERAF(z,a) AFLAGORLOCAL(z,PRISTFROMA(w)) PRISTCLRF(a)  // use a bit of jtinplace
+#define PRISTXFERAF(z,a) AFLAGORLOCAL(z,PRISTFROMA(a)) PRISTCLRF(a)  // use a bit of jtinplace
 // same, but with an added condition (in bit 0)
 #define PRISTXFERFIF(z,w,cond)AFLAGORLOCAL(z,AFLAG(w)&(((cond)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) PRISTCLRF(w)
 // transfer pristinity from a AND w to z (not if a==w)

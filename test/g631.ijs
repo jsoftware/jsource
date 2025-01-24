@@ -232,7 +232,7 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 ~. ckprist 0 1 0 0 ] 5
 ~. ckprist 0 1 0 0 ] 4 5
 '<"0 i. 3' -. ckprist 0 1 2 0 ] 5
-'<"0 i. 3' ([-.-.) ckprist 0 0 ] 5
+'<"0 i. 3' ([-.-.) ckprist (0 , IF64 , 2 0) ] 5  NB. In 32-bit ([-.-.) is not recognized as a compound and it is not seen that a is marked inplaceable for the rightmost -. but it can't get its result to the final output
 |. ckprist 0 1 0 0 ] 5
 |.!.a: ckprist 0 0 0 0 ] 5
 '3' |. ckprist 0 1 0 0 ] 5

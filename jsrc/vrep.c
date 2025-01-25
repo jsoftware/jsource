@@ -173,7 +173,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
       I len1=len*k-SZI;  // get length in bytes of #wds to move-1
       __m256i tmp=_mm256_loadu_si256((__m256i*)(zvv+wzofst)); __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)validitymask+(NPAR-1)*SZI-(len1&(NPAR-1)*SZI)));  // load first word & mask
       while((len1-=NPAR*SZI)>=0){_mm256_storeu_si256((__m256i*)(zvv),tmp); zvv=(C*)zvv+SZI*NPAR; tmp=_mm256_loadu_si256((__m256i*)((C*)zvv+wzofst));}  // copy till last batch, which will have 1-4 wds
-      _mm256_maskstore_pd(zvv,endmask,_mm256_castsi256_pd(tmp)); zvv=(C*)zvv+len1+(NPAR+1)*SZI;
+      _mm256_maskstore_epi64(zvv,endmask,tmp); zvv=(C*)zvv+len1+(NPAR+1)*SZI;
      }else{   // not an even number of words
       MC(zvv,(C*)zvv+wzofst,len*k);   // copy the bytes
       zvv=(C*)zvv+len*k;  // advance the 

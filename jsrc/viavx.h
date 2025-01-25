@@ -88,7 +88,7 @@
   }while(1);
 
 // Traverse the hash table for one argument.  (src) indicates which argument, a or w, we are looping through; (hsrc) indicates which argument provided the hash table.
-// For each item we do HASHSLOT folowed by FINDP, and adjust the (v) values (both stored in xmm variable vp) to keep track
+// For each item we do HASHSLOT folowed by FINDP, and adjust the (v) values (both stored in xmm variable vp) to keep track.  vp[0]=vp[1] is running srcv+vpofst/static srcv+vpofst, vpstride[0] = source stride, vpstride[1]=0
 // of which input item is being operated on.  This loop is triple-unrolled, so that after we HASHSLOT for entry q, we FINDP for entry q-2.  As soon as we HASHSLOT for entry
 // q, we prefetch it into L1 cache; then as soon as we have finished the last store for entry q-1, we do the fetch for entry q (which will be fetching while the hash for entry
 // q+2 is being calculated).

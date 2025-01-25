@@ -66,9 +66,14 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  flgs=FLGSNPAROK*SGNTO0((5*m-6*p)|-(k^SZI));  // Enable NPAR loop if p>0.85m or k is not SZI
 #endif
  if(!ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
-  // normal non-in-place copy
-    // we copy in NPAR batches, and the last one might overstore.  We allocate enough extra atoms to cover one NPAR block to the last valid result atom
-  I zr=AR(w); GA00(z,AT(w),zn+((NPAR*SZI)>>klg)-1,zr); MCISH(AS(z),AS(w),zr) AN(z)=zn; // allocate result, with pad; restore AN to correct value
+  // normal non-in-place copy.   we copy in NPAR batches, and the last one might overstore.
+  I pad=((NPAR*SZI)>>klg)-1;  //  We allocate enough extra atoms to cover one NPAR block to the last valid result atom
+#if C_AVX2 || EMU_AVX2
+  pad&=REPSGN(~pad&flgs);  // if pad is negative or wide loop disabled, use no pad
+#else
+  pad&=REPSGN(~pad);
+#endif
+  I zr=AR(w); GA00(z,AT(w),zn+pad,zr); MCISH(AS(z),AS(w),zr) AN(z)=zn; // allocate result, with pad; restore AN to correct value
   zvv=voidAVn(zr,z);  // point to the output area
   // if blocks abandoned, pristine status can be transferred to the result, because we know we are not repeating any cells
   AFLAGORLOCAL(z,PRISTFROMW(w))  // result pristine if inplaceable input was - w prist cleared later

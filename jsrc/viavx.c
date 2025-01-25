@@ -1247,16 +1247,13 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  if(unlikely(MIN(ai,wi)==0)&&(ar!=0))RCA(a);  // if either arg has no items, there's nothing to remove, return a, unless atom must become a list
- if((ar^1)+wr==0){  // taking a single atom from a list?
-// if # y speedup if(ar==wr+1){  // is just 1 cell of y?
+// obsolete  if((ar^1)+wr==0){  // taking a single atom from a list?
+ if(ar==wr+1){  // is just 1 cell of y?
   // if y has rank 1 less than x, execute as ((x ~: y) # x) if y is atomic or ((x ~.@-:"yr) # x) if y is an array.  Inplace x.  Use IRS and leave comparison tolerance as set
   J jtipx=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>1)&JTINPLACEW));  // move input inplace-x flag to inplace-w
-  RZ(x=jtrepeat(jtipx,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
-#if 0   // until x # y has a fast-copy for strings of 1s this isn't so fast
-  if(wr==0){
+  if(wr==0){RZ(x=jtrepeat(jtipx,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
   }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtipx,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
   }
-#endif
  }else{
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
   if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here

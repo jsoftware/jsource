@@ -61,6 +61,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
 #if C_AVX2 || EMU_AVX2
  I exactlen;  // will be 1 if overstore is not allowed on copy
+ I msb1no=(5*m-6*p)|((SZI-k)&((k&(SZI-1))-1));  // In the large loop this will hold the msb of the previous field.  We init to negative to call for using the short loop, if p>0.85m or k is an even # Is > 1
 #endif
  if(!ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy
@@ -75,7 +76,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   n=0;  // cannot skip prefix of 1s if not inplace
  }else{
   z=w; // inplace
-  // We are going to change the type/shape/rank of the virtual block.  If it is UNINCORPABLE (meaning it will be reused), create a new clone.  We will still inplace the data area
+  // We are going to change the (type)/shape/rank of the abandoned w block.  If it is UNINCORPABLE (meaning it will be reused), create a new clone.  We will still inplace the data area
   if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));}
   AN(z)=zn;  // Install the correct atom count
   // see how many leading values of the result are already in position.  We don't need to copy them in the first cell
@@ -94,7 +95,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  AS(z)[wf]=p;  // move in length of item axis, #bytes per item of cell
  if(!zn)R z;  // If no atoms to process, return empty
 
-// original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
+// obsolete // original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
  JMCDECL(endmask) JMCSETMASK(endmask,k,exactlen)   // set up for irregular move, if we need one
   
  while(--c>=0){
@@ -109,18 +110,18 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   while(n>0){    // n is # bytes left to process
    // We process 64 bytes at a time, always reading ahead one block.  If there are >=64 items to do, bitpipe1 has the next set to process, from *avv
    // In case there are few 1s, we fast-skip over blocks of 0s.  Because the processing is so fast, we don't change alignment ever.
-   I n0=n;  // remember where we started
+/// obsolete    I n0=n;  // remember where we started
    while(1){
     bitpipe00=bitpipe10; bitpipe01=bitpipe11;  // Move the next bits (if any) into pipe0
     if(n<=2*BSIZE)break;  // exit if there is no further batch.  n will never hit 0.  We may process an empty stack
     if(n>=4*BSIZE){bitpipe10=_mm256_loadu_si256((__m256i*)(avv+2*BSIZE)); bitpipe11=_mm256_loadu_si256((__m256i*)(avv+3*BSIZE));}  // if there is another FULL batch, prefetch it
     if(!_mm256_testz_si256(_mm256_or_si256(bitpipe00,bitpipe01),_mm256_or_si256(bitpipe00,bitpipe01)))break;  // exit if nonzero found.  Cannot be spurious
-    // We hit 64 0s.  Advance over them
-    avv+=2*BSIZE; n-=2*BSIZE;
+    // We hit 64 0s.  Advance over them, and skip the input values for them
+    avv+=2*BSIZE; n-=2*BSIZE; wvv+=2*BSIZE*k;
    }
-   wvv+=k*(n0-n);  // advance w pointer for the moves made, if any
+/// obsolete    wvv+=k*(n0-n);  // advance w pointer for the moves made, if any
    // Move the bits into bitstack
-   I bitstack;  // the bits packed together
+   UI bitstack;  // the bits packed together
    if(n>=2*BSIZE){
     // n>=64, bitpipe0 has the bits to process (and if n>=128 bitpipe1 is in flight).
     // scaf if all 64 bits are 1s, copy full cachelines to the output.  They will be misaligned, alas
@@ -134,6 +135,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
     bitstack&=~(-1LL<<n);  // leave n valid bits
    }
    avv+=2*BSIZE;  // we have moved 2 batches of bits into bitstack
+   if(msb1no<0){
 #else
   UI *avv=(UI*)(CAV(a)+n); n=m-n; n+=((n&(SZI-1))?SZI:0); UI bits=*avv++;  // prime the pipeline for top of loop.  Extend n only if needed to get all bits, and only by a full word
   while(n>0){    // where we load bits SZI at a time
@@ -148,13 +150,37 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 #endif
 #define REPEATLOOP1(t,x) if(bitstack==0){zvv+=sizeof(t)*x; break;} *(t*)(zvv+sizeof(t)*x)=((t*)wvv)[CTTZI(bitstack)]; bitstack&=bitstack-1;
 #define REPEATLOOP(t) NOUNROLL while(1){REPEATLOOP1(t,0) REPEATLOOP1(t,1) REPEATLOOP1(t,2) REPEATLOOP1(t,3) zvv+=sizeof(t)*4;} break;
-   switch(k){  // copy the words
-   case sizeof(UI): REPEATLOOP(UI) case sizeof(C): REPEATLOOP(C)  case sizeof(US): REPEATLOOP(US) 
+    switch(k){  // copy the words
+    case sizeof(UI): REPEATLOOP(UI) case sizeof(C): REPEATLOOP(C)  case sizeof(US): REPEATLOOP(US) 
 #if BW==64
-   case sizeof(UI4): REPEATLOOP(UI4) 
+    case sizeof(UI4): REPEATLOOP(UI4) 
 #endif
-   default: NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
+    default: NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
+    }
+#if C_AVX2 || EMU_AVX2
+   }else{
+    // This version is, surprisingly, faster only when a has >85% ones OR the size of an item is a multiple of Is > 1 - and even then it's slower for D3$  (but this not tested with inplacing)
+    // bitstack has up to BW bits to process, with any extra ones being 0.   zvv is the output pointer, wvv the input pointer
+    // The carried dependency is short, marked with *
+    I msb1no=0; I wzofst=(C*)wvv-(C*)zvv;  // start of prev wd found; dist betw z and w pointers, lengthening as we skip
+    while(bitstack){
+     I lsb=LOWESTBIT(bitstack); I lsbno=CTTZI(bitstack);  // starting bit(*) and its bit#
+     wzofst+=(lsbno-msb1no)*k;  // dist between (end+1 of old field) and (start of new field) is # skips; add then to w offset
+     bitstack+=lsb; msb1no=CTTZI(bitstack); msb1no=bitstack==0?BW:msb1no;  // add lsb to propagate carry past end-of-field(*); find its#, BW if carry fell off the end
+     bitstack-=LOWESTBIT(bitstack);  // remove the carry bit(*)
+     I len=msb1no-lsbno;  // dist between end+1 and start is length of field
+     if((k&(SZI-1))==0){  // if we can copy an even # words
+      I len1=len*k-SZI;  // get length in bytes of #wds to move-1
+      __m256i tmp=_mm256_loadu_si256((__m256i*)(zvv+wzofst)); __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)validitymask+(NPAR-1)*SZI-(len1&(NPAR-1)*SZI)));  // load first word & mask
+      while((len1-=NPAR*SZI)>=0){_mm256_storeu_si256((__m256i*)(zvv),tmp); zvv=(C*)zvv+SZI*NPAR; tmp=_mm256_loadu_si256((__m256i*)((C*)zvv+wzofst));}  // copy till last batch, which will have 1-4 wds
+      _mm256_maskstore_pd(zvv,endmask,tmp); zvv=(C*)zvv+len1+(NPAR+1)*SZI;
+     }else{   // not an even number of words
+      MC(zvv,(C*)zvv+wzofst,len*k);   // copy the bytes
+      zvv=(C*)zvv+len*k;  // advance the 
+     }
+    }
    }
+#endif
 
    wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64
    n-=BW;  // decr count left

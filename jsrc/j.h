@@ -1558,7 +1558,7 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // move 1 full store to begin with and align the store pointer and length to within that block
 #if C_AVX2 || EMU_AVX2
 #define JMCDECL(mskname) __m256i mskname;
-#define JMCSETMASK(mskname,l,bytelen) mskname=_mm256_loadu_si256((__m256i*)(validitymask+((-(((l)+SZI*(1-bytelen)-1)>>LGSZI))&(NPAR-1)))); /* 0->1111 1->1000 3->1110 */
+#define JMCSETMASK(mskname,l,bytelen) mskname=_mm256_loadu_si256((__m256i*)(validitymask+((-(((l)+SZI*(1-(bytelen))-1)>>LGSZI))&(NPAR-1)))); /* 0->1111 1->1000 3->1110 */
 #define JMCcommon(d,s,l,bytelen,mskname,mskdecl,mskset) \
 { \
  void *src=(s); \
@@ -1572,14 +1572,14 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
   I overwr=(I)dst&(NPAR*SZI-1); dst=(C*)dst+NPAR*SZI-overwr; src=(C*)src+NPAR*SZI-overwr; ll-=NPAR*SZI-overwr; JMCSETMASK(mskname,ll,bytelen) \
  }else{mskset}  /* if short op, set mask if not set outside loop */ \
  if(likely(ll>0)){ /* an empty vector has no guaranteed pad */ \
-  ll+=SZI*(1-bytelen)-1; /* len-1 to move, rounded up if moving qwords */  \
+  ll+=SZI*(1-(bytelen))-1; /* len-1 to move, rounded up if moving qwords */  \
   /* copy the remnants at the end - bytes and Is.  Do this early because they have address conflicts that will take 20 */ \
   /* cycles to sort out, and we can put that time into the switch and loop branch overhead  NO - see below */ \
   /* First, the odd bytes if any */ \
   /* if there is 1 byte to do low bits of ll are 0, which means protect 7 bytes, thus 0->7, 1->6, 7->0 */ \
-  if(bytelen!=0)STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
+  if((bytelen)!=0)STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
   /* copy up till last section */ \
-  if(likely((ll-=SZI)>=0)||(bytelen==0)){  /* reduce ll (=len-1) by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
+  if(likely((ll-=SZI)>=0)||((bytelen)==0)){  /* reduce ll (=len-1) by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
    /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
    UI n2=DUFFLPCT(ll>>LGSZI,2);  /* # turns through duff loop */ \
    if(n2>0){ \

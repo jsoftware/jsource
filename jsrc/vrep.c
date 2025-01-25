@@ -54,31 +54,31 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  if(unlikely(m==p)){RETF(w);}  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
  PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); // c=#major cells, k=#atoms per item of cell
  I zn=c*k*p;  // zn=#atoms in result
- k<<=bplg(AT(w));   // k is now # bytes/cell
+ I klg=bplg(AT(w)); k<<=klg;   // k is now # bytes/cell, klg is lg(atomsize)
  // if the result is inplaceable, AND it is not getting much shorter, keep the same result area
  // We retain the old block as long as the new one is at least half as big, without looking at total size of the allocation,
  // This could result in a very small block's remaining in a large allocation after repeated trimming.  We will accept the risk.
  // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
 #if C_AVX2 || EMU_AVX2
- I exactlen;  // will be 1 if overstore is not allowed on copy
- I msb1no=(5*m-6*p)|((SZI-k)&((k&(SZI-1))-1));  // In the large loop this will hold the msb of the previous field.  We init to negative to call for using the short loop, if p>0.85m or k is an even # Is > 1
+ I flgs;  // will be 1 if overstore is not allowed on copy
+#define FLGSNOOSTORE 1  // set if overstore on copy is allowed
+#define FLGSNPAROK -2  // set if we should enable the NPAR loop (the upper bits are 0 to disable)
+ flgs=FLGSNPAROK*SGNTO0((5*m-6*p)|-(k^SZI));  // Enable NPAR loop if p>0.85m or k is not SZI
 #endif
  if(!ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy
-    // no overflow possible unless a is empty; nothing  moved then, and zn is 0
-  I zr=AR(w); GA00(z,AT(w),zn,zr); MCISH(AS(z),AS(w),zr) // allocate result
+    // we copy in NPAR batches, and the last one might overstore.  We allocate enough extra atoms to cover one NPAR block to the last valid result atom
+  I zr=AR(w); GA00(z,AT(w),zn+((NPAR*SZI)>>klg)-1,zr); MCISH(AS(z),AS(w),zr) AN(z)=zn; // allocate result, with pad; restore AN to correct value
   zvv=voidAVn(zr,z);  // point to the output area
   // if blocks abandoned, pristine status can be transferred to the result, because we know we are not repeating any cells
   AFLAGORLOCAL(z,PRISTFROMW(w))  // result pristine if inplaceable input was - w prist cleared later
-#if C_AVX2 || EMU_AVX2
-  exactlen=0;  // OK to overstore when copying to new buffer
-#endif
+  // OK to overstore when copying to new buffer
   n=0;  // cannot skip prefix of 1s if not inplace
  }else{
   z=w; // inplace
   // We are going to change the (type)/shape/rank of the abandoned w block.  If it is UNINCORPABLE (meaning it will be reused), create a new clone.  We will still inplace the data area
   if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));}
-  AN(z)=zn;  // Install the correct atom count
+  AN(z)=zn;  // Install the correct atom count.  We make sure we don't overstore when we are copying inplace
   // see how many leading values of the result are already in position.  We don't need to copy them in the first cell
   UI *avv=IAV(a); for(n=0;n<((m-1)>>LGSZI);++n)if(avv[n]!=VALIDBOOLEAN)break;  // n ends pointing to a word that is known not all valid, because there MUST be a 0 somewhere
   // now n has the number of words of a to skip.  Get the number of extra bytes in the last word.
@@ -88,7 +88,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
 #if C_AVX2 || EMU_AVX2
-  exactlen=!!(k&(SZI-1));  // if items are not multiples of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
+  flgs|=FLGSNOOSTORE*!!(k&(SZI-1));  // if items are not multiples of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
 #endif
   // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
  }
@@ -96,7 +96,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  if(!zn)R z;  // If no atoms to process, return empty
 
 // obsolete // original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
- JMCDECL(endmask) JMCSETMASK(endmask,k,exactlen)   // set up for irregular move, if we need one
+ JMCDECL(endmask) JMCSETMASK(endmask,k,flgs&FLGSNOOSTORE)   // set up for irregular move, if we need one
   
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
@@ -135,7 +135,8 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
     bitstack&=~(-1LL<<n);  // leave n valid bits
    }
    avv+=2*BSIZE;  // we have moved 2 batches of bits into bitstack
-   if(msb1no<0){
+   I wzofst=(C*)wvv-(C*)zvv;   // dist betw z and w pointers, lengthening as we skip
+   if((wzofst&flgs&-NPAR*SZI)==0){  // if flgs disable the big loop (with upper 0s), OR z would overlap w, use the short loop
 #else
   UI *avv=(UI*)(CAV(a)+n); n=m-n; n+=((n&(SZI-1))?SZI:0); UI bits=*avv++;  // prime the pipeline for top of loop.  Extend n only if needed to get all bits, and only by a full word
   while(n>0){    // where we load bits SZI at a time
@@ -155,29 +156,23 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 #if BW==64
     case sizeof(UI4): REPEATLOOP(UI4) 
 #endif
-    default: NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
+    default: NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k,flgs&FLGSNOOSTORE,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
     }
 #if C_AVX2 || EMU_AVX2
    }else{
     // This version is, surprisingly, faster only when a has >85% ones OR the size of an item is a multiple of Is > 1 - and even then it's slower for D3$  (but this not tested with inplacing)
     // bitstack has up to BW bits to process, with any extra ones being 0.   zvv is the output pointer, wvv the input pointer
     // The carried dependency is short, marked with *
-    I msb1no=0; I wzofst=(C*)wvv-(C*)zvv;  // start of prev wd found; dist betw z and w pointers, lengthening as we skip
+    I msb1no=0;
+   // start of prev wd found;
     while(bitstack){
      I lsb=LOWESTBIT(bitstack); I lsbno=CTTZI(bitstack);  // starting bit(*) and its bit#
      wzofst+=(lsbno-msb1no)*k;  // dist between (end+1 of old field) and (start of new field) is # skips; add then to w offset
      bitstack+=lsb; msb1no=CTTZI(bitstack); msb1no=bitstack==0?BW:msb1no;  // add lsb to propagate carry past end-of-field(*); find its#, BW if carry fell off the end
      bitstack-=LOWESTBIT(bitstack);  // remove the carry bit(*)
-     I len=msb1no-lsbno;  // dist between end+1 and start is length of field
-     if((k&(SZI-1))==0){  // if we can copy an even # words
-      I len1=len*k-SZI;  // get length in bytes of #wds to move-1
-      __m256i tmp=_mm256_loadu_si256((__m256i*)(zvv+wzofst)); __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)validitymask+(NPAR-1)*SZI-(len1&(NPAR-1)*SZI)));  // load first word & mask
-      while((len1-=NPAR*SZI)>=0){_mm256_storeu_si256((__m256i*)(zvv),tmp); zvv=(C*)zvv+SZI*NPAR; tmp=_mm256_loadu_si256((__m256i*)((C*)zvv+wzofst));}  // copy till last batch, which will have 1-4 wds
-      _mm256_maskstore_epi64(zvv,endmask,tmp); zvv=(C*)zvv+len1+(NPAR+1)*SZI;
-     }else{   // not an even number of words
-      MC(zvv,(C*)zvv+wzofst,len*k);   // copy the bytes
-      zvv=(C*)zvv+len*k;  // advance the 
-     }
+     I len=(msb1no-lsbno)*k;  // dist between end+1 and start is length of field, in bytes
+     NOUNROLL do{_mm256_storeu_si256((__m256i*)zvv,_mm256_loadu_si256((__m256i*)(zvv+wzofst))); zvv=(C*)zvv+NPAR*SZI;}while((len-=NPAR*SZI)>0);  // copy with overstore
+     zvv=(C*)zvv+len;   // back z to the actual valid length
     }
    }
 #endif

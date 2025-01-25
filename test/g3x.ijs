@@ -482,6 +482,7 @@ test y=: !i.10x
 test y=: % >: +/~ i.4x
 test y=: $. (3 4 ?@$ 2) * 3 4 5 ?@$ 1e5
 
+{{ 1 if. IF64 do. 'limit error' -: 0&(3!:1) etx 3000000000 end. }} ''  NB. avoid integer overflow
 
 NB. 3!:n exact representation -------------------------------------------
 

@@ -95,21 +95,21 @@
 // The (fstmt,nfstmt,store) arguments indicate what to do when a match/notmatch is resolved.
 // (loopctl) give the stride through the input array, the control for the main loop, and the index of the last value.  These values differ for forward and reverse scans through the input.
 // in the loop i is the index of the item being looked up in the hash (if store is not 0 or 3, that will be the index stored into the hashtable on notfound)
-#define XSEARCHV(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
+#define XSEARCHalgv(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
  {I i, j, hj; T *v; vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
 
 // Traverse a in forward direction, adding values to the hash table
-#define XDOAP(T,TH,hash,exp,stride,XSEARCH) XSEARCH(T,TH,a,a,hash,exp,stride,{},{},1,0, (i=0;i<asct-2;++i) ,asct-1)
+#define XDOAPalgv(T,TH,hash,exp,stride,ALG) XSEARCH##ALG(T,TH,a,a,hash,exp,stride,{},{},1,0, (i=0;i<asct-2;++i) ,asct-1)
 // Traverse w in forward direction, executing fstmt/nfstmt depending on found/notfound; and adding to the hash if (reflex) is 1, indicating a reflexive operation   scaf could save a register if reflexive
-#define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex,XSEARCH) XSEARCH(T,TH,w,a,hash,exp,stride,fstmt,nfstmt,reflex,0, (i=0;i<wsct-2;++i) ,wsct-1)
+#define XDOPalgv(T,TH,hash,exp,stride,fstmt,nfstmt,reflex,ALG) XSEARCH##ALG(T,TH,w,a,hash,exp,stride,fstmt,nfstmt,reflex,0, (i=0;i<wsct-2;++i) ,wsct-1)
 // version used for ~. inplace: reflex=3 (controls FINDP), only a is used.  wsct is freed for use as stored-item count
-#define XDOPIP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex,XSEARCH) XSEARCH(T,TH,a,a,hash,exp,stride,fstmt,nfstmt,reflex,0, (i=0;i<asct-2;++i) ,asct-1)
+#define XDOPIPalgv(T,TH,hash,exp,stride,fstmt,nfstmt,reflex,ALG) XSEARCH##ALG(T,TH,a,a,hash,exp,stride,fstmt,nfstmt,reflex,0, (i=0;i<asct-2;++i) ,asct-1)
 // same for traversing a/w in reverse
-#define XDQAP(T,TH,hash,exp,stride,XSEARCH) XSEARCH(T,TH,a,a,hash,exp,(-(stride)),{},{},1,cn*(asct-1), (i=asct-1;i>1;--i) ,0)
-#define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex,XSEARCH) XSEARCH(T,TH,w,a,hash,exp,(-(stride)),fstmt,nfstmt,reflex,cn*(wsct-1), (i=wsct-1;i>1;--i) ,0)
+#define XDQAPalgv(T,TH,hash,exp,stride,ALG) XSEARCH##ALG(T,TH,a,a,hash,exp,(-(stride)),{},{},1,cn*(asct-1), (i=asct-1;i>1;--i) ,0)
+#define XDQPalgv(T,TH,hash,exp,stride,fstmt,nfstmt,reflex,ALG) XSEARCH##ALG(T,TH,w,a,hash,exp,(-(stride)),fstmt,nfstmt,reflex,cn*(wsct-1), (i=wsct-1;i>1;--i) ,0)
 
 // b is a bit index; BYTENO is byte number, BITNO is bit within byte
 #define BYTENO(b) ((b)>>3)

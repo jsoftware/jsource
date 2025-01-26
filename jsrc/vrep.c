@@ -67,7 +67,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 #endif
  if(!ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy.   we copy in NPAR batches, and the last one might overstore.
-  I pad=((NPAR*SZI)>>klg)-1;  //  We allocate enough extra atoms to cover one NPAR block to the last valid result atom
+  I pad=((NPAR*SZI)>>klg)-1;  //  We allocate enough extra atoms to cover one NPAR block to the last valid result atom.
 #if C_AVX2 || EMU_AVX2
   pad&=REPSGN(~pad&flgs);  // if pad is negative or wide loop disabled, use no pad
 #else

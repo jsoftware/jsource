@@ -415,7 +415,7 @@ nozv:;  // here when we have zv or don't need it
  SSSTORE((B)ziv,z,B01,B) R z;  // OK to store into allocated/inplace area.
 
  circleresult: ;
- D cirvals[3]={adv,wdv};  // put ops into memory
+ D cirvals[3]={adv,wdv,0.0};  // put ops into memory (0.0 to avoid asan warnings)
  I rc=cirDD AH2A_v(1,cirvals,cirvals+1,cirvals+2,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // run the routine
  if(rc==EVOK){SSSTORE(cirvals[2],z,FL,D);}else{jsignal(rc); z=0;} R z;  // Don't change the input block if there is an error.  If there is, post it to the return area
 }

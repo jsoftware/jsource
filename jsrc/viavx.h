@@ -87,6 +87,36 @@
   if(unlikely(--name<0))name+=p; hj=hv[name]; /* miscompare, must continue search */ \
   }while(1);
 
+#if 1
+// fetch one value
+#define FETCHalgi(dest,src,index) dest=src[index];
+// hash one value, creating the index into the hashtable, and then prefetch the value
+#define HASHalgi(dest,src,HASH) {dest=(HASH(src)*(UIL)(p))>>32; PREFETCH((C*)&hv[dest]);}
+// Pass the hash table for one value, like above
+#define FINDPalgi(warg,harg,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
+NOUNROLL do{ \
+ I hj=hv[harg];  /* fetch the hash index, which points back into the source table scaf if value is short, could store the value itself */ \
+ if(hj==hsrc##sct){if(store==1)hv[harg]=(TH)i; if(store==3)hv[harg]=wsct; nfstmt break;}  /* this is the not-found case: possibly write, execute nfstmt */ \
+ if((store!=2||hj<hsrc##sct)&&!mismatch(warg)){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* compare warg against the implied hsrc##v[hj] */ \
+ if(unlikely(--harg<0))harg+=p;   /* miscompare, must continue search, wrapping if needed */ \
+}while(1);
+// Traverse the hash table for an argument with a type, i. e. one that can be indexed by i
+#define XSEARCHalgi(T,TH,src,hsrc,hash,mismatch,stride,fstmt,nfstmt,store,initi,endi) \
+{ \
+ T w2, w1, w0; I h1, h0; \
+ FETCHalgi(w1,src##v,initi) /* fetch into item 1 */ \
+ if(likely((srcct>1)){ \
+  FETCHalgi(w2,src##v,initi+stride) HASHalgi(h1,w1,hash) /* fetch into item 2, hash item 1 */ \
+  for(i=initi;i!=endi-2*stride;i=i+stride){ \
+   /* find slot 0, hash slot 1, and fetch slot 2 */ \
+   w0=w1; w1=w2; FETCHalgi(w2,src##v,i+2*stride); h0=h1; HASHalgi(h1,w1,hash) FINDalgi(w0,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
+  } \
+  h0=h1; FINDalgi(w1,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) /* find slot 1 */ \
+ }else{w2=w1;}  /* null pipe stage if arg short - as if we fetched into 2 */ \
+ i=i+stride; HASHalgi(h0,w2,hash) FINDalgi(w2,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) /* hash & find slot 2 */ \
+}
+
+#endif
 // Traverse the hash table for one argument.  (src) indicates which argument, a or w, we are looping through; (hsrc) indicates which argument provided the hash table.
 // For each item we do HASHSLOT folowed by FINDP, and adjust the (v) values (both stored in xmm variable vp) to keep track.  vp[0]=vp[1] is running srcv+vpofst/static srcv+vpofst, vpstride[0] = source stride, vpstride[1]=0
 // of which input item is being operated on.  This loop is triple-unrolled, so that after we HASHSLOT for entry q, we FINDP for entry q-2.  As soon as we HASHSLOT for entry
@@ -100,6 +130,16 @@
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
+
+// Traverse a in forward direction, adding values to the hash table
+#define XDOAPalgi(T,TH,hash,mismatch,stride,ALG) XSEARCH##ALG(T,TH,a,a,hash,mismatch,stride,{},{},1,0,asct)
+// Traverse w in forward direction, executing fstmt/nfstmt depending on found/notfound; and adding to the hash if (reflex) is 1, indicating a reflexive operation   scaf could save a register if reflexive
+#define XDOPalgi(T,TH,hash,mismatch,stride,fstmt,nfstmt,reflex,ALG) XSEARCH##ALG(T,TH,w,a,hash,mismatch,stride,fstmt,nfstmt,reflex,0,wsct)
+// version used for ~. inplace: reflex=3 (controls FINDP), only a is used.  wsct is freed for use as stored-item count
+#define XDOPIPalgi(T,TH,hash,mismatch,stride,fstmt,nfstmt,reflex,ALG) XSEARCH##ALG(T,TH,a,a,hash,mismatch,stride,fstmt,nfstmt,reflex,0,asct)
+// same for traversing a/w in reverse
+#define XDQAPalgi(T,TH,hash,mismatch,stride,ALG) XSEARCH##ALG(T,TH,a,a,hash,mismatch,(-(stride)),{},{},1,asct-1,-1)
+#define XDQPalgi(T,TH,hash,mismatch,stride,fstmt,nfstmt,reflex,ALG) XSEARCH##ALG(T,TH,w,a,hash,mismatch,(-(stride)),fstmt,nfstmt,reflex,wsct-1,-1)
 
 // Traverse a in forward direction, adding values to the hash table
 #define XDOAPalgv(T,TH,hash,exp,stride,ALG) XSEARCH##ALG(T,TH,a,a,hash,exp,stride,{},{},1,0, (i=0;i<asct-2;++i) ,asct-1)

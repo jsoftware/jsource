@@ -620,7 +620,7 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
 F1(jtdllsymget){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,0);}  // 15!:_1 deprecated, return address of symbol-table entry
 F1(jtdllsymdat){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,1);}  // 15!:14 address of data area
 F1(jtdllsymhdr){ASSERT(!JT(jt,seclev),EVSECURE) R dllsymaddr(w,2);}  // 15!:12 address of header
-F1(jtscind){R dllsymaddr(w,3);}  // 4!:4 script index
+F1(jtscind){if(AN(w)==0)RETF(sc(jt->currslistx)); RETF(dllsymaddr(w,3));}  // 4!:4 script index, of a name or of the currently running script
 F1(jtdllvaladdr){ASSERT(!JT(jt,seclev),EVSECURE) R sc((I)w);}  // 15!:19, return address of header of noun w
 
 // look up the name w using full name resolution.  Return the value if found, abort if not found or invalid name

@@ -104,11 +104,20 @@ DF2(jtunquote){A z;
       RZSUFF(explocale=sybaseloc(thisname),z=0; goto exitname;);  //  get the explicit locale.  0 if erroneous locale
       thisname=jt->curname;  // refresh thisname
      }
+     if(unlikely(AR(explocale)&ARLOCALTABLE)){
+      // the locative specifies a local table, which must have originated from name___n.  This requires extra work,
+      // like u./v.  We switch both global & local tables, and then look up the name locally.  If not found, carry on
+      jt->locsyms=explocale; explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
+      if((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)))!=0)goto fslocal;  // look only in local symbols.  Set not-NAMEDLOC
+      // falling through, we have switched the symbol tables and we didn't find the name locally.  Continue looking through the path
+     }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
+
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
      if(likely((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)))!=0)){  // look only in local symbols.  Set not-NAMEDLOC
       // u/v, assigned by xdefn.  Implied locative.  Switch locals and globals to caller's environment
       jt->locsyms=(A)AM(jt->locsyms); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
+fslocal:;  // come here when the name we are about to execute was found in a local symbol table
       raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
      }else explocale=jt->global;  // explocale must be defined for flgd0cpC
     }

@@ -165,7 +165,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
     }
 #if C_AVX2 || EMU_AVX2
    }else{
-    // This version is, surprisingly, faster only when a has >85% ones OR the size of an item is a multiple of Is > 1 - and even then it's slower for D3$  (but this not tested with inplacing)
+    // This version is, surprisingly, faster only when a has >85% ones OR the size of an item is not SZI
     // bitstack has up to BW bits to process, with any extra ones being 0.   zvv is the output pointer, wvv the input pointer
     // The carried dependency is short, marked with *
     I msb1no=0;
@@ -181,7 +181,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
     }
    }
 #endif
-
    wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64
    n-=BW;  // decr count left
   }

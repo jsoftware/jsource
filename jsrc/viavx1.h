@@ -12,6 +12,9 @@
  if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{printf("i=%lld, (I*)_mm_extract_epi64(vp,1)=%p, wv+i=%p\n",i,(I*)_mm_extract_epi64(vp,1),wv+i); *(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
  else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); } ZCSHAPE;
 #else
+// for -./~.
+#define XMVPalgi(T,TH,hash,mismatch,stride,reflex,ALG)    \
+ {T *zc=(T*)zv; XDOP##ALG(T,TH,hash,mismatch,stride,{},{*zc=wv[i]; ++zc;},reflex,ALG); ZCSHAPENT(T); }
 #define XMVPalgv(T,TH,hash,exp,stride,reflex,ALG)    \
  if(k==SZI){I *zc=zv; XDOP##ALG(T,TH,hash,exp,stride,{},{*zc=((I*)wv)[i]; ++zc;},reflex,ALG); ZCSHAPEI; }  \
  else{C *zc=(C*)zv; XDOP##ALG(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex,ALG); ZCSHAPE; }
@@ -22,11 +25,16 @@
  if(k==SZI){XDOP##ALG(T,TH,hash,exp,stride,{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},{},reflex,ALG); }  \
  else      {XDOP##ALG(T,TH,hash,exp,stride,{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},{},reflex,ALG); } ZCSHAPE;
 #else
+#define XMVPIalgi(T,TH,hash,mismatch,stride,reflex,ALG)    \
+ {T *zc=(T*)zv; XDOP##ALG(T,TH,hash,mismatch,stride,{*zc=wv[i]; ++zc;},{},reflex,ALG); ZCSHAPENT(T); }
 #define XMVPIalgv(T,TH,hash,exp,stride,reflex,ALG)    \
  if(k==SZI){I *zc=zv; XDOP##ALG(T,TH,hash,exp,stride,{*zc=((I*)wv)[i]; ++zc;},{},reflex,ALG); ZCSHAPEI; }  \
  else{C *zc=(C*)zv; XDOP##ALG(T,TH,hash,exp,stride,{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},{},reflex,ALG); ZCSHAPE; }
 #endif
 // version for ~. inplace
+#define XMVPIPalgi(T,TH,hash,mismatch,stride,reflex,ALG)   wsct=0;    \
+ XDOPIP##ALG(T,TH,hash,mismatch,stride,{},{zv[wsct]=zv[i]; ++wsct;},reflex,ALG);  \
+ AN(z)=n*(AS(z)[0]=wsct);   /* wsct items, but there may be atoms/item */
 #define XMVPIPalgv(T,TH,hash,exp,stride,reflex,ALG)   wsct=0;    \
  if(k==SZI){XDOPIP##ALG(T,TH,hash,exp,stride,{},{zv[wsct]=zv[i]; ++wsct;},reflex,ALG); }  \
  else      {C *zc=(C*)zv; XDOPIP##ALG(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k; ++wsct;},reflex,ALG);  } \
@@ -105,8 +113,8 @@ IOFX(I, jtioi,COMPSETUP,hici(n,v),COMPCALL(av),             cn,algv) // INT arra
 IOFX(C2,jtioC2,, hici1((C2*)v),    *v!=av[hj],               1,algv) // 2-byte (char/INT2)
 IOFX(C4,jtioC4,, hici1((C4*)v),    *v!=av[hj],               1,algv) // 4-byte (char/INT4)
 IOFX(I, jtioi1,, hici1(v),         *v!=av[hj],               1,algv) // len=8, not float
-IOFX(I, jtio16,,hici2(v[0],v[1]), cmpi2(v,av+2*hj),         2,algv) // len=16, not float
+IOFX(I, jtio16,, hici2(v[0],v[1]), cmpi2(v,av+2*hj),         2,algv) // len=16, not float
 IOFX(D, jtioc01,,hic01((UIL*)v),   *v!=av[hj],               1,algv) // float atom
-IOFX(Z, jtioz01,,hic0(2,(UIL*)v),  (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1,algv) // complex atom
+IOFX(Z, jtioz01,,HASHiC16,  CNEiC, 1,algi) // complex atom
 IOFX(D, jtioc0,, hic0(n,(UIL*)v),  fcmp0(v,&av[n*hj],n),    cn,algv) // float array
 IOFX(Z, jtioz0,, hic0(2*n,(UIL*)v),fcmp0((D*)v,(D*)&av[n*hj],2*n),cn,algv) // complex array

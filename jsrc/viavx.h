@@ -61,16 +61,18 @@
 #define HASHSLOT(hash) j=((hash)*p)>>32;
 
 // Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
-#define ZISHAPE    AS(z)[0]=AN(z)=zi-zv   // zi must point to a single atom (sc. an index)
+#define ZISHAPE    AS(z)[0]=AN(z)=zi-zv   // zi must point to a single atom (maybe an index, maybe an atomic cell)
 #define ZCSHAPE    AS(z)[0]=(zc-(C*)zv)/k; AN(z)=n*AS(z)[0]
 #define ZCSHAPEI    AN(z)=n*(AS(z)[0]=(zc-zv))   // I *zc points to a SZI-sized cell but might not be an atom
+#define ZCSHAPET(T)    AN(z)=AS(z)[0]=(zc-(T*)zv)   // T *zc points to a atomic cell
+#define ZCSHAPENT(T)    AN(z)=n*(AS(z)[0]=(zc-(T*)zv))   // T *zc points to a cell but might not be an atom
 #define ZUSHAPE(T) AS(z)[0]= zu-(T*)zv;    AN(z)=n*AS(z)[0]
 
 // Calculate the hash slot.  The hash calculation (input parm) relies on the name v and produces the name j.  We have moved v to an xmm register to reduce register pressure
 // here, so extract its parts for use as needed
 #define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*(UIL)(p))>>32;
 // Conditionally insert a new value into the hash table.  The initial value of hj (the table scan pointer) has been fetched.  name is the name holding the slot to be added
-// (it will be j, j1, or j2 depending on where we are in the processing pipeline),
+// (it will be j, j1, )or j2 depending on where we are in the processing pipeline),
 // exp is a comparison expression meaning 'mismatch' that returns 0 if the data indexed by the slot is equal to *v (the expression will use *v as the new value, and hj as the index into the
 // original input av to point to the value represented in the hashtable).  hj advances through the hash until an empty slot or a match is found.
 // The v value is stored in an xmm register and brought out into v for use by (exp); it is a delayed version of the v that was used for HASHSLOT.
@@ -88,32 +90,46 @@
   }while(1);
 
 #if 1
+// hash one value
+#define HASHiCRC(x) CRC32L(-1L,(x))  // one I, any size, CRC
+#define HASHiIMM(x) (x)  // small I, without CRC
+#define HASHiF8(x) ({UIL xx=*(UIL*)&x; UI4 z=CRC32L(-1,xx); if(unlikely(xx==NEGATIVE0))z=CRC32L(-1,0); z; })
+#define HASHiF4(x) ({UI4 xx=*(UI4*)&x; UI4 z=CRC32L(-1,xx); if(unlikely(xx==0x80000000))z=CRC32L(-1,0); z; })
+#define HASHiC16(x) ({UI4 z=HASHiF8(x.re); UIL xx=*(UIL*)&x.im; if(unlikely(xx==NEGATIVE0))xx=0; CRC32L(z,xx); })
+#define HASHiE16(x) ({UI4 z=HASHiF8(x.hi); UIL xx=*(UIL*)&x.lo; if(unlikely(xx==NEGATIVE0))xx=0; CRC32L(z,xx); })
+
+// compare one value
+#define CNEiA(x,y) (x!=y)
+#define CNEiC(x,y) (x.re!=y.re||x.im!=y.im)
+#define CNEiE(x,y) (x.hi!=y.hi||x.hi!=y.hi)
+
 // fetch one value
 #define FETCHalgi(dest,src,index) dest=src[index];
 // hash one value, creating the index into the hashtable, and then prefetch the value
 #define HASHalgi(dest,src,HASH) {dest=(HASH(src)*(UIL)(p))>>32; PREFETCH((C*)&hv[dest]);}
 // Pass the hash table for one value, like above
-#define FINDPalgi(warg,harg,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
+#define FINDalgi(warg,harg,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
 NOUNROLL do{ \
  I hj=hv[harg];  /* fetch the hash index, which points back into the source table scaf if value is short, could store the value itself */ \
  if(hj==hsrc##sct){if(store==1)hv[harg]=(TH)i; if(store==3)hv[harg]=wsct; nfstmt break;}  /* this is the not-found case: possibly write, execute nfstmt */ \
- if((store!=2||hj<hsrc##sct)&&!mismatch(warg)){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* compare warg against the implied hsrc##v[hj] */ \
+ if((store!=2||hj<hsrc##sct)&&!mismatch(warg,hsrc##v[hj])){if(store==2)hv[harg]=(TH)(hsrc##sct+1); fstmt break;} /* compare warg against the implied hsrc##v[hj] */ \
  if(unlikely(--harg<0))harg+=p;   /* miscompare, must continue search, wrapping if needed */ \
 }while(1);
 // Traverse the hash table for an argument with a type, i. e. one that can be indexed by i
 #define XSEARCHalgi(T,TH,src,hsrc,hash,mismatch,stride,fstmt,nfstmt,store,initi,endi) \
 { \
  T w2, w1, w0; I h1, h0; \
- FETCHalgi(w1,src##v,initi) /* fetch into item 1 */ \
- if(likely((srcct>1)){ \
-  FETCHalgi(w2,src##v,initi+stride) HASHalgi(h1,w1,hash) /* fetch into item 2, hash item 1 */ \
-  for(i=initi;i!=endi-2*stride;i=i+stride){ \
+ I i=initi;  /* needed for FIND */ \
+ FETCHalgi(w1,src##v,i) /* fetch into item 1 */ \
+ if(likely(src##sct>1)){ \
+  FETCHalgi(w2,src##v,i+stride) HASHalgi(h1,w1,hash) /* fetch into item 2, hash item 1 */ \
+  for(;i!=endi-2*stride;i=i+stride){ \
    /* find slot 0, hash slot 1, and fetch slot 2 */ \
    w0=w1; w1=w2; FETCHalgi(w2,src##v,i+2*stride); h0=h1; HASHalgi(h1,w1,hash) FINDalgi(w0,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
   } \
-  h0=h1; FINDalgi(w1,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) /* find slot 1 */ \
+  h0=h1; FINDalgi(w1,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) i=i+stride; /* find slot 1 */ \
  }else{w2=w1;}  /* null pipe stage if arg short - as if we fetched into 2 */ \
- i=i+stride; HASHalgi(h0,w2,hash) FINDalgi(w2,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) /* hash & find slot 2 */ \
+ HASHalgi(h0,w2,hash) FINDalgi(w2,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) /* hash & find slot 2 */ \
 }
 
 #endif

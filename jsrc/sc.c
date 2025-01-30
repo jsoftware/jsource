@@ -92,10 +92,11 @@ DF2(jtunquote){A z;
    if(likely(!(nmflgs&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
-    if(unlikely(AR(jt->locsyms)&ARHASACV)){if(unlikely((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,sx,SYMORIGIN,hashx,jt->locsyms)))!=0)){raposlocal(QCWORD(fs),fs); goto deflocal;}} // ACV is probably not in local, and we can even check to see.  Set not-NAMEDLOC.  ra to match syrd1
-    fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
-    // leave LOCINCRDECR unset and jt->global unchnged
-    deflocal:;
+    if(unlikely(AR(jt->locsyms)&ARHASACV)&&unlikely((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,sx,SYMORIGIN,hashx,jt->locsyms)))!=0)){  // check local syms only if they have an ACV
+     raposlocal(QCWORD(fs),fs); // if found locally, free it for protecrtion, as if found by syrd1.  Set not-NAMEDLOC.
+    }else{fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
+    }
+    // leave LOCINCRDECR unset and jt->global uncahnged
    }else{  // locative or u./v.
     // there are subroutine calls here; we refresh thisname sometimes so the compiler won't carry it in a register
     if(likely(!(nmflgs&NMIMPLOC))){  // not implicit locative...
@@ -108,7 +109,7 @@ DF2(jtunquote){A z;
       // the locative specifies a local table, which must have originated from name___n.  This requires extra work,
       // like u./v.  We switch both global & local tables, and then look up the name locally.  If not found, carry on
       jt->locsyms=explocale; explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
-      if((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)))!=0)goto fslocal;  // look only in local symbols.  Set not-NAMEDLOC
+      if((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)))!=0)goto fslocal;  // look only in local symbols.  Set not-NAMEDLOC. if found, continue as for u./v.
       // falling through, we have switched the symbol tables and we didn't find the name locally.  Continue looking through the path
      }
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
@@ -117,8 +118,9 @@ DF2(jtunquote){A z;
      if(likely((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)))!=0)){  // look only in local symbols.  Set not-NAMEDLOC
       // u/v, assigned by xdefn.  Implied locative.  Switch locals and globals to caller's environment
       jt->locsyms=(A)AM(jt->locsyms); explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
-fslocal:;  // come here when the name we are about to execute was found in a local symbol table
-      raposlocal(QCWORD(fs),fs);   // incr usecount to match what syrd1 does
+fslocal:;  // come here when the name we are about to execute was found in a local symbol table.  We must ra() to protect the name, because syrd1() ra()s all other names
+           // and the local case is rare: we match the ra() so that every non-cached executing name has been ra()d explicitly
+      raposlocal(QCWORD(fs),fs);   // incr usecount to protect fs during execution (needed only for local names)
      }else explocale=jt->global;  // explocale must be defined for flgd0cpC
     }
     flgd0cpC|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT

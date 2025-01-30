@@ -33,7 +33,7 @@
 #endif
 // version for ~. inplace
 #define XMVPIPalgi(T,TH,hash,mismatch,stride,reflex,ALG)   wsct=0;    \
- XDOPIP##ALG(T,TH,hash,mismatch,stride,{},{zv[wsct]=zv[i]; ++wsct;},reflex,ALG);  \
+ XDOPIP##ALG(T,TH,hash,mismatch,stride,{},{((T*)zv)[wsct]=((T*)zv)[i]; ++wsct;},reflex,ALG);  \
  AN(z)=n*(AS(z)[0]=wsct);   /* wsct items, but there may be atoms/item */
 #define XMVPIPalgv(T,TH,hash,exp,stride,reflex,ALG)   wsct=0;    \
  if(k==SZI){XDOPIP##ALG(T,TH,hash,exp,stride,{},{zv[wsct]=zv[i]; ++wsct;},reflex,ALG); }  \
@@ -110,11 +110,11 @@ IOFX(X, jtiox,,  hix(v),           !eqnx(n,v,av+n*hj),      cn,algv) // extended
 IOFX(Q, jtioq,,  hiq(v),           !eqnq(n,v,av+n*hj),      cn,algv) // rational number
 IOFX(C, jtioc,,  hic(k,(UC*)v),    memcmpne(v,av+k*hj,k),   cn,algv) // boolean, char, or integer*
 IOFX(I, jtioi,COMPSETUP,hici(n,v),COMPCALL(av),             cn,algv) // INT array, not float
-IOFX(C2,jtioC2,, hici1((C2*)v),    *v!=av[hj],               1,algv) // 2-byte (char/INT2)
-IOFX(C4,jtioC4,, hici1((C4*)v),    *v!=av[hj],               1,algv) // 4-byte (char/INT4)
-IOFX(I, jtioi1,, hici1(v),         *v!=av[hj],               1,algv) // len=8, not float
+IOFX(US,jtioC2,, HASHiIMM,   CNEiA,               1,algi) // 2-byte (char/INT2)
+IOFX(C4,jtioC4,, HASHiCRC,    CNEiA,               1,algi) // 4-byte (char/INT4)
+IOFX(I, jtioi1,, HASHiCRC,         CNEiA,               1,algi) // len=8, not float
 IOFX(I, jtio16,, hici2(v[0],v[1]), cmpi2(v,av+2*hj),         2,algv) // len=16, not float
-IOFX(D, jtioc01,,hic01((UIL*)v),   *v!=av[hj],               1,algv) // float atom
+IOFX(D, jtioc01,,HASHiF8,   CNEiA,               1,algi) // float atom
 IOFX(Z, jtioz01,,HASHiC16,  CNEiC, 1,algi) // complex atom
 IOFX(D, jtioc0,, hic0(n,(UIL*)v),  fcmp0(v,&av[n*hj],n),    cn,algv) // float array
 IOFX(Z, jtioz0,, hic0(2*n,(UIL*)v),fcmp0((D*)v,(D*)&av[n*hj],2*n),cn,algv) // complex array

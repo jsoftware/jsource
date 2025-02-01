@@ -761,15 +761,25 @@ endname: ;
           zval=QCWORD((SYMORIGIN+(I)s)->fval);  // get value of symbol in primary table.  There may be no value; that's OK
          }else{zval=QCWORD(jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms));}
          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d. which is OK
-        }else{zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue))); targc=ACUC2;}  // global assignment, get slot address.  Global names have been ra()d and have AC=2
+        }else{
+          // global assignment, get slot address.  Global names have been ra()d and have AC=2
+         zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue)));
+          // We have to handle the case of name =: 5 + > <  name,  i. e where the usercount of 2 came from external boxing rather than FAOWED.
+          // we require that the zvalue be a FAOWED argument
+          targc=fsa[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;
+        }
         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and correct usecount: 1 if local, 2 if global since we have raised the count of this block already if it is named and to be operated on inplace; +1 if NJA to account for the mapping reference.
         // The block can be virtual, if it is x/y to xdefn, but we must never inplace to a virtual block or to readonly (xxx_index_ =: xxx_index_ + 1)
+        // It might seem sound to take a branch on zval since initialization assignment tend to come in batches.  This is an incomplete analysis.  The most likely
+        // path to here is to mispredict the assignment and then correctly predict the local path.  In that path we have loaded the symbol number followed by zval, and it will
+        // not settle for 10 clocks.  We very much want to keep executing during the settlement so we don't want to risk a misprediction.  We should be executing
+        // well into tpop* before zval settles.
         zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+targc))?zval:0; jt->zombieval=zval;  // compiler should generate BT+ADC
         pmask=(pt0ecam>>(PMASKSAVEX+2))&1;  // restore dyad bit after calls
        }
        PSTK *arga=fsa; arga=pmask?stack:arga; A arg1=arga[1].a;// 1st arg, monad or left dyad  2 3 1
-         // this requires fsa to survive over the assignment, but it's faster than the alternative
+         // this requires fsa to survive over the assignment block, but it's faster than the alternative
        arga=pmask?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
        // Create what we need to free arguments after the execution.  We keep the information needed to two registers so they can persist over the call as they are needed right away on return
        // (1) When the args return from the verb, we will check to see if any were abandoned.  Those can be freed right away, returning them to the

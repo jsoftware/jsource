@@ -50,6 +50,7 @@
 
 // set dx to the 'other' interval from *v.
 #define SETXVAL  xval=_mm256_castpd256_pd128(_mm256_broadcast_sd((D*)v)); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
+
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1,storevblunused)  \
  {UIL dx;       \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \

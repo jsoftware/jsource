@@ -724,7 +724,9 @@ bodyend: ;  // we branch to here to exit with z set to result
  // we don't do this, because it is possible that the AM slot was inherited from higher up the stack.
  // Note that we know we are not returning a virtual block here, so it is OK to write to AM
  // BUT: SPARSE value must NEVER be inplaceable, because the children aren't handled correctly during assignment; and READONLY values must never be inplaceable
- if(likely(z!=0))if(likely(((_ttop!=jt->tnextpushp)==AC(z))&(~AFLAG(z)>>AFROX))){ACRESET(z,(ACINPLACE&~AT(z))|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere. AT is for sparse
+ // SURPRISE: if there is a PM stack (that has not been moved to a debug stack), tpop has been disabled, which means that the EPILOGNORET call did little, and that we
+ // cannot infer from the fact that something is above ttop that it is necessarily our result that was pushed there.  In that case, skip this fillip.
+ if(likely(z!=0)&&likely(((_ttop!=jt->tnextpushp)==AC(z))&(~AFLAG(z)>>AFROX))&&likely(jt->pmstacktop==0)){ACRESET(z,(ACINPLACE&~AT(z))|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere. AT is for sparse
  RETF(z);
 }
 

@@ -201,6 +201,9 @@ NB. { followed by {. adds space
 '|domain error: efx|   { {.2    +a:' -:&(}.~ i:&'|') efx '{  {. 2 + a:'
 '|domain error: efx|   {+2    +a:' -:&(}.~ i:&'|') efx '{ + 2 + a:'
 
+a =: < aa =: >: 6
+aa =: 5 + >a  NB. should not execute in place
+a -: <7
 
 4!:55 ;:'a aa bc locnm multi swd t '
 

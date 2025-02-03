@@ -330,8 +330,8 @@ NB. int2 and int4
 {{
 xx =: y ?@$ 1000
 if. UNAME-:'OpenBSD' do.
-stdout '>>>> xx $ ',":$xx
-stdout xx
+echo '>>>> xx $ ',":$xx
+echo xx
 end.
 assert. ((1&=@:#@[ +. (-: *. -:&(3!:0))&:(+/)) 6&c.) xx
 assert. ((1&=@:#@[ +. (-: *. -:&(3!:0))&:(+/)) 7&c.) xx

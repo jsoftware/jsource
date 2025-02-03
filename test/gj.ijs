@@ -331,10 +331,9 @@ NB. int2 and int4
 xx =: y ?@$ 1000
 if. UNAME-:'OpenBSD' do.
 stdout LF,~ '<<<< xx $ ',":$xx
-stdout LF,"1~ ": ,. ,xx
+stdout LF,"1~ ": ,. xx=: ,xx
 stdout LF,~ '>>>>'
-end.
-if. UNAME-.@-:'OpenBSD' do.
+else.
 assert. ((1&=@:#@[ +. (-: *. -:&(3!:0))&:(+/)) 6&c.) xx
 assert. ((1&=@:#@[ +. (-: *. -:&(3!:0))&:(+/)) 7&c.) xx
 assert. ((-: *. (1&>:@:# +. 0=(*/@:$))@] +.  -:&(3!:0))&:(+/\) 6&c.) xx

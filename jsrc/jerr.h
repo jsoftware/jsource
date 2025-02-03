@@ -53,7 +53,8 @@
 #define EVFOLDTHROW     47  // EVEXIT+32 set when Z: requests termination of a fold; an error, but not for postmortem
 #define EVNORESULT      48    // Fold had no results to collect
 #define EVTYPECHG       49    // type pun: name changed type while in use
-#define NEVM            49      /* number of event codes       */
+#define EVUNTIMELY      50    // command not allowed in current context
+#define NEVM            50      /* number of event codes       */
 #define EVCONCURRENCY   EVDOMAIN      // eg deadlock, unlocked somebody else's lock
 
 /* The following codes are never displayed to the user   */

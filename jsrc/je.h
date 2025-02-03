@@ -768,6 +768,7 @@ extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
 extern A        jtpyxval(J,A);
 extern C        jtjobrun(J,unsigned char(*)(J,void*,UI4),void*,UI4,I);
+extern A        jtsusp(J,C);
 extern A        jtfxeachv(J,I,A);
 extern void*    jvmreserve(I);
 extern B        jvmcommit(void*,I);

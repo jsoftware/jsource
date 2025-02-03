@@ -494,13 +494,12 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
  x=jtddtokens(jm,x,(((jm->recurstate&RECSTATERENT)<<(2-RECSTATERENTX)))+1+(AN(jm->locsyms)>SYMLINFOSIZE));  // allow reads from jgets() if not recursive; return enqueue() result
  if(!jm->jerr)jtimmexexecct(jm,x);  //  ****** here is where we execute the user's sentence ******
- // if the result is an exit from suspension (which must be from dbr because we aren't now actually in a suspension), and there is a stack, purge symbols from the private symbs and free memory back to the error
- if(unlikely(JT(jt,dbuser)&TRACEDBSUSCLEAR)){  // if user executed dbr...
-  if(jm->pmttop&&jm->sitop&&jm->sitop->dctype==DCCALL&&jm->sitop->dcpflags==1){   // if there is a pm debug session going, and top-of-stack is from pm, end the session
-   // go through the stack, which must all have come from post-mortem.  Free the symbols and the block itself (to match the ra when we moved the pm stack to the debug stack)
-   {JJ jt=jm; DC s=jm->sitop; while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} if(s->dcf!=0)fa(s->dcf);} s=s->dclnk;} jm->sitop=0;}
-   old=jm->pmttop; jm->pmttop=0;  // back up the tpop pointer to the pm error and remove request for it
-  }
+ // if PM debugging is active, we must have just executed the user's sentence to go there.  Go into suspensio  so that we get the prompt and engage with the debugger
+ if(unlikely(jm->pmttop!=0)){
+  jtsusp(jm,0);  // further prompts come from suspension.  We will stay there till dbr 0
+  // End of PM debug.  go through the stack, which must all have come from post-mortem.  Free the symbols and the block itself (to match the ra when we moved the pm stack to the debug stack)
+  JJ jt=jm; DC s=jm->sitop; while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} if(s->dcf!=0)fa(s->dcf);} s=s->dclnk;} jm->sitop=0;
+  old=jm->pmttop; jm->pmttop=0;  // back up the tpop pointer to the pm error and remove request for it
  }
  e=jm->jerr; MODESRESET(jm)  // save error on sentence to be our return code
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors

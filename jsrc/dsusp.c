@@ -129,7 +129,7 @@ static B jterrcap(J jt){A y,*yv;
 
 // suspension.  Loop on keyboard input.  Keep executing sentences until something changes dbsusact.
 // superdebug is set if we are reading the lines from a script
-static A jtsusp(J jt, C superdebug){A z;
+A jtsusp(J jt, C superdebug){A z;
  // normally we run with an empty stack frame which is always ready to hold the display of the next sentence
  // to execute; the values are filled in when there is an error.  We are about to call immex to run sentences,
  // and it will create a stack frame for its result.  CREATION of this stack frame will overwrite the current top-of-stack
@@ -194,8 +194,8 @@ static A jtsusp(J jt, C superdebug){A z;
  if(savcstackmin!=0)jt->cstackmin=savcstackmin;  // if the old jt had a modified stack limit, restore it
  jt=jtold;  // Reset to original debug thread.  NOTE that old is no longer valid, so don't tpop
  // Reset stack
-  if((JT(jt,dbuser)&TRACEDB1+TRACEDBSUSCLEAR)!=TRACEDB1)jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // set stacklim to normal if we are exiting debug or clearing suspension
- debz(); 
+ if((JT(jt,dbuser)&TRACEDB1+TRACEDBSUSCLEAR)!=TRACEDB1)jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // set stacklim to normal if we are exiting debug or clearing suspension
+ debz();   // remove spacer frame
  R z;
 }    /* user keyboard loop while suspended */
 
@@ -379,24 +379,25 @@ F1(jtdbc){I k;
  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the C stack to allow suspension commands room to run
- JT(jt,dbuser)|=TRACEDBSUSCLEAR; if(unlikely((k&TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT)))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug or running, suppress so don't immediately come out of debug; also if staying in script mode
+ JT(jt,dbuser)|=TRACEDBSUSCLEAR; if(unlikely(k&(TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT)))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug or running, suppress so don't immediately come out of debug; also if staying in script mode
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 
-F1(jtdbrun ){ASSERTMTV(w); A z; RZ(z=mkwris(box(sc(SUSRUN)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+// The remaining suspension-ending commands are not allowed during PM debugging
+F1(jtdbrun ){ASSERTMTV(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(box(sc(SUSRUN)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:4  run again */
 
-F1(jtdbnext){ASSERTMTV(w); A z; RZ(z=mkwris(box(sc(SUSNEXT)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jtdbnext){ASSERTMTV(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(box(sc(SUSNEXT)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:5  run next */
 
-F1(jtdbret ){ARGCHK1(w); A z; RZ(z=mkwris(jlink(sc(SUSRET),box(w)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jtdbret ){ARGCHK1(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(jlink(sc(SUSRET),box(w)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:6  exit with result */
 
-F1(jtdbjump){I jump; RE(jump=i0(w)); A z; RZ(z=mkwris(jlink(sc(SUSJUMP),sc(jump)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jtdbjump){ASSERT(jt->pmttop==0,EVUNTIMELY) I jump; RE(jump=i0(w)); A z; RZ(z=mkwris(jlink(sc(SUSJUMP),sc(jump)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:7  resume at line n (return result error if out of range) */
 
 static F2(jtdbrr){DC d;
- RE(0);
+ RE(0); ASSERT(jt->pmttop==0,EVUNTIMELY) 
  d=jt->sitop; NOUNROLL while(d&&DCCALL!=d->dctype)d=d->dclnk; 
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  // must be tacit verb
  A z; RZ(z=box(w)); if(a)RZ(z=over(w,box(a))); 
@@ -404,8 +405,8 @@ static F2(jtdbrr){DC d;
  R z;
 }
 
-F1(jtdbrr1 ){R dbrr(0L,w);}   /* 13!:9   re-run with arg(s) */
-F2(jtdbrr2 ){R dbrr(a, w);}
+F1(jtdbrr1 ){ASSERT(jt->pmttop==0,EVUNTIMELY) R dbrr(0L,w);}   /* 13!:9   re-run with arg(s) */
+F2(jtdbrr2 ){ASSERT(jt->pmttop==0,EVUNTIMELY) R dbrr(a, w);}
 
 // T. y - set debugging thread #
 // This is a suspension command, but not suspension-ending

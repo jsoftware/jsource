@@ -329,18 +329,18 @@ NB. int2 and int4
 
 {{
 xx =: y ?@$ 1000
-if. UNAME-:'OpenBSD' do.
-stdout LF,~ '<<<< xx $ ',":$xx
-stdout LF,"1~ ": ,. xx=: ,xx
-stdout LF,~ '>>>>'
-else.
+NB. if. UNAME-:'OpenBSD' do.
+NB. stdout LF,~ '<<<< xx $ ',":$xx
+NB. stdout LF,"1~ ": ,. xx=: ,xx
+NB. stdout LF,~ '>>>>'
+NB. else.
 assert. ((1&=@:#@[ +. (-: *. -:&(3!:0))&:(+/)) 6&c.) xx
 assert. ((1&=@:#@[ +. (-: *. -:&(3!:0))&:(+/)) 7&c.) xx
 assert. ((-: *. (1&>:@:# +. 0=(*/@:$))@] +.  -:&(3!:0))&:(+/\) 6&c.) xx
 assert. ((-: *. (1&>:@:# +. 0=(*/@:$))@] +. -:&(3!:0))&:(+/\) 7&c.) xx
 assert. ((-: *. (1&>:@:# +. 0=(*/@:$))@] +. -:&(3!:0))&:(+/\.) 6&c.) xx
 assert. ((-: *. (1&>:@:# +. 0=(*/@:$))@] +. -:&(3!:0))&:(+/\.) 7&c.) xx
-end.
+NB. end.
 1 }} &> (<"0 i. 50) , <"1 (2 6 ?@$ 30)
 
 

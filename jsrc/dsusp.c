@@ -379,7 +379,7 @@ F1(jtdbc){I k;
  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the C stack to allow suspension commands room to run
- JT(jt,dbuser)|=TRACEDBSUSCLEAR; if(unlikely((k&TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT)))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug or running, suppress so don't immediately come out of debug; also if staying in script mode
+ JT(jt,dbuser)|=TRACEDBSUSCLEAR; if(unlikely(k&(TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT)))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug or running, suppress so don't immediately come out of debug; also if staying in script mode
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

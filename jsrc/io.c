@@ -494,7 +494,7 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
  x=jtddtokens(jm,x,(((jm->recurstate&RECSTATERENT)<<(2-RECSTATERENTX)))+1+(AN(jm->locsyms)>SYMLINFOSIZE));  // allow reads from jgets() if not recursive; return enqueue() result
  if(!jm->jerr)jtimmexexecct(jm,x);  //  ****** here is where we execute the user's sentence ******
- // if PM debugging is active, we must have just executed the user's sentence to go there.  Go into suspensio  so that we get the prompt and engage with the debugger
+ // if PM debugging is active, we must have just executed the user's sentence to go there.  Go into suspension so that we get the prompt and engage with the debugger
  if(unlikely(jm->pmttop!=0)){
   jtsusp(jm,0);  // further prompts come from suspension.  We will stay there till dbr 0
   // End of PM debug.  go through the stack, which must all have come from post-mortem.  Free the symbols and the block itself (to match the ra when we moved the pm stack to the debug stack)

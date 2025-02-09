@@ -376,13 +376,13 @@ F1(jtdbc){I k;
  ARGCHK1(w);
  RE(k=i0(w));
  ASSERT(!(k&~(TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT|TRACEDB1)),EVDOMAIN);
- ASSERT(!k||!jt->glock,EVDOMAIN);
+ ASSERT(!k||!jt->glock,EVDOMAIN);  // can't turn on debug if script locked
  // turn debugging on/off in all threads
  JTT *jjbase=JTTHREAD0(jt);  // base of thread blocks
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the C stack to allow suspension commands room to run
  JT(jt,dbuser)|=TRACEDBSUSCLEAR; if(unlikely(k&(TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT)))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug or running, suppress so don't immediately come out of debug; also if staying in script mode
- if(!JT(jt,insuspension))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // if not in suspension, don't set suspension clearing.  If we are reading from a script or in jtxdefn, that would prevent stop on error
+ if(!JT(jt,insuspension)&k)JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // if not in suspension, don't set suspension clearing for dbr 1.  If we are reading from a script or in jtxdefn, that would prevent stop on error
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

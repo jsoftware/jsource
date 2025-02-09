@@ -331,7 +331,7 @@ typedef struct JSTstruct {
  S locdellock;  // lock to serialize user request to delete locale
  US promptthread;  // The thread that is allowed to prompt from keyboard.  0=master normally, but set to debug thread during suspension.  Host sentences are sent to this thread
  C sidamage;  // set during debugging when an executing entity is changed.  This invalidates the stack and should end suspension.  This is like jerr but it is sampled only at the prompt level of debug suspension
-// 1 byte free
+ C insuspension;  // set when the debug thread is in suspension
 // front-end interface info
  C *capture;          // capture output for python->J etc.
  void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */

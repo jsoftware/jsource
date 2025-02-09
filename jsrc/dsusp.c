@@ -148,6 +148,7 @@ A jtsusp(J jt, C superdebug){A z;
  J jtold=jt;  // save the thread that we started in
  UI savcstackmin=0;  // when we switch threads, we keep our stack; so we must use our stack-end.  If this is not zero, we must reset the stack on exit/change
  JT(jt,promptthread)=THREADID(jt);  // set that the debug thread is the one allowed to prompt
+ C stackedsuspension=JT(jt,insuspension);   // remember suspension status before this suspension  
  while(1){A  inp;   // this is the loop that repeatedly executes user commands from keyboard
   jt->jerr=0;   // not needed
   A iep=0;
@@ -195,6 +196,7 @@ A jtsusp(J jt, C superdebug){A z;
  jt=jtold;  // Reset to original debug thread.  NOTE that old is no longer valid, so don't tpop
  // Reset stack
  if((JT(jt,dbuser)&TRACEDB1+TRACEDBSUSCLEAR)!=TRACEDB1)jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);  // set stacklim to normal if we are exiting debug or clearing suspension
+ JT(jt,insuspension)=stackedsuspension;   // restore previous suspension status 
  debz();   // remove spacer frame
  R z;
 }    /* user keyboard loop while suspended */
@@ -380,6 +382,7 @@ F1(jtdbc){I k;
  DONOUNROLL(NALLTHREADS(jt), if(k&1)__atomic_fetch_or(&jjbase[i].uflags.trace,TRACEDB1,__ATOMIC_ACQ_REL);else __atomic_fetch_and(&jjbase[i].uflags.trace,~TRACEDB1,__ATOMIC_ACQ_REL);) JT(jt,dbuser)=k;
  jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>(k&TRACEDB1));  // if we are setting debugging on, shorten the C stack to allow suspension commands room to run
  JT(jt,dbuser)|=TRACEDBSUSCLEAR; if(unlikely(k&(TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT)))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // come out of suspension, whether 0 or 1.  If going into pm debug or running, suppress so don't immediately come out of debug; also if staying in script mode
+ if(!JT(jt,insuspension))JT(jt,dbuser)&=~TRACEDBSUSCLEAR;  // if not in suspension, don't set suspension clearing.  If we are reading from a script or in jtxdefn, that would prevent stop on error
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 

@@ -279,6 +279,8 @@ olim =: 9!:20''
 (0 $~ 8e6 % IF64 { 4 8) -: (0 3e6 * 2 - IF64)  E. i. 8e6 % IF64 { 4 8 [ 'If this fails, you need ''9!:21 olim'' to restore memory allocation size'
 9!:21 olim
 
+2 = +/ (E.,~) 63$0 1
+
 4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 adot5 f g ebar i j m n s t x y G jtree joinroutes olim xstgsav ystgsav '
 randfini''
 

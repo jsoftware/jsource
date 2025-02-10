@@ -673,6 +673,9 @@ f0 =. {{ (u. f. b. 0) }}   NB. u. does not invoke PPPP
 9!:41(1)
 }}
 
+'control error' -:  0!:100 etx 'tvbl =. 3 : 0',LF,'5'
+_1 = 4!:0 <'tvbl'
+
 4!:55 ;:'calcA f0 f1 f2 f3 fp g0 g1 g1__ g2 g3 g4 g5 gvb l numloc1 numloc2 r test tmonad testhetrf vb__ vb_z_'
 
 

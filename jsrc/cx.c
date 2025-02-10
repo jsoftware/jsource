@@ -795,7 +795,8 @@ static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
  RZ(z=exta(isboxed?INT:LIT,1,1,isboxed?24:300));  sb=AAV1(z); s=CAV1(z);
  while(1){
   RE(l=jgets("\001"));   // abort if error on input
-  if(!l)break;  // exit loop if EOF.  The incomplete definition will be processed
+// obsolete   if(!l)break;  // exit loop if EOF.  The incomplete definition will be processed
+  ASSERT(l!=0,EVCTRL)  // EOF: unterminated definition in script is an error
   if(deftype!=0)RZ(l=ddtokens(l,0b1010));  // if non-noun def, handle DDs, for explicit def, return string, allow jgets().  Leave noun contents untouched
   // check for end: ) by itself, possibly with spaces
   m=AN(l); p=q=CAV(l); 

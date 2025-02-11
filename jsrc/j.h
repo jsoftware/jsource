@@ -901,6 +901,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
 #define DCACHED_THRESn  (24*24*24)    // when m*n*p less than this, don't even look for multithreads; use blocked
 
+// prompt strings for jtgets()
+#define GETSPROMPT "   "   // 3 spaces
+#define GETSSUSPEND "      "   // 6 spaces in suspension
+#define GETSKBD "/000/000"  // 00 - 1!:1]1 prompt from keyboard, which does some edits
+#define GETSXDEF "/000/001"  // 01 - m : 0 suppress edits
 
 #ifdef __x86_64__
 #define FAST_AADD 1

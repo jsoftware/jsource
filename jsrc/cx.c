@@ -794,7 +794,7 @@ static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
  // Allocate the return area, which we extend as needed
  RZ(z=exta(isboxed?INT:LIT,1,1,isboxed?24:300));  sb=AAV1(z); s=CAV1(z);
  while(1){
-  RE(l=jgets("\001"));   // abort if error on input
+  RE(l=jgets(GETSXDEF));   // abort if error on input
   if(!l)break;  // exit loop if EOF.  The incomplete definition will be processed
 // 9.7  ASSERT(l!=0,EVCTRL)  // EOF: unterminated definition in script is an error
   if(deftype!=0)RZ(l=ddtokens(l,0b1010));  // if non-noun def, handle DDs, for explicit def, return string, allow jgets().  Leave noun contents untouched
@@ -1364,7 +1364,7 @@ A jtddtokens(J jt,A w,I env){
    ASSERT(AM(wil)>=0,EVOPENQ);  // if the line didn't contain noun DD, we have to give error if open quote
    ASSERT(!(env&4),EVEMPTYDD);   // Abort if we are not allowed to continue (as for an event or ". y)
    scanstart=AM(wil);  // Get # words, not including NB.  We have looked at em all, so start next look after all of them
-   A neww=jgets("\001");  // fetch next line, in raw mode
+   A neww=jgets(GETSXDEF);  // fetch next line, in raw mode
    RE(0); ASSERT(neww!=0,EVEMPTYDD); // fail if jgets failed, or if it returned EOF - problem either way
    // join the new line onto the end of the old one (after discarding trailing NB in the old).  Must add an LF character and a word for it
    w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator, which is all that remains of the original line
@@ -1405,7 +1405,7 @@ A jtddtokens(J jt,A w,I env){
       jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
      }
      enddelimx=0;   // after the first line, we always install the LF
-     A neww=jgets("\001");  // fetch next line, in raw mode
+     A neww=jgets(GETSXDEF);  // fetch next line, in raw mode
      RE(0); ASSERT(neww!=0,EVEMPTYDD); // fail if jgets failed, or if it returned EOF - problem either way
      // join the new line onto the end of the old one
      I oldchn=AN(w);  // len after adding LF, before adding new line

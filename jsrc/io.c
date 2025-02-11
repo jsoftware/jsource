@@ -316,9 +316,10 @@ static A jtinpl(JJ jt,B b,I n,C*s){C c;I k=0;
  if(n&&(c=s[n-1],CCR==c))--n;
 #endif
  ASSERT(!__atomic_load_n(IJT(jt,adbreakr),__ATOMIC_ACQUIRE),EVINPRUPT);
- if(!b){ /* 1==b means literal input */
+ if(!b){  // if user didn't suppress control checks...
+  // edit the line
   if(n&&COFF==s[n-1])joff(num(0));  // exit J on XOFF
-  c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});  // discard stuff that looks like error typeout
+  c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});  // if first char is non-ASCII, it will be a spelling error anyway, so trim leading | and SP which might have been added as an error prefix
  }
  R str(n-k,s+k);
 }
@@ -350,12 +351,13 @@ static C* nfeinput(JS jt,C* s){A y;
 }
 
 // type NUL-terminated prompt string p, read 1 line, & return A block for the line
-// if *p is (C)1 (which comes from m : 0), the request is for unprocessed 'literal input'
+// p[0] is 0 for prompts from 1!:1]1 and m : 0.  In that case p[1] is 0 for 1!:1]1, 1 for m : 0
 // otherwise processed in inpl
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
-A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
+A jtjgets(JJ jt,C*p){A y;C*v;I j,k,m,n;UC*s;
  __atomic_store_n(&IJT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
- if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
+ B raw=p[0]==0;  // if no prompt, it's 1!:1]1 or m :  0 - suppress editing the line
+// obsolete  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
   // read next line from script
@@ -370,7 +372,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   }
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;  // m is length; discard trailing control characters (usually CRLF, but not necessarily) ?not needed: done in inpl
   jtwri((JS)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
-  R inpl(b,m,k+s);  // process & return the line
+  R inpl(raw,m,k+s);  // process & return the line
  }
  // read from keyboard
  /* J calls for input in 3 cases:
@@ -391,7 +393,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   v=((inputtype)(IJT(jt,sminput)))(JJTOJ(jt),p);
  }
  jt->recurstate=origstate;   // prompt complete, go back to normal (running) state
- R inpl(b,(I)strlen(v),v);  // return A block for string
+ R inpl(raw,(I)strlen(v),v);  // return A block for string
 }
 
 

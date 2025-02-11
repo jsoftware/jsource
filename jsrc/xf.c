@@ -141,7 +141,7 @@ DF1(jtjfread){A z;F f,fp;
  F1RANK(0,jtjfread,self);
  RE(f=stdf(w));  // f=file#, or 0 if w is a filename
  if(f){ // if special file, read it all, possibly with error
-  if(1==(I)f)R jgets("\001");
+  if(1==(I)f)R jgets(GETSKBD);
   if(3==(I)f)R rdns(stdin);
   RZ(fp=vfn(f));} //ensure actual file pointer
  else{RZ(fp=jope(w,FREAD_O));} //otherwise open named file

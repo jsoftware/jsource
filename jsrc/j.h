@@ -904,8 +904,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // prompt strings for jtgets()
 #define GETSPROMPT "   "   // 3 spaces
 #define GETSSUSPEND "      "   // 6 spaces in suspension
-#define GETSKBD "/000/000"  // 00 - 1!:1]1 prompt from keyboard, which does some edits
-#define GETSXDEF "/000/001"  // 01 - m : 0 suppress edits
+#define GETSKBD "\000\000"  // 00 - 1!:1]1 prompt from keyboard, which does some edits
+#define GETSXDEF "\000\001"  // 01 - m : 0 suppress edits
 
 #ifdef __x86_64__
 #define FAST_AADD 1

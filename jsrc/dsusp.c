@@ -170,7 +170,7 @@ A jtsusp(J jt, C superdebug){A z;
    tpop(old);  // if we don't need the result for the caller here, free up the space
   }
   // Execute one sentence from the user
-  if((inp=jgets(GETSSUSPEND))==0){z=0; break;} inp=jtddtokens(jt,inp,1+!!EXPLICITRUNNING); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
+  if((inp=jgets(GETSSUSPEND))==0){z=0; JT(jt,dbuser)|=TRACEDBSUSCLEAR; break;} inp=jtddtokens(jt,inp,1+!!EXPLICITRUNNING); z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   if(unlikely(JT(jt,sidamage))){  // If there was SI damage (changing an executing function), execute 13!:0 (oldvalue) to clear the stack and exit suspension
    if(likely(JT(jt,dbuser)&TRACEDB1))jsto(JJTOJ(jt),MTYOER,"Debug suspension ended because an executing name was changed.  Debug is still enabled."); JT(jt,sidamage)=0; z=jtdbc(jt,num(JT(jt,dbuser)&TRACEDB1));  // give msg unless user has already cleared debug (very rare)
   }

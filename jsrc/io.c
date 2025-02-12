@@ -353,7 +353,8 @@ static C* nfeinput(JS jt,C* s){A y;
 // type NUL-terminated prompt string p, read 1 line, & return A block for the line
 // p[0] is 0 for prompts from 1!:1]1 and m : 0.  In that case p[1] is 0 for 1!:1]1, 1 for m : 0
 // otherwise processed in inpl
-// Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
+// Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error (user pressed ATTN)
+// If Jinput() returns 0, exit with error EVFACE
 A jtjgets(JJ jt,C*p){A y;C*v;I j,k,m,n;UC*s;
  __atomic_store_n(&IJT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
  B raw=p[0]==0;  // if no prompt, it's 1!:1]1 or m :  0 - suppress editing the line
@@ -393,6 +394,7 @@ A jtjgets(JJ jt,C*p){A y;C*v;I j,k,m,n;UC*s;
   v=((inputtype)(IJT(jt,sminput)))(JJTOJ(jt),p);
  }
  jt->recurstate=origstate;   // prompt complete, go back to normal (running) state
+ ASSERT(v!=0,EVFACE)  // if prompt returned error, call that EVFACE
  R inpl(raw,(I)strlen(v),v);  // return A block for string
 }
 

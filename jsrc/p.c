@@ -828,7 +828,7 @@ RECURSIVERESULTSCHECK
        ramkrecursv(y);  // force recursive y
        A freea,freep;  // reg to hold arg we are possibly freeing
        // start with fs, which we extract from the stack to get the FAOWED flag
-       PSTK *fsa2=&stack[2+((pt0ecam&((I)1<<PMASKSAVEX))?-1:0)];   // point to verb slot  1 2 2
+       PSTK *fsa2=&stack[((pt0ecam&((I)1<<PMASKSAVEX))?1:2)];   // point to verb slot  1 2 2
        freep=fsa2[0].a;  // fetch pointer to verb
        if(unlikely(ISSTKREFRESHRQD(freep))){
         // here the execution of this verb required going through the stack to raise the usecount of local values on the stack.  We have to refresh the tpop[aw] values
@@ -877,7 +877,7 @@ RECURSIVERESULTSCHECK
         }else{INCRSTAT(anull/*.05*/)}
        }
 
-       // close up the stack and store the result.  We have to wait till here because y may have inherited FAOWED status
+       // close up the stack (now 1 2 2) and store the result.  We have to wait till here because y may have inherited FAOWED status
        stack[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
        y=NEXTY;  // refetch next-word to save regs
        fsa2=stack-1; stack=(pt0ecam&(2<<PMASKSAVEX))?fsa2:stack;  // stack is now 1 1 2
@@ -1036,7 +1036,7 @@ RECURSIVERESULTSCHECK
      }  // end of classifying fragment
     // the compiler doesn't handle the combination of likely and break.  If we don't put something here, the fail-parse branch will go backwards
     // and will predict that way, which is wrong.
-    }else{
+    }else{  // no executable fragment (in lines 0-7)
 rejectfrag:;
      // LPAR misses the main parse table, which is just as well because it would miss later branches anyway.  We pick it up here so as not to add
      // a couple of cycles to the main parse test.  Whether we stack or execute, y is still set with the next word+type

@@ -81,7 +81,7 @@
 // If (store) is 1, the value of i (which is the loop index giving the position within a of the item being processed) is stored into the empty hash slot,
 // only if the hash search does not find a match.  If (store) is 2, the entry that we found is cleared, by setting it to maxcount+1, when we find a match.
 // When (store)=2, we also ignore hash entries containing maxcount+1, treating them as failed compares
-// (store)=3 is ~. inplace: 
+// (store)=3 is ~. inplace.  (store)=4 is i./i: search, where we store the index immediately to save a branch
 // Independent of (store), (fstmt) is executed if the item is found in the hash table, and (nfstmt) is executed if it is not found.
 #define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) NOUNROLL do{ \
   if(hj==hsrc##sct){if(store==1)hv[name]=(TH)i; if(store==3)hv[name]=wsct; nfstmt break;}  /* this is the not-found case */ \
@@ -91,10 +91,10 @@
 
 #if 1
 // hash one value
-#define HASHiCRC(x) CRC32L(-1L,(x))  // one I, any size, CRC
+#define HASHiCRC(x) CRC32L(p,(x))  // one I, any size, CRC
 #define HASHiIMM(x) (x)  // small I, without CRC
-#define HASHiF8(x) ({UIL xx=*(UIL*)&x; UI4 z=CRC32L(-1,xx); if(unlikely(xx==NEGATIVE0))z=CRC32L(-1,0); z; })
-#define HASHiF4(x) ({UI4 xx=*(UI4*)&x; UI4 z=CRC32L(-1,xx); if(unlikely(xx==0x80000000))z=CRC32L(-1,0); z; })
+#define HASHiF8(x) ({UIL xx=*(UIL*)&x; UI4 z=CRC32L(p,xx); if(unlikely(xx==NEGATIVE0))z=CRC32L(p,0); z; })
+#define HASHiF4(x) ({UI4 xx=*(UI4*)&x; UI4 z=CRC32L(p,xx); if(unlikely(xx==0x80000000))z=CRC32L(p,0); z; })
 #define HASHiC16(x) ({UI4 z=HASHiF8(x.re); UIL xx=*(UIL*)&x.im; if(unlikely(xx==NEGATIVE0))xx=0; CRC32L(z,xx); })
 #define HASHiE16(x) ({UI4 z=HASHiF8(x.hi); UIL xx=*(UIL*)&x.lo; if(unlikely(xx==NEGATIVE0))xx=0; CRC32L(z,xx); })
 
@@ -109,11 +109,15 @@
 #define HASHalgi(dest,src,HASH) {dest=(HASH(src)*(UIL)(p))>>32; PREFETCH((C*)&hv[dest]);}
 // Pass the hash table for one value, like above
 #define FINDalgi(warg,harg,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
-NOUNROLL do{ \
+NOUNROLL do{  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
  I hj=hv[harg];  /* fetch the hash index, which points back into the source table scaf if value is short, could store the value itself */ \
- if(hj==hsrc##sct){if(store==1)hv[harg]=(TH)i; if(store==3)hv[harg]=wsct; nfstmt break;}  /* this is the not-found case: possibly write, execute nfstmt */ \
- if((store!=2||hj<hsrc##sct)&&!mismatch(warg,hsrc##v[hj])){if(store==2)hv[harg]=(TH)(hsrc##sct+1); fstmt break;} /* compare warg against the implied hsrc##v[hj] */ \
- if(unlikely(--harg<0))harg+=p;   /* miscompare, must continue search, wrapping if needed */ \
+ if(store==4){nfstmt if(hj==hsrc##sct)break;}  /* i./i: the index always comes from the hash lookup */ \
+ else if(hj==hsrc##sct){if(store==1)hv[harg]=(TH)i; if(store==3)hv[harg]=wsct; nfstmt break;}  /* this is the not-found case: possibly write, execute nfstmt */ \
+ if((store!=2||hj<hsrc##sct)&&likely(!mismatch(warg,hsrc##v[hj]))){if(store==2)hv[harg]=(TH)(hsrc##sct+1); if(store!=4){fstmt} break;} /* compare warg against the implied hsrc##v[hj] */ \
+  /* the likely in the line above is vital, to prevent the compiler from misallocating registers so as to do arithmetic on */ \
+  /* hv instead of harg when to loop continues.  As it is the compiler needlessly duplicates earlier instructions below */ \
+ if(likely(--harg>=0))continue;  /* miscompare, must continue search  scaf generates excess LEA */ \
+ harg+=p;   /* if index goes below 0, wrap to top */  \
 }while(1);
 // Traverse the hash table for an argument with a type, i. e. one that can be indexed by i
 #define XSEARCHalgi(T,TH,src,hsrc,hash,mismatch,stride,fstmt,nfstmt,store,initi,endi) \

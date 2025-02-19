@@ -70,7 +70,7 @@
    case IICO|IIMODREFLEX: {XDQP##ALG(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=i;},1,ALG) zv+=wsct;} break;      \
     /* normal i./i: - use the table */ \
    case IICO: \
-   case IIDOT: { XDOP##ALG(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=hj;},0,ALG); zv+=wsct; }                          break;  \
+   case IIDOT: { /* forcetomemory(0); scaf */ XDOP##ALG(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=hj;},4,ALG); zv+=wsct; }                          break;  \
    case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDOP##ALG(T,TH,hash,exp,stride,{zb[i]=0;},{zb[i]=1;},1,ALG) zv=(I*)(zb+=wsct);} /* IRS - keep zv running */  break;  \
    case INUBIP|IIMODREFLEX: {       XMVPIP##ALG(T,TH,hash,exp,stride,3,ALG);              }   break;  \
    case INUB|IIMODREFLEX: {       XMVP##ALG(T,TH,hash,exp,stride,1,ALG);              }   break;  \
@@ -110,6 +110,9 @@ IOFX(X, jtiox,,  hix(v),           !eqnx(n,v,av+n*hj),      cn,algv) // extended
 IOFX(Q, jtioq,,  hiq(v),           !eqnq(n,v,av+n*hj),      cn,algv) // rational number
 IOFX(C, jtioc,,  hic(k,(UC*)v),    memcmpne(v,av+k*hj,k),   cn,algv) // boolean, char, or integer*
 IOFX(I, jtioi,COMPSETUP,hici(n,v),COMPCALL(av),             cn,algv) // INT array, not float
+// obsolete IOFX(C2,jtioC2,, hici1((C2*)v),    *v!=av[hj],               1,algv) // 2-byte (char/INT2)
+// obsolete IOFX(C4,jtioC4,, hici1((C4*)v),    *v!=av[hj],               1,algv) // 4-byte (char/INT4)
+// obsolete IOFX(I, jtioi1,, hici1(v),         *v!=av[hj],               1,algv) // len=8, not float
 IOFX(US,jtioC2,, HASHiIMM,   CNEiA,               1,algi) // 2-byte (char/INT2)
 IOFX(C4,jtioC4,, HASHiCRC,    CNEiA,               1,algi) // 4-byte (char/INT4)
 IOFX(I, jtioi1,, HASHiCRC,         CNEiA,               1,algi) // len=8, not float

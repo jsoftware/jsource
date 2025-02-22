@@ -246,7 +246,7 @@ DF2(jttsit2){A z;D t;I n;I stackallo=0,i;
  A cwa; GAT0(cwa,LIT,2*sizeof(CW),1) AN(cwa)=1; CW *cwv=(CW*)voidAV1(cwa); cwv[0].tcesx=0+(CBBLOCK<<TCESXTYPEX); cwv[1].tcesx=AN(w);  // allo 2 SWs, of which 1 is thr end marker
  RZ(w=mkwris(w)) RZ(pppp(jt,w,cwa))  // make sure we can write to w, and perform pppp on it
  I wn=AN(w); A *wv=AAV(w);  // get #words in sentence after pppp, and their address
- // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name;
+ // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name:
  // to whatever is in the current local symbol table, or -1 if there is none
  for(i=0;i<wn;++i){
   if(QCPTYPE(wv[i])==QCNAMEASSIGNED || (QCTYPE(wv[i])&QCISLKPNAME)) { //  if a name, either assigned or used
@@ -276,6 +276,9 @@ foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNE
      }
     }
    }
+   // if the name is not shared, it is not a simple local name.
+   // If it is also not indirect or mnuvxy, it is eligible for caching - if that is enabled
+   if(QCPTYPE(wv[i])!=QCNAMEASSIGNED && (jt->namecaching & !(NAV(QCWORD(wv[i]))->flag&(NMILOC|NMDOT|NMIMPLOC|NMSHARED))))NAV(QCWORD(wv[i]))->flag|=NMCACHED;
   }
  }
  STACKCHKOFL  // in case the sentence calls 6!:2 again, break the loop

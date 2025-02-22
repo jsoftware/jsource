@@ -642,7 +642,7 @@ rdglob: ;  // here when we tried the buckets and failed
          // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent
          NAV(origy)->cachedref=CLRFAOWED(y); NAV(origy)->bucket=0; ACSETPERM(QCWORD(y)); // clear bucket info so we will skip that search - this name is forever cached with QCFAOWED semantics.  Make the cached value immortal
         }
-       }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.  But if the value IS a reference, use the value if possible to avoid the extra lookup
+       }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.
         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
         y=namerefacv(origname,y);   // Replace acv with reference, and fa() looked-up y value if global.  y starts with QCFAOWED semantics, returns with QCFAOWED
         FPSZ(y)

@@ -327,7 +327,8 @@ RETF(z);
 // This verb also does some processing designed to reduce register usage in the parser:
 //  * if val is not 0, it is freed if it is not local
 //  * the flags from val are converted to QCFAOWED semantics, and if a reference is created it is NOT NAMED
-// The value is used only for flags and rank
+// If value is NMCACHED and eligible, we store away a pointer to the original reference, which will be a sentence word.  When the reference is looked
+// up it will add a pointer to the reference in the sentence word, which will establish the caching.  Otherwise the value is used only for flags and rank
 // The reference lookup is initialized with QCFAOWED (not named, no fa owed) semantics (0/QCVERB if undefined ref) and the current asngct
 A jtnamerefacv(J jt, A a, A val){A y;V*v;
  y=likely(val!=0)?QCWORD(val):ds(CCAP);  // If there is a value, use it; if not, treat as [: (verb that creates error)

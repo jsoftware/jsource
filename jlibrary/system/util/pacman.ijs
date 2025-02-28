@@ -1519,9 +1519,10 @@ NEW=. hostpathsep jpath bname,'.new'
 if. 1~:ftype bname do. log'upgrade not supported for this type of install' return. end.
 
 if. IF64 > IFRASPI do.
-  t=. httpget path,plat,'/j64'
+  s=. IFWA64 pick '64';'arm64'
+  t=. httpget path,plat,'/j',s
   if. 1=;{.t do. log'upgrade - read jengine folder failed' return end.
-  a=. fread '~temp/j64'
+  a=. fread '~temp/j',s
   i=. >:((;(UNAME-:'Win'){'>libj';'>j') E. a)#i.#a
   a=. i}.each (#i)#<a
   a=. (a i.each'<'){.each a
@@ -1716,7 +1717,7 @@ smoutput m
 if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
   qt_ldd_test d1
   smoutput 'If libjqt cannot be loaded, see this guide for installing the Qt library'
-  smoutput 'https://code.jsoftware.com/wiki/Guides/Linux_Installation'
+  smoutput 'https://code.jsoftware.com/wiki/Guides/Qt_IDE/Install'
   return.
 end.
 

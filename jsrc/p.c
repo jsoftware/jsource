@@ -470,7 +470,7 @@ void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
 // JT flag is used to indicate execution from ". - we can't honor name_: then, or perhaps some assignments
 A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK *stack;A z,*v;
- // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragement; the stack will be analyzed
+ // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragment; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // Save info for error typeout.  We save pointers to the sentence, and the executing parser-stack frame for each execution, from which we infer error position

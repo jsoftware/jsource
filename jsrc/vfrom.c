@@ -415,9 +415,9 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
  I nia; PROD(nia,af,as);     // number of 1-cells of a
  I wr=AR(w); I *ws=AS(w); I wcr=wr-wf;
  ASSERT(naxa<=wcr,EVLENGTH)  // the number of axes must not exceed the length of a major cell
- if(unlikely((-AN(a)&-AN(w))>=0)){A z;  // empty array, either a or w
-  // if empty a, return w in full, one copy per 1-cell of a, as w"_"1 a   (}:$a) $ ,:w .  "_ needed to prevent w from being construed as a gerund
-  if(unlikely(AN(a)==0))R dfv1(z,a,qq(qq(w,ainf),zeroionei(1)));
+ if(unlikely((-AN(a)&-AN(w))>=0)){A z, z1;  // empty array, either a or w
+  // if empty a, return w-cell in full, one copy per 1-cell of a, as ({.^:({:$a)w)"_"1 a   .  "_ needed to prevent w from being construed as a gerund
+  if(unlikely(AN(a)==0))R dfv1(z,a,qq(qq(df1(z1,w,powop(ds(CHEAD),tail(shape(a)),0)),ainf),zeroionei(1)));
   // empty w.  We must verify the indexes of a do not exceed w's shape
   I *ad=IAV(a); DO(nia, DO(naxa, ASSERT((*ad^REPSGN(*ad))<ws[i],EVINDEX); ++ad;) ) 
   // allocate empty result, move in shape: frame of w, frame of a, shape of item

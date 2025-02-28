@@ -1238,6 +1238,16 @@ NB. selections from empties
 
 (,<,'+') -: a: { +`''  NB. gerund is not converted to verb
 
+NB. empty scatter reads
+(,0) -: $(<i. 0 2) { i. 4 5
+2 4 5 -: $(<i. 2 0) { i. 4 5
+2 0 5 -: $(<i. 2 0 1) { i. 4 5
+0 2 5 -:  $(<i. 0 2 1) { i. 4 5
+0 2 -: $(<i. 0 2 2) { i. 4 5
+4 5 -: $(<i. 0) { i. 4 5
+(,5) -: $(<i. 1) { i. 4 5
+
+
 NB. i{y integer indices -------------------------------------------------
 
 fr =: 4 : '((x**/s)+/i.s=.}.$y){,y'

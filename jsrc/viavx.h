@@ -78,18 +78,19 @@
 // The v value is stored in an xmm register and brought out into v for use by (exp); it is a delayed version of the v that was used for HASHSLOT.
 // The table search goes in descending order, and wraps around to p-1 (the last entry in the table).
 // What happens after the search depends on the last 3 parameters:
-// If (store) is 1, the value of i (which is the loop index giving the position within a of the item being processed) is stored into the empty hash slot,
-// only if the hash search does not find a match.  If (store) is 2, the entry that we found is cleared, by setting it to maxcount+1, when we find a match.
+// If (store) is 1 (hashing or reflexive), the value of i (which is the loop index giving the position within a of the item being processed) is stored into the empty hash slot,
+// only if the hash search is tolerant or does not find an exact match.  If (store) is 2 (used for reverse-hash e.), the entry that we found is cleared, by setting it to maxcount+1, when we find a match.
 // When (store)=2, we also ignore hash entries containing maxcount+1, treating them as failed compares
 // (store)=3 is ~. inplace.  (store)=4 is i./i: search, where we store the index immediately to save a branch
+// store=5 is for /. or ~. which do not store if a tolerant match is found
 // Independent of (store), (fstmt) is executed if the item is found in the hash table, and (nfstmt) is executed if it is not found.
 #define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) NOUNROLL do{ \
-  if(hj==hsrc##sct){if(store==1)hv[name]=(TH)i; if(store==3)hv[name]=wsct; nfstmt break;}  /* this is the not-found case */ \
-  if((store!=2||hj<hsrc##sct)&&(v=(T*)_mm_extract_epi64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
+  if(hj==hsrc##sct){if((store)==1)hv[name]=(TH)i; if((store)==3)hv[name]=wsct; nfstmt break;}  /* this is the not-found case */ \
+  if(((store)!=2||hj<hsrc##sct)&&(v=(T*)_mm_extract_epi64(vp,1),!(exp))){if((store)==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
   if(unlikely(--name<0))name+=p; hj=hv[name]; /* miscompare, must continue search */ \
   }while(1);
 
-#if 1
+#if 1 // obsolete 
 // hash one value
 #define HASHiCRC(x) CRC32L(p,(x))  // one I, any size, CRC
 #define HASHiIMM(x) (x)  // small I, without CRC
@@ -102,7 +103,95 @@
 #define CNEiA(x,y) (x!=y)
 #define CNEiC(x,y) (x.re!=y.re||x.im!=y.im)
 #define CNEiE(x,y) (x.hi!=y.hi||x.hi!=y.hi)
+// algt cases.  x is a register with the sought value in lane 1, y is the value from the hash
+#define CNEtD(x,y) ({ \
+ __mm256d hashv=_mm256_set1_pd(y); hashv=_mm256_blend_pd(x,hashv,0b0010); \
+ (3*_mm256_movemask_pd(_mm256d_fmsub_pd(cct,hashv,_mm256_permute_pd(hashv,0b0001))))&2; /* tolerant comparison by our defn */ \
+})  // mismatch if sign bits not =
+#define CNE0tD(x,y) ({ /* this version for exact comparison */ \
+ _mm256_movemask_pd(x,_mm256_cmp_pd(_mm256_set1_pd(y),CMP_NEQ_UQ)))&1; /* intolerant comparison */ \
+})  // mismatch if sign bits not =
 
+#if 0
+// fetch into the bucketed queue, creating the queue of values, primary bucket, secondary bucket.  May overfetch by 3 words
+#define BUCKETalgt(src,index,store) bq=_mm256_loadu_pd(&src[index]); /* load the values */ \
+ bq=_mm256_and_pd(bq,_mm256_cmp_pd(bq,mm256_setzero_pd(),CMP_NEQ_UQ)); /* convert -0 to +0 */ \
+ bqp=_mm256_mul_pd(bq,cct); bqx=_mm256_mul_pd(bq,ccti);  /* get lower & upper limits of tolerant equality */ \
+ bqx=_mm256_xor_pd(bqx,bqp); bqp=_mm256_and_pd(bp,bmsk); bqx=_mm256_xor_pd(bqx,bq); bqx=_mm256_and_pd(bx,bmsk); // create buckets
+   // At most one of upper/lower neighbors are in a different bucket.  Find that neighbor, setting to the primary if there is no overlap
+// fetch one value from the bucketed queue.  The actual value goes into lane 0 of dest; the primary bucket value goes into
+// dest##p; the XOR offset for the secondary bucket goes into dest##x
+#define FETCHalgt(dest,src,index,store) dest##p=_mm256_extract_epi64(_mm256_castpd_si256(bqp),0x0); bqp=_mm256_permute4x64_pd(bqp,0b11111001); dest=bq; bq=_mm256_permute4x64_pd(bq,0b11111001); \
+ if((store)!=1){dest##x=_mm256_extract_epi64(_mm256_castpd_si256(bqx),0x0); bqx=_mm256_permute4x64_pd(bqx,0b11111001);}   /* shift queue after extracting */
+// hash one value (both primary and XOR), create the indexes into the hashtable, and then prefetch the primary value
+#define HASHalgt(dest,src,HASH) {dest##p=(HASH(src##p)*(UIL)(p))>>32; PREFETCH((C*)&hv[dest##p]); dest##x=(HASH(src##x)*(UIL)(p))>>32;}
+// Pass the hash table for one value, like above. stop if index exceeds xlim
+// cases are given by store, with bits meaning:
+// 0 intolerant store only nonreflexive (table build)
+// 2 normal tolerant search nonreflexive, forward or reverse - result will always be the last hash value inspected
+// 3 e. &c. tolerant search nonreflexive index not needed
+// 4 tolerant search + intolerant search/store reflexive (i./i: reflexive) store-search continues after tolerant match
+// 6 tolerant search/store reflexive (/. or ~.) store suppressed on tolerant match
+// 7 /. or ~. inplace - tolerant search/store reflexive, and use current wsct (running size of nub) as hash index of new store, store suppressed on tolerant match
+// 8 set for tolerant i: (either reflexive or not), indicating that the LARGER result of the two searches should be used
+// 9 set when we are processing the secondary bucket and can exit if the position passes the result of the first bucket
+// at end, harg is the hashtable slot we ended on (used for ~. and /.: we fill the slot in if there was not a tolerant match)
+// fndx is the location of the tolerant match, if there is one.  After the primary, fndx=max if no match; after secondary, 0 or max depending on direction
+#define FIND1algt(warg,harg,T,TH,hsrc,mismatch,fstmt,nfstmt,store,lbl) \
+NOUNROLL for(;;({--harg; if(unlikely(harg<0))harg+=p;})){  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
+ I hj=hv[harg];  /* fetch the hash index, which points back into the source table */ \
+ if((store)==4)fndx=hj; /* simple case in primary, save a branch */
+ if(hj==hsrc##sct || ((store)&512 && ((store)&256?hj<fndx:hj>fndx))){  /* stopper slot encountered - empty, or second pass that has overshot the index found in the first pass */ 
+  if((store)==1||(store)==16){hv[harg]=(TH)i;}  /* intolerant store: we must be at an empty slot, store into it. */
+  break;  /* exit not found in this bucket */ \
+ }else{  /* nonempty slot found.  See if it matches */ \
+  if(!((store)&1)){  /* first look is for tolerant match, skip if intolerant store */ \
+   if(likely(!mismatch(warg,hsrc##v[hj]))){  /* if there is a tolerant match */ \
+    if((store)&8)goto lbl##found;  /* if match on e., just say found, no need to check secondary */
+    else if((store)==16)fndx=fndx==i?hj:fndx;  /* if we must keep looking for exact match, remember the first tolerant match */ \
+    else{if((store)!=4)fndx=hj; break;} /* looking just for 1 tolerant match per bucket: remember it and stop looking */ \
+   }else continue; /* if tolerant mismatch, can't be exact match, go to next slot */ \
+  } \
+ } /* falling through, we have a nonempty slot that we have to check for an exact match - type 1 or 16 */ \
+ if(likely(!CNE0tD(warg,hsrc##v[hj])))break;  /* exact match prevents the store */ \
+}
+
+#define FINDalgt(warg,harg,T,TH,hsrc,mismatch,fstmt,nfstmt,store,lbl) { \
+ if((store)&4)fndx=i;   /* set fndx to 'found at i' if reflexive, otherwise will be set by search */
+ FIND1algt(warg##p,harg##p,T,TH,hsrc,mismatch,fstmt,nfstmt,store)  /* set harg with place to store in primary, fndx to result of tolerant match */ \
+ if(!((store)&1)){ /* if not intolerant store (table build nonreflexive), which has already been performed */
+  if(unlikely(warg##p!=warg##x)){  /* if there is a secondary bucket */
+   /* if the primary search matched (including the reflexive which always matches), leave fndx to cause early termination of the secondary; otherwise set fndx to accept any match */  
+   if(!((store)&0b11011000){fndx=fndx==hsrc##sct?((store)&256?-1:hsrc##sct):fndx;} 
+   FIND1algt(warg##x,harg##x,T,TH,hsrc,mismatch,fstmt,nfstmt,((store)+512))  /* set fndx/harg from match on socondary */ \
+   if((store)&8)goto lbl##notfound;  /* if e. missed both buckets, finis */
+   /* combine primary & secondary giving overall found result */
+   fndx=fndx==((store)&256?-1:hsrc##sct)?hsrc##sct:fndx;  /* if no match found, convert to canonical mismatch value */
+  }else if((store)&8)goto lbl##notfound;  /* if e. missed, finis */
+  if((store)&0b11000000){if(fndx!=hsrc##sct)if((store)&64)hv[harg##p]=(TH)i;else hv[harg##p]=wsct++;} /* ~. and /. store to the hashtable only if no tolerant match: store i if not inplace, wsct if inplace */
+  if(fndx==hsrc##sct){lbl##notfound: nfstmt }else{lbl##found; fstmt}  /* run user's result instructions */
+ }
+}
+
+// Traverse the hash table for an argument with a type, i. e. one that can be indexed by i
+#define XSEARCHalgt(T,TH,src,hsrc,hash,mismatch,stride,fstmt,nfstmt,store,initi,endi,lbl) \
+{ \
+ T w2, w1, w0; I h1, h0; \
+ I i=initi;  /* needed for FIND */ \
+ FETCHalgi(w1,src##v,i) /* fetch into item 1 */ \
+ if(likely(src##sct>1)){ \
+  FETCHalgi(w2,src##v,i+stride) HASHalgi(h1,w1,hash) /* fetch into item 2, hash item 1 */ \
+  for(;i!=endi-2*stride;i=i+stride){ \
+   /* find slot 0, hash slot 1, and fetch slot 2 */ \
+   w0=w1; w1=w2; FETCHalgi(w2,src##v,i+2*stride); h0=h1; HASHalgi(h1,w1,hash) FINDalgi(w0,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
+  } \
+  h0=h1; FINDalgi(w1,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) i=i+stride; /* find slot 1 */ \
+ }else{w2=w1;}  /* null pipe stage if arg short - as if we fetched into 2 */ \
+ HASHalgi(h0,w2,hash) FINDalgi(w2,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) /* hash & find slot 2 */ \
+}
+
+
+#endif
 // fetch one value
 #define FETCHalgi(dest,src,index) dest=src[index];
 // hash one value, creating the index into the hashtable, and then prefetch the value

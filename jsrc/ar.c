@@ -1188,7 +1188,7 @@ static DF2(jtfold12){F2PREFIP;A z,vz;
    tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // fwd/rev.  newitem v vz   a is inplaceable if y was (set above).  w is inplaceable first time based on initial-item status
    if(unlikely(tz==virtw)){if(unlikely((tz=clonevirtual(tz))==0))goto exitpop;}
    AK(virtw)+=wstride;  // advance item pointer to next/prev if there is one
-   jtinplace=(J)((I)jtinplace|JTINPLACEW);  // w inplaceable on all iterations after the first
+   jtinplace=(J)((I)jtinplace|((FAV(self)->flag>>VJTFLGOK2X)&JTINPLACEW));  // w inplaceable on all iterations after the first - if the operation supports flags
   }else if(dmfr&STATEDYAD){tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // directionless dyad  x v vz
   }else tz=CALL1IP(FAV(vself)->valencefns[0],vz,vself);   // directionless monad   v vz
 

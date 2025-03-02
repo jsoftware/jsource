@@ -199,7 +199,6 @@
 
 // hashes using the 2-byte hashtable
 IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl),INITTLTR INITXNEW INITXROT D x,algv)    // FL array
-IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom
 IOFT(Z,US,jtioz, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj),INITTLTR INITXNEW INITXROT D x,algv)     // CMPLX array
 IOFT(Z,US,jtioz1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // CMPLX atom
 IOFT(E,US,jtioe, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !jteqe(jt,n,v,&av[n*hj]),INITTLTR INITXNEW INITXROT D x,algv)     // QP array
@@ -208,11 +207,153 @@ IOFT(A,US,jtioa, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+
 IOFT(A,US,jtioa1,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])),,algv)     // singleton box
 // hashes using the 4-byte hashtable
 IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl),INITTLTR INITXNEW INITXROT D x,algv)     // FL array
-IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom
 IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj),INITTLTR INITXNEW INITXROT D x,algv)     // CMPLX array
 IOFT(Z,UI4,jtioz12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // CMPLX atom
 IOFT(E,UI4,jtioe2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !jteqe(jt,n,v,&av[n*hj]),INITTLTR INITXNEW INITXROT D x,algv)     // QP array
 IOFT(E,UI4,jtioe12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),  2), !jteqe(jt,1,v,&av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // QP atom
 IOFT(A,UI4,jtioa2, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj), D x,algv)     // boxed array with more than 1 box
 IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])),  D x,algv)     // singleton box
+
+#if 1  // obsolete  
+// algt compares.  x is a register with the sought value in lane 1, y is the value from the hash
+#define CNEtD(x,y) ({ \
+ __mm256d hashv=_mm256_set1_pd(y); hashv=_mm256_blend_pd(x,hashv,0b0010); \
+ (3*_mm256_movemask_pd(_mm256d_fmsub_pd(cct,hashv,_mm256_permute_pd(hashv,0b0001))))&2; /* tolerant comparison by our defn */ \
+})  // mismatch if sign bits not =
+#define CNE0tD(x,y) ({ /* this version for exact comparison */ \
+ _mm256_movemask_pd(x,_mm256_cmp_pd(_mm256_set1_pd(y),_CMP_NEQ_UQ)))&1; /* intolerant comparison */ \
+})
+
+// fetch into the bucketed queue, creating the queue of values, primary bucket, secondary bucket.  May overfetch by 3 words on either end
+#define BUCKETalgt(src,index,store) bq=_mm256_loadu_pd(&src##v[index-((store)&256?NPAR-1:0)]); /* load the values */ \
+ bq=_mm256_and_pd(bq,_mm256_cmp_pd(bq,_mm256_setzero_pd(),_CMP_NEQ_UQ)); /* convert -0 to +0 */ \
+ bqp=_mm256_mul_pd(bq,cct); bqx=_mm256_mul_pd(bq,ccti);  /* get lower & upper limits of tolerant equality */ \
+ bqx=_mm256_xor_pd(bqx,bqp); bqp=_mm256_and_pd(bq,bmsk); bqx=_mm256_xor_pd(bqx,bq); bqx=_mm256_and_pd(bqx,bmsk); // create buckets
+   // At most one of upper/lower neighbors are in a different bucket.  Find that neighbor, setting to the primary if there is no overlap
+// fetch one value from the bucketed queue.  The actual value goes into lane 0 of dest; the primary bucket value goes into
+// dest##p; the XOR offset for the secondary bucket goes into dest##x
+#define FETCHalgt(dest,src,index,store) if((store)&256){bqp=_mm256_permute4x64_pd(bqp,0b00011011); dest##p=_mm256_extract_epi64(_mm256_castpd_si256(bqp),0x0); bq=_mm256_permute4x64_pd(bq,0b00011011); dest=bq; \
+ if(!((store)&1)){bqx=_mm256_permute4x64_pd(bqx,0b00011011); dest##x=_mm256_extract_epi64(_mm256_castpd_si256(bqx),0x0);}}   /* reverse, shift queue before extracting */ \
+ else{dest##p=_mm256_extract_epi64(_mm256_castpd_si256(bqp),0x0); bqp=_mm256_permute4x64_pd(bqp,0b11111001); dest=bq; bq=_mm256_permute4x64_pd(bq,0b11111001); \
+ if(!((store)&1)){dest##x=_mm256_extract_epi64(_mm256_castpd_si256(bqx),0x0); bqx=_mm256_permute4x64_pd(bqx,0b11111001);}}   /* forward, shift queue after extracting */
+// hash one value (both primary and XOR), create the indexes into the hashtable, and then prefetch the primary value
+#define HASHalgt(dest,src,HASH) {dest##p=(HASH(src##p)*(UIL)(p))>>32; PREFETCH((C*)&hv[dest##p]); dest##x=(HASH(src##x)*(UIL)(p))>>32;}
+// Pass the hash table for one value, like above. stop if index exceeds xlim
+// cases are given by store, with bits meaning:
+// 0 intolerant store only nonreflexive (table build)
+// 2 normal tolerant search nonreflexive, forward or reverse - result will always be the last hash value inspected
+// 3 e. &c. tolerant search nonreflexive index not needed
+// 4 tolerant search + intolerant search/store reflexive (i./i: reflexive) store-search continues after tolerant match
+// 6 tolerant search/store reflexive (/. or ~.) store suppressed on tolerant match
+// 7 /. or ~. inplace - tolerant search/store reflexive, and use current wsct (running size of nub) as hash index of new store, store suppressed on tolerant match
+// 8 set for tolerant i: (either reflexive or not), indicating that the LARGER result of the two searches should be used
+// 9 set when we are processing the secondary bucket and can exit if the position passes the result of the first bucket
+// at end, harg is the hashtable slot we ended on (used for ~. and /.: we fill the slot in if there was not a tolerant match)
+// fndx is the location of the tolerant match, if there is one.  After the primary, fndx=max if no match; after secondary, 0 or max depending on direction
+#define FIND1algt(warg,harg,T,TH,hsrc,mismatch,mismatchx,store,lbl) \
+NOUNROLL for(;;({--harg; if(unlikely(harg<0))harg+=p;})){  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
+ I hj=hv[harg];  /* fetch the hash index, which points back into the source table */ \
+ if((store)==4)fndx=hj; /* simple case in primary, save a branch */ \
+ if(hj==hsrc##sct || ((store)&512 && ((store)&256?hj<fndx:hj>fndx))){  /* stopper slot encountered - empty, or second pass that has overshot the index found in the first pass */ \
+  if(!((store)&512) && (store)&0b11000000)fndx=hsrc##sct;  /* notfound in ~. first pass: indicate no tolerant match */ \
+  if(((store)&~256)==1||((store)&~256)==16){hv[harg]=(TH)i; if((store)&1)goto lbl##notfound;}  /* intolerant store first pass: we must be at an empty slot, store into it.  If reflexive, indicate match in new stored element */ \
+  break;  /* exit not found in this bucket */ \
+ }else{  /* nonempty slot found.  See if it matches */ \
+  if(!((store)&1)){  /* first look is for tolerant match, skip if intolerant store */ \
+   if(likely(!mismatch(warg,hsrc##v[hj]))){  /* if there is a tolerant match */ \
+    if((store)&8)goto lbl##found;  /* if match on e., just say found, no need to check secondary */ \
+    else if((store)&16 && !((store)&512))fndx=fndx==i?hj:fndx;  /* if first pass reflexive, we must keep looking for exact match, remember the first tolerant match */ \
+    else{if((store)!=4)fndx=hj; break;} /* looking just for 1 tolerant match per bucket: remember it and stop looking */ \
+   }else continue; /* if tolerant mismatch, can't be exact match, go to next slot */ \
+  } \
+ } /* falling through, we have a nonempty slot that we have to check for an exact match - type 1 or 16 */ \
+ if(likely(!mismatchx(warg,hsrc##v[hj]))){if((store)&1)goto lbl##found; break;}  /* exact match terminates the search without store */ \
+}
+
+#define FINDalgt(warg,harg,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl) { \
+ if((store)&16)fndx=i;   /* set fndx to 'found at i' if intolerant reflexive, otherwise will be set by search if needed */ \
+ FIND1algt(warg##p,harg##p,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store)  /* set harg with place to store in primary, fndx to result of tolerant match */ \
+ /* intolerant store (table build nonreflexive) has already branch to found/notfound */ \
+ if(unlikely(warg##p!=warg##x)){  /* if there is a secondary bucket */ \
+  /* if the primary search matched (including the reflexive which always matches), leave fndx to cause early termination of the secondary; otherwise set fndx to accept any match */ \
+  if(!((store)&0b11011000){fndx=fndx==hsrc##sct?((store)&256?-1:hsrc##sct):fndx;} \
+  FIND1algt(warg##x,harg##x,T,TH,hsrc,mismatch,mismatchx,((store)+512))  /* set fndx/harg from match on socondary */ \
+  if((store)&8)goto lbl##notfound;  /* if e. missed both buckets, finis */ \
+  /* combine primary & secondary giving overall found result */ \
+  fndx=fndx==((store)&256?-1:hsrc##sct)?hsrc##sct:fndx;  /* if no match found, convert to canonical mismatch value */ \
+ }else if((store)&8)goto lbl##notfound;  /* if e. missed, finis */ \
+ if((store)&0b11000000){if(fndx!=hsrc##sct){if((store)&64)hv[harg##p]=(TH)i;else hv[harg##p]=wsct++;}} /* ~. and /. store to the hashtable only if no tolerant match: store i if not inplace, wsct if inplace */ \
+ if(fndx==hsrc##sct){lbl##notfound: nfstmt}else{lbl##found: fstmt}  /* run user's result instructions */ \
+}
+
+// Traverse the hash table for an argument with a type, i. e. one that can be indexed by i
+#define XSEARCHalgt(T,TH,src,hsrc,hash,mismatch,mismatchx,stride,fstmt,nfstmt,store,len,lbl) \
+{ \
+ __m256d w2, w1, w0; I h1p, h1x, h0p, h0x; \
+ I i=(store)&256?src##sct-1:0;  /* needed for FIND */ \
+ BUCKETalgt(src,i,store) \
+ FETCHalgt(w1,src##v,i,store) /* fetch into item 1 */ \
+ if(likely(src##sct>1)){ \
+     FETCHalgt(w2,src##v,i+((store)&256?-1:1),store) HASHalgt(h1,w1,hash) /* fetch into item 2, hash item 1 */ \
+  for(;i!=(store)&256?1:src##sct-2;i=i+((store)&256?-1:1)){ \
+   /* find slot 0, hash slot 1, and fetch slot 2 */ \
+   if((store)&256?((src##sct-i)&3)==3:(i&3)==2){BUCKET(src,i+((store)&256?-2:2),store)}  /* if we need 4 new input words, get them */ \
+   w0=w1; w1=w2; FETCHalgt(w2,src##v,i+((store)&256?-2:2),store); h0p=h1p; h0x=h1x; HASHalgt(h1,w1,hash) FINDalgt(w0,h0,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##0) \
+  } \
+  h0p=h1p; h0x=h1x; FINDalgt(w1,h0,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##1) i=i+((store)&256?-1:1); /* find slot 1 */ \
+ }else{w2=w1;}  /* null pipe stage if arg short - as if we fetched into 2 */ \
+ HASHalgt(h0,w2,hash) FINDalgt(w2,h0,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##2) /* hash & find slot 2 */ \
+}
+
+// version for atomic tolerant types, where ALG is algt
+#define IOFT1(T,TH,f,hash,mismatch,mismatchx,ALG)   \
+IOF(f){ \
+ I acn=ak/sizeof(T),  \
+ wcn=wk/sizeof(T),* zv=AV(z);T* RESTRICT av=(T*)AV(a),* wv=(T*)AV(w);I md; \
+ __m256d bq, bqp, bqx, cct=_mm256_set1_pd(jt->cct), ccti=_mm256_set1_pd(1.000000000000001*(2.0-jt->cct));  /*  bucket info, stored & calculated NPAR at a time. bq is the actual data, bqp is the pruimary bucket, bqx is the secondary bucket cct and 1/cct, used to see whether the value overlaps buckets */ \
+ /* bmsk holds 16 tolerance intervals at the large end.  The bigger the bucket  the less often we have to check 2 buckets, but the more hits we might have in a bucket. */ \
+ /* with 16 intervals we still have 38 bits of mantissa in the bucket, which is plenty.  For non-atomic searches we use a minimal bucket size because comparse are slow */ \
+ __m256d bmsk; UIL bmsku; if(likely(jt->cct==1.0-FUZZ))bmsku=(UIL)0xffffffffffffc000LL; else if(likely(jt->cct==1.0))bmsku=(UIL)~0LL; \
+                          else{D ct=1.0-jt->cct; I8 exp=(((*(I8*)&ct-1)>>52)&0x7ff)-0x3fe+44+10+4; exp=exp<0?0:exp; bmsku=-((UIL)1<<exp);} /* convert ct of 10..0 to 01..1, then look at exponent and make the size match on the default 2^_44 */ \
+ bmsk=_mm256_castsi256_pd(_mm256_set1_epi64x(bmsku));  /* bmsk in all lanes */ \
+ IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=calcctmask(jt->cct);   \
+ md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */ \
+ if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBIP)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
+ I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
+ for(;ac>0;av+=acn,--ac,wv+=--wreps<0?wcn:0,wreps=wreps<0?wrepssv:wreps){ \
+  if(!(mode&IPHOFFSET)){  /* if we are not using a prehashed table */ \
+   hashallo(hh,p,asct,mode);      /* allocate the table */ \
+   if(!(IIMODREFLEX&md)){I cn= k/sizeof(T);  /* not reflexive */ \
+    if(md==IICO)XSEARCHalgt(T,TH,a,a,hash,mismatch,mismatchx,,,,1,asct,lblsf) else XSEARCHalgt(T,TH,a,a,hash,mismatch,mismatchx,,,,(256+1),asct,lblsr)  /* all writes to hash must use intolerant compare */ \
+    if(w==mark)break; /* if the prehash was all we are interested in, skip the search */ \
+   } \
+  }  \
+  switch(md){ \
+  case IIDOT: case IICO: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,zv[i]=fndx;,zv[i]=fndx;,4,wsct,lbls0,algt) zv+=wsct; } break;  \
+  case IIDOT|IIMODREFLEX: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,zv[i]=fndx;,zv[i]=fndx;,16,wsct,lbls1,algt) zv+=wsct; } break;  \
+  case IICO|IIMODREFLEX: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,zv[i]=fndx;,zv[i]=fndx;,256+16,wsct,lbls2,algt) zv+=wsct; } break;  \
+  case IFORKEY|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,zv[i]=fndx;zv[fndx]++;,wsct++;zv[fndx]++;,64,asct,lbls3,algt) AM(h)=nuniq; zv+=wsct; } break; /* scaf zv+ not needed */ \
+  case INUBSV|IIMODREFLEX:{XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,((B*)zv)[i]=0;,((B*)zv)[i]=1;,8,wsct,lbls4,algt) zv=(I*)(zb+=wsct);} break;  /* zv must keep running */  \
+  case INUB|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,,,((T*)zv)[wsct++]=wv[i];,64,asct,lbls5,algt) AS(z)[0]=AN(z)=wsct; }    break;  \
+  case INUBIP|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,,,((T*)zv)[wsct++]=wv[i];,128,asct,lbls6,algt) AS(z)[0]=AN(z)=wsct; }    break;  \
+  case INUBI|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,,,((I*)zv)[wsct++]=i;,64,asct,lbls7,algt) AS(z)[0]=AN(z)=wsct; } break;  \
+  case ILESS: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,,((T*)zv)[zct++]=wv[i];,8,wsct,lbls8,algt) AS(z)[0]=AN(z)=zct; }    break;  \
+  case IINTER: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,((T*)zv)[zct++]=wv[i];,,8,wsct,lbls9,algt) AS(z)[0]=AN(z)=zct; }    break;  \
+  case IEPS:  {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,((B*)zv)[i]=1;,((B*)zv)[i]=0;,8,wsct,lbls10,algt) zv=(I*)(zb+=wsct);} break;   /* zv must keep running */ \
+  case II0EPS: case II1EPS: {I s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,if(md==II1EPS){s=i; goto lbls11fin;},if(md==II0EPS){s=i; goto lbls11fin;},8,wsct,lbls11,algt) s=wsct; lbls11fin: *(I*)zv=s;} break;  \
+  case IJ0EPS: case IJ1EPS: {I s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,if(md==IJ1EPS){s=i; goto lbls12fin;},if(md==IJ0EPS){s=i; goto lbls12fin;},256+8,wsct,lbls12,algt) s=wsct; lbls12fin: *(I*)zv=s;} break;  \
+  case ISUMEPS: {I s=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,++s,,8,wsct,lbls13,algt) *(I*)zv=s; }  break;  \
+  case IANYEPS: {B s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,s=1;goto lbls14fin;,,8,wsct,lbls14,algt) s=0; lbls14fin: *(B*)zv=s;} break;  \
+  case IALLEPS: {B s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,,s=0;goto lbls14fin;,8,wsct,lbls15,algt) s=1; lbls15fin: *(B*)zv=s;} break;  \
+  case IIFBEPS: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,((I*)zv)[zct++]=i;,,8,wsct,lbls16,algt) AS(z)[0]=AN(z)=zct; }    break;  \
+  } \
+ } \
+ R h;  \
+}
+#endif
+// test IOFT1(D,US,jtiod1,HASHiCRC, CNEtD,CNE0tD,algt)     // FL atom
+IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom
+IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom
+
+
 #endif

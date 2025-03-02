@@ -217,11 +217,11 @@ IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v)
 #if 1  // obsolete  
 // algt compares.  x is a register with the sought value in lane 1, y is the value from the hash
 #define CNEtD(x,y) ({ \
- __mm256d hashv=_mm256_set1_pd(y); hashv=_mm256_blend_pd(x,hashv,0b0010); \
- (3*_mm256_movemask_pd(_mm256d_fmsub_pd(cct,hashv,_mm256_permute_pd(hashv,0b0001))))&2; /* tolerant comparison by our defn */ \
+ __m256d hashv=_mm256_set1_pd(y); hashv=_mm256_blend_pd(x,hashv,0b0010); \
+ (3*_mm256_movemask_pd(_mm256_fmsub_pd(cct,hashv,_mm256_permute_pd(hashv,0b0001))))&2; /* tolerant comparison by our defn */ \
 })  // mismatch if sign bits not =
 #define CNE0tD(x,y) ({ /* this version for exact comparison */ \
- _mm256_movemask_pd(x,_mm256_cmp_pd(_mm256_set1_pd(y),_CMP_NEQ_UQ)))&1; /* intolerant comparison */ \
+ _mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_set1_pd(y),_CMP_NEQ_UQ))&1; /* intolerant comparison */ \
 })
 
 // fetch into the bucketed queue, creating the queue of values, primary bucket, secondary bucket.  May overfetch by 3 words on either end
@@ -237,7 +237,7 @@ IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v)
  else{dest##p=_mm256_extract_epi64(_mm256_castpd_si256(bqp),0x0); bqp=_mm256_permute4x64_pd(bqp,0b11111001); dest=bq; bq=_mm256_permute4x64_pd(bq,0b11111001); \
  if(!((store)&1)){dest##x=_mm256_extract_epi64(_mm256_castpd_si256(bqx),0x0); bqx=_mm256_permute4x64_pd(bqx,0b11111001);}}   /* forward, shift queue after extracting */
 // hash one value (both primary and XOR), create the indexes into the hashtable, and then prefetch the primary value
-#define HASHalgt(dest,src,HASH) {dest##p=(HASH(src##p)*(UIL)(p))>>32; PREFETCH((C*)&hv[dest##p]); dest##x=(HASH(src##x)*(UIL)(p))>>32;}
+#define HASHalgt(destsrc,HASH,store) {destsrc##p=(HASH(destsrc##p)*(UIL)(p))>>32; PREFETCH((C*)&hv[destsrc##p]); if(!((store)&1))destsrc##x=(HASH(destsrc##x)*(UIL)(p))>>32;}
 // Pass the hash table for one value, like above. stop if index exceeds xlim
 // cases are given by store, with bits meaning:
 // 0 intolerant store only nonreflexive (table build)
@@ -251,7 +251,7 @@ IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v)
 // at end, harg is the hashtable slot we ended on (used for ~. and /.: we fill the slot in if there was not a tolerant match)
 // fndx is the location of the tolerant match, if there is one.  After the primary, fndx=max if no match; after secondary, 0 or max depending on direction
 #define FIND1algt(warg,harg,T,TH,hsrc,mismatch,mismatchx,store,lbl) \
-NOUNROLL for(;;({--harg; if(unlikely(harg<0))harg+=p;})){  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
+NOUNROLL for(;;({--harg; if(unlikely(harg<0))harg+=p;harg;})){  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
  I hj=hv[harg];  /* fetch the hash index, which points back into the source table */ \
  if((store)==4)fndx=hj; /* simple case in primary, save a branch */ \
  if(hj==hsrc##sct || ((store)&512 && ((store)&256?hj<fndx:hj>fndx))){  /* stopper slot encountered - empty, or second pass that has overshot the index found in the first pass */ \
@@ -272,37 +272,37 @@ NOUNROLL for(;;({--harg; if(unlikely(harg<0))harg+=p;})){  /* loop until we hit 
 
 #define FINDalgt(warg,harg,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl) { \
  if((store)&16)fndx=i;   /* set fndx to 'found at i' if intolerant reflexive, otherwise will be set by search if needed */ \
- FIND1algt(warg##p,harg##p,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store)  /* set harg with place to store in primary, fndx to result of tolerant match */ \
+ FIND1algt(warg,harg##p,T,TH,hsrc,mismatch,mismatchx,store,lbl)  /* set harg with place to store in primary, fndx to result of tolerant match */ \
  /* intolerant store (table build nonreflexive) has already branch to found/notfound */ \
- if(unlikely(warg##p!=warg##x)){  /* if there is a secondary bucket */ \
+ if(unlikely(harg##p!=harg##x)){  /* if there is a secondary bucket */ \
   /* if the primary search matched (including the reflexive which always matches), leave fndx to cause early termination of the secondary; otherwise set fndx to accept any match */ \
-  if(!((store)&0b11011000){fndx=fndx==hsrc##sct?((store)&256?-1:hsrc##sct):fndx;} \
-  FIND1algt(warg##x,harg##x,T,TH,hsrc,mismatch,mismatchx,((store)+512))  /* set fndx/harg from match on socondary */ \
+  if(!((store)&0b11011000)){fndx=fndx==hsrc##sct?((store)&256?-1:hsrc##sct):fndx;} \
+  FIND1algt(warg,harg##x,T,TH,hsrc,mismatch,mismatchx,((store)+512),lbl)  /* set fndx/harg from match on socondary */ \
   if((store)&8)goto lbl##notfound;  /* if e. missed both buckets, finis */ \
   /* combine primary & secondary giving overall found result */ \
   fndx=fndx==((store)&256?-1:hsrc##sct)?hsrc##sct:fndx;  /* if no match found, convert to canonical mismatch value */ \
  }else if((store)&8)goto lbl##notfound;  /* if e. missed, finis */ \
  if((store)&0b11000000){if(fndx!=hsrc##sct){if((store)&64)hv[harg##p]=(TH)i;else hv[harg##p]=wsct++;}} /* ~. and /. store to the hashtable only if no tolerant match: store i if not inplace, wsct if inplace */ \
- if(fndx==hsrc##sct){lbl##notfound: nfstmt}else{lbl##found: fstmt}  /* run user's result instructions */ \
+ if(fndx==hsrc##sct){lbl##notfound:; nfstmt}else{lbl##found:; fstmt}  /* run user's result instructions */ \
 }
 
 // Traverse the hash table for an argument with a type, i. e. one that can be indexed by i
-#define XSEARCHalgt(T,TH,src,hsrc,hash,mismatch,mismatchx,stride,fstmt,nfstmt,store,len,lbl) \
+#define XSEARCHalgt(T,TH,src,hsrc,hash,mismatch,mismatchx,stride,fstmt,nfstmt,store,len,lbl,ALG) \
 { \
- __m256d w2, w1, w0; I h1p, h1x, h0p, h0x; \
+ __m256d w2, w1, w0; I w2p, w2x, wh1p, wh1x, h0p, h0x; \
  I i=(store)&256?src##sct-1:0;  /* needed for FIND */ \
  BUCKETalgt(src,i,store) \
- FETCHalgt(w1,src##v,i,store) /* fetch into item 1 */ \
+ FETCHalgt(w2,src##v,i,store) /* fetch into item 1 */ \
  if(likely(src##sct>1)){ \
-     FETCHalgt(w2,src##v,i+((store)&256?-1:1),store) HASHalgt(h1,w1,hash) /* fetch into item 2, hash item 1 */ \
+     w1=w2; wh1p=w2p; if(!((store)&1))wh1x=w2x; FETCHalgt(w2,src##v,i+((store)&256?-1:1),store) HASHalgt(wh1,hash,store) /* fetch into item 2, hash item 1 */ \
   for(;i!=(store)&256?1:src##sct-2;i=i+((store)&256?-1:1)){ \
    /* find slot 0, hash slot 1, and fetch slot 2 */ \
-   if((store)&256?((src##sct-i)&3)==3:(i&3)==2){BUCKET(src,i+((store)&256?-2:2),store)}  /* if we need 4 new input words, get them */ \
-   w0=w1; w1=w2; FETCHalgt(w2,src##v,i+((store)&256?-2:2),store); h0p=h1p; h0x=h1x; HASHalgt(h1,w1,hash) FINDalgt(w0,h0,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##0) \
+   if((store)&256?((src##sct-i)&3)==3:(i&3)==2){BUCKETalgt(src,i+((store)&256?-2:2),store)}  /* if we need 4 new input words, get them */ \
+   w0=w1; w1=w2; h0p=wh1p; wh1p=w2p; if(!((store)&1)){h0x=wh1x; wh1x=w2x;} FETCHalgt(w2,src##v,i+((store)&256?-2:2),store); HASHalgt(wh1,hash,store) FINDalgt(w0,h0,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##0) \
   } \
-  h0p=h1p; h0x=h1x; FINDalgt(w1,h0,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##1) i=i+((store)&256?-1:1); /* find slot 1 */ \
- }else{w2=w1;}  /* null pipe stage if arg short - as if we fetched into 2 */ \
- HASHalgt(h0,w2,hash) FINDalgt(w2,h0,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##2) /* hash & find slot 2 */ \
+  FINDalgt(w1,wh1,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##1) i=i+((store)&256?-1:1); /* find slot 1 */ \
+ } \
+ HASHalgt(w2,hash,store) FINDalgt(w2,w2,T,TH,hsrc,mismatch,mismatchx,fstmt,nfstmt,store,lbl##2) /* hash & find slot 2 */ \
 }
 
 // version for atomic tolerant types, where ALG is algt
@@ -316,7 +316,8 @@ IOF(f){ \
  __m256d bmsk; UIL bmsku; if(likely(jt->cct==1.0-FUZZ))bmsku=(UIL)0xffffffffffffc000LL; else if(likely(jt->cct==1.0))bmsku=(UIL)~0LL; \
                           else{D ct=1.0-jt->cct; I8 exp=(((*(I8*)&ct-1)>>52)&0x7ff)-0x3fe+44+10+4; exp=exp<0?0:exp; bmsku=-((UIL)1<<exp);} /* convert ct of 10..0 to 01..1, then look at exponent and make the size match on the default 2^_44 */ \
  bmsk=_mm256_castsi256_pd(_mm256_set1_epi64x(bmsku));  /* bmsk in all lanes */ \
- IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=calcctmask(jt->cct);   \
+ IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH;    \
+ I fndx; /* index match found at; initally comes from hashtable */ \
  md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */ \
  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBIP)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
  I wrepssv=0; if(1==wc){wrepssv=ac;}else if(unlikely(ac>wc))wrepssv=(ac/wc)-1; I wreps=wrepssv; if(w==mark){wsct=0;} \
@@ -324,35 +325,35 @@ IOF(f){ \
   if(!(mode&IPHOFFSET)){  /* if we are not using a prehashed table */ \
    hashallo(hh,p,asct,mode);      /* allocate the table */ \
    if(!(IIMODREFLEX&md)){I cn= k/sizeof(T);  /* not reflexive */ \
-    if(md==IICO)XSEARCHalgt(T,TH,a,a,hash,mismatch,mismatchx,,,,1,asct,lblsf) else XSEARCHalgt(T,TH,a,a,hash,mismatch,mismatchx,,,,(256+1),asct,lblsr)  /* all writes to hash must use intolerant compare */ \
+    if(md==IICO)XSEARCHalgt(T,TH,a,a,hash,mismatch,mismatchx,,,,1,asct,lblsf,ALG) else XSEARCHalgt(T,TH,a,a,hash,mismatch,mismatchx,,,,(256+1),asct,lblsr,ALG)  /* all writes to hash must use intolerant compare */ \
     if(w==mark)break; /* if the prehash was all we are interested in, skip the search */ \
    } \
   }  \
   switch(md){ \
-  case IIDOT: case IICO: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,zv[i]=fndx;,zv[i]=fndx;,4,wsct,lbls0,algt) zv+=wsct; } break;  \
-  case IIDOT|IIMODREFLEX: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,zv[i]=fndx;,zv[i]=fndx;,16,wsct,lbls1,algt) zv+=wsct; } break;  \
-  case IICO|IIMODREFLEX: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,zv[i]=fndx;,zv[i]=fndx;,256+16,wsct,lbls2,algt) zv+=wsct; } break;  \
-  case IFORKEY|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,zv[i]=fndx;zv[fndx]++;,wsct++;zv[fndx]++;,64,asct,lbls3,algt) AM(h)=nuniq; zv+=wsct; } break; /* scaf zv+ not needed */ \
-  case INUBSV|IIMODREFLEX:{XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,((B*)zv)[i]=0;,((B*)zv)[i]=1;,8,wsct,lbls4,algt) zv=(I*)(zb+=wsct);} break;  /* zv must keep running */  \
-  case INUB|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,,,((T*)zv)[wsct++]=wv[i];,64,asct,lbls5,algt) AS(z)[0]=AN(z)=wsct; }    break;  \
-  case INUBIP|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,,,((T*)zv)[wsct++]=wv[i];,128,asct,lbls6,algt) AS(z)[0]=AN(z)=wsct; }    break;  \
-  case INUBI|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,,,((I*)zv)[wsct++]=i;,64,asct,lbls7,algt) AS(z)[0]=AN(z)=wsct; } break;  \
-  case ILESS: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,,((T*)zv)[zct++]=wv[i];,8,wsct,lbls8,algt) AS(z)[0]=AN(z)=zct; }    break;  \
-  case IINTER: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,((T*)zv)[zct++]=wv[i];,,8,wsct,lbls9,algt) AS(z)[0]=AN(z)=zct; }    break;  \
-  case IEPS:  {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,((B*)zv)[i]=1;,((B*)zv)[i]=0;,8,wsct,lbls10,algt) zv=(I*)(zb+=wsct);} break;   /* zv must keep running */ \
-  case II0EPS: case II1EPS: {I s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,if(md==II1EPS){s=i; goto lbls11fin;},if(md==II0EPS){s=i; goto lbls11fin;},8,wsct,lbls11,algt) s=wsct; lbls11fin: *(I*)zv=s;} break;  \
-  case IJ0EPS: case IJ1EPS: {I s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,if(md==IJ1EPS){s=i; goto lbls12fin;},if(md==IJ0EPS){s=i; goto lbls12fin;},256+8,wsct,lbls12,algt) s=wsct; lbls12fin: *(I*)zv=s;} break;  \
-  case ISUMEPS: {I s=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,++s,,8,wsct,lbls13,algt) *(I*)zv=s; }  break;  \
-  case IANYEPS: {B s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,s=1;goto lbls14fin;,,8,wsct,lbls14,algt) s=0; lbls14fin: *(B*)zv=s;} break;  \
-  case IALLEPS: {B s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,,s=0;goto lbls14fin;,8,wsct,lbls15,algt) s=1; lbls15fin: *(B*)zv=s;} break;  \
-  case IIFBEPS: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,,((I*)zv)[zct++]=i;,,8,wsct,lbls16,algt) AS(z)[0]=AN(z)=zct; }    break;  \
+  case IIDOT: case IICO: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;,zv[i]=fndx;,4,wsct,lbls0,ALG) zv+=wsct; } break;  \
+  case IIDOT|IIMODREFLEX: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;,zv[i]=fndx;,16,wsct,lbls1,ALG) zv+=wsct; } break;  \
+  case IICO|IIMODREFLEX: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;,zv[i]=fndx;,256+16,wsct,lbls2,ALG) zv+=wsct; } break;  \
+  case IFORKEY|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;zv[fndx]++;,wsct++;zv[fndx]++;,64,asct,lbls3,ALG) AM(h)=wsct; zv+=wsct; } break; /* scaf zv+ not needed */ \
+  case INUBSV|IIMODREFLEX:{XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,((B*)zv)[i]=0;,((B*)zv)[i]=1;,8,wsct,lbls4,ALG) zv=(I*)((I)zv+wsct);} break;  /* zv must keep running */  \
+  case INUB|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,STRIDE,,((T*)zv)[wsct++]=wv[i];,64,asct,lbls5,ALG) AS(z)[0]=AN(z)=wsct; }    break;  \
+  case INUBIP|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,STRIDE,,((T*)zv)[wsct++]=wv[i];,128,asct,lbls6,ALG) AS(z)[0]=AN(z)=wsct; }    break;  \
+  case INUBI|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,STRIDE,,((I*)zv)[wsct++]=i;,64,asct,lbls7,ALG) AS(z)[0]=AN(z)=wsct; } break;  \
+  case ILESS: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,,((T*)zv)[zct++]=wv[i];,8,wsct,lbls8,ALG) AS(z)[0]=AN(z)=zct; }    break;  \
+  case IINTER: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,((T*)zv)[zct++]=wv[i];,,8,wsct,lbls9,ALG) AS(z)[0]=AN(z)=zct; }    break;  \
+  case IEPS:  {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,((B*)zv)[i]=1;,((B*)zv)[i]=0;,8,wsct,lbls10,ALG) zv=(I*)((I)zv+wsct);} break;   /* zv must keep running */ \
+  case II0EPS: case II1EPS: {I s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,if(md==II1EPS){s=i; goto lbls11fin;},if(md==II0EPS){s=i; goto lbls11fin;},8,wsct,lbls11,ALG) s=wsct; lbls11fin: *(I*)zv=s;} break;  \
+  case IJ0EPS: case IJ1EPS: {I s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,if(md==IJ1EPS){s=i; goto lbls12fin;},if(md==IJ0EPS){s=i; goto lbls12fin;},256+8,wsct,lbls12,ALG) s=wsct; lbls12fin: *(I*)zv=s;} break;  \
+  case ISUMEPS: {I s=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,++s;,,8,wsct,lbls13,ALG) *(I*)zv=s; }  break;  \
+  case IANYEPS: {B s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,s=1;goto lbls14fin;,,8,wsct,lbls14,ALG) s=0; lbls14fin: *(B*)zv=s;} break;  \
+  case IALLEPS: {B s; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,,s=0;goto lbls15fin;,8,wsct,lbls15,ALG) s=1; lbls15fin: *(B*)zv=s;} break;  \
+  case IIFBEPS: {I zct=0; XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,((I*)zv)[zct++]=i;,,8,wsct,lbls16,ALG) AS(z)[0]=AN(z)=zct; }    break;  \
   } \
  } \
  R h;  \
 }
 #endif
-// test IOFT1(D,US,jtiod1,HASHiCRC, CNEtD,CNE0tD,algt)     // FL atom
-IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom
+IOFT1(D,US,jtiod1,HASHiCRC, CNEtD,CNE0tD,algt)     // FL atom
+// test IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom
 IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom
 
 

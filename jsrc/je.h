@@ -259,6 +259,8 @@ extern F1(jtnot);
 extern F1(jtnub);
 extern DF1(jtnubind);
 extern DF1(jtnubind0);
+extern DF2(jtepsind);
+extern DF2(jtepsind0);
 extern F1(jtnubsieve);
 extern F1(jtnubsievesp);
 extern F1(jtnulljob);

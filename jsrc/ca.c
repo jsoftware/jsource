@@ -334,7 +334,8 @@ F2(jtatop){F2PREFIP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, fla
    else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; // >.@(2^][)
    else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other >.@v
    break;
-  case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@E.
+  case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}
+                else if(d==CEPS){f2=jtepsind; flag&=~VJTFLGOK2;} else if(FIT0(CEPS,wv)){f2=jtepsind0; flag&=~VJTFLGOK2;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  //  I.@e.[!.0] I.@~:[!.0] I.@E.
   case CQUERY&0x3f:  if((d&-2)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;} break;  // # $
   case CQRYDOT&0x3f: if((d&-2)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // # $
   case CRAZE&0x3f:  // detect ;@(<@(f/\));.
@@ -445,7 +446,8 @@ F2(jtatco){F2PREFIP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m
    break;
   case CQUERY&0x3f:  if((d&~1)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;  // x ?@:# y or x ?@:$ y
   case CQRYDOT&0x3f: if((d&~1)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // x ?.@:# y or x ?.@:$ y
-  case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@:~: y  I.@:(~:!.0) y  x I.@:E. y
+  case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}
+                else if(d==CEPS){f2=jtepsind; flag&=~VJTFLGOK2;} else if(FIT0(CEPS,wv)){f2=jtepsind0; flag&=~VJTFLGOK2;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@:e. y  I.@:(e.!.0) y  I.@:~: y  I.@:(~:!.0) y  x I.@:E. y
   case CAMP&0x3f:    {m=(e&~2)==CIOTA?e:m; I j=-1; j=g==num(0)?0:j;  j=g==num(1)?1:j; m|=j; break;}   // i.&0/1@:g    i:&0/1@:g   note 0/1 must be boolean SDTs
   case CSLASH&0x3f:  //  f/@:g where f is not a gerund
    if(FAV(f)->flag&FAV(w)->flag&VISATOMIC2){f2=jtfslashatg;}  // f/@:g when f and g are both atomic

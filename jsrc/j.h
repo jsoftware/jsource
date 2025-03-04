@@ -720,7 +720,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define LGBW (LGSZI+LGBB)  // lg (# bits in a word)
 
 // nominal cache sizes for current processors
-#define L1CACHESIZE (((I)1)<<15) // 32k
+#define L1CACHESIZE (((I)1)<<16) // 32k
 #define L2CACHESIZE (((I)1)<<20) // 1m
 #define L3CACHESIZE (((I)1)<<22) // 4m
 

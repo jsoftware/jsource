@@ -872,7 +872,7 @@ inplace:;
  }else{
 
 #define SMALLHASHCACHE L2CACHESIZE/sizeof(US)  // number of US entries that fit in L2
-#define SMALLHASHMAX (131072-2-(2*SZI/sizeof(US))-((NORMAH*SZI+sizeof(IH))/sizeof(US)))  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion.
+#define SMALLHASHMAX (65535*4-2-(2*SZI/sizeof(US))-((NORMAH*SZI+sizeof(IH))/sizeof(US)))  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion; and allow 4x size for hash slack
   // we allocate 4 extra entries to make sure we can write a quadword at the end, and to ensure there are sentinels
 
 // testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically
@@ -961,8 +961,8 @@ inplace:;
    // set p based on the length of the argument being hashed
    if(unlikely((SGNIF(t,B01X)&(k-(BW-1)))<0)){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
    // Find the best hash size, based on empirical studies.  Allow at least 3x hashentries per input value; if that's less than the size of the small hash, go to the limit of
-   // the small hash.  But not more than 10 hashtable entries per input (to save time clearing)
-   {UI op=p*10; op=p>=SMALLHASHMAX/10?IMAX-5:op; p=p>(IMAX-5)/3?(IMAX-5)/3:p; p*=3; p=p<SMALLHASHMAX?SMALLHASHMAX:p; p=p>op?op:p;}
+   // the small hash.  But not more than 5 hashtable entries per input (to save time clearing and to reduce cache footprint)
+   {UI op=p*5; op=p>=SMALLHASHMAX/5?IMAX-5:op; p=p>(IMAX-5)/3?(IMAX-5)/3:p; p*=3; p=p<SMALLHASHMAX?SMALLHASHMAX:p; p=p>op?op:p;}  // op limits to 5*p; p calls for 3*p, or MAX; take the smaller
   }else if(unlikely((mode&IIOPMSK)==IFORKEY)){
    // We are processing on behalf of key, and we decided to do small-range processing.  Key can do better by
    // creating and processing the small-range table itself, so we will let it do that.  We return a special short block (LSB=1)
@@ -1003,7 +1003,7 @@ inplace:;
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
-    if((((I)p-(I)SMALLHASHMAX) & ((I)booladj-1) & ((I)((mode&IREVERSED)?c:m)-65535))<0){  // range must fit into address; hash index+1 must fit into the 16-bit entry
+    if((((I)p-(I)(SMALLHASHMAX+1)) & ((I)booladj-1) & ((I)((mode&IREVERSED)?c:m)-65535))<0){  // range must fit into address; hash index+1 must fit into the 16-bit entry
       // (the +1 is in case we do reversed hash where we invalidate by writing m+1; shouldn't have small hash if m=65535, but take no chances)
     // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
     // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
@@ -1315,6 +1315,21 @@ DF1(jtnubind0){A z;
  PUSHCCT(1.0) z=indexofsub(INUBI,w,w); POPCCT  // do operation intolerantly
  R z;
 }    /* I.@(~:!.0) w */
+
+// I.@e. y   does not have IRS
+DF2(jtepsind){
+ ARGCHK2(a,w);
+ R unlikely(ISSPARSE(AT(w)|AT(w)))?on1cell(jt,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse
+} 
+
+// i.@(e.!.0) y     does not have IRS
+DF2(jtepsind0){A z;
+ ARGCHK2(a,w);
+ if(unlikely(ISSPARSE(AT(a)|AT(w))))R on1cell(jt,w,self);  // revert for sparse
+ PUSHCCT(1.0) z=indexofsub(IIFBEPS,w,a); POPCCT  // do operation intolerantly
+ R z;
+}
+
 
 // x i.!.1 y - assumes xy -: /:~ xy (integer atoms only for now)
 F2(jtsfu){

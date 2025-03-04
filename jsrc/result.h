@@ -123,10 +123,6 @@ do{
    ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&zzzaflag)|~ZZFLAGPRISTINE;
    // first check the shape
    I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzframelen; I zexprank=zzr-zzframelen;
- // obsolete      // change in rank/shape: a wreck, fail
- // obsolete    zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
- // obsolete    DO(zexprank, zexprank+=zs[i]^zzs[i];)  // if shapes don't match, set zexprank
- // obsolete    if(likely(!((zt&SPARSE) + (zexprank^zr)))){  // if there was no wreck...
    if(unlikely(ISSPARSE(zt)) || unlikely(zexprank!=zr))goto iswreck;  // sparse is a wreck in itself; otherwise wreck if change of rank
    if(unlikely(!TESTAGREE(zs,zzs,zexprank)))goto iswreck;    // if shapes don't match, it's a wreck
    if(likely(1)){  // normal case of no wreck
@@ -213,17 +209,14 @@ iswreck:;
       // while we have the cell in cache, update the maximum-result-cell-shape
       I zcsr=AR(zzcellshape);  // incumbent z cell rank
       if(zr>zcsr){  // the new shape is longer than what was stored.  We have to extend the old shape with 1s.  We have preallocated extra space so we may slide the shape down front-to-back.
-// obsolete        I *zcsold=AS(zzcellshape)+zcsr;  // save pointer to end+1 of current cell size
        I *zcsold=AS(zzcellshape);  // save pointer to start of current cell size
        if(unlikely(zr>=AN(zzcellshape))){GATV0(zzcellshape,INT,zr+3,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  >= to leave 1 extra for later
        AR(zzcellshape)=(RANKT)zr;   // set the new result-cell rank
-// obsolete        I *zcsnew=AS(zzcellshape)+zr;  // pointer to end+1 of new cell size, which might overlap the old
        I *zcsnew=AS(zzcellshape)+zr-zcsr;  // pointer to trailing zcsr atoms of new location of axes, which might overlap the old
        DQNOUNROLL(zcsr, zcsnew[i]=zcsold[i];) zcsnew-=zr-zcsr; DQNOUNROLL(zr-zcsr, zcsnew[i]=1;)   // move the old axes, followed by 1s for extra axes.  The areas may overlap at the beginning, so go back to front
        zcsr=zr;  // now the stored cell has a new rank
       }
       // compare the old against the new, taking the max.  extend new with 1s if short
-// obsolete       I *zcs=AS(zzcellshape); I zcs0; I zs0; DQ(zcsr-zr, zcs0=*zcs; zcs0=(zcs0==0)?1:zcs0; *zcs++=zcs0;)  DQ(zr, zcs0=*zcs; zs0=*zs++; zcs0=(zs0>zcs0)?zs0:zcs0; *zcs++=zcs0;)
       I *zcs=AS(zzcellshape); I zcs0; I zs0; DQNOUNROLL(zcsr-zr, zcs0=zcs[i]; zcs0=(zcs0==0)?1:zcs0; zcs[i]=zcs0;) zcs+=zcsr-zr; DQNOUNROLL(zr, zcs0=zcs[i]; zs0=zs[i]; zcs0=(zs0>zcs0)?zs0:zcs0; zcs[i]=zcs0;)
       // Store the address of the result in the next slot
       INCORP(z);  // we can't store a virtual block, because its backer may change before we collect the final result
@@ -285,14 +278,10 @@ iswreck:;
      // the result will be razed next.  We will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
      // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
      // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
-// obsolete      I diff;  // Will be set to non0 if we are unable to report the # items
 #if PYXES
      // If the returned result is a pyx, we can't look into it to get its type/len.  We could see if the pyx has been resolved, but we don't
      if(unlikely(AT(z)&PYX))goto inhomoitems;   // if the result is a pyx, which can't be inspected, treat as inhomogeneous item
-// obsolete #else
-// obsolete      diff=0;  // if no pyxes, init to no change
 #endif
-// obsolete      {   // this brace may be part of the previous line!
       // not a pyx - we can count the items
 #if !ZZSTARTATEND  // going forwards
      A result0=AAV(zz)[0];   // fetch pointer to the first 
@@ -308,7 +297,6 @@ iswreck:;
 #endif
      resr=resr==0?1:resr;  // treat atom like singleton list
      if(unlikely(TYPESXOR(AT(z),AT(result0))+(zr^resr)))goto inhomoitems; if(likely(TESTAGREE(zs+1,ress+1,resr-1)))goto homoitems;
-// obsolete       diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
 inhomoitems: ;  // here when we have had a mismatch on shape etc - stop looking at it
      ZZFLAGWORD&=~ZZFLAGCOUNTITEMS;  // turn off bit (which must be set now) if we can't say the items are homogeneous
 homoitems:;  // here when new item is same shape etc as old - count was updated

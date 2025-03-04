@@ -100,7 +100,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  AS(z)[wf]=p;  // move in length of item axis, #bytes per item of cell
  if(!zn)R z;  // If no atoms to process, return empty
 
-// obsolete // original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
  JMCDECL(endmask) JMCSETMASK(endmask,k,flgs&FLGSNOOSTORE)   // set up for irregular move, if we need one
   
  while(--c>=0){
@@ -115,7 +114,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   while(n>0){    // n is # bytes left to process
    // We process 64 bytes at a time, always reading ahead one block.  If there are >=64 items to do, bitpipe1 has the next set to process, from *avv
    // In case there are few 1s, we fast-skip over blocks of 0s.  Because the processing is so fast, we don't change alignment ever.
-/// obsolete    I n0=n;  // remember where we started
    while(1){
     bitpipe00=bitpipe10; bitpipe01=bitpipe11;  // Move the next bits (if any) into pipe0
     if(n<=2*BSIZE)break;  // exit if there is no further batch.  n will never hit 0.  We may process an empty stack
@@ -124,7 +122,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
     // We hit 64 0s.  Advance over them, and skip the input values for them
     avv+=2*BSIZE; n-=2*BSIZE; wvv+=2*BSIZE*k;
    }
-/// obsolete    wvv+=k*(n0-n);  // advance w pointer for the moves made, if any
    // Move the bits into bitstack
    UI bitstack;  // the bits packed together
    if(n>=2*BSIZE){

@@ -214,7 +214,8 @@ IOFT(E,UI4,jtioe12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+
 IOFT(A,UI4,jtioa2, cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj), D x,algv)     // boxed array with more than 1 box
 IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,C(*v)),TFINDBX,TFINDBY,TFINDBYKEY,!equ(C(*v),C(av[hj])),!equ(C(*v),C(av[hj])),  D x,algv)     // singleton box
 
-#if 1  // obsolete  
+// algt follows: tolerant comparison in minimal passes
+
 // algt compares.  x is a register with the sought value in lane 1, y is the value from the hash
 #define CNEtD(x,y) ({ \
  __m256d hashv=_mm256_set1_pd(y); hashv=_mm256_blend_pd(x,hashv,0b0010); \
@@ -317,7 +318,7 @@ IOF(f){ \
  /* bmsk holds 16 tolerance intervals at the large end.  The bigger the bucket  the less often we have to check 2 buckets, but the more hits we might have in a bucket. */ \
  /* with 16 intervals we still have 38 bits of mantissa in the bucket, which is plenty.  For non-atomic searches we use a minimal bucket size because comparse are slow */ \
  __m256d bmsk; UIL bmsku; if(likely(jt->cct==1.0-FUZZ))bmsku=(UIL)0xffffffffffffc000LL; else if(likely(jt->cct==1.0))bmsku=(UIL)~0LL; \
-                          else{D ct=1.0-jt->cct; I8 exp=(((*(I8*)&ct-1)>>52)&0x7ff)-0x3fe+44+10+4; exp=exp<0?0:exp; bmsku=-((UIL)1<<exp);} /* convert ct of 10..0 to 01..1, then look at exponent and make the size match on the default 2^_44 */ \
+                          else{D ct=1.0-jt->cct; I8 exp=(((*(I8*)&ct-1)>>52)&0x7ff)-(0x3fe)+44+10+4; exp=exp<0?0:exp; bmsku=-((UIL)1<<exp);} /* convert ct of 10..0 to 01..1, then look at exponent and make the size match on the default 2^_44 */ \
  bmsk=_mm256_castsi256_pd(_mm256_set1_epi64x(bmsku));  /* bmsk in all lanes */ \
  IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH;    \
  I fndx; /* index match found at; initally comes from hashtable */ \
@@ -354,7 +355,6 @@ IOF(f){ \
  } \
  R h;  \
 }
-#endif
 IOFT1(D,US,jtiod1,HASHiCRC, CNEtD,CNE0tD,algt)     // FL atom
 // test IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom
 IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,*(D*)v,av[hj] ),INITTLTR INITXNEW INITXROT D x,algv)     // FL atom

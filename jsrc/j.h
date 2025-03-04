@@ -638,7 +638,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // modes for indexofsub()
 #define IIOPMSKX        5  // # bits of flags
 #define IIOPMSK         (((I)1<<IIOPMSKX)-1)     // operation bits.  INTER also uses bit 3, which is included as a modifier in the switches
-// obsolete #define IIOPMSKINIT     0xf  // used to mask the op for initializing botmasks.  Then the low-order 4 bits indicate the value to use
 #define IIDOT           0        // IIDOT and IICO must be 0-1
 #define IICO            1
 #define INUBSV          2   // BIT arrays INUBSV-INUBI init to 1 to that out-of-bounds in LESS keeps the value

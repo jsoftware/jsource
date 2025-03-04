@@ -90,7 +90,6 @@
   if(unlikely(--name<0))name+=p; hj=hv[name]; /* miscompare, must continue search */ \
   }while(1);
 
-#if 1 // obsolete 
 // hash one value
 #define HASHiCRC(x) CRC32L(p,(x))  // one I, any size, CRC
 #define HASHiIMM(x) (x)  // small I, without CRC
@@ -137,7 +136,6 @@ NOUNROLL do{  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
  HASHalgi(h0,w2,hash) FINDalgi(w2,h0,T,TH,hsrc,mismatch,fstmt,nfstmt,store) /* hash & find slot 2 */ \
 }
 
-#endif
 // Traverse the hash table for one argument.  (src) indicates which argument, a or w, we are looping through; (hsrc) indicates which argument provided the hash table.
 // For each item we do HASHSLOT folowed by FINDP, and adjust the (v) values (both stored in xmm variable vp) to keep track.  vp[0]=vp[1] is running srcv+vpofst/static srcv+vpofst, vpstride[0] = source stride, vpstride[1]=0
 // of which input item is being operated on.  This loop is triple-unrolled, so that after we HASHSLOT for entry q, we FINDP for entry q-2.  As soon as we HASHSLOT for entry

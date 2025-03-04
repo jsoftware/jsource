@@ -358,7 +358,6 @@ static C* nfeinput(JS jt,C* s){A y;
 A jtjgets(JJ jt,C*p){A y;C*v;I j,k,m,n;UC*s;
  __atomic_store_n(&IJT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
  B raw=p[0]==0;  // if no prompt, it's 1!:1]1 or m :  0 - suppress editing the line
-// obsolete  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
   // read next line from script

@@ -35,8 +35,6 @@ I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
   UI fillval = (((1LL<<INUBSV)|(1LL<<ILESS)|(1LL<<INUB)|(1LL<<INUBI)|(1LL<<INUBIP))>>(md&(IIMODPACK+IIOPMSK)))&1; UI temp=md&IIMODPACK?255:1; fillval=md&IREVERSED?temp:fillval;  // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
-// obsolete   UI fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSKINIT))<=INUBI); // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
-// obsolete  fillval|=fillval<<8; fillval|=fillval<<16; 
   mvc(p,hh->data.UI,1,&fillval);  // fill with repeated copies of fillval
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
@@ -1247,7 +1245,6 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  if(unlikely(MIN(ai,wi)==0)&&(ar!=0))RCA(a);  // if either arg has no items, there's nothing to remove, return a, unless atom must become a list
-// obsolete  if((ar^1)+wr==0){  // taking a single atom from a list?
  if(ar==wr+1){  // is just 1 cell of y?
   // if y has rank 1 less than x, execute as ((x ~: y) # x) if y is atomic or ((x ~.@-:"yr) # x) if y is an array.  Inplace x.  Use IRS and leave comparison tolerance as set
   J jtipx=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>1)&JTINPLACEW));  // move input inplace-x flag to inplace-w
@@ -1287,7 +1284,6 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws;
      repeat(eps(a,x),a);
  POPCCT
  RZ(x);
-// obsolete  PRISTXFERAF(x,a)
  if(unlikely(at&BOX))PRISTXFERAF(x,a)  // the boxes in w cannot get to the result, even though their values participate; so pristinity depends entirely on a
  RETF(x);
 }

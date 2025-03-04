@@ -695,7 +695,6 @@ A jtprobequiet(J jt,A a){A g;
 // Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage
 // flags set in jt: bit 0=this is a final assignment; bit 1 always 0
 I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
-// obsolete  ARGCHK2(a,w);
  // we don't ARGCHK because path is heavily used.  Caller's responsibility.
  I anmf=NAV(a)->flag; // fetch flags for the name
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
@@ -715,7 +714,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
   RZ(g);  // abort if error in locale name
  }else{  // not locative assignment
 
-// obsolete   if(g==jt->global){  // global assignment.
   if(!(gr&ARLOCALTABLE+ARLCLONED)){  // global assignment, and the symbol table does not suppress the check for local names
    // check for non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
@@ -724,7 +722,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
    ASSERTSUFF(likely(localnexist!=0)||!probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
  }
-// obsolete  RZ(g)  // g has the locale we are writing to
  I valtype=ATYPETOVALTYPE(wt);  // value flags to install into value block.  It will have QCSYMVAL semantics
 
  if(unlikely((wt&NOUN)==0)){  // writing to ACV
@@ -782,7 +779,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
    // Virtual values were realized earlier, and usecounts guaranteed recursive
    // If the value is abandoned inplaceable, we can just zap it and set its usecount to 1
    // SPARSE nouns must never be inplaceable, because their components are not 
-// obsolete    if((SGNIF(jtinplace,JTFINALASGNX)&AC(w))<0){  // if final assignment of abandoned value, in local table
    if(((I)g+SGNTO0(AC(w)))==0){  // if final assignment of abandoned value, in local table (g=-1 and inplace bit set)
     // We can zap abandoned nouns.  But only if they are final assignment: something like nm:_ [ nm=. 4+4 would free the active block if we zapped, when the FAOWED was applied
     // the idea is that the assignment will protect the value; this is true for local assignment but not for global, because another thread may free the name immediately.
@@ -812,7 +808,6 @@ I jtsymbis(J jt,A a,A w,A g){F2PREFIP;
  }else x=0;  // repurpose x to be the value needing fa
  // x here is the value that needs to be freed
  if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock);
-// obsolete else jtinplace=(J)((I)jtinplace|JTASGNWASLOCAL);  // if global, release lock; else indic local in return 
  // ************* we have released the write lock
  // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
  // in case the new value was being protected by the old (ex: n =. >n).

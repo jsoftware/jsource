@@ -7,30 +7,20 @@
 // Routines to build the hash table from a.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.
 
 // special lookup routines to move the data rather than store its index, used for nub/less
-#if 0  // obsolete 
-#define XMVP(T,TH,hash,exp,stride,reflex) C *zc=(C*)zv;      \
- if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{printf("i=%lld, (I*)_mm_extract_epi64(vp,1)=%p, wv+i=%p\n",i,(I*)_mm_extract_epi64(vp,1),wv+i); *(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
- else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); } ZCSHAPE;
-#else
 // for -./~.
 #define XMVPalgi(T,TH,hash,mismatch,stride,reflex,ALG)    \
  {T *zc=(T*)zv; XDOP##ALG(T,TH,hash,mismatch,stride,{},{*zc=wv[i]; ++zc;},reflex,ALG); ZCSHAPENT(T); }
 #define XMVPalgv(T,TH,hash,exp,stride,reflex,ALG)    \
  if(k==SZI){I *zc=zv; XDOP##ALG(T,TH,hash,exp,stride,{},{*zc=((I*)wv)[i]; ++zc;},reflex,ALG); ZCSHAPEI; }  \
  else{C *zc=(C*)zv; XDOP##ALG(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex,ALG); ZCSHAPE; }
-#endif
+
 // version for ([ -. -.)
-#if 0  // obsolete 
-#define XMVPI(T,TH,hash,exp,stride,reflex,ALG)   C *zc=(C*)zv;    \
- if(k==SZI){XDOP##ALG(T,TH,hash,exp,stride,{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},{},reflex,ALG); }  \
- else      {XDOP##ALG(T,TH,hash,exp,stride,{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},{},reflex,ALG); } ZCSHAPE;
-#else
 #define XMVPIalgi(T,TH,hash,mismatch,stride,reflex,ALG)    \
  {T *zc=(T*)zv; XDOP##ALG(T,TH,hash,mismatch,stride,{*zc=wv[i]; ++zc;},{},reflex,ALG); ZCSHAPENT(T); }
 #define XMVPIalgv(T,TH,hash,exp,stride,reflex,ALG)    \
  if(k==SZI){I *zc=zv; XDOP##ALG(T,TH,hash,exp,stride,{*zc=((I*)wv)[i]; ++zc;},{},reflex,ALG); ZCSHAPEI; }  \
  else{C *zc=(C*)zv; XDOP##ALG(T,TH,hash,exp,stride,{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},{},reflex,ALG); ZCSHAPE; }
-#endif
+
 // version for ~. inplace
 #define XMVPIPalgi(T,TH,hash,mismatch,stride,reflex,ALG)   wsct=0;    \
  XDOPIP##ALG(T,TH,hash,mismatch,stride,{},{((T*)zv)[wsct]=((T*)zv)[i]; ++wsct;},reflex,ALG);  \
@@ -110,9 +100,6 @@ IOFX(X, jtiox,,  hix(v),           !eqnx(n,v,av+n*hj),      cn,algv) // extended
 IOFX(Q, jtioq,,  hiq(v),           !eqnq(n,v,av+n*hj),      cn,algv) // rational number
 IOFX(C, jtioc,,  hic(k,(UC*)v),    memcmpne(v,av+k*hj,k),   cn,algv) // boolean, char, or integer*
 IOFX(I, jtioi,COMPSETUP,hici(n,v),COMPCALL(av),             cn,algv) // INT array, not float
-// obsolete IOFX(C2,jtioC2,, hici1((C2*)v),    *v!=av[hj],               1,algv) // 2-byte (char/INT2)
-// obsolete IOFX(C4,jtioC4,, hici1((C4*)v),    *v!=av[hj],               1,algv) // 4-byte (char/INT4)
-// obsolete IOFX(I, jtioi1,, hici1(v),         *v!=av[hj],               1,algv) // len=8, not float
 IOFX(US,jtioC2,, HASHiIMM,   CNEiA,               1,algi) // 2-byte (char/INT2)
 IOFX(C4,jtioC4,, HASHiCRC,    CNEiA,               1,algi) // 4-byte (char/INT4)
 IOFX(I, jtioi1,, HASHiCRC,         CNEiA,               1,algi) // len=8, not float

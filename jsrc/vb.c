@@ -151,16 +151,10 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
   }
   break;  // if no start found, exit loop.  Back wv to the 1st character, because we haven't checked that position yet
 matchfnd: ;
-// obsolete   C *endwv=wv+32;  // after we try these 32 start positions, wv will advance to next block
-// obsolete    // match.
    //  Trying each possible match, refetch it and see if it matches the entire search string
    // the matches found in matchmsk start at wv-1; we back up the pointer now to indicate that.  At the end
    // we will restore to the position in scan
-// obsolete   --wv;  // make wv position agree with matchmsk
   do{  // till no more matches...
-// obsolete    wv += CTTZI(matchmsk);  // advance to possible match
-// obsolete    matchmsk >>= CTTZI(matchmsk);  // shift the bit of the first match off, so we start after it for the next match
-// obsolete    matchmsk>>=1;
    C *wvmatch=wv+CTTZI(matchmsk); matchmsk&=matchmsk-1;  // get addr of first match, and discard the match
    if(wvmatch<wvend){   // if there are enough bytes left to try fetching
     ws=_mm256_loadu_si256((__m256i*)wvmatch);  // fetch the string, in which the first 2 bytes match
@@ -177,8 +171,6 @@ matchfnd: ;
     }else{if(match32&1)if((fullmatchmsk>>56)==3)R sc(wvmatch-wv0);  // i.&1@:E.
           else R num(1);  // +./@E.
     }
-// obsolete     wv += 1;
-// obsolete    }else{endwv=wv+1; matchmsk=0;}  // if we run past the valid compare area, stop comparing & don't advance pointers.  Set wv so that after we exit the loop and back up, we are on the wv we found here
    }else break;  // if we run past the valid compare area, stop comparing
   }while(matchmsk!=0);
   wv+=32;  // step up to next block, skipping trailing 0s in this block.
@@ -186,8 +178,7 @@ matchfnd: ;
  // There is one trailing section of 0<length<=32.  Process it without fetching out of bounds
  // If an>32, there is no need to look
  if(an<=32){
-  // This is like the loop above, but we avoid overfetch and exit the loop when out of data.  We crawl through the match positions.  wv is still backed off by 1, and match0 has the valid carry-in for it obsolete   // The wv passed in from above points to the second character checked, so we have to back up one position
-// obsolete   wv-=wv!=wv0;  // back up wv to point to the first possible match position - unless that would be before the start of the data
+  // This is like the loop above, but we avoid overfetch and exit the loop when out of data.  We crawl through the match positions.  wv is still backed off by 1, and match0 has the valid carry-in for it
   wv=MAX(wv0,wvend);
   wvend=wv0+wn-an+1;  // first inadmissible position
   // read in valid bytes to end of string
@@ -209,26 +200,6 @@ matchfnd: ;
    }else{if(match32&1)if((fullmatchmsk>>56)==3)R sc(wvmatch-wv0);  // i.&1@:E.
          else R num(1);  // +./@E.
    }
-// obsolete    // see if the first 2 characters are matched in sequence
-// obsolete    I4 match0=_mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1=_mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
-// obsolete    matchmsk=match0&(match1>>1);
-// obsolete    if(matchmsk&1){
-// obsolete     // match on 1st char.  See if it all matches in this position
-// obsolete     match0=_mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
-// obsolete     // output the result if any; advance 1 byte to continue search for start characters
-// obsolete     match0=((I4)fullmatchmsk|match0)==(I4)~0;  // if all bits =, produce a 1.  match0 has garbage in top 8 bits
-// obsolete     // perform the action based on the input type (now in fullmatchmsk)
-// obsolete     if((fullmatchmsk>>56)<1){zv[wv-wv0]=(C)match0;  // E.
-// obsolete     }else if((fullmatchmsk>>56)==1){zv+=match0&1;   // +/@E.
-// obsolete     }else if((fullmatchmsk>>56)<3){     // I.@E.  extend if needed; always write result to avoid misbranch
-// obsolete      if((I*)zv==IAV(z)+AN(z)){I m=AN(z); RZ(z=ext(0,z)); zv=(C*)(m+IAV(z));} *(I*)zv=wv-wv0; zv=(C*)((I*)zv+(match0&1));
-// obsolete     }else{ if(match0&1)if((fullmatchmsk>>56)==3)R sc(wv-wv0);  // i.&1@:E.
-// obsolete     else R num(1);  // +./@E.
-// obsolete     }
-// obsolete     matchmsk &= ~1;  // turn off the match we have processed
-// obsolete    }
-// obsolete    wv += CTTZI(matchmsk|(1LL<<31));  // advance to possible match
-// obsolete   }
   }
  }
  // Return with value appropriate for function

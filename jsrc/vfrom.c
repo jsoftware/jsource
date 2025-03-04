@@ -197,7 +197,6 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
    if(nsel>=0){  // normal axis
     index0=sels[0]; index0+=REPSGN(index0)&lenaxis;  // index of first item, accounting for negative indexing
     if((UI)index0>=(UI)lenaxis)goto novirtual; if(index0+nsel>lenaxis)goto novirtual;  // if first value out of range, or too many selectors, can't be virtual
-// obsolete  indexn=0;
     // check the last item before checking the middle.
     DQ(nsel-1, I indexn=sels[1+i]; indexn+=REPSGN(indexn)&lenaxis; if(indexn!=index0+1+i){goto novirtual;});  // no virtual if not sequential values
     nsel=AR(axes[r].indsubx.ind)!=1?0:nsel;  // if shape changes, set flag value to suppress returning entire w unchanged
@@ -208,11 +207,8 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
     nsel=~nsel;  // convert nsel to positive length - gives number of result slots.  lenaxis-nsel is original # unique complementary indexes 
     index0=axes[r].sel0; I axn=axes[r].lenaxis; I indexn=likely(index0<lenaxis-nsel)?axes[r].sels[index0]:axn;  // start of gap, axis len, end+1 of gap (or len of axis if there is no next sel)
     if(nsel>indexn-index0)goto novirtual;  // if the first gap does not account for all the selectors, we can't make a virtual one
-// obsolete     index0|=(indexn-index0)-nsel;  // if more cells than gap, turn index0 neg to stop virtual
-// obsolete     --indexn;  // convert to end of gap
    }
    // nsel has been modified if shape changes
-// obsolete    if((index0|(lenaxis-indexn-1))>=0){  // index0>=0 and indexn<=lenaxis-1
    // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
    // if the selected length is the axis length, and there is only one axis, we are taking the entire w arg - just return it
    if(unlikely((r+(nsel^lenaxis))==0))R RETARG(w);
@@ -233,7 +229,6 @@ static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
    // install 1s for the rest of the shape
    if(zs!=AS(z))do{*--zs=1;}while(zs!=AS(z));
    RETF(z);
-// obsolete    }
 novirtual:;  // abort to here if virtual not allowed because indexes are not consecutive
   }
  }else{zn=0;}  // if w empty, z must be empty too, since no nonempty selector is valid on 0-len axis

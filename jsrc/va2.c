@@ -39,17 +39,11 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
 
-// obsolete // do singleton operation. ipcaserank bits 0-7=rank of result, 8-15=self->lc code for the operation (with comparisons flagged),
-// obsolete // 16-17=abandoned+inplaceable flags, 18-19=assignable flags, 20-23 types code
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
-// obsolete   I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w)); awip=(awip&(I)jtinplace)+4*((I)jtinplace&3);  // abandoned flags from aw; make (assignable),(inplaceable) flags
-// obsolete   z=jtssingleton(jt,a,w,af+((I)FAV(self)->lu2.lc<<RANKTX)+(awip<<16)+((3*(at>>INTX)+(wt>>INTX))<<20));  // create portmanteau parm reg
 INLINE static A jtssingleton(J jt,A a,A w,I af,I at,I wt,A self){
-// obsolete A INLINE jtssingleton(J jt, A a,A w,I ipcaserank){A z;I aiv;void *zv;
  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
  I opcode=(I)FAV(self)->lu2.lc;  // fetch operation#
  I jtinplace=(I)jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);   // save jt as an I, clear low bits
-// obsolete  I zomb=2*(a==jt->zombieval)+(w==jt->zombieval); // see if either arg is being assigned
  A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result
  I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,SSINGENC(at,wt));  // case # for eventual switch.  Lump all Booleans at 0
@@ -63,31 +57,11 @@ INLINE static A jtssingleton(J jt,A a,A w,I af,I at,I wt,A self){
  // See if we can inplace an assignment.  That is always a good idea, though rare
  if(unlikely((2*(a==z)+(w==z))&jtinplace)){   // one of the args is being reassigned
   if(likely((AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(z))==0)){goto getzv;}   // mustn't modify VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
-// obsolete    if(likely(af==AR(jt->zombieval))){z=jt->zombieval; goto getzv;}  // the 
-// obsolete   }
  }
  if(awip&=jtinplace){z=awip&JTINPLACEW?w:a;   // block is abandoned inplaceable, : pick it.  Priority to w
   if(likely((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0))goto getzv;  // not disallowed and correct rank: use it
   if(awip==3){z=a; if(likely((AFLAG(a)&AFUNINCORPABLE+AFRO)+(af^AR(a))==0))goto getzv;}  // if a & w both eligible, check a if w failed
  }
-// obsolete  awip&=jtinplace; z=awip&JTINPLACEA?a:z; z=awip&JTINPLACEW?w:z;  // block is contextually inplaceable and inplaceable by count= abandoned.  Give priority to w
-#if 0 // obsolete
- // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
- // a potential gain if the result can itself be inplaced, but it is a certain loser when deciding where the result is
- if((ipcaserank&0x80ff)==0x8000)goto nozv;  // comparison rank 0 - leave z=0
-// obsolete  I ac=AC(a); I wc=AC(w);
- // see if the block is inplaceable in the ordinary way - start loading the z value if it is
-// obsolete  z=(AC(a)&SGNIF(ipcaserank,24+JTINPLACEAX))<0?a:z; z=(AC(w)&SGNIF(ipcaserank,24+JTINPLACEWX))<0?w:z;  // block is contextually inplaceable
- z=ipcaserank&0x20000?a:z; z=ipcaserank&0x10000?w:z;  // block is contextually inplaceable.  Give priority to w
- // While z is settling, see if we can inplace an assignment.  That is always a good idea (since it results in IP assignment), though rare
-// obsolete  if(unlikely(((B)(a==jt->zombieval)&((B)(ipcaserank>>(24+JTINPLACEAX))))+((B)(w==jt->zombieval)&((B)(ipcaserank>>(24+JTINPLACEWX)))))){
- if(unlikely((2*(a==jt->zombieval)+(w==jt->zombieval))&(ipcaserank>>18))){
-  if(likely(!(AFLAG(jt->zombieval)&AFVIRTUAL+AFUNINCORPABLE))){
-   if(likely((RANKT)ipcaserank==AR(jt->zombieval))){z=jt->zombieval; goto getzv;}
-  }
- }
-#endif
-// obsolete  if(z&&likely(!(AFLAG(z)&AFUNINCORPABLE+AFRO)))if(likely(af==AR(z)))goto getzv;  // not disallowed and correct rank, take it
  // fall through: no inplacing, allocate the result, usually an atom.  If not atom, make the shape all 1s
  if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call, then freed
  goto nozv;
@@ -108,8 +82,6 @@ nozv:;  // here when we have zv or don't need it
 #endif
  
  // Huge switch statement to handle every case.  Lump all the booleans together at 0
-// obsolete  I caseno=((ipcaserank>>RANKTX)&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno;
-// obsolete  switch(SSINGCASE(caseno,ipcaserank>>20)){
  switch(caseno){
  default: ASSERTSYS(0,"ssing");
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv+(B)wiv,z,INT,I) R z;  // NV because B01 is never virtual inplace
@@ -406,7 +378,6 @@ nozv:;  // here when we have zv or don't need it
  bitwiseresult:
  ziv=(I)FAV(self)->lu2.lc-VA2CBW0000;  // mask describing operation.  We refetch because self is needed in a reg and opcode isn't
  RE(0);  // if error on D arg, make sure we abort
-// obsolete  ziv=((ipcaserank>>RANKTX)&0x7f)-VA2CBW0000;  // mask describing operation
  ziv=((aiv&wiv)&REPSGN(SGNIF(ziv,0)))|((aiv&~wiv)&REPSGN(SGNIF(ziv,1)))|((~aiv&wiv)&REPSGN(SGNIF(ziv,2)))|((~aiv&~wiv)&REPSGN(SGNIF(ziv,3)));
  SSSTORE(ziv,z,INT,I) R z;
 
@@ -1683,8 +1654,6 @@ DF2(jtatomic2){A z;
   // singleton.  we need the rank of the result
   ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf; af+=ar;   // set af to max len of frame, ar to max cell rank; then af=max framelen + max rank = resultrank
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result
-// obsolete   I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w)); awip=(awip&(I)jtinplace)+4*((I)jtinplace&3);  // abandoned flags from aw; make (assignable),(inplaceable) flags
-// obsolete   z=jtssingleton(jt,a,w,af+((I)FAV(self)->lu2.lc<<RANKTX)+(awip<<16)+((3*(at>>INTX)+(wt>>INTX))<<20));  // create portmanteau parm reg
   z=jtssingleton(jtinplace,a,w,af,at,wt,self);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry

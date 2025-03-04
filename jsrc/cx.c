@@ -300,7 +300,6 @@ DF2(jtxdefn){
   L *sympv=SYMORIGIN;  // bring into local
   L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]];  // pointer to sym block for y, known to exist
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
-// obsolete    I vtype=QCNAMED|(REPSGN(AT(w))&QCRAREQD)|ATYPETOVALTYPE(AT(w));   // install QCSYMVAL flags: named, with type
    I vtype=unlikely(ISSPARSE(AT(w)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse.  Must be a noun
    ybuckptr->fval=MAKEFVAL(w,vtype); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCSYMVAL semantics
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
@@ -320,7 +319,6 @@ DF2(jtxdefn){
   if(a!=0){
    L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
-// obsolete    I vtype=QCNAMED|(LOCALRA?QCRAREQD:REPSGN(AT(a))&QCRAREQD)|ATYPETOVALTYPE(AT(a));   // install QCSYMVAL flags
    I vtype=unlikely(ISSPARSE(AT(a)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse
    xbuckptr->fval=MAKEFVAL(a,vtype); xbuckptr->sn=jt->currslistx;
    if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX))){
@@ -703,7 +701,6 @@ bodyend: ;  // we branch to here to exit with z set to result
   // Also, disable the pmdebug feature if JHS is running.  pmdebug freezes the tpop stack and expects nothing to happen until the user gives the next sentence.  JHS however uses J calls for input & output to console.
   // This causes problems (to wit, the test below for _ttop==jt->tnextpushp gives unreliable results) and the easiest temp kludge is to block it
   if(jt->jerr && jt->jerr!=EVWSFULL && ((jt->jerr&~0x60)!=EVEXIT) && !(jt->uflags.trace&TRACEDB1) && THREADID(jt)==0 && !(jt->emsgstate&EMSGSTATETRAPPING) && jt->iepdo==0){
-// obsolete  && !JT(jt,nfe)
    // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that we are about to pop over.  Only x and y are possible
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
@@ -795,7 +792,6 @@ static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
  RZ(z=exta(isboxed?INT:LIT,1,1,isboxed?24:300));  sb=AAV1(z); s=CAV1(z);
  while(1){
   RE(l=jgets(GETSXDEF));   // abort if error on input
-// obsolete   if(!l)break;  // exit loop if EOF.  The incomplete definition will be processed
   ASSERT(l!=0,EVCTRL)  // EOF: unterminated definition in script is now an error
   if(deftype!=0)RZ(l=ddtokens(l,0b1010));  // if non-noun def, handle DDs, for explicit def, return string, allow jgets().  Leave noun contents untouched
   // check for end: ) by itself, possibly with spaces

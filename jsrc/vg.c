@@ -792,10 +792,10 @@ DF2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
 DF2(jtordstati){A t;I n,wt;
  ARGCHK2(a,w);
  n=AN(w); wt=AT(w);
- if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R jthook1cell(jt,w,self);  // revert if not int/float, len>4, and (atom a & list w)
+ if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R jthook2cell(jt,a,w,self);  // revert if not int/float, len>4, and (atom a & list w)
  RZ(t=jtordstat(jt,a,w,0));   // Get the value of the ath order statistic.  No self, because it can't revert (checks are identical)
  I j=0;  // =0 needed to stifle warning
- if(wt&FL){D p=DAV(t)[0],*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}  // get index for the value we found
+ if(wt&FL){D p=DAV(t)[0],*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}  // get index for the value we found  scaf use faster search
  else     {I p=AV(t)[0],*v= AV(w); DO(n, if(p==*v++){j=i; break;});}
  R sc(j);
 }    /* a {/:w */

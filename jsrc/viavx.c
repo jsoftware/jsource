@@ -870,8 +870,8 @@ inplace:;
  }else{
 
 #define SMALLHASHCACHE L2CACHESIZE/sizeof(US)  // number of US entries that fit in L2
-#define SMALLHASHMAX (65535*4-2-(2*SZI/sizeof(US))-((NORMAH*SZI+sizeof(IH))/sizeof(US)))  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion; and allow 4x size for hash slack
-  // we allocate 4 extra entries to make sure we can write a quadword at the end, and to ensure there are sentinels
+#define SMALLHASHEXTRA (2+(2*SZI/sizeof(US))+((NORMAH*SZI+sizeof(IH))/sizeof(US)))  // we allocate 4 extra entries to make sure we can write a quadword at the end, and to ensure there are sentinels; also the header
+#define SMALLHASHMAX (65535*4-SMALLHASHEXTRA)  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion; and allow 4x size for hash slack
 
 // testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically
   fnx=-2 + (1.0==jt->cct); // we haven't figured it out yet.  Change meaning of fnx: fnx is -2 for tolerant, -1 for intolerant
@@ -1001,8 +1001,7 @@ inplace:;
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
-    if((((I)p-(I)(SMALLHASHMAX+1)) & ((I)booladj-1) & ((I)((mode&IREVERSED)?c:m)-65535))<0){  // range must fit into address; hash index+1 must fit into the 16-bit entry
-      // (the +1 is in case we do reversed hash where we invalidate by writing m+1; shouldn't have small hash if m=65535, but take no chances)
+   if((((I)p-(I)(SMALLHASHMAX+1)) & ((I)booladj-1) & ((I)((mode&IREVERSED)?c:m)-65535))<0){  // range must fit into address; hash index+1 must fit into the 16-bit entry
     // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
     // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
     // but if it IS assigned, the main table may be too big, and we don't have any good way to trim it down
@@ -1016,7 +1015,8 @@ inplace:;
 #endif
     // we can use the small table.  See if there already is one we can use, otherwise allocate one
     if(unlikely((REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)(h=jt->idothash0))==0)){   // precalc, or  small table doesn't exist
-     GATV0(h,INT,((SMALLHASHMAX*sizeof(US)+SZI+(SZI-1))>>LGSZI),0);  // size too big for GAT
+     I smallallo=p+SMALLHASHEXTRA; SMALLHASHMAX; smallallo=mode&IPHCALC?smallallo:SMALLHASHMAX;  // if allocating small table, allocate the max; if prehash, only as large as needed
+     GATV0(h,INT,((smallallo*sizeof(US)+SZI+(SZI-1))>>LGSZI),0);  // size too big for GAT
      // Fill in the header
      hh=IHAV0(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
@@ -1315,13 +1315,13 @@ DF1(jtnubind0){A z;
 // I.@e. y   does not have IRS
 DF2(jtepsind){
  ARGCHK2(a,w);
- R unlikely(ISSPARSE(AT(w)|AT(w)))?on1cell(jt,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse
+ R unlikely(ISSPARSE(AT(w)|AT(w)))?jtupon2cell(jt,a,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse
 } 
 
 // i.@(e.!.0) y     does not have IRS
 DF2(jtepsind0){A z;
  ARGCHK2(a,w);
- if(unlikely(ISSPARSE(AT(a)|AT(w))))R on1cell(jt,w,self);  // revert for sparse
+ if(unlikely(ISSPARSE(AT(a)|AT(w))))R jtupon2cell(jt,a,w,self);  // revert for sparse
  PUSHCCT(1.0) z=indexofsub(IIFBEPS,w,a); POPCCT  // do operation intolerantly
  R z;
 }

@@ -258,7 +258,7 @@ NOUNROLL for(;;({--harg; if(unlikely(harg<0))harg+=p;harg;})){  /* loop until we
  I hj=hv[harg];  /* fetch the hash index, which points back into the source table */ \
  if((store)==4)fndx=hj; /* simple case in primary, save a branch */ \
  if(hj==hsrc##sct || ((store)&512 && ((store)&256?hj<fndx:hj>fndx))){  /* stopper slot encountered - empty, or second pass that has overshot the index found in the first pass */ \
-  if(!((store)&512))fndx=hsrc##sct;  /* notfound in first pass: indicate no tolerant match to avoid early cutoff on second pass */ \
+  if(!((store)&512) && !((store)&0b10001))fndx=hsrc##sct;  /* notfound in first pass on non-i./i:~: indicate no tolerant match to avoid early cutoff on second pass */ \
   if(((store)&~256)==1||((store)&~256)==16){hv[harg]=(TH)i; if((store)&1)goto lbl##notfound;}  /* intolerant store first pass: we must be at an empty slot, store into it.  If reflexive, indicate match in new stored element */ \
   break;  /* exit not found in this bucket */ \
  }else{  /* nonempty slot found.  See if it matches */ \

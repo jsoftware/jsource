@@ -1451,6 +1451,21 @@ DF1(jtnubind0){A z;
  R z;
 }    /* I.@(~:!.0) w */
 
+// I.@e. y   does not have IRS
+DF2(jtepsind){
+ ARGCHK2(a,w);
+ R unlikely(ISSPARSE(AT(w)|AT(w)))?jtupon2cell(jt,a,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse
+} 
+
+// i.@(e.!.0) y     does not have IRS
+DF2(jtepsind0){A z;
+ ARGCHK2(a,w);
+ if(unlikely(ISSPARSE(AT(a)|AT(w))))R jtupon2cell(jt,a,w,self);  // revert for sparse
+ PUSHCCT(1.0) z=indexofsub(IIFBEPS,w,a); POPCCT  // do operation intolerantly
+ R z;
+}
+
+
 // = y    
 F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  ARGCHK1(w);

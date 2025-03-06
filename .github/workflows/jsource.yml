@@ -1,16 +1,10 @@
+# jsource for 9.6maint
+
 name: JE
 
 on:
  push:
-  branches: [ master ]
-
-# trigger workflow on file change
-#on:
-# push:
-#  paths:
-#   - 'version.txt'
-
-# if: ${{ false }}
+  branches: [ 9.6maint ]
 
 jobs:
 
@@ -62,7 +56,7 @@ jobs:
    - name: Release JE (Linux)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "l64.zip,l64d.zip,commit.txt,version.txt"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -121,7 +115,7 @@ jobs:
    - name: Release JE (Linux gcc)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "lgcc64.zip,lgcc64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -176,7 +170,7 @@ jobs:
    - name: Release JE (macOS)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "m64.zip,m64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -231,7 +225,7 @@ jobs:
    - name: Release JE (macOS arm64)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "m64arm.zip,m64armd.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -294,7 +288,7 @@ jobs:
    - name: Release JE (Raspberry)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "rpi64.zip,rpi64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -357,7 +351,7 @@ jobs:
    - name: Release JE (Raspberry32)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "rpi32.zip,rpi32d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -425,7 +419,7 @@ jobs:
    - name: Release JE (OpenBSD)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "obsd64.zip,obsd64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -493,7 +487,7 @@ jobs:
    - name: Release JE (OpenBSD)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "obsd64.zip,obsd64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -559,7 +553,7 @@ jobs:
    - name: Release JE (OpenBSD arm64)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "obsdarm64.zip,obsdarm64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -627,7 +621,7 @@ jobs:
    - name: Release JE (FreeBSD)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "fbsd64.zip,fbsd64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -696,7 +690,7 @@ jobs:
    - name: Release JE (FreeBSD)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "fbsd64.zip,fbsd64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -765,7 +759,7 @@ jobs:
    - name: Release JE (FreeBSD arm64)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "fbsdarm64.zip,fbsdarm64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -802,7 +796,7 @@ jobs:
    - name: Release JE (android)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "androidlibs.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -834,7 +828,7 @@ jobs:
    - name: Release JE (wasm)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "wasm32.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -872,7 +866,7 @@ jobs:
    - name: Release JE (Windows)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "w64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -915,7 +909,7 @@ jobs:
    - name: Release JE (Windows 32)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "w32.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -959,7 +953,7 @@ jobs:
    - name: Release JE (Windows arm64)
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "warm64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
@@ -993,20 +987,20 @@ jobs:
    - name: Copy Tests to Build
      uses: ncipollo/release-action@v1
      with:
-      tag: build
+      tag: build96
       artifacts: "tests.txt"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
 
- webhook:
-  name: Run Webhook
-  runs-on: ubuntu-22.04
-  needs: tests
-  steps:
-   - name: update server
-     uses: distributhor/workflow-webhook@v2
-     env:
-      webhook_url: ${{ secrets.WEBHOOK_URL }}
-      webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
-      data: '{ "id": "jebuild" }'
+# webhook:
+#  name: Run Webhook
+#  runs-on: ubuntu-22.04
+#  needs: tests
+#  steps:
+#   - name: update server
+#     uses: distributhor/workflow-webhook@v2
+#     env:
+#      webhook_url: ${{ secrets.WEBHOOK_URL }}
+#      webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+#      data: '{ "id": "jebuild" }'

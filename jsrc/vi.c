@@ -1331,7 +1331,13 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
    }
    xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fn; xv[5]=ztype; 
    zv[0]=incorp(x); zv[1]=incorp(h); zv[2]=incorp(hi);
+ }else if(unlikely((mode&IIOPMSK)==IIFBEPS)){
+  // I.@e. initially allocated a maximum-sized result, which might be colossally wasteful of space (but not of time or cache footprint)
+  // if the block is mostly empty, reallocate it & copy a right-sized block
+  if(((allosize(z)-AKXR(1))>>(LGSZI+1))>MAX(AN(z),12)){  // if a smaller block would serve (but not if the block is already small)
+   GATV0(h,INT,AN(z),1); JMC(IAV1(h),IAV1(z),SZI*AN(z),0) z=h;  // repackage the result in a right-sized block
   }
+ }
  }  // end of 'not sequential comparison' which means we need a hashtable
  RZ(z=EPILOGNORET(z));
  // Since EPILOG may have rewritten AM, and IFORKEY never returns to the parser, we can store the FORKEY result in AM.

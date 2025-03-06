@@ -1,10 +1,10 @@
-# jsource for 9.6maint
+# jsource for 9.6 maintenance branch
 
 name: JE
 
 on:
  push:
-  branches: [ 9.6maint ]
+  branches: [ 9.6 ]
 
 jobs:
 

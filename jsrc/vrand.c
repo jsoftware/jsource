@@ -55,7 +55,7 @@ static void lcg(I n,I*v,I seed){D c=16807.0,p=2147483647.0,x=(D)seed;
  DQ(n, x*=c; x-=p*(I)(x/p); *v++=(I)x;);
 }
 
-F1(jtlcg_test){A x;I n=1597,*v;
+F1(jtlcg_test){F12IP;A x;I n=1597,*v;
  ASSERTMTV(w);
  GATV0(x,INT,n,1); v=AV1(x);
  lcg(n,v,1L);
@@ -124,7 +124,7 @@ static I jtgb_unif_rand(J jt,I m){
  R r%m;
 }
 
-F1(jtgb_test){I j=jt->rngdata->rng;
+F1(jtgb_test){F12IP;I j=jt->rngdata->rng;
  ASSERTMTV(w);
  RZ(rngselects(sc(GBI)));
  gb_init(-314159);
@@ -264,7 +264,7 @@ static UI jtmt_next(J jt){UI*mt=jt->rngdata->rngv,*u,*v,*w,y;
 }
 
 #if SY_64
-F1(jtmt_test){I j=jt->rngdata->rng;UI init[4]={0x12345ULL, 0x23456ULL, 0x34567ULL, 0x45678ULL},x;
+F1(jtmt_test){F12IP;I j=jt->rngdata->rng;UI init[4]={0x12345ULL, 0x23456ULL, 0x34567ULL, 0x45678ULL},x;
  ASSERTMTV(w);
  RZ(rngselects(sc(MTI)));
  mt_init_by_array(init,(I)4);
@@ -277,7 +277,7 @@ F1(jtmt_test){I j=jt->rngdata->rng;UI init[4]={0x12345ULL, 0x23456ULL, 0x34567UL
  R num(1);
 }
 #else
-F1(jtmt_test){I j=jt->rngdata->rng;UI init[4]={0x123, 0x234, 0x345, 0x456},x;
+F1(jtmt_test){F12IP;I j=jt->rngdata->rng;UI init[4]={0x123, 0x234, 0x345, 0x456},x;
  ASSERTMTV(w);
  RZ(rngselects(sc(MTI)));
  mt_init_by_array(init,(I)4);
@@ -336,7 +336,7 @@ static UI jtdx_next(J jt){I j;UI*u,*v,*vv,r,x;
 
 static void jtdx_init(J jt,UI s){lcg(DXN,jt->rngdata->rngv,s); jt->rngdata->rngi=0;} 
 
-F1(jtdx_test){I j=jt->rngdata->rng,x;
+F1(jtdx_test){F12IP;I j=jt->rngdata->rng,x;
  ASSERTMTV(w);
  RZ(rngselects(sc(DXI))); dx_init(1UL); 
  x=dx_next(); ASSERTSYS(x== 221240004UL, "dx_test 0");
@@ -399,7 +399,7 @@ static void jtmr_init(J jt,UI s){D*v=(D*)jt->rngdata->rngv;I t[MRN];
  jt->rngdata->rngi=0;
 } 
 
-F1(jtmr_test){I j=jt->rngdata->rng,x;
+F1(jtmr_test){F12IP;I j=jt->rngdata->rng,x;
  ASSERTMTV(w);
  RZ(rngselects(sc(MRI))); mr_init(1UL);
  x=mr_next(); ASSERTSYS(x==(I)3293966663UL, "mr_test 0");
@@ -438,7 +438,7 @@ static void jtsm_init(J jt,UI s){
 
 /* ----------------------------------------------------------------------- */
 
-F1(jtrngraw){A z;I n,*v;SETNEXT
+F1(jtrngraw){F12IP;A z;I n,*v;SETNEXT
  RE(n=i0(w));
  ASSERT(0<=n,EVDOMAIN);
  GATV0(z,INT,n,1); v=AV1(z);
@@ -463,7 +463,7 @@ B jtrnginit(J jt){
  R 1;
 }
 
-F1(jtrngselectq){ASSERTMTV(w); R sc(jt->rngdata->rng);}
+F1(jtrngselectq){F12IP;ASSERTMTV(w); R sc(jt->rngdata->rng);}
 
 static B jtrngga(J jt,I i,struct rngparms*vv){
  if(vv[i].rngV){jt->rngdata->rngv=vv[i].rngV; jt->rngdata->rngi=jt->rngdata->rngparms[i].rngI;}
@@ -480,7 +480,7 @@ static B jtrngga(J jt,I i,struct rngparms*vv){
  R 1;
 }
 
-F1(jtrngselects){I i;struct rngparms*vv=jt->rngdata->rngparms;
+F1(jtrngselects){F12IP;I i;struct rngparms*vv=jt->rngdata->rngparms;
  RE(i=i0(w));
  ASSERT(BETWEENO(i,0,NRNG),EVDOMAIN);
  jt->rngdata->rngparms[jt->rngdata->rng].rngI=jt->rngdata->rngi;
@@ -495,7 +495,7 @@ F1(jtrngselects){I i;struct rngparms*vv=jt->rngdata->rngparms;
  R mtv;
 }
 
-F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
+F1(jtrngstateq){F12IP;A x=0,z,*zv;D*u=0;I n;UI*v;
  ASSERTMTV(w);
  switch(jt->rngdata->rng){
   case SMI: 
@@ -536,7 +536,7 @@ static B jtrngstates1(J jt,I j,I n,struct rngparms*vv,I i,I k,A x,B p){D*u;UI*xv
  R 1;
 }
 
-F1(jtrngstates){A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
+F1(jtrngstates){F12IP;A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
  ARGCHK1(w);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(BOX&AT(w),EVDOMAIN);
@@ -561,10 +561,10 @@ F1(jtrngstates){A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
 
 // Return the seed info.  This is a scalar jt->rngdata->rngparms[jt->rngdata->rng].rngS unless the generator is Mersenne Twister and
 // jt->rngdata->rngseed is set, in which case jt->rngdata->rngseed is the vector of seed info
-F1(jtrngseedq){ASSERTMTV(w); R jt->rngdata->rngseed&&MTI==jt->rngdata->rng?jt->rngdata->rngseed:sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS);}
+F1(jtrngseedq){F12IP;ASSERTMTV(w); R jt->rngdata->rngseed&&MTI==jt->rngdata->rng?jt->rngdata->rngseed:sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS);}
 
 // Set the vector of RNG seed info
-F1(jtrngseeds){I k,r; 
+F1(jtrngseeds){F12IP;I k,r; 
  // Force w to integer; k=first value; r=rank
  RZ(w=vi(w)); k=AV(w)[0]; r=AR(w);
  if(r){
@@ -587,7 +587,7 @@ F1(jtrngseeds){I k,r;
 }
 
 
-F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
+F2(jtrollksub){F12IP;A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
@@ -638,7 +638,7 @@ F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngpar
  R z;
 }
 
-DF2(jtrollk){A g,z;V*sv;
+DF2(jtrollk){F12IP;A g,z;V*sv;
  ARGCHK3(a,w,self);
  sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];   // 2d verb, # or $
  if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&((g==ds(CDOLLAR))|(1==AN(a)))))R jtupon2cell(jt,a,w,self);  // revert if XNUM/RAT or nonatomic w or AR(a)>1 or (?@# with a not a singleton)
@@ -686,7 +686,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);
  EPILOG(q);
 }    /* ?x where x is a single strictly positive extended integer */
 
-static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
+static F1(jtrollxnum){F12IP;A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to numeric
  n=AN(w); v=XAV(w);
  I zr=AR(w); GATV(z,XNUM,n,AR(w),AS(w)); u=XAVn(zr,z);
@@ -702,7 +702,7 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
 }    /* ?n$x where x is extended integer */
 
 
-static F1(jtrollbool){A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
+static F1(jtrollbool){F12IP;A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
  n=AN(w); v=BAV(w); INITD;
  I zr=AR(w); GATV(z,FL,n,AR(w),AS(w)); u=DAVn(zr,z);
  if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
@@ -769,7 +769,7 @@ static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngdat
  *b=1; R z;
 }    /* ?s$x where x can be anything and 1<#x */
 
-F1(jtroll){A z;B b=0;I m,wt;
+F1(jtroll){F12IP;A z;B b=0;I m,wt;
  ARGCHK1(w);
  wt=AT(w);
  ASSERT(!ISSPARSE(wt),EVDOMAIN);
@@ -783,7 +783,7 @@ F1(jtroll){A z;B b=0;I m,wt;
  RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 
-DF2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
+DF2(jtdeal){F12IP;A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
@@ -837,7 +837,7 @@ DF2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata
 
 #undef rollksub
 #define rollksub(a,w) jtrollksubdot(jt,(a),(w))
-static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
+static F2(jtrollksubdot){F12IP;A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
@@ -882,7 +882,7 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngda
 
 #undef rollk
 #define rollk(a,w,self) jtrollkdot(jt,(a),(w),(self))
-DF2(jtrollkdot){A g,z;V*sv;
+DF2(jtrollkdot){F12IP;A g,z;V*sv;
  ARGCHK3(a,w,self);
  sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];
  if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(dfv2(z,a,w,g));
@@ -908,7 +908,7 @@ static X jtxranddot(J jt,X x){PROLOG(0090); // A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
 
 #undef rollxnum
 #define rollxnum(w) jtrollxnumdot(jt,(w))
-static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
+static F1(jtrollxnumdot){F12IP;A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to integer
  n=AN(w); v=XAV(w);
  I zr=AR(w); GATV(z,XNUM,n,AR(w),AS(w)); u=XAVn(zr,z);
@@ -925,7 +925,7 @@ static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
 
 #undef rollbool
 #define rollbool(w) jtrollbooldot(jt,(w))
-static F1(jtrollbooldot){A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
+static F1(jtrollbooldot){F12IP;A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
  n=AN(w); v=BAV(w); INITD;
  I zr=AR(w); GATV(z,FL,n,AR(w),AS(w)); u=DAVn(zr,z);
  if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
@@ -1000,7 +1000,7 @@ static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rng
 
 #undef roll
 #define roll(w) jtrolldot(jt,(w))
-static F1(jtrolldot){A z;B b=0;I m,wt;
+static F1(jtrolldot){F12IP;A z;B b=0;I m,wt;
  ARGCHK1(w);
  wt=AT(w);
  ASSERT(!ISSPARSE(wt),EVDOMAIN);
@@ -1016,7 +1016,7 @@ static F1(jtrolldot){A z;B b=0;I m,wt;
 
 #undef deal
 #define deal(a,w) jtdealdot(jt,(a),(w),ds(CQRYDOT))
-static DF2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
+static DF2(jtdealdot){F12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
@@ -1052,13 +1052,13 @@ static DF2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t
                      jt->rngdata->rngparms[GBI].rngV=jt->rngdata->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
 #define FXSOD       {jt->rngdata->rngparms[GBI].rngV=v; jt->rngdata->rngparms[GBI].rngI=jt->rngdata->rngi=i; I e=jt->jerr; jt->jerr=0; rngselects(sc(j)); jt->jerr=e;}  // rngselects doesn't function if there is error
 
-F1(jtrollx  ){FXSDECL; ARGCHK1(w);                 FXSDO; z=roll(w);         FXSOD; R z;}       
-DF2(jtdealx  ){FXSDECL; F2RANK(0,0,jtdealx,self); FXSDO; z=deal(a,w);       FXSOD; R z;}        
-DF2(jtrollkx){FXSDECL; ARGCHK3(a,w,self);        FXSDO; z=rollk(a,w,self); FXSOD; R z;}      
+F1(jtrollx  ){F12IP;FXSDECL; ARGCHK1(w);                 FXSDO; z=roll(w);         FXSOD; R z;}       
+DF2(jtdealx  ){F12IP;FXSDECL; F2RANK(0,0,jtdealx,self); FXSDO; z=deal(a,w);       FXSOD; R z;}        
+DF2(jtrollkx){F12IP;FXSDECL; ARGCHK3(a,w,self);        FXSDO; z=rollk(a,w,self); FXSOD; R z;}      
 
 
 /*
-static F1(jtroll){A z;D rl=jt->rl;static D dm=16807,p=2147483647L;I c,n,*v,*x;
+static F1(jtroll){F12IP;A z;D rl=jt->rl;static D dm=16807,p=2147483647L;I c,n,*v,*x;
  ARGCHK1(w);
  n=AN(w); v=AV(w);
  RZ(z=reshape(shape(w),num(2))); x=AV(z);

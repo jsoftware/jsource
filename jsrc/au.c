@@ -11,12 +11,12 @@ static I jtfdepger(J jt,A w){R 0;
 
 
 // $: itself
-DF2(jtself12){A z; F2PREFIP; A fs=jt->parserstackframe.sf; I dyad=EPDYAD; jtinplace=FAV(fs)->flag&(VJTFLGOK1<<dyad)?jtinplace:jt; AF f12=FAV(fs)->valencefns[dyad]; STACKCHKOFL RETF((f12)(jtinplace,a,dyad?w:fs,fs));}
+DF2(jtself12){F12IP;A z;  A fs=jt->parserstackframe.sf; I dyad=EPDYAD; jtinplace=FAV(fs)->flag&(VJTFLGOK1<<dyad)?jtinplace:jt; AF f12=FAV(fs)->valencefns[dyad]; STACKCHKOFL RETF((f12)(jtinplace,a,dyad?w:fs,fs));}
 
 // not used A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 A jtac2(J jt,AF f){R fdef(0,0,VERB, jtvalenceerr,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}  // f is entry point; result is VERB type to call f as dyad with infinite rank
 
-F1(jtvalenceerr){F1PREFIP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:
+F1(jtvalenceerr){F12IP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:
 
 // return 1 if w contains no names (including ~ references) or explicit definitions
 B nameless(A w){A f,g,h;C id;V*v;

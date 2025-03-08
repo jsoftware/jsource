@@ -309,7 +309,7 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
 }    /* integer vector from boolean mask */
 
 // i. # w
-static F1(jtii){ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
+static F1(jtii){F12IP;ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 
 // Return the higher-priority of the types s and t.  s and t are known to be not equal.
 // If either is sparse, convert the result to sparse.
@@ -478,7 +478,7 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
  R z;
 }
 
-F1(jtrankle){R!w||AR(w)?w:ravel(w);}
+F1(jtrankle){F12IP;R!w||AR(w)?w:ravel(w);}
 
 A jtsc(J jt,I k)     {A z; if(BETWEENC(k,NUMMIN,NUMMAX)){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); IAV0(z)[0]=k;     RETF(z);}  // always return I
 A jtscib(J jt,I k)   {A z; if(BETWEENC(k,NUMMIN,NUMMAX))R num(k); GAT0(z,INT, 1,0); IAV0(z)[0]=k;     RETF(z);}  // return b if 0 or 1, else I
@@ -495,7 +495,7 @@ A jtstr(J jt,I n,C*s){A z; GATV0(z,LIT,n,1); MC(AV1(z),s,n); RETF(z);}
 A jtstrq(J jt,I n,C*s){A z; I qc=2; DO(n, qc+=s[i]=='\'';) GATV0(z,LIT,n+qc,1); C *zv=CAV1(z); *zv++='\''; DO(n, C c=s[i]; if(c=='\'')*zv++=c; *zv++=c;) *zv='\''; RETF(z);}
 
 // w is a LIT string; result is a new block with the same string, with terminating NUL added
-F1(jtstr0){A z;C*x;I n; ARGCHK1(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV0(z,LIT,n+1,1); x=CAV1(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
+F1(jtstr0){F12IP;A z;C*x;I n; ARGCHK1(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV0(z,LIT,n+1,1); x=CAV1(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
 
 // return A-block for a 2-atom integer vector containing a,b
 A jtv2(J jt,I a,I b){A z;I*x; GAT0(z,INT,2,1); x=AV1(z); *x++=a; *x=b; RETF(z);}
@@ -575,14 +575,14 @@ for(i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
 #endif
 
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)
-F1(jtvi){ARGCHK1(w);
+F1(jtvi){F12IP;ARGCHK1(w);
  if(ISDENSETYPE(AT(w),INT))R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
  if((AT(w)&SPARSE+B01)>AR(w))R zeroionei(BAV(w)[0]);   // non-sparse Boolean atom, take atomic integer
  R cvt(INT,w);
 }
 
 // Audit w to ensure valid integer value(s).  Error (i. e. 0 return) if non-integral.  Result is A block for integer array.  Infinities converted to IMAX/-IMAX.  Non-infinities greater than integer precision give error
-F1(jtvib){A z;I i,n,*zv;
+F1(jtvib){F12IP;A z;I i,n,*zv;
  ARGCHK1(w);
  if(ISDENSETYPE(AT(w),INT))R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
  if(ISDENSETYPE(AT(w),B01)){if(!AR(w))R zeroionei(BAV(w)[0]); R cvt(INT,w);}
@@ -616,14 +616,14 @@ F1(jtvib){A z;I i,n,*zv;
 }
 
 // Convert w to integer if needed, and verify every atom is nonnegative
-F1(jtvip){I*v; ARGCHK1(w); if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w)); v=AV(w); DQ(AN(w), ASSERT(0<=*v++,EVDOMAIN);); RETF(w);}
+F1(jtvip){F12IP;I*v; ARGCHK1(w); if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w)); v=AV(w); DQ(AN(w), ASSERT(0<=*v++,EVDOMAIN);); RETF(w);}
 
 // Convert w to string, verify it is a list or atom
-F1(jtvs){ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); if(!ISDENSETYPE(AT(w),LIT))w=cvt(LIT,w); R w;}    
+F1(jtvs){F12IP;ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); if(!ISDENSETYPE(AT(w),LIT))w=cvt(LIT,w); R w;}    
      /* verify string */
 
 // Convert w to utf8 string, verify it is a list or atom
-F1(jtvslit){ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); if(!ISDENSETYPE(AT(w),LIT)){w=AT(w)&(C2T+C4T)?toutf8(w):cvt(LIT,w);} R w;}    
+F1(jtvslit){F12IP;ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); if(!ISDENSETYPE(AT(w),LIT)){w=AT(w)&(C2T+C4T)?toutf8(w):cvt(LIT,w);} R w;}    
      /* verify string */
 
 // w is a boxed noun whose contents may include virtual blocks.  Realize any such virtual blocks.

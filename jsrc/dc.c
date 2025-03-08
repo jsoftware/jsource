@@ -7,7 +7,7 @@
 #include "d.h"
 
 
-static F1(jtdfrep){ARGCHK1(w); R NOUN&AT(w)?w:lrep(w);}
+static F1(jtdfrep){F12IP;ARGCHK1(w); R NOUN&AT(w)?w:lrep(w);}
 
 static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=incorp(sfn(0,d->name))); RZ(*zv++=incorp(dfrep(QCWORD(d->fval))));})
 
@@ -69,7 +69,7 @@ static B jtdrow(J jt,DC si,DC s0,A*zv,UI ncollist,I* collist){A fs,q,*qv,y,z;C c
  R 1;
 }    /* construct one row of function stack- called only for DCCALL type */
 
-F1(jtdbcall){A y,*yv,z,zz,*zv;DC si,s0=0;I c=11,m=0,*s;  // c is # columns
+F1(jtdbcall){F12IP;A y,*yv,z,zz,*zv;DC si,s0=0;I c=11,m=0,*s;  // c is # columns
  UI *collist, ncollist;   // arrays of columns, and its length
  ASSERT(AR(w)<2,EVRANK);  // must be atom or list
  if(AN(w)==0){collist=&iotavec[-IOTAVECBEGIN]; ncollist=9;  // default is IX(9)

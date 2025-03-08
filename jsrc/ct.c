@@ -652,7 +652,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
 
 // 13!:_7 run a null job with tasks.  w is #spins per task, # tasks
 static C nulljohnson(J jt,void *ctx,UI4 i){R johnson(*(I*)ctx);}  // delay a bit
-F1(jtnulljob){
+F1(jtnulljob){F12IP;
   ASSERT(AR(w)==1,EVRANK); ASSERT(AN(w)==2,EVLENGTH); if(!(AT(w)&INT))RZ(w=cvt(INT,w));
   I nspins=IAV(w)[0], ntasks=IAV(w)[1];  // extract parms
   I ctx=nspins;
@@ -678,7 +678,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){
 
 // u t. n - start a task.  We just create a verb to handle the arguments, performing <@u
 // n is [importantoptions, all numeric or boxed numeric] [; k [;v] ]...
-F2(jttdot){F2PREFIP;
+F2(jttdot){F12IP;
  ASSERTVN(a,w);
  ASSERT(AR(w)<=1,EVRANK) // arg must be atom or list
  I nolocal=-1;  // establish unset values for options
@@ -735,7 +735,7 @@ F2(jttdot){F2PREFIP;
 #define CREDAMV (I)0x86a7210d76e0295f
 
 // x T. y - various thread and task operations
-F2(jttcapdot2){A z;
+F2(jttcapdot2){F12IP;A z;
  ARGCHK2(a,w)
  I m; RE(m=i0(a))   // get the x argument, which must be an atom
  switch(m){

@@ -451,7 +451,7 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  R z;
 }    /* each row of literal array w less the trailing "blanks" is a symbol */
 
-static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
+static F1(jtsbunbox){F12IP;A*wv,x,z;S c2;I i,m,n;SB*zv;
  ARGCHK1(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
  m=AN(w); wv=AAV(w); 
@@ -465,7 +465,7 @@ static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
  R z;
 }    /* each element of boxed array w is a string */
 
-static F1(jtsbunind){A z;I j,n,*zv;
+static F1(jtsbunind){F12IP;A z;I j,n,*zv;
  RZ(z=cvt(INT,w));
  READLOCK(JT(jt,sblock))
  zv=AV(z); n=AM(JT(jt,sbu));
@@ -477,7 +477,7 @@ static F1(jtsbunind){A z;I j,n,*zv;
 }    /* w is a numeric array of symbol indices */
 
 #ifdef TMP
-F1(jtsb1){
+F1(jtsb1){F12IP;
  A abc;
  clo=clock();
  ARGCHK1(w);
@@ -492,7 +492,7 @@ F1(jtsb1){
  R abc;
 }
 #else
-F1(jtsb1){
+F1(jtsb1){F12IP;
  ARGCHK1(w);
  switch(CTTZ(AT(w))){
  default:  ASSERT(0,EVDOMAIN);
@@ -505,7 +505,7 @@ F1(jtsb1){
 #endif
 
 
-F1(jtsborder){A z;I n,*zv;SB*v;
+F1(jtsborder){F12IP;A z;I n,*zv;SB*v;
  ARGCHK1(w);
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
@@ -514,7 +514,7 @@ F1(jtsborder){A z;I n,*zv;SB*v;
  R z;
 }    /* order numbers for symbol array w */
 
-static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
+static F1(jtsbbox){F12IP;A z,*zv;C*s;I n;SB*v;SBU*u;
  ARGCHK1(w);
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
@@ -572,7 +572,7 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
 }    /* literal array for symbol array w padded with c */
 
 
-static F1(jtsbhashstat){A z;I j,k,n,*zv;SBU*v;
+static F1(jtsbhashstat){F12IP;A z;I j,k,n,*zv;SBU*v;
  READLOCK(JT(jt,sblock))
  n=AM(JT(jt,sbu)); v=SBUV4(JT(jt,sbu));
  GATV0E(z,INT,n,1,goto exit;); zv=AV1(z);
@@ -696,14 +696,14 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  EPILOG(num(1));
 }
 
-static F1(jtsbcheck){
+static F1(jtsbcheck){F12IP;
  READLOCK(JT(jt,sblock))
  A z=sbcheck1(sc(AM(JT(jt,sbu))),sc(AM(STRINGTABLE)),JT(jt,sbu),STRINGTABLE,HASHTABLE,sc(ROOT),sc(FILLFACTOR),sc(GAP),1);
  READUNLOCK(JT(jt,sblock))
  R z;
 }
 
-static F1(jtsbsetdata){A h,s,u,*wv,x;
+static F1(jtsbsetdata){F12IP;A h,s,u,*wv,x;
  ARGCHK1(w);
  ASSERTD(BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
@@ -736,7 +736,7 @@ static void resetdata(J jt){
  WRITEUNLOCK(JT(jt,sblock))
 }    /* re-initialize global symbol table */
 
-static F1(jtsbsetdata2){A *wv;I c,i,offset=0;SBU*uv,*v;C*sv;
+static F1(jtsbsetdata2){F12IP;A *wv;I c,i,offset=0;SBU*uv,*v;C*sv;
  ARGCHK1(w);
  ASSERTD(!AN(w)||BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
@@ -758,7 +758,7 @@ static F1(jtsbsetdata2){A *wv;I c,i,offset=0;SBU*uv,*v;C*sv;
  R num(1);
 }
 
-static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
+static F1(jtsbtestbox){F12IP;A*wv,x,z;S c2;I i,m,n;B*zv;
  ARGCHK1(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
  m=AN(w); wv=AAV(w); 
@@ -772,7 +772,7 @@ static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
  R z;
 }    /* test symbol, each element of boxed array w is a string */
 
-static F1(jtsbgetdata){A z,zz=0,*zv;
+static F1(jtsbgetdata){F12IP;A z,zz=0,*zv;
  GAT0(z,BOX,8,1); zv=AAV1(z);
  READLOCK(JT(jt,sblock))
  RZGOTO(zv[0]=incorp(sc(AM(JT(jt,sbu)))),exit);
@@ -792,7 +792,7 @@ exit: ;
  R zz;
 }
 
-F2(jtsb2){A z;I j,k,n;
+F2(jtsb2){F12IP;A z;I j,k,n;
 #ifdef TMP
  I*zv;
 #endif

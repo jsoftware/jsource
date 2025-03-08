@@ -64,7 +64,7 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
 }    /* stop on line i? */
 
 // 13!:2, query stops
-F1(jtdbstopq){
+F1(jtdbstopq){F12IP;
  ASSERTMTV(w); 
  // we must read & protect the sentence under lock in case another thread is changing it
  READLOCK(JT(jt,dblock)) A stops=JT(jt,dbstops); if(stops)ras(stops); READUNLOCK(JT(jt,dblock))  // must ra() while under lock
@@ -73,7 +73,7 @@ F1(jtdbstopq){
 }
 
 // 13!:3, set stops
-F1(jtdbstops){
+F1(jtdbstops){F12IP;
  ARGCHK1(w);
  RZ(w=vs(w));
  if(AN(w)){RZ(ras(w));}else w=0;  // protect w if it is nonempty; if empty, convert to null

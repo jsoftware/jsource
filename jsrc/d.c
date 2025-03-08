@@ -96,7 +96,7 @@ static I jtdspell(J jt,C id,A w,I nflag){C c,s[5];
  R nflag;
 }
 
-static F1(jtsfn0){R sfn(0,w);}  // return string form of full name for a NAME block
+static F1(jtsfn0){F12IP;R sfn(0,w);}  // return string form of full name for a NAME block
 EVERYFS(sfn0overself,jtsfn0,jtover,0,VFLAGNONE)
 
 // print a word; nflag bits if (space needed before name/numeric),(parens needed),(space before { needed); return new value of nflag
@@ -204,13 +204,13 @@ static B jtdebsi1(J jt,DC d){I t;
  R 1;
 }
 
-F1(jtdbstack){DC d=jt->sitop; 
+F1(jtdbstack){F12IP;DC d=jt->sitop; 
  ASSERTMTV(w);
  if(d){if(DCCALL!=d->dctype)d=d->dclnk; NOUNROLL while(d){debdisp(d); d=d->dclnk;}}
  R mtm;
 }    /* 13!:1  display SI stack */
 
-F1(jtdbstackz){A y,z; 
+F1(jtdbstackz){F12IP;A y,z; 
  RE(dbstack(w)); 
  RZ(y=str(jt->etxn,jt->etxinfo->etx)); 
  jt->etxn=0; 
@@ -225,9 +225,8 @@ F1(jtdbstackz){A y,z;
 // m is the m argument for adverbs
 // the args to eformat_j_ are error#;curname;jt->ranks/empty if m};AR of self;a/AR(a)[;w/AR(w)}[;m]
 // Result is always 0
-A jteformat(J jt,A self,A a,A w,A m){
- F1PREFIP;
- if(likely(self!=DUMMYSELF)){  // if we are called without a real self, we must be executing something internal.  Format it later when we have a real self
+A jteformat(J jtinplace,A self,A a,A w,A m){F12IP;
+  if(likely(self!=DUMMYSELF)){  // if we are called without a real self, we must be executing something internal.  Format it later when we have a real self
   C e=jt->jerr;
   if(e!=0 && e!=EVABORTEMPTY && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if no error, or we have already run eformat on this error, don't do it again.  Don't waste time on aborts
    if(!jt->glock && !(jt->emsgstate&EMSGSTATENOEFORMAT)){ // if we are locked, show nothing; if eformat suppressed, leave the error line as is
@@ -386,7 +385,7 @@ R jtjsignale(jt,EVDOMAIN|EMSGSPACEAFTEREVM,(A)s,strlen(s));
 }
 
 // display for 13!:8
-static F2(jtdbsig){I e;
+static F2(jtdbsig){F12IP;I e;
  RE(0);
  if(!AN(w))R mtm;
  RZ(w=vi(w)); e=AV(w)[0]; 
@@ -400,11 +399,11 @@ static F2(jtdbsig){I e;
  R 0;
 }    
 
-F1(jtdbsig1){R dbsig(0L,w);}   /* 13!:8  signal error */
-F2(jtdbsig2){R dbsig(a, w);}
+F1(jtdbsig1){F12IP;R dbsig(0L,w);}   /* 13!:8  signal error */
+F2(jtdbsig2){F12IP;R dbsig(a, w);}
 
 // 9!:59 set emsgslvl, return previous
-DF1(jtemsglevel){
+DF1(jtemsglevel){F12IP;
  if(!AN(w))R mtm;
  RZ(w=vi(w)); I e=AV(w)[0]; 
  ASSERT(e<=7,EVDOMAIN);  // must be integer in range 0-7
@@ -413,10 +412,10 @@ DF1(jtemsglevel){
 }
 
 
-F1(jtdberr){ASSERTMTV(w); R sc(jt->jerr1);}           /* 13!:11 y  last error number   */
+F1(jtdberr){F12IP;ASSERTMTV(w); R sc(jt->jerr1);}           /* 13!:11 y  last error number   */
 // 13!:12 last error text.  If there is no error, show no text.  If there is an error with no text, we must have suppressed
 // loading the terse message; return it now
-F1(jtdbetx){
+F1(jtdbetx){F12IP;
  ASSERTMTV(w);
  if(jt->jerr1==0)R mtv;  // if no error, no text either
  if(jt->etxn1==0 && BETWEENC(jt->jerr1,1,NEVM))R AAV(JT(jt,evm))[jt->jerr1];  // no text, supply it now

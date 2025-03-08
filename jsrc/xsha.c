@@ -47,13 +47,11 @@ static UC* tohex(UC* dest, UC* src, I len)
   R dest;
 }
 
-F1(jtshasum1)
-{
+F1(jtshasum1){F12IP;
   R shasum2(sc(1),w);
 }
 
-DF2(jtshasum2)
-{
+DF2(jtshasum2){F12IP;
   I n;
   A z;
   UC *v;

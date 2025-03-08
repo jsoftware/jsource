@@ -1014,7 +1014,7 @@ A jtbcvt(J jt,C mode,A w){FPREFIP(J); A z=w;
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 
-F1(jticvt){A z;D*v,x;I i,n,*u;
+F1(jticvt){F12IP;A z;D*v,x;I i,n,*u;
  ARGCHK1(w);
  n=AN(w); v=DAV(w);
  I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); u=AVn(zr,z);
@@ -1026,12 +1026,12 @@ F1(jticvt){A z;D*v,x;I i,n,*u;
 }
 
 A jtpcvt(J jt,I t,A w){B b;RANK2T oqr=jt->ranks;
- RESETRANK; A z=ccvt(t,w,0); jt->ranks=oqr;
+ RESETRANK; A z=ccvt(t,w,0); jt->ranks=oqr;  // scaf should suppress error formatting
  RESETERR; R z?z:w;
 }    /* convert w to type t, if possible, otherwise just return w.  Leave ranks unaffected */
 
 #if !C_CRC32C
-F1(jtcvt0){I n,t;D *u;
+F1(jtcvt0){F12IP;I n,t;D *u;
  ARGCHK1(w);
  t=AT(w); n=AN(w); 
  if(n&&t&FL+CMPX){
@@ -1042,9 +1042,9 @@ F1(jtcvt0){I n,t;D *u;
 }    /* convert -0 to 0 in place */
 #endif
 
-F1(jtxco1){ARGCHK1(w); ASSERT(!ISSPARSE(AT(w)),EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
+F1(jtxco1){F12IP;ARGCHK1(w); ASSERT(!ISSPARSE(AT(w)),EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
 
-F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
+F2(jtxco2){F12IP;A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  ARGCHK2(a,w);
  n=AN(w); r=AR(w); t=AT(w);
  ASSERT(!ISSPARSE(t),EVNONCE);
@@ -1071,7 +1071,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
 // parms is list of 0-2 elements min,max allowed
 // result is rc;index: rc: 0=OK, 1=nonnumeric, 2=nonintegral value 3=out of bounds
 // index=index list of failing entry, or empty if rc=0 or 1
-F2(jtindaudit){PROLOG(365);
+F2(jtindaudit){F12IP;PROLOG(365);
  ARGCHK2(a,w)
  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // need 2 boxes
  I type; RE(type=i0(C(AAV(w)[0]))); ASSERT(BETWEENC(type,0,1),EVDOMAIN)  // first box must hold integer type 0 or 1

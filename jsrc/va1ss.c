@@ -16,8 +16,7 @@
 #define SSINGENC(type) ((type)>>INTX)
 #define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value
 
-A jtssingleton1(J jt, A w,I caseno){A z;void *zv;
- F2PREFIP;
+A jtssingleton1(J jtinplace, A w,I caseno){F12JT;A z;void *zv;
  I ar=AR(w);
  // Calculate inplaceability
  // Inplaceable if: count=2 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE.  No inplace if on NVR stack (AM is NVR and count>0)

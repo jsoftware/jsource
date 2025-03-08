@@ -168,7 +168,7 @@ I4 charfill=0x20;  // SP, used for filling LIT/C2T/C4T
 
 const char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
 
-F1(jtversq){
+F1(jtversq){F12IP;
  char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p;
  ASSERTMTV(w);
  strcpy(m,jeversion+8);

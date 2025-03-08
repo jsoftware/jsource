@@ -13,19 +13,19 @@
 
 
 // undocumented 13!: functions, used to test condrange
-static DF2(jtfindrange){
+static DF2(jtfindrange){F12IP;
  ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange(AV(w),AN(w),av[0],av[1],av[2]);  // starting min, starting max, max range
  R v2(rng.min,rng.range);
 } // 13!:_1
-static DF2(jtfindrange4){
+static DF2(jtfindrange4){F12IP;
  ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange4(C4AV(w),AN(w),av[0],av[1],av[2]);
  R v2(rng.min,rng.range);
 }  // 13!:_2
-static DF2(jtfindrange2){
+static DF2(jtfindrange2){F12IP;
  ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange2(USAV(w),AN(w),av[0],av[1],av[2]);
@@ -33,7 +33,7 @@ static DF2(jtfindrange2){
 }  // 13!:_3
 
 // 13!:_4  Return header info: t, flag, m, type, c, n, r
-static DF1(jthdrinfo){A z;
+static DF1(jthdrinfo){F12IP;A z;
  ARGCHK1(w);
  GAT0(z,INT,7,1);
  IAV1(z)[0]=AK(w); IAV1(z)[1]=AFLAG(w); IAV1(z)[2]=AM(w); IAV1(z)[3]=AT(w); IAV1(z)[4]=AC(w); IAV1(z)[5]=AN(w); IAV1(z)[6]=AR(w);
@@ -42,7 +42,7 @@ static DF1(jthdrinfo){A z;
 
 // 0!:_1 set skip character for scripts (13!:7 c makes scripts discard lines till one starts with NB.c
 // Behavior undefined if a script is not being read
-static DF1(jtskipinscript){
+static DF1(jtskipinscript){F12IP;
  ARGCHK1(w);
  ASSERT(AR(w)==0, EVRANK) ASSERT(AT(w)&LIT,EVDOMAIN)
  jt->scriptskipbyte=CAV(w)[0];  // save the skip byte
@@ -389,7 +389,7 @@ I jtforeignassigninit(J jt){A nm;L *e;
 // m!:n, requiring m & n to be nouns, and always returning AVN (never C)
 // All the verbs are prebuilt in foreignA.  Only the second cacheline of each will be used.  The m & n args are in localuse.lu1.foreignmn[] and are not
 // saved in fgh.  foreignA is accessed as an open hash with linear probing.  We install the most common foreigns first so they will take the fewest probes.
-F2(jtforeign){F2PREFIP;I p,q;A z;
+F2(jtforeign){F12IP;I p,q;A z;
  ARGCHK2(a,w);
  ASSERT(!((AT(a)|AT(w))&VERB),EVDOMAIN)
  p=i0(a); q=i0(w); RE(0);

@@ -372,7 +372,7 @@ REDUCEPFX(  mininsS, SB,SB,SBMIN, minSS, minSS )
 
 // +/!.0"r, compensated summation
 static DF1(jtreduce);  // forward declaration
-DF1(jtcompsum){
+DF1(jtcompsum){F12IP;
  ARGCHK1(w)
  I wr=AR(w); I *ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
@@ -504,14 +504,14 @@ DF1(jtcompsum){
 }
 
 // w is an array with 0 items, self is f, result is frame $ ,: identity-verb cell-shape $ atom-of-type
-static DF1(jtred0){A x,z;I f,r,wr,*s;
+static DF1(jtred0){F12IP;A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
  if(likely(!ISSPARSE(AT(w)))){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}  // x exists only for type and shape
  R reitem(vec(INT,f,s),lamin1(dfv1(z,x,(AT(w)&SBT)?idensb(self):iden(self))));
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DF1(jtredg){F1PREFIP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; AD * RESTRICT a;I i,n,r,wr;
+static DF1(jtredg){F12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; AD * RESTRICT a;I i,n,r,wr;
  ARGCHK1(w);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank
@@ -590,8 +590,8 @@ static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
 
-DF1(jtredravel){A f,x,z;I n;P*wp;
- F1PREFIP;PROLOG(0000);
+DF1(jtredravel){F12IP;A f,x,z;I n;P*wp;
+ PROLOG(0000);
  if(likely(!ISSPARSE(AT(w)))){RZ(z=on1cell(jtinplace,w,self));  // reversion is the normal path
  }else{
   ARGCHK1(w);
@@ -712,8 +712,8 @@ static A jtredsps(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,a1,e,sn
  R z;
 }    /* f/"r w for sparse w, rank > 1, sparse axis */
 
-static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
- ARGCHK1(w);J jtinplace=jt;
+static DF1(jtreducesp){F12IP;A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
+ ARGCHK1(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
@@ -825,8 +825,8 @@ TW2(INTX,CEQ)+TW2(INTX,CLT)+TW2(INTX,CLE)+TW2(INTX,CGT)+TW2(INTX,CGE)+TW2(INTX,C
 TW3(B01X,CSTARCO)+TW3(LITX,CEQ)+TW3(LITX,CNE)+TW3(C2TX,CEQ)+TW3(C2TX,CNE)+TW3(C4TX,CEQ)+TW3(C4TX,CNE)+TW3(SBTX,CEQ)+TW3(SBTX,CLT)+TW3(SBTX,CLE)+TW3(SBTX,CGT)+TW3(SBTX,CGE)+TW3(SBTX,CNE)+ \
 TW3(INTX,CEQ)+TW3(INTX,CLT)+TW3(INTX,CLE)+TW3(INTX,CGT)+TW3(INTX,CGE)+TW3(INTX,CNE)+TW3(FLX, CEQ)+TW3(FLX, CLT)+TW3(FLX, CLE)+TW3(FLX, CGT)+TW3(FLX, CGE)+TW3(FLX, CNE)
 #endif
-static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
- F1PREFIP;ARGCHK1(w);
+static DF1(jtreduce){F12IP;A z;I d,f,m,n,r,t,wr,*ws,zt;
+ ARGCHK1(w);
  if(unlikely(ISSPARSE(AT(w))))RETF(reducesp(w,self));  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
@@ -914,8 +914,8 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
 
 // ,&.:(<"r)  run together all axes above the last r.  r must not exceed AR(w)-1
 // w must not be sparse or empty
-A jtredcatcell(J jt,A w,I r){A z;
- F1PREFIP;ARGCHK1(w);
+A jtredcatcell(J jtinplace,A w,I r){F12IP;A z;
+ ARGCHK1(w);
  I wr=AR(w);  // get original rank, which may change if we inplace into the same block
  if(r>=wr-1)R RETARG(w);  // if only 1 axis left to run together, return the input
  if((ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE))){  // inplace allowed, usecount is right
@@ -932,8 +932,8 @@ A jtredcatcell(J jt,A w,I r){A z;
 }
 
 
-DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
- F1PREFIP;ARGCHK1(w);
+DF1(jtredcat){F12IP;A z;B b;I f,r,*s,*v,wr;
+ ARGCHK1(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); RESETRANK;
  b=1==r&&1==s[f];  // special case: ,/ on last axis which has length 1: in that case, the rules say the axis disappears (because of the way ,/ works on length-1 lists)
  if(2>r&&!b)RCA(w);  // in all OTHER cases, result=input for ranks<2
@@ -949,7 +949,7 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  }
 }    /* ,/"r w */
 
-static DF1(jtredsemi){I f,n,r,wr;
+static DF1(jtredsemi){F12IP;I f,n,r,wr;
  ARGCHK1(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);   // let the rank run into tail   n=#items in a cell of w
  if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(w);}  // rank still set
@@ -957,7 +957,7 @@ static DF1(jtredsemi){I f,n,r,wr;
  else{A z; R IRS1(w,0L,r-1,jtbox,z);}  // unboxed, just box the cells
 }    /* ;/"r w */
 
-static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
+static DF1(jtredstitch){F12IP;A c,y;I f,n,r,*s,*v,wr;
  ARGCHK1(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  s=AS(w); SETICFR(w,f,r,n);
@@ -977,7 +977,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
   RETF(y);
 }}   /* ,./"r w */
 
-static DF1(jtredstiteach){A*wv,y;I n,p,r,t;
+static DF1(jtredstiteach){F12IP;A*wv,y;I n,p,r,t;
  ARGCHK1(w);
  n=AN(w);
  if(!(2<n&&1==AR(w)&&BOX&AT(w)))R reduce(w,self);
@@ -986,7 +986,7 @@ static DF1(jtredstiteach){A*wv,y;I n,p,r,t;
  R box(razeh(w));
 }    /* ,.&.>/ w */
 
-static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0,n2=0;
+static DF1(jtredcateach){F12IP;A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0,n2=0;
  ARGCHK1(w);
  wr=AR(w); ws=AS(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  SETICFR(w,f,r,n);
@@ -1002,10 +1002,10 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  RETF(z);
 }    /* ,&.>/"r w */
 
-static DF2(jtoprod){A z; R dfv2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
+static DF2(jtoprod){F12IP;A z; R dfv2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
 
 
-F1(jtslash){F1PREFIP;A h;AF f1;C c;V*v;
+F1(jtslash){F12IP;A h;AF f1;C c;V*v;
  ARGCHK1(w);
  if(NOUN&AT(w))R evger(w,sc(GINSERT));  // treat m/ as m;.6.  This means that a node with CSLASH never contains gerund u
  // falling through w is a verb
@@ -1029,7 +1029,7 @@ A jtaslash (J jt,C c,    A w){RZ(   w); A z; R dfv1(z,  w,   slash(ds(c))     );
 A jtaslash1(J jt,C c,    A w){RZ(   w); A z; R dfv1(z,  w,qq(slash(ds(c)),zeroionei(1)));}
 A jtatab   (J jt,C c,A a,A w){ARGCHK2(a,w); A z; R dfv2(z,a,w,   slash(ds(c))     );}
 
-DF1(jtmean){
+DF1(jtmean){F12IP;
  ARGCHK1(w);
  I wr=AR(w); I r=(RANKT)jt->ranks; r=wr<r?wr:r;
  I n=AS(w)[wr-r]; n=r?n:1;
@@ -1043,7 +1043,7 @@ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
 
 #if 0   // keep as example of coding a primitive as an addon
 // entry point to execute monad/dyad Fold after the noun arguments are supplied
-static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplaces
+static DF2(jtfoldx){F12IP;  // this stands in place of jtxdefn, which inplaces
  // see if this is monad or dyad
  I foldflag=((~AT(w))>>(VERBX-3))&8;  // flags: dyad mult fwd rev  if w is not conj, this must be a dyad call
  self=foldflag?self:w; w=foldflag?w:a; a=foldflag?a:mtv; // if monad, it's w self garbage,  move to '' w self
@@ -1059,7 +1059,7 @@ static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplace
 }
 
 // u F. F.. F.: F: F:. F:: v
-DF2(jtfold){F2PREFIP;
+DF2(jtfold){F12IP;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  ASSERTVV(a,w)   // nouns not allowed
  A foldconj; ASSERT(foldconj=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","Foldr_j_",CONJ),EVNONCE);
@@ -1077,7 +1077,7 @@ DF2(jtfold){F2PREFIP;
 }
 
 // [x] Z: y, bivalent
-DF2(jtfoldZ){
+DF2(jtfoldZ){F12IP;
  ASSERT(jt->foldrunning,EVSYNTAX);  // If fold not running, fail.  Should be a semantic error rather than syntax
  // The name FoldZ_j_ should have been loaded at startup.  If not, fail
  A foldvb; ASSERT(foldvb=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","FoldZ_j_",VERB),EVNONCE)   // error if undefined or not verb
@@ -1101,7 +1101,7 @@ DF2(jtfoldZ){
 #define STATEMULT ((I)1<<STATEMULTX)
 #define STATEDYADX 29   // call is dyadic.  Must be the MSB of the flags
 #define STATEDYAD ((I)1<<STATEDYADX)
-static DF2(jtfold12){F2PREFIP;A z,vz;
+static DF2(jtfold12){F12IP;A z,vz;
  struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z:   zstatus: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);
  I dyad=EPDYAD; w=EPDYAD?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
@@ -1249,7 +1249,7 @@ exitpop:;   // here to abort on error, after popping stack
  zz=0; goto abortexit;  // otherwise, must be error in u or v, which will have been previously signaled - keep the error
 }
 // u F. F.. F.: F: F:. F:: v
-DF2(jtfold){F2PREFIP;
+DF2(jtfold){F12IP;
  ASSERTVV(a,w);  // must be verb ops
  A z; fdefallo(z);   // allocate verb result
  I flag = (FAV(w)->flag&(VJTFLGOK1|VJTFLGOK2));  // there is never a need to inplace u.  Inplace v if possible
@@ -1258,7 +1258,7 @@ DF2(jtfold){F2PREFIP;
 }
 
 // Z: y
-DF1(jtfoldZ1){
+DF1(jtfoldZ1){F12IP;
  ARGCHK1(w)
  ASSERT(jt->afoldinfo,EVSYNTAX);  // If fold not running, fail.  scaf Should be a semantic error rather than syntax
  I type; RE(type=i0(w));  // verify atomic integer
@@ -1266,7 +1266,7 @@ DF1(jtfoldZ1){
  RETF(sc(jt->afoldinfo->exestats[type]));  // return the value
 }
 // x Z: y
-DF2(jtfoldZ2){
+DF2(jtfoldZ2){F12IP;
  ARGCHK2(a,w)
  ASSERT(jt->afoldinfo,EVSYNTAX);  // If fold not running, fail.  scaf Should be a semantic error rather than syntax
  I type; RE(type=i0(a));  // verify atomic integer

@@ -219,7 +219,7 @@ static XF2(jtxlog2){
  else R XgetI(e+(XMCEIL==jt->xmode)); // our estimate was low
 }
 
-F2(jtxlog2a){A z; GAT0(z,XNUM,1L,0L); XAVn(0L,z)[0]=rifvsdebug(xlog2(XAV(a)[0],XAV(w)[0])); RNE(z);}
+F2(jtxlog2a){F12IP;A z; GAT0(z,XNUM,1L,0L); XAVn(0L,z)[0]=rifvsdebug(xlog2(XAV(a)[0],XAV(w)[0])); RNE(z);}
 
 XF2(jtxroota){ // a %: w (optionally with <. or >.)
  PROLOG(0115);
@@ -254,7 +254,7 @@ XF1(jtxfact){ // !w
  mpz_t mpz; jmpz_init(mpz); jmpz_fac_ui(mpz, jmpz_get_si(mpw));
  EPILOG(Xmp(z));
 }
-DF1(jtdigits10){ // "."0@":
+DF1(jtdigits10){F12IP; // "."0@":
  PROLOG(0117);
  ARGCHK1(w);
  // see if a fast case applies
@@ -426,7 +426,7 @@ static I mod_inv(I a, I n){
 }
 
 // modular add on extendeds, one atom
-static DF2(jtmodopextadd){A z;PROLOG(000);
+static DF2(jtmodopextadd){F12IP;A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  X xz=XmodXX(XaddXX(xa,xw),n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
@@ -435,7 +435,7 @@ static DF2(jtmodopextadd){A z;PROLOG(000);
 }
 
 // modular subtract on extendeds, one atom
-static DF2(jtmodopextsub){A z;PROLOG(000);
+static DF2(jtmodopextsub){F12IP;A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  X xz=XmodXX(XsubXX(xa,xw),n);   // perform modular power - using inverse if negative power.  We take the inverse twice, which sucks
@@ -444,7 +444,7 @@ static DF2(jtmodopextsub){A z;PROLOG(000);
 }
 
 // modular multiply on extendeds, one atom
-static DF2(jtmodopexttimes){A z;PROLOG(000);
+static DF2(jtmodopexttimes){F12IP;A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  if(unlikely(icmpXX(xa,n)>0))xa=XmodXX(xa,n); if(unlikely(icmpXX(xw,n)>0))xw=XmodXX(xw,n);  // take moduli before product.  extra work if x is (unlikely) neg, but we don't want the abs
@@ -454,7 +454,7 @@ static DF2(jtmodopexttimes){A z;PROLOG(000);
 }
 
 // modular reciprocal/divide on extendeds, one atom.  Bivalent. 0%0=0
-static DF2(jtmodopextdiv){A z;PROLOG(000);
+static DF2(jtmodopextdiv){F12IP;A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X xw=XAV(EPMONAD?a:w)[0], n=XAV(FAV(self)->fgh[2])[0];  // divisor and modulus (possibly negative)
  xw=XinvertXX(xw,n); // take inverse of divisor, returning 0 if coprime
@@ -465,7 +465,7 @@ static DF2(jtmodopextdiv){A z;PROLOG(000);
 }
 
 // modular power on extendeds, one atom
-static DF2(jtmodopextexp){A z;PROLOG(000);
+static DF2(jtmodopextexp){F12IP;A z;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~XNUM)),EVDOMAIN)  // must test here if empty args
  X n=XAV(FAV(self)->fgh[2])[0]; X xa=XAV(a)[0], xw=XAV(w)[0];  // modulus (possibly negative) and the atomic ops
  if(unlikely(icmpXX(xa,n)>0))xa=XmodXX(xa,n);  // take modulus of a
@@ -478,11 +478,11 @@ static DF2(jtmodopextexp){A z;PROLOG(000);
 
 // modular operation on extendeds (function for one atom is in self)
 // Convert args to XNUM and call rankex to loop over atoms
-static DF1(jtmodopext1){if(likely(AN(w)!=0)){if(!(AT(w)&XNUM))RZ(w=cvt(XMODETOCVT(2)|XNUM,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}   // (2) means exact conversion only
-static DF2(jtmodopext2){if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&XNUM))RZ(a=cvt(XMODETOCVT(2)|XNUM,a)) if(!(AT(w)&XNUM))RZ(w=cvt(XMODETOCVT(2)|XNUM,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}   // (2) means exact conversion only
+static DF1(jtmodopext1){F12IP;if(likely(AN(w)!=0)){if(!(AT(w)&XNUM))RZ(w=cvt(XMODETOCVT(2)|XNUM,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}   // (2) means exact conversion only
+static DF2(jtmodopext2){F12IP;if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&XNUM))RZ(a=cvt(XMODETOCVT(2)|XNUM,a)) if(!(AT(w)&XNUM))RZ(w=cvt(XMODETOCVT(2)|XNUM,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}   // (2) means exact conversion only
 
 // modular add with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
-static DF2(jtmodopintadd){PROLOG(000);
+static DF2(jtmodopintadd){F12IP;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // must test here if empty args
  // fetch n from h and nrecip from self
  X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
@@ -498,7 +498,7 @@ static DF2(jtmodopintadd){PROLOG(000);
 }
 
 // modular subtract with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
-static DF2(jtmodopintsub){PROLOG(000);
+static DF2(jtmodopintsub){F12IP;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // must test here if empty args
  // fetch n from h and nrecip from self
  X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
@@ -515,7 +515,7 @@ static DF2(jtmodopintsub){PROLOG(000);
 
 
 // modular multiply with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
-static DF2(jtmodopinttimes){PROLOG(000);
+static DF2(jtmodopinttimes){F12IP;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // must test here if empty args
  // fetch n from h and nrecip from self
  X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
@@ -532,7 +532,7 @@ static DF2(jtmodopinttimes){PROLOG(000);
 
 // modular divide/reciprocal with small modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
 // bivalent
-static DF2(jtmodopintdiv){PROLOG(000);
+static DF2(jtmodopintdiv){F12IP;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // bivalent must test here if empty args
  // fetch n from h and nrecip from self
  X hx0=XAV(FAV(self)->fgh[2])[0];  // the one and only limb of the modulus
@@ -552,7 +552,7 @@ static DF2(jtmodopintdiv){PROLOG(000);
 
 
 // modular power with small integer modulus, one atom.  a and w are either INT or XNUM.  Result is XNUM if modulus is
-static DF2(jtmodopintexp){PROLOG(000);
+static DF2(jtmodopintexp){F12IP;PROLOG(000);
  ASSERT(!((AT(a)|AT(w))&(NOUN&~(INT|XNUM))),EVDOMAIN)  // must test here if empty args
  // if w is XNUM, transfer to extended code
  if(AT(w)&XNUM){if(!(AT(a)&XNUM))RZ(a=cvt(XNUM,a)) R jtmodopextexp(jt,a,w,self);}
@@ -579,11 +579,11 @@ static DF2(jtmodopintexp){PROLOG(000);
 // modular operation with small integer modulus (function for one integer atom is in self)
 // convert arg(s) to integral and call the function through the rank loop
 // if an arg is empty skip the conversion.  We have to check each atom's type then
-static DF1(jtmodopint1){if(likely(AN(w)!=0)){if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
-static DF2(jtmodopint2){if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&INT+XNUM))RZ(a=cvt(AT(a)&RAT?XNUM:INT,a)) if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
+static DF1(jtmodopint1){F12IP;if(likely(AN(w)!=0)){if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank1ex0(w,self,FAV(self)->localuse.lu0.modatomfn);}
+static DF2(jtmodopint2){F12IP;if(likely((-AN(a)&-AN(w))<0)){if(!(AT(a)&INT+XNUM))RZ(a=cvt(AT(a)&RAT?XNUM:INT,a)) if(!(AT(w)&INT+XNUM))RZ(w=cvt(AT(w)&RAT?XNUM:INT,w))} R rank2ex0(a,w,self,FAV(self)->localuse.lu0.modatomfn);}
 
 // entry point to execute monad/dyad %. m. n after the noun argument(s) are supplied
-static DF2(jtmodularexplicitx){F2PREFIP;  // this stands in place of jtxdefn, which inplaces
+static DF2(jtmodularexplicitx){F12IP;  // this stands in place of jtxdefn, which inplaces
  // the only reason we need this routine is to reformat any error to avoid exposing internals
  A z=jtxdefn(jt,a,w,self);   // the imp must be in an explicit def
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
@@ -610,7 +610,7 @@ static A jtmodularexplicit(J jt,A a,A w,I type){
 // index is (fn#,extended)
 static AF modoptbl[][2]={ {jtmodopintexp,jtmodopextexp} , {jtmodopinttimes,jtmodopexttimes} , {jtmodopintdiv,jtmodopextdiv} , {jtmodopintadd,jtmodopextadd} , {jtmodopintsub,jtmodopextsub} };
 // Modular arithmetic u m. n
-F2(jtmdot){F2PREFIP;A z=0;
+F2(jtmdot){F12IP;A z=0;
  ASSERT(AT(a)&VERB,EVDOMAIN)  // u must be a verb
  // Verify that n is an integer and create a XNUM form for it
  ASSERT(AT(w)&NOUN,EVDOMAIN) ASSERT(AR(w)==0,EVRANK)  // n must be a noun atom

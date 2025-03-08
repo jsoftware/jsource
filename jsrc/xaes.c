@@ -32,8 +32,7 @@ int aes_arm(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
   1    CBC
   2    CTR
  */
-DF2(jtaes2)
-{
+DF2(jtaes2){F12IP;
   I n,decrypt,keyn,mode=1;
   int n1,padding=1;
   A z,*av,dec;

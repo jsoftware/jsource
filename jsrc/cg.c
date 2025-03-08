@@ -19,10 +19,10 @@
 // Bivalent entry point.
 // self is a cyclic iterator
 // we extract the pointer to the verb to be executed, advance the cycle pointer (.gerx) with wraparound, and call the verb
-// passes inplacing through
-static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
+// pass inplaceability through
+static DF2(jtexeccyclicgerund){F12IP;  // call is w,self or a,w,self
  // find the real self, valence-dependent
-  F2PREFIP;ARGCHK1(w);
+  ARGCHK1(w);
  I ismonad=AT(w)==0; self=ismonad?w:self;
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx; A vbtoexec=C(AAV(FAV(self)->fgh[2])[nexttoexec]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
@@ -32,9 +32,10 @@ static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
 }
 
 // similar, for executing m@.v on cells sequentially.  This for I selectors
-static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
+// pass inplaceability through
+static DF2(jtexecgerundcellI){F12IP;  // call is w,self or a,w,self
  // find the real self, valence-dependent
- F2PREFIP;ARGCHK1(w);
+ ARGCHK1(w);
  I ismonad=AT(w)==0; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;  // index of cell we are working on
  I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];  // selector for that cell
@@ -51,9 +52,9 @@ errorwind:;  // here if there is an error in the result of calculating the selec
   RETF(0);
 }
 // This for B selectors
-static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
+static DF2(jtexecgerundcellB){F12IP;  // call is w,self or a,w,self
  // find the real self, valence-dependent
- F2PREFIP;ARGCHK1(w);
+ ARGCHK1(w);
  I ismonad=AT(w)==0; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;
  I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
@@ -117,16 +118,16 @@ PRIM jtfxself[2]={
 // run jtfx on each box in w, turning AR into an A block
 // self is a parm passed through to jtfx, coming from jtfxself above.  if AK(self) is nonzero, we return nouns as is
 // Result claims to be an array of boxes, but each box holds an A with possibly a function type
-DF1(jtfxeach){RETF(every(w,self));}
+DF1(jtfxeach){F12IP;RETF(every(w,self));}
 
-static DF1(jtcon1){A h,*hv,*x,z;V*sv;
+static DF1(jtcon1){F12IP;A h,*hv,*x,z;V*sv;
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  I zr=AR(h); GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAVn(zr,z);
  DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(C(*hv))->valencefns[0],  w,C(*hv)))); ++hv;);
  R jtopenforassembly(jt,z);
 }
 
-static DF2(jtcon2){A h,*hv,*x,z;V*sv;
+static DF2(jtcon2){F12IP;A h,*hv,*x,z;V*sv;
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  I zr=AR(h); GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAVn(zr,z);
  DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(C(*hv))->valencefns[1],a,w,C(*hv)))); ++hv;);
@@ -134,7 +135,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
 }
 
 // u`:3 insert 
-static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
+static DF1(jtinsert){F12IP;A hs,*hv,z;I hfx,j,m,n;A *old;
  ARGCHK1(w);
  SETIC(w,n); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R dfv1(z,w,iden(C(*hv)));
@@ -145,7 +146,7 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
 }
 
 // u`:m
-F2(jtevger){F2PREFIP;A hs;I k;
+F2(jtevger){F12IP;A hs;I k;
  ARGCHK2(a,w);
  STACKCHKOFL  // because this is an execution, we must check the stack to avoid self-executions
  RE(k=i0(w)); 
@@ -157,13 +158,13 @@ F2(jtevger){F2PREFIP;A hs;I k;
 }
 
 // u`v.  Allow append-in-place to m
-F2(jttie){F2PREFIP;ARGCHK2(a,w); R jtapip(jtinplace,VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
+F2(jttie){F12IP;ARGCHK2(a,w); R jtapip(jtinplace,VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 
 
 // m@.:v y.  Execute the verbs at high rank if the operands are large
 // Bivalent entry point: called as (jt,w,self,self) or (jt,a,w,self)
-static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
- F1PREFIP; ARGCHK2(a,w);
+static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
+  ARGCHK2(a,w);
  PROLOG(997);
  // see if we were called as monad or dyad.  If monad, fix up w and self
  ZZFLAGWORD=EPMONAD?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
@@ -345,7 +346,7 @@ errorwind:;  // here if there is an error in the result of calculating the selec
 }
 
 // @.n
-static F2(jtgerfrom){A*av,*v,z;I n;
+static F2(jtgerfrom){F12IP;A*av,*v,z;I n;
  ARGCHK2(a,w);  /* 1==AR(w)&&BOX&AT(w) */
  ASSERT(1>=AR(a),EVRANK);
  if(NUMERIC&AT(a))R from(a,w);
@@ -358,7 +359,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
 }}
 
 // initial handler for u@.v, to create resulting verb
-F2(jtagendai){F2PREFIP;I flag;
+F2(jtagendai){F12IP;I flag;
  ARGCHK2(a,w)
  ASSERT(NOUN&AT(a),EVDOMAIN);  // u must always be a gerund
  if(unlikely(NOUN&AT(w)))R exg(gerfrom(w,a));  // noun form, as before

@@ -643,7 +643,7 @@ APFX(lcmZZ, Z,Z,Z, zlcm ,,HDR1JERR)
 #define INTDIVF(c,d) (c/d-(SGNTO0(c^d)&(c%d!=0)))  // c/d - (c^d)<0 && c%d
 #define INTDIVC(c,d) (c/d+(~SGNTO0((c^d))&(c%d!=0)))   // c/d + (c^d)>=0 && c%d
 
-F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv;
+F2(jtintdiv){F12IP;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv;
  ARGCHK2(a,w);
  an=AN(a); ar=AR(a); as=AS(a); av=AV(a);
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w); b=ar>=wr; r=b?wr:ar; s=b?as:ws;
@@ -763,9 +763,9 @@ end:
 }    /* <.@% or >.@% on integers */
 
 
-static F2(jtweight){ARGCHK2(a,w); A z; R dfv1(z,behead(over(AR(w)?w:reshape(a,w),num(1))),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
+static F2(jtweight){F12IP;ARGCHK2(a,w); A z; R dfv1(z,behead(over(AR(w)?w:reshape(a,w),num(1))),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
 
-F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;PROLOG(889);
+F1(jtbase1){F12IP;A z;B*v;I c,m,p,r,*s,t,*x;PROLOG(889);
  ARGCHK1(w);
  t=AT(w); r=AR(w); s=AS(w); c=AS(w)[r-1]; c=r?c:1;
  ASSERT(!ISSPARSE(t),EVNONCE);
@@ -777,7 +777,7 @@ F1(jtbase1){A z;B*v;I c,m,p,r,*s,t,*x;PROLOG(889);
  EPILOG(z);
 }
 
-F2(jtbase2){I ar,at,c,t,wr,wt;PROLOG(888);
+F2(jtbase2){F12IP;I ar,at,c,t,wr,wt;PROLOG(888);
  ARGCHK2(a,w);
  at=AT(a); ar=AR(a);
  wt=AT(w); wr=AR(w); c=AS(w)[wr-1]; c=wr?c:1;
@@ -789,7 +789,7 @@ F2(jtbase2){I ar,at,c,t,wr,wt;PROLOG(888);
 }
 
 // #: y
-F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
+F1(jtabase1){F12IP;A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  ARGCHK1(w);
  // n = #atoms, r=rank, t=type
  n=AN(w); r=AR(w); t=AT(w);
@@ -822,7 +822,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  RETF(z);
 }
 
-DF2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
+DF2(jtabase2){F12IP;A z;I an,ar,at,t,wn,wr,wt,zn;
  ARGCHK2(a,w);
  an=AN(a); ar=AR(a); at=AT(a);
  wn=AN(w); wr=AR(w); wt=AT(w);
@@ -876,8 +876,8 @@ DF2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
 }}
 
 // Compute power-of-2 | w for INT w, by ANDing.  Result is boolean if mod is 1 or 2
-A jtintmod2(J jt,A w,I mod){A z;B *v;I n,q,r,*u;UI m=0;  // init m for warning
- F1PREFIP;ARGCHK1(w);
+A jtintmod2(J jtinplace,A w,I mod){F12IP;A z;B *v;I n,q,r,*u;UI m=0;  // init m for warning
+ ARGCHK1(w);
  if(mod>2)R jtatomic2(jtinplace,sc(mod-1),w,ds(CBW0001));  // INT result, by AND
  // the rest is boolean result
  n=AN(w); v=BAV(w);  // littleendian only

@@ -436,7 +436,7 @@ void breakclose(JS jt)
 #endif
 
 // 2!:55 retcode
-F1(jtjoff){I x;
+F1(jtjoff){F12IP;I x;
  ARGCHK1(w);
  x=i0(w);  // use 0 for any nonnumeric arg
  jt->jerr=EVEXIT; jt->etxn=0; // clear old errors, replacing with the higher-priority EVEXIT
@@ -543,8 +543,7 @@ C* getlocale(JS jt){JJ jm=MDTHREAD(jt); A y=jtlocname(jm,mtv); y=AAV(y)[0]; R CA
 // The array allocated by jga is post processed inside jtwd and becomes the return value of jtwd, ie, the result of calling 11!:0 in J script.
 //
 // This may be confusing because the actual callback functions do not appear anywhere inside JE source.
-DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
-  FPREFIP(JJ);
+DF1(jtwd){F12IP;A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   F1RANK(1,jtwd,self);
   ARGCHK1(w);
   ASSERT(2>AR(w),EVRANK);
@@ -967,13 +966,13 @@ CDPROC int _stdcall JFree(JS jt){
   R 0;
 }
 
-F1(jtbreakfnq){
+F1(jtbreakfnq){F12IP;
  ASSERTMTV(w);
  R cstr(IJT(jt,breakfn));
 }
 
 // w is a filename; use it as the breakfile
-F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
+F1(jtbreakfns){F12IP;A z;I *fh,*mh=0; void* ad;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w)<NPATH,EVDOMAIN);
@@ -1119,7 +1118,7 @@ CDPROC int _stdcall JErrorTextM(JS jt, I ec, I* p)
 
 #if 0  // for debugging
 int enabledebug=0;
-F1(jttest1){
+F1(jttest1){F12IP;
  ARGCHK1(w);
  if((AT(w)&B01+INT)&&AN(w)){
   enabledebug=i0(w);

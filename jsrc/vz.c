@@ -276,7 +276,7 @@ B jtztridiag(J jt,I n,A a,A x){I i,j,n1=n-1;Z*av,d,p,*xv;
  R 1;
 }
 
-DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
+DF1(jtexppi){F12IP;A z;B b;D r,th,y;I k;Z*v,t;
  F1RANK(0,jtexppi,self);
  if(!(CMPX&AT(w)))goto revert;   // if not complex, revert
  v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;  // take exp of real part, set y=|imaginary part|

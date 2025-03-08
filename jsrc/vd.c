@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
+static F1(jtnorm){F12IP;R sqroot(pdt(w,conjug(w)));}
 
 // take inverse of upper-triangular w.  We ASSUME w is inplaceable
 // n is the size of the nxn matrix w; ncomp codes for special processing
@@ -55,7 +55,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
 
 
 // 128!:1 Invert Upper-triangular matrix R
-DF1(jtrinv){
+DF1(jtrinv){F12IP;
  ARGCHK1(w);
  F1RANK(2,jtrinv,self);
  ASSERT(AR(w)==2,EVRANK);  // rank at least 2
@@ -66,7 +66,7 @@ DF1(jtrinv){
 }
 
 // recursive subroutine for qr decomposition, returns q;r
-static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
+static F1(jtqrr){F12IP;PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  ARGCHK1(w);
  if(2>AR(w)){p=AN(w); n=1;}else{s=AS(w); p=s[0]; n=s[1];}  // p=#rows, n=#columns
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
@@ -96,7 +96,7 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
 // this version operates on rows, inplace.  w is not empty
 // q is the ADJOINT of the original q matrix
 // result is adjoint of the L in LQ decomp, therefore upper-triangular
-static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
+static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
 #if C_AVX2 || EMU_AVX2
  D ipa[8], *ipv;
 #endif
@@ -188,7 +188,7 @@ ARGCHK1(w);
 }
 
 // qr (?) decomposition of w, returns q;r
-DF1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
+DF1(jtqr){F12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,self);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  ASSERT(AT(w)&B01+INT+FL+CMPX+QP,EVDOMAIN);
@@ -253,7 +253,7 @@ static A jtminvdet(J jt,A w,D *det){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
  }
  EPILOG(z);
 }
-F1(jtminv){D detv; R jtminvdet(jt,w,&detv);}
+F1(jtminv){F12IP;D detv; R jtminvdet(jt,w,&detv);}
 
 static B jttridiag(J jt,I n,A a,A x){D*av,d,p,*xv;I i,j,n1=n-1;
  av=DAV(a); xv=DAV(x); d=xv[0];
@@ -270,7 +270,7 @@ static B jttridiag(J jt,I n,A a,A x){D*av,d,p,*xv;I i,j,n1=n-1;
  R 1;
 }
 
-static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
+static F2(jtmdivsp){F12IP;A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
  ASSERT(2==AR(w),EVRANK);
  v=AS(w); n=v[0]; 
  ASSERT(n>=v[1]&&n==AN(a),EVLENGTH); 
@@ -288,7 +288,7 @@ static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
 
 
 // a %. w  for all types
-DF2(jtmdiv){PROLOG(0069);A z;I t;
+DF2(jtmdiv){F12IP;PROLOG(0069);A z;I t;
  F2RANK(RMAX,2,jtmdiv,self);
  if(ISSPARSE(AT(a)))RZ(a=denseit(a));
  t=AT(w);

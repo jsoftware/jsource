@@ -7,7 +7,7 @@
 #include "vcomp.h"
 
 
-static F2(jtth2box){A z;I n,p,q,*v,x,y;
+static F2(jtth2box){F12IP;A z;I n,p,q,*v,x,y;
  RZ(a=vi(a)); n=AN(a); v=AV(a);
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(1==n||2==n,EVLENGTH);
@@ -370,7 +370,7 @@ static A jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
 }    /* parse format control (left argument of ":) */
 
 // x ": y
-DF2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,cellbuf,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*dv,k,m,*mv,n,r,sk,t,wk,*ws,zk;
+DF2(jtthorn2){F12IP;PROLOG(0050);A da,ea,h,ma,s,cellbuf,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*dv,k,m,*mv,n,r,sk,t,wk,*ws,zk;
  F2RANK(1,RMAX,jtthorn2,self);  // apply rank 1 _
  // From here on the a arg is rank 0 or 1
  an=AN(a); t=AT(w);  // an=#atoms of a, t=type of w

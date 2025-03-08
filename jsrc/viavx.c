@@ -731,7 +731,7 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 // mode indicates the type of operation, defined in j.h
-A jtindexofsub(J jt,I mode,AD * RESTRICT a,AD * RESTRICT w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
+A jtindexofsub(J jtinplace,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     I ac,ak,datamin,f,f1,k,klg,n,r,*s,t,wc,wk,zn;UI c,m,p;
  ARGCHK2(a,w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
@@ -1156,7 +1156,7 @@ inplace:;
 
 // verb to vector combine@e. compounds.  The i. code is in the self
 // because these are e. compounds we swap a and w
-DF2(jtcombineeps){ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
+DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
 
 // verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 // a is the arg that was indexed, used only if we have to revert to rerunning the operation
@@ -1216,27 +1216,27 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
 }
 
 // x i. y, supports inplacing (in subroutine)
-F2(jtindexof){
- if(unlikely(((UI)a^(UI)ds(CALP))<(UI)(AT(w)&LIT))&&likely(!ISSPARSE(AT(w)))){F2PREFIP; R jtadotidot(jt,w);}
- R indexofsub(IIDOT,a,w);
+F2(jtindexof){F12IP;
+ if(unlikely(((UI)a^(UI)ds(CALP))<(UI)(AT(w)&LIT))&&likely(!ISSPARSE(AT(w)))){R jtadotidot(jt,w);}
+ R jtindexofsub(jtinplace,IIDOT,a,w);  // pass inplaceability through
 }
      /* a i."r w */
 
 // x i: y, supports inplacing (in subroutine)
-F2(jtjico2){R indexofsub(IICO,a,w);}
+F2(jtjico2){F12IP;R jtindexofsub(jtinplace,IICO,a,w);}  // pass inplaceability through
      /* a i:"r w */
 
 // ~: y
-F1(jtnubsieve){
+F1(jtnubsieve){F12IP;
  ARGCHK1(w);
  if(unlikely(ISSPARSE(AT(w))))R nubsievesp(w); 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
- R indexofsub(INUBSV,w,w); 
+ R indexofsub(INUBSV,w,w);   // not inplace
 }    /* ~:"r w */
 
 // ~. y  - does not have IRS
-F1(jtnub){ 
- F1PREFIP;ARGCHK1(w);
+F1(jtnub){F12IP; 
+ ARGCHK1(w);
  if(unlikely((SGNIFSPARSE(AT(w))|SGNIF(AFLAG(w),AFNJAX))<0))R repeat(nubsieve(w),w);    // sparse or NJA
  A z; RZ(z=jtindexofsub(jtinplace,INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
@@ -1245,8 +1245,8 @@ F1(jtnub){
 }    /* ~.w */
 
 // x -. y.  does not have IRS, support inplacing
-F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
- F2PREFIP;ARGCHK2(a,w);
+F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
+ ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
@@ -1271,8 +1271,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws;
 }    /* a-.w */
 
 // x ([ -. -.[!.f]) y.  does not have IRS, supports inplacing
-DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws;
- F2PREFIP;ARGCHK2(a,w);
+DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
+ ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
@@ -1295,37 +1295,37 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws;
 }
 
 // x e. y
-F2(jteps){I l,r;
+F2(jteps){F12IP;I l,r;
  ARGCHK2(a,w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
- R indexofsub(IEPS,w,a);
+ R indexofsub(IEPS,w,a);  // no inplacing
 }    /* a e."r w */
 
 // I.@~: y   does not have IRS
-DF1(jtnubind){
+DF1(jtnubind){F12IP;
  ARGCHK1(w);
- R unlikely(ISSPARSE(AT(w)))?on1cell(jt,w,self):indexofsub(INUBI,w,w);  // revert for sparse
+ R unlikely(ISSPARSE(AT(w)))?on1cell(jt,w,self):indexofsub(INUBI,w,w);  // revert for sparse.  No inplacing - could do
 }    /* I.@~: w */
 
-// i.@(~:!.0) y     does not have IRS
-DF1(jtnubind0){A z;
+// I.@(~:!.0) y     does not have IRS
+DF1(jtnubind0){F12IP;A z;
  ARGCHK1(w);
  if(unlikely(ISSPARSE(AT(w))))R on1cell(jt,w,self);  // revert for sparse
- PUSHCCT(1.0) z=indexofsub(INUBI,w,w); POPCCT  // do operation intolerantly
+ PUSHCCT(1.0) z=indexofsub(INUBI,w,w); POPCCT  // do operation intolerantly.  Could inplace
  R z;
 }    /* I.@(~:!.0) w */
 
 // I.@e. y   does not have IRS
-DF2(jtepsind){
+DF2(jtepsind){F12IP;
  ARGCHK2(a,w);
- R unlikely(ISSPARSE(AT(w)|AT(w)))?jtupon2cell(jt,a,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse
+ R unlikely(ISSPARSE(AT(w)|AT(w)))?jtupon2cell(jt,a,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse.  Could inplace
 } 
 
 // i.@(e.!.0) y     does not have IRS
-DF2(jtepsind0){A z;
+DF2(jtepsind0){F12IP;A z;
  ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R jtupon2cell(jt,a,w,self);  // revert for sparse
  PUSHCCT(1.0) z=indexofsub(IIFBEPS,w,a); POPCCT  // do operation intolerantly
@@ -1334,7 +1334,7 @@ DF2(jtepsind0){A z;
 
 
 // x i.!.1 y - assumes xy -: /:~ xy (integer atoms only for now)
-F2(jtsfu){
+F2(jtsfu){F12IP;
  ARGCHK2(a,w);
  I type=ISFU+IIDOT; type=((NOUN|SPARSE)&~(INT))&(AT(a)|AT(w))?IIDOT:type;
  I l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l; type=l!=1?IIDOT:type; // If the cells of a are not atoms, we revert to standard methods
@@ -1342,7 +1342,7 @@ F2(jtsfu){
 }    /* a i.!.1"r w */
 
 // = y    
-F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
+F1(jtsclass){F12IP;A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  ARGCHK1(w);
  // If w is scalar, return 1 1$1
  if(!AR(w))R reshape(v2(1L,1L),num(1));

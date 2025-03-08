@@ -180,13 +180,13 @@ SUFFIXPFX(bw1110sfxI, UI,UI, BW1110, bw1110II,R EVOK;)
 SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 
-static DF1(jtsuffix){A fs=FAV(self)->fgh[0]; I r;
+static DF1(jtsuffix){F12IP;A fs=FAV(self)->fgh[0]; I r;
  ARGCHK1(w);
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtsuffix);
  R eachl(IX(SETIC(w,r)),w,atop(fs,ds(CDROP)));
 }    /* f\."r w for general f */
 
-static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
+static DF1(jtgsuffix){F12IP;A h,*hv,z,*zv;I m,n,r;
  ARGCHK1(w);
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
  SETIC(w,n); 
@@ -204,7 +204,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
    AK(x)-=k; AK(y)-=k; tpop(old);  \
  }}
 
-static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
+static DF1(jtssg){F12IP;PROLOG(0020);A a,z;I i,n,r,wr;
  ARGCHK1(w);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank - we claim to handle IRS
@@ -310,8 +310,8 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
  R z;
 }    /* f/\"r or f/\."r on sparse w */
 
-static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
- F1PREFIP;ARGCHK1(w);
+static DF1(jtsscan){F12IP;A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
+ ARGCHK1(w);
  wt=AT(w);
  if(unlikely(ISSPARSE(wt)))R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
@@ -330,7 +330,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
 }    /* f/\."r w main control */
 
 
-static F2(jtomask){A c,r,x,y;I m,n,p;
+static F2(jtomask){F12IP;A c,r,x,y;I m,n,p;
  ARGCHK2(a,w);
  RE(m=i0(a)); p=ABS(m); SETIC(w,n);
  r=sc(0>m?(n+p-1)/p:MAX(0,1+n-m)); c=tally(w);
@@ -339,7 +339,7 @@ static F2(jtomask){A c,r,x,y;I m,n,p;
  R reshapeW(over(r,c),over(x,y));
 }
 
-static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
+static DF2(jtgoutfix){F12IP;A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  SETIC(x,n);
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
@@ -348,9 +348,9 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  R jtopenforassembly(jt,z);
 }
 
-static DF2(jtoutfix){F2PREFIP;PROLOG(117);A fs=FAV(self)->fgh[0]; A z; F2RANK(0,RMAX,jtoutfix,self) z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}
+static DF2(jtoutfix){F12IP;PROLOG(117);A fs=FAV(self)->fgh[0]; A z; F2RANK(0,RMAX,jtoutfix,self) z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}
 
-static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
+static DF2(jtofxinv){F12IP;A f,fs,z;C c;I t;V*v;
  F2RANKW(0,RMAX,jtofxinv,self);
  fs=FAV(self)->fgh[0]; f=FAV(fs)->fgh[0]; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||((c&-2)==CEQ)&&t&B01))R outfix(a,w,self);  // if not +/\. or m b./\. or =/\. or ~:/\.
@@ -358,7 +358,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
 }    /* a f/\. w where f has an "undo" */
 
-static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
+static DF2(jtofxassoc){F12IP;A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANKW(0,RMAX,jtofxassoc,self);
  SETIC(w,m); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
  f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)AV(v->fgh[1])[0]:v->id;  // self = f/\. f = f/  x = f  v = verb info for f
@@ -391,9 +391,9 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  R z;
 }    /* a f/\. w where f is an atomic associative fn */
 
-static DF1(jtiota1rev){I j; SETIC(w,j); R apv(j,j,-1L);}
+static DF1(jtiota1rev){F12IP;I j; SETIC(w,j); R apv(j,j,-1L);}
 
-F1(jtbsdot){F1PREFIP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;  // init flag is IRS1
+F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;  // init flag is IRS1
  ARGCHK1(w);
  A z; fdefallo(z)
  if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|VAV(ds(CBSDOT))->flag, RMAX,0L,RMAX); RETF(z);}

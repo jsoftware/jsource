@@ -363,7 +363,7 @@ static I jtconword(J jt,I n,C*s){
 }
 
 // w is string, result is list of boxed strings, for each line (sentence text, [ending control word except on last line])
-static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
+static F1(jtgetsen){F12IP;A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  RZ(y=wordil(w)); ASSERT(AM(y)>=0,EVOPENQ) // split string into words - result block has special format
  v=AV(y);   // v-> (index,end+1) for each word; #words neg if last is NB.
  n=AM(y)<<1;  // number of words not including any final NB., times 2 to get  # start/end+1 slots

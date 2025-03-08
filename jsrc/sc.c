@@ -11,7 +11,7 @@
 // This routine calls a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
-DF2(jtunquote){A z;
+DF2(jtunquote){F12IP;A z;
  // we stack sf ($:), curname, and local/global symbols, restoring them all on return (except perhaps globals which
  // is changed by cocurrent).  The layout in JTT must match the layout here
  struct unqstack {
@@ -32,13 +32,12 @@ DF2(jtunquote){A z;
 #define FLGLOCCHANGEDX 14  // the caller of this function has previously encountered cocurrent
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
 // next 7 bits must be 0
-
 #define FLGMONADX VJTFLGOK1X  // 23 operation is monad, in position to mask verb flags
 #define FLGMONAD ((I)1<<FLGMONADX)
 #define FLGDYADX (VJTFLGOK1X+1)  // operation is dyad  must be highest flag
 #define FLGDYAD ((I)1<<FLGDYADX)
- I flgd0cpC=((I)jt&JTFLAGMSK)+(FLGMONAD<<(w!=self));  // save flag bits to pass through to function; set MONAD/DYAD
- F2PREFIP;  // We check inplaceability of the called function.  jtinplace unused
+ I flgd0cpC=((I)jtinplace&JTFLAGMSK)+(FLGMONAD<<(w!=self));  // save flag bits to pass through to function; set MONAD/DYAD
+   // We check inplaceability of the called function.  jtinplace unused
  A explocale;  // locale to execute in.  Not used unless LOCINCRDECR set
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
@@ -368,7 +367,7 @@ A jtnameref(J jt,A w,A locsyms){A z;
 // Adverb 4!:8 create looked-up cacheable reference to (possibly boxed) literal name a
 // The name must be defined.  It supplies the type and rank of the reference.  We require the name to be defined so that
 // there will not be a circular reference if a name in a numbered locale is a reference to the same name
-F1(jtcreatecachedref){F1PREFIP;A z;
+F1(jtcreatecachedref){F12IP;A z;
  A nm; RZ(nm=onm(w)); // create name from arg
  ASSERT(!(NAV(nm)->flag&(NMILOC|NMDOT|NMIMPLOC)),EVDOMAIN) // if special name or indirect locative, error
  A val=QCWORD(syrd(nm,(A)(*JT(jt,emptylocale))[THREADID(jt)]));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
@@ -381,7 +380,7 @@ F1(jtcreatecachedref){F1PREFIP;A z;
 }
 
 // Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=0, g=name, h=actual entity to execute
-F2(jtnamerefop){V*v;
+F2(jtnamerefop){F12IP;V*v;
  ARGCHK2(a,w);
  v=FAV(w);
  R fdef(0,CCOLONE,VERB,  jtunquote,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
@@ -397,10 +396,10 @@ F2(jtnamerefop){V*v;
 // u./v.
 // We process this as 'u'~ where the name is flagged as NMIMPLOC
 // Bivalent: called with (a,w,self) or (w,self,self).  We treat as dyad but turn it into monad if input w is not a noun
-DF2(jtimplocref){
+DF2(jtimplocref){F12IP;
  A childself=JT(jt,implocref)[FAV(self)->id&1];  // pull from namerefs for u and v
  R unquote(a,EPDYAD?w:childself,childself); // call as (w,self,self) or (a,w,self)
 }
 
 // 9!:30 query current name, '' if none
-F1(jtcurnameq){ASSERTMTV(w); if(jt->curname==0)R mtv; R str(AN(jt->curname),NAV(jt->curname)->s);}
+F1(jtcurnameq){F12IP;ASSERTMTV(w); if(jt->curname==0)R mtv; R str(AN(jt->curname),NAV(jt->curname)->s);}

@@ -136,7 +136,7 @@ static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
 }    /* write/append string w to file f at j */
 
 // 1!:1 read entire file
-DF1(jtjfread){A z;F f,fp;
+DF1(jtjfread){F12IP;A z;F f,fp;
  ASSERT(!JT(jt,seclev),EVSECURE) 
  F1RANK(0,jtjfread,self);
  RE(f=stdf(w));  // f=file#, or 0 if w is a filename
@@ -152,7 +152,7 @@ DF1(jtjfread){A z;F f,fp;
  RETF(z);}
 
 // 1!:2
-DF2(jtjfwrite){B b;F f;
+DF2(jtjfwrite){F12IP;B b;F f;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,0,jtjfwrite,self);
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
@@ -170,7 +170,7 @@ DF2(jtjfwrite){B b;F f;
 }
 
 // 1!:3
-DF2(jtjfappend){B b;F f;
+DF2(jtjfappend){F12IP;B b;F f;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,0,jtjfappend,self);
  RE(f=stdf(w));
@@ -183,7 +183,7 @@ DF2(jtjfappend){B b;F f;
  RNE(mtm);
 }
 
-DF1(jtjfsize){B b;F f;I m;
+DF1(jtjfsize){F12IP;B b;F f;I m;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfsize,self);
  RE(f=stdf(w));
@@ -219,7 +219,7 @@ static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
 }    /* process index file arg for index and length */
 
 // 1!:11
-DF1(jtjiread){A z=0;B b;F f;I i,n;
+DF1(jtjiread){F12IP;A z=0;B b;F f;I i,n;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjiread,self);
  RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD_O));  // b=filename, not number; if name, open the named file
@@ -229,7 +229,7 @@ DF1(jtjiread){A z=0;B b;F f;I i,n;
 }
 
 // 1!:12
-DF2(jtjiwrite){B b;F f;I i;
+DF2(jtjiwrite){F12IP;B b;F f;I i;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,1,jtjiwrite,self);
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
@@ -268,7 +268,7 @@ static B rmdir(C*v){R!rmdir1(v);}
 #endif
 
 
-DF1(jtjmkdir){A y,z;
+DF1(jtjmkdir){F12IP;A y,z;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjmkdir,self);
  ASSERT(AT(w)&BOX,EVDOMAIN);
@@ -282,7 +282,7 @@ DF1(jtjmkdir){A y,z;
 }
 
 // 1!:55
-DF1(jtjferase){A y,fn;US*s;I h;
+DF1(jtjferase){F12IP;A y,fn;US*s;I h;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjferase,self);
  RE(h=fnum(w));
@@ -298,7 +298,7 @@ DF1(jtjferase){A y,fn;US*s;I h;
 #endif
 }    /* erase file or directory */
 
-F1(jtpathcwd){C path[1+NPATH];US wpath[1+NPATH];
+F1(jtpathcwd){F12IP;C path[1+NPATH];US wpath[1+NPATH];
  ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
 #if (SYS & SYS_UNIX)
  ASSERT(getcwd(path,NPATH),EVFACE);
@@ -309,7 +309,7 @@ F1(jtpathcwd){C path[1+NPATH];US wpath[1+NPATH];
  R cstr(path);
 }
 
-F1(jtpathchdir){A z;
+F1(jtpathchdir){F12IP;A z;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
@@ -328,7 +328,7 @@ F1(jtpathchdir){A z;
 #endif
 
 // 2!:5
-DF1(jtjgetenv){
+DF1(jtjgetenv){F12IP;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjgetenv,self);
  ASSERT((LIT+C2T+C4T)&AT(w),EVDOMAIN);
@@ -352,7 +352,7 @@ DF1(jtjgetenv){
 }
 
 // 2!:6
-F1(jtjgetpid){
+F1(jtjgetpid){F12IP;
  ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERTMTV(w);
 #if SY_WIN32
@@ -363,7 +363,7 @@ F1(jtjgetpid){
 }
 
 // #if (SYS & SYS_UNIX)
-F1(jtpathdll){
+F1(jtpathdll){F12IP;
  ASSERT(!JT(jt,seclev),EVSECURE) ASSERTMTV(w);
 #if (SYS & SYS_UNIX)
 char p[PATH_MAX]; extern C sopath[];

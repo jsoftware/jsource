@@ -64,7 +64,7 @@ DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
 void jtdebz(J jt){if(jt->sitop!=0)jt->sitop=jt->sitop->dclnk;}  // stack may vanish if 13!:0]0
      /* remove     top of si stack */
 
-F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
+F1(jtsiinfo){F12IP;A z,*zv;DC d;I c=5,n,*s;
  ASSERTMTV(w);
  n=0; d=jt->sitop; NOUNROLL while(d){++n; d=d->dclnk;}
  GATV0(z,BOX,c*n,2); s=AS(z); s[0]=n; s[1]=c; zv=AAV2(z);
@@ -110,7 +110,7 @@ static DC suspset(DC d){DC e=0;
 
 // 13!:24 Install suspension at the end of the debug stack.  Valid only when debug on.
 // Result is i.0
-F1(jtdbisolatestk){
+F1(jtdbisolatestk){F12IP;
  ASSERT(jt->uflags.trace&TRACEDB1,EVNONCE);  // debug must be on
  ASSERTMTV(w)  // no arg
  if(jt->sitop)jt->sitop->dcsusp=1;  // install suspension
@@ -331,7 +331,7 @@ noparse: ;
  R parsez;
 }
 
-A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
+A jtdbunquote(J jtinplace,A a,A w,A self,DC d){F12IP;A t,z;B s;V*sv;
  sv=FAV(self); t=sv->fgh[0]; 
  if(sv->id==CCOLONE&&t!=0){  // : explicit and not anonymous (if anonymous, it goes to unquote which will reexecute the vebr with a name)
   ras(self); a?df2ip(z,a,w,self):df1ip(z,w,self);   if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);  // we have self, so this can be a format point
@@ -354,11 +354,11 @@ A jtdbunquote(J jt,A a,A w,A self,DC d){F2PREFIP;A t,z;B s;V*sv;
  R z;
 }    /* function call, debug version */
 
-F1(jtdbq){ASSERTMTV(w); R sc(JT(jt,dbuser)&~TRACEDBSUSCLEAR);}
+F1(jtdbq){F12IP;ASSERTMTV(w); R sc(JT(jt,dbuser)&~TRACEDBSUSCLEAR);}
      /* 13!:17 debug flag */
 
 // x 13!:11 y set error number(s) in threads.  Error _1 is converted to EVDEBUGEND
-F2(jtdberr2){
+F2(jtdberr2){F12IP;
  ARGCHK2(a,w);
  ASSERT(AR(a)<2,EVRANK); ASSERT(AN(a)>0,EVDOMAIN); if(AT(a)!=INT)RZ(a=cvt(INT,a));  // verify #threads OK
  ASSERT(AR(w)<2,EVRANK); ASSERT(AN(w)==1||AN(w)==AN(a),EVDOMAIN); if(AT(w)!=INT)RZ(w=cvt(INT,w));  // verify #err#s OK
@@ -369,11 +369,11 @@ F2(jtdberr2){
 }
 
 // x 13!:23 y  return y if it is a suspension result, otherwise x (which defaults to i. 0 0).  Bivalent 
-F2(jtdbpasss){I t=AT(w); w=t&NOUN?w:a; a=t&NOUN?a:mtm; RETF(AFLAG(w)&AFDEBUGRESULT?w:a); }
+F2(jtdbpasss){F12IP;I t=AT(w); w=t&NOUN?w:a; a=t&NOUN?a:mtm; RETF(AFLAG(w)&AFDEBUGRESULT?w:a); }
 
 // Suspension-ending commands.  These commands return a list of boxes flagged with the AFDEBUGRESULT flag.  The first box is always an integer atom and gives the type
 // of exit (run, step, clear, etc).  Other boxes give values for the run and ret types.  EXCEPTION: 13!:0 returns i. 0 0 for compatibility, but still flagged as AFDEBUGRESULT
-F1(jtdbc){I k;
+F1(jtdbc){F12IP;I k;
  ARGCHK1(w);
  RE(k=i0(w));
  ASSERT(!(k&~(TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT|TRACEDB1)),EVDOMAIN);
@@ -388,19 +388,19 @@ F1(jtdbc){I k;
 }    /* 13!:0  clear stack; enable/disable suspension */
 
 // The remaining suspension-ending commands are not allowed during PM debugging
-F1(jtdbrun ){ASSERTMTV(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(box(sc(SUSRUN)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jtdbrun ){F12IP;ASSERTMTV(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(box(sc(SUSRUN)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:4  run again */
 
-F1(jtdbnext){ASSERTMTV(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(box(sc(SUSNEXT)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jtdbnext){F12IP;ASSERTMTV(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(box(sc(SUSNEXT)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:5  run next */
 
-F1(jtdbret ){ARGCHK1(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(jlink(sc(SUSRET),box(w)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jtdbret ){F12IP;ARGCHK1(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(jlink(sc(SUSRET),box(w)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:6  exit with result */
 
-F1(jtdbjump){ASSERT(jt->pmttop==0,EVUNTIMELY) I jump; RE(jump=i0(w)); A z; RZ(z=mkwris(jlink(sc(SUSJUMP),sc(jump)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jtdbjump){F12IP;ASSERT(jt->pmttop==0,EVUNTIMELY) I jump; RE(jump=i0(w)); A z; RZ(z=mkwris(jlink(sc(SUSJUMP),sc(jump)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:7  resume at line n (return result error if out of range) */
 
-static F2(jtdbrr){DC d;
+static F2(jtdbrr){F12IP;DC d;
  RE(0); ASSERT(jt->pmttop==0,EVUNTIMELY) 
  d=jt->sitop; NOUNROLL while(d&&DCCALL!=d->dctype)d=d->dclnk; 
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  // must be tacit verb
@@ -409,15 +409,15 @@ static F2(jtdbrr){DC d;
  R z;
 }
 
-F1(jtdbrr1 ){ASSERT(jt->pmttop==0,EVUNTIMELY) R dbrr(0L,w);}   /* 13!:9   re-run with arg(s) */
-F2(jtdbrr2 ){ASSERT(jt->pmttop==0,EVUNTIMELY) R dbrr(a, w);}
+F1(jtdbrr1 ){F12IP;ASSERT(jt->pmttop==0,EVUNTIMELY) R dbrr(0L,w);}   /* 13!:9   re-run with arg(s) */
+F2(jtdbrr2 ){F12IP;ASSERT(jt->pmttop==0,EVUNTIMELY) R dbrr(a, w);}
 
 // T. y - set debugging thread #
 // This is a suspension command, but not suspension-ending
-F1(jttcapdot1){I thno; RE(thno=i0(w)); ASSERT(BETWEENO(thno,0,THREADIDFORWORKER(JT(jt,wthreadhwmk))),EVDOMAIN) A z; RZ(z=mkwris(jlink(sc(SUSTHREAD),sc(thno)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jttcapdot1){F12IP;I thno; RE(thno=i0(w)); ASSERT(BETWEENO(thno,0,THREADIDFORWORKER(JT(jt,wthreadhwmk))),EVDOMAIN) A z; RZ(z=mkwris(jlink(sc(SUSTHREAD),sc(thno)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
 
 // 13!:14, query suspension trap sentence
-F1(jtdbtrapq){
+F1(jtdbtrapq){F12IP;
  ASSERTMTV(w); 
  // we must read & protect the sentence under lock in case another thread is changing it
  READLOCK(JT(jt,dblock)) A trap=JT(jt,dbtrap); if(trap)ras(trap); READUNLOCK(JT(jt,dblock))  // must ra() while under lock
@@ -426,7 +426,7 @@ F1(jtdbtrapq){
 }
 
 // 13!:15, set suspension trap sentence
-F1(jtdbtraps){
+F1(jtdbtraps){F12IP;
  ARGCHK1(w);
  RZ(w=vs(w));
  if(AN(w)){RZ(ras(w));}else w=0;  // protect w if it is nonempty; if empty, convert to null

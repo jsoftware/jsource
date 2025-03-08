@@ -29,10 +29,10 @@ I levelle(J jt,A w,I l){
  R 1;  // if it never gets big enough, say so, keep looking
 }
 
-F1(jtlevel1){ARGCHK1(w); I z=level(jt,w); RE(0) R sc(z);}
+F1(jtlevel1){F12IP;ARGCHK1(w); I z=level(jt,w); RE(0) R sc(z);}
 
-F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
- F1PREFIP;ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
+F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
+ ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
 #ifndef BOXEDSPARSE
  ASSERTF(!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");
 #else
@@ -107,14 +107,14 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  RETF(z);
 }    /* <"r w */
 
-F1(jtboxopen){F1PREFIP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtinplace,w);} R w;}
+F1(jtboxopen){F12IP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtinplace,w);} R w;}
 
 // x ; y, with options for x (,<) y   x (;<) y   x ,&< y
 // This verb propagates WILLOPEN, so it must not raise usecounts or EPILOG or call a verb that does EPILOG if WILLBEOPENED is set on input.
 // As a result of this we support both recursive and nonrecursive y inputs.  If y is unboxed, we create a recursive block if WILLOPEN is
 // not set, or a nonrecursive block if WILLOPEN is set
-DF2(jtjlink){
-F2PREFIP;ARGCHK2(a,w);
+DF2(jtjlink){F12IP;
+ARGCHK2(a,w);
 #if FORCEVIRTUALINPUTS
  // to allow mapped-boxed tests to run, we detect when the virtual block being realized is at offset 0 from its
  // base block, and has the same atomsct/rank/shape.  Then we just return the base block, since the virtual block
@@ -488,7 +488,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen
 // if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
 // We don't support inplacing here yet so just do that always
-F1(jtope){F1PREFIP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
+F1(jtope){F12IP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  ARGCHK1(w);
  v=AAV(w);
  if(likely((RANKT)((AT(w)>>BOXX)&(BOX>>BOXX))>AR(w))){   // boxed and rank=0
@@ -632,7 +632,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,
 }    /* raze general case */
 
 // ; y
-F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
+F1(jtraze){F12IP;A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
  ARGCHK1(w);
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(unlikely(!(BOX&AT(w))))R n?ravel(w):mtv;   // if not boxed, just return ,w (but $0 if empty)
@@ -685,7 +685,7 @@ F1(jtraze){A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
  RETF(z);
 }
 
-F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
+F1(jtrazeh){F12IP;A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);

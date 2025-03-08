@@ -228,9 +228,9 @@ static I debugnewi(I i, DC thisframe, A self){
 #define IFNOTOB(likelihood) if(likelihood(ic>OBCW))  // true if i has not gone off the end of the defn)
 // Processing of explicit definitions, line by line.  Bivalent, called as y vb vb or x y vb.  If JTXDEFMODIFIER is set,
 // it's a modifier, called as u adv adv or u v conj
-DF2(jtxdefn){
+DF2(jtxdefn){F12IP;
  V *sv=FAV(self); I sflg=sv->flag;   // pointer to definition, and flags therefrom
- F2PREFIP; PROLOG(0048);
+  PROLOG(0048);
 
  ARGCHK2(a,w);
  A * RESTRICT cwsent;   // Base pointer, to both the cw data (going down) and the sentence words (going up)  Filled in by LINE
@@ -729,19 +729,19 @@ bodyend: ;  // we branch to here to exit with z set to result
 }
 
 // execution of u : v, selecting the version of self & function to use based on valence.  Bivalent, called only from parse/unquote with w,self,self or a,w,self
-static DF2(xv12){I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; R (FAV(self)->valencefns[dyad])(jt,a,w,self);}
+static DF2(xv12){F12IP;I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; R (FAV(self)->valencefns[dyad])(jt,a,w,self);}
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are
 // executing PARSE or other, we must be executing a truly anonymous operator, and we return 0
-static F1(jtxopcall){R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}  // debug or pm, and CALL type.  sitop may be 0 if deb/pm turned on in the middle of a sentence
+static F1(jtxopcall){F12IP;R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}  // debug or pm, and CALL type.  sitop may be 0 if deb/pm turned on in the middle of a sentence
 
 // This handles explicit adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, self as g, and copy the flags
 // bivalent adv/conj
 // If we have to add a name for debugging purposes, do so
 // Flag the resulting operator with VXOP, and remove VFIX for it so that the compound can be fixed
 // self->flag always has VXOPR+VFIX+VJTFLGOK[12]
-DF2(jtxop2){F2PREFIP;A ff,x;
+DF2(jtxop2){F12IP;A ff,x;
  ARGCHK2(a,w);
  self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
  ff=fdef(0,CCOLONE,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w, (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags, incl JTFLGOK[12]
@@ -814,12 +814,12 @@ static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
 
 // w is character array or list
 // if table, take , w ,. LF    if list take ,&LF^:(LF~:{:) w)
-static F1(jtlineit){
+static F1(jtlineit){F12IP;
  R 1<AR(w)?ravel(stitch(w,scc(CLF))):AN(w)&&CLF==CAV(w)[AN(w)-1]?w:over(w,scc(CLF));
 }
 
 // w is a rank-1 string.  We scan it for {{ }} and return the boxed result.  self is invalid
-static DF1(jtboxddline){RZ(w=ddtokens(w,0b1110)) R box(w);}
+static DF1(jtboxddline){F12IP;RZ(w=ddtokens(w,0b1110)) R box(w);}
 
 
 // Convert ASCII w to boxed lines.  w is the argument to m : w and thus might be from 9 : w or might contain
@@ -1189,7 +1189,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  R z;
 }
 
-F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
+F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  ARGCHK2(a,w);PROLOG(778);
  A z; fdefallo(z)
  if(VERB&AT(a)){  // v : v case
@@ -1315,9 +1315,9 @@ F2(jtcolon){F2PREFIP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
 // Bit 3 of env is set if the caller wants the returned value as a string rather than as enqueued words
 //
 // If the call to jgets() returns EOF, indicating end-of-script, that is also a control error
-A jtddtokens(J jt,A w,I env){
+A jtddtokens(J jtinplace,A w,I env){F12IP;
 // TODO: Use LF for DDSEP, support {{), make nouns work
- PROLOG(000);F1PREFIP;
+ PROLOG(000);
  ARGCHK1(w);
  // find word boundaries, remember if last word is NB
  A wil; RZ(wil=wordil(w));  // get index to words

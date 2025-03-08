@@ -39,7 +39,7 @@ static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYP
 }    /* /:@/: w where w is boolean and items have length 2 or 4 */
 
 // /:@/:
-F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *yv,*yu;
+F1(jtranking){F12IP;A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *yv,*yu;
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  wt=AT(w); wv=CAV(w); wn=AN(w);

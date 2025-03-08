@@ -1006,7 +1006,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 
 #define MAXBYTEBOOL 65536  // if p exceeds this, we switch over to packed bits
 
-A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;fauxblockINT(zfaux,1,0);
+A jtindexofsub(J jtinplace,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;fauxblockINT(zfaux,1,0);
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;I forkeyresult;
  ARGCHK2(a,w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
@@ -1347,7 +1347,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
 
 // verb to vector combine@e. compounds.  The i. code is in the self
 // because these are e. compounds we swap a and w
-DF2(jtcombineeps){ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
+DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
 
 // verb to handle compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
@@ -1393,15 +1393,15 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,hi,*hv,x,z;AF fn;I ar,*as,at,
 // Now, support for the primitives that use indexof
 
 // x i. y
-F2(jtindexof){F2PREFIP; R indexofsub(IIDOT,a,w);}
+F2(jtindexof){F12IP; R indexofsub(IIDOT,a,w);}
      /* a i."r w */
 
 // x i: y
-F2(jtjico2){F2PREFIP; R indexofsub(IICO,a,w);}
+F2(jtjico2){F12IP; R indexofsub(IICO,a,w);}
      /* a i:"r w */
 
 // ~: y
-F1(jtnubsieve){
+F1(jtnubsieve){F12IP;
  ARGCHK1(w);
  if(ISSPARSE(AT(w)))R nubsievesp(w); 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
@@ -1409,8 +1409,8 @@ F1(jtnubsieve){
 }    /* ~:"r w */
 
 // ~. y  - does not have IRS
-F1(jtnub){ 
- F1PREFIP;ARGCHK1(w);
+F1(jtnub){F12IP; 
+ ARGCHK1(w);
  if(ISSPARSE(AT(w))||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
@@ -1419,8 +1419,8 @@ F1(jtnub){
 }    /* ~.w */
 
 // x -. y.  does not have IRS
-F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
- F2PREFIP;ARGCHK2(a,w);
+F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws,wt;
+ ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
@@ -1435,7 +1435,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 }    /* a-.w */
 
 // x e. y
-F2(jteps){I l,r;
+F2(jteps){F12IP;I l,r;
  ARGCHK2(a,w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
@@ -1445,26 +1445,26 @@ F2(jteps){I l,r;
 }    /* a e."r w */
 
 // I.@~: y   does not have IRS
-DF1(jtnubind){
+DF1(jtnubind){F12IP;
  ARGCHK1(w);
  R ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
 // i.@(~:!.0) y     does not have IRS
-DF1(jtnubind0){A z;
+DF1(jtnubind0){F12IP;A z;
  ARGCHK1(w);
  PUSHCCT(1.0) z=ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;
 }    /* I.@(~:!.0) w */
 
 // I.@e. y   does not have IRS
-DF2(jtepsind){
+DF2(jtepsind){F12IP;
  ARGCHK2(a,w);
  R unlikely(ISSPARSE(AT(w)|AT(w)))?jtupon2cell(jt,a,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse
 } 
 
 // i.@(e.!.0) y     does not have IRS
-DF2(jtepsind0){A z;
+DF2(jtepsind0){F12IP;A z;
  ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R jtupon2cell(jt,a,w,self);  // revert for sparse
  PUSHCCT(1.0) z=indexofsub(IIFBEPS,w,a); POPCCT  // do operation intolerantly
@@ -1473,7 +1473,7 @@ DF2(jtepsind0){A z;
 
 
 // = y    
-F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
+F1(jtsclass){F12IP;A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  ARGCHK1(w);
  // If w is scalar, return 1 1$1
  if(!AR(w))R reshape(v2(1L,1L),num(1));

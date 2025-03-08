@@ -33,7 +33,7 @@
 // which is often the same original function that called here.
 // rr is the rank at which the verb will be applied: in u"n, the smaller of rank-of-u and n
 // JT flags: all these routines use JTINPLACEW, JTINPLACEA, JTCOUNTITEMS, JTWILLBEOPENED.  Other flags are untouched
-A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
+A jtrank1ex(J jtinplace,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z,virtw;
    I mn,wcn,wf,wk;
  ARGCHK1(w);
  wf=AR(w)-rr;
@@ -118,7 +118,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
 // Streamlined version when rank is 0.  In this version we look for ATOPOPEN (i. e. every)
 // f1 is the function to use if there are no flags, OR if there is just 1 cell with no frame or a cell of fill
 // "Supports IRS", which means nothing except that we ignore input rank
-A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
+A jtrank1ex0(J jtinplace,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virtw;
    I wk;
  ARGCHK1(w);
  RESETRANK;  // in case we are called with IRS, clear it
@@ -229,9 +229,9 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
  EPILOG(zz);
 }
 
-A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){
+A jtrank2ex(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12IP;
  I lrrr=(RANK2T)lrrrlcrrcr; I lcrrcr=lrrrlcrrcr>>RANK2TX;  // inner, outer ranks
- F2PREFIP;PROLOG(0042);A virta,virtw,z;I acn,ak,mn,wcn,wk;
+ PROLOG(0042);A virta,virtw,z;I acn,ak,mn,wcn,wk;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
  ARGCHK2(a,w);
  if(unlikely((UI)lrrr==(((UI)AR(a)<<RANKTX)+AR(w)))){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
@@ -415,7 +415,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){
 
 // version for rank 0.  We look at ATOPOPEN too.  f2 is the function to use if there is no frame
 // This code does not set inplaceability on nonrepeated cells - hardly useful at rank 0
-A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(0042);A virta,virtw,z;
+A jtrank2ex0(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F12IP;PROLOG(0042);A virta,virtw,z;
    I ak,ar,*as,ict,oct,mn,wk,wr,*ws;
  ARGCHK2(a,w); ar=AR(a); wr=AR(w); if(unlikely(!(ar+wr)))R CALL2IP(f2,a,w,fs);   // if no frame, make just 1 call
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R sprank2(a,w,fs,0,0,f2);  // this needs to be updated to handle multiple ranks
@@ -564,17 +564,17 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 /* frame agreement is verified before invoking f        */
 /* frames either match, or one is empty                 */
 /* (i.e. prefix agreement invokes general case)         */
-// If the action verb handles inplacing, we pass that through
+// If the action verb handles inplacing, we pass inplaceability through
 
 // irs1() and irs2() are simply calls to the IRS-savvy function f[12] with the specified rank, faster than creating a verb with rank
 
-A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I wr; 
- F1PREFIP; ARGCHK1(w);
+A jtirs1(J jtinplace,A w,A fs,I m,AF f1){F12IP;A z;I wr; 
+  ARGCHK1(w);
 // Get the rank of w; if the requested rank m is > wr, use ~0 because some verbs test for that as an expedient
 // If m is negative, use wr+m but never < 0
  wr=AR(w); m=m>=wr?R2MAX:m; wr+=m; wr=wr<0?0:wr; wr=m>=0?m:wr;   // requested rank, after negative resolution, or ~0
  jt->ranks=(RANK2T)wr;  // install rank for called routine
- z=CALL1IP(f1,w,fs);
+ z=CALL1IP(f1,w,fs);    // Pass inplaceability through
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
@@ -588,42 +588,42 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I wr;
 // IRS verbs are those that look at jt->rank.  This is where we set up jt->rank.  Once
 // we have it, we call the setup verb, which will go on to do its internal looping and (optionally) call
 // the verb f2 to finish operation on a cell
-A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I ar,wr;
- F2PREFIP; ARGCHK2(a,w);
+A jtirs2(J jtinplace,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
+  ARGCHK2(a,w);
  wr=AR(w); r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; r=AR(w)-wr;   // wr=requested rank, after negative resolution, or ~0; r=frame of w, possibly negative if no frame
  ar=AR(a); l=l>=ar?RMAX:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(r,l)))  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
- z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
+ z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack.  Pass inplaceability through
    // Not all verbs (*f2)() use the fs argument.
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 
 
-static DF1(cons1a){R FAV(self)->fgh[0];}
-static DF2(cons2a){R FAV(self)->fgh[0];}
+static DF1(cons1a){F12IP;R FAV(self)->fgh[0];}
+static DF2(cons2a){F12IP;R FAV(self)->fgh[0];}
 
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
-static DF1(cons1){
+static DF1(cons1){F12IP;
  ARGCHK1(w);
  I mr; efr(mr,AR(w),(I)FAV(self)->localuse.lu1.srank[0]);
  R rank1ex(w,self,mr,cons1a);
 }
-static DF2(cons2){
+static DF2(cons2){F12IP;
  ARGCHK2(a,w);
  I lr2,rr2; efr(lr2,AR(a),(I)FAV(self)->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)FAV(self)->localuse.lu1.srank[2]);
  R rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a);
 }
 
 // cyclic-gerund verbs for m"n create an iterator from the gerund and pass that into rank processing, looping over cells
-static DF1(cycr1){V*sv=FAV(self); I cger[128/SZI];
+static DF1(cycr1){F12IP;V*sv=FAV(self); I cger[128/SZI];
  ARGCHK1(w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I mr; efr(mr,AR(w),(I)sv->localuse.lu1.srank[0]);
  R rank1ex(w,self,mr,FAV(self)->valencefns[0]);  // callback is to the cyclic-execution function
 }
-static DF2(cycr2){V*sv=FAV(self); I cger[128/SZI];
+static DF2(cycr2){F12IP;V*sv=FAV(self); I cger[128/SZI];
  ARGCHK2(a,w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)sv->localuse.lu1.srank[2]);
@@ -633,16 +633,16 @@ static DF2(cycr2){V*sv=FAV(self); I cger[128/SZI];
 
 
 
-// Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
-static DF1(rank1i){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];F1PREFIP;ARGCHK1(w);  // this version when requested rank is positive
+// Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass inplaceability through.
+static DF1(rank1i){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];ARGCHK1(w);  // this version when requested rank is positive
  I m=FAV(self)->localuse.lu1.srank[0]; I r=AR(w); m+=REPSGN(m)&r; m=m<0?0:m; m=m>=r?RMAX:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 
-// dyadic forms also check agreement wrt the given ranks
-static DF2(rank2i){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; F2PREFIP;ARGCHK1(w);
+// dyadic forms also check agreement wrt the given ranks.  pass inplaceability through.
+static DF2(rank2i){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; ARGCHK1(w);
  I ar=FAV(self)->localuse.lu1.srank[1]; I r=AR(a); ar+=REPSGN(ar)&r; ar=ar<0?0:ar; ar=ar>=r?RMAX:ar; I af=r-ar;   // left rank and frame
  I wr=FAV(self)->localuse.lu1.srank[2];   r=AR(w); wr+=REPSGN(wr)&r; wr=wr<0?0:wr; wr=wr>=r?RMAX:wr; I wf=r-wr;   // right rank and frame
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)));  // verify agreement before we modify jt->ranks
@@ -653,8 +653,8 @@ static DF2(rank2i){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; F2PREFI
 }
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
-// This routine supports jtflags by not touching jt - pass it through
-static DF1(rank1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; I m,wr;
+// Pass inplaceability through
+static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; I m,wr;
  ARGCHK1(w);
  wr=AR(w); efr(m,wr,(I)FAV(self)->localuse.lu1.srank[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
@@ -665,13 +665,13 @@ static DF1(rank1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; I m,wr;
    m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
   }
  }
- R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
+ R m<wr?jtrank1ex(jtinplace,w,fs,m,f1):CALL1IP(f1,w,fs);
 }
 #define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
 #define LEMIN0(a,b,c) ((b-a)|(c-a)) // sign is 0 if a<=MIN(b,c): a<=b and a<=c
 
-// This routine supports jtflags by not touching jt - pass it through
-static DF1(rank1q){  // fast version: nonneg rank, no check for multiple RANKONLY
+// Pass inplaceability through
+static DF1(rank1q){F12IP;  // fast version: nonneg rank, no check for multiple RANKONLY
  ARGCHK1(w);
  // rank is considered nugatory if the rank of u<=n or rank of arg <=n or if n=rank of u, i. e. if n>=MIN(ranku,rankarg)
  // This gives error in the case
@@ -682,17 +682,17 @@ static DF1(rank1q){  // fast version: nonneg rank, no check for multiple RANKONL
  I um=FAV(fs)->mr;
  if(unlikely(GEMIN0(m,r,um)>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
  r=r>m?m:r;  // clamp rank at arg rank - MIN(n, rankarg)
- R rank1ex(w,fs,r,FAV(fs)->valencefns[0]);
+ R jtrank1ex(jtinplace,w,fs,r,FAV(fs)->valencefns[0]);
 }
 
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
-static DF1(jtrank10atom){ A fs=FAV(self)->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
-static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceability through.
+static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  Pass inplaceability through
+static DF1(jtrank10){F12IP;R jtrank1ex0(jtinplace,w,self,jtrank10atom);}  // pass inplaceability through.
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 
-// This routine supports jtflags by not touching jt - pass it through
-static DF2(rank2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; I ar,l=FAV(self)->localuse.lu1.srank[1],r=FAV(self)->localuse.lu1.srank[2],wr;
+// This routine supports jtflags by not touching jt - pass inplaceability through
+static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; I ar,l=FAV(self)->localuse.lu1.srank[1],r=FAV(self)->localuse.lu1.srank[2],wr;
  ARGCHK2(a,w);
  ar=AR(a); efr(l,ar,l);
  wr=AR(w); efr(r,wr,r);  // now l<=ar, r<=wr
@@ -713,12 +713,12 @@ static DF2(rank2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; I ar,l=F
    fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];   // advance to the new function
   }
  }
- R rank2ex(a,w,fs,llr,lrr,l,r,f2);
+ R rank2exip(a,w,fs,llr,lrr,l,r,f2);
 }
 
 // This version for use when the ranks are nonnegative and u is not RANKONLY
-// This routine supports jtflags by not touching jt - pass it through
-static DF2(rank2q){
+// This routine supports jtflags by not touching jt - pass inplaceability through
+static DF2(rank2q){F12IP;
  ARGCHK2(a,w);
  A fs=FAV(self)->fgh[0]; I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // u, left & right ranks of u
  I ar=AR(a), wr=AR(w), l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2];  // ranks of args, ranks from n
@@ -728,16 +728,17 @@ static DF2(rank2q){
  ulr+=(UI)ulr>=RMAX; urr+=(UI)urr>=RMAX;  // rank _ can be hiding negative rank, for which we don't know the cells; force mismatch then, and below assume inner cells
  if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr)|SGNIF(ulr,LGRMAX))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)|SGNIF(urr,LGRMAX)))>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
  ar=ar>l?l:ar; wr=wr>r?r:wr;   // clamp ranks at argument rank
- RETF(rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
+ RETF(rank2exip(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
 }
 
 // Version for rank 0.  Call rank2ex0, pointing to the u"r
-static DF2(jtrank20atom){ A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[1])(jt,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
-static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceability through.
+static DF2(jtrank20atom){F12IP; A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[1])(jtinplace,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
+
+static DF2(jtrank20){F12IP;R jtrank2ex0(jtinplace,a,w,self,jtrank20atom);}  // pass inplaceability through.
 
 
 // a"w; result is a verb
-F2(jtqq){F2PREFIP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
+F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  ARGCHK2(a,w);
  A z; fdefallo(z)
  // The localuse value in the function will hold the ranks from w.

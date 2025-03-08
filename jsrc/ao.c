@@ -10,8 +10,8 @@
 #endif
 
 // This is the derived verb for f/. y
-static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
- F1PREFIP;ARGCHK1(w);
+static DF1(jtoblique){F12IP;A x,y,z;I m,n,r;D rkblk[16];
+ ARGCHK1(w);
  r=AR(w);  // r = rank of w
  // create y= ,/ w - the _2-cells of w arranged in a list (virtual block)
  RZ(y=redcat(w,self)); if(1>=r){m=AN(w); n=1;}else{m=AS(w)[0]; n=AS(w)[1];}
@@ -39,7 +39,7 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
  }
 
 // Derived verb for f//. y for atomic f
-static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,n,n1,r,*s,wt;
+static DF1(jtobqfslash){F12IP;A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,n,n1,r,*s,wt;
  ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
  if(unlikely((-AN(w)&(1-r)&SGNIFDENSE(wt))>=0))goto revert;  // revert to default if rank<2, empty, or sparse.  This implies m/n below are non0
@@ -108,7 +108,7 @@ revert:;
    expr0; DQ(p-1, expr;); *zv++=x;           \
  }}
 
-DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
+DF2(jtpolymult){F12IP;A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  ARGCHK3(a,w,self);
  ASSERT(!ISSPARSE(AT(a)|AT(w)),EVNONCE);
  m=AN(a); n=AN(w); m1=m-1; zn=m+n-1; k=MIN(m,n);
@@ -168,7 +168,7 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
 static DF2(jtkey);
 
 
-static DF2(jtkeyi){PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
+static DF2(jtkeyi){F12IP;PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
  ARGCHK2(a,w);
  SETIC(a,n); av=AV(a);
  RZ(j=grade1(a)); jv=AV(j);  // get grading permutation for the self-indexes.  This groups the partitions
@@ -178,7 +178,7 @@ static DF2(jtkeyi){PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
  EPILOG(z);
 }    /* a f/. w where a is i.~x for dense x  */
 
-static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
+static DF2(jtkeysp){F12IP;PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  ARGCHK2(a,w);
  ASSERT(FAV(self)->id==CSLDOT,EVNONCE);  // /.. not supported for sparse
  {I t2; ASSERT(SETIC(a,n)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  n is # items of a
@@ -200,7 +200,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  EPILOG(z);
 }  // a f/. w  for sparse a
 
-static DF2(jtkeyspw){PROLOG(0011); I ica, icw;
+static DF2(jtkeyspw){F12IP;PROLOG(0011); I ica, icw;
  RZ(a&&w);
  SETIC(a,ica); SETIC(w,icw);
  ASSERT(ica==icw,EVLENGTH);
@@ -210,11 +210,11 @@ static DF2(jtkeyspw){PROLOG(0011); I ica, icw;
 }    // a f/. w for sparse w
 
 
-static DF2(jtkey){F2PREFIP;R jtkeyct(jtinplace,a,w,self,jt->cct);}
+static DF2(jtkey){F12IP;R jtkeyct(jtinplace,a,w,self,jt->cct);}
 
 // a u/.[.] w.  Self-classify a, then rearrange w and call cut.  Includes special cases for f//.
 // toler is the ct to use for the classification
-A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
+A jtkeyct(J jtinplace,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
  ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(a))))R keysp(a,w,self);  // if a sparse, go handle it
  if(unlikely(ISSPARSE(AT(w))))R jtkeyspw(jt,a,w,self);  // if w sparse, go handle it
@@ -542,7 +542,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 }    /* a f/. w for dense x & w */
 
 // bivalent entry point: a </. w   or  (</. i.@#) w
-DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
+DF2(jtkeybox){F12IP;PROLOG(0009);A ai,z=0;I nitems;
  ARGCHK2(a,w);  // we don't need ip, but all jtkey dyads must support it
  if(unlikely(ISSPARSE(AT(a))))R (EPDYAD?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
  SETIC(a,nitems);   // nitems is # items in a and w
@@ -684,7 +684,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 
 F2(jtkeytally);
 
-static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
+static F1(jtkeytallysp){F12IP;PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  ARGCHK1(w);
  RZ(q=indexof(w,w));
  p=PAV(q); 
@@ -700,7 +700,7 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  EPILOG(z);
 }    /* x #/.y , sparse x */
 
-F2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
+F2(jtkeytally){F12IP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
  ARGCHK2(a,w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); at=AT(a);
  ASSERT(n==SETIC(w,k),EVLENGTH);
@@ -744,7 +744,7 @@ F2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
 
 
 //  bivalent entry point for x ({.,#)/.y or x (#,{.)/. y (dyad), or (({.,#)/. i.@#) y or ((#,{.)/. i.@#) y  (monad)
-DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
+DF2(jtkeyheadtally){F12IP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
  ARGCHK2(a,w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); wt=AT(w);
  if(likely(EPDYAD)){
@@ -824,7 +824,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
 }    /* x ({.,#)/.y or x (#,{.)/. y */
 
 // f/.
-F1(jtsldot){F1PREFIP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
+F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
@@ -855,7 +855,7 @@ F1(jtsldot){F1PREFIP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2
 }
 
 // f/.. - looks like /. except for id
-F1(jtsldotdot){F1PREFIP;A h=0; I flag=VJTFLGOK1|VJTFLGOK2;
+F1(jtsldotdot){F12IP;A h=0; I flag=VJTFLGOK1|VJTFLGOK2;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);

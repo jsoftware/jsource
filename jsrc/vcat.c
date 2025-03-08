@@ -50,7 +50,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  R z;
 }    /* a,"r w (0=p) or w,"r a (1=p) where a is scalar and w is sparse */
 
-static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,c,m,n,r,t,*v,wcr,wr,*ws,wt,*zs;P*ap,*wp,*zp;
+static F2(jtovs){F12IP;A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,c,m,n,r,t,*v,wcr,wr,*ws,wt,*zs;P*ap,*wp,*zp;
  ARGCHK2(a,w);
  acr=jt->ranks>>RANKTX; ar=AR(a); at=AT(a); acr=ar<acr?ar:acr; 
  wcr=(RANKT)jt->ranks; wr=AR(w); wt=AT(w); wcr=wr<wcr?wr:wcr; RESETRANK; 
@@ -124,7 +124,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,I somefill){I d,n,p=c*m;  // p=#
  R x+k*p;
 }    /* move an argument into the result area */
 
-static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
+static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  ARGCHK2(a,w);
  // scaf most of this should move back to the caller so it can be outside the rank loop
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
@@ -218,8 +218,8 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 }
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV,moveawVVI};
-DF2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
- F2PREFIP;ARGCHK2(a,w);
+DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
+ ARGCHK2(a,w);
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  // convert args to compatible precisions, changing a and w if needed.  Treat empty arg as boolean if the other is non-Boolean
@@ -304,23 +304,23 @@ DF2(jtover){AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
-DF2(jtstitch){I ar,wr; A z;
- F2PREFIP;ARGCHK2(a,w);
+DF2(jtstitch){F12IP;I ar,wr; A z;
+ ARGCHK2(a,w);
  ar=AR(a); wr=AR(w);
  ASSERT((-ar&-wr&-(AS(a)[0]^AS(w)[0]))>=0,EVLENGTH);  // a or w scalar, or same # items    always OK to fetch s[0]
  if(likely(((SGNIFDENSE(AT(a)|AT(w)))&(2-ar)&(2-wr))>=0))R IRSIP2(a,w,self,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
-F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
- F1PREFIP;ARGCHK1(w);
+F1(jtlamin1){F12IP;A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
+ ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
  fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=AV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
  R jtreshape(jtinplace,x,w);
 }    /* ,:"r w */
 
-DF2(jtlamin2){A z;I ar,p,q,wr;
+DF2(jtlamin2){F12IP;A z;I ar,p,q,wr;
  // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
  ARGCHK2(a,w); 
  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;  // p=cell rank of a, q=cell rank of w
@@ -333,7 +333,7 @@ DF2(jtlamin2){A z;I ar,p,q,wr;
 }    /* a,:"r w */
 
 // Append, including tests for append-in-place
-A jtapip(J jt, A a, A w){F2PREFIP;A h;
+F2(jtapip){F12IP;A h;
  ARGCHK2(a,w);
  // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty

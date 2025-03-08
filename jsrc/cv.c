@@ -6,21 +6,21 @@
 #include "j.h"
 
 // 9!:22 read current fill, or i. 0 0 if none.  Clear fill after reading it
-F1(jtqfill){PROLOG(976); ASSERTMTV(w); A z=jt->fill; z=z?z:mtm; jt->fill=0; EPILOG(z);}
+F1(jtqfill){F12IP;PROLOG(976); ASSERTMTV(w); A z=jt->fill; z=z?z:mtm; jt->fill=0; EPILOG(z);}
 
 // here to set jt->fill over the execution of u
-static DF2(jtfitfill12){w=EPMONAD?0:w; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w]; F2PREFIP;A z; jt->fill=FAV(self)->fgh[1]; z=CALL12IP(w,f12,a,w,fs); jt->fill=0; RETF(z);}
+static DF2(jtfitfill12){F12IP;w=EPMONAD?0:w; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w]; A z; jt->fill=FAV(self)->fgh[1]; z=CALL12IP(w,f12,a,w,fs); jt->fill=0; RETF(z);}
 
-static DF1(jtfitct1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
+static DF1(jtfitct1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
 
-#define fitctvector(name,vector) DF2(name){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; F2PREFIP;A z; ASSERT(0<=1.0-FAV(self)->localuse.lu1.cct&&1.0-FAV(self)->localuse.lu1.cct<5.82076609134675e-11,EVLIMIT) PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
+#define fitctvector(name,vector) DF2(name){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; A z; ASSERT(0<=1.0-FAV(self)->localuse.lu1.cct&&1.0-FAV(self)->localuse.lu1.cct<5.82076609134675e-11,EVLIMIT) PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
    // we muct audit ct again in case bivalent >!.f was used
 static fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
 fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 // Note: it is OK to call eformat before popping ct because ct cannot possibly introduce error
 
 // for key, we pass in the tolerance to use for the classification
-static DF2(jtfitctkey){A fs=FAV(self)->fgh[0]; R jtkeyct(jt,a,w,fs,FAV(self)->localuse.lu1.cct);}  // inplace is OK, since we don't use jt
+static DF2(jtfitctkey){F12IP;A fs=FAV(self)->fgh[0]; R jtkeyct(jt,a,w,fs,FAV(self)->localuse.lu1.cct);}  // inplace is OK, since we don't use jt
 
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
 static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey,
@@ -45,31 +45,31 @@ static A jtfitct(J jt,A a,A w,I cno,A z){
  R z;
 }
 
-static DF2(jtfitexp2){
+static DF2(jtfitexp2){F12IP;
  F2RANK(0,0,jtfitexp2,self);
  ASSERT(0<=i0(w)&&!jt->jerr,EVDOMAIN);
  A z; R aslash(CSTAR,plus(a,dfv2(z,iota(w),FAV(self)->fgh[1],slash(ds(CSTAR)))));
 }    /* a ^!.s w */
 
-static DF2(jtfitpoly2){I j;
+static DF2(jtfitpoly2){F12IP;I j;
  F2RANK(1,0,jtfitpoly2,self);
  A z; R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,dfv2(z,IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
 // print precision, just the number of fractional digits requested from sprintf
-static DF1(jtfitpp1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A z;
+static DF1(jtfitpp1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A z;
  I stkppn=jt->ppn; jt->ppn=AV(FAV(self)->fgh[1])[0]; z=CALL1(f1,w,fs); jt->ppn=stkppn;
  RETF(z);
 }
 
-static DF1(jtfitf1){V*sv=FAV(self); A z; R dfv1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n scaf combine?  Who calls?
-static DF2(jtfitf2){V*sv=FAV(self); A z; R dfv2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
+static DF1(jtfitf1){F12IP;V*sv=FAV(self); A z; R dfv1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n scaf combine?  Who calls?
+static DF2(jtfitf2){F12IP;V*sv=FAV(self); A z; R dfv2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
 
 // Fit conjunction u!.v
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
 // Preserve VISATOMIC1 from u (applies only to numeric atomic ops)
 // Preserve comparison-combination flags for tolerance fit, in case this is a fit-allowing primitive that uses them
-F2(jtfit){F2PREFIP;A f;C c;I k,l,m,r;
+F2(jtfit){F12IP;A f;C c;I k,l,m,r;
 //  ASSERTVN(a,w);  // a must be a verb, w a noun (except for $!.v)
  ASSERT(AT(a)&VERB,EVDOMAIN)  // a must be a verb
  A z; fdefallo(z)

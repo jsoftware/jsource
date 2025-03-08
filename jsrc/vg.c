@@ -689,7 +689,7 @@ static GF(jtgrc){F1PREFJT;A x;B b,q,up;I *g,*h,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
 static GF(jtgrs){F1PREFJT;R gri(m,ai,n,sborder(w),zv);}    
      /* grade"r w on symbols w */
 
-F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
+F2(jtgrade1p){F12IP;PROLOG(0074);A x,z;I n,*s,*xv,*zv;
  RZ(x=curtail(a)); IRS2(x,w,0L,1L,1L,jtfrom,z); z=grade1(z); EPILOG(z);
  // A special sort function for this is a bad idea, because the indirection is repeated so often
 }    /* /:(}:a){"1 w , permutation a, integer matrix w */
@@ -733,12 +733,12 @@ A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I f,ai,m,n,r,*s,t,wn,wr,zn;
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 
-F1(jtgrade1 ){A z; ARGCHK1(w); J jtinplace=(J)((I)jt&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
-F1(jtdgrade1){A z; ARGCHK1(w); J jtinplace=(J)(((I)jt&~JTFLAGMSK)|JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
+F1(jtgrade1){F12IP;A z; ARGCHK1(w); jtinplace=(J)((I)jtinplace&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
+F1(jtdgrade1){F12IP;A z; ARGCHK1(w); jtinplace=(J)(((I)jtinplace&~JTFLAGMSK)|JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
 // Since grade2 pulls from a, mark a as non-pristine.  But since there can be no repeats, transfer a's pristinity to result if a is inplaceable
 // We do this in jtgr2 because it has a branch where all boxed values go
-F2(jtgrade2 ){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtinplace&~JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace&~JTDESCEND),a,w));}
-F2(jtdgrade2){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtinplace|JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace|JTDESCEND),a,w));}
+F2(jtgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtinplace&~JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace&~JTDESCEND),a,w));}
+F2(jtdgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtinplace|JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace|JTDESCEND),a,w));}
 
 
 #define OSGT(i,j) (u[i]>u[j])
@@ -778,7 +778,7 @@ F2(jtdgrade2){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2
   }  \
  }
 
-DF2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
+DF2(jtordstat){F12IP;A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  I i=NRANDS-1;  // i points to the next random number to draw
  ARGCHK2(a,w);
  n=AN(w); wt=AT(w); RE(j=i0(a));
@@ -789,7 +789,7 @@ DF2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */
 
-DF2(jtordstati){A t;I n,wt;
+DF2(jtordstati){F12IP;A t;I n,wt;
  ARGCHK2(a,w);
  n=AN(w); wt=AT(w);
  if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R jthook2cell(jt,a,w,self);  // revert if not int/float, len>4, and (atom a & list w)

@@ -1074,8 +1074,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CCMSGN(cand,tval) (cand<<(tval&(BW-1)))   // set sign bit if value found
 #define CCMTST(cand,tval) (cand&(1LL<<(~tval&(BW-1))))  // test true is value found
 #define CLRATTN __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // remove any pending ATT/BREAK; at start of sentence or where error handled
-#define DF1(f)          A f(JJ jt,    A w,A self)
-#define DF2(f)          A f(JJ jt,A a,A w,A self)
+#define DF1(f)          A f(JJ jtinplace,    A w,A self)
+#define DF2(f)          A f(JJ jtinplace,A a,A w,A self)
 #define DO(n,stm...)          {I _n=(n); I i=0; for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DONOUNROLL(n,stm...)  {I _n=(n); I i=0; NOUNROLL for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm...)          {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
@@ -1125,14 +1125,16 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ISFTOIOK(f,i)    ((f)==(I)(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
 #endif
 #define ISFTOIOKFZ(f,i,fuzz) (ABS(f)<-(D)IMIN && ((f)==(i) || FIEQ(f,i,fuzz))) // same, but variable fuzz
-#define F1(f)           A f(JJ jt,    A w)  // whether in an interface routine or not, these must use the internal parameter type
-#define F2(f)           A f(JJ jt,A a,A w)
-#define FPREF           
-#define F1PREF          FPREF
-#define F2PREF          FPREF
+#define F1(f)           A f(JJ jtinplace,    A w)  // whether in an interface routine or not, these must use the internal parameter type
+#define F2(f)           A f(JJ jtinplace,A a,A w)
+#define F12IP JJ jt=(JJ)(intptr_t)((I)jtinplace&~JTFLAGMSK)
+#define F12JT JJ jt=(JJ)(intptr_t)((I)jtinplace&~JTFLAGMSK)  // for documentation, when flags are not IP flags
+// obsolete #define FPREF           
+// obsolete #define F1PREF          FPREF
+// obsolete #define F2PREF          FPREF
 #define FPREFIP(T)         T jtinplace=jt; jt=(T)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
-#define F1PREFIP        FPREFIP(J)
-#define F2PREFIP        FPREFIP(J)
+// obsolete #define F1PREFIP        FPREFIP(J)
+// obsolete #define F2PREFIP        FPREFIP(J)
 #define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
 #define F2PREFJT        FPREFIP(J)
 #define F1RANKSUFF(m,f,self,suff)    {ARGCHK1(w);A z; if(likely(m<AR(w))){if(m==0)z=rank1ex0(w,(A)self,f);else z=rank1ex(  w,(A)self,(I)m,     f); suff}}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Run suff only if rank was called.  Fall through otherwise
@@ -1159,7 +1161,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // FORK1 and FORK2 are NOT bivalent
 #define FORK1(name,opt) \
-DF1(name){F1PREFIP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
+DF1(name){F12IP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
 AF fghfn; A fs, gs, hs; \
 if(opt&0x100){ \
  /* h is omitted.  Fetch from g and f, and ignore @][ for hs purposes.  hfn is dyad for @: only */ \
@@ -1228,7 +1230,7 @@ RETF(z); \
 // @: is 1c0
 // &: is 148
 #define FORK2(name,opt) \
-DF2(name){F2PREFIP;PROLOG(0000); PUSHZOMB; ARGCHK2D(a,w) \
+DF2(name){F12IP;PROLOG(0000); PUSHZOMB; ARGCHK2D(a,w) \
 AF fghfn; A fs, gs, hs; \
 if(opt&0x100){ \
  /* h is omitted.  Fetch from g and f, and ignore @][ for hs purposes.  hfn is dyad for @: only */ \

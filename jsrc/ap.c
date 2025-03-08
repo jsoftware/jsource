@@ -397,13 +397,13 @@ PREFIXPFX(bw1111pfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 // This old prefix support is needed for sparse matrices
 
-static DF1(jtprefix){A fs=FAV(self)->fgh[0]; I r;
+static DF1(jtprefix){F12IP;A fs=FAV(self)->fgh[0]; I r;
  ARGCHK1(w);
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtprefix);}
  R eachl(apv(SETIC(w,r),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
 
-static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
+static DF1(jtgprefix){F12IP;A h,*hv,z,*zv;I m,n,r;
  ARGCHK1(w);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
@@ -419,7 +419,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
 
 // block a contains (start,length) of infix.  w is the A for the data.
 // Result is new block containing the extracted infix
-static F2(jtseg){A z;I c,k,m,n,*u,zn;
+static F2(jtseg){F12IP;A z;I c,k,m,n,*u,zn;
  ARGCHK2(a,w);
  // The (start,length) had better be integers.  Extract them into m,n
  if(INT&AT(a)){u=AV(a); m=*u; n=u[1];} else m=n=0;
@@ -446,7 +446,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 }
 
 // Entry point for infix.  a is x, w is y, fs points to u
-static DF2(jtinfix){PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m; 
+static DF2(jtinfix){F12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m; 
  F2RANK(0,RMAX,jtinfix,self); // Handle looping over rank.  This returns here for each cell (including this test)
  // The rest of this verb handles a single cell
  // If length is infinite, convert to large integer
@@ -471,13 +471,13 @@ static DF2(jtinfix){PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m;
  EPILOG(z);
 }
 
-static DF1(jtinfix2){PROLOG(0019);A f; 
+static DF1(jtinfix2){F12IP;PROLOG(0019);A f; 
  f=FAV(self)->fgh[0]; f=FAV(f)->fgh[0];  // f=u in u/\ y
  A l=curtail(w), r=behead(w), z; IRS2(l,r,f,AR(w)-1,AR(w)-1,FAV(f)->valencefns[1],z); // (}: u"_1 }.) y
  EPILOG(z);
 }    /* 2 f/\w, where f supports IRS */
 
-static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
+static DF2(jtginfix){F12IP;A h,*hv,x,z,*zv;I d,m,n;
  RE(m=i0(vib(a))); 
  RZ(x=ifxi(m,w));
  h=VAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
@@ -498,7 +498,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
 #define STATESLASH2 ((I)1<<STATESLASH2X)
 
 // prefix and infix: prefix if a is mark
-static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
+static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
    I wt;
   ARGCHK1(w);
  F2RANKIP(0,RMAX,jtinfixprefix2,self);  // handle rank loop if needed
@@ -677,14 +677,14 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
 }
 
 // prefix, vectors to common processor.  Handles IRS.  Supports inplacing
-static DF1(jtinfixprefix1){F1PREFIP;
+static DF1(jtinfixprefix1){F12IP;
  I r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R jtrank1ex(jtinplace,w,self,r,jtinfixprefix1);}
  R jtinfixprefix2(jtinplace,mark,w,self);
 }
 
 //  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
- F1PREFIP;ARGCHK1(w);
+static DF1(jtpscan){F12IP;A z;I f,n,r,t,wn,wr,*ws,wt;
+ ARGCHK1(w);
  wt=AT(w);   // get type of w
  if(unlikely(ISSPARSE(wt)))R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
@@ -704,7 +704,7 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  if(unlikely((255&~EVNOCONV)&rc)){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
-static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
+static DF2(jtinfixd){F12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
  F2RANKW(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);   // n=#items of w
  RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);  // m=x arg, p=abs(m)
@@ -772,7 +772,7 @@ static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
  R jtinfixprefix2(jt,sc(m),w,fs);
 }
 
-static DF2(jtmovavg){I m,j;
+static DF2(jtmovavg){F12IP;I m,j;
  F2RANK(0,RMAX,jtmovavg,self);
  RE(m=i0(vib(a)));SETIC(w,j);
  if(0<m&&m<=j&&AT(w)&B01+FL+INT)R movsumavg(m,w,self,1);   // j may be 0
@@ -901,7 +901,7 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
-static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
+static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  F2RANK(0,RMAX,jtmovfslash,self);
  SETIC(w,p); wt=AT(w);   // p=#items of w
  RE(m0=i0(vib(a))); m=REPSGN(m0); m=(m^m0)-m; m^=REPSGN(m);  // m0=infx x,  m=abs(m0), handling IMIN
@@ -938,9 +938,9 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if(255&rc){jsignal(rc); if(rc>=EWOV){RESETERR; R movfslash(a,ccvt(FL,w,0),self);}R0;}else R z;
 }    /* a f/\w */
 
-static DF1(jtiota1){I j; R apv(SETIC(w,j),1L,1L);}
+static DF1(jtiota1){F12IP;I j; R apv(SETIC(w,j),1L,1L);}
 
-F1(jtbslash){F1PREFIP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
+F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
 ;
  ARGCHK1(w);
  A z; fdefallo(z)

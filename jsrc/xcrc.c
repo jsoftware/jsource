@@ -28,10 +28,10 @@ static UINT jtcrcvalidate(J jt,A w, UINT* crctab){A*wv;B*v;I m;UINT p,x,z=-1;
 }
 
 // 128!:3 monad
-F1(jtcrc1){R crc2(sc(-306674912),w);}
+F1(jtcrc1){F12IP;R crc2(sc(-306674912),w);}
 
 // 128!:3 dyad
-F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
+F2(jtcrc2){F12IP;I n;UINT z;UC*v; UINT crctab[256];
  ARGCHK2(a,w);
  ASSERT(1>=AR(a)&&1>=AR(w),EVRANK);
  n=AN(w); v=UAV(w);
@@ -43,7 +43,7 @@ F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
  R sc((I)(I4)(z^-1L));  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
 }
 
-F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
+F1(jtcrccompile){F12IP;A h,*hv;UINT z; UINT crctab[256];
  ARGCHK1(w);
  GAT0(h,BOX,2,1); hv=AAV1(h);
  RE(z=crcvalidate(w,crctab));
@@ -53,7 +53,7 @@ F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
 }
 
 // CRC where table has been precomputed and stored in h
-DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
+DF1(jtcrcfixedleft){F12IP;A h,*hv;I n;UINT*t,z;UC*v;
  ARGCHK1(w);
  h=FAV(self)->fgh[2]; hv=AAV(h); t=(UINT*)AV(C(hv[0])); z=(UINT)AV(C(hv[1]))[0];
  n=AN(w); v=UAV(w);
@@ -67,7 +67,7 @@ DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
 #ifndef CRC32L
 #define CRC32L(acc,in) (0xffffffff&((acc*15015)^(in)))   // if no hardware CRC (rare), mix the bits a little
 #endif
-DF2(jtqhash12){F2PREFIP; I hsiz; UI crc;
+DF2(jtqhash12){F12IP; I hsiz; UI crc;
  ARGCHK2(a,w);
  if(EPDYAD){RE(hsiz=i0(vib(a)));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
  ASSERT(hsiz>=0,EVDOMAIN);
@@ -91,7 +91,7 @@ DF2(jtqhash12){F2PREFIP; I hsiz; UI crc;
 // base64 stuff
 #include<assert.h>
 static C base64tab[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-DF1(jttobase64){
+DF1(jttobase64){F12IP;
  F1RANK(1,jttobase64,self);  // here we deal only with rank<= 1
  ASSERT(AT(w)&LIT,EVDOMAIN);  // we work only on ASCII (which includes UTF-8).  Other types must be converted first
  // Calculate # triples, #extras
@@ -152,7 +152,7 @@ static C base64invtab[256] = {
 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
  };
 
-DF1(jtfrombase64){
+DF1(jtfrombase64){F12IP;
  F1RANK(1,jtfrombase64,self);  // here we deal only with rank<= 1
  ASSERT(AT(w)&LIT,EVDOMAIN);  // we work only on ASCII
  // Calculate the number of result bytes.  We take the number of input bytes, and discard trailing '=' on a 2- or 3-boundary

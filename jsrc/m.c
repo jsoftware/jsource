@@ -166,12 +166,12 @@ void memhashadd(I lineno, C *string){
 }
 
 // 9!:54/55  read/set memory histogram
-F1(jtmemhistoq){
+F1(jtmemhistoq){F12IP;
  ASSERTMTV(w);
  R vec(INT,sizeof(jt->memhisto)/sizeof(jt->memhisto)[0],jt->memhisto);
 }
 
-F1(jtmemhistos){I k;
+F1(jtmemhistos){F12IP;I k;
  ASSERTMTV(w); 
  mvc(sizeof(jt->memhisto),jt->memhisto,MEMSET00LEN,MEMSET00);
  R mtm;
@@ -181,10 +181,10 @@ F1(jtmemhistos){I k;
 // return histo area
 
 // process using   ;"1 (":@{. ; ' ' ; 3 (3!:4) {:)"1 (20) {. \:~ |."1 (_2) ]\ 9!:62''
-F1(jtmemhashq){
+F1(jtmemhashq){F12IP;
  R vec(INT,sizeof(histarea)/sizeof(histarea)[0][0],histarea);
 }
-F1(jtmemhashs){
+F1(jtmemhashs){F12IP;
  ASSERTMTV(w); 
  mvc(sizeof(histarea,histarea,MEMSET00LEN,MEMSET00));
  R mtm;
@@ -224,7 +224,7 @@ B jtmeminitt(JJ jt){I k;
 // your code for which the warning gets suppressed 
 void jtauditmemchains(J jt){
 #if MEMAUDIT&0x30
- F1PREFIP; I Wi,Wj;A Wx,prevWx=0; forcetomemory(&prevWx);  if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdata))){
+  I Wi,Wj;A Wx,prevWx=0; forcetomemory(&prevWx);  if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdata))){
  for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mempool[-PMINL+Wi]);
  NOUNROLL while(Wx){if(Wx->origin!=THREADID1(jt)||FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
 }
@@ -235,7 +235,7 @@ void jtauditmemchains(J jt){
 //  atom 0 is return code 0=OK 1=pool number corrupted 2=header corrupted 3=usecount corrupted (valid only if MEMAUDIT&0x4) 4=loop in chain 
 //  atom 1 is lg of failing blocksize
 // if arg is not empty, crash on any error
-F1(jtcheckfreepool){
+F1(jtcheckfreepool){F12IP;
  I Wi,Wj,ecode=0;A Wx; 
  for(Wi=PMINL;Wi<=PLIML;++Wi){  // for each free list
   Wj=0; Wx=(jt->mempool[-PMINL+Wi]);  // get head of chain, init count of # eles
@@ -253,7 +253,7 @@ F1(jtcheckfreepool){
  R v2(ecode,ecode?Wi:0);  // return error code and chain 
 }
 
-F1(jtspcount){A z;I c=0,i,j,*v;A x;
+F1(jtspcount){F12IP;A z;I c=0,i,j,*v;A x;
  ASSERTMTV(w);
  GATV0(z,INT,2*(-PMINL+PLIML+1),2); v=AV2(z);
  for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mempool[-PMINL+i]); NOUNROLL while(x){x=AFCHAIN(x); ++j;} if(j){++c; *v++=(I)1<<i; *v++=j;}}
@@ -383,7 +383,7 @@ static D jtspfor1(J jt, A w){D tot=0.0;
  R tot;
 }
 
-F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
+F1(jtspfor){F12IP;A*wv,x,y,z;C*s;D*zv;I i,m,n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
@@ -399,7 +399,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
  RETF(z);
 }    /* 7!:5 space for named object; w is <'name' */
 
-F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
+F1(jtspforloc){F12IP;A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
@@ -432,10 +432,10 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
 }    /* 7!:6 space for a locale */
 
 
-F1(jtmmaxq){ASSERTMTV(w); RETF(sc(JT(jt,mmax)));}
+F1(jtmmaxq){F12IP;ASSERTMTV(w); RETF(sc(JT(jt,mmax)));}
      /* 9!:20 space limit query */
 
-F1(jtmmaxs){I j,m=MLEN,n;
+F1(jtmmaxs){F12IP;I j,m=MLEN,n;
  RE(n=i0(vib(w)));
  ASSERT(1E5<=n,EVLIMIT);
  j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
@@ -467,7 +467,7 @@ static A jtspallthreadsx(J jt){I grandtotal;
 
 // 7!:8 Get total# bytes used in all threads
 // Call a system lock, then get bytes in use for each thread.  Inactive threads may have bytes in use.
-F1(jtspallthreads){A z;
+F1(jtspallthreads){F12IP;A z;
  ASSERTMTV(w);  // no args allowed
  do{z=jtsystemlock(jt,LOCK78MEM,jtspallthreadsx);}while(z==(A)1);  // call a lock, and repeat if another thread got the same lock request
  R z;  // return value/err from call
@@ -582,7 +582,7 @@ void jtsetleakcode(J jt, I code) {
 #endif
 }
 
-F1(jtleakblockread){
+F1(jtleakblockread){F12IP;
 #if LEAKSNIFF
 if(!leakblock)R num(0);
 R vec(INT,2*leaknbufs,IAV(leakblock));
@@ -590,7 +590,7 @@ R vec(INT,2*leaknbufs,IAV(leakblock));
 R num(0);
 #endif
 }
-F1(jtleakblockreset){
+F1(jtleakblockreset){F12IP;
 #if LEAKSNIFF
 leakcode = 0;
 leaknbufs = 0;
@@ -602,7 +602,7 @@ R num(0);
 
 // Verify that block w does not appear on tstack more than lim times
 // nextpushp might start out on a boundary
-void audittstack(J jt){F1PREFIP;
+void audittstack(J jt){
  static B chkenabled= 0;
 #if BW==64 && MEMAUDIT&2
  if(JT(jt,audittstackdisabled)&1)R;
@@ -635,7 +635,7 @@ void audittstack(J jt){F1PREFIP;
 
 // x 13!:_5 y  audit a recursive pyx array y 
 // result 0=ok, 1=pyx found with usecount<x 2=pyx found with usecount<0 (maybe deadbeef) 3=nonrecursive block found 4=dead value found
-F2(jtauditpyx){I mindepth;
+F2(jtauditpyx){F12IP;I mindepth;
  ARGCHK2(a,w);
  RE(mindepth=i0(a));   // minimum expected depth
  I n=AN(w); // number of boxes
@@ -1190,7 +1190,7 @@ void jttpop(J jt,A *old,A *pushp){A *endingtpushp;
 // If the noun is assigned as part of a named derived verb, protection is not needed (but harmless) because if the same value is
 // assigned to another name, the usecount will be >1 and therefore not inplaceable.  Likewise, the the noun is non-DIRECT we need
 // only protect the top level, because if the named value is incorporated at a lower level its usecount must be >1.
-F1(jtrat){ARGCHK1(w); ras(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
+F1(jtrat){F12IP;ARGCHK1(w); ras(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
 
 A jtras(J jt, AD * RESTRICT w) { ARGCHK1(w); realizeifvirtual(w); ra(w); R w; }  // subroutine version of ra() to save space
 A jtra00s(J jt, AD * RESTRICT w) { ARGCHK1(w); ra00(w,AT(w)); R w; }  // subroutine version of ra00() to save space
@@ -1572,7 +1572,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 }    /* allocate header */ 
 
 // clone w, returning the address of the cloned area.  Result is NOT recursive, not AFRO, not virtual
-F1(jtca){A z;I t;P*wp,*zp;
+F1(jtca){F12IP;A z;I t;P*wp,*zp;
  ARGCHK1(w);
  I n=AN(w);  t=AT(w);
  if(unlikely(ISSPARSE(t))){
@@ -1595,10 +1595,10 @@ F1(jtca){A z;I t;P*wp,*zp;
  R z;
 }
 // clone block only if it is read-only
-F1(jtcaro){ if(AFLAG(w)&AFRO){RETF(ca(w));} RETF(w); }
+F1(jtcaro){F12IP; if(AFLAG(w)&AFRO){RETF(ca(w));} RETF(w); }
 
 // clone virtual block, producing a new virtual block
-F1(jtclonevirtual){
+F1(jtclonevirtual){F12IP;
  A z; RZ(z=virtual(w,0,AR(w)));  // allocate a new virtual block
  AN(z)=AN(w); MCISH(AS(z),AS(w),(I)AR(w));  // copy AN and shape; leave AC alone
  R z;

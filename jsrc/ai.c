@@ -18,14 +18,14 @@ static B jtconsf(J jt,A w){C c;
  R 0;
 }    // 1 iff w is a constant function or (constant function) g (constant function)
 
-static F2(jtfong){A f;C c;V*v;
+static F2(jtfong){F12IP;A f;C c;V*v;
  ARGCHK2(a,w);
  v=FAV(a); c=v->id; f=v->fgh[0]; A g=v->fgh[1];  A h=v->fgh[2];
  if(c==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}   // reconsitute capped fork 
  R (c&~1)==CLEFT ? w : c==CFORK&&(NOUN&AT(f)||CCAP==FAV(f)->id) ? folk(f,g,fong(h,w)) : folk(ds(CCAP),a,w);
 }   // [: f g  with simplifications: [: ][ w -> w;  [: (N/[: x y) w -> N/[: x [: y w   and y omitted if ][
 
-static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
+static F1(jtinvfork){F12IP;A f,fi,g,gi,h,k;B b,c;V*v;
  ARGCHK1(w);
  v=FAV(w);
  // extract fgh; replace nameref with value in fh
@@ -44,16 +44,16 @@ static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  R fong(fi,gi);  // if f const, h^:_1 @: const&g^:_1   if h const, f^:_1 @: g&const^:_1
 }
 
-static DF1(jtexpandf){A f; ARGCHK2(w,self); f=FAV(self)->fgh[0]; R expand(VAV(f)->fgh[0],w);}
+static DF1(jtexpandf){F12IP;A f; ARGCHK2(w,self); f=FAV(self)->fgh[0]; R expand(VAV(f)->fgh[0],w);}
 
-static DF1(jtexpandg){A f,g,z;V*v;
+static DF1(jtexpandg){F12IP;A f,g,z;V*v;
  ARGCHK2(w,self);
  f=FAV(self)->fgh[0]; v=FAV(f); g=v->fgh[1];
  jt->fill=FAV(g)->fgh[1]; z=expand(v->fgh[0],w); jt->fill=0;   // elements of FAV cannot be virtual
  R z;
 }
 
-static F2(jtdiag){I m,p,r,t,*v;
+static F2(jtdiag){F12IP;I m,p,r,t,*v;
  ARGCHK2(a,w);
  r=AR(w); t=AT(w);
  v=AS(w);   m=0;      DO(r, m=MIN(m,v[i]););
@@ -66,7 +66,7 @@ static F2(jtdiag){I m,p,r,t,*v;
   ASSERT(0,EVNONCE);
 }}
 
-static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
+static F1(jtbminv){F12IP;A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  ARGCHK1(w);
  ASSERT(0,EVNONCE);
  ASSERT(BOX&AT(w),EVDOMAIN);
@@ -232,7 +232,7 @@ xco:
 }
 
 // inverse of I., with domain extended to allow unsorted w
-static DF1(jticapdotinv){
+static DF1(jticapdotinv){F12IP;
  ARGCHK1(w); F1RANK(1,jticapdotinv,self);  // we handle only rank 1 here
  // the rest applies only to lists
  if(unlikely(!(AT(w)&INT)))RZ(w=cvt(INT,w));  // integers needed
@@ -343,7 +343,7 @@ xco:
  ASSERT(0,EVDOMAIN);
 }
 
-static F1(jtneutral){A x,y;B b;V*v;
+static F1(jtneutral){F12IP;A x,y;B b;V*v;
  ARGCHK1(w);
  v=FAV(w);
  ASSERT(!v->lrr,EVDOMAIN);
@@ -359,7 +359,7 @@ static F1(jtneutral){A x,y;B b;V*v;
  ASSERT(0,EVDOMAIN);
 }    /* neutral of arbitrary rank-0 function */
 
-F1(jtiden){A f,g,x=0;V*u,*v;
+F1(jtiden){F12IP;A f,g,x=0;V*u,*v;
  RZ(w=fix(w,zeroionei(0))); ASSERT(VERB&AT(w),EVDOMAIN);
  v=FAV(w); f=v->fgh[0]; g=v->fgh[1];
  switch(v->id){
@@ -401,7 +401,7 @@ F1(jtiden){A f,g,x=0;V*u,*v;
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
 }
 
-F1(jtidensb){A x=0,w0=w;V*v;
+F1(jtidensb){F12IP;A x=0,w0=w;V*v;
  RZ(w=fix(w,zeroionei(0))); ASSERT(VERB&AT(w),EVDOMAIN);
  v=FAV(w);
  switch(v->id){

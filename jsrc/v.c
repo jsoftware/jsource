@@ -6,18 +6,18 @@
 #include "j.h"
 
 
-F1(jttally ){A z; I k; ARGCHK1(w); z=sc(SETIC(w,k)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}  //  # y
-F1(jtshapex){A z; ARGCHK1(w); VECI(z,AR(w),AS(w)); if(unlikely(((AT(w)&XNUM+RAT)!=0)))z=xco1(z); RETF(z);}
-F1(jtshape){ARGCHK1(w); A z; VECI(z,AR(w),AS(w)); RETF(z);}  // $ y
-F1(jtisempty){ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
-F1(jtisnotempty){ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
-F1(jtisitems){ARGCHK1(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
-F1(jtrank){F1PREFIP; ARGCHK1(w); R sc(AR(w));}  // #@$
-F1(jtnatoms){F1PREFIP; A z; ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R dfv1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
+F1(jttally ){F12IP;A z; I k; ARGCHK1(w); z=sc(SETIC(w,k)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}  //  # y
+F1(jtshapex){F12IP;A z; ARGCHK1(w); VECI(z,AR(w),AS(w)); if(unlikely(((AT(w)&XNUM+RAT)!=0)))z=xco1(z); RETF(z);}
+F1(jtshape){F12IP;ARGCHK1(w); A z; VECI(z,AR(w),AS(w)); RETF(z);}  // $ y
+F1(jtisempty){F12IP;ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
+F1(jtisnotempty){F12IP;ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
+F1(jtisitems){F12IP;ARGCHK1(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
+F1(jtrank){F12IP; ARGCHK1(w); R sc(AR(w));}  // #@$
+F1(jtnatoms){F12IP; A z; ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R dfv1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
 
 // ,y and ,"r y - producing virtual blocks
-F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
- F1PREFIP; ARGCHK1(w); 
+F1(jtravel){F12IP;A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
+  ARGCHK1(w); 
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; // r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(likely(!ISSPARSE(AT(w)))){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
@@ -63,8 +63,8 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  RETF(z);
 }
 
-F1(jttable){A z,zz;I r,wr;
- F1PREFIP;ARGCHK1(w);
+F1(jttable){F12IP;A z,zz;I r,wr;
+ ARGCHK1(w);
  // We accept the pristine calculations from ravel
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
  RZ(IRSIP1(w,0L,r-((UI)r>0),jtravel,z));  // perform ravel on items
@@ -87,17 +87,17 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
 } 
 
 // ][.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
-F2(jtleft2 ){F2PREFIP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(a)); RETF(lr2((jtr<<RANKTX)|(jtr>>RANKTX),w,a));}  // swap a & w, and their ranks
-F2(jtright2){F2PREFIP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(w)); RETF(lr2(jtr,a,w));}
+F2(jtleft2 ){F12IP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(a)); RETF(lr2((jtr<<RANKTX)|(jtr>>RANKTX),w,a));}  // swap a & w, and their ranks
+F2(jtright2){F12IP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(w)); RETF(lr2(jtr,a,w));}
 
-F1(jtright1){RETF(RETARG(w));}
+F1(jtright1){F12IP;RETF(RETARG(w));}
 // lev, dex, and ident - identity adverb/conjunction  (ident uses the same code as lev)
-F2(jtlev){F2PREFIP;RETF(RETARG(a));}  F2(jtdex){F2PREFIP;RETF(RETARG(w));}
+F2(jtlev){F12IP;RETF(RETARG(a));}  F2(jtdex){F12IP;RETF(RETARG(w));}
 
 
 
 // i. y
-DF1(jtiota){A z;I m,n,*v;
+DF1(jtiota){F12IP;A z;I m,n,*v;
  F1RANK(1,jtiota,self);
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));  // if extended, take integer and convert
  RZ(w=vi(w)); n=AN(w); v=AV(w);
@@ -108,7 +108,7 @@ DF1(jtiota){A z;I m,n,*v;
 }
 
 // i: w
-DF1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
+DF1(jtjico1){F12IP;A y,z;B b;D d,*v;I c,m,n; 
  F1RANK(0,jtjico1,self);
  RZ(y=ccvt(FL,rect(w),0)); v=DAV(y); d=*v;  // convert to complex, d=real part of value
  RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num(2))));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
@@ -121,7 +121,7 @@ DF1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
 }
 
 // _9: to 9: and _:, return the saved value.  If we can inplace the operation (i. e. 0:"0), do so for DIRECT types, preserving the existing precision
-DF1(jtnum1){F1PREFIP;A z=0;
+DF1(jtnum1){F12IP;A z=0;
  ARGCHK2(w,self); RANKT rank=(RANKT)jt->ranks; rank=rank>AR(w)?AR(w):rank; A a=FAV(self)->fgh[2];  // fetch value to store: always an INT/boolean, but if boolean the high-order bytes are 0, so 0 is valid INT/FL and 1 a valid INT
  if(rank==AR(w))R a;  // at infinite rank, just return the value.  Because VFATOP[LR] puns with comparison flags,
    // it is possible that inplacing flags are set; so we must handle infinite rank before looking at inplacing
@@ -145,16 +145,16 @@ DF1(jtnum1){F1PREFIP;A z=0;
  mvc(natoms<<k,voidAV(z),1LL<<k,voidAV(a));  // could use voidAV0(a)
  R z;
 }
-DF2(jtnum2){ARGCHK3(a,w,self); R FAV(self)->fgh[2];}
+DF2(jtnum2){F12IP;ARGCHK3(a,w,self); R FAV(self)->fgh[2];}
 
-F2(jtfromr  ){ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is infinite - no frame  {"_ 1
-F2(jtrepeatr){ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}  // #"_ 1
+F2(jtfromr  ){F12IP;ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is infinite - no frame  {"_ 1
+F2(jtrepeatr){F12IP;ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}  // #"_ 1
 
 A jttaker(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jttake,z);}  // n {."1 w
 A jtdropr(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,z);}  // n }."1 w
 
 // I. y
-DF1(jticap){A a,e;I n;P*p;
+DF1(jticap){F12IP;A a,e;I n;P*p;
  F1RANK(1,jticap,self);
  SETIC(w,n);
  if(unlikely((AT(w)&SPARSE+B01)==SPARSE+B01)){
@@ -164,7 +164,7 @@ DF1(jticap){A a,e;I n;P*p;
  R likely((B01&AT(w))!=0) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }
 
-DF1(jtcharmap){F1PREFIP; A z;B bb[256];I k,n;UC c,*u,*v,*yv,zz[256];
+DF1(jtcharmap){F12IP; A z;B bb[256];I k,n;UC c,*u,*v,*yv,zz[256];
  ARGCHK1(w);
  A x=FAV(FAV(self)->fgh[2])->fgh[0], y=FAV(self)->fgh[0];  // extract translation tables
  if(!(LIT&AT(w)))R fork120(jt,w,self);  // revert if not byte args

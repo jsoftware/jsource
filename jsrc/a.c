@@ -7,16 +7,16 @@
 
 // These routines support IRS iff the underlying verb does, so all we have to do is switch the ranks if any and vector on to the function
 // create inplace bits as copy of W, or swap A & W
-static DF1(swap1){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];F1PREFIP; jtinplace = (J)(intptr_t)(((I)jtinplace&~JTINPLACEA)+2*((I)jtinplace&JTINPLACEW));
+static DF1(swap1){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtinplace = (J)(intptr_t)(((I)jtinplace&~JTINPLACEA)+2*((I)jtinplace&JTINPLACEW));
  // a~ carried the IRS flag from a and thus we might have ranks set.  If so, use them, and no need to check agreement again.  For ease, we just use whatever is set 
  A z; IRSIP2(w,w,fs,(RANKT)jt->ranks,(RANKT)jt->ranks,f2,z); R z;
 }
-static DF2(swap2){A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace^((JTINPLACEW+JTINPLACEA)&(0x3C>>(2*((I)jtinplace&JTINPLACEW+JTINPLACEA)))));
+static DF2(swap2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtinplace = (J)(intptr_t)((I)jtinplace^((JTINPLACEW+JTINPLACEA)&(0x3C>>(2*((I)jtinplace&JTINPLACEW+JTINPLACEA)))));
  A z; IRSIP2(w,a,fs,(RANKT)jt->ranks,jt->ranks>>RANKTX,f2,z); R z;
 }
 
 // w~, which is either reflexive/passive or evoke
-F1(jtswap){F1PREFIP;A y;C*s;I n;
+F1(jtswap){F12IP;A y;C*s;I n;
  ARGCHK1(w); 
  if(VERB&AT(w)){
   // reflexive/passive.  Create verb that swaps.  Most flags do not apply to the derived verb
@@ -43,12 +43,12 @@ static const B booltab[64]={
  1,0,0,0, 1,0,0,1, 1,0,1,0, 1,0,1,1,  1,1,0,0, 1,1,0,1, 1,1,1,0, 1,1,1,1,
 };
 
-static DF2(jtbdot2){R from(plusA(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]);}  // dyad b. (2*a + w) { h
+static DF2(jtbdot2){F12IP;R from(plusA(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]);}  // dyad b. (2*a + w) { h
 
-static DF1(jtbdot1){R bdot2(num(0),w,self);}
+static DF1(jtbdot1){F12IP;R bdot2(num(0),w,self);}
 
 // (a b.) w
-static DF1(jtbasis1){A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
+static DF1(jtbasis1){F12IP;A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
  F1RANK(0,jtbasis1,self);
  RZ(w=vi(w));
  switch(AV(w)[0]){   // switch on arg
@@ -65,7 +65,7 @@ static DF1(jtbasis1){A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
 }
 
 // a b.
-F1(jtbdot){F1PREFIP;A b,h=0;I j=0,n,*v;
+F1(jtbdot){F12IP;A b,h=0;I j=0,n,*v;
  ARGCHK1(w);
  A z; fdefallo(z)
  if(VERB&AT(w)){fdeffill(z,0,CBDOT,VERB,(AF)(jtbasis1),jtvalenceerr,w,0L,0L,VFLAGNONE,0,0,0) RETF(z);}
@@ -162,7 +162,7 @@ static I jtint0(J jt,A w){A x;
  R w&&INT+B01&AT(w)?BIV0(w):IMIN;
 }
 
-static DF2(jtmemo12){A fs=FAV(self)->fgh[0];A z;I x,y;   // w is 0 for monad
+static DF2(jtmemo12){F12IP;A fs=FAV(self)->fgh[0];A z;I x,y;   // w is 0 for monad
  ARGCHK2(a,w); w=EPDYAD?w:0; AF f12=FAV(fs)->valencefns[!!w];
  x=int0(a); y=w&&x!=IMIN?int0(w):x;  // get arg value, IMIN if not memoable; for monad let y=x
  if(MIN(x,y)==IMIN)R CALL12(w,f12,a,w,fs);  // IMIN is unmemoable, run fn
@@ -170,7 +170,7 @@ static DF2(jtmemo12){A fs=FAV(self)->fgh[0];A z;I x,y;   // w is 0 for monad
 }
 
 // Create the memoed verb.  We create an h argument of hashtable;key;value, as described above
-F1(jtmemo){F1PREFIP;PROLOG(300);A h,*hv;I m;
+F1(jtmemo){F12IP;PROLOG(300);A h,*hv;I m;
  ARGCHK1(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  V *v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate

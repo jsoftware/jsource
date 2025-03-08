@@ -537,7 +537,7 @@ static E jtpospowE(J jt,E x,E y){
 APFX(powEE, E,E,E, pospowE,,HDR1JERR)
 
 
-F2(jtlogar2){A z;I t;
+F2(jtlogar2){F12IP;A z;I t;
  ARGCHK2(a,w); 
  RE(t=maxtype(AT(a),AT(w)));
  if(!(t&XNUM)||jt->xmode==XMEXACT){jt->xmode=XMEXACT; R jtatomic2(JTIPAW,logar1(w),logar1(a),ds(CDIV));}  // better to multiply by recip, but not much, & it makes 0 ^. 0 not fail
@@ -547,7 +547,7 @@ F2(jtlogar2){A z;I t;
  R 0;
 }
     
-F2(jtroot){A z;I t;
+F2(jtroot){F12IP;A z;I t;
  ARGCHK2(a,w);
  RE(t=maxtype(AT(a),AT(w)));
  A ma=a; if(TYPESNE(t,AT(a)))RZ(ma=cvt(t,a));
@@ -562,9 +562,9 @@ F2(jtroot){A z;I t;
  }
 }
 
-F1(jtjdot1){R tymes(a0j1,w);}
+F1(jtjdot1){F12IP;R tymes(a0j1,w);}
 // j. should preserve -0 when given real arguments
-F2(jtjdot2){
+F2(jtjdot2){F12IP;
  ARGCHK2(a,w); I at=AT(a), wt=AT(w);
  if((~(SGNIFSPARSE(at)|SGNIFSPARSE(wt))&-(at&B01+INT+FL)&-(wt&B01+INT+FL))<0){A z;  // if both args real and not sparse
   I ar=AR(a), wr=AR(w);
@@ -575,13 +575,13 @@ F2(jtjdot2){
  }
  R plus(a,tymes(a0j1,w));
 }
-F1(jtrdot1){R expn1(jdot1(w));}
-F2(jtrdot2){R tymes(a,rdot1(w));}
+F1(jtrdot1){F12IP;R expn1(jdot1(w));}
+F2(jtrdot2){F12IP;R tymes(a,rdot1(w));}
 
 
-F1(jtpolar){ARGCHK1(w); A z; R cvt((AT(w)&SPARSE)+FL,dfv2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
+F1(jtpolar){F12IP;ARGCHK1(w); A z; R cvt((AT(w)&SPARSE)+FL,dfv2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
 
-DF1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
+DF1(jtrect){F12IP;A e,z;B b;I r,t;P*wp,*zp;Z c;
  ARGCHK1(w); 
  t=AT(w); r=AR(w); RESETRANK;   // Run as infinite rank
  ASSERT(!AN(w)||t&NUMERIC,EVDOMAIN);

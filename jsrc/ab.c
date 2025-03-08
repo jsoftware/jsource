@@ -148,8 +148,8 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DQ(m, DQ(d,
 
 
 #define BITWISE(f,T,op)  \
- DF2(f){A z;I *av,k=0,x;T*wv,y,*zv;             \
-  F2PREFIP;ARGCHK2(a,w);  /* kludge we allow inplace call but we don't honor it yet */ \
+ DF2(f){F12IP;A z;I *av,k=0,x;T*wv,y,*zv;             \
+  ARGCHK2(a,w);  /* kludge we allow inplace call but we don't honor it yet */ \
   if(!ISDENSETYPE(AT(a),INT))RZ(a=cvt(INT,a));                                    \
   if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w));                                    \
   av=(I*)AV(a);                          \
@@ -171,7 +171,7 @@ BITWISE(jtbitwiserotate,UI,BWROT   )
 BITWISE(jtbitwiseshift, UI,BWSHIFT )
 BITWISE(jtbitwiseshifta,I, BWSHIFTA)
 
-DF1(jtbitwise1){R CALL2(FAV(self)->valencefns[1],zeroionei(0),w,self);}   // inplaceable - don't touch jt
+DF1(jtbitwise1){F12IP;R CALL2(FAV(self)->valencefns[1],zeroionei(0),w,self);}   // inplaceable - don't touch jt
 
 
 static AHDR2FN* bwC[16]={(AHDR2FN*)bw0000CC,(AHDR2FN*)bw0001CC,(AHDR2FN*)bw0010CC,(AHDR2FN*)bw0011CC, (AHDR2FN*)bw0100CC,(AHDR2FN*)bw0101CC,(AHDR2FN*)bw0110CC,(AHDR2FN*)bw0111CC,
@@ -184,7 +184,7 @@ static AHDR2FN* bwI[16]={(AHDR2FN*)bw0000II,(AHDR2FN*)bw0001II,(AHDR2FN*)bw0010I
 /* a m b.&.(a.i.]) w */
 /* m e. 16+i.16      */
 DF2(jtunderh2);
-DF2(jtbitwisechar){A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I b;I j,m,n,zn;AHDR2FN* ado;
+DF2(jtbitwisechar){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I b;I j,m,n,zn;AHDR2FN* ado;
  ARGCHK2(a,w);
  A x=a, y=w; I an=AN(a), wn=AN(w);
  if((-an&-wn&-(AT(a)&AT(w))&LIT)>=0)R jtunderh2(jt,a,w,self);  // empty or not LIT, revert
@@ -210,7 +210,7 @@ static AHDRRFN* bwinsI[16]={(AHDRRFN*)bw0000insI,(AHDRRFN*)bw0001insI,(AHDRRFN*)
 /* m e. 16+i.16     */
 
 DF1(jtunderh1);
-DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN* ado;
+DF1(jtbitwiseinsertchar){F12IP;A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN* ado;
  ARGCHK2(w,self);
  wr=AR(w); wn=AN(w); SETIC(w,n); z=VAV(self)->fgh[0]; fs=VAV(z)->fgh[0];
  if((-(wn)&(SZI-n)&SGNIF(AT(w),LITX))>=0)R jtunderh1(jt,w,self);  // revert if not wn!=0 & n>SZI & LIT

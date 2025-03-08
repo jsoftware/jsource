@@ -13,7 +13,7 @@ static I jtord(J jt,A w){I j,n,*v,z;
  R z;
 }  // the order of the permutation w: max element of w (could be negative)
 
-DF1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
+DF1(jtpinv){F12IP;I m=-1,n,*v;  // empty perm will set m=0
  F1RANK(1,jtpinv,self);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
@@ -74,7 +74,7 @@ A jtpfill(J jt,I n,A w){PROLOG(0081);A b,z;B*bv;I*wv,*zv;
  EPILOG(z);
 }
 
-static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
+static F1(jtcfd){F12IP;A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  ARGCHK1(w);
  if(c=ISDENSETYPE(AT(w),INT)){
   n=AN(w); v=AV(w);
@@ -114,17 +114,17 @@ static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
 }    /* direct from cycle */
 
 // C. y
-DF1(jtcdot1){F1RANK(1,jtcdot1,self); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
+DF1(jtcdot1){F12IP;F1RANK(1,jtcdot1,self); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
 
 // x C. y
-DF2(jtccapdot2){A p;I k;
+DF2(jtccapdot2){F12IP;A p;I k;
  F2RANK(1,RMAX,jtccapdot2,self);
  SETIC(w,k);
  RZ(p=BOX&AT(a)?dfc(k,a):pfill(k,a));
  R AR(w)?fromA(p,w):w;
 }
 
-F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
+F1(jtpparity){F12IP;A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
  RZ(x=cvt(INT,w)); makewritable(x);   // we ALWAYS create a copy of w, because we modify it here
  r=AR(x); s=AS(x); n=AS(x)[r-1]; n=r?n:1; PRODX(m,r-1,s,1); v=AV(x);
  GATV0(y,B01,n,1); u=BAV1(y);
@@ -140,7 +140,7 @@ F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
 }    /* permutation parity; # interchanges to get i.n */
 
 // reduced form seems to be (>:i.<:-$y) #: y where y is the permutation number (note there is a redundant 0 at the end)
-static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
+static F1(jtdfr){F12IP;A z;I c,d,i,j,m,n,*v,*x;
  ARGCHK1(w);
  n=AS(w)[AR(w)-1]; PROD(m,AR(w)-1,AS(w)); v=AV(w);  // n=length of each permutation, m=#permutations
  I zr=AR(w); GATV(z,INT,AN(w),AR(w),AS(w)); x=AVn(zr,z);
@@ -152,14 +152,14 @@ static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
  R z;
 }    /* direct from reduced */
 
-static F1(jtrfd){A z;I j,k,m,n,r,*s,*x;
+static F1(jtrfd){F12IP;A z;I j,k,m,n,r,*s,*x;
  RZ(z=ca(w)); x=AV(z);
  r=AR(w); s=AS(w); PROD(m,r-1,s);
  if(n=s[r-1])DO(m, j=n-1; ++x; DO(n-1, k=0; DO(j--, k+=*x>x[i];); *x++=k;););
  R z;
 }    /* reduced from direct */
 
-DF1(jtadot1){A y;I n;
+DF1(jtadot1){F12IP;A y;I n;
  F1RANK(1,jtadot1,self);
  RZ(y=BOX&AT(w)?cdot1(w):pfill(ord(w),w));
  SETIC(y,n);
@@ -167,7 +167,7 @@ DF1(jtadot1){A y;I n;
 }
 
 // x A. y, 
-F2(jtadot2){A m,p;I n;
+F2(jtadot2){F12IP;A m,p;I n;
  ARGCHK2(a,w);
  SETIC(w,n); p=sc(n); if(XNUM&AT(a))p=cvt(XNUM,p); RZ(m=fact(p));
  I ckx=all1(le(negate(m),a))&&all1(lt(a,m)); RE(0); ASSERT(ckx,EVINDEX);

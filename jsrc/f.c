@@ -235,7 +235,7 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I dec=REPSGN(n);n=n^dec;I
  *y=0; R y-s;
 }
 
-static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
+static F1(jtthb){F12IP;A z;B*x;C*y;I c,m,n,p,r,*s;
  n=AN(w); r=AR(w); s=AS(w);
   SHAPEN(w,r-1,c); m=n/c; p=2*c-1;
  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; 
@@ -245,7 +245,7 @@ static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
 }
 
 // default for for numerics
-static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt;
+static F1(jtthn){F12IP;A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt;
  n=AN(w); r=AR(w); s=AS(w);
  thcase(AT(w),&wd,&fmt);  // get default field width and routine address
  GATV0(t,LIT,wd*(1+n),1); tv=CAV1(t);
@@ -344,7 +344,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SB
  EPILOG(z);
 }
 
-static F1(jtthx1){
+static F1(jtthx1){F12IP;
  C*s=SgetX(w); // base 10 representation
  if('-'==s[0])s[0]='_'; // use J's convention for negative
  I l= strlen(s); // maybe better to use AN(UNvoidAV1(s))-1 ??
@@ -365,7 +365,7 @@ static F1(jtthx1){
  R z;
 }
 
-static F1(jtthxqe){
+static F1(jtthxqe){F12IP;
  I n=AN(w), r=AR(w), *s=AS(w), *wv=AV(w), c;
  SHAPEN(w,r-1,c); I m=n/c; // m: # rows, c: # columns
  A t; GATV0(t,BOX,n,1); A*tv=AAV1(t);
@@ -516,7 +516,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
 // 2-cell of w is opened and the contents joined to its neighbors, with boxing characters
 // installed around it.
 // All the 2-cells of the result have boxing characters in the same locations.
-static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;F1PREFJT;
+static F1(jtenframe){F12JT;A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
  // Find the positions of the cell boundaries within each 2-cell of the
  // result. x and y are lists, where x[i] and y[j] give the height/width of cell
  // (i,j) of the result 2-cell. This height/width includes the boxing char
@@ -544,7 +544,7 @@ static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;F1PR
 // Convert any character array to a table for display
 // w is an r-dimensional array of characters; result is a table with
 // 1 blank line between 2-cells, 2 blank lines between 3-cells, etc
-F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
+F1(jtmat){F12IP;A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  ARGCHK1(w);  // return if no w
  // r=rank of w, s->shape, v->characters, t=type
  r=AR(w); s=AS(w); v=CAV(w); t=AT(w);
@@ -572,7 +572,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
 }
 
 // Convert 1 box to character array, then to character table
-static F2(jtmatth1){F1PREFJT; R mat(thorn1main(a,w));}
+static F2(jtmatth1){F12JT; R mat(thorn1main(a,w));}
 static EVERYFS(matth1self,0,jtmatth1,0,VFLAGNONE)
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
@@ -595,7 +595,7 @@ static A jtthbox(J jt,A w,A prxthornuni){A z;static UC ctrl[]=" \001\002\003\004
 }
 
 // format sparse array
-static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
+static F1(jtths){F12IP;A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  RZ(scheck(w));
  p=PAV(w); e=SPA(p,e); i=SPA(p,i); x=SPA(p,x); 
  RZ(i=thorn1(i)); s=AS(i); m=s[0]; n=s[1];
@@ -678,13 +678,13 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
 // entry point to allow C2T result from thorn1.  But always pass byte arguments unchanged
 // This will enable null insertion/removal for CJK, but that's OK since the result goes to display
 // This is called only from jprx()
-F1(jtthorn1u){ A z; ARGCHK1(w); z = thorn1main(w,sc(jt->boxpos+2+!(AT(w)&(LIT)))); R z; }  // set prx and prxthornuni flags
+F1(jtthorn1u){F12IP; A z; ARGCHK1(w); z = thorn1main(w,sc(jt->boxpos+2+!(AT(w)&(LIT)))); R z; }  // set prx and prxthornuni flags
 
 // entry point for returning LIT array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
 A jtthorn1xy(J jt,A w,I xypos){ A z; ARGCHK1(w); A prxthornuni=sc(xypos+!(AT(w)&(LIT+C2T+C4T))); z = thorn1main(w,prxthornuni); if (z&&AT(z)&(C2T+C4T))z = rank2ex(z,prxthornuni,DUMMYSELF,MIN(AR(z),1L),0,MIN(AR(z),1L),0, RoutineD); R z; }
 
 // entry point to use default boxing
-F1(jtthorn1){ R jtthorn1xy(jt,w,jt->boxpos); }
+F1(jtthorn1){F12IP; R jtthorn1xy(jt,w,jt->boxpos); }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}
@@ -926,7 +926,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
 // a is the output control, (outeol, outmaxlen, outmaxbefore, outmaxafter)
 // w is any noun
 // Result is the UTF-8 byte string that would be displayed
-F2(jtoutstr){I*v;
+F2(jtoutstr){F12IP;I*v;
  ARGCHK2(a,w);
  RZ(a=vib(a));
  ASSERT(1==AR(a), EVRANK);
@@ -941,7 +941,7 @@ F2(jtoutstr){I*v;
 }
 
 // w is a character noun.  Convert it to a UTF-8 string and write it to the console
-static F1(jtjpr1){F1PREFJT;PROLOG(0002);A z;
+static F1(jtjpr1){F12JT;PROLOG(0002);A z;
  // extract the output type buried in jt
  I mtyo=(I)jtinplace&JTPRTYO;
  // convert the character array to a null-terminated UTF-8 string
@@ -961,7 +961,7 @@ static F1(jtjpr1){F1PREFJT;PROLOG(0002);A z;
 // w is anything; convert it to character and write it to the display
 // flag bits in jt indicate output class, print-enable, and screen destination
 // Result is 0 if error, otherwise a harmless constant
-F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
+F1(jtjpr){F12JT;A y;I i,n,t; UC *v;
  ARGCHK1(w);
  t=AT(w);
   // if w is a noun, format it and output it

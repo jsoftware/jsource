@@ -155,9 +155,9 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  EPILOG(z);
 }                                                                                                                                                                                                                                                                                                 ZZ(
  
-F1(jtspres){ARGCHK1(w) ASSERT(0,EVNONCE); R w;}                                                                                                                                                                                                                                                                                       )
+F1(jtspres){F12IP;ARGCHK1(w) ASSERT(0,EVNONCE); R w;}                                                                                                                                                                                                                                                                                       )
 
-F1(jtdenseit){A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
+F1(jtdenseit){F12IP;A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
  ARGCHK1(w);
  r=AR(w); t=AT(w);
  if(!r||!ISSPARSE(t))R ca(w);
@@ -174,7 +174,7 @@ F1(jtdenseit){A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
  R b?z:cant2(pinv(q),z);
 }    /* $.^:_1 */
 
-F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
+F2(jtreaxis){F12IP;A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
  ARGCHK2(a,w);
  wt=AT(w);
  if(!ISSPARSE(wt))R sparseit(w,a,selm(wt));
@@ -229,7 +229,7 @@ static A jtaxbytes1(J jt,I t,I an,I m,I xr,I*xs){I k,z;
   R sc(z);
 }
 
-static F2(jtaxbytes){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
+static F2(jtaxbytes){F12IP;A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
  ARGCHK2(a,w);
  r=AR(w); ws=AS(w); wt=AT(w); 
  GATV0(q,INT,r,1); u=AV1(q); j=0;
@@ -254,7 +254,7 @@ static F2(jtaxbytes){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
  R axbytes(a1,reaxis(over(a,less(a1,a)),w));
 }    /* bytes required for (2;a)$.w */
 
-static F2(jtaxtally){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,wt;P*wp;
+static F2(jtaxtally){F12IP;A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,wt;P*wp;
  ARGCHK2(a,w);
  r=AR(w); wt=AT(w); 
  GATV0(q,INT,r,1); u=AV1(q); j=0;
@@ -277,7 +277,7 @@ static F2(jtaxtally){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,wt;P*wp;
  R axtally(a1,reaxis(over(a,less(a1,a)),w));
 }    /* #4$.(2;a)$.w */
 
-F2(jtrezero){A x,z;I at,t,wt,zt;P*wp,*zp;
+F2(jtrezero){F12IP;A x,z;I at,t,wt,zt;P*wp,*zp;
  ARGCHK2(a,w);
  at=AT(a); wp=PAV(w); x=SPA(wp,x); wt=AT(x);
  ASSERT(!AR(a),EVRANK);
@@ -292,7 +292,7 @@ F2(jtrezero){A x,z;I at,t,wt,zt;P*wp,*zp;
  R z;
 }    /* respecify the sparse element */
 
-F1(jtunzero){A e,q,x,z;I r;P*wp,*zp;
+F1(jtunzero){F12IP;A e,q,x,z;I r;P*wp,*zp;
  ARGCHK1(w);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); r=AR(x)-1;
  GASPARSE(z,AT(w),1,AR(w),AS(w)); zp=PAV(z);
@@ -304,14 +304,14 @@ F1(jtunzero){A e,q,x,z;I r;P*wp,*zp;
  R z;
 }    /* remove completely sparse cells */
 
-static F1(jtsparsep1){A*wv;I n=0;
+static F1(jtsparsep1){F12IP;A*wv;I n=0;
  ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK); 
  if(BOX&AT(w)){n=AN(w); wv=AAV(w); ASSERT(1<=n&&n<=3||5==n,EVLENGTH);}
  R sparse1a(0<n?C(wv[0]):w,1<n?C(wv[1]):mark,2<n?C(wv[2]):mark,3<n?C(wv[3]):mark,4<n?C(wv[4]):mark);
 }
 
-static F1(jtsparsen1){A*u,z;P*p;
+static F1(jtsparsen1){F12IP;A*u,z;P*p;
  ARGCHK1(w);
  ASSERT(ISSPARSE(AT(w)),EVDOMAIN);
  GAT0(z,BOX,3,1); u=AAV1(z); p=PAV(w);
@@ -319,13 +319,13 @@ static F1(jtsparsen1){A*u,z;P*p;
  RE(0); R z;
 }
 
-F1(jtsparse1){
+F1(jtsparse1){F12IP;
  ARGCHK1(w);
  if(!AR(w)||ISSPARSE(AT(w)))R ca(w);
  R sparseit(w,IX(AR(w)),selm(AT(w)));
 }    /* $. y */
 
-F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
+F2(jtsparse2){F12IP;A*av,q=0;B b;I j,k,t,*v;P*p;
  ARGCHK2(a,w);
  if(ISDENSETYPE(AT(a),BOX)){
   ASSERT(1==AR(a),EVRANK);

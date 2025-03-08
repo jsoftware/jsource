@@ -16,10 +16,10 @@ BPFX(nandBB, NAND,BNAND,NAND,BNAND, _mm256_xor_pd(bool256,_mm256_and_pd(u256,v25
 BPFX( norBB, NOR ,BNOR, NOR, BNOR, _mm256_xor_pd(bool256,_mm256_or_pd(u256,v256)) , , __m256d bool256=_mm256_broadcast_sd((D*)&Ivalidboolean); )
 
 
-F1(jtrazein){A z; R dfv2(z,w,box(raze(w)),amp(swap(ds(CEPS)),ds(COPE)));}
+F1(jtrazein){F12IP;A z; R dfv2(z,w,box(raze(w)),amp(swap(ds(CEPS)),ds(COPE)));}
 
 
-static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n,r,s,si,sj,t,*ws;
+static F2(jtebarmat){F12IP;A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n,r,s,si,sj,t,*ws;
  ARGCHK2(a,w);
  as=AS(a);      av=CAV(a);
  ws=AS(w); v=v0=wv=CAV(w);
@@ -41,7 +41,7 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
  RETF(z);
 }    /* E. on matrix arguments */
 
-static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
+static F2(jtebarvec){F12IP;A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
  ARGCHK2(a,w); a=C(a); w=C(w);
  an=AN(a); av=CAV(a); 
  wn=AN(w); wv=CAV(w); n=1+wn-an; 
@@ -212,7 +212,7 @@ matchfnd: ;
 }
 #endif
 
-F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
+F2(jtebar){F12IP;PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  ARGCHK2(a,w);
  ASSERT(!ISSPARSE(AT(a)|AT(w)), EVNONCE);
  ASSERT((AR(a) == AR(w)) || (AR(a) + (AR(w) ^ 1)) == 0, EVRANK);
@@ -250,7 +250,7 @@ default:
 }    /* Daniel M. Sunday, CACM 1990 8, 132-142 */
 
 
-F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
+F2(jti1ebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  ARGCHK2(a,w);
 
  RE(d=ebarprep(a,w,&a,&w,&c));
@@ -282,7 +282,7 @@ default:
  R sc(n);
 }    /* a (E. i. 1:) w where a and w are atoms or lists */
 
-F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
+F2(jtsumebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  ARGCHK2(a,w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
@@ -314,7 +314,7 @@ default:
  R sc(z);
 }    /* a ([: +/ E.) w where a and w are atoms or lists */
 
-F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
+F2(jtanyebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  ARGCHK2(a,w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
@@ -349,7 +349,7 @@ default:
 #define IFB1  \
  {if(zu==zv){I m=zu-AV(z); RZ(z=ext(0,z)); zv=m+AV(z); zu=AN(z)+AV(z);} *zv++=k;}
 
-DF2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
+DF2(jtifbebar){F12IP;A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  ARGCHK2(a,w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);

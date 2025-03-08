@@ -46,7 +46,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
 // a[i] is the axis of the result that axis i of w contributes to - known to be valid and INT type
 // This is the inverse permutation of the x in x |: y
 // This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
-static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
+static F2(jtcanta){F12IP;A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
  ARGCHK2(a,w);
  av=AV(a); ws=AS(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  ASSERT(r==AN(a),EVLENGTH);
@@ -102,8 +102,8 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
  RETF(z);
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
-DF1(jtcant1){I r; A z;
- F1PREFIP;ARGCHK1(w);
+DF1(jtcant1){F12IP;I r; A z;
+ ARGCHK1(w);
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
 #if 0  //  C_AVX2 || EMU_AVX2
  // This attempt to transpose in 4x4 blocks fails because the stores are very slow if not aligned, and cannot be aligned if the array has odd size.
@@ -182,8 +182,8 @@ DF1(jtcant1){I r; A z;
  RETF(z);  // This verb propagates WILLOPEN and must not perform EPILOG
 }    /* |:"r w */
 
-F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
- F2PREFIP;ARGCHK2(a,w); 
+F2(jtcant2){F12IP;A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
+ ARGCHK2(a,w); 
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
  if(((q-2)&(AR(a)-q-1))>=0){t=rank2ex(a,w,DUMMYSELF,MIN(q,1),r,q,r,jtcant2); PRISTCLRF(w) RETF(t);} // rank loop on a.  Loses pristinity

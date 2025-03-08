@@ -7,7 +7,7 @@
 
 extern A jtthq1(J jt, Q y);
 // w is a rational matrix
-DF1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
+DF1(jtgausselm){F12IP;I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,self);
  ASSERT(RAT&AT(w),EVNONCE);
  // This routine modifies w in place.  If w is virtual, that causes an error, because the blocks referred to in
@@ -34,7 +34,7 @@ DF1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
  R w;
 }    /* Gaussian elimination in place */
 
-static F1(jtdetr){A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
+static F1(jtdetr){F12IP;A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
  ARGCHK1(w);
  w=rifvsdebug(w);  // must realize before in-place operations, as above
  s=AS(w); r=s[0]; c=s[1];
@@ -57,7 +57,7 @@ static F1(jtdetr){A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
  GAT0(z,RAT,1,0); QAV0(z)[0]=d; R z;
 }    /* determinant on rational matrix; works in place */
 
-static F1(jtdetd){D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
+static F1(jtdetd){F12IP;D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
  ARGCHK1(w);
  s=AS(w); r=s[0]; c=s[1]; v=DAV(w);
  NAN0;
@@ -79,7 +79,7 @@ static F1(jtdetd){D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
 
 #define ZABT(v)         ((v).re*(v).re+(v).im*(v).im)
 
-static F1(jtdetz){A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
+static F1(jtdetz){F12IP;A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
  ARGCHK1(w);
  z.re=1.0; z.im=0.0;
  s=AS(w); r=s[0]; c=s[1]; v=ZAV(w);
@@ -100,7 +100,7 @@ static F1(jtdetz){A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
  GAT0(t,CMPX,1,0); ZAV0(t)[0]=z; R t;
 }    /* determinant on complex  matrix; works in place */
 
-F1(jtgaussdet){A z;I*s;
+F1(jtgaussdet){F12IP;A z;I*s;
  ARGCHK1(w);
  ASSERT(2==AR(w),EVRANK);
  s=AS(w);

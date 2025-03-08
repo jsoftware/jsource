@@ -743,7 +743,7 @@ I utousize(C4* src, I srcn){ C4 w,w1; I r=0;
  R r;
 }
 
-F1(jttoutf16){A z;I n,n1,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
+F1(jttoutf16){F12IP;A z;I n,n1,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  PROLOG(0000);
  ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
@@ -839,7 +839,7 @@ EPILOG(z);
 }    // called by monad ":
 
 // w is C2T C4T or LIT INT.  Result is U8 string
-F1(jttoutf8){A z;I n,n1,t,q,j; A c4; C4* c4v; I *v;
+F1(jttoutf8){F12IP;A z;I n,n1,t,q,j; A c4; C4* c4v; I *v;
 PROLOG(0000);
 ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
@@ -881,7 +881,7 @@ EPILOG(z);
 }    // 8 u: x - utf8 from LIT or C2T C4T
 
 // Similar to jttoutf16, but unlike 7&u: this one always returns unicode
-F1(jttoutf16x){A z;I n,n1,t,q;
+F1(jttoutf16x){F12IP;A z;I n,n1,t,q;
 PROLOG(0000);
 ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty list
@@ -913,7 +913,7 @@ EPILOG(z);
 
 // Similar to jttoutf8a, allow invalid unicode
 // w is C2T C4T or LIT.  Result is U8 string and null-terminate
-F1(jttoutf8x){
+F1(jttoutf8x){F12IP;
 R str0(toutf8a(w,0));
 }
 
@@ -932,7 +932,7 @@ wtom(fw,wcslen((wchar_t*)fw),f);
 f[q]=0;
 }
 
-F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
+F1(jttoutf32){F12IP;A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
  PROLOG(0000);
  ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
@@ -996,7 +996,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
 // illegal utf-16 is allowed
 // literal is NOT interpreted as utf-8.
 // rank is infinit
-F1(jttou32){A z;I n,t,b=0,j; US* c2v; C4* c4v; I* v; UC* c1v;
+F1(jttou32){F12IP;A z;I n,t,b=0,j; US* c2v; C4* c4v; I* v; UC* c1v;
  PROLOG(0000);
  ARGCHK1(w); n=AN(w); t=AT(w);
  if(C4T&AT(w))RCA(w);  // if already C4T, return
@@ -1064,9 +1064,9 @@ EPILOG(z);
 
 // to modified utf-8 assume input is rank-1 LIT
 // nul converted 0xc080
-F1(jttomutf8){R tocesu8a(jt,w,1);}
+F1(jttomutf8){F12IP;R tocesu8a(jt,w,1);}
 
 // to cesu-8 assume input is rank-1 LIT
 // to convert backwards, first to utf-16 then to utf-8
-F1(jttocesu8){R tocesu8a(jt,w,0);}
+F1(jttocesu8){F12IP;R tocesu8a(jt,w,0);}
 

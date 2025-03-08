@@ -17,7 +17,7 @@
 // w is the symbol table to be traversed, a is unused in the macro and can be used for a result
 
 #define SYMWALK(f,T,TYPE,COUNT,COL,SELECT,PROCESS)  \
- F2(f){A z;LX *e,j,k;I i,m=0,n;L*d;T*zv;                         \
+ F2(f){F12IP;A z;LX *e,j,k;I i,m=0,n;L*d;T*zv;                         \
   ARGCHK1(w);                                                     \
   n=AN(w); e=SYMLINFOSIZE+LXAV0(w);                                  \
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,GACOPYSHAPE0,R 0);                \

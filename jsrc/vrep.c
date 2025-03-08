@@ -7,11 +7,11 @@
 #include "ve.h"
 
 
-#define REPF(f)         A f(J jt,A a,A w,I wf,I wcr)
+#define REPF(f)         A f(J jtinplace,A a,A w,I wf,I wcr)
 
 
-static REPF(jtrepzdx){A p,q,x;P*wp;
- F2PREFIP;ARGCHK2(a,w);
+static REPF(jtrepzdx){F12IP;A p,q,x;P*wp;
+ ARGCHK2(a,w);
  if(ISSPARSE(AT(w))){wp=PAV(w); x=SPA(wp,e);}
  else x=jt->fill&&AN(jt->fill)?jt->fill:jtfiller(jt,AT(w),0,0);
  RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?AS(w)[wf]:1),num(-1)))));
@@ -19,8 +19,8 @@ static REPF(jtrepzdx){A p,q,x;P*wp;
  R IRS2(p,q,0L,1L,wcr+!wcr,jtfrom,x);
 }    /* (dense complex) # (dense or sparse) */
 
-static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
- F2PREFIP;ARGCHK2(a,w);
+static REPF(jtrepzsx){F12IP;A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
+ ARGCHK2(a,w);
  ap=PAV(a); x=SPA(ap,x); m=AN(x);
  if(!AN(SPA(ap,a)))R repzdx(ravel(x),w,wf,wcr);
  y=SPA(ap,i); yv=AV(y);
@@ -44,9 +44,9 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
  ASSERT(0,EVNONCE);
 }    /* (sparse complex) #"r (dense or sparse) */
 
-static REPF(jtrepbdx){A z;I c,k,m,p;
+static REPF(jtrepbdx){F12IP;A z;I c,k,m,p;
  // wf and wcr are set.  a is repeated for each cell of w
- F2PREFIP;ARGCHK2(a,w);
+ ARGCHK2(a,w);
  if(ISSPARSE(AT(w)))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
  m=AN(a);   // m is # minor cells in a major cell, i. e. #booleans in a
  void *zvv; void *wvv=voidAV(w); I n; // pointer to output area; pointer to input data; number of prefix bytes to skip in first cell
@@ -187,8 +187,8 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 
-static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,*v,*v0;P*ap,*wp,*zp;
- F2PREFIP;ARGCHK2(a,w);
+static REPF(jtrepbsx){F12IP;A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,*v,*v0;P*ap,*wp,*zp;
+ ARGCHK2(a,w);
  ap=PAV(a); e=SPA(ap,e); 
  y=SPA(ap,i); u=AV(y);
  x=SPA(ap,x); n=AN(x); b=BAV(x);
@@ -220,8 +220,8 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
  R z;
 }    /* (sparse boolean) #"r (dense or sparse) */
 
-static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;A z; 
- F2PREFIP;ARGCHK2(a,w);
+static REPF(jtrepidx){F12IP;A y;I j,m,p=0,*v,*x;A z; 
+ ARGCHK2(a,w);
  RZ(a=vi(a)); x=IAV(a);
  m=AS(a)[0]; if(unlikely(m==0))RETF(RETARG(w));
 #if 0  // when the integer reductions get faster
@@ -293,8 +293,8 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;A z;
 }    /* (dense  integer) #"r (dense or sparse) */
 #undef itemsize
 
-static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
- F2PREFIP;ARGCHK2(a,w);
+static REPF(jtrepisx){F12IP;A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
+ ARGCHK2(a,w);
  ap=PAV(a); e=SPA(ap,e); 
  y=SPA(ap,i); yv=AV(y);
  x=SPA(ap,x); if(!(INT&AT(x)))RZ(x=cvt(INT,x)); xv=AV(x);
@@ -310,8 +310,8 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
 }    /* (sparse integer) #"r (dense or sparse) */
 
 
-static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
- F2PREFIP;ARGCHK2(a,w);
+static REPF(jtrep1d){F12IP;A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
+ ARGCHK2(a,w);
  t=AT(a); m=AN(a); ws=AS(w); SETICFR(w,wf,wcr,n);   // n=length of item axis in input.  If atom, is repeated to length of a
  t=m?t:B01;  // 
  if(t&CMPX){
@@ -344,8 +344,8 @@ static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
  R 1;
 }    /* process a in a#"0 w */
 
-static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp;
- F2PREFIP;ARGCHK2(a,w);
+static REPF(jtrep1s){F12IP;A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp;
+ ARGCHK2(a,w);
  if((AT(a)&(SPARSE+CMPX))==(SPARSE+CMPX))R rep1d(denseit(a),w,wf,wcr);
  RE(rep1sa(a,&c,&d)); cd=c+d;   // c=#repeats, d=#skips, cd=stride between repeats
  if(!ISSPARSE(AT(w)))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
@@ -392,8 +392,8 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
 A (*reptab[])() = {jtrepisx,jtrepidx,jtrepbsx,jtrepbdx,jtrepzsx,jtrepzdx,jtrep1s,jtrep1d};
-F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
- F2PREFIP;ARGCHK2(a,w);
+F2(jtrepeat){F12IP;A z;I acr,ar,wcr,wf,wr;
+ ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  I adense=SGNIFDENSE(AT(a));  // sign set if a is dense

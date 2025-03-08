@@ -94,7 +94,7 @@ A jtsfn(J jt,B b,A w){NM*v; ARGCHK1(w); v=NAV(w); R str(b&SFNSIMPLEONLY?v->m:AN(
 A jtsfne(J jt,A w){ARGCHK1(w); A wn=FAV(w)->fgh[0]; if(AT(wn)&NAMEBYVALUE)R fix(w,zeroionei(0)); R sfn(0,wn);}
 
 
-F1(jtnfb){A y;C*s;I n;
+F1(jtnfb){F12IP;A y;C*s;I n;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(!AR(w),EVRANK);
@@ -105,7 +105,7 @@ F1(jtnfb){A y;C*s;I n;
 }    /* name from scalar boxed string */
 
 // w is an A for a name string; return NAME block or 0 if error
-F1(jtstdnm){C*s;I j,n,p,q;
+F1(jtstdnm){F12IP;C*s;I j,n,p,q;
  if(!(w=vs(w)))R 0;  // convert to ASCII
  n=AN(w); s=CAV(w);  // n = #characters, s->string
  if(!(n))R 0;
@@ -117,10 +117,10 @@ F1(jtstdnm){C*s;I j,n,p,q;
 
 // x is a (possibly) boxed string; result is NAME block for name x, error if invalid name
 // if stdnm has already set an error, leave it, because the name might not be ASCII
-F1(jtonm){A x,y; RZ(x=ope(w)); RE(y=stdnm(x)); ASSERTN(y!=0,EVILNAME,nfs(AN(x),CAV(x))); R y;}
+F1(jtonm){F12IP;A x,y; RZ(x=ope(w)); RE(y=stdnm(x)); ASSERTN(y!=0,EVILNAME,nfs(AN(x),CAV(x))); R y;}
 
 // w is array of boxed strings; result is name class for each
-F1(jtnc){A*wv,x,y,z;I i,n,t,*zv; 
+F1(jtnc){F12IP;A*wv,x,y,z;I i,n,t,*zv; 
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);   // n=#names  wv->first box
  ASSERT(!n||BOX&AT(w),EVDOMAIN);   // verify boxed input (unless empty)
@@ -156,7 +156,7 @@ static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 // a is the rank-1 256-byte initial-letter mask
 // w is the type to look for
 // result is list of names
-static F2(jtnlx){A z=mtv;B b;I m=0,*v,x;
+static F2(jtnlx){F12IP;A z=mtv;B b;I m=0,*v,x;
  RZ(w=vi(w)); v=AV(w); 
  DQ(AN(w), x=*v++; m|=nlmask[BETWEENC(x,0,6)?x:7];); 
  AS(a)[0]=m&RHS; b=1&&AS(a)[0]&RHS;  // AS(a)[0] is used for the type mask   b='type is NOUN/VERB/ADV/CONJ'
@@ -167,10 +167,10 @@ static F2(jtnlx){A z=mtv;B b;I m=0,*v,x;
  R nub(grade2(z,ope(z)));
 }
 
-F1(jtnl1){A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01); R nlx(a,w);}
+F1(jtnl1){F12IP;A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01); R nlx(a,w);}
      /* 4!:1  name list */
 
-F2(jtnl2){UC*u;
+F2(jtnl2){F12IP;UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
  A tmp; GAT0(tmp,B01,256,1) mvc(256L,CAV1(tmp),MEMSET00LEN,MEMSET00);
@@ -204,7 +204,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  R ch;
 }
 
-static F1(jtnch2){A ch;B b;LX *e;I i,m,n;L*d;
+static F1(jtnch2){F12IP;A ch;B b;LX *e;I i,m,n;L*d;
  RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=BAV(w)[0];
  GAT0(ch,BOX,20,1); m=0;
  if(JT(jt,stch)){
@@ -226,9 +226,9 @@ static F1(jtnch2){A ch;B b;LX *e;I i,m,n;L*d;
  R grade2(ch,ope(ch));
 }    /* 4!:5  names changed */
 
-F1(jtnch){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
+F1(jtnch){F12IP;READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
-F1(jtex){A*wv,y,z;B*zv;I i,n;
+F1(jtex){F12IP;A*wv,y,z;B*zv;I i,n;
  ARGCHK1(w);
  protectlocals(jt,0);  // we must ra() any local names on the current sentence's stack, since we may be about to delete them
  n=AN(w); wv=AAV(w); 

@@ -60,11 +60,11 @@ static I fromonehottype(I t){
  else R f3x0bit[CTTZ(t)-CMPXX];
 }
 
-F1(jtstype){ARGCHK1(w); R sc(toonehottype(AT(w)));}
+F1(jtstype){F12IP;ARGCHK1(w); R sc(toonehottype(AT(w)));}
      /* 3!:0 w */
 
 // (3!:0-type) c. w - convert
-F2(jtcdot2){A z;
+F2(jtcdot2){F12IP;A z;
  ARGCHK2(a,w);
  I t; RE(t=i0(a)); // convert type to integer atom, error if can't
  ASSERT(t=fromonehottype(t),EVDOMAIN)  // convert from 3!:0 form to internal type
@@ -73,7 +73,7 @@ F2(jtcdot2){A z;
 
 // a is integer atom or list, values indicating the desired result
 // atom values in x: 0=NJA, others reserved
-F2(jtnouninfo2){A z;
+F2(jtnouninfo2){F12IP;A z;
  ARGCHK2(a,w);
  RZ(a=vi(a)); // convert to integer, error if can't
  ASSERT(AR(a)<2,EVRANK);  // must be atom or list
@@ -366,17 +366,17 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
  RETF(z);
 }
 
-F1(jtbinrep1){ARGCHK1(w); ASSERT(NOUN&AT(w),EVDOMAIN); R brep(BU,SY_64,w);}  /* 3!:1 w */
-F1(jthexrep1){ARGCHK1(w); ASSERT(NOUN&AT(w),EVDOMAIN); R hrep(BU,SY_64,w);}  /* 3!:3 w */
+F1(jtbinrep1){F12IP;ARGCHK1(w); ASSERT(NOUN&AT(w),EVDOMAIN); R brep(BU,SY_64,w);}  /* 3!:1 w */
+F1(jthexrep1){F12IP;ARGCHK1(w); ASSERT(NOUN&AT(w),EVDOMAIN); R hrep(BU,SY_64,w);}  /* 3!:3 w */
 
-F2(jtbinrep2){I k;
+F2(jtbinrep2){F12IP;I k;
  ARGCHK2(a,w);
  RE(k=i0(a)); if(10<=k)k-=8;
  ASSERT(BETWEENC(k,0,3),EVDOMAIN);
  R brep((B)(k&1),(B)(2<=k),w);
 }    /* a 3!:1 w */
 
-F2(jthexrep2){I k;
+F2(jthexrep2){F12IP;I k;
  ARGCHK2(a,w); 
  RE(k=i0(a)); if(10<=k)k-=8;
  ASSERT(BETWEENC(k,0,3),EVDOMAIN);
@@ -390,7 +390,7 @@ static S jtunh(J jt,C c){
  ASSERT(0,EVDOMAIN);
 }
 
-static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
+static F1(jtunhex){F12IP;A z;C*u;I c,n;UC p,q,*v;
  ARGCHK1(w);
  c=AS(w)[1];
  ASSERT(c==8||c==16,EVLENGTH);  
@@ -504,7 +504,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  RE(z); RETF(z);
 }    /* b iff reverse the bytes; d iff argument is 64-bits */
 
-F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
+F1(jtunbin){F12IP;A q;B b,d;C*v;I c,i,k,m,n,r,t;
  ARGCHK1(w);
  ASSERT(LIT&AT(w),EVDOMAIN);
  if(2==AR(w))RZ(w=unhex(w));
@@ -539,7 +539,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
 }    /* 3!:2 w, inverse for binrep/hexrep */
 
 // 3!:4
-F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
+F2(jtic2){F12IP;A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  ARGCHK2(a,w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
@@ -569,7 +569,7 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
 }
 
 // 3!:5
-F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
+F2(jtfc2){F12IP;A z;D*x,*v;I j,m,n,p,zt;float*s;
  ARGCHK2(a,w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
@@ -589,7 +589,7 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
 
 // a  0: tolower  1: toupper
 // w  only process LIT C2T C4T
-F2(jtlowerupper){I k,n;A z;
+F2(jtlowerupper){F12IP;I k,n;A z;
  ARGCHK2(a,w);
  ASSERT(1==AN(a),EVDOMAIN);
  RE(k=i0(a));
@@ -610,7 +610,7 @@ F2(jtlowerupper){I k,n;A z;
 // left/right trim space
 // a  0: rtrim  1: ltrim  2: lrtrim
 // w  only process LIT C2T C4T
-F2(jtlrtrim){I k;
+F2(jtlrtrim){F12IP;I k;
  ARGCHK2(a,w);
  ASSERT(1==AN(a),EVDOMAIN);
  RE(k=i0(a));
@@ -626,7 +626,7 @@ F2(jtlrtrim){I k;
 
 // right trim space
 // w  only process LIT C2T C4T
-F1(jtrtrim){I stride,ln,n,ar;A z=0;C *u,*v;I as[63];
+F1(jtrtrim){F12IP;I stride,ln,n,ar;A z=0;C *u,*v;I as[63];
  ARGCHK1(w);
  ASSERT(!(ISSPARSE(AT(w))&&(LIT+C2T+C4T)&AT(w)),EVNONCE);
  if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
@@ -672,7 +672,7 @@ F1(jtrtrim){I stride,ln,n,ar;A z=0;C *u,*v;I as[63];
 
 // left trim space
 // w  only process LIT C2T C4T
-F1(jtltrim){I stride,ln,lh,n,ar,*pi;A z=0;C *u,*v;I as[63];
+F1(jtltrim){F12IP;I stride,ln,lh,n,ar,*pi;A z=0;C *u,*v;I as[63];
  ARGCHK1(w);
  ASSERT(!(ISSPARSE(AT(w))&&(LIT+C2T+C4T)&AT(w)),EVNONCE);
  if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
@@ -732,7 +732,7 @@ static B jtisnanq(J jt,A w){
 }
 
 // 128!:5  Result is boolean with same shape as w
-F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
+F1(jtisnan){F12IP;A*wv,z;B*u;D*v;I n,t;
  ARGCHK1(w);
  n=AN(w); t=AT(w);
  ASSERT(!ISSPARSE(t),EVNONCE);
@@ -999,7 +999,7 @@ R 0;
 
 
 // 6!:14 Convert a block of integer yyyymmddHHMMSS to nanoseconds from year 2000
-F1(jtinttoe){A z;I n;
+F1(jtinttoe){F12IP;A z;I n;
  ARGCHK1(w);
  n=AN(w);
  ASSERT(SY_64,EVNONCE);
@@ -1010,7 +1010,7 @@ F1(jtinttoe){A z;I n;
 }
 
 // 6!:15 Convert a block of nanosecond times to Y M D h m s nanosec
-F1(jtetoint){
+F1(jtetoint){F12IP;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  RETF(sfe(jt,w,7*SZI-20,0,0));  // special precision meaning 'store INTs'.  Turns into linelen=56
@@ -1020,7 +1020,7 @@ F1(jtetoint){
 // Bivalent.  left arg is 3 characters, one to use as the decimal point, one to store just after the value (usually ' ' or 'Z'),
 // one for result precision ('d'=date only, '0'-'9' give # fractional digits)
 // Default is '. 0'
-DF2(jtetoiso8601){UC decimalpt,zuluflag;I prec;
+DF2(jtetoiso8601){F12IP;UC decimalpt,zuluflag;I prec;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
@@ -1041,7 +1041,7 @@ DF2(jtetoiso8601){UC decimalpt,zuluflag;I prec;
 // Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
 // optional second box of x is #seconds to local timezone, i. e 180 for GMT+03; if given all UTC times will be
 // converted to local time
-DF2(jtiso8601toe){A z;I prec;I local;
+DF2(jtiso8601toe){F12IP;A z;I prec;I local;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
@@ -1171,7 +1171,7 @@ static A efstring(J jt,A w,I prec){
 
 // 6!:18 convert a block of strings to nanosecond times.  Result has one INT for each string
 // Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
-DF2(jtstringtoe){A z;I prec;
+DF2(jtstringtoe){F12IP;A z;I prec;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit

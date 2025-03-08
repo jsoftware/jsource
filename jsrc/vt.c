@@ -5,10 +5,10 @@
 
 #include "j.h"
 
-F1(jtbehead ){F1PREFIP; R jtdrop(jtinplace,zeroionei(1),    w);}
-F1(jtcurtail){F1PREFIP; R jtdrop(jtinplace,num(-1),w);}
+F1(jtbehead ){F12IP; R jtdrop(jtinplace,zeroionei(1),    w);}
+F1(jtcurtail){F12IP; R jtdrop(jtinplace,num(-1),w);}
 
-F1(jtshift1){R drop(num(-1),over(num(1),w));}
+F1(jtshift1){F12IP;R drop(num(-1),over(num(1),w));}
 
 static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  r=AR(w); n=AN(a); u=AV(a); 
@@ -19,7 +19,7 @@ static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  R z;
 }
 
-static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
+static F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  an=AN(a); u=AV(a); r=AR(w); s=AS(w); 
  GASPARSE(z,AT(w),1,r,s); v=AS(z); DO(an, v[i]=ABS(u[i]););
  zp=PAV(z); wp=PAV(w);
@@ -49,7 +49,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
 }    /* take on sparse array w */
 
 // general take routine.  a is result frame followed by signed take values i. e. shape of result, w is array
-static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
+static F2(jttk){F12IP;PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
  if(unlikely(ISSPARSE(t)))R tks(a,w);
  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
@@ -73,8 +73,8 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
  EPILOG(z);
 }
 
-F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
- F2PREFIP;
+F2(jttake){F12IP;A s;I acr,af,ar,n,*v,wcr,wf,wr;
+ 
  ARGCHK2(a,w); I wt = AT(w);  // wt=type of w
  acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
  if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  //if a is empty this destroys jt->ranks
@@ -135,8 +135,8 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  RETF(s);
 }
 
-F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
- F2PREFIP;
+F2(jtdrop){F12IP;A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
+ 
  RZ((a=vib(a))&&w);  // convert & audit a
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; I wt=AT(w);
@@ -181,7 +181,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
 
 
 // create 1 cell of fill when head/tail of an array with no items (at the given rank)
-static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
+static F1(jtrsh0){F12IP;A x,y;I wcr,wf,wr,*ws;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ws=AS(w);
  RZ(x=vec(INT,wr-1,ws)); MCISH(wf+AV(x),ws+wf+1,wcr-1);
@@ -190,8 +190,8 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
  // not pristine
 }
 
-F1(jthead){I wcr,wf,wr;
- F1PREFIP;
+F1(jthead){F12IP;I wcr,wf,wr;
+ 
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK so that we can pass rank into other code
  if(unlikely(!wcr)){RETF(RETARG(w))  // {."0, a NOP
@@ -213,8 +213,8 @@ F1(jthead){I wcr,wf,wr;
  // pristinity from the called verb
 }
 
-F1(jttail){I wcr,wf,wr;
- F1PREFIP;
+F1(jttail){F12IP;I wcr,wf,wr;
+ 
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
  if(unlikely(!wcr)){RETF(RETARG(w))  // {:"0, a NOP

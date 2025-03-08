@@ -9,7 +9,7 @@
 static F1(jtdrr);
 EVERYFS(drrself,jtdrr,0,0,VFLAGNONE)
 
-static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
+static F1(jtdrr){F12IP;PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  ARGCHK1(w);
  // If the input is a name, it must be from ".@'name' which turned into ".@(name+noun)  - or in debug, but that's discarded
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
@@ -39,10 +39,10 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  EPILOG(z);
 }
 
-F1(jtdrep){A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
+F1(jtdrep){F12IP;A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
 
 // create AR of w
-F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
+F1(jtaro){F12IP;A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  ARGCHK1(w);
  if(FUNC&AT(w)){
   if(unlikely(AFLAG(w)&AFRO))if(AT(w)&VERB){R str(12,"cocurrent_z_");}  // readonly name, must not expand it.  We don't have access to the name used
@@ -71,10 +71,10 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  R z;
 }
 
-F1(jtarep){R box(aro(w));}
+F1(jtarep){F12IP;R box(aro(w));}
 
 // Create A for a string - name~, a primitive, or the boxed string
-static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
+static DF1(jtfxchar){F12IP;A y;C c,d,id,*s;I m,n;
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);  // string must be an atom or list
  ASSERT(n!=0,EVLENGTH);
@@ -90,7 +90,7 @@ static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
 
 // Convert an AR to an A block.  w is an AR that has been opened.  If it originally came from a verb it can't be a pyx, but it may contain pyxes
 // self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value, and leave adv/conj ARs looking like nouns
-DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
+DF1(jtfx){F12IP;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ARGCHK1(w);
  // if string, handle that special case (name/primitive)
  if(LIT&AT(w))R fxchar(w,self);
@@ -143,7 +143,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
 // if JTINPLACEA is set, make sure the result fits on one line for error display: stop copying if we hit LF and emit '...',
 // and don't put spaces before/after the delimiters
 // result is always incorpable
-A jtunDD(J jt, A w){F1PREFIP;
+A jtunDD(J jtinplace, A w){F12JT;
  I shortres=(I)jtinplace&JTINPLACEA;  // set for short, one-line result
  C *wv=CAV(w);  // start of word string
  // quick scan for 9, :, '; if not, return the input
@@ -305,7 +305,7 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A x,y;A *v;I i,j,k;
 
 // w is a def.  Return unparsed form (list of boxed character strings)
 // JT flags indicate valences to suppress.  If we suppress one, we also suppress the :
-F2(jtunparsem){F2PREFIP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
+F2(jtunparsem){F12IP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  ARGCHK2(a,w);
  wv=VAV(w); h=wv->fgh[2]; hv=AAV(h);  // h[2][HN] is preparsed def
  mc=hv[0];    ms=hv[2];    m=mn=CWNC(mc)-1;  // mc->control words ms->commented text  m,mn = #control words
@@ -349,7 +349,7 @@ A cw57rep(J jt, A x){I i, q[3];
 }
 
 // 5!:7
-static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
+static F2(jtxrep){F12IP;A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
  ARGCHK2(a,w);
  RE(j=i0(a)); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
  ASSERT(AT(w)&VERB+ADV+CONJ,EVDOMAIN);
@@ -359,11 +359,11 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
 }    /* explicit representation -- h parameter for : definitions */
 
 
-DF1(jtarx){F1RANK(0,  jtarx,self); R arep(  symbrdlocknovalerr(nfb(w)));}  // 5!:1
-DF1(jtdrx){F1RANK(0,  jtdrx,self); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
-DF1(jttrx){F1RANK(0,  jttrx,self); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
-DF1(jtlrx1){F1RANK(0,  jtlrx1,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5 monad
-DF2(jtlrx2){ASSERT(AR(w)==0,EVRANK) I mask=0; if(AN(a)==0)mask=JTPRFORSCREEN;else{RE(mask=i0(a)); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) mask=(~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF;}  R jtlrep((J)((I)jt|mask),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt; in x empty, print as if for screen
-DF1(jtprx){F1RANK(0,  jtprx,self); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
+DF1(jtarx){F12IP;F1RANK(0,  jtarx,self); R arep(  symbrdlocknovalerr(nfb(w)));}  // 5!:1
+DF1(jtdrx){F12IP;F1RANK(0,  jtdrx,self); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
+DF1(jttrx){F12IP;F1RANK(0,  jttrx,self); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
+DF1(jtlrx1){F12IP;F1RANK(0,  jtlrx1,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5 monad
+DF2(jtlrx2){F12IP;ASSERT(AR(w)==0,EVRANK) I mask=0; if(AN(a)==0)mask=JTPRFORSCREEN;else{RE(mask=i0(a)); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) mask=(~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF;}  R jtlrep((J)((I)jt|mask),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt; in x empty, print as if for screen
+DF1(jtprx){F12IP;F1RANK(0,  jtprx,self); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
 
-DF2(jtxrx){F2RANK(0,0,jtxrx,self); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7
+DF2(jtxrx){F12IP;F2RANK(0,0,jtxrx,self); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7

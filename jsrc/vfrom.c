@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-DF1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
+DF1(jtcatalog){F12IP;PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
  F1RANK(1,jtcatalog,self);
  ASSERTF(!ISSPARSE((AT(w))),EVNONCE,"sparse arrays not supported");
  if((-AN(w)&-(AT(w)&BOX))>=0)R box(w);   // empty or unboxed, just box it
@@ -164,7 +164,7 @@ zbase=zv; }
 
 // rflags is w minor cell rank/len of w frame/1B rank of result/1B /6B dimension of axes-1
 // if a is inplaceable in jt, ind in the last axis is the area that can be used for the result
-static A jtaxisfrom(J jt,A w,struct faxis *axes,I rflags){F2PREFIP; I i;
+static A jtaxisfrom(J jtinplace,A w,struct faxis *axes,I rflags){F12IP;I i;
  I r=rflags&0x3f, zr=(C)(rflags>>8), wf=(C)(rflags>>16), wcr=(C)(rflags>>24), hasr=(rflags>>7)&1;  // number of axes-1; result rank; w framelen; 1 iff 1st axis is from rank
  C *base=voidAV(w);  // will be starting cell number in all axes before last
  // convert lencell to bytes & roll it up; calculate base from sel0 values
@@ -362,8 +362,8 @@ endaxes:;
 }
 
 // a is numeric
-F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
- F1PREFIP;
+F2(jtifrom){F12IP;A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
+ 
  ARGCHK2(a,w);
  // IRS supported but only for a single a value.  This has implications for empty arguments.
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
@@ -403,7 +403,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
 // a is array whose 1-cells are index lists, w is array
 // result is (<"1 a) { w
 // wf is length of the frame
-A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
+A jtfrombu(J jtinplace,A a,A w,I wf){F12IP;
  ARGCHK2(a,w)
  if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0));  // integral indexes required
  I *as=AS(a); I af=AR(a)-1; I naxa=as[af]; naxa=af>=0?naxa:1; af=af>=0?af:0;  // naxa is length of the index list, i. e. number of axes of w that disappear during indexing
@@ -455,7 +455,7 @@ A jtfrombu(J jt,A a,A w,I wf){F2PREFIP;
 }    /* (<"1 a){"r w, dense w, integer array a */
 
 // general boxed a
-static F2(jtafrom){F2PREFIP; PROLOG(0073);
+static F2(jtafrom){F12IP; PROLOG(0073);
  ARGCHK2(a,w);
  I ar=AR(a); I acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  I wr=AR(w); I wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; I wf=wr-wcr; RESETRANK;
@@ -542,8 +542,8 @@ static F2(jtafrom){F2PREFIP; PROLOG(0073);
 }    /* a{"r w for boxed index a */
 
 // a{"r w  We handle the fast cases (atom{array) and (empty{"r array) here.  For others we go to a type-dependent processor for a that will build index lists
-DF2(jtfrom){A z;
- F2PREFIP;
+DF2(jtfrom){F12IP;A z;
+ 
  ARGCHK2(a,w);
  I at=AT(a), wt=AT(w), ar=AR(a), wr=AR(w);
  if(likely(!ISSPARSE(at|wt))){
@@ -622,7 +622,7 @@ DF2(jtfrom){A z;
 }   /* a{"r w main control */
 
 DF2(fork242);
-DF2(jtsfrom){
+DF2(jtsfrom){F12IP;
  if(likely(!ISSPARSE((AT(w))))){
   // not sparse, transfer to code to handle it if nonempty numeric.  If nonnumeric (must be boxed),
   // if the arg is empty, the details are tricky depending on the type and we just revert to boxed code
@@ -663,7 +663,7 @@ mustbox:;
 static F2(jtmapx);
 static EVERYFS(mapxself,0,jtmapx,0,VFLAGNONE)
 
-static F2(jtmapx){A z1,z2,z3;
+static F2(jtmapx){F12IP;A z1,z2,z3;
  ARGCHK2(a,w);
  if(!(BOX&AT(w)))R ope(a);
  RZ(z1=catalog(every(shape(w),ds(CIOTA))));  // create index list of each box
@@ -673,16 +673,16 @@ static F2(jtmapx){A z1,z2,z3;
  R every2(z3,w,(A)&mapxself);
 }
 
-F1(jtmap){R mapx(ds(CACE),w);}
+F1(jtmap){F12IP;R mapx(ds(CACE),w);}
 
 // extract the single box a from w and open it.  Don't mark it no-inplace.  If w is not boxed, it had better be an atom, and we return it after auditing the index
-static F2(jtquicksel){I index;
+static F2(jtquicksel){F12IP;I index;
  RE(index=i0(a));  // extract the index
  SETNDX(index,index,AN(w))   // remap negative index, check range
  R AT(w)&BOX?C(AAV(w)[index]):w;  // select the box, or return the entire unboxed w
 }
 
-DF2(jtfetch){A*av, z;I n;F2PREFIP;
+DF2(jtfetch){F12IP;A*av, z;I n;
  F2RANKW(1,RMAX,jtfetch,self);  // body of verb applies to rank-1 a, and must turn pristine off if used higher, since there may be repetitions.
  if(unlikely(ISSPARSE(AT(w)|AT(a)))){   // sparse x or y
   ASSERT(!ISSPARSE(AT(a)),EVNONCE)  // selector must be dense
@@ -1509,7 +1509,7 @@ return4:;  // we have a preemptive result.  store and set minimp =-inf to cut of
 //  result is list of columns that have positive SPR (no line with col>ColBk0Threshold && bk<Bk0Threshold)
 //  
 // Rank is infinite
-F1(jtmvmsparse){PROLOG(832);
+F1(jtmvmsparse){F12IP;PROLOG(832);
 #if C_AVX2 || EMU_AVX2
  if(AN(w)==0){
   // empty arg just returns stats; none defined yet
@@ -1851,7 +1851,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 // w is Qk or bk.  If bk, prx must be scalar 0
 // If Qk has rank > rank newrownon0 + rank prx, or pivotcolnon0/newrownon0 rank 2, calculate them in extended FP precision
 // Qk/bk is modified in place
-F2(jtekupdate){F2PREFIP;
+F2(jtekupdate){F12IP;
  ARGCHK2(a,w);
  // extract the inputs
  A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w),EVNONCE)
@@ -1908,7 +1908,7 @@ struct ekctx opctx={YC(rowsperthread)YC(prx)YC(qk)YC(pcx)YC(pivotcolnon0)YC(newr
  R qk;
 }
 #else
-F2(jtekupdate){ASSERT(0,EVNONCE);}
+F2(jtekupdate){F12IP;ASSERT(0,EVNONCE);}
 #endif
 
 #if C_AVX2 || EMU_AVX2
@@ -2085,7 +2085,7 @@ static unsigned char jtfindsprx(J jt,struct sprctx* const ctx,UI4 ti){
 // 128!:13  find minimum pivot ratio in quad precision  OR  take reciprocal
 // w is ck;bk;ColThresh,bkthresh  or   ck value
 // result is row#,reciprocal of pivot hi,lo
-F1(jtfindspr){F1PREFIP;
+F1(jtfindspr){F12IP;
  ARGCHK1(w);
  I row;  // will hold the row of the SPR
  D *ckd;  // pointer to column data
@@ -2147,5 +2147,5 @@ struct sprctx opctx={YC(rowsperthread)YC(ck)YC(bk)YC(m).ckthreshd=DAV(thresh)[0]
  }
 }
 #else
-F1(jtfindspr){ASSERT(0,EVNONCE);}
+F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #endif

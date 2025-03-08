@@ -846,10 +846,9 @@ static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)
-static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){  // allranks is argranks/ranks
+static A jtva2(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks
  A z;I m,mf,n,nf,zn;VA2 adocv,*aadocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
- F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
   if(likely(!(((I)jtinplace&JTRETRY)+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args
@@ -1374,7 +1373,7 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
 
 #if C_AVX2 || EMU_AVX2
 // +/@:*"1 for QP, with IRS by hand
-static DF2(jtsumattymes1E){
+static DF2(jtsumattymes1E){F12IP;
  if(unlikely((I)((1-AR(a))|(1-AR(w)))<0)){I lr=MIN((RANKT)jt->ranks,AR(a)); I rr=MIN(jt->ranks>>RANKTX,AR(w)); R rank2ex(a,w,(A)self,1,1,lr,rr,jtsumattymes1E);}  // if multiple results needed, do rank loop
  I i; I n=AS(a)[AR(a)-1]; ASSERT(AS(w)[AR(w)-1]==n,EVLENGTH);  // length of vector; verify agreement
  E *x=EAV(a)+n, *y=EAV(w)+n;  // input pointers, advanced past end
@@ -1408,7 +1407,7 @@ static DF2(jtsumattymes1E){
 
 
 // +/@:*"1 with IRS, also +/@:*"1!.0 on float args and +/@:*"1!.1 producing a float extended-precision result, a length-2 list per product
-DF2(jtsumattymes1){
+DF2(jtsumattymes1){F12IP;
  ARGCHK2(a,w);
  I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
  // get the cell-ranks to use 
@@ -1581,9 +1580,9 @@ DF2(jtsumattymes1){
 
 
 // f/@:g when f and g are atomic.  If the args are big and not inplace it pays to execute one cell of g at a time to save cache footprint
-DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
+DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
      n,nn,r,rs,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;VA2 adocv,adocvf;
- ARGCHK3(a,w,self);F2PREFIP;
+ ARGCHK3(a,w,self);
  an=AN(a); ar=AR(a); as=AS(a); at=AT(a); at=an?at:B01;
  wn=AN(w); wr=AR(w); ws=AS(w); wt=AT(w); wt=wn?wt:B01;
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=s[0]; nn=r?nn:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
@@ -1630,8 +1629,8 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 // the atomic.  If the block is a rank block, we will switch self over to the block for the atomic.
 // Rank can be passed in via jt->ranks, or in the rank for self.  jt->ranks has priority.
 // This entry point supports inplacing
-DF2(jtatomic2){A z;
- F2PREFIP;ARGCHK2(a,w);
+DF2(jtatomic2){F12IP;A z;
+ ARGCHK2(a,w);
  UI ar=AR(a), wr=AR(w); I at=AT(a), wt=AT(w); I af;
  if((ar+wr+((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))))==0){af=0; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
@@ -1691,28 +1690,28 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
  RETF(z);
 }
 
-DF2(jtexpn2  ){F2PREFIP; ARGCHK2(a,w); if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
-DF2(jtresidue){F2PREFIP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtinplace,a,w,self);}
+DF2(jtexpn2  ){F12IP; ARGCHK2(a,w); if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
+DF2(jtresidue){F12IP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtinplace,a,w,self);}
 
 
 // These are the unary ops that are implemented using a canned argument
 // NOTE that they pass through inplaceability
 
 // Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
-#define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
+#define IPSHIFTWA (jtinplace = (J)(intptr_t)(((I)jtinplace+JTINPLACEW)&-JTINPLACEA))
 
 // We use the right type of singleton so that we engage AVX loops and avoid promotion of INT[124]
 #define SETCONPTR(n) A conptr=num(n); \
   if(unlikely(!(AT(w)&B01+INT+FL))){A conptr2=numi2(n); conptr=AT(w)&INT2?conptr2:conptr; conptr2=numi4(n); conptr=AT(w)&INT4?conptr2:conptr;  \
   }else{A conptr2; if(n<2){conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr;} conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;}
-F1(jtnot   ){ARGCHK1(w); SETCONPTR(1) R AT(w)&B01?eq(num(0),w):minus(conptr,w);}
+F1(jtnot){F12IP;ARGCHK1(w); SETCONPTR(1) R AT(w)&B01?eq(num(0),w):jtatomic2(jtinplace,conptr,w,ds(CMINUS));}
 // negate moved to va1
-F1(jtdecrem){ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R minus(w,conptr);}
-F1(jtincrem){ARGCHK1(w); SETCONPTR(1) R plus(conptr,w);}
-F1(jtduble ){ARGCHK1(w); SETCONPTR(2) R tymes(conptr,w);}
-F1(jtsquare){ARGCHK1(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never inplaces
+F1(jtdecrem){F12IP;ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R jtatomic2(jtinplace,w,conptr,ds(CMINUS));}
+F1(jtincrem){F12IP;ARGCHK1(w); SETCONPTR(1) R jtatomic2(jtinplace,conptr,w,ds(CPLUS));}  // leave inplaceable in w only
+F1(jtduble ){F12IP;ARGCHK1(w); SETCONPTR(2) R jtatomic2(jtinplace,conptr,w,ds(CSTAR));}  // leave inplaceable in w only
+F1(jtsquare){F12IP;ARGCHK1(w); R tymes(w,w);}   // Never inplace (would be OK if can't overflow)
 // recip moved to va1
-F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
+F1(jthalve ){F12IP;ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R jtatomic2(jtinplace,onehalf,w,ds(CSTAR)); IPSHIFTWA; R jtatomic2(jtinplace,w,num(2),ds(CDIV));} 
 
 static AHDR2(zeroF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,MEMSET00LEN,MEMSET00);R EVOK;}
 static AHDR2(oneF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,1,MEMSET01);R EVOK;}

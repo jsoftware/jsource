@@ -24,16 +24,16 @@ extern UC fboxedsparse;
 #include <signal.h>
 
 // 9!:32-33 #tries for elliptic-curve factoring
-F1(jtecmtriesq){ASSERTMTV(w); R sc(jt->ecmtries);}
-F1(jtecmtriess){I i; RE(i=i0(w)); ASSERT(BETWEENC(i,1,255),EVLIMIT) jt->ecmtries=i; R mtm;}
+F1(jtecmtriesq){F12IP;ASSERTMTV(w); R sc(jt->ecmtries);}
+F1(jtecmtriess){F12IP;I i; RE(i=i0(w)); ASSERT(BETWEENC(i,1,255),EVLIMIT) jt->ecmtries=i; R mtm;}
 
 // 9!:34-35 assertion enable
-F1(jtassertq){ASSERTMTV(w); R scb(JT(jt,assert));}
-F1(jtasserts){B b; RE(b=b0(w)); JT(jt,assert)=b; R mtm;}
+F1(jtassertq){F12IP;ASSERTMTV(w); R scb(JT(jt,assert));}
+F1(jtasserts){F12IP;B b; RE(b=b0(w)); JT(jt,assert)=b; R mtm;}
 
-F1(jtboxq){ASSERTMTV(w); R str(sizeof(JT(jt,bx)),JT(jt,bx));}
+F1(jtboxq){F12IP;ASSERTMTV(w); R str(sizeof(JT(jt,bx)),JT(jt,bx));}
 
-F1(jtboxs){A x;
+F1(jtboxs){F12IP;A x;
  RZ(w=vs(w));
  ASSERT(sizeof(JT(jt,bx))==AS(w)[0],EVLENGTH);
  MC(JT(jt,bx),CAV(w),sizeof(JT(jt,bx)));
@@ -41,10 +41,10 @@ F1(jtboxs){A x;
 }  // box-display characters
 
 // 9!:18
-F1(jtctq){ASSERTMTV(w); R scf(1.0-jt->cct);}
+F1(jtctq){F12IP;ASSERTMTV(w); R scf(1.0-jt->cct);}
 
 // 9!:19
-F1(jtcts){D d;
+F1(jtcts){F12IP;D d;
  ASSERT(!AR(w),EVRANK);
  RZ(w=ccvt(FL,w,0)); d=DAV(w)[0];
  ASSERT(0<=d,EVDOMAIN); 
@@ -54,15 +54,15 @@ F1(jtcts){D d;
 }
 
 // 9!:4 and 9!:5 name caching
-F1(jtnmcacheq){ASSERTMTV(w); R sc(jt->namecaching>>1);}
-F1(jtnmcaches){
+F1(jtnmcacheq){F12IP;ASSERTMTV(w); R sc(jt->namecaching>>1);}
+F1(jtnmcaches){F12IP;
  I arg=i0(w); RE(0); ASSERT(BETWEENO(arg,0,3),EVDOMAIN);  // arg must be 0, 1, or 2
  jt->namecaching|=(C)((arg<<1)+!!arg); if(arg==0)jt->namecaching=0; R mtv;  // save bits separately, clear if both 0, return empty vec
 }
 
-F1(jtdispq){A z; ASSERTMTV(w); GATV0(z,INT,*JT(jt,disp),1); ICPY(AV1(z),1+JT(jt,disp),*JT(jt,disp)); R z;}
+F1(jtdispq){F12IP;A z; ASSERTMTV(w); GATV0(z,INT,*JT(jt,disp),1); ICPY(AV1(z),1+JT(jt,disp),*JT(jt,disp)); R z;}
 
-F1(jtdisps){UC n;
+F1(jtdisps){F12IP;UC n;
  RZ(w=vi(w));
  n=(UC)AN(w);
  ASSERT(1>=AR(w),EVRANK);
@@ -73,10 +73,10 @@ F1(jtdisps){UC n;
 }
 
 // 9!:8 error messages
-F1(jtevmq){ASSERTMTV(w); R behead(JT(jt,evm));}
+F1(jtevmq){F12IP;ASSERTMTV(w); R behead(JT(jt,evm));}
 
 // 9!:9 set error messages
-F1(jtevms){A t,*tv,*wv;
+F1(jtevms){F12IP;A t,*tv,*wv;
  ARGCHK1(w);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(NEVM==AN(w),EVLENGTH);
@@ -91,7 +91,7 @@ F1(jtevms){A t,*tv,*wv;
 }
 
 // 5!:0, return ((>u)~)f. 
-F1(jtfxx){F1PREFIP;
+F1(jtfxx){F12IP;
  ARGCHK1(w);
  ASSERT(AT(w)&LIT+BOX,EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
@@ -99,13 +99,13 @@ F1(jtfxx){F1PREFIP;
 }
 
 // 9!:28, immex flag  bit 0 = immex requested, bit 1 = immex running
-F1(jtiepdoq){ASSERTMTV(w); R sc(jt->iepdo);}
+F1(jtiepdoq){F12IP;ASSERTMTV(w); R sc(jt->iepdo);}
 
 // 9!:29, immex flag
-F1(jtiepdos){B b; RE(b=b0(w)); jt->iepdo|=b; R mtm;}
+F1(jtiepdos){F12IP;B b; RE(b=b0(w)); jt->iepdo|=b; R mtm;}
 
 // 9!:26, immex sentence
-F1(jtiepq){
+F1(jtiepq){F12IP;
  ASSERTMTV(w); 
  // we must read & protect the sentence under lock in case another thread is changing it
  READLOCK(JT(jt,felock)) A iep=JT(jt,iep); if(iep)ras(iep); READUNLOCK(JT(jt,felock))  // must ra() while under lock
@@ -114,7 +114,7 @@ F1(jtiepq){
 }
 
 // 9!:27, immex sentence
-F1(jtieps){
+F1(jtieps){F12IP;
  ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
@@ -125,7 +125,7 @@ F1(jtieps){
 }
 
 // 9!:36
-F1(jtoutparmq){A z;D*u;I*v;
+F1(jtoutparmq){F12IP;A z;D*u;I*v;
  ASSERTMTV(w);
  GAT0(z,INT,4,1); v= AV1(z);
  v[0]=JT(jt,outeol);
@@ -136,7 +136,7 @@ F1(jtoutparmq){A z;D*u;I*v;
 }
 
 // 9!:37
-F1(jtoutparms){I*v;
+F1(jtoutparms){F12IP;I*v;
  RZ(w=vib(w));
  ASSERT(1==AR(w),EVRANK);
  ASSERT(4==AN(w),EVLENGTH);
@@ -152,9 +152,9 @@ F1(jtoutparms){I*v;
  R mtv;
 }
 
-F1(jtposq){ASSERTMTV(w); R v2((jt->boxpos>>JTTHORNXX)&(JTTHORNX>>JTTHORNXX),(jt->boxpos>>JTTHORNYX)&(JTTHORNY>>JTTHORNYX));}
+F1(jtposq){F12IP;ASSERTMTV(w); R v2((jt->boxpos>>JTTHORNXX)&(JTTHORNX>>JTTHORNXX),(jt->boxpos>>JTTHORNYX)&(JTTHORNY>>JTTHORNYX));}
 
-F1(jtposs){I n,p,q,*v;
+F1(jtposs){F12IP;I n,p,q,*v;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  ASSERT(1>=AR(w),EVRANK);
@@ -166,26 +166,26 @@ F1(jtposs){I n,p,q,*v;
 }
 
 // 9!:10 query print precision
-F1(jtppq){C*end;I k;
+F1(jtppq){F12IP;C*end;I k;
  ASSERTMTV(w);
  R sc(jt->ppn);
 }
 
 // 9!:10 set print precision
-F1(jtpps){I k;
+F1(jtpps){F12IP;I k;
  RE(sc(k=i0(w))); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
  jt->ppn=k;
  R mtv;
 }
 
-F1(jtretcommq){ASSERTMTV(w); R num(1);}  // 9!:40 - always on
+F1(jtretcommq){F12IP;ASSERTMTV(w); R num(1);}  // 9!:40 - always on
 
-F1(jtretcomms){B b; R mtm;}   // 9!:41 - unused
+F1(jtretcomms){F12IP;B b; R mtm;}   // 9!:41 - unused
 
-F1(jtseclevq){ASSERTMTV(w); R sc(JT(jt,seclev));}   // 9!:24  security level
+F1(jtseclevq){F12IP;ASSERTMTV(w); R sc(JT(jt,seclev));}   // 9!:24  security level
 
 // 9!:25 security level
-F1(jtseclevs){I k; 
+F1(jtseclevs){F12IP;I k; 
  RE(k=i0(w)); 
  ASSERT(0==k||1==k,EVDOMAIN); 
  if(!JT(jt,seclev)&&1==k)JT(jt,seclev)=(UC)k;
@@ -193,7 +193,7 @@ F1(jtseclevs){I k;
 }
 
 #if 0  // not implemented
-F1(jtsysparmq){I k;
+F1(jtsysparmq){F12IP;I k;
  RE(k=i0(w));
  switch(k){
  default: ASSERT(0,EVINDEX);
@@ -204,7 +204,7 @@ F1(jtsysparmq){I k;
  }
 }
 
-F1(jtsysparms){A*wv;I k,m;
+F1(jtsysparms){F12IP;A*wv;I k,m;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
@@ -222,7 +222,7 @@ F1(jtsysparms){A*wv;I k,m;
 }
 #endif
 
-F1(jtsysq){I j;
+F1(jtsysq){F12IP;I j;
  ASSERTMTV(w);
  switch(SYS){
  case SYS_PC:        j=0;                break;
@@ -236,10 +236,10 @@ F1(jtsysq){I j;
 }
 
 // 9!:52
-F1(jtasgzombq){ASSERTMTV(w); R sc(JT(jt,asgzomblevel));}
+F1(jtasgzombq){F12IP;ASSERTMTV(w); R sc(JT(jt,asgzomblevel));}
 
 // 9!:53
-F1(jtasgzombs){I k; 
+F1(jtasgzombs){F12IP;I k; 
  RE(k=i0(w)); 
  ASSERT(BETWEENC(k,0,2),EVDOMAIN);
  JT(jt,asgzomblevel)=(C)k;
@@ -267,7 +267,7 @@ exiterr: ;
 }
 
 // 9!:55  Set deprecation msg status  #msgs to give before error (default, 0, means 'never error'; -1 mean error immediately);exclusions
-F1(jtdeprecxs){A ct, excl;
+F1(jtdeprecxs){F12IP;A ct, excl;
  ARGCHK1(w);
  if(!(AT(w)&BOX)){ct=w; excl=mtv;
  }else{
@@ -288,7 +288,7 @@ F1(jtdeprecxs){A ct, excl;
 }
 
 //9!:54
-F1(jtdeprecxq){A zd;
+F1(jtdeprecxq){F12IP;A zd;
  GAT0(zd,INT,16,1); I zdi=0; DO(15, if((JT(jt,deprecex)>>i)&1)IAV1(zd)[zdi++]=i;) AN(zd)=AS(zd)[0]=zdi;  // create vector of exclusions
  READLOCK(JT(jt,startlock))
  A z=jlink(sc(JT(jt,deprecct)),zd);  // return current status
@@ -310,7 +310,7 @@ static I recurmsg(J jt, C *msgaddr){
  R 0;
 } 
 //13!:_6 stackfault verb - scribble on stack until we crash.  Give messages every 0x10000 bytes
-F1(jtstackfault){C stackbyte,buf[80],*stackptr=&stackbyte;
+F1(jtstackfault){F12IP;C stackbyte,buf[80],*stackptr=&stackbyte;
  sprintf(buf,"starting stackptr=0x%p, cstackmin=0x%p\n",stackptr,(void *)jt->cstackmin);
  jsto(JJTOJ(jt),MTYOER,buf);
  recurmsg(jt,stackptr);
@@ -319,7 +319,7 @@ F1(jtstackfault){C stackbyte,buf[80],*stackptr=&stackbyte;
 
 // 9!:56
 // query/override cpu feature
-F1(jtcpufeature){
+F1(jtcpufeature){F12IP;
  ARGCHK1(w);
  ASSERT(AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w),EVLENGTH);
@@ -447,7 +447,7 @@ F1(jtcpufeature){
 }
 
 // thread unsafe
-F2(jtcpufeature2){I k;
+F2(jtcpufeature2){F12IP;I k;
  ARGCHK2(a,w);
  ASSERT(AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w),EVLENGTH);
@@ -662,7 +662,7 @@ R mtm;
 // The values are stored in 16-bit floating-point so they may be truncated
 
 // 9!:58 0/1/2
-F1(jtgemmtune){I k;
+F1(jtgemmtune){F12IP;I k;
  ARGCHK1(w);
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);
  ASSERT(1==AN(w),EVLENGTH);
@@ -673,7 +673,7 @@ F1(jtgemmtune){I k;
 }
 
 // thresh 9!:58 0/1/2
-F2(jtgemmtune2){I j,k;
+F2(jtgemmtune2){F12IP;I j,k;
  ARGCHK2(a,w);
  ASSERT(AT(a)&(B01+INT),EVDOMAIN);
  ASSERT(1==AN(a),EVLENGTH);
@@ -696,7 +696,7 @@ F2(jtgemmtune2){I j,k;
 // set boxed sparse array capacity  0 disable  1 enable
 
 // 9!:65 0/1
-F1(jtboxedsparse){I k;
+F1(jtboxedsparse){F12IP;I k;
 #ifndef BOXEDSPARSE
  ASSERT(0,EVNONCE);
 #else
@@ -714,7 +714,7 @@ F1(jtboxedsparse){I k;
 // enable/disable tstack auditing, since some testcases run too long with it enabled
 // bit 0 is set to disable, bit 1 is a one-shot to ask for an audit
 // result is old value
-F1(jtaudittdisab){
+F1(jtaudittdisab){F12IP;
 #if MEMAUDIT&2
  I k,oldval;
  oldval = JT(jt,audittstackdisabled);  // return value
@@ -728,7 +728,7 @@ F1(jtaudittdisab){
 }
 
 // 9!:66 check compiler generated code for feature level
-F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
+F1(jtcheckcompfeatures){F12IP;UI i;I v1,v2,temp;
  RZ(w=vib(w));  // inputs must be integer
  I ttype=IAV(w)[0];  // test type
  I featon=IAV(w)[1];  // 0=run code that does not use the feature, 1=use feature.  The code using the feature will be faster is the feature is present, otherwise slower
@@ -801,7 +801,7 @@ F1(jtcheckcompfeatures){UI i;I v1,v2,temp;
 }
 
 // 2!:10   raise a signal. _1 calls SEGFAULT
-F1(jtgsignal){I m;
+F1(jtgsignal){F12IP;I m;
  RE(m=i0(vib(w)));
  if(-1==m)SEGFAULT;
  R sc(raise(m));

@@ -6,4 +6,4 @@
 #include "j.h"
 #include "x.h"
 
-F1(jthash){RZ(w=vs(w)); R sc(hic(AN(w),UAV(w)));}
+F1(jthash){F12IP;RZ(w=vs(w)); R sc(hic(AN(w),UAV(w)));}

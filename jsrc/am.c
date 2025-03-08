@@ -52,7 +52,7 @@ D*wd=(D*)wc,*zd=(D*)zc;
                        zv[i]=*(i+(T*)aa[j]);); break;}
 
 // Handle the case statement abc =: pqr} x,...,y,:z, with in-place operation if pqr is Boolean and abc appears on the right
-F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
+F1(jtcasev){F12IP;A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  ARGCHK1(w);
  RZ(w1=ca(w)); u=AAV(w1);   // make a copy of the input, point to its value
  // the input is a boxed list.  The last 3 values are (name pqr);(index in which abc appeared in the x,y,... or -1 if it didn't);(original sentence queue including flags)
@@ -129,7 +129,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 // cellframelen is the number of axes of w that were used in computing the cell indexes, complemented if ind is axes.  Later axes of w are the cell shape
 //   Value is (number of axes added for frame)/(framelen wrt a)/(framelen wrt w)/(#axes in ind)
 // ind is the assembled indices OR a pointer to axes[]
-static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
+static A jtmerge2(J jtinplace,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
  ARGCHK2(a,w); RZ(ind);
  I aframelen=(I1)(cellframelen>>RANK2TX), wframelen=(I1)(cellframelen>>RANKTX), nframeaxes=(cellframelen>>(3*RANKTX)); cellframelen=(I1)cellframelen;  // length of frame of a and w; convert cellframelen to signed int
  //   w w w w w
@@ -536,7 +536,7 @@ static A jtcompidx(J jt,I axislen,A ind){
 }
 
 // Execution of x m}"r y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
-A jtamendn2(J jt,A a,A w,AD * RESTRICT ind,A self){F2PREFIP;PROLOG(0007);A e,z; I atd,wtd,t,t1;P*p;
+A jtamendn2(J jtinplace,A a,A w,AD * RESTRICT ind,A self){F12IP;PROLOG(0007);A e,z; I atd,wtd,t,t1;P*p;
   // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
  I acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
@@ -773,7 +773,7 @@ static A jtamendn2c(J jt,A a,A w,A self){R jtamendn2(jt,a,w,VAV(self)->fgh[0],se
 
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
-static DF2(amccv2){F2PREFIP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
+static DF2(amccv2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
  ARGCHK2(a,w); 
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // u} not supported for sparse
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
@@ -785,8 +785,8 @@ static DF2(amccv2){F2PREFIP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]
 }
 
 
-static DF1(mergn1){A ind,z; z=merge1(w,ind=VAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
-static DF1(mergv1){A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z; z=merge1(w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
+static DF1(mergn1){F12IP;A ind,z; z=merge1(w,ind=VAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
+static DF1(mergv1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z; z=merge1(w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
 
 // called from m}, m is usually NOT a gerund
 static B ger(J jt,A w){A*wv,x;
@@ -842,7 +842,7 @@ B jtgerexact(J jt, A w){A*wv;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
 // verb executed for v0`v1`v2} y
-static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
+static DF1(jtgav1){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
@@ -855,7 +855,7 @@ static DF1(jtgav1){V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
 }
 
 // verb executed for x v0`v1`v2} y
-static DF2(jtgav2){F2PREFIP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
+static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
  A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
  I hn=AS(sv->fgh[2])[0];  // hn=# gerunds in h
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
@@ -892,7 +892,7 @@ static A jtgadv(J jt,A w){A hs;I n;
 }
 
 // Execution of x -@:{`[`]}"r y
-static DF2(jtamnegate){F2PREFIP;
+static DF2(jtamnegate){F12IP;
  ARGCHK2(a,w); 
  // if y is CMPX/FL/QP, execute markd x} y which means negate
  if(AT(w)&FL+CMPX+QP)R jtamendn2(jtinplace,markd((AT(w)>>FLX)&(FL+CMPX>>FLX)),w,a,self);
@@ -902,7 +902,7 @@ static DF2(jtamnegate){F2PREFIP;
 }
 
 // u} handling.  This is not inplaceable but the derived verb is.  Self can be 0 to indicate this is a recursive call from a subroutine of jtamend
-DF1(jtamend){F1PREFIP;
+DF1(jtamend){F12IP;
  ARGCHK1(w);
  if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
  else if(AT(w)&BOX&&unlikely(ger(jt,w))){A z;

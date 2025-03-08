@@ -873,7 +873,7 @@ int setfileattr(char*p, unsigned int x)
 }
 #endif
 
-F1(jtts){A z;D*x;SYSTEMTIME t;
+F1(jtts){F12IP;A z;D*x;SYSTEMTIME t;
  ASSERTMTV(w);
  GetLocalTime(&t);
  GAT0(z,FL,6,1); x=DAV(z);

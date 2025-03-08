@@ -10,10 +10,10 @@
 
 
 // 9!:63 return [((AC of x) ; x) ;] inplacingflags ; < (AC of y) ; y
-F1(jtshowinplacing1){F1PREFIP;
+F1(jtshowinplacing1){F12IP;
 R jlink(sc((I)jtinplace&JTFLAGMSK),box(jlink(sc(AC(w)),w)));
 }
-F2(jtshowinplacing2){F2PREFIP;
+F2(jtshowinplacing2){F12IP;
 R jlink(jlink(sc(AC(a)),a),jlink(sc((I)jtinplace&JTFLAGMSK),box(jlink(sc(AC(w)),w))));
 }
 
@@ -47,7 +47,7 @@ FORK1(jthook1cell,0x110)
 
 
 // Create the derived verb for a fork.  Insert in-placeable flags based on routine, and asgsafe based on fgh
-A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1,fline,hcol;V*fv,*gv,*hv,*v;
+A jtfolk(J jtinplace,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1,fline,hcol;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  // by the parsing rules, g and h must be verbs here
  A z; fdefallo(z);  // allocate the result early to free regs during function body
@@ -190,29 +190,29 @@ A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fl
 }
 
 // Handlers for trains
-static DF1(taAV){F1PREFIP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,mark);}  // adv A A/V
-static DF2(tca){F2PREFIP;TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,mark);}  // conj C A
-static DF1(tNVc){F1PREFIP;TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
-static DF1(tac){F1PREFIP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C  adverbial hook
-static DF1(tcNV){F1PREFIP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
-static DF2(tcc){F2PREFIP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,mark);}  // conj C C
+static DF1(taAV){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,mark);}  // adv A A/V
+static DF2(tca){F12IP;TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,mark);}  // conj C A
+static DF1(tNVc){F12IP;TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
+static DF1(tac){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C  adverbial hook
+static DF1(tcNV){F12IP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
+static DF2(tcc){F12IP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,mark);}  // conj C C
 
-static DF1(taaa){F1PREFIP;TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
-static DF2(tNVvc){F2PREFIP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
-static DF2(tcVCc){F2PREFIP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
-static DF2(taav){F2PREFIP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
-static DF2(tcaa){F1PREFIP;TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
-static DF1(tNVca){F1PREFIP;TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
-static DF2(tNVcc){F2PREFIP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
-static DF1(taVCNV){F1PREFIP;TDECL; A z,t; RZ(df1(t,w,fs)); R hook(t,gs,hs);}  // adv A V/C N/V
-static DF2(taca){F2PREFIP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj A C A
-static DF2(tacc){F2PREFIP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj A C C
-static DF2(tcVCNV){F2PREFIP;TDECL; A z,t; RZ(df2(t,a,w,fs)); R hook(t,gs,hs);}  // conj C V/C N/V
-static DF2(tcca){F2PREFIP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj C C A
+static DF1(taaa){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
+static DF2(tNVvc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
+static DF2(tcVCc){F12IP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
+static DF2(taav){F12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
+static DF2(tcaa){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
+static DF1(tNVca){F12IP;TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
+static DF2(tNVcc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
+static DF1(taVCNV){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); R hook(t,gs,hs);}  // adv A V/C N/V
+static DF2(taca){F12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj A C A
+static DF2(tacc){F12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj A C C
+static DF2(tcVCNV){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); R hook(t,gs,hs);}  // conj C V/C N/V
+static DF2(tcca){F12IP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj C C A
 
 
 
-static DF1(jthkiota){A a,e;I n;P*p;
+static DF1(jthkiota){F12IP;A a,e;I n;P*p;
  ARGCHK1(w);
  SETIC(w,n);
  if(unlikely((AT(w)&SPARSE+B01)==SPARSE+B01)&&1==AR(w)){   // sparse boolean list
@@ -225,7 +225,7 @@ revert: ;
  R jthook1cell(jt,w,self);
 }    /* special code for (# i.@#) y */
 
-static DF1(jthkodom){I n,*v;
+static DF1(jthkodom){F12IP;I n,*v;
  ARGCHK1(w);
  if(INT&AT(w)&&1==AR(w)){
   n=AN(w); v=AV(w); DO(n, if(v[i]<0)goto revert;)  // revert if not all-nonneg integer list
@@ -235,7 +235,7 @@ revert: ;
  R jthook1cell(jt,w,self);
 }    /* special code for (#: i.@(* /)) */
 
-static DF1(jthkindexofmaxmin){
+static DF1(jthkindexofmaxmin){F12IP;
  ARGCHK2(w,self);
  // The code for ordinary search and min/max is very fast.  There's no value in trying to improve it.  The only
  // thing we have to add is setting intolerant comparison on the search, since we know we will be looking for something that is en exact match
@@ -243,7 +243,7 @@ static DF1(jthkindexofmaxmin){
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */
 
 // (compare L.) dyadic
-static DF2(jthklvl2){
+static DF2(jthklvl2){F12IP;
  F2RANK(0,RMAX,jthklvl2,self);
  I comparand; RE(comparand=i0(a));  // get value to compare against
  RETF(num(((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(jt,w,comparand-(VAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
@@ -262,12 +262,12 @@ static exeV cmpabsblk[6] = {
 
 
 // (compare |) dyadic, reverting if not float
-static DF2(jthkcmpabs){F2PREFIP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
+static DF2(jthkcmpabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
  z=jtatomic2(jtinplace,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
  RETF(z);
 }
 // (compare!.n |) dyadic, reverting if not float
-static DF2(jthkcmpfitabs){F2PREFIP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
+static DF2(jthkcmpfitabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
  PUSHCCT(FAV(FAV(self)->fgh[0])->localuse.lu1.cct) z=jtatomic2(jtinplace,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
  POPCCT RETF(z);
 }

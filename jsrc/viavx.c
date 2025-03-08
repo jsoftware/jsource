@@ -1162,7 +1162,7 @@ DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>
 // a is the arg that was indexed, used only if we have to revert to rerunning the operation
 // w is the arg to be applied to the index
 // hs is the hashtable
-A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
+A jtindexofprehashed(J jtinplace,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt;
  ARGCHK3(a,w,hs);
  // hv is (info vector);(hashtable);(byte index validity)

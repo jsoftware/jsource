@@ -27,7 +27,7 @@ static DF1(jtlev1){F12IP;
 }
 
 // Like monad, but AT(self) is left trigger level, AC(self) is the right trigger level 
-static A jtlev2(J jt,A a,A w,A self){
+static DF2(jtlev2){F12JT;
  ARGCHK2(a,w);
  I aready=levelle(jt,a,FAV(self)->localuse.lslevels[0]); I wready=levelle(jt,w,FAV(self)->localuse.lslevels[1]);  // see if args are at the needed level
  // If both args are ready to process, do so.  Otherwise, drop down a level and try again.  If one arg is ready but the other isn't,

@@ -295,7 +295,7 @@ static DF2(jtgcr12){F12IP;PROLOG(0);
 // Creates a verb that will run jtgcr12 to execute the gerunds on the xy arguments, and
 // then execute the operation
 // a is the original u (a verb), w is the original n (boxed)
-static A jtgconj(J jt,A a,A w){A hs;
+static F2(jtgconj){F12JT;A hs;
  ARGCHK2(a,w);
  ASSERT((AN(w)&-2)==2,EVLENGTH);  // length is 2 or 3
  RZ(hs=fxeachv(1,w));  // convert gerund to array of A blocks, each verified to be a verb.

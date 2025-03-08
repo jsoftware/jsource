@@ -769,7 +769,7 @@ exitra:
  if(ip)ra(w);
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
-static A jtamendn2c(J jt,A a,A w,A self){R jtamendn2(jt,a,w,VAV(self)->fgh[0],self);}  // entry point from normal compound
+static DF2(jtamendn2c){F12IP;R jtamendn2(jtinplace,a,w,VAV(self)->fgh[0],self);}  // entry point from normal compound
 
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.

@@ -124,7 +124,7 @@ void spellit(UC c,UC *s){
  s[0]=(C)spell; s[1]=(C)(0x203a2e00>>(((spell>>8)&0x3)<<3)); s[2]=(C)(0x203a2e00>>(((spell>>10)&0x3)<<3));   // 00100000 00111010 00101110 00000000  for NUL . :, with overlap
 }
 
-A jtspella(J jt,A w){C c,s[3];V*v;
+F1(jtspella){F12JT;C c,s[3];V*v;
  ARGCHK1(w);
  v=FAV(w); c=v->id;
  if(c==CFCONS)R apip(thorn1(v->fgh[2]),chrcolon); 

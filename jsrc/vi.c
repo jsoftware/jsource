@@ -1350,7 +1350,7 @@ A jtindexofsub(J jtinplace,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B m
 DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
 
 // verb to handle compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
-A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
+A jtindexofprehashed(J jtinplace,A a,A w,A hs,A self){F12IP;A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt,ztype;
  ARGCHK3(a,w,hs);
  // hv is (info vector);(hashtable);(byte index validity)

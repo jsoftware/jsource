@@ -153,7 +153,7 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 #define PTISMARKBACKORRPAR(s)  ((((US*)&(s).pt)[1])==(PTRPAR>>16))  // s.pt is ) or MARK.
 _Static_assert((PTRPAR^PTMARKBACK&0xffff0000)==0,"MARKBACK must equal RPAR for end purposes");
 #define PTISMARKFRONT(pt)  (((pt)&0xff000000)==(PTMARKFRONT&0xff000000))  // pt is MARKFRONT
-#define PTISNOTASGNNAME(pt)  ((pt)&0x1000000)  // bit must be >= VJTFLGOK2X because we compare them > to find valid named assignments
+#define PTISNOTASGNNAME(pt)  ((pt)&0x1000000)  // NOT =./=: with name on the left
 #define PTASGNLOCALX 22  // set in the type-code for local assignment
 #define PTASGNLOCAL (1LL<<PTASGNLOCALX)
 #define PTNOTLPARX 27  // this bit is set for NOT LPAR    used in a register here
@@ -716,7 +716,7 @@ endname: ;
     pmask&=GETSTACK0PT;  // finish 1st 3 columns of parse
     pmask&=(I)((C*)&stack[3].pt)[3];  // finish 4th column of parse
     A fs1=__atomic_load_n(&stack[1].a,__ATOMIC_ACQUIRE);  // in case of line 1 V0 V1 N2, we will need the flags from V1.  Could be garbage
-    pt0ecam&=~(VJTFLGOK1+VJTFLGOK2+VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PMASKSAVEX));   // clear all the flags we will use
+    pt0ecam&=~(VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PMASKSAVEX));   // clear all the flags we will use
     
     if(withprob(pmask!=0,0.8)){  // If all 0, nothing is dispatchable, go push next word after checking for ( .  likely is an overstatement but it gives better register usage
      fs1=QCWORD(fs1);  // clear flags from address

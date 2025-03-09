@@ -12,7 +12,7 @@ static DF2(obv12){F12IP;self=AT(w)&VERB?w:self; PREF2IP(obv12cell); R obv12cell(
 
 
 // Set ASGSAFE from a&w; set INPLACE from a
-F2(jtobverse){F12IP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv12,obv12,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)+(FAV(a)->flag&(VJTFLGOK1|VJTFLGOK2))),mr(a),lr(a),rr(a));}
+F2(jtobverse){F12IP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv12,obv12,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)),mr(a),lr(a),rr(a));}
 
 // Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun).  Bivalent  a,w,self or w,self,self
 static DF2(ad12){F12IP;A z; A childself=FAV(self)->fgh[0]; 

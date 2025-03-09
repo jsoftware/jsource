@@ -538,7 +538,8 @@ static DF1(jtredg){F12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->val
  I aipok = (SGNIF((I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self),JTINPLACEWX)&AC(w))+ACUC1;   // requires JTINPLACEWX==0.  This is 1 or 8..1
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
  ACINIT(wfaux,aipok)   // first cell is inplaceable if second is
- jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
+// obsolete  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
+ jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA));  // all items are used only once
 
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
  // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecursive recursible type.
@@ -1013,11 +1014,11 @@ F1(jtslash){F12IP;A h;AF f1;C c;V*v;
  v=FAV(w); 
  I flag=v->flag&VASGSAFE;  // if u is asgsafe, so is u/
  switch(v->id){  // select the monadic case
- case CCOMMA:  f1=jtredcat; flag|=VJTFLGOK1;   break;   // ,/
+ case CCOMMA:  f1=jtredcat;  break;   // ,/
  case CCOMDOT: f1=jtredstitch; break;    // ,./
  case CSEMICO: f1=jtredsemi; break;    // ;/
  case CUNDER:  f1=jtreduce; if(COPE==IDD(v->fgh[1])){c=FAV(v->fgh[0])->id; if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} break;   // ,&.>/
- default: f1=jtreduce; flag|=(v->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); break;  // monad is inplaceable if the dyad for u is
+ default: f1=jtreduce; break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
  fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VISATOMIC2?((VA*)((I)va+v->localuse.lu1.uavandx[1]))->rps:&rpsnull);
@@ -1188,7 +1189,8 @@ static DF2(jtfold12){F12IP;A z,vz;
    tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // fwd/rev.  newitem v vz   a is inplaceable if y was (set above).  w is inplaceable first time based on initial-item status
    if(unlikely(tz==virtw)){if(unlikely((tz=clonevirtual(tz))==0))goto exitpop;}
    AK(virtw)+=wstride;  // advance item pointer to next/prev if there is one
-   jtinplace=(J)((I)jtinplace|((FAV(self)->flag>>VJTFLGOK2X)&JTINPLACEW));  // w inplaceable on all iterations after the first - if the operation supports flags
+// obsolete    jtinplace=(J)((I)jtinplace|((FAV(self)->flag>>VJTFLGOK2X)&JTINPLACEW));  // w inplaceable on all iterations after the first - if the operation supports flags
+   jtinplace=(J)((I)jtinplace|JTINPLACEW);  // w inplaceable on all iterations after the first - if the operation supports flags
   }else if(dmfr&STATEDYAD){tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // directionless dyad  x v vz  scaf set inplaceable?
   }else tz=CALL1IP(FAV(vself)->valencefns[0],vz,vself);   // directionless monad   v vz scaf set inplaceable?
 
@@ -1252,8 +1254,8 @@ exitpop:;   // here to abort on error, after popping stack
 DF2(jtfold){F12IP;
  ASSERTVV(a,w);  // must be verb ops
  A z; fdefallo(z);   // allocate verb result
- I flag = (FAV(w)->flag&(VJTFLGOK1|VJTFLGOK2));  // there is never a need to inplace u.  Inplace v if possible
- fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, flag, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
+// obsolete  I flag = (FAV(w)->flag&(VJTFLGOK1|VJTFLGOK2));  // there is never a need to inplace u.  Inplace v if possible
+ fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, 0, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
  R z;
 }
 

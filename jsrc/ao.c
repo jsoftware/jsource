@@ -534,7 +534,8 @@ A jtkeyct(J jtinplace,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nite
  I wpprist=wprist&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX));  // original pristinity of wperm
  AFLAGINIT(wperm,AFLAG(wperm)|wpprist)
  // We pass the self pointer for /. into cut, as it uses the id therein to interpret a
- z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
+// obsolete  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
+ z=jtcut2((J)(intptr_t)((I)jt+JTINPLACEW),frets,wperm,self);  // OK to inplace an inplaceable w as far as we are concerned
  // If the operation turned off pristinity of wperm, do the same for w.  Pristinity only matters if the block is inplaceable, but our tests expect that
  // assigned values retain their pristinity, so we have to clear pristinity of w whenever wperm ends non-prist
  if(unlikely(wprist>(AFLAG(wperm)&AFPRISTINE)))AFLAGCLRPRIST(w)  // if pristinity of wperm was turned off, do the same in w
@@ -824,7 +825,7 @@ DF2(jtkeyheadtally){F12IP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,
 }    /* x ({.,#)/.y or x (#,{.)/. y */
 
 // f/.
-F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
+F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
@@ -835,7 +836,7 @@ F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*
  case CBOX: f2=jtkeybox; break;  // </.
  case CPOUND: f2=jtkeytally; break;
  case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){ // f//.  if f is atomic2
-   f1=jtobqfslash; flag&=~VJTFLGOK1;
+   f1=jtobqfslash;
    // dyad f//. is special for f=+ >. <.   we set flags to indicate the operation and the allowed types
 #define keyslashvalues(w)CCM(w,CPLUS)+CCM(w,CMIN)+CCM(w,CMAX)
    CCMWDS(keyslash) CCMCAND(keyslash,cand,FAV(v->fgh[0])->id) if(CCMTST(cand,FAV(v->fgh[0])->id)){
@@ -855,7 +856,7 @@ F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*
 }
 
 // f/.. - looks like /. except for id
-F1(jtsldotdot){F12IP;A h=0; I flag=VJTFLGOK1|VJTFLGOK2;
+F1(jtsldotdot){F12IP;A h=0; I flag=0;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);

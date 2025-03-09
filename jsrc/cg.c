@@ -158,7 +158,7 @@ F2(jtevger){F12IP;A hs;I k;
 }
 
 // u`v.  Allow append-in-place to m
-F2(jttie){F12IP;ARGCHK2(a,w); R jtapip(jtinplace,VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
+F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtinplace&(~JTFLAGMSK+JTINPLACEA+JTINPLACEW)),VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}  // don't pass MODIFIER flag through
 
 
 // m@.:v y.  Execute the verbs at high rank if the operands are large
@@ -274,8 +274,9 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
    // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
     A fs=C(AAV(FAV(self)->fgh[2])[currres]);  // fetch the gerund to execute
-    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))&(((I)2<<(ZZFLAGWORD>>ZZFLAGISDYADX))-1))),
-     virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace from VJTFLGOK1/2 depending on valence
+// obsolete     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))&(((I)2<<(ZZFLAGWORD>>ZZFLAGISDYADX))-1))),
+    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(JTINPLACEA*(ZZFLAGWORD>>ZZFLAGISDYADX)+JTINPLACEW)),
+     virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace depending on valence
 
 #define ZZBODY  // assemble results
 #define ZZASSUMEBOXATOP 1
@@ -338,7 +339,8 @@ assemblyerror: RESETERR jt->etxinfo->asseminfo.assemframelen=0; jt->jerr=EVASSEM
   I vx=i0(vres); RE(0);  // fetch index of gerund
   vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERTGOTO(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
   A ger=C(AAV(FAV(self)->fgh[2])[vx]);  // the selected gerund
-  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(ger)->flag,(state>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
+// obsolete   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(ger)->flag,(state>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
+  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(jtinplace,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
 errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
   jteformat(jt,self,ZZFLAGWORD&ZZFLAGISDYAD?a:0,w,vres);
@@ -367,6 +369,6 @@ F2(jtagendai){F12IP;I flag;
  A avb; RZ(avb = incorp(fxeachv(1L,a)));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
  flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
- R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), RMAX, RMAX, RMAX);
+ R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL)|FAV(ds(CATDOT))->flag), RMAX, RMAX, RMAX);
 }
 

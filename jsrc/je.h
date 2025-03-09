@@ -651,7 +651,7 @@ extern DF2(jtbitwisechar);
 extern DF2(jtcharfn2);
 extern DF2(jtdeadband);
 extern DF2(jtunquote);
-extern A jtdbunquote(J,A,A,A,DC);
+extern A jtdbunquote(J,A,A,A);
 extern DF2(jteachl);
 extern DF2(jteachr);
 extern DF2(jtfslashatg);

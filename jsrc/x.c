@@ -124,12 +124,12 @@ void jtforeigninit(J jt){UI i;
  MN(8,1)   XPRIM(VERB, jtfmt11,      jtfmt12,      VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(8,2)   XPRIM(VERB, jtfmt21,      jtfmt22,      VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,30)  XPRIM(VERB, jtcurnameq,   0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX); 
- MN(15,0)  XPRIM(VERB, 0,            jtcd,         VASGSAFE|VJTFLGOK2,VF2NONE,RMAX,   1L,  1L  );
+ MN(15,0)  XPRIM(VERB, 0,            jtcd,         VASGSAFE,VF2NONE,RMAX,   1L,  1L  );
  MN(15,1)  XPRIM(VERB, jtmemr,       0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,2)  XPRIM(VERB, 0,            jtmemw,       VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(15,3)  XPRIM(VERB, jtmema,       0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,4)  XPRIM(VERB, jtmemf,       0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(15,15) XPRIM(VERB, jtmemu,       jtmemu2,      VASGSAFE|VJTFLGOK1,VF2NONE,RMAX,0,   0   );
+ MN(15,15) XPRIM(VERB, jtmemu,       jtmemu2,      VASGSAFE,VF2NONE,RMAX,0,   0   );
  MN(18,2)  XPRIM(VERB, jtlocpath1,   jtlocpath2,   VFLAGNONE,VF2NONE,0,   1,   0   );
  MN(18,3)  XPRIM(VERB, jtloccre1,    jtloccre2,    VFLAGNONE,VF2NONE,RMAX,0,   RMAX);
  Andx=(sizeof(foreignA)/sizeof(foreignA[0]))-1;
@@ -140,8 +140,8 @@ void jtforeigninit(J jt){UI i;
  MN(128,5) XPRIM(VERB, jtisnan,      0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(128,9) XPRIM(VERB, jtmvmsparse,  0,            VASGSAFE,VF2WILLOPEN1,RMAX,   RMAX,RMAX);
  MN(128,11) XPRIM(VERB, 0,           jtlrtrim,     VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(128,12) XPRIM(VERB, 0,           jtekupdate,   VASGSAFE|VJTFLGOK2,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
- MN(128,13) XPRIM(VERB, jtfindspr,   0,            VASGSAFE|VJTFLGOK2,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
+ MN(128,12) XPRIM(VERB, 0,           jtekupdate,   VASGSAFE,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
+ MN(128,13) XPRIM(VERB, jtfindspr,   0,            VASGSAFE,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
 
 // infrequently-used fns follow
 
@@ -342,7 +342,7 @@ void jtforeigninit(J jt){UI i;
  MN(128,4) XPRIM(VERB, jtrngraw,     0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(128,6) XPRIM(VERB, jtshasum1,    jtshasum2,    VASGSAFE,VF2NONE,1,1,RMAX);
  MN(128,7) XPRIM(VERB, 0,            jtaes2,       VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(128,8) XPRIM(VERB, jtqhash12,    jtqhash12,    VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE,RMAX,RMAX,RMAX);  
+ MN(128,8) XPRIM(VERB, jtqhash12,    jtqhash12,    VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);  
  MN(128,10) XPRIM(VERB, jtludecomp,  jtludecomp,   VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(18,6)  XPRIM(VERB, jtresetbloom, 0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
 #if 0   // no longer supported
@@ -353,7 +353,7 @@ MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VFLAGNONE,VF2NONE,RMAX,RMAX,RM
  MN(5,-1)  XPRIM(VERB, 0,            jtoutstr,     VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,-1)  XPRIM(VERB, jtleakblockread, 0,         VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,-2)  XPRIM(VERB, jtleakblockreset, 0,        VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,-3)  XPRIM(VERB, jtshowinplacing1, jtshowinplacing2,  VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-3)  XPRIM(VERB, jtshowinplacing1, jtshowinplacing2,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-1) XPRIM(VERB, 0,            jtfindrange,  VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-2) XPRIM(VERB, 0,            jtfindrange4, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-3) XPRIM(VERB, 0,            jtfindrange2, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);

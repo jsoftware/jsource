@@ -295,12 +295,12 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the  // monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  fdeffill(z,flag2,CAT,VERB, jtonright12,d&1?jtonright12:onleft2, a,0,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
+  fdeffill(z,flag2,CAT,VERB, jtonright12,d&1?jtonright12:onleft2, a,0,0, (av->flag&VASGSAFE), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
- flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VJTFLGOK1|VJTFLGOK2));
+ flag = ((av->flag&wv->flag)&VASGSAFE);
  // special cases of u
  UI mrecip=0;  // used only for m&|@^, where it is non0
 #define IDBIT(c) ((UI8)1<<((c)&0x3f))   // mask for c
@@ -308,12 +308,12 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
  if((I)(SPECAT>>(c&0x3f))&BETWEENC(c,CFIT,CQQ)){
   switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECAT test above! ****
   case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f
-  case CNOT&0x3f:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;
-  case CGRADE&0x3f:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;
+  case CNOT&0x3f:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2;} break;
+  case CGRADE&0x3f:  if(d==CGRADE){f1=jtranking; flag+=VIRS1;} break;
   case CSLASH&0x3f:  if(d==CCOMMA)f1=jtredravel; if(d==CDOLLAR&&FAV(av->fgh[0])->id==CSTAR)f1=jtnatoms;  // f/@, */@$
-   // warn on f/@atomic.  We need atomic in both monad and dyad; we use the fact that ATOMIC1 and FLGOK1
-   // are both set only in atomic primitives
-   if(unlikely((wv->lrr|wv->mr|(~wv->flag&(VISATOMIC1|VJTFLGOK1)))==0))if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,8,"(008) f/@g is the same as g when g is atomic\n"));
+   // warn on f/@atomic.  We need atomic in both monad and dyad; we use the fact that ATOMIC1
+   // is set only in atomic primitives
+   if(unlikely((wv->lrr|wv->mr|(~wv->flag&(VISATOMIC1)))==0))if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,8,"(008) f/@g is the same as g when g is atomic\n"));
    break;
   case CPOUND&0x3f:  f1=d==CCOMMA?jtnatoms:f1; f1=d==CDOLLAR?jtrank:f1; f1=d==COPE?jttallyatopopen:f1; break;    // #@,  #@$    #@>
   case CSTAR&0x3f:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
@@ -327,17 +327,17 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
   case CFLOOR&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintfloorlog2at; flag|=VIRS1;}  // <.@(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
    else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right; // <.@(2^][)
-   else{f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other <.@v
+   else{f1=jtonf1; f2=jtuponf2; flag+=VFLR;}  // any other <.@v
    break;
   case CCEIL&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintceillog2at; flag|=VIRS1;}  // >.@(2&^.)  2 must be SDT if w is 2&v, v must be a verb;
    else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; // >.@(2^][)
-   else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other >.@v
+   else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL;}  // any other >.@v
    break;
-  case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}
-                else if(d==CEPS){f2=jtepsind; flag&=~VJTFLGOK2;} else if(FIT0(CEPS,wv)){f2=jtepsind0; flag&=~VJTFLGOK2;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  //  I.@e.[!.0] I.@~:[!.0] I.@E.
-  case CQUERY&0x3f:  if((d&-2)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;} break;  // # $
-  case CQRYDOT&0x3f: if((d&-2)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // # $
+  case CICAP&0x3f:   if(d==CNE){f1=jtnubind;} else if(FIT0(CNE,wv)){f1=jtnubind0;}
+                else if(d==CEPS){f2=jtepsind;} else if(FIT0(CEPS,wv)){f2=jtepsind0;}else if(d==CEBAR){f2=jtifbebar;} break;  //  I.@e.[!.0] I.@~:[!.0] I.@E.
+  case CQUERY&0x3f:  if((d&-2)==CPOUND){f2=jtrollk;} break;  // # $
+  case CQRYDOT&0x3f: if((d&-2)==CPOUND){f2=jtrollkx;} break;  // # $
   case CRAZE&0x3f:  // detect ;@(<@(f/\));.
    if(d==CCUT&&boxatop(w)){  // w is <@g;.k
     if((((I)1)<<(wv->localuse.lu1.gercut.cutn+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
@@ -345,15 +345,15 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
      if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
       A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
       if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-       f1=jtrazecut1; f2=jtrazecut2; flag&=~(VJTFLGOK1|VJTFLGOK2);
+       f1=jtrazecut1; f2=jtrazecut2;
       }
      }
     }
    }
    break;
-  case CSLDOT&0x3f:  if(d==CSLASH&&AT(wv->fgh[0])&VERB&&FAV(wv->fgh[0])->flag&VISATOMIC2 && CSLASH==ID(av->fgh[0])&&AT(FAV(av->fgh[0])->fgh[0])&VERB&&FAV(FAV(av->fgh[0])->fgh[0])->flag&VISATOMIC2){f2=jtpolymult; flag&=~VJTFLGOK2;} break;  // f//.@(g/) for atomic fg
-  case CQQ&0x3f:     if(d==CTHORN&&CEXEC==IDD(av->fgh[0])&&av->fgh[1]==num(0)){f1=jtdigits10; flag&=~VJTFLGOK1;} break;  // "."0@":
-  case CEXP&0x3f:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;   // ^@o.
+  case CSLDOT&0x3f:  if(d==CSLASH&&AT(wv->fgh[0])&VERB&&FAV(wv->fgh[0])->flag&VISATOMIC2 && CSLASH==ID(av->fgh[0])&&AT(FAV(av->fgh[0])->fgh[0])&VERB&&FAV(FAV(av->fgh[0])->fgh[0])->flag&VISATOMIC2){f2=jtpolymult;} break;  // f//.@(g/) for atomic fg
+  case CQQ&0x3f:     if(d==CTHORN&&CEXEC==IDD(av->fgh[0])&&av->fgh[1]==num(0)){f1=jtdigits10;} break;  // "."0@":
+  case CEXP&0x3f:    if(d==CCIRCLE){f1=jtexppi;} break;   // ^@o.
   case CAMP&0x3f:
    x=av->fgh[0];
    if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
@@ -361,7 +361,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
     h=x; UI m=ABS(IAV(x)[0]);
     // precalculate 2^64/m so it is there if we need it
     if(AT(x)&INT&&m>1){mrecip=((UI)IMIN/m); mrecip=(mrecip<<1)+((((UI)IMIN-mrecip*m)<<1)>=m);}  // 2^64%m, possibly low by as much as 2^-64
-    if(d==CEXP){f2=jtmodpow2; flag&=~VJTFLGOK2;} else{f1=jtmodpow1; flag&=~VJTFLGOK1;}
+    if(d==CEXP){f2=jtmodpow2;} else{f1=jtmodpow1;}
    }
   }
  }
@@ -378,7 +378,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
   if(c==CSLASH){cb=FAV(av->fgh[0])->id; n=BETWEENC(cb,CPLUS,CSTARDOT)?0:n; cb+=1;}  // +/@ set cb to id of + +. *., plus 1 to match code for combining op
   else if(c==CAMP){cb=FAV(av->fgh[0])->id; A cr=av->fgh[1]; cr=(cb&~2)==CIOTA?cr:0; n=cr==num(0)?0:n; n=cr==num(1)?1:n;} // i.&0  already has combining op, set n if 0 or 1
   f2=n>=0?atcomp:f2;  // if valid comparison type, switch to it
-  flag+=((6+(cd&1))+8*((cb+n)&7))&REPSGN(~n); flag&=REPSGN(n)|~VJTFLGOK2;  // only if n>=0, set comp type & clear FLGOK2
+  flag+=((6+(cd&1))+8*((cb+n)&7))&REPSGN(~n);  // only if n>=0, set comp type
  }
 
  if(unlikely(d==COPE))if(!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
@@ -412,12 +412,12 @@ F2(jtatco){F12IP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  fdeffill(z,flag2,CATCO,VERB, jtonright12,d&1?jtonright12:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX); R z;  // must go through onright1 to set self
+  fdeffill(z,flag2,CATCO,VERB, jtonright12,d&1?jtonright12:onleft2, a,w,0, (av->flag&VASGSAFE), RMAX,RMAX,RMAX); R z;  // must go through onright1 to set self
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
- flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VJTFLGOK1|VJTFLGOK2));
+ flag = ((av->flag&wv->flag)&VASGSAFE);
 #define SPECATCO (IDBIT(CFIT)|IDBIT(CEXP)|IDBIT(CBOX)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CSEMICO)|IDBIT(CNOT)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR))  // mask for all special cases
  if(unlikely((I)(SPECATCO>>(c&0x3f))&BETWEENC(c,CFIT,CPOUND))){
   switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECATCO test above! ****
@@ -425,8 +425,8 @@ F2(jtatco){F12IP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1
 #if SLEEF && (C_AVX2 || EMU_AVX2)
   case CEXP&0x3f:    if(d==CPOLY){f2=jtpoly2; flag+=VIRS2+(VFATOPPOLYEXP<<VFATOPPOLYX);} break;   // ^@:p.
 #endif
-  case CNOT&0x3f:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;  // x -.@:-: y
-  case CGRADE&0x3f:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:@:/: y
+  case CNOT&0x3f:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2;} break;  // x -.@:-: y
+  case CGRADE&0x3f:  if(d==CGRADE){f1=jtranking; flag+=VIRS1;} break;  // /:@:/: y
   case CFIT&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG && (FAV(av->fgh[0])->id&~1)==CFLOOR){    //   if w is 2&v, v must be a verb
     f1=FAV(av->fgh[0])->id==CCEIL?jtintceillog2at:jtintfloorlog2at; flag|=VIRS1;  //  [<>].!.f@:(2&^.)
@@ -437,17 +437,17 @@ F2(jtatco){F12IP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1
   case CFLOOR&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintfloorlog2at; flag|=VIRS1;}  // <.@(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
    else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right; // <.@:(2^][)
-   else{f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other <.@:v
+   else{f1=jtonf1; f2=jtuponf2; flag+=VFLR;}  // any other <.@:v
    break;
   case CCEIL&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintceillog2at; flag|=VIRS1;}  // >.@:(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
    else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; // >.@:(2^][)
-   else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2);}  // any other >.@:v
+   else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL;}  // any other >.@:v
    break;
-  case CQUERY&0x3f:  if((d&~1)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;  // x ?@:# y or x ?@:$ y
-  case CQRYDOT&0x3f: if((d&~1)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // x ?.@:# y or x ?.@:$ y
-  case CICAP&0x3f:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}
-                else if(d==CEPS){f2=jtepsind; flag&=~VJTFLGOK2;} else if(FIT0(CEPS,wv)){f2=jtepsind0; flag&=~VJTFLGOK2;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@:e. y  I.@:(e.!.0) y  I.@:~: y  I.@:(~:!.0) y  x I.@:E. y
+  case CQUERY&0x3f:  if((d&~1)==CPOUND){f2=jtrollk;}  break;  // x ?@:# y or x ?@:$ y
+  case CQRYDOT&0x3f: if((d&~1)==CPOUND){f2=jtrollkx;} break;  // x ?.@:# y or x ?.@:$ y
+  case CICAP&0x3f:   if(d==CNE){f1=jtnubind;} else if(FIT0(CNE,wv)){f1=jtnubind0;}
+                else if(d==CEPS){f2=jtepsind;} else if(FIT0(CEPS,wv)){f2=jtepsind0;}else if(d==CEBAR){f2=jtifbebar;} break;  // I.@:e. y  I.@:(e.!.0) y  I.@:~: y  I.@:(~:!.0) y  x I.@:E. y
   case CAMP&0x3f:    {m=(e&~2)==CIOTA?e:m; I j=-1; j=g==num(0)?0:j;  j=g==num(1)?1:j; m|=j; break;}   // i.&0/1@:g    i:&0/1@:g   note 0/1 must be boolean SDTs
   case CSLASH&0x3f:  //  f/@:g where f is not a gerund
    if(FAV(f)->flag&FAV(w)->flag&VISATOMIC2){f2=jtfslashatg;}  // f/@:g when f and g are both atomic
@@ -460,14 +460,14 @@ F2(jtatco){F12IP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1
   case CSEMICO&0x3f:  // u@:(v;.k)
    if(d==CCUT){I j;
     j=wv->localuse.lu1.gercut.cutn;   // cut type, valid EXCEPT for <;.0 which is detected by function:
-    if(wv->valencefns[1]==jtboxcut0){f2=jtrazecut0; flag&=~VJTFLGOK2;}  // detect ;@:(<;.0), used for substring extraction
+    if(wv->valencefns[1]==jtboxcut0){f2=jtrazecut0;}  // detect ;@:(<;.0), used for substring extraction
     else if(boxatop(w)){  // w is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
      if((((I)1)<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
       A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
       if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
        A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
        if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-        f1=jtrazecut1; f2=jtrazecut2; flag&=~(VJTFLGOK1|VJTFLGOK2);
+        f1=jtrazecut1; f2=jtrazecut2;
        }
       }
      }
@@ -486,7 +486,7 @@ F2(jtatco){F12IP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1
   if(BETWEENC(e,CEQ,CEPS)){
    // valid comparison combination.  m is the combiner, e is the comparison
    f2=atcomp;  // if valid comparison type, switch to it
-   flag+=(e-CEQ)+8*(m&7); flag&=~VJTFLGOK2;  // set comp type & clear FLGOK2
+   flag+=(e-CEQ)+8*(m&7);  // set comp type
   }
  }
 
@@ -506,7 +506,7 @@ F2(jtampco){F12IP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
  A z; fdefallo(z)
  c=FAV(a)->id; wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
- flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
+ flag = ((FAV(a)->flag&wv->flag)&VASGSAFE);
  if(unlikely(c==CBOX)){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(unlikely(BOTHEQ8(c,d,CSLASH,CCOMMA))){f1=jtredravel;}    // f/&:, y
  else if(unlikely(BOTHEQ8(c,d,CRAZE,CCUT)))if(boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2 y
@@ -515,12 +515,12 @@ F2(jtampco){F12IP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
    if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
     A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
     if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-     f1=jtrazecut1; flag&=~(VJTFLGOK1);
+     f1=jtrazecut1;
     }
    }
   }
  }
- else if(unlikely(BOTHEQ8(c,d,CGRADE,CGRADE))){f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}  // /:&:/: monad
+ else if(unlikely(BOTHEQ8(c,d,CGRADE,CGRADE))){f1=jtranking; flag+=VIRS1;}  // /:&:/: monad
  else if(unlikely(BOTHEQ8(c,d,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP
 
  // Copy the monad open/raze status from v into u&:v
@@ -587,12 +587,12 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
   f1=on1; f2=on2;
   v=FAV(w); c=v->id; r=v->mr;   // c=pseudochar for v; overall rank is monad rank of v
   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
-  flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
+  flag = ((FAV(a)->flag&v->flag)&VASGSAFE);
   if(unlikely((c&~(CFORK^CAMP))==CFORK)){C d=CLEFT;  // u&(FORK/&)
    if(c==CFORK)d=ID(v->fgh[2]);  // d is CLEFT if &, 0 if capped fork, otherwise from h of fork
    if(CIOTA==FAV(v->fgh[1])->id&&(d&~1)==CLEFT&&v->fgh[0]==ds(CALP)){  // (FORK/&) is a.&i. or (a. i. ][)  avoid subrt call to equ()
     d=FAV(a)->id;
-    if(BETWEENC(d,CEQ,CGT)){f2=jtcharfn2; flag&=~VJTFLGOK2;}  // any comparison - comp&(a.&i. or (a. i. ][))
+    if(BETWEENC(d,CEQ,CGT)){f2=jtcharfn2;}  // any comparison - comp&(a.&i. or (a. i. ][))
    }
   }
   // the special cases, except for ,&<, are very rare because it is idiomatic to use @ for monads
@@ -601,11 +601,11 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
    if(unlikely(BOTHEQ8(FAV(a)->id,c,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP
    else switch(FAV(a)->id&0x3f){   // **** DO NOT add to this switch without updating SPECAND above ****
    case CBOX&0x3f:   flag |= VF2BOXATOP1; break;  // <&u mark this as <@f for the monad
-   case CGRADE&0x3f: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y
+   case CGRADE&0x3f: if(c==CGRADE){f1=jtranking; flag+=VIRS1;} break;  // /:&/: y
    case CSLASH&0x3f: if(c==CCOMMA){f1=jtredravel; } break;   // f/&, y
    case CPOUND&0x3f: f1=c==COPE?jttallyatopopen:f1; break;    //  #&>
-   case CCEIL&0x3f:  f1=jtonf1; flag+=VCEIL; flag&=~VJTFLGOK1; break;  // >.&g
-   case CFLOOR&0x3f: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;   // <.&g
+   case CCEIL&0x3f:  f1=jtonf1; flag+=VCEIL; break;  // >.&g
+   case CFLOOR&0x3f: f1=jtonf1; flag+=VFLR; break;   // <.&g
    case CRAZE&0x3f:  // detect ;&(<@(f/\));.
     if(c==CCUT&&boxatop(w)){  // w is <@g;.k
      if((((I)1)<<(v->localuse.lu1.gercut.cutn+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
@@ -613,7 +613,7 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
       if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
        A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
        if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-        f1=jtrazecut1; flag&=~(VJTFLGOK1);
+        f1=jtrazecut1;
        }
       }
      }
@@ -640,7 +640,7 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
   f1=AT(a)&VERB?withr:withl; I visa=AT(a)&VERB?~2:0; c=FAV(va)->id;  // visa is ~2 if a is verb, 0 if w.  c is ID of the verb
   AF vbf2=FAV(va)->valencefns[1]; cct=0.0;  // address of the function for the verb, for simple bonded fn; cct to 0.  These will be added!!
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
-  p=FAV(va)->flag; flag=((p&(VJTFLGOK2|VIRS2))>>1)+(FAV(va)->flag&VASGSAFE);
+  p=FAV(va)->flag; flag=(FAV(va)->flag&VASGSAFE);
 
   // take WILLOPEN/COUNT for the monad from the appropriate side of the dyadic verb.
   flag2=((FAV(va)->flag2)>>(AT(a)&VERB?VF2WILLOPEN2AX-VF2WILLOPEN1X:VF2WILLOPEN2WX-VF2WILLOPEN1X))&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
@@ -652,15 +652,15 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
    if(unlikely((c&~3)==CIOTA)){  // verb is i. i: { #:
     if(unlikely((c&(visa^~2))==CIOTA)){  // m&i.   m&i:  
      if(unlikely(na==ds(CALP))){f1=jtadotidotifchar;  // a.&i., keep IRS  (must be a., not some equal value)
-     }else{PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(IIDOT+((c&(CIOTA^CICO))>>1),a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; vbf2=0; flag&=~(VJTFLGOK1+VIRS1); RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
+     }else{PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(IIDOT+((c&(CIOTA^CICO))>>1),a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; vbf2=0; flag&=~(VIRS1); RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
     }else if(unlikely((c&(visa|2))==CLBRACE)&&na==ds(CALP)){f1=jtfromadotifchar;   // {&a., keep IRS  (must be a., not some equal value)
     }
    }else if(unlikely(visa==((7^~2)^(p&7)))){  // e.-compound&n  p=7 & a is verb
     mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=FAV(va)->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
-    {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; vbf2=0; flag&=~(VJTFLGOK1+VIRS1); RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
-   }else if(unlikely(FAV(w)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; vbf2=0; flag&=~(VJTFLGOK1+VIRS1);   // m&;:
-   }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; vbf2=0; flag&=~(VJTFLGOK1+VIRS1); // m&128!:3
+    {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; vbf2=0; flag&=~(VIRS1); RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
+   }else if(unlikely(FAV(w)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; vbf2=0; flag&=~(VIRS1);   // m&;:
+   }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; vbf2=0; flag&=~(VIRS1); // m&128!:3
    }
   }
 

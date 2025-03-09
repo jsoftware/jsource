@@ -11,7 +11,7 @@ static I jtfdepger(J jt,A w){R 0;
 
 
 // $: itself
-DF2(jtself12){F12IP;A z;  A fs=jt->parserstackframe.sf; I dyad=EPDYAD; jtinplace=FAV(fs)->flag&(VJTFLGOK1<<dyad)?jtinplace:jt; AF f12=FAV(fs)->valencefns[dyad]; STACKCHKOFL RETF((f12)(jtinplace,a,dyad?w:fs,fs));}
+DF2(jtself12){F12IP;A z;  A fs=jt->parserstackframe.sf; I dyad=EPDYAD; AF f12=FAV(fs)->valencefns[dyad]; STACKCHKOFL RETF((f12)(jtinplace,a,dyad?w:fs,fs));}
 
 // not used A jtac1(J jt,AF f){R fdef(0,0,VERB, f,jtvalenceerr, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 A jtac2(J jt,AF f){R fdef(0,0,VERB, jtvalenceerr,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}  // f is entry point; result is VERB type to call f as dyad with infinite rank

@@ -952,7 +952,7 @@ F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(
  case CSLASH: ;  // never gerund/ which is coded as GRCO
   A u=v->fgh[0];  // the u in u/\ y
   if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
-  f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan; flag|=VJTFLGOK1;} break;
+  f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan;} break;
  case CPOUND:
   f1=jtiota1; break;
  case CLEFT: case CRIGHT: case CCOMMA:
@@ -960,7 +960,7 @@ F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(
  case CFORK:  
   if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
  default:
-  flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
+  break; // The default u\ looks at WILLBEOPENED
  }
  fdeffillall(z,0,CBSLASH,VERB,f1,f2,w,0L,0L,flag,RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .   f is nonnull if f/\ .

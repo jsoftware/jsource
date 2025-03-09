@@ -1275,14 +1275,15 @@ typedef struct {
 #define VXOP            (I)0x100000      // this is the result of giving [u]/v args to a defn that had VXOPR set.  u and v are in fgh[0/2]
 #define VTRY1           (I)0x200000      /* monad contains try.             */
 #define VTRY2           (I)0x400000      /* dyad  contains try.  must be just above VTRY1           */
-// bits VJTFLGOK1/VJTFLGOK2/VASGSAFE are wired into a flag reg in parser
-#define VJTFLGOK1X    23    // monad can handle flags in jt must be paired with VJTFLGOK2X
-#define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
-#define VJTFLGOK2X    24    // dyad can  handle flags in jt
-#define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
+// bits 23-24 free
+// bit VASGSAFE is wired into a flag reg in parser
+// obsolete #define VJTFLGOK1X    23    // monad can handle flags in jt must be paired with VJTFLGOK2X
+// obsolete #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
+// obsolete #define VJTFLGOK2X    24    // dyad can  handle flags in jt
+// obsolete #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
 #define VXOPCALL       (I)0x2000000      // 25 this verb is a namerefop, interposed to hang a name for debugging onto an anyymous verb.  f is 0, the name is in g, the actual verb in h     overlaps SYMB/ASGNLOCAL
 #define VASGSAFEX     26
-#define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path.  Must be > VJTFLGOK2 for parser comparisons
+#define VASGSAFE      (((I)1)<<VASGSAFEX)     // Execution does not alter locale/path.
 // 27 free   it appears that u !: n forms were envisaged
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb

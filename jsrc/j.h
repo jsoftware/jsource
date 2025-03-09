@@ -1108,7 +1108,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF(STACKPOS>=jt->cstackmin,EVSTACK,suff);}
 #define EPDYAD (w!=self)  // for any call (i. e. verb or modifier), true if w is an operand
 #define EPMONAD (w==self)  // for any call (i. e. verb or modifier), true if w is self, not an operand
-#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VJTFLGOK1+VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
+#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
 // fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
 #define FUZZ            0.000000000000056843418860808015   // tolerance
 #define FUZZDS          0.0000152588  // for SP integer conversions
@@ -1180,7 +1180,7 @@ A hx; \
 if(opt&0x1){hx=w; \
 }else{J jtf; \
  I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all g willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
- jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
+ jtf=JPTROP(jt,+,(((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
  RZEFCALL(hx,(fghfn)(jtf,PTR(w),hs,hs),hs,PTR(w),0); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  ARGCHK1D(hx) \
@@ -1193,7 +1193,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
  }else{J jtf; \
   fghfn=FAVV(fs)->valencefns[0]; \
   I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all g willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
-  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
+  jtf=JPTROP(jt,+,(((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
   RZEFCALL(fx,(fghfn)(jtf,PTR(w),fs,fs),fs,PTR(w),0); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   ARGCHK2D(fx,hx) \
@@ -1210,9 +1210,9 @@ if(!((opt&1)||((opt&0x10)&&!(opt&0x20)))) \
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if(opt&0x40){ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs),gs,PTR(hx),0); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),PTR(hx),gs,gs),gs,PTR(hx),0); \
 }else{ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
 } \
 /* EPILOG to free up oddments from f/g/h, but not if we may be returning a virtual block */ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); \
@@ -1257,11 +1257,11 @@ if(opt&0x2){hx=w; \
   /* h@][.  Don't allow inplacing if a=w, because f will need the value for sure then.  Exception: NVV, where f needs nothing */ \
   /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
   /* the flags in gh@][ are passed through from gh */ \
-  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  jtf=JPTROP(jt,+,(-(((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
   RZEFCALL(hx,(fghfn)(jtf,PTR(opt&0x4?a:w),hs,hs),hs,PTR(opt&0x4?a:w),0); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \
-  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK2X)&((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  jtf=JPTROP(jt,+,(-(((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
   RZEFCALL(hx,(fghfn)(jtf,PTR(a),PTR(w),hs),hs,PTR(a),PTR(w)); \
   hx=PTROP(hx,+,(I)((hx!=w)&(hx!=a))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  } \
@@ -1279,7 +1279,7 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
   I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, propagate willopen */ \
   if(opt&0xc0){ \
    /* f@][.  Before we execute, free the argument we don't need (unless it equals the other argument or hx) */ \
-   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+   jtf=JPTROP(jt,+,((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
    /* free only if c<0.  Shift (UI)c>>1 to disable the free.  Special case: PRISTINE blocks can generate AC=8..xx where xx is anything, if the block is abandoned & picked up multiple times.  So check AC */ \
    /* Check AC and zap/free only if the block can be freed; zapping otherwise would leave no way to make the usecount positive in every() */ \
    if(opt&0x40){if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){if(likely(c==(ACINPLACE+ACUC1))){*tpopw=0; fanapop(w,AFLAG(w));}}}} \
@@ -1287,7 +1287,7 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
    RZEFCALL(fx,(fghfn)(jtf,PTR(opt&0x40?a:w),fs,fs),fs,PTR(opt&0x40?a:w),0); \
    hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   }else{ \
-   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+   jtf=JPTROP(jt,+,((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
    RZEFCALL(fx,(fghfn)(jtf,PTR(a),PTR(w),fs),fs,PTR(a),PTR(w)); \
    hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   } \
@@ -1305,9 +1305,9 @@ if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); if((opt&0xc0)!=0xc0&&(opt&0x30
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if((opt&0xc0)==0xc0){ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))|~JTFLAGMSK)),PTR(hx),gs,gs),gs,PTR(hx),0); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),PTR(hx),gs,gs),gs,PTR(hx),0); \
 }else{ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
 } \
 /* EPILOG to free up oddments from f/g/h, but not if we may be returning a virtual block */ \
 if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \

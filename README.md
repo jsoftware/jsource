@@ -5,9 +5,9 @@ is provided under both commercial and GPL 3 licenses.
 
 J is easy to install, has a small footprint, and has direct access to tutorials and documentation.
 
-The latest release is J9.5 with several new language features and performance improvements, available from December 2023. See [J9.5 Release Notes](https://code.jsoftware.com/wiki/System/ReleaseNotes/J9.5).
+The latest release is J9.6 with several new language features and performance improvements, available from February 2025. See [J9.6 Release Notes](https://code.jsoftware.com/wiki/System/ReleaseNotes/J9.6).
 
-A [J9.6 beta](https://code.jsoftware.com/wiki/System/ReleaseNotes/J9.6) is available from January 2024.
+A [J9.7 beta](https://code.jsoftware.com/wiki/System/ReleaseNotes/J9.7) is available from March 2025.
 
 Documentation can be found in the [J wiki](https://code.jsoftware.com/wiki).
 

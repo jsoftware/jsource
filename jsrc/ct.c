@@ -540,7 +540,7 @@ static I jtthreadcreate(J jt,I n){
 }
 
 // execute the user's task.  Result is an ordinary array or a pyx.  Bivalent (a,w,self) or (w,self,self) called from unquote or parse
-static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
+static A jttaskrun(J jtinplace,A arg1, A arg2, A arg3){F12JT;A pyx;
  ARGCHK2(arg1,arg2);  // the verb is not the issue
  RZ(pyx=jtcreatepyx(jt,-2,inf));
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITUNPUSH(jobA);  // protect the job till it is finished

@@ -488,7 +488,7 @@ static F2(jtmatchs){F12IP;A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,
 
 // x -:"r y or x -.@-:"r y depending on LSB of jt
 F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
- I eqis0 = (I)jtinplace&1;
+ I eqis0 = !!((I)jtinplace&JTNOTMATCH);   // remember whether we are -: or -.@-:
 // obsolete  jt=(J)((I)jt&~1);
  ARGCHK2(a,w);
  I isatoms = (-AN(a))&(-AN(w));  // neg if both args have atoms
@@ -520,4 +520,4 @@ F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
  RETF(z);
 }    /* a -:"r w */
 
-F2(jtnotmatch){F12IP;R jtmatch((J)((I)jt+1),a,w);}   /* a -.@-:"r w */
+F2(jtnotmatch){F12IP;R jtmatch((J)((I)jt+JTNOTMATCH),a,w);}   /* a -.@-:"r w */

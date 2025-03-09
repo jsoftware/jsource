@@ -51,9 +51,9 @@ A jtevery(J jtinplace, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
  }
  AFLAGINIT(z,(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX)  // if WILLBEOPENED is NOT set, make the result a recursive box
  zv=AAV(z);
- // Get jt flags to pass to next level - take them from  fs, so that we always inplace this verb, which will allow us to set pristinity better
+ // Get jt flags to pass to next level -  we always inplace this verb, which will allow us to set pristinity better
  // We must remove raze flags since we are using them here
- jtinplace=(J)((I)jt+((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
+ jtinplace=(J)((I)jt+JTINPLACEW);
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
  if(wflag&AFVIRTUAL)w=ABACK(w);
  // *** now w has been replaced by its backing block, if it was virtual
@@ -202,7 +202,7 @@ A jtevery2(J jtinplace, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
  // We must remove raze flags since we are using them here
  // If the arguments are the same, we turn off inplacing for the function but not for the argument blocks.  It only matters if a block is returned: then
  // it's OK to treat the return as pristine the arguments are zombie, even if noninplaceable ones
- jtinplace=(J)((I)jt+((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX))&(a!=w))*(JTINPLACEW+JTINPLACEA));
+ jtinplace=(J)((I)jt+(a!=w)*(JTINPLACEW+JTINPLACEA));
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
  if(AFLAG(a)&AFVIRTUAL)a=ABACK(a);

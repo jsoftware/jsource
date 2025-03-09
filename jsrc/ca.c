@@ -157,7 +157,7 @@ static UI imodpow(UI x,I n,UI m,UI mrecip){
  while(n){UI zz=z*x; zz=modm(zz); x=x*x; x=modm(x); z=n&1?zz:z; n>>=1;}  //  repeated square/mod
  R z;
 }
-static DF2(jtmodpow2){F12IP;A h;B b,c;I m,n,x,z;
+static DF2(jtmodpow2){F12IP;A h;B b,c;I m,n,x,z;  // scaf could inplace
  h=FAV(self)->fgh[2];
  if(unlikely(((AT(a)|AT(w))&(NOUN&~(INT+XNUM)))!=0)){  // convert any non-INT arg to INT if it can be done exactly
   if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a));
@@ -199,10 +199,10 @@ static DF1(jttallyatopopen){F12IP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV
 
 // u@v and u@:v
 FORK1(on1cell,0x160)   // u@:v monad
-DF1(on1){F12IP;PREF1(on1cell); R on1cell(jtinplace,w,self);}  // u@v monad - pass inplaceability through
+DF1(on1){F12IP;PREF1IP(on1cell); R on1cell(jtinplace,w,self);}  // u@v monad - pass inplaceability through
 
 FORK2(jtupon2cell,0x1c0)  // u@:v monad
-DF2(jtupon2){F12IP;PREF2(jtupon2cell); R jtupon2cell(jtinplace,a,w,self);}  // u@v dyad -  pass inplaceability through
+DF2(jtupon2){F12IP;PREF2IP(jtupon2cell); R jtupon2cell(jtinplace,a,w,self);}  // u@v dyad -  pass inplaceability through
 
 // special case for rank 0.  Transfer to loop.
 // if there is only one cell, process it through on1, which understands this type
@@ -217,12 +217,12 @@ static DF2(onleft2){F12IP; jtinplace=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))
 static DF2(jtonright12){F12IP; jtinplace=(J)((I)jtinplace&~JTINPLACEA); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],VERB&AT(w)?a:w,fs);}  // keep inplaceability of w; turn a off for monad
 
 // u@n
-static DF2(onconst12){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];R CALL1(FAV(fs)->valencefns[0],FAV(self)->fgh[1],FAV(self)->fgh[0]);}
+static DF2(onconst12){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];R CALL1IP(FAV(fs)->valencefns[0],FAV(self)->fgh[1],FAV(self)->fgh[0]);}  // pass inplaceability through
 
 // x u&v y
 FORK2(on2cell,0x148)
 
-static DF2(on2){F12IP;PREF2(on2cell); R on2cell(jt,a,w,self);}
+static DF2(on2){F12IP;PREF2(on2cell); R on2cell(jtinplace,a,w,self);}  // pass inplaceability through
 
 static DF2(on20){F12IP;R jtrank2ex0(jtinplace,a,w,self,on2cell);}  // pass inplaceability through
 
@@ -242,7 +242,7 @@ DF2(atcomp){F12IP;A z;AF f;
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0.0)
  if(f!=0){
   // a suitable processing function was found apply it
-  z=f(jt,a,w,self);
+  z=f(jt,a,w,self);  // these founctions do not benefit from inplacing
   // postprocessing needed: 0x=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
   if(likely(z!=0)){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else z=(FAV(self)->fgh[2]?jtfolk2:jtupon2)(jt,a,w,self);   // revert if can't use special code - not inplace
@@ -573,9 +573,9 @@ static DF1(jtfromadotifchar){F12IP;
 
 // Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the precision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
-static DF1(ixfixedleft){F12IP;V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT R z;}  // must use the ct when table was created
+static DF1(ixfixedleft){F12IP;V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=jtindexofprehashed(jtinplace,v->fgh[0],w,v->fgh[2],self); POPCCT R z;}  // must use the ct when table was created  pass inplaceability through
 // Here for compounds like (i.&0@:e.)&n  e.&n -.&n that compute a prehashed table from w
-static DF1(ixfixedright){F12IP;V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT R z;}
+static DF1(ixfixedright){F12IP;V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=jtindexofprehashed(jtinplace,v->fgh[1],w,v->fgh[2],self); POPCCT R z;}  // must use the ct when table was created  pass inplaceability through
 
 // u&v
 F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;

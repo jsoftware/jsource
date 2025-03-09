@@ -496,7 +496,7 @@ A jtparsea(J jtinplace, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
   jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
 
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
-  //  (exec) 23,26 VJTFLGOK1/2+VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (
+  //  (exec) 26 VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (
   //         25 set if first stack word AFTER the executing fragment is NOT MARK/RPAR (i. e. there are executions remaining on the stack) 
   //  (name resolution) 23-26  free
   //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
@@ -504,7 +504,7 @@ A jtparsea(J jtinplace, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
   //  18   AR flag from symtab
   //  16 free
   //  0-15 m (word# in sentence)
-#define NOTFINALEXECX 25  // bit must be >= VJTFLGOK2X and less than 32+PTISCAVNX, because we test values 
+#define NOTFINALEXECX 25  // bit must be less than 32+PTISCAVNX, because we test values 
 #define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define LOCSYMFLGX (18-ARLCLONEDX)  // add LOCSYMFLGX to AR*X to get to the flag bit in pt0ecam
 #define PMASKSAVEX 20  // 3 bits of pline
@@ -740,8 +740,8 @@ endname: ;
        jt->parserstackframe.sf=fs;  // set new recursion point for $:
        AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask],__ATOMIC_RELAXED);  // frees fs the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call
        fs1flag&=fsflag;  // include ASGSAFE from V0 (if applicable, otherwise just a duplicate of fsflag)
-       fsflag>>=pmask; fsflag&=VJTFLGOK1;  // select the monad/dyad bit indicating inplaceability, store it in the monad bit pf flags
-       pt0ecam|=fsflag;  // insert flag into portmanteau reg.  Used in the execution
+// obsolete        fsflag>>=pmask; fsflag&=VJTFLGOK1;  // select the monad/dyad bit indicating inplaceability, store it in the monad bit pf flags
+// obsolete        pt0ecam|=fsflag;  // insert flag into portmanteau reg.  Used in the execution
        // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
        // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
        // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
@@ -750,10 +750,11 @@ endname: ;
        // the name =. name , 3 will come to execution.  Can it inplace?  Yes, because the modified value of name will be on the stack after
        // execution.  That will then execute as (name' + +) creating a fork that will assign to name.  So we can inplace any execution, because
        // it always produces a noun and the only things executable from the stack are tridents
-       if(withprob((UI)fsflag>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(~fs1flag&VASGSAFE)),0.1)){A zval; I targc;  // targc is # refs in the assigned symbol that is allowed for inplaceables
-          // The values on the left are good: function that understands inplacing.
-          // The values on the right are bad, and all bits > the good bits.  They are: not assignment to name;
-          // ill-behaved function (may change locales).  The > means 'good and no bads', that is, inplaceable assignment
+// obsolete        if(withprob((UI)fsflag>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(~fs1flag&VASGSAFE)),0.1)){A zval; I targc;  // targc is # refs in the assigned symbol that is allowed for inplaceables
+       if(withprob(0==(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(~fs1flag&VASGSAFE)),0.1)){A zval; I targc;  // targc is # refs in the assigned symbol that is allowed for inplaceables
+// obsolete           // The values on the left are good: function that understands inplacing.
+// obsolete           // The values on the right are bad, and all bits > the good bits.  They are: not assignment to name;
+          // Assignment to name, and not ill-behaved function (may change locales)., that is, inplaceable assignment
         // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
         if(likely(GETSTACK0PT&PTASGNLOCAL)){L *s;   // only sentences from explicit defns have ASGNLOCAL set
          // local assignment.  First check for primary symbol.  We expect this to succeed.  We fetch the unflagged address of the value
@@ -796,7 +797,8 @@ endname: ;
               // point to pointer to arg2 (if it is inplace) - only if dyad
               // tpopa/tpopw are:  monad: w fs  dyad: a w
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
-       J jti=(J)((I)jt+(2*pmask)+1); jti=(pt0ecam&VJTFLGOK1)?jti:jt;  // pmask now means 'dyad execution'.  Set args as inplaceable if verb supports jtflags in the current valence
+       J jti=(J)((I)jt+(2*pmask)+1);  // pmask now means 'dyad execution'.  Set inplaceable execution, 1 or 2 bits
+// obsolete  jti=(pt0ecam&VJTFLGOK1)?jti:jt;  // pmask now means 'dyad execution'.  Set args as inplaceable if verb supports jtflags in the current valence
        y=(*actionfn)(jti,QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
          // use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  When we don't break we lose time waiting for jt->fs to settle, but very little.
        // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the

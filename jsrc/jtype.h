@@ -134,6 +134,9 @@ typedef I SI;
 // following bit used as arg to jtover
 #define JTALLOWRETARGX    2   // allow jtover to return an argument if empty appended to it
 #define JTALLOWRETARG      (((I)1)<<JTALLOWRETARGX)
+// following bit used as arg to jtmatch
+#define JTNOTMATCHX    2   // match should return -.@-:
+#define JTNOTMATCH      (((I)1)<<JTNOTMATCHX)
 // following bits is used inside/input to jtlrep only
 #define JTNORESETERRX   0   // 
 #define JTNORESETERR        (((I)1)<<JTNORESETERRX)

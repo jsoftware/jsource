@@ -129,7 +129,7 @@ F1(jtcasev){F12IP;A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 // cellframelen is the number of axes of w that were used in computing the cell indexes, complemented if ind is axes.  Later axes of w are the cell shape
 //   Value is (number of axes added for frame)/(framelen wrt a)/(framelen wrt w)/(#axes in ind)
 // ind is the assembled indices OR a pointer to axes[]
-static A jtmerge2(J jtinplace,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
+static A jtmerge2(J jtfg,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
  ARGCHK2(a,w); RZ(ind);
  I aframelen=(I1)(cellframelen>>RANK2TX), wframelen=(I1)(cellframelen>>RANKTX), nframeaxes=(cellframelen>>(3*RANKTX)); cellframelen=(I1)cellframelen;  // length of frame of a and w; convert cellframelen to signed int
  //   w w w w w
@@ -172,7 +172,7 @@ static A jtmerge2(J jtinplace,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
  // It is not possible to inplace a value that is backing a virtual block, because we inplace assigned names only when
  // the stack is empty, so if there is a virtual block it must be in a higher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
- I ip = ASGNINPLACESGNNJA(SGNIF(jtinplace,JTINPLACEWX),w)
+ I ip = ASGNINPLACESGNNJA(SGNIF(jtfg,JTINPLACEWX),w)
       &&( ((AT(w)&t&(DIRECT|RECURSIBLE))>0)&(w!=a)&(w!=ind)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) );
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(-ip&t&RECURSIBLE){
@@ -536,7 +536,7 @@ static A jtcompidx(J jt,I axislen,A ind){
 }
 
 // Execution of x m}"r y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
-A jtamendn2(J jtinplace,A a,A w,AD * RESTRICT ind,A self){F12IP;PROLOG(0007);A e,z; I atd,wtd,t,t1;P*p;
+A jtamendn2(J jtfg,A a,A w,AD * RESTRICT ind,A self){F12IP;PROLOG(0007);A e,z; I atd,wtd,t,t1;P*p;
   // ind=m, the indexes to be modified
  ARGCHK3(a,w,ind);
  I acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
@@ -568,7 +568,7 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
    if(unlikely(TYPESNE(t,AT(a))))RZ(a=cvt(t,a));  // if a must change precision, do so
    I k=bplg(t);  // lg2 of an atom of result
    // inplaceability is explained in the main logic in merge2n
-   if(ASGNINPLACESGNNJA(SGNIF(jtinplace,JTINPLACEWX),w)
+   if(ASGNINPLACESGNNJA(SGNIF(jtfg,JTINPLACEWX),w)
       &&( ((AT(w)&t)>0)&(w!=a)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) )){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}  // inplaceable, use it.  w==ind OK
    else{RZ(z=cvt(t,w));}  // copy old block, converting if needed
    mvc(cellsize<<k,CAV(z)+(cellsize<<k)*cellx,AN(a)<<k,voidAV(a)); // copy a to the cell, replicating as needed
@@ -612,7 +612,7 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
   }else if(unlikely(indr!=0)){
    // All this is deprecated, should be domain error
    // ind is a list of boxes.  The contents had better all be numeric, and opening them must not use fill
-   RZ(ind0=jtope((J)((I)jtinplace|JTNOFILL),ind)) ASSERT(AT(ind0)&NUMERIC,EVDOMAIN);  // open; contents must be numeric
+   RZ(ind0=jtope((J)((I)jtfg|JTNOFILL),ind)) ASSERT(AT(ind0)&NUMERIC,EVDOMAIN);  // open; contents must be numeric
    if(AR(ind0)==indr){
     if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,1,"(001) (x (<\"0 array)} y): consider using (<<array)}\n"));
     goto doubleboxednumeric;  // the boxes were created with <"0 array.  That is the same as <<array now
@@ -724,7 +724,7 @@ indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
     if(likely(cellframelen!=0)){RZSUFF(z=jtcelloffset(jt,w,ind0,wframelen),R jteformat(jt,self,a,w,ind););}else{z=zeroionei(0);}  // if empty list, that means 'all taken in full' - one selection of the whole.  Otherwise convert the list to indexes
    }
   }
-  z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,z,(cellframelen&255)+(wframelen<<RANKTX)+(aframelen<<RANK2TX)+(nframeaxes<<(3*RANKTX)));  //  dense a if needed; dense amend
+  z=jtmerge2(jtfg,ISSPARSE(AT(a))?denseit(a):a,w,z,(cellframelen&255)+(wframelen<<RANKTX)+(aframelen<<RANK2TX)+(nframeaxes<<(3*RANKTX)));  //  dense a if needed; dense amend
   if(unlikely(z==0))jteformat(jt,self,a,w,ind);  // eformat this error while we have access to ind
   // We modified w which is now not pristine.
   PRISTCLRF(w)
@@ -756,7 +756,7 @@ indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
  RE(t=maxtyped(atd,wtd)); t1=STYPE(t); RZ(a=TYPESEQ(t,atd)?a:cvt(ISSPARSE(AT(a))?t1:t,a));
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
  // DIRECT or this is a boxed memory-mapped array
- B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->zombieval==w&&AC(w)<=ACUC2)
+ B ip=((I)jtfg&JTINPLACEW) && (ACIPISOK(w) || jt->zombieval==w&&AC(w)<=ACUC2)
      &&TYPESEQ(t,wtd)&&(t&DIRECT)>0;
  // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w; fa(w);}else RZ(z=cvt(t1,w));  // don't know why, but sparse amend code requires AC=1
@@ -769,7 +769,7 @@ exitra:
  if(ip)ra(w);
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
-static DF2(jtamendn2c){F12IP;R jtamendn2(jtinplace,a,w,VAV(self)->fgh[0],self);}  // entry point from normal compound
+static DF2(jtamendn2c){F12IP;R jtamendn2(jtfg,a,w,VAV(self)->fgh[0],self);}  // entry point from normal compound
 
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
@@ -777,7 +777,7 @@ static DF2(amccv2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
  ARGCHK2(a,w); 
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // u} not supported for sparse
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
- A z=jtmerge2(jtinplace,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
+ A z=jtmerge2(jtfg,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
  if(unlikely(z==0))jteformat(jt,self,a,w,x);  // eformat this error while we have access to x
  // We modified w which is now not pristine.
  PRISTCLRF(w)
@@ -856,7 +856,7 @@ static DF1(jtgav1){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[
 
 // verb executed for x v0`v1`v2} y
 static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
- A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
+ A protw = (A)(intptr_t)((I)w+((I)jtfg&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtfg&JTINPLACEA)); // protected addresses
  I hn=AS(sv->fgh[2])[0];  // hn=# gerunds in h
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
@@ -864,15 +864,15 @@ static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->
  RZ(ffm);
  RZ(ff=jtamend(jt,ffm,0));  // now ff represents(x v1 y)} .  0 indicates this recursive call into powop, which will cause nonce error if v1 returned another gerund
  // Protect any input that was returned by v1 (must be ][)
- if(a==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEW);
+ if(a==ffm)jtfg = (J)(intptr_t)((I)jtfg&~JTINPLACEA); if(w==ffm)jtfg = (J)(intptr_t)((I)jtfg&~JTINPLACEW);
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
  // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- if(hn>=3){RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ if(hn>=3){RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w?(J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
  }else{ffy=w;}  // if v2 omitted or ], just use y directly
  // x v0 y - can inplace any unprotected argument
-// obsolete  RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
- RZ(ffx = (FAV(hv[0])->valencefns[1])(((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))),a,w,hv[0]));
+// obsolete  RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtfg&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
+ RZ(ffx = (FAV(hv[0])->valencefns[1])(((J)(intptr_t)((I)jtfg&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))),a,w,hv[0]));
  // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
 // obsolete POPZOMB; R ((AF)jtamendn2c)(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
  POPZOMB; R ((AF)jtamendn2c)(( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ),ffx,ffy,ff);
@@ -897,7 +897,7 @@ static A jtgadv(J jt,A w){A hs;I n;
 static DF2(jtamnegate){F12IP;
  ARGCHK2(a,w); 
  // if y is CMPX/FL/QP, execute markd x} y which means negate
- if(AT(w)&FL+CMPX+QP)R jtamendn2(jtinplace,markd((AT(w)>>FLX)&(FL+CMPX>>FLX)),w,a,self);
+ if(AT(w)&FL+CMPX+QP)R jtamendn2(jtfg,markd((AT(w)>>FLX)&(FL+CMPX>>FLX)),w,a,self);
  // otherwise, revert to x -@:{`[`]}"r y, processed by jtgav2
  US ranks=jt->ranks; RESETRANK;
  R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);

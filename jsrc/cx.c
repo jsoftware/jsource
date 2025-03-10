@@ -255,7 +255,7 @@ DF2(jtxdefn){F12IP;
   NPGpysfmtdl=(w!=self?64:0);  // set if dyad, i. e. dyadic verb or non-operator conjunction.
   // Set up for operation type (monad dyad, operator/verb)
   // If the verb contains try., allocate a try-stack area for it.  Remember debug/trapping state coming in so we can restore on exit
-  if(likely(((I)jtinplace&JTXDEFMODIFIER)==0)){
+  if(likely(((I)jtfg&JTXDEFMODIFIER)==0)){
    // we are executing a verb.  It may be an operator
    if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=FAV(sv->fgh[1]);}else u=v=0;  // If operator, extract u/v and self from orig defn.  flags don't change
    w=NPGpysfmtdl&64?w:a; a=NPGpysfmtdl&64?a:0;  // a w self = [x] y verb
@@ -304,7 +304,7 @@ DF2(jtxdefn){F12IP;
    ybuckptr->fval=MAKEFVAL(w,vtype); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCSYMVAL semantics
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
-   if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX))){
+   if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtfg>>JTINPLACEWX))){
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
     ramkrecursv(w);  // make the block recursive by raising contents
@@ -321,7 +321,7 @@ DF2(jtxdefn){F12IP;
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    I vtype=unlikely(ISSPARSE(AT(a)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse
    xbuckptr->fval=MAKEFVAL(a,vtype); xbuckptr->sn=jt->currslistx;
-   if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX))){
+   if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtfg>>JTINPLACEAX))){
     AFLAGORLOCAL(a,AFKNOWNNAMED); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(a); ramkrecursv(a);
    }else{ra(a);}
   }
@@ -705,7 +705,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=QCWORD(ybuckptr->fval); if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){ybuckptr->fval=0; symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
-   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtinplace>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self);  // push a debug frame for this error.  We know we didn't free locsym
+   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self);  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
   }
  }
@@ -1315,7 +1315,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
 // Bit 3 of env is set if the caller wants the returned value as a string rather than as enqueued words
 //
 // If the call to jgets() returns EOF, indicating end-of-script, that is also a control error
-A jtddtokens(J jtinplace,A w,I env){F12IP;
+A jtddtokens(J jtfg,A w,I env){F12IP;
 // TODO: Use LF for DDSEP, support {{), make nouns work
  PROLOG(000);
  ARGCHK1(w);
@@ -1363,21 +1363,21 @@ A jtddtokens(J jtinplace,A w,I env){F12IP;
    A neww=jgets(GETSXDEF);  // fetch next line, in raw mode
    RE(0); ASSERT(neww!=0,EVEMPTYDD); // fail if jgets failed, or if it returned EOF - problem either way
    // join the new line onto the end of the old one (after discarding trailing NB in the old).  Must add an LF character and a word for it
-   w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator, which is all that remains of the original line
-   jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
+   w=jtapip(jtfg,w,scc(DDSEP));   // append a separator, which is all that remains of the original line
+   jtfg=(J)((I)jtfg|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
    I oldchn=AN(w);  // len after adding LF, before adding new line
-   RZ(w=jtapip(jtinplace,w,neww));   // join the new character list onto the old, inplace if possible
+   RZ(w=jtapip(jtfg,w,neww));   // join the new character list onto the old, inplace if possible
    // Remove the trailing comment if any from wil, and add a word for the added LF
    makewritable(wil);  // We will modify the block rather than curtailing it
    AS(wil)[0]=scanstart; AN(wil)=2*scanstart;  // set AS and AN to discard comment
    A lfwd; fauxblockINT(lffaux,2,2); fauxINT(lfwd,lffaux,2,2)  AS(lfwd)[0]=2; AS(lfwd)[1]=1; IAV(lfwd)[0]=oldchn-1; IAV(lfwd)[1]=oldchn; 
-   RZ(wil=jtapip(jtinplace,wil,lfwd));  // add a new word for added LF.  # words in wil is now scanstart+1
+   RZ(wil=jtapip(jtfg,wil,lfwd));  // add a new word for added LF.  # words in wil is now scanstart+1
    ++scanstart;  // update count of words already examined so we start after the added LF word
    A newwil; RZ(newwil=wordil(neww));  // get index to new words
    I savam=AM(newwil);  // save AM for insertion in final new string block
    makewritable(newwil);  // We will modify the block rather than adding to it
    I *nwv=IAV(newwil); DO(AN(newwil), *nwv++ += oldchn;)  // relocate all the new words so that they point to chars after the added LF
-   RZ(wil=jtapip(jtinplace,wil,newwil));   // add new words after LF, giving old LF new
+   RZ(wil=jtapip(jtfg,wil,newwil));   // add new words after LF, giving old LF new
    if(likely(savam>=0)){AM(wil)=savam+scanstart;}else{AM(wil)=savam;}  // set total # words in combined list, not including final comment; remember if error scanning line
    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // refresh pointer to word indexes, and length
   }
@@ -1397,16 +1397,16 @@ A jtddtokens(J jtinplace,A w,I env){F12IP;
     while(1){
      // append the LF for the previous line (unless an empty first line), then the new line itself, to w
      if(enddelimx<wn){
-      w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator
-      jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
+      w=jtapip(jtfg,w,scc(DDSEP));   // append a separator
+      jtfg=(J)((I)jtfg|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
      }
      enddelimx=0;   // after the first line, we always install the LF
      A neww=jgets(GETSXDEF);  // fetch next line, in raw mode
      RE(0); ASSERT(neww!=0,EVEMPTYDD); // fail if jgets failed, or if it returned EOF - problem either way
      // join the new line onto the end of the old one
      I oldchn=AN(w);  // len after adding LF, before adding new line
-     RZ(w=jtapip(jtinplace,w,neww));   // join the new character list onto the old, inplace if possible
-     jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
+     RZ(w=jtapip(jtfg,w,neww));   // join the new character list onto the old, inplace if possible
+     jtfg=(J)((I)jtfg|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
      wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
      // see if the new line starts with the delimiter - if so, we're done looking
      if(AN(w)>=oldchn+2 && wv[oldchn]==(DDEND&0xff) && wv[oldchn+1]==(DDEND>>8)){enddelimx=oldchn; break;}
@@ -1434,9 +1434,9 @@ A jtddtokens(J jtinplace,A w,I env){F12IP;
    A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-firstcharx,wv+firstcharx));
    // append the string for the start/end of DD
    I bodystart=AN(w), bodylen=AN(ddqu), trailstart=wilv[ddendx][1];  // start/len of body in w, and start of after-DD text
-   RZ(ddqu=jtapip(jtinplace,ddqu,str(8,") ( 9 : ")));
+   RZ(ddqu=jtapip(jtfg,ddqu,str(8,") ( 9 : ")));
    // append the new stuff to w
-   RZ(w=jtapip(jtinplace,w,ddqu));
+   RZ(w=jtapip(jtfg,w,ddqu));
    wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
    // Replace ddbgnx and ddendx with the start/end strings.  Fill in the middle, if any, with everything in between
    wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :  

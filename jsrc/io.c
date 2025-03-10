@@ -278,7 +278,7 @@ extern void dllquit(JJ);
 // flags in jt indicate whether display is suppressed.  p is the prompt, s is the text (whose length is m).  suppression of s happens when it is created;
 // here we control suppression of p; but we suppress all anyway
 void NOINLINE jtwri(JS jt,I type,C*p,I m,C*s){FPREFIP(JS);C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
- if(!((I)jtinplace&JTPRNOSTDOUT)){  // if the prompt is not suppressed...
+ if(!((I)jtfg&JTPRNOSTDOUT)){  // if the prompt is not suppressed...
   c=strlen(p);            /* prompt      */
   e=strlen(t);            /* end-of-line */
   n=sizeof(buf)-(c+e+1);  /* main text   */
@@ -564,7 +564,7 @@ DF1(jtwd){F12IP;A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
       ASSERT(0,EVDOMAIN);
     }
   }
-  RZ(w=jtmemu(jtinplace,w));
+  RZ(w=jtmemu(jtfg,w));
   // Now call the host and get the response
   // Calling the Host takes us out of BUSY state, back to IDLE.  (If for some reason we are prompting, that is not affected)
   // That is, while we are waiting for the reply we are back to interruptible state.  If the interrupt issues another wd,

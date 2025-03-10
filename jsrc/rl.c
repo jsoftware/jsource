@@ -11,9 +11,9 @@
 #endif
 
 // functions of this class add to the growing ltext
-#define F1X(f)           A f(J jtinplace,A w,A *ltext)
-#define DF1X(f)           A f(J jtinplace,A w,A self,A *ltext)
-#define F2X(f)           A f(J jtinplace,A a,A w,A *ltext)
+#define F1X(f)           A f(J jtfg,A w,A *ltext)
+#define DF1X(f)           A f(J jtfg,A w,A self,A *ltext)
+#define F2X(f)           A f(J jtfg,A a,A w,A *ltext)
 static F1X(jtlnoun);
 static F1X(jtlnum);
 static DF1X(jtlrr);
@@ -21,11 +21,11 @@ static DF1X(jtlrr);
 #define NUMV(c)  (((1LL<<C9)|(1LL<<CD)|(1LL<<CS)|(1LL<<CA)|(1LL<<CN)|(1LL<<CB))&(1LL<<(c)))
 
 // choose function for applying parentheses, for normal verbs and for tie strings
-#define parfn ((I)jtinplace&JTPARENS?jtlcpb:jtlcpa)
-#define tiefn ((I)jtinplace&JTPARENS?jtltieb:jtltiea) 
+#define parfn ((I)jtfg&JTPARENS?jtlcpb:jtlcpa)
+#define tiefn ((I)jtfg&JTPARENS?jtltieb:jtltiea) 
 
 // w is the displayable string for an entity.  esult is 1 if it needs parens if next to anything else; or -1 if a primitive that never needs parens
-static I jtlp(J jtinplace,A w){F12JT;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
+static I jtlp(J jtfg,A w){F12JT;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
  ARGCHK1(w);
  n=AN(w); v=CAV(w); c=*v; d=v[n-1];
  if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R -1;  // if a primitive or name, it doesn't need parens
@@ -36,14 +36,14 @@ static I jtlp(J jtinplace,A w){F12JT;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
 }    /* 1 iff put parens around w */
 
 // add () when user asks for normal ()
-static A jtlcpa(J jtinplace,B b,A w){F12JT;A z=w;C*zv;I n;
+static A jtlcpa(J jtfg,B b,A w){F12JT;A z=w;C*zv;I n;
  ARGCHK1(w);
  if(b){n=AN(w); GATV0(z,LIT,2+n,1); zv=CAV1(z); *zv='('; MC(1+zv,AV(w),n); zv[1+n]=')';}
  R z;
 }    /* if b then (w) otherwise just w */
 
 // add (), when user asks for full ()
-static A jtlcpb(J jtinplace,B b,A w){F12JT;A z=w;B p;C c,*v,*wv,*zv;I n;
+static A jtlcpb(J jtfg,B b,A w){F12JT;A z=w;B p;C c,*v,*wv,*zv;I n;
  ARGCHK1(w);
  n=AN(w); wv=CAV(w); 
  if(!b){
@@ -57,7 +57,7 @@ static A jtlcpb(J jtinplace,B b,A w){F12JT;A z=w;B p;C c,*v,*wv,*zv;I n;
  R z;
 }
 
-static A jtlcpx(J jtinplace,A w){F12JT;ARGCHK1(w); R parfn(jtinplace,lp(w)>0,w);}
+static A jtlcpx(J jtfg,A w){F12JT;ARGCHK1(w); R parfn(jtfg,lp(w)>0,w);}
 
 // display a list of boxes as if they come from a gerund.  Normal ()
 static F1X(jtltiea){F12JT;A t,*v,*wv,x,y;B b;C c;I n;
@@ -65,7 +65,7 @@ static F1X(jtltiea){F12JT;A t,*v,*wv,x,y;B b;C c;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV1(y);
  DO(n, *v++=i?t:mtv; x=C(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
-     b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtinplace,b,x)););
+     b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtfg,b,x)););
  R raze(y);
 }
 
@@ -76,7 +76,7 @@ static F1X(jtltieb){F12JT;A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  GATV0(y,BOX,n+n,1); v=AAV1(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV1(x); DQ(n-2, *s++='(';);}
  DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=C(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
-     b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtinplace,b,x)););
+     b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtfg,b,x)););
  R raze(y);
 }
 
@@ -151,12 +151,12 @@ static F1X(jtlbox){F12JT;A p,*v,*vv,*wv,x,y;B b=0;I n;
  R over(lshape(w),raze(y));
 }    /* non-empty boxed array */
 
-A jtdinsert(J jtinplace,A w,A ic,I ix){F12JT;A l=sc4(INT,ix); R over(over(take(l,w),ic),drop(l,w));}   /* insert ic before position ix in w */
+A jtdinsert(J jtfg,A w,A ic,I ix){F12JT;A l=sc4(INT,ix); R over(over(take(l,w),ic),drop(l,w));}   /* insert ic before position ix in w */
 
 // Apply decoration as needed to a numeric character string w to give it the correct type t
 // We know the string is a generated number, so it doesn't contain suffixes in the middle of the string
 // Result is A block for decorated string
-A jtdecorate(J jtinplace,A w,I t){F12JT;
+A jtdecorate(J jtfg,A w,I t){F12JT;
  if(AN(w)==0)R w;  // if empty string, don't decorate
  if(t&FL){
   // float: make sure there is a . somewhere, or infinity/indefinite ('_' followed by space/end/.), else put '.' at end, floated back over exponent if any
@@ -180,7 +180,7 @@ static F1X(jtlnum1){F12JT;A z,z0;I t;
  ARGCHK1(w);
  t=AT(w);
  // use full for float values not going to screen; otherwise the default 
- RZ(z=(t&FL+CMPX+QP)&&!((I)jtinplace&JTPRFORSCREEN)?dfv1(z0,w,fit(ds(CTHORN),sc((I)(t&QP?35:18)))):thorn1(w));
+ RZ(z=(t&FL+CMPX+QP)&&!((I)jtfg&JTPRFORSCREEN)?dfv1(z0,w,fit(ds(CTHORN),sc((I)(t&QP?35:18)))):thorn1(w));
  R decorate(z,t);
 }    /* dense non-empty numeric vector */
 
@@ -271,7 +271,7 @@ static F1X(jtlnoun){F12JT;I t;
  }
 }
 
-static A jtlsymb(J jtinplace,C c,A w,A *ltext){F12JT;A t;C buf[20],d,*s;I*u;V*v=FAV(w);
+static A jtlsymb(J jtfg,C c,A w,A *ltext){F12JT;A t;C buf[20],d,*s;I*u;V*v=FAV(w);
  {RZ(t=spella(w)); if(AN(t)==1&&(CAV(t)[0]=='{'||CAV(t)[0]=='}')){RZ(t=mkwris(t)); AS(t)[0]=AN(t)=2; CAV(t)[1]=' '; }}  // add trailing space to { } to avoid DD codes
  d=CAV(t)[0];
  R d==CESC1||d==CESC2?over(chrspace,t):t;
@@ -303,18 +303,18 @@ static F2X(jtlinsert){F12JT;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V
  case CADVF:
  case CHOOK:
   GAT0(y,BOX,3,1); u=AAV1(y);
-  u[0]=f=parfn(jtinplace,ft||lnn(f,g),f);
-  u[2]=g=parfn(jtinplace,gt||b,       g);
+  u[0]=f=parfn(jtfg,ft||lnn(f,g),f);
+  u[2]=g=parfn(jtfg,gt||b,       g);
   u[1]=str(' '==CAV(g)[0]||id==CADVF&&!laa(f,g)&&!((lp(f)>0)&&(lp(g)>0))?0L:1L," ");
   RE(0); R raze(y);
  case CFORK:
   GAT0(y,BOX,5,1); u=AAV1(y);
-  RZ(u[0]=f=parfn(jtinplace,ft||lnn(f,g),   f));
-  RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==CAV(g)[0]?0L:1L," "));
-  RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==CAV(h)[0]?0L:1L," "));
+  RZ(u[0]=f=parfn(jtfg,ft||lnn(f,g),   f));
+  RZ(u[2]=g=parfn(jtfg,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==CAV(g)[0]?0L:1L," "));
+  RZ(u[4]=h=parfn(jtfg,ht,             h)); RZ(u[3]=str(' '==CAV(h)[0]?0L:1L," "));
   R raze(y);
  default:
-  t0=parfn(jtinplace,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&(lp(f)>0),f);
+  t0=parfn(jtfg,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&(lp(f)>0),f);
   t1=lsymb(id,w);
   y=over(t0,laa(t0,t1)?over(chrspace,t1):t1);
   if(1==n)R y;
@@ -326,9 +326,9 @@ static F2X(jtlinsert){F12JT;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V
 // create linear rep for m : n
 // JT has valence-suppression flags
 static F1X(jtlcolon){F12JT;A*v,x,y;C*s,*s0;I m,n;
- RZ(y=jtunparsem(jtinplace,num(1),w));   // extract the valences of w, run together: a list of boxes
+ RZ(y=jtunparsem(jtfg,num(1),w));   // extract the valences of w, run together: a list of boxes
  n=AN(y); v=AAV(y); RZ(x=lrr(C(VAV(w)->fgh[0])));  // n=#lines, v->line 0, get x=linear rep for m (string form of a digit)
- if((I)jtinplace&JTPRFORSCREEN && FAV(w)->flag&VISDD){A z;  // defn was {{ }} and we are printing it to screen
+ if((I)jtfg&JTPRFORSCREEN && FAV(w)->flag&VISDD){A z;  // defn was {{ }} and we are printing it to screen
   // we can display the defn as a DD.
   C hdr[5]; I hdrl=0; hdr[hdrl++]='{'; hdr[hdrl++]='{'; // install {{
   if(FAV(w)->flag&VDDHASCTL){   // user gave ')?'
@@ -339,7 +339,7 @@ static F1X(jtlcolon){F12JT;A*v,x,y;C*s,*s0;I m,n;
   }else hdr[hdrl++]=' ';  // ordinary DD: {{SP
   R raze(over(dfv2(z,box(str(hdrl,hdr)),ravel(stitch(box(scc(CLF)),y)),amend(num(0))),box(str(2,"}}"))));  //  ; ((<hdr) 0} , (<LF) ,. y) ,  <tlr
  }
- if(!((I)jtinplace&JTEXPVALENCEOFF)&&(2>n||2==n&&1==AN(v[0])&&':'==CAV(C(v[0]))[0])){  // if all valences requested, and only one line, or monadic valence empty (i. e. first line is ':')
+ if(!((I)jtfg&JTEXPVALENCEOFF)&&(2>n||2==n&&1==AN(v[0])&&':'==CAV(C(v[0]))[0])){  // if all valences requested, and only one line, or monadic valence empty (i. e. first line is ':')
   // return one-line definition m : 'string'.  m will come from x
   if(!n)R over(x,str(5L," : \'\'"));  // empty string, return m : ''
   y=lrr(C(v[2==n]));   // convert n to string form, with quotes
@@ -370,15 +370,15 @@ static DF1X(jtlrr){F12JT;A hs,t,*tv;C id;I fl,m;V*v;
  m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLONE&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
  if(!m)R lsymb(id,w);  // if none, it's a primitive, out it
  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
- if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLONE)R jtlcolon(jtinplace,w,ltext);  // x : with boxed h - must be explicit defn, for which we might suppress a valence
+ if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLONE)R jtlcolon(jtfg,w,ltext);  // x : with boxed h - must be explicit defn, for which we might suppress a valence
  // display of a single valence applies only to an explicit definition.  It wouldn't be a bad idea for others, but that would require inspecting the op to see
  // which valences are active on each side.  For the nonce we display everything
- jtinplace=(J)((I)jtinplace&~JTEXPVALENCEOFF);  // display both valences of compounds
+ jtfg=(J)((I)jtfg&~JTEXPVALENCEOFF);  // display both valences of compounds
  GATV0(t,BOX,m,1); tv=AAV1(t);
  if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
- if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtinplace,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(0&&BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));  // fill in g if present
- if(0<m)RZ(tv[0]=incorp(fl&VGERL?tiefn(jtinplace,fxeach(fs,(A)&jtfxself[!!self]),ltext):lrr(fs)));  // fill in f (always present)
+ if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtfg,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(0&&BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));  // fill in g if present
+ if(0<m)RZ(tv[0]=incorp(fl&VGERL?tiefn(jtfg,fxeach(fs,(A)&jtfxself[!!self]),ltext):lrr(fs)));  // fill in f (always present)
  R linsert(t,w);
 }
 
@@ -388,7 +388,7 @@ static DF1X(jtlrr){F12JT;A hs,t,*tv;C id;I fl,m;V*v;
 // JTPRFORSCREEN indicates that the result is for the user, not 5!:5
 // This routine MUST NOT be called with normal inplacing bits
 F1(jtlrep){F12JT;PROLOG(0056);A z;A ltextb=0, *ltext=&ltextb;
- RE(z=jtlrr((J)((I)jtinplace&~(JTNORESETERR|JTPARENS)),w,w,ltext));  // the w for self is just any nonzero to indicate top-level call.  Clear paren flags to start.  Exit if error
+ RE(z=jtlrr((J)((I)jtfg&~(JTNORESETERR|JTPARENS)),w,w,ltext));  // the w for self is just any nonzero to indicate top-level call.  Clear paren flags to start.  Exit if error
  if(*ltext)z=apip(z,*ltext);
  EPILOG(z);
 }

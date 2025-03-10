@@ -7,7 +7,7 @@
 #include "ve.h"
 
 
-#define REPF(f)         A f(J jtinplace,A a,A w,I wf,I wcr)
+#define REPF(f)         A f(J jtfg,A a,A w,I wf,I wcr)
 
 
 static REPF(jtrepzdx){F12IP;A p,q,x;P*wp;
@@ -65,7 +65,7 @@ static REPF(jtrepbdx){F12IP;A z;I c,k,m,p;
 #define FLGSNPAROK -2  // set if we should enable the NPAR loop (the upper bits are 0 to disable)
  flgs=FLGSNPAROK*SGNTO0((5*m-6*p)|-(k^SZI));  // Enable NPAR loop if p>0.85m or k is not SZI
 #endif
- if(!ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
+ if(!ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy.   we copy in NPAR batches, and the last one might overstore.
   I pad=((NPAR*SZI)>>klg)-1;  //  We allocate enough extra atoms to cover one NPAR block to the last valid result atom.
 #if C_AVX2 || EMU_AVX2
@@ -411,7 +411,7 @@ F2(jtrepeat){F12IP;A z;I acr,ar,wcr,wf,wr;
  }
  if(((1-acr)|(acr-ar))<0){z=rank2ex(a,w,DUMMYSELF,MIN(1,acr),wcr,acr,wcr,jtrepeat); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity; loop if multiple cells of a
  ASSERT((-acr&-wcr)>=0||(AS(a)[0]==AS(w)[wf]),EVLENGTH);  // require agreement if neither cell is an atom
- z=(*repfn)(jtinplace,a,w,wf,wcr);
+ z=(*repfn)(jtfg,a,w,wf,wcr);
  // mark w not pristine, since we pulled from it
  PRISTCLRF(w)
  RETF(z);

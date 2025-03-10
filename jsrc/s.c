@@ -236,7 +236,7 @@ exit: ;
 // if the symbol is PERMANENT, it is not deleted but its value is removed
 // if the symbol is CACHED, it is removed from the chain but otherwise untouched, leaving the symbol abandoned.  It is the caller's responsibility to handle the name
 // We take no locks on g.  They are necessary, but are the user's responsibility
-B jtprobedel(J jtinplace,C*string,UI4 hash,A g){F12JT;B ret;
+B jtprobedel(J jtfg,C*string,UI4 hash,A g){F12JT;B ret;
  L *sympv=SYMORIGIN;  // base of symbol pool
  LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
  LX delblockx=*asymx;
@@ -246,7 +246,7 @@ B jtprobedel(J jtinplace,C*string,UI4 hash,A g){F12JT;B ret;
   L *sym=sympv+delblockx;  // address of next in chain, before we delete it
   LX nextdelblockx=sym->next;  // unroll loop once
   if(likely(!(AFLAG(sym->name)&AFRO))){   // ignore request to delete readonly name (cocurrent)
-   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
+   IFCMPNAME(NAV(sym->name),string,(I)jtfg&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
      {
       ret=sym->fval==0?0:~(I)sym->fval&QCNOUN;  // return value: value was defined & not a noun
       SYMVALFA(*sym); sym->fval=0;  // decr usecount in value; remove value from symbol
@@ -405,7 +405,7 @@ L *jtprobeislocal(J jt,A a,A lsym){NM*u;I bx;L *sympv=SYMORIGIN;
 // Bit QCNAMEDLOC of the result is set iff the name was found in a named locale
 // We must have no locks coming in; we take a read lock on each symbol table we have to search
 // if we find a name, we ra() it under lock.  All we have to do is increment the name since it is known to be recursive if possible
-A jtsyrd1(J jtinplace,C *string,UI4 hash,A g){F12JT;A*v,x,y;
+A jtsyrd1(J jtfg,C *string,UI4 hash,A g){F12JT;A*v,x,y;
  RZ(g);   // make sure there is a locale...
  // we store an extra 0 at the end of the path to allow us to unroll this loop once
  v=LOCPATH(g); L *sympv=SYMORIGIN;   // v->|.locales, with NUL at font; sympv doesn't change here
@@ -419,7 +419,7 @@ A jtsyrd1(J jtinplace,C *string,UI4 hash,A g){F12JT;A*v,x,y;
  NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE);   // hashchain number, for fetching the Bloom filter and starting the chain search
                         if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table (there's a chain for it)...
                          READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
-                         A res=(probe)((I)jtinplace&255,string,sympv,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]);  // look up symbol.  We must fetch the chain root in case it was deleted
+                         A res=(probe)((I)jtfg&255,string,sympv,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]);  // look up symbol.  We must fetch the chain root in case it was deleted
                          if(res){  // if symbol found...
                           raposgblqcgsv(QCWORD(res),QCPTYPE(res),res);  // ra it
 #ifdef PDEP
@@ -434,9 +434,9 @@ A jtsyrd1(J jtinplace,C *string,UI4 hash,A g){F12JT;A*v,x,y;
  R 0;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found, and no ra().  Takes readlock on searched locales.  Return 0 if not found
-A jtsyrd1forlocale(J jtinplace,C *string,UI4 hash,A g){F12JT;
+A jtsyrd1forlocale(J jtfg,C *string,UI4 hash,A g){F12JT;
  RZ(g);   // make sure there is a locale...
- A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE); if(BLOOMTEST(BLOOMBASE(g),chainno)){READLOCK(g->lock) y=(probe)((I)jtinplace&255,string,SYMORIGIN,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
+ A *v=LOCPATH(g); NOUNROLL do{A gn=*v--; A y; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE); if(BLOOMTEST(BLOOMBASE(g),chainno)){READLOCK(g->lock) y=(probe)((I)jtfg&255,string,SYMORIGIN,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]); READUNLOCK(g->lock) if(y){break;}} g=gn;}while(g);  // return when name found.
  R g;
 }
 
@@ -550,7 +550,7 @@ A jtsyrdnobuckets(J jt,A a){A g,val;
 }
 
 // return symbol address for name, or 0 if not found
-static L *jtprobeforsym(J jtinplace,C*string,UI4 hash,A g){F12JT;
+static L *jtprobeforsym(J jtfg,C*string,UI4 hash,A g){F12JT;
  RZ(g);
   LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
  L *sympv=SYMORIGIN;  // base of symbol table
@@ -558,7 +558,7 @@ static L *jtprobeforsym(J jtinplace,C*string,UI4 hash,A g){F12JT;
  NOUNROLL while(symx){  // loop is unrolled 1 time
   // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
   symnext=sympv+SYMNEXT(symx=sym->next);
-  IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R sym->fval!=0?sym:0;)     // (1) exact match - if there is a value, return the symbol
+  IFCMPNAME(NAV(sym->name),string,(I)jtfg&0xff,hash,R sym->fval!=0?sym:0;)     // (1) exact match - if there is a value, return the symbol
   sym=symnext;  // advance to value we read
  }
  R 0;  // not found
@@ -692,7 +692,7 @@ A jtprobequiet(J jt,A a){A g;
 // public assignment is an error if the symbol is defined in the local table, but that test can be disabled by setting ARLCLONED in AR of the table
 // Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage
 // flags set in jt: bit 0=this is a final assignment; bit 1 always 0
-I jtsymbis(J jtinplace,A a,A w,A g){F12JT;
+I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // we don't ARGCHK because path is heavily used.  Caller's responsibility.
  I anmf=NAV(a)->flag; // fetch flags for the name
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
@@ -739,7 +739,7 @@ I jtsymbis(J jtinplace,A a,A w,A g){F12JT;
  if((gr&ARLOCALTABLE)!=0){  // if assignment to a local table (which might not be jt->locsyms)
   I4 symx=NAV(a)->symx;   // fetch the symbol slot assigned to this name (0 if none)
   e=likely((SGNIF(gr,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
-  g=(A)((I)jtinplace|-JTASGNWASLOCAL);   // indicate local assignment (we have no lock to clear), remember final assignment
+  g=(A)((I)jtfg|-JTASGNWASLOCAL);   // indicate local assignment (we have no lock to clear), remember final assignment
   valtype|=QCNAMED|(REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
  }else{  // global table
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
@@ -747,7 +747,7 @@ I jtsymbis(J jtinplace,A a,A w,A g){F12JT;
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the locale
   // if we are writing to a non-local table, update the table's Bloom filter.
-  g=(A)((I)g+((I)jtinplace&JTFINALASGN));  // flags in g: copy final-assignment flag, keep glocal-table flag 0 indicating free needed
+  g=(A)((I)g+((I)jtfg&JTFINALASGN));  // flags in g: copy final-assignment flag, keep glocal-table flag 0 indicating free needed
   BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty
   // A couple of debugging flags are set during assignment.  We don't bother for local names
   if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - needed only for globals

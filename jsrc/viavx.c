@@ -731,7 +731,7 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 // mode indicates the type of operation, defined in j.h
-A jtindexofsub(J jtinplace,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
+A jtindexofsub(J jtfg,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     I ac,ak,datamin,f,f1,k,klg,n,r,*s,t,wc,wk,zn;UI c,m,p;
  ARGCHK2(a,w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
@@ -768,7 +768,7 @@ A jtindexofsub(J jtinplace,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(
    I zt; A z;  // type of result to allocate; address of block
    if((mode&IIOPMSK)==IEPS)zt=B01;
    else{
-    if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))){z=w; goto inplace;}  // if inplaceable (not including assignment) and items have the right size
+    if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX))){z=w; goto inplace;}  // if inplaceable (not including assignment) and items have the right size
     zt=INT;  // the result type depends on the operation.
    }
    GA(z,zt,wn,wr,AS(w));  // allocate result area
@@ -1072,17 +1072,17 @@ inplace:;
  case IIDOT:
  case IICO:
   // i./i: can run inplace on w if w is abandoned, not the same block as a, rank matches rank needed, item size<=SZI, DIRECT, and (not UNINCORPABLE or same type as result)
-  if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(-(AT(w)&(INT+SY_64*FL))&AC(w)&SGNIF(jtinplace,JTINPLACEWX)&((AR(w)^(f+f1))-1))<0){z=w; AT(z)=INT; break;}  // inplace w if not disqualified
+  if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(-(AT(w)&(INT+SY_64*FL))&AC(w)&SGNIF(jtfg,JTINPLACEWX)&((AR(w)^(f+f1))-1))<0){z=w; AT(z)=INT; break;}  // inplace w if not disqualified
   // if can't inplace fall through to...
  case IFORKEY:
   GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
  case ILESS: case IINTER:
   // -./([-.-.) can run inplace if w is abandoned, not the same block as a, rank not 0, DIRECT, not UNINCORPABLE (since we don't want to change shape of an unincorpable)
-  if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(((AT(w)&~DIRECT)-1)&AC(w)&SGNIF(jtinplace,JTINPLACEWX)&-(AR(w)))<0){z=w; break;}  // inplace w if not disqualified
+  if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(((AT(w)&~DIRECT)-1)&AC(w)&SGNIF(jtfg,JTINPLACEWX)&-(AR(w)))<0){z=w; break;}  // inplace w if not disqualified
   ws=wr==0?&AN(w):ws; GA(z,AT(w),AN(w),MAX(1,wr),ws); break;  // if wr is an atom, use 1 for the shape
  case INUB:
   // ~. can run inplace if abandoned, rank>0, DIRECT
-  if(likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(((AT(w)&~DIRECT)-1)&AC(w)&SGNIF(jtinplace,JTINPLACEWX)&-(AR(w)))<0){z=w; mode^=INUB^INUBIP; break;}  // inplace w if not disqualified
+  if(likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(((AT(w)&~DIRECT)-1)&AC(w)&SGNIF(jtfg,JTINPLACEWX)&-(AR(w)))<0){z=w; mode^=INUB^INUBIP; break;}  // inplace w if not disqualified
     {I q; PRODX(q,AR(a)-1,AS(a)+1,MIN(m,p+1)) GA(z,t,q,MAX(1,wr),ws); break;}  // we speculatively overwrite, possibly 1 more than in a but no more than in w
  case INUBI:   GATV0(z,INT,MIN(m,p)+1,1); break;  // we speculatively overwrite but never past a full buffer
  case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
@@ -1162,7 +1162,7 @@ DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>
 // a is the arg that was indexed, used only if we have to revert to rerunning the operation
 // w is the arg to be applied to the index
 // hs is the hashtable
-A jtindexofprehashed(J jtinplace,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
+A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt;
  ARGCHK3(a,w,hs);
  // hv is (info vector);(hashtable);(byte index validity)
@@ -1218,12 +1218,12 @@ A jtindexofprehashed(J jtinplace,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;AF fn;I 
 // x i. y, supports inplacing (in subroutine)
 F2(jtindexof){F12IP;
  if(unlikely(((UI)a^(UI)ds(CALP))<(UI)(AT(w)&LIT))&&likely(!ISSPARSE(AT(w)))){R jtadotidot(jt,w);}
- R jtindexofsub(jtinplace,IIDOT,a,w);  // pass inplaceability through
+ R jtindexofsub(jtfg,IIDOT,a,w);  // pass inplaceability through
 }
      /* a i."r w */
 
 // x i: y, supports inplacing (in subroutine)
-F2(jtjico2){F12IP;R jtindexofsub(jtinplace,IICO,a,w);}  // pass inplaceability through
+F2(jtjico2){F12IP;R jtindexofsub(jtfg,IICO,a,w);}  // pass inplaceability through
      /* a i:"r w */
 
 // ~: y
@@ -1238,7 +1238,7 @@ F1(jtnubsieve){F12IP;
 F1(jtnub){F12IP; 
  ARGCHK1(w);
  if(unlikely((SGNIFSPARSE(AT(w))|SGNIF(AFLAG(w),AFNJAX))<0))R repeat(nubsieve(w),w);    // sparse or NJA
- A z; RZ(z=jtindexofsub(jtinplace,INUB,w,w));
+ A z; RZ(z=jtindexofsub(jtfg,INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
  PRISTXFERF(z,w)
  RETF(z);
@@ -1253,7 +1253,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  if(unlikely(MIN(ai,wi)==0)&&(ar!=0))RCA(a);  // if either arg has no items, there's nothing to remove, return a, unless atom must become a list
  if(ar==wr+1){  // is just 1 cell of y?
   // if y has rank 1 less than x, execute as ((x ~: y) # x) if y is atomic or ((x ~.@-:"yr) # x) if y is an array.  Inplace x.  Use IRS and leave comparison tolerance as set
-  J jtipx=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>1)&JTINPLACEW));  // move input inplace-x flag to inplace-w
+  J jtipx=(J)(((I)jtfg&~(JTINPLACEA+JTINPLACEW))+(((I)jtfg>>1)&JTINPLACEW));  // move input inplace-x flag to inplace-w
   if(wr==0){RZ(x=jtrepeat(jtipx,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
   }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtipx,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
   }
@@ -1262,7 +1262,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
   if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
   // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. y e. x) # x 
   // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
-  RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtinplace,ILESS,x,a):
+  RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtfg,ILESS,x,a):
       repeat(not(eps(a,x)),a));
   // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  }
@@ -1286,7 +1286,7 @@ DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
  // Don't revert to fork!  localuse.lu1.fork2hfn is not set
- x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtinplace,IINTER,x,a):
+ x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtfg,IINTER,x,a):
      repeat(eps(a,x),a);
  POPCCT
  RZ(x);

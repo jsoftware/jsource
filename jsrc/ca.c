@@ -199,22 +199,22 @@ static DF1(jttallyatopopen){F12IP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV
 
 // u@v and u@:v
 FORK1(on1cell,0x160)   // u@:v monad
-DF1(on1){F12IP;PREF1IP(on1cell); R on1cell(jtinplace,w,self);}  // u@v monad - pass inplaceability through
+DF1(on1){F12IP;PREF1IP(on1cell); R on1cell(jtfg,w,self);}  // u@v monad - pass inplaceability through
 
 FORK2(jtupon2cell,0x1c0)  // u@:v monad
-DF2(jtupon2){F12IP;PREF2IP(jtupon2cell); R jtupon2cell(jtinplace,a,w,self);}  // u@v dyad -  pass inplaceability through
+DF2(jtupon2){F12IP;PREF2IP(jtupon2cell); R jtupon2cell(jtfg,a,w,self);}  // u@v dyad -  pass inplaceability through
 
 // special case for rank 0.  Transfer to loop.
 // if there is only one cell, process it through on1, which understands this type
-static DF1(jton10){F12IP;R jtrank1ex0(jtinplace,w,self,on1cell);}  // pass inplaceability through
-static DF2(jtupon20){F12IP;R jtrank2ex0(jtinplace,a,w,self,jtupon2cell);}  // pass inplaceability through
+static DF1(jton10){F12IP;R jtrank1ex0(jtfg,w,self,on1cell);}  // pass inplaceability through
+static DF2(jtupon20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtupon2cell);}  // pass inplaceability through
 // these versions are called for f@atomic; they warn if executed on more than one atom
-static DF1(jton10atom){F12IP; if(unlikely(AN(w)>1&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,5,"(005) f@atomic executed on multiple cells; use f\"0@:atomic (or f@:atomic if f has 0 rank)\n")); R jtrank1ex0(jtinplace,w,self,on1cell);}  // pass inplaceability through
-static DF2(jtupon20atom){F12IP; if(unlikely((AN(a)|AN(w))>1&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,6,"(006) f@atomic executed on multiple cells; use f\"0@:atomic (or f@:atomic if f has 0 rank)\n")); R jtrank2ex0(jtinplace,a,w,self,jtupon2cell);}  // pass inplaceability through
+static DF1(jton10atom){F12IP; if(unlikely(AN(w)>1&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,5,"(005) f@atomic executed on multiple cells; use f\"0@:atomic (or f@:atomic if f has 0 rank)\n")); R jtrank1ex0(jtfg,w,self,on1cell);}  // pass inplaceability through
+static DF2(jtupon20atom){F12IP; if(unlikely((AN(a)|AN(w))>1&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,6,"(006) f@atomic executed on multiple cells; use f\"0@:atomic (or f@:atomic if f has 0 rank)\n")); R jtrank2ex0(jtfg,a,w,self,jtupon2cell);}  // pass inplaceability through
 
 // special lightweight case for u@[ and u@].
-static DF2(onleft2){F12IP; jtinplace=(J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],a,fs);}  // move inplaceable a to w, pass other JT flags
-static DF2(jtonright12){F12IP; jtinplace=(J)((I)jtinplace&~JTINPLACEA); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],VERB&AT(w)?a:w,fs);}  // keep inplaceability of w; turn a off for monad
+static DF2(onleft2){F12IP; jtfg=(J)(((I)jtfg&~(JTINPLACEA+JTINPLACEW))+(((I)jtfg>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],a,fs);}  // move inplaceable a to w, pass other JT flags
+static DF2(jtonright12){F12IP; jtfg=(J)((I)jtfg&~JTINPLACEA); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],VERB&AT(w)?a:w,fs);}  // keep inplaceability of w; turn a off for monad
 
 // u@n
 static DF2(onconst12){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];R CALL1IP(FAV(fs)->valencefns[0],FAV(self)->fgh[1],FAV(self)->fgh[0]);}  // pass inplaceability through
@@ -222,9 +222,9 @@ static DF2(onconst12){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]
 // x u&v y
 FORK2(on2cell,0x148)
 
-static DF2(on2){F12IP;PREF2(on2cell); R on2cell(jtinplace,a,w,self);}  // pass inplaceability through
+static DF2(on2){F12IP;PREF2(on2cell); R on2cell(jtfg,a,w,self);}  // pass inplaceability through
 
-static DF2(on20){F12IP;R jtrank2ex0(jtinplace,a,w,self,on2cell);}  // pass inplaceability through
+static DF2(on20){F12IP;R jtrank2ex0(jtfg,a,w,self,on2cell);}  // pass inplaceability through
 
 // handler for comparison compounds including ones that go through i.
 // We have to look at the ranks to decide what function to execute or whether to revert
@@ -532,12 +532,12 @@ F2(jtampco){F12IP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
 }
 
 // m&v and u&n.  Never inplace the noun argument, since the verb may
-// be repeated; preserve the inplacing of the argument given (i. e. move w to a for u&n).  Bit 1 of jtinplace is always 0 for monad.
+// be repeated; preserve the inplacing of the argument given (i. e. move w to a for u&n).  Bit 1 of jtfg is always 0 for monad.
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 // This supports IRS so that it can pass the rank on to the called function; no need to revalidate here.  jt is inplaceable but we don't use it except to fiddle with flags
 // We pass the WILLOPEN flags through. We don't need full IRS2 because jt->ranks is known to be OK for the monad
-static DF1(withl){F12IP;AF f2=FAV(self)->localuse.lu1.bondfn;  ((C*)&jt->ranks)[1]=RMAX; A z=f2(jtinplace,FAV(self)->fgh[0],w,FAV(self)->fgh[1]); RETF(z);}  // m&v.  Leave inplacing of w
-static DF1(withr){F12IP;AF f2=FAV(self)->localuse.lu1.bondfn;  jt->ranks=(jt->ranks<<RANKTX)+RMAX; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z=f2(jtinplace,w,FAV(self)->fgh[1],FAV(self)->fgh[0]); RETF(z);}  // u&n.  Move inplacing of w to a
+static DF1(withl){F12IP;AF f2=FAV(self)->localuse.lu1.bondfn;  ((C*)&jt->ranks)[1]=RMAX; A z=f2(jtfg,FAV(self)->fgh[0],w,FAV(self)->fgh[1]); RETF(z);}  // m&v.  Leave inplacing of w
+static DF1(withr){F12IP;AF f2=FAV(self)->localuse.lu1.bondfn;  jt->ranks=(jt->ranks<<RANKTX)+RMAX; jtfg=(J)(intptr_t)((I)jtfg+((I)jtfg&JTINPLACEW)); A z=f2(jtfg,w,FAV(self)->fgh[1],FAV(self)->fgh[0]); RETF(z);}  // u&n.  Move inplacing of w to a
 
 
 // a.&i., {&a.
@@ -573,9 +573,9 @@ static DF1(jtfromadotifchar){F12IP;
 
 // Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the precision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
-static DF1(ixfixedleft){F12IP;V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=jtindexofprehashed(jtinplace,v->fgh[0],w,v->fgh[2],self); POPCCT R z;}  // must use the ct when table was created  pass inplaceability through
+static DF1(ixfixedleft){F12IP;V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=jtindexofprehashed(jtfg,v->fgh[0],w,v->fgh[2],self); POPCCT R z;}  // must use the ct when table was created  pass inplaceability through
 // Here for compounds like (i.&0@:e.)&n  e.&n -.&n that compute a prehashed table from w
-static DF1(ixfixedright){F12IP;V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=jtindexofprehashed(jtinplace,v->fgh[1],w,v->fgh[2],self); POPCCT R z;}  // must use the ct when table was created  pass inplaceability through
+static DF1(ixfixedright){F12IP;V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=jtindexofprehashed(jtfg,v->fgh[1],w,v->fgh[2],self); POPCCT R z;}  // must use the ct when table was created  pass inplaceability through
 
 // u&v
 F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;

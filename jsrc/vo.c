@@ -42,8 +42,8 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  if(likely(!f)){
   // single box: fast path.  Allocate a scalar box and point it to w.
   GAT0(z,BOX,1,0);
-  I aband=SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
-  if(!((I)jtinplace&JTWILLBEOPENED)){
+  I aband=SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
+  if(!((I)jtfg&JTWILLBEOPENED)){
    // Normal case.  Mark w as incorporated.  Make all results recursive
    // If the input is DIRECT and abandoned inplaceable, mark the result as PRISTINE
    // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
@@ -68,7 +68,7 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // Since we are allocating the new boxes, the result will ipso facto be PRISTINE, as long as w is DIRECT and the result does not contain virtuals.  If w is not DIRECT, we can be PRISTINE if we ensure that
   // w is PRISTINE inplaceable, but we don't bother to do that because PRISTINE is used only for DIRECT contents.
   // If the input is DIRECT, mark the result as PRISTINE
-  GATV(z,BOX,n,f,ws); AFLAGINIT(z,BOX+((((I)jtinplace&JTWILLBEOPENED)-1)&(-(wt&DIRECT))&AFPRISTINE)) if(unlikely(n==0)){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+  GATV(z,BOX,n,f,ws); AFLAGINIT(z,BOX+((((I)jtfg&JTWILLBEOPENED)-1)&(-(wt&DIRECT))&AFPRISTINE)) if(unlikely(n==0)){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.  If WILLOPEN is given, we synthesize a virtual block and leave
   // that in the result - it will be freed when the result is, since result is recursive
 
@@ -81,7 +81,7 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   JMCDECL(endmask) JMCSETMASK(endmask,k,0)   // set mask for JMCR - OK to copy SZIs
   A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
   while(n--){
-   if(!((I)jtinplace&JTWILLBEOPENED)){
+   if(!((I)jtfg&JTWILLBEOPENED)){
     GAE(y,wt,m,r,f+ws,break); JMCR(CAVn(r,y),wv,k,0,endmask); INCORPRAZAPPED(y,wt);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
    }else{
     // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead
@@ -97,7 +97,7 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    wv+=k; 
   }
   // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
-  if(unlikely((I)jtinplace&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
+  if(unlikely((I)jtfg&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
   jt->tnextpushp=pushxsave;   // restore tstack pointer
   // OK to fail now - memory is restored
   //   Since we are copying contents of w, it must lose PRISTINE status if it is boxed
@@ -107,7 +107,7 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  RETF(z);
 }    /* <"r w */
 
-F1(jtboxopen){F12IP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtinplace,w);} R w;}
+F1(jtboxopen){F12IP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtfg,w);} R w;}
 
 // x ; y, with options for x (,<) y   x (;<) y   x ,&< y
 // This verb propagates WILLOPEN, so it must not raise usecounts or EPILOG or call a verb that does EPILOG if WILLBEOPENED is set on input.
@@ -135,12 +135,12 @@ ARGCHK2(a,w);
  ASSERTF(fboxedsparse||!ISSPARSE(AT(a)|AT(w)),EVNONCE,"can't box sparse arrays");
 #endif
  I optype=FAV(self)->localuse.lu1.linkvb;  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
- optype|=((I)jtinplace&JTWILLBEOPENED)<<(BOXX-JTWILLBEOPENEDX);  // fold in BOX flag that tells us to allow virtual boxed results
+ optype|=((I)jtfg&JTWILLBEOPENED)<<(BOXX-JTWILLBEOPENEDX);  // fold in BOX flag that tells us to allow virtual boxed results
  if(likely(!(optype&BOX))){realizeifvirtual(w);}  // it's going into an array, so realize it unless virtual results allowed
  // if (,<) and a is not boxed singleton atom/list, revert
- if(unlikely((optype&1)>((AT(a)>>BOXX)&SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtinplace,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing - WILLOPEN is impossible
+ if(unlikely((optype&1)>((AT(a)>>BOXX)&SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtfg,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing - WILLOPEN is impossible
  I unboxempty=SGNIFNOT(AT(w),BOXX)|(AN(w)-1)|optype;  // sign set if w unboxed or empty, or the operation is (,<) or ,&< or (;<) which will always box w
- I aband=(a!=w)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // 1 if w is abandoned, 0 otherwise.  Must not accept a==w as it could lead to w containing itself
+ I aband=(a!=w)&SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // 1 if w is abandoned, 0 otherwise.  Must not accept a==w as it could lead to w containing itself
  if((unboxempty|((AN(w)|AR(w))-2))<0){A neww;   // unboxed/empty or force-boxed w, or AN(w)<2 and AR(w)<2
   // Here to start building the right-to-left result area.  We can do this is w is a singleton box or w must be boxed here
   // if w is unboxed/empty or is a singleton rank<2, allocate a  vector of 8 boxes, point AK to the next-last, and put w there as the new w.  Vector is recursive unless WILLBEOPENED
@@ -176,7 +176,7 @@ ARGCHK2(a,w);
    AFLAGINIT(neww,AFLAG(w)) AFLAGANDLOCAL(w,~RECURSIBLE)  // If w recursive: transfer ownership of old blocks to new, making neww recursive (& maybe PRISTINE) and w nonrecursive.  If w nonrecursive, so is neww and they are independent
    w=neww;  // start adding to the new block
   }
-  aband=SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX)&&(a!=w);  // bit 0 = 1 if a is abandoned and is not the same as x
+  aband=SGNTO0(AC(a))&((I)jtfg>>JTINPLACEAX)&&(a!=w);  // bit 0 = 1 if a is abandoned and is not the same as x
   if(unlikely(optype&1)){  // if verb is (,<) we deal with contents of a
    // if verb is (,<), a must be a boxed singleton.  move the contents of a into w, then ra/zap as above if w recursive.  This doesn't propagate WILLOPEN so boxed virtuals in a are impossible
    // a was boxed, & a known singleton.  Put the single value into w, then ra or zap.  w loses pristinity unless a is abandoned pristine
@@ -203,7 +203,7 @@ ARGCHK2(a,w);
  // if WILLBEOPENED, any virtual boxes in w must be realized
  if(unlikely(optype&AT(w)&~AFLAG(w)&BOX))RZ(realizeboxedvirtuals(w));  // realize virtuals, in place.  Required only if WILLOPEN is set, and w is nonrecursive boxed.  Result 0 is error
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w);}   // box empty or unboxed w
- RETF(jtover(jtinplace,jtbox(JTIPAtoW,a),w,ds(CSEMICO)));  // join to boxed a
+ RETF(jtover(jtfg,jtbox(JTIPAtoW,a),w,ds(CSEMICO)));  // join to boxed a
 }
 
 // Calculate the value to use for rf arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)
@@ -557,7 +557,7 @@ F1(jtope){F12IP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // now we know the number of atoms in the result.  If this differs from the number of input atoms, there is fill
  if(zn!=natoms){   // will there be fill?
   // there is fill
-  ASSERT(!((I)jtinplace&JTNOFILL),EVASSEMBLY)  // error if fill not allowed
+  ASSERT(!((I)jtfg&JTNOFILL),EVASSEMBLY)  // error if fill not allowed
   if(unlikely(jt->fill)){A f=jt->fill;
    // user fill specified.  Install it, perhaps converting
    if(TYPESNE(t,AT(f))){ASSERT(HOMO(t,AT(f)),EVINHOMO) t=maxtypedne(t,AT(f)); if(AT(f)!=t)RZ(f=ccvt(t,f,0))}  // include fill in the type calc, and convert it if needed

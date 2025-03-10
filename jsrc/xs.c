@@ -71,7 +71,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  C oldnmcachescript=jt->namecaching&2;  // save the per-script part of the status
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));   //  ************** no errors allowed till debz ******************
  d->dcpflags=(!(tso&&!JT(jt,seclev)))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
- J jtinplace=(J)((I)jt|d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
+ J jtfg=(J)((I)jt|d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
  d->dcss=1;  // indicate this script is not overridden by suspension
  A *old=jt->tnextpushp;
  C se=jt->emsgstate;   // save init TRAPPING status, which we will restore
@@ -79,15 +79,15 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
  // since these loops may continue after error, we don't automatically fail on a 0 result from immex.  This causes a problem at end of suspension, because the combination of result=0/jerr=0
  // indicates end of suspension with no error.  In that case, we need to stop these loops: so when debug suspension ends, it sets EOF in the active scripts.
- case 0: NOUNROLL while(x){RESETERR x=jgets(GETSPROMPT); if(x==0)break; SETTRACK z=jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); if(jt->jerr)break; tpop(old);} break;  // lgets returns 0 for error or EOF no display
- case 1: {jt->emsgstate|=EMSGSTATETRAPPING; NOUNROLL while(x){if(!JT(jt,seclev))jtshowerr(jtinplace); RESETERR x=jgets(GETSPROMPT); SETTRACK  jtimmex(jtinplace,x=ddtokens(x,1+!!EXPLICITRUNNING)); tpop(old);}} break;  // w/display
+ case 0: NOUNROLL while(x){RESETERR x=jgets(GETSPROMPT); if(x==0)break; SETTRACK z=jtimmex(jtfg,x=ddtokens(x,1+!!EXPLICITRUNNING)); if(jt->jerr)break; tpop(old);} break;  // lgets returns 0 for error or EOF no display
+ case 1: {jt->emsgstate|=EMSGSTATETRAPPING; NOUNROLL while(x){if(!JT(jt,seclev))jtshowerr(jtfg); RESETERR x=jgets(GETSPROMPT); SETTRACK  jtimmex(jtfg,x=ddtokens(x,1+!!EXPLICITRUNNING)); tpop(old);}} break;  // w/display
  case 3:jt->emsgstate|=EMSGSTATETRAPPING;  // each line is an ASSERT, but we continue to run, checking at the end to see if there was any error
   // fall through to...
  case 2: {   // each line of the file is an ASSERT
 #if SEEKLEAK
   I stbytes = spbytesinuse();
 #endif
-  NOUNROLL while(x){RESETERR x=jgets(GETSPROMPT); if(x==0)break; SETTRACK z=jtimmea(jtinplace,x); if(jt->jerr)break; tpop(old);}   // no tpop on untrapped error
+  NOUNROLL while(x){RESETERR x=jgets(GETSPROMPT); if(x==0)break; SETTRACK z=jtimmea(jtfg,x); if(jt->jerr)break; tpop(old);}   // no tpop on untrapped error
 #if SEEKLEAK
   I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
 #endif

@@ -876,9 +876,9 @@ DF2(jtabase2){F12IP;A z;I an,ar,at,t,wn,wr,wt,zn;
 }}
 
 // Compute power-of-2 | w for INT w, by ANDing.  Result is boolean if mod is 1 or 2
-A jtintmod2(J jtinplace,A w,I mod){F12IP;A z;B *v;I n,q,r,*u;UI m=0;  // init m for warning
+A jtintmod2(J jtfg,A w,I mod){F12IP;A z;B *v;I n,q,r,*u;UI m=0;  // init m for warning
  ARGCHK1(w);
- if(mod>2)R jtatomic2(jtinplace,sc(mod-1),w,ds(CBW0001));  // INT result, by AND
+ if(mod>2)R jtatomic2(jtfg,sc(mod-1),w,ds(CBW0001));  // INT result, by AND
  // the rest is boolean result
  n=AN(w); v=BAV(w);  // littleendian only
  GATV(z,B01,n,AR(w),AS(w)); RZ(n);  // loops below can't handle empty

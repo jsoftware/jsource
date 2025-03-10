@@ -529,7 +529,7 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
   state |= vf->flag2>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
   state &= ~(vf->flag2>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   state &= ZZFLAGBOXATOP;  // we want just the one bit, BOXATOP1 & ~ATOPOPEN1
-  state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+  state |= (-state) & (I)jtfg & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
  }
  AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
 
@@ -678,8 +678,8 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
 
 // prefix, vectors to common processor.  Handles IRS.  Supports inplacing
 static DF1(jtinfixprefix1){F12IP;
- I r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R jtrank1ex(jtinplace,w,self,r,jtinfixprefix1);}
- R jtinfixprefix2(jtinplace,mark,w,self);
+ I r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R jtrank1ex(jtfg,w,self,r,jtinfixprefix1);}
+ R jtinfixprefix2(jtfg,mark,w,self);
 }
 
 //  f/\"r y    w is y, fs is in self
@@ -699,7 +699,7 @@ static DF1(jtpscan){F12IP;A z;I f,n,r,t,wn,wr,*ws,wt;
  I d,m; PROD(m,f,ws); PROD(d,r-1,ws+f+1);   // m=#scans, d=#atoms in a cell of each scan
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtypew(adocv.cv,t),wn,wr,ws);
+ if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtypew(adocv.cv,t),wn,wr,ws);
  I rc=(adocv.f)(d,n,m,AV(w),AV(z),jt);
  if(unlikely((255&~EVNOCONV)&rc)){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */

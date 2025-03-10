@@ -970,7 +970,7 @@ A jtcvt(J jt,I t,A w){
 // and use 'exact' and 'no rank' for them.  If mode=0, do not promote XNUM/RAT to fixed-length types.
 // If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL; if mode bit 3 is set, minimum precision is CMPX 
 // Result is a new buffer, always
-A jtbcvt(J jtinplace,C mode,A w){F12IP; A z=w;
+A jtbcvt(J jtfg,C mode,A w){F12IP; A z=w;
  ARGCHK1(w);
 #ifdef NANFLAG
  // there may be values (especially b types) that were nominally CMPX but might actually be integers.  Those were
@@ -982,7 +982,7 @@ A jtbcvt(J jtinplace,C mode,A w){F12IP; A z=w;
   I allflag=1, anyflag=0; Z *wv = ZAV(w); DO(AN(w), I isflag=*(I*)&wv[i].im==NANFLAG; allflag&=isflag; anyflag|=isflag;)
   if(anyflag){
    I zr=AR(w);
-   I ipok=SGNIF(jtinplace,JTINPLACEWX) & AC(w);  // both sign bits set (<0) if inplaceable
+   I ipok=SGNIF(jtfg,JTINPLACEWX) & AC(w);  // both sign bits set (<0) if inplaceable
    if(allflag){
     if(ipok>=0)GATV(z,INT,AN(w),zr,AS(w));
     I *zv=IAV(z);  // output area
@@ -1001,11 +1001,11 @@ A jtbcvt(J jtinplace,C mode,A w){F12IP; A z=w;
   // To avoid a needless copy, suppress conversion to B01 if type is B01, to INT if type is INT, etc
   // set the NOFUZZ flag in t to insist on an exact match so we won't lose precision
   PUSHNOMSGS  // no need to format the messages for failed conversions
-  if(!(mode&14)&&(z=jtccvt(jtinplace,B01|CVTNOFUZZ,w,0)));  // if OK to try B01, and it fits, keep B01
+  if(!(mode&14)&&(z=jtccvt(jtfg,B01|CVTNOFUZZ,w,0)));  // if OK to try B01, and it fits, keep B01
   else if(ISDENSETYPE(AT(w),INT))z=w;   // if w is INT, we can't improve
-  else if(!(mode&12)&&(z=jtccvt(jtinplace,INT|CVTNOFUZZ,w,0)));  //  OK to try INT and it fits, keep B01
+  else if(!(mode&12)&&(z=jtccvt(jtfg,INT|CVTNOFUZZ,w,0)));  //  OK to try INT and it fits, keep B01
   else if(ISDENSETYPE(AT(w),FL))z=w;   // if w if FL, we can't improve
-  else if(!(mode&8)&&(z=jtccvt(jtinplace,FL|CVTNOFUZZ,w,0)));  // if to try FL and it fits, keep FL
+  else if(!(mode&8)&&(z=jtccvt(jtfg,FL|CVTNOFUZZ,w,0)));  // if to try FL and it fits, keep FL
   else z=w;  // no lower precision available, keep as is
   POPMSGS   // restore error handling
   RESETERR;   // some conversions might have failed

@@ -235,7 +235,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
  // because some of the sparse code writes over the result from here, we enable this only if the call enables it
   I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
-  if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)|((I)jtinplace&JTALLOWRETARG)))){  // appending empty to nonempty, no frame, equal rank (not 0)
+  if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)|((I)jtfg&JTALLOWRETARG)))){  // appending empty to nonempty, no frame, equal rank (not 0)
    A ea=ai?w:a, nea=ai?a:w;  // empty & nonempty args
    I emptybig; TESTXITEMSMALL(emptybig,AS(ea),AS(nea),ar) if(!emptybig)R RETARG(nea);  // if item not changing, return nonempty argument unchanged
   }
@@ -265,7 +265,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
     // The result can be pristine if both inputs are abandoned pristine, and are not the same block
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
     I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
-    xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtinplace))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
+    xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtfg))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
     if(unlikely((xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE))!=0)){  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
      // a and w are both non-shared blocks, and not VIRTUAL or PERMANENT.  xfer is the transferable recursibility if any, plus inherited pristinity
      AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGANDLOCAL(a,~xfer) AFLAGANDLOCAL(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
@@ -317,7 +317,7 @@ F1(jtlamin1){F12IP;A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
  fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=AV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
- R jtreshape(jtinplace,x,w);
+ R jtreshape(jtfg,x,w);
 }    /* ,:"r w */
 
 DF2(jtlamin2){F12IP;A z;I ar,p,q,wr;
@@ -352,7 +352,7 @@ F2(jtapip){F12IP;A h;
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting
- if((SGNIF((I)jtinplace,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
+ if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
   I lgk=bplg(at); I lgatomsini=MAX(LGSZI-lgk,0);  // lg of size of atom of a; lg of number of atoms in an I (0 if <1)
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
@@ -380,7 +380,7 @@ F2(jtapip){F12IP;A h;
    // usecount of a if any part of w refers to a (3) make the eventual incrementing of usecount in a quicker.  After we have resolved w we see if the usecount of a has budged.  If not, we can proceed with inplacing.
    if(unlikely(at&BOX)){
     // result is pristine if a and w both are, and they are not the same block, and there is no fill, w is abandoned and not atomic
-    fgwd|=(((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)&-wr))<<AFPRISTINEX)&AFLAG(w);  // set if w qualifies as pristine before extension
+    fgwd|=(((a!=w)&((I)jtfg>>JTINPLACEWX)&SGNTO0(AC(w)&-wr))<<AFPRISTINEX)&AFLAG(w);  // set if w qualifies as pristine before extension
     an&=virtreqd-1;  // turn off inplacing if the result must be virtual
     ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
     an=(AC(a)>ac)?0:an;  // turn off inplacing if w referred to a
@@ -460,5 +460,5 @@ F2(jtapip){F12IP;A h;
    }  // end 'a and w compatible in rank and type'
   }   // end 'inplaceable usecount'
  }  // end 'inplaceable'
- R(jtover(jtinplace,a,w,ds(CCOMMA)));  // if there was trouble, failover to non-in-place code
+ R(jtover(jtfg,a,w,ds(CCOMMA)));  // if there was trouble, failover to non-in-place code
 }    /* append in place if possible */

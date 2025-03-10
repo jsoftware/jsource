@@ -55,7 +55,7 @@ F1(jtimmex){F12JT;A z;
  // immex sentences are always directed to the master thread
  if(!(jt->recurstate&RECSTATERENT))AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL z=parse(AT(w)&BOX?w:tokens(w,1+!!EXPLICITRUNNING));
- if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr((J)((I)jtinplace|JTPRFORSCREEN),z);   // print if z not 0 && LSB of z is 0 && Result is not for debug
+ if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr((J)((I)jtfg|JTPRFORSCREEN),z);   // print if z not 0 && LSB of z is 0 && Result is not for debug
  RETF(z);
 }
 
@@ -63,7 +63,7 @@ F1(jtimmex){F12JT;A z;
 // jt has typeout flags, pass through to immex
 // Result has assignment flag
 F1(jtimmea){F12JT;A t,z,z1;
- RZ(w=ddtokens(w,1+!!EXPLICITRUNNING)); z=jtimmex(jtinplace,w);   // check for DD, allow continuation
+ RZ(w=ddtokens(w,1+!!EXPLICITRUNNING)); z=jtimmex(jtfg,w);   // check for DD, allow continuation
  ASSERT(PARSERASGN(z)||!z||!(AT(z)&NOUN)||(t=eq(num(1),z),
      all1(ISSPARSE(AT(z))?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);  // apply *./@, if sparse
  RETF(z);

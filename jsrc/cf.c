@@ -11,10 +11,10 @@
 
 // 9!:63 return [((AC of x) ; x) ;] inplacingflags ; < (AC of y) ; y
 F1(jtshowinplacing1){F12IP;
-R jlink(sc((I)jtinplace&JTFLAGMSK),box(jlink(sc(AC(w)),w)));
+R jlink(sc((I)jtfg&JTFLAGMSK),box(jlink(sc(AC(w)),w)));
 }
 F2(jtshowinplacing2){F12IP;
-R jlink(jlink(sc(AC(a)),a),jlink(sc((I)jtinplace&JTFLAGMSK),box(jlink(sc(AC(w)),w))));
+R jlink(jlink(sc(AC(a)),a),jlink(sc((I)jtfg&JTFLAGMSK),box(jlink(sc(AC(w)),w))));
 }
 
 FORK1(fork100,0x00) FORK1(fork101,0x01) FORK1(fork110,0x10) FORK1(fork111,0x11) FORK1(fork120,0x20) FORK1(fork121,0x21) 
@@ -47,7 +47,7 @@ FORK1(jthook1cell,0x110)
 
 
 // Create the derived verb for a fork.  Insert in-placeable flags based on routine, and asgsafe based on fgh
-A jtfolk(J jtinplace,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1,fline,hcol;V*fv,*gv,*hv,*v;
+A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1,fline,hcol;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  // by the parsing rules, g and h must be verbs here
  A z; fdefallo(z);  // allocate the result early to free regs during function body
@@ -181,7 +181,7 @@ A jtfolk(J jtinplace,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;
  // if we are using the default functions, pull them from the tables
  if(likely(!f1))f1=fork1tbl[(0x200110>>(fline<<2))&3][(0b00110>>hcol)&1];  // fline: 0/3/4->0,  1/2->1, 5->2   hcol: / 0/3/4->0,  1/2->1
  if(likely(!f2)){
-  f2=fork2tbl[fline][hcol]; f2=(I)jtinplace&JTFOLKNOHFN?jtfolk2:f2;  // NOHFN means the caller is going to fool with the result fork, so the EP is unreliable
+  f2=fork2tbl[fline][hcol]; f2=(I)jtfg&JTFOLKNOHFN?jtfolk2:f2;  // NOHFN means the caller is going to fool with the result fork, so the EP is unreliable
  }else{hcol=-1;}   // select the value we will put into localuse: hcol=-1 means cct, other hcol=routine address of h or h@]
 
  fdeffillall(z,flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,if(hcol<0)FAV(z)->localuse.lu1.cct=cct;else FAV(z)->localuse.lu1.fork2hfn=hcol<=2?hv->valencefns[1]:FAV(hv->fgh[0])->valencefns[0]);
@@ -262,13 +262,13 @@ static exeV cmpabsblk[6] = {
 
 
 // (compare |) dyadic, reverting if not float
-static DF2(jthkcmpabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
- z=jtatomic2(jtinplace,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
+static DF2(jthkcmpabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtfg,a,w,self);
+ z=jtatomic2(jtfg,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
  RETF(z);
 }
 // (compare!.n |) dyadic, reverting if not float
-static DF2(jthkcmpfitabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtinplace,a,w,self);
- PUSHCCT(FAV(FAV(self)->fgh[0])->localuse.lu1.cct) z=jtatomic2(jtinplace,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
+static DF2(jthkcmpfitabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtfg,a,w,self);
+ PUSHCCT(FAV(FAV(self)->fgh[0])->localuse.lu1.cct) z=jtatomic2(jtfg,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
  POPCCT RETF(z);
 }
 

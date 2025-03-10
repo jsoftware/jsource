@@ -71,7 +71,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,d,t,x,y,z;I cn,*cv,*dv,i,n
  RZ(z=grd1spz(w,wf,wcr)); zv=AV(z);
  SORT sortblok; SORTSP spblok;
  sortblok.f=(CMP)(wt&B01?compspssB:wt&INT?compspssI:wt&FL?compspssD:compspssZ);  // comparison function
- sortblok.jt=jtinplace;  // jt including direction bit
+ sortblok.jt=jtfg;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
  y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1];
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&CMPX?2:1);
@@ -128,7 +128,7 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z;I*cv,m,n,n1,p,*tv,
  RZ(z=grd1spz(w,wf,wcr)); zv=AV(z);
  SORT sortblok; SORTSP spblok;
  sortblok.f=(CMP)(wt&B01?compspdsB:wt&INT?compspdsI:wt&FL?compspdsD:compspdsZ);  // comparison function
- sortblok.jt=jtinplace;  // jt including direction bit
+ sortblok.jt=jtfg;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
  y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1]; 
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=p=aii(x)*(wt&CMPX?2:1);
@@ -207,7 +207,7 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z,zy;
 
  SORT sortblok; SORTSP spblok;
  sortblok.f=(CMP)(wt&B01?compspssB:wt&INT?compspssI:wt&FL?compspssD:compspssZ);  // comparison function
- sortblok.jt=jtinplace;  // jt including direction bit
+ sortblok.jt=jtfg;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
  y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1];
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&CMPX?2:1);
@@ -250,7 +250,7 @@ F2(jtgrd2sp){F12JT;PROLOG(0078);A z;B b,c,*wb;I acr,af,am,ar,*as,j,m,wcr,wf,wm,w
  DQ(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
  if(c){b=a==w; RZ(w=reaxis(ifb(wr,wb),w)); if(b)a=w;}
  switch((2*wb[0]+wb[wf])*(a==w&&af==wf&&acr==wcr)){
-  default: z=irs2(IRS1(w,0L,wcr,(I)jtinplace&JTDESCEND?jtdgrade1:jtgrade1,z),a,VFLAGNONE, RMAX,acr,jtfrom); break;
+  default: z=irs2(IRS1(w,0L,wcr,(I)jtfg&JTDESCEND?jtdgrade1:jtgrade1,z),a,VFLAGNONE, RMAX,acr,jtfrom); break;
   case 2: /* sparse dense  */ z=grd2spsd(w,wf,wcr); break;
   case 3: /* sparse sparse */ z=grd2spss(w,wf,wcr); break;
  } 

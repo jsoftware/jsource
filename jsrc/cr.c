@@ -33,7 +33,7 @@
 // which is often the same original function that called here.
 // rr is the rank at which the verb will be applied: in u"n, the smaller of rank-of-u and n
 // JT flags: all these routines use JTINPLACEW, JTINPLACEA, JTCOUNTITEMS, JTWILLBEOPENED.  Other flags are untouched
-A jtrank1ex(J jtinplace,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z,virtw;
+A jtrank1ex(J jtfg,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z,virtw;
    I mn,wcn,wf,wk;
  ARGCHK1(w);
  wf=AR(w)-rr;
@@ -50,7 +50,7 @@ A jtrank1ex(J jtinplace,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z,
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
-  state |= (-state) & (I)jtinplace & (JTWILLBEOPENED|JTCOUNTITEMS);
+  state |= (-state) & (I)jtfg & (JTWILLBEOPENED|JTCOUNTITEMS);
   wf=AR(w)-rr;  // refresh frame
  }
  // multiple cells.  Loop through them.
@@ -72,11 +72,11 @@ A jtrank1ex(J jtinplace,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z,
   // Don't pass WILLOPEN status - we use that at this level
   fauxvirtual(virtw,virtwfaux,w,rr,ACUC1) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;
   // Calculate inplaceability.  Since the inplaceability of f1 was passed into f"r, we don't need to look it up: we just pass the original
-  // jtinplace through, except that we remove WILLOPEN status which we are picking up at this level
-  jtinplace = (J)((I)jtinplace & ~(JTWILLBEOPENED+JTCOUNTITEMS));
+  // jtfg through, except that we remove WILLOPEN status which we are picking up at this level
+  jtfg = (J)((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS));
   // Mark the virtual block as inplaceable only if w is fully inplaceable.  We have to turn off inplaceability in the virtual block so that
   // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>
-  state |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+  state |= (UI)(SGNIF(jtfg,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
 #define ZZDECL
 #include "result.h"
@@ -118,7 +118,7 @@ A jtrank1ex(J jtinplace,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z,
 // Streamlined version when rank is 0.  In this version we look for ATOPOPEN (i. e. every)
 // f1 is the function to use if there are no flags, OR if there is just 1 cell with no frame or a cell of fill
 // "Supports IRS", which means nothing except that we ignore input rank
-A jtrank1ex0(J jtinplace,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virtw;
+A jtrank1ex0(J jtfg,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virtw;
    I wk;
  ARGCHK1(w);
  RESETRANK;  // in case we are called with IRS, clear it
@@ -168,7 +168,7 @@ A jtrank1ex0(J jtinplace,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virt
   ZZPARMSNOFS(AR(w),mn)
   // if we are using the BOXATOP from f, we can also use the raze flags from the caller.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
-  state |= (-(state&ZZFLAGBOXATOP)) & (I)jtinplace & (JTWILLBEOPENED+JTCOUNTITEMS);
+  state |= (-(state&ZZFLAGBOXATOP)) & (I)jtfg & (JTWILLBEOPENED+JTCOUNTITEMS);
 
   // Now that we have handled the structural requirements of ATOPOPEN, clear it if w is not open
   // Allocate a non-in-place virtual block unless this is ATOPOPEN and w is boxed, in which case we will just use the value of the A block
@@ -177,15 +177,15 @@ A jtrank1ex0(J jtinplace,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virt
    fauxvirtual(virtw,virtwfaux,w,0,ACUC1); AN(virtw)=1; state&=~ZZFLAGATOPOPEN1;
    // Mark the virtual block as inplaceable only if w is fully inplaceable.  We have to turn of inplaceability in the virtual block so that
    // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>
-   state |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+   state |= (UI)(SGNIF(jtfg,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
    // Init the inplaceability of virtw.  We do this here because in the loop we handle it only for low rank (i. e. virtwfaux) so as to avoid inplacing ATOPOPEN.
    // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
    ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
   }else{wav=AAV(w); virtw=C(*wav++);
   }
   // Since the inplaceability of f1 was passed into f"r, we don't need to look it up: we just pass the original
-  // jtinplace through, except that we remove WILLOPEN status which we are picking up at this level
-  jtinplace = (J)((I)jtinplace & ~(JTWILLBEOPENED+JTCOUNTITEMS));
+  // jtfg through, except that we remove WILLOPEN status which we are picking up at this level
+  jtfg = (J)((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS));
 
 #define ZZINSTALLFRAME(optr) MCISHd(optr,AS(w),AR(w))
   do{
@@ -229,7 +229,7 @@ A jtrank1ex0(J jtinplace,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virt
  EPILOG(zz);
 }
 
-A jtrank2ex(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12IP;
+A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12IP;
  I lrrr=(RANK2T)lrrrlcrrcr; I lcrrcr=lrrrlcrrcr>>RANK2TX;  // inner, outer ranks
  PROLOG(0042);A virta,virtw,z;I acn,ak,mn,wcn,wk;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
@@ -272,7 +272,7 @@ A jtrank2ex(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2W)>>(VF2ATOPOPEN2WX-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
-  state |= (-state) & (I)jtinplace & (JTWILLBEOPENED|JTCOUNTITEMS);
+  state |= (-state) & (I)jtfg & (JTWILLBEOPENED|JTCOUNTITEMS);
   lrrr=(lr<<RANKTX)+rr;  // reconstitute the combined llrr
  }
  UI afwf=((UI)AR(a)<<RANKTX)+AR(w)-lrrr;   // frames
@@ -328,7 +328,7 @@ A jtrank2ex(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2
  fauxblock(virtwfaux); fauxblock(virtafaux); 
  if(likely((mn|(state&STATEANOTEMPTY))!=0)){
   // OK to inplace an arg if it's not the same as the other, not repeated, correct type (unless &.>), inplaceable usecount
-  state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF(jtinplace,JTINPLACEAX)&AC(a)&~(((AT(a)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATAX)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
+  state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF(jtfg,JTINPLACEAX)&AC(a)&~(((AT(a)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATAX)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
   fauxvirtual(virta,virtafaux,a,(UI)lrrr>>RANKTX,ACUC1) MCISH(AS(virta),AS(a)+(afwf>>RANKTX),(UI)lrrr>>RANKTX); AN(virta)=acn;
   // Init the inplaceability of virtw.  We do this here because in the loop we handle it only for low rank (i. e. virt[aw]faux) so as to avoid inplacing fill.
   // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
@@ -336,12 +336,12 @@ A jtrank2ex(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2
  }else{RZ(virta=jtfiller(jt,AT(a),(UI)lrrr>>RANKTX,AS(a)+(afwf>>RANKTX)));}
 
  if(likely((mn|(state&STATEWNOTEMPTY))!=0)){  // repeat for w
-  state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF(jtinplace,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
+  state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF(jtfg,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
   fauxvirtual(virtw,virtwfaux,w,lrrr&RANKTMSK,ACUC1) MCISH(AS(virtw),AS(w)+(afwf&RANKTMSK),lrrr&RANKTMSK); AN(virtw)=wcn;
   ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
  }else{RZ(virtw=jtfiller(jt,AT(w),lrrr&RANKTMSK,AS(w)+(afwf&RANKTMSK)));}
  // Allow inplacing if the verb supports it, but with the raze flags removed.  We can be loose here because we must be strict about the virt inplaceability to get pristinity right.
- jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)));
+ jtfg = (J)(intptr_t)((I)jtfg & (~(JTWILLBEOPENED+JTCOUNTITEMS)));
 
  A zz=0;  // place where we will build up the homogeneous result cells
  if(likely(mn!=0)){I i0, i1, i2, i3;  // likely on single word fails
@@ -415,7 +415,7 @@ A jtrank2ex(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2
 
 // version for rank 0.  We look at ATOPOPEN too.  f2 is the function to use if there is no frame
 // This code does not set inplaceability on nonrepeated cells - hardly useful at rank 0
-A jtrank2ex0(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F12IP;PROLOG(0042);A virta,virtw,z;
+A jtrank2ex0(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F12IP;PROLOG(0042);A virta,virtw,z;
    I ak,ar,*as,ict,oct,mn,wk,wr,*ws;
  ARGCHK2(a,w); ar=AR(a); wr=AR(w); if(unlikely(!(ar+wr)))R CALL2IP(f2,a,w,fs);   // if no frame, make just 1 call
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R sprank2(a,w,fs,0,0,f2);  // this needs to be updated to handle multiple ranks
@@ -491,7 +491,7 @@ A jtrank2ex0(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F12IP;PROLO
 
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
-  state |= (-(state&ZZFLAGBOXATOP)) & (I)jtinplace & (JTWILLBEOPENED+JTCOUNTITEMS);
+  state |= (-(state&ZZFLAGBOXATOP)) & (I)jtfg & (JTWILLBEOPENED+JTCOUNTITEMS);
 
   // Now that we have handled the structural requirements of ATOPOPEN, clear it if the argument is not boxed
   // Allocate a non-in-place virtual block unless this is ATOPOPEN and w is boxed, in which case we will just use the value of the A block
@@ -568,7 +568,7 @@ A jtrank2ex0(J jtinplace,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F12IP;PROLO
 
 // irs1() and irs2() are simply calls to the IRS-savvy function f[12] with the specified rank, faster than creating a verb with rank
 
-A jtirs1(J jtinplace,A w,A fs,I m,AF f1){F12IP;A z;I wr; 
+A jtirs1(J jtfg,A w,A fs,I m,AF f1){F12IP;A z;I wr; 
   ARGCHK1(w);
 // Get the rank of w; if the requested rank m is > wr, use ~0 because some verbs test for that as an expedient
 // If m is negative, use wr+m but never < 0
@@ -588,7 +588,7 @@ A jtirs1(J jtinplace,A w,A fs,I m,AF f1){F12IP;A z;I wr;
 // IRS verbs are those that look at jt->rank.  This is where we set up jt->rank.  Once
 // we have it, we call the setup verb, which will go on to do its internal looping and (optionally) call
 // the verb f2 to finish operation on a cell
-A jtirs2(J jtinplace,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
+A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
   ARGCHK2(a,w);
  wr=AR(w); r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; r=AR(w)-wr;   // wr=requested rank, after negative resolution, or ~0; r=frame of w, possibly negative if no frame
  ar=AR(a); l=l>=ar?RMAX:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
@@ -665,7 +665,7 @@ static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; I 
    m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
   }
  }
- R m<wr?jtrank1ex(jtinplace,w,fs,m,f1):CALL1IP(f1,w,fs);
+ R m<wr?jtrank1ex(jtfg,w,fs,m,f1):CALL1IP(f1,w,fs);
 }
 #define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
 #define LEMIN0(a,b,c) ((b-a)|(c-a)) // sign is 0 if a<=MIN(b,c): a<=b and a<=c
@@ -682,12 +682,12 @@ static DF1(rank1q){F12IP;  // fast version: nonneg rank, no check for multiple R
  I um=FAV(fs)->mr;
  if(unlikely(GEMIN0(m,r,um)>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
  r=r>m?m:r;  // clamp rank at arg rank - MIN(n, rankarg)
- R jtrank1ex(jtinplace,w,fs,r,FAV(fs)->valencefns[0]);
+ R jtrank1ex(jtfg,w,fs,r,FAV(fs)->valencefns[0]);
 }
 
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
 static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  Pass inplaceability through
-static DF1(jtrank10){F12IP;R jtrank1ex0(jtinplace,w,self,jtrank10atom);}  // pass inplaceability through.
+static DF1(jtrank10){F12IP;R jtrank1ex0(jtfg,w,self,jtrank10atom);}  // pass inplaceability through.
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 
@@ -732,9 +732,9 @@ static DF2(rank2q){F12IP;
 }
 
 // Version for rank 0.  Call rank2ex0, pointing to the u"r
-static DF2(jtrank20atom){F12IP; A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[1])(jtinplace,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
+static DF2(jtrank20atom){F12IP; A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[1])(jtfg,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
 
-static DF2(jtrank20){F12IP;R jtrank2ex0(jtinplace,a,w,self,jtrank20atom);}  // pass inplaceability through.
+static DF2(jtrank20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtrank20atom);}  // pass inplaceability through.
 
 
 // a"w; result is a verb

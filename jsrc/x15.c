@@ -1187,7 +1187,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   }else if(star){  // pointer, but not boxed atom
    CDASSERT(xr&&((xt&DIRECT)>0),per);                /* pointer can't point at scalar, and it must point to direct values */
    // if type is * (not &), make a safe copy.
-   if(star&1){RZ(x=jtmemu(jtinplace,x)); if(zbx)*zv=incorp(x); xv=AV(x);}  // what we install into * must be unaliased (into & is ok)
+   if(star&1){RZ(x=jtmemu(jtfg,x)); if(zbx)*zv=incorp(x); xv=AV(x);}  // what we install into * must be unaliased (into & is ok)
 #if defined(__aarch64__)
    if(rcnt<maxrcnt) data[rcnt++]=(I)xv; else{
    dvc=alignto(dvc,sizeof(void*));
@@ -1378,8 +1378,8 @@ F2(jtcd){F12IP;A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
   if(!ISDENSETYPE(wt,B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));  // if w sparse or not DIRECT, convert it
  }
  wv=CAV(w); zv=CAV(z); k=bpnoun(wt);
- if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0))
- else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bpnoun(AT(z)); DQ(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0)); wv+=p; zv+=q;);}
+ if(1==m)RZ(jtcdexec1(jtfg,cc,zv,wv,k,wt,0))
+ else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bpnoun(AT(z)); DQ(m, RZ(jtcdexec1(jtfg,cc,zv,wv,k,wt,0)); wv+=p; zv+=q;);}
  R z;
 }    /* 15!:0 */
 
@@ -1520,7 +1520,7 @@ DF2(jtmemalign){F12IP;I *s, n, r;  // shape and rank
 
 // 15!:15 memu - make a copy of y if it is not writable (inplaceable and not read-only)
 // We have to check jt in case this usage is in a fork that will use the block later
-F1(jtmemu) {F12IP;  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w);
+F1(jtmemu) {F12IP;  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtfg&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w);
  // We will NUL-terminate a string in case called routines need it (not sure this is necessary)
 #if SY_64
  if(unlikely((AT(w)&LAST0)!=0))*(C4*)&CAV(w)[AN(w)*bpnoun(AT(w))]=0;  // on 64-bit systems, always safe to add 4 bytes at end of data

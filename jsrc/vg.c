@@ -133,9 +133,9 @@ static struct {
 // General grade.  jt has the JTDESCEND flag.  Build the control block to hold merge info
 static GF(jtgrx){F1PREFJT;A x;I ck,t,*xv;I c=ai*n;
  t=AT(w); SORT sortblok;
- void **(*sortfunc)() = sortroutines[CTTZ(t)][(~(I)jtinplace>>JTDESCENDX)&1].sortfunc;  // the major routine to use (normal merge or minimum comparisons)
- sortblok.f=sortroutines[CTTZ(t)][(~(I)jtinplace>>JTDESCENDX)&1].comproutine;  // comparison function
- sortblok.jt=jtinplace;  // jt including direction bit
+ void **(*sortfunc)() = sortroutines[CTTZ(t)][(~(I)jtfg>>JTDESCENDX)&1].sortfunc;  // the major routine to use (normal merge or minimum comparisons)
+ sortblok.f=sortroutines[CTTZ(t)][(~(I)jtfg>>JTDESCENDX)&1].comproutine;  // comparison function
+ sortblok.jt=jtfg;  // jt including direction bit
  I natoms=ai<<!!(t&CMPX+QP);   // number of atoms to compare in loop
  sortblok.n=natoms;  // pass in as parm
  natoms=(t&BOX+XNUM+RAT)?(I)&sortblok:natoms;  // for simple compares, pass in #atoms.  For more complex ones, the whole sort block
@@ -270,7 +270,7 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
 // We interpret the input as integer form so that we can hide the item number in an infinity without turning it into a NaN
 static GF(jtgrdq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
- I sortdown63=SGNIF(jtinplace,JTDESCENDX)&IMIN;  // sign bit set if sorting down; other bits 0
+ I sortdown63=SGNIF(jtfg,JTDESCENDX)&IMIN;  // sign bit set if sorting down; other bits 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
  unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
  // Loop over each grade
@@ -314,7 +314,7 @@ static GF(jtgrdq){F1PREFJT;
 
 static GF(jtgrd){F1PREFJT;A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c=ai*n;
 #if BW==64
- if(ai==1){R jtgrdq(jtinplace,m,ai,n,w,zv);}  // if fast list code is available, always use it
+ if(ai==1){R jtgrdq(jtfg,m,ai,n,w,zv);}  // if fast list code is available, always use it
 #endif
   // if not large and 1 atom per key, go do general grade
  if(!(ai==1&&n>3300))R grx(m,ai,n,w,zv);  // Empirically derived crossover   TUNE
@@ -335,7 +335,7 @@ static GF(jtgrd){F1PREFJT;A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c
   // in x, then the postpass ends in z
   g=b?xv:zv; h=b?zv:xv;
   // sort from LSB to MSB.  Sort in the order requested UNLESS all the values are negative; then reverse the order and save the postpass
-  colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,(((~(I)jtinplace>>(JTDESCENDX-1))&2)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
+  colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,(((~(I)jtfg>>(JTDESCENDX-1))&2)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
   colflags=grcol(65536,0L,yv,n,h, g,sizeof(D)/sizeof(US),u+=WDINC,colflags);
   colflags=grcol(65536,0L,yv,n,g, h,sizeof(D)/sizeof(US),u+=WDINC,colflags);
   // for the MSB, which is signed, do the same thing, but to save a few cycles tell grcol if all the values are negative or nonnegative.  grcol will
@@ -390,7 +390,7 @@ static GF(jtgri1){F1PREFJT;A x,y;I*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  for(i=0;i<m;++i){I colflags;
   // process each 16-bit section of input
   u=(US*)wv+INTLSBWDX;   // point to LSB
-  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,(~(I)jtinplace>>(JTDESCENDX-1))&2);  // move 'up' to bit 1
+  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,(~(I)jtfg>>(JTDESCENDX-1))&2);  // move 'up' to bit 1
 #if SY_64
   colflags=grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+=WDINC,colflags);
   colflags=grcol(65536,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),u+=WDINC,colflags);
@@ -409,7 +409,7 @@ static GF(jtgru1){F1PREFJT;A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  GATV0(x,INT,n,1); xv=AV1(x);
  for(i=0;i<m;++i){I colflags;
   u=(US*)wv+INTLSBWDX;   // point to LSB
-  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,(~(I)jtinplace>>(JTDESCENDX-1))&2);  // move 'up' to bit 1
+  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,(~(I)jtfg>>(JTDESCENDX-1))&2);  // move 'up' to bit 1
   grcol(65536,0L,yv,n,xv,zv,sizeof(C4)/sizeof(US),u+=WDINC,colflags);
   wv+=c; zv+=n;
  }
@@ -420,7 +420,7 @@ static GF(jtgru1){F1PREFJT;A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
 // grade INTs by hiding the item number in the value and sorting.  Requires ai==1.
 static GF(jtgriq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
- I gradedown=REPSGN(SGNIF(jtinplace,JTDESCENDX));  // ~0 if sorting down, else 0
+ I gradedown=REPSGN(SGNIF(jtfg,JTDESCENDX));  // ~0 if sorting down, else 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
  unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
  I itemmsb=(I)1<<(BW-1-hbit); I itemsigmsk=2*-itemmsb;  // get bit at place we will shift into sign bit, and a mask for all higher bits
@@ -536,14 +536,14 @@ static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,* RESTRICT v,*wv,*xv;UI4 * RESTRICT y
 #else
 #if SY_64  // no quickgrade unless INTs are 64 bits
  if(ai==1){  // for atoms, usually use smallrange or quicksort
-  if(n<10)R jtgriq(jtinplace,m,ai,n,w,zv);  // for short lists just use qsort
+  if(n<10)R jtgriq(jtfg,m,ai,n,w,zv);  // for short lists just use qsort
   UI4 lgn3=CTLZI(n); lgn3 = (UI4)((lgn3*8) - 8 + (n>>(lgn3-3)));  // approx lg(n)<<3
   rng = condrange(wv,AN(w),IMAX,IMIN,MIN((L2CACHESIZE>>LGSZI),(n*lgn3)>>(3-1)));  // let range go up to 2n lgn, but never more than L2 size
   if(!rng.range){
-   if(!BETWEENC(n,5500,500000))R jtgriq(jtinplace,m,ai,n,w,zv);  // quicksort except for 5500-500000
+   if(!BETWEENC(n,5500,500000))R jtgriq(jtfg,m,ai,n,w,zv);  // quicksort except for 5500-500000
    // in the middle range, we still use quicksort if the atoms have more than 2 bytes of significance.  We just spot-check rather than running condrange,
    // because the main appl is sorting timestamps, which are ALL big
-   DO(10, if(0xffffffff00000000 & (0x0000000080000000+wv[i<<9]))R jtgriq(jtinplace,m,ai,n,w,zv);)  // quicksort if more than 2 bytes of significance, sampling the input
+   DO(10, if(0xffffffff00000000 & (0x0000000080000000+wv[i<<9]))R jtgriq(jtfg,m,ai,n,w,zv);)  // quicksort if more than 2 bytes of significance, sampling the input
    R gri1(m,ai,n,w,zv);  // moderate-range middle lengths use radix sort
   }
   // fall through to small-range
@@ -557,7 +557,7 @@ static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,* RESTRICT v,*wv,*xv;UI4 * RESTRICT y
  if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range   TUNE
 #endif
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
- GATV0(y,C4T,rng.range,1); yvb=C4AV1(y); yv=yvb-rng.min; up=(~(I)jtinplace>>JTDESCENDX)&1;
+ GATV0(y,C4T,rng.range,1); yvb=C4AV1(y); yv=yvb-rng.min; up=(~(I)jtfg>>JTDESCENDX)&1;
  // if there are multiple ints per item, we have to do multiple passes.  Allocate a workarea
  // should start in correct position to end in z
  if(1<ai){GATV0(x,INT,n,1); xv=AV1(x);
@@ -608,7 +608,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);   //  TUNE
  }else rng.range=0;
  if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
- GATV0(y,C4T,rng.range,1); yvb=C4AV1(y); yv=yvb-rng.min; up=(~(I)jtinplace>>JTDESCENDX)&1;
+ GATV0(y,C4T,rng.range,1); yvb=C4AV1(y); yv=yvb-rng.min; up=(~(I)jtfg>>JTDESCENDX)&1;
  if(1<ai){GATV0(x,INT,n,1); xv=AV1(x);
  }
  for(i=0;i<m;++i){
@@ -659,7 +659,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 static GF(jtgrb){F1PREFJT;A x;B b,up;I *g,*h,i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
  UI4 lgn=CTLZI(n);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
- q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
+ q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=(~(I)jtfg>>JTDESCENDX)&1;
  if(1<q){GATV0(x,INT,n,1); xv=AV1(x);}
  for(i=0;i<m;++i){
   vv=wv+ai; b=(q&1);
@@ -674,7 +674,7 @@ static GF(jtgrc){F1PREFJT;A x;B b,q,up;I *g,*h,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  UI4 lgn=CTLZI(n);
  if((UI)ai>lgn)R grx(m,ai,n,w,zv);   // TUNE
  ai<<=((AT(w)>>C2TX)&1);
- p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
+ p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=(~(I)jtfg>>JTDESCENDX)&1;
  q=C2T&AT(w) && C_LE;
  if(1<ai){GATV0(x,INT,n,1); xv=AV1(x);}
  for(i=0;i<m;++i){
@@ -729,16 +729,16 @@ A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I f,ai,m,n,r,*s,t,wn,wr,zn;
  // if there are no atoms, or we are grading things with 0-1 item, return an index vector of the appropriate shape 
  if(((wn-1)|(n-2))<0)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible
- RZ((t&B01&&0==(ai&3)?jtgrb:grroutine[CTTZ(t)])(jtinplace,m,ai,n,w,AV(z)))
+ RZ((t&B01&&0==(ai&3)?jtgrb:grroutine[CTTZ(t)])(jtfg,m,ai,n,w,AV(z)))
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 
-F1(jtgrade1){F12IP;A z; ARGCHK1(w); jtinplace=(J)((I)jtinplace&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
-F1(jtdgrade1){F12IP;A z; ARGCHK1(w); jtinplace=(J)(((I)jtinplace&~JTFLAGMSK)|JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
+F1(jtgrade1){F12IP;A z; ARGCHK1(w); jtfg=(J)((I)jtfg&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
+F1(jtdgrade1){F12IP;A z; ARGCHK1(w); jtfg=(J)(((I)jtfg&~JTFLAGMSK)|JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
 // Since grade2 pulls from a, mark a as non-pristine.  But since there can be no repeats, transfer a's pristinity to result if a is inplaceable
 // We do this in jtgr2 because it has a branch where all boxed values go
-F2(jtgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtinplace&~JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace&~JTDESCEND),a,w));}
-F2(jtdgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtinplace|JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace|JTDESCEND),a,w));}
+F2(jtgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg&~JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtfg&~JTDESCEND),a,w));}
+F2(jtdgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg|JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtfg|JTDESCEND),a,w));}
 
 
 #define OSGT(i,j) (u[i]>u[j])

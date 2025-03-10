@@ -36,7 +36,7 @@ DF2(jtunquote){F12IP;A z;
 // obsolete #define FLGDYADX (FLGMONADX+1)  // operation is dyad  must be highest flag
 // obsolete #define FLGDYAD ((I)1<<FLGDYADX)
  I flgd0cpC=w!=self;  // init DYAD flag
-   // We check inplaceability of the called function.  jtinplace unused
+   // We check inplaceability of the called function.  jtfg unused
  A explocale;  // locale to execute in.  Not used unless LOCINCRDECR set
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
@@ -235,14 +235,14 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
  if(likely(!(jt->uflags.ui4))) {
   // No special processing. Just run the entity as (a,w,self) or (w,self,self)
-  // We preserve the XDEFMODIFIER flag in jtinplace, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through if the call supports inplacing
+  // We preserve the XDEFMODIFIER flag in jtfg, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through
 // obsolete   z=(*actionfn)((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),a,w,fs);  // keep MODIFIER flag always, and others too if verb supports it 
-  z=(*actionfn)(jtinplace,a,w,fs);  // keep jt flags incl MODIFIER 
+  z=(*actionfn)(jtfg,a,w,fs);  // keep jt flags incl MODIFIER 
   if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
  }else{
   // Extra processing is required.  Check each option individually
 // obsolete   jt=(J)((I)jt+((flgd0cpC+1)&0x200));
-  fs=jt->parserstackframe.sf;  // reinit fs
+// obsolete   fs=jt->parserstackframe.sf;  // reinit fs
   DC d=0;  // pointer to debug stack frame, if one is allocated
   if(jt->uflags.trace){  // debug or pm
    // allocate debug stack frame if we are debugging OR PM'ing.  In PM, we need a way to get the name being executed in an operator
@@ -258,10 +258,10 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
   jt->uflags.bstkreqd&=flgd0cpC>>FLGPSEUDOX;  // clear bstk for next level (if not pseudo)
   // call the function, as above
   if((jt->uflags.trace&TRACEDB)&&!(jt->glock||VLOCK&FAV(fs)->flag)&&!(jt->recurstate&RECSTATERENT)){  // The verb is locked if it is marked as locked, or if the script is locked; don't debug/pm any recursive entry
-// obsolete    z=jtdbunquote(jtinplace,flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
-   z=jtdbunquote(jtinplace,a,w,fs);  // if debugging, go do that.  Uses jt->sitop as stack frame
+// obsolete    z=jtdbunquote(jtfg,flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
+   z=jtdbunquote(jtfg,a,w,fs);  // if debugging, go do that.  Uses jt->sitop as stack frame
   }else{
-   z=(*actionfn)(jtinplace,a,w,fs);
+   z=(*actionfn)(jtfg,a,w,fs);
    if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
   }
   if(jt->uflags.trace&TRACEPM)pmrecord(jt->curname,execlocname,-2L,(flgd0cpC&FLGDYAD)+1);  // record the return from call
@@ -269,7 +269,9 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
   if(unlikely(flgd0cpC&FLGPSEUDO)){jt->uflags.spfreeneeded&=~0x80; goto exitanon;}  // if this was an anonymous explicit verb, skip over locale restoration (it can't be cocurrent)
   if(jt->uflags.spflag){                        // Need to do some form of space reclamation?
    if(jt->uflags.sprepatneeded)jtrepatrecv(jt); // repatriate first, because we might reclaim enough memory to need to gc
-   if(jt->uflags.spfreeneeded&1)spfree();}        // if garbage collection required, do it
+   if(jt->uflags.spfreeneeded&1)spfree();
+  }        // if garbage collection required, do it
+  fs=jt->parserstackframe.sf;  // restore fs
  }
  // the call has returned, long way or short way
 

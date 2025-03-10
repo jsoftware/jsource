@@ -299,7 +299,7 @@ F1(jtlocsizes){F12IP;I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 // jtprobe, with readlock taken on stlock
-static A jtprobestlock(J jtinplace, C *u,UI4 h){F12JT; READLOCK(JT(jt,stloc)->lock) A z=probex((I)jtinplace&255,u,SYMORIGIN,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}
+static A jtprobestlock(J jtfg, C *u,UI4 h){F12JT; READLOCK(JT(jt,stloc)->lock) A z=probex((I)jtfg&255,u,SYMORIGIN,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}
 
 // find the symbol table for locale with name u which has length n and hash/number bucketx
 // locale name is known to be valid

@@ -237,16 +237,16 @@ static DF1(jtssg){F12IP;PROLOG(0020);A a,z;I i,n,r,wr;
  k<<=bplg(AT(w)); // k now=length of input cell in bytes, where it will remain
  AK(z)+=(n-1)*k; AK(a)+=(n-1)*k; MCISH(AS(z),AS(w)+1,r-1); MCISH(AS(a),AS(w)+1,r-1);  // a points to tail; it will be decremented before first use
  // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or (fs is &.> and w is recursive))
- // We include contextual inplaceability (from jtinplace) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
- // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtinplace itself
+ // We include contextual inplaceability (from jtfg) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
+ // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtfg itself
  // We have to include the recursive check to make sure that we don't create a virtual pristine block (which is always recursive) out of a nonrecursive w, because
  // nonrecursive contents cannot be zapped inside every2
- state |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-((f2!=jtevery2self)|((AFLAG(w)&RECURSIBLE)==0)))&AC(w))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+ state |= (UI)(SGNIF(jtfg,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-((f2!=jtevery2self)|((AFLAG(w)&RECURSIBLE)==0)))&AC(w))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
- // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
+ // and the input jtfg.  We turn off WILLBEOPENED status in jtfg for the callee.
  ACINIT(z,ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX)))   // first cell is inplaceable if second is
-// obsolete  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
- jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA));  // all items are used only once
+// obsolete  jtfg = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
+ jtfg = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA));  // all items are used only once
 
 #define ZZPOPNEVER 1   // we mustn't TPOP after copying the result atoms, because they are reused.  This will leave the memory used for type-conversions unclaimed.
 
@@ -325,7 +325,7 @@ static DF1(jtsscan){F12IP;A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
  // The rest handles primitives with fast suffix scans
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtypew(adocv.cv,t),wn,wr,ws);
+ if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtypew(adocv.cv,t),wn,wr,ws);
  I rc=((AHDRSFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
  if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))R z; jsignal(rc); R jt->jerr>=EWOV?IRS1(w,self,r,jtsscan,z):0;} else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */

@@ -26,7 +26,7 @@ static DF2(jtexeccyclicgerund){F12IP;  // call is w,self or a,w,self
  I ismonad=AT(w)==0; self=ismonad?w:self;
  I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx; A vbtoexec=C(AAV(FAV(self)->fgh[2])[nexttoexec]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
- w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
+ w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtfg,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
  if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund is invalid
  R z;
 }
@@ -43,7 +43,7 @@ static DF2(jtexecgerundcellI){F12IP;  // call is w,self or a,w,self
  ASSERTGOTO(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);  // must be in range of # gerunds
  A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // advance to next cell
- w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
+ w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtfg,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
  if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund is invalid
  R z;
 // in case of index error we have to call eformat right here, because our caller does not have the self block for the overall gerund.  The a and w values are unused except for valence.  We pass in all the selectors
@@ -62,7 +62,7 @@ static DF2(jtexecgerundcellB){F12IP;  // call is w,self or a,w,self
  ASSERTGOTO(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
  A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec;
- w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
+ w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtfg,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
  if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund can't
  R z;
 errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
@@ -158,7 +158,7 @@ F2(jtevger){F12IP;A hs;I k;
 }
 
 // u`v.  Allow append-in-place to m
-F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtinplace&(~JTFLAGMSK+JTINPLACEA+JTINPLACEW)),VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}  // don't pass MODIFIER flag through
+F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtfg&(~JTFLAGMSK+JTINPLACEA+JTINPLACEW)),VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}  // don't pass MODIFIER flag through
 
 
 // m@.:v y.  Execute the verbs at high rank if the operands are large
@@ -168,7 +168,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  PROLOG(997);
  // see if we were called as monad or dyad.  If monad, fix up w and self
  ZZFLAGWORD=EPMONAD?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
- jtinplace=(J)((I)jtinplace&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad
+ jtfg=(J)((I)jtfg&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad
  w=EPMONAD?a:w;  // if monad, a==w
  I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank
  // Execute v at infinite rank
@@ -212,7 +212,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    // from here on we have w always, and optional a.  But we call a always, with optional w.  That's OK, because we set up
    // omitted a to point to w and not to modify it.
    if(wr>=0){
-    RZ(w=jtredcatcell(jtinplace,w,wr));  // inplaceability of original w
+    RZ(w=jtredcatcell(jtfg,w,wr));  // inplaceability of original w
     RZ(sortw=from(gradepm,w));
     // Inplace the virtual block if that is allowed
     ZZFLAGWORD |= SGNTO0((-(AT(sortw)&TYPEVIPOK))&AC(sortw))<<ZZFLAGVIRTWINPLACEX;
@@ -229,7 +229,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    I ak,wk=bpnoun(AT(w)); wk&=REPSGN(~wr);  // size of atom of w, but 0 if w is an atom (so we don't advance)
    if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
     if(ar>=0){
-     RZ(a=jtredcatcell((J)((I)jt|(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
+     RZ(a=jtredcatcell((J)((I)jt|(((I)jtfg>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
      RZ(sorta=from(gradepm,a));
     ZZFLAGWORD |= SGNTO0((-(AT(sorta)&TYPEVIPOK))&AC(sorta))<<ZZFLAGVIRTAINPLACEX;
      ZZFLAGWORD|=ZZFLAGARRAYA;
@@ -339,8 +339,8 @@ assemblyerror: RESETERR jt->etxinfo->asseminfo.assemframelen=0; jt->jerr=EVASSEM
   I vx=i0(vres); RE(0);  // fetch index of gerund
   vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERTGOTO(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
   A ger=C(AAV(FAV(self)->fgh[2])[vx]);  // the selected gerund
-// obsolete   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(ger)->flag,(state>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
-  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(jtinplace,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
+// obsolete   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(ger)->flag,(state>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtfg),a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
+  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(jtfg,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
 errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
   jteformat(jt,self,ZZFLAGWORD&ZZFLAGISDYAD?a:0,w,vres);

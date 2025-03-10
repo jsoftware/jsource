@@ -16,7 +16,7 @@ static DF1(jtfitct1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
 #define fitctvector(name,vector) DF2(name){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; A z; ASSERT(0<=1.0-FAV(self)->localuse.lu1.cct&&1.0-FAV(self)->localuse.lu1.cct<5.82076609134675e-11,EVLIMIT) PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
    // we muct audit ct again in case bivalent >!.f was used
 static fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
-fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
+fitctvector(jtfitcteq,jtatomic2(jtfg,a,w,fs))
 // Note: it is OK to call eformat before popping ct because ct cannot possibly introduce error
 
 // for key, we pass in the tolerance to use for the classification

@@ -170,7 +170,7 @@ static DF2(jtisf){F12IP;A am, mw; RZ(am=onm(a)); RZ(mw=CALL1(FAV(self)->valencef
 // assignment other than name =[.:], single or multiple
 // jt has flag set for final assignment (passed into symbis)
 // The return must be 0 for bad, otherwise good with bit 0=final assignment, bit 1 = local assignment (never set)
-static I NOINLINE jtis(J jtinplace,A n,A v,A symtab){F12IP;
+static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
  B ger=0;C *s;
  if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
   // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
@@ -178,8 +178,8 @@ static I NOINLINE jtis(J jtinplace,A n,A v,A symtab){F12IP;
   else{
    // multiple assignment to fixed names
    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
-   if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],C(vv[i]),symtab);)}  // v is boxed list
-   else {A *nv=AAV(n); DO(AN(n), A  vval; RZ(vval=ope(AR(v)?from(sc(i),v):v)); jtsymbis((J)((I)jtinplace|JTFINALASGN),nv[i],vval,symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment since value is not passed on
+   if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtfg,nv[i],C(vv[i]),symtab);)}  // v is boxed list
+   else {A *nv=AAV(n); DO(AN(n), A  vval; RZ(vval=ope(AR(v)?from(sc(i),v):v)); jtsymbis((J)((I)jtfg|JTFINALASGN),nv[i],vval,symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment since value is not passed on
    goto retstack;
   }
  }
@@ -203,12 +203,12 @@ static I NOINLINE jtis(J jtinplace,A n,A v,A symtab){F12IP;
    // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
    stack[2].a=
 #endif
-  jtsymbis(jtinplace,n,v,symtab);
+  jtsymbis(jtfg,n,v,symtab);
  }else{
   // computed name(s), now boxed character strings
   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
   // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
-  if(!AR(n)){A nnm; RZ(nnm=onm(n)); jtsymbis(jtinplace,nnm,v,symtab);  // just one name
+  if(!AR(n)){A nnm; RZ(nnm=onm(n)); jtsymbis(jtfg,nnm,v,symtab);  // just one name
   }else{
    // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
    // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
@@ -231,7 +231,7 @@ static I NOINLINE jtis(J jtinplace,A n,A v,A symtab){F12IP;
   }
  }
 retstack:  // return, but 0 if error
- R unlikely(jt->jerr!=0)?0:(I)jtinplace;  // return 0 if error, otherwise a nonzero with final assignment flag correct and local assignment clear
+ R unlikely(jt->jerr!=0)?0:(I)jtfg;  // return 0 if error, otherwise a nonzero with final assignment flag correct and local assignment clear
 }
 
 
@@ -294,8 +294,8 @@ F1(jtparse){F12IP;A z;I stackallo=0;
  // parse a sentence in the time it takes to allocate a frame, that is unacceptable overhead.  We come through here for keyboard, script, and ". .
  // We need a DCPARSE frame to get error messages displayed, but we use the dcm field in it to indicate how many levels of ". are active
  if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop==0)||unlikely(jt->sitop->dctype!=DCPARSE)){RZ(deba(DCPARSE,queue,(A)m,0L)); stackallo=1;}
- I oexct=jt->sitop->dcm; jt->sitop->dcm+=((I)jtinplace>>JTFROMEXECX)&1;   // if this is "., raise the exec count in the PARSE frame
- z=jtparsea(jtinplace,queue,m);
+ I oexct=jt->sitop->dcm; jt->sitop->dcm+=((I)jtfg>>JTFROMEXECX)&1;   // if this is "., raise the exec count in the PARSE frame
+ z=jtparsea(jtfg,queue,m);
  jt->sitop->dcm=oexct; if(unlikely(stackallo))debz();   // remove the exec count, pop stack if pushed
  // It is vital that we NOT issue EPILOG here, in case there are deleted values on the stack that need protection
  R z;
@@ -340,12 +340,12 @@ static A virthook(J jtip, A f, A g){
 // name_: delete the symbol name but not deleting the value.  The value has been ra()d.  Undo the pending fa: If usecount goes to 1, make it abandoned inplaceable and tpush
 // Incoming y is the value attached to the symbol & has QCFAOWED semantics, result is same value with QCFAOWED semantics.
 // result is the value, possibly with FAOWED set
-static A nameundco(J jtinplace, A name, A y){F12IP;
+static A nameundco(J jtfg, A name, A y){F12IP;
  A locfound;
  if(unlikely(((I)y&QCFAOWED)!=0))locfound=syrdforlocale(name);  // get locale to use.  This re-looks up global names, but they should be rare in name_:
  else{locfound=jt->locsyms;  // if not FAOWED, it must be local, no lookup needed
  }
- if(((I)jtinplace&JTFROMEXEC))R SETFAOWED(y);   // in "., the result value from ". has not been protected by FAOWED, and might be prematurely freed.  So we don't free here, set FAOWED and return indicating indic that we need to fa
+ if(((I)jtfg&JTFROMEXEC))R SETFAOWED(y);   // in "., the result value from ". has not been protected by FAOWED, and might be prematurely freed.  So we don't free here, set FAOWED and return indicating indic that we need to fa
  WRITELOCK(locfound->lock)
  jtprobedel((J)((I)jt+NAV(name)->m),NAV(name)->s,NAV(name)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
  WRITEUNLOCK(locfound->lock)
@@ -469,7 +469,7 @@ void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
 // JT flag is used to indicate execution from ". - we can't honor name_: then, or perhaps some assignments
-A jtparsea(J jtinplace, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
+A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragment; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
@@ -631,7 +631,7 @@ rdglob: ;  // here when we tried the buckets and failed
           // the stacked value might have been an unflagged non-NAMED result, but after we ra() it we must call it STKNAMED because only STKNAMED values get fa()d when they leave execution
           for(sk=stack;sk!=stackend1;++sk){if(QCWORD(y)==QCWORD(sk->a) && !ISSTKFAOWED(sk->a)){rapos(QCWORD(y),y); sk->a=SETSTKNAMEDFAOWED(sk->a);}}  // if the value we want to use is stacked already, it must be marked non-abondoned
          }
-         FPSZSUFF(y=nameundco(jtinplace, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)
+         FPSZSUFF(y=nameundco(jtfg, QCWORD(*(volatile A*)queue), y), fa(QCWORD(y));)
         }else y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
         // nameless modifier, and not a locative.  This handles 'each' and the like.  Don't create a reference; maybe cache the value
@@ -1133,7 +1133,7 @@ abandname:;
       if(unlikely(yflags&QCNAMEABANDON)){
        // If the value is local, we must ra it because undco() expects it (questionable)
        if(unlikely(!ISRAREQD(sv)))rapos(QCWORD(sv),sv);  // ra() the new value first
-       sv=nameundco(jtinplace, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  returned sv has QCFAOWED semantics
+       sv=nameundco(jtfg, y, sv);  // if name_:, go delete the name, leaving the value to be deleted later.  returned sv has QCFAOWED semantics
        y=QCWORD(sv); sv=(A)ISFAOWED(sv);  // undco will set FAOWED if it didn't fa() the value; transfer that to sv
       }else{y=QCWORD(sv); sv=(A)ISFAOWED(sv);}  // not name_:, just use the value.  sv=non0 if it needs free
      }else{y=QCWORD(namerefacv(y, sv)); sv=0;}   // Replace other acv with reference.  Could fail.  Undo the ra from syrd if global, so clear sv to indicate no further fa

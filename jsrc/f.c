@@ -470,7 +470,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
  // n=#boxes in w, wv->&first box
  n=AN(w); wv=AAV(w);
  // Get centering info for x and y, 012 for MinCenterMax
- xp=((I)jtinplace>>JTTHORNXX)&(JTTHORNX>>JTTHORNXX); yp=((I)jtinplace>>JTTHORNYX)&(JTTHORNY>>JTTHORNYX);
+ xp=((I)jtfg>>JTTHORNXX)&(JTTHORNX>>JTTHORNXX); yp=((I)jtfg>>JTTHORNYX)&(JTTHORNY>>JTTHORNYX);
  // get xn=# rows, xv->height; & similarly for y
  xn=AN(x); xv=AV(x); yn=AN(y); yv=AV(y);
  // Loop through each box, installing it in the proper position
@@ -943,7 +943,7 @@ F2(jtoutstr){F12IP;I*v;
 // w is a character noun.  Convert it to a UTF-8 string and write it to the console
 static F1(jtjpr1){F12JT;PROLOG(0002);A z;
  // extract the output type buried in jt
- I mtyo=(I)jtinplace&JTPRTYO;
+ I mtyo=(I)jtfg&JTPRTYO;
  // convert the character array to a null-terminated UTF-8 string
  RZ(z=jprx(JT(jt,outeol),FLOAT16TOI(JT(jt,outmaxlen)),FLOAT16TOI(JT(jt,outmaxbefore)),FLOAT16TOI(JT(jt,outmaxafter)),w));
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden
@@ -965,12 +965,12 @@ F1(jtjpr){F12JT;A y;I i,n,t; UC *v;
  ARGCHK1(w);
  t=AT(w);
   // if w is a noun, format it and output it
- if(t&NOUN&&!((I)jtinplace&JTPRNOSTDOUT))RZ(jpr1(w))
+ if(t&NOUN&&!((I)jtfg&JTPRNOSTDOUT))RZ(jpr1(w))
  else if(t&VERB+ADV+CONJ){
   // result is ACV, including undefnames.  If it is the evocation of a name, evaluate the name (unless it is locked - then
   // just use the name).  If the name is undefined, this will give error; the failing sentence has been popped, but we will ignore it because the init stack has 0 words
   RZ(y=evoke(w)?symbrdlock(FAV(w)->fgh[0]):w);
-  if(!((I)jtinplace&JTPRNOSTDOUT)){
+  if(!((I)jtfg&JTPRNOSTDOUT)){
    // for each representation selected by the user, create the representation and type it
    n=*JT(jt,disp); v=1+JT(jt,disp);
    for(i=0;i<n;++i)
@@ -978,7 +978,7 @@ F1(jtjpr){F12JT;A y;I i,n,t; UC *v;
     case 1: RZ(jpr1(arep(y))); break;
     case 2: RZ(jpr1(drep(y))); break;
     case 4: RZ(jpr1(trep(y))); break;
-    case 5: RZ(jpr1(jtlrep((J)((I)jtinplace&~JTEXPVALENCEOFF),y))); break;  // set parm bits, leaving FORSCREEN
+    case 5: RZ(jpr1(jtlrep((J)((I)jtfg&~JTEXPVALENCEOFF),y))); break;  // set parm bits, leaving FORSCREEN
     case 6: RZ(jpr1(prep(y))); break;
    }
   } 

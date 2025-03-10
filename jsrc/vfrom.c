@@ -164,7 +164,7 @@ zbase=zv; }
 
 // rflags is w minor cell rank/len of w frame/1B rank of result/1B /6B dimension of axes-1
 // if a is inplaceable in jt, ind in the last axis is the area that can be used for the result
-static A jtaxisfrom(J jtinplace,A w,struct faxis *axes,I rflags){F12IP;I i;
+static A jtaxisfrom(J jtfg,A w,struct faxis *axes,I rflags){F12IP;I i;
  I r=rflags&0x3f, zr=(C)(rflags>>8), wf=(C)(rflags>>16), wcr=(C)(rflags>>24), hasr=(rflags>>7)&1;  // number of axes-1; result rank; w framelen; 1 iff 1st axis is from rank
  C *base=voidAV(w);  // will be starting cell number in all axes before last
  // convert lencell to bytes & roll it up; calculate base from sel0 values
@@ -233,7 +233,7 @@ novirtual:;  // abort to here if virtual not allowed because indexes are not con
   }
  }else{zn=0;}  // if w empty, z must be empty too, since no nonempty selector is valid on 0-len axis
  // allocate the result, or use a inplace for the result (which must not be unincorpable or DIRECT)
- if(!((I)jtinplace&JTINPLACEA)){
+ if(!((I)jtfg&JTINPLACEA)){
   GA00(z,wt,zn,zr);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
   // install shape: w frame, followed by shape of each selector, then shape of cell
   MCISH(AS(z),AS(w),wf);  // axes coming from w frame
@@ -372,7 +372,7 @@ F2(jtifrom){F12IP;A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  // From here on, execution on a single cell of a (on matching cell(s) of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
  if(unlikely(!ISDENSETYPE(AT(a),INT))){
-  if(AR(a)<(AT(a)&B01))a=zeroionei(BAV(a)[0]);else{RZ(a=ccvt(INT,a,0)); jtinplace=(J)((I)jtinplace|JTINPLACEA);}  // convert boolean or other arg to int, with special check for scalar boolean.  Allocated result is always eligible to inplace
+  if(AR(a)<(AT(a)&B01))a=zeroionei(BAV(a)[0]);else{RZ(a=ccvt(INT,a,0)); jtfg=(J)((I)jtfg|JTINPLACEA);}  // convert boolean or other arg to int, with special check for scalar boolean.  Allocated result is always eligible to inplace
  }
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
@@ -395,15 +395,15 @@ F2(jtifrom){F12IP;A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  // if no frame, w cell-rank is 1, a is inplaceable, and an atom of w is the same size as an atom of a, preserve inplaceability of a (.ind is already filled in)
  // since inplacing may change the type, we further require that the block not be UNINCORPABLE, and the result also must be DIRECT since
  // the copy may be interrupted by index error and be left with invalid atoms, and if boxed may be to a recursive block.  Also, a must not be the same block as w
- jtinplace=(J)((I)jtinplace&~((((a!=w)&SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT)))<=(UI)(wf|(wcr^1)|(LGSZI^bplg(AT(w)))))<<JTINPLACEAX));
- RETF(jtaxisfrom(jtinplace,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
+ jtfg=(J)((I)jtfg&~((((a!=w)&SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT)))<=(UI)(wf|(wcr^1)|(LGSZI^bplg(AT(w)))))<<JTINPLACEAX));
+ RETF(jtaxisfrom(jtfg,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
 }    /* a{"r w for numeric a */
 
 
 // a is array whose 1-cells are index lists, w is array
 // result is (<"1 a) { w
 // wf is length of the frame
-A jtfrombu(J jtinplace,A a,A w,I wf){F12IP;
+A jtfrombu(J jtfg,A a,A w,I wf){F12IP;
  ARGCHK2(a,w)
  if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0));  // integral indexes required
  I *as=AS(a); I af=AR(a)-1; I naxa=as[af]; naxa=af>=0?naxa:1; af=af>=0?af:0;  // naxa is length of the index list, i. e. number of axes of w that disappear during indexing
@@ -451,7 +451,7 @@ A jtfrombu(J jtinplace,A a,A w,I wf){F12IP;
  I *av=IAV(a); I *wsl=ws+wf;  // point to 1-cell of ind, and the axis lengths
  DO(nia, I s=0; DO(naxa, I v=av[i]; if((UI)v>=(UI)wsl[i]){v+=wsl[i]; ASSERT((UI)v<(UI)wsl[i],EVINDEX)} s=s*wsl[i]+v;) indv[i]=s; av+=naxa;)
  // sel0 not needed in last axis
- RETF(jtaxisfrom((J)((I)jtinplace&~JTINPLACEA),w,axes,((wcr-naxa)<<24)+(wf<<16)+(zr<<8)+r*0x81))  // move the values and return the result.  Pass through inplaceability of w, not a
+ RETF(jtaxisfrom((J)((I)jtfg&~JTINPLACEA),w,axes,((wcr-naxa)<<24)+(wf<<16)+(zr<<8)+r*0x81))  // move the values and return the result.  Pass through inplaceability of w, not a
 }    /* (<"1 a){"r w, dense w, integer array a */
 
 // general boxed a
@@ -468,7 +468,7 @@ static F2(jtafrom){F12IP; PROLOG(0073);
  }
  // a is an atomic box.  Open it
  A c=C(AAV(a)[0]);  // contents of a
- if(!(AT(c)&BOX)){R jtfrombu(jtinplace,c,w,wf);}  // if single-boxed, handle as <"1@[ { ].
+ if(!(AT(c)&BOX)){R jtfrombu(jtfg,c,w,wf);}  // if single-boxed, handle as <"1@[ { ].
  // Double-boxed. Set up axis structs
  // We DO NOT treat leading scalar indexes as a special case here.  Building & using the axis block is pretty cheap.  We catch them when we fill.
  ASSERT(1>=AR(c),EVRANK);  // boxes may not have rank > 1
@@ -538,7 +538,7 @@ static F2(jtafrom){F12IP; PROLOG(0073);
  }
  if(unlikely(r<hasr))R RETARG(w);  // if all axes taken in full, do nothing, return full w
  I *rla=&axes[0].lencell; rla=hasr?rla:jt->shapesink; *rla=celllen;  // if there is frame, it needs len of a major cell
- RETF(jtaxisfrom((J)((I)jtinplace&~JTINPLACEA),w,axes,(wncr<<24)+(wf<<16)+(zr<<8)+(hasr<<7)+r))  // move the values and return the result
+ RETF(jtaxisfrom((J)((I)jtfg&~JTINPLACEA),w,axes,(wncr<<24)+(wf<<16)+(zr<<8)+(hasr<<7)+r))  // move the values and return the result
 }    /* a{"r w for boxed index a */
 
 // a{"r w  We handle the fast cases (atom{array) and (empty{"r array) here.  For others we go to a type-dependent processor for a that will build index lists
@@ -567,7 +567,7 @@ DF2(jtfrom){F12IP;A z;
     // We can't get away with changing the type for an INT atom a to BOX.  It would work if the a is not contents, but if it is pristine contents it may have
     // been made to appear inplaceable in jtevery.  In that case, when we change the AT we have the usecount wrong, because the block is implicitly recursive by virtue
     // of being contents.  It's not a good trade to check for recursiveness of contents in tpop (currently implied).
-    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+AFNJA+BOX)-1))<0){z=a; AT(z)=wt;} else{GA00(z,wt,1,0)}  // NJA=LIT, ok.  transfer the block-type if we reuse a
+    if((SGNIF(jtfg,JTINPLACEAX)&AC(a)&(((AFLAG(a)|wt)&AFUNINCORPABLE+AFNJA+BOX)-1))<0){z=a; AT(z)=wt;} else{GA00(z,wt,1,0)}  // NJA=LIT, ok.  transfer the block-type if we reuse a
     // Move the value
     IAV(z)[0]=IAV(w)[j];   // change type only if the transfer succeeds, to avoid creating an invalid a block that eformat will look at
     // We transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
@@ -595,7 +595,7 @@ DF2(jtfrom){F12IP;A z;
     // $ (i.0 0) { (i. 4 5)  is 0 0 5;  $ (0 0$a:) { (i. 4 5) is 0 0 4 5.  $ (0$a:) { 5  is  $ (0$0) { 5  is 0
     zr=zr<0?0:zr;  // rank of cell of w
     // if result is empty, we can use a as the return element if it is incorpable and abandoned inplaceable or it is an empty of the right type
-    if(((zr-1)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&((AC(a)&SGNIF(jtinplace,JTINPLACEAX))|-(at&wt&NOUN)))<0){z=a; I *tv=&AT(a); tv=at&wt&NOUN?&jt->shapesink[0]:tv; *tv=wt;
+    if(((zr-1)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&((AC(a)&SGNIF(jtfg,JTINPLACEAX))|-(at&wt&NOUN)))<0){z=a; I *tv=&AT(a); tv=at&wt&NOUN?&jt->shapesink[0]:tv; *tv=wt;
     }else{GA00(z,wt,0,zr+ar); MCISH(AS(z),AS(a),ar) MCISH(AS(z)+ar,AS(w)+wr-zr,zr)  // if we can't reuse a, allocate & fill in
     }
    }else{
@@ -608,7 +608,7 @@ DF2(jtfrom){F12IP;A z;
   }else{
    // not (atom/empty){array.  Process according to type of a
     RANK2T origranks=jt->ranks;  // remember original ranks in case of error
-   if(!(at&BOX))z=jtifrom(jtinplace,a,w);else z=jtafrom(jtinplace,a,w);
+   if(!(at&BOX))z=jtifrom(jtfg,a,w);else z=jtafrom(jtfg,a,w);
    // If there was an error, call eformat while we still have the ranks.  convert default rank back to R2MAX to avoid "0 0 in msg
    if(unlikely(z==0)){jt->ranks=origranks!=RMAX?origranks:R2MAX; jteformat(jt,self,a,w,0); RESETRANK; R0}
    // Here we transferred out of w.  We must mark w non-pristine unless the result was virtual
@@ -1854,7 +1854,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 F2(jtekupdate){F12IP;
  ARGCHK2(a,w);
  // extract the inputs
- A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w),EVNONCE)
+ A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w),EVNONCE)
  ASSERT(AT(a)&BOX,EVDOMAIN) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==5,EVLENGTH)  // a is 5 boxes
  A box0=C(AAV(a)[0]), box1=C(AAV(a)[1]), box2=C(AAV(a)[2]), box3=C(AAV(a)[3]), box4=C(AAV(a)[4]);
  A prx=box0; ASSERT(AT(prx)&INT,EVDOMAIN) ASSERT(AR(prx)<=1,EVRANK)  // prx is integer list or atom

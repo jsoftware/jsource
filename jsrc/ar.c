@@ -532,14 +532,14 @@ static DF1(jtredg){F12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->val
  k<<=bplg(AT(w)); // k now=length of input cell in bytes, where it will remain
  AK(wfaux)+=(n-1)*k; AK(a)+=(n-2)*k; MCISH(AS(wfaux),AS(w)+1,r-1); MCISH(AS(a),AS(w)+1,r-1);  // make the virtual block look like the tail, except for the offset
  // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or fs is &.>)
- // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
- // We include contextual inplaceability (from jtinplace) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
- // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtinplace itself
- I aipok = (SGNIF((I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self),JTINPLACEWX)&AC(w))+ACUC1;   // requires JTINPLACEWX==0.  This is 1 or 8..1
+ // and the input jtfg.  We turn off WILLBEOPENED status in jtfg for the callee.
+ // We include contextual inplaceability (from jtfg) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
+ // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtfg itself
+ I aipok = (SGNIF((I)jtfg&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self),JTINPLACEWX)&AC(w))+ACUC1;   // requires JTINPLACEWX==0.  This is 1 or 8..1
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
  ACINIT(wfaux,aipok)   // first cell is inplaceable if second is
-// obsolete  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
- jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA));  // all items are used only once
+// obsolete  jtfg = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
+ jtfg = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA));  // all items are used only once
 
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
  // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecursive recursible type.
@@ -593,7 +593,7 @@ static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m
 
 DF1(jtredravel){F12IP;A f,x,z;I n;P*wp;
  PROLOG(0000);
- if(likely(!ISSPARSE(AT(w)))){RZ(z=on1cell(jtinplace,w,self));  // reversion is the normal path
+ if(likely(!ISSPARSE(AT(w)))){RZ(z=on1cell(jtfg,w,self));  // reversion is the normal path
  }else{
   ARGCHK1(w);
   f=FAV(self)->fgh[0];  // f/
@@ -915,11 +915,11 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
 
 // ,&.:(<"r)  run together all axes above the last r.  r must not exceed AR(w)-1
 // w must not be sparse or empty
-A jtredcatcell(J jtinplace,A w,I r){F12IP;A z;
+A jtredcatcell(J jtfg,A w,I r){F12IP;A z;
  ARGCHK1(w);
  I wr=AR(w);  // get original rank, which may change if we inplace into the same block
  if(r>=wr-1)R RETARG(w);  // if only 1 axis left to run together, return the input
- if((ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE))){  // inplace allowed, usecount is right
+ if((ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE))){  // inplace allowed, usecount is right
   // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
   // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
   // the number of atoms
@@ -940,7 +940,7 @@ DF1(jtredcat){F12IP;A z;B b;I f,r,*s,*v,wr;
  if(2>r&&!b)RCA(w);  // in all OTHER cases, result=input for ranks<2
  // use virtual block (possibly self-virtual) for all cases except sparse
  if(likely(!ISSPARSE(AT(w)))){
-  RZ(z=jtvirtual(jtinplace,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
+  RZ(z=jtvirtual(jtfg,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
   I *zs=AS(z); MCISH(zs,s,f); if(!b){DPMULDE(s[f],s[f+1],zs[f]); MCISH(zs+f+1,s+f+2,r-2);}
   R z;
  }else{
@@ -1106,7 +1106,7 @@ static DF2(jtfold12){F12IP;A z,vz;
  struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z:   zstatus: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);
  I dyad=EPDYAD; w=EPDYAD?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
- if(unlikely(((UI)a^(UI)w)<(UI)dyad))jtinplace=(J)((I)jtinplace&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
+ if(unlikely(((UI)a^(UI)w)<(UI)dyad))jtfg=(J)((I)jtfg&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
 #define ZZFLAGWORD dmfr
  I dmfr=ZZFLAGINITSTATE+((8*dyad+FAV(self)->lu2.lc-CFDOT)<<STATEREVX);  // init flags, including zz flags
  struct foldstatus *stkfoldinfo=jt->afoldinfo; jt->afoldinfo=&foldinfo;  // push fold status, init to zeros
@@ -1155,10 +1155,10 @@ static DF2(jtfold12){F12IP;A z,vz;
    AK(virtw)+=(item0nofst<<wk)+(dmfr&STATEDYAD?0:wstride);  // point to first item (if dyad) or second (if monad) as the first x arg
    // Mark the virtual block (coming into v as a) as inplaceable only if input y is fully inplaceable.  We have to turn off inplaceability in the virtual block so that
    // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>
-   dmfr |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&(-(AT(w)&TYPEVIPOK)&AC(w)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+   dmfr |= (UI)(SGNIF(jtfg,JTINPLACEWX)&(-(AT(w)&TYPEVIPOK)&AC(w)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
    // vz will be the previous full result of v, usually inplaceable; init to x or first item of y
-   if(dmfr&STATEDYAD){vz=a; dmfr|=((I)jtinplace&JTINPLACEA)<<(ZZFLAGVIRTWINPLACEX-JTINPLACEAX); // x given, use it as first input and use its inplaceability
+   if(dmfr&STATEDYAD){vz=a; dmfr|=((I)jtfg&JTINPLACEA)<<(ZZFLAGVIRTWINPLACEX-JTINPLACEAX); // x given, use it as first input and use its inplaceability
    }else{
     vz=virtualip(w,item0nofst,wcr); if(unlikely(vz==0))goto exitpop; AN(vz)=wcn; MCISH(AS(vz),AS(w)+1,wcr);  // create a virtual block to the first item, possibly self-virtual, fill in
     if(dmfr&ZZFLAGVIRTAINPLACE){ACRESET(vz,ACUC1+ACINPLACE); dmfr|=ZZFLAGVIRTWINPLACE;} // inplaceability of w might have changed: if it was originally inplaceable, make this virtual inplaceable
@@ -1166,13 +1166,13 @@ static DF2(jtfold12){F12IP;A z,vz;
 
    // Install initial inplaceability.  Since the inplaceability of v was used for F., we can assume that any inplaceability shown is allowed for v.
    // Remove WILLOPEN status which we are ignoring.  Values were calculated above
-   jtinplace = (J)(((I)jtinplace & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|((dmfr>>ZZFLAGVIRTWINPLACEX)&(JTINPLACEW+JTINPLACEA)));
+   jtfg = (J)(((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|((dmfr>>ZZFLAGVIRTWINPLACEX)&(JTINPLACEW+JTINPLACEA)));
 
    --nitems;  // convert #items to # executions of loop
   }
  }else{  // here for unlimited fold
   nitems=0;  // convert to infinite loop
-  jtinplace = (J)((I)jtinplace & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA));  // never inplace x, which repeats if given; pass along original inplaceability of y
+  jtfg = (J)((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA));  // never inplace x, which repeats if given; pass along original inplaceability of y
   virtw=a; vz=w;  // v starts on w and then reapplies to the result; save a reg by moving a to virtw
  }
  A *_old=jt->tnextpushp;  // pop back to here to clear everything except the result & any early allocation
@@ -1189,8 +1189,8 @@ static DF2(jtfold12){F12IP;A z,vz;
    tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // fwd/rev.  newitem v vz   a is inplaceable if y was (set above).  w is inplaceable first time based on initial-item status
    if(unlikely(tz==virtw)){if(unlikely((tz=clonevirtual(tz))==0))goto exitpop;}
    AK(virtw)+=wstride;  // advance item pointer to next/prev if there is one
-// obsolete    jtinplace=(J)((I)jtinplace|((FAV(self)->flag>>VJTFLGOK2X)&JTINPLACEW));  // w inplaceable on all iterations after the first - if the operation supports flags
-   jtinplace=(J)((I)jtinplace|JTINPLACEW);  // w inplaceable on all iterations after the first - if the operation supports flags
+// obsolete    jtfg=(J)((I)jtfg|((FAV(self)->flag>>VJTFLGOK2X)&JTINPLACEW));  // w inplaceable on all iterations after the first - if the operation supports flags
+   jtfg=(J)((I)jtfg|JTINPLACEW);  // w inplaceable on all iterations after the first - if the operation supports flags
   }else if(dmfr&STATEDYAD){tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // directionless dyad  x v vz  scaf set inplaceable?
   }else tz=CALL1IP(FAV(vself)->valencefns[0],vz,vself);   // directionless monad   v vz scaf set inplaceable?
 

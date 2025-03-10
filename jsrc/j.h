@@ -1051,13 +1051,13 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // CALL[12] is an eformat point if we have a valid self.  AT is 0 in an invalid self
 #define CALL1COMMON(f,w,fs,j,pop)   ({A carg1=(w), carg3=(A)(fs), cargz; cargz=(f)(j,carg1,carg3,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,0,0);} cargz;})
 #define CALL1(f,w,fs)   CALL1COMMON(f,w,fs,jt,)
-#define CALL1IP(f,w,fs)   CALL1COMMON(f,w,fs,jtinplace,)
+#define CALL1IP(f,w,fs)   CALL1COMMON(f,w,fs,jtfg,)
 #define CALL2COMMON(f,a,w,fs,j,pop)   ({A carg1=(a), carg2=(w), carg3=(A)(fs), cargz; cargz=(f)(j,carg1,carg2,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,carg2,0);} cargz;})
 #define CALL2(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jt,)
-#define CALL2IP(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jtinplace,)
+#define CALL2IP(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jtfg,)
 #define CALL12COMMON(dyad,f,a,w,fs,j,pop)   ({A carg1=(a), carg3=(A)(fs), carg2=(dyad)?(w):carg3, cargz; cargz=(f)(j,carg1,carg2,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,AT(carg2)&VERB?0:carg2,0);} cargz;})
 #define CALL12(dyad,f,a,w,fs)   CALL12COMMON(dyad,f,a,w,fs,jt,)
-#define CALL12IP(dyad,f,a,w,fs)   CALL12COMMON(dyad,f,a,w,fs,jtinplace,)
+#define CALL12IP(dyad,f,a,w,fs)   CALL12COMMON(dyad,f,a,w,fs,jtfg,)
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
 #define MODESRESET(jm)      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c
@@ -1074,8 +1074,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CCMSGN(cand,tval) (cand<<(tval&(BW-1)))   // set sign bit if value found
 #define CCMTST(cand,tval) (cand&(1LL<<(~tval&(BW-1))))  // test true is value found
 #define CLRATTN __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // remove any pending ATT/BREAK; at start of sentence or where error handled
-#define DF1(f)          A f(JJ jtinplace,    A w,A self)
-#define DF2(f)          A f(JJ jtinplace,A a,A w,A self)
+#define DF1(f)          A f(JJ jtfg,    A w,A self)
+#define DF2(f)          A f(JJ jtfg,A a,A w,A self)
 #define DO(n,stm...)          {I _n=(n); I i=0; for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DONOUNROLL(n,stm...)  {I _n=(n); I i=0; NOUNROLL for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm...)          {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
@@ -1125,14 +1125,14 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ISFTOIOK(f,i)    ((f)==(I)(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
 #endif
 #define ISFTOIOKFZ(f,i,fuzz) (ABS(f)<-(D)IMIN && ((f)==(i) || FIEQ(f,i,fuzz))) // same, but variable fuzz
-#define F1(f)           A f(JJ jtinplace,    A w)  // whether in an interface routine or not, these must use the internal parameter type
-#define F2(f)           A f(JJ jtinplace,A a,A w)
-#define F12IP JJ jt=(JJ)(intptr_t)((I)jtinplace&~JTFLAGMSK)
-#define F12JT JJ jt=(JJ)(intptr_t)((I)jtinplace&~JTFLAGMSK)  // for documentation, when flags are not IP flags
+#define F1(f)           A f(JJ jtfg,    A w)  // whether in an interface routine or not, these must use the internal parameter type
+#define F2(f)           A f(JJ jtfg,A a,A w)
+#define F12IP JJ jt=(JJ)(intptr_t)((I)jtfg&~JTFLAGMSK)
+#define F12JT JJ jt=(JJ)(intptr_t)((I)jtfg&~JTFLAGMSK)  // for documentation, when flags are not IP flags
 // obsolete #define FPREF           
 // obsolete #define F1PREF          FPREF
 // obsolete #define F2PREF          FPREF
-#define FPREFIP(T)         T jtinplace=jt; jt=(T)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
+#define FPREFIP(T)         T jtfg=jt; jt=(T)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtfg
 // obsolete #define F1PREFIP        FPREFIP(J)
 // obsolete #define F2PREFIP        FPREFIP(J)
 #define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
@@ -1143,8 +1143,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define F2RANK(l,r,f,self)  F2RANKcommon(l,r,f,self,)
 // same, but used when the function may pull an address from w.  In that case, we have to turn pristine off since there may be duplicates in the result
 #define F2RANKW(l,r,f,self) F2RANKcommon(l,r,f,self,PRISTCLR(w))
-#define F1RANKIP(m,f,self)    {RZ(   w); if(unlikely(m<AR(w)))R jtrank1ex(jtinplace,  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
-#define F2RANKIP(l,r,f,self)  {ARGCHK2(a,w); if(unlikely((I)((l-AR(a))|(r-AR(w)))<0)){I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R jtrank2ex(jtinplace,a,w,(A)self,REX2R(lr,rr,lr,rr),f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
+#define F1RANKIP(m,f,self)    {RZ(   w); if(unlikely(m<AR(w)))R jtrank1ex(jtfg,  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
+#define F2RANKIP(l,r,f,self)  {ARGCHK2(a,w); if(unlikely((I)((l-AR(a))|(r-AR(w)))<0)){I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R jtrank2ex(jtfg,a,w,(A)self,REX2R(lr,rr,lr,rr),f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 // fork, including simple variants and NVV
 #define PTRSNE(a,b) ((((I)(a)^(I)(b))&~(JTINPLACEW|JTINPLACEA))!=0)  // pointers don't match, ignoring low 2 bits
 #define PTR(a) ((A)((I)(a)&~(JTINPLACEW|JTINPLACEA)))  // base of a pointer that might have flag bits
@@ -1173,26 +1173,26 @@ if(opt&0x100){ \
  gs=FAV(self)->fgh[1]; \
  if(!(opt&0x70)){fs=FAV(self)->fgh[0];} \
 } \
-A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF(jtinplace,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
-w = PTROP(w,+,(I)jtinplace&JTINPLACEW); /* if w inplaceable, change the pointer to fail compares below */ \
+A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF(jtfg,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
+w = PTROP(w,+,(I)jtfg&JTINPLACEW); /* if w inplaceable, change the pointer to fail compares below */ \
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT (from the apropriate valence of g).  Inplace h if f is x@] */ \
 A hx; \
 if(opt&0x1){hx=w; \
 }else{J jtf; \
- I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all g willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
+ I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* shift all g willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
  jtf=JPTROP(jt,+,(((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
  RZEFCALL(hx,(fghfn)(jtf,PTR(w),hs,hs),hs,PTR(w),0); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  ARGCHK1D(hx) \
 } \
-/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but not for an arg equal to hx (which is in use for g).  Both flags in jtinplace are used */ \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but not for an arg equal to hx (which is in use for g).  Both flags in jtfg are used */ \
 A fx; \
 if(!(opt&0x40)){  /* f produces a result */ \
  if(opt&0x20){fx=FAV(self)->fgh[0];  /* NVV - never inplaceable */ \
  }else if(opt&0x10){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
  }else{J jtf; \
   fghfn=FAVV(fs)->valencefns[0]; \
-  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all g willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
+  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* all g willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
   jtf=JPTROP(jt,+,(((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
   RZEFCALL(fx,(fghfn)(jtf,PTR(w),fs,fs),fs,PTR(w),0); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
@@ -1210,12 +1210,12 @@ if(!((opt&1)||((opt&0x10)&&!(opt&0x20)))) \
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if(opt&0x40){ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),PTR(hx),gs,gs),gs,PTR(hx),0); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtfg,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),PTR(hx),gs,gs),gs,PTR(hx),0); \
 }else{ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtfg,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
 } \
 /* EPILOG to free up oddments from f/g/h, but not if we may be returning a virtual block */ \
-if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); \
+if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); \
 RETF(z); \
 }
 
@@ -1244,15 +1244,15 @@ if(opt&0x100){ \
  gs=FAV(self)->fgh[1]; \
  if(opt&0x1000)fghfn=FAVV(hs)->valencefns[1]; \
 } \
-A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF(jtinplace,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
-A *tpopa=AZAPLOC(a); tpopa=(A*)((I)tpopa&REPSGN(SGNIF(jtinplace,JTINPLACEAX)&AC(a)&((AFLAG(a)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0;  /* point to pointer to a (if it is inplace) */ \
-w = PTROP(w,+,(I)jtinplace&JTINPLACEW); a = PTROP(a,+,(I)jtinplace&JTINPLACEA);  /* if arg inplaceable, change the pointer to fail compares below */\
+A *tpopw=AZAPLOC(w); tpopw=(A*)((I)tpopw&REPSGN(SGNIF(jtfg,JTINPLACEWX)&AC(w)&((AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  /* point to pointer to w (if it is inplace) */ \
+A *tpopa=AZAPLOC(a); tpopa=(A*)((I)tpopa&REPSGN(SGNIF(jtfg,JTINPLACEAX)&AC(a)&((AFLAG(a)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0;  /* point to pointer to a (if it is inplace) */ \
+w = PTROP(w,+,(I)jtfg&JTINPLACEW); a = PTROP(a,+,(I)jtfg&JTINPLACEA);  /* if arg inplaceable, change the pointer to fail compares below */\
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
 A hx; \
 if(opt&0x2){hx=w; \
 }else if(opt&0x1){hx=PTROP(a,-,((I)a>>JTINPLACEAX)&(JTINPLACEA>>JTINPLACEAX)); \
 }else{J jtf; \
- I wof = (FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, propagate willopen */ \
+ I wof = (FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, propagate willopen */ \
  if(opt&0xc){ \
   /* h@][.  Don't allow inplacing if a=w, because f will need the value for sure then.  Exception: NVV, where f needs nothing */ \
   /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
@@ -1267,7 +1267,7 @@ if(opt&0x2){hx=w; \
  } \
  ARGCHK1D(hx) \
 } \
-/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but not for an arg equal to hx (which is in use for g).  Both flags in jtinplace are used */ \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but not for an arg equal to hx (which is in use for g).  Both flags in jtfg are used */ \
 A fx; \
 if((opt&0xc0)!=0xc0){ /* if we are running f */ \
  if((opt&0x30)==0x30){fx=fs;  /* NVV - never inplaceable */ \
@@ -1276,7 +1276,7 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
  }else if(opt&0x10){fx=PTR(a); hx=PTROP(hx,+,((I)a&JTINPLACEA)); \
  }else{J jtf; \
   if(!(opt&0x100)){if(opt&0xc0){fghfn=FAVV(fs)->valencefns[0];}else{fghfn=FAVV(fs)->valencefns[1];}}  /* if not fork, leave f=h */ \
-  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtinplace)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, propagate willopen */ \
+  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, propagate willopen */ \
   if(opt&0xc0){ \
    /* f@][.  Before we execute, free the argument we don't need (unless it equals the other argument or hx) */ \
    jtf=JPTROP(jt,+,((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
@@ -1305,12 +1305,12 @@ if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); if((opt&0xc0)!=0xc0&&(opt&0x30
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if((opt&0xc0)==0xc0){ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),PTR(hx),gs,gs),gs,PTR(hx),0); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtfg,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),PTR(hx),gs,gs),gs,PTR(hx),0); \
 }else{ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtfg,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
 } \
 /* EPILOG to free up oddments from f/g/h, but not if we may be returning a virtual block */ \
-if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
+if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 }
 
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
@@ -1544,10 +1544,10 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // args should be names, because they are evaluated repeatedly, and also because rank is set before one of the evaluations
 #define IRS1COMMON(j,w,fs,r,f1,z) (z=(A)(r),z=(I)AR(w)>(I)(r)?z:(A)~0,jt->ranks=(RANK2T)(I)z,z=((AF)(f1))(j,(w),(A)(fs)),jt->ranks=R2MAX,z)  // nonneg rank
 #define IRS1(w,fs,r,f1,z) IRS1COMMON(jt,w,fs,r,f1,z)  // nonneg rank
-#define IRSIP1(w,fs,r,f1,z) IRS1COMMON(jtinplace,w,fs,r,f1,z)  // nonneg rank
+#define IRSIP1(w,fs,r,f1,z) IRS1COMMON(jtfg,w,fs,r,f1,z)  // nonneg rank
 #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
 #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
-#define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtinplace,a,w,fs,l,r,f2,z)
+#define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtfg,a,w,fs,l,r,f2,z)
 // no longer used #define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
@@ -1622,8 +1622,8 @@ if(likely(!((I)jtinplace&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))
-#define JTIPAtoW        (J)((I)jt+(((I)jtinplace>>JTINPLACEAX)&JTINPLACEW))  // jtinplace, with a' inplaceability transferred to w
-#define JTIPWonly       (J)((I)jtinplace&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS))  // dyad jt converted to monad for w
+#define JTIPAtoW        (J)((I)jt+(((I)jtfg>>JTINPLACEAX)&JTINPLACEW))  // jtfg, with a' inplaceability transferred to w
+#define JTIPWonly       (J)((I)jtfg&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS))  // dyad jt converted to monad for w
 #define JTIPEX1(name,arg) jt##name(JTIPW,arg)   // like name(arg) but inplace
 #define JTIPEX1S(name,arg,self) jt##name(JTIPW,arg,self)   // like name(arg,self) but inplace
 #define JTIPAEX2(name,arga,argw) jt##name(JTIPA,arga,argw)   // like name(arga,argw) but inplace on a
@@ -1959,18 +1959,18 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PRISTCLRNODCL(w) PRISTCOMMON(w)
 // normal entry points.  clear PRISTINE flag in w (or its backer, if virtual) because we have removed something from it
 #define PRISTCLR(w) A awback; PRISTCLRNODCL(w)
-#define PRISTFROMW(w) (AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX))
-#define PRISTFROMA(a) (AFLAG(a)&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX))
+#define PRISTFROMW(w) (AFLAG(w)&((SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX))<<AFPRISTINEX))
+#define PRISTFROMA(a) (AFLAG(a)&((SGNTO0(AC(a))&((I)jtfg>>JTINPLACEAX))<<AFPRISTINEX))
 // same, but destroy w in the process
 // transfer pristinity of w to z
 #define PRISTXFER(z,w) AFLAGORLOCAL(z,PRISTFROMW(w)) PRISTCOMMON(w)
 // transfer pristinity of w to z, destroying w
-#define PRISTXFERF(z,w) AFLAGORLOCAL(z,PRISTFROMW(w)) PRISTCLRF(w)  // use w bit of jtinplace
-#define PRISTXFERAF(z,a) AFLAGORLOCAL(z,PRISTFROMA(a)) PRISTCLRF(a)  // use a bit of jtinplace
+#define PRISTXFERF(z,w) AFLAGORLOCAL(z,PRISTFROMW(w)) PRISTCLRF(w)  // use w bit of jtfg
+#define PRISTXFERAF(z,a) AFLAGORLOCAL(z,PRISTFROMA(a)) PRISTCLRF(a)  // use a bit of jtfg
 // same, but with an added condition (in bit 0)
-#define PRISTXFERFIF(z,w,cond)AFLAGORLOCAL(z,AFLAG(w)&(((cond)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) PRISTCLRF(w)
+#define PRISTXFERFIF(z,w,cond)AFLAGORLOCAL(z,AFLAG(w)&(((cond)&SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX))<<AFPRISTINEX)) PRISTCLRF(w)
 // transfer pristinity from a AND w to z (not if a==w)
-#define PRISTXFERF2(z,a,w) AFLAGORLOCAL(z,AFLAG(a)&AFLAG(w)&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) \
+#define PRISTXFERF2(z,a,w) AFLAGORLOCAL(z,AFLAG(a)&AFLAG(w)&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtfg>>JTINPLACEAX)&((I)jtfg>>JTINPLACEWX))<<AFPRISTINEX)) \
                            PRISTCLRF(a) PRISTCLRF(w)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free

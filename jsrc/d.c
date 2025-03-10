@@ -46,7 +46,7 @@ static void jtefmt(J jt,C*s,I i){
 // jt has the typeout flags.  Display error text if any, then reset errors
 // If the sentence fails, there should always be an error message EXCEPT for when debug exits: that fails quietly
 void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
- if(jt->etxn&&!((I)jtinplace&JTPRNOSTDOUT)){  // if there is a message and it is not suppressed...
+ if(jt->etxn&&!((I)jtfg&JTPRNOSTDOUT)){  // if there is a message and it is not suppressed...
   p=b; q=jt->etxinfo->etx; r=q+jt->etxn;
   NOUNROLL while(q<r&&p<b+2*NETX-3){if(*q==CLF){strcpy(p,OUTSEQ); p+=strlen(OUTSEQ); ++q;}else *p++=*q++;}  // avoid buffer overrun on huge typeouts
   *p=0;
@@ -225,7 +225,7 @@ F1(jtdbstackz){F12IP;A y,z;
 // m is the m argument for adverbs
 // the args to eformat_j_ are error#;curname;jt->ranks/empty if m};AR of self;a/AR(a)[;w/AR(w)}[;m]
 // Result is always 0
-A jteformat(J jtinplace,A self,A a,A w,A m){F12IP;
+A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
   if(likely(self!=DUMMYSELF)){  // if we are called without a real self, we must be executing something internal.  Format it later when we have a real self
   C e=jt->jerr;
   if(e!=0 && e!=EVABORTEMPTY && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if no error, or we have already run eformat on this error, don't do it again.  Don't waste time on aborts

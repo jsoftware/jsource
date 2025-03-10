@@ -128,8 +128,8 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
  I bpi=api<<bplg(t);  // bytes per item of a sort
  I bps=bpi*n;  // bytes per sort
  void * RESTRICT wv=voidAV(w);
- CMP cmpfunc=sortroutines[CTTZ(t)][(~(I)jtinplace>>JTDESCENDX)&1].comproutine;
- void *(*sortfunc)() = sortroutines[CTTZ(t)][(~(I)jtinplace>>JTDESCENDX)&1].sortfunc;
+ CMP cmpfunc=sortroutines[CTTZ(t)][(~(I)jtfg>>JTDESCENDX)&1].comproutine;
+ void *(*sortfunc)() = sortroutines[CTTZ(t)][(~(I)jtfg>>JTDESCENDX)&1].sortfunc;
  // allocate the merge work area, large enough to hold one sort.  In case this turns out to be the final result,
  // make the shape the same as the result shape (if there is more than one sort, this shape will be wrong, but that
  // won't matter, since the shape will never be used elsewhere)
@@ -150,7 +150,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
 
 
 // JTDESCEND in jt is set for descending
-#define SF(f)         A f(J jtinplace,I m,I n,A w)
+#define SF(f)         A f(J jtfg,I m,I n,A w)
 
 /* m - # cells (# individual grades to do) */
 /* c - # atoms in a cell                   */
@@ -159,7 +159,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){F1PREFJT;A x,z;I t;
 
 static SF(jtsortb){F12JT;A z;B up,*u,*v;I i,s;
  I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=BAVn(zr,z);
- up=(~(I)jtinplace>>JTDESCENDX)&1;  u=BAV(w);
+ up=(~(I)jtfg>>JTDESCENDX)&1;  u=BAV(w);
  for(i=0;i<m;++i){
   s=bsum(n,u);
   if(up){mvc(n-s,v,MEMSET00LEN,MEMSET00); mvc(s  ,v+n-s,1,MEMSET01);}
@@ -171,7 +171,7 @@ static SF(jtsortb){F12JT;A z;B up,*u,*v;I i,s;
 
 static SF(jtsortb2){F12JT;A z;B up;I i,ii,yv[4];US*v,*wv;
  I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAVn(zr,z);
- wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
+ wv=USAV(w); up=(~(I)jtfg>>JTDESCENDX)&1;
  I startfill=0;
  for(i=0;i<m;++i){
   mvc(sizeof(yv),yv,MEMSET00LEN,MEMSET00);
@@ -183,7 +183,7 @@ static SF(jtsortb2){F12JT;A z;B up;I i,ii,yv[4];US*v,*wv;
 
 static SF(jtsortb4){F12JT;A z;B up;I i,ii,yv[16];UINT*v,*wv;
  I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=(UINT*)AVn(zr,z);
- wv=(UINT*)AV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
+ wv=(UINT*)AV(w); up=(~(I)jtfg>>JTDESCENDX)&1;
  I startfill=0;
  for(i=0;i<m;++i){
   mvc(sizeof(yv),yv,MEMSET00LEN,MEMSET00);
@@ -195,7 +195,7 @@ static SF(jtsortb4){F12JT;A z;B up;I i,ii,yv[16];UINT*v,*wv;
 
 static SF(jtsortc){F12JT;A z;B up;I i,ii,yv[256];UC*v,*wv;
  I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=UAVn(zr,z);
- wv=UAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1; I p=LIT&AT(w)?256:2; 
+ wv=UAV(w); up=(~(I)jtfg>>JTDESCENDX)&1; I p=LIT&AT(w)?256:2; 
  I startfill=0;
  for(i=0;i<m;++i){
   mvc(p*SZI,yv,MEMSET00LEN,MEMSET00);
@@ -207,7 +207,7 @@ static SF(jtsortc){F12JT;A z;B up;I i,ii,yv[256];UC*v,*wv;
 
 static SF(jtsortc2){F12JT;A z;B up;I i,yv[65536];US*v,*wv;
  I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAVn(zr,z);
- wv=USAV(w); up=(~(I)jtinplace>>JTDESCENDX)&1;
+ wv=USAV(w); up=(~(I)jtfg>>JTDESCENDX)&1;
  I startfill=0; I sct=AT(w)&C2T?0:8;  // C2T is littleendian, 2 chars are bigendian
  for(i=0;i<m;++i){
   mvc(65536*SZI,yv,MEMSET00LEN,MEMSET00);
@@ -227,7 +227,7 @@ static SF(jtsorti1){F12JT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV1(y);}
  GATV0(x,INT,n,1); xv=AV1(x);
  for(i=0;i<m;++i){I colflags;
-  colflags=grcol(65536,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    INTLSBWDX+(US*)wv,4+((~(I)jtinplace>>(JTDESCENDX-1))&2));  // 'sort', and move 'up' to bit 1
+  colflags=grcol(65536,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    INTLSBWDX+(US*)wv,4+((~(I)jtfg>>(JTDESCENDX-1))&2));  // 'sort', and move 'up' to bit 1
 #if SY_64
   colflags=grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),1*WDINC+INTLSBWDX+(US*)xv,colflags);
   colflags=grcol(65536,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),2*WDINC+INTLSBWDX+(US*)zv,colflags);
@@ -277,14 +277,14 @@ void vvsortqs4ao(I4 *z,I4 *w,I n){ memcpy(z,w,4*n); vvsortqs4ai(z,n); }
 
 // JTDESCEND set in jt
 static SF(jtsortiq){F12JT;  // m=#sorts, n=#items in each sort, w is block
- A z;I inplace=ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w); //inplace sort?
+ A z;I inplace=ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w); //inplace sort?
  if(inplace)z=w;
  else GA(z,AT(w),AN(w),AR(w),AS(w));
  I *zv=IAV(z),*wv=IAV(w);
  DQ(m,
   if(inplace)vvsortqiai(zv,n);
   else vvsortqiao(zv,wv,n),wv+=n;
-  if((I)jtinplace&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} //scaf strawman reverse if desc
+  if((I)jtfg&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} //scaf strawman reverse if desc
   zv+=n;)
  RETF(z);}
 
@@ -302,15 +302,15 @@ static SF(jtsorti){F12JT;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  CR rng = condrange(wv,AN(w),IMAX,IMIN,n*nrange); // see if smallrange allowed
  // smallrange always wins if applicable
  if(!rng.range){  // range was too large
-  R jtsortiq(jtinplace,m,n,w);  // qsort always wins as of 2/2023 Alder Lake
-//  if(n<100000)R jtsortdirect(jtinplace,m,1,n,w);  // 800-99999, mergesort   TUNE
+  R jtsortiq(jtfg,m,n,w);  // qsort always wins as of 2/2023 Alder Lake
+//  if(n<100000)R jtsortdirect(jtfg,m,1,n,w);  // 800-99999, mergesort   TUNE
 //  R sorti1(m,n,w);  // 100000+, radix  TUNE
  }
 #else
   CR rng = condrange(wv,AN(w),IMAX,IMIN,n*50); // testing on Alder Lake 2/2023
   if(!rng.range){  // range was too large
-   if((n&3)==0b00)R jtsortiq(jtinplace,m,n,w);  // qsort  TUNE
-   if((n&3)==0b01)R jtsortdirect(jtinplace,m,1,n,w);  //  mergesort   TUNE
+   if((n&3)==0b00)R jtsortiq(jtfg,m,n,w);  // qsort  TUNE
+   if((n&3)==0b01)R jtsortdirect(jtfg,m,1,n,w);  //  mergesort   TUNE
    if((n&2)==0b10)R sorti1(m,n,w);  // radix  TUNE
 // {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  y ?@$ 1e9}}"0 <.&.(%&4) 10000 * 10 ^ 10 %~ i. 41  NB. tuning not including smallrange: qsort merge radix.  range up to 1e9
 // {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  y ?@$ 1e9}}"0 <.&.(%&4) 1e9 1e10 1e11  NB. tuning not including smallrange: qsort merge radix, big arrays, range to 1e9
@@ -325,7 +325,7 @@ static SF(jtsorti){F12JT;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
 #endif
  // allocate area for the data, and result area
  GATV0(y,C4T,rng.range,1); yv=C4AV1(y)-rng.min;  // yv->totals area
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
+ if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
  zv=AV(z);
  // clear all totals to 0, then bias address of area so the data fits
  for(i=0;i<m;++i){  // for each list...
@@ -333,7 +333,7 @@ static SF(jtsorti){F12JT;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
   DQ(n, ++yv[*wv++];);  // increment total for each input atom
   // run through the totals, copying in the requisite # repetitions of each value
   // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
-  I incr = 1-(((I)jtinplace>>(JTDESCENDX-1))&2); j=rng.min+(REPSGN(incr)&(rng.range-1));  // jt>complt is 1 or -1
+  I incr = 1-(((I)jtfg>>(JTDESCENDX-1))&2); j=rng.min+(REPSGN(incr)&(rng.range-1));  // jt>complt is 1 or -1
   DQ(rng.range, s=yv[j]; DQ(s, *zv++=j;) j+=incr;)  // Don't zv+=zincr, because VS doesn't pull the *8 out
 //  if((UI)jt->workareas.compare.complt>>(BW-1)){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DQ(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
 //  else{j=rng.min+rng.range; DQ(rng.range, --j; s=(I)yv[j]; DQ(s, *zv++=j  ;););}
@@ -350,13 +350,13 @@ static SF(jtsortu){F12JT;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  I maxrange; CR rng;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
  }else rng.range=0;
- if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jtinplace,m,1,n,w);  // TUNE
+ if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jtfg,m,1,n,w);  // TUNE
  GATV0(y,C4T,rng.range,1); yv=C4AV1(y)-rng.min;
  I zr=AR(w); GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AVn(zr,z);
  for(i=0;i<m;++i){
   mvc(rng.range*sizeof(UI4),yv+rng.min,MEMSET00LEN,MEMSET00); 
   DQ(n, ++yv[*wv++];);
-  I incr = 1-(((I)jtinplace>>(JTDESCENDX-1))&2); j=(C4)(rng.min+(REPSGN(incr)&(rng.range-1)));
+  I incr = 1-(((I)jtfg>>(JTDESCENDX-1))&2); j=(C4)(rng.min+(REPSGN(incr)&(rng.range-1)));
   DQ(rng.range, s=yv[j]; DQ(s, *zv++=j;) j+=(C4)incr;)
  }
  R z;
@@ -371,7 +371,7 @@ static SF(jtsortu1){F12JT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV1(y);}
  GATV0(x,C4T,n,1); xu=C4AV1(x);
  for(i=0;i<m;++i){I colflags;
-  colflags=grcol(65536, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),INTLSBWDX+0*WDINC+(US*)wv,4+((~(I)jtinplace>>(JTDESCENDX-1))&2));  // 'sort' + 'up' moved to bit 1
+  colflags=grcol(65536, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),INTLSBWDX+0*WDINC+(US*)wv,4+((~(I)jtfg>>(JTDESCENDX-1))&2));  // 'sort' + 'up' moved to bit 1
   grcol(65536, 0L, yv,n,(UI*)xu, (UI*)zu,sizeof(C4)/sizeof(US),INTLSBWDX+1*WDINC+(US*)xu ,colflags);
   wv+=n; zu+=n;
  }
@@ -396,8 +396,8 @@ static SF(jtsortu1){F12JT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 
 static SF(jtsortdq){F12JT;  // m=#sorts, n=#items in each sort, w is block
  A z; 
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
- D *zv=DAV(z); DQ(m, sortdq1(zv,n); if((I)jtinplace&JTDESCEND){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
+ if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
+ D *zv=DAV(z); DQ(m, sortdq1(zv,n); if((I)jtfg&JTDESCEND){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
  RETF(z);
 }
 
@@ -405,10 +405,10 @@ static SF(jtsortdq){F12JT;  // m=#sorts, n=#items in each sort, w is block
 static SF(jtsortd){F12JT;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
 #if 1  // normal case
  // Use quicksort always
- R jtsortdq(jtinplace,m,n,w);  // TUNE
+ R jtsortdq(jtfg,m,n,w);  // TUNE
 #else
- if((n&3)==0b00)R jtsortdq(jtinplace,m,n,w);
- if((n&3)==0b01)R jtsortdirect(jtinplace,m,1,n,w);  // TUNE
+ if((n&3)==0b00)R jtsortdq(jtfg,m,n,w);
+ if((n&3)==0b01)R jtsortdirect(jtfg,m,1,n,w);  // TUNE
 // {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  (1.e8) * y ?@$ 0}}"0 <.&.(%&4) 100 * 10 ^ 10 %~ i. 41  NB. tuning not including smallrange: qsort merge radix.  range up to 1e9
 #endif
  // falling through for radix sort
@@ -421,7 +421,7 @@ static SF(jtsortd){F12JT;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  for(i=0;i<m;++i){I colflags;  // for each cell to be sorted...
   g=wv; nneg=0; DQ(n, nneg+=(0>*g++);); b=0<nneg&&nneg<n;
   g=b?xu:zu; h=b?zu:xu;  // select correct alignment to end with result in zv
-  colflags=grcol(65536,    0L,      yv,n,(I*)wv,(I*)h,sizeof(D)/sizeof(US),FPLSBWDX+0*WDINC+(US*)wv,4+(((I )(nneg==n)<<1)^((~(I)jtinplace>>(JTDESCENDX-1))&2))); // 'sort', plus 'up' in bit 1, but reversed if all neg
+  colflags=grcol(65536,    0L,      yv,n,(I*)wv,(I*)h,sizeof(D)/sizeof(US),FPLSBWDX+0*WDINC+(US*)wv,4+(((I )(nneg==n)<<1)^((~(I)jtfg>>(JTDESCENDX-1))&2))); // 'sort', plus 'up' in bit 1, but reversed if all neg
   colflags=grcol(65536,    0L,      yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),FPLSBWDX+1*WDINC+(US*)h ,colflags);
   colflags=grcol(65536,    0L,      yv,n,(I*)g, (I*)h,sizeof(D)/sizeof(US),FPLSBWDX+2*WDINC+(US*)g ,colflags);
   grcol(32768<<b,(nneg==n)<<15,yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),FPLSBWDX+3*WDINC+(US*)h ,colflags);
@@ -454,12 +454,12 @@ F2(jtgr2){F12IP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
   if(n>5){   //  TUNE
    if(t&(C4T+INT+FL)){
     // If this datatype supports smallrange or radix sorting, go try that
-    if(1==api)RZ(z=(t&INT?jtsorti:t&FL?jtsortd:jtsortu)(jtinplace,m,n,w))   // Lists of INT/FL/C4T
+    if(1==api)RZ(z=(t&INT?jtsorti:t&FL?jtsortd:jtsortu)(jtfg,m,n,w))   // Lists of INT/FL/C4T
    }else if(((d^2)+(t&INT2))==0){
     // 2-byte types (not INT2), which must be B01/LIT/C2T.  Use special code, unless strings too short
     if(t&B01)             RZ(z=sortb2(m,n,w))  // Booleans with cell-items 2 bytes long
     else if(n>4600)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long   TUNE
-   }else if(d<2){RZ(z=(t&B01&&(m==1||0==(n&(SZI-1)))?jtsortb:jtsortc)(jtinplace,m,n,w))  // Lists of B01/LIT
+   }else if(d<2){RZ(z=(t&B01&&(m==1||0==(n&(SZI-1)))?jtsortb:jtsortc)(jtfg,m,n,w))  // Lists of B01/LIT
    }else if(d==4&&t&B01) RZ(z=sortb4(m,n,w))  // Booleans with cell-items 4 bytes long
   }
    // for direct types, we have the choice of direct/indirect.  For indirect, we do grade followed by from to apply the grading permutation.
@@ -470,7 +470,7 @@ F2(jtgr2){F12IP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
    // We roughly approximate this curve
   if(!z){  // not a special case
    UI4 lgn=CTLZI(n);
-   if(d<40||(UI4)d<(lgn<<4))RZ(z=jtsortdirect(jtinplace,m,api,n,w))  //  TUNE
+   if(d<40||(UI4)d<(lgn<<4))RZ(z=jtsortdirect(jtfg,m,api,n,w))  //  TUNE
   }
  }
  // If not a supported reflexive case, grade w and then select those values from a.  jt->ranks is still set
@@ -480,7 +480,7 @@ F2(jtgr2){F12IP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
   // Boxed args will come through here.  Because no cell of a is repeated in the result, we know that if a is pristine,
   // the result will be too, as long as the frames have equal length (and thus must be equal).  If from chose to return virtual z,
   // a will now be non-inplaceable and z will be virtual but not inplaceable.
-  AFLAGORLOCAL(z,awflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX)&(((acr-AR(a))^(wcr-AR(w)))-1))<<AFPRISTINEX))
+  AFLAGORLOCAL(z,awflg&((SGNTO0(AC(a))&((I)jtfg>>JTINPLACEAX)&(((acr-AR(a))^(wcr-AR(w)))-1))<<AFPRISTINEX))
   // But the original a certainly loses pristinity.  We rely on from to have done that, if it didn't create a virtual block
 // not needed  if(unlikely(awflg&AFVIRTUAL)){a=ABACK(a); awflg=AFLAG(a);} AFLAG(a)=awflg&~AFPRISTINE;
  }  // if inputs agreed, they will agree with w replaced by /:w and rank by 1

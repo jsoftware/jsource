@@ -143,14 +143,14 @@ DF1(jtfx){F12IP;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
 // if JTINPLACEA is set, make sure the result fits on one line for error display: stop copying if we hit LF and emit '...',
 // and don't put spaces before/after the delimiters
 // result is always incorpable
-A jtunDD(J jtinplace, A w){F12JT;
- I shortres=(I)jtinplace&JTINPLACEA;  // set for short, one-line result
+A jtunDD(J jtfg, A w){F12JT;
+ I shortres=(I)jtfg&JTINPLACEA;  // set for short, one-line result
  C *wv=CAV(w);  // start of word string
  // quick scan for 9, :, '; if not, return the input
  I scan; I qc9=0; for(scan=0;scan<AN(w);++scan){I t=0; t=wv[scan]=='\''?4:t; t=wv[scan]==':'?2:t; t=wv[scan]=='9'?1:t; qc9|=t;}  // check for ' : 9 chars
  if(qc9==7){  // if there is possibly a DD...
   // make input writable if it is not recursive; find words
-  if(!((I)jtinplace&JTINPLACEW))RZ(w=ca(w)); wv=CAV(w); A wil; RZ(wil=wordil(w)); ASSERT(AM(wil)>=0,EVOPENQ)
+  if(!((I)jtfg&JTINPLACEW))RZ(w=ca(w)); wv=CAV(w); A wil; RZ(wil=wordil(w)); ASSERT(AM(wil)>=0,EVOPENQ)
   // loop until no more DDs found
   I (*wilv)[2]=voidAV(wil); // pointer to wordlist: (start,end+1) pairs
   I inx=0;  // next input character that has not been copied to the result
@@ -311,19 +311,19 @@ F2(jtunparsem){F12IP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  mc=hv[0];    ms=hv[2];    m=mn=CWNC(mc)-1;  // mc->control words ms->commented text  m,mn = #control words
  dc=hv[0+HN]; ds=hv[2+HN]; n=dn=CWNC(dc)-1;
  m=AN(mc)==0?-1:m; n=AN(dc)==0?-1:n;  // mc is normally a compiled defn (boxed rank 1), but it can also be an empty list of boxes if the valence is not defined.  Make mc/nc=-1 in that case.
- p=!((I)jtinplace&JTEXPVALENCEOFF)&&(n>=0)&&((m>=0)||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
+ p=!((I)jtfg&JTEXPVALENCEOFF)&&(n>=0)&&((m>=0)||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
  if(equ(mtv,hv[2])&&equ(mtv,hv[2+HN])){
   // no comments: recover the original by unparsing
   // if there is a definition (even if there are no control words), set mn to the inferred #source lines
-  if(m>=0)mn=1+CWSOURCE(CWBASE(mc),-CWNC(mc),~(CWNC(mc)-2));else mn=0; mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
-  if(n>=0)dn=1+CWSOURCE(CWBASE(dc),-CWNC(dc),~(CWNC(dc)-2));else dn=0; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;
+  if(m>=0)mn=1+CWSOURCE(CWBASE(mc),-CWNC(mc),~(CWNC(mc)-2));else mn=0; mn=(I)jtfg&JTEXPVALENCEOFFM?0:mn;  // clear mn if monad suppressed
+  if(n>=0)dn=1+CWSOURCE(CWBASE(dc),-CWNC(dc),~(CWNC(dc)-2));else dn=0; dn=(I)jtfg&JTEXPVALENCEOFFD?0:dn;
   GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV1(z);   // allocate the inferred #lines
   RZ(zv=unparse1a(MAX(m,0),hv,   zv)); if(p)RZ(*zv++=chrcolon);
   RZ(zv=unparse1a(MAX(n,0),hv+HN,zv));
   ASSERTSYS(AN(z)==zv-zu,"unparsem zn");
  }else{
   // commented text found.  Use it
-  mn=AN(ms); dn=AN(ds); mn=(I)jtinplace&JTEXPVALENCEOFFM?0:mn; dn=(I)jtinplace&JTEXPVALENCEOFFD?0:dn;  // length of text; clear suppressed valence
+  mn=AN(ms); dn=AN(ds); mn=(I)jtfg&JTEXPVALENCEOFFM?0:mn; dn=(I)jtfg&JTEXPVALENCEOFFD?0:dn;  // length of text; clear suppressed valence
   GATV0(z,BOX,p+mn+dn,1); zv=AAV1(z);
   DO(mn, *zv++=jtunDD(jt,AAV(ms)[i]);); if(p)RZ(*zv++=chrcolon);
   DO(dn, *zv++=jtunDD(jt,AAV(ds)[i]););

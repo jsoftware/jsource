@@ -123,7 +123,7 @@ F2(jtrotate){F12IP;A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  I e=(n*d)<<klg; I dk=d<<klg; // e=#bytes per cell  dk=bytes per item
  I kd,ks,jd,js; ROTF(av0)
  I yztotal=0;  // sum of ping-pong buffer A addresses
- if((((AFLAG(w)&(AFVIRTUAL|AFNJA|AFRO|RECURSIBLE))-1)&ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w))<0){  // w allows inplacing, header size is valid
+ if((((AFLAG(w)&(AFVIRTUAL|AFNJA|AFRO|RECURSIBLE))-1)&ASGNINPLACENEG(SGNIF(jtfg,JTINPLACEWX),w))<0){  // w allows inplacing, header size is valid
   if((notrightfill&~negifragged)<0){  // a does not differ between cells and is not right fill
    // Check for inplacing.  We can if the rotate, after converted to positive shift value, fits in the slack
    I backslack=(FHRHSIZE(AFHRH(w))-AK(w)-(AN(w)<<klg))&-SZI;  //  allocated size of w, which is known to be allocated by J, MINUS the offset to the data and the length of the data
@@ -205,7 +205,7 @@ F1(jtreverse){F12IP;A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  wt=AT(w); wv=CAV(w);  // wv->source data
  PROD(m,f,ws); PROD(k,r-1,ws+f+1);  // m=# argument cells k=#atoms in one subitem
  k<<=bplg(wt); nk=n*k;  // k=#bytes in subitem  nk=#bytes in cell
- if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))<0){z=w;}  // inplace: leave pristinity of w alone
+ if((AC(w)&SGNIF(jtfg,JTINPLACEWX))<0){z=w;}  // inplace: leave pristinity of w alone
  else{GA(z,wt,AN(w),wr,ws); PRISTCLRF(w)}  // new copy: allocate new area, make w non-pristine since it escapes
  // w has been destroyed
  zv=CAV(z);  // zv->target data
@@ -311,7 +311,7 @@ F2(jtreshape){F12IP;A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRIC
   if(c==1) {  // if there is only 1 cell of w...
    // If no fill required, we can probably use a virtual result, or maybe even an inplace one.  Check for inplace first.  Mustn't inplace an indirect that shortens the data,
    // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those).  Since it must be DIRECT, there's no question about PRISTINE, but that would be OK to transfer if inplaceable
-   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right, equal atom count if not DIRECT
+   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right, equal atom count if not DIRECT
     // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
     AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISH(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
    }
@@ -348,7 +348,7 @@ F2(jtreitem){F12IP;A y,z;I acr,an,ar,r,*v,wcr,wr;
   fauxINT(y,yfaux,an+r,1) v=AV(y);
   MCISH(v,AV(a),an); MCISH(v+an,AS(w)+wr-r,r);
  }
- R wr==wcr?jtreshape(jtinplace,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z);  // Since a has no frame, we don't have to check agreement
+ R wr==wcr?jtreshape(jtfg,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z);  // Since a has no frame, we don't have to check agreement
 }    /* a $"r w */
 
 // x $[!.n]!.v y or x ($,)[!.n]!.v y which uses fn v if needed to resolve _ in x
@@ -363,7 +363,7 @@ DF2(jtreshapeblankfn){F12IP;I acr,ar,r,wcr,wr;
   I nlens=FAV(self)->localuse.lu1.fittype?1:wcr; nlens=wcr<nlens?wcr:nlens;  // # axes to use for counting result cells: the w-cell, or 1 item thereof
   RZ(a=jtreshapeblank(jt,a,w,FAV(self)->fgh[1],nlens,wcr))  // replace the blank, applying function in g
  }
- RETF((*reshapefn)(jtinplace,a,w,fs))   // do the reshape, with _ replaced
+ RETF((*reshapefn)(jtfg,a,w,fs))   // do the reshape, with _ replaced
 }
 
 #define EXPAND(T)  \

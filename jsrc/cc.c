@@ -38,7 +38,7 @@ static DF2(jtcut02){F12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROL
   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assembly path
   state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
-  state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+  state |= (-state) & (I)jtfg & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
  }
  AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
 
@@ -146,9 +146,9 @@ DF2(jtboxcut0){F12IP;A z;
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
  // We require a have rank >=2, not sparse
- if(unlikely(((1-(I)AR(a))&(SGNIFDENSE(AT(a)|AT(w))))>=0))R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);
+ if(unlikely(((1-(I)AR(a))&(SGNIFDENSE(AT(a)|AT(w))))>=0))R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);
  // Shape of a must end 2 1 - a one-dimensional selection
- if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);
+ if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);
  // it is a (set of) one-dimensional selection
  // a must be integral
  RZ(a=vib(a));  // make a integer
@@ -175,13 +175,13 @@ DF2(jtboxcut0){F12IP;A z;
  A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself sirtual
  I i; for(i=0;i<resatoms;++i){
   I start=av[i][0]; I endorlen=av[i][1];
-  if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
+  if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);}  // verify start in range - failover if not
   endorlen+=start&abslength;  // convert len to end+1 form
   endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
-  if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
+  if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
   I substratoms=endorlen*cellsize;
   // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
-  if(!((I)jtinplace&JTWILLBEOPENED)){
+  if(!((I)jtfg&JTWILLBEOPENED)){
    GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
    // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
    JMC(CAV(y),wv+start*(cellsize<<k),substratoms<<k,0); INCORPRAZAPPED(y,t)   // copy the data, incorporate the block into the result
@@ -198,12 +198,12 @@ DF2(jtboxcut0){F12IP;A z;
   }
  }
  // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
- if(unlikely((I)jtinplace&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
+ if(unlikely((I)jtfg&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
  jt->tnextpushp=pushxsave;   // restore tstack pointer
  // OK to fail now - memory is restored
  ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
  // The result can be called pristine if the contents are DIRECT and the result is recursive, because it contains all copied data
- AFLAGORLOCAL(z,(-(t&DIRECT))&(~(I)jtinplace<<(AFPRISTINEX-JTWILLBEOPENEDX))&AFPRISTINE)
+ AFLAGORLOCAL(z,(-(t&DIRECT))&(~(I)jtfg<<(AFPRISTINEX-JTWILLBEOPENEDX))&AFPRISTINE)
  RETF(z);  // return the recursive block
 }
 
@@ -601,7 +601,7 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
  if(FAV(fs)->mr>=r){
   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
   state |= ((FAV(fs)->flag2>>(issldotdot*(VF2BOXATOP2X-VF2BOXATOP1X)))&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Remember <@ . Don't touch fs yet, since we might not loop
-  state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+  state |= (-state) & (I)jtfg & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
  }
  AF f1=FAV(fs)->valencefns[issldotdot];  // point to the action routine now that we have handled gerunds
   // for /.. we take the dyad; but we don't support <@ yet; so we call it f1 always
@@ -903,12 +903,12 @@ skipspecial:;
    // Set the offset to the first data
    AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
    // Make virtw inplaceable if w is.  If &.>, we could perhaps inplace always except if ]&.>
-   state |= (UI)(SGNIF(jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+   state |= (UI)(SGNIF(jtfg,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
    // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags
-// obsolete    jtinplace = (J)(intptr_t)(((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | (((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX-((state>>STATEDYADKEYX)&(VJTFLGOK2X-VJTFLGOK1X)))))&JTINPLACEW));  // turn off inplacing based on verb
-   jtinplace = (J)(intptr_t)(((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | JTINPLACEW);  // turn offour input flags, set to inplace w
+// obsolete    jtfg = (J)(intptr_t)(((I)jtfg & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | (((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX-((state>>STATEDYADKEYX)&(VJTFLGOK2X-VJTFLGOK1X)))))&JTINPLACEW));  // turn off inplacing based on verb
+   jtfg = (J)(intptr_t)(((I)jtfg & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | JTINPLACEW);  // turn offour input flags, set to inplace w
 
 #define ZZDECL
 #define f2 f1
@@ -967,7 +967,7 @@ skipspecial:;
 }    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
 
 
-static DF1(jtcut1){F12IP;R jtcut2(jtinplace,mark,w,self);}  // pass inplaceability through
+static DF1(jtcut1){F12IP;R jtcut2(jtfg,mark,w,self);}  // pass inplaceability through
 
 // ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required  also \.
 // also [: ; (<@(f/\));._2 _1 1 2)  when no rank loop required
@@ -1011,7 +1011,7 @@ DF2(jtrazecut2){F12IP;A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=
  AS(z)[0]=m; AN(z)=m*d; R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
 }   
 
-DF1(jtrazecut1){F12IP;R jtrazecut2(jtinplace,mark,w,self);}  // pass inplaceability through
+DF1(jtrazecut1){F12IP;R jtrazecut2(jtfg,mark,w,self);}  // pass inplaceability through
 
 // if pv given, it is the place to put the shapes of the top 2 result axes.  If omitted, do them all and return an A block for them
 // if pv is given, set pv[0] to 0 if there is a 0 anywhere in the result frame

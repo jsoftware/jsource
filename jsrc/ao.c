@@ -210,11 +210,11 @@ static DF2(jtkeyspw){F12IP;PROLOG(0011); I ica, icw;
 }    // a f/. w for sparse w
 
 
-static DF2(jtkey){F12IP;R jtkeyct(jtinplace,a,w,self,jt->cct);}
+static DF2(jtkey){F12IP;R jtkeyct(jtfg,a,w,self,jt->cct);}
 
 // a u/.[.] w.  Self-classify a, then rearrange w and call cut.  Includes special cases for f//.
 // toler is the ct to use for the classification
-A jtkeyct(J jtinplace,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
+A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
  ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(a))))R keysp(a,w,self);  // if a sparse, go handle it
  if(unlikely(ISSPARSE(AT(w))))R jtkeyspw(jt,a,w,self);  // if w sparse, go handle it
@@ -434,7 +434,7 @@ A jtkeyct(J jtinplace,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nite
   nfrets=AM(ai);  // fetch # frets before we possibly clone ai
   I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets, if some are long
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; AR(frets)=0; if(MEMAUDIT&0xc)AFLAGFAUX(frets,0)} // Cut tests the type field - only.  If debug, the flag also  rank must be valid in case we call rankex
-  else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
+  else if((I)jtfg&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
 
@@ -480,7 +480,7 @@ A jtkeyct(J jtinplace,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nite
   // use local fretblock if there are few frets
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; AR(frets)=0; if(MEMAUDIT&0xc)AFLAGFAUX(frets,0)} // Cut tests the type field - only; for memaudit we need flag too, and rank in case we rank2ex
   // we can write the frets over w if w is inplaceable, DIRECT, has items as big as an I4, not 32-bit or atom, and not u/..~  w has always been copied to a new buffer by the sort
-  else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((w!=a)|(FAV(self)->id!=CSLDOTDOT))&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))
+  else if((I)jtfg&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((w!=a)|(FAV(self)->id!=CSLDOTDOT))&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))
    frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
@@ -531,7 +531,7 @@ A jtkeyct(J jtinplace,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nite
  // wperm pristine so it can be used, but it's pristine only is w is zombie.  We sacrifice pristinity to inplaceability
  // the AM field of wperm is destroyed but that's OK because it never becomes a result
  I wprist=AFLAG(w)&AFPRISTINE;
- I wpprist=wprist&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX));  // original pristinity of wperm
+ I wpprist=wprist&REPSGN(AC(w)&SGNIF(jtfg,JTINPLACEWX));  // original pristinity of wperm
  AFLAGINIT(wperm,AFLAG(wperm)|wpprist)
  // We pass the self pointer for /. into cut, as it uses the id therein to interpret a
 // obsolete  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);

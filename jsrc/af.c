@@ -69,7 +69,7 @@ EVERYFS(arofixaself,jtaro,jtfixa,0,VFLAGNONE)  // create A block to be used in e
 // a has to be an A type because it goes into every2.  It is always an I type with rank 0 so it can go into every, but it has multiple items.
 //   It may be virtual in callbacks from every2 so must not use IAV0
 // IAV0(aa)[1] points to the recursion name-list and must be passed to all recursion levels
-static A jtfixa(J jtinplace,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; fauxINT(aa,fauxself,2,0); IAV0(aa)[1]=IAV(a)[1];  // place to build recursion parm - make the AK field right, and pass the AM field along
+static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; fauxINT(aa,fauxself,2,0); IAV0(aa)[1]=IAV(a)[1];  // place to build recursion parm - make the AK field right, and pass the AM field along
 #define REFIXA(a,x) (IAV0(aa)[0]=(aif|(a)), fixa((A)aa,(x)))
  ARGCHK1(w);
  I ai=IAV(a)[0];  // value of a

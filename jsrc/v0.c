@@ -314,7 +314,7 @@ DF2(jtpoly2){F12IP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*
  }  // if mplr/roots form, a has been replace by the roots and c is the coeff
  t=maxtyped(at,wt); if(b)t=maxtyped(t,AT(c)); if(!(t&XNUM+RAT))t=maxtyped(t,FL);  // promote B01/INT to FL
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
- if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} x=DAV(w); wz=ZAV(w);
+ if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtfg=(J)(intptr_t)((I)jtfg|JTINPLACEW);} x=DAV(w); wz=ZAV(w);
  if(b){
   // mult/roots: convert and extract the coeff
   RZ(c=cvt(t,c)); d=DAV(c)[0]; e=ZAV(c)[0];
@@ -330,7 +330,7 @@ DF2(jtpoly2){F12IP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  b=b?3:b;  // now b=3 means BOX i. e. mplr/roots form
  if(likely(((j-1)&SGNIFDENSE(t)&-(t&FL+CMPX))<0)){  // j==0 (=no inf) & not sparse and FL/CMPX
-  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
+  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
   if(n==0){RETF(za);}  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);
   b+=(t>>FLX)&3; // must be FL/CMPX, add 1 or 2

@@ -188,9 +188,9 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
  if(oprc&(255&~EVNOCONV)){
   jt->jerr=(UC)oprc;  // signal error to the retry code, or to the system
   if(jt->jerr<=NEVM)R 0;
-  J jtinplace=(J)((I)jt+JTRETRY);  // tell va1 it's a retry
-  RZ(ze=jtva1(jtinplace,e,self)); 
-  jt->jerr=(UC)oprc; RZ(zx=jtva1(jtinplace,x,self));   // restore restart signal for the main data too
+  J jtfg=(J)((I)jt+JTRETRY);  // tell va1 it's a retry
+  RZ(ze=jtva1(jtfg,e,self)); 
+  jt->jerr=(UC)oprc; RZ(zx=jtva1(jtfg,x,self));   // restore restart signal for the main data too
  }else if(cv&VRI+VRD&&oprc!=EVNOCONV){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
  GASPARSE(z,STYPE(AT(ze)),1,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,a,ca(SPA(wp,a)));
@@ -209,7 +209,7 @@ static DF1(jtva1){F12IP;A z;I cv,n,t,wt,zt;VA1F ado;
  if(unlikely(!(wt&NUMERIC))){ASSERT(AN(w)==0,EVDOMAIN) wt=B01;}  // arg must be numeric.  If it is, keep its type even if empty; if not, fail unless empty, for which treat as boolean
  VA1 *p=&u->p1[(0x76098054032100>>(CTTZ(wt)<<2))&0xf];  // convert numeric type to 4-bit fn#
 
- if(likely(!((I)jtinplace&JTRETRY))){
+ if(likely(!((I)jtfg&JTRETRY))){
   ado=p->f; cv=p->cv;
  }else{
   I m=REPSGN((wt&XNUM+RAT)-1);   // -1 if not XNUM/RAT
@@ -238,8 +238,8 @@ static DF1(jtva1){F12IP;A z;I cv,n,t,wt,zt;VA1F ado;
  if(unlikely((SGNIFSPARSE(AT(w))&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv);  // extract required type of input and result
- if(t&~wt){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w)); if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;}  // move 16-byte values to 16-byte bdy
+ if(t&~wt){RZ(w=cvt(t,w)); jtfg=(J)((I)jtfg|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
+ if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w)); if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;}  // move 16-byte values to 16-byte bdy
  if(!n){RETF(z);}
  I oprc = ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms, save result status.  If an error was signaled it will be reported here, but not necessarily vice versa
  if(likely(!(oprc&(255&~EVNOCONV)))){RETF(unlikely(cv&VRI+VRD&&oprc!=EVNOCONV)?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
@@ -281,17 +281,17 @@ DF1(jtatomic1){F12IP;A z;
  I awm1=AN(w)-1;
  // check for singletons
  if(!(awm1|(AT(w)&((NOUN|SPARSE)&~(B01+INT+FL))))){  // len=1 andbool/int/float
-  z=jtssingleton1(jtinplace,w,3*(FAV(self)->lu2.lc-VA1ORIGIN)+(AT(w)>>INTX));
+  z=jtssingleton1(jtfg,w,3*(FAV(self)->lu2.lc-VA1ORIGIN)+(AT(w)>>INTX));
   if(z||jt->jerr<=NEVM){RETF(z);}  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code
-  jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
+  jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation
  }
  // Run the full op, retrying if a retryable error is returned
  NOUNROLL while(1){  // run until we get no error
-  z=jtva1(jtinplace,w,self);  // execute the verb
+  z=jtva1(jtfg,w,self);  // execute the verb
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
-  jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
+  jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation
  }
  // There was an error. format it now
  jteformat(jt,self,w,0,0);
@@ -301,7 +301,7 @@ DF1(jtatomic1){F12IP;A z;
 #define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
 DF1(jtnegate){F12IP;ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(0) R minus(conptr,w);}
 DF1(jtrecip ){F12IP;ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); A conptr=num(1); A conptr2=numvr(1); R divide(AT(w)&XNUM+RAT?conptr:conptr2,w);}
-DF1(jtpix){F12IP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,AT(w)&QP?pieE:pie,w,ds(CSTAR));}
+DF1(jtpix){F12IP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtfg,w,self); R jtatomic2(jtfg,AT(w)&QP?pieE:pie,w,ds(CSTAR));}
 
 // special code for x ((<[!.0] |) * ]) y, implemented as if !.0
 #if C_AVX2 || EMU_AVX2
@@ -309,9 +309,9 @@ DF2(jtdeadband){F12IP;A zz;
  ARGCHK2(a,w);
  I n=AN(w);  // number of atoms to process
   // revert if not the special case we handle: both args FL, not sparse, a is an atom, w is nonempty
- if(unlikely((((AT(a)|AT(w))&(NOUN+SPARSE))&(REPSGN(((I)AR(a)-1)&-n)))!=FL))R jtfolk2(jtinplace,a,w,self);
+ if(unlikely((((AT(a)|AT(w))&(NOUN+SPARSE))&(REPSGN(((I)AR(a)-1)&-n)))!=FL))R jtfolk2(jtfg,a,w,self);
  // allocate the result area, inplacing w if possible
- if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){zz=w;}else{GATV(zz,FL,AN(w),AR(w),AS(w));}
+ if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w)){zz=w;}else{GATV(zz,FL,AN(w),AR(w),AS(w));}
  // perform the operation
  D *x=DAV(w), *z=DAV(zz);  // input and output pointers
  AVXATOMLOOP(0,  // unroll loop

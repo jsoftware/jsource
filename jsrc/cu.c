@@ -26,9 +26,9 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
 
 // NOTE: internal calls to every/every2 use a skeletal fs created by the EVERYFS macro.  It fills in only
 // AK, valencefns, and flag.  If these routines use other fields, EVERYFS will need to fill them in
-DF1(jteveryself){F12IP;R jtevery(jtinplace,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process.  Pass inplaceability through
+DF1(jteveryself){F12IP;R jtevery(jtfg,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process.  Pass inplaceability through
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
-A jtevery(J jtinplace, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
+A jtevery(J jtfg, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
  ARGCHK1(w);RESETRANK;  // we claim to support IRS1 but really there's nothing to do for it
  I wt=AT(w), wflag=AFLAG(w), wr=AR(w);
  if(unlikely(ISSPARSE(wt)))R everysp(w,fs);
@@ -39,11 +39,11 @@ A jtevery(J jtinplace, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
  AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
  A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was recursive inplaceable pristine, contents can be inplaced AFPRISTINE=w must be marked non-PRIST
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
- flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(wt&BOX);
+ flags=ACINPLACE|((I)jtfg&JTWILLBEOPENED)|(wt&BOX);
  // Get input pointer
  fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){virtw=C(*(wv=AAV(w)));  // if input is boxed, point to first box
-  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
+  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(wt);  // note if w has gerunds, it is always boxed & doesn't go through here
@@ -53,7 +53,7 @@ A jtevery(J jtinplace, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
  zv=AAV(z);
  // Get jt flags to pass to next level -  we always inplace this verb, which will allow us to set pristinity better
  // We must remove raze flags since we are using them here
- jtinplace=(J)((I)jt+JTINPLACEW);
+ jtfg=(J)((I)jt+JTINPLACEW);
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
  if(wflag&AFVIRTUAL)w=ABACK(w);
  // *** now w has been replaced by its backing block, if it was virtual
@@ -147,13 +147,13 @@ DF2(jtevery2self){F12IP;
  ARGCHK2(a,w);
  I ar=AR(a); I wr=AR(w);
  I cf=ar; cf=ar<wr?cf:wr;
- R jtevery2(jtinplace,a,w,FAV(self)->fgh[0]);  // replace u&.> with u and process
+ R jtevery2(jtfg,a,w,FAV(self)->fgh[0]);  // replace u&.> with u and process
 } 
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 // This routine is called internally from many places without agreement checks
 // We could use a flag in jt to indicate agreement already checked
  // This is called with skeletal fs sometimes.  This routine refers to valencefns[1] and flag, and passes fs into execution
-A jtevery2(J jtinplace, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
+A jtevery2(J jtfg, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
  ARGCHK2(a,w);
  AF f2=FAV(fs)->valencefns[1];
  // Get the number of atoms, and the number of times to repeat the short side.
@@ -176,14 +176,14 @@ A jtevery2(J jtinplace, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
   GATV(z,BOX,natoms,lr,AS(la)); if(unlikely(!natoms))RETF(z) zv=AAVn(lr,z);  // make sure we don't fetch outside empty arg
  }
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
- flags|=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AT(a)&BOX)<<1);
+ flags|=ACINPLACE|((I)jtfg&JTWILLBEOPENED)|(AT(w)&BOX)|((AT(a)&BOX)<<1);
  AFLAGINIT(z,(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX)  // if WILLBEOPENED is NOT set, make the result a recursive box
  A virtw;
  // Get input pointer
  fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){
   virtw=C(*(wv=AAV(w)));  // if input is boxed, point to first box
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1)&-(AFLAG(w)&RECURSIBLE);  // indicates inplaceability of boxed contents.  Never if arg repeated, only if recursive
+  if(ASGNINPLACESGN(SGNIF((I)jtfg&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1)&-(AFLAG(w)&RECURSIBLE);  // indicates inplaceability of boxed contents.  Never if arg repeated, only if recursive
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));  // note if w has gerunds, it is always boxed & doesn't go through here
@@ -194,7 +194,7 @@ A jtevery2(J jtinplace, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
  fauxblockINT(virtblocka,0,0);  // virtual block of rank 0, 0 atoms
  if(likely((flags&(BOX<<1))!=0)){
   virta=C(*(av=AAV(a)));
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT&-(AFLAG(a)&RECURSIBLE);
+  if(ASGNINPLACESGN(SGNIF((I)jtfg&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT&-(AFLAG(a)&RECURSIBLE);
  }else{
   fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
  }
@@ -202,7 +202,7 @@ A jtevery2(J jtinplace, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
  // We must remove raze flags since we are using them here
  // If the arguments are the same, we turn off inplacing for the function but not for the argument blocks.  It only matters if a block is returned: then
  // it's OK to treat the return as pristine the arguments are zombie, even if noninplaceable ones
- jtinplace=(J)((I)jt+(a!=w)*(JTINPLACEW+JTINPLACEA));
+ jtfg=(J)((I)jt+(a!=w)*(JTINPLACEW+JTINPLACEA));
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
  if(AFLAG(a)&AFVIRTUAL)a=ABACK(a);
@@ -288,26 +288,26 @@ DF2(jteachr){F12IP;ARGCHK3(a,w,self); I rcr=AR(w)-((UI)AR(w)>0); I rr=rr(self); 
 // u&.v
 // PUSH/POP ZOMB is performed in atop/amp/ampco
 // under is for when we could not precalculate the inverse.  The verb is in localuse
-static DF1(jtunder1){F12IP;A fullf; RZ(fullf=atop(invrecur(fix(FAV(self)->localuse.lu1.wvb,sc(FIXASTOPATINV))),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[0])(jtinplace,w,fullf);}
-static DF2(jtunder2){F12IP;A fullf; RZ(fullf=atop(invrecur(fix(FAV(self)->localuse.lu1.wvb,sc(FIXASTOPATINV))),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[1])(jtinplace,a,w,fullf);}
+static DF1(jtunder1){F12IP;A fullf; RZ(fullf=atop(invrecur(fix(FAV(self)->localuse.lu1.wvb,sc(FIXASTOPATINV))),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[0])(jtfg,w,fullf);}
+static DF2(jtunder2){F12IP;A fullf; RZ(fullf=atop(invrecur(fix(FAV(self)->localuse.lu1.wvb,sc(FIXASTOPATINV))),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[1])(jtfg,a,w,fullf);}
 // underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
-DF1(jtunderh1){F12IP;A hs=FAV(self)->fgh[2]; R (FAV(hs)->valencefns[0])(jtinplace,w,hs);}
-DF2(jtunderh2){F12IP;A hs=FAV(self)->fgh[2]; R (FAV(hs)->valencefns[1])(jtinplace,a,w,hs);}
+DF1(jtunderh1){F12IP;A hs=FAV(self)->fgh[2]; R (FAV(hs)->valencefns[0])(jtfg,w,hs);}
+DF2(jtunderh2){F12IP;A hs=FAV(self)->fgh[2]; R (FAV(hs)->valencefns[1])(jtfg,a,w,hs);}
 // undco is for when we could not precalculate the inverse
-static DF1(jtundco1){F12IP;A fullf; RZ(fullf=atop(inv(FAV(self)->localuse.lu1.wvb),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[0])(jtinplace,w,fullf);}
-static DF2(jtundco2){F12IP;A fullf; RZ(fullf=atop(inv(FAV(self)->localuse.lu1.wvb),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[1])(jtinplace,a,w,fullf);}
+static DF1(jtundco1){F12IP;A fullf; RZ(fullf=atop(inv(FAV(self)->localuse.lu1.wvb),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[0])(jtfg,w,fullf);}
+static DF2(jtundco2){F12IP;A fullf; RZ(fullf=atop(inv(FAV(self)->localuse.lu1.wvb),FAV(self)->fgh[2])); R (FAV(fullf)->valencefns[1])(jtfg,a,w,fullf);}
 
 // versions for rank 0 (including each).  Passes inplaceability through
 // if there is only one cell, process it through under[h]1, which understands this type; if more, loop through
-static DF1(jtunder10){F12IP;R jtrank1ex0(jtinplace,w,self,jtunder1);}  // pass inplaceability through
-static DF1(jtunderh10){F12IP;R jtrank1ex0(jtinplace,w,self,jtunderh1);}  // pass inplaceability through
-static DF2(jtunder20){F12IP;R jtrank2ex0(jtinplace,a,w,self,jtunder2);}  // pass inplaceability through
-static DF2(jtunderh20){F12IP;R jtrank2ex0(jtinplace,a,w,self,jtunderh2);}  // pass inplaceability through
+static DF1(jtunder10){F12IP;R jtrank1ex0(jtfg,w,self,jtunder1);}  // pass inplaceability through
+static DF1(jtunderh10){F12IP;R jtrank1ex0(jtfg,w,self,jtunderh1);}  // pass inplaceability through
+static DF2(jtunder20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtunder2);}  // pass inplaceability through
+static DF2(jtunderh20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtunderh2);}  // pass inplaceability through
 
 // structural under, i. e. u&.v when v is a special noninvertible form that we recognize.  Currently only , and m&{ are recognized
 static DF1(jtsunder){F12IP;PROLOG(777);
  I origacw=AC(w);  // preserve original inplaceability of y
- I negifipw=ASGNINPLACENEG(SGNIF(jtinplace,JTINPLACEWX),w);   // get inplaceability of y
+ I negifipw=ASGNINPLACENEG(SGNIF(jtfg,JTINPLACEWX),w);   // get inplaceability of y
  A v=FAV(self)->fgh[1]; A vz; RZ(vz=(FAV(v)->valencefns[0])(jt,w,v));  // execute v y, not allowing inplaceing since we have to store back
  I negifip;  // inplaceability of final result
  if((negifip=negifipw&SGNIF(AFLAG(vz),AFVIRTUALX))<0){
@@ -334,7 +334,7 @@ static DF1(jtsunder){F12IP;PROLOG(777);
       // Also, if AC(w) is above 1, it has escaped and must no longer be inplaced.  If it isn't above 1, it must be confined to here
   // do the inverse
   if(FAV(v)->id==CCOMMA){RZ(z=reshape(shape(w),uz));  // inv for , is ($w)&($,)
-  }else{RZ(z=jtamendn2(jtinplace,uz,w,FAV(v)->fgh[0],ds(CAMEND)));   // inv for m&{ is m}&w
+  }else{RZ(z=jtamendn2(jtfg,uz,w,FAV(v)->fgh[0],ds(CAMEND)));   // inv for m&{ is m}&w
   }
   EPILOG(z);
  }

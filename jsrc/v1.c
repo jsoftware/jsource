@@ -296,7 +296,7 @@ fail:
 #endif
 
 // Return 1 if a and w match, 0 if not
-B jtequ(J jtinplace,A a,A w){F12IP;A x;  // allow inplace request - it has no effect
+B jtequ(J jtfg,A a,A w){F12IP;A x;  // allow inplace request - it has no effect
  ARGCHK2(a,w);
  if(a==w)R 1;
  if(unlikely(ISSPARSE(AT(a)|AT(w))))if(AR(a)&&AR(w)){RZ(x=matchs(a,w)); R BAV(x)[0];}
@@ -304,10 +304,10 @@ B jtequ(J jtinplace,A a,A w){F12IP;A x;  // allow inplace request - it has no ef
 }
 
 // Return 1 if a and w match, 0 if not   Passes inplaceability through
-B jtequx(J jtinplace,X a,X w){F12IP;R 0==icmpXX(a,w);}
+B jtequx(J jtfg,X a,X w){F12IP;R 0==icmpXX(a,w);}
 
 // Return 1 if a and w match, 0 if not
-B jteqx(J jtinplace,A a,A w){F12IP;A x;  // allow inplace request - it has no effect
+B jteqx(J jtfg,A a,A w){F12IP;A x;  // allow inplace request - it has no effect
  ARGCHK2(a,w);
  if(a==w)R 1;
  if(unlikely(ISSPARSE(AT(a)|AT(w))))if(AR(a)&&AR(w)){RZ(x=matchs(a,w)); R BAV(x)[0];}
@@ -315,7 +315,7 @@ B jteqx(J jtinplace,A a,A w){F12IP;A x;  // allow inplace request - it has no ef
 }
 
 // Return 1 if a and w match intolerantly, 0 if not
-B jtequ0(J jtinplace,A a,A w){F12IP;   // allow inplace request - it has no effect
+B jtequ0(J jtfg,A a,A w){F12IP;   // allow inplace request - it has no effect
  PUSHCCT(1.0) B res=equ(a,w); POPCCT R res;
 }
 
@@ -328,7 +328,7 @@ static B eqname(A a,A w){
 }
 
 // Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
-B jteqf(J jtinplace,A a,A w){F12IP;A p,q;V*u=FAV(a),*v=FAV(w);
+B jteqf(J jtfg,A a,A w){F12IP;A p,q;V*u=FAV(a),*v=FAV(w);
  if(TYPESXOR(AT(a),AT(w))+(u->id^v->id))R 0;   // must match on type and id
  p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||(p==0)==(q==0)&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
  p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||(p==0)==(q==0)&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
@@ -377,7 +377,7 @@ B jteqf(J jtinplace,A a,A w){F12IP;A p,q;V*u=FAV(a),*v=FAV(w);
 // m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
 // the comparands may not be sparse
 // arguments after x may be omitted if x==0, and are then assumed to be 0 0 1 1 1
-static B jtmatchsub(J jtinplace,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){F12IP;C*av,*wv;I at,c,j=0,t,wt;
+static B jtmatchsub(J jtfg,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){F12IP;C*av,*wv;I at,c,j=0,t,wt;
  // we tested for a==w before the call, to save on call overhead (usually)
  // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
  {
@@ -488,7 +488,7 @@ static F2(jtmatchs){F12IP;A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,
 
 // x -:"r y or x -.@-:"r y depending on LSB of jt
 F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
- I eqis0 = !!((I)jtinplace&JTNOTMATCH);   // remember whether we are -: or -.@-:
+ I eqis0 = !!((I)jtfg&JTNOTMATCH);   // remember whether we are -: or -.@-:
 // obsolete  jt=(J)((I)jt&~1);
  ARGCHK2(a,w);
  I isatoms = (-AN(a))&(-AN(w));  // neg if both args have atoms

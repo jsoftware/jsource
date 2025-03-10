@@ -332,18 +332,18 @@ noparse: ;
 }
 
 // Execute self under debug.  Bivalent a,w,self or w,self,self.  A stack frame must have been allocated on the top of the debug stack
-A jtdbunquote(J jtinplace,A a,A w,A self){F12IP;A t,z;B s;V*sv;
+A jtdbunquote(J jtfg,A a,A w,A self){F12IP;A t,z;B s;V*sv;
  I dyad=EPDYAD; DC d=jt->sitop;   // remember if dyad, fetch debug frame
  sv=FAV(self); t=sv->fgh[0]; 
  if(sv->id==CCOLONE&&t!=0){  // : explicit and not anonymous (if anonymous, it goes to unquote which will reexecute the vebr with a name)
 // obsolete  ras(self); a?df2ip(z,a,w,self):df1ip(z,w,self);   if(unlikely(z==0)){jteformat(jt,self,a?a:w,a?w:0,0);} fa(self);  // we have self, so this can be a format point
-  ras(self); z=FAV(self)->valencefns[dyad](jtinplace,a,w,self);  if(unlikely(z==0)){jteformat(jt,self,a,dyad?w:0,0);} fa(self);  // we have self, so this can be a format point
+  ras(self); z=FAV(self)->valencefns[dyad](jtfg,a,w,self);  if(unlikely(z==0)){jteformat(jt,self,a,dyad?w:0,0);} fa(self);  // we have self, so this can be a format point
  }else{                              /* tacit    */
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 
   while(1){
    d->dcnewlineno=0;  // turn off 'reexec requested' flag
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}  // if first line is a stop
-   else{ras(self); z=FAV(self)->valencefns[dyad](jtinplace,a,w,self);  if(unlikely(z==0)){jteformat(jt,self,a,dyad?w:0,0);} fa(self);}  // if no stop, execute 1 line & format any error
+   else{ras(self); z=FAV(self)->valencefns[dyad](jtfg,a,w,self);  if(unlikely(z==0)){jteformat(jt,self,a,dyad?w:0,0);} fa(self);}  // if no stop, execute 1 line & format any error
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:0]0, and we should continue on outside of debug mode.  The debug stack frames are still on the stack, but they have been unchained from the root
    // Don't reenter debug if we are on the way out of it

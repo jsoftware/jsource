@@ -601,12 +601,12 @@ foo =. 3 : 0
  z=.z,sp 'xyz=. _789 (6})xyz'   NB. in place
  z=.z,sp 'qqq=. _123 (7)}xyz'   NB. create copy
  z=.z,sp 'xyz=. 8 9 >:@[`[`]} xyz'  NB. in place
- z=.z,sp 'xyz=. xyz >:@]`]`[} 11 12'  NB. in place
+ z=.z,sp 'xyz=. xyz >:@]`]`[} 11 12'  NB. not in place on [
  n =. 14 15
  z=.z,sp 'xyz=. n >:@(17 ,~ [)`(16 ,~ [)`]} xyz'  NB. in place but only the amend and ]
  assert. n -: 14 15
  z=.z,sp 'xyz=. 8 9 >:@[`[`(,~)} xyz'  NB. in place only if 9!:53]1
- z=.z,sp 'xyz=. xyz >:@]`]`,} 11 12'  NB. in place only if 9!:53]1
+ z=.z,sp 'xyz=. xyz >:@]`]`,} 11 12'  NB. not in place
  assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 12 13 13 15 16 18 17, (18}.(i.10000)) , 8 9 11 12
  assert. pqr -: i. 10000
  z
@@ -632,12 +632,12 @@ hoo =. 3 : 0
  z=:z,sp 'xyz=: _789 (6})xyz'   NB. in place
  z=:z,sp 'qqq=: _123 (7)}xyz'   NB. create copy
  z=:z,sp 'xyz=: 8 9 >:@[`[`]} xyz'  NB. in place
- z=:z,sp 'xyz=: xyz >:@]`]`[} 11 12'  NB. in place
+ z=:z,sp 'xyz=: xyz >:@]`]`[} 11 12'  NB. not in place on [
  n =: 14 15
  z=:z,sp 'xyz=: n >:@(17 ,~ [)`(16 ,~ [)`]} xyz'  NB. in place but only the amend
  assert. n -: 14 15
  z=:z,sp 'xyz=: 8 9 >:@[`[`(,~)} xyz'  NB. in place only if 9!:53]1
- z=:z,sp 'xyz=: xyz >:@]`]`,} 11 12'  NB. in place only if 9!:53]1
+ z=:z,sp 'xyz=: xyz >:@]`]`,} 11 12'  NB. not in place
  z=:z,sp 'xyz=: 11 13 (>:@{)`[} xyz'  NB. in place, 2 gerunds
  assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 13 13 14 15 16 18 17, (18}.(i.10000)) , 8 9 11 12
  assert. pqr -: i. 10000
@@ -645,13 +645,13 @@ hoo =. 3 : 0
 )
 
 9!:53(0)
-IGNOREIFFVI ((50000*2-b32) < 0 3 7 8 {t) , (7000*2-b32)> 1 2 4 5 6 { t=:foo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3 5 7 8 {t) , (7000*2-b32)> 1 2 4 6 { t=:foo 1
 IGNOREIFFVI ((50000*2-b32) < 0 3{t) , (5000*2-b32)> 1 2 { t=:goo 1
-IGNOREIFFVI ((50000*2-b32) < 0 3 7 8 {t) , (7000*2-b32)> 1 2 4 5 6 9 { t=:hoo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3 5 7 8 {t) , (7000*2-b32)> 1 2 4 6 9 { t=:hoo 1
 9!:53(1)
-IGNOREIFFVI ((50000*2-b32) < 0 3 {t) , (7000*2-b32)> 1 2 4 5 6 7 8 { t=:foo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3 5 8 {t) , (7000*2-b32)> 1 2 4 6 7 { t=:foo 1
 IGNOREIFFVI ((50000*2-b32) < 0 3{t) , (5000*2-b32)> 1 2 { t=:goo 1
-IGNOREIFFVI ((50000*2-b32) < 0 3 {t) , (7000*2-b32)> 1 2 4 5 6 7 8 9 { t=:hoo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3 5 8 {t) , (7000*2-b32)> 1 2 4 6 7 9 { t=:hoo 1
 9!:53(2)   NB. Default
 
 abc =. save =. i.10000
@@ -853,7 +853,7 @@ NB. shaped boxed selectors
 (7 2 3$0 1 2 900 900 900 6 7 8 900 900 900 12 13 14 900 900 900 18 19 20 900 900 900 24 25 26 900 900 900 30 31 32 33 34 35 36 37 38 900 900 900) -: (900) (<(3 2 $1 3  0 6 4 2);1)} i. 7 2 3
 (7 2 3$0 1 2 3 4 900 6 7 8 9 10 900 12 13 14 15 16 900 18 19 20 21 22 900 24 25 26 27 28 900 30 31 32 33 34 35 36 37 38 39 40 900) -: (900) (<(3 2 $1 3  0 6 4 2);1;2)} i. 7 2 3
 
-'nonce error' -: (<3) [`]`]} etx [`1:`]  NB. execute exception if gerund returns gerund
+'domain error' -: (<3) [`]`]} etx [`1:`]  NB. execute exception if gerund returns gerund
 
 1:    99 (<1 2 3 ,:3 2 1)} i. 4 4 6   NB. more atoms than axes OK
 'domain error' -: 99 (0;0 0)} etx i. 2 3

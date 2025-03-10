@@ -856,29 +856,36 @@ static DF1(jtgav1){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[
 
 // verb executed for x v0`v1`v2} y
 static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
- A protw = (A)(intptr_t)((I)w+((I)jtfg&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtfg&JTINPLACEA)); // protected addresses
+// obsolete  A protw = (A)(intptr_t)((I)w+((I)jtfg&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtfg&JTINPLACEA)); // protected addresses
  I hn=AS(sv->fgh[2])[0];  // hn=# gerunds in h
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  dfv2(ffm,a,w,hv[1]);  // x v1 y - no inplacing.
  RZ(ffm);
- RZ(ff=jtamend(jt,ffm,0));  // now ff represents(x v1 y)} .  0 indicates this recursive call into powop, which will cause nonce error if v1 returned another gerund
- // Protect any input that was returned by v1 (must be ][)
- if(a==ffm)jtfg = (J)(intptr_t)((I)jtfg&~JTINPLACEA); if(w==ffm)jtfg = (J)(intptr_t)((I)jtfg&~JTINPLACEW);
+// obsolete  RZ(ff=jtamend(jt,ffm,0));  // now ff represents(x v1 y)} .  0 indicates this recursive call into amend.  scaf should call jtamendn2c directly
+// obsolete  if(a==ffm)jtfg = (J)(intptr_t)((I)jtfg&~JTINPLACEA); if(w==ffm)jtfg = (J)(intptr_t)((I)jtfg&~JTINPLACEW);
+ jtfg=(J)((I)jtfg&~(JTINPLACEA*(a==ffm)+JTINPLACEW*(w==ffm))); // Protect any input that was returned by v1 (must be ][ or equivalent)
+ jtfg=a==w?jt:jtfg;  // if a=w, abort all inplacing
  PUSHZOMB
- // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
- // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- if(hn>=3){RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w?(J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ // execute the gerunds that will give the arguments to amend.
+ // x v2 y - allow inplacing an arg not used by v0
+ if(hn>=3){
+// obsolete   RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w?(J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+  RZ(ffy = (FAV(hv[2])->valencefns[1])((J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))),a,w,hv[2]));  // x v2 y - inplacing whatever v0 doesn't use (self flags were set for v0)
+  jtfg=(J)((I)jtfg|(JTINPLACEW*((ffy!=w)&(ffy!=a)))); // if v2 returns new result, that becomes inplaceable, otherwise its status unchanged
  }else{ffy=w;}  // if v2 omitted or ], just use y directly
- // x v0 y - can inplace any unprotected argument
+ jtfg=(J)((I)jtfg&~(JTINPLACEA*(a==ffy))); // Protect x if it was returned by v2 (y doesn't need protection since we defer its inplacing till final amend)
+ // x v0 y - allow inplacing of x but not y
 // obsolete  RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtfg&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
- RZ(ffx = (FAV(hv[0])->valencefns[1])(((J)(intptr_t)((I)jtfg&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))),a,w,hv[0]));
+// obsolete  RZ(ffx = (FAV(hv[0])->valencefns[1])(((J)(intptr_t)((I)jtfg&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))),a,w,hv[0]));
+ RZ(ffx = (FAV(hv[0])->valencefns[1])((J)(intptr_t)((I)jtfg&~JTINPLACEW),a,w,hv[0]));  // x v0 y - allow inplacing x only
  // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
 // obsolete POPZOMB; R ((AF)jtamendn2c)(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
- POPZOMB; R ((AF)jtamendn2c)(( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ),ffx,ffy,ff);
+// obsolete  POPZOMB; R ((AF)jtamendn2c)(( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ),ffx,ffy,self);
+ POPZOMB; R jtamendn2(( (J)(intptr_t)((I)jtfg&~JTINPLACEA)),ffx,ffy,ffm,self);  // final amend.  No inplacing on x, but y OK
 }
 
-// handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive
+// handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive.  This result verb has ATOP[LR] flags set from v0
 static A jtgadv(J jt,A w){A hs;I n;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
@@ -907,7 +914,7 @@ static DF2(jtamnegate){F12IP;
 DF1(jtamend){F12IP;
  ARGCHK1(w);
  if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE, RMAX,RMAX,RMAX);  // verb} 
- else if(AT(w)&BOX&&unlikely(ger(jt,w))){A z;
+ else if(AT(w)&BOX&&unlikely(ger(jt,w))){A z;  // gerund}
   ASSERT(self!=0,EVNONCE);  // execute exception if gerund returns gerund
   RZ(z=gadv(w))   // get verbs for v0`v1`v2}, as verbs
   A *hx=AAV(FAV(z)->fgh[2]);

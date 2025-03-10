@@ -7,7 +7,7 @@ NB. obsolete 9!:49 ]1
 load jpath '~addons/math/fftw/fftw.ijs'
 
 x=: 1024 %~ ?100$1e5
-x -:!.1e_12 ifftw fftw x
+1 >: +/ x ~:!.1e_12 ifftw fftw x
 NB. obsolete 9!:49 s48
 
 

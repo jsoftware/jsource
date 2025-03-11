@@ -451,7 +451,7 @@ jobs:
      with:
       operating_system: openbsd
       architecture: x86-64
-      version: '7.2'
+      version: '7.6'
       shell: bash
 
       run: |

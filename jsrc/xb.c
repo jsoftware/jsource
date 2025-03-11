@@ -68,7 +68,8 @@ F2(jtcdot2){F12IP;A z;
  ARGCHK2(a,w);
  I t; RE(t=i0(a)); // convert type to integer atom, error if can't
  ASSERT(t=fromonehottype(t),EVDOMAIN)  // convert from 3!:0 form to internal type
- R cvt(t,w);
+ if(t!=AT(w))w=cvt(t,w);  // if the type doesn't match the desired, convert it
+ RETF(w);
 }
 
 // a is integer atom or list, values indicating the desired result

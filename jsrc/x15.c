@@ -1448,6 +1448,7 @@ F1(jtmema){F12IP;I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); R sc((I)MALLO
 F1(jtmemf){F12IP;I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); FREE((void*)k); R num(0);}
      /* 15!:4  memory free */
 
+// memr
 F1(jtmemr){F12IP;C*u;I m,n,t,*v;US*us;C4*c4;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(INT&AT(w),EVDOMAIN);
@@ -1475,7 +1476,7 @@ F1(jtmemr){F12IP;C*u;I m,n,t,*v;US*us;C4*c4;
  R vecb01(t,m,u);
 }    /* 15!:1  memory read */
 
-// write to memory.  w is addr,offset,count[,type]
+// write to memory (memw).  w is addr,offset,count[,type]
 F2(jtmemw){F12IP;C*u;I m,n,t,*v;
  ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(INT&AT(w),EVDOMAIN);

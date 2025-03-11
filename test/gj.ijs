@@ -297,6 +297,10 @@ NB. 9!:11 ] 30
 NB. qy%qx
 NB. 9!:11 t
 
+-. (15!:19 -: 15!:19@(11&c.)) 0. + i. 10   NB. new block allocated
+(15!:19 -: 15!:19@(11&c.)) 11 c. 0. + i. 10   NB. not allocated allocated
+(15!:19 -: 15!:19@(8&c.)) 0. + i. 10  NB. not allocated if already correct type 
+
 'domain error' -: 12 c. etx 1
 'domain error' -: 5 c. etx 1
 'domain error' -: 17 c. etx 1

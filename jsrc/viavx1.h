@@ -60,7 +60,7 @@
    case IICO|IIMODREFLEX: {XDQP##ALG(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=i;},1,ALG) zv+=wsct;} break;      \
     /* normal i./i: - use the table */ \
    case IICO: \
-   case IIDOT: { /* forcetomemory(0); scaf */ XDOP##ALG(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=hj;},4,ALG); zv+=wsct; }                          break;  \
+   case IIDOT: { XDOP##ALG(T,TH,hash,exp,stride,{zv[i]=hj;},{zv[i]=hj;},4,ALG); zv+=wsct; }                          break;  \
    case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDOP##ALG(T,TH,hash,exp,stride,{zb[i]=0;},{zb[i]=1;},1,ALG) zv=(I*)(zb+=wsct);} /* IRS - keep zv running */  break;  \
    case INUBIP|IIMODREFLEX: {       XMVPIP##ALG(T,TH,hash,exp,stride,3,ALG);              }   break;  \
    case INUB|IIMODREFLEX: {       XMVP##ALG(T,TH,hash,exp,stride,1,ALG);              }   break;  \

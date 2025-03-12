@@ -840,7 +840,7 @@ RECURSIVERESULTSCHECK
         tpopa=~(pt0ecam>>(PMASKSAVEX+2))&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
        }
        fsa2[0]=fsa2[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2(NOP)
-       PSTK *fsa0=fsa2-1; fsa0=(pt0ecam&(4<<PMASKSAVEX))?fsa2:fsa0; *fsa0=stack[0];  // fsa0=0 1 1->0 1 2 close up the stack  0->0(NOP)  0->1   0->2  scaf could be better
+       PSTK *fsa0=fsa2-1; fsa0=(pt0ecam&(4<<PMASKSAVEX))?fsa2:fsa0; *fsa0=stack[0];  // fsa0=0 1 1->0 1 2 close up the stack
        stack=fsa2;  // move stack to verb slot for now 1 2 2
        if(unlikely(ISSTKFAOWED(freep))){INCRSTAT(ffaowed)/* 0.0 */; faowed(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}
 

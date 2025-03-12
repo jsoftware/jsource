@@ -110,7 +110,7 @@
 // Pass the hash table for one value, like above
 #define FINDalgi(warg,harg,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
 NOUNROLL do{  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
- I hj=hv[harg];  /* fetch the hash index, which points back into the source table scaf if value is short, could store the value itself */ \
+ I hj=hv[harg];  /* fetch the hash index, which points back into the source table */ \
  if(store==4){nfstmt if(hj==hsrc##sct)break;}  /* i./i: the index always comes from the hash lookup */ \
  else if(hj==hsrc##sct){if(store==1)hv[harg]=(TH)i; if(store==3)hv[harg]=wsct; nfstmt break;}  /* this is the not-found case: possibly write, execute nfstmt */ \
  if((store!=2||hj<hsrc##sct)&&likely(!mismatch(warg,hsrc##v[hj]))){if(store==2)hv[harg]=(TH)(hsrc##sct+1); if(store!=4){fstmt} break;} /* compare warg against the implied hsrc##v[hj] */ \

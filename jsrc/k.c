@@ -1026,7 +1026,7 @@ F1(jticvt){F12IP;A z;D*v,x;I i,n,*u;
 }
 
 A jtpcvt(J jt,I t,A w){B b;RANK2T oqr=jt->ranks;
- RESETRANK; A z=ccvt(t,w,0); jt->ranks=oqr;  // scaf should suppress error formatting
+ RESETRANK; A z; WITHMSGSOFF(z=ccvt(t,w,0);) jt->ranks=oqr;
  RESETERR; R z?z:w;
 }    /* convert w to type t, if possible, otherwise just return w.  Leave ranks unaffected */
 

@@ -164,6 +164,7 @@ DF1(jticap){F12IP;A a,e;I n;P*p;
  R likely((B01&AT(w))!=0) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }
 
+// translate characters
 DF1(jtcharmap){F12IP; A z;B bb[256];I k,n;UC c,*u,*v,*yv,zz[256];
  ARGCHK1(w);
  A x=FAV(FAV(self)->fgh[2])->fgh[0], y=FAV(self)->fgh[0];  // extract translation tables

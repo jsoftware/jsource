@@ -960,7 +960,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   if(AT(QCWORD(lv[j]))&ASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
    A neww; RZ(neww=words(t));  // find names; if string ill-formed, we might as well catch it now
    if(AN(neww)){  // ignore blank string
-    A newt=every(neww,(A)&onmself);  // convert every word to a NAME block
+    A newt; WITHMSGSOFF(newt=every(neww,(A)&onmself);)  // convert every word to a NAME block
     if(newt){lv[j-1]=QCINSTALLTYPE(t=incorp(newt),QCNOUN); AT(t)|=BOXMULTIASSIGN;}else RESETERR  // if no error, mark the block as MULTIASSIGN type and save it in the compiled definition; also set as t for below.  If error, catch it later
    }
   }
@@ -978,12 +978,14 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    } else if(AT(t)&LIT) {
     // LIT followed by =.  Probe each word.  Now that we support lists of NAMEs, this is used only for AR assignments
     // First, convert string to words
-    s=CAV(t);   // s->1st character; remember if it is `
-    if(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t)){I kk;  // convert to words (discarding leading ` if present)
+    s=CAV(t);   // s->1st character; remember if it is
+    WITHMSGSOFF(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t);)
+    if(wds){I kk;  // convert to words (discarding leading ` if present)
      I wdsn=AN(wds); A *wdsv = AAV(wds), wnm;
      for(kk=0;kk<wdsn;++kk) {  // Process each word in string
       // Convert word to NAME; if local name, add to symbol table
-      if((wnm=onm(wdsv[kk]))) {
+      WITHMSGSOFF(wnm=onm(wdsv[kk]);)
+      if(wnm) {
        if(!(NAV(wnm)->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeisres(wnm,pfst)); AT(nml->name)&=~NAMEABANDON;}  // see above
       } else RESETERR
      }

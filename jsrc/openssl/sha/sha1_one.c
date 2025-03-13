@@ -18,6 +18,9 @@ unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
     SHA_CTX c;
     static unsigned char m[SHA_DIGEST_LENGTH];
 
+#if defined(__OpenBSD__)
+  fprintf(stdout,"openssl a0 \n");
+#endif
     if (md == NULL)
         md = m;
 #if defined(__OpenBSD__)

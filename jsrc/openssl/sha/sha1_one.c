@@ -23,9 +23,7 @@ unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
     if (!SHA1_Init(&c))
         return NULL;
     SHA1_Update(&c, d, n);
-#if !defined(__OpenBSD__)
     SHA1_Final(md, &c);
-#endif
     OPENSSL_cleanse(&c, sizeof(c));
     return md;
 }

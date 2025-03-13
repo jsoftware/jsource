@@ -88,9 +88,6 @@ DF2(jtshasum2){F12IP;
 // SHA1 SHA224 SHA256 for armv8 x86_64
 // use other sources
 
-#if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 s= %lld \n",s);
-#endif
   switch((s>0)?s:-s) {
   case 1: {
     UC md[20],dh[2*20];

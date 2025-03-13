@@ -32,6 +32,9 @@ NB. this crash on Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
 echo '1: (3x ^ 2 ^ i. 10x)'
 1: 1: (3x ^ 2 ^ i. 10x)
 
+NB. this crash on OpenBSD v7.6
+echo (128!:6) 'abc'
+
 echo 'avx512f: ',":9!:56'avx512f'
 echo 'avx512vl: ',":9!:56'avx512vl'
 echo 'avx512bw: ',":9!:56'avx512bw'

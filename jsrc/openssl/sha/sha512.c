@@ -54,6 +54,7 @@
 #undef MMSC_VER
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

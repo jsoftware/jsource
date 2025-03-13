@@ -95,7 +95,7 @@ DF2(jtshasum2){F12IP;
 // use other sources
 
 #if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 a2 \n");
+ fprintf(stderr, "jtshasum2 a2 %lld \n",s);
 #endif
   switch((s>0)?s:-s) {
   case 1: {

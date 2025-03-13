@@ -339,10 +339,25 @@ unsigned char *SHA384(const unsigned char *d, size_t n, unsigned char *md)
 
     if (md == NULL)
         md = m;
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl c0 \n");
+#endif
     SHA384_Init(&c);
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl c1 \n");
+#endif
     SHA512_Update(&c, d, n);
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl c2 \n");
+#endif
     SHA512_Final(md, &c);
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl c3 \n");
+#endif
     OPENSSL_cleanse(&c, sizeof(c));
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl c4 \n");
+#endif
     return md;
 }
 

@@ -18,32 +18,14 @@ unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
     SHA_CTX c;
     static unsigned char m[SHA_DIGEST_LENGTH];
 
-#if defined(__OpenBSD__)
-  fprintf(stderr,"openssl a0 \n");
-#endif
     if (md == NULL)
         md = m;
-#if defined(__OpenBSD__)
-  fprintf(stderr,"openssl a1 \n");
-#endif
     if (!SHA1_Init(&c))
         return NULL;
-#if defined(__OpenBSD__)
-  fprintf(stderr,"openssl a2 \n");
-#endif
     SHA1_Update(&c, d, n);
-#if defined(__OpenBSD__)
-  fprintf(stderr,"openssl a3 \n");
-#endif
 #if !defined(__OpenBSD__)
     SHA1_Final(md, &c);
 #endif
-#if defined(__OpenBSD__)
-  fprintf(stderr,"openssl a4 \n");
-#endif
     OPENSSL_cleanse(&c, sizeof(c));
-#if defined(__OpenBSD__)
-  fprintf(stderr,"openssl a5 \n");
-#endif
     return md;
 }

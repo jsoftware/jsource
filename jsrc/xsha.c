@@ -89,18 +89,12 @@ DF2(jtshasum2){F12IP;
 // use other sources
 
 #if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 a2 %lld \n",s);
+ fprintf(stderr, "jtshasum2 s= %lld \n",s);
 #endif
   switch((s>0)?s:-s) {
   case 1: {
     UC md[20],dh[2*20];
-#if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 a4 \n");
-#endif
     SHA1(v, n, md);
-#if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 a5 \n");
-#endif
     z = (s<0)?str(20, md):str(2*20, tohex(dh,md,20));
   }
   break;
@@ -118,13 +112,7 @@ DF2(jtshasum2){F12IP;
   break;
   case 4: {
     UC md[64],dh[2*48];
-#if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 a6 \n");
-#endif
     SHA384(v, n, md);
-#if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 a7 \n");
-#endif
     z = (s<0)?str(48, md):str(2*48, tohex(dh,md,48));
   }
   break;

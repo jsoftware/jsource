@@ -206,7 +206,7 @@ if  [ "$1" != "openbsd" ] ; then
 j64x=j64avx2 USE_PYXES=1 ./build_libj.sh
 ./clean.sh
 j64x=j64avx512 USE_PYXES=1 ./build_libj.sh
-endif
+fi
 fi
 else
 j64x=j32 USE_PYXES=0 ./build_jconsole.sh

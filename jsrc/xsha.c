@@ -55,17 +55,11 @@ DF2(jtshasum2){F12IP;
   I n;
   A z;
   UC *v;
-#if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 a0 \n");
-#endif
   F2RANK(0,1,jtshasum2,self);  // do rank loop if necessary
   RZ(a=vi(a));
   n=AN(w);
   v=UAV(w);
   ASSERT(!n||AT(w)&LIT,EVDOMAIN);
-#if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum2 a1 \n");
-#endif
   I s=AV(a)[0];
 
   // sha1 and sha256 routines use sse instructions, since there are no avx versions of the relevant instructions
@@ -99,9 +93,6 @@ DF2(jtshasum2){F12IP;
 #endif
   switch((s>0)?s:-s) {
   case 1: {
-#if defined(__OpenBSD__)
- fprintf(stderr, "jtshasum3 a1 \n");
-#endif
     UC md[20],dh[2*20];
 #if defined(__OpenBSD__)
  fprintf(stderr, "jtshasum2 a4 \n");
@@ -127,7 +118,13 @@ DF2(jtshasum2){F12IP;
   break;
   case 4: {
     UC md[64],dh[2*48];
+#if defined(__OpenBSD__)
+ fprintf(stderr, "jtshasum2 a6 \n");
+#endif
     SHA384(v, n, md);
+#if defined(__OpenBSD__)
+ fprintf(stderr, "jtshasum2 a7 \n");
+#endif
     z = (s<0)?str(48, md):str(2*48, tohex(dh,md,48));
   }
   break;

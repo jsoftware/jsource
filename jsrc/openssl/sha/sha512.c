@@ -352,10 +352,25 @@ unsigned char *SHA512(const unsigned char *d, size_t n, unsigned char *md)
 
     if (md == NULL)
         md = m;
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl b0 \n");
+#endif
     SHA512_Init(&c);
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl b0 \n");
+#endif
     SHA512_Update(&c, d, n);
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl b1 \n");
+#endif
     SHA512_Final(md, &c);
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl b2 \n");
+#endif
     OPENSSL_cleanse(&c, sizeof(c));
+#if defined(__OpenBSD__)
+  fprintf(stderr,"openssl b3 \n");
+#endif
     return md;
 }
 

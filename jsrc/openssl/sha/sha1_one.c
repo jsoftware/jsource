@@ -20,10 +20,25 @@ unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
 
     if (md == NULL)
         md = m;
+#if defined(__OpenBSD__)
+  fprintf(stdout,"openssl a1 \n");
+#endif
     if (!SHA1_Init(&c))
         return NULL;
+#if defined(__OpenBSD__)
+  fprintf(stdout,"openssl a2 \n");
+#endif
     SHA1_Update(&c, d, n);
+#if defined(__OpenBSD__)
+  fprintf(stdout,"openssl a3 \n");
+#endif
     SHA1_Final(md, &c);
+#if defined(__OpenBSD__)
+  fprintf(stdout,"openssl a4 \n");
+#endif
     OPENSSL_cleanse(&c, sizeof(c));
+#if defined(__OpenBSD__)
+  fprintf(stdout,"openssl a5 \n");
+#endif
     return md;
 }

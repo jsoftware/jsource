@@ -35,7 +35,9 @@ unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md)
 #if defined(__OpenBSD__)
   fprintf(stderr,"openssl a3 \n");
 #endif
+#if !defined(__OpenBSD__)
     SHA1_Final(md, &c);
+#endif
 #if defined(__OpenBSD__)
   fprintf(stderr,"openssl a4 \n");
 #endif

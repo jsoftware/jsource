@@ -56,7 +56,7 @@ DF2(jtshasum2){F12IP;
   A z;
   UC *v;
 #if defined(__OpenBSD__)
- fprintf(stdout, "jtshasum2 a0 \n");
+ fprintf(stderr, "jtshasum2 a0 \n");
 #endif
   F2RANK(0,1,jtshasum2,self);  // do rank loop if necessary
   RZ(a=vi(a));
@@ -64,7 +64,7 @@ DF2(jtshasum2){F12IP;
   v=UAV(w);
   ASSERT(!n||AT(w)&LIT,EVDOMAIN);
 #if defined(__OpenBSD__)
- fprintf(stdout, "jtshasum2 a1 \n");
+ fprintf(stderr, "jtshasum2 a1 \n");
 #endif
   I s=AV(a)[0];
 
@@ -95,20 +95,20 @@ DF2(jtshasum2){F12IP;
 // use other sources
 
 #if defined(__OpenBSD__)
- fprintf(stdout, "jtshasum2 a2 \n");
+ fprintf(stderr, "jtshasum2 a2 \n");
 #endif
   switch((s>0)?s:-s) {
   case 1: {
 #if defined(__OpenBSD__)
- fprintf(stdout, "jtshasum3 a1 \n");
+ fprintf(stderr, "jtshasum3 a1 \n");
 #endif
     UC md[20],dh[2*20];
 #if defined(__OpenBSD__)
- fprintf(stdout, "jtshasum2 a4 \n");
+ fprintf(stderr, "jtshasum2 a4 \n");
 #endif
     SHA1(v, n, md);
 #if defined(__OpenBSD__)
- fprintf(stdout, "jtshasum2 a5 \n");
+ fprintf(stderr, "jtshasum2 a5 \n");
 #endif
     z = (s<0)?str(20, md):str(2*20, tohex(dh,md,20));
   }

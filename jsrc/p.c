@@ -496,18 +496,16 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
   jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
 
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
-  //  (exec) 26 VASGSAFE from verb flags 27 PTNOTLPARX set if stack[0] is not (
-  //         25 set if first stack word AFTER the executing fragment is NOT MARK/RPAR (i. e. there are executions remaining on the stack) 
   //  (name resolution) 23-26  free
-  //  (exec) 20-22 savearea for pmask for lines 0-2  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
+  //  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
   //  19 free
   //  18   AR flag from symtab
   //  16 free
   //  0-15 m (word# in sentence)
-#define NOTFINALEXECX 25  // bit must be less than 32+PTISCAVNX, because we test values 
-#define NOTFINALEXEC (1LL<<NOTFINALEXECX)
+// obsolete #define NOTFINALEXECX 25  // bit must be less than 32+PTISCAVNX, because we test values 
+// obsolete#define NOTFINALEXEC (1LL<<NOTFINALEXECX)
 #define LOCSYMFLGX (18-ARLCLONEDX)  // add LOCSYMFLGX to AR*X to get to the flag bit in pt0ecam
-#define PMASKSAVEX 20  // 3 bits of pline
+// obsolete#define PMASKSAVEX 20  // 3 bits of pline
 #define NAMEFLAGSX 17  // 17 and 20
   // STACK0PT needs only enough info to decode from position 0.  It persists into the execution phase
 #if SY_64
@@ -518,7 +516,8 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
   UI4 stack0pt;
 #define SETSTACK0PT(v) stack0pt=(v);
 #define GETSTACK0PT stack0pt
-#define STACK0PTISCAVN (PTISCAVN(stack0pt)<<(NOTFINALEXECX+1-PTISCAVNX))  // move the bit to above NOTFINALX
+// obsolete #define STACK0PTISCAVN (PTISCAVN(stack0pt)<<(NOTFINALEXECX+1-PTISCAVNX))  // move the bit to above NOTFINALX
+#define STACK0PTISCAVN PTISCAVN(stack0pt)  // must be above bit 16
 #endif
   jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
   UI pt0ecam = (AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert clone/added flags into portmanteau vbl.  locsyms cannot change during this execution
@@ -711,12 +710,13 @@ endname: ;
     // First, create the bitmask of parser lines that are eligible to execute
     // register pressure is severe where we do subroutine calls below
     I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 2 is enough to detect bit 0 if result is 0-4
-    PSTK *fsa=(PSTK*)((I)stack+((2*sizeof(PSTK))>>((I)((C*)&stack[2].pt)[2]&1)));  // pointer to stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
-    A fs=QCWORD(__atomic_load_n(&fsa->a,__ATOMIC_ACQUIRE));  // the action to be executed if lines 0-4.   Could be garbage
+    I fsaofst=(2*sizeof(PSTK))>>((I)((C*)&stack[2].pt)[2]&1);  // offset to stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
+// scaf create fsa, pass that through the calls, reinit stack after calls. Don't put fsaofst into jtp
+    A fs=QCWORD(__atomic_load_n(&(((PSTK*)((I)stack+fsaofst))->a),__ATOMIC_ACQUIRE));  // the action to be executed if lines 0-4.   Could be garbage
     pmask&=GETSTACK0PT;  // finish 1st 3 columns of parse
     pmask&=(I)((C*)&stack[3].pt)[3];  // finish 4th column of parse
 // obsolete    A fs1=__atomic_load_n(&stack[1].a,__ATOMIC_ACQUIRE);  // in case of line 1 V0 V1 N2, we will need the flags from V1.  Could be garbage, but will be a valid verb in lines 0-2
-    pt0ecam&=~(VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PMASKSAVEX));   // clear all the flags we will use
+// obsolete     pt0ecam&=~(VASGSAFE+PTNOTLPAR+NOTFINALEXEC+(7LL<<PMASKSAVEX));   // clear all the flags we will use
     
     if(withprob(pmask!=0,0.8)){  // If all 0, nothing is dispatchable, go push next word after checking for ( .  likely is an overstatement but it gives better register usage
 // obsolete  obsolete obsolete    fs1=QCWORD(fs1);  // clear flags from address
@@ -734,11 +734,12 @@ endname: ;
       if(pmask&7){  // lines 0 1 2, verb execution
        // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
 // obsolete        if(unlikely((!PTISMARKBACKORRPAR(fsa[2]))))pt0ecam|=NOTFINALEXEC;  // remember if this exec is final in its branch.   Wait till we know not fail, so we don't have to wait for (.  Used after execution
-       pt0ecam|=pmask<<PMASKSAVEX;  // save pmask over the subroutine calls - also used after the verb execution
+// obsolete        pt0ecam|=pmask<<PMASKSAVEX;  // save pmask over the subroutine calls - also used after the verb execution
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
-       pmask>>=1;        // convert pmask to 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
+// obsolete        pmask>>=1;        // convert pmask to 
        jt->parserstackframe.sf=fs;  // set new recursion point for $:
-       AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>1],__ATOMIC_RELAXED);  // frees fs the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call
+       J jtp=(J)((I)jt+fsaofst+(pmask>>=1));  // stop usage of fsa/pmask, fold into jtp as stack offset to verb (1 2 2), 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
+       AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>=1],__ATOMIC_RELAXED);  // frees fs the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call
 // obsolete       fs1flag&=fsflag;  // include ASGSAFE from V0 (if applicable, otherwise just a duplicate of fsflag)
 // obsolete        fsflag>>=pmask; fsflag&=VJTFLGOK1;  // select the monad/dyad bit indicating inplaceability, store it in the monad bit pf flags
 // obsolete        pt0ecam|=fsflag;  // insert flag into portmanteau reg.  Used in the execution
@@ -751,7 +752,7 @@ endname: ;
        // execution.  That will then execute as (name' + +) creating a fork that will assign to name.  So we can inplace any execution, because
        // it always produces a noun and the only things executable from the stack are tridents
        if(withprob(!PTISNOTASGNNAME(GETSTACK0PT),0.1)){A zval; I targc;  // targc is # refs in the assigned symbol that is allowed for inplaceables.  Is this an assignment?
-        A fs1=QCWORD(stack[1].a); fs1=pmask&1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
+        A fs1=QCWORD(stack[1].a); fs1=(I)jtp&1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
         if(FAV(fs)->flag&FAV(fs1)->flag&VASGSAFE){  // do the verb(s) allow assignment in place?
 // obsolete        if(withprob((UI)fsflag>(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(~fs1flag&VASGSAFE)),0.1)){A zval; I targc;  // targc is # refs in the assigned symbol that is allowed for inplaceables
 // obsolete        if(withprob(0==(UI)(PTISNOTASGNNAME(GETSTACK0PT)+(~fs1flag&VASGSAFE)),0.1)){A zval; I targc;  // targc is # refs in the assigned symbol that is allowed for inplaceables
@@ -764,14 +765,17 @@ endname: ;
           if(likely((s=(L*)(I)(NAV(QCWORD(*(volatile A*)queue))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
            zval=QCWORD((SYMORIGIN+(I)s)->fval);  // get value of symbol in primary table.  There may be no value; that's OK
           }else{zval=QCWORD(jtprobelocal(jt,QCWORD(*(volatile A*)queue),jt->locsyms));}
-          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d. which is OK
+          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d.) which is OK
          }else{
            // global assignment, get slot address.  Global names have been ra()d and have AC=2
           zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue)));
-           // We have to handle the case of name =: 5 + > <  name,  i. e where the usercount of 2 came from external boxing rather than FAOWED.
+           // We have to handle the case of name =: 5 + > <  name,  i. e where the usecount of 2 came from external boxing rather than FAOWED.
            // we require that the zvalue be a FAOWED argument
-           targc=fsa[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;
+           targc=((PSTK *)((I)stack+((I)jtp&(4*16-4))))[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;  // allow inplacing with target=2 if the assigned value is either arg with FAOWED flag
          }
+#define jt ((J)((I)jtp&~JTFLAGMSK))  // all jt use goes through jtp     stop using jt, pmask, and pt0ecam, which were not saved over the subroutine call
+#define pmask xxx
+#define pt0ecam xxx
          // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
          // We require flags indicate not read-only, and correct usecount: 1 if local, 2 if global since we have raised the count of this block already if it is named and to be operated on inplace; +1 if NJA to account for the mapping reference.
          // The block can be virtual, if it is x/y to xdefn, but we must never inplace to a virtual block or to readonly (xxx_index_ =: xxx_index_ + 1)
@@ -780,12 +784,11 @@ endname: ;
          // not settle for 10 clocks.  We very much want to keep executing during the settlement so we don't want to risk a misprediction.  We should be executing
          // well into tpop* before zval settles.
          zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+targc))?zval:0; jt->zombieval=zval;  // compiler should generate BT+ADC
-         pmask=(pt0ecam>>(PMASKSAVEX+1))&3;  // restore line# after calls
+// obsolete          pmask=(pt0ecam>>(PMASKSAVEX+1))&3;  // restore line# after calls
         }
        }
-       PSTK *arga=fsa; arga=pmask&2?stack:arga; A arg1=arga[1].a;// 1st arg, monad or left dyad  2 3 1
-         // this requires fsa to survive over the assignment block, but it's faster than the alternative
-       arga=pmask&2?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
+       PSTK *arga=(PSTK *)((I)stack+((I)jtp&(4*16-4))); arga=(I)jtp&2?stack:arga; A arg1=arga[1].a;// 1st arg, reconstituted; then fetch  monad or left dyad  2 3 1
+       arga=(I)jtp&2?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
        // Create what we need to free arguments after the execution.  We keep the information needed to two registers so they can persist over the call as they are needed right away on return
        // (1) When the args return from the verb, we will check to see if any were abandoned.  Those can be freed right away, returning them to the
 //     // pool and allowing their cache space to be reused.  But there is a problem:
@@ -794,20 +797,20 @@ endname: ;
        // the address of the tpop slot IF the arg is abandoned now.  Then after execution we will pick up again, knowing to quit if the tpop slot
        // has been zapped.  If the tpop[aw] is not abandoned, we switch it to look like STKNAMED/~STKFAOWED because that is the fastest path out
        // (2) If either arg is STKNAMED, it can't be abandoned & we use tpop[aw] to hold it, preserving the STKNAMED/STKFAOWED flags.  After exec if FAOWED we must either fa() the arg, paying the debt, or flag the result as STKFAOWED
-       // The calculation of tpopa/w will run to completion while the expected indirect-branch misprediction is being processed
+       // The calculation of tpopa/w here will run to completion while the expected indirect-branch misprediction is being processed
        A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:(A*)STKNAMED; tpopa=ISSTKNAMED(arg1)?(A*)arg1:tpopa;
         // Note: this line must come before the next one, to free up the reg holding STKNAMED
-       A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:(A*)STKNAMED; tpopw=(I)arg2&(pmask>>1)?(A*)arg2:tpopw;
+       A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:(A*)STKNAMED; tpopw=((I)arg2<<(1-STKNAMEDX))&((I)jtp&2)?(A*)arg2:tpopw;
               // point to pointer to arg2 (if it is inplace) - only if dyad
               // tpopa/tpopw are:  monad: w fs  dyad: a w
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
 // obsolete        J jti=(J)((I)jt+(2*pmask)+1);  // pmask now means 'dyad execution'.  Set inplaceable execution, 1 or 2 bits
 // obsolete  jti=(pt0ecam&VJTFLGOK1)?jti:jt;  // pmask now means 'dyad execution'.  Set args as inplaceable if verb supports jtflags in the current valence
-       y=(*actionfn)((J)(((I)jt+pmask)|1),QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set bit 0, and bit 1 if dyadic, if inplacing allowed by the verb
+       y=(*actionfn)((J)(((I)jtp&~(JTFLAGMSK&~3))|1),QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set inplacing flags  bit 0, and bit 1 if dyadic.  Clear other flags incl MODX
          // use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  When we don't break we lose time waiting for jt->fs to settle, but very little.
        // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
        // indirect branch can mispredict and start fetching from the new address.  That is, minimize total # instructions from loading actionfn until the call, with no concern for latency.  In the normal case the
-       // load of actionfn will be a single load, completing in 5 cycles, so every instruction after that is money.  The shifting of pmask in place in the code above is needed to prevent the
+       // load of actionfn will be a single load, completing in 5 cycles, so every instruction after that is money.  obsolete The shifting of pmask in place in the code above is needed to prevent the
        // compiler from spilling actionfn (the compiler doesn't realize that this is going to be a pipeline break, so if it feels moved to spill actionfn, it will end with
        // call [actionfn] which is as bad as the code can be).
        // The generated code is maddeningly brittle.  As of 20220802 actionfn is loaded early and kept in a register, while jt->parserstackframe.sf resides in r9 for the duration of the function.  But if you do an atomic_load of jt->parserstackframe.sf
@@ -817,9 +820,9 @@ RECURSIVERESULTSCHECK
        auditmemchains();  // trap here while we still point to the action routine
 #endif
        if(unlikely(y==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
-        pmask=(pt0ecam>>PMASKSAVEX)&7;  // restore after calls
+// obsolete         pmask=(pt0ecam>>PMASKSAVEX)&7;  // restore after calls
         // if there was an error, try to localize it to this primitive
-        jteformat(jt,jt->parserstackframe.sf,QCWORD(stack[(pmask+1)&3].a),QCWORD(pmask&4?stack[3].a:0),0);
+        jteformat(jt,jt->parserstackframe.sf,QCWORD(stack[(0b0110>>((I)jtp&3))&3].a),QCWORD((I)jtp&2?stack[3].a:0),0);  // first arg is w/a 2 3 1, second is 0/w
         FP
        }
 #if AUDITEXECRESULTS
@@ -832,19 +835,26 @@ RECURSIVERESULTSCHECK
        // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
        //  so that it is safe to remove its protection
        ramkrecursv(y);  // force recursive y
+
+       // We have to fa any value that we ra'd.  For the args this is the lengthy tpop procedure below, but first we have to handle an unusual case:
+       // a few functions such as name_: and 4!:55 <'name' raise the usecount of the variables on the stack and mark the stack entry as FAOWED to note the need for a fa.
+       // we have to transfer that info from the stack to the tpop[aw] that we saved in registers over the call to actionfn
        A freea,freep;  // reg to hold arg we are possibly freeing
        // start with fs, which we extract from the stack to get the FAOWED flag
-       PSTK *fsa2=&stack[((pt0ecam&((I)1<<PMASKSAVEX))?1:2)];   // point to verb slot  1 2 2
-       freep=fsa2[0].a;  // fetch pointer to verb
-       if(unlikely(ISSTKREFRESHRQD(freep))){
-        // here the execution of this verb required going through the stack to raise the usecount of local values on the stack.  We have to refresh the tpop[aw] values
-        freea=stack[1].a; tpopa=(pt0ecam>>(PMASKSAVEX+2))&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if dyad and the x arg was STKNAMED
+       PSTK *fsa2=(PSTK *)((I)stack+((I)jtp&(4*16-4)));;   // point to verb slot  1 2 2
+       freep=fsa2[0].a;  // fetch pointer to verb.  We don't look at the verb (i. e. fs)!  We are looking to see if the args were modified
+       if(unlikely(ISSTKREFRESHRQD(freep))){   // if the stack has been altered...
+        // here the execution of this verb required going through the stack to raise the usecount of local values on the stack.  The raised values were
+        // flagged as having STKFAOWED+STKNAMED.  Since any STKNAMED arg put the arg into tpop[aw], we refresh the tpop[aw] values to get the correct setting of FAOWED for any that is STKNAMED
+        freea=stack[1].a; tpopa=((I)jtp>>1)&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if dyad and the x arg was STKNAMED
         freea=fsa2[1].a;   // fetch y arg of verb
-        tpopw=(pt0ecam>>(PMASKSAVEX+2))&(I)freea&STKNAMED?(A*)freea:tpopw;  // refresh tpopw if dyad and the y arg was STKNAMED
-        tpopa=~(pt0ecam>>(PMASKSAVEX+2))&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
+        tpopw=((I)jtp>>1)&(I)freea&STKNAMED?(A*)freea:tpopw;  // refresh tpopw if dyad and the y arg was STKNAMED
+        tpopa=~((I)jtp>>1)&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
        }
+
+       // While we have fs and the stack pointer, close up the stack and free fs if needed
        fsa2[0]=fsa2[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2(NOP)
-       PSTK *fsa0=fsa2-1; fsa0=(pt0ecam&(4<<PMASKSAVEX))?fsa2:fsa0; *fsa0=stack[0];  // fsa0=0 1 1->0 1 2 close up the stack
+       PSTK *fsa0=fsa2-1; fsa0=(I)jtp&2?fsa2:fsa0; *fsa0=stack[0];  // fsa0=0 1 1->0 1 2 close up the stack   scaf try fsa[-(((I)jtp&2)>>1)]=stack[0]
        stack=fsa2;  // move stack to verb slot for now 1 2 2
        if(unlikely(ISSTKFAOWED(freep))){INCRSTAT(ffaowed)/* 0.0 */; faowed(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}
 
@@ -856,12 +866,9 @@ RECURSIVERESULTSCHECK
        // We mustn't free VIRTUAL blocks because they have to be zapped differently.  When we work that out, we will free them here too
        // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
        // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc from BEFORE the call
-       // (2) if any of args/fs is FAOWED, the value is now out of execution and must be fa()d.  BUT if the value is y, it remains in execution and we inherit the
+       // (2) if any of args/fs is FAOWED, the value is now out of execution and must be fa()d, ESCEPT that if the arg id the return value y, it remains in execution and we inherit the
        // FAOWED status into y (but only once per value, because the first such inheritance modifies y). 
        // first the w arg
-       // We schedule the loads according to the measured frequencies indicated, which come from the test suite (not including gtdot*.ijs) measured 20241224 on Alder Lake (Skylake compilation)
-       // The rule is: loads that contribute to mispredictable test A should be scheduled before the LAST likely-mispredicted branch leading to A.
-       // Those loads will settle during misprediction, reducing the time through A (including its misprediction, if it mispredicts)
        if(ISSTKNAMED(tpopw)){INCRSTAT(wfaowed/*.7*/) if(unlikely((A)QCWORD(tpopw)==y)){INCRSTAT(wfainh/*.02*/) y=(A)tpopw;}else if(withprob(ISSTKFAOWED(tpopw),0.2)){INCRSTAT(wfafa/*.08*/) faowed((A)QCWORD(tpopw),AC((A)QCWORD(tpopw)),AT((A)QCWORD(tpopw)));}}
                 // if the input is the result, keep the flags from the input, which are set to indicate required frees.  The presence of one of these will suppress matching a also
        else{ /*0.3*/  // tpopw points to the tpop stack, not the argument
@@ -883,11 +890,11 @@ RECURSIVERESULTSCHECK
         }else{INCRSTAT(anull/*.05*/)}
        }
 
-       // close up the stack (now 1 2 2) and store the result.  We have to wait till here because y may have inherited FAOWED status
+       // close up the stack (now 1 2 2) and store the result.  We have to wait till here because y may have inherited FAOWED status during the tpop[aw] processing
        UI endstkpt=((US*)&stack[2].pt)[1];  // top half of pt at NEXT stack position
        stack[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
        y=NEXTY;  // refetch next-word to save regs
-       fsa2=stack-1; stack=(pt0ecam&(2<<PMASKSAVEX))?fsa2:stack;  // fsa2->0 1 1; stack->1 1 2
+       fsa2=stack-1; stack=(I)jtp&1?fsa2:stack;  // fsa2->0 1 1; stack->1 1 2
 
        // Most of the executed fragments are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
        // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
@@ -898,13 +905,18 @@ RECURSIVERESULTSCHECK
 
        // Handle early exits from exec loop: (1) line (0, impossible)/1/2 with AVN in pos 0; (2) (line 0/2, not LPAR in pos 0, finalexec).
        // If line 02 and the current word is (C)AVN and the next is also, stack 2
-       // the likelys on the next 2 lines are to get the compiler to avoid spilling queue or nextat
+       // the likelys on the next 2 lines are to get the compiler to avoid spilling queue
+#undef jt
+#undef pt0ecam
+#undef pmask
+       jt=(J)((I)jtp&~JTFLAGMSK);   // restore jt for normal use
        if(likely((GETSTACK0PT&PTNOTLPAR)!=0)){
 // obsolete        if(unlikely((!PTISMARKBACKORRPAR(stack[1]))))pt0ecam|=NOTFINALEXEC;  // remember if this exec is final in its branch.   Wait till we know not fail, so we don't have to wait for (.  Used after execution
 // obsolete         if(likely(STACK0PTISCAVN>=(pt0ecam&NOTFINALEXEC+(1LL<<(PMASKSAVEX+1))))){   // test is AVN or (NOTFINAL and pmask[1] both 0)
-        if(likely(STACK0PTISCAVN>=(endstkpt^(PTRPAR>>16))+(pt0ecam&(1LL<<(PMASKSAVEX+1))))){   // test is AVN or !(!FINAL | line1) =  AVN or FINAL&!line1
+        if(likely(STACK0PTISCAVN>=(endstkpt^(PTRPAR>>16))+(I)jtp&1)){   // test is AVN or !(!FINAL | line1) =  AVN or FINAL&!line1
          // not ( and (AVN or !line1 & finalexec)): OK to skip the executable check
-         pt0ecam&=(((GETSTACK0PT<<(CONJX-PTISCAVNX))&~(pt0ecam<<(CONJX-(PMASKSAVEX+1))))|~CONJ);  // Optionally stack one more.  CONJ comes in as (next is CAVN).  Stack 2 if also (curr is CAVN) and (line 02)
+// obsolete          pt0ecam&=(((GETSTACK0PT<<(CONJX-PTISCAVNX))&~(pt0ecam<<(CONJX-(PMASKSAVEX+1))))|~CONJ);  // Optionally stack one more.  CONJ comes in as (next is CAVN).  Stack 2 if also (curr is CAVN) and (line 02)
+         pt0ecam&=(((GETSTACK0PT<<(CONJX-PTISCAVNX))&~((I)jtp<<(CONJX-0)))|~CONJ);  // Optionally stack one more.  CONJ comes in as (next is CAVN).  Stack 2 if also (curr is CAVN) and (line 0/2)
          break;  // Go stack.
         }
        }else{
@@ -915,12 +927,11 @@ RECURSIVERESULTSCHECK
        // If line 1, we must rescan in case it was V V V N which is now x V V N
       }else{
        // Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about recursion
-       pmask>>=3; // 1 for adj, 2 for conj
+       pmask>>=3; // 1 for adj, 2 for conj   1 2
        AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
        A arg2=stack[pmask+1].a;   // 2nd arg, fs or right dyad
-       A arg3=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED); arg3=pmask&2?arg3:0;  // fs, if this is a conjunction, for FAOWED testing.  If not conj, set to 0 which has FAOWED clear.  Atomic to avoid branch
-       UI4 restok=stack[1].t;  // save token # to use for result
+// obsolete        A arg3=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED); arg3=pmask&2?arg3:0;  // fs, if this is a conjunction, for FAOWED testing.  If not conj, set to 0 which has FAOWED clear.  Atomic to avoid branch
        // We set the MODIFIER flag in the call so that jtxdefn/unquote can know that they are modifiers
        // We mark the inputs inplaceable (the first modifier to support that is u`v) - both always, even for adverbs
        A yy=(*actionfn)((J)((I)jt|JTXDEFMODIFIER+JTINPLACEA+JTINPLACEW),QCWORD(arg1),QCWORD(arg2),fs);
@@ -930,7 +941,8 @@ RECURSIVERESULTSCHECK
 #endif
        if(unlikely(yy==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         // if there was an error, try to localize it to this primitive
-        jteformat(jt,fs,QCWORD(stack[1].a),QCWORD(pmask&2?stack[3].a:0),0);
+// obsolete         jteformat(jt,fs,QCWORD(stack[1].a),QCWORD(pmask&2?stack[3].a:0),0);
+        jteformat(jt,QCWORD(stack[2].a),QCWORD(stack[1].a),QCWORD(pmask&2?stack[3].a:0),0);
         FP
        }
 #if AUDITEXECRESULTS
@@ -944,12 +956,15 @@ RECURSIVERESULTSCHECK
        //  so that it is safe to remove its protection
        ramkrecursv(yy);  // force recursive y
 
-       while(1){       // for each stacked value, free the value unless it survives to the result, in which case it inherits the FAOWED.  Only one FAOWED can be passed on this way
-        if(unlikely(ISSTKFAOWED(arg1))){if(unlikely(QCWORD(arg1)==yy))yy=arg1;else faowed(QCWORD(arg1),__atomic_load_n(&AC(QCWORD(arg1)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(arg1)),__ATOMIC_RELAXED));}
-            // unlikely because modifiers apply usually to primitives
-        if(arg2==0)break; arg1=arg2; arg2=arg3; arg3=0;
-       };
+// obsolete        while(1){
+// obsolete         if(unlikely(ISSTKFAOWED(arg1))){if(unlikely(QCWORD(arg1)==yy))yy=arg1;else faowed(QCWORD(arg1),__atomic_load_n(&AC(QCWORD(arg1)),__ATOMIC_RELAXED),__atomic_load_n(&AT(QCWORD(arg1)),__ATOMIC_RELAXED));}
+// obsolete             // unlikely because modifiers apply usually to primitives
+// obsolete         if(arg2==0)break; arg1=arg2; arg2=arg3; arg3=0;
+// obsolete        };
+       // for each stacked value, free the value unless it survives to the result, in which case it inherits the FAOWED.  Only one FAOWED can be passed on this way.  The FAOWED might have been set by name_: or 4!:55
+       DO(pmask+1,A a=stack[1+i].a; if(unlikely(ISSTKFAOWED(a))){if(unlikely(QCWORD(a)==yy))yy=a;else faowed(QCWORD(a),AC(QCWORD(a)),AT(QCWORD(a)));})  // the assignment to yy enforces max 1 inheritance
 
+       UI4 restok=stack[1].t;  // save token # to use for result
        y=NEXTY;  // refetch next-word to save regs
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
@@ -986,7 +1001,7 @@ RECURSIVERESULTSCHECK
        // if the 2d-next word exists, and it is (C)AVN, and the current top-of-stack is not ADV, and the next word is not ASGN, we can pull a third word.  (Only ADV can become executable in stack[2]
        // if it was not executable next to ASGN).  We go to the trouble (1) because the case is the usual one and we are saving a little time; (2) by eliminating
        // failing calls to the parser we strengthen its branch prediction
-       // At this point pt0ecam&CONJ is set to (nextat is CAVN).  For comp ease we use this instead of checking for LPAR and ASGN.  This means that for a =: b =: c we will miss after assigning b.
+       // At this point pt0ecam&CONJ is set to (next AT is CAVN).  For comp ease we use this instead of checking for LPAR and ASGN.  This means that for a =: b =: c we will miss after assigning b.
        y=NEXTY;  // refetch next-word to save regs
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word(s)

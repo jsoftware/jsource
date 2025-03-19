@@ -370,6 +370,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
  // we calculate m for the combining operator: i.&0 (0), i.&1 (1), i:&0 (2), i:&1 (3),, +/ (4), +,/ (5), *./ (6)  [formerly I. was 7]
  // m is (u char code + n)&7 where n is 0, but 1 in i&1 types.  We set n to -1 if there is no comparison operator
  // cd comes from the comparison operator, here only E. (6) e.[!.n] (7)
+ // scaf support boolean ops as comparison operators
  // comparison flag is cd+8*m
  C cd; D cct;  // local copy of id of w;  cct for comparison combination, 0=use default
  if(unlikely(d==CFIT)){cct=FAV(wv->fgh[0])->localuse.lu1.cct; cd=FAV(wv->fgh[0])->id;}else{cct=0.0; cd=d;}

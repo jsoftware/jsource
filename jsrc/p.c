@@ -710,9 +710,9 @@ endname: ;
     // First, create the bitmask of parser lines that are eligible to execute
     // register pressure is severe where we do subroutine calls below
     I pmask=(I)((C*)&stack[1].pt)[1] & (I)((C*)&stack[2].pt)[2];  // stkpos 2 is enough to detect bit 0 if result is 0-4
-    I fsaofst=(2*sizeof(PSTK))>>((I)((C*)&stack[2].pt)[2]&1);  // offset to stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
+    PSTK *fsa=(PSTK*)((I)stack+((2*sizeof(PSTK))>>((I)((C*)&stack[2].pt)[2]&1)));  // address of stack slot for the CAV to be executed, for lines 0-4   1 2 2 (2 2)
 // scaf create fsa, pass that through the calls, reinit stack after calls. Don't put fsaofst into jtp
-    A fs=QCWORD(__atomic_load_n(&(((PSTK*)((I)stack+fsaofst))->a),__ATOMIC_ACQUIRE));  // the action to be executed if lines 0-4.   Could be garbage
+    A fs=QCWORD(__atomic_load_n(&fsa->a,__ATOMIC_ACQUIRE));  // the action to be executed if lines 0-4.   Could be garbage.  atomic to force early load
     pmask&=GETSTACK0PT;  // finish 1st 3 columns of parse
     pmask&=(I)((C*)&stack[3].pt)[3];  // finish 4th column of parse
 // obsolete    A fs1=__atomic_load_n(&stack[1].a,__ATOMIC_ACQUIRE);  // in case of line 1 V0 V1 N2, we will need the flags from V1.  Could be garbage, but will be a valid verb in lines 0-2
@@ -731,14 +731,14 @@ endname: ;
       // Here for lines 0-4, which execute the entity pointed to by fs
       // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
       // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
-      if(pmask&7){  // lines 0 1 2, verb execution
+      if(likely(pmask&7)){  // lines 0 1 2, verb execution
        // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
 // obsolete        if(unlikely((!PTISMARKBACKORRPAR(fsa[2]))))pt0ecam|=NOTFINALEXEC;  // remember if this exec is final in its branch.   Wait till we know not fail, so we don't have to wait for (.  Used after execution
 // obsolete        pt0ecam|=pmask<<PMASKSAVEX;  // save pmask over the subroutine calls - also used after the verb execution
        // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
 // obsolete        pmask>>=1;        // convert pmask to 
        jt->parserstackframe.sf=fs;  // set new recursion point for $:
-       J jtp=(J)((I)jt+fsaofst+(pmask>>=1));  // stop usage of fsa/pmask, fold into jtp as stack offset to verb (1 2 2), 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
+       J jtp=(J)((I)jt+(pmask>>=1));  // stop usage of fsa/pmask, fold into jtp as stack offset to verb (1 2 2), 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
        AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>=1],__ATOMIC_RELAXED);  // frees fs the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call
 // obsolete       fs1flag&=fsflag;  // include ASGSAFE from V0 (if applicable, otherwise just a duplicate of fsflag)
 // obsolete        fsflag>>=pmask; fsflag&=VJTFLGOK1;  // select the monad/dyad bit indicating inplaceability, store it in the monad bit pf flags
@@ -771,7 +771,7 @@ endname: ;
           zval=QCWORD(probequiet(QCWORD(*(volatile A*)queue)));
            // We have to handle the case of name =: 5 + > <  name,  i. e where the usecount of 2 came from external boxing rather than FAOWED.
            // we require that the zvalue be a FAOWED argument
-           targc=((PSTK *)((I)stack+((I)jtp&(4*16-4))))[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;  // allow inplacing with target=2 if the assigned value is either arg with FAOWED flag
+           targc=fsa[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;  // allow inplacing with target=2 if the assigned value is either arg with FAOWED flag
          }
 #define jt ((J)((I)jtp&~JTFLAGMSK))  // all jt use goes through jtp     stop using jt, pmask, and pt0ecam, which were not saved over the subroutine call
 #define pmask xxx
@@ -787,8 +787,9 @@ endname: ;
 // obsolete          pmask=(pt0ecam>>(PMASKSAVEX+1))&3;  // restore line# after calls
         }
        }
-       PSTK *arga=(PSTK *)((I)stack+((I)jtp&(4*16-4))); arga=(I)jtp&2?stack:arga; A arg1=arga[1].a;// 1st arg, reconstituted; then fetch  monad or left dyad  2 3 1
+       PSTK *arga=fsa; arga=(I)jtp&2?stack:arga; A arg1=arga[1].a;// 1st arg, reconstituted 1 1 2->1 2 0; then fetch  monad or left dyad  2 3 1
        arga=(I)jtp&2?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
+#define stack xxx  // stop using stack, which could get through previous calls but not the actionfn below
        // Create what we need to free arguments after the execution.  We keep the information needed to two registers so they can persist over the call as they are needed right away on return
        // (1) When the args return from the verb, we will check to see if any were abandoned.  Those can be freed right away, returning them to the
 //     // pool and allowing their cache space to be reused.  But there is a problem:
@@ -806,7 +807,7 @@ endname: ;
         // tpopw may point to fs, but who cares?  If it's zappable, best to zap it now
 // obsolete        J jti=(J)((I)jt+(2*pmask)+1);  // pmask now means 'dyad execution'.  Set inplaceable execution, 1 or 2 bits
 // obsolete  jti=(pt0ecam&VJTFLGOK1)?jti:jt;  // pmask now means 'dyad execution'.  Set args as inplaceable if verb supports jtflags in the current valence
-       y=(*actionfn)((J)(((I)jtp&~(JTFLAGMSK&~3))|1),QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set inplacing flags  bit 0, and bit 1 if dyadic.  Clear other flags incl MODX
+       y=(*actionfn)((J)((I)jtp|1),QCWORD(arg1),QCWORD(arg2),jt->parserstackframe.sf);   // set inplacing flags  bit 0, and bit 1 if dyadic.  Clear other flags incl MODX
          // use jt->parserstackframe.sf to free fs earlier; we are about to break the pipeline.  When we don't break we lose time waiting for jt->fs to settle, but very little.
        // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
        // indirect branch can mispredict and start fetching from the new address.  That is, minimize total # instructions from loading actionfn until the call, with no concern for latency.  In the normal case the
@@ -822,7 +823,9 @@ RECURSIVERESULTSCHECK
        if(unlikely(y==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
 // obsolete         pmask=(pt0ecam>>PMASKSAVEX)&7;  // restore after calls
         // if there was an error, try to localize it to this primitive
-        jteformat(jt,jt->parserstackframe.sf,QCWORD(stack[(0b0110>>((I)jtp&3))&3].a),QCWORD((I)jtp&2?stack[3].a:0),0);  // first arg is w/a 2 3 1, second is 0/w
+        A aa=fsa[-1].a, wa=fsa[1].a;  // fsa is stack[1 2 2]; aa is stack[-1].a, used only for dyad; wa is w
+// obsolete         jteformat(jt,jt->parserstackframe.sf,QCWORD(stack[(0b0110>>((I)jtp&3))&3].a),QCWORD((I)jtp&2?stack[3].a:0),0);  // fsa is 1 2 2 first arg is w/a 2 3 1, second is 0/w x x 3
+        jteformat(jt,jt->parserstackframe.sf,QCWORD((I)jtp&2?aa:wa),QCWORD((I)jtp&2?wa:0),0);  // fsa is 1 2 2 first arg is w/a 2 3 1, second is 0/w x x 3
         FP
        }
 #if AUDITEXECRESULTS
@@ -840,22 +843,23 @@ RECURSIVERESULTSCHECK
        // a few functions such as name_: and 4!:55 <'name' raise the usecount of the variables on the stack and mark the stack entry as FAOWED to note the need for a fa.
        // we have to transfer that info from the stack to the tpop[aw] that we saved in registers over the call to actionfn
        A freea,freep;  // reg to hold arg we are possibly freeing
-       // start with fs, which we extract from the stack to get the FAOWED flag
-       PSTK *fsa2=(PSTK *)((I)stack+((I)jtp&(4*16-4)));;   // point to verb slot  1 2 2
-       freep=fsa2[0].a;  // fetch pointer to verb.  We don't look at the verb (i. e. fs)!  We are looking to see if the args were modified
+       // start with fs, which we extract from the stack to get the FAOWED flag.  fsa points to it  1 2 2
+// obsolete        PSTK *fsa2=(PSTK *)((I)stack+((I)jtp&(4*16-4)));;   // point to verb slot  1 2 2
+       freep=fsa[0].a;  // fetch pointer to verb.  We don't look at the verb (i. e. fs)!  We are looking to see if the args were modified
        if(unlikely(ISSTKREFRESHRQD(freep))){   // if the stack has been altered...
         // here the execution of this verb required going through the stack to raise the usecount of local values on the stack.  The raised values were
         // flagged as having STKFAOWED+STKNAMED.  Since any STKNAMED arg put the arg into tpop[aw], we refresh the tpop[aw] values to get the correct setting of FAOWED for any that is STKNAMED
-        freea=stack[1].a; tpopa=((I)jtp>>1)&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if dyad and the x arg was STKNAMED
-        freea=fsa2[1].a;   // fetch y arg of verb
+        freea=fsa[-1].a; tpopa=((I)jtp>>1)&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if dyad and the x arg was STKNAMED
+        freea=fsa[1].a;   // fetch y arg of verb
         tpopw=((I)jtp>>1)&(I)freea&STKNAMED?(A*)freea:tpopw;  // refresh tpopw if dyad and the y arg was STKNAMED
         tpopa=~((I)jtp>>1)&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
        }
 
        // While we have fs and the stack pointer, close up the stack and free fs if needed
-       fsa2[0]=fsa2[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2(NOP)
-       PSTK *fsa0=fsa2-1; fsa0=(I)jtp&2?fsa2:fsa0; *fsa0=stack[0];  // fsa0=0 1 1->0 1 2 close up the stack   scaf try fsa[-(((I)jtp&2)>>1)]=stack[0]
-       stack=fsa2;  // move stack to verb slot for now 1 2 2
+       fsa[0]=fsa[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2(NOP)
+// obsolete         PSTK *fsa0=fsa-1; fsa0=(I)jtp&2?fsa:fsa0; *fsa0=stack[0];  // fsa0=0 1 1->0 1 2   0->0(NOP)  0->1 0->2  close up the stack   scaf try fsa[-(((I)jtp&2)>>1)]=stack[0]
+// obsolete        stack=fsa2;  // move stack to verb slot for now 1 2 2
+       PSTK *fsa0=fsa-1; fsa0=(I)jtp&2?fsa:fsa0; *fsa0=fsa[-2];  // fsa0=0 1 1->0 1 2   _1->0(NOP)  0->1 0->2  close up the stack
        if(unlikely(ISSTKFAOWED(freep))){INCRSTAT(ffaowed)/* 0.0 */; faowed(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}
 
        // (1) free up inputs that are no longer used.  These will be inputs that are still abandoned and were not themselves returned by the execution.
@@ -890,11 +894,12 @@ RECURSIVERESULTSCHECK
         }else{INCRSTAT(anull/*.05*/)}
        }
 
-       // close up the stack (now 1 2 2) and store the result.  We have to wait till here because y may have inherited FAOWED status during the tpop[aw] processing
-       UI endstkpt=((US*)&stack[2].pt)[1];  // top half of pt at NEXT stack position
-       stack[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
+#undef stack
+       // close up the stack (now pointed to by fsa 1 2 2) and store the result.  We have to wait till here because y may have inherited FAOWED status during the tpop[aw] processing
+       UI endstkpt=((US*)&fsa[2].pt)[1];  // top half of pt at NEXT stack position
+       fsa[1].a=y;  // save result 2 3 3; parsetype (noun) is unchanged, token# is immaterial
        y=NEXTY;  // refetch next-word to save regs
-       fsa2=stack-1; stack=(I)jtp&1?fsa2:stack;  // fsa2->0 1 1; stack->1 1 2
+       stack=fsa-1; stack=(I)jtp&1?stack:fsa;  // stack->0 1 1->1 1 2 restore stack vbl
 
        // Most of the executed fragments are executed right here.  In two cases we can be sure that the stack does not need to be rescanned:
        // 1. pline=2, token 0 is AVN: we have just put a noun in the first position, and if that produced an executable it would have been executed earlier.
@@ -961,14 +966,14 @@ RECURSIVERESULTSCHECK
 // obsolete             // unlikely because modifiers apply usually to primitives
 // obsolete         if(arg2==0)break; arg1=arg2; arg2=arg3; arg3=0;
 // obsolete        };
-       // for each stacked value, free the value unless it survives to the result, in which case it inherits the FAOWED.  Only one FAOWED can be passed on this way.  The FAOWED might have been set by name_: or 4!:55
+       // for each stacked arg/fs, free the value unless it survives to the result, in which case it inherits the FAOWED.  Only one FAOWED can be passed on this way.  The FAOWED might have been set by name_: or 4!:55
        DO(pmask+1,A a=stack[1+i].a; if(unlikely(ISSTKFAOWED(a))){if(unlikely(QCWORD(a)==yy))yy=a;else faowed(QCWORD(a),AC(QCWORD(a)),AT(QCWORD(a)));})  // the assignment to yy enforces max 1 inheritance
 
-       UI4 restok=stack[1].t;  // save token # to use for result
        y=NEXTY;  // refetch next-word to save regs
+       UI4 restok=stack[1].t;  // save token # to use for result
        stack[pmask]=stack[0]; // close up the stack
        stack=stack+pmask;  // advance stackpointer to position before result 1 2
-       PTFROMTYPE(stack[1].pt,AT(QCWORD(yy))) stack[1].t=restok; stack[1].a=yy;   // save result, move token#, recalc parsetype
+       PTFROMTYPE(stack[1].pt,AT(QCWORD(yy))) stack[1].t=restok; stack[1].a=yy;   // save result (which may now have FAOWED flag), move token#, recalc parsetype
        // quite often there is another execution so we don't try to avoid it
       }
      }else{

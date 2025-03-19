@@ -54,7 +54,7 @@ case "$jplatform64" in
 	 CC="$(xcrun --sdk macosx --find clang)"
 	 AR="$(xcrun --sdk macosx --find libtool)"
 	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
-	openbsd/*) make=gmake;;
+	openbsd/*) NO_SHA_ASM=1;make=gmake;;
 	freebsd/*) make=gmake;;
  wasm*)
 	 USE_OPENMP=0

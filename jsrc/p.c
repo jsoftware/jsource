@@ -517,7 +517,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
   UI4 stack0pt;
 #define SETSTACK0PT(v) stack0pt=(v);
 #define GETSTACK0PT stack0pt
-#define TESTSTACK0PT(x) (stack0pt&((UI)1<<(x))!=0)
+#define TESTSTACK0PT(x) ((stack0pt&((UI)1<<(x)))!=0)
 // obsolete #define STACK0PTISCAVN (PTISCAVN(stack0pt)<<(NOTFINALEXECX+1-PTISCAVNX))  // move the bit to above NOTFINALX
 #define STACK0PTISCAVN PTISCAVN(stack0pt)  // must be above bit 16
 #endif

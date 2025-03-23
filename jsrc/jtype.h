@@ -872,6 +872,7 @@ typedef DST* DC;
 #define QCVERB  ((VERBX-LASTNOUNX)+1)  // 8
 #define QCLPAR  ((LPARX-LASTNOUNX)+1)  // 9
 #define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10
+#define QCRPAR ((RPARX-LASTNOUNX)+1)  // 11   referred to implicitly by mask operation
 #define QCNAMEASSIGNED ((NAMEX-LASTNOUNX)+1) // 2 name followed by copula
 // bit 4 and code points 12-15 depend on the context.
 // In the words of a sentence, created by enqueue(), they use QCSENTENCE semantics as follows:

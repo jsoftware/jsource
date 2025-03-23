@@ -362,7 +362,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
   if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
   // if the unexecutable bident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.  This is aimed mostly at each and every
-  I flag2=VF2NAMELESS; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));  // CPLUS to make bouns look primitive
+  I flag2=VF2NAMELESS; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));  // CPLUS to make nouns look primitive
                          ta=w; ta=AT(w)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX));
   fdeffill(z,flag2,CADVF, t, rtn,rtn, a,w,0, flag, 0L,0L,0L) R z;  // only one of the rtns is ever used.  h=0 to indicate bident
 

@@ -310,14 +310,14 @@ A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[buc
 // If the value is empty, return 0 for not found
 // Take no locks because local
 // Use buckets if present
-A jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
+A jtprobelocal(L *symorigin,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
  if(likely((b = u->bucket)>0)){  // if there is bucket info, use it
-  R probelocalbuckets(SYMORIGIN,a,LXAV0(locsyms)[b],u->bucketx);  // look up using bucket info
+  R probelocalbuckets(symorigin,a,LXAV0(locsyms)[b],u->bucketx);  // look up using bucket info
  }else{
   // No bucket information, do full search.  This includes names that don't come straight from words in an explicit definition
-  R probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,locsyms);
+  R probex(NAV(a)->m,NAV(a)->s,symorigin,NAV(a)->hash,locsyms);
  }
 }
 

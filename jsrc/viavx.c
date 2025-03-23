@@ -955,7 +955,7 @@ inplace:;
    // type we have selected supports it, and if w is much shorter than a.  The operation must be i./i:/e., and we must not be prehashing
    p=m;
    if(((m>>1)>c) && (mode&IIOREPS) && fntbl[FNTABLEPREFIX+fnx+FNTBLREVERSE][0]){
-    p=c; fnx+=FNTBLREVERSE;
+    p=c; fnx+=FNTBLREVERSE; jtinplace=(J)((I)jtinplace&~JTINPLACEW);  // we mustn't inplace a reverse hash
     fmods = fnflags[fnx];  // refetch flags
    }
    // set p based on the length of the argument being hashed

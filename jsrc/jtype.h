@@ -496,7 +496,7 @@ struct AD {
 // note: LPAR used as flag to cvt() see below; also as modifier to ADV type
 #define LPARSIZE sizeof(I)
 // unquote requires that the spacing CONJX-ADVX equal VERBX-NAMEX
-// CONJ must be 1 bit below RPAR
+// CONJ must be 1 bit below RPAR to call for stacking 1 extra word after CONJ, 2 after RPAR
 #define CONJX 29
 #define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
 #define CONJSIZE sizeof(V)

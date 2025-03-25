@@ -149,6 +149,7 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 #define PTISCAVNX 23  // this flag used in a register here
 #define PTISCAVN(pt) ((pt)&(1LL<<PTISCAVNX))
 #define PTISAN(pt) ((pt)&0x00090000)  // col 2 enables lines 0 or 3 - adv or noun
+#define PTISAC(pt) ((pt)&0x00180000)  // col 2 enables lines 3 or 4 - adv or conj
 #define PTISRPAR0(pt) ((pt)&0x7fff)
 // clang17 wastes an instruction #define PTISMARKBACKORRPAR(s)  (((s).pt>>16)==(PTRPAR>>16))  // s.pt is ) or MARK.
 #define PTISMARKBACKORRPAR(s)  ((s)==(PTRPAR>>16))  // s is top half of pt; true if ) or MARK.
@@ -967,7 +968,7 @@ RECURSIVERESULTSCHECK
      }else{
       A yy;  // will be the result of the operation, stored after we have freed the args on the stack
       if(withprob(pmask=pmask567&0x1F,0.7)){
-       // Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about recursion
+       // ***** Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about recursion
        pmask>>=3; // 1 for adj, 2 for conj   1 2
        AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
@@ -984,7 +985,7 @@ RECURSIVERESULTSCHECK
        if(unlikely(yy==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         // if there was an error, try to localize it to this primitive
 // obsolete         jteformat(jt,fs,QCWORD(stack[1].a),QCWORD(pmask&2?stack[3].a:0),0);
-        jteformat(jt,QCWORD(stack[2].a),QCWORD(stack[1].a),QCWORD(pmask&2?stack[3].a:0),0);
+        jteformat(jt,QCWORD(stack[2].a),QCWORD(stack[1].a),QCWORD(pt0ecam&FLGPMONAD?0:stack[3].a),0);
         FP
        }
 #if AUDITEXECRESULTS
@@ -1015,6 +1016,7 @@ RECURSIVERESULTSCHECK
 #endif
        // quite often there is another execution so we don't try to avoid it
       }else if(pmask567&0b10000000){  // assign - can't be fork/hook
+       // ****** assignment
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
@@ -1045,6 +1047,7 @@ RECURSIVERESULTSCHECK
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word(s)
       }else if(pmask567&0b100000){  // fork NVV or VVV
+       // ***** fork
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
        pt0ecam&=~FLGPMSK;     // set initial value of loop counter/flag: 000 always for dyad
        yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
@@ -1068,7 +1071,7 @@ RECURSIVERESULTSCHECK
        stack[2]=stack[0]; stack+=2;  // close up stack
 #endif
       }else{
-       // hook, other bidents, and non-fork tridents
+       // ***** hook, other bidents, and non-fork tridents
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
        // Because we use some bits in the PT flags to distinguish assignment types, those bits indicate valid-parse on some invalid combinations.  They come to here with an ASGN in stack[2].  Catch it and reject the fragment
        // We could defer the check until later (in hook) but this seems tolerable
@@ -1123,8 +1126,11 @@ rejectfrag:;
      if(likely(!(TESTSTACK0PT(PTNOTLPARX)))){  // ( with no other line.  Better be ( CAVN )  note compiler doesn't generate BT
 execlpar:;  // come here when we are sitting on ( ...
       if(likely(PTISCAVN(~stack[1].pt)==PTISRPAR0(stack[2].pt))){  // must be [1]=CAVN and [2]=RPAR.  To be equal, !CAVN and RPAR-if-0 must both be 0 
+       UI4 stack3pt=stack[3].pt;
        SETSTACK0PT(stack[1].pt); stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
        stack+=2;  // advance stack pointer to result
+       // Most of the unexecutable fragments that we scan come after ( ... ).  It's not worth checking for NV NV V N, but perhaps it is worth checking for CAVN AC which never executes.  The CAVN is known to be there
+       if(PTISAC(stack3pt)){pt0ecam&=~CONJ; break;}   //   CAVN AC on stack now.  Return to stack next word.  Must clear 'stack 2' flag
       }else{jt->parserstackframe.parserstkend1=stack; jsignal(EVSYNTAX); FPS}  // error if contents of ( not valid.  Set stackpointer so we see the failing exec
       // we fall through to rescan after ( )
      }else{pt0ecam&=~CONJ;  break;}   // not ( and no executable fragment.  Return to stack next word.  Must clear 'stack 2' flag

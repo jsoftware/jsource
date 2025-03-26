@@ -534,7 +534,6 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
  I wpprist=wprist&REPSGN(AC(w)&SGNIF(jtfg,JTINPLACEWX));  // original pristinity of wperm
  AFLAGINIT(wperm,AFLAG(wperm)|wpprist)
  // We pass the self pointer for /. into cut, as it uses the id therein to interpret a
-// obsolete  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  z=jtcut2((J)(intptr_t)((I)jt+JTINPLACEW),frets,wperm,self);  // OK to inplace an inplaceable w as far as we are concerned
  // If the operation turned off pristinity of wperm, do the same for w.  Pristinity only matters if the block is inplaceable, but our tests expect that
  // assigned values retain their pristinity, so we have to clear pristinity of w whenever wperm ends non-prist

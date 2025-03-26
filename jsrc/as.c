@@ -245,7 +245,6 @@ static DF1(jtssg){F12IP;PROLOG(0020);A a,z;I i,n,r,wr;
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
  // and the input jtfg.  We turn off WILLBEOPENED status in jtfg for the callee.
  ACINIT(z,ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX)))   // first cell is inplaceable if second is
-// obsolete  jtfg = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
  jtfg = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA));  // all items are used only once
 
 #define ZZPOPNEVER 1   // we mustn't TPOP after copying the result atoms, because they are reused.  This will leave the memory used for type-conversions unclaimed.
@@ -405,7 +404,6 @@ F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C 
  case CSLASH:  // v is f/, but not when f is a gerund
   f1=jtsscan;  // code for f/\. - take inplaceability from dyad f
   f=v->fgh[0]; id=FAV(f)->id; if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)AV(f)[0];}
-// obsolete  flag|=(FAV(f)->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X);
 #define xinvvalues(w) CCM(w,CPLUS)+CCM(w,CEQ)+CCM(w,CNE)+CCM(w,CBW0110)+CCM(w,CBW1001)
   {CCMWDS(xinv) CCMCAND(xinv,cand,id) f2=CCMTST(cand,id)?jtofxinv:f2;}
 #define xassocvalues(w) CCM(w,CSTAR)+CCM(w,CMAX)+CCM(w,CMIN)+CCM(w,CPLUSDOT)+CCM(w,CSTARDOT)+CCM(w,CBW0000)+CCM(w,CBW0001)+CCM(w,CBW0011)+CCM(w,CBW0101)+CCM(w,CBW0111)+CCM(w,CBW1111)

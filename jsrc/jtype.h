@@ -1278,10 +1278,6 @@ typedef struct {
 #define VTRY2           (I)0x400000      /* dyad  contains try.  must be just above VTRY1           */
 // bits 23-24 free
 // bit VASGSAFE is wired into a flag reg in parser
-// obsolete #define VJTFLGOK1X    23    // monad can handle flags in jt must be paired with VJTFLGOK2X
-// obsolete #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
-// obsolete #define VJTFLGOK2X    24    // dyad can  handle flags in jt
-// obsolete #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
 #define VXOPCALL       (I)0x2000000      // 25 this verb is a namerefop, interposed to hang a name for debugging onto an anyymous verb.  f is 0, the name is in g, the actual verb in h     overlaps SYMB/ASGNLOCAL
 #define VASGSAFEX     26
 #define VASGSAFE      (((I)1)<<VASGSAFEX)     // Execution does not alter locale/path.

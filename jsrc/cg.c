@@ -274,7 +274,6 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
    // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
     A fs=C(AAV(FAV(self)->fgh[2])[currres]);  // fetch the gerund to execute
-// obsolete     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))&(((I)2<<(ZZFLAGWORD>>ZZFLAGISDYADX))-1))),
     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(JTINPLACEA*(ZZFLAGWORD>>ZZFLAGISDYADX)+JTINPLACEW)),
      virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace depending on valence
 
@@ -339,7 +338,6 @@ assemblyerror: RESETERR jt->etxinfo->asseminfo.assemframelen=0; jt->jerr=EVASSEM
   I vx=i0(vres); RE(0);  // fetch index of gerund
   vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERTGOTO(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
   A ger=C(AAV(FAV(self)->fgh[2])[vx]);  // the selected gerund
-// obsolete   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(ger)->flag,(state>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtfg),a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(jtfg,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
 errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat

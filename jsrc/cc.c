@@ -907,7 +907,6 @@ skipspecial:;
 
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
    // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags
-// obsolete    jtfg = (J)(intptr_t)(((I)jtfg & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | (((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX-((state>>STATEDYADKEYX)&(VJTFLGOK2X-VJTFLGOK1X)))))&JTINPLACEW));  // turn off inplacing based on verb
    jtfg = (J)(intptr_t)(((I)jtfg & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | JTINPLACEW);  // turn offour input flags, set to inplace w
 
 #define ZZDECL
@@ -1410,7 +1409,6 @@ F2(jtcut){F12IP;A h=0;I flag=0,k;
  }
 #endif
 // fall through to...
-// obsolete  case 1: case -1: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; fdeffillall(z,0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  case 1: case -1: fdeffillall(z,0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  case 3: case -3: case 259: case -259: fdeffillall(z,0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  default:         ASSERT(0,EVDOMAIN);

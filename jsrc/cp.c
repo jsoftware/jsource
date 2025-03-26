@@ -250,7 +250,6 @@ static DF2(jtpowv12cell){F12IP;A z;PROLOG(0110);
   if(u0){jtfg=(J)((I)jtfg&~(a==w?JTDOWHILE+JTINPLACEA+JTINPLACEW:JTDOWHILE)); z=CALL12IP(w,uf,a,w,fs);}   // v result is atomic INT/B01 1: execute u, inplace if possible - but suppress the DOWHILE flag, and all inplacing if a=w
   else{z=w?w:a; if((I)jtfg&JTDOWHILE)R (A)1;}  // v result is atomic INT/B01 0: bypass.  If ^:_. return 1 to indicate u returned 0 - skips EPILOG but powatom12 will soon do one
  }else{ASSERT(!((I)jtfg&JTDOWHILE),EVDOMAIN) RZ(u=powop(fs,u,(A)1));  // not a simple if statement: fail if called from ^:_.; create u^:n form of powop;
-// obsolete   jtfg=FAV(u)->flag&(VJTFLGOK1<<(!!w))?jtfg:jt;   // u might have been a gerund so there is no telling what the inplaceability of the new u is; refresh it
   z=CALL12IP(w,FAV(u)->valencefns[!!w],a,w,u);  // execute the power, inplace
  }
  EPILOG(z);
@@ -278,14 +277,12 @@ static DF2(jtgcr12){F12IP;PROLOG(0);
   RZ(z0=CALL12(w,FAV(hv[0])->valencefns[1],a,w,hv[0]))  // z0=[x] v0 y  if this is a dyad
   jtfg=(J)((I)jtfg&~(JTINPLACEA*(z0==a)+JTINPLACEW*(z0==w)));  // if v0 returned an argument, remove v2 inplacing for that argument
  }else z0=w?a:0;  // if dyad, set v0 result to x for omitted v0; if monad, set z0=0 as a flag
-// obsolete  jtfg=(FAV(v2)->flag&(VJTFLGOK1<<!!z0))?jtfg:jt;  // turn off inplacing if v2 doesn't support it
  A z; RZ(z=CALL12IP(w,FAV(v2)->valencefns[!!z0],a,w,v2))  // z=[x] v2 y  inplacing if supported
  if(ff){  // if the power was 0, keep the y value as the result, otherwise...
   // we allow inplacing z0 and z UNLESS they match an input x/y that was not inplaceable
   I zipno=(((z==w)&~origjtfg) | ((z==a)&~(origjtfg>>!!z0)));  // if z=w, it must be dyadic & we look at original w.  If z=a it could be either & we look at dyad/monad depending
   I z0ipno=!!z0 & (((z0==w)&~origjtfg) | ((z0==a)&~(origjtfg>>!!z0)));  // same for z0, but never if monad
   jtfg=(J)((I)jt+((JTINPLACEA+JTINPLACEW)^(JTINPLACEA*z0ipno+JTINPLACEW*zipno)));  // inplace unless copied.  If monad, z0=w=0
-// obsolete   jtfg=(FAV(ff)->flag&(VJTFLGOK1<<!!z0))?jtfg:jt;  // turn off inplacing if v2 doesn't support it
   z=CALL12IP(z0,FAV(ff)->valencefns[!!z0],z0?z0:z,z,ff);  // z=[z0] u^:power z
  }
  EPILOG(z);

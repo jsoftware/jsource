@@ -31,10 +31,6 @@ DF2(jtunquote){F12IP;A z;
 #define FLGLOCINCRDECR ((I)1<<FLGLOCINCRDECRX)
 #define FLGLOCCHANGEDX 14  // the caller of this function has previously encountered cocurrent
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
-// obsolete #define FLGMONADX 23  // 23 operation is monad, in position to mask verb flags
-// obsolete #define FLGMONAD ((I)1<<FLGMONADX)
-// obsolete #define FLGDYADX (FLGMONADX+1)  // operation is dyad  must be highest flag
-// obsolete #define FLGDYAD ((I)1<<FLGDYADX)
  I flgd0cpC=w!=self;  // init DYAD flag
    // We check inplaceability of the called function.  jtfg unused
  A explocale;  // locale to execute in.  Not used unless LOCINCRDECR set
@@ -236,13 +232,10 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
  if(likely(!(jt->uflags.ui4))) {
   // No special processing. Just run the entity as (a,w,self) or (w,self,self)
   // We preserve the XDEFMODIFIER flag in jtfg, because the type of the exec must not have been changed by name lookup.  Pass the other inplacing flags through
-// obsolete   z=(*actionfn)((J)((I)jt+((FAV(fs)->flag&(flgd0cpC&FLGMONAD+FLGDYAD)?JTFLAGMSK:JTXDEFMODIFIER)&flgd0cpC)),a,w,fs);  // keep MODIFIER flag always, and others too if verb supports it 
   z=(*actionfn)(jtfg,a,w,fs);  // keep jt flags incl MODIFIER 
   if(unlikely(z==0)){jteformat(jt,jt->parserstackframe.sf,a,w,0);}  // make this a format point
  }else{
   // Extra processing is required.  Check each option individually
-// obsolete   jt=(J)((I)jt+((flgd0cpC+1)&0x200));
-// obsolete   fs=jt->parserstackframe.sf;  // reinit fs
   DC d=0;  // pointer to debug stack frame, if one is allocated
   if(jt->uflags.trace){  // debug or pm
    // allocate debug stack frame if we are debugging OR PM'ing.  In PM, we need a way to get the name being executed in an operator
@@ -258,7 +251,6 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
   jt->uflags.bstkreqd&=flgd0cpC>>FLGPSEUDOX;  // clear bstk for next level (if not pseudo)
   // call the function, as above
   if((jt->uflags.trace&TRACEDB)&&!(jt->glock||VLOCK&FAV(fs)->flag)&&!(jt->recurstate&RECSTATERENT)){  // The verb is locked if it is marked as locked, or if the script is locked; don't debug/pm any recursive entry
-// obsolete    z=jtdbunquote(jtfg,flgd0cpC&FLGDYAD?a:0,flgd0cpC&FLGDYAD?w:a,fs,d);  // if debugging, go do that. 
    z=jtdbunquote(jtfg,a,w,fs);  // if debugging, go do that.  Uses jt->sitop as stack frame
   }else{
    z=(*actionfn)(jtfg,a,w,fs);

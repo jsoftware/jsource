@@ -538,7 +538,6 @@ static DF1(jtredg){F12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->val
  I aipok = (SGNIF((I)jtfg&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self),JTINPLACEWX)&AC(w))+ACUC1;   // requires JTINPLACEWX==0.  This is 1 or 8..1
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
  ACINIT(wfaux,aipok)   // first cell is inplaceable if second is
-// obsolete  jtfg = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
  jtfg = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA));  // all items are used only once
 
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
@@ -1189,7 +1188,6 @@ static DF2(jtfold12){F12IP;A z,vz;
    tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // fwd/rev.  newitem v vz   a is inplaceable if y was (set above).  w is inplaceable first time based on initial-item status
    if(unlikely(tz==virtw)){if(unlikely((tz=clonevirtual(tz))==0))goto exitpop;}
    AK(virtw)+=wstride;  // advance item pointer to next/prev if there is one
-// obsolete    jtfg=(J)((I)jtfg|((FAV(self)->flag>>VJTFLGOK2X)&JTINPLACEW));  // w inplaceable on all iterations after the first - if the operation supports flags
    jtfg=(J)((I)jtfg|JTINPLACEW);  // w inplaceable on all iterations after the first - if the operation supports flags
   }else if(dmfr&STATEDYAD){tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // directionless dyad  x v vz  scaf set inplaceable?
   }else tz=CALL1IP(FAV(vself)->valencefns[0],vz,vself);   // directionless monad   v vz scaf set inplaceable?
@@ -1254,7 +1252,6 @@ exitpop:;   // here to abort on error, after popping stack
 DF2(jtfold){F12IP;
  ASSERTVV(a,w);  // must be verb ops
  A z; fdefallo(z);   // allocate verb result
-// obsolete  I flag = (FAV(w)->flag&(VJTFLGOK1|VJTFLGOK2));  // there is never a need to inplace u.  Inplace v if possible
  fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, 0, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
  R z;
 }

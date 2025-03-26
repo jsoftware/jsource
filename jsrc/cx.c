@@ -590,7 +590,7 @@ dobblock:
     // ending the iteration normally.  set xyz to i.0
     {A val=itemsym->fval; fa(QCWORD(val))}  // discard & free incumbent, probably the virtual block.  If the virtual block, this is never the final free, which comes in unstackcv
     itemsym->fval=SETNAMED(MAKEFVAL(mtv,ATYPETOVALTYPE(INT)));  // after last iteration, set xyz to mtv, which is permanent, and value type in the symbol (as a local), in case it was changed.  Any noun will do
-   }else if(likely(cv->j<cv->niter)){--ic; goto elseifasdo;}  // (no for_xyz.) advance to next line and process it; if flagged is bblock
+   }else if(likely(cv->j<cv->niter)){--ic; goto elseifasdo;}  // (not for_xyz.) advance to next line and process it; if flagged is bblock
    // if there are no more iterations, fall through...
    tcesx&=~(32<<TCESXTYPEX);  // the flag for DOF is for the loop, but we are exiting, so turn off the flag
   case CENDSEL:

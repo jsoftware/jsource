@@ -7,7 +7,6 @@
 
 // obv1 and obv2 merely pass the call to f.  Since we took the inplace flags for the compound from the original a, we can pass them on too.  Pass inplaceability through
 static DF2(obv12cell){F12IP;w=EPDYAD?w:0; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w];A z;PROLOG(0103); z=CALL12IP(w,f12,a,w,fs); EPILOG(z);}
-// obsolete static DF1(obv1){F12IP;A a=w; w=self; PREF2IP(obv12cell); R obv12cell(jtfg,a,w,self);}
 static DF2(obv12){F12IP;self=AT(w)&VERB?w:self; PREF2IP(obv12cell); R obv12cell(jtfg,a,w,self);}  // Pass inplaceability through
 
 

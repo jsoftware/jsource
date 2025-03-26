@@ -856,32 +856,25 @@ static DF1(jtgav1){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[
 
 // verb executed for x v0`v1`v2} y
 static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
-// obsolete  A protw = (A)(intptr_t)((I)w+((I)jtfg&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtfg&JTINPLACEA)); // protected addresses
  I hn=AS(sv->fgh[2])[0];  // hn=# gerunds in h
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  dfv2(ffm,a,w,hv[1]);  // x v1 y - no inplacing.
  RZ(ffm);
  // to support gerund-returning-gerund, you need to execute RZ(ff=jtamend(jt,ffm,0)); now and at the bottom call through valencefns to process the returned gerund
-// obsolete  if(a==ffm)jtfg = (J)(intptr_t)((I)jtfg&~JTINPLACEA); if(w==ffm)jtfg = (J)(intptr_t)((I)jtfg&~JTINPLACEW);
  jtfg=(J)((I)jtfg&~(JTINPLACEA*(a==ffm)+JTINPLACEW*(w==ffm))); // Protect any input that was returned by v1 (must be ][ or equivalent)
  jtfg=a==w?jt:jtfg;  // if a=w, abort all inplacing
  PUSHZOMB
  // execute the gerunds that will give the arguments to amend.
  // x v2 y - allow inplacing an arg not used by v0
  if(hn>=3){
-// obsolete   RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w?(J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
   RZ(ffy=(FAV(hv[2])->valencefns[1])((J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))),a,w,hv[2]));  // x v2 y - inplacing whatever v0 doesn't use (self flags were set for v0).  Result of v2 is ALWAYS inplaceable into amend, as if executed in parser
   jtfg=(J)((I)jtfg&~(JTINPLACEA*(a==ffy))); // Protect any input that was returned by v2
  }else{ffy=w;}  // if v2 omitted or ], just use y directly
  jtfg=(J)((I)jtfg&~(JTINPLACEW*(w==ffy))); // Protect any input that was returned by v2
  // x v0 y - allow inplacing of whatever hasn't been protected
-// obsolete  RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtfg&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
-// obsolete  RZ(ffx = (FAV(hv[0])->valencefns[1])(((J)(intptr_t)((I)jtfg&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))),a,w,hv[0]));
  RZ(ffx=(FAV(hv[0])->valencefns[1])(jtfg,a,w,hv[0]));  // x v0 y - allow inplacing
  // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
-// obsolete POPZOMB; R ((AF)jtamendn2c)(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
-// obsolete  POPZOMB; R ((AF)jtamendn2c)(( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ),ffx,ffy,self);
  POPZOMB; R jtamendn2(( (J)(intptr_t)((I)jt|JTINPLACEW)),ffx,ffy,ffm,self);  // final amend.  No inplacing on x, but y OK
 }
 

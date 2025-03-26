@@ -316,7 +316,6 @@ static DF1(jtsunder){F12IP;PROLOG(777);
  }
  negifipw=vz!=w?negifipw:0;  // if we pass y into  u, clear flag that allows us to restore usecount of y
  A u=FAV(self)->fgh[0]; I ipok=vz!=w?JTINPLACEW:0;
-// obsolete  ipok=FAV(u)->flag&VJTFLGOK1?ipok:0;
  A uz; RZ(uz=(FAV(u)->valencefns[0])((J)((I)jt+ipok),vz,u,u)); negifip=uz==vz?negifip:0;     // execute u rv; rv is inplaceable unless it was passthrough
  if(negifip<0){  // u inplaced and didn't change the rank or item count
   // if u returned the block backed by originally-inplaceable y, it must have run inplace, and we can return the original y, restored to inplaceability.  tpop the virtual result of v first
@@ -373,7 +372,6 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
    if(CIOTA==vv&&(!c)&&v->fgh[0]==ds(CALP)){   // w is  {a.&i.  or  (a. i. ][)}
     f1=b&b1?jtbitwiseinsertchar:f1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
     f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
-// obsolete     flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
    }
    if(vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)), structural under
    break;

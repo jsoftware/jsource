@@ -1129,12 +1129,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define F2(f)           A f(JJ jtfg,A a,A w)
 #define F12IP JJ jt=(JJ)(intptr_t)((I)jtfg&~JTFLAGMSK)
 #define F12JT JJ jt=(JJ)(intptr_t)((I)jtfg&~JTFLAGMSK)  // for documentation, when flags are not IP flags
-// obsolete #define FPREF           
-// obsolete #define F1PREF          FPREF
-// obsolete #define F2PREF          FPREF
 #define FPREFIP(T)         T jtfg=jt; jt=(T)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtfg
-// obsolete #define F1PREFIP        FPREFIP(J)
-// obsolete #define F2PREFIP        FPREFIP(J)
 #define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
 #define F2PREFJT        FPREFIP(J)
 #define F1RANKSUFF(m,f,self,suff)    {ARGCHK1(w);A z; if(likely(m<AR(w))){if(m==0)z=rank1ex0(w,(A)self,f);else z=rank1ex(  w,(A)self,(I)m,     f); suff}}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Run suff only if rank was called.  Fall through otherwise

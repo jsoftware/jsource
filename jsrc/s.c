@@ -690,7 +690,7 @@ A jtprobequiet(J jt,A a){A g;
 // assign symbol: assign name a in symbol table g to the value w
 // g is the current local or global symbol table, or possibly a separate local table to simulate assignments in 13 : n.  g is ignored if a is a locative.  If a is not a locative and g is a local table,
 // public assignment is an error if the symbol is defined in the local table, but that test can be disabled by setting ARLCLONED in AR of the table
-// Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage
+// Result is 0 if error, otherwise low 2 bits are x1 = final assignment, 1x = local assignment, others garbage (but not 0)
 // flags set in jt: bit 0=this is a final assignment; bit 1 always 0
 I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // we don't ARGCHK because path is heavily used.  Caller's responsibility.

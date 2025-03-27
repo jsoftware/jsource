@@ -23,7 +23,8 @@ static AMON(floorDI,I,D, {D d=tfloor(*x); *z=(I)d; ASSERTWR(d==*z,EWOV);})
 #endif
 static AMON(floorD, D,D, *z=tfloor(*x);)
 static AMON(floorZ, Z,Z, *z=zfloor(*x);)
-static AMON(floorE, E,E, *z=efloor(*x);)
+static AMON(floorEI,I,E, {D d=tfloor(x->hi); *z=(I)d; ASSERTWR(d==*z,EWOV1);})  // tolerant floor of high part only...
+static AMON(floorE, E,E, *z=efloor(*x);)  // ... if INT overflow, keep as extended to preserve precision
 
 #if BW==64
 static AMONPS(ceilDI,I,D,
@@ -37,6 +38,7 @@ static AMONPS(ceilDI,I,D,
 #else
 static AMON(ceilDI, I,D, {D d=tceil(*x);  *z=(I)d; ASSERTWR(d==*z,EWOV);})
 #endif
+static AMON(ceilEI,I,E, {D d=tceil(x->hi); *z=(I)d; ASSERTWR(d==*z,EWOV1);})
 static AMON(ceilD,  D,D, *z=tceil(*x);)
 static AMON(ceilZ,  Z,Z, *z=zceil(*x);)
 static AMON(ceilE,  E,E, *z=eceil(*x);)
@@ -161,8 +163,8 @@ static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
 extern AHDR1FN expI, expD, expE, logI, logD, logE;
 
 UA va1tab[]={
- /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}, {0,VI}, {floorE,VUNCH+VIPW}, {  0, VUNCH}, {0, VUNCH}}},
- /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}, {0,VI}, {ceilE,VUNCH+VIPW}, {  0, VUNCH}, {0, VUNCH}}},
+ /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}, {0,VI}, {floorEI,VI}, {  0, VUNCH}, {0, VUNCH}}},
+ /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}, {0,VI}, {ceilEI,VI}, {  0, VUNCH}, {0, VUNCH}}},
  /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}, {  0, VUNCH}, {0, VUNCH}, {  0, VUNCH}, {0, VUNCH}}},
  /* *  */ {{{ 0,VB}, { sgnI,VI+VIPW}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}, {0,VI}, {sgnE,VI}, {sgnI2,VI}, {sgnI4,VI}}},
  /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIPW}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}, {0,0}, {expE,VUNCH}, { expD,VDD+VD}, { expD,VDD+VD}}},
@@ -218,6 +220,8 @@ static DF1(jtva1){F12IP;A z;I cv,n,t,wt,zt;VA1F ado;
   // all these cases are needed because sparse code may fail over to them
   case VA1CASE(EWOV,  VA1CMIN-VA1ORIGIN): cv=VD;       ado=floorD;               break;
   case VA1CASE(EWOV,  VA1CMAX-VA1ORIGIN): cv=VD;       ado=ceilD;                break;
+  case VA1CASE(EWOV1,  VA1CMIN-VA1ORIGIN): cv=VUNCH;       ado=floorE;               break;
+  case VA1CASE(EWOV1,  VA1CMAX-VA1ORIGIN): cv=VUNCH;       ado=ceilE;                break;
   case VA1CASE(EWOV,  VA1CSTILE-VA1ORIGIN): cv=VD+VDD;   ado=absD;                 break;
   case VA1CASE(EWIRR, VA1CROOT-VA1ORIGIN): cv=VD+VDD;   ado=sqrtD;                break;
   case VA1CASE(EWIRR, VA1CEXP-VA1ORIGIN): cv=VD+VDD;   ado=expD;                 break;

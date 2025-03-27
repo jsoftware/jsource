@@ -64,8 +64,8 @@
 #define EWIRR           62      /* irrational result           */
 #define EWRAT           63      /* rational   result           */
 #define EWDIV0          64      /* division by zero            */
-#define EWOV            66      // integer overflow from the old routines that do not support recovery.  Anything >= EWOV is an overflow.  Leave at 50 until asm routines are retired
-#define EWOV1           67      // integer overflow that can be recovered because the float version has already been saved
+#define EWOV            66      // integer overflow from the old routines that do not support recovery.  Anything >= EWOV is an overflow.
+#define EWOV1           67      // integer overflow that can be recovered because the float version has already been saved; also used in float/ceilEI to indicate any overflow
 #define EWOVIP          68      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
 #define EWOVIPPLUSII    1  //0b001
 #define EWOVIPPLUSBI    0  //0b000  // bit 2=XOR value, bit0=AND value, bits 1:0 indicate function to use

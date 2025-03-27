@@ -154,7 +154,8 @@ static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
 // clang17 wastes an instruction #define PTISMARKBACKORRPAR(s)  (((s).pt>>16)==(PTRPAR>>16))  // s.pt is ) or MARK.
 #define PTISMARKBACKORRPAR(s)  ((s)==(PTRPAR>>16))  // s is top half of pt; true if ) or MARK.
 _Static_assert((PTRPAR^PTMARKBACK&0xffff0000)==0,"MARKBACK must equal RPAR for end purposes");
-#define PTISMARKFRONT(pt)  (((pt)&0xff000000)==(PTMARKFRONT&0xff000000))  // pt is MARKFRONT
+// obsolete #define PTISMARKFRONT(pt)  (((pt)&0xff000000)==(PTMARKFRONT&0xff000000))  // pt is MARKFRONT
+#define PTISMARKFRONT(pt)  ((I4)(pt)>PTLPAR)  // pt is MARKFRONT
 #define PTISNOTASGNNAME  TESTSTACK0PT(24)  // NOT =./=: with name on the left
 #define PTASGNLOCALX 22  // set in the type-code for local assignment
 #define PTASGNLOCAL (1LL<<PTASGNLOCALX)
@@ -715,16 +716,17 @@ endname: ;
     // First, create the bitmask of parser lines that are eligible to execute
     // register pressure is severe where we do subroutine calls below
     // the chained dependency (marked with $$$) is ((C*)&stack[2].pt)[2]->fs->actionfn->actionfn().  We accelerate fs by fetching the 2 possibilities and then selecting; similarly for fsa because we have time on our hands while the pts are loading
-    I pmask; A fs, fs1;   // line# matched, the address of the operator, the value in stack[1]
+    C pmask; A fs, fs1;   // line# matched, the address of the operator, the value in stack[1]
     {
-     I stk2pt=(I)((C*)&stack[2].pt)[2]; pmask=(I)((C*)&stack[1].pt)[1] & stk2pt;  // stkpos 2 is enough to detect bit 0 (which gives fsa) if result turns out to be 0-4 $$$
+     C stk2pt=__atomic_load_n((C*)&stack[2].pt+2,__ATOMIC_RELAXED); pmask=__atomic_load_n((C*)&stack[1].pt+1,__ATOMIC_RELAXED);  // stkpos 2 is enough to detect bit 0 (which gives fsa) if result turns out to be 0-4 $$$
      fs1=__atomic_load_n(&stack[1].a,__ATOMIC_RELAXED); A fs2=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED);   // the actions to be executed if lines 0-4.   Could be garbage.  atomic to force early load $$$
-     pmask&=(I)((C*)&stack[3].pt)[3]; pmask&=GETSTACK0PT;  // finish all columns of parse
+     C stk3pt=__atomic_load_n((C*)&stack[3].pt+3,__ATOMIC_RELAXED);  // this gets the loads moving
+     pmask&=GETSTACK0PT; pmask&=stk2pt; pmask&=stk3pt;  // finish all columns of parse, starting with 0 to draw even with the load of lane 3
      fs=fs1=QCWORD(fs1); fs2=QCWORD(fs2);  // prepare multiplexers while we wait for stk2pt
      fs=stk2pt&1?fs:fs2; // select operative fs 1 2 2 and fsa 
     }
 
-    // (There are a couple of cycles of delay waiting for fs and pmask to settle.  The compiler fills with its best guesses.)
+    // (There are a couple of cycles of delay waiting for fs and pmask to settle.  The compiler fills with its best guesses, after doing the branches.)
 
     if(withprob(pmask!=0,0.8)){  // If all 0, nothing is dispatchable in lines 0-7, go push next word after checking for ( .  likely is an overstatement but it gives better register usage
      // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
@@ -742,7 +744,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       J jtp=(J)((I)jt+(pmask>>=1));  // stop usage of pmask, fold into jtp as stack offset to verb (1 2 2), 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
       PSTK *fsa=&stack[2]; {PSTK *fsa1=&stack[1]; fsa=pmask?fsa:fsa1;}    // pointer to the operator's stack slot  1 2 2
 #define jt ((J)((I)jtp&~JTFLAGMSK))  // all jt use goes through jtp     stop using jt, pmask, and pt0ecam, which were not saved over the subroutine call
-      AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>1],__ATOMIC_RELAXED);  // frees fs the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call $$$
+      AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>1],__ATOMIC_RELAXED);  // frees fs the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call.  Stop using pmask $$$
       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
       // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
@@ -770,9 +772,6 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
           // we require that the zvalue be a FAOWED argument
           targc=fsa[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;  // allow inplacing with target=2 if the assigned value is either arg with FAOWED flag
         }
-#define y xxx   // y can disappear after the subroutine call
-#define pmask xxx
-#define pt0ecam xxx  // We don't need it for a while, but would be good to save over actionfn & later
         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and correct usecount: 1 if local, 2 if global since we have raised the count of this block already if it is named and to be operated on inplace; +1 if NJA to account for the mapping reference.
         // The block can be virtual, if it is x/y to xdefn, but we must never inplace to a virtual block or to readonly (xxx_index_ =: xxx_index_ + 1)
@@ -800,7 +799,6 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:(A*)STKNAMED; tpopw=ISSTKNAMED(arg2)?(A*)arg2:tpopw; tpopw=(I)jtp&2?(A*)tpopw:(A*)STKNAMED;
          // we encode omitted or non-abandoned tpop[aw] as STKNAMED+!FAOWED.  We do not use 0 for tpopw then, because the branches to skip out of STKNAMED+!FAOWED will predict correctly and we want the free loop to run exactly twice always.
          // tpopa/tpopw are:  monad: w -  dyad: a w
-#undef y
       y=(*actionfn)((J)((I)jtp|1),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
       // When we don't break we lose time waiting for stack->a to be read and masked, but not much.  We avoid using jt->parserstackframe.sf because the compiler writes jt to memory, a loser when it has to be read back.
       // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
@@ -818,7 +816,7 @@ RECURSIVERESULTSCHECK
        jt = ((J)((I)jtp&~JTFLAGMSK)); {PSTK *stack00=stack-1; stack00=(I)jtp&1?stack00:stack; stack=stack00;}  // stack->0 1 1->1 1 2 restore jt and stack vbls
        jteformat(jt,jt->parserstackframe.sf,(A)((I)jtp&2?aa:wa),(A)((I)jtp&2?wa:0),0);  // stack is 1 2 2 first arg is w/a 2 3 1, second is 0/w x x 3
        FP   // we have regs back to normal for exit
-#define jt ((J)((I)jtp&~JTFLAGMSK))  // all jt use goes through jtp     stop using jt, pmask, and pt0ecam, which were not saved over the subroutine call
+#define jt ((J)((I)jtp&~JTFLAGMSK))
       }
 #if AUDITEXECRESULTS
       auditblock(jt,y,1,1);
@@ -827,8 +825,7 @@ RECURSIVERESULTSCHECK
       audittstack(jt);
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
 #endif           
-      // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
-      //  so that it is safe to remove its protection
+      // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased, so that it is safe to remove its protection
       ramkrecursv(y);  // force recursive y
 
       // We have to fa any value that we ra'd.  For the args this is the lengthy tpop procedure below, but first we have to handle an unusual case:
@@ -913,17 +910,15 @@ RECURSIVERESULTSCHECK
       {PSTK *stack0=stack-1, *stack00=stack0; stack0=(I)jtp&2?stack:stack0; *stack0=stack[-2];  // stack0=0 1 1->0 1 2   _1->0(NOP)  0->1 0->2  close up the stack
        stack00=(I)jtp&1?stack00:stack; stack=stack00;}  // stack00->0 1 1->1 1 2 restore stack vbl
 #undef jt
-#undef pt0ecam
-#undef pmask
       jt=(J)((I)jtp&~3);   // restore jt for normal use
-      // We can avoid rescanning the result of this execution in all normal cases:
+      // We can avoid rescanning the result of this execution in all normal cases(*):
       // (1) if we are executing line 1, the result is always EDGE+AVN V N.  This will be executable (as line 0) ONLY when word 0 is EDGE.  In that case go do it directly
       // (2) otherwise, if word 0 is (, we have ( N ... which is executable only as (.  Go to that directly
       // (3) otherwise, we have (a) AVN+MARK+=: N ... (from lines 0/2), with the additional info that V N ... was not executable earlier; that cannot be executable now (* except see below) (b) AVN V N (from line 1) which is never executable.
       // We go straight to stacking, and the question is how many words.  We can never stack 2 words after executing line 0 or 1 (in line 0 we might lose the EDGE in slot 0, in line 1 the V in slot 1).
       // pt0ecam&CONJ indicates when the next word coming in is CAVN. If that is set, and we are in line 2, we can stack 2 if not EDGE ....  [We can also stack 2 for AN N ... (line 2 without EDGE+V) regardless of CONJ, but why bother?  It will be an error without CAVN]  Others only 1
       // Each of these tests saves considerable work
-      // * The abnormal case is where there is a conjunction following the executable part, such as +: 2 &  or (+: 2 & ).  To handle these we branch straight back to reexecute if this is not a final exec.
+      // (*) The abnormal case is where there is a conjunction following the executable part, such as +: 2 &  or (+: 2 & ).  To handle these we branch straight back to reexecute if this is not a final exec.
       if((GETSTACK0PT&1)&(I)jtp){fs=fs1=QCWORD(stack[1].a); pmask=0; goto reexec012;}  // reexecutable line 1: go do it
       if(unlikely(endstkpt!=(PTRPAR>>16)))continue;   // if not final exec check for reexec
       if(!TESTSTACK0PT(PTNOTLPARX))goto execlpar;  // if (, go execute that immediately.  could save a test there since we know stack[1] is VN
@@ -957,8 +952,6 @@ RECURSIVERESULTSCHECK
        if(AC(yy)==0 || (AC(yy)<0 && AC(yy)!=ACINPLACE+ACUC1))SEGFAULT; 
        audittstack(jt);
 #endif
-       // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
-       //  so that it is safe to remove its protection
 // obsolete        ramkrecursv(yy);  // force recursive y
        PTFROMTYPE(stack[pt0ecam&FLGPMONAD?2:3].pt,AT(yy)) stack[pt0ecam&FLGPMONAD?2:3].t=stack[1].t;   // take err tok from first arg.   Must store new type because this line takes adverb hooks also
 
@@ -999,8 +992,6 @@ RECURSIVERESULTSCHECK
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
        pt0ecam&=~FLGPMSK;     // set initial value of loop counter/flag: 000 always for dyad
        yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
-       // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
-       //  so that it is safe to remove its protection
        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
        // errors during fork execution are formatted there.  The only error on the fork itself is syntax, for which the terse error is enough
        RECURSIVERESULTSCHECK
@@ -1015,20 +1006,20 @@ RECURSIVERESULTSCHECK
        pt0ecam&=~FLGPMSK; pt0ecam|=PTISCAVN(stack[3].pt)?0:(FLGPMONAD|FLGPINCR); // set initial value of loop counter/flag
        arg3=PTISCAVN(stack[3].pt)?arg3:mark;  // beginning of stack after execution; a is invalid in end-of-stack.  mark suffices to show not FAOWED
        yy=hook(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the hook
-       // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased,
-       //  so that it is safe to remove its protection
        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
        // errors inside hook are formatted there.  The only error on the hook itself is syntax, for which the terse error is enough
        RECURSIVERESULTSCHECK
 // obsolete        ramkrecursv(yy);  // force recursive y
        PTFROMTYPE(stack[pt0ecam&FLGPMONAD?2:3].pt,AT(yy)) stack[pt0ecam&FLGPMONAD?2:3].t = stack[((pt0ecam&FLGPMONAD)?2:3)-1].t;   // take err tok from f of hook, g of trident; save result.  Must store new type because this line takes adverb hooks also
       }  // end of classifying fragment (lines 3-7)
+
       // we fall through here for lines 3-4 and 6-7 requiring a rescan (i. e. adv/conj/fork/hook/trident).  We have to free any FAOWED operands from the stack.
       // the .t field of the result must have been updated, and .pt also if it is liable to change.  yy is the result, stored into the result on the stack, possibly flagged as FAOWED.  pt0ecam must have been initialized with the
       // number of arguments.  We avoid DO so as not to need the i and _n values preserved, and we increment stack because indexing is ineffective on the large type.
+      // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased, so that it is safe to remove its protection
       ramkrecursv(yy);  // force recursive y
       y=NEXTY;   // refetch next-word to save regs
-      while(1){A a=stack[1].a; if(unlikely(ISSTKFAOWED(a))){if(unlikely(QCWORD(a)==yy))yy=a;else faowed(QCWORD(a),AC(QCWORD(a)),AT(QCWORD(a)));} if(pt0ecam&FLGPCTEND)break; pt0ecam+=FLGPINCR; ++stack;}  // the assignment to yy enforces max 1 inheritance
+      NOUNROLL while(1){A a=stack[1].a; if(unlikely(ISSTKFAOWED(a))){if(unlikely(QCWORD(a)==yy))yy=a;else faowed(QCWORD(a),AC(QCWORD(a)),AT(QCWORD(a)));} if(pt0ecam&FLGPCTEND)break; pt0ecam+=FLGPINCR; ++stack;}  // the assignment to yy enforces max 1 inheritance
        // this assigns to stack[1]..stack[dyad+2].  Counter goes 1-2 for monad, 0-1-2 for dyad.  stack ends up pointing to new stack position, i. e. original 1 or 2, just before the result
       stack[1].a = yy; stack[0]=stack[pt0ecam&FLGPMONAD?-1:-2];  // close up stack
      }   // end of 'execute lines 3-7'

@@ -33,6 +33,26 @@ b=: 20 64 ?@$ 0
   assert.  (a +/@(*"1 _) b) -: a X b
 end. 1 }} ''
 
+thr=: (9!:58)"0 i.3
+
+'a b'=: (0?@$~2,,~500)
+assert.  (a +/@(*"1 _) b) -: a X b
+0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
+assert.  (a +/@(*"1 _) b) -: a X b
+_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
+assert.  (a +/@(*"1 _) b) -: a X b
+
+empty thr (9!:58)"0 i.3
+
+'a b'=: (0?@$~2,,~500) j. (0?@$~2,,~500)
+assert.  (a +/@(*"1 _) b) -: a X b
+0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
+assert.  (a +/@(*"1 _) b) -: a X b
+_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
+assert.  (a +/@(*"1 _) b) -: a X b
+
+empty thr (9!:58)"0 i.3
+
 a=: (QKTEST{::1024 1024;256 256) ?@$ 0
 b=: (QKTEST{::1024 1024;256 256) ?@$ 0
 c=: a +/@(*"1 _)t.'' b    NB.test against strawman approach
@@ -47,7 +67,7 @@ end.
 }} ''
 delth''
 
-4!:55 ;:'N X XT a b c d delth e n'
+4!:55 ;:'N X XT a b c d delth e n thr'
 
 epilog''
 

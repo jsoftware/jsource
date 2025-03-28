@@ -522,7 +522,7 @@ case $jplatform64 in
  darwin/j32*) # darwin x86
   TARGET=jamalgam
   CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
-  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin"
+  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin -framework Accelerate "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC32}"
   GASM_FLAGS="-m32 $macmin"
@@ -533,7 +533,7 @@ case $jplatform64 in
  darwin/j64avx512*) # darwin intel 64bit
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX2=1 -DC_AVX512=1 "
-  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin -framework Accelerate "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -546,7 +546,7 @@ case $jplatform64 in
  darwin/j64avx2*) # darwin intel 64bit
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX2=1 "
-  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin -framework Accelerate "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -559,7 +559,7 @@ case $jplatform64 in
  darwin/j64arm*) # darwin arm
   TARGET=jamalgam
   CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
-  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin -framework Accelerate "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
@@ -570,7 +570,7 @@ case $jplatform64 in
  darwin/j64iphoneos) # iphone
   TARGET=jamalgam
   CFLAGS="$common $macmin -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
-  LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDOPENMP $LDTHREAD $macmin "
+  LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDOPENMP $LDTHREAD $macmin -framework Accelerate "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
@@ -581,7 +581,7 @@ case $jplatform64 in
  darwin/j64iphonesimulator) # iphone simulator
   TARGET=jamalgam
   CFLAGS="$common $macmin -D IMPORTGMPLIB -DC_CRC32C=1 "
-  LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDOPENMP $LDTHREAD $macmin "
+  LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDOPENMP $LDTHREAD $macmin -framework Accelerate "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
@@ -592,7 +592,7 @@ case $jplatform64 in
  darwin/j64*) # darwin intel 64bit nonavx
   TARGET=jamalgam
   CFLAGS="$common $macmin -msse3 "
-  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+  LDFLAGS=" -lm -ldl $LDOPENMP $LDTHREAD $macmin -framework Accelerate "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"

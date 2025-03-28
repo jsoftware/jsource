@@ -262,6 +262,7 @@ dgemm_macro_kernel(dim_t   mc,
     aligned_free( _C );
 }
 
+#ifndef __APPLE__
 //
 //  Compute C <- beta*C + alpha*A*B
 //
@@ -335,6 +336,7 @@ dgemm_nn         (I              m,
         }
     }
 }
+#endif
 
 
 // -----------------------------------------------------------------
@@ -775,6 +777,7 @@ zgemm_macro_kernel(dim_t   mc,
     aligned_free( _C );
 }
 
+#ifndef __APPLE__
 //
 //  Compute C <- beta*C + alpha*A*B
 //
@@ -848,4 +851,4 @@ zgemm_nn         (I              m,
         }
     }
 }
-
+#endif

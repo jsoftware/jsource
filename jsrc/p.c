@@ -717,7 +717,7 @@ endname: ;
     // the chained dependency (marked with $$$) is ((C*)&stack[2].pt)[2]->fs->actionfn->actionfn().  We accelerate fs by fetching the 2 possibilities and then selecting; similarly for fsa because we have time on our hands while the pts are loading
     C pmask; A fs, fs1;   // line# matched, the address of the operator, the value in stack[1]
     {
-     C stk2pt=__atomic_load_n(((C*)&stack[2].pt+2),__ATOMIC_RELAXED); pmask=__atomic_load_n(((C*)&stack[1].pt+1),__ATOMIC_RELAXED);  // stkpos 2 is enough to detect bit 0 (which gives fsa) if result turns out to be 0-4 $$$
+     C stk2pt=__atomic_load_n(((C*)&stack[2].pt+2),__ATOMIC_RELAXED); pmask=__atomic_load_n(((C*)&stack[1].pt+1),__ATOMIC_RELAXED);  // stkpos 2 is enough to detect bit 0 (which gives fsa) if result turns out to be 0-4 $$$  extra () to cover clang bug
      fs1=__atomic_load_n(&stack[1].a,__ATOMIC_RELAXED); A fs2=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED);   // the actions to be executed if lines 0-4.   Could be garbage.  atomic to force early load $$$
      C stk3pt=__atomic_load_n(((C*)&stack[3].pt+3),__ATOMIC_RELAXED);  // this gets the loads moving
      pmask&=GETSTACK0PT; pmask&=stk2pt; pmask&=stk3pt;  // finish all columns of parse, starting with 0 to draw even with the load of lane 3
@@ -739,11 +739,12 @@ endname: ;
       // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and recursion
       // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
 reexec012:;  // enter here with fs, fs1, and pmask set when we know which line will be used for an execution
+      L *symorigin=SYMORIGIN;   // while we are waiting for pmask/fs to settle (3+ clocks at least), read something useful if we are on an assignment
       jt->parserstackframe.sf=fs;  // set new recursion point for $:
       J jtp=(J)((I)jt+(pmask>>=1));  // stop usage of pmask, fold into jtp as stack offset to verb (1 2 2), 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
       PSTK *fsa=&stack[2]; {PSTK *fsa1=&stack[1]; fsa=pmask?fsa:fsa1;}    // pointer to the operator's stack slot  1 2 2
 #define jt ((J)((I)jtp&~JTFLAGMSK))  // all jt use goes through jtp     stop using jt, pmask, and pt0ecam, which were not saved over the subroutine call
-      AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>1],__ATOMIC_RELAXED);  // frees fs the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call.  Stop using pmask $$$
+      AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>1],__ATOMIC_RELAXED);  // the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call.  Stop using pmask $$$
       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
       // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
@@ -753,16 +754,17 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       // execution.  That will then execute as (name' + +) creating a fork that will assign to name.  So we can inplace any execution, because
       // it always produces a noun and the only things executable from the stack are tridents
       if(withprob(!PTISNOTASGNNAME,0.1)){A zval; I targc;  //  Is this an assignment? targc is # refs in the assigned symbol that is allowed for inplaceables.
+       I symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#
        fs1=(I)jtp&1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
-       if(FAV(fs)->flag&FAV(fs1)->flag&VASGSAFE){  // do the verb(s) allow assignment in place?
+       if(FAV(fs)->flag&FAV(fs1)->flag&VASGSAFE){  // do the verb(s) allow assignment in place?   this frees fs/fs1
         // Assignment to name, and not ill-behaved function (i. e. that may change locales)., that is, inplaceable assignment
         // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
-        if(likely(TESTSTACK0PT(PTASGNLOCALX))){L *s;   // only sentences from explicit defns have ASGNLOCAL set
+        if(likely(TESTSTACK0PT(PTASGNLOCALX))){   // only sentences from explicit defns have ASGNLOCAL set
          // local assignment.  First check for primary symbol.  We expect this to succeed.  We fetch the unflagged address of the value
-         // registers are very tight.  Just moving SYMORIGIN to a common branch causes the compiler to spill regs to memory
-         if(likely((s=(L*)(I)(NAV(QCWORD(y))->symx&~REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX))))!=0)){
-          zval=QCWORD((SYMORIGIN+(I)s)->fval);  // get value of symbol in primary table.  There may be no value; that's OK
-         }else{zval=QCWORD(jtprobelocal(SYMORIGIN,QCWORD(y),jt->locsyms));}
+         symx=pt0ecam&(LOCSYMFLGX+ARLCLONEDX)?0:symx;  // if cloned local symbol table, ignore the symbol
+         if(likely(symx!=0)){   // y is the name, which has not been stacked yet
+          zval=QCWORD((symorigin+symx)->fval);  // get value of symbol in primary table.  There may be no value; that's OK
+         }else{zval=QCWORD(jtprobelocal(symorigin,QCWORD(y),jt->locsyms));}
          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d.) which is OK
         }else{
           // global assignment, get slot address.  Global names have been ra()d and have AC=2
@@ -811,7 +813,7 @@ RECURSIVERESULTSCHECK
        // if there was an error, try to localize it to this primitive
        A aa=QCWORD(stack[-1].a), wa=QCWORD(stack[1].a);  // stack is stack[1 2 2]; aa is stack[-1].a, used only for dyad; wa is w
 #undef jt
-       jt = ((J)((I)jtp&~JTFLAGMSK)); {PSTK *stack00=stack-1; stack00=(I)jtp&1?stack00:stack; stack=stack00;}  // stack->0 1 1->1 1 2 restore jt and stack vbls
+       jt=((J)((I)jtp&~JTFLAGMSK)); {PSTK *stack00=stack-1; stack00=(I)jtp&1?stack00:stack; stack=stack00;}  // stack->1 1 2 restore jt and stack vbls
        jteformat(jt,jt->parserstackframe.sf,(A)((I)jtp&2?aa:wa),(A)((I)jtp&2?wa:0),0);  // stack is 1 2 2 first arg is w/a 2 3 1, second is 0/w x x 3
        FP   // we have regs back to normal for exit
 #define jt ((J)((I)jtp&~JTFLAGMSK))
@@ -922,9 +924,9 @@ RECURSIVERESULTSCHECK
        if(AC(yy)==0 || (AC(yy)<0 && AC(yy)!=ACINPLACE+ACUC1))SEGFAULT; 
        audittstack(jt);
 #endif
-       PTFROMTYPE(stack[pt0ecam&FLGPMONAD?2:3].pt,AT(yy)) stack[pt0ecam&FLGPMONAD?2:3].t=stack[1].t;   // take err tok from first arg.   Must store new type because this line takes adverb hooks also
-
+       PTFROMTYPE(stack[pt0ecam&FLGPMONAD?2:3].pt,AT(yy)) stack[pt0ecam&FLGPMONAD?2:3].t=stack[1].t;
        // quite often there is another execution so we don't try to avoid it
+
       }else if(pmask567&0b10000000){  // assign - can't be fork/hook
        // ****** assignment
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
@@ -964,7 +966,7 @@ RECURSIVERESULTSCHECK
        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
        // errors during fork execution are formatted there.  The only error on the fork itself is syntax, for which the terse error is enough
        RECURSIVERESULTSCHECK
-       stack[3].t = stack[1].t;  // take err tok from f; no need to set parsertype, since it didn't change
+       stack[3].t=stack[1].t;  // take err tok from f; no need to set parsertype, since it didn't change
       }else{
        // ***** hook, other bidents, and non-fork tridents
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
@@ -987,7 +989,7 @@ RECURSIVERESULTSCHECK
       y=NEXTY;   // refetch next-word to save regs
       while(1){A a=stack[1].a; if(unlikely(ISSTKFAOWED(a))){if(unlikely(QCWORD(a)==yy))yy=a;else faowed(QCWORD(a),AC(QCWORD(a)),AT(QCWORD(a)));} if(pt0ecam&FLGPCTEND)break; pt0ecam+=FLGPINCR; ++stack;}  // the assignment to yy enforces max 1 inheritance
        // this assigns to stack[1]..stack[dyad+2].  Counter goes 1-2 for monad, 0-1-2 for dyad.  stack ends up pointing to new stack position, i. e. original 1 or 2, just before the result
-      stack[1].a = yy; stack[0]=stack[pt0ecam&FLGPMONAD?-1:-2];  // close up stack
+      stack[1].a=yy; stack[0]=stack[pt0ecam&FLGPMONAD?-1:-2];  // close up stack
      }   // end of 'execute lines 3-7'
 #if MEMAUDIT&0x10
      auditmemchains();  // trap here while we still have the parseline

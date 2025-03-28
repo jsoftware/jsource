@@ -353,8 +353,9 @@
 // NOTE: famf() could be used to preserve a register, if we could find one to preserve
 #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
-// Thus we mark the free as unlikely, and it will usually do the RFO cycle.  The block must be recursive if it is recursible
+// Thus we mark the free as unlikely, but it will usually do the RFO cycle.  The block must be recursive if it is recursible
 #define faowed(x,Zc,tt) {if(unlikely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
+#define faowedjt3(x,Zc,tt) {if(unlikely(((Zc-2)|tt)<0)){jtfamf((J)((I)jt&~3),x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf((J)((I)jt&~3),x,tt);}}}  // call if sparse or ending; never touch a PERM
 // faifowed does the free only if the block is marked FAOWED in stkf.  These may have been stacked by local names, if the stack was later protected
 #define faifowed(x,Zc,tt,stkf) {if(unlikely(tt<0) || ((((Zc>>(ACPERMANENTX-(STKFAOWEDX+1)))&(4*STKFAOWED-1))<((I)stkf&STKFAOWED)) && unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2)))jtfamf(jt,x,tt);}  // call if sparse or ending; never touch a PERM
    // FAOWED becomes ..0f0; perm becomes .0p00 where perhaps p00 has +-1 added; 0f0>p00 means 'FAOWED & not PERMANENT'
@@ -370,6 +371,7 @@
 #define fana(x)                     {if(likely((x)!=0))faaction(jt,(x),;)}
 // Within tpop, no need to check ACISPERM; usecount has gone to 0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              jtfamf(jt,(x),(flg)&RECURSIBLE);
+#define fanapopjt3(x,flg)           jtfamf((J)((I)jt&~3),(x),(flg)&RECURSIBLE);
 // At end of task, we FA() blocks that were known to have been ra()d.  Their usecount cannot be negative, but they may be virtual or sparse.  If virtual when usecount goes to 0, fa the backer and suppress traversal
 #define faafterrav(x)  {I Zc=AC(x); I tt=AT(x); if(likely(!ACISPERM(Zc))){if(unlikely((tt|(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)-2))<0)){if(unlikely(AFLAG(x)&AFVIRTUAL)){fa(ABACK(x)); tt=0;} jtfamf(jt,x,tt);}} }
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))

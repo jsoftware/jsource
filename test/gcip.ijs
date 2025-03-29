@@ -35,21 +35,30 @@ end. 1 }} ''
 
 thr=: (9!:58)"0 i.3
 
-'a b'=: (0?@$~2,,~500)
-assert.  (a +/@(*"1 _) b) -: a X b
+'a b'=: (1000?@$~2,,~500)
+(a +/@(*"1 _) b) -: a X b
 0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
-assert.  (a +/@(*"1 _) b) -: a X b
+(a +/@(*"1 _) b) -: a X b
 _1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
-assert.  (a +/@(*"1 _) b) -: a X b
+(a +/@(*"1 _) b) -: a X b
+
+empty thr (9!:58)"0 i.3
+
+'a b'=: (0?@$~2,,~500)
+(a +/@(*"1 _) b) -: a X b
+0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
+(a +/@(*"1 _) b) -: a X b
+_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
+(a +/@(*"1 _) b) -: a X b
 
 empty thr (9!:58)"0 i.3
 
 'a b'=: (0?@$~2,,~500) j. (0?@$~2,,~500)
-assert.  (a +/@(*"1 _) b) -: a X b
+(a +/@(*"1 _) b) -: a X b
 0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
-assert.  (a +/@(*"1 _) b) -: a X b
+(a +/@(*"1 _) b) -: a X b
 _1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
-assert.  (a +/@(*"1 _) b) -: a X b
+(a +/@(*"1 _) b) -: a X b
 
 empty thr (9!:58)"0 i.3
 

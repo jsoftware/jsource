@@ -299,7 +299,7 @@ static struct {
 
 // This handles all bident/tridents except N/V V V forks.  If h is CAVN, we have a trident; omitted h is 0
 A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
- ARGCHK2(a,w); if(h&&AT(h)&MARK)SEGFAULT;  // scaf
+ ARGCHK2(a,w);
  A z; fdefallo(z)
 // obsolete if(likely(!(LOWESTBIT(AT(h))&NOUN+VERB+ADV+CONJ))){
  if(likely(h==0)){

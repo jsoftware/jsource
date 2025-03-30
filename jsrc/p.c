@@ -476,6 +476,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
  // to get the error token.  Errors during the stacking phase will be located from this routine
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
+  //  28 garbage, overflow from bit 29
   //  (execution of lines 3-6) 23-25  loop counter+monad/dyad flag
   //  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
   //  19 free
@@ -511,10 +512,9 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch  LPAR in [-1] doesn't hurt anything
   I pull4=((~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-2])) & (~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-3])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
                          // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
-  A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early because it's needed first
+  A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early
 
   PSTK *stackend1;   // will be the initial stack position, which is where the stack should end up if there is no error
-
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
   // never look at a stack location until we have moved from the queue to that position.
   // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
@@ -528,24 +528,24 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
    I allo=MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
    GATV0(sa,B01,allo,1);
    currstk=(PSTK*)CAV1(sa);   // save start of data area, leaving space for all the marks
-   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
+   // We are taking advantage of the fact that NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
    stack=(PSTK*)(CAV(sa)+allo);  // point to the end+1 of the allocation, our new start point
   }  // We could worry about hysteresis to avoid reallocation of every call
 
   // the first element of the parser stack is where we save unchanging error info for the sentence
-  currstk->a=(A)queue;  currstk->t=(US)nwds;   //  lower stack: addr & length of words being parsed
+  currstk->a=(A)queue; currstk->t=(US)nwds;   //  lower stack: addr & length of words being parsed
 
   queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
 
-  // Save info for error typeout.  We save pointers to the sentence, and the executing parser-stack frame for each execution, from which we infer error position
+  // push and update the current parser stack frame.
   PFRAME oframe=jt->parserstackframe;   // save all the stack status
-
   jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
   jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
+  // we update parserstkend1 every time we execute something that might recur through here.  We must restore it on exit, as part of the entire frame
 
   stackend1=stack-=BACKMARKS;   // start at the end, pointing to first of 3 marks, and remember that position, because we should finish there
 
-  pt0ecam += nwds+((0b11LL<<CONJX)<<pull4);  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
+  pt0ecam+=nwds+((0b11LL<<CONJX)<<pull4);  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
 // debug if(jt->parsercalls == 0x4)
@@ -583,13 +583,13 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
       // keep over a subroutine call, we have to store it in pt0ecam or some other saved name
       I4 symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  This fetch gates the normal path
 // obsolete       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
-      L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier since it can't survive subroutine calls
+      L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change within a single stacking loop but there's scant benefit in fetching earlier
       I4 buck=__atomic_load_n(&NAV(QCWORD(y))->bucket,__ATOMIC_RELAXED);  // While symx settles, start a read for bucket#.  We have 3 idle cycles.  Perhaps we should load jt->locsyms too, but regs might not permit
       pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
       y=QCWORD(y);  // back y up to the NAME block
 // preferred      if((symx&=REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using an uncloned table and there is a symbol stored there...  The compiler creates 2 branches which hurts only when the uncloned table is in play
-      if(!(pt0ecam&FLGARCLONED)&&(symx!=0)){  // if we are using an uncloned table and there is a symbol stored there...
+      if(withprob(!(pt0ecam&FLGARCLONED),0.9)&&(symx!=0)){  // if we are using an uncloned table and there is a symbol stored there (i. e. local name)...
        // this is the normal path for all local names as long as we can use the uncloned table.
        L *s=&sympv[symx];  // get address of symbol from the primary table
        if(unlikely((s->fval)==0))goto rdglob;  // if value has not been assigned, ignore it.  y has QCSYMVAL semantics
@@ -601,7 +601,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
        if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if nonneg bucketx and no name has been added, skip the search - the usual case if not recursive symtab.  AR may change midsentence
        // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table.  Added name is pretty rare -
        // should we loop through the buckets on a local name?  Probably - saves a call for every name in a non-primary table
-       if(likely(bx<0)){L* l; for(l=LXAV0(jt->locsyms)[buck]+sympv;++bx<0;l=l->next+sympv); y=l->fval;}  // local name in cloned table.  Get to it without subroutine call
+       if(likely(bx<0)){L* l; for(l=LXAV0(jt->locsyms)[buck]+sympv;++bx<0;l=&sympv[l->next]); y=l->fval;}  // local name in cloned table.  Get to it without subroutine call
        else if(unlikely((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0)){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // must be unassigned name and there has been a surprise write to the cloned symtab.  Rare indeed.  If not found, it's global - restore y
        if(unlikely(ISRAREQD(y)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
       }else{
@@ -656,8 +656,8 @@ rdglob: ;  // here when we tried the buckets and failed
          NAV(origy)->cachedref=CLRFAOWED(y); NAV(origy)->bucket=0; ACSETPERM(QCWORD(y)); // clear bucket info so we will skip that search - this name is forever cached with QCFAOWED semantics.  Make the cached value immortal
         }
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.
-        A origname=QCWORD(*(volatile A*)queue);  // refetch the name
-        y=namerefacv(origname,y);   // Replace acv with reference, and fa() looked-up y value if global.  y starts with QCFAOWED semantics, returns with QCFAOWED
+// obsolete         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
+        y=namerefacv(QCWORD(*(volatile A*)queue),y);   // Replace acv with reference, and fa() looked-up y value if global.  y starts with QCFAOWED semantics, returns with QCFAOWED
         FPSZ(y)
        }
       }else{
@@ -680,24 +680,26 @@ endname: ;
      // Look to see if it is ) or a conjunction,
      // which allow 2 or 1 more pulls from the queue without checking for an executable fragment.
      // Also, dyad executions sometimes allow two pulls if the first one is AVN.
-     I tx=QCPTYPE(y);  // extract the 4-bit parsing-type index
+     I tx=QCPTYPE(y); I savy=(I)y;  // extract the 4-bit parsing-type index, and save y to allow early load
+     y=queue[-1];  // fetch new word as early as possible.  (it) is needed earlier but y can be read earlier
      I it=ptcol[tx-1];   // convert type to internal code
      --stack;  // back up to new stack frame, where we will store the new word
      stack[0].t = (US)pt0ecam;  // install the original token number for the word
      --pt0ecam;  //  decrement token# for the word we just processed
-     queue--;  // OK to fetch queue[-1]
+     queue--;  // back to the word we just fetched, which might be garbage
      // stack the value, changing it to STKNAMED semantics
-     stack[0].a = (A)(((I)y&~QCMASK)+(((I)y>>(QCNAMEDX-STKNAMEDX))&STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
-     y=*(volatile A*)queue;   // fetch next value as early as possible
-     pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  This is where we skip execution for CONJ/RPAR
+     stack[0].a = (A)((savy&~QCMASK)+((savy>>(QCNAMEDX-STKNAMEDX))&STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
+// obsolete      y=*(volatile A*)queue;   // fetch next value as early as possible
+     pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
      UI4 tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
      pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
      // Put new word onto the stack along with a code indicating part of speech and the token number of the word
      SETSTACK0PT(it) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.  Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact that CONW is set as a flag ONLY in ASGN type
-     if(!(tmpes&(0b111LL<<CONJX)))break;  // exit stack phase when no more to do (stack delay line tmpes=000)                    *** here is where we exit stacking to do execution ***
+     if(!(tmpes&=(0b111LL<<CONJX)))break;  // exit stack phase when no more to do (stack delay line tmpes=000)                    *** here is where we exit stacking to do execution ***
      // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shifting it down and shortening it if we pulled ADV
-     pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;  // Advance delay line bits 31-29: 1xx->010 01x->001 others->000.  But if ADV, change request for 2 more to request for 1 more by clearing bit 30.
+     pt0ecam|=(tmpes&(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
+// obsolete      pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If have not yet signaled the (virtual) mark, do so; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
@@ -710,7 +712,7 @@ endname: ;
 
    // Repurpose pt0ecam&CONJX during the execution phase to indicate next word is AVN/name, which guarantees the next word will be CAVN.  This will request a second pull during the next stacking if it is not cleared.
    pt0ecam|=(((((UI8)1<<QCADV)|((UI8)1<<QCVERB)|((UI8)1<<QCNOUN)|((UI8)1<<QCISLKPNAME)|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE))|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
-      >>(QCPTYPE(y)))&(UI8)1)<<CONJX;  // We have read 1 word ahead.  remember next-is-CAVN status in CONJ (which will become the request for a 2nd pull).
+      >>(QCPTYPE(y)))&(UI8)1)<<CONJX;  // We have read 1 word ahead.  remember next-is-CAVN status in CONJ (which will become the request for a 2nd pull).  If y is garbage this is immaterial because there will be no more pulls anyway
 
 #define NEXTY queue[0]
 
@@ -966,6 +968,7 @@ RECURSIVERESULTSCHECK
       }else if(pmask567&0b100000){  // fork NVV or VVV
        // ***** fork
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
+ASSERTSYSV(!(AT(arg3)&NOUN),"pun in hook",FP;)  // scaf
        pt0ecam&=~FLGPMSK;     // set initial value of loop counter/flag: 000 always for dyad
        yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them

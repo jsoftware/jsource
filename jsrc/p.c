@@ -475,36 +475,6 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragment; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
-  // Save info for error typeout.  We save pointers to the sentence, and the executing parser-stack frame for each execution, from which we infer error position
-  PFRAME oframe=jt->parserstackframe;   // save all the stack status
-
-  // allocate the stack.  No need to initialize it, except for the marks at the end, because we
-  // never look at a stack location until we have moved from the queue to that position.
-  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
-  // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each sentence
-  // The stack grows down
-  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current start of stack area (the stack grows down)
-  stack=jt->parserstackframe.parserstkend1;  // current end+1 of stack area, where we will start
-  if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1+1)*(intptr_t)sizeof(PSTK)))<0)){A y;
-   ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
-   I allo=MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
-   GATV0(y,B01,allo,1);
-   currstk=(PSTK*)CAV1(y);   // save start of data area, leaving space for all the marks
-   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
-   stack=(PSTK*)(CAV(y)+allo);  // point to the end+1 of the allocation, our new start point
-  }  // We could worry about hysteresis to avoid reallocation of every call
-
-  // the first element of the parser stack is where we save unchanging error info for the sentence
-  currstk->a=(A)queue;   // start filling in the lower parser stack...
-
-  queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
-  A y=*(volatile A*)queue;   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early because it's needed first
-
-  currstk->t=(US)nwds;  // ...finish lower stack: addr & length of words being parsed
-  jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
-
-  PSTK *stackend1=stack-=BACKMARKS;   // start at the end, pointing to first of 3 marks, and remember that position, because we should finish there
-
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
   //  (execution of lines 3-6) 23-25  loop counter+monad/dyad flag
   //  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
@@ -534,17 +504,48 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
 #define TESTSTACK0PT(x) ((stack0pt&((UI)1<<(x)))!=0)
 #define STACK0PTISCAVN PTISCAVN(stack0pt)  // must be above bit 16
 #endif
-  jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
-  UI pt0ecam = (AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
 
+  UI pt0ecam=(AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
 #define ASGNEDGE ((0xfLL<<QCASGN)|(0x1LL<<QCLPAR)|(0xfLL<<(QCNAMED+QCASGN))|(0x1LL<<(QCNAMED+QCLPAR)))  // ASGN+EDGE, ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch  LPAR in [-1] doesn't hurt anything
-  I pull4=((~(UI8)ASGNEDGE>>QCTYPE(queue[-1])) & (~(UI8)ASGNEDGE>>QCTYPE(queue[-2])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
+  I pull4=((~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-2])) & (~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-3])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
                          // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
+  A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early because it's needed first
 
-  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
-  pt0ecam += nwds+((0b11LL<<CONJX)<<pull4);
+  PSTK *stackend1;   // will be the initial stack position, which is where the stack should end up if there is no error
+
+  // allocate the stack.  No need to initialize it, except for the marks at the end, because we
+  // never look at a stack location until we have moved from the queue to that position.
+  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
+  // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each sentence
+  // The stack grows down
+  stack=jt->parserstackframe.parserstkend1;  // current end+1 of stack area, where we will start
+  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current start of stack area (the stack grows down)
+  if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1+1)*(intptr_t)sizeof(PSTK)))<0)){A sa;
+   ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
+   forcetomemory(&stackend1);   // Make sure stackend1 is not put into a register
+   I allo=MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+   GATV0(sa,B01,allo,1);
+   currstk=(PSTK*)CAV1(sa);   // save start of data area, leaving space for all the marks
+   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
+   stack=(PSTK*)(CAV(sa)+allo);  // point to the end+1 of the allocation, our new start point
+  }  // We could worry about hysteresis to avoid reallocation of every call
+
+  // the first element of the parser stack is where we save unchanging error info for the sentence
+  currstk->a=(A)queue;  currstk->t=(US)nwds;   //  lower stack: addr & length of words being parsed
+
+  queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
+
+  // Save info for error typeout.  We save pointers to the sentence, and the executing parser-stack frame for each execution, from which we infer error position
+  PFRAME oframe=jt->parserstackframe;   // save all the stack status
+
+  jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
+  jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
+
+  stackend1=stack-=BACKMARKS;   // start at the end, pointing to first of 3 marks, and remember that position, because we should finish there
+
+  pt0ecam += nwds+((0b11LL<<CONJX)<<pull4);  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
 // debug if(jt->parsercalls == 0x4)
@@ -555,7 +556,6 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
 
   // We have the initial stack pointer.  Grow the stack down from there
   stack[0].pt = PTMARKBACK;  // install 1 mark, whose 0s will protect the other 2 mark-slots
-  forcetomemory(&stackend1);   // Make sure stackend1 is not put into a register.  We have a little dead time here
   while(1){  // till no more matches possible...
 
     // no executable fragment, pull from the queue.  Bits 31-29 of pt0ecam indicate how many we can safely pull before we
@@ -584,7 +584,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
       I4 symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  This fetch gates the normal path
 // obsolete       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
       L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change between executions but there's no benefit in fetching earlier since it can't survive subroutine calls
-      I4 buck=__atomic_load_n(&NAV(QCWORD(y))->bucket,__ATOMIC_RELAXED);  // While symx settles, start a read for bucket#.  We will wait 3 cycles.  Perhaps we should load jt->locsyms too, but regs might not permit
+      I4 buck=__atomic_load_n(&NAV(QCWORD(y))->bucket,__ATOMIC_RELAXED);  // While symx settles, start a read for bucket#.  We have 3 idle cycles.  Perhaps we should load jt->locsyms too, but regs might not permit
       pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
       y=QCWORD(y);  // back y up to the NAME block

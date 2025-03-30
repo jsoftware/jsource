@@ -186,7 +186,7 @@ xco:
   f=amp(mag(x),ds(CPLUS));
   g=1==AN(x)?ds(CPOUND):atop(amp(tally(x),ds(CTAKE)),ds(CDOLLAR));
   h=!yv[1]?f:atop(!yv[0]?ds(CMINUS):amp(negate(signum(x)),ds(CSTAR)),f);
-  R obverse(hook(swap(ds(CTAKE)),atop(h,g),mark),fampg?fampg:amp(f,g));
+  R obverse(hook(swap(ds(CTAKE)),atop(h,g),0),fampg?fampg:amp(f,g));
  case CDOMINO:
   if(!(2==AR(x)&&AS(x)[0]==AS(x)[1]))break;
   ff=eval("+/ .*");
@@ -199,7 +199,7 @@ xco:
   }
   break;
  case CQQ:
-  if(!nf&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ),mark);
+  if(!nf&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ),0);
   break;
  case CBSLASH:
   if(nf&&(n=i0(x),0>n)&&(d=IDD(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT

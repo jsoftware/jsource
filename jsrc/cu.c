@@ -389,8 +389,8 @@ sunder:  // come here for all structural under
  if(gside<0){h=amp(a,wvb); rlr=rrr=rmr;  // normal case, f&g"mg
  }else{
   f1=jtvalenceerr;  // monad not allowed with gerund v
-  if(gside==0){rlr=rmr; rrr=(RANKT)FAV(a)->lrr; h=qq(swap(hook(swap(a),wvb,mark)),v2(rlr,rrr));  // (f~ g)~"mw rf
-  }else{rlr=FAV(a)->lrr>>RANKTX; rrr=rmr; h=qq(hook(a,wvb,mark),v2(rlr,rrr));  // (f g)"lf mg
+  if(gside==0){rlr=rmr; rrr=(RANKT)FAV(a)->lrr; h=qq(swap(hook(swap(a),wvb,0)),v2(rlr,rrr));  // (f~ g)~"mw rf
+  }else{rlr=FAV(a)->lrr>>RANKTX; rrr=rmr; h=qq(hook(a,wvb,0),v2(rlr,rrr));  // (f g)"lf mg
   }
  }
  ASSERT(h!=0,EVDOMAIN);
@@ -424,8 +424,8 @@ F2(jtundco){F12IP;AF f1=0,f2;I gside=-1, flag=0;
  if(gside<0){h=ampco(a,wvb); // normal case, f&:g
  }else{
   f1=jtvalenceerr;  // monad not allowed with gerund v
-  if(gside==0){h=swap(hook(swap(a),wvb,mark));  // (f~ g)~
-  }else{h=hook(a,wvb,mark);  // (f g)
+  if(gside==0){h=swap(hook(swap(a),wvb,0));  // (f~ g)~
+  }else{h=hook(a,wvb,0);  // (f g)
   }
  }
  ASSERT(h!=0,EVDOMAIN);

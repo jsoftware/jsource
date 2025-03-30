@@ -562,9 +562,9 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
     // check for executability.  If we pull ')', there is no way we can execute
     // anything till 2 more words have been pulled, so we pull them here to avoid parse overhead.
     // Likewise, if we pull a CONJ, we can safely pull 1 more here.  And first time through, we should
-    // pull 2 words following the first one.  Sometimes we can pull 3, if there are no adverbs about.
+    // pull 2 words following the first one.  Sometimes we can pull 3, if the first is not an adverb.
 
-    // pt0ecam is settling from pt0 but it will be ready soon
+    // pt0ecam is settling from pt0 below but it will be ready soon
    
    do{
 
@@ -819,8 +819,7 @@ RECURSIVERESULTSCHECK
       if(unlikely(y==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
        // if there was an error, try to localize it to this primitive
        A aa=QCWORD(stack[-1].a), wa=QCWORD(stack[1].a); aa=(I)jt&2?aa:wa; wa=(I)jt&2?wa:0;  // stack is stack[1 2 2]; aa is stack[-1].a, used only for dyad; wa is w
-       {PSTK *stack00=stack-1; stack00=(I)jt&1?stack00:stack; stack=stack00;} jt=((J)((I)jt&~JTFLAGMSK));  // stack->1 1 2 restore jt and stack vbls
-       jt->parserstackframe.parserstkend1=stack;  // move stack-end down so eformat doesn't overwrite it
+       jt=((J)((I)jt&~JTFLAGMSK)); stack=jt->parserstackframe.parserstkend1; // restore stack to point to the region needing FAOWED checking (i. e. its normal position) - also prevents eformat from fouling the stack
        jteformat(jt,jt->parserstackframe.sf,aa,wa,0);  // stack is 1 2 2 first arg is w/a 2 3 1, second is 0/w x x 3
        FP   // we have regs back to normal for exit
       }
@@ -920,8 +919,7 @@ RECURSIVERESULTSCHECK
 #endif
        if(unlikely(yy==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
         // if there was an error, try to localize it to this primitive
-        jt->parserstackframe.parserstkend1=stack;  // move stack-end down so eformat doesn't overwrite it
-        jteformat(jt,QCWORD(stack[2].a),QCWORD(stack[1].a),QCWORD(pt0ecam&FLGPMONAD?0:stack[3].a),0);
+        jteformat(jt,QCWORD(stack[2].a),QCWORD(stack[1].a),QCWORD(pt0ecam&FLGPMONAD?0:stack[3].a),0);   // stack still points to original position, which is where FAOWED recovery will start
         FP
        }
 #if AUDITEXECRESULTS
@@ -980,7 +978,7 @@ RECURSIVERESULTSCHECK
        // Because we use some bits in the PT flags to distinguish assignment types, those bits indicate valid-parse on some invalid combinations.  They come to here with an ASGN in stack[2].  Catch it and reject the fragment
        if(unlikely(QCPTYPE(arg2)>=QCASGN))goto rejectfrag;     // We could defer the check until later (in hook) but this seems tolerable.  If we wait till hook we have to distinguish this from a real error here.
        pt0ecam&=~FLGPMSK; pt0ecam|=PTISCAVN(stack[3].pt)?0:(FLGPMONAD|FLGPINCR); // set initial value of loop counter/flag
-       arg3=PTISCAVN(stack[3].pt)?arg3:mark;  // beginning of stack after execution; a is invalid in end-of-stack.  mark suffices to show not FAOWED
+       arg3=PTISCAVN(stack[3].pt)?arg3:0;  // beginning of stack after execution; a is invalid in end-of-stack.  mark suffices to show not FAOWED
        yy=hook(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the hook
        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
        // errors inside hook are formatted there.  The only error on the hook itself is syntax, for which the terse error is enough
@@ -1054,7 +1052,7 @@ failparsestack: // here we encountered an error during stacking.  The error was 
                 // we call eformat with empty a to indicate 'stacking error'
    {C olderr=jt->jerr; RESETERR jt->parserstackframe.parseroridetok=(US)pt0ecam; jsignal(olderr);}
 failparseeformat:
-   jt->parserstackframe.parserstkend1=stack;  // move stack-end down so eformat doesn't overwrite it
+   jt->parserstackframe.parserstkend1=stack;  // make sure stkend1 points to the failing location (it will already except for FPE syntax-error cases above)
    jteformat(jt,ds(CENQUEUE),mtv,zeroionei(0),0);  // recreate the error with the correct spacing
 failparse:
    // the special error code EVABORTEMPTY causes the sentence to be aborted with no error and an empty result (not used)

@@ -469,7 +469,7 @@ struct AD {
 // NOTE: SYMB and MARK are used as flags in names, see below, and CONW in some type args
 // MASK and ASGN are used in Vxxx flags
 #define MARKX 22  // don't try to move this! it ripples through and breaks JTflags
-#define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
+#define MARK            ((I)1L<<MARKX)     // I  null argument, used when 0 won't do.  Deprecated
 #define MARKSIZE sizeof(I)
 #define ADVX 23
 #define ADV             ((I)1L<<ADVX)      /* V  adverb                       */

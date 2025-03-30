@@ -118,7 +118,7 @@ DF1(jtfx){F12IP;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  case CADVF:  // yv must have been set
   // invisible bident/trident except for N/V V V fork
   ASSERT(2==(n&-2),EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF
-  A h3=(n==3)?fx(C(yv[2])):mark;  // if 3d parm not given, use mark
+  A h3=(n==3)?fx(C(yv[2])):0;  // if 3d parm not given, use 0
   R hook(fx(C(yv[0])),fx(C(yv[1])),h3);
  case CFORK:
   ASSERT(3==n,EVLENGTH);   // yv must have been set

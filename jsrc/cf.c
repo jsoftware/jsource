@@ -190,12 +190,12 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
 }
 
 // Handlers for trains
-static DF1(taAV){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,mark);}  // adv A A/V
-static DF2(tca){F12IP;TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,mark);}  // conj C A
+static DF1(taAV){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,0);}  // adv A A/V
+static DF2(tca){F12IP;TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,0);}  // conj C A
 static DF1(tNVc){F12IP;TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
 static DF1(tac){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C  adverbial hook
 static DF1(tcNV){F12IP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
-static DF2(tcc){F12IP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,mark);}  // conj C C
+static DF2(tcc){F12IP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,0);}  // conj C C
 
 static DF1(taaa){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
 static DF2(tNVvc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
@@ -297,11 +297,12 @@ static struct {
  [TYPE3(CONJ,CONJ,VERB)]={tcVCNV, CONJ}, [TYPE3(CONJ,CONJ,NOUN)]={tcVCNV, CONJ}, [TYPE3(CONJ,CONJ,ADV)]={tcca, CONJ},   [TYPE3(CONJ,CONJ,CONJ)]={tcVCc, CONJ},
  };
 
-// This handles all bident/tridents except N/V V V forks.  If h is CAVN, we have a trident
+// This handles all bident/tridents except N/V V V forks.  If h is CAVN, we have a trident; omitted h is 0
 A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
- ARGCHK3(a,w,h);
+ ARGCHK2(a,w); if(h&&AT(h)&MARK)SEGFAULT;  // scaf
  A z; fdefallo(z)
- if(likely(!(LOWESTBIT(AT(h))&NOUN+VERB+ADV+CONJ))){
+// obsolete if(likely(!(LOWESTBIT(AT(h))&NOUN+VERB+ADV+CONJ))){
+ if(likely(h==0)){
   // bident.
   if(AT(a)&AT(w)&VERB){
    // This is the (V V) case, producing a verb

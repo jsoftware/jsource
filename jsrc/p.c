@@ -700,7 +700,7 @@ endname: ;
      pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
      stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB. Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact that CONW is set as a flag ONLY in ASGN type
-#if 0
+#if 1
      if(!(tmpes&=(0b111LL<<CONJX))){SETSTACK0PT0(it) break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***
 #else
      SETSTACK0PT0(it) if(!(tmpes&=(0b111LL<<CONJX))){break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***

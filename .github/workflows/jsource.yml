@@ -17,7 +17,7 @@ jobs:
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)
-  runs-on: ubuntu-20.04
+  runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
 # linux gcc ------------------------------------------------------------
  jelinux-gcc:
   name: JE (Linux gcc)
-  runs-on: ubuntu-20.04
+  runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -247,7 +247,7 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
-  runs-on: ubuntu-20.04
+  runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -310,7 +310,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-  runs-on: ubuntu-20.04
+  runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -975,7 +975,7 @@ jobs:
 # get tests ------------------------------------------------------------
  tests:
   name: Test Results
-  runs-on: ubuntu-20.04
+  runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   needs: [jelinux, jelinux-gcc, jemacos, jemacosarm, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:

@@ -509,12 +509,13 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
 #endif
 
   UI pt0ecam=(AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
+  A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early
 #define ASGNEDGE ((0xfLL<<QCASGN)|(0x1LL<<QCLPAR)|(0xfLL<<(QCNAMED+QCASGN))|(0x1LL<<(QCNAMED+QCLPAR)))  // ASGN+EDGE, ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch  LPAR in [-1] doesn't hurt anything
   I pull4=((~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-2])) & (~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-3])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
+// & 
                          // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
-  A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early
 
   PSTK *stackend1;   // will be the initial stack position, which is where the stack should end up if there is no error
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
@@ -650,8 +651,8 @@ rdglob: ;  // here when we tried the buckets and failed
         }else y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
        }else if(unlikely(QCPTYPE(y)==VALTYPENAMELESS)){
         // nameless modifier, and not a locative.  This handles 'each' and the like.  Don't create a reference; maybe cache the value
-        A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its flags
-        NAMELESSQCTOTYPEDQC(y)  // convert type to normal adverb, which the parser looks for.  Leaves semantics intact
+        A origy=QCWORD(*(volatile A*)queue);  // refetch name so we can look at its cacheability
+        NAMELESSQCTOTYPEDQC(y)  // convert AT(y) to flags for ADV/CONJ, which the parser looks for.  Leaves semantics intact
         y=SYMVALTOFAOWED(y) ;  // if global, mark to free later
         if(NAV(origy)->flag&NMCACHED){  // nameless mod is cachable - replace it by its value in the name
          // cachable and not a locative (and not a noun).  store the value in the name, make the value permanent
@@ -670,11 +671,12 @@ undefname:
        FPSZ(y)   // abort if failure allocating reference, or malformed name
       }
 endname: ;
-     // else
-      // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
-      // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED+~FAOWED in blocks that are known to need no pretection from deletion:
-      // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
-      // guarantee that the block is never protected from deletion.
+      // Handle the adverb exception to stacking 4 words initially.  If what we have is an adverb, we must suppress pulling 4 words (which can happen only initially).  Non-named adverbs never got the flag set.
+     }else{
+     // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
+     // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED+~FAOWED in blocks that are known to need no pretection from deletion:
+     // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
+     // guarantee that the block is never protected from deletion.
      }
 
      // names have been resolved
@@ -704,9 +706,9 @@ endname: ;
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
      UI tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
      pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
-     SETSTACK0PT0(it) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB. Only parts have to be valid; we use the rest as flags
+     stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB. Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact that CONW is set as a flag ONLY in ASGN type
-     if(!(tmpes&=(0b111LL<<CONJX))){ break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***
+     if(!(tmpes&=(0b111LL<<CONJX))){SETSTACK0PT0(it) break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***
 #endif
 
      // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shifting it down and shortening it if we pulled ADV

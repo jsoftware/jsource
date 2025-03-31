@@ -495,12 +495,14 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
   // STACK0PT needs only enough info to decode from position 0.  It persists into the execution phase
 #if SY_64
 #define SETSTACK0PT(v) pt0ecam=(UI4)pt0ecam, pt0ecam|=(I)(v)<<32;
+#define SETSTACK0PT0(v) pt0ecam|=(I)(v)<<32;   // use if upper pt0ecam known 0
 #define GETSTACK0PT (pt0ecam>>32)
 #define TESTSTACK0PT(x) ((pt0ecam&((UI)1<<((x)+32)))!=0)
 #define STACK0PTISCAVN (pt0ecam&(1LL<<(32+PTISCAVNX)))  // the bit must be > NOTFINALX, and must not be converted to boolean
 #else
   UI4 stack0pt;
 #define SETSTACK0PT(v) stack0pt=(v);
+#define SETSTACK0PT0(v) stack0pt=(v);
 #define GETSTACK0PT stack0pt
 #define TESTSTACK0PT(x) ((stack0pt&((UI)1<<(x)))!=0)
 #define STACK0PTISCAVN PTISCAVN(stack0pt)  // must be above bit 16
@@ -684,12 +686,13 @@ endname: ;
      y=queue[-1];  // fetch new word as early as possible.  (it) is needed earlier but y can be read earlier
      I it=ptcol[tx-1];   // convert type to internal code
      --stack;  // back up to new stack frame, where we will store the new word
+     // stack the value, changing it to STKNAMED semantics: address, parsing type, word#
      stack[0].t = (US)pt0ecam;  // install the original token number for the word
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // back to the word we just fetched, which might be garbage
-     // stack the value, changing it to STKNAMED semantics
      stack[0].a = (A)((savy&~QCMASK)+((savy>>(QCNAMEDX-STKNAMEDX))&STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
 // obsolete      y=*(volatile A*)queue;   // fetch next value as early as possible
+#if 0   // obsolete 
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
      UI4 tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
      pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
@@ -697,8 +700,21 @@ endname: ;
      SETSTACK0PT(it) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.  Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact that CONW is set as a flag ONLY in ASGN type
      if(!(tmpes&=(0b111LL<<CONJX)))break;  // exit stack phase when no more to do (stack delay line tmpes=000)                    *** here is where we exit stacking to do execution ***
+#else
+     pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
+     UI tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
+     pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
+     stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB. Only parts have to be valid; we use the rest as flags
+         // and to reduce required initialization of marks.  Here we take advantage of the fact that CONW is set as a flag ONLY in ASGN type
+     if(!(tmpes&=(0b111LL<<CONJX))){SETSTACK0PT0(it) break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***
+#endif
+
      // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shifting it down and shortening it if we pulled ADV
-     pt0ecam|=(tmpes&(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
+//     pt0ecam|=(tmpes&(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
+     pt0ecam|=(tmpes&(~(1ULL<<(CONJX+2-QCADV+tx))))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
+       // Close question whether the ADV test is worth making.  At 5 cycles of L1 latency, the 3 instructions are probably buried since there are about 23 instructions including the ADV test until y (the critical path)
+       // is available.  But on a shorter latency the 3 instructions might count.  The test allows us to save exactly 1 failing execution test, 10-15 cycles depending on misprediction, on any sentence that doesn't end
+       // ADV.  The cost is the 3 instructions for every time we stack without executing.  For normal sentences the test is a win.
 // obsolete      pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If have not yet signaled the (virtual) mark, do so; otherwise we are finished
@@ -968,7 +984,7 @@ RECURSIVERESULTSCHECK
       }else if(pmask567&0b100000){  // fork NVV or VVV
        // ***** fork
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
-ASSERTSYSV(!(AT(arg3)&NOUN),"pun in hook",FP;)  // scaf
+// ASSERTSYSV(!(AT(arg3)&NOUN),"pun in fork",FP;)  // scaf
        pt0ecam&=~FLGPMSK;     // set initial value of loop counter/flag: 000 always for dyad
        yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them

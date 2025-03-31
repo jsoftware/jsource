@@ -867,8 +867,11 @@ typedef DST* DC;
 #define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 #define QCNOUNX 0
 #define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any non-noun CAVN type, i. e. not in ACV.  But it must be set in SPARSE.  It can be used to test for FUNC in a named QCTYPE
+// note: code points 2-3 must be left unused so we don't mess up clearing the pull queue
 #define QCADV  ((ADVX-LASTNOUNX)+1) // 4
 // note: code point 5 must be left unused so we don't mess up clearing the pull queue
+// 6 NAMELESS, which can be ADV or CONJ and must be distinguished during lookup
+// 7 sparse noun
 #define QCVERB  ((VERBX-LASTNOUNX)+1)  // 8
 #define QCLPAR  ((LPARX-LASTNOUNX)+1)  // 9
 #define QCCONJ  ((CONJX-LASTNOUNX)+1)  // 10

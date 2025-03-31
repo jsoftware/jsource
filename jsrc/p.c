@@ -476,7 +476,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
  // to get the error token.  Errors during the stacking phase will be located from this routine
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
-  //  28 garbage, overflow from bit 29
+  //  27-28 garbage, overflow from bit 29, may be cleared during stacking
   //  (execution of lines 3-6) 23-25  loop counter+monad/dyad flag
   //  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
   //  19 free
@@ -513,8 +513,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
 #define ASGNEDGE ((0xfLL<<QCASGN)|(0x1LL<<QCLPAR)|(0xfLL<<(QCNAMED+QCASGN))|(0x1LL<<(QCNAMED+QCLPAR)))  // ASGN+EDGE, ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch  LPAR in [-1] doesn't hurt anything
-  I pull4=((~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-2])) & (~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-3])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
-// & (QCPTYPE(y)!=QCADV)
+  I pull4=(((UI4)~ASGNEDGE>>QCTYPE(queue[nwds-2])) & ((UI4)~ASGNEDGE>>QCTYPE(queue[nwds-3]))) & (QCPTYPE(y)!=QCADV);  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
                          // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
 
   PSTK *stackend1;   // will be the initial stack position, which is where the stack should end up if there is no error
@@ -672,7 +671,8 @@ undefname:
       }
 endname: ;
       // Handle the adverb exception to stacking 4 words initially.  If what we have is an adverb, we must suppress pulling 4 words (which can happen only initially).  Non-named adverbs never got the flag set.
-//     pt0ecam&=~(1ULL<<(CONJX+2-QCADV))<<QCPTYPE(y);  // If ADV, turn off bit 31 (request for 4)
+      // Stacking 4 saves a failing pass through execution (10-15 cycles) at the cost of 3 instructions per name.  Normally a good trade.
+      pt0ecam&=~((1ULL<<(CONJX+2-QCADV))<<QCPTYPE(y));  // If ADV, turn off bit 31 (request for 4)
      }else{
      // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
      // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED+~FAOWED in blocks that are known to need no pretection from deletion:
@@ -700,19 +700,16 @@ endname: ;
      pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
      stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB. Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact that CONW is set as a flag ONLY in ASGN type
-#if 1
+#if SY_64  // for some reason some 32-bit compilers can't handle the next line
      if(!(tmpes&=(0b111LL<<CONJX))){SETSTACK0PT0(it) break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***
 #else
      SETSTACK0PT0(it) if(!(tmpes&=(0b111LL<<CONJX))){break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***
 #endif
 
      // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shifting it down and shortening it if we pulled ADV
-     pt0ecam|=(tmpes&=(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
-//     pt0ecam|=tmpes>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x
+// obsolete      pt0ecam|=(tmpes&=(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
+     pt0ecam|=tmpes>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x
 // better if compiler generated BTR     pt0ecam|=(tmpes&=(~(1ULL<<(CONJX+2-QCADV+tx))))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
-       // Close question whether the ADV test is worth making.  At 5 cycles of L1 latency, the 3 instructions are probably buried since there are about 23 instructions including the ADV test until y (the critical path)
-       // is available.  But on a shorter latency the 3 instructions might count.  The test allows us to save exactly 1 failing execution test, 10-15 cycles depending on misprediction, on any sentence that doesn't end
-       // ADV.  The cost is the 3 instructions for every time we stack without executing.  For normal sentences the test is a win.
 // obsolete      pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If have not yet signaled the (virtual) mark, do so; otherwise we are finished

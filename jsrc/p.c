@@ -710,8 +710,8 @@ endname: ;
 #endif
 
      // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shifting it down and shortening it if we pulled ADV
-//     pt0ecam|=(tmpes&(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
-     pt0ecam|=(tmpes&(~(1ULL<<(CONJX+2-QCADV+tx))))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
+     pt0ecam|=(tmpes&=(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
+// better if compiler generated BTR     pt0ecam|=(tmpes&=(~(1ULL<<(CONJX+2-QCADV+tx))))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
        // Close question whether the ADV test is worth making.  At 5 cycles of L1 latency, the 3 instructions are probably buried since there are about 23 instructions including the ADV test until y (the critical path)
        // is available.  But on a shorter latency the 3 instructions might count.  The test allows us to save exactly 1 failing execution test, 10-15 cycles depending on misprediction, on any sentence that doesn't end
        // ADV.  The cost is the 3 instructions for every time we stack without executing.  For normal sentences the test is a win.

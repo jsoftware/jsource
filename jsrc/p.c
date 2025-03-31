@@ -514,7 +514,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch  LPAR in [-1] doesn't hurt anything
   I pull4=((~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-2])) & (~(UI8)ASGNEDGE>>QCTYPE(queue[nwds-3])))&1;  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
-// & 
+// & (QCPTYPE(y)!=QCADV)
                          // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
 
   PSTK *stackend1;   // will be the initial stack position, which is where the stack should end up if there is no error
@@ -565,7 +565,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
     // check for executability.  If we pull ')', there is no way we can execute
     // anything till 2 more words have been pulled, so we pull them here to avoid parse overhead.
     // Likewise, if we pull a CONJ, we can safely pull 1 more here.  And first time through, we should
-    // pull 2 words following the first one.  Sometimes we can pull 3, if the first is not an adverb.
+    // pull 2 words following the first one.  Sometimes we can pull 3 extra, if the first is not an adverb.
 
     // pt0ecam is settling from pt0 below but it will be ready soon
    
@@ -672,6 +672,7 @@ undefname:
       }
 endname: ;
       // Handle the adverb exception to stacking 4 words initially.  If what we have is an adverb, we must suppress pulling 4 words (which can happen only initially).  Non-named adverbs never got the flag set.
+//     pt0ecam&=~(1ULL<<(CONJX+2-QCADV))<<QCPTYPE(y);  // If ADV, turn off bit 31 (request for 4)
      }else{
      // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
      // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED+~FAOWED in blocks that are known to need no pretection from deletion:
@@ -694,25 +695,20 @@ endname: ;
      queue--;  // back to the word we just fetched, which might be garbage
      stack[0].a = (A)((savy&~QCMASK)+((savy>>(QCNAMEDX-STKNAMEDX))&STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
 // obsolete      y=*(volatile A*)queue;   // fetch next value as early as possible
-#if 0   // obsolete 
-     pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
-     UI4 tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
-     pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
-     // Put new word onto the stack along with a code indicating part of speech and the token number of the word
-     SETSTACK0PT(it) stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.  Only parts have to be valid; we use the rest as flags
-         // and to reduce required initialization of marks.  Here we take advantage of the fact that CONW is set as a flag ONLY in ASGN type
-     if(!(tmpes&=(0b111LL<<CONJX)))break;  // exit stack phase when no more to do (stack delay line tmpes=000)                    *** here is where we exit stacking to do execution ***
-#else
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
      UI tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
      pt0ecam&=(I)(UI4)~((0b111LL<<CONJX));  // clear the pull queue, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
      stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB. Only parts have to be valid; we use the rest as flags
          // and to reduce required initialization of marks.  Here we take advantage of the fact that CONW is set as a flag ONLY in ASGN type
+#if 0
      if(!(tmpes&=(0b111LL<<CONJX))){SETSTACK0PT0(it) break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***
+#else
+     SETSTACK0PT0(it) if(!(tmpes&=(0b111LL<<CONJX))){break;}  // isolate stack delay line; exit stack phase when no more to do.  Save pt in a register to avoid store forwarding.                   *** here is where we exit stacking to do execution ***
 #endif
 
      // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shifting it down and shortening it if we pulled ADV
      pt0ecam|=(tmpes&=(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
+//     pt0ecam|=tmpes>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x
 // better if compiler generated BTR     pt0ecam|=(tmpes&=(~(1ULL<<(CONJX+2-QCADV+tx))))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
        // Close question whether the ADV test is worth making.  At 5 cycles of L1 latency, the 3 instructions are probably buried since there are about 23 instructions including the ADV test until y (the critical path)
        // is available.  But on a shorter latency the 3 instructions might count.  The test allows us to save exactly 1 failing execution test, 10-15 cycles depending on misprediction, on any sentence that doesn't end

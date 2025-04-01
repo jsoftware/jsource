@@ -1,3 +1,4 @@
+// scaf todo: continue in exec; skip mask in loading AR; lose jtx; branch around adv on noun; use BSR
 /* Copyright (c) 1990-2025, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
@@ -18,7 +19,7 @@
 // 9. forks are processed through line 5.  All other bidents/tridents are processed through line 6, which calls jthook to do the work
 // 10. minimal error information is preserved.  When an error occurs, jtjsignal calls back to infererrtok to figure out where the error happened
 // 11. end-of-parse is often detected early, especially after an assignment
-// 12. In certain cases the parse knows it can stack 2 or even 3 words before checking for an executable fragment
+// 12. In certain cases the parse knows it can stack 2 or even 4 words before checking for an executable fragment
 //
 // There is a separate path for one-word sentences.  If you add any feature, check to see if you have to add it to the one-word path also.
 //
@@ -476,21 +477,30 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
  // to get the error token.  Errors during the stacking phase will be located from this routine
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
-  //  27-28 garbage, overflow from bit 29, may be cleared during stacking
-  //  (execution of lines 3-6) 23-25  loop counter+monad/dyad flag
+  //  27-28 garbage, overflow from delayline, may be cleared during stacking
+  //  (execution of lines 0-2) 24-26 pmask save area
+  //  (execution of lines 3-6) 24-26  loop counter+monad/dyad flag
   //  (stack) 17,20 flags from at NAMEBYVALUE/NAMEABANDON
   //  19 free
-  //  18 AR flag from symtab, which cannot change during execution since it comes from the executing explicit defn
-  //  16 free
+  //  18  free
+  //  16-23 AR flag from symtab, which cannot change during execution since it comes from the executing explicit defn.  Only ARLCLONED is used
   //  0-15 m (word# in sentence)
-#define FLGPMSKX 23   // init to 0101 for monad, 0000 for dyad.  Counts up
+#define FLGPMSKX 24   // init to 0101 for monad, 0000 for dyad.  Counts up
 #define FLGPMSK (0x7<<FLGPMSKX)  // the full field
+// lines 0-2:
+#define FLGPLINE2 (0x4<<FLGPMSKX)  // set for monad
+#define FLGPLINE1 (0x2<<FLGPMSKX)  // goes to 1 to end loop
+#define FLGPLINE0 (0x1<<FLGPMSKX)  // goes to 1 to end loop
+// lines 3-6:
 #define FLGPMONAD (0x4<<FLGPMSKX)  // set for monad
 #define FLGPCTEND (0x2<<FLGPMSKX)  // goes to 1 to end loop
 #define FLGPINCR (0x1<<FLGPMSKX)  // goes to 1 to end loop
-#define FLGARCLONEDX 18  // the local symbol table is a clone
-#define FLGARCLONED (0x1<<FLGARCLONEDX)
-#define LOCSYMFLGX (18-ARLCLONEDX)  // add LOCSYMFLGX to AR*X to get to the flag bit in pt0ecam
+#define FLGPMONAD (0x4<<FLGPMSKX)  // set for monad
+#define FLGPCTEND (0x2<<FLGPMSKX)  // goes to 1 to end loop
+#define FLGPINCR (0x1<<FLGPMSKX)  // goes to 1 to end loop
+// obsolete #define FLGARCLONEDX 18  // the local symbol table is a clone
+// obsolete #define FLGARCLONED (0x1<<FLGARCLONEDX)
+#define LOCSYMFLGX 16  // AR flags go here, 7 bits
 #define NAMEFLAGSX 17  // 17 and 20
   // STACK0PT needs only enough info to decode from position 0.  It persists into the execution phase
 #if SY_64
@@ -508,7 +518,8 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
 #define STACK0PTISCAVN PTISCAVN(stack0pt)  // must be above bit 16
 #endif
 
-  UI pt0ecam=(AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
+// obsolete   UI pt0ecam=(AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
+  UI pt0ecam=AR(jt->locsyms)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
   A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early
 #define ASGNEDGE ((0xfLL<<QCASGN)|(0x1LL<<QCLPAR)|(0xfLL<<(QCNAMED+QCASGN))|(0x1LL<<(QCNAMED+QCLPAR)))  // ASGN+EDGE, ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
@@ -591,7 +602,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
       y=QCWORD(y);  // back y up to the NAME block
 // preferred      if((symx&=REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using an uncloned table and there is a symbol stored there...  The compiler creates 2 branches which hurts only when the uncloned table is in play
-      if(withprob(!(pt0ecam&FLGARCLONED),0.9)&&(symx!=0)){  // if we are using an uncloned table and there is a symbol stored there (i. e. local name)...
+      if(withprob(!(pt0ecam&(ARLCLONED<<LOCSYMFLGX)),0.9)&&(symx!=0)){  // if we are using an uncloned table and there is a symbol stored there (i. e. local name)...
        // this is the normal path for all local names as long as we can use the uncloned table.
        L *s=&sympv[symx];  // get address of symbol from the primary table
        if(unlikely((s->fval)==0))goto rdglob;  // if value has not been assigned, ignore it.  y has QCSYMVAL semantics
@@ -782,7 +793,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
         // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
         if(likely(TESTSTACK0PT(PTASGNLOCALX))){   // only sentences from explicit defns have ASGNLOCAL set
          // local assignment.  First check for primary symbol.  We expect this to succeed.  We fetch the unflagged address of the value
-         if(!(pt0ecam&FLGARCLONED)&&(symx!=0)){   //   The compiler creates 2 branches anyway which hurts only when the uncloned table is in play
+         if(!(pt0ecam&(ARLCLONED<<LOCSYMFLGX))&&(symx!=0)){   //   The compiler creates 2 branches anyway which hurts only when the uncloned table is in play
           zval=QCWORD(symorigin[symx].fval);  // get value of symbol in primary table.  There may be no value; that's OK
          }else{zval=QCWORD(jtprobelocal(symorigin,QCWORD(y),jto->locsyms));}
          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d.) which is OK

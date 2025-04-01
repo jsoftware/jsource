@@ -220,7 +220,7 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
  if(unlikely(ISSPARSE(AT(w))))R jtkeyspw(jt,a,w,self);  // if w sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
  PUSHCCT(toler);  // now that partitioning is over, reset ct for the executions of u
- RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct
+ RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct  scaf this should be inplace for /.
  POPCCT
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
  // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
@@ -434,7 +434,9 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
   nfrets=AM(ai);  // fetch # frets before we possibly clone ai
   I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets, if some are long
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; AR(frets)=0; if(MEMAUDIT&0xc)AFLAGFAUX(frets,0)} // Cut tests the type field - only.  If debug, the flag also  rank must be valid in case we call rankex
-  else if((I)jtfg&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
+  // we can write the frets over w if w is inplaceable, DIRECT, has items as big as an I4, not 32-bit or atom, and not u/..~  w has always been copied to a new buffer by the sort
+// obsolete   else if((I)jtfg&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((w!=a)|(FAV(self)->id!=CSLDOTDOT))&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))
+  else if((likely(w!=a)||likely(FAV(self)->id!=CSLDOTDOT)) && (SZI==8) && likely(AR(w)) && ((((AFLAG(w)&(AFVIRTUAL|AFNJA))-((I)jtfg&JTINPLACEW))&(-(I)(AT(w)&DIRECT))&AC(w))<0))frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
 
@@ -480,8 +482,8 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
   // use local fretblock if there are few frets
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; AR(frets)=0; if(MEMAUDIT&0xc)AFLAGFAUX(frets,0)} // Cut tests the type field - only; for memaudit we need flag too, and rank in case we rank2ex
   // we can write the frets over w if w is inplaceable, DIRECT, has items as big as an I4, not 32-bit or atom, and not u/..~  w has always been copied to a new buffer by the sort
-  else if((I)jtfg&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((w!=a)|(FAV(self)->id!=CSLDOTDOT))&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))
-   frets=w;
+  else if((likely(w!=a)||likely(FAV(self)->id!=CSLDOTDOT)) && (SZI==8) && likely(AR(w)) && ((((AFLAG(w)&(AFVIRTUAL|AFNJA))-((I)jtfg&JTINPLACEW))&(-(I)(AT(w)&DIRECT))&AC(w))<0))frets=w;
+// obsolete  else if((I)jtfg&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((w!=a)|(FAV(self)->id!=CSLDOTDOT))&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))   frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
 

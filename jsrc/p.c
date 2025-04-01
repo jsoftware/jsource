@@ -674,10 +674,10 @@ endname: ;
       // Stacking 4 saves a failing pass through execution (10-15 cycles) at the cost of 3 instructions per name.  Normally a good trade.
       pt0ecam&=~((1ULL<<(CONJX+2-QCADV))<<QCPTYPE(y));  // If ADV, turn off bit 31 (request for 4)
      }else{
-     // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
-     // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED+~FAOWED in blocks that are known to need no pretection from deletion:
-     // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
-     // guarantee that the block is never protected from deletion.
+      // not a name requiring lookup.   enqueue() set the QC flags, which we will use below.  We have just checked the NAMED flag, off here.  Now we notionally switch to
+      // QCFAOWED semantics, in which QCISLKPNAME is repurposed to QCFAOWED (& known to be 0).  enqueue() sets QCNAMED+~FAOWED in blocks that are known to need no pretection from deletion:
+      // those are PERMANENT blocks and sentence words (together these amount to the entire sentence except for NAMEs).  With FAOWED off we will know that the block needs no fa(), and the flags
+      // guarantee that the block is never protected from deletion.
      }
 
      // names have been resolved

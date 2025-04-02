@@ -496,3 +496,4 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 empty 0&T.^:(0=1&T.) ::1:''
 techo 9!:14''
 techo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
+1: RUN1 'g421'

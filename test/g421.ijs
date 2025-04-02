@@ -1,4 +1,3 @@
-(40 <\ a) -: 40 ]@<\ a =: 1e4 $ 'abc'    NB. test crash
 prolog './g421.ijs'
 NB. f/. f\  f\. models --------------------------------------------------
 
@@ -454,6 +453,8 @@ NB. x f/.. y ------------------------------------------------------------
 (0 0 0;1 4;(,10);(,18)) -: (0 1 0 0 1 2 3) <@:*/.. i. 7  NB. BOXATOP
 
 1: */..~ memu i. 10000   NB. crashed overwriting w, which was also a
+(40 <\ a) -: 40 ]@<\ a =: 1e4 $ 'abc'    NB. used to crash
+
 
 '' -: ;@(<@(# # +/ % $)@]/.. >:@i.@#) (0$0)   NB. no frets, execute on fills
 

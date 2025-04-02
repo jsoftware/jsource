@@ -2442,6 +2442,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
 #if C_AVX2
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
+#define PEXTN(s,x,m)  _pext_u64((UI)(s),(UI)((m)<<(x)))  // x is bit#, m must be contiguous
 #define PDEP(s,m) _pdep_u64((UI)(s),(UI)(m))
 #define BZHI(s,i) _bzhi_u64(s,i)
 #else
@@ -2450,6 +2451,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // #define PDEP(s,m) (((s)&((m)>>CTTZI(m)))<<CTTZI(m))
 // requires special insts#define PEXT(s,m) _pext_u32(s,m)
 // requires special insts#define PDEP(s,m) _pdep_u32(s,m)
+#define PEXTN(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m must be contiguous
 #endif
 
 #ifndef offsetof

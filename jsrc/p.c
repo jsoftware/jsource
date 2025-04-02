@@ -500,7 +500,8 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
 #define FLGPINCR (0x1<<FLGPMSKX)  // goes to 1 to end loop
 // obsolete #define FLGARCLONEDX 18  // the local symbol table is a clone
 // obsolete #define FLGARCLONED (0x1<<FLGARCLONEDX)
-#define LOCSYMFLGX 16  // AR flags go here, 7 bits
+#define LOCSYMFLGX 16  // AR flags go here, 7 bits, of which only bit 2 is used (i. e. bit 18)
+#define LOCSYM1 0x10000  // bit 0 of LOCSYM flags is forced to 1
 #define NAMEFLAGSX 17  // 17 and 20
   // STACK0PT needs only enough info to decode from position 0.  It persists into the execution phase
 #if SY_64
@@ -558,7 +559,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
 
   stackend1=stack-=BACKMARKS;   // start at the end, pointing to first of 3 marks, and remember that position, because we should finish there
 
-  pt0ecam+=nwds+((0b11LL<<CONJX)<<pull4);  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
+  pt0ecam+=(nwds|LOCSYM1)+((0b11LL<<CONJX)<<pull4);  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
 // debug if(jt->parsercalls == 0x4)
@@ -598,11 +599,11 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z,*v;
 // obsolete       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
       L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change within a single stacking loop but there's scant benefit in fetching earlier
       I4 buck=__atomic_load_n(&NAV(QCWORD(y))->bucket,__ATOMIC_RELAXED);  // While symx settles, start a read for bucket#.  We have 3 idle cycles.  Perhaps we should load jt->locsyms too, but regs might not permit
-      pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y
+      pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y, in this dead time
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
       y=QCWORD(y);  // back y up to the NAME block
 // preferred      if((symx&=REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using an uncloned table and there is a symbol stored there...  The compiler creates 2 branches which hurts only when the uncloned table is in play
-      if(withprob(!(pt0ecam&(ARLCLONED<<LOCSYMFLGX)),0.9)&&(symx!=0)){  // if we are using an uncloned table and there is a symbol stored there (i. e. local name)...
+      if(withprob(!(pt0ecam&(ARLCLONED<<LOCSYMFLGX)),0.9)&&(symx!=0)){  // if we are using an uncloned table and there is a symbol stored there (i. e. local name)... scaf move !ARLCLONED high & use <
        // this is the normal path for all local names as long as we can use the uncloned table.
        L *s=&sympv[symx];  // get address of symbol from the primary table
        if(unlikely((s->fval)==0))goto rdglob;  // if value has not been assigned, ignore it.  y has QCSYMVAL semantics
@@ -771,12 +772,15 @@ endname: ;
      if(likely(pmask&=7)){  // lines 0 1 2, verb execution
       // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and recursion
       // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
+      pt0ecam&=~FLGPMSK;  // scaf should clear earlier
+      pt0ecam|=pmask<<FLGPMSKX;  // save pmask in pt0ecam
+      PSTK *fsa=&stack[2];
 reexec012:;  // enter here with fs, fs1, and pmask set when we know which line will be used for an execution
       L *symorigin=SYMORIGIN;   // while we are waiting for pmask/fs to settle (3+ clocks at least), read something that will be useful if we are on an assignment
       jt->parserstackframe.sf=fs;  // set new recursion point for $:
-      J jto=jt; jt=(J)((I)jt+(pmask>>=1));  // fold into jt as stack offset to verb (1 2 2), 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
-      PSTK *fsa=&stack[2]; {PSTK *fsa1=&stack[1]; fsa=pmask?fsa:fsa1;}    // pointer to the operator's stack slot  1 2 2
-      AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>1],__ATOMIC_RELAXED);  // the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call.  Stop using pmask $$$
+// obsolete      J jto=jt; jt=(J)((I)jt+(pmask>>=1));  // fold into jt as stack offset to verb (1 2 2), 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
+      PSTK *fsa1=&stack[1]; fsa=pt0ecam&FLGPLINE2+FLGPLINE1?fsa:fsa1;    // pointer to the operator's stack slot  1 2 2
+      AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>2],__ATOMIC_RELAXED);  // the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call.  Stop using pmask $$$
       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
       // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
@@ -787,7 +791,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       // it always produces a noun and the only things executable from the stack are tridents
       if(withprob(!PTISNOTASGNNAME,0.1)){A zval; I targc;  //  Is this an assignment to a single name? targc is # refs in the assigned symbol that is allowed for inplaceables.
        I symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  y is the name, which has not been stacked yet
-       fs1=(I)jt&1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
+       fs1=pt0ecam&FLGPLINE1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
        if(FAV(fs)->flag&FAV(fs1)->flag&VASGSAFE){  // do the verb(s) allow assignment in place?   this frees fs/fs1
         // Assignment to name, and not ill-behaved function (i. e. that may change locales)., that is, inplaceable assignment
         // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
@@ -795,11 +799,11 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
          // local assignment.  First check for primary symbol.  We expect this to succeed.  We fetch the unflagged address of the value
          if(!(pt0ecam&(ARLCLONED<<LOCSYMFLGX))&&(symx!=0)){   //   The compiler creates 2 branches anyway which hurts only when the uncloned table is in play
           zval=QCWORD(symorigin[symx].fval);  // get value of symbol in primary table.  There may be no value; that's OK
-         }else{zval=QCWORD(jtprobelocal(symorigin,QCWORD(y),jto->locsyms));}
+         }else{zval=QCWORD(jtprobelocal(symorigin,QCWORD(y),jt->locsyms));}
          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d.) which is OK
         }else{
           // global assignment, get slot address.  Global names have been ra()d and have AC=2
-         zval=QCWORD(jtprobequiet(jto,QCWORD(y)));
+         zval=QCWORD(jtprobequiet(jt,QCWORD(y)));
           // We have to handle the case of name =: 5 + > <  name,  i. e where the usecount of 2 came from external boxing rather than FAOWED.
           // we require that the zvalue be a FAOWED argument
           targc=fsa[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;  // allow inplacing with target=2 if the assigned value is either arg with FAOWED flag
@@ -811,11 +815,11 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
         // path to here is to mispredict the assignment and then correctly predict the local path.  In that path we have loaded the symbol number followed by zval, and it will
         // not settle for 10 clocks.  We very much want to keep executing during the settlement so we don't want to risk a misprediction.  We should be executing
         // well into tpop* before zval settles.
-        zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+targc))?zval:0; ((J)((I)jt&~3))->zombieval=zval;  // jto might not make it through the subroutine
+        zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(((AFLAG(zval)>>AFNJAX)&(AFNJA>>AFNJAX))+targc))?zval:0; jt->zombieval=zval;
        }
       }
-      PSTK *arga=fsa; arga=(I)jt&2?stack:arga; A arg1=arga[1].a;// 1st arg, reconstituted 1 1 2->1 2 0; then fetch  monad or left dyad  2 3 1
-      arga=(I)jt&2?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
+      PSTK *arga=fsa; arga=pt0ecam&FLGPLINE2?stack:arga; A arg1=arga[1].a;// 1st arg, reconstituted 1 1 2->1 2 0; then fetch  monad or left dyad  2 3 1
+      arga=pt0ecam&FLGPLINE2?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
       stack=fsa;  // adjust stack vbl to point to verb 1 2 2; stop using fsa
       // Create what we need to free arguments after the execution.  We keep the information needed to two registers so they can persist over the call as they are needed right away on return
       // (1) When the args return from the verb, we will check to see if any were abandoned.  Those can be freed right away, returning them to the pool and allowing their cache space to be reused.  But there is a problem:
@@ -827,10 +831,10 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       // There are about 40 instructions from the load of actionfn to the call.  About 20 of them are used to get the arguments to actionfn().  The other 20 are the calculation of tpopa/w here
       // which will be starting around the time of the call and will run to completion while the expected indirect-branch misprediction is being processed.
       A *tpopa=AZAPLOC(QCWORD(arg1)); tpopa=(A*)((I)tpopa&REPSGN(AC(QCWORD(arg1))&((AFLAG(QCWORD(arg1))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:(A*)STKNAMED; tpopa=ISSTKNAMED(arg1)?(A*)arg1:tpopa;
-      A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:(A*)STKNAMED; tpopw=ISSTKNAMED(arg2)?(A*)arg2:tpopw; tpopw=(I)jt&2?(A*)tpopw:(A*)STKNAMED;
+      A *tpopw=AZAPLOC(QCWORD(arg2)); tpopw=(A*)((I)tpopw&REPSGN(AC(QCWORD(arg2))&((AFLAG(QCWORD(arg2))&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:(A*)STKNAMED; tpopw=ISSTKNAMED(arg2)?(A*)arg2:tpopw; tpopw=pt0ecam&FLGPLINE2?(A*)tpopw:(A*)STKNAMED;
          // we encode omitted or non-abandoned tpop[aw] as STKNAMED+!FAOWED.  We do not use 0 for tpopw then, because the branches to skip out of STKNAMED+!FAOWED will predict correctly and we want the free loop to run exactly twice always.
          // tpopa/tpopw are:  monad: w -  dyad: a w
-      y=(*actionfn)((J)((I)jt|1),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
+      y=(*actionfn)((J)((I)jt|((pt0ecam>>(FLGPMSKX+1))&2)|1),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
       // When we don't break we lose time waiting for stack->a to be read and masked, but not much.
       // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
       // indirect branch can mispredict and start fetching from the new address.  That is, minimize total # instructions from loading actionfn until the call, with no concern for latency.  In the normal case the
@@ -842,16 +846,17 @@ RECURSIVERESULTSCHECK
 #endif
       if(unlikely(y==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
        // if there was an error, try to localize it to this primitive
-       A aa=QCWORD(stack[-1].a), wa=QCWORD(stack[1].a); aa=(I)jt&2?aa:wa; wa=(I)jt&2?wa:0;  // stack is stack[1 2 2]; aa is stack[-1].a, used only for dyad; wa is w
-       jt=((J)((I)jt&~JTFLAGMSK)); stack=jt->parserstackframe.parserstkend1; // restore stack to point to the region needing FAOWED checking (i. e. its normal position) - also prevents eformat from fouling the stack
+       A aa=QCWORD(stack[-1].a), wa=QCWORD(stack[1].a); aa=pt0ecam&FLGPLINE2?aa:wa; wa=pt0ecam&FLGPLINE2?wa:0;  // stack is stack[1 2 2]; aa is stack[-1].a, used only for dyad; wa is w
+// obsolete        jt=((J)((I)jt&~JTFLAGMSK));
+       stack=jt->parserstackframe.parserstkend1; // restore stack to point to the region needing FAOWED checking (i. e. its normal position) - also prevents eformat from fouling the stack
        jteformat(jt,jt->parserstackframe.sf,aa,wa,0);  // stack is 1 2 2 first arg is w/a 2 3 1, second is 0/w x x 3
        FP   // we have regs back to normal for exit
       }
 #if AUDITEXECRESULTS
-      auditblock((J)((I)jt&~3),y,1,1);
+      auditblock(jt,y,1,1);
 #endif
 #if MEMAUDIT&0x2
-      audittstack((J)((I)jt&~3));
+      audittstack(jt);
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
 #endif           
       // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased, so that it is safe to remove its protection
@@ -866,16 +871,16 @@ RECURSIVERESULTSCHECK
        if(unlikely(ISSTKREFRESHRQD(freep))){   // if the stack has been altered...
         // here the execution of this verb required going through the stack to raise the usecount of local values on the stack.  The raised values were
         // flagged as having STKFAOWED+STKNAMED.  Since any STKNAMED arg put the arg into tpop[aw], we refresh the tpop[aw] values to get the correct setting of FAOWED for any that is STKNAMED
-        A freea=stack[-1].a; tpopa=((I)jt>>1)&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if dyad and the x arg was STKNAMED
+        A freea=stack[-1].a; tpopa=(pt0ecam>>(FLGPMSKX+2))&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if dyad and the x arg was STKNAMED
         freea=stack[1].a;   // fetch y arg of verb
-        tpopw=((I)jt>>1)&(I)freea&STKNAMED?(A*)freea:tpopw;  // refresh tpopw if dyad and the y arg was STKNAMED
-        tpopa=~((I)jt>>1)&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
+        tpopw=(pt0ecam>>(FLGPMSKX+2))&(I)freea&STKNAMED?(A*)freea:tpopw;  // refresh tpopw if dyad and the y arg was STKNAMED
+        tpopa=~(pt0ecam>>(FLGPMSKX+2))&(I)freea&STKNAMED?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
        }
 
        // tpopa and tpopw are valid.  Transfer FAOWED from (at most 1 of) them to y (they can match only if STKNAMED).  Then put y into the result area, freeing the vbl
        if(unlikely((A)QCWORD(tpopa)==y)){y=(A)tpopa; tpopa=(A*)((I)tpopa&~STKFAOWED); } if(unlikely((A)QCWORD(tpopw)==y)){y=(A)tpopw; tpopw=(A*)STKNAMED; }  // tpopa must have STKNAMED, and tpopw should also
        stack[1].a=y;  // save result 2 3 3, with FAOWED+STKNAMED flags transferred from tpop[aw]; parsetype (noun) is unchanged, token# is immaterial since it's a nonexecutable noun.  y is now free.
-       if(unlikely(ISSTKFAOWED(freep))){INCRSTAT(ffaowed)/* 0.0 */; faowedjt3(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}   // While we have fs, free fs if needed
+       if(unlikely(ISSTKFAOWED(freep))){INCRSTAT(ffaowed)/* 0.0 */; faowed(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}   // While we have fs, free fs if needed
       }
 
       // (1) free up inputs that are no longer used.  These will be inputs that are still abandoned and were not themselves returned by the execution.
@@ -891,12 +896,12 @@ RECURSIVERESULTSCHECK
       // first the w arg
       // compiler note: putting these 2 blocks into a loop made the compiler lose its register allocation
       NOUNROLL while(1){  // make this a loop to save cache space
-       if(withprob(ISSTKFAOWED(tpopa),0.2)){INCRSTAT(wfafa/*.08*/) faowedjt3((A)QCWORD(tpopa),AC((A)QCWORD(tpopa)),AT((A)QCWORD(tpopa)));  // free if owed
+       if(withprob(ISSTKFAOWED(tpopa),0.2)){INCRSTAT(wfafa/*.08*/) faowed((A)QCWORD(tpopa),AC((A)QCWORD(tpopa)),AT((A)QCWORD(tpopa)));  // free if owed
        }else if(withprob(!ISSTKNAMED(tpopa),0.6)){   // otherwise if it's a tstack pointer...
         A freea=*tpopa;   // get the tstack pointer, which points back to the arg if it has not been zapped
         if(likely(freea!=0)){INCRSTAT(wpop/*.99*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
          I zapok=(AC(freea)&(-(AT(freea)&DIRECT)|SGNIF(AFLAG(freea),AFPRISTINEX))); zapok=freea==y?0:zapok; // (not return value) and abandoned.  Sparse blocks are never abandoned
-         if(zapok<0){INCRSTAT(wpopfa/*0.45*/) *tpopa=0; fanapopjt3(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopw before subroutine
+         if(zapok<0){INCRSTAT(wpopfa/*0.45*/) *tpopa=0; fanapop(freea,AFLAG(freea));  // zap the top block; if recursive, fa the contents.  We free tpopw before subroutine
          }else{INCRSTAT(wpopnull/*0.55*/)}
         }else{INCRSTAT(wnull/*.01*/)}
        }
@@ -908,9 +913,9 @@ RECURSIVERESULTSCHECK
       y=NEXTY;  // refetch next-word to save regs, as early as possible.
       UI endstkpt=((US*)&stack[2].pt)[1];  // top half of pt at NEXT stack position
       stack[0]=stack[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2(NOP)
-      {PSTK *stack0=stack-1, *stack00=stack0; stack0=(I)jt&2?stack:stack0; *stack0=stack[-2];  // stack0=0 1 1->0 1 2   _1->0(NOP)  0->1 0->2  close up the stack
-       stack00=(I)jt&1?stack00:stack; stack=stack00;}  // stack00->0 1 1->1 1 2 restore stack vbl
-      jto=jt; jt=(J)((I)jt&~3);   // save mask flags, restore jt for normal use
+      {PSTK *stack0=stack-1, *stack00=stack0; stack0=pt0ecam&FLGPLINE2?stack:stack0; *stack0=stack[-2];  // stack0=0 1 1->0 1 2   _1->0(NOP)  0->1 0->2  close up the stack
+       stack00=pt0ecam&FLGPLINE1?stack00:stack; stack=stack00;}  // stack00->0 1 1->1 1 2 restore stack vbl
+// obsolete       jto=jt; jt=(J)((I)jt&~3);   // save mask flags, restore jt for normal use
       // We can avoid rescanning the result of this execution in all normal cases(*):
       // (1) if we are executing line 1, the result is always EDGE+AVN V N.  This will be executable (as line 0) ONLY when word 0 is EDGE.  In that case go do it directly
       // (2) otherwise, if word 0 is (, we have ( N ... which is executable only as (.  Go to that directly
@@ -920,10 +925,10 @@ RECURSIVERESULTSCHECK
       // Each of these tests saves considerable work
       // (*) The abnormal case is where there is a conjunction following the executable part, such as +: 2 &  or (+: 2 & ).  To handle these we branch straight back to reexecute if this is not a final exec.
       // the withprobs below are needed to tip the compiler into keeping queue in a register.  That way the NEXTY is 1 fetch instead of 2.
-      if(withprob((GETSTACK0PT&1)&(I)jto,0.1)){fs=fs1=QCWORD(stack[1].a); pmask=0; goto reexec012;}  // reexecutable line 1: go do it
+      if(withprob((GETSTACK0PT&1)&(pt0ecam>>(FLGPMSKX+1)),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask=0; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
       if(unlikely(endstkpt!=(PTRPAR>>16)))continue;   // if not final exec check for reexec
       if(withprob(!TESTSTACK0PT(PTNOTLPARX),0.2))goto execlpar;  // if (, go execute that immediately.  could save a test there since we know stack[1] is VN
-      pt0ecam&=~(((GETSTACK0PT|(I)jto)&1)<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull
+      pt0ecam&=~(((GETSTACK0PT|(pt0ecam>>(FLGPMSKX+1)))&1)<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull
       break;   // go back to the stacking phase
      }else{
       A yy;  // will be the result of the operation, stored after we have freed the args on the stack

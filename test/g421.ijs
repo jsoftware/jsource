@@ -338,6 +338,8 @@ NB. -. '(0: + 0:/.~) 1 #"1 a' (> 10000&+)&(7!:2) '0:/.~ 1 #"1 a' [ a =: 10 u: 10
 NB. -. '(0: + 0:/.~) 2 # a' (> 10000&+)&(7!:2) '0:/.~ 2 # a' [ a =: 10 u: 5000 ?@$ 400   NB. Does not inplace
 NB. 
 
+
+
 NB. Check that w can be reused if direct inplaceable, cells more than 4 bytes, non-virtual.  Just make sure incorrect types don't fail
 yx =. 500 ((* #) $ ]) 1 2 3 4 5
 (yx <"</. memu yy) -: ((i. 5) +/ (5 * i. 500)) <@:{"1 _ yy =. 2500 $ 0 0 1 1 1 1

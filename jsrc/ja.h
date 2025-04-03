@@ -354,7 +354,7 @@
 #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
 // Thus we mark the free as unlikely, but it will usually do the RFO cycle.  The block must be recursive if it is recursible
-#define faowed(x,Zc,tt) {if(unlikely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
+#define faowed(x,Zc,tt) {if(withprob(((Zc-2)|tt)<0,0.2)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(withprob(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2,0.1))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
 #define faowedjt3(x,Zc,tt) {if(unlikely(((Zc-2)|tt)<0)){jtfamf((J)((I)jt&~3),x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf((J)((I)jt&~3),x,tt);}}}  // call if sparse or ending; never touch a PERM
 // faifowed does the free only if the block is marked FAOWED in stkf.  These may have been stacked by local names, if the stack was later protected
 #define faifowed(x,Zc,tt,stkf) {if(unlikely(tt<0) || ((((Zc>>(ACPERMANENTX-(STKFAOWEDX+1)))&(4*STKFAOWED-1))<((I)stkf&STKFAOWED)) && unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2)))jtfamf(jt,x,tt);}  // call if sparse or ending; never touch a PERM
@@ -907,7 +907,7 @@ extern void jfree4gmp(void*,size_t);
 #define radescendsv(x,sv)         {I tt=AT(x); {if(unlikely(((tt^AFLAG(x))&TRAVERSIBLE)!=0)){AFLAGORLOCAL((x),(tt)&RECURSIBLE); sv=jtra((x),(tt),sv);}}}  // keep sv in a register
 #define radescend(x)         radescendsv(x,x)
 // Make a block recursive if it is recursible and not already recursive.  Virtuals are already recursive, as are PERMANENTs.  We use this in a place where we know the result can't be unincorpable.  x might not be a noun
-#define ramkrecursv(x)              if(unlikely(((AT(x)^AFLAG(x))&RECURSIBLE))){AFLAGORLOCAL((x),AT(x)&RECURSIBLE); x=jtra(x,AT(x),x);}  // if block is not recursive, it must be local
+#define ramkrecursv(x)              if(withprob(((AT(x)^AFLAG(x))&RECURSIBLE),0.1)){AFLAGORLOCAL((x),AT(x)&RECURSIBLE); x=jtra(x,AT(x),x);}  // if block is not recursive, it must be local
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
 #define ra00(x,tt)                {if(unlikely(((tt)&TRAVERSIBLE)!=0)){AFLAGORLOCAL((x),(tt)&RECURSIBLE); x=jtra((x),(tt),x);}}
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a

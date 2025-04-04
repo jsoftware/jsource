@@ -522,7 +522,8 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
 #endif
 
 // obsolete   UI pt0ecam=(AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
-  A queuem2=queue[nwds-2], queuem3=queue[nwds-3];
+  A queuem2=queue[nwds-2], queuem3=queue[nwds-3];   // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
+                         // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
 
   PSTK *stackend1;   // will be the initial stack position, which is where the stack should end up if there is no error
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
@@ -532,6 +533,14 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
   // The stack grows down
   stack=jt->parserstackframe.parserstkend1;  // current end+1 of stack area, where we will start
   PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current start of stack area (the stack grows down)
+
+  PFRAME oframe=jt->parserstackframe;   // save all the stack status
+  jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
+  // we update parserstkend1 every time we execute something that might recur through here.  We must restore it on exit, as part of the entire frame
+  ++jt->parsercalls;  // now we are committed to full parse.
+// debug if(jt->parsercalls == 0x4)
+// debug jt->parsercalls = 0x4;
+
   if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1+1)*(intptr_t)sizeof(PSTK)))<0)){A sa;
    ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
    forcetomemory(&stackend1);   // Make sure stackend1 is not put into a register
@@ -542,35 +551,36 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
    stack=(PSTK*)(CAV(sa)+allo);  // point to the end+1 of the allocation, our new start point
   }  // We could worry about hysteresis to avoid reallocation of every call
 
+  I flgsfor3=nwds+FLG1+(0b11LL<<CONJX), flgsfor4=nwds+FLG1+(0b111LL<<CONJX);   // flags to pull 3/4 words
+
   // the first element of the parser stack is where we save unchanging error info for the sentence
   currstk->a=(A)queue; currstk->t=(US)nwds;   //  lower stack: addr & length of words being parsed
   // push and update the current parser stack frame.
-  PFRAME oframe=jt->parserstackframe;   // save all the stack status
   jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
-  jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
-  // we update parserstkend1 every time we execute something that might recur through here.  We must restore it on exit, as part of the entire frame
-
-  pt0ecam<<=LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
-#define ASGNEDGE ((0xfLL<<QCASGN)|(0x1LL<<QCLPAR)|(0xfLL<<(QCNAMED+QCASGN))|(0x1LL<<(QCNAMED+QCLPAR)))  // ASGN+EDGE, ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
-  // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
-  // It has long latency so we start early.  The actual computation is about 3 cycles, much faster than a table search+misbranch  LPAR in [-1] doesn't hurt anything
-  I pull4=(((UI4)~ASGNEDGE>>QCTYPE(queuem2)) & ((UI4)~ASGNEDGE>>QCTYPE(queuem3))) & (QCPTYPE(y)!=QCADV);  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
-                         // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
-  pt0ecam|=(nwds|FLG1)+((0b11LL<<CONJX)<<pull4);  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
 
   stackend1=stack-=BACKMARKS;   // start at the end, pointing to first of 3 marks, and remember that position, because we should finish there
   queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
-  ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
-// debug if(jt->parsercalls == 0x4)
-// debug jt->parsercalls = 0x4;
 
-  // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
-  // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
-
-  // We have the initial stack pointer.  Grow the stack down from there
+  // We have the initial stack pointer.  Grow the stack down from there.  We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
   stack[0].pt = PTMARKBACK;  // install 1 mark, whose 0s will protect the other 2 mark-slots
+
+  // We need to get pt0ecam ready before it is needed inside the loop.  The components are:
+  // ARLCLONE, chain-loaded in cycle 0, ready in cycle 10.  Then: shift, or
+  // y, loaded in cycle 1, ready in cycle 6.  Then: and, compare with QCADV, cmov
+  // queuem2/queue2m3, loaded in cycle 3, ready in cycle 9.  Then: shift, and, cmov
+  // We should be ready in cycle 12, which is before the value is needed in the loop
+  flgsfor4=QCPTYPE(y)==QCADV?flgsfor3:flgsfor4;  // if wd0 is ADV, pull only 3
+#define ASGNNOTEDGE (I4)~(((UI4)0xf0000000LL>>QCASGN)|((UI4)0x80000000LL>>QCLPAR)|((UI4)0xf0000000LL>>(QCNAMED+QCASGN))|((UI4)0x80000000LL>>(QCNAMED+QCLPAR)))  // !(ASGN+EDGE), ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
+  // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
+// obsolete   I pull4=(((UI4)~ASGNEDGE>>QCTYPE(queuem2)) & ((UI4)~ASGNEDGE>>QCTYPE(queuem3))) & ();  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
+  I4 asgnnotedgem2=(ASGNNOTEDGE<<(I4)QCTYPE(queuem2)), asgnnotedgem3=(ASGNNOTEDGE<<(I4)QCTYPE(queuem3));   // wd[-2/-3] = ASGN/EDGE?  Set neg if not
+  flgsfor3=(asgnnotedgem2&asgnnotedgem3)<0?flgsfor4:flgsfor3;  // take 4 if not prevented by any word
+  pt0ecam<<=LOCSYMFLGX; pt0ecam+=flgsfor3;  // add selected flags to ARLCLONE flag
+// obsolete   pt0ecam|=(nwds|FLG1)+((0b11LL<<CONJX)<<pull4);  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
+
   goto firstword;  // we know the first pulls are valid
 
+  // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
   while(1){  // till no more matches possible...
 
     // no executable fragment, pull from the queue.  Bits 31-29 of pt0ecam indicate how many we can safely pull before we
@@ -779,7 +789,7 @@ endname: ;
       PSTK *fsa=&stack[2];  // we are at a dead space, and the compiler gets a great notion to do a bunch of arithmetic
          // to calculate fsa.  To prevent this we split the calculation by the label reexec012, so that compiler just uses
          // the mask operation coded.
-      pt0ecam|=pmask<<FLGPMSKX;  // save pmask in pt0ecam, which must have been cleared by the stacker
+      pt0ecam+=pmask<<FLGPMSKX;  // save pmask in pt0ecam, which must have been cleared by the stacker
 reexec012:;  // enter here with fs, fs1, and pmask set when we know which line will be used for an execution
       L *symorigin=SYMORIGIN;   // while we are waiting for pmask/fs to settle (3+ clocks at least), read something that will be useful if we are on an assignment
       jt->parserstackframe.sf=fs;  // set new recursion point for $:
@@ -844,7 +854,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
 #else
 #define jtlsbs (((pt0ecam>>(FLGPMSKX+1))&2)|1)
 #endif
-      y=(*actionfn)((J)((I)jt|jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
+      y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
       // When we don't break we lose time waiting for stack->a to be read and masked, but not much.
       // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
       // indirect branch can mispredict and start fetching from the new address.  That is, minimize total # instructions from loading actionfn until the call, with no concern for latency.  In the normal case the
@@ -937,7 +947,9 @@ RECURSIVERESULTSCHECK
       // the withprobs below are needed to tip the compiler into keeping queue in a register.  That way the NEXTY is 1 fetch instead of 2.
 // obsolete       if(withprob((GETSTACK0PT&1)&(pt0ecam>>(FLGPMSKX+1)),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask=0; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
       if(withprob(GETSTACK0PT&PEXTN(pt0ecam,FLGPMSKX+1,1),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask=0; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
-      if(unlikely(endstkpt!=(PTRPAR>>16)))continue;   // if not final exec check for reexec
+      if(unlikely(endstkpt!=(PTRPAR>>16))){jt=(J)(((I)jt+3^2)-1); continue;}   // if not final exec check for reexec
+          // On its own the compiler makes a couple of bad optimization decisions, both involving jt, that don't improve the code but hoist some invariants outside the loop.
+          // To avoid calculating these invariants we razzle-dazzle the compiler into not relying on constant jt. 
       if(withprob(!TESTSTACK0PT(PTNOTLPARX),0.2))goto execlpar;  // if (, go execute that immediately.  could save a test there since we know stack[1] is VN
 // obsolete        pt0ecam&=~(((GETSTACK0PT|(pt0ecam>>(FLGPMSKX+1)))&1)<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull
       pt0ecam&=~((GETSTACK0PT|PEXTN(pt0ecam,FLGPMSKX+1,1))<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull.  May clear bit 29; 30-31 immaterial
@@ -953,7 +965,7 @@ RECURSIVERESULTSCHECK
        // We set the MODIFIER flag in the call so that jtxdefn/unquote can know that they are modifiers
        // We mark the inputs inplaceable (the first modifier to support that is u`v) - both always, even for adverbs
        pt0ecam|=pmask&2?0:(FLGPMONAD|FLGPINCR); // set initial value of loop counter/flag (cleared by stacker)
-       yy=(*actionfn)((J)((I)jt|JTXDEFMODIFIER+JTINPLACEA+JTINPLACEW),QCWORD(arg1),QCWORD(arg2),fs);
+       yy=(*actionfn)((J)((I)jt+JTXDEFMODIFIER+JTINPLACEA+JTINPLACEW),QCWORD(arg1),QCWORD(arg2),fs);
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();  // trap here while we still point to the action routine
@@ -981,8 +993,8 @@ RECURSIVERESULTSCHECK
        I rc;
        if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // if there are stacked values after the value to be assigned, protect them in case we are about to reassign the value.  This should be rare.  The value itself needs no protection
              // this is not required on a final assignment, because then the sentence must be in error - not worth testing
-       if(likely(TESTSTACK0PT(PTNAME0X)))rc=jtsymbis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
-       else rc=jtis((J)((I)jt|(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);  // unknown or multiple name, process
+       if(likely(TESTSTACK0PT(PTNAME0X)))rc=jtsymbis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
+       else rc=jtis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);  // unknown or multiple name, process
 #if MEMAUDIT&0x10
        auditmemchains();
 #endif

@@ -878,7 +878,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define xchga(p,n) __atomic_exchange_n(p,n,__ATOMIC_ACQ_REL)
 
 // Tuning options for cip.c
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(__APPLE__)
 #define IGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
 #define ZGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'

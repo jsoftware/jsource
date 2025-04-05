@@ -34,7 +34,7 @@ end.
 NB. test create locale on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 0
 )
 
 NB. run & open the futures results
@@ -65,7 +65,7 @@ end.
 NB. test create/erase locale on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 1
 )
 
 NB. run & open the futures results
@@ -90,7 +90,7 @@ end.
 NB. test create/erase locale on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 2
 )
 
 NB. run & open the futures results
@@ -117,7 +117,7 @@ end.
 NB. test create/erase locale on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 3
 )
 
 NB. run & open the futures results
@@ -149,7 +149,7 @@ z
 NB. test create/erase locale on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 4
 )
 
 NB. run & open the futures results
@@ -174,7 +174,7 @@ end.
 NB. test create/erase locale on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 5
 )
 
 NB. run & open the futures results
@@ -196,7 +196,7 @@ end.
 NB. test create numbered locale on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-z=. ]&.> NX (t1 t.'')"0 [ i.TASK       NB. start task
+z=. ]&.> NX (t1 t.'')"0 [ i.TASK       NB. start task 6
 18!:55 [ 18!:1 [1                   NB. erase residual numbered locales in each task
 z
 )
@@ -221,7 +221,7 @@ end.
 NB. test create/erase locale on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK           NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK           NB. start task 7
 )
 
 NB. run & open the futures results
@@ -246,7 +246,7 @@ end.
 NB. test update local noun on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK           NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK           NB. start task 8
 )
 
 NB. run & open the futures results
@@ -271,7 +271,7 @@ end.
 NB. test update global noun on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-z=. ]&.> NX (t1 t.'')"0 [ i.TASK       NB. start task
+z=. ]&.> NX (t1 t.'')"0 [ i.TASK       NB. start task 9
 for_t. i.TASK do.
  4!:55 <'noun_',(":t)               NB. erase global noun
 end.
@@ -298,7 +298,7 @@ end.
 NB. test write local noun on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK           NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK           NB. start task 10
 )
 
 NB. run & open the futures results
@@ -324,7 +324,7 @@ end.
 NB. test write local noun on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-z=. ]&.> NX (t1 t.'')"0 [ i.TASK       NB. start task
+z=. ]&.> NX (t1 t.'')"0 [ i.TASK       NB. start task 11
 for_t. i.TASK do.
  4!:55 ('noun_',(":t))~             NB. erase global noun
  4!:55 <'noun_',(":t)               NB. erase name of name list

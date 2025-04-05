@@ -474,10 +474,11 @@ void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A
 A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragment; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
- UI pt0ecam=AR(jt->locsyms);  // Init flags from local table.  locsyms cannot change during this execution.  Needed early.  This is a double load (which we could make single by installing AR into JTT), but
+ A jtlocsyms=jt->locsyms;  // we need the AR flags in the local table very quickly for singlee-word sentences, less urgency for longer
+ UI pt0ecam=AR(jtlocsyms);  // Init flags from local table.  locsyms cannot change during this execution.  Needed early.  This is a double load (which we could make single by installing AR into JTT), but
                               // it doesn't limit the multi-word path, and will be resolved during the pipeline break for the 1-word path
  A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early
- if(likely(nwds>1)) {  // normal case where there is a fragment to parse
+ if(likely(nwds>1)) {  // normal case where there is a fragment to parse - we get the values needed by the 1-word path loaded before the pipeline break
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
   //  27-28 garbage, overflow from delayline, may be cleared during stacking
   //  (execution of lines 0-2) 24-26 pmask save area
@@ -525,8 +526,6 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
 // obsolete   UI pt0ecam=(AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
   stack=jt->parserstackframe.parserstkend1;  // current end+1 of stack area, where we will start
   PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current start of stack area (the stack grows down)
-  A queuem2=queue[nwds-2], queuem3=queue[nwds-3];   // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
-                         // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
 
   PSTK *stackend1;   // will be the initial stack position, which is where the stack should end up if there is no error
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
@@ -535,9 +534,6 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
   // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each sentence
   // The stack grows down
 
-  PFRAME oframe=jt->parserstackframe;   // save all the stack status
-  jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
-  // we update parserstkend1 every time we execute something that might recur through here.  We must restore it on exit, as part of the entire frame
   ++jt->parsercalls;  // now we are committed to full parse.
 // debug if(jt->parsercalls == 0x4)
 // debug jt->parsercalls = 0x4;
@@ -551,14 +547,21 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
    // We are taking advantage of the fact that NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
    stack=(PSTK*)(CAV(sa)+allo);  // point to the end+1 of the allocation, our new start point
   }  // We could worry about hysteresis to avoid reallocation of every call
+  A queuem2=queue[nwds-2], queuem3=queue[nwds-3];   // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
+                         // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
 
+  PFRAME oframe=jt->parserstackframe;   // save all the stack status
+  jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
+  // we update parserstkend1 every time we execute something that might recur through here.  We must restore it on exit, as part of the entire frame
+
+  I4 flgsfor3=nwds+FLG1+(0b11LL<<CONJX);
+  I4 flgsfor4=flgsfor3+(0b11LL<<CONJX);   // flags to pull 3/4 words
+  flgsfor4=QCPTYPE(y)==QCADV?flgsfor3:flgsfor4;  // if wd0 is ADV, pull only 3
 
   // the first element of the parser stack is where we save unchanging error info for the sentence
   currstk->a=(A)queue; currstk->t=(US)nwds;   //  lower stack: addr & length of words being parsed
   // push and update the current parser stack frame.
   jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
-  I flgsfor3=nwds+FLG1+(0b11LL<<CONJX);
-  I flgsfor4=flgsfor3+(0b11LL<<CONJX);   // flags to pull 3/4 words
 
   stackend1=stack-=BACKMARKS;   // start at the end, pointing to first of 3 marks, and remember that position, because we should finish there
   queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
@@ -572,7 +575,6 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
   // queuem2/queue2m3, loaded in cycle 3-4, ready in cycle ~9.  Then: shift, and, cmov
   // We should be ready in cycle 12, which is before the value is needed in the loop
   // We would like execution to get to the load of symx and SYMORIGIN quickly, with pt0ecam following soon after
-  flgsfor4=QCPTYPE(y)==QCADV?flgsfor3:flgsfor4;  // if wd0 is ADV, pull only 3
 #define ASGNNOTEDGE (I4)~(((UI4)0xf0000000LL>>QCASGN)|((UI4)0x80000000LL>>QCLPAR)|((UI4)0xf0000000LL>>(QCNAMED+QCASGN))|((UI4)0x80000000LL>>(QCNAMED+QCLPAR)))  // !(ASGN+EDGE), ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
 // obsolete   I pull4=(((UI4)~ASGNEDGE>>QCTYPE(queuem2)) & ((UI4)~ASGNEDGE>>QCTYPE(queuem3))) & ();  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
@@ -1138,16 +1140,20 @@ failparse:
    // No ASSERT - must get to the end to pop stack
    y=QCWORD(yflags);  // point y to the start of block
    if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up
+    I4 symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  This fetch gates the normal path
+// obsolete       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
+    L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change within a single stacking loop but there's scant benefit in fetching earlier
+    I clonedhi=(pt0ecam&ARLCLONED)<<(30-ARLCLONEDX);  // 0 if not cloned, big value if cloned.  pt0ecam=AR flags here
 // obsolete     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
-    if(likely((((I)NAV(y)->symx-1)|SGNIF(pt0ecam,ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
-     L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
-     if(likely((sv=s->fval)!=0)){  // value has been assigned
+    if(withprob(clonedhi<symx,0.9)){  // if we are using primary table and there is a symbol stored there...
+// obsolete      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
+     if(likely((sv=sympv[symx].fval)!=0)){  // value has been assigned
       // the very likely case of a local name.  This value needs no protection because there is nothing more to happen in the sentence and the local symbol table is sufficient protection.  Skip the ra and the tpush
       I svt=QCTYPE(sv); sv=QCWORD(sv);  // type of stored value
       if(likely(svt&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
        if(unlikely(yflags&QCNAMEABANDON))goto abandname;  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  Since rare (especially for a single word!), do so by re-looking up the name
        y=sv; // we will use the value we read
-       }else{y=QCWORD(namerefacv(y, sv));}   // Replace other acv with reference.  Could fail.  Flags in sv=s->val=0 to prevent fa() and ensure flags=0 in return value
+       }else{y=QCWORD(namerefacv(y,sv));}   // Replace other acv with reference.  Could fail.  Flags in sv=s->val=0 to prevent fa() and ensure flags=0 in return value
       goto gotlocalval;   // y has the unprotected value read.  We can use that.
      }
     }
@@ -1157,7 +1163,7 @@ abandname:;
     PSTK* ostk=jt->parserstackframe.parserstkbgn;  // save caller's stack - rest of parserstackframe is untouched and unused
     PSTK localstack[PSTACKRSV]={{.a=(A)queue, .t=1}};  // stack to use, containing pointer to the sentence
     jt->parserstackframe.parserstkbgn=&localstack[PSTACKRSV];  // point to originfo to use, +1
-    if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it if global - undefname gives 0 without error
+    if(likely((sv=syrd(y,jtlocsyms))!=0)){     // Resolve the name and ra() it if global - undefname gives 0 without error
      // The name was found, not in a static local table.  sv has QCFAOWED semantics
      if(likely((I)sv&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
       if(unlikely(yflags&QCNAMEABANDON)){

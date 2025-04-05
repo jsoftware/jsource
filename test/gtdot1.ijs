@@ -43,7 +43,7 @@ end.
 NB. test erase/write on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 0
 )
 
 NB. run & open the futures results
@@ -71,7 +71,7 @@ z
 NB. test write/read on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 1
 )
 
 NB. run & open the futures results
@@ -92,7 +92,7 @@ end.
 NB. test read directory on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-((QKTEST+.4>9!:56'cores'){10 2) (t1 t.'')"0 [ i.TASK          NB. start task
+((QKTEST+.4>9!:56'cores'){10 2) (t1 t.'')"0 [ i.TASK          NB. start task 2
 )
 
 NB. run & open the futures results
@@ -126,7 +126,7 @@ z
 NB. test read/write/list on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 3
 )
 
 NB. run & open the futures results
@@ -155,7 +155,7 @@ end.
 NB. test append on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task
+]&.> NX (t1 t.'')"0 [ i.TASK        NB. start task 4
 )
 
 NB. run & open the futures results
@@ -177,7 +177,7 @@ end.
 NB. test file size on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-((QKTEST+.4>9!:56'cores'){10 2) (t1 t.'')"0 [ i.TASK          NB. start task
+((QKTEST+.4>9!:56'cores'){10 2) (t1 t.'')"0 [ i.TASK          NB. start task 5
 )
 
 NB. run & open the futures results
@@ -208,7 +208,7 @@ NB. test create directory on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
 1!:55 :: 1: "0 -.&' '&.> <"1 'dir',~"1 '~temp/tdot/f',"1 ": ,. i.TASK*STRIDE   NB. clear all directories
-3 (t1 t.'')"0 [ i.3          NB. start task
+3 (t1 t.'')"0 [ i.3          NB. start task 6
 )
 
 NB. run & open the futures results
@@ -238,7 +238,7 @@ NB. test indexed write/read on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
 1!:55 :: 1: "0 -.&' '&.> <"1 'dat',~"1 '~temp/tdot/f',"1 ": ,. i.TASK*STRIDE   NB. clear all files
-]&.> 5 (t1 t.'')"0 [ i.3  NB. start task, too many files limit error if x is too large
+]&.> 5 (t1 t.'')"0 [ i.3  NB. start task 7, too many files limit error if x is too large
 )
 
 NB. run & open the futures results
@@ -276,7 +276,7 @@ z
 NB. test file open/close on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.'')"0 [ i.TASK1  NB. start task, too many files limit error if x it too large
+]&.> NX (t1 t.'')"0 [ i.TASK1  NB. start task 8, too many files limit error if x it too large
 )
 
 NB. run & open the futures results
@@ -316,7 +316,7 @@ z
 NB. test file indexed read/write on multiple threads, with virtual y
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
-]&.> NX (t1 t.''  {&(1e6 #"0 i. TASK1))"0 [ i.TASK1  NB. start task, too many files limit error if x is too large
+]&.> NX (t1 t.''  {&(1e6 #"0 i. TASK1))"0 [ i.TASK1  NB. start task 9, too many files limit error if x is too large
 )
 
 NB. run & open the futures results
@@ -352,7 +352,7 @@ NB. test getcwd/chdir on multiple threads
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
 1!:55 :: 1: "0 -.&' '&.> <"1 'dir',~"1 '~temp/tdot/f',"1 ": ,. i.TASK*STRIDE   NB. clear all directories
-10 (t1 t.'')"0 [ i.TASK          NB. start task
+10 (t1 t.'')"0 [ i.TASK          NB. start task 10
 )
 
 NB. test parallel file lock
@@ -392,7 +392,7 @@ NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
 NB. file lock only available for windows
 if. IFWIN do.
- ]&.> NX (t1 t.'')"0 [ i.TASK1    NB. start task, too many files limit error if x it too large
+ ]&.> NX (t1 t.'')"0 [ i.TASK1    NB. start task 11, too many files limit error if x it too large
 else.
  1
 end.
@@ -427,7 +427,7 @@ NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
 NB. 1!:6/7 only available for windows
 if. IFWIN do.
- ]&.> NX (t1 t.'')"0 [ i.TASK       NB. start task
+ ]&.> NX (t1 t.'')"0 [ i.TASK       NB. start task 12
 else.
  1
 end.
@@ -458,7 +458,7 @@ end.
 NB. test name access while path is being changed
 NB. Result is list of results from each thread
 s1=: 3 : 0
- ]&.> ((QKTEST+.4>9!:56'cores'){1e5 1e2)(t1 f. t.'')"0  y       NB. start task
+ ]&.> ((QKTEST+.4>9!:56'cores'){1e5 1e2)(t1 f. t.'')"0  y       NB. start task 13
 )
 
 t1done=: 0
@@ -495,7 +495,7 @@ end.
 NB. test name access while name is being changed/deleted
 NB. Nilad.  Result is list of results from each thread
 s1=: 3 : 0
- ]&.> 5e5 (t1 f. t.'')"0 y       NB. start task
+ ]&.> 5e5 (t1 f. t.'')"0 y       NB. start task 14
 )
 
 'a_l1_ a_l2_ b_l1_ b_l2_ ' =: 0 1 3 4

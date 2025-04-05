@@ -1251,22 +1251,23 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  if(unlikely(MIN(ai,wi)==0)&&(ar!=0))RCA(a);  // if either arg has no items, there's nothing to remove, return a, unless atom must become a list
+ jtfg=MOVEIP0A(jtfg);  // only our a argument can be inplaced, and it moves to y in all uses
  if(ar==wr+1){  // is just 1 cell of y?
-  // if y has rank 1 less than x, execute as ((x ~: y) # x) if y is atomic or ((x ~.@-:"yr) # x) if y is an array.  Inplace x.  Use IRS and leave comparison tolerance as set
-  J jtipx=(J)(((I)jtfg&~(JTINPLACEA+JTINPLACEW))+(((I)jtfg>>1)&JTINPLACEW));  // move input inplace-x flag to inplace-w
-  if(wr==0){RZ(x=jtrepeat(jtipx,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
-  }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtipx,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
+  // if y has rank 1 less than x, execute as ((x ~: y) # x) if y is atomic or ((x -.@-:"yr) # x) if y is an array.  Inplace x.  Use IRS and leave comparison tolerance as set
+// obsolete   J jtipx=(J)(((I)jtfg&~(JTINPLACEA+JTINPLACEW))+(((I)jtfg>>1)&JTINPLACEW));  // move input inplace-x flag to inplace-w
+  if(wr==0){RZ(x=jtrepeat(jtfg,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
+  }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtfg,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
   }
  }else{
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
   if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
   // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. y e. x) # x 
   // Because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
-  RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(MOVEIP0A(jtfg),ILESS,x,a):   // move a' inplacing to w slot (because w is hashed)
+  RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtfg,ILESS,x,a):   // move a' inplacing to w slot (because w is hashed)
       repeat(not(eps(a,x)),a));
   // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  }
- if(unlikely(at&BOX))PRISTXFERAF(x,a)
+ if(unlikely(at&BOX))PRISTXFERF(x,a)  // transfer pristinity from a; but remembering that a's inplacing has been moved to the w bit
  RETF(x);
 }    /* a-.w */
 

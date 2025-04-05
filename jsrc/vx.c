@@ -595,7 +595,7 @@ static DF2(jtmodularexplicitx){F12IP;  // this stands in place of jtxdefn, which
 static A jtmodularexplicit(J jt,A a,A w,I type){
  // Apply Md_j_ to the input arguments, creating a derived verb to do the work
  A xadv; ASSERT(xadv=jtfindnameinscript(jt,"~addons/dev/modular/modular.ijs",type?"Mdet_j_":"Md_j_",ADV),EVNONCE);
- A derivvb; RZ(derivvb=jtunquote((J)((I)jt|JTXDEFMODIFIER),w,xadv,xadv));
+ A derivvb; RZ(derivvb=jtunquote((J)((I)jt+JTXDEFMODIFIER),w,xadv,xadv));
  // If the returned verb has VXOPCALL set, that means we are in debug and a namerefop has been interposed for Foldr_j_.  We don't want that - get the real verb
  if(unlikely(FAV(derivvb)->flag&VXOPCALL))derivvb=FAV(derivvb)->fgh[2];  // the verb is saved in h of the reference
  // Modify the derived verb to go to our preparatory stub.  We require that the continuation be at jtxdefn because we call bivalently and with flags

@@ -594,7 +594,7 @@ F1(jtlocswitch){F12IP;A g;
   ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
  }
  RZ(g=locale(1,w));   // point to locale, if no error
- R (A)((I)g|1);  // set LSB as flag to unquote that we ran cocurrent
+ R (A)((I)g+1);  // set LSB as flag to unquote that we ran cocurrent
 }
 F1(jtlocname){F12IP;A g=jt->global;
  ASSERTMTV(w);

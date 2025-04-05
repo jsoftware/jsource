@@ -1234,7 +1234,7 @@ F1(jtnubsieve){F12IP;
  R indexofsub(INUBSV,w,w);   // not inplace
 }    /* ~:"r w */
 
-// ~. y  - does not have IRS
+// ~. y  - does not have IRS.  Supports inplacing
 F1(jtnub){F12IP; 
  ARGCHK1(w);
  if(unlikely((SGNIFSPARSE(AT(w))|SGNIF(AFLAG(w),AFNJAX))<0))R repeat(nubsieve(w),w);    // sparse or NJA
@@ -1244,7 +1244,7 @@ F1(jtnub){F12IP;
  RETF(z);
 }    /* ~.w */
 
-// x -. y.  does not have IRS, support inplacing
+// x -. y.  does not have IRS, supports inplacing on the unhashed argument
 F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
@@ -1261,8 +1261,8 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
   if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
   // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. y e. x) # x 
-  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
-  RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtfg,ILESS,x,a):
+  // Because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
+  RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(MOVEIP0A(jtfg),ILESS,x,a):   // move a' inplacing to w slot (because w is hashed)
       repeat(not(eps(a,x)),a));
   // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  }
@@ -1270,7 +1270,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  RETF(x);
 }    /* a-.w */
 
-// x ([ -. -.[!.f]) y.  does not have IRS, supports inplacing
+// x ([ -. -.[!.f]) y.  does not have IRS, supports inplacing on a (the unhashed argument)
 DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
@@ -1286,7 +1286,7 @@ DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
  // Don't revert to fork!  localuse.lu1.fork2hfn is not set
- x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtfg,IINTER,x,a):
+ x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(MOVEIP0A(jtfg),IINTER,x,a):
      repeat(eps(a,x),a);
  POPCCT
  RZ(x);

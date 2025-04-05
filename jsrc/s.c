@@ -820,5 +820,5 @@ exitlock:  // error exit
 // assign symbol and free values immediately
 I jtsymbisdel(J jt,A a,A w,A g){
  // All we have to do is mark the assignment as final.
- R jtsymbis((J)((I)jt|JTFINALASGN),a,w,g);
+ R jtsymbis((J)((I)jt+JTFINALASGN),a,w,g);
 }

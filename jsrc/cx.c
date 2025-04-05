@@ -910,7 +910,7 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
   NAV(tv)->bucketx=compcount;
  }
  if(!dobuckets)NAV(tv)->bucket=0;  // remove bucket if this name not allowed to have them
- R (A)((I)tv|tqc);  // return combined pointer/type
+ R (A)((I)tv+tqc);  // return combined pointer/type
 }
 
 EVERYFS(onmself,jtonm,0,0,VFLAGNONE)  // create self to pass into every

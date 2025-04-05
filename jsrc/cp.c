@@ -88,7 +88,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
  AF f12=FAV(fs)->valencefns[!!a];  // action routine for u
  I allowinplace=(((poweratom&IMIN+POWERADOWHILE)==IMIN?0:JTINPLACEW))|~JTINPLACEW;  // suppress all inplacing if verb doesn't support it, or this is convergence (or multiple results, where jt is always 0)
  jtfg=(J)((I)jtfg&allowinplace&~(JTINPLACEA|(a==w)));  // never inplace a; pass inplacing of w only if !multiple & !infinite, and not same as a
- jtfg=(J)((I)jtfg|(poweratom&JTDOWHILE));  // set flag to indicate ^:_.
+ jtfg=(J)((I)jtfg+(poweratom&JTDOWHILE));  // set flag to indicate ^:_.
  poweratom>>=POWERABSX;  // convert powerabs to iteration counter
  for(;poweratom!=0;poweratom--){  // for all requested powers
   A wnew=CALL12IP(a,f12,a?a:w,w,fs);  // execute the verb, monad or dyad

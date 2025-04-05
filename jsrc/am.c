@@ -612,7 +612,7 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
   }else if(unlikely(indr!=0)){
    // All this is deprecated, should be domain error
    // ind is a list of boxes.  The contents had better all be numeric, and opening them must not use fill
-   RZ(ind0=jtope((J)((I)jtfg|JTNOFILL),ind)) ASSERT(AT(ind0)&NUMERIC,EVDOMAIN);  // open; contents must be numeric
+   RZ(ind0=jtope((J)((I)jtfg+JTNOFILL),ind)) ASSERT(AT(ind0)&NUMERIC,EVDOMAIN);  // open; contents must be numeric
    if(AR(ind0)==indr){
     if(JT(jt,deprecct)!=0)RZ(jtdeprecmsg(jt,1,"(001) (x (<\"0 array)} y): consider using (<<array)}\n"));
     goto doubleboxednumeric;  // the boxes were created with <"0 array.  That is the same as <<array now
@@ -875,7 +875,7 @@ static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->
  // x v0 y - allow inplacing of whatever hasn't been protected
  RZ(ffx=(FAV(hv[0])->valencefns[1])(jtfg,a,w,hv[0]));  // x v0 y - allow inplacing
  // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
- POPZOMB; R jtamendn2(( (J)(intptr_t)((I)jt|JTINPLACEW)),ffx,ffy,ffm,self);  // final amend.  No inplacing on x, but y OK
+ POPZOMB; R jtamendn2(( (J)(intptr_t)((I)jt+JTINPLACEW)),ffx,ffy,ffm,self);  // final amend.  No inplacing on x, but y OK
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive.  This result verb has ATOP[LR] flags set from v0

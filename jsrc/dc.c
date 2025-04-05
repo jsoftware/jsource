@@ -32,7 +32,7 @@ static B jtdrow(J jt,DC si,DC s0,A*zv,UI ncollist,I* collist){A fs,q,*qv,y,z;C c
    *zv++=num(ADV&AT(fs)?1:CONJ&AT(fs)?2:3);  /* 3 name class               */
    break;
   case 4:
-   RZ(*zv++=incorp(jtlrep((J)((I)jt|(JTEXPVALENCEOFFD>>si->dcdyad)),fs)));  // 4 linear rep, but only the correct valence
+   RZ(*zv++=incorp(jtlrep((J)((I)jt+(JTEXPVALENCEOFFD>>si->dcdyad)),fs)));  // 4 linear rep, but only the correct valence
    break;
   case 5:
    {

@@ -474,7 +474,8 @@ void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A
 A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragment; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
- UI pt0ecam=AR(jt->locsyms);  // Init flags from local table.  locsyms cannot change during this execution.  Needed early
+ UI pt0ecam=AR(jt->locsyms);  // Init flags from local table.  locsyms cannot change during this execution.  Needed early.  This is a double load (which we could make single by installing AR into JTT), but
+                              // it doesn't limit the multi-word path, and will be resolved during the pipeline break for the 1-word path
  A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
@@ -522,6 +523,8 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
 #endif
 
 // obsolete   UI pt0ecam=(AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
+  stack=jt->parserstackframe.parserstkend1;  // current end+1 of stack area, where we will start
+  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current start of stack area (the stack grows down)
   A queuem2=queue[nwds-2], queuem3=queue[nwds-3];   // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
                          // of queue.  That's OK, because the fetch will always be legal, as the data always has a word of legal data (usually the block header; in pppp an explicit pad word)
 
@@ -531,8 +534,6 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
   // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
   // It goes from stkbgn to stkend1.  During execution we update stkend1 before each execution, and stkbgn at the beginning of each sentence
   // The stack grows down
-  stack=jt->parserstackframe.parserstkend1;  // current end+1 of stack area, where we will start
-  PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current start of stack area (the stack grows down)
 
   PFRAME oframe=jt->parserstackframe;   // save all the stack status
   jt->parserstackframe.parseroridetok=0xffff;  // indicate no pee/syrd error has occurred
@@ -541,7 +542,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
 // debug if(jt->parsercalls == 0x4)
 // debug jt->parsercalls = 0x4;
 
-  if(unlikely(((intptr_t)jt->parserstackframe.parserstkend1-((intptr_t)jt->parserstackframe.parserstkbgn+(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1+1)*(intptr_t)sizeof(PSTK)))<0)){A sa;
+  if(unlikely((intptr_t)stack-(intptr_t)currstk<(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1+1)*(intptr_t)sizeof(PSTK))){A sa;
    ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
    forcetomemory(&stackend1);   // Make sure stackend1 is not put into a register
    I allo=MAX((nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
@@ -551,24 +552,26 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
    stack=(PSTK*)(CAV(sa)+allo);  // point to the end+1 of the allocation, our new start point
   }  // We could worry about hysteresis to avoid reallocation of every call
 
-  I flgsfor3=nwds+FLG1+(0b11LL<<CONJX), flgsfor4=nwds+FLG1+(0b111LL<<CONJX);   // flags to pull 3/4 words
 
   // the first element of the parser stack is where we save unchanging error info for the sentence
   currstk->a=(A)queue; currstk->t=(US)nwds;   //  lower stack: addr & length of words being parsed
   // push and update the current parser stack frame.
   jt->parserstackframe.parserstkbgn=currstk+PSTACKRSV;  // advance over the original-sentence info, creating an upward-growing stack at the bottom of the area. jt->parserstackframe.parserstkbgn[-1] has the error info
+  I flgsfor3=nwds+FLG1+(0b11LL<<CONJX);
+  I flgsfor4=flgsfor3+(0b11LL<<CONJX);   // flags to pull 3/4 words
 
   stackend1=stack-=BACKMARKS;   // start at the end, pointing to first of 3 marks, and remember that position, because we should finish there
   queue+=nwds-1;  // Advance queueptr to last token.  It always points to the next value to fetch.
 
   // We have the initial stack pointer.  Grow the stack down from there.  We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we infer a mark.
-  stack[0].pt = PTMARKBACK;  // install 1 mark, whose 0s will protect the other 2 mark-slots
+  stack[0].pt = PTMARKBACK;  // install 1 mark, whose 0s in .pt will protect the other 2 mark-slots
 
   // We need to get pt0ecam ready before it is needed inside the loop.  The components are:
   // ARLCLONE, chain-loaded in cycle 0, ready in cycle 10.  Then: shift, or
   // y, loaded in cycle 1, ready in cycle 6.  Then: and, compare with QCADV, cmov
-  // queuem2/queue2m3, loaded in cycle 3, ready in cycle 9.  Then: shift, and, cmov
+  // queuem2/queue2m3, loaded in cycle 3-4, ready in cycle ~9.  Then: shift, and, cmov
   // We should be ready in cycle 12, which is before the value is needed in the loop
+  // We would like execution to get to the load of symx and SYMORIGIN quickly, with pt0ecam following soon after
   flgsfor4=QCPTYPE(y)==QCADV?flgsfor3:flgsfor4;  // if wd0 is ADV, pull only 3
 #define ASGNNOTEDGE (I4)~(((UI4)0xf0000000LL>>QCASGN)|((UI4)0x80000000LL>>QCLPAR)|((UI4)0xf0000000LL>>(QCNAMED+QCASGN))|((UI4)0x80000000LL>>(QCNAMED+QCLPAR)))  // !(ASGN+EDGE), ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
@@ -1130,7 +1133,7 @@ failparse:
  }else{  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){A sv=0;  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // 1-word sentence:
-   I yflags=y;  // save the word, with QCNAMELKP semantics
+   I yflags=(I)y;  // save the word, with QCNAMELKP semantics
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing overhead, because it happens enough to notice (conditions & function results)
    // No ASSERT - must get to the end to pop stack
    y=QCWORD(yflags);  // point y to the start of block

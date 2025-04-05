@@ -1614,9 +1614,9 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define JATTN           {if(unlikely(JT(jt,adbreakr)[0]!=0)){jsignal(EVATTN); R 0;}}   // requests orderly termination at start of sentence
 #define JBREAK0         {if(unlikely(2<=JT(jt,adbreakr)[0])){jsignal(EVBREAK); R 0;}}  // requests immediate stop
 #define JNAN  (DAV0(ds(CUSDOT))[0])  // system-supplied NAN has trouble in Windows SDKs.  We wire one into _. and refer to it this way
-#define JTIPA           ((J)((I)jt|JTINPLACEA))
-#define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
-#define JTIPW           ((J)((I)jt|JTINPLACEW))
+#define JTIPA           ((J)((I)jt+JTINPLACEA))
+#define JTIPAW          ((J)((I)jt+(JTINPLACEA+JTINPLACEW)))
+#define JTIPW           ((J)((I)jt+JTINPLACEW))
 #define JTIPAtoW        (J)((I)jt+(((I)jtfg>>JTINPLACEAX)&JTINPLACEW))  // jtfg, with a' inplaceability transferred to w
 #define JTIPWonly       (J)((I)jtfg&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS))  // dyad jt converted to monad for w
 #define JTIPEX1(name,arg) jt##name(JTIPW,arg)   // like name(arg) but inplace
@@ -1905,18 +1905,27 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
  postloop
 #endif
 
+#define MOVEIPWW(j) (J)(intptr_t)(((I)j&~JTINPLACEA)+2*((I)j&JTINPLACEW))  // copy w inplaceability to both args
+#define MOVEIPWA(j) (J)(intptr_t)((I)j^((JTINPLACEW+JTINPLACEA)&(0x3C>>(2*((I)j&JTINPLACEW+JTINPLACEA)))))  // exchange inplaceability of w and a
+#define MOVEIP0A(j) (J)(intptr_t)((((I)j&~(JTINPLACEW+JTINPLACEA))+((((I)j>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW))))  // move a inplaceability to w, a's is garbage
+
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
 #define OUTSEQ          "\n"  // string used for internal end-of-line (not jtpx)
 // Given SZI B01s read into p, pack the bits into the MSBs of p and clear the lower bits of p
 #if C_LE  // if anybody makes a bigendian CPU we'll have to recode
 #if BW==64
-// this is what it should be #define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p|=p>>28LL;p<<=56LL;}
-#define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p|=p<<28LL;p&=0xff0000000; p<<=28LL;}  // this generates one extra instruction, rather than the 3 for the correct version
-#define PACKBITSINTO(p,out) {p|=p>>7LL;p|=p>>14LL;out=((p|(p>>28LL))<<56)|(out>>SZI);}  // pack and shift into out, which must be unsigned
+#ifdef PEXT
+#define PACKBITS(p) {p=PEXT(p,VALIDBOOLEAN)<<(BW-SZI);}
+#define PACKBITSINTO(p,out) {out=PACKBITS(p)|(out>>SZI);}  // pack and shift into out, which must be unsigned
 #else
-#define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p<<=28LL;}
-#define PACKBITSINTO(p,out) {p|=p>>7LL;p|=p>>14LL;out=(p<<28)|(out>>SZI);}  // pack and shift into out
+// this is what it should be #define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p|=p>>28LL;p<<=56LL;}
+#define PACKBITS(p) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;p|=p<<28LL;p&=0xff0000000; p<<=28LL;}  // this generates one extra instruction, rather than the 3 for the correct version
+#define PACKBITSINTO(p,out) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;out=((p|(p>>28LL))<<56)|(out>>SZI);}  // pack and shift into out, which must be unsigned
+#endif
+#else
+#define PACKBITS(p) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;p<<=28LL;}
+#define PACKBITSINTO(p,out) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;out=(p<<28)|(out>>SZI);}  // pack and shift into out
 #endif
 #endif
 // parser results have the LSB set if the last thing was an assignment

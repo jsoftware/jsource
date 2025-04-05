@@ -147,7 +147,7 @@ static REPF(jtrepbdx){F12IP;A z;I c,k,m,p;
    I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);
    UI bitstack=0; NOUNROLL while(--batchsize>0){I bits2=*avv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead
    // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
-   bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
+   PACKBITSINTO(bits,bitstack);
    // Now handle the last batch, by removing initial extension if any, discarding garbage bits at the end, and then shifting the lead bit down to bit 0
    if(n>=BW+SZI)bits=*avv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
 #endif

@@ -195,7 +195,7 @@ A jtunDD(J jtfg, A w){F12JT;
    inx=wilv[wilx+4][1];  // next input character will pick up after the final )
    // recur on the string to handle any 9 : it holds; update length when finished
    fauxblock(fauxw); A z; fauxvirtual(z,fauxw,w,1,ACUC1); AK(z)+=startddx; AN(z)=AS(z)[0]=outx-startddx;
-   RZ(jtunDD((J)((I)jt|JTINPLACEW|shortres),z));
+   RZ(jtunDD((J)((I)jt+(JTINPLACEW|shortres)),z));
    // the recursion leaves the DD in place, but it may have become shorter if it too contained DDs (the {{ }}
    // overhead is always less than the ( 9 : '' ) overhead)
    // We are going to install a trailing blank.  To prevent accumulation of blanks, discard any trailing blanks in the definition
@@ -363,7 +363,7 @@ DF1(jtarx){F12IP;F1RANK(0,  jtarx,self); R arep(  symbrdlocknovalerr(nfb(w)));} 
 DF1(jtdrx){F12IP;F1RANK(0,  jtdrx,self); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
 DF1(jttrx){F12IP;F1RANK(0,  jttrx,self); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
 DF1(jtlrx1){F12IP;F1RANK(0,  jtlrx1,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5 monad
-DF2(jtlrx2){F12IP;ASSERT(AR(w)==0,EVRANK) I mask=0; if(AN(a)==0)mask=JTPRFORSCREEN;else{RE(mask=i0(a)); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) mask=(~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF;}  R jtlrep((J)((I)jt|mask),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt; in x empty, print as if for screen
+DF2(jtlrx2){F12IP;ASSERT(AR(w)==0,EVRANK) I mask=0; if(AN(a)==0)mask=JTPRFORSCREEN;else{RE(mask=i0(a)); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) mask=(~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF;}  R jtlrep((J)((I)jt+mask),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt; in x empty, print as if for screen
 DF1(jtprx){F12IP;F1RANK(0,  jtprx,self); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
 
 DF2(jtxrx){F12IP;F2RANK(0,0,jtxrx,self); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7

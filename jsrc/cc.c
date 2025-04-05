@@ -701,9 +701,9 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
      UI bitstack;  // the bits packed together and processed one by one
      {I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);  // batch size, never 0
      // XOR to put 0 bytes on frets; combine bits so that a boolean bit is 0 only if all bits of its byte are 0, i. e. 0 only if fret
-     bitstack=0; NOUNROLL while(--batchsize>0){I bits2=*wvv++; bits ^=valI; ZBYTESTOZBITS(bits); bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
+     bitstack=0; NOUNROLL while(--batchsize>0){I bits2=*wvv++; bits ^=valI; ZBYTESTOZBITS(bits); PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
      }// Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
-     bits ^=valI; ZBYTESTOZBITS(bits); bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
+     bits ^=valI; ZBYTESTOZBITS(bits); PACKBITSINTO(bits,bitstack);
      bitstack=~bitstack;     // Convert not-a-fret bits to fret bits
      // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
      if(n>=BW+SZI)bits=*wvv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // Unbias n back to actual count (always in [1,64]); discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch. (Don't fetch outside block!)
@@ -735,7 +735,7 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
      {I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);  // batch size, never 0
      bitstack=0; NOUNROLL while(--batchsize>0){I bits2=*wvv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
      }// Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
-     bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
+     PACKBITSINTO(bits,bitstack);
      // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
      if(n>=BW+SZI)bits=*wvv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // Unbias n back to actual count (always in [1,64]); discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch. (Don't fetch outside block!)
      while(bitstack){

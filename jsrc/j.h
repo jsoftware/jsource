@@ -1909,6 +1909,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
  postloop
 #endif
 
+#define MOVEIP0A(j) (J)(intptr_t)((((I)j&~(JTINPLACEW+JTINPLACEA))+((((I)j>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW))))  // move a inplaceability to w, a's is garbage
+
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
 #define OUTSEQ          "\n"  // string used for internal end-of-line (not jtpx)

@@ -257,7 +257,7 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  jtinitnl(jt);  // init numbered locales, using master thread to allocate
  // init z locale
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
- SYMRESERVE(2) RZ(zloc=stcreate(0,p,1L,"z")); ACX(zloc);   // make the z locale permanent
+ SYMRESERVE(2) RZ(zloc=stcreate(0,p,1L,"z      ")); ACX(zloc);   // make the z locale permanent.  6 trailing spaces (plus the NUL) avoids overfetch, which Address Sanitizer tests for
  // create zpath, the default path to use for all other locales
  GAT0(q,BOX,2,1); AAV1(q)[0]=0; AAV1(q)[1]=zloc; ACX(q); JT(jt,zpath)=&AAV1(q)[1];   // install ending 0 & z locale; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
  LOCPATH(zloc)=&AAV1(q)[0];   // make z locale have no path.  The path is already permanent

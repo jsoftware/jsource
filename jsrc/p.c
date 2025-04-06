@@ -630,7 +630,7 @@ firstword: ;  // come here first time, while pt0ecam settles
       }else if(likely(buck>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.
        // public names come through here (with positive pucketx) or 
        I bx=NAV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
-       if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if nonneg bucketx and no name has been added, skip the search - the usual case if not recursive symtab.  AR may change midsentence
+       if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if nonneg bucketx and no name has been added, skip the search - the usual case if not recursive symtab.  AR may change midsentence.  No other thread can add a local symbol.
        // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table.  Added name is pretty rare -
        // should we loop through the buckets on a local name?  Probably - saves a call for every name in a non-primary table
        if(likely(bx<0)){L* l; for(l=LXAV0(jt->locsyms)[buck]+sympv;++bx<0;l=&sympv[l->next]); y=l->fval;}  // local name in cloned table.  Get to it without subroutine call

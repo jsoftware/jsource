@@ -154,6 +154,13 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
     flag|=(7+(((IINTER-II0EPS)&0xf)<<3));  // flag it like -.
     // if tolerance given on second -., it is now in cct
    }
+  }else if(unlikely(BOTHEQ8(gi,hi,CPOUND,CLEFT))){
+   I c=fi; I e=c; if(unlikely(e==CFIT)){cct=fv->localuse.lu1.cct; e=FAV(fv->fgh[0])->id;}  // comparison op, possibly from u!.f
+   if(unlikely(e==CEPS)){   // e. # [
+    f2=jtintersect;  // treat the compound as a primitive of its own
+    flag|=(7+(((IINTER-II0EPS)&0xf)<<3));  // flag it like -.
+    // if tolerance given on e., it is now in cct
+   }
   }
 #endif
 

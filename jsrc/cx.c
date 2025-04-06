@@ -304,7 +304,7 @@ DF2(jtxdefn){F12IP;
    ybuckptr->fval=MAKEFVAL(w,vtype); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCSYMVAL semantics
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
-   if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtfg>>JTINPLACEWX))){
+   if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtfg>>JTINPLACEWX))){  // it is impossible for another thread to make the usecount go to 8..1 while this runs
     AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
     ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
     ramkrecursv(w);  // make the block recursive by raising contents

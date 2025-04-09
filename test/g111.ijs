@@ -31,6 +31,9 @@ x=: j./ _5000 + 2 10000 ?@$ 10000
 y=: j./ _5000 + 2 10000 ?@$ 10000
 (x*.y) -: y*.x
 
+21073519j_13660082 -: _3748j_4633 *. _442j4191   NB. troublesome cases
+0.09999999999999 (-:!.1e_11) 0j1 +. 16.1
+
 'domain error' -: 'abc' *. etx 4
 'domain error' -: 'abc' *.~etx 4
 'domain error' -: 4     *. etx <'abc'

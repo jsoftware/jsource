@@ -89,7 +89,7 @@ ZF2(jtzrem){D a,b,d;Z q;
  }
  ZASSERT(!ZINF(u),EVNONCE);
  // general case, return v - u * <. v % u
- // calculate v % u as (v * +u) % |u
+ // calculate v % u as (v * +u) % |u  (magnitude may go infinite)
  d=u.re*u.re+u.im*u.im;
  a=u.re*v.re+u.im*v.im;
  b=u.re*v.im-u.im*v.re;
@@ -98,10 +98,12 @@ ZF2(jtzrem){D a,b,d;Z q;
  R zminus(v,ztymes(u,q));
 }
 
-ZF2(jtzgcd){D a,b;Z t,z;I lim;
+ZF2(jtzgcd){D a,b;Z t,z,t1;I lim;
  ZASSERT(!(ZINF(u)||ZINF(v)),EVNAN);
- for(lim=2048; lim>0&&ZNZ(u); --lim){t=zrem(u,v); v.re=u.re; v.im=u.im; u.re=t.re; u.im=t.im;}  // max # iters is log(MAXFLOAT)/log(phi)
- if(lim==0)R zeroZ;  // if Euclid failed, return 0j0
+ for(lim=10+1.5*MAX(MAX(ABS(u.re),ABS(u.im)),MAX(ABS(v.re),ABS(v.im))); ZNZ(u)&&lim>0; --lim){  // The limit is a patience measure.  Convergence can be very slow but for integers, at least one unit per iteration
+  t=zrem(u,v); v=u; u=t;  // emulate Euclid
+ }
+ // if Euclid failed, keep the last value as the best guess
  // Move result into first quadrant, and off the real axis
  I RrIi=(((v.re>0)*2+(v.re==0))*2+(v.im>0))*2+(v.im==0);  // classify result signs en bloc
  z.re=ABS(v.re); z.im=ABS(v.im);

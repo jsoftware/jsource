@@ -999,26 +999,53 @@ static void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   if(likely(--n>=0)){  // skip everything if no boxes
-   np=*wv;  // prefetch first box
-   NOUNROLL do{AD* np0;  // n is always >0 to start.  Loop for n-1 times
-    np0=*++wv;  // fetch next box.  This fetch settles while the ra() is running
-    // NOTE that we do not use C() here, so that we free pyxes as well as contents.  The usecount of the pyx will protect it until its
-    // value has been installed.  Thus we ensure that fa() never causes a system lock.
-    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
-runout:;  // 
-    // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
-    if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
-     if(likely(!(AFLAG(np)&AFVIRTUAL))){fanano0(np);}   // do the recursive POP only if RECURSIBLE block; then free np
-     else{I c=AC(np);
-      // virtual block.  Must be the contents of a WILLBEOPENED, but it may have other aliases so the usecount must be checked
-      if(--c<=0){
-       A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.
-      }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
-     }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
-    }
-    np=np0;  // advance to next box
-   }while(--n>0);
-   if(n==0)goto runout;  // skip prefetch last time.  Maybe not needed.  This will alternate branch prediction except when n was 1.  Saves I1$
+   np=wv[n];  // prefetch last box.  We go last to front so we can overfetch the last box
+   A wdprev=0;  // for nested boxed arrays we keep a stack of levels.  This is the previous level, initially 0
+   while(1){
+    NOUNROLL do{AD* np0;  // n is always >=0 to start.  Loop for n+1 times (i. e. original n times)
+     np0=wv[n-1];  // fetch next box.  This fetch settles while the ra() is running
+     // NOTE that we do not use C() here, so that we free pyxes as well as contents.  The usecount of the pyx will protect it until its
+     // value has been installed.  Thus we ensure that fa() never causes a system lock.
+     PREFETCH((C*)np0);   // prefetch the next box while ra() is running
+// obsolete runout:;  // 
+     // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
+     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
+      if(likely(!(AFLAG(np)&AFVIRTUAL))){
+       I Zc=AC(np); I tt=AT(np);
+       if(likely(((Zc-2)|tt)<0) ||  // if sparse or count<2, go to free the block
+          (likely(!ACISPERM(Zc)) && unlikely(__atomic_fetch_sub(&AC(np),1,__ATOMIC_ACQ_REL)<2))){  // not permanent and count < 2
+        if(tt&BOX){I nn;
+         // box within box.  We can't recur because the recursion might go arbitrarily deep and overflow any reasonable stack limit.
+         // Instead, we use spare space in to-be-freed np as a stack area and loop back to keep running the free loop
+         if(likely((nn=AN(np))!=0)){  // if there is something to recur to...
+          A *wvv=AAV(np);   // len/addr of new level
+          ABACK(np)=wdprev; AKASA(np)=(A)wv; AC(np)=n;  // save n/wv on stack
+          n=nn; wdprev=np; wv=wvv; np=wv[n-1];  // get new n/wv, update stack, fetch new last element
+          continue;  // loop back to continue on new level
+         }
+        }
+        jtfamf(jt,np,tt);  // free the block if it can't recur
+       }   // do the recursive POP only if RECURSIBLE block; then free np
+      }else{I c=AC(np);
+       // virtual block.  Must be the contents of a WILLBEOPENED, but it may have other aliases so the usecount must be checked.  If this recurs deeply, it will be caught when non-virtual
+       if(--c<=0){
+        A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.  It can never be incremented in another thread.
+       }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
+      }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
+     }
+     np=np0;  // advance to next box
+    }while(--n>=0);
+    do{
+     if(wdprev==0)goto finbox;  // exit loop when we are back to top boxing level
+     // We were in multiple boxing levels.  back up to the previous level and carry on with it
+     A owdprev=wdprev;  // popping up puts us at wdprev, which we will free & continue from
+     wv=(A*)AKASA(wdprev); n=AC(wdprev); wdprev=ABACK(wdprev);  // pick up where we left off.  owdprev=wv[n] is the interrupted np
+     np=wv[n-1]; mf(owdprev);   // prefetch next element, free current
+    }while(--n<0);   // pop up as many levels as end here
+    // now we pick up with the element before the one we just deleted, which is wv[n] with n having been decremented
+   }
+finbox:;
+// obsolete    if(n==0)goto runout;  // skip prefetch last time.  Maybe not needed.  This will alternate branch prediction except when n was 1.  Saves I1$
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.

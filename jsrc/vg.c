@@ -759,7 +759,7 @@ F2(jtdgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J
 
 #define NRANDS 36  // must be even
 // Partitioning function for order statistics
-// j is the order desired, w is the data .  t is a temp buffer we allocate to hold the shrinking partition
+// j is the order desired, w is the data .  t is a temp buffer we allocate to hold the shrinking partition  scaf use fast partitioner?
 #define OSLOOP(T,ATOMF)  \
 {T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
   tv=wv=(T*)AV(w);                                                                     \
@@ -798,4 +798,5 @@ DF2(jtordstati){F12IP;A t;I n,wt;
  if(wt&FL){D p=DAV(t)[0],*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}  // get index for the value we found  scaf use faster search
  else     {I p=AV(t)[0],*v= AV(w); DO(n, if(p==*v++){j=i; break;});}
  R sc(j);
-}    /* a {/:w */
+}    /* a {/:w */  // scaf support a ({. /:)
+

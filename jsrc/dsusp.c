@@ -335,7 +335,7 @@ noparse: ;
 A jtdbunquote(J jtfg,A a,A w,A self){F12IP;A t,z;B s;V*sv;
  I dyad=EPDYAD; DC d=jt->sitop;   // remember if dyad, fetch debug frame
  sv=FAV(self); t=sv->fgh[0]; 
- if(sv->id==CCOLONE&&t!=0){  // : explicit and not anonymous (if anonymous, it goes to unquote which will reexecute the vebr with a name)
+ if(sv->id==CCOLONE&&t!=0){  // : explicit and not anonymous (if anonymous, it goes to unquote which will reexecute the verb with a name)
   ras(self); z=FAV(self)->valencefns[dyad](jtfg,a,w,self);  if(unlikely(z==0)){jteformat(jt,self,a,dyad?w:0,0);} fa(self);  // we have self, so this can be a format point
  }else{                              /* tacit    */
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 

@@ -34,6 +34,7 @@
 
 #define J_STACK  0xc00000uL // 12mb
 
+static int jversion=0;     /* exit after printing version */
 static int runjscript=0;   /* exit after running script */
 static int forceprmpt=0;   /* emit prompt even if isatty is false */
 static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
@@ -285,23 +286,24 @@ int main(int argc, char* argv[])
  setlocale(LC_NUMERIC,"C");
 #endif
  void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type;
- int i,poslib=0,poslibpath=0,posnorl=0,posnoel=0,posprmpt=0,posscrpt=0; // assume all absent
+ int i,poslib=0,poslibpath=0,posnorl=0,posnoel=0,posprmpt=0,posscrpt=0,posjversion=0; // assume all absent
  for(i=1;i<argc;i++){
   if(!poslib&&!strcmp(argv[i],"-lib")){poslib=i; if((i<argc-1)&&('-'!=*(argv[i+1])))poslibpath=i+1;}
+  else if(!posnorl&&!strcmp(argv[i],"-version")) {posjversion=i; jversion=1;}
   else if(!posnorl&&!strcmp(argv[i],"-norl")) {posnorl=i; norl=1;}
   else if(!posnoel&&!strcmp(argv[i],"-noel")) {posnoel=i; noel=1;}
   else if(!posprmpt&&!strcmp(argv[i],"-prompt")) {posprmpt=i; forceprmpt=1;}
   else if(!posscrpt&&!strcmp(argv[i],"-jscript")) {posscrpt=i; runjscript=1; norl=1; noel=1; forceprmpt=0;}
  }
-// fprintf(stderr,"poslib %d,poslibpath %d,posnorl %d,posnoel %d,posprmpt %d,posscrpt %d\n",poslib,poslibpath,posnorl,posnoel,posprmpt,posscrpt);
+// fprintf(stderr,"poslib %d,poslibpath %d,posnorl %d,posnoel %d,posprmpt %d,posscrpt %d,posjversion %d\n",poslib,poslibpath,posnorl,posnoel,posprmpt,posscrpt,posjversion);
  jepath(argv[0],(poslibpath)?argv[poslibpath]:"");
  // remove processed arg
- if(poslib||poslibpath||posnorl||posnoel||posprmpt||posscrpt){
+ if(poslib||poslibpath||posnorl||posnoel||posprmpt||posscrpt||posjversion){
   int j=0; 
   char **argvv = malloc(argc*sizeof(char*));
   argvv[j++]=argv[0];
   for(i=1;i<argc;i++){
-   if(!(i==poslib||i==poslibpath||i==posnorl||i==posnoel||i==posprmpt||i==posscrpt))argvv[j++]=argv[i];
+   if(!(i==poslib||i==poslibpath||i==posnorl||i==posnoel||i==posprmpt||i==posscrpt||i==posjversion))argvv[j++]=argv[i];
   }
   argc=j;
   for(i=1;i<argc;++i)argv[i]=argvv[i];
@@ -388,7 +390,14 @@ int main(int argc, char* argv[])
   _setmode( _fileno( stdin ), _O_TEXT ); //readline filters '\r' (so does this)
 #endif
  if(runjscript)type|=256;
+ if(jversion)type=3;
  int r=jefirst(type,input);
+ if(jversion){
+  if(r)return r;
+  r=jedo((char*)"9!:14''");
+  jefree();
+  return r;
+ }
 #if !defined(TESTS)
  if(!runjscript)while(1){r=jedo((char*)Jinput(jt,(forceprmpt||_isatty(_fileno(stdin)))?(C*)"   ":(C*)""));}
 #else

@@ -345,6 +345,12 @@ F1(jtcpufeature){F12IP;
   R sc(numberOfCores);
  } else if (!strcasecmp(CAV(w),"MAXTHREADS")) {
   R sc(MAXTHREADS);
+ } else if (!strcasecmp(CAV(w),"OPENMP")) {
+#if defined(_OPENMP)
+  R sc(1);
+#else
+  R sc(0);
+#endif
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

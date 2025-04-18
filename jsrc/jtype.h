@@ -1274,7 +1274,7 @@ typedef struct {
 #define VLOCK           (I)0x10000        /* function is locked              */
 // bit 17 free
 #define VFIX            (I)0x40000       /* f. applied                      */
-#define VXOPRX          19                // the definition is a modifier that refers to x or y
+#define VXOPRX          19                // the definition is an explicit modifier that refers to x or y
 #define VXOPR           ((I)1<<VXOPRX)
 #define VXOP            (I)0x100000      // this is the result of giving [u]/v args to a defn that had VXOPR set.  u and v are in fgh[0/2]
 #define VTRY1           (I)0x200000      /* monad contains try.             */
@@ -1348,6 +1348,8 @@ typedef struct {
 #define VF2NAMELESS  ((I)(((I)1)<<VF2NAMELESSX))
 #define VF2CACHEDX 24   // In a nameref, indicates the nameref is cached, i. e. cacheable and filled in
 #define VF2CACHED  ((I)(((I)1)<<VF2CACHEDX))
+#define VF2PSEUDONAMEX 25  // in a nameref, indicates the nameref is VXOP type, either with a locative or during debug
+#define VF2PSEUDONAME  ((I)(((I)1)<<VF2PSEUDONAMEX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; UI8 primfl; } prim; } PRIM;  // two cachelines exactly in 64-bit
@@ -1388,8 +1390,8 @@ typedef struct {
   PSTK* parserstkend1;    // [0}&end+1 of parser stack   [-1]: number of words
   US parseroridetok;  // inited to -1; set to the failing token number+1 to override looking at the exec stack. 0 for no error-line flag.  This is done when pee is detected
                      // or preemptively for calls to syrd which can fail (kludge)
-  C filler[SZI-2];
-  A sf;   // $: stack in the parser (other users of $: have their own stacks)
+  C filler[SZI-sizeof(US)];
+  A sf;   // $: stack in the parser (other users of $: have their own stacks) MUST BE LAST because it is part of a block stacked by unquote
  } PFRAME;  // these are stacked en bloc
 
 // input/result for fmtlong

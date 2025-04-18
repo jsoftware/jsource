@@ -21,7 +21,6 @@ DF2(jtunquote){F12IP;A z;
   A locsyms;  // local symbol table
  } stack;
 
- A thisname=FAV(self)->fgh[0]; A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
 #define FLGDYAD 1
 #define FLGPSEUDOX 11  // operation is pseudo-named function
 #define FLGPSEUDO ((I)1<<FLGPSEUDOX)
@@ -31,7 +30,11 @@ DF2(jtunquote){F12IP;A z;
 #define FLGLOCINCRDECR ((I)1<<FLGLOCINCRDECRX)
 #define FLGLOCCHANGEDX 14  // the caller of this function has previously encountered cocurrent
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
- I flgd0cpC=w!=self;  // init DYAD flag
+// bits 15-21 must be 0 - they are stored into bstkreqd
+#define FLGFLAG2X 32  // location of FLAG2 flags
+ UI8 flgd0cpC=((UI8)FAV(self)->flag2<<FLGFLAG2X)+(w!=self);   // extract self flags, which we will need quickly, init dyad flag
+ A thisname=FAV(self)->fgh[0]; A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
+// obsolete  I flgd0cpC=w!=self;  // init DYAD flag
    // We check inplaceability of the called function.  jtfg unused
  A explocale;  // locale to execute in.  Not used unless LOCINCRDECR set
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
@@ -42,12 +45,12 @@ DF2(jtunquote){F12IP;A z;
  memcpy(&stack,&jt->parserstackframe.sf,sizeof(stack));  // push sf/globals/curname/locals
 #endif
  // *** errors must to go the error exit to restore stacked values
- if(likely(thisname!=0)){  // normal names, not pseudo
+ if(likely(!(flgd0cpC&(VF2PSEUDONAME<<FLGFLAG2X)))){  // normal names, not pseudo
   jt->curname=thisname;  // set executing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
   // normal path for named functions
   if(likely((fs=FAV(self)->localuse.lu1.cachedlkp)!=0)){  // fetch the most recent lookup, which may be reused. no QC
-   if(FAV(self)->flag2&VF2CACHEABLE){  // cacheable?  (test first because test suite expects it)
-    if(likely(FAV(self)->flag2&VF2CACHED)){  // cached already?
+   if(flgd0cpC&(VF2CACHEABLE<<FLGFLAG2X)){  // cacheable?  (test first because test suite expects it)
+    if(likely(flgd0cpC&(VF2CACHED<<FLGFLAG2X))){  // cached already?
      // the reference is cached.  Switch to it immediately.
      // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
      if(((A)(I)(NAV(thisname)->flag&NMLOC)!=0)){  // most verbs aren't locatives. if no direct locative, leave global unchanged
@@ -135,7 +138,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
    // This is a little different between short- and long-term caches, because of the possibility that the
    // locale is numbered/private.  Such locales are unsuitable for long-term caches since the locale
    // may disappear.  They are OK for short-term caches
-   if(likely(!(FAV(self)->flag2&VF2CACHEABLE))){  // if only short-term cache is possible
+   if(likely(!(flgd0cpC&(VF2CACHEABLE<<FLGFLAG2X)))){  // if only short-term cache is possible
     // for short-term cache, save the lookup, and the locale too if it is a direct locale (either named or numbered).
     if(!(nmflgs&NMILOC+NMIMPLOC)){  // Never cache anything for indirect or implicit locatives
      FAV(self)->localuse.lu1.cachedlkp=fs;     // save named lookup calc for next time  should ra locale or make permanent?  no QC
@@ -147,7 +150,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
     thisname=jt->curname;  // refresh thisname
     // point the nameref to the lookup result.
     WRITELOCK(fs->lock);  // we want to cache a name only once
-    if(!(FAV(self)->flag2&VF2CACHED)){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
+    if(!(flgd0cpC&(VF2CACHED<<FLGFLAG2X))){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
      ACSETPERM(fs);  // make the cached value immortal
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
      // to use the flags.  If we do PPPP, this will be too late
@@ -172,19 +175,20 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
          //  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
      }
      FAV(self)->localuse.lu1.cachedlkp=fs;     // save named lookup calc for next time  should ra locale or make permanent?
-     if(nmflgs&NMLOC)FAV(self)->localuse.lu0.cachedloc=explocale;   // including locale it is was looked up
+     if(nmflgs&NMLOC)FAV(self)->localuse.lu0.cachedloc=explocale;   // including locale it is was looked up in
     }
     WRITEUNLOCK(fs->lock);
    }
   }
 
  }else{
-  // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
+  // here for pseudo-named function.  The actual name is in f, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
-  jt->curname=thisname=FAV(self)->fgh[1];  // get the original name
+  jt->curname=thisname;   // use the original name, which may have locatives that we will ignore
+// obsolete =FAV(self)->fgh[1];  // get the original name
   fs=FAV(self)->fgh[2];  // point to the actual executable
   ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;); // make sure the name's value is given also
-  flgd0cpC|=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
+  flgd0cpC+=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
   ASSERTSUFF(TYPESEQ(AT(self),AT(fs)),EVTYPECHG,z=0; goto exitfa;);   // make sure its part of speech has not changed since the name was parsed - that's a pun in type
   // The pseudo-named function was created under debug/pm mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
   // implications: anonymous verbs do not restore locales.  To preserve that behavior, we divert the call to the slow path and then skip restoring the locale
@@ -375,11 +379,12 @@ F1(jtcreatecachedref){F12IP;A z;
  RETF(z);
 }
 
-// Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=0, g=name, h=actual entity to execute
+// Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=name, h=actual entity to execute
 F2(jtnamerefop){F12IP;V*v;
  ARGCHK2(a,w);
  v=FAV(w);
- R fdef(0,CCOLONE,VERB,  jtunquote,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
+ R fdef(VF2PSEUDONAME,CCOLONE,VERB,  jtunquote,jtunquote, a,0L,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
+   // VXOPCALL is checked by representations; VF2PSEUDONAME is checked by unquote.  They could be merged
 }    
 
 /* namerefop() is used by explicit defined operators when: */

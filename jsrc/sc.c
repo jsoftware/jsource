@@ -45,12 +45,12 @@ DF2(jtunquote){F12IP;A z;
  memcpy(&stack,&jt->parserstackframe.sf,sizeof(stack));  // push sf/globals/curname/locals
 #endif
  // *** errors must to go the error exit to restore stacked values
- if(likely(!(flgd0cpC&(VF2PSEUDONAME<<FLGFLAG2X)))){  // normal names, not pseudo
+ if(likely(!(flgd0cpC&((UI8)VF2PSEUDONAME<<FLGFLAG2X)))){  // normal names, not pseudo
   jt->curname=thisname;  // set executing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
   // normal path for named functions
   if(likely((fs=FAV(self)->localuse.lu1.cachedlkp)!=0)){  // fetch the most recent lookup, which may be reused. no QC
-   if(flgd0cpC&(VF2CACHEABLE<<FLGFLAG2X)){  // cacheable?  (test first because test suite expects it)
-    if(likely(flgd0cpC&(VF2CACHED<<FLGFLAG2X))){  // cached already?
+   if(flgd0cpC&((UI8)VF2CACHEABLE<<FLGFLAG2X)){  // cacheable?  (test first because test suite expects it)
+    if(likely(flgd0cpC&((UI8)VF2CACHED<<FLGFLAG2X))){  // cached already?
      // the reference is cached.  Switch to it immediately.
      // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
      if(((A)(I)(NAV(thisname)->flag&NMLOC)!=0)){  // most verbs aren't locatives. if no direct locative, leave global unchanged
@@ -138,7 +138,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
    // This is a little different between short- and long-term caches, because of the possibility that the
    // locale is numbered/private.  Such locales are unsuitable for long-term caches since the locale
    // may disappear.  They are OK for short-term caches
-   if(likely(!(flgd0cpC&(VF2CACHEABLE<<FLGFLAG2X)))){  // if only short-term cache is possible
+   if(likely(!(flgd0cpC&((UI8)VF2CACHEABLE<<FLGFLAG2X)))){  // if only short-term cache is possible
     // for short-term cache, save the lookup, and the locale too if it is a direct locale (either named or numbered).
     if(!(nmflgs&NMILOC+NMIMPLOC)){  // Never cache anything for indirect or implicit locatives
      FAV(self)->localuse.lu1.cachedlkp=fs;     // save named lookup calc for next time  should ra locale or make permanent?  no QC
@@ -150,7 +150,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
     thisname=jt->curname;  // refresh thisname
     // point the nameref to the lookup result.
     WRITELOCK(fs->lock);  // we want to cache a name only once
-    if(!(flgd0cpC&(VF2CACHED<<FLGFLAG2X))){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
+    if(!(flgd0cpC&((UI8)VF2CACHED<<FLGFLAG2X))){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
      ACSETPERM(fs);  // make the cached value immortal
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
      // to use the flags.  If we do PPPP, this will be too late

@@ -13,6 +13,7 @@ extern UC fboxedsparse;
 I level(J jt,A w){A*wv;I d,j;
  ARGCHK1(w);
  if((-AN(w)&-(AT(w)&BOX))>=0)R 0;
+ STACKCHKOFL   // ptotect against deeply nested boxes
  d=0; wv=AAV(w);
  DQ(AN(w), j=level(jt, C(wv[i])); d=d<j?j:d;);
  R 1+d;
@@ -25,6 +26,7 @@ I levelle(J jt,A w,I l){
  if((-AN(w)&-(AT(w)&BOX))>=0)R SGNTO0(~l);  // if arg is unboxed, its level is 0, so return 1 if l>=0
  if(l<=0)R 0;  // (arg is boxed) if l is <=0, arglevel is  > l
  --l; A *wv=AAV(w);
+ STACKCHKOFL   // ptotect against deeply nested boxes
  DO(AN(w), if(!levelle(jt,C(wv[i]),l))R 0;);  // stop as soon as we see level big enough
  R 1;  // if it never gets big enough, say so, keep looking
 }

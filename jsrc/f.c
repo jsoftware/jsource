@@ -580,6 +580,7 @@ static A jtthbox(J jt,A w,A prxthornuni){A z;static UC ctrl[]=" \001\002\003\004
  // Format the contents of each box; form into a table.  every returns an array of boxes,
  // with the same shape as w, where the contents have been replaced by a table of characters
  // Then call enframe to assemble all the tables into the result table
+ STACKCHKOFL   // abort if deeply nested boxes
  RZ(z=jtenframe((J)((I)jt+BIV0(prxthornuni)),every2(w,prxthornuni,(A)&matth1self)));
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space

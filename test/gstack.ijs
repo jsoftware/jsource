@@ -79,7 +79,31 @@ catch.
 end.
 }} ''
 
-4!:55 ;:'c f f5 f6 t p'
+NB. Check handling of deeply nested boxes.
+NB. Nesting level.
+N =: 1e6 NB. Change to 1e1 to check that tests are correct.
+NB. Utils.
+arraytolist =: (0 $ 0)&(]F.:(,&<))
+listtoarray =: [: 0&{::"1@}: >@{:^:(0 < #)^:a:
+NB. 1) Check free.
+(-: listtoarray@arraytolist) ?@$~ N
+NB. 2) Check L. and free.
+(N;'stack error') e.~ < L. etx arraytolist i. N
+(0;'stack error') e.~ < N (> L.) etx arraytolist i. N
+NB. 3) Cont'd.
+((N+1);'stack error') e.~ < L. etx t =: (< arraytolist i. N) ({{ 3 ? N }} '')} <"0 i. N
+4!:55 < 't'
+NB. 4) Check L:, L. and free.
+((N+10);'stack error') e.~ < L.@:({{ arraytolist i. 10 }}L:0) etx arraytolist i. N
+NB. 5) Check S: and free.
+((,. ,&0 >: i. N);'stack error') e.~ < >:S:0 etx arraytolist i. N
+NB. 6) Display and free.
+('out of memory';'stack error') e.~ < ": etx <^:N a:
+
+
+
+
+4!:55 ;:'c f f5 f6 t p arraytolist listtoarray N'
 
 
 

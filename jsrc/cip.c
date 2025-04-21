@@ -965,7 +965,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     else {
       // Large problem - start up BLAS
       mvc(2*m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
-      zgemm_nn(m,n,p,zone,(dcomplex*)DAV(a),p,1,(dcomplex*)DAV(w),n,1,zzero,(dcomplex*)DAV(z),n,1);
+      zgemm_nn(m,n,p,(dcomplex*)&zone,(dcomplex*)DAV(a),p,1,(dcomplex*)DAV(w),n,1,(dcomplex*)&zzero,(dcomplex*)DAV(z),n,1);
     }
    }
    if(smallprob||NANTEST){Z c,*u,*v,*wv,*x,*zv;

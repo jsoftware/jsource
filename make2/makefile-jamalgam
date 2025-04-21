@@ -63,6 +63,7 @@ OBJS=  \
  gemm_int-avx.o \
  gemm_int-sse2.o \
  gemm_vec-ref.o \
+ cblas.o \
  c.o \
  ca.o \
  cc.o \

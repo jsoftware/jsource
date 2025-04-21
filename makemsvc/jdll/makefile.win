@@ -100,6 +100,7 @@ OBJS=  \
  ../../jsrc/blis/gemm_int-fma.o \
  ../../jsrc/blis/gemm_int-sse2.o \
  ../../jsrc/blis/gemm_vec-ref.o \
+ ../../jsrc/cblas.o \
  ../../jsrc/c.o \
  ../../jsrc/ca.o \
  ../../jsrc/cc.o \

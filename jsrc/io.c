@@ -274,6 +274,7 @@ Similarly, calls to external libraries MUST be preceded by a vzeroupper, to put 
 
 JS _Initializer(void*);
 extern void dllquit(JJ);
+extern void cblasinit(C*libpath);
 
 // flags in jt indicate whether display is suppressed.  p is the prompt, s is the text (whose length is m).  suppression of s happens when it is created;
 // here we control suppression of p; but we suppress all anyway
@@ -915,6 +916,7 @@ JS _Initializer(void* hDLL){
  if(!jtglobinit(jt)){jvmrelease(jt,sizeof(JST)); R 0;}
  dll_initialized=1;
  jvmrelease(jt,sizeof(JST)); //the jt block itself can be released; we effectively orphan any blocks pointed to thereby, because they are used by the globals we've just initialised
+ cblasinit(sopath); // cblas
  R jt;
 }
 

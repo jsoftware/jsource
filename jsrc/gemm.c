@@ -262,12 +262,11 @@ dgemm_macro_kernel(dim_t   mc,
     aligned_free( _C );
 }
 
-#ifndef __APPLE__
 //
 //  Compute C <- beta*C + alpha*A*B
 //
 void
-dgemm_nn         (I              m,
+dgemm_nnblis     (I              m,
                   I              n,
                   I              k,
                   double         alpha,
@@ -336,7 +335,6 @@ dgemm_nn         (I              m,
         }
     }
 }
-#endif
 
 
 // -----------------------------------------------------------------
@@ -451,7 +449,7 @@ ipack_B(dim_t kc, dim_t nc, const I *B, inc_t rs_b, inc_t cs_b, double *buffer)
 //  Compute C <- beta*C + alpha*A*B
 //
 void
-igemm_nn         (I              m,
+igemm_nnblis     (I              m,
                   I              n,
                   I              k,
                   I              alpha,
@@ -777,22 +775,21 @@ zgemm_macro_kernel(dim_t   mc,
     aligned_free( _C );
 }
 
-#ifndef __APPLE__
 //
 //  Compute C <- beta*C + alpha*A*B
 //
 void
-zgemm_nn         (I              m,
+zgemm_nnblis     (I              m,
                   I              n,
                   I              k,
-                  dcomplex       alpha,
+                  dcomplex       *palpha,
                   dcomplex       *A,
                   I              rs_a,
                   I              cs_a,
                   dcomplex       *B,
                   I              rs_b,
                   I              cs_b,
-                  dcomplex       beta,
+                  dcomplex       *pbeta,
                   dcomplex       *C,
                   I              rs_c,
                   I              cs_c)
@@ -805,6 +802,8 @@ zgemm_nn         (I              m,
     I _nc = n % NC;
     I _kc = k % KC;
 
+    dcomplex alpha=*palpha;
+    dcomplex beta=*pbeta;
     dcomplex _beta;
 
     if ((alpha.real==0.0 && alpha.imag==0.0) || k==0) {
@@ -851,4 +850,3 @@ zgemm_nn         (I              m,
         }
     }
 }
-#endif

@@ -930,6 +930,7 @@
     <ClCompile Include="..\..\jsrc\blis\gemm_int-fma.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_int-sse2.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_vec-ref.c" />
+    <ClCompile Include="..\..\jsrc\cblas.c" />
     <ClCompile Include="..\..\jsrc\c.c" />
     <ClCompile Include="..\..\jsrc\ca.c" />
     <ClCompile Include="..\..\jsrc\cc.c" />

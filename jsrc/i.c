@@ -11,6 +11,7 @@
 #include "j.h"
 #include "w.h"
 #include "cpuinfo.h"
+extern void *libcblas;
 
 #if SYS & SYS_FREEBSD
 #include <floatingpoint.h>
@@ -168,10 +169,17 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
  INITJT(jjt,implocref)[0] = fdef(0,CTILDE,VERB,jtvalenceerr,jtvalenceerr, uimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[0])=ACUC1;  //create 'u.'~, mark an not abandoned (no ra() needed)
  A vimp=ca(mnuvxynam[3]); NAV(vimp)->flag|=NMIMPLOC;
  INITJT(jjt,implocref)[1] = fdef(0,CTILDE,VERB,jtvalenceerr,jtvalenceerr, vimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[1])=ACUC1;  //create 'v.'~
-
+// fprintf(stderr,"libcblas %p \n",libcblas);
+#if defined(__APPLE__)
+ INITJT(jjt,igemm_thres)=FLOATTOFLOAT16((libcblas)?DCACHED_THRESn:IGEMM_THRES);   // tuning parameters for cip.c
+ INITJT(jjt,dgemm_thres)=FLOATTOFLOAT16((libcblas)?DCACHED_THRESn:DGEMM_THRES);
+ INITJT(jjt,zgemm_thres)=FLOATTOFLOAT16((libcblas)?DCACHED_THRESn:ZGEMM_THRES);
+#else
+// possibly non-optimized cblas
  INITJT(jjt,igemm_thres)=FLOATTOFLOAT16(IGEMM_THRES);   // tuning parameters for cip.c
  INITJT(jjt,dgemm_thres)=FLOATTOFLOAT16(DGEMM_THRES);
  INITJT(jjt,zgemm_thres)=FLOATTOFLOAT16(ZGEMM_THRES);
+#endif
  jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
  MTHREAD(jjt)->threadpoolno=-1; // the master thread is in no pool, ever

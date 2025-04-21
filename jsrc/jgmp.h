@@ -145,10 +145,10 @@ extern Q jtQmpq(J, mpq_t);
 
 #ifdef JGMPINIT
  /* context here is jgmpinit.c */
- #define EXTERN
+ #define GMPEXTERN
 #else
  /* context here is external references to jgmpinit.c */
- #define EXTERN extern
+ #define GMPEXTERN extern
 #endif
 
 #define FHRHISGMP 0x4000 // this block was allocated by GMP (goes in AFHRH(x))
@@ -258,19 +258,19 @@ extern Q jtQmpq(J, mpq_t);
 // make a temporary Q q (and mpq_t mp##q) copy of mpq_t mp##t
 #define MPQtemp(q,t) GEMP0; mpq_t mp##q; jmpq_init(mp##q); GEMP0; jmpq_set(mp##q,t); Q q= Qmp(q);
 
-EXTERN X X2;             //  2x internal form
-EXTERN X X1;             //  1x internal form
-EXTERN mpz_t mpX1;
-EXTERN X X0;             //  0x internal form
-EXTERN X X_1;            // _1x internal form
-// EXTERN A AX1;            // 1x as a rank 0 array
+GMPEXTERN X X2;             //  2x internal form
+GMPEXTERN X X1;             //  1x internal form
+GMPEXTERN mpz_t mpX1;
+GMPEXTERN X X0;             //  0x internal form
+GMPEXTERN X X_1;            // _1x internal form
+// GMPEXTERN A AX1;            // 1x as a rank 0 array
 
-EXTERN Q Q_;             // x: _   NB. 1r0 internal form
-EXTERN Q Q1;             // 1r1 internal form
-EXTERN Q Q1r2;           // 1r2 internal form
-EXTERN Q Q0;             // 0r1 internal form
-EXTERN Q Q_1;            // _1r1 internal form
-EXTERN Q Q__;            // x: __ NB. _1r0 internal form
+GMPEXTERN Q Q_;             // x: _   NB. 1r0 internal form
+GMPEXTERN Q Q1;             // 1r1 internal form
+GMPEXTERN Q Q1r2;           // 1r2 internal form
+GMPEXTERN Q Q0;             // 0r1 internal form
+GMPEXTERN Q Q_1;            // _1r1 internal form
+GMPEXTERN Q Q__;            // x: __ NB. _1r0 internal form
 
 // workalike for mpn_neg (could be better optimized)
 // see: https://gmplib.org/manual/Low_002dlevel-Functions
@@ -361,64 +361,64 @@ extern void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n);
 #define jmpz_sizeinbase __gmpz_sizeinbase    // https://gmplib.org/manual/Miscellaneous-Integer-Functions
 #define jmpz_sub __gmpz_sub                  // https://gmplib.org/manual/Integer-Arithmetic
 #else
-EXTERN mp_limb_t (*jmpn_add)(mp_limb_t *, const mp_limb_t *, mp_size_t, const mp_limb_t *, mp_size_t);
+GMPEXTERN mp_limb_t (*jmpn_add)(mp_limb_t *, const mp_limb_t *, mp_size_t, const mp_limb_t *, mp_size_t);
 #ifndef _WIN32
-EXTERN mp_limb_t (*jmpn_com)(mp_limb_t *, const mp_limb_t *, mp_size_t);
+GMPEXTERN mp_limb_t (*jmpn_com)(mp_limb_t *, const mp_limb_t *, mp_size_t);
 #endif
-EXTERN mp_limb_t (*jmpn_sub)(mp_limb_t *, const mp_limb_t *, mp_size_t, const mp_limb_t *, mp_size_t);
-EXTERN void (*jmpq_add)(mpq_t, const mpq_t, const mpq_t);
-EXTERN void (*jmpq_clear)(mpq_t);
-EXTERN int  (*jmpq_cmp)(const mpq_t, const mpq_t);
-EXTERN int  (*jmpq_cmp_z)(const mpq_t, const mpz_t);
-EXTERN void (*jmpq_div)(mpq_t, const mpq_t, const mpq_t);
-EXTERN D    (*jmpq_get_d)(const mpq_t);
-EXTERN C*   (*jmpq_get_str)(C*, int, const mpq_t);
-EXTERN void (*jmpq_init)(mpq_t);
-EXTERN void (*jmpq_out_str)(FILE*,int,const mpq_t); // for debugging
-EXTERN void (*jmpq_mul)(mpq_t, const mpq_t, const mpq_t);
-EXTERN void (*jmpq_set)(mpq_t, const mpq_t);
-EXTERN void (*jmpq_set_d)(mpq_t, const double);
-EXTERN void (*jmpq_sub)(mpq_t, const mpq_t, const mpq_t);
-EXTERN void (*jmpz_abs)(mpz_t, const mpz_t);
-EXTERN void (*jmpz_add)(mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_add_ui)(mpz_t, const mpz_t, mpir_ui);
-EXTERN void (*jmpz_bin_ui)(mpz_t, const mpz_t, mpir_ui);
-EXTERN void (*jmpz_cdiv_q)(mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_clear)(mpz_t);
-EXTERN int  (*jmpz_cmp)(const mpz_t, const mpz_t);
-EXTERN int  (*jmpz_cmpabs_ui)(const mpz_t, mpir_ui);
-EXTERN int  (*jmpz_cmp_si)(const mpz_t, mpir_si);
-EXTERN void (*jmpz_fac_ui)(mpz_t, mpir_ui);
-EXTERN void (*jmpz_fdiv_q)(mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_fdiv_qr)(mpz_t, mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_fdiv_qr_ui)(mpz_t, mpz_t, const mpz_t, mpir_ui);
-EXTERN void (*jmpz_fdiv_r)(mpz_t, const mpz_t, const mpz_t);
-EXTERN int  (*jmpz_fits_slong_p)(const mpz_t);
-EXTERN void (*jmpz_gcd)(mpz_t, const mpz_t, const mpz_t);
-EXTERN D    (*jmpz_get_d)(const mpz_t);
-EXTERN D    (*jmpz_get_d_2exp)(long int*, const mpz_t);
-EXTERN C*   (*jmpz_get_str)(C*, int, const mpz_t);
-EXTERN mpir_si(*jmpz_get_si)(const mpz_t);
-EXTERN void (*jmpz_init)(mpz_t);
-EXTERN void (*jmpz_init_set_d)(mpz_t, D); /* probably not used: see jtXfromD */
-EXTERN int  (*jmpz_init_set_str)(mpz_t, C*, int);
-EXTERN void (*jmpz_init_set_si)(mpz_t, mpir_si);
-EXTERN int  (*jmpz_invert)(mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_lcm)(mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_mod)(mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_mul)(mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_neg)(mpz_t, const mpz_t);
-EXTERN void (*jmpz_out_str)(FILE*,int,const mpz_t); // for debugging
-EXTERN void (*jmpz_powm)(mpz_t, const mpz_t, const mpz_t, const mpz_t);
-EXTERN void (*jmpz_pow_ui)(mpz_t, const mpz_t, mpir_ui);
-EXTERN int  (*jmpz_probab_prime_p)(const mpz_t,int);
-EXTERN void (*jmpz_ui_pow_ui)(mpz_t, mpir_ui, mpir_ui);
-EXTERN int  (*jmpz_root)(mpz_t, const mpz_t, mpir_ui);
-EXTERN void (*jmpz_set)(mpz_t, const mpz_t);
-EXTERN void (*jmpz_set_d)(mpz_t, const double);
-// not used EXTERN void (*jmpz_set_si)(mpz_t, mpir_si);
-EXTERN size_t(*jmpz_sizeinbase)(const mpz_t, int);
-EXTERN void (*jmpz_sub)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN mp_limb_t (*jmpn_sub)(mp_limb_t *, const mp_limb_t *, mp_size_t, const mp_limb_t *, mp_size_t);
+GMPEXTERN void (*jmpq_add)(mpq_t, const mpq_t, const mpq_t);
+GMPEXTERN void (*jmpq_clear)(mpq_t);
+GMPEXTERN int  (*jmpq_cmp)(const mpq_t, const mpq_t);
+GMPEXTERN int  (*jmpq_cmp_z)(const mpq_t, const mpz_t);
+GMPEXTERN void (*jmpq_div)(mpq_t, const mpq_t, const mpq_t);
+GMPEXTERN D    (*jmpq_get_d)(const mpq_t);
+GMPEXTERN C*   (*jmpq_get_str)(C*, int, const mpq_t);
+GMPEXTERN void (*jmpq_init)(mpq_t);
+GMPEXTERN void (*jmpq_out_str)(FILE*,int,const mpq_t); // for debugging
+GMPEXTERN void (*jmpq_mul)(mpq_t, const mpq_t, const mpq_t);
+GMPEXTERN void (*jmpq_set)(mpq_t, const mpq_t);
+GMPEXTERN void (*jmpq_set_d)(mpq_t, const double);
+GMPEXTERN void (*jmpq_sub)(mpq_t, const mpq_t, const mpq_t);
+GMPEXTERN void (*jmpz_abs)(mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_add)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_add_ui)(mpz_t, const mpz_t, mpir_ui);
+GMPEXTERN void (*jmpz_bin_ui)(mpz_t, const mpz_t, mpir_ui);
+GMPEXTERN void (*jmpz_cdiv_q)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_clear)(mpz_t);
+GMPEXTERN int  (*jmpz_cmp)(const mpz_t, const mpz_t);
+GMPEXTERN int  (*jmpz_cmpabs_ui)(const mpz_t, mpir_ui);
+GMPEXTERN int  (*jmpz_cmp_si)(const mpz_t, mpir_si);
+GMPEXTERN void (*jmpz_fac_ui)(mpz_t, mpir_ui);
+GMPEXTERN void (*jmpz_fdiv_q)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_fdiv_qr)(mpz_t, mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_fdiv_qr_ui)(mpz_t, mpz_t, const mpz_t, mpir_ui);
+GMPEXTERN void (*jmpz_fdiv_r)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN int  (*jmpz_fits_slong_p)(const mpz_t);
+GMPEXTERN void (*jmpz_gcd)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN D    (*jmpz_get_d)(const mpz_t);
+GMPEXTERN D    (*jmpz_get_d_2exp)(long int*, const mpz_t);
+GMPEXTERN C*   (*jmpz_get_str)(C*, int, const mpz_t);
+GMPEXTERN mpir_si(*jmpz_get_si)(const mpz_t);
+GMPEXTERN void (*jmpz_init)(mpz_t);
+GMPEXTERN void (*jmpz_init_set_d)(mpz_t, D); /* probably not used: see jtXfromD */
+GMPEXTERN int  (*jmpz_init_set_str)(mpz_t, C*, int);
+GMPEXTERN void (*jmpz_init_set_si)(mpz_t, mpir_si);
+GMPEXTERN int  (*jmpz_invert)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_lcm)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_mod)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_mul)(mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_neg)(mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_out_str)(FILE*,int,const mpz_t); // for debugging
+GMPEXTERN void (*jmpz_powm)(mpz_t, const mpz_t, const mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_pow_ui)(mpz_t, const mpz_t, mpir_ui);
+GMPEXTERN int  (*jmpz_probab_prime_p)(const mpz_t,int);
+GMPEXTERN void (*jmpz_ui_pow_ui)(mpz_t, mpir_ui, mpir_ui);
+GMPEXTERN int  (*jmpz_root)(mpz_t, const mpz_t, mpir_ui);
+GMPEXTERN void (*jmpz_set)(mpz_t, const mpz_t);
+GMPEXTERN void (*jmpz_set_d)(mpz_t, const double);
+// not used GMPEXTERN void (*jmpz_set_si)(mpz_t, mpir_si);
+GMPEXTERN size_t(*jmpz_sizeinbase)(const mpz_t, int);
+GMPEXTERN void (*jmpz_sub)(mpz_t, const mpz_t, const mpz_t);
 #endif
 
 // for freeing C* results from libgmp
@@ -573,9 +573,9 @@ extern void jfree4gmp(void*, size_t);
 #define GMPMAXSZ (1<<20)       // allowed #bytes for exponential contexts
 #define GMPMAXBITS (GMPMAXSZ*8) // corresponding #bits
 #define GEMPSIZE (GMPMAXSZ<<6) // corresponding emergency pool size
-EXTERN C gempool[GEMPSIZE];    // the pool itself
-EXTERN C*gemptr;               // next available location in the pool
-EXTERN I gempwsfull;           // non-zero when pool is occupied
+GMPEXTERN C gempool[GEMPSIZE];    // the pool itself
+GMPEXTERN C*gemptr;               // next available location in the pool
+GMPEXTERN I gempwsfull;           // non-zero when pool is occupied
 
 #define INGEMP(pointer) unlikely(pointer >= gempool && pointer < gempool+GEMPSIZE)
 #define GEMPWSFULL unlikely(__atomic_load_n(&gempwsfull, __ATOMIC_SEQ_CST))
@@ -586,4 +586,4 @@ EXTERN I gempwsfull;           // non-zero when pool is occupied
 #define GEMPq(value) GEMPcommon(value, jmpq_clear)
 /* ------------------------------------------------- */
 
-#undef EXTERN
+#undef GMPEXTERN

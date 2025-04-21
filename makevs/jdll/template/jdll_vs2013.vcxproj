@@ -812,6 +812,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\jsrc\a.c" />
     <ClCompile Include="..\..\jsrc\ab.c" />
+    <ClCompile Include="..\..\jsrc\aes-asm.c" />
     <ClCompile Include="..\..\jsrc\aes-c.c" />
     <ClCompile Include="..\..\jsrc\aes-ni.c" />
     <ClCompile Include="..\..\jsrc\aes-sse2.c" />
@@ -831,6 +832,7 @@
     <ClCompile Include="..\..\jsrc\blis\gemm_int-fma.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_int-sse2.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_vec-ref.c" />
+    <ClCompile Include="..\..\jsrc\cblas.c" />
     <ClCompile Include="..\..\jsrc\c.c" />
     <ClCompile Include="..\..\jsrc\ca.c" />
     <ClCompile Include="..\..\jsrc\cc.c" />
@@ -865,6 +867,7 @@
     <ClCompile Include="..\..\dllsrc\jdll.c" />
     <ClCompile Include="..\..\dllsrc\jdllcomx.cpp" />
     <ClCompile Include="..\..\jsrc\jdlllic.c" />
+    <ClCompile Include="..\..\jsrc\jgmpinit.c" />
     <ClCompile Include="..\..\jsrc\k.c" />
     <ClCompile Include="..\..\jsrc\m.c" />
     <ClCompile Include="..\..\jsrc\mbx.c" />
@@ -972,6 +975,8 @@
     <ClCompile Include="..\..\jsrc\openssl\sha\sha256.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\sha3.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\sha512.c" />
+    <ClCompile Include="..\..\jsrc\utf\utf16le_to_utf8_avx512i.c" />
+    <ClCompile Include="..\..\jsrc\utf\utf8_to_utf16le_avx512i.c" />
     <ClCompile Include="..\..\sleef\src\common\arraymap.c" />
     <ClCompile Include="..\..\sleef\src\common\common.c" />
     <ClCompile Include="..\..\sleef\src\libm\rempitab.c" />

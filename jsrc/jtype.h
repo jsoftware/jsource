@@ -1019,19 +1019,19 @@ typedef struct{
 //   0 if chain index not known or name is a locative
  UI4 hash;  // hash for non-locale part of name
  UC m; // length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)  scaf should move to second cacheline
- C flag; //  flags for name
+ C flag; //  flags for name (see below)
  C s[1];  // string part of full name (1 to ?? characters, including locale of assignment if given) up to 34 chars fit in a 128B allo
 } NM;
 
-// values in flag:
-#define NMLOC           1       // direct   locale abc_lm_   only one of NMLOC/NMILOC/NMIMPLOC is set
+// values in flag.  These are set at creation and not modified, & thus threadsafe
+#define NMLOC           1       // direct   locative abc_lm_   only one of NMLOC/NMILOC/NMIMPLOC is set
+#define NMILOC          2       // indirect locative abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMSHAREDX    2
 #define NMSHARED     (1LL<<NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
-#define NMILOC          2       // indirect locale abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
-#define NMDOT           128       // one of the names m n u v x y, which originally carried a . inflection 
 #define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
 #define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup
+#define NMMNUVXY           128       // one of the names m n u v x y
 
 
 // ************************ sparse-array header ************************

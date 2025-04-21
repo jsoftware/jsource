@@ -1058,7 +1058,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    t=QCWORD(lv[j]=jtcalclocalbuckets(jt,&lv[j],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,0));  // install bucket info into name
    // if the name is not shared, it is not a simple local name.
    // If it is also not indirect or mnuvxy, it is eligible for caching - if that is enabled
-   if(jt->namecaching & !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC|NMSHARED)))NAV(t)->flag|=NMCACHED;
+   if(jt->namecaching & !(NAV(t)->flag&(NMILOC|NMMNUVXY|NMIMPLOC|NMSHARED)))NAV(t)->flag|=NMCACHED;
   }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
    A *tv=AAV(t); DO(AN(t), tv[i]=QCWORD(jtcalclocalbuckets(jt,&tv[i],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,AFLAG(t)&BOX));)  // calculate details about the boxed names.  Remove flags in strings
   }

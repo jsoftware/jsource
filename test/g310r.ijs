@@ -222,6 +222,37 @@ s aa
 )
 15 225 100 226 226 101 -: f''  NB. The returns from a all get fixed, but only at lowest level
 
+NB. locative operator has a reference that acts like a locative
+4!:55 <'aa'
+cocurrent 'base'
+aa_xxx_ =: {{ (u y) ; coname'' }}
+(10;'xxx') -: +: aa_xxx_ 5
+
+NB. nonlocative or anonymous operator does not restore locale
+aa_z_ =: {{ u ] coname'' [ cocurrent y }}
+('yyy';'yyy') -: (coname '') , ] 0 aa 'yyy' 
+cocurrent 'base'
+('base';'yyy') -: (coname '') , ] 0 aa_z_ 'yyy'   NB. This is not locative & thus restores
+cocurrent 'base'
+('yyy';'yyy') -: (coname '') , ] 0 {{ u ] coname'' [ cocurrent y }} 'yyy' 
+cocurrent 'base'
+
+NB. Same works when PM is on, creating debug namerefs
+1: 6!:10 ] 1e5 $ ' '
+aa_xxx_ =: {{ (u y) ; coname'' }}
+(10;'xxx') -: +: aa_xxx_ 5
+aa_z_ =: {{ u ] coname'' [ cocurrent y }}
+('yyy';'yyy') -: (coname '') , ] 0 aa 'yyy' 
+cocurrent 'base'
+('base';'yyy') -: (coname '') , ] 0 aa_z_ 'yyy' 
+cocurrent 'base'
+('yyy';'yyy') -: (coname '') , ] 0 {{ u ] coname'' [ cocurrent y }} 'yyy' 
+cocurrent 'base'
+1: 6!:10 ''
+
+4!:55 ;:'aa_z_ aa_xxx_'
+
+
 NB. Returns
 5 -: 10 + (2 : 'u. v.') - 5
 _5 -: 10 + (2 : '(u.~ v.)~') - 5

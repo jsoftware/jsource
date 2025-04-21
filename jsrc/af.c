@@ -30,7 +30,7 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
 // See if there are references to implicit locatives.  Return 1 if so, 0 if not
 B jthasimploc(J jt,A w){A hs,*u;V*v;
  ARGCHK1(w);
- if(AT(w)&NOUN+NAME)R 0;
+ if(AT(w)&NOUN+NAME+SYMB)R 0;
  v=FAV(w);
  switch(v->id){
  default:     

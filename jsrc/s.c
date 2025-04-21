@@ -312,7 +312,7 @@ A probelocalbuckets(L *sympv,A a,LX lx,I bx){NM*u;   // lx is LXAV0(locsyms)[buc
 // Use buckets if present
 A jtprobelocal(L *symorigin,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
- ARGCHK1(a);u=NAV(a);  // u->NM block
+ RZ(a);u=NAV(a);  // u->NM block
  if(likely((b = u->bucket)>0)){  // if there is bucket info, use it
   R probelocalbuckets(symorigin,a,LXAV0(locsyms)[b],u->bucketx);  // look up using bucket info
  }else{

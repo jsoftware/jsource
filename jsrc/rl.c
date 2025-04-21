@@ -369,7 +369,7 @@ static DF1X(jtlrr){F12JT;A hs,t,*tv;C id;I fl,m;V*v;
  if(fl&VXOPCALL)R lrr(hs);   // pseudo-named entity created during debug of operator.  The defn is in h
  m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLONE&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
  if(!m)R lsymb(id,w);  // if none, it's a primitive, out it
- if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
+ if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMMNUVXY, in which case use the (f.'d) verb value
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLONE)R jtlcolon(jtfg,w,ltext);  // x : with boxed h - must be explicit defn, for which we might suppress a valence
  // display of a single valence applies only to an explicit definition.  It wouldn't be a bad idea for others, but that would require inspecting the op to see
  // which valences are active on each side.  For the nonce we display everything

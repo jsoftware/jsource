@@ -154,7 +154,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     if(e==CASGN && (env==1 || (i && AT(QCWORD(x[-1]))&NAME && (NAV(QCWORD(x[-1]))->flag&(NMLOC|NMILOC))))){y=asgnforceglo;}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.
     if(i&& AT(QCWORD(x[-1]))&NAME){y= y==asgnforceglo?asgnforcegloname:y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
    }
-   if(AT(y)&NAME&&(NAV(y)->flag&NMDOT)){RZ(y=ca(y));}     // mnuvxy must be cloned because each definition has its own symbol info
+   if(AT(y)&NAME&&(NAV(y)->flag&NMMNUVXY)){RZ(y=ca(y));}     // mnuvxy must be cloned because each definition has its own symbol info
    *x=y;   // install the value
   } else if(e==CFCONS){RZ(*x=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
   } else {

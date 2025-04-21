@@ -278,7 +278,7 @@ foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNE
    }
    // if the name is not shared, it is not a simple local name.
    // If it is also not indirect or mnuvxy, it is eligible for caching - if that is enabled
-   if(QCPTYPE(wv[i])!=QCNAMEASSIGNED && (jt->namecaching & !(NAV(QCWORD(wv[i]))->flag&(NMILOC|NMDOT|NMIMPLOC|NMSHARED))))NAV(QCWORD(wv[i]))->flag|=NMCACHED;
+   if(QCPTYPE(wv[i])!=QCNAMEASSIGNED && (jt->namecaching & !(NAV(QCWORD(wv[i]))->flag&(NMILOC|NMMNUVXY|NMIMPLOC|NMSHARED))))NAV(QCWORD(wv[i]))->flag|=NMCACHED;
   }
  }
  STACKCHKOFL  // in case the sentence calls 6!:2 again, break the loop

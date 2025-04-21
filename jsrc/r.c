@@ -15,7 +15,7 @@ static F1(jtdrr){F12IP;PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
  // If noun, return the value of the noun.
  if(AT(w)&NOUN)R w;  // no quotes needed
- // Non-nouns and NMDOT names carry on.  Any modifiers must be primitive
+ // Non-nouns and NMMNUVXY names carry on.  Any modifiers must be primitive
  v=FAV(w); id=v->id; fl=v->flag;
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R drr(gs);  // if <@:t. discard the <@:
@@ -57,7 +57,7 @@ F1(jtaro){F12IP;A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   ex=hs&&id==CCOLONE&&!xop;   // ex = this is a non-operator explicit defn
   m=BETWEENC(id,CFORK,CADVF)&&hs?3:!!fs+(ex||xop&&hs||!xop&&gs);  // number of components: if invisible, 2 or 3; otherwise count f g h
   if(!m)R spella(w);
-  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w)){A wi=w; if(wi==(w=aro(w)))ASSERT(0,EVVALUE)} R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
+  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w)){A wi=w; if(wi==(w=aro(w)))ASSERT(0,EVVALUE)} R w;}  // keep nameref as a string, UNLESS it is NMMNUVXY, in which case use the (f.'d) verb value
      // taking AR of undefined uv results in an infinite loop.  We break it here, with an error
  }
  GAT0(z,BOX,2,1); x=AAV1(z);

@@ -224,5 +224,5 @@ void cblasinit(C*libpath) {
 //   jcblasfn1(cblas_zher2k)
 //   jcblasfn1(cblas_xerbla)
  }
- libcblas= (void*)!!libcblas;
+ libcblas= (void*)(intptr_t)!!libcblas;
 }

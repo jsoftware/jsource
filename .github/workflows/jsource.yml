@@ -387,7 +387,7 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2 libedit openblas
+       pkg_add curl zip gfind gmake nasm pcre2 libedit openblas
 
       run: |
        rm -f jobdone
@@ -459,7 +459,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg_add curl zip gfind gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
        gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
@@ -592,7 +592,7 @@ jobs:
       prepare: |
        sudo pkg upgrade -y
        rdate time.cloudflare.com || true
-       pkg install -y curl zip gmake nasm pcre2 libedit openblas
+       pkg install -y curl zip gfind gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
 
       run: |
@@ -666,7 +666,7 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg install -y curl zip gfind gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
        gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
@@ -736,7 +736,7 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg install -y curl zip gfind gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
        gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/

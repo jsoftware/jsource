@@ -16,6 +16,7 @@
 #include "cpuinfo.h"
 
 void*libcblas=0;
+char hascblas=0;
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
@@ -61,8 +62,11 @@ void cblasinit(C*libpath) {
 #elif defined(_WIN32)
  if(libpath&&*libpath){
   strcpy(dllpath,libpath);strcat(dllpath,"\\");strcat(dllpath,LIBCBLASNAME);
-  if(!(libcblas= LoadLibraryA(dllpath)))  /* first try current directory */
-  libcblas= LoadLibraryA(LIBCBLASNAME);
+  if(!(libcblas= LoadLibraryA(dllpath))){  /* first try current directory */
+   strcpy(dllpath,libpath);strcat(dllpath,"\\..\\addons\\math\\lapack2\\lib\\");strcat(dllpath,LIBCBLASNAME);
+   if(!(libcblas= LoadLibraryA(dllpath)))  /* lapack2 addon lib folder */
+    libcblas= LoadLibraryA(LIBCBLASNAME);
+  }
  } else libcblas= LoadLibraryA(LIBCBLASNAME);
  if(libcblas && !GetProcAddress(libcblas,"cblas_dgemm")){   /* check cblas routine */
   FreeLibrary(libcblas); libcblas= 0;
@@ -233,5 +237,5 @@ void cblasinit(C*libpath) {
 //   jcblasfn1(cblas_zher2k)
 //   jcblasfn1(cblas_xerbla)
  }
- libcblas= (void*)(intptr_t)!!libcblas;
+ hascblas= !!libcblas;
 }

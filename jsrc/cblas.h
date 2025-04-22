@@ -750,6 +750,7 @@ CBLASEXTERN void (*jcblas_xerbla)(int p, const char *rout, const char *form, ...
 #undef CBLASEXTERN
 
 extern void*libcblas;
+extern char hascblas;
 
 #ifdef __cplusplus
 }

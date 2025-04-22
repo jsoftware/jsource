@@ -38,7 +38,7 @@ void*libcblas=0;
 
 #ifdef _WIN32
 static void dldiag(){}
-#define jcblasfn1(fn) j##fn= GetProcAddress(libcblas,"_"#fn); if(!(j##fn)){fprintf(stderr,"%s\n","error loading "#fn);};
+#define jcblasfn1(fn) j##fn= GetProcAddress(libcblas,""#fn); if(!(j##fn)){fprintf(stderr,"%s\n","error loading "#fn);};
 #elif defined(__wasm__)
 static void dldiag(){}
 #define jcblasfn1(fn)

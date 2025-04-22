@@ -18,10 +18,19 @@
 void*libcblas=0;
 
 #if defined(__APPLE__)
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE||TARGET_OS_IOS||TARGET_OS_TV||TARGET_OS_WATCH||TARGET_OS_SIMULATOR||TARGET_OS_EMBEDDED||TARGET_IPHONE_SIMULATOR
+#define LIBCBLASNAME "/System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.framework/vecLib"
+#else
 #define LIBCBLASNAME "/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/vecLib"
+#endif
 #elif defined(_WIN32)
+#if defined(_WIN64)
 #define LIBCBLASNAME "libopenblas.dll"
-#elif defined(ANDROID)
+#else
+#define LIBCBLASNAME "libopenblas_32.dll"
+#endif
+#elif defined(ANDROID) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #define LIBCBLASNAME "liblapack.so"
 #else
 #define LIBCBLASNAME "liblapack.so.3"

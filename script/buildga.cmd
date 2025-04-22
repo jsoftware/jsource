@@ -18,7 +18,7 @@ copy bin\profile.ijs j64
 copy pthreads4w\bin\pthreadVC3.dll j64
 copy mpir\windows\x64\mpir.dll j64
 copy pcre2\windows\x64\jpcre2.dll tools\regex\.
-curl --output-dir "j64" -O -S "https://www.jsoftware.com/download/lapackbin/libopenbas.dll"
+curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
 GOTO L01C
 :L01A
 mkdir j32
@@ -26,7 +26,7 @@ copy bin\profile.ijs j32
 copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3.dll
 copy mpir\windows\x86\mpir.dll j32
 copy pcre2\windows\x86\jpcre2.dll tools\regex\.
-curl --output-dir "j32" -O -S "https://www.jsoftware.com/download/lapackbin/libopenbas_32.dll"
+curl --output-dir "j32" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
 GOTO L01C
 :L01B
 mkdir jarm64

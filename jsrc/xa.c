@@ -661,9 +661,9 @@ OPENSSL_setcap();
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
 #endif
  if(k){
- if     (!strcasecmp(CAV(w),"CBLAS"   ))  libcblas=1;
+ if     (!strcasecmp(CAV(w),"CBLAS"   ))  libcblas=(void*)1;
  }else{
- if     (!strcasecmp(CAV(w),"CBLAS"   ))  libcblas=0;
+ if     (!strcasecmp(CAV(w),"CBLAS"   ))  libcblas=(void*)0;
  }
 R mtm;
 }

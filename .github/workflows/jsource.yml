@@ -387,11 +387,12 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2 libedit
+       pkg_add curl zip gmake nasm pcre2 libedit openblas
 
       run: |
        rm -f jobdone
        /sbin/ldconfig -r
+       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
        ls -al ~/.ssh
        echo "Host *" >>~/.ssh/config || true
@@ -458,8 +459,9 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2 libedit
+       sudo pkg_add curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
+       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -527,8 +529,9 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2 libedit
+       sudo pkg_add curl zip gmake gmp pcre2 libedit openblas
        /sbin/ldconfig -r
+       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -593,9 +596,9 @@ jobs:
        /sbin/ldconfig -r
 
       run: |
-       find / -type f -name 'liblapack.so*' 2 > /dev/null
        rm -f jobdone
        /sbin/ldconfig -r
+       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
        ls -al ~/.ssh
        echo "Host *" >>~/.ssh/config || true
@@ -665,7 +668,7 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
-       find / -type f -name 'liblapack.so*' 2 > /dev/null
+       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -735,7 +738,7 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
-       find / -type f -name 'liblapack.so*' 2 > /dev/null
+       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true

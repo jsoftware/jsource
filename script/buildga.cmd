@@ -17,21 +17,23 @@ mkdir j64
 copy bin\profile.ijs j64
 copy pthreads4w\bin\pthreadVC3.dll j64
 copy mpir\windows\x64\mpir.dll j64
-copy pcre2\windows\x64\jpcre2.dll tools/regex/.
+copy pcre2\windows\x64\jpcre2.dll tools\regex\.
+curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
 GOTO L01C
 :L01A
 mkdir j32
 copy bin\profile.ijs j32
 copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3.dll
 copy mpir\windows\x86\mpir.dll j32
-copy pcre2\windows\x86\jpcre2.dll tools/regex/.
+copy pcre2\windows\x86\jpcre2.dll tools\regex\.
+curl --output-dir "j32" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
 GOTO L01C
 :L01B
 mkdir jarm64
 copy bin\profile.ijs jarm64
 copy pthreads4w\bin\pthreadVC3-arm64.dll jarm64\pthreadVC3.dll
 copy mpir\windows\arm64\mpir.dll jarm64
-copy pcre2\windows\arm64\jpcre2.dll tools/regex/.
+copy pcre2\windows\arm64\jpcre2.dll tools\regex\.
 :L01C
 
 copy version.txt jsrc\jversion.h

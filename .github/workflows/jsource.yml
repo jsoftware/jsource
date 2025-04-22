@@ -261,7 +261,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip
+       apt-get install --no-install-recommends -y clang zip libopenblas0
        export CC=clang
        export USE_SLEEF=1
        script/buildga.sh raspberry || exit 1
@@ -387,7 +387,7 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2 libedit
+       pkg_add curl zip gmake nasm pcre2 libedit openblas
 
       run: |
        rm -f jobdone
@@ -458,7 +458,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2 libedit
+       sudo pkg_add curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -527,7 +527,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2 libedit
+       sudo pkg_add curl zip gmake gmp pcre2 libedit openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -589,7 +589,8 @@ jobs:
       prepare: |
        sudo pkg upgrade -y
        rdate time.cloudflare.com || true
-       pkg install -y curl zip gmake nasm pcre2 libedit
+       pkg install -y curl zip find gmake nasm pcre2 libedit openblas
+       /sbin/ldconfig -r
 
       run: |
        rm -f jobdone
@@ -661,7 +662,7 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit
+       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -730,7 +731,7 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit
+       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh

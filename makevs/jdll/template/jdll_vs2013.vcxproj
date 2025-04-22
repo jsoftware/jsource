@@ -812,6 +812,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\jsrc\a.c" />
     <ClCompile Include="..\..\jsrc\ab.c" />
+    <ClCompile Include="..\..\jsrc\aes-asm.c" />
     <ClCompile Include="..\..\jsrc\aes-c.c" />
     <ClCompile Include="..\..\jsrc\aes-ni.c" />
     <ClCompile Include="..\..\jsrc\aes-sse2.c" />
@@ -831,6 +832,7 @@
     <ClCompile Include="..\..\jsrc\blis\gemm_int-fma.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_int-sse2.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_vec-ref.c" />
+    <ClCompile Include="..\..\jsrc\cblas.c" />
     <ClCompile Include="..\..\jsrc\c.c" />
     <ClCompile Include="..\..\jsrc\ca.c" />
     <ClCompile Include="..\..\jsrc\cc.c" />
@@ -865,6 +867,7 @@
     <ClCompile Include="..\..\dllsrc\jdll.c" />
     <ClCompile Include="..\..\dllsrc\jdllcomx.cpp" />
     <ClCompile Include="..\..\jsrc\jdlllic.c" />
+    <ClCompile Include="..\..\jsrc\jgmpinit.c" />
     <ClCompile Include="..\..\jsrc\k.c" />
     <ClCompile Include="..\..\jsrc\m.c" />
     <ClCompile Include="..\..\jsrc\mbx.c" />
@@ -972,6 +975,8 @@
     <ClCompile Include="..\..\jsrc\openssl\sha\sha256.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\sha3.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\sha512.c" />
+    <ClCompile Include="..\..\jsrc\utf\utf16le_to_utf8_avx512i.c" />
+    <ClCompile Include="..\..\jsrc\utf\utf8_to_utf16le_avx512i.c" />
     <ClCompile Include="..\..\sleef\src\common\arraymap.c" />
     <ClCompile Include="..\..\sleef\src\common\common.c" />
     <ClCompile Include="..\..\sleef\src\libm\rempitab.c" />
@@ -1014,27 +1019,61 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\jsrc\a.h" />
+    <ClInclude Include="..\..\jsrc\aes-arm_table.h" />
+    <ClInclude Include="..\..\jsrc\aes-c.h" />
+    <ClInclude Include="..\..\jsrc\ar.h" />
+    <ClInclude Include="..\..\jsrc\avx2intrin-emu.h" />
+    <ClInclude Include="..\..\jsrc\avxintrin-emu.h" />
+    <ClInclude Include="..\..\jsrc\avxintrin-neon.h" />
+    <ClInclude Include="..\..\jsrc\blis.h" />
+    <ClInclude Include="..\..\jsrc\cblas.h" />
+    <ClInclude Include="..\..\jsrc\cip_t.h" />
+    <ClInclude Include="..\..\jsrc\cpuinfo.h" />
+    <ClInclude Include="..\..\jsrc\cr_t.h" />
+    <ClInclude Include="..\..\jsrc\crc32c.h" />
+    <ClInclude Include="..\..\jsrc\crc32ctables.h" />
     <ClInclude Include="..\..\jsrc\d.h" />
-    <ClInclude Include="..\..\jsrc\dd.h" />
-    <ClInclude Include="..\..\jsrc\jversion.h" />
+    <ClInclude Include="..\..\jsrc\dtoa.h" />
+    <ClInclude Include="..\..\jsrc\fnmatch.h" />
+    <ClInclude Include="..\..\jsrc\gemm.h" />
     <ClInclude Include="..\..\jsrc\j.h" />
+    <ClInclude Include="..\..\jsrc\ja.h" />
     <ClInclude Include="..\..\jsrc\jc.h" />
     <ClInclude Include="..\..\jsrc\je.h" />
     <ClInclude Include="..\..\jsrc\jerr.h" />
+    <ClInclude Include="..\..\jsrc\jfex.h" />
+    <ClInclude Include="..\..\jsrc\jgmp.h" />
+    <ClInclude Include="..\..\jsrc\jlib.h" />
+    <ClInclude Include="..\..\jsrc\jr0.h" />
     <ClInclude Include="..\..\jsrc\js.h" />
     <ClInclude Include="..\..\jsrc\jt.h" />
     <ClInclude Include="..\..\jsrc\jtype.h" />
+    <ClInclude Include="..\..\jsrc\jversion.h" />
     <ClInclude Include="..\..\jsrc\m.h" />
+    <ClInclude Include="..\..\jsrc\mt.h" />
     <ClInclude Include="..\..\jsrc\p.h" />
     <ClInclude Include="..\..\jsrc\result.h" />
+    <ClInclude Include="..\..\jsrc\s.h" />
+    <ClInclude Include="..\..\jsrc\sse2neon.h" />
+    <ClInclude Include="..\..\jsrc\sse2neon2.h" />
     <ClInclude Include="..\..\jsrc\va.h" />
     <ClInclude Include="..\..\jsrc\vasm.h" />
+    <ClInclude Include="..\..\jsrc\vcomp.h" />
+    <ClInclude Include="..\..\jsrc\vdx.h" />
     <ClInclude Include="..\..\jsrc\ve.h" />
+    <ClInclude Include="..\..\jsrc\vg.h" />
+    <ClInclude Include="..\..\jsrc\vgmerge.h" />
+    <ClInclude Include="..\..\jsrc\vgmergemincomp.h" />
     <ClInclude Include="..\..\jsrc\vgsort.h" />
+    <ClInclude Include="..\..\jsrc\vgsortq.h" />
+    <ClInclude Include="..\..\jsrc\viavx.h" />
+    <ClInclude Include="..\..\jsrc\viavx1.h" />
+    <ClInclude Include="..\..\jsrc\vq.h" />
     <ClInclude Include="..\..\jsrc\vx.h" />
     <ClInclude Include="..\..\jsrc\vz.h" />
     <ClInclude Include="..\..\jsrc\w.h" />
     <ClInclude Include="..\..\jsrc\x.h" />
+    <ClInclude Include="..\..\jsrc\xc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

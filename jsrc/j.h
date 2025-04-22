@@ -878,10 +878,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define xchga(p,n) __atomic_exchange_n(p,n,__ATOMIC_ACQ_REL)
 
 // Tuning options for cip.c
+#define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
+#define DCACHED_THRESn  (24*24*24)    // when m*n*p less than this, don't even look for multithreads; use blocked
 #if defined(__aarch64__) || defined(__APPLE__)
-#define IGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS
-#define DGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
-#define ZGEMM_THRES  (0)     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
+#define IGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
+#define ZGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
 #elif ((C_AVX2 || EMU_AVX2) && PYXES) || !defined(_OPENMP)
 #define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
@@ -893,12 +895,16 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
 #else
 // tuned for linux
+#if defined(_OPENMP)
+#define IGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
+#define ZGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
+#else
 #define IGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #define ZGEMM_THRES  (60*60*60)      // when m*n*p less than this use cached; when higher, use BLAS  
 #endif
-#define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
-#define DCACHED_THRESn  (24*24*24)    // when m*n*p less than this, don't even look for multithreads; use blocked
+#endif
 
 // prompt strings for jtgets()
 #define GETSPROMPT "   "   // 3 spaces

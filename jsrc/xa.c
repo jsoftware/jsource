@@ -10,6 +10,8 @@
 extern uint64_t g_cpuFeatures;
 extern uint64_t g_cpuFeatures2;
 extern int numberOfCores;
+extern void*libcblas;
+extern char hascblas;
 
 #ifdef BOXEDSPARSE
 extern UC fboxedsparse;
@@ -345,6 +347,8 @@ F1(jtcpufeature){F12IP;
   R sc(numberOfCores);
  } else if (!strcasecmp(CAV(w),"MAXTHREADS")) {
   R sc(MAXTHREADS);
+ } else if (!strcasecmp(CAV(w),"CBLAS")) {
+  R sc(hascblas&&libcblas);
  } else if (!strcasecmp(CAV(w),"OPENMP")) {
 #if defined(_OPENMP)
   R sc(1);
@@ -657,6 +661,7 @@ OPENSSL_setcap();
 #if defined(__x86_64__)
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
 #endif
+ if(!strcasecmp(CAV(w),"CBLAS"   ))  hascblas= k&&libcblas;
 R mtm;
 }
 

@@ -159,4 +159,6 @@ enum {
   CPU_FAMILY_MAX /* do not remove */
 };
 
+extern const char *usrlib[];
+
 #endif /* CPU_INFO_H */

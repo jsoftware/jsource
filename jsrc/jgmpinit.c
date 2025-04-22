@@ -12,6 +12,7 @@
 #endif
 #endif
 #include "j.h"      // includes jgmp.h
+#include "cpuinfo.h"  // usrlib
 
 #ifdef _WIN32
 void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
@@ -345,16 +346,14 @@ B nogmp(){R!libgmp;}
 #endif
 
 #ifdef _WIN32
-void dldiag(){}
+static void dldiag(){}
 #define jgmpfn(fn) j##fn= GetProcAddress(libgmp,"__g"#fn); if(!(j##fn)){fprintf(stderr,"%s\n","error loading "#fn);};
-#else
-#if defined(__wasm__)
-void dldiag(){}
+#elif defined(__wasm__)
+static void dldiag(){}
 #define jgmpfn(fn) 
 #else
-void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
+static void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
 #define jgmpfn(fn) j##fn= dlsym(libgmp,"__g"#fn); dldiag();
-#endif
 #endif
 
 // referenced gmp routines are declared twice:
@@ -383,9 +382,6 @@ void jgmpinit(C*libpath) {
 #else
  if(libpath&&*libpath){
   int FHS=0,i=0;
-  const char *usrlib[]={"/opt/homebrew/lib","/usr/local/lib","/lib64","/lib",
-                  "/lib/aarch64-linux-gnu","/lib/arm-linux-gnueabihf",
-                  "/lib/x86_64-linux-gnu","/lib/i386-linux-gnu",0 };
   while(usrlib[i]){
    if(!strcmp(libpath,usrlib[i])) {FHS=1; break;}
    i++;

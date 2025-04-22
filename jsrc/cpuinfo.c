@@ -18,6 +18,22 @@ extern uint64_t g_cpuFeatures;
 extern uint64_t g_cpuFeatures2;
 extern int numberOfCores;
 
+#if defined(__aarch64__)||defined(_M_ARM64)
+#if defined(__APPLE__)
+const char *usrlib[]={"/opt/homebrew/lib","/lib64","/lib","/lib/aarch64-linux-gnu", 0 };
+#else
+const char *usrlib[]={"/usr/local/lib","/lib64","/lib","/lib/aarch64-linux-gnu", "/usr/lib64","/usr/lib","/usr/lib/aarch64-linux-gnu", 0 };
+#endif
+#elif defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
+const char *usrlib[]={"/usr/local/lib","/lib","/lib/arm-linux-gnueabihf", "/usr/lib","/usr/lib/arm-linux-gnueabihf", 0 };
+#elif defined(__x86_64__)||defined(_M_X64)
+const char *usrlib[]={"/usr/local/lib","/lib64","/lib","/lib/x86_64-linux-gnu", "/usr/lib64","/usr/lib","/usr/lib/x86_64-linux-gnu", 0 };
+#elif defined(__i386__)||defined(_M_IX86)
+const char *usrlib[]={"/usr/local/lib","/lib","/lib/i386-linux-gnu", "/usr/lib","/usr/lib/i386-linux-gnu", 0 };
+#else
+const char *usrlib[]={"/usr/local/lib","/lib64","/lib", "/usr/lib64","/usr/lib", 0 };
+#endif
+
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
 uint32_t OPENSSL_armcap_P;
 

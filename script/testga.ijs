@@ -19,7 +19,6 @@ stdout LF ,~ 9!:14''
 
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gstack.ijs' NB. temporarily disable
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot3.ijs';'gtdot4.ijs' NB. temporarily disable
-ddall=: ~. ddall ,~ (-.IFWA64)#(IF64*.(<UNAME)e.<'Win')#(<testpath),each <'gcip1.ijs'
 ddall=: ~. ddall ,~ (-.IFWA64)#((<UNAME)e.'Win';'Darwin')#(<testpath),each <'glapack.ijs'
 
 NB. smoke test

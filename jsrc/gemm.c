@@ -262,12 +262,11 @@ dgemm_macro_kernel(dim_t   mc,
     aligned_free( _C );
 }
 
-#ifndef __APPLE__
 //
 //  Compute C <- beta*C + alpha*A*B
 //
-void
-dgemm_nn         (I              m,
+static void
+dgemm_nnblis     (I              m,
                   I              n,
                   I              k,
                   double         alpha,
@@ -336,7 +335,6 @@ dgemm_nn         (I              m,
         }
     }
 }
-#endif
 
 
 // -----------------------------------------------------------------
@@ -450,8 +448,8 @@ ipack_B(dim_t kc, dim_t nc, const I *B, inc_t rs_b, inc_t cs_b, double *buffer)
 //
 //  Compute C <- beta*C + alpha*A*B
 //
-void
-igemm_nn         (I              m,
+static void
+igemm_nnblis     (I              m,
                   I              n,
                   I              k,
                   I              alpha,
@@ -777,22 +775,21 @@ zgemm_macro_kernel(dim_t   mc,
     aligned_free( _C );
 }
 
-#ifndef __APPLE__
 //
 //  Compute C <- beta*C + alpha*A*B
 //
-void
-zgemm_nn         (I              m,
+static void
+zgemm_nnblis     (I              m,
                   I              n,
                   I              k,
-                  dcomplex       alpha,
+                  dcomplex       *palpha,
                   dcomplex       *A,
                   I              rs_a,
                   I              cs_a,
                   dcomplex       *B,
                   I              rs_b,
                   I              cs_b,
-                  dcomplex       beta,
+                  dcomplex       *pbeta,
                   dcomplex       *C,
                   I              rs_c,
                   I              cs_c)
@@ -805,6 +802,8 @@ zgemm_nn         (I              m,
     I _nc = n % NC;
     I _kc = k % KC;
 
+    dcomplex alpha=*palpha;
+    dcomplex beta=*pbeta;
     dcomplex _beta;
 
     if ((alpha.real==0.0 && alpha.imag==0.0) || k==0) {
@@ -851,4 +850,85 @@ zgemm_nn         (I              m,
         }
     }
 }
-#endif
+
+// enum CBLAS_ORDER {CblasRowMajor=101, CblasColMajor=102 };
+// enum CBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113, AtlasConj=114};
+// typedef int __LAPACK_int;
+// // typedef scomplex __LAPACK_float_complex;
+// typedef dcomplex __LAPACK_double_complex;
+// // extern void cblas_sgemm(const enum CBLAS_ORDER ORDER, const enum CBLAS_TRANSPOSE TRANSA, const enum CBLAS_TRANSPOSE TRANSB, const __LAPACK_int M, const __LAPACK_int N, const __LAPACK_int K, const float ALPHA, const float * A, const __LAPACK_int LDA, const float * B, const __LAPACK_int LDB, const float BETA, float * C, const __LAPACK_int LDC);
+// extern void cblas_dgemm(const enum CBLAS_ORDER ORDER, const enum CBLAS_TRANSPOSE TRANSA, const enum CBLAS_TRANSPOSE TRANSB, const __LAPACK_int M, const __LAPACK_int N, const __LAPACK_int K, const double ALPHA, const double * A, const __LAPACK_int LDA, const double * B, const __LAPACK_int LDB, const double BETA, double * C, const __LAPACK_int LDC);
+// // extern void cblas_cgemm(const enum CBLAS_ORDER ORDER, const enum CBLAS_TRANSPOSE TRANSA, const enum CBLAS_TRANSPOSE TRANSB, const __LAPACK_int M, const __LAPACK_int N, const __LAPACK_int K, const __LAPACK_float_complex * ALPHA, const __LAPACK_float_complex * A, const __LAPACK_int LDA, const __LAPACK_float_complex * B, const __LAPACK_int LDB, const __LAPACK_float_complex * BETA, __LAPACK_float_complex * C, const __LAPACK_int LDC);
+// extern void cblas_zgemm(const enum CBLAS_ORDER ORDER, const enum CBLAS_TRANSPOSE TRANSA, const enum CBLAS_TRANSPOSE TRANSB, const __LAPACK_int M, const __LAPACK_int N, const __LAPACK_int K, const __LAPACK_double_complex * ALPHA, const __LAPACK_double_complex * A, const __LAPACK_int LDA, const __LAPACK_double_complex * B, const __LAPACK_int LDB, const __LAPACK_double_complex * BETA, __LAPACK_double_complex * C, const __LAPACK_int LDC);
+// //note: we never get passed significant values for cs_x
+// #define dgemm_nn( m, n, k, alpha, A, rs_A, cs_A, B, rs_B, cs_B, beta, C, rs_C, cs_C) \
+//  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (m), (n), (k), (alpha), (A), (rs_A), (B), (rs_B), (beta), (C), (rs_C))
+//
+// //note: we never get passed significant values for cs_x
+// #define zgemm_nn( m, n, k, alpha, A, rs_A, cs_A, B, rs_B, cs_B, beta, C, rs_C, cs_C) \
+//  cblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (m), (n), (k), &(alpha), (A), (rs_A), (B), (rs_B), &(beta), (C), (rs_C))
+
+void
+dgemm_nn(I              m,
+         I              n,
+         I              k,
+         double         alpha,
+         double         *A,
+         I              rs_A,
+         I              cs_A,
+         double         *B,
+         I              rs_B,
+         I              cs_B,
+         double         beta,
+         double         *C,
+         I              rs_C,
+         I              cs_C)
+{
+ if(hascblas&&libcblas)
+  jcblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (m), (n), (k), (alpha), (A), (rs_A), (B), (rs_B), (beta), (C), (rs_C));
+ else
+  dgemm_nnblis((m), (n), (k), (alpha), (A), (rs_A), (cs_A), (B), (rs_B), (cs_B), (beta), (C), (rs_C), (cs_C));
+}
+
+void
+zgemm_nn(I              m,
+         I              n,
+         I              k,
+         dcomplex       *alpha,
+         dcomplex       *A,
+         I              rs_A,
+         I              cs_A,
+         dcomplex       *B,
+         I              rs_B,
+         I              cs_B,
+         dcomplex       *beta,
+         dcomplex       *C,
+         I              rs_C,
+         I              cs_C)
+{
+ if(hascblas&&libcblas)
+  jcblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (m), (n), (k), (alpha), (A), (rs_A), (B), (rs_B), (beta), (C), (rs_C));
+ else
+  zgemm_nnblis((m), (n), (k), (alpha), (A), (rs_A), (cs_A), (B), (rs_B), (cs_B), (beta), (C), (rs_C), (cs_C));
+}
+
+//note: no such cblas_igemm
+void
+igemm_nn(I              m,
+         I              n,
+         I              k,
+         I              alpha,
+         I              *A,
+         I              rs_A,
+         I              cs_A,
+         I              *B,
+         I              rs_B,
+         I              cs_B,
+         I              beta,
+         double         *C,
+         I              rs_C,
+         I              cs_C)
+{
+ igemm_nnblis((m), (n), (k), (alpha), (A), (rs_A), (cs_A), (B), (rs_B), (cs_B), (beta), (C), (rs_C), (cs_C));
+}
+

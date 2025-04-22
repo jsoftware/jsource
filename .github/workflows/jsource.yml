@@ -324,7 +324,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j32
       commands: |
-       apt-get install --no-install-recommends -y zip libopenblas0
+       apt-get install --no-install-recommends -y zip
        export CC=gcc
        export USE_SLEEF=0
        script/buildga.sh raspberry || exit 1
@@ -387,12 +387,12 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_add curl zip gfind gmake nasm pcre2 libedit openblas
+       pkg_add curl zip gmake nasm pcre2 libedit openblas
 
       run: |
        rm -f jobdone
        /sbin/ldconfig -r
-       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so\*' -print 2> /dev/null
        ls -al ~/
        ls -al ~/.ssh
        echo "Host *" >>~/.ssh/config || true
@@ -459,9 +459,9 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gfind gmake nasm pcre2 libedit openblas
+       sudo pkg_add curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
-       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so\*' -print 2> /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -531,7 +531,7 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 libedit openblas
        /sbin/ldconfig -r
-       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so\*' -print 2> /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -592,13 +592,13 @@ jobs:
       prepare: |
        sudo pkg upgrade -y
        rdate time.cloudflare.com || true
-       pkg install -y curl zip gfind gmake nasm pcre2 libedit openblas
+       pkg install -y curl zip find gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
 
       run: |
        rm -f jobdone
        /sbin/ldconfig -r
-       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so\*' -print 2> /dev/null
        ls -al ~/
        ls -al ~/.ssh
        echo "Host *" >>~/.ssh/config || true
@@ -666,9 +666,9 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gfind gmake nasm pcre2 libedit openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
-       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so\*' -print 2> /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -736,9 +736,9 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gfind gmake nasm pcre2 libedit openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
-       gfind / -type f -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so\*' -print 2> /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true

@@ -21,7 +21,7 @@ DF2(jtunquote){F12IP;A z;
   A locsyms;  // local symbol table
  } stack;
 
-#define FLGDYAD 1
+#define FLGDYAD 1   // conjunction or dyadic verb
 #define FLGLOCATIVEX JTXDEFMODIFIERX  // 8 name is a direct or indirect locative (not u./v.)
 #define FLGLOCATIVE ((I)1<<FLGLOCATIVEX)
 #define FLGNMFLGX 9   // place where we store flags from name
@@ -38,22 +38,24 @@ DF2(jtunquote){F12IP;A z;
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
    // bits 22-28 must be 0 - they are stored into bstkreqd
 #define FLGFLAG2X 32  // location of FLAG2 flags
- UI8 flgvbnmgen=((UI8)FAV(self)->flag2<<FLGFLAG2X)+(w!=self);   // extract self flags, which we will need quickly, init dyad flag
- A thisname=FAV(self)->fgh[0]; A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
- C flagsfromname=NAV(thisname)->flag;  // get flags from name
+
+ UI8 flgvbnmgen=(UI8)__atomic_load_n(&FAV(self)->flag2,__ATOMIC_RELAXED);   // extract self flags, which we will need quickly, init dyad flag
+ A thisname=__atomic_load_n(&FAV(self)->fgh[0],__ATOMIC_RELAXED); A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
+ C flagsfromname=__atomic_load_n(&NAV(thisname)->flag,__ATOMIC_RELAXED);  // get flags from name
 // obsolete  I flgvbnmgen=w!=self;  // init DYAD flag
    // We check inplaceability of the called function.  jtfg unused
  A explocale;  // locale to execute in.  Not used unless LOCINCRDECR set
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
  ARGCHK2(a,w);  // w is w or self always, must be valid
+ flgvbnmgen=(flgvbnmgen<<FLGFLAG2X)+(w!=self);  // move self flags into position, install dyad flag
 #if C_AVX2 || EMU_AVX2
  _mm256_storeu_si256((__m256i *)&stack,_mm256_loadu_si256((__m256i *)&jt->parserstackframe.sf));
 #else
  memcpy(&stack,&jt->parserstackframe.sf,sizeof(stack));  // push sf/globals/curname/locals
 #endif
  // *** errors must to go the error exit to restore stacked values
+ jt->curname=thisname;  // set executing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
  if(likely(!(flgvbnmgen&((UI8)VF2PSEUDONAME<<FLGFLAG2X)))){  // normal names, not pseudo
-  jt->curname=thisname;  // set executing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
   // normal path for named functions
   if(likely((fs=FAV(self)->localuse.lu1.cachedlkp)!=0)){  // fetch the most recent lookup, which may be reused. no QC
    if(flgvbnmgen&((UI8)VF2CACHEABLE<<FLGFLAG2X)){  // cacheable?  (test first because test suite expects it)
@@ -62,11 +64,11 @@ DF2(jtunquote){F12IP;A z;
      // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
      if(((A)(I)(flagsfromname&NMLOC)!=0)){  // most verbs aren't locatives. if no direct locative, leave global unchanged
       explocale=FAV(self)->localuse.lu0.cachedloc;  // it's a direct locative, so we must have looked it up when we cached the ref
-      flgvbnmgen|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale, but not if it is permanent
+      flgvbnmgen+=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale, but not if it is permanent
       flgvbnmgen+=FLGLOCATIVE;  // remember if this call is a locative
       SYMSETGLOBAL(explocale);   // switch to the (possibly new) locale.
      }
-     flgvbnmgen|=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
+     flgvbnmgen+=FLGCACHED;  // indicate cached lookup, which also tells us that we have not ra()d the name
      goto finlookup;     // NM flags have not been inserted into flagsfromname, not needed
     }
    }else{  // if long cacheable, don't allow short caching, else long cache would seldom get used (and it's faster)
@@ -74,15 +76,15 @@ DF2(jtunquote){F12IP;A z;
     if(vtime==ACVCACHEREAD){  // is previous lookup still valid
      // Short caching: the previous lookup can be reused because there have been no assignments
      flgvbnmgen+=flagsfromname<<FLGNMFLGX;  // insert name flags into flag reg.  They should have settled from the load
-     raposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion
+     raposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion, i. e. no subroutine call, OK because the value must not be sparse
      if(unlikely(flgvbnmgen&(NMLOC<<FLGNMFLGX))){  // is this a (necessarily direct) locative?
       // see if the locale is cached.   public_z_ =: entry_loc_ where entry_loc will have the locale pointer
       if(unlikely((explocale=cachedlocale)==0)){  // use cached locale if there is one (there will be, except first time through)  If not...
        RZSUFF(explocale=sybaseloc(thisname),z=0; goto exitname;);  //  get the explicit locale.  0 if erroneous locale
        FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
-       thisname=jt->curname;  // refresh thisname
+// obsolete        thisname=jt->curname;  // refresh thisname
       }
-      flgvbnmgen|=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
+      flgvbnmgen+=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
       flgvbnmgen+=FLGLOCATIVE;  // remember this call is a locative
       SYMSETGLOBAL(explocale);   // switch to the (possibly new) locale.  We DO NOT change AKGST because if we are calling a non-operator modifier we need the old locale if the modifier calls u./v. .
          // AKGST changes only from cocurrent.  This leads to a divergence between jt->global and AKGST if a non-operator modifier calls an anonymous explicit that issues cocurrent.  BFD.  The divergence
@@ -101,7 +103,7 @@ DF2(jtunquote){F12IP;A z;
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
     if(unlikely(AR(jt->locsyms)&ARHASACV)&&unlikely((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,sx,SYMORIGIN,hashx,jt->locsyms)))!=0)){  // check local syms only if they have an ACV
-     raposlocal(QCWORD(fs),fs); // if found locally, free it for protecrtion, as if found by syrd1.  Set not-NAMEDLOC.
+     raposlocal(QCWORD(fs),fs); // if found locally, free it for protection, as if found by syrd1.  Set not-NAMEDLOC.
     }else{fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
     }
     // leave LOCINCRDECR unset and jt->global unchanged
@@ -118,6 +120,7 @@ DF2(jtunquote){F12IP;A z;
       // like u./v.  We switch both global & local tables, and then look up the name locally.  If not found, carry on
       jt->locsyms=explocale; explocale=AKGST(jt->locsyms);  // move to new locals and their globals (up the local-sym chain)
       if((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)))!=0)goto fslocal;  // look only in local symbols.  Set not-NAMEDLOC. if found, continue as for u./v.
+      thisname=jt->curname;  // refresh thisname
       // falling through, we have switched the symbol tables and we didn't find the name locally.  Continue looking through the path
      }else flgvbnmgen+=FLGLOCATIVE;  // remember if this call is a locative - but not a local table 
      fs=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
@@ -195,7 +198,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
  }else{
   // here for pseudo-named function.  The actual name is in f, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
-  jt->curname=thisname;   // use the original name, which may have locatives that we will ignore
+// obsolete   jt->curname=thisname;   // use the original name, which may have locatives that we will ignore
 // obsolete =FAV(self)->fgh[1];  // get the original name
   fs=FAV(self)->fgh[2];  // point to the actual executable
   ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;); // make sure the name's value is given also

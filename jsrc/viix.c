@@ -283,5 +283,5 @@ DF2(jticap2){F12IP;A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r
    }
   }
  }
- RETF(z);
+ RE(0); RETF(z);  // error is stack error
 }    /* a I. w */

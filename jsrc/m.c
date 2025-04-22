@@ -352,6 +352,7 @@ static D jtspfor1(J jt, A w){D tot=0.0;
  case BOXX:
   if(!ISSPARSE(AT(w))){  // I don't know why we don't account for space in sparse box
    if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
+    STACKCHKOFL    // protect against excessive box depth
     {DO(AN(w), if(wv[i])tot+=spfor1(QCWORD(wv[i])););}  // No C() for the value!  If a pyx is not ready, we don't
           // wait for it, giving it a space of 0.  If ready, we use its size.  Also, we may be processing any type
           // of internal value here, so if we did check for a pyx, we would need to check for PYX+BOX

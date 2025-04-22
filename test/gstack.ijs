@@ -100,10 +100,43 @@ NB. 5) Check S: and free.
 NB. 6) Display and free.
 ('out of memory';'stack error') e.~ < ": etx <^:N a:
 
+'stack error' -: (<^:1e6 a:) = etx  <^:1e6 a:
+'stack error' -: (<^:1e6 a:) ~: etx <^:1e6 a:
+'stack error' -: (<^:1e6 a:) -: etx <^:1e6 a:
+'stack error' -: /: etx (<^:1e6 ] 2) , <^:1e6 ] 1
+'stack error' -: ~. etx (<^:1e6 ] 2) , <^:1e6 ] 1
+b1 =: <^:1e6 ] 1
+b2 =: <^:1e6 ] 2
+a =: b1 , b2
+NB. Tests.
+'stack error' -: b1 = etx b2
+'stack error' -: b1 ~: etx b2
+'stack error' -: b1 -: etx b2
+'stack error' -: b2 e. etx a
+'stack error' -: a i. etx b2
+'stack error' -: b2 E. etx a
+'stack error' -: a -. etx b2
+'stack error' -: a I. etx b2
+'stack error' -: ~. etx a
+'stack error' -: ~: etx a
+'stack error' -: /: etx a
+'stack error' -: \: etx a
+'domain error' -: b1} etx 'abc'
+'domain error' -: '*' b1} etx 'abc'
+'stack error' -: a ]/. etx 1 2
+'stack error' -: a ]/.. etx 1 2
+'stack error' -: 1 2 /: etx a
+'stack error' -: 1 2 \: etx a
+'stack error' -: a i: etx b1
+'stack error' -: <;.1 etx a  NB. u;.1 a
+'stack error' -: <;._1 etx a NB. u;._1 a
+'stack error' -: <;.2 etx a  NB. u;.2 a
+'stack error' -: <;._2 etx a NB. u;._2 a
+'stack error' -: b1 =!.0 etx b2
 
+(;: '3 :') -.@-: (;: '3:')   NB. failed once
 
-
-4!:55 ;:'c f f5 f6 t p arraytolist listtoarray N'
+4!:55 ;:'a b1 b2 c f f5 f6 t p arraytolist listtoarray N'
 
 
 

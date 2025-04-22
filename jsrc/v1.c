@@ -300,7 +300,8 @@ B jtequ(J jtfg,A a,A w){F12IP;A x;  // allow inplace request - it has no effect
  ARGCHK2(a,w);
  if(a==w)R 1;
  if(unlikely(ISSPARSE(AT(a)|AT(w))))if(AR(a)&&AR(w)){RZ(x=matchs(a,w)); R BAV(x)[0];}
- R ((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // don't check level - it takes too long for big arrays
+ B z=((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // don't check level - it takes too long for big arrays
+ RE(z); R z;
 }
 
 // Return 1 if a and w match, 0 if not   Passes inplaceability through
@@ -455,7 +456,7 @@ static B jtmatchsub(J jtfg,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){F12IP;C
  case QPX: INNERT(E,EQE); break;
  case XNUMX: INNERT(X,equx); break;
  case RATX:  INNERT(Q,EQQ); break;
- case BOXX:  INNERT(A,EQA); break;
+ case BOXX:  STACKCHKOFL INNERT(A,EQA); break;
  }
  R 0;  // Return value matters only for single compare (x=0); we have returned already in that case
 }
@@ -508,7 +509,9 @@ F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
  // There are atoms.  If there is only 1 cell to compare, do it quickly
  if(wf==0){
  I nocall = (-(a!=w)&((AN(a)^AN(w))-1));
- R num((nocall>=0?SGNTO0(nocall)+(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))^eqis0);  // SGNTO0 to prevent misbranch
+ if(nocall>=0)nocall=SGNTO0(nocall)+(a==w); else nocall=((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // compare value, 0/1
+ RE(0)  // abort if error, presumably stack error
+ RETF(num(nocall^eqis0));
  }
  // Otherwise we are doing match with rank.  Set up for the repetition in matchsub
  // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
@@ -516,6 +519,7 @@ F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
  mn=m*n;  // total number of matches to do, i. e. # results
  GATV(z,B01,mn,wf,AS(w)); matchsub(a,w,BAVn(wf,z),af,wf,m,n,eqis0^1);  // matchsub stores, and we ignore the result
  // We do not check for a==w here & thus will compare them
+ RE(0)   // abort if error
  RETF(z);
 }    /* a -:"r w */
 

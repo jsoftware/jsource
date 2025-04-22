@@ -77,7 +77,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
   case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
   case INT2X:  COMPLOOQ (I2, m  );         break;
   case INT4X:  COMPLOOQ (I4, m  );         break;
-  case BOXX:  {COMPDCLQ(A);I j; DO(m, if(j=jtcompare(jtfg,x[i],y[i]))R j;);} break;
+  case BOXX:  {COMPDCLQ(A);I j; STACKCHKOFL DO(m, if(j=jtcompare(jtfg,x[i],y[i]))R j;);} break;
   }
  }
  if(1>=ar)R an==wn?0:RETGT(an>wn);   // all compared items matched.  If they weren't the same length, the longer is bigger

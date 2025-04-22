@@ -773,7 +773,7 @@ A jtindexofsub(J jtfg,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(0079)
    }
    GA(z,zt,wn,wr,AS(w));  // allocate result area
 inplace:;
-   jtiosc(jt,mode,1,an,wn,1,1,a,w,z); // simple sequential search without hashing.
+   RE(jtiosc(jt,mode,1,an,wn,1,1,a,w,z)); // simple sequential search without hashing.  error is stack error
    *(z==w?&AT(z):(I*)jt->shapesink)=INT;  // if inplace, force result to INT (op must not be EPS)
    R z;  // not RETF because of FORKEY
   }
@@ -1129,7 +1129,7 @@ inplace:;
  }
 
  // Call the routine to perform the operation
- RZ(h=ifn(jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
+ RZ(h=ifn(jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h)); RE(0);  // error must be stack error; catch it
  // If the call was IFORKEY, the number of partitions was stored in AM(h).  Move it to AM(z) whence it will be returned.
  I forkeyresult=AM(h);  // save # partitions
 

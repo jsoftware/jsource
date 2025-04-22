@@ -1138,7 +1138,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
  // m*number of results.  The cost of small-range hashing is at best 8 cycles per atom added to the table and 5 cycles per lookup.
  // (full hashing is considerably more expensive)
  if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS||(mode==IFORKEY&&((0x100000&((UI4*)&jt->cct)[1])>((at|wt)&(FLX|CMPX|BOX)))))){
-  jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
+  RE(jtiosc(jt,mode,m,c,ac,wc,a,w,z)); // simple sequential search without hashing.
  }else{B b=1.0==jt->cct;I t1;
   AF fn=0; // we haven't figured it out yet
   UI booladj = (mode&(IIOPMSK&~(IIDOT^IICO)))?5:0; // init table length not found; booladj = 5 if boolean hashvalue is OK, 0 if full index needed
@@ -1311,7 +1311,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
   }
 
   // Call the routine to perform the operation
-  RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
+  RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z)); RE(0);  // error must be stack error; catch it
   forkeyresult=AM(h); 
   if(mk){A x,*zv;I*xv,ztype;
    // If w was omitted (indicating prehashing), return the information for that special case

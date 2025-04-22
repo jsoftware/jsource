@@ -147,7 +147,7 @@ igemm_nn(I              m,
          I              rs_C,
          I              cs_C)
 {
- igemm_nnblis((m), (n), (k), (alpha), (A), (rs_A), (rs_A), (B), (rs_B), (cs_B), (beta), (C), (rs_C), (cs_C));
+ igemm_nnblis((m), (n), (k), (alpha), (A), (rs_A), (cs_A), (B), (rs_B), (cs_B), (beta), (C), (rs_C), (cs_C));
 }
 
 #endif

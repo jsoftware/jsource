@@ -593,7 +593,7 @@ jobs:
        /sbin/ldconfig -r
 
       run: |
-       find / -type -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so*' 2 > /dev/null
        rm -f jobdone
        /sbin/ldconfig -r
        ls -al ~/
@@ -665,7 +665,7 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
-       find / -type -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -735,7 +735,7 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        /sbin/ldconfig -r
-       find / -type -name 'liblapack.so*' 2 > /dev/null
+       find / -type f -name 'liblapack.so*' 2 > /dev/null
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true

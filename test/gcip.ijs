@@ -77,7 +77,7 @@ end.
 delth''
 
 t1=: 3 : 0
-{{0 T.0}}^:] 0 >. (1&T.'') -~ 4 <. <./ 8&T.''
+if. (1<1 { 8 T. '') do. {{0 T.0}}^:] 0 >. (1&T.'') -~ 4 <. 9!:56'cores' end.
 echo 'threads ', ": 1 T. ''
 echo 'OMP_NUM_THREADS=', (''"_)^:(0&-:) (2!:5)'OMP_NUM_THREADS'
 echo 'openmp ',":9!:56'openmp'

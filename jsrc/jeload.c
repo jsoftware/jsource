@@ -35,6 +35,7 @@
   #define JDLLEXT ".so"
  #endif
 #endif
+#define CBLASINIT
 #include "j.h"
 #include "jversion.h"
 #include <stdint.h>

@@ -166,6 +166,10 @@ fi
 
 common="$common -DJAMALGAM"
 
+if [ $USE_OPENMP -eq 1 ] ; then
+ common="$common -I../../../../openmp/include"
+fi
+
 USE_BOXEDSPARSE="${USE_BOXEDSPARSE:=0}"
 if [ $USE_BOXEDSPARSE -eq 1 ] ; then
  common="$common -DBOXEDSPARSE"

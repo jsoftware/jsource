@@ -96,8 +96,8 @@ nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0 USE_OPENMP=1 
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L03C
 :L03A
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 USE_OPENMP=1 USE_PYXES=0 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 USE_OPENMP=1 USE_PYXES=0
+nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 USE_OPENMP=0 USE_PYXES=0 clean
+nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 USE_OPENMP=0 USE_PYXES=0
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L03C
 :L03B
@@ -116,8 +116,8 @@ nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0 USE_OPENMP=1 
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L05C
 :L05A
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 USE_OPENMP=1 USE_PYXES=0 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 USE_OPENMP=1 USE_PYXES=0
+nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 USE_OPENMP=0 USE_PYXES=0 clean
+nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 USE_OPENMP=0 USE_PYXES=0
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L05C
 :L05B

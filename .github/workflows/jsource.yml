@@ -28,7 +28,10 @@ jobs:
        sdeVersion: 9.27.0 # possible values: 9.27.0 (default), 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
 
    - name: Setup Environment (Linux)
-     run: script/install-lnx.sh
+     run: |
+      script/install-lnx.sh
+      sudo openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
 
    - name: Commit
      run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
@@ -90,7 +93,10 @@ jobs:
        sdeVersion: 9.27.0 # possible values: 9.27.0 (default), 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
 
    - name: Setup Environment (Linux gcc)
-     run: script/install-lnx.sh
+     run: |
+      script/install-lnx.sh
+      sudo openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
 
    - name: Build JE (Linux gcc)
      env:
@@ -393,9 +399,9 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2 libedit openblas libomp
        pkg_info -Q openblas
-       pkg_info -Q libomp
+       pkg_info -Q openmp
+       pkg_add curl zip gmake nasm pcre2 libedit openblas openmp
 
       run: |
        rm -f jobdone
@@ -467,9 +473,9 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2 libedit openblas libomp
        sudo pkg_info -Q openblas
-       sudo pkg_info -Q libomp
+       sudo pkg_info -Q openmp
+       sudo pkg_add curl zip gmake nasm pcre2 libedit openblas openmp
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -539,9 +545,9 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2 libedit openblas libomp
        sudo pkg_info -Q openblas
-       sudo pkg_info -Q libomp
+       sudo pkg_info -Q openmp
+       sudo pkg_add curl zip gmake gmp pcre2 libedit openblas openmp
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -604,9 +610,9 @@ jobs:
       prepare: |
        sudo pkg upgrade -y
        rdate time.cloudflare.com || true
-       pkg install -y curl zip find gmake nasm pcre2 libedit openblas libomp
        pkg search openblas
-       pkg search libomp
+       pkg search openmp
+       pkg install -y curl zip find gmake nasm pcre2 libedit openblas openmp
        /sbin/ldconfig -r
 
       run: |
@@ -680,9 +686,9 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas libomp
        sudo pkg search openblas
-       sudo pkg search libomp
+       sudo pkg search openmp
+       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas openmp
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -752,9 +758,9 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas libomp
        sudo pkg search openblas
-       sudo pkg search libomp
+       sudo pkg search openmp
+       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas openmp
        sudo find / -type f -name 'liblapack.so*' -print
        sudo find / -type f -name 'libopenblas.so*' -print
        /sbin/ldconfig -r

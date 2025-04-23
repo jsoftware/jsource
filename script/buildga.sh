@@ -71,6 +71,7 @@ cp mpir/linux/arm/libgmp.so j32
 cp pcre2/linux/arm/libjpcre2.so tools/regex/.
 fi
 elif [ "$1" = "darwin" ]; then
+brew install libomp
 cp mpir/apple/macos/libgmp.dylib j64
 cp pcre2/apple/macos/libjpcre2.dylib tools/regex/.
 elif [ "$1" = "openbsd" ]; then
@@ -183,8 +184,8 @@ elif [ "$1" = "linux" ]; then
 ./clean.sh
 j64x=j32 USE_PYXES=0 ./build_jconsole.sh
 j64x=j32 ./build_tsdll.sh
-j64x=j32 USE_PYXES=0 ./build_libj.sh
-# j64x=j32 USE_PYXES=0 ./build_jamalgam.sh
+j64x=j32 USE_PYXES=0 USE_OPENMP=0 ./build_libj.sh
+# j64x=j32 USE_PYXES=0 USE_OPENMP=0 ./build_jamalgam.sh
 fi
 ./clean.sh
 if ( [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ) && ( [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ] ) ; then

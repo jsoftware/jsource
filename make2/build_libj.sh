@@ -73,13 +73,13 @@ if [ $USE_OPENMP -eq 1 ] ; then
  case $jplatform64 in
   darwin/j64arm*)
    # assume libomp installed at /opt/homebrew/
-   OPENMP=" -Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include "
-   LDOPENMP=" -L/opt/homebrew/opt/libomp/lib -Wl,-rpath,/opt/homebrew/opt/libomp/lib -lomp "
+   OPENMP=" -Xpreprocessor -fopenmp -I/opt/homebrew/include "
+   LDOPENMP=" -L/opt/homebrew/lib -Wl,-rpath,/opt/homebrew/lib -lomp "
   ;;
   darwin/*)
    # assume libomp installed at /usr/local/
-   OPENMP=" -Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include "
-   LDOPENMP=" -L/usr/local/opt/libomp/lib -Wl,-rpath,/usr/local/opt/libomp/lib -lomp "
+   OPENMP=" -Xpreprocessor -fopenmp -I/usr/local/include "
+   LDOPENMP=" -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lomp "
   ;;
   *)
    OPENMP=" -fopenmp "

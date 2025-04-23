@@ -42,7 +42,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_OPENMP: 1
+      USE_OPENMP: 0
      run: |
       echo $SDE_PATH
       $SDE_PATH/sde -help || true
@@ -106,7 +106,7 @@ jobs:
      env:
       CC: gcc
       USE_SLEEF: 1
-      USE_OPENMP: 1
+      USE_OPENMP: 0
      run: |
       echo $SDE_PATH
       $SDE_PATH/sde -help || true
@@ -278,7 +278,7 @@ jobs:
        apt-get install --no-install-recommends -y clang zip libopenblas0 libomp-dev
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=1
+       export USE_OPENMP=0
        script/buildga.sh raspberry || exit 1
        script/testga.sh raspberry || exit 1
        ls -l j64
@@ -822,7 +822,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_OPENMP: 1
+      USE_OPENMP: 0
      run: |
       script/buildga.sh android || exit 1
 

@@ -8,6 +8,7 @@
  
 #include "j.h"
 #include "gemm.h"
+extern char hasopenmp;
 #ifdef MC
 #undef MC
 #endif
@@ -316,6 +317,7 @@ dgemm_nnblis     (I              m,
 
 // loop 3
             I i=0;
+            if(hasopenmp){
 #pragma omp parallel for default(none),private(i),shared(j,l,A,C,mb,nc,kc,alpha,_beta,_mc,_B,rs_a,cs_a,rs_c,cs_c)
             for (i=0; i<mb; ++i) {
                 I mc;
@@ -330,6 +332,22 @@ dgemm_nnblis     (I              m,
                                    &C[i*MC*rs_c+j*NC*cs_c],
                                    rs_c, cs_c);
                 aligned_free( _A );
+            }
+            }else{  // 0=hasopenmp
+            for (i=0; i<mb; ++i) {
+                I mc;
+                mc = (i!=mb-1 || _mc==0) ? MC : _mc;
+
+                double * _A = aligned_malloc(MC*(KC+1)*SZD, alignv);
+                pack_A(mc, kc,
+                       &A[i*MC*rs_a+l*KC*cs_a], rs_a, cs_a,
+                       _A);
+
+                dgemm_macro_kernel(mc, nc, kc, alpha, _beta, _A, _B,
+                                   &C[i*MC*rs_c+j*NC*cs_c],
+                                   rs_c, cs_c);
+                aligned_free( _A );
+            }
             }
             aligned_free( _B );
         }
@@ -499,6 +517,7 @@ igemm_nnblis     (I              m,
 
 // loop 3
             I i=0;
+            if(hasopenmp){
 #pragma omp parallel for default(none),private(i),shared(j,l,A,C,mb,nc,kc,alpha,_beta,_mc,_B,rs_a,cs_a,rs_c,cs_c)
             for (i=0; i<mb; ++i) {
                 I mc;
@@ -513,6 +532,22 @@ igemm_nnblis     (I              m,
                                    &C[i*MC*rs_c+j*NC*cs_c],
                                    rs_c, cs_c);
                 aligned_free( _A );
+            }
+            }else{  // 0=hasopenmp
+            for (i=0; i<mb; ++i) {
+                I mc;
+                mc = (i!=mb-1 || _mc==0) ? MC : _mc;
+
+                double * _A = aligned_malloc(MC*(1+KC)*SZD, alignv);
+                ipack_A(mc, kc,
+                       &A[i*MC*rs_a+l*KC*cs_a], rs_a, cs_a,
+                       _A);
+
+                dgemm_macro_kernel(mc, nc, kc, (double)alpha, _beta, _A, _B,
+                                   &C[i*MC*rs_c+j*NC*cs_c],
+                                   rs_c, cs_c);
+                aligned_free( _A );
+            }
             }
             aligned_free( _B );
         }
@@ -831,6 +866,7 @@ zgemm_nnblis     (I              m,
 
 // loop 3
             I i=0;
+            if(hasopenmp){
 #pragma omp parallel for default(none),private(i),shared(j,l,A,C,mb,nc,kc,alpha,_beta,_mc,_B,rs_a,cs_a,rs_c,cs_c)
             for (i=0; i<mb; ++i) {
                 I mc;
@@ -845,6 +881,22 @@ zgemm_nnblis     (I              m,
                                    &C[i*MC*rs_c+j*NC*cs_c],
                                    rs_c, cs_c);
                 aligned_free( _A );
+            }
+            }else{  // 0=hasopenmp
+            for (i=0; i<mb; ++i) {
+                I mc;
+                mc = (i!=mb-1 || _mc==0) ? MC : _mc;
+
+                dcomplex * _A = aligned_malloc(2*MC*(1+KC)*SZD, alignv);
+                zpack_A(mc, kc,
+                       &A[i*MC*rs_a+l*KC*cs_a], rs_a, cs_a,
+                       _A);
+
+                zgemm_macro_kernel(mc, nc, kc, alpha, _beta, _A, _B,
+                                   &C[i*MC*rs_c+j*NC*cs_c],
+                                   rs_c, cs_c);
+                aligned_free( _A );
+            }
             }
             aligned_free( _B );
         }

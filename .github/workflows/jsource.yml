@@ -459,7 +459,8 @@ jobs:
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 libedit openblas
-       sudo pkg_search openblas
+       sudo pkg_info -Q openblas
+       sudo find / -type f -name 'liblapack.so*' -print
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -529,7 +530,8 @@ jobs:
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 libedit openblas
-       sudo pkg_search openblas
+       sudo pkg_info -Q openblas
+       sudo find / -type f -name 'liblapack.so*' -print
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -666,6 +668,7 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        sudo pkg search openblas
+       sudo find / -type f -name 'liblapack.so*' -print
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -736,6 +739,7 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
        sudo pkg search openblas
+       sudo find / -type f -name 'liblapack.so*' -print
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh

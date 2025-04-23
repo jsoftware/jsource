@@ -79,9 +79,9 @@ typedef struct CDATA {
  A fchn;  // pointer to next allocated block in stack, 0 if end of stack
  struct CDATA *bchn;  // pointer to previous allocated block, possibly the local block.  0 in the local block itself
  A t;  // iteration array for for_xyz., select. value, or nullptr for for.
- A item;  // if for_xyz, the virtual block we are using to hold the value
- I j;  // iteration index
- I niter;  // for for. and for_xyz., number of iterations (number of items in T block)
+ A item;  // if for_xyz, the virtual block we are using to hold the value.
+ I j;  // for for. and for_xyz., iteration index  In select, value of t if it is a scalar int 
+ I niter;  // for for. and for_xyz., number of iterations (number of items in T block)  In select., AT(t)
  I itemsiz;  // size of an item of xyz, in bytes
  I4 w; // cw code for the structure
  LX itemsym;  // symbol number of xyz, 0 for for. or select.
@@ -549,8 +549,8 @@ dobblock:
    BASSERT(0,EVTHROW);
   case CFOR: case CSELECT: case CSELECTN:
    // for./select. push the stack.  Use the C stack for the first one, after that allocate as needed, keeping blocks around
-   if(cv==0){cv=&cdata; cv->bchn=0;  // for first block, use the canned area.  Indicate no previous blocks; there may be successors that we can reuse
-   }else if(cv->fchn){cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
+   if(withprob(cv==0,0.9)){cv=&cdata; cv->bchn=0;  // for first block, use the canned area.  Indicate no previous blocks; there may be successors that we can reuse
+   }else if(withprob(cv->fchn,0.9)){cv=voidAV0(cv->fchn);  // if there is another element already allocated, move to it
    }else{A cd;
     // we have to allocate an element.  cv points to end of current chain
     GAT0E(cd,INT,(sizeof(CDATA)+SZI-1)>>LGSZI,0,{z=0; goto bodyend;}); ACINITUNPUSH(cd) // allocate, rank 0, exiting with error if allocation failure.  Zap the block because it must persist over subsequent tpops; we will delete by hand
@@ -587,7 +587,7 @@ dobblock:
      }
      --ic; goto elseifasdo;   // advance to next line and process it; if flagged, we know it's bblock
     }
-    // ending the iteration normally.  set xyz to i.0
+    // falling through, we are ending the iteration normally.  set xyz to i.0
     {A val=itemsym->fval; fa(QCWORD(val))}  // discard & free incumbent, probably the virtual block.  If the virtual block, this is never the final free, which comes in unstackcv
     itemsym->fval=SETNAMED(MAKEFVAL(mtv,ATYPETOVALTYPE(INT)));  // after last iteration, set xyz to mtv, which is permanent, and value type in the symbol (as a local), in case it was changed.  Any noun will do
    }else if(likely(cv->j<cv->niter)){--ic; goto elseifasdo;}  // (not for_xyz.) advance to next line and process it; if flagged is bblock
@@ -597,7 +597,7 @@ dobblock:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    cv=unstackcv(cv,1);  // This leaves xyz[_index] defined, so there is no need to rat() z
    if(FLAGGEDNOTRACE(tcesx)){--ic; goto dobblock;}  // if flagged (must be ENDSEL), NSI is bblock, go do it without reading
-   ic=CWGO(cwsent,CNSTOREDCW,ic);    // continue at new location
+   ic=CWGO(cwsent,CNSTOREDCW,ic);    // otherwise, continue at new location
    goto nextline;
   case CCASE:
   case CFCASE:
@@ -606,10 +606,10 @@ dobblock:
     // This is the first case.  That means the t block has the select. value.  Save it in cv->t
     BASSERT(t!=0,EVEMPTYT);  // error if select. case.
     CHECKNOUN(1)    // if t is not a noun, signal error on the last line executed in the select T block
-    BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
+    BZ(ras(t)); cv->t=t; cv->niter=AT(t); if((AR(t)+(AT(t)^INT))==0)cv->j=IAV(t)[0];  t=0;  // protect t from free while we are comparing with it, save in stack.  Extract AT(value)
     --ic;   // first case always falls to NSI
     if(FLAGGEDNOTRACE(tcesx))goto knowntblock;  // if flagged, NSI is tblock, go do it without reading
-    goto nextline;  // expect tblock after first case.
+    goto nextline;  // otherwise expect tblock after first case.
    }
    ic=CWGO(cwsent,CNSTOREDCW,ic);  // Go to next sentence, which might be after end., or (for the first case.), the test
    goto elseifasdo;  // case. after the first marks the end of a do. block and is like elseif
@@ -617,18 +617,19 @@ dobblock:
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
    // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
    --ic;  // go to NSI if case tests true
-   if(t){    // if t is not a noun, signal error on the last line executed in the T block
-    CHECKNOUN(1)
-    if(!((AT(t)|AT(cv->t))&BOX)){
+   if(t){   // if the T block was not empty...
+    CHECKNOUN(1)   // if t is not a noun, signal error on the last line executed in the T block
+    if(withprob(!((AT(t)|cv->niter)&BOX),0.8)){
      // if neither t nor cv is boxed, just compare for equality.  Boxed empty goes through the other path
-     if(!equ(t,cv->t))ic=CWGO(cwsent,CNSTOREDCW,ic+1);  // should perhaps take the scalar case specially & send it through singleton code
+     I neq=((AR(t)+AR(cv->t)+((AT(t)&cv->niter)^INT))==0)?IAV(t)[0]!=cv->j:!equ(t,cv->t);   // in the very common case of scalar integer cases, compare right here
+     if(neq)ic=CWGO(cwsent,CNSTOREDCW,ic+1);  // if !=, go to next case
     }else{
      if(all0(eps(boxopen(cv->t),boxopen(t))))ic=CWGO(cwsent,CNSTOREDCW,ic+1);  // if case tests false, jump around bblock   test is cv +./@:,@:e. boxopen t
     }
     // Clear t to ensure that the next case./fcase. does not reuse this value
     t=0;
    }
-   // the probable next instruction is the bblock if the test was true or the next tblock if the test was false.  No prediction
+   // the probable next instruction is the bblock if the test was true or the next tblock if the test was false.  No prediction  scaf should predict false?
    goto nextline;
     
   case CGOTO: case CBREAKS: case CCONTS: case CBREAK: case CCONT: case CBREAKF: case CRETURN: // goto_label. or any break/continue/return.  Close any structures we branch out of

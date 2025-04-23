@@ -345,6 +345,7 @@ B jteqf(J jtfg,A a,A w){F12IP;A p,q;V*u=FAV(a),*v=FAV(w);
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
 // In case the boxes have QC flags (possible if we are comparing functions), mask off the flags
+// We are comparing the contents of boxes, which thus cannot be virtual; so it's OK to assume that if the address are the same the values have the same length
 #ifndef BOXEDSPARSE
 #define EQA(a,w) \
  ({ A ma=QCWORD(C(a)), mw=QCWORD(C(w)); ((-(ma!=mw)&((AN(ma)^AN(mw))-1))>=0?(ma==mw):((B (*)())jtmatchsub)(jt,ma,mw,0   MATCHSUBDEFAULTS)); })
@@ -354,6 +355,13 @@ B jteqf(J jtfg,A a,A w){F12IP;A p,q;V*u=FAV(a),*v=FAV(w);
 #endif
 // compare rationals
 #define EQQ(a,w)  (equx(a.n,w.n)&&equx(a.d,w.d))
+
+// inner loop to compare cells
+// we compare starting at the end on the theory that a miscompare is more likely there
+#define INNERTX DO(c, if(!f(u[i],v[i])){b^=1; break;})
+// comparing boxes, if the contents is itself boxed we defer the comparison till all non-boxes have been compared.  The rationale for this is that recurring on boxes is expensive and
+// no more likely to get a fast mismatch than comparing other values
+#define INNERTA A bxv=0, uu=u[c-1], vv=v[c-1]; DQ(c, A uu0=u[i-1], vv0=v[i-1]; if(!EQA(uu,vv)){b^=1; break;} uu=uu0; vv=vv0; )
 
 // compare arrays for equality of all values.  f is the compare function
 // m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated

@@ -17,6 +17,8 @@
 
 void*libcblas=0;
 char hascblas=0;
+C    cblasfile[1000]="";
+char hasopenmp=0;
 
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
@@ -31,8 +33,10 @@ char hascblas=0;
 #else
 #define LIBCBLASNAME "libopenblas_32.dll"
 #endif
-#elif defined(ANDROID) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#elif defined(ANDROID) || defined(__OpenBSD__)
 #define LIBCBLASNAME "liblapack.so"
+#elif defined(__FreeBSD__)
+#define LIBCBLASNAME "libopenblas.so.0"
 #else
 #define LIBCBLASNAME "liblapack.so.3"
 #endif
@@ -54,20 +58,24 @@ static void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
 
 // cblas dynamic linking
 void cblasinit(C*libpath) {
- C dllpath[1000];
+#if defined(_OPENMP)
+ hasopenmp= 1;
+#else
+ hasopenmp= 0;
+#endif
 #if defined(__APPLE__)
- libcblas= dlopen(LIBCBLASNAME, RTLD_LAZY);
+ libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME), RTLD_LAZY);
 #elif defined(__wasm__)
  libcblas= 0;
 #elif defined(_WIN32)
  if(libpath&&*libpath){
-  strcpy(dllpath,libpath);strcat(dllpath,"\\");strcat(dllpath,LIBCBLASNAME);
-  if(!(libcblas= LoadLibraryA(dllpath))){  /* first try current directory */
-   strcpy(dllpath,libpath);strcat(dllpath,"\\..\\addons\\math\\lapack2\\lib\\");strcat(dllpath,LIBCBLASNAME);
-   if(!(libcblas= LoadLibraryA(dllpath)))  /* lapack2 addon lib folder */
-    libcblas= LoadLibraryA(LIBCBLASNAME);
+  strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME);
+  if(!(libcblas= LoadLibraryA(cblasfile))){  /* first try current directory */
+   strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME);
+   if(!(libcblas= LoadLibraryA(cblasfile)))  /* lapack2 addon lib folder */
+    libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
   }
- } else libcblas= LoadLibraryA(LIBCBLASNAME);
+ } else libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
  if(libcblas && !GetProcAddress(libcblas,"cblas_dgemm")){   /* check cblas routine */
   FreeLibrary(libcblas); libcblas= 0;
  }
@@ -78,14 +86,14 @@ void cblasinit(C*libpath) {
    if(!strcmp(libpath,usrlib[i])) {break;}
    i++;
   }
-  strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBCBLASNAME);
-  if((libcblas= dlopen(dllpath, RTLD_LAZY))){
+  strcpy(cblasfile,libpath);strcat(cblasfile,"/");strcat(cblasfile,LIBCBLASNAME);
+  if((libcblas= dlopen(cblasfile, RTLD_LAZY))){
    if(!dlsym(libcblas,"cblas_dgemm")){   /* check cblas routine */
     dlclose(libcblas); libcblas= 0;
    }
   }
-  if(!libcblas) libcblas= dlopen(LIBCBLASNAME, RTLD_LAZY);
- } else libcblas= dlopen(LIBCBLASNAME, RTLD_LAZY);
+  if(!libcblas) libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME), RTLD_LAZY);
+ } else libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME), RTLD_LAZY);
  if(libcblas && !dlsym(libcblas,"cblas_dgemm")){   /* check cblas routine */
   dlclose(libcblas); libcblas= 0;
  }
@@ -236,6 +244,8 @@ void cblasinit(C*libpath) {
 //   jcblasfn1(cblas_zherk)
 //   jcblasfn1(cblas_zher2k)
 //   jcblasfn1(cblas_xerbla)
+ }else{
+  *cblasfile=0;
  }
  hascblas= !!libcblas;
 }

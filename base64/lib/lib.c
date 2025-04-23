@@ -9,6 +9,8 @@
 #include "codecs.h"
 #include "env.h"
 
+extern char hasopenmp;
+
 // These static function pointers are initialized once when the library is
 // first used, and remain in use for the remaining lifetime of the program.
 // The idea being that CPU features don't change at runtime.
@@ -112,12 +114,14 @@ base64_encode
 	size_t t;
 	struct base64_state state;
 
-	#ifdef _OPENMP
+#ifdef _OPENMP
+	if(hasopenmp){
 	if (srclen >= OMP_THRESHOLD) {
 		base64_encode_openmp(src, srclen, out, outlen, flags);
 		return;
 	}
-	#endif
+	}
+#endif
 
 	// Init the stream reader:
 	base64_stream_encode_init(&state, flags);
@@ -144,11 +148,13 @@ base64_decode
 	int ret;
 	struct base64_state state;
 
-	#ifdef _OPENMP
+#ifdef _OPENMP
+	if(hasopenmp){
 	if (srclen >= OMP_THRESHOLD) {
 		return base64_decode_openmp(src, srclen, out, outlen, flags);
 	}
-	#endif
+	}
+#endif
 
 	// Init the stream reader:
 	base64_stream_decode_init(&state, flags);

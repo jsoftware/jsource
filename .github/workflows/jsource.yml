@@ -28,7 +28,12 @@ jobs:
        sdeVersion: 9.27.0 # possible values: 9.27.0 (default), 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
 
    - name: Setup Environment (Linux)
-     run: script/install-lnx.sh
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
 
    - name: Commit
      run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
@@ -37,6 +42,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
+      USE_OPENMP: 0
      run: |
       echo $SDE_PATH
       $SDE_PATH/sde -help || true
@@ -89,12 +95,18 @@ jobs:
        sdeVersion: 9.27.0 # possible values: 9.27.0 (default), 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
 
    - name: Setup Environment (Linux gcc)
-     run: script/install-lnx.sh
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
 
    - name: Build JE (Linux gcc)
      env:
       CC: gcc
       USE_SLEEF: 1
+      USE_OPENMP: 0
      run: |
       echo $SDE_PATH
       $SDE_PATH/sde -help || true
@@ -148,6 +160,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
+      USE_OPENMP: 0
      run: |
       script/buildga.sh darwin || exit 1
 
@@ -203,6 +216,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
+      USE_OPENMP: 0
      run: |
       script/buildga.sh darwin || exit 1
 
@@ -261,9 +275,10 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip libopenblas0
+       apt-get install --no-install-recommends -y clang zip libopenblas0 libomp-dev
        export CC=clang
        export USE_SLEEF=1
+       export USE_OPENMP=0
        script/buildga.sh raspberry || exit 1
        script/testga.sh raspberry || exit 1
        ls -l j64
@@ -327,6 +342,7 @@ jobs:
        apt-get install --no-install-recommends -y zip
        export CC=gcc
        export USE_SLEEF=0
+       export USE_OPENMP=0
        script/buildga.sh raspberry || exit 1
        script/testga.sh raspberry || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
@@ -387,7 +403,7 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2 libedit openblas
+       pkg_add curl zip gmake nasm pcre2
 
       run: |
        rm -f jobdone
@@ -401,6 +417,7 @@ jobs:
        cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
+       export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        ls -l j64
@@ -458,7 +475,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg_add curl zip gmake nasm pcre2
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -469,6 +486,7 @@ jobs:
        sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
+       export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        ls -l j64
@@ -527,7 +545,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2 libedit openblas
+       sudo pkg_add curl zip gmake gmp pcre2
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -538,6 +556,7 @@ jobs:
        sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
+       export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
        ls -l j64
        zip -r obsdarm64d.zip j64
@@ -589,7 +608,8 @@ jobs:
       prepare: |
        sudo pkg upgrade -y
        rdate time.cloudflare.com || true
-       pkg install -y curl zip find gmake nasm pcre2 libedit openblas
+       pkg search openblas
+       pkg install -y curl zip find gmake nasm pcre2 openblas
        /sbin/ldconfig -r
 
       run: |
@@ -604,6 +624,7 @@ jobs:
        cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
+       export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
@@ -662,7 +683,8 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg search openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -673,6 +695,7 @@ jobs:
        sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
+       export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
@@ -731,7 +754,8 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg search openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -742,6 +766,7 @@ jobs:
        sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
+       export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
@@ -797,6 +822,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
+      USE_OPENMP: 0
      run: |
       script/buildga.sh android || exit 1
 
@@ -826,6 +852,7 @@ jobs:
      env:
       CC: emcc
       USE_SLEEF: 1
+      USE_OPENMP: 0
      run: |
       script/buildga.sh wasm || exit 1
       script/testga.sh wasm || exit 1

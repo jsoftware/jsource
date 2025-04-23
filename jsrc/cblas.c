@@ -33,8 +33,10 @@ char hasopenmp=0;
 #else
 #define LIBCBLASNAME "libopenblas_32.dll"
 #endif
-#elif defined(ANDROID) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#elif defined(ANDROID) || defined(__OpenBSD__)
 #define LIBCBLASNAME "liblapack.so"
+#elif defined(__FreeBSD__)
+#define LIBCBLASNAME "libopenblas.so.0"
 #else
 #define LIBCBLASNAME "liblapack.so.3"
 #endif

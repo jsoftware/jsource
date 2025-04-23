@@ -358,20 +358,22 @@ B jteqf(J jtfg,A a,A w){F12IP;A p,q;V*u=FAV(a),*v=FAV(w);
 
 // inner loop to compare cells
 // we compare starting at the end on the theory that a miscompare is more likely there
-#define INNERTX DO(c, if(!f(u[i],v[i])){b^=1; break;})
+#define INNERTX(f) DO(c, if(!f(u[i],v[i])){b^=1; break;})
 // comparing boxes, if the contents is itself boxed we defer the comparison till all non-boxes have been compared.  The rationale for this is that recurring on boxes is expensive and
-// no more likely to get a fast mismatch than comparing other values
-#define INNERTA A bxv=0, uu=u[c-1], vv=v[c-1]; DQ(c, A uu0=u[i-1], vv0=v[i-1]; if(!EQA(uu,vv)){b^=1; break;} uu=uu0; vv=vv0; )
+// no more likely to get a fast mismatch than comparing other values.
+//#define INNERTA(f) A bxv=0, uu=u[c-1], vv=v[c-1]; DQ(c, A uu0=u[i-1], vv0=v[i-1]; if(!EQA(uu,vv)){b^=1; break;} uu=uu0; vv=vv0; )
+#define INNERTA(f) I i; A uu, vv; for(i=c,uu=u[c-1],vv=v[c-1];i>0;--i){A uu0=u[i-2], vv0=v[i-2]; if(!(AT(QCWORD(uu))&AT(QCWORD(vv))&BOX))if(!EQA(uu,vv))break; uu=uu0; vv=vv0;} \
+                          if(i==0)for(i=c,uu=u[c-1],vv=v[c-1];i>0;--i){A uu0=u[i-2], vv0=v[i-2]; if( (AT(QCWORD(uu))&AT(QCWORD(vv))&BOX))if(!EQA(uu,vv))break; uu=uu0; vv=vv0;} b^=(i!=0);   // no need for C() for test here, since a pyx is in fact a box
 
 // compare arrays for equality of all values.  f is the compare function
 // m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
 // x[] is result array.  This can be 0 if we are doing a comparison inside a box, in which case
 // we don't store the result.  In any case, b holds the result of the last comparison
-#define INNERT(T,f)                  \
+#define INNERT(T,f,INNERLP)                  \
  {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv; I m0=m, n0=n; m0=x==0?1:m0; n0=x==0?1:n0;  /* u->a data, v->w data */           \
-  if(1==n0){      DO(m0,       B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); if(!x)R b^b1^1; x[j++]=b; u+=c; v+=c;)}  \
-  else if(af>wf)DO(m0, DO(n0, B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
-  else          DO(m0, DO(n0, B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
+  if(1==n0){      DO(m0,       B b=b1; INNERLP(f) if(!x)R b^b1^1; x[j++]=b; u+=c; v+=c;)}  \
+  else if(af>wf)DO(m0, DO(n0, B b=b1; INNERLP(f) x[j++]=b; u+=c;); v+=c;)  \
+  else          DO(m0, DO(n0, B b=b1; INNERLP(f) x[j++]=b; v+=c;); u+=c;)  \
  }
 
 // compare functions for float/complex intolerant comparison
@@ -444,11 +446,11 @@ static B jtmatchsub(J jtfg,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){F12IP;C
    R eqv(af,wf,m,n,c,av,wv,x,b1);  // stored version loops & stores
   }
   break;
- case CMPXX: if(1.0!=jt->cct){INNERT(Z,zeq) break;}  // tolerant, must use complex distance
+ case CMPXX: if(1.0!=jt->cct){INNERT(Z,zeq,INNERTX) break;}  // tolerant, must use complex distance
 #if C_AVX2 || EMU_AVX2
   c*=2;   // intolerant: treat as 2 floats, fall through
 #else
-  INNERT(Z,ZEQCT0) break;
+  INNERT(Z,ZEQCT0,INNERTX) break;
 #endif
  case FLX:
 #if C_AVX2 || EMU_AVX2
@@ -458,13 +460,13 @@ static B jtmatchsub(J jtfg,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){F12IP;C
    R eqvfl(af,wf,m,n,c,(D*)av,(D*)wv,x,b1,jt);  // stored version loops & stores
   }
 #else
-   if(1.0!=jt->cct)INNERT(D,TEQ)else INNERT(D,DEQCT0)
+   if(1.0!=jt->cct)INNERT(D,TEQ,INNERTX)else INNERT(D,DEQCT0,INNERTX)
 #endif
   break;
- case QPX: INNERT(E,EQE); break;
- case XNUMX: INNERT(X,equx); break;
- case RATX:  INNERT(Q,EQQ); break;
- case BOXX:  STACKCHKOFL INNERT(A,EQA); break;
+ case QPX: INNERT(E,EQE,INNERTX); break;
+ case XNUMX: INNERT(X,equx,INNERTX); break;
+ case RATX:  INNERT(Q,EQQ,INNERTX); break;
+ case BOXX:  STACKCHKOFL INNERT(A,EQA,INNERTA); break;
  }
  R 0;  // Return value matters only for single compare (x=0); we have returned already in that case
 }

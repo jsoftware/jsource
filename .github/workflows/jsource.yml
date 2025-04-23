@@ -459,6 +459,7 @@ jobs:
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg_search openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -528,6 +529,7 @@ jobs:
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 libedit openblas
+       sudo pkg_search openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -663,6 +665,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg search openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -732,6 +735,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas
+       sudo pkg search openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh

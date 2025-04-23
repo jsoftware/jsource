@@ -18,11 +18,11 @@ if. (1<1 { 8 T. '') do. {{0 T.0}}^:] 0 >. (1&T.'') -~ 4 <. 9!:56'cores' end.
 echo 9!:14''
 echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 if. UNAME-:'Linux' do.
-  echo 2!:0 'lscpu | grep "MHz"'
+  echo 2!:0 ::(''"_) 'lscpu | grep "MHz"'
 elseif. UNAME-:'Darwin' do.
-  echo 2!:0 'sysctl -n machdep.cpu.brand_string'
+  echo 2!:0 ::(''"_) 'sysctl -n machdep.cpu.brand_string'
 elseif. UNAME-:'Win' do.
-  echo spawn_jtask_ 'wmic cpu get Name,CurrentClockSpeed'
+  echo spawn_jtask_ ::(''"_) 'wmic cpu get Name,CurrentClockSpeed'
 end.
 echo 'threads ', ": 1 T. ''
 echo 'OMP_NUM_THREADS=', (''"_)^:(0&-:) (2!:5)'OMP_NUM_THREADS'
@@ -30,8 +30,9 @@ echo 'openmp ',":m0=. 9!:56'openmp'
 echo 'cblas  ',":c0=. 9!:56'cblas'
 echo 'gemm threshold ', ": (9!:58)"0 i.3
 
-N=. IF64{520 4000
+N=. IF64{2000 4000
 'A B'=. 0?@$~2,,~N
+echo '$A= ',":$A
 
 _1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
 t1=. 6!:2'c1=. A+/ .*B'

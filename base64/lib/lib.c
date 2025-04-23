@@ -114,12 +114,14 @@ base64_encode
 	size_t t;
 	struct base64_state state;
 
+#ifdef _OPENMP
 	if(hasopenmp){
 	if (srclen >= OMP_THRESHOLD) {
 		base64_encode_openmp(src, srclen, out, outlen, flags);
 		return;
 	}
 	}
+#endif
 
 	// Init the stream reader:
 	base64_stream_encode_init(&state, flags);
@@ -146,11 +148,13 @@ base64_decode
 	int ret;
 	struct base64_state state;
 
+#ifdef _OPENMP
 	if(hasopenmp){
 	if (srclen >= OMP_THRESHOLD) {
 		return base64_decode_openmp(src, srclen, out, outlen, flags);
 	}
 	}
+#endif
 
 	// Init the stream reader:
 	base64_stream_decode_init(&state, flags);

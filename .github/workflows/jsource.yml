@@ -30,8 +30,8 @@ jobs:
    - name: Setup Environment (Linux)
      run: |
       script/install-lnx.sh
-      sudo openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
-      sudo openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
 
    - name: Commit
      run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
@@ -95,8 +95,8 @@ jobs:
    - name: Setup Environment (Linux gcc)
      run: |
       script/install-lnx.sh
-      sudo openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
-      sudo openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
 
    - name: Build JE (Linux gcc)
      env:
@@ -399,9 +399,7 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_info -Q openblas
-       pkg_info -Q openmp
-       pkg_add curl zip gmake nasm pcre2 libedit openblas openmp
+       pkg_add curl zip gmake nasm pcre2
 
       run: |
        rm -f jobdone
@@ -415,7 +413,7 @@ jobs:
        cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=1
+       export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        ls -l j64
@@ -473,9 +471,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_info -Q openblas
-       sudo pkg_info -Q openmp
-       sudo pkg_add curl zip gmake nasm pcre2 libedit openblas openmp
+       sudo pkg_add curl zip gmake nasm pcre2
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -486,7 +482,7 @@ jobs:
        sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=1
+       export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        ls -l j64
@@ -545,9 +541,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_info -Q openblas
-       sudo pkg_info -Q openmp
-       sudo pkg_add curl zip gmake gmp pcre2 libedit openblas openmp
+       sudo pkg_add curl zip gmake gmp pcre2
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -558,7 +552,7 @@ jobs:
        sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=1
+       export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
        ls -l j64
        zip -r obsdarm64d.zip j64
@@ -611,8 +605,7 @@ jobs:
        sudo pkg upgrade -y
        rdate time.cloudflare.com || true
        pkg search openblas
-       pkg search openmp
-       pkg install -y curl zip find gmake nasm pcre2 libedit openblas openmp
+       pkg install -y curl zip find gmake nasm pcre2 openblas
        /sbin/ldconfig -r
 
       run: |
@@ -627,7 +620,7 @@ jobs:
        cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=1
+       export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
@@ -687,8 +680,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg search openblas
-       sudo pkg search openmp
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas openmp
+       sudo pkg install -y curl zip gmake nasm pcre2 openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -699,7 +691,7 @@ jobs:
        sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=1
+       export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64
@@ -759,10 +751,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg search openblas
-       sudo pkg search openmp
-       sudo pkg install -y curl zip gmake nasm pcre2 libedit openblas openmp
-       sudo find / -type f -name 'liblapack.so*' -print
-       sudo find / -type f -name 'libopenblas.so*' -print
+       sudo pkg install -y curl zip gmake nasm pcre2 openblas
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -773,7 +762,7 @@ jobs:
        sudo cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=1
+       export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        ls -l j64

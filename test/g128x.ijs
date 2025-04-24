@@ -83,7 +83,7 @@ end.
 NB. LU rational
 todiag =: ([`(,.~@i.@#@])`])}  NB. stuff x into diagonal of y
 lrtoa =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
-(-: (0&{:: /:~ lrtoa@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
+1:^:(-.IF64) (-: (0&{:: /:~ lrtoa@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
 
 1: 0 : 0
@@ -95,6 +95,7 @@ NB. 128!:10 -------------------------------------------------------------
 NB. lapack
 
 t=: 3 : 0
+if. -.IF64 do. EMPTY return. end.
 N=. y
 a=. (N,N) ?@$ 1000 1000
 c1=. 128!:10 a
@@ -111,7 +112,7 @@ u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
 if. 1-:9!:56'cblas' do.
   assert. 1e_6 > >./ | , a - p { l (+/ .*) u
 end.
-''
+EMPTY
 )
 
 c=: 9!:56'cblas'

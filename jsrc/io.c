@@ -863,8 +863,7 @@ void getsopath(HINSTANCE hi, char* path)
  GetModuleFileNameW(hi, wpath, _MAX_PATH);
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,_MAX_PATH,0,0);
  p = strrchr(path, filesep);
- if(!p) p = strrchr(path, ':');
- p[1] = 0;
+ if(!p) {p = strrchr(path, ':'); p[1] = 0;} else p[0] = 0;
 }
 
 #else
@@ -875,7 +874,7 @@ void getsopath(char* path){
 const char *sym_name = "JGetLocale";
 #if defined(__wasm__)
 //  *path=0;  /* missing dladdr function */
- strcpy(sopath,"/");
+ strcpy(path,"/");
 #else
  void *sym_ptr = dlsym(RTLD_DEFAULT,sym_name);
 // fprintf(stdout,"SYMBOL %s ADDRESS %p\n", sym_name, sym_ptr);

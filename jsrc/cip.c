@@ -1117,6 +1117,49 @@ DF1(jtludecompg){F12IP;PROLOG(823);
  R z;
 }
 
+// LAPACK version
+// 128!:10 LU decomposition for square real arrays LUP=A
+// returns permutation ; L+U-I (Doolittle form)
+// the ith element of the permutation is the original row of row i of LU
+DF1(jtludecompblas){F12IP;PROLOG(823);
+ ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
+ ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
+ if(unlikely(!(AT(w)&FL)))RZ(w=ccvt(FL,w,0));
+ I wn=AS(w)[0];  // n=size of square matrix
+ int info=0; int pvt[wn]; int im=wn;
+ A aresultperm; RZ(aresultperm=apvwr(wn,0,1)); I *resultperm=IAV1(aresultperm);
+ A z=cant1(w);
+ jdgetrf_(&im,&im,DAV(z),&im,pvt,&info);
+ ASSERT(!info,EVDOMAIN);
+ I *r=IAV(aresultperm);
+ for(int i=wn-1;0<=i;--i){I t; int j;
+  if(i==(j= pvt[i]-1))continue;
+  t= r[i]; r[i]= r[j]; r[j]= t;
+ }
+ EPILOG(jlink(aresultperm,cant1(z)));
+}
+
+// LAPACK version
+// 128!:10 LU decomposition for square complex arrays LUP=A
+// returns permutation ; L+U-I (Doolittle form)
+// the ith element of the permutation is the original row of row i of LU
+DF1(jtludecompxblas){F12IP;PROLOG(823);
+ ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
+ ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
+ ASSERT(AT(w)&CMPX,EVDOMAIN);
+ I wn=AS(w)[0];  // n=size of square matrix
+ int info=0; int pvt[wn]; int im=wn;
+ A aresultperm; RZ(aresultperm=apvwr(wn,0,1)); I *resultperm=IAV1(aresultperm);
+ A z=cant1(w);
+ jzgetrf_(&im,&im,(dcomplex*)ZAV(z),&im,pvt,&info);
+ ASSERT(!info,EVDOMAIN);
+ I *r=IAV(aresultperm);
+ for(int i=wn-1;0<=i;--i){I t; int j;
+  if(i==(j= pvt[i]-1))continue;
+  t= r[i]; r[i]= r[j]; r[j]= t;
+ }
+ EPILOG(jlink(aresultperm,cant1(z)));
+}
 
 // 128!:10 LU decomposition for square real arrays LUP=A
 // returns permutation ; L+U-I (Doolittle form)
@@ -1125,7 +1168,7 @@ DF1(jtludecompg){F12IP;PROLOG(823);
 DF2(jtludecomp){F12IP;PROLOG(823);
  static D pthresh[2]={1e-6,0}, *pivotthresh; I npivotthresh, curpivotthreshx;  // list of successive thresholds for pivots, last one usually 0.0
  if(AT(w)&NOUN){ASSERT(AR(a)<=1,EVRANK); ASSERT(AN(a)>0,EVLENGTH) if(unlikely(!(AT(a)&FL)))RZ(a=ccvt(FL,a,0)); pivotthresh=DAV(a); npivotthresh=AN(a);}else{w=a; pivotthresh=pthresh; npivotthresh=sizeof(pthresh)/sizeof(pthresh[0]);}
-#if C_AVX2 || EMU_AVX2
+// #if C_AVX2 || EMU_AVX2
  // We operate on 4x4 blocks of A, which we transform into 4x4 blocks of LU.  The ravel of each LU block is stored for cache ease,
  // and the U blocks are ordered in transpose form to speed up the dot-product operations.
  // For each row of A, we subtract the matrix product of (preceding U) * (preceding L) to get the new U row and the first L entry L0.
@@ -1139,9 +1182,12 @@ DF2(jtludecomp){F12IP;PROLOG(823);
  B lookfor0blocks;  // set if we think it's worthwhile to check for sparse array
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
- if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w,DUMMYSELF);  // if not real float type, use general version
- if(unlikely(!(AT(w)&FL)))RZ(w=ccvt(FL,w,0));
  I wn=AS(w)[0];  // n=size of square matrix
+ if((EPMONAD)&&hascblas&&(AT(w)&B01+INT+FL)&&wn>(hwfma?300:10))R  jtludecompblas(jt,w,DUMMYSELF);  // use lapack version
+ if(hascblas&&(AT(w)&CMPX))R  jtludecompxblas(jt,w,DUMMYSELF);  // use lapack version
+ if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w,DUMMYSELF);  // if not real float type, use general version
+#if C_AVX2 || EMU_AVX2
+ if(unlikely(!(AT(w)&FL)))RZ(w=ccvt(FL,w,0));
  // Allocate the result
  A z; GATV(z,FL,wn*wn,2,AS(w)) if(unlikely(wn==0))R jlink(mtv,z);  // if empty result, return fast.  Now nr must be >0
  // Allocate the result permutation, an index vector

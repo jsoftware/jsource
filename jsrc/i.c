@@ -71,6 +71,7 @@ B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
  cpuInit();  // get CPU characteristics
 #if defined(__aarch64__)
  hwaes=(getCpuFeatures()&ARM_HWCAP_AES)?1:0;
+ hwfma=1;
 #elif (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
  hwaes=((getCpuFeatures()&CPU_X86_FEATURE_SSE4_1)&&(getCpuFeatures()&CPU_X86_FEATURE_AES_NI))?1:0;
 #endif

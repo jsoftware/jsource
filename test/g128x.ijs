@@ -91,8 +91,39 @@ sm =. ((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.00
 dm =.lrtoa@:(1.&todiag)@:(0.01&*)@:(0 ?@$~ ,~) 1000
 )
 
+NB. 128!:10 -------------------------------------------------------------
+NB. lapack
 
-4!:55 ;:'a i q qr r todiag lrtoa lrin out128 perma s x'
+t=: 3 : 0
+N=. y
+a=. (N,N) ?@$ 1000 1000
+c1=. 128!:10 a
+mk=. <:/~(i.N)
+p=. 0{::c1 [ lu=. 1{::c1
+u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
+assert. 1e_6 > >./ | , a - p { l (+/ .*) u
+
+a=. a j. (N,N) ?@$ 1000 1000
+c1=. 128!:10 a
+mk=. <:/~(i.N)
+p=. 0{::c1 [ lu=. 1{::c1
+u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
+if. 1-:9!:56'cblas' do.
+  assert. 1e_6 > >./ | , a - p { l (+/ .*) u
+end.
+''
+)
+
+c=: 9!:56'cblas'
+0(9!:56)'cblas'
+t 9
+t 600
+1(9!:56)'cblas'
+t 9
+t 600
+c(9!:56)'cblas'
+
+4!:55 ;:'a c i q qr r t todiag lrtoa lrin out128 perma s x'
 
 
 

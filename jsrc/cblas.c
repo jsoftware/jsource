@@ -244,6 +244,8 @@ void cblasinit(C*libpath) {
 //   jcblasfn1(cblas_zherk)
 //   jcblasfn1(cblas_zher2k)
 //   jcblasfn1(cblas_xerbla)
+   jcblasfn1(dgetrf_)
+   jcblasfn1(zgetrf_)
  }else{
   *cblasfile=0;
  }

@@ -747,6 +747,30 @@ CBLASEXTERN void (*jcblas_zherk)(const enum CBLAS_ORDER Order, const enum CBLAS_
 CBLASEXTERN void (*jcblas_zher2k)(const enum CBLAS_ORDER Order, const enum CBLAS_UPLO Uplo, const enum CBLAS_TRANSPOSE Trans, const int N, const int K, const void *alpha, const void *A, const int lda, const void *B, const int ldb, const double beta, void *C, const int ldc);
 CBLASEXTERN void (*jcblas_xerbla)(int p, const char *rout, const char *form, ...);
 
+#ifndef _DEFINED_SCOMPLEX
+#define _DEFINED_SCOMPLEX
+typedef struct
+{
+	float  real;
+	float  imag;
+} scomplex;
+#endif
+
+#ifndef _DEFINED_DCOMPLEX
+#define _DEFINED_DCOMPLEX
+typedef struct
+{
+	double real;
+	double imag;
+} dcomplex;
+#endif
+
+extern void dgetrf_(int *m, int *n, double *A, int *lda, int *ipvt, int *info);
+CBLASEXTERN void (*jdgetrf_)(int *m, int *n, double *A, int *lda, int *ipvt, int *info);
+
+extern void zgetrf_(int *m, int *n, dcomplex *A, int *lda, int *ipvt, int *info);
+CBLASEXTERN void (*jzgetrf_)(int *m, int *n, dcomplex *A, int *lda, int *ipvt, int *info);
+
 #undef CBLASEXTERN
 
 extern void*libcblas;

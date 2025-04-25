@@ -201,7 +201,7 @@ static DF1(jttallyatopopen){F12IP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV
 FORK1(on1cell,0x160)   // u@:v monad
 DF1(on1){F12IP;PREF1IP(on1cell); R on1cell(jtfg,w,self);}  // u@v monad - pass inplaceability through
 
-FORK2(jtupon2cell,0x1c0)  // u@:v monad
+FORK2(jtupon2cell,0x1c0)  // u@:v dyad
 DF2(jtupon2){F12IP;PREF2IP(jtupon2cell); R jtupon2cell(jtfg,a,w,self);}  // u@v dyad -  pass inplaceability through
 
 // special case for rank 0.  Transfer to loop.

@@ -138,9 +138,13 @@ static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  PRODX(c,r-1,1+sv,1); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // c=#atoms in result item; m, n=#items in each arg (1 if arg has lower rank)
  DPMULDE(c,m+n,zn);  // get total # atoms in result
  // Now that we have figured out the result shape we can decide whether we need fill
- I somefill;  // set if we must have a fill atom
- I origwt=AT(w); if(unlikely((somefill=((AN(a)+AN(w)-zn)&(-MIN(ar,wr))))<0))RZ(w=setfv(a,w));  // set fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate).  cvt w if needed
- if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|(AN(a)==0),t|(((t^origwt)+AN(w))==0)); t=LOWESTBIT(t); I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty.  If fill changed w, don't do B01 for it
+ I somefill; I an=AN(a); I wn=AN(w);   // set if we must have a fill atom
+ if(unlikely((somefill=((an+wn-zn)&(-MIN(ar,wr))))<0)){    // we need fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate). 
+  RZ(w=setfv(a,w)); t=AT(w); if(!(/*an!=0&&*/t&AT(a)))RZ(a=cvt(t,a)) // set fill, and convert w to its type.  Then convert a with different type,  Alas, we have to convert empties because take uses fill in ovgmove
+ }else if(unlikely(AT(a)!=(t=AT(w)))){   // if no fill but dissimilar types...
+  t=maxtypedne(AT(a)|((UI)-an<(UI)wn),t|((UI)-wn<(UI)an)); t=LOWESTBIT(t);   // If types not the same, get result type.  Treat empty arg as boolean if the other is nonempty.
+  /*if((-an&-wn)<0)*/{I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}  // if both args nonempty, convert low arg to result precision.
+ }
  GA(z,t,zn,r,sv); AS(z)[0]=m+n; x=CAVn(r,z); k=bpnoun(t);  // allocate result with composite item shape; install #items; get len of an atom
  RZ(x=jtovgmove(jt,k,c,m,s,a,x,somefill));
  RZ(x=jtovgmove(jt,k,c,n,s,w,x,somefill));
@@ -222,13 +226,14 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
  ARGCHK2(a,w);
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
- // convert args to compatible precisions, changing a and w if needed.  Treat empty arg as boolean if the other is non-Boolean
- if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t); I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}
+ //Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
+ if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t)+VERB; t+=t&AT(a)?0:ADV;}  // t is result type; if it contains VERB, a conversion is needed, ADV is set if a must convert
  ar=AR(a); wr=AR(w);
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
  // no RESETRANK - not required by ovv or main line here
  as=AS(a); ws=AS(w);
+ PROLOG(000);   // we will allocate our result first so that we can tpop back to it without EPILOG.
  if(af+wf==0){
 #if 0  // we don't use ALLOWRETARG anywhere yet
  // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
@@ -254,8 +259,9 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
     // The itemcount is the sum of the itemcounts; but if the ranks are different, use 1 for the shorter; and if both ranks are 0, the item count is 2
     // empty items are OK: they just have 0 length but their shape follows the normal rules
     I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
-    I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
-    GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);  // install # items after copying shape
+    GA(z,t&NOUN,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
+    if(unlikely(t&VERB)){A zt; RZ(zt=cvt(t&NOUN,t&ADV?a:w)) a=t&ADV?zt:a; w=t&ADV?w:zt;}   // convert the discrepant argument to type t
+    I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;  // arg sizes
     JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
     // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
     // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
@@ -274,7 +280,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(a))}  //  like PRISTCOMSETF
     if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(w))}  //  like PRISTCOMSETF
-    RETF(z);
+    if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
    }
   }
  }
@@ -289,20 +295,22 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
   I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
   I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w;
   I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
+  p=acr?p:q; cc2a=cc2a+cc2w;   // last 2 axes, calc before subrt call
+  I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps before subrt call
   PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
   DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
-  GA(z,t,zn,f+r,s); if(unlikely(zn==0))RETF(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops
-  if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
+  GA(z,t&NOUN,zn,f+r,s); if(unlikely(zn==0))RETF(z); s=AS(z)+f+r;  // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops.  Mark result in tstack
+  if(unlikely(t&VERB)){A zt; RZ(zt=cvt(t&NOUN,t&ADV?a:w)) a=t&ADV?zt:a; w=t&ADV?w:zt;}   // convert the discrepant argument to type t
+  if(2>r)s[-1]=ma+mw; else{s[-1]=p; s[-2]=cc2a;}  // fill in last 2 atoms of shape
   I klg=bplg(t);   // # bytes per atom of result
   // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
   // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
-  I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps
   sreps=(((((ma<<klg)^SZI)+((mw<<klg)^SZI))==0)>sreps)?3:sreps;  // if VV case moving exactly SZI, use routine for that
   moveawtbl[sreps](CAV(z),CAV(a),CAV(w),replct*framect,(I)1<<klg,ma<<klg,mw<<klg,(wf>=af)?replct:1,(wf>=af)?1:replct);
-  RETF(z);
+  if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
  }
  // no special cases apply, perform general copy with rank and fill
- PROLOG(000); RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); EPILOG(z);  // ovg calls other functions, so we clear rank
+ RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); RETF(z);  // ovg calls other functions, so we clear rank.  rank2ex does EPILOG
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 DF2(jtstitch){F12IP;I ar,wr; A z;
@@ -352,7 +360,7 @@ F2(jtapip){F12IP;A h;
  // the argument a is marked inplaceable.  Usecount of <1 is inplaceable, and for memory-mapped nouns, 2 is also OK since
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
- // Allow only DIRECT and BOX types, to simplify usecounting
+ // Allow only DIRECT and BOX types, to simplify usecounting (we don't have to EPILOG for RAT/XNUM)
  if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
   I lgk=bplg(at); I lgatomsini=MAX(LGSZI-lgk,0);  // lg of size of atom of a; lg of number of atoms in an I (0 if <1)
@@ -452,7 +460,7 @@ F2(jtapip){F12IP;A h;
         // if a has recursive usecount (which precludes virtual extension), increment the usecount of the added data - including any fill
         if(UCISRECUR(a)){wn<<=((fgwd&FGLGK)-LGSZI); A* aav=(A*)av; DO(wn, ra(aav[i]);)}        // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
        }
-       if(unlikely(_ttop!=jt->tnextpushp))tpop(_ttop);  // if virtual, ttop is after the result; otherwise result was surely not allocated here.  EPILOG not needed
+       if(unlikely(_ttop!=jt->tnextpushp))tpop(_ttop);  // if virtual, ttop is after the result; otherwise result was surely not allocated here.  EPILOG not needed because no non-BOX indirects allowed, and BOX doesn't call cvt
        RETF(a);
       }else ASSERT(!(AFLAG(a)&AFNJA),EVALLOC)  // if we failed only because the new value wouldn't fit, signal EVALLOC if NJA, to avoid creating a huge unassignable value
      } // end 'no fill required with dissimilar type'

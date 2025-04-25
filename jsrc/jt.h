@@ -225,8 +225,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // seldom used, but contended during system lock.  Also used for intertask communication of memory allocation
  ETXDATA *etxinfo;  // error display string and other info
  void *dtoa;             /* use internally by dtoa.c                        */
- PSTK initparserstack[1];  // 2 words stack used for messages when we don't have a real one Only .a and .t are used, leaving 6 bytes free (.pt and .filler)
- //   initparserstack[0].filler is the lock for repatq.  The lock is taken by eack task to send data back, and by this task when we receive the data
+ PSTK initparserstack[1];  // 2 words stack used for messages when we don't have a real one Only .a and .t are used for messages, leaving .pt and .filler free
+ //   initparserstack[0].filler is the lock for repatq.  The lock is taken by eack task to send data back, and by this task when we receive the data   ??? scaf is this still right ???
  A repatq;  // queue of blocks allocated in this thread but freed by other threads.  Used as a lock, so put in its own cacheline.  Same format as repato above.  TODO would something with splay be more memory friendly than a straight chain?
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)

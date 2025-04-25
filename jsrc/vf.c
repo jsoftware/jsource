@@ -294,7 +294,6 @@ static A jtreshapeblank(J jt, A a, A w, A rndfn, I nlens, I wcr){
 }
 
 F2(jtreshape){F12IP;A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wcr,wf,wr,* RESTRICT ws,zn;
- 
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; ws=AS(w); RESETRANK;
@@ -334,7 +333,6 @@ F2(jtreshape){F12IP;A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRIC
 }    /* a ($,)"r w */
 
 F2(jtreitem){F12IP;A y,z;I acr,an,ar,r,*v,wcr,wr;
- 
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; r=wcr-1; RESETRANK;

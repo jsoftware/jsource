@@ -847,7 +847,6 @@ A jtgc(J jt,A w,A* old){
  // We want to avoid realizing w if possible, so we handle virtual w separately
  if(AFLAG(w)&(AFVIRTUAL|AFVIRTUALBOXED)){
   if(AFLAG(w)&AFVIRTUALBOXED)R w;  // We don't disturb VIRTUALBOXED arrays because we know they're going to be opened presently.  The backer(s) might be on the stack.
-  // It might be right to just return fast for any virtual block
   if(likely(!(AFLAG(w)&AFUNINCORPABLE))){
    A b=ABACK(w);  // backing block for w.  It is known to be direct or recursible, and had its usecount incremented by w
    // Raise the count of w to protect it.  Since w raised the count of b when w was created, this protects b also.  Afterwards, if
@@ -859,11 +858,11 @@ A jtgc(J jt,A w,A* old){
    // advisedly and we do not delete the backer, but leave w alone.  Thus the test for realizing is (backer count changed during tpop) AND
    // (backer count is now <2)
    I bc=AC(b); bc=bc>2?2:bc;  // backer count before tpop.  We will delete backer if value goes down, to a value less than 2.  
-   ACINCRVIRT(w);  // protect w from being freed.  Its usecount may be >1.  Local because no other task can see our virtual, and it can't be PERM
+   ACINCRVIRT(w);  // protect w from being freed.  Its usecount may be >1.  Local because no other thread can see our virtual, and it can't be PERM
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w has no reason to persist except as the backer for w, we delete it to avoid wasting space.  We must realize w to protect it; and we must also ra() the contents of w to protect them.
    // If there are multiple virtual blocks relying on the backer, we can't realize them all so we have to keep the backer around.
-   if(unlikely(AC(b)<bc)){A origw = w; RZ(w=realize(w)); radescend(w); fa(b); mf(origw); }  // if b exists only for w, delete b.  get w out of the way.  w cannot be sparse.  Since we
+   if(unlikely(AC(b)<bc)){A origw=w; RZ(w=realize(w)); radescend(w); fa(b); mf(origw); }  // if b exists only for w, delete b.  get w out of the way.  w cannot be sparse.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
    else{

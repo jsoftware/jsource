@@ -262,7 +262,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
     // We can't transfer ownership if one of the args is VIRTUAL, because a virtual block doesn't really own its contents
     // We can't transfer ownership if a=w, because the counts for the blocks would be one too low
 
-    // The result can be pristine if both inputs are abandoned pristine, and are not the same block
+    // The result can be pristine if both inputs are abandoned pristine, and are not the same block (note: if one is boxed, no coonversion will ever happen)
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
     I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
     xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtfg))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
@@ -284,24 +284,25 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
  q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
- if(((r-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))>=0){  // r>2, or empty (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom), and items (which are lists) have same length 
-  RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); R z;  // ovg calls other functions, so we clear rank
+ if(((r-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))<0){  // r<=2, neither arg empty,  (sum of ranks<3 (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom) OR items (which are lists) have same length)
+  // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible, but scalar replication might be
+  I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
+  I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w;
+  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
+  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
+  DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
+  GA(z,t,zn,f+r,s); if(unlikely(zn==0))RETF(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops
+  if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
+  I klg=bplg(t);   // # bytes per atom of result
+  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
+  // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
+  I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps
+  sreps=(((((ma<<klg)^SZI)+((mw<<klg)^SZI))==0)>sreps)?3:sreps;  // if VV case moving exactly SZI, use routine for that
+  moveawtbl[sreps](CAV(z),CAV(a),CAV(w),replct*framect,(I)1<<klg,ma<<klg,mw<<klg,(wf>=af)?replct:1,(wf>=af)?1:replct);
+  RETF(z);
  }
- // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible, but scalar replication might be
- I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
- I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w;
- I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
- PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
- DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
- GA(z,t,zn,f+r,s); if(unlikely(zn==0))RETF(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops
- if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
- I klg=bplg(t);   // # bytes per atom of result
- // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
- // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
- I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps
- sreps=(((((ma<<klg)^SZI)+((mw<<klg)^SZI))==0)>sreps)?3:sreps;  // if VV case moving exactly SZI, use routine for that
- moveawtbl[sreps](CAV(z),CAV(a),CAV(w),replct*framect,(I)1<<klg,ma<<klg,mw<<klg,(wf>=af)?replct:1,(wf>=af)?1:replct);
- RETF(z);
+ // no special cases apply, perform general copy with rank and fill
+ PROLOG(000); RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); EPILOG(z);  // ovg calls other functions, so we clear rank
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 DF2(jtstitch){F12IP;I ar,wr; A z;
@@ -415,10 +416,14 @@ F2(jtapip){F12IP;A h;
       // See if there is room in a to fit w (including trailing pad to ensure a SZI can be fetched/stored at the last valid atom's address- but no pad for NJA blocks, to allow appending to the limit)
       I extrasize; if(likely(!(AFLAG(a)&AFNJA+AFVIRTUAL)))extrasize=FHRHSIZE(AFHRH(a))-AK(a)-(((SZI-1)<<(fgwd&FGLGK))&(SZI-1)); else extrasize=AFLAG(a)&AFVIRTUAL?-1:AM(a);  // a can't be GMP; inline the computation of allosize.  VIRTUAL must be UNINCORPABLE - pity to have to wait so long
       if(likely(extrasize>=ak+wk)){    // if free space is sufficient...
-       // We have passed all the tests.  Inplacing is OK.
+       // *********************** We have passed all the tests.  Inplacing is OK.
        AFLAGRESET(a,AFLAG(a)&(fgwd|~AFPRISTINE))  // clear pristine flag in a if w is not also (a must not be virtual)
-       // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)
-       if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}
+       //  Now adjust the result block to match the upcoming copy.  If the operation is virtual extension we have to allocate a new block for the result
+       if(unlikely(fgwd&FGVIRTREQD)){    // If virtual extension...
+        A oa=a; ar=AR(a); RZ(a=virtual(a,0,ar)); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],ar-1);  // Allocate a virtual block, which will extend past the original block.  Fill in AN and AS for the block
+       }
+       PROLOG(000);  // everything allocated after this is scratch area
+       if(unlikely(TYPESNE(at,AT(w)))){RZ(w=cvt(at,w));}       // If w must change precision, do.  This is where we catch domain errors.  We wait till here in case a and w should be converted to the type of user fill (in jtover)
        // If the items of w must be padded to the result item-size, do so.
        // If the items of w are items of the result, we simply extend each to the shape of
        // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
@@ -431,7 +436,7 @@ F2(jtapip){F12IP;A h;
   // if w cell must be expanded, whether by leading or internal axis, but not by scalar replication
        }else{
         // fill required, and no atomic replication.  First expand the entire w as needed, then framing fill as needed for extra axes
-        if(!(fgwd&FGWNOCELLFILL)){h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX)); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}
+        if(!(fgwd&FGWNOCELLFILL)){RZ(h=vec(INT,AR(w),AS(a)+(fgwd>>FGARMINUSWRX))); makewritable(h); IAV1(h)[0]=AS(fgwd&FGARMINUSWR?a:w)[fgwd>>FGARMINUSWRX]; RZ(w=take(h,w));}
         // If an item of a is bigger than the entire (possibly expanded) nonatomic w,
         // copy fill to the output area.  Start the copy after the area that will be filled in by w
         wlen=AN(w)<<(fgwd&FGLGK); // the length in bytes of the data in w after fill to item size
@@ -441,18 +446,13 @@ F2(jtapip){F12IP;A h;
        if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1)} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill
        // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
        PRISTCLRF(w)  // this destroys w!
-       // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
-       if(likely(!(fgwd&FGVIRTREQD))){
-        // Normal append-in-place.
-        // Update the # items in a, and the # atoms
-        AS(a)[0]+=wm; AN(a)+=wn;
-        // if a has recursive usecount, increment the usecount of the added data - including any fill
-        // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
-        if(UCISRECUR(a)){wn<<=((fgwd&FGLGK)-LGSZI); A* aav=(A*)av; DO(wn, ra(aav[i]);)}
-       }else{
-        // virtual extension.  Allocate a virtual block, which will extend past the original block.  Fill in AN and AS for the block
-        A oa=a; ar=AR(a); RZ(a=virtual(a,0,ar)); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],ar-1);
+       // The data has been copied.  No more errors are possible.  It is safe to modify the size of a
+       if(likely(!(fgwd&FGVIRTREQD))){     // Normal append-in-place.
+        AS(a)[0]+=wm; AN(a)+=wn;  // Update the # items in a, and the # atoms
+        // if a has recursive usecount (which precludes virtual extension), increment the usecount of the added data - including any fill
+        if(UCISRECUR(a)){wn<<=((fgwd&FGLGK)-LGSZI); A* aav=(A*)av; DO(wn, ra(aav[i]);)}        // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
        }
+       if(unlikely(_ttop!=jt->tnextpushp))tpop(_ttop);  // if virtual, ttop is after the result; otherwise result was surely not allocated here.  EPILOG not needed
        RETF(a);
       }else ASSERT(!(AFLAG(a)&AFNJA),EVALLOC)  // if we failed only because the new value wouldn't fit, signal EVALLOC if NJA, to avoid creating a huge unassignable value
      } // end 'no fill required with dissimilar type'

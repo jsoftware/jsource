@@ -24,7 +24,7 @@ static DF2(ad12){F12IP;A z; A childself=FAV(self)->fgh[0];
  if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN  // if the error was ATTN/BREAK, clear the source of the error
  RESETERR;
  if(likely(z))RETF(z);  // normal return.  fall through to execute v
- tpop(old);  // the error exit leaves the stack unpopped
+ tpop(old);  // clear the stack for the failed branch, which might have left a large stack.  the error exit leaves its stack unpopped on error, as all errors must
  childself=FAV(self)->fgh[1];  w=dyad?w:childself; R AT(childself)&NOUN?childself:CALL2(FAV(childself)->valencefns[dyad],a,dyad?w:childself,childself);
 }
 

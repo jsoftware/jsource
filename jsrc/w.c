@@ -104,9 +104,11 @@ A jtunwordil(J jt, A wil, A w, I opts){A z;
 // ;: y
 DF1(jtwords){F12IP;A t,*x,z;C*s;I k,n,*y;
  F1RANK(1,jtwords,self);
+ PROLOG(000);
  RZ(w=vs(w));  // convert w to LIT if it's not already
  RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ)
- R jtboxcut0(jt,t,w,self);  // result of wordil has shape suitable for <;.0, so we use that
+ t=jtboxcut0(jt,t,w,self);  // result of wordil has shape suitable for <;.0, so we use that
+ EPILOG(t)
 }
 
 

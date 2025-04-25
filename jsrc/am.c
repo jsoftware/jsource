@@ -775,13 +775,14 @@ static DF2(jtamendn2c){F12IP;R jtamendn2(jtfg,a,w,VAV(self)->fgh[0],self);}  // 
 // call merge2 to do the merge.  Pass inplaceability into merge2.
 static DF2(amccv2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
  ARGCHK2(a,w); 
+ PROLOG(000);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // u} not supported for sparse
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
  A z=jtmerge2(jtfg,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
  if(unlikely(z==0))jteformat(jt,self,a,w,x);  // eformat this error while we have access to x
  // We modified w which is now not pristine.
  PRISTCLRF(w)
- RETF(z);
+ EPILOG(z);
 }
 
 

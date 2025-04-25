@@ -120,6 +120,7 @@ F1(jtjopen){F12IP;A z;I h;
  else{A ww;
   // opening a file by name.  We open the file and then add it to the table.  If the same name is opened more than once, they get
   // separate table entries
+  PROLOG(000);
   RZ(h=(I)jope(w,FUPDATE_O));
   RZ(ww=mkwris(fullname(vslit(C(AAV(w)[0])))));
   WRITELOCK(JT(jt,flock))
@@ -127,7 +128,7 @@ F1(jtjopen){F12IP;A z;I h;
   AAV0(JT(jt,fopafl))[AM(JT(jt,fopafl))]=ww; ACINITZAP(ww) AM(ww)=h;  // install new string, with file handle in AM
   ++AM(JT(jt,fopafl));
   WRITEUNLOCK(JT(jt,flock))
-  R sc(h);
+  EPILOG(sc(h));
 }}   /* open the file named w if necessary; return file# */
 
 // 1!:22

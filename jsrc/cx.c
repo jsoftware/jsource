@@ -497,6 +497,7 @@ dobblock:
    // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types and BOX cause it's free (they are always true)
    if(unlikely(AN(tt)==0))goto safedo;  // nonexistent or empty t can fall through without checking for end
    if((-(AT(tt)&(B01|LIT|INT|INT2|INT4|FL|CMPX|QP|C2T|C4T|BOX))&-((I)CAV(tt)[0]))<0)goto safedo;  // C cond is true if (type direct or BOX) and (value not 0).  J cond is true then.  Musn't fetch CAV[0] if AN==0
+    // false cases come here, and a few true ones
     // here the type is indirect or the low byte is 0.  We must compare more
    I nextic=CWGO(cwsent,CNSTOREDCW,ic+1);  // next inst if false
    while(1){  // 2 loops if sparse
@@ -510,7 +511,7 @@ dobblock:
     if(!ISSPARSE(AT(tt)))break;     // nonnumeric types (BOX, char) test true: i is set for that
     BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
    }
-   // false cases come here, and a few true ones
+   // ic has been set from the test
  elseifasdo:;  // elseif is like do. with a failing test - probably followed by B.  ic is set  case./fcase after the first also come here, to branch to end.
  safedo:;  // here when we have advanced ic.  If this op is flagged we know the thing at ic is a bblock[end].  tcesx still has the value from the previous ic
    if(likely(FLAGGEDNOTRACE(tcesx)))goto dobblock;   // normal case, we know we are continuing with bblock.  No need to fetch it

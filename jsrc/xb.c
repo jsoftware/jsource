@@ -367,8 +367,8 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
  RETF(z);
 }
 
-F1(jtbinrep1){F12IP;ARGCHK1(w); ASSERT(NOUN&AT(w),EVDOMAIN); R brep(BU,SY_64,w);}  /* 3!:1 w */
-F1(jthexrep1){F12IP;ARGCHK1(w); ASSERT(NOUN&AT(w),EVDOMAIN); R hrep(BU,SY_64,w);}  /* 3!:3 w */
+F1(jtbinrep1){F12IP;ARGCHK1(w); PROLOG(000); ASSERT(NOUN&AT(w),EVDOMAIN); A z=brep(BU,SY_64,w); EPILOG(z)}  /* 3!:1 w */
+F1(jthexrep1){F12IP;ARGCHK1(w); PROLOG(000); ASSERT(NOUN&AT(w),EVDOMAIN); A z=hrep(BU,SY_64,w); EPILOG(z)}  /* 3!:3 w */
 
 F2(jtbinrep2){F12IP;I k;
  ARGCHK2(a,w);

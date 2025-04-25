@@ -139,6 +139,7 @@ static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
 DF1(jtjfread){F12IP;A z;F f,fp;
  ASSERT(!JT(jt,seclev),EVSECURE) 
  F1RANK(0,jtjfread,self);
+ PROLOG(000);
  RE(f=stdf(w));  // f=file#, or 0 if w is a filename
  if(f){ // if special file, read it all, possibly with error
   if(1==(I)f)R jgets(GETSKBD);
@@ -149,12 +150,13 @@ DF1(jtjfread){F12IP;A z;F f,fp;
  z=fl<0?rdns(fp):rd(fp,0,fl);
  if(!f){fclose(fp);} //if we opened the file, close it
  else{jtunvfn(jt,f,0);} //otherwise, release the lock on it
- RETF(z);}
+ EPILOG(z);}
 
 // 1!:2
 DF2(jtjfwrite){F12IP;B b;F f;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,0,jtjfwrite,self);
+ PROLOG(000);
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
  RE(f=stdf(w));
  if(2==(I)f){jtjpr((J)((I)jt+MTYOFILE),a); R a;}  // for write to stdout, convert to printable string and type out, with NOSTDOUT off
@@ -166,13 +168,15 @@ DF2(jtjfwrite){F12IP;B b;F f;
  if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f)); 
  wa(f,0L,a); 
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
- RNE(mtm);
+ RE(0); EPILOG(mtm);   // check error, return mtm if none
+// obsolete  RNE(mtm);
 }
 
 // 1!:3
 DF2(jtjfappend){F12IP;B b;F f;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,0,jtjfappend,self);
+ PROLOG(000);
  RE(f=stdf(w));
  if(2==(I)f){jpr(a); R a;}  // this forces typeout, with NOSTDOUT off
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
@@ -180,17 +184,21 @@ DF2(jtjfappend){F12IP;B b;F f;
  if(b=!f)RZ(f=jope(w,FAPPEND_O)) else RE(vfn(f));
  wa(f,fsize(f),a);
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
- RNE(mtm);
+ RE(0); EPILOG(mtm);   // check error, return mtm if none
+// obsolete  RNE(mtm);
 }
 
+// 1!:4
 DF1(jtjfsize){F12IP;B b;F f;I m;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfsize,self);
+ PROLOG(000);
  RE(f=stdf(w));
  if(b=!f)RZ(f=jope(w,FREAD_O)) else RE(vfn(f)); 
  m=fsize(f); 
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
- RNE(sc(m));
+ RE(0); EPILOG(sc(m));   // check error, return mtm if none
+// obsolete  RNE(sc(m));
 }
 
 // process index file arg for file number; return 0 if error or file name
@@ -222,21 +230,25 @@ static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
 DF1(jtjiread){F12IP;A z=0;B b;F f;I i,n;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjiread,self);
+ PROLOG(000);
  RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD_O));  // b=filename, not number; if name, open the named file
  if(ixin(w,fsize(f),&i,&n))z=rd(f,i,n);
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
- R z;
+ EPILOG(z);
 }
 
 // 1!:12
 DF2(jtjiwrite){F12IP;B b;F f;I i;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(RMAX,1,jtjiwrite,self);
+ PROLOG(000);
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
  RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FUPDATE_O));  // b=filename, not number; if name, open the named file
  if(ixin(w,fsize(f),&i,0L))wa(f,i,a); 
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
+ RE(0); EPILOG(mtm);   // check error, return mtm if none
+// obsolete  RNE(mtm);
  RNE(mtm);
 }
 
@@ -332,23 +344,27 @@ DF1(jtjgetenv){F12IP;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjgetenv,self);
  ASSERT((LIT+C2T+C4T)&AT(w),EVDOMAIN);
+ PROLOG(000); A z;
 #if (SYS & SYS_UNIX)
  {
   C*s;
-  R(s=getenv(CAV(toutf8x(w))))?cstr(s):num(0); // toutf8x has trailing nul
+  z=(s=getenv(CAV(toutf8x(w))))?cstr(s):num(0); // toutf8x has trailing nul
  }
 #else
  {
-  A z; US* us;
+  US* us;
   RZ(z=toutf16x(toutf8(w))); USAV(z)[AN(z)]=0;  // install termination
   us=_wgetenv(USAV(z));
-  if(!us)R num(0);
-  GATV0(z,C2T,wcslen(us),1);
-  MC(USAV1(z),us,2*wcslen(us));
-  R toutf8(z);
+  if(!us)z=num(0);
+  else{
+   GATV0(z,C2T,wcslen(us),1);
+   MC(USAV1(z),us,2*wcslen(us));
+   z=toutf8(z);
+  }
  }
 #endif
- R num(0);
+EPILOG(z);
+// obsolete  R num(0);
 }
 
 // 2!:6

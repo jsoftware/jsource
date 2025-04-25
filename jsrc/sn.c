@@ -122,6 +122,7 @@ F1(jtonm){F12IP;A x,y; RZ(x=ope(w)); RE(y=stdnm(x)); ASSERTN(y!=0,EVILNAME,nfs(A
 // w is array of boxed strings; result is name class for each
 F1(jtnc){F12IP;A*wv,x,y,z;I i,n,t,*zv; 
  ARGCHK1(w);
+ PROLOG(000);
  n=AN(w); wv=AAV(w);   // n=#names  wv->first box
  ASSERT(!n||BOX&AT(w),EVDOMAIN);   // verify boxed input (unless empty)
  I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); zv=AVn(zr,z);   // Allocate z=result, same shape as input; zv->first result
@@ -136,7 +137,7 @@ F1(jtnc){F12IP;A*wv,x,y,z;I i,n,t,*zv;
   zc=x?zc:-1; zc=y?zc:-2;
   zv[i]=zc;  // calculate the type, store in result array
  }
- RETF(z);
+ EPILOG(z);
 }    /* 4!:0  name class */
 
 // these functions are called with an a arg that is a 256-char rank-1 boolean map giving the initial characters wanted, and AS(a)[0] is a mask of allowed types
@@ -230,6 +231,7 @@ F1(jtnch){F12IP;READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT
 
 F1(jtex){F12IP;A*wv,y,z;B*zv;I i,n;
  ARGCHK1(w);
+ PROLOG(000);
  protectlocals(jt,0);  // we must ra() any local names on the current sentence's stack, since we may be about to delete them
  n=AN(w); wv=AAV(w); 
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
@@ -248,5 +250,5 @@ F1(jtex){F12IP;A*wv,y,z;B*zv;I i,n;
    WRITEUNLOCK(locfound->lock)
   }
  }
- RETF(z);
+ EPILOG(z);
 }    /* 4!:55 expunge */

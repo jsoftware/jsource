@@ -1247,6 +1247,7 @@ F1(jtnub){F12IP;
 // x -. y.  does not have IRS, supports inplacing on the unhashed argument
 F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  ARGCHK2(a,w);
+ PROLOG(000);
  at=AT(a); ar=AR(a); 
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
@@ -1268,12 +1269,13 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
   // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  }
  if(unlikely(at&BOX))PRISTXFERF(x,a)  // transfer pristinity from a; but remembering that a's inplacing has been moved to the w bit
- RETF(x);
+ EPILOG(x);
 }    /* a-.w */
 
 // x ([ -. -.[!.f]) y.  does not have IRS, supports inplacing on a (the unhashed argument)
 DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  ARGCHK2(a,w);
+ PROLOG(000);
  at=AT(a); ar=AR(a); 
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
@@ -1292,7 +1294,7 @@ DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  POPCCT
  RZ(x);
  if(unlikely(at&BOX))PRISTXFERAF(x,a)  // the boxes in w cannot get to the result, even though their values participate; so pristinity depends entirely on a
- RETF(x);
+ EPILOG(x);
 }
 
 // x e. y

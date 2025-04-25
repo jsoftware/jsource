@@ -24,12 +24,13 @@ A jteval(J jt,C*s){R PARSERVALUE(parseforexec(tokens(cstr(s),1+!!EXPLICITRUNNING
 A jtev12(J jt,A a,A w,C*s){A z; A fs; RZ(fs=eval(s)); R (FAV(fs)->valencefns[!!w])((J)((I)jt+(AT(fs)&VERB?0:JTXDEFMODIFIER)),a,w?w:fs,fs);}  // if modifier, so flag (for unquote & xdefn, so not needed)
 
 // ". y
-static F1(jtexec1cell){F12IP;A z;
+static F1(jtexec1cell){F12IP;A z;PROLOG(000);
   z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+!!EXPLICITRUNNING)));  // replace DDs, but require that they be complete within the string (no jgets)
  // we MUST NOT call EPILOG, even though there is trash from ddtokens to clean up.  Local values are not protected by FAOWED but instead by the local symbol table.  If a local-named value is in execution
  // and the name is deleted (by name_: or 4!:55), we use tpush to defer the fa to the caller.  For this purpose sentences executed by ". are part of the containing sentence in parse, and must not do tpop
  // before the calling sentence has completed.
- RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
+ z=z&&!(AT(z)&NOUN)?mtv:z;  // if non-noun result, return empty $0
+ EPILOG(z)
 }
 DF1(jtexec1){F12IP;A z;
  ARGCHK1(w);

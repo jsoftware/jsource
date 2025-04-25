@@ -240,6 +240,7 @@ F1(jttss){F12IP;ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 // 6!:2 dyad
 DF2(jttsit2){F12IP;A z;D t;I n;I stackallo=0,i;
  F2RANK(0,1,jttsit2,self);
+ PROLOG(000);
  RE(n=i0(a));
  RZ(w=ddtokens(vs(w),4+1+!!EXPLICITRUNNING));   // tokenize outside of timer.  We time as if the sentence were executed in an explicit defn
  // apply pppp to the sentence.  Create a 1-sentence block of control words
@@ -292,7 +293,8 @@ foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNE
  t=qpc()-t; // Run the sentence.  No need to run as exec since the result doesn't escape.  tpop like jtxdefn.  no tpop on error.
  if(unlikely(stackallo))debz();
  RZ(z);  // if error, fail the timing request
- R scf(n?t/(n*pf):0);   // convert processor freq to seconds, get time per iteration
+ z=scf(n?t/(n*pf):0);   // convert processor freq to seconds, get time per iteration
+ EPILOG(z)
 }
 
 

@@ -800,6 +800,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
+// xdefn frees memory at the end of a sentence.  Well-written verbs (including anything that runs EPILOG) clean up their own mess, leaving nothing to tpop.  To reduce
+// tpop overhead, we allow a few blocks to stay unfreed before we force a tpop.
 #define TPOPSLACKB 1  // number of stacked blocks to allow before we tpop them (in jtxdefn) - 0 means tpop every time - for B blocks
 #define TPOPSLACKT 2  // number of stacked blocks to allow before we tpop them (in jtxdefn) - 0 means tpop every time - for T blocks
 

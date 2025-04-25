@@ -26,9 +26,9 @@ spleak=: 3 : 0
  y2288=. 7!:0 ''
  x2288=. 7!:0 ''
  ". y
+ assert. 1  NB. Force xdefn to tpop
  y2288=. 7!:0 ''
- assert. x2288 = y2288
- 1
+ if. x2288 ~: y2288 do. 0 [ x2288__ =: x2288 [ y2288__ =: y2288 else. 1 end.
 )
 
 spleak '>:   ^:(<1000)  1x'

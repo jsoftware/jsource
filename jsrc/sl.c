@@ -585,7 +585,7 @@ F2(jtloccre2){F12IP;
 }    /* 18!:3  create locale with specified hash table size */
 
 
-// 18!:4 cocurrent/coclass.  Called only from unquote.  We return a flag requesting a change of locale
+// (formerly 18!:4) cocurrent/coclass.  Called only from unquote.  We return a flag requesting a change of locale
 F1(jtlocswitch){F12IP;A g;
  ARGCHK1(w);
  if(!(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)){  // atomic integer/bool is OK as is

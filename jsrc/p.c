@@ -859,23 +859,12 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
 #else
 #define jtlsbs (((pt0ecam>>(FLGPMSKX+1))&2)|1)
 #endif
-A *opushp=jt->tnextpushp;  // scaf
       y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
       // When we don't break we lose time waiting for stack->a to be read and masked, but not much.
       // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
       // indirect branch can mispredict and start fetching from the new address.  That is, minimize total # instructions from loading actionfn until the call, with no concern for latency.  In the normal case the
       // load of actionfn will be a single load, completing in 5 cycles, so every instruction after that is money.
       // Vars that survive this call include (sp) queue pt0ecam stack jt tpopa tpopw.
-UI stacksz=jt->tnextpushp-opushp;
-if(stacksz&&y==jt->tnextpushp[-1])--stacksz;
-if(stacksz==0);
-else
- if(stacksz==1)
-  stacksz=1;
-else if(stacksz==2)
-  stacksz=2;
-else if(stacksz>2)
-  stacksz=3;
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still point to the action routine

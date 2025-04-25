@@ -588,13 +588,15 @@ F2(jtloccre2){F12IP;
 // (formerly 18!:4) cocurrent/coclass.  Called only from unquote.  We return a flag requesting a change of locale
 F1(jtlocswitch){F12IP;A g;
  ARGCHK1(w);
+ A *_ttop=jt->tnextpushp;  // stack restore point
  if(!(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)){  // atomic integer/bool is OK as is
   // not a numeric atom.  perform boxxopen
   if(((AN(w)-1)|SGNIF(AT(w),BOXX))>=0)RZ(w=box(w));  // if not empty & not boxed, box it
   ASSERT(!AR(w),EVRANK);   // now always boxed: must be atom
  }
  RZ(g=locale(1,w));   // point to locale, if no error
- R (A)((I)g+1);  // set LSB as flag to unquote that we ran cocurrent
+ tpop(_ttop);  // we don't need EPILOG because the locale can't be on the stack anywhere
+ R (A)((I)g+1);  // set LSB as flag to unquote that we ran cocurrent.  Don't EPILOG to avoid ra/fa on locale
 }
 F1(jtlocname){F12IP;A g=jt->global;
  ASSERTMTV(w);

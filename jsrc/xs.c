@@ -47,6 +47,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 // handler for load command, 0!:0-112
 // w is the text of the file.  We create a debug frame, in which we will store the state of the reading
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
+PROLOG(000);
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256]; int tracklineno=0;  // will hold line# followed by line
@@ -97,7 +98,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  jt->emsgstate&=se|~EMSGSTATETRAPPING;  // retore original TRAPPING status.  We only set it higher here
  jt->namecaching&=~(2+1); jt->namecaching|=oldnmcachescript; jt->namecaching|=!!jt->namecaching;  // pop the per-script part, reestablish LSB
  jt->glock=oldk; // pop lock status
- if(3==ce){z=num(jt->jerr==0); RESETERR; R z;}else RNE(mtm);
+ if(3==ce){z=num(jt->jerr==0); RESETERR;}else z=mtm; RE(0); EPILOG(z);
 }
 
 static F1(jtaddscriptname){F12IP;I i;A z;
@@ -131,6 +132,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->cu
   ASSERT(LIT&AT(y),EVDOMAIN); 
   ASSERT(3<n&&!memcmpne(s+n-3,".js",3L)||4<n&&!memcmpne(s+n-4,".ijs",4L),EVSECURE);
  }
+ PROLOG(000);
  RZ(x=jfread(w));
  // Remove UTF8 BOM if present - disabled pending resolution.  Other BOMs should not occur
  // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num(3),x))
@@ -147,7 +149,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->cu
 #if SYS & SYS_PCWIN
  if(lk)mvc(AN(x),AV(x),MEMSET00LEN,MEMSET00);  /* security paranoia */
 #endif
- R z;
+ EPILOG(z);
 }
 
 // 4!:6 add script name to list and return its index

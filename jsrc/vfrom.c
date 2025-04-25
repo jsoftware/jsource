@@ -363,7 +363,6 @@ endaxes:;
 
 // a is numeric
 F2(jtifrom){F12IP;A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
- 
  ARGCHK2(a,w);
  // IRS supported but only for a single a value.  This has implications for empty arguments.
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
@@ -543,10 +542,10 @@ static F2(jtafrom){F12IP; PROLOG(0073);
 
 // a{"r w  We handle the fast cases (atom{array) and (empty{"r array) here.  For others we go to a type-dependent processor for a that will build index lists
 DF2(jtfrom){F12IP;A z;
- 
  ARGCHK2(a,w);
  I at=AT(a), wt=AT(w), ar=AR(a), wr=AR(w);
  if(likely(!ISSPARSE(at|wt))){
+  PROLOG(000);
   // Handle the simple case of unboxed atom { array, and no frame: single cell
   // We don't process NJA through here because it might create a virtual block & we don't want NJAs rendered unmodifiable by virtual blocks
   if(!((at&BOX)+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1))))+(AFLAG(w)&AFNJA))){   // if AR is unboxed atom and w has no frame
@@ -615,6 +614,7 @@ DF2(jtfrom){F12IP;A z;
    // Since there may have been duplicates, we cannot mark z as pristine.  We overwrite w because it is no longer in use
    if(!(AFLAG(z)&AFVIRTUAL))PRISTCLRF(w)
   }
+  EPILOG(z);
  }else if(ISSPARSE(at&wt)){z=fromss(a,w);  // sparse cases
  }else if(ISSPARSE(wt)){z=at&BOX?frombs(a,w) : fromis(a,w);
  }else{z=fromsd(a,w);}

@@ -11,16 +11,20 @@
 // if w is not the same type as the fill, convert it.  The user has to handle a.
 // if w and a have the same type, w will not be converted
 // Result is possibly-converted w
-F2(jtsetfv){F12IP;A q=jt->fill;I t;
+F2(jtsetfv){F12IP;A q=jt->fill;
  ARGCHK2(a,w);
+ I an=AN(a), wn=AN(w);   // empty flags for a/w 
  q=q?q:mtv;  // if no fill given, use empty vector
- I t2=REPSGN(-AN(w))&AT(w); t=REPSGN(-AN(a))&AT(a); t=t?t:t2;  // ignoring empties, use type of a then w
+ I t=maxtypedne(AT(a)|((UI)-an<(UI)wn),AT(w)|((UI)-wn<(UI)an)); t=LOWESTBIT(t);   // If types not the same, get result type.  Treat empty arg as boolean if the other is nonempty.  If both empty, use higher type.  requires B01=1
+// obsolete  I t2=REPSGN(-AN(w))&AT(w); t=REPSGN(-AN(a))&AT(a); t=t?t:t2;  // ignoring empties, use type of a then w
  if(unlikely(AN(q)!=0)){ // fill specified
-  RE(t=t?maxtype(t,AT(q)):AT(q)); // get type needed for fill
+// obsolete   RE(t=t?maxtype(t,AT(q)):AT(q)); // get type needed for fill
+  RE(t=an+wn?maxtype(t,AT(q)):AT(q));   // get type needed for fill, user fill is both a & w both empty, else the higher priority of fill+nonempty
   if(TYPESNE(t,AT(q))){if((q=cvt(t,q))==0){if(jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; R 0;}}  // convert the user's type if needed; call it INHOMO if incompatible
   jt->fillv=CAV(q); jt->fillvlen=bpnoun(t);  // jt->fillv points to the fill atom
- }else{if(!t)t=AT(w); fillv0(t);}    // empty or no fill.  create std fill in fillv0 and point jt->fillv at it
- w=TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed and nonempty this won't change it
+// obsolete  }else{if(!t)t=AT(w); fillv0(t);}    // empty or no fill.  create std fill in fillv0 and point jt->fillv at it
+ }else{fillv0(t);}    // empty or no fill.  create std fill in fillv0 and point jt->fillv at it
+ w=TYPESEQ(t,AT(w))?w:cvt(t,w);  // convert w to dest type.  note if w is boxed and nonempty this won't change it
  if(w==0&&jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; // if we got an error here (always called DOMAIN), show it as EVHOMO when we eformat
  R w;
 }

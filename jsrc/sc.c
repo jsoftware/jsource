@@ -38,7 +38,6 @@ DF2(jtunquote){F12IP;A z;
 #define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
    // bits 22-28 must be 0 - they are stored into bstkreqd
 #define FLGFLAG2X 32  // location of FLAG2 flags
-A *opushp=jt->tnextpushp;  // scaf
 
  UI8 flgvbnmgen=(UI8)__atomic_load_n(&FAV(self)->flag2,__ATOMIC_RELAXED);   // extract self flags, which we will need quickly, init dyad flag
  A thisname=__atomic_load_n(&FAV(self)->fgh[0],__ATOMIC_RELAXED); A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
@@ -291,16 +290,6 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
   fs=jt->parserstackframe.sf;  // restore fs
  }
  // the call has returned, long way or short way
-UI stacksz=jt->tnextpushp-opushp;
-if(stacksz&&z==jt->tnextpushp[-1])--stacksz;  // scaf
-if(stacksz==0);
-else
- if(stacksz==1)
-  stacksz=1;
-else if(stacksz==2)
-  stacksz=2;
-else if(stacksz>2)
-  stacksz=3;
 
  if(unlikely((I)jtfg&flgvbnmgen&FLGLOCATIVE) && likely(z!=0) && !(AT(z)&NOUN)){  // can't be cocurrent
   // a locative modifier returned a non-noun.  We create a pseudoname to remember the name and locale that were used.

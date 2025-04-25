@@ -482,7 +482,7 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
   // use local fretblock if there are few frets
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; AR(frets)=0; if(MEMAUDIT&0xc)AFLAGFAUX(frets,0)} // Cut tests the type field - only; for memaudit we need flag too, and rank in case we rank2ex
   // we can write the frets over w if w is inplaceable, DIRECT, has items bigger than an I4, not 32-bit or atom, and not u/..~  w has always been copied to a new buffer by the sort
-  else if((likely(w!=a)||likely(FAV(self)->id!=CSLDOTDOT)) && (SZI==8) && likely(AR(w)) && ((((AFLAG(w)&(AFVIRTUAL|AFNJA))-((I)jtfg&JTINPLACEW))&(-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen))<0))frets=w;  // scaf 3-cellsize?
+  else if((likely(w!=a)||likely(FAV(self)->id!=CSLDOTDOT)) && (SZI==8) && likely(AR(w)) && ((((AFLAG(w)&(AFVIRTUAL|AFNJA))-((I)jtfg&JTINPLACEW))&(-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen))<0))frets=w;
 // obsolete  else if((I)jtfg&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((w!=a)|(FAV(self)->id!=CSLDOTDOT))&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))   frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254

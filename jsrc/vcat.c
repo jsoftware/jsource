@@ -324,7 +324,7 @@ DF2(jtstitch){F12IP;I ar,wr; A z;
 F1(jtlamin1){F12IP;A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
- fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=AV(x);
+ fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=IAV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
  R jtreshape(jtfg,x,w);
 }    /* ,:"r w */
@@ -332,13 +332,14 @@ F1(jtlamin1){F12IP;A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr;
 DF2(jtlamin2){F12IP;A z;I ar,p,q,wr;
  // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
  ARGCHK2(a,w); 
+ PROLOG(000);
  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;  // p=cell rank of a, q=cell rank of w
  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
  if(p)RZ(a=IRS1(a,0L,p,jtlamin1,z));
  if(q)RZ(w=IRS1(w,0L,q,jtlamin1,z));
  RZ(IRS2(a,w,self,p+!!p,q+!!q,jtover,z));
  if(!(p|q))z=IRS1(z,0L,0L,jtlamin1,a);
- RETF(z);
+ EPILOG(z);
 }    /* a,:"r w */
 
 // Append, including tests for append-in-place

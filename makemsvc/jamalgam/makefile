@@ -350,6 +350,6 @@ noclean:
 	#
 
 clean:
-	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(OBJSLN) $(OBJS_SLEEF) $(SRC_ASM)
+	rm -f *.lib *.exp *.ilk *.pdb $(OBJS) $(OBJSLN) $(OBJS_SLEEF) $(SRC_ASM)
 
 .PHONY: all clean nonclean

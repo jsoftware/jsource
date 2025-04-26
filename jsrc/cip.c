@@ -1183,7 +1183,7 @@ DF2(jtludecomp){F12IP;PROLOG(823);
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
  I wn=AS(w)[0];  // n=size of square matrix
- if((EPMONAD)&&hascblas&&(AT(w)&B01+INT+FL)&&wn>(hwfma?300:10))R  jtludecompblas(jt,w,DUMMYSELF);  // use lapack version
+ if((EPMONAD)&&hascblas&&(AT(w)&B01+INT+FL)&&wn>=(hwfma?500:10))R  jtludecompblas(jt,w,DUMMYSELF);  // use lapack version
  if(hascblas&&(AT(w)&CMPX))R  jtludecompxblas(jt,w,DUMMYSELF);  // use lapack version
  if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w,DUMMYSELF);  // if not real float type, use general version
 #if C_AVX2 || EMU_AVX2

@@ -222,7 +222,7 @@ s aa
 )
 15 225 100 226 226 101 -: f''  NB. The returns from a all get fixed, but only at lowest level
 
-NB. locative operator has a reference that acts like a locative
+NB. modifier locative operator has a reference that acts like a locative
 4!:55 <'aa'
 cocurrent 'base'
 aa_xxx_ =: {{ (u y) ; coname'' }}
@@ -251,6 +251,44 @@ cocurrent 'base'
 1: 6!:10 ''
 
 4!:55 ;:'aa_z_ aa_xxx_'
+
+
+cocurrent 'xxx'
+
+t =: 0
+f =: -
+a =: /
+
+A =: 1 : 0
++a_xxx_ t_xxx_ + f_xxx_ u y
+)
+
+B =: 1 : 0
++a t + f u y
+)
+
+C =: +a_xxx_@:(t_xxx_&+)@:f_xxx_@:
+
+D =: +a@:(t&+)@:f@:
+
+cocurrent 'base'
+
+t =: 100
+f =: +
+a =: ]:
+
+_18 -: *: A_xxx_ 3 3
+_18 -: *: B_xxx_ 3 3
+_18 -: *: C_xxx_ 3 3
+_18 -: *: D_xxx_ 3 3
+
+_18 -: *: A_xxx_ f. 3 3
+109 109 -: *: B_xxx_ f. 3 3
+_18 -: *: C_xxx_ f. 3 3
+18 -: *: D_xxx_ f. 3 3
+
+
+
 
 
 NB. Returns
@@ -330,7 +368,7 @@ f =: *:
 
 'value error' -: 3 : '(u [. +)' etx 3  NB. used to crash overwriting parser stack
 
-4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ g_z_ j j_xxx_ dou F f f_a_ F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nm nn sum v'
+4!:55 ;:'a a_xxx_ A_xxx_ B_xxx_ C_xxx_ D_xxx_ aa q a_z_ c_z_ d_yyy_ d_xxx_ g_z_ j j_xxx_ dou F f f_a_ f_xxx_ F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nm nn sum t t_xxx_ v'
 (271828) 18!:55 ;:'xxx yyy'
 
 

@@ -405,7 +405,7 @@ F1(jtcreatecachedref){F12IP;A z;
  RETF(z);
 }
 
-// Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=name, h=actual entity to execute
+// Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=name, h=actual entity to execute. g can be filled in with a locale for modifier locative
 F2(jtnamerefop){F12IP;V*v;
  ARGCHK2(a,w);
  v=FAV(w);

@@ -203,7 +203,7 @@ static B jtconsinitt(J jt){
  jt->cct= 1.0-FUZZ;
  jt->xmode=XMEXACT;
  // create an initial stack, so that stack[-1] can be used for saving error messages
- jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&jt->initparserstack[1];  // ensure valid error stack after final return (start off the end)
+ jt->parserstackframe.parserstkbgn=jt->parserstackframe.parserstkend1=&initparserstack[1];  // ensure valid error stack after final return (start off the end)
  R 1;
 }
 

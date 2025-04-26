@@ -118,6 +118,10 @@ true
 > pilo;
 0x1.1a62633145c07p-53
 */
+
+// parser stack used for sentence info when we don't have a real one, either after the last exec or in a task that runs a tacit verb with no parsing
+PSTK initparserstack[4]={{.a=0, .t=0},{.pt=(UI4)0xC9000040}};  //Only [0].a and [0].t are used for messages, leaving .pt and .filler free. [1].pt is a backmark to stop protectlocals.  Init pointer to [1], but protectlocals looks at [2] which we must get mapped
+
 I   iotavec[IOTAVECLEN];  // return values for i. small
 uint64_t g_cpuFeatures;   // blis
 uint64_t g_cpuFeatures2;  // fsgsbase

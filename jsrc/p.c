@@ -452,8 +452,8 @@ I infererrtok(J jt){I errtok;
 // If we raise a value that is an argument to the current verb running from parse (which may be a large tacit function), we have to tell parse about it so that it can
 // flag tpopa/tpopw to fa the value when it leaves execution.  We do so by marking the verb in the top entry of the execution stack
 // parserstkend1 is the end+1 of the current stack, which makes it the beginning of the stack for the calling sentence.  We scan there till be hit the back mark for that sentence
-void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A y=0;  // pointer to execution stack
- if(unlikely(stk==&jt->initparserstack[1]))R;  // in a thread it is possible there in NO stack, if the verb is tacit.  We could put a backmark in the initparserstack, but that would add 2 words to JTT.  This code is lightly used.
+void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A y=0;  // pointer to execution stack, possibly the null one we start out with
+// obsolete  if(unlikely(stk==&jt->initparserstack[1]))R;  // in a thread it is possible there in NO stack, if the verb is tacit.  We could put a backmark in the initparserstack, but that would add 2 words to JTT.  This code is lightly used.
  I verbpos=(stk[2].pt==PTNOUN)?1:2, ranoun=0; verbpos=ofst?0:verbpos; // verb is in slot 1 if x V N, 2 if x N V N or x V V N; but 0 (no verb) for assignments; flag that we changed tpop[aw]
  for(;stk[ofst].pt!=PTMARKBACK;++ofst){
   if(((I)stk[ofst].a&STKNAMED+STKFAOWED)==STKNAMED&&stk[ofst].pt!=PTMARKFRONT){   // if named and not FAOWED - but .a is garbage in a front mark, so not then

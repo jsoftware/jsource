@@ -1104,6 +1104,7 @@ extern struct Bi1 Bnumi2[];
 #define numi2(n) ((A)(Bnumi2+(n)))
 extern struct Bi1 Bnumi4[];
 #define numi4(n) ((A)(Bnumi4+(n)))
+extern PSTK initparserstack[4];
 extern struct Bd1 Bonehalf;
 #define onehalf ((A)&Bonehalf)
 #define minus0 Bnumvr[0].v[0]  // float -0

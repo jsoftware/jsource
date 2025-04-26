@@ -65,6 +65,6 @@ noclean:
 	#
 
 clean:
-	rm -f *.res *.ilk *.pdb $(OBJS) $(OBJSLN)
+	rm -f *.ilk *.pdb $(OBJS) $(OBJSLN)
 
 .PHONY: all clean noclean

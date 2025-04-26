@@ -27,6 +27,7 @@ test*.txt
 *.ilk
 *.pdb
 *.exp
+*.res
 .vs
 **/.vs/**
 

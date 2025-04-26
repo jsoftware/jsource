@@ -65,6 +65,6 @@ noclean:
 	#
 
 clean:
-	erase /q *.res *.ilk *.pdb ..\..\jsrc\jconsole.o ..\..\jsrc\jeload.o ..\..\jsrc\linenoise.o
+	erase /q *.ilk *.pdb ..\..\jsrc\jconsole.o ..\..\jsrc\jeload.o ..\..\jsrc\linenoise.o
 
 .PHONY: all clean noclean

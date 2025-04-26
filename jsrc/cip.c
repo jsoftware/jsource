@@ -1167,7 +1167,8 @@ DF1(jtludecompxblas){F12IP;PROLOG(823);
 // Bivalent.  a, if given, is the sequence of thresholds to try
 DF2(jtludecomp){F12IP;PROLOG(823);
  static D pthresh[2]={1e-6,0}, *pivotthresh; I npivotthresh, curpivotthreshx;  // list of successive thresholds for pivots, last one usually 0.0
- if(AT(w)&NOUN){ASSERT(AR(a)<=1,EVRANK); ASSERT(AN(a)>0,EVLENGTH) if(unlikely(!(AT(a)&FL)))RZ(a=ccvt(FL,a,0)); pivotthresh=DAV(a); npivotthresh=AN(a);}else{w=a; pivotthresh=pthresh; npivotthresh=sizeof(pthresh)/sizeof(pthresh[0]);}
+ C monad=0;
+ if(AT(w)&NOUN){ASSERT(AR(a)<=1,EVRANK); ASSERT(AN(a)>0,EVLENGTH) if(unlikely(!(AT(a)&FL)))RZ(a=ccvt(FL,a,0)); pivotthresh=DAV(a); npivotthresh=AN(a);}else{w=a; pivotthresh=pthresh; npivotthresh=sizeof(pthresh)/sizeof(pthresh[0]);monad=1;}
 // #if C_AVX2 || EMU_AVX2
  // We operate on 4x4 blocks of A, which we transform into 4x4 blocks of LU.  The ravel of each LU block is stored for cache ease,
  // and the U blocks are ordered in transpose form to speed up the dot-product operations.
@@ -1183,7 +1184,7 @@ DF2(jtludecomp){F12IP;PROLOG(823);
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
  I wn=AS(w)[0];  // n=size of square matrix
- if((EPMONAD)&&hascblas&&(AT(w)&B01+INT+FL)&&wn>=(hwfma?500:10))R  jtludecompblas(jt,w,DUMMYSELF);  // use lapack version
+ if(monad&&hascblas&&(AT(w)&B01+INT+FL)&&wn>=(hwfma?500:10))R  jtludecompblas(jt,w,DUMMYSELF);  // use lapack version
  if(hascblas&&(AT(w)&CMPX))R  jtludecompxblas(jt,w,DUMMYSELF);  // use lapack version
  if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w,DUMMYSELF);  // if not real float type, use general version
 #if C_AVX2 || EMU_AVX2

@@ -99,15 +99,17 @@ N=. y
 a=. (N,N) ?@$ 1000 1000
 echo '$a ',":$a
 t1=. 6!:2'c1=. 128!:10 a'
-echo 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>(9!:56'fma'){10,500)*.9!:56'cblas')#' cblas'
+echo 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!:56'cblas')#' cblas'
 mk=. <:/~(i.N)
 p=. 0{::c1 [ lu=. 1{::c1
 u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
-assert. 1e_5 > >./ | , a - p { l (+/ .*) u
+if. IF64 +. 9!:56'cblas' do.
+  assert. 1e_5 > >./ | , a - p { l (+/ .*) u
+end.
 
 a=. a j. (N,N) ?@$ 1000 1000
 t1=. 6!:2'c1=. 128!:10 a'
-echo 'complex ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((9!:56'cblas')#' cblas')
+echo 'complex ',(' GFlop ',~ 0j3": 4*(N^3)%(t1)*1e9),((9!:56'cblas')#' cblas')
 mk=. <:/~(i.N)
 p=. 0{::c1 [ lu=. 1{::c1
 u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
@@ -118,15 +120,18 @@ EMPTY
 )
 
 (3 : 0)''
-if. -.IF64 do. EMPTY return. end.
+echo 9!:14''
+echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 c=. 9!:56'cblas'
 0(9!:56)'cblas'
-t 9
-t 600
+t IF64{250 500
+if. (9!:56)'fma' do. NB. otherwise too slow
+  t IF64{500 1000
+end.
 1(9!:56)'cblas'
 if. (9!:56)'cblas' do.
-  t 9
-  t 600
+  t IF64{250 500
+  t IF64{500 1000
 end.
 c(9!:56)'cblas'
 EMPTY

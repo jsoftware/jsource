@@ -428,6 +428,7 @@ F1(jtcpufeature){F12IP;
  else if(!strcasecmp(CAV(w),"EBF16"   )) R sc(!!(getCpuFeatures2()&ARM_HWCAP2_EBF16 ));
  else if(!strcasecmp(CAV(w),"SVE_EBF16" )) R sc(!!(getCpuFeatures2()&ARM_HWCAP2_SVE_EBF16 ));
 #endif
+ else if(!strcasecmp(CAV(w),"FMA"     )) R sc(1);
  else R sc(0);
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
  if     (!strcasecmp(CAV(w),"SSSE3"   )) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_SSSE3 ));

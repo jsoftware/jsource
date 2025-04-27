@@ -107,15 +107,21 @@ static F2(jtovs){F12IP;A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*
  RETF(z);
 }    /* a,"r w where a or w or both are sparse */
 
-// k is length of an atom; c is atoms/result item; m is #items to move; s is shape of result item; w->arg to move; x->area to move to; z is A block for output area; somefill is neg if there is any fill
+// k is length of an atom; c is atoms/result item; m is #items to move; z is result; w->arg to move; x->area to move to; z is A block for output area; somefill is neg if there is any fill
 // result points to end+1 of area filled
-static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,I somefill){I d,n,p=c*m;  // p=#atoms in result
+// NOTE: AS(z)[0] is overwritten
+static C*jtovgmove(J jt,I k,I c,I m,A z,A w,C*x,I somefill){I d,n,p=c*m;  // p=#atoms in result
    // z may not be boxed; but if it is, w must be also.
- if(AR(w)){
-  n=AN(w); d=AN(s)-AR(w);
-  if((~somefill|(-n&(d-1)))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short (d>0).  Fills unnecessarily if axis was extended with 1s and the other arg needed fill
-  if(n){  // nonempty cell, must copy in the data
-   if(n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}  // incoming cell smaller than result area: take to result-cell size (uses fill)
+ if(likely(AR(w))){
+// obsolete   n=AN(w); d=AN(s)-AR(w);
+  n=AN(w); d=AR(z)-AR(w);   // d is number of added axes required to bring w up to shape of result
+  if((~somefill|(-n&(d-1)))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: fill needed somewhere, and w empty or shape short (d>0).  Fills unnecessarily if axis was extended with 1s and the other arg needed fill
+  if(likely(n!=0)){  // nonempty cell, must copy in the data
+   if(withprob(n<p,0.1)){  // incoming cell smaller than result area: take to result-cell size (uses fill)
+// obsolete I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));
+    fauxblockINT(sh,0,1); AK((A)sh)=(C*)(&AS(z)[d])-(C*)sh; AT((A)sh)=INT; AR((A)sh)=1; AN((A)sh)=AS((A)sh)[0]=AR(w);  // create arg to take: INT vector with shape of item of result
+    AS(z)[0]=m; RZ(w=take((A)sh,w));  // do the take, with fill
+   }
    JMC(x,AV(w),k*AN(w),1);  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy
   }
  }else{  // scalar replication
@@ -124,20 +130,21 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,I somefill){I d,n,p=c*m;  // p=#
  R x+k*p;
 }    /* move an argument into the result area */
 
-static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
+static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,*sv,t,wr,*ws,zn;
  ARGCHK2(a,w);
  // scaf most of this should move back to the caller so it can be outside the rank loop
- ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
- RZ(s=r?vec(INT,r,AS(r==ar?a:w)):num(2)); sv=AV(s);   // Allocate list for shape of composite item, init to longer shape; but if both are atoms, just the number 2, which we will not modify
- // Calculate the shape of the result: the shape of the item, max of input shapes
- if(m=MIN(ar,wr)){   // m=lower rank.  If either arg is a scalar, it wiil be replicated, so no need to check item size then
-  as=ar+AS(a); ws=wr+AS(w); k=r;  // as, ws point past end of shape, k indexes past end of combined shape
-  DQ(m, --as; --ws; sv[--k]=MAX(*as,*ws););   // set sv to max len of each axis, for the common rank
-  DO(r-m, sv[i]=MAX(1,sv[i]););   // continue with the frame, where the shorter frame extends its item shape with 1s
- }
- PRODX(c,r-1,1+sv,1); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // c=#atoms in result item; m, n=#items in each arg (1 if arg has lower rank)
- DPMULDE(c,m+n,zn);  // get total # atoms in result
- // Now that we have figured out the result shape we can decide whether we need fill
+ ar=AR(a); wr=AR(w);
+ // First loop: calculate zn=#result atoms, c=#atoms in result item.  We go through the loop once for each number in the result-rank, fetch m/n (the values).  For all except the first,
+ // we process by finding the result axis-length and multiplying it into the total size.  The result axis-length is the larger of the arg axis lengths; the arg lengths come from the shape
+ // until the shape is exhausted; then the shape is extended with 1 for arrays, 0 for atoms (scalar extension, which takes the cell-shape from the other argument even if it contains a 0).
+ // This overfetches ?r[-1], which is OK.
+ as=AS(a); ws=AS(w); I ax=ar-1; I wx=wr-1; c=1; I extenmin=SGNTO0(~(ax|wx));  // if either arg is scalar, extend shape with 0; otherwise 1
+ while(1){m=as[ax]; m=ax<0?extenmin:m; ax=ax<0?0:ax; n=ws[wx]; n=wx<0?extenmin:n; wx=wx<0?0:wx; if(ax+wx==0)break; I axlen=MAX(m,n); DPMULDZ(c,axlen,c); if(axlen==0)goto emptyresult; --ax, --wx;}  // fetches AS[-1] which is OK.
+ ASSERT(c>0,EVLIMIT);   // we end the loop with 0 product only if some product overflowed and was set to 0
+emptyresult:;   // abort loop to come here if a result axis length is 0, which always produces a true empty result
+ m=ar==0?1:m; n=wr==0?1:n;  // a scalar arg always has exactly one item
+ DPMULDE(c,m+n,zn);  // get total # atoms in result.  m, n invalid if c==0, no problem
+ // Now that we have figured out the result size we can decide whether we need fill
  I somefill; I an=AN(a); I wn=AN(w);   // set if we must have a fill atom
  if(unlikely((somefill=((an+wn-zn)&(-MIN(ar,wr))))<0)){    // we need fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate). 
   RZ(w=setfv(a,w)); t=AT(w); if(!(/*an!=0&&*/t&AT(a)))RZ(a=cvt(t,a)) // set fill, and convert w to its type.  Then convert a with different type,  Alas, we have to convert empties because take uses fill in ovgmove
@@ -145,9 +152,14 @@ static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
   t=maxtypedne(AT(a)|((UI)-an<(UI)wn),t|((UI)-wn<(UI)an)); t=LOWESTBIT(t);   // If types not the same, get result type.  Treat empty arg as boolean if the other is nonempty.
   /*if((-an&-wn)<0)*/{I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}  // if both args nonempty, convert low arg to result precision.
  }
- GA(z,t,zn,r,sv); AS(z)[0]=m+n; x=CAVn(r,z); k=bpnoun(t);  // allocate result with composite item shape; install #items; get len of an atom
- RZ(x=jtovgmove(jt,k,c,m,s,a,x,somefill));
- RZ(x=jtovgmove(jt,k,c,n,s,w,x,somefill));
+ I r=MAX(ar,wr); r=MAX(r,1); GA00(z,t,zn,r); x=CAVn(r,z); k=bpnoun(t);  // allocate result; get pointer to data & len of an atom
+ as=AS(a); ws=AS(w); I *zs=AS(z); ax=ar-1; wx=wr-1; I zx=MAX(ax,wx);  // zx is immaterial if both args are atoms
+ // Second loop: fill in shape of z, except for the first value which is overwritten by ovgmove.
+ while(1){m=as[ax]; m=ax<0?extenmin:m; ax=ax<0?0:ax; n=ws[wx]; n=wx<0?extenmin:n; wx=wx<0?0:wx; if(ax+wx==0)break; zs[zx]=MAX(m,n); --ax, --wx, --zx;}  // Store max of extended shapes.  fetches AS[-1] which is OK.
+ m=ar==0?1:m; n=wr==0?1:n;  // a scalar arg always has exactly one item
+ RZ(x=jtovgmove(jt,k,c,m,z,a,x,somefill));
+ RZ(x=jtovgmove(jt,k,c,n,z,w,x,somefill));
+ zs[0]=m+n;  // m and n are left to first value in (1-extended) rank
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 
@@ -226,7 +238,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
  ARGCHK2(a,w);
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
- //Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
+ // Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
  if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t)+VERB; t+=t&AT(a)?0:ADV;}  // t is result type; if it contains VERB, a conversion is needed, ADV is set if a must convert
  ar=AR(a); wr=AR(w);
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
@@ -289,7 +301,6 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
  p=as[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
  q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
- // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
  if(((r-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))<0){  // r<=2, neither arg empty,  (sum of ranks<3 (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom) OR items (which are lists) have same length)
   // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible, but scalar replication might be
   I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
@@ -309,6 +320,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
   moveawtbl[sreps](CAV(z),CAV(a),CAV(w),replct*framect,(I)1<<klg,ma<<klg,mw<<klg,(wf>=af)?replct:1,(wf>=af)?1:replct);
   if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
  }
+ // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
  // no special cases apply, perform general copy with rank and fill
  RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); RETF(z);  // ovg calls other functions, so we clear rank.  rank2ex does EPILOG
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */

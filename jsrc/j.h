@@ -1988,7 +1988,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free
 #if !defined(__wasm__)
 #define PRODCOMMON(z,length,ain,type) {I _i=(I)(length); I * RESTRICT _zzt=(ain); \
-if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
+if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=_zzt[type --_i]; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
 #else
 // the above original version confuse emscripten compiler when 1==length where zzt always becomes &oneone
 // but this version introduces mispredicted branches

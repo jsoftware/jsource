@@ -103,7 +103,9 @@ echo 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!
 mk=. <:/~(i.N)
 p=. 0{::c1 [ lu=. 1{::c1
 u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
-assert. 1e_5 > >./ | , a - p { l (+/ .*) u
+if. IF64 +. 9!:56'cblas' do.
+  assert. 1e_5 > >./ | , a - p { l (+/ .*) u
+end.
 
 a=. a j. (N,N) ?@$ 1000 1000
 t1=. 6!:2'c1=. 128!:10 a'
@@ -118,7 +120,8 @@ EMPTY
 )
 
 (3 : 0)''
-if. -.IF64 do. EMPTY return. end.   NB. validation error
+echo 9!:14''
+echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 c=. 9!:56'cblas'
 0(9!:56)'cblas'
 t IF64{250 500

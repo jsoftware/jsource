@@ -1715,8 +1715,8 @@ static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b,
 // for debug only
 // #define NAN1            {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R 0;}}
 // #define NAN1V           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R  ;}}
-// #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
-#endif
+// #define NANTEST         ({int z; if((z=_SW_INVALID&_clearfp())){fprintf(stderr,"nantest positive: file %s line %d\n",__FILE__,__LINE__);}z;})
+// #endif
 
 // can't just emu vblendvb using vblendvps because different sizing => different behaviour; so use BLENDVI when the masks are guaranteed at least 32 bits.
 // Use ps over pd for greater granularity and because old cpus don't have separate single/double domains; newer cpus will have the int blend so don't care

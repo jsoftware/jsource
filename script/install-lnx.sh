@@ -7,6 +7,9 @@ sudo apt-get install -y nasm libomp-dev
 sudo apt-cache search libopenblas0 1>&2
 sudo apt-cache search libomp 1>&2
 sudo apt-get install -y libopenblas0-pthread
+sudo apt-get install -y libopenblas0-pthread:i386 1>&2 || true
+sudo apt-get install -y libopenblas0-openmp:i386 1>&2 || true
+sudo apt-get install -y libopenblas0-serial:i386 1>&2 || true
 echo "fr_FR.UTF-8 UTF-8" | sudo tee -a /etc/locale.gen
 sudo locale-gen
 clang --version

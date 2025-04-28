@@ -205,13 +205,14 @@ static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
   }
  }else{
   while(--c>=0){
-   // copy one cell from a; advance z; advance a if not repeated
+   // copy one cell from a; advance z; advance a if not repeated (i. e. rptct=0).  Advance the long frame every time, repeating the shorter
    JMCR(zv,av,ma,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
    // repeat for w
    JMCR(zv,wv,mw,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
   }
  }
 }
+#if 0 // obsolete 
 static void moveawVS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
  JMCDECL(endmaska) JMCSETMASK(endmaska,ma,0)
  I arptct=arptreset-1; I wrptct=wrptreset-1;
@@ -232,8 +233,21 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
   JMCR(zv,wv,mw,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
-int (*p[4]) (int x, int y);
-static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV,moveawVVI};
+#else
+static void moveawS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
+ JMCDECL(endmask) JMCSETMASK(endmask,MAX(ma,mw),0)
+ I arptct=arptreset-1; I wrptct=wrptreset-1;
+ I aadv=ma<mw?k:ma, wadv=ma<mw?mw:k;  // advance the atomic arg by 1 atom, the other by cellsize
+ while(--c>=0){
+  // copy one cell from a; advance z; advance a if not repeated
+  if(ma<mw)mvc(ma,zv,k,av); else JMCR(zv,av,ma,0,endmask) zv+=ma; --arptct; av+=REPSGN(arptct)&aadv; arptct+=REPSGN(arptct)&arptreset;
+  // repeat for w
+  if(ma<mw)JMCR(zv,wv,mw,0,endmask) else mvc(mw,zv,k,wv); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&wadv; wrptct+=REPSGN(wrptct)&wrptreset;
+ }
+}
+#endif
+// obsolete int (*p[4]) (int x, int y);
+// obsolete static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV,moveawVVI};
 DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
  ARGCHK2(a,w);
  UI jtr=jt->ranks;//  fetch early
@@ -302,22 +316,29 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,*as,ma,mw,p,q,r,t,w
  q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  if(((r-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))<0){  // r<=2, neither arg empty,  (sum of ranks<3 (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom) OR items (which are lists) have same length)
-  // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible, but scalar replication might be
-  I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
+  // joining rows, or table/row with same lengths, or table/atom; possibly with frame.  In any case no fill is possible, but scalar replication might be
+  I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w; i. e. #atoms to fill from an item of a
   I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w;
   I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
   p=acr?p:q; cc2a=cc2a+cc2w;   // last 2 axes, calc before subrt call
-  I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps before subrt call
-  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
-  DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
+// obsolete  I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps before subrt call
+  t|=(SGNTO0(((acr-1)&(1-ma))|((wcr-1)&(1-mw))))<<MARKX;  // set MARK in t if there is any scalar extension
+  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s); framect*=replct;  // Number of cells in a and w; known non-empty shapes; framect becomes size of both frames
+  DPMULDE(framect,ma+mw,zn);  // total # atoms in result
+  replct^=REPSGN(af-wf);  // 1's comp replct if wf>af, i. e. a is short frame: a must repeat |replct| times between advances, while long frame advances every time (setting ct to 1)
   GA(z,t&NOUN,zn,f+r,s); if(unlikely(zn==0))RETF(z); s=AS(z)+f+r;  // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops.  Mark result in tstack
   if(unlikely(t&VERB)){A zt; RZ(zt=cvt(t&NOUN,t&ADV?a:w)) a=t&ADV?zt:a; w=t&ADV?w:zt;}   // convert the discrepant argument to type t
   if(2>r)s[-1]=ma+mw; else{s[-1]=p; s[-2]=cc2a;}  // fill in last 2 atoms of shape
   I klg=bplg(t);   // # bytes per atom of result
   // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
   // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
-  sreps=(((((ma<<klg)^SZI)+((mw<<klg)^SZI))==0)>sreps)?3:sreps;  // if VV case moving exactly SZI, use routine for that
-  moveawtbl[sreps](CAV(z),CAV(a),CAV(w),replct*framect,(I)1<<klg,ma<<klg,mw<<klg,(wf>=af)?replct:1,(wf>=af)?1:replct);
+// obsolete   sreps=(((((ma<<klg)^SZI)+((mw<<klg)^SZI))==0)>sreps)?3:sreps;  // if VV case moving exactly SZI, use routine for that
+  C *av=CAV(a), *wv=CAV(w), *zv=CAV(z); ma<<=klg; mw<<=klg;   // set up all subrt args
+  I k=1, arptreset=~replct; replct=arptreset>=0?k:replct; arptreset=arptreset>=0?arptreset:k; k<<=klg;  // repeat counts: replct neg is wf>af: aw repeats are ~replct/1.  replct pos repeats 1/replct
+  if(!(t&MARK)){if((ma|mw)==SZI)moveawVVI(zv,av,wv,framect,k,ma,mw,arptreset,replct);else moveawVV(zv,av,wv,framect,k,ma,mw,arptreset,replct);
+// obsolete   }else{if(ma<mw)moveawSV(zv,av,wv,framect,k,ma,mw,arptreset,replct);else moveawVS(zv,av,wv,framect,k,ma,mw,arptreset,replct);}
+  }else{moveawS(zv,av,wv,framect,k,ma,mw,arptreset,replct);}
+// obsolete   moveawtbl[sreps](CAV(z),CAV(a),CAV(w),replct*framect,(I)1<<klg,ma<<klg,mw<<klg,(wf>=af)?replct:1,(wf>=af)?1:replct);
   if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
  }
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case

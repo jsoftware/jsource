@@ -1556,7 +1556,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
 // memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args.  l, the length in bytes, may be 0
-// if bytelen is 1, the arg may be of any length; if 0, will be lengthened to be a multiple of Is; full words only are moved
+// if bytelen is 1, the arg may be of any length; if 0, will be lengthened to be a multiple of Is; full words only are moved; if -1, aligned fullwords only (not implemented yet)
 // address may be identical but otherwise should not overlap
 // Normal use allowing overcopy: JMC(d,s,l,0)
 // Normal use not allowing overcopy: JMC(d,s,l,1)

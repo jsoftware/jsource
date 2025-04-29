@@ -235,7 +235,7 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 }
 #else
 static void moveawS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset,B anotatomic){
- JMCDECL(endmask) JMCSETMASK(endmask,MAX(ma,mw),0)
+ JMCDECL(endmask) JMCSETMASK(endmask,anotatomic?ma:mw,0)
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  I aadv=anotatomic?ma:k, wadv=anotatomic?k:mw;  // advance the atomic arg by 1 atom, the other by cellsize.  SYMB means a is not atomic
  while(--c>=0){
@@ -253,7 +253,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,ma,mw,p,q,t,wcr,wf,
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  // Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
- if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t)+VERB; t+=t&AT(a)?0:ADV;}  // t is result type; if it contains VERB, a conversion is needed, ADV is set if a must convert
+ if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t)+RPAR; t+=t&AT(a)?0:CONJ;}  // t is result type; if it contains RPAR, a conversion is needed, CONJ is set if a must convert
  ar=AR(a); wr=AR(w);
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
@@ -286,7 +286,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,ma,mw,p,q,t,wcr,wf,
     // empty items are OK: they just have 0 length but their shape follows the normal rules
     I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
     GA(z,t&NOUN,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
-    if(unlikely(t&VERB)){A zt; RZ(zt=cvt(t&NOUN,t&ADV?a:w)) a=t&ADV?zt:a; w=t&ADV?w:zt;}   // convert the discrepant argument to type t
+    if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;  // arg sizes
     JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
     // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
@@ -317,30 +317,33 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,ma,mw,p,q,t,wcr,wf,
 // obsolete  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  if(((MAX(acr,wcr)-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))<0){  // r<=2, neither arg empty,  (sum of ranks<3 (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom) OR items (which are lists) have same length)
   // joining atoms, rows, row/atom, or table/row with same lengths, or table/atom; possibly with frame.  In any case no fill is possible, but scalar replication might be
-  I cc2a=__atomic_load_n(&AS(a)[ar-2],__ATOMIC_RELAXED); p=acr?p:1; B anotatomic=acr!=0; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w; i. e. #atoms to fill from an item of a
-  I cc2w=__atomic_load_n(&AS(w)[wr-2],__ATOMIC_RELAXED); q=wcr?q:1; cc2w=wcr<=1?1:cc2w; cc2a+=cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w; cc2a is combined length of axis -2 f can increment only once
-  p=acr?p:q; I cr=MAX(acr,wcr);  C hasscalarexten=(C)(0b100000100>>(4*acr+wcr))&(C)(p>1);   // len of 1-cell of result (if r=2); remember if there is scalar extension of more than 1 atom (lens are 2 and 0, len (which can't be 0) > 1
-  B aflewf=(wf>=af); I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?AS(w):AS(a);   // long frame, short frame, pointer to long shape
-     // remember if wf>=af, i. e. a is short frame: a must repeat |replct| times between advances, while long frame advances every time (setting ct to 1)
+  I awcrflg=4*acr+wcr;  // incredible register pressure.  Combine af/wf, and shift in flags as we calculate them
+  I cc2a=__atomic_load_n(&AS(a)[ar-2],__ATOMIC_RELAXED); p=awcrflg&0b1100?p:1; cc2a=awcrflg&0b1000?cc2a:1; ma=cc2a*p; ma=awcrflg==0b0010?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w; i. e. #atoms to fill from an item of a
+  I cc2w=__atomic_load_n(&AS(w)[wr-2],__ATOMIC_RELAXED); q=awcrflg&0b0011?q:1; cc2w=awcrflg&0b0010?cc2w:1; cc2a+=cc2w; mw=cc2w*q; mw=awcrflg==0b1000?p:mw;  // sim for w; cc2a is combined length of axis -2 f can increment only once
+  p=awcrflg&0b1100?p:q; awcrflg=2*awcrflg+((C)(0b100000100>>awcrflg)&(C)(p>1));   // len of 1-cell of result (if r=2); new low flag: scalar extension of more than 1 atom (lens are 2 and 0, len (which can't be 0) > 1
+  awcrflg=2*awcrflg+(wf>=af); I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=AS((wf>=af)?w:a);   // long frame, short frame, pointer to long shape
+     // new low flag wf>=af, i. e. a is short frame: a must repeat |replct| times between advances, while long frame advances every time (setting ct to 1)
+     // *** awcrflg has been shifted, low flags are bit 10(scalar exten) bit 0=(a is short frame) ***
 // obsolete   replct^=REPSGN(af-wf);
-  p=cr<2?ma+mw:p; cc2a=cr<2?0:cc2a;  // last 1 or 2 axes, calc before subrt call.  cc2a is 2nd-last axis, 0 to mean nonexistent
+  t+=awcrflg<<23;  // save flags in t to free up awcrflg
+  p=awcrflg&0b101000?p:ma+mw;  // last 1 or 2 axes, calc before subrt call.  cc2a is 2nd-last axis, valid only if rank=2
 // obsolete  I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps before subrt call
 // obsolete   t|=(SGNTO0(((acr-1)&(1-ma))|((wcr-1)&(1-mw))))<<MARKX;  // set MARK in t if there is any scalar extended to >1 atom
-  PROD(replct,f-shortf,s+shortf); f+=cr+(cr==0); PROD(framect,shortf,s); framect*=replct;  // Number of cells in a and w; known non-empty shapes; framect becomes size of both frames.  Repurpose f to total result rank
-  DPMULDE(framect,ma+mw,zn);  // total # atoms in result
+  PROD(replct,f-shortf,s+shortf); f+=1+!!(t&(0b101000<<23)); PROD(framect,shortf,s); framect*=replct;  // Number of cells in a and w; known non-empty shapes; framect becomes size of both frames.  Repurpose f to total result rank
+  DPMULDECLS DPMULDE(framect,ma+mw,zn);  // total # atoms in result
   GA(z,t&NOUN,zn,f,s); if(unlikely(AN(z)==0))RETF(z);   // allocate result; repurpose s to point to END+1 of shape field.  Return if area empty so we can use UNTIL loops.  Mark result in tstack
-  if(unlikely(t&VERB)){A zt; RZ(zt=cvt(t&NOUN,t&ADV?a:w)) a=t&ADV?zt:a; w=t&ADV?w:zt;}   // convert the discrepant argument to type t
+  if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
 // obsolete   s=AS(z)+f+r; if(2>r)s[-1]=ma+mw; else{s[-1]=p; s[-2]=cc2a;}  // fill in last 2 atoms of shape
-  AS(z)[AR(z)+(cc2a==0)-2]=cc2a; AS(z)[AR(z)-1]=p;  // store [cc2a] p to last 1 or 2 items of shape
+  AS(z)[AR(z)+!(t&(0b101000<<23))-2]=cc2a; AS(z)[AR(z)-1]=p;  // store [cc2a] p to last 1 or 2 items of shape
   I klg=bplg(t);   // # bytes per atom of result
   // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
   // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
 // obsolete   sreps=(((((ma<<klg)^SZI)+((mw<<klg)^SZI))==0)>sreps)?3:sreps;  // if VV case moving exactly SZI, use routine for that
   C *av=CAV(a), *wv=CAV(w), *zv=CAVn(AR(z),z); ma<<=klg; mw<<=klg;   // set up all 'subrt args', but the functions are inlined here
-  I k=1, arptreset=replct; replct=aflewf?k:replct; arptreset=aflewf?arptreset:k; k<<=klg;  // repeat counts: aflewf is wf>=af: aw repeats are ~replct/1.  if wf<af, repeats 1/replct
-  if(!hasscalarexten){if((ma|mw)==SZI)moveawVVI(zv,av,wv,framect,k,ma,mw,arptreset,replct);else moveawVV(zv,av,wv,framect,k,ma,mw,arptreset,replct);  // if no scalar rep.  ?w must not be 0, so this tests both=SZI
+  I k=1, arptreset=replct; replct=t&(0b000001<<23)?k:replct; arptreset=t&(0b000001<<23)?arptreset:k; k<<=klg;  // repeat counts: aflewf is wf>=af: aw repeats are ~replct/1.  if wf<af, repeats 1/replct
+  if(!(t&(0b000010<<23))){if((ma|mw)==SZI)moveawVVI(zv,av,wv,framect,k,ma,mw,arptreset,replct);else moveawVV(zv,av,wv,framect,k,ma,mw,arptreset,replct);  // if no scalar rep.  ?w must not be 0, so this tests both=SZI
 // obsolete   }else{if(ma<mw)moveawSV(zv,av,wv,framect,k,ma,mw,arptreset,replct);else moveawVS(zv,av,wv,framect,k,ma,mw,arptreset,replct);}
-  }else{moveawS(zv,av,wv,framect,k,ma,mw,arptreset,replct,anotatomic);}   // if scalar rep
+  }else{moveawS(zv,av,wv,framect,k,ma,mw,arptreset,replct,!!(t&(0b110000<<23)));}   // if scalar rep
 // obsolete   moveawtbl[sreps](CAV(z),CAV(a),CAV(w),replct*framect,(I)1<<klg,ma<<klg,mw<<klg,(wf>=af)?replct:1,(wf>=af)?1:replct);
   if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
  }

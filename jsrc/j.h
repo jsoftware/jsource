@@ -1575,8 +1575,8 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
  mskdecl \
  void *dst=(d); \
  I ll=(l);  /* len of valid data */ \
- /* if the operation is long, move 1 block to align the store pointer */ \
- if(ll>32*SZI){ /* TUNE should depend on repetition? */\
+ /* if the operation is long and unaligned, move 1 block to align the store pointer */ \
+ if(ll>3*NPAR*SZI){ /* TUNE should depend on repetition?  DO NOT look at output alignment for this test, because we may loop & we need to update mask either always or never */\
   _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); \
   I overwr=(I)dst&(NPAR*SZI-1); dst=(C*)dst+NPAR*SZI-overwr; src=(C*)src+NPAR*SZI-overwr; ll-=NPAR*SZI-overwr; JMCSETMASK(mskname,ll,bytelen) \
  }else{mskset}  /* if short op, set mask if not set outside loop */ \

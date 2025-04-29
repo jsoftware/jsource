@@ -263,8 +263,8 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,ma,mw,p,q,t,wcr,wf,
  if(af+wf==0){
 #if 0  // we don't use ALLOWRETARG anywhere yet
  // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
- // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
- // because some of the sparse code writes over the result from here, we enable this only if the call enables it
+ // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty.
+ // Because some of the sparse code writes over the result from here, we enable this only if the call enables it
   I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
   if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)|((I)jtfg&JTALLOWRETARG)))){  // appending empty to nonempty, no frame, equal rank (not 0)
    A ea=ai?w:a, nea=ai?a:w;  // empty & nonempty args
@@ -326,7 +326,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,ma,mw,p,q,t,wcr,wf,
      // *** awcrflg has been shifted, low flags are bit 10(scalar exten) bit 0=(a is short frame) ***
 // obsolete   replct^=REPSGN(af-wf);
   t+=awcrflg<<23;  // save flags in t to free up awcrflg
-  p=awcrflg&0b101000?p:ma+mw;  // last 1 or 2 axes, calc before subrt call.  cc2a is 2nd-last axis, valid only if rank=2
+  p=t&(0b101000<<23)?p:ma+mw;  // last 1 or 2 axes, calc before subrt call.  cc2a is 2nd-last axis, valid only if rank=2
 // obsolete  I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps before subrt call
 // obsolete   t|=(SGNTO0(((acr-1)&(1-ma))|((wcr-1)&(1-mw))))<<MARKX;  // set MARK in t if there is any scalar extended to >1 atom
   PROD(replct,f-shortf,s+shortf); f+=1+!!(t&(0b101000<<23)); PROD(framect,shortf,s); framect*=replct;  // Number of cells in a and w; known non-empty shapes; framect becomes size of both frames.  Repurpose f to total result rank

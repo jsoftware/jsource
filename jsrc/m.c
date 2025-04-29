@@ -504,6 +504,7 @@ static void auditsimverify0(J jt,A w){
   fprintf(stderr,"AFHRH(w): %hx (%hi)\n", AFHRH(w), AFHRH(w));
   SEGFAULT;
  }   // hang if nonzero count
+ if((AFHRH(w)==0 || FHRHPOOLBIN(AFHRH(w))>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
  if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2 && AC(w)!=ACINPLACE+3))SEGFAULT;   // could go higher but doesn't in our tests
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(jt,ABACK(w));  // check backer
@@ -1529,7 +1530,7 @@ printf("%p-\n",w);
 #endif
 #if MEMAUDIT&1
  if(hrh!=FHRHISGMP) {
-	 if((hrh==0 || blockx>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
+  if((hrh==0 || blockx>(PLIML-PMINL+1)))SEGFAULT;  // pool number must be valid if not GMP block
  } else {
 #if MEMAUDIT&0x40
   jgmpguard(w);

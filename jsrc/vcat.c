@@ -120,6 +120,9 @@ static C*jtovgmove(J jt,I k,I c,I m,A z,A w,C*x,I somefill){I d,n,p=c*m;  // p=#
    if(withprob(n<p,0.1)){  // incoming cell smaller than result area: take to result-cell size (uses fill)
 // obsolete I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));
     fauxblockINT(sh,0,1); AK((A)sh)=(C*)(&AS(z)[d])-(C*)sh; AT((A)sh)=INT; AR((A)sh)=1; AN((A)sh)=AS((A)sh)[0]=AR(w);  // create arg to take: INT vector with shape of item of result
+#if MEMAUDIT&0xe
+    AFLAG((A)sh)=0;  // audits check it
+#endif
     AS(z)[0]=m; RZ(w=take((A)sh,w));  // do the take, with fill
    }
    JMC(x,AV(w),k*AN(w),1);  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy
@@ -159,7 +162,7 @@ emptyresult:;   // abort loop to come here if a result axis length is 0, which a
  m=ar==0?1:m; n=wr==0?1:n;  // a scalar arg always has exactly one item
  RZ(x=jtovgmove(jt,k,c,m,z,a,x,somefill));
  RZ(x=jtovgmove(jt,k,c,n,z,w,x,somefill));
- zs[0]=m+n;  // m and n are left to first value in (1-extended) rank
+ AS(z)[0]=m+n;  // m and n are left to first value in (1-extended) rank
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 

@@ -5,21 +5,28 @@ FAVX2= /DC_AVX2=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=skylake -mno-vzer
 endif
 ifeq (1,$(USE_OPENMP))
 FOPENMP= -Xclang -fopenmp
-LOPENMP= libomp.lib
+# LOPENMP= libomp.lib
+ifeq (ARM64,$(TARGET_CPU))
+LOPENMP= ../../openmp/obj/windows/libomparm64.lib
+else ifeq (x64,$(TARGET_CPU))
+LOPENMP= ../../openmp/obj/windows/libomp.lib
+else
+LOPENMP= ../../openmp/obj/windows/libomp32.lib
+endif
 endif
 USE_SLEEF=1
 ifeq (ARM64,$(TARGET_CPU))
-FSLEEF= /DSLEEF=1 /DENABLE_ADVSIMD /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+FSLEEF= /DSLEEF=1 /DSLEEFQUAD=1 /DENABLE_ADVSIMD
 else ifeq (x64,$(TARGET_CPU))
 ifeq (1,$(JAVX512))
-FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+FSLEEF= /DSLEEF=1 /DSLEEFQUAD=1 /DENABLE_AVX2
 else ifeq (1,$(JAVX2))
-FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+FSLEEF= /DSLEEF=1 /DSLEEFQUAD=1 /DENABLE_AVX2
 else
-FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+FSLEEF= /DSLEEF=1 /DSLEEFQUAD=1 /DENABLE_SSE2
 endif
 else
-FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+FSLEEF= /DSLEEF=1 /DSLEEFQUAD=1 /DENABLE_SSE2
 endif
 ifeq (1,$(USE_PYXES))
 PTHREADINC = -I../../pthreads4w/include
@@ -281,16 +288,6 @@ OBJS_ASM= \
  ../../openssl-asm/sha512-586-nasm.o
 endif
 
-ifeq (1,$(USE_SLEEF))
-OBJS_SLEEF= \
- ../../sleef/src/common/arraymap.o \
- ../../sleef/src/common/common.o \
- ../../sleef/src/libm/rempitab.o \
- ../../sleef/src/libm/sleefsimddp.o \
- ../../sleef/src/quad/rempitabqp.o \
- ../../sleef/src/quad/sleefsimdqp.o
-endif
-
 ifeq (1,$(JAVX512))
 OBJS_SIMDUTF8= \
  ../../jsrc/utf/utf8_to_utf16le_avx512.o \
@@ -336,8 +333,8 @@ else
 SYNCLIB= synchronization.lib
 endif
 
-$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_SIMDUTF8) $(ASM) $(PTHREADLIB) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_SIMDUTF8) $(ASM) $(PTHREADLIB) $(MPIRLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) $(LOPENMP)
+$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(ASM) $(PTHREADLIB) jdll.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(ASM) $(PTHREADLIB) $(MPIRLIB) jdll.res ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) $(LOPENMP)
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)
@@ -348,6 +345,6 @@ noclean:
 	#
 
 clean:
-	rm -f *.lib *.exp *.ilk *.pdb $(OBJS) $(OBJS_SLEEF) $(OBJS_SIMDUTF8) $(SRC_ASM)
+	rm -f *.lib *.exp *.ilk *.pdb $(OBJS) $(OBJS_SIMDUTF8) $(SRC_ASM)
 
 .PHONY: all clean noclean

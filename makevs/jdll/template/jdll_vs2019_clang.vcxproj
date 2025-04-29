@@ -165,8 +165,8 @@
       <AdditionalOptions>/Wp64  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -218,7 +218,7 @@
       <AdditionalOptions>/Wp64 -fno-strict-aliasing -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-unused-but-set-variable -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -271,7 +271,7 @@
       <AdditionalOptions>-fno-strict-aliasing -Wsign-compare -Wno-int-conversion -Wno-incompatible-fuction-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-unused-but-set-variable -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype   %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -324,8 +324,8 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>__clang__=1;PYXES=1;C_NA=0;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__clang__=1;PYXES=1;C_NA=0;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -381,8 +381,8 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>__clang__=1;PYXES=1;C_NA=0;C_AVX2=1;HAVE_AVX2=1;EMU_AVX2=1;ENABLE_AVX2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__clang__=1;PYXES=1;C_NA=0;C_AVX2=1;HAVE_AVX2=1;EMU_AVX2=1;ENABLE_AVX2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -440,8 +440,8 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>PYXES=1;C_NA=0;__clang__=1;C_AVX2=1;HAVE_AVX2=1;EMU_AVX2=1;ENABLE_AVX2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>PYXES=1;C_NA=0;__clang__=1;C_AVX2=1;HAVE_AVX2=1;EMU_AVX2=1;ENABLE_AVX2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -494,7 +494,7 @@
     <ClCompile>
       <AdditionalOptions>/Wp64  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug64/jdll.pch</PrecompiledHeaderOutputFile>
@@ -546,8 +546,8 @@
     <ClCompile>
       <AdditionalOptions>-maes -msse3 -fno-strict-aliasing -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-unused-but-set-variable -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>__clang__=1;PYXES=1;C_NA=0;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__clang__=1;PYXES=1;C_NA=0;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
@@ -606,8 +606,8 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__clang__=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -660,7 +660,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>__clang__=1;C_NOMULTINTRINSIC;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__clang__=1;C_NOMULTINTRINSIC;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -708,8 +708,8 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <PreprocessorDefinitions>__clang__=1;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NOASM;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__clang__=1;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NOASM;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -760,8 +760,8 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <PreprocessorDefinitions>__clang__=1;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NOASM;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__clang__=1;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;NOASM;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -811,7 +811,7 @@
     <ClCompile>
       <AdditionalOptions>-maes -msse2 -fno-strict-aliasing -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-unused-but-set-variable -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>__clang__=1;C_64=0;C_NA=0;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__clang__=1;C_64=0;C_NA=0;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
@@ -829,7 +829,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\; ..\..\sleef\src\common\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories></AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -868,8 +868,8 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>__clang__=1;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__clang__=1;EMU_AVX2=1;ENABLE_SSE2;SLEEF=1;SLEEFQUAD=1;SLEEF_STATIC_LIBS;DORENAME=1;_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\pthreads4w\include\;..\..\mpir\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\debug/jdll.pch</PrecompiledHeaderOutputFile>
@@ -1075,12 +1075,6 @@
     <ClCompile Include="..\..\jsrc\openssl\sha\sha512.c" />
     <ClCompile Include="..\..\jsrc\utf\utf16le_to_utf8_avx512i.c" />
     <ClCompile Include="..\..\jsrc\utf\utf8_to_utf16le_avx512i.c" />
-    <ClCompile Include="..\..\sleef\src\common\arraymap.c" />
-    <ClCompile Include="..\..\sleef\src\common\common.c" />
-    <ClCompile Include="..\..\sleef\src\libm\rempitab.c" />
-    <ClCompile Include="..\..\sleef\src\libm\sleefsimddp.c" />
-    <ClCompile Include="..\..\sleef\src\quad\rempitabqp.c" />
-    <ClCompile Include="..\..\sleef\src\quad\sleefsimdqp.c" />
     <ClCompile Include="..\..\base64\lib\arch\avx2\codec-avx2.c" />
     <ClCompile Include="..\..\base64\lib\arch\avx512\codec-avx512.c" />
     <ClCompile Include="..\..\base64\lib\arch\generic\codec-generic.c" />

@@ -4,6 +4,7 @@
 /* Verbs: Polynomial Roots & Polynomial Evaluation                         */
 
 #include "j.h"
+#include "jsleef.h"
 
 #define EPS            (FUZZ)
 

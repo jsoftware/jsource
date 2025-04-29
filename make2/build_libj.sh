@@ -183,15 +183,16 @@ else
  common="$common -DPYXES=0"
 fi
 
-USE_SLEEFQUAD="${USE_SLEEFQUAD:=1}"
 case "$jplatform64" in 
  raspberry/j32*) USE_SLEEF=0;;
  wasm*) USE_SLEEF=0;;
  *) USE_SLEEF="${USE_SLEEF:=1}";;
 esac
+USE_SLEEFQUAD="${USE_SLEEFQUAD:=$USE_SLEEF}"
 if [ $USE_SLEEF -eq 1 ] ; then
- common="$common -DSLEEF=1 -DSLEEFQUAD=1"
-elif [ $USE_SLEEFQUAD -eq 1 ] ; then
+ common="$common -DSLEEF=1"
+fi
+if [ $USE_SLEEFQUAD -eq 1 ] ; then
  common="$common -DSLEEFQUAD=1"
 fi
 
@@ -733,24 +734,6 @@ case $jplatform64 in
  ;;
 esac
 
-if [ $USE_SLEEF -eq 1 ] ; then
- OBJS_SLEEF=" \
-  ../../../../sleef/src/common/arraymap.o \
-  ../../../../sleef/src/common/common.o \
-  ../../../../sleef/src/libm/rempitab.o \
-  ../../../../sleef/src/libm/sleefsimddp.o \
-  ../../../../sleef/src/quad/rempitabqp.o \
-  ../../../../sleef/src/quad/sleefsimdqp.o \
- "
-elif [ $USE_SLEEFQUAD -eq 1 ] ; then
- OBJS_SLEEF=" \
-  ../../../../sleef/src/common/arraymap.o \
-  ../../../../sleef/src/common/common.o \
-  ../../../../sleef/src/quad/rempitabqp.o \
-  ../../../../sleef/src/quad/sleefsimdqp.o \
- "
-fi
-
 echo "CFLAGS=$CFLAGS"
 
 if [ ! -f ../jsrc/jversion.h ] ; then
@@ -760,7 +743,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-libj obj/$jplatform64/.
-export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform64 LDFLAGS_b
+export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform64 LDFLAGS_b
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then
  if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi

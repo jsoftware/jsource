@@ -4,6 +4,7 @@
 /* Conjunctions: Atop and Ampersand                                        */
 
 #include "j.h"
+#include "jsleef.h"
 
 // [><].@[:]*  monad inner loop
 static DF1(jtonf1cell){F12IP;PROLOG(0021);A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A gs=FAV(self)->fgh[1]; AF g1=FAV(gs)->valencefns[0];

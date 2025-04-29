@@ -358,6 +358,10 @@ F1(jtcpufeature){F12IP;
 #else
   R sc(0);
 #endif
+ } else if (!strcasecmp(CAV(w),"SLEEF")) {
+  R sc(SLEEF);
+ } else if (!strcasecmp(CAV(w),"SLEEFQUAD")) {
+  R sc(SLEEFQUAD);
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

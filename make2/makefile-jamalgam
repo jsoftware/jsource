@@ -213,10 +213,9 @@ OBJS=  \
 $(OBJS_FMA) : CFLAGS_FMA := -mfma
 $(OBJS_AESNI) : CFLAGS_AESNI := -maes
 $(OBJS_AESARM) : CFLAGS_AESARM := -march=armv8-a+crc+crypto
-$(OBJS_SLEEF) : CFLAGS_SLEEF := $(FLAGS_SLEEF) -DSLEEF_STATIC_LIBS -DNDEBUG -DDORENAME=1 -Wno-sign-compare -ffp-contract=off -fno-math-errno -fno-trapping-math -I../../../../sleef/src/arch -I../../../../sleef/src/common
 $(OBJS_BASE64) : CFLAGS_BASE64 := $(FLAGS_BASE64)
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN)
-	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS) $(OBJSLN)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN)
+	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS) $(OBJSLN)
 
 $(LIBJRES): jamalgam.rc
 	$(WINDRES) -o$@ $^
@@ -224,6 +223,6 @@ $(LIBJRES): jamalgam.rc
 all: $(ODIR)/$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_BASE64) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN) linenoise.o
+	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_BASE64) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN) linenoise.o
 
 .PHONY: all clean

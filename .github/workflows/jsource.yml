@@ -606,10 +606,12 @@ jobs:
       usesh: true
       sync: sshfs
       prepare: |
-       sudo pkg upgrade -y
+       pkg upgrade -y
        rdate time.cloudflare.com || true
-       pkg search openblas
+       pkg search openblas 1>&2
        pkg install -y curl zip find gmake nasm pcre2 openblas
+       find / -type f -name 'liblapack.so*' 1>&2
+       find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
 
       run: |
@@ -683,8 +685,10 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas
+       sudo pkg search openblas 1>&2
        sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo find / -type f -name 'liblapack.so*' 1>&2
+       sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -754,8 +758,10 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas
+       sudo pkg search openblas 1>&2
        sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo find / -type f -name 'liblapack.so*' 1>&2
+       sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh

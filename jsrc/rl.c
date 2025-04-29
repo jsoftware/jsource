@@ -123,6 +123,7 @@ static F1X(jtlchar){F12JT;A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
 
 static F1X(jtlbox){F12JT;A p,*v,*vv,*wv,x,y;B b=0;I n;
  ARGCHK1(w);
+ STACKCHKOFL
  if(equ(ds(CACE),w)&&B01&AT(AAV(w)[0]))R cstr("a:");
  n=AN(w); wv=AAV(w); 
  DO(n, x=C(wv[i]); if(BOX&AT(x)){b=1; break;}); b|=1==n;

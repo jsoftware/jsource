@@ -251,15 +251,15 @@ static void moveawS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset,
 #endif
 // obsolete int (*p[4]) (int x, int y);
 // obsolete static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV,moveawVVI};
-DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,ma,mw,p,q,t,wcr,wf,wr,zn;
+DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  ARGCHK2(a,w);
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  // Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
  if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t)+RPAR; t+=t&AT(a)?0:CONJ;}  // t is result type; if it contains RPAR, a conversion is needed, CONJ is set if a must convert
  ar=AR(a); wr=AR(w);
- acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
- wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
+ acr=jtr>>RANKTX; acr=ar<acr?ar:acr; UI af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
+ wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; UI wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
  // no RESETRANK - not required by ovv or main line here
 // obsolete  as=AS(a); ws=AS(w);
  PROLOG(000);   // we will allocate our result first so that we can tpop back to it without EPILOG.
@@ -292,23 +292,25 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,ma,mw,p,q,t,wcr,wf,
     if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;  // arg sizes
     JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
-    // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
-    // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
-    // We can't transfer ownership if one of the args is VIRTUAL, because a virtual block doesn't really own its contents
-    // We can't transfer ownership if a=w, because the counts for the blocks would be one too low
+    if(withprob(t&NOUN&RECURSIBLE,0.2)){   //  recursive/pristine processing applies only to RECURSIBLEs 
+     // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
+     // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
+     // We can't transfer ownership if one of the args is VIRTUAL, because a virtual block doesn't really own its contents
+     // We can't transfer ownership if a=w, because the counts for the blocks would be one too low
 
-    // The result can be pristine if both inputs are abandoned pristine, and are not the same block (note: if one is boxed, no coonversion will ever happen)
-    // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
-    I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
-    xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtfg))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
-    if(unlikely((xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE))!=0)){  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
-     // a and w are both non-shared blocks, and not VIRTUAL or PERMANENT.  xfer is the transferable recursibility if any, plus inherited pristinity
-     AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGANDLOCAL(a,~xfer) AFLAGANDLOCAL(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
-    }else{AFLAGCLRPRIST(w); AFLAGCLRPRIST(a);}  // if we can't transfer pristinity, we must clear it
-    // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
-    // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
-    if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(a))}  //  like PRISTCOMSETF
-    if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(w))}  //  like PRISTCOMSETF
+      // The result can be pristine if both inputs are abandoned pristine, and are not the same block (note: if one is boxed, no coonversion will ever happen)
+      // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
+      I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
+      xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtfg))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
+      if(unlikely((xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE))!=0)){  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
+       // a and w are both non-shared blocks, and not VIRTUAL or PERMANENT.  xfer is the transferable recursibility if any, plus inherited pristinity
+       AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGANDLOCAL(a,~xfer) AFLAGANDLOCAL(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
+      }else{AFLAGCLRPRIST(w); AFLAGCLRPRIST(a);}  // if we can't transfer pristinity, we must clear it
+      // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
+      // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
+      if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(a))}  //  like PRISTCOMSETF
+      if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(w))}  //  like PRISTCOMSETF
+     }
     if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
    }
   }
@@ -324,12 +326,13 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,af,ar,ma,mw,p,q,t,wcr,wf,
   I cc2a=__atomic_load_n(&AS(a)[ar-2],__ATOMIC_RELAXED); p=awcrflg&0b1100?p:1; cc2a=awcrflg&0b1000?cc2a:1; ma=cc2a*p; ma=awcrflg==0b0010?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w; i. e. #atoms to fill from an item of a
   I cc2w=__atomic_load_n(&AS(w)[wr-2],__ATOMIC_RELAXED); q=awcrflg&0b0011?q:1; cc2w=awcrflg&0b0010?cc2w:1; cc2a+=cc2w; mw=cc2w*q; mw=awcrflg==0b1000?p:mw;  // sim for w; cc2a is combined length of axis -2 f can increment only once
   p=awcrflg&0b1100?p:q; awcrflg=2*awcrflg+((C)(0b100000100>>awcrflg)&(C)(p>1));   // len of 1-cell of result (if r=2); new low flag: scalar extension of more than 1 atom (lens are 2 and 0, len (which can't be 0) > 1
-  awcrflg=2*awcrflg+(wf>=af); I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=AS((wf>=af)?w:a);   // long frame, short frame, pointer to long shape
+  awcrflg=2*awcrflg+(wf>=af);  t+=awcrflg<<23;  // save flags in t to free up awcrflg
      // new low flag wf>=af, i. e. a is short frame: a must repeat |replct| times between advances, while long frame advances every time (setting ct to 1)
-     // *** awcrflg has been shifted, low flags are bit 10(scalar exten) bit 0=(a is short frame) ***
+     // *** awcrflg has been shifted and moved into t<<23, low flags are bit 1=(scalar exten) bit 0=(a is short frame) ***
 // obsolete   replct^=REPSGN(af-wf);
-  t+=awcrflg<<23;  // save flags in t to free up awcrflg
-  p=t&(0b101000<<23)?p:ma+mw;  // last 1 or 2 axes, calc before subrt call.  cc2a is 2nd-last axis, valid only if rank=2
+// obsolete   I f=t&(0b000001<<23)?wf:af; I shortf=t&(0b000001<<23)?af:wf; I *s=AS(t&(0b000001<<23)?w:a);   // long frame, short frame, pointer to long shape
+  I f=wf>=af?wf:af; I shortf=wf>=af?af:wf; I *s=AS(wf>=af?w:a);   // long frame, short frame, pointer to long shape
+  p=t&(0b101000<<23)?p:ma+mw;  // last axis, depending on rank.  cc2a is 2nd-last axis, valid only if rank=2
 // obsolete  I sreps=SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))));  // look for scalar reps before subrt call
 // obsolete   t|=(SGNTO0(((acr-1)&(1-ma))|((wcr-1)&(1-mw))))<<MARKX;  // set MARK in t if there is any scalar extended to >1 atom
   PROD(replct,f-shortf,s+shortf); f+=1+!!(t&(0b101000<<23)); PROD(framect,shortf,s); framect*=replct;  // Number of cells in a and w; known non-empty shapes; framect becomes size of both frames.  Repurpose f to total result rank

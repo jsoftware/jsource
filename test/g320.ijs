@@ -503,6 +503,11 @@ cat=: 4 : 'x,y'
 r=: <"1 ] 4 4#:i.16
 f=: 3 : 'xx (,"y -: cat"y) yy'
 
+(2 4 $ 'aaaaabcd') -: 'a' , 1 4 $ 'abcd'
+(2 4 $ 'abcdaaaa') -: 'a' ,~ 1 4 $ 'abcd'
+(2 2 4 $ 'aaaaabcdbbbbefgh') -: 'ab' ,"0 2 ] 2 1 4 $ 'abcdefgh'
+(2 2 4 $ 'abcdaaaaefghbbbb') -: 'ab' ,"2 0~ ] 2 1 4 $ 'abcdefgh'
+
 f&>r [ xx=:    ?  2 3 4$2   [ yy=:    ?  2 3 4$2
 f&>r [ xx=:a.{~?  2 3 4$256 [ yy=:a.{~?  2 3 4$256
 f&>r [ xx=:adot1{~?  2 3 4$(#adot1) [ yy=:adot1{~?  2 3 4$(#adot1)

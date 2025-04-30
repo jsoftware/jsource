@@ -142,11 +142,11 @@ static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,*sv,t,wr,*ws,zn;
  // until the shape is exhausted; then the shape is extended with 1 for arrays, 0 for atoms (scalar extension, which takes the cell-shape from the other argument even if it contains a 0).
  // This overfetches ?r[-1], which is OK.
  as=AS(a); ws=AS(w); I ax=ar-1; I wx=wr-1; c=1; I extenmin=SGNTO0(~(ax|wx));  // if either arg is scalar, extend shape with 0; otherwise 1
- while(1){m=as[ax]; m=ax<0?extenmin:m; ax=ax<0?0:ax; n=ws[wx]; n=wx<0?extenmin:n; wx=wx<0?0:wx; if(ax+wx==0)break; I axlen=MAX(m,n); DPMULDZ(c,axlen,c); if(axlen==0)goto emptyresult; --ax, --wx;}  // fetches AS[-1] which is OK.
+ while(1){m=as[ax]; m=ax<0?extenmin:m; ax=ax<0?0:ax; n=ws[wx]; n=wx<0?extenmin:n; wx=wx<0?0:wx; if(ax+wx==0)break; I axlen=MAX(m,n); DPMULDDECLS DPMULDZ(c,axlen,c); if(axlen==0)goto emptyresult; --ax, --wx;}  // fetches AS[-1] which is OK.
  ASSERT(c>0,EVLIMIT);   // we end the loop with 0 product only if some product overflowed and was set to 0
 emptyresult:;   // abort loop to come here if a result axis length is 0, which always produces a true empty result
  m=ar==0?1:m; n=wr==0?1:n;  // a scalar arg always has exactly one item
- DPMULDE(c,m+n,zn);  // get total # atoms in result.  m, n invalid if c==0, no problem
+ DPMULDDECLS DPMULDE(c,m+n,zn);  // get total # atoms in result.  m, n invalid if c==0, no problem
  // Now that we have figured out the result size we can decide whether we need fill
  I somefill; I an=AN(a); I wn=AN(w);   // set if we must have a fill atom
  if(unlikely((somefill=((an+wn-zn)&(-MIN(ar,wr))))<0)){    // we need fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate). 

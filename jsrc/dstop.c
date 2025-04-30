@@ -29,7 +29,7 @@ static B stopsub(C*p,C*nw,I md){C*q,*s;I n;
  R 0;   // no stopnum matched, return failure
 }
 
-// i is the line we are about to execute, c is the call-stack entry for the current function
+// i is the line we are about to execute, d is the call-stack entry for the current function
 // return 1 if we should stop before executing the line
 B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  if(!d)R 0;  // if there is no debug stack, there is no stop
@@ -45,7 +45,7 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  // if no single-step stop, try looking the line up in the stops table
  if(i==d->dcstop){d->dcstop=-2; R 0;}     /* not stopping if already stopped at the same place */
  READLOCK(JT(jt,dblock));  // lock the stops table while we inspect it
- if((d->dca&&JT(jt,dbstops))){  // if the name is given and there are stops...
+ if((d->dca&&d->dcnmlev<3&&JT(jt,dbstops))){  // if the name is given, not anonymous, and there are stops...
   s=CAV(str0(JT(jt,dbstops))); sprintf(nw,FMTI,i);  // s->stop strings, nw=character form of line#
   a=d->dca; n=NAV(a)->m; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1;   // t->name we are looking for, n=its length, md=valence of call
   NOUNROLL while(s){  // until we have looked at all stops...

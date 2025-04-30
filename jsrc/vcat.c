@@ -316,7 +316,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
   }
  }
  // dissimilar items, or there is frame.  Mark the inputs non-pristine; leave the result non-pristine, since we don't know whether it has repetitions (we could figure that out)
- PRISTCLR(a) PRISTCLRNODCL(w)  // make inputs non-PRISTINE
+ PRISTCLR(a) PRISTCLRNODCL(w)  // make inputs non-PRISTINE   scaf verify that this is threadsafe
  p=AS(a)[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
  q=AS(w)[wr-1];   //  q=len of last axis of cell
 // obsolete  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.

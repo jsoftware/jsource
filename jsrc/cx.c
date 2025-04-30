@@ -360,7 +360,7 @@ nextlinedebug:;
     if(unlikely(!(NPGpysfmtdl&16))){  // if we have never allocated debug stack
      // if debug/perfmon is set, or has ever been set while this defn is running, there are 2 stack frames available: top of stack is a PARSE frame used for requesting line changes & ? else, and the
      // frame below the top is a DCCALL type which will hold debug info.  If the caller was unquote, it will have opened a CALL for the name, which can reuse (once)
-     I lvl; DC callframe;   // level of name: 0=bare 1=> 2=>> 3=anionymous
+     I lvl; DC callframe;   // level of name: 0=bare 1=> 2=>> 3=anonymous
      if(unlikely(!((callframe=jt->sitop)&&callframe->dctype==DCCALL)))lvl=3;     // If the TOS is not a call, we were called from the parser or 0!:n (or ".) and are truly anonymous.
      else{  // TOS is a call
       // self==callframe->dcf    callframe->dcc!=0  lvl example

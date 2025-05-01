@@ -49,9 +49,9 @@ ZF2(jtzdiv){ZF2DECL;D t;
   if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
   a/=c; b/=c; if(likely(ABS(d)!=inf))
 #if defined(__aarch64__)||defined(__arm__)
-  {__asm__("" ::: "cc");d/=c;} 
+  {__asm__("" ::: "cc");d/=c;}   // or change if(likely to if(unlikely
 #else
-  d/=c; 
+  d/=c;
 #endif
   else d=0.0;  t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
  }else if(ZNZ(u)){  // division by 0

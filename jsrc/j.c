@@ -6,6 +6,7 @@
 #include "j.h"
 #include "jversion.h"
 #include "gemm.h"
+#include "jsleef.h"
 #include <math.h>
 #pragma warning(disable : 4056)  // negative infinity overflow
 

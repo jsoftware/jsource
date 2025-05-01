@@ -5,6 +5,8 @@
 
 #include "j.h"
 #include "ve.h"
+#include "jsleef.h"
+
 #if defined(__GNUC__) && !(C_AVX2 || EMU_AVX2)
 static int64_t m7f = 0x7fffffffffffffffLL;
 #define COMMA ,
@@ -441,6 +443,9 @@ E f128toe(Sleef_quad w){
 
 AMON(expE,   E,E, *z=x->hi<(2*EMIN)?zeroE:f128toe(Sleef_expq1_u10(etof128(*x)));)
 AMON(logE,   E,E, ASSERTWR(0<=x->hi,EWIMAG); *z=f128toe(Sleef_logq1_u10(etof128(*x)));)
+#else
+AMON(expE,   E,E, x;z;ASSERTWR(0,EVNONCE);)
+AMON(logE,   E,E, x;z;ASSERTWR(0,EVNONCE);)
 #endif
 
 static I jtcire(J jt,I n,I k,E*z,E*x){E p,t;
@@ -526,9 +531,11 @@ AHDR2(cirEE,E,E,E){I k=(I)jround(x->hi);
 static E jtpospowE(J jt,E x,E y){
  if(unlikely(0==y.hi))R (E){.hi=1.0,.lo=0.};
  if(unlikely(0==y.hi))R (E){.hi=0<y.hi?0.0:inf,.lo=0.};
+#if SLEEFQUAD
  if(0<x.hi){
   R f128toe(Sleef_expq1_u10(Sleef_mulq1_u05(etof128(y),Sleef_logq1_u10(etof128(x)))));
  }
+#endif
  jt->jerr=EWIMAG;
  R (E){.hi=0.0,.lo=0.};
 }    /* x^y where x and y are qp */

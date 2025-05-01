@@ -41,6 +41,9 @@
 #endif
 #endif
 #endif
+#if defined(__SSE2__)
+#include <emmintrin.h>
+#endif
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
@@ -157,6 +160,11 @@
 #endif
 #endif
 
+#if SLEEF
+#undef SLEEFQUAD
+#define SLEEFQUAD 1
+#endif
+
 #if SLEEF && !defined(_CMP_EQ)
 #define _CMP_EQ          0
 #define _CMP_LT          1
@@ -222,15 +230,6 @@ _mm512_storeu_epi64 (void *__P, __m512i __A)
 #define HASFMA 1  // true if architecture has hardware FMA capacity with AVX2 instructions
 #else
 #define HASFMA 0
-#endif
-
-#if SLEEF
-#include "../sleef/include/sleef.h"
-#undef SLEEFQUAD
-#define SLEEFQUAD 1
-#include "../sleef/include/sleefquad.h"
-#elif SLEEFQUAD
-#include "../sleef/include/sleefquad.h"
 #endif
 
 #if defined(_OPENMP)

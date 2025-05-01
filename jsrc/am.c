@@ -862,21 +862,24 @@ static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  dfv2(ffm,a,w,hv[1]);  // x v1 y - no inplacing.
  RZ(ffm);
- // to support gerund-returning-gerund, you need to execute RZ(ff=jtamend(jt,ffm,0)); now and at the bottom call through valencefns to process the returned gerund
- jtfg=(J)((I)jtfg&~(JTINPLACEA*(a==ffm)+JTINPLACEW*(w==ffm))); // Protect any input that was returned by v1 (must be ][ or equivalent)
- jtfg=a==w?jt:jtfg;  // if a=w, abort all inplacing
+     // to support gerund-returning-gerund, you need to execute RZ(ff=jtamend(jt,ffm,0)); now and at the bottom call through valencefns to process the returned gerund
+ jtfg=(J)((I)jtfg&~(JTINPLACEA*(a==ffm)+JTINPLACEW*(w==ffm))); // Turn off inplacing for any arg returned by v1
+ jtfg=unlikely(a==w)?jt:jtfg;  // if a=w, abort all inplacing
  PUSHZOMB
  // execute the gerunds that will give the arguments to amend.
  // x v2 y - allow inplacing an arg not used by v0
+ J jtfgv1=jtfg;  // remember which input args are inplaceable now - they will be inplaceable to v1 unless returned by v2
  if(hn>=3){
   RZ(ffy=(FAV(hv[2])->valencefns[1])((J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))),a,w,hv[2]));  // x v2 y - inplacing whatever v0 doesn't use (self flags were set for v0).  Result of v2 is ALWAYS inplaceable into amend, as if executed in parser
-  jtfg=(J)((I)jtfg&~(JTINPLACEA*(a==ffy))); // Protect any input that was returned by v2
+  if(unlikely(ffy==a)){jtfg=(J)(((I)jtfg&~JTINPLACEW)|(((I)jtfg>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)); jtfgv1=(J)((I)jtfgv1&~JTINPLACEA);}  // if v2 returns a, replace w's inplaceability with a'1 for }, clear a's for v1
+// obsolete   jtfg=(J)((I)jtfg&~(JTINPLACEW*(a==ffy))); // If v2 returned a, all inplacing is off because we lost a's inplaceability (not worth tracking)
  }else{ffy=w;}  // if v2 omitted or ], just use y directly
- jtfg=(J)((I)jtfg&~(JTINPLACEW*(w==ffy))); // Protect any input that was returned by v2
+// obsolete  jtfg=(J)((I)jtfg&~(JTINPLACEW*(w==ffy))); // Protect any input that was returned by v2
+ jtfgv1=(J)((I)jtfgv1&~(JTINPLACEW*((w==ffy)))); // If v2 returned w, uninplace it for v1 but leave for amend.
  // x v0 y - allow inplacing of whatever hasn't been protected
- RZ(ffx=(FAV(hv[0])->valencefns[1])(jtfg,a,w,hv[0]));  // x v0 y - allow inplacing
+ RZ(ffx=(FAV(hv[0])->valencefns[1])(jtfgv1,a,w,hv[0]));  // x v0 y - allow inplacing
  // execute ff, i. e.  ffx (x v1 y)} ffy .  Allow inplacing xy unless protected by the caller.  No need to pass WILLOPEN status, since the verb can't use it.  ff is needed to give access to m
- POPZOMB; R jtamendn2(( (J)(intptr_t)((I)jt+JTINPLACEW)),ffx,ffy,ffm,self);  // final amend.  No inplacing on x, but y OK
+ POPZOMB; R jtamendn2((J)((I)jtfg|(JTINPLACEW*!((w==ffy)|(a==ffy)))),ffx,ffy,ffm,self);  // final amend. If v2 returned a/w, the corresponding inplaceability value is set.  If not, it must always be inplaceable
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive.  This result verb has ATOP[LR] flags set from v0

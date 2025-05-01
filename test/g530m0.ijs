@@ -864,6 +864,10 @@ NB. shaped boxed selectors
 1:    99 (<1 2 3 ,:3 2 1)} i. 4 4 6   NB. more atoms than axes OK
 'domain error' -: 99 (0;0 0)} etx i. 2 3
 
+(0 2 3 ,: 0 3 2) -: (,: 1 2&(] ] (|.@:{)`[`]})) memu 0  2 3  NB. } not inplace when v2 returns old block
+(1 2&(15!:19@((|.@:{)`[`]})) = 15!:19@]) memu 0  2 3  NB. } inplace
+(7!:2 '1 [`0:`(+:@])} i. 100 100') < 10000 + 7!:2 '1 [`0:`]} i. 100 100'  NB. inplace when v2 returns new block
+
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '

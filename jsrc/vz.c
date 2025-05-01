@@ -47,7 +47,13 @@ ZF2(jtztymes){D a,b,c,d;Z z;
 ZF2(jtzdiv){ZF2DECL;D t;
  if(ZNZ(v)){
   if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
-  a/=c; b/=c; if(likely(ABS(d)!=inf))d/=c; else d=0.0;  t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
+  a/=c; b/=c; if(likely(ABS(d)!=inf))
+#if defined(__aarch64__)||defined(__arm__)
+  {__asm__("" ::: "cc");d/=c;} 
+#else
+  d/=c; 
+#endif
+  else d=0.0;  t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
  }else if(ZNZ(u)){  // division by 0
   if(a!=0)zr=a/0.0; if(b!=0)zi=b/0.0;  // set any nonzero to infinity
  }

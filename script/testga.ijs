@@ -48,8 +48,8 @@ echo '13&(128!:6) ', 13&(128!:6) 'abc'
 echo '14&(128!:6) ', 14&(128!:6) 'abc'
 echo '15&(128!:6) ', 15&(128!:6) 'abc'
 
-1: RUN1 'g421'
-echo %/"1[1j1 1j1 1j1 0   NB. NaN in arm64
+NB. expect _j_ but NaN in arm64
+echo %/ 1j1 1j1 1j1 0
 
 echo 'avx512f: ',":9!:56'avx512f'
 echo 'avx512vl: ',":9!:56'avx512vl'

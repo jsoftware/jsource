@@ -10,7 +10,7 @@ APP_ABI := armeabi-v7a x86 x86_64 arm64-v8a
 # APP_ABI := x86_64 arm64-v8a
 # will be enable inside jconsole, it is easier to enable than disable
 APP_PIE := false
-# android 4.1
-APP_PLATFORM := android-16
+# android 7.0
+APP_PLATFORM := android-24
 # android 2.3.1
 # APP_PLATFORM := android-9

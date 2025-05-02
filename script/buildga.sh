@@ -135,7 +135,7 @@ cd -
 cd android
 sed -i "" -e "s/^APP_ABI/#   APP_ABI/g" jni/Application.mk
 sed -i "" -e "s/^# APP_ABI := armeabi/APP_ABI := armeabi/g" jni/Application.mk
-sed -i "" -e "s/android-16/android-9/g" jni/Application.mk
+sed -i "" -e "s/android-24/android-9/g" jni/Application.mk
 NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
 zip -r ../androidlibs.zip libs
 cd ..

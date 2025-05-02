@@ -40,6 +40,10 @@ char hasopenmp=0;
 #else
 #define LIBCBLASNAME "liblapack.so.3"
 #endif
+/* atlas provides cblas only. missing/usable lapack?
+/usr/lib/i386-linux-gnu/libatlas.so.3.10.3
+/usr/lib/x86_64-linux-gnu/libatlas.so.3.10.3
+*/
 
 #ifdef _WIN32
 static void dldiag(){}

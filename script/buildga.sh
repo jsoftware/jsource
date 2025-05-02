@@ -7,8 +7,9 @@
 
 set -e
 CC=${CC-clang}
-USE_SLEEF=${USE_SLEEF-1}
-export CC USE_SLEEF
+USE_SLEEF=${USE_SLEEF:=1}
+USE_SLEEFQUAD=${USE_SLEEFQUAD:=$USE_SLEEF}
+export CC USE_SLEEF USE_SLEEFQUAD
 
 if [ "$1" = "linux" ]; then
   ext="so"

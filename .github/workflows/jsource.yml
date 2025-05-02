@@ -342,6 +342,7 @@ jobs:
        apt-get install --no-install-recommends -y zip
        export CC=gcc
        export USE_SLEEF=0
+       export USE_SLEEFQUAD=1
        export USE_OPENMP=0
        script/buildga.sh raspberry || exit 1
        script/testga.sh raspberry || exit 1

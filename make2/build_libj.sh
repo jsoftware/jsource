@@ -103,7 +103,6 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-cast-function-type \
  -Wno-clobbered \
  -Wno-empty-body \
- -Wno-error=stringop-overflow \
  -Wno-format-overflow \
  -Wno-implicit-fallthrough \
  -Wno-incompatible-function-pointer-types \

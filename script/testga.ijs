@@ -48,9 +48,6 @@ echo '13&(128!:6) ', 13&(128!:6) 'abc'
 echo '14&(128!:6) ', 14&(128!:6) 'abc'
 echo '15&(128!:6) ', 15&(128!:6) 'abc'
 
-NB. expect _j_ but NaN in arm64
-echo %/ 1j1 1j1 1j1 0
-
 echo 'avx512f: ',":9!:56'avx512f'
 echo 'avx512vl: ',":9!:56'avx512vl'
 echo 'avx512bw: ',":9!:56'avx512bw'

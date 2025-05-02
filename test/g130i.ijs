@@ -43,6 +43,9 @@ NB. %/ Z ----------------------------------------------------------------
 
 div=: 4 : 'x%y'
 
+NB. arm64 branch prediction
+_j_ -:  %/ 1j1 1j1 1j1 0
+
 (%/   mtchinf div/  ) x=:j./0.1*_1e2+?2     23$2e2
 (%/   mtchinf div/  ) x=:j./0.1*_1e2+?2 4   23$2e2
 (%/"1 mtchinf div/"1) x

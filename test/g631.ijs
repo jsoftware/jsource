@@ -77,7 +77,7 @@ g=: 9&o.&.(0&({ ))@(*@{. * f@:+)"1
 (4 5$9.5) -: (+/%#)&., i. 4 5   NB. u does not support inplacing
 
 
-
+((<<0) ,: <<1) -: 0 1 <&.>/. <"0 i. 2  NB. zapped up the stack
 
 NB. semiduals x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------------------------
 

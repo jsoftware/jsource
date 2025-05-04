@@ -281,6 +281,11 @@ olim =: 9!:20''
 
 2 = +/ (E.,~) 63$0 1
 
+(,:,:3) (I.@E. -: I."I.@E.) ,:~ i. 5  NB. should revert
+(,:,:3) (+/@E. -: +"+/@E.) ,:~ i. 5  NB. does not call special
+(,:,:3) (+./@E. -: +."+./@E.) ,:~ i. 5  NB. "
+(,:,:3) ((E. i. 1:) -: (E."E. i. 1:)) ,:~ i. 5  NB. "
+
 4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 adot5 f g ebar i j m n s t x y G jtree joinroutes olim xstgsav ystgsav '
 randfini''
 

@@ -259,7 +259,7 @@ F2(jti1ebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  if(unlikely(d<0)){
   switch(d){
   case -1: R sc(n);
-  case -4: R indexof(ebarvec(a,w),num(1));
+  case -4: R indexof(ebarvec(a,w),num(1));  // scaf revert simpler
  }
  }
 #if C_AVX2 || EMU_AVX2
@@ -280,7 +280,7 @@ default:
 #endif
  }
  R sc(n);
-}    /* a (E. i. 1:) w where a and w are atoms or lists */
+}    /* a (E. i. 1:) w */
 
 F2(jtsumebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  ARGCHK2(a,w);
@@ -290,7 +290,7 @@ F2(jtsumebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  if(unlikely(d<0)){
   switch(d){
   case -1: R num(0);
-  case -4: R aslash(CPLUS,ebarvec(a,w));
+  case -4: R aslash(CPLUS,ebarvec(a,w));  // scaf revert simpler
   }
  }
  if((-m&-n)>=0){R sc(n);}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it
@@ -312,7 +312,7 @@ default:
 #endif
  }
  R sc(z);
-}    /* a ([: +/ E.) w where a and w are atoms or lists */
+}    /* a ([: +/ E.) w */
 
 F2(jtanyebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  ARGCHK2(a,w);
@@ -322,7 +322,7 @@ F2(jtanyebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  if(unlikely(d<0)){
   switch(d){
   case -1: R num(0);
-  case -4: R aslash(CPLUSDOT,ebarvec(a,w));
+  case -4: R aslash(CPLUSDOT,ebarvec(a,w));  // scaf revert simpler
   }
  }
  if((-m&-n)>=0){R num(SGNTO0(-n));}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it - 0/1 only
@@ -344,7 +344,7 @@ default:
 #endif
  }
  R num(0);
-}    /* a ([: +./ E.) w where a and w are atoms or lists */
+}    /* a ([: +./ E.) w */
 
 #define IFB1  \
  {if(zu==zv){I m=zu-AV(z); RZ(z=ext(0,z)); zv=m+AV(z); zu=AN(z)+AV(z);} *zv++=k;}
@@ -354,17 +354,16 @@ DF2(jtifbebar){F12IP;A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
- if(unlikely(d<0)){
-  switch(d){
-  case -1: R mtv;
-  case -4: R jtupon2cell(jt,a,w,self);  // revert if recoverable error
-  }
- }
+ if(unlikely(d<0)){RETF(d==-1?mtv:jtupon2cell(jt,a,w,self))}  // empty if inhomo; revert if not list or range too large
+// obsolete   case -1: R mtv;
+// obsolete  case -2: case -3: case -4: R   // revert if recoverable error
+// obsolete   }
+// obsolete  }
  if((-m&-n)>=0){R icap(ebar(a,w));}  // empty argument.
  GATV0(z,INT,MAX(22,n>>7),1); zv=AV1(z); zu=zv+AN(z);
 #if C_AVX2 || EMU_AVX2
  if(AT(w)&LIT+B01){
-   if(m==1){R icap(ebar(a,w));}  // if a is 1 char, we can't use the fast code.  Other forms are checked in vcompsc
+   if(m==1){R icap(ebar(a,w));}  // if a is 1 char, we can't use the fast code.
    R jtebar1C(jt, av,wv, m,n,CAV(z),2LL<<56,z);
  }
 #endif
@@ -384,4 +383,4 @@ default:
  }
  AN(z)=AS(z)[0]=zv-AV(z);
  RETF(z);
-}    /* a ([: I. E.) w where a and w are atoms or lists */
+}    /* a ([: I. E.) w  */

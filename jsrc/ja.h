@@ -937,6 +937,7 @@ extern void jfree4gmp(void*,size_t);
 #define raczap(x,cond)              raczapcommon(x,cond,*AZAPLOC(x)=0;)
 #define razap(x)                    raczap(x,c<0)  // default case is to zap whenever inplaceable, assuming abandoned
 #define razaptstackend(x)           raczapcommon(x,c<0,ZAPTSTACKEND(x))  // default case is to zap whenever inplaceable, assuming abandoned, but also checking to see if we can simply expunge the tstack entry
+#define razapwhenatend(x)          AC(x)=AC(x)&=~ACINPLACE; ramkrecursv(x)  // used when we know ZAP is ok & we just want to repair usecounts.  AC may be 8..2
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))

@@ -110,7 +110,7 @@ void* jehjdll(){return hjdll;}
 // load JE, Jinit, getprocaddresses, JSM
 JST* jeload(void* callbacks)
 {
-#if defined(JAMALGAM) || defined(__wasm__) || defined(TARGET_IOS)
+#if defined(JAMALGAM)
  jt=JInit();
  if(!jt) return 0;
  JSM(jt,callbacks);
@@ -121,6 +121,8 @@ JST* jeload(void* callbacks)
  jgetlocale=JGetLocale;
  jgeta=JGetA;
  jseta=JSetA;
+// #elif defined(__wasm__) || defined(TARGET_IOS)
+// exit(1);    /* not applicable to these platforms */
 #else
 #ifdef _WIN32
  WCHAR wpath[PLEN];

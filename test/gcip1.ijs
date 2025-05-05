@@ -21,6 +21,8 @@ if. UNAME-:'Darwin' do.
   echo 2!:0 ::(''"_) 'sysctl -n machdep.cpu.brand_string'
 elseif. UNAME-:'Win' do.
   echo spawn_jtask_ ::(''"_) 'wmic cpu get Name,CurrentClockSpeed'
+elseif. (UNAME-:'FreeBSD')*.'arm64'-:(9!:56'cpu') do.
+  '' return.
 elseif. do.
   echo 2!:0 ::(''"_) 'lscpu | grep "MHz"'
 end.

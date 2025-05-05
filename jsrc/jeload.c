@@ -18,7 +18,7 @@
  #endif
 #else
  #include <unistd.h>
- #if !defined(__wasm__) && !defined(TARGET_IOS)
+ #if !defined(__wasm__)
  #include <dlfcn.h>
  #define GETPROCADDRESS(h,p)	dlsym(h,p)
  #endif

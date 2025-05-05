@@ -120,7 +120,7 @@ char *toascbuf(wchar_t *src);
 
 #if (SYS & SYS_UNIX)
 
-#if !defined(__wasm__) && !defined(TARGET_IOS)
+#if !defined(__wasm__)
 #include <dlfcn.h>
 #endif
 
@@ -885,7 +885,7 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
  #endif
  CDASSERT((UI)h>HINSTANCE_ERROR,DEBADLIB);
 #endif
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__)
   CDASSERT(0,DEBADLIB);
 #elif SYS & SYS_UNIX
   CDASSERT(h=dlopen((*lib)?lib:0,RTLD_LAZY),DEBADLIB);
@@ -898,7 +898,7 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
 #if SY_WINCE
  f=GetProcAddress(h,tounibuf(proc));
 #endif
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__)
   CDASSERT(0,DEBADLIB);
 #elif (SYS & SYS_UNIX)
  f=(FARPROC)dlsym(h,proc);
@@ -1387,7 +1387,7 @@ F2(jtcd){F12IP;A z;C *wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 #if SY_WIN32
 #define FREELIB FreeLibrary
 #endif
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__)
 #define FREELIB(x) 0
 #elif (SYS & SYS_UNIX)
 #define FREELIB dlclose
@@ -1434,7 +1434,7 @@ F1(jtcderx){F12IP;I4 t;C buf[1024];
  }
 #endif
 
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__)
  {strcpy (buf, "");}
 #elif SYS&SYS_UNIX
  {const char *e = dlerror(); strcpy (buf, e?e:"");}
@@ -1905,7 +1905,7 @@ F1(jtcddlopen){F12IP;HMODULE h;
  MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,_MAX_PATH);
  h=LoadLibraryW(wlib);
 #else
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__)
  CDASSERT(0,DEBADLIB);
 #else
  h=dlopen((*lib)?lib:0,RTLD_LAZY);
@@ -1915,7 +1915,7 @@ F1(jtcddlopen){F12IP;HMODULE h;
 #ifdef _WIN32
  h=GetModuleHandle(NULL);
 #else
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__)
  CDASSERT(0,DEBADLIB);
 #else
  h=dlopen(0,RTLD_LAZY);
@@ -1935,7 +1935,7 @@ F2(jtcddlsym){F12IP;C*proc;FARPROC f;HMODULE h;
 #ifdef _WIN32
  f=GetProcAddress(h,(LPCSTR)proc);
 #else
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__)
  CDASSERT(0,DEBADLIB);
 #else
  f=(FARPROC)dlsym(h,proc);
@@ -1965,7 +1965,7 @@ R sc(rc);   /* return zero on success */
 
 F1(jtcdq){F12IP;I rc;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__)
  R sc(0);
 #else
  R sc(1);

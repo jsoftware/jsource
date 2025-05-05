@@ -28,6 +28,7 @@ tools=. install,'/tools'
 home=. >(systype-5){(2!:5'HOME');2!:5'USERPROFILE'
 home=. >(0-:home){home;,'/'
 home=. ifios{::home;home,'/Documents/j'
+home=. (home-:,'/'){::home;install
 1!:44^:(ifios+.ifwasm) install
 isroot=. (0=#1!:0'/data') *. ('root'-:2!:5'USER') +. (<home) e. '/var/root';'/root';'';,'/'
 userx=. omitversion{::'/j9.7-user';'/j-user'

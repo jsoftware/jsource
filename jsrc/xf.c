@@ -11,7 +11,7 @@
 #define filesep '\\'
 #else
 #if defined(__GNUC__) && defined(_GNU_SOURCE)
-#if !defined(__wasm__) && !defined(TARGET_IOS)
+#if !defined(__wasm__)
 #include <dlfcn.h>
 #endif
 #endif

@@ -35,6 +35,7 @@ ifeq ($(TARGET_ARCH),x86)
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 LOCAL_LDLIBS := -ldl -llog
+LOCAL_LDFLAGS += -Wl,-z,noexecstack
 
 LOCAL_SRC_FILES := a.c ab.c aes-arm.c aes-c.c aes-sse2.c af.c ai.c am.c am1.c amn.c ao.c ap.c ar.c as.c au.c c.c ca.c cblas.c cc.c cd.c cf.c cg.c ch.c cip.c cl.c cp.c cpdtsp.c cpuinfo.c cr.c crs.c \
 	ct.c cu.c cv.c cx.c d.c dc.c dss.c dstop.c dsusp.c dtoa.c f.c f2.c fbu.c gemm.c i.c io.c j.c jdlllic.c jgmpinit.c k.c m.c mbx.c mt.c p.c pv.c px.c r.c rl.c rt.c s.c sc.c sl.c \

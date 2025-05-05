@@ -330,7 +330,7 @@ case $jplatform64 in
   CFLAGS="$common -m32 -msse2 -mfpmath=sse "
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 $LDTHREAD -Wa,--noexecstack "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 $LDTHREAD -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
@@ -341,7 +341,7 @@ case $jplatform64 in
  linux/j64avx512*) # linux intel 64bit avx512
   TARGET=libj.so
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wa,--noexecstack "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -355,7 +355,7 @@ case $jplatform64 in
  linux/j64avx2*) # linux intel 64bit avx2
   TARGET=libj.so
   CFLAGS="$common -DC_AVX2=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wa,--noexecstack "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -368,7 +368,7 @@ case $jplatform64 in
  linux/j64*) # linux intel 64bit nonavx
   TARGET=libj.so
   CFLAGS="$common -msse3 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wa,--noexecstack "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""

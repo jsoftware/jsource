@@ -36,6 +36,8 @@ ifeq ($(TARGET_ARCH),x86)
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 LOCAL_LDLIBS := -ldl -llog
+LOCAL_LDFLAGS += -Wl,-z,noexecstack
+LOCAL_CFLAGS += -DJAMALGAM
 
 # LOCAL_CFLAGS += -fPIE
 # LOCAL_LDFLAGS += -fPIE -pie

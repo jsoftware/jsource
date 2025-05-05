@@ -57,6 +57,8 @@ static char pathexec[PLEN];
 static char jdllver[20];
 static int FHS=0;
 #ifdef ANDROID
+#define AndroidPackage "com.jsoftware.j.android"
+#define AndroidPackageBeta "com.jsoftware.j.beta.android"
 #include <sys/system_properties.h>
 #include <android/log.h>
 static char install[PLEN];
@@ -108,7 +110,7 @@ void* jehjdll(){return hjdll;}
 // load JE, Jinit, getprocaddresses, JSM
 JST* jeload(void* callbacks)
 {
-#if defined(JAMALGAM)
+#if defined(JAMALGAM) || defined(__wasm__) || defined(TARGET_IOS)
  jt=JInit();
  if(!jt) return 0;
  JSM(jt,callbacks);
@@ -119,8 +121,6 @@ JST* jeload(void* callbacks)
  jgetlocale=JGetLocale;
  jgeta=JGetA;
  jseta=JSetA;
-#elif defined(__wasm__) || defined(TARGET_IOS)
- exit(1);    /* not applicable to these platforms */
 #else
 #ifdef _WIN32
  WCHAR wpath[PLEN];
@@ -153,6 +153,7 @@ void jepath(char* arg,char* lib)
  *pathdll = *libpathj = *path = 0;  /* libj is static library */
  return;
 #else
+ char tmp[PLEN];
 #ifndef _WIN32
  struct stat st;
 #endif
@@ -162,11 +163,11 @@ void jepath(char* arg,char* lib)
  *(wcsrchr(wpath, '\\')) = 0;
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
  strcpy(libpathj,path);
-#elif defined(ANDROID)
-#define AndroidPackage "com.jsoftware.j.android"
- char tmp[PLEN];
+#elif defined(ANDROID) && !defined(JAMALGAM)
+ char pkg[100];
+ if(strstr(jversion,"beta")) strcpy(pkg,AndroidPackageBeta); else strcpy(pkg,AndroidPackage);
  strcpy(path,"/data/data/");
- strcat(path,AndroidPackage);
+ strcat(path,pkg);
  strcpy(pathdll,path);
  strcat(pathdll,"/lib/");
  strcpy(libpathj,pathdll);
@@ -174,7 +175,7 @@ void jepath(char* arg,char* lib)
  strcat(pathdll,JDLLEXT);
  if(stat(path,&st)){ /* android 5 or newer */
  strcpy(path,"/data/user/0/");
- strcat(path,AndroidPackage);
+ strcat(path,pkg);
  }
  if(stat(pathdll,&st)){ /* android 4 or newer */
 #if defined(__aarch64__)||defined(_M_ARM64)
@@ -189,25 +190,25 @@ void jepath(char* arg,char* lib)
  int i;
  for(i=0;i<20;i++){
   if(i)
-   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s.%s",AndroidPackage,i,arch,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s.%s",pkg,i,arch,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/data/app/%s/lib/%s/%s.%s",AndroidPackage,arch,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/data/app/%s/lib/%s/%s.%s",pkg,arch,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
   if(i)
-   sprintf(pathdll,"/data/app-lib/%s-%d/%s.%s",AndroidPackage,i,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/data/app-lib/%s-%d/%s.%s",pkg,i,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/data/app-lib/%s/%s.%s",AndroidPackage,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/data/app-lib/%s/%s.%s",pkg,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
   if(i)
-   sprintf(pathdll,"/mnt/asec/%s-%d/lib/%s.%s",AndroidPackage,i,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/mnt/asec/%s-%d/lib/%s.%s",pkg,i,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/mnt/asec/%s/lib/%s.%s",AndroidPackage,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/mnt/asec/%s/lib/%s.%s",pkg,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
  }
  }
  strcpy(tmp, "/mnt/sdcard/Android/data");
  strcpy(install,(stat(tmp,&st))?((stat(tmp+4,&st))?"/storage/emulated/0/Android/data/":"/sdcard/Android/data/"):"/mnt/sdcard/Android/data/");
- strcat(install,AndroidPackage);
+ strcat(install,pkg);
  strcat(install,"/files");
  setenv("HOME",install,1);
  if(!getenv("TMPDIR")) {
@@ -271,18 +272,20 @@ void jepath(char* arg,char* lib)
  snk=path+strlen(path)-1;
  if('/'==*snk) *snk=0;
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(JAMALGAM)
  strcpy(tmp,pathdll);
+#else
+ strcpy(tmp,path);
 #endif
  strcpy(pathdll,path);
  strcpy(libpathj,pathdll);
  strcat(pathdll,filesepx);
  strcat(pathdll,JDLLNAME);
  strcat(pathdll,JDLLEXT);
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(JAMALGAM)
  if(stat(pathdll,&st))strcpy(pathdll,tmp);
 #endif
-#if !defined(_WIN32) && !defined(ANDROID)
+#if !defined(_WIN32) && !defined(ANDROID) && !defined(__wasm__) && !defined(TARGET_IOS) // FHS ?
  if(stat(pathdll,&st)||strncmp(pathexec0,"/usr/bin/",9)||strncmp(pathexec0,"/usr/local/bin/",15)||strncmp(pathexec0,"/opt/homebrew/bin/",18)){
  char pathpx[PLEN];
  if('/'==*pathexec){
@@ -297,10 +300,10 @@ void jepath(char* arg,char* lib)
  }
  if (FHS) {
   char *jv1;
-// jversion   "9.6.1" "9.6.0-betaX"
+// jversion   "9.7.1" "9.7.0-betaX"
   if (jv1=strchr(jversion,'.')) if (jv1=strchr(jv1+1,'.')){ memcpy(jdllver,jversion,jv1-(jversion));jdllver[jv1-jversion]=0; }
-  if (!jv1) strcpy(jdllver,"9.6");
-  if (5<strlen(jdllver)) strcpy(jdllver,"9.6");
+  if (!jv1) strcpy(jdllver,"9.7");
+  if (5<strlen(jdllver)) strcpy(jdllver,"9.7");
 #if defined(__APPLE__)
   strcpy(pathdll,pathetcpx);
   strcat(pathdll,"/lib/");
@@ -314,9 +317,9 @@ void jepath(char* arg,char* lib)
   strcat(pathdll,".");
   strcat(pathdll,jdllver);
 #endif
+ }  // if (FHS)
  }
- }
-#endif
+#endif  // FHS ?
  if(lib&&*lib)
  {
 	 if(filesep==*lib || ('\\'==filesep && ':'==lib[1]))
@@ -336,6 +339,19 @@ void jepath(char* arg,char* lib)
 #else
 	 char *p1;
 	 if((p1=strrchr(pathdll,filesep))){strcpy(libpathj,pathdll);libpathj[p1-pathdll]=0;}
+#if defined(ANDROID) && defined(JAMALGAM)
+ strcpy(install,path);
+ if(p1=strrchr(install,filesep))*p1=0;
+ setenv("HOME",install,1);
+ if(!getenv("TMPDIR")) {
+  strcpy(tmp, install);
+  strcat(tmp, "/temp");
+  if(stat(tmp,&st)) mkdir(tmp, S_IRWXU | S_IRWXG | S_IRWXO);
+  chmod(tmp, S_IRWXU | S_IRWXG | S_IRWXO);
+  setenv("TMPDIR",tmp,1);
+ }
+ chmod(getenv("TMPDIR"), S_IRWXU | S_IRWXG | S_IRWXO);
+#endif
 #endif
  }
 #endif
@@ -358,7 +374,7 @@ void jesetpath(char* arg)
 // profile is from BINPATH, ARGV, ijx basic, or nothing
 int jefirst(int type,char* arg)
 {
-	int r; char* p,*q;
+	int r; char* p,*q,*p1;
 	char* input=malloc(2000+strlen(arg));
 	int runjscript=!!(type&256);
 	type=type&255;
@@ -402,10 +418,16 @@ int jefirst(int type,char* arg)
   }
 	strcat(input,"[UNAME_z_=:'Android'");
 	strcat(input,"[INSTALLROOT_z_=:'");
+#if defined(JAMALGAM)
+	strcpy(install,path);
+	if((p1=strrchr(install,filesep)))*p1=0;
 	strcat(input,install);
+#else
+	strcat(input,install);
+#endif
 	strcat(input,"'");
 	strcat(input,"[AndroidPackage_z_=:'");
-	strcat(input,AndroidPackage);
+	if(strstr(jversion,"beta")) strcat(input,AndroidPackageBeta); else strcat(input,AndroidPackage);
 	strcat(input,"'");
 #endif
 #if defined(RASPI)
@@ -484,15 +506,13 @@ void jefail(char* msg)
 	 NULL, GetLastError(),
 	 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  /* Default language */
 	 buf, (sizeof(buf)/sizeof(char)), 0);
-	strcat(msg,buf);
-#else
-#if !defined(__wasm__) && !defined(TARGET_IOS)
+	 strcat(msg,buf);
+#elif !defined(__wasm__)
 	char *dlerr=dlerror();
 	if(dlerr)strcat(msg,dlerr);
 	else{
 		char ermsg[1024];
 		if(errno&&!strerror_r(errno,ermsg,1024))strcat(msg,ermsg);}
-#endif
 #endif
 	strcat(msg,"\n");
 }

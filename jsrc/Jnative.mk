@@ -6,8 +6,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := jnative
 LOCAL_MODULE_FILENAME    := libjnative
 
-LOCAL_LDLIBS := 
-
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -fno-strict-aliasing -DC_CRC32C=1 -DEMU_AVX2=1 -DPYXES=1 -march=armv8-a -I../mpir/include
   LOCAL_ARM_NEON := true
@@ -29,5 +27,6 @@ endif
 
 LOCAL_SRC_FILES := andjnative.c jeload.c
 LOCAL_LDLIBS := -ldl -llog
+LOCAL_LDFLAGS += -Wl,-z,noexecstack
 
 include $(BUILD_SHARED_LIBRARY)

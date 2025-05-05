@@ -25,6 +25,7 @@ endif
 ifeq ($(TARGET_ARCH),x86)
   LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -fno-strict-aliasing -DREADLINE -DUSE_LINENOISE -march=i686 -mssse3 -mfpmath=sse -fno-stack-protector -I../mpir/include
 endif
+LOCAL_LDFLAGS += -Wl,-z,noexecstack
 
 LOCAL_SRC_FILES :=  jconsole.c jeload.c linenoise.c \
 ../libbacktrace/atomic.c \

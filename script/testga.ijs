@@ -12,7 +12,6 @@ testres=: 'test',os,'.txt'
 IFWA64=: IFWIN*.'arm64'-:9!:56'cpu'
 
 0!:0 <testpath,'tsu.ijs'
-GITHUBCI=: 1       NB. testing on github
 ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''

@@ -120,6 +120,9 @@ EMPTY
 )
 
 (3 : 0)''
+if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
+  EMPTY return.
+end.
 echo 9!:14''
 echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 c=. 9!:56'cblas'

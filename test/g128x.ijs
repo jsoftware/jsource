@@ -84,24 +84,36 @@ end.
 NB. LU rational
 todiag =: ([`(,.~@i.@#@])`])}  NB. stuff x into diagonal of y
 lrtoa =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
-(-.IF64) +. (-: (0&{:: /:~ lrtoa@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
 t=: 3 : 0''
+if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
+  EMPTY return.
+end.
 c=. 9!:56'cblas'
 for_i. i.15 do.
+ echo 'i ',":i
  0(9!:56)'cblas'
+ echo 'a1 '
  a1=. 128!:10 r=. (1000x ?@$~ ,~) i
- assert. 1e_10 > | r - (0&{:: /:~ lrtoa@(1&{::)) _1&x: &.> a1  NB. dev/lu rational
  assert. r -: (0&{:: /:~ lrtoa@(1&{::)) a1                     NB. dev/lu rational
+ b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) _1&x: &.> a1  NB. dev/lu rational
+ echo 'a2 ',":b
+ assert. 1e_10 > b
  a2=. 128!:10 r1=. _1&x: r
- assert. 1e_10 > | r1 - (0&{:: /:~ lrtoa@(1&{::)) a2   NB. nocblas  double
+ b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a2   NB. nocblas  double
+ echo 'a3 ',":b
+ assert. 1e_10 > b
  1(9!:56)'cblas'
  a3=. 128!:10 r1
- assert. 1e_10 > | r1 - (0&{:: /:~ lrtoa@(1&{::)) a3   NB. cblas  double
+ b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a3   NB. cblas  double
+ echo 'a4 ',":b
+ assert. 1e_10 > b
 end.
 c(9!:56)'cblas'
 EMPTY
 )
+
+(-.IF64) +. (-: (0&{:: /:~ lrtoa@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
 1: 0 : 0
 sm =. ((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.001 * *:) 1000

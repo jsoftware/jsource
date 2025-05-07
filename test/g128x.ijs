@@ -107,7 +107,7 @@ for_i. i.15 do.
  a3=. 128!:10 r1
  b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a3   NB. cblas  double
  echo 'a4 ',":b
- assert. 1e_10 > b
+NB.  assert. 1e_10 > b
 end.
 c(9!:56)'cblas'
 EMPTY

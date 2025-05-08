@@ -12,7 +12,6 @@ testres=: 'test',os,'.txt'
 IFWA64=: IFWIN*.'arm64'-:9!:56'cpu'
 
 0!:0 <testpath,'tsu.ijs'
-GITHUBCI=: 1       NB. testing on github
 ECHOFILENAME=: 1   NB. echo file name
 
 stdout LF ,~ 9!:14''
@@ -26,6 +25,12 @@ NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot.ijs';'gtdot3.
 NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
+
+echo 'avx512f: ',":9!:56'avx512f'
+echo 'avx512vl: ',":9!:56'avx512vl'
+echo 'avx512bw: ',":9!:56'avx512bw'
+echo 'avx512vbmi: ',":9!:56'avx512vbmi'
+echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 
 NB. this crash on Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
 echo '1: (3x ^ 2 ^ i. 10x)'
@@ -48,11 +53,34 @@ echo '13&(128!:6) ', 13&(128!:6) 'abc'
 echo '14&(128!:6) ', 14&(128!:6) 'abc'
 echo '15&(128!:6) ', 15&(128!:6) 'abc'
 
-echo 'avx512f: ',":9!:56'avx512f'
-echo 'avx512vl: ',":9!:56'avx512vl'
-echo 'avx512bw: ',":9!:56'avx512bw'
-echo 'avx512vbmi: ',":9!:56'avx512vbmi'
-echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
+r=: ".;._2 (0 : 0)
+865 856 916 212 912 899 855 500 480 465
+263 452 902 338  80 419 702 993 239 618
+134 658 259  17 612  85 284 547 523 571
+754 192 537 253 287 141 743 913 816 682
+ 23 815 832 464 227 344 369 747 112 674
+ 75 890 278 252 589 545 204 446 968 204
+123 353 843 499 338 277 334  17  52 497
+335 200 187  32 195 298  28 889 578 589
+507 573 894 999 627 326 294 312 165 620
+535 472 838  83 247 391 314 580 170 492.0
+)
+t1=: 3 : 0^:(IF64)''
+todiag=. ([`(,.~@i.@#@])`])}  NB. stuff x into diagonal of y
+lrtoa=. (((1. todiag *) +/ . * (* -.)) >/~@i.@#)
+c=. (9!:56)'cblas'
+0(9!:56)'cblas'
+a=. (128!:10) r
+assert. 1e_4 > | , r - (0&{:: { lrtoa@(1&{::)) a
+if. 1=c do.
+1(9!:56)'cblas'
+a=. (128!:10) r
+assert. 1e_4 > | , r - (0&{:: { lrtoa@(1&{::)) a
+end.
+c(9!:56)'cblas'
+EMPTY
+)
+erase ;:'r t1'
 
 FINISH=: 3 : 0
 msg=. 9!:14''

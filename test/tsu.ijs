@@ -243,7 +243,7 @@ RECHO4=: 13 : '+/ RESUB4 y'
 
 NB. bill extensions
 
-GITHUBCI=: 0       NB. running on github action
+GITHUBCI=: 'true'-:2!:5'GITHUB_ACTIONS'       NB. running on github action
 ECHOFILENAME=: IFIOS+.IFRASPI+.((<UNAME)e.'Android';'Wasm')  NB. echo file name
 PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script

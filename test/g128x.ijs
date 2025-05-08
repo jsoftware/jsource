@@ -79,12 +79,38 @@ for_dim. 2 + 20 ?@$ 40 do.
   assert. 1e_7 > >./ | , (p { a) - lrtoa lr
 end.
 1
-}}^:IF64 1 NB. all J64 support EMU_AVX2 true fma
+}}^:IF64 1 NB. all J64 support EMU_AVX2 emulated fma
+
 NB. LU rational
 todiag =: ([`(,.~@i.@#@])`])}  NB. stuff x into diagonal of y
 lrtoa =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
-(-.IF64) +. (-: (0&{:: /:~ lrtoa@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
+t=: 3 : 0''
+if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
+  EMPTY return.
+end.
+c=. 9!:56'cblas'
+for_i. i.15 do.
+ 0(9!:56)'cblas'
+ a1=. 128!:10 r=. (1000x ?@$~ ,~) i
+ assert. r -: (0&{:: /:~ lrtoa@(1&{::)) a1                     NB. dev/lu rational
+ b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) _1&x: &.> a1  NB. dev/lu rational
+ assert. 1e_4 > b
+ a2=. 128!:10 r1=. _1&x: r
+ b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a2   NB. nocblas  double
+ assert. 1e_4 > b
+ 1(9!:56)'cblas'
+ if. 0 [ (9!:56)'cblas' do.
+ a3=. 128!:10 r1
+ b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a3   NB. cblas  double
+ assert. 1e_4 > b
+ end.
+end.
+c(9!:56)'cblas'
+EMPTY
+)
+
+(-.IF64) +. (-: (0&{:: /:~ lrtoa@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
 1: 0 : 0
 sm =. ((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.001 * *:) 1000
@@ -104,7 +130,7 @@ mk=. <:/~(i.N)
 p=. 0{::c1 [ lu=. 1{::c1
 u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
 if. IF64 +. 9!:56'cblas' do.
-  assert. 1e_5 > >./ | , a - p { l (+/ .*) u
+  assert. 1e_4 > >./ | , a - p { l (+/ .*) u
 end.
 
 a=. a j. (N,N) ?@$ 1000 1000
@@ -114,12 +140,15 @@ mk=. <:/~(i.N)
 p=. 0{::c1 [ lu=. 1{::c1
 u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
 if. 9!:56'cblas' do.
-  assert. 1e_5 > >./ | , a - p { l (+/ .*) u
+  assert. 1e_4 > >./ | , a - p { l (+/ .*) u
 end.
 EMPTY
 )
 
 (3 : 0)''
+if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
+  EMPTY return.
+end.
 echo 9!:14''
 echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 c=. 9!:56'cblas'

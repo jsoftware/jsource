@@ -305,7 +305,7 @@ A jtparsex(J jt,A* queue,I m,I source,DC c){A z,parsez;
  }
  // we can stop before the sentence, or after it if it fails.  Stopping before is better because then we know we can restart safely
  // if there is a stop, enter debug suspension
- if(c&&dbstop(c,source)){z=parsez=0; jsignal(EVSTOP); goto noparse;}
+ if(c&&jt->uflags.trace&TRACEDB1&&dbstop(c,source)){z=parsez=0; jsignal(EVSTOP); goto noparse;}
  // xdefn adds a stack entry for PARSE, needed to get anonymous operators right
  z=PARSERVALUE(parsez=parsea(queue,m));  // make sure we preserve ASGN flag in parsez
 noparse: ;

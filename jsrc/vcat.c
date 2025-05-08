@@ -288,9 +288,10 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
     // The itemcount is the sum of the itemcounts; but if the ranks are different, use 1 for the shorter; and if both ranks are 0, the item count is 2
     // empty items are OK: they just have 0 length but their shape follows the normal rules
     I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
-    GA(z,t&NOUN,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
+    I alen=AN(a); I wlen=AN(w);  // Remember, a/w may be being extended!  We must decide on the length(s) to use BEFORE we allocate the block, and must not change them later
+    GA(z,t&NOUN,alen+wlen,lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
     if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
-    I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;  // arg sizes
+    I klg=bplg(t); alen<<=klg; wlen<<=klg;  // arg sizes in bytes
     JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
     if(withprob(t&NOUN&RECURSIBLE,0.2)){   //  recursive/pristine processing applies only to RECURSIBLEs 
      // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
@@ -298,19 +299,19 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
      // We can't transfer ownership if one of the args is VIRTUAL, because a virtual block doesn't really own its contents
      // We can't transfer ownership if a=w, because the counts for the blocks would be one too low
 
-      // The result can be pristine if both inputs are abandoned pristine, and are not the same block (note: if one is boxed, no coonversion will ever happen)
-      // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
-      I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
-      xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtfg))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
-      if(unlikely((xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE))!=0)){  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
-       // a and w are both non-shared blocks, and not VIRTUAL or PERMANENT.  xfer is the transferable recursibility if any, plus inherited pristinity
-       AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGANDLOCAL(a,~xfer) AFLAGANDLOCAL(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
-      }else{AFLAGCLRPRIST(w); AFLAGCLRPRIST(a);}  // if we can't transfer pristinity, we must clear it
-      // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
-      // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
-      if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(a))}  //  like PRISTCOMSETF
-      if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(w))}  //  like PRISTCOMSETF
-     }
+     // The result can be pristine if both inputs are abandoned pristine, and are not the same block (note: if one is boxed, no coonversion will ever happen)
+     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
+     I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
+     xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtfg))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
+     if(unlikely((xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE))!=0)){  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
+      // a and w are both non-shared blocks, and not VIRTUAL or PERMANENT.  xfer is the transferable recursibility if any, plus inherited pristinity
+      AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGANDLOCAL(a,~xfer) AFLAGANDLOCAL(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
+     }else{AFLAGCLRPRIST(w); AFLAGCLRPRIST(a);}  // if we can't transfer pristinity, we must clear it
+     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
+     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
+     if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(a))}  //  like PRISTCOMSETF
+     if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(w))}  //  like PRISTCOMSETF
+    }
     if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
    }
   }
@@ -322,6 +323,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
 // obsolete  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  if(((MAX(acr,wcr)-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))<0){  // r<=2, neither arg empty,  (sum of ranks<3 (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom) OR items (which are lists) have same length)
   // joining atoms, rows, row/atom, or table/row with same lengths, or table/atom; possibly with frame.  In any case no fill is possible, but scalar replication might be
+  // scaf this could be generalized to any time ranks differ by at most 1 and the items agree or one is atomic
   I awcrflg=4*acr+wcr;  // incredible register pressure.  Combine af/wf, and shift in flags as we calculate them
   I cc2a=__atomic_load_n(&AS(a)[ar-2],__ATOMIC_RELAXED); p=awcrflg&0b1100?p:1; cc2a=awcrflg&0b1000?cc2a:1; ma=cc2a*p; ma=awcrflg==0b0010?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w; i. e. #atoms to fill from an item of a
   I cc2w=__atomic_load_n(&AS(w)[wr-2],__ATOMIC_RELAXED); q=awcrflg&0b0011?q:1; cc2w=awcrflg&0b0010?cc2w:1; cc2a+=cc2w; mw=cc2w*q; mw=awcrflg==0b1000?p:mw;  // sim for w; cc2a is combined length of axis -2 f can increment only once
@@ -502,9 +504,9 @@ F2(jtapip){F12IP;A h;
        PRISTCLRF(w)  // this destroys w!
        // The data has been copied.  No more errors are possible.  It is safe to modify the size of a
        if(likely(!(fgwd&FGVIRTREQD))){     // Normal append-in-place.
-        AS(a)[0]+=wm; AN(a)+=wn;  // Update the # items in a, and the # atoms
         // if a has recursive usecount (which precludes virtual extension), increment the usecount of the added data - including any fill
         if(UCISRECUR(a)){wn<<=((fgwd&FGLGK)-LGSZI); A* aav=(A*)av; DO(wn, ra(aav[i]);)}        // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
+        AS(a)[0]+=wm; AN(a)+=wn;  // Update the # items in a, and the # atoms - after the data is fully ready, in case another thread is watching
        }
        if(unlikely(_ttop!=jt->tnextpushp))tpop(_ttop);  // if virtual, ttop is after the result; otherwise result was surely not allocated here.  EPILOG not needed because no non-BOX indirects allowed, and BOX doesn't call cvt
        RETF(a);
@@ -515,4 +517,5 @@ F2(jtapip){F12IP;A h;
   }   // end 'inplaceable usecount'
  }  // end 'inplaceable'
  R(jtover(jtfg,a,w,ds(CCOMMA)));  // if there was trouble, failover to non-in-place code
+
 }    /* append in place if possible */

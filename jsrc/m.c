@@ -1465,15 +1465,14 @@ void jtrepatrecv(J jt){
  A p=xchga(&jt->repatq,0);   // dequeue the current repatq; remember head pointer (p) and set repatq empty
  __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
  if(likely(p)){  // if anything to repat here...
-  // this duplicates mf() and perhaps should just call there instead
-  I count=AC(p);
-  jt->bytes-=count;  // remove repats from byte count.  Not worth testing whether couting enabled
-  for(A nextp=AFCHAIN(p); p; p=nextp, nextp=p?AFCHAIN(p):nextp){  // send the blocks to their various queues
-   I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
-   if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0))jt->uflags.spfreeneeded=1;  // if we have freed enough to call for garbage collection, do
-   AFCHAIN(p)=jt->mempool[blockx];  // chain new block at head of queue
-   jt->mempool[blockx]=p;
-  }
+// obsolete   // this duplicates mf() and perhaps should just call there instead
+  jt->bytes-=AC(p);  // remove repats from byte count.  Not worth testing whether counting enabled
+  A nextp; do{nextp=AFCHAIN(p); mf(p);}while(p=nextp);  // send the blocks to their various queues
+// obsolete    I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
+// obsolete    if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0))jt->uflags.spfreeneeded=1;  // if we have freed enough to call for garbage collection, do
+// obsolete    AFCHAIN(p)=jt->mempool[blockx];  // chain new block at head of queue
+// obsolete    jt->mempool[blockx]=p;
+// obsolete   }
  }
 #endif
 }

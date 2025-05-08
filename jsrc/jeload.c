@@ -151,7 +151,7 @@ JST* jeload(void* callbacks)
 // WIN arg is 0, Unix arg is argv[0]
 void jepath(char* arg,char* lib)
 {
-#if defined(__wasm__) || defined(TARGET_IOS)
+#if defined(__wasm__) || defined(TARGET_IOS) || defined(JAMALGAM)
  *pathdll = *libpathj = *path = 0;  /* libj is static library */
  return;
 #else
@@ -190,21 +190,21 @@ void jepath(char* arg,char* lib)
 #define arch "arm"
 #endif
  int i;
- for(i=0;i<20;i++){
+ for(i=0;i<40;i++){
   if(i)
-   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s.%s",pkg,i,arch,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s%s",pkg,i,arch,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/data/app/%s/lib/%s/%s.%s",pkg,arch,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/data/app/%s/lib/%s/%s%s",pkg,arch,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
   if(i)
-   sprintf(pathdll,"/data/app-lib/%s-%d/%s.%s",pkg,i,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/data/app-lib/%s-%d/%s%s",pkg,i,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/data/app-lib/%s/%s.%s",pkg,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/data/app-lib/%s/%s%s",pkg,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
   if(i)
-   sprintf(pathdll,"/mnt/asec/%s-%d/lib/%s.%s",pkg,i,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/mnt/asec/%s-%d/lib/%s%s",pkg,i,JDLLNAME,JDLLEXT);
   else
-   sprintf(pathdll,"/mnt/asec/%s/lib/%s.%s",pkg,JDLLNAME,JDLLEXT);
+   sprintf(pathdll,"/mnt/asec/%s/lib/%s%s",pkg,JDLLNAME,JDLLEXT);
   if(!stat(pathdll,&st))break;
  }
  }

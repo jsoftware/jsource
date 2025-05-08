@@ -12,6 +12,7 @@ APP_ABI := armeabi-v7a x86 x86_64 arm64-v8a
 APP_PIE := false
 # android 7.0  api level 24
 # android 5.0  api level 21  first version supported pie executable only
-APP_PLATFORM := android-24
+# android 4.1  api level 16
+APP_PLATFORM := android-16
 # android 2.3.1
 # APP_PLATFORM := android-9  # support nopie only

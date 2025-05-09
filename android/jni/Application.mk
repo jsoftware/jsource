@@ -10,9 +10,10 @@ APP_ABI := armeabi-v7a x86 x86_64 arm64-v8a
 # APP_ABI := x86_64 arm64-v8a
 # will be enable inside Jconsole.mk, it is easier to enable than disable
 APP_PIE := false
+# android 10   api level 29 suppress warning on Phone API 36
 # android 7.0  api level 24
 # android 5.0  api level 21  first version supported pie executable only
 # android 4.1  api level 16
-APP_PLATFORM := android-16
+APP_PLATFORM := android-29
 # android 2.3.1
 # APP_PLATFORM := android-9  # support nopie only

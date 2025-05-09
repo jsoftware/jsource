@@ -133,12 +133,12 @@ wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
 unzip android-ndk-r16b-darwin-x86_64.zip
 cd -
 cd android
-sed -i "" -e "s/^APP_MODULES := jconsonle /##   APP_MODULES := jconsonle /g" jni/Application.mk
-sed -i "" -e "s/^# APP_MODULES := jconsonle-nopie /APP_MODULES := jconsonle-nopie /g" jni/Application.mk
+sed -i "" -e "s/^APP_MODULES := /##   APP_MODULES := /g" jni/Application.mk
+sed -i "" -e "s/^#APP_MODULES := /APP_MODULES := /g" jni/Application.mk
 sed -i "" -e "s/^APP_ABI/##   APP_ABI/g" jni/Application.mk
-sed -i "" -e "s/^# APP_ABI := armeabi/APP_ABI := armeabi/g" jni/Application.mk
+sed -i "" -e "s/^#APP_ABI := /APP_ABI := /g" jni/Application.mk
 sed -i "" -e "s/^APP_PLATFORM/##   APP_PLATFORM/g" jni/Application.mk
-sed -i "" -e "s/^# APP_PLATFORM/APP_PLATFORM/g" jni/Application.mk
+sed -i "" -e "s/^#APP_PLATFORM/APP_PLATFORM/g" jni/Application.mk
 NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
 zip -r ../androidlibs.zip libs
 cd ..

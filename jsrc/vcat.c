@@ -290,6 +290,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
     I si=AS(s)[0]; si=ar==wr?si:1; si+=__atomic_load_n(&AS(l)[0],__ATOMIC_ACQUIRE); si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
       // The a block may be being extended in another thread.  We ensure that AS[0] is incremented AFTER AN to ensure that our allocation is adequate.  This can happen only if the apip started before we locked the block for this thread
     I alen=__atomic_load_n(&AN(a),__ATOMIC_ACQUIRE);  // ensure our copy matches the allocation even if AN incremented during allocation
+if(lr==1&&si!=alen+AN(w))printf("Allocation with AN=%lld AS[0]=%lld\n",alen+AN(w),si);  // scaf
     GA(z,t&NOUN,alen+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
 ASSERTSYS(!(AR(z)==1&&AN(z)<AS(z)[0]),"AS>AN");  // scaf
     if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t

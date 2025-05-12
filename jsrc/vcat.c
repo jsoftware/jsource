@@ -276,7 +276,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
 #endif
   // No frame.  See if ranks are equal or different by 1, and if the items have the same shape
   I lr=ar;  // rank of arg with long shape
-  A l=a; l=wr>ar?w:l; lr=wr>ar?wr:lr;  // arg with long shape.  Not needed till later but we usually go through the fast path
+  A l=a; l=wr>ar?w:l; lr=wr>ar?wr:lr;  // arg with long shape (a if =).  Not needed till later but we usually go through the fast path
   if(likely(2*lr-1<=ar+wr)){  // if ranks differ by at most 1
    // items have the same rank or one argument is an item of the other (cases where the ranks differ by more than 1 follow the general path below)
    // see if the shapes agree up to the shape of an item of the longer argument
@@ -287,11 +287,10 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
     // The rank is the rank of the long argument, unless both arguments are atoms; then it's 1
     // The itemcount is the sum of the itemcounts; but if the ranks are different, use 1 for the shorter; and if both ranks are 0, the item count is 2
     // empty items are OK: they just have 0 length but their shape follows the normal rules
-    I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
-    I alen=AN(a); I wlen=AN(w);  // Remember, a/w may be being extended!  We must decide on the length(s) to use BEFORE we allocate the block, and must not change them later
-    GA(z,t&NOUN,alen+wlen,lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
+    I si=AS(s)[0]; si=ar==wr?si:1; si+=__atomic_load_n(&AS(l)[0],__ATOMIC_ACQUIRE); si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
+    GA(z,t&NOUN,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
     if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
-    I klg=bplg(t); alen<<=klg; wlen<<=klg;  // arg sizes in bytes
+    I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;  // arg sizes in bytes
     JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
     if(withprob(t&NOUN&RECURSIBLE,0.2)){   //  recursive/pristine processing applies only to RECURSIBLEs 
      // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
@@ -506,7 +505,7 @@ F2(jtapip){F12IP;A h;
        if(likely(!(fgwd&FGVIRTREQD))){     // Normal append-in-place.
         // if a has recursive usecount (which precludes virtual extension), increment the usecount of the added data - including any fill
         if(UCISRECUR(a)){wn<<=((fgwd&FGLGK)-LGSZI); A* aav=(A*)av; DO(wn, ra(aav[i]);)}        // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
-        AS(a)[0]+=wm; AN(a)+=wn;  // Update the # items in a, and the # atoms - after the data is fully ready, in case another thread is watching
+        AN(a)+=wn; __atomic_store_n(&AS(a)[0],AS(a)[0]+wm,__ATOMIC_RELEASE);  // Update the # items in a, and the # atoms - after the data is fully ready, in case another thread is watching
        }
        if(unlikely(_ttop!=jt->tnextpushp))tpop(_ttop);  // if virtual, ttop is after the result; otherwise result was surely not allocated here.  EPILOG not needed because no non-BOX indirects allowed, and BOX doesn't call cvt
        RETF(a);

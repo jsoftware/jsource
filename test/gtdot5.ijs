@@ -84,7 +84,7 @@ pyx=. (p4 t.'')"0  i. 100
 EMPTY
 )
 
-{{ for. y$' ' do. t1 '' end. 1 }} 200
+{{ for. y$' ' do. t1 '' end. 1 }} 2000  NB. scaf 200
 t3''
 
 t2''

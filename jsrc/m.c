@@ -1540,11 +1540,11 @@ printf("%p-\n",w);
 #endif
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   I allocsize = FHRHPOOLBINTOSIZE(blockx);
-#if MEMAUDIT&4
-  DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
-#endif
 #if PYXES
   if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
+#endif
+#if MEMAUDIT&4
+  DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
   AFCHAIN(w)=jt->mempool[blockx];  // append free list to the new addition...
   jt->mempool[blockx]=w;   //  ...and make new addition the new head
@@ -1565,7 +1565,7 @@ printf("%p-\n",w);
   if(likely(jtremote==jt)){  // normal case of freeing in the allocating thread: avoid atomics
    jt->malloctotal-=allocsize;
    jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
-  }else{  // the block was allocated in another thread.  Account for its free there
+  }else{  // the block was allocated in another thread.  Account for its free in that thread so we won't show migration of memory
    __atomic_fetch_sub(&jtremote->malloctotalremote,allocsize,__ATOMIC_ACQ_REL);
    __atomic_fetch_sub(&jtremote->mfreegenalloremote,allocsize,__ATOMIC_ACQ_REL);
   }
@@ -1575,7 +1575,10 @@ printf("%p-\n",w);
   jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS
   if(unlikely(jt->mfreegenallo&MFREEBCOUNTING))jt->bytes-=allocsize;  // keep track of total allocation, needed only if enabled
 #endif
- 
+#if MEMAUDIT&4
+ ((I*)w)[6] = (I)0xdeadbeefdeadbeefLL;   //  Reserved area in malloc blocks is not permanent
+#endif
+
 #if ALIGNTOCACHE
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else

@@ -502,7 +502,7 @@ F2(jtapip){F12IP;A h;
         if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
        }
        // Fill has been installed.  Copy in the actual data, replicating if w is atomic
-       if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1)} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill
+       if(!(fgwd&FGWATOMIC)){MC(av,CAV(w),wlen);} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill  /// MC scaf
        // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
        PRISTCLRF(w)  // this destroys w!
        // The data has been copied.  No more errors are possible.  It is safe to modify the size of a

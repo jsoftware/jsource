@@ -29,8 +29,9 @@ p2 =: ".
 (i. 100) -: > (p2@> t.'')"0  <@":"0 i. 100   NB. test executing tacit verb with no parser running
 
 p1=: 3 : 0
-for_i. i.100 do.
-ALL=: ALL, ,(3 T.'')
+for_i. (1000 * 3 t. '') + i.100 do.
+ALL=: ALL, ,i
+if. 128 <: #ALL do. ALL =: 0$00 end.
 end.
 EMPTY
 )

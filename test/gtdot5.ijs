@@ -30,7 +30,7 @@ p2 =: ".
 
 p1=: 3 : 0
 for_i. i.100 do.
-ALL=: ALL, (3 T.'')
+ALL=: ALL, ,(3 T.'')
 end.
 EMPTY
 )
@@ -59,7 +59,7 @@ EMPTY
 p3=: 3 : 0
 ALL=. 0$0
 for_i. i.100 do.
-ALL=. ALL, (3 T.'')
+ALL=. ALL, ,(3 T.'')
 end.
 #ALL
 )

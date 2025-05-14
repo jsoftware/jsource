@@ -295,7 +295,9 @@ if(lr==1&&si!=alen+AN(w)){printf("Allocation with AN=%lld AS[0]=%lld\n",alen+AN(
 ASSERTSYS(!(AR(z)==1&&AN(z)<AS(z)[0]),"AS>AN");  // scaf
     if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
     I klg=bplg(t); alen<<=klg; I wlen=AN(w)<<klg;  // arg sizes in bytes
+if(!(JT(jt,peekdata)&&t&FL)){   // scaf
     JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
+}
     if(withprob(t&NOUN&RECURSIBLE,0.2)){   //  recursive/pristine processing applies only to RECURSIBLEs 
      // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
      // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway

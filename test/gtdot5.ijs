@@ -31,7 +31,6 @@ p2 =: ".
 p1=: 3 : 0
 for_i. (1000 * 3 T. '') + i.100 do.
 ALL=: ALL, ,i
-if. 128 <: #ALL do. ALL =: 0$00 end.
 end.
 EMPTY
 )
@@ -44,7 +43,7 @@ EMPTY
 )
 
 t1=: 3 : 0
-ALL=: 0$0
+ALL=: 128$00
 pyx=. (p1 t.'')"0  i. 100
 1:&>pyx
 EMPTY
@@ -60,7 +59,7 @@ EMPTY
 p3=: 3 : 0
 ALL=. 0$0
 for_i. i.100 do.
-ALL=. ALL, ,(3 T.'')
+ALL=. ALL, (3 T.'')
 end.
 #ALL
 )
@@ -85,12 +84,15 @@ pyx=. (p4 t.'')"0  i. 100
 EMPTY
 )
 
-{{ for. y$' ' do. t1 '' end. 1 }} 2000  NB. scaf 200
+1: 6!:5 ] 1  NB. test mode
+{{ for. y$' ' do. t1 '' end. 1 }} 20000  NB. scaf 200
+1: 6!:5 ] 0
+0 : 0
 t3''
 
 t2''
 t4''
-
+)
 delth''
 
 4!:55 ;:'ALL delth N p1 p2 p3 p4 t1 t2 t3 t4 sleep wthr'

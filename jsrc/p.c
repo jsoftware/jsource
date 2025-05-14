@@ -829,6 +829,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
           // We have to handle the case of name =: 5 + > <  name,  i. e where the usecount of 2 came from external boxing rather than FAOWED.
           // we require that the zvalue be a FAOWED argument
          targc=fsa[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;  // allow inplacing with target=2 if the assigned value is either arg with FAOWED flag
+         zval=targc==0?0:zval;  // if we don't allow inplacing, we must ensure that we don't dereference zval, because if it has not been protected by FAOWED it might have been freed
         }
         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and correct usecount: 1 if local, 2 if global since we have raised the count of this block already if it is named and to be operated on inplace; +1 if NJA to account for the mapping reference.

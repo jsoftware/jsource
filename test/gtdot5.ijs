@@ -35,6 +35,11 @@ end.
 EMPTY
 )
 
+p1=: 3 : 0  NB. scaf
+label_loop. ALL=: ALL, ((,0.5)) goto_loop.
+EMPTY
+)
+
 p2=: 3 : 0
 for_i. i.100 do.
 ALL=: ALL, ,~(3 T.'')

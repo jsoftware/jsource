@@ -745,7 +745,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
   C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
-  e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a lock on the locale
+  e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a LOCK on the locale
   // if we are writing to a non-local table, update the table's Bloom filter.
   g=(A)((I)g+((I)jtfg&JTFINALASGN));  // flags in g: copy final-assignment flag, keep glocal-table flag 0 indicating free needed
   BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty

@@ -36,7 +36,7 @@ EMPTY
 )
 
 p1=: 3 : 0  NB. scaf
-label_loop. ALL=: i. 2040 goto_loop.
+label_loop. ALL=:ALL, ((,0.5)) goto_loop.
 EMPTY
 )
 

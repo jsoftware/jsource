@@ -1294,6 +1294,43 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  R z;
 }
 
+#if (MEMAUDIT&5)==5  // scaf
+static C * alloblocks[1024]; static I nalloblocks=0; static US allolock=0; I allorunin=0;
+static I alloring[1024]; static I alloringx=0;
+static I findbuf(void *buf){  // must have lock
+DQ(nalloblocks, if(alloblocks[i]==buf)R i;) R nalloblocks;  // alloblocks i. buf
+}
+static void addbuf(J jt,void *buf){
+if(allorunin==0)R;
+WRITELOCK(allolock);
+alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(1024-1);
+I bufx; if(nalloblocks>(bufx=findbuf(buf)))SEGFAULT;  // error if already in list
+if(nalloblocks==sizeof(alloblocks)/sizeof(alloblocks)[0])SEGFAULT;  // error if list full
+if(allorunin<0){++allorunin; if(allorunin==0)allorunin=1;}   // go to 1 after startup
+alloblocks[nalloblocks]=buf;  // add to list
+++nalloblocks;  // add to count
+WRITEUNLOCK(allolock);
+}
+static void rembuf(J jt,void *buf){
+if(allorunin==0)R;
+WRITELOCK(allolock);
+alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(1024-1);
+I bufx; if(nalloblocks==(bufx=findbuf(buf))){if(allorunin<0)goto exit; SEGFAULT;}  // error if not in list, except during runin
+--nalloblocks;  // remove from count
+alloblocks[bufx]=alloblocks[nalloblocks];  // remove from list
+exit: ;
+WRITEUNLOCK(allolock);
+}
+void testbuf(void *buf){
+if(allorunin<=0)R;  // no test till initialized
+if(!(AT((A)buf)&NOUN))R;  // check only nouns, since ACV might be very old
+WRITELOCK(allolock);
+I bufx; if(nalloblocks==(bufx=findbuf(buf)))SEGFAULT;  // error if not in list
+WRITEUNLOCK(allolock);
+}
+#endif
+
+
 // static auditmodulus = 0;
 // blockx is bit# of MSB in (length-1), i. e. lg2(bufsize)-1
 RESTRICTF A jtgaf(J jt,I blockx){A z;
@@ -1354,6 +1391,9 @@ if((I)jt&3)SEGFAULT;
 #endif
 #if SHOWALLALLOC
 printf("%p+\n",z);
+#endif
+#if (MEMAUDIT&5)==5  // scaf
+if(JT(jt,peekdata))addbuf(jt,z);  // add to allocated list
 #endif
  R z;
 }
@@ -1505,6 +1545,9 @@ extern void jgmpguard(X);
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
 void jtmf(J jt,A w,I hrh,I blockx){
+#if (MEMAUDIT&5)==5  // scaf
+if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
+#endif
 #if MEMAUDIT&16
 auditmemchains();
 #endif
@@ -1557,7 +1600,7 @@ printf("%p-\n",w);
  }else{    // buffer allocated from malloc
   I allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
-  DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
+  DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area  scaf &1
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
 #if PYXES

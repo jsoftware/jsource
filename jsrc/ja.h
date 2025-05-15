@@ -351,7 +351,7 @@
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 // fa() usually results in a free, coming mostly from freeing named values where the usecount is 1, and the RFO cycle is unnecessary
 // NOTE: famf() could be used to preserve a register, if we could find one to preserve
-#define scaft(x) if(AN(x)<0)SEGFAULT;  // scaf
+#define scaft(x) testbuf(x); if(AN(x)<0)SEGFAULT;  // scaf
 #define faaction(jt,x, nomfaction) {scaft(x) I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
 // Thus we mark the free as unlikely, but it will usually do the RFO cycle.  The block must be recursive if it is recursible
@@ -920,7 +920,7 @@ extern void jfree4gmp(void*,size_t);
 #define rasv(x)   {scaft(x) I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x,sv)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
 #define ra(x)   {scaft(x) I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
 #define racontents(x)   {scaft(x) I c=AC(x); if(MEMAUDIT!=0&&c<0)SEGFAULT; if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // Used on contents of box, which cannot have AC<0
-#define raname(x) {scaft(x) if(likely(!ACISPERM(AC(x))))__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);}  // NAME is not inplaceable, seldom local; just add 1.  No traverse needed on ra
+#define raname(x) {if(likely(!ACISPERM(AC(x))))__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);}  // NAME is not inplaceable, seldom local; just add 1.  No traverse needed on ra
 // In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount); local means local symtab
 // sv means the last arg is saved/restored through the call; qcg supplies the QC type; uncond means the arg cannot be perm/sparse/need recursion, so just increment
 #define rapos(x,sv)   {scaft(x) I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(ISSPARSE(AT(x))))sv=jtra((x),SPARSE,sv);}}  // better a misbranch than an atomic instruction if c<0

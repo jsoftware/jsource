@@ -1018,6 +1018,9 @@ extern C        spellin(I,C*);
 extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
+#if (MEMAUDIT&5)==5
+extern void testbuf(void *);
+#endif
 extern I        sqrtE(J,I,E*,E*);
 extern void     vvsortqs8ai(IL*,I);
 extern void     vvsortqs8ao(IL*,IL*,I);

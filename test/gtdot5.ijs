@@ -35,11 +35,6 @@ end.
 EMPTY
 )
 
-p1=: 3 : 0  NB. scaf
-label_loop. ALL=:ALL, ((,0.5)) goto_loop.
-EMPTY
-)
-
 p2=: 3 : 0
 for_i. i.100 do.
 ALL=: ALL, ,~(3 T.'')
@@ -89,7 +84,19 @@ pyx=. (p4 t.'')"0  i. 100
 EMPTY
 )
 
-1: 6!:5 ] 1  NB. test mode
+1: (6!:5) ] _2000  NB. test mode
+p1=: 3 : 0  NB. scaf
+label_loop. ALL=:ALL, ((,0.5)) goto_loop.
+EMPTY
+)
+t1=: 3 : 0
+ALL=: 128$00
+pyx=. (p1 t.'')"0  i. 100
+1:&>pyx
+EMPTY
+)
+
+
 {{ for. y$' ' do. t1 '' end. 1 }} 20000  NB. scaf 200
 1: 6!:5 ] 0
 0 : 0

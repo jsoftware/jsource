@@ -253,11 +253,11 @@ static void moveawS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset,
 // obsolete static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV,moveawVVI};
 DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  ARGCHK2(a,w);
-if((JT(jt,peekdata)&&AT(w)&FL)){   // scaf
-//    GA(z,t&NOUN,alen+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
-    GA0(z,FL,2040,1);
-    RETF(z);
-}
+// obsolete if((JT(jt,peekdata)&&AT(w)&FL)){   // scaf
+// obsolete //    GA(z,t&NOUN,alen+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
+// obsolete     GA0(z,FL,2040,1);
+// obsolete     RETF(z);
+// obsolete }
  UI jtr=jt->ranks;//  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  // Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
@@ -422,7 +422,7 @@ F2(jtapip){F12IP;A h;
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting (we don't have to EPILOG for RAT/XNUM)
- if(!JT(jt,peekdata)&&(SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand   // peekdata scaf
+ if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
   I lgk=bplg(at); I lgatomsini=MAX(LGSZI-lgk,0);  // lg of size of atom of a; lg of number of atoms in an I (0 if <1)
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
@@ -512,7 +512,7 @@ F2(jtapip){F12IP;A h;
         if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
        }
        // Fill has been installed.  Copy in the actual data, replicating if w is atomic
-if(!JT(jt,peekdata))   // scaf
+if(!(JT(jt,peekdata)&&at&FL))   // scaf
        if(!(fgwd&FGWATOMIC)){MC(av,CAV(w),wlen);} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill  /// MC scaf
        // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
        PRISTCLRF(w)  // this destroys w!

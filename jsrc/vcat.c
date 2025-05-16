@@ -253,7 +253,7 @@ static void moveawS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset,
 // obsolete static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV,moveawVVI};
 DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  ARGCHK2(a,w);
-// obsolete if((JT(jt,peekdata)&&AT(w)&FL)){   // scaf
+// obsolete if((JT(jt,peekdata)&&AT(w)&FL)){
 // obsolete //    GA(z,t&NOUN,alen+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
 // obsolete     GA0(z,FL,2040,1);
 // obsolete     RETF(z);
@@ -295,17 +295,19 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
     I si=AS(s)[0]; si=ar==wr?si:1; si+=__atomic_load_n(&AS(l)[0],__ATOMIC_ACQUIRE); si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
       // The a block may be being extended in another thread.  We ensure that AS[0] is incremented AFTER AN to ensure that our allocation is adequate.  This can happen only if the apip started before we locked the block for this thread
     I alen=__atomic_load_n(&AN(a),__ATOMIC_ACQUIRE);  // ensure our copy matches the allocation even if AN incremented during allocation
-if(lr==1&&si!=alen+AN(w)){printf("Allocation with AN=%lld AS[0]=%lld\n",alen+AN(w),si); --alen;}  // scaf
+if(lr==1&&si!=alen+AN(w)){
+// obsolete printf("Allocation with AN=%lld AS[0]=%lld\n",alen+AN(w),si);
+ --alen;}  // scaf
     GA(z,t&NOUN,alen+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
-if((JT(jt,peekdata)&&t&FL)){   // scaf
-    RETF(z);
-}
-ASSERTSYS(!(AR(z)==1&&AN(z)<AS(z)[0]),"AS>AN");  // scaf
+// obsolete if((JT(jt,peekdata)&&t&FL)){
+// obsolete     RETF(z);
+// obsolete }
+// obsolete ASSERTSYS(!(AR(z)==1&&AN(z)<AS(z)[0]),"AS>AN");
     if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
     I klg=bplg(t); alen<<=klg; I wlen=AN(w)<<klg;  // arg sizes in bytes
-if(!(JT(jt,peekdata)&&t&FL)){   // scaf
+// obsolete if(!(JT(jt,peekdata)&&t&FL)){
     JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
-}
+// obsolete }
     if(withprob(t&NOUN&RECURSIBLE,0.2)){   //  recursive/pristine processing applies only to RECURSIBLEs 
      // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
      // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
@@ -330,7 +332,7 @@ if(!(JT(jt,peekdata)&&t&FL)){   // scaf
   }
  }
  // dissimilar items, or there is frame.  Mark the inputs non-pristine; leave the result non-pristine, since we don't know whether it has repetitions (we could figure that out)
- PRISTCLR(a) PRISTCLRNODCL(w)  // make inputs non-PRISTINE   scaf verify that this is threadsafe
+ PRISTCLR(a) PRISTCLRNODCL(w)  // make inputs non-PRISTINE
  p=AS(a)[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
  q=AS(w)[wr-1];   //  q=len of last axis of cell
 // obsolete  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
@@ -512,8 +514,8 @@ F2(jtapip){F12IP;A h;
         if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
        }
        // Fill has been installed.  Copy in the actual data, replicating if w is atomic
-if(!(JT(jt,peekdata)&&at&FL))   // scaf
-       if(!(fgwd&FGWATOMIC)){MC(av,CAV(w),wlen);} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill  /// MC scaf
+// obsolete if(!(JT(jt,peekdata)&&at&FL))
+       if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1);} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill
        // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
        PRISTCLRF(w)  // this destroys w!
        // The data has been copied.  No more errors are possible.  It is safe to modify the size of a

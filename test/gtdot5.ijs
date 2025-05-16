@@ -84,7 +84,7 @@ pyx=. (p4 t.'')"0  i. 100
 EMPTY
 )
 
-1: (6!:5) ] _2000  NB. test mode
+1: (6!:5) ] _20000  NB. test mode
 p1=: 3 : 0  NB. scaf
 label_loop. ALL=:ALL, ((,0.5)) goto_loop.
 EMPTY

@@ -86,12 +86,12 @@ EMPTY
 
 1: (6!:5) ] _20000  NB. test mode
 p1=: 3 : 0  NB. scaf
-label_loop. ALL=:ALL, ((,0.5)) goto_loop.
+label_loop.  ALL=: ALL, ((,0.5)) [ echo 'a' goto_loop.
 EMPTY
 )
 t1=: 3 : 0
 ALL=: 128$00
-pyx=. (p1 t.'')"0  i. 100
+pyx=. (p1 t.'')"0  i. 1[100
 1:&>pyx
 EMPTY
 )

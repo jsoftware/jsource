@@ -146,8 +146,13 @@ ASSERTMTV(w);
 F1(jtparsercalls){F12IP;ASSERTMTV(w); R sc(jt->parsercalls);}
 
 // 6!:5, window into the running J code
-extern I allorunin;
-F1(jtpeekdata){F12IP;ARGCHK1(w);  I opeek=JT(jt,peekdata); JT(jt,peekdata)=allorunin=i0(w); R sc(opeek); }
+F1(jtpeekdata){F12IP;ARGCHK1(w);  I opeek=JT(jt,peekdata);
+ JT(jt,peekdata)=i0(w);
+#if (MEMAUDIT&5)==5  // scaf
+extern I allorunin, nalloblocks;
+ allorunin=JT(jt,peekdata); nalloblocks=0;  // reset remembered blocks on store
+#endif
+ R sc(opeek); }
 
 // 13!:_9, set/get recurstate
 F1(jtsetgetrecurstate){F12IP;I orstate=jt->recurstate; if(AN(w)){jt->recurstate=i0(w);} R sc(orstate); }

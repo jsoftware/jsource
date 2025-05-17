@@ -1295,37 +1295,59 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 }
 
 #if (MEMAUDIT&5)==5  // scaf
-static C * alloblocks[1024]; static I nalloblocks=0; static US allolock=0; I allorunin=0;
+static C * alloblocks[1024]; static US allolock=0; I nalloblocks=0; I allorunin=0;
 static I alloring[1024]; static I alloringx=0;
+
 static I findbuf(void *buf){  // must have lock
 DQ(nalloblocks, if(alloblocks[i]==buf)R i;) R nalloblocks;  // alloblocks i. buf
 }
+
+static void printbufhist(void *buf){I arx=alloringx;
+DQ(sizeof(alloring)/sizeof(alloring)[0], arx=(arx-1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
+ if((I)buf==(alloring[arx]&0x00ffffffffffffffLL))printf("pos %5lld: %16p\n",i,(void *)alloring[arx]); )
+printf("\n");
+}
+
 static void addbuf(J jt,void *buf){
 if(allorunin==0)R;
 WRITELOCK(allolock);
-alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(1024-1);
-I bufx; if(nalloblocks>(bufx=findbuf(buf)))SEGFAULT;  // error if already in list
+alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
+I bufx; if(nalloblocks>(bufx=findbuf(buf))){
+ printf("allocated %p which is already in the list\nRing history:\n",buf);
+ printbufhist(buf);
+ SEGFAULT;  // error if already in list
+}
 if(nalloblocks==sizeof(alloblocks)/sizeof(alloblocks)[0])SEGFAULT;  // error if list full
 if(allorunin<0){++allorunin; if(allorunin==0)allorunin=1;}   // go to 1 after startup
 alloblocks[nalloblocks]=buf;  // add to list
 ++nalloblocks;  // add to count
 WRITEUNLOCK(allolock);
 }
+
 static void rembuf(J jt,void *buf){
 if(allorunin==0)R;
 WRITELOCK(allolock);
-alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(1024-1);
-I bufx; if(nalloblocks==(bufx=findbuf(buf))){if(allorunin<0)goto exit; SEGFAULT;}  // error if not in list, except during runin
+alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
+I bufx; if(nalloblocks==(bufx=findbuf(buf))){if(allorunin<0)goto exit;
+ printf("removed %p which is not in the list\nRing history:\n",buf);
+ printbufhist(buf);
+ SEGFAULT;}  // error if not in list, except during runin
 --nalloblocks;  // remove from count
 alloblocks[bufx]=alloblocks[nalloblocks];  // remove from list
 exit: ;
 WRITEUNLOCK(allolock);
 }
+
 void testbuf(void *buf){
 if(allorunin<=0)R;  // no test till initialized
 if(!(AT((A)buf)&NOUN))R;  // check only nouns, since ACV might be very old
+if(AC((A)buf)&ACPERMANENT)R;  // PERMANENT is not included
 WRITELOCK(allolock);
-I bufx; if(nalloblocks==(bufx=findbuf(buf)))SEGFAULT;  // error if not in list
+I bufx; if(nalloblocks==(bufx=findbuf(buf))){
+ printf("testing %p which is not in the list\nRing history:\n",buf);
+ printbufhist(buf);
+ SEGFAULT;  // error if not in list
+}
 WRITEUNLOCK(allolock);
 }
 #endif

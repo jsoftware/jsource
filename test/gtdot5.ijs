@@ -84,23 +84,70 @@ pyx=. (p4 t.'')"0  i. 100
 EMPTY
 )
 
+
 1: (6!:5) ] _20000  NB. test mode
 p1=: 3 : 0  NB. scaf
 label_loop. ALL=:ALL, ((,0.5)) goto_loop.
 EMPTY
 )
-t1=: 3 : 0
+
+1: (6!:5) ] _20000  NB. test mode
+p1=: 3 : 0  NB. scaf
+label_loop. ALL=:ALL, ,0.5 goto_loop.
+EMPTY
+)
+
+NB. Remove the 'x' from 'p1x' in each successive version below to enable the test
+1: (6!:5) ] _20000  NB. test mode
+p1x=: 3 : 0  NB. scaf
+for. 1000#' ' do. ALL=:ALL, ((,0.5)) end.
+EMPTY
+)
+
+1: (6!:5) ] _20000  NB. test mode
+p1x=: 3 : 0  NB. scaf
+for. 1000#' ' do. ALL=:ALL (, >:) ((,0.5)) end.
+EMPTY
+)
+
+1: (6!:5) ] _20000  NB. test mode
+p1x=: 3 : 0  NB. scaf
+for. 1000#' ' do. ALL=:ALL, ,0.5 end.
+EMPTY
+)
+
+1: (6!:5) ] _20000  NB. test mode
+p1x=: 3 : 0
+for_i. 8 c. (1000 * 3 T. '') + i.1000 do.
+ALL=: ALL, i
+end.
+EMPTY
+)
+
+1: (6!:5) ] _20000  NB. test mode
+p1x=: 3 : 0
+for_i. 8 c. (1000 * 3 T. '') + i.1000 do.
+ALL=: ALL, ,i
+end.
+EMPTY
+)
+
+1: (6!:5) ] _20000  NB. test mode
+p1x=: 3 : 0  NB. scaf
+label_loop. ALL=:ALL, ((,0.5)) goto_loop.
+EMPTY
+)
+
+t1=: 3 : 0   NB. Must redefine this after the 6!:5
 ALL=: 128$00
 pyx=. (p1 t.'')"0  i. 100
 1:&>pyx
 EMPTY
 )
 
-t1''
-
-
 {{ for. y$' ' do. t1 '' end. 1 }} 20000  NB. scaf 200
 1: 6!:5 ] 0
+
 0 : 0
 t3''
 

@@ -85,58 +85,12 @@ EMPTY
 )
 
 
-1: (6!:5) ] _20000  NB. test mode
-p1=: 3 : 0  NB. scaf
-label_loop. ALL=:ALL, ((,0.5)) goto_loop.
-EMPTY
-)
+1: (6!:5) ] _5000  NB. test mode
 
-1: (6!:5) ] _20000  NB. test mode
-p1=: 3 : 0  NB. scaf
-label_loop. ALL=:ALL, ,0.5 goto_loop.
+p1=: {{  NB. scaf
+while.  do. ALL=:ALL, ((,0.5)) end.
 EMPTY
-)
-
-NB. Remove the 'x' from 'p1x' in each successive version below to enable the test
-1: (6!:5) ] _20000  NB. test mode
-p1x=: 3 : 0  NB. scaf
-for. 1000#' ' do. ALL=:ALL, ((,0.5)) end.
-EMPTY
-)
-
-1: (6!:5) ] _20000  NB. test mode
-p1x=: 3 : 0  NB. scaf
-for. 1000#' ' do. ALL=:ALL (, >:) ((,0.5)) end.
-EMPTY
-)
-
-1: (6!:5) ] _20000  NB. test mode
-p1x=: 3 : 0  NB. scaf
-for. 1000#' ' do. ALL=:ALL, ,0.5 end.
-EMPTY
-)
-
-1: (6!:5) ] _20000  NB. test mode
-p1x=: 3 : 0
-for_i. 8 c. (1000 * 3 T. '') + i.1000 do.
-ALL=: ALL, i
-end.
-EMPTY
-)
-
-1: (6!:5) ] _20000  NB. test mode
-p1x=: 3 : 0
-for_i. 8 c. (1000 * 3 T. '') + i.1000 do.
-ALL=: ALL, ,i
-end.
-EMPTY
-)
-
-1: (6!:5) ] _20000  NB. test mode
-p1x=: 3 : 0  NB. scaf
-label_loop. ALL=:ALL, ((,0.5)) goto_loop.
-EMPTY
-)
+}}
 
 t1=: 3 : 0   NB. Must redefine this after the 6!:5
 ALL=: 128$00
@@ -159,4 +113,53 @@ delth''
 4!:55 ;:'ALL delth N p1 p2 p3 p4 t1 t2 t3 t4 sleep wthr'
 
 epilog''
+
+1: 0 : 0  NB. Move these tests to be executed, one by one
+
+p1=: {{  NB. scaf
+label_loop. ALL=:ALL, ((,0.5)) goto_loop.
+EMPTY
+}}
+
+p1=: {{  NB. scaf
+label_loop. ALL=:ALL, ,0.5 goto_loop.
+EMPTY
+}}
+
+NB. ***** current test *****
+p1=: {{  NB. scaf
+while. do. ALL=:ALL, ((,0.5)) end.
+EMPTY
+}}
+
+p1=: {{  NB. scaf
+for. 1e7#' ' do. ALL=:ALL, ((,0.5)) end.
+EMPTY
+}}
+
+p1=: {{  NB. scaf
+for. 1e7#' ' do. ALL=:ALL (, >:) ((,0.5)) end.
+EMPTY
+}}
+
+p1=: {{  NB. scaf
+for. 1e7#' ' do. ALL=:ALL, ,0.5 end.
+EMPTY
+}}
+
+p1=: {{
+for_i. (1000 * 3 T. '') + i.1e7 do.
+ALL=: ALL, i
+end.
+EMPTY
+}}
+
+p1=: {{
+for_i. (1000 * 3 T. '') + i.1e7 do.
+ALL=: ALL, ,i
+end.
+EMPTY
+}}
+
+)
 

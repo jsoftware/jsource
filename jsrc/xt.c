@@ -148,7 +148,7 @@ F1(jtparsercalls){F12IP;ASSERTMTV(w); R sc(jt->parsercalls);}
 // 6!:5, window into the running J code
 F1(jtpeekdata){F12IP;ARGCHK1(w);  I opeek=JT(jt,peekdata);
  JT(jt,peekdata)=i0(w);
-#if (MEMAUDIT&5)==5  // scaf
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
 extern I allorunin, nalloblocks;
  allorunin=JT(jt,peekdata); nalloblocks=0;  // reset remembered blocks on store
 #endif

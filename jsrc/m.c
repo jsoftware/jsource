@@ -1294,7 +1294,7 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  R z;
 }
 
-#if (MEMAUDIT&5)==5  // scaf
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
 static C * alloblocks[1024]; static US allolock=0; I nalloblocks=0; I allorunin=0;
 static I alloring[1024]; static I alloringx=0;
 
@@ -1331,7 +1331,8 @@ alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(si
 I bufx; if(nalloblocks==(bufx=findbuf(buf))){if(allorunin<0)goto exit;
  printf("removed %p which is not in the list\nRing history:\n",buf);
  printbufhist(buf);
- SEGFAULT;}  // error if not in list, except during runin
+ SEGFAULT;
+}  // error if not in list, except during runin
 --nalloblocks;  // remove from count
 alloblocks[bufx]=alloblocks[nalloblocks];  // remove from list
 exit: ;
@@ -1414,7 +1415,7 @@ if((I)jt&3)SEGFAULT;
 #if SHOWALLALLOC
 printf("%p+\n",z);
 #endif
-#if (MEMAUDIT&5)==5  // scaf
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
 if(JT(jt,peekdata))addbuf(jt,z);  // add to allocated list
 #endif
  R z;
@@ -1567,7 +1568,7 @@ extern void jgmpguard(X);
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
 void jtmf(J jt,A w,I hrh,I blockx){
-#if (MEMAUDIT&5)==5  // scaf
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
 if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
 #endif
 #if MEMAUDIT&16

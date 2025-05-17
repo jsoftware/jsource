@@ -1018,7 +1018,7 @@ extern C        spellin(I,C*);
 extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
-#if (MEMAUDIT&5)==5
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
 extern void testbuf(void *);
 #endif
 extern I        sqrtE(J,I,E*,E*);

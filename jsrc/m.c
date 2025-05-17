@@ -1303,7 +1303,7 @@ DQ(nalloblocks, if(alloblocks[i]==buf)R i;) R nalloblocks;  // alloblocks i. buf
 static void addbuf(J jt,void *buf){
 if(allorunin==0)R;
 WRITELOCK(allolock);
-alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(1024-1);
+alloring[alloringx]=(THREADID(jt)<<(SY_64?56:24))+(I)buf; alloringx=(alloringx+1)&(1024-1);
 I bufx; if(nalloblocks>(bufx=findbuf(buf)))SEGFAULT;  // error if already in list
 if(nalloblocks==sizeof(alloblocks)/sizeof(alloblocks)[0])SEGFAULT;  // error if list full
 if(allorunin<0){++allorunin; if(allorunin==0)allorunin=1;}   // go to 1 after startup
@@ -1314,7 +1314,7 @@ WRITEUNLOCK(allolock);
 static void rembuf(J jt,void *buf){
 if(allorunin==0)R;
 WRITELOCK(allolock);
-alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(1024-1);
+alloring[alloringx]=((128|THREADID(jt))<<(SY_64?56:24))+(I)buf; alloringx=(alloringx+1)&(1024-1);
 I bufx; if(nalloblocks==(bufx=findbuf(buf))){if(allorunin<0)goto exit; SEGFAULT;}  // error if not in list, except during runin
 --nalloblocks;  // remove from count
 alloblocks[bufx]=alloblocks[nalloblocks];  // remove from list

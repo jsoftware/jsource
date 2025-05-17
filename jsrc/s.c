@@ -417,7 +417,7 @@ A jtsyrd1(J jtfg,C *string,UI4 hash,A g){F12JT;A*v,x,y;
  // in this table will hit an empty chain.  This is our Bloom filter.  We check that, and if the chain is empty, we call it a miss without locking the table.
  // That's OK, because this call could have come a few nanoseconds later
  NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE);   // hashchain number, for fetching the Bloom filter and starting the chain search
-                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table (there's a chain for it)...
+                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table (there's a chain for it)...  // scaf just look for empty chain
                          READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
                          A res=(probe)((I)jtfg&255,string,sympv,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]);  // look up symbol.  We must fetch the chain root in case it was deleted
                          if(res){  // if symbol found...

@@ -184,7 +184,7 @@ typedef I SI;
 
 struct AD {
  union {
-  I k;
+  I k;  // 0
   A chain;   // used when block is on free chain
   A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table, i. e. jt->global, when that table is active
   A *locpath;  // for non-local SYMB (named and numeric), AK points to the path, which is the end of a list of addresses of SYMBs
@@ -194,8 +194,8 @@ struct AD {
              // are changing the block address (i. e. not extending) you must take a system lock before freeing
   A global;      // for user JOB blocks, points to jt->global for the job
  } kchain;
- FLAGT flag;
- union {
+ FLAGT flag; // 1
+ union { // 2
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) in syncos, a credential to allow pthread calls
         // (3) for SYMB tables for explicit definitions (i. e. local SYMB tables), the address of the calling symbol table;
         // (4) for the block holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
@@ -211,15 +211,15 @@ struct AD {
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
   A aarg;  // for /.., the original a arg
 } mback;
- union {
+ union {  // 3
   I t;  // type
   A proxychain;  // used when block is on free chain
  } tproxy;
- I c;  // usecount
+ I c;  // 4 usecount
 //  NOTE!! result.h faux cellshape block depends on n, r, and s being in place from here to the end of this struct, with 2 Is from n to s
- I n;  // # atoms - always 1 for sparse arrays
+ I n;  // 5 # atoms - always 1 for sparse arrays
 #if C_LE
- RANKT r;  // rank.  Used as flags in SYMB types (i. e. locales)
+ RANKT r;  // 6 rank.  Used as flags in SYMB types (i. e. locales)
  UC filler;
  US h;   // reserved for allocator.  Not used for AFNJA memory
 #if BW==64
@@ -236,7 +236,7 @@ struct AD {
  UC filler;
  RANKT r;  // rank  Used as flags in SYMB types (i. e. locales)
 #endif
- I s[1];   // shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
+ I s[1];   // 7 shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
   // when AFUNIFORMITEMS is set, s[0] holds the number of items in the raze of the block
 };
 // header fits in 7 words
@@ -1363,7 +1363,7 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 #define FUNCID0 ((A)(validitymask-4*(!SY_64)))  // 0 in index [15] ([19] for 32-bit), which has a 0 in the id field of V
 #define SYMVAL0 ((L*)(validitymask+12))  // 0 0, which has a 0 in the val field of L
 #define AFLAG0 ((A)(validitymask+12))  // 0 0, which has a 0 in the flag field of A
-#define ACLEN0 ((A)(validitymask+12-4))  // x x x x 0 0, which has a 0 in the AC field
+#define ANLEN0 ((A)(validitymask+12-4))  // x x x x 0 0, which has a 0 in the AN field
 #define ZAPLOC0 ((A*)(validitymask+12))  // 0 used as a pointer to a null tpop-stack value
 #define PSTK2NOTFINALASGN ((PSTK*)(validitymask+12)-2)  // 0 in position [2], signifying NOT final assignment (used for errors)
 #define BREAK0 ((C*)(validitymask+12))  // 0 to indicate no ATTN requested

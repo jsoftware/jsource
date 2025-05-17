@@ -150,7 +150,7 @@ F1(jtpeekdata){F12IP;ARGCHK1(w);  I opeek=JT(jt,peekdata);
  JT(jt,peekdata)=i0(w);
 #if ((MEMAUDIT&5)==5) && SY_64 // scaf
 extern I allorunin, nalloblocks;
- allorunin=JT(jt,peekdata); nalloblocks=0;  // reset remembered blocks on store
+ allorunin=JT(jt,peekdata); if(allorunin==0)nalloblocks=0;  // reset remembered blocks on store
 #endif
  R sc(opeek); }
 

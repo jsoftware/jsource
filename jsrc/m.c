@@ -1295,8 +1295,8 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 }
 
 #if ((MEMAUDIT&5)==5) && SY_64 // scaf
-static C * alloblocks[1024]; static US allolock=0; I nalloblocks=0; I allorunin=0;
-static I alloring[1024]; static I alloringx=0;
+static C * alloblocks[1048576]; static US allolock=0; I nalloblocks=0; I allorunin=0;
+static I alloring[2048]; static I alloringx=0;
 
 static I findbuf(void *buf){  // must have lock
 DQ(nalloblocks, if(alloblocks[i]==buf)R i;) R nalloblocks;  // alloblocks i. buf
@@ -1343,6 +1343,7 @@ void testbuf(void *buf){
 if(allorunin<=0)R;  // no test till initialized
 if(!(AT((A)buf)&NOUN))R;  // check only nouns, since ACV might be very old
 if(AC((A)buf)&ACPERMANENT)R;  // PERMANENT is not included
+if(AFLAG((A)buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
 WRITELOCK(allolock);
 I bufx; if(nalloblocks==(bufx=findbuf(buf))){
  printf("allorunin=%lld: testing %p which is not in the list\nRing history:\n",allorunin,buf);
@@ -1512,12 +1513,12 @@ void jtrepatsend(J jt){
  if(!repato)R; // nothing to repatriate
  tail=AAV0(repato)[0];  // extract tail
  I origthread1=repato->origin;
- I allocsize=AC(repato);  // extract total length in repato
+ I allocsize=AN(repato);  // extract total length in repato
  jt->repato=0;  // clear repato to empty
  jt=JTFORTHREAD1(jt,origthread1); // switch to the thread the chain must return to
  I zero=0,exsize;
- // Add chain of new blocks to repatq.  AC(repatq) has total alloc size in repatq.  This code fails if ABA happens in repatq (the count is wrong), but that is vanishingly unlikely
- A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AC(repato)=allocsize+(exsize=AC(expval?expval:ACLEN0)); } while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
+ // Add chain of new blocks to repatq.  AN(repatq) has total alloc size in repatq.  This code fails if ABA happens in repatq (the count is wrong), but that is vanishingly unlikely
+ A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AN(repato)=allocsize+(exsize=AN(expval?expval:ANLEN0)); } while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
  if(common(((allocsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_store_n(&jt->uflags.sprepatneeded,1,__ATOMIC_RELEASE); // if amt freed crosses boundary, request reclamation in the home thread
 #endif
 }
@@ -1529,8 +1530,12 @@ void jtrepatrecv(J jt){
  __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
  if(likely(p)){  // if anything to repat here...
 // obsolete   // this duplicates mf() and perhaps should just call there instead
-  jt->bytes-=AC(p);  // remove repats from byte count.  Not worth testing whether counting enabled
-  A nextp; do{nextp=AFCHAIN(p); mf(p);}while(p=nextp);  // send the blocks to their various queues
+  jt->bytes-=AN(p);  // remove repats from byte count.  Not worth testing whether counting enabled
+  A nextp; do{nextp=AFCHAIN(p);
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
+if(JT(jt,peekdata))addbuf(jt,p);  // the repat looks like an alllo for tracking purposes
+#endif
+ mf(p);}while(p=nextp);  // send the blocks to their various queues
 // obsolete    I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
 // obsolete    if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0))jt->uflags.spfreeneeded=1;  // if we have freed enough to call for garbage collection, do
 // obsolete    AFCHAIN(p)=jt->mempool[blockx];  // chain new block at head of queue
@@ -1543,14 +1548,14 @@ void jtrepatrecv(J jt){
 // repatriate a single block onto its queue, flushing if there is a change of owner or too much data
 static void jtrepat1(J jt, A w, I allocsize){
 #if PYXES
- // repatriate a block allocated in another thread.  AC(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no AFCHAIN pointer
+ // repatriate a block allocated in another thread.  AN(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no AFCHAIN pointer
  A repato=jt->repato;
  if(common(repato&&repato->origin==w->origin)){      // adding to existing repatriation queue
-  allocsize+=AC(jt->repato);AC(jt->repato)=allocsize; // update allocated size
+  allocsize+=AN(jt->repato);AN(jt->repato)=allocsize; // update allocated size
   AFCHAIN(AAV0(repato)[0])=w; AAV0(repato)[0]=w;          // add block to chain
  }else{
   if(repato)jtrepatsend(jt);                             // repatriation queue was not empty; flush it now (TODO could do better and buffer more)
-  jt->repato=w; AC(w)=allocsize; AAV0(w)[0]=w;             // queue now empty regardless; install w as both head and tail
+  jt->repato=w; AN(w)=allocsize; AAV0(w)[0]=w;             // queue now empty regardless; install w as both head and tail
  }
  if(uncommon(allocsize>=REPATOLIM))jtrepatsend(jt);    // allocsize now has total size of repato.  if size of chain exceeded limit, flush
 #endif

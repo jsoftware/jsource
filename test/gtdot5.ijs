@@ -28,32 +28,35 @@ wthr N
 p2 =: ".
 (i. 100) -: > (p2@> t.'')"0  <@":"0 i. 100   NB. test executing tacit verb with no parser running
 
+
+1: (6!:5) ] _5000  NB. engage test mode
+
 p1=: 3 : 0
-for_i. 8 c. (1000 * 3 T. '') + i.100000 do.
-ALL=: ALL, ,i
+for_i. (1000 * 3 T. '') + i.100 do.
+ALL=: ALL, 3 T.''
 end.
-EMPTY
+i. 0 0
+)
+
+t1=: 3 : 0
+ALL=: 128$00
+pyx=. (p1 t.'')"0  i. y
+1:&>pyx
+i. 0 0
 )
 
 p2=: 3 : 0
 for_i. i.100 do.
 ALL=: ALL, ,~(3 T.'')
 end.
-EMPTY
-)
-
-t1=: 3 : 0
-ALL=: 128$00
-pyx=. (p1 t.'')"0  i. 100
-1:&>pyx
-EMPTY
+i. 0 0
 )
 
 t2=: 3 : 0
 ALL=: 0 0$0
-pyx=. (p2 t.'')"0  i. 100
+pyx=. (p2 t.'')"0  i. y
 1:&>pyx
-EMPTY
+i. 0 0
 )
 
 p3=: 3 : 0
@@ -64,6 +67,12 @@ end.
 #ALL
 )
 
+t3=: 3 : 0
+pyx=. (p3 t.'')"0  i. y
+1:&>pyx
+i. 0 0
+)
+
 p4=: 3 : 0
 ALL=. 0 0$0
 for_i. i.100 do.
@@ -72,42 +81,24 @@ end.
 #ALL
 )
 
-t3=: 3 : 0
-pyx=. (p3 t.'')"0  i. 100
-1:&>pyx
-EMPTY
-)
-
 t4=: 3 : 0
-pyx=. (p4 t.'')"0  i. 100
+pyx=. (p4 t.'')"0  i. y
 1:&>pyx
-EMPTY
+i. 0 0
 )
 
 
-1: (6!:5) ] _5000  NB. test mode
+NB. Insert p1 here to override the default from above
 
-p1=: {{  NB. scaf
-while.  do. ALL=:ALL, ((,0.5)) end.
-EMPTY
-}}
+t1 1000
 
-t1=: 3 : 0   NB. Must redefine this after the 6!:5
-ALL=: 128$00
-pyx=. (p1 t.'')"0  i. 100
-1:&>pyx
-EMPTY
-)
+t3 1000
 
-{{ for. y$' ' do. t1 '' end. 1 }} 20000  NB. scaf 200
+t2 1000
+t4 1000
+
 1: 6!:5 ] 0
 
-0 : 0
-t3''
-
-t2''
-t4''
-)
 delth''
 
 4!:55 ;:'ALL delth N p1 p2 p3 p4 t1 t2 t3 t4 sleep wthr'
@@ -157,6 +148,13 @@ EMPTY
 p1=: {{
 for_i. (1000 * 3 T. '') + i.1e7 do.
 ALL=: ALL, ,i
+end.
+EMPTY
+}}
+
+p1=: {{
+for_i. (1000 * 3 T. '') + i.1e7 do.
+ALL=: ALL, ,i [ echo i
 end.
 EMPTY
 }}

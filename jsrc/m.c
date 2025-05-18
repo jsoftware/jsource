@@ -1302,6 +1302,7 @@ static I alloring[2048]; static I alloringx=0;
 #define HASHBUF(buf) ((CRC32L((I)buf,~0)*(sizeof(allohash)/sizeof(allohash)[0]))>>32)
 // look up buf starting in hashslot.  Return 0 if error, 1 if OK
 static I findbuf(I hashslot,void *buf,I probewrdel){I z;  // must have lock
+ if(nalloblocks==0){nalloblocks=1; DO(sizeof(allohash)/sizeof(allohash)[0], allohash[i]=0;)}  // first time after enagagement or reengagement
  I maxstop=probewrdel&1;  // max stopper value to pause at: 0, except 1 for wr
  while(1){
   if(allohash[hashslot]<=maxstop){  // found a stopper (tombstone or empty)

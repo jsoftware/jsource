@@ -436,7 +436,7 @@ F2(jtapip){F12IP;A h;
 #define FGVIRTREQD (1LL<<FGVIRTREQDX)
 #define FGWATOMICX 8     // if w is atomic - higher than highest bit of rank
 #define FGWATOMIC (1LL<<FGWATOMICX)
-#define FGWNOFILLX 9 // if fill is required for any reason
+#define FGWNOFILLX 9 // if fill is required for any reason.  If NOCELLFILL, the fill must come from higher axes of a that are not length 1
 #define FGWNOFILL (1LL<<FGWNOFILLX)
 #define FGWNOCELLFILLX 10 // if w has an interior axis that requires fill, i. e. take
 #define FGWNOCELLFILL (1LL<<FGWNOCELLFILLX)

@@ -33,8 +33,8 @@ echo 'avx512vbmi: ',":9!:56'avx512vbmi'
 echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 
 NB. this crash on Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
-echo '1: (3x ^ 2 ^ i. 10x)'
-1: 1: (3x ^ 2 ^ i. 10x)
+echo '(3x ^ 2 ^ i. 10x)'
+empty (3x ^ 2 ^ i. 10x)
 
 NB. this crash on OpenBSD v7.6
 echo '(128!:6)   ', (128!:6)   'abc'
@@ -81,6 +81,10 @@ c(9!:56)'cblas'
 EMPTY
 )
 erase ;:'r t1'
+
+NB. this crash on J32
+echo '0 0 1 2 2 2 3 3 4 5 5 5 </. i.12'
+empty 0 0 1 2 2 2 3 3 4 5 5 5 </. i.12
 
 FINISH=: 3 : 0
 msg=. 9!:14''

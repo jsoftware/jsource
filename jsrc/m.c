@@ -1360,13 +1360,13 @@ if(!(AT((A)buf)&NOUN))R;  // check only nouns, since ACV might be very old
 if(AC((A)buf)&ACPERMANENT)R;  // PERMANENT is not included
 if(AFLAG((A)buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
 I hashslot=HASHBUF(buf);  // starting slot
-READLOCK(allolock);
+// obsolete READLOCK(allolock);
  if(unlikely(!findbuf(hashslot,buf,0))){
   printf("allorunin=%lld: testing %p which is not in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
   SEGFAULT;  // error if not in list
  }
-READUNLOCK(allolock);
+// obsolete READUNLOCK(allolock);
 }
 #endif
 

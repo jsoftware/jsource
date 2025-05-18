@@ -345,17 +345,17 @@
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
 #define extnvr(x)                    jtextnvr(jt,(x))
+#if 0 && ((MEMAUDIT&5)==5) && SY_64
+#define scaft(x) testbuf(x); if(AN(x)<0)SEGFAULT;
+#else
+#define scaft(x) 
+#endif
 // Handle top level of fa(), which decrements use count and decides whether recursion is needed.  We recur if the contents are traversible and
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the tpop system.
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 // fa() usually results in a free, coming mostly from freeing named values where the usecount is 1, and the RFO cycle is unnecessary
 // NOTE: famf() could be used to preserve a register, if we could find one to preserve
-#if ((MEMAUDIT&5)==5) && SY_64
-#define scaft(x) testbuf(x); if(AN(x)<0)SEGFAULT;
-#else
-#define scaft(x) 
-#endif
 #define faaction(jt,x, nomfaction) {scaft(x) I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
 // Thus we mark the free as unlikely, but it will usually do the RFO cycle.  The block must be recursive if it is recursible

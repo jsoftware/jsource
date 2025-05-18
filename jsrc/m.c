@@ -1295,11 +1295,28 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 }
 
 #if ((MEMAUDIT&5)==5) && SY_64 // scaf
-static C * alloblocks[1048576]; static US allolock=0; I nalloblocks=0; I allorunin=0;
+static C allohash[65536];  // 0 is empty, 1 is tombstone, 2 is valid
+static C * alloblocks[65536]; static US allolock=0; I nalloblocks=0; I allorunin=0;
 static I alloring[2048]; static I alloringx=0;
 
-static I findbuf(void *buf){  // must have lock
-DQ(nalloblocks, if(alloblocks[i]==buf)R i;) R nalloblocks;  // alloblocks i. buf
+#define HASHBUF(buf) ((CRC32L((I)buf,~0)*(sizeof(allohash)/sizeof(allohash)[0]))>>32)
+// look up buf starting in hashslot.  Return 0 if error, 1 if OK
+static I findbuf(I hashslot,void *buf,I probewrdel){I z;  // must have lock
+ I maxstop=probewrdel&1;  // max stopper value to pause at: 0, except 1 for wr
+ while(1){
+  if(allohash[hashslot]<=maxstop){  // found a stopper (tombstone or empty)
+   if(unlikely((probewrdel&1)==0))R 0;  // probe or delete not found, error
+   if(maxstop==1){allohash[hashslot]=2; alloblocks[hashslot]=buf; maxstop=0;}  // first wr, store value and advance to finishing wr state
+   else R 1;  // if finishing wr, we must have hit empty, we're finished
+  }else if(allohash[hashslot]==2&&alloblocks[hashslot]==buf){
+   if(probewrdel==2){  // found deletion point
+    allohash[hashslot]=1;  // install tombstone
+    if(allohash[(hashslot-1)&65535]==0){for(;allohash[hashslot]==1;hashslot=(hashslot+1)&65535)allohash[hashslot]=0;}  // replace trailing tombstones with empty
+   }
+   R probewrdel!=1;  // match is failure for add, success for probe/del
+  }
+  hashslot=(hashslot-1)&65535;  // advance to next slot to try
+ }
 }
 
 static void printbufhist(void *buf){I arx=alloringx;
@@ -1310,31 +1327,28 @@ printf("\n");
 
 static void addbuf(J jt,void *buf){
 if(allorunin==0)R;
+I hashslot=HASHBUF(buf);  // starting slot
 WRITELOCK(allolock);
-alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
-I bufx; if(nalloblocks>(bufx=findbuf(buf))){
- printf("allorunin=%lld: allocated %p which is already in the list\nRing history:\n",allorunin,buf);
- printbufhist(buf);
- SEGFAULT;  // error if already in list
-}
-if(nalloblocks==sizeof(alloblocks)/sizeof(alloblocks)[0])SEGFAULT;  // error if list full
-if(allorunin!=0){++allorunin; if(allorunin==0)allorunin=1;}   // go to 1+ after startup
-alloblocks[nalloblocks]=buf;  // add to list
-++nalloblocks;  // add to count
+ alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
+ if(unlikely(!findbuf(hashslot,buf,1))){
+  printf("allorunin=%lld: allocated %p which is already in the list\nRing history:\n",allorunin,buf);
+  printbufhist(buf);
+  SEGFAULT;  // error if already in list
+ }
 WRITEUNLOCK(allolock);
 }
 
 static void rembuf(J jt,void *buf){
 if(allorunin==0)R;
+I hashslot=HASHBUF(buf);  // starting slot
 WRITELOCK(allolock);
-alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
-I bufx; if(nalloblocks==(bufx=findbuf(buf))){if(allorunin<0)goto exit;
- printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);
- printbufhist(buf);
- SEGFAULT;
-}  // error if not in list, except during runin
---nalloblocks;  // remove from count
-alloblocks[bufx]=alloblocks[nalloblocks];  // remove from list
+ alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
+ if(unlikely(!findbuf(hashslot,buf,2))){
+  if(allorunin<0)goto exit;
+  printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);
+  printbufhist(buf);
+  SEGFAULT;
+ }  // error if not in list, except during runin
 exit: ;
 WRITEUNLOCK(allolock);
 }
@@ -1344,13 +1358,14 @@ if(allorunin<=0)R;  // no test till initialized
 if(!(AT((A)buf)&NOUN))R;  // check only nouns, since ACV might be very old
 if(AC((A)buf)&ACPERMANENT)R;  // PERMANENT is not included
 if(AFLAG((A)buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
-WRITELOCK(allolock);
-I bufx; if(nalloblocks==(bufx=findbuf(buf))){
- printf("allorunin=%lld: testing %p which is not in the list\nRing history:\n",allorunin,buf);
- printbufhist(buf);
- SEGFAULT;  // error if not in list
-}
-WRITEUNLOCK(allolock);
+I hashslot=HASHBUF(buf);  // starting slot
+READLOCK(allolock);
+ if(unlikely(!findbuf(hashslot,buf,0))){
+  printf("allorunin=%lld: testing %p which is not in the list\nRing history:\n",allorunin,buf);
+  printbufhist(buf);
+  SEGFAULT;  // error if not in list
+ }
+READUNLOCK(allolock);
 }
 #endif
 

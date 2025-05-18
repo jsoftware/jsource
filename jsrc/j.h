@@ -737,7 +737,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #ifndef MEMAUDIT
-#define MEMAUDIT 0x00     // Bitmask for memory audits: 
+#define MEMAUDIT 0x05       // scaf     // Bitmask for memory audits: 
 //        1:  make sure  headers match pool#
 //        2:  full audit of tpush/tpop
 //            detect double-frees before they happen,

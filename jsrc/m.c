@@ -1327,7 +1327,7 @@ printf("\n");
 }
 
 static void addbuf(J jt,void *buf){
-if(allorunin==0)R;
+if(1||allorunin==0)R;
 I hashslot=HASHBUF(buf);  // starting slot
 WRITELOCK(allolock);
  alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
@@ -1340,7 +1340,7 @@ WRITEUNLOCK(allolock);
 }
 
 static void rembuf(J jt,void *buf){
-if(allorunin==0)R;
+if(1||allorunin==0)R;
 I hashslot=HASHBUF(buf);  // starting slot
 WRITELOCK(allolock);
  alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);

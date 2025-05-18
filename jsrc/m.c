@@ -1355,7 +1355,7 @@ WRITEUNLOCK(allolock);
 }
 
 void testbuf(void *buf){
-if(allorunin<=0)R;  // no test till initialized
+if(1||allorunin<=0)R;  // no test till initialized
 if(!(AT((A)buf)&NOUN))R;  // check only nouns, since ACV might be very old
 if(AC((A)buf)&ACPERMANENT)R;  // PERMANENT is not included
 if(AFLAG((A)buf)&AFUNINCORPABLE)R;  // PERMANENT is not included

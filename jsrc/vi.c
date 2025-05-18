@@ -1195,7 +1195,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
     // creating and processing the small-range table itself, so we will let it do that.  We return a special short block (LSB=1)
     // that indicates the length of the key (AN) and the start and range of the keys (AK and AM)
     A z; GAT0(z,INT,1,0); AN(z)=k; AK(z)=datamin; AM(z)=p;  // allocate and return
-    RETF((A)((I)z+1));  // return the tagged address
+    R (A)((I)z+1);  // return the tagged address
    }
    // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
    // if the #entries fits in a US, use the short table.  But bits always use the long table

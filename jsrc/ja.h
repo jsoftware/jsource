@@ -351,7 +351,7 @@
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 // fa() usually results in a free, coming mostly from freeing named values where the usecount is 1, and the RFO cycle is unnecessary
 // NOTE: famf() could be used to preserve a register, if we could find one to preserve
-#if (MEMAUDIT==5) && SY_64
+#if ((MEMAUDIT&5)==5) && SY_64
 #define scaft(x) testbuf(x); if(AN(x)<0)SEGFAULT;
 #else
 #define scaft(x) 

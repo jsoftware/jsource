@@ -972,6 +972,15 @@ ASSERT(0,EVNONCE)
   ASSERT(0,EVNONCE)
 #endif
   break;}
+ case 20: {  // yield
+#if PYXES
+  ASSERTMTV(w);
+  YIELD
+  z=mtv;
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
  case 55: {  // destroy thread.  w is threadpool to destroy from, or '' for highest-numbered thread
   // A thread is set to ACTIVE state when it is created.  It sets itself !ACTIVE when it returns.
   // ACTIVE is changed only under the job lock.

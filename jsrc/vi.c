@@ -1342,7 +1342,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
  RZ(z=EPILOGNORET(z));
  // Since EPILOG may have rewritten AM, and IFORKEY never returns to the parser, we can store the FORKEY result in AM.
  *((mode&IIOPMSK)==IFORKEY?(I*)&AM(z):(I*)&jt->shapesink)=forkeyresult;
- RETF(z);
+ R z;  // RETF fails under audit
 }    /* a i."r w main control */
 
 // verb to vector combine@e. compounds.  The i. code is in the self

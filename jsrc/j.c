@@ -57,7 +57,8 @@ struct Bd1 Bmarkd[3]={{{AKXR(0),QP&TRAVERSIBLE,0,QP,ACPERMANENT,-1,0},{0.}},{{AK
 CREBLOCKVEC1I(iv0,INT,0)    /* ,0                                                          */
 CREBLOCKVEC1I(iv1,INT,1)     /* ,1                                                          */
 #define CREBLOCKVEC2I(name,t) I __attribute__((aligned(CACHELINESIZE)))  B##name[9]={(7+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
-CREBLOCKVEC2I(mtm,B01)    /* i. 0 0                                                          */
+CREBLOCKVEC2I(mtm,B01)    // i. 0 0, but boolean
+CREBLOCKVEC2I(mtmi,INT)    // i. 0 0 integer
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 // validitymask is used mostly to set a sequence of all1/all0 words in a ymm reg.  We also use it as a read-only area containing
 // 0 or 1 fields.  We put all those fields over validitymask so that we use just one cacheline for all the uses.  The mappings into

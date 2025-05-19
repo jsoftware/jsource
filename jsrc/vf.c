@@ -301,11 +301,15 @@ F2(jtreshape){F12IP;A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRIC
  ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; ws=AS(w); RESETRANK;
- if((I )(1<acr)|(I )(acr<ar)){z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreshape); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity
+ if((I )(1<acr)|(I )(acr<ar)){z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreshape); PRISTCLRF(w) RETF(z);}  // multiple cells of a - w must lose pristinity
  // now a is an atom or a list.  w can have any rank
  if(unlikely(AT(a)&FL))RZ(a=jtreshapeblank(jt,a,w,ds(CRIGHT),wcr,wcr)) else RZ(a=vip(a));  // convert a to integer & audit; if FL, also check for _ and handle
  r=AN(a); u=AV(a);   // r=length of a   u->values of a
  if(unlikely(ISSPARSE(AT(w)))){RETF(reshapesp(a,w,wf,wcr));}
+ if(unlikely((-(AT(w)&B01+INT)&(wf-1)&(r-3)&(0-r))<0) && u[0]==0){   // common special cases: int/bool, no w frame, rank 1 or 2, and a all 0
+  if(r==1){R AT(w)&INT?mtvi:mtv;}  // 0 $ int/bool
+  if(r==2&&u[1]==0){R AT(w)&INT?mtmi:mtm;}  // 0 0 $ int/bool
+ }
  PRODX(m,r,u,1)  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  CPROD(,c,wf,ws); CPROD(,n,wcr,wf+ws);
  ASSERT(likely(n!=0)||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill

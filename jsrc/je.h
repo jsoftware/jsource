@@ -1063,6 +1063,8 @@ extern I Bmtvi[];
 #define mtvi ((A)&Bmtvi)
 extern I Bmtm[];
 #define mtm ((A)&Bmtm)
+extern I Bmtmi[];
+#define mtmi ((A)&Bmtmi)
 extern I Basgnlocsimp[];
 #define asgnlocsimp ((A)&Basgnlocsimp)
 extern I Basgngloname[];

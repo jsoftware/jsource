@@ -101,9 +101,11 @@ DF1(jtiota){F12IP;A z;I m,n,*v;
  F1RANK(1,jtiota,self);
  PROLOG(000);
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));  // if extended, take integer and convert
- RZ(w=vi(w)); n=AN(w); v=AV(w);
- if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}  // if list required, create it (ascending or descending) and return it forthwith
- A mg; RZ(mg=mag(w)); PRODX(m,n,IAV(mg),1); RZ(z=IX(m)); RZ(z=reshape(mag(w),z));  // rank>1.  Take */|y, create index vector, reshape to (|y) i. */|y
+ RZ(w=vi(w)); n=AN(w); v=IAV(w);
+ if(n==1){if(unlikely(v[0]==0))R mtvi; m=*v; I rs=REPSGN(m); R apv((m^rs)-rs,(m^rs)&rs,2*rs+1); }   // if list required, create it (ascending or descending) and return it forthwith.  i. 0 special
+// obsolete R 0>m?apv(-m,-m-1,-1L):IX(m);}
+ if(n==2&&(v[0]|v[1])==0)R mtmi;  // i. 0 0 special
+ A mg; RZ(mg=mag(w)); PRODX(m,n,IAV(mg),1); RZ(z=IX(m)); RZ(z=reshape(mg,z));  // rank>1.  Take */|y, create index vector, reshape to (|y) i. */|y
  DO(n, A zz; if(0>v[i])z=IRS1(z,0L,n-i,jtreverse,zz););  // reverse negative axes in input
  EPILOG(z);
 }

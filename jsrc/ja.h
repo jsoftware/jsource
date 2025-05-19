@@ -345,7 +345,8 @@
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
 #define extnvr(x)                    jtextnvr(jt,(x))
-#if 0 && ((MEMAUDIT&5)==5) && SY_64
+#define scaft2(x)
+#if ((MEMAUDIT&5)==5) && SY_64
 #define scaft(x) testbuf(x); if(AN(x)<0)SEGFAULT;
 #else
 #define scaft(x) 
@@ -359,10 +360,10 @@
 #define faaction(jt,x, nomfaction) {scaft(x) I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
 // Thus we mark the free as unlikely, but it will usually do the RFO cycle.  The block must be recursive if it is recursible
-#define faowed(x,Zc,tt) {scaft(x) if(withprob(((Zc-2)|tt)<0,0.2)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(withprob(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2,0.1))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
+#define faowed(x,Zc,tt) {scaft2(1) if(withprob(((Zc-2)|tt)<0,0.2)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(withprob(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2,0.1))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
 #define faowedjt3(x,Zc,tt) {if(unlikely(((Zc-2)|tt)<0)){jtfamf((J)((I)jt&~3),x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf((J)((I)jt&~3),x,tt);}}}  // call if sparse or ending; never touch a PERM
 // faifowed does the free only if the block is marked FAOWED in stkf.  These may have been stacked by local names, if the stack was later protected
-#define faifowed(x,Zc,tt,stkf) {scaft(x) if(unlikely(tt<0) || ((((Zc>>(ACPERMANENTX-(STKFAOWEDX+1)))&(4*STKFAOWED-1))<((I)stkf&STKFAOWED)) && unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2)))jtfamf(jt,x,tt);}  // call if sparse or ending; never touch a PERM
+#define faifowed(x,Zc,tt,stkf) {scaft2(1) if(unlikely(tt<0) || ((((Zc>>(ACPERMANENTX-(STKFAOWEDX+1)))&(4*STKFAOWED-1))<((I)stkf&STKFAOWED)) && unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2)))jtfamf(jt,x,tt);}  // call if sparse or ending; never touch a PERM
    // FAOWED becomes ..0f0; perm becomes .0p00 where perhaps p00 has +-1 added; 0f0>p00 means 'FAOWED & not PERMANENT'
 #define fajt(jt,x) {faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
 

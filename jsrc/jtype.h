@@ -300,7 +300,6 @@ struct AD {
 #define CAV2(x)         (((C*)(x)+AKXR(2)))  // character in non-virtual rank-2 array
 #define UCAV(x)         (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define UCAV0(x)        (     (UC*)(x)+AKXR(0) )  // local unsigned character atom
-#define EAV(x)          ( (E*)((C*)(x)+AK(x)))  /* quad-prec                */
 #define DSAV(x)          ( (DS*)((C*)(x)+AK(x)))  /* single-prec                */
 #define USAV(x)         ((US*)((C*)(x)+AK(x)))  /* wchar                   */
 #define USAVn(n,x)         ((US*)((C*)(x)+AKXR(n)))  // local wchar atom
@@ -348,7 +347,8 @@ struct AD {
 #define QAV(x)          ( (Q*)((C*)(x)+AK(x)))  /* rational                */
 #define QAV0(x)         ( (Q*)((C*)(x)+AKXR(0)))  // local rational atom
 #define QAV1(x)         ( (Q*)((C*)(x)+AKXR(1)))  // local rational list
-#define EAV(x)          ( (E*)((C*)(x)+AK(x)))  /* QP                 */
+#define EAV(x)          ( (E*)((C*)(x)+AK(x)))  // QP
+#define EAV1(x)          ( (E*)((C*)(x)+AKXR(1)))  // QP list, always on cache bdy.  Other ranks are often adjusted to cache bdy
 #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed                   */
 #define AAVn(n,x)         ((A*)((C*)(x)+AKXR(n)))  // A block in a stack- or heap-allocated atom (rank n)
 #define AAV0(x)         ((A*)((C*)(x)+AKXR(0)))  // A block in a stack- or heap-allocated atom (rank 0 - used for internal tables)

@@ -2117,9 +2117,14 @@ F2(jtqktupdate){F12IP;
   DO(n, ASSERT(IAV(prx)[i]<AS(w)[AR(w)-1],EVINDEX))  // verify valid column indexes
  }
 
- // transpose pivotcolnon0 
+ // transpose pivotcolnon0 into 0213 order, by cachelines
  A pcnt; GATV0(pcnt,QP,((AN(pivotcolnon0)-1)|3)+1,1) D *pcntv=DAV1(pcnt); E *pcnv=EAV1(pivotcolnon0);
- DO(AN(pcnt)>>2, pcntv[i*8+0]=pcnv[i*4+0].hi; pcntv[i*8+4]=pcnv[i*4+0].lo; pcntv[i*8+1]=pcnv[i*4+1].hi; pcntv[i*8+5]=pcnv[i*4+1].lo;  
+
+
+ DO(AN(pcnt)>>2, 
+
+
+pcntv[i*8+0]=pcnv[i*4+0].hi; pcntv[i*8+4]=pcnv[i*4+0].lo; pcntv[i*8+1]=pcnv[i*4+1].hi; pcntv[i*8+5]=pcnv[i*4+1].lo;  
   pcntv[i*8+2]=pcnv[i*4+2].hi; pcntv[i*8+6]=pcnv[i*4+2].lo; pcntv[i*8+3]=pcnv[i*4+3].hi; pcntv[i*8+7]=pcnv[i*4+3].lo; )
  if((AN(pcnt)&3)>0){pcntv[(AN(pcnt)>>2)*8+0]=pcnv[(AN(pcnt)>>2)*4+0].hi; pcntv[(AN(pcnt)>>2)*8+4]=pcnv[(AN(pcnt)>>2)*4+0].lo;
   if((AN(pcnt)&3)>1){pcntv[(AN(pcnt)>>2)*8+1]=pcnv[(AN(pcnt)>>2)*4+1].hi; pcntv[(AN(pcnt)>>2)*8+5]=pcnv[(AN(pcnt)>>2)*4+1].lo;
@@ -2152,6 +2157,7 @@ struct ekctx opctx={YC(rowsperthread)YC(pcx)YC(qk)YC(prx)YC(pivotcolnon0)YC(newr
 
 #else
 F2(jtekupdate){F12IP;ASSERT(0,EVNONCE);}
+F2(jtqktupdate){F12IP;ASSERT(0,EVNONCE);}
 #endif
 
 #if C_AVX2 || EMU_AVX2

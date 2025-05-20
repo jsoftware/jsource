@@ -90,7 +90,7 @@ DF2(jtqhash12){F12IP; I hsiz; UI crc;
 
 // base64 stuff
 #include<assert.h>
-static C base64tab[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static C base64tab[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";  // wasm 65 including null terminating character
 DF1(jttobase64){F12IP;
  F1RANK(1,jttobase64,self);  // here we deal only with rank<= 1
  ASSERT(AT(w)&LIT,EVDOMAIN);  // we work only on ASCII (which includes UTF-8).  Other types must be converted first

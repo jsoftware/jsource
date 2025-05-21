@@ -1020,7 +1020,7 @@ extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
 #if ((MEMAUDIT&5)==5) && SY_64 // scaf
-extern void testbuf(void *);
+extern void testbuf(A);
 #endif
 extern I        sqrtE(J,I,E*,E*);
 extern void     vvsortqs8ai(IL*,I);

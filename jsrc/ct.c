@@ -542,7 +542,7 @@ static I jtthreadcreate(J jt,I n){
 // execute the user's task.  Result is an ordinary array or a pyx.  Bivalent (a,w,self) or (w,self,self) called from unquote or parse
 static A jttaskrun(J jtfg,A arg1, A arg2, A arg3){F12JT;A pyx;
  ARGCHK2(arg1,arg2);  // the verb is not the issue
- RZ(pyx=jtcreatepyx(jt,-2,inf));
+ RZ(pyx=jtcreatepyx(jt,-2,inf));  // create pyx for the result, including ra().  threadid is not known yet
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITUNPUSH(jobA);  // protect the job till it is finished
  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; // the call is either noun self x or noun noun self.  See which, select self.  dyad is 0 or 1
  // extract parms given to t.: threadpool number, worker-only flag

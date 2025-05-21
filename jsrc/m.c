@@ -1301,7 +1301,7 @@ static I alloring[2048]; static I alloringx=0;
 
 #define HASHBUF(buf) ((CRC32L((I)buf,~0)*(sizeof(allohash)/sizeof(allohash)[0]))>>32)
 // look up buf starting in hashslot.  Return 0 if error, 1 if OK
-static I findbuf(I hashslot,void *buf,I probewrdel){I z;  // must have lock
+static NOINLINE I findbuf(I hashslot,void *buf,I probewrdel){I z;  // must have lock
  if(nalloblocks==0){nalloblocks=1; DO(sizeof(allohash)/sizeof(allohash)[0], allohash[i]=0;)}  // first time after enagagement or reengagement
  I maxstop=probewrdel&1;  // max stopper value to pause at: 0, except 1 for wr
  while(1){
@@ -1320,7 +1320,7 @@ static I findbuf(I hashslot,void *buf,I probewrdel){I z;  // must have lock
  }
 }
 
-static void printbufhist(void *buf){I arx=alloringx;
+static NOINLINE void printbufhist(void *buf){I arx=alloringx;
 DQ(sizeof(alloring)/sizeof(alloring)[0], arx=(arx-1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if((I)buf==(alloring[arx]&0x00ffffffffffffffLL))printf("pos %5lld: %16p\n",i,(void *)alloring[arx]); )
 printf("\n");
@@ -1339,9 +1339,10 @@ WRITELOCK(allolock);
 WRITEUNLOCK(allolock);
 }
 
-static void rembuf(J jt,void *buf){
+static void rembuf(J jt,A buf){
 if(allorunin==0)R;
 I hashslot=HASHBUF(buf);  // starting slot
+if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)SEGFAULT;  // unfreed buf.  no sparse here
 WRITELOCK(allolock);
  alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,2))){
@@ -1354,11 +1355,13 @@ exit: ;
 WRITEUNLOCK(allolock);
 }
 
-void testbuf(void *buf){
-if(1||allorunin<=0)R;  // no test till initialized
-if(!(AT((A)buf)&NOUN))R;  // check only nouns, since ACV might be very old
-if(AC((A)buf)&ACPERMANENT)R;  // PERMANENT is not included
-if(AFLAG((A)buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
+void testbuf(A buf){
+if(allorunin<=0)R;  // no test till initialized
+if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)SEGFAULT;  // unfreed buf.  no sparse here
+if(AC(buf)&0x3fffffff00000000)SEGFAULT;  // unfreed buf
+if(!(AT(buf)&NOUN))R;  // check only nouns, since ACV might be very old
+if(AC(buf)&ACPERMANENT)R;  // PERMANENT is not included
+if(AFLAG(buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
 I hashslot=HASHBUF(buf);  // starting slot
 // obsolete READLOCK(allolock);
  if(unlikely(!findbuf(hashslot,buf,0))){

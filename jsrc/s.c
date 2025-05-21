@@ -805,12 +805,12 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   }
  }else x=0;  // repurpose x to be the value needing fa
  // x here is the value that needs to be freed
- SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock (subroutine call)   scaf move after lock *************
  if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock);
  // ************* we have released the write lock
  // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
  // in case the new value was being protected by the old (ex: n =. >n).
  // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
+ SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock (subroutine call)
  R (I)g;   // good return, with bit 0 set if final assignment, bit 1 if local
 exitlock:  // error exit
  if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock)

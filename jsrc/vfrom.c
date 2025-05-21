@@ -1959,7 +1959,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     if(coln-colx<NPAR){  // if not all lanes valid
      endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
      okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
-     rn0x=_mm256_and_pd(rn0x,endmask); prowdh=_mm256_and_pd(prowdh,endmask); prowdl=_mm256_and_pd(prowdl,endmask);  // clear invalid indexes & values 
+     rn0x=_mm256_and_si256(rn0x,_mm256_castpd_si256(endmask)); prowdh=_mm256_and_pd(prowdh,endmask); prowdl=_mm256_and_pd(prowdl,endmask);  // clear invalid indexes & values 
     }
     if(unlikely(dpflag&8)){   // modifying ck/Rk?
      // mplr is given, we are modifying ck/Rk, which have only one row but may repeat column #s.  We have to

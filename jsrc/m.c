@@ -1332,6 +1332,7 @@ I hashslot=HASHBUF(buf);  // starting slot
 WRITELOCK(allolock);
  alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,1))){
+  WRITEUNLOCK(allolock);
   printf("allorunin=%lld: allocated %p which is already in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
   SEGFAULT;  // error if already in list
@@ -1347,6 +1348,7 @@ WRITELOCK(allolock);
  alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,2))){
   if(allorunin<0)goto exit;
+  WRITEUNLOCK(allolock);
   printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
   SEGFAULT;

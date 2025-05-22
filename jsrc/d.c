@@ -316,7 +316,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
     jt->etxn=0;  // clear error-message area indicating message not installed yet
     // if the user will never see the error, exit without further ado - keeps u :: v fast
     if(!(jt->emsgstate&EMSGSTATENOTEXT) && (eflg&EMSGLINEISA || BETWEENC(e,1,NEVM))){  // message text not suppressed and not internal-only (but not e=0, which is sigd): the number is all we need, skip the rest of the processing
-     // we will format for display.  *** STOP HERE to stop on unmasked error
+     // we will format for display.  *** STOP HERE to stop on unmasked error <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
      if(e!=EVSTOP)moveparseinfotosi(jt);  // before we display, move error info from parse variables to si; but if STOP, it's already installed
      // if debug is set, turn it off, with message, if there is not enough memory to run it
      if((jt->uflags.trace&TRACEDB)&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.trace&=~TRACEDB;}  // spc sees that you can malloc 1000 bytes

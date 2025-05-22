@@ -752,7 +752,7 @@ F2(jttcapdot2){F12IP;A z;
  case 5: { // create a user pyx.  y is the timeout in seconds
 #if PYXES
   ASSERT(AN(w)==1,EVLENGTH) w=ccvt(FL,w,0); D atimeout=*DAV(w); // get the timeout value
-  ASSERT(atimeout==inf||atimeout<=9e9,EVLIMIT); // 9e9 is approx 63 bits of ns.  This leaves ~300y; should be ok
+  if(atimeout==0.)atimeout=inf; ASSERT(atimeout==inf||atimeout<=9e9,EVLIMIT); // 9e9 is approx 63 bits of ns.  This leaves ~300y; should be ok
   z=box(jtcreatepyx(jt,THREADID(jt),atimeout));  // create the recursive pyx, owned by this thread
 #else
 ASSERT(0,EVNONCE)

@@ -1935,8 +1935,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
  UI coln=AN(prx), colstride=AN(pivotcolnon0); I *colxv=IAV(prx); D *pcn0v=DAV(pivotcolnon0);  // # cols, stride between hi&lo, address of col indexes, data repeated for each row of Qkt (high values all followed by all low values)  Note: in scatter mode coln can be used instead of prnstride
 // obsolete  UI prnstride=AS(pivotrownon0)[AR(pivotrownon0)-1];
 // obsolete  dpflag|=(AR(pivotrownon0)>1)<<2;
-// obsolete  dpflag|=AR(absfuzzmplr)<<3;
- dpflag&=~(AR(absfuzzmplr)<<5);  // set flag if mplr is given; if not mplr, clear 'batch mode'
+ dpflag|=AR(absfuzzmplr)<<3; dpflag&=~(AR(absfuzzmplr)<<5);  // set flag if mplr is given; if mplr, clear 'batch mode'
 // obsolete  dpflag|=((dpflag&0b1110)==0)<<4;  // set 'single-precision multiply' flag if that is enough
  // for each row
  for(;rowx<slicen;++rowx){
@@ -1948,8 +1947,9 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 // obsolete    if(dpflag&2)pcoldl=_mm256_xor_pd(sgnbit,_mm256_set1_pd(pcn0v[rown+rowx]));  // fetch low part if it is present
    UI colx; I okwds=NPAR; I okmsk=(1LL<<NPAR)-1;  //  number/mask of valid wds in block
    // for each column-group in Qkt (4 lanes)
-   __m256d endmask=_mm256_setone_pd();  // mask for maskload and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
+   __m256d endmask;  // mask for 'maskload' and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
    for(colx=0;colx<coln;colx+=okwds){
+    endmask=sgnbit;
     __m256i rn0x;  // indexes of nonzero values in row of Qkt
     // fetch pivotcol values (high-low), fetch the Qkt byte indexes to modify.  We may overfetch
     rn0x=_mm256_loadu_si256((__m256i*)(colxv+colx));  // load the byte indexes into Qkt
@@ -1959,7 +1959,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     if(coln-colx<NPAR){  // if not all lanes valid
      endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
      okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
-     rn0x=_mm256_and_si256(rn0x,_mm256_castpd_si256(endmask)); prowdh=_mm256_and_pd(prowdh,endmask); prowdl=_mm256_and_pd(prowdl,endmask);  // clear invalid indexes & values 
+     rn0x=_mm256_and_si256(rn0x,_mm256_castpd_si256(endmask)); pcoldh=_mm256_and_pd(pcoldh,endmask); pcoldl=_mm256_and_pd(pcoldl,endmask);  // clear invalid indexes & values 
     }
     if(unlikely(dpflag&8)){   // modifying ck/Rk?
      // mplr is given, we are modifying ck/Rk, which have only one row but may repeat column #s.  We have to
@@ -1991,7 +1991,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     // if mplr given, multiply prow by it
     if(dpflag&8){
      // mplr is dp, prow is qp.
-     TWOPRODQD(prowdh,prowdl,mabsfuzz,iph,ipl) prowdh=iph; prowdl=ipl;
+     TWOPRODQD(pcoldh,pcoldl,mabsfuzz,iph,ipl) pcoldh=iph; pcoldl=ipl;
     }
     // (iph,ipl) = - prowdh*pcoldh
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
@@ -2039,7 +2039,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     // we do not use aligned loads for the row values, because sometimes they have been copied to an unaligned temp buffer (as on a swap).  They will be from fast local cache anyway
 
     __m256d pcoldh=_mm256_loadu_pd(pcn0v+colx*8), pcoldl=_mm256_loadu_pd(pcn0v+colx*8+4);  // next 4 pivotcol values, high then low in 0213 order
-    __m256d h0l0h1l1=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)((I)qkvrow*blockx))), h2l2h3l3=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)((I)qkvrow*blockx)+1));  // batch of Qkt, as Es
+    __m256d h0l0h1l1=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)((I)qkvrow+blockx))), h2l2h3l3=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)((I)qkvrow+blockx)+1));  // batch of Qkt, as Es
     __m256d qkvh=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), qkvl=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // batch of Qkt, high & low separated in 0213 order
 
     TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
@@ -2059,7 +2059,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
     magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
     qkvl=_mm256_and_pd(qkvl,magqh); qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz
-    _mm256_stream_pd((D*)(__m256i *)((I)qkvrow*blockx),_mm256_shuffle_pd(qkvh,qkvl,0b0000)); _mm256_stream_pd((D*)((__m256i *)((I)qkvrow*blockx)+1),_mm256_shuffle_pd(qkvh,qkvl,0b1111));  // write out the new Qk.
+    _mm256_stream_pd((D*)(__m256i *)((I)qkvrow+blockx),_mm256_shuffle_pd(qkvh,qkvl,0b0000)); _mm256_stream_pd((D*)((__m256i *)((I)qkvrow+blockx)+1),_mm256_shuffle_pd(qkvh,qkvl,0b1111));  // write out the new Qk.
    }
   }
  }  // loop to next row
@@ -2079,26 +2079,26 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 F2(jtqktupdate){F12IP;
  ARGCHK2(a,w);
  // extract the inputs
- A qk=w; ASSERT(AT(w)&FL,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w),EVNONCE)  // w must be inplaceable
+ A qk=w; ASSERT(AT(w)&QP,EVDOMAIN) ASSERT(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w),EVNONCE)  // w must be inplaceable
  ASSERT(AT(a)&BOX,EVDOMAIN) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==5,EVLENGTH)  // a is 5 boxes
  A box0=C(AAV(a)[0]), box1=C(AAV(a)[1]), box2=C(AAV(a)[2]), box3=C(AAV(a)[3]), box4=C(AAV(a)[4]);
  A pcx=box0; ASSERT(AT(pcx)&INT,EVDOMAIN) ASSERT(AR(pcx)<=1,EVRANK)  // pcx is integer list or atom
  A prx=box1; ASSERT(AT(prx)&INT,EVDOMAIN) ASSERT(AR(prx)==1,EVRANK)  // prx is integer list
- A pivotrownon0=box2; ASSERT(AT(pivotrownon0)&QP,EVDOMAIN) ASSERT(AR(pivotrownon0)==1,EVRANK)  // scaf should=AR(pcx)
- A pivotcolnon0=box3; ASSERT(AT(pivotcolnon0)&QP,EVDOMAIN) ASSERT(AR(pivotcolnon0)==AR(prx),EVRANK)
+ A pivotrownon0=box2; ASSERT(AT(pivotrownon0)&QP,EVDOMAIN) ASSERT(AR(pivotrownon0)==AR(pcx),EVRANK)
+ A pivotcolnon0=box3; ASSERT(AT(pivotcolnon0)&QP,EVDOMAIN) ASSERT(AR(pivotcolnon0)==1,EVRANK)
  A absfuzzmplr=box4; ASSERT(AT(absfuzzmplr)&FL,EVDOMAIN) ASSERT(AR(absfuzzmplr)<=1,EVRANK)  // absfuzz is a float atom; mplr is a float list
  I isbatch=0;  // set if we are doing batches of aligned accesses
  if(AR(absfuzzmplr)==1)ASSERT(AN(absfuzzmplr)==AN(prx),EVLENGTH)  // if mplr, must be one per input in row
  else isbatch=DAV(absfuzzmplr)[0]<0.;  // batch if negative threshold
  // agreement
- ASSERT(AR(w)==AR(pcx)+AR(prx),EVRANK)  // Qk is nxn+1..4; bk is n, treated as a single row.
- if(AR(pcx)!=0){ASSERT(AS(w)[0]<=AS(w)[1]-1,EVLENGTH) DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[0],EVINDEX))} else{ASSERT(IAV(pcx)[0]==0,EVINDEX)}  // Qk/bk rows may be padded (Qk might include Fk); valid row indexes
- ASSERT(AN(pcx)==AS(pivotrownon0)[AR(pivotrownon0)-1],EVLENGTH)  // indexes and values must agree  scaf shapes should be identical
+ ASSERT(AR(w)==AR(pcx)+AR(prx),EVRANK)  // Qkt is nxn+1..4; bk is n, treated as a single row.
+ if(AR(pcx)!=0){ASSERT(AS(w)[0]<=AS(w)[1]-1,EVLENGTH) DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[0],EVINDEX))} else{ASSERT(IAV(pcx)[0]==0,EVINDEX)}  // Qkt/bk rows may be padded (Qkt includes Fk); valid row indexes
+ ASSERT(AN(pcx)==AN(pivotrownon0),EVLENGTH)  // indexes and values must agree  scaf shapes should be identical
  I m=AN(pcx), n=AN(prx);  // # rows & columns to modify
  if(isbatch){
   // we are processing cache-aligned blocks
   ASSERTSYS(((I)DAV(qk)&((SZD<<LGNPAR)-1))==0,"Qkt is not on cacheline bdy")  // we fetch along rows; insist on data alignment
-  ASSERTSYS((AS(qk)[2]&(NPAR-1))==0,"stride of Qkt is not a cacheline multiple")  // we fetch along rows; insist on data alignment
+  ASSERTSYS((AS(qk)[1]&(NPAR-1))==0,"stride of Qkt is not a cacheline multiple")  // we fetch along rows; insist on data alignment
 // no longer  ASSERTSYS(((I)DAV(pivotrownon0)&((SZD<<LGNPAR)-1))==0,"row values not on cacheline bdy")  // we fetch along rows; insist on data alignment
 // no longer  ASSERTSYS((AS(pivotrownon0)[1]&(NPAR-1))==0,"stride of row values is not a cacheline multiple")  // we fetch along rows; insist on data alignment
   DO(n, ASSERT(IAV(prx)[i]<AS(w)[AR(w)-1],EVINDEX) ASSERTSYS((IAV(prx)[i]&(NPAR-1))==0,"prx not 0(mod NPAR)"))  // verify valid column indexes, aligned to batches
@@ -2108,20 +2108,21 @@ F2(jtqktupdate){F12IP;
   DO(n, ASSERT(IAV(prx)[i]<AS(w)[AR(w)-1],EVINDEX))  // verify valid column indexes
  }
 
- // transpose pivotcolnon0 into needed
- A pcnt; GATV0(pcnt,QP,((AN(pivotcolnon0)-1)|3)+1,1) E *pcntv=EAV1(pcnt); E *pcnv=EAV1(pivotcolnon0);
+ // transpose pivotcolnon0 into needed order
+ A pcnt; GATV0(pcnt,QP,((AN(pivotcolnon0)-1)|3)+1,1) E *pcntv=EAV1(pcnt); E *pcnv=EAV(pivotcolnon0);
+ I *prxv=IAV(prx);  // col#s
  if(isbatch){
-  // batch mode transpose pivotcolnon0 into 0213 order, by cachelines
-    DO(AN(pcnt)>>2, __m256d h0l0h1l1=_mm256_loadu_pd((D*)&pcnv[2*i]); __m256d h2l2h3l3=_mm256_loadu_pd((D*)&pcnv[2*i+1]);
-     _mm256_storeu_pd((D*)&pcntv[2*i],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000)); _mm256_storeu_pd((D*)&pcntv[2*i+1],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111)); )
+  // batch mode transpose selected parts of pivotcolnon0 (which is the entire pivot column) into 0213 order, by cachelines
+    DO(AN(prx), __m256d h0l0h1l1=_mm256_loadu_pd((D*)&pcnv[prxv[i]]); __m256d h2l2h3l3=_mm256_loadu_pd((D*)&pcnv[prxv[i]+2]);
+     _mm256_storeu_pd((D*)&pcntv[i*4],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000)); _mm256_storeu_pd((D*)&pcntv[i*4+2],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111)); )
  }else{
   // non-batch: collect the high parts in order, followed by the low
-  I colstride=AN(pcnt); DO(AN(pcnt), ((D*)pcnv)[i]=pcntv[i].hi; ((D*)pcnv)[i+colstride]=pcntv[i].lo;)  // separate high & low parts
+  I colstride=AN(pcnt); DO(AN(pcnt), ((D*)pcntv)[i]=pcnv[i].hi; ((D*)pcntv)[i+colstride]=pcnv[i].lo;)  // separate high & low parts
  }
  pivotcolnon0=pcnt;   // use the transposed version
 
  // convert column #s to byte offset of Es
- A prxt; GATV0(prxt,INT,((AN(prx)-1)|3)+1,1) I *prxtv=IAV1(prxt); I *prxv=IAV1(prx);
+ A prxt; GATV0(prxt,INT,AN(prx),1) I *prxtv=IAV1(prxt); 
  DO(AN(prxt), prxtv[i]=prxv[i]*sizeof(E);)
  prx=prxt;  // use the transposed version
 

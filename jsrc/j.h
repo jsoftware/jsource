@@ -972,7 +972,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {I *aaa=(I*)(x), *aab=(I*)(y); I aai=(l); \
   if(unlikely(aai>NPAR)){NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR]))),_mm256_loadu_si256((__m256i*)validitymask)),EVLENGTH)}while((aai-=NPAR)>NPAR);} \
-  ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai))),EVLENGTH) /* result is 1 if all match */ \
+  ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR))),_mm256_loadu_si256((__m256i*)(validitymask+NPAR+aai))),EVLENGTH) /* result is 1 if all match */ \
  }
 // result is true if shapes agree.  Modify only aai
 #define TESTAGREE(x,y,l) \
@@ -983,8 +983,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
     aaaa=_mm256_loadu_si256((__m256i *)&aaa[aai-NPAR]); aaab=_mm256_loadu_si256((__m256i *)&aab[aai-NPAR]); \
     if(!_mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam))break; \
    }while((aai-=NPAR)>NPAR); \
-   if(likely(aai<=NPAR)){aaaa=_mm256_loadu_si256((__m256i *)aaa); aaab=_mm256_loadu_si256((__m256i *)aab); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai));}  /* if error, stay on it; otherwise back to beginning (would be OK to leave mask) */ \
-  }else{aaaa=_mm256_loadu_si256((__m256i *)aaa); aaab=_mm256_loadu_si256((__m256i *)aab); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai));  /* normal case, fetch beginning and mask */ \
+   if(likely(aai<=NPAR)){aaaa=_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR)); aaab=_mm256_loadu_si256((__m256i *)(aab+aai-NPAR)); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR+aai));}  /* if error, stay on it; otherwise back to beginning (would be OK to leave mask) */ \
+  }else{aaaa=_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR)); aaab=_mm256_loadu_si256((__m256i *)(aab+aai-NPAR)); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR+aai));  /* normal case, fetch beginning and mask */ \
   } \
   _mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam); /* test result is 1 if all match */ \
  })
@@ -992,7 +992,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=NPAR)){ \
-   r=!(_mm256_testz_si256(_mm256_cmpgt_epi64(_mm256_loadu_si256((__m256i *)aaa),_mm256_loadu_si256((__m256i *)aab)),_mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)))); /* test result is 1 if all match */ \
+   r=!(_mm256_testz_si256(_mm256_cmpgt_epi64(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR))),_mm256_loadu_si256((__m256i*)(validitymask+NPAR+aai)))); /* test result is 1 if all match */ \
   }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]>aab[aai])){r=1; break;}}while(aai);} \
  }
 #else

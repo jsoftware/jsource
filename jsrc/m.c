@@ -1330,6 +1330,7 @@ static void addbuf(J jt,void *buf){
 if(allorunin==0)R;
 I hashslot=HASHBUF(buf);  // starting slot
 WRITELOCK(allolock);
+ if(++allorunin==0)allorunin=1; if(unlikely(JT(jt,peekdata==0)))allorunin=0;  // go into normal state after runin completes
  alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,1))){
   WRITEUNLOCK(allolock);
@@ -1347,7 +1348,7 @@ if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)SEGFAULT;  // unfreed buf.  n
 WRITELOCK(allolock);
  alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,2))){
-  if(allorunin<0)goto exit;
+  if(allorunin<=0)goto exit;
   WRITEUNLOCK(allolock);
   printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);

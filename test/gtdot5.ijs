@@ -32,15 +32,15 @@ p2 =: ".
 1: (6!:5) ] _5000  NB. engage test mode
 
 p1=: 3 : 0
-for_i. (1000 * 3 T. '') + i.100 do.
-ALL=: ALL, 3 T.''
+for_i. y do.
+ALL=: 15!:15^:i ALL
 end.
 i. 0 0
 )
 
-t1=: 3 : 0
+t1=: 4 : 0
 ALL=: 128$00
-pyx=. (p1 t.'')"0  i. y
+pyx=. (p1 t.''@y)"0 x#0
 1:&>pyx
 i. 0 0
 )
@@ -90,7 +90,7 @@ i. 0 0
 
 NB. Insert p1 here to override the default from above
 
-t1 1000
+1000 t1 0.5 < 1000 ?@$ 0
 
 t3 1000
 

@@ -574,7 +574,7 @@ f =: 1:`({{
   Qk =. (>.&.(%&4) siz) {."1 (siz,siz) ?@$ 0
   expQk=. (((<prx;pcx) { Qk) ((*  absfuzz <!.0 |)@:-) pivotcolnon0 */ newrownon0) (<prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk
-  if. -. r =. 1e_13 > >./ , | Qk - expQk do. 13!:8]4 [ 'prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
+  if. -. r =. 1e_11 > >./ , | Qk - expQk do. 13!:8]4 [ 'prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
   0 T. 0  NB. allocate a worker thread
  end.
  while. 1 T. '' do. 55 T. '' end.
@@ -683,7 +683,7 @@ f =: 1:`({{
  upd=. ckchg -~ prcrnub { ck
  expck=. upd prcrnub} preck =. memu ck
  ck =. (00;prcr;(,1.);(prcl #"01 newrownon0);(mplr)) 128!:12 ck
- if. -. r =. 1e_13 > >./ , | ck - expck do. 13!:8]4 [ ' prcr__  newrownon0__  expck__ preck__ ck__' =: prcr;newrownon0;expck;preck;ck end.
+ if. -. r =. 1e_11 > >./ , | ck - expck do. 13!:8]4 [ ' prcr__  newrownon0__  expck__ preck__ ck__' =: prcr;newrownon0;expck;preck;ck end.
  1
 }})@.IF64
 f ''
@@ -804,7 +804,7 @@ f =: 1:`({{
  upd=. ckchg -~ prcrnub { ck
  expck=. upd prcrnub} preck =. memu ck
  ck =. {. (00;prcr;(1. 0);(0,:~prcl #"01 newrownon0);(mplr)) e128x22 ck,:0
- if. -. r =. 1e_13 > >./ , | ck - expck do. 13!:8]4 [ ' prcr__  newrownon0__  expck__ preck__ ck__' =: prcr;newrownon0;expck;preck;ck end.
+ if. -. r =. 1e_11 > >./ , | ck - expck do. 13!:8]4 [ ' prcr__  newrownon0__  expck__ preck__ ck__' =: prcr;newrownon0;expck;preck;ck end.
  1
 }})@.IF64
 f ''

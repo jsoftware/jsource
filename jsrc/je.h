@@ -245,6 +245,7 @@ extern F1(jtmmaxs);
 extern F1(jtmr_test);
 extern F1(jtmt_test);
 extern F1(jtmvmsparse);
+extern F1(jtmvmsparsee);
 extern A jtnameref(J,A,A);
 extern F1(jtnmcacheq);
 extern F1(jtnmcaches);

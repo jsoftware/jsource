@@ -2470,7 +2470,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // requires special insts#define PDEP(s,m) _pdep_u32(s,m)
 #define PEXTN(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m must be contiguous
 // emulation of general PDEP
-#define PDEP(s,m) ({UI bits=(s), msk=(m), res=0; DO(BB*BW, res=(res>>1)+SGNIF(bits&msk,0); bits>>=(msk&1); msk>>=1;) res;})
+// too slow #define PDEP(s,m) ({UI bits=(s), msk=(m), res=0, i=BW; do{res=(res>>1)+SGNIF(bits&msk,0); bits>>=(msk&1); --i; msk>>=1;}while(msk);)  res>>i;})
 #endif
 
 #ifndef offsetof

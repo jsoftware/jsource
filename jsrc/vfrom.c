@@ -1867,7 +1867,7 @@ endpipem2: ;  // come here in runout where pipe input is invalid
     if(likely(zv&ZVSHARINGMIN))*(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE); vv0=&qkt0[qktrowstride*ppp->colx];  // leave an=-1
   }else{if(an==-2)goto usefullrowtotal; goto abortcol;  // immediate termination/abort.  DO NOT fetch sharedmin, as we will be checking it presently.  rowx, accumsumsq needed
   }
-if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it must leave us on a bndrowmask bdy
+if((rowx&(2*BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it must leave us on a bndrowmask bdy
 
   __m256d accnorm4=_mm256_setzero_pd();  // accumulator for sumsq, in short bursts
 
@@ -1879,8 +1879,10 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
 
    // if this starts a boundmask block, fetch the mask for it
    if((rowx&(2*BNDROWBATCH/1-1))==0){
-    // move the 64 bits to  the correct position in each lane
-    bndmsk=_mm256_castsi256_pd(_mm256_sllv_epi64(_mm256_set1_epi64x(*(I*)&bndrowmask[rowx>>(LGBNDROWBATCH-0)]),bndmskshift));
+    // move the 64 bits to  the correct position in each lane.  The 64 bits are (LSB) lane0 | lane1 | lane2 | lane3 (MSB)
+    // The bits for each lane are in bigendian order so that they come out at the sign bit.  We then shift them to get
+    // x,lane0 | x,lane2 || x,lane0 | x,lane2 || x,lane1 | x,lane3 || x,lane1 | x,lane3 ||  which is the order we use them in
+    bndmsk=_mm256_castsi256_pd(_mm256_sllv_epi64(_mm256_set1_epi64x(*(I*)&bndrowmask[rowx>>((LGBNDROWBATCH-0)+1)]),bndmskshift));  // +1 to divide rowx
    }
 
    // calculate several blocks of the dot-product
@@ -1931,11 +1933,15 @@ if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it mus
    // combine the blocks.   if row is bound, multiply its value by sqrt(2).  Then accumulate value^2 into accnorm4.  This will complete while the next burst is being calculated
    // idea: store bound rows with Qk values multiplied by sqrt(2).  Must undo for onecol, and must take into account during pivot
    // better idea: have single-precision version of Qkt, used only for gradients, with bound rows already multiplied by sqrt(2)
-   #define GRSQ(accno) acc##accno=_mm256_blendv_pd(acc##accno,_mm256_mul_pd(acc##accno,sqrt2),bndmsk); acc##accno=_mm256_mul_pd(acc##accno,acc##accno); /* sq, or 2*sq */ \
-   bndmsk=_mm256_castsi256_pd(_mm256_slli_epi64(_mm256_castpd_si256(bndmsk),1));  // move bound-row mask to the next group of rows.
-   #define GRSQACC(accno,addend) acc##accno=_mm256_blendv_pd(acc##accno,_mm256_mul_pd(acc##accno,sqrt2),bndmsk); acc##accno=_mm256_fmadd_pd(acc##accno,acc##accno,addend); /* sq, or 2*sq */ \
-   bndmsk=_mm256_castsi256_pd(_mm256_slli_epi64(_mm256_castpd_si256(bndmsk),1));  // move bound-row mask to the next group of rows.
-   GRSQACC(0,accnorm4) GRSQ(1) GRSQ(2) GRSQ(3) GRSQACC(4,acc0) GRSQACC(5,acc1) GRSQACC(6,acc2) GRSQACC(7,acc3)  //  accnorm4+all accs into 4 acc4s
+   // bndmsk is (LSL) x,lane0 | x,lane2 || x,lane0 | x,lane2 || x,lane1 | x,lane3 || x,lane1 | x,lane3 (MSL) ||  
+   // we exchange 32-bit lanes to put 0 first and interleave 0/2 thereafter; after the operation we shift the odd lanes to advance to the next bit
+   #define GRBNDSH0 bndmsk=_mm256_castsi256_pd(_mm256_shuffle_epi32(_mm256_castpd_si256(bndmsk),0b10110001));
+   #define GRBNDSH1 bndmsk=_mm256_castsi256_pd(_mm256_blend_epi32(_mm256_castpd_si256(bndmsk),_mm256_slli_epi64(_mm256_castpd_si256(bndmsk),1),0b01010101));
+   #define GRSQs(accno) GRBNDSH0 acc##accno=_mm256_blendv_pd(acc##accno,_mm256_mul_pd(acc##accno,sqrt2),bndmsk); acc##accno=_mm256_mul_pd(acc##accno,acc##accno); GRBNDSH1 /* sq, or 2*sq */
+// obsolete    bndmsk=_mm256_castsi256_pd(_mm256_slli_epi64(_mm256_castpd_si256(bndmsk),1));  // move bound-row mask to the next group of rows.
+   #define GRSQACCs(accno,addend) GRBNDSH0 acc##accno=_mm256_blendv_pd(acc##accno,_mm256_mul_pd(acc##accno,sqrt2),bndmsk); acc##accno=_mm256_fmadd_pd(acc##accno,acc##accno,addend); GRBNDSH1 /* sq, or 2*sq */
+// obsolete    bndmsk=_mm256_castsi256_pd(_mm256_slli_epi64(_mm256_castpd_si256(bndmsk),1));  // move bound-row mask to the next group of rows.
+   GRSQACCs(0,accnorm4) GRSQs(1) GRSQs(2) GRSQs(3) GRSQACCs(4,acc0) GRSQACCs(5,acc1) GRSQACCs(6,acc2) GRSQACCs(7,acc3)  //  accnorm4+all accs into 4 acc4s
 
    acc5=_mm256_add_pd(acc4,acc5); acc7=_mm256_add_pd(acc6,acc7); accnorm4=_mm256_add_pd(acc5,acc7);  // accnorm4+all accs into 1 acc4.
 
@@ -2053,7 +2059,7 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
  I ndotprods=0;  // number of dot-products we perform here
  I frowbatchx;  // rowx of batch containing Fk, if any
  I qkstride=qktrowstride*nqkbcols;  // distance between planes of Qk
- __m256i bndmskshift=_mm256_set_epi64x(0,16,32,48);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
+ __m256i bndmskshift=_mm256_set_epi64x(0,0,16,16);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
  __m256d store0thresh=_mm256_set1_pd(parms[3]);  // In one-column mode, this holds the Store0Threshold: column values less than this are set to 0 when written out
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
 
@@ -2394,12 +2400,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
  box=C(AAV(w)[2]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN); I avn=AN(box); opctx.avv0=DAV(box);  // weights
  ASSERT(amn==avn,EVLENGTH);  // weights and col#s must agree
  box=C(AAV(w)[4]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) C *rvtv=CAV(box);  // RVT
- box=C(AAV(w)[5]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN)   // bndrowmask
- // double the bits of bndrowmsk since they are repeated.  the top 32 bits from input lanes 0 & 2 are interleaved to produce 64 bits that are duplicated in output lanes 0-1.
- // then input 1 & 3 are interleaved to produce 64 bits for output lanes 2 & 3.  Then the low 32 bits, and the step to the next 64 bits in each lane.
- A bmx; GAT0(bmx,INT,((AN(box)+7)&-8)>>2,1) UI4 (*inmask)[][2][2]=(UI4 (*)[][2][2])CAV(box); I (*dupmsk)[][2][2][2]=(I (*)[][2][2][2])IAV(bmx);
- DO(AN(bmx)>>3, I k=i; DO(2, I j=i; DO(2, UI m0=(*inmask)[k][2*i][1-j], m1=(*inmask)[k][2*i+1][1-j]; m0=PDEP(m0,0xaaaaaaaaaaaaaaaa)|PDEP(m1,0x5555555555555555); (*dupmsk)[k][j][i][0]=(*dupmsk)[k][j][i][1]=m0;) ) )
- opctx.bndrowmask=DAV(bmx);
+ box=C(AAV(w)[5]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&LIT,EVDOMAIN) opctx.bndrowmask=DAV(box);   // bndrowmask
  box=C(AAV(w)[8]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AT(box)&INT,EVDOMAIN)   // col indexes being evaluated
  I isgradmode; I nthreads=(*JT(jt,jobqueues))[0].nthreads+1;   // non0 if gradient mode; ptr to output if any; #threads available for processing
  unsigned char (*actionrtn)(JJ, void *, UI4);  // the routine to do the operation

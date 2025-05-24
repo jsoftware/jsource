@@ -200,8 +200,12 @@ if [ "${USE_GMP_H:=1}" -eq 1 ] ; then
  common="$common -I../../../../mpir/include"
 fi
 
-if [ "" != "$_MEMAUDIT" ]; then
+if [ -n "$_MEMAUDIT" ]; then
  common="$common -DMEMAUDIT=$_MEMAUDIT"
+fi
+
+if [ -n "$_ASSERT" ]; then
+ common="$common -D_ASSERT"
 fi
 
 case "$jplatform64" in

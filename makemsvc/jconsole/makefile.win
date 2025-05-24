@@ -6,7 +6,7 @@ DPYXES = /DPYXES=1
 DPYXES = /DPYXES=0
 !endif
 MPIRINC = -I../../mpir/include
-!if "1"=="$(_DEBUG)"
+!if ""!="$(_DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 !endif

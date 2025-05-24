@@ -55,9 +55,15 @@ MPIRINC = -I../../mpir/include
 !if "1"=="$(NOSYNCHLIB)"
 FNOSYNCHLIB = /DNOSYNCHLIB=1
 !endif
-!if "1"=="$(_DEBUG)"
+!if ""!="$(_DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
+!endif
+!if ""!="$(_MEMAUDIT)"
+FDEBUG := $(FDEBUG) /DMEMAUDIT=$(_MEMAUDIT)
+!endif
+!if ""!="$(_ASSERT)"
+FDEBUG := $(FDEBUG) /D_ASSERT
 !endif
 !if "1"=="$(USE_BOXEDSPARSE)"
 FBOXEDSPARSE = /DBOXEDSPARSE

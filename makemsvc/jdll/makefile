@@ -55,9 +55,15 @@ endif
 ifeq (1,$(NOSYNCHLIB))
 FNOSYNCHLIB = /DNOSYNCHLIB=1
 endif
-ifeq (1,$(_DEBUG))
+ifneq ($(_DEBUG),)
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
+endif
+ifneq ($(_MEMAUDIT),)
+FDEBUG := $(FDEBUG) /DMEMAUDIT=$(_MEMAUDIT)
+endif
+ifneq ($(_ASSERT),)
+FDEBUG := $(FDEBUG) /D_ASSERT
 endif
 ifeq (1,$(USE_BOXEDSPARSE))
 FBOXEDSPARSE = /DBOXEDSPARSE

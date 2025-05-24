@@ -211,6 +211,10 @@ if [ -n "$_MEMAUDIT" ]; then
  common="$common -DMEMAUDIT=$_MEMAUDIT"
 fi
 
+if [ -n "$_ASSERT" ]; then
+ common="$common -D_ASSERT"
+fi
+
 case "$jplatform64" in
  *32*) USE_EMU_AVX=0;;
  wasm*) USE_EMU_AVX=0;;

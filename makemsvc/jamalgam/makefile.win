@@ -62,6 +62,9 @@ LDEBUG = /DEBUG
 !if ""!="$(_MEMAUDIT)"
 FDEBUG := $(FDEBUG) /DMEMEUDIT=$(_MEMAUDIT)
 !endif
+!if ""!="$(_ASSERT)"
+FDEBUG := $(FDEBUG) /D_ASSERT
+!endif
 !if "1"=="$(USE_BOXEDSPARSE)"
 FBOXEDSPARSE = /DBOXEDSPARSE
 !endif

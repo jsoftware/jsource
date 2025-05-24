@@ -62,6 +62,9 @@ endif
 ifneq ($(_MEMAUDIT),)
 FDEBUG := $(FDEBUG) /DMEMEUDIT=$(_MEMAUDIT)
 endif
+ifneq ($(_ASSERT),)
+FDEBUG := $(FDEBUG) /D_ASSERT
+endif
 ifeq (1,$(USE_BOXEDSPARSE))
 FBOXEDSPARSE = /DBOXEDSPARSE
 endif

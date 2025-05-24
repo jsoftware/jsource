@@ -6,7 +6,7 @@ else
 DPYXES = /DPYXES=0
 endif
 MPIRINC = -I../../mpir/include
-ifeq (1,$(_DEBUG))
+ifneq ($(_DEBUG),)
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 endif

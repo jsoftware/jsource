@@ -207,7 +207,7 @@ common="$common -DREADLINE -DUSE_LINENOISE"
 OBJSLN="linenoise.o"
 fi
 
-if [ "" != "$_MEMAUDIT" ]; then
+if [ -n $_MEMAUDIT ]; then
  common="$common -DMEMAUDIT=$_MEMAUDIT"
 fi
 

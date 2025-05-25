@@ -312,11 +312,11 @@ DF2(jtpowop){F12IP;B b;V*v;
  ARGCHK2(a,w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  // handle the very important case of scalar   int/boolean   n of 0/1
-#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
- if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
-#else
+// obsolete #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
+// obsolete  if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
+// obsolete #else
  if(unlikely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
-#endif
+// obsolete #endif
  A z; fdefallo(z)  // allocate normal result area
  AF f1,f2; I flag;  // derived-verb handlers; flags for the verb we build
  A h;  // A block for the power list converted to integer (initially, remaining for jtply12 only); u^:_1 (for jtinv[12]); 0 for others
@@ -352,21 +352,21 @@ DF2(jtpowop){F12IP;B b;V*v;
    // scalar 0/1 bool/int handled earlier; check other cases (including non-B01/INT)
    if(w==ds(CUSDOT)){   // power is _.
     ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs
-    flag = FAV(a)->flag&VASGSAFE; n=IMIN; // u^:v^:_. inherits inplaceability from u^:v, set exponent IMIN to indic u^:v^:_.
+    n=IMIN; // u^:v^:_. inherits assignsafe from u^:v, set exponent IMIN to indic u^:v^:_.
    }else{   // normal power, not _.
     RZ(h=vib(w)); ASSERT(AN(h)!=0,EVDOMAIN); n=IAV(h)[0]; n=n==IMIN?-IMAX:n;   // hs=n coerced to integer (must not be 0); n=power (if atomic), exponent IMIN reserved for ^:_.
    }
    if(likely(!AR(w))){  // input is an atom
     // Handle the important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), _ (converge), _. (dowhile)
-    if(!(n&~1))R a=n?a:ds(CRIGHT);  //  the if statement: u^:0 is like ],  u^:1 is like u
+    if(!(n&~1))R a=n?a:ds(CRIGHT);  //  the if statement: u^:0 is like ],  u^:1 is like u (normally handled above)
     // falling through is not the if statement
-    f1=f2=jtpowatom12;   // init to handler for general atomic power.  All atomic-power entry points support inplacing
+    f1=f2=jtpowatom12; flag=FAV(a)->flag&VASGSAFE;   // init to handler for general atomic power.  All atomic-power entry points support inplacing
     h=0;    // inverse, if we can calculate it (we no longer need the list of powers)
     if(likely((n<<1)==-2)){  //  u^:_1 or u^:_
      if(n<0){  // u^:_1
       // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
       // must wait until we get arguments.  We can't trust the inverse to be ASGSAFE
-      f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;flag=0;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
+      f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;flag=VFLAGNONE;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
      }else flag=VFLAGNONE;     // if u^:_, never allow inplacing since we are converging
      // Note: negative powers other than _1 are resolved in the action routine
     }

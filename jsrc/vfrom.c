@@ -1696,7 +1696,7 @@ static unsigned char jtmvmsparseegradx(J jt,struct mvmctx *ctx,UI4 ti){
  __m256d sqrt2=_mm256_set1_pd(sqrt(2.0));   // sqrt(2) for weighting bound rows
  I ndotprods=0, nimpandcols=0;  // number of dot-products we perform here, and #cols and improvements
  I nqkrows=nbasiswfk^REPSGN(nbasiswfk); // number of rows of Qk NOT including any Fk
- __m256i bndmskshift=_mm256_set_epi64x(0,16,32,48);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
+ __m256i bndmskshift=_mm256_set_epi64x(0, 0, 16, 16);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
 
  I mvvvtoalloc=(maxweights+1+NPAR-1)&-NPAR;  // round (max Axlen+1) up to batch bdy
@@ -2049,7 +2049,7 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
 #define YCU(x) YCUT(typeof(ctx->u.spr.x),x)
 #define YCT(T,x) T x=(T)__atomic_load_n(&ctx->x,__ATOMIC_ACQUIRE);
 #define YC(x) YCT(typeof(ctx->x),x)
- YCUT(I,colx)YCU(zv)YCT(I,nqkbcols)YCU(axv)YC(amv0)YC(avv0)YC(qkt0)YCT(I4,qktrowstride)YC(nbasiswfk)YC(ressize)YCUT(I,zstride)YCU(parms)YCU(bk)
+ YCUT(I,colx)YCUT(E*,zv)YCT(I,nqkbcols)YCU(axv)YC(amv0)YC(avv0)YC(qkt0)YCT(I4,qktrowstride)YC(nbasiswfk)YC(ressize)YCUT(I,zstride)YCU(parms)YCUT(E*,bk)
  YC(bndrowmask)YCU(bkbeta)YCU(ressize2)
 #undef YC
 #undef YCT
@@ -2058,8 +2058,8 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
  // perform the operation
  I ndotprods=0;  // number of dot-products we perform here
  I frowbatchx;  // rowx of batch containing Fk, if any
- I qkstride=qktrowstride*nqkbcols;  // distance between planes of Qk
- __m256i bndmskshift=_mm256_set_epi64x(0,0,16,16);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift
+// obsolete  I qkstride=qktrowstride*nqkbcols;  // distance between planes of Qk
+ __m256i bndmskshift=_mm256_set_epi64x(0, 32, 16, 48);  // bndmsk is littleendian, but reversed in 16-bit sections.  last section goes to lane 3, i. e. no shift.  Process in 0213 order
  __m256d store0thresh=_mm256_set1_pd(parms[3]);  // In one-column mode, this holds the Store0Threshold: column values less than this are set to 0 when written out
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
 
@@ -2113,7 +2113,7 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
  // For 0 SPR, we indicate that we are looking for 0 SPR, but we don't try to start at the same value as the other thread, because owing to numerical error
  // we might end up thinking we had the winning 0 SPR with no idea what row it came from.  So we just set the max-col-value to a harmless invalid 0, which will
  // never be the smallest 0-SPR
- if(unlikely(*(I*)&initspr<0)){if(*(I*)&initspr==IMIN)R 0; initspr=0.; zv=(D*)((I)zv|ZVSPR0);}  // if remote abort, abort w/o reply; if 0-SPR, set up for that
+ if(unlikely(*(I*)&initspr<0)){if(*(I*)&initspr==IMIN)R 0; initspr=0.; zv=(E*)((I)zv|ZVSPR0);}  // if remote abort, abort w/o reply; if 0-SPR, set up for that
  sharedspr=_mm256_set1_pd(initspr);
 
  // create the column NPAR values at a time
@@ -2159,12 +2159,15 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
    I mx;   // row index (of the nonzero components of this A0 col)
    NOUNROLL for(mx=0;mx<an;++mx){  // for each element of the dot-product
     __m256d tl,th2,tl2,vval;  // temps for value loaded, and multiplier from A column
-    D *mv=mv0[mx];  // advance the pipeline of row addresses in Qkt.  We don't unroll because we have a great many dependent instructions to release
+    E *mv=(E*)mv0[mx];  // advance the pipeline of row addresses in Qkt.  We don't unroll because we have a great many dependent instructions to release
     // get column number to fetch; fetch 4 rows
-    dotproducth=_mm256_load_pd(&mv[rowx]);  // fetch 4 values.  Extras should be 0.  We use load, not loadu, because these fetches MUST be aligned
+    __m256d h0l0h1l1=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&mv[rowx])), h2l2h3l3=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&mv[rowx]+1));  // batch of Qkt, as Es
+    dotproducth=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000);
+// obsolete =_mm256_load_pd(&mv[rowx]);  // fetch 4 values.  Extras should be 0.  We use load, not loadu, because these fetches MUST be aligned
     if(_mm256_testz_si256(_mm256_castpd_si256(dotproducth),_mm256_castpd_si256(endmask)))continue;  // if all values 0, skip em.  Probably worth a test
     // there's a nonzero, calculate it
-    tl=_mm256_load_pd(&mv[rowx+qkstride]);  // fetch 4 values, low part
+// obsolete     tl=_mm256_load_pd(&mv[rowx+qkstride]);  // fetch 4 values, low part
+    tl=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // batch of Qkt, high & low separated in 0213 order
     vval=_mm256_set1_pd(vv0[mx]);  // load weight for the column
     // take the two products and canonicalize
     TWOPROD(dotproducth,vval,th2,tl2)  // high qk * col
@@ -2180,11 +2183,14 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
 accumulateqp: ;
    NOUNROLL for(++mx;mx<an;++mx){  // skip the first nonzero; for each remaining element of the dot-product
     __m256d th,tl,th2,tl2,vval;  // temps for value loaded, and multiplier from A column
-    D *mv=mv0[mx];  // advance the pipeline of row addresses in Qkt
+    E *mv=(E*)mv0[mx];  // advance the pipeline of row addresses in Qkt
     // get column number to fetch; fetch 4 rows
-    th=_mm256_load_pd(&mv[rowx]);  // fetch 4 values.  Extras should be 0
+    __m256d h0l0h1l1=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&mv[rowx])), h2l2h3l3=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&mv[rowx]+1));  // batch of Qkt, as Es
+    th=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000);
+// obsolete     th=_mm256_load_pd(&mv[rowx]);  // fetch 4 values.  Extras should be 0
     if(_mm256_testz_si256(_mm256_castpd_si256(th),_mm256_castpd_si256(endmask)))continue;  // if all values 0, skip em.  Probably worth a test
-    tl=_mm256_load_pd(&mv[rowx+qkstride]);  // fetch 4 values, low part
+// obsolete     tl=_mm256_load_pd(&mv[rowx+qkstride]);  // fetch 4 values, low part
+    tl=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // batch of Qkt, high & low separated in 0213 order
     vval=_mm256_set1_pd(vv0[mx]);  // load weight for the column
     // accumulate the dot-product
     TWOPROD(th,vval,th2,tl2)  // high qk * col
@@ -2195,15 +2201,19 @@ accumulateqp: ;
     TWOSUM(dotproducth,tl2,dotproducth,dotproductl)  // combine high & extension for final form
     // this is accurate to 104 bits from the largest of (new,old,new+old).
    }
-  }else{dotproducth=_mm256_load_pd(&vv0[rowx]); dotproductl=_mm256_load_pd(&vv0[rowx+qkstride]); accmaxabs=_mm256_setzero_pd();}  // slack vbl, just read column value, no need for noise test
+  }else{
+   __m256d h0l0h1l1=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&((E*)vv0)[rowx])), h2l2h3l3=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i *)&((E*)vv0)[rowx]+1));  // batch of Qkt, as Es
+   dotproducth=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000); dotproductl=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111); accmaxabs=_mm256_setzero_pd();}  // slack vbl, just read column value, no need for noise test
+// obsolete dotproducth=_mm256_load_pd(&vv0[rowx]); dotproductl=_mm256_load_pd(&vv0[rowx+qkstride]);
 endqp: ;
 
-  // ************************************************************************** one-column mode+SPR: store out the values, setting to 0 if below threshold
+  // store out the values, setting to 0 if below threshold
   accmaxabs=_mm256_fmadd_pd(accmaxabs,_mm256_set1_pd(RELSIGMAX),store0thresh);  // no reason to keep values that are all noise.  We take 100 bits from max significance, but never less than store threshold
   __m256d okmask=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,dotproducth),accmaxabs,_CMP_GT_OQ);  // 0s where we need to clamp
   if((I)zv&ZVNEGATECOL){dotproducth=_mm256_xor_pd(sgnbit,dotproducth); dotproductl=_mm256_xor_pd(sgnbit,dotproductl);}  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
   dotproducth=_mm256_and_pd(dotproducth,okmask); dotproductl=_mm256_and_pd(dotproductl,okmask); // set values < threshold to +0, high and low parts
-  _mm256_store_pd(remflgs(zv)+rowx,dotproducth); _mm256_store_pd(remflgs(zv)+rowx+zstride,dotproductl);   // store high & low.  This may overstore, and must always be aligned
+// obsolete   _mm256_store_pd(remflgs(zv)+rowx,dotproducth); _mm256_store_pd(remflgs(zv)+rowx+zstride,dotproductl);   // store high & low.  This may overstore, and must always be aligned
+  _mm256_store_pd((D*)((__m256i *)((E*)remflgs(zv)+rowx)),_mm256_shuffle_pd(dotproducth,dotproductl,0b0000)); _mm256_store_pd((D*)((__m256i *)(E*)remflgs(zv)+rowx)+1,_mm256_shuffle_pd(dotproducth,dotproductl,0b1111));  // write out the value, 0123
 if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaf
   // We treat Fk as part of the column, except that we don't want to include it in the SPR calculation.
   if(unlikely(rowx==frowbatchx)){
@@ -2217,9 +2227,9 @@ if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaf
   __m256d cgt0=_mm256_cmp_pd(bnddotproducth,col0thresh,_CMP_GT_OQ);  // mask of valid c-value lanes.  Will always be 0 in lanes where endmask is 0 (must pad Qk with 0)
   if(!_mm256_testz_pd(cgt0,endmask)){  // testz is 1 if all comparisons fail, i. e. no product is big enough to process.  skip batch if so
    // there is a positive c value.  process the batch.  Get bk to use
-   zv=(D*)((I)zv|ZVPOSCVFOUND);  // The positive col value makes the column bounded
+   zv=(E*)((I)zv|ZVPOSCVFOUND);  // The positive col value makes the column bounded
    __m256d bk4, beta4;  // will be ~0 for words that have positive c; the 4 bk values we will use (with overshoot added by caller before we start)
-   bk4=_mm256_loadu_pd(&bk[rowx]); beta4=_mm256_loadu_pd(&bkbeta[rowx]);  // load bk and beta to use  this overfetches the bk/bkbeta areas, which must be padded to batch length including Fk
+   bk4=_mm256_shuffle_pd(_mm256_loadu_pd((D*)&bk[rowx]),_mm256_loadu_pd((D*)&bk[rowx+2]),0b0000); beta4=_mm256_loadu_pd(&bkbeta[rowx]);  // load bk and beta to use  this overfetches the bk/bkbeta areas, which must be padded to batch length including Fk
    bk4=_mm256_blendv_pd(bk4,_mm256_sub_pd(beta4,bk4),_mm256_and_pd(bndmsk,dotproducth));  // b, except beta-b in bound rows with originally negative col
    // if bk < threshold, set it to 0.  If col value negative, mark the column invalid
    __m256d bknon0=_mm256_cmp_pd(bk4,bk0thresh,_CMP_GE_OQ);  // remember which bks are non0
@@ -2240,12 +2250,12 @@ if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharedspr,bnddotproducth)),cgt
       sharedspr=_mm256_min_pd(sprs,_mm256_permute_pd(sprs,0b0101)); // sharedspr = min01 min01 min23 min23  could use integer in AVX-512
       sharedspr=_mm256_min_pd(sharedspr,_mm256_permute4x64_pd(sharedspr,0b00001010));  // sharedspr=min value in all lanes
       // remember the row that had the minimum.  Make sure we take only SPRs for valid col values
-      limitrowx=rowx+CTTZI(_mm256_movemask_pd(_mm256_and_pd(cgt0,_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(sharedspr),_mm256_castpd_si256(sprs))))));  // index of a lane containing the minimum SPR (there must be one)
+      limitrowx=rowx+(3&(0x21232120>>(_mm256_movemask_pd(_mm256_and_pd(cgt0,_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(sharedspr),_mm256_castpd_si256(sprs)))))<<1)));  // index of a lane containing the minimum SPR (there must be one).  0213->0123
       // it is just barely possible that the division to calculate SPR gives a zero value even though bk is not 0 (underflow).  Since SPR=0 is a flag value indicating
       // no improvement, we will miss the limitrowx that is set here, and the pivot will be marked dangerous unless a different nondangerous nonimproving pivot
       // is found elsehere.  This can happen only once per thread, because once SPR=0 it is impossible to get low-or-tie unless bk=0.  We ignore the possibility,
       // because the column value would have to be HUGE to underflow to 0.
-     }else{sharedspr=_mm256_setzero_pd(); if(parms[10]==0.0){limitrowx=-2; goto return4;} zv=(D*)((I)zv|ZVSPR0); goto startspr0;}   // FIRST 0 SPR: switch modes, change sharedspr to look for max column value; abort if SPR>0 needed; process through 0-SPR path
+     }else{sharedspr=_mm256_setzero_pd(); if(parms[10]==0.0){limitrowx=-2; goto return4;} zv=(E*)((I)zv|ZVSPR0); goto startspr0;}   // FIRST 0 SPR: switch modes, change sharedspr to look for max column value; abort if SPR>0 needed; process through 0-SPR path
             // we don't check for column aborts from other threads because the juice isn't worth the squeeze
     }
    }else{
@@ -2259,7 +2269,7 @@ startspr0:;  // come here for the first 0-SPR batch, after mode switch.  The new
      I candlanes=_mm256_movemask_pd(_mm256_cmp_pd(validcol,maxvalidcol,_CMP_EQ_OQ));   // mask of lanes that could be the result
      // Select a lane: if only one, take it, otherwise select a random lane containing the new maximum.  This distribution is not uniform, but that's OK since we are just trying to break cycles
      I randval=-1;  // init to no random value drawn  Low quality is OK.  We leave RNG unseeded so that repeated runs will give different sequences
-     I lanehere=rowx+CTLZI(LOWESTBIT(candlanes)|(likely(candlanes==LOWESTBIT(candlanes))?0:(candlanes&(randval=rand()))));  // If multiple matches, randomly turn off candidates above the lowest; then find highest survivor
+     I lanehere=rowx+(3&(0xffff55a0>>((LOWESTBIT(candlanes)|(likely(candlanes==LOWESTBIT(candlanes))?0:(candlanes&(randval=rand()))))<<1)));  // If multiple matches, randomly turn off candidates above the lowest; then find highest survivor   0213->0123
      if(likely(!_mm256_testz_pd(_mm256_cmp_pd(validcol,sharedspr,_CMP_GT_OQ),cgt0))){  // Zf if validcol<=old max in all valid lanes.  If not, we have a new undisputed high
       nzerobatches=1.0; limitrowx=lanehere;  // new maximum batch.  unconditionally take the value and set to 1 in equal group
       sharedspr=_mm256_max_pd(sharedspr,maxvalidcol);  // update shared max value to date

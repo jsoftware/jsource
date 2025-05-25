@@ -166,6 +166,10 @@ else
 
 fi
 
+case "$jplatform64" in
+ darwin/*) common="$common -fno-common" ;;  # other platforms already default to this
+esac
+
 if [ $USE_OPENMP -eq 1 ] ; then
  common="$common -I../../../../openmp/include"
 fi

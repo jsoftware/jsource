@@ -1348,6 +1348,7 @@ if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)SEGFAULT;  // unfreed buf.  n
 WRITELOCK(allolock);
  alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,2))){
+  if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2)goto exit;  // ignore audit failure during system lock, which might by a symbol change eg
   if(allorunin<=0)goto exit;
   WRITEUNLOCK(allolock);
   printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);

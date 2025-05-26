@@ -360,7 +360,7 @@ DF2(jtpowop){F12IP;B b;V*v;
     // Handle the important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), _ (converge), _. (dowhile)
     if(!(n&~1))R a=n?a:ds(CRIGHT);  //  the if statement: u^:0 is like ],  u^:1 is like u (normally handled above)
     // falling through is not the if statement
-    f1=f2=jtpowatom12; flag=FAV(a)->flag&VASGSAFE;   // init to handler for general atomic power.  All atomic-power entry points support inplacing
+    f1=f2=jtpowatom12; flag=FAV(a)->flag&VASGSAFE;   // init to handler for general atomic power.  All atomic-power entry points support inplacing unless they converge
     h=0;    // inverse, if we can calculate it (we no longer need the list of powers)
     if(likely((n<<1)==-2)){  //  u^:_1 or u^:_
      if(n<0){  // u^:_1
@@ -371,7 +371,7 @@ DF2(jtpowop){F12IP;B b;V*v;
      // Note: negative powers other than _1 are resolved in the action routine
     }
     encn=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0); encn=n==IMIN?((I)-1*POWERABS)+POWERADOWHILE:encn;  // save the power, in flagged form, for powatom12
-   }else{f1=f2=jtply12; flag=VFLAGNONE;}  // non-atomic power: handle general case, which does not support inplacing
+   }else{f1=f2=jtply12; flag=VFLAGNONE;}  // non-atomic power: handle general case, which does not support inplacing (since it might converge)
    // fall through to create result
   }  // end of 'u^:numeric'
  }  // end of 'u^:n'

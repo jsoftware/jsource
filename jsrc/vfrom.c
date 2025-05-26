@@ -2213,7 +2213,7 @@ endqp: ;
   if((I)zv&ZVNEGATECOL){dotproducth=_mm256_xor_pd(sgnbit,dotproducth); dotproductl=_mm256_xor_pd(sgnbit,dotproductl);}  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
   dotproducth=_mm256_and_pd(dotproducth,okmask); dotproductl=_mm256_and_pd(dotproductl,okmask); // set values < threshold to +0, high and low parts
 // obsolete   _mm256_store_pd(remflgs(zv)+rowx,dotproducth); _mm256_store_pd(remflgs(zv)+rowx+zstride,dotproductl);   // store high & low.  This may overstore, and must always be aligned
-  _mm256_store_pd((D*)((__m256i *)((E*)remflgs(zv)+rowx)),_mm256_shuffle_pd(dotproducth,dotproductl,0b0000)); _mm256_store_pd((D*)((__m256i *)(E*)remflgs(zv)+rowx)+1,_mm256_shuffle_pd(dotproducth,dotproductl,0b1111));  // write out the value, 0123
+  _mm256_store_pd((D*)((__m256i *)((E*)remflgs(zv)+rowx)),_mm256_shuffle_pd(dotproducth,dotproductl,0b0000)); _mm256_store_pd((D*)(((__m256i *)((E*)remflgs(zv)+rowx))+1),_mm256_shuffle_pd(dotproducth,dotproductl,0b1111));  // write out the value, 0123
 if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaf
   // We treat Fk as part of the column, except that we don't want to include it in the SPR calculation.
   if(unlikely(rowx==frowbatchx)){

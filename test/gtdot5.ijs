@@ -92,10 +92,10 @@ NB. Insert p1 here to override the default from above
 
 1000 t1 0.5 < 1000 ?@$ 0
 
-t3 1000
+t3 100
 
-t2 1000
-t4 1000
+t2 100
+t4 100
 
 1: 6!:5 ] 0
 

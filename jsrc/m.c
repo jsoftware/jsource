@@ -1298,6 +1298,7 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
 static C allohash[65536];  // 0 is empty, 1 is tombstone, 2 is valid
 static C * alloblocks[65536]; static US allolock=0; I nalloblocks=0; I allorunin=0;
 static I alloring[2048]; static I alloringx=0;
+I syslockactive=0;
 
 #define HASHBUF(buf) ((CRC32L((I)buf,~0)*(sizeof(allohash)/sizeof(allohash)[0]))>>32)
 // look up buf starting in hashslot.  Return 0 if error, 1 if OK
@@ -1369,6 +1370,7 @@ if(AFLAG(buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
 I hashslot=HASHBUF(buf);  // starting slot
 // obsolete READLOCK(allolock);
  if(unlikely(!findbuf(hashslot,buf,0))){
+  if(syslockactive)R;  // ignore audit failure during system lock, which might by a symbol change eg
   printf("allorunin=%lld: testing %p which is not in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
   SEGFAULT;  // error if not in list

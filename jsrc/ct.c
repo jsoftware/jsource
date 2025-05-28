@@ -106,6 +106,9 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
  // If the system is already in systemlock, the system is essentially single-threaded.  Just execute the user's function.
  // This would happen if a sentence executed in debug suspension needed symbols, or had an error
  if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2){R (*lockedfunction)(jt);}
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
+extern I syslockactive; syslockactive=1;
+#endif
  // Process the request.  We don't know what the highest-priority request is until we have heard from all the
  // threads.  Thus, it is possible that our request will still be pending whe we finish.  In that case, loop till it is satisfied
  while(priority!=0){
@@ -146,6 +149,9 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
    DO(nlocked, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
    // set the systemlock to 0, completing the operation
    __atomic_store_n(&JT(jt,systemlock),0,__ATOMIC_RELEASE);
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
+syslockactive=0;
+#endif
   }else{
    // outside the executor, we wait for state to move off 5
    while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
@@ -156,7 +162,7 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
  }
  // here a request was processed at the level we requested.  We have the value to return; error
  // is available but has been signaled to the executor only
- R z;  // ewturn to requester
+ R z;  // return to requester
 }
 
 // Allow a system lock to proceed.  Called by a running thread when it notices the broadcast system-lock request at its priority or higher
@@ -762,7 +768,7 @@ ASSERT(0,EVNONCE)
 #if PYXES
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
-  ASSERT((AT(pyx)&BOX)!=0,EVDOMAIN)
+  ASSERT((AT(pyx)&BOX+PYX)==BOX+PYX,EVDOMAIN)
   ASSERT(jtsetpyxval(jt,pyx,val,0)!=0,EVRO)  // install value.  Will fail if previously set
   z=mtm;  // good quiet value
 #else
@@ -774,7 +780,7 @@ ASSERT(0,EVNONCE)
   // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
-  ASSERT((AT(pyx)&PYX)!=0,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
+  ASSERT((AT(pyx)&BOX+PYX)==BOX+PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
   ASSERT(jtsetpyxval(jt,pyx,0,err)!=0,EVRO)  // install error value.  Will fail if previously set
   z=mtm;  // good quiet value
 #else

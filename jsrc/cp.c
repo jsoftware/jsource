@@ -269,6 +269,7 @@ static DF2(jtgcr12){F12IP;PROLOG(0);
  A uc; I u0; if(likely(((AT(z0)&~(B01+INT))|AR(z0)|((u0=BIV0(z0))&~1))==0)||(AR(z0)==0&&AT(z0)&NUMERIC&&(uc=cvt(INT,z0))!=0&&!((u0=IAV(uc)[0])&~1))){  // v1 result is atomic bool/int 0/1 (if statement)
   ff=FAV(self)->fgh[0]; ff=u0?ff:0;  // we will execute u or nothing; ff tells which
  }else{  // v1 returned something other than 0/1
+  RESETERR;  // we have to clear the error in case cvt() failed
   RZ(ff=powop(FAV(self)->fgh[0],z0,(A)1))  // ff=.u^:power, a verb to execute.  Any arg used in ff will no longer be inplaceable
   u0=1;  // indicate we will execute ff
  }

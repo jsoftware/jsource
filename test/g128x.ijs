@@ -145,7 +145,7 @@ end.
 EMPTY
 )
 
-(3 : 0)^:IF64 ''
+(3 : 0)^:(IFWIN<IF64) ''
 if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
   EMPTY return.
 end.

@@ -1126,16 +1126,18 @@ DF1(jtludecompblas){F12IP;PROLOG(823);
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
  if(unlikely(!(AT(w)&FL)))RZ(w=ccvt(FL,w,0));
  I wn=AS(w)[0];  // n=size of square matrix
- int info=0; int pvt[wn]; int im=wn;
+ int info=0; int *pvt; int im=wn;
  A aresultperm; RZ(aresultperm=apvwr(wn,0,1)); I *resultperm=IAV1(aresultperm);
  A z=cant1(w);
+ pvt=MALLOC(wn*sizeof(int));
  jdgetrf_(&im,&im,DAV(z),&im,pvt,&info);
- ASSERT(!info,EVDOMAIN);
+ if(info){FREE(pvt); ASSERT(!info,EVDOMAIN);}
  I *r=IAV(aresultperm);
  for(int i=wn-1;0<=i;--i){I t; int j;
   if(i==(j= pvt[i]-1))continue;
   t= r[i]; r[i]= r[j]; r[j]= t;
  }
+ FREE(pvt);
  EPILOG(jlink(aresultperm,cant1(z)));
 }
 
@@ -1148,16 +1150,18 @@ DF1(jtludecompxblas){F12IP;PROLOG(823);
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
  ASSERT(AT(w)&CMPX,EVDOMAIN);
  I wn=AS(w)[0];  // n=size of square matrix
- int info=0; int pvt[wn]; int im=wn;
+ int info=0; int *pvt; int im=wn;
  A aresultperm; RZ(aresultperm=apvwr(wn,0,1)); I *resultperm=IAV1(aresultperm);
  A z=cant1(w);
+ pvt=MALLOC(wn*sizeof(int));
  jzgetrf_(&im,&im,(dcomplex*)ZAV(z),&im,pvt,&info);
- ASSERT(!info,EVDOMAIN);
+ if(info){FREE(pvt); ASSERT(!info,EVDOMAIN);}
  I *r=IAV(aresultperm);
  for(int i=wn-1;0<=i;--i){I t; int j;
   if(i==(j= pvt[i]-1))continue;
   t= r[i]; r[i]= r[j]; r[j]= t;
  }
+ FREE(pvt);
  EPILOG(jlink(aresultperm,cant1(z)));
 }
 
@@ -1184,8 +1188,10 @@ DF2(jtludecomp){F12IP;PROLOG(823);
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
  I wn=AS(w)[0];  // n=size of square matrix
- if(monad&&hascblas&&(AT(w)&B01+INT+FL)&&wn>=(hwfma?500:10))R  jtludecompblas(jt,w,DUMMYSELF);  // use lapack version
- if(hascblas&&(AT(w)&CMPX))R  jtludecompxblas(jt,w,DUMMYSELF);  // use lapack version
+#if !defined(_WIN32)    // windows openblas issue
+ if(monad&&hascblas&&(AN(w))&&(AT(w)&B01+INT+FL)&&wn>=(hwfma?500:10))R  jtludecompblas(jt,w,DUMMYSELF);  // use lapack version
+ if(monad&&hascblas&&(AN(w))&&(AT(w)&CMPX))R  jtludecompxblas(jt,w,DUMMYSELF);  // use lapack version
+#endif
  if((AT(w)&SPARSE+B01+INT+FL)<=0)R jtludecompg(jt,w,DUMMYSELF);  // if not real float type, use general version
 #if C_AVX2 || EMU_AVX2
  if(unlikely(!(AT(w)&FL)))RZ(w=ccvt(FL,w,0));

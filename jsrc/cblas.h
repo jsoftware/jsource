@@ -771,6 +771,12 @@ CBLASEXTERN void (*jdgetrf_)(int *m, int *n, double *A, int *lda, int *ipvt, int
 extern void zgetrf_(int *m, int *n, dcomplex *A, int *lda, int *ipvt, int *info);
 CBLASEXTERN void (*jzgetrf_)(int *m, int *n, dcomplex *A, int *lda, int *ipvt, int *info);
 
+extern void dgetri_(int *m, double *A, int *lda, int *ipiv, double *work, int *lwork, int *info);
+CBLASEXTERN void (*jdgetri_)(int *m, double *A, int *lda, int *ipiv, double *work, int *lwork, int *info);
+
+extern void zgetri_(int *m, dcomplex *A, int *lda, int *ipiv, dcomplex *work, int *lwork, int *info);
+CBLASEXTERN void (*jzgetri_)(int *m, dcomplex *A, int *lda, int *ipiv, dcomplex *work, int *lwork, int *info);
+
 #undef CBLASEXTERN
 
 extern void*libcblas;

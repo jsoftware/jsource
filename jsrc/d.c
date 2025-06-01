@@ -310,8 +310,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
  // if a message has already been stored, ignore any subsequent one.  This should happen only in code that generates the same error in an inner loop over data
  if(likely(jt->jerr==0)){
   if(unlikely(!(jt->emsgstate&EMSGSTATEFORMATTED))){   // if not first error or formatting the line is in progress, ignore altogether.  Also used when we expect an error and don't need jt->jerr set, which is why the paradoxical unlikely
-   C e=eflg&EMSGE; jt->jerr=e;   // extract error# & save it.  Even if eformat is running we need to set the error to cut off invalid internal paths
-   jt->jerr1=e;   // remember error for later user testing
+   C e=eflg&EMSGE; jt->jerr1=jt->jerr=jt->jerrraw=e;   // extract error# & save it.  Even if eformat is running we need to set the error to cut off invalid internal paths.  jerr1 is for later sentences, jerrraw for more detail about this sentence
    if(jt->etxn>=0){  // if the error line is frozen, don't touch it
     jt->etxn=0;  // clear error-message area indicating message not installed yet
     // if the user will never see the error, exit without further ado - keeps u :: v fast

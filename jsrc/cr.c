@@ -340,11 +340,12 @@ A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12
   fauxvirtual(virtw,virtwfaux,w,lrrr&RANKTMSK,ACUC1) MCISH(AS(virtw),AS(w)+(afwf&RANKTMSK),lrrr&RANKTMSK); AN(virtw)=wcn;
   ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
  }else{RZ(virtw=jtfiller(jt,AT(w),lrrr&RANKTMSK,AS(w)+(afwf&RANKTMSK)));}
+
  // Allow inplacing if the verb supports it, but with the raze flags removed.  We can be loose here because we must be strict about the virt inplaceability to get pristinity right.
  jtfg = (J)(intptr_t)((I)jtfg & (~(JTWILLBEOPENED+JTCOUNTITEMS)));
 
  A zz=0;  // place where we will build up the homogeneous result cells
- if(likely(mn!=0)){I i0, i1, i2, i3;  // likely on single word fails
+ if(likely(mn!=0)){I i0, i1, i2, i3;
   // Normal case where there are cells.
   // loop over the matched part of the outer frame
 
@@ -394,17 +395,24 @@ A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12
 
  }else{I *zzs;
   // if there are no cells, execute on a cell of fills.
-  // Do this quietly, because
-  // if there is an error, we just want to use a value of 0 for the result; thus debug
-  // mode off and RESETERR on failure.
-  // However, if the error is a non-computational error, like out of memory, it
-  // would be wrong to ignore it, because the verb might execute erroneously with no
+  // Do this quietly, because if there is an error, we just want to use a value of 0 for the result; thus debug mode off and RESETERR on failure.
+  // However, if the error is a non-computational error, like out of memory, it would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
   WITHDEBUGOFF(z=CALL2(f2,virta,virtw,fs);)
 #if AUDITEXECRESULTS
   auditblock(jt,z,1,1);
 #endif
-  if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
+  if(unlikely(z==0)){
+   if(jt->jerrraw==EVINHOMO){I t, at=AT(virta), wt=AT(virtw);  // type to convert to
+    RESETERR;  // we will retry
+    // fill-cell generated INHOMO.  Probably  a: ,"0 (0$5) or the like.  Convert one arg to the type of the other
+    if(state&STATEANOTEMPTY+STATEWNOTEMPTY){t=state&STATEANOTEMPTY?at:wt;}  // one arg is not empty: keep its type
+    else{t=maxtyped(at,wt);}  // both empty, keep the larger type
+    if(t!=at)RZ(virta=jtfiller(jt,t,AR(virta),AS(virta))); if(t!=wt)RZ(virtw=jtfiller(jt,t,AR(virtw),AS(virtw)));  // convert one arg
+    WITHDEBUGOFF(z=CALL2(f2,virta,virtw,fs);)  // retry the fill-cell
+   }
+  }
+  if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // abort if out of memory e. g.; use 0 as result if error encountered
   I zr=AR(z); GA00(zz,AT(z),0L,lof+lif+zr); zzs=AS(zz);
   MCISH(zzs,los,lof); MCISH(zzs+lof,lis,lif); MCISH(zzs+lof+lif,AS(z),zr);
  }
@@ -542,9 +550,19 @@ A jtrank2ex0(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F12IP;PROLOG(004
    if(!AN(a)){RZ(virta=jtfiller(jt,AT(a),0,0));}else{virta = virtual(a,0,0); AN(virta)=1;}  // if there are cells, use first atom; else fill atom
    if(!AN(w)){RZ(virtw=jtfiller(jt,AT(w),0,0));}else{virtw = virtual(w,0,0); AN(virtw)=1;}
    WITHDEBUGOFF(z=CALL2(f2,virta,virtw,fs);)   // normal execution on fill-cell
-   if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
+   if(unlikely(z==0)){  // error executing fill-cell
+    if(jt->jerrraw==EVINHOMO){I t, at=AT(virta), wt=AT(virtw);  // type to convert to
+     RESETERR;  // we will retry
+     // fill-cell generated INHOMO.  Probably  a: ,"0 (0$5) or the like.  Convert one arg to the type of the other
+     if(AN(a)|AN(w)){t=AN(a)!=0?at:wt;}  // one arg is not empty: keep its type
+     else{t=maxtyped(at,wt);}  // both empty, keep the larger type
+     if(t!=at)RZ(virta=jtfiller(jt,t,AR(virta),AS(virta))); if(t!=wt)RZ(virtw=jtfiller(jt,t,AR(virtw),AS(virtw)));  // convert one arg
+     WITHDEBUGOFF(z=CALL2(f2,virta,virtw,fs);)  // retry the fill-cell
+    }
+   }
+   if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // abort if out of memory e. g.; use 0 as result if error encountered
   }else{
-   // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
+   // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic empty box.  We don't bother executing the verb at all then.
    z=ds(CACE);  // cell 'returned' a:
   }
   I zr=AR(z); GA00(zz,AT(z),0L,ar+zr); zzs=AS(zz); MCISH(zzs,as,ar); MCISH(zzs+ar,AS(z),zr);  // allocate result, copy frame and shape

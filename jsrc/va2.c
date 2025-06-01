@@ -1098,7 +1098,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
    {
     I mend=aawwzknfxrz[9]+(I)zv;   // add addr to offset to get addr of last block of z
     // Call the action routines:
-    // aawwzknfxrz[6] is original nf-1, the number of inner outer loops; but IMIN if there are no outer loops.  We do this so that executions with no rank will ratify the branch immediately, reduce misbranch
+    // aawwzknfxrz[6] is original nf-1, the number of inner outer loops; but IMIN if there are no outer loops.  We do this so that executions with no rank will ratify the branch immediately, reducing misbranch
     // overhead if there is any.  If there are outer loops, jj counts the inners and aawwzknfxrz[9] has the starting offset of the last inner loop of all.  aawwzknfxrz[0,1] are the cell-size of a for the outer loop, aawwzknfxrz[2,3] are for w;
     // but aawwzknfxrz[1,3] have 0 in a repeated argument.  aawwzknfxrz[1,3] are added for each inner iteration, aawwzk[0,2] at the end of an inner cycle
     // m is the length of the inner loop, with flags: complement=single loop of length ~m, otherwise each loop has length m>>1, and LSB of m is set if a atom is repeated

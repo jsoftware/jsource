@@ -1228,21 +1228,22 @@ A jtmkwris(J jt, AD * RESTRICT w) { ARGCHK1(w); makewritable(w); R w; }  // subr
 #if MEMAUDIT&8
 static I lfsr = 1;  // holds varying memory pattern
 #endif
-
 // call tp, but return the value passed in as z.  Used to save a register in caller
 __attribute__((noinline)) A jttgz(J jt,A *tp, A z){RZ(tp=tg(tp)); jt->tnextpushp=tp; R z;}
 
 __attribute__((noinline)) A jtgafallopool(J jt){
  A u,chn; US hrh;
+WRITELOCK(JT(jt,dblock));   // scaf **********
 #if ALIGNPOOLTOCACHE   // with smaller headers, always align pool allo to cache bdy
  // align the buffer list on a cache-line boundary
- I *v; ASSERT(v=MALLOC(PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE),EVWSFULL);
+ I *v; ASSERTSUFF(v=MALLOC(PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE),EVWSFULL,WRITEUNLOCK(JT(jt,dblock)); R 0;);
  A z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
  ((I**)z)[-1] = v;   // save address of entire allocation in the word before the aligned section
 #else
  // allocate without alignment
- ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
+ ASSERTSUFF(av=MALLOC(PSIZE+TAILPAD),EVWSFULL,WRITEUNLOCK(JT(jt,dblock); R 0;);
 #endif
+WRITEUNLOCK(JT(jt,dblock));   // scaf **********
  I blockx=(I)jt&63; jt=(J)((I)jt&-64);
  jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
  I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
@@ -1273,15 +1274,17 @@ __attribute__((noinline)) A jtgafallopool(J jt){
 
 // allocate from OS and fill in h field.  n is full size to allocate, padded for all reasons
 __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
+WRITELOCK(JT(jt,dblock));   // scaf **********
 #if ALIGNTOCACHE
  // Allocate the block, and start it on a cache-line boundary
  I *v;
- ASSERT(v=MALLOC(n),EVWSFULL);
+ ASSERTSUFF(v=MALLOC(n),EVWSFULL,WRITEUNLOCK(JT(jt,dblock)); R 0;);  // scaf
  z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
  ((I**)z)[-1] = v;    // save address of original allocation
 #else
- ASSERT(z=MALLOC(n),EVWSFULL);
+ ASSERTSUFF(z=MALLOC(n),EVWSFULL,WRITEUNLOCK(JT(jt,dblock)); R 0;);
 #endif
+WRITEUNLOCK(JT(jt,dblock));   // scaf **********
  AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
  if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
   I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
@@ -1675,11 +1678,13 @@ printf("%p-\n",w);
  ((I*)w)[6] = (I)0xdeadbeefdeadbeefLL;   //  Reserved area in malloc blocks is not permanent
 #endif
 
+WRITELOCK(JT(jt,dblock));   // scaf **********
 #if ALIGNTOCACHE
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else
   FREECHK(w);  // free the block
 #endif
+WRITEUNLOCK(JT(jt,dblock));   // scaf **********
  }
 }
 

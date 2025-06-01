@@ -133,8 +133,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  S etxn1;            // last non-zero etxn
  UC jerr;             // error number (0 means no error)
  UC jerr1;            // last non-zero jerr
+ UC jerrraw;    // set when jerr is set, but holds the raw error type before conversion back to laconic code
  C namecaching;     // 0=off 1=(either 2 or 4 set) 2=for script 4=on
-// 1 byte free
  A xmod;             // extended integer: the m in m&|@f
  struct foldstatus *afoldinfo;  // nonzero if fold is running, and points to current fold info 
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized

@@ -529,8 +529,8 @@ AHDR2(cirEE,E,E,E){I k=(I)jround(x->hi);
 }
 
 static E jtpospowE(J jt,E x,E y){
- if(unlikely(0==y.hi))R (E){.hi=1.0,.lo=0.};
- if(unlikely(0==y.hi))R (E){.hi=0<y.hi?0.0:inf,.lo=0.};
+ if(unlikely(0==y.hi))R (E){.hi=1.0,.lo=0.};  // anything^0=1
+ if(unlikely(0==x.hi))R (E){.hi=0<y.hi?0.0:inf,.lo=0.};   // otherwise, 0^pos=0, 0^neg=inf
 #if SLEEFQUAD
  if(0<x.hi){
   R f128toe(Sleef_expq1_u10(Sleef_mulq1_u05(etof128(y),Sleef_logq1_u10(etof128(x)))));

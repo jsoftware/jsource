@@ -312,7 +312,7 @@ DF2(jtpoly2){F12IP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*
   ASSERT(NUMERIC&(at|AT(c)),EVDOMAIN);
   ASSERT(!AR(c),EVRANK);
   ASSERT(1>=AR(a),EVRANK); if(!AR(a))RZ(a=ravel(a));  // treat atomic a as list
- }  // if mplr/roots form, a has been replace by the roots and c is the coeff
+ }  // if mplr/roots form, a has been replaced by the roots and c is the coeff
  t=maxtyped(at,wt); if(b)t=maxtyped(t,AT(c)); if(!(t&XNUM+RAT))t=maxtyped(t,FL);  // promote B01/INT to FL
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
  if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtfg=(J)(intptr_t)((I)jtfg|JTINPLACEW);} x=DAV(w); wz=ZAV(w);
@@ -321,7 +321,7 @@ DF2(jtpoly2){F12IP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*
   RZ(c=cvt(t,c)); d=DAV(c)[0]; e=ZAV(c)[0];
  }else{
   // coeffs: discard trailing 0 coeffs (to avoid 0*_ as our first action), extract high-order coeff.  Leave constant coeff always
-  for(;an>1;--an){if(t&CMPX?ad[2*(an-1)]||ad[2*(an-1)+1]:ad[an-1])break;}  // stop on nonzero
+  for(;an>1;--an){if(t&CMPX+QP?ad[2*(an-1)]||ad[2*(an-1)+1]:ad[an-1])break;}  // stop on nonzero
  }
  j=0;  // Set j=1 if there is an infinity in the coeffs/roots.  In that case we can't use Horner's rule (could do this only if !b&&FL?)
  if(t&FL+CMPX){

@@ -927,7 +927,7 @@ CDPROC JS _stdcall JInit(void){
  if(!jt)R 0;
  if(!jvmcommit(jt,offsetof(JST,threaddata[1]))){jvmrelease(jt,sizeof(JST));R 0;}
  jvmwire(jt,offsetof(JST,threaddata[1])); //JS should probably not ever be swapped out.  But failure is non-catastrophic
- mvc(offsetof(JST,threaddata[1]),jt,MEMSET00LEN,MEMSET00);
+ mvc(offsetof(JST,threaddata[1]),jt,MEMSET00LEN,MEMSET00);  // init JST and JST[0] (master thread) to all 0
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){jvmrelease(jt,sizeof(JST)); R 0;}
  jgmpinit(sopath); // mp support for 1x and 2r3

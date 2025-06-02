@@ -1268,6 +1268,8 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
     if(m==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=((flag&~VTRY2)+VTRY1)&~VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad.  Clear TRY1 to avoid spurious activity
    }
    if(m<=2){  // adv or conj after autodetection
+    if(fndflag&3)flag|=VXOPR;  // if this def refers to xy, set VXOPR
+    else ASSERT((-AN(v1)&-AN(v2))>=0,EVVALENCE)  // otherwise, if two valence defined, one definition is nugatory, signal valence error
     flag|=!!(fndflag&3)<<VXOPRX;   // if this def refers to xy, set VXOPR
     // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a non-operator conjunction: the operands will be the two verbs;
     // (2) it is an operator with a reference to x.  Move the TRY flag to the dyad too
@@ -1296,6 +1298,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   I ft=VERBX;  // type to use, default to verb
   ft=m==1?ADVX:ft; okv1=m==1?modfn:okv1; okv2=m==1?jtvalenceerr:okv2;  // adv goes to modfn/valenceerr
   ft=m==2?CONJX:ft; okv1=m==2?jtvalenceerr:okv1; okv2=m==2?modfn:okv2;  // conj goes to valenceerr/modfn
+  okv1=hv[HN*0+3]?okv1:jtvalenceerr; okv2=hv[HN*1+3]?okv2:jtvalenceerr;    // don't allow call to undefined valence
   fdeffill(z,0,CCOLONE, ((I)1<<ft), okv1,okv2, num(m),0L,h, flag, RMAX,RMAX,RMAX);
  }  // tacit form joins the explicit here
  // EPILOG is called for because of the allocations we made, but it is essential to make sure the pfsts created during crelocalsyms get deleted.  They have symbols with no value

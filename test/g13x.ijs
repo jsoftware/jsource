@@ -492,6 +492,15 @@ NB. in script, 1!:1 doesn't prompt.  OK from console  ([ 13!:_9@1:) 'control err
 (>:3) -: ([ 13!:_9@1:) f [ [ 13!:_10 'i. 0 0 [ f =: 13!:_10 ''a: 13!:8 >: 13!:_9$0'' [ 13!:_9 (2)' [ 13!:_9 (0)  NB. second recursive call stays recursive 
 (>:2) -: ([ 13!:_9@1:) 13!:_10 'a: 13!:8 >: 13!:_9$0 [ 13!:_10 ''i. 0 0'' [ 13!:_9 (2)' [ 13!:_9 (0)  NB. second recursive call returns to recursive 
 
+'valence error' -: ". etx '+ 1 : '''''  NB. nonexistent modifier valence
+'valence error' -: ". etx '+ 2 : '''''  NB. nonexistent modifier valence
+'valence error' -: ". etx '1 : 0'   NB. too many valences
++
+:
++
+)
+
+
 NB. ------------ eformat ---------------------------------------------------
 
 1 e. '(0)' E. 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun

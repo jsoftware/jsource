@@ -395,10 +395,8 @@ a -: i. 100000
 
 (271828) 18!:55 ;:'loc'
 
-NB. arm64 cpu. see cp.c line 315-319
+NB. arm64 cpu.
 f=: ([^:2 ]) f.
-echo 'f=: ([^:2 ]) f.'
-echo 5!:5<'f'
 '[^:2 ]' -: 5!:5<'f'
 
 4!:55 ;:'a adot1 adot2 sdot0 b c D Da Nt Expand ar cap eps eq f f1 f2 f_g '

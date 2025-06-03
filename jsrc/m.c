@@ -1030,7 +1030,7 @@ static void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
       }else{I c=AC(np);
        // virtual block.  Must be the contents of a WILLBEOPENED, but it may have other aliases so the usecount must be checked.  If this recurs deeply, it will be caught when non-virtual
        if(--c<=0){
-        A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.  It can never be incremented in another thread.
+        A b=ABACK(np); fanano0(b); mf(np);  // virtual block going away.  Check the backer.  The virtual block can never have been passed to another thread since it is contents of WILLBEOPENED
        }else ACSETLOCAL(np,c)  // virtual block survives, decrement its count
       }  // if virtual block going away, reduce usecount in backer; ignore the flagged recursiveness, just free the virt block
      }

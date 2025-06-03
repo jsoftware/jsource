@@ -379,7 +379,7 @@
 #define fanapop(x,flg)              jtfamf(jt,(x),(flg)&RECURSIBLE);
 #define fanapopjt3(x,flg)           jtfamf((J)((I)jt&~3),(x),(flg)&RECURSIBLE);
 // At end of task, we FA() blocks that were known to have been ra()d.  Their usecount cannot be negative, but they may be virtual or sparse.  If virtual when usecount goes to 0, fa the backer and suppress traversal
-#define faafterrav(x)  {scaft(x) I Zc=AC(x); I tt=AT(x); if(likely(!ACISPERM(Zc))){if(unlikely((tt|(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)-2))<0)){if(unlikely(AFLAG(x)&AFVIRTUAL)){fa(ABACK(x)); tt=0;} jtfamf(jt,x,tt);}} }
+#define faafterrav(x)  {scaft(x) I Zc=__atomic_load_n(&AC(x),__ATOMIC_ACQUIRE); I tt=AT(x); if(likely(!ACISPERM(Zc))){if(unlikely(Zc<2)||unlikely((tt|(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)-2))<0)){if(unlikely(AFLAG(x)&AFVIRTUAL)){fa(ABACK(x)); tt=0;} jtfamf(jt,x,tt);}} }
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtatomic1(jt,(x),ds(CBANG))

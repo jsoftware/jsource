@@ -707,7 +707,8 @@ bodyend: ;  // we branch to here to exit with z set to result
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=QCWORD(ybuckptr->fval); if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){ybuckptr->fval=0; symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
-   deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self);  // push a debug frame for this error.  We know we didn't free locsym
+   DC d; RZ(d=deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self));  // push a debug frame for this error.  We know we didn't free locsym
+   d->dcy=(A)jt->tnextpushp;   // remember tpushp - only the first matters
    RETF(0)
   }
  }
@@ -1298,7 +1299,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   I ft=VERBX;  // type to use, default to verb
   ft=m==1?ADVX:ft; okv1=m==1?modfn:okv1; okv2=m==1?jtvalenceerr:okv2;  // adv goes to modfn/valenceerr
   ft=m==2?CONJX:ft; okv1=m==2?jtvalenceerr:okv1; okv2=m==2?modfn:okv2;  // conj goes to valenceerr/modfn
-  okv1=hv[HN*0+3]?okv1:jtvalenceerr; okv2=hv[HN*1+3]?okv2:jtvalenceerr;    // don't allow call to undefined valence
+  if(!(flag&VXOPR)){okv1=hv[HN*0+3]?okv1:jtvalenceerr; okv2=hv[HN*1+3]?okv2:jtvalenceerr;}    // don't allow call to undefined non-operator valence
   fdeffill(z,0,CCOLONE, ((I)1<<ft), okv1,okv2, num(m),0L,h, flag, RMAX,RMAX,RMAX);
  }  // tacit form joins the explicit here
  // EPILOG is called for because of the allocations we made, but it is essential to make sure the pfsts created during crelocalsyms get deleted.  They have symbols with no value

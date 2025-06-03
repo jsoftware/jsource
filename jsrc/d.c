@@ -217,6 +217,7 @@ F1(jtdbstackz){F12IP;A y,z;
  R dfv1(z,y,cut(ds(CLEFT),num(-2)));
 }    /* 13!:18  SI stack as result */
 
+static A gahzap(J jt,I r,A w){RZ(w=gah(r,w)) ACINITUNPUSH(w); R w;}  // allocate header and ra()
 // ratify the current emsg and call eformat_j_ to give a full message
 // This is called from CALL[12] when we know the arguments and self.  The error code will have been signaled earlier
 // self is the self for the failing entity; but if self is 0, a is a string to display for the error
@@ -233,7 +234,7 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
     A saverr;   // savearea for the initial message
     A *old=jt->tnextpushp;  // we must free all memory that we allocate here
     if((saverr=str(jt->etxn,jt->etxinfo->etx))!=0){  // save error code and message; if error in str, skip formatting
-     A msg=0;   // indicate no formatted message
+     A msg=0, m1ah=0, w1ah=0, a1ah=0; // indicate no formatted message; headers for the arguments, which we will delete before exit
      if(self){
       if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
        // we are going to try to run eformat.
@@ -253,17 +254,18 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
        // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
        // The headers are like virtual blocks but they don't increment the usecount of the backer.  That means that if further execution frees the backer
        // the header is left pointing to garbage.  That means we have to be sure to free the header before we return from this function, with tpop
-       // The header will be  made recursive, which will increment usecounts in the contents; that's OK.  We will decrement the usecounts before we
-       // exit, simultaneously freeing the header before it can refer to garbage
-       A awm=0; // where we build the a/w/m arguments
-       if(m){A m1; rnk=mtv; if((m1=gah(AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;  // if m exists, make it the last arg, and set rank to ''
+       // The header will be made recursive, which will increment usecounts in the contents; that's OK.  We will decrement the usecounts before we
+       // exit, simultaneously freeing the header before it can refer to garbage.  NOTE that if PM debugging is on here, the tpop is suppressed, putting
+       // a spoke in our wheel.  When we come out of PM debug, we must first tpop to get rid of the headers defined here, and only then start deleting names.
+       A awm=0;   // place to build the arg list for eformat
+       if(m){A m1; rnk=mtv; if((m1=m1ah=gahzap(jt,AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;  // if m exists, make it the last arg, and set rank to ''
        }else if(e==EVASSEMBLY){
         // assembly errors are special.  They require an info vector, which has been stored in jt->etxinfo.  We pass this vector as m
         if((awm=box(vec(INT,jt->etxinfo->asseminfo.assemframelen+(offsetof(struct assem,assemshape)/sizeof(I)),&jt->etxinfo->asseminfo)))==0)goto noeformat;
        }
       if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
-        {A w1=w; if(AT(w1)&NOUN){if((w1=gah(AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
-       if(a){A a1=a; if(AT(a1)&NOUN){if((a1=gah(AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
+        {A w1=w; if(AT(w1)&NOUN){if((w1=w1ah=gahzap(jt,AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
+       if(a){A a1=a; if(AT(a1)&NOUN){if((a1=a1ah=gahzap(jt,AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
        // Convert self to AR.  If self is not a verb convert a/w to AR also
        A selfar; if((selfar=arep(self))==0)goto noeformat;
        // run the analyzer.  Fold the unbalanced-paren info into the error number
@@ -273,6 +275,7 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
       }
      }else msg=a;  // self not given, use given message text
  noeformat: ;
+     if(m1ah)fa(m1ah); if(w1ah)fa(w1ah); if(a1ah)fa(a1ah);  // free the headers so they cannot lie around with their unprotected values that are subject to deletion 
      jt->jerr=jt->jerr1=e; jt->etxn=0;
      C *savtext=CAV(saverr); I copyoffset=0;  // pointer to old emsg text, and offset to copy from
      if(msg&&(AT(msg)&LIT)&&AN(msg)>0){

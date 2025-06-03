@@ -477,15 +477,20 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
  // on any other reply, free up the values and allocations made by the failing sentence
  if(unlikely(jm->pmstacktop!=0&&!(jm->recurstate&RECSTATERENT))){  // last sentence failed and ran to completion to get a full error stack; and our line is from the console
   C *lp2; for(lp2=lp;*lp2;++lp2)if(*lp2!=' '&&*lp2!='\t'&&*lp2!='\n')break;   // stop on non-whitespace or end-of-string
+  // reverse the order of the pmstack so we process from the newest frames to the oldest
+  DC pmcurr=jm->pmstacktop, pmrevd=0, pmnext; while(pmnext=pmcurr->dclnk){pmcurr->dclnk=pmrevd; pmrevd=pmcurr; pmcurr=pmnext;}
   if(*lp2){  // nonnull string
-   // user responded to error with a new sentence.  Clear the error stack
-   DC s=jm->pmstacktop; while(s){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;} jm->pmstacktop=0;  // purge symbols & clear stack
+   // user responded to error with a new sentence.  Clear the error stack.  After we delete a symbol table, we tpop back to where the table was created 
+   jttpop(jm,(A*)pmrevd->dcy,jm->tnextpushp);  // When we entered PM debug, we probably did eformat(), which allocates some headers (gah()).  These might alias named variables, and must be popped off the
+        // tstack before any names are deleted, lest pointers in the name be invalidated.  After the headers are gone it is safe to delete names.  We pop the stack back to where it was when
+        // the first (i. e. newest) PM frame was created.
+   DC s=pmrevd; while(s){jtsymfreeha(jm,s->dcloc);  __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;} jm->pmstacktop=0;  // purge symbols & clear stack
    jttpop(jm,jm->pmttop,jm->tnextpushp);  // free all memory allocated in the previous sentence
    jm->pmttop=0;  // clear to avoid another reset
   }else{
    // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order.  ra() the self for each block - necessary in case they are reassigned while on the stack
-   DC s=jm->pmstacktop, sp=0; while(s){DC sn=s->dclnk; s->dclnk=sp; if(s->dctype==DCCALL&&s->dcpflags==1)ra(s->dcf) sp=s; s=sn;} jm->sitop=sp; jm->pmstacktop=0;  // reverse pmstack, move it to debug stack
-   if(sp)sp->dcsusp=1;   // debug discards lines before the suspension, so we have to mark the stack-top as starting suspension
+   DC s=pmrevd; while(s){if(s->dctype==DCCALL&&s->dcpflags==1)ra(s->dcf) s=s->dclnk;} jm->sitop=pmrevd; jm->pmstacktop=0;  // ra() selfs, set pmstack as debug stack
+   pmrevd->dcsusp=1;   // debug discards lines before the suspension, so we have to mark the stack-top as starting suspension
    lp="'dbr 0 to end inspection; use y___1 to look inside top stack frame (see code.jsoftware.com/wiki/Debug/Stack#irefs)' [ dbg_z_ 513";  // change the sentence to one that starts the debug window with no TRACEDBSUSCLEAR flag
   }
  }
@@ -503,7 +508,8 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
  if(unlikely(jm->pmttop!=0)){
   jtsusp(jm,0);  // further prompts come from suspension.  We will stay there till dbr 0
   // End of PM debug.  go through the stack, which must all have come from post-mortem.  Free the symbols and the block itself (to match the ra when we moved the pm stack to the debug stack)
-  JJ jt=jm; DC s=jm->sitop; while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} if(s->dcf!=0)fa(s->dcf);} s=s->dclnk;} jm->sitop=0;
+  JJ jt=jm; DC s=jm->sitop; I tpopped=0;  // fa vbl, scan ptr for blocks, one-time tppo
+  while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(!tpopped){jttpop(jm,(A*)s->dcy,jm->tnextpushp); tpopped=1;} if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} if(s->dcf!=0)fa(s->dcf);} s=s->dclnk;} jm->sitop=0;
   old=jm->pmttop; jm->pmttop=0;  // back up the tpop pointer to the pm error and remove request for it
  }
  e=jm->jerr; MODESRESET(jm)  // save error on sentence to be our return code

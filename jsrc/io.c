@@ -478,10 +478,10 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
  if(unlikely(jm->pmstacktop!=0&&!(jm->recurstate&RECSTATERENT))){  // last sentence failed and ran to completion to get a full error stack; and our line is from the console
   C *lp2; for(lp2=lp;*lp2;++lp2)if(*lp2!=' '&&*lp2!='\t'&&*lp2!='\n')break;   // stop on non-whitespace or end-of-string
   // reverse the order of the pmstack so we process from the newest frames to the oldest
-  DC pmcurr=jm->pmstacktop, pmrevd=0, pmnext; while(pmnext=pmcurr->dclnk){pmcurr->dclnk=pmrevd; pmrevd=pmcurr; pmcurr=pmnext;}
+  DC pmcurr=jm->pmstacktop, pmrevd=0, pmnext; do{pmnext=pmcurr->dclnk; pmcurr->dclnk=pmrevd; pmrevd=pmcurr; pmcurr=pmnext;}while(pmcurr);
   if(*lp2){  // nonnull string
    // user responded to error with a new sentence.  Clear the error stack.  After we delete a symbol table, we tpop back to where the table was created 
-   jttpop(jm,(A*)pmrevd->dcy,jm->tnextpushp);  // When we entered PM debug, we probably did eformat(), which allocates some headers (gah()).  These might alias named variables, and must be popped off the
+   jttpop(jm,pmrevd->dcttop,jm->tnextpushp);  // When we entered PM debug, we probably did eformat(), which allocates some headers (gah()).  These might alias named variables, and must be popped off the
         // tstack before any names are deleted, lest pointers in the name be invalidated.  After the headers are gone it is safe to delete names.  We pop the stack back to where it was when
         // the first (i. e. newest) PM frame was created.
    DC s=pmrevd; while(s){jtsymfreeha(jm,s->dcloc);  __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;} jm->pmstacktop=0;  // purge symbols & clear stack
@@ -509,8 +509,15 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
   jtsusp(jm,0);  // further prompts come from suspension.  We will stay there till dbr 0
   // End of PM debug.  go through the stack, which must all have come from post-mortem.  Free the symbols and the block itself (to match the ra when we moved the pm stack to the debug stack)
   JJ jt=jm; DC s=jm->sitop; I tpopped=0;  // fa vbl, scan ptr for blocks, one-time tppo
-  while(s){if(s->dctype==DCCALL&&s->dcpflags==1){if(!tpopped){jttpop(jm,(A*)s->dcy,jm->tnextpushp); tpopped=1;} if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);} if(s->dcf!=0)fa(s->dcf);} s=s->dclnk;} jm->sitop=0;
-  old=jm->pmttop; jm->pmttop=0;  // back up the tpop pointer to the pm error and remove request for it
+  while(s){   // for each debug block
+   if(s->dctype==DCCALL&&s->dcpflags==1){  // if PM block
+    if(!tpopped){jttpop(jm,s->dcttop,jm->tnextpushp); tpopped=1;}  // tpop before the first PM block
+    if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);}  // free symbol table
+    if(s->dcf!=0)fa(s->dcf);  // undo the ra above
+   }
+   s=s->dclnk;  // step to next block
+  }
+  jm->sitop=0; old=jm->pmttop; jm->pmttop=0;  // clear debug stack; back up the tpop pointer to the pm error; remove request for it
  }
  e=jm->jerr; MODESRESET(jm)  // save error on sentence to be our return code
  jtshowerr(jm);   // jt flags=0 to force typeout of iep errors

@@ -827,7 +827,7 @@ UI4 tcesx;  // cw type/canend/number of first word in the line
 
 typedef struct DS{      /* 1 2 3 5                                                       */
  struct DS*dclnk;       /* x x x x   link to next stack entry                              */
- A dcy;                 // x x x x  &tokens; text       ; right argument ; _ttop at start of xdefn when this symbol table was used
+ A dcy;                 // x x x    &tokens; text       ; right argument
  I dcn;                 /* x x x    #tokens; line #     ; ptr to executing value               */
  I dcix;                // x x x x  index ; next index (neg to abort)  ; cw# in exp def being executed, or to be exec next
  I dcj;                 /* x x x x  error#; prev index  ; error #                         */
@@ -846,6 +846,7 @@ typedef struct DS{      /* 1 2 3 5                                              
  A dcc;                 /*     x x  control matrix   (0 if not explicit)                  */
  I dcm;                 /* x x x    ". nesting level; script index    */
  I dcstop;              /*     x    the last stop in this function                        */
+ A *dcttop;             //       x  top of tstack when this PM frame was created
 } DST;
 
 typedef DST* DC;

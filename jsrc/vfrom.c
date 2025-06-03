@@ -1253,8 +1253,11 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
 
  // create the column NPAR values at a time
  // loop for each row, in groups of NPAR
+I scafx[4], scafn[4], scafr[4];
  while(1){
-
+  scafx[0]=scafx[1]; scafx[1]=scafx[2]; scafx[2]=scafx[3]; scafx[3]=rowx; 
+  scafn[0]=scafn[1]; scafn[1]=scafn[2]; scafn[2]=scafn[3]; scafn[3]=rown; 
+  scafr[0]=scafr[1]; scafr[1]=scafr[2]; scafr[2]=scafr[3]; scafr[3]=newrowx; 
   // Establish what batch of NPAR lines we should work on.  This block handles end-of-column/end-of-section
   if(unlikely(rowx>=rown)){   // if there are not a full 4 values to process
    // not 4 values.  If there is no remnant, we are through with the reservation for this column
@@ -1612,7 +1615,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
    ressize=(nbndbatches/nthreads)<<LGBNDROWBATCH;  // the most ressize can be is enough batches not to overrun the input
    ressize=MIN(ressize,32768-BNDROWBATCH);  // init alloc must fit into a US
    ressize=MIN(ressize,ressize2);  // a good and legal starting size
-   ressize2=ninclfk/nthreads-ressize; ressize2=MAX(0,ressize2); ressize2=(ressize2+(BNDROWBATCH-1))&-BNDROWBATCH;  // distribute remaining batches evenly over the threads
+   ressize2=ninclfk/nthreads-ressize; ressize2=MAX(1,ressize2); ressize2=(ressize2+(BNDROWBATCH-1))&-BNDROWBATCH;  // distribute remaining batches evenly over the threads, always >0 per reservation
   }else{
    // the initial allocation can be followed by allocations of size ressize2.  Allocate half the rows in the initial allocation
    ressize=((nbndbatches>>1)/nthreads)<<LGBNDROWBATCH;  // half the total batches, evened out per thread.  There must be at least 1
@@ -2113,7 +2116,7 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
 
  I rowx=ressize*ti;  // the row number we are working on.  We stop when rowx=rown.  Always on an NPAR-row boundary
  I rown=rowx+ressize;  // index of last+1 row in current (or only) section of the column.  If there is a remnant, the value is backed up by 4.  If 0, we are processing the remnant
- I newrowx=rown;  // if we don't get a reservation, for termination purposes use the end+1 of the current one.  The only time we don't resv is when this is past the end
+ I newrowx=nqkrows;  // if we don't get a reservation, for termination purposes use the end+1 of the current one.  The only time we don't resv is when this is past the end
  I needresvx=(rown-ROWSPERRESV)&-NPAR; needresvx=needresvx<rowx?rowx:needresvx;   // point at which we need new resv.  Might be off the end, if we never need one
  rown=rown>nqkrows?nqkrows:rown; rown-=rown&(NPAR-1)?NPAR:0;  // clamp to end of column, and back up end if there is a remnant
 
@@ -2143,8 +2146,8 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
     // We are going to take a new reservation.  Deduct the size of the gap from the # products to date
     ndotprods+=rowx-newrowx;  // we remove (new rowx-old rowx), i. e. the amount skipped, from the count of rows processed
     rowx=newrowx;   // start new reservation
-    rown=rowx+ressize2; newrowx=rown; needresvx=(rown-ROWSPERRESV)&-NPAR; needresvx=needresvx<rowx?rowx:needresvx;  // set up for reading next reservation
-    rown=rown>nqkrows?nqkrows:rown; rown-=rown&(NPAR-1)?NPAR:0;  // clamp to end of column, and back up end if there is a remnant
+    rown=rowx+ressize2; newrowx=nqkrows; needresvx=(rown-ROWSPERRESV)&-NPAR; needresvx=needresvx<rowx?rowx:needresvx; needresvx=rown>=nqkrows?nqkrows:needresvx;  // set up for reading next reservation; if we have the last resv, suppress taking another
+    rown=rown>=nqkrows?nqkrows:rown; rown-=rown&(NPAR-1)?NPAR:0;  // clamp to end of column, and back up end if there is a remnant
    }
    if(rowx>rown){  // if there is a remnant (which could be the first batch of a new reservation), process it and make sure we finish next time
     // there is a remnant to process.  Get the endmask for it
@@ -2501,7 +2504,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
    ressize=(nbndbatches/nthreads)<<LGBNDROWBATCH;  // the most ressize can be is enough batches not to overrun the input
    ressize=MIN(ressize,32768-BNDROWBATCH);  // init alloc must fit into a US
    ressize=MIN(ressize,ressize2);  // a good and legal starting size
-   ressize2=ninclfk/nthreads-ressize; ressize2=MAX(0,ressize2); ressize2=(ressize2+(BNDROWBATCH-1))&-BNDROWBATCH;  // distribute remaining batches evenly over the threads
+   ressize2=ninclfk/nthreads-ressize; ressize2=MAX(1,ressize2); ressize2=(ressize2+(BNDROWBATCH-1))&-BNDROWBATCH;  // distribute remaining batches evenly over the threads.  Ensure ressize2>0
   }else{
    // the initial allocation can be followed by allocations of size ressize2.  Allocate half the rows in the initial allocation
    ressize=((nbndbatches>>1)/nthreads)<<LGBNDROWBATCH;  // half the total batches, evened out per thread.  There must be at least 1

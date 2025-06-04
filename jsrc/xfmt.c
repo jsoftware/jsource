@@ -169,11 +169,6 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*
  R z;
 }
 
-#if SY_WIN32
-typedef __int64 I8;
-#else
-typedef long long I8;
-#endif
 typedef union u_DI8_tag { I8 i; D d; } DI8;
 
 static D jtroundID(J jt,I d,D y){D f,q,c,h;DI8 f8,q8,c8;

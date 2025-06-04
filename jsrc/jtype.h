@@ -846,7 +846,7 @@ typedef struct DS{      /* 1 2 3 5                                              
  A dcc;                 /*     x x  control matrix   (0 if not explicit)                  */
  I dcm;                 /* x x x    ". nesting level; script index    */
  I dcstop;              /*     x    the last stop in this function                        */
- A *dcttop;             //       x  top of tstack when this PM frame was created
+// obsolete  A *dcttop;             //       x  top of tstack when this PM frame was created
 } DST;
 
 typedef DST* DC;

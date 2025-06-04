@@ -708,7 +708,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=QCWORD(ybuckptr->fval); if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){ybuckptr->fval=0; symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
    DC d; RZ(d=deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self));  // push a debug frame for this error.  We know we didn't free locsym
-   d->dcttop=jt->tnextpushp;   // remember tpushp - only the first matters
+// obsolete    d->dcttop=jt->tnextpushp;   // remember tpushp - only the first matters
    RETF(0)
   }
  }

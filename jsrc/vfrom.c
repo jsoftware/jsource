@@ -1253,11 +1253,7 @@ static unsigned char jtmvmsparsesprx(J jt,struct mvmctx *ctx,UI4 ti){
 
  // create the column NPAR values at a time
  // loop for each row, in groups of NPAR
-I scafx[4], scafn[4], scafr[4];
  while(1){
-  scafx[0]=scafx[1]; scafx[1]=scafx[2]; scafx[2]=scafx[3]; scafx[3]=rowx; 
-  scafn[0]=scafn[1]; scafn[1]=scafn[2]; scafn[2]=scafn[3]; scafn[3]=rown; 
-  scafr[0]=scafr[1]; scafr[1]=scafr[2]; scafr[2]=scafr[3]; scafr[3]=newrowx; 
   // Establish what batch of NPAR lines we should work on.  This block handles end-of-column/end-of-section
   if(unlikely(rowx>=rown)){   // if there are not a full 4 values to process
    // not 4 values.  If there is no remnant, we are through with the reservation for this column
@@ -2116,7 +2112,7 @@ static unsigned char jtmvmsparseesprx(J jt,struct mvmctx *ctx,UI4 ti){
 
  I rowx=ressize*ti;  // the row number we are working on.  We stop when rowx=rown.  Always on an NPAR-row boundary
  I rown=rowx+ressize;  // index of last+1 row in current (or only) section of the column.  If there is a remnant, the value is backed up by 4.  If 0, we are processing the remnant
- I newrowx=nqkrows;  // if we don't get a reservation, for termination purposes use the end+1 of the current one.  The only time we don't resv is when this is past the end
+ I newrowx=rown;  // if we don't get a reservation, for termination purposes use the end+1 of the current one.  The only time we don't resv is when this is past the end
  I needresvx=(rown-ROWSPERRESV)&-NPAR; needresvx=needresvx<rowx?rowx:needresvx;   // point at which we need new resv.  Might be off the end, if we never need one
  rown=rown>nqkrows?nqkrows:rown; rown-=rown&(NPAR-1)?NPAR:0;  // clamp to end of column, and back up end if there is a remnant
 

@@ -1010,7 +1010,8 @@ static void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 // obsolete runout:;  // 
      // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
-     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags#define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
+     if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
+// obsolete #define faaction(jt,x, nomfaction) {I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
       if(likely(!(AFLAG(np)&AFVIRTUAL))){
        I Zc=AC(np); I tt=AT(np);
        if(likely(((Zc-2)|tt)<0) ||  // if sparse or count<2, go to free the block

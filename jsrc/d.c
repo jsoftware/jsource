@@ -275,7 +275,7 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
       }
      }else msg=a;  // self not given, use given message text
  noeformat: ;
-     if(m1ah)fa(m1ah); if(w1ah)fa(w1ah); if(a1ah)fa(a1ah);  // free the headers so they cannot lie around with their unprotected values that are subject to deletion 
+// obsolete      if(m1ah)fa(m1ah); if(w1ah)fa(w1ah); if(a1ah)fa(a1ah);  // free the headers so they cannot lie around with their unprotected values that are subject to deletion 
      jt->jerr=jt->jerr1=e; jt->etxn=0;
      C *savtext=CAV(saverr); I copyoffset=0;  // pointer to old emsg text, and offset to copy from
      if(msg&&(AT(msg)&LIT)&&AN(msg)>0){
@@ -287,7 +287,8 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
      if(AN(saverr)==0)eputc(CLF);else ep(AN(saverr)-copyoffset,savtext+copyoffset);  // copy out the rest (or all) of the original message, plus trailing LF; but if the message was never formatted (AN=0), just add LF
      jt->etxn1=jt->etxn;
     }
-    tpop(old);
+    // We have moved the message, including the saved one, into the message buffer.  OK to pop now
+    DC savpm=jt->pmstacktop; jt->pmstacktop=0; tpop(old); jt->pmstacktop=savpm;   // We MUST pop what we did here because the headers contain unprotected pointers that are wiped out by symfreeha
    }
    // some errors are distinguished internally to make eformat_j_ easier.  We revert them to the normal message after eformatting
    C oe=e; e=oe==EVINHOMO?EVDOMAIN:e; e=oe==EVINDEXDUP?EVINDEX:e; e=oe==EVEMPTYT?EVCTRL:e; e=oe==EVEMPTYDD?EVCTRL:e; e=oe==EVMISSINGGMP?EVFACE:e;

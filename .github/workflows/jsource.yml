@@ -261,7 +261,7 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -271,11 +271,11 @@ jobs:
      with:
       cpu: cortex-a53
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-      base_image: raspios_lite_arm64:latest
+      base_image: raspios_lite_arm64:2023-05-03
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip libopenblas0 libomp-dev
+       apt-get install --no-install-recommends -y clang zip libomp-dev
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -325,7 +325,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -335,11 +335,11 @@ jobs:
      with:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
-      base_image: raspbian_lite:2020-02-13
+      base_image: raspios_lite:2023-05-03
       image_additional_mb: 1024
       copy_artifact_path: j32
       commands: |
-       apt-get install --no-install-recommends -y zip
+       apt-get install --no-install-recommends -y clang zip libomp-dev
        export CC=gcc
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
@@ -847,7 +847,7 @@ jobs:
 # wasm -----------------------------------------------------------------
  jewasm:
   name: JE (wasm)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

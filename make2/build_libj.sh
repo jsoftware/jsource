@@ -131,6 +131,7 @@ else
  # clang
  common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv \
  -Werror -Wextra -Wno-unknown-warning-option \
+ -Wtypedef-redefinition \
  -Wsign-compare \
  -Wtautological-constant-out-of-range-compare \
  -Wuninitialized \

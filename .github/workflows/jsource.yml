@@ -275,7 +275,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip libopenblas0 libomp-dev
+       apt-get install --no-install-recommends -y clang zip libomp-dev
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0

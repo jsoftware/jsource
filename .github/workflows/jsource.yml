@@ -340,7 +340,7 @@ jobs:
       copy_artifact_path: j32
       commands: |
        apt-get install --no-install-recommends -y clang zip libomp-dev
-       export CC=clang
+       export CC=gcc
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
        export USE_OPENMP=0

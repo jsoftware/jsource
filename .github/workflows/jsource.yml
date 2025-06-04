@@ -271,7 +271,7 @@ jobs:
      with:
       cpu: cortex-a53
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-      base_image: raspi_3_bookworm:20231109
+      base_image: raspios_lite_arm64:2022-04-04
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
@@ -335,7 +335,7 @@ jobs:
      with:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
-      base_image: raspi_2_bookworm:20231109
+      base_image: raspios_lite:2023-05-03
       image_additional_mb: 1024
       copy_artifact_path: j32
       commands: |

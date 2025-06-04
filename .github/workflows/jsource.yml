@@ -261,7 +261,7 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -275,7 +275,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip
+       apt-get install --no-install-recommends -y clang zip libopenblas0 libomp-dev
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -325,7 +325,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -847,7 +847,7 @@ jobs:
 # wasm -----------------------------------------------------------------
  jewasm:
   name: JE (wasm)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

@@ -53,7 +53,7 @@
     /* Signal post-exec error*/ \
     {t=pee(cwsent,CWTCESX2(cwsent,tic),EVNONNOUN,NPGpysfmtdl<<(BW-2)); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    if(ob){ic=CWGO(cwsent,CNSTOREDCW,tic); IFNOTOB(unlikely){ RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}else z=0;} \
+    if(ob){bic=ic; ic=CWGO(cwsent,CNSTOREDCW,tic); IFNOTOB(unlikely){ RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}else z=0;} \
     goto nextline;}
 #define CHECKNOUN(ob) if (unlikely(!(NOUN&AT(t))))NOUNERR(t,tic,ob)   /* error, T block not creating noun */ \
 

@@ -1341,6 +1341,7 @@ WRITELOCK(allolock);
   WRITEUNLOCK(allolock);
   printf("allorunin=%lld: allocated %p which is already in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
+  printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
   SEGFAULT;  // error if already in list
  }
 WRITEUNLOCK(allolock);
@@ -1349,7 +1350,7 @@ WRITEUNLOCK(allolock);
 static void rembuf(J jt,A buf){
 if(allorunin==0)R;
 I hashslot=HASHBUF(buf);  // starting slot
-if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)SEGFAULT;  // unfreed buf.  no sparse here
+if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)goto printblock;  // unfreed buf.  no sparse here
 WRITELOCK(allolock);
  alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,2))){
@@ -1358,6 +1359,8 @@ WRITELOCK(allolock);
   WRITEUNLOCK(allolock);
   printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
+printblock:;
+  printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
   SEGFAULT;
  }  // error if not in list, except during runin
 exit: ;
@@ -1366,8 +1369,8 @@ WRITEUNLOCK(allolock);
 
 void testbuf(A buf){
 if(allorunin<=0)R;  // no test till initialized
-if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)SEGFAULT;  // unfreed buf.  no sparse here
-if(AC(buf)&0x3fffffff00000000)SEGFAULT;  // unfreed buf
+if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)goto printblock;  // unfreed buf.  no sparse here
+if(AC(buf)&0x3fffffff00000000)goto printblock;  // unfreed buf
 if(!(AT(buf)&NOUN))R;  // check only nouns, since ACV might be very old
 if(AC(buf)&ACPERMANENT)R;  // PERMANENT is not included
 if(AFLAG(buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
@@ -1377,6 +1380,8 @@ I hashslot=HASHBUF(buf);  // starting slot
   if(syslockactive)R;  // ignore audit failure during system lock, which might by a symbol change eg
   printf("allorunin=%lld: testing %p which is not in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
+printblock:;
+  printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
   SEGFAULT;  // error if not in list
  }
 // obsolete READUNLOCK(allolock);

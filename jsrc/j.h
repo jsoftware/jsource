@@ -377,6 +377,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define FMTI02          "%02lli"
 #define FMTI04          "%04lli"
 #define FMTI05          "%05lli"
+#define FMTX            "%llx"
 
 #if defined(MMSC_VER)  // SY_WIN32
 #define strtoI         _strtoi64
@@ -394,6 +395,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define FMTI02          "%02d"
 #define FMTI04          "%04d"
 #define FMTI05          "%05d"
+#define FMTX            "%x"
 #define strtoI          strtol
 #endif
 

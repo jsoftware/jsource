@@ -3279,3 +3279,100 @@ struct sprctx opctx={YC(rowsperthread)YC(ck)YC(bk)YC(m).ckthreshd=DAV(thresh)[0]
 #else
 F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #endif
+
+
+#if 0 && (C_AVX2 || EMU_AVX2)
+
+// everything we need for one core's execution
+struct __attribute__((aligned(CACHELINESIZE))) bopctx {
+ // the rest is moved into static names
+ // arguments
+ // result
+} ;
+
+// the processing loop for one core.  We take groups of rows, in order
+static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
+ // transfer everything out of ctx into local names
+#define YC(x) typeof(ctx->x) x=ctx->x;
+ YC(rowsperthread)YC(ck)YC(bk)YC(m)YC(ckthreshd)YC(bkthreshd)
+#undef YC
+
+ // calculate the shared indexes
+ // clear localt area
+ // clear line index for localt area
+ // clear result mask for localt area
+ // init ring in & out lines
+
+ // take initial reservation
+ // for each reservation...
+  // for each stripe in reservation
+   // for each op (1 unroll)
+    // if op is active in the stripe:
+     // fetch bitmask for the stripe
+     // convert bitmask to result-block mask
+     // convert bitmask to list of offsets (in localt and Qkt)
+     // fetch op col values (to weight row of Qkt), convert to 0213
+
+     // insert the op into sorted list, keyed on starting row#
+
+   // init local 8block start to first row#
+   // loop till no more active ops
+    // select next op-row to process: if curr op remains in 8block, keep current op, otherwise move to next op
+             // keep track of max line# in 8block
+             // when we fall off the end of ops, go back & re-sort the ops, start new 8block
+
+    // process the op: start by fetching next row#/row value in op
+    // OR result-block mask from op into current row
+    // store row# into line index for current row
+
+    // process math for the row.  If last op for this row, release the row to result stage
+
+    // process result stage if any, clearing result-mask and localt area as we go along
+
+
+
+
+   
+
+ 
+
+ R 0;
+}
+
+
+// 128!:14  apply outer-products in parallel
+// w is 
+// result is row#,reciprocal of pivot hi,lo
+F1(jtbatchop){F12IP;
+ ARGCHK1(w);
+ // extract the inputs
+
+  // do the work
+
+  // figure out how many threads to use, how many lines to take in each one
+#define TASKMINATOMS ((2*2000)/2)  // TUNE Values will be in cache.  Normal DP comp is 2 clocks per atom.  We don't want to start a task with less than 2000 clocks, so insist on twice that many
+  I nthreads=(*JT(jt,jobqueues))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
+  I rowsperthread=m;  // will be #rows each processor should take
+  if(((1-nthreads)&(TASKMINATOMS-rowsperthread))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread
+  else{
+   // big enough for multithreading.
+   rowsperthread=(m+nthreads-1)/nthreads;  // number of threads per processor, rounded up
+  }
+#undef TASKMINATOMS
+
+  // init the context
+#define YC(n) .n=n,
+struct sprctx opctx={YC(rowsperthread)YC(ck)YC(bk)YC(m).ckthreshd=DAV(thresh)[0],.bkthreshd=DAV(thresh)[1]};
+#undef YC
+
+  // run the operation
+  opctx.row=-1;  // init row# to invalid.  Improving threads will update it
+  if(nthreads>1)jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtfindsprx,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
+  else jtbatchopx(jt,&opctx,0);  // the one-thread case is not uncommon and we avoid thread overhead then
+
+  // if no SPR was found, signal error.  This is possible only if the only pivots were near-threshold in dp and below threshold in qp
+ }
+}
+#else
+F1(jtbatchop){F12IP;ASSERT(0,EVNONCE);}
+#endif

@@ -3284,6 +3284,11 @@ F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #if 0 && (C_AVX2 || EMU_AVX2)
 
 // everything we need for one core's execution
+#define RINGROWS 64
+#define RINGCOLS 256  // max width of a stripe
+#define MAXOP 40  // max # ops
+#define MAXNON0 128  // max # non0 values in a stripe
+
 struct __attribute__((aligned(CACHELINESIZE))) bopctx {
  // the rest is moved into static names
  // arguments
@@ -3296,12 +3301,34 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
 #define YC(x) typeof(ctx->x) x=ctx->x;
  YC(rowsperthread)YC(ck)YC(bk)YC(m)YC(ckthreshd)YC(bkthreshd)
 #undef YC
+ E ring[RINGROWS][RINGCOLS];   // the ring - 1/2 of D2$
+ typedef struct __attribute__ ((aligned (CACHELINESIZE))) opi {
+  union {
+   _m256d bloc[2];  // reading en bloc, 2 reads at a time to get 1 full cacheline
+   E vals[8];  // accessing individually
+  } colvalsahead;
+  union {
+   _m256i bloc[2];  // reading en bloc, 2 reads at a time to get 1 full cacheline
+   I4 vals[32];  // accessing individually
+  } colndxahead;
+  UI8 rbmask;   // mask of resultblocks in each row touched by this op
+  I rowindex;  // index into col index of the current position in this column
+  I currndx;  // the first/next index to process for this op, used as sort key
+  struct opi *chain;  // chain used to sort OPs, -1 for end
+ } opinfo;  // info for each op
+ opinfo oplist[MAXOP];  // collected info about the ops in the current stripe
+ I4 stripeofst[MAXOP][MAXNON0];  // byte offset to each non0 value in the stripe, for loading the ring value
+ __attribute__ ((aligned (CACHELINESIZE))) _m256d stripevals0213[MAXOP][MAXNON0/2];  // values in the stripe for each op, in format needed
+ typedef struct {
+  I rowline;  // line# in Qkt that this ring line maps to
+  UI8 rowmask;  // mask of all the resultblocks that have been modified in this line
+ } releaseinfo;
+ releaseinfo rinfo[RINGROWS];  // info on all rows that have been released
+
 
  // calculate the shared indexes
- // clear localt area
- // clear line index for localt area
- // clear result mask for localt area
- // init ring in & out lines
+ // clear ring area
+ // init ring in & out lines, & released-result index
 
  // take initial reservation
  // for each reservation...
@@ -3315,19 +3342,32 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
 
      // insert the op into sorted list, keyed on starting row#
 
-   // init local 8block start to first row#
+     // init col data for op: index=0, read ahead for row# and value
+
    // loop till no more active ops
-    // select next op-row to process: if curr op remains in 8block, keep current op, otherwise move to next op
-             // keep track of max line# in 8block
-             // when we fall off the end of ops, go back & re-sort the ops, start new 8block
+    // sort the modified ops, then merge them into the list of unmodified ops, key is line#
 
-    // process the op: start by fetching next row#/row value in op
-    // OR result-block mask from op into current row
-    // store row# into line index for current row
+    // init 8block start to first row#
+    // init result block mask & line#
 
-    // process math for the row.  If last op for this row, release the row to result stage
 
-    // process result stage if any, clearing result-mask and localt area as we go along
+    // loop till end of 8block
+     // select next op-row to process: if curr op remains in 8block, keep current op, otherwise move to next op
+              // keep track of max line# in 8block
+              // remember #ops processed, addr of first w/ row too high
+
+     // process the op: start by fetching current row#/row value in op, then refresh readahead buffer if needed
+     // OR result-block mask from op into current row
+
+     // process math for the row.
+
+     // process result stage if any, clearing localt area as we go along
+
+     // after each op-row, update the row index for the op
+
+    // release 8block to result stage (could be slightly accelerated)
+
+ // after last reservation, flush the result stage
 
 
 

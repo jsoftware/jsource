@@ -211,8 +211,8 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
   __atomic_store_n(&JT(jt,adbreak)[1],0,__ATOMIC_RELEASE);  // Now that we know all threads have gone into debug, we must clear ATTN/BREAK in case we start an explicit definition
  c=jt->sitop; NOUNROLL while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
  d=suspset(jt->sitop);  // find the topmost CALL frame and mark it as suspended
- if(unlikely(d==0)||unlikely(d->dcix<0)){   // if we cannot suspend, either because stack is malformed or because the verb has finished, abort back to console level as if dbr 1 entered
-  jsto(JJTOJ(jt),MTYOER,"Debug suspension ended by program logic error.    Debug is still enabled.");  // Tell the user we had a problem
+ if(unlikely(d==0)||unlikely(d->dcix<0)){   // if we cannot suspend, either because stack is malformed or because the verb has finished, abort back to console level as if dbr 1 entered.  single-step outside suspension makes this happen too.
+// obsolete   jsto(JJTOJ(jt),MTYOER,"Debug suspension ended by program logic error.    Debug is still enabled.");  // Tell the user we had a problem
   NOUNROLL for(c=jt->sitop;c;c=c->dclnk){if(c->dctype==DCCALL){DGOTO(c,-1) c->dcsusp=0;}} R 0;  // exit from all explicit defns; return error, with jt->err unchanged
  }
  e=jt->jerr; jt->jerr=0;  // remember error and reset it, possibly to be restored later

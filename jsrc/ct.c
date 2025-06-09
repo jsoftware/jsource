@@ -6,6 +6,9 @@
 #include "j.h"
 extern int numberOfCores;
 
+static void scaffa(J jt,A w){fa(w);}  // scaf
+static void scafraposacv(A w){raposacv(w);}  // scaf
+
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES
@@ -219,7 +222,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  // broadcast to wake up any tasks waiting for the result
  if(PYXWAIT==xchga((C*)&((PYXBLOK*)AAV0(pyx))->seqstate,PYXFULL))jfutex_wakea(&((PYXBLOK*)AAV0(pyx))->seqstate);
  // unprotect pyx.  It was raised when it was assigned to this owner; now it belongs to the system
- fa(pyx);
+ scaffa(jt,pyx);
  R 1;
 }
 
@@ -486,7 +489,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
-   jt->uflags.bstkreqd=1; INCREXECCTIF(startloc); fa(startloc);  // start new exec chain; raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
+   jt->uflags.bstkreqd=1; INCREXECCTIF(startloc); scaffa(jt,startloc);  // start new exec chain; raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
    A arg1=job->user.args[0],arg2=job->user.args[1],arg3=job->user.args[2];
    fa(UNvoidAV1(job));  // job is no longer needed
    I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; arg3=dyad?arg3:0;  // the call is either noun self self or noun noun self.  See which and select self.  Set arg3 to 0 if monad (we use it to free later)
@@ -571,7 +574,7 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A arg3){F12JT;A pyx;
   JOB *oldjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   if((UI)jobq->nthreads>(forcetask&jobq->nuunfin)){  // recheck after lock
    // We know there is a thread that can take the user task (possibly after finishing internal tasks), or the user insists on queueing.  Queue the task
-   raposacv(jt->global);   // we have to protect the task's locale until the task starts.  We will free it before the user verb runs
+   scafraposacv(jt->global);   // we have to protect the task's locale until the task starts.  We will free it before the user verb runs
    ++jobq->nuunfin;  // add the new user job to the unfinished count
    _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun &JOBQ->ht[1] as a JOB, when the q is empty
    job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr

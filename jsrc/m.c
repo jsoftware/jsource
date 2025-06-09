@@ -1550,8 +1550,9 @@ void jtrepatsend(J jt){
  I allocsize=AN(repato);  // extract total length in repato
  jt->repato=0;  // clear repato to empty
  jt=JTFORTHREAD1(jt,origthread1); // switch to the thread the chain must return to
+  // ******* jt has changed ********
  I zero=0,exsize;
- // Add chain of new blocks to repatq.  AN(repatq) has total alloc size in repatq.  This code fails if ABA happens in repatq (the count is wrong), but that is vanishingly unlikely
+ // Add chain of new blocks to repatq.  AN(repatq) has total alloc size in repatq.  This code fails if ABA happens in repatq (the count is wrong), but that is vanishingly unlikely.  AN(repato) goes through invalid counts if there is retry
  A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AN(repato)=allocsize+(exsize=AN(expval?expval:ANLEN0)); } while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
  if(common(((allocsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_store_n(&jt->uflags.sprepatneeded,1,__ATOMIC_RELEASE); // if amt freed crosses boundary, request reclamation in the home thread
 #endif

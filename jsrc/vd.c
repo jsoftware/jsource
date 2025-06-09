@@ -211,6 +211,40 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
  if(ISDENSETYPE(AT(w),B01+INT))RZ(w=cvt(FL,w));  // convert boolean/integer to real
  if(wr==1)w=table(w);  // convert column vector to column matrix
+#if !defined(_WIN32)    // windows openblas issue
+// calling lapack LUP factoriztion to compute inverse of square matrix
+ if(hascblas&&(s[0]==s[1])&&(AT(w)&FL)&&(s[0]>1)){
+ int info; int m1=s[0]; int *ipiv;
+ D worksize; D *work; int nn=-1;
+ ipiv=MALLOC(m1*sizeof(int));
+ w=cant1(w);
+ jdgetrf_(&m1,&m1,DAV(w),&m1,ipiv,&info);
+ if(info){FREE(ipiv); ASSERT(!info,EVDOMAIN);}
+ jdgetri_(&m1,DAV(w),&m1,ipiv,&worksize,&nn,&info);
+ if(info){FREE(ipiv); ASSERT(!info,EVDOMAIN);}
+ nn=worksize; work=MALLOC(nn*sizeof(D));
+ jdgetri_(&m1,DAV(w),&m1,ipiv,work,&nn,&info);
+ if(info){FREE(ipiv); FREE(work); ASSERT(!info,EVDOMAIN);}
+ FREE(ipiv); FREE(work);
+ *det=0.0;
+ RETF(cant1(w));
+ }else if(hascblas&&(s[0]==s[1])&&(AT(w)&CMPX)&&(s[0]>1)){
+ int info; int m1=s[0]; int *ipiv;
+ dcomplex worksize; dcomplex *work; int nn=-1;
+ ipiv=MALLOC(m1*sizeof(int));
+ w=cant1(w);
+ jzgetrf_(&m1,&m1,(dcomplex*)ZAV(w),&m1,ipiv,&info);
+ if(info){FREE(ipiv); ASSERT(!info,EVDOMAIN);}
+ jzgetri_(&m1,(dcomplex*)ZAV(w),&m1,ipiv,&worksize,&nn,&info);
+ if(info){FREE(ipiv); ASSERT(!info,EVDOMAIN);}
+ nn=*(D*)&worksize; work=MALLOC(nn*sizeof(dcomplex));
+ jzgetri_(&m1,(dcomplex*)ZAV(w),&m1,ipiv,work,&nn,&info);
+ if(info){FREE(ipiv); FREE(work); ASSERT(!info,EVDOMAIN);}
+ FREE(ipiv); FREE(work);
+ *det=0.0;
+ RETF(cant1(w));
+ }
+#endif
  w=conjug(cant1(w));  // create w*, where the result will be built inplace
  RZ(l=jtltqip(jt,w)); n=AS(l)[0]; n1=1+n;
  // build determinant for integer correction, if that is enabled (i. e. nonzero)

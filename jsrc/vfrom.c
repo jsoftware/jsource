@@ -3381,7 +3381,7 @@ finndx:;
  I b8start=0;  // start of ring area where next 8block is built AND end+1 pointer of data released to ring (could be US)
 
  DO(nops, opstat[i].acolvals=EAV(opcolvals[i]);)  // get pointer to values in each column
- __m256d sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
+ __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(Iimin));  // 0x8..0
 
  while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+nops)johnson(100);  // delay until indexes are ready
 
@@ -3482,9 +3482,9 @@ finmask:;
 
       // store results.
       h0l0h1l1=_mm256_shuffle_pd(h0h2h1h3,l0l2l1l3,0b0000); h2l2h3l3=_mm256_shuffle_pd(h0h2h1h3,l0l2l1l3,0b1111);  // convert result to E order
-      _mm_storeu_pd((D*)((I)r0+o0),_mm256_castsi256_si128(_mm256_castpd_si256(h0l0h1l1))); _mm_storeu_pd((D*)((I)r0+o2),_mm256_castsi256_si128(_mm256_castpd_si256(h2l2h3l3)));   // store 0&2
+      _mm_storeu_pd((D*)((I)r0+o0),_mm256_castpd256_pd128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o2),_mm256_castpd256_pd128(h2l2h3l3));   // store 0&2
       h0l0h1l1=_mm256_permute4x64_pd(h0l0h1l1,0b01001110); h2l2h3l3=_mm256_permute4x64_pd(h2l2h3l3,0b01001110);  // shift 1&3
-      _mm_storeu_pd((D*)((I)r0+o1),_mm256_castsi256_si128(_mm256_castpd_si256(h0l0h1l1))); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castsi256_si128(_mm256_castpd_si256(h2l2h3l3)));   // store 1&3 - 3 must be last because the others may have the same offset
+      _mm_storeu_pd((D*)((I)r0+o1),_mm256_castpd256_pd128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castpd256_pd128(h2l2h3l3));   // store 1&3 - 3 must be last because the others may have the same offset
      }while((andx+=(RESBLKE*sizeof(aof[0])))<alen);  // end after last block
 
      // send a few values to Qkt

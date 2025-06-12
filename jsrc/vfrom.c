@@ -3281,7 +3281,7 @@ F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #endif
 
 
-#if (C_AVX2 || EMU_AVX2)
+#if (C_AVX2)
 
 // everything we need for one core's execution
 #define RINGROWS 64  // must be power of 2
@@ -3310,6 +3310,7 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
  I *stripegrade;  // downgrade of computational weight of stripes, so we take biggest first
  
  E *qkt;    // pointer to the array - must be cache-aligned and cache-multiple in each row
+ D threshold;  // Result |values| below this are clamped to 0
  // atomics, in new cacheline
  I4 colndxct;  // next column index to create, initialized to nthreads
  I4 resvx;   // next stripe to reserve, initialized to nthreads
@@ -3322,6 +3323,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  YC(nops)YC(nthreads)YC(nstripes)YC(qktnrows)YC(qktncols)YC(oprowmasks)YC(oprowvals)YC(opcolmasks)YC(opcolvals)YC(colndxs)YC(stripestartend1)YC(opstripebsum)YC(stripegrade)YC(qkt)
 #undef YC
  E ring[RINGROWS][RINGCOLS];   // the ring - 1/2 of D2$
+ __m256d zerothresh=_mm256_set1_pd(ctx->threshold);  // near0 threshold
 
  typedef struct opi {
   struct opi *chain;  // &next active op
@@ -3342,7 +3344,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
 
   // values in the stripe for each op, in format needed
 
- typedef struct {
+ typedef struct {   // scaf perhaps separate these to allow indexed fetch
   __m256d *qktbase;  // offset in bytes between start of ring row and corresponding value in Qkt
   UI8 rowmask;  // mask of all the resultblocks that have been modified in this line
  } releaseinfo;
@@ -3379,11 +3381,11 @@ finndx:;
  I b8start=0;  // start of ring area where next 8block is built AND end+1 pointer of data released to ring (could be US)
 
  DO(nops, opstat[i].acolvals=EAV(opcolvals[i]);)  // get pointer to values in each column
+ __m256i sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
 
  while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+nops)johnson(100);  // delay until indexes are ready
 
  DO(nops, opstat[i].acolndxs=(*ctx->colndxs)[i];)  // get start address of index
- __m256i sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
 
  I stripex=ti;  // initial stripe reservation, from thread#
  // state needed to release one row of ring (viz relstart). 
@@ -3467,16 +3469,16 @@ finmask:;
       __m256d iph,ipl,isl;  // intermediate products and sums
       TWOPROD(rowh,colh,iph,ipl)  // (rowh,colh) to high precision
       ipl=_mm256_fmadd_pd(rowh,coll,ipl); ipl=_mm256_fmadd_pd(rowl,colh,ipl);  // accumulate middle pps
-      // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
+      // Because we added 3 low-order values (with the same shift), we are limiting precision to 104 bits
       // (h0h2h1h3,l0l2l1l3) + (rowh,rowl) * (colh,coll)
       // Do high-precision add of h0h2h1h3 and iph.  If this decreases the absvalue of h0h2h1h3, we will lose precision because of insufficient
       // bits of qkv.  If this increases the absvalue of h0h2h1h3, all of l0l2l1l3 will contribute and the limit of validity will be
       // from the product.  In either case it is safe to accumulate all the partial products and ipl into l0l2l1l3
-      l0l2l1l3=_mm256_add_pd(l0l2l1l3,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
-      TWOSUM(h0h2h1h3,iph,h0h2h1h3,isl)   // combine the high parts
-      isl=_mm256_add_pd(isl,l0l2l1l3);  // add the combined low parts
+      l0l2l1l3=_mm256_add_pd(l0l2l1l3,ipl);  // the middle pps.  low*low will never contribute unless value is exhausted & thus noise
+      TWOSUM(iph,h0h2h1h3,iph,ipl)   // combine the high parts
+      ipl=_mm256_add_pd(ipl,l0l2l1l3);  // add the combined low parts
       // Make sure l0l2l1l3 is much less than h0h2h1h3
-      TWOSUM(h0h2h1h3,isl,h0h2h1h3,l0l2l1l3)  // put h0h2h1h3 into canonical form
+      TWOSUMBS(iph,ipl,h0h2h1h3,l0l2l1l3)  // put h0h2h1h3 into canonical form.  If iph<ipl we have had massive cancellation and lost most precision; then it will not hurt to mistakenly call iph the bigger
 
       // store results.
       h0l0h1l1=_mm256_shuffle_pd(h0h2h1h3,l0l2l1l3,0b0000); h2l2h3l3=_mm256_shuffle_pd(h0h2h1h3,l0l2l1l3,0b1111);  // convert result to E order
@@ -3491,21 +3493,26 @@ finmask:;
       I releasect=releasenormct;  // set releasect to the number of blocks to take.  We will stop when the row is empty in any case
 releaserow:;  // entered from below to drain the ring, either on buffer-full or at end-of-operation.  releasect is set to a high value in that case
       __m256 *releaseringbase=(__m256*)ring[relstart];  // get address in ring
-      do{  // 
+      do{
+       // calculate a result block
        I blockbyteofst=CTTZI(releaseblockmask)*sizeof(E)*RESBLKE;  // get offset to next modified block in  this row
-       __m256d ipl;  // intermediate products and sums
+       __m256d iph,ipl;  // intermediate products and sums
        __m256d qkE01=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i*)((I)releaseqkbase+blockbyteofst))), qkE23=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i*)((I)releaseqkbase+blockbyteofst)+1));  // read qk, bypass caches
        __m256d ringE01=_mm256_load_pd((D*)(__m256d*)((I)releaseringbase+blockbyteofst)), ringE23=_mm256_load_pd((D*)((__m256d*)((I)releaseringbase+blockbyteofst)+1));  // read ring
        __m256d qk0213h=_mm256_shuffle_pd(qkE01,qkE23,0b0000), qk0213l=_mm256_shuffle_pd(qkE01,qkE23,0b1111);  // convert to 0213 order, hi & lo
        __m256d ring0213h=_mm256_shuffle_pd(ringE01,ringE23,0b0000), ring0213l=_mm256_shuffle_pd(ringE01,ringE23,0b1111);  // convert to 0213 order, hi & lo
-       TWOSUM(qk0213h,ring0213h,qk0213h,ipl)   // combine the high parts
-       ipl=_mm256_add_pd(ipl,qk0213l);  // add the combined low parts
-       TWOSUM(qk0213h,ipl,qk0213h,qk0213l)  // put h0h2h1h3 into canonical form
+       TWOSUM(qk0213h,ring0213h,iph,ipl)   // combine the high parts
+       ipl=_mm256_add_pd(ipl,_mm256_add_pd(qk0213l,ring0213l));  // add the combined low parts
+       TWOSUMBS(iph,ipl,qk0213h,qk0213l)  // put h0h2h1h3 into canonical form.  If iph<ipl we have had massive cancellation and lost most precision; then it will not hurt to mistakenly call iph the bigger
+       // zero the |value|s that are below threshold
+       iph=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qk0213h),zerothresh,_CMP_GT_OQ);   // iph = 0 if result too small
+       qk0213h=_mm256_and_pd(qk0213h,iph); qk0213l=_mm256_and_pd(qk0213l,iph); // set values to 0 if lower than threshold
+       // write out the block and clear 
        qkE01=_mm256_shuffle_pd(qk0213h,qk0213l,0b0000); qkE23=_mm256_shuffle_pd(qk0213h,qk0213l,0b1111);  // convert result to E order
        _mm256_stream_pd((D*)(__m256d*)((I)releaseqkbase+blockbyteofst),qkE01); _mm256_stream_pd((D*)((__m256d*)((I)releaseqkbase+blockbyteofst)+1),qkE23);   // store qk, bypass caches
        _mm256_storeu_pd((D*)(__m256d*)((I)releaseringbase+blockbyteofst),_mm256_setzero_pd()); _mm256_storeu_pd((D*)((__m256d*)((I)releaseringbase+blockbyteofst)+1),_mm256_setzero_pd());   // zero ring for next use
-       if((releaseblockmask&=-releaseblockmask)==0)goto rowfin;  // advance to next block, exit if none
-      }while(--releasect);
+       if((releaseblockmask&=(releaseblockmask-1))==0)goto rowfin;  // advance to next block, exit if none
+      }while(--releasect);  // could use PEXT & block mask to avoid need for releasect here
       if(0){rowfin:;  // come here when a row has been fully sent to Qkt
        rinfo[relstart].rowmask=0;  // when we finish a row, we must leave it with an empty mask
        relstart=(relstart+1)&(RINGROWS-1);  // advance to next row
@@ -3545,7 +3552,7 @@ finis:;  // here we have flushed the ring at the end
 
 
 // 128!:14  apply outer-products in parallel
-// w is name;rowmasks;rowvalues,colmasks;colvalues;stripes;\:comploads
+// w is name;rowmasks;rowvalues,colmasks;colvalues;stripes;(\:comploads);threshold
 // name (usually 'Qkt') is the source/destination, QP type.  shape (r,c).  It must be globally assigned with usecount 1, aligned on a cacheline boundary with rows that are even # cachelines
 // rowmasks (boxed shape p, the number of outer products).  Each contents is a boolean list, length <=r, indicating the position of non0 in rowvalues.  (+/@> rowmask) -: #@> rowvalues
 // rowvalues (boxed shape p).  Each contents is QP list of non0 row values
@@ -3553,6 +3560,7 @@ finis:;  // here we have flushed the ring at the end
 // colvalues (boxed shape p).  Each contents is QP list of non0 col values
 // stripes shape (s (number of stripes),2) giving start and end+1 of each stripe
 // compgrade shape s  is (\: comploads), the order stripes should be processed in to go from slowest to fastest
+// threshold is a float atom.  Result |values| less than threshold are forced to 0
 // result empty
 F1(jtbatchop){F12IP;PROLOG(000);
  ARGCHK1(w);
@@ -3567,6 +3575,8 @@ F1(jtbatchop){F12IP;PROLOG(000);
  GATV0(box,INT4,opctx.nstripes*MAXOP,1); opctx.opstripebsum=(I4 (*)[][MAXOP])I4AV(box);  // allocate running-index area, save in ctx
  box=C(AAV(w)[6]);  // stripegrade
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==opctx.nstripes,EVLENGTH) opctx.stripegrade=IAV(box);  // must be INT [#stripes]
+ box=C(AAV(w)[7]);  // threshold
+ if(!(AT(box)&FL))RZ(box=cvt(FL,box)); ASSERT(AR(box)==0,EVRANK) opctx.threshold=DAV(box)[0];  // convert to FL
  box=C(AAV(w)[0]);  // 'Qkt'
  ASSERT(AT(box)&LIT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK)  A nm; RZ(nm=nfs(AN(box),CAV(box))); A qktf=syrd(nm,jt->locsyms); A qkt=QCWORD(qktf); ASSERT(qkt!=0,EVVALUE)  // name exists
  // from here till end we must take errors through 'exit'

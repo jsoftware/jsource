@@ -2197,11 +2197,13 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define TWOPRODQD(qp0,qp1,dp,outhi,outlo) TWOPROD(qp0,dp,outhi,outlo) outlo=_mm256_fmadd_pd(qp1,dp,outlo);
 #endif
 
-// create quad-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  outlo must not be an input.  Needs sgnbit.
-#define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(t),_mm256_castpd_si256(outlo))); \
+// create quad-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  outlo must not be an input.  Could reduce latency by 1 cycle be delaying blendv, but at a cost of 1 more instruction
+// obsolete #define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(t),_mm256_castpd_si256(outlo))); \
+// obsolete                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); /* outlo=val with larger abs t=val with smaller abs */ \
+// obsolete                                     outhi=_mm256_add_pd(in0,in1); /* single-prec sum */ 
+#define TWOSUM(in0,in1,outhi,outlo) {__m256d s=_mm256_add_pd(in0,in1), t=_mm256_xor_pd(_mm256_sub_pd(in0,in1),s); /* single-prec diff & sum; sign of t=1 if in1 has larger |value| */ \
                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); /* outlo=val with larger abs t=val with smaller abs */ \
-                                    outhi=_mm256_add_pd(in0,in1); /* single-prec sum */ \
-                                    outlo=_mm256_sub_pd(outlo,outhi); /* big-(big+small): implied val of -small after rounding */ \
+                                    outhi=s; outlo=_mm256_sub_pd(outlo,outhi); /* big-(big+small): implied val of -small after rounding */ \
                                     outlo=_mm256_add_pd(outlo,t);}  // amt by which actual value exceeds implied: this is the lost low precision
 // Same, but we know first argument has bigger absval.  outhi cannot be an input; outlo can be the same as inbig
 #define TWOSUMBS(inbig,insmall,outhi,outlo) {outhi=_mm256_add_pd(inbig,insmall); /* single-prec sum */ \

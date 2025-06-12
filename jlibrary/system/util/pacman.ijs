@@ -1537,7 +1537,8 @@ else.
   name=. <name
 end.
 
-r=. je_get jxxx;platform;(3{.jbithw);name
+p=. IFWA64 pick (3{.jbithw);'jarm64'
+r=. je_get jxxx;platform;p;name
 if. _1=r do. log'upgrade file not found' return. end.
 if. r-:fread DLL do. log'upgrade not required - already current' return. end.
 
@@ -1571,6 +1572,7 @@ je_get=: 3 : 0
 'jvno plat bits name'=. y
 arg=. (je_dlpath''),plat,'/',bits,'/',name
 ferase'~temp/',name
+echo 'get: ', arg
 httpget arg
 fread '~temp/',name
 )

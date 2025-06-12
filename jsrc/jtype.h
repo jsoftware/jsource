@@ -325,6 +325,8 @@ struct AD {
 #define I1AV(x)         ( (I1*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define I2AV(x)         ( (I2*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define I4AV(x)         ( (I4*)((C*)(x)+AK(x)))  /* pointer to ravel        */
+#define I4AV0(x)        ((I4*)((C*)(x)+AKXR(0)))  // local unsigned 32-bit int atom
+#define I4AV1(x)        ((I4*)((C*)(x)+AKXR(1)))  // local unsigned 32-bit int list
 #define I8AV(x)         ( (I8*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define IAVn(n,x)       ((I*)((C*)(x)+AKXR(n)))  // integer in a stack- or heap-allocated atom (rank n
 #define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
@@ -1278,14 +1280,18 @@ typedef struct {
 #define VCEIL           (I)0x4000       /* function is >.@g                */
 // bit 15 free
 #define VLOCK           (I)0x10000        /* function is locked              */
-// bit 17 free
+#define VWASUNARY       (I)0x20000       // 17 this verb replaces the original, which was something like -: that is replaced by 0.5 *
 #define VFIX            (I)0x40000       /* f. applied                      */
 #define VXOPRX          19                // the definition is an explicit modifier that refers to x or y
 #define VXOPR           ((I)1<<VXOPRX)
 #define VXOP            (I)0x100000      // this is the result of giving [u]/v args to a defn that had VXOPR set.  u and v are in fgh[0/2]
 #define VTRY1           (I)0x200000      /* monad contains try.             */
 #define VTRY2           (I)0x400000      /* dyad  contains try.  must be just above VTRY1           */
-// bits 23-24 free
+#define VUNARYCODEX      23                //  2-bit field indiating the original verb (when taken with id)
+#define VUNARYCODE0     ((I)0<<VUNARYCODEX)
+#define VUNARYCODE1     ((I)1<<VUNARYCODEX)
+#define VUNARYCODE2     ((I)2<<VUNARYCODEX)
+#define VUNARYCODE3     ((I)3<<VUNARYCODEX)
 // bit VASGSAFE is wired into a flag reg in parser
 #define VXOPCALL       (I)0x2000000      // 25 this verb is a namerefop, interposed to hang a name for debugging onto an anyymous verb.  f is 0, the name is in g, the actual verb in h     overlaps SYMB/ASGNLOCAL
 #define VASGSAFEX     26

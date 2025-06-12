@@ -3281,7 +3281,7 @@ F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #endif
 
 
-#if 0 && (C_AVX2 || EMU_AVX2)
+#if (C_AVX2 || EMU_AVX2)
 
 // everything we need for one core's execution
 #define RINGROWS 64  // must be power of 2
@@ -3297,15 +3297,15 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
  US nops;  // number of outer products
  US nthreads;  // number of threads
  I4 nstripes;  // number of stripes in the input
- I4 qktshape[2];  // shape of Qkt
+ I4 qktnrows, qktncols;  // shape of Qkt
  // arguments
  
  A *oprowmasks;  // AAV(rowmask), each box holding a mask or a list of indexes of nonzeros
  A *oprowvals;   // AAV(rowvalues), which map to the rows of Qkt - each on a cacheline boundary
  A *opcolmasks;  // AAV(colmask), each box holding a mask or a list of indexes of nonzeros
  A *opcolvals;   // AAV(colvalues), which map to the cols of Qkt - each on a cacheline boundary
- _m256i (*colndxs)[MAXOP];  // pointers to column indexes, filled in by threads - each on a cacheline boundary
- I4 (*stripestartend1)[][2];  // start and end+1 for each stripe
+ I4 *(*colndxs)[MAXOP];  // pointers to column indexes, each having one value per stripe,  filled in by threads
+ I (*stripestartend1)[][2];  // start and end+1 for each stripe [][2]
  I4 (*opstripebsum)[][MAXOP];  // number of 1 bits in [0..stripe][op] - leading 0 omitted
  I *stripegrade;  // downgrade of computational weight of stripes, so we take biggest first
  
@@ -3319,55 +3319,54 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
 static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(ctx->x) x=ctx->x;
- YC(rowsperthread)YC(ck)YC(bk)YC(m)YC(ckthreshd)YC(bkthreshd)
+ YC(nops)YC(nthreads)YC(nstripes)YC(qktnrows)YC(qktncols)YC(oprowmasks)YC(oprowvals)YC(opcolmasks)YC(opcolvals)YC(colndxs)YC(stripestartend1)YC(opstripebsum)YC(stripegrade)YC(qkt)
 #undef YC
  E ring[RINGROWS][RINGCOLS];   // the ring - 1/2 of D2$
 
- typedef struct __attribute__ ((aligned (8*SZI))) opi {
+ typedef struct opi {
+  struct opi *chain;  // &next active op
   E colvalahead;
   UI8 rbmask;   // mask of resultblocks in each row touched by this op
-  struct opi *chain;  // &next active op
-??  _m256d *astripeval[2];  // address of (first,last) block of col values
-  I4 *acolndxs;  // addr of start of col indexes - on a cacheline boundary
+  I4 *acolndxs;  // addr of start of col indexes, one value per stripe
   E *acolvals;  // addr of start of values - on a cacheline boundary
+  US *arowoffsets;  // pointer to offsets in row
+  __m256d *arow0213;  // pointer to corresponding values
   I4 colndxahead;  // next col index
   I4 rowindex;  // index into col index of the current position in this column
+  US nofsts;  // index to the offset pointer after the last offset/val has been processed
  } opinfo;  // info for each op
 
  opinfo opstat[MAXOP];  // collected info about the ops in the current stripe
- US stripeofst[MAXOP][MAXNON0];  // byte offset to each non0 value in the stripe, for loading the ring value
- __attribute__ ((aligned (CACHELINESIZE)))
-   union {_m256d as256[MAXNON0/(sizeof(_m256d)/sizeof(E))];
-          D asD[MAXNON0/(sizeof(_m256d)/sizeof(D))][2][4];  // [hi/lo][0213]
-         } stripe0213[MAXOP];
+ US stripeofst[MAXOP*MAXNON0+3];  // byte offset to each non0 value in the stripe, for loading the ring value.  Allocated in groups of 4.  +3 because of overstore
+ __attribute__ ((aligned (CACHELINESIZE))) __m256d stripe0213[MAXOP*MAXNON0/(sizeof(__m256d)/sizeof(E))];  // row values for stripe, 0213
 
   // values in the stripe for each op, in format needed
 
  typedef struct {
-  I qktoffset;  // offset in bytes between start of ring row and corresponding value in Qkt
+  __m256d *qktbase;  // offset in bytes between start of ring row and corresponding value in Qkt
   UI8 rowmask;  // mask of all the resultblocks that have been modified in this line
  } releaseinfo;
  releaseinfo rinfo[RINGROWS];  // info on all rows that have been released.  Must be cleared after each release, i. e. 0 when starting new 8block
 
- I opno=ti;  // opp# to create the index for.  First one is out thread#
+ I opno=ti;  // op# to create the index for.  First one is out thread#
  do{
   if(opno<nops){A ma;  // if the first reservation is too high, we have more threads than ops.  skip it then
-   // calculate column index for the op
-   I ncvals=AN(opcolvals[opno]); _m256i *cmask=(_m256i *)BAV(opcolmasks[opno]);  // # non0s left in op column, pointer to mask
-   GAT0(ma,INT4,(ncvals+sizeof(opinfo.colndxahead.vals)/sizeof(opinfo.colndxahead.vals[0]))&-(sizeof(opinfo.colndxahead.vals)/sizeof(opinfo.colndxahead.vals[0]))),1)  // allocate space for index (incl 1 sentinel), on cacheline boundary
-   I4 *mav=I4AV1(ma); ctx->colndxs[opno]=mav;  // Get address of index, publish the address to other threads.  Lots of false sharing on this store!
+   // calculate column index for the op - the offset into mask/cols when we process a given stripe
+   I ncvals=AN(opcolvals[opno]); __m256i *cmask=(__m256i *)BAV(opcolmasks[opno]);  // # non0s left in op column, pointer to mask
+   GATV0(ma,INT4,ncvals+1,1)  // allocate space for index (incl 1 sentinel), on cacheline boundary
+   I4 *mav=I4AV1(ma); (*colndxs)[opno]=mav;  // Get address of index, publish the address to other threads.  Lots of false sharing on this store!
    I fetchndx=0;  // index of first bit in this word
    while(1){  // till we have stored all the index
     I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_loadu_si256(cmask),_mm256_setzero_si256())); ++cmask;  // fetch and step over next 32 bits.  Overfetch possible and OK
-    while(bits){*mav++=fetchndx+CTTZI(bits)); bits&=-bits; if(--ncvals<=0)goto finndx;}  // store index for every non0, stop when all done
+    while(bits){*mav++=fetchndx+CTTZI(bits); bits&=-bits; if(--ncvals<=0)goto finndx;}  // store index for every non0, stop when all done
     fetchndx+=sizeof(*cmask)/BB;  // advance to next mask base
    }
    *mav=(UI4)~0>>1;  // install sentinel at end
 
    // calculate stripe index for the op
-   I bsumtodate; C *mask=CAV(oprowmasks[i]);  // total 1s found, 
-   DO(nstripes, I start=stripestartend[i][0], end=stripestartend[i][0]-BW, bsum=0; while(start<end){bsum+=*(I*)&mask[start]; start+=BW;} bsum+=*(I*)&mask[start]<<(start==end?0:BW/2);
-     bsum+=bsum>>32; bsum+=bsum>>16; bsum+=bsum>>8; opstripebsum[i][opno]=bsumtodate+=(C)bsum;)
+   I bsumtodate; C *mask=CAV(oprowmasks[opno]);  // total 1s found, 
+   DO(nstripes, I start=(*stripestartend1)[opno][0], end=(*stripestartend1)[opno][1]-BW, bsum=0; while(start<end){bsum+=*(I*)&mask[start]; start+=BW;} bsum+=*(I*)&mask[start]<<(start==end?0:BW/2);
+     bsum+=bsum>>32; bsum+=bsum>>16; bsum+=bsum>>8; (*opstripebsum)[i][opno]=bsumtodate+=(C)bsum;)
 
 finndx:;
   }
@@ -3378,139 +3377,222 @@ finndx:;
  mvc(sizeof(ring),ring,MEMSET00LEN,MEMSET00);  // clear the ring to all 0.0
  mvc(sizeof(rinfo),rinfo,MEMSET00LEN,MEMSET00);  // clear the release info to 0
  I b8start=0;  // start of ring area where next 8block is built AND end+1 pointer of data released to ring (could be US)
- I relstart=0;  // start of ring area that has been released.  When =b8start, nothing has been released, i. e. ring is empty
 
- DO(nops, opstat[i].acolndxs=EAV(opcolvals[i]);)  // get pointer to values in each column
+ DO(nops, opstat[i].acolvals=EAV(opcolvals[i]);)  // get pointer to values in each column
 
- while(__atomic_fetch_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+nops)johnson(100);  // delay until indexes are ready
+ while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+nops)johnson(100);  // delay until indexes are ready
 
- DO(nops, opstat[i].acolndxs=ctx->colndxs[i]);)  // get start address of index
+ DO(nops, opstat[i].acolndxs=(*ctx->colndxs)[i];)  // get start address of index
+ __m256i sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
 
  I stripex=ti;  // initial stripe reservation, from thread#
+ // state needed to release one row of ring (viz relstart). 
+ UI releaseblockmask=0; I relstart=0, releasenormct=8, releasedelayct=0, releasect; __m256d *releaseqkbase;  // mask of blocks in row, index of row being released, normal burst length, amount of processing before next burst, actual burst length, Qkt addr of burst
+    // when relstart==b8start, ring is empty.  releaseblockmask is always 0 then.  releasedelayct is set negative to delay the next batch; it increments as blocks are put into the ring.  releasenormct gives the normal burst size, which increases
+    // if the ring fills.  releasect counts the actual burst kength, which is releasenormct unless the ring is full or processing is over, in which case it is set to high-value to flush the ring
  while(stripex<nstripes){  // ... for each reservation...
   I stripe=stripegrade[stripex];  // get the actual stripe# to process
 
   // establish the values for each op in this stripe
-  I io, sstart=stripestartend1[stripe][0], minnextrow=(UI4)~0>>1;  // start col for stripe, starting row for next 8batch
+  I io, sstart=(*stripestartend1)[stripe][0], minnextrow=(UI4)~0>>1;  // start col for stripe, starting row for next 8batch
   E *qktcol=qkt+sstart;  // address of the output column in row 0
   opinfo *aops=0;  // chain of active ops, init to empty
+  US *nextstripeofst=stripeofst; __m256d *nextstripe0213=stripe0213;  // we lay the offsets & values in sequentially to get best cache utilization, without gaps
   for(io=0;io<nops;++io){   // for each op:
-   I stripeval0x=unlikely(io==0)?0:opstripebsum[stripe-1][io];  // starting offset to values in this stripe
-   I ssize=opstripebsum[stripe][io]-stripeval0x;  // number of non0 values in this stripe
+   I stripeval0x=unlikely(io==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting offset to values in this stripe
+   I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
 if(ssize>MAXNON0||ssize<=0)SEGFAULT;
    if(ssize){    // if this op intersects this stripe...
     opstat[io].rowindex=0; I4 nx=opstat[io].colndxahead=opstat[io].acolndxs[0]; minnextrow=nx<minnextrow?nx:minnextrow; opstat[io].colvalahead=opstat[io].acolvals[0];  // start on first row; prefetch first.  Keep track of smallest start value
     // read the mask for this op and convert it to offsets into ring and mask of resultblocks
     opstat[io].chain=aops; aops=&opstat[io];  // add this op to the active chain
     opstat[io].rbmask=0;  // init mask of touched blocks
-    I j32, nofst; _m256i *smask;   // number of 32-byte mask reads to date; number of offsets written; pointer to the start of the bitmask for this section
-    for(j32=0,nofst=0,smask=(_m256i *)(BAV(oprowmasks[io])+sstart);nofst<ssize;++j32){
-     _m256i m32=_mm256_loadu_si256(smask+j32);  // read 32 bits.  May overfetch
+    I j32, nofst, lastoffset; __m256i *smask;   // number of 32-byte mask reads to date; number of offsets written; value of last offset; pointer to the start of the bitmask for this section
+    opstat[io].arowoffsets=nextstripeofst;  // remember where the offsets start
+    for(j32=0,nofst=0,smask=(__m256i *)(BAV(oprowmasks[io])+sstart);;++j32){
+     __m256i m32=_mm256_loadu_si256(smask+j32);  // read 32 bits.  May overfetch
      ((C*)&opstat[io].rbmask)[j32]=(UI)(UI4)_mm256_movemask_ps(_mm256_cmpgt_epi32(m32,_mm256_setzero_si256()));   // create touched mask for each 4-value section (i. e. 1 resultblock), save in rbmask
      I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(m32,_mm256_setzero_si256()));   // extract the 32 bits
-     while(bits){stripeofst[io][nofst]=(j32*32+CTTZI(bits))*sizeof(E); bits&=-bits; ++nofst; if(nofst==ssize)break;}  // turn each 1-bit into a byte offset; stop if we have hit # offsets
+     while(bits){lastoffset=nextstripeofst[nofst]=(j32*32+CTTZI(bits))*sizeof(E); bits&=-bits; ++nofst; if(nofst==ssize)goto finmask;}  // turn each 1-bit into a byte offset; stop if we have hit # offsets
     }
-    opstat[io].rbmask&=(UI)~0>>(BW-((stripestartend1[stripe][1]-sstart)>>LGRESBLKE));  // mask off blocks past the valid region
+finmask:;
+    opstat[io].rbmask&=(UI)~0>>(BW-(((*stripestartend1)[stripe][1]-sstart)>>LGRESBLKE));  // mask off blocks past the valid region
     // read the row values for this stripe and convert them to 0213 form
-    I j4; _m256d *sval;  // number of 4-E reads to date; pointer to start of values for this section
-    _m256d h0l0h1l1, h2l2h3l3;
-    for(j4=0,sval=(_m256d *)(EAV(oprowvals[io])+stripeval0x);j4<(ssize>>LGRESBLKE);++j4){
-     _m256d h0l0h1l1=_mm256_loadu_si256(smask+j4*2), h2l2h3l3=_mm256_loadu_si256(smask+j4*2+1);  // read the next 4 values
-     h0h2h1h3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000); l0l2l1l3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // convert to 0213 order
-     _mm256_storeu_si256(&stripe0213.as256[io][2*j4],h0h2h1h3); _mm256_storeu_si256(&stripe0213.as256[io][2*j4+1],l0l2l1l3);  // store in 0213 order
+    I j4; C *sval;  // byte offset of 4-E reads to date; pointer to start of values for this section
+    opstat[io].arow0213=nextstripe0213;  // remember where the offsets start
+    for(j4=0,sval=(C*)(EAV(oprowvals[io])+stripeval0x);j4<(ssize<<LGRESBLKE);j4+=RESBLKE*sizeof(E)){
+     __m256d h0l0h1l1=_mm256_loadu_pd((D*)(sval+j4)), h2l2h3l3=_mm256_loadu_pd((D*)(sval+j4+sizeof(E)*RESBLKE/2));  // read the next 4 values.  This wipes out lots of D2$; perhaps should stream into temp area
+     __m256d h0h2h1h3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), l0l2l1l3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // convert to 0213 order
+     _mm256_store_pd((D*)((C*)nextstripe0213+j4),h0h2h1h3); _mm256_store_pd((D*)((C*)nextstripe0213+j4+sizeof(E)*RESBLKE/2),l0l2l1l3);  // store in 0213 order
     }
-    I remsize=j4-(ssize>>LGRESBLKE);  // number of garbage values stored at the end.  We must set those pointers, and the last value, to a valid value
-    if(remsize){  // if the last block is incomplete...
-     stripe0213[io].asD[j4][0][-1]=stripe0213[io].asD[j4][0][-remsize-1]; stripe0213[io].asD[j4][1][-1]=stripe0213[io].asD[j4][1][-remsize-1];  // move last valid value to [-1]
-     DO(remsize, stripeofst[io][-i-1]=stripeofst[io][-remsize-1];  // make all the offsets valid.  We will store the [-1] result last, others are garbage
-    }
+    // if last block of 4 values is not all valid, we must repeat the last valid offset to the end of the block, and put the last value into the last slot
+    lastoffset+=lastoffset<<(sizeof(US)*BB); lastoffset+=lastoffset<<(2*sizeof(US)*BB); *(I*)&nextstripeofst[nofst]=lastoffset;  // append 4 copies of last offset; 0-3 are needed
+    I lastvalidlane=(0b01100011>>(ssize&(NPAR-1)))&(NPAR-1);   // lane# holding last valid value: 0 1 2 3 -> 3 0 2 1 (since values are 0213)
+    D (*lastvals)[2][4]=(D (*)[2][4])((C*)nextstripe0213+j4-RESBLKE*sizeof(E));  // address of resblk containing last valid pointer
+    (*lastvals)[0][3]=(*lastvals)[0][lastvalidlane]; (*lastvals)[1][3]=(*lastvals)[1][lastvalidlane];  // transfer value to last value in block, which is written last
+
+    US *ofstend1=&nextstripeofst[(ssize+(NPAR-1))&(-NPAR)]; opstat[io].nofsts=(I)ofstend1-(I)nextstripeofst; nextstripeofst=ofstend1; nextstripe0213=(__m256d*)((C*)nextstripe0213+j4); // advance pointers to a block boundary, remembering the end+1 offset of the current op
    }
   }
+    // we keep all ops in a single list, removing ones that have been fully processed.   It might be right to keep a second list with ops that have not entered yet, sorted on row of entry.  Depends on overlap.
 
   // ops ready, now calculate the entire stripe
   while(aops){  // keep processing rows as long as there is an active op
    // minnextrow is set with the starting row for the new 8block
-   b8qktrow=minnextrow; minnextrow=(UI4)~0>>1;  // remember starting row# in qkt = start of 8 window
-   while(unlikely(((b8start-relstart)&(RINGROWS-1)))>=(RINGROWS-B8ROWS)){releaserow(); rinfo[relstart].rbmask=0; relstart=(relstart+1)&(RINGROWS-1)}  // if ring is full, wait for it to drain
+   I b8qktrow=minnextrow; minnextrow=(UI4)~0>>1;  // remember starting row# in qkt = start of 8 window
 
    opinfo *currop, *prevop;  // op being processed, prev ptr used to delete blocks
    for(currop=aops,prevop=0;currop;){
     I4 nextrowinop;  // next row to process in this op
-    while((nextrowinop=currop->colvalahead)-b8qktrow<B8ROWS){  // if next row is in 8block
+    while((nextrowinop=currop->colndxahead)-b8qktrow<B8ROWS){  // if next row is in 8block
      // next row can be processed in this 8block.  Load the column info and update the readahead
-     _m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes
-     currop->colndxahead=currndx->acolndxs[++currndx->rowindex]; currop->colvalahead=currndx->avalndxs[currndx->rowindex];  // read ahead for next row
      I ringx=(b8start+(nextrowinop-b8qktrow))&(RINGROWS-1);  // ring row to fill
+     E *r0=ring[ringx];  // base the offsets will be applied against
+     US *aof=currop->arowoffsets; __m256d *ava=currop->arow0213; I alen=currop->nofsts;  // loop boundaries for processing the row of the stripe
+     __m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes
+     currop->colndxahead=currop->acolndxs[++currop->rowindex]; currop->colvalahead=currop->acolvals[currop->rowindex];  // read ahead for next row
      rinfo[ringx].rowmask|=currop->rbmask;  // make note of the resultblocks that will be modified by this row
 
-     // process the op: row ringx, values stripe0213[currop-opstat], indexes stripeofst[currop-opstat]
+     // Calculate one row of the op
+     I andx=0;  // counts in steps of RESBLKE*sizeof(one offset).  With this stride we can use andx to point to offsets and andx*sizeof(E)/sizeof(one offset) (=8) to point to values
+     do{
+      // read the inputs. gather would be attractive (transpose the 1-byte offsets, use them for multiple gathers) except that GDS mitigation slows down Intel and AMD support is weak period.
+      I o1=((US*)((C*)aof+andx))[1]; I o0=((US*)((C*)aof+andx))[0]; I o3=((US*)((C*)aof+andx))[3]; I o2=((US*)((C*)aof+andx))[2];  // offsets to ring values to accumulate into
+      __m256d rowh=_mm256_load_pd((D*)((C*)ava+andx*sizeof(E)/sizeof(aof[0]))), rowl=_mm256_load_pd((D*)((C*)(ava+1)+andx*sizeof(E)/sizeof(aof[0])));  // the outer-product values
+      __m256d h0l0h1l1=_mm256_blend_pd(_mm256_loadu_pd((D*)((I)r0+o0)),_mm256_loadu_pd((D*)((I)r0+o1-sizeof(E))),0b1100);  // read accumulands 0-1 
+      __m256d h2l2h3l3=_mm256_blend_pd(_mm256_loadu_pd((D*)((I)r0+o2)),_mm256_loadu_pd((D*)((I)r0+o3-sizeof(E))),0b1100);  // read accumulands 2-3
+      __m256d h0h2h1h3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), l0l2l1l3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // convert to 0213 order, hi & lo
+  
+      // multiply-accumulate
+      __m256d iph,ipl,isl;  // intermediate products and sums
+      TWOPROD(rowh,colh,iph,ipl)  // (rowh,colh) to high precision
+      ipl=_mm256_fmadd_pd(rowh,coll,ipl); ipl=_mm256_fmadd_pd(rowl,colh,ipl);  // accumulate middle pps
+      // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
+      // (h0h2h1h3,l0l2l1l3) + (rowh,rowl) * (colh,coll)
+      // Do high-precision add of h0h2h1h3 and iph.  If this decreases the absvalue of h0h2h1h3, we will lose precision because of insufficient
+      // bits of qkv.  If this increases the absvalue of h0h2h1h3, all of l0l2l1l3 will contribute and the limit of validity will be
+      // from the product.  In either case it is safe to accumulate all the partial products and ipl into l0l2l1l3
+      l0l2l1l3=_mm256_add_pd(l0l2l1l3,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
+      TWOSUM(h0h2h1h3,iph,h0h2h1h3,isl)   // combine the high parts
+      isl=_mm256_add_pd(isl,l0l2l1l3);  // add the combined low parts
+      // Make sure l0l2l1l3 is much less than h0h2h1h3
+      TWOSUM(h0h2h1h3,isl,h0h2h1h3,l0l2l1l3)  // put h0h2h1h3 into canonical form
 
-     // process math for the row.
+      // store results.
+      h0l0h1l1=_mm256_shuffle_pd(h0h2h1h3,l0l2l1l3,0b0000); h2l2h3l3=_mm256_shuffle_pd(h0h2h1h3,l0l2l1l3,0b1111);  // convert result to E order
+      _mm_storeu_pd((D*)((I)r0+o0),_mm256_castsi256_si128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o2),_mm256_castsi256_si128(h2l2h3l3));   // store 0&2
+      h0l0h1l1=_mm256_permute4x64_pd(h0l0h1l1,0b01001110); h2l2h3l3=_mm256_permute4x64_pd(h2l2h3l3,0b01001110);  // shift 1&3
+      _mm_storeu_pd((D*)((I)r0+o1),_mm256_castsi256_si128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castsi256_si128(h2l2h3l3));   // store 1&3 - 3 must be last because the others may have the same offset
+     }while((andx+=(RESBLKE*sizeof(aof[0])))<alen);  // end after last block
 
-     // process result stage if any, clearing localt area as we go along
-
+     // send a few values to Qkt
+     releasedelayct+=andx;  // add the number of blocks we processed.  When the total goes nonnegative we can release again
+     if(releaseblockmask>(UI)REPSGN(releasedelayct)){  // if there are released values...  (mask>0 and delayct nonneg)
+      I releasect=releasenormct;  // set releasect to the number of blocks to take.  We will stop when the row is empty in any case
+releaserow:;  // entered from below to drain the ring, either on buffer-full or at end-of-operation.  releasect is set to a high value in that case
+      __m256 *releaseringbase=(__m256*)ring[relstart];  // get address in ring
+      do{  // 
+       I blockbyteofst=CTTZI(releaseblockmask)*sizeof(E)*RESBLKE;  // get offset to next modified block in  this row
+       __m256d ipl;  // intermediate products and sums
+       __m256d qkE01=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i*)((I)releaseqkbase+blockbyteofst))), qkE23=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i*)((I)releaseqkbase+blockbyteofst)+1));  // read qk, bypass caches
+       __m256d ringE01=_mm256_load_pd((D*)(__m256d*)((I)releaseringbase+blockbyteofst)), ringE23=_mm256_load_pd((D*)((__m256d*)((I)releaseringbase+blockbyteofst)+1));  // read ring
+       __m256d qk0213h=_mm256_shuffle_pd(qkE01,qkE23,0b0000), qk0213l=_mm256_shuffle_pd(qkE01,qkE23,0b1111);  // convert to 0213 order, hi & lo
+       __m256d ring0213h=_mm256_shuffle_pd(ringE01,ringE23,0b0000), ring0213l=_mm256_shuffle_pd(ringE01,ringE23,0b1111);  // convert to 0213 order, hi & lo
+       TWOSUM(qk0213h,ring0213h,qk0213h,ipl)   // combine the high parts
+       ipl=_mm256_add_pd(ipl,qk0213l);  // add the combined low parts
+       TWOSUM(qk0213h,ipl,qk0213h,qk0213l)  // put h0h2h1h3 into canonical form
+       qkE01=_mm256_shuffle_pd(qk0213h,qk0213l,0b0000); qkE23=_mm256_shuffle_pd(qk0213h,qk0213l,0b1111);  // convert result to E order
+       _mm256_stream_pd((D*)(__m256d*)((I)releaseqkbase+blockbyteofst),qkE01); _mm256_stream_pd((D*)((__m256d*)((I)releaseqkbase+blockbyteofst)+1),qkE23);   // store qk, bypass caches
+       _mm256_storeu_pd((D*)(__m256d*)((I)releaseringbase+blockbyteofst),_mm256_setzero_pd()); _mm256_storeu_pd((D*)((__m256d*)((I)releaseringbase+blockbyteofst)+1),_mm256_setzero_pd());   // zero ring for next use
+       if((releaseblockmask&=-releaseblockmask)==0)goto rowfin;  // advance to next block, exit if none
+      }while(--releasect);
+      if(0){rowfin:;  // come here when a row has been fully sent to Qkt
+       rinfo[relstart].rowmask=0;  // when we finish a row, we must leave it with an empty mask
+       relstart=(relstart+1)&(RINGROWS-1);  // advance to next row
+       if(relstart!=b8start){  // if the release area is not empty after removing the finished row...
+        releaseblockmask=rinfo[relstart].rowmask; releaseringbase=(__m256*)ring[relstart]; releaseqkbase=rinfo[relstart].qktbase;  // move next row to the release variables.  blockmask=0 means no work
+        // Here we loop back to handle exception cases: (1) ring full; (2) operation finished.  We set releasect to high-value 
+        if(unlikely(((b8start-relstart)&(RINGROWS-1)))>=(RINGROWS-B8ROWS))goto releaserow;  // if ring is still full, wait for it to drain
+        if(unlikely(stripex>=nstripes))goto releaserow;  // if the problem is over, flush the entire ring
+       }
+       if(unlikely(releasect>100))if(stripex>=nstripes)goto finis; else goto caughtup;   // if we are coming out of a loopback, go to the right place: end, or just after we released into the full ring
+      }
+     }
     }
+    // one op finished.  Move to next
     opinfo *currchn=currop->chain;   // pointer to next 
     if(unlikely(nextrowinop==(UI4)~0>>1)){if(unlikely(prevop==0))aops=currchn; else prevop->chain=currchn;}  // if currop expired, remove it from chain
     else{prevop=currop; minnextrow=nextrowinop<minnextrow?nextrowinop:minnextrow;}  // otherwise update the oprev ptr, remember min new starting line#
     currop=currchn;
    }
   
-   // close up the rows and release them to the output stage.  For each nonempty row we write out the offset between the ring and the Qkt data, and copy the
-   // mask.  We also have to make sure the mask is cleared to 0 in all rows that have not yet been released
-   I sx=b8start; I qktrcol=(I)&qktcol[b8qktrow*qktshape[1]];  // store index, address of the modified row of Qkt corresponding to b8start
-   NOUNROLL DO(B8ROWS, rinfo[sx].qktoffset=qktrcol-(I)&ring[sx][0]; UI8 msk=rinfo[b8start].rowmask; rinfo[b8start].rowmask=0; rinfo[sx].rowmask=msk; sx=(sx+(msk>0))&(RINGROWS-1); b8start=(b8start+1)&(RINGROWS-1); qktrcol+=qktshape[1]*sizeof(E);)
+   // 8block finished.  close up the rows and release them to the output stage.  For each nonempty row we write out the address of the Qkt data, and copy the
+   // mask.  We also have to make sure the mask is cleared to 0 in all rows that go unreleased
+   I sx=b8start; I qktrcol=(I)&qktcol[b8qktrow*qktncols];  // store index, address of the modified row of Qkt corresponding to b8start
+   DONOUNROLL(B8ROWS, rinfo[sx].qktbase=(__m256d*)qktrcol; UI8 msk=rinfo[b8start].rowmask; rinfo[b8start].rowmask=0; rinfo[sx].rowmask=msk; sx=(sx+(msk>0))&(RINGROWS-1); b8start=(b8start+1)&(RINGROWS-1); qktrcol+=qktncols*sizeof(E);)
    b8start=sx;  // release the nonempty rows
- 
+   if(releaseblockmask==0){releaseblockmask=rinfo[relstart].rowmask; releaseqkbase=rinfo[relstart].qktbase;}  // if release queue was empty, move first row to the release variables.  blockmask=0 means no work
+   else if(unlikely(((b8start-relstart)&(RINGROWS-1)))>=(RINGROWS-B8ROWS)){releasect=(I4)~0>>1; goto releaserow;}  // if ring is full, wait for it to drain
+caughtup:;  // here when we have removed the ring-full situation
   }  // end 'while aops'
   stripe=__atomic_fetch_add(&ctx->resvx,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation
- }while(opno<nops);
-
-// after last reservation, flush the result stage
-
-
-
-
-   
-
- 
+ }
+ if(releaseblockmask){releasect=(I4)~0>>1; goto releaserow;}
+finis:;  // here we have flushed the ring at the end
 
  R 0;
 }
 
 
 // 128!:14  apply outer-products in parallel
-// w is 
-// result is row#,reciprocal of pivot hi,lo
-F1(jtbatchop){F12IP;
+// w is name;rowmasks;rowvalues,colmasks;colvalues;stripes;\:comploads
+// name (usually 'Qkt') is the source/destination, QP type.  shape (r,c).  It must be globally assigned with usecount 1, aligned on a cacheline boundary with rows that are even # cachelines
+// rowmasks (boxed shape p, the number of outer products).  Each contents is a boolean list, length <=r, indicating the position of non0 in rowvalues.  (+/@> rowmask) -: #@> rowvalues
+// rowvalues (boxed shape p).  Each contents is QP list of non0 row values
+// colmasks (boxed shape p).  Each contents is a boolean list, length =r, indicating the position of non0 in rowvalues.  (+/@> colmask) -: #@> rowvalues
+// colvalues (boxed shape p).  Each contents is QP list of non0 col values
+// stripes shape (s (number of stripes),2) giving start and end+1 of each stripe
+// compgrade shape s  is (\: comploads), the order stripes should be processed in to go from slowest to fastest
+// result empty
+F1(jtbatchop){F12IP;PROLOG(000);
  ARGCHK1(w);
+ I4 *(colndxs)[MAXOP];  // pointers to column indexes, filled in by threads
+ struct bopctx opctx={.nthreads=(*JT(jt,jobqueues))[0].nthreads+1, .colndxct=(*JT(jt,jobqueues))[0].nthreads+1, .resvx=(*JT(jt,jobqueues))[0].nthreads+1, .colndxs=&colndxs,};
+
  // extract the inputs
-
-  // do the work
-
-  // figure out how many threads to use, how many lines to take in each one
-#define TASKMINATOMS ((2*2000)/2)  // TUNE Values will be in cache.  Normal DP comp is 2 clocks per atom.  We don't want to start a task with less than 2000 clocks, so insist on twice that many
-  I nthreads=(*JT(jt,jobqueues))[0].nthreads+1;  // the number of threads we would like to use (including master), init to # available
-  I rowsperthread=m;  // will be #rows each processor should take
-  if(((1-nthreads)&(TASKMINATOMS-rowsperthread))>=0)nthreads=1;  // if only one thread, or job too small, use just one thread
-  else{
-   // big enough for multithreading.
-   rowsperthread=(m+nthreads-1)/nthreads;  // number of threads per processor, rounded up
-  }
-#undef TASKMINATOMS
-
-  // init the context
-#define YC(n) .n=n,
-struct sprctx opctx={YC(rowsperthread)YC(ck)YC(bk)YC(m).ckthreshd=DAV(thresh)[0],.bkthreshd=DAV(thresh)[1]};
-#undef YC
-
+ ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==7,EVLENGTH)  // w is 7 boxes
+ A box;  // will hold the contents of each box in turn
+ box=C(AAV(w)[5]);  // stripes
+ ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[1]==2,EVLENGTH) opctx.stripestartend1=(I (*)[][2])IAV(box); opctx.nstripes=AS(box)[0];  // must be INT [][2]
+ GATV0(box,INT4,opctx.nstripes*MAXOP,1); opctx.opstripebsum=(I4 (*)[][MAXOP])I4AV(box);  // allocate running-index area, save in ctx
+ box=C(AAV(w)[6]);  // stripegrade
+ ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==opctx.nstripes,EVLENGTH) opctx.stripegrade=IAV(box);  // must be INT [#stripes]
+ box=C(AAV(w)[0]);  // 'Qkt'
+ ASSERT(AT(box)&LIT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK)  A nm; RZ(nm=nfs(AN(box),CAV(box))); A qktf=syrd(nm,jt->locsyms); A qkt=QCWORD(qktf); ASSERT(qkt!=0,EVVALUE)  // name exists
+ // from here till end we must take errors through 'exit'
+ ASSERTGOTO(AT(qkt)&QP,EVDOMAIN,exit) ASSERTGOTO(AR(qkt)==2,EVRANK,exit) opctx.qkt=EAV(qkt);  // QP, rank=2
+ ASSERTSYSGOTO(((I)opctx.qkt&(CACHELINESIZE-1))==0,"accumuland not on cache bdy",exit)  // data must be on cache bdy
+ opctx.qktnrows=AS(qkt)[0]; opctx.qktncols=AS(qkt)[1];  // remember shape in parm block 
+ ASSERTSYSGOTO((((I)opctx.qktncols*sizeof(E))&(CACHELINESIZE-1))==0,"accumuland length not a cacheline multiple",exit)  // data must be on cache bdy
+ ASSERTSYSGOTO((AC(qkt)-!!((I)qktf&QCFAOWED))==1,"accumuland is aliased",exit);   // count, after removing the ra from syrd, must be 1
+ box=C(AAV(w)[1]);  // row masks
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) opctx.nops=AN(box); opctx.oprowmasks=AAV(box);  // must be list of boxes; save number and address
+ DO(opctx.nops, A sb=C(opctx.oprowmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be boolean mask no longer than the row
+ box=C(AAV(w)[2]);  // row values
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.oprowvals=AAV(box);  // must be list of boxes; save number and address
+ DO(opctx.nops, A sb=C(opctx.oprowvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be quadprec no longer than the row
+ box=C(AAV(w)[3]);  // col masks
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.opcolmasks=AAV(box);  // must be list of boxes; save number and address
+ DO(opctx.nops, A sb=C(opctx.opcolmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be boolean mask no longer than the col
+ box=C(AAV(w)[4]);  // col values
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.opcolvals=AAV(box);  // must be list of boxes; save number and address
+ DO(opctx.nops, A sb=C(opctx.opcolvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be quadprec no longer than the col
   // run the operation
-  opctx.row=-1;  // init row# to invalid.  Improving threads will update it
-  if(nthreads>1)jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtfindsprx,&opctx,nthreads,0);  // go run the tasks - default to threadpool 0
-  else jtbatchopx(jt,&opctx,0);  // the one-thread case is not uncommon and we avoid thread overhead then
+ jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtbatchopx,&opctx,opctx.nthreads,0);  // execute on all threads
 
-  // if no SPR was found, signal error.  This is possible only if the only pivots were near-threshold in dp and below threshold in qp
- }
+exit:;  // here on error to undo syrd
+ if((I)qktf&QCFAOWED)fa(qkt);  // if syrd issued ra, undo it
+ EPILOG(mtm);  // return i. 0 0 always
 }
 #else
 F1(jtbatchop){F12IP;ASSERT(0,EVNONCE);}

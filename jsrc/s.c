@@ -503,7 +503,7 @@ A jtsybaseloc(J jt,A a) {I m,n;NM*v;
  R locindirect(n-m-2,2+m+v->s,v->bucketx);
 }
 
-// look up a name (either simple or locative) using the full name resolution
+// look up name a (either simple or locative) using the full name resolution
 // result is addr/global/flags for name (i. e. QCFAOWED semantics), or 0 if not found (no error on undefname)
 // If the block is found, the value has been ra()d
 A jtsyrd(J jt,A a,A locsyms){A g;

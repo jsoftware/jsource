@@ -964,6 +964,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTPYX(e,line)   {jtjsignale(jt,(e)|(EMSGFROMPYX|EMSGNOEFORMAT|EMSGNOMSGLINE),line,0); R 0;}
 #define ASSERTSYSCOMMON(b,s,stmt)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); stmt}}
 #define ASSERTSYS(b,s)  ASSERTSYSCOMMON(b,s,R 0;)
+#define ASSERTSYSGOTO(b,s,lbl)  ASSERTSYSCOMMON(b,s,goto lbl;)
 #define ASSERTSYSV(b,s,stmt) ASSERTSYSCOMMON(b,s,stmt)
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}  // put error code into jerr, but signal only if nonretryable
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}  // exit primitive with error code in return

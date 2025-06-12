@@ -263,11 +263,12 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
         // assembly errors are special.  They require an info vector, which has been stored in jt->etxinfo.  We pass this vector as m
         if((awm=box(vec(INT,jt->etxinfo->asseminfo.assemframelen+(offsetof(struct assem,assemshape)/sizeof(I)),&jt->etxinfo->asseminfo)))==0)goto noeformat;
        }
-      if(w&&((AT(self)&CONJ)||(AT(w)&NOUN)))  // if w is valid
-        {A w1=w; if(AT(w1)&NOUN){if((w1=w1ah=gahzap(jt,AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w))} if(!(AT(self)&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
-       if(a){A a1=a; if(AT(a1)&NOUN){if((a1=a1ah=gahzap(jt,AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(AT(self)&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
        // Convert self to AR.  If self is not a verb convert a/w to AR also
+       I selft=AT(self);
        A selfar; if((selfar=arep(self))==0)goto noeformat;
+       if(w&&((selft&CONJ)||(AT(w)&NOUN)))  // if w is valid
+         {A w1=w; if(AT(w1)&NOUN){ if((w1=w1ah=gahzap(jt,AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w)) } if(!(selft&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
+       if(a){A a1=a; if(AT(a1)&NOUN){if((a1=a1ah=gahzap(jt,AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(selft&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
        // run the analyzer.  Fold the unbalanced-paren info into the error number
        deba(DCJUNK,0,0,0);  // create spacer frame so eformat calls don't overwrite stack
        WITHDEBUGOFF(df1(msg,jlink(sc(e|(pareninfo<<8)),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val);)  // run eformat_j_

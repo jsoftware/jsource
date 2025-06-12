@@ -41,8 +41,9 @@ static __attribute__((aligned(CACHELINESIZE))) const C alp[256]={
 
 #define PRIMNOUN(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primint=val} }
 #define PRIMNOUNFL(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primfl=val} }
-#define PRIMALL(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) \
- [idda]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
+#define PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) \
+ ={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
+#define PRIMALL(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) [idda]PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc)
 #define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=0,0,rm,rl,rr,vflg,vflg2,0,0,0)
 #define PRIMACVPARM(id,t,f0,f1,rm,rl,rr,vflg,vflg2,initpm1,initpm2) PRIMALL(id,id,t,f0,f1,0,0,0,initpm1,initpm2,rm,rl,rr,vflg,vflg2,0,0,0)
 #define PRIMATOMIC2(vaid,id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,0,0,0,.lu1.uavandx=0,VA2##vaid*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
@@ -58,6 +59,17 @@ static __attribute__((aligned(CACHELINESIZE))) const C alp[256]={
  VA1##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 #define PRIMATOMIC12(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=(VA1##id-VA1ORIGIN)*sizeof(UA),VA2##id*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
  VA2##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
+
+PRIM dsCMINUS_NOT PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CMINUS*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE0,VF2NONE|VF2PRIM,0,0,VA2CMINUS);
+PRIM dsCMINUS_NEG PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CMINUS*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE1,VF2NONE|VF2PRIM,0,0,VA2CMINUS);
+PRIM dsCMINUS_DEC PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CMINUS*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE2,VF2NONE|VF2PRIM,0,0,VA2CMINUS);
+PRIM dsCPLUS_INC PRIMASSIGN(CPLUS,CPLUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CPLUS*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE0,VF2NONE|VF2PRIM,0,0,VA2CPLUS);
+PRIM dsCSTAR_DUBL PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CSTAR*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE0,VF2NONE|VF2PRIM,0,0,VA2CSTAR);
+PRIM dsCSTAR_SQUARE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CSTAR*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE1,VF2NONE|VF2PRIM,0,0,VA2CSTAR);
+PRIM dsCSTAR_HALVE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CSTAR*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE2,VF2NONE|VF2PRIM,0,0,VA2CSTAR);
+PRIM dsCSTAR_CIRCLE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CSTAR*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE3,VF2NONE|VF2PRIM,0,0,VA2CSTAR);
+PRIM dsCDIV_RECIP PRIMASSIGN(CDIV,CDIV,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CDIV*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE0,VF2NONE|VF2PRIM,0,0,VA2CDIV);
+PRIM dsCDIV_HALVE PRIMASSIGN(CDIV,CDIV,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CDIV*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VASGSAFE|VWASUNARY|VUNARYCODE1,VF2NONE|VF2PRIM,0,0,VA2CDIV);
 
 PRIM primtab[256] = {
  /*  (  */  PRIMNOUN(CLPAR,LPAR,1,0,0),

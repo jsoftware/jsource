@@ -1686,7 +1686,18 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
  }
  // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
  // convert 0 rank back to R2MAX to avoid "0 0 in msg
- jt->ranks=selfranks?selfranks:R2MAX; jteformat(jt,self,a,w,0); RESETRANK;
+ jt->ranks=selfranks?selfranks:R2MAX;
+ if(FAV(self)->flag&VWASUNARY){  // originally monadic shorthand?
+  // the verb was translated from a unary shorthand like -: to 0.5 * .  We must translate back for display.
+  switch(FAV(self)->id){  // for each id, revert to the original id.  If the original arg was in w, move it to a.
+  case CMINUS: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CNOT); a=w;  break; case VUNARYCODE1: self=ds(CMINUS); a=w; break; case VUNARYCODE2: self=ds(CLE); break;} break;
+  case CPLUS: self=ds(CGE); a=w; break;
+  case CSTAR: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CPLUSCO); a=w;  break; case VUNARYCODE1: self=ds(CSTARCO); break; case VUNARYCODE2: self=ds(CHALVE); a=w; break; case VUNARYCODE3: self=ds(CCIRCLE); a=w; break;} break;
+  case CDIV: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CDIV); a=w;  break; case VUNARYCODE1: self=ds(CHALVE); break;} break;
+  }
+  w=0; // now a monad
+ }
+ jteformat(jt,self,a,w,0); RESETRANK;
  RETF(z);
 }
 
@@ -1704,14 +1715,15 @@ DF2(jtresidue){F12IP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&
 #define SETCONPTR(n) A conptr=num(n); \
   if(unlikely(!(AT(w)&B01+INT+FL))){A conptr2=numi2(n); conptr=AT(w)&INT2?conptr2:conptr; conptr2=numi4(n); conptr=AT(w)&INT4?conptr2:conptr;  \
   }else{A conptr2; if(n<2){conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr;} conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;}
-F1(jtnot){F12IP;ARGCHK1(w); SETCONPTR(1) R AT(w)&B01?eq(num(0),w):jtatomic2(jtfg,conptr,w,ds(CMINUS));}
+F1(jtnot){F12IP;ARGCHK1(w); SETCONPTR(1) R AT(w)&B01?eq(num(0),w):jtatomic2(jtfg,conptr,w,(A)&dsCMINUS_NOT);}
 // negate moved to va1
-F1(jtdecrem){F12IP;ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R jtatomic2(jtfg,w,conptr,ds(CMINUS));}
-F1(jtincrem){F12IP;ARGCHK1(w); SETCONPTR(1) R jtatomic2(jtfg,conptr,w,ds(CPLUS));}  // leave inplaceable in w only
-F1(jtduble ){F12IP;ARGCHK1(w); SETCONPTR(2) R jtatomic2(jtfg,conptr,w,ds(CSTAR));}  // leave inplaceable in w only
-F1(jtsquare){F12IP;ARGCHK1(w); R tymes(w,w);}   // Never inplace (would be OK if can't overflow)
+F1(jtdecrem){F12IP;ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R jtatomic2(jtfg,w,conptr,(A)&dsCMINUS_DEC);}
+F1(jtincrem){F12IP;ARGCHK1(w); SETCONPTR(1) R jtatomic2(jtfg,conptr,w,(A)&dsCPLUS_INC);}  // leave inplaceable in w only
+F1(jtduble ){F12IP;ARGCHK1(w); SETCONPTR(2) R jtatomic2(jtfg,conptr,w,(A)&dsCSTAR_DUBL);}  // leave inplaceable in w only
+F1(jtsquare){F12IP;ARGCHK1(w); R jtatomic2(jt,w,w,(A)&dsCSTAR_SQUARE);}   // Never inplace (would be OK if can't overflow)
 // recip moved to va1
-F1(jthalve ){F12IP;ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R jtatomic2(jtfg,onehalf,w,ds(CSTAR)); IPSHIFTWA; R jtatomic2(jtfg,w,num(2),ds(CDIV));} 
+F1(jthalve ){F12IP;ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R jtatomic2(jtfg,onehalf,w,(A)&dsCSTAR_HALVE); IPSHIFTWA; R jtatomic2(jtfg,w,num(2),(A)&dsCDIV_HALVE);}
+// pix moved to va1
 
 static AHDR2(zeroF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,MEMSET00LEN,MEMSET00);R EVOK;}
 static AHDR2(oneF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,1,MEMSET01);R EVOK;}

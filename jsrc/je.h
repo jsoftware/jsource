@@ -479,6 +479,7 @@ extern F2(jtebar);
 extern F2(jtekupdate);
 extern F2(jtqktupdate);
 extern F1(jtfindspr);
+extern F1(jtbatchop);
 extern F2(jteps);
 extern DF2(jtetoiso8601);
 extern DF2(jtiso8601toe);
@@ -1121,6 +1122,16 @@ extern struct Bd2 BpieE;
 extern D        pf;
 extern struct Bd1 Bpie;
 #define pie ((A)&Bpie)
+extern PRIM dsCMINUS_NOT;  // -. that was converted to -
+extern PRIM dsCMINUS_NEG;  // -. that was converted to -
+extern PRIM dsCMINUS_DEC;  // -. that was converted to -
+extern PRIM dsCPLUS_INC;  // >: that was converted to +
+extern PRIM dsCSTAR_DUBL;  // +: that was converted to *
+extern PRIM dsCSTAR_SQUARE;  // *: that was converted to *
+extern PRIM dsCSTAR_HALVE;  // -: that was converted to *
+extern PRIM dsCSTAR_CIRCLE;  // o. that was converted to *
+extern PRIM dsCDIV_RECIP;  // % that was converted to %
+extern PRIM dsCDIV_HALVE;  // -: that was converted to %
 extern PRIM     primtab[];
 extern Z        zeroZ;
 extern const dcomplex zone;

@@ -3381,7 +3381,7 @@ finndx:;
  I b8start=0;  // start of ring area where next 8block is built AND end+1 pointer of data released to ring (could be US)
 
  DO(nops, opstat[i].acolvals=EAV(opcolvals[i]);)  // get pointer to values in each column
- __m256i sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
+ __m256d sgnbit=_mm256_set1_epi64x(Iimin);  // 0x8..0
 
  while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+nops)johnson(100);  // delay until indexes are ready
 
@@ -3413,7 +3413,7 @@ if(ssize>MAXNON0||ssize<=0)SEGFAULT;
     opstat[io].arowoffsets=nextstripeofst;  // remember where the offsets start
     for(j32=0,nofst=0,smask=(__m256i *)(BAV(oprowmasks[io])+sstart);;++j32){
      __m256i m32=_mm256_loadu_si256(smask+j32);  // read 32 bits.  May overfetch
-     ((C*)&opstat[io].rbmask)[j32]=(UI)(UI4)_mm256_movemask_ps(_mm256_cmpgt_epi32(m32,_mm256_setzero_si256()));   // create touched mask for each 4-value section (i. e. 1 resultblock), save in rbmask
+     ((C*)&opstat[io].rbmask)[j32]=(UI)(UI4)_mm256_movemask_ps(_mm256_castsi256_ps(_mm256_cmpgt_epi32(m32,_mm256_setzero_si256())));   // create touched mask for each 4-value section (i. e. 1 resultblock), save in rbmask
      I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(m32,_mm256_setzero_si256()));   // extract the 32 bits
      while(bits){lastoffset=nextstripeofst[nofst]=(j32*32+CTTZI(bits))*sizeof(E); bits&=-bits; ++nofst; if(nofst==ssize)goto finmask;}  // turn each 1-bit into a byte offset; stop if we have hit # offsets
     }
@@ -3482,9 +3482,9 @@ finmask:;
 
       // store results.
       h0l0h1l1=_mm256_shuffle_pd(h0h2h1h3,l0l2l1l3,0b0000); h2l2h3l3=_mm256_shuffle_pd(h0h2h1h3,l0l2l1l3,0b1111);  // convert result to E order
-      _mm_storeu_pd((D*)((I)r0+o0),_mm256_castsi256_si128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o2),_mm256_castsi256_si128(h2l2h3l3));   // store 0&2
+      _mm_storeu_pd((D*)((I)r0+o0),_mm256_castsi256_si128(_mm256_castpd_si256(h0l0h1l1))); _mm_storeu_pd((D*)((I)r0+o2),_mm256_castsi256_si128(_mm256_castpd_si256(h2l2h3l3)));   // store 0&2
       h0l0h1l1=_mm256_permute4x64_pd(h0l0h1l1,0b01001110); h2l2h3l3=_mm256_permute4x64_pd(h2l2h3l3,0b01001110);  // shift 1&3
-      _mm_storeu_pd((D*)((I)r0+o1),_mm256_castsi256_si128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castsi256_si128(h2l2h3l3));   // store 1&3 - 3 must be last because the others may have the same offset
+      _mm_storeu_pd((D*)((I)r0+o1),_mm256_castsi256_si128(_mm256_castpd_si256(h0l0h1l1))); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castsi256_si128(_mm256_castpd_si256(h2l2h3l3)));   // store 1&3 - 3 must be last because the others may have the same offset
      }while((andx+=(RESBLKE*sizeof(aof[0])))<alen);  // end after last block
 
      // send a few values to Qkt

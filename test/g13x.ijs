@@ -505,6 +505,7 @@ NB. ------------ eformat ---------------------------------------------------
 
 1 e. '(0)' E. 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun
 
+f =: 1:`({{ x -: y [ rx__ =: x [ ry__ =: y }}  ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
 f =: 1:`(-:  ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
 
 '|length error in f, executing dyad +|shapes 2 and 3 do not conform|   2 3    +4 5 6'    f '2 3+4 5 6'

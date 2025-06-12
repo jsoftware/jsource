@@ -505,7 +505,7 @@ NB. ------------ eformat ---------------------------------------------------
 
 1 e. '(0)' E. 4 {{y*"(0) 0 0 1,:_ _,7)];.0 x}} eftx 5 6 7  NB. verify error disp puts () around PPPP noun
 
-f =: 1:`(-:   ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
+f =: 1:`(-:  ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
 
 '|length error in f, executing dyad +|shapes 2 and 3 do not conform|   2 3    +4 5 6'    f '2 3+4 5 6'
 '|length error in f, executing dyad +"1|shapes 2 3 and 4 5 6 do not conform|   (i.2 3)    +"1 i.4 5 6'    f '(i. 2 3)+"1 i.4 5 6'
@@ -525,8 +525,19 @@ g =: {{ y + x }}
 '|valence error in g|explicit definition has no monadic valence|       g 3' f 'g 3'
 '|valence error in f|[: must be part of a capped fork|   5.7    ([:;]<@(+/\);.2)i.5' f '5.7 ([:;]<@(+/\);.2) i. 5'
 
+NB. monadic shorthands
+'|domain error in f, executing monad -.|y is boxed|       -.a:' f '-. a:'
+'|domain error in f, executing monad -|y is boxed|       -a:' f '- a:'
+'|domain error in f, executing monad <:|y is boxed|       <:a:' f '<: a:'
+'|domain error in f, executing monad >:|y is boxed|       >:a:' f '>: a:'
+'|domain error in f, executing monad +:|y is boxed|       +:a:' f '+: a:'
+'|domain error in f, executing monad *:|y is boxed|       *:a:' f '*: a:'
+'|domain error in f, executing monad %|y is boxed|       %a:' f '% a:'
+'|domain error in f, executing monad -:|y is boxed|       -:a:' f '-: a:'
+'|domain error in f, executing monad o.|y is boxed|       o.a:' f 'o. a:'
+
 NB. 11!:n
-NB. The only thing we can test is error, since gconsole soen't support it
+NB. The only thing we can test is error, since gconsole doesn't support it
 'interface error' -: 11!:2500 etx 2
 'domain error' -: 11!:2500 etx 2j2
 

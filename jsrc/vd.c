@@ -213,7 +213,7 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  if(wr==1)w=table(w);  // convert column vector to column matrix
 #if !defined(_WIN32)    // windows openblas issue
 // calling lapack LUP factoriztion to compute inverse of square matrix
- if(hascblas&&(s[0]==s[1])&&(AT(w)&FL)&&(s[0]>1)){
+ if(hascblas&&(wr==2)&&(s[0]==s[1])&&(AT(w)&FL)&&(s[0]>1)){
  int info; int m1=s[0]; int *ipiv;
  D worksize; D *work; int nn=-1;
  ipiv=MALLOC(m1*sizeof(int));
@@ -228,7 +228,7 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  FREE(ipiv); FREE(work);
  *det=0.0;
  RETF(cant1(w));
- }else if(hascblas&&(s[0]==s[1])&&(AT(w)&CMPX)&&(s[0]>1)){
+ }else if(hascblas&&(wr==2)&&(s[0]==s[1])&&(AT(w)&CMPX)&&(s[0]>1)){
  int info; int m1=s[0]; int *ipiv;
  dcomplex worksize; dcomplex *work; int nn=-1;
  ipiv=MALLOC(m1*sizeof(int));
@@ -243,6 +243,82 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  FREE(ipiv); FREE(work);
  *det=0.0;
  RETF(cant1(w));
+#if 0
+ }else if(hascblas&&(wr==2)&&(s[0]>=s[1])&&(AT(w)&FL)&&(s[1]>1)){
+ int info; int m1=s[0]; int n1=s[1];   // m1 >= n1
+ D *work;
+ int lwork;
+ char jobz='A';
+/*
+ A = U*SIGMA*VT
+ sg(M,N), u(M,M), vt[N,N];
+*/
+ D *sg=MALLOC(n1*sizeof(D));
+ D *u=MALLOC(m1*m1*sizeof(D));
+ D *vt=MALLOC(n1*n1*sizeof(D));
+ int *iwork=MALLOC(n1*8);
+ w=cant1(w);
+ lwork=-1;
+ D work0;
+ dgesdd_(&jobz, &m1, &n1, DAV(w), &m1, sg, u, &m1, vt, &n1, &work0, &lwork, iwork, &info);
+ if(info){FREE(sg); FREE(u); FREE(vt); FREE(iwork); ASSERT(!info,EVDOMAIN);}
+ lwork=(int)work0;
+ work=MALLOC(lwork*sizeof(D));
+ dgesdd_(&jobz, &m1, &n1, DAV(w), &m1, sg, u, &m1, vt, &n1, work, &lwork, iwork, &info);
+ if(info){FREE(sg); FREE(u); FREE(vt); FREE(iwork); FREE(work); ASSERT(!info,EVDOMAIN);}
+ FREE(iwork); FREE(work);
+ DO(n1, sg[i] = 1.0 / sg[i];)
+ I sp[2]={n1,m1};
+ A z; GATV(z,FL,n1*m1,2,sp)
+//compute the  first multiplication sg*ut       (n,m) x (m,m) => (n,m)
+ DO(n1, cblas_dscal(m1,sg[i],&u[i*m1],1););    // u is column major
+ FREE(sg);
+//compute the second multiplication v*sg*u^T  (n,n) x (n,m) => (n,m)
+ cblas_dgemm(CblasRowMajor,CblasNoTrans, CblasNoTrans, n1, m1, n1, 1.0, vt, n1, u, m1, 0.0, DAV(z), m1);
+//now, z is the pseudoinverse of a.
+ FREE(u); FREE(vt);
+ ASSERT(!info,EVDOMAIN);
+ *det=0.0;
+ RETF(z);
+ }else if(hascblas&&(wr==2)&&(s[0]>=s[1])&&(AT(w)&CMPX)&&(s[1]>1)){
+ int info; int m1=s[0]; int n1=s[1];   // m1 >= n1
+ dcomplex *work;
+ int lwork;
+ char jobz='A';
+/*
+ A = U*SIGMA*VT
+ sg(M,N), u(M,M), vt[N,N];
+*/
+ D *sg=MALLOC(n1*sizeof(D));
+ dcomplex *u=MALLOC(m1*m1*sizeof(Z));
+ dcomplex *vt=MALLOC(n1*n1*sizeof(Z));
+ int *iwork=MALLOC(n1*8);
+ D *rwork=MALLOC((5*m1*m1+7*m1)*sizeof(D));
+ w=cant1(w);
+ lwork=-1;
+ dcomplex work0;
+ zgesdd_(&jobz, &m1, &n1, (dcomplex*)ZAV(w), &m1, sg, u, &m1, vt, &n1, &work0, &lwork, rwork, iwork, &info);
+ if(info){FREE(sg); FREE(u); FREE(vt); FREE(iwork); FREE(rwork); ASSERT(!info,EVDOMAIN);}
+ lwork=(int)*(D*)&work0;
+ work=MALLOC(lwork*sizeof(Z));
+ zgesdd_(&jobz, &m1, &n1, (dcomplex*)ZAV(w), &m1, sg, u, &m1, vt, &n1, work, &lwork, rwork, iwork, &info);
+ if(info){FREE(sg); FREE(u); FREE(vt); FREE(iwork); FREE(rwork); FREE(work); ASSERT(!info,EVDOMAIN);}
+ FREE(iwork); FREE(rwork); FREE(work);
+ DO(n1, sg[i] = 1.0 / sg[i];)
+ I sp[2]={n1,m1};
+ A z; GATV(z,CMPX,n1*m1,2,sp)
+ dcomplex sgi;
+//compute the  first multiplication sg*ut       (n,m) x (m,m) => (n,m)
+ DO(n1, sgi.real=sg[i];sgi.imag=0.0;cblas_zscal(m1,(void*)&sgi,&u[i*m1],1););    // u is column major
+ FREE(sg);
+//compute the second multiplication v*sg*u^T  (n,n) x (n,m) => (n,m)
+ cblas_zgemm(CblasRowMajor,CblasNoTrans, CblasNoTrans, n1, m1, n1, &zone, vt, n1, u, m1, &zzero, DAV(z), m1);
+//now, z is the pseudoinverse of a.
+ FREE(u); FREE(vt);
+ ASSERT(!info,EVDOMAIN);
+ *det=0.0;
+ RETF(z);
+#endif
  }
 #endif
  w=conjug(cant1(w));  // create w*, where the result will be built inplace

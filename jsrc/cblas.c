@@ -146,9 +146,9 @@ void cblasinit(C*libpath) {
 //   jcblasfn1(cblas_drot)
 //   jcblasfn1(cblas_drotm)
 //   jcblasfn1(cblas_sscal)
-//   jcblasfn1(cblas_dscal)
+     jcblasfn1(cblas_dscal)
 //   jcblasfn1(cblas_cscal)
-//   jcblasfn1(cblas_zscal)
+     jcblasfn1(cblas_zscal)
 //   jcblasfn1(cblas_csscal)
 //   jcblasfn1(cblas_zdscal)
 //   jcblasfn1(cblas_sgemv)
@@ -252,6 +252,8 @@ void cblasinit(C*libpath) {
    jcblasfn1(zgetrf_)
    jcblasfn1(dgetri_)
    jcblasfn1(zgetri_)
+   jcblasfn1(dgesdd_)
+   jcblasfn1(zgesdd_)
  }else{
   *cblasfile=0;
  }

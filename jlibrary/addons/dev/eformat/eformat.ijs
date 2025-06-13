@@ -564,7 +564,9 @@ case. 3 do.
           hdr , xmsg , ' but ' , ymsg return.
         end.
       elseif. e=EVDOMAIN do. emsg=. 'x has '&,^:(*@#) a efindexmsg a 9!:23 (1;0)
-      elseif. e=EVINHOMO do. emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
+      elseif. e=EVINHOMO do.
+        if. #emsg=. efcknumericargs a  do. hdr,'x is ' , emsg return. end.
+        emsg =. 'arguments and fill are incompatible: ' , efandlist w efhomo@:(,&(*@(#@,) * 3!:0)) fill
       end.
     case. ;:'#.' do.
       if. e=EVLENGTH do.

@@ -1,5 +1,47 @@
 prolog './g520.ijs'
 
+NB. 128!:14
+0!:_1^:(-.IF64) '$'   NB. skip if not 64-bit
+
+batchopndx =: {{
+'name rowmasks rowvalues colmasks colvalues threshold' =. y
+NB. Find the vertical stripes. 
+
+minmaxct =. 01 ,.~ ,.~ I. > +.&.>/ colmasks  NB. get mask of all columns of Qkt to be processed,convert to minmaxct form
+
+NB. x is (min gap,max gap+1) y is minmaxct  result is ending frets for sections that can be coalesced
+NB. A section can be coalesced to the previous one if the gap between the two is in range, and neither is already 64 long
+coalfrets =.  1 ,~ (}.*.}:)@(64&>)@:(2&{"1)@] *. >/@(<:/ (}:@:(1&{"1) - }.@:(0&{"1)))
+NB. (reduction verb) x,y are partitions of minmaxct that can be coalesced
+NB. result is y for the next reduction: if new block cannot be coalesced to the tail, either because the tail len was >64 (0 now) or the spread with the new block is >256, start over at the new block;
+NB.   otherwise keep the tail's ending position and add the length of the new to the coalesced total (resetting to 0 if >64)
+redmmc =. (0:^:(>:&64)@:+&:{: 2} [) ^:(*@{:@[ *. 256 >: 1&{@[ - {.@])~
+NB. y is result of applying redmmc
+NB. result is leading frets: 1 if the ending position is not the same as the PREVIOUS ending position
+blockfrets =. (~: |.!._1) @: (1&{"1)
+NB. y is block of mmcs, result is coalesced mmc for the block
+coalesce =. ,`(((<0 0,:_1 1))&{ , +/@:(2&{"1))@.(1<#)   NB. Result is a single mmc
+
+NB. for gap sizes 8, 16,...256, combine groups separated by a smaller gap that will not make a run of > 128 cols
+for_gap. 2 ]\ 1 4 8 16 32 64 128 do.
+  minmaxct =.  (;@:(<@((coalesce;.1~    [: blockfrets redmmc/)^:(1<#));.2)~  gap&coalfrets) minmaxct
+end.
+
+stripes =. 0 1{"1 minmaxct  NB. (start,end+1) for each stripe 
+comploads =. +/ (+/@> rowmasks) * (,.@(-~/\)"1 stripes)&(+/;.0)@> colmasks    NB. table of (start,len) of each stripe; for each column, count 1s in each stripe; weight by #rows in each op; sum by stripes
+
+128!:14 y,stripes;(\:comploads)
+
+i. 0 0
+}}
+
+qkt =. (15!:19) 11 c. 19 1024 $ 0.
+rowmasks =. 
+
+NB.$     end of 64-bit-only
+
+
+
 e128x19 =: {{
 if. '' -: $ 8{:: y do.   NB. col/spr
  qy =: ([: (15!:18) 11 c. +/@:(11&c.))&.>&.(3 6 7&{) y
@@ -2461,7 +2503,7 @@ NB. -----------------
 ({&1. 2 (~: 15!:19)~ 15!:19) $0    NB. If a is not inplaceable, we cannot change its type
 
  
-4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b catalog copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom qres qy res run128_9 savx savy savref savres savspr'
+4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchopndx catalog copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom qres qy res run128_9 savx savy savref savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y z zb zz '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

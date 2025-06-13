@@ -479,7 +479,7 @@ extern F2(jtebar);
 extern F2(jtekupdate);
 extern F2(jtqktupdate);
 extern F1(jtfindspr);
-extern F1(jtbatchop);
+extern F2(jtbatchop);
 extern F2(jteps);
 extern DF2(jtetoiso8601);
 extern DF2(jtiso8601toe);

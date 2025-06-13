@@ -3551,19 +3551,21 @@ finis:;  // here we have flushed the ring at the end
 }
 
 
-// 128!:14  apply outer-products in parallel
-// w is name;rowmasks;rowvalues,colmasks;colvalues;stripes;(\:comploads);threshold
+// 128!:14  apply outer-products in parallel.  Bivalent
+// a (optional) is debug options
+// w is name;rowmasks;rowvalues,colmasks;colvalues;threshold;stripes;(\:comploads)
 // name (usually 'Qkt') is the source/destination, QP type.  shape (r,c).  It must be globally assigned with usecount 1, aligned on a cacheline boundary with rows that are even # cachelines
 // rowmasks (boxed shape p, the number of outer products).  Each contents is a boolean list, length <=r, indicating the position of non0 in rowvalues.  (+/@> rowmask) -: #@> rowvalues
 // rowvalues (boxed shape p).  Each contents is QP list of non0 row values
 // colmasks (boxed shape p).  Each contents is a boolean list, length =r, indicating the position of non0 in rowvalues.  (+/@> colmask) -: #@> rowvalues
 // colvalues (boxed shape p).  Each contents is QP list of non0 col values
+// threshold is a float atom.  Result |values| less than threshold are forced to 0
 // stripes shape (s (number of stripes),2) giving start and end+1 of each stripe
 // compgrade shape s  is (\: comploads), the order stripes should be processed in to go from slowest to fastest
-// threshold is a float atom.  Result |values| less than threshold are forced to 0
 // result is value of name after modification
-F1(jtbatchop){F12IP;PROLOG(000);
+F2(jtbatchop){F12IP;PROLOG(000);
  ARGCHK1(w);
+ if(likely(AT(w)&VERB)){w=a; a=zeroionei(0);} RE(a=i0(a))  // default options for monad and verify integer atom
  I4 *(colndxs)[MAXOP];  // pointers to column indexes, filled in by threads
  struct bopctx opctx={.nthreads=(*JT(jt,jobqueues))[0].nthreads+1, .colndxct=(*JT(jt,jobqueues))[0].nthreads+1, .resvx=(*JT(jt,jobqueues))[0].nthreads+1, .colndxs=&colndxs,};
 
@@ -3573,7 +3575,7 @@ F1(jtbatchop){F12IP;PROLOG(000);
  box=C(AAV(w)[5]);  // stripes
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[1]==2,EVLENGTH) opctx.stripestartend1=(I (*)[][2])IAV(box); opctx.nstripes=AS(box)[0];  // must be INT [][2]
  GATV0(box,INT4,opctx.nstripes*MAXOP,1); opctx.opstripebsum=(I4 (*)[][MAXOP])I4AV(box);  // allocate running-index area, save in ctx
- box=C(AAV(w)[6]);  // stripegrade
+ box=C(AAV(w)[6]);  // compgrade
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==opctx.nstripes,EVLENGTH) opctx.stripegrade=IAV(box);  // must be INT [#stripes]
  box=C(AAV(w)[7]);  // threshold
  if(!(AT(box)&FL))RZ(box=cvt(FL,box)); ASSERT(AR(box)==0,EVRANK) opctx.threshold=DAV(box)[0];  // convert to FL

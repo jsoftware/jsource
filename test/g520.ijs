@@ -1,9 +1,9 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.IF64 '$'   NB. skip if not 64-bit
+0!:_1`1:@.0 '$'   NB. skip if not 64-bit
 
-
+load'format/printf'  NB. scaf
 
 NB. 'col' means pivot column, which is horizontal in Qkt.  'row' is pivot row in Qk, which comes from a col of Qkt.
 NB. Call is destname;rowmasks;rowvalues;colmasks;colvalues<threshold
@@ -16,10 +16,11 @@ NB.     This specifies the non0 values in the pivot column after discarding the 
 NB. colvalues is, for each pivot,  #&(pivot column)&.> colmask as above
 NB. threshold is near0 threshold for results
 batchop =: {{
-name =. {.y
+sy__  =: y
+name =. 0 {:: y
 origname =. memu name~  NB. save original input
 threshold =. _1 {:: y
-for_p. 2 2 $"1 }. y do. (name~) =: (I.&.> {."1 p),(#&.>/"1 p),<0.0) 128!:12 name~ end.  NB. no threshold for intermediate results, to match 128!:14
+for_p. 2 2 $"1 }. y do. (name~) =: ((I.&.> {."1 p),(#&.>/"1 p),<0.0) 128!:12 name~ [ p__ =: p end.  NB. no threshold for intermediate results, to match 128!:14
 (name~) =: name~ * (origname ~:!.0 name) *: (threshold >!.0 | 8 c. name)  NB. set changed values to 0 if they went below threshold 
 name~  NB. Return the modified qkt, in case anyone wants it
 }}
@@ -62,7 +63,7 @@ end.
 
 stripes =. 0 1{"1 minmaxct  NB. (start,end+1) for each stripe 
 comploads =. +/ (+/@> rowmasks) * (,.@(-~/\)"1 stripes)&(+/;.0)@> colmasks    NB. table of (start,len) of each stripe; for each column, count 1s in each stripe; weight by #rows in each op; sum by stripes
-
+qprintf'stripes comploads '
 debugopts 128!:14 y,stripes;(\:comploads)  NB. Run the pivots.  Result is name~
 }}
 
@@ -70,9 +71,9 @@ debugopts 128!:14 y,stripes;(\:comploads)  NB. Run the pivots.  Result is name~
 
 qkt =. (15!:19) 11 c. 19 1024 $ 0.
 rm =. ,< 1023 {. 1 0 1 1 0 1 1 1 0 1
-rv =. , < 11 c. I. rm
+rv =. (11 c. I.)&.> rm
 cm =. ,< 19 {. 0 1 0 1 1
-cv =. , < 11 c. 1000 + I. cm
+cv =. (11 c. 1000 + I.)&.> cm
 
 (batchopndx@('qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =. memu qkt
 

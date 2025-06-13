@@ -3570,7 +3570,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  struct bopctx opctx={.nthreads=(*JT(jt,jobqueues))[0].nthreads+1, .colndxct=(*JT(jt,jobqueues))[0].nthreads+1, .resvx=(*JT(jt,jobqueues))[0].nthreads+1, .colndxs=&colndxs,};
 
  // extract the inputs
- ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==7,EVLENGTH)  // w is 7 boxes
+ ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==8,EVLENGTH)  // w is 8 boxes
  A box;  // will hold the contents of each box in turn
  box=C(AAV(w)[5]);  // stripes
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[1]==2,EVLENGTH) opctx.stripestartend1=(I (*)[][2])IAV(box); opctx.nstripes=AS(box)[0];  // must be INT [][2]

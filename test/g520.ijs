@@ -1,7 +1,7 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.IF64 '$'   NB. skip if not 64-bit
+0!:_1`1:@.0 '$'   NB. skip if not 64-bit
 
 load'format/printf'  NB. scaf
 
@@ -23,8 +23,9 @@ threshold =. 5 {:: y
 rcmv =. 1 2 3 4 { y  NB. mask/values for rows/columns
 assert. (= {.) $&.> rcmv  NB. must have same shape
 assert. (<,1) ~: #@$&.> rcmv  NB. all lists
-for_p. 2 2 $"1 |: > rcmv do. iqkt =. (arg__   =: ((I.&.> {."1 p),{:"1 p),<0.0) 128!:22 iqkt end.  NB. no threshold for intermediate results, to match 128!:14
-name~ =: 15!:18 iqkt * (name~ ~:!.0 iqkt) *: (threshold >!.0 | 8 c. iqkt)  NB. set changed values to 0 if they went below threshold 
+
+for_p. 2 2 $"1 |: > rcmv do. iqkt =. arg 128!:22 iqkt [ arg__   =: ((I.&.> {."1 p),{:"1 p),<0.0 end.  NB. no threshold for intermediate results, to match 128!:14
+(name) =: 15!:18 iqkt * (name~ ~:!.0 iqkt) *: (threshold >!.0 | 8 c. iqkt)  NB. set changed values to 0 if they went below threshold 
 NB. Return the modified qkt, in case anyone wants it
 }}
 
@@ -72,13 +73,13 @@ debugopts 128!:14 y,stripes;(\:comploads)  NB. Run the pivots.  Result is name~
 
 
 
-Qkt =. (15!:18) 11 c. 19 1024 $ 0.
+Qkt =: (15!:18) 11 c. 19 1024 $ 0.
 rm =. ,< 1023 {. 1 0 1 1 0 1 1 1 0 1
 rv =. (11 c. I.)&.> rm
 cm =. ,< 19 {. 0 1 0 1 1
 cv =. (11 c. 1000 + I.)&.> cm
 
-(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =. memu Qkt
+(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB.$     end of 64-bit-only
 
@@ -2545,7 +2546,7 @@ NB. -----------------
 ({&1. 2 (~: 15!:19)~ 15!:19) $0    NB. If a is not inplaceable, we cannot change its type
 
  
-4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom qres qy res run128_9 savx savy savref savres savspr'
+4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog cm cv copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms Qkt qktcopy qpmulvecatom qres qy res rm rv run128_9 savx savy savref savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y z zb zz '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

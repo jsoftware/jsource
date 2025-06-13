@@ -3565,7 +3565,7 @@ finis:;  // here we have flushed the ring at the end
 // result is value of name after modification
 F2(jtbatchop){F12IP;PROLOG(000);
  ARGCHK1(w);
- if(likely(AT(w)&VERB)){w=a; a=zeroionei(0);} RE(a=i0(a))  // default options for monad and verify integer atom
+ if(likely(AT(w)&VERB)){w=a; a=zeroionei(0);} I debopts; RE(debopts=i0(a))  // default options for monad and verify integer atom
  I4 *(colndxs)[MAXOP];  // pointers to column indexes, filled in by threads
  struct bopctx opctx={.nthreads=(*JT(jt,jobqueues))[0].nthreads+1, .colndxct=(*JT(jt,jobqueues))[0].nthreads+1, .resvx=(*JT(jt,jobqueues))[0].nthreads+1, .colndxs=&colndxs,};
 

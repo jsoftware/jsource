@@ -1,7 +1,7 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.0 '$'   NB. skip if not 64-bit
+0!:_1`1:@.IF64 '$'   NB. skip if not 64-bit
 
 load'format/printf'  NB. scaf
 
@@ -16,13 +16,16 @@ NB.     This specifies the non0 values in the pivot column after discarding the 
 NB. colvalues is, for each pivot,  #&(pivot column)&.> colmask as above
 NB. threshold is near0 threshold for results
 batchop =: {{
-sy__  =: y
 name =. 0 {:: y
-origname =. memu name~  NB. save original input
-threshold =. _1 {:: y
-for_p. 2 2 $"1 }. y do. (name~) =: ((I.&.> {."1 p),(#&.>/"1 p),<0.0) 128!:12 name~ [ p__ =: p end.  NB. no threshold for intermediate results, to match 128!:14
-(name~) =: name~ * (origname ~:!.0 name) *: (threshold >!.0 | 8 c. name)  NB. set changed values to 0 if they went below threshold 
-name~  NB. Return the modified qkt, in case anyone wants it
+NB. Because of the poor design of 128!:22, we have to know the name exactly
+iqkt =. 15!:18 memu name~  NB. make a copy for our use
+threshold =. 5 {:: y
+rcmv =. 1 2 3 4 { y  NB. mask/values for rows/columns
+assert. (= {.) $&.> rcmv  NB. must have same shape
+assert. (<,1) ~: #@$&.> rcmv  NB. all lists
+for_p. 2 2 $"1 |: > rcmv do. iqkt =. (arg__   =: ((I.&.> {."1 p),{:"1 p),<0.0) 128!:22 iqkt end.  NB. no threshold for intermediate results, to match 128!:14
+name~ =: 15!:18 iqkt * (name~ ~:!.0 iqkt) *: (threshold >!.0 | 8 c. iqkt)  NB. set changed values to 0 if they went below threshold 
+NB. Return the modified qkt, in case anyone wants it
 }}
 
 NB. 'col' means pivot column, which is horizontal in Qkt.  'row' is pivot row in Qk, which comes from a col of Qkt.
@@ -69,13 +72,13 @@ debugopts 128!:14 y,stripes;(\:comploads)  NB. Run the pivots.  Result is name~
 
 
 
-qkt =. (15!:19) 11 c. 19 1024 $ 0.
+Qkt =. (15!:18) 11 c. 19 1024 $ 0.
 rm =. ,< 1023 {. 1 0 1 1 0 1 1 1 0 1
 rv =. (11 c. I.)&.> rm
 cm =. ,< 19 {. 0 1 0 1 1
 cv =. (11 c. 1000 + I.)&.> cm
 
-(batchopndx@('qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =. memu qkt
+(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =. memu Qkt
 
 NB.$     end of 64-bit-only
 

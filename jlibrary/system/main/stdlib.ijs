@@ -1,7 +1,7 @@
 cocurrent <'z'
 3 : 0 ''
 
-JLIB=: '9.7.1'
+JLIB=: '9.7.2'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -2523,9 +2523,8 @@ if. (3!:0 y) e. 2 32 do. y=. cutopen y
 else. y=. (4!:1 y) -. (,'y');,'y.' end.
 wid=. {.wcsize''
 sub=. '.'&(I. @(e.&(9 10 12 13 127 254 255{a.))@]})
-den=: {{ try. 0 $.y [ 3 $. y catch. y end. }}
 j=. '((1<#$t)#(":$t),''$''),":,t'
-j=. 'if. L. t=. den ".y do. 5!:5 <y return. end.';j
+j=. 'if. L. t=. $.^:_1 ".y do. 5!:5 <y return. end.';j
 j=. 'if. 0~:4!:0 <y do. 5!:5 <y return. end.';j
 a=. (,&'=: ',sub @ (3 : j)) each y
 }: ; ((wid <. #&> a) {.each a) ,each LF

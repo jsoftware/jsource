@@ -1222,7 +1222,7 @@ assert. ((<P;0),(<01),<(<I),(<00),<P;0) -: (* ] ((9!:_3) (9!:_3))) 0
 (15!:19@:- = 15!:19) memu i. 20  NB. Verify inplaceable monads
 (15!:19@:% = 15!:19) memu 0. + i. 20
 (15!:19@:o. = 15!:19) memu 0. + i. 20
-0!:_1^:(-. IF64) '$'  NB. skip for 32-bit
+0!:_1`1:@.IF64 '$'   NB. skip if not 64-bit
 (15!:19@:% = 15!:19) memu i. 20
 (15!:19@:o. = 15!:19) memu i. 20
 NB.$  end of skip

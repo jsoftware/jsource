@@ -3561,7 +3561,7 @@ finis:;  // here we have flushed the ring at the end
 // stripes shape (s (number of stripes),2) giving start and end+1 of each stripe
 // compgrade shape s  is (\: comploads), the order stripes should be processed in to go from slowest to fastest
 // threshold is a float atom.  Result |values| less than threshold are forced to 0
-// result empty
+// result is value of name after modification
 F1(jtbatchop){F12IP;PROLOG(000);
  ARGCHK1(w);
  I4 *(colndxs)[MAXOP];  // pointers to column indexes, filled in by threads
@@ -3602,7 +3602,7 @@ F1(jtbatchop){F12IP;PROLOG(000);
 
 exit:;  // here on error to undo syrd
  if((I)qktf&QCFAOWED)fa(qkt);  // if syrd issued ra, undo it
- EPILOG(mtm);  // return i. 0 0 always
+ EPILOG(qkt);  // return the value
 }
 #else
 F1(jtbatchop){F12IP;ASSERT(0,EVNONCE);}

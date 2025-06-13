@@ -1,9 +1,42 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1^:(-.IF64) '$'   NB. skip if not 64-bit
+0!:_1`1:@.IF64 '$'   NB. skip if not 64-bit
 
+
+
+NB. 'col' means pivot column, which is horizontal in Qkt.  'row' is pivot row in Qk, which comes from a col of Qkt.
+NB. Call is destname;rowmasks;rowvalues;colmasks;colvalues<threshold
+NB. destname is 'Qkt'.  Qkt must be assigned, aligned to cacheline boundary, unaliased.  It is modified in place
+NB. rowmasks is list of boxes, one per pivot, with a 1 in the position of each column of Qk (=row of Qkt) to be modified by the pivot.
+NB.     This specifies the non0 values in the column of Qkt after discarding rows that have been partial-pivoted (i. e. the cols of QK that contribute to pivot cols in the batch)
+NB. rowvalues is, for each pivot,  #&(pivot column of Qkt)&.> rowmask as above
+NB. colmasks is list of boxes, one per pivot, with a 1 in the position of each column of Qkt (=row of Qk) to be modified by the pivot.
+NB.     This specifies the non0 values in the pivot column after discarding the pivot rows of the batch
+NB. colvalues is, for each pivot,  #&(pivot column)&.> colmask as above
+NB. threshold is near0 threshold for results
+batchop =: {{
+name =. {.y
+origname =. memu name~  NB. save original input
+threshold =. _1 {:: y
+for_p. 2 2 $"1 }. y do. (name~) =: (I.&.> {."1 p),(#&.>/"1 p),<0.0) 128!:12 name~ end.  NB. no threshold for intermediate results, to match 128!:14
+(name~) =: name~ * (origname ~:!.0 name) *: (threshold >!.0 | 8 c. name)  NB. set changed values to 0 if they went below threshold 
+name~  NB. Return the modified qkt, in case anyone wants it
+}}
+
+NB. 'col' means pivot column, which is horizontal in Qkt.  'row' is pivot row in Qk, which comes from a col of Qkt.
+NB. destname is 'Qkt'.  Qkt must be assigned, aligned to cacheline boundary, unaliased.  It is modified in place
+NB. rowmasks is list of boxes, one per pivot, with a 1 in the position of each column of Qk (=row of Qkt) to be modified by the pivot.
+NB.     This specifies the non0 values in the column of Qkt after discarding rows that have been partial-pivoted (i. e. the cols of QK that contribute to pivot cols in the batch)
+NB. rowvalues is, for each pivot,  #&(pivot column of Qkt)&.> rowmask as above
+NB. colmasks is list of boxes, one per pivot, with a 1 in the position of each column of Qkt (=row of Qk) to be modified by the pivot.
+NB.     This specifies the non0 values in the pivot column after discarding the pivot rows of the batch
+NB. colvalues is, for each pivot,  #&(pivot column)&.> colmask as above
+NB. threshold is the near0 threshold for results
 batchopndx =: {{
+0 batchopndx y
+:
+debugopts =. x
 'name rowmasks rowvalues colmasks colvalues threshold' =. y
 NB. Find the vertical stripes. 
 
@@ -30,13 +63,18 @@ end.
 stripes =. 0 1{"1 minmaxct  NB. (start,end+1) for each stripe 
 comploads =. +/ (+/@> rowmasks) * (,.@(-~/\)"1 stripes)&(+/;.0)@> colmasks    NB. table of (start,len) of each stripe; for each column, count 1s in each stripe; weight by #rows in each op; sum by stripes
 
-128!:14 y,stripes;(\:comploads)
-
-i. 0 0
+debugopts 128!:14 y,stripes;(\:comploads)  NB. Run the pivots.  Result is name~
 }}
 
+
+
 qkt =. (15!:19) 11 c. 19 1024 $ 0.
-rowmasks =. 
+rm =. ,< 1023 {. 1 0 1 1 0 1 1 1 0 1
+rv =. , < 11 c. I. rm
+cm =. ,< 19 {. 0 1 0 1 1
+cv =. , < 11 c. 1000 + I. cm
+
+(batchopndx@('qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =. memu qkt
 
 NB.$     end of 64-bit-only
 
@@ -2503,7 +2541,7 @@ NB. -----------------
 ({&1. 2 (~: 15!:19)~ 15!:19) $0    NB. If a is not inplaceable, we cannot change its type
 
  
-4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchopndx catalog copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom qres qy res run128_9 savx savy savref savres savspr'
+4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms qpmulvecatom qres qy res run128_9 savx savy savref savres savspr'
 4!:55 ;:'jot k l n p prod q r s v x y z zb zz '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

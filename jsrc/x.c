@@ -42,6 +42,7 @@ static DF1(jthdrinfo){F12IP;A z;
 
 // 0!:_1 set skip character for scripts (0!:_1 c makes scripts discard lines till one starts with NB.c)
 // Behavior undefined if a script is not being read
+// Returns empty, which will not fail assert.
 static DF1(jtskipinscript){F12IP;
  ARGCHK1(w);
  ASSERT(AR(w)==0, EVRANK) ASSERT(AT(w)&LIT,EVDOMAIN)

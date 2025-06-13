@@ -3281,7 +3281,7 @@ F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #endif
 
 
-#if (C_AVX2)
+#if (C_AVX2 || EMU_AVX2)
 
 // everything we need for one core's execution
 #define RINGROWS 64  // must be power of 2
@@ -3607,5 +3607,5 @@ exit:;  // here on error to undo syrd
  EPILOG(qkt);  // return the value
 }
 #else
-F1(jtbatchop){F12IP;ASSERT(0,EVNONCE);}
+F2(jtbatchop){F12IP;ASSERT(0,EVNONCE);}
 #endif

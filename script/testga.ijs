@@ -1,5 +1,9 @@
 (9!:14'') 1!:2 [2
 
+load'pacman'
+'update'jpkg''
+'upgrade'jpkg'dev/eformat dev/lu'
+
 testpath=: (1!:43''),'/test/'
 
 os=: (('Linux';'Darwin';'OpenBSD';'FreeBSD') i. <UNAME) pick ;:'linux darwin openbsd freebsd win'

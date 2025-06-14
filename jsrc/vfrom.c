@@ -3436,7 +3436,7 @@ finmask:;
     US *ofstend1=&nextstripeofst[(ssize+(NPAR-1))&(-NPAR)]; opstat[io].nofsts=(I)ofstend1-(I)nextstripeofst; nextstripeofst=ofstend1; nextstripe0213=(__m256d*)((C*)nextstripe0213+j4); // advance pointers to a block boundary, remembering the end+1 offset of the current op
    }
   }
-    // we keep all ops in a single list, removing ones that have been fully processed.   It might be right to keep a second list with ops that have not entered yet, sorted on row of entry.  Depends on overlap.
+    // we keep all ops in a single list, removing ones that have been fully processed.   It might be right to keep a second list with ops that have not entered yet, heaped on row of entry.  Depends on overlap.
 
   // ops ready, now calculate the entire stripe
   while(aops){  // keep processing rows as long as there is an active op
@@ -3572,13 +3572,13 @@ F2(jtbatchop){F12IP;PROLOG(000);
  // extract the inputs
  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==8,EVLENGTH)  // w is 8 boxes
  A box;  // will hold the contents of each box in turn
- box=C(AAV(w)[5]);  // stripes
+ box=C(AAV(w)[5]);  // threshold
+ if(!(AT(box)&FL))RZ(box=cvt(FL,box)); ASSERT(AR(box)==0,EVRANK) opctx.threshold=DAV(box)[0];  // convert to FL
+ box=C(AAV(w)[6]);  // stripes
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[1]==2,EVLENGTH) opctx.stripestartend1=(I (*)[][2])IAV(box); opctx.nstripes=AS(box)[0];  // must be INT [][2]
  GATV0(box,INT4,opctx.nstripes*MAXOP,1); opctx.opstripebsum=(I4 (*)[][MAXOP])I4AV(box);  // allocate running-index area, save in ctx
- box=C(AAV(w)[6]);  // compgrade
+ box=C(AAV(w)[7]);  // compgrade
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==opctx.nstripes,EVLENGTH) opctx.stripegrade=IAV(box);  // must be INT [#stripes]
- box=C(AAV(w)[7]);  // threshold
- if(!(AT(box)&FL))RZ(box=cvt(FL,box)); ASSERT(AR(box)==0,EVRANK) opctx.threshold=DAV(box)[0];  // convert to FL
  box=C(AAV(w)[0]);  // 'Qkt'
  ASSERT(AT(box)&LIT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK)  A nm; RZ(nm=nfs(AN(box),CAV(box))); A qktf=syrd(nm,jt->locsyms); A qkt=QCWORD(qktf); ASSERT(qkt!=0,EVVALUE)  // name exists
  // from here till end we must take errors through 'exit'

@@ -548,6 +548,9 @@ a =. i. 1e6
 
 20 -: #@, {. >: i. 10 10 2   NB. self-virtual used to mess up atom count
 
+NB. exigent error does not override error for fill
+'valence error' -: [:"0 etx ''
+
 
 4!:55 ;:'a adot1 adot2 sdot0 case eb ec en f f0 f1 f2 fill '
 4!:55 ;:'g1 g2 head itake jot larg mt n pad raise '

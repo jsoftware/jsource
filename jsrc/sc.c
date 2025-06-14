@@ -4,6 +4,7 @@
 /* Symbol Table: Named Function Call (unquote)                                   */
 
 #include "j.h"
+static void scafraposgblqcgsv(A w,I q, A sv){raposgblqcgsv(w,q,sv)}
 
 // This function handles both valences: monad as (w,self,self), dyad as (a,w,self).  self is the name reference.  Never called without 3 args
 // JTXDEFMODIFIER is set if the name is a modifier: not used here, but passed on - xdefn uses it
@@ -76,7 +77,7 @@ DF2(jtunquote){F12IP;A z;
     if(vtime==ACVCACHEREAD){  // is previous lookup still valid
      // Short caching: the previous lookup can be reused because there have been no assignments
      flgvbnmgen+=flagsfromname<<FLGNMFLGX;  // insert name flags into flag reg.  They should have settled from the load
-     raposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion, i. e. no subroutine call, OK because the value must not be sparse
+     scafraposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion, i. e. no subroutine call, OK because the value must not be sparse
      if(unlikely(flgvbnmgen&(NMLOC<<FLGNMFLGX))){  // is this a (necessarily direct) locative?
       // see if the locale is cached.   public_z_ =: entry_loc_ where entry_loc will have the locale pointer
       if(unlikely((explocale=cachedlocale)==0)){  // use cached locale if there is one (there will be, except first time through)  If not...

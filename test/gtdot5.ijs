@@ -29,21 +29,6 @@ p2 =: ".
 (i. 100) -: > (p2@> t.'')"0  <@":"0 i. 100   NB. test executing tacit verb with no parser running
 
 
-1: (6!:5) ] _5000  NB. engage test mode
-
-p1=: 3 : 0
-for_i. y do.
-ALL=: 15!:15^:i ALL
-end.
-i. 0 0
-)
-
-t1=: 4 : 0
-ALL=: 128$00
-pyx=. (p1 t.''@y)"0 x#0
-1:&>pyx
-i. 0 0
-)
 
 p2=: 3 : 0
 for_i. i.100 do.
@@ -87,21 +72,46 @@ pyx=. (p4 t.'')"0  i. y
 i. 0 0
 )
 
+1: (6!:5) ] _5000  NB. engage test mode before defining the verbs & names, to avoid crash freeing
 
-NB. Insert p1 here to override the default from above
+NB. Settings
+TESTS234 =: 0  NB. set to 1 to allow other tests here to run
+TEST1CT =: 1000   NB. set to 1e8 to repeat test1 forever here
+REASSIGNFRAC =: 0.5  NB. set to 0 to suppress reassignment, 1.0 to force all assignments to reassign
+ALLOSDURINGASSIGN =: 0  NB. set to 1 to cause many more buffer allocations per assignment
 
-1000 t1 0.5 < 1000 ?@$ 0
+
+p1=: 3 : 0
+for_i. y do.
+ALL=: 15!:15^:i ALL [ i."0^:ALLOSDURINGASSIGN  20 # 128
+end.
+i. 0 0
+)
+
+t1=: 4 : 0
+ALL=: 128$00
+pyx=. (p1 t.''@y)"0 x#0
+1:&>pyx
+i. 0 0
+)
+
+
+
+TEST1CT t1 REASSIGNFRAC > 1000 ?@$ 0
+
+0!:_1@'$'^:(-.TESTS234) 1  NB. optionally skip other tests
 
 t3 100
 
 t2 100
 t4 100
+NB.$   end of skip
 
 1: 6!:5 ] 0
 
 delth''
 
-4!:55 ;:'ALL delth N p1 p2 p3 p4 t1 t2 t3 t4 sleep wthr'
+4!:55 ;:'ALL delth N p1 p2 p3 p4 t1 t2 t3 t4 sleep wthr REASSIGNFRAC TESTS234 TEST1CT ALLOSDURINGASSIGN  '
 
 epilog''
 

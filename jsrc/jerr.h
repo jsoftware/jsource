@@ -85,5 +85,6 @@
 #define EVOKCLEANUP     512  // no error, but there is cleanup work to do
 
 // Exigent errors are those errors that must not be ignored if they happen during execution on a fill-cell
-#define EMSK(x) (((I)1)<<((x)-1))
-#define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVEXIT) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
+#define EMSK(x) (((UI8)1)<<((x)-1))
+#define EXIGENTERROR (  EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVEXIT) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM)  /* original set of errors that always create failure */ \
+                       | EMSK(EVVALENCE) | EMSK(EVNONCE) | EMSK(EVASSERT) | EMSK(EVSPELL) | EMSK(EVVALUE) | EMSK(EVLOCALE) | EMSK(EVNONNOUN) | EMSK(EVTHROW) | EMSK(EVDEADLOCK) | EMSK(EVTYPECHG)  )  // newer set

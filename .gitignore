@@ -31,10 +31,11 @@ test*.txt
 .vs
 **/.vs/**
 
-# following are no longer required and prevent template folders
-# **/jconsole/**/
-# **/jdll/**/
-# **/tsdll/**/
+# following are required and prevent user's local files
+**/jconsole/**/
+**/jdll/**/
+**/tsdll/**/
+**/Release64/**/
 
 # windows - need to run with different versions of vs
 # following files are in repo for vs2013

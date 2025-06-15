@@ -59,7 +59,7 @@ ls -l j64
 if [ $1 = "darwin" ] && [ "`uname -m`" = "arm64" ] ; then
 LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 j64/jconsole -lib libj.$ext testga.ijs
 LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 j64/jconsole -lib libj.$ext testga.ijs
-elif [ $1 = "linux" ] && [ "$_DEBUG" -eq 3 ] ; then
+elif [ $1 = "linux" ] && [ "$_DEBUG" = "3" ] ; then
 LC_ALL=fr_FR.UTF-8 gdb -batch -ex "run" -ex "bt" --args j64/jconsole -lib libj.$ext testga.ijs
 else
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
@@ -77,7 +77,7 @@ if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "j64/lib
 fi
 elif [ $1 = "linux" ]; then
 if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
- if [ "$_DEBUG" -eq 3 ]; then
+ if [ "$_DEBUG" = "3" ]; then
   LC_ALL=fr_FR.UTF-8 gdb -batch -ex "run" -ex "bt" --args j64/jconsole -lib libjavx2.$ext testga.ijs
  else
   LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs
@@ -86,7 +86,7 @@ elif [ -f "$SDE_PATH/sde" ] && [ -f "j64/libjavx2.$ext" ] ; then
   LC_ALL=fr_FR.UTF-8 $SDE_PATH/sde -skx -- j64/jconsole -lib libjavx2.$ext testga.ijs
 fi
 if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
- if [ "$_DEBUG" -eq 3 ]; then
+ if [ "$_DEBUG" = "3" ]; then
   LC_ALL=fr_FR.UTF-8 gdb -batch -ex "run" -ex "bt" --args j64/jconsole -lib libjavx512.$ext testga.ijs
  else
   LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
@@ -96,7 +96,7 @@ elif [ -f "$SDE_PATH/sde" ] && [ -f "j64/libjavx512.$ext" ] ; then
   echo "Not running AVX512 tests due to missing hardware support" # sde doesn't like fsgsbase?
 fi
 if [ -f "j32/libj.$ext" ] ; then
- if [ "$_DEBUG" -eq 3 ]; then
+ if [ "$_DEBUG" = "3" ]; then
   LC_ALL=fr_FR.UTF-8 gdb -batch -ex "run" -ex "bt" --args j32/jconsole -lib libj.$ext testga.ijs
  else
  fi

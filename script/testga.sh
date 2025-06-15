@@ -99,6 +99,7 @@ if [ -f "j32/libj.$ext" ] ; then
  if [ "$_DEBUG" = "3" ]; then
   LC_ALL=fr_FR.UTF-8 gdb -batch -ex "run" -ex "bt" --args j32/jconsole -lib libj.$ext testga.ijs
  else
+  LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs
  fi
 fi
 elif [ $1 = "openbsd" ] || [ $1 = "freebsd" ] ; then

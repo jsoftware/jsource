@@ -146,6 +146,63 @@ jobs:
        path: testlinuxgcc.txt
        overwrite: true
 
+# linux debug ----------------------------------------------------------
+ jelinuxd:
+  name: JE (Linux debug)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup SDE binaries
+     uses: petarpetrovt/setup-sde@v2.3
+     with:
+       sdeVersion: 9.27.0 # possible values: 9.27.0 (default), 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
+
+   - name: Setup Environment (Linux debug)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Commit
+     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
+
+   - name: Build JE (Linux debug)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      _DEBUG: 3
+     run: |
+      echo $SDE_PATH
+      $SDE_PATH/sde -help || true
+      script/buildga.sh linux || exit 1
+
+   - name: Test JE (Linux debug)
+     run: |
+      script/testga.sh linux || exit 1
+      ls -l j64
+      zip -r l64dd.zip j64
+
+   - name: Release JE (Linux debug)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "l64dd.zip,commit.txt,version.txt"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Linux debug)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testlinuxd.txt
+       overwrite: true
+
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)

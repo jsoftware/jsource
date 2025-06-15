@@ -12,6 +12,7 @@ os=: ((IF64{::'win32';'win')"_)^:IFWIN os
 os=: os, ((<os)e.'openbsd';'freebsd')#(('arm64'-:9!:56'cpu'){::'';'arm64')
 os=: os, ((<os)e.<'darwin')#('APPLEM1'-:2!:5'APPLEM1'){::'';'arm'
 os=: os, ((<os)e.<'win')#(('arm64'-:9!:56'cpu'){::'';'arm64')
+os=: os, ((,'3')-:2!:5'_DEBUG'){::'';'d')
 testres=: 'test',os,'.txt'
 IFWA64=: IFWIN*.'arm64'-:9!:56'cpu'
 

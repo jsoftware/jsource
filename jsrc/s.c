@@ -733,6 +733,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  }
 
  L *e;  // the symbol we will use
+ A x;  // incumbent value of the symbol, if it has been assigned
  // we don't have e, look it up.
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
  // convert valtype to QCSYMVAL semantics: NAMED always, RAREQD if global table or sparse
@@ -741,14 +742,17 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   e=likely((SGNIF(gr,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=(A)((I)jtfg|-JTASGNWASLOCAL);   // indicate local assignment (we have no lock to clear), remember final assignment
   valtype|=QCNAMED|(REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
+  x=e->fval;   // if nonzero, x points to the incumbent value
  }else{  // global table
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
-  C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a LOCK on the locale
-  // if we are writing to a non-local table, update the table's Bloom filter.
+  if((x=e->fval)==0){   // if nonzero, x points to the incumbent value
+   // writing a new symbol to a non-local table: update the table's Bloom filter.
+   C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
+   BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty
+  }
   g=(A)((I)g+((I)jtfg&JTFINALASGN));  // flags in g: copy final-assignment flag, keep glocal-table flag 0 indicating free needed
-  BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty
   // A couple of debugging flags are set during assignment.  We don't bother for local names
   if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - needed only for globals
   e->sn=jt->currslistx;  // Save the script in which this name was defined - meaningful only for globals
@@ -756,7 +760,6 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // ****** if g is a global table, bit2=0 and we have a write lock on the locale, which we must release in any error paths.  The low 2 bits
  // of g are exit flags: bit0=final assignment, bit 1=local assignment.  If local assignment, g=-2 (not final) or -1 (final) *******
 
- A x=e->fval;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
  if(likely(QCWORD(x)!=w)){
   // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type

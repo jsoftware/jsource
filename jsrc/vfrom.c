@@ -3316,15 +3316,6 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
  I4 resvx;   // next stripe to reserve, initialized to nthreads
 };
 
-// the processing loop for one core.  We take groups of rows, in order
-static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
- // transfer everything out of ctx into local names
-#define YC(x) typeof(ctx->x) x=ctx->x;
- YC(nops)YC(nthreads)YC(nstripes)YC(qktnrows)YC(qktncols)YC(oprowmasks)YC(oprowvals)YC(opcolmasks)YC(opcolvals)YC(colndxs)YC(stripestartend1)YC(opstripebsum)YC(stripegrade)YC(qkt)
-#undef YC
- E ring[RINGROWS][RINGCOLS];   // the ring - 1/2 of D2$
- __m256d zerothresh=_mm256_set1_pd(ctx->threshold);  // near0 threshold
-
  typedef struct opi {
   struct opi *chain;  // &next active op
   E colvalahead;
@@ -3338,16 +3329,27 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
   US nofsts;  // index to the offset pointer after the last offset/val has been processed
  } opinfo;  // info for each op
 
+ typedef struct {   // scaf perhaps separate these to allow indexed fetch
+  __m256d *qktbase;  // offset in bytes between start of ring row and corresponding value in Qkt
+  UI8 rowmask;  // mask of all the resultblocks that have been modified in this line
+ } releaseinfo;
+
+
+// the processing loop for one core.  We take groups of rows, in order
+static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
+ // transfer everything out of ctx into local names
+#define YC(x) typeof(ctx->x) x=ctx->x;
+ YC(nops)YC(nthreads)YC(nstripes)YC(qktnrows)YC(qktncols)YC(oprowmasks)YC(oprowvals)YC(opcolmasks)YC(opcolvals)YC(colndxs)YC(stripestartend1)YC(opstripebsum)YC(stripegrade)YC(qkt)
+#undef YC
+ __attribute__((aligned(CACHELINESIZE))) E ring[RINGROWS][RINGCOLS];   // the ring - 1/2 of D2$
+ __m256d zerothresh=_mm256_set1_pd(ctx->threshold);  // near0 threshold
+
  opinfo opstat[MAXOP];  // collected info about the ops in the current stripe
  US stripeofst[MAXOP*MAXNON0+3];  // byte offset to each non0 value in the stripe, for loading the ring value.  Allocated in groups of 4.  +3 because of overstore
  __attribute__ ((aligned (CACHELINESIZE))) __m256d stripe0213[MAXOP*MAXNON0/(sizeof(__m256d)/sizeof(E))];  // row values for stripe, 0213
 
   // values in the stripe for each op, in format needed
 
- typedef struct {   // scaf perhaps separate these to allow indexed fetch
-  __m256d *qktbase;  // offset in bytes between start of ring row and corresponding value in Qkt
-  UI8 rowmask;  // mask of all the resultblocks that have been modified in this line
- } releaseinfo;
  releaseinfo rinfo[RINGROWS];  // info on all rows that have been released.  Must be cleared after each release, i. e. 0 when starting new 8block
 
  I opno=ti;  // op# to create the index for.  First one is out thread#
@@ -3360,17 +3362,16 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
    I fetchndx=0;  // index of first bit in this word
    while(1){  // till we have stored all the index
     I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_loadu_si256(cmask),_mm256_setzero_si256())); ++cmask;  // fetch and step over next 32 bits.  Overfetch possible and OK
-    while(bits){*mav++=fetchndx+CTTZI(bits); bits&=-bits; if(--ncvals<=0)goto finndx;}  // store index for every non0, stop when all done
+    while(bits){*mav++=fetchndx+CTTZI(bits); bits&=bits-1; if(--ncvals<=0)goto finndx;}  // store index for every non0, stop when all done
     fetchndx+=sizeof(*cmask)/BB;  // advance to next mask base
-   }
+   }  finndx:;
    *mav=(UI4)~0>>1;  // install sentinel at end
 
    // calculate stripe index for the op
-   I bsumtodate; C *mask=CAV(oprowmasks[opno]);  // total 1s found, 
+   I bsumtodate=0; C *mask=CAV(oprowmasks[opno]);  // total 1s found, running pointer to mask
    DO(nstripes, I start=(*stripestartend1)[opno][0], end=(*stripestartend1)[opno][1]-BW, bsum=0; while(start<end){bsum+=*(I*)&mask[start]; start+=BW;} bsum+=*(I*)&mask[start]<<(start==end?0:BW/2);
      bsum+=bsum>>32; bsum+=bsum>>16; bsum+=bsum>>8; (*opstripebsum)[i][opno]=bsumtodate+=(C)bsum;)
 
-finndx:;
   }
   opno=__atomic_fetch_add(&ctx->colndxct,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation
  }while(opno<nops);
@@ -3490,7 +3491,7 @@ finmask:;
      // send a few values to Qkt
      releasedelayct+=andx;  // add the number of blocks we processed.  When the total goes nonnegative we can release again
      if(releaseblockmask>(UI)REPSGN(releasedelayct)){  // if there are released values...  (mask>0 and delayct nonneg)
-      I releasect=releasenormct;  // set releasect to the number of blocks to take.  We will stop when the row is empty in any case
+      releasect=releasenormct;  // set releasect to the number of blocks to take.  We will stop when the row is empty in any case
 releaserow:;  // entered from below to drain the ring, either on buffer-full or at end-of-operation.  releasect is set to a high value in that case
       __m256 *releaseringbase=(__m256*)ring[relstart];  // get address in ring
       do{
@@ -3539,12 +3540,12 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
    DONOUNROLL(B8ROWS, rinfo[sx].qktbase=(__m256d*)qktrcol; UI8 msk=rinfo[b8start].rowmask; rinfo[b8start].rowmask=0; rinfo[sx].rowmask=msk; sx=(sx+(msk>0))&(RINGROWS-1); b8start=(b8start+1)&(RINGROWS-1); qktrcol+=qktncols*sizeof(E);)
    b8start=sx;  // release the nonempty rows
    if(releaseblockmask==0){releaseblockmask=rinfo[relstart].rowmask; releaseqkbase=rinfo[relstart].qktbase;}  // if release queue was empty, move first row to the release variables.  blockmask=0 means no work
-   else if(unlikely(((b8start-relstart)&(RINGROWS-1)))>=(RINGROWS-B8ROWS)){releasect=(I4)~0>>1; goto releaserow;}  // if ring is full, wait for it to drain
+   else if(unlikely(((b8start-relstart)&(RINGROWS-1)))>=(RINGROWS-B8ROWS)){releasect=(UI4)~0>>1; goto releaserow;}  // if ring is full, wait for it to drain
 caughtup:;  // here when we have removed the ring-full situation
   }  // end 'while aops'
-  stripe=__atomic_fetch_add(&ctx->resvx,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation
+  stripex=__atomic_fetch_add(&ctx->resvx,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation
  }
- if(releaseblockmask){releasect=(I4)~0>>1; goto releaserow;}
+ if(releaseblockmask){releasect=(UI4)~0>>1; goto releaserow;}
 finis:;  // here we have flushed the ring at the end
 
  R 0;

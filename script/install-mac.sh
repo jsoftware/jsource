@@ -1,3 +1,3 @@
 #!/bin/bash
 brew update
-brew install lldb
+# brew install gcc

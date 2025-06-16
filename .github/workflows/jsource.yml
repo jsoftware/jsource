@@ -182,6 +182,8 @@ jobs:
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux debug)
+     env:
+      _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
       ls -l j64
@@ -191,7 +193,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "l64dd.zip,commit.txt,version.txt"
+      artifacts: "l64dd.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -211,7 +213,9 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-#   - name: Setup Environment (macOS)
+   - name: Setup Environment (macOS)
+     run: |
+      script/install-mac.sh
 
    - name: Build JE (macOS)
      env:
@@ -267,7 +271,9 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-#   - name: Setup Environment (macOS)
+   - name: Setup Environment (macOS arm64)
+     run: |
+      script/install-mac.sh
 
    - name: Build JE (macOS arm64)
      env:
@@ -1069,7 +1075,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jemacos, jemacosarm, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

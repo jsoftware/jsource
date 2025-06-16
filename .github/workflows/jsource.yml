@@ -51,8 +51,6 @@ jobs:
    - name: Test JE (Linux)
      run: |
       script/testga.sh linux || exit 1
-      ls -l j64
-      zip -r l64d.zip j64
       cd j64
       strip -S jconsole
       strip -S libj.so
@@ -69,7 +67,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "l64.zip,l64d.zip,commit.txt,version.txt"
+      artifacts: "l64.zip,commit.txt,version.txt"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -116,8 +114,6 @@ jobs:
      run: |
       script/testga.sh linux || exit 1
       mv testlinux.txt  testlinuxgcc.txt
-      ls -l j64
-      zip -r lgcc64d.zip j64
       cd j64
       strip -S jconsole
       strip -S libj.so
@@ -134,7 +130,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "lgcc64.zip,lgcc64d.zip"
+      artifacts: "lgcc64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -184,13 +180,13 @@ jobs:
      run: |
       script/testga.sh linux || exit 1
       ls -l j64
-      zip -r l64dd.zip j64
+      zip -r l64d.zip j64
 
    - name: Release JE (Linux debug)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "l64dd.zip"
+      artifacts: "l64d.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -231,8 +227,6 @@ jobs:
       rm -rf j64/libjavx512.dylib.dSYM
       rm -rf j64/libtsdll.dylib.dSYM
       rm -rf j64/jamalgam.dSYM
-      ls -l j64
-      zip -r m64d.zip j64
       cd j64
       strip -S jconsole
       strip -S libj.dylib
@@ -248,7 +242,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "m64.zip,m64d.zip"
+      artifacts: "m64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -289,8 +283,6 @@ jobs:
       rm -rf j64/libjavx512.dylib.dSYM
       rm -rf j64/libtsdll.dylib.dSYM
       rm -rf j64/jamalgam.dSYM
-      ls -l j64
-      zip -r m64armd.zip j64
       cd j64
       strip -S jconsole
       strip -S libj.dylib
@@ -306,7 +298,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "m64arm.zip,m64armd.zip"
+      artifacts: "m64arm.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -316,6 +308,57 @@ jobs:
      with:
        name: dist
        path: testdarwinarm.txt
+       overwrite: true
+
+# macOS debug ----------------------------------------------------------
+ jemacosd:
+  name: JE (macOS debug)
+  runs-on: macos-13
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (macOS debug)
+     run: |
+      bash script/install-mac.sh
+
+   - name: Build JE (macOS debug)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      _DEBUG: 3
+     run: |
+      script/buildga.sh darwin || exit 1
+
+   - name: Test JE (macOS debug)
+     env:
+      _DEBUG: 3
+     run: |
+      rm -rf j64/jconsole.dSYM
+      rm -rf j64/libj.dylib.dSYM
+      rm -rf j64/libjavx2.dylib.dSYM
+      rm -rf j64/libjavx512.dylib.dSYM
+      rm -rf j64/libtsdll.dylib.dSYM
+      rm -rf j64/jamalgam.dSYM
+      script/testga.sh darwin || exit 1
+      ls -l j64
+      zip -r m64d.zip j64
+
+   - name: Release JE (macOS debug)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "m64d.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (macOS debug)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testdarwind.txt
        overwrite: true
 
 # macOS arm64 debug ----------------------------------------------------
@@ -343,21 +386,21 @@ jobs:
      env:
       _DEBUG: 3
      run: |
-      script/testga.sh darwin || exit 1
       rm -rf j64/jconsole.dSYM
       rm -rf j64/libj.dylib.dSYM
       rm -rf j64/libjavx2.dylib.dSYM
       rm -rf j64/libjavx512.dylib.dSYM
       rm -rf j64/libtsdll.dylib.dSYM
       rm -rf j64/jamalgam.dSYM
+      script/testga.sh darwin || exit 1
       ls -l j64
-      zip -r m64armdd.zip j64
+      zip -r m64armd.zip j64
 
    - name: Release JE (macOS arm64 debug)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "m64armdd.zip"
+      artifacts: "m64armd.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -392,8 +435,6 @@ jobs:
        export USE_OPENMP=0
        script/buildga.sh raspberry || exit 1
        script/testga.sh raspberry || exit 1
-       ls -l j64
-       zip -r rpi64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -407,7 +448,6 @@ jobs:
        rm -rf j64
        mkdir j64
        mv rpi64.zip j64/.
-       mv rpi64d.zip j64/.
        mv testrpi64.txt j64/.
        find j64 -type d -exec chmod a+rwx {} \;
        find j64 -type f -exec chmod a+rw {} \;
@@ -421,7 +461,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "rpi64.zip,rpi64d.zip"
+      artifacts: "rpi64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -459,8 +499,6 @@ jobs:
        script/testga.sh raspberry || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
-       ls -l j32
-       zip -r rpi32d.zip j32
        cd j32
        strip -S jconsole
        strip -S libj.so
@@ -472,7 +510,6 @@ jobs:
        rm -rf j32
        mkdir j32
        mv rpi32.zip j32/.
-       mv rpi32d.zip j32/.
        mv testrpi32.txt j32/.
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
@@ -486,7 +523,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "rpi32.zip,rpi32d.zip"
+      artifacts: "rpi32.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -532,8 +569,6 @@ jobs:
        export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
-       ls -l j64
-       zip -r obsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -555,7 +590,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "obsd64.zip,obsd64d.zip"
+      artifacts: "obsd64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -601,8 +636,6 @@ jobs:
        export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
-       ls -l j64
-       zip -r obsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -624,7 +657,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "obsd64.zip,obsd64d.zip"
+      artifacts: "obsd64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -670,8 +703,6 @@ jobs:
        export USE_SLEEF=1
        export USE_OPENMP=0
        script/buildga.sh openbsd || exit 1
-       ls -l j64
-       zip -r obsdarm64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -691,7 +722,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "obsdarm64.zip,obsdarm64d.zip"
+      artifacts: "obsdarm64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -741,8 +772,6 @@ jobs:
        export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
-       ls -l j64
-       zip -r fbsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -764,7 +793,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "fbsd64.zip,fbsd64d.zip"
+      artifacts: "fbsd64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -814,8 +843,6 @@ jobs:
        export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
-       ls -l j64
-       zip -r fbsd64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -837,7 +864,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "fbsd64.zip,fbsd64d.zip"
+      artifacts: "fbsd64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -887,8 +914,6 @@ jobs:
        export USE_OPENMP=0
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
-       ls -l j64
-       zip -r fbsdarm64d.zip j64
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -910,7 +935,7 @@ jobs:
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "fbsdarm64.zip,fbsdarm64d.zip"
+      artifacts: "fbsdarm64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -1123,7 +1148,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosarmd, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

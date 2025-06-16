@@ -58,6 +58,7 @@ if [ $m64 -eq 1 ]; then
 ls -l j64
 if [ $1 = "darwin" ] && [ "`uname -m`" = "arm64" ] ; then
 if [ "$_DEBUG" = "3" ]; then
+echo "running debug"
 LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
 # LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
 else
@@ -67,6 +68,7 @@ fi
 elif [ $1 = "darwin" ] ; then
 # lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
 if [ "$_DEBUG" = "3" ]; then
+echo "running debug"
 LC_ALL=fr_FR.UTF-8 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
 else
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
@@ -84,14 +86,16 @@ fi
 if [ $1 = "darwin" ]; then
 if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
  if [ "$_DEBUG" = "3" ]; then
- LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs
+ echo "running debug"
+ LC_ALL=fr_FR.UTF-8 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libjavx2.$ext testga.ijs
  else
  LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs
  fi
 fi
 if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
  if [ "$_DEBUG" = "3" ]; then
- LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
+ echo "running debug"
+ LC_ALL=fr_FR.UTF-8 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libjavx512.$ext testga.ijs
  else
  LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
  fi

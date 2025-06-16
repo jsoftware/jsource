@@ -215,7 +215,7 @@ jobs:
 
    - name: Setup Environment (macOS)
      run: |
-      script/install-mac.sh
+      bash script/install-mac.sh
 
    - name: Build JE (macOS)
      env:
@@ -273,7 +273,7 @@ jobs:
 
    - name: Setup Environment (macOS arm64)
      run: |
-      script/install-mac.sh
+      bash script/install-mac.sh
 
    - name: Build JE (macOS arm64)
      env:

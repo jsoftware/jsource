@@ -59,7 +59,7 @@ ls -l j64
 if [ $1 = "darwin" ] && [ "`uname -m`" = "arm64" ] ; then
 if [ "$_DEBUG" = "3" ]; then
 LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
-LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
+# LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
 else
 LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 j64/jconsole -lib libj.$ext testga.ijs
 LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 j64/jconsole -lib libj.$ext testga.ijs

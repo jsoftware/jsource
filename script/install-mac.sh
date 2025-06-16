@@ -1,3 +1,3 @@
 #!/bin/bash
-brew update lldb
+brew update
 brew install lldb

@@ -167,9 +167,6 @@ jobs:
       sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
       sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
 
-   - name: Commit
-     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
-
    - name: Build JE (Linux debug)
      env:
       CC: clang

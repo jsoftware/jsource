@@ -1,3 +1,4 @@
 #!/bin/bash
 brew update
-# brew install gcc
+brew upgrade
+brew install gcc

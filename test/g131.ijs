@@ -144,7 +144,7 @@ _13.9    f =i.9
 (j./?2 9 9$100) (%. -: mdiv) r./0.231*_40+?2 9 9$100
 
 {{
-if. -. GITHUBCI*.(IFRASPI +. 'ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
+if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
 0 (9!:56) 'cblas'
 echo 'no cblas'
 echo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?2000 2000$12200
@@ -152,7 +152,6 @@ assert. 1e_1>>./|,(id a)-a X c
 echo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?2 2000 2000$12200
 assert. 1e_1>>./|,(id b)-b X c
 1 (9!:56) 'cblas'
-end.
 echo 'cblas'
 echo (6!:2) 'c=: %. a'
 assert. 1e_1>>./|,(id a)-a X c
@@ -162,7 +161,7 @@ assert. 1e_1>>./|,(id b)-b X c
 }}^:(9!:56 'cblas')''
 
 {{
-if. -. GITHUBCI*.(IFRASPI +. 'ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
+if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
 0 (9!:56) 'cblas'
 echo 'no cblas'
 echo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?2000 1500$12200
@@ -170,7 +169,6 @@ assert. 5e_1>>./|,(id a)-a X c
 echo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?2 2000 1500$12200
 assert. 5e_1>>./|,(id b)-b X c
 1 (9!:56) 'cblas'
-end.
 echo 'cblas'
 echo (6!:2) 'c=: %. a'
 assert. 5e_1>>./|,(id a)-a X c

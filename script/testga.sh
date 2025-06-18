@@ -73,7 +73,7 @@ LC_ALL=fr_FR.UTF-8 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext t
 else
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
 fi
-elif [ $1 = "linux" ] && [ "$_DEBUG" = "3" ] ; then
+elif [ "$_DEBUG" = "3" ] ; then
 echo "running debug"
 LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j64/jconsole -lib libj.$ext testga.ijs
 else
@@ -81,7 +81,12 @@ LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
 fi
 else
 ls -l j32
+if { [ $1 = "linux" ] || [ $1 = "raspberry" ] ; } && [ "$_DEBUG" = "3" ] ; then
+echo "running debug"
+LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
+else
 LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs
+fi
 fi
 if [ $1 = "darwin" ]; then
 if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then

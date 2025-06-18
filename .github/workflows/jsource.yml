@@ -429,7 +429,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip libomp-dev
+       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -490,7 +490,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j32
       commands: |
-       apt-get install --no-install-recommends -y clang zip libomp-dev
+       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
        export CC=gcc
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
@@ -533,6 +533,117 @@ jobs:
      with:
        name: dist
        path: testrpi32.txt
+       overwrite: true
+
+# rpi64 debug ----------------------------------------------------------
+ jerpi64d:
+  name: JE (Raspberry deubg)
+  runs-on: ubuntu-latest
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Build, Test JE (Raspberry deubg)
+     uses: pguyot/arm-runner-action@v2
+     with:
+      cpu: cortex-a53
+      cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
+      base_image: raspios_lite_arm64:2023-05-03
+      image_additional_mb: 1024
+      copy_artifact_path: j64
+      commands: |
+       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
+       export CC=clang
+       export USE_SLEEF=1
+       export USE_OPENMP=0
+       export _DEBUG=3
+       script/buildga.sh raspberry || exit 1
+       script/testga.sh raspberry || exit 1
+       zip -r rpi64d.zip j64
+       zip rpi64d.zip /usr/bin/zip
+       zip rpi64d.zip /usr/bin/unzip
+       rm -rf j64
+       mkdir j64
+       mv rpi64d.zip j64/.
+       mv testrpi64d.txt j64/.
+       find j64 -type d -exec chmod a+rwx {} \;
+       find j64 -type f -exec chmod a+rw {} \;
+
+   - name: Compress Files (Raspberry deubg)
+     run: |
+      ls -l j64
+      mv j64/* .
+
+   - name: Release JE (Raspberry deubg)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi64d.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Raspberry deubg)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testrpi64d.txt
+       overwrite: true
+
+# rpi32 debug ----------------------------------------------------------
+ jerpi32d:
+  name: JE (Raspberry32 debug)
+  runs-on: ubuntu-latest
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Build, Test JE (Raspberry 32)
+     uses: pguyot/arm-runner-action@v2
+     with:
+      cpu: arm1176
+      cpu_info: cpuinfo/raspberrypi_zero2_w
+      base_image: raspios_lite:2023-05-03
+      image_additional_mb: 1024
+      copy_artifact_path: j32
+      commands: |
+       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
+       export CC=gcc
+       export USE_SLEEF=0
+       export USE_SLEEFQUAD=1
+       export USE_OPENMP=0
+       export _DEBUG=3
+       script/buildga.sh raspberry || exit 1
+       script/testga.sh raspberry || exit 1
+       find j32 -type d -exec chmod a+rwx {} \;
+       find j32 -type f -exec chmod a+rw {} \;
+       zip -r rpi32d.zip j32
+       rm -rf j32
+       mkdir j32
+       mv rpi32d.zip j32/.
+       mv testrpi32d.txt j32/.
+       find j32 -type d -exec chmod a+rwx {} \;
+       find j32 -type f -exec chmod a+rw {} \;
+
+   - name: Compress Files (Raspberry32 debug)
+     run: |
+      ls -l j32
+      mv j32/* .
+
+   - name: Release JE (Raspberry32 debug)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi32d.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Raspberry)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testrpi32d.txt
        overwrite: true
 
 # openbsd --------------------------------------------------------------

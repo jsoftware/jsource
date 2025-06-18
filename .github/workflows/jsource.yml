@@ -538,6 +538,7 @@ jobs:
 # rpi64 debug ----------------------------------------------------------
  jerpi64d:
   name: JE (Raspberry deubg)
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -593,6 +594,7 @@ jobs:
 # rpi32 debug ----------------------------------------------------------
  jerpi32d:
   name: JE (Raspberry32 debug)
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository

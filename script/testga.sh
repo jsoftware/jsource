@@ -74,16 +74,25 @@ else
 LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
 fi
 elif [ "$_DEBUG" = "3" ] ; then
+if [ $1 = "linux" ] ; then
 echo "running debug"
 LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j64/jconsole -lib libj.$ext testga.ijs
 else
-LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
+echo "running debug"
+LC_ALL=fr_FR.UTF-8 gdb -batch -ex "run" -ex "bt" --args j64/jconsole -lib libj.$ext testga.ijs
 fi
 else
+LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
+fi
 ls -l j32
-if { [ $1 = "linux" ] || [ $1 = "raspberry" ] ; } && [ "$_DEBUG" = "3" ] ; then
+if [ "$_DEBUG" = "3" ] ; then
+if [ $1 = "linux" ] ; then
 echo "running debug"
 LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
+else
+echo "running debug"
+LC_ALL=fr_FR.UTF-8 gdb -batch -ex "run" -ex "bt" --args j32/jconsole -lib libj.$ext testga.ijs
+fi
 else
 LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs
 fi
@@ -144,11 +153,15 @@ if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx5
 fi
 fi
 if [ $m64 -eq 1 ]; then
+if [ -f "j64/jamalgam" ] ; then
 ls -l j64
 if [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
 LC_ALL=fr_FR.UTF-8 j64/jamalgam testga.ijs
 fi
+fi
 else
+if [ -f "j32/jamalgam" ] ; then
 ls -l j32
 # LC_ALL=fr_FR.UTF-8 j32/jamalgam testga.ijs
+fi
 fi

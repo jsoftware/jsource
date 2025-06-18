@@ -24,6 +24,6 @@ IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01B
 dir jarm64
-jarm\jconsole testga.ijs
+jarm64\jconsole testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01C

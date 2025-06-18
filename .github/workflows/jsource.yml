@@ -1099,52 +1099,52 @@ jobs:
       path: testwin32.txt
       overwrite: true
 
-# windows --------------------------------------------------------------
- jewinarm64:
-  name: JE (Windows arm64)
+# windows arm64 old ----------------------------------------------------
+ jewinarm64old:
+  name: JE (Windows arm64 old)
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup Environment (Windows arm64)
+   - name: Setup Environment (Windows arm64 old)
      uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64_arm64
 
-   - name: Build JE (Windows arm64)
+   - name: Build JE (Windows arm64 old)
      shell: cmd
      run: |
       script\buildga.cmd arm64
 
-   - name: Test JE (Windows arm64)
+   - name: Test JE (Windows arm64 old)
      if: ${{ false }}
      shell: cmd
      run: |
       script\testga.cmd arm64
 
-   - name: Compress Files (Windows arm64)
+   - name: Compress Files (Windows arm64 old)
      shell: pwsh
-     run: Compress-Archive jarm64 warm64.zip
+     run: Compress-Archive jarm64 warm64old.zip
 
-   - name: Release JE (Windows arm64)
+   - name: Release JE (Windows arm64 old)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "warm64.zip"
+      artifacts: "warm64old.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
 
-   - name: Copy Test (Windows arm64)
+   - name: Copy Test (Windows arm64 old)
      uses: actions/upload-artifact@v4
      with:
       name: dist
-      path: testwinarm64.txt
+      path: testwinarm64old.txt
       overwrite: true
 
-# windows --------------------------------------------------------------
- jewinarm64a:
+# windows arm64 --------------------------------------------------------
+ jewinarm64:
   name: JE (Windows11 arm64)
   runs-on: windows-11-arm
   steps:
@@ -1168,13 +1168,13 @@ jobs:
 
    - name: Compress Files (Windows11 arm64)
      shell: pwsh
-     run: Compress-Archive jarm64 warm64a.zip
+     run: Compress-Archive jarm64 warm64.zip
 
    - name: Release JE (Windows11 arm64)
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "warm64a.zip"
+      artifacts: "warm64.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -1183,7 +1183,7 @@ jobs:
      uses: actions/upload-artifact@v4
      with:
       name: dist
-      path: testwinarm64a.txt
+      path: testwinarm64.txt
       overwrite: true
 
 # get tests ------------------------------------------------------------
@@ -1191,7 +1191,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jewinarm64a, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

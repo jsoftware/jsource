@@ -328,8 +328,66 @@ end.
 
 delth''
 
+f1=: 3 : 0
+if. 0=y do.
+ a0=: 0
+ a1=: 1
+ a2=: 2
+ a3=: 3
+ a4=: 4
+ a5=: 5
+ a6=: 6
+ a7=: 7
+ a8=: 8
+ a9=: 9
+elseif. 1=y do.
+ try. a0=: a0 + a1 catch. end.
+ try. a1=: a1 + a2 catch. end.
+ try. a2=: a2 + a3 catch. end.
+ try. a3=: a3 + a4 catch. end.
+ try. a4=: a4 + a5 catch. end.
+ try. a5=: a5 + a6 catch. end.
+ try. a6=: a6 + a7 catch. end.
+ try. a7=: a7 + a8 catch. end.
+ try. a8=: a8 + a9 catch. end.
+ try. a9=: a9 + a0 catch. end.
+elseif. 2=y do.
+ 4!:55 <'a0'
+ 4!:55 <'a1'
+ 4!:55 <'a2'
+ 4!:55 <'a3'
+ 4!:55 <'a4'
+ 4!:55 <'a5'
+ 4!:55 <'a6'
+ 4!:55 <'a7'
+ 4!:55 <'a8'
+ 4!:55 <'a9'
+end.
+1
+)
 
+f2=: 3 : 0
+1:&> (f1 t. '')"0 y ?@$ 3
+1
+)
 
+f=: 3 : 0''
+{{0 T.0}}^:] 0 >. (1&T.'') -~ <: {: 8 T. ''
+a0=: 0
+a1=: 1
+a2=: 2
+a3=: 3
+a4=: 4
+a5=: 5
+a6=: 6
+a7=: 7
+a8=: 8
+a9=: 9
+f2 1e5
+''
+)
+
+delth''
 
 'domain error' -: ". etx '0 t. ($0)'
 'domain error' -: ". etx '+ t. 1.5'
@@ -347,7 +405,7 @@ delth''
 
 
 
-4!:55 ;:'allowlongjobs amv chk delth N N1 N2 f f1 f2 g g1 pyx sleep wthr'
+4!:55 ;:'a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 allowlongjobs amv chk delth N N1 N2 f f1 f2 g g1 pyx sleep wthr'
 
 epilog''
 

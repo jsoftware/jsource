@@ -1102,75 +1102,33 @@ jobs:
 # windows arm64 old ----------------------------------------------------
  jewinarm64old:
   name: JE (Windows arm64 old)
+  if: ${{ false }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup Environment (Windows arm64 old)
+   - name: Setup Environment (Windows arm64)
      uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64_arm64
 
-   - name: Build JE (Windows arm64 old)
+   - name: Build JE (Windows arm64)
      shell: cmd
      run: |
       script\buildga.cmd arm64
 
-   - name: Test JE (Windows arm64 old)
+   - name: Test JE (Windows arm64)
      if: ${{ false }}
      shell: cmd
      run: |
       script\testga.cmd arm64
 
-   - name: Compress Files (Windows arm64 old)
-     shell: pwsh
-     run: Compress-Archive jarm64 warm64old.zip
-
-   - name: Release JE (Windows arm64 old)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "warm64old.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Windows arm64 old)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testwinarm64old.txt
-      overwrite: true
-
-# windows arm64 --------------------------------------------------------
- jewinarm64:
-  name: JE (Windows11 arm64)
-  runs-on: windows-11-arm
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Setup Environment (Windows11 arm64)
-     uses: ilammy/msvc-dev-cmd@v1
-     with:
-      arch: amd64_arm64
-
-   - name: Build JE (Windows11 arm64)
-     shell: cmd
-     run: |
-      script\buildga.cmd arm64
-
-   - name: Test JE (Windows11 arm64)
-     shell: cmd
-     run: |
-      script\testga.cmd arm64
-
-   - name: Compress Files (Windows11 arm64)
+   - name: Compress Files (Windows arm64)
      shell: pwsh
      run: Compress-Archive jarm64 warm64.zip
 
-   - name: Release JE (Windows11 arm64)
+   - name: Release JE (Windows arm64)
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -1179,7 +1137,50 @@ jobs:
       allowUpdates: true
       replacesArtifacts: true
 
-   - name: Copy Test (Windows11 arm64)
+   - name: Copy Test (Windows arm64)
+     uses: actions/upload-artifact@v4
+     with:
+      name: dist
+      path: testwinarm64.txt
+      overwrite: true
+
+# windows arm64 --------------------------------------------------------
+ jewinarm64:
+  name: JE (Windows arm64)
+  runs-on: windows-11-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows arm64)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64_arm64
+
+   - name: Build JE (Windows arm64)
+     shell: cmd
+     run: |
+      script\buildga.cmd arm64
+
+   - name: Test JE (Windows arm64)
+     shell: cmd
+     run: |
+      script\testga.cmd arm64
+
+   - name: Compress Files (Windows arm64)
+     shell: pwsh
+     run: Compress-Archive jarm64 warm64.zip
+
+   - name: Release JE (Windows arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "warm64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Windows arm64)
      uses: actions/upload-artifact@v4
      with:
       name: dist

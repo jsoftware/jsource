@@ -185,20 +185,19 @@ if [ $m64 -eq 1 ]; then
   j64x=j32 ./build_tsdll.sh
   j64x=j32 USE_PYXES=0 USE_OPENMP=0 ./build_libj.sh
   # j64x=j32 USE_PYXES=0 USE_OPENMP=0 ./build_jamalgam.sh
+ fi
+ ./clean.sh
+ if ( [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ) && ( [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ] ) ; then
+  j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
+  j64x=j64arm ./build_tsdll.sh
+  j64x=j64arm USE_PYXES=1 ./build_libj.sh
+  # j64x=j64arm USE_PYXES=1 ./build_jamalgam.sh
  else
-  ./clean.sh
-  if ( [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ) && ( [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ] ) ; then
-   j64x=j64arm USE_PYXES=1 ./build_jconsole.sh
-   j64x=j64arm ./build_tsdll.sh
-   j64x=j64arm USE_PYXES=1 ./build_libj.sh
-   # j64x=j64arm USE_PYXES=1 ./build_jamalgam.sh
-  else
-   j64x=j64 USE_PYXES=1 ./build_jconsole.sh
-   j64x=j64 ./build_tsdll.sh
-   j64x=j64 USE_PYXES=1 ./build_libj.sh
-   if [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
-    j64x=j64 USE_PYXES=1 ./build_jamalgam.sh
-   fi
+  j64x=j64 USE_PYXES=1 ./build_jconsole.sh
+  j64x=j64 ./build_tsdll.sh
+  j64x=j64 USE_PYXES=1 ./build_libj.sh
+  if [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
+   j64x=j64 USE_PYXES=1 ./build_jamalgam.sh
   fi
  fi
  if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] || [ "$1" = "darwin" ] ; then

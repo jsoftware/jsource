@@ -1,7 +1,7 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.0 '$'   NB. skip if not 64-bit
+0!:_1`1:@.IF64 '$'   NB. skip if not 64-bit
 
 load'format/printf'  NB. scaf
 
@@ -20,11 +20,11 @@ name =. 0 {:: y
 NB. Because of the poor design of 128!:22, we have to know the name exactly
 iqkt =. 15!:18 memu name~  NB. make a copy for our use
 threshold =. 5 {:: y
-rcmv =. 1 2 3 4 { y  NB. mask/values for rows/columns
+rcmv =. 3 4 1 2 { y  NB. mask/values for rows/columns, transposing for 128!:22 which was written for Qk
 assert. (= {.) $&.> rcmv  NB. must have same shape
 assert. (<,1) ~: #@$&.> rcmv  NB. all lists
 
-for_p. 2 2 $"1 |: > rcmv do. iqkt =. arg 128!:22 iqkt [ arg__   =: ((I.&.> {."1 p),{:"1 p),<0.0 end.  NB. no threshold for intermediate results, to match 128!:14
+for_p. 2 2 $"1 |: > rcmv do. iqkt =. arg 128!:22 iqkt [ arg__   =: -&.>&.(3&{) ((I.&.> {."1 p),{:"1 p),<0.0 end.  NB. no threshold for intermediate results, and negate the op, to match 128!:14.
 (name) =: 15!:18 iqkt * (name~ ~:!.0 iqkt) *: (threshold >!.0 | 8 c. iqkt)  NB. set changed values to 0 if they went below threshold 
 NB. Return the modified qkt, in case anyone wants it
 }}
@@ -45,39 +45,33 @@ debugopts =. x
 'name rowmasks rowvalues colmasks colvalues threshold' =. y
 NB. Find the vertical stripes. 
 
-minmaxct =. 01 ,.~ ,.~ I. > +.&.>/ colmasks  NB. get mask of all columns of Qkt to be processed,convert to minmaxct form
+minmaxct =. (((,. a. i. -.&({.a.))~    0 4&+"0@(4&*)) I.@(({.a.)&~:)) (#: i. 16) (i. { a. {~ +/"1@[) _ 4 $!.0!.>. > +.&.>/ rowmasks  NB. bucket by 4; get ct (as char); create mmc from position & ct
 
-NB. x is (min gap,max gap+1) y is minmaxct  result is ending frets for sections that can be coalesced
-NB. A section can be coalesced to the previous one if the gap between the two is in range, and neither is already 64 long
-coalfrets =.  1 ,~ (}.*.}:)@(64&>)@:(2&{"1)@] *. >/@(<:/ (}:@:(1&{"1) - }.@:(0&{"1)))
-NB. (reduction verb) x,y are partitions of minmaxct that can be coalesced
-NB. result is y for the next reduction: if new block cannot be coalesced to the tail, either because the tail len was >64 (0 now) or the spread with the new block is >256, start over at the new block;
-NB.   otherwise keep the tail's ending position and add the length of the new to the coalesced total (resetting to 0 if >64)
-redmmc =. (0:^:(>:&64)@:+&:{: 2} [) ^:(*@{:@[ *. 256 >: 1&{@[ - {.@])~
-NB. y is result of applying redmmc
-NB. result is leading frets: 1 if the ending position is not the same as the PREVIOUS ending position
-blockfrets =. (~: |.!._1) @: (1&{"1)
-NB. y is block of mmcs, result is coalesced mmc for the block
-coalesce =. ,`(((<0 0,:_1 1))&{ , +/@:(2&{"1))@.(1<#)   NB. Result is a single mmc
+NB. Adverb.  m is max gap,max spread,max ct.  Resulting verb replaces each mmc with a new mmc: the last one stays as is, and each earlier
+NB. one either coalesces to the tail, if all conditions are are right, giving an mmc with the same start as the tail; or stays unchanged to start
+NB. a new tail.  After that, we keep the first mmc at each ending position
+makecoal =: {{ (#~ ~:@:(1&{"1)) @: ((00&{@],01&{@[,+/&{:)^:([: *./ m >: (1 _1 1 * 1 0 2&{)@] + _1 1 1&*@[)~/\.) }}  NB. old start-new end=gap, old end-new start=spread, sum of ct=new ct
 
-NB. for gap sizes 8, 16,...256, combine groups separated by a smaller gap that will not make a run of > 128 cols
-for_gap. 2 ]\ 1 4 8 16 32 64 128 do.
-  minmaxct =.  (;@:(<@((coalesce;.1~    [: blockfrets redmmc/)^:(1<#));.2)~  gap&coalfrets) minmaxct
+for_gsc. _3 ]\ 4 16 8  16 64 32  64 256 128 do.  NB. Apply coarsening sieves to the stripes
+  minmaxct =.  (gsc makecoal) minmaxct
 end.
 
 stripes =. 0 1{"1 minmaxct  NB. (start,end+1) for each stripe 
 comploads =. +/ (+/@> rowmasks) * (,.@(-~/\)"1 stripes)&(+/;.0)@> colmasks    NB. table of (start,len) of each stripe; for each column, count 1s in each stripe; weight by #rows in each op; sum by stripes
+qprintf 'Qkt '
 qprintf'stripes comploads '
 debugopts 128!:14 y,stripes;(\:comploads)  NB. Run the pivots.  Result is name~
+Qkt  NB. scaf
 }}
 
 
 
-Qkt =: (15!:18) 11 c. 19 1024 $ 0.
-rm =. ,< 1023 {. 1 0 1 1 0 1 1 1 0 1
+Qkt =: (15!:18) 11 c. 19 20 $ 0.
+rm =. ,< 18 {. 1 0 1 1 0 1 1 1 0 1
 rv =. (11 c. I.)&.> rm
 cm =. ,< 19 {. 0 1 0 1 1
 cv =. (11 c. 1000 + I.)&.> cm
+
 
 (batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 

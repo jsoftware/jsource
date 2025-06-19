@@ -713,6 +713,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #if SY_64
 #define BW              64     /* # bits in a word */
 #define LGSZI 3    // lg(#bytes in an I)
+#define LGSZE 4   // lg(#bytes in an E)
 #else
 #define BW              32
 #define LGSZI 2

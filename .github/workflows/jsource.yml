@@ -221,12 +221,6 @@ jobs:
    - name: Test JE (macOS)
      run: |
       script/testga.sh darwin || exit 1
-      rm -rf j64/jconsole.dSYM
-      rm -rf j64/libj.dylib.dSYM
-      rm -rf j64/libjavx2.dylib.dSYM
-      rm -rf j64/libjavx512.dylib.dSYM
-      rm -rf j64/libtsdll.dylib.dSYM
-      rm -rf j64/jamalgam.dSYM
       cd j64
       strip -S jconsole
       strip -S libj.dylib
@@ -277,12 +271,6 @@ jobs:
    - name: Test JE (macOS arm64)
      run: |
       script/testga.sh darwin || exit 1
-      rm -rf j64/jconsole.dSYM
-      rm -rf j64/libj.dylib.dSYM
-      rm -rf j64/libjavx2.dylib.dSYM
-      rm -rf j64/libjavx512.dylib.dSYM
-      rm -rf j64/libtsdll.dylib.dSYM
-      rm -rf j64/jamalgam.dSYM
       cd j64
       strip -S jconsole
       strip -S libj.dylib
@@ -335,12 +323,6 @@ jobs:
      env:
       _DEBUG: 3
      run: |
-      rm -rf j64/jconsole.dSYM
-      rm -rf j64/libj.dylib.dSYM
-      rm -rf j64/libjavx2.dylib.dSYM
-      rm -rf j64/libjavx512.dylib.dSYM
-      rm -rf j64/libtsdll.dylib.dSYM
-      rm -rf j64/jamalgam.dSYM
       script/testga.sh darwin || exit 1
       ls -l j64
       zip -r m64d.zip j64
@@ -386,12 +368,6 @@ jobs:
      env:
       _DEBUG: 3
      run: |
-      rm -rf j64/jconsole.dSYM
-      rm -rf j64/libj.dylib.dSYM
-      rm -rf j64/libjavx2.dylib.dSYM
-      rm -rf j64/libjavx512.dylib.dSYM
-      rm -rf j64/libtsdll.dylib.dSYM
-      rm -rf j64/jamalgam.dSYM
       script/testga.sh darwin || exit 1
       ls -l j64
       zip -r m64armd.zip j64

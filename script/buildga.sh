@@ -260,17 +260,6 @@ if [ "$1" = "linux" ]; then
  cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
 fi
 
-# if [ "$1" = "darwin" ] && [ -d j64 ] ; then
-#  cd j64
-#  dsymutil jconsole 2> /dev/null || true
-#  dsymutil libj.dylib 2> /dev/null || true
-#  dsymutil libjavx2.dylib 2> /dev/null || true
-#  dsymutil libjavx512.dylib 2> /dev/null || true
-#  dsymutil libtsdll.dylib 2> /dev/null || true
-#  dsymutil jamalgam 2> /dev/null || true
-#  cd ..
-# fi
-
 if [ -d j64 ]; then
  find j64 -type d -exec chmod 755 {} \;
  find j64 -type f -exec chmod 644 {} \;

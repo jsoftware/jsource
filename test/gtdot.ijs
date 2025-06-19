@@ -389,6 +389,40 @@ f2 1e5
 
 delth''
 
+f1=: 3 : 0
+if. 0=y do.
+ (;:'a0 a1 a2 a3 a4 a5 a6 a7 a8 a9')=: (10?10) <@#"0 'a'
+elseif. 1=y do.
+ try. a0=: a0,a7 catch. end.
+ try. a1=: a1,~a8 catch. end.
+ try. a2=: (3{.a2),a9 catch. end.
+ try. a3=: a3,(3{.a0) catch. end.
+ try. a4=: ;a4;a1 catch. end.
+ try. a5=: a5,'b' catch. end.
+ try. a6=: a6,~'b' catch. end.
+ try. a7=: axxx,a4 catch. end.
+ try. a8=: a8,|.a5 catch. end.
+ try. a9=: (|.a9),a6 catch. end.
+elseif. 2=y do.
+ 4!:55 (;:'a0 a1 a2 a3 a4 a5 a6 a7 a8 a9')
+end.
+1
+)
+
+f2=: 3 : 0
+1:&> (f1 t. '')"0 y ?@$ 3
+1
+)
+
+f=: 3 : 0''
+{{0 T.0}}^:] 0 >. (1&T.'') -~ <: {: 8 T. ''
+(;:'a0 a1 a2 a3 a4 a5 a6 a7 a8 a9')=: (10?10) <@#"0 'a'
+f2 1e4
+''
+)
+
+delth''
+
 'domain error' -: ". etx '0 t. ($0)'
 'domain error' -: ". etx '+ t. 1.5'
 'domain error' -: ". etx '+ t. ''abc'''

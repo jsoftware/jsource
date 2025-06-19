@@ -15,6 +15,8 @@ ODIR=../../../../bin/$(jplatform64)
 
 ifneq (bsd,$(findstring bsd,$(jplatform64))) 
 
+ifneq (darwin,$(findstring darwin,$(jplatform64)))
+
 BACKTRACE_OBJS := \
  atomic.o \
  backtrace.o \
@@ -32,6 +34,8 @@ ifeq (darwin,$(findstring darwin,$(jplatform64)))
 BACKTRACE_OBJS := $(BACKTRACE_OBJS) macho.o
 else
 BACKTRACE_OBJS := $(BACKTRACE_OBJS) elf.o
+endif
+
 endif
 
 endif

@@ -12,17 +12,17 @@ if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
 	# OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
-  3) OPTLEVEL=" -O2 -g "
+  3) OPTLEVEL=" -O2 -g " ; DEBUG=1
    NASM_FLAGS="-g";;
-  2) OPTLEVEL=" -O0 -ggdb -DOPTMO0 "
+  2) OPTLEVEL=" -O0 -ggdb -DOPTMO0 " ; DEBUG=1
    NASM_FLAGS="-g";;
-  1) OPTLEVEL=" -O2 -g "
+  1) OPTLEVEL=" -O2 -g " ; DEBUG=1
    NASM_FLAGS="-g"
    jplatform64=$(./jplatform64.sh)-debug;;
-  *) OPTLEVEL=" -O2 ";;
+  *) OPTLEVEL=" -O2 "; DEBUG=0 ;;
  esac
 else
- case "$CFLAGS" in *-O0*) OPTLEVEL=" -DOPTMO0 ";; *) ;; esac
+ case "$CFLAGS" in *-O0*) OPTLEVEL=" -DOPTMO0 " ; DEBUG=1 ;; *) DEBUG=0 ;; esac
 fi
 echo "jplatform64=$jplatform64"
 
@@ -165,6 +165,10 @@ else
  -Wno-unused-variable \
  $CFLAGS"
 
+fi
+
+if [ $DEBUG -eq 1 ] ; then
+common="$common -DDEBUG"
 fi
 
 case "$jplatform64" in

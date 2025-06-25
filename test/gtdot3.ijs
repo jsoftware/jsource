@@ -144,7 +144,25 @@ f ''
 
 wthr N
 
-4!:55 ;:'N N1 N2 delth f aaa__ bbb__ ccc__ sema setth wthr'
+f1=: 3 : 0
+11 T. mx
+20 T. ''
+13 T. mx
+1
+)
+
+f=: 3 : 0''
+{{0 T.0}}^:] 0 >. (1&T.'') -~ <: {: 8 T. ''
+mx=: 10 T. 0
+for_i. i.10 do.
+  1:&> (f1 t. '')"0 i.1e5
+end.
+''
+)
+
+wthr N
+
+4!:55 ;:'mx N N1 N2 delth f f1 aaa__ bbb__ ccc__ sema setth wthr'
 
 epilog''
 

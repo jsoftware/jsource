@@ -28,7 +28,16 @@
 #include "j.h"
 #include "jeload.h"
 
-#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__wasm__) //temporary
+#if defined(__APPLE__) || defined(_WIN32) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__wasm__) //temporary
+#undef LIBBACKTRACE
+#else
+#undef LIBBACKTRACE
+#ifndef DEBUG
+#define LIBBACKTRACE
+#endif
+#endif
+
+#ifdef LIBBACKTRACE
 #include "../libbacktrace/backtrace.h"
 #endif
 
@@ -52,7 +61,7 @@ static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType){
  }
 }
 #endif
-#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__wasm__) //temporary
+#ifdef LIBBACKTRACE
 static int err_write(void *data, uintptr_t pc, const char *file, int line, const char *function){
  char buf[512];
  file = file ? file : "?";
@@ -268,7 +277,7 @@ JST* jt;
 
 int main(int argc, char* argv[])
 {
-#if !defined(_WIN32) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__wasm__) //temporary
+#ifdef LIBBACKTRACE
  signal(SIGSEGV,sigsegv);
  signal(SIGILL,sigsegv);
 #ifdef __APPLE__

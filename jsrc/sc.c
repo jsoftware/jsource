@@ -59,7 +59,7 @@ DF2(jtunquote){F12IP;A z;
  if(likely(!(flgvbnmgen&((UI8)VF2PSEUDONAME<<FLGFLAG2X)))){  // normal names, not pseudo
   // normal path for named functions
   if(likely((fs=FAV(self)->localuse.lu1.cachedlkp)!=0)){  // fetch the most recent lookup, which may be reused. no QC
-   if(flgvbnmgen&((UI8)VF2CACHEABLE<<FLGFLAG2X)){  // cacheable?  (test first because test suite expects it)
+   if(flgvbnmgen&((UI8)VF2CACHEABLE<<FLGFLAG2X)){  // long cacheable?  (test first because test suite expects it)
     if(likely(flgvbnmgen&((UI8)VF2CACHED<<FLGFLAG2X))){  // cached already?
      // the reference is cached.  Switch to it immediately.
      // If it has a (necessarily direct named) locative, we must fetch the locative so we switch to it
@@ -73,26 +73,29 @@ DF2(jtunquote){F12IP;A z;
      goto finlookup;     // NM flags have not been inserted into flagsfromname, not needed
     }
    }else{  // if long cacheable, don't allow short caching, else long cache would seldom get used (and it's faster)
-    A cachedlocale=FAV(self)->localuse.lu0.cachedloc; UI4 vtime=FAV(self)->lu2.refvalidtime;  // fetch before we read reftime as atomic
-    if(vtime==ACVCACHEREAD){  // is previous lookup still valid
-     // Short caching: the previous lookup can be reused because there have been no assignments
+    if(likely(FAV(self)->lu2.refvalidtime==ACVCACHEREADLOCK)){  // is previous lookup still valid
+     // Short caching: the previous lookup can be reused because there have been no assignments to/from ACV
      flgvbnmgen+=flagsfromname<<FLGNMFLGX;  // insert name flags into flag reg.  They should have settled from the load
      scafraposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion, i. e. no subroutine call, OK because the value must not be sparse
+     ACVCACHEREADUNLOCK   // must keep the lock till the cached value is protected
      if(unlikely(flgvbnmgen&(NMLOC<<FLGNMFLGX))){  // is this a (necessarily direct) locative?
-      // see if the locale is cached.   public_z_ =: entry_loc_ where entry_loc will have the locale pointer
-      if(unlikely((explocale=cachedlocale)==0)){  // use cached locale if there is one (there will be, except first time through)  If not...
-       RZSUFF(explocale=sybaseloc(thisname),z=0; goto exitname;);  //  get the explicit locale.  0 if erroneous locale
-       FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
+// obsolete       // see if the locale is cached.   public_z_ =: entry_loc_ where entry_loc will have the locale pointer
+// obsolete       if(unlikely((explocale=cachedlocale)==0)){  // use cached locale if there is one (there will be, except first time through)  If not...
+// obsolete        RZSUFF(explocale=sybaseloc(thisname),z=0; goto exitname;);  //  get the explicit locale.  0 if erroneous locale
+// obsolete           // if the name is deleted before sybaseloc runs, we might get a starting locale that doesn't match the definition in fs.  That will be confusing but will not crash.  It is
+// obsolete           // very unlikely and occurs only when names are being deleted during execution, which is confusing to begin with
+// obsolete        FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
 // obsolete        thisname=jt->curname;  // refresh thisname
-      }
-      flgvbnmgen+=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember that there is a change of locale to non-PERMANENT
+// obsolete       }
+      explocale=FAV(self)->localuse.lu0.cachedloc;  // get the locale of the lookup
+      flgvbnmgen+=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember if there is a change of locale to non-PERMANENT, requiring putting the new locale into execution
       flgvbnmgen+=FLGLOCATIVE;  // remember this call is a locative
       SYMSETGLOBAL(explocale);   // switch to the (possibly new) locale.  We DO NOT change AKGST because if we are calling a non-operator modifier we need the old locale if the modifier calls u./v. .
          // AKGST changes only from cocurrent.  This leads to a divergence between jt->global and AKGST if a non-operator modifier calls an anonymous explicit that issues cocurrent.  BFD.  The divergence
          // is removed by the next named call
      } // simple names just use the cached value
      goto finlookup; // all caches bypass the check for change of type since that would be the least of our worries
-    }
+    }else{ACVCACHEREADUNLOCK FAV(self)->localuse.lu1.cachedlkp=0;}  // timestamp changed, removed cacheability to avoid another miss
    }
   }
   // here the address was not cached, or the cache was stale.  For namerefs caching we go through here to refetch the value because we need QCNAMEDLOC semantics
@@ -100,11 +103,12 @@ DF2(jtunquote){F12IP;A z;
    // name was not cached.  Look it up, returning QCNAMEDLOC semantics.  The calls to the lookup routines all issue ra() (under lock) on the value if found
 // obsolete    I nmflgs=NAV(thisname)->flag;   // flags from name, before we call subroutines
    flgvbnmgen+=flagsfromname<<FLGNMFLGX;  // insert name flags into flag reg.  They should have settled from the load
+   UI4 localts=ACVCACHEREAD;  // record timestamp of lookup.  This will be used only if we cache the lookup.  We must do this BEFORE ra/syrd protects the value
    if(likely(!(flagsfromname&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
     // We must not use bucket info for the local lookup, because the reference may have been created in a different context
     J jtx=(J)((I)jt+NAV(thisname)->m); C *sx=NAV(thisname)->s; UI4 hashx=NAV(thisname)->hash;
     if(unlikely(AR(jt->locsyms)&ARHASACV)&&unlikely((fs=CLRNAMEDLOC(probex(NAV(thisname)->m,sx,SYMORIGIN,hashx,jt->locsyms)))!=0)){  // check local syms only if they have an ACV
-     raposlocal(QCWORD(fs),fs); // if found locally, free it for protection, as if found by syrd1.  Set not-NAMEDLOC.
+     raposlocal(QCWORD(fs),fs); // if found locally, protect it, as if found by syrd1.  Set not-NAMEDLOC.
     }else{fs=jtsyrd1(jtx,sx,hashx,jt->global);  // not found in local, search global
     }
     // leave LOCINCRDECR unset and jt->global unchanged
@@ -149,16 +153,24 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
    // at this point we could short-circuit names that call names (e. g. public =: name_loc_) by checking that the call is to jtunquote and is not a locative.  This would save about half
    // of this routine.  It's not clear that the frequency is worth the test
 
-   // *** now that we know the lookup was valid, save it for next time, including locale if any
+   // *** now that we know the lookup was valid, save it for next time, including locale.
    // This is a little different between short- and long-term caches, because of the possibility that the
    // locale is numbered/private.  Such locales are unsuitable for long-term caches since the locale
-   // may disappear.  They are OK for short-term caches
-   if(likely(!(flgvbnmgen&((UI8)VF2CACHEABLE<<FLGFLAG2X)))){  // if only short-term cache is possible
-    // for short-term cache, save the lookup, and the locale too if it is a direct locale (either named or numbered).
+   // may disappear.  They are OK for short-term caches because deleting the locale invalidates the timestamp
+   if(likely(!(flgvbnmgen&((UI8)VF2CACHEABLE<<FLGFLAG2X)))){  // if only short-term cache is possible...
+    // for short-term cache, save the lookup, and the locale too if it is a direct locale (either named or numbered).  We stored the timestamp earlier, before the value was protected
     if(!(flgvbnmgen&((NMILOC+NMIMPLOC)<<FLGNMFLGX))){  // Never cache anything for indirect or implicit locatives
-     FAV(self)->localuse.lu1.cachedlkp=fs;     // save named lookup calc for next time  should ra locale or make permanent?  no QC
-     if(flgvbnmgen&(NMLOC<<FLGNMFLGX))FAV(self)->localuse.lu0.cachedloc=explocale;   // including locale it is was looked up
-     __atomic_store_n(&FAV(self)->lu2.refvalidtime,ACVCACHEREAD,__ATOMIC_RELEASE);  // record timestamp of lookup
+     // The tricky part with this is that the reference may be in use in multiple threads while we are trying to cache it.  Because the pair fs/timestamp must be updated atomically, we
+     // have to take a write lock.  We would like to avoid a read lock when checking the timestamp.  We do so at the cost of setting the timestamp to 'uncacheable' for a moment.  The
+     // worst this will do is cause a very rare cache miss.  Our rule is, we must never expose a situation where reading the fs followed by the timestamp gives a timestamp that is
+     // later than the correct one for the fs.
+     WRITELOCK(self->lock)  // take a lock on the reference
+     __atomic_store_n(&FAV(self)->lu2.refvalidtime,(UI4)0,__ATOMIC_RELEASE);  // set timestamp invalid in case it starts after the new stamp
+     __atomic_store_n(&FAV(self)->localuse.lu1.cachedlkp,fs,__ATOMIC_RELEASE);     // save named lookup calc for next time.  This makes the lookup cached.  no QC
+// obsolete      if(flgvbnmgen&(NMLOC<<FLGNMFLGX))
+     __atomic_store_n(&FAV(self)->localuse.lu0.cachedloc,explocale,__ATOMIC_RELEASE);   // including locale in case it was looked up (used only for NMLOC references)
+     __atomic_store_n(&FAV(self)->lu2.refvalidtime,localts,__ATOMIC_RELEASE);  // set timestamp for the lookup.  It may already be out of date, which is OK - it will be recreated
+     WRITEUNLOCK(self->lock)  // release lock on the reference
     }
    }else if(namedloc && (!(flgvbnmgen&(NMLOC<<FLGNMFLGX)) || (LXAV0(explocale)[SYMLEXECCT]&EXECCTPERM))){   // cacheable nameref, and value found in a permanent named locale
     // ************* the nameref is long-term cachable.  Fill it in.  Happens the first time a cachable reference is encountered.
@@ -248,7 +260,7 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
  // At this point jt->global is the new locale to use (possibly inherited).  If LOCINCRDECR is set,
  // explocale also holds that value.  LOCINCRDECR is set if we should incr/decr explocale, which is true if it changes
  // to a non-permanent locale (we don't want executions in z/base/... to hammer the z count)
- if(flgvbnmgen&FLGLOCINCRDECR){ACVCACHECLEAR; INCREXECCT(explocale);}  // incr execct in newly-starting locale
+ if(flgvbnmgen&FLGLOCINCRDECR){ACVCACHECLEAR; INCREXECCT(explocale);}  // incr execct in newly-starting locale.  Invalidate name lookups on locale change
  // scaf if someone deletes the locale before we start it, we are toast
  // ************** from here on errors must (optionally) decr explocale  and unra() before exiting
  // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
@@ -375,7 +387,8 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  A z=fdefnoerr(flag2,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
  if(likely(val!=0)){if(ISFAOWED(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // abort if reference not allocated
- if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val); FAV(z)->lu2.refvalidtime=ACVCACHEREAD;}  // install cachelet of lookup, but never if indirect locative.  No QC
+ // We would like to give a start to short-caching by remembering the lookup and time, but the time must be BEFORE the point when the lookup is protected by its syrd(), and we don't have that value
+// obsolete  if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val); FAV(z)->lu2.refvalidtime=ACVCACHEREAD;}  // install cachelet of lookup, but never if indirect locative.  No QC
  R (A)((I)z+QCPTYPE(val));  // Give the result the part of speech of the input.  no FAOWED since we freed val; no NAMED since a reference is not a named value
 }
 

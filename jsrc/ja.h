@@ -347,7 +347,7 @@
 #define extnvr(x)                    jtextnvr(jt,(x))
 #define scaft2(x)
 #if ((MEMAUDIT&5)==5) && SY_64
-#define scaft(x) testbuf(x); if(AN(x)<0)SEGFAULT;
+#define scaft(x) testbuf(x); if(AFLAG(x)<0)SEGFAULT;
 #else
 #define scaft(x) 
 #endif

@@ -72,7 +72,7 @@ pyx=. (p4 t.'')"0  i. y
 i. 0 0
 )
 
-1: (6!:5) ] _5000  NB. engage test mode before defining the verbs & names, to avoid crash freeing
+NB. 1: (6!:5) ] _5000  NB. engage test mode before defining the verbs & names, to avoid crash freeing
 
 NB. Settings
 TESTS234 =: 0  NB. set to 1 to allow other tests here to run

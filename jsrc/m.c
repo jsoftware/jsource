@@ -1234,7 +1234,6 @@ __attribute__((noinline)) A jttgz(J jt,A *tp, A z){RZ(tp=tg(tp)); jt->tnextpushp
 
 __attribute__((noinline)) A jtgafallopool(J jt){
  A u,chn; US hrh;
-WRITELOCK(JT(jt,dblock));   // scaf **********
 #if ALIGNPOOLTOCACHE   // with smaller headers, always align pool allo to cache bdy
  // align the buffer list on a cache-line boundary
  I *v; ASSERTSUFF(v=MALLOC(PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE),EVWSFULL,WRITEUNLOCK(JT(jt,dblock)); R 0;);
@@ -1244,7 +1243,6 @@ WRITELOCK(JT(jt,dblock));   // scaf **********
  // allocate without alignment
  ASSERTSUFF(av=MALLOC(PSIZE+TAILPAD),EVWSFULL,WRITEUNLOCK(JT(jt,dblock); R 0;);
 #endif
-WRITEUNLOCK(JT(jt,dblock));   // scaf **********
  I blockx=(I)jt&63; jt=(J)((I)jt&-64);
  jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
  I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
@@ -1275,17 +1273,15 @@ WRITEUNLOCK(JT(jt,dblock));   // scaf **********
 
 // allocate from OS and fill in h field.  n is full size to allocate, padded for all reasons
 __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
-WRITELOCK(JT(jt,dblock));   // scaf **********
 #if ALIGNTOCACHE
  // Allocate the block, and start it on a cache-line boundary
  I *v;
- ASSERTSUFF(v=MALLOC(n),EVWSFULL,WRITEUNLOCK(JT(jt,dblock)); R 0;);  // scaf
+ ASSERT(v=MALLOC(n),EVWSFULL)   // allocate the memory
  z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
  ((I**)z)[-1] = v;    // save address of original allocation
 #else
  ASSERTSUFF(z=MALLOC(n),EVWSFULL,WRITEUNLOCK(JT(jt,dblock)); R 0;);
 #endif
-WRITEUNLOCK(JT(jt,dblock));   // scaf **********
  AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
  if(unlikely((((jt->mfreegenallo+=n)&MFREEBCOUNTING)!=0))){
   I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
@@ -1299,29 +1295,31 @@ WRITEUNLOCK(JT(jt,dblock));   // scaf **********
 }
 
 #if ((MEMAUDIT&5)==5) && SY_64 // scaf
-static C allohash[65536];  // 0 is empty, 1 is tombstone, 2 is valid
-static C * alloblocks[65536]; static US allolock=0; I nalloblocks=0; I allorunin=0;
-static I alloring[2048]; static I alloringx=0;
+#define ALLOSIZE (1024*1024)
+static C allohash[ALLOSIZE];  // 0 is empty, 1 is tombstone, 2 is valid
+static C * alloblocks[ALLOSIZE]; static US allolock=0; I nalloblocks=0; I allorunin=0;
+static I alloring[2048]; static I alloringx=0, alloct[3]={0,0,0};
 I syslockactive=0;
 
-#define HASHBUF(buf) ((CRC32L((I)buf,~0)*(sizeof(allohash)/sizeof(allohash)[0]))>>32)
+#define HASHBUF(buf) ((CRC32L((I)buf,~0)*ALLOSIZE)>>32)
 // look up buf starting in hashslot.  Return 0 if error, 1 if OK
 static NOINLINE I findbuf(I hashslot,void *buf,I probewrdel){I z;  // must have lock
- if(nalloblocks==0){nalloblocks=1; DO(sizeof(allohash)/sizeof(allohash)[0], allohash[i]=0;)}  // first time after enagagement or reengagement
+ ++alloct[probewrdel];
+ if(nalloblocks==0){nalloblocks=1; DO(ALLOSIZE, allohash[i]=0;) DO(sizeof(alloring)/sizeof(alloring)[0], alloring[i]=0;)}  // first time after enagagement or reengagement
  I maxstop=probewrdel&1;  // max stopper value to pause at: 0, except 1 for wr
- while(1){
-  if(allohash[hashslot]<=maxstop){  // found a stopper (tombstone or empty)
+ while(1){I stopper;
+  if((stopper=allohash[hashslot])<=maxstop){  // found a stopper (tombstone or empty)
    if(unlikely((probewrdel&1)==0))R 0;  // probe or delete not found, error
    if(maxstop==1){allohash[hashslot]=2; alloblocks[hashslot]=buf; maxstop=0;}  // first wr, store value and advance to finishing wr state
-   else R 1;  // if finishing wr, we must have hit empty, we're finished
+   if(stopper==0)R 1;  // if we hit empty, we're finished
   }else if(allohash[hashslot]==2&&alloblocks[hashslot]==buf){
    if(probewrdel==2){  // found deletion point
     allohash[hashslot]=1;  // install tombstone
-    if(allohash[(hashslot-1)&65535]==0){for(;allohash[hashslot]==1;hashslot=(hashslot+1)&65535)allohash[hashslot]=0;}  // replace trailing tombstones with empty
+    if(allohash[(hashslot-1)&(ALLOSIZE-1)]==0){for(;allohash[hashslot]==1;hashslot=(hashslot+1)&(ALLOSIZE-1))allohash[hashslot]=0;}  // replace trailing tombstones with empty
    }
    R probewrdel!=1;  // match is failure for add, success for probe/del
   }
-  hashslot=(hashslot-1)&65535;  // advance to next slot to try
+  hashslot=(hashslot-1)&(ALLOSIZE-1);  // advance to next slot to try
  }
 }
 
@@ -1338,10 +1336,10 @@ WRITELOCK(allolock);
  if(++allorunin==0)allorunin=1; if(unlikely(JT(jt,peekdata==0)))allorunin=0;  // go into normal state after runin completes
  alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,1))){
-  WRITEUNLOCK(allolock);
   printf("allorunin=%lld: allocated %p which is already in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
   printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
+  WRITEUNLOCK(allolock);
   SEGFAULT;  // error if already in list
  }
 WRITEUNLOCK(allolock);
@@ -1350,16 +1348,16 @@ WRITEUNLOCK(allolock);
 static void rembuf(J jt,A buf){
 if(allorunin==0)R;
 I hashslot=HASHBUF(buf);  // starting slot
-if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)goto printblock;  // unfreed buf.  no sparse here
+// obsolete if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)goto printblock;  // unfreed buf. 
 WRITELOCK(allolock);
  alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,2))){
   if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2)goto exit;  // ignore audit failure during system lock, which might by a symbol change eg
   if(allorunin<=0)goto exit;
-  WRITEUNLOCK(allolock);
   printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
-printblock:;
+  WRITEUNLOCK(allolock);
+// obsolete printblock:;
   printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
   SEGFAULT;
  }  // error if not in list, except during runin
@@ -1543,9 +1541,9 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 // this is called only from the owning thread.  This thread owns repato but must arbitrate for repatq
 void jtrepatsend(J jt){
 #if PYXES
- A repato=jt->repato, tail;
+ A repato=jt->repato;
  if(!repato)R; // nothing to repatriate
- tail=AAV0(repato)[0];  // extract tail
+ A tail=AAV0(repato)[0];  // extract tail
  I origthread1=repato->origin;
  I allocsize=AN(repato);  // extract total length in repato
  jt->repato=0;  // clear repato to empty
@@ -1553,7 +1551,7 @@ void jtrepatsend(J jt){
   // ******* jt has changed ********
  I zero=0,exsize;
  // Add chain of new blocks to repatq.  AN(repatq) has total alloc size in repatq.  This code fails if ABA happens in repatq (the count is wrong), but that is vanishingly unlikely.  AN(repato) goes through invalid counts if there is retry
- A expval=lda(&jt->repatq); do { AFCHAIN(tail)=expval; AN(repato)=allocsize+(exsize=AN(expval?expval:ANLEN0)); } while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
+ A expval=lda(&jt->repatq); do {AFCHAIN(tail)=expval; AN(repato)=allocsize+(exsize=AN(expval?expval:ANLEN0));}while(!casa(&jt->repatq, &expval, repato));   // hang old chain off tail; atomic install at head of chain; set new total size
  if(common(((allocsize-REPATGCLIM-1)^(exsize+allocsize-REPATGCLIM-1))<0))__atomic_store_n(&jt->uflags.sprepatneeded,1,__ATOMIC_RELEASE); // if amt freed crosses boundary, request reclamation in the home thread
 #endif
 }
@@ -1566,11 +1564,7 @@ void jtrepatrecv(J jt){
  if(likely(p)){  // if anything to repat here...
 // obsolete   // this duplicates mf() and perhaps should just call there instead
   jt->bytes-=AN(p);  // remove repats from byte count.  Not worth testing whether counting enabled
-  A nextp; do{nextp=AFCHAIN(p);
-#if ((MEMAUDIT&5)==5) && SY_64 // scaf
-if(JT(jt,peekdata))addbuf(jt,p);  // the repat looks like an alllo for tracking purposes
-#endif
- mf(p);}while(p=nextp);  // send the blocks to their various queues
+  A nextp; do{nextp=AFCHAIN(p); AC(p)=0; mf(p);}while(p=nextp);  // send the blocks to their various queues (clear AC to avoid audit failure)
 // obsolete    I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
 // obsolete    if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0))jt->uflags.spfreeneeded=1;  // if we have freed enough to call for garbage collection, do
 // obsolete    AFCHAIN(p)=jt->mempool[blockx];  // chain new block at head of queue
@@ -1580,7 +1574,7 @@ if(JT(jt,peekdata))addbuf(jt,p);  // the repat looks like an alllo for tracking 
 #endif
 }
 
-// repatriate a single block onto its queue, flushing if there is a change of owner or too much data
+// repatriate a single block onto the outbound queue, flushing if there is a change of owner or too much data
 static void jtrepat1(J jt, A w, I allocsize){
 #if PYXES
  // repatriate a block allocated in another thread.  AN(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no AFCHAIN pointer
@@ -1608,9 +1602,6 @@ extern void jgmpguard(X);
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
 void jtmf(J jt,A w,I hrh,I blockx){
-#if ((MEMAUDIT&5)==5) && SY_64 // scaf
-if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
-#endif
 #if MEMAUDIT&16
 auditmemchains();
 #endif
@@ -1646,11 +1637,14 @@ printf("%p-\n",w);
 #endif
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   I allocsize = FHRHPOOLBINTOSIZE(blockx);
+#if MEMAUDIT&4
+  DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
+#endif
 #if PYXES
   if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
 #endif
-#if MEMAUDIT&4
-  DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
+if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
 #endif
   AFCHAIN(w)=jt->mempool[blockx];  // append free list to the new addition...
   jt->mempool[blockx]=w;   //  ...and make new addition the new head
@@ -1661,6 +1655,9 @@ printf("%p-\n",w);
   }
  }else if(unlikely(blockx==FHRHBINISGMP)){jtmfgmp(jt,w);  // if GMP allocation, free it through GMP
  }else{    // buffer allocated from malloc
+#if ((MEMAUDIT&5)==5) && SY_64 // scaf
+if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
+#endif
   I allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
   DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area  scaf &1
@@ -1685,13 +1682,11 @@ printf("%p-\n",w);
  ((I*)w)[6] = (I)0xdeadbeefdeadbeefLL;   //  Reserved area in malloc blocks is not permanent
 #endif
 
-WRITELOCK(JT(jt,dblock));   // scaf **********
 #if ALIGNTOCACHE
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else
   FREECHK(w);  // free the block
 #endif
-WRITEUNLOCK(JT(jt,dblock));   // scaf **********
  }
 }
 

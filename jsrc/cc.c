@@ -141,7 +141,7 @@ DF2(jtspecialatoprestart){F12IP;
 
 // x <;.0 y  and  x (<;.0~ -~/"2)~ y   where _1 { $x is 1 (i. e. 1 dimension of selection)  localuse distinguishes the two cases (relative vs absolute length)
 // We go for minimum overhead in the box allocation and copy
-DF2(jtboxcut0){F12IP;A z;
+DF2(jtboxcut0){F12IP;A z;I i;
  ARGCHK2(a,w);
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
@@ -159,21 +159,21 @@ DF2(jtboxcut0){F12IP;A z;
  I resatoms; PROD(resatoms,f,AS(a)); I cellsize; PROD(cellsize,wr-1,AS(w)+1);
  I k=bplg(t); C *wv=CAV(w);  // k is length of an atom of w
  // allocate the result area
- GATV(z,BOX,resatoms,f,AS(a)); if(resatoms==0){RETF(z);}  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+ GATV(z,BOX,resatoms,f,AS(a)); if(resatoms==0){RETF(z);}  // scaf could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy
   // the w values to the new block.
  A *pushxsave;  // place to restore tstack to
   AFLAGINIT(z,BOX) // Make result inplaceable; recursive too, since otherwise the boxes won't get freed
   // divert the allocation system to use the result area a tstack
   pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
- // MUST NOT FAIL UNTIL tstack restored
+ // MUST NOT FAIL UNTIL tstack restored ****************************************************************************************************
  A y;  // y is the newly-allocated block
  // Step through each block: fetch start/end; verify both positive and inrange; calc size of block; alloc and move; make block recursive
  I (*av)[2]=(I (*)[2])voidAV(a);  // pointer to first start/length pair
  I abslength=(I)FAV(self)->localuse.boxcut0.parm;  // 0 for start/length, ~0 for start/end+1
  wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
- A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself sirtual
- I i; for(i=0;i<resatoms;++i){
+ A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
+ for(i=0;i<resatoms;++i){
   I start=av[i][0]; I endorlen=av[i][1];
   if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);}  // verify start in range - failover if not
   endorlen+=start&abslength;  // convert len to end+1 form
@@ -200,7 +200,7 @@ DF2(jtboxcut0){F12IP;A z;
  // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
  if(unlikely((I)jtfg&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
  jt->tnextpushp=pushxsave;   // restore tstack pointer
- // OK to fail now - memory is restored
+ // OK to fail now - memory is restored ******************************************************************************************************
  ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
  // The result can be called pristine if the contents are DIRECT and the result is recursive, because it contains all copied data
  AFLAGORLOCAL(z,(-(t&DIRECT))&(~(I)jtfg<<(AFPRISTINEX-JTWILLBEOPENEDX))&AFPRISTINE)

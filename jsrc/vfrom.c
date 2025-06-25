@@ -3389,24 +3389,27 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  UI releaseblockmask=0; I releasect; __m256d *releaseqktringbasecurr;  // mask of blocks in row, index of row being released, normal burst length, amount of processing before next burst, actual burst length, Qkt addr of burst
 #define CYCBETWEENRELEASE0 500  // estimated clocks to receive DRAM data.  We try to burst only this often so that write buffers can drain
 #define CYCPERINSERT 12   // number of cycles per insertion
-#define RELEASEDELAYCT0 RELEASEBLOCKCT*(CYCBETWEENRELEASE0/CYCPERINSERT)*sizeof(US)  // unbiased delay, measured in #offsets processed
- I releasedelayct0;  // biased delay given ring status
+#define RELEASEDELAYCT0 ((CYCBETWEENRELEASE0/CYCPERINSERT)*sizeof(US))  // unbiased delay, measured in #offsets processed
+I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayct0;  // delay after consideing thread count, biased delay given ring status
  // portmanteau register holding ring status
- I ringdctrlb8=0;  // delay count, relstart, b8start
+ I ringdctrlb8=0;  // delay count, minnextrow, relstart, b8start
 #define RINGDCTX 48  // bit position of delayct, which counts USs and goes positive when it is OK to release RELEASEBLOCKCT blocks.  Ends at sign bit
 #define RINGDCTMASK 0xff000000000000
+#define RINGMINNEXTROWX 16  // 32-bit field to hold next starting row
+#define RINGMINNEXTROWINIT ((I)((UI4)~0>>1)<<RINGMINNEXTROWX)   // high value for countdown
 #define RINGRELSTARTX 8  // bit position of relstart, the next/current row of the ring to relesse
 #define RINGRELSTARTMASK ((RINGROWS-1)<<RINGRELSTARTX)
 #define RINGRELSTARTWRAP (~(RINGROWS<<RINGRELSTARTX))   // mask to wrap relstart when incremented
 #define RINGB8STARTX 0   // start of ring area where next 8block is built AND end+1 pointer of data released to ring
 #define RINGB8STARTMASK ((RINGROWS-1)<<RINGB8STARTX)
-    // when relstart==b8start, ring is empty.  releaseblockmask is always 0 then.  releasedelayct is set negative to delay the next batch; it increments as blocks are put into the ring.  releasenormct gives the normal burst size, which increases
-    // if the ring fills.  releasect counts the actual burst length, which is RELEASEBLOCKCT unless the ring is full or processing is over, in which case it is set to high-value to flush the ring
+    // when relstart==b8start, ring is empty.  releaseblockmask is always 0 then & only then.  releasedelayct is set negative to delay the next batch; it increments as blocks are put into the ring.
+    // releasect counts the actual burst length, which is RELEASEBLOCKCT unless the ring is full or processing is over, in which case it is set to high-value to flush the ring
  while(stripex<nstripes){  // ... for each reservation...
   I stripe=stripegrade[stripex];  // get the actual stripe# to process
 
   // establish the values for each op in this stripe
-  I io, sstart=(*stripestartend1)[stripe][0], minnextrow=(UI4)~0>>1;  // start col for stripe, starting row for next 8batch
+  I io, sstart=(*stripestartend1)[stripe][0];   // start col for stripe
+  ringdctrlb8|=RINGMINNEXTROWINIT;  //  starting row for next 8batch
   E *qktcol=qkt+sstart;  // address of the output column in row 0
   opinfo *aops=0;  // chain of active ops, init to empty
   US *nextstripeofst=stripeofst; __m256d *nextstripe0213=stripe0213;  // we lay the offsets & values in sequentially to get best cache utilization, without gaps
@@ -3415,17 +3418,18 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
    I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
 if(ssize>MAXNON0||ssize<=0)SEGFAULT;
    if(ssize){    // if this op intersects this stripe...
-    opstat[io].rowindex=0; I4 nx=opstat[io].colndxahead=opstat[io].acolndxs[0]; minnextrow=nx<minnextrow?nx:minnextrow; opstat[io].colvalahead=opstat[io].acolvals[0];  // start on first row; prefetch first.  Keep track of smallest start value
+    opstat[io].rowindex=0; I4 nx=opstat[io].colndxahead=opstat[io].acolndxs[0]; opstat[io].colvalahead=opstat[io].acolvals[0];  // start on first row; prefetch first.
+    nx=nx<(I4)(ringdctrlb8>>RINGMINNEXTROWX)?nx:(I4)(ringdctrlb8>>RINGMINNEXTROWX); ringdctrlb8=(ringdctrlb8&~RINGMINNEXTROWINIT)|((I)nx<<RINGMINNEXTROWX); // Keep track of smallest start value
     // read the mask for this op and convert it to offsets into ring and mask of resultblocks
     opstat[io].chain=aops; aops=&opstat[io];  // add this op to the active chain
     opstat[io].rbmask=0;  // init mask of touched blocks
     I j32, nofst, lastoffset; __m256i *smask;   // number of 32-byte mask reads to date; number of offsets written; value of last offset; pointer to the start of the bitmask for this section
     opstat[io].arowoffsets=nextstripeofst;  // remember where the offsets start
     for(j32=0,nofst=0,smask=(__m256i *)(BAV(oprowmasks[io])+sstart);;++j32){
-     __m256i m32=_mm256_loadu_si256(smask+j32);  // read 32 bits.  May overfetch
+     __m256i m32=_mm256_loadu_si256(smask+j32);  // read 32 B01s.  May overfetch
      ((C*)&opstat[io].rbmask)[j32]=(UI)(UI4)_mm256_movemask_ps(_mm256_castsi256_ps(_mm256_cmpgt_epi32(m32,_mm256_setzero_si256())));   // create touched mask for each 4-value section (i. e. 1 resultblock), save in rbmask
      I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(m32,_mm256_setzero_si256()));   // extract the 32 bits
-     while(bits){lastoffset=nextstripeofst[nofst]=(j32*32+CTTZI(bits))*sizeof(E); bits&=bits-1; ++nofst; if(nofst==ssize)goto finmask;}  // turn each 1-bit into a byte offset; stop if we have hit # offsets
+     while(bits){lastoffset=nextstripeofst[nofst]=(j32*32+CTTZI(bits))*sizeof(E); bits&=bits-1; ++nofst; if(nofst==ssize)goto finmask;}  // turn each 1-bit into a byte offset; stop if we have hit # values
     }
 finmask:;
     opstat[io].rbmask&=(UI)~0>>(BW-(((*stripestartend1)[stripe][1]-sstart)>>LGRESBLKE));  // mask off blocks past the valid region
@@ -3451,7 +3455,7 @@ finmask:;
   // ops ready, now calculate the entire stripe
   while(aops){  // keep processing rows as long as there is an active op
    // minnextrow is set with the starting row for the new 8block
-   I b8qktrow=minnextrow; minnextrow=(UI4)~0>>1;  // remember starting row# in qkt = start of 8 window
+   I b8qktrow=(I4)(ringdctrlb8>>RINGMINNEXTROWX); ringdctrlb8|=RINGMINNEXTROWINIT;  // remember starting row# in qkt = start of 8 window
 
    opinfo *currop, *prevop;  // op being processed, prev ptr used to delete blocks
    for(currop=aops,prevop=0;currop;){
@@ -3501,7 +3505,7 @@ finmask:;
      ringdctrlb8+=andx<<RINGDCTX;  // add the number of blocks we processed.  When the total goes nonnegative we can release again
      if(releaseblockmask>(UI)REPSGN(ringdctrlb8)){  // if there are released values...  (mask>0 and delayct nonneg)
       releasect=RELEASEBLOCKCT;  // set releasect to the number of blocks to take.  We will stop when the row is empty in any case
-      ringdctrlb8=(ringdctrlb8&~RINGDCTMASK)+releasedelayct0;  // reset delay till next block release
+      ringdctrlb8+=releasedelayct0;  // add delay, keeping credit for extra time spent in storing into ring
 releaserow:;  // entered from below to drain the ring, either on buffer-full or at end-of-operation.  releasect is set to a high value in that case
       __m256d *releaseringbase=(__m256d*)ring[(I)releaseqktringbasecurr&(RINGROWS-1)];  // get base address in ring
       __m256d *releaseqkbase=(__m256d*)((I)releaseqktringbasecurr&-RINGROWS);  // get base address in Qkt
@@ -3519,12 +3523,13 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
        // zero the |value|s that are below threshold
        iph=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qk0213h),zerothresh,_CMP_GT_OQ);   // iph = 0 if result too small
        qk0213h=_mm256_and_pd(qk0213h,iph); qk0213l=_mm256_and_pd(qk0213l,iph); // set values to 0 if lower than threshold
-       // write out the block and clear 
+       // write out the block and clear the ring for next user
        qkE01=_mm256_shuffle_pd(qk0213h,qk0213l,0b0000); qkE23=_mm256_shuffle_pd(qk0213h,qk0213l,0b1111);  // convert result to E order
        _mm256_stream_pd((D*)(__m256d*)((I)releaseqkbase+blockbyteofst),qkE01); _mm256_stream_pd((D*)((__m256d*)((I)releaseqkbase+blockbyteofst)+1),qkE23);   // store qk, bypass caches
        _mm256_storeu_pd((D*)(__m256d*)((I)releaseringbase+blockbyteofst),_mm256_setzero_pd()); _mm256_storeu_pd((D*)((__m256d*)((I)releaseringbase+blockbyteofst)+1),_mm256_setzero_pd());   // zero ring for next use
        if((releaseblockmask&=(releaseblockmask-1))==0)goto rowfin;  // advance to next block, exit if none
       }while(--releasect);  // could use PEXT & block mask to avoid need for releasect here
+
       if(0){rowfin:;  // come here when a row has been fully sent to Qkt
        I relstart=(ringdctrlb8&RINGRELSTARTMASK)>>RINGRELSTARTX;  // extract ending release row#
        releaserowmask[relstart]=0;  // when we finish a row, we must leave it with an empty mask
@@ -3543,7 +3548,7 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
     // one op finished.  Move to next
     opinfo *currchn=currop->chain;   // pointer to next 
     if(unlikely(nextrowinop==(UI4)~0>>1)){if(unlikely(prevop==0))aops=currchn; else prevop->chain=currchn;}  // if currop expired, remove it from chain
-    else{prevop=currop; minnextrow=nextrowinop<minnextrow?nextrowinop:minnextrow;}  // otherwise update the oprev ptr, remember min new starting line#
+    else{prevop=currop; nextrowinop=nextrowinop<(I4)(ringdctrlb8>>RINGMINNEXTROWX)?nextrowinop:(I4)(ringdctrlb8>>RINGMINNEXTROWX); ringdctrlb8=(ringdctrlb8&~RINGMINNEXTROWINIT)|((I)nextrowinop<<RINGMINNEXTROWX);} //  move to next, keep track of smallest start value
     currop=currchn;
    }
   
@@ -3557,7 +3562,7 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
     releaserowmask[sx]=msk; sx=(sx+(msk>0))&(RINGROWS-1); b8start=(b8start+1)&(RINGROWS-1); qktrcol+=qktncols*sizeof(E);
     skiprows<<=((msk>0)^1)<<3;  // if we skip the row, shift it up to safety (8 bits)
    )
-   // rows [sx,b8start) were skipped: store the skipped row, clearing the mask and qky base.  This returns the rows to the pool
+   // rows [sx,b8start) were skipped: store the skipped row, clearing the mask and qkt base.  This returns the rows to the pool
    while(b8start!=sx){skiprows>>=8; b8start=(b8start-1)&(RINGROWS-1); releaserowmask[b8start]=0; releaseqktringbase[b8start]=(__m256d*)(skiprows&(RINGROWS-1));}
    // b8start has been advanced over all the nonskipped rows, which releases them.
    ringdctrlb8=(ringdctrlb8&~RINGB8STARTMASK)+b8start;  // install b8start in portmanteau
@@ -3566,11 +3571,11 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
    else if(unlikely(((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX))&(RINGROWS-1)))>=(RINGROWS-B8ROWS)){releasect=(UI4)~0>>1; goto releaserow;}  // if ring is full, wait for it to drain
 caughtup:;  // here when we have removed the ring-full situation
    // throttle the release depending on ring-full status.  We figure this only when we add rows because it's not important to keep it exactly right
-   releasedelayct0=(-((((RINGROWS-((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX)-1)&(RINGROWS-1)))>>3)+1)*RELEASEDELAYCT0)>>3)<<RINGDCTX;  // decrease delay (which is negative) with each eight-row section filled
+   releasedelayct0=(-((((RINGROWS-((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX)-1)&(RINGROWS-1)))>>3)+1)*releasedelaythreaded)>>3)<<RINGDCTX;  // decrease delay (which is negative) with each eight-row section filled
   }  // end 'while aops'
   stripex=__atomic_fetch_add(&ctx->resvx,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation
  }
- if(releaseblockmask){releasect=(UI4)~0>>1; goto releaserow;}
+ if(releaseblockmask){releasect=(UI4)~0>>1; goto releaserow;}  // all stripes done - keep releasing any remnant
 finis:;  // here we have flushed the ring at the end
 
  R 0;

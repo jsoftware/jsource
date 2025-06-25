@@ -1344,8 +1344,22 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // gives errors in some versions #define ALLOBLOCK(n) MAX(PMINL-1,(31-__builtin_clzl((UI4)(n))))    // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
-#define ACVCACHECLEAR __atomic_fetch_add(&JT(jt,fnasgnct),1,__ATOMIC_ACQ_REL)  // incr the cache counter for ACVs
-#define ACVCACHEREAD __atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE)  // read the current cache counter
+// the cache counter/lock is 48 bits of counter and 16 bits of lock (8 bits each read/write).  Write unlock increments the counter
+#if PYXES
+#define ACVCACHEREAD (__atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE)>>16)  // read the current cache counter
+#define ACVCACHEREADLOCK ({UI prev; if(unlikely(((prev=__atomic_fetch_add(&JT(jt,fnasgnct),1,__ATOMIC_ACQ_REL))&(US)-WLOCKBIT)!=0)){readlock((S*)&JT(jt,fnasgnct),(S)prev); prev=__atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE);} prev>>16;})
+#define ACVCACHEREADUNLOCK __atomic_fetch_sub(&JT(jt,fnasgnct),1,__ATOMIC_ACQ_REL);  // decrement the read bits
+#define ACVCACHEWRITELOCK  WRITELOCK(*(S*)&JT(jt,fnasgnct))  // take the lock, ignoring data value
+#define ACVCACHECLEAR __atomic_fetch_add(&JT(jt,fnasgnct),0x10000, __ATOMIC_ACQ_REL);  // increment cache count - used when we aren't freeing the only reference to the acv
+#define ACVCACHEWRITEUNLOCK ACVCACHECLEAR __atomic_fetch_and(&JT(jt,fnasgnct),(UI)~(0xffff&-WLOCKBIT), __ATOMIC_ACQ_REL);  // decrement write lock and increment the upper bits
+#else
+#define ACVCACHEREAD JT(jt,fnasgnct)  // read the current cache counter
+#define ACVCACHEREADLOCK ACVCACHEREAD
+#define ACVCACHEREADUNLOCK 
+#define ACVCACHEWRITELOCK 
+#define ACVCACHEWRITEUNLOCK ++JT(jt,fnasgnct);  // increment cache count
+#define ACVCACHECLEAR ++JT(jt,fnasgnct);  // increment cache count - used when we aren't freeing the only reference to the acv
+#endif
 // Support for int-to-float, in parallel.  Input is u, 64-bit int with a type of float; result is 64-bit floats.  Define DECLS first.
 // we use initecho() to initialize zero and one because the compiler moves the initialization to inside the loop
 #define CVTEPI64DECLS  __m256i magic_i_lo = _mm256_castpd_si256(_mm256_broadcast_sd(&two_52)); /* 2^52 */ \

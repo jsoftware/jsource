@@ -1,7 +1,7 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.IF64 '$'   NB. skip if not 64-bit
+0!:_1`1:@.(0: IF64) '$'   NB. skip if not 64-bit
 
 load'format/printf'  NB. scaf
 

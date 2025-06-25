@@ -232,7 +232,7 @@ exit: ;
 }    /* 18!:_2 symbol pool */
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table  l is encoded in low bits of jt
-// the symbol is deleted if found.  Return 1 if the value was an ACV
+// the symbol is deleted if found.  If the value is an ACV, we take a write lock on the ACV cache count, incrementing it
 // if the symbol is PERMANENT, it is not deleted but its value is removed
 // if the symbol is CACHED, it is removed from the chain but otherwise untouched, leaving the symbol abandoned.  It is the caller's responsibility to handle the name
 // We take no locks on g.  They are necessary, but are the user's responsibility
@@ -249,7 +249,9 @@ B jtprobedel(J jtfg,C*string,UI4 hash,A g){F12JT;B ret;
    IFCMPNAME(NAV(sym->name),string,(I)jtfg&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
      {
       ret=sym->fval==0?0:~(I)sym->fval&QCNOUN;  // return value: value was defined & not a noun
+      if(unlikely(ret)){ACVCACHEWRITELOCK}   // ACV must be deleted under lock in case unquote is trying to protect a cached name
       SYMVALFA(*sym); sym->fval=0;  // decr usecount in value; remove value from symbol
+      if(unlikely(ret)){ACVCACHEWRITEUNLOCK}
       if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
        *asymx=sym->next; if(sym->name!=0)fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
        jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains
@@ -417,7 +419,7 @@ A jtsyrd1(J jtfg,C *string,UI4 hash,A g){F12JT;A*v,x,y;
  // in this table will hit an empty chain.  This is our Bloom filter.  We check that, and if the chain is empty, we call it a miss without locking the table.
  // That's OK, because this call could have come a few nanoseconds later
  NOUNROLL do{A gn=*v--; I chainno=SYMHASH((UI4)hash,AN(g)-SYMLINFOSIZE);   // hashchain number, for fetching the Bloom filter and starting the chain search
-                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table (there's a chain for it)...  // scaf just look for empty chain
+                        if(BLOOMTEST(BLOOMBASE(g),chainno)){  // symbol might be in table (there's a chain for it)...
                          READLOCK(g->lock)  // we have to take a lock before chasing the hashchain
                          A res=(probe)((I)jtfg&255,string,sympv,((UI8)(hash)<<32)+(UI4)LXAV0(g)[chainno]);  // look up symbol.  We must fetch the chain root in case it was deleted
                          if(res){  // if symbol found...
@@ -651,7 +653,7 @@ F1(jtsymbrdlock){F12IP;A y;
 // If the currently-executing definition is reloaded, mark the stack entry: xdefn will pick it up when debug is on
 // as modified - xdefn will try to hot-swap to the new definition between lines
 // If the modified name is executing higher on the stack, fail
-// returns v for OK to allow the assignment to proceed, 0 if error
+// returns v for OK to allow the assignment to proceed, 0 if error (which never happens - we set sidamage and proceed with the assignment)
 A jtredef(J jt,A w,A v){A f;DC c,d;
  d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R v;   // find the most recent DCCALL with error, exit if none
  // Now d->stack entry of executing entity, which is in suspension at an error
@@ -723,10 +725,8 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  I valtype=ATYPETOVALTYPE(wt);  // value flags to install into value block.  It will have QCSYMVAL semantics
 
  if(unlikely((wt&NOUN)==0)){  // writing to ACV
-  ACVCACHECLEAR; // invalidate all previous ACV lookups
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS
   // NOTE that the value may be in use elsewhere; may even be a primitive.
-
   if(unlikely((((NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC)-1)&SGNIF(FAV(w)->flag2,VF2NAMELESSX))<0))valtype=VALTYPENAMELESS;   // nameless & non-locative, so indicate
   if(unlikely(jt->glock!=0))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
   if(unlikely(gr&ARLOCALTABLE))AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up there
@@ -742,17 +742,17 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   e=likely((SGNIF(gr,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=(A)((I)jtfg|-JTASGNWASLOCAL);   // indicate local assignment (we have no lock to clear), remember final assignment
   valtype|=QCNAMED|(REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
-  x=e->fval;   // if nonzero, x points to the incumbent value
+  x=e->fval;   // if nonzero, x points to the incumbent value (QCSYMVAL semantics)
  }else{  // global table
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a LOCK on the locale
-  if((x=e->fval)==0){   // if nonzero, x points to the incumbent value
+  if((x=e->fval)==0){   // if nonzero, x points to the incumbent value (QCSYMVAL semantics)
    // writing a new symbol to a non-local table: update the table's Bloom filter.
    C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
    BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty
   }
-  g=(A)((I)g+((I)jtfg&JTFINALASGN));  // flags in g: copy final-assignment flag, keep glocal-table flag 0 indicating free needed
+  g=(A)((I)g+((I)jtfg&JTFINALASGN));  // flags in g: copy final-assignment flag, keep global-table flag 0 indicating free needed
   // A couple of debugging flags are set during assignment.  We don't bother for local names
   if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - needed only for globals
   e->sn=jt->currslistx;  // Save the script in which this name was defined - meaningful only for globals
@@ -763,12 +763,13 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
  if(likely(QCWORD(x)!=w)){
   // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
-  if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&(((I)x&QCNOUN)==0))x=redef(w,x);  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
+  if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&(((I)x&QCNOUN)==0))RZ(x=redef(w,x))  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
+  I xtype=(I)x;  // remember the type of x, if it exists; QCNOUN if not
   x=QCWORD(x);  // we have no further need for the type that has been reassigned
   
   ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only name (xxx_index) with new value, fail
   I xaf;  // holder for nvr/free flags
-  {A aaf=AFLAG0; aaf=x?x:aaf; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x
+  {A aaf=AFLAG0; aaf=x?x:aaf; xtype=x?xtype:QCNOUN; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x.
 
   if(likely(!(AFNJA&xaf))){
    // Normal case of non-memory-mapped assignment.
@@ -776,6 +777,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
                    // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
                    // SYMVALFA1 does not call a subroutine
+   x=(A)((I)x+(QCNOUN&~(valtype&xtype)));  // LSB of x is now used to mean 'AVC change', i. e. either valtype or xtype is not QCNOUN
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // Virtual values were realized earlier, and usecounts guaranteed recursive
    // If the value is abandoned inplaceable, we can just zap it and set its usecount to 1
@@ -806,14 +808,15 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
    x=0;  // repurpose x to be the value needing fa - indicate no further fa needed
   }
- }else x=0;  // repurpose x to be the value needing fa
+ }else x=0;  // (x==w) repurpose x to be the value needing fa - none
  // x here is the value that needs to be freed
  if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock);
  // ************* we have released the write lock
  // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,
  // in case the new value was being protected by the old (ex: n =. >n).
  // It is the responsibility of parse to keep the usecount of a named value raised until it has come out of execution
- SYMVALFA2(x);  // if the old value needs to be traversed in detail, do it now outside of lock (subroutine call)
+ if(unlikely((I)x&QCNOUN)){ACVCACHEWRITELOCK SYMVALFA2((A)((I)x&~QCNOUN)); ACVCACHEWRITEUNLOCK} // If the new or old value is ACV, we must invalidate the lookup cache, under lock in case unquote is about to protect the value
+ else{SYMVALFA2(x);}  // if the old value needs to be traversed in detail, do it now outside of lock (subroutine call)
  R (I)g;   // good return, with bit 0 set if final assignment, bit 1 if local
 exitlock:  // error exit
  if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock)

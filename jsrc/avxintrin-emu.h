@@ -108,6 +108,7 @@
 #endif
 
 #if !defined (__SSE4_2__) && !defined (__SSE4_1__)
+/* clang 19 defines these macro */
 #undef _mm_blend_pd
 #undef _mm_blend_ps
 #undef _mm_blendv_pd
@@ -122,6 +123,7 @@
 #undef _mm_max_epu32
 #undef _mm_testc_si128
 #undef _mm_testnzc_si128
+
 #undef _mm_testz_si128
 #define _mm_blend_pd _mm_blend_pd_REF
 #define _mm_blend_ps _mm_blend_ps_SSE2
@@ -707,6 +709,40 @@ static __emu_inline __emu_int64_t __emu_mm256_extract_epi64( __emu__m256i a, con
 /*
  * Compare predicates for scalar and packed compare intrinsics
  */
+/* clang 19 defines these macro */
+#undef _CMP_EQ_OQ
+#undef _CMP_LT_OS
+#undef _CMP_LE_OS
+#undef _CMP_UNORD_Q
+#undef _CMP_NEQ_UQ
+#undef _CMP_NLT_US
+#undef _CMP_NLE_US
+#undef _CMP_ORD_Q
+#undef _CMP_EQ_UQ
+#undef _CMP_NGE_US
+#undef _CMP_NGT_US
+#undef _CMP_FALSE_OQ
+#undef _CMP_NEQ_OQ
+#undef _CMP_GE_OS
+#undef _CMP_GT_OS
+#undef _CMP_TRUE_UQ
+#undef _CMP_EQ_OS
+#undef _CMP_LT_OQ
+#undef _CMP_LE_OQ
+#undef _CMP_UNORD_S
+#undef _CMP_NEQ_US
+#undef _CMP_NLT_UQ
+#undef _CMP_NLE_UQ
+#undef _CMP_ORD_S
+#undef _CMP_EQ_US
+#undef _CMP_NGE_UQ
+#undef _CMP_NGT_UQ
+#undef _CMP_FALSE_OS
+#undef _CMP_NEQ_OS
+#undef _CMP_GE_OQ
+#undef _CMP_GT_OQ
+#undef _CMP_TRUE_US
+
 #define _CMP_EQ_OQ     0x00  /* Equal (ordered, nonsignaling)                       */
 #define _CMP_LT_OS     0x01  /* Less-than (ordered, signaling)                      */
 #define _CMP_LE_OS     0x02  /* Less-than-or-equal (ordered, signaling)             */
@@ -1782,6 +1818,15 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define __m256  __emu__m256
 #define __m256i __emu__m256i
 #define __m256d __emu__m256d
+
+/* clang 19 defines these macro */
+#define _mm256_blend_pd
+#define _mm256_blend_ps
+#define _mm256_dp_ps
+#define _mm256_shuffle_pd
+#define _mm256_shuffle_ps
+#define _mm256_cmp_pd
+#define _mm256_cmp_ps
 
 #define _mm256_add_pd    __emu_mm256_add_pd
 #define _mm256_add_ps    __emu_mm256_add_ps

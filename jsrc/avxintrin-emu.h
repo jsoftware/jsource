@@ -107,7 +107,22 @@
 #define _mm_shuffle_epi8 _mm_shuffle_epi8_REF
 #endif
 
-#if !(defined (__SSE4_2__) || defined (__SSE4_1__))
+#if !defined (__SSE4_2__) && !defined (__SSE4_1__)
+#undef _mm_blend_pd
+#undef _mm_blend_ps
+#undef _mm_blendv_pd
+#undef _mm_blendv_ps
+#undef _mm_cmpeq_epi64
+#undef _mm_cmpgt_epi64
+#undef _mm_cvtepu8_epi64
+#undef _mm_extract_epi64
+#undef _mm_insert_epi32
+#undef _mm_insert_epi64
+#undef _mm_insert_epi8
+#undef _mm_max_epu32
+#undef _mm_testc_si128
+#undef _mm_testnzc_si128
+#undef _mm_testz_si128
 #define _mm_blend_pd _mm_blend_pd_REF
 #define _mm_blend_ps _mm_blend_ps_SSE2
 #define _mm_blendv_pd _mm_blendv_pd_SSE2

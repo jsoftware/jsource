@@ -107,7 +107,24 @@
 #define _mm_shuffle_epi8 _mm_shuffle_epi8_REF
 #endif
 
-#if !(defined (__SSE4_2__) || defined (__SSE4_1__))
+#if !defined (__SSE4_2__) && !defined (__SSE4_1__)
+/* clang 19 defines these macro */
+#undef _mm_blend_pd
+#undef _mm_blend_ps
+#undef _mm_blendv_pd
+#undef _mm_blendv_ps
+#undef _mm_cmpeq_epi64
+#undef _mm_cmpgt_epi64
+#undef _mm_cvtepu8_epi64
+#undef _mm_extract_epi64
+#undef _mm_insert_epi32
+#undef _mm_insert_epi64
+#undef _mm_insert_epi8
+#undef _mm_max_epu32
+#undef _mm_testc_si128
+#undef _mm_testnzc_si128
+#undef _mm_testz_si128
+
 #define _mm_blend_pd _mm_blend_pd_REF
 #define _mm_blend_ps _mm_blend_ps_SSE2
 #define _mm_blendv_pd _mm_blendv_pd_SSE2
@@ -692,6 +709,40 @@ static __emu_inline __emu_int64_t __emu_mm256_extract_epi64( __emu__m256i a, con
 /*
  * Compare predicates for scalar and packed compare intrinsics
  */
+/* clang 19 defines these macro */
+#undef _CMP_EQ_OQ
+#undef _CMP_LT_OS
+#undef _CMP_LE_OS
+#undef _CMP_UNORD_Q
+#undef _CMP_NEQ_UQ
+#undef _CMP_NLT_US
+#undef _CMP_NLE_US
+#undef _CMP_ORD_Q
+#undef _CMP_EQ_UQ
+#undef _CMP_NGE_US
+#undef _CMP_NGT_US
+#undef _CMP_FALSE_OQ
+#undef _CMP_NEQ_OQ
+#undef _CMP_GE_OS
+#undef _CMP_GT_OS
+#undef _CMP_TRUE_UQ
+#undef _CMP_EQ_OS
+#undef _CMP_LT_OQ
+#undef _CMP_LE_OQ
+#undef _CMP_UNORD_S
+#undef _CMP_NEQ_US
+#undef _CMP_NLT_UQ
+#undef _CMP_NLE_UQ
+#undef _CMP_ORD_S
+#undef _CMP_EQ_US
+#undef _CMP_NGE_UQ
+#undef _CMP_NGT_UQ
+#undef _CMP_FALSE_OS
+#undef _CMP_NEQ_OS
+#undef _CMP_GE_OQ
+#undef _CMP_GT_OQ
+#undef _CMP_TRUE_US
+
 #define _CMP_EQ_OQ     0x00  /* Equal (ordered, nonsignaling)                       */
 #define _CMP_LT_OS     0x01  /* Less-than (ordered, signaling)                      */
 #define _CMP_LE_OS     0x02  /* Less-than-or-equal (ordered, signaling)             */
@@ -1768,6 +1819,220 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define __m256i __emu__m256i
 #define __m256d __emu__m256d
 
+/* clang 19 defines these macro */
+#undef _mm256_add_pd
+#undef _mm256_add_ps
+#undef _mm256_addsub_pd
+#undef _mm256_addsub_ps
+#undef _mm256_and_pd
+#undef _mm256_and_ps
+#undef _mm256_andnot_pd
+#undef _mm256_andnot_ps
+#undef _mm256_blend_pd
+#undef _mm256_blend_ps
+#undef _mm256_blendv_pd
+#undef _mm256_blendv_ps
+#undef _mm256_div_pd
+#undef _mm256_div_ps
+#undef _mm256_dp_ps
+#undef _mm256_hadd_pd
+#undef _mm256_hadd_ps
+#undef _mm256_hsub_pd
+#undef _mm256_hsub_ps
+#undef _mm256_max_pd
+#undef _mm256_max_ps
+#undef _mm256_min_pd
+#undef _mm256_min_ps
+#undef _mm256_mul_pd
+#undef _mm256_mul_ps
+#undef _mm256_or_pd
+#undef _mm256_or_ps
+#undef _mm256_shuffle_pd
+#undef _mm256_shuffle_ps
+#undef _mm256_sub_pd
+#undef _mm256_sub_ps
+#undef _mm256_xor_pd
+#undef _mm256_xor_ps
+#undef _mm_cmp_pd
+#undef _mm256_cmp_pd
+#undef _mm_cmp_ps
+#undef _mm256_cmp_ps
+#undef _mm_cmp_sd
+#undef _mm_cmp_ss
+#undef _mm256_cvtepi32_pd
+#undef _mm256_cvtepi32_ps
+#undef _mm256_cvtpd_ps
+#undef _mm256_cvtps_epi32
+#undef _mm256_cvtps_pd
+#undef _mm256_cvttpd_epi32
+#undef _mm256_cvtpd_epi32
+#undef _mm256_cvttps_epi32
+#undef _mm256_extractf128_ps
+#undef _mm256_extractf128_pd
+#undef _mm256_extractf128_si256
+#undef _mm256_zeroall
+#undef _mm256_zeroupper
+#undef _mm256_permutevar_ps
+#undef _mm_permutevar_ps
+#undef _mm256_permute_ps
+#undef _mm_permute_ps
+#undef _mm256_permutevar_pd
+#undef _mm_permutevar_pd
+#undef _mm256_permute_pd
+#undef _mm_permute_pd
+#undef _mm256_permute2f128_ps
+#undef _mm256_permute2f128_pd
+#undef _mm256_permute2f128_si256
+#undef _mm256_broadcast_ss
+#undef _mm_broadcast_ss
+#undef _mm256_broadcast_sd
+#undef _mm256_broadcast_ps
+#undef _mm256_broadcast_pd
+#undef _mm256_insertf128_ps
+#undef _mm256_insertf128_pd
+#undef _mm256_insertf128_si256
+#undef _mm256_load_pd
+#undef _mm256_store_pd
+#undef _mm256_load_ps
+#undef _mm256_store_ps
+#undef _mm256_loadu_pd
+#undef _mm256_storeu_pd
+#undef _mm256_loadu_ps
+#undef _mm256_storeu_ps
+#undef _mm256_load_si256
+#undef _mm256_store_si256
+#undef _mm256_loadu_si256
+#undef _mm256_storeu_si256
+#undef _mm256_maskload_pd
+#undef _mm256_maskstore_pd
+#undef _mm_maskload_pd
+#undef _mm_maskstore_pd
+#undef _mm256_maskload_ps
+#undef _mm256_maskstore_ps
+#undef _mm_maskload_ps
+#undef _mm_maskstore_ps
+#undef _mm256_movehdup_ps
+#undef _mm256_moveldup_ps
+#undef _mm256_movedup_pd
+#undef _mm256_lddqu_si256
+#undef _mm256_stream_pd
+#undef _mm256_stream_ps
+#undef _mm256_rcp_ps
+#undef _mm256_rsqrt_ps
+#undef _mm256_sqrt_pd
+#undef _mm256_sqrt_ps
+#undef _mm256_round_pd
+#undef _mm256_round_ps
+#undef _mm256_unpackhi_pd
+#undef _mm256_unpackhi_ps
+#undef _mm256_unpacklo_pd
+#undef _mm256_unpacklo_ps
+#undef _mm256_testz_si256
+#undef _mm256_testc_si256
+#undef _mm256_testnzc_si256
+#undef _mm256_testz_pd
+#undef _mm256_testc_pd
+#undef _mm256_testnzc_pd
+#undef _mm256_testz_ps
+#undef _mm256_testc_ps
+#undef _mm256_testnzc_ps
+#undef _mm_testz_pd
+#undef _mm_testc_pd
+#undef _mm_testnzc_pd
+#undef _mm_testz_ps
+#undef _mm_testc_ps
+#undef _mm_testnzc_ps
+#undef _mm256_movemask_pd
+#undef _mm256_movemask_ps
+#undef _mm256_setzero_pd
+#undef _mm256_setzero_ps
+#undef _mm256_setzero_si256
+#undef _mm256_set_pd
+#undef _mm256_set_ps
+#undef _mm256_set_epi8
+#undef _mm256_set_epi16
+#undef _mm256_set_epi32
+#undef _mm256_set_epi64x
+#undef _mm256_setr_pd
+#undef _mm256_setr_ps
+#undef _mm256_setr_epi8
+#undef _mm256_setr_epi16
+#undef _mm256_setr_epi32
+#undef _mm256_setr_epi64x
+#undef _mm256_set1_pd
+#undef _mm256_set1_ps
+#undef _mm256_set1_epi8
+#undef _mm256_set1_epi16
+#undef _mm256_set1_epi32
+#undef _mm256_set1_epi64x
+#undef _mm256_castpd_ps
+#undef _mm256_castps_pd
+#undef _mm256_castps_si256
+#undef _mm256_castpd_si256
+#undef _mm256_castsi256_ps
+#undef _mm256_castsi256_pd
+#undef _mm256_castps256_ps128
+#undef _mm256_castpd256_pd128
+#undef _mm256_castsi256_si128
+#undef _mm256_castps128_ps256
+#undef _mm256_castpd128_pd256
+#undef _mm256_castsi128_si256
+#undef _mm256_add_epi16
+#undef _mm256_add_epi32
+#undef _mm256_add_epi8
+#undef _mm256_add_epi64
+#undef _mm256_sub_epi64
+#undef _mm256_and_si256
+#undef _mm256_andnot_si256
+#undef _mm256_or_si256
+#undef _mm256_xor_si256
+#undef _mm256_sub_epi8
+#undef _mm256_max_epu32
+#undef _mm256_mul_epu32
+#undef _mm256_blendv_epi8
+#undef _mm256_slli_epi64
+#undef _mm256_srli_epi16
+#undef _mm256_srli_epi32
+#undef _mm256_srli_epi64
+#undef _mm256_srli_si256
+#undef _mm256_broadcastb_epi8
+#undef _mm256_broadcastd_epi32
+#undef _mm256_broadcastq_epi64
+#undef _mm256_broadcastsi128_si256
+#undef _mm256_cmpeq_epi16
+#undef _mm256_cmpeq_epi32
+#undef _mm256_cmpeq_epi64
+#undef _mm256_cmpeq_epi8
+#undef _mm256_cmpgt_epi16
+#undef _mm256_cmpgt_epi32
+#undef _mm256_cmpgt_epi64
+#undef _mm256_cmpgt_epi8
+#undef _mm256_maskload_epi64
+#undef _mm256_maskstore_epi64
+#undef _mm256_movemask_epi8
+#undef _mm256_blend_epi32
+#undef _mm256_extract_epi64
+#undef _mm256_fnmadd_pd
+#undef _mm256_fmadd_pd
+#undef _mm256_fmadd_ps
+#undef _mm256_fmsub_pd
+#undef _mm256_fmsub_ps
+#undef _mm256_i64gather_epi64
+#undef _mm256_i64gather_pd
+#undef _mm256_mask_i64gather_epi64
+#undef _mm256_mask_i64gather_pd
+#undef _mm256_permute2x128_si256
+#undef _mm256_permute4x64_epi64
+#undef _mm256_permute4x64_pd
+#undef _mm256_permutevar8x32_epi32
+#undef _mm256_cvtsd_f64
+#undef _mm256_cvtepu8_epi64
+#undef _mm256_sllv_epi64
+#undef _mm256_shuffle_epi32
+#undef _mm256_stream_load_pd
+#undef _mm256_stream_si256
+#undef _mm256_stream_load_si256
+
 #define _mm256_add_pd    __emu_mm256_add_pd
 #define _mm256_add_ps    __emu_mm256_add_ps
 
@@ -1817,12 +2082,6 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 
 #define _mm256_xor_pd __emu_mm256_xor_pd
 #define _mm256_xor_ps __emu_mm256_xor_ps
-
-/* clang 19 defines these macro */
-#undef _mm_cmp_pd
-#undef _mm_cmp_ps
-#undef _mm_cmp_sd
-#undef _mm_cmp_ss
 
 #define _mm_cmp_pd __emu_mm_cmp_pd
 #define _mm256_cmp_pd __emu_mm256_cmp_pd

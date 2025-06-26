@@ -82,7 +82,7 @@ static DF1(jtfxchar){F12IP;A y;C c,d,id,*s;I m,n;
  DO(n, d=s[i]; ASSERT((C)(d-32)<(C)(127-32),EVSPELL););  // must be all ASCII
  if(((ctype[(UC)s[0]]&~CA)==0)&&c!=CESC1&&c!=CESC2)R swap(w);  // If name and not control word, treat as name~, create nameref
  ASSERT(id=spellin(n,s),EVSPELL);  // not name, must be control word or primitive.  Also classify string 
- if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(CSIGN!=s[0]?scib(m):2==n?ainf:scib(-m));} // define 0:, if it's that, using boolean for 0/1
+ if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(s[0]!=CSIGN?scib(m):2==n?ainf:s[1]==CSIGN?ainfm:scib(-m));} // normal prim uses ds block; [0-9_]: uses numeric block
  ASSERT(y&&RHS&AT(y),EVDOMAIN);   // make sure it's a noun/verb/adv/conj
  if(!self || AT(y)&NOUN+VERB)R y;  // return any NV, or AC as well if it's not the top level
  R box(w);  // If top level, we have to make sure (<,'&')`  doesn't replace the left part with bare &

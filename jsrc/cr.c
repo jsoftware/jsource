@@ -784,6 +784,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && !((AR(a)^1) | (AT(a)&(NOUN&~BOX))) && (ger=fxeachv(1LL,a))){
    f1=cycr1; f2=cycr2;  // process this with the cyclic-gerund routines
    vf=VFLAGNONE;   // the cyclic processor does not inplace or IRS and we don't bother figuring out whether it is ASGSAFE
+   r[0]=r[1]=r[2]=RMAX;  // actual rank of gerund"n is _; the gerund is applied at rank n
   } else {
    RESETERR;  // the gerund check may have raised an error
    f1=cons1; f2=cons2;    // use the constant routines for nouns

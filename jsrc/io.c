@@ -365,7 +365,7 @@ A jtjgets(JJ jt,C*p){A y;C*v;I j,k,m,n;UC*s;
   while(1){
    ++d->dcn; j=d->dcix; // increment line# and fetch current start index
    y=d->dcy; n=AN(y); s=UAV(y);
-   if(!BETWEENO(j,0,n)){jt->scriptskipbyte=0; R 0;}  // return 0 for EOF or aborted read (dcix<0)
+   if(!BETWEENO(j,0,n)||jt->scriptskipbyte==255){jt->scriptskipbyte=0; R 0;}  // return 0 for EOF or aborted read (dcix<0).  skipbyte=255 induces EOF
    d->dcj=k=j;  // k=start index
    d->dcix=j=advl(j,n,s);  // j=end+1 index
    if(unlikely(jt->scriptskipbyte!=0)){if(j-k>=4&&s[k]=='N'&&s[k+1]=='B'&&s[k+2]=='.'&&s[k+3]==jt->scriptskipbyte)jt->scriptskipbyte=0; else continue;}  // if skipping in script, skip if not end marker

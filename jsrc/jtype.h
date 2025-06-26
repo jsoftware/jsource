@@ -746,13 +746,14 @@ struct AD {
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 // NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 
+#define AUDITAFLAG(a) // if((AFLAG(a)&0xa00000)==0xa00000)SEGFAULT;  // scaf
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
-#define AFLAGINIT(a,v)  AFLAG(a)=(v);  // used when it is known that a has just been allocated & is not shared
-#define AFLAGRESET(a,v) AFLAG(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
-#define AFLAGFAUX(a,v)  AFLAG(a)=(v);  // used when a is known to be a faux block
-#define AFLAGANDLOCAL(a,v)   AFLAG(a)&=(v);  // LOCAL functions are used when the block is known not to be shared
-#define AFLAGORLOCAL(a,v)    AFLAG(a)|=(v);
+#define AFLAGINIT(a,v)  {AFLAG(a)=(v);AUDITAFLAG(a)}  // used when it is known that a has just been allocated & is not shared
+#define AFLAGRESET(a,v) {AFLAG(a)=(v);AUDITAFLAG(a)} // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
+#define AFLAGFAUX(a,v)  {AFLAG(a)=(v);AUDITAFLAG(a)}  // used when a is known to be a faux block
+#define AFLAGANDLOCAL(a,v)   {AFLAG(a)&=(v);AUDITAFLAG(a)}  // LOCAL functions are used when the block is known not to be shared
+#define AFLAGORLOCAL(a,v)    {AFLAG(a)|=(v);AUDITAFLAG(a)}
 // Once a block has been shared, the flags do not change except for PRISTINE and KNOWNNAMED.  (Pristine only gets cleared, KNOWNNAMED is set and cleared).
 // To make sure a word-wide change doesn't store an old value, we store into these flags using single-byte operations.  This will cause sharing in the exceedingly rare
 // case of simultaneous modification, but it avoids the need for RFO cycles.

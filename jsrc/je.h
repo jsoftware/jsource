@@ -1058,6 +1058,8 @@ extern struct Bd2 Ba0j1;
 #define a0j1 ((A)&Ba0j1)
 extern struct Bd1 Bainf;
 #define ainf ((A)&Bainf)
+extern struct Bd1 Bainfm;
+#define ainfm ((A)&Bainfm)
 extern I Baqq[];
 #define aqq ((A)&Baqq)
 extern I Bmtv[];

@@ -990,6 +990,9 @@ f =: %:
 (ger"1 -: appcyc"1) i. 4 5 [ cycinit ger=:+:`*:`f
 (ger"2 -: appcyc"2) i. 2 4 5 [ cycinit ger=:+:`*:`f
 (ger"3 -: appcyc"3) i. 2 4 5 [ cycinit ger=:+:`*:`f
+(ger"_1 -: appcyc"_1) i. 4 5 [ cycinit ger=:+:`*:`f
+(ger"_2 -: appcyc"_2) i. 2 4 5 [ cycinit ger=:+:`*:`f
+(ger"_3 -: appcyc"_3) i. 2 4 5 [ cycinit ger=:+:`*:`f
 (ger"0 -: appcyc"0) i. 0 5 [ cycinit ger=:+:`*:`f
 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:+:`*:`f
 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:i.`*:`f
@@ -1014,6 +1017,8 @@ f =: ^
 0 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:+`*`f
 0 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:$`*`f
 0 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:(5 5 5"_)`*`f
+
+_ _ _ -: (+`-"0) b. 0
 
 5 = # 5 ? 2980293480239480239480239480239480239482039x
 63 < >./ 2 ^. 5 ? 2980293480239480239480239480239480239482039x

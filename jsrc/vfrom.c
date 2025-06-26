@@ -3347,7 +3347,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
   __m256d *releaseqktringbase[RINGROWS];  // base of Qkt region mapped to ring.  Must be on RBLOCK boundary; low bits are corresponding ring row
   UI8 releaserowmask[RINGROWS];  // mask of all the resultblocks that have been modified in this line  Must be cleared after each release, i. e. 0 when starting new 8block
 
- I opno=ti;  // op# to create the index for.  First one is out thread#
+ I opno=ti;  // op# to create the index for.  First one is our thread#
  do{
   if(opno<nops){A ma;  // if the first reservation is too high, we have more threads than ops.  skip it then
    // calculate column index for the op - the offset into mask/cols as we process each stripe
@@ -3364,8 +3364,9 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
 
    // calculate stripe index for the op
    I bsumtodate=0; C *mask=CAV(oprowmasks[opno]);  // total 1s found, running pointer to mask
-   DO(nstripes, I start=(*stripestartend1)[opno][0], end=(*stripestartend1)[opno][1]-SZI, bsum=0; while(start<end){bsum+=*(I*)&mask[start]; start+=SZI;} bsum+=*(I*)&mask[start]<<(start==end?0:BW/2);
+   DO(nstripes-1, I start=(*stripestartend1)[i][0], end=(*stripestartend1)[i][1]-SZI, bsum=0; while(start<end){bsum+=*(I*)&mask[start]; start+=SZI;} bsum+=*(I*)&mask[start]<<(start==end?0:BW/2);
      bsum+=bsum>>32; bsum+=bsum>>16; bsum+=bsum>>8; (*opstripebsum)[i][opno]=bsumtodate+=(C)bsum;)  // add; if last word incomplete, it must have exactly 32 bits
+   (*opstripebsum)[nstripes-1][opno]=AN(oprowvals[opno]);  // infer the length of the last stripe so that we don't have to mask garbage bytes if the mask is short
 
   }
   opno=__atomic_fetch_add(&ctx->colndxct,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation
@@ -3462,7 +3463,7 @@ finmask:;
     I4 nextrowinop;  // next row to process in this op
     while((nextrowinop=currop->colndxahead)-b8qktrow<B8ROWS){  // if next row is in 8block
      // next row can be processed in this 8block.  Load the column info and update the readahead
-     I ringx=(I)releaseqktringbase[(ringdctrlb8+(nextrowinop-b8qktrow))&RINGB8STARTMASK];  // ring row to fill
+     I ringx=(I)releaseqktringbase[(ringdctrlb8+(nextrowinop-b8qktrow))&RINGB8STARTMASK];  // ring row to fill - Qkt part is always 0 here
      E *r0=ring[ringx];  // base the offsets will be applied against
      US *aof=currop->arowoffsets; __m256d *ava=currop->arow0213; I alen=currop->nofsts;  // loop boundaries for processing the row of the stripe
      __m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes

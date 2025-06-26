@@ -3306,7 +3306,7 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
  A *opcolvals;   // AAV(colvalues), which map to the cols of Qkt - each on a cacheline boundary
  I4 *(*colndxs)[MAXOP];  // pointers to column indexes, each having one value per stripe,  filled in by threads
  I (*stripestartend1)[][2];  // start and end+1 for each stripe [][2]
- I4 (*opstripebsum)[][MAXOP];  // number of 1 bits in [0..stripe][op] - leading 0 omitted
+ I4 (*opstripebsum)[][MAXOP];  // number of 1 bits in mask[0..stripe][op] - leading 0 omitted
  I *stripegrade;  // downgrade of computational weight of stripes, so we take biggest first
  
  E *qkt;    // pointer to the array - must be cache-aligned and cache-multiple in each row
@@ -3320,12 +3320,12 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
   struct opi *chain;  // &next active op
   E colvalahead;
   UI8 rbmask;   // mask of resultblocks in each row touched by this op
-  I4 *acolndxs;  // addr of start of col indexes, one value per stripe
-  E *acolvals;  // addr of start of values - on a cacheline boundary
-  US *arowoffsets;  // pointer to offsets in row
-  __m256d *arow0213;  // pointer to corresponding values
+  I4 *acolndxs;  // addr of start of col indexes, one per value in acolvals
+  E *acolvals;  // addr of start of nonzero values in column
+  US *arowoffsets;  // pointer to offsets in row, in stripeofst
+  __m256d *arow0213;  // pointer to corresponding values, in stripe0213
   I4 colndxahead;  // next col index
-  I4 rowindex;  // index into col index of the current position in this column
+  I4 rowindex;  // index into (*acol(ndx|val)s) of the next position in this column
   US nofsts;  // index to the offset pointer after the last offset/val has been processed
  } opinfo;  // info for each op
 
@@ -3380,7 +3380,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  DO(nops, opstat[i].acolvals=EAV(opcolvals[i]);)  // get pointer to values in each column
  __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(Iimin));  // 0x8..0
 
- while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+nops)johnson(100);  // delay until indexes are ready
+ while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+nops)johnson(20*nthreads);  // delay until indexes are ready.  We allow 1 read every 20ns
 
  DO(nops, opstat[i].acolndxs=(*ctx->colndxs)[i];)  // get start address of index
 
@@ -3415,7 +3415,7 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
   opinfo *aops=0;  // chain of active ops, init to empty
   US *nextstripeofst=stripeofst; __m256d *nextstripe0213=stripe0213;  // we lay the offsets & values in sequentially to get best cache utilization, without gaps
   for(io=0;io<nops;++io){   // for each op:
-   I stripeval0x=unlikely(io==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting offset to values in this stripe
+   I stripeval0x=unlikely(stripe==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting index of offsets/values in this stripe
    I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
 if(ssize>MAXNON0||ssize<=0)SEGFAULT;
    if(ssize){    // if this op intersects this stripe...
@@ -3424,15 +3424,16 @@ if(ssize>MAXNON0||ssize<=0)SEGFAULT;
     // read the mask for this op and convert it to offsets into ring and mask of resultblocks
     opstat[io].chain=aops; aops=&opstat[io];  // add this op to the active chain
     opstat[io].rbmask=0;  // init mask of touched blocks
-    I j32, nofst, lastoffset; __m256i *smask;   // number of 32-byte mask reads to date; number of offsets written; value of last offset; pointer to the start of the bitmask for this section
-    opstat[io].arowoffsets=nextstripeofst;  // remember where the offsets start
+    I j32, nofst, lastoffset, bits, lastbits; __m256i *smask;   // number of 32-byte mask reads to date; number of offsets written; value of last offset; pointer to the start of the bitmask for this section; bits read; bits read before masking
+    opstat[io].arowoffsets=nextstripeofst;  // remember where the offsets start  scaf store just one offset, usable into stripeofst & stripe0213
     for(j32=0,nofst=0,smask=(__m256i *)(BAV(oprowmasks[io])+sstart);;++j32){
      __m256i m32=_mm256_loadu_si256(smask+j32);  // read 32 B01s.  May overfetch
-     ((C*)&opstat[io].rbmask)[j32]=(UI)(UI4)_mm256_movemask_ps(_mm256_castsi256_ps(_mm256_cmpgt_epi32(m32,_mm256_setzero_si256())));   // create touched mask for each 4-value section (i. e. 1 resultblock), save in rbmask
-     I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(m32,_mm256_setzero_si256()));   // extract the 32 bits
-     while(bits){lastoffset=nextstripeofst[nofst]=(j32*32+CTTZI(bits))*sizeof(E); bits&=bits-1; ++nofst; if(nofst==ssize)goto finmask;}  // turn each 1-bit into a byte offset; stop if we have hit # values
+     ((C*)&opstat[io].rbmask)[j32]=(C)(UI4)_mm256_movemask_ps(_mm256_castsi256_ps(_mm256_cmp_ps(_mm256_castsi256_ps(m32),_mm256_setzero_ps(),_CMP_NEQ_OQ)));   // create touched mask for each 4-value section (i. e. 1 resultblock), save in rbmask.  False NE OK in MSBs, not EQ
+     lastbits=bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(m32,_mm256_setzero_si256()));   // extract the 32 bits
+     while(bits){lastoffset=nextstripeofst[nofst]=(j32*sizeof(__m256i)+CTTZI(bits))*sizeof(E); bits&=bits-1; ++nofst; if(nofst==ssize)goto finmask;}  // turn each 1-bit into a byte offset; stop if we have hit # values
     }
 finmask:;
+    ((C*)&opstat[io].rbmask)[j32]&=0xff>>(((sizeof(__m256i)-1)-CTLZI(lastbits^bits))>>2);  // keep only the valid bits read; get # trailing 4-bit sections with no valid bits; clear them in mask
     opstat[io].rbmask&=(UI)~0>>(BW-(((*stripestartend1)[stripe][1]-sstart)>>LGRESBLKE));  // mask off blocks past the valid region
     // read the row values for this stripe and convert them to 0213 form
     I j4; C *sval;  // byte offset of 4-E reads to date; pointer to start of values for this section
@@ -3463,12 +3464,13 @@ finmask:;
     I4 nextrowinop;  // next row to process in this op
     while((nextrowinop=currop->colndxahead)-b8qktrow<B8ROWS){  // if next row is in 8block
      // next row can be processed in this 8block.  Load the column info and update the readahead
-     I ringx=(I)releaseqktringbase[(ringdctrlb8+(nextrowinop-b8qktrow))&RINGB8STARTMASK];  // ring row to fill - Qkt part is always 0 here
+     I releasex=(ringdctrlb8+(nextrowinop-b8qktrow))&RINGB8STARTMASK;  // index of release slot for this row, which holds the mapping to actual ring row and the mask
+     I ringx=(I)releaseqktringbase[releasex];  // ring row to fill - Qkt part is always 0 here
      E *r0=ring[ringx];  // base the offsets will be applied against
      US *aof=currop->arowoffsets; __m256d *ava=currop->arow0213; I alen=currop->nofsts;  // loop boundaries for processing the row of the stripe
      __m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes
-     currop->colndxahead=currop->acolndxs[++currop->rowindex]; currop->colvalahead=currop->acolvals[currop->rowindex];  // read ahead for next row
-     releaserowmask[ringx]|=currop->rbmask;  // make note of the resultblocks that will be modified by this row
+     currop->colndxahead=currop->acolndxs[++currop->rowindex]; currop->colvalahead=currop->acolvals[currop->rowindex];  // read ahead for next row   scaf hoist ->rowindex out for 1 loop
+     releaserowmask[releasex]|=currop->rbmask;  // make note of the resultblocks that will be modified by this row
 
      // Calculate one row of the op
      I andx=0;  // counts in steps of RESBLKE*sizeof(one offset).  With this stride we can use andx to point to offsets and andx*sizeof(E)/sizeof(one offset) (=8) to point to values

@@ -123,8 +123,8 @@
 #undef _mm_max_epu32
 #undef _mm_testc_si128
 #undef _mm_testnzc_si128
-
 #undef _mm_testz_si128
+
 #define _mm_blend_pd _mm_blend_pd_REF
 #define _mm_blend_ps _mm_blend_ps_SSE2
 #define _mm_blendv_pd _mm_blendv_pd_SSE2
@@ -1820,13 +1820,13 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define __m256d __emu__m256d
 
 /* clang 19 defines these macro */
-#define _mm256_blend_pd
-#define _mm256_blend_ps
-#define _mm256_dp_ps
-#define _mm256_shuffle_pd
-#define _mm256_shuffle_ps
-#define _mm256_cmp_pd
-#define _mm256_cmp_ps
+#undef _mm256_blend_pd
+#undef _mm256_blend_ps
+#undef _mm256_dp_ps
+#undef _mm256_shuffle_pd
+#undef _mm256_shuffle_ps
+#undef _mm256_cmp_pd
+#undef _mm256_cmp_ps
 
 #define _mm256_add_pd    __emu_mm256_add_pd
 #define _mm256_add_ps    __emu_mm256_add_ps

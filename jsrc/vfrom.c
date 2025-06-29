@@ -3430,7 +3430,7 @@ if(ssize>MAXNON0||ssize<=0)SEGFAULT;
     opstat[io].ndxvalofst=nextstripeofst-stripeofst;  // remember where the offsets/values start
     for(j32=0,nofst=0,smask=(__m256i*)(BAV(oprowmasks[io])+sstart);;++j32){
      __m256i m32=_mm256_loadu_si256(smask+j32);  // read 32 B01s.  May overfetch
-     ((C*)&opstat[io].rbmask)[j32]=(C)(UI4)_mm256_movemask_ps(_mm256_castsi256_ps(_mm256_cmp_ps(_mm256_castsi256_ps(m32),_mm256_setzero_ps(),_CMP_NEQ_OQ)));   // create touched mask for each 4-value section (i. e. 1 resultblock), save in rbmask.  False NE OK in MSBs, not EQ
+     ((C*)&opstat[io].rbmask)[j32]=(C)_mm256_movemask_ps(_mm256_cmp_ps(_mm256_castsi256_ps(m32),_mm256_setzero_ps(),_CMP_NEQ_OQ));   // create touched mask for each 4-value section (i. e. 1 resultblock), save in rbmask.  False NE OK in MSBs, not EQ
      lastbits=bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(m32,_mm256_setzero_si256()));   // extract the 32 bits
      while(bits){lastoffset=nextstripeofst[nofst]=(j32*sizeof(__m256i)+CTTZI(bits))*sizeof(E); bits&=bits-1; ++nofst; if(nofst==ssize)goto finmask;}  // turn each 1-bit into a byte offset; stop if we have hit # values
     }

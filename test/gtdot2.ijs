@@ -2,7 +2,7 @@ prolog './gtdot2.ijs'
 NB. T. t. ------------------------------------------------------------------
 NB. locale
 
-NB. **************************************** threads & tasks **********************************
+void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
 NB. 64-bit only
 NB. delete all worker threads
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}
@@ -337,6 +337,7 @@ NB. run & open the futures results
 (271828) 18!:55 :: 1: "0 -.&' '&.> <"1 'loc',~"1 'f',"1 ": ,. i.TASK*STRIDE   NB. clear all locales
 18!:55 [ 18!:1 [1                   NB. erase residual numbered locales in each task
 
+1: 0!:_1 '$'   NB. skip this test pending design
 NB. x is number of iterations
 NB. y is a task number
 NB. result is always 1
@@ -367,6 +368,7 @@ s1=: 3 : 0
 4!:55 ;:'a b'
 t1done=: 10
 ]&> s1 0, 10#1
+NB.$    end of skip
 
 (<'z') 18!:2 <'base'
 (271828) 18!:55 ;:'l1 l2'

@@ -533,7 +533,7 @@ static F2(jtloccre){F12IP;A g,y,z=0;C*s;I n,p;A v;
  A op=0;  // old path, if there is one
  WRITELOCK(JT(jt,locdellock)) WRITELOCK(JT(jt,stloc)->lock)  // take a write lock until we have installed the new locale if any.  No errors!  We need both locks, in this order (delete calls symfree, which takes locks in this order)
  if(v=probex(n,s,SYMORIGIN,nmhash(n,s),JT(jt,stloc))){
-  // named locale exists.  It may be zombie or not, but we have to keep using the same locale block, since it may be out there in paths
+  // named locale exists.  It may be zombie (i. e. no path) or not, but we have to keep using the same locale block, since it may be out there in paths
   g=v;
   A *gp=(A*)__atomic_exchange_n(&LOCPATH(g),0,__ATOMIC_ACQ_REL);  // pointer to path, and clear path to 0
   if(gp){
@@ -718,6 +718,7 @@ B jtlocdestroy(J jt,A g){
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
  freesymb(jt,g);   // delete all the names.  Anything executing will have been fa()d
+ I j,wn=AN(g); LX * RESTRICT wv=LXAV0(g); for(j=SYMLINFOSIZE;j<wn;++j)wv[j]=0;  // clear the hashchains in case the locale lingers
  while(*path)--path; fa(UNvoidAV1(path))   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  BLOOMCLEAR(g);  // clear Bloom filter

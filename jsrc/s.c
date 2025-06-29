@@ -777,7 +777,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
                    // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
                    // SYMVALFA1 does not call a subroutine
-   x=(A)((I)x+((x?QCNOUN:0)&~(valtype&xtype)));  // LSB of x is now used to mean 'ACV change', i. e. either valtype or xtype is not QCNOUN
+   x=(A)((I)x+(QCNOUN&~(valtype&xtype)));  // LSB of x is now used to mean 'ACV change', i. e. either valtype or xtype is not QCNOUN - even if x is 0
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // Virtual values were realized earlier, and usecounts guaranteed recursive
    // If the value is abandoned inplaceable, we can just zap it and set its usecount to 1

@@ -388,7 +388,9 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  if(likely(val!=0)){if(ISFAOWED(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // abort if reference not allocated
  // We would like to give a start to short-caching by remembering the lookup and time, but the time must be BEFORE the point when the lookup is protected by its syrd(), and we don't have that value
-// obsolete  if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val); FAV(z)->lu2.refvalidtime=ACVCACHEREAD;}  // install cachelet of lookup, but never if indirect locative.  No QC
+// obsolete  if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val);} // install cache of lookup, but never if indirect locative.  No QC
+ if(flag2&VF2CACHEABLE){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val);} // install cache of lookup, but never if indirect locative.  No QC
+// obsolete  FAV(z)->lu2.refvalidtime=ACVCACHEREAD;} 
  R (A)((I)z+QCPTYPE(val));  // Give the result the part of speech of the input.  no FAOWED since we freed val; no NAMED since a reference is not a named value
 }
 

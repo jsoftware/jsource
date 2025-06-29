@@ -703,8 +703,6 @@ struct AD {
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFSENTENCEWORDX     8     // matches INT1X
 #define AFSENTENCEWORD      ((I)1<<AFSENTENCEWORDX)   // this block comes from an executing sentence and is protected by it
-#define AFUNIFORMITEMSX MARKX     // matches MARK 22
-#define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
 #define AFUNINCORPABLEX SBTX      // matches SBTX 16
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes and is probably on the C stack rather than 
@@ -731,6 +729,8 @@ struct AD {
 
 #define AFVIRTUALBOXEDX XDX   // matches XDX 19
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
+#define AFUNIFORMITEMSX MARKX     // matches MARK 22
+#define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
 #define AFPRISTINEX      ASGNX  // matches ASGN 24 - must be above all DIRECT flags   *** can be changed when block is shared
 #define AFPRISTINE  ((I)1<<AFPRISTINEX)  // meaningful only for BOX type.  This block's contents were made entirely of DIRECT inplaceable or PERMANENT values, and thus can be
    // inplaced by &.> .  If any of the contents are taken out, the PRISTINE flag must be cleared, unless the block is never going to be used again (i. e. is inplaceable).
@@ -746,7 +746,7 @@ struct AD {
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 // NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 
-#define AUDITAFLAG(a) // if((AFLAG(a)&0xa00000)==0xa00000)SEGFAULT;  // scaf
+#define AUDITAFLAG(a)  // {I aaaf0=__atomic_load_n(&AFLAG(a),__ATOMIC_ACQUIRE),aaac0=__atomic_load_n(&AC(a),__ATOMIC_ACQUIRE); johnson(1000);I aaaf1=__atomic_load_n(&AFLAG(a),__ATOMIC_ACQUIRE),aaac1=__atomic_load_n(&AC(a),__ATOMIC_ACQUIRE);  if((aaaf1&0xa00000)==0xa00000)SEGFAULT;}  // scaf
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 #define AFLAGINIT(a,v)  {AFLAG(a)=(v);AUDITAFLAG(a)}  // used when it is known that a has just been allocated & is not shared
@@ -758,10 +758,10 @@ struct AD {
 // To make sure a word-wide change doesn't store an old value, we store into these flags using single-byte operations.  This will cause sharing in the exceedingly rare
 // case of simultaneous modification, but it avoids the need for RFO cycles.
 #if C_LE
-#define AFLAGSETKNOWN(a) ((C*)&AFLAG(a))[2]|=AFKNOWNNAMED>>16;  // if the value is ever exposed to another thread, the count will be too high for KNOWN to matter
-#define AFLAGCLRKNOWN(a) ((C*)&AFLAG(a))[2]&=~(AFKNOWNNAMED>>16);
-#define AFLAGSETPRIST(a) ((C*)&AFLAG(a))[3]|=AFPRISTINE>>24;
-#define AFLAGCLRPRIST(a) ((C*)&AFLAG(a))[3]&=~(AFPRISTINE>>24);
+#define AFLAGSETKNOWN(a) {((C*)&AFLAG(a))[2]|=AFKNOWNNAMED>>16;AUDITAFLAG(a)}  // if the value is ever exposed to another thread, the count will be too high for KNOWN to matter
+#define AFLAGCLRKNOWN(a) {((C*)&AFLAG(a))[2]&=~(AFKNOWNNAMED>>16);AUDITAFLAG(a)}
+#define AFLAGSETPRIST(a) {((C*)&AFLAG(a))[3]|=AFPRISTINE>>24;AUDITAFLAG(a)}
+#define AFLAGCLRPRIST(a) {((C*)&AFLAG(a))[3]&=~(AFPRISTINE>>24);AUDITAFLAG(a)}
 #endif
 #define AFLAGPRISTNO(a) if(unlikely(AFLAG(a)&AFPRISTINE))AFLAGCLRPRIST(a)  // the test is to ensure we don't touch PERMANENT blocks
 

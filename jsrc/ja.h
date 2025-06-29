@@ -357,7 +357,7 @@
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 // fa() usually results in a free, coming mostly from freeing named values where the usecount is 1, and the RFO cycle is unnecessary
 // NOTE: famf() could be used to preserve a register, if we could find one to preserve
-#define faaction(jt,x, nomfaction) {scaft(x) I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt); else nomfaction}}}  // call if sparse or ending; never touch a PERM
+#define faaction(jt,x) {scaft(x) I Zc=AC(x); I tt=AT(x); if(likely(((Zc-2)|tt)<0)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
 // faowed() is used to free values that were protected on the execution stack.  They will only actually be freed if they were deleted by name (possibly in another thread)
 // Thus we mark the free as unlikely, but it will usually do the RFO cycle.  The block must be recursive if it is recursible
 #define faowed(x,Zc,tt) {scaft2(1) if(withprob(((Zc-2)|tt)<0,0.2)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(Zc))){if(withprob(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2,0.1))jtfamf(jt,x,tt);}}}  // call if sparse or ending; never touch a PERM
@@ -365,16 +365,16 @@
 // faifowed does the free only if the block is marked FAOWED in stkf.  These may have been stacked by local names, if the stack was later protected
 #define faifowed(x,Zc,tt,stkf) {scaft2(1) if(unlikely(tt<0) || ((((Zc>>(ACPERMANENTX-(STKFAOWEDX+1)))&(4*STKFAOWED-1))<((I)stkf&STKFAOWED)) && unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2)))jtfamf(jt,x,tt);}  // call if sparse or ending; never touch a PERM
    // FAOWED becomes ..0f0; perm becomes .0p00 where perhaps p00 has +-1 added; 0f0>p00 means 'FAOWED & not PERMANENT'
-#define fajt(jt,x) {faaction(jt,(x),{if(MEMAUDIT&2)audittstack(jt);})}
+#define fajt(jt,x) {faaction(jt,(x)) if(MEMAUDIT&2)audittstack(jt);}
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
 #define falikely(x) fa(x)  // when the block will usually be deleted  (not used yet)
 #define fatype(x,tt) {if(likely(AC(x)<=ACUC1)){scaft(x) jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(AC(x)))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // when type is known (i. e. NAME)
 #define fanamedacv(x) {scaft(x) I Zc=AC(x); if(likely(!ACISPERM(Zc)))if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,AT(x));} // block is known to be ACV, recursive, AC>0, and almost always AC>1
 // when x is known to be valid and usecount has gone to 0
-#define fanano0(x)                  faaction(jt,(x),;)
+#define fanano0(x)                  faaction(jt,(x))
 // Within jtfamf when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.
-#define fana(x)                     {if(likely((x)!=0))faaction(jt,(x),;)}
+#define fana(x)                     {if(likely((x)!=0))faaction(jt,(x))}
 // Within tpop, no need to check ACISPERM; usecount has gone to 0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              jtfamf(jt,(x),(flg)&RECURSIBLE);
 #define fanapopjt3(x,flg)           jtfamf((J)((I)jt&~3),(x),(flg)&RECURSIBLE);

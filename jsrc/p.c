@@ -182,6 +182,7 @@ static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
    if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtfg,nv[i],C(vv[i]),symtab);)}  // v is boxed list
    else {A *nv=AAV(n); DO(AN(n), A  vval; RZ(vval=ope(AR(v)?from(sc(i),v):v)); jtsymbis((J)((I)jtfg|JTFINALASGN),nv[i],vval,symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment since value is not passed on
+// scaf use <"_1 for this, with WILLBEOPENED
    goto retstack;
   }
  }

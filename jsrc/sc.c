@@ -73,7 +73,7 @@ DF2(jtunquote){F12IP;A z;
      goto finlookup;     // NM flags have not been inserted into flagsfromname, not needed
     }
    }else{  // if long cacheable, don't allow short caching, else long cache would seldom get used (and it's faster)
-    if(likely(FAV(self)->lu2.refvalidtime==ACVCACHEREADLOCK&&0)){  // is previous lookup still valid   scaf!!!
+    if(likely(FAV(self)->lu2.refvalidtime==ACVCACHEREADLOCK)){  // is previous lookup still valid
      // Short caching: the previous lookup can be reused because there have been no assignments to/from ACV
      flgvbnmgen+=flagsfromname<<FLGNMFLGX;  // insert name flags into flag reg.  They should have settled from the load
      scafraposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion, i. e. no subroutine call, OK because the value must not be sparse

@@ -337,7 +337,41 @@ NB. run & open the futures results
 (271828) 18!:55 :: 1: "0 -.&' '&.> <"1 'loc',~"1 'f',"1 ": ,. i.TASK*STRIDE   NB. clear all locales
 18!:55 [ 18!:1 [1                   NB. erase residual numbered locales in each task
 
-4!:55 ;:'NX STRIDE TASK delth s1 t1'
+NB. x is number of iterations
+NB. y is a task number
+NB. result is always 1
+NB. task 0 repeatedly delete locale; task 1 repeatedly accesses them
+t1=: 4 : 0"_ 0
+if. y=0 do.
+  while. 0<t1done do.
+   (271828) 18!:55 ;:'l1'
+   'a_l1_ a_l2_ b_l1_ b_l2_ ' =: 1 1 5 5
+  end.
+  1
+else.
+  for_xno. i.x do.
+   a + b
+  end.
+  t1done=: <:t1done
+  1
+end.
+)
+
+s1=: 3 : 0
+ 100 (t1 f. t.'')"0 y       NB. start task 14
+)
+
+'a_l1_ a_l2_ b_l1_ b_l2_ ' =: 1 1 5 5
+(;:'l1 l2') 18!:2 <'base'
+4!:55 ;:'a b'
+4!:55 ;:'a b'
+t1done=: 10
+]&> s1 0, 10#1
+
+(<'z') 18!:2 <'base'
+(271828) 18!:55 ;:'l1 l2'
+
+4!:55 ;:'NX STRIDE TASK delth s1 t1 t1done'
 
 epilog''
 

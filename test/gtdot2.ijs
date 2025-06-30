@@ -17,6 +17,7 @@ NX=: QKTEST{2000 500
 
 (271828) 18!:55 :: 1: "0 -.&' '&.> <"1 'loc',~"1 'f',"1 ": ,. i.TASK*STRIDE   NB. clear all locales
 
+
 NB. test parallel create locale
 NB. x is number of iteration in each task
 NB. y is a task number
@@ -57,7 +58,7 @@ t1=: 4 : 0"_ 0
 NB. create locale
 for_xno. i.x do.
  f=. 'loc',~'f',":xno+y*STRIDE  NB. unique locale name for each task
- (271828) 18!:55 [ 18!:3 <f              NB. create new locale and erase immediately
+ 18!:55 [ 18!:3 <f              NB. create new locale and erase immediately
 end.
 1
 )
@@ -82,7 +83,7 @@ t1=: 4 : 0"_ 0
 NB. create locale
 for_xno. i.x do.
  f=. 'loc',~'f',":xno+0*STRIDE  NB. same locale name
- (271828) 18!:55 [ 18!:3 <f              NB. create new locale and erase immediately
+ 18!:55 [ 18!:3 <f              NB. create new locale and erase immediately
 end.
 1
 )
@@ -109,7 +110,7 @@ for_xno. i.x do.
  f=. 'loc',~'f',":xno+y*STRIDE  NB. unique locale name for each task
  18!:3 <f                       NB. create new locale
  g=. 'loc',~'f',":xno+(TASK|y+(TASK>1))*STRIDE  NB. unique locale name in another task
- (271828) 18!:55 ::1: <g                 NB. erase locale of another task, possibly not exist
+ 18!:55 ::1: <g                 NB. erase locale of another task, possibly not exist
 end.
 1
 )
@@ -141,7 +142,7 @@ g=. 'loc',~'f',":(x-1)+(TASK|y+(TASK>1))*STRIDE  NB. last locale name in another
 while. 0 > 18!:0 <g do. 6!:3[0.001 end. NB. wait until all tasks have created all locales
 for_xno. i.x do.
  g=. 'loc',~'f',":xno+(TASK|y+(TASK>1))*STRIDE  NB. unique locale name in another task
- z=. z *. (271828) 18!:55 <g             NB. erase locale of another task
+ z=. z *. 18!:55 <g             NB. erase locale of another task
 end.
 z
 )
@@ -345,7 +346,7 @@ NB. task 0 repeatedly delete locale; task 1 repeatedly accesses them
 t1=: 4 : 0"_ 0
 if. y=0 do.
   while. 0<t1done do.
-   (271828) 18!:55 ;:'l1'
+   18!:55 ;:'l1'
    'a_l1_ a_l2_ b_l1_ b_l2_ ' =: 1 1 5 5
   end.
   1

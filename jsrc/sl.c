@@ -548,7 +548,8 @@ static F2(jtloccre){F12IP;A g,y,z=0;C*s;I n,p;A v;
  }else{
   // new named locale needed
   I type=REPSGN(p);  // -1 if impermanent, 0 if permanent
-  FULLHASHSIZE(1LL<<((REPSGN(p)^p)+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
+  if(unlikely(p<0))ASSERTSUFF(THREADID(jt)==0,EVLOCALE,goto exit;)  // permanent locale can be created/deleted only from master thread.
+  FULLHASHSIZE(1LL<<((REPSGN(p)^p)+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^|p|+5 minus a little
   p-=(UI)p/(sizeof(LX)*BB)+1;  // leave room for Bloom filter
   if(unlikely(stcreate(type,p,n,s)==0))goto exit;   // create the locale, but if error, cause this routine to exit with failure
  }
@@ -669,7 +670,7 @@ F1(jtsetpermanent){F12IP;A g;
      /* check for redefinition (erasure) of entire symbol table. */
 
 // 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale
-// Bivalent: if x is 271828, do the deletion even if on a permanent locale (for testcases only)
+// Bivalent: if x is 271828, do the deletion even if on a permanent locale (for testcases only), but only in master thread
 DF2(jtlocexmark){F12IP;A g,*wv,y,z;B *zv;C*u;I i,m,n;
  ACVCACHECLEAR;  // destroying a locale invalidates all lookups
  if(unlikely(EPDYAD)){  // dyadic call
@@ -697,7 +698,7 @@ DF2(jtlocexmark){F12IP;A g,*wv,y,z;B *zv;C*u;I i,m,n;
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
-   if(a){ASSERTSUFF(*JT(jt,zpath)!=g,EVRO,z=0; goto exitlock;) LXAV0(g)[SYMLEXECCT]=0; locdestroy(g);  // forced delete, clear execct/del ct & do it (but error if deleting z)
+   if(a){ASSERTSUFF(THREADID(jt)==0,EVLOCALE,z=0; goto exitlock;) ASSERTSUFF(*JT(jt,zpath)!=g,EVRO,z=0; goto exitlock;) LXAV0(g)[SYMLEXECCT]=0; locdestroy(g);  // forced delete, clear execct/del ct & do it (but error if deleting z)
     // ignore the deletion if the locale is execct-permanent.  The execct is unreliable then
    }else DELEXECCTIF(g)  // Delete if execct allows (never if permanent).  Say that the user doesn't want this locale any more.  Paths, execs, etc. still might.
   }
@@ -717,11 +718,13 @@ B jtlocdestroy(J jt,A g){
  if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
+ WRITELOCK(g->lock);  // in case a probe() is reading from this locale, lock before altering chains
  freesymb(jt,g);   // delete all the names.  Anything executing will have been fa()d
  I j,wn=AN(g); LX * RESTRICT wv=LXAV0(g); for(j=SYMLINFOSIZE;j<wn;++j)wv[j]=0;  // clear the hashchains in case the locale lingers
  while(*path)--path; fa(UNvoidAV1(path))   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  BLOOMCLEAR(g);  // clear Bloom filter
+ WRITEUNLOCK(g->lock);
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
  // The current implied locale can be deleted only after it leaves execution, i. e. after it returns to immex in all threads where it is current.

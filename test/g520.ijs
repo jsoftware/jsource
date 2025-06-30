@@ -1,7 +1,7 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.(0: IF64) '$'   NB. skip if not 64-bit
+0!:_1`1:@.(9!:56 'avx2') '$'   NB. skip if not avx2
 
 load'format/printf'  NB. scaf
 
@@ -52,27 +52,70 @@ NB. one either coalesces to the tail, if all conditions are are right, giving an
 NB. a new tail.  After that, we keep the first mmc at each ending position
 makecoal =: {{ (#~ ~:@:(1&{"1)) @: ((00&{@],01&{@[,+/&{:)^:([: *./ m >: (1 _1 1 * 1 0 2&{)@] + _1 1 1&*@[)~/\.) }}  NB. old start-new end=gap, old end-new start=spread, sum of ct=new ct
 
-for_gsc. _3 ]\ 4 16 8  16 64 32  64 256 128 do.  NB. Apply coarsening sieves to the stripes
-  minmaxct =.  (gsc makecoal) minmaxct
+maxstripewidth =. 32 <.^:(1=#rowmasks) <. (+/ {:"1 minmaxct) % +:^:(>&1) 1 T. ''  NB. Limit width of stripe to leave at least 2 stripes per thread (unless single-threaded), but max 32 if only one OP to prevent result code from lagging
+
+for_gsc. maxstripewidth ((01 >. (I.~ {:"1)) {. ]) _3 ]\ 4 16 8  16 64 32  64 256 128 do.  NB. Apply coarsening sieves to the stripes, honoring the max width
+  minmaxct =. (gsc makecoal) minmaxct
 end.
+assert. ((<_1 1) { minmaxct) <: {: $ name~
 
 stripes =. 0 1{"1 minmaxct  NB. (start,end+1) for each stripe 
-comploads =. +/ (+/@> rowmasks) * (,.@(-~/\)"1 stripes)&(+/;.0)@> colmasks    NB. table of (start,len) of each stripe; for each column, count 1s in each stripe; weight by #rows in each op; sum by stripes
-qprintf 'Qkt '
-qprintf'stripes comploads '
+comploads =. +/ (+/@> colmasks) * (,.@(-~/\)"1 stripes)&(+/;.0)@> rowmasks    NB. table of (start,len) of each stripe; for each column, count 1s in each stripe; weight by #rows in each op; sum by stripes
+NB. obsolete qprintf 'Qkt '
+NB. obsolete qprintf'stripes comploads '
 debugopts 128!:14 y,stripes;(\:comploads)  NB. Run the pivots.  Result is name~
-Qkt  NB. scaf
+NB. obsolete Qkt  NB. scaf
 }}
+55 T."1 i. 0 ,~ 1 T. ''
 
-
-
+1: 0!:_1'$'
+NB. 1 stripe
 Qkt =: (15!:18) 11 c. 19 20 $ 0.
 rm =. ,< 18 {. 1 0 1 1 0 1 1 1 0 1
 rv =. (11 c. I.)&.> rm
 cm =. ,< 19 {. 0 1 0 1 1
 cv =. (11 c. 1000 + I.)&.> cm
+(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
+NB. 2 stripes
+Qkt =: (15!:18) 11 c. 19 20 $ 0.
+rm =. ,< 18 {. 1 0 1 1 0 0 0 0 0 0 0 0 0 1 1 1 0 1
+rv =. (11 c. 1 + I.)&.> rm
+cm =. ,< 19 {. 0 1 0 1 1
+cv =. (11 c. 1000 + I.)&.> cm
+(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
+NB. 2 OPs
+Qkt =: (15!:18) 11 c. 19 20 $ 0.
+rm =. <"1 (18) {."1 ]  1 0 1 1 0 0 0 0 0 1 1 1 0 1 ,: 0 1 1 1 0 0 0 0 0 0 0 1 0 1 
+rv =. 0 100 (11 c. (+ I.))&.> rm
+cm =. <"1 (19) {."1 ]  0 1 0 1 1 ,: 1 1 0 1 0 0 1
+cv =. 0 1000 (11 c. (+ I.))&.> cm
+(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+
+NB. 1 tall thin OP
+Qkt =: (15!:18) 11 c. 1003 20 $ 0.
+rm =. , <"1 (18) {."1 ]  0 1 
+rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
+cm =. , <"1 (1001) {."1 ]  0 , 1000$1
+cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
+(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+
+NB. 1 wide short OP
+Qkt =: (15!:18) 11 c. 20 1004 $ 0.
+rm =. , <"1 ] 0 , 1000$1 
+rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
+cm =. , <"1 ] ,1
+cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
+(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+NB.$
+
+NB. 2 overlapping OPs that will overrun a single thread
+Qkt =: (15!:18) 11 c. 1004 132 $ 0.
+rm =. , <"1 ] 2 128$1 
+rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
+cm =. , <"1 ] 2 1000$1
+cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB.$     end of 64-bit-only

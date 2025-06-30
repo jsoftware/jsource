@@ -2958,7 +2958,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 // Qkt/bk=: (((<pcx;prx) { Qkt) ((~:!.absfuzz) * -) pivotcolnon0 */ pivotrownon0 [* mplr]) (<pcx;prx)} Qkt/bk
 // with high precision
 // a is pcx;prx;pivotrownon0;pivotcolnon0;absfuzz/mplr (mplr if not atom)
-// pcx is indexes on non0 in col of Qkt (=row of Qk), i. e. the rows of Qkt to be modified; for ck/Rk, which have one row, pcx is 0
+// pcx is indexes of non0 in col of Qkt (=row of Qk), i. e. the rows of Qkt to be modified; for ck/Rk, which have one row, pcx is 0
 // prx is indexes of non0 in pivot col, which give the column indexes of Qkt/ck/Rk to be modified
 // pivotrownon0 is pcx { col of Qkt, each of which multiplies the pivot column
 // pivotcolnon0 is prx { pivot column
@@ -2980,7 +2980,7 @@ F2(jtqktupdate){F12IP;
  else isbatch=DAV(absfuzzmplr)[0]<0.;  // batch if negative threshold
  // agreement
  ASSERT(AR(w)==AR(pcx)+AR(prx),EVRANK)  // Qkt is nxn+1..4; bk is n, treated as a single row.
- if(AR(pcx)!=0){ASSERT(AS(w)[0]<=AS(w)[1]-1,EVLENGTH) DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[0],EVINDEX))} else{ASSERT(IAV(pcx)[0]==0,EVINDEX)}  // Qkt/bk rows may be padded (Qkt includes Fk); valid row indexes
+ if(AR(pcx)!=0){DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[0],EVINDEX))} else{ASSERT(IAV(pcx)[0]==0,EVINDEX)}  // valid row indexes
  ASSERT(AN(pcx)==AN(pivotrownon0),EVLENGTH)  // indexes and values must agree  scaf shapes should be identical
  I m=AN(pcx), n=AN(prx);  // # rows & columns to modify
  if(isbatch){
@@ -3359,7 +3359,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
    while(1){  // till we have stored all the index
     I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_loadu_si256(cmask),_mm256_setzero_si256())); ++cmask;  // fetch and step over next 32 bits.  Overfetch possible and OK
     while(bits){*mav++=fetchndx+CTTZI(bits); bits&=bits-1; if(--ncvals<=0)goto finndx;}  // store index for every non0, stop when all done
-    fetchndx+=sizeof(*cmask)/BB;  // advance to next mask base
+    fetchndx+=sizeof(*cmask);  // advance to next mask base, adding 1 for each bit we read
    }  finndx:;
    *mav=(UI4)~0>>1;  // install sentinel at end
 
@@ -3463,6 +3463,7 @@ finmask:;
 
    // loop to process one 8block
    I b8qktrow=(I4)(ringdctrlb8>>RINGMINNEXTROWX); ringdctrlb8|=RINGMINNEXTROWINIT;  // remember starting row# in qkt = start of 8 window
+// obsolete printf("starting 8block at row %lld\n, ring b8=%lld\n", b8qktrow,ringdctrlb8&RINGB8STARTMASK); // scaf
    opinfo *currop, *prevop;  // op being processed, prev ptr used to delete blocks
    for(ringdctrlb8&=~RINGACCREQD,currop=aops,prevop=0;currop;ringdctrlb8|=RINGACCREQD){  // each op, with ACCREQD set in all but the first
     I4 nextrowinop;  // next row to process in this op
@@ -3470,6 +3471,7 @@ finmask:;
      // next row can be processed in this 8block.  Load the column info and update the readahead
      I releasex=(ringdctrlb8+(nextrowinop-b8qktrow))&RINGB8STARTMASK;  // index of release slot for this row, which holds the mapping to actual ring row and the mask
      I ringx=(I)releaseqktringbase[releasex];  // ring row to fill - Qkt part is always 0 here
+// obsolete printf("calc row %d, releasex=%lld, phys ringx=%lld ", nextrowinop,releasex,ringx); // scaf
      E *r0=ring[ringx];  // base the offsets will be applied against
      US *aof=&stripeofst[currop->ndxvalofst]; __m256d *ava=(__m256d*)&((E*)stripe0213)[currop->ndxvalofst]; I alen=currop->nofsts;  // loop boundaries for processing the row of the stripe
      __m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes
@@ -3519,6 +3521,7 @@ finmask:;
 releaserow:;  // entered from below to drain the ring, either on buffer-full or at end-of-operation.  releasect is set to a high value in that case
       __m256d *releaseringbase=(__m256d*)ring[(I)releaseqktringbasecurr&(RINGROWS-1)];  // get base address in ring
       __m256d *releaseqkbase=(__m256d*)((I)releaseqktringbasecurr&-RINGROWS);  // get base address in Qkt
+// obsolete printf(" - release ring row %lld to addr %p, mask=0x%llx, releasect=%lld \n",(I)releaseqktringbasecurr&(RINGROWS-1),releaseqkbase,releaseblockmask,releasect);  // scaf
       do{
        // calculate a result block
        I blockbyteofst=CTTZI(releaseblockmask)*sizeof(E)*RESBLKE;  // get offset to next modified block in  this row
@@ -3542,18 +3545,23 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
 
       if(0){rowfin:;  // come here when a row has been fully sent to Qkt
        I relstart=(ringdctrlb8&RINGRELSTARTMASK)>>RINGRELSTARTX;  // extract ending release row#
+// obsolete printf("row %lld release complete ",relstart);   // scaf
        releaserowmask[relstart]=0;  // when we finish a row, we must leave it with an empty mask
        releaseqktringbase[relstart]=(__m256d*)((I)releaseqktringbase[relstart]&(RINGROWS-1));  // clear Qkt, leaving ring row#
        relstart=(relstart+1)&(RINGROWS-1); ringdctrlb8=(ringdctrlb8+(1<<RINGRELSTARTX))&RINGRELSTARTWRAP;   // advance to next released row
+// obsolete printf("next row=0x%llx, ringdctrlb8=0x%llx ",relstart,ringdctrlb8);  // scaf
        if(((ringdctrlb8-relstart)&(RINGROWS-1))!=0){  // if the release area is not empty after removing the finished row...
         releaseblockmask=releaserowmask[relstart]; releaseqktringbasecurr=releaseqktringbase[relstart];  // move next row to the release variables.  blockmask=0 means no work
+// obsolete printf(" next release mask=0x%llx, qktbase=%p\n",releaseblockmask,releaseqktringbasecurr);  // scaf
         // Here we loop back to handle exception cases: (1) ring full; (2) operation finished.  We set releasect to high-value 
         if(unlikely(((ringdctrlb8-relstart)&(RINGROWS-1))>=(RINGROWS-B8ROWS)))goto releaserow;  // if ring is still full, wait for it to drain
         if(unlikely(stripex>=nstripes))goto releaserow;  // if the problem is over, flush the entire ring
        }
+// obsolete else printf(" release ring now empty\n");  // scaf
        if(unlikely(releasect>100))if(stripex>=nstripes)goto finis; else goto caughtup;   // if we are coming out of a loopback, go to the right place: end, or just after we released into the full ring
       }
      }
+// obsolete else printf(" - no release to Qkt\n");  // scaf
     }
     // one op finished.  Move to next
     opinfo *currchn=currop->chain;   // pointer to next 
@@ -3576,9 +3584,10 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
    while(b8start!=sx){skiprows>>=8; b8start=(b8start-1)&(RINGROWS-1); releaserowmask[b8start]=0; releaseqktringbase[b8start]=(__m256d*)(skiprows&(RINGROWS-1));}
    // b8start has been advanced over all the nonskipped rows, which releases them.
    ringdctrlb8=(ringdctrlb8&~RINGB8STARTMASK)+b8start;  // install b8start in portmanteau
-   if(releaseblockmask==0){releaseblockmask=releaserowmask[origb8]; releaseqktringbasecurr=releaseqktringbase[origb8]; ringdctrlb8&=~RINGDCTMASK;}  // if release queue was empty, move first row to the release variables.  blockmask=0 means no work.
+// obsolete printf("8block released, ending at0x%llx ", b8start);  // scaf
+   if(releaseblockmask==0){releaseblockmask=releaserowmask[origb8]; releaseqktringbasecurr=releaseqktringbase[origb8]; ringdctrlb8&=~RINGDCTMASK;}  // scaf if release queue was empty, move first row to the release variables.  blockmask=0 means no work.
       // delayct has been incrementing continuously, perhaps overflowing - clear it to start releasing
-   else if(unlikely(((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX))&(RINGROWS-1)))>=(RINGROWS-B8ROWS)){releasect=(UI4)~0>>1; ringdctrlb8&=~RINGDCTMASK; goto releaserow;}  // if ring is full, wait for it to drain, and clear delayct to ensure releasing coontinues
+   else if(unlikely((((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX))&(RINGROWS-1)))>=(RINGROWS-B8ROWS))){releasect=(UI4)~0>>1; ringdctrlb8&=~RINGDCTMASK; goto releaserow;}  // if ring is full, loop in release to wait for it to drain, and clear delayct to ensure releasing coontinues
 caughtup:;  // here when we have removed the ring-full situation
    // throttle the release depending on ring-full status.  We figure this only when we add rows because it's not important to keep it exactly right
    releasedelayct0=(-((((RINGROWS-((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX)-1)&(RINGROWS-1)))>>3)+1)*releasedelaythreadedstripe)>>3)<<RINGDCTX;  // decrease delay (which is negative) with each eight-row section filled
@@ -3630,10 +3639,10 @@ F2(jtbatchop){F12IP;PROLOG(000);
  ASSERTSYSGOTO((AC(qkt)-!!((I)qktf&QCFAOWED))==1,"accumuland is aliased",exit);   // count, after removing the ra from syrd, must be 1
  box=C(AAV(w)[1]);  // row masks
  ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) opctx.nops=AN(box); opctx.oprowmasks=AAV(box);  // must be list of boxes; save number and address
- DO(opctx.nops, A sb=C(opctx.oprowmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be boolean mask no longer than the row
+ DO(opctx.nops, A sb=C(opctx.oprowmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktncols,EVLENGTH,exit) )  // must be boolean mask no longer than the row
  box=C(AAV(w)[2]);  // row values
  ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.oprowvals=AAV(box);  // must be list of boxes; save number and address
- DO(opctx.nops, A sb=C(opctx.oprowvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be quadprec no longer than the row
+ DO(opctx.nops, A sb=C(opctx.oprowvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktncols,EVLENGTH,exit) )  // must be quadprec no longer than the row
  box=C(AAV(w)[3]);  // col masks
  ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.opcolmasks=AAV(box);  // must be list of boxes; save number and address
  DO(opctx.nops, A sb=C(opctx.opcolmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be boolean mask no longer than the col

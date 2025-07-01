@@ -1,9 +1,9 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.(9!:56 'avx2') '$'   NB. skip if not avx2
+0!:_1`1:@.IF64 '$'   NB. skip if not avx2/emulation
 
-load'format/printf'  NB. scaf
+NB. load'format/printf'  NB. scaf
 
 NB. 'col' means pivot column, which is horizontal in Qkt.  'row' is pivot row in Qk, which comes from a col of Qkt.
 NB. Call is destname;rowmasks;rowvalues;colmasks;colvalues<threshold

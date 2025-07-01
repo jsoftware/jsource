@@ -206,7 +206,7 @@ A jtrank1ex0(J jtfg,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virtw;
 
  }else{I *zzs;
   // no cells - execute on a cell of fills
-  RZ(virtw=jtfiller(jt,AT(w),0,0));  // The cell of fills
+  RZ(virtw=jtfiller(jt,AT(w),0,(I*)jt));  // The cell of fills
   // Do this quietly, because
   // if there is an error, we just want to use a value of 0 for the result; thus debug
   // mode off and RESETERR on failure.
@@ -280,7 +280,8 @@ A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12
  // Get the length of the outer frames, which are needed only if either "-rank is greater than the verb rank,
  // either argument has frame with respect to the "-ranks, and those frames are not the same length
  I aofwof=((UI)AR(a)<<RANKTX)+AR(w)-lcrrcr;  // outer frames
- if(likely((I)((lrrr-lcrrcr)&(-((aofwof>>RANKTX)^(aofwof&RANKTMSK))))>=0)){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
+ 
+ if(likely((I)((lrrr-lcrrcr)&(-((aofwof>>RANKTX)^(aofwof&RANKTMSK))))>=0)){los=(I*)a; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed, but give a valid address to fetch from
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
   // find smaller/larger frame/shape, and indicate if a is the repeated arg (otherwise we assume w)
@@ -547,8 +548,8 @@ A jtrank2ex0(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F12IP;PROLOG(004
   // indication that anything unusual happened.  So fail then
 
   if(!(FAV(fs)->flag2&VF2BOXATOP2)){
-   if(!AN(a)){RZ(virta=jtfiller(jt,AT(a),0,0));}else{virta = virtual(a,0,0); AN(virta)=1;}  // if there are cells, use first atom; else fill atom
-   if(!AN(w)){RZ(virtw=jtfiller(jt,AT(w),0,0));}else{virtw = virtual(w,0,0); AN(virtw)=1;}
+   if(!AN(a)){RZ(virta=jtfiller(jt,AT(a),0,(I*)jt));}else{virta = virtual(a,0,0); AN(virta)=1;}  // if there are cells, use first atom; else fill atom
+   if(!AN(w)){RZ(virtw=jtfiller(jt,AT(w),0,(I*)jt));}else{virtw = virtual(w,0,0); AN(virtw)=1;}
    WITHDEBUGOFF(z=CALL2(f2,virta,virtw,fs);)   // normal execution on fill-cell
    if(unlikely(z==0)){  // error executing fill-cell
     if(jt->jerrraw==EVINHOMO){I t, at=AT(virta), wt=AT(virtw);  // type to convert to

@@ -740,7 +740,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #ifndef MEMAUDIT
-#define MEMAUDIT 0x05       // scaf     // Bitmask for memory audits: 
+#define MEMAUDIT 0x00     // Bitmask for memory audits: 
 //        1:  make sure  headers match pool#
 //        2:  full audit of tpush/tpop
 //            detect double-frees before they happen,
@@ -1680,7 +1680,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MCISH(dest,src,n) \
  {I *_d=(I*)(dest), *_s=(I*)(src); I _n=(I)(n); \
  if(unlikely(_n>NPAR))do{_mm256_storeu_si256((__m256i*)_d,_mm256_loadu_si256((__m256i*)_s)); _d+=NPAR; _s+=NPAR;}while((_n-=NPAR)>NPAR); \
-   __m256i endmask=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); _mm256_maskstore_epi64(_d,endmask,_mm256_maskload_epi64(_s,endmask)); \
+   __m256i endmask=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); _mm256_maskstore_epi64(_d,endmask,_mm256_loadu_si256((__m256i*)_s)); \
   }
 #else
 #define MCISH(dest,src,n) \

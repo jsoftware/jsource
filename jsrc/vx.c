@@ -243,7 +243,7 @@ XF2(jtxroota){ // a %: w (optionally with <. or >.)
    }
   z0= Xmp(z0);
  }
- A z;GA(z,XNUM,1L,0L,0L); XAVn(0L,z)[0]= z0;
+ A z;GAT0(z,XNUM,1L,0L); XAVn(0L,z)[0]= z0;
  EPILOG(z);
 }
 XF1(jtxfact){ // !w

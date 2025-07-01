@@ -292,12 +292,12 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
     // The rank is the rank of the long argument, unless both arguments are atoms; then it's 1
     // The itemcount is the sum of the itemcounts; but if the ranks are different, use 1 for the shorter; and if both ranks are 0, the item count is 2
     // empty items are OK: they just have 0 length but their shape follows the normal rules
-    I si=AS(s)[0]; si=ar==wr?si:1; si+=__atomic_load_n(&AS(l)[0],__ATOMIC_ACQUIRE); si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
+    I si=__atomic_load_n(&AS(s)[0],__ATOMIC_ACQUIRE); si=ar==wr?si:1; si+=__atomic_load_n(&AS(l)[0],__ATOMIC_ACQUIRE); si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
       // The a block may be being extended in another thread.  We ensure that AS[0] is incremented AFTER AN to ensure that our allocation is adequate.  This can happen only if the apip started before we locked the block for this thread
     I alen=__atomic_load_n(&AN(a),__ATOMIC_ACQUIRE);  // ensure our copy matches the allocation even if AN incremented during allocation
-if(lr==1&&si!=alen+AN(w)){
+    if(lr==1)alen=si-AN(w);  // if lr==1, the atom count calculated from the shapes (si) may lag behind that from the atom counts (AN(a)+AN(w)).  Override AN
+      // this is questionable, since a is malformed and we leave it that way.  But there is no real alternative.  We hope the user will realize that the lengthening a is invalid.
 // obsolete printf("Allocation with AN=%lld AS[0]=%lld\n",alen+AN(w),si);
- --alen;}  // scaf
     GA(z,t&NOUN,alen+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
 // obsolete if((JT(jt,peekdata)&&t&FL)){
 // obsolete     RETF(z);

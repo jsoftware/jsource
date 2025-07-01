@@ -6,13 +6,6 @@
 #include "j.h"
 extern int numberOfCores;
 
-static void scaffa(J jt,A w){fa(w);}  // scaf
-static void scaffaafterrav(J jt,A w){faafterrav(w);}  // scaf
-static UI4 scafldaUI4(UI4 *a){R lda(a);}  // scaf
-static void scafra(A w){ra(w);}  // scaf
-static void scafraposacv(A w){raposacv(w);}  // scaf
-static void scafmemcpy(void *d, void* s, I l){memcpy(d,s,l);}  // scaf
-
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES
@@ -113,9 +106,6 @@ A jtsystemlock(J jt,I priority,A (*lockedfunction)(J)){A z;
  // If the system is already in systemlock, the system is essentially single-threaded.  Just execute the user's function.
  // This would happen if a sentence executed in debug suspension needed symbols, or had an error
  if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2){R (*lockedfunction)(jt);}
-#if ((MEMAUDIT&5)==5) && SY_64 // scaf
-extern I syslockactive; syslockactive=1;
-#endif
  // Process the request.  We don't know what the highest-priority request is until we have heard from all the
  // threads.  Thus, it is possible that our request will still be pending whe we finish.  In that case, loop till it is satisfied
  while(priority!=0){
@@ -156,9 +146,6 @@ extern I syslockactive; syslockactive=1;
    DO(nlocked, __atomic_fetch_and(&jjbase[i].taskstate,~TASKSTATELOCKACTIVE,__ATOMIC_ACQ_REL);)
    // set the systemlock to 0, completing the operation
    __atomic_store_n(&JT(jt,systemlock),0,__ATOMIC_RELEASE);
-#if ((MEMAUDIT&5)==5) && SY_64 // scaf
-syslockactive=0;
-#endif
   }else{
    // outside the executor, we wait for state to move off 5
    while(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)==5)YIELD
@@ -226,7 +213,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  // broadcast to wake up any tasks waiting for the result
  if(PYXWAIT==xchga((C*)&((PYXBLOK*)AAV0(pyx))->seqstate,PYXFULL))jfutex_wakea(&((PYXBLOK*)AAV0(pyx))->seqstate);
  // unprotect pyx.  It was raised when it was assigned to this owner; now it belongs to the system
- scaffa(jt,pyx);
+ fa(pyx);
  R 1;
 }
 
@@ -493,7 +480,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
    // run the task, raising & lowering the locale execct.  Bivalent
-   jt->uflags.bstkreqd=1; INCREXECCTIF(startloc); scaffa(jt,startloc);  // start new exec chain; raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
+   jt->uflags.bstkreqd=1; INCREXECCTIF(startloc); fa(startloc);  // start new exec chain; raise execcount of current locale to protect it while running; remove the protection installed in taskrun()
    A arg1=job->user.args[0],arg2=job->user.args[1],arg3=job->user.args[2];
    fa(UNvoidAV1(job));  // job is no longer needed
    I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; arg3=dyad?arg3:0;  // the call is either noun self self or noun noun self.  See which and select self.  Set arg3 to 0 if monad (we use it to free later)
@@ -512,7 +499,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // we must also fa the backer.  This is different from the case of virtual args to explicit defns: there we know that the virtual arg is on the stack in the caller,
    // and will be freed from the stack, and thus that there is no chance that a virtual will be freed.  Here the caller has continued, and there may be nothing but this
    // virtual to hold the backer.  So, unlike in all other fa()s, we fa the backer if the virtual is freed.
-   scaffaafterrav(jt,arg1); scaffaafterrav(jt,arg2); if(arg3!=0)fa(arg3);  // unprotect args only after result has been safely installed
+   faafterrav(arg1); faafterrav(arg2); if(arg3!=0)fa(arg3);  // unprotect args only after result has been safely installed
    jtrepatsend(jt); // send our freed blocks back to where they were allocated.  That will include the args just freed
    __atomic_store_n(&JTFORTHREAD(jt,initthread)->uflags.sprepatneeded,1,__ATOMIC_RELEASE);  // signal the originator to repat the freed blocks.  We force this now in case some were virtual and have large backers.  The repat may be delayed a while.
    jtclrtaskrunning(jt);  // clear RUNNING state, possibly after finishing system locks (which is why we wait till the value has been signaled)
@@ -561,7 +548,7 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A arg3){F12JT;A pyx;
  // extract parms given to t.: threadpool number, worker-only flag
  UI forcetask=((FAV(self)->localuse.lu1.forcetask>>8)&1)-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
  JOBQ *jobq=&(*JT(jt,jobqueues))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
- if((((I)(forcetask&scafldaUI4(&jobq->nuunfin))-jobq->nthreads)&(lda(&JT(jt,systemlock))-3))<0){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
+ if((((I)(forcetask&lda(&jobq->nuunfin))-jobq->nthreads)&(lda(&JT(jt,systemlock))-3))<0){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
     // in suspension (systemlock state>2) we do not start any task anywhere
   // we would like to avoid realizing virtual arguments, so that the copy will be done into the core that needs the data.  However, if we leave the block as virtual,
   // we will fa() it at end-of-job and that will fail if it is recursive.  We meanly want to avoid checking VIRTUAL on every fa.  So, we realize a virtual only if it is recursive,
@@ -569,16 +556,16 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A arg3){F12JT;A pyx;
   // It would be nice to be able to free the virtual before the task completes, but we don't have a way to (we could realize/fa in the worker, but why?).  The virtual backer will be tied up during the task, but we
   // won't have to copy the data here and then transfer it in the task
   ASSERT(ISDENSE(AT(arg1)),EVNONCE) if(dyad){ASSERT(ISDENSE(AT(arg2)),EVNONCE) ra(arg3);}   // Don't allow sparse args since we can't box them; arg3 is self, so never virtual; just ra
-  if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} scafra(arg1);
-  if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} scafra(arg2);
+  if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} ra(arg1);
+  if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
   job->n=0; job->initthread=THREADID(jt);  // indicate this is a user job.  ns is immaterial since it will always trigger a deq.  Install initing thread# for repatriation
-  job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=arg3;(UNvoidAV1(job))->kchain.global=jt->global;scafmemcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // A little overcopy OK
+  job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=arg3;(UNvoidAV1(job))->kchain.global=jt->global;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // A little overcopy OK
   (UNvoidAV1(job))->mback.jobpyx=pyx;  // pyx is secreted in header
   JOB *oldjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   if((UI)jobq->nthreads>(forcetask&jobq->nuunfin)){  // recheck after lock
    // We know there is a thread that can take the user task (possibly after finishing internal tasks), or the user insists on queueing.  Queue the task
-   scafraposacv(jt->global);   // we have to protect the task's locale until the task starts.  We will free it before the user verb runs
+   raposacv(jt->global);   // we have to protect the task's locale until the task starts.  We will free it before the user verb runs
    ++jobq->nuunfin;  // add the new user job to the unfinished count
    _Static_assert(offsetof(JOB,next)==offsetof(JOBQ,ht[0]),"JOB and JOBQ need identical prefixes");  // we pun &JOBQ->ht[1] as a JOB, when the q is empty
    job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr

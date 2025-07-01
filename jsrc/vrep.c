@@ -13,7 +13,7 @@
 static REPF(jtrepzdx){F12IP;A p,q,x;P*wp;
  ARGCHK2(a,w);
  if(ISSPARSE(AT(w))){wp=PAV(w); x=SPA(wp,e);}
- else x=jt->fill&&AN(jt->fill)?jt->fill:jtfiller(jt,AT(w),0,0);
+ else x=jt->fill&&AN(jt->fill)?jt->fill:jtfiller(jt,AT(w),0,(I*)jt);
  RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?AS(w)[wf]:1),num(-1)))));
  RZ(IRS2(w,x,NOEMSGSELF,wcr,0L,jtover,q));
  R IRS2(p,q,0L,1L,wcr+!wcr,jtfrom,x);

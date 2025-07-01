@@ -87,7 +87,7 @@ static F1(jtbminv){F12IP;A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  if(!z){A f,h,*zv;I*hv;
   GATVR(z,BOX,wn,2,ws); zv=AAV2(z);
   GATV0(h,INT,wr,1); hv=AV1(h);
-  RZ(f=jtfiller(jt,t,0,0)); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
+  RZ(f=jtfiller(jt,t,0,(I*)jt)); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
   for(i=0;i<wn;++i){
    zv[i]=x=C(wv[i]);
    if(2>AR(x)){DO(wr, hv[i]=v[i][u[i]];); RZ(zv[i]=diag(x,reshape(h,f)));}

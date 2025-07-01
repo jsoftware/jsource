@@ -182,7 +182,7 @@ static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
    if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtfg,nv[i],C(vv[i]),symtab);)}  // v is boxed list
    else {A *nv=AAV(n); DO(AN(n), A  vval; RZ(vval=ope(AR(v)?from(sc(i),v):v)); jtsymbis((J)((I)jtfg|JTFINALASGN),nv[i],vval,symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment since value is not passed on
-// scaf use <"_1 for this, with WILLBEOPENED
+// scaf use virtual block for this
    goto retstack;
   }
  }
@@ -909,7 +909,7 @@ RECURSIVERESULTSCHECK
        // tpopa and tpopw are valid.  Transfer FAOWED from (at most 1 of) them to y (they can match only if STKNAMED).  Then put y into the result area, freeing the vbl
        if(withprob((A)QCWORD(tpopa)==y,0.2)){y=(A)tpopa; tpopa=(A*)((I)tpopa&~STKFAOWED); } if(withprob((A)QCWORD(tpopw)==y,0.2)){y=(A)tpopw; tpopw=(A*)STKNAMED; }  // tpopa must have STKNAMED, and tpopw should also
        stack[1].a=y;  // save result 2 3 3, with FAOWED+STKNAMED flags transferred from tpop[aw]; parsetype (noun) is unchanged, token# is immaterial since it's a nonexecutable noun.  y is now free.
-       if(withprob(ISSTKFAOWED(freep),0.01)){INCRSTAT(ffaowed)/* 0.0 */;scaft(QCWORD(freep)) faowed(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}   // While we have fs, free fs if needed
+       if(withprob(ISSTKFAOWED(freep),0.01)){INCRSTAT(ffaowed)/* 0.0 */; faowed(QCWORD(freep),AC(QCWORD(freep)),AT(QCWORD(freep)));}   // While we have fs, free fs if needed
       }
 
       // (1) free up inputs that are no longer used.  These will be inputs that are still abandoned and were not themselves returned by the execution.
@@ -925,7 +925,7 @@ RECURSIVERESULTSCHECK
       // first the w arg
       // compiler note: putting these 2 blocks into a loop made the compiler lose its register allocation
       NOUNROLL while(1){  // make this a loop to save cache space
-       if(withprob(ISSTKFAOWED(tpopa),0.2)){INCRSTAT(wfafa/*.08*/) scaft(QCWORD(tpopa)) faowed((A)QCWORD(tpopa),AC((A)QCWORD(tpopa)),AT((A)QCWORD(tpopa)));  // free if owed
+       if(withprob(ISSTKFAOWED(tpopa),0.2)){INCRSTAT(wfafa/*.08*/) faowed((A)QCWORD(tpopa),AC((A)QCWORD(tpopa)),AT((A)QCWORD(tpopa)));  // free if owed
        }else if(withprob(!ISSTKNAMED(tpopa),0.6)){   // otherwise if it's a tstack pointer...
         A freea=*tpopa;   // get the tstack pointer, which points back to the arg if it has not been zapped
         if(likely(freea!=0)){INCRSTAT(wpop/*.99*/)  // if the arg has a place on the tstack, look at it to see if the block is still around
@@ -1028,7 +1028,6 @@ RECURSIVERESULTSCHECK
       }else if(pmask567&0b100000){  // fork NVV or VVV
        // ***** fork
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
-// ASSERTSYSV(!(AT(arg3)&NOUN),"pun in fork",FP;)  // scaf
        // initial value of loop counter/flag: 000 always for dyad, cleared by stacker
        yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
        FPZ(yy);    // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
@@ -1055,7 +1054,7 @@ RECURSIVERESULTSCHECK
       ramkrecursv(yy);  // Make sure the result is recursive.  We need this to guarantee that any named value that has been incorporated has its usecount increased, so that it is safe to remove its protection
 
       y=NEXTY;   // refetch next-word to save regs
-      while(1){A a=stack[1].a; if(unlikely(ISSTKFAOWED(a))){if(unlikely(QCWORD(a)==yy))yy=a;else{scaft(QCWORD(a)) faowed(QCWORD(a),AC(QCWORD(a)),AT(QCWORD(a)));}} if(pt0ecam&FLGPCTEND)break; pt0ecam+=FLGPINCR; ++stack;}  // the assignment to yy enforces max 1 inheritance
+      while(1){A a=stack[1].a; if(unlikely(ISSTKFAOWED(a))){if(unlikely(QCWORD(a)==yy))yy=a;else{faowed(QCWORD(a),AC(QCWORD(a)),AT(QCWORD(a)));}} if(pt0ecam&FLGPCTEND)break; pt0ecam+=FLGPINCR; ++stack;}  // the assignment to yy enforces max 1 inheritance
        // this assigns to stack[1]..stack[dyad+2].  Counter goes 1-2 for monad, 0-1-2 for dyad.  stack ends up pointing to new stack position, i. e. original 1 or 2, just before the result
       stack[1].a=yy; stack[0]=stack[pt0ecam&FLGPMONAD?-1:-2];  // close up stack
      }   // end of 'execute lines 3-7'
@@ -1107,7 +1106,7 @@ execlpar:;  // come here when we are sitting on ( ...
    // by another thread while we are using the value.  The case is very rare but we test for it, so we have to make it work.
    // If final assignment was local this can't happen, and we do the fa
    jt->parserstackframe = oframe;  // pop the parser frame-stack before tpushna, which may fail   NOW it is OK to return
-   if(unlikely(ISSTKFAOWED(z))){if(pt0ecam&JTASGNWASLOCAL){scaft(QCWORD(z)) faowed(QCWORD(z),AC(QCWORD(z)),AT(QCWORD(z)))} else tpushna(QCWORD(z));}   // if the result needs a free, do it, possibly deferred via tpush
+   if(unlikely(ISSTKFAOWED(z))){if(pt0ecam&JTASGNWASLOCAL){faowed(QCWORD(z),AC(QCWORD(z)),AT(QCWORD(z)))} else tpushna(QCWORD(z));}   // if the result needs a free, do it, possibly deferred via tpush
   }else{  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym.  Repurpose pt0ecam
 failparsestack: // here we encountered an error during stacking.  The error was processed using an old stack, so its spacing is wrong.
                 // we set the error word# for the failing word and then resignal the error to get the spacing right and call eformat to annotate it
@@ -1122,7 +1121,7 @@ failparse:
    // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first, and also the virtual since it has no flags
    stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment on error
    // fa() any blocks left on the stack that have FAOWED - but not the mark, which has a garbage address
-   for(;stack!=stackend1;++stack)if(!PTISMARKFRONT(stack->pt)&&ISSTKFAOWED(stack->a)){scaft(QCWORD(stack->a)) faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
+   for(;stack!=stackend1;++stack)if(!PTISMARKFRONT(stack->pt)&&ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
    jt->parserstackframe = oframe;  // pop the parser frame-stack   NOW it is OK to return
    if(unlikely(jt->jerr==EVABORTEMPTY)){RESETERR; z=mtv;}  // if the sentence was aborted without error, revert to empty result after cleanup
   }

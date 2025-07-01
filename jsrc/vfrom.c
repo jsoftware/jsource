@@ -3463,20 +3463,21 @@ finmask:;
 
    // loop to process one 8block
    I b8qktrow=(I4)(ringdctrlb8>>RINGMINNEXTROWX); ringdctrlb8|=RINGMINNEXTROWINIT;  // remember starting row# in qkt = start of 8 window
-// obsolete printf("starting 8block at row %lld\n, ring b8=%lld\n", b8qktrow,ringdctrlb8&RINGB8STARTMASK); // scaf
+// obsolete printf("starting 8block at row %lld\n, ring b8=%lld\n", b8qktrow,ringdctrlb8&RINGB8STARTMASK);
    opinfo *currop, *prevop;  // op being processed, prev ptr used to delete blocks
    for(ringdctrlb8&=~RINGACCREQD,currop=aops,prevop=0;currop;ringdctrlb8|=RINGACCREQD){  // each op, with ACCREQD set in all but the first
     I4 nextrowinop;  // next row to process in this op
+    I4 rowindex=currop->rowindex;  // index of the values we read ahead in this op
     while((nextrowinop=currop->colndxahead)-b8qktrow<B8ROWS){  // if next row is in 8block
      // next row can be processed in this 8block.  Load the column info and update the readahead
      I releasex=(ringdctrlb8+(nextrowinop-b8qktrow))&RINGB8STARTMASK;  // index of release slot for this row, which holds the mapping to actual ring row and the mask
      I ringx=(I)releaseqktringbase[releasex];  // ring row to fill - Qkt part is always 0 here
-// obsolete printf("calc row %d, releasex=%lld, phys ringx=%lld ", nextrowinop,releasex,ringx); // scaf
+// obsolete printf("calc row %d, releasex=%lld, phys ringx=%lld ", nextrowinop,releasex,ringx);
      E *r0=ring[ringx];  // base the offsets will be applied against
+     releaserowmask[releasex]|=currop->rbmask;  // make note of the resultblocks that will be modified by this row
      US *aof=&stripeofst[currop->ndxvalofst]; __m256d *ava=(__m256d*)&((E*)stripe0213)[currop->ndxvalofst]; I alen=currop->nofsts;  // loop boundaries for processing the row of the stripe
      __m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes
-     currop->colndxahead=currop->acolndxs[++currop->rowindex]; currop->colvalahead=currop->acolvals[currop->rowindex];  // read ahead for next row   scaf hoist ->rowindex out for 1 loop
-     releaserowmask[releasex]|=currop->rbmask;  // make note of the resultblocks that will be modified by this row
+     currop->colndxahead=currop->acolndxs[rowindex++]; currop->colvalahead=currop->acolvals[rowindex];  // read ahead for next row
 
      // Calculate one row of the op
      I andx=0;  // counts in steps of RESBLKE*sizeof(one offset).  With this stride we can use andx to point to offsets and andx*sizeof(E)/sizeof(one offset) (=8) to point to values
@@ -3521,10 +3522,10 @@ finmask:;
 releaserow:;  // entered from below to drain the ring, either on buffer-full or at end-of-operation.  releasect is set to a high value in that case
       __m256d *releaseringbase=(__m256d*)ring[(I)releaseqktringbasecurr&(RINGROWS-1)];  // get base address in ring
       __m256d *releaseqkbase=(__m256d*)((I)releaseqktringbasecurr&-RINGROWS);  // get base address in Qkt
-// obsolete printf(" - release ring row %lld to addr %p, mask=0x%llx, releasect=%lld \n",(I)releaseqktringbasecurr&(RINGROWS-1),releaseqkbase,releaseblockmask,releasect);  // scaf
+// obsolete printf(" - release ring row %lld to addr %p, mask=0x%llx, releasect=%lld \n",(I)releaseqktringbasecurr&(RINGROWS-1),releaseqkbase,releaseblockmask,releasect);
       do{
        // calculate a result block
-       I blockbyteofst=CTTZI(releaseblockmask)*sizeof(E)*RESBLKE;  // get offset to next modified block in  this row
+       I blockbyteofst=CTTZI(releaseblockmask)*sizeof(E)*RESBLKE;  // get offset to next modified block in this row
        __m256d iph,ipl;  // intermediate products and sums
        __m256d qkE01=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i*)((I)releaseqkbase+blockbyteofst))), qkE23=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i*)((I)releaseqkbase+blockbyteofst)+1));  // read qk, bypass caches
        __m256d ringE01=_mm256_load_pd((D*)(__m256d*)((I)releaseringbase+blockbyteofst)), ringE23=_mm256_load_pd((D*)((__m256d*)((I)releaseringbase+blockbyteofst)+1));  // read ring
@@ -3545,25 +3546,26 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
 
       if(0){rowfin:;  // come here when a row has been fully sent to Qkt
        I relstart=(ringdctrlb8&RINGRELSTARTMASK)>>RINGRELSTARTX;  // extract ending release row#
-// obsolete printf("row %lld release complete ",relstart);   // scaf
+// obsolete printf("row %lld release complete ",relstart);
        releaserowmask[relstart]=0;  // when we finish a row, we must leave it with an empty mask
        releaseqktringbase[relstart]=(__m256d*)((I)releaseqktringbase[relstart]&(RINGROWS-1));  // clear Qkt, leaving ring row#
        relstart=(relstart+1)&(RINGROWS-1); ringdctrlb8=(ringdctrlb8+(1<<RINGRELSTARTX))&RINGRELSTARTWRAP;   // advance to next released row
-// obsolete printf("next row=0x%llx, ringdctrlb8=0x%llx ",relstart,ringdctrlb8);  // scaf
+// obsolete printf("next row=0x%llx, ringdctrlb8=0x%llx ",relstart,ringdctrlb8);
        if(((ringdctrlb8-relstart)&(RINGROWS-1))!=0){  // if the release area is not empty after removing the finished row...
         releaseblockmask=releaserowmask[relstart]; releaseqktringbasecurr=releaseqktringbase[relstart];  // move next row to the release variables.  blockmask=0 means no work
-// obsolete printf(" next release mask=0x%llx, qktbase=%p\n",releaseblockmask,releaseqktringbasecurr);  // scaf
+// obsolete printf(" next release mask=0x%llx, qktbase=%p\n",releaseblockmask,releaseqktringbasecurr); 
         // Here we loop back to handle exception cases: (1) ring full; (2) operation finished.  We set releasect to high-value 
         if(unlikely(((ringdctrlb8-relstart)&(RINGROWS-1))>=(RINGROWS-B8ROWS)))goto releaserow;  // if ring is still full, wait for it to drain
         if(unlikely(stripex>=nstripes))goto releaserow;  // if the problem is over, flush the entire ring
        }
-// obsolete else printf(" release ring now empty\n");  // scaf
+// obsolete else printf(" release ring now empty\n");
        if(unlikely(releasect>100))if(stripex>=nstripes)goto finis; else goto caughtup;   // if we are coming out of a loopback, go to the right place: end, or just after we released into the full ring
       }
      }
-// obsolete else printf(" - no release to Qkt\n");  // scaf
+// obsolete else printf(" - no release to Qkt\n");
     }
     // one op finished.  Move to next
+    currop->rowindex=rowindex;  // putback the updated readahead index of the current op
     opinfo *currchn=currop->chain;   // pointer to next 
     if(unlikely(nextrowinop==(UI4)~0>>1)){if(unlikely(prevop==0))aops=currchn; else prevop->chain=currchn; if(likely(aops!=0)&&unlikely(aops->chain==0))releasedelaythreadedstripe=0;}  // if currop expired, remove it from chain; if only 1 op left, stop throttling release
     else{prevop=currop; nextrowinop=nextrowinop<(I4)(ringdctrlb8>>RINGMINNEXTROWX)?nextrowinop:(I4)(ringdctrlb8>>RINGMINNEXTROWX); ringdctrlb8=(ringdctrlb8&~RINGMINNEXTROWINIT)|((I)nextrowinop<<RINGMINNEXTROWX);} //  move to next, keep track of smallest start value
@@ -3584,8 +3586,8 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
    while(b8start!=sx){skiprows>>=8; b8start=(b8start-1)&(RINGROWS-1); releaserowmask[b8start]=0; releaseqktringbase[b8start]=(__m256d*)(skiprows&(RINGROWS-1));}
    // b8start has been advanced over all the nonskipped rows, which releases them.
    ringdctrlb8=(ringdctrlb8&~RINGB8STARTMASK)+b8start;  // install b8start in portmanteau
-// obsolete printf("8block released, ending at0x%llx ", b8start);  // scaf
-   if(releaseblockmask==0){releaseblockmask=releaserowmask[origb8]; releaseqktringbasecurr=releaseqktringbase[origb8]; ringdctrlb8&=~RINGDCTMASK;}  // scaf if release queue was empty, move first row to the release variables.  blockmask=0 means no work.
+// obsolete printf("8block released, ending at0x%llx ", b8start);
+   if(releaseblockmask==0){releaseblockmask=releaserowmask[origb8]; releaseqktringbasecurr=releaseqktringbase[origb8]; ringdctrlb8&=~RINGDCTMASK;}  // if release queue was empty, move first row to the release variables.  blockmask=0 means no work.
       // delayct has been incrementing continuously, perhaps overflowing - clear it to start releasing
    else if(unlikely((((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX))&(RINGROWS-1)))>=(RINGROWS-B8ROWS))){releasect=(UI4)~0>>1; ringdctrlb8&=~RINGDCTMASK; goto releaserow;}  // if ring is full, loop in release to wait for it to drain, and clear delayct to ensure releasing coontinues
 caughtup:;  // here when we have removed the ring-full situation

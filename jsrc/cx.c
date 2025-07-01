@@ -16,7 +16,6 @@
 #include "d.h"
 #include "p.h"
 #include "w.h"
-static void scafra(A w){ra(w);}  // scaf
 
 // DD definitions
 #define DDBGN (US)('{'+256*'{')  // digraph for start DD
@@ -1183,7 +1182,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
    l=symnew(zhbase,SYMNEXT(ztx));   // make sure symbol is available; append new symbol after tail (or head, if tail is empty), as PERMANENT.
    *zhbase=SYMNEXT(*zhbase);  // zhbase points to the pointer to the entry we just added.  First time, that's the chain base
    A nm=(SYMORIGIN)[ahx].name;
-   l->name=nm; scafra(l->name);  // point symbol table to the name block, and increment its use count accordingly
+   l->name=nm; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
    l->flag=(SYMORIGIN)[ahx].flag&(LINFO|LPERMANENT);  // Preserve only flags that persist
    ztx = ztx?(SYMORIGIN)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail

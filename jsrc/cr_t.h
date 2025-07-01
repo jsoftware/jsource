@@ -3,6 +3,7 @@
 /*                                                                         */
 /* cr.c templates                                                          */
 
+THIS FILE IS OBSOLETE, REPLACED BY RESULT.H
 /* template 0 used by the rank operator general cases (monad and dyad)     */
 /* requires:                                                               */
 /*  VALENCE 1 or 2                                                         */
@@ -49,7 +50,7 @@
  // With luck this will process the entire input.
  if(!mn||yt&DIRECT&&RFLAG){I zn;
   RARG1; RE(zn=mult(mn,yn));   // Reallocate y? if needed; zn=number of atoms in all result cells (if they stay homogeneous)
-  GA(z,yt,zn,p+yr,0L); ICPY(AS(z),s,p); ICPY(p+AS(z),ys,yr);  // allocate output area, move in long frame followed by result-shape
+  GA0(z,yt,zn,p+yr,0L); ICPY(AS(z),s,p); ICPY(p+AS(z),ys,yr);  // allocate output area, move in long frame followed by result-shape
   if(mn){zv=CAVn(p+yr,z); MC(zv,AV(y),k);}   // If there was a first cell, copy it in
   // Establish the point we will free to after each call.  This must be after the allocated result area, and
   // after the starting result cell.  After we call the verb we will free up what it allocated, until we have to

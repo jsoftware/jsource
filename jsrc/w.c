@@ -114,7 +114,8 @@ DF1(jtwords){F12IP;A t,*x,z;C*s;I k,n,*y;
 
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
  p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; m+=(b^1)|p; p=((b^1)|p)^1;);  // should just take half the # '
- if(0==m)R aqq;   // Use shared block for ''   scaf how about ' '?
+ if(0==m)R aqq;   // Use shared block for ''
+ if(1==m){if(s[0]==' ')R chrspace; if(s[0]==':')R chrcolon;}  // if we have a block for a single character, use it
  GATV0(z,LIT,m,1!=m); x=CAVn(1!=m,z);
  p=0; t=s; DQ(n-2, *x=c=*++t; b=c==CQUOTE; x+=(b^1)|p; p=((b^1)|p)^1;);  // This may overstore by 1 character but that's OK because LIT types have allocated space at the end
  R z;

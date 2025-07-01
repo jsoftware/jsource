@@ -50,7 +50,7 @@ minmaxct =. (((,. a. i. -.&({.a.))~    0 4&+"0@(4&*)) I.@(({.a.)&~:)) (#: i. 16)
 NB. Adverb.  m is max gap,max spread,max ct.  Resulting verb replaces each mmc with a new mmc: the last one stays as is, and each earlier
 NB. one either coalesces to the tail, if all conditions are are right, giving an mmc with the same start as the tail; or stays unchanged to start
 NB. a new tail.  After that, we keep the first mmc at each ending position
-makecoal =: {{ (#~ ~:@:(1&{"1)) @: ((00&{@],01&{@[,+/&{:)^:([: *./ m >: (1 _1 1 * 1 0 2&{)@] + _1 1 1&*@[)~/\.) }}  NB. old start-new end=gap, old end-new start=spread, sum of ct=new ct
+makecoal =. {{ (#~ ~:@:(1&{"1)) @: ((00&{@],01&{@[,+/&{:)^:([: *./ m >: (1 _1 1 * 1 0 2&{)@] + _1 1 1&*@[)~/\.) }}  NB. old start-new end=gap, old end-new start=spread, sum of ct=new ct
 
 maxstripewidth =. 32 <.^:(1=#rowmasks) <. (+/ {:"1 minmaxct) % +:^:(>&1) 1 T. ''  NB. Limit width of stripe to leave at least 2 stripes per thread (unless single-threaded), but max 32 if only one OP to prevent result code from lagging
 
@@ -68,7 +68,7 @@ NB. obsolete Qkt  NB. scaf
 }}
 55 T."1 i. 0 ,~ 1 T. ''
 
-1: 0!:_1'$'
+1: 0!:_1'#'
 NB. 1 stripe
 Qkt =: (15!:18) 11 c. 19 20 $ 0.
 rm =. ,< 18 {. 1 0 1 1 0 1 1 1 0 1
@@ -108,7 +108,7 @@ rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =. , <"1 ] ,1
 cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
-NB.$
+NB.#
 
 NB. 2 overlapping OPs that will overrun a single thread
 Qkt =: (15!:18) 11 c. 1004 132 $ 0.

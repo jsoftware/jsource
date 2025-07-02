@@ -3330,7 +3330,7 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
   US nofsts;  // index to the offset pointer after the last offset/val has been processed
  } opinfo;  // info for each op
 
-// the processing loop for one core.  We take groups of rows, in order
+// the processing loop for one core.  We take stripes, in order of decresing computational weight
 static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  // transfer everything out of ctx into local names
 #define YC(x) typeof(ctx->x) x=ctx->x;
@@ -3458,9 +3458,7 @@ finmask:;
 
   // ops ready, now calculate the entire stripe
   I releasedelaythreadedstripe=aops->chain==0?0:releasedelaythreaded;  // throttle info for this stripe.  If only 1 active OP, don't throttle anything
-  while(aops){  // keep processing rows as long as there is an active op
-   // minnextrow is set with the starting row for the new 8block
-
+  while(aops){  // keep processing rows as long as there is an active op.  minnextrow is set with the starting row for the new 8block
    // loop to process one 8block
    I b8qktrow=(I4)(ringdctrlb8>>RINGMINNEXTROWX); ringdctrlb8|=RINGMINNEXTROWINIT;  // remember starting row# in qkt = start of 8 window
 // obsolete printf("starting 8block at row %lld\n, ring b8=%lld\n", b8qktrow,ringdctrlb8&RINGB8STARTMASK);
@@ -3514,12 +3512,12 @@ finmask:;
       _mm_storeu_pd((D*)((I)r0+o1),_mm256_castpd256_pd128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castpd256_pd128(h2l2h3l3));   // store 1&3 - 3 must be last because the others may have the same offset
      }while((andx+=(RESBLKE*sizeof(aof[0])))<alen);  // end after last block
 
-     // send a few values to Qkt
+     // send a few values to Qkt if enough time has elapsed
      ringdctrlb8+=andx<<RINGDCTX;  // add the number of blocks we processed.  When the total goes nonnegative we can release again
      if(releaseblockmask>(UI)REPSGN(ringdctrlb8)){  // if there are released values...  (mask>0 and delayct nonneg)
       releasect=RELEASEBLOCKCT;  // set releasect to the number of blocks to take.  We will stop when the row is empty in any case
       ringdctrlb8+=releasedelayct0;  // add delay, keeping credit for extra time spent in storing into ring
-releaserow:;  // entered from below to drain the ring, either on buffer-full or at end-of-operation.  releasect is set to a high value in that case
+releaserow:;  // entered from below to drain the ring, either on buffer-full or at end-of-operation.  releasect is set to high-value in that case
       __m256d *releaseringbase=(__m256d*)ring[(I)releaseqktringbasecurr&(RINGROWS-1)];  // get base address in ring
       __m256d *releaseqkbase=(__m256d*)((I)releaseqktringbasecurr&-RINGROWS);  // get base address in Qkt
 // obsolete printf(" - release ring row %lld to addr %p, mask=0x%llx, releasect=%lld \n",(I)releaseqktringbasecurr&(RINGROWS-1),releaseqkbase,releaseblockmask,releasect);
@@ -3544,7 +3542,7 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
        if((releaseblockmask&=(releaseblockmask-1))==0)goto rowfin;  // advance to next block, exit if none
       }while(--releasect);  // could use PEXT & block mask to avoid need for releasect here
 
-      if(0){rowfin:;  // come here when a row has been fully sent to Qkt
+      if(0){rowfin:;  // come here when a row has been fully sent to Qkt  releaseblockmask==0 in open code always means nothing to release
        I relstart=(ringdctrlb8&RINGRELSTARTMASK)>>RINGRELSTARTX;  // extract ending release row#
 // obsolete printf("row %lld release complete ",relstart);
        releaserowmask[relstart]=0;  // when we finish a row, we must leave it with an empty mask
@@ -3578,14 +3576,13 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
    UI8 skiprows=0;  // mask of empty rows that must be added to the end
    DONOUNROLL(B8ROWS,
     skiprows=(skiprows&-RINGROWS)+(I)releaseqktringbase[b8start];  // remember new row in case we skip it
-    releaseqktringbase[sx]=(__m256d*)(qktrcol+(I)releaseqktringbase[b8start]); UI8 msk=releaserowmask[b8start];
-    releaserowmask[sx]=msk; sx=(sx+(msk>0))&(RINGROWS-1); b8start=(b8start+1)&(RINGROWS-1); qktrcol+=qktncols*sizeof(E);
+    releaseqktringbase[sx]=(__m256d*)(qktrcol+(I)releaseqktringbase[b8start]); UI8 msk=releaserowmask[sx]=releaserowmask[b8start];  // set ringbase/mask in output ring, which are all that is needed to update Qkt
+    sx=(sx+(msk>0))&(RINGROWS-1); b8start=(b8start+1)&(RINGROWS-1); qktrcol+=qktncols*sizeof(E);  // advance to next input/output positions, and Qkt base
     skiprows<<=((msk>0)^1)<<3;  // if we skip the row, shift it up to safety (8 bits)
    )
-   // rows [sx,b8start) were skipped: store the skipped row, clearing the mask and qkt base.  This returns the rows to the pool
-   while(b8start!=sx){skiprows>>=8; b8start=(b8start-1)&(RINGROWS-1); releaserowmask[b8start]=0; releaseqktringbase[b8start]=(__m256d*)(skiprows&(RINGROWS-1));}
-   // b8start has been advanced over all the nonskipped rows, which releases them.
-   ringdctrlb8=(ringdctrlb8&~RINGB8STARTMASK)+b8start;  // install b8start in portmanteau
+   // rows [sx,b8start) were skipped: store the skipped row, clearing the mask and qkt base.  This returns the skipped rows to the pool
+   while(b8start!=sx){skiprows>>=8; b8start=(b8start-1)&(RINGROWS-1); releaserowmask[b8start]=0; releaseqktringbase[b8start]=(__m256d*)(skiprows&(RINGROWS-1));}   // preserve row# mapped to this output-ring slot
+   ringdctrlb8=(ringdctrlb8&~RINGB8STARTMASK)+b8start;  // b8start has been advanced over all the nonskipped rows.  Put it into the portmanteau, which releases them
 // obsolete printf("8block released, ending at0x%llx ", b8start);
    if(releaseblockmask==0){releaseblockmask=releaserowmask[origb8]; releaseqktringbasecurr=releaseqktringbase[origb8]; ringdctrlb8&=~RINGDCTMASK;}  // if release queue was empty, move first row to the release variables.  blockmask=0 means no work.
       // delayct has been incrementing continuously, perhaps overflowing - clear it to start releasing

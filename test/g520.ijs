@@ -136,6 +136,7 @@ createops =: <"1 @: |: @: createop
 
 NB. x is #threads to use.  y is rcmv of batch of pivots.  result is (time old,time new), but aborting on mismatch of result
 
+NB. 13!:8 ] 4   NB. used for testing
 
 NB.$     end of 64-bit-only
 
@@ -2602,7 +2603,7 @@ NB. -----------------
 ({&1. 2 (~: 15!:19)~ 15!:19) $0    NB. If a is not inplaceable, we cannot change its type
 
  
-4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog cm cv copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms Qkt qktcopy qpmulvecatom qres qy res rm rv run128_9 savx savy savref savres savspr setnworkers'
+4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog cm createop createops cv copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms Qkt qktcopy qpmulvecatom qres qy res rm rv run128_9 savx savy savref savres savspr setnworkers'
 4!:55 ;:'jot k l n p prod q r s v x y z zb zz '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

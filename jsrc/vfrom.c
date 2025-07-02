@@ -3477,7 +3477,7 @@ finmask:;
      releaserowmask[releasex]|=currop->rbmask;  // make note of the resultblocks that will be modified by this row
      US *aof=&stripeofst[currop->ndxvalofst]; __m256d *ava=(__m256d*)&((E*)stripe0213)[currop->ndxvalofst]; I alen=currop->nofsts;  // loop boundaries for processing the row of the stripe
      __m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes
-     currop->colndxahead=currop->acolndxs[rowindex++]; currop->colvalahead=currop->acolvals[rowindex];  // read ahead for next row
+     currop->colndxahead=currop->acolndxs[++rowindex]; currop->colvalahead=currop->acolvals[rowindex];  // read ahead for next row
 
      // Calculate one row of the op
      I andx=0;  // counts in steps of RESBLKE*sizeof(one offset).  With this stride we can use andx to point to offsets and andx*sizeof(E)/sizeof(one offset) (=8) to point to values

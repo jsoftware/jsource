@@ -15,6 +15,7 @@ NB. colmasks is list of boxes, one per pivot, with a 1 in the position of each c
 NB.     This specifies the non0 values in the pivot column after discarding the pivot rows of the batch
 NB. colvalues is, for each pivot,  #&(pivot column)&.> colmask as above
 NB. threshold is near0 threshold for results
+NB. Result is time for the operation, with the name updated
 batchop =: {{
 name =. 0 {:: y
 NB. Because of the poor design of 128!:22, we have to know the name exactly
@@ -24,9 +25,13 @@ rcmv =. 3 4 1 2 { y  NB. mask/values for rows/columns, transposing for 128!:22 w
 assert. (= {.) $&.> rcmv  NB. must have same shape
 assert. (<,1) ~: #@$&.> rcmv  NB. all lists
 
-for_p. 2 2 $"1 |: > rcmv do. iqkt =. arg 128!:22 iqkt [ arg__   =: -&.>&.(3&{) ((I.&.> {."1 p),{:"1 p),<0.0 end.  NB. no threshold for intermediate results, and negate the op, to match 128!:14.
+t =. 0  NB. init total time
+for_p. 2 2 $"1 |: > rcmv do.
+  arg =. -&.>&.(3&{) ((I.&.> {."1 p),{:"1 p),<0.0  NB. no threshold for intermediate results, and negate the op, to match 128!:14.
+  t =. t + 6!:2 'iqkt =. arg 128!:22 iqkt'
+end.
 (name) =: 15!:18 iqkt * (name~ ~:!.0 iqkt) *: (threshold >!.0 | 8 c. iqkt)  NB. set changed values to 0 if they went below threshold 
-NB. Return the modified qkt, in case anyone wants it
+t
 }}
 
 NB. 'col' means pivot column, which is horizontal in Qkt.  'row' is pivot row in Qk, which comes from a col of Qkt.
@@ -38,6 +43,7 @@ NB. colmasks is list of boxes, one per pivot, with a 1 in the position of each c
 NB.     This specifies the non0 values in the pivot column after discarding the pivot rows of the batch
 NB. colvalues is, for each pivot,  #&(pivot column)&.> colmask as above
 NB. threshold is the near0 threshold for results
+NB. Result is elapsed time.  name is modified
 batchopndx =: {{
 0 batchopndx y
 :
@@ -63,10 +69,12 @@ stripes =. 0 1{"1 minmaxct  NB. (start,end+1) for each stripe
 comploads =. +/ (+/@> colmasks) * (,.@(-~/\)"1 stripes)&(+/;.0)@> rowmasks    NB. table of (start,len) of each stripe; for each column, count 1s in each stripe; weight by #rows in each op; sum by stripes
 NB. obsolete qprintf 'Qkt '
 NB. obsolete qprintf'stripes comploads '
-debugopts 128!:14 y,stripes;(\:comploads)  NB. Run the pivots.  Result is name~
-NB. obsolete Qkt  NB. scaf
+6!:2 'debugopts 128!:14 y,stripes;(\:comploads)'  NB. Run the pivots.  Result is time; name is modified
 }}
+
 55 T."1 i. 0 ,~ 1 T. ''
+
+compvers =. ".@'Qkt' -: ".@'qktcopy'  NB. compare the temp vars we use for the two version
 
 1: 0!:_1'#'
 NB. 1 stripe
@@ -75,7 +83,7 @@ rm =. ,< 18 {. 1 0 1 1 0 1 1 1 0 1
 rv =. (11 c. I.)&.> rm
 cm =. ,< 19 {. 0 1 0 1 1
 cv =. (11 c. 1000 + I.)&.> cm
-(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+(batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 2 stripes
 Qkt =: (15!:18) 11 c. 19 20 $ 0.
@@ -83,7 +91,7 @@ rm =. ,< 18 {. 1 0 1 1 0 0 0 0 0 0 0 0 0 1 1 1 0 1
 rv =. (11 c. 1 + I.)&.> rm
 cm =. ,< 19 {. 0 1 0 1 1
 cv =. (11 c. 1000 + I.)&.> cm
-(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+(batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 2 OPs
 Qkt =: (15!:18) 11 c. 19 20 $ 0.
@@ -91,7 +99,7 @@ rm =. <"1 (18) {."1 ]  1 0 1 1 0 0 0 0 0 1 1 1 0 1 ,: 0 1 1 1 0 0 0 0 0 0 0 1 0 
 rv =. 0 100 (11 c. (+ I.))&.> rm
 cm =. <"1 (19) {."1 ]  0 1 0 1 1 ,: 1 1 0 1 0 0 1
 cv =. 0 1000 (11 c. (+ I.))&.> cm
-(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+(batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 1 tall thin OP
 Qkt =: (15!:18) 11 c. 1003 20 $ 0.
@@ -99,7 +107,7 @@ rm =. , <"1 (18) {."1 ]  0 1
 rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =. , <"1 (1001) {."1 ]  0 , 1000$1
 cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
-(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+(batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 1 wide short OP
 Qkt =: (15!:18) 11 c. 20 1004 $ 0.
@@ -107,7 +115,7 @@ rm =. , <"1 ] 0 , 1000$1
 rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =. , <"1 ] ,1
 cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
-(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+(batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 NB.#
 
 NB. 2 overlapping OPs that will overrun a single thread
@@ -116,7 +124,18 @@ rm =. , <"1 ] 2 128$1
 rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =. , <"1 ] 2 1000$1
 cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
-(batchopndx@('Qkt'&;) -: batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+(batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+
+setnworkers =: {{ while. 1 T. '' do. 55 T. '' end. for. y#0 do. 0 T. '' end. 1 }}   NB. ensure there are exactly y worker threads
+
+NB. y is density of non0 (col,row).  Result is rcmv for batchndx.  Qkt exists, and we use its shape
+createop =: {{ }}"1
+
+NB. y is table of densities, result is rcmv for the multiple pivots
+createops =: <"1 @: |: @: createop
+
+NB. x is #threads to use.  y is rcmv of batch of pivots.  result is (time old,time new), but aborting on mismatch of result
+
 
 NB.$     end of 64-bit-only
 
@@ -2583,7 +2602,7 @@ NB. -----------------
 ({&1. 2 (~: 15!:19)~ 15!:19) $0    NB. If a is not inplaceable, we cannot change its type
 
  
-4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog cm cv copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms Qkt qktcopy qpmulvecatom qres qy res rm rv run128_9 savx savy savref savres savspr'
+4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog cm cv copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms Qkt qktcopy qpmulvecatom qres qy res rm rv run128_9 savx savy savref savres savspr setnworkers'
 4!:55 ;:'jot k l n p prod q r s v x y z zb zz '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

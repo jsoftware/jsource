@@ -226,9 +226,9 @@ XF2(jtxroota){ // a %: w (optionally with <. or >.)
  X z0, a0= XAV(a)[0], w0= XAV(w)[0];
  if (0==XSGN(a0)) {
   if (0==XSGN(w0)) {
-   z0= X0;
+   z0=X0;
   } else if (ISX1(w0)) {
-   z0= X1;
+   z0=X1;
   } else ASSERT(0, EWIRR);
  } else {
   // ASSERT(0<XSGN(w0)||1&XLIMB0(a0), EWIMAG);
@@ -241,9 +241,9 @@ XF2(jtxroota){ // a %: w (optionally with <. or >.)
    case XMFLR: if (mpz0->_mp_size<0) jmpz_sub(mpz0, mpz0, mpX1); break;
    case XMCEIL: if (mpz0->_mp_size>0) jmpz_add(mpz0, mpz0, mpX1); break;
    }
-  z0= Xmp(z0);
+  z0=Xmp(z0);
  }
- A z;GAT0(z,XNUM,1L,0L); XAVn(0L,z)[0]= z0;
+ A z;GAT0(z,XNUM,1,0); XAVn(0L,z)[0]= z0;
  EPILOG(z);
 }
 XF1(jtxfact){ // !w

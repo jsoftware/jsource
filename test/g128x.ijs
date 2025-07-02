@@ -89,24 +89,15 @@ t=: 3 : 0''
 if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
   EMPTY return.
 end.
-c=. 9!:56'cblas'
 for_i. i.15 do.
- 0(9!:56)'cblas'
  a1=. 128!:10 r=. (1000x ?@$~ ,~) i
  assert. r -: (0&{:: /:~ lrtoa@(1&{::)) a1                     NB. dev/lu rational
  b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) _1&x: &.> a1  NB. dev/lu rational
  assert. 1e_4 > b
  a2=. 128!:10 r1=. _1&x: r
- b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a2   NB. nocblas  double
+ b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a2
  assert. 1e_4 > b
- 1(9!:56)'cblas'
- if. 0 [ (9!:56)'cblas' do.
- a3=. 128!:10 r1
- b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a3   NB. cblas  double
- assert. 1e_4 > b
- end.
 end.
-c(9!:56)'cblas'
 EMPTY
 )
 
@@ -151,18 +142,13 @@ if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
 end.
 echo 9!:14''
 echo '128!:10  cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
-c=. 9!:56'cblas'
-0(9!:56)'cblas'
 t IF64{250 500
 if. (9!:56)'fma' do. NB. otherwise too slow
   t IF64{500 1000
 end.
-1(9!:56)'cblas'
 if. (9!:56)'cblas' do.
-  t IF64{250 500
   t IF64{500 1000
 end.
-c(9!:56)'cblas'
 EMPTY
 )
 

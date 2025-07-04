@@ -51,7 +51,7 @@ debugopts =. x
 'name rowmasks rowvalues colmasks colvalues threshold' =. y
 NB. Find the vertical stripes. 
 
-minmaxct =. (((,. a. i. -.&({.a.))~    0 4&+"0@(4&*)) I.@(({.a.)&~:)) (#: i. 16) (i. { a. {~ +/"1@[) _ 4 $!.0!.>. > +.&.>/ rowmasks  NB. bucket by 4; get ct (as char); create mmc from position & ct
+minmaxct =. (((,. a. i. -.&({.a.))~    0 4&+"0@(4&*)) I.@(({.a.)&~:)) (#: i. 16) (i. { a. {~ +/"1@[) _ 4 $!.0!.>. +./ > rowmasks  NB. bucket by 4; get ct (as char); create mmc from position & ct
 
 NB. Adverb.  m is max gap,max spread,max ct.  Resulting verb replaces each mmc with a new mmc: the last one stays as is, and each earlier
 NB. one either coalesces to the tail, if all conditions are are right, giving an mmc with the same start as the tail; or stays unchanged to start
@@ -116,7 +116,6 @@ rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =. , <"1 ] ,1
 cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
-NB.#
 
 NB. 2 overlapping OPs that will overrun a single thread
 Qkt =: (15!:18) 11 c. 1004 132 $ 0.
@@ -125,18 +124,39 @@ rv =. , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =. , <"1 ] 2 1000$1
 cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+NB.#
 
 setnworkers =: {{ while. 1 T. '' do. 55 T. '' end. for. y#0 do. 0 T. '' end. 1 }}   NB. ensure there are exactly y worker threads
 
-NB. y is density of non0 (col,row).  Result is rcmv for batchndx.  Qkt exists, and we use its shape
-createop =: {{ }}"1
+NB. y is density of non0 (col,row).  Result is rcmv for batchndx (single-boxed).  Qkt exists, and we use its shape
+createop =: {{
+rc =. y (> ?@$&0)&.>&|. (2 ?@$ 4) -~ $Qkt  NB. masks for r and c
+, (,. (11 c. 0 ?@$~ +/)&.>) rc  NB. create a value for each mask bit, order as rm,rv,cm,cv
+}}"1
 
-NB. y is table of densities, result is rcmv for the multiple pivots
-createops =: <"1 @: |: @: createop
+NB. x is #worker threads to use.  y is rcmvt of batch of pivots.  Qkt is set.  result is (time old,time new), but aborting on mismatch of result
+mtpivot =: {{
+mtx__ =: x [ mty__ =: y
+setnworkers x   NB. Use specified # workers
+qktcopy =: memu Qkt
+ot =. batchop 'qktcopy';y
+nt =. batchopndx 'Qkt';y
+assert. 1e_20 > <./ , | Qkt -&(8&c.) qktcopy  NB. results should be close
+ot,nt  NB. return times
+}}"0 1
 
-NB. x is #threads to use.  y is rcmv of batch of pivots.  result is (time old,time new), but aborting on mismatch of result
+NB. x is (max#worker threads to use).  y is (shape of Qkt);(table of densities);threshold.  Result is (table of old times (#threads,#pivots)),:(table of new times), but aborting on mismatch of result
+mtpivottbl =: {{
+'qkts dens thresh' =. y  NB. extract parms
+qkts =. >.&.(%&4)&.(1&{) qkts  NB. round row-len up to cacheline
+Qkt =: (15!:18) 11 c. qkts $ 0   NB. Allocate Qkt
+ops =. createop dens   NB. create all the ops, as a table of rm,rv,cm,cv
+|: ((i. >: x) mtpivot (thresh (,<)~ <"1@:|:)@])\ ops  NB. all pivot-batches, producing (#pivots)x(#threads)x(old,new)
+}}
 
-NB. 13!:8 ] 4   NB. used for testing
+res =: 0 mtpivottbl 20 20;(,:0.9 0.9);0.0
+
+13!:8 ] 4   NB. used for testing
 
 NB.$     end of 64-bit-only
 
@@ -2603,7 +2623,7 @@ NB. -----------------
 ({&1. 2 (~: 15!:19)~ 15!:19) $0    NB. If a is not inplaceable, we cannot change its type
 
  
-4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog cm createop createops cv copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j origparms Qkt qktcopy qpmulvecatom qres qy res rm rv run128_9 savx savy savref savres savspr setnworkers'
+4!:55 ;:'a a2 a4 adot1 adot2 sdot0 arg b batchop batchopndx catalog cm createop createops cv copy count e128x19 e128x22 epdefuzzsub exp f fr from ftype i j mtpivot mtpivottbl origparms Qkt qktcopy qpmulvecatom qres qy res rm rv run128_9 savx savy savref savres savspr setnworkers'
 4!:55 ;:'jot k l n p prod q r s v x y z zb zz '
 4!:55 <'abcdefghijabcdefghijabcdefghij0'
 4!:55 <'abcdefghijabcdefghijabcdefghij1'

@@ -93,6 +93,7 @@ for_i. i.15 do.
  a1=. 128!:10 r=. (1000x ?@$~ ,~) i
 echo 'a1 ',":i
 echo 'a2 ',":3!:0 r
+stderr , LF,"1~ ":_1&x: r
  assert. r -: (0&{:: /:~ lrtoa@(1&{::)) a1                     NB. dev/lu rational
  b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) _1&x: &.> a1  NB. dev/lu rational
 echo 'a3 ',":b

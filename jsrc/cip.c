@@ -1133,7 +1133,7 @@ DF1(jtludecompblas){F12IP;PROLOG(823);
  jdgetrf_(&im,&im,DAV(z),&im,pvt,&info);
  if(info){FREE(pvt); ASSERT(!info,EVDOMAIN);}
  I *r=IAV(aresultperm);
- for(int i=wn-1;0<=i;--i){I t; int j;
+ for(int i=0;i<wn;i++){I t; int j;
   if(i==(j= pvt[i]-1))continue;
   t= r[i]; r[i]= r[j]; r[j]= t;
  }
@@ -1157,7 +1157,7 @@ DF1(jtludecompxblas){F12IP;PROLOG(823);
  jzgetrf_(&im,&im,(dcomplex*)ZAV(z),&im,pvt,&info);
  if(info){FREE(pvt); ASSERT(!info,EVDOMAIN);}
  I *r=IAV(aresultperm);
- for(int i=wn-1;0<=i;--i){I t; int j;
+ for(int i=0;i<wn;i++){I t; int j;
   if(i==(j= pvt[i]-1))continue;
   t= r[i]; r[i]= r[j]; r[j]= t;
  }

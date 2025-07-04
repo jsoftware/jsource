@@ -52,11 +52,12 @@ NB. 128!:2 --------------------------------------------------------------
 
 NB. 128!:10 -------------------------------------------------------------
 
-{{
-todiag =: ([`(,.~@i.@#@])`])}
+todiag =: ([`(,.~@i.@#@])`])}  NB. stuff x into diagonal of y
 lrtoa =: (((1. todiag *) +/ . * (* -.)) >/~@i.@#)
-assert. (-: 1&{::@(128!:10)@:lrtoa) 3 3 $ 2 _1 _2 _2 4 _1 _2 _1 3
-assert. (-: 1&{::@(128!:10)@:lrtoa) 4 4  $ 2 _1 _2 5  _2 4 _1 3  _2 _1 3 2  2 1 _2 3
+
+{{
+NB. assert. (-: 1&{::@(128!:10)@:lrtoa) 3 3 $ 2 _1 _2 _2 4 _1 _2 _1 3
+NB. assert. (-: 1&{::@(128!:10)@:lrtoa) 4 4  $ 2 _1 _2 5  _2 4 _1 3  _2 _1 3 2  2 1 _2 3
 NB. ((>./@:,@:-) 1&{::@(128!:10)@:lrtoa)@:>:@:i.@:(,~)"0 i. 20
 t128 =. {{ lrin (>./@:,@:|@:-) out128 =: 1 {:: 128!:10 lrtoa lrin =: y }}
 assert. 1e_15 > >./ t128@(1.&todiag)@:(0.01&*)@:(0 ?@$~ ,~)"0 i. 25
@@ -82,8 +83,7 @@ end.
 }}^:IF64 1 NB. all J64 support EMU_AVX2 emulated fma
 
 NB. LU rational
-todiag =: ([`(,.~@i.@#@])`])}  NB. stuff x into diagonal of y
-lrtoa =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
+lrtoar =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
 
 t=: 3 : 0''
 if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
@@ -91,23 +91,17 @@ if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu')
 end.
 for_i. i.15 do.
  a1=. 128!:10 r=. (1000x ?@$~ ,~) i
-echo 'a1 ',":i
-echo 'a2 ',":3!:0 r
-stderr , LF,"1~ ":_1&x: r
- assert. r -: (0&{:: /:~ lrtoa@(1&{::)) a1                     NB. dev/lu rational
+ assert. r -: (0&{:: /:~ lrtoar@(1&{::)) a1                     NB. dev/lu rational
  b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) _1&x: &.> a1  NB. dev/lu rational
-echo 'a3 ',":b
  assert. 1e_4 > b
  a2=. 128!:10 r1=. _1&x: r
-echo 'a4 ',":3!:0 r1
  b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a2
-echo 'a5 ',":b
  assert. 1e_4 > b
 end.
 EMPTY
 )
 
-(-: (0&{:: /:~ lrtoa@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
+(-: (0&{:: /:~ lrtoar@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
 1: 0 : 0
 sm =. ((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.001 * *:) 1000
@@ -123,21 +117,15 @@ a=. (N,N) ?@$ 1000 1000
 echo '$a ',":$a
 t1=. 6!:2'c1=. 128!:10 a'
 echo 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!:56'cblas')#' cblas'
-mk=. <:/~(i.N)
-p=. 0{::c1 [ lu=. 1{::c1
-u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
 if. IF64 +. 9!:56'cblas' do.
-  assert. 1e_4 > >./ | , a - p { l (+/ .*) u
+  assert. 1e_4 >  >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
 end.
 
 a=. a j. (N,N) ?@$ 1000 1000
 t1=. 6!:2'c1=. 128!:10 a'
 echo 'complex ',(' GFlop ',~ 0j3": 4*(N^3)%(t1)*1e9),((9!:56'cblas')#' cblas')
-mk=. <:/~(i.N)
-p=. 0{::c1 [ lu=. 1{::c1
-u=. mk*lu [ l=. (=/~(i.N))+(-.mk)*lu
 if. 9!:56'cblas' do.
-  assert. 1e_4 > >./ | , a - p { l (+/ .*) u
+  assert. 1e_4 >  >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
 end.
 EMPTY
 )
@@ -158,7 +146,7 @@ end.
 EMPTY
 )
 
-4!:55 ;:'a i q qr r t todiag lrtoa lrin out128 perma s x'
+4!:55 ;:'a i q qr r t todiag lrtoa lrtoar lrin out128 perma s x'
 
 
 

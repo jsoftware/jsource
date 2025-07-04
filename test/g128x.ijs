@@ -91,11 +91,16 @@ if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu')
 end.
 for_i. i.15 do.
  a1=. 128!:10 r=. (1000x ?@$~ ,~) i
+echo 'a1 ',":i0
+echo 'a2 ',":3!:0 r
  assert. r -: (0&{:: /:~ lrtoa@(1&{::)) a1                     NB. dev/lu rational
  b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) _1&x: &.> a1  NB. dev/lu rational
+echo 'a3 ',":b
  assert. 1e_4 > b
  a2=. 128!:10 r1=. _1&x: r
+echo 'a4 ',":3!:0 r1
  b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a2
+echo 'a5 ',":b
  assert. 1e_4 > b
 end.
 EMPTY

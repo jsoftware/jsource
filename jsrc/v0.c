@@ -303,7 +303,7 @@ DF2(jtpoly2){F12IP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*
  ASSERT((-an&((at&NUMERIC+BOX)-1))>=0,EVDOMAIN);  // error if nonnumeric unless degree __ 
  // if we are applying f@:p, revert if not sum-of-powers form
  I postfn=FAV(self)->flag&VFATOPPOLY;  //  index of function to apply after p. 0=none 1=^
- if(b){A*av=AAV(a); // mplr/roots or multinomial
+ if(unlikely(b)){A*av=AAV(a); // mplr/roots or multinomial
   if(postfn)R jtupon2cell(jt,a,w,self);  // revert if ^@:p.   must do before a is modified
   ASSERT(2>=an,EVLENGTH);
   c=1==an?num(1):C(av[0]); a=C(av[1!=an]); // c=mplr, a=roots
@@ -312,7 +312,14 @@ DF2(jtpoly2){F12IP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*
   ASSERT(NUMERIC&(at|AT(c)),EVDOMAIN);
   ASSERT(!AR(c),EVRANK);
   ASSERT(1>=AR(a),EVRANK); if(!AR(a))RZ(a=ravel(a));  // treat atomic a as list
- }  // if mplr/roots form, a has been replaced by the roots and c is the coeff
+ }else if((((at&wt)^INT)+(n^1))==0){  // special case: integer polynomial, integer singleton.  Evaluate integer result, inplace if possible.  Eschew Horner's rule because of carried dependency
+  I pn=1,*av=IAV(a); DQ(an, if(av[i]!=0){pn=i+1; break;})  // pn is degree of polynomial with high 0 terms removed
+  DPMULDECLS I h=av[0],xx=IAV(w)[0],xxi=xx,oflo=0; DO(pn-1, I tt,avv; DPMULD(av[i+1],xxi,tt,goto noint;) if(__builtin_add_overflow(h,tt,&h))goto noint; if(i+1==_n)break; DPMULD(xxi,xx,xxi,goto noint;))
+  if(ASGNINPLACENEG(SGNIF((I)jtfg&~AFLAG(w),JTINPLACEWX),w)<0&&likely(a!=w))za=w;else{GATV(za,INT,AN(w),AR(w),AS(w));}  // inplace if possible (puns AFRO=JTINPLACEWX), otherwise allocate.  Inplace VIRT+UNINCORP is OK if no change of type
+  IAV(za)[0]=h; RETF(za);  // install the value, return
+ noint:; // if overflow, fall through to treat as float
+ }
+ // if mplr/roots form, a has been replaced by the roots and c is the coeff
  t=maxtyped(at,wt); if(b)t=maxtyped(t,AT(c)); if(!(t&XNUM+RAT))t=maxtyped(t,FL);  // promote B01/INT to FL
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
  if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtfg=(J)(intptr_t)((I)jtfg|JTINPLACEW);} x=DAV(w); wz=ZAV(w);

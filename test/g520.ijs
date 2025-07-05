@@ -156,7 +156,7 @@ ops =. createop dens   NB. create all the ops, as a table of rm,rv,cm,cv
 
 res =: 0 mtpivottbl 20 20;(,:0.9 0.9);0.0
 
-13!:8 ] 4   NB. used for testing
+NB. 13!:8 ] 4   NB. used for testing
 
 NB.$     end of 64-bit-only
 

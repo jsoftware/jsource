@@ -1118,9 +1118,9 @@ DF1(jtludecompg){F12IP;PROLOG(823);
 }
 
 // LAPACK version
-// 128!:10 LU decomposition for square real arrays LUP=A
-// returns permutation ; L+U-I (Doolittle form)
-// the ith element of the permutation is the original row of row i of LU
+// 128!:10 LU decomposition for square real arrays LU=P{A
+// returns permutation P ; L+U-I (Doolittle form)
+// the ith element of the permutation is the original row# in A of row i of LU
 DF1(jtludecompblas){F12IP;PROLOG(823);
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
@@ -1142,9 +1142,9 @@ DF1(jtludecompblas){F12IP;PROLOG(823);
 }
 
 // LAPACK version
-// 128!:10 LU decomposition for square complex arrays LUP=A
-// returns permutation ; L+U-I (Doolittle form)
-// the ith element of the permutation is the original row of row i of LU
+// 128!:10 LU decomposition for square complex arrays LU=P{A
+// returns permutation P ; L+U-I (Doolittle form)
+// the ith element of the permutation is the original row# in A of row i of LU
 DF1(jtludecompxblas){F12IP;PROLOG(823);
  ASSERT(AR(w)>=2,EVRANK);   // require rank>=2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // matrix must be square
@@ -1165,9 +1165,9 @@ DF1(jtludecompxblas){F12IP;PROLOG(823);
  EPILOG(jlink(aresultperm,cant1(z)));
 }
 
-// 128!:10 LU decomposition for square real arrays LUP=A
-// returns permutation ; L+U-I (Doolittle form)
-// the ith element of the permutation is the original row of row i of LU
+// 128!:10 LU decomposition for square real arrays LU=P{A
+// returns permutation P ; L+U-I (Doolittle form)
+// the ith element of the permutation is the original row# in A of row i of LU
 // Bivalent.  a, if given, is the sequence of thresholds to try
 DF2(jtludecomp){F12IP;PROLOG(823);
  static D pthresh[2]={1e-6,0}, *pivotthresh; I npivotthresh, curpivotthreshx;  // list of successive thresholds for pivots, last one usually 0.0

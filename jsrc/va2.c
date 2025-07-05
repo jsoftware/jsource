@@ -56,7 +56,7 @@ INLINE static A jtssingleton(J jt,A a,A w,I af,I at,I wt,A self){
  // because it makes the assignment skip the free
  // See if we can inplace an assignment.  That is always a good idea, though rare
  if(unlikely((2*(a==z)+(w==z))&jtfg)){   // one of the args is being reassigned
-  if(likely((AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(z))==0)){goto getzv;}   // mustn't modify VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
+  if(likely((AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(z))==0)){goto getzv;}   // mustn't modify type of VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
  }
  if(awip&=jtfg){z=awip&JTINPLACEW?w:a;   // block is abandoned inplaceable, : pick it.  Priority to w
   if(likely((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0))goto getzv;  // not disallowed and correct rank: use it

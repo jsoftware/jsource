@@ -3313,6 +3313,7 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
  D threshold;  // Result |values| below this are clamped to 0
  // atomics, in new cacheline
  I4 colndxct;  // next column index to create, initialized to nthreads
+ I4 colndx9ct;  // early completion of column indexes (first 9 values created), inited to nopct and decremented
  I4 resvx;   // next stripe to reserve, initialized to nthreads
 };
 
@@ -3346,30 +3347,38 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  US stripeofst[MAXOP*MAXNON0+3];  // byte offset to each non0 value in the stripe, for loading the ring value.  Allocated in groups of 4.  +3 because of overstore
  __attribute__ ((aligned (CACHELINESIZE))) __m256d stripe0213[MAXOP*MAXNON0/(sizeof(__m256d)/sizeof(E))];  // row values for stripe, 0213
 
-  // values in the stripe for each op, in format needed
+ // values in the stripe for each op, in format needed
+ __m256d *releaseqktringbase[RINGROWS];  // base of Qkt region mapped to ring.  Must be on RBLOCK boundary; low bits are the real ring row containing the values.  rows are shuffled to compact empty rows.
+ UI8 releaserowmask[RINGROWS];  // mask of all the resultblocks that have been modified in this line  Must be cleared after each release, i. e. 0 when starting new 8block
 
-  __m256d *releaseqktringbase[RINGROWS];  // base of Qkt region mapped to ring.  Must be on RBLOCK boundary; low bits are the real ring row containing the values.  rows are shuffled to compact empty rows.
-  UI8 releaserowmask[RINGROWS];  // mask of all the resultblocks that have been modified in this line  Must be cleared after each release, i. e. 0 when starting new 8block
-
+ // Before calculating ops, the threads need to calculate indexes for each op, to wit (1) for each stripe, the number of values whose indexes are before the stripe; (2) the indexes of the non0s in the column.
+ // The entire stripe index is needed before any calculations can be made, but we can get started with the first 8block as soon as we have the first 9 column indexes of the ops in a stripe.  We do the 2 tasks
+ // per op by arbitrating for them (using thread index the first time); we signal first completion when we have written 9 column indexes in the column, and then final completion after finishing the column index.
+ // Each task can run its first 8block after first completion, and then must wait for final completion for the rest.
  I opno=ti;  // op# to create the index for.  First one is our thread#
- while(opno<nops){A ma;  // if the first reservation is too high, we have more threads than ops.  skip it then
+ while(opno<2*nops){A ma;  // if the first reservation is too high, we have more threads than ops.  skip it then
   // calculate column index for the op - the offset into mask/cols as we process each stripe
-  I ncvals=AN(opcolvals[opno]); __m256i *cmask=(__m256i*)BAV(opcolmasks[opno]);  // # non0s left in op column, pointer to mask
-  GATV0(ma,INT4,ncvals+1,1)  // allocate space for index (incl 1 sentinel), on cacheline boundary
-  I4 *mav=I4AV1(ma); __atomic_store_n(&(*colndxs)[opno],mav,__ATOMIC_RELEASE);  // Get address of index, publish the address to other threads.  Lots of false sharing on this store!
-  I fetchndx=0;  // index of first bit in this word
-  while(1){  // till we have stored all the index
-   I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_loadu_si256(cmask),_mm256_setzero_si256())); ++cmask;  // fetch and step over next 32 bits.  Overfetch possible and OK
-   while(bits){*mav++=fetchndx+CTTZI(bits); bits&=bits-1; if(--ncvals<=0)goto finndx;}  // store index for every non0, stop when all done
-   fetchndx+=sizeof(*cmask);  // advance to next mask base, adding 1 for each bit we read
-  }  finndx:;
-  *mav=HIGHVALUEI4;  // install sentinel at end
+  if(opno<nops){
+   // first job: calculate stripe index for the op
+   I bsumtodate=0; C *mask=CAV(oprowmasks[opno]);  // total 1s found, running pointer to mask
+   DO(nstripes-1, I start=(*stripestartend1)[i][0], end=(*stripestartend1)[i][1]-SZI, bsum=0; while(start<end){bsum+=*(I*)&mask[start]; start+=SZI;} bsum+=*(I*)&mask[start]<<(start==end?0:BW/2);
+     bsum+=bsum>>32; bsum+=bsum>>16; bsum+=bsum>>8; bsumtodate+=(C)bsum; __atomic_store_n(&(*opstripebsum)[i][opno],bsumtodate,__ATOMIC_RELEASE);)  // add; if last word incomplete, it must have exactly 32 bits
+   __atomic_store_n(&(*opstripebsum)[nstripes-1][opno],AN(oprowvals[opno]),__ATOMIC_RELEASE);  // infer the length of the last stripe so that we don't have to mask garbage bytes if the mask is short
+   __atomic_fetch_add(&ctx->colndx9ct,-1,__ATOMIC_ACQ_REL);  // the stripe is required for early release
+  }else{
+   opno-=nops;  // convert back to op#
+   I ncvals=AN(opcolvals[opno]); __m256i *cmask=(__m256i*)BAV(opcolmasks[opno]);  // # non0s left in op column, pointer to mask
+   GATV0(ma,INT4,ncvals+1,1)  // allocate space for index (incl 1 sentinel), on cacheline boundary
+   I4 *mav=I4AV1(ma), *mavn=mav+9; __atomic_store_n(&(*colndxs)[opno],mav,__ATOMIC_RELEASE);  // Get address of index, publish the address to other threads.  Lots of false sharing on this store!
+   I fetchndx=0;  // index of first bit in this word
+   while(1){  // till we have stored all the index
+    I bits=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_loadu_si256(cmask),_mm256_setzero_si256())); ++cmask;  // fetch and step over next 32 bits.  Overfetch possible and OK
+    while(bits){*mav++=fetchndx+CTTZI(bits); if(unlikely(mav==mavn))__atomic_fetch_add(&ctx->colndx9ct,-1,__ATOMIC_ACQ_REL); bits&=bits-1; if(--ncvals<=0)goto finndx;}  // store index for every non0, stop when all done.  Signal first completion after prefix
+    fetchndx+=sizeof(*cmask);  // advance to next mask base, adding 1 for each bit we read
+   }  finndx:;
+   if(unlikely(mav<mavn))__atomic_fetch_add(&ctx->colndx9ct,-1,__ATOMIC_ACQ_REL); *mav=HIGHVALUEI4;  // Signal first completion if we haven't already; install sentinel at end
+  }
 
-  // calculate stripe index for the op
-  I bsumtodate=0; C *mask=CAV(oprowmasks[opno]);  // total 1s found, running pointer to mask
-  DO(nstripes-1, I start=(*stripestartend1)[i][0], end=(*stripestartend1)[i][1]-SZI, bsum=0; while(start<end){bsum+=*(I*)&mask[start]; start+=SZI;} bsum+=*(I*)&mask[start]<<(start==end?0:BW/2);
-    bsum+=bsum>>32; bsum+=bsum>>16; bsum+=bsum>>8; bsumtodate+=(C)bsum; __atomic_store_n(&(*opstripebsum)[i][opno],bsumtodate,__ATOMIC_RELEASE);)  // add; if last word incomplete, it must have exactly 32 bits
-  __atomic_store_n(&(*opstripebsum)[nstripes-1][opno],AN(oprowvals[opno]),__ATOMIC_RELEASE);  // infer the length of the last stripe so that we don't have to mask garbage bytes if the mask is short
   opno=__atomic_fetch_add(&ctx->colndxct,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation, which may be the first one
  }
 
@@ -3381,7 +3390,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  DONOUNROLL(nops, opstat[i].acolvals=EAV(opcolvals[i]);)  // get pointer to values in each column
  __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(Iimin));  // 0x8..0
 
- while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+nops)johnson(20*nthreads);  // delay until indexes are ready (nops ops, plus one failure for each thread).  We allow 1 read every 20ns
+ while(__atomic_load_n(&ctx->colndx9ct,__ATOMIC_ACQUIRE)!=0)johnson(20*nthreads);  // delay until we have early completion on each op.  We allow 1 read every 20ns
 
  DONOUNROLL(nops, opstat[i].acolndxs=(*colndxs)[i]; if((*colndxs)[i]==0)SEGFAULT;)  // scaf  get start address of index for each op.  This is generally coming from another core so no reason to unroll
 
@@ -3396,6 +3405,7 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
  // portmanteau register holding ring status
 #define RINGDCTX 48  // bit position of delayct, which counts USs and goes positive when it is OK to release RELEASEBLOCKCT blocks.  Ends at sign bit
 #define RINGDCTMASK 0xffff000000000000
+#define RINGFINALSYNC 0x40000  // set when we have waited for final completion of all op indexes
 #define RINGNNTX 16  // non-non-temporal flags: for read and write.  0 (default) means non-temporal, 1=cached
 #define RINGNNTREAD ((I)1<<RINGNNTX)
 #define RINGNNTWRITE ((I)2<<RINGNNTX)
@@ -3420,7 +3430,7 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
   for(io=0;io<nops;++io){   // for each op:
    I stripeval0x=unlikely(stripe==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting index of offsets/values in this stripe
    I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
-if(!BETWEENO(ssize,0,MAXNON0))SEGFAULT;
+if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
    if(ssize){    // if this op intersects this stripe...
     opstat[io].rowindex=0; I4 nx=opstat[io].colndxahead=opstat[io].acolndxs[0]; opstat[io].colvalahead=opstat[io].acolvals[0];  // start on first row; prefetch first.
     minnextrow=nx<minnextrow?nx:minnextrow; // Keep track of smallest start value.  The readahead will take a long time, but we do not use minnextrow in this loop 
@@ -3589,6 +3599,8 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
    while(b8start!=sx){skiprows>>=8; b8start=(b8start-1)&(RINGROWS-1); releaserowmask[b8start]=0; releaseqktringbase[b8start]=(__m256d*)(skiprows&(RINGROWS-1));}   // preserve row# mapped to this output-ring slot
    ringdctrlb8=(ringdctrlb8&~RINGB8STARTMASK)+b8start;  // b8start has been advanced over all the nonskipped rows.  Put it into the portmanteau, which releases them
 // obsolete printf("8block released, ending at0x%llx ", b8start);
+   // Now that we have released an 8block, we must wait for final completion on all the op column indexes
+   if(unlikely(!(ringdctrlb8&RINGFINALSYNC))){while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+2*nops)johnson(20*nthreads); ringdctrlb8|=RINGFINALSYNC;}  // delay until indexes are ready (2*nops op indexes, plus one failure for each thread).  We allow 1 read every 20ns
    if(releaseblockmask==0){releaseblockmask=releaserowmask[origb8]; releaseqktringbasecurr=releaseqktringbase[origb8]; ringdctrlb8&=~RINGDCTMASK;}  // if release queue was empty, move first row to the release variables.  blockmask=0 means no work.
       // delayct has been incrementing continuously, perhaps overflowing - clear it to start releasing
    else if(unlikely((((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX))&(RINGROWS-1)))>=(RINGROWS-B8ROWS))){releasect=HIGHVALUEI4; ringdctrlb8&=~RINGDCTMASK; goto releaserow;}  // if ring is full, loop in release to wait for it to drain, and clear delayct to ensure releasing continues
@@ -3600,7 +3612,6 @@ caughtup:;  // here when we have removed the ring-full situation
  }
  if(releaseblockmask){releasect=HIGHVALUEI4; goto releaserow;}  // all stripes done - keep releasing any remnant
 finis:;  // here we have flushed the ring at the end
-
  R 0;
 }
 
@@ -3653,7 +3664,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  box=C(AAV(w)[4]);  // col values
  ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.opcolvals=AAV(box);  // must be list of boxes; save number and address
  DO(opctx.nops, A sb=C(opctx.opcolvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be quadprec no longer than the col
- opctx.colndxct=opctx.resvx=opctx.nthreads;  // each thread will fetch at least once; those with a job# less than nops will fetch again.  When all have missed once, we are synced.
+ opctx.colndxct=opctx.resvx=opctx.nthreads; opctx.colndx9ct=2*opctx.nops;  // each thread will fetch at least once; those with a job# less than nops will fetch again.  When all have missed once, we are synced.  9ct is early completion, counting down, one for stripe index one for top of column index
   // run the operation
  jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtbatchopx,&opctx,opctx.nthreads,0);  // execute on all threads
 

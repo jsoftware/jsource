@@ -136,7 +136,6 @@ rc =. y (> ?@$&0)&.>&|. (2 ?@$ 4) -~ $Qkt  NB. masks for r and c
 
 NB. x is #worker threads to use.  y is rcmvt of batch of pivots.  Qkt is set.  result is (time old,time new), but aborting on mismatch of result
 mtpivot =: {{
-mtx__ =: x [ mty__ =: y
 setnworkers x   NB. Use specified # workers
 qktcopy =: memu Qkt
 ot =. batchop 'qktcopy';y

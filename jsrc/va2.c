@@ -214,6 +214,7 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGII): adv=(D)aiv; wdv=(D)wiv; goto outofresultcvti;
  case SSINGCASE(VA2CBANG-VA2CBW1111,SSINGDD): goto outofresult;
 
+
  case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBB): SSSTORENV((I)(B)aiv|(I)!(B)wiv,z,B01,B) R z;
  case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGBD): SSSTORE((B)aiv?1.0:(zdv=wdv)<0?inf:zdv==0?1:0,z,FL,D) R z;
  case SSINGCASE(VA2CEXP-VA2CBW1111,SSINGDB): SSSTORE((B)wiv?adv:1.0,z,FL,D) R z;
@@ -235,6 +236,36 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGII): goto bitwiseresult;
  case SSINGCASE(VA2CBW1111-VA2CBW1111,SSINGDD): ((D*)jt->shapesink)[0]=wdv; aiv=intforD(jt,adv); wiv=intforD(jt,((D*)jt->shapesink)[0]); goto bitwiseresult;  // hide wdv so it doesn't get allocated to reg requiring save/restore
 
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGBB): aiv=(B)aiv; wiv=(B)wiv; goto rotateresult;
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGBD): aiv=(B)aiv; wiv=intforD(jt,wdv); goto rotateresult;
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGDB): aiv=intforD(jt,adv); wiv=(B)wiv; goto rotateresult;
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGID): wiv=intforD(jt,wdv); goto rotateresult;
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGDI): aiv=intforD(jt,adv); goto rotateresult;
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGBI): aiv=(B)aiv; goto rotateresult;
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGIB): wiv=(B)wiv; goto rotateresult;
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGII): goto rotateresult;
+ case SSINGCASE(VA2CBW10000-VA2CBW1111,SSINGDD): ((D*)jt->shapesink)[0]=wdv; aiv=intforD(jt,adv); wiv=intforD(jt,((D*)jt->shapesink)[0]); goto rotateresult;  // hide wdv so it doesn't get allocated to reg requiring save/restore
+
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGBB): aiv=(B)aiv; wiv=(B)wiv; goto lslresult;
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGBD): aiv=(B)aiv; wiv=intforD(jt,wdv); goto lslresult;
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGDB): aiv=intforD(jt,adv); wiv=(B)wiv; goto lslresult;
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGID): wiv=intforD(jt,wdv); goto lslresult;
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGDI): aiv=intforD(jt,adv); goto lslresult;
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGBI): aiv=(B)aiv; goto lslresult;
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGIB): wiv=(B)wiv; goto lslresult;
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGII): goto lslresult;
+ case SSINGCASE(VA2CBW10001-VA2CBW1111,SSINGDD): ((D*)jt->shapesink)[0]=wdv; aiv=intforD(jt,adv); wiv=intforD(jt,((D*)jt->shapesink)[0]); goto lslresult;  // hide wdv so it doesn't get allocated to reg requiring save/restore
+
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGBB): aiv=(B)aiv; wiv=(B)wiv; goto aslresult;
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGBD): aiv=(B)aiv; wiv=intforD(jt,wdv); goto aslresult;
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGDB): aiv=intforD(jt,adv); wiv=(B)wiv; goto aslresult;
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGID): wiv=intforD(jt,wdv); goto aslresult;
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGDI): aiv=intforD(jt,adv); goto aslresult;
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGBI): aiv=(B)aiv; goto aslresult;
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGIB): wiv=(B)wiv; goto aslresult;
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGII): goto aslresult;
+ case SSINGCASE(VA2CBW10010-VA2CBW1111,SSINGDD): ((D*)jt->shapesink)[0]=wdv; aiv=intforD(jt,adv); wiv=intforD(jt,((D*)jt->shapesink)[0]); goto aslresult;  // hide wdv so it doesn't get allocated to reg requiring save/restore
+
 
  case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBB): ziv=(B)aiv<(B)wiv; goto compareresult;
  case SSINGCASE(VA2CLT-VA2CBW1111,SSINGBD): ziv=TLT((B)aiv,wdv); goto compareresult;
@@ -246,7 +277,6 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CLT-VA2CBW1111,SSINGII): ziv=aiv<wiv; goto compareresult;
  case SSINGCASE(VA2CLT-VA2CBW1111,SSINGDD): ziv=TLT(adv,wdv); goto compareresult;
 
-
  case SSINGCASE(VA2CGT-VA2CBW1111,SSINGBB): ziv=(B)aiv>(B)wiv; goto compareresult;
  case SSINGCASE(VA2CGT-VA2CBW1111,SSINGBD): ziv=TGT((B)aiv,wdv); goto compareresult;
  case SSINGCASE(VA2CGT-VA2CBW1111,SSINGDB): ziv=TGT(adv,(B)wiv); goto compareresult;
@@ -256,7 +286,6 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CGT-VA2CBW1111,SSINGIB): ziv=aiv>(B)wiv; goto compareresult;
  case SSINGCASE(VA2CGT-VA2CBW1111,SSINGII): ziv=aiv>wiv; goto compareresult;
  case SSINGCASE(VA2CGT-VA2CBW1111,SSINGDD): ziv=TGT(adv,wdv); goto compareresult;
-
 
  case SSINGCASE(VA2CLE-VA2CBW1111,SSINGBB): ziv=(B)aiv<=(B)wiv; goto compareresult;
  case SSINGCASE(VA2CLE-VA2CBW1111,SSINGBD): ziv=TLE((B)aiv,wdv); goto compareresult;
@@ -268,7 +297,6 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CLE-VA2CBW1111,SSINGII): ziv=aiv<=wiv; goto compareresult;
  case SSINGCASE(VA2CLE-VA2CBW1111,SSINGDD): ziv=TLE(adv,wdv); goto compareresult;
 
-
  case SSINGCASE(VA2CGE-VA2CBW1111,SSINGBB): ziv=(B)aiv>=(B)wiv; goto compareresult;
  case SSINGCASE(VA2CGE-VA2CBW1111,SSINGBD): ziv=TGE((B)aiv,wdv); goto compareresult;
  case SSINGCASE(VA2CGE-VA2CBW1111,SSINGDB): ziv=TGE(adv,(B)wiv); goto compareresult;
@@ -279,7 +307,6 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CGE-VA2CBW1111,SSINGII): ziv=aiv>=wiv; goto compareresult;
  case SSINGCASE(VA2CGE-VA2CBW1111,SSINGDD): ziv=TGE(adv,wdv); goto compareresult;
 
-
  case SSINGCASE(VA2CNE-VA2CBW1111,SSINGBB): ziv=(B)aiv!=(B)wiv; goto compareresult;
  case SSINGCASE(VA2CNE-VA2CBW1111,SSINGBD): ziv=TNE((B)aiv,wdv); goto compareresult;
  case SSINGCASE(VA2CNE-VA2CBW1111,SSINGDB): ziv=TNE(adv,(B)wiv); goto compareresult; 
@@ -289,7 +316,6 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CNE-VA2CBW1111,SSINGIB): ziv=aiv!=(B)wiv; goto compareresult;
  case SSINGCASE(VA2CNE-VA2CBW1111,SSINGII): ziv=aiv!=wiv; goto compareresult;
  case SSINGCASE(VA2CNE-VA2CBW1111,SSINGDD): ziv=TNE(adv,wdv); goto compareresult;
-
 
  case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGBB): ziv=(B)aiv==(B)wiv; goto compareresult;
  case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGBD): ziv=TEQ((B)aiv,wdv); goto compareresult;
@@ -307,6 +333,7 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CLEABS-VA2CBW1111,SSINGDD): ziv=TLE(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CGEABS-VA2CBW1111,SSINGDD): ziv=TGE(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CGTABS-VA2CBW1111,SSINGDD): ziv=TGT(adv,ABS(wdv)); goto compareresult;
+
 
  case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBB): adv=(B)aiv; wdv=(B)wiv; goto circleresult;
  case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBD): adv=(B)aiv; goto circleresult;
@@ -379,7 +406,23 @@ nozv:;  // here when we have zv or don't need it
  ziv=(I)FAV(self)->lu2.lc-VA2CBW0000;  // mask describing operation.  We refetch because self is needed in a reg and opcode isn't
  RE(0);  // if error on D arg, make sure we abort
  ziv=((aiv&wiv)&REPSGN(SGNIF(ziv,0)))|((aiv&~wiv)&REPSGN(SGNIF(ziv,1)))|((~aiv&wiv)&REPSGN(SGNIF(ziv,2)))|((~aiv&~wiv)&REPSGN(SGNIF(ziv,3)));
+bitwiseexit:;
  SSSTORE(ziv,z,INT,I) R z;
+
+ rotateresult:
+ RE(0);  // if error on D arg, make sure we abort
+ ziv=BW10000(aiv,wiv);  // do the rotate
+ goto bitwiseexit;
+
+ lslresult:
+ RE(0);  // if error on D arg, make sure we abort
+ ziv=BW10001(aiv,wiv);  // do the lsl
+ goto bitwiseexit;
+
+ aslresult:
+ RE(0);  // if error on D arg, make sure we abort
+ ziv=BW10010(aiv,wiv);  // do the rsl
+ goto bitwiseexit;
 
  compareresult:
  if(likely(!z))R num(ziv);  // Don't store into num[], even though it wouldn't change the value - it would invalidate caches.  Only fallthrough is for nonzero rank
@@ -660,6 +703,28 @@ VA va[]={
   {(VF)bw1111II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VCVTIP+VI+VII+VIP},
   {(VF)bw1111II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VCVTIP+VI+VII+VIP}, {0,0}, {(VF)bw1111II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw1111I2I2,VRNONE+VCVTIP+VUNCH+VIP}, {(VF)bw1111I4I4,VRNONE+VCVTIP+VUNCH+VIP}}, 
   &rpsbw1111},
+
+/* 32 b.    */ {
+ {{(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, 
+  {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VIP},     {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP},
+  {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP},
+  {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {0,0}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10000I2I2,VRNONE+VCVTIP+VUNCH+VIP}, {(VF)bw10000I4I4,VRNONE+VCVTIP+VUNCH+VIP}}, 
+  &rpsnull},
+
+/* 33 b.    */ {
+ {{(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, 
+  {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VIP},     {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP},
+  {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP},
+  {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {0,0}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10001I2I2,VRNONE+VCVTIP+VUNCH+VIP}, {(VF)bw10001I4I4,VRNONE+VCVTIP+VUNCH+VIP}}, 
+  &rpsnull},
+
+/* 34 b.    */ {
+ {{(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, 
+  {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VIP},     {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP},
+  {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP},
+  {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {0,0}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VCVTIP+VI+VII+VIP}, {(VF)bw10010I2I2,VRNONE+VCVTIP+VUNCH+VIP}, {(VF)bw10010I4I4,VRNONE+VCVTIP+VUNCH+VIP}}, 
+  &rpsnull},
+
 
    // For Booleans, VIP means 'inplace if rank not specified and there is no frame'
 /* 95 ~: */ {

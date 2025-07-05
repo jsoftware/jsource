@@ -194,18 +194,21 @@
 #define CBW1101    (C)0x7d  // bitwise
 #define CBW1110    (C)0x7e  // bitwise
 #define CBW1111    (C)0x7f  // bitwise
+#define CBW10000   (C)0x80  // bitwise <<>
+#define CBW10001   (C)0x81  // bitwise << unsigned
+#define CBW10010   (C)0x82  // bitwise signed
 
-#define CASGN      (C)0x80       /* 128 200 80 =.                           */
-#define CGASGN     (C)0x81       /* 129 201 81 =:                           */
-#define CLPAR      (C)0x82  // (
-#define CRPAR      (C)0x83  // )
-#define CLEV       (C)0x84  // [.
-#define CDEX       (C)0x85  // ].
-#define CIDENT     (C)0x86  // ]:
-#define CDUMMY     (C)0x87  // no graphic - holds DUMMYSELF, which is used for flags only.  Must be >= 0x80 so will not look like a character
-#define CENQUEUE   (C)0x88  // no graphic - when used in AR, produces a single space.  Used to create recognizable AR to send to eformat from enqueue
-#define CCOLONE    (C)0x89  // : for explicit definition (noun m)
-// 8a-af free
+#define CASGN      (C)0x84       /* 128 200 80 =.                           */
+#define CGASGN     (C)0x85       /* 129 201 81 =:                           */
+#define CLPAR      (C)0x86  // (
+#define CRPAR      (C)0x87  // )
+#define CLEV       (C)0x88  // [.
+#define CDEX       (C)0x89  // ].
+#define CIDENT     (C)0x8a  // ]:
+#define CDUMMY     (C)0x8b  // no graphic - holds DUMMYSELF, which is used for flags only.  Must be >= 0x80 so will not look like a character
+#define CENQUEUE   (C)0x8c  // no graphic - when used in AR, produces a single space.  Used to create recognizable AR to send to eformat from enqueue
+#define CCOLONE    (C)0x8d  // : for explicit definition (noun m)
+// 8e-af free
 #define CEXEC      (C)0xb0       /* 176 260 b0 ".                           */
 #define CGRDOT     (C)0xb2       /* 178 262 b2 `.                           */
 

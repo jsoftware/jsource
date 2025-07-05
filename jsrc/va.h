@@ -171,6 +171,10 @@
 #define BW1110(x,y)     (~( (x)& (y)))
 #define BW1111(x,y)     (-1|(x)|(y))
 
+#define BW10000(x,y)    (((UI)(y)<<((x)&(BW-1)))|((UI)(y)>>(-(x)&(BW-1)))) // left-rotate
+#define BW10001(x,y)    ((x)>=0?((x)>=BW?0:(UI)(y)<<(x)):((x)<=-BW?0:(UI)(y)>>-(x))) // left-shift unsigned
+#define BW10010(x,y)    ((x)>=0?((x)>=BW?0:(I)(y)<<(x)):((x)<=-BW?(I)(y)>>63:(I)(y)>>-(x))) // left-shift signed
+
 
 // value in vaptr[]
 // first part: verbs that are atomic only in the dyad
@@ -190,51 +194,54 @@
 #define VA2CBW1101 14
 #define VA2CBW1110 15
 #define VA2CBW1111 16
-#define VA2CNE 17
-#define VA2CDIV 18
-#define VA2CPLUSCO 19
-#define VA2CPLUSDOT 20
-#define VA2CMINUS 21
-#define VA2CLT 22
-#define VA2CEQ 23
-#define VA2CGT 24
-#define VA2CSTARDOT 25
-#define VA2CSTARCO 26
-#define VA2CGE 27
-#define VA2CLE 28
+#define VA2CBW10000 17
+#define VA2CBW10001 18
+#define VA2CBW10010 19
+#define VA2CNE 20
+#define VA2CDIV 21
+#define VA2CPLUSCO 22
+#define VA2CPLUSDOT 23
+#define VA2CMINUS 24
+#define VA2CLT 25
+#define VA2CEQ 26
+#define VA2CGT 27
+#define VA2CSTARDOT 28
+#define VA2CSTARCO 29
+#define VA2CGE 30
+#define VA2CLE 31
 // shared part: verbs that are atomic in monad and dyad
 // the following are in the same order in va1
-#define VA2CMIN 29
-#define VA2CMAX 30
-#define VA2CPLUS 31
-#define VA2CSTAR 32
-#define VA2CEXP 33
-#define VA2CSTILE 34
-#define VA2CBANG 35
-#define VA2CCIRCLE 36
+#define VA2CMIN 32
+#define VA2CMAX 33
+#define VA2CPLUS 34
+#define VA2CSTAR 35
+#define VA2CEXP 36
+#define VA2CSTILE 37
+#define VA2CBANG 38
+#define VA2CCIRCLE 39
 // the following are used only for execution, not definition, and only for singletons
-#define VA2CEQABS 37  // all the entries in va[] share this block
-#define VA2CNEABS 38
-#define VA2CLTABS 39
-#define VA2CLEABS 40
-#define VA2CGEABS 41
-#define VA2CGTABS 42
+#define VA2CEQABS 40  // all the entries in va[] share this block
+#define VA2CNEABS 41
+#define VA2CLTABS 42
+#define VA2CLEABS 43
+#define VA2CGEABS 44
+#define VA2CGTABS 45
 // end of the dyads
-#define VA1ORIGIN 29 // the start of the monadic section
-#define VA1CMIN 29
-#define VA1CMAX 30
-#define VA1CPLUS 31
-#define VA1CSTAR 32
-#define VA1CEXP 33
-#define VA1CSTILE 34
-#define VA1CBANG 35
-#define VA1CCIRCLE 36
+#define VA1ORIGIN 32 // the start of the monadic section
+#define VA1CMIN 32
+#define VA1CMAX 33
+#define VA1CPLUS 34
+#define VA1CSTAR 35
+#define VA1CEXP 36
+#define VA1CSTILE 37
+#define VA1CBANG 38
+#define VA1CCIRCLE 39
 // verbs atomic only in the monad
-#define VA1CROOT 37
-#define VA1CLOG 38
+#define VA1CROOT 40
+#define VA1CLOG 41
 // extension: verbs that are implemented by calls to the dyad for some precisions, but not all
-#define VA1CNEG 39  // -, which is 0-y except for E
-#define VA1CRECIP 40  // %, which is 1/y except for E
+#define VA1CNEG 42  // -, which is 0-y except for E
+#define VA1CRECIP 43  // %, which is 1/y except for E
 
 
 /*

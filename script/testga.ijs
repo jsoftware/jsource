@@ -79,11 +79,11 @@ lrtoa=. (((1. todiag *) +/ . * (* -.)) >/~@i.@#)
 c=. (9!:56)'cblas'
 0(9!:56)'cblas'
 a=. (128!:10) r
-assert. 1e_4 > | , r - (0&{:: { lrtoa@(1&{::)) a
+assert. 1e_4 > | , r - (0&{:: /:~ lrtoa@(1&{::)) a
 if. 1=c do.
 1(9!:56)'cblas'
 a=. (128!:10) r
-assert. 1e_4 > | , r - (0&{:: { lrtoa@(1&{::)) a
+assert. 1e_4 > | , r - (0&{:: /:~ lrtoa@(1&{::)) a
 end.
 c(9!:56)'cblas'
 EMPTY

@@ -3430,7 +3430,7 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
   for(io=0;io<nops;++io){   // for each op:
    I stripeval0x=unlikely(stripe==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting index of offsets/values in this stripe
    I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
-if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
+if(!BETWEENO(ssize,0,MAXNON0))SEGFAULT;
    if(ssize){    // if this op intersects this stripe...
     opstat[io].rowindex=0; I4 nx=opstat[io].colndxahead=opstat[io].acolndxs[0]; opstat[io].colvalahead=opstat[io].acolvals[0];  // start on first row; prefetch first.
     minnextrow=nx<minnextrow?nx:minnextrow; // Keep track of smallest start value.  The readahead will take a long time, but we do not use minnextrow in this loop 
@@ -3641,6 +3641,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  if(!(AT(box)&FL))RZ(box=cvt(FL,box)); ASSERT(AR(box)==0,EVRANK) opctx.threshold=DAV(box)[0];  // convert to FL
  box=C(AAV(w)[6]);  // stripes
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[1]==2,EVLENGTH) opctx.stripestartend1=(I (*)[][2])IAV(box); opctx.nstripes=AS(box)[0];  // must be INT [][2]
+ DO(opctx.nstripes, ASSERT((*opctx.stripestartend1)[i][1]-(*opctx.stripestartend1)[i][0]<=RINGCOLS,EVLIMIT))   // verify max stripe width not exceeded
  GATV0(box,INT4,opctx.nstripes*MAXOP,1); opctx.opstripebsum=(I4 (*)[][MAXOP])I4AV(box);  // allocate running-index area, save in ctx
  box=C(AAV(w)[7]);  // compgrade
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==opctx.nstripes,EVLENGTH) opctx.stripegrade=IAV(box);  // must be INT [#stripes]
@@ -3653,7 +3654,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  ASSERTSYSGOTO((((I)opctx.qktncols*sizeof(E))&(CACHELINESIZE-1))==0,"accumuland length not a cacheline multiple",exit)  // data must be on cache bdy
  ASSERTSYSGOTO((AC(qkt)-!!((I)qktf&QCFAOWED))==1,"accumuland is aliased",exit);   // count, after removing the ra from syrd, must be 1
  box=C(AAV(w)[1]);  // row masks
- ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) opctx.nops=AN(box); opctx.oprowmasks=AAV(box);  // must be list of boxes; save number and address
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) opctx.nops=AN(box); ASSERT(opctx.nops<=MAXOP,EVLIMIT) opctx.oprowmasks=AAV(box);  // must be list of boxes; save number and address
  DO(opctx.nops, A sb=C(opctx.oprowmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktncols,EVLENGTH,exit) )  // must be boolean mask no longer than the row
  box=C(AAV(w)[2]);  // row values
  ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.oprowvals=AAV(box);  // must be list of boxes; save number and address

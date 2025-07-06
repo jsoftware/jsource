@@ -173,7 +173,7 @@
 
 #define BW10000(x,y)    (((UI)(y)<<((x)&(BW-1)))|((UI)(y)>>(-(x)&(BW-1)))) // left-rotate
 #define BW10001(x,y)    ((x)>=0?((x)>=BW?0:(UI)(y)<<(x)):((x)<=-BW?0:(UI)(y)>>-(x))) // left-shift unsigned
-#define BW10010(x,y)    ((x)>=0?((x)>=BW?0:(I)(y)<<(x)):((x)<=-BW?(I)(y)>>63:(I)(y)>>-(x))) // left-shift signed
+#define BW10010(x,y)    ((x)>=0?((x)>=BW?0:(I)(y)<<(x)):((x)<=-BW?(I)(y)>>(BW-1):(I)(y)>>-(x))) // left-shift signed
 
 
 // value in vaptr[]

@@ -53,6 +53,9 @@ id=: =&i.&#
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
 
+cblas=: 9!:56'cblas'
+0 (9!:56) 'cblas'
+
 {{
 N=: 3 <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
 for. i. N do.
@@ -190,9 +193,10 @@ assert. 5e_1>>./|,(id b)-b X c
 'length error' -:        %. etx ?3 5$123
 'length error' -: 3 4 5  %. etx ?7 4$100
 
+cblas (9!:56) 'cblas'
 9!:19 ct
 
-4!:55 ;:'N X a a0 a1 ai b bee bx c ct delth di '
+4!:55 ;:'N X a a0 a1 ai b bee bx c cblas ct delth di '
 4!:55 ;:'em en f id m mdiv minv mm n norm '
 4!:55 ;:'q0 q1 q2 qr r0 r1 r4 rinv splitm test x '
 

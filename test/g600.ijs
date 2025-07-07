@@ -961,9 +961,6 @@ minus =: -
 (0 100 -"1 1"2 2 i. 3 2 2) -: 0 100 minus"1 1"2 2 i. 3 2 2
 (0 100 -"1 _1"2 2 i. 3 2 2) -: 0 100 minus"1 _1"2 2 i. 3 2 2
 
-(2 2 2$2 3 4 0 5 1 0 0) -: (1&+@>)"1. ] 2 2 $ 1 2;3;4;0   NB. Verify fill done in correct order with fp rank
-(2 2 2$2 3 4 0 5 0 1 0) -: (1&+@>)"1 ] 2 2 $ 1 2;3;4;0   NB. Integer rank combines the loops
-
 0 1 2 3 -: (i. 2 2) ;@:(<@(["1)) i. 2 2  NB. Verify virtual block not incorporated
 0 1 2 3 -: (i. 2 2) ;@:(<@(]"1)) i. 2 2  NB. Verify virtual block not incorporated
 (i. 6) -: ;@:(<@]"0) i. 6  NB. Verify virtual block not incorporated
@@ -1030,6 +1027,9 @@ a=:_1 4 6 8 3 5 8 _1 7 4
 (2 2 2 $ 1 2 3 0 4 5 0 0) -: >"1 ] 2 2 $ 1 2 ; 3 ; 4 ; 5
 (2 2 2 $ 1 2 3 0 4 0 5 0) -:{{ > y }} "0 "1 ] 2 2 $ 1 2;3;4;5
 (2 2 2 $ 1 2 3 0 4 5 0 0) -:{{ > y }} "0 "1. ] 2 2 $ 1 2;3;4;5  NB. float rank not suppressed
+(2 2 2$2 3 4 0 5 1 0 0) -: (1&+@>)"1. ] 2 2 $ 1 2;3;4;0   NB. Verify fill done in correct order with fp rank
+(2 2 2$2 3 4 0 5 1 0 0) -: (1&+@>)"1 ] 2 2 $ 1 2;3;4;0   NB. Integer rank combines the loops
+
 
 4!:55 ;:'a adot1 adot2 sdot0 agree appcyc asm b boxr c c1 c2 cells crank cs cshape cycinit dr er f fr frame '
 4!:55 ;:'ger glob lag minus mm mrk msh prevmod ops pfx rag rank rk savger s1 svy t testlen x xx y '

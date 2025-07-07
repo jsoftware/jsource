@@ -1027,6 +1027,10 @@ a=:_1 4 6 8 3 5 8 _1 7 4
 'value error' -: undefname`0:`*: "0 etx a
 
 
+(2 2 2 $ 1 2 3 0 4 5 0 0) -: >"1 ] 2 2 $ 1 2 ; 3 ; 4 ; 5
+(2 2 2 $ 1 2 3 0 4 0 5 0) -:{{ > y }} "0 "1 ] 2 2 $ 1 2;3;4;5
+(2 2 2 $ 1 2 3 0 4 5 0 0) -:{{ > y }} "0 "1. ] 2 2 $ 1 2;3;4;5  NB. float rank not suppressed
+
 4!:55 ;:'a adot1 adot2 sdot0 agree appcyc asm b boxr c c1 c2 cells crank cs cshape cycinit dr er f fr frame '
 4!:55 ;:'ger glob lag minus mm mrk msh prevmod ops pfx rag rank rk savger s1 svy t testlen x xx y '
 randfini''

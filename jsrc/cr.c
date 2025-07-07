@@ -694,9 +694,9 @@ static DF1(rank1q){F12IP;  // fast version: nonneg rank, no check for multiple R
  ARGCHK1(w);
  // rank is considered nugatory if the rank of u<=n or rank of arg <=n or if n=rank of u, i. e. if n>=MIN(ranku,rankarg)
  // This gives error in the case
- // (1&+@>)"1 ] 2 2 $ 1 2;3;4;0
- // If you run this at rank 0, the fill will be calculated onver the whole array, while if you interpose a rank-1 step
- // the last row will fill separately.  User can give a floating-point rank to mean 'force the rank regardless'
+ //  {{ > y }} "0 "1 ] 2 2 $ 1 2;3;4;0   NB. >"1 is caught in jtqq
+ // If you run this at rank 0, the fill will be calculated over the whole array, while if you interpose a rank-1 step
+ // the last row will fill separately.  User can give a floating-point rank to mean 'force the rank regardless'.
  I r=AR(w); A fs=FAV(self)->fgh[0]; I m=FAV(self)->localuse.lu1.srank[0];   // r=arg rank  fs->u  m=rank from n
  I um=FAV(fs)->mr;
  if(unlikely(GEMIN0(m,r,um)>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
@@ -761,7 +761,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  ARGCHK2(a,w);
  A z; fdefallo(z)
  // The localuse value in the function will hold the ranks from w.
- I isfloat=AT(w)&FL;  // before we change w, remember if the value given was float.  We pass this through in srank[3] to tell the processing routines not to combine the rank op with other
+ I isfloat=AT(w)&FL;  // before we change w, remember if the value given was float.  We pass this through in srank[3] to tell the processing routines not to combine the rank op with others
  if(unlikely(VERB&AT(w))){
   // verb v.  Extract the ranks into an integer list, which goes into the derived verb
   r[0]=hv[0]=mr(w);
@@ -809,7 +809,10 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   // For monads: atomic verbs ignore rank, but they require the localuse field, so we can't just point the rank verb at them; we use a passthrough routine instead.  Otherwise, if the verb supports
   // IRS, go to the appropriate routine depending on the sign of rank; otherwise we will be doing an explicit rank loop: distinguish
   // rank-0, quick rank (rank is positive and a is NOT a rankonly type that may need to be combined), and all-purpose cases
-  if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1){f1=rank1i;}else{f1=hv[0]?(hv[0]>=0&&!(av->flag2&VF2RANKONLY1)?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
+  flag2|=av->flag2&VF2WILLOPEN1;  // if u will open, so will u"n
+ // For monads that are not ATOMIC1/IRS1, we use quick rank if r>0, which suppresses the rank loop if r >= mu.  This may erroneously suppress a rank loop that would affect fill.
+ // We mitigate the problem by giving the user credit if: u WILLOPEN; u cannot be combined in a rank loop
+  if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?(hv[0]>=0&&!(av->id==CQQ)&&!(av->flag2&(VF2RANKONLY1+VF2WILLOPEN1))?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
   // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
   vf|=(hv[0]==0)<<VIRS1X;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only

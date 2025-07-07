@@ -170,7 +170,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
  C scriptskipbyte;  // when not NUL, reading script discards lines up till the first one that starts NB. followed by skipbyte
-// 7 bytes free
+ C dissectrunning;  // set by the dissect instrumented sentence
+// 6 bytes free
  DC pmstacktop;  // Top (i. e. end) of the postmortem stack.  The pm stack is just the chain of private SYMB namespaces.  When there is an error that will go all the way back to console, the namespaces are preserved.  If the next
            // keyboard command turns on debug, they will be converted into a debug stack and moved out of this field.  They are deleted when debug mode is turned off or the stack is deleted by 13!:0.
  UI4 *futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate

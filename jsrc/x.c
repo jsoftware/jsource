@@ -11,6 +11,17 @@
 #include "j.h"
 #include "x.h"
 
+// 0!:_1 set skip character for scripts (0!:_1 '' terminates script immediately; 0!:_1 c makes scripts discard lines till one starts with NB.c)
+// Behavior undefined if a script is not being read
+// Returns empty, which will not fail assert.
+static DF1(jtskipinscript){F12IP;
+ ARGCHK1(w);
+ ASSERT(AT(w)&LIT,EVDOMAIN) ASSERT(AR(w)<=1, EVRANK) ASSERT(AN(w)<=1, EVLENGTH)
+ jt->scriptskipbyte=AN(w)==0?255:CAV(w)[0];  // save the skip byte, or 255 for EOF
+ R mtm;
+}
+
+static DF1(jttoggledissect1){F12IP; jt->dissectrunning^=1; R RETARG(w);}    // 9!:_4 toggle dissect status.  Result is y
 
 // undocumented 13!: functions, used to test condrange
 static DF2(jtfindrange){F12IP;
@@ -40,15 +51,6 @@ static DF1(jthdrinfo){F12IP;A z;
  R z;
 }
 
-// 0!:_1 set skip character for scripts (0!:_1 '' terminates script immediately; 0!:_1 c makes scripts discard lines till one starts with NB.c)
-// Behavior undefined if a script is not being read
-// Returns empty, which will not fail assert.
-static DF1(jtskipinscript){F12IP;
- ARGCHK1(w);
- ASSERT(AT(w)&LIT,EVDOMAIN) ASSERT(AR(w)<=1, EVRANK) ASSERT(AN(w)<=1, EVLENGTH)
- jt->scriptskipbyte=AN(w)==0?255:CAV(w)[0];  // save the skip byte, or 255 for EOF
- R mtm;
-}
 // TUNE static I totprobes=0, totslots=0;  // umber of probes/slots
 
 
@@ -358,6 +360,7 @@ MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VFLAGNONE,VF2NONE,RMAX,RMAX,RM
  MN(9,-1)  XPRIM(VERB, jtleakblockread, 0,         VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,-2)  XPRIM(VERB, jtleakblockreset, 0,        VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,-3)  XPRIM(VERB, jtshowinplacing1, jtshowinplacing2,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-4)  XPRIM(VERB, jttoggledissect1, 0,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-1) XPRIM(VERB, 0,            jtfindrange,  VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-2) XPRIM(VERB, 0,            jtfindrange4, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-3) XPRIM(VERB, 0,            jtfindrange2, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);

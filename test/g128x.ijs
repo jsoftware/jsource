@@ -92,7 +92,7 @@ if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu')
 end.
 for_i. (>: , 500&+) (i.15) do.
  a1=. 128!:10 r=. (1000 ?@$~ ,~) i
- b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) a1  NB. floating point
+ echo b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) a1  NB. floating point
  assert. 1e_10 > b
 end.
 EMPTY
@@ -113,14 +113,16 @@ echo '$a ',":$a
 t1=. 6!:2'c1=. 128!:10 a'
 echo 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!:56'cblas')#' cblas'
 if. IF64 +. 9!:56'cblas' do.
-  assert. 1e_10 >  >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  echo b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  assert. 1e_10 >  b
 end.
 
 a=. a j. (N,N) ?@$ 1000 1000
 t1=. 6!:2'c1=. 128!:10 a'
 echo 'complex ',(' GFlop ',~ 0j3": 4*(N^3)%(t1)*1e9),((9!:56'cblas')#' cblas')
 if. 9!:56'cblas' do.
-  assert. 1e_6 >  >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  echo b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  assert. 1e_6 >  b
 end.
 EMPTY
 )

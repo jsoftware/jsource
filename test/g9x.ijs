@@ -466,6 +466,7 @@ foo=: 3 : 0
 'foo' -: foo''
 
 '9!:_4' -: 9!:_4 b. _1
+5 1 5 0 -: (9!:_4 , 9!:_4~ , 9!:_4 , 9!:_4~) 5
 
 4!:55 ;:'a a12 a6 a9 b boxq boxs c dispq disps '
 4!:55 ;:'drop1 erase evmq evms foo initspace namedvb nub old p ppq pps promptq '

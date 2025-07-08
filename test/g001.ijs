@@ -344,6 +344,29 @@ a > 7!:0''
 4!:55 <'xxx'
 a > 7!:0''
 
+NB. stack protection
+{{
+a =. i. 6
+assert. 2 = 4 { ] ]  (b =. 13!:_4) a  NB. a is protected during exec of b
+assert. 1 = 4 { 13!:_4 a [ [ (b =. -) a  NB. protection removed by ending of b
+assert. 1 = 4 { 13!:_4 a
+1
+}}''
+{{
+a =. i. 6
+assert. 2 = 4 { ] ]  (b =. 13!:_4) a  NB. a is protected during exec of b
+assert. 1 = 4 { 13!:_4 [ [ (a =. ]) a  NB. protection removed by ending of verb
+1
+}}''
+{{
+a =. i. 6
+assert. 2 = 4 { af =: (". '5') 13!:_4@] a  NB. a is protected during exec
+assert. 2 = 4 { 13!:_4 (". '5') ] a  NB. protection not removed till end of sentence
+assert. 1 = 4 { 13!:_4 a
+1
+}}''
+
+
 0 = ('=',':') +./@:E. a =. 2 , :: (13!:12@'') '2'  NB. For a while the =. was changed to =:
 
 NB. assignment messages

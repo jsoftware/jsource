@@ -21,7 +21,7 @@ static DF1(jtskipinscript){F12IP;
  R mtm;
 }
 
-static DF1(jttoggledissect1){F12IP; jt->dissectrunning^=1; R RETARG(w);}    // 9!:_4 toggle dissect status.  Result is y
+static DF2(jttoggledissect12){F12IP; if(AT(w)&VERB)jt->dissectrunning^=1; else a=sc(jt->dissectrunning); R RETARG(a);}    // 9!:_4 toggle dissect status.  Bivalent.  Monad result is y, dyad result is current setting
 
 // undocumented 13!: functions, used to test condrange
 static DF2(jtfindrange){F12IP;
@@ -360,7 +360,7 @@ MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VFLAGNONE,VF2NONE,RMAX,RMAX,RM
  MN(9,-1)  XPRIM(VERB, jtleakblockread, 0,         VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,-2)  XPRIM(VERB, jtleakblockreset, 0,        VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,-3)  XPRIM(VERB, jtshowinplacing1, jtshowinplacing2,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,-4)  XPRIM(VERB, jttoggledissect1, 0,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-4)  XPRIM(VERB, jttoggledissect12, jttoggledissect12,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-1) XPRIM(VERB, 0,            jtfindrange,  VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-2) XPRIM(VERB, 0,            jtfindrange4, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-3) XPRIM(VERB, 0,            jtfindrange2, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);

@@ -188,7 +188,7 @@ static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
  }
  // single assignment or variable assignment
  if(unlikely((SGNIF(AT(n),LITX)&(AR(n)-2))<0)){
-  // lhs is ASCII characters, atom or list.  Convert it to words
+  // lhs is ASCII characters, atom or list.  Convert it to words.  If multiple, the line must not come from a script, which would have converted it to BOXASSIGN
   s=CAV(n); ger=CGRAVEC==s[0];   // s->1st character; remember if it is `
   RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment with no values, if there is something to be assigned
@@ -213,7 +213,7 @@ static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
   // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
   if(!AR(n)){A nnm; RZ(nnm=onm(n)); jtsymbis(jtfg,nnm,v,symtab);  // just one name
   }else{
-   // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
+   // otherwise it's multiple assignment (could have just 1 name to assign).
    // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
    // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
    // if not AR assignment, just open each box of rhs and assign

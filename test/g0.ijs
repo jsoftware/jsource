@@ -368,8 +368,6 @@ f =: &&&
 ((8 $~ _3 }. $) -: 8:"3) i. 3 4 5 6
 
 
-4!:55 ;:'ar dr eight eq f five four fx g lr '
-4!:55 ;:'mac nine one rk seven six test three tr two x z zero '
 
 
 

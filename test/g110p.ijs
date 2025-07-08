@@ -86,7 +86,6 @@ times=: 4 : 'x*y'
 'domain error' -: */\ etx s:@<"0&.> ;:'peace in our time'
 'domain error' -: */\ etx <"0@s: ;:'peace in our time'
 
-4!:55 ;:'times x'
 
 
 

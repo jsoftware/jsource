@@ -52,7 +52,6 @@ perm =: i.@! A. i.
 (perm -: /:~@subgroup@generator)"0 ]2+i.4
 
  
-4!:55 ;:'gen generator gn perm pvp stdarg subgroup test'
 
 
 

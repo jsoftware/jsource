@@ -207,7 +207,6 @@ y     =: <.  -2^IF64{31 62
 ,_2 _1 0 1 2 testc&>/~x,y
 ,_2 _1 0 1 2 testc&>/~x,y
 
-4!:55 ;:'a b f t test testa testb testc x y'
 
 
 

@@ -818,9 +818,6 @@ b =: 0. + i. 3 4
 (a i.!.0"1 b) -: (a (4 : 'x i.!.0 y')"1 b)
 
 
-4!:55 ;:'a adot1 adot2 sdot0 b c ciof ct f f1 f2 g iota j l r map n p q t test x xx y yy'
-4!:55 ;:'xop yop1 yopn'
-4!:55 ;: 'mtchontally mtchonreshape mtchontally0 mtchonreshape0'
 randfini''
 
 

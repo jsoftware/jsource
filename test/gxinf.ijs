@@ -251,7 +251,6 @@ _ 2x match !  _ 2r1
 'domain error' -: q: etx {. __ 12r7
 
 
-4!:55 ;:'match ninf pinf x xi y'
 
 
 

@@ -106,7 +106,6 @@ g  0.5-?1000$1e6
 'domain error' -: _1 fc etx s:@<"0 'a'
 'domain error' -: _1 fc etx s:@<"0 'abc'
 
-4!:55 ;:'f fc g x'
 
 
 

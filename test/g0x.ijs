@@ -47,8 +47,6 @@ b -: i.3 4
 0!:0 <testpath,'tsheb.ijs'
 sheb = 9
 
-4!:55 ;:'a b c l0 '
-4!:55 ;:'l1 l2 lf mtm mtv s sc00 sheb t x '
 
 
 

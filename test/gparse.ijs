@@ -205,7 +205,6 @@ a =: < aa =: >: 6
 aa =: 5 + >a  NB. should not execute in place
 a -: <7
 
-4!:55 ;:'a aa bc locnm multi swd t '
 
 
 

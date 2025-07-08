@@ -83,7 +83,6 @@ test=: 4 : 0
 
 9!:19 ct
 
-4!:55 ;:'ct phi t test x xx Y y1 y2 y3 yy'
 
 
 

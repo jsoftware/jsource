@@ -36,7 +36,6 @@ NB. OK now 'domain error' -: ex '+ :: 0 0   '
 NB. OK now 'domain error' -: ex '+ :: ''a'' '
 NB. OK now 'domain error' -: ex '+ :: (<0)  '
 
-4!:55 ;:'f g y'
 
 
 

@@ -53,8 +53,6 @@ erase <'conflict'
 
 1!:44 ocwd
 
-4!:55 ;:'att bada badf d dir erase f oldmac mkdir ocwd p pc '
-4!:55 ;:'read unix win write x '
 
 
 

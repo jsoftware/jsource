@@ -121,7 +121,6 @@ g3 imin,0,imax
 'domain error' -:  0 ic etx s:@<"0 'abc'
 
 
-4!:55 ;:'g1 g2 g3 ic x'
 
 
 

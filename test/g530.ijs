@@ -862,11 +862,6 @@ NB. shaped boxed selectors
 (1 2&(15!:19@((|.@:{)`[`]})) = 15!:19@]) memu 0  2 3  NB. } inplace
 (7!:2 '1 [`0:`(+:@])} i. 100 100') < 10000 + 7!:2 '1 [`0:`]} i. 100 100'  NB. inplace when v2 returns new block
 
-4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
-4!:55 ;:'f10 f11 f12 f13'
-4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '
-4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test test1 test2 testm testn x xx xyz y yy z z1 zz '
-4!:55 ;:'lim lm mody rx ry selshape tm tx ty' 
 randfini''
 
 epilog''

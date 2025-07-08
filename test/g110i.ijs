@@ -56,7 +56,6 @@ times=: 4 : 'x*y'
 (*/"1 -: times/"1) x
 (*/"2 -: times/"2) x
 
-4!:55 ;:'f times x'
 
 
 

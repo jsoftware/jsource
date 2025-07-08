@@ -113,8 +113,6 @@ test"0 ] 10^i.4
 
 1 -:   2 -^:(]`1:) _   NB. Gerund producing _
 
-4!:55 ;:'boxed_rec f indexlim r randomfile rec rec1 sbok spleak'
-4!:55 ;:'test x x2288 y2288'
 
 
 

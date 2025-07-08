@@ -53,7 +53,6 @@ mac =: 3 = 9!:12 ''
 f   =: mac{'no/such/dir/or/file';':no:such:dir:or:file'
 'file name error'   -: 'asdf' append etx f
 
-4!:55 ;:'append erase f mac read write x y '
 
 
 

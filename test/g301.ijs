@@ -33,8 +33,6 @@ x=:(0.01*_700+?20$1400),0,*/\4$0j1
 1e_12 > | (cosh - cosh2) x
 
 
-4!:55 ;:'cos cos1 cos2 cosh cosh1 cosh2 sin sin1 sin2 sinh '
-4!:55 ;:'sinh1 sinh2 skew symm x '
 
 )
 

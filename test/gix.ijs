@@ -192,7 +192,6 @@ NB. Verify that y can have the long frame
 ((i. 2 3 4)&i. i. 4 5) -:  (i. 2 3 4)&(i."i.) i. 4 5
 
 
-4!:55 ;:'f0 f1 f2 f3 f4 f5 f6 f7 f8 f9 fa fb xx yy'
 
 
 

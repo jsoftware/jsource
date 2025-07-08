@@ -513,6 +513,5 @@ t1done=: 0
 1: (2!:0 :: 1:)^:IFUNIX 'rm -rf ',jpath '~temp/tdot'
 1: (1!:55 ::1:)^:IFWIN ((jpath'~temp/tdot/')&,)&.> {."1[ 1!:0 jpath '~temp/tdot/*' 
 
-4!:55 ;:'MINLEN MLEN NX STRIDE TASK1 TASK delth s1 t1 t1done shrxno '
 epilog''
 

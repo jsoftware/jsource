@@ -43,7 +43,6 @@ NB. (__ j. 0) -:&(3!:3) {. 10^. 0 _1
 'length error' -: 2 3 ^. etx i.4 5
 'length error' -: 2 3 ^.~etx i.4 5
 
-4!:55 ;:'f log x'
 
 
 

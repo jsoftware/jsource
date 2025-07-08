@@ -140,7 +140,6 @@ x=: 2 : 0
 'ill-formed name' -: 7!:5 etx <''
 
 
-4!:55 ;:'adot1 adot2 fmapped gmapped sdot0 bp f g sp x '
 randfini''
 
 

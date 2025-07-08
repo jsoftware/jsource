@@ -542,8 +542,6 @@ NB. The only thing we can test is error, since gconsole doesn't support it
 'interface error' -: 11!:2500 etx 2
 'domain error' -: 11!:2500 etx 2j2
 
-4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '
-4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x original '
 
 
 

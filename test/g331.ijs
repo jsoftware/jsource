@@ -1253,9 +1253,6 @@ b1 =: 7!:0''
 512 > 0 >. a1 - b1  NB. Make sure virtual blocks freed
 
 
-4!:55 ;:'a a1 adot1 adot2 sdot0 b b1 bb c cut3 cutm3 data f f1 f2 f3 f4 f5'
-4!:55 ;:'i1 i2 intervals l m P p q r size t test testw w x y'
-4!:55 ;: 'a c'
 randfini''
 
 

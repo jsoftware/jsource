@@ -74,7 +74,6 @@ times=: 4 : 'x*y'
 'domain error' -: */\. etx s:@<"0&.> ;:'sui generis'
 'domain error' -: */\. etx <"0@s: ;:'sui generis'
 
-4!:55 ;:'f times x'
 
 
 

@@ -80,7 +80,6 @@ y=: j./ _5000 + 2 10000 ?@$ 10000
 'domain error' -: (2;3) | etx s:@<"0 'eg'
 'domain error' -: (2;3) | etx 4;5
 
-4!:55 ;:'complex f mag t test x y'
 
 
 

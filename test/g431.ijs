@@ -297,9 +297,6 @@ xover =: 3 : '~:/y'
 
 9!:19 ct
 
-4!:55 ;:'a adot1 adot2 sdot0 base bs bsd ct em en f iind infix '
-4!:55 ;:'kay key max maxover n ob oind omask osub outfix '
-4!:55 ;:'plus prefix product sd seg suffix sum t times x xor xover z zzz'
 randfini''
 
 

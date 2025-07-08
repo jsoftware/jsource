@@ -234,6 +234,5 @@ ferase ::1: F
 
 9!:19 ct
 
-4!:55 ;:'ct j32 j64 s F'
 
 epilog''

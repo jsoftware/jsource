@@ -765,9 +765,7 @@ assert. s1 > 7!:0''
 f ''
 
 
-4!:55 ;:'a a_z_ ab c d dd dhs2liso dhs2liso_nonlocale_ e ee f '
-4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath'
-4!:55 ;:'not_a_locative s1 s2 s3 spnow t test x xx xy_z_ xy_nonlocale_ y '
+4!:55 ;:'a_z_ dhs2liso_nonlocale_ xy_z_ xy_nonlocale_'
 (271828) 18!:55 ;:'abcpristloc nonlocale'
 
 

@@ -194,8 +194,6 @@ f =: cocurrent_z_ f.
 'cocurrent_z_' -: 5!:5 <'f'
 'cocurrent_z_' -: 5!:5 <'coclass'
 
-4!:55 ;:'a a001 ambi ar b C cap dec dyad eachh eq f fact fact1 foo g i inc lr '
-4!:55 ;:'mat monad plus s sgn slash t v y'
 
 
 

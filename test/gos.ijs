@@ -66,7 +66,6 @@ cir=. 4 : 'x o. y'
 'domain error' -: o./\. etx s:@<"0&.> ;:'quod erat demonstratum'
 'domain error' -: o./\. etx <"0@s: ;:'quod erat demonstratum'
 
-4!:55 ;:'cir x'
 
 
 

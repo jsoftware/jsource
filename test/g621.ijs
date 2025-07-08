@@ -26,7 +26,6 @@ g =: ;: '&+&.+&:^.@'
 0 _1 1  -: +`-`* @. ] etx i.3   NB. was rank error
 (1 1 $ 0)  -: +`-`* @. ] etx i.1 1   NB. was rank error
 
-4!:55 ;:'c1 c2 c3'
 ack=: c1`c1`c2`c3 @. (#.@(,&*)) " 0
 c1 =: >:@]                     NB. 1+y
 c2 =: <:@[ ack 1:              NB. (x-1) ack 1
@@ -166,10 +165,6 @@ NB. Inplacing
 (1e6 * 8 * IF64 { 3.6 4.1) < 7!:2 '0.5&+@#"0`-:@.(0"0) 1. + i. _1e6'  NB. not inplaceable: create, add (inplace on 64 bits), (apply vb), grade, from, apply gerund vb (not inplace), copy result
 (1e6 * SZI * IF64 { 5.75 5.1) < 7!:2 '(i. 1e6) (0.5&+@#"0@])`-:@.(0"0) i. _1e6'  NB. not inplaceable
 
-4!:55 ;:'ack agenda ar c1 c2 c3 basis decr do erf f f0 f1 form from from1 '
-4!:55 ;:'g ifopen ind mask '
-4!:55 ;:'n01cdf n01cdfa n01cdfh n01cdfn n01cdfp n01cdfr n01pdf '
-4!:55 ;:'part pfx recur square start t test x z '
 
 
 

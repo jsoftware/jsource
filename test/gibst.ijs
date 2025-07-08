@@ -87,7 +87,6 @@ NB. x ([: I.   e.!.0 ) R y
 NB. x (   I. @(e.!.0)) R y
 
 
-4!:55 ;:'adot1 adot2 sdot0 f L R t x y'
 randfini''
 
 

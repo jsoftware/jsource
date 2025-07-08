@@ -684,7 +684,6 @@ a=: 3#.^:_1 ] 49401 10852 55070 6484 14621 8515
 0 1 1 1 1 0 0 1 0 0 -: ([: {. (#~ <&2))"1 |: a  NB. # overwrites & changes shape of virtual block; must use a clone
 
 
-4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g l0 l1 m n siz1200 siz12002 tally x xx y '
 randfini''
 
 

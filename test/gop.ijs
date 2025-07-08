@@ -32,7 +32,6 @@ cir=: 4 : 'x o. y'
 'domain error' -: o./\ etx s:@<"0&.> ;:'super cali fragi listic espi ali do cious'
 'domain error' -: o./\ etx <"0@s: ;:'super cali fragi listic espi ali do cious'
 
-4!:55 ;:'cir x'
 
 
 

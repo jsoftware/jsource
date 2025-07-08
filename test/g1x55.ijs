@@ -63,7 +63,6 @@ f   =. mac{'no/such/dir/or/file';':no:such:dir:or:file'
 (<erase etx <'NoSuch.943') e. 'file name error';'interface error'
 (<erase etx f            ) e. 'file name error';'interface error' 
 
-4!:55 ;:'erase f files g h mac open q write '
 
 
 

@@ -26,7 +26,6 @@ c h&>/ d [ r=: 3
 c h&>/ d [ r=: 4
 
 
-4!:55 ;:'a b c d f g h r s t'
 
 
 

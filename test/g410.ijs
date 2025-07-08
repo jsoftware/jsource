@@ -448,15 +448,6 @@ NB. Types, for singleton and not
 (2 # _1.1 ! 1e6) -: _1.1 ! 2 # 1e6
 (2 # _10.5 ! 1e6) -: _10.5 ! 2 # 1e6
 
-4!:55 ;:'C a b basis c cfi ci c0 case cb'
-4!:55 ;:'comb0 comb1 comb2 comb3 comb4 comb5 comb6'
-4!:55 ;:'count em en '
-4!:55 ;:'f f000 f001 f010 f011 f100 f101 f110 f111 '
-4!:55 ;:'fac g gamma Gauss gm gps grecur grm grow grp '
-4!:55 ;:'i iic ifc im i0 i1 i2 i3 j0 j1 k m n p'
-4!:55 ;:'pascal0 pascal1 pascal2 q re'
-4!:55 ;:'recur rm sbase scorr seed seed5 sinh start stirlf stirlg Stirling '
-4!:55 ;:'t test x y z '
 
 
 

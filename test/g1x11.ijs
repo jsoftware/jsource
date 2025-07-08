@@ -99,7 +99,6 @@ f =. (3=9!:12 ''){'no/such/dir/or/file';':no:such:dir:or:file'
 
 erase h
 
-4!:55 ;:'close erase f h i intv iread open t write'
 
 
 

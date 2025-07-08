@@ -369,11 +369,6 @@ _1.5707963267949 = _1 o. _1
 
 9!:19 ct
 
-4!:55 ;:'a acos acosh asin asinh atan atanh b cir0 cir4 '
-4!:55 ;:'cir4m cir8 cir8m circle cirm cirp cos cosh ct imag '
-4!:55 ;:'jasin jatan jcosh jsinh p pi q real sin sinh '
-4!:55 ;:'tan tanh x y z zacos zacosh zarc zasin zasinh zatan '
-4!:55 ;:'zatanh zcos zcosh zm4 zp4 zp8 zsin zsinh ztan ztanh '
 
 
 

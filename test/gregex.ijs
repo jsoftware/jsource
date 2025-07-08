@@ -22,7 +22,6 @@ D=: utf8 4 u: 3 u: {. 7 u: C
 E=: '\x{306f}' NB. codepoint of D
 (,:6 3) -: E rxmatch A
 
-4!:55 ;:'A B C D E'
 
 epilog''
 

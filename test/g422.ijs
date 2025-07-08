@@ -585,7 +585,6 @@ NB. /:~ on boolean lists
 
 
 
-4!:55 ;:'a adot1 adot2 sdot0 b c d e f g ge i k le m n0vec p v x y z'
 randfini''
 
 

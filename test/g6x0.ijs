@@ -31,7 +31,6 @@ t -:&((-.x e. 'YMDhms')&#) x
 (_2{.":{.ts '') -: ts 'YY'
 
 
-4!:55 ;:'t ts x'
 
 epilog''
 

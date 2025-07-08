@@ -270,7 +270,6 @@ _= (-/ .*) x: 4 4$_ __ 0 0 1 1 0 0 0 0 1 0 0 0 0 1         NB. test for crash
 
 9!:19 ct
 
-4!:55 ;:'arch ct eqf f g h m sh test x xx yy'
 
 
 

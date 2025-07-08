@@ -41,7 +41,6 @@ NB. With new code, test all permutations of smallest element, repeated and not, 
 'domain error' -: (i.<./) etx 1;2;3 4 
 
 
-4!:55 ;:'test yy'
 
 
 

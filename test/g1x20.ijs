@@ -94,7 +94,6 @@ t=:(pc#'does/not/exist/no.x'),(mac#':does:not:exist:no.x'),unix#'does/not/exist/
 'file number error' -: close etx 0;1;0
 'file number error' -: close etx 4;5;6
 
-4!:55 ;:'close d dir erase f files g h mac open pc q t unix win write x'
 
 
 

@@ -68,7 +68,6 @@ lt=: 4 : 'x<y'
 'domain error' -: </\. etx s:@<"0&.> ;:'professors in New England'
 'domain error' -: </\. etx <"0@s: ;:'professors in New England'
 
-4!:55 ;:'f lt x'
 
 
 

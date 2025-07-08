@@ -263,8 +263,6 @@ NB. obsolete 'domain error' -: f etx 1 2
 
 100000 100000 -: $  +./ . *.~ 1$.1e5 1e5;0 1;0   NB. formerly crashed not detecting sparse
 
-4!:55 ;:'b c d e f g r s t x'
-4!:55 ;:'a1 a2 ' 
 
 
 

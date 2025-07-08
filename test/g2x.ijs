@@ -15,7 +15,6 @@ errnox =: 2!:8
 'length error' -: errnox etx 'abc'
 'rank error' -: errnox etx <1 2
 
-4!:55 ;:'errnox'
 
 
 

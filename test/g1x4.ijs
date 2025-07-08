@@ -68,7 +68,6 @@ _1 -: 4!:7 (0)
 'index error' -: 4!:7 etx _2
 'index error' -: 4!:7 etx (#4!:3'')
 
-4!:55 ;:'close d dir f h j mac open p pc s size unix win x ' 
 
 
 

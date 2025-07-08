@@ -61,7 +61,6 @@ pr =. 5!:6
 ('asdfasdf')     -: lr <'asdfasdf'
 ('asdfasdf')     -: pr <'asdfasdf'
 
-4!:55 ;:'ar dr pr lr tr'
 
 
 

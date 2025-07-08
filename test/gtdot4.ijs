@@ -46,7 +46,6 @@ a =: i.&.> (20 ?@$ 10)
 
 
 delth''
-4!:55 ;:'a delth granularity stime'
 
 epilog''
 

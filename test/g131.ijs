@@ -200,9 +200,6 @@ assert. 5e_1>e
 
 9!:19 ct
 
-4!:55 ;:'N X a a0 a1 ai b bee bx c cblas ct delth di '
-4!:55 ;:'em en f id m mdiv minv mm n norm '
-4!:55 ;:'q0 q1 q2 qr r0 r1 r4 rinv splitm test x '
 
 
 

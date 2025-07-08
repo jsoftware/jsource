@@ -90,7 +90,6 @@ _2 -: f _2
 
 9!:41 ws
 
-4!:55 ;:'f lf s word ws'
 
 
 epilog''

@@ -125,7 +125,6 @@ nm1__a =: 'b'
 
 
 
-4!:55 ;:'a adv b f h i k li m oktypes p pcheck perm s sum t x y yy'
 
 
 

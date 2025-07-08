@@ -356,7 +356,6 @@ end.
 1 }} &> (<"0 i. 50) , <"1 (2 5 ?@$ 30)
 
 
-4!:55 ;:'a argrand argnear b c carg d f f2 fsmall jdot p t xd yd dx dy xx xy qx qy s xs ys'
 
 
 

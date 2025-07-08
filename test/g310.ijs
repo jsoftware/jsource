@@ -370,9 +370,6 @@ NB. obsolete 2 -: 7 (<'base') c [: 5
 NB. obsolete 9!:49 svxy
 NB. obsolete !:41 ws
 
-4!:55 ;:'a ar c det dyad eq f f0 f1 f2 f3 f4'
-4!:55 ;:'f4a f5 f5a f6 f6a f6b f6c f7'
-4!:55 ;:'minors monad nln p q svxy Tv x'
 
 
 

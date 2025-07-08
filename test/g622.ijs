@@ -13,7 +13,6 @@ NB. 'nonce error' -: ,&.>/ etx (i. 5);4;i. 2 3
 'domain error' -: ". etx '+ @: 3'
 'domain error' -: ". etx '3 @: 3'
 
-4!:55 ;:'x y'
 
 
 

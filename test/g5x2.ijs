@@ -289,10 +289,6 @@ f =: g@.*
 (br<'f') -: (th"0 g);'@.';,'*'
 
 
-4!:55 ;:'a adv ar boxed br brep bx bxcase bxg '
-4!:55 ;:'bxgl bxgr bxroot bxtil bxx c conj f f1 f12 f2 '
-4!:55 ;:'fork fvv fx g gd ger hook inv ip n1 '
-4!:55 ;:'n12 n2 oarg or plus pow r t test test1 th tv '
 
 
 

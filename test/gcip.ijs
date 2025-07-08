@@ -82,7 +82,6 @@ end.
 delth''
 empty thr (9!:58)"0 i.3
 
-4!:55 ;:'N X XT a b c d delth e n thr'
 
 epilog''
 

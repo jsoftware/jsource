@@ -52,7 +52,6 @@ a=: (?3 5$10) f"0 ?3 5$30
 'rank error'   -: ex '<: L: (i.1 2)'
 
 
-4!:55 ;:'a f Level test totient'
 
 
 

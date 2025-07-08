@@ -389,10 +389,6 @@ NB. (c;r) (p. -: pdot) z
 
 9!:19 ct
 
-4!:55 ;:'a b boxed c cfr ct d d1 d2 del delta dfl '
-4!:55 ;:'div emm err evc evr f fc fr g h '
-4!:55 ;:'lg mt n p pc pdot pdot1 pdot2 pm pr ptimes r r1'
-4!:55 ;:'rem rfc root rou rov rs s sq step test x y xx yy z '
 
 
 

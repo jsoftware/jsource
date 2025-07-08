@@ -660,8 +660,6 @@ NB. q: ------------------------------------------------------------------
 
 9!:19 ct
 
-4!:55 ;:'a b c cmpx ct f g fl h hex Hilbert ir'
-4!:55 ;:'r rat ri stope x xint y'
 
 
 

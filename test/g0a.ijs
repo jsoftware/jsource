@@ -96,7 +96,6 @@ nonempties =. 0;' ';00;0.;0.j0.;a:;1x;1r2
 1 1 4 8 16 1 64 128 -: 3!:0@:*:&> empties
 
 
-4!:55 ;:'n empties nonempties'
 
 
 

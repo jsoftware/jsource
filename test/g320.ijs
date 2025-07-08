@@ -665,7 +665,6 @@ NB. fill not used if not needed
 1: (i. 2 3 2 5 6) ,!.'a'"3 i. 2 5 6
 
 
-4!:55 ;:'adot1 adot2 sdot0 cat f n l r t test x xx y yy'
 randfini''
 
 

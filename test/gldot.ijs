@@ -52,7 +52,6 @@ a =: 1e6$a:
 THRESHOLD +. ((100) 6!:2 '0 < L. a') > 100 * ((100) 6!:2 '0 (< L.) a')
 
 
-4!:55 ;:'a f g level mt open totient'
 
 
 

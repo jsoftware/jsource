@@ -865,8 +865,6 @@ det=: -/ .*
 (~.@q:@%@det@H -: i.&.(p:^:_1)@+:) 9x
 
 
-4!:55 ;:'arg bc bc2 bct c den det e e0 e1 exp f H ind min n'
-4!:55 ;:'num pf root t test x x1 x2 x3 Y Y0 y1 y2 y3'
 
 
 

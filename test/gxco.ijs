@@ -107,7 +107,6 @@ NB. FIXME: make this work right
 NB. (1000 4 {~ 9!:57 (0) [ 9!:57 (1)) f1"0 ]10^2 3
 
 
-4!:55 ;:'e d f f1 p q'
 
 
 

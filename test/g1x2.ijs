@@ -64,7 +64,6 @@ f   =: mac{'no/such/dir/or/file';':no:such:dir:or:file'
 
 'file name error'   -: 'asdf'  write etx f
 
-4!:55 ;:'erase f mac pc read unix win write x'
 
 
 

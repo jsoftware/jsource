@@ -163,7 +163,6 @@ x (>.//. -: 3 : '>./y'/.) y=: sdot0{~  ?($x)$$sdot0
 'length error' -: 1 2 3 >.//. etx 4 5.6
 
 
-4!:55 ;:'adot1 adot2 bigval sdot0 test v x xx y yy'
 randfini''
 
 epilog''

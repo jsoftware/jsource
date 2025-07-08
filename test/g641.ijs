@@ -65,7 +65,6 @@ seed -: 9!:0 ''
 
 270869761 1880044261 -: q: :: q: 509247139646491621x   NB. Twice to elude nonce error
 
-4!:55 ;:'a b s seed x'
 
 
 

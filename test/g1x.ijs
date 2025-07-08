@@ -147,7 +147,6 @@ erase  =. 1!:55
 'rank error'        -: (3 4$'a') append etx <'abc'
 
 
-4!:55 ;:'append erase in mtm out read size t write x'
 
 
 

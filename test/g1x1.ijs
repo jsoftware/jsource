@@ -68,7 +68,6 @@ t -: x
 'file number error' -: read etx <2
 'file number error' -: read etx <12345
 
-4!:55 ;:'close d dir erase f h mac open p pc read size t unix win write x'
 
 
 

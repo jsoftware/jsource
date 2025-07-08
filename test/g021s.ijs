@@ -80,7 +80,6 @@ max=: 4 : 'x>.y'
 'domain error' -: >./\. etx 10&u:'triskaidekaphobia'
 'domain error' -: >./\. etx 10&u:&.> ;:'professors in New England'
 
-4!:55 ;:'adot1 adot2 sdot0 f max x'
 randfini''
 
 

@@ -40,7 +40,6 @@ dv =: {{
 'domain error' -: 0 dv etx '.';'.' [ N =: 0
 
 
-4!:55 ;:'add dv f ln N p x y'
 
 
 

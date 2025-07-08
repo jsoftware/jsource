@@ -65,7 +65,6 @@ y=: _1e5+?100$2e5
 'domain error' -: 0 0 *. etx s:@<"0&.> ;:'sui generis'
 'domain error' -: 0 0 *. etx <"0@s: ;:'sui generis'
 
-4!:55 ;:'x y z'
 
 
 

@@ -108,7 +108,6 @@ g=: 0&+@]^:(2&|@])
 (i. 3 7 4 5) (]"2 -: dex"2)~ (i. 3 4 5)
 
 
-4!:55 ;:'dex f g lev t x xa xb xd xi xj xu xw y'
 
 
 

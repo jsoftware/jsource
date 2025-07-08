@@ -99,7 +99,6 @@ max=: 4 : 'x>.y'
 'domain error' -: >./\ etx 10&u:'deipnosophist'
 'domain error' -: >./\ etx 10&u:&.> ;:'peace in our time'
 
-4!:55 ;:'adot1 adot2 sdot0 max x'
 randfini''
 
 

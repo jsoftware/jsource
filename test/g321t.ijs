@@ -21,7 +21,6 @@ y=: ". 'timer ''f t'' [ t=: (<12?@$1e9) $~ ',"1 ": ,. x=: 11000*1+i.9
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
 
-4!:55 ;:'f rsq ss t x y '
 
 
 

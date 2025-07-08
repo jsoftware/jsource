@@ -236,8 +236,6 @@ phi=: -:%:5
 0 1 1 2 3 5 8 13 21 34 55 89 -: (^@-: * sinh&.(phi&*)) t: i.12
 
 
-4!:55 ;:'asin asinh atan atanh B c cos cosh d f g k '
-4!:55 ;:'m n p phi pp q r rp s sin sinh tangent taysqrt x y '
 
 )
 

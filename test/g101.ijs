@@ -101,7 +101,6 @@ gcd1 =: (}.@{.) @ (iter^:(*@{.@{:)^:_) @ init
 1 -: 1 *. 1r28
 
 
-4!:55 ;:'a f gcd gcd1 init iter x y'
 
 
 

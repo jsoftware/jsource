@@ -136,7 +136,6 @@ NB. Tests.
 
 (;: '3 :') -.@-: (;: '3:')   NB. failed once
 
-4!:55 ;:'a b1 b2 c f f5 f6 t p arraytolist listtoarray N'
 
 
 

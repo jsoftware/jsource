@@ -107,6 +107,8 @@ empty 0&T.^:(0=1&T.) ::1:''
 if. 'Linux'-:UNAME do.
  'libc.so.6 malloc_trim > i x'&cd <.64*1024
 end.
+assert. (<'base')-:18!:5''
+4!:55 (nl'') -. oldnl
 1: techo^:ECHOFILENAME RUNFILE,'  time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
 )
 
@@ -256,32 +258,25 @@ x123=. x>.1
 y123=. y
 d123=. Debug
 assert. (<'base')-:18!:5''
-4!:55 ;:'x y oldnl RLAST'
-assert. 0=(;:'x y oldnl RLAST') e. nl''
-oldnl=: nl''
+4!:55 ;:'x y'
 for_y234. y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  techo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
-  assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  techo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
-  assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
 NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
 end.
-4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
 techo 'Finish'
@@ -293,10 +288,7 @@ x123=. (0=x){x,1
 y123=. y
 d123=. Debug
 assert. (<'base')-:18!:5''
-4!:55 ;:'x y oldnl RLAST'
-techo (;:'x y oldnl RLAST') (e.#[) nl''
-assert. 0=(;:'x y oldnl RLAST') e. nl''
-oldnl=: nl''
+4!:55 ;:'x y'
 while. x123~:0 do.
  for_y234. y123{~?~#y123 do.
   techo RLAST=: >y234
@@ -304,24 +296,20 @@ while. x123~:0 do.
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  techo ((;:'oldnl y234 RLAST save_ran')-.~nl'') (-.,-.~) oldnl
-  assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  techo ((;:'oldnl y234 RLAST save_ran')-.~nl'') (-.,-.~) oldnl
-  assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
-NB.   11 s: ''    NB. reset symbol
+NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
  x123=. <:x123
 end.
-4!:55 ;:'oldnl save_ran'
+4!:55 ;:'save_ran'
 Debug=: d123
 dbr 0
 techo 'Finish'
@@ -333,32 +321,25 @@ x123=. x>.1
 y123=. y
 d123=. Debug
 assert. (<'base')-:18!:5''
-4!:55 ;:'x y oldnl RLAST'
-assert. 0=(;:'x y oldnl RLAST') e. nl''
-oldnl=: nl''
+4!:55 ;:'x y'
 for_y234. y123{~?~#y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  techo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
-  assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
-  techo ((;:'oldnl y234 RLAST')-.~nl'') (-.,-.~) oldnl
-  assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
 NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
 end.
-4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
 techo 'Finish'
@@ -370,30 +351,23 @@ x123=. (0=x){x,1
 y123=. y
 d123=. Debug
 assert. (<'base')-:18!:5''
-4!:55 ;:'x y oldnl'
-assert. 0=(;:'x y oldnl') e. nl''
-oldnl=: nl''
+4!:55 ;:'x y'
 while. x123~:0 do.
- Debug=: 0
- 0!:2<testpath,y123,'.ijs'
- assert. 0 s: 11
- assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
- assert. (<'base')-:18!:5''
- techo ((;:'oldnl')-.~nl'') (-.,-.~) oldnl
- assert. ((;:'oldnl')-.~nl'') -: oldnl
- Debug=: 1
- 0!:2<testpath,y123,'.ijs'
- Debug=: 0
- assert. 0 s: 11
- assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
- assert. (<'base')-:18!:5''
- techo ((;:'oldnl')-.~nl'') (-.,-.~) oldnl
- assert. ((;:'oldnl')-.~nl'') -: oldnl
- x123=. <:x123
+  Debug=: 0
+  0!:2<testpath,y123,'.ijs'
+  assert. 0 s: 11
+NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. (<'base')-:18!:5''
+  Debug=: 1
+  0!:2<testpath,y123,'.ijs'
+  Debug=: 0
+  assert. 0 s: 11
+NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. (<'base')-:18!:5''
+  x123=. <:x123
 NB.  11 s: ''    NB. reset symbol
- techo (+/ % #) 0 s: 12
+  techo (+/ % #) 0 s: 12
 end.
-4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
 techo 'Finish'
@@ -483,6 +457,8 @@ allorcmdline=: 3 :0
     ddall-.((testpath,'g') , ,&'.ijs')&.>;:'131 cip 520 sp 7x tdot1 3x tdot2 tdot3 tdot4 tdot5 tdot t' NB. temporarily ignore threading
   end.
 )
+
+oldnl=: (;:'x y') -.~ ('RB';'RF';'oldnl';'RLAST';'save_ran'),~ (nl__ i.4)
 
 techo 0 : 0
 see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd

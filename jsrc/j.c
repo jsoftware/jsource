@@ -126,8 +126,8 @@ true
 PSTK initparserstack[4]={{.a=0, .t=0},{.pt=(UI4)0xC9000040}};  //Only [0].a and [0].t are used for messages, leaving .pt and .filler free. [1].pt is a backmark to stop protectlocals.  Init pointer to [1], but protectlocals looks at [2] which we must get mapped
 
 I   iotavec[IOTAVECLEN];  // return values for i. small
-uint64_t g_cpuFeatures;   // blis
-uint64_t g_cpuFeatures2;  // fsgsbase
+uint64_t g_cpuFeatures,g0_cpuFeatures;   // blis
+uint64_t g_cpuFeatures2,g0_cpuFeatures2;  // fsgsbase
 int numberOfCores;        // number of cpu cores
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning

@@ -100,6 +100,7 @@ end.
 1
 }} ''
 delth''
+cblas (9!:56) 'cblas'
 
 x -: %. x=:=i.1
 x -: %. x=:=i.2
@@ -149,20 +150,24 @@ _13.9    f =i.9
 {{
 if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
 echo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?2000 2000$12200
-assert. 1e_1>>./|,(id a)-a X c
+echo e=. >./|,(id a)-a X c
+assert. 1e_9>e
 echo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?2 2000 2000$12200
-assert. 1e_1>>./|,(id b)-b X c
+echo e=. >./|,(id b)-b X c
+assert. 1e_9>e
 ''
 }}^:(9!:56 'cblas')''
 
 {{
 if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
 echo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?2000 1500$12200
-assert. 5e_1>>./|,(id a)-a X c
+echo e=. >./|,(id a)-a X c
+assert. 5e_1>e
 echo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?2 2000 1500$12200
-assert. 5e_1>>./|,(id b)-b X c
+echo e=. >./|,(id b)-b X c
+assert. 5e_1>e
 ''
-}}^:(9!:56 'cblas')''
+}}''
 
 0 2 -: 2 4 6 %. 1 2 3 ^/ i.2x
 128 = 3!:0 ] 2 4 6 %. 1 2 3 ^/ i.2x
@@ -193,7 +198,6 @@ assert. 5e_1>>./|,(id b)-b X c
 'length error' -:        %. etx ?3 5$123
 'length error' -: 3 4 5  %. etx ?7 4$100
 
-cblas (9!:56) 'cblas'
 9!:19 ct
 
 4!:55 ;:'N X a a0 a1 ai b bee bx c cblas ct delth di '

@@ -14,8 +14,8 @@
 #include <unistd.h>
 #endif
 
-extern uint64_t g_cpuFeatures;
-extern uint64_t g_cpuFeatures2;
+extern uint64_t g_cpuFeatures,g0_cpuFeatures;
+extern uint64_t g_cpuFeatures2,g0_cpuFeatures2;
 extern int numberOfCores;
 
 #if defined(__aarch64__)||defined(_M_ARM64)
@@ -39,8 +39,8 @@ uint32_t OPENSSL_armcap_P;
 
 void cpuInit(void)
 {
-  g_cpuFeatures = 0;
-  g_cpuFeatures2 = 0;
+  g_cpuFeatures = g0_cpuFeatures = 0;
+  g_cpuFeatures2 = g0_cpuFeatures2 = 0;
   OPENSSL_armcap_P = 0;
   numberOfCores=getNumberOfCores();
 }
@@ -242,7 +242,9 @@ void cpuInit(void)
 
 #endif
 
-  OPENSSL_setcap();
+  g0_cpuFeatures = g_cpuFeatures;
+  g0_cpuFeatures2 = g_cpuFeatures2;
+  OPENSSL_setcap(g_cpuFeatures);
 }
 
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
@@ -296,6 +298,7 @@ get_cpuid_count (unsigned int __level, unsigned int __count,
 void cpuInit(void)
 {
   g_cpuFeatures = 0;
+  g_cpuFeatures2 = 0;
   numberOfCores=getNumberOfCores();
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
@@ -486,8 +489,6 @@ EDX[bit 23]  AVX512_FP16
   }
 #endif
 
-  OPENSSL_setcap();
-
 #if defined(__linux__) && !defined(ANDROID)
 #ifndef HWCAP2_RING3MWAIT
 #define HWCAP2_RING3MWAIT      (1 << 0)
@@ -499,13 +500,18 @@ EDX[bit 23]  AVX512_FP16
   if (hwcaps2 & HWCAP2_FSGSBASE) g_cpuFeatures2 |= CPU_X86_FEATURE2_RING3MWAIT;
   if (hwcaps2 & HWCAP2_FSGSBASE) g_cpuFeatures2 |= CPU_X86_FEATURE2_FSGSBASE;
 #endif
+
+  g0_cpuFeatures = g_cpuFeatures;
+  g0_cpuFeatures2 = g_cpuFeatures2;
+  OPENSSL_setcap(g_cpuFeatures);
 }
 
 #else
 
 void cpuInit(void)
 {
-  g_cpuFeatures = 0;
+  g_cpuFeatures = g0_cpuFeatures = 0;
+  g_cpuFeatures2 = g0_cpuFeatures2 = 0;
   numberOfCores=getNumberOfCores();
 }
 
@@ -513,12 +519,12 @@ void cpuInit(void)
 
 uint64_t getCpuFeatures(void)
 {
-  return g_cpuFeatures;
+  return g_cpuFeatures & g0_cpuFeatures;
 }
 
 uint64_t getCpuFeatures2(void)
 {
-  return g_cpuFeatures2;
+  return g_cpuFeatures2 & g0_cpuFeatures2;
 }
 
 intptr_t getCpuFamily(void)
@@ -536,7 +542,7 @@ intptr_t getCpuFamily(void)
 #endif
 }
 
-void OPENSSL_setcap(void)
+void OPENSSL_setcap(uint64_t g_cpuFeatures)
 {
 #if defined(__aarch64__)||defined(_M_ARM64)
   OPENSSL_armcap_P = ARMV7_NEON;

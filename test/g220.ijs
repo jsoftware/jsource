@@ -29,7 +29,6 @@ mean=: +/ % #
 'ill-formed name' -: ex ' ''do_gosh!_''~ 12'
 
 
-4!:55 ;:'mean t x y'
 
 
 

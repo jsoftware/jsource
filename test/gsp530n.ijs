@@ -176,7 +176,6 @@ case 4
 'length error' -: (i.3 4) (2;3)        } etx (2;0 1)$. i.4 5
 
 
-4!:55 ;:'a b c ca case cw d e f g h i m r s t x y'
 
 
 

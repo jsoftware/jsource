@@ -117,7 +117,6 @@ g=: 3 : 'y#:i.*/y'
 'domain error' -: (s:@<"0 'abc')#: etx 7
 'domain error' -: (123;4 5 6)#: etx _12
 
-4!:55 ;:'abase1 abase2 bits f g max t x '
 
 
 

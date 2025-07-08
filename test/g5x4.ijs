@@ -131,12 +131,6 @@ h =. g`:6@*
 9!:7 oldboxc        NB. restored original boxc
 
 NB. jtr appears twice, one is global another local
-4!:55 ;:'a ar bot boxc boxed c center connect cross dash '
-4!:55 ;:'extent f fx g gap ger graft h inv ip '
-4!:55 ;:'jtr jtr kern kernb kernt lab label leaf left limb limb1 '
-4!:55 ;:'lr mat mt oarg oldboxc pad pfx rc rep right root '
-4!:55 ;:'shl shr take test th tr trcase tree trg trgl trgr '
-4!:55 ;:'trnoun trtil trx '
 
 
 

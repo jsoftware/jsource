@@ -7,8 +7,8 @@
 #include "x.h"
 
 #include "cpuinfo.h"
-extern uint64_t g_cpuFeatures;
-extern uint64_t g_cpuFeatures2;
+extern uint64_t g_cpuFeatures,g0_cpuFeatures;
+extern uint64_t g_cpuFeatures2,g0_cpuFeatures2;
 extern int numberOfCores;
 extern void*libcblas;
 extern char hascblas;
@@ -673,7 +673,7 @@ F2(jtcpufeature2){F12IP;I k;
  else if(!strcasecmp(CAV(w),"FSGSBASE" )) g_cpuFeatures2 &= ~CPU_X86_FEATURE2_FSGSBASE ;
 #endif
 }
-OPENSSL_setcap();
+OPENSSL_setcap(getCpuFeatures());
 #if defined(__x86_64__)
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
 #endif

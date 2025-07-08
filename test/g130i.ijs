@@ -53,7 +53,6 @@ _j_ -:  %/ 1j1 1j1 1j1 0
 (%/"1 mtchinf div/"1) x
 (%/"2 mtchinf div/"2) x
 
-4!:55 ;:'div mtchinf x'
 
 
 

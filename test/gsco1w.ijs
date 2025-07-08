@@ -61,7 +61,6 @@ NB. IF64 +. s0 -: s1
 
 0 s: 11
 
-4!:55 ;:'a b b0 b1 c d data e p q s s0 s1 t'
 
 
 

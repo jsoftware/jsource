@@ -84,24 +84,19 @@ end.
 
 NB. LU rational
 lrtoar =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
+(-: (0&{:: /:~ lrtoar@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
 t=: 3 : 0''
 if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
   EMPTY return.
 end.
-for_i. i.15 do.
- a1=. 128!:10 r=. (1000x ?@$~ ,~) i
- assert. r -: (0&{:: /:~ lrtoar@(1&{::)) a1                     NB. dev/lu rational
- b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) _1&x: &.> a1  NB. dev/lu rational
- assert. 1e_4 > b
- a2=. 128!:10 r1=. _1&x: r
- b=. >./ | ,r1 - (0&{:: /:~ lrtoa@(1&{::)) a2
+for_i. (>: , 500&+) (i.15) do.
+ a1=. 128!:10 r=. (1000 ?@$~ ,~) i
+ echo b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) a1  NB. floating point
  assert. 1e_4 > b
 end.
 EMPTY
 )
-
-(-: (0&{:: /:~ lrtoar@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
 1: 0 : 0
 sm =. ((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.001 * *:) 1000
@@ -118,35 +113,33 @@ echo '$a ',":$a
 t1=. 6!:2'c1=. 128!:10 a'
 echo 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!:56'cblas')#' cblas'
 if. IF64 +. 9!:56'cblas' do.
-  assert. 1e_4 >  >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  echo b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  assert. 1e_4 >  b
 end.
 
 a=. a j. (N,N) ?@$ 1000 1000
 t1=. 6!:2'c1=. 128!:10 a'
 echo 'complex ',(' GFlop ',~ 0j3": 4*(N^3)%(t1)*1e9),((9!:56'cblas')#' cblas')
 if. 9!:56'cblas' do.
-  assert. 1e_4 >  >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  echo b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  assert. 1e_4 >  b
 end.
 EMPTY
 )
 
-(3 : 0)^:(IFWIN<IF64) ''
+(3 : 0)^:(IFWIN*:-.IF64) ''
 if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
   EMPTY return.
 end.
 echo 9!:14''
 echo '128!:10  cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 t IF64{250 500
-if. (9!:56)'fma' do. NB. otherwise too slow
-  t IF64{500 1000
-end.
-if. (9!:56)'cblas' do.
+if. ((9!:56)'cblas') +. (9!:56)'fma' do. NB. otherwise too slow
   t IF64{500 1000
 end.
 EMPTY
 )
 
-4!:55 ;:'a i q qr r t todiag lrtoa lrtoar lrin out128 perma s x'
 
 
 

@@ -162,7 +162,6 @@ NB. empty u
 1 2 3 -: 27 (0#a:)}1 2 3
 
 
-4!:55 ;:'a b c d f g i r s t x'
 
 
 

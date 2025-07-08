@@ -262,7 +262,6 @@ f=: 1 : 0
 (imin;-1000 ?@$ 1e4) -/\. f"1 0 >: i.7
 
 
-4!:55 ;:'B C CI data E EI f n nn permute V x xi xx y yy'
 
 
 

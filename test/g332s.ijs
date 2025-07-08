@@ -290,11 +290,6 @@ x testj y
 'index error'  -: ( 0;sh;mh;_1 _1 0 0)  ;: etx 'qqq0x30x50x40x0xxxx'
 
 
-4!:55 ;:'A f me mh mj mj1 mq mv remq remq1 remq2 se sh sj sq sqx sv'
-4!:55 ;:'t t testj x y STATE Y map FSM'
-4!:55 ;:'faliases opaliases csvStates csvEvents fbox flist fsl fcr fslcr ftrace noop jtoi ewji ewnj evji evnj stop back jfwi ewfj evfj NEWROW NEWFLD INFLD FQTE1 INQTE QQTE1 SERR '
-4!:55 ;:'eCOMMA eQUOTE eLF eOTHER eFINAL imap s '
-4!:55 ;:'smcsv traceAnnotate tracecsv unquote uSL coalescesm csv txt '
 
 
 

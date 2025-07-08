@@ -436,8 +436,6 @@ f=: 128!:6
 'domain error' -: (34;'a')      f etx 'xyz'
 'domain error' -: (34;56;3)     f etx 'xyz'
 
-4!:55 ;:'s f tobin SHA_1 SHA_224 SHA_256 SHA_384 SHA_512 SHA_3_224 SHA_3_256 SHA_3_384 SHA_3_512 KECCAK_224 KECCAK_256 KECCAK_384 KECCAK_512 MD4 MD5'
-4!:55 ;:'sha1sum sha1sum_process sha1sum_step test_1 test_2'
 
 epilog''
 

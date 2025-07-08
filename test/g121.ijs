@@ -470,7 +470,6 @@ s =: i. 10000 5  NB. empty arg is lean
 16 46 136 166 18 106 196 48 -: 196 195 16 18 24 22 28 (] [ ([ -. -.)~) 16 46 136 166 18 106 196 48
 
 
-4!:55 ;:'adot1 adot2 sdot0 dr f intersect less not rank res s t x xx yy'
 randfini''
 
 

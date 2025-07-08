@@ -42,7 +42,6 @@ _5r2 -: 5r_2
 (rat x) *. 0.5 __ -: x=: 1r2 _3r0
 
 
-4!:55 ;:'cmpx fl int intx rat x'
 
 
 

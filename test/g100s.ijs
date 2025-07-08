@@ -75,7 +75,6 @@ plus=: 4 : 'x+y'
 'domain error' -: +/\. etx <"0@s: ;:'sui generis'
 
 
-4!:55 ;:'f plus x'
 
 
 

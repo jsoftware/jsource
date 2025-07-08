@@ -55,7 +55,6 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: u: 128+a.i. ' miasma chthonic
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: 10&u: 65536+a.i. ' miasma chthonic chronic kakistocracy dado'
 
 
-4!:55 ;:'f ifb n t test yy'
 
 
 

@@ -440,12 +440,6 @@ _14  (": -: (": x:)) 999996
 2 50027 -: $ 0j25 ": ,. 10 ^ 0 50000x
 
 
-4!:55 ;:'a afte bc bcorn bint bl bot boxc boxed cleanZ edge efmt '
-4!:55 ;:'f f0 finite fmt fmtB fmtD fmtI fmtZ fmtZ1 frame ' 
-4!:55 ;:'imag inside k left mask massage mat minus mt perim '
-4!:55 ;:'pi pp ppq rc real right rows sh sp sprintf '        
-4!:55 ;:'sqz t take tcorn test th thbox thorn1 tint top '
-4!:55 ;:'topleft ubar width x y z ' 
 
 
 epilog''

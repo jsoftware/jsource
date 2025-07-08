@@ -307,7 +307,6 @@ loc=: >@{. ((unxlib 'c'),' duplocale x x')&(15!:0) ^:(IFIOS<(<UNAME) e.;:'Darwin
 loc=: >@{. ((unxlib 'c'),' newlocale x i *c x')&(15!:0) ^:(IFIOS<(<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'C');loc
 empty ((unxlib 'c'),' uselocale x x')&(15!:0) ^:(IFIOS<(<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
 
-4!:55 ;:'IMIN efs efp sfe a e t loc '
 
 epilog''
 

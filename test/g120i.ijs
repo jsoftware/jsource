@@ -65,7 +65,6 @@ minus=: 4 : 'x-y'
 (-/"1 -: minus/"1) x
 (-/"2 -: minus/"2) x
 
-4!:55 ;:'f minus x'
 
 
 

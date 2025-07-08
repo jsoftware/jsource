@@ -56,7 +56,6 @@ cir=. 4 : 'x o. y'
 'domain error' -: o./ etx 'eleemosynary'
 'domain error' -: o./ etx ;:'quod erat demonstratum'
 
-4!:55 ;:'cir x'
 
 
 

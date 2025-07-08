@@ -48,7 +48,6 @@ NB. no longer honored ((%:x)+/*:x) -: f x
 'valence error' -: ''             [: etx <"0@s: ;:'Cogito, ergo sum.'
 
 
-4!:55 ;:'c1 c2 cc cc f ss t x y'
 
 
 

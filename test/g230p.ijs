@@ -44,7 +44,6 @@ res=: 4 : 'x|y'
 'domain error' -: |/\ etx s:@<"0&.> ;:'guard the glory that was Greece'
 'domain error' -: |/\ etx <"0@s: ;:'guard the glory that was Greece'
 
-4!:55 ;:'res x'
 
 
 

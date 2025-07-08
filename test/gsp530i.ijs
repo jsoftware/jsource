@@ -147,7 +147,6 @@ a=: 0 (,:1 1)} a }} etx ''   NB. formerly failed to ra and crashed
 'length error' -: (i.2 3)   2 0} etx $.i.4 3 2
 
 
-4!:55 ;:'a b c d f fs g h i m r s t x'
 
 
 

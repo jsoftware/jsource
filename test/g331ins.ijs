@@ -94,7 +94,6 @@ testb i.2000
 1 0 -: $ 1 0 +/;.1 i.2 0
 
 
-4!:55 ;:'a b c f j p q sp spa t test testb xx yy'
 
 
 

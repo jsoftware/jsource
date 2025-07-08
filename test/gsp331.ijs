@@ -67,7 +67,6 @@ q=: x j}1$.2e9;0;2-2
 (p +/;.1 q) -: p +/ cut1 q
 
 
-4!:55 ;:'classify cut1 f i j n p q qs s t x'
 
 
 

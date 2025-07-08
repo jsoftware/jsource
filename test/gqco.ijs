@@ -158,8 +158,6 @@ NB. fill
 100 101 -:&:(q:"0) 100 101.
  (-: ]&.:q:) 100 101
 
-4!:55 ;:'b d0 d1 d2 d3 divisors f g max n odometer p pa phi pn primes'
-4!:55 ;:'qa qco t2 x y '
 
 
 

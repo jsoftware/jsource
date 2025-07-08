@@ -167,7 +167,6 @@ x (,:"1 -: lam"1) y [ x=: j./?2 3$100 [ y=: j./?2 5 4 3$1e6
 y (,:"1 -: lam"1) x
 
 
-4!:55 ;:'a adot1 adot2 sdot0 f lam t x y'
 randfini''
 
 

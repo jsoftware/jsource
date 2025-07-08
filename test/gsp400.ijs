@@ -128,7 +128,6 @@ t -: (3#x) (,(3*i)+/i.3)} 1 $. 15e8 ; 0 ; 2-2
 
 'limit error' -: 5 # etx 1 $. (IF64{1e9 3e18);0;0
 
-4!:55 ;:'a b c d f g h i j r s t x'
 
 
 

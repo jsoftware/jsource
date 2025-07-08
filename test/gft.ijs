@@ -28,7 +28,6 @@ t=: 10 timer 'rev"1 f. y'
 THRESHOLD +. (1-*:threshold) > | (s-t)%s
 
 
-4!:55 ;:'mean plus rev s sum t tally x y'
 
 
 

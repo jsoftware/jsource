@@ -53,7 +53,6 @@ r"0 i. 10000
 2178309 -: ([: +&$:/ <:^:(1 2))`]@.(1&>:)M. 32  NB. virtual result must incorp
 55 -: ([: +/ [: $: -&1 2)^:(1&<) M."0 ] 10
  
-4!:55 ;:'coeffs combr f fib fibr hwmk params pn pnx rec t'
 
 
 

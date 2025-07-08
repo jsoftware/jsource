@@ -104,8 +104,6 @@ test2a=: 3 : 0
 test2a"0 i.NRNG
 
 
-4!:55 ;:'j NRNG p0 p1 p2 q0 q1 q2 s t '
-4!:55 ;:'test0 test1 test2 test2a u xx yarg yy'
 
 
 

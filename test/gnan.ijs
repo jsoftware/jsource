@@ -306,7 +306,6 @@ NB. end-of-buffer garbage is masked out
 1: = +~ 96 }. 96 {. 1. (i. 96)} 100 $ _2 (3!:5) 2 0 0 0 0 0 240 255 { a.  NB. signaling NaN
 
 
-4!:55 ;:'d det f i inf ninf pinf t t1 x y zero znan'
 
 
 

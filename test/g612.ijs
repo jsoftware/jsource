@@ -22,7 +22,6 @@ x =: 5 7
 'domain error' -: ex '-`a;._2'
 
 
-4!:55 ;:'a f plus x y'
 
 
 

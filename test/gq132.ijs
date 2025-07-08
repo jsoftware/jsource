@@ -57,7 +57,6 @@ test=: 3 : 0
 *./ 1 _1 e.~ t=. test 1+*:1+?1000
 
 
-4!:55 ;:'cfsqrt N rat t test v xx yy'
 
 
 

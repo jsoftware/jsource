@@ -100,7 +100,6 @@ t -: /:~t
 *./~:{."1 t
 
 
-4!:55 ;:'chk delth f g h n old pr s sp spa space t x y '
 
 
 

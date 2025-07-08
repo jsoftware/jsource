@@ -243,7 +243,6 @@ THRESHOLD +. (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9
 THRESHOLD +. (-. 1 e. 'avx2' E. 9!:14'') +. (6!:2 '9!:66]2 1') < 1.25 *  6!:2 '9!:66]4 0'  NB. verify lzcnt used
 
 
-4!:55 ;:'dr eq exp f qct rk s sgn t test testa testb testc times x y'
 
 
 

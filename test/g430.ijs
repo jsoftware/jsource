@@ -582,9 +582,6 @@ a =: i. 1000 1000
 (; 2 (<@(]@]/)\) a) -: 2 ;@:(<@(]@]/)\) a
 
 
-4!:55 ;:'A a adot1 adot2 sdot0 b base bs bsd em en f iind '
-4!:55 ;:'infix inv k kay key n ob oind omask osub '
-4!:55 ;:'outfix prefix sd seg suffix t test w x y'
 randfini''
 
 

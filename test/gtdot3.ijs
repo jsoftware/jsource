@@ -162,7 +162,6 @@ end.
 
 wthr N
 
-4!:55 ;:'mx N N1 N2 delth f f1 aaa__ bbb__ ccc__ sema setth wthr'
 
 epilog''
 

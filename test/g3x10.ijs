@@ -103,6 +103,5 @@ assert. (P-:Q)
 
 S1 test1 0
 
-4!:55 ;:'BASE64 BASE64_2 tobase64_old frombase64_old f L0 S1 test1'
 
 epilog''

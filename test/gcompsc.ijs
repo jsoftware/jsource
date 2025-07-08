@@ -535,12 +535,6 @@ NB. empty-arg detection
 ((+/"]@:= S: 0 <"0@i.@#) -: (+/@:= S: 0~ <"0@i.@#)) (0 $ 00) ; , 01
 
 
-4!:55 ;:'ad ai as cc data expression f ftab ri sp SPTOLER'
-4!:55 ;:'t test testbsv testbvs testbvv testc testE testsp'
-4!:55 ;:'testss testsv testvs testvv'
-4!:55 ;:'xa xb xb1 xb2 xb3 xb4 xb5 xb6 xb7 xc xd xi xj xs xx'
-4!:55 ;:'ya yb yb1 yb2 yb3 yb4 yb5 yb6 yb7 yc yd yi yj ys yy'
-4!:55 ;:'zb zd zi zs'
 
 
 

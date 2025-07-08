@@ -80,7 +80,6 @@ test 16
 'index error'  -: (71$3 _6) ;@:{ etx 5$<"0@s: <'xy'
 
 
-4!:55 ;:'adot1 adot2 sdot0 b data f i m test yy'
 randfini''
 
 

@@ -72,7 +72,6 @@ f=:(#:1 3)&(+/ .*)
 (,&'xx' pow n -: ,&'xx'^:n) ''  [ n=:i.6
 
 
-4!:55 ;:'boxed f g inv jnc n open pow powg pown powv verb' 
 
 epilog''
 

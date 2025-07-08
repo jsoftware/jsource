@@ -484,7 +484,6 @@ NB. s: errors -----------------------------------------------------------
 
 0 s: 11
 
-4!:55 ;:'c i m offset s sbase sn t uv x x0 x1 x2 y y0 y1 y2 z0 z1'
 randfini''
 
 

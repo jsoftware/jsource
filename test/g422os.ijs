@@ -31,7 +31,6 @@ THRESHOLD +. 0.75 > %/ 10000&(6!:2) '5 ({ /:~) y' ,: '5 ({ /:~"]) y' NB. 0.71 on
 'index error'  -: _1e6 ({/:~) etx y
 
 
-4!:55 ;:'n x y'
 
 
 epilog''

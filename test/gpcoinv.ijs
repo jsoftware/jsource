@@ -30,7 +30,6 @@ NB. LeVeque, Fundamentals of Number Theory, Addison-Wesley, 1977, p. 5.
 50847534 = f 1e9
 
 
-4!:55 ;:'f v x'
 
 
 

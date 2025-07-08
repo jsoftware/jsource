@@ -100,7 +100,6 @@ b (exp -: expand) x=: j./ ?2$1e6 [ b=:  (1+?1000)$0
 'length error' -: 1 0 1 #^:_1 etx i.5 3
 
 
-4!:55 ;:'adot1 adot2 sdot0 b exp expand f g x'
 randfini''
 
 

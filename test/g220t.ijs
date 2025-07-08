@@ -25,7 +25,6 @@ test0 ''
 test1 ''
 
 
-4!:55 ;:'i ratio t test0 test1 xx yy'
 
 
 

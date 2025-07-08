@@ -84,7 +84,6 @@ x ] g y
 'rank error'   -: (1 0 1;,:1 0 0 0) <;.1 etx i.3 4
 
 
-4!:55 ;:'c cut f g index size stdx x y'
 
 
 

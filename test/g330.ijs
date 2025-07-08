@@ -392,7 +392,6 @@ IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$s:@<"0 'chthonic
 4 -: (3!:0) > _3 }. (0, 2);(0;0);a=. 0;0
 
 
-4!:55 ;:'a adot1 adot2 sdot0 boxed f link maxr mt raze t templ x y'
 randfini''
 
 

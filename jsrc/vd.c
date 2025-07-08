@@ -211,7 +211,7 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
  if(ISDENSETYPE(AT(w),B01+INT))RZ(w=cvt(FL,w));  // convert boolean/integer to real
  if(wr==1)w=table(w);  // convert column vector to column matrix
-#if !defined(_WIN32)    // windows openblas issue
+#if defined(_WIN64)||!defined(_WIN32)    // 32-bit windows openblas issue
 // calling lapack LUP factoriztion to compute inverse of square matrix
  if(hascblas&&(wr==2)&&(s[0]==s[1])&&(AT(w)&FL)&&(s[0]>1)){
  int info; int m1=s[0]; int *ipiv;
@@ -243,7 +243,7 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  FREE(ipiv); FREE(work);
  *det=0.0;
  RETF(cant1(w));
-#if 0      // slow 
+#if 0      // slow
  }else if(hascblas&&(wr==2)&&(s[0]>=s[1])&&(AT(w)&FL)&&(s[1]>1)){
  int info; int m1=s[0]; int n1=s[1];   // m1 >= n1
  D *work;
@@ -260,21 +260,21 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  w=cant1(w);
  lwork=-1;
  D work0;
- dgesdd_(&jobz, &m1, &n1, DAV(w), &m1, sg, u, &m1, vt, &n1, &work0, &lwork, iwork, &info);
+ jdgesdd_(&jobz, &m1, &n1, DAV(w), &m1, sg, u, &m1, vt, &n1, &work0, &lwork, iwork, &info);
  if(info){FREE(sg); FREE(u); FREE(vt); FREE(iwork); ASSERT(!info,EVDOMAIN);}
  lwork=(int)work0;
  work=MALLOC(lwork*sizeof(D));
- dgesdd_(&jobz, &m1, &n1, DAV(w), &m1, sg, u, &m1, vt, &n1, work, &lwork, iwork, &info);
+ jdgesdd_(&jobz, &m1, &n1, DAV(w), &m1, sg, u, &m1, vt, &n1, work, &lwork, iwork, &info);
  if(info){FREE(sg); FREE(u); FREE(vt); FREE(iwork); FREE(work); ASSERT(!info,EVDOMAIN);}
  FREE(iwork); FREE(work);
  DO(n1, sg[i] = 1.0 / sg[i];)
  I sp[2]={n1,m1};
  A z; GATV(z,FL,n1*m1,2,sp)
 //compute the  first multiplication sg*ut       (n,m) x (m,m) => (n,m)
- DO(n1, cblas_dscal(m1,sg[i],&u[i*m1],1););    // u is column major
+ DO(n1, jcblas_dscal(m1,sg[i],&u[i*m1],1););    // u is column major
  FREE(sg);
 //compute the second multiplication v*sg*u^T  (n,n) x (n,m) => (n,m)
- cblas_dgemm(CblasRowMajor,CblasNoTrans, CblasNoTrans, n1, m1, n1, 1.0, vt, n1, u, m1, 0.0, DAV(z), m1);
+ jcblas_dgemm(CblasRowMajor,CblasNoTrans, CblasNoTrans, n1, m1, n1, 1.0, vt, n1, u, m1, 0.0, DAV(z), m1);
 //now, z is the pseudoinverse of a.
  FREE(u); FREE(vt);
  ASSERT(!info,EVDOMAIN);
@@ -297,11 +297,11 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  w=cant1(w);
  lwork=-1;
  dcomplex work0;
- zgesdd_(&jobz, &m1, &n1, (dcomplex*)ZAV(w), &m1, sg, u, &m1, vt, &n1, &work0, &lwork, rwork, iwork, &info);
+ jzgesdd_(&jobz, &m1, &n1, (dcomplex*)ZAV(w), &m1, sg, u, &m1, vt, &n1, &work0, &lwork, rwork, iwork, &info);
  if(info){FREE(sg); FREE(u); FREE(vt); FREE(iwork); FREE(rwork); ASSERT(!info,EVDOMAIN);}
  lwork=(int)*(D*)&work0;
  work=MALLOC(lwork*sizeof(Z));
- zgesdd_(&jobz, &m1, &n1, (dcomplex*)ZAV(w), &m1, sg, u, &m1, vt, &n1, work, &lwork, rwork, iwork, &info);
+ jzgesdd_(&jobz, &m1, &n1, (dcomplex*)ZAV(w), &m1, sg, u, &m1, vt, &n1, work, &lwork, rwork, iwork, &info);
  if(info){FREE(sg); FREE(u); FREE(vt); FREE(iwork); FREE(rwork); FREE(work); ASSERT(!info,EVDOMAIN);}
  FREE(iwork); FREE(rwork); FREE(work);
  dcomplex *sgi=MALLOC(n1*sizeof(dcomplex));
@@ -309,10 +309,10 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  I sp[2]={n1,m1};
  A z; GATV(z,CMPX,n1*m1,2,sp)
 //compute the  first multiplication sg*ut       (n,m) x (m,m) => (n,m)
- DO(n1, cblas_zscal(m1,(void*)&sgi[i],&u[i*m1],1););    // u is column major
+ DO(n1, jcblas_zscal(m1,(void*)&sgi[i],&u[i*m1],1););    // u is column major
  FREE(sg);FREE(sgi);
 //compute the second multiplication v*sg*u^T  (n,n) x (n,m) => (n,m)
- cblas_zgemm(CblasRowMajor,CblasNoTrans, CblasNoTrans, n1, m1, n1, &zone, vt, n1, u, m1, &zzero, DAV(z), m1);
+ jcblas_zgemm(CblasRowMajor,CblasNoTrans, CblasNoTrans, n1, m1, n1, &zone, vt, n1, u, m1, &zzero, DAV(z), m1);
 //now, z is the pseudoinverse of a.
  FREE(u); FREE(vt);
  ASSERT(!info,EVDOMAIN);

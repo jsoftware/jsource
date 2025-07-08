@@ -164,7 +164,6 @@ f=:+,*
 'length error' -: ex '(<''a.'';<<''+''     ) fx'
 
 
-4!:55 ;:'a ar cn cv eachh eq f fx g noun pow tv verb '
 
 
 

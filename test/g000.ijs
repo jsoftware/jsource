@@ -145,7 +145,6 @@ NB. rational
 'length error' -: (i.3 4) =~etx i.5 4    
 
 
-4!:55 ;:'a adot1 adot2 sdot0 b n t test x'
 randfini''
 
 

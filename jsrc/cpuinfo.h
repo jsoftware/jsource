@@ -25,7 +25,7 @@ extern void cpuInit(void);
 extern uint64_t getCpuFeatures(void);
 extern uint64_t getCpuFeatures2(void);
 extern intptr_t getCpuFamily(void);
-extern void OPENSSL_setcap(void);
+extern void OPENSSL_setcap(uint64_t);
 extern int getNumberOfCores(void);
 
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)

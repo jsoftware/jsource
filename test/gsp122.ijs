@@ -88,7 +88,6 @@ f&>c=: ; (i.1+r) <"1@comb&.>r=:#$p
 g&>c
 
 
-4!:55 ;:'c d f g p q r s t x y'
 
 
 

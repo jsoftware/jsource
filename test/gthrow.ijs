@@ -319,7 +319,6 @@ NB. '10 not cut back' -: main5 10
 (271828) 18!:55 <'jthrow'
 
 
-4!:55 ;:'f main main1 main2 main3 main4 main5 sub t'
 NB. =====================================================================
 
 dbr Debug

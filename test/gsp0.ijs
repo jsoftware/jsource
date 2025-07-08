@@ -185,7 +185,6 @@ f&>/~c
 'domain error' -: 1 2 >: etx $. 3j4 5
 
 
-4!:55 ;:'c f p q r t x y z'
 
 
 

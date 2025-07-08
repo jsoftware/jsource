@@ -43,7 +43,6 @@ y=: 2e4$'boustrophedonic chuffed'
 (IF64{1000 2400) > 7!:2 'x[y'
 
 
-4!:55 ;:'x xa xb xd xi xj y'
 
 
 

@@ -118,7 +118,6 @@ x=: (5 1e4 ?@$ 2)
 'limit error' -: /:@/:"2 etx 0 $~ (IF64$2e9),1e9 11 17 0
 
 
-4!:55 ;:'adot1 adot2 sdot0 f g rk x xx y'
 randfini''
 
 epilog''

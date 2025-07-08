@@ -135,7 +135,6 @@ b =: + ((1 : '/') \)
 '/\' -: 5!:5 <'b'
 
 
-4!:55 ;:'adot1 adot2 sdot0 b c f g i x'
 randfini''
 
 

@@ -39,7 +39,6 @@ test <"0 ?40$100
 'length error' -: 1 2 3 #/. etx i.4 
 
 
-4!:55 ;:'adot1 adot2 sdot0 tally test xx'
 randfini''
 
 epilog''

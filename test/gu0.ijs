@@ -674,7 +674,6 @@ y=: 10&u: x
 (t i:&:> t,t) -: ((10&u:)&.>t) i: t,~(10&u:)&.>t
 
 
-4!:55 ;:'domerr f g i j k lr sq t UTYPE x y z'
 
 
 

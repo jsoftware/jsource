@@ -341,7 +341,6 @@ NB. 'ill-formed number' -: ex '123 45e   '
 'ill-formed number' -: ex '2 3pb     '
 'ill-formed number' -: ex '2 3xb     '
 
-4!:55 ;:'dig eq q r rhet rhet1 t'
 
 
 

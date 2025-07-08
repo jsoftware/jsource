@@ -115,7 +115,6 @@ a:&, f a
 -.&a: f a
 ;&a f a
 
-4!:55 ;:'a f f1 g h h1 mean q r rsq ss tbase timenoa timea tip tnip x x1 x2 y y1 y2'
 
 
 

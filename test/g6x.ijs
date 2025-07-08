@@ -388,9 +388,6 @@ _1 0 1 2 5 6 9 10 13 15 _2 -: 3 {:: 6!:11''
 
 (271828) 18!:55 ;:'aa l6x foo'
 
-4!:55 ;:'avg bhdr bpe dl f m n '
-4!:55 ;:'pmctr pmdata pmstats pmunpack qpc qpf '
-4!:55 ;:'s sp sum_z_ t time ts tss tv x xop xx '
 
 
 

@@ -25,7 +25,6 @@ f"0 x=:>:i.2 10
 'domain error' -: +:/\. etx s:@<"0&.> ;:'professors in New England'
 'domain error' -: +:/\. etx <"0@s: ;:'professors in New England'
 
-4!:55 ;:'f nor x'
 
 
 

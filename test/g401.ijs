@@ -159,7 +159,6 @@ NB. complex
 'domain error' -: 1 2 3   #. etx <5
 
 
-4!:55 ;:'base1 base2 ext f n rank x'
 
 
 

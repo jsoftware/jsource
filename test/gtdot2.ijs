@@ -374,7 +374,6 @@ NB.$    end of skip
 (<'z') 18!:2 <'base'
 (271828) 18!:55 ;:'l1 l2'
 
-4!:55 ;:'NX STRIDE TASK delth s1 t1 t1done'
 
 epilog''
 

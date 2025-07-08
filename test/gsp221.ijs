@@ -33,7 +33,6 @@ scheck t
 (5$.t) -: ~.(q/:p) -. (0 * {. q)
 
 
-4!:55 ;:'c f p q r s t'
 
 epilog''
 

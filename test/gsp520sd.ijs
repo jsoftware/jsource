@@ -46,7 +46,6 @@ stsp -~ 7!:0'' }} ''   NB. At one point this leaked memory
 'non-unique sparse elements' -: ($.i.2 3){"2 1 etx i.2 6
 
 
-4!:55 ;:'c f p q r'
 
 
 

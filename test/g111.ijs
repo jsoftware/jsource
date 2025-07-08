@@ -58,7 +58,6 @@ y=: j./ _5000 + 2 10000 ?@$ 10000
 'length error' -: 3 4   *. etx i.5 6
 'length error' -: 3 4   *.~etx i.5 6
 
-4!:55 ;:'a f x y'
 
 
 

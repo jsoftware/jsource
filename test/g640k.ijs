@@ -363,12 +363,6 @@ testf=: 4 : 0
 2 testf 5x
 )
 
-4!:55 ;:'a c chisqcdf couplen d e ea erf f g g0 g1 gamma h ig0 incgam'
-4!:55 ;:'j k m mean n n01cdf NRNG p r s s2 sp t'
-4!:55 ;:'test test1 test10 test2 test3 test4'
-4!:55 ;:'test5 test6 test7 test8 test9'
-4!:55 ;:'testa testb testc testd teste testf'
-4!:55 ;:'var x xx x1 y yy'
 
 
 

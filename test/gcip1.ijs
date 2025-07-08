@@ -69,7 +69,6 @@ t1''
 
 delth''  NB. make sure we start with an empty system
 
-4!:55 ;:'delth mm t1'
 
 epilog''
 

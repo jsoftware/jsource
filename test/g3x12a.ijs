@@ -88,6 +88,5 @@ S1 test1 1
 S2 test1 1
 S3 test1 1
 
-4!:55 ;:'L0 ToLower tolower1 tolower2 ToUpper toupper1 toupper2 S1 S2 S3 test1'
 
 epilog''

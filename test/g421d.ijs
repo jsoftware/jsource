@@ -78,7 +78,6 @@ test <"0 ?40$100
 'domain error' -: 1 2 3 ({.,#)/. etx <"0@s: ;:'foo upon thee' 
 
 
-4!:55 ;:'adot1 adot2 sdot0 f g test testa xx yy'
 randfini''
 
 

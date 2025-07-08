@@ -40,7 +40,6 @@ s -: size   p,&.>{."1 d
 
 'rank error'   -: dir etx 2 3$'ab'
 
-4!:55 ;:'d dir read mac p pc s size t test unix win x'
 
 
 

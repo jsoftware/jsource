@@ -30,6 +30,8 @@ char hasopenmp=0;
 #elif defined(_WIN32)
 #if defined(_WIN64)
 #define LIBCBLASNAME "libopenblas.dll"
+#elif defined(__aarch64__)||defined(_M_ARM64)
+#define LIBCBLASNAME "libopenblas_arm64.dll"
 #else
 #define LIBCBLASNAME "libopenblas_32.dll"
 #endif

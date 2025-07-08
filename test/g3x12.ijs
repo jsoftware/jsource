@@ -69,7 +69,6 @@ x=. I. 26 > n=. ((97+i.26){a.) i. t=. ,y
 'domain error' -: _1&(3!:12) etx ''
 'domain error' -: 2&(3!:12) etx ''
 
-4!:55 ;:'ToLower ToUpper'
 
 epilog''
 

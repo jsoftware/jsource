@@ -668,7 +668,6 @@ y=: u: x
 (t i:&:> t,t) -: (u:&.>t) i: t,~u:&.>t
 
 
-4!:55 ;:'domerr f g i j k lr sq t UTYPE x y z'
 
 
 

@@ -644,7 +644,6 @@ assert. 'domain error' -: aa ff f. m. modm etx bb
 NB. not working yet *./ , h@> { (<01);a;mod;<f
 NB. not working yet *./ , h@> { a;(<01);mod;<f
 
-4!:55 ;:'a exp f h mod n pow rou s x y'
 
 
 

@@ -197,7 +197,6 @@ f=: e.!.0
 1 [ unmap_jmf_ 'r'
 1!:55 ::1: f,f1
 
-4!:55 ;:'f f1 g j mean q r t x y'
 
 
 

@@ -312,10 +312,6 @@ test_dx 1
 1 [ 9!:57 (2)
 
 
-4!:55 ;:'a B b bigdeal c d deal deal1 dx dx1'
-4!:55 ;:'gb_A gb_flip_cycle gb_i gb_init_rand gb_init_rand1 gb_next_rand'
-4!:55 ;:'i lcg M m mean mod_diff n qrl r r1597 rix roll roll0 seed'
-4!:55 ;:'t test test_dx test_lcg test1 testmean tick var x zz'
 
 
 

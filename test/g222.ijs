@@ -320,7 +320,6 @@ NB. rational
 'length error' -: 1 2 ~: etx s:@<"0 'abc'
 
 
-4!:55 ;:'a adot1 adot2 sdot0 b g t test x y yy'
 randfini''
 
 

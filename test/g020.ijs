@@ -112,8 +112,6 @@ NB. symbol
 'domain error' -: (s:@<"0 'abc') > etx 1 2 3j4   
 'domain error' -: (s:@<"0 'abc') >~etx 1 2 3j4
 
-4!:55 ;:'b crank crk cshape ctype f fill mrk msh mt '
-4!:55 ;:'mtype ope rank t x '
 
 
 

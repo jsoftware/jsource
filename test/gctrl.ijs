@@ -96,6 +96,7 @@ f0=. {{     NB. empty first line
 r =: {{ y }} :. {{ y }}
 '3 : ''y '' :.(3 : ''y '')' -: 5!:5 <'r'
 
+4!:55 ;:'x y'
 r =: {{
 _1 = 4!:0 u
 }}
@@ -678,7 +679,7 @@ NB. 9.7 _1 = 4!:0 <'tvbl'
 
 {{ dodothrow =. {{ if. dothrow'' do. end. }} [. (dothrow =: {{ throw. }}) try. dodothrow'' 0 catcht. 1 end. }} ''  NB. throw passed through T-block
 
-4!:55 ;:'calcA dothrow f0 f1 f2 f3 fp g0 g1 g1__ g2 g3 g4 g5 gvb l numloc1 numloc2 r test tmonad testhetrf vb__ vb_z_'
+4!:55 ;:'vb_z_'
 
 
 

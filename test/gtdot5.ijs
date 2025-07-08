@@ -111,7 +111,6 @@ NB.$   end of skip
 
 delth''
 
-4!:55 ;:'ALL delth N p1 p2 p3 p4 t1 t2 t3 t4 sleep wthr REASSIGNFRAC TESTS234 TEST1CT ALLOSDURINGASSIGN  '
 
 epilog''
 

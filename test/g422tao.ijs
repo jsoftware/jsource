@@ -15,7 +15,6 @@ eq=: -:!.0
 0 =   123 gt '123'
 1 =   3j4 gt 2j7
 
-4!:55 ;:'eq ge gt le lt'
 
 epilog''
 

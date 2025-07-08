@@ -143,7 +143,6 @@ a =: 2 2 $ 1 ; (0 2 $ a:) ; 2 ; (0 $ 0)
 (; <@({. ,. >@{:)"1 a) -: (; <@({. ,","_1 >@{:)"1 a)
 
 
-4!:55 ;:'a adot1 adot2 sdot0 c f g k s sp t test x yy z'
 randfini''
 
 

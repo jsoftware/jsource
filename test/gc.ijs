@@ -162,10 +162,6 @@ k = p log"1 p pow"1 0 k=:?2 10$n
 )
 
 
-4!:55 ;:'ab ac assert bc boxed c cdot1 cdot2 cfd chk0 '
-4!:55 ;:'chk1 cr CT cyc dfc f g g0 gcd iscyc '
-4!:55 ;:'isperm it k log mr n ord p p1 parity pfill '
-4!:55 ;:'pind pow t wh where x '
 
 
 

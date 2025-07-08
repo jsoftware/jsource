@@ -168,7 +168,6 @@ n (}."2 -: f"2) x [ n=:?}.$x
 (7,61$1) -: $ (61$0) }."1 0 i.7x
 
 
-4!:55 ;:'adot1 adot2 sdot0 behead di drop f m n ni pi t test x '
 randfini''
 
 

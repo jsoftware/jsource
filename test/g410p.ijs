@@ -37,7 +37,6 @@ bang=: 4 : 'x!y'
 'domain error' -: !/\ etx s:@<"0&.> ;:'super cali fragi listic espi ali do cious'
 'domain error' -: !/\ etx <"0@s: ;:'super cali fragi listic espi ali do cious'
 
-4!:55 ;:'bang x'
 
 
 

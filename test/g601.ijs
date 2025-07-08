@@ -340,8 +340,6 @@ assert. 8 -: type ". '_9223372036854775809'  NB. below imin stays float
 'rank error'   -: 3 4   ". etx '1 2 3'
 
 
-4!:55 ;:'a aa b eq f n p x y'
-4!:55 ;: 'p'
 
 
 

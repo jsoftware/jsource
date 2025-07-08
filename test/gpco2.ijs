@@ -136,7 +136,6 @@ c=: _4 _1 0 1 2 3 4 5
 'rank error'   -: 0 1  p: etx 4 5 6
 
 
-4!:55 ;:'b c f1 f2 isprime tot x y'
 
 
 

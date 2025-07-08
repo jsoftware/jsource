@@ -44,7 +44,6 @@ pow=: 4 : 'x^y'
 'domain error' -: ^/\ etx s:@<"0&.> ;:'ex cathedra'
 'domain error' -: ^/\ etx <"0@s: ;:'ex cathedra'
 
-4!:55 ;:'pow x'
 
 
 

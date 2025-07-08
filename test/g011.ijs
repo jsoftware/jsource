@@ -161,7 +161,6 @@ NB. symbol
 'length error' -: (i.3 4) <. etx i.5 4 
 'length error' -: (i.3 4) <.~etx i.5 4 
 
-4!:55 ;:'a b f inc ir p q x y zfl zfloor '
 
 
 

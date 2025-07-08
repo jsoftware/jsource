@@ -98,7 +98,6 @@ x -: %/\x=: [&.j. 0 0 0 0
 'domain error' -: %/\ etx s:@<"0&.> ;:'peace in our time'
 'domain error' -: %/\ etx <"0@s: ;:'peace in our time'
 
-4!:55 ;:'div x'
 
 
 

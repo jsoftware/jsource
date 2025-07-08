@@ -43,7 +43,6 @@ a (r. -: rdot) b
 'length error' -: 3 4   r. etx i.3 4
 'length error' -: 3 4   r.~etx i.3 4
 
-4!:55 ;: 'a b c rdot'
 
 
 

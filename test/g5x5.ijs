@@ -977,17 +977,6 @@ y
 ('3 : 0',LF,'x + y',LF,'y',LF,')') -: (2) 5!:5 <'f'
 
 
-4!:55 ;:'a act adot1 adot2 sdot0 alp ar base bot boxc boxed bp bs '
-4!:55 ;:'bsd c center connect cp cross dash dig dotco em '
-4!:55 ;:'en extent f f3 fx g gap graft h hfork '
-4!:55 ;:'id iind infix ins insert kay kern kernb kernt key '
-4!:55 ;:'lab label lcase leaf left lg lgl lgr limb limb1 '
-4!:55 ;:'lnoun lr lrep ltie ltil lx mat mt mtv name '
-4!:55 ;:'nopar num oarg ob oind omask osub outfix pad paren '
-4!:55 ;:'pfx prefix pstr qstr quote rc rep right root '
-4!:55 ;:'s sd seg shape shl shr slist suffix symb '
-4!:55 ;:'t take test test1 test2 testeq testlr tr trcase tree trg trgl trgr trtil trx '
-4!:55 ;:'value vbox vchar x '
 randfini''
 
 

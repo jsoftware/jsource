@@ -267,12 +267,14 @@ for_y234. y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
 NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
 NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
 NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
@@ -298,12 +300,14 @@ while. x123~:0 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
 NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
 NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
 NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
@@ -330,12 +334,14 @@ for_y234. y123{~?~#y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
 NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
 NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
 NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
@@ -358,12 +364,14 @@ while. x123~:0 do.
   assert. 0 s: 11
 NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
   Debug=: 1
   0!:2<testpath,y123,'.ijs'
   Debug=: 0
   assert. 0 s: 11
 NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
   x123=. <:x123
 NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12

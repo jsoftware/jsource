@@ -36,6 +36,7 @@ copy bin\profile.ijs jarm64
 copy pthreads4w\bin\pthreadVC3-arm64.dll jarm64\pthreadVC3.dll
 copy mpir\windows\arm64\mpir.dll jarm64
 copy pcre2\windows\arm64\jpcre2.dll tools\regex\.
+curl --output-dir "jarm64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
 :L01C
 
 copy version.txt jsrc\jversion.h

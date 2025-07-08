@@ -380,7 +380,7 @@ neg p
 
 1: ?~ 6  NB. deal random #s.  Change if we hit a bad spot
 
-
+4!:55 ;:'a fa'
 
 
 epilog''

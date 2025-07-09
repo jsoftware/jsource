@@ -98,10 +98,11 @@ eftxs     =: ::((10{a.) -.~ (13!:12) @ i. @ 0:)   NB. only the terse part
 eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
 efx      =: ". eftx
 
+currlocals_z_ =: (4!:1)@0 1 2 3  NB. create list of local names plus any in the current locale
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-prolog=: {{ 1: (dbr bind Debug)@:(9!:19)2^_44[4!:55'x';'y'[techo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}
+prolog=: {{ 1: xyziniloc__ =: x [ (dbr bind Debug)@:(9!:19)2^_44[techo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}~ currlocals_p38s4jf7_
 NB. epilog'' is run as the last line of each testcase
-epilog=: 3 :  0
+epilog=: 3 :  0 @: (4!:55) @: (currlocals_p38s4jf7_ -. ".@'xyziniloc__')  NB. Erase locals defined since prolog
 10 s: GLOBALSYMBOL
 empty 0&T.^:(0=1&T.) ::1:''
 if. 'Linux'-:UNAME do.

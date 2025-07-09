@@ -6,9 +6,9 @@ NB. |/\. B -------------------------------------------------------------
 rem=: 4 : 'x|y'
 
 f=: 3 : '(|/\. -: rem/\.) y ?@$ 2'
-,f"1 x=.7 8 9,."0 1 [ _1 0 1+  255
+,f"1 x=:7 8 9,."0 1 [ _1 0 1+  255
 ,f"1 |."1 x
-,f"1 x=.7 8 9,."0 1 [ _1 0 1+4*255
+,f"1 x=:7 8 9,."0 1 [ _1 0 1+4*255
 ,f"1 |."1 x
 
 'domain error' -: |/\. etx 'deipnosophist'
@@ -20,7 +20,6 @@ f=: 3 : '(|/\. -: rem/\.) y ?@$ 2'
 'domain error' -: |/\. etx s:@<"0 'deipnosophist'
 'domain error' -: |/\. etx s:@<"0&.> ;:'professors in New England'
 'domain error' -: |/\. etx <"0@s: ;:'professors in New England'
-
 
 
 

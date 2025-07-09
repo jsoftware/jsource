@@ -108,6 +108,8 @@ if. 'Linux'-:UNAME do.
  'libc.so.6 malloc_trim > i x'&cd <.64*1024
 end.
 assert. (<'base')-:18!:5''
+4!:55 ;:'x y'
+4!:55 ;:'x y'
 4!:55 (nl'') -. oldnl
 1: techo^:ECHOFILENAME RUNFILE,'  time(sec): ',(":RUNTIME-~6!:1''),'  memory used: ',":(7!:1,7!:7)''
 )
@@ -263,16 +265,17 @@ for_y234. y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
 NB.  11 s: ''    NB. reset symbol
@@ -296,16 +299,17 @@ while. x123~:0 do.
   techo RLAST=: >y234
   save_ran=:9!:44''
   Debug=: 0
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
 NB.  11 s: ''    NB. reset symbol
@@ -330,16 +334,17 @@ for_y234. y123{~?~#y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
 NB.  11 s: ''    NB. reset symbol
@@ -360,16 +365,17 @@ assert. (<'base')-:18!:5''
 4!:55 ;:'x y'
 while. x123~:0 do.
   Debug=: 0
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2<testpath,y123,'.ijs'
   assert. 0 s: 11
-NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
   Debug=: 1
   0!:2<testpath,y123,'.ijs'
   Debug=: 0
   assert. 0 s: 11
-NB.  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
   x123=. <:x123
@@ -466,7 +472,8 @@ allorcmdline=: 3 :0
   end.
 )
 
-oldnl=: (;:'x y') -.~ ('RB';'RF';'oldnl';'RLAST';'save_ran'),~ (nl__ i.4)
+oldnl=: (;:'x y') -.~ ('IgnoredLocal';'RB';'RF';'oldnl';'RLAST';'save_ran'),~ (nl__ i.4)
+IgnoredLocal=: ;:'x y d123 x123 y123 y234 y234_index'
 
 techo 0 : 0
 see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd

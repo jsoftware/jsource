@@ -166,6 +166,6 @@ f=:+,*
 
 
 
-
+4!:55 ;:'cn cv noun verb'
 epilog''
 

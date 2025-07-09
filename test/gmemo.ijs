@@ -32,7 +32,7 @@ combr=: 4 : 0 M.  NB. All size x combinations of i.y
  if. (x>:y)+.0=x do. i.(x<:y),x else. (0,.x combr&.<: y),1+x combr y-1 end.
 )
 
-(comb -: combr)/"1 (<:/"1 t)#t=. ,/>{;~i.9
+(comb -: combr)/"1 (<:/"1 t)#t=: ,/>{;~i.9
 
 params =: ( <:@:i.@:(] - <:@:[))
 coeffs =: (|.@:>:@:i.@(] - <:@:[))
@@ -53,7 +53,6 @@ r"0 i. 10000
 2178309 -: ([: +&$:/ <:^:(1 2))`]@.(1&>:)M. 32  NB. virtual result must incorp
 55 -: ([: +/ [: $: -&1 2)^:(1&<) M."0 ] 10
  
-
 
 
 epilog''

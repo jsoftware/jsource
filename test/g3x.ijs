@@ -169,11 +169,11 @@ hexrep f 1
 f=: 1 : 0  NB. boxed arrays
  test=: (-: unbin@(0&u)) , (-: unbin@(1&u)) , (-: unbin@(10&u)) , (-: unbin@(11&u)) , (-: unbin@u)
  assert. test x=: 5!:1 <'test'
- assert. test x=: t{~?3       $#t=. (5!:1 <'test');;:'Cogito, ergo sum. jarl is the root of earl'
+ assert. test x=: t{~?3       $#t=: (5!:1 <'test');;:'Cogito, ergo sum. jarl is the root of earl'
  assert. test x=: t{~?3 5     $#t
  assert. test x=: t{~?3 5 7   $#t
  assert. test x=: t{~?3 5 7 11$#t
- assert. test x=: t{~?3       $#t=. (?20$2);(?2 3 4$1e6);(o.?2 3$1e6);(j./?2 3 4$1e6);(x:?17$1e6);%/?2 3 4 5$100000x
+ assert. test x=: t{~?3       $#t=: (?20$2);(?2 3 4$1e6);(o.?2 3$1e6);(j./?2 3 4$1e6);(x:?17$1e6);%/?2 3 4 5$100000x
  assert. test x=: t{~?3 5     $#t
  assert. test x=: t{~?3 5 7   $#t
  assert. test x=: t{~?3 5 7 11$#t

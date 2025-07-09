@@ -47,7 +47,7 @@ end.
 
 NB. values to use
 NB. Use smaller arrays if doing full memory audit
-arglen =. ((QKTEST{100 10),2) {~ 9!:57 (0) [ 9!:57 (1)
+arglen =: ((QKTEST{100 10),2) {~ 9!:57 (0) [ 9!:57 (1)
 NB. v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
 v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20<.arglen),((<"0) arglen ?@$ 1e6),((<"0) 100000 * (20 <. arglen) ?@$ 0),((<"0) (,-) 0.999999999999999 1. 1.00000000000001)
 NB. vv0 =: ((<"0) sdot0{~ arglen ?@$ #sdot0)
@@ -189,8 +189,8 @@ timearray =. (QKTEST{2000 200) (6!:2) 'u f.&>~ x'
 timesing,timearray return.
 u x  NB. to force dyad
 )
-vv0 =. <"0 (1000 $ 1 - 1)
-vv1 =. <"1 (1000 2 $ 1 - 1)
+vv0 =: <"0 (1000 $ 1 - 1)
+vv1 =: <"1 (1000 2 $ 1 - 1)
 THRESHOLD +. 0.75 > %/ vv1 + compst vv0
 THRESHOLD +. 0.75 > %/ vv1 = compst vv0
 THRESHOLD +. 0.75 > %/ vv1 < compst vv0
@@ -295,22 +295,22 @@ NB. Verify that the contents of a non-inplacable box are not inplaced
 (2 2 1 $ 0 _2 2 0) -: -&>/~ ((<"_1) ,._1 1)
 
 NB. verify inplaceable in assignment
-vv0 =. 5 + 2
+vv0 =: 5 + 2
 xx =: 15!:14<'vv0'
-vv0 =. * vv0
+vv0 =: * vv0
 xx = 15!:14<'vv0'  NB. verify inplace
-vv0 =. 7 + vv0
+vv0 =: 7 + vv0
 xx = 15!:14<'vv0'  NB. verify inplace
-vv0 =. vv0 + 6
+vv0 =: vv0 + 6
 xx = 15!:14<'vv0'  NB. verify inplace
-vv1 =. vv0  NB. alias the value
-vv0 =. * vv0
+vv1 =: vv0  NB. alias the value
+vv0 =: * vv0
 xx ~: yy =: 15!:14<'vv0'  NB. verify inplace
-vv1 =. vv0  NB. alias the value
-vv0 =. 7 + vv0
+vv1 =: vv0  NB. alias the value
+vv0 =: 7 + vv0
 yy ~: xx =: 15!:14<'vv0'  NB. verify inplace
-vv1 =. vv0  NB. alias the value
-vv0 =. vv0 + 6
+vv1 =: vv0  NB. alias the value
+vv0 =: vv0 + 6
 xx ~: yy =: 15!:14<'vv0'  NB. verify inplace
 
 

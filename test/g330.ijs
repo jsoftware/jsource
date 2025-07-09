@@ -261,7 +261,7 @@ NB. x;y -----------------------------------------------------------------
 boxed =: e.&32 64@(3!:0)
 mt    =: 0&e.@$
 link  =: <@[ , <`]@.(boxed *. -.@mt)@]
-f =. 4 : 0
+f =: 4 : 0
 assert. x (; -: link) y
 assert. x ((;<) -: (link<)) y
 assert. x (,&< -: (link<)) y
@@ -388,8 +388,8 @@ IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$s:@<"0 'chthonic
 16b20 = 1 { 13!:_4 (>:  i. 3) ; (i. 4)
 3 4 -: # S:0 (< >:  i. 3) (,<) (>: i. 4)
 
-1: ": }: (0, 2);(0;0);a=. 0;0   NB. crashed when (0,2) was left inplaceable
-4 -: (3!:0) > _3 }. (0, 2);(0;0);a=. 0;0
+1: ": }: (0, 2);(0;0);a=: 0;0   NB. crashed when (0,2) was left inplaceable
+4 -: (3!:0) > _3 }. (0, 2);(0;0);a=: 0;0
 
 
 randfini''

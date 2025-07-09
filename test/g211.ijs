@@ -91,7 +91,7 @@ iso=. 6 2 $ 0 1 1 0 0 2 2 0 1 2 2 1
 vals=. _1 1 _2 2 _3 3
 vals (<"1 iso)} 1 $. y ; (i. # y) ; 00  NB. This failed when sparse array was returned marked inplaceable
 )
-iso=. mksa ''  NB. The assignment didn't ra() the children
+iso=: mksa ''  NB. The assignment didn't ra() the children
 scheck iso
 
 NB. 1$.y ----------------------------------------------------------------
@@ -364,7 +364,6 @@ d -: 5 $. x
 scheck |.x
 (|.d) -: 5 $. |.x
 (,.(n-1)-|.i) -: 4 $. |. x
-
 
 
 

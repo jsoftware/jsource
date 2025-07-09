@@ -232,7 +232,7 @@ NB.  T. CTCAP,   CONJ, 0L,      tcap,
 'nonce error' -: 1 x: etx s
 'nonce error' -: 2 x: etx s
 
-sa=. 1 (0 0 ; 1 1)} 1 $. 2 2 ; 0 01 ; 00
+sa=: 1 (0 0 ; 1 1)} 1 $. 2 2 ; 0 01 ; 00
 (<"2 i. 2 1 1) -: <@(4&$.)"1 sa
 0 0 -: (3&$.)"1 sa
 'domain error' -: (4&$.)"1 etx sa

@@ -505,6 +505,6 @@ p1''   NB. Fails on the second call
 
 randfini''
 
-
+4!:55 ;:'IMAX IMIN'
 epilog''
 

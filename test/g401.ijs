@@ -161,6 +161,6 @@ NB. complex
 
 
 
-
+4!:55 ;:'base1 base2 ext f rank'
 epilog''
 

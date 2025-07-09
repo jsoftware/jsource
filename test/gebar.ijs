@@ -98,7 +98,7 @@ NB. Verify long strings, and matches all over
 
 NB. x is len of x, y is len of y
 NB. install some random occurrences of x into y, then verify
-f =. 4 : 0"0
+f =: 4 : 0"0
 ystg =. y (] {~ (?@# #)) 'abcdefghij'
 xstg =. x (] {~ (?@# #)) 'abcdefgh'
 randpos =. 2 ?@$ y - x
@@ -287,6 +287,7 @@ olim =: 9!:20''
 (,:,:3) ((E. i. 1:) -: (E."E. i. 1:)) ,:~ i. 5  NB. "
 
 randfini''
+
 
 
 epilog''

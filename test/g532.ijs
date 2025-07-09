@@ -3,7 +3,7 @@ NB. }:y -----------------------------------------------------------------
 
 randuni''
 
-curtail =. _1&}.
+curtail =: _1&}.
 
 NB. Boolean
 (curtail -: }:) 1=?2
@@ -62,7 +62,7 @@ NB. complex
 (curtail -: }:) 0 3$123j56
 
 NB. boxed
-t=.(+&.>i.5),;:'(raze a) -: }: a=. ^0j1*?3 4$1256'
+t=:(+&.>i.5),;:'(raze a) -: }: a=: ^0j1*?3 4$1256'
 (curtail -: }:) <123j45
 (curtail -: }:) t{~?4$#t
 (curtail -: }:) t{~?3 4$#t

@@ -1,8 +1,8 @@
 prolog './gs.ijs'
 NB. S: ------------------------------------------------------------------
 
-phi=. * -.@%@~.&.q:      NB. Euler's totient function
-t=. 5!:2 <'phi'
+phi=: * -.@%@~.&.q:      NB. Euler's totient function
+t=: 5!:2 <'phi'
 
 (;:'* -.@%@~.&.q:') -: < S: 0 t
 

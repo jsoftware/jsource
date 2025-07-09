@@ -870,5 +870,6 @@ NB. shaped boxed selectors
 
 randfini''
 
+4!:55 ;:'C f f1 foo g goo h h1 hoo ia save t1 t2'
 epilog''
 

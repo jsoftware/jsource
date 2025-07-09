@@ -133,6 +133,6 @@ h =. g`:6@*
 NB. jtr appears twice, one is global another local
 
 
-
+4!:55 ;:'a c f fx g h inv ip jtr th'
 epilog''
 

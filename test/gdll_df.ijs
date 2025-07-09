@@ -300,6 +300,6 @@ obj_add=:    <>{.'obj_add x' dcd ''
 (6 1 -: cder '') *. 'domain error' -: '1 0      x *  x x' cd etx obj_add   ;'2';3
 (6 2 -: cder '') *. 'domain error' -: '1 0      x *  x x' cd etx obj_add   ;2  ;'3'
 
-
+4!:55 ;:'a v0 v1 v2 v3 v4 v5'
 epilog''
 

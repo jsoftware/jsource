@@ -1,8 +1,8 @@
 prolog './g3x6.ijs'
 NB. 3!:6 ----------------------------------------------------------------
 
-f=. <jpath'~temp/test.ijl'
-d=.'abc=:i.5'
+f=: <jpath'~temp/test.ijl'
+d=:'abc=:i.5'
 (3!:6 d) 1!:2 f
 -.d-:1!:1 f
 abc=: 5
@@ -61,6 +61,6 @@ m1=: 'mean' f.
 
 
 
-
+4!:55 ;:'d f'
 epilog''
 

@@ -899,8 +899,8 @@ t =: 5 6 7
 5 6 7 -: ([ 3 : 't =: t , 0'@+:) t
 
 NB. The following failed once on nonavx because of error pushing zombieval
-'nmm min max'=. 0.1 _1.99977 1.99977
-min=. nmm ([ * [: <. %~) 1.98
+'nmm min max'=: 0.1 _1.99977 1.99977
+min=: nmm ([ * [: <. %~) 1.98
 0.1 1.9 1.99977 -: nmm,min,max
 
 10 -: ([ + 1 * -~)/ +: 2 5  NB. Failed on error in inplacing u~

@@ -113,7 +113,6 @@ NB. symbol
 'domain error' -: (s:@<"0 'abc') >~etx 1 2 3j4
 
 
-
-
+4!:55 ;:'rank mt mrk crk crank msh cshape mtype fill ctype ope f b t'
 epilog''
 

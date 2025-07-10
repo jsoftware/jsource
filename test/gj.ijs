@@ -314,6 +314,7 @@ NB. <. >. return integer when possible
 (15!:19 -: 15!:19@(8&c.)) 0. + i. 10  NB. not allocated if already correct type 
 
 'domain error' -: 12 c. etx 1
+echo 5 c. etx 1
 'domain error' -: 5 c. etx 1
 'domain error' -: 17 c. etx 1
 'rank error' -: 4 8 c. etx 1

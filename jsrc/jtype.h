@@ -760,7 +760,7 @@ struct AD {
 // case of simultaneous modification, but it avoids the need for RFO cycles.
 #if C_LE
 #define AFLAGSETKNOWN(a) {((C*)&AFLAG(a))[2]|=AFKNOWNNAMED>>16;}  // if the value is ever exposed to another thread, the count will be too high for KNOWN to matter
-#define AFLAGCLRKNOWN(a) {((C*)&AFLAG(a))[2]&=~(AFKNOWNNAMED>>16);}
+#define AFLAGCLRKNOWN(a) (((C*)&AFLAG(a))[2]&=~(AFKNOWNNAMED>>16))
 #define AFLAGSETPRIST(a) {((C*)&AFLAG(a))[3]|=AFPRISTINE>>24;}
 #define AFLAGCLRPRIST(a) {((C*)&AFLAG(a))[3]&=~(AFPRISTINE>>24);}
 #endif

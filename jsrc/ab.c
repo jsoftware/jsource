@@ -249,3 +249,6 @@ DF1(jtbitwiseinsertchar){F12IP;A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;A
  }
  R z;
 }
+
+// 1&(17 b.) w, i. e. test even/odd.   Run through atomic2, except when w is an atom; then return canned 0/1
+DF1(jtisodd){F12IP; if((AR(w)|(AT(w)&~(INT+B01)))==0)R zeroionei(BIV0(w)&1); R jtatomic2(jtfg,zeroionei(1),w,FAV(self)->fgh[1]);}

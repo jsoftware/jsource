@@ -189,7 +189,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A global;           // global symbol table inherit for task, but not for job
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
 // *** end of fixed block
- I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  Used at thread startup as pointer to coremask, NUL if none
 // end of cacheline 2  (spanned by shapesink)
 
  C _cl3[0];

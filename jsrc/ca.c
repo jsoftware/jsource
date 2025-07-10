@@ -647,7 +647,7 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
   // take WILLOPEN/COUNT for the monad from the appropriate side of the dyadic verb.
   flag2=((FAV(va)->flag2)>>(AT(a)&VERB?VF2WILLOPEN2AX-VF2WILLOPEN1X:VF2WILLOPEN2WX-VF2WILLOPEN1X))&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
 
-  // look for supported forms: comparison, i.-family, 128!:3.  But not if the arg is atomic or empty - no value in that
+  // look for supported forms: comparison, i.-family, 128!:3, 1&(17 b.).  But not if the arg is atomic or empty - no value in that
   if((-AN(na)&-AR(na))<0){  // noun is not atomic and not empty
    if(unlikely(b=c==CFIT)){c=FAV(FAV(va)->fgh[0])->id; p=FAV(FAV(va)->fgh[0])->flag;}  // if verb is u1!.n1, replace the id and flag with that of u1, and remember cct from n1
    // check the supported cases one by one
@@ -663,11 +663,13 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
     {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; vbf2=0; flag&=~(VIRS1); RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
    }else if(unlikely(FAV(w)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; vbf2=0; flag&=~(VIRS1);   // m&;:
    }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; vbf2=0; flag&=~(VIRS1); // m&128!:3
-   }
+   } 
+  }else{  // forms that use atomic or empty noun
+   if(unlikely(a==num(1)&&FAV(w)->valencefns[0]==jtbitwise1&&FAV(w)->lu2.lc==VA2CBW0001)){f1=jtisodd;}  // 1&(17 b.) - keeps IRS
   }
 
   fdeffillall(z,flag2,CAMP,VERB, f1,jtvalenceerr, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
-  FAV(z)->localuse.lu1.bondfn=(AF)((I)FAV(z)->localuse.lu1.bondfn+(I)vbf2);  // Lifetime Achievement Award, float+address.  One must be exactly 0, saves a branch
+  FAV(z)->localuse.lu1.bondfn=(AF)((I)FAV(z)->localuse.lu1.bondfn+(I)vbf2);  // Lifetime Achievement Award, float+address.  One must be exactly 0 if value used, saves a branch
 
   R z;
 }

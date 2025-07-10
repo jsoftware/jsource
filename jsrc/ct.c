@@ -390,6 +390,8 @@ static NOINLINE I joblock(JOBQ *jobq){I z;
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
 static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  // One-time initialization
+ cpu_set_t *acoremask=(cpu_set_t*)jt->shapesink[0];  // parm: pointer to coremask, passed in through jt
+ if(acoremask!=0)sched_setaffinity(0,SZI,(cpu_set_t*)acoremask);  // set core mask, from the value back in the user's thread (we are still synchronous witxh the thread creator)
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  // get/set stack limits
  // not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
@@ -518,8 +520,8 @@ terminate:   // termination request.  We hold the job lock, and 'job' has the va
  R 0;  // return to OS, closing the thread
 }
 
-// Create worker thread n, and call its threadmain to start it in wait state
-static I jtthreadcreate(J jt,I n){
+// Create worker thread n, and call its threadmain to start it in wait state.  coremask is pointer to mask of eligible cores, or NULL to allow any
+static I jtthreadcreate(J jt,I n,I *coremask){
  pthread_attr_t attr;  // attributes for the task we will start
  // create thread
  ASSERT(pthread_attr_init(&attr)==0,EVFACE);
@@ -533,7 +535,9 @@ static I jtthreadcreate(J jt,I n){
 #endif
  ASSERT(pthread_attr_setstacksize(&attr,stksiz)==0,EVFACE)    // request sufficient stack size
  JTFORTHREAD(jt,n)->cstackmin=0;  // clear any old stackarea; we wait for thread to fill in the stack
+ JTFORTHREAD(jt,n)->shapesink[0]=(I)(intptr_t)coremask;  // pass in pointer to coremask, if any
  ASSERT(pthread_create(&(pthread_t){0},&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
+pid_t p;
  // since the user may try to use the thread right away, delay until it is available for use.  We use cstackmin as a 99.999% proxy for 'ready'
  while(__atomic_load_n(&JTFORTHREAD(jt,n)->cstackmin,__ATOMIC_ACQUIRE)==0){delay(10000); YIELD}  // task startup takes a while
  R 1;
@@ -669,7 +673,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
  R pyx;
 }
-static I jtthreadcreate(J jt,I n){ASSERT(0,EVFACE)}
+static I jtthreadcreate(J jt,I n,I *coremask){ASSERT(0,EVFACE)}
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){
  DO(n,C c=f(jt,ctx,i);if(c)R c;);
  R 0;}
@@ -678,6 +682,8 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){
 
 // u t. n - start a task.  We just create a verb to handle the arguments, performing <@u
 // n is [importantoptions, all numeric or boxed numeric] [; k [;v] ]...
+// importantoptions are pool#
+// k is 'worker', value=0/1(default)
 F2(jttdot){F12IP;
  ASSERTVN(a,w);
  ASSERT(AR(w)<=1,EVRANK) // arg must be atom or list
@@ -723,7 +729,7 @@ F2(jttdot){F12IP;
   }
  }
  // set defaults for omitted parms
- nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0
+ nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0 (no mask given)
  // parms read, install them into the block for t. verb
  A z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
  FAV(z)->localuse.lu1.forcetask=poolno+(nolocal<<8);  // save the t. options for execution.  Bits 0-7=poolno, 8=worker only
@@ -844,16 +850,62 @@ ASSERT(0,EVNONCE)
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
   RZ(z=sc(nact))
   break;}
- case 0:  { // create a thread and start it.  Optional arg is threadpool number
+ case 0:  { // create a thread and start it.  positional arg is threadpool#, keyword is coremask (integer mask value required)
 #if PYXES
+  // extract args
+  ASSERT(AR(w)<=1,EVRANK) // arg must be atom or list
+  I coremask=-1;  // establish unset values for options
+  I poolno=0;  // default to using threadpool 0
+  A afixed=0;  // the fixed-format args if any
+  // parse the options
+  // Go through each box, analyzing.  If we hit leading fixed-format options, remember where and skip for later
+  DO(AN(w),
+   A akw; A aval;  // A block for keyword, A block for value
+   if(AT(w)&BOX){
+    A boxl1=C(AAV(w)[i]);  // contents of first box to examine
+    if(AN(boxl1)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}
+    if(AT(boxl1)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}
+    if(AT(boxl1)&BOX){
+     A boxl2=C(AAV(boxl1)[0]);   // w is (<((<boxl2), ...))
+     if(AN(boxl2)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}
+     if(AT(boxl2)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}
+     akw=boxl2;   // the keyword
+     if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw))  // keyword must be literal type
+     ASSERT(AR(boxl1)<2,EVRANK) ASSERT(AN(boxl1)<=2,EVLENGTH) aval=AN(boxl2)==1?0:C(AAV(boxl1)[1]);  // arg has only 0-1 value; get value if any
+    }else{
+     akw=boxl1;  // the keyword
+     if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw))  // keyword must be literal type
+     aval=0;
+    }
+   }else if(AT(w)&NUMERIC){afixed=w; break;  // numeric arg must be fixed-format
+   }else{akw=w; if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw)) aval=0;  // string arg is a valueless keyword
+   }
+   // we have the keyword/value; examine them one by one
+   if(strncmp(CAV(akw),"coremask",AN(akw))==0){
+    ASSERT(coremask<0,EVDOMAIN)  // can't set same parm twice
+    ASSERT(aval!=0,EVDOMAIN)  // cannot omit mask
+    RE(coremask=i0(aval))   // extract integer value
+   }else{ASSERT(0,EVDOMAIN)}   // error if keyword is unknown
+   if(!(AT(w)&BOX))break;  // unboxed must be a single value
+  )
+  // if there is a fixed-format area, analyze it
+  if(afixed){
+   ASSERT(AR(afixed)<2&&AN(afixed)<=1,EVDOMAIN)  // fixed area is [threadpoolno]
+   if(likely(AN(afixed)>=1)){
+    RZ(afixed=vi(afixed)) poolno=IAV(afixed)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // verify value in bounds
+   }
+  }
+// obsolete 
+// obsolete   I poolno=0;  // default to threadpool 0
+// obsolete   if(AN(w)){   // arg is [threadpool #]
+// obsolete    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
+// obsolete    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
+// obsolete   }
+
+  // input parms have been read.  Allocate the thread
   // We must not increase the # running tasks while suspension is running.  If we do, we have no way to tell the task that a system lock is active, and we also have
   // no way to prevent the created task from starting up running, thus violating the lock rules.
   ASSERT(lda(&JT(jt,systemlock))<=2,EVSIDAMAGE)  // if the lock has already started, this must be an execution from debug suspension.  Fail it
-  I poolno=0;  // default to threadpool 0
-  if(AN(w)){   // arg is [threadpool #]
-   ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
-   RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
-  }
   // if the threadslot we will use is being terminated, we have to wait for termination to finish, so that we can restart it with the correct threadpool
   // We also have to ensure that the thread data is initialized and the virtual memory for it is mapped
   // Finally, we have to ensure that we don't add a thread during systemlock, from the time the threads are counted until the end.  If systemlock has started at all, we defer to it
@@ -883,7 +935,7 @@ ASSERT(0,EVNONCE)
   JTFORTHREAD(jt,resthread)->threadpoolno=poolno;  // install threadpool number
   JTFORTHREAD(jt,resthread)->ndxinthreadpool=jobq->nthreads;  // install ndx within pool.  Always ascending in the threads, since we delete only from the end
   // Try to allocate a thread in the OS and start it running.  We hold locks while this is happening, so thread startup must be lock-free
-  if(jtthreadcreate(jt,resthread)){   // start thread.  thread started normally?
+  if(jtthreadcreate(jt,resthread,coremask<0?0:&coremask)){   // start thread.  thread started normally?
    if(WORKERIDFORTHREAD(resthread)>=JT(jt,wthreadhwmk))JT(jt,wthreadhwmk)=WORKERIDFORTHREAD(resthread+1);   // if adding a new thread, increment hwmk
    ++jobq->nthreads;  // incr # threads in pool
   }else resthread=0;  // if error, mark invalid thread#; error signaled earlier

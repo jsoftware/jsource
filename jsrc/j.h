@@ -1029,7 +1029,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define BLOOMBASE(l) (C*)(SYMBAV0(l)+AN(l))   // start of the Bloom filter for locale l, 1 bit per chain including SYMLINFO
 #define BLOOMLEN(l) ((((UI)AN(l)+sizeof(LX)*BB-1)/(sizeof(LX)*BB))*sizeof(LX))  // length of Bloom filter in bytes
 #define BLOOMTEST(b,c) ((b)[(c)>>LGBB]&(1<<((c)&(BB-1))))   // is Bloom bit c set in b?  If so, name might be in the chain
-#define BLOOMSET(b,c) ((b)[(c)>>LGBB]|=(1<<((c)&(BB-1))))   // set Bloom bit c in b.  Requires write lock on the locale
+#define BLOOMSET(b,c) ((BLOOMTEST(b,c)==0)?((b)[(c)>>LGBB]|=(1<<((c)&(BB-1)))):0)   // set Bloom bit c in b.  Requires write lock on the locale.  Don't write if set, to avoid thrashing the mask.  Questionable, since we are writing to an undefined name here
 #define BLOOMCLEAR(l) mvc(BLOOMLEN(l),BLOOMBASE(l),MEMSET00LEN,MEMSET00) // reset Bloom filter to 0s
 #define BLOOMFILL(l) {((LX*)BLOOMBASE(l))[0]=-1; if(unlikely((UI)AN(l)>sizeof(LX)*BB))memset(BLOOMBASE(l),0xff,BLOOMLEN(l));} // reset Bloom filter to 1s (for local table) - usually with 1 store (if <=32 chains)
 #define BMK(x) (1LL<<(x))  // bit number x
@@ -2182,7 +2182,7 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define SYMRESERVE(n) SYMRESERVEPREFSUFF(n,,)   // called outside of lock to make sure n symbols are available for assignment
 // fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1 so that it may be freed by the caller as abandoned
 // Implies that AM must not be modified when abandoned block is assigned to x/y.
-// Clear KNOWNNAMED since we are removing the value from a name
+// Clear KNOWNNAMED since we are removing the value from a name.  Never when PERMANENT, which can never be ABANDONED
 // split into two parts: the symbol-dependent and not, so we can move the expensive part outside of lock
 #define SYMVALFA1(l,faname) {if(faname!=0){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(faname); if(likely(AC(faname)<2))ACRESET(faname,ACINPLACE|ACUC1); faname=0;}}}
 #define SYMVALFA2(faname) if(faname!=0){faactionrfo(jt,faname,AFLAGCLRKNOWN(faname))}   // must clear known before free, since once we reduce usect we cannot touch the block

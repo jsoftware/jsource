@@ -371,7 +371,8 @@
 
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
 #define falikely(x) fa(x)  // when the block will usually be deleted  (not used yet)
-#define fatype(x,tt) {if(likely(AC(x)<=ACUC1)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(AC(x)))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // when type is known (i. e. NAME)
+// obsolete #define fatype(x,tt) {if(likely(AC(x)<=ACUC1)){jtfamf(jt,x,tt);}else{if(likely(!ACISPERM(AC(x)))){if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,tt);}}}  // when type is known (i. e. NAME)
+#define fatype(x,tt) {if(likely(AC(x)<=ACUC1) || (likely(!ACISPERM(AC(x))) && unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2)))jtfamf(jt,x,tt);}  // when type is known (i. e. NAME)
 #define fanamedacv(x) {I Zc=AC(x); if(likely(!ACISPERM(Zc)))if(unlikely(__atomic_fetch_sub(&AC(x),1,__ATOMIC_ACQ_REL)<2))jtfamf(jt,x,AT(x));} // block is known to be ACV, recursive, AC>0, and almost always AC>1
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x))
@@ -935,7 +936,7 @@ extern void jfree4gmp(void*,size_t);
 #define raposacv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);}}  // ACV is guaranteed recursive
 #define raposgblqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
 #define raposlocalqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
-#define rarecur(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); I tt=AT(x); if(unlikely(ISSPARSE(tt)))x=jtra((x),(tt),x);}}  // ra but recursibles know to be recursive
+#define rarecurknown(x)   {I c=AC(x); if(likely(!ACISPERM(c))){AFLAGSETKNOWN(w); if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); I tt=AT(x); if(unlikely(ISSPARSE(tt)))x=jtra((x),(tt),x);}}  // ra but recursibles know to be recursive
 // NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
 // We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.  the tstackend variant checks to see if the value is the end of the stack
 #define raczapcommon(x,cond,zapfn)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){zapfn AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);} \

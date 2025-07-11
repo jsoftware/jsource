@@ -746,8 +746,8 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  }else{  // global table
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
-  e=probeis(a, g);  // get the symbol address to use, old or new.  This returns holding a LOCK on the locale
-  if((x=e->fval)==0){   // if nonzero, x points to the incumbent value (QCSYMVAL semantics)
+  e=probeis(a, g);  // get the symbol address to use, old or new.  ************************ This returns holding a WRITELOCK on the locale
+  if(unlikely((x=e->fval)==0)){   // if nonzero, x points to the incumbent value (QCSYMVAL semantics).  Global assignments are usually reassignments
    // writing a new symbol to a non-local table: update the table's Bloom filter.
    C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
    BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty
@@ -786,7 +786,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
     // We can zap abandoned nouns.  But only if they are final assignment: something like nm:_ [ nm=. 4+4 would free the active block if we zapped, when the FAOWED was applied
     // the idea is that the assignment will protect the value; this is true for local assignment but not for global, because another thread may free the name immediately.
     // If we could be sure that the result of the sentence would never be inspected we could return a value that might be freed, but without such a guarantee we can zap only local assignment.
-    AFLAGORLOCAL(w,AFKNOWNNAMED);   // indicate the value is in a name.  We do this to allow virtual extension.
+    AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.
     // very often a final assignment will assign the abandoned result of the last computation.  These values accumulate on the tstack and have to
     // be popped off every now & then in jtxdefn, since there is nothing else to pop them.  We detect this important case, in which the zaploc of the
     // abandoned value is the very last thing on the tstack: then we back up tpushp, removing all trace of the block
@@ -795,8 +795,9 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
     // only before sentence execution, and there is no way for an anonymous abandoned value to come from a higher level (name:_ pushes a stack entry at the current level; assignment to y clears inplaceability).
     // NOTE: NJA can't zap either, but it never has AC<0
    }else{   // not abandoned final assignment
-    if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);   // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway
-    rarecur(w);  // if zap not allowed, just ra() w, known recursive-if-recursible so this is quick.  Subroutine call.  w may be inplaceable but not zappable so no rapos; may be sparse so we must allow 1 small recursion then
+// obsolete     if(likely(!ACISPERM(AC(w))))AFLAGSETKNOWN(w);
+    rarecurknown(w);  // if zap not allowed, just ra() w, known recursive-if-recursible so this is quick.  Subroutine call.  w may be inplaceable but not zappable so no rapos; may be sparse so we must allow 1 small recursion then
+        // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway.  We don't do it for x/y
    }
 
   }else{  // x exists, is either read-only or memory-mapped, and is not rewriting the previous value

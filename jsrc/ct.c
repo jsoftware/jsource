@@ -3,6 +3,7 @@
 /*                                                                         */
 /* Threads and Tasks                                                       */
 
+#define _GNU_SOURCE
 #include "j.h"
 extern int numberOfCores;
 

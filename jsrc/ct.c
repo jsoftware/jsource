@@ -390,8 +390,11 @@ static NOINLINE I joblock(JOBQ *jobq){I z;
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
 static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  // One-time initialization
- cpu_set_t *acoremask=(cpu_set_t*)jt->shapesink[0];  // parm: pointer to coremask, passed in through jt
- if(acoremask!=0)sched_setaffinity(0,SZI,(cpu_set_t*)acoremask);  // set core mask, from the value back in the user's thread (we are still synchronous witxh the thread creator)
+#if SUPPORT_AFFINITY
+ A acoremask=(A)jt->shapesink[0];  // parm: pointer to coremask, passed in through jt
+ if(acoremask!=0)sched_setaffinity(0,AN(acoremask)<<bplg(AT(acoremask)),(cpu_set_t*)IAV(acoremask));  // set core mask, from the value back in the user's thread (we are still synchronous witxh the thread creator)
+cpu_set_t coremask; ASSERT(sched_getaffinity((pid_t){0},sizeof(cpu_set_t),&coremask)==0,EVFACE)   // get coremask before change if any scaf
+#endif
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  // get/set stack limits
  // not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
@@ -521,7 +524,7 @@ terminate:   // termination request.  We hold the job lock, and 'job' has the va
 }
 
 // Create worker thread n, and call its threadmain to start it in wait state.  coremask is pointer to mask of eligible cores, or NULL to allow any
-static I jtthreadcreate(J jt,I n,I *coremask){
+static I jtthreadcreate(J jt,I n,A coremask){
  pthread_attr_t attr;  // attributes for the task we will start
  // create thread
  ASSERT(pthread_attr_init(&attr)==0,EVFACE);
@@ -673,7 +676,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
  R pyx;
 }
-static I jtthreadcreate(J jt,I n,I *coremask){ASSERT(0,EVFACE)}
+static I jtthreadcreate(J jt,I n,A coremask){ASSERT(0,EVFACE)}
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){
  DO(n,C c=f(jt,ctx,i);if(c)R c;);
  R 0;}
@@ -803,6 +806,22 @@ ASSERT(0,EVNONCE)
 ASSERT(0,EVNONCE)
 #endif
   break;}
+ case 22:  { // get/set coremask for executing thread
+#if PYXES && SUPPORT_AFFINITY
+  A athread, acoremask=0;
+  if(AT(w)&BOX){  // not naked thread#
+   ASSERT(AR(w)<2,EVRANK) ASSERT(BETWEENC(AN(w),1,2),EVLENGTH)  // must be singleton or 2-box list
+   athread=C(AAV(w)[0]); if(AN(w)==2)acoremask=C(AAV(w)[1]);   // get thread#, coremask args
+  }else athread=w;  // if bare thread#, take it
+  I threadno; RE(threadno=i0(athread)) ASSERT(threadno==0,EVNONCE)  // get thread#, which must be 0
+  if(acoremask){ASSERT(AR(acoremask)<=1,EVRANK) ASSERT(AN(acoremask)!=0,EVLENGTH) if(unlikely(AT(acoremask)&B01))acoremask=cvt(INT,acoremask); ASSERT(AT(acoremask)&INT+LIT,EVDOMAIN)} // verify coremask valid if given
+  cpu_set_t coremask; ASSERT(sched_getaffinity((pid_t){0},sizeof(cpu_set_t),&coremask)==0,EVFACE)   // get coremask before change if any
+  if(acoremask)ASSERT(sched_setaffinity((pid_t){0},AN(acoremask)<<bplg(AT(acoremask)),(cpu_set_t*)IAV(acoremask))==0,EVFACE)  // set new coremask if requested
+  z=vec(INT,sizeof(coremask)>>LGSZI,(void *)&coremask);  // convert old value to A return result
+#else
+  ASSERT(0,EVNONCE)
+#endif
+  break;}
  case 8:  { // system info: (number of cores),(max number of threads including master)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
   z=v2(numberOfCores,MAXTHREADS);
@@ -850,11 +869,11 @@ ASSERT(0,EVNONCE)
   WRITEUNLOCK(JT(jt,flock))  // nwthreads is protected by flock
   RZ(z=sc(nact))
   break;}
- case 0:  { // create a thread and start it.  positional arg is threadpool#, keyword is coremask (integer mask value required)
+ case 0:  { // create a thread and start it.  positional arg is threadpool#, keyword is coremask (integer/char mask value required)
 #if PYXES
   // extract args
   ASSERT(AR(w)<=1,EVRANK) // arg must be atom or list
-  I coremask=-1;  // establish unset values for options
+  A coremask=0;  // establish unset values for options
   I poolno=0;  // default to using threadpool 0
   A afixed=0;  // the fixed-format args if any
   // parse the options
@@ -882,9 +901,9 @@ ASSERT(0,EVNONCE)
    }
    // we have the keyword/value; examine them one by one
    if(strncmp(CAV(akw),"coremask",AN(akw))==0){
-    ASSERT(coremask<0,EVDOMAIN)  // can't set same parm twice
-    ASSERT(aval!=0,EVDOMAIN)  // cannot omit mask
-    RE(coremask=i0(aval))   // extract integer value
+    ASSERT(coremask==0,EVDOMAIN)  // can't set same parm twice
+    ASSERT(aval!=0,EVDOMAIN) ASSERT(AR(aval)<=1,EVRANK) ASSERT(AN(aval)!=0,EVLENGTH) if(unlikely(AT(aval)&B01))aval=cvt(INT,aval); ASSERT(AT(aval)&INT+LIT,EVDOMAIN)  // cannot omit mask, which must be nonempty rank<2 IN T or LIT
+    coremask=aval;  // if value OK, keep it.  We will send it to pthread_create
    }else{ASSERT(0,EVDOMAIN)}   // error if keyword is unknown
    if(!(AT(w)&BOX))break;  // unboxed must be a single value
   )
@@ -895,6 +914,10 @@ ASSERT(0,EVNONCE)
     RZ(afixed=vi(afixed)) poolno=IAV(afixed)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // verify value in bounds
    }
   }
+
+#if !SUPPORT_AFFINITY
+  ASSERT(coremask==0,EVNONCE)  // if affinity not supported, fail a request for it
+#endif
 // obsolete 
 // obsolete   I poolno=0;  // default to threadpool 0
 // obsolete   if(AN(w)){   // arg is [threadpool #]
@@ -935,7 +958,7 @@ ASSERT(0,EVNONCE)
   JTFORTHREAD(jt,resthread)->threadpoolno=poolno;  // install threadpool number
   JTFORTHREAD(jt,resthread)->ndxinthreadpool=jobq->nthreads;  // install ndx within pool.  Always ascending in the threads, since we delete only from the end
   // Try to allocate a thread in the OS and start it running.  We hold locks while this is happening, so thread startup must be lock-free
-  if(jtthreadcreate(jt,resthread,coremask<0?0:&coremask)){   // start thread.  thread started normally?
+  if(jtthreadcreate(jt,resthread,coremask)){   // start thread.  thread started normally?
    if(WORKERIDFORTHREAD(resthread)>=JT(jt,wthreadhwmk))JT(jt,wthreadhwmk)=WORKERIDFORTHREAD(resthread+1);   // if adding a new thread, increment hwmk
    ++jobq->nthreads;  // incr # threads in pool
   }else resthread=0;  // if error, mark invalid thread#; error signaled earlier

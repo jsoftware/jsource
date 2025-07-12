@@ -882,6 +882,15 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define sts(p,v) __atomic_store_n(p,v,__ATOMIC_SEQ_CST)
 #define xchga(p,n) __atomic_exchange_n(p,n,__ATOMIC_ACQ_REL)
 
+#ifndef SUPPORT_AFFINITY   // 1 iff the OS supports the pthreads call sched_setaffinity() and sched_getaffinity()
+#if PYXES && !defined(__OpenBSD__) && !defined(__APPLE__)
+#define SUPPORT_AFFINITY 1
+#else
+#define SUPPORT_AFFINITY 0
+#endif
+#endif
+
+
 // Tuning options for cip.c
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
 #define DCACHED_THRESn  (24*24*24)    // when m*n*p less than this, don't even look for multithreads; use blocked

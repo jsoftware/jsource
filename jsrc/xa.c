@@ -3,6 +3,17 @@
 /*                                                                         */
 /* Xenos: Miscellaneous                                                    */
 
+#define _GNU_SOURCE
+
+#ifdef _WIN32
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "j.h"
 #include "x.h"
 
@@ -50,7 +61,7 @@ F1(jtctq){F12IP;ASSERTMTV(w); R scf(1.0-jt->cct);}
 F1(jtcts){F12IP;D d;
  ASSERT(!AR(w),EVRANK);
  RZ(w=ccvt(FL,w,0)); d=DAV(w)[0];
- ASSERT(0<=d,EVDOMAIN); 
+ ASSERT(0<=d,EVDOMAIN);
  ASSERT(d<=5.820766091e-11,EVDOMAIN);
  jt->cct=1.0-d;
  R mtv;
@@ -85,7 +96,7 @@ F1(jtevms){F12IP;A t,*tv,*wv;
  ASSERT(NEVM==AN(w),EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(THREADID(jt)==0,EVRO);  // allow setting messages only in master thread
- GAT0(t,BOX,1+NEVM,1); tv=AAV1(t); 
+ GAT0(t,BOX,1+NEVM,1); tv=AAV1(t);
  *tv++=mtv;
  wv=AAV(w);
  DQ(NEVM, RZ(*tv=incorp(ca(vs(C(*wv))))); ACINITZAP(*tv) CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room.  ZAP since it's going into recursive box
@@ -93,12 +104,12 @@ F1(jtevms){F12IP;A t,*tv,*wv;
  R mtv;
 }
 
-// 5!:0, return ((>u)~)f. 
+// 5!:0, return ((>u)~)f.
 F1(jtfxx){F12IP;
  ARGCHK1(w);
  ASSERT(AT(w)&LIT+BOX,EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
- R fx(ope(w)); 
+ R fx(ope(w));
 }
 
 // 9!:28, immex flag  bit 0 = immex requested, bit 1 = immex running
@@ -109,7 +120,7 @@ F1(jtiepdos){F12IP;B b; RE(b=b0(w)); jt->iepdo|=b; R mtm;}
 
 // 9!:26, immex sentence
 F1(jtiepq){F12IP;
- ASSERTMTV(w); 
+ ASSERTMTV(w);
  // we must read & protect the sentence under lock in case another thread is changing it
  READLOCK(JT(jt,felock)) A iep=JT(jt,iep); if(iep)ras(iep); READUNLOCK(JT(jt,felock))  // must ra() while under lock
  if(iep){tpushnr(iep);}else iep=mtv;  // if we did ra(), stack a fa() on the tpop stack
@@ -162,7 +173,7 @@ F1(jtposs){F12IP;I n,p,q,*v;
  n=AN(w); v=AV(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(1==n||2==n,EVLENGTH);
- if(1==n)p=q=*v; else{p=v[0]; q=v[1];} 
+ if(1==n)p=q=*v; else{p=v[0]; q=v[1];}
  ASSERT(BETWEENC(p,0,2)&&BETWEENC(q,0,2),EVDOMAIN);
  jt->boxpos=(p<<JTTHORNXX)+(q<<JTTHORNYX);
  R mtv;
@@ -188,9 +199,9 @@ F1(jtretcomms){F12IP;B b; R mtm;}   // 9!:41 - unused
 F1(jtseclevq){F12IP;ASSERTMTV(w); R sc(JT(jt,seclev));}   // 9!:24  security level
 
 // 9!:25 security level
-F1(jtseclevs){F12IP;I k; 
- RE(k=i0(w)); 
- ASSERT(0==k||1==k,EVDOMAIN); 
+F1(jtseclevs){F12IP;I k;
+ RE(k=i0(w));
+ ASSERT(0==k||1==k,EVDOMAIN);
  if(!JT(jt,seclev)&&1==k)JT(jt,seclev)=(UC)k;
  R mtm;
 }
@@ -212,7 +223,7 @@ F1(jtsysparms){F12IP;A*wv;I k,m;
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(2==AN(w),EVLENGTH);
- wv=AAV(w); 
+ wv=AAV(w);
  RE(k=i0(wv[0]));
  switch(k){
  default: ASSERT(0,EVINDEX);
@@ -242,8 +253,8 @@ F1(jtsysq){F12IP;I j;
 F1(jtasgzombq){F12IP;ASSERTMTV(w); R sc(JT(jt,asgzomblevel));}
 
 // 9!:53
-F1(jtasgzombs){F12IP;I k; 
- RE(k=i0(w)); 
+F1(jtasgzombs){F12IP;I k;
+ RE(k=i0(w));
  ASSERT(BETWEENC(k,0,2),EVDOMAIN);
  JT(jt,asgzomblevel)=(C)k;
  R mtm;
@@ -311,7 +322,7 @@ static I recurmsg(J jt, C *msgaddr){
  if(jt)R (I)&buf+recurmsg(jt,msgaddr);
 #endif
  R 0;
-} 
+}
 //13!:_6 stackfault verb - scribble on stack until we crash.  Give messages every 0x10000 bytes
 F1(jtstackfault){F12IP;C stackbyte,buf[80],*stackptr=&stackbyte;
  sprintf(buf,"starting stackptr=0x%p, cstackmin=0x%p\n",stackptr,(void *)jt->cstackmin);
@@ -367,6 +378,39 @@ F1(jtcpufeature){F12IP;
  } else if (!strcasecmp(CAV(w),"SLEEFQUAD")) {
 #if defined(SLEEFQUAD)
   R sc(SLEEFQUAD);
+#else
+  R sc(0);
+#endif
+ } else if (!strcasecmp(CAV(w),"CACHELINESIZE")) {
+#if defined(__APPLE__)
+  size_t line_size = 0;
+  size_t size = sizeof(ret);
+  if (sysctlbyname("hw.cachelinesize", &line_size, &size, NULL, 0)) R sc(0);
+  R sc(line_size);
+#elif defined(_WIN32)
+  size_t line_size = 0;
+  DWORD buffer_size = 0;
+  DWORD i = 0;
+  SYSTEM_LOGICAL_PROCESSOR_INFORMATION * buffer = 0;
+
+  GetLogicalProcessorInformation(0, &buffer_size);
+  buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(buffer_size);
+  GetLogicalProcessorInformation(&buffer[0], &buffer_size);
+
+  for (i = 0; i != buffer_size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+      if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
+          line_size = buffer[i].Cache.LineSize;
+          break;
+      }
+  }
+  free(buffer);
+  R sc(line_size);
+#else
+  R sc(sysconf(_SC_LEVEL1_DCACHE_LINESIZE));
+#endif
+ } else if(!strcasecmp(CAV(w),"CPUSETSIZE")) {
+#if defined(CPU_SETSIZE)
+  R sc(CPU_SETSIZE);
 #else
   R sc(0);
 #endif

@@ -384,7 +384,7 @@ F1(jtcpufeature){F12IP;
  } else if (!strcasecmp(CAV(w),"CACHELINESIZE")) {
 #if defined(__APPLE__)
   size_t line_size = 0;
-  size_t size = sizeof(ret);
+  size_t size = sizeof(line_size);
   if (sysctlbyname("hw.cachelinesize", &line_size, &size, NULL, 0)) R sc(0);
   R sc(line_size);
 #elif defined(_WIN32)
@@ -405,8 +405,10 @@ F1(jtcpufeature){F12IP;
   }
   free(buffer);
   R sc(line_size);
-#else
+#elif defined(__linux__)
   R sc(sysconf(_SC_LEVEL1_DCACHE_LINESIZE));
+#else
+  R sc(64);
 #endif
  } else if(!strcasecmp(CAV(w),"CPUSETSIZE")) {
 #if defined(CPU_SETSIZE)

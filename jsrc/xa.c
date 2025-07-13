@@ -7,15 +7,17 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__APPLE__)
-#include <sys/param.h>
-#include <sys/sysctl.h>
 #else
 #include <unistd.h>
 #endif
 
 #include "j.h"
 #include "x.h"
+
+#if defined(__APPLE__)
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#endif
 
 #include "cpuinfo.h"
 extern uint64_t g_cpuFeatures,g0_cpuFeatures;

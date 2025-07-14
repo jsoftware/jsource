@@ -358,6 +358,7 @@ static C* nfeinput(JS jt,C* s){A y;
 // If Jinput() returns 0, exit with result 0 and no error.  If Jinput() returns 1, signal error EVFACE.
 A jtjgets(JJ jt,C*p){A y;C*v;I j,k,m,n;UC*s;
  __atomic_store_n(&IJT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // this is CLRATTN but for the definition of JT here
+ ASSERT(!THREADID(jt),EVFACE);     // only the master thread can call sminput
  B raw=p[0]==0;  // if no prompt, it's 1!:1]1 or m :  0 - suppress editing the line
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
@@ -849,6 +850,7 @@ void jsto(JS jt,I type,C*s){C e;I ex;
   ENABLEATTN
  }else{
   // Normal output.  Call the output routine
+  if(THREADID(jt)) R;     // smoutput ignored for non-master threads
   if(JT(jt,smoutput)){((outputtype)(JT(jt,smoutput)))(jt,(int)type,s);R;} // JFE output
 #if SY_WIN32 && !SY_WINCE && defined(OLECOM)
   if(JT(jt,oleop) && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;} // ole output

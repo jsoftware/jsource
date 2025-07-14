@@ -954,7 +954,7 @@ static F1(jtjpr1){F12JT;PROLOG(0002);A z;
   CAV(z)[AN(z)]=0;
 #endif
   ASSERTSYS(!CAV(z)[AN(z)],"jtjpr1 trailing null byte");
-  jsto(JJTOJ(jt),mtyo==0?MTYOFM:mtyo,CAV(z));
+  jsto(jt,mtyo==0?MTYOFM:mtyo,CAV(z));
  }
  EPILOG(mtm);
 }

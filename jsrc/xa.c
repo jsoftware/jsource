@@ -273,7 +273,7 @@ I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  // extract the output type buried in jt
  if(JT(jt,deprecct)<0&&mno<0)goto exiterr;  // non-noun is a pee; don't set error info here
  ASSERTGOTO(JT(jt,deprecct)>0,EVNONCE,exiterr);  // if fail on warning, do so
- if(JT(jt,deprecct)!=271828)jsto(JJTOJ(jt),MTYOER,mtxt); // write null-terminated string to console except when magic number given
+ if(JT(jt,deprecct)!=271828)jsto(jt,MTYOER,mtxt); // write null-terminated string to console except when magic number given
  JT(jt,deprecct)-=JT(jt,deprecct)!=0;  // decrement # of messages to allow
 exitok: ;
  res=1;
@@ -317,7 +317,7 @@ static I recurmsg(J jt, C *msgaddr){
  if(&buf[0]-msgaddr<0){
   msgaddr-=0x40000;  // set new level for next msg
   sprintf(buf,"stack now at 0x%p\n",&buf);
-  jsto(JJTOJ(jt),MTYOER,buf);
+  jsto(jt,MTYOER,buf);
  }
 /* 32-bit raspberry pi gcc 4.7 compilation warning */
 #if !( !defined(__clang__) && defined( __GNUC__ ) && ( __GNUC__ == 4 ) && (__GNUC_MINOR__ < 8 ) )
@@ -328,7 +328,7 @@ static I recurmsg(J jt, C *msgaddr){
 //13!:_6 stackfault verb - scribble on stack until we crash.  Give messages every 0x10000 bytes
 F1(jtstackfault){F12IP;C stackbyte,buf[80],*stackptr=&stackbyte;
  sprintf(buf,"starting stackptr=0x%p, cstackmin=0x%p\n",stackptr,(void *)jt->cstackmin);
- jsto(JJTOJ(jt),MTYOER,buf);
+ jsto(jt,MTYOER,buf);
  recurmsg(jt,stackptr);
  R 0;
 }

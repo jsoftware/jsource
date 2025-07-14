@@ -53,9 +53,9 @@ void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
 #ifdef ANDROID
   A z=tocesu8(str(strlen(b),b));
   CAV(z)[AN(z)]=0;
-  jsto(JJTOJ(jt),MTYOER,CAV(z));
+  jsto(jt,MTYOER,CAV(z));
 #else
-  jsto(JJTOJ(jt),MTYOER,b);
+  jsto(jt,MTYOER,b);
 #endif
  }
  RESETERR   // leave the error text until we start a new sentence from jdo, so that if the user looks at the stack it will still be there

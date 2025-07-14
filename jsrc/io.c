@@ -562,6 +562,7 @@ DF1(jtwd){F12IP;A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   ASSERT(2>AR(w),EVRANK);
   sv=VAV(self);
   t=sv->localuse.lu1.foreignmn[1];  // the n arg from the original 11!:n
+  ASSERT(!THREADID(jt),EVFACE);     // only the master thread can call wd
   if(BETWEENO(t,2000,3000) && AN(w) && !(LIT+C2T+C4T+INT&AT(w))) {  // 2000<=t<3000
     switch(AT(w)) {
     case B01:

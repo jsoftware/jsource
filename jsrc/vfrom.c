@@ -3430,7 +3430,7 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
   for(io=0;io<nops;++io){   // for each op:
    I stripeval0x=unlikely(stripe==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting index of offsets/values in this stripe
    I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
-if(!BETWEENO(ssize,0,MAXNON0))SEGFAULT;
+if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
    if(ssize){    // if this op intersects this stripe...
     opstat[io].rowindex=0; I4 nx=opstat[io].colndxahead=opstat[io].acolndxs[0]; opstat[io].colvalahead=opstat[io].acolvals[0];  // start on first row; prefetch first.
     minnextrow=nx<minnextrow?nx:minnextrow; // Keep track of smallest start value.  The readahead will take a long time, but we do not use minnextrow in this loop 

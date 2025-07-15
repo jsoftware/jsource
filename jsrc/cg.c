@@ -345,12 +345,12 @@ errorwind:;  // here if there is an error in the result of calculating the selec
   RETF(0);
 }
 
-// @.n
+// w@.a a is noun
 static F2(jtgerfrom){F12IP;A*av,*v,z;I n;
  ARGCHK2(a,w);  /* 1==AR(w)&&BOX&AT(w) */
  ASSERT(1>=AR(a),EVRANK);
- if(NUMERIC&AT(a))R from(a,w);
- else{
+ if(NUMERIC&AT(a))R from(a,w);   // normal case of gerund@.n
+ else{  // boxed n.  Create boxed train recursively
   ASSERT(BOX&AT(a),EVDOMAIN);
   n=AN(a); av=AAV(a); 
   GATV0(z,BOX,n,1); v=AAV1(z);

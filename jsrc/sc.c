@@ -357,7 +357,7 @@ RETF(z);
 }
 
 
-// return ref to adv/conj/verb whose name is a and whose value/type is val (with QCFAOWED semantics if it is not 0; but typeflags may be 0 in a NONzero value if the result should be value/0)
+// return ref to adv/conj/verb whose name is a and whose value/type is val (with QCSYMVAL semantics if it is not 0; but typeflags may be 0 in a NONzero value if the result should be value/0)
 // if the value is a noun, we just return the value with its flags; otherwise we create a 'name~' block
 // and return that with the part of speech of the value; the name will be resolved when the name~ is executed.
 // If the name is undefined, return a reference to [: (a verb that always fails)
@@ -401,7 +401,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
 A jtnameref(J jt,A w,A locsyms){A z;
  ARGCHK1(w); z=syrd(w,locsyms);
  RZ(z=namerefacv(w,z));  // make a reference to the name, with QCFAOWED semantics
- if(unlikely((I)z&QCFAOWED)){tpush(QCWORD(z));}  // if free is owed, tpush it & cancel the request
+ if(unlikely((I)z&QCFAOWED)){tpush(QCWORD(z));}  // if free is owed (must be noun), tpush it & cancel the request
  R QCWORD(z);
 }    /* argument assumed to be a NAME */
 

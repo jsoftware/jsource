@@ -207,9 +207,8 @@ static KF1(jtQfromE){
 
 static KF1F(jtXfromE){
  X *x= yv; E *wv=EAV(w);
- DO(AN(w), 
-   mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo);  jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
-   ASSERT(ISQINT(z),EVDOMAIN) *x++= z.n;   // Verify that the denominator is 1; install the numerator into *x
+ DO(AN(w), mpQ0(W); mpQ0(Wl); Q z; mpQ0(z); jmpq_set_d(mpW,wv[i].hi); jmpq_set_d(mpWl,wv[i].lo); jmpq_add(mpz,mpW,mpWl);  // add high & low parts as Qs
+  z=Qmp(z); ASSERT(ISQINT(z),EVDOMAIN) *x++= z.n;   // cvrt GMP to Q; Verify that the denominator is 1; install the numerator into *x
  ); 
  R 1;
 }

@@ -727,7 +727,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  if(unlikely((wt&NOUN)==0)){  // writing to ACV
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS
   // NOTE that the value may be in use elsewhere; may even be a primitive.
-  if(unlikely((((NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC)-1)&SGNIF(FAV(w)->flag2,VF2NAMELESSX))<0))valtype=VALTYPENAMELESS;   // nameless & non-locative, so indicate
+  if(unlikely((((NAV(a)->flag&NMLOC+NMILOC+NMIMPLOC)-1)&SGNIF(FAV(w)->flag2,VF2NAMELESSX))<0))valtype=VALTYPENAMELESS;   // nameless & non-locative, so indicate in the val ptr in this symbol
   if(unlikely(jt->glock!=0))if(likely(FAV(w)->fgh[0]!=0)){FAV(w)->flag|=VLOCK;}  // fn created in locked function is also locked
   if(unlikely(gr&ARLOCALTABLE))AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up there
  }

@@ -173,7 +173,7 @@ A jtsusp(J jt, C superdebug){A z;
   if(unlikely((inp=jgets(GETSSUSPEND)))==0){RESETERR; z=jtdbc(jt,zeroionei(0));  // get sentence; if error (must be FE rejecting debug), continue as if dbr 0 - will exit suspension
   }else{inp=jtddtokens(jt,inp,1+!!EXPLICITRUNNING); z=immex(inp);} // *** execute user's line*** force prompt and typeout read and execute a line, but exit debug if error reading line
   if(unlikely(JT(jt,sidamage))){  // If there was SI damage (changing an executing function), execute 13!:0 (oldvalue) to clear the stack and exit suspension
-   if(likely(JT(jt,dbuser)&TRACEDB1))jsto(JJTOJ(jt),MTYOER,"Debug suspension ended because an executing name was changed.  Debug is still enabled."); JT(jt,sidamage)=0; z=jtdbc(jt,num(JT(jt,dbuser)&TRACEDB1));  // give msg unless user has already cleared debug (very rare)
+   if(likely(JT(jt,dbuser)&TRACEDB1))jsto(jt,MTYOER,"Debug suspension ended because an executing name was changed.  Debug is still enabled."); JT(jt,sidamage)=0; z=jtdbc(jt,num(JT(jt,dbuser)&TRACEDB1));  // give msg unless user has already cleared debug (very rare)
   }
   // If the result came from a suspension-ending command, get out of suspension
   // Kludge: 13!:0 and single-step can be detected here by flag bits in dbuser.  We do this because the lab code doesn't properly route the result of these to the
@@ -212,7 +212,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  c=jt->sitop; NOUNROLL while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
  d=suspset(jt->sitop);  // find the topmost CALL frame and mark it as suspended
  if(unlikely(d==0)||unlikely(d->dcix<0)){   // if we cannot suspend, either because stack is malformed or because the verb has finished, abort back to console level as if dbr 1 entered.  single-step outside suspension makes this happen too.
-// obsolete   jsto(JJTOJ(jt),MTYOER,"Debug suspension ended by program logic error.    Debug is still enabled.");  // Tell the user we had a problem
+// obsolete   jsto(jt,MTYOER,"Debug suspension ended by program logic error.    Debug is still enabled.");  // Tell the user we had a problem
   NOUNROLL for(c=jt->sitop;c;c=c->dclnk){if(c->dctype==DCCALL){DGOTO(c,-1) c->dcsusp=0;}} R 0;  // exit from all explicit defns; return error, with jt->err unchanged
  }
  e=jt->jerr; jt->jerr=0;  // remember error and reset it, possibly to be restored later

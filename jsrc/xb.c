@@ -1190,3 +1190,17 @@ DF2(jtstringtoe){F12IP;A z;I prec;
  if(!AN(w)){RETF(dfv1(z,w,qq(sc(IMIN),zeroionei(1))));}   // return _"1 w on empty w - equivalent
  RETF(efstring(jt,w,prec));
 }
+
+#if 0
+// check argument for debugging
+F2(jttest2){F12IP;
+ ARGCHK2(a,w);
+ I x=i0(a);
+ if(x==0){
+  R sc(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w)); // inplaceable
+ } else if(x==1){
+  R sc(((I)DAV(w)&((SZD<<LGNPAR)-1))==0);          // on cacheline bdy
+ }
+ R sc(0);
+}
+#endif

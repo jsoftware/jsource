@@ -972,7 +972,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jtjsignale(jt,(e)|EMSGLINEISNAME|EMSGNOMSGLINE,(nm),0); R 0;}}  // signal error, overriding the running name with a different one
 #define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){jtjsignale(jt,(e)|EMSGLINEISNAME|EMSGNOMSGLINE,(nm),0); goto lbl;}}  // same, but without the exit
 #define ASSERTPYX(e,line)   {jtjsignale(jt,(e)|(EMSGFROMPYX|EMSGNOEFORMAT|EMSGNOMSGLINE),line,0); R 0;}
-#define ASSERTSYSCOMMON(b,s,stmt)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); stmt}}
+#define ASSERTSYSCOMMON(b,s,stmt)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); stmt}}
 #define ASSERTSYS(b,s)  ASSERTSYSCOMMON(b,s,R 0;)
 #define ASSERTSYSGOTO(b,s,lbl)  ASSERTSYSCOMMON(b,s,goto lbl;)
 #define ASSERTSYSV(b,s,stmt) ASSERTSYSCOMMON(b,s,stmt)
@@ -2347,7 +2347,11 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 
 
 
+#if 0 && defined(__APPLE__) && defined(__aarch64__)
+#define CACHELINESIZE 128  // size of processor cache line, in case we align to it
+#else
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
+#endif
 #define VIRTPAGESIZE 4096  // size of the memory mapped by a single TLB entry
 
 

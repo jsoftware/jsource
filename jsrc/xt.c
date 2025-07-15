@@ -453,7 +453,7 @@ F1(jtpmunpack){F12IP;A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v
  R z;
 }
 
-// 6!:14
+// 6!:13
 F1(jtpmstats){F12IP;A x,z;I*zv;PM0*u;
  ASSERTMTV(w);
  GAT0(z,INT,6,1); zv=AV1(z);

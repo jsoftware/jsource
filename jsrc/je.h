@@ -428,6 +428,7 @@ extern DF1(jtwords);
 extern F1(jtxco1);
 
 // extern F1(jttest1);
+// extern F2(jttest2);
 
 extern DF2(jtabase2);
 extern F2(jtadot2);
@@ -979,7 +980,7 @@ extern A        jtunvfn(J,F,A);
 extern A        jtvger2(J,C,A,A);
 extern A        jtvirtual(J,AD * RESTRICT,I,I);
 extern B        jtvnm(J,I,C*);
-extern void     jtwri(JS,I,C*,I,C*);
+extern void     jtwri(J,JS,I,C*,I,C*);
 extern B        jtxlinit(JS);
 extern B        jtxoinit(JS);
 extern B        jtxsinit(JS);
@@ -1004,7 +1005,7 @@ extern UI       hic2(I,UC*);
 extern UI       hic4(I,UC*);
 extern I        hsize(I);
 extern J        jinit(void);
-extern void     jsto(JS,I,C*);
+extern void     jsto(J,I,C*);
 extern void     jstpoll(J);
 extern void     jststop(J);
 extern I        level(J,A);

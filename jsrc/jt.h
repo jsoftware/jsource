@@ -453,8 +453,8 @@ typedef JST* JS;  // shared part of struct
 #endif
 #define JT(p,n) (JJTOJ(p)->n)  // reference name n in the JST
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
-#define MTHREAD(jjt) (&jjt->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
-#define MDTHREAD(jjt) (&jjt->threaddata[jjt->promptthread])     // jt for master/debug thread.  jjt is the shared jt pointer
+#define MTHREAD(jjt) (&(jjt)->threaddata[0])   // jt for master thread.  jjt is the shared jt pointer
+#define MDTHREAD(jjt) (&(jjt)->threaddata[jjt->promptthread])     // jt for master/debug thread.  jjt is the shared jt pointer
 #define THREADID(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE)-(offsetof(struct JSTstruct, threaddata[0])>>LGTHREADBLKSIZE))  // thread number from jt.  Thread 0 is the master
 #define THREADID1(jt) ((((I)(jt)&(JTALIGNBDY-1))>>LGTHREADBLKSIZE))  // unique thread #, faster to calculate (is 1+THREADID)
 #define JTTHREAD0(jt) (JJTOJ(jt)->threaddata)   // the array of JTT structs

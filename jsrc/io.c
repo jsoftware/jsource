@@ -278,7 +278,7 @@ extern void cblasinit(C*libpath);
 
 // flags in jt indicate whether display is suppressed.  p is the prompt, s is the text (whose length is m).  suppression of s happens when it is created;
 // here we control suppression of p; but we suppress all anyway
-void NOINLINE jtwri(JS jt,I type,C*p,I m,C*s){FPREFIP(JS);C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
+void NOINLINE jtwri(J jjt,JS jt,I type,C*p,I m,C*s){FPREFIP(JS);C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
  if(!((I)jtfg&JTPRNOSTDOUT)){  // if the prompt is not suppressed...
   c=strlen(p);            /* prompt      */
   e=strlen(t);            /* end-of-line */
@@ -289,11 +289,11 @@ void NOINLINE jtwri(JS jt,I type,C*p,I m,C*s){FPREFIP(JS);C buf[1024],*t=OUTSEQ,
   MC(v,t,e); v+=e;   // join prompt/body/EOL
   *v=0;   // NUL termination
 #ifdef ANDROID
-  A z=jttocesu8(MDTHREAD(jt),jtstr(MDTHREAD(jt),strlen(buf),buf));  // calling internal jt... functions
+  A z=jttocesu8(jjt,jtstr(MDTHREAD(jt),strlen(buf),buf));  // calling internal jt... functions
   CAV(z)[AN(z)]=0;
-  jsto(jt,type,CAV(z));
+  jsto(jjt,type,CAV(z));
 #else
-  jsto(jt,type,buf);
+  jsto(jjt,type,buf);
 #endif
  }
 }
@@ -346,7 +346,7 @@ static C* nfeinput(JS jt,C* s){A y;
  WITHATTNDISABLED(y=jtstr0(MDTHREAD(jt),PARSERVALUE(jtparse((JTT*)((I)MDTHREAD(jt)|JTFROMEXEC),jtddtokens(MDTHREAD(jt),jtcstr(MDTHREAD(jt),s),4+1+0)))););  // replace DDs, but require that they be complete within the string (no jgets); 0 is !!EXPLICITRUNNING; execute, NUL-terminate
 
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
- jtwri(jt,MTYOLOG,"",AN(y)-1,CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
+ jtwri(MTHREAD(jt),jt,MTYOLOG,"",AN(y)-1,CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
  // the value y is still on the tpop stack
 }
@@ -372,7 +372,7 @@ A jtjgets(JJ jt,C*p){A y;C*v;I j,k,m,n;UC*s;
    break;
   }
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;  // m is length; discard trailing control characters (usually CRLF, but not necessarily) ?not needed: done in inpl
-  jtwri((JS)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
+  jtwri(MTHREAD((JS)((I)JJTOJ(jt)+d->dcpflags)),(JS)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
   R inpl(raw,m,k+s);  // process & return the line
  }
  // read from keyboard
@@ -391,6 +391,7 @@ A jtjgets(JJ jt,C*p){A y;C*v;I j,k,m,n;UC*s;
   // Native Front End
   v=nfeinput(JJTOJ(jt),*p?"input_jfe_'      '":"input_jfe_''");   // use jt so always emit prompt
  }else{
+  ASSERT(IJT(jt,promptthread)==0||IJT(jt,sm)==SMCON,EVFACE);
   v=((inputtype)(IJT(jt,sminput)))(JJTOJ(jt),p);
  }
  jt->recurstate=origstate;   // prompt complete, go back to normal (running) state
@@ -441,7 +442,7 @@ F1(jtjoff){F12IP;I x;
  ARGCHK1(w);
  x=i0(w);  // use 0 for any nonnumeric arg
  jt->jerr=EVEXIT; jt->etxn=0; // clear old errors, replacing with the higher-priority EVEXIT
- if(IJT(jt,sesm))jsto(JJTOJ(jt), MTYOEXIT,(C*)x); else JFree(JJTOJ(jt));
+ if(IJT(jt,sesm))jsto(jt, MTYOEXIT,(C*)x); else JFree(JJTOJ(jt));
  // let front-end handle exit.
 // exit((int)x);
  R 0;
@@ -538,7 +539,7 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
   jtspfree(jm);  // check for garbage collection
  }
  // free any memory left at the end of the sentence.  BUT if the sentence failed and created a pm stack, defer the free and offer pm debugging
- if(likely(((I)jm->pmstacktop|(I)jm->pmttop)==0))jttpop(jm,old,jm->tnextpushp); else{if(jm->pmttop==0)jsto(jt,MTYOER,"Press ENTER to inspect\n"); jm->pmttop=old;}  // free if not new or continuing pm session; message first time through
+ if(likely(((I)jm->pmstacktop|(I)jm->pmttop)==0))jttpop(jm,old,jm->tnextpushp); else{if(jm->pmttop==0)jsto(MTHREAD(jt),MTYOER,"Press ENTER to inspect\n"); jm->pmttop=old;}  // free if not new or continuing pm session; message first time through
  R e;
 }
 
@@ -562,6 +563,7 @@ DF1(jtwd){F12IP;A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   ASSERT(2>AR(w),EVRANK);
   sv=VAV(self);
   t=sv->localuse.lu1.foreignmn[1];  // the n arg from the original 11!:n
+  ASSERT(!THREADID(jt),EVFACE);     // only the master thread can call wd
   if(BETWEENO(t,2000,3000) && AN(w) && !(LIT+C2T+C4T+INT&AT(w))) {  // 2000<=t<3000
     switch(AT(w)) {
     case B01:
@@ -832,7 +834,8 @@ void oleoutput(JS jt, I n, char* s); /* SY_WIN32 only */
 
 /* jsto - display output in output window */
 // type is mtyo of string, s->null-terminated string
-void jsto(JS jt,I type,C*s){C e;I ex;
+void jsto(J jjt,I type,C*s){C e;I ex;
+ JS jt=JJTOJ(jjt);
  if(JT(jt,nfe))
  {JJ jm=MTHREAD(jt);  // get address of thread struct we are using.  For the nonce we always use the master in case there is stored state there, since we aren't executing sentences
  if(MTYOEXIT==type) { JFree(JJTOJ(jt)); exit((int)(intptr_t)s); }
@@ -848,6 +851,7 @@ void jsto(JS jt,I type,C*s){C e;I ex;
   ENABLEATTN
  }else{
   // Normal output.  Call the output routine
+  if(THREADID(jjt)&&(JT(jt,sm)!=SMCON)) R;
   if(JT(jt,smoutput)){((outputtype)(JT(jt,smoutput)))(jt,(int)type,s);R;} // JFE output
 #if SY_WIN32 && !SY_WINCE && defined(OLECOM)
   if(JT(jt,oleop) && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;} // ole output

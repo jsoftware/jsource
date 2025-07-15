@@ -609,6 +609,7 @@ int getNumberOfCores(void) {
   return sysinfo.dwNumberOfProcessors;
  }
 #elif defined(__APPLE__)
+#if 0
  int nm[2];
  size_t len = 4;
  uint32_t count;
@@ -621,6 +622,10 @@ int getNumberOfCores(void) {
   sysctl(nm, 2, &count, &len, NULL, 0);
   if(count < 1) { count = 1; }
  }
+#endif
+ uint32_t count;
+ size_t len = sizeof(count);
+ if (sysctlbyname("machdep.cpu.core_count", &count, &len, 0, 0)) count = 1;
  return count;
 #elif defined(__linux__)
  cpu_set_t set;

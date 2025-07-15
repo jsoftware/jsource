@@ -1366,7 +1366,7 @@ typedef struct {
 #define VF2PSEUDONAME  ((I)(((I)1)<<VF2PSEUDONAMEX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
-typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; UI8 primfl; } prim; } PRIM;  // two cachelines exactly in 64-bit
+typedef struct __attribute__((aligned(ABDY))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; UI8 primfl; } prim; } PRIM;  // two cachelines exactly in 64-bit
 
 // Canned blocks
 // NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that

@@ -37,7 +37,7 @@ DF1(jtcatalog){F12IP;PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n
 #define SETJ(jexp) SETNDX(j,jexp,p)
 
 // block used to hold axis info, leading axis first
-struct __attribute__((aligned(CACHELINESIZE))) faxis {
+struct __attribute__((aligned(ABDY))) faxis {
  I lenaxis;  // the length of the axes (including frame) represented by this faxis struct, in items
  I lencell;  // size of item of this axis in atoms
  I nsel;  // number of selectors.  If negative, axis is complementary; nsel has ~(# of items to move to result)

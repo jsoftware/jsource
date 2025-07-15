@@ -46,11 +46,12 @@ c3 =: <:@[ ack [ ack <:@]      NB. (x-1) ack x ack y-1
 (2 2 $ 1 1 2 2) -: 1 2 ,.`,.@.0: 1 2  NB. dyad ,. is not inplaceable
 (_2 ]\ 1 0 2 0 2 5 4 0 8 0 1.5 0.6 7 0) -:  (1&+)`(2&*)`(3&%^:]) @. (3&|) i. 7  NB. dyad 3&% is not inplaceable
 
+NB.Leak tests
+
 1000 > (7!:0@{{ for. 1000#' ' do. a =. coname`coname@.1 end. '' }} - 7!:0) '' 
 1000 > (7!:0@{{ for. 1000#' ' do. a =. coname`coname@.1: end. '' }} - 7!:0) '' 
 '`nm1 nm2 nm3 nm4 nm5 nm6 nm7 nm8' =: ]`]`]`]`]`]`]`]
-ray_test_sw =: nm1`nm2`nm3`nm4`nm5`nm6`nm7`nm8
-1000 {{ for. 1000#' ' do. ({.y) ray_test_swtc@. ({:y) x end. }} i. 8
+1000 > 100 (7!:0@''@{{ for. 1000#0 do. ({.y) nm1`nm2`nm3`nm4`nm5`nm6`nm7`nm8@. ({:y) x end. }} - 7!:0@'') i. 8
 
 
 'domain error' -: ". etx '+@undef@.0'

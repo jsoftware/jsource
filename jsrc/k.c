@@ -46,11 +46,11 @@ static KF1(jtC4fromC2){US*v;C4*x;
 }
 
 typedef struct {D a; D b; D c; D d;} dbl4;
-static __attribute__((aligned(CACHELINESIZE))) dbl4 Dfours[16] = {
+static __attribute__((aligned(4*sizeof(D)))) dbl4 Dfours[16] = {
 {0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,1,0}, {1,0,1,0}, {0,1,1,0}, {1,1,1,0}, {0,0,0,1}, {1,0,0,1}, {0,1,0,1}, {1,1,0,1}, {0,0,1,1}, {1,0,1,1}, {0,1,1,1}, {1,1,1,1},
 };
 typedef struct {I a; I b; I c; I d;} int4;
-static __attribute__((aligned(CACHELINESIZE))) int4 Ifours[16] = {
+static __attribute__((aligned(4*sizeof(I)))) int4 Ifours[16] = {
 {0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,1,0}, {1,0,1,0}, {0,1,1,0}, {1,1,1,0}, {0,0,0,1}, {1,0,0,1}, {0,1,0,1}, {1,1,0,1}, {0,0,1,1}, {1,0,1,1}, {0,1,1,1}, {1,1,1,1},
 };
 

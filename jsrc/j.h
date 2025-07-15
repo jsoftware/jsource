@@ -1688,9 +1688,9 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #elif C_AVX2
 #define MCISH(dest,src,n) \
  {I *_d=(I*)(dest), *_s=(I*)(src); I _n=(I)(n); \
- if(unlikely(_n>NPAR))do{_mm256_storeu_si256((__m256i*)_d,_mm256_loadu_si256((__m256i*)_s)); _d+=NPAR; _s+=NPAR;}while((_n-=NPAR)>NPAR); \
-   __m256i endmask=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); _mm256_maskstore_epi64(_d,endmask,_mm256_loadu_si256((__m256i*)_s)); \
-  }
+  if(unlikely(_n>NPAR))do{_mm256_storeu_si256((__m256i*)_d,_mm256_loadu_si256((__m256i*)_s)); _d+=NPAR; _s+=NPAR;}while((_n-=NPAR)>NPAR); \
+  __m256i endmask=_mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); _mm256_maskstore_epi64(_d,endmask,_mm256_loadu_si256((__m256i*)_s)); \
+ }
 #else
 #define MCISH(dest,src,n) \
  {I *_d=(dest), *_s=(src); I _n=(I)(n); \
@@ -2352,6 +2352,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #else
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 #endif
+#define ABDY 64  // minimum alignment for any A block (lower bits are used as flags)
 #define VIRTPAGESIZE 4096  // size of the memory mapped by a single TLB entry
 
 

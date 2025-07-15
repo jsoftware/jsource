@@ -19,9 +19,9 @@ CREBLOCKATOMV2(a0j1,CMPX,0.0,1.0)  // 0j1
 #define CBAIVALM(t,v,m) {8*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,0,(v)}
 #endif
 #define CBAIVAL(t,v) CBAIVALM(t,v,0)
-#define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9-SY_64]=CBAIVAL(t,v);
+#define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(ABDY))) B##name[9-SY_64]=CBAIVAL(t,v);
 struct Bxnum0 {I hdr[AKXR(0)/SZI]; X v[1];};
-#define CREBLOCKVEC0(name,t) I __attribute__((aligned(CACHELINESIZE))) B##name[8]={8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
+#define CREBLOCKVEC0(name,t) I __attribute__((aligned(ABDY))) B##name[8]={8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
 CREBLOCKVEC0(aqq,LIT)  // ''
 CREBLOCKVEC0(mtv,B01)  // i.0 boolean
 CREBLOCKVEC0(mtvi,INT)  // i.0 integer
@@ -54,10 +54,10 @@ CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
 struct Bd1 Bmarkd[3]={{{AKXR(0),QP&TRAVERSIBLE,0,QP,ACPERMANENT,-1,0},{0.}},{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,-1,0},{0.}},{{AKXR(0),CMPX&TRAVERSIBLE,0,CMPX,ACPERMANENT,-1,0},{0.}}};  // weird double mark: atomic FL with AN<0.  Used to indicate a special case
     // order is QP,FL,CMPX
-#define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
+#define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(ABDY))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
 CREBLOCKVEC1I(iv0,INT,0)    /* ,0                                                          */
 CREBLOCKVEC1I(iv1,INT,1)     /* ,1                                                          */
-#define CREBLOCKVEC2I(name,t) I __attribute__((aligned(CACHELINESIZE)))  B##name[9]={(7+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
+#define CREBLOCKVEC2I(name,t) I __attribute__((aligned(ABDY)))  B##name[9]={(7+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
 CREBLOCKVEC2I(mtm,B01)    // i. 0 0, but boolean
 CREBLOCKVEC2I(mtmi,INT)    // i. 0 0 integer
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
@@ -72,12 +72,12 @@ I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, -1, -1, 0, 0
 // lanes 01/23, for the 2 successive fetches.  Each value is the top 2 bits of a 4-byte value.  The I values are broadcast
 // into each 64-byte lane, and then the UPPER (second) value is selected for lanes 0-1, and the LOWER (first)
 // for lanes 2-3
-I __attribute__((aligned(CACHELINESIZE))) maskec4123[4]={0xc0000000c0000000, 0x8000000000000000, 0x8000000080000000, 0xc000000080000000,};  // 4, 1, 2, 3
+I __attribute__((aligned(ABDY))) maskec4123[4]={0xc0000000c0000000, 0x8000000000000000, 0x8000000080000000, 0xc000000080000000,};  // 4, 1, 2, 3
 #else 
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
 
-__attribute__((aligned(CACHELINESIZE))) I Bnum[NUMMAX-NUMMIN+1+2][8*(2-SY_64)] = {   // A blocks for the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
+__attribute__((aligned(ABDY))) I Bnum[NUMMAX-NUMMIN+1+2][8*(2-SY_64)] = {   // A blocks for the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
 CBAIVAL(INT,0), CBAIVAL(INT,1),
 // minimal CBAIVAL(INT,-20), CBAIVAL(INT,-19), CBAIVAL(INT,-18), CBAIVAL(INT,-17), CBAIVAL(INT,-16), CBAIVAL(INT,-15), CBAIVAL(INT,-14), CBAIVAL(INT,-13), CBAIVAL(INT,-12), CBAIVAL(INT,-11), 
 CBAIVAL(INT,-10), CBAIVAL(INT,-9), CBAIVAL(INT,-8), CBAIVAL(INT,-7), CBAIVAL(INT,-6), CBAIVAL(INT,-5), CBAIVAL(INT,-4), CBAIVAL(INT,-3), CBAIVAL(INT,-2), CBAIVAL(INT,-1), 

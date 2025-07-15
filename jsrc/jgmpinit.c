@@ -44,7 +44,7 @@ void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
 #endif
 
 #define XFIXED0(nam, typ,val) \
- struct AD __attribute__((aligned(CACHELINESIZE))) B##nam= \
+ struct AD __attribute__((aligned(ABDY))) B##nam= \
  {AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,{(I)val}}; \
  X nam= (X)&B##nam
 
@@ -64,7 +64,7 @@ struct BDV1 {I k;I f;I m;I t;I c;I n;
  I s[1];UI d;};
  
 #define XFIXED1(nam, typ,sgn,val) \
- struct BDV1 __attribute__((aligned(CACHELINESIZE))) B##nam= \
+ struct BDV1 __attribute__((aligned(ABDY))) B##nam= \
  {XHSZ,typ,0,typ,ACPERMANENT,1,Xrh,sgn,(UI)val}; \
  X nam= (X)&B##nam
 

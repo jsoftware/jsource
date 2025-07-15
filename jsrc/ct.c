@@ -367,7 +367,7 @@ typedef struct jobstruct {
 // We take JOBLOCK before taking the mutex, always.  By measurement (20220516 SkylakeX, 4 cores) the job lock keeps contention low until the tasks are < 400ns
 // long, while using the mutex gives out at < 1000ns
 _Static_assert(MAXTHREADSINPOOL<64,"JOBLOCK fails if > 63 threads");
-#define JOBLOCK(jobq) ({I z; if(unlikely(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(CACHELINESIZE-1))!=0))z=joblock(jobq); (JOB*)z; })
+#define JOBLOCK(jobq) ({I z; if(unlikely(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(ABDY-1))!=0))z=joblock(jobq); (JOB*)z; })
 #define JOBUNLOCK(jobq,oldh) __atomic_store_n(&jobq->ht[0],oldh,__ATOMIC_RELEASE);
 static NOINLINE I joblock(JOBQ *jobq){I z;
  // loop until we get the lock
@@ -376,9 +376,9 @@ static NOINLINE I joblock(JOBQ *jobq){I z;
   // we are delaying while a writer finishes.  Usually this will be fairly short, as controlled by nspins.  The danger is that the
   // writer will be preempted, leaving us in a tight spin.  If the spin counter goes to 0, we decide this must have happened, and we
   // do a low-power delay for a little while (method TBD)
-  do{if(--nspins==0){nspins=50; YIELD} POLLDELAY}while((__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)&(CACHELINESIZE-1))!=0);  // loop till lock released
+  do{if(--nspins==0){nspins=50; YIELD} POLLDELAY}while((__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)&(ABDY-1))!=0);  // loop till lock released
   // try to reacquire the lock, loop if can't
- }while(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(CACHELINESIZE-1))!=0);
+ }while(((z=__atomic_fetch_add((I*)&jobq->ht[0],1,__ATOMIC_ACQ_REL))&(ABDY-1))!=0);
  R z;
 }
 // It would be possible to save a little time in going from active to waiting in all threads, by having a 'conditional lock' that

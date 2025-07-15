@@ -126,7 +126,7 @@ PT cases[] = {
 #define PTLPAR 0x0100007F  // flagged to be not a name
 #define PTRPAR (UI4)0xC9000000
 // table for translating AT type to QC type flags
-static const __attribute__((aligned(CACHELINESIZE))) UI4 ptcol[16] = {
+static const __attribute__((aligned(16*sizeof(UI4)))) UI4 ptcol[16] = {
 [LASTNOUNX-LASTNOUNX] = PTNOUN,  // PN
 [NAMEX-LASTNOUNX] = 0xC9200080,  // PNM assigned: high 16 bits immaterial because this MUST match line 7 which will delete it
 [MARKX-LASTNOUNX] = 0x0,  // PM cannot occur in a sentence

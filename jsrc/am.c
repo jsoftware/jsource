@@ -114,7 +114,7 @@ F1(jtcasev){F12IP;A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 #define AMFLAGDUFFW ((I)1<<AMFLAGDUFFWX)  // duff backoff for w, 0-7
 #define AMFLAGDUFFAX 24
 #define AMFLAGDUFFA ((I)1<<AMFLAGDUFFAX)  // duff backoff for a, 0-7.  Must be highest field
- struct __attribute__((aligned(CACHELINESIZE))) axis{
+ struct __attribute__((aligned(ABDY))) axis{
   UI size;  // First, the length of this axis in the result.  Later, size in bytes of a cell of this axis
   C *base;  //  pointer to result cell of higher axis that this axis is indexing within.  base for axis i does not include index i.  Not needed for axis -1, or -2 if taken in full
   I max;  // number of indexes for this axis (if in full, total axis length).

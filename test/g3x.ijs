@@ -563,6 +563,7 @@ NB. Verify they don't check syntax
 
 3 : 'for. do. end.'  NB. used to crash
 
+1: 0!:_1 '$'   NB. skip this test
 0 (3!:_1) memu i.4 5
 0 (3!:_1) memu 2{. i.4 5
 
@@ -578,6 +579,7 @@ a=: (15!:18) i.4 5
 b=: (15!:18) 2{. i.4 5
 1 (3!:_1) a
 1 (3!:_1) b
+NB.$    end of skip
 
 randfini''
 

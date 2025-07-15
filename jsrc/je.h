@@ -428,7 +428,7 @@ extern DF1(jtwords);
 extern F1(jtxco1);
 
 // extern F1(jttest1);
-extern F2(jttest2);
+// extern F2(jttest2);
 
 extern DF2(jtabase2);
 extern F2(jtadot2);

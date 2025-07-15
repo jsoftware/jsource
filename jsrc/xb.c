@@ -1191,6 +1191,7 @@ DF2(jtstringtoe){F12IP;A z;I prec;
  RETF(efstring(jt,w,prec));
 }
 
+#if 0
 // check argument for debugging
 F2(jttest2){F12IP;
  ARGCHK2(a,w);
@@ -1202,3 +1203,4 @@ F2(jttest2){F12IP;
  }
  R sc(0);
 }
+#endif

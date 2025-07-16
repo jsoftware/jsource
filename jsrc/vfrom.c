@@ -3648,7 +3648,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  box=C(AAV(w)[0]);  // 'Qkt'
  ASSERT(AT(box)&LIT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK)  A nm; RZ(nm=nfs(AN(box),CAV(box))); A qktf=syrd(nm,jt->locsyms); A qkt=QCWORD(qktf); ASSERT(qkt!=0,EVVALUE)  // name exists
  // from here till end we must take errors through 'errexit'
- I z=0;  // presumptive error return
+ A z=0;  // presumptive error return
  ASSERTGOTO(AT(qkt)&QP,EVDOMAIN,errexit) ASSERTGOTO(AR(qkt)==2,EVRANK,errexit) opctx.qkt=EAV(qkt);  // QP, rank=2
  ASSERTSYSGOTO(((I)opctx.qkt&(CACHELINESIZE-1))==0,"accumuland not on cache bdy",errexit)  // data must be on cache bdy
  opctx.qktnrows=AS(qkt)[0]; opctx.qktncols=AS(qkt)[1];  // remember shape in parm block 

@@ -415,7 +415,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  I n; RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));         // n: quantity
  I r; RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d));         // r: rank
  C*v=BV(d,w,r);                                        // v[]: n values come from here
- RZ(t=fromonehottype(t))
+ ASSERT((t=fromonehottype(t))!=0,EVDOMAIN)  // extract & audit type
  ASSERT(t&NOUN,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);

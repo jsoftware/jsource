@@ -697,12 +697,13 @@ struct AD {
 #define AFNJA           ((I)1<<AFNJAX)
 #define AFDEBUGRESULTX  2           // special flag for values that alter debug state matches INT
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
-#define AFHADPARENX     3     // in an explicit-defn word, set if user's original had () around the value  matched FL
+#define AFHADPARENX     3     // in an explicit-defn word, set if user's original had () around the value  matches FL
 #define AFHADPAREN      ((I)1<<AFHADPARENX)
 // Note: bit 4 is LABANDONED which is merged here
-// the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFSENTENCEWORDX     8     // matches INT1X
 #define AFSENTENCEWORD      ((I)1<<AFSENTENCEWORDX)   // this block comes from an executing sentence and is protected by it
+#define AFNOALIASX     9     // matches INT2X
+#define AFNOALIAS      ((I)1<<AFNOALIASX)   // this block must not be aliased (it is needed inplace)
 #define AFUNINCORPABLEX SBTX      // matches SBTX 16
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes and is probably on the C stack rather than 
@@ -727,6 +728,7 @@ struct AD {
                                   // even if the value is assigned to another name.  The purpose is to allow virtual extension: if you know that a value is assigned to a name, then only one
                                   // thread can encounter the value with AC=2, and that is safe for virtual extension.
 
+// the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFVIRTUALBOXEDX XDX   // matches XDX 19
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
 #define AFUNIFORMITEMSX MARKX     // matches MARK 22

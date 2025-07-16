@@ -3647,31 +3647,34 @@ F2(jtbatchop){F12IP;PROLOG(000);
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==opctx.nstripes,EVLENGTH) opctx.stripegrade=IAV(box);  // must be INT [#stripes]
  box=C(AAV(w)[0]);  // 'Qkt'
  ASSERT(AT(box)&LIT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK)  A nm; RZ(nm=nfs(AN(box),CAV(box))); A qktf=syrd(nm,jt->locsyms); A qkt=QCWORD(qktf); ASSERT(qkt!=0,EVVALUE)  // name exists
- // from here till end we must take errors through 'exit'
- ASSERTGOTO(AT(qkt)&QP,EVDOMAIN,exit) ASSERTGOTO(AR(qkt)==2,EVRANK,exit) opctx.qkt=EAV(qkt);  // QP, rank=2
- ASSERTSYSGOTO(((I)opctx.qkt&(CACHELINESIZE-1))==0,"accumuland not on cache bdy",exit)  // data must be on cache bdy
+ // from here till end we must take errors through 'errexit'
+ I z=0;  // presumptive error return
+ ASSERTGOTO(AT(qkt)&QP,EVDOMAIN,errexit) ASSERTGOTO(AR(qkt)==2,EVRANK,errexit) opctx.qkt=EAV(qkt);  // QP, rank=2
+ ASSERTSYSGOTO(((I)opctx.qkt&(CACHELINESIZE-1))==0,"accumuland not on cache bdy",errexit)  // data must be on cache bdy
  opctx.qktnrows=AS(qkt)[0]; opctx.qktncols=AS(qkt)[1];  // remember shape in parm block 
- ASSERTSYSGOTO((((I)opctx.qktncols*sizeof(E))&(CACHELINESIZE-1))==0,"accumuland length not a cacheline multiple",exit)  // data must be on cache bdy
- ASSERTSYSGOTO((AC(qkt)-!!((I)qktf&QCFAOWED))==1,"accumuland is aliased",exit);   // count, after removing the ra from syrd, must be 1
+ ASSERTSYSGOTO((((I)opctx.qktncols*sizeof(E))&(CACHELINESIZE-1))==0,"accumuland length not a cacheline multiple",errexit)  // data must be on cache bdy
+ ASSERTSYSGOTO((AC(qkt)-!!((I)qktf&QCFAOWED))==1,"accumuland is aliased",errexit);   // count, after removing the ra from syrd, must be 1
  box=C(AAV(w)[1]);  // row masks
- ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) opctx.nops=AN(box); ASSERT(opctx.nops<=MAXOP,EVLIMIT) opctx.oprowmasks=AAV(box);  // must be list of boxes; save number and address
- DO(opctx.nops, A sb=C(opctx.oprowmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktncols,EVLENGTH,exit) )  // must be boolean mask no longer than the row
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,errexit) ASSERTGOTO(AR(w)<=1,EVRANK,errexit) opctx.nops=AN(box); ASSERT(opctx.nops<=MAXOP,EVLIMIT) opctx.oprowmasks=AAV(box);  // must be list of boxes; save number and address
+ DO(opctx.nops, A sb=C(opctx.oprowmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,errexit) ASSERTGOTO(AR(sb)<=1,EVRANK,errexit) ASSERTGOTO(AN(sb)<=opctx.qktncols,EVLENGTH,errexit) )  // must be boolean mask no longer than the row
  box=C(AAV(w)[2]);  // row values
- ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.oprowvals=AAV(box);  // must be list of boxes; save number and address
- DO(opctx.nops, A sb=C(opctx.oprowvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktncols,EVLENGTH,exit) )  // must be quadprec no longer than the row
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,errexit) ASSERTGOTO(AR(w)<=1,EVRANK,errexit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,errexit) opctx.oprowvals=AAV(box);  // must be list of boxes; save number and address
+ DO(opctx.nops, A sb=C(opctx.oprowvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,errexit) ASSERTGOTO(AR(sb)<=1,EVRANK,errexit) ASSERTGOTO(AN(sb)<=opctx.qktncols,EVLENGTH,errexit) )  // must be quadprec no longer than the row
  box=C(AAV(w)[3]);  // col masks
- ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.opcolmasks=AAV(box);  // must be list of boxes; save number and address
- DO(opctx.nops, A sb=C(opctx.opcolmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be boolean mask no longer than the col
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,errexit) ASSERTGOTO(AR(w)<=1,EVRANK,errexit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,errexit) opctx.opcolmasks=AAV(box);  // must be list of boxes; save number and address
+ DO(opctx.nops, A sb=C(opctx.opcolmasks[i]); ASSERTGOTO(AT(sb)==B01,EVDOMAIN,errexit) ASSERTGOTO(AR(sb)<=1,EVRANK,errexit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,errexit) )  // must be boolean mask no longer than the col
  box=C(AAV(w)[4]);  // col values
- ASSERTGOTO(AT(box)&BOX,EVDOMAIN,exit) ASSERTGOTO(AR(w)<=1,EVRANK,exit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,exit) opctx.opcolvals=AAV(box);  // must be list of boxes; save number and address
- DO(opctx.nops, A sb=C(opctx.opcolvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,exit) ASSERTGOTO(AR(sb)<=1,EVRANK,exit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,exit) )  // must be quadprec no longer than the col
+ ASSERTGOTO(AT(box)&BOX,EVDOMAIN,errexit) ASSERTGOTO(AR(w)<=1,EVRANK,errexit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,errexit) opctx.opcolvals=AAV(box);  // must be list of boxes; save number and address
+ DO(opctx.nops, A sb=C(opctx.opcolvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,errexit) ASSERTGOTO(AR(sb)<=1,EVRANK,errexit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,errexit) )  // must be quadprec no longer than the col
  opctx.colndxct=opctx.resvx=opctx.nthreads; opctx.colndx9ct=2*opctx.nops;  // each thread will fetch at least once; those with a job# less than nops will fetch again.  When all have missed once, we are synced.  9ct is early completion, counting down, one for stripe index one for top of column index
   // run the operation
  jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtbatchopx,&opctx,opctx.nthreads,0);  // execute on all threads
-
-exit:;  // here on error to undo syrd
+ z=qkt;  // good return
+errexit:;  // here on error to undo syrd
  if((I)qktf&QCFAOWED)fa(qkt);  // if syrd issued ra, undo it
- EPILOG(qkt);  // return the value
+ EPILOG(z);  // return the value
+
+
 }
 #else
 F2(jtbatchop){F12IP;ASSERT(0,EVNONCE);}

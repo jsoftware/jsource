@@ -393,8 +393,11 @@ static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  // One-time initialization
 #if SUPPORT_AFFINITY
  A acoremask=(A)jt->shapesink[0];  // parm: pointer to coremask, passed in through jt
- if(acoremask!=0)sched_setaffinity(0,AN(acoremask)<<bplg(AT(acoremask)),(cpu_set_t*)IAV(acoremask));  // set core mask, from the value back in the user's thread (we are still synchronous witxh the thread creator)
-cpu_set_t coremask; ASSERT(sched_getaffinity((pid_t){0},sizeof(cpu_set_t),&coremask)==0,EVFACE)   // get coremask before change if any scaf
+ I afflen; cpu_set_t* aaff;  // len of affinity, and the data
+ // pthreads4w peculiarity: once you use setaffinity it always uses setaffinity, so if affinity not given we need a mask of 1s
+ if(acoremask!=0){afflen=AN(acoremask)<<bplg(AT(acoremask)); aaff=(cpu_set_t*)IAV(acoremask);}else{aaff=(cpu_set_t*)&validitymask; afflen=4*sizeof(validitymask[0]);}
+ ASSERT(sched_setaffinity(0,afflen,aaff)==0,EVFACE)  // set core mask, from the value back in the user's thread (we are still synchronous with the thread creator)
+ cpu_set_t coremask; ASSERT(sched_getaffinity((pid_t){0},sizeof(cpu_set_t),&coremask)==0,EVFACE)   // get coremask before change if any scaf
 #endif
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  // get/set stack limits
@@ -882,12 +885,12 @@ ASSERT(0,EVNONCE)
   DO(AN(w),
    A akw; A aval;  // A block for keyword, A block for value
    if(AT(w)&BOX){
-    A boxl1=C(AAV(w)[i]);  // contents of first box to examine
-    if(AN(boxl1)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}
-    if(AT(boxl1)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}
-    if(AT(boxl1)&BOX){
+    A boxl1=C(AAV(w)[i]);  // contents of first-level box to examine
+    if(AN(boxl1)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}  // first box empty; call it fixed options
+    if(AT(boxl1)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}  // first box numeric, call it fixed options
+    if(AT(boxl1)&BOX){   // box contains boxes
      A boxl2=C(AAV(boxl1)[0]);   // w is (<((<boxl2), ...))
-     if(AN(boxl2)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}
+     if(AN(boxl2)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}   // first keyword empty or numeric, treat as fixed option
      if(AT(boxl2)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}
      akw=boxl2;   // the keyword
      if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw))  // keyword must be literal type

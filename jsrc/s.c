@@ -742,8 +742,10 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   e=likely((SGNIF(gr,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=(A)((I)jtfg|-JTASGNWASLOCAL);   // indicate local assignment (we have no lock to clear), remember final assignment
   valtype|=QCNAMED|(REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
+reprobelocal: ;  // here to retry storing a local NOALIAS symbol.  g and e, and the new w, are set
   x=e->fval;   // if nonzero, x points to the incumbent value (QCSYMVAL semantics)
  }else{  // global table
+reprobeglobal: ;  // loop back here when we have to retry storing a global NOALIAS symbol.  g is set, and the new w
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  ************************ This returns holding a WRITELOCK on the locale
@@ -771,7 +773,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   I xaf;  // holder for nvr/free flags
   {A aaf=AFLAG0; aaf=x?x:aaf; xtype=x?xtype:QCNOUN; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x.
 
-  if(likely(!(AFNJA&xaf))){
+  if(likely(!(xaf&AFNJA+AFNOALIAS))){
    // Normal case of non-memory-mapped assignment.
    e->fval=MAKEFVAL(w,valtype);  // store the new flagged value to free w before ra()
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
@@ -800,7 +802,10 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
         // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway.  We don't do it for x/y
    }
 
-  }else{  // x exists, is either read-only or memory-mapped, and is not rewriting the previous value
+  }else{  // x is memory-mapped or NOALIAS, and is not rewriting the previous value
+   if(xaf&AFNOALIAS){if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock); RZ(w=ca(w)); if(((I)g&JTASGNWASLOCAL))goto reprobelocal; g=(A)((I)g&~(JTASGNWASLOCAL+JTFINALASGN)); goto reprobeglobal;}
+    // is x is marked NOALIAS, make a new copy.  This might be long, so do it out of lock.  Then loop back to retry the assignment
+   // falling through, x exists, is memory-mapped
    ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
    // no need to store valtype - that can't change from noun (because must be DIRECT below)
    I wt=AT(w); I wn=AN(w); I wr=AR(w); I m=wn<<bplg(wt);  // we will move the flags/data from w to the preallocated area x

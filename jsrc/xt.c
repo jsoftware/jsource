@@ -294,13 +294,15 @@ foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNE
  }
  A *old=jt->tnextpushp;
  t=qpc();  // start time
- // We attempt to run as if under jtxdefn, so we check ATTN and jt->jerr as a replacement for reading from the word block; and we tpop like jtxdefn
- DQ(n, z=PARSERVALUE(parsea(wv,wn)); if(unlikely(!z))break; ASSERT((__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE)&3)==0,EVATTN) RE(0) if((UI)jt->tnextpushp-(UI)old>TPOPSLACKB*SZI)tpop(old););
+ // We attempt to time as if under jtxdefn, so we check ATTN and jt->jerr as a replacement for reading from the word block; and we tpop like jtxdefn
+ DQ(n, z=PARSERVALUE(parsea(wv,wn)); if(unlikely(!z))break; ASSERTGOTO((__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE)&3)==0,EVATTN,exiterr) REGOTO(0,exiterr) if((UI)jt->tnextpushp-(UI)old>TPOPSLACKB*SZI)tpop(old););
  t=qpc()-t; // Run the sentence.  No need to run as exec since the result doesn't escape.  tpop like jtxdefn.  no tpop on error.
+exit: ;
  if(unlikely(stackallo))debz();
  RZ(z);  // if error, fail the timing request
  z=scf(n?t/(n*pf):0);   // convert processor freq to seconds, get time per iteration
  EPILOG(z)
+exiterr: z=0; goto exit;   // clear rc before cleanup
 }
 
 
@@ -359,7 +361,7 @@ static F1(jtpmfree){F12IP;A x,y;C*c;I m;PM*v;PM0*u;
 
 F1(jtpmarea1){F12IP;R pmarea2(vec(B01,2L,&zeroZ),w);}  // 6!:10
 
-// 6!:10  y is data area to use   x is 2-ele list (record all lines),(wrap the buffer)
+// 6!:10  y is data area to use   x is 2-ele list (record all lines),(wrap the buffer).  Result is #entries
 F2(jtpmarea2){F12IP;A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  ARGCHK2(a,w);
  RZ(a=cvt(B01,a));  // force x boolean

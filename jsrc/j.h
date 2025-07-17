@@ -2347,10 +2347,10 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 
 
 
-#if 0 && defined(__APPLE__) && defined(__aarch64__)
+#if defined(__APPLE__) && defined(__aarch64__)
 #define CACHELINESIZE 128  // size of processor cache line, in case we align to it
 #else
-#define CACHELINESIZE 128  // 64  // size of processor cache line, in case we align to it
+#define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 #endif
 #define ABDY 64  // minimum alignment for any A block (lower bits are used as flags)
 #define VIRTPAGESIZE 4096  // size of the memory mapped by a single TLB entry

@@ -153,7 +153,8 @@ ops =. createop dens   NB. create all the ops, as a table of rm,rv,cm,cv
 |: ((i. >: x) mtpivot (thresh (,<)~ <"1@:|:)@])\ ops  NB. all pivot-batches, producing (#pivots)x(#threads)x(old,new)
 }}
 
-res =: 0 mtpivottbl 20 20;(,:0.9 0.9);0.0
+64 128 e.~ cs=: 9!:56'cachelinesize'
+res =: 0 mtpivottbl ((64<cs){20 20,:20 24);(,:0.9 0.9);0.0
 
 NB. 13!:8 ] 4   NB. used for testing
 

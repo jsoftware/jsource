@@ -126,7 +126,7 @@ cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 NB.#
 
-WORDER =: 0 2 4 6 8 10 12 16 13 17 14 18 15 19 (33 b.) 1
+WORDER =: 0 2 4 6 8 10 12 16 13 17 14 18 15 19 (33 b.) 1  NB. P then E
 setnworkers =: {{ while. 1 T. '' do. 55 T. '' end. for_c. y{.}.WORDER do. 0 T. 0;<'coremask';c end. 1 }}   NB. ensure there are exactly y worker threads
 
 NB. y is density of non0 (col,row).  Result is rcmv for batchndx (single-boxed).  Qkt exists, and we use its shape

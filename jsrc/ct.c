@@ -815,7 +815,7 @@ ASSERT(0,EVNONCE)
   ASSERT(pthread_getaffinity_np(pthread_self(),cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
 #endif
   if(acoremask)ASSERT(pthread_setaffinity_np(pthread_self(),AN(acoremask)<<bplg(AT(acoremask)),(cpu_set_t*)IAV(acoremask))==0,EVFACE)  // set new coremask if requested
-  z=vec(INT,sizeof(cpu_set_t)>>LGSZI,(void *)&cpuset.cpuset);  // convert old value to A return result
+  z=vec(INT,sizeof(cpu_set_t)>>LGSZI,(void *)&cpuset);  // convert old value to A return result
 #else
   ASSERT(0,EVNONCE)
 #endif

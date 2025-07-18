@@ -4,6 +4,7 @@ NB. 128!:14
 0!:_1`1:@.(0:@IF64) '$'   NB. skip if not avx2/emulation
 
 NB. load'format/printf'  NB. scaf
+NB. load'C:/My Downloads/tpiv.ijs'
 
 NB. 'col' means pivot column, which is horizontal in Qkt.  'row' is pivot row in Qk, which comes from a col of Qkt.
 NB. Call is destname;rowmasks;rowvalues;colmasks;colvalues<threshold

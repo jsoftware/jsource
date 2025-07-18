@@ -383,7 +383,9 @@ F1(jtcpufeature){F12IP;
 #else
   R sc(0);
 #endif
- } else if (!strcasecmp(CAV(w),"CACHELINESIZE")) {
+ } else if (!strcasecmp(CAV(w),"CACHELINESIZE")) {  // cacheline size used in compilation time
+  R sc(CACHELINESIZE);
+ } else if (!strcasecmp(CAV(w),"CACHELINESIZEHW")) {  // cacheline size by querrying OS during runtime
 #if defined(__APPLE__)
   size_t line_size = 0;
   size_t size = sizeof(line_size);

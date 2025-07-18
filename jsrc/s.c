@@ -704,8 +704,6 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // virtuals.
  // Find the internal code for the name to be assigned.  Do this before we take the lock.
  I wt=AT(w); I gr=AR(g);  // type of w, rank-flags for g
- rifv(w); // must realize any virtual
- if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
 
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
@@ -713,7 +711,6 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx);
   RZ(g);  // abort if error in locale name
  }else{  // not locative assignment
-
   if(!(gr&ARLOCALTABLE+ARLCLONED)){  // global assignment, and the symbol table does not suppress the check for local names
    // check for non-locative global assignment to a locally-defined name.  Give domain error and immediately eformat, since no one has a self for assignment
    // this test will usually have a positive bucketx and will not call probelocal.  Unlikely that symx is present
@@ -721,9 +718,16 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
    localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def) OR if neg (name in sentence for 6!:2 from keyboard); now non0 if valid & known to have no assignment
    ASSERTSUFF(likely(localnexist!=0)||!probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
+  // if we are assigning jt->zombieval, it must be a reassignment in place, since zombieval is set only for a direct assignment.  We can bypass the entire assignment (except for the masked-public check above).  If another
+  // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
+  if(w==jt->zombieval){R (I)jtfg+((gr&ARLOCALTABLE)>>(ARLOCALTABLEX-1));}  // set/keep low flag bits, make others non0
+ }
+ // if the assignand is VIRTUAL (including UNINCORPABLE) or NOALIAS, it must be realized/copied.  If recursive, ensure RECURSIBLE
+ if(unlikely((((wt&RECURSIBLE)^AFLAG(w))&RECURSIBLE+AFNOALIAS+AFVIRTUAL)!=0)){
+  if(AFLAG(w)&AFNOALIAS)RZ(w=ca(w))else rifv(w); // copy if NOALIAS (must not be virtual); realize any virtual.  These may leave a nonrecursive result and change AFLAG(w)
+  if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
  }
  I valtype=ATYPETOVALTYPE(wt);  // value flags to install into value block.  It will have QCSYMVAL semantics
-
  if(unlikely((wt&NOUN)==0)){  // writing to ACV
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS
   // NOTE that the value may be in use elsewhere; may even be a primitive.
@@ -742,10 +746,10 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   e=likely((SGNIF(gr,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
   g=(A)((I)jtfg|-JTASGNWASLOCAL);   // indicate local assignment (we have no lock to clear), remember final assignment
   valtype|=QCNAMED|(REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
-reprobelocal: ;  // here to retry storing a local NOALIAS symbol.  g and e, and the new w, are set
+// obsolete reprobelocal: ;  // here to retry storing a local NOALIAS symbol.  g and e, and the new w, are set
   x=e->fval;   // if nonzero, x points to the incumbent value (QCSYMVAL semantics)
  }else{  // global table
-reprobeglobal: ;  // loop back here when we have to retry storing a global NOALIAS symbol.  g is set, and the new w
+// obsolete reprobeglobal: ;  // loop back here when we have to retry storing a global NOALIAS symbol.  g is set, and the new w
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
   valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
   e=probeis(a, g);  // get the symbol address to use, old or new.  ************************ This returns holding a WRITELOCK on the locale
@@ -773,8 +777,8 @@ reprobeglobal: ;  // loop back here when we have to retry storing a global NOALI
   I xaf;  // holder for nvr/free flags
   {A aaf=AFLAG0; aaf=x?x:aaf; xtype=x?xtype:QCNOUN; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x.
 
-  if(likely(!(xaf&AFNJA+AFNOALIAS))){
-   // Normal case of non-memory-mapped assignment.
+  if(likely(!(xaf&AFNJA))){
+// obsolete noalias:;    // Normal case of non-memory-mapped assignment, perhaps after chacking some flags
    e->fval=MAKEFVAL(w,valtype);  // store the new flagged value to free w before ra()
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
                    // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
@@ -802,10 +806,12 @@ reprobeglobal: ;  // loop back here when we have to retry storing a global NOALI
         // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway.  We don't do it for x/y
    }
 
-  }else{  // x is memory-mapped or NOALIAS, and is not rewriting the previous value
-   if(xaf&AFNOALIAS){if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock); RZ(w=ca(w)); if(((I)g&JTASGNWASLOCAL))goto reprobelocal; g=(A)((I)g&~(JTASGNWASLOCAL+JTFINALASGN)); goto reprobeglobal;}
-    // is x is marked NOALIAS, make a new copy.  This might be long, so do it out of lock.  Then loop back to retry the assignment
-   // falling through, x exists, is memory-mapped
+  }else{  // x is memory-mapped, and is not rewriting an incumbent value
+// obsolete    if(xaf&AFNOALIAS){
+// obsolete     if(likely(AC(w)<0))goto noalias;  // NOALIAS block can be assigned when it is still inplaceable
+// obsolete     if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock); RZ(w=ca(w)); if(((I)g&JTASGNWASLOCAL))goto reprobelocal; g=(A)((I)g&~(JTASGNWASLOCAL+JTFINALASGN)); goto reprobeglobal;
+// obsolete       // is x is marked NOALIAS, make a new copy.  This might be long, so do it out of lock.  Then loop back to retry the assignment
+// obsolete    } // falling through, x exists, is memory-mapped
    ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
    // no need to store valtype - that can't change from noun (because must be DIRECT below)
    I wt=AT(w); I wn=AN(w); I wr=AR(w); I m=wn<<bplg(wt);  // we will move the flags/data from w to the preallocated area x

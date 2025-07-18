@@ -1,7 +1,7 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.IF64 '$'   NB. skip if not avx2/emulation
+0!:_1`1:@.(0:@IF64) '$'   NB. skip if not avx2/emulation
 
 NB. load'format/printf'  NB. scaf
 
@@ -126,7 +126,8 @@ cv =. , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 NB.#
 
-setnworkers =: {{ while. 1 T. '' do. 55 T. '' end. for. y#0 do. 0 T. '' end. 1 }}   NB. ensure there are exactly y worker threads
+WORDER =: 0 2 4 6 8 10 12 16 13 17 14 18 15 19 (33 b.) 1
+setnworkers =: {{ while. 1 T. '' do. 55 T. '' end. for_c. y{.}.WORDER do. 0 T. 0;<'coremask';c end. 1 }}   NB. ensure there are exactly y worker threads
 
 NB. y is density of non0 (col,row).  Result is rcmv for batchndx (single-boxed).  Qkt exists, and we use its shape
 createop =: {{
@@ -151,6 +152,24 @@ qkts =. >.&.(%&4)&.(1&{) qkts  NB. round row-len up to cacheline
 Qkt =: (15!:18) 11 c. qkts $ 0   NB. Allocate Qkt
 ops =. createop dens   NB. create all the ops, as a table of rm,rv,cm,cv
 |: ((i. >: x) mtpivot (thresh (,<)~ <"1@:|:)@])\ ops  NB. all pivot-batches, producing (#pivots)x(#threads)x(old,new)
+}}
+
+
+NB. y is #threads to use, result is time for r 40-pivot batches with 100% fill, 5000x5000
+NB. x is r,(0 for batched, 1 for nonbatched)
+NB. 0 0 timepiv 0
+timepiv =: {{
+'r unbat' =. x
+nthr =. y
+setnworkers nthr
+22 T. 0;{.WORDER
+qkts =. >.&.(%&4)&.(1&{) 5000 5000  NB. round row-len up to cacheline
+Qkt =: (15!:18) 11 c. qkts $ 0   NB. Allocate Qkt
+qktcopy =: memu Qkt
+ops =. <"1@:|: createop 40$,:1.0,1.0   NB. create all the ops, as rm,rv,cm,cv  each a boxed list
+tt =. 0
+for. r#0 do. if. unbat do. tt =. tt , batchop 'qktcopy';ops,<0.0 else. tt =. tt , batchopndx 'Qkt';ops,<0.0 end. end.
+(+/ % #) tt
 }}
 
 res =: 0 mtpivottbl 20 20;(,:0.9 0.9);0.0

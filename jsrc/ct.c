@@ -669,7 +669,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
  R pyx;
 }
-static I jtthreadcreate(J jt,I n,pthread_attr_t *threadattrs){ASSERT(0,EVFACE)}
+static I jtthreadcreate(J jt,I n,void *threadattrs){ASSERT(0,EVFACE)}
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){
  DO(n,C c=f(jt,ctx,i);if(c)R c;);
  R 0;}

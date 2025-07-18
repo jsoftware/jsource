@@ -61,10 +61,8 @@ echo '14&(128!:6) ', 14&(128!:6) 'abc'
 echo '15&(128!:6) ', 15&(128!:6) 'abc'
 
 NB. this failed on windows arm64
-'imin imax'=: _9223372036854775808 9223372036854775807
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
-4!:55 ;:'imin imax'
 
 FINISH=: 3 : 0
 msg=. 9!:14''

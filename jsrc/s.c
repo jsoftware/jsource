@@ -722,9 +722,9 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
   if(w==jt->zombieval){R (I)jtfg+((gr&ARLOCALTABLE)>>(ARLOCALTABLEX-1));}  // set/keep low flag bits, make others non0
  }
- // if the assignand is VIRTUAL (including UNINCORPABLE) or NOALIAS, it must be realized/copied.  If recursive, ensure RECURSIBLE
+ // if the assignand is VIRTUAL (including UNINCORPABLE) or NOALIAS noninplaceable, it must be realized/copied.  If recursive, ensure RECURSIBLE
  if(unlikely((((wt&RECURSIBLE)^AFLAG(w))&RECURSIBLE+AFNOALIAS+AFVIRTUAL)!=0)){
-  if(AFLAG(w)&AFNOALIAS)RZ(w=ca(w))else rifv(w); // copy if NOALIAS (must not be virtual); realize any virtual.  These may leave a nonrecursive result and change AFLAG(w)
+  if(AFLAG(w)&AFNOALIAS){if(AC(w)>=0)RZ(w=ca(w))}else rifv(w); // copy if NOALIAS (must not be virtual); realize any virtual.  These may leave a nonrecursive result and change AFLAG(w)
   if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
  }
  I valtype=ATYPETOVALTYPE(wt);  // value flags to install into value block.  It will have QCSYMVAL semantics

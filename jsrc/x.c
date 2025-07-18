@@ -52,15 +52,8 @@ static DF1(jthdrinfo){F12IP;A z;
 }
 
 // 15!:24, query/set unaliasability
-static DF2(jtnoalias){F12IP;
- ARGCHK2(a,w);
- I monad=AT(w)&VERB, newval=-1;  // see if this is the monad (set) or the dyad (query)
- if(!monad){newval=b0(a); a=w;}   // now a is the noun value, newval set to 0/1 if dyad
- I oldval=!!(AFLAG(a)&AFNOALIAS);  // remember incoming value
- ASSERT(!(newval==1&&AC(a)>=0),EVDOMAIN)  // error if trying to mark a block that is already aliased
- if(newval==1)AFLAGSETNOALIAS(a) else if(newval==0)AFLAGCLRNOALIAS(a);  // if set, do the set/clr in a single byte
- R num(oldval);  // return old value
-}
+static DF1(jtnoalias1){F12IP; RETF(num(!!(AFLAG(w)&AFNOALIAS)))}  // return old value
+static DF2(jtnoalias2){F12IP; I newval=b0(a); if(newval==1){ASSERT(AC(w)<0,EVDOMAIN) AFLAGSETNOALIAS(w)} else AFLAGCLRNOALIAS(w); RETF(RETARG(w))} // error if trying to mark a block that is already aliased
 
 // TUNE static I totprobes=0, totslots=0;  // umber of probes/slots
 
@@ -350,7 +343,7 @@ void jtforeigninit(J jt){UI i;
  MN(15,21) XPRIM(VERB, 0,            jtcddlsym,    VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,22) XPRIM(VERB, jtcddlclose,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,23) XPRIM(VERB, jtcdq,        0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(15,24) XPRIM(VERB, jtnoalias,    jtnoalias,    VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(15,24) XPRIM(VERB, jtnoalias1,    jtnoalias2,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,0)  XPRIM(VERB, jtlocnc,      0,            VFLAGNONE,VF2NONE,0,   RMAX,RMAX);
  MN(18,1)  XPRIM(VERB, jtlocnl1,     jtlocnl2,     VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,55) XPRIM(VERB, jtlocexmark,  jtlocexmark,  VFLAGNONE,VF2NONE,0,   RMAX,RMAX);

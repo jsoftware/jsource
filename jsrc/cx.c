@@ -300,7 +300,7 @@ DF2(jtxdefn){F12IP;
   L *sympv=SYMORIGIN;  // bring into local
   L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]];  // pointer to sym block for y, known to exist
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
-   if(unlikely(AFLAG(w)&AFNOALIAS)){RZ(w=ca(w))}  // make a copy if NOALIAS
+   if(unlikely(AFLAG(w)&AFNOALIAS)&&AC(w)>=0){RZ(w=ca(w))}  // make a copy if NOALIAS
    I vtype=unlikely(ISSPARSE(AT(w)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse.  Must be a noun
    ybuckptr->fval=MAKEFVAL(w,vtype); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCSYMVAL semantics
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
@@ -318,7 +318,7 @@ DF2(jtxdefn){F12IP;
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
   if(a!=0){
-   if(unlikely(AFLAG(a)&AFNOALIAS)){RZ(a=ca(a))}  // make a copy if NOALIAS
+   if(unlikely(AFLAG(a)&AFNOALIAS)&&AC(a)>=0){RZ(a=ca(a))}  // make a copy if NOALIAS
    L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    I vtype=unlikely(ISSPARSE(AT(a)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse

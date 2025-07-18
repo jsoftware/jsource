@@ -172,7 +172,8 @@ for. r#0 do. if. unbat do. tt =. tt , batchop 'qktcopy';ops,<0.0 else. tt =. tt 
 (+/ % #) tt
 }}
 
-res =: 0 mtpivottbl 20 20;(,:0.9 0.9);0.0
+64 128 e.~ cs=: 9!:56'cachelinesize'
+res =: 0 mtpivottbl ((64<cs){20 20,:20 24);(,:0.9 0.9);0.0
 
 NB. 13!:8 ] 4   NB. used for testing
 

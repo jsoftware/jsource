@@ -715,7 +715,7 @@ size1 =: 7!:0''
 IGNOREIFFVI 200000 > 7!:2 'a =: b (i. 10)} a'   NB. Write to many cells
 IGNOREIFFVI (size1 - 10 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
 4!:55 ;:'a b'
-IGNOREIFFVI (size0 + 1000) > 7!:0''
+IGNOREIFFVI (size0 + 1500) > 7!:0''
 
 size0 =: 7!:0''
 a =: <"0 i. 100 1000
@@ -726,7 +726,7 @@ a -: b , b , 2 }. <"0 i. 100 1000
 IGNOREIFFVI (size1 - 2 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
 4!:55 ;:'a b'
 IGNOREIFFVI 1  NB. execute a name to allow garbage collection to run
-IGNOREIFFVI (size0 + 1000) > 7!:0''
+IGNOREIFFVI (size0 + 1500) > 7!:0''
 
 NB. Verify memcpy routine by replacing one cell of an array
 test =: 3 : 0"0

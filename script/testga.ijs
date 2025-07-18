@@ -43,10 +43,6 @@ echo 'avx512bw: ',":9!:56'avx512bw'
 echo 'avx512vbmi: ',":9!:56'avx512vbmi'
 echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 
-NB. this crash on Intel(R) Xeon(R) CPU E5-2673 v3 @ 2.40GHz
-echo '(3x ^ 2 ^ i. 10x)'
-empty (3x ^ 2 ^ i. 10x)
-
 NB. this crash on OpenBSD v7.6
 echo '(128!:6)   ', (128!:6)   'abc'
 echo '2&(128!:6) ', 2&(128!:6) 'abc'
@@ -64,9 +60,11 @@ echo '13&(128!:6) ', 13&(128!:6) 'abc'
 echo '14&(128!:6) ', 14&(128!:6) 'abc'
 echo '15&(128!:6) ', 15&(128!:6) 'abc'
 
-NB. this crash on J32
-echo '0 0 1 2 2 2 3 3 4 5 5 5 </. i.12'
-empty 0 0 1 2 2 2 3 3 4 5 5 5 </. i.12
+NB. this failed on windows arm64
+'imin imax'=: _9223372036854775808 9223372036854775807
+echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
+echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
+4!:55 ;:'imin imax'
 
 FINISH=: 3 : 0
 msg=. 9!:14''

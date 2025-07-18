@@ -1961,7 +1961,7 @@ F1(jtcddlclose){F12IP;HMODULE h;I rc;
  rc= !!FREELIB(h);      /* dlcose return zero on success */
 #endif
 R sc(rc);   /* return zero on success */
-}    /* 15!:22 close lilbrary handle */
+}    /* 15!:22 close library handle */
 
 F1(jtcdq){F12IP;I rc;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)

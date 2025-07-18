@@ -44,7 +44,7 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(likely(!f)){
   // single box: fast path.  Allocate a scalar box and point it to w.
-  INCORPNC(w);  // this realizes w if virtual
+  INCORPNC(w);  // this realizes w if virtual or NOALIAS
   I aband=SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
   // it's not worth checking WILLBEOPENED, because the only reasonable time to box is at the end of a compound, which has its own result
 // obsolete   if(!((I)jtfg&JTWILLBEOPENED)){

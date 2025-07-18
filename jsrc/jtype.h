@@ -757,10 +757,12 @@ struct AD {
 #define AFLAGFAUX(a,v)  {AFLAG(a)=(v);}  // used when a is known to be a faux block
 #define AFLAGANDLOCAL(a,v)   {AFLAG(a)&=(v);}  // LOCAL functions are used when the block is known not to be shared
 #define AFLAGORLOCAL(a,v)    {AFLAG(a)|=(v);}
-// Once a block has been shared, the flags do not change except for PRISTINE and KNOWNNAMED.  (Pristine only gets cleared, KNOWNNAMED is set and cleared).
+// Once a block has been shared, the flags do not change except for PRISTINE, KNOWNNAMED, NOALIAS.  (Pristine only gets cleared, KNOWNNAMED is set and cleared).
 // To make sure a word-wide change doesn't store an old value, we store into these flags using single-byte operations.  This will cause sharing in the exceedingly rare
 // case of simultaneous modification, but it avoids the need for RFO cycles.
 #if C_LE
+#define AFLAGSETNOALIAS(a) {((C*)&AFLAG(a))[1]|=AFNOALIAS>>8;}
+#define AFLAGCLRNOALIAS(a) (((C*)&AFLAG(a))[1]&=~(AFNOALIAS>>8))
 #define AFLAGSETKNOWN(a) {((C*)&AFLAG(a))[2]|=AFKNOWNNAMED>>16;}  // if the value is ever exposed to another thread, the count will be too high for KNOWN to matter
 #define AFLAGCLRKNOWN(a) (((C*)&AFLAG(a))[2]&=~(AFKNOWNNAMED>>16))
 #define AFLAGSETPRIST(a) {((C*)&AFLAG(a))[3]|=AFPRISTINE>>24;}
@@ -777,7 +779,8 @@ struct AD {
 #define ARLCLONED (1LL<<ARLCLONEDX)
 #define ARHASACVX 3   // set if this local symbol table contains an ACV
 #define ARHASACV ((I)1<<ARHASACVX)
-#define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
+#define ARLOCALTABLEX 4   // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
+#define ARLOCALTABLE ((I)1<<ARLOCALTABLEX)
 #define ARLSYMINUSE 32  // This bit is set in the rank of the original local symbol table when it is in use
 #define ARINVALID 64  // This (named or numbered) symbol table was never filled in and must not be analyzed when freed
 #define ARNAMEADDEDX 7  // 128 Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag.  Keep as sign bit

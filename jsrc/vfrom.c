@@ -190,7 +190,7 @@ static A jtaxisfrom(J jtfg,A w,struct faxis *axes,I rflags){F12IP;I i;
   DPMULDE(zn,nsel^REPSGN(nsel),zn);  // * last-axis size, gives result size
   if(((nunitsels-r)|(zn-MINVIRTSIZE))>=0){  // if there is only one axis left, and result is big enough
    // There is only one application of the last axis.  If the indexes are sequential, we can make the result virtual
-   // We allow virtualing even for NJA blocks. 
+   // We allow virtualing even for NJA blocks.  We allow for NOALIAS because it's just too useful when the user knows what he's doing. 
    // If the block can be virtual, we create the virtual here and return
    I *sels=axes[r].sels;  // pointer to selectors of last axis
    I index0;  // indexes of first item if virtual is OK

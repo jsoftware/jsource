@@ -97,16 +97,17 @@ A jtevery(J jtfg, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
-   realizeifvirtual(x); razaptstackend(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
+   if(unlikely(AFLAG(x)&AFNOALIAS)){RZ(x=ca(x)) ACINITZAP(x);}  // user shouldn't box a NOALIAS, but if so we clone it
+   else{realizeifvirtual(x); razaptstackend(x);}   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
      // razap OK, because if the result is inplaceable it must be newly created or an input from here; in either case the value is not up the tstack
   } else {
-   // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
+   // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra.  Since it is about to be opened that doesn't count as aliasing
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block, but we do have to mark the block
    // non-inplaceable, because the next thing to open it might be each: each will set the inplaceable flag if the parent is abandoned, so as to allow
    // pristinity of lower results; thus we may not relax the rule that all contents must be non-inplaceable
    ACIPNO(x);  // can't ever have inplaceable contents
-#if 0  // not clear this is worth doing,  and must check for pyxes
+#if 0  // not clear this is worth doing, and must check for pyxes
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
     // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
@@ -252,9 +253,10 @@ A jtevery2(J jtfg, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
-   realizeifvirtual(x); razaptstackend(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
+   if(unlikely(AFLAG(x)&AFNOALIAS)){RZ(x=ca(x)) ACINITZAP(x);}  // user shouldn't box a NOALIAS, but if so we clone it
+   else{realizeifvirtual(x); razaptstackend(x);}   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
   } else {
-   // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
+   // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra, and this will be opened so it doesn't count as aliasing
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block, but we do have to mark the block
    // non-inplaceable, because the next thing to open it might be each: each will set the inplaceable flag if the parent is abandoned, so as to allow

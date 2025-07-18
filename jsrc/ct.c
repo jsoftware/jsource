@@ -391,14 +391,6 @@ static NOINLINE I joblock(JOBQ *jobq){I z;
 // Processing loop for thread.  Grab jobs from the global queue, and execute them
 static void *jtthreadmain(void *arg){J jt=arg;I dummy;
  // One-time initialization
-#if SUPPORT_AFFINITY
- A acoremask=(A)jt->shapesink[0];  // parm: pointer to coremask, passed in through jt
- I afflen; cpu_set_t* aaff;  // len of affinity, and the data
- // pthreads4w peculiarity: once you use setaffinity it always uses setaffinity, so if affinity not given we need a mask of 1s
- if(acoremask!=0){afflen=AN(acoremask)<<bplg(AT(acoremask)); aaff=(cpu_set_t*)IAV(acoremask);}else{aaff=(cpu_set_t*)&validitymask; afflen=4*sizeof(validitymask[0]);}
- ASSERT(sched_setaffinity(0,afflen,aaff)==0,EVFACE)  // set core mask, from the value back in the user's thread (we are still synchronous with the thread creator)
- cpu_set_t coremask; ASSERT(sched_getaffinity((pid_t){0},sizeof(cpu_set_t),&coremask)==0,EVFACE)   // get coremask before change if any scaf
-#endif
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
  // get/set stack limits
  // not supported on Windows if(pthread_attr_getstackaddr(0,(void **)&jt->cstackinit)!=0)R 0;
@@ -527,23 +519,20 @@ terminate:   // termination request.  We hold the job lock, and 'job' has the va
  R 0;  // return to OS, closing the thread
 }
 
-// Create worker thread n, and call its threadmain to start it in wait state.  coremask is pointer to mask of eligible cores, or NULL to allow any
-static I jtthreadcreate(J jt,I n,A coremask){
- pthread_attr_t attr;  // attributes for the task we will start
+// Create worker thread n, and call its threadmain to start it in wait state.  *threadattrs has initial attributes, which we modify
+static I jtthreadcreate(J jt,I n,pthread_attr_t *threadattrs){
  // create thread
- ASSERT(pthread_attr_init(&attr)==0,EVFACE);
- ASSERT(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED)==0,EVFACE);
+ ASSERT(pthread_attr_setdetachstate(threadattrs,PTHREAD_CREATE_DETACHED)==0,EVFACE);
  size_t stksiz=CSTACKSIZE;
 #if defined(__APPLE__)
  stksiz=pthread_get_stacksize_np(pthread_self());
 #elif defined(__linux__) && defined(_GNU_SOURCE)
  pthread_attr_t tattr;  // attributes for the current task
- if(pthread_getattr_np(pthread_self(),&tattr)==0) if(pthread_attr_getstacksize(&tattr,&stksiz)!=0)stksiz=CSTACKSIZE;
+ if(pthread_getattr_np(pthread_self(),&tattr)==0)if(pthread_attr_getstacksize(&tattr,&stksiz)!=0)stksiz=CSTACKSIZE;
 #endif
- ASSERT(pthread_attr_setstacksize(&attr,stksiz)==0,EVFACE)    // request sufficient stack size
+ ASSERT(pthread_attr_setstacksize(threadattrs,stksiz)==0,EVFACE)    // request sufficient stack size
  JTFORTHREAD(jt,n)->cstackmin=0;  // clear any old stackarea; we wait for thread to fill in the stack
- JTFORTHREAD(jt,n)->shapesink[0]=(I)(intptr_t)coremask;  // pass in pointer to coremask, if any
- ASSERT(pthread_create(&(pthread_t){0},&attr,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
+ ASSERT(pthread_create(&(pthread_t){0},threadattrs,jtthreadmain,JTFORTHREAD(jt,n))==0,EVFACE)  // create the thread, save its threadid (by passing its jt into jtthreadmain)
 pid_t p;
  // since the user may try to use the thread right away, delay until it is available for use.  We use cstackmin as a 99.999% proxy for 'ready'
  while(__atomic_load_n(&JTFORTHREAD(jt,n)->cstackmin,__ATOMIC_ACQUIRE)==0){delay(10000); YIELD}  // task startup takes a while
@@ -567,8 +556,8 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A arg3){F12JT;A pyx;
   // It would be nice to be able to free the virtual before the task completes, but we don't have a way to (we could realize/fa in the worker, but why?).  The virtual backer will be tied up during the task, but we
   // won't have to copy the data here and then transfer it in the task
   ASSERT(ISDENSE(AT(arg1)),EVNONCE) if(dyad){ASSERT(ISDENSE(AT(arg2)),EVNONCE) ra(arg3);}   // Don't allow sparse args since we can't box them; arg3 is self, so never virtual; just ra
-  if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} ra(arg1);
-  if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);
+  if(unlikely(AFLAG(arg1)&AFNOALIAS)){RZ(arg1=ca(arg1)) ACINITZAP(arg1);}else{if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZ(arg1=realize(arg1)) else if(AFLAG(arg1)&AFUNINCORPABLE)RZ(arg1=clonevirtual(arg1))} ra(arg1);}
+  if(unlikely(AFLAG(arg2)&AFNOALIAS)){RZ(arg2=ca(arg2)) ACINITZAP(arg2);}else{if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZ(arg2=realize(arg2)) else if(AFLAG(arg2)&AFUNINCORPABLE)RZ(arg2=clonevirtual(arg2))} ra(arg2);}
   JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
   job->n=0; job->initthread=THREADID(jt);  // indicate this is a user job.  ns is immaterial since it will always trigger a deq.  Install initing thread# for repatriation
   job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=arg3;(UNvoidAV1(job))->kchain.global=jt->global;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // A little overcopy OK
@@ -680,7 +669,7 @@ static A jttaskrun(J jt,A arg1, A arg2, A arg3){A pyx;
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; pyx=(FAV(FAV(self)->fgh[0])->valencefns[dyad])(jt,arg1,uarg2,uarg3); jt->parserstackframe.sf=s;
  R pyx;
 }
-static I jtthreadcreate(J jt,I n,A coremask){ASSERT(0,EVFACE)}
+static I jtthreadcreate(J jt,I n,pthread_attr_t *threadattrs){ASSERT(0,EVFACE)}
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){
  DO(n,C c=f(jt,ctx,i);if(c)R c;);
  R 0;}
@@ -819,9 +808,14 @@ ASSERT(0,EVNONCE)
   }else athread=w;  // if bare thread#, take it
   I threadno; RE(threadno=i0(athread)) ASSERT(threadno==0,EVNONCE)  // get thread#, which must be 0
   if(acoremask){ASSERT(AR(acoremask)<=1,EVRANK) ASSERT(AN(acoremask)!=0,EVLENGTH) if(unlikely(AT(acoremask)&B01))acoremask=cvt(INT,acoremask); ASSERT(AT(acoremask)&INT+LIT,EVDOMAIN)} // verify coremask valid if given
-  cpu_set_t coremask; ASSERT(sched_getaffinity((pid_t){0},sizeof(cpu_set_t),&coremask)==0,EVFACE)   // get coremask before change if any
-  if(acoremask)ASSERT(sched_setaffinity((pid_t){0},AN(acoremask)<<bplg(AT(acoremask)),(cpu_set_t*)IAV(acoremask))==0,EVFACE)  // set new coremask if requested
-  z=vec(INT,sizeof(coremask)>>LGSZI,(void *)&coremask);  // convert old value to A return result
+  pthread_attr_t tattr; cpu_set_t cpuset; size_t cpusetsize=sizeof(cpu_set_t); // attributes for the current task
+#if defined(__APPLE__) || (defined(__linux__) && defined(_GNU_SOURCE))
+  ASSERT(pthread_getattr_np(pthread_self(),&tattr)==0,EVFACE) ASSERT(pthread_attr_getaffinity_np(&tattr,cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
+#else
+  ASSERT(pthread_getaffinity_np(pthread_self(),cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
+#endif
+  if(acoremask)ASSERT(pthread_setaffinity_np(pthread_self(),AN(acoremask)<<bplg(AT(acoremask)),(cpu_set_t*)IAV(acoremask))==0,EVFACE)  // set new coremask if requested
+  z=vec(INT,sizeof(cpu_set_t)>>LGSZI,(void *)&cpuset.cpuset);  // convert old value to A return result
 #else
   ASSERT(0,EVNONCE)
 #endif
@@ -919,9 +913,6 @@ ASSERT(0,EVNONCE)
    }
   }
 
-#if !SUPPORT_AFFINITY
-  ASSERT(coremask==0,EVNONCE)  // if affinity not supported, fail a request for it
-#endif
 // obsolete 
 // obsolete   I poolno=0;  // default to threadpool 0
 // obsolete   if(AN(w)){   // arg is [threadpool #]
@@ -930,6 +921,13 @@ ASSERT(0,EVNONCE)
 // obsolete   }
 
   // input parms have been read.  Allocate the thread
+  // create the attributes for the thread
+  pthread_attr_t threadattrs; ASSERT(pthread_attr_init(&threadattrs)==0,EVFACE)
+#if SUPPORT_AFFINITY
+  if(coremask!=0)ASSERT(pthread_attr_setaffinity_np(&threadattrs,AN(coremask)<<bplg(AT(coremask)),(cpu_set_t*)IAV(coremask))==0,EVFACE)
+#else
+  ASSERT(coremask==0,EVNONCE)  // if affinity not supported, fail a request for it
+#endif
   // We must not increase the # running tasks while suspension is running.  If we do, we have no way to tell the task that a system lock is active, and we also have
   // no way to prevent the created task from starting up running, thus violating the lock rules.
   ASSERT(lda(&JT(jt,systemlock))<=2,EVSIDAMAGE)  // if the lock has already started, this must be an execution from debug suspension.  Fail it
@@ -962,12 +960,13 @@ ASSERT(0,EVNONCE)
   JTFORTHREAD(jt,resthread)->threadpoolno=poolno;  // install threadpool number
   JTFORTHREAD(jt,resthread)->ndxinthreadpool=jobq->nthreads;  // install ndx within pool.  Always ascending in the threads, since we delete only from the end
   // Try to allocate a thread in the OS and start it running.  We hold locks while this is happening, so thread startup must be lock-free
-  if(jtthreadcreate(jt,resthread,coremask)){   // start thread.  thread started normally?
+  if(jtthreadcreate(jt,resthread,&threadattrs)){   // start thread.  thread started normally?
    if(WORKERIDFORTHREAD(resthread)>=JT(jt,wthreadhwmk))JT(jt,wthreadhwmk)=WORKERIDFORTHREAD(resthread+1);   // if adding a new thread, increment hwmk
    ++jobq->nthreads;  // incr # threads in pool
   }else resthread=0;  // if error, mark invalid thread#; error signaled earlier
   JOBUNLOCK(jobq,job);  // We don't add a job - just unlock
   WRITEUNLOCK(JT(jt,flock))  // release lock on global thread data
+  pthread_attr_destroy(&threadattrs);  // release attr block
   // ***** end of lock on thread info
   jvmwire(JTFORTHREAD(jt,resthread),sizeof(JTT)); // try to wire thread data.  Do this outside of the lock, since failure is not catastrophic.  Also don't check for error before doing the wiring; if there was an error, resthread=0, so we just harmlessly wire thread 0's data again.
   z=resthread?sc(resthread):0;  // if no error, return thread# started

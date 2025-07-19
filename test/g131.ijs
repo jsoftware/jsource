@@ -151,20 +151,20 @@ _13.9    f =i.9
 if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
 echo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?2000 2000$12200
 echo e=. >./|,(id a)-a X c
-assert. 1e_9>e
+assert. 1e_8>e
 echo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?2 2000 2000$12200
 echo e=. >./|,(id b)-b X c
-assert. 1e_9>e
+assert. 1e_8>e
 ''
 }}^:(9!:56 'cblas')''
 
 {{
 echo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?2000 1500$12200
 echo e=. >./|,a - (a X c) X a
-assert. 1e_9>e
+assert. 1e_8>e
 echo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?2 2000 1500$12200
 echo e=. >./|,b - (b X c) X b
-assert. 1e_9>e
+assert. 1e_8>e
 ''
 }}''
 

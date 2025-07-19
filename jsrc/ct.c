@@ -800,7 +800,7 @@ ASSERT(0,EVNONCE)
 #endif
   break;}
  case 22:  { // get/set coremask for executing thread
-#if PYXES && SUPPORT_AFFINITY
+#if PYXES && SUPPORT_AFFINITY && !defined(__FreeBSD__)
   A athread, acoremask=0;
   if(AT(w)&BOX){  // not naked thread#
    ASSERT(AR(w)<2,EVRANK) ASSERT(BETWEENC(AN(w),1,2),EVLENGTH)  // must be singleton or 2-box list
@@ -809,12 +809,18 @@ ASSERT(0,EVNONCE)
   I threadno; RE(threadno=i0(athread)) ASSERT(threadno==0,EVNONCE)  // get thread#, which must be 0
   if(acoremask){ASSERT(AR(acoremask)<=1,EVRANK) ASSERT(AN(acoremask)!=0,EVLENGTH) if(unlikely(AT(acoremask)&B01))acoremask=cvt(INT,acoremask); ASSERT(AT(acoremask)&INT+LIT,EVDOMAIN)} // verify coremask valid if given
   pthread_attr_t tattr; cpu_set_t cpuset; size_t cpusetsize=sizeof(cpu_set_t); // attributes for the current task
-#if defined(__APPLE__) || (defined(__linux__) && defined(_GNU_SOURCE))
+#if defined(ANDROID)
+  ASSERT(sched_getaffinity(pthread_gettid_np(pthread_self()), cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
+#elif defined(__APPLE__) || (defined(__linux__) && defined(_GNU_SOURCE))
   ASSERT(pthread_getattr_np(pthread_self(),&tattr)==0,EVFACE) ASSERT(pthread_attr_getaffinity_np(&tattr,cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
 #else
   ASSERT(pthread_getaffinity_np(pthread_self(),cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
 #endif
+#if defined(ANDROID)
+  if(acoremask)ASSERT(sched_getaffinity(pthread_gettid_np(pthread_self()),AN(acoremask)<<bplg(AT(acoremask)),(cpu_set_t*)IAV(acoremask))==0,EVFACE)  // set new coremask if requested
+#else
   if(acoremask)ASSERT(pthread_setaffinity_np(pthread_self(),AN(acoremask)<<bplg(AT(acoremask)),(cpu_set_t*)IAV(acoremask))==0,EVFACE)  // set new coremask if requested
+#endif
   z=vec(INT,sizeof(cpu_set_t)>>LGSZI,(void *)&cpuset);  // convert old value to A return result
 #else
   ASSERT(0,EVNONCE)
@@ -923,8 +929,12 @@ ASSERT(0,EVNONCE)
   // input parms have been read.  Allocate the thread
   // create the attributes for the thread
   pthread_attr_t threadattrs; ASSERT(pthread_attr_init(&threadattrs)==0,EVFACE)
-#if SUPPORT_AFFINITY
+#if SUPPORT_AFFINITY && !defined(__FreeBSD__)
+#if defined(ANDROID)
+  if(coremask!=0)ASSERT(sched_setaffinity(pthread_gettid_np(pthread_self()),AN(coremask)<<bplg(AT(coremask)),(cpu_set_t*)IAV(coremask))==0,EVFACE)
+#else
   if(coremask!=0)ASSERT(pthread_attr_setaffinity_np(&threadattrs,AN(coremask)<<bplg(AT(coremask)),(cpu_set_t*)IAV(coremask))==0,EVFACE)
+#endif
 #else
   ASSERT(coremask==0,EVNONCE)  // if affinity not supported, fail a request for it
 #endif

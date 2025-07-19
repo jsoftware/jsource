@@ -812,7 +812,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       // the name =. name , 3 will come to execution.  Can it inplace?  Yes, because the modified value of name will be on the stack after
       // execution.  That will then execute as (name' + +) creating a fork that will assign to name.  So we can inplace any execution, because
       // it always produces a noun and the only things executable from the stack are tridents
-      if(withprob(!PTISNOTASGNNAME,0.1)){A zval; I targc;  //  Is this an assignment to a single name? targc is # refs in the assigned symbol that is allowed for inplaceables.
+      if(withprob(!PTISNOTASGNNAME,0.1)){A zval; I targc;  //  Is this an assignment to a single name? targc is # refs in the assigned symbol that is allowed for inplaceables (depends on public/private).
        I symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  y is the name, which has not been stacked yet
        fs1=pt0ecam&FLGPLINE1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
        if(FAV(fs)->flag&FAV(fs1)->flag&VASGSAFE){  // do the verb(s) allow assignment in place?   this frees fs/fs1
@@ -823,7 +823,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
          if(likely((I)((pt0ecam&(ARLCLONED<<LOCSYMFLGX))<<(30-(ARLCLONEDX+LOCSYMFLGX)))<symx)){   //   (Is cloned local table) < symbol given? 
           zval=QCWORD(symorigin[symx].fval);  // get value of symbol in primary table.  There may be no value; that's OK
          }else{zval=QCWORD(jtprobelocal(symorigin,QCWORD(y),jt->locsyms));}
-         targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d.) which is OK
+         targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d) which is OK
         }else{
           // global assignment, get slot address.  Global names have been ra()d and have AC=2
          zval=QCWORD(jtprobequiet(jt,QCWORD(y)));
@@ -966,7 +966,7 @@ RECURSIVERESULTSCHECK
      }else{
       A yy;  // will be the result of the operation, stored after we have freed the args on the stack
       if(withprob(pmask=pmask567&0x1F,0.7)){
-       // ***** Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about recursion
+       // ***** Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about recursion **********************************************************************************************************
        pmask>>=3; // 1 for adj, 2 for conj   1 2
        AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
@@ -995,7 +995,7 @@ RECURSIVERESULTSCHECK
        // quite often there is another execution so we don't try to avoid it
 
       }else if(pmask567&0b10000000){  // assign - can't be fork/hook
-       // ****** assignment
+       // ****** assignment *****************************************************************************************************************************************************************************************************************
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
@@ -1026,7 +1026,7 @@ RECURSIVERESULTSCHECK
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word(s)
       }else if(pmask567&0b100000){  // fork NVV or VVV
-       // ***** fork
+       // ***** fork *********************************************************************************************************************************************************************************************************************
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
        // initial value of loop counter/flag: 000 always for dyad, cleared by stacker
        yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
@@ -1035,7 +1035,7 @@ RECURSIVERESULTSCHECK
        RECURSIVERESULTSCHECK
        stack[3].t=stack[1].t;  // take err tok from f; no need to set parsertype, since it didn't change
       }else{
-       // ***** hook, other bidents, and non-fork tridents
+       // ***** hook, other bidents, and non-fork tridents *******************************************************************************************************************************************************************************
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
        // Because we use some bits in the PT flags to distinguish assignment types, those bits indicate valid-parse on some invalid combinations.  They come to here with an ASGN in stack[2].  Catch it and reject the fragment
        if(unlikely(QCPTYPE(arg2)>=QCASGN))goto rejectfrag;     // We could defer the check until later (in hook) but this seems tolerable.  If we wait till hook we have to distinguish this from a real error here.

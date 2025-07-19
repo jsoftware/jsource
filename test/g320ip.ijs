@@ -1238,6 +1238,31 @@ b =: a
 1 = 15!:24 a
 0 = 15!:24 b
 
+f=:{{
+a =: 9 - 3
+ga =. 15!:19 a
+a =: a + 1
+ga2 =: ga , 15!:19 a
+assert. a__ = 7
+assert. ga = 15!:19 a
+a =. 10
+a =: a__ + 1
+assert. a__ = 8
+assert. ga = 15!:19 a__
+a__ =: a__ + 1
+assert. a__ = 9
+assert. ga = 15!:19 a__
+1
+}}
+f''
+
+f =:{{ a =: 100000#0  NB. make sure sentence following assignment is inplaceable
+a =: 1 (3}) a
+1
+}}
+
+150000 > 7!:2 'f 0'
+
 
 
 epilog''

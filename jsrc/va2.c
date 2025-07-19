@@ -31,7 +31,7 @@
 
 
 // Return int version of d, with error if loss of significance
-static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many ymm regs that the caller has to save them too
+static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many ymm regs that the caller has to save them too, and it is little needed
  q=jround(d); z=(I)q;
  ASSERT(ISFTOIOK(d,q),EVDOMAIN);
  R z;
@@ -83,7 +83,6 @@ nozv:;  // here when we have zv or don't need it
  
  // Huge switch statement to handle every case.  Lump all the booleans together at 0
  switch(caseno){
- default: ASSERTSYS(0,"ssing");
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv+(B)wiv,z,INT,I) R z;  // NV because B01 is never virtual inplace
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv+wdv,z,FL,D) R z;
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGDB): SSSTORENV(adv+(B)wiv,z,FL,D) R z;
@@ -362,6 +361,7 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDD): 
   floatresidue: ;
    zdv=jtremdd(jt,adv,wdv); if(!jt->jerr){SSSTORE(zdv,z,FL,D);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error
+ default: ASSERTSYS(0,"ssing");
  }
  // The only thing left is exit processing for the different functions
  gcdintresult:

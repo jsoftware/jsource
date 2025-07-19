@@ -699,7 +699,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  I gr=AR(g);   // rank-flags for g
  // if we are assigning jt->zombieval, it must be a reassignment in place, since zombieval is set only for a direct assignment.  We can bypass the entire assignment.  If another
  // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
- if(w==jt->zombieval){R (I)jtfg+((gr&ARLOCALTABLE)>>(ARLOCALTABLEX-1));}  // set/keep low flag bits, make others non0.  Even if value defined locally, the assignment is meaningful
+ if(w==jt->zombieval){R (I)jtfg+((gr&ARLOCALTABLE)>>(ARLOCALTABLEX-1));}  // set/keep low flag bits, make others non0.  Even if value defined locally, the assignment is meaningful.  Assignment could be to locative
  I anmf=NAV(a)->flag; // fetch flags for the name
  I wt=AT(w);  // type of w
 

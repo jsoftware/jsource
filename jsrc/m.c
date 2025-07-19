@@ -846,8 +846,8 @@ A jtgc(J jt,A w,A* old){
  ARGCHK1(w);  // return if no input (could be error or unfilled box)
  I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately
- if(AFLAG(w)&(AFVIRTUAL|AFVIRTUALBOXED)){
-  if(AFLAG(w)&AFVIRTUALBOXED)R w;  // We don't disturb VIRTUALBOXED arrays because we know they're going to be opened presently.  The backer(s) might be on the stack.
+ if(unlikely(AFLAG(w)&(AFVIRTUAL|AFVIRTUALBOXED))){
+  if(unlikely(AFLAG(w)&AFVIRTUALBOXED))R w;  // We don't disturb VIRTUALBOXED arrays because we know they're going to be opened presently.  The backer(s) might be on the stack.
   if(likely(!(AFLAG(w)&AFUNINCORPABLE))){
    A b=ABACK(w);  // backing block for w.  It is known to be direct or recursible, and had its usecount incremented by w
    // Raise the count of w to protect it.  Since w raised the count of b when w was created, this protects b also.  Afterwards, if

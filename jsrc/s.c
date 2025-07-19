@@ -696,14 +696,12 @@ A jtprobequiet(J jt,A a){A g;
 // flags set in jt: bit 0=this is a final assignment; bit 1 always 0
 I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // we don't ARGCHK because path is heavily used.  Caller's responsibility.
+ I gr=AR(g);   // rank-flags for g
+ // if we are assigning jt->zombieval, it must be a reassignment in place, since zombieval is set only for a direct assignment.  We can bypass the entire assignment.  If another
+ // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
+ if(w==jt->zombieval){R (I)jtfg+((gr&ARLOCALTABLE)>>(ARLOCALTABLEX-1));}  // set/keep low flag bits, make others non0.  Even if value defined locally, the assignment is meaningful
  I anmf=NAV(a)->flag; // fetch flags for the name
- // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
- // name is NJA or is a reassignment, but since NJAs cannot be non-DIRECT little is lost.  We will be doing an unneeded realize if a virtual [x]y from
- // xdefn is reassigned to itself.  Too bad: we need to make sure we don't hold the lock through an expensive operation.
- // It is safe to do the recursive-usecount change here as local at the top level, because the value cannot have been released to any other core.  Similarly for
- // virtuals.
- // Find the internal code for the name to be assigned.  Do this before we take the lock.
- I wt=AT(w); I gr=AR(g);  // type of w, rank-flags for g
+ I wt=AT(w);  // type of w
 
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
@@ -718,15 +716,18 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
    localnexist=~localnexist&(I)NAV(a)->bucket;  // the previous calc is valid only if bucket info exists (i. e. processed for explicit def) OR if neg (name in sentence for 6!:2 from keyboard); now non0 if valid & known to have no assignment
    ASSERTSUFF(likely(localnexist!=0)||!probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms),EVDOMAIN,R (I)jteformat(jt,0,str(strlen("public assignment to a name with a private value"),"public assignment to a name with a private value"),0,0);)
   }
-  // if we are assigning jt->zombieval, it must be a reassignment in place, since zombieval is set only for a direct assignment.  We can bypass the entire assignment (except for the masked-public check above).  If another
-  // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
-  if(w==jt->zombieval){R (I)jtfg+((gr&ARLOCALTABLE)>>(ARLOCALTABLEX-1));}  // set/keep low flag bits, make others non0
  }
+ // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
+ // name is NJA or is a reassignment, but since NJAs cannot be non-DIRECT little is lost.  We will be doing an unneeded realize if a virtual [x]y from
+ // xdefn is reassigned to itself.  Too bad: we need to make sure we don't hold the lock through an expensive operation.
+ // It is safe to do the recursive-usecount change here as local at the top level, because the value cannot have been released to any other core.  Similarly for
+ // virtuals.
  // if the assignand is VIRTUAL (including UNINCORPABLE) or NOALIAS noninplaceable, it must be realized/copied.  If recursive, ensure RECURSIBLE
  if(unlikely((((wt&RECURSIBLE)^AFLAG(w))&RECURSIBLE+AFNOALIAS+AFVIRTUAL)!=0)){
   if(AFLAG(w)&AFNOALIAS){if(AC(w)>=0)RZ(w=ca(w))}else rifv(w); // copy if NOALIAS (must not be virtual); realize any virtual.  These may leave a nonrecursive result and change AFLAG(w)
   if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
  }
+ // Find the internal code for the name to be assigned.  Do this before we take the lock.
  I valtype=ATYPETOVALTYPE(wt);  // value flags to install into value block.  It will have QCSYMVAL semantics
  if(unlikely((wt&NOUN)==0)){  // writing to ACV
   // if the value we are assigning is marked as NAMELESS, and the name is not a locative, flag this name as NAMELESS.  Only ACVs are NAMELESS

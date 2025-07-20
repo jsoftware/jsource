@@ -811,7 +811,10 @@ ASSERT(0,EVNONCE)
   pthread_attr_t tattr; cpu_set_t cpuset; size_t cpusetsize=sizeof(cpu_set_t); // attributes for the current task
 #if defined(ANDROID)
   ASSERT(sched_getaffinity(pthread_gettid_np(pthread_self()), cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
-#elif defined(__APPLE__) || (defined(__linux__) && defined(_GNU_SOURCE))
+#elif defined(__APPLE__)
+  CPU_ZERO(&cpuset);
+  pthread_getaffinity_np(pthread_self(),cpusetsize,&cpuset);  // THREAD_AFFINITY_POLICY not supported on Apple M1
+#elif defined(__linux__) && defined(_GNU_SOURCE)
   ASSERT(pthread_getattr_np(pthread_self(),&tattr)==0,EVFACE) ASSERT(pthread_attr_getaffinity_np(&tattr,cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
 #else
   ASSERT(pthread_getaffinity_np(pthread_self(),cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
@@ -932,6 +935,8 @@ ASSERT(0,EVNONCE)
 #if SUPPORT_AFFINITY && !defined(__FreeBSD__)
 #if defined(ANDROID)
   if(coremask!=0)ASSERT(sched_setaffinity(pthread_gettid_np(pthread_self()),AN(coremask)<<bplg(AT(coremask)),(cpu_set_t*)IAV(coremask))==0,EVFACE)
+#elif defined(__APPLE__)
+  if(coremask!=0)ASSERT(pthread_setaffinity_np(pthread_self(),AN(coremask)<<bplg(AT(coremask)),(cpu_set_t*)IAV(coremask))==0,EVFACE)
 #else
   if(coremask!=0)ASSERT(pthread_attr_setaffinity_np(&threadattrs,AN(coremask)<<bplg(AT(coremask)),(cpu_set_t*)IAV(coremask))==0,EVFACE)
 #endif

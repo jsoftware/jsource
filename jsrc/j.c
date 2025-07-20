@@ -131,7 +131,11 @@ uint64_t g_cpuFeatures2,g0_cpuFeatures2;  // fsgsbase
 int numberOfCores;        // number of cpu cores
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning
-UC  supportaffinity=SUPPORT_AFFINITY;     // support thread affinity
+#if SUPPORT_AFFINITY && !defined(__FreeBSD__)
+UC  supportaffinity=1;
+#else
+UC  supportaffinity=0;
+#endif
 #ifdef BOXEDSPARSE
 UC  fboxedsparse=1;       // enable boxed sparse
 #endif

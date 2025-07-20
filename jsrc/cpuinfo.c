@@ -617,6 +617,7 @@ int getNumberOfCores(void) {
  }
 #elif defined(__APPLE__)
 
+// THREAD_AFFINITY_POLICY not supported on Apple M1
  pthread_t thread1;
  pthread_create_suspended_np(&thread1, NULL, threadmain, NULL);
  mach_port_t mach_thread1 = pthread_mach_thread_np(thread1);

@@ -696,12 +696,11 @@ A jtprobequiet(J jt,A a){A g;
 // flags set in jt: bit 0=this is a final assignment; bit 1 always 0
 I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // we don't ARGCHK because path is heavily used.  Caller's responsibility.
+// obsolete // if we are assigning jt->zombieval, it must be a reassignment in place, since zombieval is set only for a direct assignment.  We can bypass the entire assignment.  If another
+// obsolete  // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
+// obsolete  if(w==jt->zombieval){R (I)jtfg+((gr&ARLOCALTABLE)>>(ARLOCALTABLEX-1));}  // set/keep low flag bits, make others non0.  Even if value defined locally, the assignment is meaningful.  Assignment could be to locative
+ I anmf=NAV(a)->flag; I wt=AT(w); // fetch flags for the name; type of w
  I gr=AR(g);   // rank-flags for g
- // if we are assigning jt->zombieval, it must be a reassignment in place, since zombieval is set only for a direct assignment.  We can bypass the entire assignment.  If another
- // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
- if(w==jt->zombieval){R (I)jtfg+((gr&ARLOCALTABLE)>>(ARLOCALTABLEX-1));}  // set/keep low flag bits, make others non0.  Even if value defined locally, the assignment is meaningful.  Assignment could be to locative
- I anmf=NAV(a)->flag; // fetch flags for the name
- I wt=AT(w);  // type of w
 
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
@@ -718,10 +717,8 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   }
  }
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
- // name is NJA or is a reassignment, but since NJAs cannot be non-DIRECT little is lost.  We will be doing an unneeded realize if a virtual [x]y from
- // xdefn is reassigned to itself.  Too bad: we need to make sure we don't hold the lock through an expensive operation.
- // It is safe to do the recursive-usecount change here as local at the top level, because the value cannot have been released to any other core.  Similarly for
- // virtuals.
+ // name is NJA, but since NJAs cannot be non-DIRECT little is lost.
+ // It is safe to do the recursive-usecount change here as local at the top level, because the value cannot have been released to any other core.  Similarly for virtuals.
  // if the assignand is VIRTUAL (including UNINCORPABLE) or NOALIAS noninplaceable, it must be realized/copied.  If recursive, ensure RECURSIBLE
  if(unlikely((((wt&RECURSIBLE)^AFLAG(w))&RECURSIBLE+AFNOALIAS+AFVIRTUAL)!=0)){
   if(AFLAG(w)&AFNOALIAS){if(AC(w)>=0)RZ(w=ca(w))}else rifv(w); // copy if NOALIAS (must not be virtual); realize any virtual.  These may leave a nonrecursive result and change AFLAG(w)
@@ -756,7 +753,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   e=probeis(a, g);  // get the symbol address to use, old or new.  ************************ This returns holding a WRITELOCK on the locale
   if(unlikely((x=e->fval)==0)){   // if nonzero, x points to the incumbent value (QCSYMVAL semantics).  Global assignments are usually reassignments
    // writing a new symbol to a non-local table: update the table's Bloom filter.
-   C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to
+   C *bloombase=BLOOMBASE(g); I chainno=SYMHASH(NAV(a)->hash,AN(g)-SYMLINFOSIZE);   // get addr of Bloom filter and the location we are storing to.  Could do this before lock
    BLOOMSET(bloombase,chainno);  // g is under lock.  This modifies the shared memory every time - might be better to write only when chain is empty
   }
   g=(A)((I)g+((I)jtfg&JTFINALASGN));  // flags in g: copy final-assignment flag, keep global-table flag 0 indicating free needed
@@ -767,7 +764,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // ****** if g is a global table, bit2=0 and we have a write lock on the locale, which we must release in any error paths.  The low 2 bits
  // of g are exit flags: bit0=final assignment, bit 1=local assignment.  If local assignment, g=-2 (not final) or -1 (final) *******
 
- // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
+ // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else.  This is assignment in place, but most cases are detected in our calleer
  if(likely(QCWORD(x)!=w)){
   // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
   if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&(((I)x&QCNOUN)==0))RZ(x=redef(w,x))  // check for SI damage (handled later).  could move outside of lock, but it's only for debug

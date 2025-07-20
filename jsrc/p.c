@@ -995,15 +995,23 @@ RECURSIVERESULTSCHECK
        // quite often there is another execution so we don't try to avoid it
 
       }else if(pmask567&0b10000000){  // assign - can't be fork/hook
-       // ****** assignment *****************************************************************************************************************************************************************************************************************
+       // ****** line 7, assignment *****************************************************************************************************************************************************************************************************************
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
-       I rc;
-       if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // if there are stacked values after the value to be assigned, protect the locals among them in case we are about to reassign the value.  This should be rare.  The value itself needs no protection
-             // this is not required on a final assignment, because then the sentence must be in error - not worth testing
-       if(likely(TESTSTACK0PT(PTNAME0X)))rc=jtsymbis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
-       else rc=jtis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),QCWORD(stack[2].a),symtab);  // unknown or multiple name, process
+       I rc=(I)jt+(((US)pt0ecam==0)<<JTFINALASGNX); A assignand=QCWORD(stack[2].a);   // result code (inited to parameter giving 'final assignment' flag), the value to be assigned
+       if(likely(TESTSTACK0PT(PTNAME0X))){
+        // if we are assigning jt->zombieval, it must be a reassignment in place, since zombieval is set only for a direct assignment.  We can bypass the entire assignment.  If another
+        // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
+        if(assignand==jt->zombieval){rc+=((AR(symtab)&ARLOCALTABLE)>>(ARLOCALTABLEX-1));  // set/keep low flag bits, make others non0.  Even if value defined locally, the assignment is meaningful.  Assignment could be to locative
+        }else{
+         if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // if there are stacked values after the value to be assigned, protect the locals among them in case we are about to reassign the value.  This should be rare.  The value itself needs no protection
+         rc=jtsymbis((J)rc,QCWORD(stack[0].a),assignand,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
+        }
+       }else{
+        if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // protect stack as noted above
+        rc=jtis((J)rc,QCWORD(stack[0].a),assignand,symtab);  // unknown or multiple name, process
+       }
 #if MEMAUDIT&0x10
        auditmemchains();
 #endif
@@ -1012,7 +1020,7 @@ RECURSIVERESULTSCHECK
        FPZ(rc)  // rc=0 is error
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.
-       if(likely((US)pt0ecam==0))EP(rc)  // In the normal sentence name =: ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
+       if(likely((US)pt0ecam==0))EP(rc)  // In the normal sentence name =[.:] ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
          // rc has bits 0-1 set to indicate if final assignment, and single assignment to a local name, others (non0) garbage
        stack+=2;  // if we have to keep going, advance stack to the assigned value
        // here we are dealing with the uncommon case of non-final assignment.
@@ -1026,7 +1034,7 @@ RECURSIVERESULTSCHECK
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word(s)
       }else if(pmask567&0b100000){  // fork NVV or VVV
-       // ***** fork *********************************************************************************************************************************************************************************************************************
+       // ***** line 5, fork *********************************************************************************************************************************************************************************************************************
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
        // initial value of loop counter/flag: 000 always for dyad, cleared by stacker
        yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
@@ -1035,7 +1043,7 @@ RECURSIVERESULTSCHECK
        RECURSIVERESULTSCHECK
        stack[3].t=stack[1].t;  // take err tok from f; no need to set parsertype, since it didn't change
       }else{
-       // ***** hook, other bidents, and non-fork tridents *******************************************************************************************************************************************************************************
+       // ***** line 6, hook, other bidents, and non-fork tridents *******************************************************************************************************************************************************************************
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
        // Because we use some bits in the PT flags to distinguish assignment types, those bits indicate valid-parse on some invalid combinations.  They come to here with an ASGN in stack[2].  Catch it and reject the fragment
        if(unlikely(QCPTYPE(arg2)>=QCASGN))goto rejectfrag;     // We could defer the check until later (in hook) but this seems tolerable.  If we wait till hook we have to distinguish this from a real error here.

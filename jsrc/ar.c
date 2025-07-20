@@ -1041,7 +1041,7 @@ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
  RETF(w);
 }    // (+/%#)"r w, implemented as +/"r % cell-length
 
-#if 0   // keep as example of coding a primitive as an addon
+#if 0   // obsolete but keep as example of coding a primitive as an addon
 // entry point to execute monad/dyad Fold after the noun arguments are supplied
 static DF2(jtfoldx){F12IP;  // this stands in place of jtxdefn, which inplaces
  // see if this is monad or dyad

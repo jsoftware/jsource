@@ -14,6 +14,13 @@
 #include <unistd.h>
 #endif
 
+#if defined(__APPLE__)
+#include <stdio.h>
+#include "thread.h"
+static void *threadmain(void *arg){return 0;}
+extern char supportaffinity;
+#endif
+
 extern uint64_t g_cpuFeatures,g0_cpuFeatures;
 extern uint64_t g_cpuFeatures2,g0_cpuFeatures2;
 extern int numberOfCores;
@@ -609,20 +616,14 @@ int getNumberOfCores(void) {
   return sysinfo.dwNumberOfProcessors;
  }
 #elif defined(__APPLE__)
-#if 0
- int nm[2];
- size_t len = 4;
- uint32_t count;
 
- nm[0] = CTL_HW; nm[1] = HW_AVAILCPU;
- sysctl(nm, 2, &count, &len, NULL, 0);
+ pthread_t thread1;
+ pthread_create_suspended_np(&thread1, NULL, threadmain, NULL);
+ mach_port_t mach_thread1 = pthread_mach_thread_np(thread1);
+ thread_affinity_policy_data_t policyData1 = { 1 };
+ supportaffinity = !thread_policy_set(mach_thread1, THREAD_AFFINITY_POLICY, (thread_policy_t)&policyData1, 1); 
+ pthread_kill(thread1,0);
 
- if(count < 1) {
-  nm[1] = HW_NCPU;
-  sysctl(nm, 2, &count, &len, NULL, 0);
-  if(count < 1) { count = 1; }
- }
-#endif
  uint32_t count;
  size_t len = sizeof(count);
  if (sysctlbyname("machdep.cpu.core_count", &count, &len, 0, 0)) count = 1;

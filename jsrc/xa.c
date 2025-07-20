@@ -26,6 +26,7 @@ extern int numberOfCores;
 extern void*libcblas;
 extern char hascblas;
 extern C    cblasfile[];
+extern char supportaffinity;
 
 #ifdef BOXEDSPARSE
 extern UC fboxedsparse;
@@ -420,6 +421,8 @@ F1(jtcpufeature){F12IP;
 #else
   R sc(0);
 #endif
+ } else if(!strcasecmp(CAV(w),"SUPPORTAFFINITY")) {
+  R sc(supportaffinity);
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

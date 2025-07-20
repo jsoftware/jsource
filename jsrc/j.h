@@ -884,7 +884,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define xchga(p,n) __atomic_exchange_n(p,n,__ATOMIC_ACQ_REL)
 
 #ifndef SUPPORT_AFFINITY   // 1 iff the OS supports the pthreads call sched_setaffinity() and sched_getaffinity()
-#if PYXES && !defined(__OpenBSD__) && !defined(__APPLE__)
+#if PYXES && !defined(__OpenBSD__)
 #define SUPPORT_AFFINITY 1
 #else
 #define SUPPORT_AFFINITY 0

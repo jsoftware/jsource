@@ -116,6 +116,7 @@ OBJS=  \
  sl.o \
  sn.o \
  t.o \
+ thread.o \
  u.o \
  v.o \
  v0.o \

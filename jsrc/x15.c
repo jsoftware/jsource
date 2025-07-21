@@ -1960,15 +1960,16 @@ F1(jtcddlclose){F12IP;HMODULE h;I rc;
 #else
  rc= !!FREELIB(h);      /* dlcose return zero on success */
 #endif
-R sc(rc);   /* return zero on success */
+R sc(!rc);   /* return one on success */
 }    /* 15!:22 close library handle */
 
 F1(jtcdq){F12IP;I rc;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
+ ASSERTMTV(w); 
 #if defined(__wasm__)
  R sc(0);
 #else
  R sc(1);
 #endif
-}    /* 15!:23 test 15!:0 availability */
+}    /* 15!:23 query 15!:0 availability */
 

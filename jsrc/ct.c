@@ -6,6 +6,7 @@
 #define _GNU_SOURCE
 #include "j.h"
 extern int numberOfCores;
+extern char supportaffinity;
 
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
@@ -806,14 +807,14 @@ ASSERT(0,EVNONCE)
    ASSERT(AR(w)<2,EVRANK) ASSERT(BETWEENC(AN(w),1,2),EVLENGTH)  // must be singleton or 2-box list
    athread=C(AAV(w)[0]); if(AN(w)==2)acoremask=C(AAV(w)[1]);   // get thread#, coremask args
   }else athread=w;  // if bare thread#, take it
+  if(!supportaffinity)ASSERT(0,EVNONCE)
   I threadno; RE(threadno=i0(athread)) ASSERT(threadno==0,EVNONCE)  // get thread#, which must be 0
   if(acoremask){ASSERT(AR(acoremask)<=1,EVRANK) ASSERT(AN(acoremask)!=0,EVLENGTH) if(unlikely(AT(acoremask)&B01))acoremask=cvt(INT,acoremask); ASSERT(AT(acoremask)&INT+LIT,EVDOMAIN)} // verify coremask valid if given
   pthread_attr_t tattr; cpu_set_t cpuset; size_t cpusetsize=sizeof(cpu_set_t); // attributes for the current task
 #if defined(ANDROID)
   ASSERT(sched_getaffinity(pthread_gettid_np(pthread_self()), cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
 #elif defined(__APPLE__)
-  CPU_ZERO(&cpuset);
-  pthread_getaffinity_np(pthread_self(),cpusetsize,&cpuset);  // THREAD_AFFINITY_POLICY not supported on Apple M1
+  ASSERT(pthread_getaffinity_np(pthread_self(),cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
 #elif defined(__linux__) && defined(_GNU_SOURCE)
   ASSERT(pthread_getattr_np(pthread_self(),&tattr)==0,EVFACE) ASSERT(pthread_attr_getaffinity_np(&tattr,cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
 #else

@@ -64,11 +64,14 @@ NB. this failed on windows arm64
 NB. echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 NB. echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
-3 : 0''
-if. (-.IF64) +. ('OpenBSD';'FreeBSD') e.~ <UNAME do. '' return. end.
-echo 22 T. 0
-try. echo 22 T. 0;5 catch. echo 'error' end.
-echo 22 T. 0
+3 : 0^:(1<{:8 T.'') ''
+echo 9!:56 'supportaffinity'
+echo n=. <: <.2^9!:56'cores'
+try. echo 22 T. 0 catch. echo 'get affinity error' end.
+try. echo 22 T. 0;6 catch. echo 'set affinity error' end.
+try. echo 22 T. 0 catch. echo 'get affinity error' end.
+try. echo 22 T. 0;n catch. echo 'set affinity error' end.
+try. echo 22 T. 0 catch. echo 'get affinity error' end.
 ''
 )
 

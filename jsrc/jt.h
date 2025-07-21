@@ -13,6 +13,9 @@
 
 #if PYXES
 #include <pthread.h>
+#if defined(__APPLE__)
+#include "thread.h"
+#endif
 #endif
 
 /*

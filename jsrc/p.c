@@ -999,30 +999,32 @@ RECURSIVERESULTSCHECK
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
-       I rc; A assignand=QCWORD(stack[2].a);   // result code (inited to parameter giving 'final assignment' flag), the value to be assigned
+       I rc; A assignand=QCWORD(stack[2].a);   // result code, the value to be assigned
        if(likely(TESTSTACK0PT(PTNAME0X))){   // simple assignment to a name
         // if we are assigning jt->zombieval, it must be a reassignment in place.  We can bypass the entire assignment.  If another
         // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
-        // rc is needed only at end-of-sentence, so set final assignment always.  'local assignment' saves a little time protecting the result, and it's OK if it's not set sometimes
-        if(assignand==jt->zombieval){rc=2*(symtab==jt->locsyms)+4+1;  // set low flag bits, make others non0.
+        // rc is needed only at end-of-sentence, so set final assignment always.  'local assignment' saves a little time protecting the result, and it's OK if it's not set sometimes.
+        // We don't scruple to get it perfect because we may need rc soon if we are exiting, and no errors require perfection.
+        if(assignand==jt->zombieval){rc=(symtab==jt->locsyms)?3:1;  // set low flag bits.  No actual assignment needed, no error possible.  This is the hot path for Jthon
         }else{
          if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // if there are stacked values after the value to be assigned, protect the locals among them in case we are about to reassign the value.  This should be rare.  The value itself needs no protection
          rc=jtsymbis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),assignand,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
+         FPZ(rc)  // rc=0 is error
         }
        }else{
         if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // protect stack as noted above
         rc=jtis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),assignand,symtab);  // unknown or multiple name, process
+        FPZ(rc)  // rc=0 is error
        }
 #if MEMAUDIT&0x10
        auditmemchains();
 #endif
-       y=NEXTY;  // refetch next-word to save regs
-       CLEARZOMBIE   // in case zombieval was set, clear it until next use
-       FPZ(rc)  // rc=0 is error
+       CLEARZOMBIE   // in case zombieval was set, clear it until next use.  We know that if zombie is set, the next parse acxrtion MUST be assignment or error
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.
        if(likely((US)pt0ecam==0))EP(rc)  // In the normal sentence name =[.:] ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
          // rc has bits 0-1 set to indicate if final assignment, and single assignment to a local name, others (non0) garbage
+       y=NEXTY;  // refetch next-word to save regs
        stack+=2;  // if we have to keep going, advance stack to the assigned value
        // here we are dealing with the uncommon case of non-final assignment.
        // the newly-assigned name might have been ra()d, if it couldn't be zapped.  If so, indicate that fact in the stacked address
@@ -1128,7 +1130,7 @@ failparseeformat:
 failparse:
    // the special error code EVABORTEMPTY causes the sentence to be aborted with no error and an empty result (not used)
    // if m=0, the stack contains a virtual mark and perhaps one garbage entry.  Skip the possible garbage first, and also the virtual since it has no flags
-   stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment on error
+   stack+=((US)pt0ecam==0); CLEARZOMBIE z=0; pt0ecam=0;  // indicate not final assignment on error; clear inplace assignment address
    // fa() any blocks left on the stack that have FAOWED - but not the mark, which has a garbage address
    for(;stack!=stackend1;++stack)if(!PTISMARKFRONT(stack->pt)&&ISSTKFAOWED(stack->a)){faowed(QCWORD(stack->a),AC(QCWORD(stack->a)),AT(QCWORD(stack->a)))};  // issue deferred fa for items ra()d and not finished
    jt->parserstackframe = oframe;  // pop the parser frame-stack   NOW it is OK to return

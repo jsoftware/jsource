@@ -277,9 +277,9 @@ DF2(jtxdefn){F12IP;
   // Symbols may have been allocated, and we have pushed the symbol table.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
 
   // zombieval should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
-  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest
-  // in preventing it - still not a full fix, since invalid inplacing may have been done already
-  CLEARZOMBIE
+  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  Invalid inplacing may have been done already.
+  // User workaround would be to start the name as [: which is not ASGSAFE; or to f. the derived verb after the pun
+
   // Assign the special names x y m n u v.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
   // For low-rank short verbs, this takes a significant amount of time using symbis, because the name doesn't have bucket info and is
   // not an assignment-in-place

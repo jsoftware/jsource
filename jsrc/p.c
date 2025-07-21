@@ -999,18 +999,19 @@ RECURSIVERESULTSCHECK
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
-       I rc=(I)jt+(((US)pt0ecam==0)<<JTFINALASGNX); A assignand=QCWORD(stack[2].a);   // result code (inited to parameter giving 'final assignment' flag), the value to be assigned
-       if(likely(TESTSTACK0PT(PTNAME0X))){
-        // if we are assigning jt->zombieval, it must be a reassignment in place, since zombieval is set only for a direct assignment.  We can bypass the entire assignment.  If another
+       I rc; A assignand=QCWORD(stack[2].a);   // result code (inited to parameter giving 'final assignment' flag), the value to be assigned
+       if(likely(TESTSTACK0PT(PTNAME0X))){   // simple assignment to a name
+        // if we are assigning jt->zombieval, it must be a reassignment in place.  We can bypass the entire assignment.  If another
         // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
-        if(assignand==jt->zombieval){rc+=((AR(symtab)&ARLOCALTABLE)>>(ARLOCALTABLEX-1));  // set/keep low flag bits, make others non0.  Even if value defined locally, the assignment is meaningful.  Assignment could be to locative
+        // rc is needed only at end-of-sentence, so set final assignment always.  'local assignment' saves a little time protecting the result, and it's OK if it's not set sometimes
+        if(assignand==jt->zombieval){rc=2*(symtab==jt->locsyms)+4+1;  // set low flag bits, make others non0.
         }else{
          if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // if there are stacked values after the value to be assigned, protect the locals among them in case we are about to reassign the value.  This should be rare.  The value itself needs no protection
-         rc=jtsymbis((J)rc,QCWORD(stack[0].a),assignand,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
+         rc=jtsymbis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),assignand,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
         }
        }else{
         if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // protect stack as noted above
-        rc=jtis((J)rc,QCWORD(stack[0].a),assignand,symtab);  // unknown or multiple name, process
+        rc=jtis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),assignand,symtab);  // unknown or multiple name, process
        }
 #if MEMAUDIT&0x10
        auditmemchains();

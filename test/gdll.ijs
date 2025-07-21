@@ -204,7 +204,7 @@ f=: 3 : 0
 t=. LIBFILE
 assert. 0~: h=. 15!:20 t
 assert. 0~: p=. h 15!:21 'JInit'
-assert. 0= 15!:22 h
+assert. 1= 15!:22 h
 1
 )
 

@@ -24,7 +24,7 @@ by -: (<51);(20 20+2.5-2.5);''
 NB. Test plusBI and plusIB with overflow and inplace
 
 bx =: 0 1 0 0 0 1 0 1 0 0 0 0 1
-IMAX =. _1 - IMIN =. <. - 2 ^ IF64 { 31 63
+IMAX =: _1 - IMIN =: <. - 2 ^ IF64 { 31 63
 iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
 (bx + iy) -: bx +"0"0 iy
 (bx + (0 + iy)) -: bx +"0"0 iy
@@ -266,7 +266,7 @@ NB. Create random data.
 ix =: xs (?@$ - <.@:-:@:]) IF64 { 30000 1000000
 iy =: ys (?@$ - <.@:-:@:]) IF64 { 30000 1000000
 NB. Install random overflow values, with enough coverage to exercise the paths; say 10% of each argument, both IMAX and IMIN
-IMAX =. _1 - IMIN =. <. - 2 ^ IF64 { 31 63
+IMAX =: _1 - IMIN =: <. - 2 ^ IF64 { 31 63
 if. #ixx =. ($ix) <@#: I. 0.10 > ?@$&0 */ $ ix do.
  ix =: (IMAX - (#ixx) ?@$ 10) ixx} ix
 elseif. '' -: $ix do. ix =: IMIN
@@ -505,6 +505,5 @@ p1''   NB. Fails on the second call
 
 randfini''
 
-4!:55 ;:'IMAX IMIN'
 epilog''
 

@@ -398,9 +398,9 @@ F1(jtcpufeature){F12IP;
   DWORD i = 0;
   SYSTEM_LOGICAL_PROCESSOR_INFORMATION * buffer = 0;
 
-  GetLogicalProcessorInformation(0, &buffer_size);
+  if (!GetLogicalProcessorInformation(0, &buffer_size)) R sc(0);
   buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)malloc(buffer_size);
-  GetLogicalProcessorInformation(&buffer[0], &buffer_size);
+  if (!GetLogicalProcessorInformation(&buffer[0], &buffer_size)) {free(buffer); R sc(0);};
 
   for (i = 0; i != buffer_size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
       if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {

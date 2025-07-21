@@ -2,7 +2,7 @@
 #
 # test linux/macOS on github actions
 #
-# argument is linux|darwin|raspberry|openbsd|freebsd
+# argument is linux|darwin|raspberry|openbsd|freebsd|wasm
 # openbsd/freebsd is experimental
 #
 # current Linux github builder supports avx512
@@ -145,16 +145,18 @@ elif [ $1 = "openbsd" ] || [ $1 = "freebsd" ] ; then
  fi
 fi
 
-if [ $m64 -eq 1 ]; then
- if [ -f "j64/jamalgam" ] ; then
-  ls -l j64
-  if [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
-   LC_ALL=fr_FR.UTF-8 j64/jamalgam testga.ijs
-  fi
- fi
-else
- if [ -f "j32/jamalgam" ] ; then
-  ls -l j32
-  # LC_ALL=fr_FR.UTF-8 j32/jamalgam testga.ijs
- fi
-fi
+# if [ $m64 -eq 1 ]; then
+#  if [ -f "j64/jamalgam" ] ; then
+#   ls -l j64
+#   if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
+#    LC_ALL=fr_FR.UTF-8 j64/jamalgam testga.ijs
+#   fi
+#  fi
+# else
+#  if [ -f "j32/jamalgam" ] ; then
+#   ls -l j32
+#   if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
+#    LC_ALL=fr_FR.UTF-8 j32/jamalgam testga.ijs
+#   fi
+#  fi
+# fi

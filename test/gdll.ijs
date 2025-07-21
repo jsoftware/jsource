@@ -154,11 +154,16 @@ NB. 0 procaddress
 xbasic_add=: ":>{.'xbasic_add x' dcd ''
 
 NB. alternate ways to get proc address
-NB. 0 ~: f =: 15!:20 }:lib
-NB. (f 15!:21 'xbasic') = 15!:21 lib,'xbasic'
-NB. xbasic_add -: ": 15!:21 lib,'xbasic'
+0 ~: f =: 15!:20 }:lib
+xbasic_add -: ": (f 15!:21 'xbasic')
 
 (9;(,9);2;3 4) = ('0 ',xbasic_add,' x *x x *x') cd (,2);2;3 4
+
+NB. close library handle
+1 = 15!:22 f
+
+NB. test 15!:0 availability
+1 = 15!:23 ''
 
 (2 0 -: cder '') *. 'domain error' -: '0  1e4 x x' cd etx (,2);2;3 4
 (2 0 -: cder '') *. 'domain error' -: '0 _1e4 x x' cd etx (,2);2;3 4

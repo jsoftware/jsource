@@ -265,16 +265,15 @@ assert. (<'base')-:18!:5''
 for_y234. y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
-  Debug=: 0
+  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 1
-  0!:2 y234
   Debug=: 0
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
@@ -299,16 +298,15 @@ while. x123~:0 do.
  for_y234. y123{~?~#y123 do.
   techo RLAST=: >y234
   save_ran=:9!:44''
-  Debug=: 0
+  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 1
-  0!:2 y234
   Debug=: 0
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
@@ -325,6 +323,60 @@ techo 'Finish'
 ''
 )
 
+RUN2=: 4 : 0
+x123=. (0=x){x,1
+y123=. y
+d123=. Debug
+assert. (<'base')-:18!:5''
+4!:55 ;:'x y'
+while. x123~:0 do.
+  Debug=: 1
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  0!:2<testpath,y123,'.ijs'
+  assert. 0 s: 11
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
+  Debug=: 0
+  0!:2<testpath,y123,'.ijs'
+  assert. 0 s: 11
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
+  x123=. <:x123
+NB.  11 s: ''    NB. reset symbol
+  techo (+/ % #) 0 s: 12
+end.
+Debug=: d123
+dbr 0
+techo 'Finish'
+''
+)
+
+RUN2D=: 4 : 0
+x123=. (0=x){x,1
+y123=. y
+d123=. Debug
+assert. (<'base')-:18!:5''
+4!:55 ;:'x y'
+Debug=: 1
+while. x123~:0 do.
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  0!:2<testpath,y123,'.ijs'
+  assert. 0 s: 11
+  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
+  assert. (<'base')-:18!:5''
+  assert. 0= (;:'x y') e. nl__ i.4
+  x123=. <:x123
+NB.  11 s: ''    NB. reset symbol
+  techo (+/ % #) 0 s: 12
+end.
+Debug=: d123
+dbr 0
+techo 'Finish'
+''
+)
+
 RUND3=: 4 : 0
 x123=. x>.1
 y123=. y
@@ -334,16 +386,15 @@ assert. (<'base')-:18!:5''
 for_y234. y123{~?~#y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
-  Debug=: 0
+  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 1
-  0!:2 y234
   Debug=: 0
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
@@ -351,37 +402,6 @@ for_y234. y123{~?~#y123 do.
 NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
-end.
-Debug=: d123
-dbr 0
-techo 'Finish'
-''
-)
-
-RUN2=: 4 : 0
-x123=. (0=x){x,1
-y123=. y
-d123=. Debug
-assert. (<'base')-:18!:5''
-4!:55 ;:'x y'
-while. x123~:0 do.
-  Debug=: 0
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  0!:2<testpath,y123,'.ijs'
-  assert. 0 s: 11
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  assert. (<'base')-:18!:5''
-  assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 1
-  0!:2<testpath,y123,'.ijs'
-  Debug=: 0
-  assert. 0 s: 11
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  assert. (<'base')-:18!:5''
-  assert. 0= (;:'x y') e. nl__ i.4
-  x123=. <:x123
-NB.  11 s: ''    NB. reset symbol
-  techo (+/ % #) 0 s: 12
 end.
 Debug=: d123
 dbr 0
@@ -412,6 +432,7 @@ tsu_usage=: 0 : 0
    RUN1 'g000' NB. run script with display
  n RUN2 'g000' NB. run script with display for n times
                NB. run infinite times until failure if n<0
+ n RUN2D 'g000' NB. same as RUN2 but run with Debug=1 only
    
  n RUND1 ddall NB. run script with display for n times and stop on failure
                NB. n>0, RLAST is the last script

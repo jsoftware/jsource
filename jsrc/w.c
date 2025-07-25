@@ -126,7 +126,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 #define TVERB(i,c)  (QCWORD(v[i])==ds(c))  // true if this word is the given verb
 #define TRBRACE(i)  TVERB(i,CRBRACE)  // true if given word is }
 #define TAIA(i,j)   (TASGN(1) && TNAME(j) && AN(QCWORD(v[i]))==AN(QCWORD(v[j)]) && TNAME(i) && \
-                        !memcmpne(NAV(QCWORD(v[i]))->s,NAV(QCWORD(v[j]))->s,AN(QCWORD(v[i]))))
+                        !memcmpne(NAV(QCWORD(v[i]))->s,NAV(QCWORD(v[j]))->s,NAV(QCWORD(v[i]))->n))
   // true if the two words are names, word 1 is assignment, and the names are equal
 
 // Convert text sentence to a sequence of words to be the queue for parsing
@@ -145,7 +145,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  for(i=0;i<n;i++,x++){  // for each word
   wl=u[1]-u[0]; wi=u[0]+s; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b=there are inflections, init to false
   if(wl==1||(b=((p!=C9)&(wi[wl-1]==CESC1))|(wi[wl-1]==CESC2)))e=spellin(wl,wi);else e=0;  // set b if inflections; if word has 1 character, or is a--. or ---:, convert to pseudocharacter
-  if(BETWEENO(c,32,128)&&AK(y=ds(e))){
+  if(BETWEENO(c,32,128)&&AC(y=ds(e))){   // valid primitive has a usecount (permanent)
    // If first char is ASCII, see if the form including inflections is a primitive;
    // if so, that is the word to put into the queue.  No need to copy it
    // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
@@ -219,8 +219,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     // (_3) the name pqr, (_2) the position if any of abc in the right-hand list (-1 if absent), (_1) the parsed queue before this replacement
     GAT0(z1,BOX,4,1); x=AAV1(z1);   // Allocate the sentence, point to its data
     GATV0(y,BOX,m+3,1); yv=AAV1(y);   // Allocate the argument
-    c=-1; k=AN(QCWORD(v[0])); s=NAV(QCWORD(v[0]))->s;   // get length and address of abc
-    j=4; DO(m, yv[i]=p=QCWORD(v[j]); j+=2; if(AN(p)==k&&!memcmpne(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
+    c=-1; k=NAV(QCWORD(v[0]))->n; s=NAV(QCWORD(v[0]))->s;   // get length and address of abc
+    j=4; DO(m, yv[i]=p=QCWORD(v[j]); j+=2; if(NAV(p)->n==k&&!memcmpne(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
     yv[m]=QCWORD(v[2]); RZ(yv[m+1]=incorp(sc(c))); yv[m+2]=incorp(z);    // add the 3 ending elements
     x[0]=v[0]; x[1]=v[1]; x[2]=QCINSTALLTYPE(ds(CCASEV),QCVERB); x[3]=QCINSTALLTYPE(incorp(y),QCNOUN);  // build the sentence
     RETF(z1);  // that's what we'll execute

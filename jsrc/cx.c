@@ -772,7 +772,7 @@ static I jtxop(J jt,A w){I i,k;
   A w=QCWORD(wv[i]);  // w is box containing a queue value.  If it's a name, we inspect it
   if((I)wv[i]&QCISLKPNAME){   // look for names NOT followed by =. since it is only initial arguments that we care about
    // Get length/string pointer
-   I n=AN(w); C *s=NAV(w)->s;
+   I n=NAV(w)->n; C *s=NAV(w)->s;
    if(n){
     // Set flags if this is a special name, or an indirect locative referring to a special name in the last position, or u./v.
     if(n==1||(n>=3&&s[n-3]=='_'&&s[n-2]=='_')){

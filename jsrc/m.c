@@ -1716,7 +1716,7 @@ F1(jtca){F12IP;A z;P*wp,*zp;
   SPB(zp,x,ca(SPA(wp,x)));
  }else{
   void *wv=t&FUNC?FAV(w):t&NAME?NAV(w):voidAV(w);  // source address
-  if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;AC(z)=ACUC1;z->mback.lookaside=0;}  // GA does not allow NAME type, for speed.  NAME is always non-ip
+  if(t&NAME){n=NAV(w)->n;GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;AC(z)=ACUC1;z->mback.lookaside=0;}  // GA does not allow NAME type, for speed.  NAME is always non-ip.  Take n from struct
   else {
    n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for minimum rank, someday
    GA(z,t,n,AR(w),AS(w));
@@ -1725,7 +1725,7 @@ F1(jtca){F12IP;A z;P*wp,*zp;
   void *zv=voidAV(z);  // dest address
   I bpt=bp(t);  // bp needed for non-noun
   MC(zv,wv,(n*bpt)+(t&NAME?sizeof(NM):0));
-//  if(t&FUNC)AK(z)=AK(w);
+  if(t&FUNC+NAME){AK(z)=AK(w); AN(z)=AN(w);}  // FUNC/NAME use AK/AN as localuse, preserve them
  }
  R z;
 }

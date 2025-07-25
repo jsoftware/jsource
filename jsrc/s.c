@@ -505,7 +505,7 @@ exitfa: ;
 // a is a locative NAME block; result is the starting locale, or 0 if error
 // if the locative is direct we just look up/create the locale with that name; if indirect we find the value, then look up that locale
 A jtsybaseloc(J jt,A a) {I m,n;NM*v;
- n=AN(a); v=NAV(a); m=v->m;
+ v=NAV(a); n=v->n; m=v->m;
  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
  if(likely(!(NMILOC&v->flag)))R stfindcre(n-m-2,1+m+v->s,v->bucketx);
  R locindirect(n-m-2,2+m+v->s,v->bucketx);
@@ -688,7 +688,7 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
 // We are called for purposes of setting zombieval for inplace assignments.  We do not create the symbol because multiple threads may assign a name
 // We try to create the symbol table (not really needed).  This routine must not modify fillv, which is in use in parsing
 A jtprobequiet(J jt,A a){A g;
- I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
+ I n=NAV(a)->n; NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
  if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale
  else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
  READLOCK(g->lock) A res=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,g); READUNLOCK(g->lock)   // return pointer to value, if found
@@ -708,7 +708,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  I anmf=NAV(a)->flag; I wt=AT(w); // fetch flags for the name; type of w
  I gr=AR(g);   // rank-flags for g
 
- if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
+ if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=NAV(a)->n; I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately zombieval doesn't give us the symbol table
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx);

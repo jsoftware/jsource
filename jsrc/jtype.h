@@ -470,7 +470,7 @@ struct AD {
 
 #define LASTNOUNX XZX    // index of last noun bit
 
-// upper flags may be used, except for RPAR and CONJ (used as stack count in parser), LPAR and ASGN (used in parser to calculate initial stack count), CONW (always means ASGNTONAME in parser)
+// upper flags may be used, except for RPAR and CONJ (used as stack count in parser), LPAR and ASGN (used in parser to calculate initial stack count), CONW (always means ASGNTONAME in parser), NAME
 // VERB/ADV/CONJ should not be used as flags in NOUN types.  The main flags are MARK/SYMB/CONW
 // if ADV is used, some tests may need to change
 // B01/INT must not have any upper flags at all

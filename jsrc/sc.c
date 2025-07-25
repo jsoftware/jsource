@@ -444,4 +444,4 @@ DF2(jtimplocref){F12IP;
 }
 
 // 9!:30 query current name, '' if none
-F1(jtcurnameq){F12IP;ASSERTMTV(w); if(jt->curname==0)R mtv; R str(AN(jt->curname),NAV(jt->curname)->s);}
+F1(jtcurnameq){F12IP;ASSERTMTV(w); if(jt->curname==0)R mtv; R str(NAV(jt->curname)->n,NAV(jt->curname)->s);}

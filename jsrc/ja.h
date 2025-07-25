@@ -427,7 +427,6 @@ A fffasg=(ffffs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[0]=fffasg;  /
 fffasg=(fffgs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[1]=fffasg;  /* incorp gs and install as g */ \
 fffasg=(fffhs); if(likely(fffasg!=0))INCORPRA(fffasg); fffv->fgh[2]=fffasg;  /* incorp hs/other stuff and install as h */ \
 AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wait till here so audits of the incomplete block don't fail if realize happens, or we abort with unfilled fgh */ \
-AK(fffz)=0xbeefdeadbeefdead; AN(fffz)=0xbeefdeadbeefdead;   /* scaf remove AK, AN */ \
 }
 // fdeffill replaces the original fdef, which did not know about localuse
 #define fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) fdeffillall(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r,fffv->localuse.lu0.cachedloc=0,fffv->localuse.lu1.cct=0.0)

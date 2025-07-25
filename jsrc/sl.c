@@ -226,8 +226,8 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
   v->flag|=LINFO;  // mark as not having a value (for diags.  value is used for locnum)
   // Put this locale into the in-use list at an empty location.  ras(g) at that time
   RZ(x=nfs(20,&CAV(ds(CALP))['a'],1))  // create the name block before lock.  The hash will be meaningless
-  WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0);   // put the locale into the numbered list; exit if error (with lock removed); zap g
-  I nmlen=sprintf(NAV(x)->s,FMTI,n); AN(x)=nmlen; NAV(x)->m=nmlen;  // install true locale number and length of name
+  WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt,g))>=0);   // put the locale into the numbered list; exit if error (with lock removed); zap g
+  I nmlen=sprintf(NAV(x)->s,FMTI,n); NAV(x)->n=nmlen; NAV(x)->m=nmlen;  // install true locale number and length of name
   LOCNUMW(g)=(A)n; // save locale# in SYMLINFO
   LOCPATH(g)=JT(jt,zpath);  // zpath is permanent, no ras needed  Must be after installnl
   WRITEUNLOCK(JT(jt,stlock))

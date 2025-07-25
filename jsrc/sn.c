@@ -58,7 +58,7 @@ A jtnfs(J jt,I n,C*s,I notlocal){A z;C f,*t;I m,p;NM*zv;
  DQ(n, if(' '!=(f=*s))break; ++s; --n;); 
  t=s+n-1;
  DQ(n, if(' '!=*t)break; --t; --n;);
- ASSERT(n!=0,EVILNAME);   // error if name is empty  (? not required since name always valid?
+ ASSERT(BETWEENO(n,1,32767),EVILNAME);   // error if name is empty or too long
  // If the name is the special mnuvxy, return a copy of the preallocated block for that name (we may have to add flags to it)
  if(SGNTO0(n-2)&BETWEENC(f,'m','y')&(p=(0x1b03>>(f-'m')))){  // M N o p q r s t U V w X Y 1101100000011
   R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags/buckets may be added)
@@ -83,13 +83,14 @@ A jtnfs(J jt,I n,C*s,I notlocal){A z;C f,*t;I m,p;NM*zv;
  ASSERT((m|p)<=255,EVLIMIT);  // error if name too long.  Requires limit be power of 2
  zv->flag=f;  // Install locative flag
  zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length of simple name, and calculate hash of simple name
+ zv->n=n; AN(z)=0xdeadbeefdeadbeef; AK(z)=0xdeadbeefdeadbeef;  // scaf
  // the bucket and symbol-id fields are left at 0
  RETF(z);
 }    /* name from string */
 
 // string from name: returns string for the name
 // if b&SFNSIMPLEONLY, return only the simple name
-A jtsfn(J jt,B b,A w){NM*v; ARGCHK1(w); v=NAV(w); R str(b&SFNSIMPLEONLY?v->m:AN(w),v->s);}
+A jtsfn(J jt,B b,A w){NM*v; ARGCHK1(w); v=NAV(w); R str(b&SFNSIMPLEONLY?v->m:v->n,v->s);}
 
 // string from name evocation: returns string for name UNLESS the name is u/v which is always by value; in that case it returns w f. which will be a verb
 A jtsfne(J jt,A w){ARGCHK1(w); A wn=FAV(w)->fgh[0]; if(AT(wn)&NAMEBYVALUE)R fix(w,zeroionei(0)); R sfn(0,wn);}
@@ -183,7 +184,7 @@ F2(jtnl2){F12IP;UC*u;
 static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  ARGCHK1(w);
  wn=AN(w); e=LXAV0(w);                               // w is locale, e->hashchains
- x=LOCNAME(w); p=AN(x); s=NAV(x)->s;  /* locale name/number           */
+ x=LOCNAME(w); p=NAV(x)->n; s=NAV(x)->s;  /* locale name/number           */
  m=*pm; v=AAV(ch)+m;                               /* result to append to */
  for(i=SYMLINFOSIZE;i<wn;++i)if(e[i]){
   d=SYMNEXT(e[i])+SYMORIGIN;

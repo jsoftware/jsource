@@ -122,9 +122,9 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;   // b if this is n
   if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!(nflag&1)); break;}
   // If this is an array of names, turn it back into a character string with spaces between
   // we can't do this by simply executing }: (string&.> names) ,&.> ' ' because if we are out of memory we need to get the string out.  So we do it by hand
-  eputc('\''); DO(AN(w), if(i!=0)eputc(' '); A bx=AAV(w)[i]; ep(AN(bx),NAV(bx)->s);) eputc('\''); break;
+  eputc('\''); DO(AN(w), if(i!=0)eputc(' '); A bx=AAV(w)[i]; ep(NAV(bx)->n,NAV(bx)->s);) eputc('\''); break;
  case LITX:  eputq(w,(nflag&1));                break;
- case NAMEX: ep(AN(w),NAV(w)->s); if(unlikely((AT(w)&NAMEABANDON)!=0)){ep(2,"_:");}     break;
+ case NAMEX: ep(NAV(w)->n,NAV(w)->s); if(unlikely((AT(w)&NAMEABANDON)!=0)){ep(2,"_:");}     break;
  case LPARX: eputc('(');              break;
  case RPARX: eputc(')');              break;
  case ASGNX: dspell(CAV(w)[0],w,(nflag&1));       break;
@@ -164,7 +164,7 @@ A jtunparse(J jt,A w,I nflag){A*v,z;
 
 // Display DCCALL stack frame
 static void jtseecall(J jt,DC d){A a;
- if(a=d->dca)ep(AN(a),NAV(a)->s); 
+ if(a=d->dca)ep(NAV(a)->n,NAV(a)->s); 
  efmt(d->dcx&&d->dcy?"[:"FMTI"]":"["FMTI"]",lnumsi(d));
 }    /* display function line */
 
@@ -338,7 +338,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
      A nameblok=(d&&d->dctype!=DCCALL&&d->dcsusp)?0:jt->curname;  // use name unless we reached suspension without seeing a CALL
      // Value error, which may come up after the stack is long gone, sets EMSGLINEISNAME to override the name
      nameblok=eflg&EMSGLINEISNAME?line:nameblok;  // if caller overrides the name, use the caller's name
-     if(nameblok){if(!jt->glock){eputs(": "); ep(AN(nameblok),NAV(nameblok)->s);}}  // ...followed by name of running entity
+     if(nameblok){if(!jt->glock){eputs(": "); ep(NAV(nameblok)->n,NAV(nameblok)->s);}}  // ...followed by name of running entity
      if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such
      eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
      if(!jt->glock){  // suppress detail if locked

@@ -265,16 +265,15 @@ assert. (<'base')-:18!:5''
 for_y234. y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
-  Debug=: 0
+  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 1
-  0!:2 y234
   Debug=: 0
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
@@ -299,16 +298,15 @@ while. x123~:0 do.
  for_y234. y123{~?~#y123 do.
   techo RLAST=: >y234
   save_ran=:9!:44''
-  Debug=: 0
+  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 1
-  0!:2 y234
   Debug=: 0
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
@@ -332,16 +330,15 @@ d123=. Debug
 assert. (<'base')-:18!:5''
 4!:55 ;:'x y'
 while. x123~:0 do.
-  Debug=: 0
+  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2<testpath,y123,'.ijs'
   assert. 0 s: 11
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 1
-  0!:2<testpath,y123,'.ijs'
   Debug=: 0
+  0!:2<testpath,y123,'.ijs'
   assert. 0 s: 11
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
@@ -366,7 +363,6 @@ Debug=: 1
 while. x123~:0 do.
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2<testpath,y123,'.ijs'
-  Debug=: 0
   assert. 0 s: 11
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
@@ -390,16 +386,15 @@ assert. (<'base')-:18!:5''
 for_y234. y123{~?~#y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
-  Debug=: 0
+  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 1
-  0!:2 y234
   Debug=: 0
+  0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''

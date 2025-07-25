@@ -31,7 +31,6 @@ static A jtmakename(J jt,C*s,I flags){A z;I m;NM*zv;
  zv->flag=NMMNUVXY;   // NMMNUVXY indicates mnuvxy
  zv->hash=(UI4)nmhash(1,(UC*)&zv->s);  // use copy because hic may overread
  ACX(z);  // set PERMANENT
- AN(z)=0xdeadbeefdeadbeef;  // scaf
  R z;
 }
 

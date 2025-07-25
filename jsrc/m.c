@@ -371,7 +371,6 @@ static D jtspfor1(J jt, A w){D tot=0.0;
   if(AFNJA&AFLAG(w)) {  
    if(BETWEENC(AK(w),0,AM(w)))tot += SZI*WP(AT(w),AN(w),64);  // for NJA allocations with contiguous header, the size is the header size (7+64 words) plus the data size. fixed rank of 64 in NJA memory
    else{  // for NJA allocations with separate header, the size is the data size plus the size of the base block
-if(AT(w)&NAME)SEGFAULT;  // scaf
 // obsolete     tot += SZI*((1&&AT(w)&LAST0)+(((AT(w)&NAME?sizeof(NM):0)+(AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only
     tot += SZI*((1&&AT(w)&LAST0)+(((AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only.  NJA must be DIRECT type, so not NAME
     tot += alloroundsize(w);  // add in the header

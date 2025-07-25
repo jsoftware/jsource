@@ -83,7 +83,7 @@ A jtnfs(J jt,I n,C*s,I notlocal){A z;C f,*t;I m,p;NM*zv;
  ASSERT((m|p)<=255,EVLIMIT);  // error if name too long.  Requires limit be power of 2
  zv->flag=f;  // Install locative flag
  zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length of simple name, and calculate hash of simple name
- zv->n=n; AN(z)=0xdeadbeefdeadbeef; AK(z)=0xdeadbeefdeadbeef;  // scaf
+ zv->n=n;  // install length of fully qualified name
  // the bucket and symbol-id fields are left at 0
  RETF(z);
 }    /* name from string */

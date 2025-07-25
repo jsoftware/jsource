@@ -1100,7 +1100,7 @@ execlpar:;  // come here when we are sitting on ( ...
    // ****** PUT NOTHING HERE! we use continue to reexecute sometimes
   }  // break with stack==0 on error to failparse; main exit is when queue is empty (m<0), to exitparse
 
- exitparse:
+ exitparse:;
   // *** pt0ecam has been repurposed to bit 0=final assignment, bit 1=assignment to local, others garbage
 #if MEMAUDIT&0x2
   audittstack(jt);

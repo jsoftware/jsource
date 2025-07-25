@@ -341,7 +341,7 @@ static I jtconword(J jt,I n,C*s){
  else if((MATCHNAME8(6,'w','h','i','l','e','.',' ',' ')))cwtlen=(CWHILE<<8)+6;
  else if((MATCHNAME8(7,'e','l','s','e','i','f','.',' ')))cwtlen=(CELSEIF<<8)+7;
  else if((MATCHNAME8(4,'f','o','r','.',' ',' ',' ',' ')))cwtlen=(CFOR<<8)+4;
- else if((MATCHNAME8(4,'f','o','r','_',' ',' ',' ',' '))){ASSERTN(vnm(n-5,4+s),EVILNAME,nfs(n-5,4+s)) R CFOR;}
+ else if((MATCHNAME8(4,'f','o','r','_',' ',' ',' ',' '))){ASSERTN(vnm(n-5,4+s),EVILNAME,nfs(n-5,4+s,0)) R CFOR;}
  else if((MATCHNAME8(7,'r','e','t','u','r','n','.',' ')))cwtlen=(CRETURN<<8)+7;
  else if((MATCHNAME8(6,'b','r','e','a','k','.',' ',' ')))cwtlen=(CBREAK<<8)+6;
  else if((MATCHNAME8(8,'c','o','n','t','i','n','u','e')))cwtlen=(CCONT<<8)+9;

@@ -87,7 +87,7 @@ F1(jtexg){F12IP;A*v,*wv,x,y,z;I n;
 }
 
 // immediate assignment of value x to name
-I jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name),x,jt->global);}
+I jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name,0),x,jt->global);}
 
 // 128!:2
 DF2(jtapplystr){F12IP;PROLOG(0054);A fs,z;

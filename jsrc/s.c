@@ -131,11 +131,12 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
  R u;
 }    /* allocate a new pool entry and insert into hash table entry hv */
 
-// free all the symbols in symbol table w.  As long as the symbols are PERMANENT, delete the values but not the name.
+// Reset symbols in local symbol table w.  As long as the symbols are PERMANENT, delete the values but not the name, and also clear the lookaside if the table is primary.
 // For non-PERMANENT, delete name and value.
 // Reset the fields in the deleted blocks.
 // This is used only for freeing local symbol tables, thus does not need to clear the name/path or worry about CACHED values
 extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
+ I isprimary=AR(w)&ARLSYMINUSE;  // remember if this table is primary.  It is except during cleanup from PM debug
  LX freeroot=0; L *freetailchn=(L*)((I)jt->shapesink-offsetof(L,next));  // sym index of first freed ele; addr of chain field in last freed ele
  L *jtsympv=SYMORIGIN;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free an explicit locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
@@ -149,7 +150,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
   if(k=*aprev){  // process only chains with values
    // first, free the PERMANENT values (if any), but not the names
    NOUNROLL do{
-    if(!SYMNEXTISPERM(k))break;  // we are about to free k.  exit if it is not permanent
+    if(!SYMNEXTISPERM(k))break;  // we are about to free k.  exit loop if it is not permanent
     I nextk=jtsympv[k].next;  // unroll loop 1 time
     aprev=&jtsympv[k].next;  // save last item we processed here
     if(jtsympv[k].fval){
@@ -157,6 +158,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
      // otherwise decrement the usecount
      SYMVALFA(jtsympv[k]);
      jtsympv[k].fval=0;  // clear value - don't clear name
+     if(likely(isprimary))jtsympv[k].name->mback.lookaside=0;  // if this name has a lookaside, clear it too
     }
     k=nextk;
    }while(k);
@@ -180,6 +182,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
   }
  }
  if(likely(freeroot!=0)){jtsymreturn(jt,freeroot,lastk,nfreed);}  // put all blocks freed here onto the free chain
+ __atomic_store_n(&AR(w),ARLOCALTABLE,__ATOMIC_RELEASE);  // reset table to available (LOCALTABLE is the init value).  Immaterial if not primary - table will be deleted soon
 }
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
@@ -234,6 +237,7 @@ exit: ;
 // l/string are length/addr of name, hash is hash of the name, g is symbol table  l is encoded in low bits of jt
 // the symbol is deleted if found.  If the value is an ACV, we take a write lock on the ACV cache count, incrementing it
 // if the symbol is PERMANENT, it is not deleted but its value is removed
+// if the symbol has a lookaside, the lookaside is cleared
 // if the symbol is CACHED, it is removed from the chain but otherwise untouched, leaving the symbol abandoned.  It is the caller's responsibility to handle the name
 // We take no locks on g.  They are necessary, but are the user's responsibility
 B jtprobedel(J jtfg,C*string,UI4 hash,A g){F12JT;B ret;
@@ -252,7 +256,9 @@ B jtprobedel(J jtfg,C*string,UI4 hash,A g){F12JT;B ret;
       if(unlikely(ret)){ACVCACHEWRITELOCK}   // ACV must be deleted under lock in case unquote is trying to protect a cached name
       SYMVALFA(*sym); sym->fval=0;  // decr usecount in value; remove value from symbol
       if(unlikely(ret)){ACVCACHEWRITEUNLOCK}
-      if(!(sym->flag&LPERMANENT)){  // if PERMANENT, we delete only the value
+        // if the name has a primary symbol, clear the lookaside
+      if(likely(sym->flag&LPERMANENT)){if(likely(AR(g)&ARLSYMINUSE))sym->name->mback.lookaside=0;  // if PERMANENT, we delete only the value, but clear lookaside if there is one
+      }else{
        *asymx=sym->next; if(sym->name!=0)fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0;    // unhook symbol from hashchain, free the name, clear the symbol
        jtsymreturn(jt,delblockx,delblockx,1);  // return symbol to free chains
       }  // add to symbol free list
@@ -459,23 +465,23 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
     y=QCWORD(probex(k,v,SYMORIGIN,hash,jt->locsyms));  // look up local first.
     if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y,y);}  // if not local, start in implied locale.  ra to match syrd
    }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
-   ASSERTN(y,EVVALUE,nfs(k,v));  // verify found.  If y was found, it has been ra()d
-   ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v),exitfa);   // verify atomic
+   ASSERTN(y,EVVALUE,nfs(k,v,0));  // verify found.  If y was found, it has been ra()d
+   ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v,0),exitfa);   // verify atomic
    if(AT(y)&(INT|B01)){  // atomic integer, numbered or debug locale
     hash=BIV0(y);   // fetch locale number, overwriting the input parameter as needed below
     if(hash<0){ASSERT(g==0,EVLOCALE) goto neglocnum;}   // negative locale number (debug frame) is valid only as last locale.  Transfer to the code to handle it
     g=findnl(hash); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // nonnegative locale#, use it for the numbered locale
    }else{
-    ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v),exitfa);  // verify box
+    ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v,0),exitfa);  // verify box
     x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
      // Boxed integer - use that as bucketx, the locale number
      g=findnl(BIV0(x)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // boxed integer, look it up
     }else{
      xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
-     ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v),exitfa);   // verify list (or atom)
-     ASSERTNGOTO(xn,EVLENGTH,nfs(k,v),exitfa);   // verify not empty
-     ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v),exitfa);  // verify string
-     ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v),exitfa);  // verify legal name
+     ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v,0),exitfa);   // verify list (or atom)
+     ASSERTNGOTO(xn,EVLENGTH,nfs(k,v,0),exitfa);   // verify not empty
+     ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v,0),exitfa);  // verify string
+     ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v,0),exitfa);  // verify legal name
      I bucketx=BUCKETXLOC(xn,xv);
      RZGOTO(g=stfindcre(xn,xv,bucketx),exitfa);  // find st for the name
     }
@@ -607,7 +613,7 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
   if(unlikely((AR(x)&~1)+(component^3)+nmlen==0))val=0;  // special case of script lookup with empty name: could be unnamed stack entry in 13!:13, so give not found rather than name error
   else{
    if(unlikely((AR(x)&~1)+(component^3)==0))RZ(x=take(indexof(x,scc('>')),x));  // script lookup: name =. (name i. '>') {. name
-   RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(nmlen,CAV(x))); RESETERR; 
+   RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(nmlen,CAV(x),0)); RESETERR; 
    val=jtsyrdinternal(jt,y,component);
   }
   if(component==3)RESETERR; RE(0);  // if the name lookup failed, exit; but 4!:4 never fails, because used in 13!:13
@@ -734,22 +740,29 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   if(unlikely(gr&ARLOCALTABLE))AR(g)|=ARHASACV;  // if we assign a non-noun to a local table, note the fact so we will look them up there
  }
 
+ w=MAKEFVAL(w,valtype);  // move incompleted valtype into w to save it over subroutine calls
  L *e;  // the symbol we will use
  A x;  // incumbent value of the symbol, if it has been assigned
  // we don't have e, look it up.
  // We reserve 1 symbol for the new name, in case the name is not defined.  If the name is not new we won't need the symbol.
- // convert valtype to QCSYMVAL semantics: NAMED always, RAREQD if global table or sparse
+ // convert valtype (now in w) to QCSYMVAL semantics: NAMED always, RAREQD if global table or sparse
  if((gr&ARLOCALTABLE)!=0){  // if assignment to a local table (which might not be jt->locsyms)
+  QCBITOP(w,|,QCNAMED|(REPSGN(wt)&QCRAREQD));  // enter QCSYMVAL semantics; ra needed if sparse
+  // find the slot, which may be preallocated (indicated by symx!=0).  If we are running in a cloned table we must replace the symx with the value derived from bucketx.  If the slot is preallocated in the primary  table we can set the lookaside in the shared name
   I4 symx=NAV(a)->symx;   // fetch the symbol slot assigned to this name (0 if none)
-  e=likely((SGNIF(gr,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:probeislocal(a,g);  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol
+  if(likely(symx!=0)){  // if there is a preallocated slot
+   L *sympv=SYMORIGIN;  // base of symbol table
+   if(likely(!(gr&ARLCLONED))){e=SYMORIGIN+(I)symx; e->name->mback.lookaside=w;  // if primary, set the lookaside there
+   }else{I bx; for(e=sympv+LXAV0(g)[NAV(a)->bucket], bx=NAV(a)->bucketx;++bx;e=e->next+sympv);}  // (bucketx must be negative) if not primary, skip to the indicated slot.  all permanent
+  }else{e=probeislocal(a,g); if(!(gr&ARLCLONED)&&e->flag&LPERMANENT)e->name->mback.lookaside=w;}  // no preallocated slot: go look up the name, possibly allocating a new symbol.  If slot is primary preallocated, set the lookaside
+// obsolete   e=likely((SGNIF(gr,ARLCLONEDX)|(symx-1))>=0)?SYMORIGIN+(I)symx:  // local symbol given and we are using the original table: use the symbol.  Otherwise, look up and reserve 1 symbol.  scaf if bucketx neg find sym here w/o call
   g=(A)((I)jtfg|-JTASGNWASLOCAL);   // indicate local assignment (we have no lock to clear), remember final assignment
-  valtype|=QCNAMED|(REPSGN(wt)&QCRAREQD);  // enter QCSYMVAL semantics; ra needed if sparse
 // obsolete reprobelocal: ;  // here to retry storing a local NOALIAS symbol.  g and e, and the new w, are set
   x=e->fval;   // if nonzero, x points to the incumbent value (QCSYMVAL semantics)
  }else{  // global table
 // obsolete reprobeglobal: ;  // loop back here when we have to retry storing a global NOALIAS symbol.  g is set, and the new w
   SYMRESERVE(1)  // before we go into lock, make sure we have a symbol to assign to
-  valtype|=QCNAMED|QCRAREQD;  // must flag local/global type in symbol
+  QCBITOP(w,|,QCNAMED|QCRAREQD);  // enter QCSYMVAL semantics; must flag local/global type in symbol becuase global needs ra
   e=probeis(a, g);  // get the symbol address to use, old or new.  ************************ This returns holding a WRITELOCK on the locale
   if(unlikely((x=e->fval)==0)){   // if nonzero, x points to the incumbent value (QCSYMVAL semantics).  Global assignments are usually reassignments
    // writing a new symbol to a non-local table: update the table's Bloom filter.
@@ -765,9 +778,9 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // of g are exit flags: bit0=final assignment, bit 1=local assignment.  If local assignment, g=-2 (not final) or -1 (final) *******
 
  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else.  This is assignment in place, but most cases are detected in our calleer
- if(likely(QCWORD(x)!=w)){
+ if(likely(QCWORD((I)x^(I)w)!=0)){
   // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
-  if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&(((I)x&QCNOUN)==0))RZ(x=redef(w,x))  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
+  if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&(((I)x&QCNOUN)==0))RZ(x=redef(QCWORD(w),x))  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
   I xtype=(I)x;  // remember the type of x, if it exists; QCNOUN if not
   x=QCWORD(x);  // we have no further need for the type that has been reassigned
   
@@ -777,11 +790,12 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
 
   if(likely(!(xaf&AFNJA))){
 // obsolete noalias:;    // Normal case of non-memory-mapped assignment, perhaps after chacking some flags
-   e->fval=MAKEFVAL(w,valtype);  // store the new flagged value to free w before ra()
+   e->fval=w;  // store the new flagged value to free w before ra()
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
                    // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
                    // SYMVALFA1 does not call a subroutine
-   x=(A)((I)x+(QCNOUN&~(valtype&xtype)));  // LSB of x is now used to mean 'ACV change', i. e. either valtype or xtype is not QCNOUN - even if x is 0
+   x=(A)((I)x+(QCNOUN&~((I)w&xtype)));  // LSB of x is now used to mean 'ACV change', i. e. either valtype or xtype is not QCNOUN - even if x is 0
+   w=QCWORD(w);  // remove type that was stored in w
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // Virtual values were realized earlier, and usecounts guaranteed recursive
    // If the value is abandoned inplaceable, we can just zap it and set its usecount to 1
@@ -805,6 +819,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
    }
 
   }else{  // x is memory-mapped, and is not rewriting an incumbent value
+   w=QCWORD(w);  // remove type that was stored in w
 // obsolete    if(xaf&AFNOALIAS){
 // obsolete     if(likely(AC(w)<0))goto noalias;  // NOALIAS block can be assigned when it is still inplaceable
 // obsolete     if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock); RZ(w=ca(w)); if(((I)g&JTASGNWASLOCAL))goto reprobelocal; g=(A)((I)g&~(JTASGNWASLOCAL+JTFINALASGN)); goto reprobeglobal;

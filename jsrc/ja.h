@@ -775,7 +775,7 @@ extern void jfree4gmp(void*,size_t);
 #define newt(x0,x1,x2,x3)           jtnewt(jt,(x0),(x1),(x2),(x3))
 #define nextprime(x)                jtnextprime(jt,(x))
 #define nfb(x)                      jtnfb(jt,(x))
-#define nfs(x,y)                    jtnfs(jt,(x),(y))  
+#define nfs(x,y,z)                    jtnfs(jt,(x),(y),(z))  
 #define nlsym(x,y,z)                  jtnlsym(jt,(x),(y),(z))
 #define nlx(x,y)                    jtnlx(jt,(x),(y))
 #define nlxxx(x,y)                  jtnlxxx(jt,(x),(y))

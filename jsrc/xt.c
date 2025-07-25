@@ -250,7 +250,7 @@ DF2(jttsit2){F12IP;A z;D t;I n;I stackallo=0,i;
  RE(n=i0(a));
  RZ(w=ddtokens(vs(w),4+1+!!EXPLICITRUNNING));   // tokenize outside of timer.  We time as if the sentence were executed in an explicit defn
  // apply pppp to the sentence.  Create a 1-sentence block of control words
- A cwa; GAT0(cwa,LIT,2*sizeof(CW),1) AN(cwa)=1; CW *cwv=(CW*)voidAV1(cwa); cwv[0].tcesx=0+(CBBLOCK<<TCESXTYPEX); cwv[1].tcesx=AN(w);  // allo 2 SWs, of which 1 is thr end marker
+ A cwa; GAT0(cwa,LIT,2*sizeof(CW),1) AN(cwa)=1; CW *cwv=(CW*)voidAV1(cwa); cwv[0].tcesx=0+(CBBLOCK<<TCESXTYPEX); cwv[1].tcesx=AN(w);  // allo 2 CWs, of which 1 is the end marker
  RZ(w=mkwris(w)) RZ(pppp(jt,w,cwa))  // make sure we can write to w, and perform pppp on it
  I wn=AN(w); A *wv=AAV(w);  // get #words in sentence after pppp, and their address
  // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name:
@@ -276,9 +276,13 @@ DF2(jttsit2){F12IP;A z;D t;I n;I stackallo=0,i;
      }
      NAV(QCWORD(wv[i]))->bucketx=symno; NAV(QCWORD(wv[i]))->symx=0;  // the symbol was not found in the local symbol table.  bucketx will be the # permanent symbols, with no local symbol#
      if(0){
-foundsym:;  // we found the symbol.  Install its info.  sym is the symbol, SYMNEXT(symx) its index, symno the position in chain
-      NAV(QCWORD(wv[i]))->bucketx=~symno;  // install complement of position in chain to indicate found position
-      NAV(QCWORD(wv[i]))->symx=AR(jt->locsyms)&ARLCLONED?0:SYMNEXT(symx);  // install symbol number if this is not a cloned definition
+foundsym:;  // we found a matching symbol.  Switch over to it.  It might not have buckets, if it is an x/y that has was not used in the definition.
+      wv[i]=MAKEFVAL(sym->name,QCTYPE(wv[i]));  // new address, old NAME type
+// obsolete   If it has buckets, switch our pointer over to using it.  That way we will share the nameblock
+// obsolete       if(NAV(sym->name)->symx){wv[i]=MAKEFVAL(sym->name,QCTYPE(wv[i]));  // new address, old type
+// obsolete       }else{  // no name with buckets.  Install the position at end of chain
+// obsolete       NAV(QCWORD(wv[i]))->bucketx=~symno;  // install complement of position in chain to indicate found position
+// obsolete        NAV(QCWORD(wv[i]))->symx=AR(jt->locsyms)&ARLCLONED?0:SYMNEXT(symx);  // install symbol number if this is not a cloned definition
        // note: we don't have to worry about erasing references because symbols might escape from a modifier: the result of the sentence is unused.  We have slightly better bucket info than usual, no crime
      }
     }

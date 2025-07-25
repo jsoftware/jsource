@@ -474,7 +474,7 @@ void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
 // JT flag is used to indicate execution from ". - we can't honor name_: then, or perhaps some assignments
-A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;A z;
+A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragment; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
  A jtlocsyms=jt->locsyms;  // we need the AR flags in the local table very quickly for singlee-word sentences, less urgency for longer
@@ -624,9 +624,10 @@ firstword: ;  // come here first time, while pt0ecam settles
       I clonedhi=(pt0ecam&(ARLCLONED<<LOCSYMFLGX))<<(30-(ARLCLONEDX+LOCSYMFLGX));  // 0 if not cloned, big value if cloned
       y=QCWORD(y);  // back y up to the NAME block
 // preferred      if((symx&=REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using an uncloned table and there is a symbol stored there...  The compiler creates 2 branches which hurts only when the uncloned table is in play
-      if(withprob(clonedhi<symx,0.9)){  // if we are using an uncloned table and there is a symbol stored there (i. e. local name)...
+      if(withprob(clonedhi<symx,0.9)){  // if we are using an uncloned table and there is a symbol stored there (i. e. defined local name)...
        // this is the normal path for all local names as long as we can use the uncloned table.
        L *s=&sympv[symx];  // get address of symbol from the primary table
+// obsolete if(s->fval!=y->mback.lookaside&&!((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX)))))SEGFAULT;  // scaf
        if(unlikely((s->fval)==0))goto rdglob;  // if value has not been assigned, ignore it.  y has QCSYMVAL semantics
        if(unlikely(ISRAREQD(y=s->fval)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // Set y.  ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
 // obsolete       }else if(likely((buck=NAV(QCWORD(y))->bucket)>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.  We would fetch symx&buck together if we could hand-code it.
@@ -996,16 +997,17 @@ RECURSIVERESULTSCHECK
 
       }else if(pmask567&0b10000000){  // assign - can't be fork/hook
        // ****** line 7, assignment *****************************************************************************************************************************************************************************************************************
+       A assignand=QCWORD(__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED)), jtzv=__atomic_load_n(&jt->zombieval,__ATOMIC_RELAXED);  // what we need first is resolution of the unpredictable branch below
        // Point to the block for the assignment; fetch the assignmenttype; choose the starting symbol table
        // depending on which type of assignment (but if there is no local symbol table, always use the global)
        A symtab=jt->locsyms; {A gsyms=jt->global; symtab=!EXPLICITRUNNING?gsyms:symtab; symtab=!(stack[1].pt&PTASGNLOCAL)?gsyms:symtab;}  // use global table if  =: used, or symbol table is the short one, meaning 'no symbols'
-       I rc; A assignand=QCWORD(stack[2].a);   // result code, the value to be assigned
+       I rc;    // result code
        if(likely(TESTSTACK0PT(PTNAME0X))){   // simple assignment to a name
-        // if we are assigning jt->zombieval, it must be a reassignment in place.  We can bypass the entire assignment.  If another
+        // if we are assigning jt->zombieval, it is a reassignment in place.  We can bypass the entire assignment.  If another
         // thread has replaced the incumbent (necessarily global) value, we don't care, since the order is unpredictable for assignments between threads.
         // rc is needed only at end-of-sentence, so set final assignment always.  'local assignment' saves a little time protecting the result, and it's OK if it's not set sometimes.
-        // We don't scruple to get it perfect because we may need rc soon if we are exiting, and no errors require perfection.
-        if(assignand==jt->zombieval){rc=(symtab==jt->locsyms)?3:1;  // set low flag bits.  No actual assignment needed, no error possible.  This is the hot path for Jthon
+        // We don't scruple to get it perfect because we may need rc soon if we are exiting, and no error checks require perfection (i. e. AIP is never domain error).
+        if(assignand==jtzv){rc=(symtab==jt->locsyms)?3:1;  // set low flag bits.  No actual assignment needed, no error possible.  This is the hot path for Jthon
         }else{
          if(unlikely(stack[3].pt!=PTMARKBACK))protectlocals(jt,3);  // if there are stacked values after the value to be assigned, protect the locals among them in case we are about to reassign the value.  This should be rare.  The value itself needs no protection
          rc=jtsymbis((J)((I)jt+(((US)pt0ecam==0)<<JTFINALASGNX)),QCWORD(stack[0].a),assignand,symtab);   // Assign to the known name.  If ASSIGNSYM is set, PTNAME0 must also be set
@@ -1019,16 +1021,15 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
        auditmemchains();
 #endif
-       CLEARZOMBIE   // in case zombieval was set, clear it until next use.  We know that if zombie is set, the next parse acxrtion MUST be assignment or error
+       CLEARZOMBIE   // in case zombieval was set, clear it until next use.  We know that if zombie is set, the next parse action MUST be assignment or error
        // it impossible for the stack to be executable.  If there are no more words, the sentence is finished.
        // If FAOWED was in the value, the result needs to inherit it.  But since we retain the same stack position as the result of the assignment, nothing more is needed.
        if(likely((US)pt0ecam==0))EP(rc)  // In the normal sentence name =[.:] ..., we are done after the assignment.  Ending stack must be  (x x result) normally (x MARK result), i. e. leave stackptr unchanged
          // rc has bits 0-1 set to indicate if final assignment, and single assignment to a local name, others (non0) garbage
+       // falling through, the assignment was non-final
        y=NEXTY;  // refetch next-word to save regs
        stack+=2;  // if we have to keep going, advance stack to the assigned value
        // here we are dealing with the uncommon case of non-final assignment.
-       // the newly-assigned name might have been ra()d, if it couldn't be zapped.  If so, indicate that fact in the stacked address
-
        // If the next word is not LPAR, we can fetch another word after.
        // if the 2d-next word exists, and it is (C)AVN, and the current top-of-stack is not ADV, and the next word is not ASGN, we can pull a third word.  (Only ADV can become executable in stack[2]
        // if it was not executable next to ASGN).  We go to the trouble (1) because the case is the usual one and we are saving a little time; (2) by eliminating
@@ -1037,7 +1038,7 @@ RECURSIVERESULTSCHECK
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word(s)
       }else if(pmask567&0b100000){  // fork NVV or VVV
-       // ***** line 5, fork *********************************************************************************************************************************************************************************************************************
+       // ***** line 5, fork (producing verb) *********************************************************************************************************************************************************************************************************************
        A arg1=stack[1].a, arg2=stack[2].a, arg3=stack[3].a;
        // initial value of loop counter/flag: 000 always for dyad, cleared by stacker
        yy=folk(QCWORD(arg1),QCWORD(arg2),QCWORD(arg3));  // create the fork
@@ -1105,10 +1106,10 @@ execlpar:;  // come here when we are sitting on ( ...
   audittstack(jt);
 #endif
    // Prepare the result
-  z=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED);   // stack[0..1] are the mark; this is the sentence result, if there is no error.  STKNAMED semantics.  Force early read
+  A z=__atomic_load_n(&stack[2].a,__ATOMIC_RELAXED);   // stack[0..1] are the mark; this is the sentence result, if there is no error.  STKNAMED semantics.  Force early read
   if(likely(1)){  // no error on this branch
-   // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
-   // stack[1] is the initial mark (not written out), stack[2] is the result, and stack[3] had better be the first ending mark
+   // If final assignment, we left the stack as (name copula result); if stack exhaustion we backed the stack to before the initial mark entry.
+   //  At this point stack[0] is name/invalid, stack[1] is the copula/initial mark (not written out), stack[2] is the result, and stack[3] had better be the first ending mark
    if(unlikely(!PTISCAVN(stack[2].pt))){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FPE}
    if(unlikely(&stack[3]!=stackend1)){jt->parserstackframe.parseroridetok=0; jsignal(EVSYNTAX); FPE}
    // normal end, but we have to handle the case where the result has FAOWED.   (ex: ([ 4!:55@(<'x')) x   or   a =: >: a   or a =. b).
@@ -1156,7 +1157,7 @@ failparse:
    if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up
     I4 symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  This fetch gates the normal path
 // obsolete       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
-    L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change within a single stacking loop but there's scant benefit in fetching earlier
+    L *sympv=SYMORIGIN;  // fetch the base of the symbol table
     I clonedhi=(pt0ecam&ARLCLONED)<<(30-ARLCLONEDX);  // 0 if not cloned, big value if cloned.  pt0ecam=AR flags here
 // obsolete     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
     if(withprob(clonedhi<symx,0.9)){  // if we are using primary table and there is a symbol stored there...

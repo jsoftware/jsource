@@ -208,13 +208,18 @@ struct AD {
         // address of the symbol table being assigned to (9) in the y block internal to pv.c, used for flags (10) in all tables that use extendunderlock, the number of valid entries in the table (AN gives the allocation)
         // (11) in file-lock list and file-number list, the # valid files (12) if AFUNIFORMITEMS is set, the total# items in all boxes (13) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
         // (14) in the filenames pointed to by fopafl, the file handle for the open file (15) for fret block passed from /.. into ;., the address of the original a arg to /..
-        // (16) in permuted W block passed from /. to ;., pointer to information on where frets are in a
+        // (16) in permuted W block passed from /. to ;., pointer to information on where frets are in a (17) in all NAME blocks for local symbol tables, lookaside pointer to value if any (QCSYMVAL semantics)
   A back; // For VIRTUAL blocks, points to backing block
   A jobpyx;    // for user JOB blocks, points to the pyx
   A *zaploc;  // For all blocks allocated by GA, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
   A aarg;  // for /.., the original a arg
-} mback;
+  A lookaside;  // for local NAME, a pointer to the value.  When this is non0, it must always match the value in the symbol table.  It is cleared to 0 when a NAME is allocated.  When a local value is assigned to a NAME with a negative bucketx,
+         // we know that the NAME is the unique nameblock for all simple references to that name in that definition (it may be a clone of the original NAME bot it is still unique in that definition and used by ALL simple references including
+         // assignments).  We save the assignment in the NAME block it is assigned to.  The value may change on reassignment.  When a local symbol table is cretaed or cloned, symbols are allocated for all PERMANENT (i. e. negative-bucketx) names
+         // AND the symbol's name points to the shared name.  THIS WILL NEVER CHANGE - that's what PERMANENT means.  Therefore, whenever a negative-bucketx value is stored into a local table, we can update the lookaside value in the name block
+         // pointed to by the symbol table.  If the value is deleted in the symbol table the lookaside must be cleared.
+ } mback;
  union {  // 3
   I t;  // type
   A proxychain;  // used when block is on free chain
@@ -874,6 +879,7 @@ typedef DST* DC;
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part plus semantics-dependent bits
 #define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part only, 0-15 for the syntax units including assignment
 #define QCINSTALLTYPE(x,t) ((A)((I)(x)|(I)(t)))  // install t into word-pointer x
+#define QCBITOP(x,op,mask) (x=(A)((I)x op (mask)))
 // values 0-11 are the same in all contexts:
 // the CAVN types are selected for comp ease in the typeval field of an assigned value.  They are indexes into ptcol.
 // The value which might also hold VALTYPESPARSE, or VALTYPENAMELESS which is converted to correct type before the lookup).  These types are seen only in valtypes in named blocks, which have QCSYMVAL semantics
@@ -1029,7 +1035,7 @@ typedef struct{
 //   (for locale names in SYMLINFO of a numbered locale) the locale number
  A cachedref; // (only for cachable NAME blocks): the value to be used for this name entry, if it is not a noun.  Non-QC semantics.  It may be (1) in a nameless modifier, the A block for the value, which has PERMANENT AC
                // (2) otherwise, the nameref for the name block, which may or may not have the pointer to the looked-up value.  This nameref is not PERMANENT AC and must be deleted when the name is deleted
- LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table
+ LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table.  Used for assignment
  I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local.  -1 for names in 6!:2 from keyboard, to bypass the check for local names in global assignment
 //   0 if chain index not known or name is a locative
  UI4 hash;  // hash for non-locale part of name

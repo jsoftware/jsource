@@ -203,7 +203,7 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
   AR(g)=ARINVALID;  // until the table is all filled in, it is in an invalid state and cannot be inspected when freed
   v=symnew(&LXAV0(g)[SYMLINFO],0);    // put new block into locales table, allocate at head of chain without non-PERMANENT marking,  The symbol must be available
   v->flag|=LINFO;  // mark as not having a value
-  RZ(x=nfs(n,u));  // this fills in the hash for the name
+  RZ(x=nfs(n,u,1));  // this fills in the hash for the name - this name is not for a local table
   // Install name and path.  Path is 'z'. correct for all but z locale itself, which is overwritten at initialization
   LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);   // zpath is permanent.
   // Assign this name in the locales symbol table to point to the allocated SYMB block
@@ -225,7 +225,7 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0));   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
   v->flag|=LINFO;  // mark as not having a value (for diags.  value is used for locnum)
   // Put this locale into the in-use list at an empty location.  ras(g) at that time
-  RZ(x=nfs(20,&CAV(ds(CALP))['a']))  // create the name block before lock.  The hash will be meaningless
+  RZ(x=nfs(20,&CAV(ds(CALP))['a'],1))  // create the name block before lock.  The hash will be meaningless
   WRITELOCK(JT(jt,stlock)) RZ((n=jtinstallnl(jt, g))>=0);   // put the locale into the numbered list; exit if error (with lock removed); zap g
   I nmlen=sprintf(NAV(x)->s,FMTI,n); AN(x)=nmlen; NAV(x)->m=nmlen;  // install true locale number and length of name
   LOCNUMW(g)=(A)n; // save locale# in SYMLINFO
@@ -363,7 +363,7 @@ static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
   ASSERT(m!=0,EVLENGTH);
   ASSERT(LIT&AT(y),EVDOMAIN);
   ASSERT(((1-b) & (I)((UI)CAV(y)[0]-('9'+1)))>=0,EVDOMAIN);  // numeric locale not allowed except when called for in b
-  if(b&1)ASSERTN(vlocnm(m,s),EVILNAME,nfs(m,s));
+  if(b&1)ASSERTN(vlocnm(m,s),EVILNAME,nfs(m,s,0));
  }
  R w;
 }    /* validate namelist of locale names  Returns list if all valid, else 0 for error */

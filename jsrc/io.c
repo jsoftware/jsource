@@ -481,11 +481,11 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
   // reverse the order of the pmstack so we process from the newest frames to the oldest
   DC pmcurr=jm->pmstacktop, pmrevd=0, pmnext; do{pmnext=pmcurr->dclnk; pmcurr->dclnk=pmrevd; pmrevd=pmcurr; pmcurr=pmnext;}while(pmcurr);
   if(*lp2){  // nonnull string
-   // user responded to error with a new sentence.  Clear the error stack.  After we delete a symbol table, we tpop back to where the table was created
+   // user responded to error with a new sentence.  Clear the error stack
    jm->pmstacktop=0;   // turn off PM debug collection, which reenables tpop
 // obsolete   jttpop(jm,pmrevd->dcttop,jm->tnextpushp);  // When we entered PM debug, we probably did eformat(), which allocates some headers (gah()).  These might alias named variables, and must be popped off the
-   DC s=pmrevd; while(s){jtsymfreeha(jm,s->dcloc);  __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE); s=s->dclnk;}   // purge symbols & clear stack
-   jttpop(jm,jm->pmttop,jm->tnextpushp);  // free all memory allocated in the previous sentence
+   DC s=pmrevd; while(s){jtsymfreeha(jm,s->dcloc); s=s->dclnk;}   // purge symbols & clear stack.  This clears only symbols, leaving primary tables extant 
+   jttpop(jm,jm->pmttop,jm->tnextpushp);  // free all memory allocated in the previous sentence, including any cloned tables
    jm->pmttop=0;  // clear to avoid another reset
   }else{
    // user wants to debug the error.  Transfer the pmstack to the debug stack in reverse order.  ra() the self for each block - necessary in case they are reassigned while on the stack
@@ -512,7 +512,7 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
   while(s){   // for each debug block
    if(s->dctype==DCCALL&&s->dcpflags==1){  // if PM block
 // obsolete     if(!tpopped){jttpop(jm,s->dcttop,jm->tnextpushp); tpopped=1;}  // tpop before the first PM block
-    if(s->dcc!=0){jtsymfreeha(jm,s->dcloc); __atomic_store_n(&AR(s->dcloc),ARLOCALTABLE,__ATOMIC_RELEASE);}  // free symbol table
+    if(s->dcc!=0){jtsymfreeha(jm,s->dcloc);}  // free symbol table
     if(s->dcf!=0)fa(s->dcf);  // undo the ra above
    }
    s=s->dclnk;  // step to next block
@@ -685,7 +685,7 @@ CDPROC A _stdcall JGetA(JS jt, I n, C* name){A x,z=0;
  if(name==0){if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;} R 0;}
  jm->jerr=0;
  A *old=jm->tnextpushp;
- if(!(x=jtsymbrdlock(jm,jtnfs(jm,n,name)))){jtjsignal(jm,EVILNAME);  // look up the name, error if invalid
+ if(!(x=jtsymbrdlock(jm,jtnfs(jm,n,name,0)))){jtjsignal(jm,EVILNAME);  // look up the name, error if invalid
  }else if(FUNC&AT(x)){jtjsignal(jm,EVDOMAIN);   // verify the value is not adv/verb/conj
  }else{
   // name is OK; get the binary rep
@@ -711,7 +711,7 @@ CDPROC I _stdcall JSetA(JS jt,I n,C* name,I dlen,C* d){
  jm->jerr=0;
  if(!jtvnm(jm,n,name)){jtjsignal(jm,EVILNAME); R EVILNAME;}
  A *old=jm->tnextpushp;
- jtsymbisdel(jm,jtnfs(jm,n,name),jtunbin(jm,jtstr(jm,dlen,d)),jm->global);
+ jtsymbisdel(jm,jtnfs(jm,n,name,0),jtunbin(jm,jtstr(jm,dlen,d)),jm->global);
  jttpop(jm,old,jm->tnextpushp);
  R jm->jerr;
 }
@@ -843,7 +843,7 @@ void jsto(J jjt,I type,C*s){C e;I ex;
   // we execute the sentence:  type output_jfe_ s    in the master thread
   fauxblockINT(fauxtok,3,1); A tok; fauxBOXNR(tok,fauxtok,3,1);  // allocate 3-word sentence on stack, rank 1
   DISABLEATTN
-  AAV1(tok)[0]=PTROP(num(type),|,QCNAMED+QCNOUN); AAV1(tok)[1]=PTROP(jtnfs(jm,11,"output_jfe_"),|,QCISLKPNAME); AAV1(tok)[2]=PTROP(jtcstr(jm,s),|,QCNAMED+QCNOUN);  // the sentence to execute, tokenized and with flag-types installed.  Better not fail!
+  AAV1(tok)[0]=PTROP(num(type),|,QCNAMED+QCNOUN); AAV1(tok)[1]=PTROP(jtnfs(jm,11,"output_jfe_",0),|,QCISLKPNAME); AAV1(tok)[2]=PTROP(jtcstr(jm,s),|,QCNAMED+QCNOUN);  // the sentence to execute, tokenized and with flag-types installed.  Better not fail!
   e=jm->jerr; ex=jm->etxn;   // save error state before running the output sentence
   jm->jerr=0; jm->etxn=0;
   jtparse(jm,tok);  // run sentence, with no interrupts.  ignore errors.
@@ -1039,7 +1039,7 @@ CDPROC int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdat
  A *old=jm->tnextpushp;
  if(strlen(name) >= sizeof(gn)){jtjsignal(jm,z=EVILNAME);
  }else if(valid(name, gn)){jtjsignal(jm,z=EVILNAME);
- }else if(!(a=jtsymbrdlock(jm,jtnfs(jm,strlen(gn),gn)))){jtjsignal(jm,z=EVDOMAIN);
+ }else if(!(a=jtsymbrdlock(jm,jtnfs(jm,strlen(gn),gn,0)))){jtjsignal(jm,z=EVDOMAIN);
  }else if(FUNC&AT(a)){jtjsignal(jm,z=EVDOMAIN);
  }else{
   *jtype = AT(a);

@@ -393,8 +393,8 @@ MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VFLAGNONE,VF2NONE,RMAX,RMAX,RM
 
 // called at initialization after memory reset, to assign cocurrent_z_ and coclass_z_.  The 18!:4 block is at the end of foreignA and is a read-only value
 I jtforeignassigninit(J jt){A nm;L *e;
- RZ(nm=nfs(12,"cocurrent_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],jt->global); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;  // the assignment is in z, but we need...
- RZ(nm=nfs(10,"coclass_z_")); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],jt->global); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;  // ... a valid global table as an arg
+ RZ(nm=nfs(12,"cocurrent_z_",0)); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],jt->global); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;  // the assignment is in z, but we need...
+ RZ(nm=nfs(10,"coclass_z_",0)); symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],jt->global); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;  // ... a valid global table as an arg
  R 1;
 }
 

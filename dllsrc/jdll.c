@@ -268,7 +268,7 @@ static int jget(JJ jt, C* name, VARIANT* v, int dobstr)  // jt is a thread point
 
 	if(strlen(name) >= sizeof(gn)) return EVILNAME;
 	if(valid(name, gn)) return EVILNAME; 
-	RZ(a=symbrd(nfs(strlen(gn),gn)));
+	RZ(a=symbrd(nfs(strlen(gn),gn,0)));
 	A *old = jt->tnextpushp;
 	er = a2v (jt, a, v, dobstr);
 	tpop (old);

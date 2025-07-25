@@ -241,7 +241,7 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
        // we have to reset the state of the error system after saving what we will need
        I pareninfo = (jt->emsgstate&EMSGSTATEPAREN)>>EMSGSTATEPARENX;  // unbalanced-paren info from infererrtok
        RESETERR; jt->emsgstate|=EMSGSTATEFORMATTED; // clear error system; indicate that we are starting to format, so that the error line will not be modified during eformat
-       A nam=nfs(10,"eformat_j_"); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat;
+       A nam=nfs(10,"eformat_j_",0); A val; if((val=syrd(nam,jt->locsyms))==0)goto noeformat;
        if((val=QCWORD(namerefacv(nam,QCWORD(val))))==0)goto noeformat; if(!(val&&LOWESTBIT(AT(val))&VERB))goto noeformat;  // there is always a ref, but it may be to [:.   namerefscv will undo ra() in syrd
        // we also have to reset processing state: ranks.  It seems too hard to force eformat to infer the ranks from the args
        // other internal state (i. e. from !.n) will have been restored before we get here  

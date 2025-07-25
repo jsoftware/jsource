@@ -123,7 +123,7 @@ static B jterrcap(J jt){A y,*yv;
  RZ(yv[1]=str(jt->etxn1,jt->etxinfo->etx));
  RZ(yv[2]=dbcall(mtv));
  RZ(yv[3]=locname(mtv));
- A nm; RZ(nm=nfs(22L,"STACK_ERROR_INFO_base_")); RZ(symbis(nm,y,mark));
+ A nm; RZ(nm=nfs(22L,"STACK_ERROR_INFO_base_",0)); RZ(symbis(nm,y,mark));
  R 1;
 }    /* error capture */
 

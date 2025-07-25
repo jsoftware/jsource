@@ -767,7 +767,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
 #ifndef NAMETRACK
-#define NAMETRACK 0   // turn on to define trackinfo in unquote, xdefn, line
+#define NAMETRACK 0   // turn on to define trackinfo in unquote, xdefn, line.  This makes some tests fail because we use etx as a workarea
 #endif
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #ifndef FINDNULLRET
@@ -2197,6 +2197,8 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define SYMVALFA1(l,faname) {if(faname!=0){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(faname); if(likely(AC(faname)<2))ACRESET(faname,ACINPLACE|ACUC1); faname=0;}}}
 #define SYMVALFA2(faname) if(faname!=0){faactionrfo(jt,faname,AFLAGCLRKNOWN(faname))}   // must clear known before free, since once we reduce usect we cannot touch the block
 #define SYMVALFA(l) {A v=QCWORD((l).fval); SYMVALFA1(l,v) SYMVALFA2(v)}   // l points to the symbol-table entry for the name
+#define SETLOCALFVALTEST(val,sym,test) {if(likely(test))(sym)->name->mback.lookaside=(val); (sym)->fval=(val);}  // set value in local symbol, with copy to the lookaside if defined.  test is true if primary table
+#define SETLOCALFVAL(val,sym,loc) SETLOCALFVALTEST(val,sym,AR(loc)&ARLSYMINUSE)  // set value in local symbol, with copy to the lookaside if defined.  Used when sym is in execution and thus flagged if primary
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

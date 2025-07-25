@@ -1050,7 +1050,7 @@ static DF2(jtfoldx){F12IP;  // this stands in place of jtxdefn, which inplaces
  // get the rest of the flags from the original ID byte, which was moved to lc
  foldflag|=FAV(self)->lu2.lc-CFDOT;  // this sets mult fwd rev
  // define the flags as the special global
- A nm; RZ(nm=nfs(11,"Foldtype_j_")); RZ(jtsymbis((J)((I)jt+JTFINALASGN),nm,sc(foldflag),jt->locsyms));
+ A nm; RZ(nm=nfs(11,"Foldtype_j_",0)); RZ(jtsymbis((J)((I)jt+JTFINALASGN),nm,sc(foldflag),jt->locsyms));
  // execute the Fold.  While it is running, set the flag to allow Z:
  B foldrunning=jt->foldrunning; jt->foldrunning=1; A z=(*(FAV(self)->localuse.lu1.foldfn))(jt,a,w,self); jt->foldrunning=foldrunning;
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script

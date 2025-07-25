@@ -3646,7 +3646,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  box=C(AAV(w)[7]);  // compgrade
  ASSERT(AT(box)&INT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==opctx.nstripes,EVLENGTH) opctx.stripegrade=IAV(box);  // must be INT [#stripes]
  box=C(AAV(w)[0]);  // 'Qkt'
- ASSERT(AT(box)&LIT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK)  A nm; RZ(nm=nfs(AN(box),CAV(box))); A qktf=syrd(nm,jt->locsyms); A qkt=QCWORD(qktf); ASSERT(qkt!=0,EVVALUE)  // name exists
+ ASSERT(AT(box)&LIT,EVDOMAIN) ASSERT(AR(box)<=1,EVRANK)  A nm; RZ(nm=nfs(AN(box),CAV(box),0)); A qktf=syrd(nm,jt->locsyms); A qkt=QCWORD(qktf); ASSERT(qkt!=0,EVVALUE)  // name exists
  // from here till end we must take errors through 'errexit'
  A z=0;  // presumptive error return
  ASSERTGOTO(AT(qkt)&QP,EVDOMAIN,errexit) ASSERTGOTO(AR(qkt)==2,EVRANK,errexit) opctx.qkt=EAV(qkt);  // QP, rank=2

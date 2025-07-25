@@ -394,7 +394,7 @@ F1(jtspfor){F12IP;A*wv,x,y,z;C*s;D*zv;I i,m,n;
   ASSERT(LIT&AT(x),EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   ASSERT(vnm(m,s),EVILNAME);
-  RZ(y=symbrd(nfs(m,s)));   // get value for name (protected by tpush)
+  RZ(y=symbrd(nfs(m,s,0)));   // get value for name (protected by tpush)
   zv[i]=spfor1(y);  // get size
  }
  RETF(z);
@@ -698,7 +698,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
 }
 
 // free the symbol table (i. e. locale) w.  AR(w) has been loaded.  We return w so caller doesn't have to save it
-NOINLINE A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined and that will make jtmf() save several more registers
+NOINLINE A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be inlined and that will make jtmf() save several more registers.  It is called infrequently
  if(likely(arw&ARLOCALTABLE)){
   // local tables have no path or name, and are not listed in any index.  Just delete the local names
   freesymb(jt,w);   // delete all the names/values
@@ -1715,7 +1715,7 @@ F1(jtca){F12IP;A z;I t;P*wp,*zp;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,ca(SPA(wp,x)));
  }else{
-  if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;AC(z)=ACUC1;}  // GA does not allow NAME type, for speed.  NAME is always non-ip
+  if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;AC(z)=ACUC1;z->mback.lookaside=0;}  // GA does not allow NAME type, for speed.  NAME is always non-ip
   else {
    n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for minimum rank, someday
    GA(z,t,n,AR(w),AS(w));

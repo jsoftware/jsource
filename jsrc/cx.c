@@ -106,8 +106,8 @@ static B forinitnames(J jt,CDATA*cv,I cwtype,A line,I i, I go){  // i and go are
   if(k>0){A x;  // if it is a for_xyz.
    C ss[255], *s=ss;  // We need a string buffer for "xyz_index"; s points to buffer
    MC(s,CAV(line)+4,k);  MC(s+k,"_index",6L);  // move "xyz_index" into *s
-   A indexnm; RZ(indexnm=nfs(k+6,s)) ASSERT(!(NAV(indexnm)->flag&NMLOC+NMILOC),EVILNAME) cv->indexsym=(probeislocal(indexnm,jt->locsyms))-SYMORIGIN;   // get name, verify not locative get (preallocated) index of symbol xyz_index in table
-   RZ(indexnm=nfs(k,s)) ASSERT(!(NAV(indexnm)->flag&NMLOC+NMILOC),EVILNAME) cv->itemsym=(probeislocal(indexnm,jt->locsyms))-SYMORIGIN;   // get name, verify not locative get (preallocated) index of symbol xyz in table
+   A indexnm; RZ(indexnm=nfs(k+6,s,0)) ASSERT(!(NAV(indexnm)->flag&NMLOC+NMILOC),EVILNAME) cv->indexsym=(probeislocal(indexnm,jt->locsyms))-SYMORIGIN;   // get name, verify not locative get (preallocated) index of symbol xyz_index in table
+   RZ(indexnm=nfs(k,s,0)) ASSERT(!(NAV(indexnm)->flag&NMLOC+NMILOC),EVILNAME) cv->itemsym=(probeislocal(indexnm,jt->locsyms))-SYMORIGIN;   // get name, verify not locative get (preallocated) index of symbol xyz in table
   }else{cv->itemsym=cv->indexsym=0;}  // if not for_xyz., indicate with 0 indexes
  }
  R 1;  // normal return
@@ -123,11 +123,11 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // Make initial assignment to xyz_index, and mark it readonly
   // Since we remove the readonly at the end of the loop, the user might have changed our value; so if there is
   // an incumbent value, we remove it.  We also zap the value we install, just as in any normal assignment
-  L *asym=&SYMORIGIN[cv->indexsym];   // pointer symbol-table entry, index then item
+  L *asym=&SYMORIGIN[cv->indexsym];   // pointer symbol-table entry, index first, later then item
   ASSERT(!(asym->flag&LREADONLY),EVRO)  // it had better not be readonly now
   if(unlikely(QCWORD(asym->fval)!=0))fa(QCWORD(asym->fval));  // if there is an incumbent value, discard it
   A xx; GAT0(xx,INT,1,0); IAV0(xx)[0]=-1; AFLAGINIT(xx,AFRO) // -1 is the iteration number if there are no iterations; mark value RO to prevent xxx_index =: xxx_index + 1 from changing inplace
-  ACINITUNPUSH(xx); asym->fval=SETNAMED(MAKEFVAL(xx,ATYPETOVALTYPE(INT))); // raise usecount, as local name; install as value of xyz_index
+  ACINITUNPUSH(xx); SETLOCALFVAL(SETNAMED(MAKEFVAL(xx,ATYPETOVALTYPE(INT))),asym,jt->locsyms) // raise usecount, as local name; install as value of xyz_index
   rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.  note we can free from a boxed array now
   ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free
   asym->flag|=LREADONLY;  // in the loop, the user may not modify xyz_index   LREADONLY is set iff we have cv->t, and cleared then
@@ -135,17 +135,18 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // create virtual block for the iteration.  We will store this in xyz.  We have to do usecount by hand because
   // true virtual blocks are freed only by tpop or from free of a boxed array, and we will be freeing this in unstackcv, either normally or at end-of-definition
   // We must keep ABACK in case we create a virtual block from xyz.
-  // We store the block in 2 places: cv and symp.val.  We ra() once for each place
+  // We store the block in 2 places: cv and symp.val.  We ra() once for each place.  We also store in lookaside, unprotected
   // If there is an incumbent value, discard it
   asym=&SYMORIGIN[cv->itemsym]; A val=QCWORD(asym->fval);  // stored reference address; incumbent value there
-  if(unlikely(val!=0))fa(val); asym->fval=0;    // free the incumbent if any, clear val in symbol in case of error
+  if(unlikely(val!=0))fa(val); SETLOCALFVAL(0,asym,jt->locsyms)    // free the incumbent if any, clear val in symbol in case of error
+// obsolete  asym->fval=0;
   // Calculate the item size and save it
   I isz; I r=AR(t)-((UI)AR(t)>0); PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
   // Allocate a virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=&asym->fval; A svb=virtual(t,0,r); jt->tnextpushp=pushxsave;  // since we can't ZAP a virtual, allocate this offstack to take ownership
   RZ(svb) AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINIT(svb,2); AN(svb)=isz; MCISH(AS(svb),AS(t)+1,r)  // AC=2 since we store in symbol and cv
   // Install the virtual block as xyz, and remember its address
-  cv->item=svb; asym->fval=SETNAMED(MAKEFVAL(asym->fval,ATYPETOVALTYPE(tt)));  // save in 2 places (already in asym->val), commensurate with AC of 2
+  cv->item=svb; SETLOCALFVAL(SETNAMED(MAKEFVAL(asym->fval,ATYPETOVALTYPE(tt))),asym,jt->locsyms)   // save in 2 places (already in asym->val), commensurate with AC of 2
  }
  R 1;
 }    /* for. do. end. initializations */
@@ -161,8 +162,10 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
    if(likely((svb=cv->item)!=0)){   // if the svb was allocated...
     if(unlikely(QCWORD(SYMORIGIN[cv->itemsym].fval)==svb)){A newb;   // svb was allocated, loop did not complete, and xyz has not been reassigned
      fa(svb);   // remove svb from itemsym.fval.  Safe, because it can't be the last free
-     if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); SYMORIGIN[cv->itemsym].fval=SETNAMED(MAKEFVAL(newb,ATYPETOVALTYPE(AT(newb)))); // realize stored value, raise, make recursive, store in symbol table
-     }else{SYMORIGIN[cv->itemsym].fval=0;}  // after error, we needn't bother with a value
+     if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); SETLOCALFVAL(SETNAMED(MAKEFVAL(newb,ATYPETOVALTYPE(AT(newb)))),&SYMORIGIN[cv->itemsym],jt->locsyms) // realize stored value, raise, make recursive, store in symbol table and lookaside
+// obsolete  SYMORIGIN[cv->itemsym].fval=SETNAMED(MAKEFVAL(newb,ATYPETOVALTYPE(AT(newb))));
+     }else{SETLOCALFVAL(0,&SYMORIGIN[cv->itemsym],jt->locsyms)}  // after error, we needn't bother with a value
+// obsolete SYMORIGIN[cv->itemsym].fval=0;}
     }
     // Decrement the usecount to account for being removed from cv - this is the final free of the svb, unless it is a result.  Since this is a virtual block, free the backer also
     if(AC(svb)<=1)fa(ABACK(svb)); fr(svb);  // MUST NOT USE fa() for svb so that we don't recur and free svb's current contents in cv->t - svb is virtual
@@ -175,10 +178,11 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
 }
 
 // call here when we find that xyz_index has been aliased.  We remove it, free it, and replace it with a new block.  Return 0 if error
-// valloc is a flagged value
-static A swapitervbl(J jt,A old,A *valloc){
+// asym is address of symbol slot for index
+static A swapitervbl(J jt,A old,L *asym){
  fa(old);  // discard the old value
- GAT0(old,INT,1,0); ACINITUNPUSH(old); *valloc=MAKEFVAL(old,QCTYPE(*valloc));  // raise usecount, install as value of xyz_index (with flags preserved)
+ GAT0(old,INT,1,0); ACINITUNPUSH(old); AFLAGINIT(old,AFRO) SETLOCALFVAL(SETNAMED(MAKEFVAL(old,ATYPETOVALTYPE(INT))),asym,jt->locsyms)  // raise usecount, install as value of xyz_index (with flags set)
+// obsolete  *valloc=MAKEFVAL(old,QCTYPE(*valloc));
  R old;
 }
 
@@ -275,7 +279,7 @@ DF2(jtxdefn){F12IP;
   else{RZ(locsym=clonelocalsyms(locsym));}
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
   // Symbols may have been allocated, and we have pushed the symbol table.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
-
+#define SETFVAL(val,sym) SETLOCALFVALTEST(val,sym,NPGpysfmtdl&32)  // set fval, with copy to lookaside if primary
   // zombieval should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
   // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  Invalid inplacing may have been done already.
   // User workaround would be to start the name as [: which is not ASGSAFE; or to f. the derived verb after the pun
@@ -302,7 +306,7 @@ DF2(jtxdefn){F12IP;
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    if(unlikely(AFLAG(w)&AFNOALIAS)&&AC(w)>=0){RZ(w=ca(w))}  // make a copy if NOALIAS
    I vtype=unlikely(ISSPARSE(AT(w)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse.  Must be a noun
-   ybuckptr->fval=MAKEFVAL(w,vtype); ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCSYMVAL semantics
+   SETFVAL(MAKEFVAL(w,vtype),ybuckptr) ybuckptr->sn=jt->currslistx;  // finish the assignment, with QCSYMVAL semantics, including to lookaside
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if(likely(a!=w)&&(SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtfg>>JTINPLACEWX))){  // it is impossible for another thread to make the usecount go to 8..1 while this runs
@@ -322,7 +326,7 @@ DF2(jtxdefn){F12IP;
    L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    I vtype=unlikely(ISSPARSE(AT(a)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse
-   xbuckptr->fval=MAKEFVAL(a,vtype); xbuckptr->sn=jt->currslistx;
+   SETFVAL(MAKEFVAL(a,vtype),xbuckptr)  xbuckptr->sn=jt->currslistx;
    if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtfg>>JTINPLACEAX))){
     AFLAGSETKNOWN(a); xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNOABAND(a); ramkrecursv(a);
    }else{ra(a);}
@@ -575,24 +579,27 @@ dobblock:
    if(likely(cv->indexsym!=0)){
     // for_xyz.  Manage the loop variables
     L *sympv=SYMORIGIN;  // base of symbol array
-    A *aval=&sympv[cv->indexsym].fval;  // address of iteration-count slot
-    A iterct=QCWORD(*aval);  // A block for iteration count
-    if(unlikely(AC(iterct)>1))BZ(iterct=swapitervbl(jt,iterct,aval));  // if value is now aliased, swap it out before we change it
+// obsolete     A *aval=&sympv[cv->indexsym].fval;  // address of iteration-count slot
+    A iterct=QCWORD(sympv[cv->indexsym].fval);  // A block for iteration count
+    if(unlikely(AC(iterct)>1))BZ(iterct=swapitervbl(jt,iterct,&sympv[cv->indexsym]));  // if value is now aliased, swap it out before we change it
     IAV0(iterct)[0]=cv->j;  // Install iteration number into the readonly index
     L *itemsym=&sympv[cv->itemsym];
     if(unlikely(!(tcesx&TCESXCECANT)))BZ(z=rat(z));   // if z might be the result, protect it over the free
     if(likely(cv->j<cv->niter)){  // if there are more iterations to do...
     // if xyz has been reassigned, fa the incumbent and reinstate the virtual block, advanced to the next item
      AK(cv->item)+=cv->itemsiz;  // advance to next item
-     if(unlikely(QCWORD(itemsym->fval)!=cv->item)){
+     if(unlikely(QCWORD(itemsym->fval)!=cv->item)){  // user reassigned the loop item variable
       // discard & free incumbent, switch to virtual, raise it
-      A val=itemsym->fval; fa(QCWORD(val)) val=cv->item; ra(val) itemsym->fval=SETNAMED(MAKEFVAL(val,ATYPETOVALTYPE(INT))); // also have to set the value type in the symbol (as a local), in case it was changed.  Any noun will do
+      A val=itemsym->fval; fa(QCWORD(val)) val=cv->item; ra(val) SETFVAL(SETNAMED(MAKEFVAL(val,ATYPETOVALTYPE(INT))),itemsym) 
+// obsolete  itemsym->fval=SETNAMED(MAKEFVAL(val,ATYPETOVALTYPE(INT))); // also have to set the value type in the symbol (as a local), in case it was changed.  Any noun will do
      }
      --ic; goto elseifasdo;   // advance to next line and process it; if flagged, we know it's bblock
     }
     // falling through, we are ending the iteration normally.  set xyz to i.0
     {A val=itemsym->fval; fa(QCWORD(val))}  // discard & free incumbent, probably the virtual block.  If the virtual block, this is never the final free, which comes in unstackcv
-    itemsym->fval=SETNAMED(MAKEFVAL(mtv,ATYPETOVALTYPE(INT)));  // after last iteration, set xyz to mtv, which is permanent, and value type in the symbol (as a local), in case it was changed.  Any noun will do
+    SETFVAL(SETNAMED(MAKEFVAL(mtv,ATYPETOVALTYPE(INT))),itemsym)  // after last iteration, set xyz to mtv, which is permanent, and value type in the symbol (as a local), in case it was changed.  Any noun will do
+
+// obsolete     itemsym->fval=SETNAMED(MAKEFVAL(mtv,ATYPETOVALTYPE(INT)));
    }else if(likely(cv->j<cv->niter)){--ic; goto elseifasdo;}  // (not for_xyz.) advance to next line and process it; if flagged is bblock
    // if there are no more iterations, fall through...
    tcesx&=~(32<<TCESXTYPEX);  // the flag for DOF is for the loop, but we are exiting, so turn off the flag
@@ -708,7 +715,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    // if there are any UNINCORPABLE values, they must be realized in case they are on the C stack that we are about to pop over.  Only x and y are possible
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
-   while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=QCWORD(ybuckptr->fval); if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){ybuckptr->fval=0; symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
+   while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=QCWORD(ybuckptr->fval); if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){SETFVAL(0,ybuckptr) symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
    DC d; RZ(d=deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self));  // push a debug frame for this error.  We know we didn't free locsym
 // obsolete    d->dcttop=jt->tnextpushp;   // remember tpushp - only the first matters
    RETF(0)
@@ -717,9 +724,8 @@ bodyend: ;  // we branch to here to exit with z set to result
 
  // locsym may have been freed now, if it was cloned and there was no error.
  // OTOH, if we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
- // We detect original symbol table by rank flag ARLSYMINUSE - other symbol tables are assigned rank 0.
- // Tables are born with ARNAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear ARNAMEADDED
- if(likely(NPGpysfmtdl&32)){symfreeha(locsym); __atomic_store_n(&AR(locsym),ARLOCALTABLE,__ATOMIC_RELEASE);}
+ // We detected original symbol table by rank flag ARLSYMINUSE
+ if(likely(NPGpysfmtdl&32)){symfreeha(locsym);}  // if primary table, reset it to available
 
  // Now that we have deleted all the local symbols, we can see if we were returning one.
  // See if EPILOG pushed a pointer to the block we are returning.  If it did, and the usecount we are returning is 1, set this
@@ -898,15 +904,15 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
    if(NAV(tv)->m==NAV(sympv[k].name)->m&&!memcmpne(NAV(tv)->s,NAV(sympv[k].name)->s,NAV(tv)->m)){
     // match found.  this is a local name.  Replace it with the shared copy, flag as shared, set negative bucket#
     // suppress this step if the type is ornamented, i. e. if it is name_: - then we need a flagged copy
-    A oldtv=tv;
+    
     if(likely(!(AT(tv)&NAMEABANDON))){  // not name_:
-     tv=sympv[k].name;  // use shared copy
+     A oldtv=tv; tv=sympv[k].name;  // use shared copy
      if(recur){ras(tv); fana(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old.  No audit on the fa() since tstack is temporarily invalid
      NAV(tv)->flag|=NMSHARED;  // tag the shared copy as shared
     }
     // Remember the exact location of the symbol.  It will not move as long as this symbol table is alive.  We can
     // use it only when we are in this primary symbol table
-    NAV(tv)->symx=k;  // keep index of the allocated symbol
+    NAV(tv)->symx=k;  // keep index of the allocated symbol.  name_: will have symx/bucket info but no lookaside
     compcount=~compcount;  // negative bucket indicates found symbol
     break;
    }
@@ -975,9 +981,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
     // Lookup the name, which will create the symbol-table entry for it
     // name_: causes a little trouble.  The name carries with it the _: flag, but we will eventually replace all refs with the shared ref from
     // this table.  That means we have to remove the _: flag from the stored value, lest every reference appear flagged just because the last one was.
-    // Note that we are here looking only before =., so we are specifically checking for name:: =. ... .  This should be an error, and we might catch
+    // Note that we are here looking only before =., so we are specifically checking for name_: =. ... .  This should be an error, and we might catch
     // it when executed; but we are just making sure that it doesn't make the refs invalid.  name_: also sets NAMEXY, and we have to leave that because
-    // any valid ref to mnuvxy will need that set; so there is a chance that name:: =. will result in an ordinary reference to the name's having the NAMEXY
+    // any valid ref to mnuvxy will need that set; so there is a chance that name_: =. will result in an ordinary reference to the name's having the NAMEXY
     // flag.  That won't hurt anything significant.
     L *nml; RZ(nml=probeisres(t,pfst)); AT(nml->name)&=~NAMEABANDON;   // put name in symbol table, with ABANDON flag cleared
    } else if(AT(t)&LIT) {
@@ -1010,14 +1016,14 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    if(cwlen>4){  // for_xyz.
     // for_xyz. found.  Lookup xyz and xyz_index
     A xyzname = str(cwlen+1,CAV(QCWORD(lv[cwv[j].tcesx&TCESXSXMSK]))+4);  // +1 is -5 for_. +6 _index
-    RZ(probeisres(nfs(cwlen-5,CAV(xyzname)),pfst));  // create xyz
+    RZ(probeisres(nfs(cwlen-5,CAV(xyzname),0),pfst));  // create xyz
     MC(CAV(xyzname)+cwlen-5,"_index",6L);    // append _index to name
-    RZ(probeisres(nfs(cwlen+1,CAV(xyzname)),pfst));  // create xyz_index
+    RZ(probeisres(nfs(cwlen+1,CAV(xyzname),0),pfst));  // create xyz_index
    }
   }
  }
 
- // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes in the definition.
+ // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes here in the definition.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb.  Only synthetic names will get looked up
  // The hash uses closed addressing so it is OK to have fewer buckets than symbols 
  I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=SYMORIGIN;
@@ -1071,7 +1077,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  R actst;
 }
 
-// l is the A block for all the words/queues used in the definition (modified in place)
+// l is the A block for all the words/queues used in the definition (modified in place and must be nonrecursive)
 // c is the table of control-word info used in the definition
 // type is the m operand to m : n, indicating part of speech to be produced
 // We preparse what we can in the definition

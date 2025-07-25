@@ -1,6 +1,7 @@
 prolog './gj.ijs'
 NB. j. ------------------------------------------------------------------
 
+
 jdot =: 0j1&*
 
 (j. -: jdot) 0.1*_500+?10 20$1000
@@ -88,22 +89,22 @@ f =: (j./"1@:(-"1) -: -&:(j./"1))  NB. test cmplx asub.  Last axis must be lengt
 0
 13!:5 ] 8
 NB.?
-
 NB. Tests for qp
+
 '?' 0!:_1@[^:(-. 'SLEEF' +./@:E. 9!:14'') 1  NB. skip if not SLEEF
 
 NB. tests requiring conforming arguments, qp vs xnum
-argrand =: {{  NB. x is max value (extended).  y is (max sizes),:(cumulative freq for probability of each rank)  args are large random integers
-xs =: (({: y) I. ?0) {. s [ys =: (({: y) I. ?0) {. s [ s =: ? {.y  NB. conforming shapes
+argrand =: {{  NB. x is max value (extended).  y is (min sizes),(max sizes),:(cumulative freq for probability of each rank)  args are large random integers
+xs =. (({: y) I. ?0) {. s [ys =. (({: y) I. ?0) {. s [ s =. (+ ?@(1&>.))/ -~/\ 2 {. y  NB. conforming shapes
 sf =. 0 i.&1@:~: {: y
-xs =: (sf {. ys) , sf }. xs
-dx =: 8 c. qx =: 11 c. xx =: xs ?@$ x [ dy =: 8 c. qy =: 11 c. xy =: ys ?@$ x  NB. exactly representable integers
+xs =. (sf {. ys) , sf }. xs
+dx =. 8 c. qx =. 11 c. xx =. xs ?@$ x [ dy =. 8 c. qy =. 11 c. xy =. ys ?@$ x  NB. exactly representable integers
 dx;xx;qx;dy;xy;qy
 }}
-argnear =: {{  NB. x is max value (extended).  y is (max sizes),:(cumulative freq for probability of each rank)  args are large random in a small range
-xs =: (({: y) I. ?0) {. s [ys =: (({: y) I. ?0) {. s [ s =: ? {.y  NB. conforming shapes
+argnear =: {{  NB. x is max value (extended).  y is (min sizes),(max sizes),:(cumulative freq for probability of each rank)  args are large random in a small range
+xs =. (({: y) I. ?0) {. s [ys =. (({: y) I. ?0) {. s [ s =. (+ ?)/ -~/\ 2 {. y  NB. conforming shapes
 base =. ?x  NB. random big #
-dx =: 8 c. qx =: 11 c. xx =: base + xs ?@$ 10 [ dy =: 8 c. qy =: 11 c. xy =: base + ys ?@$ 10  NB. exactly representable integers
+dx =. 8 c. qx =. 11 c. xx =. base + xs ?@$ 10 [ dy =. 8 c. qy =. 11 c. xy =. base + ys ?@$ 10  NB. exactly representable integers
 dx;xx;qx;dy;xy;qy
 }}
 
@@ -157,16 +158,19 @@ assert. (*:qy) -:!.0 *: xy
 assert. (qx >:!.0 qy) -: xx >: xy
 1
 }}
+f =: 1:
+f (2^100x) argrand 10 10 10 10 , 10 10 10 10 ,: 0.05 0.3 0.6 0.9
+f (2^100x) argnear 0 0 0 0 , 10 10 10 10 ,: 0.05 0.3 0.6 0.9
+f (2^55x) argrand 0 0 0 0 , 10 10 10 10 ,: 0.05 0.3 0.6 0.9
+f (2^55x) argnear 0 0 0 0 , 10 10 10 10 ,: 0.05 0.3 0.6 0.9
+fsmall (2^40x) argrand 0 0 0 0 , 10 10 10 10 ,: 0.05 0.3 0.6 0.9
 
-f (2^100x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
-f (2^100x) argnear 10 10 10 10 ,: 0.05 0.3 0.6 0.9
-f (2^55x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
-f (2^55x) argnear 10 10 10 10 ,: 0.05 0.3 0.6 0.9
-fsmall (2^40x) argrand 10 10 10 10 ,: 0.05 0.3 0.6 0.9
+{{ (-:!.0&(+/))&>/ 4 5 { (2^90x) argrand (0*y) , y ,: 0 }}"0 (100) $ 200
 
-{{ (-:!.0&(+/))&>/ 4 5 { (2^90x) argrand y ,: 0 }}"0 (100) $ 200
+{{ 1e_28 >  |@(-/"1 % >./) (+/@:*"1)&>/"1&((1 4,:2 5)&{) (2^90x) argrand (0*y) , y ,: 0 }}"0 (20) $ 40
 
-{{ 1e_28 >  |@(-/"1 % >./) (+/@:*"1)&>/"1&((1 4,:2 5)&{) (2^90x) argrand y ,: 0 }}"0 (20) $ 40
+
+
 
 NB. non-atomic arithmetic
 
@@ -362,6 +366,6 @@ end.
 
 
 
-
 epilog''
+
 

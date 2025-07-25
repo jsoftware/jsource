@@ -847,7 +847,7 @@ extern void     jtmf(J, A,I,I);
 extern A        jtmkwris(J, A);
 extern I        jtmult(J,I,I);
 extern A        jtnamerefacv(J, A, A);
-extern A        jtnfs(J,I,C*);
+extern A        jtnfs(J,I,C*,I);
 extern A        jtodom(J,I,I,I* RESTRICT);
 extern A        jtopenforassembly(J,A);
 extern A        jtparsea(J,A*,I);

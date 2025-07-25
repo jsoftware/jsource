@@ -52,7 +52,8 @@ static const C argnames[7]={'m','n','u','v','x','y',0};
 // s-> a string of length n.  Make a NAME block for the name.  It might not be valid; use our best efforts then.  We ALWAYS look at the first and last character, even if length is 0
 // If the name is mnuvxy (NOT u. v.), use the canned block for it
 // Possible errors: EVILNAME, EVLIMIT (if name too long), or memory error
-A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
+// the name block has lookaside (aka m) cleared.  If notlocal is 1, we do not touch the lookaside field - it may be needed for zap
+A jtnfs(J jt,I n,C*s,I notlocal){A z;C f,*t;I m,p;NM*zv;
  // Discard leading and trailing blanks.  Leave t pointing to the last character
  DQ(n, if(' '!=(f=*s))break; ++s; --n;); 
  t=s+n-1;
@@ -63,7 +64,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
   R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags/buckets may be added)
  }
  // The name may not be valid, but we will allocate a NAME block for it anyway
- GATV0(z,NAME,n,1); AC(z)=ACUC1; zv=NAV(z);   // the block is cleared to 0.  This is the only place where a NAME is allocated (except for cloning).  NAME is always non-ip
+ GATV0(z,NAME,n,1); AC(z)=ACUC1; zv=NAV(z); if(likely(!notlocal))z->mback.lookaside=0;   // the block is cleared to 0 with no lookaside value.  This is the only place where a NAME is allocated (except for cloning).  NAME is always non-ip
  MC(zv->s,s,n); zv->s[n]=0;  // should copy locally, with special dispensation for <4 chars
  f=0; m=n; p=0;
  // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative
@@ -100,8 +101,8 @@ F1(jtnfb){F12IP;A y;C*s;I n;
  ASSERT(!AR(w),EVRANK);
  RZ(y=vs(ope(w)));
  n=AN(y); s=CAV(y);
- ASSERTN(vnm(n,s),EVILNAME,nfs(n,s));
- R nfs(n,s);
+ ASSERTN(vnm(n,s),EVILNAME,nfs(n,s,0));
+ R nfs(n,s,0);
 }    /* name from scalar boxed string */
 
 // w is an A for a name string; return NAME block or 0 if error
@@ -112,12 +113,12 @@ F1(jtstdnm){F12IP;C*s;I j,n,p,q;
  j=0;   DQ(n, if(' '!=s[j++])break;); p=j-1;  // remove leading/trailing blanks from name
  j=n-1; DQ(n, if(' '!=s[j--])break;); q=(n-2)-j;
  if(!(vnm(n-(p+q),p+s)))R 0;   // Validate name
- R nfs(n-(p+q),p+s);   // Create NAME block for name
+ R nfs(n-(p+q),p+s,0);   // Create NAME block for name
 }    /* 0 result means error or invalid name */
 
 // x is a (possibly) boxed string; result is NAME block for name x, error if invalid name
 // if stdnm has already set an error, leave it, because the name might not be ASCII
-F1(jtonm){F12IP;A x,y; RZ(x=ope(w)); RE(y=stdnm(x)); ASSERTN(y!=0,EVILNAME,nfs(AN(x),CAV(x))); R y;}
+F1(jtonm){F12IP;A x,y; RZ(x=ope(w)); RE(y=stdnm(x)); ASSERTN(y!=0,EVILNAME,nfs(AN(x),CAV(x),0)); R y;}
 
 // w is array of boxed strings; result is name class for each
 F1(jtnc){F12IP;A*wv,x,y,z;I i,n,t,*zv; 

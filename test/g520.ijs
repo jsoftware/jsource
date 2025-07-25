@@ -1,7 +1,7 @@
 prolog './g520.ijs'
 
 NB. 128!:14
-0!:_1`1:@.(0:@IF64) '$'   NB. skip if not avx2/emulation
+0!:_1`1:@.(IF64) '$'   NB. skip if not avx2/emulation
 
 NB. load'format/printf'  NB. scaf
 NB. load'C:/My Downloads/tpiv.ijs'

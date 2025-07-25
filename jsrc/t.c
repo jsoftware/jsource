@@ -41,8 +41,10 @@ static __attribute__((aligned(CACHELINESIZE))) const C alp[256]={
 
 #define PRIMNOUN(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primint=val} }
 #define PRIMNOUNFL(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primfl=val} }
+// obsolete #define PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc)
+// obsolete  ={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
 #define PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) \
- ={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
+ ={{0xdeadbeefdeadbeef,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0xdeadbeefdeadbeef,(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
 #define PRIMALL(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) [idda]PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc)
 #define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=0,0,rm,rl,rr,vflg,vflg2,0,0,0)
 #define PRIMACVPARM(id,t,f0,f1,rm,rl,rr,vflg,vflg2,initpm1,initpm2) PRIMALL(id,id,t,f0,f1,0,0,0,initpm1,initpm2,rm,rl,rr,vflg,vflg2,0,0,0)

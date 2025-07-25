@@ -190,7 +190,7 @@ static DF1(jtgsuffix){F12IP;A h,*hv,z,*zv;I m,n,r;
  ARGCHK1(w);
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
  SETIC(w,n); 
- h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
+ h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,drop(sc(i),w),C(hv[imod]))); ++imod;);
  R jtopenforassembly(jt,z);
@@ -342,7 +342,7 @@ static F2(jtomask){F12IP;A c,r,x,y;I m,n,p;
 static DF2(jtgoutfix){F12IP;A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  SETIC(x,n);
- h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
+ h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,repeat(from(sc(i),x),w),C(hv[imod]))); ++imod;);
  R jtopenforassembly(jt,z);
@@ -396,14 +396,14 @@ static DF1(jtiota1rev){F12IP;I j; SETIC(w,j); R apv(j,j,-1L);}
 F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;  // init flag is IRS1
  ARGCHK1(w);
  A z; fdefallo(z)
- if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|VAV(ds(CBSDOT))->flag, RMAX,0L,RMAX); RETF(z);}
+ if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|FAV(ds(CBSDOT))->flag, RMAX,0L,RMAX); RETF(z);}
  v=FAV(w);  // verb info for w
  switch(v->id){
  default: break;
  case CPOUND: f1=jtiota1rev; break;
  case CSLASH:  // v is f/, but not when f is a gerund
   f1=jtsscan;  // code for f/\. - take inplaceability from dyad f
-  f=v->fgh[0]; id=FAV(f)->id; if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)AV(f)[0];}
+  f=v->fgh[0]; id=FAV(f)->id; if(id==CBDOT){f=FAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)AV(f)[0];}
 #define xinvvalues(w) CCM(w,CPLUS)+CCM(w,CEQ)+CCM(w,CNE)+CCM(w,CBW0110)+CCM(w,CBW1001)
   {CCMWDS(xinv) CCMCAND(xinv,cand,id) f2=CCMTST(cand,id)?jtofxinv:f2;}
 #define xassocvalues(w) CCM(w,CSTAR)+CCM(w,CMAX)+CCM(w,CMIN)+CCM(w,CPLUSDOT)+CCM(w,CSTARDOT)+CCM(w,CBW0000)+CCM(w,CBW0001)+CCM(w,CBW0011)+CCM(w,CBW0101)+CCM(w,CBW0111)+CCM(w,CBW1111)

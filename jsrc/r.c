@@ -303,11 +303,11 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A x,y;A *v;I i,j,k;
  R zv;
 }
 
-// w is a def.  Return unparsed form (list of boxed character strings)
+// w is aa explicit defn (a FUNC).  Return unparsed form (list of boxed character strings)
 // JT flags indicate valences to suppress.  If we suppress one, we also suppress the :
 F2(jtunparsem){F12IP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  ARGCHK2(a,w);
- wv=VAV(w); h=wv->fgh[2]; hv=AAV(h);  // h[2][HN] is preparsed def
+ wv=FAV(w); h=wv->fgh[2]; hv=AAV(h);  // h[2][HN] is preparsed def
  mc=hv[0];    ms=hv[2];    m=mn=CWNC(mc)-1;  // mc->control words ms->commented text  m,mn = #control words
  dc=hv[0+HN]; ds=hv[2+HN]; n=dn=CWNC(dc)-1;
  m=AN(mc)==0?-1:m; n=AN(dc)==0?-1:n;  // mc is normally a compiled defn (boxed rank 1), but it can also be an empty list of boxes if the valence is not defined.  Make mc/nc=-1 in that case.

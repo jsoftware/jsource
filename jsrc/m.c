@@ -511,7 +511,7 @@ static void auditsimverify0(J jt,A w){
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
   if((AT(w)&(RAT|XNUM|BOX|SPARSE))>0) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(jt, unlikely(AT(w)&XNUM+RAT) ?*v :CNULLNOERR(QCWORD(*v))); ++v;)}  // check descendants even if nonrecursive
   if((AT(w)&BOX+SPARSE)>0){
-  }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
+  }else if(AT(w)&FUNC) {V* RESTRICT v=FAV(w);
    auditsimverify0(jt,v->fgh[0]); auditsimverify0(jt,v->fgh[1]); auditsimverify0(jt,v->fgh[2]);
   }else if(AT(w)&(RAT|XNUM)) {
   }else if(AT(w)&(SYMB|NAME)) {
@@ -541,7 +541,7 @@ static void auditsimdelete(J jt,A w){I delct;
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimdelete(jt,(A)(intptr_t)((I)CNULLNOERR(QCWORD(wv[i]))+(I)wrel)););
-  }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
+  }else if(AT(w)&FUNC) {V* RESTRICT v=FAV(w);
    auditsimdelete(jt,v->fgh[0]); auditsimdelete(jt,v->fgh[1]); auditsimdelete(jt,v->fgh[2]);
   }else if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(jt,*v); ++v;)
   }else if(AT(w)&(SYMB|NAME)) {
@@ -565,7 +565,7 @@ static void auditsimreset(J jt,A w){I delct;
    I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimreset(jt,(A)(intptr_t)((I)CNULLNOERR(QCWORD(wv[i]))+(I)wrel)););
-  }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
+  }else if(AT(w)&FUNC) {V* RESTRICT v=FAV(w);
    auditsimreset(jt,v->fgh[0]); auditsimreset(jt,v->fgh[1]); auditsimreset(jt,v->fgh[2]);
   }else if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(jt,*v); ++v;)
   }else if(AT(w)&(SYMB|NAME)) {
@@ -1051,7 +1051,7 @@ finbox:;
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   DO(3, fana(v->fgh[i]);)  // free f, g, h
- } else if(t&NAME){A ref;   // NAMEs are usually in verb defns and don't get freed
+ } else if(t&NAME){A ref;   // NAMEs are usually in namerefs in verb defns and don't get freed
   if((ref=QCWORD(NAV(wd)->cachedref))!=0 && !(ACISPERM(ref))){I rc;  // reference, and not permanent, which means not to a nameless adv.  must be to a ~ reference
    // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
    // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
@@ -1691,7 +1691,7 @@ if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
 
 // allocate header with rank r; if w is given init z to be a surrogate of w (but do not init shape); if r==1, move the item count to be the shape also
 // a header is a noninplaceable simplified virtual block, for temporary use only, that must never escape into the wild, either in full or
-// as a backer for a virtual block
+// as a backer for a virtual block.  It must be a noun
 RESTRICTF A jtgah(J jt,I r,A w){A z;
  ASSERT(RMAX>=r,EVLIMIT); 
  RZ(z=gafv(SZI*(NORMAH+r)-1));
@@ -1704,9 +1704,9 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 }    /* allocate header */ 
 
 // clone w, returning the address of the cloned area.  Result is NOT recursive, not AFRO, not virtual
-F1(jtca){F12IP;A z;I t;P*wp,*zp;
+F1(jtca){F12IP;A z;P*wp,*zp;
  ARGCHK1(w);
- I n=AN(w);  t=AT(w);
+ I n=AN(w), t=AT(w);
  if(unlikely(ISSPARSE(t))){
   GASPARSE(z,t,n,AR(w),AS(w))
   wp=PAV(w); zp=PAV(z);
@@ -1715,14 +1715,17 @@ F1(jtca){F12IP;A z;I t;P*wp,*zp;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,ca(SPA(wp,x)));
  }else{
+  void *wv=t&FUNC?FAV(w):t&NAME?NAV(w):voidAV(w);  // source address
   if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;AC(z)=ACUC1;z->mback.lookaside=0;}  // GA does not allow NAME type, for speed.  NAME is always non-ip
   else {
    n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for minimum rank, someday
    GA(z,t,n,AR(w),AS(w));
    AN(z)=AN(w);  // copy AN, which has its own meaning in FUNC
   }
+  void *zv=voidAV(z);  // dest address
   I bpt=bp(t);  // bp needed for non-noun
-  MC(AV(z),AV(w),(n*bpt)+(t&NAME?sizeof(NM):0));
+  MC(zv,wv,(n*bpt)+(t&NAME?sizeof(NM):0));
+//  if(t&FUNC)AK(z)=AK(w);
  }
  R z;
 }

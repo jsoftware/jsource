@@ -408,7 +408,7 @@ static DF1(jtgprefix){F12IP;A h,*hv,z,*zv;I m,n,r;
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
  SETIC(w,n); 
- h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
+ h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,take(sc(1+i),w),hv[imod])); ++imod;);
  R jtopenforassembly(jt,z);
@@ -480,7 +480,7 @@ static DF1(jtinfix2){F12IP;PROLOG(0019);A f;
 static DF2(jtginfix){F12IP;A h,*hv,x,z,*zv;I d,m,n;
  RE(m=i0(vib(a))); 
  RZ(x=ifxi(m,w));
- h=VAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
+ h=FAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
  if(SETIC(x,n)){
   GATV0(z,BOX,n,1); zv=AAV1(z);
   DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),C(hv[i%d]))););
@@ -505,7 +505,7 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
  wt=AT(w);
  if(unlikely(ISSPARSE(wt))){
   // Use the old-style non-virtual code for sparse types
-  switch(((VAV(self)->flag&VGERL)>>(VGERLX-1)) + (a==mark)) {  // 2: is gerund  1: is prefix
+  switch(((FAV(self)->flag&VGERL)>>(VGERLX-1)) + (a==mark)) {  // 2: is gerund  1: is prefix
   case (0+0): R jtinfix(jt,a,w,self);
   case (0+1): R jtprefix(jt,w,self);
   case (2+0): R jtginfix(jt,a,w,self);
@@ -910,7 +910,7 @@ static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0 or 2, or if there is just 1 infix, go to general case
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=FAV(x)->id; 
  if(wt&B01){id=id==CMIN?CSTARDOT:id; id=id==CMAX?CPLUSDOT:id;}
- if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)AV(x)[0];
+ if(id==CBDOT&&(x=FAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)AV(x)[0];
  switch(AR(w)&&BETWEENC(m0,0,AS(w)[0])?id:0){
  case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
  case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;

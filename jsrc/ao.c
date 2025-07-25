@@ -19,7 +19,7 @@ static DF1(jtoblique){F12IP;A x,y,z;I m,n,r;D rkblk[16];
  A xm; RZ(xm=IX(m)); A xn; RZ(xn=IX(n));
  RZ(x=ATOMIC2(jt,xm,xn,rkblk,0L,1L,CPLUS)); AR(x)=1; AS(x)[0]=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys
- RZ(df2ip(z,x,y,sldot(VAV(self)->fgh[0])));
+ RZ(df2ip(z,x,y,sldot(FAV(self)->fgh[0])));
  // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as
  // m and n are both non0: when one is 0, result has 0 cells (but that cell is the correct result
  // of execution on a fill-cell).  Correct the length of the 0 case, when the result length should be nonzero
@@ -174,7 +174,7 @@ static DF2(jtkeyi){F12IP;PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;
  RZ(j=grade1(a)); jv=AV(j);  // get grading permutation for the self-indexes.  This groups the partitions
  GATV0(p,B01,n,1); pv=BAV1(p);   // allocate boolean fret mask
  DO(n, c=d; d=av[*jv++]; *pv++=c<d;);  // d=self-index of current output value (always ascending).  When the value changes, that's a fret
- dfv2(z,p,from(j,w),cut(VAV(self)->fgh[0],zeroionei(1)));  // z = frets u;.1 j{w
+ dfv2(z,p,from(j,w),cut(FAV(self)->fgh[0],zeroionei(1)));  // z = frets u;.1 j{w
  EPILOG(z);
 }    /* a f/. w where a is i.~x for dense x  */
 
@@ -194,7 +194,7 @@ static DF2(jtkeysp){F12IP;PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
   // Create a partition for the sparse cells.  We create a sparse vector with 1 as the sparse element
   GASPARSE0(q,B01,1,1); AS(q)[0]=n;  /* q=: 0 by}1$.n;0;1 */
   p=PAV(q); SPB(p,a,iv0); SPB(p,e,num(1)); SPB(p,i,by); SPB(p,x,reshape(tally(by),num(0)));  // q is a mask: all 1s, but 0 on the non-sparse elements of w
-  RZ(z=over(dfv1(b,repeat(q,w),VAV(self)->fgh[0]),z));  // (u q#(fill ele for w)) , (result on non-sparse)  ?? bug if u result has rank too high, the call to C. will fail with agreement
+  RZ(z=over(dfv1(b,repeat(q,w),FAV(self)->fgh[0]),z));  // (u q#(fill ele for w)) , (result on non-sparse)  ?? bug if u result has rank too high, the call to C. will fail with agreement
   z=j?ccapdot2(box(IX(1+j)),z):z;  // Use C. to rotate the sparse result into proper position
  }
  EPILOG(z);
@@ -832,7 +832,7 @@ F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
  ARGCHK1(w);
  A z; fdefallo(z)
  if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}
- v=VAV(w);
+ v=FAV(w);  // w could be a gerund but we won't use v then
  switch(IDD(w)){  // no default for f2: every path must set it
  case CBOX: f2=jtkeybox; break;  // </.
  case CPOUND: f2=jtkeytally; break;

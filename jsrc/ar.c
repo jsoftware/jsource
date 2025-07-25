@@ -717,7 +717,7 @@ static DF1(jtreducesp){F12IP;A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
- g=VAV(self)->fgh[0];  // g is the f in f/
+ g=FAV(self)->fgh[0];  // g is the f in f/
  if(!n)R red0(w,g);  // red0 uses ranks, and resets them
  C id; if(AT(g)&VERB){id=FAV(g)->id; id=FAV(g)->flag&VISATOMIC2?id:0;}else id=0;
  VARPS adocv; varps(adocv,self,wt,0);

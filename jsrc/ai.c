@@ -44,7 +44,7 @@ static F1(jtinvfork){F12IP;A f,fi,g,gi,h,k;B b,c;V*v;
  R fong(fi,gi);  // if f const, h^:_1 @: const&g^:_1   if h const, f^:_1 @: g&const^:_1
 }
 
-static DF1(jtexpandf){F12IP;A f; ARGCHK2(w,self); f=FAV(self)->fgh[0]; R expand(VAV(f)->fgh[0],w);}
+static DF1(jtexpandf){F12IP;A f; ARGCHK2(w,self); f=FAV(self)->fgh[0]; R expand(FAV(f)->fgh[0],w);}
 
 static DF1(jtexpandg){F12IP;A f,g,z;V*v;
  ARGCHK2(w,self);

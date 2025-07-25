@@ -34,9 +34,9 @@ static AF fork2tbl[6][5]={
 
 FORK2(jtfolk2,0x1000)    // this version used by reversions, where localuse may not be set
 
-// see if f is defined as [:, as a single name
+// see if x (a FUNC) is defined as [:, as a single name
 static B jtcap(J jt,A x){V*v;
- if(v=VAV(x),CTILDE==v->id&&NAME&AT(v->fgh[0])&&(x=syrd(v->fgh[0],jt->locsyms))){v=VAV(QCWORD(x)); if(ISFAOWED(x))fa(QCWORD(x));}  // don't go through chain of names, since it might loop (on u) and it's ugly to chase the chain   syrd ra()s the value if global
+ if(v=FAV(x),CTILDE==v->id&&NAME&AT(v->fgh[0])&&(x=syrd(v->fgh[0],jt->locsyms))){v=FAV(QCWORD(x)); if(ISFAOWED(x))fa(QCWORD(x));}  // don't go through chain of names, since it might loop (on u) and it's ugly to chase the chain   syrd ra()s the value if global
  R CCAP==v->id;  //
 }
 
@@ -253,7 +253,7 @@ static DF1(jthkindexofmaxmin){F12IP;
 static DF2(jthklvl2){F12IP;
  F2RANK(0,RMAX,jthklvl2,self);
  I comparand; RE(comparand=i0(a));  // get value to compare against
- RETF(num(((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(jt,w,comparand-(VAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
+ RETF(num(((FAV(self)->flag>>VFHKLVLGTX)&1)^levelle(jt,w,comparand-(FAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 
 // table of half-verbs for executing (compare |).  We back the address to the phantom start of the verb block.

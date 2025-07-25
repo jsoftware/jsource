@@ -9,7 +9,7 @@
 A jtunname(J jt,A w,I recurct){A x;V*v;
  ARGCHK1(w);
  if(recurct>100)RETF(w);  // avoid infinite recursion
- v=VAV(w);
+ v=FAV(w);
  if(CTILDE==v->id&&!jt->glock&&!(VLOCK&v->flag)){x=v->fgh[0]; if(NAME&AT(x)){A nmv; RZ(nmv=symbrd(x)); if(unlikely(AFLAG(nmv)&AFRO))R sfn(0,x); R jtunname(jt,nmv,recurct+1);}}  // if name~ unlocked, keep cocurrent as string, otherwise contents
  RETF(w);
 }
@@ -78,8 +78,8 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
  // If we are only interested in replacing locatives, and there aren't any, exit fast
  if(aif&FIXALOCSONLY&&!hasimploc(w))R w;  // nothing to fix
  if(NAME&AT(w)){R sfn(0,w);}  // only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
- if(NOUN&AT(w)||VFIX&VAV(w)->flag)R w;
- v=VAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;  // for levels other than the top, use na to cuase replacement of $:
+ if(NOUN&AT(w)||VFIX&FAV(w)->flag)R w;
+ v=FAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;  // for levels other than the top, use na to cuase replacement of $:
  if(v->id==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork
  if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  switch(v->id){  // we know that modifiers have been executed to produce verb/nouns
@@ -100,7 +100,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
                 // a namerefop for a modifier locative, which looks like a debug namerefop but has the locative in g.
 // obsolete   if(unlikely(!f)){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
 // obsolete   if(unlikely(VAV(w)->flag2&VF2PSEUDONAME)){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
-  if(unlikely(VAV(w)->flag2&VF2PSEUDONAME)){R REFIXA(0,h);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
+  if(unlikely(FAV(w)->flag2&VF2PSEUDONAME)){R REFIXA(0,h);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
   f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h?h:g,g);  // here for nameref: xop2 is bivalent; rebuild operator with original self and fixed f/h
  case CCOLON:
   f=REFIXA(1,f); g=REFIXA(2,g); R df2(z,f,g,wf);  // v : v, similarly

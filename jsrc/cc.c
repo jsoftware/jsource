@@ -349,7 +349,7 @@ static DF2(jtcut2sx){F12IP;V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(
  ASSERT(n==AS(a)[0],EVLENGTH);
  ap=PAV(a);
  if(!(equ(num(0),SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
- vf=VAV(fs);
+ vf=FAV(fs);
  if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
  GATV0(yy,INT,yn+1,1); yu=AV1(yy); *yu++=p=pfx?n:-1;
@@ -429,7 +429,7 @@ static DF2(jtcut2sx){F12IP;V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(
 static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y,z;
  *zz=0; 
  fs=sv->fgh[0];
- RE(df1(y,num(0),iden(VAV(fs)->fgh[0])));
+ RE(df1(y,num(0),iden(FAV(fs)->fgh[0])));
  if(TYPESLT(zt,AT(y))){*zz=df1(z,cut2(a,w,cut(ds(CBOX),sv->fgh[1])),amp(fs,ds(COPE))); R 0;}  // fgh still has the original A, OK to use
  if(TYPESGT(zt,AT(y)))RE(y=cvt(zt,y)); 
  R CAV(y);
@@ -975,8 +975,8 @@ static DF1(jtcut1){F12IP;R jtcut2(jtfg,mark,w,self);}  // pass inplaceability th
 DF2(jtrazecut2){F12IP;A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
     VARPS adocv;
  ARGCHK2(a,w);
- gs=FAV(self)->fgh[1]; fs=VAV(VAV(gs)->fgh[0])->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
- p=SETIC(w,wi); wt=AT(w); k=(I)VAV(gs)->localuse.lu1.gercut.cutn; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // k is n from u;.n  p,wi is # items of w; 
+ gs=FAV(self)->fgh[1]; fs=FAV(FAV(gs)->fgh[0])->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
+ p=SETIC(w,wi); wt=AT(w); k=(I)FAV(gs)->localuse.lu1.gercut.cutn; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // k is n from u;.n  p,wi is # items of w; 
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
  varps(adocv,fs,wt,1+(id!=CBSLASH));   // fs is f/\  type 1 is f/\ 2 is f/\.

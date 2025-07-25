@@ -365,7 +365,7 @@ struct AD {
 #define AAV0(x)         ((A*)((C*)(x)+AKXR(0)))  // A block in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define AAV1(x)         ((A*)((C*)(x)+AKXR(1)))  // A block in a stack- or heap-allocated list (rank 1)
 #define AAV2(x)         ((A*)((C*)(x)+AKXR(2)))  // A block in a stack- or heap-allocated list (rank 2)
-#define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
+// obsolete #define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
 #define FAVV(x)         ( (volatile V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj volatile to avoid delayed fetch
 #define PAV(x)          ( (P*)((C*)(x)+AK(x)))  /* sparse                  */

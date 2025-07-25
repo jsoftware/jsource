@@ -316,7 +316,6 @@ DF2(jtpowop){F12IP;B b;V*v;
 // obsolete #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
 // obsolete  if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
 // obsolete #else
- if(unlikely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
 // obsolete #endif
  A z; fdefallo(z)  // allocate normal result area
  AF f1,f2; I flag;  // derived-verb handlers; flags for the verb we build
@@ -327,6 +326,7 @@ DF2(jtpowop){F12IP;B b;V*v;
   f1=f2=jtpowv12cell; h=0; flag=(FAV(a)->flag&FAV(w)->flag&VASGSAFE);
  }else{
   // u^:n.  Check for special types.
+  if(unlikely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
   I n; // the power, the functions
   if(unlikely(BOX&AT(w))){A x,y;
    // Boxed v.  It could be <n or [v0`]v1`v2 or <''.

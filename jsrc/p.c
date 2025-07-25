@@ -267,7 +267,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
   }
   break;
  case VERBX: case ADVX:  case CONJX: 
-  {V*v=VAV(w); auditblock(jt,C(v->fgh[0]),nonrecur,0);
+  {V*vFVAV(w); auditblock(jt,C(v->fgh[0]),nonrecur,0);
    auditblock(jt,C(v->fgh[1]),nonrecur,0);
    auditblock(jt,C(v->fgh[2]),nonrecur,0);} break;
  case B01X: case INTX: case FLX: case CMPXX: case QPX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX: case INT2X: case INT4X:  // direct forms, but possibly sparse

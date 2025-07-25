@@ -291,7 +291,7 @@ static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=CAV(a)[AN(a)-1]; R ('x'==c||'.'==c|
 static F2X(jtlinsert){F12JT;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
  ARGCHK2(a,w);
  n=AN(a); av=AAV(a);  
- v=VAV(w); id=v->id;
+ v=FAV(w); id=v->id;
  b=id==CCOLONE&&VXOP&v->flag;  // b if operator, which is spaced as if a hook/fork: u body [v]
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CNULL(v->fgh[fndx]); A gs=CNULL(v->fgh[fndx^1]); A hs=CNULL(v->fgh[2]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);}  // scb to simplify display
@@ -328,7 +328,7 @@ static F2X(jtlinsert){F12JT;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V
 // JT has valence-suppression flags
 static F1X(jtlcolon){F12JT;A*v,x,y;C*s,*s0;I m,n;
  RZ(y=jtunparsem(jtfg,num(1),w));   // extract the valences of w, run together: a list of boxes
- n=AN(y); v=AAV(y); RZ(x=lrr(C(VAV(w)->fgh[0])));  // n=#lines, v->line 0, get x=linear rep for m (string form of a digit)
+ n=AN(y); v=AAV(y); RZ(x=lrr(C(FAV(w)->fgh[0])));  // n=#lines, v->line 0, get x=linear rep for m (string form of a digit)
  if((I)jtfg&JTPRFORSCREEN && FAV(w)->flag&VISDD){A z;  // defn was {{ }} and we are printing it to screen
   // we can display the defn as a DD.
   C hdr[5]; I hdrl=0; hdr[hdrl++]='{'; hdr[hdrl++]='{'; // install {{
@@ -360,7 +360,7 @@ static DF1X(jtlrr){F12JT;A hs,t,*tv;C id;I fl,m;V*v;
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
  if(unlikely(AFLAG(w)&AFRO))if(AT(w)&VERB){R str(12,"cocurrent_z_");}  // readonly name, must not expand it.  We don't have access to the name used
  if(AT(w)&NOUN)R lnoun(C(w));
- v=VAV(w); id=v->id;  // outer verb, & its id
+ v=FAV(w); id=v->id;  // outer verb, & its id
  // if f is 0, we take f from g.  In other words, adverbs can put their left arg in either f or g.  u b. uses g so that it can leave f=0 to allow it to function as an ATOMIC2 op
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CNULL(v->fgh[fndx]); A gs=CNULL(v->fgh[fndx^1]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R lrr(gs);  // if <@:t. discard the <@:

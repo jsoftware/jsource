@@ -769,7 +769,7 @@ exitra:
  if(ip)ra(w);
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
-static DF2(jtamendn2c){F12IP;R jtamendn2(jtfg,a,w,VAV(self)->fgh[0],self);}  // entry point from normal compound
+static DF2(jtamendn2c){F12IP;R jtamendn2(jtfg,a,w,FAV(self)->fgh[0],self);}  // entry point from normal compound
 
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
@@ -786,7 +786,7 @@ static DF2(amccv2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
 }
 
 
-static DF1(mergn1){F12IP;A ind,z; z=jtmerge1(jt,w,ind=VAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}  // no inplacing
+static DF1(mergn1){F12IP;A ind,z; z=jtmerge1(jt,w,ind=FAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}  // no inplacing
 static DF1(mergv1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z; z=jtmerge1(jt,w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
 
 // called from m}, m is usually NOT a gerund

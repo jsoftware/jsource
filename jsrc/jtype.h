@@ -1025,7 +1025,9 @@ typedef struct {
 
 // *********************** name block ************************
 
-// NM struct: pointed to by the name field of a symbol (NAV(sym->name)), and used for lookups.  Names are allocated with rank 1 (?? but it means first cacheline is unused)
+// NM struct: pointed to by the name field of a symbol (NAV(sym->name)), and used for lookups.  Names are allocated with rank 1
+// the first cacheline contains the lookaside value pointer for the primary sympbol table.  It is modified frequently by the primary and must not be referred to by other tables, for false sharing.
+// the second cacheline contains data shared by all tables and must not be modified often (bucket is cleared when a name is long-cached)
 typedef struct{
  I bucketx; // (for local simple names, only if bucket!=0) the number of chain entries to discard before
 //   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry
@@ -1039,9 +1041,10 @@ typedef struct{
  I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local.  -1 for names in 6!:2 from keyboard, to bypass the check for local names in global assignment
 //   0 if chain index not known or name is a locative
  UI4 hash;  // hash for non-locale part of name
- UC m; // length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)  scaf should move to second cacheline
+ US n;  // length of entire name
+ UC m; // length of non-locale part of name note 255-byte limit! (n holds the length of the entire name including the locative)
  C flag; //  flags for name (see below)
- C s[1];  // string part of full name (1 to ?? characters, including locale of assignment if given) up to 34 chars fit in a 128B allo
+ C s[1];  // string part of full name (1 to ?? characters, including locale of assignment if given) up to 32 chars fit in a 128B allo
 } NM;
 
 // values in flag.  These are set at creation and not modified, & thus threadsafe

@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-// if w is a reference, replace it with its value, recursively
+// if w is a reference (name~), replace it with its value, recursively
 A jtunname(J jt,A w,I recurct){A x;V*v;
  ARGCHK1(w);
  if(recurct>100)RETF(w);  // avoid infinite recursion

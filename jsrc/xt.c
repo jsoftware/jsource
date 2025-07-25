@@ -356,8 +356,9 @@ static F1(jtpmfree){F12IP;A x,y;C*c;I m;PM*v;PM0*u;
  if(w){
   c=CAV(w); u=(PM0*)c; v=(PM*)(c+sizeof(PM0)); 
   m=u->wrapped?u->n:u->i; 
-  DQ(m, x=v->name; if(x&&NAME&AT(x)&&AN(x)==AS(x)[0])fa(x); 
-        y=v->loc;  if(y&&NAME&AT(y)&&AN(y)==AS(y)[0])fa(y); ++v;);
+// obsolete   DQ(m, x=v->name; if(x&&NAME&AT(x)&&AN(x)==AS(x)[0])fa(x); 
+// obsolete         y=v->loc;  if(y&&NAME&AT(y)&&AN(y)==AS(y)[0])fa(y); ++v;);
+  DQ(m, x=v->name; if(x)fa(x); y=v->loc;  if(y)fa(y); ++v;);  // free every block we added (we did ras then)
   fa(w);
  }
  R num(1);
@@ -409,7 +410,7 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
  if(u->i>=u->n){u->wrapped=1; if(u->trunc){u->i=u->n-1; R;}else u->i=0;}  // If we stepped off the end,
   // reset next pointer to 0 (if not trunc) or stay pegged at then end (if trunc).  Trunc comes from the original x to start_jpm_
  v->name=name; if(name)ras(name);  // move name/loc; incr use counts
- v->loc =loc;  if(loc )ras(loc ); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts, freeing
+ v->loc =loc;  if(loc)ras(loc); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts, freeing
  v->val =val;  // Save valence
  v->lc  =lc;  // save line#/start/stop
  v->s=jt->bytesmax-u->s;

@@ -3,7 +3,7 @@ NB. 7!:6 ----------------------------------------------------------------
 
 (7!:6 <'') -: 7!:6 <'base'
 
-spn=: 3 : '>.&.(2&^.) 64 >. ((>.&.(%&k) 4+4+k+k+4+3)+k*(7+1))+(k-1)+#y [ k=.IF64{4 8'   NB. space needed for a name
+spn=: 3 : '>.&.(2&^.) 64 >. ((>.&.(%&k) 4+4+k+k+4+3+2)+k*(7+1))+(k-1)+#y [ k=.IF64{4 8'   NB. space needed for a name
 NB. >.&.(%&k) 4+4+k+k+4+1+1+1 sizeof(NM)     should be 8=4+4+k+k+4+1+1 offsetof(NM,s)   hash+bucket+bucketx+cachedref+symx+m+flag
 NB. 7   header words
 NB. 1   shape (no alignment needed)

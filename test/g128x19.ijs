@@ -1,5 +1,23 @@
 prolog './g128x19.ijs'
 
+3 : 0''
+if. IFWIN do.
+ sleep=: usleep@>.@(1e6&*)
+else.
+ sleep=: 6!:3
+end.
+1
+)
+
+NB. wait until there are y waiting threads
+wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
+delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
+delth''  NB. make sure we start with an empty system
+
+N=: <: 1 { 8 T. ''  NB. max # worker threads
+NB. create all available threads
+1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
+
 NB. **** 128!:19
 
 e128x19 =: {{
@@ -1323,6 +1341,8 @@ f =: {{
 }}"0
 
 f i. 65
+
+delth''
 
 epilog''
 

@@ -214,7 +214,7 @@ struct AD {
   A *zaploc;  // For all blocks allocated by GA, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
   A aarg;  // for /.., the original a arg
-  A lookaside;  // for local NAME, a pointer to the value.  When this is non0, it must always match the value in the symbol table.  It is cleared to 0 when a NAME is allocated.  When a local value is assigned to a NAME with a negative bucketx,
+  A lookaside;  // for local NAME, a pointer to the value for the primary table.  For primary tables, when this is non0, it must always match the value in the symbol table.  It is cleared to 0 when a NAME is allocated.  When a local value is assigned to a NAME with a negative bucketx,
          // we know that the NAME is the unique nameblock for all simple references to that name in that definition (it may be a clone of the original NAME bot it is still unique in that definition and used by ALL simple references including
          // assignments).  We save the assignment in the NAME block it is assigned to.  The value may change on reassignment.  When a local symbol table is cretaed or cloned, symbols are allocated for all PERMANENT (i. e. negative-bucketx) names
          // AND the symbol's name points to the shared name.  THIS WILL NEVER CHANGE - that's what PERMANENT means.  Therefore, whenever a negative-bucketx value is stored into a local table, we can update the lookaside value in the name block
@@ -872,7 +872,7 @@ typedef DST* DC;
 // ************************ parsing flags **************************
 
 // LSB codes in value pointers.  Set by enqueue() and symbis(), used by parsea().  Means that all boxes must be aligned to cacheline boundaries and freeing boxes must ignore these flags
-// type of 0000 is unused; 1-11 are the type bits (following LASTNOUNX) in order
+// type of 0000 is reserved to indicate 'no value'; 1-11 are the type bits (following LASTNOUNX) in order
 // in the words of an explicit definition the words have QCNAMELKP semantics in bit 4-5:
 #define QCMASK 0x3fLL   // all the LSB flags
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC

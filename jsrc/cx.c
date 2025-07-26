@@ -885,6 +885,7 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
 // in any case, if dobuckets is 0, remove the bucket field (NOT bucketx).  Clearing the bucket field will prevent
 // a name's escaping and being used in another context with invalid bucket info.  bucketx must survive in case it holds
 // a valid hash of a locative name
+// lookaside is set to 0x40 in nonallocated names, which are probably globals
 // actstv points to the chain headers, actstn is the number of chains
 // all the chains have had the non-PERMANENT flag cleared in the pointers
 // recur is set if *t is part of a recursive noun.
@@ -918,7 +919,8 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
    }
   }
   NAV(tv)->bucket=bucket;  // fill in the bucket in the (possibly modified) name
-  NAV(tv)->bucketx=compcount;
+  NAV(tv)->bucketx=compcount;  // compcount is #values we searched, negated if the last was found
+  if(compcount>=0)tv->mback.lookaside=QCWORD(0x40);  // flag value for nonallocated names: type=0, address non0
  }
  if(!dobuckets)NAV(tv)->bucket=0;  // remove bucket if this name not allowed to have them
  R (A)((I)tv+tqc);  // return combined pointer/type

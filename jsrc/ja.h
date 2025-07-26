@@ -1209,7 +1209,7 @@ extern void jfree4gmp(void*,size_t);
 #define syrdfromloc(x,y)            jtsyrdfromloc(jt,(x),(y))
 #define syrd(x,y)                   jtsyrd(jt,(x),(y))
 #define syrdforlocale(x)            jtsyrdforlocale(jt,(x))
-#define syrdnobuckets(x)            jtsyrdnobuckets(jt,(x))
+#define syrdnobuckets(x,y)            jtsyrdnobuckets(jt,(x),(y))
 #define table(x)                    jttable(jt,(x))   
 #define tail(x)                     jttail(jt,(x))    
 #define take(x,y)                   jttake(jt,(x),(y))   

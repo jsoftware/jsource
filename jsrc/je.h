@@ -947,7 +947,7 @@ extern A       jtsyrd1(J,C*,UI4,A);
 extern A        jtsyrdforlocale(J,A);
 extern A        jtsyrd1forlocale(J,C*,UI4,A);
 extern L*       jtsyrdfromloc(J,A,A);
-extern A       jtsyrdnobuckets(J,A);
+extern A       jtsyrdnobuckets(J,A,A);
 extern A        jtsystemlock(J,I,A (*)(JTT*));
 extern I        jtsystemlockaccept(J,I);
 extern A        jttaker(J,I,A);

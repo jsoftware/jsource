@@ -542,11 +542,11 @@ A jtsyrdforlocale(J jt,A a){A g;
 // look up a name (either simple or locative) using the full name resolution
 // result is addr/global/flags for name (i. e. QCFAOWED semantics), or 0 if not found
 // If the name/value are found, ra() the value if global
-A jtsyrdnobuckets(J jt,A a){A g,val;
+A jtsyrdnobuckets(J jt,A a,A locsyms){A g,val;
  ARGCHK1(a);
  if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){
   // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
-  if(unlikely(NAV(a)->bucket)<=0)if(val=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,jt->locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return if found locally from name
+  if(unlikely(NAV(a)->bucket)<=0)if(val=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,locsyms)){if(unlikely(ISRAREQD(val)))raposlocalqcgsv(QCWORD(val),QCPTYPE(val),val); R val;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  }else{  // if locative, start in locative locale & remember table type
   RZ(g=sybaseloc(a));

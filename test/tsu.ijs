@@ -54,7 +54,7 @@ NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
 blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
 blacklist=: blacklist, (IFRASPI<(IF64<UNAME-:'Linux')+.(IFWIN>IF64)+.IFIOS+.(UNAME-:'Wasm'))#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
-blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
+blacklist=: blacklist, (-.IF64)#(<testpath),each 'g6x14.ijs';'g128x14.ijs';'g128x19.ijs' NB. require 64-bit
 blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. require multithreading
 blacklist=: blacklist, (-.cdok)#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs'  NB. 15!:0 unavailable
 blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each <'gstack.ijs'  NB. crash
@@ -259,30 +259,20 @@ QKTEST=: (-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD')  NB
 RUND1=: 4 : 0
 x123=. x>.1
 y123=. y
-d123=. Debug
 assert. (<'base')-:18!:5''
 4!:55 ;:'x y'
 for_y234. y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
-  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 0
-  0!:2 y234
-  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  assert. (<'base')-:18!:5''
-  assert. 0= (;:'x y') e. nl__ i.4
-NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
 end.
-Debug=: d123
 dbr 0
 techo 'Finish'
 ''
@@ -291,33 +281,23 @@ techo 'Finish'
 RUND2=: 4 : 0
 x123=. (0=x){x,1
 y123=. y
-d123=. Debug
 assert. (<'base')-:18!:5''
 4!:55 ;:'x y'
 while. x123~:0 do.
  for_y234. y123{~?~#y123 do.
   techo RLAST=: >y234
   save_ran=:9!:44''
-  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 0
-  0!:2 y234
-  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  assert. (<'base')-:18!:5''
-  assert. 0= (;:'x y') e. nl__ i.4
-NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
  x123=. <:x123
 end.
 4!:55 ;:'save_ran'
-Debug=: d123
 dbr 0
 techo 'Finish'
 ''
@@ -326,52 +306,18 @@ techo 'Finish'
 RUN2=: 4 : 0
 x123=. (0=x){x,1
 y123=. y
-d123=. Debug
 assert. (<'base')-:18!:5''
 4!:55 ;:'x y'
 while. x123~:0 do.
-  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2<testpath,y123,'.ijs'
   assert. 0 s: 11
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 0
-  0!:2<testpath,y123,'.ijs'
-  assert. 0 s: 11
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  assert. (<'base')-:18!:5''
-  assert. 0= (;:'x y') e. nl__ i.4
-  x123=. <:x123
-NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
-end.
-Debug=: d123
-dbr 0
-techo 'Finish'
-''
-)
-
-RUN2D=: 4 : 0
-x123=. (0=x){x,1
-y123=. y
-d123=. Debug
-assert. (<'base')-:18!:5''
-4!:55 ;:'x y'
-Debug=: 1
-while. x123~:0 do.
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  0!:2<testpath,y123,'.ijs'
-  assert. 0 s: 11
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  assert. (<'base')-:18!:5''
-  assert. 0= (;:'x y') e. nl__ i.4
   x123=. <:x123
-NB.  11 s: ''    NB. reset symbol
-  techo (+/ % #) 0 s: 12
 end.
-Debug=: d123
 dbr 0
 techo 'Finish'
 ''
@@ -380,30 +326,20 @@ techo 'Finish'
 RUND3=: 4 : 0
 x123=. x>.1
 y123=. y
-d123=. Debug
 assert. (<'base')-:18!:5''
 4!:55 ;:'x y'
 for_y234. y123{~?~#y123 do.
  techo RLAST=: >y234
  for. i.x123 do.
-  Debug=: 1
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  Debug=: 0
-  0!:2 y234
-  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
-  assert. (<'base')-:18!:5''
-  assert. 0= (;:'x y') e. nl__ i.4
-NB.  11 s: ''    NB. reset symbol
   techo (+/ % #) 0 s: 12
  end.
 end.
-Debug=: d123
 dbr 0
 techo 'Finish'
 ''
@@ -432,7 +368,6 @@ tsu_usage=: 0 : 0
    RUN1 'g000' NB. run script with display
  n RUN2 'g000' NB. run script with display for n times
                NB. run infinite times until failure if n<0
- n RUN2D 'g000' NB. same as RUN2 but run with Debug=1 only
    
  n RUND1 ddall NB. run script with display for n times and stop on failure
                NB. n>0, RLAST is the last script
@@ -495,7 +430,7 @@ allorcmdline=: 3 :0
 )
 
 oldnl=: (;:'x y') -.~ ('IgnoredLocal';'RB';'RF';'oldnl';'RLAST';'save_ran'),~ (nl__ i.4)
-IgnoredLocal=: ;:'x y d123 x123 y123 y234 y234_index'
+IgnoredLocal=: ;:'x y x123 y123 y234 y234_index'
 
 techo 0 : 0
 see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd

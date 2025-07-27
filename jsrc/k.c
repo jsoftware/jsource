@@ -1041,7 +1041,7 @@ F1(jtcvt0){F12IP;I n,t;D *u;
 }    /* convert -0 to 0 in place */
 #endif
 
-F1(jtxco1){F12IP;ARGCHK1(w); ASSERT(!ISSPARSE(AT(w)),EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
+F1(jtxco1){F12IP;ARGCHK1(w); ASSERT(!ISSPARSE(AT(w)),EVNONCE); if(likely(!(AT(w)&XNUM+RAT)))w=cvt(AT(w)&B01+INT+INT1+INT2+INT4+XNUM?XNUM:RAT,w); R w;}
 
 F2(jtxco2){F12IP;A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  ARGCHK2(a,w);

@@ -3,6 +3,8 @@
 /*                                                                         */
 /* Xenos: parsing                                                          */
 
+#define STOPCALLNO     // set to value of jt->parsercalls that you want to stop before
+
 // Parsing follows the description in Dictionary Chapter E. Parsing
 // with the following implementation details:
 // 1. words must have gone through enqueue, which puts type information into the low 6 bits of each pointer with QCTYPE flags
@@ -480,7 +482,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
  A jtlocsyms=jt->locsyms;  // we need the AR flags in the local table very quickly for singlee-word sentences, less urgency for longer
  UI pt0ecam=AR(jtlocsyms);  // Init flags from local table.  locsyms cannot change during this execution.  Needed early.  This is a double load (which we could make single by installing AR into JTT), but
                               // it doesn't limit the multi-word path, and will be resolved during the pipeline break for the 1-word path
- A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as so that it never has to be saved over a call.  Unroll once.  We must load early
+ A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as needed so that it never has to be saved over a call.  Unroll once.  We must load early
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse - we get the values needed by the 1-word path loaded before the pipeline break
   // mash into 1 register:  bit 32-63 stack0pt, bit 29-31 (from CONJX) es delayline pull 3/2/1 after current word,
   //  27-28 garbage, overflow from delayline, may be cleared during stacking
@@ -538,8 +540,10 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
   // The stack grows down
 
   ++jt->parsercalls;  // now we are committed to full parse.
-// debug if(jt->parsercalls == 0x4)
-// debug jt->parsercalls = 0x4;
+#if STOPCALLNO+0
+  if(jt->parsercalls==STOPCALLNO)   // if stop call# given, honor it
+    jt->parsercalls=STOPCALLNO;
+#endif
 
   if(unlikely((intptr_t)stack-(intptr_t)currstk<(nwds+BACKMARKS+FRONTMARKS+PSTACKRSV+1+1)*(intptr_t)sizeof(PSTK))){A sa;
    ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
@@ -616,13 +620,13 @@ firstword: ;  // come here first time, while pt0ecam settles
       // Registers are very tight here.  Nothing survives over a subroutine call - refetch y if necessary.  If we have anything to
       // keep over a subroutine call, we have to store it in pt0ecam or some other saved name
 #if 0
+      A lka=__atomic_load_n(&QCWORD(y)->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
+            // Move the cheap & safe load to be ahead of the often-mispredicted branch
       // The name is from an explicit definition in all cases of interest.  Each explicit definition has been compiled and referenced so that each name appears only once (but name and name_: have separate blocks).
       // The name contains a lookaside value which holds the most recent value stored into the primary table.  The name is shared by all instances of the executing verb.  Nevertheless, the primary instance
       // is the dominant one by far, and we want to make it as fast as possible.  MAJOR CONSIDERATION: the primary uses pointers to values and names that only it has reason to use.  The non-primary
       // instances MUST NOT reference these values at all, because from their point of view they are volatile.  The first cacheline in the name contains the volatile primary information, and the second
       // cacheline contains the rest of the info, which does not change.
-      A lka=__atomic_load_n(&QCWORD(y)->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
-      I4 buck=__atomic_load_n(&NAV(QCWORD(y))->bucket,__ATOMIC_RELAXED);  // Read bucket# (the index of the hashchain to use)
       pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y, in this dead time
       pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
       if(!(pt0ecam&(ARLCLONED<<LOCSYMFLGX))){  // primary table?  This branch prediction will be unchanged as long as we are in the same definition
@@ -631,6 +635,7 @@ firstword: ;  // come here first time, while pt0ecam settles
        else if(likely(QCWORD(lka)!=0)&&likely(!(AR(jt->locsyms)&ARNAMEADDED)))goto rdglob;  // unallocated and bucketed, and no surprise local name has been defined: must be global
        // otherwise unalloc/synthetic name: fall through to read as if secondary, using buckets if there are any
       }
+      I4 buck=NAV(QCWORD(y))->bucket;  // Read bucket# (the index of the hashchain to use)
       // bucket search needed - secondary table or name without lookaside (including undefined name)
       if(likely(buck>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.
        y=QCWORD(y); // flags no longer needed - we are looking up the name
@@ -1184,36 +1189,36 @@ failparse:
 
  }else{  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){A sv=0;  // exit fast if empty input.  Happens only during load, but we can't deal with it
-   // 1-word sentence:
+   // 1-word sentence.  pt0ecam holds AR(locsyms)
 #if 0
    I yflags=(I)y;  // save the word, with QCNAMELKP semantics
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing overhead, because it happens enough to notice (conditions & function results)
    // No ASSERT - must get to the end to pop stack
    y=QCWORD(yflags);  // point y to the start of block
-   if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up
-    A lka=__atomic_load_n(&y->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
-    I4 buck=__atomic_load_n(&NAV(y)->bucket,__ATOMIC_RELAXED);  // Read bucket# (the index of the hashchain to use)
+   A lka=__atomic_load_n(&y->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
+   if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up.
     if(!(pt0ecam&ARLCLONED)){  // primary table?  This branch prediction will be unchanged as long as we are in the same definition.  pt0ecam=AR flags here
      // primary table.  Use the lookaside
      if(likely(QCPTYPE(lka)!=0)){sv=lka; goto finlocal1;}   // normal case of lookaside found.  Use it
-     else if(likely(QCWORD(lka)!=0)&&likely(!(AR(jt->locsyms)&ARNAMEADDED)))goto rdglob1;  // unallocated and bucketed, and no surprise local name has been defined: must be global
+     else if(likely(QCWORD(lka)!=0)&&likely(!(AR(jtlocsyms)&ARNAMEADDED)))goto rdglob1;  // unallocated and bucketed, and no surprise local name has been defined: must be global
      // otherwise unalloc/synthetic name: fall through to read as if secondary, using buckets if there are any
     }
     // bucket search needed - secondary table or name without lookaside (including undefined name)
-    if(likely(buck>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.
+    I4 buck=NAV(y)->bucket;  // Read bucket# (the index of the hashchain to use)
+    if(likely(buck>0)){  // buckjtlocsymsets but no symbol - must be global, or recursive symtab - but not synthetic new name.
      I bx=NAV(y)->bucketx;  // bucketx: neg for allocated symbols (which would have lookaside in the primary), nonnneg for others (usually public, but could be synthetic)
-     if((bx|(I)(I1)AR(jt->locsyms))>=0)goto rdglob1;  // if nonneg bucketx and no name has been added, skip the search.  AR may change midsentence.  No other thread can add a local symbol.
+     if((bx|(I)(I1)AR(jtlocsyms))>=0)goto rdglob1;  // if nonneg bucketx and no name has been added, skip the search.  AR may change midsentence.  No other thread can add a local symbol.
      // Falling through we have negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table.
      L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change within a single stacking loop but there's scant benefit in fetching earlier
-     if(likely(bx<0)){L* l; for(l=LXAV0(jt->locsyms)[buck]+sympv;++bx<0;l=&sympv[l->next]); sv=l->fval;}  // local name in cloned table.  Get to it without subroutine call
-     else sv=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx);  // must be unallocated name and there has been a surprise write to the cloned symtab.  Rare indeed.  If not found, it's global - restore y
+     if(likely(bx<0)){L* l; for(l=LXAV0(jtlocsyms)[buck]+sympv;++bx<0;l=&sympv[l->next]); sv=l->fval;}  // local name in cloned table.  Get to it without subroutine call
+     else sv=probelocalbuckets(sympv,y,LXAV0(jtlocsyms)[buck],bx);  // must be unallocated name and there has been a surprise write to the cloned symtab.  Rare indeed.  If not found, it's global - restore y
      if(unlikely(sv==0)){goto rdglob1;}  // if the local search came up undefined, switch over to global
      // falling through here we have the flagged symbol in y
 finlocal1:;
      // the very likely case of a local name.  This value needs no protection because there is nothing more to happen in the sentence and the local symbol table is sufficient protection.  Skip the ra and the tpush
      I svt=QCTYPE(sv); sv=QCWORD(sv);  // type of stored value
      if(likely(svt&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
-      if(unlikely(yflags&QCNAMEABANDON))rapos(sv,sv);  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  If the value is local, we must ra it because undco() expects it (questionable)
+      if(unlikely(yflags&QCNAMEABANDON))rapos(sv,sv);  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  Since the value is local, we must ra it because undco() expects it (questionable)
       y=sv; // we will use the value we read
      }else{y=QCWORD(namerefacv(y,sv));}   // Replace other acv with reference.  Could fail.  Flags in sv=s->val=0 to prevent fa() and ensure flags=0 in return value
      goto gotlocalval1;   // y has the unprotected value read.  We can use that.

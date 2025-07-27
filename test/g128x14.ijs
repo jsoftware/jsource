@@ -93,7 +93,7 @@ compvers =: ".@'Qkt' -: ".@'qktcopy'  NB. compare the temp vars we use for the t
 
 NB. 1: 0!:_1'#'
 NB. 1 stripe
-Qkt =: (15!:18) 11 c. (19, (>.&.(*&(16%CACHELINE)) 20)) $ 0.   NB. 16 is the byte size of quadprec
+Qkt =: (15!:18) 11 c. (19, (>.&.(%&(CACHELINE%16)) 20)) $ 0.   NB. 16 is the byte size of quadprec
 rm =: ,< 18 {. 1 0 1 1 0 1 1 1 0 1
 rv =: (11 c. I.)&.> rm
 cm =: ,< 19 {. 0 1 0 1 1
@@ -101,7 +101,7 @@ cv =: (11 c. 1000 + I.)&.> cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 2 stripes
-Qkt =: (15!:18) 11 c. (19, (>.&.(*&(16%CACHELINE)) 20)) $ 0.
+Qkt =: (15!:18) 11 c. (19, (>.&.(%&(CACHELINE%16)) 20)) $ 0.
 rm =: ,< 18 {. 1 0 1 1 0 0 0 0 0 0 0 0 0 1 1 1 0 1
 rv =: (11 c. 1 + I.)&.> rm
 cm =: ,< 19 {. 0 1 0 1 1
@@ -109,7 +109,7 @@ cv =: (11 c. 1000 + I.)&.> cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 2 OPs
-Qkt =: (15!:18) 11 c. (19, (>.&.(*&(16%CACHELINE)) 20)) $ 0.
+Qkt =: (15!:18) 11 c. (19, (>.&.(%&(CACHELINE%16)) 20)) $ 0.
 rm =: <"1 (18) {."1 ]  1 0 1 1 0 0 0 0 0 1 1 1 0 1 ,: 0 1 1 1 0 0 0 0 0 0 0 1 0 1 
 rv =: 0 100 (11 c. (+ I.))&.> rm
 cm =: <"1 (19) {."1 ]  0 1 0 1 1 ,: 1 1 0 1 0 0 1
@@ -117,7 +117,7 @@ cv =: 0 1000 (11 c. (+ I.))&.> cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 1 tall thin OP
-Qkt =: (15!:18) 11 c. (1003, (>.&.(*&(16%CACHELINE)) 20)) $ 0.
+Qkt =: (15!:18) 11 c. (1003, (>.&.(%&(CACHELINE%16)) 20)) $ 0.
 rm =: , <"1 (18) {."1 ]  0 1 
 rv =: , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =: , <"1 (1001) {."1 ]  0 , 1000$1
@@ -125,7 +125,7 @@ cv =: , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 1 wide short OP
-Qkt =: (15!:18) 11 c. (20, (>.&.(*&(16%CACHELINE)) 1004)) $ 0.
+Qkt =: (15!:18) 11 c. (20, (>.&.(%&(CACHELINE%16)) 1004)) $ 0.
 rm =: , <"1 ] 0 , 1000$1 
 rv =: , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =: , <"1 ] ,1
@@ -133,7 +133,7 @@ cv =: , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 2 overlapping OPs that will overrun a single thread
-Qkt =: (15!:18) 11 c. (1004, (>.&.(*&(16%CACHELINE)) 132)) $ 0.
+Qkt =: (15!:18) 11 c. (1004, (>.&.(%&(CACHELINE%16)) 132)) $ 0.
 rm =: , <"1 ] 2 128$1 
 rv =: , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =: , <"1 ] 2 1000$1
@@ -187,7 +187,7 @@ for. r#0 do. if. unbat do. tt =. tt , batchop 'qktcopy';ops,<0.0 else. tt =. tt 
 (+/ % #) tt
 }}
 
-res =: 0 mtpivottbl (20, (>.&.(*&(16%CACHELINE)) 20));(,:0.9 0.9);0.0
+res =: 0 mtpivottbl (20, (>.&.(%&(CACHELINE%16)) 20));(,:0.9 0.9);0.0
 
 delth''
 

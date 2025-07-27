@@ -1,5 +1,7 @@
 prolog './g128x14.ijs'
 
+CacheLine=: 9!:56'cachelinesize'
+
 3 : 0''
 if. IFWIN do.
  sleep=: usleep@>.@(1e6&*)
@@ -91,7 +93,7 @@ compvers =: ".@'Qkt' -: ".@'qktcopy'  NB. compare the temp vars we use for the t
 
 NB. 1: 0!:_1'#'
 NB. 1 stripe
-Qkt =: (15!:18) 11 c. 19 20 $ 0.
+Qkt =: (15!:18) 11 c. (19, (>.&.(%&(CacheLine%16)) 20)) $ 0.   NB. 16 is the byte size of quadprec
 rm =: ,< 18 {. 1 0 1 1 0 1 1 1 0 1
 rv =: (11 c. I.)&.> rm
 cm =: ,< 19 {. 0 1 0 1 1
@@ -99,7 +101,7 @@ cv =: (11 c. 1000 + I.)&.> cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 2 stripes
-Qkt =: (15!:18) 11 c. 19 20 $ 0.
+Qkt =: (15!:18) 11 c. (19, (>.&.(%&(CacheLine%16)) 20)) $ 0.
 rm =: ,< 18 {. 1 0 1 1 0 0 0 0 0 0 0 0 0 1 1 1 0 1
 rv =: (11 c. 1 + I.)&.> rm
 cm =: ,< 19 {. 0 1 0 1 1
@@ -107,7 +109,7 @@ cv =: (11 c. 1000 + I.)&.> cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 2 OPs
-Qkt =: (15!:18) 11 c. 19 20 $ 0.
+Qkt =: (15!:18) 11 c. (19, (>.&.(%&(CacheLine%16)) 20)) $ 0.
 rm =: <"1 (18) {."1 ]  1 0 1 1 0 0 0 0 0 1 1 1 0 1 ,: 0 1 1 1 0 0 0 0 0 0 0 1 0 1 
 rv =: 0 100 (11 c. (+ I.))&.> rm
 cm =: <"1 (19) {."1 ]  0 1 0 1 1 ,: 1 1 0 1 0 0 1
@@ -115,7 +117,7 @@ cv =: 0 1000 (11 c. (+ I.))&.> cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 1 tall thin OP
-Qkt =: (15!:18) 11 c. 1003 20 $ 0.
+Qkt =: (15!:18) 11 c. (1003, (>.&.(%&(CacheLine%16)) 20)) $ 0.
 rm =: , <"1 (18) {."1 ]  0 1 
 rv =: , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =: , <"1 (1001) {."1 ]  0 , 1000$1
@@ -123,7 +125,7 @@ cv =: , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 1 wide short OP
-Qkt =: (15!:18) 11 c. 20 1004 $ 0.
+Qkt =: (15!:18) 11 c. (20, (>.&.(%&(CacheLine%16)) 1004)) $ 0.
 rm =: , <"1 ] 0 , 1000$1 
 rv =: , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =: , <"1 ] ,1
@@ -131,7 +133,7 @@ cv =: , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
 
 NB. 2 overlapping OPs that will overrun a single thread
-Qkt =: (15!:18) 11 c. 1004 132 $ 0.
+Qkt =: (15!:18) 11 c. (1004, (>.&.(%&(CacheLine%16)) 132)) $ 0.
 rm =: , <"1 ] 2 128$1 
 rv =: , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =: , <"1 ] 2 1000$1
@@ -161,7 +163,7 @@ ot,nt  NB. return times
 NB. x is (max#worker threads to use).  y is (shape of Qkt);(table of densities);threshold.  Result is (table of old times (#threads,#pivots)),:(table of new times), but aborting on mismatch of result
 mtpivottbl =: {{
 'qkts dens thresh' =. y  NB. extract parms
-qkts =. >.&.(%&4)&.(1&{) qkts  NB. round row-len up to cacheline
+qkts =. >.&.(%&(CacheLine%16))&.(1&{) qkts  NB. round row-len up to cacheline
 Qkt =: (15!:18) 11 c. qkts $ 0   NB. Allocate Qkt
 ops =. createop dens   NB. create all the ops, as a table of rm,rv,cm,cv
 |: ((i. >: x) mtpivot (thresh (,<)~ <"1@:|:)@])\ ops  NB. all pivot-batches, producing (#pivots)x(#threads)x(old,new)
@@ -176,7 +178,7 @@ timepiv =: {{
 nthr =. y
 setnworkers nthr
 22 T. 0;{.WORDER
-qkts =. >.&.(%&4)&.(1&{) 5000 5000  NB. round row-len up to cacheline
+qkts =. >.&.(%&(CacheLine%16))&.(1&{) 5000 5000  NB. round row-len up to cacheline
 Qkt =: (15!:18) 11 c. qkts $ 0   NB. Allocate Qkt
 qktcopy =: memu Qkt
 ops =. <"1@:|: createop 40$,:1.0,1.0   NB. create all the ops, as rm,rv,cm,cv  each a boxed list
@@ -185,8 +187,7 @@ for. r#0 do. if. unbat do. tt =. tt , batchop 'qktcopy';ops,<0.0 else. tt =. tt 
 (+/ % #) tt
 }}
 
-64 128 e.~ cs=: 9!:56'cachelinesize'
-res =: 0 mtpivottbl ((64<cs){20 20,:20 24);(,:0.9 0.9);0.0
+res =: 0 mtpivottbl (20, (>.&.(%&(CacheLine%16)) 20));(,:0.9 0.9);0.0
 
 delth''
 

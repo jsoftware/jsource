@@ -58,7 +58,8 @@ static F1(jtcfr){F12IP;A c,r,*wv;I t;
  if(AR(w)){c=C(wv[0]); r=C(wv[1]);}else{c=num(1); r=C(wv[0]);}
  ASSERT(((AR(c)-1)&(AR(r)-2))<0,EVRANK);
  ASSERT((-(NUMERIC&AT(c))&((AN(r)-1)|-(NUMERIC&AT(r))))<0,EVDOMAIN);
- t=AT(r); t=AN(r)?t:B01; if(t&B01+INT)t=XNUM; t=maxtyped(t,AT(c));
+ t=AT(r); t=AN(r)?t:B01; t=maxtyped(t,AT(c)); t=t&B01+INT2+INT4+INT?XNUM:t;  // use max type, but XNUM for all integer types
+// obsolete  if(t&B01+INT)t=XNUM;
  ASSERT(!(t&QP),EVNONCE)  // no qp support
  if(TYPESNE(t,AT(c)))RZ(c=cvt(t,c));
  if(TYPESNE(t,AT(r)))RZ(r=cvt(t,r));
@@ -144,13 +145,13 @@ static Q jtmaxdenom(J jt,I n,Q*v){Q z;X*u,x,y;
  z.n=x; z.d=iv1; R z;  // set denominator as a rational number
 }    /* maximum denominator in rational vector v */
 
-/* find all exact rational roots of a rational polynomial w or degree m; return: */
+/* find all exact rational roots of a rational polynomial w of degree m; return: */
 /*  *zz: list of what rational roots are found                       */
 /*  *ww: list of complex coefficients of deflated polynomial         */
 
 static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*zv;Z r,*xv,*yv;
  wt=AT(w);
- ASSERTSYS(wt&B01+INT+FL+XNUM+RAT,"rfcq");
+// obsolete  ASSERTSYS(wt&B01+INT+INT2+INT4+FL+XNUM+RAT,"rfcq");
  // Convert w to rational; wv->1st rational coeff
  if(!(wt&RAT))RZ(w=cvt(RAT,w)); wv=QAV(w);
  rdx=maxdenom(1+m,wv);  // rdx = max denominator in the polynomial, in rational form
@@ -237,8 +238,7 @@ static F1(jtrfc){F12IP;A r,w1;I m=0,n,t;
  case 1:  r=ravel(negate(aslash(CDIV,take(num(2),w)))); break;  // linear - return solution, whatever its type
  case 0:  R jlink(num(0),mtv);  // degree 0 - return 0;''
  default: if(t&CMPX)r=rfcz(m,w);  // higher order - if complex, go straight to complex solutions
-          else{RZ(rfcq(m,w,&r,&w1)); if(m>AN(r))r=over(r,rfcz(m-AN(r),w1));} // otherwise, find rational solutions in r, and residual polynomial in w1.
-           // if there are residual (complex) solutions, go find them
+          else{RZ(rfcq(m,w,&r,&w1)); if(m>AN(r))r=over(r,rfcz(m-AN(r),w1));} // otherwise, find rational solutions in r, residual polynomial in w1; if there are residual (complex) solutions, go find them
  }
  // Return result, which is leading nonzero coeff;roots
  R jlink(from(sc(m),w),rsort(r));
@@ -252,13 +252,13 @@ DF1(jtpoly1){F12IP;A c,e,x;
  x=C(AAV(w)[0]);
  // If there is more than one box, or the first box has rank <= 1, it's scale;roots form - go handle it
  if(((AN(w)-2)&(1-AR(x)))>=0)R cfr(w);
- // Must be exponent form: a single box containing a table with 2-atom rows
+ // Falling through must be exponent form: a single box containing a table with 2-atom rows
  ASSERT(2==AR(x),EVRANK);
  ASSERT(2==AS(x)[1],EVLENGTH);
  RZ(IRS1(x,0L,1L,jthead,c));  // c = {."1>y = list of coefficients
  RZ(IRS1(x,0L,1L,jttail,e));  // e = {:"1>y = list of exponents
- ASSERT(equ(e,floor1(e))&&all1(le(num(0),e)),EVDOMAIN);  // insist on nonnegative integral exponents
- R ev12(c,e,"[`]`(0 $~ >:@(>./)@])}");  // evaluate c 2 : 'u v}(1+>./v)$0' e
+ A ef; RZ(ef=floor1(e)) ASSERT(equ(e,ef)&&all1(le(num(0),ef)),EVDOMAIN);  // insist on nonnegative integral exponents, switch to exact integers
+ R ev12(c,ef,"[`]`(0 $~ >:@(>./)@])}");  // evaluate c 2 : 'u v}(1+>./v)$0' e
 }
 
 

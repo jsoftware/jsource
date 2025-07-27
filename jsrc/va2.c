@@ -848,7 +848,7 @@ VA va[]={
  {{(VF)geBB,VRNONE+VCVTIP+VB+VIP}, {(VF)powBI,VRNONE+VCVTIP+VD}, {(VF)powBD,VRNONE+VCVTIP+VD},
   {(VF)powIB,VRNONE+VCVTIP+VI}, {(VF)powII,VRNONE+VCVTIP+VD}, {(VF)powID,VRNONE+VCVTIP+VD+VCANHALT},
   {(VF)powDB,VRNONE+VCVTIP+VD}, {(VF)powDI,VRNONE+VCVTIP+VD}, {(VF)powDD,VRNONE+VCVTIP+VD+VCANHALT}, 
-  {(VF)powZZ,VRNONE+VCVTIP+VZ+VZZ}, {(VF)powXX,VRNONE+VCVTIP+VX+VXX}, {(VF)powQQ,VRNONE+VCVTIP+VQ+VQQ}, {0,0}, {(VF)0,VRNONE+VCVTIP+VD+VDD+VCANHALT}, {(VF)powEE,VRNONE+VCVTIP+VCANHALT}, {(VF)powDD,VRNONE+VCVTIP+VD+VCANHALT}, {(VF)powDD,VRNONE+VCVTIP+VD+VCANHALT}},
+  {(VF)powZZ,VRNONE+VCVTIP+VZ+VZZ}, {(VF)powXX,VRNONE+VCVTIP+VX+VXX}, {(VF)powQQ,VRNONE+VCVTIP+VQ+VQQ}, {0,0}, {(VF)0,VRNONE+VCVTIP+VD+VDD+VCANHALT}, {(VF)powEE,VRNONE+VCVTIP+VCANHALT}, {(VF)powII,VRNONE+VCVTIP+VII+VD+VCANHALT}, {(VF)powII,VRNONE+VCVTIP+VII+VD+VCANHALT}},
   &rpsge},
 
 /* 7c |  */ {
@@ -887,7 +887,7 @@ VA va[]={
 A jtcvz(J jt,I cv,A w){I t;
  t=AT(w);
  if(cv&VRD&&!(t&FL) ){
-  // conversion to D is needed only when we took the real/int/mag of a complex number and we want a FL result from that
+  // conversion to D is needed when we took the real/int/mag of a complex number and we want a FL result from that.
   // unfortunately it's hard to tell when that's what we did; rather than converting intolerantly (which would work but allocates
   // a block always), we scan here to see if all the imaginary parts are 0; if so, then we convert
   Z *wv=ZAV(w); DQ(AN(w), if((*wv).im!=0)R w; ++wv;)

@@ -30,7 +30,7 @@
 #define VRMSK           ((I)0x8800<<VRESX) // mask for result-conversion spec 23,27
 #define VRD             ((I)0x800<<VRESX) // convert result to D if possible 23
 #define VRI             ((I)0x8000<<VRESX) // convert result to I if possible  27
-#define VRNONE          ((I)0x8800<<VRESX) // do not convert result 23,27  for now this is only in the atomic dyads - othr leave the field at 00
+#define VRNONE          ((I)0x8800<<VRESX) // do not convert result 23,27  for now this is only in the atomic dyads - other leave the field at 00
 #define VRERR           ((I)0x0<<VRESX) // result-conversion removed by error (including EVNOCONV) 23,27
 #define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
 #define VCOPYW          ((I)1<<VCOPYWX)

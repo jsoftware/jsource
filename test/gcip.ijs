@@ -39,7 +39,7 @@ NB. Test small sizes, should break into blockedmmults
 
   empty thr (9!:58)"0 i.3
   echo 'Test blas integer'
-  'a b'=: (1000?@$~2,,~500)
+  'a b'=: (1000?@$~2,,~QKTEST{500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b
@@ -48,7 +48,7 @@ NB. Test small sizes, should break into blockedmmults
 
   empty thr (9!:58)"0 i.3
   echo 'Test blas floating'
-  'a b'=: (0?@$~2,,~500)
+  'a b'=: (0?@$~2,,~QKTEST{500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b
@@ -57,7 +57,7 @@ NB. Test small sizes, should break into blockedmmults
 
   empty thr (9!:58)"0 i.3
   echo 'Test blas complex'
-  'a b'=: (0?@$~2,,~500) j. (0?@$~2,,~500)
+  'a b'=: (0?@$~2,,~QKTEST{500 100) j. (0?@$~2,,~QKTEST{500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b
@@ -67,8 +67,8 @@ NB. Test small sizes, should break into blockedmmults
   _1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
 
   echo 'Test multithreading'
-  a=: (QKTEST{::1024 1024;256 256) ?@$ 0
-  b=: (QKTEST{::1024 1024;256 256) ?@$ 0
+  a=: (QKTEST{::1024 1024;128 128) ?@$ 0
+  b=: (QKTEST{::1024 1024;128 128) ?@$ 0
   c=: a +/@(*"1 _)t.'' b    NB.test against strawman approach
   d=: a {{ (<x X y) , (x XT y) , (<x X y) }}t.'' b NB. create user task while queue has internal tasks, and vice versa
   e=: a (XT , XT , XT , XT) b

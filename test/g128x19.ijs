@@ -1,6 +1,7 @@
 prolog './g128x19.ijs'
 
 CacheLine=: 9!:56'cachelinesize'
+padc=: (CacheLine%16)&{."1
 
 3 : 0''
 if. IFWIN do.
@@ -63,13 +64,13 @@ if. '' -: $ colx =. 8 {::y do.
     NB. modify the inputs
     Qk =. drawvec {"1 _1 Qk ,"_1 (0.)
     bndrowmask =. drawvec { bndrowmask , '4'
-    drawvec =. ({.!._1~ >.&.(%&4)@#) drawvec NB. pad bk/bkbeta/z to batch bdy
+    drawvec =. ({.!._1~ >.&.(%&(CacheLine%16))@#) drawvec NB. pad bk/bkbeta/z to batch bdy
     bk =. drawvec {"1 _1 bk ,"_1 (0.)
     bkbeta =. drawvec { bkbeta , 0.
 NB. obsolete     parms =. (-^:(nflagged < 0) nrows) 0} parms  NB. restore Fk flag to new length
     y =. (Qk;bk;parms;bkbeta) 3 6 9 10} y
   else.   NB. One thread.  just pad bk/bkbeta to cacheline bdy
-    bk =. (#bkbeta) {."1 bk [ bkbeta =. ({.~ >.&.(%&4)@#) bkbeta
+    bk =. (#bkbeta) {."1 bk [ bkbeta =. ({.~ >.&.(%&(CacheLine%16))@#) bkbeta
   end.
   if. colx<ncol do. savref   =: ref =. colx {"1 Qk  NB. basic column, just fetch it
   else.
@@ -128,7 +129,7 @@ NB. obsolete   parms =. nrows 0} parms  NB. restore Fk flag to new length
   y =. (rvt;bndrowmask) 4 5} y
   NB. Transpose Qk.  Extend Qk, to cacheline row length, with 0 extend.  Change parms[0 1] to #valid columns of Qkt(flagged) and max # weights in a dot-product
   parms =. ((1{$3{::y) , (>./ 0, , 1 {"2 Ax)) 0 1} parms
-  y =. (((>.&.(%&4) 0{parms) {.!.100."1 |:"2)&.> 3 { y) 3} y  NB. Turn Qk into Qkt, filling row with 100.
+  y =. (((>.&.(%&(CacheLine%16)) 0{parms) {.!.100."1 |:"2)&.> 3 { y) 3} y  NB. Turn Qk into Qkt, filling row with 100.
   y =. (<parms) 9} y
   y =. (15!:18&.> 3 { y) 3} y  NB. cache-align the blocks that need it
   savy =: y
@@ -163,7 +164,7 @@ for_t. i. 4 do.
   M =. (,:   ] * 1e_20 * i.@#) 0. + (i. 6) ,~ =/~ i. 6  NB. extra row of Fk, used sometimes
   rvt =. '44444444' [ bndrowmask =. '014' {~ 8 ?@$ 3  NB. rvt must match total # columns; bndrowmask the rows in Qk incl Fk
   parms =.        6    0.      0.           1e_25         0.              0.             0.         0.          0.     __      _1
-  bkbeta =. (>.&.(%&4) 6) $ 0.
+  bkbeta =. (>.&.(%&(CacheLine%16)) 6) $ 0.
   bk =. ,:~ bkbeta
   beta =. (#rvt) $ 0.  NB. one beta per column
   assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;parms;bkbeta;beta 
@@ -195,7 +196,7 @@ for_t. i. 4 do.
     parms =.          _    0.      0.           1e_25      0       0.             0.         0.          0.       __    _1.
     rvt =. '014' {~ (nQcol+nAcol) ?@$ 3
     bndrowmask =. '014' {~ l ?@$ 3
-    bkbeta =. (>.&.(%&4) l) $ 0.
+    bkbeta =. (>.&.(%&(CacheLine%16)) l) $ 0.
     bk =. ,:~ bkbeta
     beta =. (#rvt) $ 0.  NB. one beta per column
     for_ndx. i. #rvt do.  NB. for each basic and non-basic column
@@ -206,7 +207,7 @@ for_t. i. 4 do.
   NB. SPR.  We need only a single column for each test
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.                1   1e_30  _1   _1    1    1    1    1
-  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0.   1.2  2.7  1.1   0    0    0
+  bkbeta =. (>.&.(%&(CacheLine%16)) 1 { $M) $ 0.    0.   1.2  2.7  1.1   0    0    0
   bk =. 2 {. ,: ($bkbeta) $     0.5    0     1    2    1    1    1    1
   bndrowmask =.                 '4',  '4',  '4', '4', '4', '4', '4', '4' 
   rvt =. ,'4'
@@ -227,17 +228,17 @@ for_t. i. 4 do.
   assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(3 }."_1 (1) |."_1  M);rvt;bndrowmask;(3 |."_1 bk);'';00;parms;bkbeta;beta
   assert. 0 1 1 8 1 ('' run128_9) Ax;Am;Av;(3 }."_1 (1) |."_1  M);rvt;bndrowmask;(3 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 4 1 8 0.5 ('' run128_9) Ax;Am;Av;(4 |."_1 M);rvt;bndrowmask;(4 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 4 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 4 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
   assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 }."_1 (1) |."_1  M);rvt;bndrowmask;(4 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 3 1 8 0.5 ('' run128_9) Ax;Am;Av;(5 |."_1 M);rvt;bndrowmask;(5 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 5 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 5 |."_1 bk);'';00;(_2 (0)} parms);(padc _4 }. bkbeta);beta
   assert. 0 2 1 8 0.5 ('' run128_9) Ax;Am;Av;(6 |."_1 M);rvt;bndrowmask;(6 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 6 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 6 |."_1 bk);'';00;(_2 (0)} parms);(padc _4 }. bkbeta);beta
   assert. 0 1 1 8 0.5 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(7 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
-NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 7 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
+NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 7 |."_1 bk);'';00;(_2 (0)} parms);(padc _4 }. bkbeta);beta
 
   NB. bound column has hidden row with SPR=beta
   assert. 0 8 1 8 0.4 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
@@ -266,7 +267,7 @@ NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1 
 
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.                2.   1    1    1    2    1    1    1
-  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.
+  bkbeta =. (>.&.(%&(CacheLine%16)) 1 { $M) $ 0.
   bk =. 2 {. ,: ($bkbeta) $     1.
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. ,'4'
@@ -318,7 +319,7 @@ NB.     end.
 NB.   end.
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.               1e_12 1e_10  ,(-2^_36),  _1e_11   0   0   0   0
-  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
+  bkbeta =. (>.&.(%&(CacheLine%16)) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
   bk =. 2 {. ,: ($bkbeta) $     1e_3   1       1       1     0   0   0   0
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. ,'4'
@@ -345,7 +346,7 @@ NB.   end.
   NB. Maximum nonimproving pivot
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.               1e_12 1e_5  ,_1e_4,  _1e_11   0   0   0   0
-  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
+  bkbeta =. (>.&.(%&(CacheLine%16)) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
   bk =. 2 {. ,: ($bkbeta) $     1e_13   1       1       1     0   0   0   0
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. ,'4'
@@ -462,7 +463,7 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
   NB. Large random test
   nqcols=.20
   for_nrow. (2000 + 1 ?@$ 512) , (128 + 10 ?@$ 512) do.  NB. varying column length of Qk.  Few cols of Qk, many of A0.  One long col to multithread small # columns
-    Qktqp =. 15!:18 (11) c. {. Qkt =. 15!:18 ] 2 {. ,: (>.&.(%&4) nrow) {."1 >: (nqcols,nrow) ?@$ 0  NB. use all positive values to avoid massive cancellation
+    Qktqp =. 15!:18 (11) c. {. Qkt =. 15!:18 ] 2 {. ,: (>.&.(%&(CacheLine%16)) nrow) {."1 >: (nqcols,nrow) ?@$ 0  NB. use all positive values to avoid massive cancellation
     Ax =. ,"0 (,.~   [: |.!.0 +/\) 1 >. (256 + ? 255) ?@$ nqcols   NB. array of start,length.  Big enough for multiple reservations
     Am =. ((<1 0)&{"2 Ax) ;@:(?&.>) nqcols  NB. column #s
     Av =. >: ((<1 0)&{"2 Ax) ;@:(?@$&.>) 0  NB. weights, all positive
@@ -530,13 +531,13 @@ if. '' -: $ colx =. 8 {::y do.
     NB. modify the inputs
     Qk =. drawvec {"1 _1 Qk ,"_1 (0.)
     bndrowmask =. drawvec { bndrowmask , '4'
-    drawvec =. ({.!._1~ >.&.(%&4)@#) drawvec NB. pad bk/bkbeta/z to batch bdy
+    drawvec =. ({.!._1~ >.&.(%&(CacheLine%16))@#) drawvec NB. pad bk/bkbeta/z to batch bdy
     bk =. drawvec {"1 _1 bk ,"_1 (0.)
     bkbeta =. drawvec { bkbeta , 0.
 NB. obsolete     parms =. (-^:(nflagged < 0) nrows) 0} parms  NB. restore Fk flag to new length
     y =. (Qk;bk;parms;bkbeta) 3 6 9 10} y
   else.   NB. One thread.  just pad bk/bkbeta to cacheline bdy
-    bk =. (#bkbeta) {."1 bk [ bkbeta =. ({.~ >.&.(%&4)@#) bkbeta
+    bk =. (#bkbeta) {."1 bk [ bkbeta =. ({.~ >.&.(%&(CacheLine%16))@#) bkbeta
   end.
   if. colx<ncol do. savref   =: ref =. colx {"1 Qk  NB. basic column, just fetch it
   else.
@@ -595,7 +596,7 @@ NB. obsolete   parms =. nrows 0} parms  NB. restore Fk flag to new length
   y =. (rvt;bndrowmask) 4 5} y
   NB. Transpose Qk.  Extend Qk, to cacheline row length, with 0 extend.  Change parms[0 1] to #valid columns of Qkt(flagged) and max # weights in a dot-product
   parms =. ((1{$3{::y) , (>./ 0, , 1 {"2 Ax)) 0 1} parms
-  y =. (((>.&.(%&4) 0{parms) {.!.100."1 |:"2)&.> 3 { y) 3} y  NB. Turn Qk into Qkt, filling row with 100.
+  y =. (((>.&.(%&(CacheLine%16)) 0{parms) {.!.100."1 |:"2)&.> 3 { y) 3} y  NB. Turn Qk into Qkt, filling row with 100.
   y =. (<parms) 9} y
   y =. (15!:18&.> 3 { y) 3} y  NB. cache-align the blocks that need it
   savy =: y
@@ -630,7 +631,7 @@ for_t. i. 4 do.
   M =. (,:   ] * 1e_20 * i.@#) 0. + (i. 6) ,~ =/~ i. 6  NB. extra row of Fk, used sometimes
   rvt =. '44444444' [ bndrowmask =. '014' {~ 8 ?@$ 3  NB. rvt must match total # columns; bndrowmask the rows in Qk incl Fk
   parms =.        6    0.      0.           1e_25         0.              0.             0.         0.          0.     __      _1
-  bkbeta =. (>.&.(%&4) 6) $ 0.
+  bkbeta =. (>.&.(%&(CacheLine%16)) 6) $ 0.
   bk =. ,:~ bkbeta
   beta =. (#rvt) $ 0.  NB. one beta per column
   assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;parms;bkbeta;beta 
@@ -662,7 +663,7 @@ for_t. i. 4 do.
     parms =.          _    0.      0.           1e_25      0       0.             0.         0.          0.       __    _1.
     rvt =. '014' {~ (nQcol+nAcol) ?@$ 3
     bndrowmask =. '014' {~ l ?@$ 3
-    bkbeta =. (>.&.(%&4) l) $ 0.
+    bkbeta =. (>.&.(%&(CacheLine%16)) l) $ 0.
     bk =. ,:~ bkbeta
     beta =. (#rvt) $ 0.  NB. one beta per column
     for_ndx. i. #rvt do.  NB. for each basic and non-basic column
@@ -673,7 +674,7 @@ for_t. i. 4 do.
   NB. SPR.  We need only a single column for each test
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.                1   1e_30  _1   _1    1    1    1    1
-  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0.   1.2  2.7  1.1   0    0    0
+  bkbeta =. (>.&.(%&(CacheLine%16)) 1 { $M) $ 0.    0.   1.2  2.7  1.1   0    0    0
   bk =. 2 {. ,: ($bkbeta) $     0.5    0     1    2    1    1    1    1
   bndrowmask =.                 '4',  '4',  '4', '4', '4', '4', '4', '4' 
   rvt =. ,'4'
@@ -694,17 +695,17 @@ for_t. i. 4 do.
   assert. 0 4 1 8 1 ('' run128_9) Ax;Am;Av;(3 }."_1 (1) |."_1  M);rvt;bndrowmask;(3 |."_1 bk);'';00;parms;bkbeta;beta
   assert. 0 1 1 8 1 ('' run128_9) Ax;Am;Av;(3 }."_1 (1) |."_1  M);rvt;bndrowmask;(3 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 4 1 8 0.5 ('' run128_9) Ax;Am;Av;(4 |."_1 M);rvt;bndrowmask;(4 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 4 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 4 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
   assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(4 }."_1 (1) |."_1  M);rvt;bndrowmask;(4 |."_1 bk);'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 3 1 8 0.5 ('' run128_9) Ax;Am;Av;(5 |."_1 M);rvt;bndrowmask;(5 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 5 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 5 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(5 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 5 |."_1 bk);'';00;(_2 (0)} parms);(padc _4 }. bkbeta);beta
   assert. 0 2 1 8 0.5 ('' run128_9) Ax;Am;Av;(6 |."_1 M);rvt;bndrowmask;(6 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 6 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 6 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 6 |."_1 bk);'';00;(_2 (0)} parms);(padc _4 }. bkbeta);beta
   assert. 0 1 1 8 0.5 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(7 |."_1 bk);'';00;(parms);bkbeta;beta
-  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;parms;(_4 }. bkbeta);beta
-NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;(_2 (0)} parms);(_4 }. bkbeta);beta
+  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 7 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
+NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(_4 (}."1) 7 |."_1 bk);'';00;(_2 (0)} parms);(padc _4 }. bkbeta);beta
 
   NB. bound column has hidden row with SPR=beta
   assert. 0 8 1 8 0.4 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
@@ -733,7 +734,7 @@ NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1 
 
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.                2.   1    1    1    2    1    1    1
-  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.
+  bkbeta =. (>.&.(%&(CacheLine%16)) 1 { $M) $ 0.
   bk =. 2 {. ,: ($bkbeta) $     1.
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. ,'4'
@@ -784,7 +785,7 @@ NB. put nothing here! savy is carried over to the next line
   end.
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.               1e_12 1e_10  ,(-2^_36),  _1e_11   0   0   0   0
-  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
+  bkbeta =. (>.&.(%&(CacheLine%16)) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
   bk =. 2 {. ,: ($bkbeta) $     1e_3   1       1       1     0   0   0   0
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. ,'4'
@@ -811,7 +812,7 @@ NB. put nothing here! savy is carried over to the next line
   NB. Maximum nonimproving pivot
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.               1e_12 1e_5  ,_1e_4,  _1e_11   0   0   0   0
-  bkbeta =. (>.&.(%&4) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
+  bkbeta =. (>.&.(%&(CacheLine%16)) 1 { $M) $ 0.    0   ,(1+2^_36), 1.2    0   0   0   0
   bk =. 2 {. ,: ($bkbeta) $     1e_13   1       1       1     0   0   0   0
   bndrowmask =. (1 { $ M) $     '4'
   rvt =. ,'4'
@@ -917,7 +918,7 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
   NB. Large random test
   nqcols=.20
   for_nrow. (2000 + 1 ?@$ 512) , (128 + 10 ?@$ 512) do.  NB. varying column length of Qk.  Few cols of Qk, many of A0.  One long col to multithread small # columns
-    Qkt =. 15!:18 ] 2 {. ,: (>.&.(%&4) nrow) {."1 >: (nqcols,nrow) ?@$ 0  NB. use all positive values to avoid massive cancellation
+    Qkt =. 15!:18 ] 2 {. ,: (>.&.(%&(CacheLine%16)) nrow) {."1 >: (nqcols,nrow) ?@$ 0  NB. use all positive values to avoid massive cancellation
     Ax =. ,"0 (,.~   [: |.!.0 +/\) 1 >. (256 + ? 255) ?@$ nqcols   NB. array of start,length.  Big enough for multiple reservations
     Am =. ((<1 0)&{"2 Ax) ;@:(?&.>) nqcols  NB. column #s
     Av =. >: ((<1 0)&{"2 Ax) ;@:(?@$&.>) 0  NB. weights, all positive
@@ -1077,7 +1078,7 @@ f =: {{
   prx =. 00 + r ? siz [ pcx =. 00 + c ? siz  NB. indexes of mods
   pivotcolnon0 =.r ?@$ 0 [ newrownon0 =. c ?@$ 0
   absfuzz =. 1e_14 * ? 0  NB. tolerance
-  Qk =. (>.&.(%&4) siz) {."1 (siz,siz) ?@$ 0
+  Qk =. (>.&.(%&(CacheLine%16)) siz) {."1 (siz,siz) ?@$ 0
   expQk=. (((<prx;pcx) { Qk) ((*  absfuzz <!.0 |)@:-) pivotcolnon0 */ newrownon0) (<prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk
   if. -. r =. 1e_11 > >./ , | Qk - expQk do. 13!:8]4 [ 'prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
@@ -1107,7 +1108,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
   newrownon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) newrownon0  NB. append extended part
   newrownon0 =. 0. + newrownon0  NB. force to float
   absfuzz =. 1e_25 * ? 0  NB. tolerance
-  Qk =. (>.&.(%&4) siz) {."1 (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
+  Qk =. (>.&.(%&(CacheLine%16)) siz) {."1 (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
   Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
   Qk1 =. memu Qk
   expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
@@ -1140,7 +1141,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
   newrownon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) newrownon0  NB. append extended part
   newrownon0 =. 0. + newrownon0  NB. force to float
   absfuzz =. 1e_30 >. 1e_25 * ? 0  NB. tolerance
-  Qk =. (>.&.(%&4) siz) {."1 (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
+  Qk =. (>.&.(%&(CacheLine%16)) siz) {."1 (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
   Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
   expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk
@@ -1265,7 +1266,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
   newrownon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) newrownon0  NB. append extended part
   newrownon0 =. 0. + newrownon0  NB. force to float
   absfuzz =. 1e_30 >. 1e_25 * ? 0  NB. tolerance
-  Qk =. (>.&.(%&4) >: siz) {."1 (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
+  Qk =. (>.&.(%&(CacheLine%16)) >: siz) {."1 (*  0.25 < 0 ?@$~ $) 1e6 * (siz,siz) ?@$ 0.
   Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
   expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) e128x22 Qk

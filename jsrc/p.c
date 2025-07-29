@@ -637,7 +637,7 @@ firstword: ;  // come here first time, while pt0ecam settles
       }
       I4 buck=NAV(QCWORD(y))->bucket;  // Read bucket# (the index of the hashchain to use)
       // bucket search needed - secondary table or name without lookaside (including undefined name)
-      if(likely(buck>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.
+      if(likely(buck>0)){  // buckets but no symbol - must be global, or cloned symtab - but not synthetic new name.
        y=QCWORD(y); // flags no longer needed - we are looking up the name
        I bx=NAV(y)->bucketx;  // bucketx: neg for allocated symbols (which would have lookaside in the primary), nonnneg for others (usually public, but could be synthetic)
        if((bx|(I)(I1)AR(jt->locsyms))>=0)goto rdglob;  // if nonneg bucketx and no name has been added, skip the search.  AR may change midsentence.  No other thread can add a local symbol.

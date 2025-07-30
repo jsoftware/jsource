@@ -3327,7 +3327,7 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
 // obsolete   __m256d *arow0213;  // pointer to corresponding values, in stripe0213
   I4 colndxahead;  // next col index
   I4 rowindex;  // index into (*acol(ndx|val)s) of the next position in this column
-  US ndxvalofst;  // index of start of ndx/val for this op in ths stripe, relative to stripeofst/stripe0213, always a multiple of RESBLKE
+  US ndxvalofst;  // index of start of ndx/val for this op in this stripe, relative to stripeofst/stripe0213, always a multiple of RESBLKE
   US nofsts;  // index to the offset pointer after the last offset/val has been processed
  } opinfo;  // info for each op
 
@@ -3437,6 +3437,11 @@ if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
     // read the mask for this op and convert it to offsets into ring and mask of resultblocks
     opstat[io].chain=aops; aops=&opstat[io];  // add this op to the active chain
     opstat[io].rbmask=0;  // init mask of touched blocks
+#if 0
+    // Go through the mask, classifying each set bit into a run of 4, a run of 2, or a run of 1
+
+    // Go back through the masks, consolidating them into one block and gathering the values and converting them to 0213 order
+#else
     I j32, nofst, lastoffset, bits, lastbits; __m256i *smask;   // number of 32-byte mask reads to date; number of offsets written; value of last offset; pointer to the start of the bitmask for this section; bits read; bits read before masking
     opstat[io].ndxvalofst=nextstripeofst-stripeofst;  // remember where the offsets/values start   save 2 insts by making this a byte offset
     for(j32=0,nofst=0,smask=(__m256i*)(BAV(oprowmasks[io])+sstart);;++j32){
@@ -3463,6 +3468,7 @@ finmask:;
     (*lastvals)[0][3]=(*lastvals)[0][lastvalidlane]; (*lastvals)[1][3]=(*lastvals)[1][lastvalidlane];  // transfer value to last value in block, which is written last
 
     US *ofstend1=&nextstripeofst[(ssize+(NPAR-1))&(-NPAR)]; opstat[io].nofsts=(I)ofstend1-(I)nextstripeofst; nextstripeofst=ofstend1; nextstripe0213=(__m256d*)((C*)nextstripe0213+j4); // advance pointers to a block boundary, remembering the end+1 offset of the current op
+#endif
    }
   }
     // we keep all ops in a single list, removing ones that have been fully processed.   It might be right to keep a second list with ops that have not entered yet, heaped on row of entry.  Depends on overlap.

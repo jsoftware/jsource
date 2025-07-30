@@ -645,8 +645,8 @@ F2(jtmdot){F12IP;A z=0;
  R z;
 }
 
-B jtxquad(J jt,E *z,X W){
- mpX(W); mpX0(z); D h=jmpz_get_d(mpW); jmpz_set_d(mpz,h); jmpz_sub(mpz,mpW,mpz); D l=jmpz_get_d(mpz);  // high & low parts as D
- D th,tl; TWOSUMBS1(h,l,th,tl) *z=CANONE1(th,tl);   // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do.  convert to canonical form
+B jtxquad(J jt,E *Z,X W){
+ mpX(W); mpX0(Z); D h=jmpz_get_d(mpW); jmpz_set_d(mpZ,h); jmpz_sub(mpZ,mpW,mpZ); D l=jmpz_get_d(mpZ); Xmp(Z);  // high & low parts as D
+ D th,tl; TWOSUMBS1(h,l,th,tl) *Z=CANONE1(th,tl);   // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do.  convert to canonical form
  R 1;
 }

@@ -467,7 +467,7 @@ I remii(I a,I b){I r; R (a!=REPSGN(a))?(r=b%a,0<a?r+(a&REPSGN(r)):r+(a&REPSGN(-r
 AHDR2(remII,I,I,I){I u,v;
  if(m<0){DQUC(m,*z++=remii(*x,*y); x++; y++; )
  }else if(m&1){m>>=1;   // repeated x.  Handle special cases and avoid integer divide
-#if SY_64 && C_USEMULTINTRINSIC
+#if (SY_64 && C_USEMULTINTRINSIC) && !(defined(_WIN32) && defined(__aarch64__))
   DQU(n, u=*x++;
     // take abs(x); handle negative x in a postpass
    UI ua=-u>=0?-u:u;  // abs(x)

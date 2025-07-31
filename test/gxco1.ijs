@@ -582,9 +582,15 @@ Y=: 4 _4 4 _4 * x
 (|/~ -: |/~@:x:) 20e4+_20+i.(QKTEST{41 21)
 (|/~ -: |/~@:x:) 27e4+_20+i.(QKTEST{41 21)
 echo '*** gxco1'
-echo (|/~) a1=: (imin+i. 20),(-.QKTEST)#(imax-i. 20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
+echo 'a1=: (imin+i. 20),(-.QKTEST)#(imax-i. 20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
+echo a1=: (imin+i. 20),(-.QKTEST)#(imax-i. 20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
+echo '(|/~) a1'
+echo (|/~) a1
+echo '(|/~@:x:) a1'
 echo (|/~@:x:) a1
+echo '(|/~ = |/~@:x:) a1'
 echo (|/~ = |/~@:x:) a1
+echo '(|/~ -: |/~@:x:) a1'
 echo (|/~ -: |/~@:x:) a1
 IFWA64 +. (|/~ -: |/~@:x:) (imin+i. 20),(-.QKTEST)#(imax-i. 20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 

@@ -160,13 +160,13 @@ I jtqcompare(J jt,Q a,Q w){R QCOMP(a,w);}
 #undef FAIL
 #include "jr0.h"
 
-B jtqquad(J jt,E *z,Q W){
-  if (ISQinf(W)){*z=(E){.hi=0<QSGN(W) ?inf :infm,.lo=0.};}
+B jtqquad(J jt,E *Z,Q W){
+  if (ISQinf(W)){*Z=(E){.hi=0<QSGN(W) ?inf :infm,.lo=0.};}
   else{
-   mpQ(W); mpQ0(z); D h=jmpq_get_d(mpW); jmpq_set_d(mpz,h); jmpq_sub(mpz,mpW,mpz); D l=jmpq_get_d(mpz);  // high & low parts as D
+   mpQ(W); mpQ0(Z); D h=jmpq_get_d(mpW); jmpq_set_d(mpZ,h); jmpq_sub(mpZ,mpW,mpZ); D l=jmpq_get_d(mpZ); FREEQmp(Z);  // high & low parts as D
    // if jmpq_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do
    D th=h+l; D tl=h-th; h=th; l+=tl;
-   *z=CANONE1(h,l);   // convert to canonical form
+   *Z=CANONE1(h,l);   // convert to canonical form
   }
   R 1;
 }

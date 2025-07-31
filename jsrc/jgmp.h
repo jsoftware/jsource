@@ -140,8 +140,8 @@ extern B nogmp(void);
 extern void*jmalloc4gmp(size_t);
 #define GAGMP(z,n) (z=({n ?({GEMP0; mpz_t mpd= {n/SZI, n/SZI, jmalloc4gmp(n)}; Xmp(d);}) :X0;}))
 #define GAX(z, n) {GA10(z, LIT, SZI*(n)); ACINIT(z,1); z;}  // like GAGMP but native J alloc
-extern X jtXmpzcommon(J, mpz_t, B);
-extern Q jtQmpq(J, mpq_t);
+extern X jtXmpzcommon(J, mpz_t, I);
+extern Q jtQmpq(J, mpq_t, I);
 
 #ifdef JGMPINIT
  /* context here is jgmpinit.c */
@@ -238,9 +238,16 @@ extern Q jtQmpq(J, mpq_t);
 // dehydrate a gmp (mpz_t) as a J (X), produces the X result as a C rvalue
 #define Xmpnojt(x) Xmpzcommon(mp##x, 1)
 
+// free a gmp (mpz_t), returning 0
+#define FREEXmp(x) Xmpzcommon(GEMPz(mp##x), 2)
+
 // dehydrate a gmp (mpq_t mp##q) as a J value of type (Q)
 // produces the Q result as a C rvalue
-#define Qmp(q) jtQmpq(jt, GEMPq(mp##q))
+#define Qmp(q) jtQmpq(jt, GEMPq(mp##q), 1)
+
+// free a gmp (mpq_t mp##q), returning 0
+// produces the Q result as a C rvalue
+#define FREEQmp(q) jtQmpq(jt, GEMPq(mp##q), 2)
 
 // rehydrate a J (Q q) as a gmp (mpq_t mp##q) reflecting value of q
 #define mpQ(q) \

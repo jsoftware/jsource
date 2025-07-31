@@ -183,7 +183,8 @@ void jgmpguard(X x) {
  fprintf(stderr,"AC(z): %llx (%lli), ", AC(z), AC(z));
  fprintf(stderr,"AN(z): %llx (%lli), ", AN(z), AN(z));
  fprintf(stderr,"AR(z): %hhx (%hhu), ", AR(z), AR(z));
- fprintf(stderr,"AFHRH(z): %hx (%hi)\n", AFHRH(z), AFHRH(z));
+ fprintf(stderr,"AFHRH(z): %hx (%hi)", AFHRH(z), AFHRH(z));
+ fprintf(stderr,"\n");
  */
 #if MEMAUDIT&8
  static I lfsr= 1;
@@ -263,7 +264,8 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
  fprintf(stderr,"AC(x): %llx (%lli), ", AC(x), AC(x));
  fprintf(stderr,"AN(x): %llx (%lli), ", AN(x), AN(x));
  fprintf(stderr,"AR(x): %hhx (%hhu), ", AR(x), AR(x));
- fprintf(stderr,"AFHRH(x): %hx (%hi)\n", AFHRH(x), AFHRH(x));
+ fprintf(stderr,"AFHRH(x): %hx (%hi)", AFHRH(x), AFHRH(x));
+ fprintf(stderr,"\n");
  */
 #if MEMAUDIT&0x4
  AK(x)= AFLAG(x)= AM(x)= AT(x)= AC(x)= AN(x)= 0xdeadbeef;
@@ -280,8 +282,9 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
 }
 
 // dehydrate fresh (mpz_t) as J (X)
-X jtXmpzcommon(J jt, mpz_t mpz, B numeric) {
- if(unlikely(!mpz->_mp_size) && likely(numeric)) {
+// numeric is 0 for non-numeric, which is always allocated; 1 for numeric, which may have length 0 (not allocated); 2 to free numeric immediately if allocated
+X jtXmpzcommon(J jt, mpz_t mpz, I numeric) {
+ if(unlikely(!mpz->_mp_size) && likely(numeric!=0)) {
   jmpz_clear(mpz);
   R X0; // mpz is new but may not have memory
  }
@@ -291,6 +294,7 @@ X jtXmpzcommon(J jt, mpz_t mpz, B numeric) {
  if(1!=AC(x)) SEGFAULT;             // should be pristine from libgmp
  if(ACISPERM(AC(x))) SEGFAULT;      // should never happen
 #endif
+ if(numeric==2){jfree4gmp(mpz->_mp_d,AN(x)); R 0;}   // if just a call to free, avoid the tpush overhead
  XSGN(x)= mpz->_mp_size;            // size of number and its sign
  I n= AN(x);                        // length of memory allocated for number
  I sz= XHSZ+n;                      // bytes allocated
@@ -306,11 +310,11 @@ X jtXmpzcommon(J jt, mpz_t mpz, B numeric) {
 }
 
 // dehydrate fresh (mpq_t) as J (Q)
-Q jtQmpq(J jt, mpq_t mpq) {
+Q jtQmpq(J jt, mpq_t mpq, I number) {
  Q q; A*pushp;
- q.n= Xmpzcommon(&mpq->_mp_num, 1); // dehydrate numerator
- q.d= Xmpzcommon(&mpq->_mp_den, 1); // dehydrate denominator
- if (unlikely(!q.n)||unlikely(!q.d)||unlikely(ISQ0(q))) R Q0;
+ q.n= Xmpzcommon(&mpq->_mp_num, number); // dehydrate numerator
+ q.d= Xmpzcommon(&mpq->_mp_den, number); // dehydrate denominator
+ if (unlikely(!q.n)||unlikely(!q.d)||unlikely(ISQ0(q))) R Q0;   // if error (or number was 2 indicating deletion), return canned 0
  R q;
 }
 

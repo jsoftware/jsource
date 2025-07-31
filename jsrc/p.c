@@ -611,6 +611,8 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
 
      // We have the value/typeclass of the next word (QCSENTENCE semantics).  If it is an unassigned name, we have to resolve it and perhaps use the new name/type
 firstword: ;  // come here first time, while pt0ecam settles
+     A lka=__atomic_load_n(&QCWORD(y)->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
+            // Move the cheap & safe load to be ahead of the often-mispredicted branch
      if(((I)y&QCISLKPNAME)){
       // Replace a name (not to left of ASGN) with its value
       // Name, not being assigned
@@ -619,9 +621,7 @@ firstword: ;  // come here first time, while pt0ecam settles
       // The important performance case is local names with lookaside.
       // Registers are very tight here.  Nothing survives over a subroutine call - refetch y if necessary.  If we have anything to
       // keep over a subroutine call, we have to store it in pt0ecam or some other saved name
-#if 0
-      A lka=__atomic_load_n(&QCWORD(y)->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
-            // Move the cheap & safe load to be ahead of the often-mispredicted branch
+#if 1  // obsolete 
       // The name is from an explicit definition in all cases of interest.  Each explicit definition has been compiled and referenced so that each name appears only once (but name and name_: have separate blocks).
       // The name contains a lookaside value which holds the most recent value stored into the primary table.  The name is shared by all instances of the executing verb.  Nevertheless, the primary instance
       // is the dominant one by far, and we want to make it as fast as possible.  MAJOR CONSIDERATION: the primary uses pointers to values and names that only it has reason to use.  The non-primary
@@ -1190,7 +1190,7 @@ failparse:
  }else{  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){A sv=0;  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // 1-word sentence.  pt0ecam holds AR(locsyms)
-#if 0
+#if 1   // obsolete 
    I yflags=(I)y;  // save the word, with QCNAMELKP semantics
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing overhead, because it happens enough to notice (conditions & function results)
    // No ASSERT - must get to the end to pop stack
@@ -1253,7 +1253,7 @@ rdglob1:;
     PSTK* ostk=jt->parserstackframe.parserstkbgn;  // save caller's stack - rest of parserstackframe is untouched and unused
     PSTK localstack[PSTACKRSV]={{.a=(A)queue, .t=1}};  // stack to use, containing pointer to the sentence
     jt->parserstackframe.parserstkbgn=&localstack[PSTACKRSV];  // point to originfo to use, +1
-    if(likely((sv=syrd(y,jt->locsyms))!=0)){     // Resolve the name and ra() it if global - undefname gives 0 without error
+    if(likely((sv=syrdnobuckets(y,jt->locsyms))!=0)){     // Resolve the name and ra() it if global - undefname gives 0 without error
      // The name was found, not in a static local table.  sv has QCFAOWED semantics
      if(likely((I)sv&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
       if(unlikely(yflags&QCNAMEABANDON)){

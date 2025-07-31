@@ -2197,8 +2197,8 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define SYMVALFA1(l,faname) {if(faname!=0){if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AFLAGCLRKNOWN(faname); if(likely(AC(faname)<2))ACRESET(faname,ACINPLACE|ACUC1); faname=0;}}}
 #define SYMVALFA2(faname) if(faname!=0){faactionrfo(jt,faname,AFLAGCLRKNOWN(faname))}   // must clear known before free, since once we reduce usect we cannot touch the block
 #define SYMVALFA(l) {A v=QCWORD((l).fval); SYMVALFA1(l,v) SYMVALFA2(v)}   // l points to the symbol-table entry for the name
-// scaf #define SETLOCALFVALTEST(val,sym,test) {if(likely(test))(sym)->name->mback.lookaside=(val); (sym)->fval=(val);}  // set value in local symbol, with copy to the lookaside if defined.  test is true if primary table
-#define SETLOCALFVALTEST(val,sym,test) {(sym)->fval=(val);}  // set value in local symbol, with copy to the lookaside if defined.  test is true if primary table
+#define SETLOCALFVALTEST(val,sym,test) {if(likely(test))(sym)->name->mback.lookaside=(val); (sym)->fval=(val);}  // set value in local symbol, with copy to the lookaside if defined.  test is true if primary table
+// obsolete #define SETLOCALFVALTEST(val,sym,test) {(sym)->fval=(val);}  // set value in local symbol, with copy to the lookaside if defined.  test is true if primary table
 #define SETLOCALFVAL(val,sym,loc) SETLOCALFVALTEST(val,sym,AR(loc)&ARLSYMINUSE)  // set value in local symbol, with copy to the lookaside if defined.  Used when sym is in execution and thus flagged if primary
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size

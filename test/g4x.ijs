@@ -446,7 +446,7 @@ end.
 a =: {{ if. y do. a <: y end. dat =: 5
 4!:55<'dat1' [ dat=. dat1 [ 4!:55<'dat' [ dat1=. dat
  4!:55<'dat' }}
-NB. scaf should reinstate  a 2
+a 2
 
 
 4!:55 ;:'abc_z_ jnc_z_ jnl_z_ sum_z_'

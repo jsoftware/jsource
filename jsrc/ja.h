@@ -902,7 +902,7 @@ extern void jfree4gmp(void*,size_t);
 #define qlogd1(x)                   jtqlogd1(jt,(x))
 #define qlogz1(x)                   jtqlogz1(jt,(x))
 #define qminus(x,y)                 jtqminus(jt,(x),(y))
-#define Qmpq(x)                     jtQmpq(jt,(x))
+// obsolete #define Qmpq(x)                     jtQmpq(jt,(x))
 #define qplus(x,y)                  jtqplus(jt,(x),(y))
 #define qpow(x,y)                   jtqpow(jt,(x),(y))
 #define qq(x,y)                     jtqq(jt,(x),(y)) 

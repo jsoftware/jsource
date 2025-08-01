@@ -3438,7 +3438,48 @@ if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
     opstat[io].chain=aops; aops=&opstat[io];  // add this op to the active chain
     opstat[io].rbmask=0;  // init mask of touched blocks
 #if 0
-    // Go through the mask, classifying each set bit into a run of 4, a run of 2, or a run of 1
+    // Go through the mask, classifying each set bit into a run of 4, a run of 2, or a run of 1.  We temporarily store some in the E area
+    US *deplanes[3]={&stripeofst[nextstripex],(US*)&stripe0213[nextstripex],(US*)&stripe0213[nextstripex]+MAXNON0};  // start of 4-, 2-, & 1-col blocks
+    C *smask=BAV(oprowmasks[io])+sstart;  // start of bitmask for this stripe in this op
+ndxvalofst; must allow 2*MAXNON0 overstores in ofst area
+    UI bitvec; I nvalsfnd=0, bitofst=0;  // vector of bits; number of values found so far; offset for bit 0 in bitvec;
+    while(1){
+     bitvec=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_loadu_si256((__m256i*)(smask+bitofst)),_mm256_setzero_si256()));  // read next 32 bits
+     I nrembits=32;  // #valid bits left in bitvec
+     while(1){
+      if(bitvec==0){bitofst+=nrembits; break;}  // no more bits in this section, advance to next
+      I low1=CTTZI(bitvec); bitvec>>=low1; bitofst+=low1; nrembits-=low1;   // shift out low 0s
+      I vallimit=MIN(ssize-nvalsfnd,4); I validbits=bitvec&~(~0<<vallimit);   // max # 1s that can be valid; discard bits that must be after the last valid value
+      I sizefoundx=(validbits>>1)&1; sizefoundx=validbits==0b1111?2:sizefoundx; I sizefound=1LL<<sizefoundx;   // sizefound is 1/2/4, # consecutive low bits found
+      if(unlikely(sizefound+nvalsfnd==ssize)){*deplanes[sizefoundx]=bitofst*sizeof(US); deplanes[sizefoundx]+=sizefound; goto finclass;}  // if this block exhausts the non0 values, remember them and exit
+      if(unlikely((sizefound&3)==nrembits))break;  // if we find 1 or 2 bits exactly at the end of the block, don't match them in case a 4-block straddles the boundary
+      *deplanes[sizefoundx]=bitofst*sizeof(US); deplanes[sizefoundx]+=sizefound;  // normal block; record it in its section.  The offset and value use the same pointer, so increment lane position accordingly
+      bitvec>>=sizefound; bitofst+=sizefound; nrembits-=sizefound;  // discard the bits from the block
+     }
+    }
+   }
+finclass:;  // we have classified the blocks
+   opstat[io].laneendofst[0]=(C*)deplanes[0]-(C*)&stripeofst[nextstripex];  // get cumulative lengths to end of each section from beginning of stripe
+   opstat[io].laneendofst[1]=opstat[io].laneendofst[0]+(C*)deplanes[1]-(C*)&stripe0213[nextstripex];
+   opstat[io].laneendofst[2]=opstat[io].laneendofst[1]+(C*)deplanes[2]-(C*)((US*)&stripe0213[nextstripex]+MAXNON0);
+#define C8(o) _mm256_storeu_si256((__m256i*)(C8D+(o)*sizeof(__m256i)),_mm256_loadu_pd((__m256i*)(C8S+(o)*sizeof(__m256i)));
+   I C8D=(I)&deplanes[0], C8S=(I)&stripe0213[nextstripex]; C8(0) C8(1) C8(2) C8(3) C8(4) C8(5) C8(6) C8(7)   // copy max # offsets into compacted area
+   C8D+=(C*)deplanes[1]-(C*)&stripe0213[nextstripex], C8S=(I)&stripe0213[nextstripex+MAXNON0]; C8(0) C8(1) C8(2) C8(3) C8(4) C8(5) C8(6) C8(7) 
+
+   // square the offsets up to RESBLK boundaries.  If there were no 1-blocks, duplicate the last 2-block if it is odd.  If there are 1-blocks, replicate the last one to end-of-block.
+   // if the last 2-block is odd, convert it to 2 1-blocks
+   US *ca=(US*)((C*)&stripeofst[nextstripex]+opstat[io].laneendofst[1]);  // pooint to end of 2-blocks
+   if(unlikely(opstat[io].laneendofst[1]==opstat[io].laneendofst[2])){
+    ca[0]=ca[-2]; opstat[io].laneendofst[1]=opstat[io].laneendofst[2]=(opstat[io].laneendofst[1]+2*sizeof(US))&~(2*sizeof(US));    // append one copy of last offset keep it if it was odd - as end of 2s and 1s
+   }else{
+    ca[-1]=ca[-2]+sizeof(US); opstat[io].laneendofst[1]=opstat[io].laneendofst[1]&~(2*sizeof(US));  // add offset to companion in 2-block; keep it if 2-block is odd
+    ca=(US*)((C*)&stripeofst[nextstripex]+opstat[io].laneendofst[2]); ca[0]=ca[1]=ca[2]=ca[-1];  // append 3 copies of last offset
+    opstat[io].laneendofst[2]=(opstat[io].laneendofst[2]+3*sizeof(US))&~(3*sizeof(US));  // keep as many as needed to fill RESBLK
+   }
+
+   // offsets finished.  collect the values, convert to 0213.  Assemble the mask of touched RESBLKs
+
+    
 
     // Go back through the masks, consolidating them into one block and gathering the values and converting them to 0213 order
 #else

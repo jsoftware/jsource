@@ -37,13 +37,13 @@ static I4 type3x0[][2]={  // 1st arg is bit#, 2nd is 1 iff sparse type
 #define T3X0(t) [t##X]={(I)1<<(t##X),0}   // when sparse not supported
 #define T3X0A(t)  [t##X]={t##EXTTYPE,0}   // when bit must be represented as a different value
 T3X0SP(B01), T3X0SP(LIT), T3X0SP(INT), T3X0SP(FL), T3X0SP(CMPX), T3X0SP(BOX), T3X0(XNUM), T3X0(RAT),
-T3X0A(INT1), T3X0A(INT2), T3X0A(INT4), T3X0A(HP), T3X0A(SP), T3X0A(QP), 
+/* T3X0A(INT1),*/ T3X0A(INT2), T3X0A(INT4), T3X0A(HP), T3X0A(SP), T3X0A(QP), 
 T3X0(SBT), T3X0(C2T), T3X0(C4T), 
 T3X0(NAME), T3X0(MARK), T3X0(ADV), T3X0(ASGN), T3X0(SYMB), T3X0(CONW), T3X0(VERB), T3X0(LPAR), T3X0(CONJ), T3X0(RPAR), 
 
 };
 static S f3x0new[]={
-[B01]=B01, [LIT]=LIT,  [INT]=INT,  [FL]=FL, [INT1EXTTYPE]=INT1, [INT2EXTTYPE]=INT2, [INT4EXTTYPE]=INT4, [HPEXTTYPE]=HP, [SPEXTTYPE]=SP, [QPEXTTYPE]=QP,
+[B01]=B01, [LIT]=LIT,  [INT]=INT,  [FL]=FL, /*[INT1EXTTYPE]=INT1,*/ [INT2EXTTYPE]=INT2, [INT4EXTTYPE]=INT4, [HPEXTTYPE]=HP, [SPEXTTYPE]=SP, [QPEXTTYPE]=QP,
 };
 #define F3X0(t) [t##X-CMPXX]=t
 static I4 f3x0bit[]={F3X0(CMPX), F3X0(BOX), F3X0(XNUM), F3X0(RAT), F3X0(SBT), F3X0(C2T), F3X0(C4T), 
@@ -52,8 +52,10 @@ F3X0(NAME), F3X0(MARK), F3X0(ADV), F3X0(ASGN), F3X0(SYMB), F3X0(CONW), F3X0(VERB
 // conversion from internal type to the result in 3!:x, which matches the published types
 static I toonehottype(I t){R type3x0[CTTZ(t)][SGNTO0(t)];}  // take value from table
 // Convert from 3!:x form to internal type, 0 if invalid
-static I fromonehottype(I t){
+static I fromonehottype(I t,J jt){  // scaf
+// obsolete if(JT(jt,peekdata)==8)printf("entering onehottype, t=%lld\n",t);  // scaf 
  if((UI)t>RPAR)R 0;  // error if value too high
+// obsolete if(JT(jt,peekdata)==8)DO(sizeof(f3x0new)/sizeof(f3x0new[0]), printf("fx0new[%lld]=0x%x\n",i,f3x0new[i]);)  // scaf
  if(t<=QPEXTTYPE)R f3x0new[t];  // return if a new type, or an old one < 11 (sc. B01 LIT INT FL)
  if((t&-t)!=t)R 0;  // if more than one upper bit set, error
  if(t&0xfc00)R SPARSE|(t>>10);
@@ -66,9 +68,13 @@ F1(jtstype){F12IP;ARGCHK1(w); R sc(toonehottype(AT(w)));}
 // (3!:0-type) c. w - convert
 F2(jtcdot2){F12IP;A z;
  ARGCHK2(a,w);
- I t; RE(t=i0(a)); // convert type to integer atom, error if can't
- ASSERT(t=fromonehottype(t),EVDOMAIN)  // convert from 3!:0 form to internal type
+// obsolete if(JT(jt,peekdata)==8)printf("entering c.\n");  // scaf 
+ I t; RE(t=i0(a)) ASSERT(t=fromonehottype(t,jt),EVDOMAIN)  // convert from 3!:0 form, which must  be to atomic integer, to internal type, which must be valid
+// obsolete if(JT(jt,peekdata)==8)printf("jt->jerr is %d\n",jt->jerr);  // scaf 
+// obsolete if(JT(jt,peekdata)==8)printf("value of x is %lld\n",t);  // scaf 
+// obsolete if(JT(jt,peekdata)==8)printf("return from onehottype is %lld\n",t);  // scaf 
  if(t!=AT(w))w=cvt(t,w);  // if the type doesn't match the desired, convert it
+// obsolete if(JT(jt,peekdata)==8)printf("return from cvt; w=%p, jt->jerr=%d\n",w,jt->jerr);  // scaf 
  RETF(w);
 }
 
@@ -415,7 +421,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  I n; RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));         // n: quantity
  I r; RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d));         // r: rank
  C*v=BV(d,w,r);                                        // v[]: n values come from here
- ASSERT((t=fromonehottype(t))!=0,EVDOMAIN)  // extract & audit type
+ ASSERT((t=fromonehottype(t,jt))!=0,EVDOMAIN)  // extract & audit type
  ASSERT(t&NOUN,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);

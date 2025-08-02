@@ -399,6 +399,7 @@ extern F1(jttoutf32);
 extern F1(jttoutf8);
 extern A jttoutf8a(J,A,A);
 extern F1(jttoutf8x);
+extern F1(jttraceexf);
 extern F1(jttrep);
 extern DF1(jttrx);
 extern F1(jtts);
@@ -1144,8 +1145,13 @@ extern I oneone[2];
 // extern A        zpath;
 extern I iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN
 /* cpu feature */
+extern int numberOfCores;        // number of cpu cores
 extern UC       hwaes;
 extern UC       hwfma;
+extern UC       supportaffinity;
+extern UC       traceexplicit;
+extern UC       fboxedsparse;       // enable boxed sparse
+extern char     *traceexpfile;
 extern VARPSA rpsnull;
 extern PRIM sfn0overself;
 extern UA va1tab[];

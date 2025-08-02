@@ -468,8 +468,31 @@ foo=: 3 : 0
 '9!:_4' -: 9!:_4 b. _1
 5 1 5 0 -: (9!:_4 , 9!:_4~ , 9!:_4 , 9!:_4~) 5
 
+foo1=: 3 : 0
+''
+)
 
+foo2=: 3 : 0
+foo1''
+)
 
+NB. trace explicit routine
+empty 9!:31[0
+0= 9!:31[0
+0= 9!:31[1
+1= 9!:31[2
+2= 9!:31[0
+empty ferase f=: jpath'~temp/jtrace.txt'
+0= 9!:31[f
+foo2''
+3= 9!:31[0
+(fread f) -: 0 : 0
+jtrace i foo2 base
+jtrace i foo1 base
+jtrace o foo1 base
+jtrace o foo2 base
+)
+empty ferase f
 
 epilog''
 

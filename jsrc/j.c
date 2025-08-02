@@ -136,6 +136,8 @@ UC  supportaffinity=1;
 #else
 UC  supportaffinity=0;
 #endif
+UC  traceexplicit=0;   // 0: disable  1: stdout  2: stderr  3: file name *traceexpfile
+char* traceexpfile=0;
 #ifdef BOXEDSPARSE
 UC  fboxedsparse=1;       // enable boxed sparse
 #endif

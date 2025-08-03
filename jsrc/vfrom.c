@@ -3301,9 +3301,9 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
  // arguments
  
  A *oprowmasks;  // AAV(rowmask), each box holding a mask or a list of indexes of nonzeros
- A *oprowvals;   // AAV(rowvalues), which map to the rows of Qkt - each on a cacheline boundary
+ A *oprowvals;   // AAV(non0 rowvalues), which scatter-map to the rows of Qkt - each on a cacheline boundary
  A *opcolmasks;  // AAV(colmask), each box holding a mask or a list of indexes of nonzeros
- A *opcolvals;   // AAV(colvalues), which map to the cols of Qkt - each on a cacheline boundary
+ A *opcolvals;   // AAV(non0 colvalues), which scatter-map to the cols of Qkt - each on a cacheline boundary
  I4 *(*colndxs)[MAXOP];  // pointers to column indexes, each having one value per stripe.  filled in by threads
  I (*stripestartend1)[][2];  // start and end+1 for each stripe [][2]
  I4 (*opstripebsum)[][MAXOP];  // number of 1 bits in mask[0..stripe][op] - leading 0 omitted
@@ -3325,10 +3325,11 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
   E *acolvals;  // addr of start of nonzero values in column
 // obsolete   US *arowoffsets;  // pointer to offsets in row, in stripeofst
 // obsolete   __m256d *arow0213;  // pointer to corresponding values, in stripe0213
+  UI8 endofsts;  // 4 US values: (index of start of offsets/vals in stripe*)/end4/end2/end1 offsets
   I4 colndxahead;  // next col index
   I4 rowindex;  // index into (*acol(ndx|val)s) of the next position in this column
-  US ndxvalofst;  // index of start of ndx/val for this op in this stripe, relative to stripeofst/stripe0213, always a multiple of RESBLKE
-  US nofsts;  // index to the offset pointer after the last offset/val has been processed
+// obsolete  US ndxvalofst;  // index of start of ndx/val for this op in this stripe, relative to stripeofst/stripe0213, always a multiple of RESBLKE
+// obsolete   US nofsts;  // offset to the offset/val pointer after the last offset/val has been processed
  } opinfo;  // info for each op
 
 #define HIGHVALUEI4 (((UI4)~0)>>1)
@@ -3345,7 +3346,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
 
  opinfo opstat[MAXOP];  // collected info about the ops in the current stripe
  US stripeofst[MAXOP*MAXNON0+3];  // byte offset to each non0 value in the stripe, for loading the ring value.  Allocated in groups of 4.  +3 because of overstore
- __attribute__ ((aligned (CACHELINESIZE))) __m256d stripe0213[MAXOP*MAXNON0/(sizeof(__m256d)/sizeof(E))];  // row values for stripe, 0213
+ __attribute__ ((aligned (CACHELINESIZE))) __m256d stripe0213[MAXOP*MAXNON0/(sizeof(__m256d)/sizeof(E))+3];  // row values for stripe, 0213, possible overstore
 
  // values in the stripe for each op, in format needed
  __m256d *releaseqktringbase[RINGROWS];  // base of Qkt region mapped to ring.  Must be on RBLOCK boundary; low bits are the real ring row containing the values.  rows are shuffled to compact empty rows.
@@ -3426,7 +3427,8 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
   I4 minnextrow=HIGHVALUEI4;  //  starting row for next 8batch
   E *qktcol=qkt+sstart;  // address of the output column in row 0
   opinfo *aops=0;  // chain of active ops, init to empty
-  US *nextstripeofst=stripeofst; __m256d *nextstripe0213=stripe0213;  // we lay the offsets & values in sequentially to get best cache utilization, without gaps
+  US *nextstripeofst=stripeofst; __m256d *nextstripe0213=stripe0213;  // we lay the offsets & values in sequentially to get best cache utilization, without gaps   scaf
+  I nextstripex=0;  // index of starting offset/val of next op in this stripe
   for(io=0;io<nops;++io){   // for each op:
    I stripeval0x=unlikely(stripe==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting index of offsets/values in this stripe
    I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
@@ -3437,11 +3439,12 @@ if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
     // read the mask for this op and convert it to offsets into ring and mask of resultblocks
     opstat[io].chain=aops; aops=&opstat[io];  // add this op to the active chain
     opstat[io].rbmask=0;  // init mask of touched blocks
-#if 0
-    // Go through the mask, classifying each set bit into a run of 4, a run of 2, or a run of 1.  We temporarily store some in the E area
-    US *deplanes[3]={&stripeofst[nextstripex],(US*)&stripe0213[nextstripex],(US*)&stripe0213[nextstripex]+MAXNON0};  // start of 4-, 2-, & 1-col blocks
-    C *smask=BAV(oprowmasks[io])+sstart;  // start of bitmask for this stripe in this op
-ndxvalofst; must allow 2*MAXNON0 overstores in ofst area
+#if 1
+    // Go through the mask, classifying each set bit into a run of 4, a run of 2, or a run of 1.
+    US non0pos[MAXNON0+RESBLKE];  // for each non0, the position in the row it came from; top 2 bits are lgsz.  Index of entry implies its position in the compacted values
+    UI8 sizn=0;  // for each size, the number of values found so far at that size.  3 packed US values.  We don't use an array because the carried dependency of an update is too long
+    C *smask=BAV(oprowmasks[io])+sstart;  // start of bitmask for this stripe in this op.  The offset is the position in the mask
+    UI8 rbmask=0;  // accumulator for mask of touched resblks
     UI bitvec; I nvalsfnd=0, bitofst=0;  // vector of bits; number of values found so far; offset for bit 0 in bitvec;
     while(1){
      bitvec=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_loadu_si256((__m256i*)(smask+bitofst)),_mm256_setzero_si256()));  // read next 32 bits
@@ -3451,37 +3454,41 @@ ndxvalofst; must allow 2*MAXNON0 overstores in ofst area
       I low1=CTTZI(bitvec); bitvec>>=low1; bitofst+=low1; nrembits-=low1;   // shift out low 0s
       I vallimit=MIN(ssize-nvalsfnd,4); I validbits=bitvec&~(~0<<vallimit);   // max # 1s that can be valid; discard bits that must be after the last valid value
       I sizefoundx=(validbits>>1)&1; sizefoundx=validbits==0b1111?2:sizefoundx; I sizefound=1LL<<sizefoundx;   // sizefound is 1/2/4, # consecutive low bits found
-      if(unlikely(sizefound+nvalsfnd==ssize)){*deplanes[sizefoundx]=bitofst*sizeof(US); deplanes[sizefoundx]+=sizefound; goto finclass;}  // if this block exhausts the non0 values, remember them and exit
+      US sizepos=(sizefoundx<<14)+bitofst; non0pos[nvalsfnd]=sizepos; non0pos[nvalsfnd+1]=sizepos+1; non0pos[nvalsfnd+2]=sizepos+2; non0pos[nvalsfnd+3]=sizepos+3;  // add 4 copies to result in case we need them
+      if(unlikely(sizefound+nvalsfnd==ssize)){  // if this block exhausts the non0 values, remember them and exit
+       sizn+=sizefound<<(sizefoundx<<4); nvalsfnd+=sizefound;  // count # vals at this size, step over the valid ones
+       rbmask|=((((bitofst&(RESBLKE-1))+(sizefound-1))>>(LGRESBLKE-1))|1)<<(bitofst>>LGRESBLKE);   // flag resblks touched by this block
+       goto finclass;
+      }
       if(unlikely((sizefound&3)==nrembits))break;  // if we find 1 or 2 bits exactly at the end of the block, don't match them in case a 4-block straddles the boundary
-      *deplanes[sizefoundx]=bitofst*sizeof(US); deplanes[sizefoundx]+=sizefound;  // normal block; record it in its section.  The offset and value use the same pointer, so increment lane position accordingly
+      sizn+=sizefound<<(sizefoundx<<4); nvalsfnd+=sizefound;    // count # vals at this size, step over the valid ones
+      rbmask|=((((bitofst&(RESBLKE-1))+(sizefound-1))>>(LGRESBLKE-1))|1)<<(bitofst>>LGRESBLKE);   // flag resblks touched by this block
       bitvec>>=sizefound; bitofst+=sizefound; nrembits-=sizefound;  // discard the bits from the block
      }
     }
-   }
 finclass:;  // we have classified the blocks
-   opstat[io].laneendofst[0]=(C*)deplanes[0]-(C*)&stripeofst[nextstripex];  // get cumulative lengths to end of each section from beginning of stripe
-   opstat[io].laneendofst[1]=opstat[io].laneendofst[0]+(C*)deplanes[1]-(C*)&stripe0213[nextstripex];
-   opstat[io].laneendofst[2]=opstat[io].laneendofst[1]+(C*)deplanes[2]-(C*)((US*)&stripe0213[nextstripex]+MAXNON0);
-#define C8(o) _mm256_storeu_si256((__m256i*)(C8D+(o)*sizeof(__m256i)),_mm256_loadu_pd((__m256i*)(C8S+(o)*sizeof(__m256i)));
-   I C8D=(I)&deplanes[0], C8S=(I)&stripe0213[nextstripex]; C8(0) C8(1) C8(2) C8(3) C8(4) C8(5) C8(6) C8(7)   // copy max # offsets into compacted area
-   C8D+=(C*)deplanes[1]-(C*)&stripe0213[nextstripex], C8S=(I)&stripe0213[nextstripex+MAXNON0]; C8(0) C8(1) C8(2) C8(3) C8(4) C8(5) C8(6) C8(7) 
-
-   // square the offsets up to RESBLK boundaries.  If there were no 1-blocks, duplicate the last 2-block if it is odd.  If there are 1-blocks, replicate the last one to end-of-block.
-   // if the last 2-block is odd, convert it to 2 1-blocks
-   US *ca=(US*)((C*)&stripeofst[nextstripex]+opstat[io].laneendofst[1]);  // pooint to end of 2-blocks
-   if(unlikely(opstat[io].laneendofst[1]==opstat[io].laneendofst[2])){
-    ca[0]=ca[-2]; opstat[io].laneendofst[1]=opstat[io].laneendofst[2]=(opstat[io].laneendofst[1]+2*sizeof(US))&~(2*sizeof(US));    // append one copy of last offset keep it if it was odd - as end of 2s and 1s
-   }else{
-    ca[-1]=ca[-2]+sizeof(US); opstat[io].laneendofst[1]=opstat[io].laneendofst[1]&~(2*sizeof(US));  // add offset to companion in 2-block; keep it if 2-block is odd
-    ca=(US*)((C*)&stripeofst[nextstripex]+opstat[io].laneendofst[2]); ca[0]=ca[1]=ca[2]=ca[-1];  // append 3 copies of last offset
-    opstat[io].laneendofst[2]=(opstat[io].laneendofst[2]+3*sizeof(US))&~(3*sizeof(US));  // keep as many as needed to fill RESBLK
-   }
-
-   // offsets finished.  collect the values, convert to 0213.  Assemble the mask of touched RESBLKs
-
-    
-
-    // Go back through the masks, consolidating them into one block and gathering the values and converting them to 0213 order
+    opstat[io].rbmask=rbmask;  // save touched blocks in op/stripe
+    //  non0pos now gives the blocksize and input position of each non0 value.  Put the offsets in order in stripeofst and the values in order in stripe0123
+    US *offsetsbase=&stripeofst[nextstripex]; E *valsbase0213=(E*)&stripe0213[nextstripex];  // start of offsets for this stripe, start of values in 0213 order
+    E *valsbasein=&EAV(oprowvals[io])[stripeval0x];  // position of first compacted value for this stripe
+    UI8 locn=(sizn>>16)+(sizn>>32);  // starting position in each size, running total of sizes.  3 packed US values.  We don't use an array because the carried dependency of an update is too long
+    DO(nvalsfnd, I lgsz=non0pos[i]>>10; I rowofst=(non0pos[i]&0x03ff)*sizeof(E); I slot=(locn>>lgsz)&0x3ff; locn+=(UI8)1<<lgsz; offsetsbase[slot]=rowofst; valsbase0213[slot]=valsbasein[i];)  // distribute values and byte-offsets into Qk
+    // square the offsets up to RESBLK boundaries.
+    if(unlikely((sizn&0xffff)==0)){
+     // there are no 1-blocks.  If there are an odd# 2-blocks, replicate the last one (we always replicate, then change only if odd)
+     I locn1=(locn>>16)&0xffff;  // index of end+1 2-block
+     offsetsbase[locn1]=offsetsbase[locn1-2]; offsetsbase[locn1+1]=offsetsbase[locn1-1]; valsbase0213[locn1]=valsbase0213[locn1-2]; valsbase0213[locn1+1]=valsbase0213[locn1-1]; locn+=0x20002; 
+    }else{
+     // If there are 1-3 1-blocks replicate (we always replicate, change # only if remnent)
+     I locn0=locn&0xffff;  // index of end+1 2-block
+     offsetsbase[locn0]=offsetsbase[locn0+1]=offsetsbase[locn0+2]=offsetsbase[locn0-1]; valsbase0213[locn0]=valsbase0213[locn0+1]=valsbase0213[locn0+2]=valsbase0213[locn0-1]; locn+=3;
+    }
+    locn&=0xfffcfffcfffc;  // put all blocks on a 4-boundary.  This is subtle!  If there is an odd 2-block followed by a 1-block, it converts the 2-block to a 1-block.
+    // save info for this op and advance to the next
+    opstat[io].endofsts=(nextstripex<<48)+(locn*sizeof(US)); nextstripex+=locn&0xffff;  // save startoffset/end4/end2/end1 (converted from index to US-offset), and advance nextstripx by end1 to get to next op
+    // convert the values to 0213 order, in place
+    DO((locn&0xffff)>>2, __m256d h0l0h1l1=_mm256_loadu_pd((D*)&valsbase0213[4*i]); __m256d h2l2h3l3=_mm256_loadu_pd((D*)&valsbase0213[4*i+2]); 
+        _mm256_storeu_pd((D*)&valsbase0213[4*i],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000)); _mm256_storeu_pd((D*)&valsbase0213[4*i+2],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111));)
 #else
     I j32, nofst, lastoffset, bits, lastbits; __m256i *smask;   // number of 32-byte mask reads to date; number of offsets written; value of last offset; pointer to the start of the bitmask for this section; bits read; bits read before masking
     opstat[io].ndxvalofst=nextstripeofst-stripeofst;  // remember where the offsets/values start   save 2 insts by making this a byte offset
@@ -3524,6 +3531,8 @@ finmask:;
    for(ringdctrlb8&=~RINGACCREQD,currop=aops,prevop=0;currop;ringdctrlb8|=RINGACCREQD){  // each op, with ACCREQD set in all but the first
     I4 nextrowinop;  // next row to process in this op
     I4 rowindex=currop->rowindex;  // index of the values we read ahead in this op
+// obsolete     US *aof=&stripeofst[currop->ndxvalofst]; __m256d *ava=(__m256d*)&((E*)stripe0213)[currop->ndxvalofst]; I alen=currop->nofsts;  // loop boundaries for processing each row of the stripe/op  scaf
+    I endofsts=currop->endofsts; US *aof=&stripeofst[endofsts>>48]; __m256d *ava=(__m256d*)&((E*)stripe0213)[endofsts>>48];  // offset/end4/end2/end1; base of offsets/values for each row of the stripe/op 
     while((nextrowinop=currop->colndxahead)-b8qktrow<B8ROWS){  // if next row is in 8block
      // next row can be processed in this 8block.  Load the column info and update the readahead
      I releasex=(ringdctrlb8+(nextrowinop-b8qktrow))&RINGB8STARTMASK;  // index of release slot for this row, which holds the mapping to actual ring row and the mask
@@ -3531,12 +3540,81 @@ finmask:;
 // obsolete printf("calc row %d, releasex=%lld, phys ringx=%lld ", nextrowinop,releasex,ringx);
      E *r0=ring[ringx];  // base the offsets will be applied against
      releaserowmask[releasex]|=currop->rbmask;  // make note of the resultblocks that will be modified by this row
-     US *aof=&stripeofst[currop->ndxvalofst]; __m256d *ava=(__m256d*)&((E*)stripe0213)[currop->ndxvalofst]; I alen=currop->nofsts;  // loop boundaries for processing the row of the stripe
      __m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes
      currop->colndxahead=currop->acolndxs[++rowindex]; currop->colvalahead=currop->acolvals[rowindex];  // read ahead for next row
-
+     I andx=0;  // counts in steps of RESBLKE*sizeof(one offset).  With this stride we can use andx to point to offsets and andx*sizeof(E)/sizeof(one offset) (=8) to point to row values
      // Calculate one row of the op
-     I andx=0;  // counts in steps of RESBLKE*sizeof(one offset).  With this stride we can use andx to point to offsets and andx*sizeof(E)/sizeof(one offset) (=8) to point to values
+#if 1
+     I alen;  // ending offset for a section
+     // the 4-blocks
+     for(alen=(endofsts>>32)&0xffff;andx<alen;andx+=(RESBLKE*sizeof(aof[0]))){__m256d h0l0h1l1,h2l2h3l3;  // temps needed
+      I o0=((US*)((C*)aof+andx))[0];  // offsets to ring values to accumulate into
+      __m256d rowh=_mm256_load_pd((D*)((C*)ava+andx*sizeof(E)/sizeof(aof[0]))), rowl=_mm256_load_pd((D*)((C*)(ava+1)+andx*sizeof(E)/sizeof(aof[0])));  // the outer-product values
+      __m256d iph,ipl,isl;  // intermediate products and sums
+      // multiply
+      TWOPROD(rowh,colh,iph,ipl)  // (rowh,colh) to high precision
+      ipl=_mm256_fmadd_pd(rowh,coll,ipl); ipl=_mm256_fmadd_pd(rowl,colh,ipl);  // accumulate middle pps
+      if(ringdctrlb8&RINGACCREQD){   // normally we have to add the product into the incumbent ring value
+       // accumulate into Qk
+       h0l0h1l1=_mm256_loadu_pd((D*)((I)r0+o0)); h2l2h3l3=_mm256_loadu_pd((D*)((I)r0+o0+sizeof(__m256d)));   // read accumulands 0123 
+       __m256d h0h2h1h3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), l0l2l1l3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // convert to 0213 order, hi & lo
+       // Because we added 3 low-order values (with the same shift), we are limiting precision to 104 bits
+       // Now add in the incumbent Qk value
+       // Do high-precision add of h0h2h1h3 and iph.  If this decreases the absvalue of h0h2h1h3, we will lose precision because of insufficient
+       // bits of qkv.  If this increases the absvalue of h0h2h1h3, all of l0l2l1l3 will contribute and the limit of validity will be
+       // from the product.  In either case it is safe to accumulate all the partial products and ipl into l0l2l1l3
+       l0l2l1l3=_mm256_add_pd(l0l2l1l3,ipl);  // the middle pps.  low*low will never contribute unless value is exhausted & thus noise
+       TWOSUM(iph,h0h2h1h3,iph,ipl)   // combine the high parts
+       ipl=_mm256_add_pd(ipl,l0l2l1l3);  // add the combined low parts
+       // At this point h0h2h1h3/l0l2l1l3 are a good high-precision product, with all the significance we can get, but it is possible that h<l if there was massive cancellation.  Even in that case,
+       // the next add will restore h>l except in the case when the next h is >h but <l.  In that case, h can remain <l but there is no loss of significance, which is still limited by l.
+       // Even though h>l, they may be close in magnitude.  After the final accumulation into Qkt we will ensure h>>l
+// obsolete        // Make sure l0l2l1l3 is much less than h0h2h1h3
+// obsolete        TWOSUMBS(iph,ipl,h0h2h1h3,l0l2l1l3)  // put h0h2h1h3 into canonical form.  If iph<ipl we have had massive cancellation and lost most precision; then it will not hurt to mistakenly call iph the bigger
+      }
+      // store results.
+      h0l0h1l1=_mm256_shuffle_pd(iph,ipl,0b0000); h2l2h3l3=_mm256_shuffle_pd(iph,ipl,0b1111);  // convert result to E order
+      _mm256_storeu_pd((D*)((I)r0+o0),h0l0h1l1); _mm256_storeu_pd((D*)((I)r0+o0+sizeof(__m256d)),h2l2h3l3);    // store results
+     }
+     // the 2-blocks
+     for(alen=(endofsts>>16)&0xffff;andx<alen;andx+=(RESBLKE*sizeof(aof[0]))){__m256d h0l0h1l1,h2l2h3l3;  // temps needed
+      I o0=((US*)((C*)aof+andx))[0]; I o2=((US*)((C*)aof+andx))[2];  // offsets to ring values to accumulate into
+      __m256d rowh=_mm256_load_pd((D*)((C*)ava+andx*sizeof(E)/sizeof(aof[0]))), rowl=_mm256_load_pd((D*)((C*)(ava+1)+andx*sizeof(E)/sizeof(aof[0])));  // the outer-product values
+      __m256d iph,ipl,isl;  // intermediate products and sums
+      TWOPROD(rowh,colh,iph,ipl)  // (rowh,colh) to high precision
+      ipl=_mm256_fmadd_pd(rowh,coll,ipl); ipl=_mm256_fmadd_pd(rowl,colh,ipl);  // accumulate middle pps
+      if(ringdctrlb8&RINGACCREQD){   // normally we have to add the product into the incumbent ring value
+       h0l0h1l1=_mm256_loadu_pd((D*)((I)r0+o0)); h2l2h3l3=_mm256_loadu_pd((D*)((I)r0+o2));   // read accumulands 0123 
+       __m256d h0h2h1h3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), l0l2l1l3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // convert to 0213 order, hi & lo
+       l0l2l1l3=_mm256_add_pd(l0l2l1l3,ipl);  // the middle pps.  low*low will never contribute unless value is exhausted & thus noise
+       TWOSUM(iph,h0h2h1h3,iph,ipl)   // combine the high parts
+       ipl=_mm256_add_pd(ipl,l0l2l1l3);  // add the combined low parts
+      }
+      h0l0h1l1=_mm256_shuffle_pd(iph,ipl,0b0000); h2l2h3l3=_mm256_shuffle_pd(iph,ipl,0b1111);  // convert result to E order
+      _mm256_storeu_pd((D*)((I)r0+o0),h0l0h1l1); _mm256_storeu_pd((D*)((I)r0+o2),h2l2h3l3);    // store results
+     }
+
+     // 1-blocks
+     for(alen=endofsts&0xffff;andx<alen;andx+=(RESBLKE*sizeof(aof[0]))){__m256d h0l0h1l1,h2l2h3l3;  // temps needed
+      I o1=((US*)((C*)aof+andx))[1]; I o0=((US*)((C*)aof+andx))[0]; I o3=((US*)((C*)aof+andx))[3]; I o2=((US*)((C*)aof+andx))[2];  // offsets to ring values to accumulate into
+      __m256d rowh=_mm256_load_pd((D*)((C*)ava+andx*sizeof(E)/sizeof(aof[0]))), rowl=_mm256_load_pd((D*)((C*)(ava+1)+andx*sizeof(E)/sizeof(aof[0])));  // the outer-product values
+      __m256d iph,ipl,isl;  // intermediate products and sums
+      TWOPROD(rowh,colh,iph,ipl)  // (rowh,colh) to high precision
+      ipl=_mm256_fmadd_pd(rowh,coll,ipl); ipl=_mm256_fmadd_pd(rowl,colh,ipl);  // accumulate middle pps
+      if(ringdctrlb8&RINGACCREQD){   // normally we have to add the product into the incumbent ring value
+       h0l0h1l1=_mm256_blend_pd(_mm256_loadu_pd((D*)((I)r0+o0)),_mm256_loadu_pd((D*)((I)r0+o1-sizeof(E))),0b1100);  // read accumulands 0-1 
+       h2l2h3l3=_mm256_blend_pd(_mm256_loadu_pd((D*)((I)r0+o2)),_mm256_loadu_pd((D*)((I)r0+o3-sizeof(E))),0b1100);  // read accumulands 2-3
+       __m256d h0h2h1h3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), l0l2l1l3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // convert to 0213 order, hi & lo
+       l0l2l1l3=_mm256_add_pd(l0l2l1l3,ipl);  // the middle pps.  low*low will never contribute unless value is exhausted & thus noise
+       TWOSUM(iph,h0h2h1h3,iph,ipl)   // combine the high parts
+       ipl=_mm256_add_pd(ipl,l0l2l1l3);  // add the combined low parts
+      }
+      h0l0h1l1=_mm256_shuffle_pd(iph,ipl,0b0000); h2l2h3l3=_mm256_shuffle_pd(iph,ipl,0b1111);  // convert result to E order
+      _mm_storeu_pd((D*)((I)r0+o0),_mm256_castpd256_pd128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o2),_mm256_castpd256_pd128(h2l2h3l3));   // store 0&2
+      h0l0h1l1=_mm256_permute4x64_pd(h0l0h1l1,0b01001110); h2l2h3l3=_mm256_permute4x64_pd(h2l2h3l3,0b01001110);  // shift 1&3
+      _mm_storeu_pd((D*)((I)r0+o1),_mm256_castpd256_pd128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castpd256_pd128(h2l2h3l3));   // store 1&3 - 3 must be last because the others may have the same offset
+     }
+#else
      do{__m256d h0l0h1l1,h2l2h3l3;  // temps needed
       // read the inputs. gather would be attractive (transpose the 1-byte offsets, use them for multiple gathers) except that GDS mitigation slows down Intel and AMD support is weak period.
       I o1=((US*)((C*)aof+andx))[1]; I o0=((US*)((C*)aof+andx))[0]; I o3=((US*)((C*)aof+andx))[3]; I o2=((US*)((C*)aof+andx))[2];  // offsets to ring values to accumulate into
@@ -3571,7 +3649,7 @@ finmask:;
       h0l0h1l1=_mm256_permute4x64_pd(h0l0h1l1,0b01001110); h2l2h3l3=_mm256_permute4x64_pd(h2l2h3l3,0b01001110);  // shift 1&3
       _mm_storeu_pd((D*)((I)r0+o1),_mm256_castpd256_pd128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castpd256_pd128(h2l2h3l3));   // store 1&3 - 3 must be last because the others may have the same offset
      }while((andx+=(RESBLKE*sizeof(aof[0])))<alen);  // end after last block
-
+#endif
      // send a few values to Qkt if enough time has elapsed
      ringdctrlb8+=andx<<RINGDCTX;  // add the number of blocks we processed.  When the total goes nonnegative we can release again
      if(releaseblockmask>(UI)REPSGN(ringdctrlb8)){  // if there are released values...  (mask>0 and delayct nonneg)

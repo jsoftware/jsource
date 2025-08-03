@@ -40,10 +40,9 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
 
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
-INLINE static A jtssingleton(J jt,A a,A w,I af,I at,I wt,A self){
+INLINE static A jtssingleton(J jtfg,A a,A w,I af,I at,I wt,A self){F12JT;
  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
  I opcode=(I)FAV(self)->lu2.lc;  // fetch operation#
- I jtfg=(I)jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);   // save jt as an I, clear low bits
  A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result
  I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,SSINGENC(at,wt));  // case # for eventual switch.  Lump all Booleans at 0
@@ -55,10 +54,10 @@ INLINE static A jtssingleton(J jt,A a,A w,I af,I at,I wt,A self){
  // and not AFRO if bare; and never UNINCORPABLE since we may change the type and we don't want callers to bear the burden of checking that.  Assign in place is best,
  // because it makes the assignment skip the free
  // See if we can inplace an assignment.  That is always a good idea, though rare
- if(unlikely((2*(a==z)+(w==z))&jtfg)){   // one of the args is being reassigned
+ if(unlikely((2*(a==z)+(w==z))&(I)jtfg)){   // one of the args is being reassigned
   if(likely((AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(z))==0)){goto getzv;}   // mustn't modify type of VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
  }
- if(awip&=jtfg){z=awip&JTINPLACEW?w:a;   // block is abandoned inplaceable, : pick it.  Priority to w
+ if(awip&=(I)jtfg){z=awip&JTINPLACEW?w:a;   // block is abandoned inplaceable, : pick it.  Priority to w
   if(likely((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0))goto getzv;  // not disallowed and correct rank: use it
   if(awip==3){z=a; if(likely((AFLAG(a)&AFUNINCORPABLE+AFRO)+(af^AR(a))==0))goto getzv;}  // if a & w both eligible, check a if w failed
  }

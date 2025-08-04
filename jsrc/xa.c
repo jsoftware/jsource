@@ -339,6 +339,10 @@ F1(jttraceexf){F12IP;
  if(!AN(w)) RETF(z);   // query
  if(AT(w)&LIT){     // set output file name
   ASSERT(' '!=CAV(w)[0],EVDOMAIN) ASSERT(0!=CAV(w)[0],EVDOMAIN)
+  char *f=MALLOC(1+AN(w)); MC(f,CAV(w),AN(w)); *(f+AN(w))=0;
+  FILE * p; p= fopen (f, "a");  // test file location
+  if(!p) {FREE(f); ASSERT(0,EVFACE)}
+  fclose(p); FREE(f);
   FREE(traceexpfile); traceexpfile=0; traceexpfile=MALLOC(1+AN(w)); MC(traceexpfile,CAV(w),AN(w)); *(traceexpfile+AN(w))=0; traceexplicit=3;
  }else{  // 0: disable  1: stdout  2: stderr
   int s=i0(w); ASSERT(BETWEENC(s,0,2),EVDOMAIN); FREE(traceexpfile); traceexpfile=0; traceexplicit=s;

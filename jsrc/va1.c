@@ -18,21 +18,21 @@
 
 INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  I ar=AR(w);
- // Calculate inplaceability
- // Inplaceable if: count=2 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE.  No inplace if on NVR stack (AM is NVR and count>0)
- I wipok = ((w==jt->zombieval)|(SGNTO0(AC(w)))) & ((UI)jtfg>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO);
-// Allocate the result area
- if(wipok){ z=w; zv=voidAV(w); } else if(likely(ar==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,ar); zv=voidAVn(ar,z);}
-
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  I wiv=IAV(w)[0],ziv;
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
- D wdv;
- memcpy(&wdv,DAV(w),4);
- memcpy(4+(char*)&wdv,4+(char*)DAV(w),4);   // avoid bus error
+ wdv=(wt&FL)?*(D*)wv:0.0;   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary
+// obsolete  memcpy(&wdv,DAV(w),4);
+// obsolete  memcpy(4+(char*)&wdv,4+(char*)DAV(w),4);   // avoid bus error
 #else
  D wdv=DAV(w)[0];
 #endif
+ // Calculate inplaceability
+ // Inplaceable if: count=2 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE/READONLY.
+ I wipok = ((w==jt->zombieval)|(SGNTO0(AC(w)))) & ((UI)jtfg>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO);
+ // Allocate the result area
+ if(wipok){z=w; zv=voidAV(w);} else if(likely(ar==0)){GAT0(z,FL,1,0); zv=voidAV0(z);} else{GATV1(z,FL,1,ar); zv=voidAVn(ar,z);}
+
  D zdv;
  // Huge switch statement to handle every case.
  switch(caseno){
@@ -41,7 +41,7 @@ INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  case SSINGCASE(VA1CMIN-VA1ORIGIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA1CMIN-VA1ORIGIN,SSINGENC(FL)):
    {D x=wdv; wdv=jround(x); wdv-=TGT(wdv,x);}  // do round/floor in parallel
-   if(likely(wdv == (D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
+   if(likely(wdv==(D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
 
 
@@ -49,12 +49,12 @@ INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  case SSINGCASE(VA1CMAX-VA1ORIGIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA1CMAX-VA1ORIGIN,SSINGENC(FL)):
    {D x=wdv; wdv=jround(x); wdv+=TLT(wdv,x);}  // do round/ceil in parallel
-   if(likely(wdv == (D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
+   if(likely(wdv==(D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
 
 
  case SSINGCASE(VA1CSTAR-VA1ORIGIN,SSINGENC(B01)): R w;
- case SSINGCASE(VA1CSTAR-VA1ORIGIN,SSINGENC(INT)): SSSTORENV((wiv>0)-(SGNTO0(wiv)),z,INT,I) R z;
+ case SSINGCASE(VA1CSTAR-VA1ORIGIN,SSINGENC(INT)): SSSTORENV(SGNTO0(-wiv)|(REPSGN(wiv)),z,INT,I) R z;
  case SSINGCASE(VA1CSTAR-VA1ORIGIN,SSINGENC(FL)):
    SSSTORE((wdv>=1.0-jt->cct)-(-wdv>=1.0-jt->cct),z,INT,I)
    R z;

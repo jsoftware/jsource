@@ -46,6 +46,17 @@ INLINE static A jtssingleton(J jtfg,A a,A w,I af,I at,I wt,A self){F12JT;
  A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result
  I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,SSINGENC(at,wt));  // case # for eventual switch.  Lump all Booleans at 0
+ // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
+ I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values
+#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
+ adv=(at&FL)?*(D*)av:0.0; wdv=(wt&FL)?*(D*)wv:0.0;   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary
+// obsolete  memcpy(&adv,av,4);
+// obsolete  memcpy(4+(char*)&adv,4+(char*)av,4);   // avoid bus error
+// obsolete  memcpy(&wdv,wv,4);
+// obsolete  memcpy(4+(char*)&wdv,4+(char*)wv,4);   // avoid bus error
+#else
+ adv=*(D*)av,wdv=*(D*)wv;
+#endif
  // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
  // a potential gain if the result can itself be inplaced, but it is a certain loser when deciding where the result is
  if((opcode>>7)>af){z=0; goto nozv;}  // true if 0x80 (comparison op) and af=0.  Set z=0 as a flag to return num(result)
@@ -53,11 +64,11 @@ INLINE static A jtssingleton(J jtfg,A a,A w,I af,I at,I wt,A self){F12JT;
  // and abandoned arg (checked presently).  If either passes, it must further be not VIRTUAL if assigned (lest it overwrite the backer of a virtual x/y arg)
  // and not AFRO if bare; and never UNINCORPABLE since we may change the type and we don't want callers to bear the burden of checking that.  Assign in place is best,
  // because it makes the assignment skip the free
- // See if we can inplace an assignment.  That is always a good idea, though rare
+ // See if we can inplace an assignment.  That is always a good idea
  if(unlikely((2*(a==z)+(w==z))&(I)jtfg)){   // one of the args is being reassigned
   if(likely((AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(z))==0)){goto getzv;}   // mustn't modify type of VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
  }
- if(awip&=(I)jtfg){z=awip&JTINPLACEW?w:a;   // block is abandoned inplaceable, : pick it.  Priority to w
+ if(awip&=(I)jtfg){z=awip&JTINPLACEW?w:a;   // block is abandoned inplaceable, pick it.  Priority to w
   if(likely((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0))goto getzv;  // not disallowed and correct rank: use it
   if(awip==3){z=a; if(likely((AFLAG(a)&AFUNINCORPABLE+AFRO)+(af^AR(a))==0))goto getzv;}  // if a & w both eligible, check a if w failed
  }
@@ -69,16 +80,6 @@ getzv:;  // here when we are operating inplace on z
 nozv:;  // here when we have zv or don't need it
  // z is 0 ONLY for comparisons with no rank.
  I ziv; D zdv;
- // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
- I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values
-#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
- memcpy(&adv,av,4);
- memcpy(4+(char*)&adv,4+(char*)av,4);   // avoid bus error
- memcpy(&wdv,wv,4);
- memcpy(4+(char*)&wdv,4+(char*)wv,4);   // avoid bus error
-#else
- adv=*(D*)av,wdv=*(D*)wv;
-#endif
  
  // Huge switch statement to handle every case.  Lump all the booleans together at 0
  switch(caseno){

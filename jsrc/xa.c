@@ -22,11 +22,9 @@
 #include "cpuinfo.h"
 extern uint64_t g_cpuFeatures,g0_cpuFeatures;
 extern uint64_t g_cpuFeatures2,g0_cpuFeatures2;
-extern int numberOfCores;
 extern void*libcblas;
 extern char hascblas;
 extern C    cblasfile[];
-extern char supportaffinity;
 
 #ifdef BOXEDSPARSE
 extern UC fboxedsparse;
@@ -332,6 +330,24 @@ F1(jtstackfault){F12IP;C stackbyte,buf[80],*stackptr=&stackbyte;
  jsto(jt,MTYOER,buf);
  recurmsg(jt,stackptr);
  R 0;
+}
+
+// 9!:31   '': query  0: disable  1: stdout  2: stderr  string: file name *traceexpfile
+// query/set trace explicit status. result is previous setting  0: disable  1: stdout  2: stderr  3: file name *traceexpfile
+F1(jttraceexf){F12IP;
+ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); A z=sc(traceexplicit);
+ if(!AN(w)) RETF(z);   // query
+ if(AT(w)&LIT){     // set output file name
+  ASSERT(' '!=CAV(w)[0],EVDOMAIN) ASSERT(0!=CAV(w)[0],EVDOMAIN)
+  char *f=MALLOC(1+AN(w)); MC(f,CAV(w),AN(w)); *(f+AN(w))=0;
+  FILE * p; p= fopen (f, "a");  // test file location
+  if(!p) {FREE(f); ASSERT(0,EVFACE)}
+  fclose(p); FREE(f);
+  FREE(traceexpfile); traceexpfile=0; traceexpfile=MALLOC(1+AN(w)); MC(traceexpfile,CAV(w),AN(w)); *(traceexpfile+AN(w))=0; traceexplicit=3;
+ }else{  // 0: disable  1: stdout  2: stderr
+  int s=i0(w); ASSERT(BETWEENC(s,0,2),EVDOMAIN); FREE(traceexpfile); traceexpfile=0; traceexplicit=s;
+ }
+ RETF(z);
 }
 
 // 9!:56

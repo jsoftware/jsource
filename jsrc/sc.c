@@ -55,6 +55,26 @@ DF2(jtunquote){F12IP;A z;
 #endif
  // *** errors must to go the error exit to restore stacked values
  jt->curname=thisname;  // set executing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
+ // trace explicit routine
+ if(unlikely((traceexplicit>0) && jt->curname)) {
+  A g=jt->global; NM*v; v=NAV(LOCNAME(g)); // v->n,v->s  current locale name
+#ifdef ANDROID
+  if(traceexplicit==1||traceexplicit==2) __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace", "jtrace i %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
+#else
+  if(traceexplicit==1) fprintf(stdout, "jtrace i %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
+  else if(traceexplicit==2) fprintf(stderr, "jtrace i %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
+#endif
+  else if(traceexplicit==3) {
+   if(!traceexpfile) {traceexplicit= -3; ASSERT(traceexpfile,EVFACE) }
+   else {
+    FILE * p; p= fopen (traceexpfile, "a");
+    if(!p) {traceexplicit= -3; ASSERT(p, EVFACE) }
+    else {
+     fprintf(p, "jtrace i %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s); fclose(p);
+    }
+   }
+  }
+ }
  if(likely(!(flgvbnmgen&((UI8)VF2PSEUDONAME<<FLGFLAG2X)))){  // normal names, not pseudo
   // normal path for named functions
   if(likely((fs=FAV(self)->localuse.lu1.cachedlkp)!=0)){  // fetch the most recent lookup, which may be reused. no QC
@@ -345,6 +365,26 @@ if(likely(!(flgvbnmgen&(FLGCACHED|FLGPSEUDO)))){fanamedacv(fs);}  // unra the na
 exitname:; // error point for name errors.
  SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed early or as late as the deletion; make sure locsyms matches.  global and AKGST always match for the named explicit routine that is running.
     // if an explicit routine calls a tacit name via locative, globals and AKGST will diverge while the tacit verb runs; if the tacit verb then calls a (possibly named) explicit, the explicit's u. will be from the earlier explicit, not the intervening tacit.
+ // trace explicit routine
+ if(unlikely((traceexplicit>0) && jt->curname)) {
+  A g=jt->global; NM*v; v=NAV(LOCNAME(g)); // v->n,v->s  current locale name
+#ifdef ANDROID
+  if(traceexplicit==1||traceexplicit==2) __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace", "jtrace o %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
+#else
+  if(traceexplicit==1) fprintf(stdout, "jtrace o %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
+  else if(traceexplicit==2) fprintf(stderr, "jtrace o %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
+#endif
+  else if(traceexplicit==3) {
+   if(!traceexpfile) {traceexplicit= -3; ASSERT(traceexpfile,EVFACE) }
+   else {
+    FILE * p; p= fopen (traceexpfile, "a");
+    if(!p) {traceexplicit= -3; ASSERT(p, EVFACE) }
+    else {
+     fprintf(p, "jtrace o %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s); fclose(p);
+    }
+   }
+  }
+ }
 #if C_AVX2 || EMU_AVX2
  _mm256_storeu_si256((__m256i *)&jt->parserstackframe.sf,_mm256_loadu_si256((__m256i *)&stack));
 #else

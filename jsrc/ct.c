@@ -5,8 +5,6 @@
 
 #define _GNU_SOURCE
 #include "j.h"
-extern int numberOfCores;
-extern char supportaffinity;
 
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0

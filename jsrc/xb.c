@@ -57,7 +57,8 @@ static I fromonehottype(I t,J jt){  // scaf
  if((UI)t>RPAR)R 0;  // error if value too high
 // obsolete if(JT(jt,peekdata)==8)DO(sizeof(f3x0new)/sizeof(f3x0new[0]), printf("fx0new[%lld]=0x%x\n",i,f3x0new[i]);)  // scaf
  if(t<=QPEXTTYPE)R f3x0new[t];  // return if a new type, or an old one < 11 (sc. B01 LIT INT FL)
- if((t&-t)!=t)R 0;  // if more than one upper bit set, error
+// obsolete  if((t&-t)!=t)R 0;  // if more than one upper bit set, error
+ if(t&(t-1))R 0;  // if more than one upper bit set, error
  if(t&0xfc00)R SPARSE|(t>>10);
  else R f3x0bit[CTTZ(t)-CMPXX];
 }

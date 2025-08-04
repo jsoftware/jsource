@@ -349,7 +349,8 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGBI): aiv=(I)(B)aiv; goto intresidue;
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGII): 
   intresidue: ;
-   ziv=((aiv&-aiv)+(aiv<=0)==0)?wiv&(aiv-1):remii(aiv,wiv);  // if positive power of 2, just AND; otherwise divide
+// obsolete    ziv=((aiv&-aiv)+(aiv<=0)==0)?wiv&(aiv-1):remii(aiv,wiv);  // if positive power of 2, just AND; otherwise divide
+   ziv=((aiv&(aiv-1))==0&&likely(aiv>=0))?wiv&(aiv-1):remii(aiv,wiv);  // if positive power of 2 (or 0), just AND; otherwise divide
    SSSTORE(ziv,z,INT,I); R z;
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGID): 
    ziv=jtremid(jt,aiv,wdv); if(!jt->jerr){SSSTORE(ziv,z,INT,I);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error

@@ -75,9 +75,8 @@ NB. one either coalesces to the tail, if all conditions are are right, giving an
 NB. a new tail.  After that, we keep the first mmc at each ending position
 makecoal =. {{ (#~ ~:@:(1&{"1)) @: ((00&{@],01&{@[,+/&{:)^:([: *./ m >: (1 _1 1 * 1 0 2&{)@] + _1 1 1&*@[)~/\.) }}  NB. old start-new end=gap, old end-new start=spread, sum of ct=new ct
 
-maxstripewidth =. 32 <.^:(1=#rowmasks) <. (+/ {:"1 minmaxct) % +:^:(>&1) 1 T. ''  NB. Limit width of stripe to leave at least 2 stripes per thread (unless single-threaded), but max 32 if only one OP to prevent result code from lagging
-
-for_gsc. maxstripewidth ((01 >. (I.~ {:"1)) {. ]) _3 ]\ 4 16 8  16 64 32  64 256 128 do.  NB. Apply coarsening sieves to the stripes, honoring the max width
+maxstripewidth =. 32 <.^:(1=#rowmasks) <. (+/ {:"1 minmaxct) % +:^:(>&1) >: 1 T. ''  NB. Limit width of stripe to leave at least 2 stripes per thread (unless single-threaded), but max 32 if only one OP to prevent result code from lagging
+for_gsc. maxstripewidth ([ (<_1 _1)} (01 >. (I.~ {:"1)) {. ]) _3 ]\ 4 16 8  16 64 32  64 256 128 do.  NB. Apply coarsening sieves to the stripes, honoring the max width
   minmaxct =. (gsc makecoal) minmaxct
 end.
 assert. ((<_1 1) { minmaxct) <: {: $ name~
@@ -91,7 +90,14 @@ NB. obsolete qprintf'stripes comploads '
 
 compvers =: ".@'Qkt' -: ".@'qktcopy'  NB. compare the temp vars we use for the two version
 
-NB. 1: 0!:_1'#'
+Qkt =: (15!:18) 11 c. (38, (>.&.(%&(CacheLine%16)) 39)) $ 0.   NB. 16 is the byte size of quadprec
+rm =: ,< 36 {. (16$0) , 0 1 1 0 1 1 1 1 0 1 0 1 1 0 1 1
+rv =: (11 c. I.)&.> rm
+cm =: ,< 37 {. 0 1 0 1 1
+cv =: (11 c. 1000 + I.)&.> cm
+(batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+NB. 13!:8 ] 4
+
 NB. 1 stripe
 Qkt =: (15!:18) 11 c. (19, (>.&.(%&(CacheLine%16)) 20)) $ 0.   NB. 16 is the byte size of quadprec
 rm =: ,< 18 {. 1 0 1 1 0 1 1 1 0 1
@@ -99,6 +105,7 @@ rv =: (11 c. I.)&.> rm
 cm =: ,< 19 {. 0 1 0 1 1
 cv =: (11 c. 1000 + I.)&.> cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
+
 
 NB. 2 stripes
 Qkt =: (15!:18) 11 c. (19, (>.&.(%&(CacheLine%16)) 20)) $ 0.
@@ -139,7 +146,6 @@ rv =: , 100 ((* i.@#) (11 c. (+ I.))&.> ]) rm
 cm =: , <"1 ] 2 1000$1
 cv =: , 10000 ((* i.@#) (11 c. (+ I.))&.> ]) cm
 (batchopndx@('Qkt'&;) compvers batchop@('qktcopy'&;)) rm;rv;cm;cv;0.0 [ qktcopy =: memu Qkt
-NB.#
 
 WORDER =: 0 2 4 6 8 10 12 16 13 17 14 18 15 19 (33 b.) 1  NB. P then E
 setnworkers =: {{ while. 1 T. '' do. 55 T. '' end. for_c. y{.}.WORDER do. 0 T. 0;<'coremask';c end. 1 }}   NB. ensure there are exactly y worker threads

@@ -392,9 +392,9 @@ DF1(jtatomic1){F12IP;A z;
  ARGCHK1(w);
  I awm1=AN(w)-1;
  // check for singletons
- if(!(awm1|(AT(w)&((NOUN|SPARSE)&~(B01+INT+FL))))){  // len=1 andbool/int/float
+ if(!(awm1|(AT(w)&((NOUN|SPARSE)&~(B01+INT+FL))))){  // len=1 and bool/int/float
   z=jtssingleton1(jtfg,w,3*(FAV(self)->lu2.lc-VA1ORIGIN)+(AT(w)>>INTX));
-  if(z||jt->jerr<=NEVM){RETF(z);}  // normal return, or non-retryable error
+  if(likely(z!=0)||unlikely(jt->jerr<=NEVM)){RETF(z);}  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code
   jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation
  }

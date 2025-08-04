@@ -3346,7 +3346,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
 
  opinfo opstat[MAXOP];  // collected info about the ops in the current stripe
  US stripeofst[MAXOP*MAXNON0+3];  // byte offset to each non0 value in the stripe, for loading the ring value.  Allocated in groups of 4.  +3 because of overstore
- __attribute__ ((aligned (CACHELINESIZE))) __m256d stripe0213[MAXOP*MAXNON0/(sizeof(__m256d)/sizeof(E))+3];  // row values for stripe, 0213, possible overstore
+ __attribute__ ((aligned (CACHELINESIZE))) E stripe0213[MAXOP*MAXNON0+3];  // row values for stripe, 0213, possible overstore
 
  // values in the stripe for each op, in format needed
  __m256d *releaseqktringbase[RINGROWS];  // base of Qkt region mapped to ring.  Must be on RBLOCK boundary; low bits are the real ring row containing the values.  rows are shuffled to compact empty rows.
@@ -3427,12 +3427,12 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
   I4 minnextrow=HIGHVALUEI4;  //  starting row for next 8batch
   E *qktcol=qkt+sstart;  // address of the output column in row 0
   opinfo *aops=0;  // chain of active ops, init to empty
-  US *nextstripeofst=stripeofst; __m256d *nextstripe0213=stripe0213;  // we lay the offsets & values in sequentially to get best cache utilization, without gaps   scaf
-  I nextstripex=0;  // index of starting offset/val of next op in this stripe
+// obsolete   US *nextstripeofst=stripeofst; __m256d *nextstripe0213=stripe0213;  // we lay the offsets & values in sequentially to get best cache utilization, without gaps   scaf
+  I nextopofstvalx=0;  // index of starting offset/val of next op in this stripe
   for(io=0;io<nops;++io){   // for each op:
    I stripeval0x=unlikely(stripe==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting index of offsets/values in this stripe
    I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
-if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
+if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;   // scaf
    if(ssize){    // if this op intersects this stripe...
     opstat[io].rowindex=0; I4 nx=opstat[io].colndxahead=opstat[io].acolndxs[0]; opstat[io].colvalahead=opstat[io].acolvals[0];  // start on first row; prefetch first.
     minnextrow=nx<minnextrow?nx:minnextrow; // Keep track of smallest start value.  The readahead will take a long time, but we do not use minnextrow in this loop 
@@ -3448,7 +3448,7 @@ if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
     UI bitvec; I nvalsfnd=0, bitofst=0;  // vector of bits; number of values found so far; offset for bit 0 in bitvec;
     while(1){
      bitvec=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_loadu_si256((__m256i*)(smask+bitofst)),_mm256_setzero_si256()));  // read next 32 bits
-     I nrembits=32;  // #valid bits left in bitvec
+     I nrembits=32;  // #bits left in bitvec.  Bits past the last value are invalid
      while(1){
       if(bitvec==0){bitofst+=nrembits; break;}  // no more bits in this section, advance to next
       I low1=CTTZI(bitvec); bitvec>>=low1; bitofst+=low1; nrembits-=low1;   // shift out low 0s
@@ -3461,35 +3461,33 @@ if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;
        goto finclass;
       }
       if(unlikely((sizefound&3)==nrembits))break;  // if we find 1 or 2 bits exactly at the end of the block, don't match them in case a 4-block straddles the boundary
-      sizn+=sizefound<<(sizefoundx<<4); nvalsfnd+=sizefound;    // count # vals at this size, step over the valid ones
-      rbmask|=((((bitofst&(RESBLKE-1))+(sizefound-1))>>(LGRESBLKE-1))|1)<<(bitofst>>LGRESBLKE);   // flag resblks touched by this block
+      sizn+=sizefound<<(sizefoundx<<4); nvalsfnd+=sizefound;    // count # vals at this size, step over them
+      rbmask|=((((bitofst&(RESBLKE-1))+(sizefound-1))>>(LGRESBLKE-1))|1)<<(bitofst>>LGRESBLKE);   // flag resblks touched by this block.  Close question whether to do this here or one values at a time.  We choose here because
+               // the carried dependency on bitvec is 11 clocks and we need work to fill the time in the loop 
       bitvec>>=sizefound; bitofst+=sizefound; nrembits-=sizefound;  // discard the bits from the block
      }
     }
 finclass:;  // we have classified the blocks
     opstat[io].rbmask=rbmask;  // save touched blocks in op/stripe
     //  non0pos now gives the blocksize and input position of each non0 value.  Put the offsets in order in stripeofst and the values in order in stripe0123
-    US *offsetsbase=&stripeofst[nextstripex]; E *valsbase0213=(E*)&stripe0213[nextstripex];  // start of offsets for this stripe, start of values in 0213 order
+    US *offsetsbase=&stripeofst[nextopofstvalx]; E *valsbase0213=&stripe0213[nextopofstvalx];  // start of offsets for this stripe, start of values in 0213 order
     E *valsbasein=&EAV(oprowvals[io])[stripeval0x];  // position of first compacted value for this stripe
     UI8 locn=(sizn>>16)+(sizn>>32);  // starting position in each size, running total of sizes.  3 packed US values.  We don't use an array because the carried dependency of an update is too long
-    DO(nvalsfnd, I lgsz=non0pos[i]>>10; I rowofst=(non0pos[i]&0x03ff)*sizeof(E); I slot=(locn>>lgsz)&0x3ff; locn+=(UI8)1<<lgsz; offsetsbase[slot]=rowofst; valsbase0213[slot]=valsbasein[i];)  // distribute values and byte-offsets into Qk
+    DO(nvalsfnd, I lgsz=non0pos[i]>>10; I rowofst=(non0pos[i]&0x03ff)*sizeof(E); I slot=(locn>>lgsz)&0x3ff; locn+=(UI8)1<<lgsz; offsetsbase[slot]=rowofst; valsbase0213[slot]=valsbasein[i];)  // assemble values and byte-offsets into Qk
     // square the offsets up to RESBLK boundaries.
     if(unlikely((sizn&0xffff)==0)){
      // there are no 1-blocks.  If there are an odd# 2-blocks, replicate the last one (we always replicate, then change only if odd)
      I locn1=(locn>>16)&0xffff;  // index of end+1 2-block
      offsetsbase[locn1]=offsetsbase[locn1-2]; offsetsbase[locn1+1]=offsetsbase[locn1-1]; valsbase0213[locn1]=valsbase0213[locn1-2]; valsbase0213[locn1+1]=valsbase0213[locn1-1]; locn+=0x20002; 
     }else{
-     // If there are 1-3 1-blocks replicate (we always replicate, change # only if remnent)
-     I locn0=locn&0xffff;  // index of end+1 2-block
+     // If there are 1-3 1-blocks replicate (we always replicate, change # only if remnant)
+     I locn0=locn&0xffff;  // index of end+1 1-block
      offsetsbase[locn0]=offsetsbase[locn0+1]=offsetsbase[locn0+2]=offsetsbase[locn0-1]; valsbase0213[locn0]=valsbase0213[locn0+1]=valsbase0213[locn0+2]=valsbase0213[locn0-1]; locn+=3;
     }
-    locn&=0xfffcfffcfffc;  // put all blocks on a 4-boundary.  This is subtle!  If there is an odd 2-block followed by a 1-block, it converts the 2-block to a 1-block.
+    locn&=0xfffcfffcfffc;  // put all blocks on a 4-boundary.  This is subtle!  If there is an odd 2-block (which must be followed by a 1-block), it converts the odd 2-block to a 1-block.
     // save info for this op and advance to the next
-    opstat[io].endofsts=(nextstripex<<48)+(locn*sizeof(US)); nextstripex+=locn&0xffff;  // save startoffset/end4/end2/end1 (converted from index to US-offset), and advance nextstripx by end1 to get to next op
-    // convert the values to 0213 order, in place
-    DO((locn&0xffff)>>2, __m256d h0l0h1l1=_mm256_loadu_pd((D*)&valsbase0213[4*i]); __m256d h2l2h3l3=_mm256_loadu_pd((D*)&valsbase0213[4*i+2]); 
-        _mm256_storeu_pd((D*)&valsbase0213[4*i],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000)); _mm256_storeu_pd((D*)&valsbase0213[4*i+2],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111));)
-#else
+    opstat[io].endofsts=(nextopofstvalx<<48)+(locn*sizeof(US)); nextopofstvalx+=locn&0xffff;  // save startoffset/end4/end2/end1 (converted from index to US-offset), and advance nextstripx by end1 to get to next op
+#else   // obsolete 
     I j32, nofst, lastoffset, bits, lastbits; __m256i *smask;   // number of 32-byte mask reads to date; number of offsets written; value of last offset; pointer to the start of the bitmask for this section; bits read; bits read before masking
     opstat[io].ndxvalofst=nextstripeofst-stripeofst;  // remember where the offsets/values start   save 2 insts by making this a byte offset
     for(j32=0,nofst=0,smask=(__m256i*)(BAV(oprowmasks[io])+sstart);;++j32){
@@ -3519,9 +3517,13 @@ finmask:;
 #endif
    }
   }
-    // we keep all ops in a single list, removing ones that have been fully processed.   It might be right to keep a second list with ops that have not entered yet, heaped on row of entry.  Depends on overlap.
+  // convert the values from all ops to 0213 order, in place
+ DO(nextopofstvalx>>2, __m256d h0l0h1l1=_mm256_loadu_pd((D*)&stripe0213[RESBLKE*i]); __m256d h2l2h3l3=_mm256_loadu_pd((D*)&stripe0213[RESBLKE*i+2]); 
+     _mm256_storeu_pd((D*)&stripe0213[RESBLKE*i],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000)); _mm256_storeu_pd((D*)&stripe0213[RESBLKE*i+2],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111));)
 
-  // ops ready, now calculate the entire stripe
+  // we keep all ops in a single list, removing ones that have been fully processed.   It might be right to keep a second list with ops that have not entered yet, heaped on row of entry.  Depends on overlap.
+
+  // ops ready, now calculate the entire stripe.  The ops are visited in reverse order, for comp ease
   I releasedelaythreadedstripe=aops->chain==0?0:releasedelaythreaded;  // throttle info for this stripe.  If only 1 active OP, don't throttle anything
   while(aops){  // keep processing rows as long as there is an active op.  minnextrow is set with the starting row for the new 8block
    // loop to process one 8block
@@ -3532,7 +3534,7 @@ finmask:;
     I4 nextrowinop;  // next row to process in this op
     I4 rowindex=currop->rowindex;  // index of the values we read ahead in this op
 // obsolete     US *aof=&stripeofst[currop->ndxvalofst]; __m256d *ava=(__m256d*)&((E*)stripe0213)[currop->ndxvalofst]; I alen=currop->nofsts;  // loop boundaries for processing each row of the stripe/op  scaf
-    I endofsts=currop->endofsts; US *aof=&stripeofst[endofsts>>48]; __m256d *ava=(__m256d*)&((E*)stripe0213)[endofsts>>48];  // offset/end4/end2/end1; base of offsets/values for each row of the stripe/op 
+    I endofsts=currop->endofsts; US *aof=&stripeofst[endofsts>>48]; __m256d *ava=(__m256d*)&stripe0213[endofsts>>48];  // offset/end4/end2/end1; base of offsets/values for each row of the stripe/op 
     while((nextrowinop=currop->colndxahead)-b8qktrow<B8ROWS){  // if next row is in 8block
      // next row can be processed in this 8block.  Load the column info and update the readahead
      I releasex=(ringdctrlb8+(nextrowinop-b8qktrow))&RINGB8STARTMASK;  // index of release slot for this row, which holds the mapping to actual ring row and the mask
@@ -3614,7 +3616,7 @@ finmask:;
       h0l0h1l1=_mm256_permute4x64_pd(h0l0h1l1,0b01001110); h2l2h3l3=_mm256_permute4x64_pd(h2l2h3l3,0b01001110);  // shift 1&3
       _mm_storeu_pd((D*)((I)r0+o1),_mm256_castpd256_pd128(h0l0h1l1)); _mm_storeu_pd((D*)((I)r0+o3),_mm256_castpd256_pd128(h2l2h3l3));   // store 1&3 - 3 must be last because the others may have the same offset
      }
-#else
+#else  // obsolete
      do{__m256d h0l0h1l1,h2l2h3l3;  // temps needed
       // read the inputs. gather would be attractive (transpose the 1-byte offsets, use them for multiple gathers) except that GDS mitigation slows down Intel and AMD support is weak period.
       I o1=((US*)((C*)aof+andx))[1]; I o0=((US*)((C*)aof+andx))[0]; I o3=((US*)((C*)aof+andx))[3]; I o2=((US*)((C*)aof+andx))[2];  // offsets to ring values to accumulate into

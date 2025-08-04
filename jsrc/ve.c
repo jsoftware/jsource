@@ -462,7 +462,10 @@ I jtremid(J jt,I a,D b){D r;I k;
 
 APFX(remID, I,I,D, remid,,HDR1JERR)
 
-I remii(I a,I b){I r; R (a!=REPSGN(a))?(r=b%a,0<a?r+(a&REPSGN(r)):r+(a&REPSGN(-r))):b&~a;}  // must handle IMIN/-1, which overflows.  If a=0, return b.
+// a | b on integers.  We deem power-of-2 a to be likely enough to test for, trusting in the branch predictor.  We think negative values of a are very rare
+I INLINE remii(I a,I b){if((a&(a-1))==0&&likely(a>=0))R b&(a-1); if(unlikely(a==-1))R 0; I r=b%a; I adj=a&REPSGN(a^b); R r+(r==0?0:adj);}  // a=nonneg power of 2 is fast (including a=0, which returns b).  b=-1 must give 0 with overflow on _1|IMIN
+    // C returns remainder with the same sign as dividend, J gives same sign as divisor; so adjust if the signs are different
+// obsolete  R (likely(a!=REPSGN(a)))?(r=b%a,0<a?r+(a&REPSGN(r)):r+(a&REPSGN(-r))):b&~a;}  // must handle IMIN/-1, which overflows.  If a=0, return b.  scaf Should handle power of 2?
 
 AHDR2(remII,I,I,I){I u,v;
  if(m<0){DQUC(m,*z++=remii(*x,*y); x++; y++; )
@@ -490,7 +493,7 @@ AHDR2(remII,I,I,I){I u,v;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range
-   if(u<-1){I *zt=z; DQU(m, I t=*--zt; t=t>0?t-ua:t; *zt=t;)}
+   if(unlikely(u<-1)){I *zt=z; DQU(m, I t=*--zt; t=t>0?t-ua:t; *zt=t;)}
   )
 #else
   DQU(n, u=*x++;

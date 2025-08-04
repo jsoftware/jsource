@@ -486,7 +486,7 @@ empty ferase f=: jpath'~temp/jtrace.txt'
 0= 9!:31[f
 foo2''
 3= 9!:31[0
-(fread f) -: 0 : 0
+(toJ^:IFWIN fread f) -: 0 : 0
 jtrace i foo2 base
 jtrace i foo1 base
 jtrace o foo1 base

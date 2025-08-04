@@ -21,7 +21,7 @@ INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  I wiv=IAV(w)[0],ziv;
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
- wdv=(wt&FL)?*(D*)wv:0.0;   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary
+ wdv=(wt&FL)?DAV(w)[0]:0.0;   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary
 // obsolete  memcpy(&wdv,DAV(w),4);
 // obsolete  memcpy(4+(char*)&wdv,4+(char*)DAV(w),4);   // avoid bus error
 #else

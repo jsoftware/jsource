@@ -48,8 +48,8 @@ INLINE static A jtssingleton(J jtfg,A a,A w,I af,I at,I wt,A self){F12JT;
  I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,SSINGENC(at,wt));  // case # for eventual switch.  Lump all Booleans at 0
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values
-#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
- adv=(at&FL)?*(D*)av:0.0; wdv=(wt&FL)?*(D*)wv:0.0;   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary
+#ifdef ALIGNEDMEMD
+ adv=*(D*)(intptr_t)((I)av&-SZD); wdv=*(D*)(intptr_t)((I)wv&-SZD);   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary (which must be invalid)
 // obsolete  memcpy(&adv,av,4);
 // obsolete  memcpy(4+(char*)&adv,4+(char*)av,4);   // avoid bus error
 // obsolete  memcpy(&wdv,wv,4);

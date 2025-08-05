@@ -49,7 +49,9 @@ INLINE static A jtssingleton(J jtfg,A a,A w,I af,I at,I wt,A self){F12JT;
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values
 #ifdef ALIGNEDMEMD
- adv=*(D*)(intptr_t)((I)av&-SZD); wdv=*(D*)(intptr_t)((I)wv&-SZD);   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary (which must be invalid)
+ MC(&adv,CAV(av),4); MC(4+(char*)&adv,4+CAV(av),4);   // avoid bus error
+ MC(&wdv,CAV(wv),4); MC(4+(char*)&wdv,4+CAV(wv),4);   // avoid bus error
+// adv=*(D*)(intptr_t)((I)av&-SZD); wdv=*(D*)(intptr_t)((I)wv&-SZD);   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary (which must be invalid)
 // obsolete  memcpy(&adv,av,4);
 // obsolete  memcpy(4+(char*)&adv,4+(char*)av,4);   // avoid bus error
 // obsolete  memcpy(&wdv,wv,4);

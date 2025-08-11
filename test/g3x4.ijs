@@ -5,6 +5,8 @@ ic =: 3!:4
 
 g1 =: -:!.0 (_1&ic)@(1&ic)
 g2 =: -:!.0 (_2&ic)@(2&ic)
+g6 =: -:!.0 (_6&ic)@(6&ic)
+g7 =: -:!.0 (_7&ic)@(7&ic)
 ". > IF64 { 'g3=: 1:' ; 'g3=: -:!.0 (_3&ic)@(3&ic)'
 
 g1 ?2000$32768
@@ -22,8 +24,22 @@ g3 -1003 ?@$ imax
 g3 (1 _1{~1003 ?@$ 2) * 1003 ?@$ imax
 g3 imin,0,imax
 
+g6  ?2000$32768
+g6 -?2000$32769
+g6 _32768+?2000$65536
+g6 _32768 0 32767
+
+g7  ?2000$123456789
+g7 -?2000$123456789
+g7  _5e5+?2000$1e6
+g7  <.(_1+2^31),0,-2^31
+
+'' -: _7 ic ''
+'' -: _6 ic ''
 '' -: _2 ic ''
 '' -: _1 ic ''
+'' -:  7 ic i.0
+'' -:  6 ic i.0
 '' -:  2 ic i.0
 '' -:  1 ic i.0
 '' -: _2 ic ''
@@ -33,6 +49,10 @@ g3 imin,0,imax
 '' -: (-2+IF64) ic ''
 '' -: ( 2+IF64) ic i.0
 '' -: ( 2+IF64) ic ''
+
+(7 ic x) -: 7 ic 1=    x=:(2-2)+?10$2
+
+(6 ic x) -: 6 ic 1=    x=:(2-2)+?10$2
 
 (2 ic x) -: 2 ic 1=    x=:(2-2)+?10$2
 (2 ic x) -: 2 ic (o.0)+x=:_50+?10$100
@@ -56,6 +76,22 @@ g3 imin,0,imax
 'domain error' -: (<1)ic etx 3 4 5
 ". (-.IF64) # '''domain error'' -:  3 ic etx 3 4 5'
 ". (-.IF64) # '''domain error'' -: _3 ic etx 8$0{a.'
+
+'domain error' -:  7 ic etx 'abcd0123'
+'domain error' -:  7 ic etx u:'abcd0123'
+'domain error' -:  7 ic etx 10&u:'abcd0123'
+'domain error' -:  7 ic etx (i.12){a.
+'domain error' -:  7 ic etx 1 2 3.4
+'domain error' -:  7 ic etx 1 2 3j4
+'domain error' -:  7 ic etx 1;2 3 4
+
+'domain error' -:  6 ic etx 'abcd0123'
+'domain error' -:  6 ic etx u:'abcd0123'
+'domain error' -:  6 ic etx 10&u:'abcd0123'
+'domain error' -:  6 ic etx (i.12){a.
+'domain error' -:  6 ic etx 1 2 3.4
+'domain error' -:  6 ic etx 1 2 3j4
+'domain error' -:  6 ic etx 1;2 3 4
 
 'domain error' -:  2 ic etx 'abcd0123'
 'domain error' -:  2 ic etx u:'abcd0123'
@@ -88,6 +124,26 @@ g3 imin,0,imax
 'domain error' -: _2 ic etx 1 2 3j4 5
 'domain error' -: _2 ic etx 1;2 3 4;5 6
 
+'domain error' -: _6 ic etx 0 1 0 0
+'domain error' -: _6 ic etx 1 2 3.4 5
+'domain error' -: _6 ic etx 1 2 3j4 5
+'domain error' -: _6 ic etx 1;2 3 4;5 6
+
+'domain error' -: _7 ic etx 0 1 0 0
+'domain error' -: _7 ic etx 1 2 3.4 5
+'domain error' -: _7 ic etx 1 2 3j4 5
+'domain error' -: _7 ic etx 1;2 3 4;5 6
+
+'rank error'   -:  7 ic etx i.1 4
+'rank error'   -: _7 ic etx 1 4$'a'
+'rank error'   -: _7 ic etx 1 4$u:'a'
+'rank error'   -: _7 ic etx 1 4$10&u:'a'
+'rank error'   -: _7 ic etx 1 4$s:@<"0 'a'
+'rank error'   -:  6 ic etx i.3 4
+'rank error'   -: _6 ic etx 3 4$'abcd'
+'rank error'   -: _6 ic etx 3 4$u:'abcd'
+'rank error'   -: _6 ic etx 3 4$10&u:'abcd'
+'rank error'   -: _6 ic etx 3 4$s:@<"0 'abcd'
 'rank error'   -:  2 ic etx i.1 4
 'rank error'   -: _2 ic etx 1 4$'a'
 'rank error'   -: _2 ic etx 1 4$u:'a'
@@ -103,18 +159,30 @@ g3 imin,0,imax
 'rank error'   -:  0 ic etx 3 4$10&u:'a'
 'rank error'   -:  0 ic etx 3 4$s:@<"0 'a'
 
+'length error' -: _7 ic etx 'ab'
+'length error' -: _7 ic etx 'abcdef'
+'length error' -: _6 ic etx 'abc'
 'length error' -: _2 ic etx 'ab'
 'length error' -: _2 ic etx 'abcdef'
 'length error' -: _1 ic etx 'abc'
 'length error' -:  0 ic etx 'abc'
+'domain error' -: _7 ic etx u:'ab'
+'domain error' -: _7 ic etx u:'abcdef'
+'domain error' -: _6 ic etx u:'abc'
 'domain error' -: _2 ic etx u:'ab'
 'domain error' -: _2 ic etx u:'abcdef'
 'domain error' -: _1 ic etx u:'abc'
 'domain error' -:  0 ic etx u:'abc'
+'domain error' -: _7 ic etx 10&u:'ab'
+'domain error' -: _7 ic etx 10&u:'abcdef'
+'domain error' -: _6 ic etx 10&u:'abc'
 'domain error' -: _2 ic etx 10&u:'ab'
 'domain error' -: _2 ic etx 10&u:'abcdef'
 'domain error' -: _1 ic etx 10&u:'abc'
 'domain error' -:  0 ic etx 10&u:'abc'
+'domain error' -: _7 ic etx s:@<"0 'ab'
+'domain error' -: _7 ic etx s:@<"0 'abcdef'
+'domain error' -: _6 ic etx s:@<"0 'abc'
 'domain error' -: _2 ic etx s:@<"0 'ab'
 'domain error' -: _2 ic etx s:@<"0 'abcdef'
 'domain error' -: _1 ic etx s:@<"0 'abc'

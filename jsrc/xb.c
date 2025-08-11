@@ -582,6 +582,39 @@ F2(jtfc2){F12IP;A z;D*x,*v;I j,m,n,p,zt;float*s;
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
  RE(j=i0(a));
+ if(11==j||-11==j){E*x1,*v1;    // quad precision
+ p=4;
+ if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),QP))RZ(w=ccvt(QP,w,0));}
+ else   {m=n>>p; zt=QP; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
+ GA10(z,zt,m); v1=EAV(z); x1=EAV(w);
+ switch(j){
+ default: ASSERT(0,EVDOMAIN);
+ case -11: MC(v1,x1,n); {RETF(z);}
+ case  11: MC(v1,x1,m); {RETF(z);}
+ }
+#if 0
+ } else if(10==j||-10==j){float*x1,*v1;    // single precsion
+ p=2;
+ if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),SP))RZ(w=ccvt(SP,w,0));}
+ else   {m=n>>p; zt=SP; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
+ GA10(z,zt,m); v1=(float*)DAV(z); x1=(float*)DAV(w);
+ switch(j){
+ default: ASSERT(0,EVDOMAIN);
+ case -10: MC(v1,x1,n); {RETF(z);}
+ case  10: MC(v1,x1,m); {RETF(z);}
+ }
+ } else if(9==j||-9==j){uint16_t*x1,*v1;    // half precison
+ p=1;
+ if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),HP))RZ(w=ccvt(HP,w,0));}
+ else   {m=n>>p; zt=HP; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
+ GA10(z,zt,m); v1=(uint16_t*)DAV(z); x1=(uint16_t*)DAV(w);
+ switch(j){
+ default: ASSERT(0,EVDOMAIN);
+ case -9: MC(v1,x1,n); {RETF(z);}
+ case  9: MC(v1,x1,m); {RETF(z);}
+ }
+#endif
+ } else {
  p=2==j||-2==j?LGSZD:2;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),FL))RZ(w=ccvt(FL,w,0));}
  else   {m=n>>p; zt=FL; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
@@ -592,6 +625,7 @@ F2(jtfc2){F12IP;A z;D*x,*v;I j,m,n,p,zt;float*s;
  case  2: MC(v,x,m); {RETF(z);}
  case -1: s=(float*)x; DQ(m, *v++=       *s++;); {RETF(z);}
  case  1: s=(float*)v; DQ(n, *s++=(float)*x++;); {RETF(z);}
+ }
  }
 }
 

@@ -338,12 +338,11 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #endif
 #endif
 
-// #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
-// #ifndef __ARM_FEATURE_UNALIGNED
-// #define ALIGNEDMEM
-// #endif
-// #endif
-
+// obsolete #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
+// obsolete #ifndef __ARM_FEATURE_UNALIGNED
+// obsolete #define ALIGNEDMEM
+// obsolete #endif
+// obsolete #endif
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
 #define ALIGNEDMEMD  // defined if float values must be aligned to D boundary
 #endif

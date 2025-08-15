@@ -285,7 +285,9 @@ typedef struct JSTstruct {
  C _cl0[0];
  C* adbreak;		// must be first! pointer to mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
  C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
- S systemlock;       // lock used for quiescing all tasks.  Bits in order of descending priority:
+ S systemlock;       // lock used for quiescing all tasks.  This holds the system lock state:
+// 0=idle 1=lock requested, leader determined 2=wait for all tasks to ack lock (possibly after adding their own req) 3=decide highest priority 4=pick executor, run the lock 5=all threads get result
+// flag bits used to request systemlock/.  Bits in order of descending priority:
 #define LOCKPRISYM 1  // lock is requested for symbol extension
 #define LOCKPRIPATH 2  // lock is requested to change a locale path
 #define LOCK78MEM 4  // lock is requested for 7!:8, total memory in use

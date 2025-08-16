@@ -325,7 +325,7 @@ case $jplatform64 in
   CFLAGS="$common -m32 -msse2 -mfpmath=sse "
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 $LDTHREAD "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 $LDTHREAD -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
@@ -336,7 +336,7 @@ case $jplatform64 in
  linux/j64avx512*) # linux intel 64bit avx512
   TARGET=libj.so
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -350,7 +350,7 @@ case $jplatform64 in
  linux/j64avx2*) # linux intel 64bit avx2
   TARGET=libj.so
   CFLAGS="$common -DC_AVX2=1 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -363,7 +363,7 @@ case $jplatform64 in
  linux/j64*) # linux intel 64bit nonavx
   TARGET=libj.so
   CFLAGS="$common -msse3 "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
@@ -374,7 +374,7 @@ case $jplatform64 in
  raspberry/j32*) # linux raspbian arm
   TARGET=libj.so
   CFLAGS="$common -std=gnu99 -Wno-overflow -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD -Wl,-z,noexecstack "
   SRC_ASM="${SRC_ASM_RASPI32}"
   GASM_FLAGS=""
   FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
@@ -384,7 +384,7 @@ case $jplatform64 in
  raspberry/j64*) # linux arm64
   TARGET=libj.so
   CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
-  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD "
+  LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD -Wl,-z,noexecstack "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""

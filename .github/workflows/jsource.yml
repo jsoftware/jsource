@@ -304,7 +304,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -314,7 +314,7 @@ jobs:
      with:
       cpu: arm1176
       cpu_info: cpuinfo/raspberrypi_zero2_w
-      base_image: raspbian_lite:2020-02-13
+      base_image: raspios_lite:2023-05-03
       image_additional_mb: 1024
       copy_artifact_path: j32
       commands: |
@@ -445,7 +445,7 @@ jobs:
      with:
       operating_system: openbsd
       architecture: x86-64
-      version: '7.2'
+      version: '7.6'
       shell: bash
 
       run: |

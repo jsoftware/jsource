@@ -388,9 +388,59 @@ jobs:
        path: testdarwinarmd.txt
        overwrite: true
 
+# rpi64arm -------------------------------------------------------------
+ jerpi64arm:
+  name: JE (Linux arm64)
+  runs-on: ubuntu-22.04-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux arm64)
+     run: |
+      script/install-rpi.sh
+
+   - name: Build JE (Linux arm64)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+     run: |
+      script/buildga.sh raspberry || exit 1
+
+   - name: Test JE (Linux arm64)
+     run: |
+      script/testga.sh raspberry || exit 1
+      cd j64
+      strip -S jconsole
+      strip -S libj.so
+      strip -S libtsdll.so
+      strip -S jamalgam || true
+      strip -S libgmp.so
+      cd -
+      ls -l j64
+      zip -r l64.zip j64
+
+   - name: Release JE (Linux arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Linux arm64)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testrpi64.txt
+       overwrite: true
+
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -1281,7 +1331,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

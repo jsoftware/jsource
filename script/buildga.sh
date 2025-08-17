@@ -160,13 +160,13 @@ if [ "$1" = "wasm" ]; then
 fi
 
 # hostdefs netdefs
-if [ "$1" = "linux" ] && [ $m64 -eq 0 ]; then
+if [ "$1" = "linux" ] && [ $m64 -eq 1 ]; then
 cd hostdefs
 $CC hostdefs.c -o hostdefs && ./hostdefs
 $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
 cd ../netdefs
 $CC netdefs.c -o netdefs && ./netdefs
-$CC -m32 netdefs.c -o netdefs 32&& ./netdefs32
+$CC -m32 netdefs.c -o netdefs32 && ./netdefs32
 cd ..
 elif [ "$1" = "raspberry" ] && [ $m64 -eq 0 ]; then
 cd hostdefs

@@ -440,6 +440,7 @@ jobs:
 # rpi32arm -------------------------------------------------------------
  jerpi32arm:
   name: JE (Linux arm32)
+  if: ${{ false }}
   runs-on: ubuntu-22.04-arm
   steps:
    - name: Checkout Git repository
@@ -456,6 +457,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
+      USE_SLEEFQUAD=1
       USE_OPENMP: 0
      run: |
       script/buildga.sh raspberry armv6l || exit 1
@@ -511,8 +513,8 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
-       script/buildga.sh raspberry || exit 1
-       script/testga.sh raspberry || exit 1
+       script/buildga.sh raspberry arm64 || exit 1
+       script/testga.sh raspberry arm64 || exit 1
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -554,7 +556,6 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -574,8 +575,8 @@ jobs:
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
        export USE_OPENMP=0
-       script/buildga.sh raspberry || exit 1
-       script/testga.sh raspberry || exit 1
+       script/buildga.sh raspberry armv6l || exit 1
+       script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
        cd j32
@@ -637,8 +638,8 @@ jobs:
        export USE_SLEEF=1
        export USE_OPENMP=0
        export _DEBUG=3
-       script/buildga.sh raspberry || exit 1
-       script/testga.sh raspberry || exit 1
+       script/buildga.sh raspberry arm64 || exit 1
+       script/testga.sh raspberry arm64 || exit 1
        zip -r rpi64d.zip j64
        zip rpi64d.zip /usr/bin/zip
        zip rpi64d.zip /usr/bin/unzip
@@ -694,8 +695,8 @@ jobs:
        export USE_SLEEFQUAD=1
        export USE_OPENMP=0
        export _DEBUG=3
-       script/buildga.sh raspberry || exit 1
-       script/testga.sh raspberry || exit 1
+       script/buildga.sh raspberry armv6l || exit 1
+       script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
        zip -r rpi32d.zip j32
@@ -1384,7 +1385,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

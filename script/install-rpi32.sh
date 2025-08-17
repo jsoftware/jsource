@@ -2,7 +2,7 @@
 sudo pkg --add-architecture armhf
 sudo apt-get update -y
 sudo apt-get upgrade -y
-sudo apt-get install -y build-essential gcc-multilib g++-multilib libc6-dev autoconf automake libtool gdb
+sudo apt-get install -y build-essential libc6-dev autoconf automake libtool gdb
 sudo apt-get install -y nasm
 sudo apt-get install -y libomp5-14:armhf libopenblas0-pthread:armhf
 sudo apt-get install -y libc6:armhf libstdc++6:armhf

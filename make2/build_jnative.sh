@@ -148,7 +148,7 @@ LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 raspberry/j32)
 TARGET=libjnative.so
-CFLAGS="$common --target=arm-arm-none-eabi -marm -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 raspberry/j64)

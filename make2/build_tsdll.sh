@@ -126,7 +126,7 @@ LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
 
 raspberry/j32) # linux raspbian arm
 TARGET=libtsdll.so
-CFLAGS="$common --target=arm-arm-none-eabi -marm -mfloat-abi=hard -mfpu=vfp -DRASPI "
+CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
 ;;
 

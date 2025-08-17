@@ -457,7 +457,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_SLEEFQUAD=1
+      USE_SLEEFQUAD: 1
       USE_OPENMP: 0
      run: |
       script/buildga.sh raspberry armv6l || exit 1

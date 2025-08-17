@@ -410,7 +410,7 @@ jobs:
 
    - name: Test JE (Linux arm64)
      run: |
-      script/testga.sh raspberry || exit 1
+      script/testga.sh raspberry arm64 || exit 1
       cd j64
       strip -S jconsole
       strip -S libj.so
@@ -419,7 +419,7 @@ jobs:
       strip -S libgmp.so
       cd -
       ls -l j64
-      zip -r l64.zip j64
+      zip -r rpi64.zip j64
 
    - name: Release JE (Linux arm64)
      uses: ncipollo/release-action@v1
@@ -435,6 +435,59 @@ jobs:
      with:
        name: dist
        path: testrpi64.txt
+       overwrite: true
+
+# rpi32arm -------------------------------------------------------------
+ jerpi32arm:
+  name: JE (Linux arm32)
+  runs-on: ubuntu-22.04-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux arm32)
+     run: |
+      script/install-rpi32.sh
+      cd /lib
+      sudo ln -s arm-linux-gnueabihf/ld-2.23.so ld-linux.so.3
+      cd -
+
+   - name: Build JE (Linux arm32)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      j64x: j32
+     run: |
+      script/buildga.sh raspberry || exit 1
+
+   - name: Test JE (Linux arm32)
+     run: |
+      script/testga.sh raspberry armv6l|| exit 1
+      cd j32
+      strip -S jconsole
+      strip -S libj.so
+      strip -S libtsdll.so
+      strip -S jamalgam || true
+      strip -S libgmp.so
+      cd -
+      ls -l j32
+      zip -r rpi32.zip j32
+
+   - name: Release JE (Linux arm32)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi32.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Linux arm32)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testrpi32.txt
        overwrite: true
 
 # rpi64 ----------------------------------------------------------------
@@ -502,6 +555,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -1331,7 +1385,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

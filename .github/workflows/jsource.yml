@@ -406,7 +406,7 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
      run: |
-      script/buildga.sh raspberry || exit 1
+      script/buildga.sh raspberry arm64 || exit 1
 
    - name: Test JE (Linux arm64)
      run: |
@@ -457,13 +457,12 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
-      j64x: j32
      run: |
-      script/buildga.sh raspberry || exit 1
+      script/buildga.sh raspberry armv6l || exit 1
 
    - name: Test JE (Linux arm32)
      run: |
-      script/testga.sh raspberry armv6l|| exit 1
+      script/testga.sh raspberry armv6l || exit 1
       cd j32
       strip -S jconsole
       strip -S libj.so

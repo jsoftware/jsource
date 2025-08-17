@@ -2,7 +2,7 @@
 #
 # build linux/macOS on github actions
 #
-# argument is linux|darwin|raspberry|android|openbsd|freebsd|wasm
+# argument is linux|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l]
 # wasm is experimental
 
 set -e
@@ -31,12 +31,16 @@ else
 fi
 uname -a
 uname -m
-if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
-if [ "$1" = "wasm" ]; then
- m64=0
-else
- m64=1
-fi
+if [ "$2" = "arm64" ] ; then
+  m64=1
+elif [ "$2" = "armv6l" ] ; then
+  m64=0
+elif [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
+ if [ "$1" = "wasm" ]; then
+  m64=0
+ else
+  m64=1
+ fi
 else
  m64=0
 fi

@@ -391,7 +391,7 @@ case $jplatform64 in
 
  raspberry/j32*) # linux raspbian arm
   TARGET=jamalgam
-  CFLAGS="$common -std=gnu99 -Wno-overflow -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
+  CFLAGS="$common -Wno-overflow --target=arm-arm-none-eabi -marm -mfloat-abi=hard -mfpu=vfp -DRASPI "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP"
   SRC_ASM="${SRC_ASM_RASPI32}"
   GASM_FLAGS=""

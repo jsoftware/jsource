@@ -391,7 +391,7 @@ case $jplatform64 in
 
  raspberry/j32*) # linux raspbian arm
   TARGET=libj.so
-  CFLAGS="$common -std=gnu99 -Wno-overflow -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
+  CFLAGS="$common --target=arm-arm-none-eabi -Wno-overflow -marm -mfloat-abi=hard -mfpu=vfp -DRASPI "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   SRC_ASM="${SRC_ASM_RASPI32}"
   GASM_FLAGS=""

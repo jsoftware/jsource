@@ -399,6 +399,8 @@ jobs:
    - name: Setup Environment (Linux arm64)
      run: |
       script/install-rpi.sh
+      clang -march=list 1>&2 
+      clang -mcpu=list 1>&2 
 
    - name: Build JE (Linux arm64)
      env:
@@ -451,6 +453,8 @@ jobs:
       cd /lib
       sudo ln -s arm-linux-gnueabihf/ld-2.23.so ld-linux.so.3
       cd -
+      clang -march=list 1>&2 
+      clang -mcpu=list 1>&2 
 
    - name: Build JE (Linux arm32)
      env:

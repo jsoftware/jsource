@@ -149,7 +149,7 @@ CFLAGS="$common"
 LDFLAGS=" -ldl $LDTHREAD "
 ;;
 raspberry/j32)
-CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
+CFLAGS="$common --target=arm-arm-none-eabi -marm -mfloat-abi=hard -mfpu=vfp -DRASPI"
 LDFLAGS=" -ldl $LDTHREAD "
 ;;
 raspberry/j64)

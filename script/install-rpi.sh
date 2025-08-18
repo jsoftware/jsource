@@ -1,5 +1,5 @@
 #!/bin/sh
-sudo pkg --add-architecture armhf
+sudo dpkg --add-architecture armhf
 sudo apt-get update -y
 sudo apt-get upgrade -y
 sudo apt-get install -y build-essential gcc-multilib libc6-dev autoconf automake libtool gdb

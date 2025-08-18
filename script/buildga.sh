@@ -167,10 +167,6 @@ $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
 cd ../netdefs
 $CC netdefs.c -o netdefs && ./netdefs
 $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
-elif [ "$1" = "raspberry" ] && [ $m64 -eq 0 ]; then
-$CC --target=arm-arm-none-eabi hostdefs.c -o hostdefs && ./hostdefs
-cd ../netdefs
-$CC --target=arm-arm-none-eabi netdefs.c -o netdefs && ./netdefs
 else
 $CC hostdefs.c -o hostdefs && ./hostdefs
 cd ../netdefs

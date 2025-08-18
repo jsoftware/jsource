@@ -440,7 +440,6 @@ jobs:
 # rpi32arm -------------------------------------------------------------
  jerpi32arm:
   name: JE (Linux arm32)
-  if: ${{ false }}
   runs-on: ubuntu-22.04-arm
   steps:
    - name: Checkout Git repository
@@ -448,14 +447,11 @@ jobs:
 
    - name: Setup Environment (Linux arm32)
      run: |
-      script/install-rpi32.sh
-      cd /lib
-      sudo ln -s arm-linux-gnueabihf/ld-2.23.so ld-linux.so.3
-      cd -
+      script/install-rpi.sh
 
    - name: Build JE (Linux arm32)
      env:
-      CC: clang
+      CC: arm-linux-gnueabihf-gcc
       USE_SLEEF: 1
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
@@ -556,6 +552,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -1385,7 +1382,7 @@ jobs:
   name: Test Results
   runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

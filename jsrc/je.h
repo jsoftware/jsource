@@ -550,6 +550,7 @@ extern F2(jtlev);
 extern DF2(jtjlink);
 extern F2(jtloccre2);
 extern F2(jtlock2);
+extern F2(jtlockcurrent);
 extern F2(jtlocnl2);
 extern DF2(jtlocpath2);
 extern F2(jtlogar2);

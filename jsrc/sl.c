@@ -282,6 +282,13 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  R 1;
 }
 
+// x 16!:2 y lock current locale  x is 1 for writelock, y is 1 for take lock
+F2(jtlockcurrent){F12IP;
+ ARGCHK2(a,w)
+ I write=b0(a); I lock=b0(w); RE(0);   // get args, which must be boolean
+ if(write){if(lock)WRITELOCK(*(US*)&AM(jt->global))else WRITEUNLOCK(*(US*)&AM(jt->global))}else{if(lock)READLOCK(*(US*)&AM(jt->global))else READUNLOCK(*(US*)&AM(jt->global))}  // do the lock on the current locale
+ R mtv;
+}
 
 F1(jtlocsizeq){F12IP;C*v; ASSERTMTV(w); v=JT(jt,locsize); R v2(v[0],v[1]);}
      /* 9!:38 default locale size query */

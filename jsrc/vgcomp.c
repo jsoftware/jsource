@@ -26,7 +26,7 @@ static I (*comproutine[])()=   // routines for different datatypes. index is [pr
 [INT2X]=taos, [INT4X]=taol,
 };
 
-// a 16!:2 w   compare 2 nouns that have the same shape and type, returning -1/0/1
+// a 16!:0 w   compare 2 nouns that have the same shape and type, returning -1/0/1
 F2(jttao){F12IP;
  ARGCHK2(a,w)
  ASSERT(!(ISSPARSE(AT(a)|AT(w))),EVNONCE)

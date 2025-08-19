@@ -3391,7 +3391,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  DONOUNROLL(nops, opstat[i].acolvals=EAV(opcolvals[i]);)  // get pointer to values in each column
  __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(Iimin));  // 0x8..0
 
- while(__atomic_load_n(&ctx->colndx9ct,__ATOMIC_ACQUIRE)!=0)johnson(20*nthreads);  // delay until we have early completion on each op.  We allow 1 read every 20ns
+ I yd=10; while(__atomic_load_n(&ctx->colndx9ct,__ATOMIC_ACQUIRE)!=0){johnson(20*nthreads); if(--yd<0){YIELD};}  // delay until we have early completion on each op.  We allow 1 read every 20ns
 
  DONOUNROLL(nops, opstat[i].acolndxs=(*colndxs)[i]; if((*colndxs)[i]==0)SEGFAULT;)  // scaf  get start address of index for each op.  This is generally coming from another core so no reason to unroll
 
@@ -3727,7 +3727,7 @@ releaserow:;  // entered from below to drain the ring, either on buffer-full or 
    ringdctrlb8=(ringdctrlb8&~RINGB8STARTMASK)+b8start;  // b8start has been advanced over all the nonskipped rows.  Put it into the portmanteau, which releases them
 // obsolete printf("8block released, ending at0x%llx ", b8start);
    // Now that we have released an 8block, we must wait for final completion on all the op column indexes
-   if(unlikely(!(ringdctrlb8&RINGFINALSYNC))){while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+2*nops)johnson(20*nthreads); ringdctrlb8|=RINGFINALSYNC;}  // delay until indexes are ready (2*nops op indexes, plus one failure for each thread).  We allow 1 read every 20ns
+   if(unlikely(!(ringdctrlb8&RINGFINALSYNC))){I yd=10; while(__atomic_load_n(&ctx->colndxct,__ATOMIC_ACQUIRE)<nthreads+2*nops){johnson(20*nthreads); if(--yd<0){YIELD}} ringdctrlb8|=RINGFINALSYNC;}  // delay until indexes are ready (2*nops op indexes, plus one failure for each thread).  We allow 1 read every 20ns
    if(releaseblockmask==0){releaseblockmask=releaserowmask[origb8]; releaseqktringbasecurr=releaseqktringbase[origb8]; ringdctrlb8&=~RINGDCTMASK;}  // if release queue was empty, move first row to the release variables.  blockmask=0 means no work.
       // delayct has been incrementing continuously, perhaps overflowing - clear it to start releasing
    else if(unlikely((((ringdctrlb8-(ringdctrlb8>>RINGRELSTARTX))&(RINGROWS-1)))>=(RINGROWS-B8ROWS))){releasect=HIGHVALUEI4; ringdctrlb8&=~RINGDCTMASK; goto releaserow;}  // if ring is full, loop in release to wait for it to drain, and clear delayct to ensure releasing continues
@@ -3759,7 +3759,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  ARGCHK1(w);
  if(likely(AT(w)&VERB)){w=a; a=zeroionei(0);} I debopts; RE(debopts=i0(a))  // default options for monad and verify integer atom
  I4 *(colndxs)[MAXOP];  // pointers to column indexes, filled in by threads
- struct bopctx opctx={.nthreads=(JT(jt,systemlock)>1?0:(*JT(jt,jobqueues))[0].nthreads)+1, .colndxs=&colndxs, .debopts=debopts,};  // sppress worker threads during system lock (i. e. debug)
+ struct bopctx opctx={.nthreads=(*JT(jt,jobqueues))[0].nthreads+1, .colndxs=&colndxs, .debopts=debopts,};  // sppress worker threads during system lock (i. e. debug)
 
  // extract the inputs
  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==8,EVLENGTH)  // w is 8 boxes

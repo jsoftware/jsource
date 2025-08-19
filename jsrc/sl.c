@@ -216,7 +216,7 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
   LX tx=SYMNEXT(*hv); if(tx!=0)NOUNROLL while(SYMNEXT(sympv[tx].next)!=0)tx=SYMNEXT(sympv[tx].next);  // tx->last in chain, or 0 if chain empty
   v=symnew(hv,tx); v->name=x; v->fval=g; ACINITZAP(g);  // install the new locale at end of chain; put name into block; put locale pointer into fval; ZAP to match store of value
   ACINITZAP(x); ACINIT(x,ACUC2)  // now that we know we will succeed, transfer ownership to name to the locale and stloc, one each
-  AR(g)=ARNAMED;   // set rank to indicate named locale
+  AR(g)=ARNAMED; AM(g)=0;   // set rank to indicate named locale; clear user-lock to 'no lock'
   LXAV0(g)[SYMLEXECCT]=((k+1)<<EXECCTPERMX)+EXECCTNOTDELD;  // mark permanent unless k is _1
   // Bloom filter was cleared at allocation
   break;
@@ -233,7 +233,7 @@ A jtstcreate(J jt,I1 k,I p,I n,C*u){A g,x,xx;L*v;
   WRITEUNLOCK(JT(jt,stlock))
   LOCNAME(g)=x;  // set name pointer in SYMLINFO
   ACINITZAP(x);   // now that we know we will succeed, transfer ownership to name to the locale
-  AR(g)=0;   // set rank to indicate numbered locale
+  AR(g)=0; AM(g)=0;   // set rank to indicate numbered locale; clear user-lock to 'no lock'
   LXAV0(g)[SYMLEXECCT]=EXECCTNOTDELD;  // numbered locales are nondeleted but not permanent
   // Bloom filter was cleared at allocation
   break;
@@ -252,18 +252,18 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  INITJT(jjt,locsize)[0]=3;  /* default hash table size for named    locales */
  INITJT(jjt,locsize)[1]=2;  /* default hash table size for numbered locales */
  RZ(jtsymext(jt));     /* initialize symbol pool                       */
- I p; FULLHASHSIZE(400,SYMBSIZE,1,SYMLINFOSIZE,p);
+ I p; FULLHASHSIZE(100,SYMBSIZE,1,SYMLINFOSIZE,p);  // table of named locales
  GATV0(q,SYMB,p,0); AFLAGORLOCAL(q,SYMB) INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc.  All SYMBs are recursive (though this one, which will never be freed, needn't be)
  jtinitnl(jt);  // init numbered locales, using master thread to allocate
  // init z locale
- FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
+ FULLHASHSIZE(1LL<<8,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^9 chains
  SYMRESERVE(2) RZ(zloc=stcreate(0,p,1L,"z      ")); ACX(zloc);   // make the z locale permanent.  6 trailing spaces (plus the NUL) avoids overfetch, which Address Sanitizer tests for
  // create zpath, the default path to use for all other locales
  GAT0(q,BOX,2,1); AAV1(q)[0]=0; AAV1(q)[1]=zloc; ACX(q); JT(jt,zpath)=&AAV1(q)[1];   // install ending 0 & z locale; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
  LOCPATH(zloc)=&AAV1(q)[0];   // make z locale have no path.  The path is already permanent
  // init the symbol tables for the master thread.  Worker threads must copy when they start execution
  // init base locale
- FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
+ FULLHASHSIZE(1LL<<9,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^10 chains
  SYMRESERVE(2) RZ(q=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
  jt->global=q;  // init baselocale in master.  workers must init on each call
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running

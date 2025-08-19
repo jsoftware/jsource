@@ -616,6 +616,7 @@ extern DF2(jtstitchsp2);
 extern DF2(jtstringtoe);
 extern F2(jtsumebar);
 extern F2(jttake);
+extern F2(jttao);
 // extern F2(jttcap);
 extern DF2(jtthorn2);
 extern F2(jttie);

@@ -849,10 +849,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 
 #if PYXES
+#define YIELD sched_yield();  // if we are spinning on other threads, give them a chance to run in case they might be on this core
 #define REPATGCLIM 0x100000   // When this many bytes have been repatriated to a thread, call a GC in that thread
 #define REPATOLIM (REPATGCLIM/32) // When an outgoing repatriation queue contains this many bytes, flush it
 #else
 // if we are not multithreading, we replace the atomic operations with non-atomic versions
+#define YIELD ;   // if no other processes, no reason to delay
 #define __atomic_store_n(aptr,val, memorder) (*aptr=val)
 #define __atomic_load_n(aptr, memorder) *aptr
 #if defined(__clang__) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 8))

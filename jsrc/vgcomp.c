@@ -6,6 +6,36 @@
 #include "j.h"
 #include "vg.h"
 
+#define PREFLT(a,b) (a>b)
+#define PREFNE(a,b) (a!=b)
+#define PREFLTZ(a,b) (a.re>b.re || (a.re==b.re && a.im>b.im))
+#define PREFNEZ(a,b) (a.re!=b.re)
+#define PREFLTE(a,b) (a.hi>b.hi || (a.hi==b.hi && a.lo>b.lo))
+#define PREFNEE(a,b) (a.hi!=b.hi)
+#define TAOGRADE(nm,T,t,eq) I nm(I n, T *a, T *b){DO(n, if(eq(a[i],b[i])) R t(a[i],b[i])-t(b[i],a[i]);) R 0;}
+TAOGRADE(taoc,UC,PREFLT,PREFNE) TAOGRADE(taoi,I,PREFLT,PREFNE) TAOGRADE(taou,US,PREFLT,PREFNE) TAOGRADE(taot,C4,PREFLT,PREFNE) TAOGRADE(taos,I2,PREFLT,PREFNE) TAOGRADE(taol,I4,PREFLT,PREFNE)
+TAOGRADE(taof,D,PREFLT,PREFNE) TAOGRADE(taoz,Z,PREFLTZ,PREFNEZ) TAOGRADE(taoe,E,PREFLTE,PREFNEE)
+#define TAOGRADEC(nm,T,t) I nm(I n, T *a, T *b, J jt){I comp=0; DO(n, if(comp=t(a[i],b[i]))break;) R comp;}
+TAOGRADEC(taor,A,compare) TAOGRADEC(taox,A,xcompare) TAOGRADEC(taoq,Q,QCOMP)
+
+static I (*comproutine[])()=   // routines for different datatypes. index is [precisionx][up]
+{[B01X]=taoc, [LITX]=taoc, [INTX]=taoi, [FLX]=taof,
+[CMPXX]=taoz,[BOXX]=taor, [XNUMX]=taox, [RATX]=taoq,
+[QPX]=taoe,
+[C2TX]=taou, [C4TX]=taot, [SBTX]=taol,
+[INT2X]=taos, [INT4X]=taol,
+};
+
+// a 16!:2 w   compare 2 nouns that have the same shape and type, returning -1/0/1
+F2(jttao){F12IP;
+ ARGCHK2(a,w)
+ ASSERT(!(ISSPARSE(AT(a)|AT(w))),EVNONCE)
+ ASSERT(AR(a)==AR(w),EVRANK);
+ ASSERTAGREE(AS(a),AS(w),AR(a))  // rank and shape must agree
+ ASSERT(AT(a)==AT(w),EVINHOMO)  // types must be equal
+ R sc((*comproutine[CTTZI(AT(a))])(AN(a),voidAV(a),voidAV(w),jt));  // return 
+}
+
 // return 1 if a before b, 0 otherwise
 // inlinable functions are moved to vg.c
 // functions differing between merge & sort are moved to those modules
@@ -25,6 +55,7 @@ B compxu(I n, X *a, X *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->j
 B compxd(I n, X *a, X *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->jt&~JTFLAGMSK); do{if(j=xcompare(*b,*a))R SGNTO0(j); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compqu(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->jt&~JTFLAGMSK); do{if(j=QCOMP(*a,*b))R SGNTO0(j); if(!--n)break; ++a; ++b;}while(1); R a<b;} // QCOMP returns value with same sign as *a-*b
 B compqd(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->jt&~JTFLAGMSK); do{if(j=QCOMP(*b,*a))R SGNTO0(j); if(!--n)break; ++a; ++b;}while(1); R a<b;} // QCOMP returns value with same sign as *a-*b
+
 
 #define CF(f)            B f(SORT * RESTRICT sortblok,I a,I b)
 

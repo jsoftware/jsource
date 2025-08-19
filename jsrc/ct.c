@@ -9,7 +9,7 @@
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES
-#define delay(n) {if(__builtin_constant_p(n)){if(n>36)DONOUNROLL(n/36,_mm_pause();)else johnson(n);}else if(uncommon(n>36))DONOUNROLL((n-7)/36,_mm_pause();)else johnson(n);}
+static void delay(I n){if(uncommon(n>36))DONOUNROLL((n-7)/36,_mm_pause();)else johnson(n);}
 #else
 #define delay(n)
 #endif
@@ -65,11 +65,6 @@ I jtextendunderlock(J jt, A *abuf, US *alock, I flags){A z;
 
 // ************************ system lock **********************************
 #define POLLDELAY delay(20);
-#if PYXES
-#define YIELD sched_yield();  // if we are spinning on other threads, give them a chance to run in case they might be on this core
-#else
-#define YIELD ;   // if no other processes, no reason to delay
-#endif
 
 // perform the action for state n.  In the leader, set ct/advance to state n/action/wait, running wtact  In others, wait for state n/action/decr ct.  When we finish all actors have performed the action for state n, and state is n
 #define DOINSTATE(l,n,expr,wtact) \
@@ -587,7 +582,7 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A arg3){F12JT;A pyx;
 
 
 //todo: don't wake everybody up if the job only has fewer tasks than there are threads. futex_wake can do it
-// execute an internal job made up of n tasks.  f is the function to run, end is the function to call at end, ctx is parms to pass to each task
+// execute an internal job made up of n tasks (but if suspension is active, force n=1).  f is the function to run, end is the function to call at end, ctx is parms to pass to each task
 // poolno is the threadpool to use.  Tasks are run on this thread and the worker threads
 // Result is 0 for OK, else jerr.h error code
 C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *jobq=&(*JT(jt,jobqueues))[poolno];
@@ -613,7 +608,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   if(nwaiters!=0)jfutex_wakea(&jobq->futex);  // if there are waiting threads, wake them up.  We test in case there are no worker threads.  Not really necessary to read under lock, but it silences asan
   lastqueuedtask=n-1;  // if we take this task here, it is special
    // todo scaf: would be nice to wake only as many as we have work for
- }
+ }else n=1;  // if we have to run single-threaded, also run single-tasked.  This avoids thread switching
  // We have started all the threads, but we pitch in and and process tasks ourselves, starting with task 0
  // In our job setup we have accounted for the fact that we are taking the first task, so that we need nothing more from the job block to start running the first task
  A *old=jt->tnextpushp;  // we leave a clear stack when we go

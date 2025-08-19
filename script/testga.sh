@@ -2,7 +2,7 @@
 #
 # test linux/macOS on github actions
 #
-# argument is linux|darwin|raspberry|openbsd|freebsd|wasm
+# argument is linux|darwin|raspberry|openbsd|freebsd|wasm [arm64|armv6l]
 # openbsd/freebsd is experimental
 #
 # current Linux github builder supports avx512
@@ -29,7 +29,11 @@ else
  echo "argument is linux|darwin|raspberry|openbsd|freebsd|wasm"
  exit 1
 fi
-if [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
+if [ "$2" = "arm64" ] ; then
+  m64=1
+elif [ "$2" = "armv6l" ] ; then
+  m64=0
+elif [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
  if [ "$1" = "wasm" ]; then
   m64=0
  else

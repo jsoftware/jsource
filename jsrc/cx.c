@@ -41,7 +41,7 @@
  wlen=sprintf(trackinfo,"%d: ",CWSOURCE(cwsent,CNSTOREDCW,ic)); wx+=wlen; trackinfo[wx++]=' '; \
  AK(trackbox)=(C*)queue-(C*)trackbox; AN(trackbox)=AS(trackbox)[0]=m; trackstg=unparse(trackbox); \
  wlen=AN(trackstg); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(trackstg),wlen); wx+=wlen; \
- trackinfo[wx]=0;  // null-terminate the info
+ jtlogtrace(jt,"jtrace x %s\n",trackinfo);  // optionally log; the initial clear gives NUL-termination
 #else
 #define SETTRACK
 #endif

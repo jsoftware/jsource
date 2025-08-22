@@ -248,8 +248,7 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
    READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[snx]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[snx]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in script name is defined in
   }
  }
- trackinfo[wx]=0;  // null-terminate the info
- jtlogtrace(jt,"jtrace i %s\n",trackinfo);  // log the call
+ jtlogtrace(jt,"jtrace i %s\n",trackinfo);  // log the call.  Initial mvc null-terminates the line
 #endif
  AF actionfn=FAV(fs)->valencefns[flgvbnmgen&FLGDYAD];  // index is 'is dyad'.  Load here to allow call address to settle.  There are no calls from here to fn dispatch
  w=flgvbnmgen&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)

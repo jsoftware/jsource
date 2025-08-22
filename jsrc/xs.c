@@ -49,12 +49,12 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 PROLOG(000);
 #if NAMETRACK
- // bring out the name, locale, and script into easy-to-display name
+ // bring out the line# and line
  C trackinfo[256]; int tracklineno=0;  // will hold line# followed by line
  forcetomemory(&trackinfo);
 #define SETTRACK if(x){mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN+' '); \
   I trackwlen=sprintf(trackinfo,"%d: ",tracklineno++); \
-  MC(trackinfo,CAV(x),MIN((I)sizeof(trackinfo)-trackwlen,AN(x)));}  // no error allowed - used inside deba/debz
+  MC(trackinfo+trackwlen,CAV(x),MIN((I)sizeof(trackinfo)-1-trackwlen,AN(x))); jtlogtrace(jt,"jtrace l %s\n",trackinfo);}  // no error allowed - used inside deba/debz
 #else
 #define SETTRACK
 #endif

@@ -843,6 +843,7 @@ extern F1(jtshowinplacing1);
 extern F1(jtcheckcompfeatures);
 extern F2(jtshowinplacing2);
 extern B        jtlocdestroy(J,A);
+extern void     jtlogtrace(J,C*,C*);
 extern I        jtmaxtype(J,I,I);
 extern B        jtmeminits(JS);
 extern B        jtmeminitt(J);
@@ -1153,7 +1154,7 @@ extern UC       hwfma;
 extern UC       supportaffinity;
 extern UC       traceexplicit;
 extern UC       fboxedsparse;       // enable boxed sparse
-extern char     *traceexpfile;
+extern A     traceexpfile;
 extern VARPSA rpsnull;
 extern PRIM sfn0overself;
 extern UA va1tab[];

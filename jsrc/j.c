@@ -136,8 +136,8 @@ UC  supportaffinity=1;
 #else
 UC  supportaffinity=0;
 #endif
-UC  traceexplicit=0;   // 0: disable  1: stdout  2: stderr  3: file name *traceexpfile
-char* traceexpfile=0;
+UC  traceexplicit=0;   // Controls logging by jtlogtrace().  0=disable  1=stdout  2=stderr  3: to file named in *CAV(traceexpfile)
+A traceexpfile=0;  // string filename if any for logging
 #ifdef BOXEDSPARSE
 UC  fboxedsparse=1;       // enable boxed sparse
 #endif

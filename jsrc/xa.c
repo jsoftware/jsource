@@ -332,22 +332,32 @@ F1(jtstackfault){F12IP;C stackbyte,buf[80],*stackptr=&stackbyte;
  R 0;
 }
 
-// 9!:31   '': query  0: disable  1: stdout  2: stderr  string: file name *traceexpfile
-// query/set trace explicit status. result is previous setting  0: disable  1: stdout  2: stderr  3: file name *traceexpfile
-F1(jttraceexf){F12IP;
- ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); A z=sc(traceexplicit);
- if(!AN(w)) RETF(z);   // query
- if(AT(w)&LIT){     // set output file name
-  ASSERT(' '!=CAV(w)[0],EVDOMAIN) ASSERT(0!=CAV(w)[0],EVDOMAIN)
-  char *f=MALLOC(1+AN(w)); MC(f,CAV(w),AN(w)); *(f+AN(w))=0;
-  FILE * p; p= fopen (f, "a");  // test file location
-  if(!p) {FREE(f); ASSERT(0,EVFACE)}
-  fclose(p); FREE(f);
-  FREE(traceexpfile); traceexpfile=0; traceexpfile=MALLOC(1+AN(w)); MC(traceexpfile,CAV(w),AN(w)); *(traceexpfile+AN(w))=0; traceexplicit=3;
- }else{  // 0: disable  1: stdout  2: stderr
-  int s=i0(w); ASSERT(BETWEENC(s,0,2),EVDOMAIN); FREE(traceexpfile); traceexpfile=0; traceexplicit=s;
+// 9!:_5   '': query  0: disable  1: stdout  2: stderr  string: file name *traceexpfile
+// query/set trace explicit status. result is previous setting  0: disable  1: stdout  2: stderr  string: file name *traceexpfile
+// but if NAMETRACK not set (meaning trace not supported), return -1 and make no change
+F1(jttraceexf){F12IP;A z;
+#if NAMETRACK
+ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); RZ(z=traceexpfile?drop(sc(-1),traceexpfile):sc(traceexplicit)) // error if rank>1, set return to starting status (remove trailing NUL from fn)
+ if(AN(w)){   // if w empty, skip the modification
+  // user is setting the value
+  if(AT(w)&LIT){     // set output file name
+   ASSERT(' '!=CAV(w)[0],EVDOMAIN) ASSERT(0!=CAV(w)[0],EVDOMAIN)  // must not begin with SP or NUL
+   RZ(w=str0(w)) FILE * p; ASSERT((p=fopen(CAV1(w),"a"))!=0,EVFACE)  // append NUL and open file as a test
+   ACINITZAP(w) traceexplicit=3;   // protect w and set logging mode
+// obsolete    char *f=MALLOC(1+AN(w)); MC(f,CAV(w),AN(w)); *(f+AN(w))=0;
+// obsolete    FILE * p; p= fopen (f, "a");  // test file location
+// obsolete    if(!p) {FREE(f); ASSERT(0,EVFACE)}
+// obsolete    fclose(p); FREE(f);
+// obsolete    FREE(traceexpfile); traceexpfile=0; traceexpfile=MALLOC(1+AN(w)); MC(traceexpfile,CAV(w),AN(w)); *(traceexpfile+AN(w))=0; traceexplicit=3;
+  }else{  // 0: disable  1: stdout  2: stderr
+   int s=i0(w); RE(s) ASSERT(BETWEENC(s,0,2),EVDOMAIN); w=0; traceexplicit=s;  // indicate no file, save logging mode
+  }
+  if(traceexpfile)tpush(traceexpfile); traceexpfile=w;  // free old file if any, set new file if any
  }
  RETF(z);
+#else
+ RETF(sc(-1));  // if not compiled for tracing, so indicate
+#endif
 }
 
 // 9!:56

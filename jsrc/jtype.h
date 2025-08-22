@@ -665,7 +665,7 @@ struct AD {
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() after allocation, by zapping: used when we are not sure the most-recent value on the stack is a
 #define ACINITUNPUSH(a) {A *pushp=jt->tnextpushp; --pushp; \
                           if(unlikely(((I)pushp&(NTSTACKBLOCK-1))==0)){A *nextp=(A*)*pushp; if(unlikely(nextp!=pushp-1))freetstackallo(jt); pushp=nextp;} /* check start of block and start of allo */ \
-                          jt->tnextpushp=pushp; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by backing the tpush pointer
+                          jt->tnextpushp=pushp; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by backing the tpush pointer (like a ZAP but without AM)
 #define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
 #define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0 ACIPNO(x);}else ra(x);}
 #define ACX(a)          {AC(a)=ACPERMANENT; AFLAGORLOCAL(a,AT(a)&RECURSIBLE);}   // used only in initializations

@@ -311,6 +311,22 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
 // i. # w
 static F1(jtii){F12IP;ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 
+// log trace data: write *s using *fmt, with destination depending on traceexplicit and traceexpfile
+void jtlogtrace(J jt,C *fmt, C *s){
+ if(unlikely(traceexplicit>0)){  // if there has been no error...
+  if(BETWEENC(traceexplicit,1,2)){   // writing to stdout or stderr
+#ifdef ANDROID
+   __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace",fmt,s);   // write line
+#else
+   fprintf(traceexplicit?stdout:stderr,fmt,s);   // write line
+#endif
+  }else{FILE *p;  // traceexplicit must be 3, and traceexpfile must have a NUL-terminated filename
+   if((p=fopen(CAV1(traceexpfile), "a"))==0){traceexplicit= -3;} // try to open file, fail if can't
+   else{fprintf(p,fmt,s); fclose(p);}  // write to the file, close the file
+  }
+ }
+}
+
 // Return the higher-priority of the types s and t.  s and t are known to be not equal.
 // If either is sparse, convert the result to sparse.
 // Error if one argument is sparse and the other is non-sparsable
@@ -494,7 +510,7 @@ A jtstr(J jt,I n,C*s){A z; GATV0(z,LIT,n,1); MC(AV1(z),s,n); RETF(z);}
 // return A-block for the string *s with length n, enclosed in quotes and quotes doubled
 A jtstrq(J jt,I n,C*s){A z; I qc=2; DO(n, qc+=s[i]=='\'';) GATV0(z,LIT,n+qc,1); C *zv=CAV1(z); *zv++='\''; DO(n, C c=s[i]; if(c=='\'')*zv++=c; *zv++=c;) *zv='\''; RETF(z);}
 
-// w is a LIT string; result is a new block with the same string, with terminating NUL added
+// w is a LIT string; result is a new block with the same string, with terminating NUL added (always rank 1)
 F1(jtstr0){F12IP;A z;C*x;I n; ARGCHK1(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV0(z,LIT,n+1,1); x=CAV1(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
 
 // return A-block for a 2-atom integer vector containing a,b

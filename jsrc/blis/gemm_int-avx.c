@@ -3,8 +3,6 @@
 /*                                                                         */
 /* gemm micro kernel                                                       */
 
-#if 0  /* obsolete */
-
 #include "../blis.h"
 
 #if BLIS_DRIVER == BLIS_DRIVER_AVX
@@ -790,5 +788,3 @@ void BLI_ZGEMM
 #undef LOOKAHEAD_B
 
 #endif   /*  C_AVX  */
-
-#endif  /* 0 */

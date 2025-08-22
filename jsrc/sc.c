@@ -55,26 +55,6 @@ DF2(jtunquote){F12IP;A z;
 #endif
  // *** errors must to go the error exit to restore stacked values
  jt->curname=thisname;  // set executing name before we have value errors.  We will refresh thisname as needed after calls so the compiler won't have to save/restore it
- // trace explicit routine
- if(unlikely((traceexplicit>0) && jt->curname)) {
-  A g=jt->global; NM*v; v=NAV(LOCNAME(g)); // v->n,v->s  current locale name
-#ifdef ANDROID
-  if(traceexplicit==1||traceexplicit==2) __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace", "jtrace i %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
-#else
-  if(traceexplicit==1) fprintf(stdout, "jtrace i %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
-  else if(traceexplicit==2) fprintf(stderr, "jtrace i %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
-#endif
-  else if(traceexplicit==3) {
-   if(!traceexpfile) {traceexplicit= -3; ASSERT(traceexpfile,EVFACE) }
-   else {
-    FILE * p; p= fopen (traceexpfile, "a");
-    if(!p) {traceexplicit= -3; ASSERT(p, EVFACE) }
-    else {
-     fprintf(p, "jtrace i %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s); fclose(p);
-    }
-   }
-  }
- }
  if(likely(!(flgvbnmgen&((UI8)VF2PSEUDONAME<<FLGFLAG2X)))){  // normal names, not pseudo
   // normal path for named functions
   if(likely((fs=FAV(self)->localuse.lu1.cachedlkp)!=0)){  // fetch the most recent lookup, which may be reused. no QC
@@ -261,14 +241,33 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
  UI wx=0, wlen;   // index/len we will write to
  wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; MC(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name
  A locnm=LOCNAME(stack.global);  // name of global locale before call
- wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; MC(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
+ wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; MC(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the current locale name
  if((flgvbnmgen&(FLGCACHED|FLGPSEUDO))==0){  // there is a name to look up
   A sna; I snx;
   if((sna=scind(box(sfn(0,thisname))))&&(snx=BIV0(sna))>=0){
-   READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[snx]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[snx]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in the locale name
+   READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[snx]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[snx]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in the new locale name
   }
  }
  trackinfo[wx]=0;  // null-terminate the info
+ // trace explicit routine
+ if(unlikely((traceexplicit>0) && jt->curname)) {
+#ifdef ANDROID
+  if(traceexplicit==1||traceexplicit==2) __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace", "jtrace i %s\n",trackinfo);
+#else
+  if(traceexplicit==1) fprintf(stdout, "jtrace i %s\n",trackinfo);
+  else if(traceexplicit==2) fprintf(stderr, "jtrace i %s\n",trackinfo);
+#endif
+  else if(traceexplicit==3) {
+   if(!traceexpfile) {traceexplicit= -3; ASSERT(traceexpfile,EVFACE) }
+   else {
+    FILE * p; p= fopen (traceexpfile, "a");
+    if(!p) {traceexplicit= -3; ASSERT(p, EVFACE) }
+    else {
+     fprintf(p, "jtrace i %s\n",trackinfo); fclose(p);
+    }
+   }
+  }
+ }
 #endif
  AF actionfn=FAV(fs)->valencefns[flgvbnmgen&FLGDYAD];  // index is 'is dyad'.  Load here to allow call address to settle.  There are no calls from here to fn dispatch
  w=flgvbnmgen&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
@@ -365,14 +364,14 @@ if(likely(!(flgvbnmgen&(FLGCACHED|FLGPSEUDO)))){fanamedacv(fs);}  // unra the na
 exitname:; // error point for name errors.
  SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed early or as late as the deletion; make sure locsyms matches.  global and AKGST always match for the named explicit routine that is running.
     // if an explicit routine calls a tacit name via locative, globals and AKGST will diverge while the tacit verb runs; if the tacit verb then calls a (possibly named) explicit, the explicit's u. will be from the earlier explicit, not the intervening tacit.
+#if NAMETRACK
  // trace explicit routine
  if(unlikely((traceexplicit>0) && jt->curname)) {
-  A g=jt->global; NM*v; v=NAV(LOCNAME(g)); // v->n,v->s  current locale name
 #ifdef ANDROID
-  if(traceexplicit==1||traceexplicit==2) __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace", "jtrace o %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
+  if(traceexplicit==1||traceexplicit==2) __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace", "jtrace o %s\n",trackinfo);
 #else
-  if(traceexplicit==1) fprintf(stdout, "jtrace o %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
-  else if(traceexplicit==2) fprintf(stderr, "jtrace o %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s);
+  if(traceexplicit==1) fprintf(stdout, "jtrace o %s\n",trackinfo);
+  else if(traceexplicit==2) fprintf(stderr, "jtrace o %s\n",trackinfo);
 #endif
   else if(traceexplicit==3) {
    if(!traceexpfile) {traceexplicit= -3; ASSERT(traceexpfile,EVFACE) }
@@ -380,11 +379,12 @@ exitname:; // error point for name errors.
     FILE * p; p= fopen (traceexpfile, "a");
     if(!p) {traceexplicit= -3; ASSERT(p, EVFACE) }
     else {
-     fprintf(p, "jtrace o %.*s %.*s\n", NAV(jt->curname)->n, NAV(jt->curname)->s, v->n, v->s); fclose(p);
+     fprintf(p, "jtrace o %s\n",trackinfo); fclose(p);
     }
    }
   }
  }
+#endif
 #if C_AVX2 || EMU_AVX2
  _mm256_storeu_si256((__m256i *)&jt->parserstackframe.sf,_mm256_loadu_si256((__m256i *)&stack));
 #else

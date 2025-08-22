@@ -84,7 +84,7 @@ THRESHOLD +. (20 (6!:2) 'p"0 i. 10000') > 1.5 * 20 (6!:2) 'f"0 i. 10000'  NB. Ve
 'ill-formed number' -: ". etx '3jj4'
 
 NB. protecting named values during ".
-f =: {{ 'f g h' =. ('';1000;10000) $&.> 2
+f =. {{ 'f g h' =. ('';1000;10000) $&.> 2
 ex =. 'f =. >: f'
 assert. 2 -: ((f ([ ".) ex) [ g) [ h
 assert. f -: 3

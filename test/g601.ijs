@@ -83,6 +83,26 @@ THRESHOLD +. (20 (6!:2) 'p"0 i. 10000') > 1.5 * 20 (6!:2) 'f"0 i. 10000'  NB. Ve
 'ill-formed number' -: ". etx '3ee4'
 'ill-formed number' -: ". etx '3jj4'
 
+NB. protecting named values during ".
+f =: {{ 'f g h' =. ('';1000;10000) $&.> 2
+ex =. 'f =. >: f'
+assert. 2 -: ((f ([ ".) ex) [ g) [ h
+assert. f -: 3
+ex =. 'g =. >: g'
+assert. (1000 $ 2) -: ((f ([ ".) ex) ] g) [ h
+assert. g -: 1000 $ 3
+ex =. 'h =. >: h'
+assert. (10000 $ 2) -: ((f ([ ".) ex) [ g) ] h
+assert. h -: 10000 $ 3
+1
+}}
+s1 =: >: 00 [ s2 =: >: 00  NB. nonshared integer, can be replaced with no space
+1: << i. 10   NB. if in explicit, force tpop
+s1 =: 7!:0''
+f''
+1: << i. 10
+s2 =: 7!:0''
+s1 = s2
 
 NB. "."0@": y -----------------------------------------------------------
 

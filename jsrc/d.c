@@ -253,10 +253,12 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
        if(i<AN(saverr)){I j; for(j=i;j<AN(saverr)&&CAV(saverr)[j]!=' '&&CAV(saverr)[j]!=CLF;++j); RZGOTO(namestg=str(j-i,CAV(saverr)+i),noeformat)}
        // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
        // The headers are like virtual blocks but they don't increment the usecount of the backer.  That means that if further execution frees the backer
-       // the header is left pointing to garbage.  That means we have to be sure to free the header before we return from this function, with tpop
-       // The header will be made recursive, which will increment usecounts in the contents; that's OK.  We will decrement the usecounts before we
-       // exit, simultaneously freeing the header before it can refer to garbage.  NOTE that if PM debugging is on here, the tpop is suppressed, putting
-       // a spoke in our wheel.  When we come out of PM debug, we must first tpop to get rid of the headers defined here, and only then start deleting names.
+       // the header is left pointing to garbage.  To avoid trouble we zap the headers here and free them by hand after we call eformat
+// obsolete   That means we have to be sure to free the header before we return from this function, with tpop
+// obsolete        // The header will be made recursive, which will increment usecounts in the contents; that's OK.  We will decrement the usecounts before we
+// obsolete        // exit, simultaneously freeing the header before it can refer to garbage.
+// obsolete   NOTE that if PM debugging is on here, the tpop is suppressed, putting
+// obsolete        // a spoke in our wheel.  When we come out of PM debug, we must first tpop to get rid of the headers defined here, and only then start deleting names.
        A awm=0;   // place to build the arg list for eformat
        if(m){A m1; rnk=mtv; if((m1=m1ah=gahzap(jt,AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;  // if m exists, make it the last arg, and set rank to ''
        }else if(e==EVASSEMBLY){
@@ -276,7 +278,7 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
       }
      }else msg=a;  // self not given, use given message text
  noeformat: ;
-// obsolete      if(m1ah)fa(m1ah); if(w1ah)fa(w1ah); if(a1ah)fa(a1ah);  // free the headers so they cannot lie around with their unprotected values that are subject to deletion 
+     if(m1ah)fa(m1ah); if(w1ah)fa(w1ah); if(a1ah)fa(a1ah);  // free the headers, which are orphans
      jt->jerr=jt->jerr1=e; jt->etxn=0;
      C *savtext=CAV(saverr); I copyoffset=0;  // pointer to old emsg text, and offset to copy from
      if(msg&&(AT(msg)&LIT)&&AN(msg)>0){

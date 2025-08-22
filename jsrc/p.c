@@ -457,17 +457,17 @@ I infererrtok(J jt){I errtok;
 // parserstkend1 is the end+1 of the current stack, which makes it the beginning of the stack for the calling sentence.  We scan there till we hit the back mark for that sentence
 void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A y=0;  // pointer to execution stack, possibly the null one we start out with
 // obsolete  if(unlikely(stk==&jt->initparserstack[1]))R;  // in a thread it is possible there in NO stack, if the verb is tacit.  We could put a backmark in the initparserstack, but that would add 2 words to JTT.  This code is lightly used.
- I verbpos=(stk[2].pt==PTNOUN)?1:2, ranoun=0; verbpos=ofst?0:verbpos; // verb is in slot 1 if x V N, 2 if x N V N or x V V N; but 0 (no verb) for assignments; flag that we changed tpop[aw]
+ I verbpos=(stk[2].pt==PTNOUN)?1:2, ranoun=0; verbpos=ofst?-1:verbpos; // verb is in slot 1 if x V N, 2 if x N V N or x V V N; but -1 (no verb) for assignments; flag that we changed tpop[aw]
  for(;stk[ofst].pt!=PTMARKBACK;++ofst){
   if(((I)stk[ofst].a&STKNAMED+STKFAOWED)==STKNAMED&&stk[ofst].pt!=PTMARKFRONT){   // if named and not FAOWED - but .a is garbage in a front mark, so not then
    if(!ACISPERM(AC(QCWORD(stk[ofst].a)))&&!(AFLAG(QCWORD(stk[ofst].a))&AFSENTENCEWORD)){   // leave PERMANENT or SENTENCEWORD block always showing NAMED+~FAOWED which will suppress frees quickly
          // to speed parse we mark known-untouchable blocks with NAMED+~FAOWED, with the knowledge that we will not treat them as NAMED here
     rapos(QCWORD(stk[ofst].a),y); stk[ofst].a=SETSTKFAOWED(stk[ofst].a); // if named & unprotected, protect & mark
-    ranoun|=BETWEENO(ofst,1,verbpos+1)&&(stk[ofst].pt^PTNOUN);  // remember if we are protecting a noun argument 
+    ranoun|=BETWEENC(ofst,1,verbpos+1)&&(stk[ofst].pt==PTNOUN);  // remember if we are protecting a noun argument 
    }
   }
  }
- if(verbpos&&ranoun)stk[verbpos].a=SETSTKREFRESHRQD(stk[verbpos].a);  // if this is a line 1-3 exec and we modified tpop[aw], set flag to indicate that
+ if(verbpos>0&&ranoun)stk[verbpos].a=SETSTKREFRESHRQD(stk[verbpos].a);  // if this is a line 1-3 exec and we modified tpop[aw], set flag to indicate that
 }
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
@@ -789,7 +789,7 @@ endname: ;
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If have not yet signaled the (virtual) mark, do so; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
-     if(!PTISMARKFRONT(GETSTACK0PT)){SETSTACK0PT(PTMARKFRONT) stack[0].pt=PTMARKFRONT; pt0ecam&=~FLGPMSK; break;}  // first time, realize the virtual mark and use it.   We store the mark only so infererrtok can look at it
+     if(!PTISMARKFRONT(GETSTACK0PT)){SETSTACK0PT(PTMARKFRONT) stack[0].pt=PTMARKFRONT; pt0ecam&=~FLGPMSK; break;}  // first time, realize the virtual mark and use it.   We store the mark only so infererrtok or protectlocals can look at it
      EP(0)       // second time.  there's nothing more to pull, parse is over.  This is the normal end-of-parse (except for after assignment)
      // never fall through here
     }

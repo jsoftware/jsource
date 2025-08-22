@@ -679,6 +679,11 @@ a =: &/
 test2 <'a'     
 (+&5/) testeq (+ a 5)
 
+a =: (2^[.)
+test2 <'a'     
+(8) testeq (2 a 3)
+
+
 NB. Verify that all trains produce an equivalent result after going through 5!:5
 
 NB. y is a character string representing a possibly-invalid train

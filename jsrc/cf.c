@@ -204,11 +204,14 @@ static DF1(tac){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C
 static DF1(tcNV){F12IP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
 static DF2(tcc){F12IP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,0);}  // conj C C
 
-static DF1(taaa){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
-static DF2(tNVvc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj V V C  - C may return another C
+// obsolete static DF1(taaa){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
+static DF1(taaa){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); RZ(df1(z,t,gs)); R df1(t,z,hs);}  // adv A A A
+// obsolete static DF2(tNVvc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj NV V C  - C may return another C
+static DF2(tNVvc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj NV V C  - C may return another C
 static DF2(tcVCc){F12IP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
 static DF2(taav){F12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
-static DF2(tcaa){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
+// obsolete static DF2(tcaa){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // conj C A A
+static DF2(tcaa){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); RZ(df1(z,t,gs)); R df1(t,z,hs);}  // conj C A A
 static DF1(tNVca){F12IP;TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
 static DF2(tNVcc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
 static DF1(taVCNV){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); R hook(t,gs,hs);}  // adv A V/C N/V

@@ -3759,7 +3759,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  ARGCHK1(w);
  if(likely(AT(w)&VERB)){w=a; a=zeroionei(0);} I debopts; RE(debopts=i0(a))  // default options for monad and verify integer atom
  I4 *(colndxs)[MAXOP];  // pointers to column indexes, filled in by threads
- struct bopctx opctx={.nthreads=(*JT(jt,jobqueues))[0].nthreads+1, .colndxs=&colndxs, .debopts=debopts,};  // sppress worker threads during system lock (i. e. debug)
+ struct bopctx opctx={.nthreads=((lda(&JT(jt,systemlock))>2)?0:(*JT(jt,jobqueues))[0].nthreads)+1, .colndxs=&colndxs, .debopts=debopts,};  // suppress worker threads during system lock (i. e. debug)
 
  // extract the inputs
  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==8,EVLENGTH)  // w is 8 boxes

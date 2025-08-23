@@ -477,24 +477,22 @@ foo1''
 )
 
 NB. trace explicit routine
-0!:_1`1:@.(_1~:9!:_5(0)) '$'   NB. skip if NAMETRACK not set in build - tracing disabled then
-empty 9!:_5[0
-0= 9!:_5[0
-0= 9!:_5[1
-1= 9!:_5[2
-2= 9!:_5[0
+empty 9!:31[0
+0= 9!:31[0
+0= 9!:31[1
+1= 9!:31[2
+2= 9!:31[0
 empty ferase f=: jpath'~temp/jtrace.txt'
-0= 9!:_5[f
+0= 9!:31[f
 foo2''
-f-: 9!:_5[0
-(toJ^:IFWIN fread f) -: ; <@(,&((LF,~(4!:3 '') {::~ 4!:4 <'foo2')));._2 t =: (0 : 0) 
-jtrace i foo2 base 
-jtrace i foo1 base 
-jtrace o foo1 base 
-jtrace o foo2 base 
+f-: 9!:31[0
+(toJ^:IFWIN fread f) -: (0 : 0) 
+jtrace > foo2 base 
+jtrace > foo1 base 
+jtrace < foo1
+jtrace < foo2
 )
 empty ferase f
-NB.$  end of skip
 
 epilog''
 

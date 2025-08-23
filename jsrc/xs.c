@@ -52,9 +52,9 @@ PROLOG(000);
  // bring out the line# and line
  C trackinfo[256]; int tracklineno=0;  // will hold line# followed by line
  forcetomemory(&trackinfo);
-#define SETTRACK if(x){mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN+' '); \
+#define SETTRACK if(x){mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN); \
   I trackwlen=sprintf(trackinfo,"%d: ",tracklineno++); \
-  MC(trackinfo+trackwlen,CAV(x),MIN((I)sizeof(trackinfo)-1-trackwlen,AN(x))); jtlogtrace(jt,"jtrace l %s\n",trackinfo);}  // no error allowed - used inside deba/debz
+  MC(trackinfo+trackwlen,CAV(x),MIN((I)sizeof(trackinfo)-1-trackwlen,AN(x))); jtlogtrace(jt,"jtrace l %s\n",0,0,trackinfo);}  // no error allowed - used inside deba/debz
 #else
 #define SETTRACK
 #endif

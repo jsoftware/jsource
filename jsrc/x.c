@@ -268,6 +268,7 @@ void jtforeigninit(J jt){UI i;
  MN(9,28)  XPRIM(VERB, jtiepdoq,     0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX); 
  MN(9,29)  XPRIM(VERB, jtiepdos,     0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX); 
  MN(9,30)  XPRIM(VERB, jtcurnameq,   0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX); 
+ MN(9,31)  XPRIM(VERB, jttraceexf,   0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,32)  XPRIM(VERB, jtecmtriesq,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX); 
  MN(9,33)  XPRIM(VERB, jtecmtriess,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,34)  XPRIM(VERB, jtassertq,    0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX); 
@@ -368,7 +369,6 @@ MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VFLAGNONE,VF2NONE,RMAX,RMAX,RM
  MN(9,-2)  XPRIM(VERB, jtleakblockreset, 0,        VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,-3)  XPRIM(VERB, jtshowinplacing1, jtshowinplacing2,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,-4)  XPRIM(VERB, jttoggledissect12, jttoggledissect12,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,-5)  XPRIM(VERB, jttraceexf,   0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-1) XPRIM(VERB, 0,            jtfindrange,  VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-2) XPRIM(VERB, 0,            jtfindrange4, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,-3) XPRIM(VERB, 0,            jtfindrange2, VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);

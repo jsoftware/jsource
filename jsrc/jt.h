@@ -111,6 +111,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
     US spflag; // access as short
     struct {
      B spfreeneeded;  // When set, we should perform a garbage-collection pass.  Touched only by this thread.   unquote uses a flag bit temporarily  persistent
+#define SPFREEGC 0x1  // set to call for garbage collection
+#define SPFREETRACEON 0x2  // set when user call tracing is on
+#define SPFREEANONCALL 0x80   // set (temporarily) to indicate anonymous call
      B sprepatneeded; // When low bit set, we should reclaim repat blocks.  Needs synchronisation, but rarely touched by other threads so this can stay in M/E
     };
    };
@@ -233,7 +236,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
  A *pmttop;  // tstack top to free to when releasing the postmortem stack.  Non0 indicates pm debugging session is active  Could move to JST
- I filler6[3];
+ A usertracefn;  // parm to jtlogtrace and 9!:31: points to A block for log filename, or 0=trace disabled 1=to stdout 2=to stderr 3=trace disabled because to error
+ I filler6[2];
 // end of cacheline 6
 
  C _cl7[0];

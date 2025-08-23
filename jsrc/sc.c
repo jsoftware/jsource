@@ -225,7 +225,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
    // The pseudo-named function was created under debug/pm mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
    // implications: anonymous verbs do not restore locales.  To preserve that behavior, we divert the call to the slow path and then skip restoring the locale
    // at the return
-   flgvbnmgen+=FLGANON; jt->uflags.spfreeneeded|=0x80;  //  indicate anonymous call, force this call through the long path
+   flgvbnmgen+=FLGANON; jt->uflags.spfreeneeded|=SPFREEANONCALL;  //  indicate anonymous call, force this call through the long path
   }
   // NOTE: we will update the $: recursion point during this call, because recursion doesn't go through a name.  But what about a pseudo-name?  If the name comes from a locative, we treat it like any other
   // named ref and recur to fs.  If it is truly anonymous, it can only be a call to xdefn during pm/debug: xdefn will start a new parse and the recursion point is immaterial.
@@ -248,7 +248,6 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
    READLOCK(JT(jt,startlock)) wlen=AN(AAV(JT(jt,slist))[snx]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[snx]),wlen); READUNLOCK(JT(jt,startlock)) wx+=wlen;  // copy in script name is defined in
   }
  }
- jtlogtrace(jt,"jtrace i %s\n",trackinfo);  // log the call.  Initial mvc null-terminates the line
 #endif
  AF actionfn=FAV(fs)->valencefns[flgvbnmgen&FLGDYAD];  // index is 'is dyad'.  Load here to allow call address to settle.  There are no calls from here to fn dispatch
  w=flgvbnmgen&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
@@ -280,6 +279,13 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
 
   A execlocname=LOCNAME(jt->global);  // locale name for logging, known not to change since we haven't popped the executing locale yet
   if(jt->uflags.trace&TRACEPM){pmrecord(jt->curname,execlocname,-1L,(flgvbnmgen&FLGDYAD)+1); fs=jt->parserstackframe.sf;}  // Record the call to the name, if perf monitoring on
+  if(jt->uflags.spfreeneeded&SPFREETRACEON)
+#if NAMETRACK
+ jtlogtrace(jt,"jtrace > %*s\n",0,0,trackinfo);  // log the call.  Initial mvc null-terminates the line
+#else
+ jtlogtrace(jt,"jtrace > %.*s %.*s %.*s\n",thisname,stack.global,jt->global!=stack.global?jt->global:aqq);  // log name, old locale, and new locale if changed
+#endif
+
   // transfer the bstkreqd flag to our internal flags so we can continue it on after the return, and clear it for the called function.  The idea is that bstkreqd has info about
   // the current caller, and is reset for the next level.
   // But: if this is a anonymous function, we need to skip the save/restore of locales, so we skip the update
@@ -294,10 +300,11 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
   }
   if(jt->uflags.trace&TRACEPM)pmrecord(jt->curname,execlocname,-2L,(flgvbnmgen&FLGDYAD)+1);  // record the return from call
   if(d)debz();  // release stack frame if allocated
-  if(unlikely(flgvbnmgen&FLGANON)){jt->uflags.spfreeneeded&=~0x80; goto exitanon;}  // if this was an anonymous explicit verb, skip over locale restoration (it can't be cocurrent)
+  if(unlikely(flgvbnmgen&FLGANON)){jt->uflags.spfreeneeded&=~SPFREEANONCALL; goto exitanon;}  // if this was an anonymous explicit verb, skip over locale restoration (it can't be cocurrent)
   if(jt->uflags.spflag){                        // Need to do some form of space reclamation?
-   if(jt->uflags.sprepatneeded)jtrepatrecv(jt); // repatriate first, because we might reclaim enough memory to need to gc
-   if(jt->uflags.spfreeneeded&1)spfree();
+   if(jt->uflags.sprepatneeded)jtrepatrecv(jt); // repatriate first, because we might reclaim memory we need to gc
+   if(jt->uflags.spfreeneeded&SPFREEGC)spfree();
+   if(jt->uflags.spfreeneeded&SPFREETRACEON)jtlogtrace(jt,"jtrace < %.*s\n",thisname,0,0);  // log the return
   }        // if garbage collection required, do it
   fs=jt->parserstackframe.sf;  // restore fs
  }
@@ -345,9 +352,6 @@ if(likely(!(flgvbnmgen&(FLGCACHED|FLGPSEUDO)))){fanamedacv(fs);}  // unra the na
 exitname:; // error point for name errors.
  SYMSETGLOBALINLOCAL(stack.locsyms,stack.global);   // we will restore jt->global, which might have changed early or as late as the deletion; make sure locsyms matches.  global and AKGST always match for the named explicit routine that is running.
     // if an explicit routine calls a tacit name via locative, globals and AKGST will diverge while the tacit verb runs; if the tacit verb then calls a (possibly named) explicit, the explicit's u. will be from the earlier explicit, not the intervening tacit.
-#if NAMETRACK
- jtlogtrace(jt,"jtrace o %s\n",trackinfo);  // log the return
-#endif
 #if C_AVX2 || EMU_AVX2
  _mm256_storeu_si256((__m256i *)&jt->parserstackframe.sf,_mm256_loadu_si256((__m256i *)&stack));
 #else

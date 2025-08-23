@@ -402,7 +402,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
    // No job to run.  Wait for one.  While we're waiting, do a garbage-collection if one is needed.  It could be signaled by a different thread
    JOBUNLOCK(jobq,0);
    jtrepatrecv(jt); // Reclaim any of our own memory from others; unconditionally because there's nothing better to do
-   if(jt->uflags.spfreeneeded)spfree();  // Collect garbage if there is enough to check
+   if(jt->uflags.spfreeneeded&SPFREEGC)spfree();  // Collect garbage if there is enough to check
    job=JOBLOCK(jobq);
    if(likely(job==0)){
     // Still no job.  As far as tasks are concerned, we are now waiting.  But don't do an OS wait till we have lingered

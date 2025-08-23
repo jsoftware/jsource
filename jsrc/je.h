@@ -843,7 +843,7 @@ extern F1(jtshowinplacing1);
 extern F1(jtcheckcompfeatures);
 extern F2(jtshowinplacing2);
 extern B        jtlocdestroy(J,A);
-extern void     jtlogtrace(J,C*,C*);
+extern void     jtlogtrace(J,C*,void*,void*,void*);
 extern I        jtmaxtype(J,I,I);
 extern B        jtmeminits(JS);
 extern B        jtmeminitt(J);
@@ -1152,9 +1152,7 @@ extern int numberOfCores;        // number of cpu cores
 extern UC       hwaes;
 extern UC       hwfma;
 extern UC       supportaffinity;
-extern UC       traceexplicit;
 extern UC       fboxedsparse;       // enable boxed sparse
-extern A     traceexpfile;
 extern VARPSA rpsnull;
 extern PRIM sfn0overself;
 extern UA va1tab[];

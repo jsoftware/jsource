@@ -339,7 +339,7 @@ B jtspfree(J jt){I i;A p;
    xfct=jt->mfreegenalloremote; jt->mfreegenallo+=xfct; __atomic_fetch_sub(&jt->mfreegenalloremote,xfct,__ATOMIC_ACQ_REL);  // remote mods must be atomic
   }
  }
- jt->uflags.spfreeneeded = 0;  // indicate no check needed yet
+ jt->uflags.spfreeneeded&=~SPFREEGC;  // indicate no check needed yet
 // audit free list {I xxi,xxj;A xxx; {for(xxi=PMINL;xxi<=PLIML;++xxi){xxj=0; xxx=(jt->mempool[-PMINL+xxi]); while(xxx){xxx=xxx->kchain.chain; ++xxj;}}}}
  R 1;
 }
@@ -1649,7 +1649,7 @@ if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
   I mfreeb = jt->memballo[blockx] -= allocsize;   // number of bytes allocated at this size (biased zero point)
   if(unlikely((mfreeb&(0x80000000+MFREEBCOUNTING))!=0)){  // normally we're done
    if(mfreeb&MFREEBCOUNTING)jt->bytes-=allocsize;  // keep track of total allocation, needed only if enabled
-   if(mfreeb<0)jt->uflags.spfreeneeded=1;  // Indicate we have one more free buffer if this kicks the list into garbage-collection mode, indicate that
+   if(mfreeb<0)jt->uflags.spfreeneeded|=SPFREEGC;  // Indicate we have one more free buffer if this kicks the list into garbage-collection mode, indicate that
   }
  }else if(unlikely(blockx==FHRHBINISGMP)){jtmfgmp(jt,w);  // if GMP allocation, free it through GMP
  }else{    // buffer allocated from malloc

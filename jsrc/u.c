@@ -311,20 +311,28 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
 // i. # w
 static F1(jtii){F12IP;ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 
-// log trace data: write *s using *fmt, with destination depending on traceexplicit and traceexpfile
-void jtlogtrace(J jt,C *fmt, C *s){
- if(unlikely(traceexplicit>0)){  // if there has been no error...
-  if(BETWEENC(traceexplicit,1,2)){   // writing to stdout or stderr
-#ifdef ANDROID
-   __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace",fmt,s);   // write line
-#else
-   fprintf(traceexplicit?stdout:stderr,fmt,s);   // write line
-#endif
-  }else{FILE *p;  // traceexplicit must be 3, and traceexpfile must have a NUL-terminated filename
-   if((p=fopen(CAV1(traceexpfile), "a"))==0){traceexplicit= -3;} // try to open file, fail if can't
-   else{fprintf(p,fmt,s); fclose(p);}  // write to the file, close the file
-  }
+// log trace data: write *s using *fmt, with destination depending on jt->usertracefn
+// if a0 is 0, we write the null-terminated a2
+// otherwise, a? can be a SYMB, NM, or LIT, which we write as string using ptr/length.
+void jtlogtrace(J jt,C *fmt, void *a0, void *a1, void *a2){
+ // convert the input to pointers/length
+ I l0,l1,l2;  // will hold lengths
+ if(a0==0){a0=a2;  // if simple string case, move NUL-terminated string.  Other values immaterial
+ }else{  // A blocks, convert to string addresses/length
+  DO(3, A a=(A)a0; a0=a1; a1=a2; l0=l1; l1=l2;
+   if(a){if(AT(a)&SYMB)a=LOCNAME(a); a2=AT(a)&NAME?NAV(a)->s:CAV(a); l2=AN(a);}else a2=0;
+  )
  }
+ if(BETWEENC(jt->usertracefn,1,2)){   // writing to stdout or stderr
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace",fmt,l0,a0,l1,a1,l2,a2);   // write line
+#else
+  fprintf((I)jt->usertracefn==1?stdout:stderr,fmt,l0,a0,l1,a1,l2,a2);   // write line
+#endif
+ }else if((I)jt->usertracefn&~3){FILE *p;  // jt->usertracefn has have a NUL-terminated filename
+  if((p=fopen(CAV1(jt->usertracefn), "a"))==0){jt->usertracefn=(A)3; jt->uflags.spfreeneeded&=~SPFREETRACEON;} // try to open file; fail if can't, disabling further logging, incl test
+  else{fprintf(p,fmt,l0,a0,l1,a1,l2,a2); fclose(p);}  // write to the file, close the file
+ }  // otherwise do nothing: trace disabled or error
 }
 
 // Return the higher-priority of the types s and t.  s and t are known to be not equal.

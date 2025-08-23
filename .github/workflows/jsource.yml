@@ -169,6 +169,7 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _DEBUG: 3
+      _NAMETRACK: 1
      run: |
       echo $SDE_PATH
       $SDE_PATH/sde -help || true
@@ -177,6 +178,7 @@ jobs:
    - name: Test JE (Linux debug)
      env:
       _DEBUG: 3
+      _NAMETRACK: 1
      run: |
       script/testga.sh linux || exit 1
       ls -l j64
@@ -316,12 +318,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _DEBUG: 3
+      _NAMETRACK: 1
      run: |
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS debug)
      env:
       _DEBUG: 3
+      _NAMETRACK: 1
      run: |
       script/testga.sh darwin || exit 1
       ls -l j64
@@ -361,12 +365,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _DEBUG: 3
+      _NAMETRACK: 1
      run: |
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS arm64 debug)
      env:
       _DEBUG: 3
+      _NAMETRACK: 1
      run: |
       script/testga.sh darwin || exit 1
       ls -l j64
@@ -631,12 +637,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _DEBUG: 3
+      _NAMETRACK: 1
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
    - name: Test JE (Linux arm64 debug)
      env:
       _DEBUG: 3
+      _NAMETRACK: 1
      run: |
       script/testga.sh raspberry arm64 || exit 1
       ls -l j64
@@ -656,6 +664,57 @@ jobs:
      with:
        name: dist
        path: testrpi64d.txt
+       overwrite: true
+
+# rpi32arm debug -------------------------------------------------------
+ jerpi32armd:
+  name: JE (Linux arm32 debug)
+  if: ${{ false }}
+  runs-on: ubuntu-22.04-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux arm32 debug)
+     run: |
+      script/install-rpi.sh
+
+   - name: Build JE (Linux arm32 debug)
+     env:
+      CC: arm-linux-gnueabihf-gcc
+      USE_SLEEF: 1
+      USE_SLEEFQUAD: 1
+      USE_OPENMP: 0
+      _DEBUG: 3
+      _NAMETRACK: 1
+     run: |
+      script/buildga.sh raspberry armv6l || exit 1
+
+   - name: Test JE (Linux arm32 debug)
+     env:
+      _DEBUG: 3
+      _NAMETRACK: 1
+     run: |
+      script/testga.sh raspberry armv6l || exit 1
+      cd j32
+      cd -
+      ls -l j32
+      zip -r rpi32d.zip j32
+
+   - name: Release JE (Linux arm32 debug)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "rpi32d.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Linux arm32 debug)
+     uses: actions/upload-artifact@v4
+     with:
+       name: dist
+       path: testrpi32d.txt
        overwrite: true
 
 # rpi64 debug ----------------------------------------------------------
@@ -681,6 +740,7 @@ jobs:
        export USE_SLEEF=1
        export USE_OPENMP=0
        export _DEBUG=3
+       export _NAMETRACK=1
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64 || exit 1
        zip -r rpi64d.zip j64
@@ -738,6 +798,7 @@ jobs:
        export USE_SLEEFQUAD=1
        export USE_OPENMP=0
        export _DEBUG=3
+       export _NAMETRACK=1
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
@@ -1202,6 +1263,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      _NAMETRACK: 1
      run: |
       script/buildga.sh android || exit 1
 
@@ -1232,6 +1294,7 @@ jobs:
       CC: emcc
       USE_SLEEF: 1
       USE_OPENMP: 0
+      _NAMETRACK: 1
      run: |
       script/buildga.sh wasm || exit 1
       script/testga.sh wasm || exit 1

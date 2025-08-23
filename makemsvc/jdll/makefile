@@ -65,6 +65,9 @@ endif
 ifneq ($(_ASSERT),)
 FDEBUG := $(FDEBUG) /D_ASSERT
 endif
+ifneq ($(_NAMETRACK),)
+FDEBUG := $(FDEBUG) /DNAMETRACK=$(_NAMETRACK)
+endif
 ifeq (1,$(USE_BOXEDSPARSE))
 FBOXEDSPARSE = /DBOXEDSPARSE
 endif

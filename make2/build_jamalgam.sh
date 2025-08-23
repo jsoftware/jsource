@@ -223,6 +223,10 @@ if [ -n "$_ASSERT" ]; then
  common="$common -D_ASSERT"
 fi
 
+if [ -n "$_NAMETRACK" ]; then
+ common="$common -DNAMETRACK=$_NAMETRACK"
+fi
+
 case "$jplatform64" in
  *32*) USE_EMU_AVX=0;;
  wasm*) USE_EMU_AVX=0;;

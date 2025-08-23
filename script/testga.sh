@@ -87,11 +87,7 @@ else
  ls -l j32
  if [ "$_DEBUG" = "3" ] ; then
   echo "running debug"
-  if [ $1 = "raspberry" ]; then
-   LC_ALL=fr_FR.UTF-8 gdb-arm-linux-gnueabihf -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
-  else
-   LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
-  fi
+  LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
  else
   LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs
  fi

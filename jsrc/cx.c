@@ -245,7 +245,6 @@ DF2(jtxdefn){F12IP;
  C trackinfo[256];  // will hold name followed by locale
  fauxblock(trackunp); A trackbox; fauxBOXNR(trackbox,trackunp,0,1)  // faux block for line to unparse.  Will be filled in
  UI wx=0, wlen; A trackstg;   // index/len we will write to; unparsed line
- forcetomemory(&trackinfo);
 #endif
  TD* tdv=0;  // pointer to base of try. stack.  We could keep the try. stack on the C stack but it's a waste of 5 cachelines
  CDATA cdata,*cv=0;  // pointer to the current entry in the for./select. stack

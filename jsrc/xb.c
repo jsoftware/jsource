@@ -52,7 +52,7 @@ F3X0(NAME), F3X0(MARK), F3X0(ADV), F3X0(ASGN), F3X0(SYMB), F3X0(CONW), F3X0(VERB
 // conversion from internal type to the result in 3!:x, which matches the published types
 static I toonehottype(I t){R type3x0[CTTZ(t)][SGNTO0(t)];}  // take value from table
 // Convert from 3!:x form to internal type, 0 if invalid
-static I fromonehottype(I t,J jt){  // scaf
+static I fromonehottype(I t,J jt){
 // obsolete if(JT(jt,peekdata)==8)printf("entering onehottype, t=%lld\n",t);  // scaf 
  if((UI)t>RPAR)R 0;  // error if value too high
 // obsolete if(JT(jt,peekdata)==8)DO(sizeof(f3x0new)/sizeof(f3x0new[0]), printf("fx0new[%lld]=0x%x\n",i,f3x0new[i]);)  // scaf

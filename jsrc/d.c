@@ -190,7 +190,6 @@ void jtdebdisp(J jt,DC d){A*x,y;I e,t;
 
 // display the current stack frame; if it is PARSE, also display the previous frame if it is SCRIPT or CALL with explicit definition
 // This is where we format the error message that goes to display, 1 or 2 lines.
-// scaf This design requires that error information be preloaded into stack frames before execution.  That requires expensive frames and loading even when there are no errors.
 // Instead, when there is a failure outside of debug, jtxdefn & jtline, & possibly jtunquote (i. e. those places that would have had a CALL or SCRIPT frame)
 // should append their error info as they fail up the line.
 static B jtdebsi1(J jt,DC d){I t;

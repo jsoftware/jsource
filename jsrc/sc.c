@@ -282,7 +282,7 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
 #if NAMETRACK
  jtlogtrace(jt,"jtrace > %*s\n",0,0,trackinfo);  // log the call.  Initial mvc null-terminates the line
 #else
- jtlogtrace(jt,"jtrace > %.*s %.*s %.*s\n",thisname,stack.global,jt->global!=stack.global?jt->global:aqq);  // log name, old locale, and new locale if changed
+ jtlogtrace(jt,jt->global!=stack.global?"jtrace > %.*s %.*s>%.*s\n":"jtrace > %.*s %.*s\n",thisname,stack.global,jt->global);  // log name, old locale, and new locale if changed
 #endif
 
   // transfer the bstkreqd flag to our internal flags so we can continue it on after the return, and clear it for the called function.  The idea is that bstkreqd has info about
@@ -303,7 +303,11 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
   if(jt->uflags.spflag){                        // Need to do some form of space reclamation?
    if(jt->uflags.sprepatneeded)jtrepatrecv(jt); // repatriate first, because we might reclaim memory we need to gc
    if(jt->uflags.spfreeneeded&SPFREEGC)spfree();
-   if(jt->uflags.spfreeneeded&SPFREETRACEON)jtlogtrace(jt,"jtrace < %.*s\n",thisname,0,0);  // log the return
+   if(jt->uflags.spfreeneeded&SPFREETRACEON){  // if logging out trace info
+    // jt->global is the locale the caller was  running in.  if that is not stack.global, indicate the change - but NOT if the call was to cocurrent, since we are staying in jt->global then
+    A nextl=(I)z&1?(A)((I)z&~1):stack.global;  // the locale we will be returning to
+    jtlogtrace(jt,jt->global!=nextl?"jtrace < %.*s %.*s>%.*s\n":"jtrace < %.*s %.*s\n",thisname,jt->global,nextl);
+   }
   }        // if garbage collection required, do it
   fs=jt->parserstackframe.sf;  // restore fs
  }
@@ -338,7 +342,7 @@ exitpop: ;
    if(flgvbnmgen&FLGLOCCHANGED)DECREXECCTIF(stack.global)   // if the caller's locale was moved to by cocurrent (i.e. this is the second+ cocurrent in the calling function), it must be replaced by z.  No DECR is performed for the FIRST cocurrent, so if that was entered by a locative
          // it will be owed a DECR.  We can't DECR the first call because it might be in execution higher in the stack and already have a delete outstanding
    stack.global=z;  // ... and into the area we will pop from, thus storing through to the caller
-   z=mtm;  // we have switched; this will be the result of cocurrent
+   z=mtm;  // we have switched; this will set the result of cocurrent to i. 0 0
    flgvbnmgen|=FLGLOCCHANGED; // leave bstkreqd set as a flag indicating next function's caller has encountered cocurrent
   }else if(jt->uflags.bstkreqd)DECREXECCTIF(jt->global)   // we are returning from this function, which called cocurrent.  Close the final change of locale
  }

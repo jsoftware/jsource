@@ -467,14 +467,15 @@ foo=: 3 : 0
 'foo' -: foo''
 
 NB. 9!:31 ---------------------------------------------------------------
-NB. trace explicit routine
-foo1=: 3 : 0
-''
-)
-
-foo2=: 3 : 0
-foo1''
-)
+NB. trace named calls
+foo1_z_=: ]
+foo2_z_=: foo1
+foo3 =: {{
+foo2 y
+cocurrent 'loc2'
+foo2_loc_ y
+1
+}}
 
 empty 9!:31[0
 0= 9!:31[0
@@ -483,15 +484,25 @@ empty 9!:31[0
 2= 9!:31[0
 empty ferase f=: jpath'~temp/jtrace.txt'
 0= 9!:31[f
-foo2''
+foo3''
 f-: 9!:31[0
 (toJ^:IFWIN fread f) -: (0 : 0) 
-jtrace > foo2 base 
-jtrace > foo1 base 
-jtrace < foo1
-jtrace < foo2
+jtrace > foo3 base
+jtrace > foo2 base
+jtrace > foo1 base
+jtrace < foo1 base
+jtrace < foo2 base
+jtrace > cocurrent base
+jtrace < cocurrent base>loc2
+jtrace > foo2_loc_ loc2>loc
+jtrace > foo1 loc
+jtrace < foo1 loc
+jtrace < foo2_loc_ loc>loc2
+jtrace < foo3 loc2>base
 )
 empty ferase f
+18!:55 ;:'loc loc2'
+4!:55 ;:'foo1_z_ foo2_z_'
 
 NB. 9!:_4 ---------------------------------------------------------------
 NB. toggle dissect status.  Bivalent.  Monad result is y, dyad result is current setting

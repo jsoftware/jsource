@@ -459,15 +459,15 @@ NB. used only to debug error stop 'nonce error' -: 0 ((2;2 3);<3 2;4)} etx i. 10
 
 9!:55 (0)  NB. reset
 
+NB. 9!:30 ---------------------------------------------------------------
 NB. Name that is executing
 foo=: 3 : 0
 9!:30''
 )
 'foo' -: foo''
 
-'9!:_4' -: 9!:_4 b. _1
-5 1 5 0 -: (9!:_4 , 9!:_4~ , 9!:_4 , 9!:_4~) 5
-
+NB. 9!:31 ---------------------------------------------------------------
+NB. trace explicit routine
 foo1=: 3 : 0
 ''
 )
@@ -476,7 +476,6 @@ foo2=: 3 : 0
 foo1''
 )
 
-NB. trace explicit routine
 empty 9!:31[0
 0= 9!:31[0
 0= 9!:31[1
@@ -493,6 +492,12 @@ jtrace < foo1
 jtrace < foo2
 )
 empty ferase f
+
+NB. 9!:_4 ---------------------------------------------------------------
+NB. toggle dissect status.  Bivalent.  Monad result is y, dyad result is current setting
+
+'9!:_4' -: 9!:_4 b. _1
+5 1 5 0 -: (9!:_4 , 9!:_4~ , 9!:_4 , 9!:_4~) 5
 
 epilog''
 

@@ -343,11 +343,6 @@ F1(jttraceexf){F12IP;A z;
    ASSERT(' '!=CAV(w)[0],EVDOMAIN) ASSERT(0!=CAV(w)[0],EVDOMAIN)  // must not begin with SP or NUL
    RZ(w=str0(w)) FILE * p; ASSERT((p=fopen(CAV1(w),"a"))!=0,EVFACE)  // append NUL and open file as a test
    fclose(p); ACINITZAP(w)  // close the file and protect w, which will be stored as the filename
-// obsolete    char *f=MALLOC(1+AN(w)); MC(f,CAV(w),AN(w)); *(f+AN(w))=0;
-// obsolete    FILE * p; p= fopen (f, "a");  // test file location
-// obsolete    if(!p) {FREE(f); ASSERT(0,EVFACE)}
-// obsolete    fclose(p); FREE(f);
-// obsolete    FREE(traceexpfile); traceexpfile=0; traceexpfile=MALLOC(1+AN(w)); MC(traceexpfile,CAV(w),AN(w)); *(traceexpfile+AN(w))=0; traceexplicit=3;
   }else{  // 0: disable  1: stdout  2: stderr
    I s=i0(w); RE(s) ASSERT(BETWEENC(s,0,2),EVDOMAIN); w=(A)(intptr_t)s;  // indicate no file, save logging mode in place of filename
   }

@@ -371,7 +371,6 @@ static D jtspfor1(J jt, A w){D tot=0.0;
   if(AFNJA&AFLAG(w)) {  
    if(BETWEENC(AK(w),0,AM(w)))tot += SZI*WP(AT(w),AN(w),64);  // for NJA allocations with contiguous header, the size is the header size (7+64 words) plus the data size. fixed rank of 64 in NJA memory
    else{  // for NJA allocations with separate header, the size is the data size plus the size of the base block
-// obsolete     tot += SZI*((1&&AT(w)&LAST0)+(((AT(w)&NAME?sizeof(NM):0)+(AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only
     tot += SZI*((1&&AT(w)&LAST0)+(((AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only.  NJA must be DIRECT type, so not NAME
     tot += alloroundsize(w);  // add in the header
    }
@@ -1007,7 +1006,6 @@ static void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
      // NOTE that we do not use C() here, so that we free pyxes as well as contents.  The usecount of the pyx will protect it until its
      // value has been installed.  Thus we ensure that fa() never causes a system lock.
      PREFETCH((C*)np0);   // prefetch the next box while ra() is running
-// obsolete runout:;  // 
      // We now free virtual blocks in boxed nouns, as a step toward making it easier to return them to WILLOPEN
      if(likely((np=QCWORD(np))!=0)){  // value is 0 only if error filling boxed noun.  If the value is a parsed word, it may have low-order bit flags
       if(likely(!(AFLAG(np)&AFVIRTUAL))){
@@ -1045,7 +1043,6 @@ static void jtfamftrav(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
     // now we pick up with the element before the one we just deleted, which is wv[n] with n having been decremented
    }
 finbox:;
-// obsolete    if(n==0)goto runout;  // skip prefetch last time.  Maybe not needed.  This will alternate branch prediction except when n was 1.  Saves I1$
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
@@ -1346,7 +1343,6 @@ WRITEUNLOCK(allolock);
 static void rembuf(J jt,A buf){
 if(allorunin==0)R;
 I hashslot=HASHBUF(buf);  // starting slot
-// obsolete if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)goto printblock;  // unfreed buf. 
 WRITELOCK(allolock);
  alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
  if(unlikely(!findbuf(hashslot,buf,2))){
@@ -1355,7 +1351,6 @@ WRITELOCK(allolock);
   printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);
   printbufhist(buf);
   WRITEUNLOCK(allolock);
-// obsolete printblock:;
   printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
   SEGFAULT;
  }  // error if not in list, except during runin
@@ -1371,7 +1366,6 @@ if(!(AT(buf)&NOUN))R;  // check only nouns, since ACV might be very old
 if(AC(buf)&ACPERMANENT)R;  // PERMANENT is not included
 if(AFLAG(buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
 I hashslot=HASHBUF(buf);  // starting slot
-// obsolete READLOCK(allolock);
  if(unlikely(!findbuf(hashslot,buf,0))){
   if(syslockactive)R;  // ignore audit failure during system lock, which might by a symbol change eg
   printf("allorunin=%lld: testing %p which is not in the list\nRing history:\n",allorunin,buf);
@@ -1380,7 +1374,6 @@ printblock:;
   printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
   SEGFAULT;  // error if not in list
  }
-// obsolete READUNLOCK(allolock);
 }
 #endif
 
@@ -1560,14 +1553,8 @@ void jtrepatrecv(J jt){
  A p=xchga(&jt->repatq,0);   // dequeue the current repatq; remember head pointer (p) and set repatq empty
  __atomic_store_n(&jt->uflags.sprepatneeded,0,__ATOMIC_RELEASE);
  if(likely(p)){  // if anything to repat here...
-// obsolete   // this duplicates mf() and perhaps should just call there instead
   jt->bytes-=AN(p);  // remove repats from byte count.  Not worth testing whether counting enabled
   A nextp; do{nextp=AFCHAIN(p); AC(p)=0; mf(p);}while(p=nextp);  // send the blocks to their various queues (clear AC to avoid audit failure)
-// obsolete    I blockx=FHRHPOOLBIN(AFHRH(p));   // queue number of block
-// obsolete    if (unlikely((jt->memballo[blockx] -= FHRHPOOLBINSIZE(AFHRH(p))) <= 0))jt->uflags.spfreeneeded=1;  // if we have freed enough to call for garbage collection, do
-// obsolete    AFCHAIN(p)=jt->mempool[blockx];  // chain new block at head of queue
-// obsolete    jt->mempool[blockx]=p;
-// obsolete   }
  }
 #endif
 }

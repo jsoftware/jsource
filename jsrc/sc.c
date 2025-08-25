@@ -42,7 +42,6 @@ DF2(jtunquote){F12IP;A z;
  UI8 flgvbnmgen=(UI8)__atomic_load_n(&FAV(self)->flag2,__ATOMIC_RELAXED);   // extract self flags, which we will need quickly, init dyad flag
  A thisname=__atomic_load_n(&FAV(self)->fgh[0],__ATOMIC_RELAXED); A fs;   // the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself, cached or looked up
  C flagsfromname=__atomic_load_n(&NAV(thisname)->flag,__ATOMIC_RELAXED);  // get flags from name
-// obsolete  I flgvbnmgen=w!=self;  // init DYAD flag
    // We check inplaceability of the called function.  jtfg unused
  A explocale;  // locale to execute in.  Not used unless LOCINCRDECR set
  {if(unlikely(JT(jt,adbreakr)[0]>1)){jtjsignal2(jt,EVBREAK,thisname); R 0;}}  // this is JBREAK, but we force the compiler to load thisname early
@@ -78,14 +77,6 @@ DF2(jtunquote){F12IP;A z;
      raposgblqcgsv(fs,0,fs); // ra to match syrd1.  The 0 guarantees no recursion, i. e. no subroutine call, OK because the value must not be sparse
      ACVCACHEREADUNLOCK   // must keep the lock till the cached value is protected
      if(unlikely(flgvbnmgen&(NMLOC<<FLGNMFLGX))){  // is this a (necessarily direct) locative?
-// obsolete       // see if the locale is cached.   public_z_ =: entry_loc_ where entry_loc will have the locale pointer
-// obsolete       if(unlikely((explocale=cachedlocale)==0)){  // use cached locale if there is one (there will be, except first time through)  If not...
-// obsolete        RZSUFF(explocale=sybaseloc(thisname),z=0; goto exitname;);  //  get the explicit locale.  0 if erroneous locale
-// obsolete           // if the name is deleted before sybaseloc runs, we might get a starting locale that doesn't match the definition in fs.  That will be confusing but will not crash.  It is
-// obsolete           // very unlikely and occurs only when names are being deleted during execution, which is confusing to begin with
-// obsolete        FAV(self)->localuse.lu0.cachedloc=explocale;  // save named lookup calc for next time  should ra locale or make permanent?
-// obsolete        thisname=jt->curname;  // refresh thisname
-// obsolete       }
       explocale=FAV(self)->localuse.lu0.cachedloc;  // get the locale of the lookup
       flgvbnmgen+=((explocale!=jt->global)&~(LXAV0(explocale)[SYMLEXECCT]>>EXECCTPERMX))<<FLGLOCINCRDECRX;  // remember if there is a change of locale to non-PERMANENT, requiring putting the new locale into execution
       flgvbnmgen+=FLGLOCATIVE;  // remember this call is a locative
@@ -100,7 +91,6 @@ DF2(jtunquote){F12IP;A z;
   // here the address was not cached, or the cache was stale.  For namerefs caching we go through here to refetch the value because we need QCNAMEDLOC semantics
   {
    // name was not cached.  Look it up, returning QCNAMEDLOC semantics.  The calls to the lookup routines all issue ra() (under lock) on the value if found
-// obsolete    I nmflgs=NAV(thisname)->flag;   // flags from name, before we call subroutines
    flgvbnmgen+=flagsfromname<<FLGNMFLGX;  // insert name flags into flag reg.  They should have settled from the load
    UI4 localts=ACVCACHEREAD;  // record timestamp of lookup.  This will be used only if we cache the lookup.  We must do this BEFORE ra/syrd protects the value
    if(likely(!(flagsfromname&(NMLOC|NMILOC|NMIMPLOC)))) {  // simple name, and not u./v.
@@ -166,7 +156,6 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
      WRITELOCK(self->lock)  // take a lock on the reference
      __atomic_store_n(&FAV(self)->lu2.refvalidtime,(UI4)0,__ATOMIC_RELEASE);  // set timestamp invalid in case it starts after the new stamp
      __atomic_store_n(&FAV(self)->localuse.lu1.cachedlkp,fs,__ATOMIC_RELEASE);     // save named lookup calc for next time.  This makes the lookup cached.  no QC
-// obsolete      if(flgvbnmgen&(NMLOC<<FLGNMFLGX))
      __atomic_store_n(&FAV(self)->localuse.lu0.cachedloc,explocale,__ATOMIC_RELEASE);   // including locale in case it was looked up (used only for NMLOC references)
      __atomic_store_n(&FAV(self)->lu2.refvalidtime,localts,__ATOMIC_RELEASE);  // set timestamp for the lookup.  It may already be out of date, which is OK - it will be recreated
      WRITEUNLOCK(self->lock)  // release lock on the reference
@@ -210,8 +199,6 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
  }else{
   // here for pseudo-named function.  The actual name is in f, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
-// obsolete   jt->curname=thisname;   // use the original name, which may have locatives that we will ignore
-// obsolete =FAV(self)->fgh[1];  // get the original name
   fs=FAV(self)->fgh[2];  // point to the actual executable
   ASSERTSUFF(fs!=0,EVVALUE,z=0; goto exitname;); // make sure the name's value is given also
   flgvbnmgen+=FLGPSEUDO;  // indicate pseudofunction, and also that we did not ra() the value of the name (OK since anonymous)
@@ -397,9 +384,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  if(likely(val!=0)){if(ISFAOWED(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // abort if reference not allocated
  // We would like to give a start to short-caching by remembering the lookup and time, but the time must be BEFORE the point when the lookup is protected by its syrd(), and we don't have that value
-// obsolete  if(likely(!(NAV(a)->flag&(NMILOC|NMIMPLOC)))){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val);} // install cache of lookup, but never if indirect locative.  No QC
  if(flag2&VF2CACHEABLE){FAV(z)->localuse.lu1.cachedlkp=QCWORD(val);} // install cache of lookup, but never if indirect locative.  No QC
-// obsolete  FAV(z)->lu2.refvalidtime=ACVCACHEREAD;} 
  R (A)((I)z+QCPTYPE(val));  // Give the result the part of speech of the input.  no FAOWED since we freed val; no NAMED since a reference is not a named value
 }
 

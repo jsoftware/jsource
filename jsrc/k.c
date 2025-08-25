@@ -105,7 +105,7 @@ static KF1(jtEfromB){E *zv=yv; B *wv=BAV(w);
 }
 
 static KF1(jtEfromD){E *zv=yv; D *wv=DAV(w);
- I n=AN(w); DO(n, zv->hi=wv[i]; zv->lo=zv->hi*0.; ++zv;)  // frac 0 must have same sign as upper
+ I n=AN(w); DO(n, zv->hi=wv[i]; *(UI8*)&zv->lo=*(UI8*)&wv[i]&(UI8)0x8000000000000000; ++zv;)  // frac 0 must have same sign as upper
  R 1;
 }
 
@@ -822,7 +822,6 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
  // it is an override on the # cells to convert.  We use it to replace n (for use here) and yv, and AK(w) and AN(w) for the subroutines.
  // If NOUNCVTVALIDCT is set, w is modified: the caller must restore AN(w) and AK(w) if it needs it
  // TODO: same-length conversion could be done in place
-// obsolete if(JT(jt,peekdata)==8)printf("cvt, about to allocate type %llx, n=%lld, r=%lld\n",t,n,r);  // scaf 
  GA(d,t,n,r,s);  // allocate the same # atoms, even if we will convert fewer
  if(unlikely(t&CMPX+QP))AK(d)=(AK(d)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
  yv=voidAV(d);   // address of target area
@@ -862,7 +861,6 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
  // types here must both be among B01 INT FL CMPX XNUM RAT INT2 INT4 SP QP  0 2 3 4 6 7 9 10 12 13
 #define CVNUMTYPE(a) ((0xff98f76f54f321f0LL>>(CTTZ(a)<<2))&0xf)
 #define CVCASE(a,b)     (CVNUMTYPE(a)*10+CVNUMTYPE(b))
-// obsolete if(JT(jt,peekdata)==8)printf("CVCASE is %lld\n",CVCASE(t,wt));  // scaf 
  switch (CVCASE(t,wt)){  // to,from
  case CVCASE(INT, B01): R (jtIfromB(jt, w, yv))?z:0;
  case CVCASE(XNUM, B01): R (XfromB(w, yv))?z:0;
@@ -955,7 +953,6 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
  case CVCASE(INT4,QP): R (jtI4fromE(jt, w, yv, tflagged&CVTNOFUZZ?0.0:FUZZ))?z:0;
  case CVCASE(SP,QP): R (jtDSfromE(jt, w, yv))?z:0;
  default: ASSERT(0, EVINHOMO);
-// obsolete  if(JT(jt,peekdata)==8)printf("default case\n");  // scaf
  }
 }
 

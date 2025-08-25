@@ -204,13 +204,10 @@ static DF1(tac){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C
 static DF1(tcNV){F12IP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
 static DF2(tcc){F12IP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,0);}  // conj C C
 
-// obsolete static DF1(taaa){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // adv A A A
 static DF1(taaa){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); RZ(df1(z,t,gs)); R df1(t,z,hs);}  // adv A A A
-// obsolete static DF2(tNVvc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); ASSERT(AT(t)&VERB+CONJ,EVSYNTAX); R hook(fs,gs,t);}  // conj NV V C  - C may return another C
 static DF2(tNVvc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj NV V C  - C may return another C
 static DF2(tcVCc){F12IP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
 static DF2(taav){F12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
-// obsolete static DF2(tcaa){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); ASSERT(AT(t)&NOUN+VERB,EVSYNTAX); RZ(df1(z,t,gs)); ASSERT(AT(z)&NOUN+VERB,EVSYNTAX); R df1(t,z,hs);}  // conj C A A
 static DF2(tcaa){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); RZ(df1(z,t,gs)); R df1(t,z,hs);}  // conj C A A
 static DF1(tNVca){F12IP;TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
 static DF2(tNVcc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
@@ -311,7 +308,6 @@ static struct {
 A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
  ARGCHK2(a,w);
  A z; fdefallo(z)
-// obsolete if(likely(!(LOWESTBIT(AT(h))&NOUN+VERB+ADV+CONJ))){
  if(likely(h==0)){
   // bident.
   if(AT(a)&AT(w)&VERB){

@@ -609,7 +609,6 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   lastqueuedtask=n-1;  // if we take this task here, it is special
    // todo scaf: would be nice to wake only as many as we have work for
  }
-// obsolete else n=1;  // if we have to run single-threaded, also run single-tasked.  This avoids thread switching
  // We have started all the threads, but we pitch in and and process tasks ourselves, starting with task 0
  // In our job setup we have accounted for the fact that we are taking the first task, so that we need nothing more from the job block to start running the first task
  A *old=jt->tnextpushp;  // we leave a clear stack when we go
@@ -917,12 +916,6 @@ ASSERT(0,EVNONCE)
    }
   }
 
-// obsolete 
-// obsolete   I poolno=0;  // default to threadpool 0
-// obsolete   if(AN(w)){   // arg is [threadpool #]
-// obsolete    ASSERT(AR(w)<=1,EVRANK) ASSERT(AN(w)<=1,EVLENGTH)  // must be singleton
-// obsolete    RZ(w=vi(w)) poolno=IAV(w)[0]; ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
-// obsolete   }
 
   // input parms have been read.  Allocate the thread
   // create the attributes for the thread

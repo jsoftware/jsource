@@ -355,10 +355,6 @@ DF2(jtifbebar){F12IP;A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
  if(unlikely(d<0)){RETF(d==-1?mtv:jtupon2cell(jt,a,w,self))}  // empty if inhomo; revert if not list or range too large
-// obsolete   case -1: R mtv;
-// obsolete  case -2: case -3: case -4: R   // revert if recoverable error
-// obsolete   }
-// obsolete  }
  if((-m&-n)>=0){R icap(ebar(a,w));}  // empty argument.
  GATV0(z,INT,MAX(22,n>>7),1); zv=AV1(z); zu=zv+AN(z);
 #if C_AVX2 || EMU_AVX2

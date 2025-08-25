@@ -169,7 +169,6 @@ DF2(jtjfwrite){F12IP;B b;F f;
  wa(f,0L,a); 
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  RE(0); EPILOG(mtm);   // check error, return mtm if none
-// obsolete  RNE(mtm);
 }
 
 // 1!:3
@@ -185,7 +184,6 @@ DF2(jtjfappend){F12IP;B b;F f;
  wa(f,fsize(f),a);
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  RE(0); EPILOG(mtm);   // check error, return mtm if none
-// obsolete  RNE(mtm);
 }
 
 // 1!:4
@@ -198,7 +196,6 @@ DF1(jtjfsize){F12IP;B b;F f;I m;
  m=fsize(f); 
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  RE(0); EPILOG(sc(m));   // check error, return mtm if none
-// obsolete  RNE(sc(m));
 }
 
 // process index file arg for file number; return 0 if error or file name
@@ -248,7 +245,6 @@ DF2(jtjiwrite){F12IP;B b;F f;I i;
  if(ixin(w,fsize(f),&i,0L))wa(f,i,a); 
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
  RE(0); EPILOG(mtm);   // check error, return mtm if none
-// obsolete  RNE(mtm);
  RNE(mtm);
 }
 
@@ -364,7 +360,6 @@ DF1(jtjgetenv){F12IP;
  }
 #endif
 EPILOG(z);
-// obsolete  R num(0);
 }
 
 // 2!:6

@@ -76,7 +76,6 @@ static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}
 // convert the gerund (i. e.  AR) in w into a verb
 F1(jtexg){F12IP;A*v,*wv,x,y,z;I n;
  ARGCHK1(w);
-// obsolete  if(VERB&AT(w))R w;  // ?? scaf
  n=AN(w); wv=AAV(w); 
  ASSERT(n!=0,EVLENGTH);  // no empty AR
  ASSERT(1>=AR(w),EVRANK);  // must be atom or list

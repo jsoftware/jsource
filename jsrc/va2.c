@@ -50,10 +50,6 @@ INLINE static A jtssingleton(J jtfg,A a,A w,I af,I at,I wt,A self){F12JT;
  I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values
 #ifdef ALIGNEDMEMD
  adv=*(D*)(intptr_t)((I)av&-SZD); wdv=*(D*)(intptr_t)((I)wv&-SZD);   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary (which must be invalid)
-// obsolete  memcpy(&adv,av,4);
-// obsolete  memcpy(4+(char*)&adv,4+(char*)av,4);   // avoid bus error
-// obsolete  memcpy(&wdv,wv,4);
-// obsolete  memcpy(4+(char*)&wdv,4+(char*)wv,4);   // avoid bus error
 #else
  adv=*(D*)av,wdv=*(D*)wv;
 #endif
@@ -350,7 +346,6 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGBI): aiv=(I)(B)aiv; goto intresidue;
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGII): 
   intresidue: ;
-// obsolete    ziv=((aiv&-aiv)+(aiv<=0)==0)?wiv&(aiv-1):remii(aiv,wiv);  // if positive power of 2, just AND; otherwise divide
    ziv=((aiv&(aiv-1))==0&&likely(aiv>=0))?wiv&(aiv-1):remii(aiv,wiv);  // if positive power of 2 (or 0), just AND; otherwise divide
    SSSTORE(ziv,z,INT,I); R z;
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGID): 

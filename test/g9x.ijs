@@ -470,10 +470,14 @@ NB. 9!:31 ---------------------------------------------------------------
 NB. trace named calls
 foo1_z_=: ]
 foo2_z_=: foo1
+foo2_classloc_ =: ]
+numloc_loc2_ =: 0 ". > cocreate ''
+(;:'classloc z') copath numloc_loc2_
 foo3 =: {{
 foo2 y
 cocurrent 'loc2'
 foo2_loc_ y
+foo2__numloc ''
 1
 }}
 
@@ -486,7 +490,7 @@ empty ferase f=: jpath'~temp/jtrace.txt'
 0= 9!:31[f
 foo3''
 f-: 9!:31[0
-(toJ^:IFWIN fread f) -: (0 : 0) 
+(toJ^:IFWIN fread f) -: ('?';":numloc_loc2_) stringreplace (0 : 0) 
 jtrace > foo3 base
 jtrace > foo2 base
 jtrace > foo1 base
@@ -498,10 +502,13 @@ jtrace > foo2_loc_ loc2>loc
 jtrace > foo1 loc
 jtrace < foo1 loc
 jtrace < foo2_loc_ loc>loc2
+jtrace > foo2__numloc loc2>?(classloc)
+jtrace < foo2__numloc ?(classloc)>loc2
 jtrace < foo3 loc2>base
 )
 empty ferase f
-18!:55 ;:'loc loc2'
+18!:55 ;:'loc loc2 classloc'
+18!:55 numloc_loc2_
 4!:55 ;:'foo1_z_ foo2_z_'
 
 NB. 9!:_4 ---------------------------------------------------------------

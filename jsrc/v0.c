@@ -59,7 +59,6 @@ static F1(jtcfr){F12IP;A c,r,*wv;I t;
  ASSERT(((AR(c)-1)&(AR(r)-2))<0,EVRANK);
  ASSERT((-(NUMERIC&AT(c))&((AN(r)-1)|-(NUMERIC&AT(r))))<0,EVDOMAIN);
  t=AT(r); t=AN(r)?t:B01; t=maxtyped(t,AT(c)); t=t&B01+INT2+INT4+INT?XNUM:t;  // use max type, but XNUM for all integer types
-// obsolete  if(t&B01+INT)t=XNUM;
  ASSERT(!(t&QP),EVNONCE)  // no qp support
  if(TYPESNE(t,AT(c)))RZ(c=cvt(t,c));
  if(TYPESNE(t,AT(r)))RZ(r=cvt(t,r));
@@ -151,7 +150,6 @@ static Q jtmaxdenom(J jt,I n,Q*v){Q z;X*u,x,y;
 
 static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*zv;Z r,*xv,*yv;
  wt=AT(w);
-// obsolete  ASSERTSYS(wt&B01+INT+INT2+INT4+FL+XNUM+RAT,"rfcq");
  // Convert w to rational; wv->1st rational coeff
  if(!(wt&RAT))RZ(w=cvt(RAT,w)); wv=QAV(w);
  rdx=maxdenom(1+m,wv);  // rdx = max denominator in the polynomial, in rational form

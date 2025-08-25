@@ -53,11 +53,8 @@ F3X0(NAME), F3X0(MARK), F3X0(ADV), F3X0(ASGN), F3X0(SYMB), F3X0(CONW), F3X0(VERB
 static I toonehottype(I t){R type3x0[CTTZ(t)][SGNTO0(t)];}  // take value from table
 // Convert from 3!:x form to internal type, 0 if invalid
 static I fromonehottype(I t,J jt){
-// obsolete if(JT(jt,peekdata)==8)printf("entering onehottype, t=%lld\n",t);  // scaf 
  if((UI)t>RPAR)R 0;  // error if value too high
-// obsolete if(JT(jt,peekdata)==8)DO(sizeof(f3x0new)/sizeof(f3x0new[0]), printf("fx0new[%lld]=0x%x\n",i,f3x0new[i]);)  // scaf
  if(t<=QPEXTTYPE)R f3x0new[t];  // return if a new type, or an old one < 11 (sc. B01 LIT INT FL)
-// obsolete  if((t&-t)!=t)R 0;  // if more than one upper bit set, error
  if(t&(t-1))R 0;  // if more than one upper bit set, error
  if(t&0xfc00)R SPARSE|(t>>10);
  else R f3x0bit[CTTZ(t)-CMPXX];
@@ -69,13 +66,8 @@ F1(jtstype){F12IP;ARGCHK1(w); R sc(toonehottype(AT(w)));}
 // (3!:0-type) c. w - convert
 F2(jtcdot2){F12IP;A z;
  ARGCHK2(a,w);
-// obsolete if(JT(jt,peekdata)==8)printf("entering c.\n");  // scaf 
  I t; RE(t=i0(a)) ASSERT(t=fromonehottype(t,jt),EVDOMAIN)  // convert from 3!:0 form, which must  be to atomic integer, to internal type, which must be valid
-// obsolete if(JT(jt,peekdata)==8)printf("jt->jerr is %d\n",jt->jerr);  // scaf 
-// obsolete if(JT(jt,peekdata)==8)printf("value of x is %lld\n",t);  // scaf 
-// obsolete if(JT(jt,peekdata)==8)printf("return from onehottype is %lld\n",t);  // scaf 
  if(t!=AT(w))w=cvt(t,w);  // if the type doesn't match the desired, convert it
-// obsolete if(JT(jt,peekdata)==8)printf("return from cvt; w=%p, jt->jerr=%d\n",w,jt->jerr);  // scaf 
  RETF(w);
 }
 

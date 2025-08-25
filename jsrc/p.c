@@ -456,7 +456,6 @@ I infererrtok(J jt){I errtok;
 // flag tpopa/tpopw to fa the value when it leaves execution.  We do so by marking the verb in the top entry of the execution stack.
 // parserstkend1 is the end+1 of the current stack, which makes it the beginning of the stack for the calling sentence.  We scan there till we hit the back mark for that sentence
 void protectlocals(J jt, I ofst){PSTK *stk=jt->parserstackframe.parserstkend1; A y=0;  // pointer to execution stack, possibly the null one we start out with
-// obsolete  if(unlikely(stk==&jt->initparserstack[1]))R;  // in a thread it is possible there in NO stack, if the verb is tacit.  We could put a backmark in the initparserstack, but that would add 2 words to JTT.  This code is lightly used.
  I verbpos=(stk[2].pt==PTNOUN)?1:2, ranoun=0; verbpos=ofst?-1:verbpos; // verb is in slot 1 if x V N, 2 if x N V N or x V V N; but -1 (no verb) for assignments; flag that we changed tpop[aw]
  for(;stk[ofst].pt!=PTMARKBACK;++ofst){
   if(((I)stk[ofst].a&STKNAMED+STKFAOWED)==STKNAMED&&stk[ofst].pt!=PTMARKFRONT){   // if named and not FAOWED - but .a is garbage in a front mark, so not then
@@ -507,8 +506,6 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
 #define FLGPMONAD (0x4<<FLGPMSKX)  // set for monad
 #define FLGPCTEND (0x2<<FLGPMSKX)  // goes to 1 to end loop
 #define FLGPINCR (0x1<<FLGPMSKX)  // goes to 1 to end loop
-// obsolete #define FLGARCLONEDX 18  // the local symbol table is a clone
-// obsolete #define FLGARCLONED (0x1<<FLGARCLONEDX)
 #define LOCSYMFLGX 19  // AR flags go here, 7 bits, of which only bit 2 is used (i. e. bit 21)
 #define FLG1 0x10000  // bit 0 of LOCSYM flags is forced to 1
 #define NAMEFLAGSX 17  // 17 and 20
@@ -528,7 +525,6 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
 #define STACK0PTISCAVN PTISCAVN(stack0pt)  // must be above bit 16
 #endif
 
-// obsolete   UI pt0ecam=(AR(jt->locsyms)&ARLCLONED)<<LOCSYMFLGX;  // insert ~(clone/added) flag into portmanteau vbl.  locsyms cannot change during this execution
   stack=jt->parserstackframe.parserstkend1;  // current end+1 of stack area, where we will start
   PSTK *currstk=jt->parserstackframe.parserstkbgn;  // current start of stack area (the stack grows down)
 
@@ -584,11 +580,9 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
   // We would like execution to get to the load of symx and SYMORIGIN quickly, with pt0ecam following soon after
 #define ASGNNOTEDGE (I4)~(((UI4)0xf0000000LL>>QCASGN)|((UI4)0x80000000LL>>QCLPAR)|((UI4)0xf0000000LL>>(QCNAMED+QCASGN))|((UI4)0x80000000LL>>(QCNAMED+QCLPAR)))  // !(ASGN+EDGE), ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
-// obsolete   I pull4=(((UI4)~ASGNEDGE>>QCTYPE(queuem2)) & ((UI4)~ASGNEDGE>>QCTYPE(queuem3))) & ();  // NOTE: if nwds<3 (must be 2 then) this will fetch 1 word from before the beginning
   I4 asgnnotedgem2=(ASGNNOTEDGE<<(I4)QCTYPE(queuem2)), asgnnotedgem3=(ASGNNOTEDGE<<(I4)QCTYPE(queuem3));   // wd[-2/-3] = ASGN/EDGE?  Set neg if not
   flgsfor3=(asgnnotedgem2&asgnnotedgem3)<0?flgsfor4:flgsfor3;  // take 4 if not prevented by any word
   pt0ecam<<=LOCSYMFLGX; pt0ecam+=flgsfor3;  // add selected flags to ARLCLONE flag
-// obsolete   pt0ecam|=(nwds|FLG1)+((0b11LL<<CONJX)<<pull4);  // Set starting word#, and number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible, or maybe 3 as calculated above
 
   goto firstword;  // we know the first pulls are valid
 
@@ -621,7 +615,6 @@ firstword: ;  // come here first time, while pt0ecam settles
       // The important performance case is local names with lookaside.
       // Registers are very tight here.  Nothing survives over a subroutine call - refetch y if necessary.  If we have anything to
       // keep over a subroutine call, we have to store it in pt0ecam or some other saved name
-#if 1  // obsolete 
       // The name is from an explicit definition in all cases of interest.  Each explicit definition has been compiled and referenced so that each name appears only once (but name and name_: have separate blocks).
       // The name contains a lookaside value which holds the most recent value stored into the primary table.  The name is shared by all instances of the executing verb.  Nevertheless, the primary instance
       // is the dominant one by far, and we want to make it as fast as possible.  MAJOR CONSIDERATION: the primary uses pointers to values and names that only it has reason to use.  The non-primary
@@ -652,35 +645,6 @@ finlocal:;
       }else{
 rdglob: ;   // here we could not use buckets or lookaside.  Resort to full search (without buckets)
        y=QCWORD(y);   // type no longer needed
-#else
-      I4 symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  This fetch gates the normal path
-// obsolete       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
-      L *sympv=SYMORIGIN;  // fetch the base of the symbol table.  This can't change within a single stacking loop but there's scant benefit in fetching earlier
-      I4 buck=__atomic_load_n(&NAV(QCWORD(y))->bucket,__ATOMIC_RELAXED);  // While symx settles, start a read for bucket#.  We have 3 idle cycles.  Perhaps we should load jt->locsyms too, but regs might not permit
-      pt0ecam&=~(NAMEBYVALUE+NAMEABANDON)>>(NAMEBYVALUEX-NAMEFLAGSX);  // install name-status flags from y, in this dead time
-      pt0ecam|=((I)y&(QCNAMEABANDON+QCNAMEBYVALUE))<<NAMEFLAGSX;
-      I clonedhi=(pt0ecam&(ARLCLONED<<LOCSYMFLGX))<<(30-(ARLCLONEDX+LOCSYMFLGX));  // 0 if not cloned, big value if cloned
-      y=QCWORD(y);  // back y up to the NAME block
-// preferred      if((symx&=REPSGN4(SGNIF4(pt0ecam,LOCSYMFLGX+ARLCLONEDX)))!=0){  // if we are using an uncloned table and there is a symbol stored there...  The compiler creates 2 branches which hurts only when the uncloned table is in play
-      if(withprob(clonedhi<symx,0.9)){  // if we are using an uncloned table and there is a symbol stored there (i. e. defined local name)...
-       // this is the normal path for all local names as long as we can use the uncloned table.
-       L *s=&sympv[symx];  // get address of symbol from the primary table
-// obsolete if(s->fval!=y->mback.lookaside&&!((pt0ecam&(NAMEABANDON>>(NAMEBYVALUEX-NAMEFLAGSX)))))SEGFAULT;  // scaf
-       if(unlikely((s->fval)==0))goto rdglob;  // if value has not been assigned, ignore it.  y has QCSYMVAL semantics
-       if(unlikely(ISRAREQD(y=s->fval)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // Set y.  ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
-// obsolete       }else if(likely((buck=NAV(QCWORD(y))->bucket)>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.  We would fetch symx&buck together if we could hand-code it.
-      }else if(likely(buck>0)){  // buckets but no symbol - must be global, or recursive symtab - but not synthetic new name.
-       // public names come through here (with positive bucketx) or 
-       I bx=NAV(y)->bucketx;  // get an early fetch in case we don't have a symbol but we do have buckets - globals, mainly
-       if(likely((bx|(I)(I1)AR(jt->locsyms))>=0))goto rdglob;  // if nonneg bucketx and no name has been added, skip the search - the usual case if not recursive symtab.  AR may change midsentence.  No other thread can add a local symbol.
-       // negative bucket (indicating exactly where the name is) or some name has been added to this symtab.  We have to probe the local table.  Added name is pretty rare -
-       // should we loop through the buckets on a local name?  Probably - saves a call for every name in a non-primary table
-       if(likely(bx<0)){L* l; for(l=LXAV0(jt->locsyms)[buck]+sympv;++bx<0;l=&sympv[l->next]); y=l->fval;}  // local name in cloned table.  Get to it without subroutine call
-       else if(unlikely((y=probelocalbuckets(sympv,y,LXAV0(jt->locsyms)[buck],bx))==0)){y=QCWORD(*(volatile A*)queue);goto rdglob;}  // must be unassigned name and there has been a surprise write to the cloned symtab.  Rare indeed.  If not found, it's global - restore y
-       if(unlikely(ISRAREQD(y)))raposlocalqcgsv(QCWORD(y),QCPTYPE(y),y);  // ra the block if needed - rare for locals (only sparse).  Now we call it QCFAOWED semantics
-      }else{
-rdglob: ;  // here when we tried the buckets and failed
-#endif
        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
        // If the name has a cached reference, use it
        if(NAV(y)->cachedref!=0){  // if the user doesn't care enough to turn on caching, performance must not be that important
@@ -733,7 +697,6 @@ rdglob: ;  // here when we tried the buckets and failed
          NAV(origy)->cachedref=CLRFAOWED(y); NAV(origy)->bucket=0; ACSETPERM(QCWORD(y)); // clear bucket info so we will skip that search - this name is forever cached with QCFAOWED semantics.  Make the cached value immortal
         }
        }else{  // not a noun/nonlocative-nameless-modifier.  We have to stack a reference to the ACV.
-// obsolete         A origname=QCWORD(*(volatile A*)queue);  // refetch the name
         y=namerefacv(QCWORD(*(volatile A*)queue),y);   // Replace acv with reference, and fa() looked-up y value if global.  y starts with QCFAOWED semantics, returns with QCFAOWED
         FPSZ(y)
        }
@@ -770,7 +733,6 @@ endname: ;
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // back to the word we just fetched, which might be garbage
      stack[0].a = (A)((savy&~QCMASK)+((savy>>(QCNAMEDX-STKNAMEDX))&STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
-// obsolete      y=*(volatile A*)queue;   // fetch next value as early as possible
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
      UI tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
      pt0ecam&=(I)(UI4)(~((0b111LL<<CONJX)|FLGPMSK));  // clear the pull queue, PMSK, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
@@ -783,9 +745,7 @@ endname: ;
 #endif
 
      // we are looping back for another stacked word before executing.  Restore the pull queue to pt0ecam, after shifting it down and shortening it if we pulled ADV
-// obsolete      pt0ecam|=(tmpes&=(~(1ULL<<(CONJX+2-QCADV))<<tx))>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x.  But if ADV, change request for 2 more to request for 1 more by clearing bit 31 before shift.
      pt0ecam|=tmpes>>1;  // Advance delay line bits 31-29: 1xx->010x 01x->001x others->000x
-// obsolete      pt0ecam|=((tmpes>>=(CONJX+1))&(~(1LL<<(QCADV+1))>>tx))<<CONJX;
          // We shift the code down to clear the LSB, leaving 0xx.  Then we AND away bit 1 if ADV.  tx is never QCADV+1, because ASGN is mapped to 12-15, so we never AND away bit 0
     }else{  // No more tokens.  If have not yet signaled the (virtual) mark, do so; otherwise we are finished
      --stack;  // back up to new stack frame, where we will store the new word
@@ -842,7 +802,6 @@ endname: ;
 reexec012:;  // enter here with fs, fs1, and pmask set when we know which line will be used for an execution
       L *symorigin=SYMORIGIN;   // while we are waiting for pmask/fs to settle (3+ clocks at least), read something that will be useful if we are on an assignment
       jt->parserstackframe.sf=fs;  // set new recursion point for $:
-// obsolete      J jto=jt; jt=(J)((I)jt+(pmask>>=1));  // fold into jt as stack offset to verb (1 2 2), 2-bit line#: 10=dyad 01=monad line 1 00=monad line0
       PSTK *fsa1=&stack[1]; fsa=pt0ecam&FLGPLINE2+FLGPLINE1?fsa:fsa1;    // pointer to the operator's stack slot  1 2 2
       AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>2],__ATOMIC_RELAXED);  // the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call.  Stop using pmask $$$
       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
@@ -917,7 +876,6 @@ RECURSIVERESULTSCHECK
       if(unlikely(y==0)){  // fail parse if error.  All FAOWED names must stay on the stack until we know it is safe to delete them
        // if there was an error, try to localize it to this primitive
        A aa=QCWORD(stack[-1].a), wa=QCWORD(stack[1].a); aa=pt0ecam&FLGPLINE2?aa:wa; wa=pt0ecam&FLGPLINE2?wa:0;  // stack is stack[1 2 2]; aa is stack[-1].a, used only for dyad; wa is w
-// obsolete        jt=((J)((I)jt&~JTFLAGMSK));
        stack=jt->parserstackframe.parserstkend1; // restore stack to point to the region needing FAOWED checking (i. e. its normal position) - also prevents eformat from fouling the stack
        jteformat(jt,jt->parserstackframe.sf,aa,wa,0);  // stack is 1 2 2 first arg is w/a 2 3 1, second is 0/w x x 3
        FP   // we have regs back to normal for exit
@@ -985,7 +943,6 @@ RECURSIVERESULTSCHECK
       stack[0]=stack[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2(NOP)
       {PSTK *stack0=stack-1, *stack00=stack0; stack0=pt0ecam&FLGPLINE2?stack:stack0; *stack0=stack[-2];  // stack0=0 1 1->0 1 2   _1->0(NOP)  0->1 0->2  close up the stack
        stack=pt0ecam&FLGPLINE1?stack00:stack;}  // stack00->0 1 1  stack->1 1 2 for next exec
-// obsolete       jto=jt; jt=(J)((I)jt&~3);   // save mask flags, restore jt for normal use
       // We can avoid rescanning the result of this execution in all normal cases(*):
       // (1) if we are executing line 1, the result is always EDGE+AVN V N.  This will be executable (as line 0) ONLY when word 0 is EDGE.  In that case go do it directly
       // (2) otherwise, if word 0 is (, we have ( N ... which is executable only as (.  Go to that directly
@@ -995,13 +952,11 @@ RECURSIVERESULTSCHECK
       // Each of these tests saves considerable work
       // (*) The abnormal case is where there is a conjunction following the executable part, such as +: 2 &  or (+: 2 & ).  To handle these we branch straight back to reexecute if this is not a final exec.
       // the withprobs below are needed to tip the compiler into keeping queue in a register.  That way the NEXTY is 1 fetch instead of 2.
-// obsolete       if(withprob((GETSTACK0PT&1)&(pt0ecam>>(FLGPMSKX+1)),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask=0; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
       if(withprob(GETSTACK0PT&PEXTN(pt0ecam,FLGPMSKX+1,1),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask=0; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
       if(unlikely(endstkpt!=(PTRPAR>>16))){jt=(J)(((I)jt+3^2)-1); continue;}   // if not final exec check for reexec
           // On its own the compiler makes a couple of bad optimization decisions, both involving jt, that don't improve the code but hoist some invariants outside the loop.
           // To avoid calculating these invariants we razzle-dazzle the compiler into not relying on constant jt. 
       if(withprob(!TESTSTACK0PT(PTNOTLPARX),0.2))goto execlpar;  // if (, go execute that immediately.  could save a test there since we know stack[1] is VN
-// obsolete        pt0ecam&=~(((GETSTACK0PT|(pt0ecam>>(FLGPMSKX+1)))&1)<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull
       pt0ecam&=~((GETSTACK0PT|PEXTN(pt0ecam,FLGPMSKX+1,1))<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull.  May clear bit 29; 30-31 immaterial
       break;   // go back to the stacking phase
      }else{
@@ -1190,7 +1145,6 @@ failparse:
  }else{  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){A sv=0;  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // 1-word sentence.  pt0ecam holds AR(locsyms)
-#if 1   // obsolete 
    I yflags=(I)y;  // save the word, with QCNAMELKP semantics
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing overhead, because it happens enough to notice (conditions & function results)
    // No ASSERT - must get to the end to pop stack
@@ -1223,30 +1177,6 @@ finlocal1:;
      }else{y=QCWORD(namerefacv(y,sv));}   // Replace other acv with reference.  Could fail.  Flags in sv=s->val=0 to prevent fa() and ensure flags=0 in return value
      goto gotlocalval1;   // y has the unprotected value read.  We can use that.
     }
-#else
-   I yflags=(I)y;  // save the word, with QCNAMELKP semantics
-   // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing overhead, because it happens enough to notice (conditions & function results)
-   // No ASSERT - must get to the end to pop stack
-   y=QCWORD(yflags);  // point y to the start of block
-   if(likely((yflags&QCISLKPNAME))){  // y is a name to be looked up
-    I4 symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  This fetch gates the normal path
-// obsolete       symx=NAV(QCWORD(y))->symx;  // see if there is a primary symbol, which trumps everything else
-    L *sympv=SYMORIGIN;  // fetch the base of the symbol table
-    I clonedhi=(pt0ecam&ARLCLONED)<<(30-ARLCLONEDX);  // 0 if not cloned, big value if cloned.  pt0ecam=AR flags here
-// obsolete     if(likely((((I)NAV(y)->symx-1)|SGNIF(AR(jt->locsyms),ARLCLONEDX))>=0)){  // if we are using primary table and there is a symbol stored there...
-    if(withprob(clonedhi<symx,0.9)){  // if we are using primary table and there is a symbol stored there...
-// obsolete      L *s=SYMORIGIN+(I)NAV(y)->symx;  // get address of symbol in primary table
-     if(likely((sv=sympv[symx].fval)!=0)){  // value has been assigned
-      // the very likely case of a local name.  This value needs no protection because there is nothing more to happen in the sentence and the local symbol table is sufficient protection.  Skip the ra and the tpush
-      I svt=QCTYPE(sv); sv=QCWORD(sv);  // type of stored value
-      if(likely(svt&QCNOUN)||unlikely(yflags&QCNAMEBYVALUE)){   // if noun or special name, use value
-       if(unlikely(yflags&QCNAMEABANDON))goto rdglob1;  // if abandoned, it loses the symbol-table protection and we have to protect it with ra.  Since rare (especially for a single word!), do so by re-looking up the name
-       y=sv; // we will use the value we read
-      }else{y=QCWORD(namerefacv(y,sv));}   // Replace other acv with reference.  Could fail.  Flags in sv=s->val=0 to prevent fa() and ensure flags=0 in return value
-      goto gotlocalval1;   // y has the unprotected value read.  We can use that.
-     }
-    }
-#endif
     // falling through here, the name was not fast-local or not assigned.  Resolve it through a full search (without buckets).  Since errors may happen we have to have a parser stackframe
     //  Since we know that a single word can never execute, we don't need to push the stack: we simply switch to using a stack for this word that points to the sentence
 rdglob1:;

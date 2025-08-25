@@ -47,16 +47,8 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   INCORPNC(w);  // this realizes w if virtual or NOALIAS
   I aband=SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
   // it's not worth checking WILLBEOPENED, because the only reasonable time to box is at the end of a compound, which has its own result
-// obsolete   if(!((I)jtfg&JTWILLBEOPENED)){
   // if w is inplaceable and is the last thing on the tstack (somewhat likely, from the tests), back up the tstack so that the GA writes over it, effecting a ra().  We still have to make sure the block is recursive
   if(AC(w)<0&&withprob(jt->tnextpushp-1==AZAPLOC(w),0.3)){jt->tnextpushp=jt->tnextpushp-1; razapwhenatend(w);} else ra(w)  // INCORPNC+this=INCORPRA
-// obsolete   }else{
-// obsolete    // WILLBEOPENED: the result itself will be discarded and only the contents will be used.
-// obsolete    // Keep the result nonrecursive and don't realize any virtuals, knowing that they will be be realized if necessary before they are incorporated later.  They will be freed in the caller
-// obsolete    // If the input is DIRECT and abandoned inplaceable non-virtual, mark the result as PRISTINE
-// obsolete    AFLAGINIT(z,(-(wt&DIRECT))&((aband)<<AFPRISTINEX)&~(waf<<(AFPRISTINEX-AFVIRTUALX)))
-// obsolete    INCORPNCUI(w); ACIPNO(w);  // realize unincorpable (but not virtual); w must be protected while it is in the box from argument deletion
-// obsolete   }
   GAT0E(z,BOX,1,0,tpush(w); R0);  // allocate the result; if error, undo the ra()
   // If the input is DIRECT and abandoned inplaceable, mark the result as PRISTINE
   AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)))

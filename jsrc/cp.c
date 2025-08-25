@@ -313,10 +313,6 @@ DF2(jtpowop){F12IP;B b;V*v;
  ARGCHK2(a,w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  // handle the very important case of scalar   int/boolean   n of 0/1
-// obsolete #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
-// obsolete  if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
-// obsolete #else
-// obsolete #endif
  A z; fdefallo(z)  // allocate normal result area
  AF f1,f2; I flag;  // derived-verb handlers; flags for the verb we build
  A h;  // A block for the power list converted to integer (initially, remaining for jtply12 only); u^:_1 (for jtinv[12]); 0 for others
@@ -349,7 +345,6 @@ DF2(jtpowop){F12IP;B b;V*v;
   }else{
    // unboxed n.
    //  scalar   int/boolean   n of 0/1
-// obsolete    if(likely(((AT(w)&~(B01+INT))|AR(w)|(BIV0(w)&~1))==0))R BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1   upper AT flags not allowed in B01/INT    overfetch possible but harmless
    // scalar 0/1 bool/int handled earlier; check other cases (including non-B01/INT)
    if(w==ds(CUSDOT)){   // power is _.
     ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs

@@ -23,7 +23,6 @@ extern char hascblas;
 // create name block for xyuvmn.  flags is type flags to use, either 0 or NAMEBYVALUE
 static A jtmakename(J jt,C*s,I flags){A z;I m;NM*zv;
  GATV0(z,NAME,1,1); AT(z)=NAME|flags; zv=NAV(z); z->mback.lookaside=0;  // Use GATV because GA doesn't support NAME type; but we must have NAMEBYVALUE set
-// obsolete  MC(zv->s,s,m); zv->s[m]=0;
  zv->s[0]=s[0];  // copy name character
  zv->n=zv->m=(UC)1;
  zv->bucket=0;

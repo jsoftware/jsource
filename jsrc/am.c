@@ -872,9 +872,7 @@ static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->
  if(hn>=3){
   RZ(ffy=(FAV(hv[2])->valencefns[1])((J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))),a,w,hv[2]));  // x v2 y - inplacing whatever v0 doesn't use (self flags were set for v0).  Result of v2 is ALWAYS inplaceable into amend, as if executed in parser
   if(unlikely(ffy==a)){jtfg=(J)(((I)jtfg&~JTINPLACEW)|(((I)jtfg>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)); jtfgv1=(J)((I)jtfgv1&~JTINPLACEA);}  // if v2 returns a, replace w's inplaceability with a'1 for }, clear a's for v1
-// obsolete   jtfg=(J)((I)jtfg&~(JTINPLACEW*(a==ffy))); // If v2 returned a, all inplacing is off because we lost a's inplaceability (not worth tracking)
  }else{ffy=w;}  // if v2 omitted or ], just use y directly
-// obsolete  jtfg=(J)((I)jtfg&~(JTINPLACEW*(w==ffy))); // Protect any input that was returned by v2
  jtfgv1=(J)((I)jtfgv1&~(JTINPLACEW*((w==ffy)))); // If v2 returned w, uninplace it for v1 but leave for amend.
  // x v0 y - allow inplacing of whatever hasn't been protected
  RZ(ffx=(FAV(hv[0])->valencefns[1])(jtfgv1,a,w,hv[0]));  // x v0 y - allow inplacing

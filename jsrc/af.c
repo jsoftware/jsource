@@ -98,15 +98,12 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
   f=REFIXA(na,f); g=REFIXA(1,g); R df2(z,f,g,wf);
  case CCOLONE:  // Original m : n had VFIX set & never gets here.  This is (1) a nameref for an explicit modifier-plus-args, flagged as VXOP; (2) a namerefop for debug, flagged as PSEUDONAME+VXOPCALL+inherited flags;
                 // a namerefop for a modifier locative, which looks like a debug namerefop but has the locative in g.
-// obsolete   if(unlikely(!f)){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
-// obsolete   if(unlikely(VAV(w)->flag2&VF2PSEUDONAME)){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
   if(unlikely(FAV(w)->flag2&VF2PSEUDONAME)){R REFIXA(0,h);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
   f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h?h:g,g);  // here for nameref: xop2 is bivalent; rebuild operator with original self and fixed f/h
  case CCOLON:
   f=REFIXA(1,f); g=REFIXA(2,g); R df2(z,f,g,wf);  // v : v, similarly
  case CADVF:
   f=REFIXA(3,f); g=REFIXA(3,g); if(h)h=REFIXA(3,h); R hook(f,g,h);
-// obsolete  else h=mark;
  case CHOOK:
   f=REFIXA(2,f); g=REFIXA(1,g); R hook(f,g,0);
  case CFORK:

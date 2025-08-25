@@ -311,6 +311,13 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
 // i. # w
 static F1(jtii){F12IP;ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 
+// a is a SYMB type, result is NUL-terminated locale info, either name or nnn(name) for numbered locales
+// nnn(name) assumes that the first locale in the path is the class name
+C *fmtlocnm(J jt,A a,C *wkarea){
+ I stglen=snprintf(wkarea,128,"%.*s",(int)AN(LOCNAME(a)),NAV(LOCNAME(a))->s);  // format the locale name/number
+ if(!(AR(a)&ARNAMED)){snprintf(wkarea+stglen,128-stglen,"(%.*s)",(int)AN(LOCNAME(*LOCPATH(a))),NAV(LOCNAME(*LOCPATH(a)))->s);}
+ R wkarea;  // return the string (NUL-terminated by sprintf)
+}
 // log trace data: write *s using *fmt, with destination depending on jt->usertracefn
 // if a0 is 0, we write the null-terminated a2
 // otherwise, a? can be a SYMB, NM, or LIT, which we write as string using ptr/length.
@@ -319,8 +326,9 @@ void jtlogtrace(J jt,C *fmt, void *a0, void *a1, void *a2){
  I l0,l1,l2;  // will hold lengths
  if(a0==0){a0=a2;  // if simple string case, move NUL-terminated string.  Other values immaterial
  }else{  // A blocks, convert to string addresses/length
+  C wkarea[3][128];  // place where locale IDs are built
   DO(3, A a=(A)a0; a0=a1; a1=a2; l0=l1; l1=l2;
-   if(a){if(AT(a)&SYMB)a=LOCNAME(a); a2=AT(a)&NAME?NAV(a)->s:CAV(a); l2=AN(a);}else a2=0;
+   if(a){if(AT(a)&SYMB){a2=fmtlocnm(jt,a,wkarea[i]); l2=strlen((C*)a2);}else{a2=AT(a)&NAME?NAV(a)->s:CAV(a); l2=AN(a);}}else a2=0;
   )
  }
  if(BETWEENC(jt->usertracefn,1,2)){   // writing to stdout or stderr

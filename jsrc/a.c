@@ -78,10 +78,6 @@ F1(jtbdot){F12IP;A b,h=0;I j=0,n,*v;
   RZ(h=rifvs(cant2(IX(AR(w)),from(w,b))));  // h is an array representing b.  One cell for each atom of b; cell is 4 values
   fdeffill(z,0,CBDOT,VERB, jtbdot1,jtbdot2, 0L,w,h, VFLAGNONE, RMAX,0L,0L); RETF(z);
  }else{
-// obsolete   if(BETWEENC(j,32,34)){
-// obsolete    AF rtn=jtbitwiserotate; rtn=j==33?jtbitwiseshift:rtn;  rtn=j==34?jtbitwiseshifta:rtn; 
-// obsolete    fdeffill(z,0,CBDOT,VERB, jtbitwise1,rtn, 0L,w,0L, VASGSAFE, 0L,0L,0L); RETF(z);
-// obsolete   }
   z=ca(ds(j-16+CBW0000)); RZ(z); RZ(FAV(z)->fgh[1]=rifvs(w)); FAV(z)->id=CBDOT; RETF(z);  // use g field not f to avoid interfering with atomic2
  }
 }

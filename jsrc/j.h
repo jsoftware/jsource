@@ -338,11 +338,6 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #endif
 #endif
 
-// obsolete #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
-// obsolete #ifndef __ARM_FEATURE_UNALIGNED
-// obsolete #define ALIGNEDMEM
-// obsolete #endif
-// obsolete #endif
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
 #define ALIGNEDMEMD  // defined if float values must be aligned to D boundary
 #endif
@@ -2203,7 +2198,6 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #define SYMVALFA2(faname) if(faname!=0){faactionrfo(jt,faname,AFLAGCLRKNOWN(faname))}   // must clear known before free, since once we reduce usect we cannot touch the block
 #define SYMVALFA(l) {A v=QCWORD((l).fval); SYMVALFA1(l,v) SYMVALFA2(v)}   // l points to the symbol-table entry for the name
 #define SETLOCALFVALTEST(val,sym,test) {if(likely(test))(sym)->name->mback.lookaside=(val); (sym)->fval=(val);}  // set value in local symbol, with copy to the lookaside if defined.  test is true if primary table
-// obsolete #define SETLOCALFVALTEST(val,sym,test) {(sym)->fval=(val);}  // set value in local symbol, with copy to the lookaside if defined.  test is true if primary table
 #define SETLOCALFVAL(val,sym,loc) SETLOCALFVALTEST(val,sym,AR(loc)&ARLSYMINUSE)  // set value in local symbol, with copy to the lookaside if defined.  Used when sym is in execution and thus flagged if primary
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
@@ -2231,9 +2225,6 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #endif
 
 // create quad-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  outlo must not be an input.  Could reduce latency by 1 cycle be delaying blendv, but at a cost of 1 more instruction
-// obsolete #define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(t),_mm256_castpd_si256(outlo))); \
-// obsolete                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); /* outlo=val with larger abs t=val with smaller abs */ \
-// obsolete                                     outhi=_mm256_add_pd(in0,in1); /* single-prec sum */ 
 #define TWOSUM(in0,in1,outhi,outlo) {__m256d s=_mm256_add_pd(in0,in1), t=_mm256_xor_pd(_mm256_sub_pd(in0,in1),s); /* single-prec diff & sum; sign of t=1 if in1 has larger |value| */ \
                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); /* outlo=val with larger abs t=val with smaller abs */ \
                                     outhi=s; outlo=_mm256_sub_pd(outlo,outhi); /* big-(big+small): implied val of -small after rounding */ \

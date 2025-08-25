@@ -366,7 +366,6 @@ struct AD {
 #define AAV0(x)         ((A*)((C*)(x)+AKXR(0)))  // A block in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define AAV1(x)         ((A*)((C*)(x)+AKXR(1)))  // A block in a stack- or heap-allocated list (rank 1)
 #define AAV2(x)         ((A*)((C*)(x)+AKXR(2)))  // A block in a stack- or heap-allocated list (rank 2)
-// obsolete #define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
 #define FAVV(x)         ( (volatile V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj volatile to avoid delayed fetch
 #define PAV(x)          ( (P*)((C*)(x)+AK(x)))  /* sparse                  */
@@ -754,8 +753,6 @@ struct AD {
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 // NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 
-// obsolete #define AUDITAFLAG(a)
-// obsolete {I aaaf0=__atomic_load_n(&AFLAG(a),__ATOMIC_ACQUIRE),aaac0=__atomic_load_n(&AC(a),__ATOMIC_ACQUIRE); johnson(1000);I aaaf1=__atomic_load_n(&AFLAG(a),__ATOMIC_ACQUIRE),aaac1=__atomic_load_n(&AC(a),__ATOMIC_ACQUIRE);  if((aaaf1&0xa00000)==0xa00000)SEGFAULT;} 
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 #define AFLAGINIT(a,v)  {AFLAG(a)=(v);}  // used when it is known that a has just been allocated & is not shared
@@ -781,7 +778,7 @@ struct AD {
 #define ARNAMED ((I)1<<ARNAMEDX)   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
 // bit 1 not used
 // the rest of the flags apply only to local symbol tables
-#define ARLCLONEDX NMSHAREDX  // 4 set if this is a cloned local symbol table (in which symbol numbers are invalid); OR in a global table that suppresses the check for locally-defined names
+#define ARLCLONEDX NMSHAREDX  // 2 set if this is a cloned local symbol table (in which symbol numbers are invalid); OR in a global table that suppresses the check for locally-defined names
 #define ARLCLONED (1LL<<ARLCLONEDX)
 #define ARHASACVX 3   // set if this local symbol table contains an ACV
 #define ARHASACV ((I)1<<ARHASACVX)
@@ -789,7 +786,7 @@ struct AD {
 #define ARLOCALTABLE ((I)1<<ARLOCALTABLEX)
 #define ARLSYMINUSE 32  // This bit is set in the rank of the original local symbol table when it is in use
 #define ARINVALID 64  // This (named or numbered) symbol table was never filled in and must not be analyzed when freed
-#define ARNAMEADDEDX 7  // 128 Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag.  Keep as sign bit
+#define ARNAMEADDEDX 7  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag.  Keep as sign bit
 #define ARNAMEADDED (1LL<<ARNAMEADDEDX)
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
@@ -865,7 +862,6 @@ typedef struct DS{      /* 1 2 3 5                                              
  A dcc;                 /*     x x  control matrix   (0 if not explicit)                  */
  I dcm;                 /* x x x    ". nesting level; script index    */
  I dcstop;              /*     x    the last stop in this function                        */
-// obsolete  A *dcttop;             //       x  top of tstack when this PM frame was created
 } DST;
 
 typedef DST* DC;
@@ -995,10 +991,10 @@ typedef struct {
 #define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:_2
 #define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
 
-// ********************************** fields in Global symbol tables (aka locale ***************************
+// ********************************** fields in Global symbol tables (aka locales) ***************************
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is available for use
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
-#define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)
+#define LOCNAME(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].name)  // NM block for locale name, for both named and numbered
 #define LOCNUMW(g) ((SYMORIGIN)[LXAV0(g)[SYMLINFO]].fval)  // locale number, for numbered locales
 #define LOCNUM(g) (I)LOCNUMW(g)
 #define LOCPATH(g) (g)->kchain.locpath   // the path, allocated with rank 1 (so the path is in one cacheline).  If 0, the locale has been deleted.  The path runs from LOCPATH backwards

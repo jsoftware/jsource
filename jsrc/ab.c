@@ -154,32 +154,6 @@ static AHDRR(bw0101insC,UC,UC){I k=d*(n-1);                  x+=k; DQ(m, DQ(d, *
        AHDRR(bw1010insI,UI,UI){I k=d*(n-1);UI t=     (n&1)-1 ; x+=k; DQ(m, DQ(d, *z++=t^*x++;); x+=k;);R EVOK;}
 static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DQ(m, DQ(d, *z++=t^*x++;); x+=k;);R EVOK;}
 
-
-
-// obsolete #define BITWISE(f,T,op)  \
-// obsolete  DF2(f){F12IP;A z;I *av,k=0,x;T*wv,y,*zv;             \
-// obsolete   ARGCHK2(a,w);  /* kludge we allow inplace call but we don't honor it yet */ \
-// obsolete   if(!ISDENSETYPE(AT(a),INT))RZ(a=cvt(INT,a));                                    \
-// obsolete   if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w));                                    \
-// obsolete   av=(I*)AV(a);                          \
-// obsolete   wv=(T*)AV(w);                 \
-// obsolete   ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));                      \
-// obsolete   I zr=MAX(AR(a),AR(w)); GATV(z,INT,AN(AR(a)>AR(w)?a:w),zr,AS(AR(a)>AR(w)?a:w)); zv=(T*)AVn(zr,z);                  \
-// obsolete   if(!AN(z))R z;                                                       \
-// obsolete   if     (AR(a)==AR(w))DQ(AN(a), x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
-// obsolete   else if(AR(a)< AR(w))DQ(AN(a), x=*av++; DQ(AN(w)/AN(a), y=*wv++; *zv++=op(x,y););)  \
-// obsolete   else           DQ(AN(w), y=*wv++; DQ(AN(a)/AN(w), x=*av++; *zv++=op(x,y););); \
-// obsolete   RE(0); RETF(z);                                                          \
-// obsolete  }
-// obsolete 
-// obsolete #define BWROT(x,y)      ((y<<(x&(BW-1)))|(y>>(BW-(x&(BW-1)))))
-// obsolete #define BWSHIFT(x,y)    (0>x ? (x<=-BW?0:y>>-x)           : (x>=BW?0:y<<x)            )
-// obsolete #define BWSHIFTA(x,y)   (0>x ? (x<=-BW?(y<0?-1:0):y>>-x)  : (x>=BW?0:y<<x)            )
-// obsolete 
-// obsolete BITWISE(jtbitwiserotate,UI,BWROT   )
-// obsolete BITWISE(jtbitwiseshift, UI,BWSHIFT )
-// obsolete BITWISE(jtbitwiseshifta,I, BWSHIFTA)
-
 DF1(jtbitwise1){F12IP;R CALL2IP(FAV(self)->valencefns[1],zeroionei(0),w,self);}
 
 

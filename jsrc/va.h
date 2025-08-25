@@ -133,8 +133,8 @@
 // reciprocal of v: 1.0/h gives H, which is a truncated version of 1/h.  To find out what H is the true reciprocal of, we take hH=1+d where d is small.  Then we see
 // that H is the reciprocal of h/(1+d) which we approximate as h(1-d)=h-hd (error is h*d^2 which is below the ULP).  The full reciprocal we want is that of (h+l)=(h-hd)+(l+hd), which is
 // 1/((h-hd)+(l+hd)) = H - (l+hd)/((h-hd)(h+l)) which we approximate as H - (l+hd)*H*H
-#define RECIPE(v) ({D zh,one,d,H=1.0/(v).hi; TWOPROD1(H,(v).hi,one,d); one-=1.0; d+=one; d*=(v).hi; d+=(v).lo; d*=H; d*=-H; TWOSUMBS1(H,d,zh,H); (E){.hi=zh,.lo=H}; })  // noncanonical result, in {zh,H}
-#define DIVE(u,v) ({E vr=RECIPE(v); TYMESE(u,vr); })
+#define RECIPE(v) ({D zh,one,d,H; if(unlikely((v).hi==0)){zh=inf; H=0;}else{H=1.0/(v).hi; TWOPROD1(H,(v).hi,one,d); one-=1.0; d+=one; d*=(v).hi; d+=(v).lo; d*=H; d*=-H; TWOSUMBS1(H,d,zh,H);} (E){.hi=zh,.lo=H}; })  // noncanonical result, in {zh,H}
+#define DIVE(u,v) ({E vr; if(unlikely((u).hi==0)){vr.hi=0.; vr.lo=0.;}else{vr=RECIPE(v);} TYMESE(u,vr); })
 #define MAXE(u,v) ({E vr; if(u.hi>v.hi)vr=u; else if(u.hi<v.hi)vr=v; else{vr.hi=u.hi; vr.lo=MAX(u.lo,v.lo);} vr;})
 #define MINE(u,v) ({E vr; if(u.hi<v.hi)vr=u; else if(u.hi>v.hi)vr=v; else{vr.hi=u.hi; vr.lo=MIN(u.lo,v.lo);} vr;})
 

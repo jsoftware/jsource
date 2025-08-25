@@ -139,7 +139,6 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // If there is an incumbent value, discard it
   asym=&SYMORIGIN[cv->itemsym]; A val=QCWORD(asym->fval);  // stored reference address; incumbent value there
   if(unlikely(val!=0))fa(val); SETLOCALFVAL(0,asym,jt->locsyms)    // free the incumbent if any, clear val in symbol in case of error
-// obsolete  asym->fval=0;
   // Calculate the item size and save it
   I isz; I r=AR(t)-((UI)AR(t)>0); PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
   // Allocate a virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
@@ -163,9 +162,7 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
     if(unlikely(QCWORD(SYMORIGIN[cv->itemsym].fval)==svb)){A newb;   // svb was allocated, loop did not complete, and xyz has not been reassigned
      fa(svb);   // remove svb from itemsym.fval.  Safe, because it can't be the last free
      if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); SETLOCALFVAL(SETNAMED(MAKEFVAL(newb,ATYPETOVALTYPE(AT(newb)))),&SYMORIGIN[cv->itemsym],jt->locsyms) // realize stored value, raise, make recursive, store in symbol table and lookaside
-// obsolete  SYMORIGIN[cv->itemsym].fval=SETNAMED(MAKEFVAL(newb,ATYPETOVALTYPE(AT(newb))));
      }else{SETLOCALFVAL(0,&SYMORIGIN[cv->itemsym],jt->locsyms)}  // after error, we needn't bother with a value
-// obsolete SYMORIGIN[cv->itemsym].fval=0;}
     }
     // Decrement the usecount to account for being removed from cv - this is the final free of the svb, unless it is a result.  Since this is a virtual block, free the backer also
     if(AC(svb)<=1)fa(ABACK(svb)); fr(svb);  // MUST NOT USE fa() for svb so that we don't recur and free svb's current contents in cv->t - svb is virtual
@@ -182,7 +179,6 @@ static CDATA* jtunstackcv(J jt,CDATA*cv,I assignvirt){
 static A swapitervbl(J jt,A old,L *asym){
  fa(old);  // discard the old value
  GAT0(old,INT,1,0); ACINITUNPUSH(old); AFLAGINIT(old,AFRO) SETLOCALFVAL(SETNAMED(MAKEFVAL(old,ATYPETOVALTYPE(INT))),asym,jt->locsyms)  // raise usecount, install as value of xyz_index (with flags set)
-// obsolete  *valloc=MAKEFVAL(old,QCTYPE(*valloc));
  R old;
 }
 
@@ -578,7 +574,6 @@ dobblock:
    if(likely(cv->indexsym!=0)){
     // for_xyz.  Manage the loop variables
     L *sympv=SYMORIGIN;  // base of symbol array
-// obsolete     A *aval=&sympv[cv->indexsym].fval;  // address of iteration-count slot
     A iterct=QCWORD(sympv[cv->indexsym].fval);  // A block for iteration count
     if(unlikely(AC(iterct)>1))BZ(iterct=swapitervbl(jt,iterct,&sympv[cv->indexsym]));  // if value is now aliased, swap it out before we change it
     IAV0(iterct)[0]=cv->j;  // Install iteration number into the readonly index
@@ -590,7 +585,6 @@ dobblock:
      if(unlikely(QCWORD(itemsym->fval)!=cv->item)){  // user reassigned the loop item variable
       // discard & free incumbent, switch to virtual, raise it
       A val=itemsym->fval; fa(QCWORD(val)) val=cv->item; ra(val) SETFVAL(SETNAMED(MAKEFVAL(val,ATYPETOVALTYPE(INT))),itemsym) 
-// obsolete  itemsym->fval=SETNAMED(MAKEFVAL(val,ATYPETOVALTYPE(INT))); // also have to set the value type in the symbol (as a local), in case it was changed.  Any noun will do
      }
      --ic; goto elseifasdo;   // advance to next line and process it; if flagged, we know it's bblock
     }
@@ -598,7 +592,6 @@ dobblock:
     {A val=itemsym->fval; fa(QCWORD(val))}  // discard & free incumbent, probably the virtual block.  If the virtual block, this is never the final free, which comes in unstackcv
     SETFVAL(SETNAMED(MAKEFVAL(mtv,ATYPETOVALTYPE(INT))),itemsym)  // after last iteration, set xyz to mtv, which is permanent, and value type in the symbol (as a local), in case it was changed.  Any noun will do
 
-// obsolete     itemsym->fval=SETNAMED(MAKEFVAL(mtv,ATYPETOVALTYPE(INT)));
    }else if(likely(cv->j<cv->niter)){--ic; goto elseifasdo;}  // (not for_xyz.) advance to next line and process it; if flagged is bblock
    // if there are no more iterations, fall through...
    tcesx&=~(32<<TCESXTYPEX);  // the flag for DOF is for the loop, but we are exiting, so turn off the flag
@@ -716,7 +709,6 @@ bodyend: ;  // we branch to here to exit with z set to result
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=QCWORD(ybuckptr->fval); if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){SETFVAL(0,ybuckptr) symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
    DC d; RZ(d=deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self));  // push a debug frame for this error.  We know we didn't free locsym
-// obsolete    d->dcttop=jt->tnextpushp;   // remember tpushp - only the first matters
    RETF(0)
   }
  }

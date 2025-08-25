@@ -1255,7 +1255,6 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  jtfg=MOVEIP0A(jtfg);  // only our a argument can be inplaced, and it moves to y in all uses
  if(ar==wr+1){  // is just 1 cell of y?
   // if y has rank 1 less than x, execute as ((x ~: y) # x) if y is atomic or ((x -.@-:"yr) # x) if y is an array.  Inplace x.  Use IRS and leave comparison tolerance as set
-// obsolete   J jtipx=(J)(((I)jtfg&~(JTINPLACEA+JTINPLACEW))+(((I)jtfg>>1)&JTINPLACEW));  // move input inplace-x flag to inplace-w
   if(wr==0){RZ(x=jtrepeat(jtfg,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
   }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtfg,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
   }

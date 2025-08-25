@@ -483,7 +483,6 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
   if(*lp2){  // nonnull string
    // user responded to error with a new sentence.  Clear the error stack
    jm->pmstacktop=0;   // turn off PM debug collection, which reenables tpop
-// obsolete   jttpop(jm,pmrevd->dcttop,jm->tnextpushp);  // When we entered PM debug, we probably did eformat(), which allocates some headers (gah()).  These might alias named variables, and must be popped off the
    DC s=pmrevd; while(s){jtsymfreeha(jm,s->dcloc); s=s->dclnk;}   // purge symbols & clear stack.  This clears only symbols, leaving primary tables extant 
    jttpop(jm,jm->pmttop,jm->tnextpushp);  // free all memory allocated in the previous sentence, including any cloned tables
    jm->pmttop=0;  // clear to avoid another reset
@@ -511,7 +510,6 @@ static I jdo(JS jtflagged, C* lp){I e;A x;JS jt=(JS)((I)jtflagged&~JTFLAGMSK);JJ
   JJ jt=jm; DC s=jm->sitop; I tpopped=0;  // fa vbl, scan ptr for blocks, one-time tppo
   while(s){   // for each debug block
    if(s->dctype==DCCALL&&s->dcpflags==1){  // if PM block
-// obsolete     if(!tpopped){jttpop(jm,s->dcttop,jm->tnextpushp); tpopped=1;}  // tpop before the first PM block
     if(s->dcc!=0){jtsymfreeha(jm,s->dcloc);}  // free symbol table
     if(s->dcf!=0)fa(s->dcf);  // undo the ra above
    }

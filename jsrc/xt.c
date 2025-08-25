@@ -278,11 +278,6 @@ DF2(jttsit2){F12IP;A z;D t;I n;I stackallo=0,i;
      if(0){
 foundsym:;  // we found a matching symbol.  Switch over to it.  It might not have buckets, if it is an x/y that has was not used in the definition.
       wv[i]=MAKEFVAL(sym->name,QCTYPE(wv[i]));  // new address, old NAME type
-// obsolete   If it has buckets, switch our pointer over to using it.  That way we will share the nameblock
-// obsolete       if(NAV(sym->name)->symx){wv[i]=MAKEFVAL(sym->name,QCTYPE(wv[i]));  // new address, old type
-// obsolete       }else{  // no name with buckets.  Install the position at end of chain
-// obsolete       NAV(QCWORD(wv[i]))->bucketx=~symno;  // install complement of position in chain to indicate found position
-// obsolete        NAV(QCWORD(wv[i]))->symx=AR(jt->locsyms)&ARLCLONED?0:SYMNEXT(symx);  // install symbol number if this is not a cloned definition
        // note: we don't have to worry about erasing references because symbols might escape from a modifier: the result of the sentence is unused.  We have slightly better bucket info than usual, no crime
      }
     }
@@ -356,8 +351,6 @@ static F1(jtpmfree){F12IP;A x,y;C*c;I m;PM*v;PM0*u;
  if(w){
   c=CAV(w); u=(PM0*)c; v=(PM*)(c+sizeof(PM0)); 
   m=u->wrapped?u->n:u->i; 
-// obsolete   DQ(m, x=v->name; if(x&&NAME&AT(x)&&AN(x)==AS(x)[0])fa(x); 
-// obsolete         y=v->loc;  if(y&&NAME&AT(y)&&AN(y)==AS(y)[0])fa(y); ++v;);
   DQ(m, x=v->name; if(x)fa(x); y=v->loc;  if(y)fa(y); ++v;);  // free every block we added (we did ras then)
   fa(w);
  }

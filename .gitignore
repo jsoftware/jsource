@@ -28,6 +28,7 @@ test*.txt
 *.pdb
 *.exp
 *.res
+*.exe
 .vs
 **/.vs/**
 
@@ -49,26 +50,15 @@ test*.txt
 .DS_Store
 *.dSYM/
 
-#android
-android/libs/
-android/obj/
-android/jni/jsrc
-android/jni/clapack
-android/jni/pcre
-android/jni/pcre2
-android/jni/tsdll
-android/jni/hostdefs
-android/jni/netdefs
+android/
 clapack/
 pcre/
 
 release
-/test/temp.ijs
+test/temp.ijs
 
 # build folders
 bin/
-!pthreads4w/bin/
-!pthreads4w/bin/pthreadVC3.dll
 make2/obj/
 
 #github workflow action folders
@@ -77,20 +67,8 @@ tools/
 system/
 addons/
 
-# addons
-jlibrary/addons
-!jlibrary/addons/data/jfiles
-!jlibrary/addons/data/jmf
-!jlibrary/addons/dev/eformat
-!jlibrary/addons/dev/fold
-!jlibrary/addons/dev/lu
-
-# other jlibrary
-jlibrary/bin32/
-!jlibrary/system/
-!jlibrary/system/config/
-!jlibrary/tools/
-!jlibrary/bin
+# jlibrary
+jlibrary/
 
 # misc
 jsrc/toc.txt

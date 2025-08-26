@@ -9,12 +9,14 @@
 #include <windows.h>
 #include <winbase.h>
 #define filesep '\\'
+#define ftruncate _chsize_s
 #else
 #if defined(__GNUC__) && defined(_GNU_SOURCE)
 #if !defined(__wasm__)
 #include <dlfcn.h>
 #endif
 #endif
+#include <filesystem>
 #include <sys/types.h>
 #include <unistd.h>
 #if !defined(__wasm__)
@@ -119,7 +121,8 @@ A jtrd(J jt,F f,I j,I n){A z;C*x;I p=0;size_t q=1;
 
 static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
  RZ(f&&w);
- n=AN(w)*(C4T&AT(w)?4:C2T&AT(w)?2:1); x=CAV(w);
+// obsolete  n=AN(w)*(C4T&AT(w)?4:C2T&AT(w)?2:1); x=CAV(w);
+n=AN(w)<<((AT(w)>>C2TX)&3); x=CAV(w);
 
 #if !SY_WINCE
  {INT64 v; v= j+((0>j)?fsize(f):0); fsetpos(f,(fpos_t*)&v);}
@@ -158,17 +161,18 @@ DF2(jtjfwrite){F12IP;B b;F f;
  F2RANK(RMAX,0,jtjfwrite,self);
  PROLOG(000);
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
- RE(f=stdf(w));
- if(2==(I)f){jtjpr((J)((I)jt+MTYOFILE),a); R a;}  // for write to stdout, convert to printable string and type out, with NOSTDOUT off
- if(4==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stdout)?jerrno():a;}
- if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}
+ RE(f=stdf(w));   // f=0 if w is filename, else 1-6 for special files
+ if(2==(I)f){jtjpr((J)((I)jt+MTYOFILE),a); R a;}  // 2=write to console, convert to printable string and type out, with NOSTDOUT off
+ if(4==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stdout)?jerrno():a;}  // 4=stdout
+ if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}  // 5=stderr
 #ifdef ANDROID
- if(6==(I)f){A z=tocesu8(w); __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",CAV(z)); R a;}
+ if(6==(I)f){A z=tocesu8(w); __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",CAV(z)); R a;}  // 6=Android log?
 #endif
- if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f)); 
- wa(f,0L,a); 
- if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if numbered file, remove the inuse mark
- RE(0); EPILOG(mtm);   // check error, return mtm if none
+ if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f));    // b='w is a filename'.  If so, open the file; otherwise (file#) lock the file
+ wa(f,0L,a);   // write to the file
+// crashes on Windows ftruncate(f,AN(a)<<((AT(a)>>C2TX)&3));  // in case the file existed before, truncate it to the new len
+ if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if named file, close it; if numbered file, unlock the file
+ RE(0); EPILOG(mtm);   // check error, return i. 0 0 if none
 }
 
 // 1!:3

@@ -164,11 +164,16 @@ DF2(jtjfwrite){F12IP;B b;F f;
  if(4==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stdout)?jerrno():a;}  // 4=stdout
  if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}  // 5=stderr
 #ifdef ANDROID
- if(6==(I)f){A z=tocesu8(w); __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",CAV(z)); R a;}  // 6=Android log?
+ if(6==(I)f){A z=tocesu8(w); __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",CAV(z)); R a;}  // 6=Android logcat
 #endif
  if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f));    // b='w is a filename'.  If so, open the file; otherwise (file#) lock the file
+// erase previous content of opened file
+#ifdef _WIN32
+ if(!b)_chsize_s(_fileno(f),0);
+#else
+ if(!b)ftruncate(fileno(f),0);
+#endif
  wa(f,0L,a);   // write to the file
-// crashes on Windows ftruncate(f,AN(a)<<((AT(a)>>C2TX)&3));  // in case the file existed before, truncate it to the new len
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if named file, close it; if numbered file, unlock the file
  RE(0); EPILOG(mtm);   // check error, return i. 0 0 if none
 }

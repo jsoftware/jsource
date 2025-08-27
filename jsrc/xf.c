@@ -171,7 +171,7 @@ DF2(jtjfwrite){F12IP;B b;F f;
 #ifdef _WIN32
  if(!b)_chsize_s(_fileno(f),0);
 #else
- if(!b)ftruncate(fileno(f),0);
+ if(!b)!!ftruncate(fileno(f),0);
 #endif
  wa(f,0L,a);   // write to the file
  if(b)fclose(f);else{fflush(f); jtunvfn(jt,f,0);}  // if named file, close it; if numbered file, unlock the file

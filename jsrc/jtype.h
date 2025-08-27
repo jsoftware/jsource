@@ -457,10 +457,12 @@ struct AD {
 #define C2T             ((I)1L<<C2TX)       // C2 unicode (2-byte characters)
 #define C2TSIZE sizeof(US)
 #define C2TEXTTYPEX  17
-#define C4TX 18
+#define C4TX 18                  // must be C2TX+1
 #define C4T             ((I)1L<<C4TX)       // C4 unicode (4-byte characters)
+
 #define C4TSIZE sizeof(C4)
 #define C4TEXTTYPEX  18
+_Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define XDX 19
 #define XD              ((I)1L<<XDX)        // DX extended floating point   used to represent intolerant compare in jtiosc
 #define XDSIZE sizeof(DX)

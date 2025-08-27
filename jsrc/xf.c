@@ -9,14 +9,12 @@
 #include <windows.h>
 #include <winbase.h>
 #define filesep '\\'
-#define ftruncate _chsize_s
 #else
 #if defined(__GNUC__) && defined(_GNU_SOURCE)
 #if !defined(__wasm__)
 #include <dlfcn.h>
 #endif
 #endif
-#include <filesystem>
 #include <sys/types.h>
 #include <unistd.h>
 #if !defined(__wasm__)

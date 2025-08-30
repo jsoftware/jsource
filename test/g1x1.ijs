@@ -34,6 +34,26 @@ h =: open f
 t -: read f
 t -: read h
 
+close h
+erase f
+
+f =: <jpath '~temp/foogoo5.x'
+(1e6$'abc') write f
+1e6 = size f
+'...' write f
+3 = size f
+'...' -: read f
+erase f
+
+f =: <jpath '~temp/foogoo5.x'
+h =: open f
+(1e6$'abc') write h
+1e6 = size h
+'...' write h
+3 = size h
+close h
+3 = size f
+'...' -: read f
 erase f
 
 d =: dir p,&.><'*.ijs'

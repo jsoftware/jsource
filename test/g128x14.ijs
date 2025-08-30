@@ -194,7 +194,6 @@ for. r#0 do. if. unbat do. tt =. tt , batchop 'qktcopy';ops,<0.0 else. tt =. tt 
 }}
 
 res =: 0 mtpivottbl (20, (>.&.(%&(CacheLine%16)) 20));(,:0.9 0.9);0.0
-
 delth''
 
 epilog''

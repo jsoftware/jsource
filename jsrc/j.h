@@ -1530,7 +1530,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 // compare names.  We assume the names are usually short & avoid subroutine call, which ties up registers.  Names are overfetched, back to front
 #define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len))){ \
-         if((len)<=5)goto match;  /*  len 5 or less, hash is enough */ \
+         if(likely((len)<=5))goto match;  /*  len 5 or less, hash is enough */ \
          else{C*c0=(name)->s, *c1=(string); I lzz=(len); NOUNROLL do{lzz-=SZI; I t=*(I*)(c0+lzz)^*(I*)(c1+lzz); if((t>>(REPSGN(lzz)&(BW-(lzz<<LGBB))))!=0)goto nomatch;}while(lzz>0); \
           match: {stmt} \
           nomatch:; \

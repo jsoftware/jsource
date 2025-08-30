@@ -79,6 +79,8 @@ g=: 9&o.&.(0&({ ))@(*@{. * f@:+)"1
 
 ((<<0) ,: <<1) -: 0 1 <&.>/. <"0 i. 2  NB. zapped up the stack
 
+'domain error' -: ". etx '5"0 &. (0 1 2 3 { 5 4 3 2 1 0 { ])'
+
 NB. semiduals x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------------------------
 
 'valence error' -: +&.(a:`^.) etx i. 5
@@ -332,7 +334,8 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '2 3' { ckprist 0 0  ] 4 5   NB. pristine because too short for virtual
 '2 3' { ckprist 1 1  ] 4 50   NB. virtual+pristine because this goes through virtualip
 '<1' { ckprist 1 1  ] 4 50   NB. virtual block, does not clear w prist
-'<1' { ckprist 0 0  ] 4 1   NB. nonvirtual block, clears w prist
+'<1' { ckprist 0 1  ] 4 1   NB. nonvirtual block, clears w prist, result pristine on abandoned pristine input because only 1 cell
+'1;2' { ckprist 0 0  ] 4 1   NB. nonvirtual block, clears w prist, not pristine with 2 cells
 '2' A. ckprist 0 0  ] 4 5   NB. result is permutation, which is not virtual
 '1' A. ckprist 0 0  ] 4 5
 '1 3' A. ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated

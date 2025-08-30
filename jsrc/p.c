@@ -958,7 +958,7 @@ RECURSIVERESULTSCHECK
           // To avoid calculating these invariants we razzle-dazzle the compiler into not relying on constant jt. 
       if(withprob(!TESTSTACK0PT(PTNOTLPARX),0.2))goto execlpar;  // if (, go execute that immediately.  could save a test there since we know stack[1] is VN
       pt0ecam&=~((GETSTACK0PT|PEXTN(pt0ecam,FLGPMSKX+1,1))<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull.  May clear bit 29; 30-31 immaterial
-      break;   // go back to the stacking phase
+      break;   // go back to the stacking phase.  We could check for end here, but end-of-sentence when there is no assignment is predictable: m=0, then final exec, then exit.  We trust the branch predictors with that.
      }else{
       A yy;  // will be the result of the operation, stored after we have freed the args on the stack
       if(withprob(pmask=pmask567&0x1F,0.7)){
@@ -1028,7 +1028,7 @@ RECURSIVERESULTSCHECK
        // If the next word is not LPAR, we can fetch another word after.
        // if the 2d-next word exists, and it is (C)AVN, and the current top-of-stack is not ADV, and the next word is not ASGN, we can pull a third word.  (Only ADV can become executable in stack[2]
        // if it was not executable next to ASGN).  We go to the trouble (1) because the case is the usual one and we are saving a little time; (2) by eliminating
-       // failing calls to the parser we strengthen its branch prediction
+       // failing passes through execution we strengthen its branch prediction
        // At this point pt0ecam&CONJ is set to (next AT is CAVN).  For comp ease we use this instead of checking for LPAR and ASGN.  This means that for a =: b =: c we will miss after assigning b.
        if(likely((pt0ecam&(1LL-(I)(US)pt0ecam)&CONJ)!=0)){pt0ecam|=-(AT(QCWORD(queue[-1]))&ADV+VERB+NOUN+NAME)&~(AT(stack[0].a)<<(CONJX+1-ADVX))&(CONJ<<1);}  // we start with CONJ set to 'next is CAVN'
        break;  // go pull the next word(s)

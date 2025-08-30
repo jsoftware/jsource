@@ -61,30 +61,34 @@ A jtnfs(J jt,I n,C*s,I notlocal){A z;C f,*t;I m,p;NM*zv;
  ASSERT(BETWEENO(n,1,32767),EVILNAME);   // error if name is empty or too long
  // If the name is the special mnuvxy, return a copy of the preallocated block for that name (we may have to add flags to it)
  if(SGNTO0(n-2)&BETWEENC(f,'m','y')&(p=(0x1b03>>(f-'m')))){  // M N o p q r s t U V w X Y 1101100000011
-  R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags/buckets may be added)
- }
- // The name may not be valid, but we will allocate a NAME block for it anyway
- GATV0(z,NAME,n,1); AC(z)=ACUC1; zv=NAV(z); if(likely(!notlocal))z->mback.lookaside=0;   // the block is cleared to 0 with no lookaside value.  This is the only place where a NAME is allocated (except for cloning).  NAME is always non-ip
- MC(zv->s,s,n); zv->s[n]=0;  // should copy locally, with special dispensation for <4 chars
- f=0; m=n; p=0;
- // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative
- if('_'==*t){
-   // name ends with _: direct locative
-   --t; NOUNROLL while(s<t&&'_'!=*t)--t; f=NMLOC; p=n-2-(t-s); m=n-(2+p);  // t->_ before localename, p=#locale name, m=#simplename
-   // install hash/number for the direct locale
-   zv->bucketx=BUCKETXLOC(p,t+1);  // number if numeric, hash otherwise
+  // kludge: if notlocal, we must return with AM set from tpush, but ca destroys AM.  We restore it here
+  A *tpushptr=jt->tnextpushp;  // this is where ca() will store into
+  RZ(z=ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]))  // create a clone of the argument block (because flags/buckets may be added)
+  if(unlikely(notlocal))AZAPLOC(z)=tpushptr;  // if we must restore AM, do so
  }else{
-   // otherwise either simple name or indirect locative.  Look for the __; if present, find & hash the last indirect name into bucketx
-   DO(n, if('_'==s[i]&&'_'==s[1+i]){ f=NMILOC; p=n-2-i; for(m=n; s[m-1]!='_'||s[m-2]!='_';--m);   // p=length of locative string, m=offset to after last __
-    if(unlikely(m>2&&ctype[s[m]]==C9)){I val=0; DO(n-m, ASSERT(ctype[s[m+i]]==C9,EVILNAME) val=val*10+s[m+i]-'0';) zv->bucketx=s[m-3]=='_'?-val:val;  // if last name numeric, convert & save in bucketx - could be signed
-    }else{zv->bucketx=(I)nmhash(n-m,s+m);}  // otherwise save the hash
-   m=n-(2+p); break;});  // m=#simplename, hash last indirect if there is one
+  // The name may not be valid, but we will allocate a NAME block for it anyway
+  GATV0(z,NAME,n,1); AC(z)=ACUC1; zv=NAV(z); if(likely(!notlocal))z->mback.lookaside=0;   // the block is cleared to 0 with no lookaside value.  This is the only place where a NAME is allocated (except for cloning).  NAME is always non-ip
+  MC(zv->s,s,n); zv->s[n]=0;  // should copy locally, with special dispensation for <4 chars
+  f=0; m=n; p=0;
+  // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative
+  if('_'==*t){
+    // name ends with _: direct locative
+    --t; NOUNROLL while(s<t&&'_'!=*t)--t; f=NMLOC; p=n-2-(t-s); m=n-(2+p);  // t->_ before localename, p=#locale name, m=#simplename
+    // install hash/number for the direct locale
+    zv->bucketx=BUCKETXLOC(p,t+1);  // number if numeric, hash otherwise
+  }else{
+    // otherwise either simple name or indirect locative.  Look for the __; if present, find & hash the last indirect name into bucketx
+    DO(n, if('_'==s[i]&&'_'==s[1+i]){ f=NMILOC; p=n-2-i; for(m=n; s[m-1]!='_'||s[m-2]!='_';--m);   // p=length of locative string, m=offset to after last __
+     if(unlikely(m>2&&ctype[s[m]]==C9)){I val=0; DO(n-m, ASSERT(ctype[s[m+i]]==C9,EVILNAME) val=val*10+s[m+i]-'0';) zv->bucketx=s[m-3]=='_'?-val:val;  // if last name numeric, convert & save in bucketx - could be signed
+     }else{zv->bucketx=(I)nmhash(n-m,s+m);}  // otherwise save the hash
+    m=n-(2+p); break;});  // m=#simplename, hash last indirect if there is one
+  }
+  ASSERT((m|p)<=255,EVLIMIT);  // error if name too long.  Requires limit be power of 2
+  zv->flag=f;  // Install locative flag
+  zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length of simple name, and calculate hash of simple name
+  zv->n=n;  // install length of fully qualified name
+  // the bucket and symbol-id fields are left at 0
  }
- ASSERT((m|p)<=255,EVLIMIT);  // error if name too long.  Requires limit be power of 2
- zv->flag=f;  // Install locative flag
- zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length of simple name, and calculate hash of simple name
- zv->n=n;  // install length of fully qualified name
- // the bucket and symbol-id fields are left at 0
  RETF(z);
 }    /* name from string */
 

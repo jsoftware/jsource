@@ -343,7 +343,7 @@ static DF1(jtsunder){F12IP;PROLOG(777);
 
 
 // u&.v
-F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
+F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
  ARGCHK2(a,w);
  A z; fdefallo(z)
  if(AT(w)&BOX){
@@ -354,7 +354,7 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
   wvb=fx(AAV(w)[gside]);  // turn the gerund into a verb
  }
  ASSERTVV(a,wvb); v=FAV(wvb);  // v is V* for w
- c=0; f1=0; f2=0;
+ f1=0; f2=0;
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
  I flag = (FAV(a)->flag&v->flag&VASGSAFE);
@@ -365,17 +365,19 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
    // We do not expose BOXATOP or ATOPOPEN flags, because we want all u&.> to go through this path & thus we don't want to allow other loops to break in
    // We set VIRS1 just in case a user writes u&.>"n which we can ignore
    // The flags are ignored during u&.>, but they can forward through to affect previous verbs.
- case CFORK: c=((ID(v->fgh[2]))&~1)!=CLEFT;  // set c to 0 if non-capped fork with h ][; fall through
+ case CFORK: if(((ID(v->fgh[2]))&~1)!=CLEFT)break;  // if ( f g ][), fall through - equivalent to f&g if monad.
  case CAMP: {
-   u=FAV(a);  // point to u in u&.v.  v is f1&g1 or (f1 g1 h1)
+   u=FAV(a);  // point to u in u&.v.  v is f1&g1 or (f1 g1 ][)
    if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // uid=id of u; b1=u is x/, then uid=id of x      cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
-   b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<=32
+   b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<32
    C vv=IDD(v->fgh[1]);  // id of g1
-   if(CIOTA==vv&&(!c)&&v->fgh[0]==ds(CALP)){   // w is  {a.&i.  or  (a. i. ][)}
-    f1=b&b1?jtbitwiseinsertchar:f1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
+ // obsolete   if(CIOTA==vv&&(!c)&&v->fgh[0]==ds(CALP)){   // w is   (  a.&i.  or  (a. i. ][)  )
+   if(CIOTA==vv&&v->fgh[0]==ds(CALP)){   // w is   (  a.&i.  or  (a. i. ][)  )
+    f1=b&b1?jtbitwiseinsertchar:f1;    // m b./ &. (  a.&i.  or  (a. i. ][)  )   or  f &. (  a.&i.  or  (a. i. ][)  )
     f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
    }
-   if(vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)), structural under
+ // obsolete    if(vv==CFROM&&(!c)&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)) or u.&.(m { ][), structural under
+   if(vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)) or u.&.(m { ][), structural under
    break;
   }
  case CCOMMA:  // u&., structural under

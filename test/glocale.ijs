@@ -764,6 +764,9 @@ assert. s1 > 7!:0''
 }}
 f ''
 
+'A_m_ B_n_ C_u_ D_v_ E_x_ F_y_' =: i. 6
+i. 6 -:  A_m_,B_n_,C_u_,D_v_,E_x_,F_y_
+18!:55 ;:'m n u v x y'
 
 4!:55 ;:'a_z_ dhs2liso_nonlocale_ xy_z_ xy_nonlocale_'
 (271828) 18!:55 ;:'abcpristloc nonlocale'

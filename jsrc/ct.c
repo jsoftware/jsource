@@ -417,7 +417,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set
       while(1){
        if(jtmfdif(endtime)<0)break;  // if time expired, exit loop.  Would prefer to deal with ns only rather than timespec, but these are the primitives we have
 #define THREADSPERPAUSE 4  // We want to reduce the bus load when all threads are lingering.  With PAUSE at 140 cycles, one read per 35 cycles seems negligible
-       I threadct=jobq->nthreads; do{_mm_pause();}while(threadct-=THREADSPERPAUSE>0);
+       I threadct=jobq->nthreads; do{_mm_pause();}while((threadct-=THREADSPERPAUSE)>0);  // pause long enough for every thread to poll without bus overload: pausetime * #threads / THREADSPERPAUSE
        if(__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)!=0)break;  // if a job shows up, exit loop
       }
       if((job=JOBLOCK(jobq))!=0)break;   // reestablish lock, checking in case a job has arrived

@@ -1895,10 +1895,10 @@ F1(jtcallbackx){F12IP;
 
 F1(jtcddlopen){F12IP;HMODULE h;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
- ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT(LIT&AT(w),EVDOMAIN);  // w must be a literal string or atom
  ASSERT(1>=AR(w),EVRANK);
- if(AN(w)){
- ASSERT(AN(w),EVLENGTH);
+ if(AN(w)){  // w is nonnull
+// obsolete  ASSERT(AN(w),EVLENGTH);
  C*lib=CAV(str0(w));
 #ifdef _WIN32
  wchar_t wlib[_MAX_PATH];
@@ -1911,7 +1911,7 @@ F1(jtcddlopen){F12IP;HMODULE h;
  h=dlopen((*lib)?lib:0,RTLD_LAZY);
 #endif
 #endif
- }else{
+ }else{  // w is empty - get handle for current module
 #ifdef _WIN32
  h=GetModuleHandle(NULL);
 #else
@@ -1927,11 +1927,11 @@ R sc((I)(intptr_t)h);
 
 F2(jtcddlsym){F12IP;C*proc;FARPROC f;HMODULE h;
  ARGCHK2(a,w); ASSERT(!JT(jt,seclev),EVSECURE)
- ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT(LIT&AT(w),EVDOMAIN);  // w must be nonempty byte string
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
  proc=CAV(str0(w));
- RE(h=(HMODULE)i0(a));
+ RE(h=(HMODULE)i0(a));  // a must be an atomiic integer
 #ifdef _WIN32
  f=GetProcAddress(h,(LPCSTR)proc);
 #else

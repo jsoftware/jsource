@@ -1690,6 +1690,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 }    /* allocate header */ 
 
 // clone w, returning the address of the cloned area.  Result is NOT recursive, not AFRO, not virtual
+// LSB of jt is 1 only in NAME blocks that should NOT clear AM
 F1(jtca){F12IP;A z;P*wp,*zp;
  ARGCHK1(w);
  I n=AN(w), t=AT(w);
@@ -1702,7 +1703,7 @@ F1(jtca){F12IP;A z;P*wp,*zp;
   SPB(zp,x,ca(SPA(wp,x)));
  }else{
   void *wv=t&FUNC?FAV(w):t&NAME?NAV(w):voidAV(w);  // source address
-  if(t&NAME){n=NAV(w)->n;GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;AC(z)=ACUC1;z->mback.lookaside=0;}  // GA does not allow NAME type, for speed.  NAME is always non-ip.  Take n from struct
+  if(t&NAME){ n=NAV(w)->n; GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;AC(z)=ACUC1;if(likely(!((I)jtfg&1)))z->mback.lookaside=0; }  // GA does not allow NAME type, for speed.  NAME is always non-ip.  Take n from struct
   else {
    n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for minimum rank, someday
    GA(z,t,n,AR(w),AS(w));

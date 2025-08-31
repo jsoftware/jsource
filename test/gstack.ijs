@@ -3,6 +3,7 @@ NB. stack issues (function call limit) ----------------------------------
 
 
 NB. f=: 3 : 'f c=:>:y'
+NB. f=: 3 : 'f c=:>:y'
 'stack error' -: (f=: 3 : 'f y'         ) etx 0
 'stack error' -: (f=: 3 : '0!:0 ''f 0''') etx 0
 'stack error' -: (f=: 3 : 'f f. y'      ) etx 0
@@ -78,6 +79,10 @@ catch.
 17=13!:11''  NB. should be stack error
 end.
 }} ''
+
+gerund =: ]F.:('@:' ,:@:<@:(,&<) ,~) 3e5 # < '+'
+'stack error' -: ". etx 'gerund`:6' NB. JE crash.
+
 
 NB. Check handling of deeply nested boxes.
 NB. Nesting level.

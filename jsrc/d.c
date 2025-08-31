@@ -226,10 +226,10 @@ static A gahzap(J jt,I r,A w){RZ(w=gah(r,w)) ACINITUNPUSH(w); R w;}  // allocate
 // the args to eformat_j_ are error#;curname;jt->ranks/empty if m};AR of self;a/AR(a)[;w/AR(w)}[;m]
 // Result is always 0
 A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
-  if(likely(self!=DUMMYSELF)){  // if we are called without a real self, we must be executing something internal.  Format it later when we have a real self
+  if(!(jt->emsgstate&EMSGSTATEFORMATTED+EMSGSTATENOEFORMAT)&&likely(self!=DUMMYSELF)){  // If we have already formatted, don't do it again.  If we expect error, return fast.  If we are called without a real self, we must be executing something internal.  Format it later when we have a real self
   C e=jt->jerr;
-  if(e!=0 && e!=EVABORTEMPTY && !(jt->emsgstate&EMSGSTATEFORMATTED)){   // if no error, or we have already run eformat on this error, don't do it again.  Don't waste time on aborts
-   if(!jt->glock && !(jt->emsgstate&EMSGSTATENOEFORMAT)){ // if we are locked, show nothing; if eformat suppressed, leave the error line as is
+  if(e!=0 && e!=EVABORTEMPTY && e!=EVSTACK && e!=EVWSFULL){   // if no error, don't do it again.  Don't waste time on aborts.  If we have run out of memory or stack, don't call eformat, which will probably fail too
+   if(!jt->glock){ // if we are locked, show nothing;
     A saverr;   // savearea for the initial message
     A *old=jt->tnextpushp;  // we must free all memory that we allocate here
     if((saverr=str(jt->etxn,jt->etxinfo->etx))!=0){  // save error code and message; if error in str, skip formatting

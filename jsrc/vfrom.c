@@ -434,8 +434,8 @@ A jtfrombu(J jtfg,A a,A w,I wf){F12IP;
   GA00(z,AT(w),0,wf+(wcr-naxa)+af); MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AS(a),af)  MCISH(AS(z)+wf+af,AS(w)+wf+naxa,wcr-naxa)
   R z;
  }
- // fast case: a is an atom or a list (now not empty).  Select the single cell, which may be virtual
-if(af+wf==0){I jj=0, *av=IAV(a); DO(naxa, I j; SETNDX(j,av[i],ws[i]) jj*=ws[i]; jj+=j;) R jtget1cell(jtfg,w,wr-naxa,jj,AT(w),wr);}
+ // fast case: a is an atom or a list (now not empty).  Select the single cell, which may be virtual or pristine
+ if(af+wf==0){I jj=0, *av=IAV(a); DONOUNROLL(naxa, I j; SETNDX(j,av[i],ws[i]) jj*=ws[i]; jj+=j;) R jtget1cell(jtfg,w,wr-naxa,jj,AT(w),wr);}
  // get #cells in selected portion, #cells indexed, and #atoms in the cell being indexed
  I wnk; PROD(wnk,wcr-naxa,ws+wf+naxa);  // #atoms in minor cell, below the indexing
  I ncx; PROD(ncx,naxa,ws+wf);  // # minor cells in major cell
@@ -2850,7 +2850,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
    // for each column-group in Qkt (4 lanes)
    __m256d endmask;  // mask for 'maskload' and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
    // first handle the paired columns.  They always come in pairs of pairs, never have a multiplier, never ck
-   for(colx=0;colx<coln0*2*(I)sizeof(*colxv);colx+=2*sizeof(*colxv)){  // here colx is offset to colxv (16 bytes for the pair) and also to pcn0v (64 bytes).  The value in *(colxv+colx) is byte offset to value in row
+   for(colx=0;colx<coln0*(I)sizeof(*colxv);colx+=2*sizeof(*colxv)){  // here colx is offset to colxv (16 bytes for two pairs) and also to pcn0v (64 bytes).  The value in *(colxv+colx) is byte offset to value in row
 // obsolete     endmask=sgnbit;
 // obsolete     __m256i rn0x;  // indexes of nonzero values in row of Qkt
     // fetch pivotcol values (high-low), fetch the Qkt byte indexes to modify.  We may overfetch
@@ -2863,7 +2863,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     // gather the values from Qkt
 // obsolete      __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),(D*)qkvrow,rn0x,endmask,1);
 // obsolete      __m256d qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),(D*)qkvrow+1,rn0x,endmask,1);
-    __m256d h0l0h1l1=_mm256_loadu_pd((D*)((I)qkvrow+o0)),h2l2h3l3=_mm256_loadu_pd((D*)((I)qkvrow+o0+2*sizeof(E)));  // load     scaf use non-temporal load?
+    __m256d h0l0h1l1=_mm256_loadu_pd((D*)((I)qkvrow+o0)),h2l2h3l3=_mm256_loadu_pd((D*)((I)qkvrow+o1));  // load     scaf use non-temporal load?
     __m256d qkvh=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), qkvl=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // batch of Qkt, high & low separated in 0213 order
 
     // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
@@ -2904,7 +2904,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 // obsolete    }
    }
    I okwds=NPAR;  // # valid words in a batch.  Starts at max; never modified until last batch EXCEPT when ck mode, then set always
-   for(;colx-ncvals*(I)sizeof(*colxv)<0;colx+=okwds*sizeof(*colxv)){
+   for(;colx-(ncvals-coln0)*(I)sizeof(*colxv)<0;colx+=okwds*sizeof(*colxv)){
 // obsolete     endmask=sgnbit;
 // obsolete     __m256i rn0x;  // indexes of nonzero values in row of Qkt
     // fetch pivotcol values (high-low), fetch the Qkt byte indexes to modify.  We may overfetch

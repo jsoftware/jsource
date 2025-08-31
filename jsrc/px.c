@@ -70,18 +70,19 @@ F1(jtimmea){F12JT;A t,z,z1;
  RETF(z);
 }
 
-static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}
-     /* conditional execute - return 0 if error */
+static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); if(jt->jerr!=EVSTACK)RESETERR; R z;}
+     // conditional execute - return 0 if error, but EVSTACK is fatal
 
 // convert the gerund (i. e.  AR) in w into a verb
 F1(jtexg){F12IP;A*v,*wv,x,y,z;I n;
  ARGCHK1(w);
+ STACKCHKOFL
  n=AN(w); wv=AAV(w); 
  ASSERT(n!=0,EVLENGTH);  // no empty AR
  ASSERT(1>=AR(w),EVRANK);  // must be atom or list
  ASSERT(BOX&AT(w),EVDOMAIN);  // must be boxed
  GATV0(z,BOX,n,1); v=AAV1(z);   // allocate a box for each converted AR
- DO(n, x=C(wv[i]); RZ(y=(y=cex(x,jtfx,0L))?y:exg(x)); *v++=QCINSTALLTYPE(y,ATYPETOVALTYPE(AT(y)));)  // for each box: if the AR can be converted to an A, do so; otherwise it should be a list of ARs, recur to produce a verb.
+ DO(n, x=C(wv[i]); RE(y=cex(x,jtfx,0L)) RZ(y=y?y:exg(x)); *v++=QCINSTALLTYPE(y,ATYPETOVALTYPE(AT(y)));)  // for each box: if the AR can be converted to an A, do so; otherwise it should be a list of ARs, recur to produce a verb.
         // the recursion corresponds to parenthesizing the recursed train
  R PARSERVALUE(parseforexec(z));  // execute z as a tacit definition
 }

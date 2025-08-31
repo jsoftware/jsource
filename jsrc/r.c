@@ -94,6 +94,7 @@ DF1(jtfx){F12IP;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ARGCHK1(w);
  // if string, handle that special case (name/primitive)
  if(LIT&AT(w))R fxchar(w,self);
+ STACKCHKOFL
  // otherwise, it had better be boxed with rank 0 or 1, and 1 or 2 atoms
  m=AN(w);   // m=#atoms
  ASSERT(BOX&AT(w),EVDOMAIN);

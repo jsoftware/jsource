@@ -61,10 +61,7 @@ A jtnfs(J jt,I n,C*s,I notlocal){A z;C f,*t;I m,p;NM*zv;
  ASSERT(BETWEENO(n,1,32767),EVILNAME);   // error if name is empty or too long
  // If the name is the special mnuvxy, return a copy of the preallocated block for that name (we may have to add flags to it)
  if(SGNTO0(n-2)&BETWEENC(f,'m','y')&(p=(0x1b03>>(f-'m')))){  // M N o p q r s t U V w X Y 1101100000011
-  // kludge: if notlocal, we must return with AM set from tpush, but ca destroys AM.  We restore it here
-  A *tpushptr=jt->tnextpushp;  // this is where ca() will store into
-  RZ(z=ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]))  // create a clone of the argument block (because flags/buckets may be added)
-  if(unlikely(notlocal))AZAPLOC(z)=tpushptr;  // if we must restore AM, do so
+  RZ(z=jtca((J)((I)jt|notlocal),mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]))  // create a clone of the argument block (because flags/buckets may be added)
  }else{
   // The name may not be valid, but we will allocate a NAME block for it anyway
   GATV0(z,NAME,n,1); AC(z)=ACUC1; zv=NAV(z); if(likely(!notlocal))z->mback.lookaside=0;   // the block is cleared to 0 with no lookaside value.  This is the only place where a NAME is allocated (except for cloning).  NAME is always non-ip

@@ -1241,7 +1241,6 @@ f i. 65
 
 
 NB. **** 128!:22
-
 NB. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:22 Qkt ------------------------
 
 epdefuzzsub =: {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
@@ -1257,7 +1256,7 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
  siz =. y  NB. size of Qk
  while. 1 T. '' do. 55 T. '' end.
  while. 4 > 1. T. '' do.
-  'r c' =. 2 ?@$ >:siz  NB. size of modified area
+  'r c' =. 1 >. 2 ?@$ >:siz  NB. size of modified area
   prx =. /:~ 00 + r ? siz [ pcx =. /:~ 00 + c ? siz  NB. indexes of mods
   pivotcolnon0 =. (] {~ r ? #) (, -) 10 ^ (+   3 * *) 6. * _0.5 + r ?@$ 0  NB. random values 1e3 to 1e6 and 1e_3 to 1e_6, both signs
   pivotcolnon0 =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) pivotcolnon0  NB. append extended part - all 0
@@ -1270,17 +1269,22 @@ NB. obsolete  epdefuzzsub =. ((]: * >.)&:|&{. ((<!.0 |@{.) *"_ _1 ]) epsub)
   Qk =. epcanon (,:   ] * (2^_53) * _0.5 + 0 ?@$~ $) Qk  NB. append extended part
   expQk=. (((<a:;prx;pcx) { Qk) (absfuzz epdefuzzsub) (c #"0 pivotcolnon0) epmul (r&#@,:"1 newrownon0)) (<a:;prx;pcx)} preQk =. memu Qk
   Qk =. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) e128x22 Qk
-  Qk1 =. 15!:18 preQk
   if. -. 1e_30 > >./ re =. , | (+/  expQk epsub Qk) % (| +/ Qk) >. (| +/ preQk) >. (| +/ expQk) do. 13!:8]4 [ 'r__ c__ re__ prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__' =: r;c;re;prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk end.
-NB.   qktrow =. newrownon0 (<a:;pcx)} (0 2 { $Qk) (15!:18) 0.  NB. scatter the non0s throughout a simulated row (must be aligned)
-NB.   pcxbatch =. ~. _4 (17 b.) /:~ pcx  NB. unique batch indexes
-NB.   Qk1 =. (prx;pcxbatch;pivotcolnon0;qktrow;-absfuzz) e128x22 Qk1
-NB.   if. -. Qk1 -: Qk do. 13!:8]4 [ 'r__ c__ re__ prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__ Qk1__ qktrow__ pcxbatch__' =: r;c;re;prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk;Qk1;qktrow;pcxbatch end.
+  Qk1 =. 15!:18 preQk
+  pair1m =. ((}:=}.) _2 (17 b.) pcx) , 0  NB. mask of start of pair positions
+  if. 1 (17 b.) +/ pair1m do. pair1m =. 0 (pair1m i: 1)} pair1m end.
+  pairm =. (+. |.!.0) pair1m  NB. mask of both pair positions
+  pcxp =. (pair1m # pcx) , (pcx #~ -. pairm)   NB. indexes of start of each pair, followed by the rest
+  qktrow =. newrownon0 \:"1 pairm  NB. bring the pair values to the front, preserving order 
+  Qk1 =. (prx;pcxp;pivotcolnon0;qktrow;absfuzz) e128x22 Qk1
+  if. -. Qk1 -: Qk do. 13!:8]4 [ 'r__ c__ re__ prx__ pcx__ pivotcolnon0__ newrownon0__ absfuzz__ expQk__ preQk__ Qk__ Qk1__ qktrow__ pcxp__' =: r;c;re;prx;pcx;pivotcolnon0;newrownon0;absfuzz;expQk;preQk;Qk;Qk1;qktrow;pcxp end.
   0 T. 0  NB. allocate a worker thread
  end.
  while. 1 T. '' do. 55 T. '' end.
  1
 }}"0
+
+f 6
 
 f >: i. 64
 

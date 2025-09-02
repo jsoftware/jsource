@@ -451,52 +451,57 @@ A jtsyrd1forlocale(J jtfg,C *string,UI4 hash,A g){F12JT;
 
 // u is address of indirect locative: in a__b__c, it points to the b (the direct part of the name is not used)
 // n is the length of the entire locative (4 in this example)
+// hash is the hash/# of the last locative
 // result is address of symbol table to use for name lookup (if not found, it is created)
 static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
  A g=0;  // the locale we are looking in, as we go right to left through the a__b__c... chain. 0 means 'locals then globals', otherwise exact locale to search in
+ A locsym=jt->locsyms;  // if g=0, the local table we are looking in.  name___1 yields a second local name, after which they must be globals
  A y;  //  resolved A block for __x.  This is the name of a locale which will be found & put into g
  s=n+u;   // s->end+1 of name, past the last locative
  while(u<s){
-  v=s; NOUNROLL while('_'!=*--v); ++v;  // v->start of last indirect locative
-  k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
+  v=s; NOUNROLL while('_'!=*--v); ++v;  // v->start of next indirect locative, scanning right to left
+  k=s-v; s=v-2; s-=s[-1]=='_';    // k=length of indirect locative; s->end+1 of next name if any
   ASSERT(k<256,EVLIMIT);
-  if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
-   if(likely(g==0)){  // first time through
-    y=QCWORD(probex(k,v,SYMORIGIN,hash,jt->locsyms));  // look up local first.
+  if(likely(g==0)){  // first time through
+   if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
+    y=QCWORD(probex(k,v,SYMORIGIN,hash,locsym));  // look up local first.
     if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y,y);}  // if not local, start in implied locale.  ra to match syrd
-   }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
-   ASSERTN(y,EVVALUE,nfs(k,v,0));  // verify found.  If y was found, it has been ra()d
-   ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v,0),exitfa);   // verify atomic
-   if(AT(y)&(INT|B01)){  // atomic integer, numbered or debug locale
-    hash=BIV0(y);   // fetch locale number, overwriting the input parameter as needed below
-    if(hash<0){ASSERT(g==0,EVLOCALE) goto neglocnum;}   // negative locale number (debug frame) is valid only as last locale.  Transfer to the code to handle it
-    g=findnl(hash); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // nonnegative locale#, use it for the numbered locale
-   }else{
-    ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v,0),exitfa);  // verify box
-    x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
-     // Boxed integer - use that as bucketx, the locale number
-     g=findnl(BIV0(x)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // boxed integer, look it up
-    }else{
-     xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
-     ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v,0),exitfa);   // verify list (or atom)
-     ASSERTNGOTO(xn,EVLENGTH,nfs(k,v,0),exitfa);   // verify not empty
-     ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v,0),exitfa);  // verify string
-     ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v,0),exitfa);  // verify legal name
-     I bucketx=BUCKETXLOC(xn,xv);
-     RZGOTO(g=stfindcre(xn,xv,bucketx),exitfa);  // find st for the name
-    }
-   }
-  }else{DC s; 
-   // the 'name' is a number (it must be the last name).  It refers to debug stack frames, the first of which is numbered _1.  hash has the value of the number
-   // To avoid uncertainty as new frames are created, frames before the top suspended frame are ignored
-   ASSERT(hash<0,EVLOCALE)    // if index not now negative, it was too high
+   }else{DC d; 
+    // the 'name' is a number (it must be the last name, ___n).  It refers to debug stack frames, the first of which is numbered _1.  hash has the value of the number
+    // To avoid uncertainty as new frames are created, frames before the top suspended frame are ignored
+    ASSERT(hash<0,EVLOCALE)    // if index not now negative, it was too high
 neglocnum:;
-   I issusp;  //   issusp='we have hit a suspension frame'
-   for(s=jt->sitop,issusp=0;s;s=s->dclnk){issusp|=s->dcsusp; if(issusp&&s->dctype==DCCALL&&hash==-1)break; hash+=issusp&&s->dctype==DCCALL;} ASSERT(s,EVLOCALE); // skip to suspension; step to requested stack frame; error if # too low
-   g=s->dcloc;  // fetch locale to use for the lookup
+    ASSERT(v+k==u+n,EVLOCALE)  // negative indirect locative allowed only in last word (but it may be indirect there)
+    I issusp;  //   issusp='we have hit a suspension frame'
+    for(d=jt->sitop,issusp=0;d;d=d->dclnk){issusp|=d->dcsusp; if(issusp&&d->dctype==DCCALL&&hash==-1)break; hash+=issusp&&d->dctype==DCCALL;} ASSERT(d,EVLOCALE); // skip to suspension; step to requested stack frame; error if # too low
+    locsym=d->dcloc;  // fetch locale to use for the lookup, as the local table
+    if(u<s){v=s; NOUNROLL while('_'!=*--v); ++v; hash=nmhash(k,v);}   // if there is another locative, look ahead to it; update hash so that next lookup is for the second-last name
+    continue;  // advance to next locative, leaving g=0 to indicate we are still in a local table
+   }
+  }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
+  ASSERTN(y,EVVALUE,nfs(k,v,0));  // verify found.  If y was found, it has been ra()d
+  ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v,0),exitfa);   // verify atomic
+  if(AT(y)&(INT|B01)){  // atomic integer, numbered or debug locale
+numloc: ;  // integer locale whether boxed or not
+   hash=BIV0(y);   // fetch locale number, overwriting the input parameter as needed below
+   if(hash<0)goto neglocnum;   // negative locale number (debug frame) is valid only as last locale.  Transfer to the code to handle it
+   g=findnl(hash); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // nonnegative locale#, use it for the numbered locale
+  }else{   // 
+   ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v,0),exitfa);  // verify box
+   x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0){y=x; goto numloc;}  // Boxed integer - use that as the locale number
+// obsolete     g=findnl(BIV0(x)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // boxed integer, look it up
+// obsolete    }else{
+   xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
+   ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v,0),exitfa);   // verify list (or atom)
+   ASSERTNGOTO(xn,EVLENGTH,nfs(k,v,0),exitfa);   // verify not empty
+   ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v,0),exitfa);  // verify string
+   ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v,0),exitfa);  // verify legal name
+   I bucketx=BUCKETXLOC(xn,xv);
+   RZGOTO(g=stfindcre(xn,xv,bucketx),exitfa);  // find st for the name
+// obsolete    }
   }
  }
- R g;
+ g=g?g:locsym; R g;  // if we get here, good return.  If we stayed in the local table, return it
 exitfa: ;
  fa(y);
  R 0;

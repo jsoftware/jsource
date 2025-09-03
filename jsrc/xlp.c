@@ -1,7 +1,7 @@
 /* Copyright (c) 1990-2025, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
-/* Verbs: 128!:9 19 12 22 13 14                                            */
+/* Verbs: LP Foreign                                                       */
 
 #ifdef _ASSERT2
 #undef _ASSERT

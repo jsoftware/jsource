@@ -1006,7 +1006,6 @@
     <ClCompile Include="..\..\jsrc\vf.c" />
     <ClCompile Include="..\..\jsrc\vfft.c" />
     <ClCompile Include="..\..\jsrc\vfrom.c" />
-    <ClCompile Include="..\..\jsrc\vfromlp.c" />
     <ClCompile Include="..\..\jsrc\vfromsp.c" />
     <ClCompile Include="..\..\jsrc\vg.c" />
     <ClCompile Include="..\..\jsrc\vgauss.c" />
@@ -1055,6 +1054,7 @@
     <ClCompile Include="..\..\jsrc\xh.c" />
     <ClCompile Include="..\..\jsrc\xi.c" />
     <ClCompile Include="..\..\jsrc\xl.c" />
+    <ClCompile Include="..\..\jsrc\xlp.c" />
     <ClCompile Include="..\..\jsrc\xo.c" />
     <ClCompile Include="..\..\jsrc\xs.c" />
     <ClCompile Include="..\..\jsrc\xsha.c" />

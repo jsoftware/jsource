@@ -195,7 +195,6 @@ OBJS=  \
  ../../jsrc/vf.o \
  ../../jsrc/vfft.o \
  ../../jsrc/vfrom.o \
- ../../jsrc/vfromlp.o \
  ../../jsrc/vfromsp.o \
  ../../jsrc/vg.o \
  ../../jsrc/vgauss.o \
@@ -244,6 +243,7 @@ OBJS=  \
  ../../jsrc/xh.o \
  ../../jsrc/xi.o \
  ../../jsrc/xl.o \
+ ../../jsrc/xlp.o \
  ../../jsrc/xo.o \
  ../../jsrc/xs.o \
  ../../jsrc/xsha.o \

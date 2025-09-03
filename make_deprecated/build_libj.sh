@@ -308,7 +308,6 @@ OBJS="\
  vf.o \
  vfft.o \
  vfrom.o \
- vfromlp.o \
  vfromsp.o \
  vg.o \
  vgauss.o \
@@ -349,6 +348,7 @@ OBJS="\
  xh.o \
  xi.o \
  xl.o \
+ xlp.o \
  xo.o \
  xs.o \
  xsha.o \

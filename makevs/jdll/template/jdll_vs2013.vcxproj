@@ -908,6 +908,7 @@
     <ClCompile Include="..\..\jsrc\vf.c" />
     <ClCompile Include="..\..\jsrc\vfft.c" />
     <ClCompile Include="..\..\jsrc\vfrom.c" />
+    <ClCompile Include="..\..\jsrc\vfromlp.c" />
     <ClCompile Include="..\..\jsrc\vfromsp.c" />
     <ClCompile Include="..\..\jsrc\vg.c" />
     <ClCompile Include="..\..\jsrc\vgauss.c" />

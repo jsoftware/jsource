@@ -217,6 +217,11 @@ if [ -n "$_ASSERT" ]; then
  common="$common -D_ASSERT"
 fi
 
+# enforce _ASSERT on file level
+if [ -n "$_ASSERT2" ]; then
+ common="$common -D_ASSERT2"
+fi
+
 if [ -n "$_NAMETRACK" ]; then
  common="$common -DNAMETRACK=$_NAMETRACK"
 fi

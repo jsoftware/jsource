@@ -308,6 +308,7 @@ OBJS="\
  vf.o \
  vfft.o \
  vfrom.o \
+ vfromlp.o \
  vfromsp.o \
  vg.o \
  vgauss.o \

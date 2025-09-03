@@ -65,6 +65,9 @@ endif
 ifneq ($(_ASSERT),)
 FDEBUG := $(FDEBUG) /D_ASSERT
 endif
+ifneq ($(_ASSERT2),)
+FDEBUG := $(FDEBUG) /D_ASSERT2
+endif
 ifneq ($(_NAMETRACK),)
 FDEBUG := $(FDEBUG) /DNAMETRACK=$(_NAMETRACK)
 endif
@@ -194,6 +197,7 @@ OBJS=  \
  ../../jsrc/vf.o \
  ../../jsrc/vfft.o \
  ../../jsrc/vfrom.o \
+ ../../jsrc/vfromlp.o \
  ../../jsrc/vfromsp.o \
  ../../jsrc/vg.o \
  ../../jsrc/vgauss.o \

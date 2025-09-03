@@ -65,6 +65,9 @@ FDEBUG := $(FDEBUG) /DMEMAUDIT=$(_MEMAUDIT)
 !if ""!="$(_ASSERT)"
 FDEBUG := $(FDEBUG) /D_ASSERT
 !endif
+!if ""!="$(_ASSERT2)"
+FDEBUG := $(FDEBUG) /D_ASSERT2
+!endif
 !if ""!="$(_NAMETRACK)"
 FDEBUG := $(FDEBUG) /DNAMETRACK=$(_NAMETRACK)
 !endif
@@ -194,6 +197,7 @@ OBJS=  \
  ../../jsrc/vf.o \
  ../../jsrc/vfft.o \
  ../../jsrc/vfrom.o \
+ ../../jsrc/vfromlp.o \
  ../../jsrc/vfromsp.o \
  ../../jsrc/vg.o \
  ../../jsrc/vgauss.o \

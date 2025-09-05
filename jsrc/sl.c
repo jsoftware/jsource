@@ -129,7 +129,7 @@ static I jtinstallnl(J jt, A l){
 }
 
 // return the address of the locale block for number n, or 0 if not found
-A jtfindnl(J jt, I n){A z=0;
+A jtfindnl(J jt, I n){A z=0;  // init to failure
  READLOCK(JT(jt,stlock))
  I probe=HASHSLOT(n,AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find match or an empty.
  NOUNROLL while(IAV1(JT(jt,stnum))[probe]){if(LOCNUM((A)IAV1(JT(jt,stnum))[probe])==n){z=(A)IAV1(JT(jt,stnum))[probe]; goto exit;} if(unlikely(--probe<0))probe=AN(JT(jt,stnum))-1;}  // return if locale match; wrap around at beginning of block

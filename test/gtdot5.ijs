@@ -32,7 +32,7 @@ p2 =: ".
 
 p2=: 3 : 0
 for_i. i.100 do.
-ALL=: ALL, ,~(3 T.'')
+ALL=: ALL, ,~({. 3 T.'')
 end.
 i. 0 0
 )
@@ -47,7 +47,7 @@ i. 0 0
 p3=: 3 : 0
 ALL=. 0$0
 for_i. i.100 do.
-ALL=. ALL, (3 T.'')
+ALL=. ALL, ({. 3 T.'')
 end.
 #ALL
 )
@@ -61,7 +61,7 @@ i. 0 0
 p4=: 3 : 0
 ALL=. 0 0$0
 for_i. i.100 do.
-ALL=. ALL, ,~(3 T.'')
+ALL=. ALL, ,~({. 3 T.'')
 end.
 #ALL
 )
@@ -148,21 +148,21 @@ EMPTY
 }}
 
 p1=: {{
-for_i. (1000 * 3 T. '') + i.1e7 do.
+for_i. (1000 * {. 3 T. '') + i.1e7 do.
 ALL=: ALL, i
 end.
 EMPTY
 }}
 
 p1=: {{
-for_i. (1000 * 3 T. '') + i.1e7 do.
+for_i. (1000 * {. 3 T. '') + i.1e7 do.
 ALL=: ALL, ,i
 end.
 EMPTY
 }}
 
 p1=: {{
-for_i. (1000 * 3 T. '') + i.1e7 do.
+for_i. (1000 * {. 3 T. '') + i.1e7 do.
 ALL=: ALL, ,i [ echo i
 end.
 EMPTY

@@ -19,7 +19,7 @@ wslhack =: (nn$0 0,wsl) +. ]
 
 test  =: 3 : ('((,nn)-:$y) *. *./y e."_1 nn$''rwx'',.''-''')
 
-brandnew =: 'brandnew',(":2!:6''),'_',":3&T.''
+brandnew =: 'brandnew',(":2!:6''),'_',":{.3&T.''
 erase ::1: ((brandnew,'/')&,)&.> {."1[ 1!:0<brandnew,'/*'
 erase ::1: <brandnew
 d =: <brandnew
@@ -27,7 +27,7 @@ mkdir d
 test perm d
 erase d
 
-f =: <jpath ((UNAME-:'Android'){::'~temp/';'~bin/'),'foogoo5.x',(":2!:6''),'_',":3&T.''
+f =: <jpath ((UNAME-:'Android'){::'~temp/';'~bin/'),'foogoo5.x',(":2!:6''),'_',":{.3&T.''
 'foo upon thee' write f
 test perm f
 

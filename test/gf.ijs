@@ -87,7 +87,7 @@ NB. Verify that f. verbs are functionally equivalent, without checking reps
 i =: 0&$: : s
 'domain error' -: ex 'i&> b. 1'  NB. used to hang
 
-load foo [(3!:6 'a001 =: ]',LF,'a001`]@.1: f.') 1!:2 <foo=: jpath '~temp/foo','.ijs',~(":2!:6''),'_',":3&T.''
+load foo [(3!:6 'a001 =: ]',LF,'a001`]@.1: f.') 1!:2 <foo=: jpath '~temp/foo','.ijs',~(":2!:6''),'_',":{.3&T.''
 1!:55 <foo
 
 

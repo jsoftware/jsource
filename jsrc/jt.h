@@ -173,7 +173,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATETERMINATE (1LL<<TASKSTATETERMINATEX)
 #define TASKSTATEFUTEXWAKEX 4  // wakeall is using jt->futexwt; don't delete it.  Accessed with RFO cycles
 #define TASKSTATEFUTEXWAKE (1LL<<TASKSTATEFUTEXWAKEX)
- C threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
+ B threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
  C scriptskipbyte;  // when not NUL, reading script discards lines up till the first one that starts NB. followed by skipbyte
  C dissectrunning;  // set by the dissect instrumented sentence

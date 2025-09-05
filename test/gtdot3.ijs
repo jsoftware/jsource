@@ -57,11 +57,11 @@ assert. 2 <: 1 T. ''
 NB. verify that tasks go to different threads if possible.  We can ensure this only for as many threads as there are cores
 setth nwthreads=. 1 >. <: 0 { 8 T. ''  NB. one worker thread per core, -1
 wthr nwthreads
-assert. (>: i. nwthreads) *./@e. aaa__   =: > (3&T.@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
+assert. (>: i. nwthreads) *./@e. > ({.@(3&T.)@'')@(6!:3) t.'' "(0)  (0.1 #~ <:nwthreads), 0.6
 wthr nwthreads
-assert. (>: i. nwthreads) *./@e. > (3&T.@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
+assert. (>: i. nwthreads) *./@e. > ({.@(3&T.)@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
 wthr nwthreads
-assert. (ccc__   =: ((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> bbb__   =: 4 T. aaa__   =: (3&T.@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
+assert. (((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> 4 T. ({.@(3&T.)@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
 wthr nwthreads
 setth nwthreads=. N   NB. Back to testing many threads
 assert. (nwthreads-1) = 1 T. '' [ 55 T. ''

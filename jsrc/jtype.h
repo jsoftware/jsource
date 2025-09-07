@@ -211,7 +211,7 @@ struct AD {
         // (16) in permuted W block passed from /. to ;., pointer to information on where frets are in a (17) in all NAME blocks for local symbol tables, lookaside pointer to value if any (QCSYMVAL semantics)
         // (18) in non-local SYMB, used as a lock by user functions (16!:2)
   A back; // For VIRTUAL blocks, points to backing block
-  A jobpyx;    // for user JOB blocks, points to the pyx
+  A jobpyx;    // for user JOB blocks, points to the pyx or (for task with locales) pyx list
   A *zaploc;  // For all blocks allocated by GA, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
   A aarg;  // for /.., the original a arg
@@ -227,7 +227,7 @@ struct AD {
  } tproxy;
  I c;  // 4 usecount
 //  NOTE!! result.h faux cellshape block depends on n, r, and s being in place from here to the end of this struct, with 2 Is from n to s
- I n;  // 5 # atoms - always 1 for sparse arrays
+ I n;  // 5 # atoms - always 1 for sparse arrays.  In JOB block for task with locales, the thread mask
 #if C_LE
  RANKT r;  // 6 rank.  Used as flags in SYMB types (i. e. locales)
  UC filler;
@@ -1191,7 +1191,7 @@ typedef struct {
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
     A cachedlkp;  //  for namerefs ('name'~), the cached value, or 0 if not cached.   No QC semantics
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
-    I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
+    I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only 32+=locales given
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block; for $!.v, 0 if the ultimate routine is ($,), 1 if $
     I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
     UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW

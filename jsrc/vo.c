@@ -73,7 +73,7 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // inplaceable with a free on the tstack.
   // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
-  A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAVn(f,z);  // save tstack info before allocation
+  A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAVn(f,z);  // save tstack info before allocation.  No errors from here -  we have hijacked the tstack
   JMCDECL(endmask) JMCSETMASK(endmask,k,0)   // set mask for JMCR - OK to copy SZIs
   A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
   while(n--){

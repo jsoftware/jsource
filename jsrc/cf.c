@@ -364,7 +364,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    GAT0(z,INT,2,1); IAV1(z)[0]=rtnx&3; IAV1(z)[1]=rtnx>>2;  // install parts of speech in order
    jteformat(jt,ds(CENQUEUE),z,zeroionei(1),0); R0;
   }
-  if(rtn==0)R df1(z,t==VERB?a:w,t==VERB?w:a);  // V N, N/V A: we must execute immediately rather than returning a modifier for the trident.  VERB means N/V A
+  if(rtn==0)R df1(z,t==VERB?a:w,t==VERB?w:a);  // V N, N/V A: we must execute immediately rather than returning a modifier for the trident.  VERB means N/V A.  Execution is x,self,self
   // special processing: for display purposes only, we flag the gerunds in gerund@. gerund` gerund`:   `gerund ^:gerund
   if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
   if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound

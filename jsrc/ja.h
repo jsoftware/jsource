@@ -368,7 +368,7 @@
 #define fa(x) fajt(jt,(x))  // when the block will usually NOT be deleted
 #define falikely(x) fa(x)  // when the block will usually be deleted  (not used yet)
 #define fatype(x,tt) {if(likely(AC(x)<=ACUC1) || (likely(!ACISPERM(AC(x))) && unlikely(faprobe(x)<2)))jtfamf(jt,x,tt);}  // when type is known (i. e. NAME)
-#define fanamedacv(x) {I Zc=AC(x); if(likely(!ACISPERM(Zc)))if(unlikely(faprobe(x)<2))jtfamf(jt,x,AT(x));} // block is known to be ACV, recursive, AC>0, and almost always AC>1
+#define fanamedacv(x) {I Zc=AC(x); if(likely(!ACISPERM(Zc)))if(unlikely(faprobe(x)<2))jtfamf(jt,x,VERB);} // block is known to be ACV, recursive, AC>0, and almost always AC>1
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x))
 // Within jtfamf when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.
@@ -919,21 +919,22 @@ extern void jfree4gmp(void*,size_t);
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block.  ras() does include rifv
-#define rasv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x,sv)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
-#define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
-#define racontents(x)   {I c=AC(x); if(MEMAUDIT!=0&&c<0)SEGFAULT; if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); radescend(x)}}  // Used on contents of box, which cannot have AC<0
-#define raname(x) {if(likely(!ACISPERM(AC(x))))__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);}  // NAME is not inplaceable, seldom local; just add 1.  No traverse needed on ra
+#define raincr(x) __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL)
+#define rasv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else raincr(x); radescend(x,sv)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
+#define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else raincr(x); radescend(x)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
+#define racontents(x)   {I c=AC(x); if(MEMAUDIT!=0&&c<0)SEGFAULT; if(likely(!ACISPERM(c))){raincr(x); radescend(x)}}  // Used on contents of box, which cannot have AC<0
+#define raname(x) {if(likely(!ACISPERM(AC(x))))raincr(x);}  // NAME is not inplaceable, seldom local; just add 1.  No traverse needed on ra
 // In the following pos means the block is known to be assigned already, thus usecount>0 and recursive; acv means known non-noun; gbl means global name (always recursive usecount); local means local symtab
 // sv means the last arg is saved/restored through the call; qcg supplies the QC type; uncond means the arg cannot be perm/sparse/need recursion, so just increment
-#define rapos(x,sv)   {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(ISSPARSE(AT(x))))sv=jtra((x),SPARSE,sv);}}  // better a misbranch than an atomic instruction if c<0
-#define raposlocal(x,sv)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(ISSPARSE(AT(x))))sv=jtra((x),SPARSE,sv);}}  // better a misbranch than an atomic instruction if c<0
-#define raposacv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);}}  // ACV is guaranteed recursive
-#define raposgblqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){__atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
-#define raposlocalqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
-#define rarecurknown(x)   {I c=AC(x); if(likely(!ACISPERM(c))){AFLAGSETKNOWN(w); if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL); I tt=AT(x); if(unlikely(ISSPARSE(tt)))x=jtra((x),(tt),x);}}  // ra but recursibles know to be recursive
+#define rapos(x,sv)   {I c=AC(x); if(likely(!ACISPERM(c))){raincr(x); if(unlikely(ISSPARSE(AT(x))))sv=jtra((x),SPARSE,sv);}}  // better a misbranch than an atomic instruction if c<0
+#define raposlocal(x,sv)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else raincr(x); if(unlikely(ISSPARSE(AT(x))))sv=jtra((x),SPARSE,sv);}}  // better a misbranch than an atomic instruction if c<0
+#define raposacv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){raincr(x);}}  // ACV is guaranteed recursive
+#define raposgblqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){raincr(x); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
+#define raposlocalqcgsv(x,qct,sv) {I c=AC(x); if(likely(!ACISPERM(c))){if(c==1)AC(x)=ACUC2;else raincr(x); if(unlikely(qct==VALTYPESPARSE))sv=jtra((x),SPARSE,sv);}}  // must be recursive usecount but may be sparse
+#define rarecurknown(x)   {I c=AC(x); if(likely(!ACISPERM(c))){AFLAGSETKNOWN(w); if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else raincr(x); I tt=AT(x); if(unlikely(ISSPARSE(tt)))x=jtra((x),(tt),x);}}  // ra but recursibles know to be recursive
 // NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
 // We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.  the tstackend variant checks to see if the value is the end of the stack
-#define raczapcommon(x,cond,zapfn)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){zapfn AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL);} \
+#define raczapcommon(x,cond,zapfn)   {I c=AC(x); if(likely(!ACISPERM(c))){if(likely(cond)){zapfn AC(x)=c&=~ACINPLACE;}else{if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else raincr(x);} \
                                     radescend(x)}}
                                     // use ZAP for inplaceable blocks; don't increment PERMANENT blocks.  Use only if x's stack entry is in the current frame
                                     // cond must be true only if c<0

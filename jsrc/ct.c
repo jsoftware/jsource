@@ -569,7 +569,7 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
  JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
 // obsolete  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; // the call is either noun self x or noun noun self.  See which, select self.  dyad is 0 or 1
 // obsolete // A self=AT(arg2)&VERB?arg2:arg3; // the call is either noun self self or noun noun self.  See which, select self.
- I taskflags=FAV(self)->localuse.lu1.forcetask, localesx=FAV(self)->localuse.lu1.forcetask>>32;  // flags: 0-7=pool, 8=workeronly, 9=mask0 set 10=locales given  32+=localesx (-1 if no locales)
+ I taskflags=FAV(self)->localuse.lu1.forcetask, localesx=FAV(self)->localuse.lu1.forcetask>>16;  // flags: 0-7=pool, 8=workeronly, 9=mask0 set 10=locales given  16+=localesx (-1 if no locales)
  JOBQ *jobq=&(*JT(jt,jobqueues))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use, point to jobq info for selected thread
  // create the pyx/global info: if no locales, one pyx and the current jt->global; if locales, a list of pyxes and the user's list of locales.  We store these in the job.  They are what we ra and fa
  // Also fill in n, ns_mask
@@ -811,7 +811,7 @@ F2(jttdot){F12IP;
  nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0 (no mask given)
  // parms read, install them into the block for t. verb
  A z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
- FAV(z)->localuse.lu1.forcetask=poolno+(nolocal<<8)+(localex<<32);  // save the t. options for execution.  Bits 0-7=poolno, 8=worker only, 32+=box# in w of the locales keyword (-1 if none) 
+ FAV(z)->localuse.lu1.forcetask=poolno+(nolocal<<8)+(localex<<16);  // save the t. options for execution.  Bits 0-7=poolno, 8=worker only, 16+=box# in w of the locales keyword (-1 if none) 
  R atco(ds(CBOX),z);  // use <@: to get BOXATOP flags
 }
 

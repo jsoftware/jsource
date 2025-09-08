@@ -68,6 +68,9 @@ endif
 ifneq ($(_ASSERT2),)
 FDEBUG := $(FDEBUG) /D_ASSERT2
 endif
+ifneq ($(_NAN),)
+FDEBUG := $(FDEBUG) /D_NAN
+endif
 ifneq ($(_NAMETRACK),)
 FDEBUG := $(FDEBUG) /DNAMETRACK=$(_NAMETRACK)
 endif

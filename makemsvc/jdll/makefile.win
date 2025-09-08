@@ -68,6 +68,9 @@ FDEBUG := $(FDEBUG) /D_ASSERT
 !if ""!="$(_ASSERT2)"
 FDEBUG := $(FDEBUG) /D_ASSERT2
 !endif
+!if ""!="$(_NAN)"
+FDEBUG := $(FDEBUG) /D_NAN
+!endif
 !if ""!="$(_NAMETRACK)"
 FDEBUG := $(FDEBUG) /DNAMETRACK=$(_NAMETRACK)
 !endif

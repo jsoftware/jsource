@@ -1,6 +1,10 @@
 #ifndef J_SLEEF_H
 #define J_SLEEF_H
 
+#ifdef _OPENMP
+#define SLEEF_ENABLE_OMP_SIMD
+#endif
+
 #if SLEEF
 #if defined(__aarch64__)
 #include "../sleef/include/aarch64/sleefinline_advsimd.h"

@@ -26,7 +26,7 @@ ifeq ($(TARGET_ARCH_ABI),armeabi)
   LOCAL_LDFLAGS += -fopenmp
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX2=1 -DPYXES=1 -DSLEEF=1 -DSLEEFQUAD=1 -DENABLE_SSE2 -DHAVE_SSSE3=1 -DHAVE_SSE42=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-unknown-warning-option -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-pointer-to-int-cast -Wno-incompatible-function-pointer-types -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -msse4.2 -mpopcnt -fno-stack-protector -Wno-sign-compare -Wno-deprecated-non-prototype -I../mpir/include
+  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX2=1 -DPYXES=1 -DSLEEF=0 -DSLEEFQUAD=1 -DENABLE_SSE2 -DHAVE_SSSE3=1 -DHAVE_SSE42=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-unknown-warning-option -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-pointer-to-int-cast -Wno-incompatible-function-pointer-types -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -msse4.2 -mpopcnt -fno-stack-protector -Wno-sign-compare -Wno-deprecated-non-prototype -I../mpir/include
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif

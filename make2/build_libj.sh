@@ -193,6 +193,7 @@ else
 fi
 
 case "$jplatform64" in 
+ */j64) USE_SLEEF=0;USE_SLEEFQUAD=1;;
  raspberry/j32*) USE_SLEEF=0;;
  wasm*) USE_SLEEF=0;;
  *) USE_SLEEF="${USE_SLEEF:=1}";;
@@ -200,9 +201,13 @@ esac
 USE_SLEEFQUAD="${USE_SLEEFQUAD:=$USE_SLEEF}"
 if [ $USE_SLEEF -eq 1 ] ; then
  common="$common -DSLEEF=1"
+else
+ common="$common -DSLEEF=0"
 fi
 if [ $USE_SLEEFQUAD -eq 1 ] ; then
  common="$common -DSLEEFQUAD=1"
+else
+ common="$common -DSLEEFQUAD=0"
 fi
 
 if [ "${USE_GMP_H:=1}" -eq 1 ] ; then

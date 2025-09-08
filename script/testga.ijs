@@ -75,14 +75,8 @@ try. echo 22 T. 0 catch. echo 'get affinity error' end.
 ''
 )
 
-echo <.@(2&^.) _
-echo >.@(2&^.) _
-echo <.@(2&^.) 0
-echo >.@(2&^.) 0
-echo datatype <.@(2&^.) _
-echo datatype >.@(2&^.) _
-echo datatype <.@(2&^.) 0
-echo datatype >.@(2&^.) 0
+echo (2&^.) _.
+echo datatype (2&^.) _.
 
 FINISH=: 3 : 0
 msg=. 9!:14''

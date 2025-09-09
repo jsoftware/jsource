@@ -405,8 +405,6 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
-      _ASSERT: 1
-      _NAN: 1
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 

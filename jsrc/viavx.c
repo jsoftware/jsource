@@ -747,7 +747,7 @@ A jtindexofsub(J jtfg,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(0079)
   // IIOREPS indicates i./i:/e./key, which are candidates for reversed search and sequential search.  key will never cause a reversed search, but
   // it must not use sequential search if the comparison is inexact, because then it would conflict with nub and just generally fail because values not in
   // the nub could match later values leaving omitted values
-  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((0x100000&((UI4*)&jt->cct)[1])>=(UI)((at)&(FL|CMPX|BOX)))<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash) /. is OK if a is not float
+  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((0x100000&((UI4*)&jt->cct)[1])>=(UI)((at)&(FL|CMPX|QP|SP|BOX))                                                                 )<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash) /. is OK if a is not float
   // *************************************** test for linear search *******************************************
   // The comparison uses the fact that cct can never go above 1.0, which is 0x3ff0000000000000 in double precision.  To avoid integer-float conversions, we just strip out the bit that signifies
   // 1.0.  The expression then means 'tolerance=1.0 or intolerant comparison'

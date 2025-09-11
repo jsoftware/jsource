@@ -111,11 +111,11 @@ name##out: \
 // ac is # outer cells of a, asct=#items in 1 inner cell, wc is #outer search cells, wsct is #items to search for per outer cell
 // n is #atoms in a cell
 A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*v,*zv;
- p=ac>1?asct:0; q=REPSGN(1-(wc|wsct)); p*=n; q&=n;  // q=1<wc||1<wsct; number of atoms to move between repeats p=*atoms of a to move between repeats
+ p=ac>1?asct:0; q=REPSGN(1-(wc|wsct));  // q=1<wc||1<wsct; number of atoms to move between repeats p=*atoms of a to move between repeats
  zv=voidAV(z); u=voidAV(a); v=voidAV(w);
  // Create a pseudotype 19 (=XDX) for intolerant comparison.
- I at=AT(a); at|=(at&C2T+C4T)>>(C2TX-INT2X); // shift C2T/C4T (17/18) down to INT2/INT4 (9/10)
- I bit=CTTZ(at); bit=(at&(jt->cct==1.0?FL:0))?XDX:bit;
+ I at=AT(a), atexactflmsk=AT(a)&FL+CMPX+QP&~(I)((I4*)&jt->cct)[1]; at|=(at&C2T+C4T)>>(C2TX-INT2X); // leave float types only if exact comparison (cct bits 34-51=0); shift C2T/C4T (17/18) down to INT2/INT4 (9/10)
+ I bit=CTTZ(at); n<<=(atexactflmsk&CMPX+QP)!=0; p*=n; q&=n; bit=(atexactflmsk!=0)?XDX:bit;  // switch intolerant E/CMPX to XDX double-length
  switch(IOSCCASE(bit,n>1,mode)){
  SCDO(B01X,C,x!=av[j]      );
  SCDO(LITX,C,x!=av[j]      );
@@ -157,7 +157,7 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
  SCDON(INT2X,S, wvv[jj]!=avv[jj]      );
  SCDON(INT4X,C4,wvv[jj]!=avv[jj]      );
  SCDON(CMPXX,Z, !zeq(wvv[jj], avv[jj]));
- SCDON(QPX,E, !NEE(wvv[jj], avv[jj]));
+ SCDON(QPX,E, NEE(wvv[jj], avv[jj]));
  SCDON(XNUMX,A, !equ(wvv[jj], avv[jj]));
  SCDON(RATX,Q, !QEQ(wvv[jj], avv[jj]));
  SCDON(INTX,I, wvv[jj]!=avv[jj]      );

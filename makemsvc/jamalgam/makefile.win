@@ -1,3 +1,6 @@
+!if "1"=="$(USE_LINENOISE)"
+READLINE=1
+!endif
 !if "1"=="$(JAVX512)"
 FAVX512= /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=skylake-avx512 -mno-vzeroupper
 !elseif "1"=="$(JAVX2)"
@@ -67,6 +70,9 @@ FDEBUG := $(FDEBUG) /D_ASSERT
 !endif
 !if ""!="$(_ASSERT2)"
 FDEBUG := $(FDEBUG) /D_ASSERT2
+!endif
+!if ""!="$(_NAN)"
+FDEBUG := $(FDEBUG) /D_NAN
 !endif
 !if ""!="$(_NAMETRACK)"
 FDEBUG := $(FDEBUG) /DNAMETRACK=$(_NAMETRACK)

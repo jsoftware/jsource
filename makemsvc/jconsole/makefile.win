@@ -1,4 +1,6 @@
-# READLINE=1
+!if "1"=="$(USE_LINENOISE)"
+READLINE=1
+!endif
 !if "1"=="$(USE_PYXES)"
 PTHREADINC = -I../../pthreads4w/include
 DPYXES = /DPYXES=1

@@ -227,6 +227,10 @@ if [ -n "$_ASSERT2" ]; then
  common="$common -D_ASSERT2"
 fi
 
+if [ -n "$_NAN" ]; then
+ common="$common -D_NAN"
+fi
+
 if [ -n "$_NAMETRACK" ]; then
  common="$common -DNAMETRACK=$_NAMETRACK"
 fi

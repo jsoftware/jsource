@@ -348,7 +348,7 @@ int main(int argc, char* argv[])
 #endif
   if(!norl&&_isatty(_fileno(stdin))){
    breadline=readlineinit();
-#if !defined(__wasm__)
+#if !defined(_WIN32) && !defined(__wasm__)
    dlerror(); //clear error
 #endif
   }

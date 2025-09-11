@@ -27,193 +27,7 @@
 #endif
 #endif
 
-/* linenoise.c -- guerrilla line editing library against the idea that a
- * line editing lib needs to be 20,000 lines of C code.
- *
- * You can find the latest source code at:
- *
- *   http://github.com/msteveb/linenoise
- *   (forked from http://github.com/antirez/linenoise)
- *
- * Does a number of crazy assumptions that happen to be true in 99.9999% of
- * the 2010 UNIX computers around.
- *
- * ------------------------------------------------------------------------
- *
- * Copyright (c) 2010, Salvatore Sanfilippo <antirez at gmail dot com>
- * Copyright (c) 2010, Pieter Noordhuis <pcnoordhuis at gmail dot com>
- * Copyright (c) 2011, Steve Bennett <steveb at workware dot net dot au>
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *  *  Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *  *  Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * ------------------------------------------------------------------------
- *
- * References:
- * - http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
- * - http://www.3waylabs.com/nw/WWW/products/wizcon/vt220.html
- *
- * Bloat:
- * - Completion?
- *
- * Unix/termios
- * ------------
- * List of escape sequences used by this program, we do everything just
- * a few sequences. In order to be so cheap we may have some
- * flickering effect with some slow terminal, but the lesser sequences
- * the more compatible.
- *
- * EL (Erase Line)
- *    Sequence: ESC [ 0 K
- *    Effect: clear from cursor to end of line
- *
- * CUF (CUrsor Forward)
- *    Sequence: ESC [ n C
- *    Effect: moves cursor forward n chars
- *
- * CR (Carriage Return)
- *    Sequence: \r
- *    Effect: moves cursor to column 1
- *
- * The following are used to clear the screen: ESC [ H ESC [ 2 J
- * This is actually composed of two sequences:
- *
- * cursorhome
- *    Sequence: ESC [ H
- *    Effect: moves the cursor to upper left corner
- *
- * ED2 (Clear entire screen)
- *    Sequence: ESC [ 2 J
- *    Effect: clear the whole screen
- *
- * == For highlighting control characters, we also use the following two ==
- * SO (enter StandOut)
- *    Sequence: ESC [ 7 m
- *    Effect: Uses some standout mode such as reverse video
- *
- * SE (Standout End)
- *    Sequence: ESC [ 0 m
- *    Effect: Exit standout mode
- *
- * == Only used if TIOCGWINSZ fails ==
- * DSR/CPR (Report cursor position)
- *    Sequence: ESC [ 6 n
- *    Effect: reports current cursor position as ESC [ NNN ; MMM R
- *
- * == Only used in multiline mode ==
- * CUU (Cursor Up)
- *    Sequence: ESC [ n A
- *    Effect: moves cursor up n chars.
- *
- * CUD (Cursor Down)
- *    Sequence: ESC [ n B
- *    Effect: moves cursor down n chars.
- *
- * win32/console
- * -------------
- * If __MINGW32__ is defined, the win32 console API is used.
- * This could probably be made to work for the msvc compiler too.
- * This support based in part on work by Jon Griffiths.
- */
-
-#ifdef _WIN32 /* Windows platform, either MinGW or Visual Studio (MSVC) */
-#include <windows.h>
-#include <fcntl.h>
-#define USE_WINCONSOLE
-#ifdef __MINGW32__
-#define HAVE_UNISTD_H
-#else
-/* Microsoft headers don't like old POSIX names */
-#define strdup _strdup
-#if defined(MMSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif
-#endif
-#else
-#include <termios.h>
-#include <sys/ioctl.h>
-#include <poll.h>
-#define USE_TERMIOS
-#define HAVE_UNISTD_H
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <assert.h>
-#include <errno.h>
-#include <string.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
-#include "linenoise.h"
-// #ifndef STRINGBUF_H
-// #include "stringbuf.h"
-// #endif
-// #include "utf8.h"
-
-
-/**
- * UTF-8 utility functions
- *
- * (c) 2010-2019 Steve Bennett <steveb@workware.net.au>
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * * Redistributions of source code must retain the above copyright notice,
- *   this list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-// #include "utf8.h"
-
+#line 1 "utf8.h"
 #ifndef UTF8_UTIL_H
 #define UTF8_UTIL_H
 
@@ -321,6 +135,44 @@ int utf8_width(int ch);
 #endif
 
 #endif
+#line 1 "utf8.c"
+/**
+ * UTF-8 utility functions
+ *
+ * (c) 2010-2019 Steve Bennett <steveb@workware.net.au>
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * * Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#ifndef UTF8_UTIL_H
+#include "utf8.h"
+#endif
+
 #ifdef USE_UTF8
 int utf8_fromunicode(char *p, unsigned uc)
 {
@@ -518,9 +370,7 @@ static const struct utf8range unicode_range_wide[] = {
         { 0x1f9c0, 0x1f9c0 },   { 0x1f9d0, 0x1f9e6 },   { 0x20000, 0x2fffd },   { 0x30000, 0x3fffd },
 };
 
-#ifdef ARRAYSIZE
 #undef ARRAYSIZE
-#endif
 #define ARRAYSIZE(A) sizeof(A) / sizeof(*(A))
 
 static int cmp_range(const void *key, const void *cm)
@@ -562,24 +412,16 @@ int utf8_width(int ch)
     return 1;
 }
 #endif
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <assert.h>
-
-// #ifndef STRINGBUF_H
-// #include "stringbuf.h"
-// #endif
-// #ifdef USE_UTF8
-// #include "utf8.h"
-// #endif
+#line 1 "stringbuf.h"
 #ifndef STRINGBUF_H
 #define STRINGBUF_H
-
-/* (c) 2017 Workware Systems Pty Ltd  -- All Rights Reserved */
-
+/**
+ * resizable string buffer
+ *
+ * (c) 2017-2020 Steve Bennett <steveb@workware.net.au>
+ *
+ * See utf8.c for licence details.
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -625,7 +467,7 @@ void sb_free(stringbuf *sb);
 stringbuf *sb_copy(stringbuf *sb);
 
 /**
- * Returns the length of the buffer.
+ * Returns the byte length of the buffer.
  * 
  * Returns 0 for both a NULL buffer and an empty buffer.
  */
@@ -675,7 +517,7 @@ static inline char *sb_str(const stringbuf *sb)
 }
 
 /**
- * Inserts the given string *before* (zero-based) 'index' in the stringbuf.
+ * Inserts the given string *before* (zero-based) byte 'index' in the stringbuf.
  * If index is past the end of the buffer, the string is appended,
  * just like sb_append()
  */
@@ -708,6 +550,28 @@ char *sb_to_string(stringbuf *sb);
 #endif
 
 #endif
+#line 1 "stringbuf.c"
+/**
+ * resizable string buffer
+ *
+ * (c) 2017-2020 Steve Bennett <steveb@workware.net.au>
+ *
+ * See utf8.c for licence details.
+ */
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <assert.h>
+
+#ifndef STRINGBUF_H
+#include "stringbuf.h"
+#endif
+#ifdef USE_UTF8
+#ifndef UTF8_UTIL_H
+#include "utf8.h"
+#endif
+#endif
 
 #define SB_INCREMENT 200
 
@@ -732,7 +596,7 @@ void sb_free(stringbuf *sb)
 	free(sb);
 }
 
-void sb_realloc(stringbuf *sb, int newlen)
+static void sb_realloc(stringbuf *sb, int newlen)
 {
 	sb->data = (char *)realloc(sb->data, newlen);
 	sb->remaining = newlen - sb->last;
@@ -762,7 +626,11 @@ char *sb_to_string(stringbuf *sb)
 {
 	if (sb->data == NULL) {
 		/* Return an allocated empty string, not null */
+#ifdef _WIN32
+		return _strdup("");
+#else
 		return strdup("");
+#endif
 	}
 	else {
 		/* Just return the data and free the stringbuf structure */
@@ -860,11 +728,166 @@ void sb_clear(stringbuf *sb)
 #endif
 	}
 }
+#line 1 "linenoise.c"
+/* linenoise.c -- guerrilla line editing library against the idea that a
+ * line editing lib needs to be 20,000 lines of C code.
+ *
+ * You can find the latest source code at:
+ *
+ *   http://github.com/msteveb/linenoise
+ *   (forked from http://github.com/antirez/linenoise)
+ *
+ * Does a number of crazy assumptions that happen to be true in 99.9999% of
+ * the 2010 UNIX computers around.
+ *
+ * ------------------------------------------------------------------------
+ *
+ * Copyright (c) 2010, Salvatore Sanfilippo <antirez at gmail dot com>
+ * Copyright (c) 2010, Pieter Noordhuis <pcnoordhuis at gmail dot com>
+ * Copyright (c) 2011, Steve Bennett <steveb at workware dot net dot au>
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *  *  Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *  *  Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * ------------------------------------------------------------------------
+ *
+ * References:
+ * - http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+ * - http://www.3waylabs.com/nw/WWW/products/wizcon/vt220.html
+ *
+ * Bloat:
+ * - Completion?
+ *
+ * Unix/termios
+ * ------------
+ * List of escape sequences used by this program, we do everything just
+ * a few sequences. In order to be so cheap we may have some
+ * flickering effect with some slow terminal, but the lesser sequences
+ * the more compatible.
+ *
+ * EL (Erase Line)
+ *    Sequence: ESC [ 0 K
+ *    Effect: clear from cursor to end of line
+ *
+ * CUF (CUrsor Forward)
+ *    Sequence: ESC [ n C
+ *    Effect: moves cursor forward n chars
+ *
+ * CR (Carriage Return)
+ *    Sequence: \r
+ *    Effect: moves cursor to column 1
+ *
+ * The following are used to clear the screen: ESC [ H ESC [ 2 J
+ * This is actually composed of two sequences:
+ *
+ * cursorhome
+ *    Sequence: ESC [ H
+ *    Effect: moves the cursor to upper left corner
+ *
+ * ED2 (Clear entire screen)
+ *    Sequence: ESC [ 2 J
+ *    Effect: clear the whole screen
+ *
+ * == For highlighting control characters, we also use the following two ==
+ * SO (enter StandOut)
+ *    Sequence: ESC [ 7 m
+ *    Effect: Uses some standout mode such as reverse video
+ *
+ * SE (Standout End)
+ *    Sequence: ESC [ 0 m
+ *    Effect: Exit standout mode
+ *
+ * == Only used if TIOCGWINSZ fails ==
+ * DSR/CPR (Report cursor position)
+ *    Sequence: ESC [ 6 n
+ *    Effect: reports current cursor position as ESC [ NNN ; MMM R
+ *
+ * == Only used in multiline mode ==
+ * CUU (Cursor Up)
+ *    Sequence: ESC [ n A
+ *    Effect: moves cursor up n chars.
+ *
+ * CUD (Cursor Down)
+ *    Sequence: ESC [ n B
+ *    Effect: moves cursor down n chars.
+ *
+ * win32/console
+ * -------------
+ * If __MINGW32__ is defined, the win32 console API is used.
+ * This could probably be made to work for the msvc compiler too.
+ * This support based in part on work by Jon Griffiths.
+ */
 
+#ifdef _WIN32 /* Windows platform, either MinGW or Visual Studio (MSVC) */
+#include <windows.h>
+#include <fcntl.h>
+#define USE_WINCONSOLE
+#ifdef __MINGW32__
+#define HAVE_UNISTD_H
+#endif
+#else
+#include <termios.h>
+#include <sys/ioctl.h>
+#include <poll.h>
+#define USE_TERMIOS
+#define HAVE_UNISTD_H
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <assert.h>
+#include <errno.h>
+#include <string.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <sys/types.h>
+
+#if defined(_WIN32) && !defined(__MINGW32__)
+/* Microsoft headers don't like old POSIX names */
+#define strdup _strdup
+#define snprintf _snprintf
+#endif
+
+#include "linenoise.h"
+#ifndef STRINGBUF_H
+#include "stringbuf.h"
+#endif
+#ifndef UTF8_UTIL_H
+#include "utf8.h"
+#endif
 
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
 
+/* ctrl('A') -> 0x01 */
 #define ctrl(C) ((C) - '@')
+/* meta('a') ->  0xe1 */
+#define meta(C) ((C) | 0x80)
 
 /* Use -ve numbers here to co-exist with normal unicode chars */
 enum {
@@ -888,6 +911,7 @@ enum {
 
 static int history_max_len = LINENOISE_DEFAULT_HISTORY_MAX_LEN;
 static int history_len = 0;
+static int history_index = 0;
 static char **history = NULL;
 
 /* Structure to contain the status of the current (being edited) line */
@@ -904,6 +928,7 @@ struct current {
     stringbuf *output;  /* used only during refreshLine() - output accumulator */
 #if defined(USE_TERMIOS)
     int fd;     /* Terminal fd */
+    int pending; /* pending char fd_read_char() */
 #elif defined(USE_WINCONSOLE)
     HANDLE outh; /* Console output handle */
     HANDLE inh; /* Console input handle */
@@ -930,6 +955,16 @@ static void setCursorPos(struct current *current, int x);
 static void setOutputHighlight(struct current *current, const int *props, int nprops);
 static void set_current(struct current *current, const char *str);
 
+static int fd_isatty(struct current *current)
+{
+#ifdef USE_TERMIOS
+    return isatty(current->fd);
+#else
+    (void)current;
+    return 0;
+#endif
+}
+
 void linenoiseHistoryFree(void) {
     if (history) {
         int j;
@@ -942,15 +977,17 @@ void linenoiseHistoryFree(void) {
     }
 }
 
+typedef enum {
+    EP_START,   /* looking for ESC */
+    EP_ESC,     /* looking for [ */
+    EP_DIGITS,  /* parsing digits */
+    EP_PROPS,   /* parsing digits or semicolons */
+    EP_END,     /* ok */
+    EP_ERROR,   /* error */
+} ep_state_t;
+
 struct esc_parser {
-    enum {
-        EP_START,   /* looking for ESC */
-        EP_ESC,     /* looking for [ */
-        EP_DIGITS,  /* parsing digits */
-        EP_PROPS,   /* parsing digits or semicolons */
-        EP_END,     /* ok */
-        EP_ERROR,   /* error */
-    } state;
+    ep_state_t state;
     int props[5];   /* properties are stored here */
     int maxprops;   /* size of the props[] array */
     int numprops;   /* number of properties found */
@@ -1072,7 +1109,6 @@ static void DRL_STR(const char *str)
 
 #if defined(USE_WINCONSOLE)
 // #include "linenoise-win32.c"
-
 /* this code is not standalone
  * it is included into linenoise.c
  * for windows.
@@ -1087,10 +1123,12 @@ static void outputNewline(struct current *current);
 
 static void refreshStart(struct current *current)
 {
+    (void)current;
 }
 
 static void refreshEnd(struct current *current)
 {
+    (void)current;
 }
 
 static void refreshStartChars(struct current *current)
@@ -1417,6 +1455,8 @@ static int fd_read(struct current *current)
                         return SPECIAL_PAGE_UP;
                      case VK_NEXT:
                         return SPECIAL_PAGE_DOWN;
+                     case VK_RETURN:
+                        return k->uChar.UnicodeChar;
                     }
                 }
                 /* Note that control characters are already translated in AsciiChar */
@@ -1447,7 +1487,6 @@ static int getWindowSize(struct current *current)
     current->x = info.dwCursorPosition.X;
     return 0;
 }
-
 #endif
 
 #if defined(USE_TERMIOS)
@@ -1505,8 +1544,11 @@ fatal:
      * We want read to return every single byte, without timeout. */
     raw.c_cc[VMIN] = 1; raw.c_cc[VTIME] = 0; /* 1 byte, no timer */
 
-    /* put terminal in raw mode after flushing */
-    if (tcsetattr(current->fd,TCSADRAIN,&raw) < 0) {
+    /* put terminal in raw mode. Because we aren't changing any output
+     * settings we don't need to use TCSADRAIN and I have seen that hang on
+     * OpenBSD when running under a pty
+     */
+    if (tcsetattr(current->fd,TCSANOW,&raw) < 0) {
         goto fatal;
     }
     rawmode = 1;
@@ -1515,14 +1557,14 @@ fatal:
 
 static void disableRawMode(struct current *current) {
     /* Don't even check the return value as it's too late. */
-    if (rawmode && tcsetattr(current->fd,TCSADRAIN,&orig_termios) != -1)
+    if (rawmode && tcsetattr(current->fd,TCSANOW,&orig_termios) != -1)
         rawmode = 0;
 }
 
 /* At exit we'll try to fix the terminal to the initial conditions. */
 static void linenoiseAtExit(void) {
     if (rawmode) {
-        tcsetattr(STDIN_FILENO, TCSADRAIN, &orig_termios);
+        tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
     }
     linenoiseHistoryFree();
 }
@@ -1614,25 +1656,31 @@ void linenoiseClearScreen(void)
 }
 
 /**
- * Reads a char from 'fd', waiting at most 'timeout' milliseconds.
+ * Reads a char from 'current->fd', waiting at most 'timeout' milliseconds.
  *
  * A timeout of -1 means to wait forever.
  *
  * Returns -1 if no char is received within the time or an error occurs.
  */
-static int fd_read_char(int fd, int timeout)
+static int fd_read_char(struct current *current, int timeout)
 {
     struct pollfd p;
     unsigned char c;
 
-    p.fd = fd;
+    if (current->pending) {
+        c = current->pending;
+        current->pending = 0;
+        return c;
+    }
+
+    p.fd = current->fd;
     p.events = POLLIN;
 
     if (poll(&p, 1, timeout) == 0) {
         /* timeout */
         return -1;
     }
-    if (read(fd, &c, 1) != 1) {
+    if (read(current->fd, &c, 1) != 1) {
         return -1;
     }
     return c;
@@ -1650,7 +1698,11 @@ static int fd_read(struct current *current)
     int i;
     int c;
 
-    if (read(current->fd, &buf[0], 1) != 1) {
+    if (current->pending) {
+        buf[0] = current->pending;
+        current->pending = 0;
+    }
+    else if (read(current->fd, &buf[0], 1) != 1) {
         return -1;
     }
     n = utf8_charlen(buf[0]);
@@ -1666,7 +1718,7 @@ static int fd_read(struct current *current)
     utf8_tounicode(buf, &c);
     return c;
 #else
-    return fd_read_char(current->fd, -1);
+    return fd_read_char(current, -1);
 #endif
 }
 
@@ -1679,6 +1731,15 @@ static int queryCursor(struct current *current, int* cols)
 {
     struct esc_parser parser;
     int ch;
+    /* Unfortunately we don't have any persistent state, so assume
+     * a process will only ever interact with one terminal at a time.
+     */
+    static int query_cursor_failed;
+
+    if (query_cursor_failed) {
+        /* If it ever fails, don't try again */
+        return 0;
+    }
 
     /* Should not be buffering this output, it needs to go immediately */
     assert(current->output == NULL);
@@ -1688,7 +1749,7 @@ static int queryCursor(struct current *current, int* cols)
 
     /* Parse the response: ESC [ rows ; cols R */
     initParseEscapeSeq(&parser, 'R');
-    while ((ch = fd_read_char(current->fd, 100)) > 0) {
+    while ((ch = fd_read_char(current, 100)) > 0) {
         switch (parseEscapeSequence(&parser, ch)) {
             default:
                 continue;
@@ -1699,11 +1760,14 @@ static int queryCursor(struct current *current, int* cols)
                 }
                 break;
             case EP_ERROR:
+                /* Push back the character that caused the error */
+                current->pending = ch;
                 break;
         }
         /* failed */
         break;
     }
+    query_cursor_failed = 1;
     return 0;
 }
 
@@ -1770,16 +1834,20 @@ static int getWindowSize(struct current *current)
  * If no additional char is received within a short time,
  * CHAR_ESCAPE is returned.
  */
-static int check_special(int fd)
+static int check_special(struct current *current)
 {
-    int c = fd_read_char(fd, 50);
+    int c = fd_read_char(current, 50);
     int c2;
 
     if (c < 0) {
         return CHAR_ESCAPE;
     }
+    else if (c >= 'a' && c <= 'z') {
+        /* esc-a => meta-a */
+        return meta(c);
+    }
 
-    c2 = fd_read_char(fd, 50);
+    c2 = fd_read_char(current, 50);
     if (c2 < 0) {
         return c2;
     }
@@ -1802,7 +1870,7 @@ static int check_special(int fd)
     }
     if (c == '[' && c2 >= '1' && c2 <= '8') {
         /* extended escape */
-        c = fd_read_char(fd, 50);
+        c = fd_read_char(current, 50);
         if (c == '~') {
             switch (c2) {
                 case '2':
@@ -1821,7 +1889,7 @@ static int check_special(int fd)
         }
         while (c != -1 && c != '~') {
             /* .e.g \e[12~ or '\e[11;2~   discard the complete sequence */
-            c = fd_read_char(fd, 50);
+            c = fd_read_char(current, 50);
         }
     }
 
@@ -1890,7 +1958,7 @@ static linenoiseHintsCallback *hintsCallback = NULL;
 static linenoiseFreeHintsCallback *freeHintsCallback = NULL;
 static void *hintsUserdata = NULL;
 
-static void beep() {
+static void beep(void) {
 #ifdef USE_TERMIOS
     fprintf(stderr, "\x7");
     fflush(stderr);
@@ -2115,6 +2183,7 @@ static void refreshEnd(struct current *current)
 
 static void refreshStartChars(struct current *current)
 {
+    (void)current;
 }
 
 static void refreshNewline(struct current *current)
@@ -2125,6 +2194,7 @@ static void refreshNewline(struct current *current)
 
 static void refreshEndChars(struct current *current)
 {
+    (void)current;
 }
 #endif
 
@@ -2537,6 +2607,48 @@ static int insert_chars(struct current *current, int pos, const char *chars)
     return inserted;
 }
 
+static int skip_space_nonspace(struct current *current, int dir, int check_is_space)
+{
+    int moved = 0;
+    int checkoffset = (dir < 0) ? -1 : 0;
+    int limit = (dir < 0) ? 0 : sb_chars(current->buf);
+    while (current->pos != limit && (get_char(current, current->pos + checkoffset) == ' ') == check_is_space) {
+        current->pos += dir;
+        moved++;
+    }
+    return moved;
+}
+
+static int skip_space(struct current *current, int dir)
+{
+    return skip_space_nonspace(current, dir, 1);
+}
+
+static int skip_nonspace(struct current *current, int dir)
+{
+    return skip_space_nonspace(current, dir, 0);
+}
+
+static void set_history_index(struct current *current, int new_index)
+{
+    if (history_len > 1) {
+        /* Update the current history entry before to
+         * overwrite it with the next one. */
+        free(history[history_len - 1 - history_index]);
+        history[history_len - 1 - history_index] = strdup(sb_str(current->buf));
+        /* Show the new entry */
+        history_index = new_index;
+        if (history_index < 0) {
+            history_index = 0;
+        } else if (history_index >= history_len) {
+            history_index = history_len - 1;
+        } else {
+            set_current(current, history[history_len - 1 - history_index]);
+            refreshLine(current);
+        }
+    }
+}
+
 /**
  * Returns the keycode to process, or 0 if none.
  */
@@ -2562,25 +2674,25 @@ static int reverseIncrementalSearch(struct current *current)
         c = fd_read(current);
         if (c == ctrl('H') || c == CHAR_DELETE) {
             if (rchars) {
-                int p = utf8_index(rbuf, --rchars);
-                rbuf[p] = 0;
+                int p_ind = utf8_index(rbuf, --rchars);
+                rbuf[p_ind] = 0;
                 rlen = strlen(rbuf);
             }
             continue;
         }
 #ifdef USE_TERMIOS
         if (c == CHAR_ESCAPE) {
-            c = check_special(current->fd);
+            c = check_special(current);
         }
 #endif
-        if (c == ctrl('P') || c == SPECIAL_UP) {
+        if (c == ctrl('R')) {
             /* Search for the previous (earlier) match */
             if (searchpos > 0) {
                 searchpos--;
             }
             skipsame = 1;
         }
-        else if (c == ctrl('N') || c == SPECIAL_DOWN) {
+        else if (c == ctrl('S')) {
             /* Search for the next (later) match */
             if (searchpos < history_len) {
                 searchpos++;
@@ -2588,7 +2700,19 @@ static int reverseIncrementalSearch(struct current *current)
             searchdir = 1;
             skipsame = 1;
         }
-        else if (c >= ' ') {
+        else if (c == ctrl('P') || c == SPECIAL_UP) {
+            /* Exit Ctrl-R mode and go to the previous history line from the current search pos */
+            set_history_index(current, history_len - searchpos);
+            c = 0;
+            break;
+        }
+        else if (c == ctrl('N') || c == SPECIAL_DOWN) {
+            /* Exit Ctrl-R mode and go to the next history line from the current search pos */
+            set_history_index(current, history_len - searchpos - 2);
+            c = 0;
+            break;
+        }
+        else if (c >= ' ' && c <= '~') {
             /* >= here to allow for null terminator */
             if (rlen >= (int)sizeof(rbuf) - MAX_UTF8_LEN) {
                 continue;
@@ -2617,6 +2741,7 @@ static int reverseIncrementalSearch(struct current *current)
                     continue;
                 }
                 /* Copy the matching line and set the cursor position */
+                history_index = history_len - 1 - searchpos;
                 set_current(current,history[searchpos]);
                 current->pos = utf8_strlen(history[searchpos], p - history[searchpos]);
                 break;
@@ -2632,30 +2757,25 @@ static int reverseIncrementalSearch(struct current *current)
     if (c == ctrl('G') || c == ctrl('C')) {
         /* ctrl-g terminates the search with no effect */
         set_current(current, "");
+        history_index = 0;
         c = 0;
     }
     else if (c == ctrl('J')) {
         /* ctrl-j terminates the search leaving the buffer in place */
+        history_index = 0;
         c = 0;
     }
-
     /* Go process the char normally */
     refreshLine(current);
     return c;
 }
 
 static int linenoiseEdit(struct current *current) {
-    int history_index = 0;
+    history_index = 0;
 
-    /* The latest history entry is always our current buffer, that
-     * initially is just an empty string. */
-    linenoiseHistoryAdd("");
-
-    set_current(current, "");
     refreshLine(current);
 
     while(1) {
-        int dir = -1;
         int c = fd_read(current);
 
 #ifndef NO_COMPLETION
@@ -2674,7 +2794,7 @@ static int linenoiseEdit(struct current *current) {
 
 #ifdef USE_TERMIOS
         if (c == CHAR_ESCAPE) {   /* escape sequence */
-            c = check_special(current->fd);
+            c = check_special(current);
         }
 #endif
         if (c == -1) {
@@ -2723,6 +2843,7 @@ static int linenoiseEdit(struct current *current) {
                 return -1;
             }
             /* Otherwise fall through to delete char to right of cursor */
+            /* fall-thru */
         case SPECIAL_DELETE:
             if (remove_char(current, current->pos) == 1) {
                 refreshLine(current);
@@ -2732,6 +2853,24 @@ static int linenoiseEdit(struct current *current) {
             /* Ignore. Expansion Hook.
              * Future possibility: Toggle Insert/Overwrite Modes
              */
+            break;
+        case meta('b'):    /* meta-b, move word left */
+            if (skip_nonspace(current, -1)) {
+                refreshLine(current);
+            }
+            else if (skip_space(current, -1)) {
+                skip_nonspace(current, -1);
+                refreshLine(current);
+            }
+            break;
+        case meta('f'):    /* meta-f, move word right */
+            if (skip_space(current, 1)) {
+                refreshLine(current);
+            }
+            else if (skip_nonspace(current, 1)) {
+                skip_space(current, 1);
+                refreshLine(current);
+            }
             break;
         case ctrl('W'):    /* ctrl-w, delete word at left. save deleted chars */
             /* eat any spaces on the left */
@@ -2791,36 +2930,19 @@ static int linenoiseEdit(struct current *current) {
                 refreshLine(current);
             }
             break;
-        case SPECIAL_PAGE_UP:
-          dir = history_len - history_index - 1; /* move to start of history */
-          goto history_navigation;
-        case SPECIAL_PAGE_DOWN:
-          dir = -history_index; /* move to 0 == end of history, i.e. current */
-          goto history_navigation;
+        case SPECIAL_PAGE_UP: /* move to start of history */
+          set_history_index(current, history_len - 1);
+          break;
+        case SPECIAL_PAGE_DOWN: /* move to 0 == end of history, i.e. current */
+          set_history_index(current, 0);
+          break;
         case ctrl('P'):
         case SPECIAL_UP:
-            dir = 1;
-          goto history_navigation;
+            set_history_index(current, history_index + 1);
+            break;
         case ctrl('N'):
         case SPECIAL_DOWN:
-history_navigation:
-            if (history_len > 1) {
-                /* Update the current history entry before to
-                 * overwrite it with tne next one. */
-                free(history[history_len - 1 - history_index]);
-                history[history_len - 1 - history_index] = strdup(sb_str(current->buf));
-                /* Show the new entry */
-                history_index += dir;
-                if (history_index < 0) {
-                    history_index = 0;
-                    break;
-                } else if (history_index >= history_len) {
-                    history_index = history_len - 1;
-                    break;
-                }
-                set_current(current, history[history_len - 1 - history_index]);
-                refreshLine(current);
-            }
+            set_history_index(current, history_index - 1);
             break;
         case ctrl('A'): /* Ctrl+a, go to the start of the line */
         case SPECIAL_HOME:
@@ -2855,6 +2977,10 @@ history_navigation:
             refreshLine(current);
             break;
         default:
+            if (c >= meta('a') && c <= meta('z')) {
+                /* Don't insert meta chars that are not bound */
+                break;
+            }
             /* Only tab is allowed without ^V */
             if (c == '\t' || c >= ' ') {
                 if (insert_char(current, current->pos, c) == 1) {
@@ -2905,14 +3031,14 @@ static stringbuf *sb_getline(FILE *fh)
         /* ignore the effect of character count for partial utf8 sequences */
         sb_append_len(sb, &ch, 1);
     }
-    if (n == 0) {
+    if (n == 0 || sb->data == NULL) {
         sb_free(sb);
         return NULL;
     }
     return sb;
 }
 
-char *linenoise(const char *prompt)
+char *linenoiseWithInitial(const char *prompt, const char *initial)
 {
     int count;
     struct current current;
@@ -2924,12 +3050,20 @@ char *linenoise(const char *prompt)
         printf("%s", prompt);
         fflush(stdout);
         sb = sb_getline(stdin);
+        if (sb && !fd_isatty(&current)) {
+            printf("%s\n", sb_str(sb));
+            fflush(stdout);
+        }
     }
     else {
         current.buf = sb_alloc();
         current.pos = 0;
         current.nrows = 1;
         current.prompt = prompt;
+
+        /* The latest history entry is always our current buffer */
+        linenoiseHistoryAdd(initial);
+        set_current(&current, initial);
 
         count = linenoiseEdit(&current);
 
@@ -2946,8 +3080,13 @@ char *linenoise(const char *prompt)
     return sb ? sb_to_string(sb) : NULL;
 }
 
+char *linenoise(const char *prompt)
+{
+    return linenoiseWithInitial(prompt, "");
+}
+
 /* Using a circular buffer is smarter, but a bit more complex to handle. */
-int linenoiseHistoryAddAllocated(char *line) {
+static int linenoiseHistoryAddAllocated(char *line) {
 
     if (history_max_len == 0) {
 notinserted:
@@ -2955,7 +3094,7 @@ notinserted:
         return 0;
     }
     if (history == NULL) {
-        history = (char **)calloc(history_max_len, sizeof(char*));
+        history = (char **)calloc(sizeof(char*), history_max_len);
     }
 
     /* do not insert duplicate lines into history */
@@ -2988,7 +3127,7 @@ int linenoiseHistorySetMaxLen(int len) {
     if (history) {
         int tocopy = history_len;
 
-        newHistory = (char **)calloc(len, sizeof(char*));
+        newHistory = (char **)calloc(sizeof(char*), len);
 
         /* If we can't copy everything, free the elements we'll not use. */
         if (len < tocopy) {
@@ -3091,4 +3230,3 @@ char **linenoiseHistory(int *len) {
     }
     return history;
 }
-

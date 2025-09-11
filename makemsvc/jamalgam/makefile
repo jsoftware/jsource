@@ -1,3 +1,6 @@
+ifeq (1,$(USE_LINENOISE))
+READLINE=1
+endif
 ifeq (1,$(JAVX512))
 FAVX512= /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -DBASE64_AVX2_USE_ASM=1 -march=skylake-avx512 -mno-vzeroupper
 else ifeq (1,$(JAVX2))

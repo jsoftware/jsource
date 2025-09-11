@@ -37,6 +37,10 @@
 #ifndef __LINENOISE_H
 #define __LINENOISE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NO_COMPLETION
 typedef struct linenoiseCompletions {
   size_t len;
@@ -75,6 +79,11 @@ void linenoiseSetFreeHintsCallback(linenoiseFreeHintsCallback *callback);
  * caller owns the returned string and must eventually free() it.
  */
 char *linenoise(const char *prompt);
+
+/**
+ * Like linenoise() but starts with an initial buffer.
+ */
+char *linenoiseWithInitial(const char *prompt, const char *initial);
 
 /**
  * Clear the screen.
@@ -132,5 +141,9 @@ int linenoiseColumns(void);
  * Enable or disable multiline mode (disabled by default)
  */
 void linenoiseSetMultiLine(int enableml);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __LINENOISE_H */

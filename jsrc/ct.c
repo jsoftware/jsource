@@ -260,6 +260,9 @@ done:  // pyx has been filled in.  jt->futexwt must be 0
  ASSERTPYX(blok->errcode,blok->pyxvalue); // error: signal the error in the reader, noting that it was externally generated
 fail:
  CLRFUTEXWT;ASSERT(0,err);}
+// w is an A holding a pyx value.  Return its value when it has been resolved, otherwise 0
+// EVTIME if timeout
+A jtpyxvalid(J jt,A pyx){R ((PYXBLOK*)AAV0(pyx))->pyxvalue;}
 
 // ************************************* Locks **************************************
 // take a readlock on *alock.  We come here only if a writelock was requested or running.  We have incremented the readlock
@@ -410,11 +413,9 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set.  nd
    job=JOBLOCK(jobq);
    if(likely(job==0)){
     // Still no job.  As far as tasks are concerned, we are now waiting.  But don't do an OS wait till we have lingered
-    ++jobq->waiters;  // indicate we are waiting, while under lock
+    ++jobq->waiters;  // indicate we are waiting, while under lock.  Central needs to know there is an idle thread to prevent the master from taking a task.  We are in a non-OS wait state here
     UI4 warmendns=jobq->keepwarmns;   // user's keepwarm delay
     do{   // loop till we get something to process
-     futexval=__atomic_load_n(&jobq->futex,__ATOMIC_ACQUIRE);  // get current value to wait on, before we check for work.  It is updated under lock when a job is added or if threads are kicked with 15 T.
-                              // we set the value before lingering so that if we are kicked while lingering the wait will fail and we will come back to linger again
      if(warmendns!=0){struct jtimespec endtime=jtmftil(warmendns);  // time when our keepwarm expires
       // the user wants us to linger before performing a wait.  We will spin here in the hope that a job arrives
       JOBUNLOCK(jobq,job);
@@ -422,13 +423,18 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set.  nd
        if(jtmfdif(endtime)<0)break;  // if time expired, exit loop.  Would prefer to deal with ns only rather than timespec, but these are the primitives we have
 #define THREADSPERPAUSE 4  // We want to reduce the bus load when all threads are lingering.  With PAUSE at 140 cycles, one read per 35 cycles seems negligible
        I threadct=jobq->nthreads; do{_mm_pause();}while((threadct-=THREADSPERPAUSE)>0);  // pause long enough for every thread to poll without bus overload: pausetime * #threads / THREADSPERPAUSE
-       if(__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)!=0)break;  // if a job shows up, exit loop
+       if(__atomic_load_n((I*)&jobq->ht[0],__ATOMIC_ACQUIRE)!=0)break;  // if a job shows up, exit and try to acquire it
       }
-      if((job=JOBLOCK(jobq))!=0)break;   // reestablish lock, checking in case a job has arrived
+      if((job=JOBLOCK(jobq))!=0)goto jobfound;   // reestablish lock, checking in case a job has arrived.  If it has, exit to process
      }
-     // still have the lock
-     if(unlikely(jt->taskstate&TASKSTATETERMINATE)){--jobq->waiters; goto terminate;}  // if central has requested this thread to terminate, do so when the queue goes empty.   This counts as work
-waitforkick: ;  // come here with ndxinthreadpool set to wait for a new addition.  ndxinthreadpool and futexval must be set, and we must have the lock
+     // still have the lock, but there was nothing on the queue.  Wait.
+     if(unlikely(jt->taskstate&TASKSTATETERMINATE)){--jobq->waiters; goto terminate;  // if central has requested this thread to terminate, do so when the queue goes empty.   This counts as work
+      // no fallthrough, so we can put in a label for an immediate wait
+waitforkick: ;  // come here with ndxinthreadpool set to wait for a new addition.  ndxinthreadpool must be set, and we must have the lock.
+      ++jobq->waiters;  // this entry sleeps without linger, because we know the queue has something we can't process.  Mark us as waiting
+     }
+     futexval=__atomic_load_n(&jobq->futex,__ATOMIC_ACQUIRE);  // get current value to wait on, before we check for work.  It is updated under lock when a job is added or if threads are kicked with 15 T.
+                              // we set the value before lingering so that if we are kicked while lingering the wait will fail and we will come back to linger again
      JOBUNLOCK(jobq,job);
      jfutex_wait(&jobq->futex,futexval);  // wait (unless a new job has been added).  When we come out, there may or may not be a task to process (usually there is)
      // NOTE: when we come out of the wait, waiters has not been decremented; thus it may show non0 when no one is waiting
@@ -436,7 +442,8 @@ waitforkick: ;  // come here with ndxinthreadpool set to wait for a new addition
      // for real jobs.  Since the threads are idle anyway during a kick, we accept the contention
      job=JOBLOCK(jobq);  // take a conditional lock to reduce bus traffic when there is no work (as after a kick)
     }while(job==0); // wait till we get a job to run; exit holding the job lock
-    --jobq->waiters;
+jobfound:;  // come here or fall through when we got a job while we were waiting.  We must remove waiting status
+    --jobq->waiters;   // waiting no longer
    }
   }
   // We have the job lock, and a job to run, in (job).  It is possible that all the other threads - the thundering herd - woke up too.  We need to do our business with the job block and jobq ASAP.
@@ -448,7 +455,8 @@ waitforkick: ;  // come here with ndxinthreadpool set to wait for a new addition
   // if this thread has already processed this block, it means either (1) the thread was not enabled for the block (2) this thread finished the block before another thread started it.
   // In this case we don't want to spin on this job, so we sleep till the next one.  If there is another block queued after this one, we clear AR in this job to indicate a request
   // for a kick when this job is removed from the queue
-  if(unlikely(locbit&jobn)){AR(UNvoidAV1(job))=(jobnext==0); futexval=__atomic_load_n(&jobq->futex,__ATOMIC_ACQUIRE); goto waitforkick;}  // req kick (by writing 0) only if there is another job
+  if(unlikely(locbit&jobnsmask)){if(unlikely(jobnext!=0))AR(UNvoidAV1(job))=0; goto waitforkick;}  // req kick (by writing 0) only if there is another job.  Start waiting
+// obsolete  futexval=__atomic_load_n(&jobq->futex,__ATOMIC_ACQUIRE);
   locbit=(I)jobn<0?locbit:1; job->ns_mask=jobnsmask+=locbit;   // increment task counter for next owner
   JOB **writeptr=&jobq->ht[1]; writeptr=jobnext!=0?(JOB**)&jt->shapesink[0]:writeptr; writeptr=jobnsmask<jobn?(JOB**)&jt->shapesink[0]:writeptr; jobnext=jobnsmask<jobn?job:jobnext;  // calc head & tail ptrs
       // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns<jobn), divert write of tail; otherwise write the empty-queue value into tail.  If job finishing, set new headptr in jobnext
@@ -486,7 +494,7 @@ waitforkick: ;  // come here with ndxinthreadpool set to wait for a new addition
    A pyx=UNvoidAV1(job)->mback.jobpyx; A startloc=UNvoidAV1(job)->kchain.global; // extract the pyx and globals pointer from the job
    if((I)jobn<0){  // user job with locales
     // this is a job with locales.  If we removed the job from the queue (mask=n), AND AR was 0 indicating that a thread is waiting for a kick, deliver the kick
-   if(unlikely(((jobn^jobnsmask)|AR(UNvoidAV1(job))==0))){JOB *job=JOBLOCK(jobq); ++jobq->futex; JOBUNLOCK(jobq,job); jfutex_wakea(&jobq->futex);}  // wakeall sequence: lock the pool; advance futex value; unlock; kick.  No new work added
+   if(unlikely(((jobn^jobnsmask)|AR(UNvoidAV1(job)))==0)){JOB *job=JOBLOCK(jobq); ++jobq->futex; JOBUNLOCK(jobq,job); jfutex_wakea(&jobq->futex);}  // wakeall sequence: lock the pool; advance futex value; unlock; kick.  No new work added
     // pyx points to a vector of pyxes, startloc to a vector of locale#s.  Extract the pyx and global for this thread
     I vecx=__builtin_popcountll((UI)(AN(UNvoidAV1(job))<<(BW-jt->ndxinthreadpool)));  // AN is mask of threads.  Convert thread index to index into vectors, by counting the 1s after discarding higher bits in mask
     pyx=AAV1(pyx)[vecx]; startloc=jtfindnl(jt,IAV(startloc)[vecx]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)  // get pyx (AAV1 ok) and locale#; convert locale# to globals address
@@ -513,6 +521,7 @@ waitforkick: ;  // come here with ndxinthreadpool set to wait for a new addition
    // be freed until the last thread has finished.  That means we need something to count finishes, necessarily under lock.  The simplest solution is to use the usecount in the job
    // as the finish-counter.  We increment it for the number of threads to run and free, decrementing it after eack task finishes.  When the count goes to 0, we then free everything that was protected
    // We can't use the locales list or the pyxes for this counter, because they are in the wild as a user value.
+   I taskended=0;  // 1 if this completion means the user task finished
    if(faprobe(UNvoidAV1(job))<2){  // if time to free...
     // we are the last (or only) thread using this job block.  Unprotect everything it protects, then free the job
 // obsolete   #fa(startloc);; remove the protection installed in taskrun()
@@ -523,6 +532,7 @@ waitforkick: ;  // come here with ndxinthreadpool set to wait for a new addition
 // obsolete     fa(UNvoidAV1(job)->mback.jobpyx) fa(UNvoidAV1(job)->kchain.global) faafterrav(arg1); faafterrav(arg2); if(arg3!=0)fa(arg3);  // unprotect args only after result has been safely installed
     fa(UNvoidAV1(job)->mback.jobpyx) fa(UNvoidAV1(job)->kchain.global) faafterrav(arg1); if(arg2!=self)faafterrav(arg2); fanamedacv(self);  // unprotect args only after result has been safely installed
     mf(UNvoidAV1(job));  // free the job, which is never a recursive block
+    taskended=1;  // if we free, we finished the task
    }
    jtrepatsend(jt); // send our freed blocks back to where they were allocated.  That will include any args just freed
    __atomic_store_n(&JTFORTHREAD(jt,(US)initthread)->uflags.sprepatneeded,1,__ATOMIC_RELEASE);  // signal the originator to repat the freed blocks.  We force this now in case some were virtual and have large backers.  The repat may be delayed a while.
@@ -530,12 +540,12 @@ waitforkick: ;  // come here with ndxinthreadpool set to wait for a new addition
    tpop(old); // clear anything left on the stack after execution, including z
    RESETERR  // we had to keep the error till now; remove it for next task
    ndxinthreadpool=jt->ndxinthreadpool; job=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
-   --jobq->nuunfin; // mark in the jobq that we have finished the job we were working on
+   jobq->nuunfin-=taskended; // mark in the jobq that we have finished the job we were working on, if we are the last thread to work on it
    if(unlikely(jt->taskstate&TASKSTATETERMINATE))goto terminate;  // if central has requested this state to terminate, do so
    goto nexttasklocked;  // loop for next task
   }
  // end of loop forever
-terminate:   // termination request.  We hold the job lock, and 'job' has the value read from it
+terminate:   // termination request.  We hold the job lock, and 'job' has the value to write back to it.  We are not marked as waiting
  __atomic_fetch_and(&jt->taskstate,~(TASKSTATEACTIVE|TASKSTATETERMINATE),__ATOMIC_ACQ_REL);  // go inactive, and ack the terminate request
  JOBUNLOCK(jobq,job); 
  jtrepatsend(jt); // release any memory belonging to other threads
@@ -582,7 +592,7 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
   ASSERTGOTO(!ACISPERM(AC(locsa)),EVRO,errfajobA)   // surely the locales block is not permanent, but check to be safe
   UI mask=BIV0(maska); I nlocs=AN(locsa);  // extract mask value, number of locales
   ASSERTGOTO((mask>>jobq->nthreads)<=1,EVDEADLOCK,errfajobA)  // exit if the mask calls for threads that are not active.  Mask bit 0 is for current thread.  If user deletes a thread while this job is running, we may deadlock
-  taskflags|=(2+(mask&1))<<9;  // set flags indicating whether mask bit0 is set (=we must run a locale), and whether locales given
+  taskflags|=(2+(mask&1))<<9;  // set flags indicating whether mask bit0 is set (=this enqueueing thread must run a locale), and whether locales given
   jobA->kchain.global=locsa; AN(jobA)=mask; job->n=-1; job->ns_mask=1|~mask; AC(jobA)=nlocs-(mask&1);  // fill in job info: locale list, threadmask, locales type, mask of threads NOT to use.  Usecount of job is #worker threads, to count down to find completion of last thread
   GATV0E(jobA->mback.jobpyx,BOX,nlocs,1,goto errfajobA;) AFLAGINIT(jobA->mback.jobpyx,BOX)  // allocate recursive list of pyxes which will be our result
   A *psv=jt->tnextpushp; jt->tnextpushp=AAV1(jobA->mback.jobpyx); DO(nlocs, if((p=jtcreatepyx(jt,-2,inf))==0)break;) jt->tnextpushp=psv;   // hijack tstack (see vo.c for discussion), allocate pyxes.  They have usecount 1, protected by the enclosing box.
@@ -611,7 +621,7 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
   job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=self;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // Move in all parms for starting the job.  A little overcopy OK on inherited.  arg2 has not changed for monads, =self
   // protect anything that we have to ensure stays valid for the verb.  This is the pyx or list thereof, and the locales or list thereof.  Also extract them from the evanescent job block
   A ppyx=jobA->mback.jobpyx, ploc=jobA->kchain.global;  // values that need protecting/extracting
-  raincr(jt->global);   // protect globals: known nonrecursive, and were allocated here or came from boxes or jt->global, thus positive usecount; and not ACPERMANENT
+  raincr(ploc);   // protect globals: known nonrecursive, and were allocated here or came from boxes or jt->global, thus positive usecount; and not ACPERMANENT
   JOB *oldjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   if(likely((UI)jobq->nthreads>(forcetask&jobq->nuunfin))){  // recheck after lock
    // We know there is a thread that can take the user task (possibly after finishing internal tasks), or the user insists on queueing.  Queue the task
@@ -766,16 +776,16 @@ F2(jttdot){F12IP;
  DO(AN(w),
   A akw; A aval;  // A block for keyword, A block for value
   if(AT(w)&BOX){
-   A boxl1=C(AAV(w)[i]);  // contents of first box to examine
-   if(AN(boxl1)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}
-   if(AT(boxl1)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}
-   if(AT(boxl1)&BOX){
+   A boxl1=C(AAV(w)[i]);  // contents of top-level box to examine
+   if(AN(boxl1)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}   // empty box, construe as fixed parms
+   if(AT(boxl1)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl1; continue;}   // numeric contents, construe as fixed parms
+   if(AT(boxl1)&BOX){   // boxed contents, must be key [; value]
     A boxl2=C(AAV(boxl1)[0]);   // w is (<((<boxl2), ...))
-    if(AN(boxl2)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}
-    if(AT(boxl2)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}
+    if(AN(boxl2)==0){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}  // w is < ''
+    if(AT(boxl2)&NUMERIC){ASSERT(i==0,EVDOMAIN) afixed=boxl2; continue;}   // w is < poolno
     akw=boxl2;   // the keyword
     if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw))  // keyword must be literal type
-    ASSERT(AR(boxl1)<2,EVRANK) ASSERT(AN(boxl1)<=2,EVLENGTH) aval=AN(boxl2)==1?0:C(AAV(boxl1)[1]);  // arg has only 0-1 value; get value if any
+    ASSERT(AR(boxl1)<2,EVRANK) ASSERT(AN(boxl1)<=2,EVLENGTH) aval=AN(boxl1)==1?0:C(AAV(boxl1)[1]);  // arg has only 0-1 value; get value if any
    }else{
     akw=boxl1;  // the keyword
     if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw))  // keyword must be literal type
@@ -794,7 +804,8 @@ F2(jttdot){F12IP;
    ASSERT(aval!=0,EVDOMAIN)  // value must be given
    ASSERT(AT(aval)&BOX,EVDOMAIN) ASSERT(AR(aval)==1,EVRANK) ASSERT(AN(aval)==2,EVLENGTH) // value must be 2-box list
    A boxx=C(AAV(aval)[0]); ASSERT(AT(boxx)&INT+B01,EVDOMAIN) ASSERT(AR(boxx)==0,EVRANK) I mask=BIV0(boxx);  // mask must be bool/int
-   boxx=C(AAV(aval)[1]); ASSERT(AT(boxx)&INT,EVDOMAIN) ASSERT(AR(boxx)==1,EVRANK) ASSERT(AN(boxx)==__builtin_popcountll(mask),EVDEADLOCK)  // must have 1 locale per 1-bit in mask
+   boxx=C(AAV(aval)[1]); ASSERT(AT(boxx)&INT,EVDOMAIN) ASSERT(AR(boxx)<=1,EVRANK) ASSERT(AN(boxx)==__builtin_popcountll(mask),EVDEADLOCK)  // must have 1 locale per 1-bit in mask
+   I *bv=IAV(boxx); DO(AN(boxx), ASSERT(bv[i]>=0,EVLOCALE))  // verify locale #s nonnegative
    ASSERT((mask&~1)!=0,EVDEADLOCK)  // must have at least 1 locale outside of the master
    localex=i;  // remember the index we found the keyword at
   }else{ASSERT(0,EVDOMAIN)}   // error if keyword is unknown
@@ -810,9 +821,10 @@ F2(jttdot){F12IP;
  // set defaults for omitted parms
  nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0 (no mask given)
  // parms read, install them into the block for t. verb
- A z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
+ A z; RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX))
  FAV(z)->localuse.lu1.forcetask=poolno+(nolocal<<8)+(localex<<16);  // save the t. options for execution.  Bits 0-7=poolno, 8=worker only, 16+=box# in w of the locales keyword (-1 if none) 
- R atco(ds(CBOX),z);  // use <@: to get BOXATOP flags
+ if(localex<0)z=atco(ds(CBOX),z);  // non-locales call returns a single pyx (to match local execution) and it must be boxed.  use <@: to get BOXATOP flags.  locales call must always run in threads
+ RETF(z)  
 }
 
 // credentials.  These are installed into AM of a synco to indicate the type of a synco
@@ -893,7 +905,7 @@ ASSERT(0,EVNONCE)
   }else athread=w;  // if bare thread#, take it
   if(!supportaffinity)ASSERT(0,EVNONCE)
   I threadno; RE(threadno=i0(athread)) ASSERT(threadno==0,EVNONCE)  // get thread#, which must be 0
-  if(acoremask){ASSERT(AR(acoremask)<=1,EVRANK) ASSERT(AN(acoremask)!=0,EVLENGTH) if(unlikely(AT(acoremask)&B01))acoremask=cvt(INT,acoremask); ASSERT(AT(acoremask)&INT+LIT,EVDOMAIN)} // verify coremask valid if given
+  if(acoremask){ASSERT(AR(acoremask)<=1,EVRANK) ASSERT(AN(acoremask)!=0,EVLENGTH) if(unlikely(AT(acoremask)&FL+B01))acoremask=cvt(INT,acoremask); ASSERT(AT(acoremask)&INT+LIT,EVDOMAIN)} // verify coremask valid if given
   pthread_attr_t tattr; cpu_set_t cpuset; size_t cpusetsize=sizeof(cpu_set_t); // attributes for the current task
 #if defined(ANDROID)
   ASSERT(sched_getaffinity(pthread_gettid_np(pthread_self()), cpusetsize,&cpuset)==0,EVFACE)  // fetch current affinity for return
@@ -992,7 +1004,7 @@ ASSERT(0,EVNONCE)
    // we have the keyword/value; examine them one by one
    if(strncmp(CAV(akw),"coremask",AN(akw))==0){
     ASSERT(coremask==0,EVDOMAIN)  // can't set same parm twice
-    ASSERT(aval!=0,EVDOMAIN) ASSERT(AR(aval)<=1,EVRANK) ASSERT(AN(aval)!=0,EVLENGTH) if(unlikely(AT(aval)&B01))aval=cvt(INT,aval); ASSERT(AT(aval)&INT+LIT,EVDOMAIN)  // cannot omit mask, which must be nonempty rank<2 IN T or LIT
+    ASSERT(aval!=0,EVDOMAIN) ASSERT(AR(aval)<=1,EVRANK) ASSERT(AN(aval)!=0,EVLENGTH) if(unlikely(AT(aval)&FL+B01))aval=cvt(INT,aval); ASSERT(AT(aval)&INT+LIT,EVDOMAIN)  // cannot omit mask, which must be nonempty rank<2 IN T or LIT
     coremask=aval;  // if value OK, keep it.  We will send it to pthread_create
    }else{ASSERT(0,EVDOMAIN)}   // error if keyword is unknown
    if(!(AT(w)&BOX))break;  // unboxed must be a single value

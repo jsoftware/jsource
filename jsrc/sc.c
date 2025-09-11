@@ -396,7 +396,7 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
 A jtnameref(J jt,A w,A locsyms){A z;
  ARGCHK1(w); z=syrd(w,locsyms);
  RZ(z=namerefacv(w,z));  // make a reference to the name, with QCFAOWED semantics
- if(unlikely((I)z&QCFAOWED)){tpush(QCWORD(z));}  // if free is owed (must be noun), tpush it & cancel the request
+ if(unlikely((I)z&QCFAOWED)){tpush(QCWORD(z));}  // if free is owed (must be noun), tpush it to protect it during execution
  R QCWORD(z);
 }    /* argument assumed to be a NAME */
 

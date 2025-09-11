@@ -16,8 +16,40 @@ end.
 NB. wait until there are y waiting threads
 wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
-delth''  NB. make sure we start with an empty system
 
+
+NB. tests of locales keyword
+delth''
+
+NB. populate shared locale
+create_shared_ =: {{ gbl =: >y }}
+destroy_shared_ =: 4!:55@coname
+double_shared =: {{ ({. 3 T. '') , gbl =: +: gbl }}
+
+1: (0 T. [: < 'coremask';2&^)"0 ] 1 2 3  NB. create 3 threads, tied to 3 worker cores
+locs =: 0&".@>@(conew&'shared')@> locgbls =: 10;20;30;i. 10    NB. Create 4 numbered locales as instances of shared
+(1 2 3 (, 2&+)&.> }. locgbls) -: {{ ({. 3 T. '') , gbl =: gbl + y }} t. (<'locales';<14;1 2 3{locs) 2
+(0 2 2 2 +&.> locgbls) -: {{ gbl__y }}&.> locs
+(0 1 2 3 ,&.> 3&*&.> 0 2 2 2 +&.> locgbls) -: {{ ({. 3 T. '') , gbl =: gbl * y }} t. (<'locales';<15;locs) 3
+
+(3&*&.> 0 2 2 2 +&.> locgbls) -: {{ gbl__y }}&.> locs
+'domain error' -: ". etx {{)n + t. ('locales' ,&< 7 ; i. 4) }}
+'domain error' -: ". etx {{)n + t. (<<'locales') }}
+'domain error' -: ". etx {{)n + t. (<'locales' ,&< i. 2) }}
+'rank error' -: ". etx {{)n + t. (<'locales' ,&< ,: 1;2) }}
+'length error' -: ". etx {{)n + t. (<'locales' ,&< 1;2;3) }}
+'domain error' -: ". etx {{)n + t. (<'locales' ,&< 1.5;2) }}
+'rank error' -: ". etx {{)n + t. (<'locales' ,&< (,2);2) }}
+'domain error' -: ". etx {{)n + t. (<'locales' ,&< 3;0 1) }}
+'rank error' -: ". etx {{)n + t. (<'locales' ,&< 3;i. 1 2) }}
+'would deadlock' -: ". etx {{)n + t. (<'locales' ,&< 3;0 1 2) }}
+'would deadlock' -: ". etx {{)n + t. (<'locales' ,&< 1;2) }}
+'' -: ". etx {{)n + t. (<'locales' ,&< 2;2) }}
+'domain error' -: ". etx {{)n + t. ((<'locales' ,&< 2;2),(<'locales' ,&< 2;2)) }}
+18!:55 ;:'shared'
+18!:55 locs
+
+delth''  NB. make sure we start with an empty system
 N=: 62  NB. max # worker threads
 
 NB. create all available threads
@@ -169,4 +201,4 @@ EMPTY
 }}
 
 )
-
+  

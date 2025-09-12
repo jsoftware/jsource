@@ -760,7 +760,7 @@ DF2(jtfetch){F12IP;A*av, z;I n;
 #endif
 
 // CRC32 of floats
-static UI4 INLINE crcfloats(UI8 *v, I n){
+static INLINE UI4 crcfloats(UI8 *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI4 crc0=-1;
@@ -772,7 +772,7 @@ static UI4 INLINE crcfloats(UI8 *v, I n){
 }
 
 // CRC32 of Is
-static UI4 INLINE crcwords(UI *v, I n){
+static INLINE UI4 crcwords(UI *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI4 crc0=-1;
@@ -784,20 +784,20 @@ static UI4 INLINE crcwords(UI *v, I n){
 }
 
 // CRC32 of bytes
-static UI4 INLINE crcbytes(C *v, I n){
+static INLINE UI4 crcbytes(C *v, I n){
  UI4 wdcrc=crcwords((UI*)v,n>>LGSZI);  // take CRC of the fullword part
  if(n&(SZI-1)){wdcrc=HASHI(wdcrc,((UI*)v)[n>>LGSZI]<<((SZI-(n&(SZI-1)))<<LGSZI));}  // if there are bytes, take their CRC after discarding garb.  Avoid overfetch
  R wdcrc;  // return composite CRC
 }
 
 // CRC32 of y.  Floats must observe -0.
-static UI4 INLINE jtcrcy(J jt,A y){
+static INLINE UI4 jtcrcy(J jt,A y){
  I yt=AT(y), yn=AN(y); void *yv=voidAV(y);  // type of y, #atoms, address of data
  if(yt&INT+(SZI==4)*(C4T+INT4))R crcwords(yv,yn);  // INT type, might be full words
  if(yt&B01+LIT+C2T+C4T+INT1+INT2+INT4)R crcbytes(yv,yn<<bplg(yt));   // direct non-float
  if(yt&FL+CMPX+QP)R crcfloats(yv,yn<<((UI)yt>=CMPX));  // float
  if(yt&BOX){UI4 crc=0; A *bv=yv; DO(yn, crc=HASH4(crc,jtcrcy(jt,C(bv[i])));) R crc;}  // box, take CRC of all the boxes
- if(yt&RAT+XNUM){UI4 crc=0; X *xv=yv; DQ(yn<<((UI)yt>=RAT), crc=HASH4(crc,crcwords(XLIMBLEN(xv[i]),UAV(xv[i])));) R crc;}
+ if(yt&RAT+XNUM){UI4 crc=0; X *xv=yv; DQ(yn<<((UI)yt>=RAT), crc=HASH4(crc,crcwords(UIAV(xv[i]),XLIMBLEN(xv[i])));) R crc;}
  else SEGFAULT;  // scaf
 }
 

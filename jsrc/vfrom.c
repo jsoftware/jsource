@@ -739,3 +739,72 @@ DF2(jtfetch){F12IP;A*av, z;I n;
  RETF(z);   // Mark the box as non-inplaceable, as above
 }
 
+
+// Dictionary support
+
+#ifndef C_CRC32C
+#define HASH4(crc,x) ((UI4)(crc)*0x85249421+(UI4)(x))
+#define HASH8(crc,x) HASH4(HASH4(crc,x),(UI8)(x)>>32)
+#else
+#define HASH4(crc,x) CRC32(crc,x)
+#if BW==64
+#define HASH8(crc,x) CRC32L(crc,x)
+#else
+#define HASH8(crc,x) HASH4(HASH4(crc,x),(UI8)(x)>>32)
+#endif
+#endif
+#if BW==64
+#define HASHI(crc,x) HASH8(crc,x)
+#else
+#define HASHI(crc,x) HASH4(crc,x)
+#endif
+
+// CRC32 of floats
+static UI4 INLINE crcfloats(UI8 *v, I n){
+ // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
+ // This is executed repeatedly so we expect all the branches to predict correctly
+ UI4 crc0=-1;
+ if((n-=3)<0){crc0=HASH8(crc0,v[0]); if(n==-1)crc0=HASH8(crc0,v[1]); R crc0;}   // fast path for the common short case
+ UI4 crc1=crc0, crc2=crc0;  // init all CRCs
+ do{crc0=HASH8(crc0,v[n]==0x8000000000000000?0:v[n]); crc1=HASH8(crc1,v[n+1]==0x8000000000000000?0:v[n+1]); crc2=HASH8(crc2,v[n+2]==0x8000000000000000?0:v[n+2]);}while((n-=3)>=0);  // Do blocks of 24 bytes
+ if(n>=-2){crc0=HASH8(crc0,v[0]==0x8000000000000000?0:v[0]); if(n>-2)crc1=HASH8(crc1,v[1]==0x8000000000000000?0:v[1]);}  // handle last 1 or 2 words
+ R HASH8(crc1,(crc2<<29)+(crc1<<3));  // combine the CRCs, as quickly as possible
+}
+
+// CRC32 of Is
+static UI4 INLINE crcwords(UI *v, I n){
+ // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
+ // This is executed repeatedly so we expect all the branches to predict correctly
+ UI4 crc0=-1;
+ if((n-=3)<0){crc0=HASHI(crc0,v[0]); if(n==-1)crc0=HASHI(crc0,v[1]); R crc0;}   // fast path for the common short case
+ UI4 crc1=crc0, crc2=crc0;  // init all CRCs
+ do{crc0=HASHI(crc0,v[n]); crc1=HASHI(crc1,v[n+1]); crc2=HASHI(crc2,v[n+2]);}while((n-=3)>=0);  // Do blocks of 3 words
+ if(n>=-2){crc0=HASHI(crc0,v[0]); if(n>-2)crc1=HASHI(crc1,v[1]);}  // handle last 1 or 2 words
+ R HASH8(crc1,(crc2<<29)+(crc1<<3));  // combine the CRCs, as quickly as possible
+}
+
+// CRC32 of bytes
+static UI4 INLINE crcbytes(C *v, I n){
+ UI4 wdcrc=crcwords((UI*)v,n>>LGSZI);  // take CRC of the fullword part
+ if(n&(SZI-1)){wdcrc=HASHI(wdcrc,((UI*)v)[n>>LGSZI]<<((SZI-(n&(SZI-1)))<<LGSZI));}  // if there are bytes, take their CRC after discarding garb.  Avoid overfetch
+ R wdcrc;  // return composite CRC
+}
+
+// CRC32 of y.  Floats must observe -0.
+static UI4 INLINE jtcrcy(J jt,A y){
+ I yt=AT(y), yn=AN(y); void *yv=voidAV(y);  // type of y, #atoms, address of data
+ if(yt&INT+(SZI==4)*(C4T+INT4))R crcwords(yv,yn);  // INT type, might be full words
+ if(yt&B01+LIT+C2T+C4T+INT1+INT2+INT4)R crcbytes(yv,yn<<bplg(yt));   // direct non-float
+ if(yt&FL+CMPX+QP)R crcfloats(yv,yn<<((UI)yt>=CMPX));  // float
+ if(yt&BOX){UI4 crc=0; A *bv=yv; DO(yn, crc=HASH4(crc,jtcrcy(jt,C(bv[i])));) R crc;}  // box, take CRC of all the boxes
+ if(yt&RAT+XNUM){UI4 crc=0; X *xv=yv; DQ(yn<<((UI)yt>=RAT), crc=HASH4(crc,crcwords(XLIMBLEN(xv[i]),UAV(xv[i])));) R crc;}
+ else SEGFAULT;  // scaf
+}
+
+// 6!:1 create 32-bit hash of y.  For float types, +-0 must have the same hash
+// x is number of hashslots to multiply CRC by, default 2^:32
+DF2(jthashy){F12IP;
+ ARGCHK2(a,w)
+ UI8 nslots; if(w!=self)RE(nslots=i0(a))else{w=a; nslots=0x100000000LL;}  // get #slots, from x if dyad.  Leave w pointing to y
+ RETF(sc((nslots*jtcrcy(jt,w))>>32))
+}

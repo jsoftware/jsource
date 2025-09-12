@@ -18,7 +18,7 @@ TAOGRADE(taof,D,PREFLT,PREFNE) TAOGRADE(taoz,Z,PREFLTZ,PREFNEZ) TAOGRADE(taoe,E,
 #define TAOGRADEC(nm,T,t) I nm(I n, T *a, T *b, J jt){I comp=0; DO(n, if(comp=t(a[i],b[i]))break;) R comp;}
 TAOGRADEC(taor,A,compare) TAOGRADEC(taox,A,xcompare) TAOGRADEC(taoq,Q,QCOMP)
 
-static I (*comproutine[])()=   // routines for different datatypes. index is [precisionx][up]
+static I (*comproutine[])()=   // routines for different datatypes. index is [precisionx]
 {[B01X]=taoc, [LITX]=taoc, [INTX]=taoi, [FLX]=taof,
 [CMPXX]=taoz,[BOXX]=taor, [XNUMX]=taox, [RATX]=taoq,
 [QPX]=taoe,

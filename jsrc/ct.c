@@ -635,6 +635,8 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
    (taskflags&0x400?jfutex_wakea:jfutex_wake1)(&jobq->futex);  // wake 1 waiting thread, if there is one; for locales type, wake them all
    if(taskflags&0x200){
     // bit 0 of the mask was set, indicating that this thread should pitch in with locale 0.  Run as if in a thread, and report any error in the pyx.  This is copied from threadmain
+    // We start in the console locale for this thread, with globals as called for by the task.  When we finish we must restore local & both global pointers to the current
+    // state of this thread
     A pyx=AAV1(ppyx)[0], startloc=jtfindnl(jt,IAV(ploc)[0]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)  // get pyx (AAV1 ok) and locale#; convert locale# to globals address
     ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
     A savlocsyms=jt->locsyms,savglobal=jt->global;jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK;  // init what needs initing.  Notably clear the local symbols
@@ -644,7 +646,7 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
     A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // get self, positioned after the last noun arg
 // obsolete     A *old=jt->tnextpushp;  // we leave a clear stack when we go
     A z=(FAV(uself)->valencefns[arg2!=self])(jt,arg1,uarg2,uself);  // execute the u in u t. v
-    DECREXECCTIF(jt->global); SYMSETGLOBALS(savlocsyms,savglobal);  // remove exec-protection from finishing exec chain.  This may result in its deletion.  Reset symbol tables too (note there may be no locals & we have changed only globals)
+    DECREXECCTIF(jt->global); SYMRESTORELOCALGLOBALS(savlocsyms,savglobal);  // remove exec-protection from finishing exec chain.  This may result in its deletion.  Reset symbol tables too (note there may be no locals & we have changed only globals)
     C errcode=0;
     if(unlikely(z==0)){fail: z=0; errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualERR(z,goto fail;);}  // realize virtual result before returning it
     jtsetpyxval(jt,pyx,z,errcode);  // install completion info into pyx 0

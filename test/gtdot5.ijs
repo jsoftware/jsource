@@ -4,15 +4,6 @@ NB. T. t. ------------------------------------------------------------------
 NB. **************************************** threads & tasks **********************************
 NB. 64-bit only
 
-3 : 0''
-if. IFWIN do.
- sleep=: usleep@>.@(1e6&*)
-else.
- sleep=: 6!:3
-end.
-1
-)
-
 NB. wait until there are y waiting threads
 wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
@@ -31,8 +22,8 @@ locs =: 0&".@>@(conew&'shared')@> locgbls =: 10;20;30;i. 10    NB. Create 4 numb
 (1 2 3 (, 2&+)&.> }. locgbls) -: {{ ({. 3 T. '') , gbl =: gbl + y }} t. (<'locales';<14;1 2 3{locs) 2
 (0 2 2 2 +&.> locgbls) -: {{ gbl__y }}&.> locs
 (0 1 2 3 ,&.> 3&*&.> 0 2 2 2 +&.> locgbls) -: {{ ({. 3 T. '') , gbl =: gbl * y }} t. (<'locales';<15;locs) 3
-
 (3&*&.> 0 2 2 2 +&.> locgbls) -: {{ gbl__y }}&.> locs
+
 'domain error' -: ". etx {{)n + t. ('locales' ,&< 7 ; i. 4) }}
 'domain error' -: ". etx {{)n + t. (<<'locales') }}
 'domain error' -: ". etx {{)n + t. (<'locales' ,&< i. 2) }}
@@ -48,6 +39,15 @@ locs =: 0&".@>@(conew&'shared')@> locgbls =: 10;20;30;i. 10    NB. Create 4 numb
 'domain error' -: ". etx {{)n + t. ((<'locales' ,&< 2;2),(<'locales' ,&< 2;2)) }}
 18!:55 ;:'shared'
 18!:55 locs
+
+3 : 0''
+if. IFWIN do.
+ sleep=: usleep@>.@(1e6&*)
+else.
+ sleep=: 6!:3
+end.
+1
+)
 
 delth''  NB. make sure we start with an empty system
 N=: 62  NB. max # worker threads
@@ -137,14 +137,12 @@ t3 100
 
 t2 100
 t4 100
-NB.$   end of skip
 
 1: 6!:5 ] 0
 
 delth''
 
 
-epilog''
 
 1: 0 : 0  NB. Move these tests to be executed, one by one
 
@@ -201,4 +199,6 @@ EMPTY
 }}
 
 )
+NB.$  end of skip
+epilog''
   

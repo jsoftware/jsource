@@ -85,14 +85,14 @@ f=: 4 : 0
 
 test&>/~ 0;1;(?1e4);(1e9+?1e9);2e9;(o.?1e6);r.?1e6
 
-1 test x=: 3 5 ?@$ 1e4
-1 test~x
-1 test x=: 3 5 ?@$ 1e9
-1 test~x
-1 test x=: 3 5 ?@$ 0
-1 test~x
-1 test x=: j./2 3 5 ?@$ 0
-1 test~x
+1 test xx=: 3 5 ?@$ 1e4
+1 test~xx
+1 test xx=: 3 5 ?@$ 1e9
+1 test~xx
+1 test xx=: 3 5 ?@$ 0
+1 test~xx
+1 test xx=: j./2 3 5 ?@$ 0
+1 test~xx
 
 g=: 4 : 0
  assert. (x{~   107 ?@$ #x) test y{~ 107  ?@$ #y

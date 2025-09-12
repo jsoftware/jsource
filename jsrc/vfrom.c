@@ -742,7 +742,7 @@ DF2(jtfetch){F12IP;A*av, z;I n;
 
 // Dictionary support
 
-#ifndef C_CRC32C
+#ifndef CRC32
 #define HASH4(crc,x) ((UI4)(crc)*0x85249421+(UI4)(x))
 #define HASH8(crc,x) HASH4(HASH4(crc,x),(UI8)(x)>>32)
 #else
@@ -764,7 +764,7 @@ static UI4 INLINE crcfloats(UI8 *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI4 crc0=-1;
- if((n-=3)<0){crc0=HASH8(crc0,v[0]); if(n==-1)crc0=HASH8(crc0,v[1]); R crc0;}   // fast path for the common short case
+ if((n-=3)<0){crc0=HASH8(crc0,v[0]==0x8000000000000000?0:v[0]); if(n==-1)crc0=HASH8(crc0,v[1]==0x8000000000000000?0:v[1]); R crc0;}   // fast path for the common short case
  UI4 crc1=crc0, crc2=crc0;  // init all CRCs
  do{crc0=HASH8(crc0,v[n]==0x8000000000000000?0:v[n]); crc1=HASH8(crc1,v[n+1]==0x8000000000000000?0:v[n+1]); crc2=HASH8(crc2,v[n+2]==0x8000000000000000?0:v[n+2]);}while((n-=3)>=0);  // Do blocks of 24 bytes
  if(n>=-2){crc0=HASH8(crc0,v[0]==0x8000000000000000?0:v[0]); if(n>-2)crc1=HASH8(crc1,v[1]==0x8000000000000000?0:v[1]);}  // handle last 1 or 2 words

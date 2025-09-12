@@ -520,6 +520,7 @@ extern F2(jtgemmtune2);
 // extern F2(jtgenbitwiseshifta);
 extern F2(jtgrade1p);
 extern F2(jtgrade2);
+extern DF2(jthashy);
 extern F2(jthexrep2);
 extern F2(jthgeom);
 extern A jthook(J,A,A,A);

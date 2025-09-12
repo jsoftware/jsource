@@ -665,7 +665,8 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLSIZE 68  // number of functions - before the second half
 // fntbl[i][0] - 16-bit hashes;
 // fntbl[i][1] - 32-bit hashes
-static const AF fntbl[][2]={
+typedef A (*IFN)(J,I,I,I,I,I,I,A,A,A,I,I,I,A);
+static const IFN fntbl[][2]={
 // prefix: routines used without hashtables, flags, etc
  {jtiosc,jtiosc},  // sequential comparison (-2) - we pass in extra args
  {jtiosfu,jtiosfu},   // i.!.1 - sequential file update (-1)

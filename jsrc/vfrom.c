@@ -206,7 +206,7 @@ static A jtaxisfrom(J jtfg,A w,struct faxis *axes,I rflags){F12IP;I i;
   DPMULDE(zn,nsel^REPSGN(nsel),zn);  // * last-axis size, gives result size
   if(((nunitsels-r)|(zn-MINVIRTSIZE))>=0){  // if there is only one axis left, and result is big enough
    // There is only one application of the last axis.  If the indexes are sequential, we can make the result virtual
-   // We allow virtualing even for NJA blocks.  We allow for NOALIAS because it's just too useful when the user knows what he's doing. 
+   // We allow virtualing even for NJA blocks.  We allow for ANCHORED because it's just too useful when the user knows what he's doing. 
    // If the block can be virtual, we create the virtual here and return
    I *sels=axes[r].sels;  // pointer to selectors of last axis
    I index0;  // indexes of first item if virtual is OK
@@ -791,7 +791,7 @@ static INLINE UI4 crcbytes(C *v, I n){
 }
 
 // CRC32 of y.  Floats must observe -0.
-static INLINE UI4 jtcrcy(J jt,A y){
+static UI4 jtcrcy(J jt,A y){
  I yt=AT(y), yn=AN(y); void *yv=voidAV(y);  // type of y, #atoms, address of data
  if(yt&INT+(SZI==4)*(C4T+INT4))R crcwords(yv,yn);  // INT type, might be full words
  if(yt&B01+LIT+C2T+C4T+INT1+INT2+INT4)R crcbytes(yv,yn<<bplg(yt));   // direct non-float

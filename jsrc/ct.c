@@ -612,9 +612,9 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
   // It would be nice to be able to free the virtual before the task completes, but we don't have a way to (we could realize/fa in the worker, but why?).  The virtual backer will be tied up during the task, but we
   // won't have to copy the data here and then transfer it in the task
   ASSERTGOTO(ISDENSE(AT(arg1)),EVNONCE,errfajobA) // Don't allow sparse args since we can't box them; copy/realize as needed
-  if(unlikely(AFLAG(arg1)&AFNOALIAS)){RZGOTO(arg1=ca(arg1),errfajobA) ACINITZAP(arg1);}else{if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZGOTO(arg1=realize(arg1),errfajobA) else if(AFLAG(arg1)&AFUNINCORPABLE)RZGOTO(arg1=clonevirtual(arg1),errfajobA)} ra(arg1);}
+  if(unlikely(AFLAG(arg1)&AFANCHORED)){RZGOTO(arg1=ca(arg1),errfajobA) ACINITZAP(arg1);}else{if(AFLAG(arg1)&AFVIRTUAL){if(AT(arg1)&TRAVERSIBLE)RZGOTO(arg1=realize(arg1),errfajobA) else if(AFLAG(arg1)&AFUNINCORPABLE)RZGOTO(arg1=clonevirtual(arg1),errfajobA)} ra(arg1);}
   if(arg2!=self){ASSERTGOTO(ISDENSE(AT(arg2)),EVNONCE,errfaarg1)  // repeat for dyad
-   if(unlikely(AFLAG(arg2)&AFNOALIAS)){RZGOTO(arg2=ca(arg2),errfaarg1) ACINITZAP(arg2);}else{if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZGOTO(arg2=realize(arg2),errfaarg1) else if(AFLAG(arg2)&AFUNINCORPABLE)RZGOTO(arg2=clonevirtual(arg2),errfaarg1)} ra(arg2);}
+   if(unlikely(AFLAG(arg2)&AFANCHORED)){RZGOTO(arg2=ca(arg2),errfaarg1) ACINITZAP(arg2);}else{if(AFLAG(arg2)&AFVIRTUAL){if(AT(arg2)&TRAVERSIBLE)RZGOTO(arg2=realize(arg2),errfaarg1) else if(AFLAG(arg2)&AFUNINCORPABLE)RZGOTO(arg2=clonevirtual(arg2),errfaarg1)} ra(arg2);}
   }
   ra(self);  // self can't be virtual - simply raise it
   job->initthread=THREADID(jt);  // indicate this is a user job.  ns is immaterial since it will always trigger a deq.  Install initing thread# for repatriation

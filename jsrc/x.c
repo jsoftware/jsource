@@ -51,9 +51,19 @@ static DF1(jthdrinfo){F12IP;A z;
  R z;
 }
 
-// 15!:24, query/set unaliasability
-static DF1(jtnoalias1){F12IP; RETF(num(!!(AFLAG(w)&AFNOALIAS)))}  // return old value
-static DF2(jtnoalias2){F12IP; I newval=b0(a); if(newval==1){ASSERT(AC(w)<0,EVDOMAIN) AFLAGSETNOALIAS(w)} else AFLAGCLRNOALIAS(w); RETF(RETARG(w))} // error if trying to mark a block that is already aliased
+// 15!:24 <'name', query/set anchored.  name must be a global namwe found in the starting locale
+static DF1(jtanchor1){F12IP;
+ ARGCHK1(w); ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AN(w)==1,EVLENGTH) A bc=C(AAV(w)[0]); ASSERT(AT(bc)&LIT,EVDOMAIN) ASSERT(AR(bc)<2,EVRANK) A nm; RZ(nm=nfs(AN(bc),CAV(bc),0)) ASSERT(vnm(NAV(nm)->n,NAV(nm)->s),EVILNAME) // audit name & get NM block
+ ASSERT((w=jtprobequiet(jt,nm))!=0,EVVALUE) // look up the symbol, get its value.  scaf kludge! the value could be disappearing.  That seems vanishingly unlikely for the anchored flag in particular
+ RETF(num(!!(AFLAG(w)&AFANCHORED)))  // return old value
+}
+static DF2(jtanchor2){F12IP; I newval=b0(a); RE(0);
+ ARGCHK1(w); ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AN(w)==1,EVLENGTH) A bc=C(AAV(w)[0]); ASSERT(AT(bc)&LIT,EVDOMAIN) ASSERT(AR(bc)<2,EVRANK) A nm; RZ(nm=nfs(AN(bc),CAV(bc),0)) ASSERT(vnm(NAV(nm)->n,NAV(nm)->s),EVILNAME)  // audit name & get NM block
+ ASSERT((w=jtprobequiet(jt,nm))!=0,EVVALUE) // look up the symbol, get its value.  scaf kludge! the value could be disappearing.  That seems vanishingly unlikely for the anchored flag in particular
+ ASSERT(!(AFLAG(w)&AFRO+AFVIRTUAL),EVRO) ASSERT(AC(w)==ACUC1,EVUNTIMELY) ASSERT(!(newval&(AFLAG(w)>>AFANCHOREDX)),EVUNTIMELY)   // error if value is read-only or already aliased, or has been anchored already
+ if(newval==1){AFLAGSETANCHORED(w)} else AFLAGCLRANCHORED(w);  // set the flag
+ RETF(sc(newval))  // return the value we set
+} // error if trying to mark a block that is already aliased
 
 // TUNE static I totprobes=0, totslots=0;  // umber of probes/slots
 
@@ -347,7 +357,7 @@ void jtforeigninit(J jt){UI i;
  MN(15,21) XPRIM(VERB, 0,            jtcddlsym,    VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,22) XPRIM(VERB, jtcddlclose,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,23) XPRIM(VERB, jtcdq,        0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
- MN(15,24) XPRIM(VERB, jtnoalias1,    jtnoalias2,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(15,24) XPRIM(VERB, jtanchor1,    jtanchor2,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,0)  XPRIM(VERB, jtlocnc,      0,            VFLAGNONE,VF2NONE,0,   RMAX,RMAX);
  MN(18,1)  XPRIM(VERB, jtlocnl1,     jtlocnl2,     VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,55) XPRIM(VERB, jtlocexmark,  jtlocexmark,  VFLAGNONE,VF2NONE,0,   RMAX,RMAX);

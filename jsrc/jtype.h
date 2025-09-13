@@ -709,8 +709,8 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 // Note: bit 4 is LABANDONED which is merged here
 #define AFSENTENCEWORDX     8     // matches INT1X
 #define AFSENTENCEWORD      ((I)1<<AFSENTENCEWORDX)   // this block comes from an executing sentence and is protected by it
-#define AFNOALIASX     9     // matches INT2X
-#define AFNOALIAS      ((I)1<<AFNOALIASX)   // this block must not be aliased (it is needed inplace)
+#define AFANCHOREDX     9     // matches INT2X
+#define AFANCHORED      ((I)1<<AFANCHOREDX)   // this block must not be aliased (it is needed inplace)
 #define AFUNINCORPABLEX SBTX      // matches SBTX 16
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes and is probably on the C stack rather than 
@@ -762,12 +762,12 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFLAGFAUX(a,v)  {AFLAG(a)=(v);}  // used when a is known to be a faux block
 #define AFLAGANDLOCAL(a,v)   {AFLAG(a)&=(v);}  // LOCAL functions are used when the block is known not to be shared
 #define AFLAGORLOCAL(a,v)    {AFLAG(a)|=(v);}
-// Once a block has been shared, the flags do not change except for PRISTINE, KNOWNNAMED, NOALIAS.  (Pristine only gets cleared, KNOWNNAMED is set and cleared).
+// Once a block has been shared, the flags do not change except for PRISTINE, KNOWNNAMED, ANCHORED.  (Pristine only gets cleared, KNOWNNAMED is set and cleared).
 // To make sure a word-wide change doesn't store an old value, we store into these flags using single-byte operations.  This will cause sharing in the exceedingly rare
 // case of simultaneous modification, but it avoids the need for RFO cycles.
 #if C_LE
-#define AFLAGSETNOALIAS(a) {((C*)&AFLAG(a))[1]|=AFNOALIAS>>8;}
-#define AFLAGCLRNOALIAS(a) (((C*)&AFLAG(a))[1]&=~(AFNOALIAS>>8))
+#define AFLAGSETANCHORED(a) {((C*)&AFLAG(a))[1]|=AFANCHORED>>8;}
+#define AFLAGCLRANCHORED(a) (((C*)&AFLAG(a))[1]&=~(AFANCHORED>>8))
 #define AFLAGSETKNOWN(a) {((C*)&AFLAG(a))[2]|=AFKNOWNNAMED>>16;}  // if the value is ever exposed to another thread, the count will be too high for KNOWN to matter
 #define AFLAGCLRKNOWN(a) (((C*)&AFLAG(a))[2]&=~(AFKNOWNNAMED>>16))
 #define AFLAGSETPRIST(a) {((C*)&AFLAG(a))[3]|=AFPRISTINE>>24;}
@@ -1025,7 +1025,7 @@ typedef struct {
 // *********************** name block ************************
 
 // NM struct: pointed to by the name field of a symbol (NAV(sym->name)), and used for lookups.  Names are allocated with rank 1
-// the first cacheline contains the lookaside value pointer for the primary sympbol table.  It is modified frequently by the primary and must not be referred to by other tables, for false sharing.
+// the first cacheline contains the lookaside value pointer for the primary symbol table.  It is modified frequently by the primary and must not be referred to by other tables, for false sharing.
 // the second cacheline contains data shared by all tables and must not be modified often (bucket is cleared when a name is long-cached)
 typedef struct{
  I bucketx; // (for local simple names, only if bucket!=0) the number of chain entries to discard before

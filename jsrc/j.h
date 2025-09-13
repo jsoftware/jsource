@@ -1544,8 +1544,8 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // even by calling a function that returns it, you can be OK just using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
 // but that's OK as long as you don't pass it to some place where it can become an argument to another function
 // When a block is incorporated it becomes not pristine, because extractions from the parent may compromise it and we don't want to have to go through recursively to find them
-#define INCORPNC(z) {if(unlikely((AFLAG(z)&AFVIRTUAL)!=0)){RZ((z)=realize(z))}else if(unlikely((AFLAG(z)&AFNOALIAS)!=0)){RZ((z)=ca(z))} else{AFLAGPRISTNO(z)} }  // use if you are immediately going to change AC, as with ras()
-#define INCORPNCUI(z) {if(unlikely((AFLAG(z)&AFUNINCORPABLE)!=0)){RZ((z)=realize(z))}else if(unlikely((AFLAG(z)&AFNOALIAS)!=0)){RZ((z)=ca(z))}  else{AFLAGPRISTNO(z)} }  // use if OK to incorporate virtual (but never UNINCORPABLE)
+#define INCORPNC(z) {if(unlikely((AFLAG(z)&AFVIRTUAL)!=0)){RZ((z)=realize(z))}else if(unlikely((AFLAG(z)&AFANCHORED)!=0)){RZ((z)=ca(z))} else{AFLAGPRISTNO(z)} }  // use if you are immediately going to change AC, as with ras()
+#define INCORPNCUI(z) {if(unlikely((AFLAG(z)&AFUNINCORPABLE)!=0)){RZ((z)=realize(z))}else if(unlikely((AFLAG(z)&AFANCHORED)!=0)){RZ((z)=ca(z))}  else{AFLAGPRISTNO(z)} }  // use if OK to incorporate virtual (but never UNINCORPABLE)
 #define INCORP(z) {INCORPNC(z) ACIPNO(z);}  // the normal one to use when inserting into a non-DIRECT non-recursive
 #define INCORPNV(z) {AFLAGPRISTNO(z) ACIPNO(z);}  // use when z is known nonvirtual & nonaliased
 // same, but for nonassignable argument.  Must remember to check the result for 0

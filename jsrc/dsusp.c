@@ -39,7 +39,7 @@ DC jtdeba(J jt,I t,void *x,void *y,A fs){DC d;
  case DCPARSE:  d->dcy=(A)x; d->dcn=(I)y; break;
  case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
  case DCCALL:   
-  d->dcx=x; d->dcy=y; d->dcf=fs; 
+  d->dcx=x; d->dcy=y; d->dcf=fs; d->dcj=0;  // init error# to no error
   d->dcdyad=AT(fs)&VERB&&x&&y;  // remember if dyadic verb execution
   d->dca=jt->curname;
   d->dcstop=-2;

@@ -97,7 +97,7 @@ A jtevery(J jtfg, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
-   if(unlikely(AFLAG(x)&AFNOALIAS)){RZ(x=ca(x)) ACINITZAP(x);}  // user shouldn't box a NOALIAS, but if so we clone it
+   if(unlikely(AFLAG(x)&AFANCHORED)){RZ(x=ca(x)) ACINITZAP(x);}  // user shouldn't box a ANCHORED, but if so we clone it
    else{realizeifvirtual(x); razaptstackend(x);}   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
      // razap OK, because if the result is inplaceable it must be newly created or an input from here; in either case the value is not up the tstack
   } else {
@@ -253,7 +253,7 @@ A jtevery2(J jtfg, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
-   if(unlikely(AFLAG(x)&AFNOALIAS)){RZ(x=ca(x)) ACINITZAP(x);}  // user shouldn't box a NOALIAS, but if so we clone it
+   if(unlikely(AFLAG(x)&AFANCHORED)){RZ(x=ca(x)) ACINITZAP(x);}  // user shouldn't box a ANCHORED, but if so we clone it
    else{realizeifvirtual(x); razaptstackend(x);}   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra, and this will be opened so it doesn't count as aliasing

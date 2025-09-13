@@ -260,7 +260,7 @@ iswreck:;
    ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&(-(AT(z)&DIRECT)))|~ZZFLAGPRISTINE;
    if(likely(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED))) {
     // normal case where we are creating the result box.  Must incorp the result.  Can't see an advantage is storing the virtual temporarily, and that would require testing for UNINCORP block
-    if(unlikely(AFLAG(z)&AFNOALIAS)){RZ(z=ca(z)) ACINITZAP(z);}  // user shouldn't box a NOALIAS, but if so we clone it
+    if(unlikely(AFLAG(z)&AFANCHORED)){RZ(z=ca(z)) ACINITZAP(z);}  // user shouldn't box a ANCHORED, but if so we clone it
     else{realizeifvirtual(z); razaptstackend(z);}   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine flagging (above) =INCORPRA.  We trouble to see if we can shorten tstack, since that is likely
     *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
    }else{

@@ -273,7 +273,7 @@ B jtprobedel(J jtfg,C*string,UI4 hash,A g){F12JT;B ret;
  R ret;
 }
 
-// l/string are length/addr of name, hash is hash of the name, g is symbol table.  l is encoded in low bits of jt
+// len/string are length/addr of name, hash is hash of the name, g is symbol table.
 // result is addr/ra/flags for value (i. e. QCSYMVAL semantics), or 0 if not found
 // locking is the responsibility of the caller
 A probe(I len, C *string, L *sympv, UI8 hashsymx){
@@ -687,17 +687,17 @@ A jtredef(J jt,A w,A v){A f;DC c,d;
  R v;   // good return: recycle v to save a register
 }    /* check for changes to stack */
 
-// find symbol entry for name a in global symbol table g; this is known to be in service of global assignment
-// the name a may require lookup through the path; once we find the locale, we search only in it
+// find symbol entry for name a in its global symbol table; this is known to be in service of global assignment
+// we look only in the current locale (for non-locatives) or the locative locale (for locatives).  We don't follow the path
 // Result is &value for symbol, or 0, with no low-order flags
-// We are called for purposes of setting zombieval for inplace assignments.  We do not create the symbol because multiple threads may assign a name
+// We are called for purposes of setting zombieval for inplace assignments, or for 15!:24.  We do not create the symbol because multiple threads may assign a name
 // We try to create the symbol table (not really needed).  This routine must not modify fillv, which is in use in parsing
 A jtprobequiet(J jt,A a){A g;
  I n=NAV(a)->n; NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
  if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale
  else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
  READLOCK(g->lock) A res=probex(NAV(a)->m,NAV(a)->s,SYMORIGIN,NAV(a)->hash,g); READUNLOCK(g->lock)   // return pointer to value, if found
- R res;
+ R QCWORD(res);
 }
 
 // assign symbol: assign name a in symbol table g to the value w
@@ -727,9 +727,9 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // Before we take a lock on the symbol table, realize any virtual w, and convert w to recursive usecount.  These will be unnecessary if the
  // name is NJA, but since NJAs cannot be non-DIRECT little is lost.
  // It is safe to do the recursive-usecount change here as local at the top level, because the value cannot have been released to any other core.  Similarly for virtuals.
- // if the assignand is VIRTUAL (including UNINCORPABLE) or NOALIAS noninplaceable, it must be realized/copied.  If recursive, ensure RECURSIBLE
- if(unlikely((((wt&RECURSIBLE)^AFLAG(w))&RECURSIBLE+AFNOALIAS+AFVIRTUAL)!=0)){
-  if(AFLAG(w)&AFNOALIAS){if(AC(w)>=0)RZ(w=ca(w))}else rifv(w); // copy if NOALIAS (must not be virtual); realize any virtual.  These may leave a nonrecursive result and change AFLAG(w)
+ // if the assignand is VIRTUAL (including UNINCORPABLE) or ANCHORED noninplaceable, it must be realized/copied.  If recursive, ensure RECURSIBLE
+ if(unlikely((((wt&RECURSIBLE)^AFLAG(w))&RECURSIBLE+AFANCHORED+AFVIRTUAL)!=0)){
+  if(AFLAG(w)&AFANCHORED){if(AC(w)>=0)RZ(w=ca(w))}else rifv(w); // copy if ANCHORED (must not be virtual); realize any virtual.  These may leave a nonrecursive result and change AFLAG(w)
   if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) wt=(I)jtra(w,wt,(A)wt);}  // make the block recursive (incr children if was nonrecursive).  This does not affect the usecount of w itself.
  }
  // Find the internal code for the name to be assigned.  Do this before we take the lock.
@@ -776,7 +776,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
  // ****** if g is a global table, bit2=0 and we have a write lock on the locale, which we must release in any error paths.  The low 2 bits
  // of g are exit flags: bit0=final assignment, bit 1=local assignment.  If local assignment, g=-2 (not final) or -1 (final) *******
 
- // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else.  This is assignment in place, but most cases are detected in our calleer
+ // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else.  This is assignment in place, but most cases are detected in our caller
  if(likely(QCWORD((I)x^(I)w)!=0)){
   // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
   if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&(((I)x&QCNOUN)==0))RZ(x=redef(QCWORD(w),x))  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
@@ -787,7 +787,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   I xaf;  // holder for nvr/free flags
   {A aaf=AFLAG0; aaf=x?x:aaf; xtype=x?xtype:QCNOUN; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x.
 
-  if(likely(!(xaf&AFNJA))){
+  if(likely(!(xaf&AFNJA+AFANCHORED))){  // normal case...
    e->fval=w;  // store the new flagged value to free w before ra()
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
                    // It is OK to do the first half of this operation early, since it doesn't change the usecount.  But we must keep the lock until we have protected w
@@ -814,7 +814,8 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
     rarecurknown(w);  // if zap not allowed, just ra() w, known recursive-if-recursible so this is quick.  Subroutine call.  w may be inplaceable but not zappable so no rapos; may be sparse so we must allow 1 small recursion then
         // indicate the value is in a name.  We do this to allow virtual extension.  Is it worth it?.  Probably, since we have to lock AC anyway.  We don't do it for x/y
    }
-
+  }else if(unlikely(xaf&AFANCHORED)){  // attempt to reassign a ANCHORED value
+   ASSERTGOTO(0,EVRO,exitlock)  // user must unencumber the value first
   }else{  // x is memory-mapped, and is not rewriting an incumbent value
    w=QCWORD(w);  // remove type that was stored in w
    ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value

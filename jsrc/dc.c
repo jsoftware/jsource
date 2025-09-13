@@ -7,7 +7,7 @@
 #include "d.h"
 
 
-static F1(jtdfrep){F12IP;ARGCHK1(w); R NOUN&AT(w)?AFLAG(w)&AFNOALIAS?str(13,"(unaliasable)"):w:lrep(w);}
+static F1(jtdfrep){F12IP;ARGCHK1(w); R NOUN&AT(w)?AFLAG(w)&AFANCHORED?str(13,"(unaliasable)"):w:lrep(w);}
 
 static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=incorp(sfn(0,d->name))); RZ(*zv++=incorp(dfrep(QCWORD(d->fval))));})
 

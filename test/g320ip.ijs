@@ -1228,15 +1228,17 @@ assert. ((<P;0),(<01),<(<I),(<00),<P;0) -: (* ] ((9!:_3) (9!:_3))) 0
 NB.$  end of skip
 
 NB. [x] 15!:24 y ----------------------------------------
-0 = 15!:24 ] 15!:15 i. 20
-1 = 15!:24 ] 1&(15!:24) 15!:15 i. 20
-0 = 15!:24 ] 0&(15!:24) 1&(15!:24) 15!:15 i. 20
-'domain error' -: 1&(15!:24) etx a =: i. 20  NB. Can't NOALIAS if aliased already
-a =: 1&(15!:24) 15!:15 i. 20
-1 = 15!:24 a
+a =: >: i. 20
+0 = 15!:24 <'a'
+1 = 15!:24 <'a' [ 1&(15!:24) <'a'
+'untimely request' -: 1&(15!:24) etx <'a'  NB. Can't anchor twice
+'read-only data' -: ". etx 'a =: >: 5'
+0 = 15!:24 <'a' [ 0&(15!:24) <'a'
 b =: a
-1 = 15!:24 a
-0 = 15!:24 b
+'untimely request' -: 1&(15!:24) etx <'a'  NB. Can't anchor when aliased
+'ill-formed name' -: 15!:24 etx <'1a'
+'ill-formed name' -: 15!:24 etx <'a_1x_'
+'value error' -: 15!:24 etx <'nl'
 
 f=:{{
 a =: 9 - 3

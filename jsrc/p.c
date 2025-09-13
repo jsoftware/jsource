@@ -824,13 +824,15 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
           zval=QCWORD(symorigin[symx].fval);  // get value of symbol in primary table.  There may be no value; that's OK
          }else{zval=QCWORD(jtprobelocal(symorigin,QCWORD(y),jt->locsyms));}
          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d) which is OK
+         zval=zval?zval:AFLAG0;  // if no zval, point to benign flags
         }else{
-          // global assignment, get slot address.  Global names have been ra()d and have AC=2
-         zval=QCWORD(jtprobequiet(jt,QCWORD(y)));
-          // We have to handle the case of name =: 5 + > <  name,  i. e where the usecount of 2 came from external boxing rather than FAOWED.
-          // we require that the zvalue be a FAOWED argument
+         // global assignment, get slot address.  Matching global names have been ra()d and have AC=2
+         zval=jtprobequiet(jt,QCWORD(y));  // the name could be deleted after lookup, but if it matches a stacked value that value is protected, so this value must be also.  We can't dereference zval until we know it matches an arg
+         // We have to handle the case of name =: 5 + > <  name,  i. e where the usecount of 2 came from external boxing rather than FAOWED.
+         // we require that the zvalue be a FAOWED argument
          targc=fsa[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:0; targc=stack[1].a==(A)((I)zval+STKNAMED+STKFAOWED)?ACUC2:targc;  // allow inplacing with target=2 if the assigned value is either arg with FAOWED flag
-         zval=targc==0?0:zval;  // if we don't allow inplacing, we must ensure that we don't dereference zval, because if it has not been protected by FAOWED it might have been freed
+         zval=targc==0?AFLAG0:zval;  // if we don't allow inplacing, we must ensure that we don't dereference zval, because if it has not been protected by FAOWED it might have been freed
+         if(unlikely(AFLAG(zval)&AFANCHORED))goto anchoredip; // if the target is anchored, we accept it as inplaceable regardless of its usecount
         }
         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and correct usecount: 1 if local, 2 if global since we have raised the count of this block already if it is named and to be operated on inplace; +1 if NJA to account for the mapping reference.
@@ -839,7 +841,10 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
         // path to here is to mispredict the assignment and then correctly predict the local path.  In that path we have loaded the symbol number followed by zval, and it will
         // not settle for 10 clocks.  We very much want to keep executing during the settlement so we don't want to risk a misprediction.  We should be executing
         // well into tpop* before zval settles.
-        zval=zval?zval:AFLAG0; zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(PEXTN(AFLAG(zval),AFNJAX,1)+targc))?zval:0; jt->zombieval=zval;
+// obsolete         zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(PEXTN(AFLAG(zval),AFNJAX,1)+targc))?zval:0;
+        I af=AFLAG(zval); zval=AC(zval)==((I)PEXTN(af,AFNJAX,1)+targc)?zval:0; zval=af&(AFRO|AFVIRTUAL)?0:zval;  // OK if count right, and not R-O/VIRT
+anchoredip:;  // here when we have detected that an anchored name is inplaceable
+        jt->zombieval=zval;
        }
       }
       PSTK *arga=fsa; arga=pt0ecam&FLGPLINE2?stack:arga; A arg1=arga[1].a;// 1st arg, reconstituted 1 1 2->1 2 0; then fetch  monad or left dyad  2 3 1

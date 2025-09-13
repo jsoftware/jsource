@@ -643,7 +643,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 // This is the routine that analyzes the input, allocates result area and hashtable, and vectors to the correct action routine
 #pragma GCC diagnostic push
 #pragma clang diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type-mismatch"
+#pragma GCC diagnostic ignored "-Wcast-function-type"
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
 // Table to look up routine from index
 // 0-11, 16-23 are hashes for various types, calculated by bit-twisting
@@ -816,7 +816,7 @@ inplace:;
   // Handle sparse arguments
   mode &= IIOPMSK;  // remove flags before going to sparse code
   if(1>=acr)R af?sprank2(a,w,NOEMSGSELF,acr,RMAX,(AF)jtindexof):ISSPARSE(wt)?iovxs(mode,a,w):iovsd(mode,a,w);
-  if(af|wf)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtindexof);
+  if(af|wf)R sprank2(a,w,NOEMSGSELF,acr,wcr,(AF)jtindexof);
   switch((ISSPARSE(at)?2:0)+(ISSPARSE(wt)?1:0)){
   case 1: z=indexofxx(mode,a,w); break;
   case 2: z=indexofxx(mode,a,w); break;

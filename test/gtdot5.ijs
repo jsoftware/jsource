@@ -12,6 +12,7 @@ delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 NB. tests of locales keyword
 delth''
 
+0!:_1`1:@.(9!:56'supportafinity') '$'   NB. skip if not supportaffinity
 NB. populate shared locale
 create_shared_ =: {{ gbl =: >y }}
 destroy_shared_ =: 4!:55@coname
@@ -39,6 +40,7 @@ locs =: 0&".@>@(conew&'shared')@> locgbls =: 10;20;30;i. 10    NB. Create 4 numb
 'domain error' -: ". etx {{)n + t. ((<'locales' ,&< 2;2),(<'locales' ,&< 2;2)) }}
 18!:55 ;:'shared'
 18!:55 locs
+NB.$
 
 3 : 0''
 if. IFWIN do.

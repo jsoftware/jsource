@@ -668,7 +668,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 typedef A (*IFN)(J,I,I,I,I,I,I,A,A,A,I,I,I,A);
 static const IFN fntbl[][2]={
 // prefix: routines used without hashtables, flags, etc
- {jtiosc,jtiosc},  // sequential comparison (-2) - we pass in extra args
+ {(IFN)jtiosc,(IFN)jtiosc},  // sequential comparison (-2) - we pass in extra args
  {jtiosfu,jtiosfu},   // i.!.1 - sequential file update (-1)
 
  //hashing a
@@ -810,7 +810,7 @@ inplace:;
  if(unlikely(ISSPARSE(at|wt))){A z;
   // Handle sparse arguments
   mode &= IIOPMSK;  // remove flags before going to sparse code
-  if(1>=acr)R af?sprank2(a,w,NOEMSGSELF,acr,RMAX,jtindexof):ISSPARSE(wt)?iovxs(mode,a,w):iovsd(mode,a,w);
+  if(1>=acr)R af?sprank2(a,w,NOEMSGSELF,acr,RMAX,(AF)jtindexof):ISSPARSE(wt)?iovxs(mode,a,w):iovsd(mode,a,w);
   if(af|wf)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtindexof);
   switch((ISSPARSE(at)?2:0)+(ISSPARSE(wt)?1:0)){
   case 1: z=indexofxx(mode,a,w); break;
@@ -1063,7 +1063,7 @@ inplace:;
   }else{h = (A)acr;}  // if there is no hashtable, pass in acr using the h field.  This is for sorted boxes only
  }  // end of 'not sequential comparison' which means we may need a hashtable
 
- AF ifn=fntbl[FNTABLEPREFIX+fnx][bighash];  // get an early start fetching the function we will call
+ IFN ifn=fntbl[FNTABLEPREFIX+fnx][bighash];  // get an early start fetching the function we will call
 
  // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. If we are prehashing we skip this.
  // If the conditions are right, perform the operation inplace.
@@ -1163,13 +1163,13 @@ DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>
 // a is the arg that was indexed, used only if we have to revert to rerunning the operation
 // w is the arg to be applied to the index
 // hs is the hashtable
-A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
+A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;IFN fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt;
  ARGCHK3(a,w,hs);
  // hv is (info vector);(hashtable);(byte index validity)
  hv=AAV(hs); x=hv[0]; h=hv[1]; 
  // get the info from the info vector
- xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; /* noavx jt->min=xv[3]; */ fn=(AF)xv[4];  // n=#atoms in item of table, k=#bytes
+ xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; /* noavx jt->min=xv[3]; */ fn=(IFN)xv[4];  // n=#atoms in item of table, k=#bytes
  ar=AR(a); as=AS(a); at=AT(a); t=at; SETIC(a,m); 
  wr=AR(w); ws=AS(w); wt=AT(w);
  r=ar?ar-1:0;   // r=rank of a hashed item
@@ -1257,7 +1257,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  if(ar==wr+1){  // is just 1 cell of y?
   // if y has rank 1 less than x, execute as ((x ~: y) # x) if y is atomic or ((x -.@-:"yr) # x) if y is an array.  Inplace x.  Use IRS and leave comparison tolerance as set
   if(wr==0){RZ(x=jtrepeat(jtfg,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
-  }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtfg,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
+  }else{IRS2(a,w,0,wr,wr,(AF)jtnotmatch,x); RZ(x=jtrepeat(jtfg,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
   }
  }else{
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
@@ -1302,7 +1302,7 @@ F2(jteps){F12IP;I l,r;
  ARGCHK2(a,w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(unlikely(ISSPARSE(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
+ if(unlikely(ISSPARSE(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,(AF)jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);  // no inplacing
 }    /* a e."r w */
@@ -1373,6 +1373,7 @@ F1(jtsclass){F12IP;A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 
 // function definition
 #define IOCOLF(f)     void f(J jt,I asct,I wsct,I d,A a,A w,A z,A h,UIL ctmask)
+typedef void (*IOCOLFN)(J,I,I,I,A,A,A,A,UIL);
 #define IOCOLDECL(T)  D tl=jt->cct,tr=1/tl,x;                           \
                           I hj,*hv=AV(h),i,j,jr,l,p=AN(h),*u,*zv=AV(z);  \
                           T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
@@ -1430,7 +1431,7 @@ static JOCOLFT(D,jtjocold,cthid(ctmask,*v),    cthid(ctmask,tl*x),cthid(ctmask,t
 static JOCOLFT(Z,jtjocolz,cthid(ctmask,*(D*)v),cthid(ctmask,tl*x),cthid(ctmask,tr*x),!zeq(*v,av[wsct*hj]))
 
 // support for a i."1 &.|:w or a i:"1 &.|:w   used only by some sparse-array stuff
-A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
+A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;IOCOLFN fn;
  ARGCHK2(a,w);
  // require ct!=0   why??
  ASSERT(1.0!=jt->cct,EVNONCE);

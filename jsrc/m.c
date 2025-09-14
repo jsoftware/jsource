@@ -762,17 +762,17 @@ A jtincorpra(J jt, A w) {INCORPNC(w); ra(w); R w;}
 // You should be wary of calling a virtual block NJA, because with a usecount of 1 it might be inplaced by the code for x,y or x u}y
 // If this code is called with inplacing turned on (* w inplaceable), we assume that w is going to be replaced by the virtual result,
 // and we make the virtual block inplaceable if w was
-RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
- J jt=(J)(intptr_t)((I)jtip&~JTFLAGMSK);  // get flag-free pointer to J block
+RESTRICTF A jtvirtual(J jtfg, AD *RESTRICT w, I offset, I r){F12IP;AD* RESTRICT z;
+// obsolete  J jt=(J)(intptr_t)((I)jtfg&~JTFLAGMSK);  // get flag-free pointer to J block
  ASSERT(RMAX>=r,EVLIMIT);
  I t=AT(w);  // type of input
  offset<<=bplg(t);  // length of an atom of t
  I wf=AFLAG(w);  // flags in input
- I wip=SGNIF(jtip,JTINPLACEWX)&AC(w);   // sgn if w is abandoned - this clears all but the sign bit
+ I wip=SGNIF(jtfg,JTINPLACEWX)&AC(w);   // sgn if w is abandoned - this clears all but the sign bit
  // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
  // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
  // We could check for zombieval etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
- if((wip & (-(t&DIRECT)) & (r-(AR(w)+1)) & SGNIFNOT(wf,AFUNINCORPABLEX))<0){
+ if((wip & (-(t&DIRECT)) & (r-(AR(w)+1)) & SGNIFNOT(wf,AFUNINCORPABLEX))<0){  // scaf r test not required; lower rank ok, higher impossible (test)
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
   // We leave the usecount unchanged, so the block still shows as inplaceable
   AK(w)+=offset; AR(w)=(RANKT)r;

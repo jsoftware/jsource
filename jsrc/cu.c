@@ -306,11 +306,11 @@ static DF1(jtunderh10){F12IP;R jtrank1ex0(jtfg,w,self,jtunderh1);}  // pass inpl
 static DF2(jtunder20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtunder2);}  // pass inplaceability through
 static DF2(jtunderh20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtunderh2);}  // pass inplaceability through
 
-// structural under, i. e. u&.v when v is a special noninvertible form that we recognize.  Currently only , and m&{ are recognized
+// structural under, i. e. u&.v when v is a special noninvertible form that we recognize.  Currently only ,   m&{   m&(];.0) are recognized
 static DF1(jtsunder){F12IP;PROLOG(777);
  I origacw=AC(w);  // preserve original inplaceability of y
  I negifipw=ASGNINPLACENEG(SGNIF(jtfg,JTINPLACEWX),w);   // get inplaceability of y
- A v=FAV(self)->fgh[1]; A vz; RZ(vz=(FAV(v)->valencefns[0])(jt,w,v));  // execute v y, not allowing inplaceing since we have to store back
+ A v=FAV(self)->fgh[1]; A vz; RZ(vz=(FAV(v)->valencefns[0])(jt,w,v));  // execute v y, not allowing inplacing since we have to store back
  I negifip;  // inplaceability of final result
  if((negifip=negifipw&SGNIF(AFLAG(vz),AFVIRTUALX))<0){
   // v returned a virtual block (which must be backed by y or its backer), and y was inplaceable: mark the result as virtual inplaceable nonincorpable
@@ -328,14 +328,21 @@ static DF1(jtsunder){F12IP;PROLOG(777);
   // otherwise return u-result v^:_1 y
   // we want to inplace into y if possible.  To do this, we restore the original usecount of y (provided y was not passed in to u - we know v doesn't change it); but before
   // we do that we have to remove any virtual blocks created here so that they don't raise y
+  // In case of m&(];.0), extract the address of the vz data and its #items before we free the virtuals
+  void *wv=voidAV(vz); I wi=AS(vz)[0];  // w data, # items
   rifv(uz);  // if uz is a virtual, realize it in case it is backed by y
   RZ(uz=EPILOGNORET(uz));  // free any virtual blocks we created
   if((origacw&negifipw&(AC(w)-2))<0)ACRESET(w,origacw)  // usecount of y has been restored; restore inplaceability.  The use of origacw is subtle.  In a multithreaded system you mustn't reset the usecount lest another thread
       // has raised it.  So, we reset AC to ACINPLACE only in the case where it was originally inplaceable, because then we can be sure the same block is not in use in another thread.
       // Also, if AC(w) is above 1, it has escaped and must no longer be inplaced.  If it isn't above 1, it must be confined to here
-  // do the inverse
-  if(FAV(v)->id==CCOMMA){RZ(z=reshape(shape(w),uz));  // inv for , is ($w)&($,)
-  }else{RZ(z=jtamendn2(jtfg,uz,w,FAV(v)->fgh[0],ds(CAMEND)));   // inv for m&{ is m}&w
+  // do the structural inverse
+  if(FAV(self)->localuse.lu1.sundern==1){RZ(z=jtamendn2(jtfg,uz,w,FAV(v)->fgh[0],ds(CAMEND)));   // inv for m&{ is m}&w
+  }else if(FAV(self)->localuse.lu1.sundern==2){
+   // m&(];.0) - copy en bloc into original y, inplace if possible.  We know that vz (now freed) was a virtual into w
+   // verify that uz has same type as w, and the same shape as original vz
+   I t=AT(w);
+   MC(wv,voidAV(uz),AN(uz)<<bplg(t));  // inv for m&(];.0)  is copy back
+  }else{RZ(z=reshape(shape(w),uz));  // inv for , is ($w)&($,)
   }
   EPILOG(z);
  }
@@ -354,7 +361,7 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
   wvb=fx(AAV(w)[gside]);  // turn the gerund into a verb
  }
  ASSERTVV(a,wvb); v=FAV(wvb);  // v is V* for w
- f1=0; f2=0;
+ f1=0; f2=0; I sundern;   // type of structural under
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
  I flag = (FAV(a)->flag&v->flag&VASGSAFE);
@@ -377,12 +384,13 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
     f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
    }
  // obsolete    if(vv==CFROM&&(!c)&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)) or u.&.(m { ][), structural under
-   if(vv==CFROM&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)) or u.&.(m { ][), structural under
+   if(vv==CFROM&&AT(v->fgh[0])&NOUN){sundern=1; goto sunder;}  // u&.(m&{)) or u.&.(m { ][), structural under
    break;
   }
  case CCOMMA:  // u&., structural under
+  sundern=0;  // indic type of under
 sunder:  // come here for all structural under
-  fdeffill(z,VF2NONE,CUNDER,VERB,jtsunder,jtvalenceerr,a,w,0,flag,RMAX,RMAX,RMAX) R z;  // process the structural under when the argument arrives
+  fdeffillall(z,VF2NONE,CUNDER,VERB,jtsunder,jtvalenceerr,a,w,0,flag,RMAX,RMAX,RMAX,fffv->localuse.lu1.sundern=sundern,) R z;  // process the structural under when the argument arrives
  }
  I flag2=(FAV(wvb)->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1))*((VF2WILLOPEN1+VF2WILLOPEN2A+VF2WILLOPEN2W)>>VF2WILLOPEN1X);
  I r=mr(wvb);

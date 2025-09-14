@@ -28,13 +28,13 @@ static DF2(jtcut02){F12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROL
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
 
- if(!(VGERL&FAV(self)->flag)){
-  fs=FAV(self)->fgh[0];  // the verb we will execute'|syntax error in efx, executing 3:...|       ((3 3$0 1 2 1 2 3 2 3 4))+' -:&(10&{. , i:&' ' }. ]) efx '3 : ''((+/~ i. 3)) +'' 5'
+ if(likely(!(VGERL&FAV(self)->flag))){
+  fs=FAV(self)->fgh[0];  // the verb we will execute
 
  }else{
   RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.
  }
- if(FAV(fs)->mr>=AR(w)){
+ if(likely(FAV(fs)->mr>=AR(w))){
   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assembly path
   state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
@@ -76,7 +76,7 @@ static DF2(jtcut02){F12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROL
   origoffset=AK(virtw);
   wcellbytes=wcellsize<<bplg(AT(w));  // bytes per cell
  }
- if(m){
+ if(unlikely(m!=0)){
    // There is a frame; we will have to assemble the results, even if there is only one
    // See if this verb is BOXATOP.  NOTE that if this is a gerund, fs points to a cyclic iterator which is never BOXATOP
    // We honor BOXATOP if the verb can operate on a cell of w in its entirety
@@ -104,7 +104,7 @@ static DF2(jtcut02){F12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROL
    // general selection: multiple axes, or reversal.  We do not look for the case of one reversed axis (could avoid boxing input to {) on grounds of rarity
    do{
     if(q){  // if we have already allocated the input area to {, fill it in
-     // For each axis, create a boxed vector of boxed indexes to fetch, in the correct order
+     // For each axis, create a boxed vector of indexes to fetch, in the correct order
      for(i=0;i<c;++i){  // for each axis of the cell of a
       axislen=ws[i]; j=u[i]; e=u[i+c]; k=e; e=REPSGN(e); k^=e; k-=e;  // axislen=length of this axis, j=starting pos, e=sgn(length), k=ABS(length)
       if(j>=0){k=MIN(k,axislen-j); j+=e&(k-1);}else{j+=axislen; k=MIN(k,j+1); j-=(~e)&(k-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
@@ -130,6 +130,23 @@ static DF2(jtcut02){F12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROL
 #include "result.h"
  EPILOG(zz);
 }    /* a f;.0 w */
+
+// a ];.0 w
+DF2(jtrightcut0){F12IP;
+ // We check for the special case of substr (a has 1 column) and handle it fast with a virtual result; revert for others
+ if(unlikely(AR(w)==0)||unlikely(AR(a)!=2)||((AS(a)[0]^2)+(AS(a)[1]^1))!=0)R jtcut02(jt,a,w,self);  // exit if multiple substrs or w atomic
+ RZ(a=vib(a));  // audit for valid integers
+ I wr=AR(w), wi=AS(w)[0], a0=IAV(a)[0], a1=IAV(a)[1];  // rank of w, number of items, starting index, length
+ if(unlikely(a1<0))R jtcut02(jt,a,w,self);  // if reversal called for, revert, can't give virtual result
+ a1=a1>wi?wi:a1;  // replace infinite length by max feasible
+ a0+=REPSGN(a0)&(wi-(a1-1)); if(unlikely(a0<0)){ASSERT((a1+=a0)>=0,EVINDEX) a0=0;}  // resolve negative length, clamp begin to 0
+ a1+=a0; a1=a1>wi?wi:a1; a1-=a0;  // clamp end to max
+ ASSERT((a0|a1)>=0,EVINDEX)  // start and end+1 must be OK
+ I in; PROD(in,wr-1,&AS(w)[1])   // #atoms in an item of w
+ RZ(a=jtvirtual(jtfg,w,a0*in,wr))  // allocate a (possibly) self-virtual.  inplace for a immaterial
+ MCISH(&AS(a)[1],&AS(w)[1],wr-1) AS(a)[0]=a1; AN(a)=a1*in;  // fill in AS and An: a1 items
+ RETF(a);
+} 
 
 // self is a compound, using @/@:/&/&:, that we tried to run with special code, but we found that we don't support the arguments
 // here we revert to the non-special code for the compound, without inplacing
@@ -1401,7 +1418,7 @@ F2(jtcut){F12IP;A h=0;I flag=0,k;
    fdeffillall(z,0,CCUT,VERB, jtcut01,jtboxcut0, a,w,h, flag, RMAX,2L,RMAX,FAV(z)->localuse.boxcut0.parm=~0, FAV(z)->localuse.boxcut0.func=jtcut02);
    R z;
   }
-  fdeffillall(z,0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
+  fdeffillall(z,0,CCUT,VERB, jtcut01,(FAV(a)->id&~1)==CLEFT?jtrightcut0:jtcut02, a,w,h, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  case 2: case -2:
 #if 0 && C_AVX2 && PYXES //temp. disabled; broken scaf
    if(FAV(a)->id==CBOX){ //<;._2

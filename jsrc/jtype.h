@@ -1198,6 +1198,7 @@ typedef struct {
     S foreignmn[2];  // in m!:n, the arguments
     I poweratom;  // for u^:atom or u^:<any, the encoded arg status: bit0=multiple (i. e. boxed n) bit1=nonneg power bits2-31=|power|
     AF bondfn;  // for m&v u&n, the dyad entry point for u/v
+    I sundern;  // for u&.v structural under, form of u: 0=, 1=m&{ 2=m&(];.0)
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

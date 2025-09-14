@@ -564,7 +564,7 @@ extern F2(jtmemu2);
 extern F2(jtmemw);
 extern F2(jtnamerefop);
 extern F2(jtnl2);
-extern F2(jtnotmatch);
+extern DF2(jtnotmatch);
 extern F2(jtnouninfo2);
 extern F2(jtobverse);
 // extern F2(jtodd);

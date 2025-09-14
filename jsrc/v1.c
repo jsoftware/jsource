@@ -533,4 +533,4 @@ F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
  RETF(z);
 }    /* a -:"r w */
 
-F2(jtnotmatch){F12IP;R jtmatch((J)((I)jt+JTNOTMATCH),a,w);}   /* a -.@-:"r w */
+DF2(jtnotmatch){F12IP;R jtmatch((J)((I)jt+JTNOTMATCH),a,w);}   /* a -.@-:"r w */

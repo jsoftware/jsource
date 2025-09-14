@@ -95,7 +95,7 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
- common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions \
+ common="$OPENMP -std=gnu17 -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wno-attributes \
  -Wno-cast-function-type \
@@ -132,6 +132,7 @@ else
  -Wsign-compare \
  -Wtautological-constant-out-of-range-compare \
  -Wuninitialized \
+ -Wno-cast-function-type-mismatch \
  -Wno-char-subscripts \
  -Wno-consumed \
  -Wno-delete-non-abstract-non-virtual-dtor \

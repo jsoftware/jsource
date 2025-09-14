@@ -641,10 +641,6 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 
 
 // This is the routine that analyzes the input, allocates result area and hashtable, and vectors to the correct action routine
-#pragma GCC diagnostic push
-#pragma clang diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
 // Table to look up routine from index
 // 0-11, 16-23 are hashes for various types, calculated by bit-twisting
 // 32-51 are reverse hashes (i. e hash w, look up items of a)
@@ -703,8 +699,6 @@ static const IFN fntbl[][2]={
  {0,0},                                                                  //binary search
  {jtiow21,jtiow212}, {jtiow41,jtiow412}, {jtiowi1,jtiowi12}, {jtiow161,jtiow1612},//int list
 };
-#pragma GCC diagnostic pop
-#pragma clang diagnostic pop
 static const S fnflags[]={  // 0 values reserved for small-range.  They turn off booladj
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //bool/char/.. table
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  //INT table

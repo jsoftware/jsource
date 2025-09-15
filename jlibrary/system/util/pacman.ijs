@@ -65,7 +65,9 @@ end.
 3 : 0''
 HTTPCMD=: ''
 nc=. '--no-cache'
-RELNO=: ,'0,p<.>0' (8!:2) 2 {. 100 #.inv >{.revinfo_j_''
+n=. 2 {. 100 #.inv >{.revinfo_j_''
+RELNO=: ,'0,p<.>0' (8!:2) n
+VERNO=: 100 #. n
 if. IFUNIX do.
   IFWGET=. IFCURL=. 0
   if. -. IFIOS +. UNAME-:'Android' do.
@@ -1716,7 +1718,9 @@ else.
   m=. m,'check that you have write permission for: ',LF,BINPATH
 end.
 smoutput m
-if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
+linuxaio=. (UNAME -: 'Linux') *. 907 <: VERNO
+
+if. linuxaio < (<UNAME)e.'Linux';'OpenBSD';'FreeBSD' do.
   qt_ldd_test d1
   smoutput 'If libjqt cannot be loaded, see this guide for installing the Qt library'
   smoutput 'https://code.jsoftware.com/wiki/Guides/Qt_IDE/Install'
@@ -1729,6 +1733,8 @@ y=. (*#y){::0;y
 smoutput 'Installing Qt library...'
 if. IFWA64 do.
   z=. 'qt68-win-arm64-slim.zip'
+elseif. linuxaio do.
+  z=. 'qt68-linux',((y-:'slim')#'-slim'),'.tar.gz'
 elseif. IFWIN do.
   z=. 'qt68-win',((y-:'slim')#'-slim'),'.zip'
 elseif. do.
@@ -1739,7 +1745,7 @@ if. rc do.
   smoutput 'unable to download: ',z return.
 end.
 d=. jpath IFWIN{::'~install';'~bin'
-if. IFWIN do.
+if. IFWIN +. linuxaio do.
   unzip_jpacman_ p;d
 else.
   hostcmd_jpacman_ 'unzip -o ',(dquote p),' -d ',dquote d

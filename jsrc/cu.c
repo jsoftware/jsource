@@ -325,7 +325,7 @@ static A jtrightcut0inv(J jt, A w, A vz, A uz, I negifipw,A sself){I t;
   a1=a1>wi?wi:a1;  // replace infinite length by max feasible
   a0+=REPSGN(a0)&(wi-(a1-1)); if(unlikely(a0<0)){ASSERT((a1+=a0)>=0,EVINDEX) a0=0;}  // resolve negative length, clamp begin to 0
   I in; PROD(in,wr-1,&AS(w)[1])   // #atoms in an item of w
-  wv=(I)voidAV(w)+((a0*in)<<kg);  // address of destination
+  wv=(void*)((I)voidAV(w)+((a0*in)<<kg));  // address of destination
  }
  I na=AN(vz), nb=na<<kg;   // number of atoms and bytes to copy
  if(AFLAG(w)&RECURSIBLE){na<<=PEXTN(t,RATX,1); DO(na, ra(AAV(uz)[i])); DO(na, fa(((A*)wv)[i]);) } // if w is recursive, raise the new blocks then lower the old

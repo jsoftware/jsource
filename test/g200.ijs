@@ -211,9 +211,10 @@ _1072 _1073 _1074 -: <.@(2&^.) 2 ^ _1072 _1073 _1074
 _1072 _1073 _1074 -: >.@(2&^.) 2 ^ _1072 _1073 _1074
 _1050 -: <.@(2&^.) +/ ] 2 ^ _1050 _1054 _1070
 _1049 -: >.@(2&^.) +/ ] 2 ^ _1050 _1054 _1070
-NB. disabled temporarily until fixed in linux arm64
-NB. 'complex' -: datatype <.@(2&^.) _.
-NB. 'complex' -: datatype >.@(2&^.) _.
+0!:_1`1:@.(IF64*:IFRASPI) '$'   NB. skip temporarily until fixed in linux arm64
+'complex' -: datatype <.@(2&^.) _.
+'complex' -: datatype >.@(2&^.) _.
+NB.$
 _ -: <.@(2&^.) _
 _ -: >.@(2&^.) _
 __ -: <.@(2&^.) 0

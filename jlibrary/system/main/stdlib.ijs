@@ -1,7 +1,7 @@
 cocurrent <'z'
 3 : 0 ''
 
-JLIB=: '9.7.2'
+JLIB=: '9.7.4'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -343,12 +343,13 @@ end.
 if. 0 e. #nms do. return. end.
 
 if. #t=. x -. ' ' do.
-  'n s'=. '~*' e. t
-  t=. t -. '~*'
+  'n s l'=. '~*_' e. t
+  t=. t -. '~*_'
   b=. t&E. &> nms
   if. s do. b=. +./"1 b
   else. b=. {."1 b end.
   nms=. nms #~ n ~: b
+  if. l do.nms=. nms (,'_',,&'_') each coname '' end.
 end.
 )
 names=: list_z_ @ nl
@@ -1644,6 +1645,7 @@ r
 )
 topara=: 3 : 0
 if. 0=#y do. '' return. end.
+y=. toJ y
 b=. y=LF
 c=. b +. y=' '
 b=. b > (1,}:b) +. }.c,0

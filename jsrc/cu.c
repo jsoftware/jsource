@@ -306,6 +306,7 @@ static DF1(jtunderh10){F12IP;R jtrank1ex0(jtfg,w,self,jtunderh1);}  // pass inpl
 static DF2(jtunder20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtunder2);}  // pass inplaceability through
 static DF2(jtunderh20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtunderh2);}  // pass inplaceability through
 
+// inverse for m&(];.0) on one axis - structural inverse
 static A jtrightcut0inv(J jt, A w, A vz, A uz, I negifipw,A sself){I t;
  I wr=AR(vz);  // rank of w
  ASSERT(wr==AR(uz),EVRANK) ASSERTAGREE(AS(vz),AS(uz),AR(vz)) // shape of uz must match shape of vz, the hole we took from
@@ -317,7 +318,7 @@ static A jtrightcut0inv(J jt, A w, A vz, A uz, I negifipw,A sself){I t;
  // get address to copy into.  If w has not changed, we can take the address out of vz - we are updating in place
  // if w has changed, we have to reach into sself to find the starting index, and convert that to an address
  void *wv; I kg=bplg(t);  // target address of the copy, length of an atom
- if(w==origw)wv=(void *)((I)vz+AK(vz));   // inplace - the address is found from the original virtual block
+ if(w==origw)wv=voidAV(vz);   // inplace - the address is found from the original virtual block
  else{  // not inplace
   I a0=IAV(FAV(FAV(sself)->fgh[1])->fgh[0])[0],a1=IAV(FAV(FAV(sself)->fgh[1])->fgh[0])[1];  // starting index/length
   I wi=AS(w)[0];  // number of items
@@ -327,7 +328,7 @@ static A jtrightcut0inv(J jt, A w, A vz, A uz, I negifipw,A sself){I t;
   wv=(I)voidAV(w)+((a0*in)<<kg);  // address of destination
  }
  I na=AN(vz), nb=na<<kg;   // number of atoms and bytes to copy
- if(AFLAG(w)&RECURSIBLE){na<<=PEXTN(t,RAT,1); DO(na, ra(AAV(uz)[i])); DO(na, fa(((A*)wv)[i]);) } // if w is recursive, raise the new blocks then lower the old
+ if(AFLAG(w)&RECURSIBLE){na<<=PEXTN(t,RATX,1); DO(na, ra(AAV(uz)[i])); DO(na, fa(((A*)wv)[i]);) } // if w is recursive, raise the new blocks then lower the old
  MC(wv,voidAV(uz),nb);  // copy the data into the hole
  R w;   // return the block we copied into
 }

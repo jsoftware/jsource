@@ -591,6 +591,7 @@ extern F2(jtreshape);
 extern DF2(jtresidue);
 extern F2(jtrezero);
 extern F2(jtright2);
+extern DF2(jtrightcut0);
 extern F2(jtroot);
 extern F2(jtrotate);
 extern F2(jtsb2);

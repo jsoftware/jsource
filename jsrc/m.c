@@ -841,7 +841,7 @@ A jtrealize(J jt, A w){A z; I t;
 // the value is going to be opened & we don't want to free any backers
 
 A jtgc(J jt,A w,A* old){
- ARGCHK1(w);  // return if no input (could be error or unfilled box)
+ ARGCHK1(w);  // return if no input (could be error or unfilled box).  This is not a formality!  If we hit an error we must freeze tpops in case of PM debug
  I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately
  if(unlikely(AFLAG(w)&(AFVIRTUAL|AFVIRTUALBOXED))){

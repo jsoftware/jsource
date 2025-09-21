@@ -306,6 +306,32 @@ static DF1(jtunderh10){F12IP;R jtrank1ex0(jtfg,w,self,jtunderh1);}  // pass inpl
 static DF2(jtunder20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtunder2);}  // pass inplaceability through
 static DF2(jtunderh20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtunderh2);}  // pass inplaceability through
 
+static A jtrightcut0inv(J jt, A w, A vz, A uz, I negifipw,A sself){I t;
+ I wr=AR(vz);  // rank of w
+ ASSERT(wr==AR(uz),EVRANK) ASSERTAGREE(AS(vz),AS(uz),AR(vz)) // shape of uz must match shape of vz, the hole we took from
+ A origw=w;  // remember if we copied w
+ if(unlikely((t=AT(w))!=AT(uz))){ // bring uz and w to same type
+  t=maxtypedne(t,AT(uz)); if(t!=AT(w)){RZ(w=ccvt(t,w,0)) negifipw=-1;}else if(t!=AT(uz))RZ(uz=ccvt(t,uz,0))
+ }
+ if(negifipw>=0)RZ(w=ca(w)) // if w not inplaceable, copy it
+ // get address to copy into.  If w has not changed, we can take the address out of vz - we are updating in place
+ // if w has changed, we have to reach into sself to find the starting index, and convert that to an address
+ void *wv; I kg=bplg(t);  // target address of the copy, length of an atom
+ if(w==origw)wv=(void *)((I)vz+AK(vz));   // inplace - the address is found from the original virtual block
+ else{  // not inplace
+  I a0=IAV(FAV(FAV(sself)->fgh[1])->fgh[0])[0],a1=IAV(FAV(FAV(sself)->fgh[1])->fgh[0])[1];  // starting index/length
+  I wi=AS(w)[0];  // number of items
+  a1=a1>wi?wi:a1;  // replace infinite length by max feasible
+  a0+=REPSGN(a0)&(wi-(a1-1)); if(unlikely(a0<0)){ASSERT((a1+=a0)>=0,EVINDEX) a0=0;}  // resolve negative length, clamp begin to 0
+  I in; PROD(in,wr-1,&AS(w)[1])   // #atoms in an item of w
+  wv=(I)voidAV(w)+((a0*in)<<kg);  // address of destination
+ }
+ I na=AN(vz), nb=na<<kg;   // number of atoms and bytes to copy
+ if(AFLAG(w)&RECURSIBLE){na<<=PEXTN(t,RAT,1); DO(na, ra(AAV(uz)[i])); DO(na, fa(((A*)wv)[i]);) } // if w is recursive, raise the new blocks then lower the old
+ MC(wv,voidAV(uz),nb);  // copy the data into the hole
+ R w;   // return the block we copied into
+}
+
 // structural under, i. e. u&.v when v is a special noninvertible form that we recognize.  Currently only ,   m&{   m&(];.0) are recognized
 static DF1(jtsunder){F12IP;PROLOG(777);
  I origacw=AC(w);  // preserve original inplaceability of y
@@ -325,24 +351,22 @@ static DF1(jtsunder){F12IP;PROLOG(777);
   tpop(_ttop);  // free up whatever we allocated here
   RETF(RETARG(w));
  }else{A z;
-  // otherwise return u-result v^:_1 y
-  // we want to inplace into y if possible.  To do this, we restore the original usecount of y (provided y was not passed in to u - we know v doesn't change it); but before
-  // we do that we have to remove any virtual blocks created here so that they don't raise y
-  // In case of m&(];.0), extract the address of the vz data and its #items before we free the virtuals
-  void *wv=voidAV(vz); I wi=AS(vz)[0];  // w data, # items
-  rifv(uz);  // if uz is a virtual, realize it in case it is backed by y
-  RZ(uz=EPILOGNORET(uz));  // free any virtual blocks we created
-  if((origacw&negifipw&(AC(w)-2))<0)ACRESET(w,origacw)  // usecount of y has been restored; restore inplaceability.  The use of origacw is subtle.  In a multithreaded system you mustn't reset the usecount lest another thread
+  // otherwise return u-result v^:_1 y.  How much we have to do depends on what we use for the inverse
+  // do the structural inverse
+  if(FAV(self)->localuse.lu1.sundern==0)z=reshape(shape(w),uz);
+  else if(FAV(self)->localuse.lu1.sundern==2){
+   // m&(];.0) - copy en bloc into original y, inplace if possible.  We know that vz was a virtual into w
+   z=jtrightcut0inv(jt,w,vz,uz,negifipw,self);
+  }else{
+   // m&{.  The inverse is m} which has to get everything set up ab initio for inplacing
+   // we want to inplace into y if possible.  To do this, we restore the original usecount of y (provided y was not passed in to u - we know v doesn't change it); but before
+   // we do that we have to remove any virtual blocks created here so that they don't raise y
+   rifv(uz);  // if uz is a virtual, realize it in case it is backed by y
+   RZ(uz=EPILOGNORET(uz));  // free any virtual blocks we created
+   if((origacw&negifipw&(AC(w)-2))<0)ACRESET(w,origacw)  // usecount of y has been restored; restore inplaceability.  The use of origacw is subtle.  In a multithreaded system you mustn't reset the usecount lest another thread
       // has raised it.  So, we reset AC to ACINPLACE only in the case where it was originally inplaceable, because then we can be sure the same block is not in use in another thread.
       // Also, if AC(w) is above 1, it has escaped and must no longer be inplaced.  If it isn't above 1, it must be confined to here
-  // do the structural inverse
-  if(FAV(self)->localuse.lu1.sundern==1){RZ(z=jtamendn2(jtfg,uz,w,FAV(v)->fgh[0],ds(CAMEND)));   // inv for m&{ is m}&w
-  }else if(FAV(self)->localuse.lu1.sundern==2){
-   // m&(];.0) - copy en bloc into original y, inplace if possible.  We know that vz (now freed) was a virtual into w
-   // verify that uz has same type as w, and the same shape as original vz
-   I t=AT(w);
-   MC(wv,voidAV(uz),AN(uz)<<bplg(t));  // inv for m&(];.0)  is copy back
-  }else{RZ(z=reshape(shape(w),uz));  // inv for , is ($w)&($,)
+   z=jtamendn2(jtfg,uz,w,FAV(v)->fgh[0],ds(CAMEND));   // inv for m&{ is m}&w
   }
   EPILOG(z);
  }
@@ -379,12 +403,16 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
    b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<32
    C vv=IDD(v->fgh[1]);  // id of g1
  // obsolete   if(CIOTA==vv&&(!c)&&v->fgh[0]==ds(CALP)){   // w is   (  a.&i.  or  (a. i. ][)  )
-   if(CIOTA==vv&&v->fgh[0]==ds(CALP)){   // w is   (  a.&i.  or  (a. i. ][)  )
+   if(vv==CIOTA&&v->fgh[0]==ds(CALP)){   // w is   (  a.&i.  or  (a. i. ][)  )
     f1=b&b1?jtbitwiseinsertchar:f1;    // m b./ &. (  a.&i.  or  (a. i. ][)  )   or  f &. (  a.&i.  or  (a. i. ][)  )
     f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
+   }else if(vv==CFROM&&AT(v->fgh[0])&NOUN){sundern=1; goto sunder;  // u&.(m&{)) or u.&.(m { ][), structural under
+   }else if(AT(v->fgh[1])&FUNC&&FAV(v->fgh[1])->valencefns[1]==jtrightcut0&&AT(v->fgh[0])&INT&&AR(v->fgh[0])==2&&AS(v->fgh[0])[0]==2&&AS(v->fgh[0])[1]==1&&IAV(v->fgh[0])[1]>0){
+       // m&(];.0) where m is integer, shapes 2 1, with length field positive
+    sundern=2; goto sunder;
    }
+
  // obsolete    if(vv==CFROM&&(!c)&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)) or u.&.(m { ][), structural under
-   if(vv==CFROM&&AT(v->fgh[0])&NOUN){sundern=1; goto sunder;}  // u&.(m&{)) or u.&.(m { ][), structural under
    break;
   }
  case CCOMMA:  // u&., structural under

@@ -801,10 +801,211 @@ static UI4 jtcrcy(J jt,A y){
  else SEGFAULT;  // scaf
 }
 
-// 6!:1 create 32-bit hash of y.  For float types, +-0 must have the same hash
-// x is number of hashslots to multiply CRC by, default 2^:32
-DF2(jthashy){F12IP;
- ARGCHK2(a,w)
- UI8 nslots; if(w!=self)RE(nslots=i0(a))else{w=a; nslots=0x100000000LL;}  // get #slots, from x if dyad.  Leave w pointing to y
- RETF(sc((nslots*jtcrcy(jt,w))>>32))
+// 16!:0 monad create 32-bit hash of y.  For float types, +-0 must have the same hash
+DF2(jthashy){F12IP; ARGCHK2(a,w) RETF(sc(jtcrcy(jt,w)));}
+
+#if 0
+// everything about the dictionary.  This struct overlays the entire block.  AM of the first
+// cacheline is the lock for the dic.  The data starts at AS[1], the second cacheline.  The block
+// is a recursive BOX but AK points past the areas that do not need to be freed, i.e keys
+typedef struct {
+ I header[8];  // A header up through s[0].  DIC is always allocated with rank 1
+ C hashelesize;  // 2 or 4, hash table size
+ C lgminsiz;  // lg(minimum occupancy).  When cardinality drops below 1LL<<lgminsiz, we resize
+ C flags;  
+ C credentials;  // set to 5a in a valid dic
+ UI4 cardinality;  // number of kvs in the hashtable
+ I4 emptyn;  // index to next empty kv.  -1 for end.  Resize when empty
+ UI4 hashsiz;  //  number of elements in hash table
+ UI4 keyitemlen;  // number of bytes in a key
+ UI4 valitemlen;  // number of bytes in a value
+ A keys;  // array of keys
+ A vals;   // array of values
+ A empty;  // occupied kvs are -1; empties are in a chain with a chain with -1 at end, rank 1
+ A hash;  // the hash table, rank 1
+// 1 word free
+} DIC;
+#define ST UI4   // type of hash slot
+#define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found
+#define STN 4  // width of hash slot
+
+// 16!:_1 y  allocate hashtable
+// y is (hashele size [,flags]);(min #eles,max #eles,#hashslots);(key type;key shape);(value type;value shape)
+// result is DIC to use, ready for get/put, with 0 kvs
+F1(jtcreatedic){
+ // allocate DIC, move data pointer to keys
+ // fill in header
+ // allocate & fill in data areas
 }
+
+// x 16!:_1 y  read from hashtable
+// y is dic, x is 0.  Result is integer list of all the values in the DIC control block before the pointers
+F1(jtdicparms){}
+
+// Dic locking ************************************************************
+
+// We use a 2- or 3-step locking sequence.  In each step the new state is requested shortly before it is needed and then waited for when it is needed (to give the lock request time to propagate to all threads).
+// Readers use the sequence
+// lv=DICLKRDRQ(dic)  // request read lock
+// DICLKRDWT(dic,lv)  // wait for read lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+// DICLKRDREL(dic)  // release read lock
+
+// Writers use the sequence
+// lv=DICLKRWRQ(dic)  // request read/write lock
+// lv=DICLKRWWT(dic,lv)  // wait for read/write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+// lv=DICLKWRRQ(dic)  // request write lock
+// lv=DICLKWRWT(dic,lv)  // wait for write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+// DICLKWRREL(dic,lv)  // release write lock
+
+// A read lock guarantees that the control info and tables will not be modified by any thread in a way that could affect a get().  Other modifications are allowed.
+// A read-write lock guarantees that the control info and tables will not be modified by any other thread.  No modification by this thread mey affect a get() in progress.
+// A write lock guarantees that no other thread has a lock of any kind.  Any modification is allowed.
+
+
+
+A dicresize(DIC dic,J jt,A parent){
+ // call dicresize in the locale of the dic.  No need for explicit locative because locale is protected by parent
+}
+
+
+// k is A for keys, kvirt is virtual unincorpable block to point to key, s is place for slot#s.  Hash each key, convert to slot, store, prefetch
+// result is 0 on error
+B jtkeyprep(DIC dic, A k, A kvirt, STX *s,J jt){
+ DO(AS(k)[0],
+  // hash the key
+  // store hash
+  // prefetch the slot# (using the current hash parms)
+  // advance virtual block to next key
+ )
+}
+
+// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
+// resolve each key in the hash and copy the value to the result
+B jtgetslots##STN(DIC dic,A k,A kvirt,STX *s,A z,A jt){
+ // this loop will be unrolled 3 times, one for each fetch from remote memory
+ // read from the slot
+ // prefetch key and value
+ // loop till found: compare key[slot] against k[i], copy value if match
+ // if no match, abort for get, write 0 for isin
+}
+
+// get.  conjunction.  u is dic, v is hash/comp function.    w is keys
+DF1(jtdicget##STN){
+ DIC dic=FAV(self)->fgh[0];  // point to dic block
+ // allocate slots block
+ // if keys are not the right shape & type, convert/extend them
+ // allocate result area
+ // allocate virtual block for key
+ RZ(jtkeyprep(dic,k,kvirt,s,jt))  // convert keys to slot#
+ // take read lock;
+ // refresh dic info
+ z=jtgetslots##STN(dic,k,kvirt,s,z,jt);  // get the values
+ // release read lock;
+ RETF(z);
+}
+
+// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
+// resolve each key in the hash and copy new kvs
+B jtputslots##STN(DIC dic,A k,A kvirt,STX *s,A z,A jt){
+ // init empty-slot index
+ // this loop will be unrolled 3 times, one for each fetch from remote memory
+ // read from the slot
+ // prefetch key and value
+ // loop till found: compare key[slot] against k[i]
+ // if match: save neg. index of value slot
+ // if no match: save index of hash slot for re-search; copy kv to empty slot, abort if no slot (resize), advance empty-slot index
+}
+
+// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
+// resolve each key in the hash and copy new kvs
+B jtputvalues##STN(DIC dic,A k,A kvirt,STX *s,A z,A jt){
+ // init empty-slot index
+ // for each slot:
+  // if positive (no match) find empty hashslot & point it to empty-slot; advance empty-slot index
+  // else copy value to value slot
+ // restore empty-slot index, update cardinality
+}
+
+// put.  conjunction.  u is dic, v is hash/comp function.  a is values, w is keys
+DF2(jtdicput##STN){
+ DIC dic=FAV(self)->fgh[0];  // point to dic block
+ // allocate slots block
+ // if keys are not the right shape & type, convert/extend them
+ // if values are not the right shape&type convert/extend them
+ // allocate result area
+ // allocate virtual block for key
+ // allocate virtual block for value
+ RZ(jtkeyprep(dic,k,kvirt,s,jt))  // hash kreys & prefetch
+ // take prewrite lock;
+ // refresh dic info
+ z=jtputslots##STN(dic,k,kvirt,s,z,jt);  // classify keys & move new kvs
+ // take write lock;
+ if(resize requested)R dicresize();
+ z=jtputvalues##STN(dic,k,kvirt,s,z,jt);  // finish the values
+ // release write lock;
+ RETF(z);
+}
+
+
+// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
+// resolve each key in the hash and copy new kvs
+B jtdelslots##STN(DIC dic,A k,A kvirt,STX *s,A z,A jt){
+ // init empty-slot index
+ // this loop will be unrolled 3 times, one for each fetch from remote memory
+ // read from the slot
+ // prefetch key
+ // loop till found: compare key[slot] against k[i]
+ // if match: save neg. index of value slot
+}
+
+// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
+// resolve each key in the hash and copy new kvs
+B jtdelslots##STN(DIC dic,A k,A kvirt,STX *s,A z,A jt){
+ // init empty-slot index
+ // for each slot:
+  // if neg, add key# at base of empty chain
+ // restore empty-slot index, update cardinality
+ // if (cardinality less than minimum)abort, call for resize
+}
+
+// del.  conjunction.  u is dic, v is hash/comp function.  w is keys
+DF1(jtdicdel##STN){
+ DIC dic=FAV(self)->fgh[0];  // point to dic block
+ // allocate slots block
+ // if keys are not the right shape & type, convert/extend them
+ // allocate virtual block for key
+ RZ(jtkeyprep(dic,k,kvirt,s,jt))  // convert keys to slot#
+ // take prewrite lock;
+ // refresh dic info
+ z=jtdelslots##STN(dic,k,kvirt,s,z,jt);  // classify keys & move new kvs
+ // take write lock;
+ if(resize requested)R dicresize();
+ z=jtdelkeys##STN(dic,k,kvirt,s,z,jt);  // finish the deletion
+ // release write lock;
+ RETF(z);
+}
+
+// u 16!:_2 v  get: u=dic, v=hash : compare function
+// We create a verb to handle (get y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
+DF2(jtdicgetc){
+ // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
+ ARGCHK2(a,w)
+ R fdef(z,0,CIBEAM,VERB, jtdicget,jtvalenceerr, a,w,jt->global, VFLAGNONE, RMAX,RMAX,RMAX); 
+}
+
+// u 16!:_3 v  put: u=dic, v=hash : compare function
+// We create a verb to handle (x put y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
+DF2(jtdicputc){
+ // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
+ ARGCHK2(a,w)
+ R fdef(z,0,CIBEAM,VERB, jtvalenceerr,jtdicput, a,w,jt->global, VFLAGNONE, RMAX,RMAX,RMAX); 
+}
+
+// u 16!:_4 v  del: u=dic, v=hash : compare function
+// We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
+DF2(jtdicdelc){
+ // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
+ ARGCHK2(a,w)
+ R fdef(z,0,CIBEAM,VERB, jtdicdel,jtvalenceerr, a,w,jt->global, VFLAGNONE, RMAX,RMAX,RMAX); 
+}
+#endif

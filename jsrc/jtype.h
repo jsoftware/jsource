@@ -209,7 +209,7 @@ struct AD {
         // (11) in file-lock list and file-number list, the # valid files (12) if AFUNIFORMITEMS is set, the total# items in all boxes (13) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
         // (14) in the filenames pointed to by fopafl, the file handle for the open file (15) for fret block passed from /.. into ;., the address of the original a arg to /..
         // (16) in permuted W block passed from /. to ;., pointer to information on where frets are in a (17) in all NAME blocks for local symbol tables, lookaside pointer to value if any (QCSYMVAL semantics)
-        // (18) in non-local SYMB, used as a lock by user functions (16!:2)
+        // (18) in a DIC block, used as a lock by user functions
   A back; // For VIRTUAL blocks, points to backing block
   A jobpyx;    // for user JOB blocks, points to the pyx or (for task with locales) pyx list
   A *zaploc;  // For all blocks allocated by GA, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed

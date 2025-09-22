@@ -810,19 +810,21 @@ DF2(jthashy){F12IP; ARGCHK2(a,w) RETF(sc(jtcrcy(jt,w)));}
 // is a recursive BOX but AK points past the areas that do not need to be freed, i.e keys
 typedef struct {
  I header[8];  // A header up through s[0].  DIC is always allocated with rank 1
- C hashelesize;  // 2 or 4, hash table size
- C lgminsiz;  // lg(minimum occupancy).  When cardinality drops below 1LL<<lgminsiz, we resize
- C flags;  
- C credentials;  // set to 5a in a valid dic
- UI4 cardinality;  // number of kvs in the hashtable
- I4 emptyn;  // index to next empty kv.  -1 for end.  Resize when empty
- UI4 hashsiz;  //  number of elements in hash table
- UI4 keyitemlen;  // number of bytes in a key
- UI4 valitemlen;  // number of bytes in a value
+ struct { // *** this group of values is updated atomically en bloc to make sure hashelesiz matches hash when possible.
+  C flags;  
+  C hashelesize;  // 2 or 4, hash table size
+  C lgminsiz;  // lg(minimum occupancy).  When cardinality drops below 1LL<<lgminsiz, we resize
+  C credentials;  // set to 5a in a valid dic
+  UI4 cardinality;  // number of kvs in the hashtable
+  I4 emptyn;  // index to next empty kv.  -1 for end.  Resize when empty
+  UI4 hashsiz;  //  number of elements in hash table
+  UI4 keyitemlen;  // number of bytes in a key
+  UI4 valitemlen;  // number of bytes in a value
+  A hash;  // the hash table, rank 1  Note: This pointer may be stale.  MUST use AAV1 to point to hash, and use only PREFETCH until you get a lock
+ } bloc;
  A keys;  // array of keys
  A vals;   // array of values
  A empty;  // occupied kvs are -1; empties are in a chain with a chain with -1 at end, rank 1
- A hash;  // the hash table, rank 1
 // 1 word free
 } DIC;
 #define ST UI4   // type of hash slot
@@ -839,7 +841,8 @@ F1(jtcreatedic){
 }
 
 // x 16!:_1 y  read from hashtable
-// y is dic, x is 0.  Result is integer list of all the values in the DIC control block before the pointers
+// y is dic, x is 0.  Result is integer list of some of the values in the DIC control block before the pointers:
+// flags hashelesize minsiz cardinality emptyn
 F1(jtdicparms){}
 
 // Dic locking ************************************************************
@@ -852,19 +855,86 @@ F1(jtdicparms){}
 
 // Writers use the sequence
 // lv=DICLKRWRQ(dic)  // request read/write lock
-// lv=DICLKRWWT(dic,lv)  // wait for read/write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+// DICLKRWWT(dic,lv)  // wait for read/write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 // lv=DICLKWRRQ(dic)  // request write lock
-// lv=DICLKWRWT(dic,lv)  // wait for write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+// DICLKWRWT(dic,lv)  // wait for write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 // DICLKWRREL(dic,lv)  // release write lock
 
 // A read lock guarantees that the control info and tables will not be modified by any thread in a way that could affect a get().  Other modifications are allowed.
 // A read-write lock guarantees that the control info and tables will not be modified by any other thread.  No modification by this thread mey affect a get() in progress.
+//  When a read-write lock is granted, the granted thread is guaranteed to be the next to write.  It has ownership of the write-lock and sequence# bits until it releases the lock by writing to the sequence#
 // A write lock guarantees that no other thread has a lock of any kind.  Any modification is allowed.
 
+#if PYXES
+// The AM field of dic is the lock. 0-15=#read locks outstanding 16-31=#prewrite locks outstanding 32=write equest 48-63=seq# of current writer (if 32 set) or next writer (if 32 clear)
+#define DICLMSKRDX 0LL  // read locks outstanding
+#define DICLMSKRWX 16LL  // write locks request, by size 0-3
+#define DICLMSKWRX 32LL  // write lock requested by current write owner
+#define DICLMSKSEQX 48LL  // sequence# of current write owner
 
+#define DICLKRDRQ(dic) __atomic_fetch_add(&AM(dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL)  // put up read request
+#define DICLKRDWT(dic,lv) if(unlikely((lv&((I)1<<DICLMSKWRX))!=0))diclkrdwt(dic);  // if someone is writing, wait till they finish
+#define DICLKRDREL(dic)   __atomic_fetch_sub(&AM(dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL);  // remove read request
+
+#define DICLKRWRQ(dic) __atomic_fetch_add(&AM(dic),(I)1<<DICLMSKRWX,__ATOMIC_ACQ_REL)   // put up prewrite request
+#define DICLKRWWT(dic,lv) if(unlikely((US)(lv>>DICLMSKRWX)!=(US)(lv>>DICLMSKSEQX)))diclkrwwt(dic,lv);  // wait until we are the lead writer, which is immediately if there are no others
+#define DICLKWRRQ(dic) ({ __atomic_store_n(&(US*)((I)AM(dic)+4,(US)1,__ATOMIC_RELEASE); __atomic_load_n(&AM(dic),__ATOMIC_ACQUIRE); })   // put up write request (we are known to be the lead writer and own the write bit, which must be clear)
+#define DICLKWRWT(dic,lv) if(unlikely((lv&((I)0xffff<<DICLMSKRDX))!=0))diclkwrwt(dic);  // wait until all reads are quiesced
+#define DICLKWRRQ(dic,lv) __atomic_store_n(&(UI4*)((I)AM(dic)+4,(((lv)>>32)&0xffff0000)+0x10000,__ATOMIC_RELEASE);   // remove write request and advance sequence#
+
+// wait for read lock on dic.
+static void diclkrdwt(DIC *dic){I n;
+ // We know we just put up a read request and saw a writer.  Rescind our read request and then quietly poll for the write to go away
+ do{
+  DICLKRDREL(dic)  // remove read request
+  for(n=5;;--n){
+   delay(n<0?50:10)  // delay a bit.  the long delay uses mm_pause.
+   if(__atomic_load_n(&(US*)((I)AM(dic)+4,__ATOMIC_ACQUIRE)==0)break;  // wait until write is complete
+  }
+ }while((__atomic_fetch_add(&AM(dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL)&((I)1<<DICLMSKWRX))!=0);  // put up our rd request again, wait for any write to finish
+ R;
+}
+
+// wait for read-write lock on dic.
+static void diclkrwwt(DIC *dic, I lv){I n;
+ // We know we just put up a read-write request and saw that we were not the first read-write requester.  Wait till we make it to the top.  At that point we have the lock, with no further action needed
+ while(1){
+  US ourseq=lv>>DICLMSKRWX, curseq=lv>>DICLMSKSEQX;  // see where we stand
+  if(ourseq==curseq)R;   // exit when we get to the top
+  delay(ourseq-curseq>1?50:20)  // delay a bit.  the long delay uses mm_pause.  We use it when we are not the next requester
+  lv=__atomic_load_n(&AM(dic),__ATOMIC_ACQUIRE);  // refresh status
+ }
+}
+
+// wait for write lock on dic.
+static void diclkwrwt(DIC *dic){I n;
+ // We are the next writer.  We just wait for read requests to clear.  We could improve this my adapting the wait to the usage pattern
+ for(n=5;;--n){
+  delay(n<0?50:10)  // delay a bit.  the long delay uses mm_pause.
+  if(__atomic_load_n(&(US*)AM(dic),__ATOMIC_ACQUIRE)==0)R;  // wait until reads clear
+ }
+}
+
+
+#else
+#define DICLKRDRQ(dic) 0
+#define DICLKRDWT(dic,lv) 
+#define DICLKRDREL(dic) 0
+
+#define DICLKRWRQ(dic) 0
+#define DICLKRWWT(dic,lv) 
+#define DICLKWRRQ(dic) 0
+#define DICLKWRWT(dic,lv) 0
+#define DICLKWRRQ(dic,lv)
+#endif
 
 A dicresize(DIC dic,J jt,A parent){
  // call dicresize in the locale of the dic.  No need for explicit locative because locale is protected by parent
+ // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be
+ // freed when the new dic is.
+ // NOTE: we keep the old blocks hanging around until the new have been allocated.  This seems unnecessary for the hashtable, but we do it because other threads still have the old pointers and may prefetch from
+ //  the old hash.  This won't crash, but it might be slow if the old hash is no longer in mapped memory
+ // 
 }
 
 

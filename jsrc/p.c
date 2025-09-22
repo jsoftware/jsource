@@ -577,7 +577,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
   // y, loaded in cycle 1, ready in cycle 6.  Then: and, compare with QCADV, cmov
   // queuem2/queue2m3, loaded in cycle 3-4, ready in cycle ~9.  Then: shift, and, cmov
   // We should be ready in cycle 12, which is before the value is needed in the loop
-  // We would like execution to get to the load of symx and SYMORIGIN quickly, with pt0ecam following soon after
+  // We would like execution to get to the load of lookaside quickly, with pt0ecam following soon after
 #define ASGNNOTEDGE (I4)~(((UI4)0xf0000000LL>>QCASGN)|((UI4)0x80000000LL>>QCLPAR)|((UI4)0xf0000000LL>>(QCNAMED+QCASGN))|((UI4)0x80000000LL>>(QCNAMED+QCLPAR)))  // !(ASGN+EDGE), ignoring frontmark.  We use the full QCTYPE to ensure we ignore QCNAMED, but we don't let LKPNAME slip through
   // If words -1 & -2 exist, we can pull 4 words initially unless word -1 is ASGN or word -2 is EDGE or word 0 is ADV.  Unfortunately the ADV may come from a name so we also have to check in that branch
   I4 asgnnotedgem2=(ASGNNOTEDGE<<(I4)QCTYPE(queuem2)), asgnnotedgem3=(ASGNNOTEDGE<<(I4)QCTYPE(queuem3));   // wd[-2/-3] = ASGN/EDGE?  Set neg if not
@@ -812,16 +812,20 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       // the name =. name , 3 will come to execution.  Can it inplace?  Yes, because the modified value of name will be on the stack after
       // execution.  That will then execute as (name' + +) creating a fork that will assign to name.  So we can inplace any execution, because
       // it always produces a noun and the only things executable from the stack are tridents
-      if(withprob(!PTISNOTASGNNAME,0.1)){A zval; I targc;  //  Is this an assignment to a single name? targc is # refs in the assigned symbol that is allowed for inplaceables (depends on public/private).
-       I symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);  // in case it's local, start a fetch of the symbol#, which must exist in any name (0 if not allocated).  y is the name, which has not been stacked yet
+      if(withprob(!PTISNOTASGNNAME,0.1)){I targc;  //  Is this an assignment to a single name? targc is # refs in the assigned symbol that is allowed for inplaceables (depends on public/private).
+       A zval=__atomic_load_n(&QCWORD(y)->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
+// obsolete        I symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);
+              // in case it's local, start a fetch of the symbol#, whose PTYPE is not 0 if defined.  y is the name, which has not been stacked yet
        fs1=pt0ecam&FLGPLINE1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
        if(FAV(fs)->flag&FAV(fs1)->flag&VASGSAFE){  // do the verb(s) allow assignment in place?   this frees fs/fs1
         // Assignment to name, and not ill-behaved function (i. e. that may change locales)., that is, inplaceable assignment
         // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
         if(likely(TESTSTACK0PT(PTASGNLOCALX))){   // only sentences from explicit defns have ASGNLOCAL set
          // local assignment.  First check for primary symbol.  We expect this to succeed.  We fetch the unflagged address of the value
-         if(likely((I)((pt0ecam&(ARLCLONED<<LOCSYMFLGX))<<(30-(ARLCLONEDX+LOCSYMFLGX)))<symx)){   //   (Is cloned local table) < symbol given? 
-          zval=QCWORD(symorigin[symx].fval);  // get value of symbol in primary table.  There may be no value; that's OK
+// obsolete         if(likely((I)((pt0ecam&(ARLCLONED<<LOCSYMFLGX))<<(30-(ARLCLONEDX+LOCSYMFLGX)))<symx)){   //   (Is cloned local table) < symbol given? 
+         if(likely((I)(pt0ecam&(ARLCLONED<<LOCSYMFLGX))<QCPTYPE(zval))){   //   (Is cloned local table) < symbol given? 
+// obsolete            zval=QCWORD(symorigin[symx].fval);  // get value of symbol in primary table.  There may be no value; that's OK
+          zval=QCWORD(zval);  // get value of symbol in primary table.  There may be no value; that's OK
          }else{zval=QCWORD(jtprobelocal(symorigin,QCWORD(y),jt->locsyms));}
          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d) which is OK
          zval=zval?zval:AFLAG0;  // if no zval, point to benign flags

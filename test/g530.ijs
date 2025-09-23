@@ -587,6 +587,8 @@ val1 -: y
 'rank error'   -: (i.2 3 4) i.@#@]} etx i.3 4
 'rank error'   -: (i.2 3 4) 0     } etx i.3 4
 
+sp     =: 7!:2
+b32    =: 100>#3!:1 i.8  NB. 1 if 32-bit; 0 if 64-bit
 
 abc =. save =. i.10000
 IGNOREIFFVI (68500*2-b32) > t1=.sp 'abc=. _123 (0)  }abc'  NB. create copy

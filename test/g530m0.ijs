@@ -597,17 +597,21 @@ b32    =: 100>#3!:1 i.8  NB. 1 if 32-bit; 0 if 64-bit
 foo =. 3 : 0
  pqr=.xyz =. i.10000
  z=.''
- z=.z,sp 'xyz=. _123 (4)}xyz'   NB. create copy
- z=.z,sp 'xyz=. _456 (5)}xyz'   NB. in place
- z=.z,sp 'xyz=. _789 (6})xyz'   NB. in place
- z=.z,sp 'qqq=. _123 (7)}xyz'   NB. create copy
- z=.z,sp 'xyz=. 8 9 >:@[`[`]} xyz'  NB. in place
- z=.z,sp 'xyz=. xyz >:@]`]`[} 11 12'  NB. in place
+ xyza =. 15!:19 xyz
+ z=.z, xyza = 15!:19 xyz=. _123 (4)}xyz   NB. create copy
+ xyza =. 15!:19 xyz
+ z=.z, xyza = 15!:19 xyz=. _456 (5)}xyz   NB. in place
+ z=.z, xyza = 15!:19 xyz=. _789 (6})xyz   NB. in place
+ z=.z, xyza = 15!:19 ". 'xyz=. _789 (6})xyz'   NB. in place
+ z=.z, xyza = 15!:19 qqq=. _123 (7)}xyz   NB. create copy
+ z=.z, xyza = 15!:19 xyz=. 8 9 >:@[`[`]} xyz  NB. in place
+ z=.z, xyza = 15!:19 xyz=. xyz >:@]`]`[} 11 12  NB. in place
  n =. 14 15
- z=.z,sp 'xyz=. n >:@(17 ,~ [)`(16 ,~ [)`]} xyz'  NB. in place but only the amend and ]
+ z=.z, xyza = 15!:19 xyz=. n >:@(17 ,~ [)`(16 ,~ [)`]} xyz  NB. in place but only the amend and ]
  assert. n -: 14 15
- z=.z,sp 'xyz=. 8 9 >:@[`[`(,~)} xyz'  NB. in place only if 9!:53]1
- z=.z,sp 'xyz=. xyz >:@]`]`,} 11 12'  NB. in place only if 9!:53]1
+ z=.z, xyza = 15!:19 xyz=. 8 9 >:@[`[`(,~)} xyz  NB. in place only if 9!:53]1
+ xyza =. 15!:19 xyz
+ z=.z, xyza = 15!:19 xyz=. xyz >:@]`]`,} 11 12  NB. in place only if 9!:53]1
  assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 12 13 13 15 16 18 17, (18}.(i.10000)) , 8 9 11 12
  assert. pqr -: i. 10000
  z
@@ -615,11 +619,13 @@ foo =. 3 : 0
 
 goo =. 3 : 0
  pqr=.xyz =. i.10000
+ xyza =. 15!:19 xyz
  z=.''
- z=.z,sp 'xyz=. xyz 4}~ _123'   NB. create copy
- z=.z,sp 'xyz=. xyz 5}~ _456'   NB. in place
- z=.z,sp 'xyz=. xyz 6}~ _789'   NB. in place
- z=.z,sp 'qqq=. xyz 7}~ _123'   NB. create copy
+ z=.z, xyza = 15!:19 xyz=. xyz 4}~ _123   NB. create copy
+ xyza =. 15!:19 xyz
+ z=.z, xyza = 15!:19 xyz=. xyz 5}~ _456   NB. in place
+ z=.z, xyza = 15!:19 xyz=. xyz 6}~ _789   NB. in place
+ z=.z, xyza = 15!:19 qqq=. xyz 7}~ _123   NB. create copy
  assert. xyz -: 0 1 2 3 _123 _456 _789,7}.i.10000
  assert. pqr -: i. 10000
  z
@@ -646,12 +652,12 @@ hoo =. 3 : 0
 )
 
 9!:53(0)
-IGNOREIFFVI ((50000*2-b32) < 0 3 7 8 {t) , (7000*2-b32)> 1 2 4 5 6 { t=:foo 1
-IGNOREIFFVI ((50000*2-b32) < 0 3{t) , (5000*2-b32)> 1 2 { t=:goo 1
+IGNOREIFFVI 0 1 1 1 0 1 1 1 0 0 -: t=:foo 1
+IGNOREIFFVI 0 1 1 0 -: t=:goo 1
 IGNOREIFFVI ((50000*2-b32) < 0 3 7 8 {t) , (7000*2-b32)> 1 2 4 5 6 9 { t=:hoo 1
 9!:53(1)
-IGNOREIFFVI ((50000*2-b32) < 0 3 {t) , (7000*2-b32)> 1 2 4 5 6 7 8 { t=:foo 1
-IGNOREIFFVI ((50000*2-b32) < 0 3{t) , (5000*2-b32)> 1 2 { t=:goo 1
+IGNOREIFFVI 0 1 1 1 0 1 1 1 1 1 -: t=:foo 1
+IGNOREIFFVI 0 1 1 0 -: t=:goo 1
 IGNOREIFFVI ((50000*2-b32) < 0 3 {t) , (7000*2-b32)> 1 2 4 5 6 7 8 9 { t=:hoo 1
 9!:53(2)   NB. Default
 

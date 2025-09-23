@@ -776,8 +776,8 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFLAGPRISTNO(a) if(unlikely(AFLAG(a)&AFPRISTINE))AFLAGCLRPRIST(a)  // the test is to ensure we don't touch PERMANENT blocks
 
 // rank flags in the AR field of symbol tables.  The allocated rank is always 0
-#define ARNAMEDX 0   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
-#define ARNAMED ((I)1<<ARNAMEDX)   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
+#define ARNAMEDX 0   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1.  Never set in a local table
+#define ARNAMED ((I)1<<ARNAMEDX)
 // bit 1 not used
 // the rest of the flags apply only to local symbol tables
 #define ARLCLONEDX NMSHAREDX  // 2 set if this is a cloned local symbol table (in which symbol numbers are invalid); OR in a global table that suppresses the check for locally-defined names

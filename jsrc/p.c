@@ -479,7 +479,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
  // whenever we execute a fragment, parserstkend1 must be set to the execution stack of the fragment; the stack will be analyzed
  // to get the error token.  Errors during the stacking phase will be located from this routine
  A jtlocsyms=jt->locsyms;  // we need the AR flags in the local table very quickly for singlee-word sentences, less urgency for longer
- UI pt0ecam=AR(jtlocsyms);  // Init flags from local table.  locsyms cannot change during this execution.  Needed early.  This is a double load (which we could make single by installing AR into JTT), but
+ UI pt0ecam=AR(jtlocsyms)+((I)jtfg&JTFROMEXEC);  // Init flags from local table.  locsyms cannot change during this execution.  Needed early.  This is a double load (which we could make single by installing AR into JTT), but
                               // it doesn't limit the multi-word path, and will be resolved during the pipeline break for the 1-word path
  A y=queue[nwds-1];   // y will be the word+flags for the next queue value to process.  We reload it as needed so that it never has to be saved over a call.  Unroll once.  We must load early
  if(likely(nwds>1)) {  // normal case where there is a fragment to parse - we get the values needed by the 1-word path loaded before the pipeline break
@@ -506,7 +506,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
 #define FLGPMONAD (0x4<<FLGPMSKX)  // set for monad
 #define FLGPCTEND (0x2<<FLGPMSKX)  // goes to 1 to end loop
 #define FLGPINCR (0x1<<FLGPMSKX)  // goes to 1 to end loop
-#define LOCSYMFLGX 19  // AR flags go here, 7 bits, of which only bit 2 is used (i. e. bit 21)
+#define LOCSYMFLGX 19  // AR flags go here, 8 bits.  LSB is FROMEXEC flag from JT, other from rank (of which only bit 2, ARLCLONED, is used)
 #define FLG1 0x10000  // bit 0 of LOCSYM flags is forced to 1
 #define NAMEFLAGSX 17  // 17 and 20
   // STACK0PT needs only enough info to decode from position 0.  It persists into the execution phase
@@ -826,7 +826,9 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
          if(likely((I)(pt0ecam&(ARLCLONED<<LOCSYMFLGX))<QCPTYPE(zval))){   //   (Is cloned local table) < symbol given? 
 // obsolete            zval=QCWORD(symorigin[symx].fval);  // get value of symbol in primary table.  There may be no value; that's OK
           zval=QCWORD(zval);  // get value of symbol in primary table.  There may be no value; that's OK
-         }else{zval=QCWORD(jtprobelocal(symorigin,QCWORD(y),jt->locsyms));}
+         }else{zval=unlikely((pt0ecam&((ARLCLONED+JTFROMEXEC)<<LOCSYMFLGX)))?QCWORD(jtprobelocal(symorigin,QCWORD(y),jt->locsyms)):0;}  // look up the name if it is in a cloned table or from ". .  The normal case of undefined name in an uncloned
+            // table is an unassigned name, but it could also come from (". 'name =. ') or (7!:2 'name =.') or a line in a script.  We judge that the value of supporting inplacing in those cases, considerable though it may be,
+            // does not justify a name lookup for every initial assignment in every script; but we go ahead and look up in ". because the test is free.
          targc=ACUC1;  // since local values are not ra()d, they will have AC=1 if inplaceable.  This will miss sparse values (which have been ra()d) which is OK
          zval=zval?zval:AFLAG0;  // if no zval, point to benign flags
         }else{

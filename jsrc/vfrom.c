@@ -759,11 +759,11 @@ DF2(jtfetch){F12IP;A*av, z;I n;
 #define HASHI(crc,x) HASH4(crc,x)
 #endif
 
-// CRC32 of floats
+// CRC32 of n floats.
 static INLINE UI4 crcfloats(UI8 *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
- UI4 crc0=-1;
+ UI4 crc0=-1;  // convert bytecount to words
  if((n-=3)<0){crc0=HASH8(crc0,v[0]==0x8000000000000000?0:v[0]); if(n==-1)crc0=HASH8(crc0,v[1]==0x8000000000000000?0:v[1]); R crc0;}   // fast path for the common short case
  UI4 crc1=crc0, crc2=crc0;  // init all CRCs
  do{crc0=HASH8(crc0,v[n]==0x8000000000000000?0:v[n]); crc1=HASH8(crc1,v[n+1]==0x8000000000000000?0:v[n+1]); crc2=HASH8(crc2,v[n+2]==0x8000000000000000?0:v[n+2]);}while((n-=3)>=0);  // Do blocks of 24 bytes
@@ -771,11 +771,11 @@ static INLINE UI4 crcfloats(UI8 *v, I n){
  R HASH8(crc1,(crc2<<29)+(crc1<<3));  // combine the CRCs, as quickly as possible
 }
 
-// CRC32 of Is
+// CRC32 of n Is
 static INLINE UI4 crcwords(UI *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
- UI4 crc0=-1;
+ UI4 crc0=-1;  // convert bytecount to words
  if((n-=3)<0){crc0=HASHI(crc0,v[0]); if(n==-1)crc0=HASHI(crc0,v[1]); R crc0;}   // fast path for the common short case
  UI4 crc1=crc0, crc2=crc0;  // init all CRCs
  do{crc0=HASHI(crc0,v[n]); crc1=HASHI(crc1,v[n+1]); crc2=HASHI(crc2,v[n+2]);}while((n-=3)>=0);  // Do blocks of 3 words
@@ -783,21 +783,28 @@ static INLINE UI4 crcwords(UI *v, I n){
  R HASH8(crc1,(crc2<<29)+(crc1<<3));  // combine the CRCs, as quickly as possible
 }
 
-// CRC32 of bytes
+// CRC32 of n bytes
 static INLINE UI4 crcbytes(C *v, I n){
  UI4 wdcrc=crcwords((UI*)v,n>>LGSZI);  // take CRC of the fullword part
  if(n&(SZI-1)){wdcrc=HASHI(wdcrc,((UI*)v)[n>>LGSZI]<<((SZI-(n&(SZI-1)))<<LGSZI));}  // if there are bytes, take their CRC after discarding garb.  Avoid overfetch
  R wdcrc;  // return composite CRC
 }
 
+// CRC32 of n boxes
+static UI4 jtcrcy(J jt,A y);
+static INLINE UI4 crcboxes(J jt, A *v, I n){UI4 crc=0; DO(n, crc=HASH4(crc,jtcrcy(jt,C(v[i])));) R crc;}
+
+// CRC32 of n Xs
+static INLINE UI4 crcxnums(X *v, I n){UI4 crc=0; DO(n, crc=HASH4(crc,crcwords(UIAV(v[i]),XLIMBLEN(v[i])));) R crc;}
+
 // CRC32 of y.  Floats must observe -0.
 static UI4 jtcrcy(J jt,A y){
  I yt=AT(y), yn=AN(y); void *yv=voidAV(y);  // type of y, #atoms, address of data
  if(yt&INT+(SZI==4)*(C4T+INT4))R crcwords(yv,yn);  // INT type, might be full words
  if(yt&B01+LIT+C2T+C4T+INT1+INT2+INT4)R crcbytes(yv,yn<<bplg(yt));   // direct non-float
- if(yt&FL+CMPX+QP)R crcfloats(yv,yn<<((UI)yt>=CMPX));  // float
- if(yt&BOX){UI4 crc=0; A *bv=yv; DO(yn, crc=HASH4(crc,jtcrcy(jt,C(bv[i])));) R crc;}  // box, take CRC of all the boxes
- if(yt&RAT+XNUM){UI4 crc=0; X *xv=yv; DQ(yn<<((UI)yt>=RAT), crc=HASH4(crc,crcwords(UIAV(xv[i]),XLIMBLEN(xv[i])));) R crc;}
+ if(yt&FL+CMPX+QP)R crcfloats(yv,yn<<(((UI)yt>=CMPX)));  // float
+ if(yt&BOX){R crcboxes(jt,yv,yn);}  // box, take CRC of all the boxes
+ if(yt&RAT+XNUM){R crcxnums(yv,yn<<((UI)yt>=RAT));}  // RAT/XNUM, take CRC of all of them
  else SEGFAULT;  // scaf
 }
 
@@ -809,41 +816,98 @@ DF2(jthashy){F12IP; ARGCHK2(a,w) RETF(sc(jtcrcy(jt,w)));}
 // cacheline is the lock for the dic.  The data starts at AS[1], the second cacheline.  The block
 // is a recursive BOX but AK points past the areas that do not need to be freed, i.e keys
 typedef struct {
- I header[8];  // A header up through s[0].  DIC is always allocated with rank 1
- struct { // *** this group of values is updated atomically en bloc to make sure hashelesiz matches hash when possible.
+ I header[8];  // A header up through s[0].  DIC is always allocated with rank 1.  AS is set to credentials for the block
+ struct Dic { // *** this group of values is updated atomically en bloc to make sure hashelesiz matches hash when possible.
   C flags;  
-  C hashelesize;  // 2 or 4, hash table size
-  C lgminsiz;  // lg(minimum occupancy).  When cardinality drops below 1LL<<lgminsiz, we resize
-  C credentials;  // set to 5a in a valid dic
-  UI4 cardinality;  // number of kvs in the hashtable
-  I4 emptyn;  // index to next empty kv.  -1 for end.  Resize when empty
-  UI4 hashsiz;  //  number of elements in hash table
-  UI4 keyitemlen;  // number of bytes in a key
-  UI4 valitemlen;  // number of bytes in a value
-  A hash;  // the hash table, rank 1  Note: This pointer may be stale.  MUST use AAV1 to point to hash, and use only PREFETCH until you get a lock
+#define DICFIHF 1  // set if using internal hashing function
+#define DICFICF 2  // set if using internal compare function
+  C hashelesize;  // number of bytes in a hash slot, 1-5
+  C lgminsiz;  // lg(minimum cardinality).  When cardinality drops below 1LL<<lgminsiz, we resize
+// 5 bytes free
+  UI hashsiz;  //  number of elements in hash table
+  UI4 (*hashfn)();  // hash function, user's or selected internal
+  C (*compfn)();  // key-comparison function, user's or selected internal
+  A hash;  // the hash table, rank 1  Note: This pointer may be stale.  MUST use voidAV1 to point to hash, and use only PREFETCH until you get a lock
+  A keys;  // array of keys
+  A vals;   // array of values
+  A empty;  // INT shape (maxeles,hashelesiz).  occupied kvs are -1; empties are in a chain that loops to itself at the end, rank 1
+  // end of first cacheline.  Following are unchanging
+  A hashcompself;  // self to use for user's hash/compare verb
+  A locale;  // the numbered locale of the dictionary, saved here to protect it.  User hash/compare is called in this locale
+  A kshape;   // shape of a key, always accessed by AAV1
+  A vshape;  // shape of a value, always accessed by AAV1
+  UI4 ktype;  // type of a key
+  UI4 vtype;   // type of a value
+  UI4 khashlen;  // number of hash items in a key when using 16!:0
+  UI4 kcomplen;  // number of compare items in a key when using 16!:0
+  UI4 vitemlen;  // number of bytes in a value, for copying
+  UI4 kaii;   // atoms in a key
+  UI4 vaii;   // atoms in a value
+// 4 bytes free
+  // end of second cacheline.  Following changed only by put/del
+  UI cardinality;  // number of kvs in the hashtable
+  I emptyn;  // index to next empty kv.  -1 when empty.  Resize when empty
+  I filler2[SY_64?6:3];  // pad to cacheline (24 words on each system).
  } bloc;
- A keys;  // array of keys
- A vals;   // array of values
- A empty;  // occupied kvs are -1; empties are in a chain with a chain with -1 at end, rank 1
-// 1 word free
 } DIC;
 #define ST UI4   // type of hash slot
 #define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found
 #define STN 4  // width of hash slot
 
-// 16!:_1 y  allocate hashtable
-// y is (hashele size [,flags]);(min #eles,max #eles,#hashslots);(key type;key shape);(value type;value shape)
-// result is DIC to use, ready for get/put, with 0 kvs
-F1(jtcreatedic){
+// u 16!:_1 y  conjunction.  allocate hashtable.  Always called from the numbered locale of the dictionary.
+// x is the hash/compare verb OR the DIC block for a dictionary that is being resized.
+// y is (min #eles,max #eles,#hashslots);(flags, currently empty);(key type;key shape);(value type;value shape)    to create a new dictionary
+//      (min #eles,max #eles,#hashslots)   when a dictionary is being resized
+// result is DIC to use, ready for get/put, with hash/keys/vals/empty allocated, and 0 valid kvs
+F2(jtcreatedic){F12IP;A box,box1;  // temp for box contents
+ ARGCHK2(a,w);
+ ASSERT(AT(a)&VERB,EVDOMAIN)  // u must be the user's verb
+ A z; GAT0(z,BOX,20,1) AK(z)=offsetof(Dic,hash); AN(z)=8;  // allocate nonrecursive box, long enough to make the total allo big enough in 32- and 64-bit.  Then restrict to the boxes in case of error
+ if(AT(a)&VERB){  // initial creation
+  //  install user's verb, & see if the user wants the internal functions
+  AF fn=FAV(a)->valencefns[0]; fn=(FAV(a)->id==CCOLON&&AT(FAV(a)->fgh[0])&VERB)?FAV(FAV(a)->fgh[0])->valencefns[0]:fn; ((DIC*)z)->flags=fn==jthashy?DICFIHF:0;  // note if default hash
+  fn=FAV(a)->valencefns[1]; fn=(FAV(a)->id==CCOLON&&AT(FAV(a)->fgh[0])&VERB)?FAV(FAV(a)->fgh[0])->valencefns[1]:fn; I flags=((DIC*)z)->flags|=fn==jttao?DICFICF:0;  // note if default hash
+  INCORPNV(a); ((DIC*)z)->hashcompself=a;    // save self pointer to user's function, which protects it while this dic is extant
+  ((DIC*)z)->locale=jt->global;  // remember the locale this dictionary is in.  We protect it in the DIC block
+  // flags, key, value sizes
+  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==4,EVLENGTH)  // 4 boxes
+  box=C(AAV(w)[1]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==0,EVLENGTH)  // flags.  None currently supported
+  box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)  // keyspec.  must be 2 boxes
+  box1=C(AAV(box)[0]); I t; RE(t=i0(a)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN)  // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid
+  box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0) RZ(box1=ccvt(INT,ravel(box1))) I n, *s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->kaii=n; // shape. copy to allow AAV1.  get # atoms in item & save
+  INCORPNV(box1); ((DIC*)z)->kshape=box1; ((DIC*)z)->ktype=t; ((DIC*)z)->kcomplen=n; I l=n<<bplg(t);  // save shape & type; save # atoms for compare (since item size is important); fetch byte count of key
+  void (*fn)()=l&(SZI-1)?crcbytes:crcwords; fn=(t&XNUM+RAT)?crcxnums:fn; fn=(t&CMPX+FL+QP)?crcfloats:fn; fn=(t&BOX)?crcboxes:fn; fn=flags&DICFIHF?fn:FAV(a)->valencefns[0]; ((DIC*)z)->hashfn=fn; // save internal or external hash function  
+  l>>=(fn==crcboxes)?LGSZI:0; l>>=(fn==crcfloats)?((t|(t>>(QPX-BOXX)))>>CMPX)+FLX:0; l>>=(fn==crcxnums)?(t>>RATX)+LGSZI:0; l>>=(fn==crcwords)?LGSZI:0; ((DIC*)z)->khashlen=l;  // length to use for hash, if internal
+  fn=taocomproutine[CTTZI(t)]; fn=flags&DICFICF?fn:FAV(a)->valencefns[1]; ((DIC*)z)->compfn=fn; // save internal or external comp function
+  box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)  // valuespec.  must be 2 boxes
+  box1=C(AAV(box)[0]); RE(t=i0(a)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN)  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid
+  box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0) RZ(box1=ccvt(INT,ravel(box1))) I n, *s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->vaii=n;  // shape. copy to allow AAV1.  get # atoms in item & save
+  INCORPNV(box1); ((DIC*)z)->vshape=box1; ((DIC*)z)->vtype=t; ((DIC*)z)->vitemlen=n<<bplg(t);  // save shape & type; save # bytes for copy
+  box=C(AAV(w)[0]);  // fetch size parameters
+ }else{  // resize
+  ((DIC*)z)->bloc=((DIC*)a)->bloc;  // init everything from the previous dic
+  box=w;  // w is nothing but size parms
+ }
+
+ // box has the size parameters.  Audit & install into dic
+ ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==3,EVLENGTH) if(!AT(box)&INT)RZ(box=ccvt(INT,box));  // sizes. must be box of 3 integers
+ ((DIC*)z)->lgminsiz=CTLZI(UIAV(box)[0]|1); I maxeles=((DIC*)z)->maxeles=IAV(box)[1]; ASSERT(maxeles>0,EVDOMAIN) I hashsiz=((DIC*)z)->hashsiz=IAV(box)[2]; ASSERT(hashsiz>(maxeles+(maxeles>>4)),EVDEADLOCK)  // min, max, hash sizes.  Hash at least 6% spare
+ I hashelsesiz=((DIC*)z)->hashelesiz=(CTLZI(maxeles+2-1)+1+(BB-1))>>LGBB;  // max slot#, plus 2 (empty/tombstone).  Subtract 1 for max code point.  top bit#+1 is #bits we need; round that up to #bytes
+
+ // allocate & protect hash/keys/vals/empty
+ GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,CAV1(box),MEMSETFFLEN,MEMSETFF) (DIC*)z)->hash=box;  // allocate hash table & fill with empties
+ GATV0(box,LIT,maxeles*hashelesiz,1) INCORPNV(box) void *ev=voidAV1(box); DO(maxeles-1, *(I*)ev=i+1; ev=(void *)((I)ev+hashelesiz);)   // allocate empty list & chain empties together
+ *(I*)ev=maxeles-1; (boxn=0; (DIC*)z)->empty=box; // install end of chain loopback and point the dic to beginning of chain
+ GATV0(box,((DIC*)z)->ktype,maxeles*((DIC*)z)->kaii,1) INCORPNV(box) AS(box)[0]=maxeles; MCISH(AS(box)+1,IAV1(((DIC*)z)->kshape),AN(((DIC*)z)->kshape)) (DIC*)z)->keys=box;   // allocate array of keys
+ GATV0(box,((DIC*)z)->vtype,maxeles*((DIC*)z)->vaii,1) INCORPNV(box) AS(box)[0]=maxeles; MCISH(AS(box)+1,IAV1(((DIC*)z)->vshape),AN(((DIC*)z)->vshape)) (DIC*)z)->vals=box;   // allocate array of keys
+ (DIC*)z)->cardinality=0;  // init the dic is empty
  // allocate DIC, move data pointer to keys
  // fill in header
  // allocate & fill in data areas
+ // protect the copied/allocated blocks, make result recursive
+ ra0(z);   // make z recursive, protecting descendants
+ RETF(z)
 }
-
-// x 16!:_1 y  read from hashtable
-// y is dic, x is 0.  Result is integer list of some of the values in the DIC control block before the pointers:
-// flags hashelesize minsiz cardinality emptyn
-F1(jtdicparms){}
 
 // Dic locking ************************************************************
 
@@ -928,13 +992,20 @@ static void diclkwrwt(DIC *dic){I n;
 #define DICLKWRRQ(dic,lv)
 #endif
 
-A dicresize(DIC dic,J jt,A parent){
- // call dicresize in the locale of the dic.  No need for explicit locative because locale is protected by parent
- // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be
- // freed when the new dic is.
+// Request resize.  jt->globals has been set to the dic locale, so we look up resize there
+A dicresize(DIC dic,J jt){
+ A *_ttop=jt->tnextpushp;  // stack restore point
+  // call dicresize in the locale of the dic.  No need for explicit locative because locale is protected by dic
+ A nam=nfs(10,"resize",0); A val;
+ ASSERT(((val=jtsyrd1((J)((I)jt+NAV(nam)->m),NAV(nam)->s,NAV(nam)->hash,jt->global))!=0  // look up name in current locale and ra() if found
+  &&((val=QCWORD(namerefacv(nam,QCWORD(val))))!=0)   // turn the value into a reference, undo the ra
+  &&((val&&LOWESTBIT(AT(val))&VERB))),EVVALUE)   // make sure the result is a verb
+ A newdic; RZ(newdic=jtunquote(jt,(A)dic,val,val));  // execute resize on the dic, returning new dic
+ struct Dic t=dic->bloc; dic->bloc=newdic->bloc; newdic->bloc=t;  // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be freed when the new dic is.
  // NOTE: we keep the old blocks hanging around until the new have been allocated.  This seems unnecessary for the hashtable, but we do it because other threads still have the old pointers and may prefetch from
  //  the old hash.  This won't crash, but it might be slow if the old hash is no longer in mapped memory
- // 
+ tpop(_ttop);  // discard newdic and everything it refers to
+ R dic;  // always return the same block if no error.
 }
 
 
@@ -1055,27 +1126,27 @@ DF1(jtdicdel##STN){
  RETF(z);
 }
 
-// u 16!:_2 v  get: u=dic, v=hash : compare function
+// u 16!:_2  get: u=dic
 // We create a verb to handle (get y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF2(jtdicgetc){
+DF1(jtdicgetc){
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
- ARGCHK2(a,w)
- R fdef(z,0,CIBEAM,VERB, jtdicget,jtvalenceerr, a,w,jt->global, VFLAGNONE, RMAX,RMAX,RMAX); 
+ ARGCHK1(w)
+ R fdef(z,0,CIBEAM,VERB, jtdicget,jtvalenceerr, w,0,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
-// u 16!:_3 v  put: u=dic, v=hash : compare function
+// u 16!:_3  put: u=dic
 // We create a verb to handle (x put y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF2(jtdicputc){
+DF1(jtdicputc){
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
- ARGCHK2(a,w)
- R fdef(z,0,CIBEAM,VERB, jtvalenceerr,jtdicput, a,w,jt->global, VFLAGNONE, RMAX,RMAX,RMAX); 
+ ARGCHK1(w)
+ R fdef(z,0,CIBEAM,VERB, jtvalenceerr,jtdicput, w,0,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
-// u 16!:_4 v  del: u=dic, v=hash : compare function
+// u 16!:_4 v  del: u=dic
 // We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF2(jtdicdelc){
+DF1(jtdicdelc){
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
- ARGCHK2(a,w)
- R fdef(z,0,CIBEAM,VERB, jtdicdel,jtvalenceerr, a,w,jt->global, VFLAGNONE, RMAX,RMAX,RMAX); 
+ ARGCHK1(w)
+ R fdef(z,0,CIBEAM,VERB, jtdicdel,jtvalenceerr, w,0,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 #endif

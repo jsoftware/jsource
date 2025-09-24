@@ -692,6 +692,7 @@ extern void     copyTT(void *, void *, I, I,I);
 extern void     jtcopyTT(J, void *, void *, I, I,I);
 #endif
 extern A        cw57rep(J,A);
+extern I        fromonehottype(I,J);
 extern I        infererrtok(J);
 extern I        johnson(I);
 extern A        jtac1(J,AF);
@@ -1059,6 +1060,7 @@ extern I        memcmpne(void*, void*, I);
 #define memcmpne(s,t,l) (!!memcmp((s),(t),(l)))
 #endif
 
+extern I (*taocomproutine[])();
 struct __attribute__((aligned(ABDY))) Bi1 {I hdr[AKXR(0)/SZI]; I v[1];};  // data is one integer atom
 struct __attribute__((aligned(ABDY))) Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};  // data is one float atom
 struct __attribute__((aligned(ABDY))) Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // data for the multi-word atom is aligned to cacheline

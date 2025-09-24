@@ -18,7 +18,7 @@ TAOGRADE(taof,D,PREFLT,PREFNE) TAOGRADE(taoz,Z,PREFLTZ,PREFNEZ) TAOGRADE(taoe,E,
 #define TAOGRADEC(nm,T,t) I nm(I n, T *a, T *b, J jt){I comp=0; DO(n, if(comp=t(a[i],b[i]))break;) R comp;}
 TAOGRADEC(taor,A,compare) TAOGRADEC(taox,A,xcompare) TAOGRADEC(taoq,Q,QCOMP)
 
-static I (*comproutine[])()=   // routines for different datatypes. index is [precisionx]
+I (*taocomproutine[])()=   // routines for different datatypes. index is [precisionx]
 {[B01X]=taoc, [LITX]=taoc, [INTX]=taoi, [FLX]=taof,
 [CMPXX]=taoz,[BOXX]=taor, [XNUMX]=taox, [RATX]=taoq,
 [QPX]=taoe,
@@ -33,7 +33,7 @@ F2(jttao){F12IP;
  ASSERT(AR(a)==AR(w),EVRANK);
  ASSERTAGREE(AS(a),AS(w),AR(a))  // rank and shape must agree
  ASSERT(AT(a)==AT(w),EVINHOMO)  // types must be equal
- R sc((*comproutine[CTTZI(AT(a))])(AN(a),voidAV(a),voidAV(w),jt));  // return 
+ R sc((*taocomproutine[CTTZI(AT(a))])(AN(a),voidAV(a),voidAV(w),jt));  // return 
 }
 
 // return 1 if a before b, 0 otherwise

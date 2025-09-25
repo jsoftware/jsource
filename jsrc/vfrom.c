@@ -816,21 +816,25 @@ DF2(jthashy){F12IP; ARGCHK2(a,w) RETF(sc(jtcrcy(jt,w)));}
 // cacheline is the lock for the dic.  The data starts at AS[1], the second cacheline.  The block
 // is a recursive BOX but AK points past the areas that do not need to be freed, i.e keys
 typedef struct {
- I header[8];  // A header up through s[0].  DIC is always allocated with rank 1.  AS is set to credentials for the block
+ I header[8];  // A header up through s[0].  DIC is always allocated with rank 1.
  struct Dic { // *** this group of values is updated atomically en bloc to make sure hashelesiz matches hash when possible.
-  C flags;  
+  union {
+   struct {
+    filler[5];
+    C flags;  
 #define DICFIHF 1  // set if using internal hashing function
 #define DICFICF 2  // set if using internal compare function
-  C hashelesize;  // number of bytes in a hash slot, 1-5
-  C lgminsiz;  // lg(minimum cardinality).  When cardinality drops below 1LL<<lgminsiz, we resize
-// 5 bytes free
-  UI hashsiz;  //  number of elements in hash table
+    C lgminsiz;  // lg(minimum cardinality).  When cardinality drops below 1LL<<lgminsiz, we resize.  Top 3 bits always 0, used as LSBs of hashelesize
+    C hashelesize;  // number of bytes in a hash slot, 1-5 (we support only 4)
+   }
+   UI hashsiz;  //  number of elements in hash table.  We leave space for 40 bits but we don't support more than 32
+  }
   UI4 (*hashfn)();  // hash function, user's or selected internal
   C (*compfn)();  // key-comparison function, user's or selected internal
   A hash;  // the hash table, rank 1  Note: This pointer may be stale.  MUST use voidAV1 to point to hash, and use only PREFETCH until you get a lock
   A keys;  // array of keys
   A vals;   // array of values
-  A empty;  // INT shape (maxeles,hashelesiz).  occupied kvs are -1; empties are in a chain that loops to itself at the end, rank 1
+  A empty;  // LIT shape (maxeles,hashelesiz).  occupied kvs are -1; empties are in a chain that loops to itself at the end, rank 1
   // end of first cacheline.  Following are unchanging
   A hashcompself;  // self to use for user's hash/compare verb
   A locale;  // the numbered locale of the dictionary, saved here to protect it.  User hash/compare is called in this locale
@@ -838,9 +842,14 @@ typedef struct {
   A vshape;  // shape of a value, always accessed by AAV1
   UI4 ktype;  // type of a key
   UI4 vtype;   // type of a value
-  UI4 khashlen;  // number of hash items in a key when using 16!:0
-  UI4 kcomplen;  // number of compare items in a key when using 16!:0
-  UI4 vitemlen;  // number of bytes in a value, for copying
+  union {
+   struct {
+    UI4 kitemlen;  // number of hash/compare items in a key when using 16!:0
+    UI4 kbytelen;  // number of bytes in a key
+   }
+   UI8 klens;
+  }
+  UI4 vbytelen;  // number of bytes in a value, for copying
   UI4 kaii;   // atoms in a key
   UI4 vaii;   // atoms in a value
 // 4 bytes free
@@ -874,15 +883,15 @@ F2(jtcreatedic){F12IP;A box,box1;  // temp for box contents
   box=C(AAV(w)[1]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==0,EVLENGTH)  // flags.  None currently supported
   box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)  // keyspec.  must be 2 boxes
   box1=C(AAV(box)[0]); I t; RE(t=i0(a)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN)  // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid
-  box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0) RZ(box1=ccvt(INT,ravel(box1))) I n, *s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->kaii=n; // shape. copy to allow AAV1.  get # atoms in item & save
-  INCORPNV(box1); ((DIC*)z)->kshape=box1; ((DIC*)z)->ktype=t; ((DIC*)z)->kcomplen=n; I l=n<<bplg(t);  // save shape & type; save # atoms for compare (since item size is important); fetch byte count of key
+  box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0) RZ(box1=ccvt(INT,ravel(box1))) I n, *s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->kaii=n; ASSERT(n>0,EVLENGTH) // shape. copy to allow AAV1.  get # atoms in item & save
+  INCORPNV(box1); ((DIC*)z)->kshape=box1; ((DIC*)z)->ktype=t; I l=n<<bplg(t); ((DIC*)z)->kbytelen=n; // save shape & type; save #bytes in key
   void (*fn)()=l&(SZI-1)?crcbytes:crcwords; fn=(t&XNUM+RAT)?crcxnums:fn; fn=(t&CMPX+FL+QP)?crcfloats:fn; fn=(t&BOX)?crcboxes:fn; fn=flags&DICFIHF?fn:FAV(a)->valencefns[0]; ((DIC*)z)->hashfn=fn; // save internal or external hash function  
-  l>>=(fn==crcboxes)?LGSZI:0; l>>=(fn==crcfloats)?((t|(t>>(QPX-BOXX)))>>CMPX)+FLX:0; l>>=(fn==crcxnums)?(t>>RATX)+LGSZI:0; l>>=(fn==crcwords)?LGSZI:0; ((DIC*)z)->khashlen=l;  // length to use for hash, if internal
-  fn=taocomproutine[CTTZI(t)]; fn=flags&DICFICF?fn:FAV(a)->valencefns[1]; ((DIC*)z)->compfn=fn; // save internal or external comp function
+  void (*fn)()=l&(SZI-1)?taoc:taoi; fn=(t&XNUM+RAT)?taox:fn; fn=(t&CMPX+FL+QP)?taof:fn; fn=(t&BOX)?taor:fn; fn=flags&DICFICF?fn:FAV(a)->valencefns[1]; ((DIC*)z)->compfn=fn; // save int/ext comp function.  We care only about equality  
+  l>>=(fn==crcboxes)?LGSZI:0; l>>=(fn==crcfloats)?((t|(t>>(QPX-BOXX)))>>CMPX)+FLX:0; l>>=(fn==crcxnums)?(t>>RATX)+LGSZI:0; l>>=(fn==crcwords)?LGSZI:0; ((DIC*)z)->kitemlen=l;  // length to use for internal hash/comp
   box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)  // valuespec.  must be 2 boxes
   box1=C(AAV(box)[0]); RE(t=i0(a)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN)  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid
   box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0) RZ(box1=ccvt(INT,ravel(box1))) I n, *s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->vaii=n;  // shape. copy to allow AAV1.  get # atoms in item & save
-  INCORPNV(box1); ((DIC*)z)->vshape=box1; ((DIC*)z)->vtype=t; ((DIC*)z)->vitemlen=n<<bplg(t);  // save shape & type; save # bytes for copy
+  INCORPNV(box1); ((DIC*)z)->vshape=box1; ((DIC*)z)->vtype=t; ((DIC*)z)->vbytelen=n<<bplg(t);  // save shape & type; save # bytes for copy
   box=C(AAV(w)[0]);  // fetch size parameters
  }else{  // resize
   ((DIC*)z)->bloc=((DIC*)a)->bloc;  // init everything from the previous dic
@@ -891,11 +900,11 @@ F2(jtcreatedic){F12IP;A box,box1;  // temp for box contents
 
  // box has the size parameters.  Audit & install into dic
  ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==3,EVLENGTH) if(!AT(box)&INT)RZ(box=ccvt(INT,box));  // sizes. must be box of 3 integers
- ((DIC*)z)->lgminsiz=CTLZI(UIAV(box)[0]|1); I maxeles=((DIC*)z)->maxeles=IAV(box)[1]; ASSERT(maxeles>0,EVDOMAIN) I hashsiz=((DIC*)z)->hashsiz=IAV(box)[2]; ASSERT(hashsiz>(maxeles+(maxeles>>4)),EVDEADLOCK)  // min, max, hash sizes.  Hash at least 6% spare
+ ((DIC*)z)->lgminsiz=CTLZI(UIAV(box)[0]|1); I maxeles=((DIC*)z)->maxeles=IAV(box)[1]; ASSERT(maxeles>0,EVDOMAIN) I hashsiz=(UI4)((DIC*)z)->hashsiz=IAV(box)[2]; ASSERT(hashsiz>(maxeles+(maxeles>>4)),EVDEADLOCK)  // min, max, hash sizes.  Hash at least 6% spare
  I hashelsesiz=((DIC*)z)->hashelesiz=(CTLZI(maxeles+2-1)+1+(BB-1))>>LGBB;  // max slot#, plus 2 (empty/tombstone).  Subtract 1 for max code point.  top bit#+1 is #bits we need; round that up to #bytes
 
  // allocate & protect hash/keys/vals/empty
- GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,CAV1(box),MEMSETFFLEN,MEMSETFF) (DIC*)z)->hash=box;  // allocate hash table & fill with empties
+ GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,CAV1(box),MEMSETFFLEN,MEMSET00) (DIC*)z)->hash=box;  // allocate hash table & fill with empties
  GATV0(box,LIT,maxeles*hashelesiz,1) INCORPNV(box) void *ev=voidAV1(box); DO(maxeles-1, *(I*)ev=i+1; ev=(void *)((I)ev+hashelesiz);)   // allocate empty list & chain empties together
  *(I*)ev=maxeles-1; (boxn=0; (DIC*)z)->empty=box; // install end of chain loopback and point the dic to beginning of chain
  GATV0(box,((DIC*)z)->ktype,maxeles*((DIC*)z)->kaii,1) INCORPNV(box) AS(box)[0]=maxeles; MCISH(AS(box)+1,IAV1(((DIC*)z)->kshape),AN(((DIC*)z)->kshape)) (DIC*)z)->keys=box;   // allocate array of keys
@@ -996,8 +1005,9 @@ static void diclkwrwt(DIC *dic){I n;
 A dicresize(DIC dic,J jt){
  A *_ttop=jt->tnextpushp;  // stack restore point
   // call dicresize in the locale of the dic.  No need for explicit locative because locale is protected by dic
- A nam=nfs(10,"resize",0); A val;
- ASSERT(((val=jtsyrd1((J)((I)jt+NAV(nam)->m),NAV(nam)->s,NAV(nam)->hash,jt->global))!=0  // look up name in current locale and ra() if found
+ A nam, val;
+ ASSERT((nam=nfs(10,"resize",0)!=0)
+  &&((val=jtsyrd1((J)((I)jt+NAV(nam)->m),NAV(nam)->s,NAV(nam)->hash,jt->global))!=0  // look up name in current locale and ra() if found
   &&((val=QCWORD(namerefacv(nam,QCWORD(val))))!=0)   // turn the value into a reference, undo the ra
   &&((val&&LOWESTBIT(AT(val))&VERB))),EVVALUE)   // make sure the result is a verb
  A newdic; RZ(newdic=jtunquote(jt,(A)dic,val,val));  // execute resize on the dic, returning new dic
@@ -1009,39 +1019,61 @@ A dicresize(DIC dic,J jt){
 }
 
 
-// k is A for keys, kvirt is virtual unincorpable block to point to key, s is place for slot#s.  Hash each key, convert to slot, store, prefetch
+// k is A for keys, n is #keys, s is place for slot#s.  Hash each key, store, prefetch (possibly using wrong hash)
+// This version works on internal hash functions only
 // result is 0 on error
-B jtkeyprep(DIC dic, A k, A kvirt, STX *s,J jt){
- DO(AS(k)[0],
-  // hash the key
-  // store hash
-  // prefetch the slot# (using the current hash parms)
-  // advance virtual block to next key
+B jtkeyprep(DIC dic, void *k, UI8 n, I8 *s,J jt){UI8 i;
+ UI8 hsz=dic->hsizes; I kib=dic->klens; UI4 (*hf)()=dic->hashfn; C *hashtbl=AAV1(dic->hash);  // elesiz/hashsiz kbytelen/kitemlen
+ k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
+ for(i=n;--i>=0;){
+  k=(void*)((I)k-(kib>>32));  // back up to next key
+  s[i]=(I8)(*hf)(k,(UI4)kib,jt); PREFETCH(hashtbl[(((UI8)s[i]*(UI4)hsz)>>32)*(hsz>>56)];
+ }
+ R 1;
  )
 }
+// k is A for keys, kvirt is virtual unincorpable block to point to key, s is place for slot#s.  Hash each key, convert to slot, store, prefetch
 
 // k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
 // resolve each key in the hash and copy the value to the result
-B jtgetslots##STN(DIC dic,A k,A kvirt,STX *s,A z,A jt){
- // this loop will be unrolled 3 times, one for each fetch from remote memory
- // read from the slot
- // prefetch key and value
- // loop till found: compare key[slot] against k[i], copy value if match
- // if no match, abort for get, write 0 for isin
+// This version works on internal compare functions only
+B jtgetslots(DIC dic,void *k,UI8 n,I8 *s,void *zv,A jt){UI8 i;
+ UI8 hsz=dic->hsizes; I kib=dic->klens; C (*cf)()=dic->compfn; C *hashtbl=AAV1(dic->hash);  // elesiz/hashsiz kbytelen/kitemlen
+ k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
+ C *kbase=CAV(dic->keys)-2*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0 & 1 are empty and tombstone and do not take space in the key array
+ // convert the hash slot#s to index into kvs
+ for(i=n;--i>=0;){
+  k=(void*)((I)k-(kib>>32));  // back up to next key
+  I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32)*(hsz>>56);  // convert hash to slot# and then to byte offset.
+  UI8 hval; s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv
+  while(unlikely(hval<2) || unlikely((*cf)((UI4)kib,k,kbase+(kib>>32)*hval))){  // loop till we hit a valid value that compares equal on the key
+   if(s[i]==0)break;   // if we hit an empty, that ends the search
+   if(unlikely((curslot-=(hsz>>56))<0))curslot+=(UI4)hsz*(hsz>>56);  // move to next hash slot, wrap to end if we hit 0
+   s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot],(hsz>>53));  // fetch next hash value
+  }
+ }
+ // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore
+ I vn=dic->vbytelen; C *vbase=CAV(dic->vals)-2*vn;  // size of a value; address corresponding to hash value of 0.  Hashvalues 0 & 1 are empty and tombstone and do not take space in the value array
+ DO(n, ASSERT(s[i]>1,EVINDEX) MC(zv,vbase+s[i]*vn,vn); zv=(void *)((I)z+vn);)   // scaf JMC?
+ R 1;
 }
 
 // get.  conjunction.  u is dic, v is hash/comp function.    w is keys
-DF1(jtdicget##STN){
- DIC dic=FAV(self)->fgh[0];  // point to dic block
- // allocate slots block
- // if keys are not the right shape & type, convert/extend them
- // allocate result area
- // allocate virtual block for key
- RZ(jtkeyprep(dic,k,kvirt,s,jt))  // convert keys to slot#
- // take read lock;
- // refresh dic info
- z=jtgetslots##STN(dic,k,kvirt,s,z,jt);  // get the values
- // release read lock;
+// This version for internal functions only
+DF1(jtdicget){A z;
+ ARGCHK1(w)
+ DIC dic=FAV(self)->fgh[0]; I kt=dic->ktype; I kr=AN(dic->kshape), *ks=AAV1(dic->kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
+ if(unlikely(AN(w)==0)){GA0(z,dic->vtype,0,wf+AN(dic->vshape)) MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AAV1(dic->vshape),AN(dic->vshape)) R z;}  // if no keys, return empty fast
+ if(unlikely((AT(w)&kt)==0)RZ(w=ccvt(kt,w))   // convert type of w if needed
+ I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
+ GA0(z,dic->vtype,kn*dic->vaii,wf+AN(dic->vshape)) MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AAV1(dic->vshape),AN(dic->vshape))   // allocate result area & install shape
+ I8 s[100]; if(unlikely(kn>sizeof(s)/sizeof(s[0]))){GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
+ void *k=voidAV(w);  // point to the key data
+ RZ(jtkeyprep(dic,k,kn,s,jt))  // convert keys to slot#
+ I lv=DICLKRDRQ(dic) DICLKRDWT(dic,lv)  // request read lock and wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+ RZ(jtgetslots(dic,k,kn,s,voidAV(z),jt));  // get the values
+ DICLKRDREL(dic)  // release read lock
  RETF(z);
 }
 

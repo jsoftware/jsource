@@ -9,7 +9,7 @@
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES
-static void delay(I n){if(uncommon(n>36))DONOUNROLL((n-7)/36,_mm_pause();)else johnson(n);}
+void delay(I n){if(uncommon(n>36))DONOUNROLL((n-7)/36,_mm_pause();)else johnson(n);}
 #else
 #define delay(n)
 #endif

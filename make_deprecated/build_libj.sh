@@ -343,6 +343,7 @@ OBJS="\
  xc.o \
  xcrc.o \
  xd.o \
+ xdic.o \
  xf.o \
  xfmt.o \
  xh.o \

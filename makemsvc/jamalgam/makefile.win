@@ -246,6 +246,7 @@ OBJS=  \
  ../../jsrc/xc.o \
  ../../jsrc/xcrc.o \
  ../../jsrc/xd.o \
+ ../../jsrc/xdic.o \
  ../../jsrc/xf.o \
  ../../jsrc/xfmt.o \
  ../../jsrc/xh.o \

@@ -201,7 +201,7 @@ jobs:
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -251,7 +251,7 @@ jobs:
 # macOS arm64 ----------------------------------------------------------
  jemacosarm:
   name: JE (macOS arm64)
-  runs-on: macos-14
+  runs-on: macos-15
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -301,7 +301,7 @@ jobs:
 # macOS debug ----------------------------------------------------------
  jemacosd:
   name: JE (macOS debug)
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -346,7 +346,7 @@ jobs:
 # macOS arm64 debug ----------------------------------------------------
  jemacosarmd:
   name: JE (macOS arm64 debug)
-  runs-on: macos-14
+  runs-on: macos-15
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -824,7 +824,7 @@ jobs:
  jeopenbsd:
   name: JE (OpenBSD vmactions)
   if: ${{ false }}
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -1023,7 +1023,7 @@ jobs:
  jefreebsd:
   name: JE (FreeBSD vmactions)
   if: ${{ false }}
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -1235,7 +1235,7 @@ jobs:
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

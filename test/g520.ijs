@@ -450,7 +450,7 @@ end.
 delth''  NB. make sure we end with an empty system
 
 1
-}}^:IF64 1
+}}^:(IF64>UNAME-:'Darwin') 1   NB. incorrect cacheline in test
 
 NB.  128!:13 ck[;bk;colthresh,bkthresh] ------------------------
 {{

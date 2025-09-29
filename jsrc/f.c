@@ -671,8 +671,10 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
    case 4: z=thorn1main(trep(w),prxthornuni); break;
    case 5: z=thorn1main(lrep(w),prxthornuni); break;
    case 6: z=thorn1main(prep(w),prxthornuni); break;
+   }
+   break;
+   case SYMBX: z=aqq;   // DIC blocks include a SYMB, so we need to display something
   }
- }
  EPILOG(z);
 }
 

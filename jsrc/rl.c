@@ -257,9 +257,11 @@ static F1X(jtlnoun0){F12JT;A s,x;B r1;
 }   /* empty dense array */
 
 
+// format a noun.  We stray through here for FUNC and SYMB types too, when formatting a DIC.  Empty result then
 static F1X(jtlnoun){F12JT;I t;
  ARGCHK1(w);
  t=AT(w);
+ if(unlikely(t&FUNC+SYMB))R aqq;  // empty string for nondisplayable contents
  if(unlikely(ISSPARSE(t)))R lsparse(w);
  if(!AN(w))R lnoun0(w);
  switch(CTTZ(t)){

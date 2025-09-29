@@ -6,13 +6,13 @@
 #include "j.h"
 #include "vg.h"
 
-#define PREFLT(a,b) (a>b)
-#define PREFNE(a,b) (a!=b)
+#define PREFLT(a,b) ((a)>(b))
+#define PREFNE(a,b) ((a)!=(b))
 #define PREFLTZ(a,b) (a.re>b.re || (a.re==b.re && a.im>b.im))
 #define PREFNEZ(a,b) (a.re!=b.re)
 #define PREFLTE(a,b) (a.hi>b.hi || (a.hi==b.hi && a.lo>b.lo))
 #define PREFNEE(a,b) (a.hi!=b.hi)
-#define TAOGRADE(nm,T,t,eq) I nm(I n, T *a, T *b){DO(n, if(eq(a[i],b[i])) R t(a[i],b[i])-t(b[i],a[i]);) R 0;}
+#define TAOGRADE(nm,T,lt,ne) I nm(I n, T *a, T *b){DO(n, if(ne(a[i],b[i])) R lt(a[i],b[i])-lt(b[i],a[i]);) R 0;}
 TAOGRADE(taoc,UC,PREFLT,PREFNE) TAOGRADE(taoi,I,PREFLT,PREFNE) TAOGRADE(taou,US,PREFLT,PREFNE) TAOGRADE(taot,C4,PREFLT,PREFNE) TAOGRADE(taos,I2,PREFLT,PREFNE) TAOGRADE(taol,I4,PREFLT,PREFNE)
 TAOGRADE(taof,D,PREFLT,PREFNE) TAOGRADE(taoz,Z,PREFLTZ,PREFNEZ) TAOGRADE(taoe,E,PREFLTE,PREFNEE)
 #define TAOGRADEC(nm,T,t) I nm(I n, T *a, T *b, J jt){I comp=0; DO(n, if(comp=t(a[i],b[i]))break;) R comp;}

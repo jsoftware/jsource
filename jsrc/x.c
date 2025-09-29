@@ -192,6 +192,9 @@ void jtforeigninit(J jt){UI i;
 
  MN(1,55)  XPRIM(VERB, jtjferase,    0,            VASGSAFE,VF2NONE,0,   RMAX,RMAX);
  MN(16,0)  XPRIM(VERB, jthashy,     jttao,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(16,-1)  XPRIM(CONJ, 0,           jtcreatedic,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(16,-2)  XPRIM(ADV, jtdicgetc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(16,-3)  XPRIM(ADV, jtdicputc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(2,0)   XPRIM(VERB, jthost,       0,            VASGSAFE,VF2NONE,1,   RMAX,RMAX);
  MN(2,1)   XPRIM(VERB, jthostne,     0,            VASGSAFE,VF2NONE,1,   RMAX,RMAX);
 #if 0  // doesn't work

@@ -150,7 +150,7 @@ DF2(jtevery2self){F12IP;
  I cf=ar; cf=ar<wr?cf:wr;
  R jtevery2(jtfg,a,w,FAV(self)->fgh[0]);  // replace u&.> with u and process
 } 
-// u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
+// u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an array of boxes
 // This routine is called internally from many places without agreement checks
 // We could use a flag in jt to indicate agreement already checked
  // This is called with skeletal fs sometimes.  This routine refers to valencefns[1] and flag, and passes fs into execution

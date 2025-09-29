@@ -377,6 +377,7 @@ static DF2(jtdicget){F12IP;A z;
  if(unlikely(AN(w)==0)){GA0(z,dic->bloc.vtype,0,wf+AN(dic->bloc.vshape)) MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) R z;}  // if no keys, return empty fast
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
+ ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
  GA0(z,dic->bloc.vtype,kn*dic->bloc.vaii,wf+AN(dic->bloc.vshape)) MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AAV1(dic->bloc.vshape),AN(dic->bloc.vshape))   // allocate result area & install shape
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
  void *k=voidAV(w);  // point to the key data
@@ -403,15 +404,24 @@ static NOINLINE /* scaf */ I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
  C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
 
  // first pass over keys.  If key found, remember the biased kv# (will go to old chain).  If not found, remember the hashslot# and whether it was occupied by a birthstone; and make it a birthstone - will go to new or conflict chain
+ // If we encounter a birthstone, that's a conflict.  We must remember the first tombstone we encounter because that will be the store point if we don't find a match
  // We have to go in ascending order because later keys must overwrite earlier ones
  for(i=0;i<n;++i){
   I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32);  // convert hash to slot# and then to byte offset.
+  UI8 tomb1=~0;  // init to no tombstone encouuntered
   UI hval; s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
-  while(hval>=HASHNRES && (*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)){  // loop till we hit a hole, or we match the key
+  while(1){
+   if(hval<HASHNRES){
+    tomb1=tomb1!=~0ULL?curslot:tomb1;  // remember first hole we can store into, empty or tombstone
+    if(likely(hval<HASHTSTN))goto notfound;
+   }else if(!(*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval))goto found;  // if key match, we have saved the hashslot in s[]
+   // no match.  try next hashslot
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
    s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));  // fetch next hash value, flagged as old key
   }
-  if(s[i]<HASHNRES){hashtbl[curslot]=s[i]|HASHBSTN; s[i]=((I8)0x100000000<<s[i])+curslot;}   // if search ends at empty/birthstone; replace it with a birthstone and set s[i] to type of empty\hashslot#
+  found:
+notfound:
+if(s[i]<HASHNRES){hashtbl[curslot]=s[i]|HASHBSTN; s[i]=((I8)0x100000000<<s[i])+curslot;}   // if search ends at empty/birthstone; replace it with a birthstone and set s[i] to type of empty\hashslot#
          // We must touch only the low byte so the store can be atomic in the hashvalue
  }
 
@@ -424,7 +434,7 @@ static NOINLINE /* scaf */ I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
  for(cur=nroot;cur>=0;){
   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
   UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53)); if(emptynxt==emptyx)goto resize;  // get next empty, abort if end of chain (loopback)
-  MC(CAV(dic->bloc.keys)+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32); MC(CAV(dic->bloc.vals)+emptyx*vb,(void*)((I)v+cur*vb),vb);
+  MC(CAV(dic->bloc.keys)+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32); MC(CAV(dic->bloc.vals)+emptyx*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb);
   cur=nxt; emptyx=emptynxt;  // advance to next
  }
 
@@ -462,8 +472,8 @@ static NOINLINE /* scaf */ I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
 
  // we have updated the keys and hash.  Now move the values, indexed by s[i] (biased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
  C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;   // base pointer to allocated values, backed up to skip over the empty/birthstone/tombstone codes
- for(cur=oroot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; MC(vbase+kvslot*vb,(void*)((I)v+cur*vb),vb); cur=nxt;} // chase the old keys, copying the value
- for(cur=croot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; MC(vbase+kvslot*vb,(void*)((I)v+cur*vb),vb); cur=nxt;} // chase the conflict keys, copying the value
+ for(cur=oroot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; MC(vbase+kvslot*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb); cur=nxt;} // chase the old keys, copying the value
+ for(cur=croot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; MC(vbase+kvslot*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb); cur=nxt;} // chase the conflict keys, copying the value
  R 1;  // return, holding write lock on values
 
 resize: R -1;  // signal need for resize; return holding write lock on keys & values
@@ -494,6 +504,110 @@ static DF2(jtdicput){F12IP;
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
  RETF(mtv);
 }
+
+
+// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
+// resolve each key in the hash and copy new kvs
+// We have requested a prewrite lock; we may even have a full write lock on the keys and value
+// return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
+static NOINLINE /* scaf */ I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
+ DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+    // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
+
+ UI hsz=dic->bloc.hashsiz; I kib=dic->bloc.klens; I (*cf)()=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
+ C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+
+ // first pass over keys.  If key found, remember the biased kv# on the old chain
+ for(i=n-1;i>=0;--i){
+  I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32);  // convert hash to slot# and then to byte offset.
+  UI hval; s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
+  while(hval>=HASHNRES && (*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)){  // loop till we hit a hole, or we match the key
+   if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
+   s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));  // fetch next hash value, flagged as old key
+  }
+  if(s[i]<HASHNRES){hashtbl[curslot]=s[i]|HASHBSTN; s[i]=((I8)0x100000000<<s[i])+curslot;}   // if search ends at empty/birthstone; replace it with a birthstone and set s[i] to type of empty\hashslot#
+         // We must touch only the low byte so the store can be atomic in the hashvalue
+ }
+
+ // pass slot# back to front, putting them into 3 chains: new kvs, old keys, conflict keys.  Conflict keys are assumed vary rare (usually repeated keys)
+ I nroot=-1, oroot=-1, croot=-1;   // base of the 3 chains, inited to empty
+ DQ(n, I sh=((UI4*)(&s[i]))[1]; if(unlikely(sh&((1LL<<HASHTSTN)+(1LL<<(HASHTSTN+HASHBSTN))))){((UI4*)(&s[i]))[1]=croot; croot=i;}else{((I4*)(&s[i]))[1]=sh?nroot:oroot; nroot=sh?i:nroot; oroot=sh?oroot:i;})
+
+ // chase the new kvs, taking an empty slot for each and copying the k and v into the tables. s[] holds the hashslot
+ I vb=dic->bloc.vbytelen; C *empty=CAV2(dic->bloc.empty); UI emptyx=dic->bloc.emptyn; I cur;  // empty area & current pointer into it.  Length of a element is hsz>>56
+ for(cur=nroot;cur>=0;){
+  I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
+  UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53)); if(emptynxt==emptyx)goto resize;  // get next empty, abort if end of chain (loopback)
+  MC(CAV(dic->bloc.keys)+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32); 
+  cur=nxt; emptyx=emptynxt;  // advance to next
+ }
+
+ lv=DICLKWRRQ(dic); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible
+
+ // chase the new kvs again, replacing the birthstone (indexed bu s[i]) with the allocated kvslot#, which we get by retraversing the empties list.  Also mark the new kvs not-empty
+ for(cur=nroot,emptyx=dic->bloc.emptyn;cur>=0;){
+  I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
+  UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53));   // get next empty, abort if end of chain (loopback)
+  WR1s1234(hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx+=HASHNRES; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])  // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
+  cur=nxt; emptyx=emptynxt;  // advance to next
+ }
+ dic->bloc.emptyn=emptyx;  // We have allocated all the new blocks successfully.  Update the free root
+
+ // chase the conflict keys (in ascending order), updating everything.  They should be few.  For new kvs, also take an empty slot & update the keys.  Leave values in the conflict chain, in ascending order. s[i] indexes the hashslot
+ for(cur=croot;cur>=0;){
+  I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
+  I curslot=(UI4)s[cur];  // slot was originally birthstone where the search ended.  Now it has been filled in, and we resume the search there.  It could match right there
+  UI hval; hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
+  while(hval>=HASHNRES && !(*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)){  // loop till we hit a valid value that compares equal on the key
+   if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
+   hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));  // fetch next hash value
+  }
+  if(hval<HASHNRES){
+   // search ends at empty/tombstone, in hashslot (curslot).  Allocate a new empty, point curslot to it, move in the key, save the slot in s[cur]
+   emptyx=dic->bloc.emptyn; UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53)); if(emptynxt==emptyx)goto resize; hval=emptyx+HASHNRES; dic->bloc.emptyn=emptynxt; // get empty slot, save as biased kv slot#
+   WR1s1234(hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx=hval; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])   // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
+   MC(kbase+hval*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32);    // copy the new key
+  }
+  ((UI4*)(&s[cur]))[0]=hval;  // remember the biased slot the value must be moved into.  This changes s[i] from hashslot index to kv index
+  cur=nxt;  // advance to next
+ }
+
+ DICLKWRRELK(dic,lv)    // allow gets to look at hashtable & keys
+
+ // we have updated the keys and hash.  Now move the values, indexed by s[i] (biased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
+ C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;   // base pointer to allocated values, backed up to skip over the empty/birthstone/tombstone codes
+ for(cur=oroot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; cur=nxt;} // chase the old keys, copying the value
+ for(cur=croot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; cur=nxt;} // chase the conflict keys, copying the value
+ R 1;  // return, holding write lock on values
+
+resize: R -1;  // signal need for resize; return holding write lock on keys & values
+}
+
+
+//  del.  conjunction.  u is dic, v is hash/comp function.  a is values, w is keys
+// This version for internal functions only
+static DF2(jtdicdel){F12IP;
+ ARGCHK2(a,w)
+ DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
+ I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
+ if(unlikely(AN(w)==0)){R mtv;}  // if no keys, return empty fast
+ if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k  if needed
+ I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
+ ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
+ I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
+ void *k=voidAV(w);  // point to the key and value data
+ I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ while(1){  // loop till we have processed all the resizes
+  if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch
+  I rc=jtdelslots(dic,k,kn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
+  dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+ }
+ I z=mtv; if(0){errexit: z=0;}
+ DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
+ RETF(mtv);
+}
+
 
 #if 0
 

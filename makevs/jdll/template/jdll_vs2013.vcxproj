@@ -951,6 +951,7 @@
     <ClCompile Include="..\..\jsrc\xc.c" />
     <ClCompile Include="..\..\jsrc\xcrc.c" />
     <ClCompile Include="..\..\jsrc\xd.c" />
+    <ClCompile Include="..\..\jsrc\xdic.c" />
     <ClCompile Include="..\..\jsrc\xf.c" />
     <ClCompile Include="..\..\jsrc\xfmt.c" />
     <ClCompile Include="..\..\jsrc\xh.c" />

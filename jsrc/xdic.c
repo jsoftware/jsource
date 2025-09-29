@@ -328,7 +328,7 @@ static NOINLINE /* scaf */ B jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt){I i;
 // resolve each key in the hash and copy the value to the result
 // a is the original a, 0 if monad
 // This version works on internal compare functions only
-// We must hold a read lock on the table
+// We take a read lock on the table and return with it
 static NOINLINE /* scaf */ B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i;
  I lv=DICLKRDRQ(dic); DICLKRDWTK(dic,lv)  // request read lock and wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
  UI hsz=dic->bloc.hashsiz; I kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
@@ -381,7 +381,7 @@ static DF2(jtdicget){F12IP;A z;
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
  void *k=voidAV(w);  // point to the key data
  RZ(jtkeyprep(dic,k,kn,s,jt))  // convert keys to slot#
- RZ(jtgetslots(dic,k,kn,s,voidAV(z),jt,adyad));  // get the values
+ if(!jtgetslots(dic,k,kn,s,voidAV(z),jt,adyad))z=0;  // get the values and take a read lock on the dic.  If error, pass error through
  DICLKRDREL(dic)  // release read lock
  RETF(z);
 }
@@ -394,8 +394,8 @@ static DF2(jtdicget){F12IP;A z;
 // k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
-// return holding a write lock on this dic, and rc=0 to request a resize
-static NOINLINE /* scaf */ B jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv){I i;
+// return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
+static NOINLINE /* scaf */ I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv){I i;
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
@@ -407,8 +407,8 @@ static NOINLINE /* scaf */ B jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
  for(i=0;i<n;++i){
   I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32);  // convert hash to slot# and then to byte offset.
   UI hval; s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
-  while(hval>=HASHNRES && !(*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)){  // loop till we hit a valid value that compares equal on the key
-   if(unlikely(curslot--<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
+  while(hval>=HASHNRES && (*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)){  // loop till we hit a hole, or we match the key
+   if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
    s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));  // fetch next hash value, flagged as old key
   }
   if(s[i]<HASHNRES){hashtbl[curslot]=s[i]|HASHBSTN; s[i]=((I8)0x100000000<<s[i])+curslot;}   // if search ends at empty/birthstone; replace it with a birthstone and set s[i] to type of empty\hashslot#
@@ -437,6 +437,7 @@ static NOINLINE /* scaf */ B jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
   WR1s1234(hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx+=HASHNRES; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])  // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
   cur=nxt; emptyx=emptynxt;  // advance to next
  }
+ dic->bloc.emptyn=emptyx;  // We have allocated all the new blocks successfully.  Update the free root
 
  // chase the conflict keys (in ascending order), updating everything.  They should be few.  For new kvs, also take an empty slot & update the keys.  Leave values in the conflict chain, in ascending order. s[i] indexes the hashslot
  for(cur=croot;cur>=0;){
@@ -444,7 +445,7 @@ static NOINLINE /* scaf */ B jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
   I curslot=(UI4)s[cur];  // slot was originally birthstone where the search ended.  Now it has been filled in, and we resume the search there.  It could match right there
   UI hval; hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
   while(hval>=HASHNRES && !(*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)){  // loop till we hit a valid value that compares equal on the key
-   if(unlikely(curslot--<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
+   if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));  // fetch next hash value
   }
   if(hval<HASHNRES){
@@ -465,7 +466,7 @@ static NOINLINE /* scaf */ B jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
  for(cur=croot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; MC(vbase+kvslot*vb,(void*)((I)v+cur*vb),vb); cur=nxt;} // chase the conflict keys, copying the value
  R 1;  // return, holding write lock on values
 
-resize: R 0;  // return holding write lock on keys & values
+resize: R -1;  // signal need for resize; return holding write lock on keys & values
 }
 
 //  put.  conjunction.  u is dic, v is hash/comp function.  a is values, w is keys
@@ -482,11 +483,14 @@ static DF2(jtdicput){F12IP;
  I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,wf,AS(w))   // kn = number of keys to be looked up  vn=#values to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
- void *k=voidAV(w);  // point to the key data
- RZ(jtkeyprep(dic,k,kn,s,jt))  // hash keys & prefetch
- void *v=voidAV(a);  // point to the value data
+ void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
- while(jtputslots(dic,k,kn,v,vn,s,jt,lv)==0)dicresize(dic,jt);  // do the puts.  If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+ while(1){  // loop till we have processed all the resizes
+  if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch
+  I rc=jtputslots(dic,k,kn,v,vn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
+  dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+ }
+ I z=mtv; if(0){errexit: z=0;}
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
  RETF(mtv);
 }

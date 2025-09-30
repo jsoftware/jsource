@@ -390,7 +390,7 @@ static DF2(jtdicget){F12IP;A z;
 // write l bytes from x to address a.  Destroys x, which must be a name
 #define WRHASH1234(x,l,a) {if((l)&4)*(UI4*)(a)=x;else{if((l)&1){*(C*)(a)=x;x>>=8;}if((l)&2)*(US*)((C*)a+((l)&1))=x;}}  // avoid read, which will probably be a long miss.  Branches will predict
 // same for writing ~0
-#define WR1s1234(l,a) {if((l)&4)*(UI4*)(a)=~(I)0;else{if((l)&1){*(C*)(a)=~(I)0;}if((l)&2)*(US*)((C*)a+((l)&1))=~(I)0;}}  // avoid read, which will probably be a long miss.  Branches will predict
+#define WRCONST1234(x,l,a) {if((l)&4)*(UI4*)(a)=(x);else{if((l)&1){*(C*)(a)=(x);}if((l)&2)*(US*)((C*)a+((l)&1))=(x);}}  // avoid read, which will probably be a long miss.  Branches will predict
 
 // k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
 // resolve each key in the hash and copy new kvs
@@ -442,7 +442,7 @@ static NOINLINE /* scaf */ I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
  for(cur=nroot,emptyx=dic->bloc.emptyn;cur>=0;){
   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
   UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53));   // get next empty, abort if end of chain (loopback)
-  WR1s1234(hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx+=HASHNRES; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])  // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
+  WRCONST1234(~(I)0,hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx+=HASHNRES; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])  // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
   cur=nxt; emptyx=emptynxt;  // advance to next
  }
  dic->bloc.emptyn=emptyx;  // We have allocated all the new blocks successfully.  Update the free root
@@ -464,7 +464,7 @@ static NOINLINE /* scaf */ I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
 notfound:;
    // search ends at empty/tombstone, in hashslot (curslot).  Allocate a new empty, point curslot to it, move in the key, save the slot in s[cur]
    emptyx=dic->bloc.emptyn; UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53)); if(emptynxt==emptyx)goto resize; hval=emptyx+HASHNRES; dic->bloc.emptyn=emptynxt; // get empty slot, save as biased kv slot#
-   WR1s1234(hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx=hval; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])   // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
+   WRCONST1234(~(I)0,hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx=hval; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])   // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
    MC(kbase+hval*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32);    // copy the new key
 found:;  // hval is the kv slot we compared with, or a new empty kv slot
   ((UI4*)(&s[cur]))[0]=hval;  // remember the biased slot the value must be moved into.  This changes s[i] from hashslot index to kv index
@@ -521,69 +521,49 @@ static NOINLINE /* scaf */ I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I 
  C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
 
  // first pass over keys.  If key found, remember the biased kv# on the old chain
+ I oroot=-1;  // init old chain empty
  for(i=n-1;i>=0;--i){
   I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32);  // convert hash to slot# and then to byte offset.
-  UI hval; s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
-  while(hval>=HASHNRES && (*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)){  // loop till we hit a hole, or we match the key
+  UI hval; hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
+  while(1){
+   if(hval<HASHNRES){  // hole or tombstone
+    if(hval<HASHTSTN)break;   // hole, exit not found
+   }else if((*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0){s[i]=(oroot<<32)+curslot; oroot=i; break;}  // match, exit found, putting departing hashslot on old chain
+   // no match.
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
-   s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));  // fetch next hash value, flagged as old key
+   hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));  // fetch next hash value, flagged as old key
   }
-  if(s[i]<HASHNRES){hashtbl[curslot]=s[i]|HASHBSTN; s[i]=((I8)0x100000000<<s[i])+curslot;}   // if search ends at empty/birthstone; replace it with a birthstone and set s[i] to type of empty\hashslot#
-         // We must touch only the low byte so the store can be atomic in the hashvalue
- }
-
- // pass slot# back to front, putting them into 3 chains: new kvs, old keys, conflict keys.  Conflict keys are assumed vary rare (usually repeated keys)
- I nroot=-1, oroot=-1, croot=-1;   // base of the 3 chains, inited to empty
- DQ(n, I sh=((UI4*)(&s[i]))[1]; if(unlikely(sh&((1LL<<HASHTSTN)+(1LL<<(HASHTSTN+HASHBSTN))))){((UI4*)(&s[i]))[1]=croot; croot=i;}else{((I4*)(&s[i]))[1]=sh?nroot:oroot; nroot=sh?i:nroot; oroot=sh?oroot:i;})
-
- // chase the new kvs, taking an empty slot for each and copying the k and v into the tables. s[] holds the hashslot
- I vb=dic->bloc.vbytelen; C *empty=CAV2(dic->bloc.empty); UI emptyx=dic->bloc.emptyn; I cur;  // empty area & current pointer into it.  Length of a element is hsz>>56
- for(cur=nroot;cur>=0;){
-  I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
-  UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53)); if(emptynxt==emptyx)goto resize;  // get next empty, abort if end of chain (loopback)
-  MC(CAV(dic->bloc.keys)+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32); 
-  cur=nxt; emptyx=emptynxt;  // advance to next
  }
 
  lv=DICLKWRRQ(dic); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible
 
- // chase the new kvs again, replacing the birthstone (indexed bu s[i]) with the allocated kvslot#, which we get by retraversing the empties list.  Also mark the new kvs not-empty
- for(cur=nroot,emptyx=dic->bloc.emptyn;cur>=0;){
+ // chase the old kvs, which give the hashslots to be deleted.  We turn each into a tombstone, free the kv slot, and flip trailing tombstones.  If it is a tombstone already, it's a double del, ignore it
+ UI emptyx=dic->bloc.emptyn; I cur; C *empty=CAV2(dic->bloc.empty); // starting root of free queue, current index, empty list
+ for(cur=oroot;cur>=0;){
   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
-  UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53));   // get next empty, abort if end of chain (loopback)
-  WR1s1234(hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx+=HASHNRES; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])  // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
-  cur=nxt; emptyx=emptynxt;  // advance to next
- }
- dic->bloc.emptyn=emptyx;  // We have allocated all the new blocks successfully.  Update the free root
-
- // chase the conflict keys (in ascending order), updating everything.  They should be few.  For new kvs, also take an empty slot & update the keys.  Leave values in the conflict chain, in ascending order. s[i] indexes the hashslot
- for(cur=croot;cur>=0;){
-  I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
-  I curslot=(UI4)s[cur];  // slot was originally birthstone where the search ended.  Now it has been filled in, and we resume the search there.  It could match right there
-  UI hval; hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
-  while(hval>=HASHNRES && !(*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)){  // loop till we hit a valid value that compares equal on the key
-   if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
-   hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));  // fetch next hash value
+  I8 curslot=((UI4*)(&s[cur]))[0];  // extract hashslot# to be emptied
+  UI hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // get kv slot to be released
+  if(hval>=HASHNRES){  // don't clear a slot more than once
+   I t=HASHTSTN; WRHASH1234(t, hsz>>56, &hashtbl[curslot*(hsz>>56)])  // mark the slot as a tombstone
+   hval-=HASHNRES;  // remove bias from hval, giving actual slot index
+   t=emptyx; WRHASH1234(t, hsz>>56, &empty[hval*(hsz>>56)])  // chain old free chain from new deletion
+   emptyx=hval;  // put new deletion at top of the free chain
+   // Whenever we add a tombstone, we turn it into an empty if it is followed by an empty; and we continue this back into previous tombstones
+   I8 curslotn=curslot-1; if(unlikely(curslotn<0))curslotn+=(UI4)hsz;   // point to next slot
+   if(_bzhi_u64(*(UI4*)&hashtbl[curslotn*(hsz>>56)],(hsz>>53))==0){
+    // curslot is followed by a hole.  Flip it & its predecessors to holes
+    do{hashtbl[curslot*(hsz>>56)]=0; if(unlikely(++curslot==(UI4)hsz))curslot=0;}while(_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53))==HASHTSTN);  // only the low byte needs to change
+   }
   }
-  if(hval<HASHNRES){
-   // search ends at empty/tombstone, in hashslot (curslot).  Allocate a new empty, point curslot to it, move in the key, save the slot in s[cur]
-   emptyx=dic->bloc.emptyn; UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53)); if(emptynxt==emptyx)goto resize; hval=emptyx+HASHNRES; dic->bloc.emptyn=emptynxt; // get empty slot, save as biased kv slot#
-   WR1s1234(hsz>>56,&empty[emptyx*(hsz>>56)]) emptyx=hval; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)s[cur]*(hsz>>56)])   // set empty slot to ~0, set hashtable to point to new kv (skipping over reserved hashslot#s)
-   MC(kbase+hval*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32);    // copy the new key
-  }
-  ((UI4*)(&s[cur]))[0]=hval;  // remember the biased slot the value must be moved into.  This changes s[i] from hashslot index to kv index
   cur=nxt;  // advance to next
  }
+ dic->bloc.emptyn=emptyx;  // Store updated free chain after all deletions
 
  DICLKWRRELK(dic,lv)    // allow gets to look at hashtable & keys
 
- // we have updated the keys and hash.  Now move the values, indexed by s[i] (biased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
- C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;   // base pointer to allocated values, backed up to skip over the empty/birthstone/tombstone codes
- for(cur=oroot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; cur=nxt;} // chase the old keys, copying the value
- for(cur=croot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; cur=nxt;} // chase the conflict keys, copying the value
  R 1;  // return, holding write lock on values
 
-resize: R -1;  // signal need for resize; return holding write lock on keys & values
+// resize: R -1;  // signal need for resize; return holding write lock on keys & values
 }
 
 

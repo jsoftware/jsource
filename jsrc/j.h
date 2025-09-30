@@ -2491,7 +2491,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // For older processors, TZCNT is executed as BSF, which differs from TZCNT in that it does not
 // set the Z flag if the result is 0.  The optimizer sometimes turns a switch into tests rather than a branch
 // table, and it expects TZCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
-#define CTTZNOFLAG(w) (CTTZ(w)&31)
+#define CTTZNOFLAG(w) (CTTZ(w)&31)    // scaf get rid of this
 
 // parallel bit extract/deposit.  Operate on UI types.  In our use, the second argument is constant, so that if the compiler has to emulate
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
@@ -2499,7 +2499,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
 #define PEXTN(s,x,m)  _pext_u64((UI)(s),(UI)((m)<<(x)))  // x is bit#, m must be contiguous
 #define PDEP(s,m) _pdep_u64((UI)(s),(UI)(m))
-#define BZHI(s,i) _bzhi_u64(s,i)
+// obsolete #define BZHI(s,i) _bzhi_u64(s,i)
 #else
 // these emulations require that m be a sequence of 1 bits with no imbedded 0s
 // #define PEXT(s,m) (((s)>>CTTZI(m))&((m)>>CTTZI(m)))
@@ -2509,8 +2509,8 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define PEXTN(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m must be contiguous
 // emulation of general PDEP
 // too slow #define PDEP(s,m) ({UI bits=(s), msk=(m), res=0, i=BW; do{res=(res>>1)+SGNIF(bits&msk,0); bits>>=(msk&1); --i; msk>>=1;}while(msk);)  res>>i;})
+#define _bzhi_u64(s,i) ((UI8)(s)<<(64-(i))>>(64-(i)))   scaf
 #endif
-
 #ifndef offsetof
 #ifdef __GNUC__
 #define offsetof(TYPE, MEMBER)  __builtin_offsetof (TYPE, MEMBER)

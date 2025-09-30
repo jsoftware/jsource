@@ -364,9 +364,9 @@ static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i
   }
  }
  // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore
- DICLKRDWTV(dic,lv)  // wait till values are safe
  I vn=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals)-HASHNRES*vn;  // size of a value; address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
  void *av=0;  // init to 'no default data pointer yet'.  We avoid checking the default until we know we need it
+ DICLKRDWTV(dic,lv)  // wait till values are safe.  No resize is possible here
  for(i=0;i<n;++i){void *vv;  // pointer to value to move
   if(likely(s[i]>=HASHNRES))vv=vbase+s[i]*vn;   // this is the main line, key found
   else{   // default required, which we deem rare.
@@ -453,7 +453,7 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
   cur=nxt; emptyx=emptynxt;  // advance to next
  }
 
- lv=DICLKWRRQ(dic); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible
+ lv=DICLKWRRQ(dic); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put this up a little earlier
 
  // chase the new kvs again, replacing the birthstone (indexed by s[i]) with the allocated kvslot#, which we get by retraversing the empties list.  Also mark the new kvs not-empty
      // traversing a linked list sucks, but two at a time are no worse than 1, and the variable-length write takes a little time
@@ -488,7 +488,7 @@ found:;  // hval is the kv slot we compared with, or a new empty kv slot
   cur=nxt;  // advance to next
  }
 
- DICLKWRRELK(dic,lv)    // allow gets to look at hashtable & keys
+ DICLKWRRELK(dic,lv)    // allow gets to look at hashtable & keys.  We still have a write lock
 
  // we have updated the keys and hash.  Now move the values, indexed by s[i] (biased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
  C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;   // base pointer to allocated values, backed up to skip over the empty/birthstone/tombstone codes
@@ -515,8 +515,8 @@ static DF2(jtdicput){F12IP;
  // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
  // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
- void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch
   I rc=jtputslots(dic,k,kn,v,vn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
@@ -601,8 +601,8 @@ static DF1(jtdicdel){F12IP;
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
- void *k=voidAV(w);  // point to the key and value data
  I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch
   I rc=jtdelslots(dic,k,kn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad

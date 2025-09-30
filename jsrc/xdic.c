@@ -6,6 +6,7 @@
 #include "j.h"
 
 
+#define scafINLINE NOINLINE  // scaf
 // Dictionary support
 
 #ifndef CRC32
@@ -26,7 +27,7 @@
 #endif
 
 // CRC32 of n floats.
-static NOINLINE /* scaf */ UI4 crcfloats(UI8 *v, I n){
+static scafINLINE UI4 crcfloats(UI8 *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI4 crc0=-1;  // convert bytecount to words
@@ -38,7 +39,7 @@ static NOINLINE /* scaf */ UI4 crcfloats(UI8 *v, I n){
 }
 
 // CRC32 of n Is
-static NOINLINE /* scaf */ UI4 crcwords(UI *v, I n){
+static scafINLINE UI4 crcwords(UI *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI4 crc0=-1;  // convert bytecount to words
@@ -50,7 +51,7 @@ static NOINLINE /* scaf */ UI4 crcwords(UI *v, I n){
 }
 
 // CRC32 of n bytes
-static NOINLINE /* scaf */ UI4 crcbytes(C *v, I n){
+static scafINLINE UI4 crcbytes(C *v, I n){
  UI4 wdcrc=crcwords((UI*)v,n>>LGSZI);  // take CRC of the fullword part
  if(n&(SZI-1)){wdcrc=HASHI(wdcrc,((UI*)v)[n>>LGSZI]<<((SZI-(n&(SZI-1)))<<LGSZI));}  // if there are bytes, take their CRC after discarding garb.  Avoid overfetch
  R wdcrc;  // return composite CRC
@@ -58,10 +59,10 @@ static NOINLINE /* scaf */ UI4 crcbytes(C *v, I n){
 
 // CRC32 of n boxes
 static UI4 jtcrcy(J jt,A y);
-static NOINLINE /* scaf */ UI4 crcboxes(J jt, A *v, I n){UI4 crc=0; DO(n, crc=HASH4(crc,jtcrcy(jt,C(v[i])));) R crc;}
+static scafINLINE UI4 crcboxes(J jt, A *v, I n){UI4 crc=0; DO(n, crc=HASH4(crc,jtcrcy(jt,C(v[i])));) R crc;}
 
 // CRC32 of n Xs
-static NOINLINE /* scaf */ UI4 crcxnums(X *v, I n){UI4 crc=0; DO(n, crc=HASH4(crc,crcwords(UIAV(v[i]),XLIMBLEN(v[i])));) R crc;}
+static scafINLINE UI4 crcxnums(X *v, I n){UI4 crc=0; DO(n, crc=HASH4(crc,crcwords(UIAV(v[i]),XLIMBLEN(v[i])));) R crc;}
 
 // CRC32 of y.  Floats must observe -0.
 static UI4 jtcrcy(J jt,A y){
@@ -288,20 +289,23 @@ static void diclkwrwt(DIC *dic){I n;
 #define DICLKWRRELV(dic,lv) 
 #endif
 
-// Request resize.  jt->globals has been set to the dic locale, so we look up resize there
+// Request resize, in the dic locale
 A dicresize(DIC *dic,J jt){
  A *_ttop=jt->tnextpushp;  // stack restore point
   // call dicresize in the locale of the dic.  No need for explicit locative because locale is protected by dic
  A nam, val;
- ASSERT(((nam=nfs(6,"resize",0))!=0)
+ A savjtg=jt->global; SYMSETGLOBAL(dic->bloc.locale);  // push global, and move to locale.  We know resize is explicit so we don't need to worry about locals
+ ASSERTGOTO(((nam=nfs(6,"resize",0))!=0)
   &&((val=jtsyrd1((J)((I)jt+NAV(nam)->m),NAV(nam)->s,NAV(nam)->hash,jt->global))!=0  // look up name in current locale and ra() if found
   &&((val=QCWORD(namerefacv(nam,QCWORD(val))))!=0)   // turn the value into a reference, undo the ra
-  &&((val&&LOWESTBIT(AT(val))&VERB))),EVVALUE)   // make sure the result is a verb
+  &&((val&&LOWESTBIT(AT(val))&VERB))),EVVALUE, exit)   // make sure the result is a verb
  A newdic; RZ(newdic=jtunquote(jt,(A)dic,val,val));  // execute resize on the dic, returning new dic
  struct Dic t=dic->bloc; ((DIC*)dic)->bloc=((DIC*)newdic)->bloc; ((DIC*)newdic)->bloc=t;  // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be freed when the new dic is.
  // NOTE: we keep the old blocks hanging around until the new have been allocated.  This seems unnecessary for the hashtable, but we do it because other threads still have the old pointers and may prefetch from
  //  the old hash.  This won't crash, but it might be slow if the old hash is no longer in mapped memory
+exit:;  // clean up from error
  tpop(_ttop);  // discard newdic and everything it refers to
+ SYMSETGLOBAL(dic->bloc.locale);  // restore globals
  R (A)dic;  // always return the same block if no error.
 }
 
@@ -313,7 +317,7 @@ A dicresize(DIC *dic,J jt){
 // k is A for keys, n is #keys, s is place for slot#s.  Hash each key, store, prefetch (possibly using wrong hash)
 // This version works on internal hash functions only
 // result is 0 on error
-static NOINLINE /* scaf */ B jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt){I i;
+static scafINLINE B jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt){I i;
  UI hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)()=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
  for(i=n;--i>=0;){
@@ -329,7 +333,7 @@ static NOINLINE /* scaf */ B jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt){I i;
 // a is the original a, 0 if monad
 // This version works on internal compare functions only
 // We take a read lock on the table and return with it
-static NOINLINE /* scaf */ B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i;
+static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i;
  I lv=DICLKRDRQ(dic); DICLKRDWTK(dic,lv)  // request read lock and wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
  UI hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
@@ -396,7 +400,7 @@ static DF2(jtdicget){F12IP;A z;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static NOINLINE /* scaf */ I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv){I i;
+static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv){I i;
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
@@ -495,6 +499,8 @@ static DF2(jtdicput){F12IP;
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,w,0))  // convert type of k and v if needed
  I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,wf,AS(w))   // kn = number of keys to be looked up  vn=#values to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
+ // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
+ // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
@@ -513,7 +519,7 @@ static DF2(jtdicput){F12IP;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static NOINLINE /* scaf */ I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
+static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
@@ -586,9 +592,9 @@ static DF1(jtdicdel){F12IP;
   I rc=jtdelslots(dic,k,kn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
   dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
- I z=mtv; if(0){errexit: z=0;}
+ A z=mtv; if(0){errexit: z=0;}
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
- RETF(mtv);
+ RETF(z);
 }
 
 

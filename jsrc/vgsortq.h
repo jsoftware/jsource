@@ -105,7 +105,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
    // end of the opposite partition.  So, we use xchgx1 for the left side, xchgx0 for the right side.
    while(1){
     // find the exchange points.  This is the dependency loop (actually the CTTZI is not part of the dependency).  The cstk^= could be replaced with cstk&=(1<<xchgx0)-1 if that would
-    // generate a BZHI instruction.  After we get the exchange points we complement the bits of the exchange.  This guarantees that the number of set bits is invariant.
+    // generate a _bzhi_u64 instruction.  After we get the exchange points we complement the bits of the exchange.  This guarantees that the number of set bits is invariant.
     // Therefore, when we terminate xchgx0 will always be the end of the low side and xchgx1 that of the high side
     UI4 xchgx04=CTLZI(cstk); xchgx0=xchgx04; xchgx1=CTTZI(~cstk); cstk|=cstk+1; cstk^=(I)1<<xchgx0;  // get indexes of the swaps
     if(xchgx0<xchgx1)break;  // terminate when the swap would be retrograde

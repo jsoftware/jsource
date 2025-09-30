@@ -240,7 +240,7 @@ static INLINE I fcmp0(D* a, D* w, I n){
 
 #if C_AVX512
 #define COMPSETUP \
- __mmask8 endmask = BZHI(0xff,1+(n-1)%8);
+ __mmask8 endmask = _bzhi_u64(0xff,1+(n-1)%8);
 #define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)
 static INLINE I icmpeq(I *x, I *y, I n, __mmask8 em) {
  if(common(n<=8))R !!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(em,x),_mm512_maskz_loadu_epi64(em,y));

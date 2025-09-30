@@ -477,6 +477,7 @@ extern DF2(jtdeal);
 extern DF2(jtdealx);
 extern F2(jtdex);
 extern F2(jtdgrade2);
+extern DF1(jtdicdelc);
 extern DF1(jtdicgetc);
 extern DF1(jtdicputc);
 extern F2(jtdot);

@@ -400,7 +400,7 @@ static NOINLINE /* scaf */ I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
- UI hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)()=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
+ UI hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
  C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
 
  // first pass over keys.  If key found, remember the biased kv# (will go to old chain).  If not found, remember the hashslot# and whether it was occupied by a birthstone; and make it a birthstone - will go to new or conflict chain
@@ -517,7 +517,7 @@ static NOINLINE /* scaf */ I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I 
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
- UI hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)()=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
+ UI hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
  C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
 
  // first pass over keys.  If key found, remember the biased kv# on the old chain
@@ -567,10 +567,10 @@ static NOINLINE /* scaf */ I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I 
 }
 
 
-//  del.  conjunction.  u is dic, v is hash/comp function.  a is values, w is keys
+//  del.  conjunction.  u is dic, v is hash/comp function. w is keys
 // This version for internal functions only
-static DF2(jtdicdel){F12IP;
- ARGCHK2(a,w)
+static DF1(jtdicdel){F12IP;
+ ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
@@ -592,46 +592,6 @@ static DF2(jtdicdel){F12IP;
 }
 
 
-#if 0
-
-// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
-// resolve each key in the hash and copy new kvs
-B jtdelslots##STN(DIC *dic,A k,A kvirt,STX *s,A z,A jt){
- // init empty-slot index
- // this loop will be unrolled 3 times, one for each fetch from remote memory
- // read from the slot
- // prefetch key
- // loop till found: compare key[slot] against k[i]
- // if match: save neg. index of value slot
-}
-
-// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
-// resolve each key in the hash and copy new kvs
-B jtdelslots##STN(DIC *dic,A k,A kvirt,STX *s,A z,A jt){
- // init empty-slot index
- // for each slot:
-  // if neg, add key# at base of empty chain
- // restore empty-slot index, update cardinality
- // if (cardinality less than minimum)abort, call for resize
-}
-
-// del.  conjunction.  u is dic, v is hash/comp function.  w is keys
-DF1(jtdicdel##STN){
- DIC *dic=FAV(self)->fgh[0];  // point to dic block
- // allocate slots block
- // if keys are not the right shape & type, convert/extend them
- // allocate virtual block for key
- RZ(jtkeyprep(dic,k,kvirt,s,jt))  // convert keys to slot#
- // take prewrite lock;
- // refresh dic info
- z=jtdelslots##STN(dic,k,kvirt,s,z,jt);  // classify keys & move new kvs
- // take write lock;
- if(resize requested)R dicresize();
- z=jtdelkeys##STN(dic,k,kvirt,s,z,jt);  // finish the deletion
- // release write lock;
- RETF(z);
-}
-
 // u 16!:_4  del: u=dic
 // We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
 DF1(jtdicdelc){F12IP;
@@ -640,7 +600,6 @@ DF1(jtdicdelc){F12IP;
  R fdef(0,CMODX,VERB, jtdicdel,jtvalenceerr, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
-#endif
 // u 16!:_2  get: u=dic
 // We create a verb to handle (get y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
 DF1(jtdicgetc){F12IP;

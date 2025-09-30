@@ -1731,7 +1731,7 @@ static NOINLINE void sort_10v_altu4e(uint32_t *ptr, I *o,V base,M2 mask,M1 w0,M1
 }
 
 static void sortns8(I *d,I *s,I n){
- M1 m=BZHI(0xff,1+(7&(n-1)));
+ M1 m=_bzhi_u64(0xff,1+(7&(n-1)));
  switch((n+7)>>3){
   case  0:                      break;
   case  1: sort_01v_alts8(d,s,m); break;
@@ -1764,7 +1764,7 @@ static void sortnns8(__seg_gs BASEQUEUE *qs,I nv,I i){
  }
 }
 static void sortnu4(UI4 *p,I n){
- M2 m=BZHI(0xffff,1+(15&(n-1)));
+ M2 m=_bzhi_u64(0xffff,1+(15&(n-1)));
  switch((n+15)>>4){
   case 0:                      break;
   case 1: sort_01v_altu4(p,m); break;
@@ -1780,7 +1780,7 @@ static void sortnu4(UI4 *p,I n){
 }
 static void sortnu4e(UI4 *p,I n,I bases,I *o){
  V base=VBC8(bases);
- M2 rm=BZHI(0xffff,1+(15&(n-1)));
+ M2 rm=_bzhi_u64(0xffff,1+(15&(n-1)));
  M1 wm0=rm,wm1=rm>>8;
  switch((n+15)>>4){
   case  0:                                       break;

@@ -32,13 +32,13 @@ typedef struct {
 // z is a high pointer; align it by rounding down, returning <=1 full vector, giving a mask for active elements in m and the #active elements in d
 static INLINE V aligndown8d(I **z,M1 *m,I *d){
  *d=(1+(63&((I)*z-1)))>>3;
- R VLM8(*z = (I*)(((I)*z-1)&~63),*m=BZHI(0xff,*d));}
+ R VLM8(*z = (I*)(((I)*z-1)&~63),*m=_bzhi_u64(0xff,*d));}
 // same, but adjust n a count of elements
 static INLINE V aligndown8n(I **z,M1 *m,I *n){I d;V r=aligndown8d(z,m,&d);*n-=d;R r;}
 static INLINE V aligndown8(I **z,M1 *m){R aligndown8d(z,m,&(I){0});}
 static INLINE V alignup8d(I **z,M1 *m,I *d){
  I *nz=(I*)(((I)*z+64)&~63);
- V r=VLM8(*z,*m=BZHI(0xff,*d=nz-*z));
+ V r=VLM8(*z,*m=_bzhi_u64(0xff,*d=nz-*z));
  *z=nz;
  R r;}
 static INLINE V alignup8n(I **z,M1 *m,I *n){I d;V r=alignup8d(z,m,&d);*n-=d;R r;}
@@ -46,13 +46,13 @@ static INLINE V alignup8(I **z,M1 *m){R alignup8d(z,m,&(I){0});}
 
 static INLINE V aligndown4d(UI4 **z,M2 *m,I *d){
  *d=(1+(63&((I)*z-1)))>>2;
- R VLM4(*z = (UI4*)(((I)*z-1)&~63),*m=BZHI(0xffff,*d));}
+ R VLM4(*z = (UI4*)(((I)*z-1)&~63),*m=_bzhi_u64(0xffff,*d));}
 // same, but adjust n a count of elements
 static INLINE V aligndown4n(UI4 **z,M2 *m,I *n){I d;V r=aligndown4d(z,m,&d);*n-=d;R r;}
 static INLINE V aligndown4(UI4 **z,M2 *m){R aligndown4d(z,m,&(I){0});}
 static INLINE V alignup4d(UI4 **z,M2 *m,I *d){
  UI4 *nz=(UI4*)(((I)*z+64)&~63);
- V r=VLM4(*z,*m=BZHI(0xffff,*d=nz-*z));
+ V r=VLM4(*z,*m=_bzhi_u64(0xffff,*d=nz-*z));
  *z=nz;
  R r;}
 static INLINE V alignup4n(UI4 **z,M2 *m,I *n){I d;V r=alignup4d(z,m,&d);*n-=d;R r;}
@@ -60,13 +60,13 @@ static INLINE V alignup4(UI4 **z,M2 *m){R alignup4d(z,m,&(I){0});}
 
 static INLINE V aligndown2d(US **z,M4 *m,I *d){
  *d=(1+(63&((I)*z-1)))>>1;
- R VLM2(*z = (US*)(((I)*z-1)&~63),*m=BZHI(0xffffffff,*d));}
+ R VLM2(*z = (US*)(((I)*z-1)&~63),*m=_bzhi_u64(0xffffffff,*d));}
 // same, but adjust n a count of elements
 static INLINE V aligndown2n(US **z,M4 *m,I *n){I d;V r=aligndown2d(z,m,&d);*n-=d;R r;}
 static INLINE V aligndown2(US **z,M4 *m){R aligndown2d(z,m,&(I){0});}
 static INLINE V alignup2d(US **z,M4 *m,I *d){
  US *nz=(US*)(((I)*z+64)&~63);
- V r=VLM2(*z,*m=BZHI(0xffffffff,*d=nz-*z));
+ V r=VLM2(*z,*m=_bzhi_u64(0xffffffff,*d=nz-*z));
  *z=nz;
  R r;}
 static INLINE V alignup2n(US **z,M4 *m,I *n){I d;V r=alignup2d(z,m,&d);*n-=d;R r;}
@@ -238,7 +238,7 @@ void pivotqs8_squishlo4(I *z,I n,I min,I *opivot,UI4 **omid,UI4 **ohi){
   I *remp=z+n-remaining;
   if(remaining>16){compc4(&liw,&hiw,squish48(VL(remp),VL(remp+8),min),pn);remp+=16;remaining-=16;}
   if(remaining>8){comphc4(&liw,&hiw,VL(remp),min,po);remp+=8;remaining-=8;}
-  M1 m=BZHI(0xff,remaining);comphcm4(&liw,&hiw,VLM8(remp,m),min,po,m);}
+  M1 m=_bzhi_u64(0xff,remaining);comphcm4(&liw,&hiw,VLM8(remp,m),min,po,m);}
  //assert(liw==hiw);
  *opivot=ps;
  *omid=liw;
@@ -273,7 +273,7 @@ static INLINE void pivotqs8ob(I *z,I *w,I n,I **zm,I *min,I *max,I *pivot){
   compc8(&wl,&wh,v1,p);
   compc8(&wl,&wh,v0,p);}
  // handle leading partial vector
- {M1 m=BZHI(0xff,1+(7&(n-1)));
+ {M1 m=_bzhi_u64(0xff,1+(7&(n-1)));
   V v=VLM8(rl,m);vmin=VMINMS8(vmin,v,m);vmax=VMAXMS8(vmax,v,m);
   compcm8(&wl,&wh,v,p,m);}
  //assert(wl==wh);

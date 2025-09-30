@@ -43,11 +43,11 @@
 #include "vgsortinavx512.h"
 
 static INLINE void mask28(I n,M1 *m0,M1 *m1) {
- *m0=BZHI(0xff,n);
- // or maybe should be BZHI(0xff,n-8)&~(n>>63) or something?
- *m1=(n-8)<0?0:BZHI(0xff,n-8);}
+ *m0=_bzhi_u64(0xff,n);
+ // or maybe should be _bzhi_u64(0xff,n-8)&~(n>>63) or something?
+ *m1=(n-8)<0?0:_bzhi_u64(0xff,n-8);}
 static INLINE void mask48(I n,M1 *m0,M1 *m1,M1 *m2,M1 *m3) {
- *m0=BZHI(0xff,n);
- *m1=(n- 8)<0?0:BZHI(0xff,n- 8);
- *m2=(n-16)<0?0:BZHI(0xff,n-16);
- *m3=(n-24)<0?0:BZHI(0xff,n-24);}
+ *m0=_bzhi_u64(0xff,n);
+ *m1=(n- 8)<0?0:_bzhi_u64(0xff,n- 8);
+ *m2=(n-16)<0?0:_bzhi_u64(0xff,n-16);
+ *m3=(n-24)<0?0:_bzhi_u64(0xff,n-24);}

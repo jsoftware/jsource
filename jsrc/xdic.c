@@ -292,14 +292,14 @@ static void diclkwrwt(DIC *dic){I n;
 
 
 #else
-#define DICLKRDRQ(dic) 
+#define DICLKRDRQ(dic,lv) lv=0;
 #define DICLKRDWTK(dic,lv) // if someone is writing, wait till they finish with hash/keys
 #define DICLKRDWTV(dic,lv)  // if someone is writing, wait till they finish with values
 #define DICLKRDREL(dic)
 
-#define DICLKRWRQ(dic) 
+#define DICLKRWRQ(dic,lv) lv=0;
 #define DICLKRWWT(dic,lv) 
-#define DICLKWRRQ(dic) 
+#define DICLKWRRQ(dic,lv) lv=0;
 #define DICLKWRWT(dic,lv) 
 #define DICLKWRRELK(dic,lv) 
 #define DICLKWRRELV(dic,lv) 

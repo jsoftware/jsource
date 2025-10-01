@@ -298,7 +298,7 @@ static void diclkwrwt(DIC *dic){I n;
 #define DICLKRDREL(dic)
 
 #define DICLKRWRQ(dic,lv) lv=0;
-#define DICLKRWWT(dic,lv) 
+#define DICLKRWWT(dic,lv) if(lv);
 #define DICLKWRRQ(dic,lv) lv=0;
 #define DICLKWRWT(dic,lv) 
 #define DICLKWRRELK(dic,lv) 

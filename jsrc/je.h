@@ -462,7 +462,7 @@ extern F2(jtcdproc2);
 extern F2(jtcolon);
 extern DF2(jtcombineeps);
 extern F2(jtcpufeature2);
-extern F2(jtcreatedic);
+extern F1(jtcreatedic);
 extern F2(jtcrc2);
 extern DF2(jtcut2);
 extern F2(jtcut);

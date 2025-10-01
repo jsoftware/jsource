@@ -135,14 +135,14 @@ typedef struct ADic {
 #define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found
 #define STN 4  // width of hash slot
 
-// u 16!:_1 y  conjunction.  allocate hashtable.  Always called from the numbered locale of the dictionary.
-// x is the hash/compare verb OR the DIC block for a dictionary that is being resized.
+// u 16!:_1 y  adverb.  allocate hashtable.  Always called from the numbered locale of the dictionary.
+// u is the hash/compare verb OR the DIC block for a dictionary that is being resized.
 // y is (min #eles,max #eles,#hashslots);(flags, currently empty);(key type;key shape);(value type;value shape)    to create a new dictionary
 //      (min #eles,max #eles,#hashslots)   when a dictionary is being resized
 // result is DIC to use, ready for get/put, with hash/keys/vals/empty allocated, and 0 valid kvs
-F2(jtcreatedic){F12IP;A box,box1;  // temp for box contents
- ARGCHK2(a,w);
- ASSERT(AT(a)&VERB,EVDOMAIN)  // u must be the user's verb
+static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
+ ARGCHK1(w);
+ A a=FAV(self)->fgh[0];  // extract u from the verb
  A z; GAT0(z,BOX,20,1) AK(z)=offsetof(struct ADic,bloc.hash); AN(z)=AS(z)[0]=8;  // allocate nonrecursive box, long enough to make the total allo big enough in 32- and 64-bit.  Then restrict to the boxes in case of error
  if(AT(a)&VERB){  // initial creation
   //  install user's verb, & see if the user wants the internal functions
@@ -156,7 +156,8 @@ F2(jtcreatedic){F12IP;A box,box1;  // temp for box contents
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==4,EVLENGTH)  // 4 boxes
   box=C(AAV(w)[1]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==0,EVLENGTH)  // flags.  None currently supported
 
-  box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)  // keyspec.  must be 2 boxes
+  // keyspec.  must be 2 boxes
+  box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
   box1=C(AAV(box)[0]); I t; RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFKINDIR; // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
   box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) I n, *s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->bloc.kaii=n; ASSERT(n>0,EVLENGTH) // shape. copy to allow IAV1.  get # atoms in item & save
   INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
@@ -164,12 +165,14 @@ F2(jtcreatedic){F12IP;A box,box1;  // temp for box contents
   I (*fn3)()=l&(SZI-1)?(I (*)())taoc:(I (*)())taoi; fn3=(t&XNUM+RAT)?taox:fn3; fn3=(t&CMPX+FL+QP)?taof:fn3; fn3=(t&BOX)?taor:fn3; fn3=flags&DICFICF?fn3:(I (*)())FAV(a)->valencefns[1]; ((DIC*)z)->bloc.compfn=fn3; // save int/ext comp function.  We care only about equality  
   l>>=(fn2==crcboxes)?LGSZI:0; l>>=(fn2==crcfloats)?((t|(t>>(QPX-BOXX)))>>CMPX)+FLX:0; l>>=(fn2==crcxnums)?(t>>RATX)+LGSZI:0; l>>=(fn2==crcwords)?LGSZI:0; ((DIC*)z)->bloc.kitemlen=l;  // length to use for internal hash/comp
 
-  box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH) flags|=t&DIRECT?0:DICFVINDIR;  // valuespec.  must be 2 boxes
-  box1=C(AAV(box)[0]); RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN)  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid
+  // valuespec.  must be 2 boxes
+  box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
+  box1=C(AAV(box)[0]); RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFVINDIR;  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
   box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->bloc.vaii=n;  // shape. copy to allow IAV1.  get # atoms in item & save
   INCORPNV(box1); ((DIC*)z)->bloc.vshape=box1; ((DIC*)z)->bloc.vtype=t; ((DIC*)z)->bloc.vbytelen=n<<bplg(t);  // save shape & type; save # bytes for copy
   ((DIC*)z)->bloc.flags=flags;  // now that we have all the flags, save them
   box=C(AAV(w)[0]);  // fetch size parameters
+
  }else{  // resize
   ((DIC*)z)->bloc=((DIC*)a)->bloc;  // init everything from the previous dic
   box=w;  // w is nothing but size parms
@@ -191,6 +194,12 @@ F2(jtcreatedic){F12IP;A box,box1;  // temp for box contents
  ((DIC*)z)->bloc.cardinality=0;  // init the dic is empty
  ra0(z); INCORP(z); AM(z)=0;  // make z recursive, protecting descendants; INCORP and clear the lock
  RETF(z)
+}
+
+// u 16!:_1 y.  For some reason jtlr won't display CIBEAM when it is a conjunction, so we have to make it an adverb.  We save u for the verb
+F1(jtcreatedic){F12IP;
+ ARGCHK1(w)
+ R fdef(0,CIBEAM,VERB,jtcreatedic1,jtvalenceerr,w,0,0,VFLAGNONE,RMAX,RMAX,RMAX);
 }
 
 // Dic locking ************************************************************
@@ -306,10 +315,12 @@ A dicresize(DIC *dic,J jt){
   &&((val=jtsyrd1((J)((I)jt+NAV(nam)->m),NAV(nam)->s,NAV(nam)->hash,jt->global))!=0  // look up name in current locale and ra() if found
   &&((val=QCWORD(namerefacv(nam,QCWORD(val))))!=0)   // turn the value into a reference, undo the ra
   &&((val&&LOWESTBIT(AT(val))&VERB))),EVVALUE, exit)   // make sure the result is a verb
+
  A newdic; RZ(newdic=jtunquote(jt,(A)dic,val,val));  // execute resize on the dic, returning new dic
  struct Dic t=dic->bloc; ((DIC*)dic)->bloc=((DIC*)newdic)->bloc; ((DIC*)newdic)->bloc=t;  // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be freed when the new dic is.
  // NOTE: we keep the old blocks hanging around until the new have been allocated.  This seems unnecessary for the hashtable, but we do it because other threads still have the old pointers and may prefetch from
  //  the old hash.  This won't crash, but it might be slow if the old hash is no longer in mapped memory
+
 exit:;  // clean up from error
  tpop(_ttop);  // discard newdic and everything it refers to
  SYMSETGLOBAL(dic->bloc.locale);  // restore globals
@@ -348,9 +359,11 @@ static scafINLINE B jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt){I i;
 // We take a read lock on the table and return with it
 static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i;
  I lv=DICLKRDRQ(dic); DICLKRDWTK(dic,lv)  // request read lock and wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  prototype required to get arg converted to I
  k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
  C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+
  // convert the hash slot#s to index into kvs
  for(i=n;--i>=0;){
   k=(void*)((I)k-(kib>>32));  // back up to next key
@@ -363,6 +376,7 @@ static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i
    if(unlikely((curslot-=(hsz>>56))<0))curslot+=(UI4)hsz*(hsz>>56);  // move to next hash slot, wrap to end if we hit 0
   }
  }
+
  // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore
  I vn=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals)-HASHNRES*vn;  // size of a value; address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
  void *av=0;  // init to 'no default data pointer yet'.  We avoid checking the default until we know we need it
@@ -396,9 +410,11 @@ static DF2(jtdicget){F12IP;A z;
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
+
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape;
  GA0(z,t,kn*dic->bloc.vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
+
  void *k=voidAV(w);  // point to the key data
  RZ(jtkeyprep(dic,k,kn,s,jt))  // convert keys to slot#
  if(!jtgetslots(dic,k,kn,s,voidAV(z),jt,adyad))z=0;  // get the values and take a read lock on the dic.  If error, pass error through
@@ -431,7 +447,7 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
   while(1){
    s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
    if(hval<HASHNRES){
-    I8 hc=(hval<<32)+curslot; tomb1=tomb1==~0?hc:tomb1;  // remember first spot we can store into, empty or tombstone
+    I8 hc=((I8)hval<<32)+curslot; tomb1=tomb1==~0?hc:tomb1;  // remember first spot we can store into, empty or tombstone, and its type
     if(likely(hval<HASHTSTN)){hval=tomb1>>32; tomb1=(UI4)tomb1; hashtbl[tomb1]=hval|HASHBSTN; s[i]=((I8)0x100000000<<hval)+tomb1; break;}  // if we hit empty, we're done: mark first hole is birthstone; save its status before mark.  1 byte store for atomicity
    }else if((*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0)break;  // if key match, we're done: we have saved the hashslot in s[] with high 32 bits 0
    // no match.  try next hashslot
@@ -453,10 +469,10 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
   cur=nxt; emptyx=emptynxt;  // advance to next
  }
 
- lv=DICLKWRRQ(dic); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put this up a little earlier
+ lv=DICLKWRRQ(dic); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put rq up a little earlier
 
  // chase the new kvs again, replacing the birthstone (indexed by s[i]) with the allocated kvslot#, which we get by retraversing the empties list.  Also mark the new kvs not-empty
-     // traversing a linked list sucks, but two at a time are no worse than 1, and the variable-length write takes a little time
+     // traversing a linked list sucks, but two at a time are no worse than 1, and the variable-length writes take a little time
  for(cur=nroot,emptyx=dic->bloc.emptyn;cur>=0;){
   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
   UI emptynxt=_bzhi_u64(*(UI4*)&empty[emptyx*(hsz>>56)],(hsz>>53));   // get next empty, abort if end of chain (loopback)
@@ -515,15 +531,16 @@ static DF2(jtdicput){F12IP;
  // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
  // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
+
  I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch
   I rc=jtputslots(dic,k,kn,v,vn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
-  dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+  if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
- PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w
  A z=mtv; if(0){errexit: z=0;}
+ PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
  RETF(z);
 }
@@ -548,7 +565,7 @@ static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
    if(hval<HASHNRES){  // hole or tombstone
     if(hval<HASHTSTN)break;   // hole, exit not found
-   }else if((*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0){s[i]=(oroot<<32)+curslot; oroot=i; break;}  // match, exit found, putting departing hashslot on old chain
+   }else if((*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0){s[i]=((I8)oroot<<32)+curslot; oroot=i; break;}  // match, exit found, putting departing hashslot on old chain
    // no match.
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
   }
@@ -559,7 +576,7 @@ static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
  UI emptyx=dic->bloc.emptyn; I cur; C *empty=CAV2(dic->bloc.empty); // starting root of free queue, current index, empty list
  DICLKWRWT(dic,lv)  // wait for write lock to be granted.  No resize is possible
 
- // chase the old kvs, which give the hashslots to be deleted.  We turn each into a tombstone, free the kv slot, and flip trailing tombstones.  If it is a tombstone already, it's a double del, ignore it
+ // chase the old kvs, which give the hashslots to be deleted.  We turn each into a tombstone, put the kv slot on the empty chain, and flip trailing tombstones.  If it is a tombstone already, it's a double del, ignore it
  for(cur=oroot;cur>=0;){
   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
   I8 curslot=((UI4*)(&s[cur]))[0];  // extract hashslot# to be emptied
@@ -600,6 +617,7 @@ static DF1(jtdicdel){F12IP;
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k  if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
+
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
  I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data

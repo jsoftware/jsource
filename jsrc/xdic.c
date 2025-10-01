@@ -232,14 +232,14 @@ F1(jtcreatedic){F12IP;
 #define DICLMSKWRX 32LL  // write lock requested by current write owner
 #define DICLMSKSEQX 48LL  // sequence# of current write owner
 
-#define DICLKRDRQ(dic) __atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL)  // put up read request
+#define DICLKRDRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL);  // put up read request
 #define DICLKRDWTK(dic,lv) if(unlikely((lv&((I)1<<DICLMSKWRX))!=0))lv=diclkrdwtk(dic);  // if someone is writing, wait till they finish with hash/keys 
 #define DICLKRDWTV(dic,lv) if(unlikely((lv&((I)2<<DICLMSKWRX))!=0))diclkrdwtv(dic);  // if someone is writing, wait till they finish with values
 #define DICLKRDREL(dic)   __atomic_fetch_sub(&AM((A)dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL);  // remove read request
 
-#define DICLKRWRQ(dic) __atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRWX,__ATOMIC_ACQ_REL)   // put up prewrite request
+#define DICLKRWRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRWX,__ATOMIC_ACQ_REL);   // put up prewrite request
 #define DICLKRWWT(dic,lv) if(unlikely((US)(lv>>DICLMSKRWX)!=(US)(lv>>DICLMSKSEQX)))diclkrwwt(dic,lv);  // wait until we are the lead writer, which is immediately if there are no others
-#define DICLKWRRQ(dic) ({ __atomic_store_n((US*)((C*)&AM((A)dic)+4),(US)3,__ATOMIC_RELEASE); __atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE); })   // put up write request for key & value (we are known to be the lead writer and own the write bit, which must be clear)
+#define DICLKWRRQ(dic,lv) { __atomic_store_n((US*)((C*)&AM((A)dic)+4),(US)3,__ATOMIC_RELEASE); lv=__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE); }   // put up write request for key & value (we are known to be the lead writer and own the write bit, which must be clear)
 #define DICLKWRWT(dic,lv) if(unlikely((lv&((I)0xffff<<DICLMSKRDX))!=0))diclkwrwt(dic);  // wait until all reads are quiesced
 #define DICLKWRRELK(dic,lv) __atomic_store_n((US*)((C*)&AM((A)dic)+4),(US)2,__ATOMIC_RELEASE);   // release the keys, while still writing to values
 #define DICLKWRRELV(dic,lv) __atomic_store_n((UI4*)((C*)&AM((A)dic)+4),(((lv)>>32)&0xffff0000)+0x10000,__ATOMIC_RELEASE);   // remove write request and advance sequence#
@@ -292,14 +292,14 @@ static void diclkwrwt(DIC *dic){I n;
 
 
 #else
-#define DICLKRDRQ(dic) 0
+#define DICLKRDRQ(dic) 
 #define DICLKRDWTK(dic,lv) // if someone is writing, wait till they finish with hash/keys
 #define DICLKRDWTV(dic,lv)  // if someone is writing, wait till they finish with values
 #define DICLKRDREL(dic)
 
-#define DICLKRWRQ(dic) 0
+#define DICLKRWRQ(dic) 
 #define DICLKRWWT(dic,lv) 
-#define DICLKWRRQ(dic) 0
+#define DICLKWRRQ(dic) 
 #define DICLKWRWT(dic,lv) 
 #define DICLKWRRELK(dic,lv) 
 #define DICLKWRRELV(dic,lv) 
@@ -358,7 +358,7 @@ static scafINLINE B jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt){I i;
 // This version works on internal compare functions only
 // We take a read lock on the table and return with it
 static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i;
- I lv=DICLKRDRQ(dic); DICLKRDWTK(dic,lv)  // request read lock and wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+ I lv; DICLKRDRQ(dic,lv); DICLKRDWTK(dic,lv)  // request read lock and wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  prototype required to get arg converted to I
  k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
@@ -469,7 +469,7 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
   cur=nxt; emptyx=emptynxt;  // advance to next
  }
 
- lv=DICLKWRRQ(dic); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put rq up a little earlier
+ DICLKWRRQ(dic,lv); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put rq up a little earlier
 
  // chase the new kvs again, replacing the birthstone (indexed by s[i]) with the allocated kvslot#, which we get by retraversing the empties list.  Also mark the new kvs not-empty
      // traversing a linked list sucks, but two at a time are no worse than 1, and the variable-length writes take a little time
@@ -532,7 +532,7 @@ static DF2(jtdicput){F12IP;
  // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
 
- I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch
@@ -571,7 +571,7 @@ static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
   }
  }
 
- lv=DICLKWRRQ(dic);   // request write lock
+ DICLKWRRQ(dic,lv);   // request write lock
  I vb=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  UI emptyx=dic->bloc.emptyn; I cur; C *empty=CAV2(dic->bloc.empty); // starting root of free queue, current index, empty list
  DICLKWRWT(dic,lv)  // wait for write lock to be granted.  No resize is possible
@@ -619,7 +619,7 @@ static DF1(jtdicdel){F12IP;
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
  I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
- I lv=DICLKRWRQ(dic);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch

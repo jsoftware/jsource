@@ -141,6 +141,7 @@ else
  -Wno-delete-non-abstract-non-virtual-dtor \
  -Wno-deprecated-non-prototype \
  -Wno-empty-body \
+ -Wno-gnu-folding-constant \
  -Wno-implicit-float-conversion \
  -Wno-implicit-int-float-conversion \
  -Wno-incompatible-function-pointer-types \

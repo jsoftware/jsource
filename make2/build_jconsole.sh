@@ -92,6 +92,7 @@ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing \
  -Wno-consumed \
  -Wno-delete-non-abstract-non-virtual-dtor \
  -Wno-empty-body \
+ -Wno-gnu-folding-constant \
  -Wno-implicit-float-conversion \
  -Wno-implicit-int-float-conversion \
  -Wno-int-in-bool-context \

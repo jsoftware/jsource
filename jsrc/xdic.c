@@ -160,6 +160,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
   box1=C(AAV(box)[0]); I t; RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFKINDIR; // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
   box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) I n, *s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->bloc.kaii=n; ASSERT(n>0,EVLENGTH) // shape. copy to allow IAV1.  get # atoms in item & save
+  ASSERT(AN(box1)<=9 || flags&DICFICF,EVNONCE)  // if the user has a compare function, we want virt to be on the stack to save registers.  Make sure the rank is OK then
   INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
   UI4 (*fn2)()=l&(SZI-1)?(UI4 (*)())crcbytes:(UI4 (*)())crcwords; fn2=(t&XNUM+RAT)?crcxnums:fn2; fn2=(t&CMPX+FL+QP)?crcfloats:fn2; fn2=(t&BOX)?crcboxes:fn2; fn2=flags&DICFIHF?fn2:(UI4 (*)())FAV(a)->valencefns[0]; ((DIC*)z)->bloc.hashfn=fn2; // save internal or external hash function  
   I (*fn3)()=l&(SZI-1)?(I (*)())taoc:(I (*)())taoi; fn3=(t&XNUM+RAT)?taox:fn3; fn3=(t&CMPX+FL+QP)?taof:fn3; fn3=(t&BOX)?taor:fn3; fn3=flags&DICFICF?fn3:(I (*)())FAV(a)->valencefns[1]; ((DIC*)z)->bloc.compfn=fn3; // save int/ext comp function.  We care only about equality  
@@ -336,8 +337,8 @@ exit:;  // clean up from error
 
 // kl is keylength in bytes, ku is void* 'pointer' to key, kh is 'pointer' to key in keys array
 // if we are calling a user compare function, the pointers are actually offsets and we use faux virtual blocks for the call
-#define keysne(kl,ku,kh) likely(hsz&(DICFICF<<DICFBASE))?(*(I (*)(I,void*,void*))cf)(kl,ku,kh) :  /* internal compare function */ \
- AK(virt.u)=ku, AK(virt.h)=kh, ka=(*(A (*)(J,A,A,A))cf)(jt,virt.u,virt.h,virt.self), likely(ka)?likely(AN(ka))?BIV0(ka):0:0;  /* user compare function */
+#define keysne(kl,ku,kh) likely(hsz&(DICFICF<<DICFBASE))?((I (*)(I,void*,void*))*cf)(kl,ku,kh) :  /* internal compare function */ \
+ ({ AK((A)virt.u)=ku; AK((A)virt.h)=kh; A ka; RZ(ka=((A (*)(J,A,A,A))*cf)(jt,(A)virt.u,(A)virt.h,virt.self)) likely(AN(ka))?BIV0(ka):0; })  /* user compare function */
 
 typedef struct {
 I __attribute__((aligned(CACHELINESIZE))) u[16-AKXR(0)/SZI];   //  block used to access user's key
@@ -348,8 +349,8 @@ A self;   //
 // fill in virtual block to hold one key
 #define initvirt(v,dic) {AFLAG(v)=AFUNINCORPABLE+AFRO; AT(v)=dic->bloc.ktype; AN(v)=dic->bloc.kaii; AC(v)=ACPERMANENT; AR(v)=AN(dic->bloc.kshape); MCISH(AS(v),IAV1(dic->bloc.kshape),AN(dic->bloc.kshape));}
 
-#define biasforcomp {k=(void *)((I)k-(I)&virt.u; kbase=(void *)((I)kbase-(I)&virt.v; }   // bias k and kbase back so that their values can be used in AK of virt.u and virt.v
-#define unbiasforcomp {k=(void *)((I)k+(I)&virt.u; kbase=(void *)((I)kbase+(I)&virt.v; }   // restore original pointers
+#define biasforcomp {k=(void *)((I)k-(I)&virt.u); kbase=(void *)((I)kbase-(I)&virt.h); }   // bias k and kbase back so that their values can be used in AK of virt.u and virt.v
+#define unbiasforcomp {k=(void *)((I)k+(I)&virt.u); kbase=(void *)((I)kbase+(I)&virt.h); }   // restore original pointers
 
 
 // Hashtable info ***********************
@@ -393,13 +394,18 @@ static scafINLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
 // a is default if given, 0 if not 
 // This version works on internal compare functions only
 // We take a read lock on the table and return with it
-static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i;
- I lv; DICLKRDRQ(dic,lv); DICLKRDWTK(dic,lv)  // request read lock and wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
-
- UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  prototype required to get arg converted to I
+static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
+ I lv; DICLKRDRQ(dic,lv);   // request read lock
+ if(!(dic->bloc.flags&DICFICF)){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
+ UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;   // more nonresizable: kbytelen/kitemlen   compare fn   size of a value in bytes 
  k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
+ DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+
+ UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz  prototype required to get arg converted to I
  C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
- I vn=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals)-HASHNRES*vn;  // size of a value; address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
+ C *vbase=CAV(dic->bloc.vals)-HASHNRES*vn;  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
+
+ if(!(hsz&(DICFICF<<DICFBASE)))biasforcomp
 
  // convert the hash slot#s to index into kvs.  Prefetch each value to get a leg up on moving the data.  We don't prefetch more to avoid needless bus bandwidth; perhaps we should check the length   scaf
     // the only advantage of the prefetch is that the value reads will clear earlier, allowing the fence when we end our lock to finish earlier
@@ -409,7 +415,7 @@ static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a){I i
   while(1){
    s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv
    if(withprob(hval<HASHTSTN,0.3))break;   // if we hit an empty (incl birthstone empty but not a tombstone), that ends the search (not found)
-   if(withprob(hval>=HASHNRES,0.6) && withprob((*cf)((UI4)kib,k,kbase+(kib>>32)*hval)==0,0.7)){PREFETCH(vbase+s[i]*vn); break;}  // if we hit a non-tombstone that matches the key, exit found
+   if(withprob(hval>=HASHNRES,0.6) && withprob(keysne((UI4)kib,k,kbase+(kib>>32)*hval)==0,0.7)){PREFETCH(vbase+s[i]*vn); break;}  // if we hit a non-tombstone that matches the key, exit found
    // here not found
    if(unlikely((curslot-=(hsz>>56))<0))curslot+=(UI4)hsz*(hsz>>56);  // move to next hash slot, wrap to end if we hit 0
   }
@@ -455,14 +461,14 @@ static DF2(jtdicget){F12IP;A z;
  GA0(z,t,kn*dic->bloc.vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
  // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
  // nothing & use the value returned by keyprep, which will be the result area from the user hash.
- VIRT virt; I8 *s; virt,self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
  if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
  else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
  else{A x; GATV0(x,FL,kn,1) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
  
  void *k=voidAV(w);  // point to the key data
  RZ(s=jtkeyprep(dic,k,kn,s,jt,w))  // convert keys to slot#, possibly changing s
- if(!jtgetslots(dic,k,kn,s,voidAV(z),jt,adyad))z=0;  // get the values and take a read lock on the dic.  If error, pass error through
+ if(!jtgetslots(dic,k,kn,s,voidAV(z),jt,adyad,virt))z=0;  // get the values and take a read lock on the dic.  If error, pass error through
  DICLKRDREL(dic)  // release read lock
  RETF(z);
 }
@@ -479,12 +485,16 @@ static DF2(jtdicget){F12IP;A z;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv){I i;
+static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv,VIRT virt){I i;
+ if(!(dic->bloc.flags&DICFICF)){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
+ UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // kbytelen/kitemlen  compare func unchanged by resize
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
- UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
+ UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz  base of hashtbl
  C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+
+ if(!(hsz&(DICFICF<<DICFBASE)))biasforcomp
 
  // first pass over keys.  If key found, remember the biased kv# (will go to old chain).  If not found, remember the hashslot# and whether it was occupied by a birthstone; and make it a birthstone - will go to new or conflict chain
  // If we encounter a birthstone, that's a conflict.  We must remember the first tombstone we encounter because that will be the store point if we don't find a match
@@ -497,12 +507,13 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
    if(withprob(hval<HASHNRES,0.3)){
     I8 hc=((I8)hval<<32)+curslot; tomb1=tomb1==~0?hc:tomb1;  // remember first spot we can store into, empty or tombstone, and its type
     if(withprob(hval<HASHTSTN,0.8)){hval=tomb1>>32; tomb1=(UI4)tomb1; hashtbl[tomb1]=hval|HASHBSTN; s[i]=((I8)0x100000000<<hval)+tomb1; break;}  // if we hit empty, we're done: mark first hole is birthstone; save its status before mark.  1 byte store for atomicity
-   }else if(withprob((*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0,0.7))break;  // if key match, we're done: we have saved the hashslot in s[] with high 32 bits 0
+   }else if(withprob(keysne((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0,0.7))break;  // if key match, we're done: we have saved the hashslot in s[] with high 32 bits 0
    // no match.  try next hashslot
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
   }
  }
 
+ if(!(hsz&(DICFICF<<DICFBASE)))unbiasforcomp
  // pass slot# back to front, putting them into 3 chains: new kvs, old keys, conflict keys.  Conflict keys are assumed vary rare (usually repeated keys)
  I nroot=-1, oroot=-1, croot=-1;   // base of the 3 chains, inited to empty
  DQ(n, I sh=((UI4*)(&s[i]))[1]; if(unlikely(sh&((1LL<<HASHTSTN)+(1LL<<(HASHTSTN+HASHBSTN))))){((UI4*)(&s[i]))[1]=croot; croot=i;}else{((I4*)(&s[i]))[1]=sh?nroot:oroot; nroot=sh?i:nroot; oroot=sh?oroot:i;})
@@ -532,13 +543,14 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
  // chase the conflict keys (in ascending order), updating everything.  They should be few.  For new kvs, also take an empty slot & update the keys.  Leave values in the conflict chain, in ascending order. s[i] indexes the hashslot
  // Since the original search searched all the way to a hold looking for a match, we know that the only match must come from a previous key in this put.  This key would necessarily have gone into the first tombstone found,
  // so we can stop the search when we hit a tombstone or a hole.
+ if(!(hsz&(DICFICF<<DICFBASE)))biasforcomp
  for(cur=croot;cur>=0;){
   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
   I curslot=(UI4)s[cur];  UI hval; // slot was originally birthstone where the search ended.  Now it has been filled in, and we resume the search there.  It could match right there.  hval is biased kv slot# from hashtable
   while(1){
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
    if(hval<HASHNRES)goto notfound;  // if we hit a hole (birthstones have been filled), go allocate a new kv
-   if((*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0)goto found;   // if key matches, hval is the slot
+   if(keysne((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0)goto found;   // if key matches, hval is the slot
    // no match
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
   }
@@ -579,7 +591,7 @@ static DF2(jtdicput){F12IP;
  // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
  // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
 
- VIRT virt; I8 *s; virt,self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
  I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
@@ -590,7 +602,7 @@ static DF2(jtdicput){F12IP;
     // we have to reinit s in the resize loop because putslots may have modified it
  
   if(unlikely((s=jtkeyprep(dic,k,kn,s,jt,w))==0))goto errexit;  // hash keys & prefetch.  This may return as s a block that was allocated inside keyprep.  It must persist till the end
-  I rc=jtputslots(dic,k,kn,v,vn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
+  I rc=jtputslots(dic,k,kn,v,vn,s,jt,lv,virt); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
  A z=mtv; if(0){errexit: z=0;}
@@ -605,12 +617,16 @@ static DF2(jtdicput){F12IP;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
+static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv,VIRT virt){I i;
+ if(!(dic->bloc.flags&DICFICF)){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
+ UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;    // more nontresizable
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
- UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
+ UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
  C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+
+ if(!(hsz&(DICFICF<<DICFBASE)))biasforcomp
 
  // first pass over keys.  If key found, remember the biased kv# on the old chain
  I oroot=-1;  // init old chain empty
@@ -620,7 +636,7 @@ static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
    if(withprob(hval<HASHNRES,0.3)){  // hole or tombstone
     if(withprob(hval<HASHTSTN,0.8))break;   // hole, exit not found
-   }else if(withprob((*cf)((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0,0.7)){s[i]=((I8)oroot<<32)+curslot; oroot=i; break;}  // match, exit found, putting departing hashslot on old chain
+   }else if(withprob(keysne((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval)==0,0.7)){s[i]=((I8)oroot<<32)+curslot; oroot=i; break;}  // match, exit found, putting departing hashslot on old chain
    // no match.
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
   }
@@ -629,6 +645,7 @@ static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv){I i;
  DICLKWRRQ(dic,lv);   // request write lock
  I vb=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  UI emptyx=dic->bloc.emptyn; I cur; C *empty=CAV2(dic->bloc.empty); // starting root of free queue, current index, empty list
+ if(!(hsz&(DICFICF<<DICFBASE)))unbiasforcomp
  DICLKWRWT(dic,lv)  // wait for write lock to be granted.  No resize is possible
 
  // chase the old kvs, which give the hashslots to be deleted.  We turn each into a tombstone, put the kv slot on the empty chain, and flip trailing tombstones.  If it is a tombstone already, it's a double del, ignore it
@@ -673,7 +690,7 @@ static DF1(jtdicdel){F12IP;
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
- VIRT virt; I8 *s; virt,self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
  I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data
@@ -685,7 +702,7 @@ static DF1(jtdicdel){F12IP;
 
   if(unlikely((s=jtkeyprep(dic,k,kn,s,jt,w))==0))goto errexit;  // hash keys & prefetch
 
-  I rc=jtdelslots(dic,k,kn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
+  I rc=jtdelslots(dic,k,kn,s,jt,lv,virt); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
   dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
  A z=mtv; if(0){errexit: z=0;}

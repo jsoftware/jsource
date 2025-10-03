@@ -628,7 +628,7 @@ case $jplatform64 in
 
  darwin/j64*) # darwin intel 64bit nonavx
   TARGET=jamalgam
-  CFLAGS="$common $macmin -msse3 "
+  CFLAGS="$common $macmin -msse3 -msse4.1 -msse4.2 -DC_CRC32C "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"

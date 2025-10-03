@@ -144,11 +144,11 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  ARGCHK1(w);
  A a=FAV(self)->fgh[0];  // extract u from the verb
  A z; GAT0(z,BOX,20,1) AK(z)=offsetof(struct ADic,bloc.hash); AN(z)=AS(z)[0]=8;  // allocate nonrecursive box, long enough to make the total allo big enough in 32- and 64-bit.  Then restrict to the boxes in case of error
+ I flags;  // part of a union that gets overwritten
  if(AT(a)&VERB){  // initial creation
   //  install user's verb, & see if the user wants the internal functions
-  AF fn=FAV(a)->valencefns[0]; fn=(FAV(a)->id==CCOLON&&AT(FAV(a)->fgh[0])&VERB)?FAV(FAV(a)->fgh[0])->valencefns[0]:fn; I flags=fn==jthashy?DICFIHF:0;  // note if default hash
-  fn=FAV(a)->valencefns[1]; fn=(FAV(a)->id==CCOLON&&AT(FAV(a)->fgh[0])&VERB)?FAV(FAV(a)->fgh[0])->valencefns[1]:fn; flags|=fn==jttao?DICFICF:0;  // note if default comp
-  ASSERT((flags&DICFIHF+DICFICF)==DICFIHF+DICFICF,EVNONCE)  // only internal hash/compare for now
+  AF fn=FAV(a)->valencefns[0]; fn=(FAV(a)->id==CCOLON&&AT(FAV(a)->fgh[0])&VERB)?FAV(FAV(a)->fgh[0])->valencefns[0]:fn; flags=fn==jthashy?DICFIHF:0;  // note if default hash
+  fn=FAV(a)->valencefns[1]; fn=(FAV(a)->id==CCOLON&&AT(FAV(a)->fgh[0])&VERB)?FAV(FAV(a)->fgh[1])->valencefns[1]:fn; flags|=fn==jttao?DICFICF:0;  // note if default comp
   INCORPNV(a); ((DIC*)z)->bloc.hashcompself=a;    // save self pointer to user's function, which protects it while this dic is extant
   ((DIC*)z)->bloc.locale=jt->global;  // remember the locale this dictionary is in.  We protect it in the DIC block
 
@@ -163,7 +163,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
   UI4 (*fn2)()=l&(SZI-1)?(UI4 (*)())crcbytes:(UI4 (*)())crcwords; fn2=(t&XNUM+RAT)?crcxnums:fn2; fn2=(t&CMPX+FL+QP)?crcfloats:fn2; fn2=(t&BOX)?crcboxes:fn2; fn2=flags&DICFIHF?fn2:(UI4 (*)())FAV(a)->valencefns[0]; ((DIC*)z)->bloc.hashfn=fn2; // save internal or external hash function  
   I (*fn3)()=l&(SZI-1)?(I (*)())taoc:(I (*)())taoi; fn3=(t&XNUM+RAT)?taox:fn3; fn3=(t&CMPX+FL+QP)?taof:fn3; fn3=(t&BOX)?taor:fn3; fn3=flags&DICFICF?fn3:(I (*)())FAV(a)->valencefns[1]; ((DIC*)z)->bloc.compfn=fn3; // save int/ext comp function.  We care only about equality  
-  l>>=(fn2==crcboxes)?LGSZI:0; l>>=(fn2==crcfloats)?((t|(t>>(QPX-BOXX)))>>CMPX)+FLX:0; l>>=(fn2==crcxnums)?(t>>RATX)+LGSZI:0; l>>=(fn2==crcwords)?LGSZI:0; ((DIC*)z)->bloc.kitemlen=l;  // length to use for internal hash/comp
+  I lsh=l&(SZI-1)?0:LGSZI; lsh=(t&BOX+XNUM+RAT)?LGSZI:lsh; lsh=(t&CMPX+FL+QP)?FLX:lsh; ((DIC*)z)->bloc.kitemlen=l>>lsh;  // length to use for internal hash/comp
 
   // valuespec.  must be 2 boxes
   box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
@@ -174,14 +174,18 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   box=C(AAV(w)[0]);  // fetch size parameters
 
  }else{  // resize
+  flags=((DIC*)a)->bloc.flags;  // preserve flags over hashsiz write
   ((DIC*)z)->bloc=((DIC*)a)->bloc;  // init everything from the previous dic
   box=w;  // w is nothing but size parms
  }
 
- // box has the size parameters.  Audit & install into dic, overwriting anything that was copied
+ // box has the size parameters.  Audit & install into dic, overwriting anything that was copied.  But keep the 
  ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==3,EVLENGTH) if(!AT(box)&INT)RZ(box=ccvt(INT,box,0));  // sizes. must be box of 3 integers
- ((DIC*)z)->bloc.lgminsiz=CTLZI(UIAV(box)[0]|1); I maxeles=IAV(box)[1]; ASSERT(maxeles>0,EVDOMAIN) I hashsiz=((DIC*)z)->bloc.hashsiz=IAV(box)[2]; ASSERT(hashsiz>(maxeles+(maxeles>>4)),EVDEADLOCK)  // min, max, hash sizes.  Hash at least 6% spare
+ I hashsiz=((DIC*)z)->bloc.hashsiz=IAV(box)[2];   // move hashsiz, which overwrites flags/lgminsiz/hashelesiz
+ ((DIC*)z)->bloc.lgminsiz=CTLZI(UIAV(box)[0]|1); I maxeles=IAV(box)[1]; ASSERT(maxeles>0,EVDOMAIN)   // save min size, get max# eles
+ ASSERT(hashsiz>(maxeles+(maxeles>>4)),EVDEADLOCK)  // min, max, hash sizes.  Hash at least 6% spare
  I hashelesiz=((DIC*)z)->bloc.hashelesiz=(CTLZI(maxeles+4-1)+1+(BB-1))>>LGBB;  // max slot#, plus 4 (empty/tombstone/birthstone).  Subtract 1 for max code point.  top bit#+1 is #bits we need; round that up to #bytes
+ ((DIC*)z)->bloc.flags=flags;   // restore flags
 
  // allocate & protect hash/keys/vals/empty
  GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,voidAV1(box),MEMSET00LEN,MEMSET00); ((DIC*)z)->bloc.hash=box;  // allocate hash table & fill with empties
@@ -305,6 +309,7 @@ static void diclkwrwt(DIC *dic){I n;
 #define DICLKWRRELV(dic,lv) 
 #endif
 
+// **************************************************** resize ***************************************
 // Request resize, in the dic locale
 A dicresize(DIC *dic,J jt){
  A *_ttop=jt->tnextpushp;  // stack restore point
@@ -327,6 +332,26 @@ exit:;  // clean up from error
  R (A)dic;  // always return the same block if no error.
 }
 
+// ************************************************ user compare function *****************************
+
+// kl is keylength in bytes, ku is void* 'pointer' to key, kh is 'pointer' to key in keys array
+// if we are calling a user compare function, the pointers are actually offsets and we use faux virtual blocks for the call
+#define keysne(kl,ku,kh) likely(hsz&(DICFICF<<DICFBASE))?(*(I (*)(I,void*,void*))cf)(kl,ku,kh) :  /* internal compare function */ \
+ AK(virt.u)=ku, AK(virt.h)=kh, ka=(*(A (*)(J,A,A,A))cf)(jt,virt.u,virt.h,virt.self), likely(ka)?likely(AN(ka))?BIV0(ka):0:0;  /* user compare function */
+
+typedef struct {
+I __attribute__((aligned(CACHELINESIZE))) u[16-AKXR(0)/SZI];   //  block used to access user's key
+I __attribute__((aligned(CACHELINESIZE))) h[16-AKXR(0)/SZI];   // block used to access key from hash
+A self;   //
+} VIRT;
+
+// fill in virtual block to hold one key
+#define initvirt(v,dic) {AFLAG(v)=AFUNINCORPABLE+AFRO; AT(v)=dic->bloc.ktype; AN(v)=dic->bloc.kaii; AC(v)=ACPERMANENT; AR(v)=AN(dic->bloc.kshape); MCISH(AS(v),IAV1(dic->bloc.kshape),AN(dic->bloc.kshape));}
+
+#define biasforcomp {k=(void *)((I)k-(I)&virt.u; kbase=(void *)((I)kbase-(I)&virt.v; }   // bias k and kbase back so that their values can be used in AK of virt.u and virt.v
+#define unbiasforcomp {k=(void *)((I)k+(I)&virt.u; kbase=(void *)((I)kbase+(I)&virt.v; }   // restore original pointers
+
+
 // Hashtable info ***********************
 #define HASHNRES 4  // # reserved code points for empties: empty/birthstone/tombstone/tombstone+birthstone
 #define HASHBSTN 1  // this bit set when the slot is a birthstone (a slot marked for fill by a put)
@@ -339,16 +364,25 @@ exit:;  // clean up from error
 #define DELKV(s,n,ind) {if(ind){A sa=((A*)(s))[i]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; fa(sa) (s)[i]=0; sa=sa1;)}}   // deleting old kv
 
 // k is A for keys, n is #keys, s is place for slot#s.  Hash each key, store, prefetch (possibly using wrong hash)
+// if s is 0, we are using a user hash; use uits return area as s
 // This version works on internal hash functions only
 // result is 0 on error
-static scafINLINE B jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt){I i;
+static scafINLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
- k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
- for(i=n;--i>=0;){
-  k=(void*)((I)k-(kib>>32));  // back up to next key
-  s[i]=(I8)(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)s[i]*(UI4)hsz)>>32)*(hsz>>56)]);
+ if(likely(s!=0)) {
+  // internal hash
+  k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down.  This puts prefetches in the right order for get, wrong for put.  Pity.
+  for(i=n;--i>=0;){
+   k=(void*)((I)k-(kib>>32));  // back up to next key
+   s[i]=(I8)(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)s[i]*(UI4)hsz)>>32)*(hsz>>56)]);
+  }
+ }else{
+  // user hash.  Call their function
+  A h; RZ(h=((A (*)(J,A,A,A))*hf)(jt,ka,dic->bloc.hashcompself,dic->bloc.hashcompself))  // hash everything at once to avoid call overhead
+  RZ(h=mkwris(h)) ASSERT(AN(h)==n,EVLENGTH) if(unlikely(!(AT(h)&INT)))RZ(h=ccvt(INT,h,0)) s=IAV(h);  // set s to writable block
+  if(!SY_64){A x; GATV0(x,FL,n,1) DO(n, I8AV1(x)[i]=((UI*)s)[i];) s=I8AV1(x);}  // s must be I8s
  }
- R 1;
+ R s;
 }
 // k is A for keys, kvirt is virtual unincorpable block to point to key, s is place for slot#s.  Hash each key, convert to slot, store, prefetch
 
@@ -419,10 +453,15 @@ static DF2(jtdicget){F12IP;A z;
 
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape;
  GA0(z,t,kn*dic->bloc.vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
- I8 sd[17], *s=sd; if(unlikely(kn>=(I)(sizeof(sd)/sizeof(sd[0])))){GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible (leave 1 slot for overfetch).  FL is always 8 bytes
-
+ // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
+ // nothing & use the value returned by keyprep, which will be the result area from the user hash.
+ VIRT virt; I8 *s; virt,self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
+ else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
+ else{A x; GATV0(x,FL,kn,1) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
+ 
  void *k=voidAV(w);  // point to the key data
- RZ(jtkeyprep(dic,k,kn,s,jt))  // convert keys to slot#
+ RZ(s=jtkeyprep(dic,k,kn,s,jt,w))  // convert keys to slot#, possibly changing s
  if(!jtgetslots(dic,k,kn,s,voidAV(z),jt,adyad))z=0;  // get the values and take a read lock on the dic.  If error, pass error through
  DICLKRDREL(dic)  // release read lock
  RETF(z);
@@ -539,12 +578,18 @@ static DF2(jtdicput){F12IP;
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
  // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
  // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
- I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
+
+ VIRT virt; I8 *s; virt,self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
  I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
-  if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch
+  if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
+  else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
+  else{A x; GATV0(x,FL,kn,1) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
+    // we have to reinit s in the resize loop because putslots may have modified it
+ 
+  if(unlikely((s=jtkeyprep(dic,k,kn,s,jt,w))==0))goto errexit;  // hash keys & prefetch.  This may return as s a block that was allocated inside keyprep.  It must persist till the end
   I rc=jtputslots(dic,k,kn,v,vn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
@@ -628,11 +673,18 @@ static DF1(jtdicdel){F12IP;
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
- I8 sd[16], *s=sd; if(unlikely(kn>(I)(sizeof(sd)/sizeof(sd[0])))){A z; GATV0(z,FL,kn,1) s=(I8*)voidAV1(z);}   // allocate slots block, locally if possible.  FL is always 8 bytes
+ VIRT virt; I8 *s; virt,self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+
  I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
-  if(jtkeyprep(dic,k,kn,s,jt)==0)goto errexit;  // hash keys & prefetch
+  if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
+  else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
+  else{A x; GATV0(x,FL,kn,1) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
+    // we must reinit s because it might have been change by keyprep
+
+  if(unlikely((s=jtkeyprep(dic,k,kn,s,jt,w))==0))goto errexit;  // hash keys & prefetch
+
   I rc=jtdelslots(dic,k,kn,s,jt,lv); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
   dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }

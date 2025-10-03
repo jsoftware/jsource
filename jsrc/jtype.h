@@ -334,6 +334,7 @@ struct AD {
 #define I4AV0(x)        ((I4*)((C*)(x)+AKXR(0)))  // local unsigned 32-bit int atom
 #define I4AV1(x)        ((I4*)((C*)(x)+AKXR(1)))  // local unsigned 32-bit int list
 #define I8AV(x)         ( (I8*)((C*)(x)+AK(x)))  /* pointer to ravel        */
+#define I8AV1(x)         ( (I8*)((C*)(x)+AKXR(1)))  /* pointer to ravel        */
 #define IAVn(n,x)       ((I*)((C*)(x)+AKXR(n)))  // integer in a stack- or heap-allocated atom (rank n
 #define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1 - used for internal tables that need alignment or need AS[0])

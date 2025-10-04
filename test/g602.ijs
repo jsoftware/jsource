@@ -76,30 +76,32 @@ NB. Unicodes not emulated by th
 'abcd' -: ": 10&u: 'abcd'
 (224 160 128 224 160 129{a.) -: ": 4 u: 2048 2049
 
+
+perr =. (-: [ (smoutput&:(a.&i.))^:(-.@-:))
 NB. ": on unboxed literal
-(a.{~i.16 16) -: ": 16 16$a.
-(":x) -: ":("1) x=: 3 4$ 97 224 176 157 98{a.
-(":x) -: ":("1) x=: 3 4$ u: 16b61 16bd800 16bdc00
-(":x) -: ":("1) x=: 3 4$ 10&u: 16b61 16bd800 16bdc00
+(a.{~i.16 16) perr ": 16 16$a.
+(":x) perr ":("1) x=: 3 4$ 97 224 176 157 98{a.
+(":x) perr ":("1) x=: 3 4$ u: 16b61 16bd800 16bdc00
+(":x) perr ":("1) x=: 3 4$ 10&u: 16b61 16bd800 16bdc00
 
 NB. ": on unboxed literal should have no extra null
 ({.a.) -.@e. 8 u: }. u: i.16bd800
 ({.a.) -.@e. ": }. u: i.16bd800
-(8 u: x) -: ":x=: u: i.16bd800
-(8 u: x) -: ":x=: u: 0 0 0,~ 16be000 + i.16b2000
-(8 u: x) -: ":x=: 10&u: 0 0 0,~ 16b10000 + i.16b2000
+(8 u: x) perr ":x=: u: i.16bd800
+(8 u: x) perr ":x=: u: 0 0 0,~ 16be000 + i.16b2000
+(8 u: x) perr ":x=: 10&u: 0 0 0,~ 16b10000 + i.16b2000
 NB. literal2
-(8 u: x) -: ":x=: u: i.128                 NB. ascii
-(8 u: x) -: ":x=: u: 128+i.128             NB. literal2
+(8 u: x) perr ":x=: u: i.128                 NB. ascii
+(8 u: x) perr ":x=: u: 128+i.128             NB. literal2
 echo a. i. ":x=: 7 u: y=: 16bd800 + i.8   NB. lone surrogate
 echo a. i. (8 u: y)
-(8 u: y) -: ":x=: 7 u: y=: 16bd800 + i.8   NB. lone surrogate
-(8 u: y) -: ":x=: 7 u: y=: 16b10000 + i.8  NB. non-bmp
+(8 u: y) perr ":x=: 7 u: y=: 16bd800 + i.8   NB. lone surrogate
+(8 u: y) perr ":x=: 7 u: y=: 16b10000 + i.8  NB. non-bmp
 NB. literal4
-(8 u: x) -: ":x=: 10&u: i.128               NB. ascii
-(8 u: x) -: ":x=: 10&u: 128+i.128           NB. literal4
-(8 u: y) -: ":x=: 10&u: y=: 16b10000 + i.8  NB. non-bmp
-(a.{~256|y) -: ": 10&u: y=: 16b110000 + i.1000 NB. demoting unboxed illegal utf32
+(8 u: x) perr ":x=: 10&u: i.128               NB. ascii
+(8 u: x) perr ":x=: 10&u: 128+i.128           NB. literal4
+(8 u: y) perr ":x=: 10&u: y=: 16b10000 + i.8  NB. non-bmp
+(a.{~256|y) perr ": 10&u: y=: 16b110000 + i.1000 NB. demoting unboxed illegal utf32
 
 bc =: 9!:6 ''
 9!:7  '+++++++++|-'

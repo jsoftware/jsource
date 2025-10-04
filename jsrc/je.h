@@ -681,6 +681,7 @@ extern F2(jtrollksub);
 extern DF2(jtrollkx);
 extern DF2(jtsumattymes1);
 extern DF2(jtxop2);
+extern DF2(jtxxhash2);
 #if AUDITEXECRESULTS
 extern void auditblock (J jt,A w, I nonrecurok, I virtok);
 #endif

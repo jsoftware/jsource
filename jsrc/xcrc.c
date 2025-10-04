@@ -3,6 +3,13 @@
 /*                                                                         */
 /* Xenos: CRC calculation and base64 encode/decode                         */
 
+#define XXH_NO_STREAM
+#define XXH_CPU_LITTLE_ENDIAN 1
+#define XXH_PRIVATE_API
+#define XXH_STATIC_LINKING_ONLY /* access advanced declarations */
+#define XXH_IMPLEMENTATION      /* access definitions */
+#include "xxhash.h"
+
 #include "j.h"
 #include "x.h"
 
@@ -191,3 +198,49 @@ ASSERT(rc==1&&(I)zlen==AN(z),EVDOMAIN);  // make sure no invalid input bytes
 }
   // the 3 bytes are characters AAAAABB BBBBCCCC CCDDDDDD in bits
   //                            7     0 15     8 23    16
+
+DF2(jtxxhash2){F12IP;
+  I n;
+  A z;
+  UC *v;
+  F2RANK(0,1,jtxxhash2,self);  // do rank loop if necessary
+  n=AN(w);
+  v=UAV(w);
+  ASSERT(!n||AT(w)&LIT,EVDOMAIN);
+  I s=AV(a)[0];
+
+  /*
+  1   XXH32
+  2   XXH64
+  3   XXH3_64bits
+  4   XXH3_128bits
+  */
+
+  switch(s) {
+  case 1: {
+    UI4 r = XXH32(v, n, 0);
+#if (defined(_WIN64)||defined(__LP64__))
+    z = sc((I)(I4)(r^-1L));  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
+#else
+    z = sc(r);
+#endif
+  }
+  break;
+  case 2: {
+    z = sc((UI)XXH64(v, n, 0));
+  }
+  break;
+  case 3: {
+    z = sc((UI)XXH3_64bits(v, n));
+  }
+  break;
+  case 4: {
+    XXH128_hash_t r = XXH3_128bits(v, n);
+    z = str(16, (UC*)&r);
+  }
+  break;
+  default:
+    ASSERT(0,EVDOMAIN);
+  }
+  R z;
+}

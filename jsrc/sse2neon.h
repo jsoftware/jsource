@@ -729,6 +729,13 @@ FORCE_INLINE uint16_t _sse2neon_vaddvq_u16(uint16x8_t a)
  */
 
 /* Constants for use with _mm_prefetch. */
+#if defined(_M_ARM64EC)
+/* winnt.h already defines these constants as macros, so undefine them first. */
+#undef _MM_HINT_NTA
+#undef _MM_HINT_T0
+#undef _MM_HINT_T1
+#undef _MM_HINT_T2
+#endif
 enum _mm_hint {
     _MM_HINT_NTA = 0, /* load data to L1 and L2 cache, mark it as NTA */
     _MM_HINT_T0 = 1,  /* load data to L1 and L2 cache */
@@ -2162,13 +2169,13 @@ FORCE_INLINE int _mm_movemask_pi8(__m64 a)
     uint8x8_t tmp = vshr_n_u8(input, 7);
     return vaddv_u8(vshl_u8(tmp, vld1_s8(shift)));
 #else
-    // Refer the implementation of `_mm_movemask_epi8`
-    uint16x4_t high_bits = vreinterpret_u16_u8(vshr_n_u8(input, 7));
-    uint32x2_t paired16 =
-        vreinterpret_u32_u16(vsra_n_u16(high_bits, high_bits, 7));
-    uint8x8_t paired32 =
-        vreinterpret_u8_u32(vsra_n_u32(paired16, paired16, 14));
-    return vget_lane_u8(paired32, 0) | ((int) vget_lane_u8(paired32, 4) << 4);
+    // Note: Uses the same method as _mm_movemask_epi8.
+    uint8x8_t msbs = vshr_n_u8(input, 7);
+    uint32x2_t bits = vreinterpret_u32_u8(msbs);
+    bits = vsra_n_u32(bits, bits, 7);
+    bits = vsra_n_u32(bits, bits, 14);
+    uint8x8_t output = vreinterpret_u8_u32(bits);
+    return (vget_lane_u8(output, 4) << 4) | vget_lane_u8(output, 0);
 #endif
 }
 
@@ -2183,15 +2190,12 @@ FORCE_INLINE int _mm_movemask_ps(__m128 a)
     uint32x4_t tmp = vshrq_n_u32(input, 31);
     return vaddvq_u32(vshlq_u32(tmp, vld1q_s32(shift)));
 #else
-    // Uses the exact same method as _mm_movemask_epi8, see that for details.
-    // Shift out everything but the sign bits with a 32-bit unsigned shift
-    // right.
-    uint64x2_t high_bits = vreinterpretq_u64_u32(vshrq_n_u32(input, 31));
-    // Merge the two pairs together with a 64-bit unsigned shift right + add.
-    uint8x16_t paired =
-        vreinterpretq_u8_u64(vsraq_n_u64(high_bits, high_bits, 31));
-    // Extract the result.
-    return vgetq_lane_u8(paired, 0) | (vgetq_lane_u8(paired, 8) << 2);
+    // Note: Uses the same method as _mm_movemask_epi8.
+    uint32x4_t msbs = vshrq_n_u32(input, 31);
+    uint64x2_t bits = vreinterpretq_u64_u32(msbs);
+    bits = vsraq_n_u64(bits, bits, 31);
+    uint8x16_t output = vreinterpretq_u8_u64(bits);
+    return (vgetq_lane_u8(output, 8) << 2) | vgetq_lane_u8(output, 0);
 #endif
 }
 
@@ -4646,38 +4650,26 @@ FORCE_INLINE __m128d _mm_move_sd(__m128d a, __m128d b)
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_movemask_epi8
 FORCE_INLINE int _mm_movemask_epi8(__m128i a)
 {
-    // Use increasingly wide shifts+adds to collect the sign bits
-    // together.
-    // Since the widening shifts would be rather confusing to follow in little
-    // endian, everything will be illustrated in big endian order instead. This
-    // has a different result - the bits would actually be reversed on a big
-    // endian machine.
+    // Note: Everything will be illustrated in big-endian order.
 
     // Starting input (only half the elements are shown):
-    // 89 ff 1d c0 00 10 99 33
+    // 11111111 11111111 00000000 11111111 00000000 00000000 11111111 00000000
+    // ff       ff       00       ff       00       00       ff       00
     uint8x16_t input = vreinterpretq_u8_m128i(a);
 
-    // Shift out everything but the sign bits with an unsigned shift right.
-    //
-    // Bytes of the vector::
-    // 89 ff 1d c0 00 10 99 33
-    // \  \  \  \  \  \  \  \    high_bits = (uint16x4_t)(input >> 7)
-    //  |  |  |  |  |  |  |  |
-    // 01 01 00 01 00 00 01 00
-    //
-    // Bits of first important lane(s):
-    // 10001001 (89)
-    // \______
-    //        |
-    // 00000001 (01)
-    uint16x8_t high_bits = vreinterpretq_u16_u8(vshrq_n_u8(input, 7));
+    // Right-shift each 8-bit element by 7,
+    // effectively extracting the MSB into the LSB.
+    // (ff becomes a 01 | 11111111 becomes a 00000001)
+    uint8x16_t msbs = vshrq_n_u8(input, 7);
 
-    // Merge the even lanes together with a 16-bit unsigned shift right + add.
-    // 'xx' represents garbage data which will be ignored in the final result.
-    // In the important bytes, the add functions like a binary OR.
+    // Reinterpret 16x8-bit elements as 2x64-bit elements.
+    // (In our example, we only handle 1x64-bit element)
+    uint64x2_t bits = vreinterpretq_u64_u8(msbs);
+
+    // The bits B are shifted to the right by C and merged with A.
     //
     // 01 01 00 01 00 00 01 00
-    //  \_ |  \_ |  \_ |  \_ |   paired16 = (uint32x4_t)(input + (input >> 7))
+    //  \_ |  \_ |  \_ |  \_ |   bits = (uint64x1_t)(bits + (bits >> 7))
     //    \|    \|    \|    \|
     // xx 03 xx 01 xx 00 xx 02
     //
@@ -4685,13 +4677,9 @@ FORCE_INLINE int _mm_movemask_epi8(__m128i a)
     //        \_______ |
     //                \|
     // xxxxxxxx xxxxxx11 (xx 03)
-    uint32x4_t paired16 =
-        vreinterpretq_u32_u16(vsraq_n_u16(high_bits, high_bits, 7));
-
-    // Repeat with a wider 32-bit shift + add.
+    bits = vsraq_n_u64(bits, bits, 7);
     // xx 03 xx 01 xx 00 xx 02
-    //     \____ |     \____ |  paired32 = (uint64x1_t)(paired16 + (paired16 >>
-    //     14))
+    //     \____ |     \____ |   bits = (uint64x1_t)(bits + (bits >> 14))
     //          \|          \|
     // xx xx xx 0d xx xx xx 02
     //
@@ -4699,13 +4687,9 @@ FORCE_INLINE int _mm_movemask_epi8(__m128i a)
     //        \\_____ ||
     //         '----.\||
     // xxxxxxxx xxxx1101 (xx 0d)
-    uint64x2_t paired32 =
-        vreinterpretq_u64_u32(vsraq_n_u32(paired16, paired16, 14));
-
-    // Last, an even wider 64-bit shift + add to get our result in the low 8 bit
-    // lanes. xx xx xx 0d xx xx xx 02
-    //            \_________ |   paired64 = (uint8x8_t)(paired32 + (paired32 >>
-    //            28))
+    bits = vsraq_n_u64(bits, bits, 14);
+    // xx xx xx 0d xx xx xx 02
+    //            \_________ |   bits = (uint64x1_t)(bits + (bits >> 28))
     //                      \|
     // xx xx xx xx xx xx xx d2
     //
@@ -4713,15 +4697,16 @@ FORCE_INLINE int _mm_movemask_epi8(__m128i a)
     //     \   \___ |  |
     //      '---.  \|  |
     // xxxxxxxx 11010010 (xx d2)
-    uint8x16_t paired64 =
-        vreinterpretq_u8_u64(vsraq_n_u64(paired32, paired32, 28));
+    bits = vsraq_n_u64(bits, bits, 28);
 
-    // Extract the low 8 bits from each 64-bit lane with 2 8-bit extracts.
-    // xx xx xx xx xx xx xx d2
-    //                      ||  return paired64[0]
-    //                      d2
-    // Note: Little endian would return the correct value 4b (01001011) instead.
-    return vgetq_lane_u8(paired64, 0) | ((int) vgetq_lane_u8(paired64, 8) << 8);
+    // Reinterpret 2x64-bit elements as 16x8-bit elements.
+    uint8x16_t output = vreinterpretq_u8_u64(bits);
+
+    // Note: Little-endian would return the correct value 4b (01001011) instead.
+    int low = vgetq_lane_u8(output, 0);   // xxxxxxxx
+    int high = vgetq_lane_u8(output, 8);  // 11010010
+
+    return (high << 8) | low;  // 0000000 0000000 11010010 xxxxxxxx
 }
 
 // Set each bit of mask dst based on the most significant bit of the
@@ -8232,34 +8217,34 @@ SSE2NEON_GENERATE_AGGREGATE_EQUAL_ORDER(SSE2NEON_AGGREGATE_EQUAL_ORDER_)
 
 SSE2NEON_GENERATE_CMP_EQUAL_ORDERED(SSE2NEON_CMP_EQUAL_ORDERED_)
 
-#define SSE2NEON_CMPESTR_LIST                          \
-    _(CMP_UBYTE_EQUAL_ANY, cmp_byte_equal_any)         \
-    _(CMP_UWORD_EQUAL_ANY, cmp_word_equal_any)         \
-    _(CMP_SBYTE_EQUAL_ANY, cmp_byte_equal_any)         \
-    _(CMP_SWORD_EQUAL_ANY, cmp_word_equal_any)         \
-    _(CMP_UBYTE_RANGES, cmp_ubyte_ranges)              \
-    _(CMP_UWORD_RANGES, cmp_uword_ranges)              \
-    _(CMP_SBYTE_RANGES, cmp_sbyte_ranges)              \
-    _(CMP_SWORD_RANGES, cmp_sword_ranges)              \
-    _(CMP_UBYTE_EQUAL_EACH, cmp_byte_equal_each)       \
-    _(CMP_UWORD_EQUAL_EACH, cmp_word_equal_each)       \
-    _(CMP_SBYTE_EQUAL_EACH, cmp_byte_equal_each)       \
-    _(CMP_SWORD_EQUAL_EACH, cmp_word_equal_each)       \
-    _(CMP_UBYTE_EQUAL_ORDERED, cmp_byte_equal_ordered) \
-    _(CMP_UWORD_EQUAL_ORDERED, cmp_word_equal_ordered) \
-    _(CMP_SBYTE_EQUAL_ORDERED, cmp_byte_equal_ordered) \
-    _(CMP_SWORD_EQUAL_ORDERED, cmp_word_equal_ordered)
+#define SSE2NEON_CMPESTR_LIST                                  \
+    _SSE2NEON(CMP_UBYTE_EQUAL_ANY, cmp_byte_equal_any)         \
+    _SSE2NEON(CMP_UWORD_EQUAL_ANY, cmp_word_equal_any)         \
+    _SSE2NEON(CMP_SBYTE_EQUAL_ANY, cmp_byte_equal_any)         \
+    _SSE2NEON(CMP_SWORD_EQUAL_ANY, cmp_word_equal_any)         \
+    _SSE2NEON(CMP_UBYTE_RANGES, cmp_ubyte_ranges)              \
+    _SSE2NEON(CMP_UWORD_RANGES, cmp_uword_ranges)              \
+    _SSE2NEON(CMP_SBYTE_RANGES, cmp_sbyte_ranges)              \
+    _SSE2NEON(CMP_SWORD_RANGES, cmp_sword_ranges)              \
+    _SSE2NEON(CMP_UBYTE_EQUAL_EACH, cmp_byte_equal_each)       \
+    _SSE2NEON(CMP_UWORD_EQUAL_EACH, cmp_word_equal_each)       \
+    _SSE2NEON(CMP_SBYTE_EQUAL_EACH, cmp_byte_equal_each)       \
+    _SSE2NEON(CMP_SWORD_EQUAL_EACH, cmp_word_equal_each)       \
+    _SSE2NEON(CMP_UBYTE_EQUAL_ORDERED, cmp_byte_equal_ordered) \
+    _SSE2NEON(CMP_UWORD_EQUAL_ORDERED, cmp_word_equal_ordered) \
+    _SSE2NEON(CMP_SBYTE_EQUAL_ORDERED, cmp_byte_equal_ordered) \
+    _SSE2NEON(CMP_SWORD_EQUAL_ORDERED, cmp_word_equal_ordered)
 
 enum {
-#define _(name, func_suffix) name,
+#define _SSE2NEON(name, func_suffix) name,
     SSE2NEON_CMPESTR_LIST
-#undef _
+#undef _SSE2NEON
 };
 typedef uint16_t (*cmpestr_func_t)(__m128i a, int la, __m128i b, int lb);
 static cmpestr_func_t _sse2neon_cmpfunc_table[] = {
-#define _(name, func_suffix) _sse2neon_##func_suffix,
+#define _SSE2NEON(name, func_suffix) _sse2neon_##func_suffix,
     SSE2NEON_CMPESTR_LIST
-#undef _
+#undef _SSE2NEON
 };
 
 FORCE_INLINE uint16_t _sse2neon_sido_negative(int res,

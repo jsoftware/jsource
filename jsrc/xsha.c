@@ -34,7 +34,7 @@
 static const char *hex_digits = "0123456789abcdef";
 
 /* not null terminated */
-static UC* tohex(UC* dest, UC* src, I len)
+UC* tohex(UC* dest, UC* src, I len)
 {
   I i;
   UC* d = src;

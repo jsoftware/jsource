@@ -13,11 +13,19 @@
 #include "j.h"
 #include "x.h"
 
+extern UC* tohex(UC* dest, UC* src, I len);
+
 #include "../base64/include/libbase64.h"
-#if C_AVX2
+#if C_AVX512
+#define B64CODEC BASE64_FORCE_AVX512
+#elif C_AVX2
 #define B64CODEC BASE64_FORCE_AVX2
-#elif defined(__aarch64__)
+#elif defined(__aarch64__)||defined(__arm64__)||defined(_M_ARM64)||defined(_M_ARM64EC)
 #define B64CODEC BASE64_FORCE_NEON64
+#elif defined(ANDROID)&&(defined(__aarch32__)||defined(__arm__)||defined(_M_ARM))
+#define B64CODEC BASE64_FORCE_NEON32
+#elif defined(__APPLE__)&&(defined(__x86_64__)||defined(_M_X64))
+#define B64CODEC BASE64_FORCE_SSE42
 #else
 #define B64CODEC BASE64_FORCE_PLAIN
 #endif
@@ -200,14 +208,14 @@ ASSERT(rc==1&&(I)zlen==AN(z),EVDOMAIN);  // make sure no invalid input bytes
   //                            7     0 15     8 23    16
 
 DF2(jtxxhash2){F12IP;
-  I n;
+  I n,s;
   A z;
   UC *v;
-  F2RANK(0,1,jtxxhash2,self);  // do rank loop if necessary
-  n=AN(w);
-  v=UAV(w);
-  ASSERT(!n||AT(w)&LIT,EVDOMAIN);
-  I s=AV(a)[0];
+  if(AT(w)&NOUN){s=i0(a);} else {w=a; s=4;}
+  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // not sparse for now
+  ASSERT(((AT(w)&DIRECT)>0),EVNONCE);
+  n=AN(w)<<bplg(AT(w));
+  v=UCAV(w);
 
   /*
   1   XXH32
@@ -216,27 +224,30 @@ DF2(jtxxhash2){F12IP;
   4   XXH3_128bits
   */
 
-  switch(s) {
+  switch((s>0)?s:-s) {
   case 1: {
-    UI4 r = XXH32(v, n, 0);
-#if (defined(_WIN64)||defined(__LP64__))
-    z = sc((I)(I4)(r^-1L));  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
-#else
+    UC dh[2*4];
+    I4 r = XXH32(v, n, 0);  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
     z = sc(r);
-#endif
+    z = (s<0)?sc(r):str(2*4, tohex(dh,(UC*)&r,4));
   }
   break;
   case 2: {
-    z = sc((UI)XXH64(v, n, 0));
+    UC dh[2*8];
+    XXH64_hash_t r = XXH64(v, n, 0);
+    z = (s<0)?sc(r):str(2*8, tohex(dh,(UC*)&r,8));
   }
   break;
   case 3: {
-    z = sc((UI)XXH3_64bits(v, n));
+    UC dh[2*8];
+    XXH64_hash_t r = XXH3_64bits(v, n);
+    z = (s<0)?sc(r):str(2*8, tohex(dh,(UC*)&r,8));
   }
   break;
   case 4: {
+    UC dh[2*16];
     XXH128_hash_t r = XXH3_128bits(v, n);
-    z = str(16, (UC*)&r);
+    z = (s<0)?str(16, (UC*)&r):str(2*16, tohex(dh,(UC*)&r,16));
   }
   break;
   default:

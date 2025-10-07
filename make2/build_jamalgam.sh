@@ -368,7 +368,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
 
@@ -381,7 +380,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX512=1 "
  ;;
 
@@ -394,7 +392,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
@@ -405,7 +402,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
 
@@ -415,7 +411,6 @@ case $jplatform64 in
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP"
   SRC_ASM="${SRC_ASM_RASPI32}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
   FLAGS_BASE64=""
  ;;
 
@@ -426,7 +421,6 @@ case $jplatform64 in
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
@@ -441,7 +435,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
 
@@ -452,7 +445,6 @@ case $jplatform64 in
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
@@ -465,7 +457,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX512=1 "
  ;;
 
@@ -478,7 +469,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
@@ -489,7 +479,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
  
@@ -504,7 +493,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
 
@@ -515,7 +503,6 @@ case $jplatform64 in
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
@@ -528,7 +515,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX512=1 "
  ;;
 
@@ -541,7 +527,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
@@ -552,7 +537,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
  
@@ -563,7 +547,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC32}"
   GASM_FLAGS="-m32 $macmin"
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
   ;;
 
@@ -576,7 +559,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX512=1 "
  ;;
 
@@ -589,7 +571,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
@@ -600,7 +581,6 @@ case $jplatform64 in
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
@@ -611,7 +591,6 @@ case $jplatform64 in
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_ADVSIMD "
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
  ;;
 
@@ -622,7 +601,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
 
@@ -633,7 +611,6 @@ case $jplatform64 in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=" -DHAVE_SSE42=1 "
  ;;
 
@@ -661,7 +638,6 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_WIN32}"
   OBJS_ASM="${OBJS_ASM_WIN32}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
 
@@ -687,7 +663,6 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_WIN}"
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX512=1 "
  ;;
 
@@ -713,7 +688,6 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_WIN}"
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_AVX2 "
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
@@ -737,7 +711,6 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_WIN}"
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_SSE2 "
   FLAGS_BASE64=""
  ;;
 
@@ -758,7 +731,6 @@ case $jplatform64 in
  --embed-file ../../../../test/@/home/web_user/j/test "
   SRC_ASM=""
   GASM_FLAGS=""
-  FLAGS_SLEEF=" -DENABLE_VECEXT "    # broken in upstream
   FLAGS_BASE64=""
  ;;
 
@@ -777,7 +749,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-jamalgam obj/$jplatform64/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform64
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ] ; then
  if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi

@@ -179,7 +179,7 @@ OBJS=  \
 	$(CXX) -c $(CPPFLAGS) -o$@ $^
 
 %.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) $(CFLAGS_AESNI) $(CFLAGS_AESARM) $(CFLAGS_SLEEF) $(CFLAGS_BASE64)
+	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) $(CFLAGS_AESNI) $(CFLAGS_AESARM) $(CFLAGS_BASE64)
 
 %.o: %.S
 	$(CC) $(GASM_FLAGS) -c -o $@ $<

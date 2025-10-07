@@ -380,7 +380,7 @@ case $jplatform64 in
   OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_BASE64=" -DHAVE_AVX512=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
  linux/j64avx2*) # linux intel 64bit avx2
@@ -458,7 +458,7 @@ case $jplatform64 in
   OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_BASE64=" -DHAVE_AVX512=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
  openbsd/j64avx2*) # openbsd intel 64bit avx2
@@ -517,7 +517,7 @@ case $jplatform64 in
   OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
-  FLAGS_BASE64=" -DHAVE_AVX512=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
  freebsd/j64avx2*) # freebsd intel 64bit avx2
@@ -562,7 +562,7 @@ case $jplatform64 in
   OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
-  FLAGS_BASE64=" -DHAVE_AVX512=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
  darwin/j64avx2*) # darwin intel 64bit
@@ -669,7 +669,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_WIN}"
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
-  FLAGS_BASE64=" -DHAVE_AVX512=1 "
+  FLAGS_BASE64=" -DHAVE_AVX2=1 "
  ;;
 
  windows/j64avx2*) # windows intel 64bit avx2

@@ -2385,6 +2385,9 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #if C_AVX2 || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX2
 #undef C_CRC32C
 #define C_CRC32C 1
+#elif defined (__SSE4_2__)
+#undef C_CRC32C
+#define C_CRC32C 1
 #endif
 
 #define J struct JSTstruct *
@@ -2740,8 +2743,8 @@ static INLINE void aligned_free(void *ptr) {
 
 // The following definitions are used only in builds for the AVX instruction set
 // 64-bit Atom cpu in android has hardware crc32c but not AVX
-#elif C_CRC32C && (defined(_M_X64) || defined(__x86_64__))
-  #if C_AVX2 || defined(ANDROID)
+#elif C_CRC32C && (defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86))
+  #if C_AVX2 || defined(ANDROID) || defined (__SSE4_2__)
     #if defined(MMSC_VER)  // SY_WIN32
       // Visual Studio definitions
       #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4

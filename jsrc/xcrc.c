@@ -78,7 +78,7 @@ DF1(jtcrcfixedleft){F12IP;A h,*hv;I n;UINT*t,z;UC*v;
  R sc((I)(I4)(z^-1L));
 }
 
-// CRC-based hash.  Bivalent
+// 128!:8 CRC-based hash.  Bivalent
 #ifndef CRC32L
 #define CRC32L(acc,in) (0xffffffff&((acc*15015)^(in)))   // if no hardware CRC (rare), mix the bits a little
 #endif

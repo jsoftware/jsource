@@ -719,7 +719,20 @@ static DF1(jtdicdel){F12IP;
 // The tree is stored as child0/child1/parent, each a variable number of bytes.  The MSB of child0 is the color, 0=black
 // There is 1 tree node per key/value allocated
 // empty tree nodes are on the empty chain, with loopback at end of chain
-
+#define CHN(node,num) _bzhi_u64(*(UI4*)&hashtbl[(node)*nodeb+(num)*(nodexb>>16)],nodexb)   // get chain: 0=left 1=right 2=pdir
+#define LC(node) CHN(node,0)   // left chain
+#define RC(node) CHN(node,1)    // right chain
+#define PCLR(node) CHN(node,2)  // parent\clr
+#define CBYTE(node) hashtbl[(node)*nodeb+2*(nodexb>>16)]  // color byte (LSB=color)
+#define WCHN(node,num,val) {UI4 t=(val); WRHASH1234(t, nodexb>>16, &hashtbl[(node)*nodeb+(num)*(nodexb>>16)]);}
+#define WLC(node,val) WCHN(node,0,val)   // left chain
+#define WRC(node,val) WCHN(node,1,val)    // right chain
+#define WPCLR(node,val,clr) WCHN(node,2,2*(val)+clr)  // parent\clr
+#define ROT(par,chl,pardir) {UI gpar=PCLR(par)>>1; WCHN(gpar,(par)!=LC(gpar),chl) WPCLR(par,chl,CBYTE(par)&1) WCHN(chl,(pardir)^1,par) \
+     WCHN(par,pardir,CHN(chl,(pardir)^1)) WPCLR(CHN(chl,(pardir)^1),par,CBYTE(CHN(chl,(pardir)^1))&1) }
+#define LROT(par,chl) ROT(par,chl,0)  // rotate when child is left child of parent
+#define RROT(par,chl) ROT(par,chl,1)   //  rotate then child is right child of parent
+#define XCROT(par,parclr) {C pc=CBYTE(par), cc=CBYTE(CHN(par,(1^parclr))); CBYTE(par)=(pc&~1)+(cc&1); CBYTE(CHN(par,(1^parclr)))=(cc&~1)+(pc&1);}  // swap colors of parent and not-rotated child
 
 // ********************************** get **********************************
 
@@ -855,11 +868,11 @@ static scafINLINE I jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I l
  for(cur=nroot;cur>=0;){
   I8 nxthsh=s[cur];  // fetch chain\dir\treeslot of parent
 // obsolete   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
-  UI emptynxt=_bzhi_u64(*(UI4*)&hashtbl[emptyx*nodeb],nodexb); if(emptynxt==emptyx)goto resize;  // get next empty, abort if end of chain (indicated by loopback)
+  UI emptynxt=LC(emptyx); if(emptynxt==emptyx)goto resize;  // get next empty, abort if end of chain (indicated by loopback)
   PUTKVNEW(CAV(dic->bloc.keys)+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32,nodexb&(DICFICF<<8))
 ; PUTKVNEW(CAV(dic->bloc.vals)+emptyx*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,nodexb&(DICFICF<<8));
-  UI4 parent=2*nxthsh; WRHASH1234(parent, nodexb>>16, &hashtbl[emptyx*nodeb+(nodexb>>15)])  // new node is red, with parent where the search stopped
-  parent=0; WRHASH1234(parent, nodexb>>16, &hashtbl[emptyx*nodeb]) WRHASH1234(parent, nodexb>>16, &hashtbl[emptyx*nodeb+(nodexb>>16)])  // set both chilren empty
+  WPCLR(emptyx,nxthsh,0)  // new node is red, with parent where the search stopped
+  WLC(emptyx,0) WRC(emptyx,0)  // set both children empty
   cur=nxthsh>>33; emptyx=emptynxt;  // advance to next
  }
 
@@ -872,8 +885,8 @@ static scafINLINE I jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I l
   for(cur=nroot,emptyx=dic->bloc.emptyn;;){
    I8 nxthsh=s[cur];  // fetch chain\dir\treeslot
 // obsolete   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
-   UI emptynxt=_bzhi_u64(*(UI4*)&hashtbl[emptyx*nodeb],nodexb);   // get next empty, abort if end of chain (loopback)
-   WRHASH1234(emptyx, nodexb>>16, &hashtbl[(UI4)nxthsh*nodeb+(-((nxthsh>>32)&1)&(nodexb>>16))])  // install newly-allocated slot into the parent
+   UI emptynxt=LC(emptyx);    // get next empty, abort if end of chain (loopback)
+   WCHN((UI4)nxthsh,(nxthsh>>32)&1,emptyx)  // install newly-allocated slot into the parent
    if(nxthsh<0){ntail=cur; break;}   // when we hit tail, remember it & exit loop
    cur=nxthsh>>33; emptyx=emptynxt;  // advance to next
   }
@@ -899,9 +912,9 @@ static scafINLINE I jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I l
   }
 notfound:;
    // search ends at NULL, in s[cur] at direction comp.  Allocate a new empty, overwrite the NULL with it, move in the key, save the slot in s[cur] which is the first empty/tombstone found
-   emptyx=dic->bloc.emptyn; UI emptynxt=_bzhi_u64(*(UI4*)&hashtbl[emptyx*nodeb],nodexb); if(emptynxt==emptyx)goto resize; dic->bloc.emptyn=emptynxt; // get empty slot, save as biased kv slot#
-   UI4 parent=2*(UI4)s[cur]; WRHASH1234(parent, nodexb>>16, &hashtbl[emptyx*nodeb+(nodexb>>15)])  // new node is red, with parent where the search stopped
-   parent=0; WRHASH1234(parent, nodexb>>16, &hashtbl[emptyx*nodeb]) WRHASH1234(parent, nodexb>>16, &hashtbl[emptyx*nodeb+(nodexb>>16)])  // set both children empty
+   emptyx=dic->bloc.emptyn; UI emptynxt=LC(emptyx); if(emptynxt==emptyx)goto resize; dic->bloc.emptyn=emptynxt; // get empty slot, save as biased kv slot#
+   WPCLR(emptyx,2*(UI4)s[cur],0)  // new node is red, with parent where the search stopped
+   WLC(emptyx,0) WRC(emptyx,0)  // set both children empty
    PUTKVNEW(kbase+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32,nodexb&(DICFICF<<8));    // copy the new key.  Value can wait
    ((UI4*)(&s[cur]))[0]=emptyx;  // remember the biased slot the value must be moved into.  This changes s[i] from hashslot index to kv index
 found:;  // s[cur] has the kv slot: the found key, or the added empty kv slot
@@ -913,42 +926,31 @@ found:;  // s[cur] has the kv slot: the found key, or the added empty kv slot
  for(cur=nroot;cur>=0;){   // on new chain followed by conflict chain...
   I8 nxtkv=s[cur];
   // cur is an added node, initially red.  We look for red/black violations, going up the tree.  hash0 (parent of the root) is always red.
-  UI pclr=_bzhi_u64(*(UI4*)&hashtbl[cur*nodeb+(nodexb>>15)],nodexb);   // fetch parent\clr
+  UI pclr=PCLR(cur);   // fetch parent\clr
   while((pclr&1)==0){   // while we are looking at a red node... (when we get to a black node we are in sync)
-   UI sib=_bzhi_u64(*(UI4*)&hashtbl[(pclr>>1)*nodeb],nodexb);   // parent's left child (our putative sibling)
-   C sibc=hashtbl[sib*nodeb+(nodexb>>15)];   //   color of our sibling
+   UI sib=LC(pclr>>1);   // parent's left child (our putative sibling)
+   C sibc=CBYTE(sib);   //   color of our sibling
    if(sibc&1){UI t;  // parent's left child is black and we are red.  We must be the right child.  We cannot be the root
-    // left-leaning violation.  Exchange colors of cur (always red) & par.  Change sib <- par -> cur -> (c1,c2)  to  (sib,c1) <- par <- cur -> c2
-    UI parpclr=_bzhi_u64(*(UI4*)&hashtbl[(pclr>>1)*nodeb+(nodexb>>15)],nodexb);  // parent's parent\clr
-    t=2*(pclr>>1)+(parpclr&1); WRHASH1234(t, nodexb>>16, &hashtbl[cur*nodeb+(nodexb>>15)])  // cur's new parent is parent's parent, color is parent's clr
-    t=2*cur+0; WRHASH1234(t, nodexb>>16, &hashtbl[(pclr>>1)*nodeb+(nodexb>>15)])  // par's new parent is cur, color is cur's clr
-    UI c1=_bzhi_u64(*(UI4*)&hashtbl[cur*nodeb],nodexb); t=2*(pclr>>1)+(hashtbl[c1*nodeb+(nodexb>>15)]&1); WRHASH1234(t, nodexb>>16, &hashtbl[c1*nodeb+(nodexb>>15)])  // c1's new parent is par, keeping c1's color
-    t=c1; WRHASH1234(t, nodexb>>16, &hashtbl[(pclr>>1)*nodeb+(nodexb>>16)])  // c1 becomes par's right child
-    t=pclr>>1; WRHASH1234(t, nodexb>>16, &hashtbl[cur*nodeb])   // par becomes cur's left child
-    I parparleft=_bzhi_u64(*(UI4*)&hashtbl[(parpclr>>1)*nodeb],nodexb); t=cur; WRHASH1234(t, nodexb>>16, &hashtbl[(parpclr>>1)*nodeb+(parparleft!=cur)*(nodexb>>16)]) // parent's parent's left child; cur becomes correct child of parent's parent
-    cur=pclr>>1; pclr=parpclr;  // step back toward the root
+    // left-leaning violation.  Exchange colors of par & its right child.  Change sib <- par -> cur -> (c1,c2)  to  (sib,c1) <- par <- cur -> c2
+    XCROT(pclr>>1,0) LROT(pclr>>1,cur) 
+    cur=pclr>>1; pclr=PCLR(cur);  // step back toward the root
    }
    // cur and pclr are set
-   UI parpclr=_bzhi_u64(*(UI4*)&hashtbl[(pclr>>1)*nodeb+(nodexb>>15)],nodexb);   // parent's parent\clr
+   UI parpclr=PCLR(pclr>>1);   // parent's parent\clr
    if(parpclr&1)break;  // if parent is not red, there can't be a red-red vio, done
    // parent is red (red-red vio).  Can't be at root.   parpclr is  grandparent of cur.  Must be black since par-gpar can't be red-red
-   UI parsib=_bzhi_u64(*(UI4*)&hashtbl[(parpclr>>1)*nodeb+(nodexb>>16)],nodexb);  // grandparent's right child (putative sibling of parent)
-   C parsibc=hashtbl[parsib*nodeb+(nodexb>>15)];   //   color of parent's sibling
+   UI parsib=RC(parpclr>>1);  // grandparent's right child (putative sibling of parent)
+   C parsibc=CBYTE(parsib);   //   color of parent's sibling
    if(parsibc&1){UI t;
-    // par is red and its right sibling is black.  It must be the left child.  Exchange colors of gpar (always black) & par, change (c1,c2) <- par <- gpar -> parsib  to  c1 <- par -> gpar -> (c2,parsib)..  This clears the vio, because par becomes black
-    UI gparpclr=_bzhi_u64(*(UI4*)&hashtbl[(parpclr>>1)*nodeb+(nodexb>>15)],nodexb);  // gparent's parent\clr
-    t=2*(gparpclr>>1)+1; WRHASH1234(t, nodexb>>16, &hashtbl[(pclr>>1)*nodeb+(nodexb>>15)])  // par's new parent is gparent's parent, color is gparent's clr (black)
-    t=2*(pclr>>1)+0; WRHASH1234(t, nodexb>>16, &hashtbl[(parpclr>>1)*nodeb+(nodexb>>15)])  // gpar's new parent is par, color is par's clr (red)
-    UI c2=_bzhi_u64(*(UI4*)&hashtbl[cur*nodeb+(nodexb>>16)],nodexb); t=2*(parpclr>>1)+(hashtbl[c2*nodeb+(nodexb>>15)]&1); WRHASH1234(t, nodexb>>16, &hashtbl[c2*nodeb+(nodexb>>15)])  // c2's new parent is gpar, keeping c2's color
-    t=c2; WRHASH1234(t, nodexb>>16, &hashtbl[(parpclr>>1)*nodeb])  // c2 becomes gpar's left child
-    t=parpclr>>1; WRHASH1234(t,nodexb>>16,&hashtbl[(pclr>>1)*nodeb+(nodexb>>16)])   // gpar becomes par's right child
-    I parparleft=_bzhi_u64(*(UI4*)&hashtbl[(gparpclr>>1)*nodeb],nodexb); t=pclr>>1; WRHASH1234(t, nodexb>>16, &hashtbl[(parpclr>>1)*nodeb+(parparleft!=cur)*(nodexb>>16)]) // gpar's parent's left child; par becomes correct child of gpar's parent
-    break;  // vio is cleared
+    // par is red and its right sibling is black.  It must be the left child.
+    UI gparpclr=PCLR(parpclr>>1);  // gparent's parent\clr
+    XCROT(parpclr>>1,1) RROT(parpclr>>1,pclr>>1)   // Exchange colors of gpar (always black) & its right child, change (c1,c2) <- par <- gpar -> parsib  to  c1 <- par -> gpar -> (c2,parsib).
+    break;  // vio is cleared, because par becomes black
    }else{
     // both children of gpar are red.  Make them black and gpar red, and move up to gpar to continue looking for vio
-    hashtbl[(parpclr>>1)*nodeb+(nodexb>>15)]&=~1;   // make grandparent red
-    hashtbl[_bzhi_u64(*(UI4*)&hashtbl[(parpclr>>1)*nodeb],nodexb)*nodeb+(nodexb>>15)]|=1;   // make grandparent's left child black
-    hashtbl[_bzhi_u64(*(UI4*)&hashtbl[(parpclr>>1)*nodeb+(nodexb>>16)],nodexb)*nodeb+(nodexb>>15)]|=1;   // make grandparent's right child black
+    CBYTE(parpclr>>1)&=~1;   // make grandparent red
+    CBYTE(LC(parpclr>>1))|=1;   // make grandparent's left child black
+    CBYTE(RC(parpclr>>1))|=1;   // make grandparent's right child black
     cur=parpclr>>1;  // advance to new code
    }
 

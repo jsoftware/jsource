@@ -1,7 +1,7 @@
 cocurrent <'z'
 3 : 0 ''
 
-JLIB=: '9.7.4'
+JLIB=: '9.7.5'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -343,8 +343,9 @@ end.
 if. 0 e. #nms do. return. end.
 
 if. #t=. x -. ' ' do.
-  'n s l'=. '~*_' e. t
-  t=. t -. '~*_'
+  'n s'=. '~*' e. t
+  l=. '_' = {.t
+  t=. }.^:l t -. '~*'
   b=. t&E. &> nms
   if. s do. b=. +./"1 b
   else. b=. {."1 b end.

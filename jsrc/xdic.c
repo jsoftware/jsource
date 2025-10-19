@@ -106,7 +106,7 @@ typedef struct ADic {
   A hash;  // the hash table, rank 1  Note: This pointer may be stale.  MUST use voidAV1 to point to hash, and use only PREFETCH until you get a lock
   A keys;  // array of keys
   A vals;   // array of values
-  A empty;  // LIT shape (maxeles,hashelesiz).  occupied kvs are -1; empties are in a chain that loops to itself at the end, rank 1
+  A empty;  // LIT shape (maxeles,hashelesiz).  occupied kvs are -1; empties are in a chain that loops to itself at the end, rank 1.  0 for red/black
   // end of first cacheline.  Following are unchanging
   A kshape;   // shape of a key, always accessed by AAV1
   A vshape;  // shape of a value, always accessed by AAV1
@@ -128,7 +128,7 @@ typedef struct ADic {
 // 4 bytes free
   // end of second cacheline.  Following changed only by put/del
   UI cardinality;  // number of kvs in the hashtable
-  UI emptyn;  // index to next empty kv.  EOC loops back on itself.  Resize when empty
+  UI emptyn;  // index to next empty kv/treeslot.  EOC loops back on itself.  Resize when empty
   I filler2[SY_64?6:3];  // pad to cacheline (24 words on each system).
  } bloc;
 } DIC;
@@ -140,6 +140,7 @@ typedef struct ADic {
 // u is the hash/compare verb OR the DIC block for a dictionary that is being resized.
 // y is (min #eles,max #eles,#hashslots);(flags, currently empty);(key type;key shape);(value type;value shape)    to create a new dictionary
 //      (min #eles,max #eles,#hashslots)   when a dictionary is being resized
+//     if #hashslots is omitted, the map is a red/black tree
 // result is DIC to use, ready for get/put, with hash/keys/vals/empty allocated, and 0 valid kvs
 static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  ARGCHK1(w);
@@ -182,17 +183,25 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  }
 
  // box has the size parameters.  Audit & install into dic, overwriting anything that was copied.  But keep the 
- ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==3,EVLENGTH) if(!AT(box)&INT)RZ(box=ccvt(INT,box,0));  // sizes. must be box of 3 integers
- I hashsiz=((DIC*)z)->bloc.hashsiz=IAV(box)[2];   // move hashsiz, which overwrites flags/lgminsiz/hashelesiz
+ ASSERT(AR(box)<=1,EVRANK) ASSERT(BETWEENC(AN(box),2,3),EVLENGTH) if(!AT(box)&INT)RZ(box=ccvt(INT,box,0));  // sizes. must be box of 3 integers
+ I redblack=AN(box)==2;  // if only min,max, that's a red/blck tree
+ I hashsiz=((DIC*)z)->bloc.hashsiz=IAV(box)[2-redblack];   // move hashsiz, which overwrites flags/lgminsiz/hashelesiz
  ((DIC*)z)->bloc.lgminsiz=CTLZI(UIAV(box)[0]|1); I maxeles=IAV(box)[1]; ASSERT(maxeles>0,EVDOMAIN)   // save min size, get max# eles
  ASSERT(hashsiz>(maxeles+(maxeles>>4)),EVDEADLOCK)  // min, max, hash sizes.  Hash at least 6% spare
  I hashelesiz=((DIC*)z)->bloc.hashelesiz=(CTLZI(maxeles+4-1)+1+(BB-1))>>LGBB;  // max slot#, plus 4 (empty/tombstone/birthstone).  Subtract 1 for max code point.  top bit#+1 is #bits we need; round that up to #bytes
  ((DIC*)z)->bloc.flags=flags;   // restore flags
 
  // allocate & protect hash/keys/vals/empty
- GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,voidAV1(box),MEMSET00LEN,MEMSET00); ((DIC*)z)->bloc.hash=box;  // allocate hash table & fill with empties
- GATV0(box,LIT,maxeles*hashelesiz,2) AS(box)[0]=maxeles; AS(box)[1]=hashelesiz; INCORPNV(box) void *ev=voidAV2(box); DO(maxeles-1, *(I*)ev=i+1; ev=(void *)((I)ev+hashelesiz);)   // allocate empty list & chain empties together
- *(I*)ev=maxeles-1; ((DIC*)z)->bloc.empty=box; // install end of chain loopback and point the dic to beginning of chain
+ // hashtbl is hashelsiz per entry, with empties separate in a table nxhashelesiz per entry
+ // redblack has no empty table, and the tree (=hash) has shape nx2xhashelesiz (the LSB of indexes is 0)
+ hashelesiz*=1+redblack;   // length of tree/hash entry
+ GATV0(box,LIT,maxeles*hashelesiz,2+redblack) AS(box)[0]=maxeles; AS(box)[1]=2; AS(box)[1+redblack]=hashelesiz; INCORPNV(box) void *ev=voidAVn(2+redblack,box); DO(maxeles-1, *(I*)ev=i+1; ev=(void *)((I)ev+hashelesiz);)   // allocate empty list & chain empties together
+ *(I*)ev=maxeles-1; // install end of chain loopback and point the dic to beginning of chain
+ if(redblack){((DIC*)z)->bloc.hash=box; ((DIC*)z)->bloc.empty=2; ((DIC*)z)->bloc.emptyn=0; IAVn(3,box)[0]=2*0+1; IAVn(3,box)[1]=2*0+0;// red/black has empty tree.  parent of root is red NULL.  empty list starts after rootparent
+ }else{
+  ((DIC*)z)->bloc.empty=box; ((DIC*)z)->bloc.emptyn=0;  // hash: install empty chain, biased to real hashslots
+  GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,voidAV1(box),MEMSET00LEN,MEMSET00); ((DIC*)z)->bloc.hash=box;  // allocate hash table & fill with empties
+ }
  I t=((DIC*)z)->bloc.ktype; A sa=((DIC*)z)->bloc.kshape;   // key type & shape
  GA0(box,t,maxeles*((DIC*)z)->bloc.kaii,AN(sa)+1) AFLAG(box)=t&RECURSIBLE; INCORPNV(box) AS(box)[0]=maxeles; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.keys=box;   // allocate array of keys, recursive
  t=((DIC*)z)->bloc.vtype; sa=((DIC*)z)->bloc.vshape;   // key type & shape
@@ -719,6 +728,7 @@ static DF1(jtdicdel){F12IP;
 // The tree is stored as child0/child1/parent, each a variable number of bytes.  The MSB of child0 is the color, 0=black
 // There is 1 tree node per key/value allocated
 // empty tree nodes are on the empty chain, with loopback at end of chain
+#if 0 // obsolete 
 #define CHN(node,num) _bzhi_u64(*(UI4*)&hashtbl[(node)*nodeb+(num)*(nodexb>>16)],nodexb)   // get chain: 0=left 1=right 2=pdir
 #define LC(node) CHN(node,0)   // left chain
 #define RC(node) CHN(node,1)    // right chain
@@ -733,6 +743,26 @@ static DF1(jtdicdel){F12IP;
 #define LROT(par,chl) ROT(par,chl,0)  // rotate when child is left child of parent
 #define RROT(par,chl) ROT(par,chl,1)   //  rotate then child is right child of parent
 #define XCROT(par,parclr) {C pc=CBYTE(par), cc=CBYTE(CHN(par,(1^parclr))); CBYTE(par)=(pc&~1)+(cc&1); CBYTE(CHN(par,(1^parclr)))=(cc&~1)+(pc&1);}  // swap colors of parent and not-rotated child
+#endif
+
+#define RDIR(node,dir) (*(UI4*)&hashtbl[((node)+(dir))*(nodeb>>16)]&_bzhi_u64(~(UI8)1,nodeb))
+#define DLRC(name) UI8 name##ch; UI name##l,name##r,name##c;  // declare names for chrn etc
+#define RLRC(name,node) name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>16)]; name##l=name##ch&_bzhi_u64(~(UI8)1,nodeb); name##r=(name##ch>>(nodeb))&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;
+#define DRLRC(name,node) DLRC(name) RLRC(name,node)
+#define DNFC(name) UI8 name##ch; UI name##n,name##f,name##c;  // declare names for chrn, near, far,clr etc
+#define RNFC(name,node,dir) {name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>16)]; I ns=dir?(C)nodeb:0, fs=dir?0:(C)nodeb; name##n=(name##ch>>ns)&_bzhi_u64(~(UI8)1,nodeb); name##f=(name##ch>>fs)&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;}
+#define DRNFC(name,node,dir) DNFC(name) RNFC(name,node,dir)
+#define SIB(node,lnode,rnode) ((lnode)^(rnode)^(node))  // sibling of current node
+#define WLRC(node,num,val,clr) {UI4 t=(val)+(num); WRHASH1234(t, nodeb, &hashtbl[((node)+(num))*(nodeb>>16)]);}
+#define WLC(node,val,clr) WLRC(node,0,val,clr)   // left chain+color
+#define WR(node,val) WLRC(node,1,val,0)    // right chain
+#define CBYTE(node) hashtbl[(node)*(nodeb>>16)]  // color byte (LSB=color)
+// rotate par[dir], into par.  par matches pdir[pi-1].  par##f is new root (sibling), par##n is curr node
+// par has been fetched with DRNFC, and its direction is (dir)
+#define ROT(par,dir) WLRC(par,(dir)^1,RDIR(par##f,(dir)^1),par##c) \
+ WLRC(par##f,(dir),par,par##c) \
+ WLRC(pdir[pi-2]&~1,pdir[pi-2]&1,par##f,CBYTE(pdir[pi-2]&~1)&1)
+
 
 // ********************************** get **********************************
 
@@ -743,30 +773,37 @@ static DF1(jtdicdel){F12IP;
 static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
  I lv; DICLKRDRQ(dic,lv);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
- UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I   size of a value in bytes 
- k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
- I nodeb=3*dic->bloc.hashelesiz; I nodexb=nodeb*SZI+(dic->bloc.flags<<8);  // number of bytes in a tree node; number of bits in a node index, with flag bits for DICFICF
+ UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
+ I nodeb=dic->bloc.hashelesiz*(0x10000+SZI)+(dic->bloc.flags<<8);  // number of bytes in a tree node; (#bytes in node index)\(flags)\(number of bits in a node index)
+ DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
  DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
- C *hashtbl=CAV1(dic->bloc.hash);  // pointer to tree base
- I rootx=_bzhi_u64(*(UI4*)hashtbl,nodexb);  // biased node# of the root of the tree
+ C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*nodeb;  // pointer to tree base
  C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals)-TREENRES*vn;  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
 
- if(unlikely(!(nodexb&(DICFICF<<8))))biasforcomp
-
- // Look up each key.  Prefetch each value to get a leg up on moving the data.  We don't prefetch more to avoid needless bus bandwidth; perhaps we should check the length   scaf
-    // the only advantage of the prefetch is that the value reads will clear earlier, allowing the fence when we end our lock to finish earlier
- for(i=n;--i>=0;){I nodex;
-  k=(void*)((I)k-(kib>>32));  // back up to next key
+ // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
+ // Because we don't store parent info, we have to do each ket separately, which requires keeping a write
+ // lock after the first key.
+ void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
+ I vb=dic->bloc.vbytelen;   //  len of 1 value
+ for(i=0;i<n;++i){I nodex;
+  UI8 childs;  // both children
+  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
+  UI rootx=_bzhi_u64(*(UI4*)hashtbl,nodeb);  // biased node# of the root of the tree
+  I comp=1;  // will be compare result.  The root is considered to have compared low
+  // the root is pointed to by hash0/dir0.  In an empty database hash0/dir0=0.  In that case we fiddle things so that the first key is called new and the others are called conflict.  They all point to
+  // hash0/dir0 as the end-of-search point.  The new will fill hash0/dir0 with a node, and the rest will start their search at that node, which is the true root of the tree.
+  if(unlikely(rootx<TREENRES))break; // empty database: nothing to do
   for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
-   if(unlikely(nodex<TREENRES))break;  // not found
-   I childs=*(I8*)&hashtbl[nodex*nodeb];  // fetch both children
-   I comp=keysne((UI4)kib,kbase+(kib>>32)*nodex,k,nodexb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
-   if(comp==0){PREFETCH(vbase+nodex*vn); break;}  // found at node nodex.  Start a prefetch of  the value
-   nodex=_bzhi_u64(childs>>(nodexb&comp),nodexb);  // choose left/right based on comparison, mask out garb.
+   childs=*(UI8*)&hashtbl[nodex*(nodeb>>16)];  // fetch both children
+   s[i]=nodex;  // remember the node where we checked, freeing the register
+   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),ki,nodeb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
+   if(comp==0){PREFETCH(vbase+(s[i]>>1)*vn); break;}  // found at node nodex.  childs have the children, parent the parent\dir (also in pdir[])
+   nodex=(childs>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
+   if(unlikely(nodex<TREENRES)){s[i]=0; break;}  // not found.  Set s[i] that way
   }
-  s[i]=nodex;  // remember where the search ended
+  ki=(void *)ki-(kib>>32);  // back up to next key
  }
 
  // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore    scaf overstore
@@ -787,7 +824,7 @@ static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VI
    }
    vv=av;    // use the default after it has been audited
   }
-  GETV(zv,vv,vn,nodexb&(DICFICF<<8)); zv=(void *)((I)zv+vn);   // move the data & advance popinter to next one   scaf JMC?
+  GETV(zv,vv,vn,nodeb&(DICFICF<<8)); zv=(void *)((I)zv+vn);   // move the data & advance popinter to next one   scaf JMC?
   cur=nxt;
  }
  R 1;
@@ -828,146 +865,80 @@ static DF2(jtdicgeto){F12IP;A z;
 static scafINLINE I jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
- I nodeb=3*dic->bloc.hashelesiz; I nodexb=nodeb*(0x10000+SZI)+(dic->bloc.flags<<8);  // number of bytes in a tree node; (#bytes in node index)\(flags)\(number of bits in a node index)
+ I nodeb=dic->bloc.hashelesiz*(0x10000+SZI)+(dic->bloc.flags<<8);  // number of bytes in a tree node; (#bytes in node index)\(flags)\(number of bits in a node index)
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*nodeb;  // pointer to tree base
- I rootx=_bzhi_u64(*(UI4*)hashtbl,nodexb);  // biased node# of the root of the tree
  C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
 
- if(unlikely(!(nodexb&(DICFICF<<8))))biasforcomp
-
- // first pass over keys.  If key found, remember the biased kv# (will go to old chain).  If not found, remember the index of the NUL and make it a birthstone - will go to new or conflict chain
- // If there is match we will find it before we take the write lock.
- // We have to go in ascending order because later keys must overwrite earlier ones
- void *ki=k;  // pointer to key being compared
- for(i=0;i<n;++i){I nodex;
-  I comp;  // will be compare result
+ // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
+ // Because we don't store parent info, we have to do each ket separately, which requires keeping a write
+ // lock after the first key.
+ void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
+ I vb=dic->bloc.vbytelen;   //  len of 1 value
+ for(i=0;i<n;++i){UI nodex;
+  UI8 childs;  // both children
+  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
+  UI4 pdir[64]; I pi=0;   // parent/direction history; next slot to fill
+  UI parent=0, rootx=_bzhi_u64(*(UI4*)hashtbl,nodeb);  // biased node# of the root of the tree
+  I comp=1;  // will be compare result.  The root is considered to have compared low
   // the root is pointed to by hash0/dir0.  In an empty database hash0/dir0=0.  In that case we fiddle things so that the first key is called new and the others are called conflict.  They all point to
   // hash0/dir0 as the end-of-search point.  The new will fill hash0/dir0 with a node, and the rest will start their search at that node, which is the true root of the tree.
-  if(unlikely(rootx<TREENRES)){s[i]=1; rootx=i!=0; comp=1;}  // empty database: s[i]=1 to avoid modifying tree0, set conflict except on first key, direction always 0
+  if(unlikely(rootx<TREENRES))break; // empty database: nothing to do
   for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
-   if(unlikely(nodex<TREENRES)){hashtbl[s[i]*nodeb]=1; ((I4*)(&s[i]))[1]=2*comp+(nodex&1); break;}  // not found.  Top half is comp\conflict
-   I childs=*(I8*)&hashtbl[nodex*nodeb];  // fetch both children
-   s[i]=nodex;  // current node may become found loc or end of search, init as if found
-   comp=keysne((UI4)kib,kbase+(kib>>32)*nodex,ki,nodexb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
-   if(comp==0){break;}  // found at node nodex.
-   nodex=_bzhi_u64(childs>>(nodexb&comp),nodexb);  // choose left/right based on comparison, mask out garb.
+   childs=*(UI8*)&hashtbl[nodex*(nodeb>>16)];  // fetch both children
+   pdir[pi++]=parent+SGNTO0(comp);  // stack parent/dir going into nodex
+   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),ki,nodeb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
+   if(comp==0){nodex|=1; goto finput;}  // found at node nodex.  childs have the children, parent the parent\dir (also in pdir[])
+   parent=nodex;  // we will fetch again.  remember the parent of the next fetch
+   nodex=(childs>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
+   if(unlikely(nodex<TREENRES))break;  // not found.
   }
-  ki=(void *)((I)ki+(kib>>32));  // advance to next search key
- }
+  // Add the new node as parent[comp], with color red.  parent[pi-1] matches parent
+  nodex=dic->bloc.emptyn;  // next slot to allocate... (bit 0 always clear)
+  UI parentd=SGNTO0(comp);  // parent's direction
+  UI emptynxt=RDIR(nodex,0)&~1;  // ...and its successor
+  if(emptynxt==nodex)goto resize;  // if chained to self, that's end of chain, resize
+  dic->bloc.emptyn=emptynxt;   // set new head of free chain
+  WLC(nodex,0,0) WR(nodex,0)   // new node is empty red
+  WLRC(parent,SGNTO0(comp),nodex,CBYTE(parent)&1)  // set as parent[comp], leaving parent color
 
- if(unlikely(!(nodexb&(DICFICF<<8))))unbiasforcomp
- // pass slot# back to front, putting them into 3 chains: new kvs, old keys, conflict keys.  Conflict keys are assumed vary rare (multiple keys in a small range)
- // The chain element has (31 bits of chain)\(1 bit indicating which child was null (used only for new and conflict chains))\(32 bits of node index)
- I nroot=-1, oroot=-1, croot=-1, otail=0;   // base of the 3 chains, inited to empty; tail of old chain, inited to 'not found yet' (safe even if result turns out to be 0)
- DQ(n, UI4 sh=((UI4*)(&s[i]))[1]; UI dir=sh>>31; if(unlikely(sh&1)){((UI4*)(&s[i]))[1]=2*croot+dir; croot=i;}else{((I4*)(&s[i]))[1]=2*(sh?nroot:oroot)+dir; nroot=sh?i:nroot; oroot=sh?oroot:i; otail=sh|otail?otail:i;})
-
- // chase the new kvs, initing an empty slot for each and copying the k and v into the tables. s[] holds chain\hashslot
- I vb=dic->bloc.vbytelen; UI emptyx=dic->bloc.emptyn; I cur;  // current headptr of free node chain.  Length of an element is nodeb
- for(cur=nroot;cur>=0;){
-  I8 nxthsh=s[cur];  // fetch chain\dir\treeslot of parent
-// obsolete   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
-  UI emptynxt=LC(emptyx); if(emptynxt==emptyx)goto resize;  // get next empty, abort if end of chain (indicated by loopback)
-  PUTKVNEW(CAV(dic->bloc.keys)+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32,nodexb&(DICFICF<<8))
-; PUTKVNEW(CAV(dic->bloc.vals)+emptyx*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,nodexb&(DICFICF<<8));
-  WPCLR(emptyx,nxthsh,0)  // new node is red, with parent where the search stopped
-  WLC(emptyx,0) WRC(emptyx,0)  // set both children empty
-  cur=nxthsh>>33; emptyx=emptynxt;  // advance to next
- }
-
- DICLKWRRQ(dic,lv); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put rq up a little earlier
-
- // chase the new kvs again, installing the allocated kvslot#, which we get by retraversing the empties list, into the correct child field of the ending NULL, thus adding it to the tree.  s[] holds chain\dir\treeslot
-     // traversing a linked list sucks, but two at a time are no worse than 1, and the variable-length writes take a little time
- I ntail;  // tail of new chain
- if(nroot>=0){
-  for(cur=nroot,emptyx=dic->bloc.emptyn;;){
-   I8 nxthsh=s[cur];  // fetch chain\dir\treeslot
-// obsolete   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
-   UI emptynxt=LC(emptyx);    // get next empty, abort if end of chain (loopback)
-   WCHN((UI4)nxthsh,(nxthsh>>32)&1,emptyx)  // install newly-allocated slot into the parent
-   if(nxthsh<0){ntail=cur; break;}   // when we hit tail, remember it & exit loop
-   cur=nxthsh>>33; emptyx=emptynxt;  // advance to next
+  // Go up through the tree, stopping when we get past the red violations or we see a way out
+  UI gparent, gparentd, uncle;  // grandparent info for nodex, & uncle
+  while(1){
+   // at top of loop nodex (directed chgild of parent) is red
+   if(CBYTE(parent)&1)goto finput;  // parent black: no red vio, finished
+   gparent=pdir[pi-2]; gparentd=gparent&1; gparent=gparent&~1;   // grandparent\dir
+   if(gparent==0){CBYTE(parent)|=1; goto finput;}  // no grandparent; safe to make parent (the root) black
+   uncle=RDIR(gparent,gparentd^1);  // get parent's sibling (w/o dir)
+   if(CBYTE(uncle)&1)break;  // if uncle is black,  we can get out
+   nodex=gparent;  // the node we are working on, always red
+   parent=pdir[pi-3]; parentd=parent&1; parent&=~1;  // back up to parent
+   pi-=2;  // we pop up to the grandparent
   }
- }
- dic->bloc.emptyn=emptyx;  // We have allocated all the new blocks successfully.  Update the free root
-
- // chase the conflict keys (in ascending order), updating everything.  They should be few.  For ones found to be new kvs, also take an empty slot & update the keys.  Leave values in the conflict chain, in ascending order.  s[] holds chain\dir\treeslot
- // Since the original search searched all the way looking for a match, we know that the only match must come from a previous key in this put.
- if(unlikely(!(nodexb&(DICFICF<<8))))biasforcomp
- for(cur=croot;cur>=0;){I nodex;
-  I comp;  // will be compare result
-  void *ki=(void*)((I)k+i*(kib>>32));  // key being sought
-  // the database cannot be empty here.  If it started empty, the first put was made into a new node pointed to by hash0/dir0.  Initial cur puts into an empty database will start these searches there.
-  I8 nxthsh=s[cur];  // fetch chain\dir\hashslot where search ended.  It must perforce have been filled by a pointer to an empty
-  I childs;  // the two children
-  for(childs=*(I8*)&hashtbl[(UI4)nxthsh*nodeb], comp=2*((nxthsh>>32)&1)-1;;){  // traverse the tree, searching for index k.  Current node is nodex
-   nodex=_bzhi_u64(childs>>(nodexb&comp),nodexb);  // choose left/right based on comparison, mask out garb.
-   if(nodex<TREENRES){goto notfound;}  // not found.  Will be new or conflict
-   I childs=*(I8*)&hashtbl[nodex*nodeb];  // fetch both children
-   ((I4*)(&s[cur]))[0]=nodex;  // current node may become found loc or end of search, init as if found
-   comp=keysne((UI4)kib,kbase+(kib>>32)*nodex,ki,nodexb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
-   if(comp==0){goto found;}  // found at node nodex.
+  // node is red, parent is red, grandparent & uncle are black.  We can get out in 2 rotations.
+  if(gparentd!=parentd){
+   // nodex is an inner child, i. e. left child of right child or the reverse.  Rotate nodex to where the parent is.
+   DRNFC(parent,parent,parentd)
+   ROT(parent,parentd)  // rotate inner child to parent
   }
-notfound:;
-   // search ends at NULL, in s[cur] at direction comp.  Allocate a new empty, overwrite the NULL with it, move in the key, save the slot in s[cur] which is the first empty/tombstone found
-   emptyx=dic->bloc.emptyn; UI emptynxt=LC(emptyx); if(emptynxt==emptyx)goto resize; dic->bloc.emptyn=emptynxt; // get empty slot, save as biased kv slot#
-   WPCLR(emptyx,2*(UI4)s[cur],0)  // new node is red, with parent where the search stopped
-   WLC(emptyx,0) WRC(emptyx,0)  // set both children empty
-   PUTKVNEW(kbase+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32,nodexb&(DICFICF<<8));    // copy the new key.  Value can wait
-   ((UI4*)(&s[cur]))[0]=emptyx;  // remember the biased slot the value must be moved into.  This changes s[i] from hashslot index to kv index
-found:;  // s[cur] has the kv slot: the found key, or the added empty kv slot
-  cur=nxthsh>>33;  // advance to next
+  
+  DRNFC(gparent,gparent,gparentd)  // read children to rotate
+  ROT(gparent,gparentd)  // rotate original red nodex over black grandparent
+  CBYTE(gparent)&=~1; CBYTE(nodex)|=1;  // make nodex black, gparent red, removing the violation
+  goto finput;  // finished
+
+finput:;  // install the new value, and maybe the key, at nodex
+          // if LSB of nodex is set, suppress copying the key
+  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp
+  if(!(nodex&1))PUTKVNEW(CAV(dic->bloc.keys)+(nodex>>1)*(kib>>32),ki,kib>>32,nodeb&(DICFICF<<8))
+; PUTKVNEW(CAV(dic->bloc.vals)+(nodex>>1)*vb,(void*)((I)v+(likely(i<vn)?i:i%vn)*vb),vb,nodex&(DICFICF<<8));
+
+
+
+  ki=(void *)((I)ki-(kib>>32));  // advance to next search key
  }
-
- // rebalance the tree, starting at each addition made by new or conflict.  We unnecessarily look at conflict-old keys that are still in the conflict chain, but they should be rare (only rewrites within a single batch) & not worth discarding
- if(croot>=0)((I4*)(&s[ntail]))[1]=croot;  // append conflict chain to new chain.  If conflict chain is nonempty so must new be, so ntail will be valid whenever we store through it
- for(cur=nroot;cur>=0;){   // on new chain followed by conflict chain...
-  I8 nxtkv=s[cur];
-  // cur is an added node, initially red.  We look for red/black violations, going up the tree.  hash0 (parent of the root) is always red.
-  UI pclr=PCLR(cur);   // fetch parent\clr
-  while((pclr&1)==0){   // while we are looking at a red node... (when we get to a black node we are in sync)
-   UI sib=LC(pclr>>1);   // parent's left child (our putative sibling)
-   C sibc=CBYTE(sib);   //   color of our sibling
-   if(sibc&1){UI t;  // parent's left child is black and we are red.  We must be the right child.  We cannot be the root
-    // left-leaning violation.  Exchange colors of par & its right child.  Change sib <- par -> cur -> (c1,c2)  to  (sib,c1) <- par <- cur -> c2
-    XCROT(pclr>>1,0) LROT(pclr>>1,cur) 
-    cur=pclr>>1; pclr=PCLR(cur);  // step back toward the root
-   }
-   // cur and pclr are set
-   UI parpclr=PCLR(pclr>>1);   // parent's parent\clr
-   if(parpclr&1)break;  // if parent is not red, there can't be a red-red vio, done
-   // parent is red (red-red vio).  Can't be at root.   parpclr is  grandparent of cur.  Must be black since par-gpar can't be red-red
-   UI parsib=RC(parpclr>>1);  // grandparent's right child (putative sibling of parent)
-   C parsibc=CBYTE(parsib);   //   color of parent's sibling
-   if(parsibc&1){UI t;
-    // par is red and its right sibling is black.  It must be the left child.
-    UI gparpclr=PCLR(parpclr>>1);  // gparent's parent\clr
-    XCROT(parpclr>>1,1) RROT(parpclr>>1,pclr>>1)   // Exchange colors of gpar (always black) & its right child, change (c1,c2) <- par <- gpar -> parsib  to  c1 <- par -> gpar -> (c2,parsib).
-    break;  // vio is cleared, because par becomes black
-   }else{
-    // both children of gpar are red.  Make them black and gpar red, and move up to gpar to continue looking for vio
-    CBYTE(parpclr>>1)&=~1;   // make grandparent red
-    CBYTE(LC(parpclr>>1))|=1;   // make grandparent's left child black
-    CBYTE(RC(parpclr>>1))|=1;   // make grandparent's right child black
-    cur=parpclr>>1;  // advance to new code
-   }
-
-  }
-
-  cur=nxtkv>>33;
- }
-
- DICLKWRRELK(dic,lv)    // allow gets to look at hashtable & keys.  We still have a write lock
-
- // we have updated the keys and hash.  Now move the values, indexed by s[i] (biased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
- C *vbase=CAV(dic->bloc.vals)-TREENRES*vb;   // base pointer to allocated values, backed up to skip over the empty/birthstone/tombstone codes
- ((I4*)(&s[otail]))[1]=croot; oroot=oroot<0?croot:oroot;  // append conflict chain to old chain (if old chain is empty otail=0, which is OK to store into because ele 0 can never be a conflict); start on combined chain
- for(cur=oroot;cur>=0;){I8 nxtkv=s[cur]; PUTKVOLD(vbase+(UI4)nxtkv*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,nodexb&(DICFICF<<8)); cur=nxtkv>>33;} // chase the old keys, copying the value
-// obsolete  for(cur=croot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; PUTKVOLD(vbase+kvslot*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE)); cur=nxt;} // chase the conflict keys, copying the value
- R 1;  // return, holding write lock on values
-
+R 0;
 resize: R -1;  // signal need for resize; return holding write lock on keys & values
 }
 
@@ -1006,26 +977,167 @@ abortexit:;
 }
 
 
+// del
+
+// k is A for keys,
+// resolve each key in the hash and delete them
+// We have requested a prewrite lock; we may even have a full write lock on the keys and value
+// return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
+static scafINLINE I jtdelslotso(DIC *dic,void *k,I n,J jt,I lv,VIRT virt){I i;
+ if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
+ UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
+ I nodeb=dic->bloc.hashelesiz*(0x10000+SZI)+(dic->bloc.flags<<8);  // number of bytes in a tree node; (#bytes in node index)\(flags)\(number of bits in a node index)
+ DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+
+ C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*nodeb;  // pointer to tree base
+ C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+
+ // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
+ // Because we don't store parent info, we have to do each ket separately, which requires keeping a write
+ // lock after the first key.
+ void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
+ for(i=0;i<n;++i){I nodex;
+  UI8 childs;  // both children
+  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
+  UI4 pdir[64]; I pi=0;   // parent/direction history; next slot to fill
+  UI parent=0, rootx=_bzhi_u64(*(UI4*)hashtbl,nodeb);  // biased node# of the root of the tree
+  I comp=1;  // will be compare result.  The root is considered to have compared low
+  // the root is pointed to by hash0/dir0.  In an empty database hash0/dir0=0.  In that case we fiddle things so that the first key is called new and the others are called conflict.  They all point to
+  // hash0/dir0 as the end-of-search point.  The new will fill hash0/dir0 with a node, and the rest will start their search at that node, which is the true root of the tree.
+  if(unlikely(rootx<TREENRES))break; // empty database: nothing to do
+  for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
+   childs=*(UI8*)&hashtbl[nodex*(nodeb>>16)];  // fetch both children
+   pdir[pi++]=parent+SGNTO0(comp);  // stack parent/dir going into nodex
+   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),ki,nodeb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
+   if(comp==0){parent+=SGNTO0(comp); break;}  // found at node nodex.  childs have the children, parent the parent\dir (also in pdir[])
+   parent=nodex;  // we will fetch again.  remember the parent of the next fetch
+   nodex=(childs>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
+   if(unlikely(nodex<TREENRES))goto notfound;  // not found.
+  }
+  // we found the node to be deleted: nodex, whose children are in childs.  pdir[pi-1] matches parent
+  I nodexlc=_bzhi_u64(childs,nodeb), nodexr=(childs>>(nodeb&0xff))&_bzhi_u64(~1,nodeb);  // the children\color
+  if((nodexlc&~1)&&nodexr){  // 2 children
+   // 2 children.  find in-order successor (last left child of right subtree), swap with successor, continue
+   I nodexpi=pi, succpi=pi; UI lsucc=nodexr|(nodexlc&1), probe=nodexr; I sparent=nodex; comp=1;   // remember level of parent that will be swapped; init leftmost successor & probe node;  also remember level containing parent of successor
+   do{
+    // drop down to probe, updating parent chain
+    pdir[pi++]=sparent+comp; DRLRC(probe,probe)  // fetch probe
+    parent=probe; comp=probel==0; lsucc=probel?probel+probec:lsucc; probe=probel?probel:prober; succpi=probel?pi:succpi;  // remember if left child, move to leftmost child
+   }while(probe);
+   // now lsucc is the successor\color.  Put it where nodex was - keeping old colors
+   WLRC(parent&~1,parent&1,lsucc&~1,CBYTE(parent&~1)&1)   // parent[dir]=successor
+   pdir[nodexpi]=lsucc|1;   // successor is parent of right chain if any
+   DRLRC(lsucc,lsucc&~1)  // read successor children\color
+   WLC(nodex,lsuccl,nodexlc&1) WR(nodex,lsuccr)   // put succ's children into nodex, keeping color unchanged
+   WLC(lsucc&~1,nodexlc&~1,lsuccc) WR(lsucc&~1,nodexr)  // put nodex's children into succ, keeping color unchanged
+   pi=succpi; parent=pdir[pi];  // restore parent pointer to parent of successor, and reinit its parent\dir
+   // no need to write nodex into parent - we are about to expunge nodex
+   nodexlc=lsuccl+lsuccc; nodexr=lsuccr;  // estab children of node to be deleted
+  }
+  I child=(nodexlc|nodexr)&~1;  // the one child, if not 0
+  //  we must always get to here if there is a node to delete.  nodex now has 0-1 child, which we have
+  // extracted.  We now return nodex from the chain, never to be referred to again.  It is always the
+  // child of its parent, and only the chain field in the parent is modified - nothing in nodex
+  WLC(dic->bloc.emptyn,nodex&~1,0)  // add new empty to chain
+  dic->bloc.emptyn=nodex&~1;  // set new head of chain
+  if(child){  // is there a child?
+   // the node has 1 child.  color the child black, and replace the node with the child (i. e. in the parent)
+   CBYTE(child)|=1;  WLRC(parent&~1,parent&1,child,CBYTE(parent&~1)&1)   // parent[dir]=child
+   goto findel;  // finished
+  }
+  // no children.
+  WLRC(parent&~1,parent&1,0,CBYTE(parent&~1)&1)   // parent[dir]=NULL
+  if(!(nodexlc&1))goto findel;   // childless red node.  delete it (i. e. in the parent), finished
+  // black node without descendants.  full rebalance required
+  DNFC(parent); I parentd,sibling; DNFC(sibling);  // parent names incl direction; sibling names
+  // parent matches pdir[--pi].
+  while(1){
+   // rebalancing loop.  We look only at parents & siblings of nodex. 
+   parentd=parent&1; parent&=~1;  // from here on split parent & parend
+   if(!(parent))goto findel;  // top of tree, we're done
+   // If there is red either in the parent, the sibling, or the sibling's children, we can restore black level by a rotation sequence.
+   // we loop here till we see the red
+   I gparent=pdir[pi-2];  // unroll going up the tree
+   RNFC(parent,parent,parentd)  // fetch parents' children.  Near is the current node.  Both must exist, since we are black
+   if(!(CBYTE(parentf&~1)&1))goto sibred;  // sibling red, go handle it
+   sibling=parentf; RNFC(sibling,parentf&~1,parentd^1)  //  fetch sibling's children, as near/far
+   if((siblingn&~1)&&!(CBYTE(siblingn&~1)&1))goto nnephred;  // near nephew red, go handle it
+   if((siblingf&~1)&&!(CBYTE(siblingf&~1)&1))goto fnephred;  // far nephew red, go handle it
+   // sibling is not red and has no red children
+   if(!parentc)goto parred;  // parent red, go handle it
+   parent=gparent; --pi;  // no red in view, go up the tree looking
+  }
+  // rebalancing runout.  We have seen red, and can finish in at most 3 rotations
+  // parent##* matches pdir[--pi]
+sibred:;   // sibling is red
+  ROT(parent,parentd^1)  // rotate par##f (red sibling) into par
+  CBYTE(parentf)|=1; CBYTE(parent)&=~1;  // set sibling black, parent red
+  sibling=parentf; RNFC(sibling,sibling,parentd^1);  // read children of sibling, as near/far
+  if((siblingn&~1)&&!(CBYTE(siblingn&~1)&1))goto nnephred;  // near nephew red, go handle it
+  if((siblingf&~1)&&!(CBYTE(siblingf&~1)&1))goto fnephred;  // far nephew red, go handle it
+  // fall through to... 
+parred:;  // parent red, no red in sibling
+  CBYTE(parent)|=1; CBYTE(sibling)&=~1;  // set sibling red, parent black
+  goto findel;  // finished
+nnephred:;  // near nephew red
+  ++pi; ROT(sibling,parentd) --pi;  // rotate near red nephew into sibling
+  CBYTE(siblingn)|=1; CBYTE(sibling)&=~1;  // set sibling red, near nephew black
+  siblingf=sibling; sibling=siblingn;  // set up assignments for after fallthrough and rotation
+  // fall through to...
+fnephred:;   // far nephew red
+  ROT(parent,parentd^1)  // rotate sibling up to parent
+  CBYTE(sibling)=(CBYTE(sibling)&~1)|parentc;  // move parent's color to new parent
+  CBYTE(parent)|=1;  // mark old parent (now near sibling) black
+  CBYTE(siblingf)|=1;  // mark old far nephew (now far sibling) black
+  // fall through to...
+findel:;  // here when balancing complete
+notfound:;
+  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp
+  ki=(void *)((I)ki-(kib>>32));  // advance to next search key
+ }
+ R 0;  // good return
+}
+
+//  del.   w is keys   u was dic to self
+static DF1(jtdicdelo){F12IP;
+ ARGCHK1(w)
+ DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
+ I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
+ if(unlikely(AN(w)==0)){R mtv;}  // if no keys, return empty fast
+ if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k  if needed
+ I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
+ ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a 32-bit index with LSB=0
+
+ VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+
+ I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ void *k=voidAV(w);  // point to the key and value data
+ while(1){  // loop till we have processed all the resizes
+  if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
+  else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
+  else{A x; GATV0E(x,FL,kn,1,goto errexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
+    // we must reinit s because it might have been change by keyprep
+
+  I rc=jtdelslotso(dic,k,kn,jt,lv,virt); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
+  dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+ }
+ A z=mtv; if(0){errexit: z=0;}
+ DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
+ RETF(z);
+}
 
 
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*- user-level primitives *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 
-// u 16!:_4  del: u=dic
-// We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF1(jtdicdelc){F12IP;
- // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
- ARGCHK1(w)
- R fdef(0,CMODX,VERB, jtdicdel,jtvalenceerr, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
-}
-
 // u 16!:_2  get: u=dic
 // We create a verb to handle (get y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
 DF1(jtdicgetc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
- R fdef(0,CMODX,VERB, jtdicget,jtdicget, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
+ R fdef(0,CMODX,VERB, ((DIC*)w)->bloc.empty?jtdicget:jtdicgeto,((DIC*)w)->bloc.empty?jtdicget:jtdicgeto,w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
 // u 16!:_3  put: u=dic
@@ -1033,6 +1145,16 @@ DF1(jtdicgetc){F12IP;
 DF1(jtdicputc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
- R fdef(0,CMODX,VERB, jtvalenceerr,jtdicput, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
+ R fdef(0,CMODX,VERB, jtvalenceerr,((DIC*)w)->bloc.empty?jtdicput:jtdicputo, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
+
+// u 16!:_4  del: u=dic
+// We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
+DF1(jtdicdelc){F12IP;
+ // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
+ ARGCHK1(w)
+ R fdef(0,CMODX,VERB, ((DIC*)w)->bloc.empty?jtdicdel:jtdicdelo,jtvalenceerr, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
+}
+
+
 #endif

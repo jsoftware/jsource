@@ -2647,7 +2647,7 @@ F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #define RINGROWS 64  // must be power of 2
 #define RINGCOLS 256  // max width of a stripe - must allow mask to fit in 8 bytes
 // #define MAXOP 40  // max # ops
-#define MAXOP 1000  // max # ops
+#define MAXOP 100  // max # ops
 #define MAXNON0 128  // max # non0 values in a stripe
 #define LGRESBLKE 2  // number of Es in a result block
 #define RESBLKE ((I)1<<LGRESBLKE)

@@ -210,7 +210,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  I redblack=!!(flags&DICFRB);  // if only min,max, that's a red/blck tree
  I hashsiz=((DIC*)z)->bloc.hashsiz=IAV(box)[2-redblack];   // move hashsiz, which overwrites flags/lgminsiz/hashelesiz
  ((DIC*)z)->bloc.lgminsiz=CTLZI(UIAV(box)[0]|1); I maxeles=IAV(box)[1]; ASSERT(maxeles>0,EVDOMAIN)   // save min size, get max# kvs
- I hashelesiz;   // length of a kv index, in the hashtable or tree: max slot#, plus reserved (empty/tombstone/birthstone).  Subtract 1 for max code point.  top bit#+1 is #bits we need; round that up to #bytes
+ UI hashelesiz;   // length of a kv index, in the hashtable or tree: max slot#, plus reserved (empty/tombstone/birthstone).  Subtract 1 for max code point.  top bit#+1 is #bits we need; round that up to #bytes
  if(redblack){
   // red/black.  LSB of indexes is reserved for color
   hashelesiz=((DIC*)z)->bloc.hashelesiz=(CTLZI(maxeles+TREENRES-1)+1+1+(BB-1))>>LGBB;
@@ -233,7 +233,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  // allocate & protect hash/keys/vals/empty
  // hashtbl is hashelsiz per entry
  // redblack has no empty table, and the tree (=hash) has shape nx2xhashelesiz (the LSB of indexes is 0)
- I htelesiz=hashelesiz*(1+redblack);   // length of tree/hash entry
+ UI htelesiz=hashelesiz*(1+redblack);   // length of tree/hash entry
  if(redblack){  // red/black: allocate n2nxh block for tree
   GATV0(box,LIT,(maxeles+TREENRES)*htelesiz,3) AS(box)[0]=maxeles; AS(box)[1]=2; AS(box)[2]=hashelesiz; INCORPNV(box)  // alloc res eles, the root pointer
   IAVn(3,box)[0]=2*0+1; IAVn(3,box)[1]=2*0+0;// empty tree.  parent of root is red NULL.  empty list is not biased, starts after rootparent (first two keys wasted scaf)
@@ -883,6 +883,18 @@ static DF2(jtdicgeto){F12IP;A z;
  DICLKRDREL(dic)  // release read lock
  RETF(z);
 }
+
+// ********************************** getkv **********************************
+
+ // in all our usage of the stack, we push only when we are going down the left side of the tree.  Return is always to the node representing the parent itself.
+
+ // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
+ // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or of the last leaf, if the result is empty (LC>0)
+
+ // if(LC>0)exit empty;
+ // if(LC=0)push the equality node onto the stack;
+
+ // starting with the parent (which is known to be >=min), search upward to find a node 
 
 
 // ********************************** put **********************************

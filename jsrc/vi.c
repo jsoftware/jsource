@@ -7,7 +7,7 @@
 #include "vcomp.h"
 
 // platforms without hardware crc32c
-#if !(C_CRC32C && SY_64)
+#if !(C_CRC32C)
 
 /* Floating point (type D) byte order:               */
 /* Archimedes              3 2 1 0 7 6 5 4           */

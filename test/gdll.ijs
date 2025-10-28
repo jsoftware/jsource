@@ -125,9 +125,9 @@ end.
 )
 
 NB. pointer result
-address=. 0{::'pc *c' dcd ''
+address=: 0{::'pc *c' dcd ''
 'test'-:memr address,0,_1
-address=. 0{::'pc *' dcd ''
+address=: 0{::'pc *' dcd ''
 'test'-:memr address,0,_1
 
 NB. use of > parameter
@@ -211,6 +211,5 @@ assert. 1= 15!:22 h
 f''
 
 
-4!:55 ;:'address'
 epilog''
 

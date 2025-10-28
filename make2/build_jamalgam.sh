@@ -176,6 +176,17 @@ case "$jplatform64" in
  darwin/*) common="$common -fno-common" ;;  # other platforms already default to this
 esac
 
+case "$jplatform64" in
+	darwin/j64) # darwin intel 64bit nonavx
+  common="$common -msse4.1 -msse4.2 "
+  ;;
+	*/j64)
+  if [ $_SSE4_2 -eq 1 ] ; then
+  common="$common -msse4.1 -msse4.2 "
+  fi
+  ;;
+esac
+
 if [ $USE_OPENMP -eq 1 ] ; then
  common="$common -I../../../../openmp/include"
 fi
@@ -375,7 +386,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
-  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
@@ -387,7 +398,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
-  CFLAGS_SIMD=" -march=skylake -mtune=skylake -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
@@ -452,7 +463,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -lm -lkvm $LDTHREAD $LDOPENMP"
-  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
@@ -464,7 +475,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -lm -lkvm $LDTHREAD $LDOPENMP"
-  CFLAGS_SIMD=" -march=skylake -mtune=skylake -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
@@ -510,7 +521,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -lm $LDTHREAD $LDOPENMP"
-  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
@@ -522,7 +533,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 "
   LDFLAGS=" -lm $LDTHREAD $LDOPENMP"
-  CFLAGS_SIMD=" -march=skylake -mtune=skylake -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
@@ -554,7 +565,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX2=1 -DC_AVX512=1 "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
-  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
@@ -566,7 +577,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX2=1 "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
-  CFLAGS_SIMD=" -march=skylake -mtune=skylake -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
@@ -606,7 +617,7 @@ case $jplatform64 in
 
  darwin/j64*) # darwin intel 64bit nonavx
   TARGET=jamalgam
-  CFLAGS="$common $macmin -msse3 -msse4.1 -msse4.2 -DC_CRC32C "
+  CFLAGS="$common $macmin -msse3 "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
@@ -649,7 +660,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDTHREAD $LDOPENMP"
-  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
@@ -674,7 +685,7 @@ case $jplatform64 in
   TARGET=jamalgam
   CFLAGS="$common $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDTHREAD $LDOPENMP"
-  CFLAGS_SIMD=" -march=skylake -mtune=skylake -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
+  CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ] ; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "

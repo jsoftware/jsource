@@ -263,16 +263,17 @@ F1(jtcreatedic){F12IP;
 
 // We use a 2- or 3-step locking sequence.  In each step the new state is requested shortly before it is needed and then waited for when it is needed (to give the lock request time to propagate to all threads).
 // Readers use the sequence
-// lv=DICLKRDRQ(dic)  // request read lock
+// DICLKRDRQ(dic,lv)  // request read lock
 // DICLKRDWT(dic,lv)  // wait for read lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 // DICLKRDREL(dic)  // release read lock
 
 // Writers use the sequence
-// lv=DICLKRWRQ(dic)  // request read/write lock
+// DICLKRWRQ(dic,lv)  // request read/write lock
 // DICLKRWWT(dic,lv)  // wait for read/write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
-// lv=DICLKWRRQ(dic)  // request write lock
+// DICLKWRRQ(dic,lv)  // request write lock
 // DICLKWRWT(dic,lv)  // wait for write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
-// DICLKWRREL(dic,lv)  // release write lock
+// DICLKWRRELK(dic,lv)  // release write lock on keys
+// DICLKWRRELV(dic,lv)  // release write lock on values
 
 // A read lock guarantees that the control info and tables will not be modified by any thread in a way that could affect a get().  Other modifications are allowed.
 // A read-write lock guarantees that the control info and tables will not be modified by any other thread.  No modification by this thread mey affect a get() in progress.
@@ -1191,13 +1192,32 @@ DF1(jtdicdelc){F12IP;
  R fdef(0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicdel:jtdicdelo,jtvalenceerr, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
-// x 16!:_5 dic   return list of empty keyslots.  If x=1, also clear those slots to empty
-DF1(jtdicempties){F12IP;
- ARGCHK1(w)
- // count the number of empties
- // allocate it & fill it in
- R 0;
-}
+// x 16!:_5 dic   return list of empty keyslots.  If x=1, also delete the empty chainfields
+// No locks; if you need a write lock, take it before calling.
+DF2(jtdicempties){F12IP;
+ ARGCHK2(a,w)
+ DIC *dic=(DIC*)w;
+ I lv;
+ I x; RE(x=i0(a)); ASSERT(BETWEENC(x,0,1),EVDOMAIN)  // x must be 0 or 1
+ I nodeb=(dic->bloc.emptysiz<<3); UI kb=dic->bloc.kbytelen;  // #bytes in empty-chain field; #bytes in key
+ C *kv=CAV(dic->bloc.keys);   // point to start of keys
+ I nempty=0; UI emptyx;  // # of empties & index of first one
+ for(emptyx=dic->bloc.emptyn;;){
+  UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb); ++nempty;  // count this empty, get next one
+  if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
+  emptyx=emptynxt;  // advance to next
+ }
+ A z; GATV0(z,INT,nempty,1) I *zv=IAV1(z);  // allocate result; pointer to first atom
+ for(emptyx=dic->bloc.emptyn;;){
+  zv[nempty]=emptyx;  // return index of empty
+  UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb); ++nempty;  // count this empty, get next one
+  if(x==1){I t=0; WRHASH1234(t, nodeb>>3, &kv[emptyx*kb])}  // optionally erase the chain
+  if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
+  emptyx=emptynxt;  // advance to next
+ }
+ if(x==1)dic->bloc.emptyn=0;  // set chain empty if we have deleted it
+ RETF(z)
+ }
 
 
 #endif

@@ -2280,9 +2280,11 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
 #define VECI(z,n,v) {if(n==0)z=mtvi; else{GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}}
-#define PUSHNOMSGS C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATEFORMATTED;  // turn off message formatting by pretending we've already done it
+#define MAYBEPUSHNOMSGS(pushcond) C _e=jt->emsgstate; if(pushcond)jt->emsgstate|=EMSGSTATEFORMATTED;  // turn off message formatting by pretending we've already done it
+#define PUSHNOMSGS MAYBEPUSHNOMSGS(1);  // turn off message formatting by pretending we've already done it
 #define POPMSGS jt->emsgstate=_e;  // restore previous state
-#define WITHMSGSOFF(stmt) {PUSHNOMSGS stmt POPMSGS}  // execute stmt with msgs off - we don't even set jt->jerr.  Use only around internal functions
+#define MAYBEWITHMSGSOFF(offcond,stmt) {MAYBEPUSHNOMSGS(offcond) stmt POPMSGS}  // execute stmt, optionally with msgs off.  Use only around internal functions
+#define WITHMSGSOFF(stmt) MAYBEWITHMSGSOFF(1,stmt)  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
 #define MAYBEWITHDEBUG(dbg,jt,stmt) if(dbg){stmt}else{UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
  C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code

@@ -1017,14 +1017,32 @@ ret:;  // assemble & return result
 
 retempty:;  // empty result
  zak=zav=0;  // 0 if not requested
- if(flags&1)RZ(zak=ccvt(dic->bloc.ktype,iota(over(zeroionei(0),dic->bloc.kshape)),0))  // type c. i. 0 , kshape
- if(flags&2)RZ(zav=ccvt(dic->bloc.vtype,iota(over(zeroionei(0),dic->bloc.vshape)),0))  // type c. i. 0 , vshape
+ if(flags&1)RZ(zak=from(mtv,dic->bloc.keys))  // '' { keys
+ if(flags&2)RZ(zav=from(mtv,dic->bloc.vals))  // '' { values
  goto ret;
   
 }
 
 
+//   get.   Bivalent. w is k0,:kn, a is flags (#. k,v,min,max).  Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
+static DF2(jtdicgetkvo){F12IP;A z;
+ ARGCHK2(a,w)
+     I flags;  // processing flags k,v,min,max(
+ if(w==self){ w=a; flags=0b1111; } else RE(flags=i0(a))  // extract or default flags
+ DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(AR(w)==kr+1,EVRANK) ASSERT(AS(w)[0]==2,EVLENGTH) ASSERTAGREE(AS(w)+1,ks,kr)   // w must be a single key or an array of them, with correct shape
+ if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
 
+ I t=dic->bloc.vtype; A sa=dic->bloc.vshape;
+ // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
+ // nothing & use the value returned by keyprep, which will be the result area from the user hash.
+ VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ 
+ void *k=voidAV(w);  // point to the key data.  tree may be empty
+ z=jtgetkvslotso(dic,k,flags,jt,virt);  // get the values and take a read lock on the dic.  If error, pass error through
+ DICLKRDREL(dic)  // release read lock
+ RETF(z);
+}
 
 // ********************************** put **********************************
 
@@ -1331,6 +1349,15 @@ DF1(jtdicdelc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  R fdef(0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicdel:jtdicdelo,jtvalenceerr, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
+}
+
+// u 16!:_6  getkv: u=dic
+// We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
+DF1(jtdicgetkvc){F12IP;
+ // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
+ ARGCHK1(w)
+ ASSERT(((DIC*)w)->bloc.flags&DICFRB,EVDOMAIN)    // requires red/black tree
+ R fdef(0,CMODX,VERB,jtdicgetkvo,jtdicgetkvo, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
 // x 16!:_5 dic   return list of empty keyslots.  If x=1, also delete the empty chainfields

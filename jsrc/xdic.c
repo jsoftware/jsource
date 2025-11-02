@@ -408,10 +408,10 @@ A self;   //
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*- unordered map (hashed) *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 // Macros to install/delete kvs or unload values, which have extra work to do for indirect types.  ind is a condition that is non0 for indirect type
-#define PUTKVOLD(d,s,n,ind) {if(ind){A sa=((A*)(s))[i]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; A da=((A*)(d))[i]; ra(sa) ((A*)(d))[i]=sa; fa(da) sa=sa1;)}else{MC(d,s,n);}}   // when old kv exist
-#define PUTKVNEW(d,s,n,ind) {if(ind){A sa=((A*)(s))[i]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; ra(sa) ((A*)(d))[i]=sa; sa=sa1;)}else{MC(d,s,n);}}  // when old kv are empty
-#define GETV(d,s,n,ind) {if(ind){A sa=((A*)(s))[i]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; rareccontents(sa) ((A*)(d))[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
-#define DELKV(s,n,ind) {if(ind){A sa=((A*)(s))[i]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; fa(sa) (s)[i]=0; sa=sa1;)}}   // deleting old kv
+#define PUTKVOLD(d,s,n,ind) {if(ind){A sa=((A*)(s))[0]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; A da=((A*)(d))[i]; ra(sa) ((A*)(d))[i]=sa; fa(da) sa=sa1;)}else{MC(d,s,n);}}   // when old kv exist
+#define PUTKVNEW(d,s,n,ind) {if(ind){A sa=((A*)(s))[0]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; ra(sa) ((A*)(d))[i]=sa; sa=sa1;)}else{MC(d,s,n);}}  // when old kv are empty
+#define GETV(d,s,n,ind) {if(ind){A sa=((A*)(s))[0]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; rareccontents(sa) ((A*)(d))[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
+#define DELKV(s,n,ind) {if(ind){A sa=((A*)(s))[0]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; fa(sa) (s)[i]=0; sa=sa1;)}}   // deleting old kv
 
 // k is A for keys, n is #keys, s is place for slot#s.  Hash each key, store, prefetch (possibly using wrong hash)
 // if s is 0, we are using a user hash; use uits return area as s
@@ -804,7 +804,6 @@ static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VI
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
- DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
  DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*nodeb;  // pointer to tree base
@@ -817,7 +816,7 @@ static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VI
  void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
  I vb=dic->bloc.vbytelen;   //  len of 1 value
  for(i=0;i<n;++i){I nodex;
-  UI8 childs;  // both children
+  UI8 chirn;  // both children
   if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
   UI rootx=_bzhi_u64(*(UI4*)hashtbl,nodeb);  // biased node# of the root of the tree
   I comp=1;  // will be compare result.  The root is considered to have compared low
@@ -825,11 +824,11 @@ static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VI
   // hash0/dir0 as the end-of-search point.  The new will fill hash0/dir0 with a node, and the rest will start their search at that node, which is the true root of the tree.
   if(unlikely(rootx<TREENRES))break; // empty database: nothing to do
   for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
-   childs=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
+   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
    s[i]=nodex;  // remember the node where we checked, freeing the register
    comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),ki,nodeb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
-   if(comp==0){PREFETCH(vbase+(s[i]>>1)*vn); break;}  // found at node nodex.  childs have the children, parent the parent\dir (also in pdir[])
-   nodex=(childs>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
+   if(comp==0){PREFETCH(vbase+(s[i]>>1)*vn); break;}  // found at node nodex.  chirn have the children, parent the parent\dir (also in pdir[])
+   nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
    if(unlikely(nodex<TREENRES)){s[i]=0; break;}  // not found.  Set s[i] that way
   }
   ki=(void *)ki-(kib>>32);  // back up to next key
@@ -853,7 +852,7 @@ static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VI
    }
    vv=av;    // use the default after it has been audited
   }
-  GETV(zv,vv,vn,nodeb&(DICFICF<<8)); zv=(void *)((I)zv+vn);   // move the data & advance popinter to next one   scaf JMC?
+  GETV(zv,vv,vn,nodeb&(DICFVINDIR<<8)); zv=(void *)((I)zv+vn);   // move the data & advance popinter to next one   scaf JMC?
   cur=nxt;
  }
  R 1;
@@ -886,15 +885,145 @@ static DF2(jtdicgeto){F12IP;A z;
 
 // ********************************** getkv **********************************
 
- // in all our usage of the stack, we push only when we are going down the left side of the tree.  Return is always to the node representing the parent itself.
 
+
+// k is A for key0,:key1, flags is (return k, return v, include key-0, include k1)
+// We take a read lock on the table and return with it
+static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
+ PROLOG(000);
+ I lv; DICLKRDRQ(dic,lv);   // request read lock
+ if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
+ UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
+ I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
+ DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+
+ C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*nodeb;  // pointer to tree base
+ C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+ C *vbase=CAV(dic->bloc.vals)-TREENRES*vn;  // address corresponding to tree value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
+ I vb=dic->bloc.vbytelen;   //  len of 1 value
+
+ C *k01=(C*)k;  // pointer to the key we are comparing against: k0 to begin with
+ UI4 rstack[64][2]; I sp=0; // in all our usage of the stack, we push only when we are going down the left side of the tree.  Return is always to the node representing the parent itself.  Stack currnode,rchild
+ UI4 res1[3][2];  // nodex and si of the last node >= min, which will be the first node of result
+// scaf add prefetch;
+ UI8 chirn;  // both children
+ if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
+ UI rootx=_bzhi_u64(*(UI4*)hashtbl,nodeb);  // biased node# of the root of the tree
+ if(unlikely(rootx<TREENRES))goto retempty; // empty database: nothing to do
+ I comp=1;  // will be compare result at end of search.  The root is considered to have compared low
+ UI nodex;  // search node, ending either at empty leaf or on equality
+ rstack[0][0]=rstack[0][1]=0;  // top of stack is the empty-tree pointer
  // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
- // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or of the last leaf, if the result is empty (LC>0)
+ // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
+ for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
+  chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
+  rstack[sp][0]=nodex;  // store this node
+  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8));  // compare node key vs k01, so node > key0 is ~0
+  UI rnodex=(chirn>>(nodeb&0xff))&_bzhi_u64(~1,nodeb);  // right child
+  rstack[sp][1]=rnodex;  // in case we move left, store right child
+  res1[1+comp][0]=rstack[sp][0]; res1[1+comp][1]=sp;  // remember node & stack of the first result in res1[1 or 2]
+  nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
+  if(unlikely(comp==0)){break;}  // found at node nodex.  chirn have the children
+  if(unlikely(nodex<TREENRES)){break;}  // not found.  comp is set
+  // drop down to next node.  Push right node onto the return stack if it is non0 and we are going left
+  sp+=(UI)comp>0;  // make stacking effective only if comp=1 (i. e. descending left)
+ }
+ // comp is 0 if nodex=k0, 1 if nodex is just below the first key > k0, -1 if no key > k0 
+ if(unlikely(comp<0))goto retempty;  // if k0 > entire tree, nothing to return
+ UI startx=res1[1+comp][0]; I startsp=res1[1+comp][1];  // remember starting node & sp
+ // we have the first node to produce.  We will go up from there, stopping when we reach the max.  We would like to avoid
+ // comparing against the max at every node, so we go up the stack looking for the lowest level that is >=max.  Since we expect that a single request will return
+ // a small fraction of the tree, this shouldn't take long and will be faster than searching from the top of the tree down.  We scan down from there,
+ // looking for the largest value<=max, which we remember as the end key.
 
- // if(LC>0)exit empty;
- // if(LC=0)push the equality node onto the stack;
+ k01+=(kib>>32);   // from now on, comparisons are against max key
+ nodex=rstack[startsp-1][0]; I sp1;  // first node to check; index of next node to fetch
+ for(sp1=startsp-1;sp1>0;sp--){
+  UI nextx=rstack[sp1-1][0];  // unroll 1 loop
+  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8));  // compare node key vs k01, so node > key0 is ~0
+  if(comp<=0)break;  // stop when node >= max
+  nodex=nextx;  // advance to next
+ }
 
- // starting with the parent (which is known to be >=min), search upward to find a node 
+ // sp1+1 points to the node to start the search at (nodex is invalid if the root is < max).  Find the ending node.  No stacking required
+ while(1){  // traverse the tree, searching for index k.  Current node is nodex
+  chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
+  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8));  // compare node key vs k01, so node > key0 is ~0
+  res1[1+comp][0]=nodex;   // remember node & stack of the first result in res1[1 or 2]
+  nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
+  if(unlikely(comp==0)){break;}  // found at node nodex.  chirn have the children
+  if(unlikely(nodex<TREENRES)){break;}  // not found.  comp is set
+ }
+ // comp is 0 if nodex=k0, 1 if nodex is just below the first key > k0, -1 if no key > k0 
+ UI endx=res1[1+comp][0];  // remember last node in result
+ if(unlikely(comp<0))endx=res1[0][0];  // if k0 > entire tree, use last node in tree as the ending node
+ flags|=(comp&1)<<3;  // if not equality on end node, set to accept last node
+
+ if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp  // comparisons finished, prepare for copying
+
+ // scan the tree/stack, starting at startx, and stopping when we get to endx
+ nodex=startx; sp=startsp;  // init to startup node
+ UI4 zi[64-8*SZI/4], *ziv=zi; I zx=0;  // area to store node#; index of next slot in area
+ // nodex is the node scan through the loop
+ while(1){  // till we hit node >= max
+   DLRC(nodex)
+  while(1){  // go down the left children, pushing onto the stack
+   RLRC(nodex,nodex);  // read children
+   if(nodexl<TREENRES)break;  // exit loop when no left child
+   rstack[sp][0]=nodex; rstack[sp][1]=nodexr; nodex=nodexl; ++sp;  // push return, advance to left child
+  }
+  // no more left children.
+  while(1){  // process middle and right nodes
+   // nodex is a middle node, with nodexr as right child
+   // out the middle node
+   if(zx+8*SZI/4==(LOWESTBIT(zx+8*SZI/4)&-64)){  // if current allocation exceeded...
+    A zia; GATV0(zia,INT4,zx+zx+8*SZI/4,1); MC(I4AV1(zia),ziv,zx*4); ziv=I4AV1(zia);  // double & copy
+   }
+   ziv[zx]=nodex;  // put the node out, in order
+   // finish when we out the ending node
+   if(unlikely(nodex==endx)){zx+=(flags>>3)&1; goto endscan;}  // accept last node if not suppressed
+   ++zx;  // not end: accept the node
+   --sp;  // now that we have outed the middle node, we will never come back here
+   if(nodexr>0){nodex=nodexr; break;}  // if there is a right child, enter it
+   nodex=rstack[sp][0]; nodexr=rstack[sp][1];   // return up the stack when there is no right child
+  }
+ }
+endscan:;
+ // finished, zx having the count
+
+ // allocate the result(s), and run through the indexes, copying
+ A zak=0, zav=0; I zn=zx;  // result keys, values; number of results
+ if(flags&1){  // if user wants keys
+  GA00(zak,dic->bloc.ktype,dic->bloc.kaii*zn,1+AN(dic->bloc.kshape)) AS(zak)[0]=zn; MCISH(&AS(zak)[1],IAV1(dic->bloc.kshape),AN(dic->bloc.kshape)) C *zv=CAVn(1+AN(dic->bloc.kshape),zak);  // allocate result
+  nodex=ziv[0];  // 1 unroll
+  for(zx=0;zx<zn;++zx){  // for each node in result
+   UI nextx=ziv[zx+1];  // unroll loop.  1 overfetch OK
+   GETV(zv,kbase+(kib>>32)*(nodex>>1),kib>>32,nodeb&(DICFKINDIR<<8)); zv=(void *)((I)zv+(kib>>32));   // move the data & advance pointer to next one   scaf JMC?
+   nodex=nextx;  // advance to next
+  }
+ }
+ if(flags&2){  // if user wants values
+  GA00(zav,dic->bloc.vtype,dic->bloc.vaii*zn,1+AN(dic->bloc.vshape)) AS(zav)[0]=zn; MCISH(&AS(zav)[1],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(1+AN(dic->bloc.vshape),zak);  // allocate result
+  nodex=ziv[0];  // 1 unroll
+  for(zx=0;zx<zn;++zx){  // for each node in result
+   UI nextx=ziv[zx+1];  // unroll loop.  1 overfetch OK
+   GETV(zv,vbase+vb*(nodex>>1),vb,nodeb&(DICFVINDIR<<8)); zv=(void *)((I)zv+vb);   // move the data & advance pointer to next one   scaf JMC?
+   nodex=nextx;  // advance to next
+  }
+ }
+ret:;  // assemble & return result
+ A z; if(zak==0||zav==0)z=(A)((I)zak+(I)zav); else z=jlink(zak,box(zav));  // return what was requested
+ EPILOG(z);
+
+retempty:;  // empty result
+ zak=zav=0;  // 0 if not requested
+ if(flags&1)RZ(zak=ccvt(dic->bloc.ktype,iota(over(zeroionei(0),dic->bloc.kshape)),0))  // type c. i. 0 , kshape
+ if(flags&2)RZ(zav=ccvt(dic->bloc.vtype,iota(over(zeroionei(0),dic->bloc.vshape)),0))  // type c. i. 0 , vshape
+ goto ret;
+  
+}
+
+
 
 
 // ********************************** put **********************************
@@ -918,7 +1047,7 @@ static scafINLINE I jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I l
  void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
  I vb=dic->bloc.vbytelen;   //  len of 1 value
  for(i=0;i<n;++i){UI nodex;
-  UI8 childs;  // both children
+  UI8 chirn;  // both children
   if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
   UI4 pdir[64]; I pi=0;   // parent/direction history; next slot to fill
   UI parent=0, rootx=_bzhi_u64(*(UI4*)hashtbl,nodeb);  // biased node# of the root of the tree
@@ -927,12 +1056,12 @@ static scafINLINE I jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I l
   // hash0/dir0 as the end-of-search point.  The new will fill hash0/dir0 with a node, and the rest will start their search at that node, which is the true root of the tree.
   if(unlikely(rootx<TREENRES))break; // empty database: nothing to do
   for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
-   childs=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
+   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
    pdir[pi++]=parent+SGNTO0(comp);  // stack parent/dir going into nodex
    comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),ki,nodeb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
-   if(comp==0){nodex|=1; goto finput;}  // found at node nodex.  childs have the children, parent the parent\dir (also in pdir[])
+   if(comp==0){nodex|=1; goto finput;}  // found at node nodex.  chirn have the children, parent the parent\dir (also in pdir[])
    parent=nodex;  // we will fetch again.  remember the parent of the next fetch
-   nodex=(childs>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
+   nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
    if(unlikely(nodex<TREENRES))break;  // not found.
   }
   // Add the new node as parent[comp], with color red.  parent[pi-1] matches parent
@@ -1041,7 +1170,7 @@ static scafINLINE I jtdelslotso(DIC *dic,void *k,I n,J jt,I lv,VIRT virt){I i;
  void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
  I vb=dic->bloc.vbytelen;   //  len of 1 value
  for(i=0;i<n;++i){I nodex;
-  UI8 childs;  // both children
+  UI8 chirn;  // both children
   if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
   UI4 pdir[64]; I pi=0;   // parent/direction history; next slot to fill
   UI parent=0, rootx=_bzhi_u64(*(UI4*)hashtbl,nodeb);  // biased node# of the root of the tree
@@ -1050,16 +1179,16 @@ static scafINLINE I jtdelslotso(DIC *dic,void *k,I n,J jt,I lv,VIRT virt){I i;
   // hash0/dir0 as the end-of-search point.  The new will fill hash0/dir0 with a node, and the rest will start their search at that node, which is the true root of the tree.
   if(unlikely(rootx<TREENRES))break; // empty database: nothing to do
   for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
-   childs=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
+   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
    pdir[pi++]=parent+SGNTO0(comp);  // stack parent/dir going into nodex
    comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),ki,nodeb&(DICFICF<<8));  // compare node key vs k, so k > node is ~0
-   if(comp==0){parent+=SGNTO0(comp); break;}  // found at node nodex.  childs have the children, parent the parent\dir (also in pdir[])
+   if(comp==0){parent+=SGNTO0(comp); break;}  // found at node nodex.  chirn have the children, parent the parent\dir (also in pdir[])
    parent=nodex;  // we will fetch again.  remember the parent of the next fetch
-   nodex=(childs>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
+   nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~1,nodeb);  // choose left/right based on comparison, mask out garb.
    if(unlikely(nodex<TREENRES))goto notfound;  // not found.
   }
-  // we found the node to be deleted: nodex, whose children are in childs.  pdir[pi-1] matches parent
-  I nodexlc=_bzhi_u64(childs,nodeb), nodexr=(childs>>(nodeb&0xff))&_bzhi_u64(~1,nodeb);  // the children\color
+  // we found the node to be deleted: nodex, whose children are in chirn.  pdir[pi-1] matches parent
+  I nodexlc=_bzhi_u64(chirn,nodeb), nodexr=(chirn>>(nodeb&0xff))&_bzhi_u64(~1,nodeb);  // the children\color
   if((nodexlc&~1)&&nodexr){  // 2 children
    // 2 children.  find in-order successor (last left child of right subtree), swap with successor, continue
    I nodexpi=pi, succpi=pi; UI lsucc=nodexr|(nodexlc&1), probe=nodexr; I sparent=nodex; comp=1;   // remember level of parent that will be swapped; init leftmost successor & probe node;  also remember level containing parent of successor

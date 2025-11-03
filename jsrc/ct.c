@@ -691,7 +691,10 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   // (all tasks finished and waited for here).  We fa explicitly rather than calling tpop
   // NOTE that this is problematic during debug suspension, which is a systemlock.  During the systemlock no thread will start a new task, which means that
   // all jobs will be processed single-threaded even though they are on the queue: everything will be run here by the originator.
-  job->next=0; jobq->ht[1]->next=job; jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
+// we had a crash here: while waiting for it to return, isolate the assignments
+  job->next=0;
+ jobq->ht[1]->next=job;
+ jobq->ht[1]=job;  // clear chain in job; point the last job to it, and the tail ptr.  If queue is empty these both store to tailptr
   oldjob=(oldjob==0)?job:oldjob;   //  Keep old head unless it was empty
   ++jobq->futex;  // while under lock, advance futex value to indicate that we have added a job
   I nwaiters=jobq->waiters;  // see if there are waiting threads

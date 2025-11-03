@@ -941,6 +941,7 @@ static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
   UI nextx=rstack[sp1-1][0];  // unroll 1 loop
   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8));  // compare node key vs k01, so node > key0 is ~0
   if(comp<=0)break;  // stop when node >= max
+  PREFETCH(&hashtbl[rstack[sp1][1]*(nodeb>>24)]);  // prefetch right side on the way up
   nodex=nextx;  // advance to next
  }
 
@@ -973,7 +974,7 @@ static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
   while(1){  // go down the left children, pushing onto the stack
    RLRC(nodex,nodex);  // read children
    if(nodexl<TREENRES)break;  // exit loop when no left child
-   PREFETCH(hashtbl[nodexr*(nodeb>>24)]);   // prefetch the right side, which we will return to presently
+   PREFETCH(&hashtbl[nodexr*(nodeb>>24)]);   // prefetch the right side, which we will return to presently
    rstack[sp][0]=nodex; rstack[sp][1]=nodexr; nodex=nodexl; ++sp;  // push return, advance to left child
   }
 startmin:;  // enter first time going right only

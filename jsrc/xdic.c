@@ -905,7 +905,6 @@ static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
  C *k01=(C*)k;  // pointer to the key we are comparing against: k0 to begin with
  UI4 rstack[64][2]; I sp=0; // in all our usage of the stack, we push only when we are going down the left side of the tree.  Return is always to the node representing the parent itself.  Stack currnode,rchild
  UI4 res1[3][2];  // nodex and si of the last node >= min, which will be the first node of result
-// scaf add prefetch;
  UI8 chirn;  // both children
  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
  UI rootx=_bzhi_u64(*(UI4*)hashtbl,nodeb);  // biased node# of the root of the tree
@@ -961,17 +960,23 @@ static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
 
  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp  // comparisons finished, prepare for copying
 
+ // as we find the key indexes to return, prefetch key/value
+ C *pfv=flags&8?kbase:vbase; I pfb=flags&8?(kib>>32):vb;   // base/stride for prefetch
+
  // scan the tree/stack, starting at startx, and stopping when we get to endx
  nodex=startx; sp=startsp;  // init to startup node
  UI4 zi[64-8*SZI/4], *ziv=zi; I zx=0;  // area to store node#; index of next slot in area
  // nodex is the node scan through the loop
+ DLRC(nodex)
+ RLRC(nodex,nodex); goto startmin;  // read children, start moving right
  while(1){  // till we hit node >= max
-   DLRC(nodex)
   while(1){  // go down the left children, pushing onto the stack
    RLRC(nodex,nodex);  // read children
    if(nodexl<TREENRES)break;  // exit loop when no left child
+   PREFETCH(hashtbl[nodexr*(nodeb>>24)]);   // prefetch the right side, which we will return to presently
    rstack[sp][0]=nodex; rstack[sp][1]=nodexr; nodex=nodexl; ++sp;  // push return, advance to left child
   }
+startmin:;  // enter first time going right only
   // no more left children.
   while(1){  // process middle and right nodes
    // nodex is a middle node, with nodexr as right child
@@ -982,6 +987,7 @@ static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
    ziv[zx]=nodex;  // put the node out, in order
    // finish when we out the ending node
    if(unlikely(nodex==endx)){zx+=(flags>>3)&1; goto endscan;}  // accept last node if not suppressed
+   PREFETCH(pfv+(nodex>>1)*pfb);  // prefetch the kv to be moved
    ++zx;  // not end: accept the node
    --sp;  // now that we have outed the middle node, we will never come back here
    if(nodexr>0){nodex=nodexr; break;}  // if there is a right child, enter it
@@ -999,6 +1005,7 @@ endscan:;
   for(zx=0;zx<zn;++zx){  // for each node in result
    UI nextx=ziv[zx+1];  // unroll loop.  1 overfetch OK
    GETV(zv,kbase+(kib>>32)*(nodex>>1),kib>>32,nodeb&(DICFKINDIR<<8)); zv=(void *)((I)zv+(kib>>32));   // move the data & advance pointer to next one   scaf JMC?
+   if(flags&4)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
    nodex=nextx;  // advance to next
   }
  }

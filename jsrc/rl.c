@@ -269,7 +269,7 @@ static F1X(jtlnoun){F12JT;I t;
  case LITX: R lchar(w);
  case C2TX: R over(cstr("u: "),lnum(uco2(num(3),w)));
  case C4TX: R over(cstr("10&u: "),lnum(uco2(num(3),w)));
- case BOXX: R lbox(w);
+ case BOXX: R unlikely(AFLAG(w)&AFUNDISPLAYABLE)?undispstg:lbox(w);  // intercept the undisplayable
  case SBTX: R over(cstr("s: "),lbox(sb2(num(5),w)));
  }
 }

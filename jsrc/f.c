@@ -571,7 +571,7 @@ F1(jtmat){F12IP;A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  R z;
 }
 
-// Convert 1 box to character array, then to character table
+// Convert 1 box to character array, then to character table.  a is the box, w is prxthornuni
 static F2(jtmatth1){F12JT; R mat(thorn1main(a,w));}
 static EVERYFS(matth1self,0,jtmatth1,0,VFLAGNONE)
 
@@ -660,8 +660,8 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
    // If C2T output not allowed, just convert to UTF-8 bytes
    z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV(prxthornuni)[0]&1?RoutineC:jttoutf8a);
    break;
-  case BOXX:  z=thbox(w,prxthornuni);                  break;
-  case SBTX:  READLOCK(JT(jt,sblock)) z=thsb(w,prxthornuni); READUNLOCK(JT(jt,sblock))                  break;
+  case BOXX:  z=likely(!(AFLAG(w)&AFUNDISPLAYABLE))?thbox(w,prxthornuni):undispstg; break;
+  case SBTX:  READLOCK(JT(jt,sblock)) z=thsb(w,prxthornuni); READUNLOCK(JT(jt,sblock)) break;
   case NAMEX: z=sfn(0,w);                  break;
   case ASGNX: z=spellout(CAV(w)[0]);         break;
   case VERBX: case ADVX:  case CONJX:

@@ -1077,6 +1077,7 @@ extern I taor(I,A*,A*,J);
 struct __attribute__((aligned(ABDY))) Bi1 {I hdr[AKXR(0)/SZI]; I v[1];};  // data is one integer atom
 struct __attribute__((aligned(ABDY))) Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};  // data is one float atom
 struct __attribute__((aligned(ABDY))) Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // data for the multi-word atom is aligned to cacheline
+struct __attribute__((aligned(ABDY))) Bs1 {I hdr[AKXR(1)/SZI]; C v[16];};  // data is literal list
 extern struct Bd2 Ba0j1;
 #define a0j1 ((A)&Ba0j1)
 extern struct Bd1 Bainf;
@@ -1111,6 +1112,8 @@ extern struct Bd1 Bmarkd[];
 #define markd(n) ((A)&Bmarkd[n])  // QP,FL,CMPX
 extern I Bchrspace[];
 #define chrspace ((A)&Bchrspace)
+extern struct Bs1 Bundispstg;
+#define undispstg ((A)&Bundispstg)
 #if !SY_64
 extern long long validitymask[];
 #else

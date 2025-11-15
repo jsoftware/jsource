@@ -565,13 +565,14 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
  dic->bloc.cardinality+=nnew;  // account for the new keys
 
  // Now we move the new kvs into empty slots.  This wipes out the chain fields in the empties, so we have to create a separate list of where the empties were
- A ea; GATV0(ea,INT4,nnew,0) UI4 *empties=UI4AV0(ea);   // holding area for our empty list
+ UI4 empty64[64][2]; UI4 (*empties)[][2]=(UI4 (*)[][2])empty64; if((UI)nnew>sizeof(empty64)/sizeof(empty64[0])){A ea; GATV0(ea,FL,nnew,0) empties=(UI4 (*)[][2])DAV0(ea);}    // holding area for our empty list
  // scaf use stack
+
  // chase the new kvs, taking an empty slot for each and copying the k and v into the tables. s[] holds chain\hashslot
  I vb=dic->bloc.vbytelen; UI emptyx=dic->bloc.emptyn; I cur;  // empty area & current pointer into it.  Length of a element is hsz>>56
  for(nnew=0,cur=nroot;cur>=0;){
   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
-  empties[nnew++]=emptyx;  // save index of the empty we are about to use
+  (*empties)[nnew][0]=((I4*)(&s[cur]))[0]; (*empties)[nnew][1]=emptyx; ++nnew;  // save (hashslot we are about to use),(kv index to put into the hashslot)
   UI emptynxt=_bzhi_u64(*(UI4*)&CAV(dic->bloc.keys)[emptyx*(kib>>32)],(hsz>>45));  // get next empty, which must exist
   PUTKVNEW(CAV(dic->bloc.keys)+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32,hsz&(DICFKINDIR<<DICFBASE))
 ; PUTKVNEW(CAV(dic->bloc.vals)+emptyx*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE));
@@ -581,16 +582,18 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
 
  DICLKWRRQ(dic,lv); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put rq up a little earlier
 
-// scaf get hsh from empties
- // chase the new kvs again, replacing the birthstone (indexed by s[i]) with the allocated kvslot#, which was the original empty position.  s[] holds chain\hashslot
- I newi;  // seq # among the new KVs & empties
- for(newi=0,cur=nroot;newi<nnew;++newi){  // cur chases the chain, newi indexes the empties
-  I8 nxthsh=s[cur];  // fetch chain\hashslot
+ // Now that we can modify the hash, put the biased hash index of the kv into the hash
+ DQ(nnew, UI4 t=HDECEMPTY((*empties)[i][1]); WRHASH1234(t, hsz>>56, &hashtbl[(*empties)[i][0]*(hsz>>56)]))
+// obsolete // scaf get hsh from empties
+// obsolete  // chase the new kvs again, replacing the birthstone (indexed by s[i]) with the allocated kvslot#, which was the original empty position.  s[] holds chain\hashslot
+// obsolete  I newi;  // seq # among the new KVs & empties
+// obsolete  for(newi=0,cur=nroot;newi<nnew;++newi){  // cur chases the chain, newi indexes the empties
+// obsolete   I8 nxthsh=s[cur];  // fetch chain\hashslot
 // obsolete   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
 // obsolete   UI emptynxt=_bzhi_u64(*(UI4*)&CAV(dic->bloc.keys)[emptyx*(kib>>32)],(hsz>>45));   // get next empty, abort if end of chain (loopback)
-  emptyx=HDECEMPTY(empties[newi]); WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)nxthsh*(hsz>>56)])  // set hashtable to point to new kv (skipping over reserved hashslot#s)
-  cur=nxthsh>>32;  // advance to next
- }
+// obsolete   emptyx=HDECEMPTY(empties[newi]); WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)nxthsh*(hsz>>56)])  // set hashtable to point to new kv (skipping over reserved hashslot#s)
+// obsolete   cur=nxthsh>>32;  // advance to next
+// obsolete  }
 
  // chase the conflict keys (in ascending order), updating everything.  They should be few.  For new kvs, also take an empty slot & update the keys.  Leave values in the conflict chain, in ascending order. s[i] indexes the hashslot
  // Since the original search searched all the way to a hold looking for a match, we know that the only match must come from a previous key in this put.  This key would necessarily have gone into the first tombstone found,

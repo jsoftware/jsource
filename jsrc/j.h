@@ -964,7 +964,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ABS(a)          (0<=(a)?(a):-(a))
 #include "jr0.h" // #define ASSERT(b,e) {if(unlikely(!(b))){jsignal(e); R 0;}}
 
-/* moved to jr0.h
 #define ASSERTF(b,e,s...)     {if(unlikely(!(b))){jsignal(e); R 0;}}
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
@@ -980,7 +979,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTSYSV(b,s,stmt) ASSERTSYSCOMMON(b,s,stmt)
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}  // put error code into jerr, but signal only if nonretryable
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}  // exit primitive with error code in return
-*/
 
 // Avoid call to memcmp to save registers
 #if C_AVX2 || EMU_AVX2

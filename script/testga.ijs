@@ -43,6 +43,14 @@ echo 'avx512bw: ',":9!:56'avx512bw'
 echo 'avx512vbmi: ',":9!:56'avx512vbmi'
 echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 
+NB. base64 failed on avx512?
+echo 3!:10 'f'
+echo 'Zg==' -: 3!:10 'f'
+
+NB. lone surrogate failed on avx512?
+echo a. i. ":7 u: 16bd800 + i.8
+echo 237 160 128 237 160 129 237 160 130 237 160 131 237 160 132 237 160 133 237 160 134 237 160 135-:":7 u: 16bd800 + i.8
+
 NB. this crash on OpenBSD v7.6
 echo '(128!:6)   ', (128!:6)   'abc'
 echo '2&(128!:6) ', 2&(128!:6) 'abc'

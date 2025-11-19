@@ -224,6 +224,11 @@ y
 {{)m
 y}}
 )
+f0 =. {{)d: y }}
+'{{)d: y }}' -: '' 5!:5 <'f0'
+f0 =. {{)d:y }}
+'{{)d: y }}' -: '' 5!:5 <'f0'
+
 
 NB. Assigned vbl not detected as auto
 f0 =. {{ x =. y }}

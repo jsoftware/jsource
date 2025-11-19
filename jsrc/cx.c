@@ -1230,17 +1230,24 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   // If there is a control line )x at the top of the definition, parse it now and discard it from n
   if(m==9){
    flag|=VISDD;  // indicate this defn was created by a DD
-   if(likely(AN(w)!=0))if(unlikely(AN(C(AAV(w)[0]))&&CAV(C(AAV(w)[0]))[0]==')')){
-    // there is a control line.  parse it.  Cut to words
+   if(likely(AN(w)!=0))if(likely(AN(C(AAV(w)[0])))&&unlikely(CAV(C(AAV(w)[0]))[0]==')')){
+    // there is a control line.  Everything up to : is the control part
+    A line1=C(AAV(w)[0]); C *cv1=CAV(line1); C *col1=strchr(cv1,':');  // extract first line & see if it contains ':'   line1 = 0 {:: w
+    if(likely(col1==0)){   // if no :, the whole line is control.  Discard it from w
+     RZ(w=beheadW(w)); // discard the control line
+    }else{  // : given.  takeafter the : for the first line, and taketo for the control line
+     RZ(w=jtamendn2(jtfg,box(drop(sc(col1-cv1+1+(col1[1]==' ')),line1)),w,zeroionei(0),ds(CAMEND)));  // w =. (< (>:hlen) }. line1) 0} w   discard first char after : if it is SP
+     RZ(line1=take(sc(col1-cv1),line1));   // line1 =. hlen {. line1
+    }
+    // now line1 has the control line, and w is updated as needed
     flag|=VDDHASCTL;  // indicate that the DD had a control line
-    A cwds=wordil(C(AAV(w)[0])); RZ(cwds); ASSERT(AM(cwds)==2,EVDOMAIN);  // must be exactly 2 words: ) and type
+    A cwds=wordil(line1); RZ(cwds); ASSERT(AM(cwds)==2,EVDOMAIN);  // cut to words.  must be exactly 2 words: ) and type
     ASSERT(((IAV(cwds)[1]-IAV(cwds)[0])|(IAV(cwds)[3]-IAV(cwds)[2]))==1,EVDOMAIN);  // the ) and the next char must be 1-letter words  
-    C ctltype=CAV(C(AAV(w)[0]))[IAV(cwds)[2]];  // look at the second char, which must be one of acmdv*  (n is handled in ddtokens)
+    C ctltype=CAV(line1)[IAV(cwds)[2]];  // look at the second char, which must be one of acmdv*  (n is handled in ddtokens)
     I newm=-1; newm=ctltype=='a'?1:newm; newm=ctltype=='c'?2:newm; newm=ctltype=='m'?3:newm; newm=ctltype=='d'?4:newm; newm=ctltype=='v'?3:newm; newm=ctltype=='*'?9:newm;  // choose type based on char
     ASSERT(newm>=0,EVDOMAIN);  // error if invalid char
     m=newm;  // accept the type the user specified
-    // discard the control line
-    RZ(w=beheadW(w));
+   
     // Noun DD was converted to a string, possibly containing LF, and doesn't come through here
    }
   }

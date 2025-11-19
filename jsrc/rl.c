@@ -333,12 +333,13 @@ static F1X(jtlcolon){F12JT;A*v,x,y;C*s,*s0;I m,n;
  n=AN(y); v=AAV(y); RZ(x=lrr(C(FAV(w)->fgh[0])));  // n=#lines, v->line 0, get x=linear rep for m (string form of a digit)
  if((I)jtfg&JTPRFORSCREEN && FAV(w)->flag&VISDD){A z;  // defn was {{ }} and we are printing it to screen
   // we can display the defn as a DD.
-  C hdr[5]; I hdrl=0; hdr[hdrl++]='{'; hdr[hdrl++]='{'; // install {{
-  if(FAV(w)->flag&VDDHASCTL){   // user gave ')?'
+  C hdr[6]; I hdrl=0; hdr[hdrl++]='{'; hdr[hdrl++]='{'; // install {{
+  if(FAV(w)->flag&VDDHASCTL){   // user gave ')?'; we must include that in our result.
     hdr[hdrl++]=')';  // install in hdr
     C pos='v'; pos=FAV(w)->valencefns[0]==jtvalenceerr?'d':pos; pos=FAV(w)->valencefns[1]==jtvalenceerr?'m':pos; // type, if verb
     pos=AT(w)&ADV?'a':pos; pos=AT(w)&CONJ?'c':pos;   // override if not verb
-    hdr[hdrl++]=pos; hdr[hdrl++]=CLF;  // install type, giving {{)tLF
+    hdr[hdrl++]=pos;  // install type, giving {{)tLF
+    if(n==1){hdr[hdrl++]=':'; hdr[hdrl++]=' ';}else{hdr[hdrl++]=CLF;}  // Append :SP for oneliners, LF for others
   }else hdr[hdrl++]=' ';  // ordinary DD: {{SP
   R raze(over(dfv2(z,box(str(hdrl,hdr)),ravel(stitch(box(scc(CLF)),y)),amend(num(0))),box(str(2,"}}"))));  //  ; ((<hdr) 0} , (<LF) ,. y) ,  <tlr
  }

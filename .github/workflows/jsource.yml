@@ -896,11 +896,11 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD)
-     uses: cross-platform-actions/action@v0.27.0
+     uses: cross-platform-actions/action@v0.30.0
      with:
       operating_system: openbsd
       architecture: x86-64
-      version: '7.6'
+      version: '7.8'
       shell: bash
 
       run: |
@@ -964,11 +964,11 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.27.0
+     uses: cross-platform-actions/action@v0.30.0
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.6'
+      version: '7.8'
       shell: bash
 
       run: |
@@ -1099,7 +1099,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD)
-     uses: cross-platform-actions/action@v0.27.0
+     uses: cross-platform-actions/action@v0.30.0
      with:
       operating_system: freebsd
       architecture: x86-64
@@ -1170,7 +1170,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD arm64)
-     uses: cross-platform-actions/action@v0.27.0
+     uses: cross-platform-actions/action@v0.30.0
      with:
       operating_system: freebsd
       architecture: arm64

@@ -105,9 +105,9 @@ typedef struct ADic {
   UI4 (*hashfn)();  // hash function, user's or selected internal
   I (*compfn)();  // key-comparison function, user's or selected internal
    // *** start of area pointed by AK, which is the value of dic as a J noun
-  A hash;  // the hash table, rank 1  Note: This pointer may be stale.  MUST use voidAV1 to point to hash, and use only PREFETCH until you get a lock
-  A keys;  // array of keys
-  A vals;   // array of values
+  A hash;  // the hash/tree table, rank 1  Note: This pointer may be stale.  MUST use voidAV1 to point to hash, and use only PREFETCH until you get a lock
+  A keys;  // array of keys    nondisplayable if indirect
+  A vals;   // array of values    nondisplayable if indirect
   // end of first cacheline.  Following are unchanging
   A kshape;   // shape of a key, always accessed by AAV1
   A vshape;  // shape of a value, always accessed by AAV1
@@ -156,9 +156,8 @@ typedef struct ADic {
 
 // write l bytes from x to address a.  Destroys x, which must be a name.  Only low 3 bits of l are used
 #define WRHASH1234(x,l,a) {if((l)&4)*(UI4*)(a)=x;else{if((l)&1){*(C*)(a)=x;x>>=8;}if((l)&2)*(US*)((C*)a+((l)&1))=x;}}  // avoid read, which will probably be a long miss.  Branches will predict
-// same for writing ~0
-#define WRCONST1234(x,l,a) {if((l)&4)*(UI4*)(a)=(x);else{if((l)&1){*(C*)(a)=(x);}if((l)&2)*(US*)((C*)a+((l)&1))=(x);}}  // avoid read, which will probably be a long miss.  Branches will predict
-
+// obsolete // same for writing ~0
+// obsolete #define WRCONST1234(x,l,a) {if((l)&4)*(UI4*)(a)=(x);else{if((l)&1){*(C*)(a)=(x);}if((l)&2)*(US*)((C*)a+((l)&1))=(x);}}  // avoid read, which will probably be a long miss.  Branches will predict
 
 // u 16!:_1 y  adverb.  allocate hashtable.  Always called from the numbered locale of the dictionary.
 // u is the hash/compare verb OR the DIC block for a dictionary that is being resized.
@@ -231,7 +230,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  }else{((DIC*)z)->bloc.emptysiz=hashelesiz;}
 
 
- // allocate & protect hash/keys/vals/empty
+ // allocate & protect hash/keys/vals
  // hashtbl is hashelsiz per entry
  // redblack has no empty table, and the tree (=hash) has shape nx2xhashelesiz (the LSB of indexes is 0)
  UI htelesiz=hashelesiz*(1+redblack);   // length of tree/hash entry
@@ -280,8 +279,6 @@ F1(jtcreatedic){F12IP;
 //  When a read-write lock is granted, the granted thread is guaranteed to be the next to write.  It has ownership of the write-lock and sequence# bits until it releases the lock by writing to the sequence#
 // A write lock guarantees that no other thread has a lock of any kind.  Any modification is allowed.  The lock can then be advanced to a value lock, which declared that it will not touch the hash or the keys
 // but may moodify values
-
-// scaf to add: write-lock the keys & values separately; free the keys first, then the values
 
 #if PYXES
 // The AM field of dic is the lock. 0-15=#read locks outstanding 16-31=seq# of next write req 32=writelock request 33=valueslock req/active 48-63=seq# of current writer (if 32-33 not 00) or next writer (if 32-33 00)
@@ -408,10 +405,10 @@ A self;   //
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*- unordered map (hashed) *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 // Macros to install/delete kvs or unload values, which have extra work to do for indirect types.  ind is a condition that is non0 for indirect type
-#define PUTKVOLD(d,s,n,ind) {if(ind){A sa=((A*)(s))[0]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; A da=((A*)(d))[i]; ra(sa) ((A*)(d))[i]=sa; fa(da) sa=sa1;)}else{MC(d,s,n);}}   // when old kv exist
-#define PUTKVNEW(d,s,n,ind) {if(ind){A sa=((A*)(s))[0]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; ra(sa) ((A*)(d))[i]=sa; sa=sa1;)}else{MC(d,s,n);}}  // when old kv are empty
-#define GETV(d,s,n,ind) {if(ind){A sa=((A*)(s))[0]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; rareccontents(sa) ((A*)(d))[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
-#define DELKV(s,n,ind) {if(ind){A sa=((A*)(s))[0]; DO((n)>>LGSZI, A sa1=((A*)(s))[i+1]; fa(sa) (s)[i]=0; sa=sa1;)}}   // deleting old kv
+#define PUTKVOLD(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; A da=dv[i]; ra(sa) dv[i]=sa; fa(da) sa=sa1;)}else{MC(d,s,n);}}   // when old kv exist
+#define PUTKVNEW(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; ra(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}  // when old kv are empty
+#define GETV(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
+#define DELKV(s,n,ind) {if(ind){A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; fa(sa) sv[i]=0; sa=sa1;)}}   // deleting old kv
 
 // k is A for keys, n is #keys, s is place for slot#s.  Hash each key, store, prefetch (possibly using wrong hash)
 // if s is 0, we are using a user hash; use uits return area as s
@@ -545,9 +542,9 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
   I8 tomb1=~0; I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32); UI hval; // first tombstone (init none); convert hash to slot#;  place to read biased kv slot# into
   while(1){
    s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
-   if(withprob(hval<HASHNRES,0.3)){
+   if(withprob(hval<HASHNRES,0.3)){   // hole or tombstone
     I8 hc=((I8)hval<<32)+curslot; tomb1=tomb1==~0?hc:tomb1;  // remember first spot we can store into, empty or tombstone, and its type
-    if(withprob(hval<HASHTSTN,0.8)){hval=tomb1>>32; tomb1=(UI4)tomb1; hashtbl[tomb1]=hval|HASHBSTN; s[i]=((I8)0x100000000<<hval)+tomb1; break;}  // if we hit empty, we're done: mark first hole is birthstone; save its status before mark.  1 byte store for atomicity
+    if(withprob(hval<HASHTSTN,0.8)){hval=tomb1>>32; tomb1=(UI4)tomb1; hashtbl[tomb1*(hsz>>56)]=hval|HASHBSTN; s[i]=((I8)0x100000000<<hval)+tomb1; break;}  // if we hit empty, we're done: mark first hole is birthstone; save its status before mark.  1 byte store for atomicity
    }else if(withprob(keysne((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval,hsz&(DICFICF<<DICFBASE))==0,0.7))break;  // if key match, we're done: we have saved the hashslot in s[] with high 32 bits 0
    // no match.  try next hashslot
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
@@ -612,8 +609,8 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
 notfound:;
    // search ends at empty/tombstone, in hashslot (curslot).  Allocate a new empty, point curslot to it, move in the key, save the slot in s[cur] which is the first empty/tombstone found
      // in case of resize we have to keep the empty chain valid after each addition
-   emptyx=dic->bloc.emptyn; UI emptynxt=_bzhi_u64(*(UI4*)&CAV(dic->bloc.keys)[emptyx*(kib>>32)],(hsz>>53)); if(emptynxt==emptyx)goto resize; hval=emptyx+HASHNRES; dic->bloc.emptyn=emptynxt; // get empty slot, save as biased kv slot#
-   emptyx=hval; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)nxthsh*(hsz>>56)])   // set hashtable to point to new kv (skipping over reserved hashslot#s)
+   emptyx=dic->bloc.emptyn; UI emptynxt=_bzhi_u64(*(UI4*)&CAV(dic->bloc.keys)[emptyx*(kib>>32)],(hsz>>53)); if(emptynxt==emptyx)goto resize; hval=HDECEMPTY(emptyx); dic->bloc.emptyn=emptynxt; // get empty slot, save as biased kv slot#
+   emptyx=hval; WRHASH1234(emptyx, hsz>>56, &hashtbl[(UI4)curslot*(hsz>>56)])   // set hashtable to point to new kv (skipping over reserved hashslot#s)
    PUTKVNEW(kbase+hval*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32,hsz&(DICFKINDIR<<DICFBASE));    // copy the new key
    dic->bloc.cardinality++;  // account for the new keys
 

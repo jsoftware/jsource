@@ -1271,6 +1271,7 @@ static DF1(jttess1){F12IP;A s;I m,r,*v;
 }
 
 
+// This code by Elijah Stone RIP
 // parallel <;._2 y for LIT lists (could reuse for B01 harmlessly, but what's the point?)
 // TODO: other cuts, other types
 // TODO: use with user-defined verb?  u t.'';.n ok--preserves semantics, since t. executions are unordered--but what if user wants an open result?  ;@:(u t.'';.n) ok, but bulky & annoying;

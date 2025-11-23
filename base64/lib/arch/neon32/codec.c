@@ -5,7 +5,7 @@
 #include "../../../include/libbase64.h"
 #include "../../tables/tables.h"
 #include "../../codecs.h"
-#include "../../config.h"
+#include "config.h"
 #include "../../env.h"
 
 #ifdef __arm__
@@ -22,7 +22,7 @@
 #define BASE64_NEON32_USE_ASM
 #endif
 
-static inline uint8x16_t
+static BASE64_FORCE_INLINE uint8x16_t
 vqtbl1q_u8 (const uint8x16_t lut, const uint8x16_t indices)
 {
 	// NEON32 only supports 64-bit wide lookups in 128-bit tables. Emulate
@@ -52,7 +52,8 @@ vqtbl1q_u8 (const uint8x16_t lut, const uint8x16_t indices)
 // (48 bytes encode, 32 bytes decode) that we inline the
 // uint32 codec to stay performant on smaller inputs.
 
-BASE64_ENC_FUNCTION(neon32)
+void
+base64_stream_encode_neon32 BASE64_ENC_PARAMS
 {
 #ifdef BASE64_USE_NEON32
 	#include "../generic/enc_head.c"
@@ -60,11 +61,12 @@ BASE64_ENC_FUNCTION(neon32)
 	enc_loop_generic_32(&s, &slen, &o, &olen);
 	#include "../generic/enc_tail.c"
 #else
-	BASE64_ENC_STUB
+	base64_enc_stub(state, src, srclen, out, outlen);
 #endif
 }
 
-BASE64_DEC_FUNCTION(neon32)
+int
+base64_stream_decode_neon32 BASE64_DEC_PARAMS
 {
 #ifdef BASE64_USE_NEON32
 	#include "../generic/dec_head.c"
@@ -72,6 +74,6 @@ BASE64_DEC_FUNCTION(neon32)
 	dec_loop_generic_32(&s, &slen, &o, &olen);
 	#include "../generic/dec_tail.c"
 #else
-	BASE64_DEC_STUB
+	return base64_dec_stub(state, src, srclen, out, outlen);
 #endif
 }

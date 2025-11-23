@@ -3,9 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 #include "../include/libbase64.h"
 #include "codecs.h"
@@ -37,25 +34,12 @@
 	#include <cpuid.h>
 	#if HAVE_AVX512 || HAVE_AVX2 || HAVE_AVX
 		#if ((__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ >= 2) || (__clang_major__ >= 3))
-		#if !defined(__clang__)
 			static inline uint64_t _xgetbv (uint32_t index)
 			{
 				uint32_t eax, edx;
 				__asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(index));
 				return ((uint64_t)edx << 32) | eax;
 			}
-		#elif !__has_builtin(_xgetbv)
-			static inline uint64_t _xgetbv (uint32_t index)
-			{
-				uint32_t eax, edx;
-				__asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(index));
-				return ((uint64_t)edx << 32) | eax;
-			}
-		#else
-		#if defined(_MSC_VER)
-			extern unsigned __int64 __cdecl _xgetbv(unsigned int);
-		#endif
-		#endif
 		#else
 			#error "Platform not supported"
 		#endif
@@ -90,13 +74,22 @@
 #define _XCR_XFEATURE_ENABLED_MASK 0
 #endif
 
-#define _XCR_XMM_AND_YMM_STATE_ENABLED_BY_OS 0x6
+#define bit_XMM      (1 << 1)
+#define bit_YMM      (1 << 2)
+#define bit_OPMASK   (1 << 5)
+#define bit_ZMM      (1 << 6)
+#define bit_HIGH_ZMM (1 << 7)
+
+#define _XCR_XMM_AND_YMM_STATE_ENABLED_BY_OS (bit_XMM | bit_YMM)
+
+#define _AVX_512_ENABLED_BY_OS (bit_XMM | bit_YMM | bit_OPMASK | bit_ZMM | bit_HIGH_ZMM)
+
 #endif
 
 // Function declarations:
-#define BASE64_CODEC_FUNCS(arch)	\
-	BASE64_ENC_FUNCTION(arch);	\
-	BASE64_DEC_FUNCTION(arch);	\
+#define BASE64_CODEC_FUNCS(arch)					\
+	extern void base64_stream_encode_ ## arch BASE64_ENC_PARAMS;	\
+	extern int  base64_stream_decode_ ## arch BASE64_DEC_PARAMS;
 
 BASE64_CODEC_FUNCS(avx512)
 BASE64_CODEC_FUNCS(avx2)
@@ -170,13 +163,13 @@ codec_choose_forced (struct codec *codec, int flags)
 static bool
 codec_choose_arm (struct codec *codec)
 {
-#if (defined(__ARM_NEON__) || defined(__ARM_NEON)) && ((defined(__aarch64__) && HAVE_NEON64) || HAVE_NEON32)
+#if HAVE_NEON64 || ((defined(__ARM_NEON__) || defined(__ARM_NEON)) && HAVE_NEON32)
 
 	// Unfortunately there is no portable way to check for NEON
 	// support at runtime from userland in the same way that x86
 	// has cpuid, so just stick to the compile-time configuration:
 
-	#if defined(__aarch64__) && HAVE_NEON64
+	#if HAVE_NEON64
 	codec->enc = base64_stream_encode_neon64;
 	codec->dec = base64_stream_decode_neon64;
 	#else
@@ -224,9 +217,9 @@ codec_choose_x86 (struct codec *codec)
 		if (ecx & bit_XSAVE_XRSTORE) {
 			uint64_t xcr_mask;
 			xcr_mask = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
-			if (xcr_mask & _XCR_XMM_AND_YMM_STATE_ENABLED_BY_OS) {
+			if ((xcr_mask & _XCR_XMM_AND_YMM_STATE_ENABLED_BY_OS) == _XCR_XMM_AND_YMM_STATE_ENABLED_BY_OS) { // check multiple bits at once
 				#if HAVE_AVX512
-				if (max_level >= 7) {
+				if (max_level >= 7 && ((xcr_mask & _AVX_512_ENABLED_BY_OS) == _AVX_512_ENABLED_BY_OS)) {
 					__cpuid_count(7, 0, eax, ebx, ecx, edx);
 					if ((ebx & bit_AVX512vl) && (ecx & bit_AVX512vbmi)) {
 						codec->enc = base64_stream_encode_avx512;

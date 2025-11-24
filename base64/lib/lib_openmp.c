@@ -24,7 +24,7 @@ base64_encode_openmp
 	size_t t;
 	size_t sum = 0, len, last_len;
 	struct base64_state state, initial_state;
-	int num_threads, i;
+	int num_threads, i=0;
 
 	// Request a number of threads but not necessarily get them:
 	#pragma omp parallel
@@ -82,7 +82,7 @@ base64_decode_openmp
 	, int		 flags
 	)
 {
-	int num_threads, result = 0, i;
+	int num_threads, result = 0, i=0;
 	size_t sum = 0, len, last_len, s;
 	struct base64_state state, initial_state;
 

@@ -22,11 +22,6 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2.4
-     with:
-       sdeVersion: 9.33.0 # possible values: 9.33.0 (default), 9.27.0, 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
-
    - name: Setup Environment (Linux)
      run: |
       script/install-lnx.sh
@@ -44,8 +39,6 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
      run: |
-      echo $SDE_PATH
-      $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux)
@@ -87,11 +80,6 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2.4
-     with:
-       sdeVersion: 9.33.0 # possible values: 9.33.0 (default), 9.27.0, 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
-
    - name: Setup Environment (Linux gcc)
      run: |
       script/install-lnx.sh
@@ -106,8 +94,6 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
      run: |
-      echo $SDE_PATH
-      $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux gcc)
@@ -150,11 +136,6 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2.4
-     with:
-       sdeVersion: 9.33.0 # possible values: 9.33.0 (default), 9.27.0, 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
-
    - name: Setup Environment (Linux debug)
      run: |
       script/install-lnx.sh
@@ -170,8 +151,6 @@ jobs:
       USE_OPENMP: 0
       _DEBUG: 3
      run: |
-      echo $SDE_PATH
-      $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux debug)

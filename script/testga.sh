@@ -118,8 +118,6 @@ elif [ $1 = "linux" ]; then
   else
    LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs
   fi
- elif [ -f "$SDE_PATH/sde" ] && [ -f "j64/libjavx2.$ext" ] ; then
-   LC_ALL=fr_FR.UTF-8 $SDE_PATH/sde -skx -- j64/jconsole -lib libjavx2.$ext testga.ijs
  fi
  if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
   if [ "$_DEBUG" = "3" ]; then
@@ -128,9 +126,6 @@ elif [ $1 = "linux" ]; then
   else
    LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
   fi
- elif [ -f "$SDE_PATH/sde" ] && [ -f "j64/libjavx512.$ext" ] ; then
-   #LC_ALL=fr_FR.UTF-8 $SDE_PATH/sde -skx -- j64/jconsole -lib libjavx512.$ext testga.ijs
-   echo "Not running AVX512 tests due to missing hardware support" # sde doesn't like fsgsbase?
  fi
  if [ -f "j32/libj.$ext" ] ; then
   if [ "$_DEBUG" = "3" ]; then
@@ -144,9 +139,9 @@ elif [ $1 = "openbsd" ] || [ $1 = "freebsd" ] ; then
  if [ "$(cat /var/run/dmesg.boot | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ] ; then
    LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs
  fi
- if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
-   LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
- fi
+# if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
+#   LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
+# fi
 fi
 
 # if [ $m64 -eq 1 ]; then

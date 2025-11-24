@@ -5,7 +5,7 @@
 #include "../../../include/libbase64.h"
 #include "../../tables/tables.h"
 #include "../../codecs.h"
-#include "../../config.h"
+#include "config.h"
 #include "../../env.h"
 
 #if HAVE_SSE42
@@ -33,24 +33,26 @@
 
 #endif	// HAVE_SSE42
 
-BASE64_ENC_FUNCTION(sse42)
+void
+base64_stream_encode_sse42 BASE64_ENC_PARAMS
 {
 #if HAVE_SSE42
 	#include "../generic/enc_head.c"
 	enc_loop_ssse3(&s, &slen, &o, &olen);
 	#include "../generic/enc_tail.c"
 #else
-	BASE64_ENC_STUB
+	base64_enc_stub(state, src, srclen, out, outlen);
 #endif
 }
 
-BASE64_DEC_FUNCTION(sse42)
+int
+base64_stream_decode_sse42 BASE64_DEC_PARAMS
 {
 #if HAVE_SSE42
 	#include "../generic/dec_head.c"
 	dec_loop_ssse3(&s, &slen, &o, &olen);
 	#include "../generic/dec_tail.c"
 #else
-	BASE64_DEC_STUB
+	return base64_dec_stub(state, src, srclen, out, outlen);
 #endif
 }

@@ -5,7 +5,7 @@
 #include "../../../include/libbase64.h"
 #include "../../tables/tables.h"
 #include "../../codecs.h"
-#include "../../config.h"
+#include "config.h"
 #include "../../env.h"
 
 #if HAVE_SSSE3
@@ -35,24 +35,26 @@
 
 #endif	// HAVE_SSSE3
 
-BASE64_ENC_FUNCTION(ssse3)
+void
+base64_stream_encode_ssse3 BASE64_ENC_PARAMS
 {
 #if HAVE_SSSE3
 	#include "../generic/enc_head.c"
 	enc_loop_ssse3(&s, &slen, &o, &olen);
 	#include "../generic/enc_tail.c"
 #else
-	BASE64_ENC_STUB
+	base64_enc_stub(state, src, srclen, out, outlen);
 #endif
 }
 
-BASE64_DEC_FUNCTION(ssse3)
+int
+base64_stream_decode_ssse3 BASE64_DEC_PARAMS
 {
 #if HAVE_SSSE3
 	#include "../generic/dec_head.c"
 	dec_loop_ssse3(&s, &slen, &o, &olen);
 	#include "../generic/dec_tail.c"
 #else
-	BASE64_DEC_STUB
+	return base64_dec_stub(state, src, srclen, out, outlen);
 #endif
 }

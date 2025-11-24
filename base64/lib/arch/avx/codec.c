@@ -5,7 +5,7 @@
 #include "../../../include/libbase64.h"
 #include "../../tables/tables.h"
 #include "../../codecs.h"
-#include "../../config.h"
+#include "config.h"
 #include "../../env.h"
 
 #if HAVE_AVX
@@ -33,7 +33,8 @@
 
 #endif	// HAVE_AVX
 
-BASE64_ENC_FUNCTION(avx)
+void
+base64_stream_encode_avx BASE64_ENC_PARAMS
 {
 #if HAVE_AVX
 	#include "../generic/enc_head.c"
@@ -50,17 +51,18 @@ BASE64_ENC_FUNCTION(avx)
 
 	#include "../generic/enc_tail.c"
 #else
-	BASE64_ENC_STUB
+	base64_enc_stub(state, src, srclen, out, outlen);
 #endif
 }
 
-BASE64_DEC_FUNCTION(avx)
+int
+base64_stream_decode_avx BASE64_DEC_PARAMS
 {
 #if HAVE_AVX
 	#include "../generic/dec_head.c"
 	dec_loop_ssse3(&s, &slen, &o, &olen);
 	#include "../generic/dec_tail.c"
 #else
-	BASE64_DEC_STUB
+	return base64_dec_stub(state, src, srclen, out, outlen);
 #endif
 }

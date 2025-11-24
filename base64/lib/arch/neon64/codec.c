@@ -5,16 +5,10 @@
 #include "../../../include/libbase64.h"
 #include "../../tables/tables.h"
 #include "../../codecs.h"
-#include "../../config.h"
+#include "config.h"
 #include "../../env.h"
 
-#ifdef __aarch64__
-#  if (defined(__ARM_NEON__) || defined(__ARM_NEON)) && HAVE_NEON64
-#    define BASE64_USE_NEON64
-#  endif
-#endif
-
-#ifdef BASE64_USE_NEON64
+#if HAVE_NEON64
 #include <arm_neon.h>
 
 // Only enable inline assembly on supported compilers.
@@ -22,7 +16,7 @@
 #define BASE64_NEON64_USE_ASM
 #endif
 
-static inline uint8x16x4_t
+static BASE64_FORCE_INLINE uint8x16x4_t
 load_64byte_table (const uint8_t *p)
 {
 #ifdef BASE64_NEON64_USE_ASM
@@ -66,32 +60,34 @@ load_64byte_table (const uint8_t *p)
 # include "enc_loop.c"
 #endif
 
-#endif	// BASE64_USE_NEON64
+#endif	// HAVE_NEON64
 
 // Stride size is so large on these NEON 64-bit functions
 // (48 bytes encode, 64 bytes decode) that we inline the
 // uint64 codec to stay performant on smaller inputs.
 
-BASE64_ENC_FUNCTION(neon64)
+void
+base64_stream_encode_neon64 BASE64_ENC_PARAMS
 {
-#ifdef BASE64_USE_NEON64
+#if HAVE_NEON64
 	#include "../generic/enc_head.c"
 	enc_loop_neon64(&s, &slen, &o, &olen);
 	enc_loop_generic_64(&s, &slen, &o, &olen);
 	#include "../generic/enc_tail.c"
 #else
-	BASE64_ENC_STUB
+	base64_enc_stub(state, src, srclen, out, outlen);
 #endif
 }
 
-BASE64_DEC_FUNCTION(neon64)
+int
+base64_stream_decode_neon64 BASE64_DEC_PARAMS
 {
-#ifdef BASE64_USE_NEON64
+#if HAVE_NEON64
 	#include "../generic/dec_head.c"
 	dec_loop_neon64(&s, &slen, &o, &olen);
 	dec_loop_generic_32(&s, &slen, &o, &olen);
 	#include "../generic/dec_tail.c"
 #else
-	BASE64_DEC_STUB
+	return base64_dec_stub(state, src, srclen, out, outlen);
 #endif
 }

@@ -100,10 +100,10 @@ dec_loop_neon64 (const uint8_t **s, size_t *slen, uint8_t **o, size_t *olen)
 
 		// Check for invalid input, any value larger than 63:
 		const uint8x16_t classified
-			= vcgtq_u8(str.val[0], vdupq_n_u8(63))
-			| vcgtq_u8(str.val[1], vdupq_n_u8(63))
-			| vcgtq_u8(str.val[2], vdupq_n_u8(63))
-			| vcgtq_u8(str.val[3], vdupq_n_u8(63));
+			= vorrq_u8(
+				vorrq_u8(vcgtq_u8(str.val[0], vdupq_n_u8(63)), vcgtq_u8(str.val[1], vdupq_n_u8(63))),
+				vorrq_u8(vcgtq_u8(str.val[2], vdupq_n_u8(63)), vcgtq_u8(str.val[3], vdupq_n_u8(63)))
+			);
 
 		// Check that all bits are zero:
 		if (vmaxvq_u8(classified) != 0U) {
@@ -111,9 +111,9 @@ dec_loop_neon64 (const uint8_t **s, size_t *slen, uint8_t **o, size_t *olen)
 		}
 
 		// Compress four bytes into three:
-		dec.val[0] = vshlq_n_u8(str.val[0], 2) | vshrq_n_u8(str.val[1], 4);
-		dec.val[1] = vshlq_n_u8(str.val[1], 4) | vshrq_n_u8(str.val[2], 2);
-		dec.val[2] = vshlq_n_u8(str.val[2], 6) | str.val[3];
+		dec.val[0] = vorrq_u8(vshlq_n_u8(str.val[0], 2), vshrq_n_u8(str.val[1], 4));
+		dec.val[1] = vorrq_u8(vshlq_n_u8(str.val[1], 4), vshrq_n_u8(str.val[2], 2));
+		dec.val[2] = vorrq_u8(vshlq_n_u8(str.val[2], 6), str.val[3]);
 
 		// Interleave and store decoded result:
 		vst3q_u8((uint8_t *) *o, dec);

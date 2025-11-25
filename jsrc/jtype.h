@@ -308,6 +308,7 @@ struct AD {
 #define CAV0(x)         (((C*)(x)+AKXR(0)))  // character in non-virtual rank-0 array  (allocated as rank 0, that is)
 #define CAV1(x)         (((C*)(x)+AKXR(1)))  // character in non-virtual rank-1 array
 #define CAV2(x)         (((C*)(x)+AKXR(2)))  // character in non-virtual rank-2 array
+#define CAV3(x)         (((C*)(x)+AKXR(3)))  // character in non-virtual rank-3 array
 #define UCAV(x)         (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define UCAV0(x)        (     (UC*)(x)+AKXR(0) )  // local unsigned character atom
 #define DSAV(x)          ( (DS*)((C*)(x)+AK(x)))  /* single-prec                */

@@ -236,9 +236,9 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  UI htelesiz=hashelesiz*(1+redblack);   // length of tree/hash entry
  if(redblack){  // red/black: allocate n2nxh block for tree
   GATV0(box,LIT,(maxeles+TREENRES)*htelesiz,3) AS(box)[0]=maxeles; AS(box)[1]=2; AS(box)[2]=hashelesiz; INCORPNV(box)  // alloc res eles, the root pointer
-  IAVn(3,box)[0]=2*0+1; IAVn(3,box)[1]=2*0+0;// empty tree.  parent of root is red NULL.  empty list is not biased, starts after rootparent (first two keys wasted scaf)
+  IAVn(3,box)[0]=2*0+1; IAVn(3,box)[1]=2*0+0;// empty tree.  parent of root is red NULL then black NULL regardless of elesiz.  empty list is not biased.  (first two keys wasted scaf)
  }else{  // hash: allocate hashtable, as a LIT list
-  GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,voidAV1(box),MEMSET00LEN,MEMSET00); ((DIC*)z)->bloc.hash=box;  // allocate hash table & fill with empties
+  GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,voidAV1(box),MEMSET00LEN,MEMSET00);   // allocate hash table & fill with empties
  }
  ((DIC*)z)->bloc.emptyn=0; ((DIC*)z)->bloc.hash=box;   // save tree/hash, and set root of empty chain as unbiased 0
  I t=((DIC*)z)->bloc.ktype; A sa=((DIC*)z)->bloc.kshape;   // key type & shape
@@ -271,8 +271,8 @@ F1(jtcreatedic){F12IP;
 // DICLKRWWT(dic,lv)  // ...wait for read/write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock.
 // DICLKWRRQ(dic,lv)  // request write lock
 // DICLKWRWT(dic,lv)  // wait for write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
-// DICLKWRRELK(dic,lv)  // release write lock on keys
-// DICLKWRRELV(dic,lv)  // release write lock on values
+// DICLKWRRELK(dic)  // release write lock on keys (optional)
+// DICLKWRRELV(dic,lv)  // release write lock on keys and values
 
 // A read lock guarantees that the control info and tables will not be modified by any thread in a way that could affect a get().  Other modifications are allowed.
 // A read-write lock guarantees that the control info and tables will not be modified by any other thread.  No modification by this thread mey affect a get() in progress.
@@ -282,60 +282,67 @@ F1(jtcreatedic){F12IP;
 
 #if PYXES
 // The AM field of dic is the lock. 0-15=#read locks outstanding 16-31=seq# of next write req 32=writelock request 33=valueslock req/active 48-63=seq# of current writer (if 32-33 not 00) or next writer (if 32-33 00)
-#define DICLMSKRDX 0LL  // read locks outstanding
-#define DICLMSKRWX 16LL  // write locks request, by size 0-3
-#define DICLMSKWRX 32LL  // write lock requested by current write owner
-#define DICLMSKSEQX 48LL  // sequence# of current write owner
+#define DICLMSKSEQX 0LL  // sequence# of current write owner
+#define DICLMSKWRX 16LL  // flags indicating write lock requested by current write owner.  Invalid to request keys w/o values
+#define DICLMSKWRK ((I)1<<DICLMSKWRX)  // request includes keys
+#define DICLMSKWRV ((I)2<<DICLMSKWRX)  // request includes values
+#define DICLMSKRDX 32LL  // #read locks outstanding
+#define DICLMSKRWX 48LL  // seq# of write ownership requests
 
-#define DICLKRDRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL);  // put up read request
-#define DICLKRDWTK(dic,lv) if(unlikely((lv&((I)1<<DICLMSKWRX))!=0))lv=diclkrdwtk(dic);  // if someone is writing, wait till they finish with hash/keys 
-#define DICLKRDWTV(dic,lv) if(unlikely((lv&((I)2<<DICLMSKWRX))!=0))diclkrdwtv(dic);  // if someone is writing, wait till they finish with values
+#define DICLKRDRQ(dic,lv) (lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL))  // put up read request and read current status. Cannot overflow
+#define DICLKRDWTK(dic,lv) if(unlikely((lv&DICLMSKWRK)!=0))lv=diclkrdwtkv(dic,DICLMSKWRK);  // if someone is writing, wait till they finish with hash/keys, and update status
+#define DICLKRDWTV(dic,lv) if(unlikely((lv&DICLMSKWRV)!=0))diclkrdwtkv(dic,DICLMSKWRV);  // if someone is writing, wait till they finish with values.  Then we can read keys but not change them
 #define DICLKRDREL(dic)   __atomic_fetch_sub(&AM((A)dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL);  // remove read request
 
-#define DICLKRWRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRWX,__ATOMIC_ACQ_REL);   // put up prewrite request
-#define DICLKRWWT(dic,lv) if(unlikely((US)(lv>>DICLMSKRWX)!=(US)(lv>>DICLMSKSEQX)))diclkrwwt(dic,lv);  // wait until we are the lead writer, which is immediately if there are no others
-#define DICLKWRRQ(dic,lv) { __atomic_store_n((US*)((C*)&AM((A)dic)+4),(US)3,__ATOMIC_RELEASE); lv=__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE); }   // put up write request for key & value (we are known to be the lead writer and own the write bit, which must be clear)
-#define DICLKWRWT(dic,lv) if(unlikely((lv&((I)0xffff<<DICLMSKRDX))!=0))diclkwrwt(dic);  // wait until all reads are quiesced
-#define DICLKWRRELK(dic,lv) __atomic_store_n((US*)((C*)&AM((A)dic)+4),(US)2,__ATOMIC_RELEASE);   // release the keys, while still writing to values
-#define DICLKWRRELV(dic,lv) __atomic_store_n((UI4*)((C*)&AM((A)dic)+4),(((lv)>>DICLMSKWRX)&(0xffffL<<(DICLMSKSEQX-DICLMSKWRX)))+(1L<<(DICLMSKSEQX-DICLMSKWRX)),__ATOMIC_RELEASE);   // remove write request and advance sequence#
-
-// wait for read lock on keys in dic.
-static I diclkrdwtk(DIC *dic){I n;
- // We know we just put up a read request and saw a writer.  Rescind our read request and then quietly poll for the write to go away
+// obsolete #define DICLKRWRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRWX,__ATOMIC_ACQ_REL); scafRWC(dic);   // put up prewrite request and read status, which establishes our sequence# in lv where it will remain until we release the lock.  Can overflow
+// obsolete #define DICLKRWWT(dic,lv) if(unlikely((US)(lv>>DICLMSKRWX)!=(US)(lv>>DICLMSKSEQX)))diclkrwwt(dic,lv);  // wait until we are the lead writer, which is immediately if there are no others
+// obsolete #define DICLKWRRQ(dic,rdct) { __atomic_store_n((US*)((C*)&AM((A)dic)+DICLMSKWRX/BB),(US)3,__ATOMIC_RELEASE); rdct=__atomic_load_n((US*)((C*)&AM((A)dic)+DICLMSKRDX/BB),__ATOMIC_ACQUIRE); }   // put up write request for key & value (we are known to be the lead writer and own the write bit, which must be clear)
+// obsolete #define DICLKWRWT(dic,rdct) if(unlikely(rdct!=0))diclkwrwt(dic);  // wait until all reads are quiesced
+// obsolete #define DICLKWRRELK(dic) __atomic_store_n((US*)((C*)&AM((A)dic)+DICLMSKWRX/BB),(US)2,__ATOMIC_RELEASE);   // release the keys, while still writing to values
+// obsolete #define DICLKWRRELV(dic,lv) __atomic_store_n((UI4*)((C*)&AM((A)dic)+DICLMSKSEQX/BB),((lv)+1)&~(0xffffL<<(DICLMSKWRX-DICLMSKSEQX)),__ATOMIC_RELEASE); scafRWC(dic);   // remove write request and advance owner sequence# (suppressing overflow)
+// candyass designers don't allow mixing atomic of different sizes
+#define DICLKRWRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRWX,__ATOMIC_ACQ_REL);   // put up prewrite request and read status, which establishes our sequence# in lv where it will remain until we release the lock.  Can overflow
+#define DICLKRWWT(dic,lv) if(unlikely(((lv>>DICLMSKRWX)&0xffff)!=((lv>>DICLMSKSEQX)&0x7ffff)))diclkrwwt(dic,lv);  // wait until we are the lead writer and write requests have been removed, which is immediately if there are no others
+#define DICLKWRRQ(dic,rdct) rdct=__atomic_fetch_or(&AM((A)dic),DICLMSKWRK+DICLMSKWRV,__ATOMIC_ACQ_REL);   // put up write request for key & value (we are known to be the lead writer and own the write bits, which must be clear)
+#define DICLKWRWT(dic,rdct) if(unlikely(rdct&(0xffff<<DICLMSKRDX)))diclkwrwt(dic);  // wait until all reads are quiesced
+#define DICLKWRRELK(dic) __atomic_fetch_and(&AM((A)dic),~DICLMSKWRK,__ATOMIC_ACQ_REL);   // release the keys, while still writing to values
+#define DICLKWRRELV(dic,lv) __atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKSEQX,__ATOMIC_ACQ_REL); __atomic_fetch_and(&AM((A)dic),~((I)0xffff<<DICLMSKWRX),__ATOMIC_ACQ_REL);   // advance owner sequence#, then clear write req (which handles overflow on the seq#)
+// wait for read lock on keys in dic, which we have requested & found busy. kvtyp indicates the type of lock wanted: keys or values
+static I diclkrdwtkv(DIC *dic,I kvtyp){I n;
+ // We know we just put up a read request and saw busy.  Rescind our read request and then quietly poll for the write to go away
  do{
   DICLKRDREL(dic)  // remove read request
   for(n=5;;--n){
    delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
-   if(__atomic_load_n((US*)((I)AM((A)dic)+4),__ATOMIC_ACQUIRE)==0)break;  // wait until write is complete
+   if((__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)&kvtyp)==0)break;  // lightweight wait until resource is available
   }
- }while(((n=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL))&((I)1<<DICLMSKWRX))!=0);  // put up our rd request again, wait for any write to finish
+ }while(((DICLKRDRQ(dic,n))&kvtyp)!=0);  // put up our rd request again, wait for any write to finish with keys.  Usually succeeds
  R n;
 }
 
-// we have a read lock on keys in dic; wait for values to be available, keeping the lock the whole time
-static void diclkrdwtv(DIC *dic){I n;
- // We know we just put up a read request and saw a writer.  Rescind our read request and then quietly poll for the write to go away
- do{
-  for(n=5;;--n){
-   delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
-   if(__atomic_load_n((US*)((I)AM((A)dic)+4),__ATOMIC_ACQUIRE)==0)break;  // wait until write is complete
-  }
- }while(((n=__atomic_fetch_add(&AM((A)dic),(I)2<<DICLMSKRDX,__ATOMIC_ACQ_REL))&((I)1<<DICLMSKWRX))!=0);  // put up our rd request again, wait for any write to finish
+// obsolete // we have a read lock on keys in dic; wait for values to be available, keeping the lock the whole time
+// obsolete static void diclkrdwtv(DIC *dic){I n;
+// obsolete  // We know we just put up a read request and saw a writer.  Rescind our read request and then quietly poll for the write to go away
+// obsolete  do{
+// obsolete   for(n=5;;--n){
+// obsolete    delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
+// obsolete    if(__atomic_load_n((US*)((I)&AM((A)dic)+DICLMSKWRX/BB),__ATOMIC_ACQUIRE)==0)break;  // wait until write is complete
+// obsolete   }
+// obsolete  }while(((DICLKRDRQ(dic,n))&((I)2<<DICLMSKWRX))!=0);  // put up our rd request again, wait for any write to finish with keys and values
+// obsolete  R;
+// obsolete }
+// obsolete 
+// obsolete 
+// wait for prewrite lock on dic, which is granted when we know no other writer is going to modify keys
+static void diclkrwwt(DIC *dic, UI lv){I n;
+ // We know we just put up a read-write request and saw that we were not the first read-write requester.  Wait till we our seq# makes it to the top.  At that point we can change only flags in empties/tombstones, with no further action needed
+ UI ourseq=(lv>>DICLMSKRWX)&0xffff;  // get our sequence#.  When the current sequence# matches and writes have cleared, we have the resource
+ UI curseq=(lv>>DICLMSKSEQX)&0x7ffff;  // next sequence# to grant, and the write-request bits
+do{
+  delay((US)ourseq-(US)curseq>1?50:20);  // delay a bit.  the long delay uses mm_pause.  We use it when we are not the next requester
+  curseq=(__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)>>DICLMSKSEQX)&0x7ffff;  // refresh write bits\sequence#
+ }while(ourseq!=curseq);   // exit when we get to the top
  R;
-}
-
-
-// wait for read-write lock on dic, which is granted when we know no other writer is going to modify keys
-static void diclkrwwt(DIC *dic, I lv){I n;
- // We know we just put up a read-write request and saw that we were not the first read-write requester.  Wait till we our seq# makes it to the top.  At that point we have the lock, with no further action needed
- US ourseq=lv>>DICLMSKRWX;  // get our sequence#.  When the current sequence# matches, we have the resource
- US curseq=lv>>DICLMSKSEQX;  // next sequence# to grant
- while(1){
-  delay(ourseq-curseq>1?50:20);  // delay a bit.  the long delay uses mm_pause.  We use it when we are not the next requester
-  lv=__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE);  // refresh status
-  if(ourseq==curseq)R;   // exit when we get to the top
-  curseq=lv>>DICLMSKSEQX;  // refresh sequence#
- }
 }
 
 // wait for write lock on keys and values in dic.
@@ -343,13 +350,13 @@ static void diclkwrwt(DIC *dic){I n;
  // We are the next writer.  We just wait for read requests to clear.  We could improve this my adapting the wait to the usage pattern
  for(n=5;;--n){
   delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
-  if(__atomic_load_n((US*)&AM((A)dic),__ATOMIC_ACQUIRE)==0)R;  // wait until reads clear
+  if(__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)&(0xffff<<DICLMSKRWX))R;  // wait until reads clear
  }
 }
 
 
 #else
-#define DICLKRDRQ(dic,lv) lv=0;
+#define DICLKRDRQ(dic,lv) (lv=0)
 #define DICLKRDWTK(dic,lv) // if someone is writing, wait till they finish with hash/keys
 #define DICLKRDWTV(dic,lv)  // if someone is writing, wait till they finish with values
 #define DICLKRDREL(dic)
@@ -358,7 +365,7 @@ static void diclkwrwt(DIC *dic){I n;
 #define DICLKRWWT(dic,lv) if(lv);
 #define DICLKWRRQ(dic,lv) lv=0;
 #define DICLKWRWT(dic,lv) 
-#define DICLKWRRELK(dic,lv) 
+#define DICLKWRRELK(dic) 
 #define DICLKWRRELV(dic,lv) 
 #endif
 
@@ -441,7 +448,7 @@ static scafINLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
 // a is default if given, 0 if not 
 // We take a read lock on the table and return with it
 static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
- I lv; DICLKRDRQ(dic,lv);   // request read lock
+ UI lv; DICLKRDRQ(dic,lv);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;   // more nonresizable: kbytelen/kitemlen   compare fn   size of a value in bytes 
  k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
@@ -525,7 +532,7 @@ static DF2(jtdicget){F12IP;A z;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv,VIRT virt){I i;
+static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // kbytelen/kitemlen  compare func unchanged by resize
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
@@ -560,7 +567,7 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
    // conflict if BSTN was set; otherwise old if high part of s[i]=0 
 
  // If the operation is going to run out of slots, abort before we start.
- if(unlikely(dic->bloc.cardinality+nnew>=(UI)AS(dic->bloc.keys)[0]))goto resize;  // if this would fill the last key, resize
+ if(unlikely(dic->bloc.cardinality+nnew>=(UI)AS(dic->bloc.keys)[0]))goto lockforresize;  // if this would fill the last key, resize
  dic->bloc.cardinality+=nnew;  // account for the new keys
 
  // Now we move the new kvs into empty slots.  This wipes out the chain fields in the empties, so we have to create a separate list of where the empties were
@@ -578,7 +585,7 @@ static scafINLINE I jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv
  }
  dic->bloc.emptyn=emptyx;  // We have allocated all the new blocks successfully.  Update the free root, freeing the old blocks
 
- DICLKWRRQ(dic,lv); DICLKWRWT(dic,lv)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put rq up a little earlier
+ US rdct; DICLKWRRQ(dic,rdct); DICLKWRWT(dic,rdct)  // request pre-write and wait for it to be granted.  No resize is possible.  scaf could put rq up a little earlier
 
  // Now that we can modify the hash, put the biased hash index of the kv into the hash
  DQ(nnew, UI4 t=HDECEMPTY((*empties)[i][1]); WRHASH1234(t, hsz>>56, &hashtbl[(*empties)[i][0]*(hsz>>56)]))
@@ -621,7 +628,7 @@ found:;  // hval is the kv slot we compared with, or a new empty kv slot
   cur=nxthsh>>32;  // advance to next
  }
 
- DICLKWRRELK(dic,lv)    // allow gets to look at hashtable & keys.  We still have a write lock
+ DICLKWRRELK(dic)    // allow gets to look at hashtable & keys.  We still have a write lock
 
  // we have updated the keys and hash.  Now move the (non-new) values, indexed by s[i] (biased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
  C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;   // base pointer to allocated values, backed up to skip over the empty/birthstone/tombstone codes
@@ -630,6 +637,7 @@ found:;  // hval is the kv slot we compared with, or a new empty kv slot
 // obsolete  for(cur=croot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; PUTKVOLD(vbase+kvslot*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE)); cur=nxt;} // chase the conflict keys, copying the value
  R 1;  // return, holding write lock on values
 
+lockforresize:; US temp; DICLKWRRQ(dic,temp); DICLKWRWT(dic,temp)  // come here when we detect resize early.  We need a full write lock to resize
 resize: R -1;  // signal need for resize; return holding write lock on keys & values
 }
 
@@ -650,7 +658,7 @@ static DF2(jtdicput){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
@@ -675,7 +683,7 @@ abortexit:;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv,VIRT virt){I i;
+static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;    // more nonresizable
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
@@ -700,14 +708,15 @@ static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv,VIRT virt){I
   }
  }
 
- DICLKWRRQ(dic,lv);   // request write lock
+ US rdct; DICLKWRRQ(dic,rdct);   // request write lock
  I vb=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  UI emptyx=dic->bloc.emptyn; I cur; // starting root of free queue, current index, empty list
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))unbiasforcomp
  I ndel=0;  // number of deleted keys
- DICLKWRWT(dic,lv)  // wait for write lock to be granted.  No resize is possible
+ DICLKWRWT(dic,rdct)  // wait for write lock to be granted.  No resize is possible
 
  // chase the old kvs, which give the hashslots to be deleted.  We turn each into a tombstone, put the kv slot on the empty chain, and flip trailing tombstones.  If it is a tombstone already, it's a double del, ignore it
+// scaf should first mark the tombstones, closing up double dels; then release lock on keys; the retraverse, fixing the empty chain and flipping trailing tombstones.  No other thread can write to the keys while we still have the value lock
  for(cur=oroot;cur>=0;){
   I nxt=((I4*)(&s[cur]))[1];  // unroll the fetch once
   I8 curslot=((UI4*)(&s[cur]))[0];  // extract hashslot# to be emptied
@@ -730,7 +739,7 @@ static scafINLINE I jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,I lv,VIRT virt){I
  dic->bloc.emptyn=emptyx;  // Store updated free chain after all deletions
  dic->bloc.cardinality-=ndel;  // account for the deleted keys
 
- DICLKWRRELK(dic,lv)    // allow gets to look at hashtable & keys
+ DICLKWRRELK(dic)    // allow gets to look at hashtable & keys
 
  R 1;  // return, holding write lock on values
 
@@ -751,13 +760,13 @@ static DF1(jtdicdel){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
   else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
   else{A x; GATV0E(x,FL,kn,1,goto errexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
-    // we must reinit s because it might have been change by keyprep
+    // we must reinit s because it might have been changed by keyprep
 
   if(unlikely((s=jtkeyprep(dic,k,kn,s,jt,w))==0))goto errexit;  // hash keys & prefetch
 
@@ -817,13 +826,13 @@ static DF1(jtdicdel){F12IP;
 // a is default if given, 0 if not 
 // We take a read lock on the table and return with it
 static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
- I lv; DICLKRDRQ(dic,lv);   // request read lock
+ UI lv; DICLKRDRQ(dic,lv);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
  DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
- C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*nodeb;  // pointer to tree base
+ C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
  C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals)-TREENRES*vn;  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
 
@@ -908,13 +917,13 @@ static DF2(jtdicgeto){F12IP;A z;
 // We take a read lock on the table and return with it
 static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
  PROLOG(000);
- I lv; DICLKRDRQ(dic,lv);   // request read lock
+ UI lv; DICLKRDRQ(dic,lv);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
  DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
- C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*nodeb;  // pointer to tree base
+ C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
  C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals)-TREENRES*vn;  // address corresponding to tree value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
  I vb=dic->bloc.vbytelen;   //  len of 1 value
@@ -1075,13 +1084,13 @@ static DF2(jtdicgetkvo){F12IP;A z;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE I jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,I lv,VIRT virt){I i;
+static scafINLINE I jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
- C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*(nodeb&0xff);  // pointer to tree base
+ C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
  C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty/tombstone/birthstone and do not take space in the key array
 
  // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
@@ -1173,7 +1182,7 @@ static DF2(jtdicputo){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
@@ -1197,13 +1206,13 @@ abortexit:;
 // resolve each key in the hash and delete them
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE I jtdelslotso(DIC *dic,void *k,I n,J jt,I lv,VIRT virt){I i;
+static scafINLINE I jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
- C *hashtbl=CAV1(dic->bloc.hash)-TREENRES*(nodeb&0xff);  // pointer to tree base
+ C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
  C *kbase=CAV(dic->bloc.keys);  // origin of free chain (keys)
  C *vbase=CAV(dic->bloc.vals);  // origin of free chain (vals)
 
@@ -1331,7 +1340,7 @@ static DF1(jtdicdelo){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- I lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
@@ -1390,7 +1399,7 @@ DF1(jtdicgetkvc){F12IP;
 DF2(jtdicempties){F12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
- I lv;
+ UI lv;
  I x; RE(x=i0(a)); ASSERT(BETWEENC(x,0,1),EVDOMAIN)  // x must be 0 or 1
  I nodeb=(dic->bloc.emptysiz<<3); UI kb=dic->bloc.kbytelen;  // #bytes in empty-chain field; #bytes in key
  C *kv=CAV(dic->bloc.keys);   // point to start of keys

@@ -164,7 +164,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
-      <ObjectFileName>.\Release64/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -210,7 +210,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
-      <ObjectFileName>.\Release64/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -256,7 +256,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
-      <ObjectFileName>.\Release64/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -303,7 +303,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -355,7 +355,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -408,7 +408,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -458,7 +458,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug64/</AssemblerListingLocation>
-      <ObjectFileName>.\Debug64/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug64/</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
@@ -503,7 +503,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
@@ -554,7 +554,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -602,7 +602,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -647,7 +647,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\release/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\release/</AssemblerListingLocation>
-      <ObjectFileName>.\release/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\release/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -692,7 +692,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\release/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\release/</AssemblerListingLocation>
-      <ObjectFileName>.\release/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\release/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -734,7 +734,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
@@ -784,7 +784,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\debug/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\debug/</AssemblerListingLocation>
-      <ObjectFileName>.\debug/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\debug/</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>

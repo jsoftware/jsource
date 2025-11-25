@@ -237,11 +237,9 @@ THRESHOLD +. 0.75 > %/ vv1 > compst vv0
 THRESHOLD +. 0.75 > %/ vv1 >. compst vv0
 THRESHOLD +. 0.75 > %/ vv1 >: compst vv0
 THRESHOLD +. 0.75 > %/ vv1 ~: compst vv0
-THRESHOLD +. 0.75 > %/ vv1 0&o.@] compst vv0
-echo  %/ vv1 1&o.@] compst vv0
-THRESHOLD +. 0.85 > %/ vv1 1&o.@] compst vv0
-echo  %/ vv1 _1&o.@] compst vv0
-THRESHOLD +. 0.85 > %/ vv1 _1&o.@] compst vv0
+NB. no ss THRESHOLD +. 0.75 > %/ vv1 0&o.@] compst vv0
+NB. no ss THRESHOLD +. 0.75 > %/ vv1 1&o.@] compst vv0
+NB. no ss THRESHOLD +. 0.75 > %/ vv1 _1&o.@] compst vv0
 NB. Repeat for monad
 compst =: 1 : 0
 :

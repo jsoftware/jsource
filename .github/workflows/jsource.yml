@@ -1214,7 +1214,7 @@ jobs:
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
-  runs-on: macos-15
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

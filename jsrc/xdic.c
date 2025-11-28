@@ -209,7 +209,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   box=w;  // w is nothing but size parms
  }
 
- // box has the size parameters.  Audit & install into dic, overwriting anything that was copied.  But keep the 
+ // box has the size parameters.  Audit & install into dic, overwriting anything that was copied.
  ASSERT(AR(box)<=1,EVRANK) ASSERT(BETWEENC(AN(box),2,3),EVLENGTH) if(!AT(box)&INT)RZ(box=ccvt(INT,box,0));  // sizes. must be box of 3 integers
  I redblack=!!(flags&DICFRB);  // if only min,max, that's a red/blck tree
  I hashsiz=((DIC*)z)->bloc.hashsiz=IAV(box)[2-redblack];   // move hashsiz, which overwrites flags/lgminsiz/hashelesiz
@@ -234,9 +234,9 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  }else{((DIC*)z)->bloc.emptysiz=hashelesiz;}
 
 
- // allocate & protect hash/keys/vals
+ // allocate & protect hash/keys/vals, and put all keys on the empty chain
  // hashtbl is hashelsiz per entry
- // redblack has no empty table, and the tree (=hash) has shape nx2xhashelesiz (the LSB of indexes is 0)
+ // redblack has no empty table, and the tree (=hash) has shape nx2xhashelesiz (the LSB of indexes is color/0)
  UI htelesiz=hashelesiz*(1+redblack);   // length of tree/hash entry
  if(redblack){  // red/black: allocate n2nxh block for tree
   GATV0(box,LIT,(maxeles+TREENRES)*htelesiz,3) AS(box)[0]=maxeles; AS(box)[1]=2; AS(box)[2]=hashelesiz; INCORPNV(box)  // alloc res eles, the root pointer
@@ -284,7 +284,6 @@ F1(jtcreatedic){F12IP;
 // A write lock guarantees that no other thread has a lock of any kind.  Any modification is allowed.  The lock can then be advanced to a value lock, which declared that it will not touch the hash or the keys
 // but may moodify values
 
-#if PYXES
 // The AM field of dic is the lock. 0-15=#read locks outstanding 16-31=seq# of next write req 32=writelock request 33=valueslock req/active 48-63=seq# of current writer (if 32-33 not 00) or next writer (if 32-33 00)
 #define DICLMSKSEQX 0LL  // sequence# of current write owner
 #define DICLMSKWRX 16LL  // flags indicating write lock requested by current write owner.  Invalid to request keys w/o values
@@ -295,6 +294,7 @@ F1(jtcreatedic){F12IP;
 #define DICLMSKRDX 32LL  // #read locks outstanding
 #define DICLMSKRWX 48LL  // seq# of write ownership requests
 
+#if PYXES
 #define DICLKRDRQ(dic,lv) (lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRDX,__ATOMIC_ACQ_REL))  // put up read request and read current status. Cannot overflow
 #define DICLKRDWTK(dic,lv) if(unlikely((lv&DICLMSKWRK)!=0))lv=diclkrdwtkv(dic,DICLMSKWRK);  // if someone is writing, wait till they finish with hash/keys, and update status
 #define DICLKRDWTV(dic,lv) if(unlikely((lv&DICLMSKWRV)!=0))diclkrdwtkv(dic,DICLMSKWRV);  // if someone is writing, wait till they finish with values.  Then we can read keys but not change them
@@ -373,14 +373,14 @@ static UI diclkwrwt(DIC *dic){I n;
 #define DICLKRDRQ(dic,lv) (lv=0)
 #define DICLKRDWTK(dic,lv) // if someone is writing, wait till they finish with hash/keys
 #define DICLKRDWTV(dic,lv)  // if someone is writing, wait till they finish with values
-#define DICLKRDREL(dic)
+#define DICLKRDREL(dic) ;
 
 #define DICLKRWRQ(dic,lv) lv=0;
 #define DICLKRWWT(dic,lv) ;
 #define DICLKWRRQ(dic,lv) lv=0;
 #define DICLKWRWT(dic,lv) lv=0;
-#define DICLKWRRELK(dic,lv) 
-#define DICLKWRRELV(dic,lv) 
+#define DICLKWRRELK(dic,lv) ;
+#define DICLKWRRELV(dic,lv) ;
 #endif
 
 // **************************************************** resize ***************************************
@@ -399,8 +399,13 @@ A dicresize(DIC *dic,J jt){
  struct Dic t=dic->bloc; ((DIC*)dic)->bloc=((DIC*)newdic)->bloc; ((DIC*)newdic)->bloc=t;  // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be freed when the new dic is.
  // NOTE: we keep the old blocks hanging around until the new have been allocated.  This seems unnecessary for the hashtable, but we do it because other threads still have the old pointers and may prefetch from
  //  the old hash.  This won't crash, but it might be slow if the old hash is no longer in mapped memory
- // for trees, we copy the old tree into the new one because it's still a valid prefix of the new larger tree and recreating it is slow.
- // we copy the keys and values too, which is tricky because of empties.  To avoid looking at atoms we copy the keys and values en bloc and then make the old kvs nonrecursive, so that the new block has sole ownership.
+ if(((DIC*)dic)->bloc.flags&DICFRB){
+  // for trees, we copy the old tree into the new one because it's still a valid prefix of the new larger tree and recreating it is slow.
+  // we must then copy the keys and values too, which is tricky because of empties.  To avoid looking at atoms we copy the keys and values en bloc and then make the old kvs nonrecursive, so that the new block has sole ownership.
+  I kk=bplg(AT(((DIC*)newdic)->bloc.keys)), kn=AN(((DIC*)newdic)->bloc.keys), vk=bplg(AT(((DIC*)newdic)->bloc.vals)), vn=AN(((DIC*)newdic)->bloc.vals);  // kv, #atom & size of atom
+  MC(voidAV(((DIC*)dic)->bloc.keys), voidAV(((DIC*)newdic)->bloc.keys), kn<<kk); AFLAG(((DIC*)newdic)->bloc.keys)&=~RECURSIBLE;   // copy & abandon the old keys, transferring ownership
+  MC(voidAV(((DIC*)dic)->bloc.vals), voidAV(((DIC*)newdic)->bloc.vals), vn<<vk); AFLAG(((DIC*)newdic)->bloc.vals)&=~RECURSIBLE;   // copy & abandon the old values, transferring ownership
+ }
  // for hashtables, we let the resize function make the copy, to work for downsizing.  We have to recreate the hashtable anyway.
 
 exit:;  // clean up from error
@@ -768,7 +773,7 @@ static scafINLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt
   I t=emptyx; WRHASH1234(t,hsz>>48,&kbase[kvx*(kib>>32)])  // chain old free chain from new deletion
   emptyx=HENCEMPTY(kvx);  // put new deletion at top of the free chain, unbiased
   // Whenever we add a tombstone, we turn it into an empty if it is followed by an empty; and we continue this back into previous tombstones
-  I cs=(UI4)curslot, curslotn=cs-1; if(unlikely(curslotn<0))curslotn+=(UI4)hsz;   // point to next slot
+  UI cs=(UI4)curslot; I curslotn=cs-1; if(unlikely(curslotn<0))curslotn+=(UI4)hsz;   // point to next slot
   if(_bzhi_u64(*(UI4*)&hashtbl[curslotn*(hsz>>56)],(hsz>>53))==0){
    // curslot is followed by a hole.  Flip it & its predecessors to holes
    do{hashtbl[cs*(hsz>>56)]=0; if(unlikely(++cs==(UI4)hsz))cs=0;}while(_bzhi_u64(*(UI4*)&hashtbl[cs*(hsz>>56)],(hsz>>53))==HASHTSTN);  // only the low byte needs to change

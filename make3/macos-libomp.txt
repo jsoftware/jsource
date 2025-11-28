@@ -1,0 +1,15 @@
+get/build cmake if not yet
+
+$ brew install cmake
+
+How to get/build libomp.
+
+$ cd
+$ svn co http://llvm.org/svn/llvm-project/openmp/trunk libomp
+$ cd libomp
+$ mkdir -p build
+$ cmake -DCMAKE_INSTALL_PREFIX=/usr/local/opt/libomp
+$ make && make install
+
+need to deploy this run-time 
+/usr/local/opt/libomp/lib/libomp.dylib

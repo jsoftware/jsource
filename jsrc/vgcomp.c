@@ -12,10 +12,11 @@
 #define PREFNEZ(a,b) (a.re!=b.re)
 #define PREFLTE(a,b) (a.hi>b.hi || (a.hi==b.hi && a.lo>b.lo))
 #define PREFNEE(a,b) (a.hi!=b.hi)
-#define TAOGRADE(nm,T,lt,ne) I nm(I n, T *a, T *b){DO(n, if(ne(a[i],b[i])) R lt(a[i],b[i])-lt(b[i],a[i]);) R 0;}
+// the TAO routines are called outside of sort & thus may have a=b, which allows fast exit
+#define TAOGRADE(nm,T,lt,ne) I nm(I n, T *a, T *b){if(a!=b)DO(n, if(ne(a[i],b[i])) R lt(a[i],b[i])-lt(b[i],a[i]);) R 0;}
 TAOGRADE(taoc,UC,PREFLT,PREFNE) TAOGRADE(taoi,I,PREFLT,PREFNE) TAOGRADE(taou,US,PREFLT,PREFNE) TAOGRADE(taot,C4,PREFLT,PREFNE) TAOGRADE(taos,I2,PREFLT,PREFNE) TAOGRADE(taol,I4,PREFLT,PREFNE)
 TAOGRADE(taof,D,PREFLT,PREFNE) TAOGRADE(taoz,Z,PREFLTZ,PREFNEZ) TAOGRADE(taoe,E,PREFLTE,PREFNEE)
-#define TAOGRADEC(nm,T,t) I nm(I n, T *a, T *b, J jt){I comp=0; DO(n, if(comp=t(a[i],b[i]))break;) R comp;}
+#define TAOGRADEC(nm,T,t) I nm(I n, T *a, T *b, J jt){I comp=0; if(a!=b)DO(n, if(comp=t(a[i],b[i]))break;) R comp;}
 TAOGRADEC(taor,A,compare) TAOGRADEC(taox,A,xcompare) TAOGRADEC(taoq,Q,QCOMP)
 
 I (*taocomproutine[])()=   // routines for different datatypes. index is [precisionx]
@@ -36,7 +37,7 @@ F2(jttao){F12IP;
  R sc((*taocomproutine[CTTZI(AT(a))])(AN(a),voidAV(a),voidAV(w),jt));  // return 
 }
 
-// return 1 if a before b, 0 otherwise
+// return 1 if a before b, 0 otherwise.  These routines are called only in sort and do not encounter a=b
 // inlinable functions are moved to vg.c
 // functions differing between merge & sort are moved to those modules
 B compcu(I n, UC *a, UC *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
@@ -64,9 +65,9 @@ B compqd(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->j
 
 #define COMPDCLQ(T)      T*x=(T*)av,*y=(T*)wv
 #define COMPDCLS(T)      T*x=(T*)SBAV(a),*y=(T*)SBAV(w)
-#define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]!=y[i])R RETGT(x[i]>y[i]);)}
-#define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBNE(x[i],y[i]))R RETGT(SBGT(x[i],y[i])););}
-#define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; DO(m, if(j=f(x[i],y[i]))R RETGT(j>0););}
+#define COMPLOOQ(T,m)    {COMPDCLQ(T); if(x!=y)DO(m, if(x[i]!=y[i])R RETGT(x[i]>y[i]);)}
+#define COMPLOOS(T,m)    {COMPDCLS(T); if(x!=y)DO(m, if(SBNE(x[i],y[i]))R RETGT(SBGT(x[i],y[i])););}
+#define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; if(x!=y)DO(m, if(j=f(x[i],y[i]))R RETGT(j>0););}
 
 // this is used by routines outside of sort/merge & therefore a & w can be dissimilar
 // jt has the JTDESCEND flag
@@ -108,7 +109,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
   case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
   case INT2X:  COMPLOOQ (I2, m  );         break;
   case INT4X:  COMPLOOQ (I4, m  );         break;
-  case BOXX:  {COMPDCLQ(A);I j; STACKCHKOFL DO(m, if(j=jtcompare(jtfg,x[i],y[i]))R j;);} break;
+  case BOXX:  {COMPDCLQ(A);I j; STACKCHKOFL if(x!=y)DO(m, if(j=jtcompare(jtfg,x[i],y[i]))R j;);} break;
   }
  }
  if(1>=ar)R an==wn?0:RETGT(an>wn);   // all compared items matched.  If they weren't the same length, the longer is bigger

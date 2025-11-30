@@ -402,6 +402,8 @@ F1(jtcpufeature){F12IP;
 #else
   R sc(0);
 #endif
+ } else if (!strcasecmp(CAV(w),"MAXOP")) {  // MAXOP for 128!:14 - must match with the value in xlp.c
+  R sc(100);
  } else if (!strcasecmp(CAV(w),"CACHELINESIZE")) {  // cacheline size used in compilation time
   R sc(CACHELINESIZE);
  } else if (!strcasecmp(CAV(w),"CACHELINESIZEHW")) {  // cacheline size by querrying OS during runtime

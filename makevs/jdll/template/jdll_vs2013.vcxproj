@@ -158,7 +158,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
-      <ObjectFileName>.\Release64/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -204,7 +204,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
-      <ObjectFileName>.\Release64/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -250,7 +250,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
-      <ObjectFileName>.\Release64/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -297,7 +297,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -349,7 +349,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -402,7 +402,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -452,7 +452,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug64/</AssemblerListingLocation>
-      <ObjectFileName>.\Debug64/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug64/</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
@@ -498,7 +498,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
@@ -550,7 +550,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -598,7 +598,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -643,7 +643,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\release/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\release/</AssemblerListingLocation>
-      <ObjectFileName>.\release/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\release/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -688,7 +688,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\release/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\release/</AssemblerListingLocation>
-      <ObjectFileName>.\release/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\release/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -730,7 +730,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
-      <ObjectFileName>$(outdir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
@@ -780,7 +780,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\debug/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\debug/</AssemblerListingLocation>
-      <ObjectFileName>.\debug/</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <ProgramDataBaseFileName>.\debug/</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
@@ -979,15 +979,15 @@
     <ClCompile Include="..\..\jsrc\openssl\sha\sha512.c" />
     <ClCompile Include="..\..\jsrc\utf\utf16le_to_utf8_avx512i.c" />
     <ClCompile Include="..\..\jsrc\utf\utf8_to_utf16le_avx512i.c" />
-    <ClCompile Include="..\..\base64\lib\arch\avx2\codec-avx2.c" />
-    <ClCompile Include="..\..\base64\lib\arch\avx512\codec-avx512.c" />
-    <ClCompile Include="..\..\base64\lib\arch\generic\codec-generic.c" />
-    <ClCompile Include="..\..\base64\lib\arch\neon32\codec-neon32.c" />
-    <ClCompile Include="..\..\base64\lib\arch\neon64\codec-neon64.c" />
-    <ClCompile Include="..\..\base64\lib\arch\ssse3\codec-ssse3.c" />
-    <ClCompile Include="..\..\base64\lib\arch\sse41\codec-sse41.c" />
-    <ClCompile Include="..\..\base64\lib\arch\sse42\codec-sse42.c" />
-    <ClCompile Include="..\..\base64\lib\arch\avx\codec-avx.c" />
+    <ClCompile Include="..\..\base64\lib\arch\avx2\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\avx512\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\generic\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\neon32\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\neon64\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\ssse3\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\sse41\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\sse42\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\avx\codec.c" />
     <ClCompile Include="..\..\base64\lib\lib.c" />
     <ClCompile Include="..\..\base64\lib\codec_choose.c" />
     <ClCompile Include="..\..\base64\lib\tables\tables.c" />

@@ -54,7 +54,7 @@ case "$jplatform64" in
 	 CC="$(xcrun --sdk macosx --find clang)"
 	 AR="$(xcrun --sdk macosx --find libtool)"
 	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
-	openbsd/*) make=gmake;;
+	openbsd/*) NO_SHA_ASM=1;make=gmake;;
 	freebsd/*) make=gmake;;
  wasm*)
 	 USE_OPENMP=0
@@ -346,15 +346,15 @@ else
 fi
 
 OBJS_BASE64=" \
-  ../../../../base64/lib/arch/avx2/codec-avx2.o \
-  ../../../../base64/lib/arch/avx512/codec-avx512.o \
-  ../../../../base64/lib/arch/generic/codec-generic.o \
-  ../../../../base64/lib/arch/neon32/codec-neon32.o \
-  ../../../../base64/lib/arch/neon64/codec-neon64.o \
-  ../../../../base64/lib/arch/ssse3/codec-ssse3.o \
-  ../../../../base64/lib/arch/sse41/codec-sse41.o \
-  ../../../../base64/lib/arch/sse42/codec-sse42.o \
-  ../../../../base64/lib/arch/avx/codec-avx.o \
+  ../../../../base64/lib/arch/avx2/codec.o \
+  ../../../../base64/lib/arch/avx512/codec.o \
+  ../../../../base64/lib/arch/generic/codec.o \
+  ../../../../base64/lib/arch/neon32/codec.o \
+  ../../../../base64/lib/arch/neon64/codec.o \
+  ../../../../base64/lib/arch/ssse3/codec.o \
+  ../../../../base64/lib/arch/sse41/codec.o \
+  ../../../../base64/lib/arch/sse42/codec.o \
+  ../../../../base64/lib/arch/avx/codec.o \
   ../../../../base64/lib/lib.o \
   ../../../../base64/lib/codec_choose.o \
   ../../../../base64/lib/tables/tables.o \

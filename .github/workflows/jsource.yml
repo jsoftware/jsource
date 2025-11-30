@@ -22,11 +22,6 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2.4
-     with:
-       sdeVersion: 9.33.0 # possible values: 9.33.0 (default), 9.27.0, 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
-
    - name: Setup Environment (Linux)
      run: |
       script/install-lnx.sh
@@ -44,8 +39,6 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
      run: |
-      echo $SDE_PATH
-      $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux)
@@ -87,11 +80,6 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2.4
-     with:
-       sdeVersion: 9.33.0 # possible values: 9.33.0 (default), 9.27.0, 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
-
    - name: Setup Environment (Linux gcc)
      run: |
       script/install-lnx.sh
@@ -106,8 +94,6 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
      run: |
-      echo $SDE_PATH
-      $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux gcc)
@@ -150,11 +136,6 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup SDE binaries
-     uses: petarpetrovt/setup-sde@v2.4
-     with:
-       sdeVersion: 9.33.0 # possible values: 9.33.0 (default), 9.27.0, 9.24.0, 9.14.0, 9.7.0, 9.0.0, 8.69.1
-
    - name: Setup Environment (Linux debug)
      run: |
       script/install-lnx.sh
@@ -170,8 +151,6 @@ jobs:
       USE_OPENMP: 0
       _DEBUG: 3
      run: |
-      echo $SDE_PATH
-      $SDE_PATH/sde -help || true
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux debug)
@@ -201,7 +180,7 @@ jobs:
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -251,7 +230,7 @@ jobs:
 # macOS arm64 ----------------------------------------------------------
  jemacosarm:
   name: JE (macOS arm64)
-  runs-on: macos-14
+  runs-on: macos-15
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -301,7 +280,7 @@ jobs:
 # macOS debug ----------------------------------------------------------
  jemacosd:
   name: JE (macOS debug)
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -346,7 +325,7 @@ jobs:
 # macOS arm64 debug ----------------------------------------------------
  jemacosarmd:
   name: JE (macOS arm64 debug)
-  runs-on: macos-14
+  runs-on: macos-15
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -824,7 +803,7 @@ jobs:
  jeopenbsd:
   name: JE (OpenBSD vmactions)
   if: ${{ false }}
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -896,7 +875,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD)
-     uses: cross-platform-actions/action@v0.27.0
+     uses: cross-platform-actions/action@v0.30.0
      with:
       operating_system: openbsd
       architecture: x86-64
@@ -964,7 +943,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.27.0
+     uses: cross-platform-actions/action@v0.30.0
      with:
       operating_system: openbsd
       architecture: arm64
@@ -1023,7 +1002,7 @@ jobs:
  jefreebsd:
   name: JE (FreeBSD vmactions)
   if: ${{ false }}
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -1099,7 +1078,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD)
-     uses: cross-platform-actions/action@v0.27.0
+     uses: cross-platform-actions/action@v0.30.0
      with:
       operating_system: freebsd
       architecture: x86-64
@@ -1170,7 +1149,7 @@ jobs:
      uses: actions/checkout@v4
 
    - name: Build, Test JE (FreeBSD arm64)
-     uses: cross-platform-actions/action@v0.27.0
+     uses: cross-platform-actions/action@v0.30.0
      with:
       operating_system: freebsd
       architecture: arm64
@@ -1235,7 +1214,7 @@ jobs:
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
-  runs-on: macos-13
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

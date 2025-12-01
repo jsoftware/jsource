@@ -323,6 +323,7 @@ struct AD {
 #define UI4AV(x)        ((UI4*)((C*)(x)+AK(x)))  /* unsigned 32-bit int      */
 #define UI4AV0(x)       ((UI4*)((C*)(x)+AKXR(0)))  // local unsigned 32-bit int atom
 #define UI4AV1(x)       ((UI4*)((C*)(x)+AKXR(1)))  // local unsigned 32-bit int list
+#define UI4AV3(x)       ((UI4*)((C*)(x)+AKXR(3)))  // local unsigned 32-bit int brick
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define C4AVn(n,x)      ((C4*)((C*)(x)+AKXR(n)))  // local literal4 list
 #define C4AV1(x)        ((C4*)((C*)(x)+AKXR(1)))  // local literal4 list
@@ -1204,6 +1205,7 @@ typedef struct {
     I poweratom;  // for u^:atom or u^:<any, the encoded arg status: bit0=multiple (i. e. boxed n) bit1=nonneg power bits2-31=|power|
     AF bondfn;  // for m&v u&n, the dyad entry point for u/v
     I sundern;  // for u&.v structural under, form of u: 0=, 1=m&{ 2=m&(];.0)
+    I varno;  // verb variant index.  For 16!:_2 and _12, 0 for 16!:_2
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

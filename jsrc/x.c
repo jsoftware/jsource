@@ -153,6 +153,7 @@ void jtforeigninit(J jt){UI i;
    AFLAG((A)&foreignA[Andx])|=AFRO;  // mark as read-only value, as a flag to lrep etc
  MN(18,5)  XPRIM(VERB, jtlocname,    0,            VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(16,-2)  XPRIM(ADV, jtdicgetc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(16,-12)  XPRIM(ADV, jtdichasc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-3)  XPRIM(ADV, jtdicputc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-4)  XPRIM(ADV, jtdicdelc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-6)  XPRIM(ADV, jtdicgetkvc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
@@ -198,6 +199,7 @@ void jtforeigninit(J jt){UI i;
  MN(16,0)  XPRIM(VERB, jthashy,     jttao,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-1)  XPRIM(ADV, jtcreatedic,  0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-5)  XPRIM(VERB, 0,     jtdicempties,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(16,-7)  XPRIM(VERB, jtdisprbdic,jtdisprbdic,   VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(2,0)   XPRIM(VERB, jthost,       0,            VASGSAFE,VF2NONE,1,   RMAX,RMAX);
  MN(2,1)   XPRIM(VERB, jthostne,     0,            VASGSAFE,VF2NONE,1,   RMAX,RMAX);
 #if 0  // doesn't work

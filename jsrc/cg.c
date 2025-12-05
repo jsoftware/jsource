@@ -148,6 +148,7 @@ static DF1(jtinsert){F12IP;A hs,*hv,z;I hfx,j,m,n;A *old;
 // u`:m
 F2(jtevger){F12IP;A hs;I k;
  ARGCHK2(a,w);
+ ASSERT((AT(w)&VERB)==0,EVDOMAIN)   // must be m `: n
  STACKCHKOFL  // because this is an execution, we must check the stack to avoid self-executions
  RE(k=i0(w)); 
  if(k==GTRAIN)R exg(a);

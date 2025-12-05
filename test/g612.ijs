@@ -20,6 +20,7 @@ x =: 5 7
 'domain error' -: ex '-`a;._1'
 'domain error' -: ex '-`a;. 2'
 'domain error' -: ex '-`a;._2'
+'domain error' -: ex '+`:+'
 
 
 

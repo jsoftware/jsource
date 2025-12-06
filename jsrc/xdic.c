@@ -412,7 +412,7 @@ static UI diclkwrwt(DIC *dic,I type){I n;
 
 #define DICLKRWRQ(dic,lv,cond) lv=0;
 #define DICLKRWWT(dic,lv)
-#define DICLKWRRQ(dic,lv,cond)
+#define DICLKWRRQ(dic,lv)
 #define DICLKWRWTK(dic,lv)
 #define DICLKCKSTAT(dic,lv)
 #define DICLKWRWTV(dic,lv)
@@ -763,7 +763,7 @@ static DF2(jtdicput){F12IP;
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
  }
- A z=mtv; if(0){errexit: z=0;}
+ A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
  PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
 abortexit:;
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
@@ -892,7 +892,7 @@ static DF1(jtdicdel){F12IP;
 // obsolete   I rc=jtdelslots(dic,k,kn,s,jt,lv,virt); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
 // obsolete   dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
- A z=mtv; if(0){errexit: z=0;}
+ A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
  DICLKWRRELV(dic,nlv)    // we are finished. advance sequence# and allow everyone to look at values
  RETF(z);
 }
@@ -1261,6 +1261,8 @@ static scafINLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,U
  C *kebase=CAV(dic->bloc.keys), *kbase=kebase-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty/tombstone/birthstone and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals)-TREENRES*vb;  // same for value
 
+ DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys to be modifiable.
+
  // loop over keys.  Find the key
  // Because we don't store parent info, we have to do each key separately, which requires keeping a write
  // lock after the first key.
@@ -1369,7 +1371,7 @@ static DF2(jtdicputo){F12IP;
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
  }
- A z=mtv; if(0){errexit: z=0;}
+ A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
  PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
 abortexit:;
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
@@ -1547,7 +1549,7 @@ static DF1(jtdicdelo){F12IP;
   I rc=jtdelslotso(dic,k,kn,jt,lv,virt); if(likely(rc>0))break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
   dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
- A z=mtv; if(0){errexit: z=0;}
+ A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
  RETF(z);
 }

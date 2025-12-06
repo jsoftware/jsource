@@ -97,6 +97,7 @@ typedef struct ADic {
 #define DICFVINDIR (I8)8   // set if vals are indirect type
 #define DICFRB (I8)16  // set if red/black tree
 #define DICFRESIZE (I8)32  // set if we are running out & will have to resize
+#define DICFSINGLETHREADED (I8)64  // set if we should bypass locking, assuming the user doesn't do put/get simultaneously
 // NOTE bit 7 of flags must be 0, used as LSB of a length
     C emptysiz;  // length in bytes of the chain field in the empty chain - never exceeding length of key  Top 3 bits always 0, used as LSBs of hashelesiz
     C hashelesiz;  // number of bytes in a hash slot, 1-5 (we support only 4)
@@ -165,7 +166,7 @@ typedef struct ADic {
 
 // u 16!:_1 y  adverb.  allocate hashtable.  Always called from the numbered locale of the dictionary.
 // u is the hash/compare verb OR the DIC block for a dictionary that is being resized.
-// y is (min #eles,max #eles,#hashslots);(flags, currently empty);(key type;key shape);(value type;value shape)    to create a new dictionary
+// y is (min #eles,max #eles,#hashslots);(flags: singlethreading (default 0));(key type;key shape);(value type;value shape)    to create a new dictionary
 //      (min #eles,max #eles,#hashslots)   when a dictionary is being resized
 //     if #hashslots is omitted, the map is a red/black tree
 // result is DIC to use, ready for get/put, with hash/keys/vals/empty allocated, and 0 valid kvs
@@ -183,7 +184,8 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
 
   // flags, key, value sizes
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==4,EVLENGTH)  // 4 boxes
-  box=C(AAV(w)[1]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)==0,EVLENGTH)  // flags.  None currently supported
+  box=C(AAV(w)[1]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)<=1,EVLENGTH)  // flags.  First is singlethreading (default 0), must have 0-1 values
+  if(AN(box)>0){if(!(AT(box)&B01))RZ(box=ccvt(B01,box,0)) if(BAV(box)[0])flags|=DICFSINGLETHREADED;}  // set singlethreading if user wants it
 
   // keyspec.  must be 2 boxes
   box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
@@ -295,20 +297,21 @@ F1(jtcreatedic){F12IP;
 #define DICLMSKRDK       0x3fff80000LL  // #read locks for keys outstanding
 #define DICLMSKRDV   0x1fffc00000000LL  // #read locks for values outstanding
 #define DICLMSKRW 0xfffe000000000000LL  // seq# of write ownership requests
-#define DICLMSKRWX 49  // LSB of ownership requests
 #define LKSEQ(x) ((x)>>0)
 #define LKRDK(x) ((x)>>19)
 #define LKRDV(x) ((x)>>34)
 #define LKRW(x) ((x)>>49)
+#define DICLSINGLETHREADED DICLMSKRDK  // WR=10 is impossible and used internally to indicate singlethreading.  DICLMSKRDV=0 is used as flag during read to indicate singlethreading.  DICLMSKWRK says we have the lock, which may persist over resize
+     //  No RFO cycles are performed.  If we chance to detect overlapping puts/gets we will abort, but there are no guarantees.  
 
 #if PYXES
-#define DICLKRDRQ(dic,lv) (lv=__atomic_fetch_add(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL))  // put up read request and read current status. Cannot overflow
-#define DICLKRDWTK(dic,lv) if(unlikely((lv&DICLMSKWRK)!=0))lv=diclkrdwtkv(dic,DICLMSKWRK+DICLMSKWRV);  // wait till current owner finishes with hash/keys, and update status
-#define DICLKRDRELK(dic,lv) (lv=__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDK),__ATOMIC_ACQ_REL));  // remove read request for keys
-#define DICLKRDWTV(dic,lv) if(unlikely((lv&DICLMSKWRK+DICLMSKWRV)==DICLMSKWRV))diclkrdwtkv(dic,DICLMSKWRV);  // (after we have a key lock) wait till the owner, if any, finishes with values.  Then we can read keys but not change them.
+#define DICLKRDRQ(dic,lv,cond) (lv=!(cond)?__atomic_add_fetch(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL):DICLSINGLETHREADED)  // put up read request and read current status. Cannot overflow
+#define DICLKRDWTK(dic,lv) if(unlikely((lv&DICLMSKWRK)!=0))if((lv&DICLMSKWRV)!=0)lv=diclkrdwtkv(dic,DICLMSKWRK+DICLMSKWRV);  // wait till current owner finishes with hash/keys, and update status.  Skip if single-threaded (WR=10)
+#define DICLKRDRELK(dic,lv) if((lv&DICLMSKRDV)!=0)(lv=__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDK),__ATOMIC_ACQ_REL));  // if not single-threaded, remove read request for keys
+#define DICLKRDWTV(dic,lv) if(unlikely((lv&DICLMSKWRK+DICLMSKWRV)==DICLMSKWRV))diclkrdwtkv(dic,DICLMSKWRV);  // (after we have a key lock) wait till the owner, if any, finishes with values.  Then we can read keys but not change them.  Single-threaded (WR=10) always passes
      // We know that our WTK gave us a read lock with WRK=0,WRV=x.  If there was a writer, state will go to 00 when it finishes and then may go only as far as 11 while we retain our read lock.  Thus, anythong but 01 gives us a value lock.
-#define DICLKRDRELV(dic) (__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL));  // remove read request for values
-#define DICLKRDRELKV(dic) __atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL);  // remove read request for keys & values simultaneously
+#define DICLKRDRELV(dic) if((lv&DICLMSKRDV)!=0)(__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL));  // if not single-threaded, remove read request for values
+#define DICLKRDRELKV(dic) if((lv&DICLMSKRDV)!=0)__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL);  // remove read request for keys & values simultaneously
 
 // obsolete #define DICLKRWRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRWX,__ATOMIC_ACQ_REL); scafRWC(dic);   // put up prewrite request and read status, which establishes our sequence# in lv where it will remain until we release the lock.  Can overflow
 // obsolete #define DICLKRWWT(dic,lv) if(unlikely((US)(lv>>DICLMSKRWX)!=(US)(lv>>DICLMSKSEQX)))diclkrwwt(dic,lv);  // wait until we are the lead writer, which is immediately if there are no others
@@ -320,20 +323,20 @@ F1(jtcreatedic){F12IP;
 // We start a write sequence by putting up the prewrite rewuest and waiting to become the lead writer.  If there is a resize, which happens only after we have become the lead writer and acquired a write lock,
 // we keep the same lock throughout the resize, and we use the existence of that lock as a flag to suppress requesting the write lock again.  That in turn means that we must ignore any write lock that we see before we have
 // become the lead writer.  We just mask it off here on the initial prewrite response.  When we become lead writer we can be sure the lock is clear.
-#define DICLKRWRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),LOWESTBIT(DICLMSKRW),__ATOMIC_ACQ_REL)&~(DICLMSKWRK+DICLMSKWRV);   // put up prewrite request and read status, which establishes our sequence# in lv where it will remain until we have become lead writer.  Can overflow
+#define DICLKRWRQ(dic,lv,cond) (lv=!(cond)?__atomic_fetch_add(&AM((A)dic),LOWESTBIT(DICLMSKRW),__ATOMIC_ACQ_REL)&~(DICLMSKWRK+DICLMSKWRV):DICLSINGLETHREADED)   // put up prewrite request and read status, which establishes our sequence# in lv where it will remain until we have become lead writer.  Can overflow
 #define DICLKRWWT(dic,lv) if(likely((lv&DICLMSKWRK+DICLMSKWRV)==0))if(unlikely((((LKRW(lv)^LKSEQ(lv)))&DICLMSKSEQ))!=0)diclkrwwt(dic,lv);  // wait until we are the lead writer; but if we already have a lock,
        // we must be in resize; our lv may be stale then so we keep the old lock
 // once we become the lead writer we know that no one else will change the lead writer, so we can safely update lv from the global
 #define DICLKWRRQ(dic,lv) if(likely((lv&DICLMSKWRK+DICLMSKWRV)==0))lv=__atomic_add_fetch(&AM((A)dic),DICLMSKWRK+DICLMSKWRV,__ATOMIC_ACQ_REL);   // put up write request for key & value (we are known to be the lead writer and own the write bits, which must be clear)
-#define DICLKWRWTK(dic,lv) if(unlikely(lv&DICLMSKRDK))lv=diclkwrwt(dic,0);  // wait until all reads have finished looking at keys
+#define DICLKWRWTK(dic,lv) if(unlikely(lv&DICLMSKRDK))lv=diclkwrwt(dic,0);  // wait until all reads have finished looking at keys.  If single-threading, test fails
    // we update that part of lv we don't control, so that the ultimate CAS will have a better chance of starting with the right value
 #define DICLKCKSTAT(dic) __atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)   // (optional) refetch status before we have to check it
-#define DICLKWRWTV(dic,lv) if(unlikely(((LKRDV(lv)^LKRDK(lv))&0x7fff))!=0)lv=diclkwrwt(dic,-1);  // wait until all reads have finished looking at values.  We know we have a lock on the keys, so any read-lock requests are transient
+#define DICLKWRWTV(dic,lv) if(unlikely(((LKRDV(lv)^LKRDK(lv))&0x7fff))!=0)lv=diclkwrwt(dic,-1);  // wait until all reads have finished looking at values.  We know we have a lock on the keys, so any read-lock requests are transient  If single-threading, test fails
    // we update that part of lv we don't control, so that the ultimate CAS will have a better chance of starting with the right value
-#define DICLKWRRELK(dic,lv) lv=__atomic_sub_fetch(&AM((A)dic),DICLMSKWRK,__ATOMIC_ACQ_REL);   // release the keys, while still writing to values
+#define DICLKWRRELK(dic,lv) if((lv&DICLMSKWRV)!=0)lv=__atomic_sub_fetch(&AM((A)dic),DICLMSKWRK,__ATOMIC_ACQ_REL);   // we have keys locked; if values locked too (i. e. not single-threaded), release the keys, while still writing to values
    // we update that part of lv we don't control, so that the ultimate CAS will have a better chance of starting with the right value
 // obsolete #define DICLKWRRELV(dic,lv) {__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKSEQX,__ATOMIC_ACQ_REL); __atomic_fetch_and(&AM((A)dic),~((I)0xffff<<DICLMSKWRX),__ATOMIC_ACQ_REL);}   // advance owner sequence#, then clear write req (which handles overflow on the seq#)
-#define DICLKWRRELV(dic,lv)  UI nv; do{nv=((lv&~DICLMSKWRK)+1)&~(DICLMSKWRK+DICLMSKWRV+DICLMSKOKRET+DICLMSKRESIZEREQ);}while(!casa(&AM((A)dic), &lv, nv));    // advance owner sequence# (suppressing overflow), clear write req
+#define DICLKWRRELV(dic,lv) if((lv&DICLMSKWRV)!=0){UI nv; do{nv=((lv&~DICLMSKWRK)+1)&~(DICLMSKWRK+DICLMSKWRV+DICLMSKOKRET+DICLMSKRESIZEREQ);}while(!casa(&AM((A)dic), &lv, nv));}    // if not single-tahreaded, advance owner sequence# (suppressing overflow), clear write req
 
 // wait for read lock on keys/values in dic, which we have requested & found busy. kvtyp indicates the type of lock wanted: keys or values
 static UI diclkrdwtkv(DIC *dic,I kvtyp){I n;UI lv;
@@ -344,7 +347,7 @@ static UI diclkrdwtkv(DIC *dic,I kvtyp){I n;UI lv;
    delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
    if((__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)&DICLMSKWRK+DICLMSKWRV)!=kvtyp)break;  // lightweight wait until resource is available
   }
- }while(((DICLKRDRQ(dic,lv))&DICLMSKWRK+DICLMSKWRV)==kvtyp);  // put up our rd request again, wait for not-busy.  Usually succeeds
+ }while(((DICLKRDRQ(dic,lv,1))&DICLMSKWRK+DICLMSKWRV)==kvtyp);  // put up our rd request again, wait for not-busy.  Usually succeeds
  R lv;
 }
 
@@ -387,16 +390,16 @@ static UI diclkwrwt(DIC *dic,I type){I n;
 
 #else
 
-#define DICLKRDRQ(dic,lv) (lv=0)
+#define DICLKRDRQ(dic,lv,cond) (lv=0)
 #define DICLKRDWTK(dic,lv)
 #define DICLKRDRELK(dic,lv)
 #define DICLKRDWTV(dic,lv)
 #define DICLKRDRELV(dic)
 #define DICLKRDRELKV(dic)
 
-#define DICLKRWRQ(dic,lv) lv=0;
+#define DICLKRWRQ(dic,lv,cond) lv=0;
 #define DICLKRWWT(dic,lv)
-#define DICLKWRRQ(dic,lv)
+#define DICLKWRRQ(dic,lv,cond)
 #define DICLKWRWTK(dic,lv)
 #define DICLKCKSTAT(dic,lv)
 #define DICLKWRWTV(dic,lv)
@@ -495,7 +498,7 @@ static scafINLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
 // a is default if given, 0 if not; or 1 if has
 // We take a read lock on the table and return with it
 static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
- UI lv; DICLKRDRQ(dic,lv);   // request read lock
+ UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;   // more nonresizable: kbytelen/kitemlen   compare fn   size of a value in bytes 
  k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down
@@ -702,7 +705,6 @@ found:;  // hval is the kv slot we compared with, or a new empty kv slot
  ((I4*)(&s[otail]))[1]=croot; oroot=oroot<0?croot:oroot;  // append conflict chain to old chain (if old chain is empty otail=0, which is OK to store into because ele 0 can never be a conflict); start on combined chain
  for(cur=oroot;cur>=0;){I8 nxtkv=s[cur]; if(likely((UI4)nxtkv!=(UI4)~0))PUTKVOLD(vbase+(UI4)nxtkv*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE)); cur=nxtkv>>32;} // chase the old keys, copying the value (except the last during resize)
 // obsolete  for(cur=croot;cur>=0;){I nxt=((I4*)(&s[cur]))[1]; UI kvslot=((UI4*)(&s[cur]))[0]; PUTKVOLD(vbase+kvslot*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE)); cur=nxt;} // chase the conflict keys, copying the value
-printf("put lv=%p\n",(A)lv);  // scaf
  R lv|DICLMSKOKRET+(hsz&(DICFRESIZE<<DICFBASE)?DICLMSKRESIZEREQ:0);  // return, holding write lock on values or values/keys
 
 lockforresize:; DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv) goto lockvforresize;  // come here when we detect resize early.  Catch up by requesting a write lock
@@ -734,7 +736,7 @@ static DF2(jtdicput){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- UI lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
 // scaf have fast path for 1 key
  while(1){  // loop till we have processed all the resizes
@@ -744,10 +746,9 @@ static DF2(jtdicput){F12IP;
     // we have to reinit s in the resize loop because putslots may have modified it
  
   if(unlikely((s=jtkeyprep(dic,k,kn,s,jt,w))==0))goto errexit;  // hash keys & prefetch.  This may return as s a block that was allocated inside keyprep.  It must persist till the end
-  lv=jtputslots(dic,k,kn,v,vn,s,jt,lv,virt); if(lv==0)goto errexit; if(!(lv&DICLMSKRESIZEREQ))break;  // do the puts; abort if error if no resize, finish, good or bad
+  lv=jtputslots(dic,k,kn,v,vn,s,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; abort if error if no resize, finish, good or bad
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
-if((lv&DICLMSKWRK+DICLMSKWRV)!=DICLMSKWRK+DICLMSKWRV)SEGFAULT;  // scaf
  }
  A z=mtv; if(0){errexit: z=0;}
  PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
@@ -863,7 +864,7 @@ static DF1(jtdicdel){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- UI lv,nlv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv,nlv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
@@ -873,7 +874,7 @@ static DF1(jtdicdel){F12IP;
 
   if(unlikely((s=jtkeyprep(dic,k,kn,s,jt,w))==0))goto errexit;  // hash keys & prefetch
 
-  nlv=jtdelslots(dic,k,kn,s,jt,lv,virt); if(nlv==0)goto errexit; if(!(nlv&DICLMSKRESIZEREQ))break;  // do the puts; abort if error if no resize, finish, good or bad
+  nlv=jtdelslots(dic,k,kn,s,jt,lv,virt); if(nlv==0)goto errexit; if(likely(!(nlv&DICLMSKRESIZEREQ)))break;  // do the puts; abort if error if no resize, finish, good or bad
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
 // obsolete   I rc=jtdelslots(dic,k,kn,s,jt,lv,virt); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
 // obsolete   dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
@@ -970,7 +971,7 @@ DF2(jtdisprbdic){F12IP;
 // a is default if given, 0 if not; or 1 if has
 // We take a read lock on the table and release it
 static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
- UI lv; DICLKRDRQ(dic,lv);   // request read lock
+ UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vb=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
@@ -1062,7 +1063,7 @@ static DF2(jtdicgeto){F12IP;A z;
 // We take a read lock on the table and release it
 static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
  PROLOG(000);
- UI lv; DICLKRDRQ(dic,lv);   // request read lock
+ UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
@@ -1344,14 +1345,14 @@ static DF2(jtdicputo){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- UI lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
   else{A x; GATV0E(x,FL,kn,1,goto abortexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
     // we have to reinit s in the resize loop because putslots may have modified it
  
-  lv=jtputslotso(dic,k,kn,v,vn,s,jt,lv,virt); if(lv==0)goto errexit; if(!(lv&DICLMSKRESIZEREQ))break;  // do the puts; if no resize, finish, good or bad
+  lv=jtputslotso(dic,k,kn,v,vn,s,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; if no resize, finish, good or bad
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
  }
@@ -1522,7 +1523,7 @@ static DF1(jtdicdelo){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- UI lv; DICLKRWRQ(dic,lv);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
@@ -1530,7 +1531,7 @@ static DF1(jtdicdelo){F12IP;
   else{A x; GATV0E(x,FL,kn,1,goto errexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
     // we must reinit s because it might have been change by keyprep
 
-  I rc=jtdelslotso(dic,k,kn,jt,lv,virt); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
+  I rc=jtdelslotso(dic,k,kn,jt,lv,virt); if(likely(rc>0))break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
   dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
  A z=mtv; if(0){errexit: z=0;}

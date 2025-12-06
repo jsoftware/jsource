@@ -428,7 +428,7 @@ F2(jtforeign){F12IP;I p,q;A z;
  ASSERT(!((AT(a)|AT(w))&VERB),EVDOMAIN)
  p=i0(a); q=i0(w); RE(0);
  if(p!=11){  // normal m!:n
-  ASSERT(BETWEENC(p,0,128),EVDOMAIN) ASSERT(BETWEENC(q,-10,111),EVDOMAIN)   // check reasonable inputs
+  ASSERT(BETWEENC(p,0,128),EVDOMAIN) ASSERT(BETWEENC(q,-20,111),EVDOMAIN)   // check reasonable inputs
   ASSERT((z=findslot(p,q))!=0,EVDOMAIN)  // look up the (m,n), fail if not found
   RETF(z);  // return the block we found
  }else{

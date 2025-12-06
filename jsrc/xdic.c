@@ -270,16 +270,19 @@ F1(jtcreatedic){F12IP;
 
 // We use a 2- or 3-step locking sequence.  In each step the new state is requested shortly before it is needed and then waited for when it is needed (to give the lock request time to propagate to all threads).
 // Readers use the sequence
-// DICLKRDRQ(dic,lv)  // request read lock
-// DICLKRDWT(dic,lv)  // wait for read lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
-// DICLKRDREL(dic)  // release read lock
+// DICLKRDRQ(dic,lv,cond)  request read lock.   If cond is true, use singlethreading version
+// DICLKRDWTK(dic,lv)   wait for read lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+// DICLKRDWTV(dic,lv)   when finished with keys, wait for values to be available
+// DICLKRDRELK(dic,lv)   then release read lock on keys
+// DICLKRDRELV(dic,lv)   release read lock on values at end
+// DICLKRDRELKV(dic,lv)   if the read locks for keys & values finish simultaneously, release them both
 
 // Writers use the sequence
 // DICLKRWRQ(dic,lv)  // request read/write lock.  fairly soon...
 // DICLKRWWT(dic,lv)  // ...wait for read/write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock.
 // DICLKWRRQ(dic,lv)  // request write lock
 // DICLKWRWT(dic,lv)  // wait for write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
-// DICLKWRRELK(dic)  // release write lock on keys (optional)
+// DICLKWRRELK(dic,lv)  // release write lock on keys (optional)
 // DICLKWRRELV(dic,lv)  // release write lock on keys and values
 
 // A read lock guarantees that the control info and tables will not be modified by any thread in a way that could affect a get().  Other modifications are allowed.
@@ -301,17 +304,17 @@ F1(jtcreatedic){F12IP;
 #define LKRDK(x) ((x)>>19)
 #define LKRDV(x) ((x)>>34)
 #define LKRW(x) ((x)>>49)
-#define DICLSINGLETHREADED DICLMSKRDK  // WR=10 is impossible and used internally to indicate singlethreading.  DICLMSKRDV=0 is used as flag during read to indicate singlethreading.  DICLMSKWRK says we have the lock, which may persist over resize
+#define DICLSINGLETHREADED DICLMSKWRK  // WR=10 is impossible and used internally to indicate singlethreading.  DICLMSKRDV=0 is used as flag during read to indicate singlethreading.  DICLMSKWRK says we have the lock, which may persist over resize
      //  No RFO cycles are performed.  If we chance to detect overlapping puts/gets we will abort, but there are no guarantees.  
 
 #if PYXES
 #define DICLKRDRQ(dic,lv,cond) (lv=!(cond)?__atomic_add_fetch(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL):DICLSINGLETHREADED)  // put up read request and read current status. Cannot overflow
-#define DICLKRDWTK(dic,lv) if(unlikely((lv&DICLMSKWRK)!=0))if((lv&DICLMSKWRV)!=0)lv=diclkrdwtkv(dic,DICLMSKWRK+DICLMSKWRV);  // wait till current owner finishes with hash/keys, and update status.  Skip if single-threaded (WR=10)
+#define DICLKRDWTK(dic,lv) if(unlikely((lv&DICLMSKWRK)!=0))if((lv&DICLMSKWRV)!=0)lv=diclkrdwtkv(dic,lv);  // wait till current owner finishes with hash/keys, and update status.  Skip if single-threaded (WR=10)
 #define DICLKRDRELK(dic,lv) if((lv&DICLMSKRDV)!=0)(lv=__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDK),__ATOMIC_ACQ_REL));  // if not single-threaded, remove read request for keys
-#define DICLKRDWTV(dic,lv) if(unlikely((lv&DICLMSKWRK+DICLMSKWRV)==DICLMSKWRV))diclkrdwtkv(dic,DICLMSKWRV);  // (after we have a key lock) wait till the owner, if any, finishes with values.  Then we can read keys but not change them.  Single-threaded (WR=10) always passes
+#define DICLKRDWTV(dic,lv) if(unlikely((lv&DICLMSKWRK+DICLMSKWRV)==DICLMSKWRV))diclkrdwtv(dic);  // (after we have a key lock) wait till the owner, if any, finishes with values.  Then we can read keys but not change them.  Single-threaded (WR=10) always passes
      // We know that our WTK gave us a read lock with WRK=0,WRV=x.  If there was a writer, state will go to 00 when it finishes and then may go only as far as 11 while we retain our read lock.  Thus, anythong but 01 gives us a value lock.
-#define DICLKRDRELV(dic) if((lv&DICLMSKRDV)!=0)(__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL));  // if not single-threaded, remove read request for values
-#define DICLKRDRELKV(dic) if((lv&DICLMSKRDV)!=0)__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL);  // remove read request for keys & values simultaneously
+#define DICLKRDRELV(dic,lv) if((lv&DICLMSKRDV)!=0)__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL);  // if not single-threaded, remove read request for values
+#define DICLKRDRELKV(dic,lv) if((lv&DICLMSKRDV)!=0)__atomic_fetch_sub(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL);  // remove read request for keys & values simultaneously
 
 // obsolete #define DICLKRWRQ(dic,lv) lv=__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKRWX,__ATOMIC_ACQ_REL); scafRWC(dic);   // put up prewrite request and read status, which establishes our sequence# in lv where it will remain until we release the lock.  Can overflow
 // obsolete #define DICLKRWWT(dic,lv) if(unlikely((US)(lv>>DICLMSKRWX)!=(US)(lv>>DICLMSKSEQX)))diclkrwwt(dic,lv);  // wait until we are the lead writer, which is immediately if there are no others
@@ -336,18 +339,28 @@ F1(jtcreatedic){F12IP;
 #define DICLKWRRELK(dic,lv) if((lv&DICLMSKWRV)!=0)lv=__atomic_sub_fetch(&AM((A)dic),DICLMSKWRK,__ATOMIC_ACQ_REL);   // we have keys locked; if values locked too (i. e. not single-threaded), release the keys, while still writing to values
    // we update that part of lv we don't control, so that the ultimate CAS will have a better chance of starting with the right value
 // obsolete #define DICLKWRRELV(dic,lv) {__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKSEQX,__ATOMIC_ACQ_REL); __atomic_fetch_and(&AM((A)dic),~((I)0xffff<<DICLMSKWRX),__ATOMIC_ACQ_REL);}   // advance owner sequence#, then clear write req (which handles overflow on the seq#)
-#define DICLKWRRELV(dic,lv) if((lv&DICLMSKWRV)!=0){UI nv; do{nv=((lv&~DICLMSKWRK)+1)&~(DICLMSKWRK+DICLMSKWRV+DICLMSKOKRET+DICLMSKRESIZEREQ);}while(!casa(&AM((A)dic), &lv, nv));}    // if not single-tahreaded, advance owner sequence# (suppressing overflow), clear write req
+#define DICLKWRRELV(dic,lv) if((lv&DICLMSKWRV)!=0){UI nv; do{nv=((lv&~DICLMSKWRK)+1)&~(DICLMSKWRK+DICLMSKWRV+DICLMSKOKRET+DICLMSKRESIZEREQ);}while(!casa(&AM((A)dic), &lv, nv));}    // if not single-threaded, advance owner sequence# (suppressing overflow), clear write req
 
-// wait for read lock on keys/values in dic, which we have requested & found busy. kvtyp indicates the type of lock wanted: keys or values
-static UI diclkrdwtkv(DIC *dic,I kvtyp){I n;UI lv;
+// wait for read lock on keys+values in dic, which we have requested & found busy
+static UI diclkrdwtkv(DIC *dic, UI lv){I n;
  // We know we just put up a read request and saw busy.  Rescind our read request and then quietly poll for the write to go away
  do{
-  DICLKRDRELKV(dic)  // remove read request
+  DICLKRDRELKV(dic,lv)  // remove read request
   for(n=5;;--n){
    delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
-   if((__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)&DICLMSKWRK+DICLMSKWRV)!=kvtyp)break;  // lightweight wait until resource is available
+   if((__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)&DICLMSKWRK+DICLMSKWRV)!=DICLMSKWRK+DICLMSKWRV)break;  // lightweight wait until resource is available
   }
- }while(((DICLKRDRQ(dic,lv,1))&DICLMSKWRK+DICLMSKWRV)==kvtyp);  // put up our rd request again, wait for not-busy.  Usually succeeds
+ }while(((DICLKRDRQ(dic,lv,0))&DICLMSKWRK+DICLMSKWRV)==DICLMSKWRK+DICLMSKWRV);  // put up our rd request again, wait for not-busy.  Usually succeeds
+ R lv;
+}
+
+// wait for read lock on values in dic, which we have requested & found busy.
+// We have a read lock already, so no RFO is required.  We just wait for the values to be ready
+static UI diclkrdwtv(DIC *dic){I n;UI lv;
+ for(n=5;;--n){
+  delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
+  if(((lv=__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE))&DICLMSKWRK+DICLMSKWRV)!=DICLMSKWRV)break;  // lightweight wait until resource is available
+ }
  R lv;
 }
 
@@ -394,8 +407,8 @@ static UI diclkwrwt(DIC *dic,I type){I n;
 #define DICLKRDWTK(dic,lv)
 #define DICLKRDRELK(dic,lv)
 #define DICLKRDWTV(dic,lv)
-#define DICLKRDRELV(dic)
-#define DICLKRDRELKV(dic)
+#define DICLKRDRELV(dic,lv)
+#define DICLKRDRELKV(dic,lv)
 
 #define DICLKRWRQ(dic,lv,cond) lv=0;
 #define DICLKRWWT(dic,lv)
@@ -526,7 +539,7 @@ static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIR
 
  
  // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore    scaf overstore
- if(a==(A)1){DICLKRDRELKV(dic) DO(n, ((C*)zv)[i]=s[i]>=HASHNRES;)   // if processing has, just copy found status, then release lock
+ if(a==(A)1){DICLKRDRELKV(dic,lv) DO(n, ((C*)zv)[i]=s[i]>=HASHNRES;)   // if processing has, just copy found status, then release lock
  }else{
   DICLKRDWTV(dic,lv) DICLKRDRELK(dic,lv) // We have finished our use of the keys, but we must wait till the values are safe to copy
   void *av=0;  // init to 'no default data pointer yet'.  We avoid checking the default until we know we need it
@@ -548,11 +561,11 @@ static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIR
    GETV(zv,vv,vn,hsz&(DICFVINDIR<<DICFBASE)); zv=(void *)((I)zv+vn);   // move the data & advance pointer to next one   scaf JMC?
    cur=nxt;
   }
-  DICLKRDRELV(dic)  // remove lock on values
+  DICLKRDRELV(dic,lv)  // remove lock on values
 }
  R 1;
-exitvals:; DICLKRDRELV(dic) R 0;
-exitkeyvals:;  DICLKRDRELKV(dic) R 0;
+exitvals:; DICLKRDRELV(dic,lv) R 0;
+exitkeyvals:;  DICLKRDRELKV(dic,lv) R 0;
 }
 
 //   get/has.   Bivalent. w is keys, [a] is default value, 0 if monad.  Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
@@ -1003,7 +1016,7 @@ static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VI
 
 
  // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore    scaf overstore
- if(a==(A)1){DICLKRDRELKV(dic) DO(n, ((C*)zv)[i]=s[i]>=TREENRES<<1;)  // if processing has, just copy found status
+ if(a==(A)1){DICLKRDRELKV(dic,lv) DO(n, ((C*)zv)[i]=s[i]>=TREENRES<<1;)  // if processing has, just copy found status
  }else{
   DICLKRDWTV(dic,lv) DICLKRDRELK(dic,lv)  // signal we are finished with keys; wait till values are safe to copy
   void *av=0;  // init to 'no default data pointer yet'.  We avoid checking the default until we know we need it
@@ -1025,11 +1038,11 @@ static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VI
    GETV(zv,vv,vb,nodeb&(DICFVINDIR<<8)); zv=(void *)((I)zv+vb);   // move the data & advance pointer to next one   scaf JMC?
    cur=nxt;
   }
-  DICLKRDRELV(dic)  // values copied, release lock on them
+  DICLKRDRELV(dic,lv)  // values copied, release lock on them
  }
  R 1;
-exitvals:; DICLKRDRELV(dic) R 0;
-exitkeyvals:;  DICLKRDRELKV(dic) R 0;
+exitvals:; DICLKRDRELV(dic,lv) R 0;
+exitkeyvals:;  DICLKRDRELKV(dic,lv) R 0;
 }
 
 //   get.   Bivalent. w is keys, [a] is default value, 0 if monad.  Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
@@ -1194,7 +1207,7 @@ endscan:;
    nodex=nextx;  // advance to next
   }
  }
- DICLKRDRELV(dic)   // release our lock on values 
+ DICLKRDRELV(dic,lv)   // release our lock on values 
 ret:;  // assemble & return result
  A z; if(zak==0||zav==0)z=(A)((I)zak+(I)zav); else z=jlink(zak,box(zav));  // return what was requested
  EPILOG(z);
@@ -1203,11 +1216,11 @@ retempty:;  // empty result
  zak=zav=0;  // 0 if not requested
  if(flags&1)RZGOTO(zak=from(mtv,dic->bloc.keys),exitkeyvals)  // '' { keys
  if(flags&2)RZGOTO(zav=from(mtv,dic->bloc.vals),exitkeyvals)  // '' { values
- DICLKRDRELKV(dic)   // release lock on keys & values
+ DICLKRDRELKV(dic,lv)   // release lock on keys & values
  goto ret;
 
-exitvals:; DICLKRDRELV(dic)  R 0;  // release lock & exit
-exitkeyvals:; DICLKRDRELKV(dic)  R 0;  // release lock & exit
+exitvals:; DICLKRDRELV(dic,lv)  R 0;  // release lock & exit
+exitkeyvals:; DICLKRDRELKV(dic,lv)  R 0;  // release lock & exit
   
 }
 

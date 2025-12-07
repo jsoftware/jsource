@@ -199,7 +199,6 @@ void jtforeigninit(J jt){UI i;
  MN(16,0)  XPRIM(VERB, jthashy,     jttao,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-1)  XPRIM(ADV, jtcreatedic,  0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-5)  XPRIM(VERB, 0,     jtdicempties,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
- MN(16,-7)  XPRIM(VERB, jtdisprbdic,jtdisprbdic,   VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(2,0)   XPRIM(VERB, jthost,       0,            VASGSAFE,VF2NONE,1,   RMAX,RMAX);
  MN(2,1)   XPRIM(VERB, jthostne,     0,            VASGSAFE,VF2NONE,1,   RMAX,RMAX);
 #if 0  // doesn't work
@@ -364,6 +363,7 @@ void jtforeigninit(J jt){UI i;
  MN(15,22) XPRIM(VERB, jtcddlclose,  0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,23) XPRIM(VERB, jtcdq,        0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(15,24) XPRIM(VERB, jtanchor1,    jtanchor2,  VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
+ MN(16,-7) XPRIM(VERB, jtdisprbdic,jtdisprbdic,   VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(18,0)  XPRIM(VERB, jtlocnc,      0,            VFLAGNONE,VF2NONE,0,   RMAX,RMAX);
  MN(18,1)  XPRIM(VERB, jtlocnl1,     jtlocnl2,     VFLAGNONE,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,55) XPRIM(VERB, jtlocexmark,  jtlocexmark,  VFLAGNONE,VF2NONE,0,   RMAX,RMAX);

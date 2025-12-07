@@ -462,7 +462,7 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
   v=s; NOUNROLL while('_'!=*--v); ++v;  // v->start of next indirect locative, scanning right to left
   k=s-v; s=v-2; s-=s[-1]=='_';    // k=length of indirect locative; s->end+1 of next name if any
   ASSERT(k<256,EVLIMIT);
-  if(likely(g==0)){  // first time through
+  if(likely(g==0)){  // first time through, or maybe second if the first was l___1
    if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
     y=QCWORD(probex(k,v,SYMORIGIN,hash,locsym));  // look up local first.
     if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y,y);}  // if not local, start in implied locale.  ra to match syrd
@@ -475,7 +475,7 @@ neglocnum:;
     I issusp;  //   issusp='we have hit a suspension frame'
     for(d=jt->sitop,issusp=0;d;d=d->dclnk){issusp|=d->dcsusp; if(issusp&&d->dctype==DCCALL&&hash==-1)break; hash+=issusp&&d->dctype==DCCALL;} ASSERT(d,EVLOCALE); // skip to suspension; step to requested stack frame; error if # too low
     locsym=d->dcloc;  // fetch locale to use for the lookup, as the local table
-    if(u<s){v=s; NOUNROLL while('_'!=*--v); ++v; hash=nmhash(k,v);}   // if there is another locative, look ahead to it; update hash so that next lookup is for the second-last name
+    if(u<s){v=s; NOUNROLL while('_'!=*--v); ++v; hash=nmhash(s-v,v);}   // if there is another locative, look ahead to it; update hash so that next lookup is for the second-last name
     continue;  // advance to next locative, leaving g=0 to indicate we are still in a local table
    }
   }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative

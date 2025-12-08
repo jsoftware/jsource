@@ -184,8 +184,9 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
 
   // flags, key, value sizes
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==4,EVLENGTH)  // 4 boxes
-  box=C(AAV(w)[1]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)<=1,EVLENGTH)  // flags.  First is singlethreading (default 0), must have 0-1 values
-  if(AN(box)>0){if(!(AT(box)&B01))RZ(box=ccvt(B01,box,0)) if(BAV(box)[0])flags|=DICFSINGLETHREADED;}  // set singlethreading if user wants it
+  box=C(AAV(w)[1]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)<=1,EVLENGTH)  // flags.  First is singlethreading (default 1), must have 0-1 values
+  I deffg=DICFSINGLETHREADED; if(AN(box)>0){if(!(AT(box)&B01))RZ(box=ccvt(B01,box,0)) if(!BAV(box)[0])deffg=0;}  // set concurrent if user wants it
+  flags|=deffg;  // remember user's choice
 
   // keyspec.  must be 2 boxes
   box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)

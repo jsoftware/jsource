@@ -98,7 +98,7 @@ fi
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -std=gnu17 -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
- -Werror -Wextra -Wno-unknown-warning-option \
+ -Werror -Wextra \
  -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \
@@ -106,12 +106,9 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-error=stringop-overflow \
  -Wno-format-overflow \
  -Wno-implicit-fallthrough \
- -Wno-incompatible-function-pointer-types \
  -Wno-int-to-pointer-cast \
  -Wno-maybe-uninitialized \
  -Wno-missing-field-initializers \
- -Wno-null-pointer-arithmetic \
- -Wno-null-pointer-subtraction \
  -Wno-overflow \
  -Wno-parentheses \
  -Wno-pointer-sign \
@@ -120,7 +117,6 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  \
  -Wno-shift-negative-value \
  -Wno-sign-compare \
- -Wno-string-plus-int \
  -Wno-type-limits \
  -Wno-uninitialized \
  -Wno-unused-parameter \

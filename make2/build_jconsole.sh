@@ -56,7 +56,7 @@ esac
 make="${make:=make}"
 
 CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
-compiler="$($CC -v 2>&1 | sed -n 's/^\(\w*\) version .*/\1/p')"
+compiler="$($CC -v 2>&1 | sed -n 's/^\(\|.*[[:space:]]\)\(\w*\) version .*/\2/p')"
 echo "CC=$CC"
 echo "compiler=$compiler"
 

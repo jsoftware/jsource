@@ -976,7 +976,7 @@ static I auditnode(J jt,DIC *dic,UI nodex,UI excludednode, I doprint){A z;
 // Result is 1 if OK, 0 if error
 DF2(jtdisprbdic){F12IP;
  ARGCHK1(w)
- I na=w==self?zeroionei(1):a; w=w==self?a:w; I opts; RE(opts=b0(na));   // get print options
+ A na=w==self?zeroionei(1):a; w=w==self?a:w; I opts; RE(opts=b0(na));   // get print options
  R sc(auditnode(jt,(DIC*)w,*(UI4AV3(((DIC*)w)->bloc.hash))&_bzhi_u64(~(UI8)1,((DIC*)w)->bloc.hashelesiz<<LGBB),~0LL,opts));
 }
 // ********************************** get/has **********************************

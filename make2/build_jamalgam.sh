@@ -63,9 +63,9 @@ make="${make:=make}"
 
 CC=${CC-"$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)"}
 echo "CC=$CC"
-if [ $($CC -dM -E - </dev/null | grep -c __clang__) ] ; then
+if [ 1 -eq $($CC -dM -E - </dev/null | grep -c __clang__) ] ; then
 compiler=clang
-elif [ $($CC -dM -E - </dev/null | grep -c __GNUC__) ] ; then
+elif [ 1 -eq $($CC -dM -E - </dev/null | grep -c __GNUC__) ] ; then
 compiler=gcc
 else
 compiler=$(readlink -f $(which $CC) || which $CC)

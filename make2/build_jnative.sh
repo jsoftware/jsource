@@ -59,8 +59,14 @@ esac
 make="${make:=make}"
 
 CC=${CC-$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)}
-compiler=$(readlink -f $(which $CC) || which $CC)
 echo "CC=$CC"
+if [ 1 -eq $($CC -dM -E - </dev/null | grep -c __clang__) ] ; then
+compiler=clang
+elif [ 1 -eq $($CC -dM -E - </dev/null | grep -c __GNUC__) ] ; then
+compiler=gcc
+else
+compiler=$(readlink -f $(which $CC) || which $CC)
+fi
 echo "compiler=$compiler"
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then

@@ -383,8 +383,8 @@ _1 0 1 2 5 6 9 10 13 15 _2 -: 3 {:: 6!:11''
 'domain error' -: pmunpack etx 1r2 3
 'domain error' -: pmunpack etx 1;2 3
 
-'index error'  -: pmunpack etx 8
-'index error'  -: pmunpack etx _9
+'index error'  -: pmunpack etx 20
+'index error'  -: pmunpack etx _19
 
 0 -: pmdata ''
 

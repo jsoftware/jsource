@@ -98,7 +98,9 @@ f=: 4 : 0
  assert. (type&.>t) e.&> 4;4;4;4;1 4 8;1 4 8;32
  assert. *./ (>0{t) e. i.#>6{t
  assert. *./ (>1{t) e. i.#>6{t
- assert. *./ (>2{t) e. 1 2
+ assert. *./ (}:>2{t) e. 1 2
+ assert. 0 = (2;_1) {:: t
+ assert. _3 = (3;_1) {:: t
  assert. (xx -: <.xx) *. *./ 0 <: xx=: >4{t
  assert. (*./ 0<:xx) *. *./ (}.xx) >: }:xx=: >5{t
  assert. (*./ (xx e. a:) +. 2=type&>xx) *. *./ 1 = #@$&>xx=: >6{t
@@ -106,9 +108,9 @@ f=: 4 : 0
 )
 
 (3 4+2*n) f t
-(dbq'')+. ({&:>/0 6{t) -: (0 2,(2*n),1)#;:'pmctr pmstats avg pmctr'
-(dbq'')+. ({&:>/1 6{t) e. <'base'
-(dbq'')+. (>3{t) -: _1 _2,((2*n)$_1 _2),_1
+(dbq'')+. (}: {&:>/0 6{t) -: (0 2,(2*n),1)#;:'pmctr pmstats avg pmctr'
+(dbq'')+. (}: {&:>/1 6{t) e. <'base'
+(dbq'')+. (}: >3{t) -: _1 _2,((2*n)$_1 _2),_1
 
 200 -: x=: 1 0 pmdata (bhdr+bpe*200)$'c'
 
@@ -125,9 +127,9 @@ t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) pmunpack ''
 (dbq'')+. 2 >: +/ 100 100 100 1 100 100 * | s - 1 0 200,(200<.3+5*n),(200<:3+5*n),0
 
 (3 4+5*n) f t
-(dbq'')+. ({&:>/0 6{t) -: (0 2,(5*n),1)#;:'pmctr pmstats avg pmctr'
-(dbq'')+. ({&:>/1 6{t) e. <'base'
-(dbq'')+. (>3{t) -: _1 _2,((5*n)$_1 0 1 2 _2),_1
+(dbq'')+. (}: {&:>/0 6{t) -: (0 2,(5*n),1)#;:'pmctr pmstats avg pmctr'
+(dbq'')+. (}: {&:>/1 6{t) e. <'base'
+(dbq'')+. (}: >3{t) -: _1 _2,((5*n)$_1 0 1 2 _2),_1
 
 sum_foo_=: 3 : 0
  +/y
@@ -144,9 +146,9 @@ mean_l6x_=: 3 : 0
 1 [ mean_l6x_ i.12
 0 -: pmctr _1
 t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) 6!:11 ''
-8 9 f t
-(dbq'')+. ({&:>/0 6{t) -: ;:'mean_l6x_ mean_l6x_ sum sum_foo_ sum_foo_ sum_foo_ sum mean_l6x_ pmctr'
-(dbq'')+. ({&:>/1 6{t) -: ;:'l6x       l6x       l6x foo      foo      foo      l6x l6x       base'
+9 10 f t
+(dbq'')+. (}: {&:>/0 6{t) -: ;:'mean_l6x_ mean_l6x_ sum sum_foo_ sum_foo_ sum_foo_ sum mean_l6x_ pmctr'
+(dbq'')+. (}: {&:>/1 6{t) -: ;:'l6x       l6x       l6x foo      foo      foo      l6x l6x       base'
 
 mean_aa_=: 3 : 0
  sum=. +/
@@ -159,8 +161,8 @@ mean_aa_=: 3 : 0
 0 -: pmctr _1
 t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) 6!:11 ''
 7 8 f t
-(dbq'')+. ({&:>/0 6{t) -: ;:'mean_aa_ mean_aa_ mean_aa_ sum sum mean_aa_ pmctr'
-(dbq'')+. ({&:>/1 6{t) -: ;:'aa       aa       aa       aa  aa  aa       base'
+(dbq'')+. (}: {&:>/0 6{t) -: ;:'mean_aa_ mean_aa_ mean_aa_ sum sum mean_aa_ pmctr'
+(dbq'')+. (}: {&:>/1 6{t) -: ;:'aa       aa       aa       aa  aa  aa       base'
 
 f=: 255$'a'
 12 -: ". f,'=: 12'

@@ -191,7 +191,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   // keyspec.  must be 2 boxes
   box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
   box1=C(AAV(box)[0]); I t; RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFKINDIR; // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
-  box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) I n, *s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->bloc.kaii=n; ASSERT(n>0,EVLENGTH) // shape. copy to allow IAV1.  get # atoms in item & save
+  box1=C(AAV(box)[1]); I r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) I n, *s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.kaii=n; ASSERT(n>0,EVLENGTH) // shape. copy to allow IAV1.  get # atoms in item & save
   ASSERT(AN(box1)<=9 || flags&DICFICF,EVNONCE)  // if the user has a compare function, we want virt to be on the stack to save registers.  Make sure the rank is OK then
   INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
   UI4 (*fn2)()=l&(SZI-1)?(UI4 (*)())crcbytes:(UI4 (*)())crcwords; fn2=(t&XNUM+RAT)?crcxnums:fn2; fn2=(t&CMPX+FL+QP)?crcfloats:fn2; fn2=(t&BOX)?crcboxes:fn2; fn2=flags&DICFIHF?fn2:(UI4 (*)())FAV(a)->valencefns[0]; ((DIC*)z)->bloc.hashfn=fn2; // save internal or external hash function  
@@ -201,7 +201,8 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   // valuespec.  must be 2 boxes
   box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
   box1=C(AAV(box)[0]); RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFVINDIR;  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
-  box1=C(AAV(box)[1]); ASSERT(AR(box1)<=1,EVRANK) ASSERT(AN(box1)>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,AN(box1),s,1) ((DIC*)z)->bloc.vaii=n;  // shape. copy to allow IAV1.  get # atoms in item & save
+  box1=C(AAV(box)[1]); r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.vaii=n;  // shape. copy to allow IAV1.  get # atoms in item & save
+  ASSERT(likely(n>0)||r==1,EVRANK)   // empty value only allowed at rank 1
   INCORPNV(box1); ((DIC*)z)->bloc.vshape=box1; ((DIC*)z)->bloc.vtype=t; ((DIC*)z)->bloc.vbytelen=n<<bplg(t);  // save shape & type; save # bytes for copy
   box=C(AAV(w)[0]);  // fetch size parameters
   ((DIC*)z)->bloc.flags=flags|=AN(box)==2?DICFRB:0;  // now that we have all the flags, save them.  Remember hash/tree type
@@ -464,8 +465,10 @@ exit:;  // clean up from error
  ({ AK((A)virt.u)=(I)ku; AK((A)virt.h)=(I)kh; A ka; RZGOTO(ka=((A (*)(J,A,A,A))*cf)(jt,(A)virt.u,(A)virt.h,virt.self),exit) likely(AN(ka))?BIV0(ka):0; }) )  /* user compare function */
 
 typedef struct {
-I __attribute__((aligned(CACHELINESIZE))) u[16-AKXR(0)/SZI];   //  block used to access user's key
-I __attribute__((aligned(CACHELINESIZE))) h[16-AKXR(0)/SZI];   // block used to access key from hash
+// obsolete I __attribute__((aligned(CACHELINESIZE))) u[16-AKXR(0)/SZI];   //  block used to access user's key
+// obsolete I __attribute__((aligned(CACHELINESIZE))) h[16-AKXR(0)/SZI];   // block used to access key from hash
+I __attribute__((aligned(CACHELINESIZE))) u[16];   //  block used to access user's key - big enough for rank 9
+I __attribute__((aligned(CACHELINESIZE))) h[16];   // block used to access key from hash - big enough for rank 9
 A self;   //
 } VIRT;
 
@@ -580,7 +583,8 @@ static DF2(jtdicget){F12IP;A z;
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
- I t=dic->bloc.vtype; A sa=dic->bloc.vshape; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has 
+ I t=dic->bloc.vtype; A sa=dic->bloc.vshape; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
+ ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
  GA0(z,t,kn*dic->bloc.vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
 // scaf have fast path for 1 key
  // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
@@ -1058,6 +1062,7 @@ static DF2(jtdicgeto){F12IP;A z;
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has 
+ ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
 // obsolete  I t=dic->bloc.vtype; A sa=dic->bloc.vshape;
  GA0(z,t,kn*dic->bloc.vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
  // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
@@ -1073,8 +1078,9 @@ static DF2(jtdicgeto){F12IP;A z;
 
 // ********************************** getkv **********************************
 
-// k is A for key0,:key1, flags is (return k, return v, include key-0, include k1)
+// k is A for key0,:key1, flags is (return k, return v, include key-0, include k-end)
 // We take a read lock on the table and release it
+// virt is used as virtuals for compare, and then repurposed to hold indexes of kvs to be copied
 static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
  PROLOG(000);
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
@@ -1089,99 +1095,114 @@ static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
  I vb=dic->bloc.vbytelen;   //  len of 1 value
 
  C *k01=(C*)k;  // pointer to the key we are comparing against: k0 to begin with
- UI4 rstack[64][2]; I sp=0; // in all our usage of the stack, we push only when we are going down the left side of the tree.  Return is always to the node representing the parent itself.  Stack currnode,rchild
- UI4 res1[3][2];  // nodex and si of the last node >= min, which will be the first node of result
+ UI4 rstack[64][2]; //  Stack currnode,rchild.  Return is always to the node representing the parent itself.
+ UI4 res1[3];  // nodex or sp during tree search.  Values are stored into res1[comp+1] and the correct sign is selected at the end, giving the last thing stored with that sign
  UI8 chirn;  // both children
  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
- UI rootx=*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // biased node# of the root of the tree
- if(unlikely(rootx<(TREENRES<<1)))goto retempty; // empty database: nothing to do
+ UI nodex=*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // search node.  Init to biased node# of the root of the tree
+ if(unlikely(nodex<(TREENRES<<1)))goto retempty; // empty database: nothing to do
  I comp=1;  // will be compare result at end of search.  The root is considered to have compared low
- UI nodex;  // search node, ending either at empty leaf or on equality
  rstack[0][0]=rstack[0][1]=0;  // top of stack is the empty-tree pointer
+ res1[1+1]=0;  // init 'stack at first key' to 0 (invalid).  If it is still there after the search there were no valid keys
+ I sp=1; // sp points to last valid stack entry+1
  // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
  // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
- for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
+ do{  // traverse the tree, searching for index k.  Current node is nodex
   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
   rstack[sp][0]=nodex;  // store this node
-  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01, so node > key0 is ~0
-  UI rnodex=(chirn>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);  // right child
-  rstack[sp][1]=rnodex;  // in case we move left, store right child
-  res1[1+comp][0]=rstack[sp][0]; res1[1+comp][1]=sp;  // remember node & stack of the first result in res1[1 or 2]
-  nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);  // choose left/right based on comparison, mask out garb.
-  if(unlikely(comp==0)){break;}  // found at node nodex.  chirn have the children
-  if(unlikely(nodex<(TREENRES<<1))){break;}  // not found.  comp is set
-  // drop down to next node.  Push right node onto the return stack if it is non0 and we are going left
-  sp+=(UI)comp>0;  // make stacking effective only if comp=1 (i. e. descending left)
- }
- // comp is 0 if nodex=k0, 1 if nodex is just below the first key > k0, -1 if no key > k0 
- if(unlikely(comp<0))goto retempty;  // if k0 > entire tree, nothing to return
- UI startx=res1[1+comp][0]; I startsp=res1[1+comp][1];  // remember starting node & sp
- // we have the first node to produce.  We will go up from there, stopping when we reach the max.  We would like to avoid
+  rstack[sp][1]=(chirn>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack right child
+  chirn=((UI8)rstack[sp][1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left
+  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01 (key to be found), so node > min is 1
+  if(comp==0)goto match;  // found at node nodex.  sp points to the children
+  nodex=(chirn>>((UI)comp>>(BW-5)))&0xffffffff;  // choose left/right based on comparison
+  // No match.  drop down to next node.
+  res1[1+comp]=sp;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted
+  ++sp;  // advance sp to next empty slot, which we will fill presently
+ }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
+ // falling through, there was no match.  Take the last value that is > min
+ sp=res1[1+1];  //  the last (i. e. smallest) key > k01 is in slot 1.  remember sp+1 for starting node
+ flags|=4;  // indicate we should out the first key (since it isn't the min)
+ if(unlikely(sp==0))goto retempty;  // if all comparisons were <, k0 > entire tree, nothing to return
+match:;   // here when match, with sp set from the push of the matching node
+ // rstack[sp] holds (startx,startxr).  We will go up from there, stopping when we reach the max.  We would like to avoid
  // comparing against the max at every node, so we go up the stack looking for the lowest level that is >=max.  Since we expect that a single request will return
- // a small fraction of the tree, this shouldn't take long and will be faster than searching from the top of the tree down.  We scan down from there,
- // looking for the largest value<=max, which we remember as the end key.
+ // a small fraction of the tree, this shouldn't take long and will be faster than searching from the top of the tree down.
 
  k01+=(kib>>32);   // from now on, comparisons are against max key
- nodex=rstack[startsp-1][0]; I sp1;  // first node to check; index of next node to fetch
- for(sp1=startsp-1;sp1>0;sp--){
-  UI nextx=rstack[sp1-1][0];  // unroll 1 loop
-  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01, so node > key0 is ~0
-  if(comp<=0)break;  // stop when node >= max
+
+ UI dstartx; I sp1;  // will be starting point for downward search, holding the highest stacked node index <= max; stack pointer+1 when nodex was the current node
+ for(nodex=rstack[sp][0],sp1=sp;sp1>0;sp1--){   // do not look at sp=0, which is 0
+  UI nextx=rstack[sp1-1][0];  // unroll 1 loop - parent of nodex
+  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01 (max), so node > max is 1
+  if(comp>0)break;  // stop when node > max.  If node=max, we want to start on it, so we go 1 more turn
   PREFETCH(&hashtbl[rstack[sp1][1]*(nodeb>>24)]);  // prefetch right side on the way up
+  dstartx=nodex;  // update dstartx to be the last value <= max
   nodex=nextx;  // advance to next
  }
+ if(unlikely(sp1==sp))goto retempty;  // if startx was > max, there are no keys in the range
 
- // sp1+1 points to the node to start the search at (nodex is invalid if the root is < max).  Find the ending node.  No stacking required
+ nodex=dstartx;  // revert to search-down point, known to be <= max; we know end-of-region will be in a subtree of this node
+ // The stack contained values that were tested and found to be > min.  We have gone up, finding the highest-up such value that is <= max.  That is the start point dstartx.
+ //  We will be on the correct half of the tree, at least.  Find the ending node.  No stacking required
  while(1){  // traverse the tree, searching for index k.  Current node is nodex
   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
-  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01, so node > key0 is ~0
-  res1[1+comp][0]=nodex;   // remember node & stack of the first result in res1[1 or 2]
+  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01, so node > max is 1
+  res1[1+comp]=nodex;   // remember node of the first result in res1[1 or 2].  We could do this in endx, not using res1, but res1 doesn't require a register
+  if(unlikely(comp==0)){goto matchdown;}  // found at node nodex.  chirn have the children
   nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);  // choose left/right based on comparison, mask out garb.
-  if(unlikely(comp==0)){break;}  // found at node nodex.  chirn have the children
   if(unlikely(nodex<(TREENRES<<1))){break;}  // not found.  comp is set
  }
- // comp is 0 if nodex=k0, 1 if nodex is just below the first key > k0, -1 if no key > k0 
- UI endx=res1[1+comp][0];  // remember last node in result
- if(unlikely(comp<0))endx=res1[0][0];  // if k0 > entire tree, use last node in tree as the ending node
- flags|=(comp&1)<<3;  // if not equality on end node, set to accept last node
+ // fall through: no match: use the last node where node key was < max (i. e. comp=-1) 
+ flags|=8;   // no match: flag that we should keep the end node
+ comp=-1;  // set so we look at the last key < max
+matchdown:;  // come here when comp=0, meaning exact match
+ UI endx=res1[1+comp];  // remember last node in result
 
  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp  // comparisons finished, prepare for copying
 
  // as we find the key indexes to return, prefetch key/value
- C *pfv=flags&8?kbase:vbase; I pfb=flags&8?(kib>>32):vb;   // base/stride for prefetch
+ C *pfv=flags&1?kbase:vbase; I pfb=flags&1?(kib>>32):vb;   // base/stride for prefetch, keys if keys are written, else values
 
- // scan the tree/stack, starting at startx, and stopping when we get to endx
- nodex=startx; sp=startsp;  // init to startup node
- UI4 zi[64-8*SZI/4], *ziv=zi; I zx=0;  // area to store node#; index of next slot in area
+ // scan the tree/stack, starting at startx, and stopping when we get to endx.  sp points to nodex, so we will return to nodex's caller.  We will enter looking at nodex itself, as if the left side just returned
+ UI4 *ziv=(UI4*)&virt; I zx=0;  // Repurpose virt area to store node#, used if there aren't many kvs; index of next slot in area
  // nodex is the node scan through the loop
  DLRC(nodex)
- RLRC(nodex,nodex); goto startmin;  // read children, start moving right
+ nodex=rstack[sp][0]; nodexr=rstack[sp][1];    // init to first found node.   sp still holds its stackpos.  We don't need nodexl
+ if(unlikely(nodex==endx)&&(flags&0b1100)!=0b1100)goto endscan;  // special case when there is only one node: if either boundary flag is clear (indicating indicating the boundary node should be elided), reject both boundaries for fast bypass
+ if(flags&4)goto startmin; else goto startminex;  // Start moving right.  If we should out the min node, go there; otherwise to where we handle right side
  while(1){  // till we hit node >= max
   while(1){  // go down the left children, pushing onto the stack
    RLRC(nodex,nodex);  // read children
    if(nodexl<(TREENRES<<1))break;  // exit loop when no left child
-   PREFETCH(&hashtbl[nodexr*(nodeb>>24)]);   // prefetch the right side, which we will return to presently
+   PREFETCH(&hashtbl[nodexr*(nodeb>>24)]);   // prefetch the right side of tree, which we will return to presently
    rstack[sp][0]=nodex; rstack[sp][1]=nodexr; nodex=nodexl; ++sp;  // push return, advance to left child
   }
-startmin:;  // enter first time going right only
   // no more left children.
+startmin:;  // enter first time going right only
   while(1){  // process middle and right nodes
    // nodex is a middle node, with nodexr as right child
    // out the middle node
-   if(zx+8*SZI/4==(LOWESTBIT(zx+8*SZI/4)&-64)){  // if current allocation exceeded...
+   if(zx+8*SZI/4==(LOWESTBIT(zx+8*SZI/4)&-(8*SZI))){  // if current allocation exceeded...  (when size+header size is a power of 2, at least 8*SZI - VIRT holds 32 Is, which is 32/64 UI4s)
     A zia; GATV0E(zia,INT4,zx+zx+8*SZI/4,1,goto exitkeyvals); MC(I4AV1(zia),ziv,zx*4); ziv=I4AV1(zia);  // double & copy
    }
    ziv[zx]=nodex;  // put the node out, in order
+   PREFETCH(pfv+(nodex>>1)*pfb);  // prefetch the kv to be (possibly) moved
    // finish when we out the ending node
-   if(unlikely(nodex==endx)){zx+=(flags>>3)&1; goto endscan;}  // accept last node if not suppressed
-   PREFETCH(pfv+(nodex>>1)*pfb);  // prefetch the kv to be moved
+   if(nodex==endx){zx+=(flags>>3)&1; goto endscan;}  // accept last node if not suppressed
    ++zx;  // not end: accept the node
-   --sp;  // now that we have outed the middle node, we will never come back here
-   if(nodexr>0){nodex=nodexr; break;}  // if there is a right child, enter it
-   nodex=rstack[sp][0]; nodexr=rstack[sp][1];   // return up the stack when there is no right child
+startminex:;  // enter first time when first node is suppressed.  We know that is not also the end node
+   if(nodexr>=(TREENRES<<1)){nodex=nodexr; break;}  // if there is a right child, enter it
+   // No right child, we must pop.  If the previous right child matches our nodex, we are returning to the right side
+   do{
+    --sp;  // pop back
+    nodexl=nodex;  // save nodex for test
+    nodex=rstack[sp][0]; nodexr=rstack[sp][1];  // restore nodex/nodexr for right-side processing in caller
+   }while(nodexl==nodexr);  // if called from right side, end the call and try up one level; if from left, continue through loop to process the middle and right nodes of caller
+     // note: this loop must end because we know endx is in the tree
   }
+  // we fall through to here to return from a left-side call
  }
-endscan:;
+endscan:;   // come here when we exnounter the end node, possibly without looking at anything
  // finished, zx having the count
 
  // allocate the result(s), and run through the indexes, copying
@@ -1192,14 +1213,14 @@ endscan:;
   for(zx=0;zx<zn;++zx){  // for each node in result
    UI nextx=ziv[zx+1];  // unroll loop.  1 overfetch OK
    GETV(zv,kbase+(kib>>32)*(nodex>>1),kib>>32,nodeb&(DICFKINDIR<<8)); zv=(void *)((I)zv+(kib>>32));   // move the data & advance pointer to next one   scaf JMC?
-   if(flags&4)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
+   if(flags&2)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
    nodex=nextx;  // advance to next
   }
  }
  DICLKRDRELK(dic,lv)   // release our lock on keys
 
  if(flags&2){  // if user wants values... 
-  GAE0(zav,dic->bloc.vtype,dic->bloc.vaii*zn,1+AN(dic->bloc.vshape),goto exitvals) AS(zav)[0]=zn; MCISH(&AS(zav)[1],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(1+AN(dic->bloc.vshape),zak);  // allocate result
+  GAE0(zav,dic->bloc.vtype,dic->bloc.vaii*zn,1+AN(dic->bloc.vshape),goto exitvals) AS(zav)[0]=zn; MCISH(&AS(zav)[1],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(1+AN(dic->bloc.vshape),zav);  // allocate result
   DICLKRDWTV(dic,lv)   // wait for values to be ready
   nodex=ziv[0];  // 1 unroll
   for(zx=0;zx<zn;++zx){  // for each node in result
@@ -1229,15 +1250,16 @@ exitkeyvals:; DICLKRDRELKV(dic,lv)  R 0;  // release lock & exit
 //   getkv.   Bivalent. w is k0,:kn, a is flags (#. k,v,min,max).  Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
 static DF2(jtdicgetkvo){F12IP;A z;
  ARGCHK2(a,w)
-     I flags;  // processing flags k,v,min,max(
- if(w==self){ w=a; flags=0b1111; } else RE(flags=i0(a))  // extract or default flags
+ I flags=0b1111;  // processing flags k,v,min,max
+ if(w==self){w=a; // monad, keep default
+ }else{   // extract for dyad
+  ASSERT(AR(a)<=1,EVRANK) ASSERT(AN(a)<=4,EVLENGTH) if(unlikely(!(AT(a)&B01)))RZ(ccvt(B01,a,0))   //  convert to binary list, length <= 4
+  DO(AN(a), flags&=~((BAV(a)[i]^1)<<i);)  // if bit i is 0, turn that bit off in flags
+ }
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(AR(w)==kr+1,EVRANK) ASSERT(AS(w)[0]==2,EVLENGTH) ASSERTAGREE(AS(w)+1,ks,kr)   // w must be a single key or an array of them, with correct shape
+ ASSERT(likely(dic->bloc.vbytelen!=0)||!(flags&2),EVDOMAIN) ASSERT(AR(w)==kr+1,EVRANK) ASSERT(AS(w)[0]==2,EVLENGTH) ASSERTAGREE(AS(w)+1,ks,kr)   // can't read values if they are empty; w must be a single key or an array of them, with correct shape
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
 
- I t=dic->bloc.vtype; A sa=dic->bloc.vshape;
- // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
- // nothing & use the value returned by keyprep, which will be the result area from the user hash.
  VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
  
  void *k=voidAV(w);  // point to the key data.  tree may be empty

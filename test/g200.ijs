@@ -646,6 +646,10 @@ assert. 'domain error' -: aa ff f. m. modm etx bb
 NB. not working yet *./ , h@> { (<01);a;mod;<f
 NB. not working yet *./ , h@> { a;(<01);mod;<f
 
+NB. library fns
+13 1 7 0 4 13 6 11 3 -: , (%. m. 15) 3 3 $ 7 2 0 9 6 8 3 4 1
+13 -: , (-/ . * m. 15) 3 3 $ 7 2 0 9 6 8 3 4 1
+
 
 
 

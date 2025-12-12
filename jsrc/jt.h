@@ -93,7 +93,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
    UC trace;  // tracing-related flags (debug and pm)  inherit
 #define TRACEDB1                1  // full debug
 #define TRACEPMX                 1  // set when PM is running
-#define TRACEPM              (1<<TRACEPMX)
+#define TRACEPM              (1LL<<TRACEPMX)
 #define TRACEDBSUSSS         0x20  // single-step request encountered - end suspension
 #define TRACEDBSUSCLEAR      0x40  // set to forcibly end suspension
 #define TRACEDBSUSFROMSCRIPT 0x80  // debug only, to keep reading from script during suspension

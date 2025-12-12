@@ -343,7 +343,7 @@ F1(jtpmctr){F12IP;D x;I q;
  ASSERT(JT(jt,pma),EVDOMAIN);
  x=q+(D)((PM0*)(CAV1(JT(jt,pma))))->pmctr;
  ASSERT(IMIN<=x&&x<FLIMAX,EVDOMAIN);
- ((PM0*)(CAV1(JT(jt,pma))))->pmctr=q=(I)x; if(q)jt->uflags.trace|=TRACEPM;else jt->uflags.trace&=~TRACEPM; // tell cx and unquote to look for pm
+ ((PM0*)(CAV1(JT(jt,pma))))->pmctr=q=(I)x; if(q)jt->uflags.trace|=TRACEPM;else{jt->uflags.trace&=~TRACEPM; pmrecord(0,0,-3,0);} // tell cx and unquote to look for pm; if turning off sampling, emit lacuna
  R sc(q);
 }    /* add w to pmctr */
 
@@ -393,7 +393,7 @@ F2(jtpmarea2){F12IP;A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;
 
 // Add an entry to the Performance Monitor area
 // name and loc are A blocks for the name and current locale
-// lc is the line number being executed, or _1 for start function, _2 for end function
+// lc is the line number being executed, or _1 for start function, _2 for end function, _3 for lacuna record, installed when sampling turned off
 // val is the valence 
 void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
  u=(PM0*)CAV1(JT(jt,pma));  // u-> pm control area

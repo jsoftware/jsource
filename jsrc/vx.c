@@ -591,7 +591,7 @@ static DF2(jtmodularexplicitx){F12IP;  // this stands in place of jtxdefn, which
  R z;
 }
 
-// entry point for monad and dyad %. m. n (type=0) and -/ . * m. n (type=1)
+// entry point for monad and dyad %. m. n (type=0) and monad -/ . * m. n (type=1)
 static A jtmodularexplicit(J jt,A a,A w,I type){
  // Apply Md_j_ to the input arguments, creating a derived verb to do the work
  A xadv; ASSERT(xadv=jtfindnameinscript(jt,"~addons/dev/modular/modular.ijs",type?"Mdet_j_":"Md_j_",ADV),EVNONCE);
@@ -599,7 +599,7 @@ static A jtmodularexplicit(J jt,A a,A w,I type){
  // If the returned verb has VXOPCALL set, that means we are in debug and a namerefop has been interposed for Foldr_j_.  We don't want that - get the real verb
  if(unlikely(FAV(derivvb)->flag&VXOPCALL))derivvb=FAV(derivvb)->fgh[2];  // the verb is saved in h of the reference
  // Modify the derived verb to go to our preparatory stub.  We require that the continuation be at jtxdefn because we call bivalently and with flags
- ASSERT(FAV(derivvb)->valencefns[1]==jtxdefn,EVSYSTEM);
+ ASSERT(FAV(derivvb)->valencefns[0]==jtxdefn,EVSYSTEM); if(type==0)ASSERT(FAV(derivvb)->valencefns[1]==jtxdefn,EVSYSTEM);
  FAV(derivvb)->valencefns[0]=jtmodularexplicitx;   // monad always defined
  FAV(derivvb)->valencefns[1]=type?jtvalenceerr:(AF)jtmodularexplicitx;  // dyad defined only for %.
  // For display purposes, give the compound the spelling of the original

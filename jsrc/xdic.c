@@ -1417,7 +1417,7 @@ static scafINLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
- C *kebase=CAV(dic->bloc.keys), *kbase=kebase-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty/tombstone/birthstone and do not take space in the key array
+ C *kebase=CAV(dic->bloc.keys), *kbase=kebase-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals)-TREENRES*vb;  // same for value
 
  // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
@@ -1477,7 +1477,7 @@ static scafINLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i
   // extracted.  We now remove nodex from the tree, never to be referred to again.  It is always the
   // child of its parent, and only the chain field in the parent is modified - nothing in nodex
   I emptyx=RENCEMPTY(nodex);  // put new deletion at top of the free chain, unbiased
-  DELKV(kbase+emptyx*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+RENCEMPTY(nodex)*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
+  DELKV(kebase+emptyx*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+RENCEMPTY(nodex)*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
   I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kebase[emptyx*(kib>>32)])  // chain old free chain from new deletion
   dic->bloc.emptyn=emptyx;  // set new head of chain
 

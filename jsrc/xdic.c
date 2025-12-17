@@ -441,11 +441,11 @@ A dicresize(DIC *dic,J jt){
   UI nhold=2*AS(newdic->bloc.hash)[0]; C *iv=CAV(newdic->bloc.hash), *ov=CAV(dic->bloc.hash); I il=newdic->bloc.hashelesiz, ol=dic->bloc.hashelesiz;  // number of half-tree-nodes to copy, including hidden ones; addr, len
   DO(nhold, *(UI4*)ov=_bzhi_u64(*(UI4*)iv,il<<LGBB); iv+=il; ov+=ol;)   // copy all the old nodes, zero-extending if needed.  Fails on a downsize!
   // for trees, we copy the old tree into the new one because it's still a valid prefix of the new larger tree and recreating it is slow.  The tree element may have changed size!
-  // we must then copy the keys and values too, which is tricky because of empties.  To avoid looking at atoms we copy the keys and values en bloc and then make the old kvs nonrecursive, so that the new block has sole ownership.
+  // we must then copy the keys and values too, which is tricky because of empties.  To avoid looking at atoms we copy the keys and values en bloc and then switch the type of the old kv to INT, in effect freeing them one tme
   I kk=bplg(AT(newdic->bloc.keys)), kn=AN(newdic->bloc.keys), vk=bplg(AT(newdic->bloc.vals)), vn=AN(newdic->bloc.vals);  // kv, #atom & size of atom
-  MC(voidAV(dic->bloc.keys), voidAV(newdic->bloc.keys), kn<<kk); AFLAG(newdic->bloc.keys)&=~RECURSIBLE;   // copy & abandon the old keys, transferring ownership
-  MC(voidAV(dic->bloc.vals), voidAV(newdic->bloc.vals), vn<<vk); AFLAG(newdic->bloc.vals)&=~RECURSIBLE;   // copy & abandon the old values, transferring ownership
-  UI nkold=AS(newdic->bloc.keys)[0]; dic->bloc.emptyn=nkold-1;  // the end of the free chain is always the last key, which is never allocated.  Point that to the first new key and make it  the head of the free chain
+  MC(voidAV(dic->bloc.keys), voidAV(newdic->bloc.keys), kn<<kk); AT(newdic->bloc.keys)=INT;   // copy & abandon the old keys, transferring ownership
+  MC(voidAV(dic->bloc.vals), voidAV(newdic->bloc.vals), vn<<vk); AT(newdic->bloc.vals)=INT;   // copy & abandon the old values, transferring ownership
+  UI nkold=AS(newdic->bloc.keys)[0]; dic->bloc.emptyn=nkold-1;  // the end of the free chain is always the last key, which is never allocated.  Point that to the first new key and make it the head of the free chain
   UI t=nkold; WRHASH1234(t, dic->bloc.emptysiz, &CAV(dic->bloc.keys)[(nkold-1)*newdic->bloc.kbytelen])  // hang the excess new empty chain off the old
 
  }
@@ -603,6 +603,27 @@ static DF2(jtdicget){F12IP;A z;
 
 // ********************************** put **********************************
 
+// put fast case: one key, no user hash or compare function.  We enter having requested a pre-write lock.
+// Result is 0 on error, otherwise is the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed
+static scafINLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
+ // hash the key and prefetch from the hashtable
+ // wait till we become the current writer, then request write lock on k+v
+ // look up the key in the hashtable
+ // if new key{
+ //   add it to the keys or abort to resize
+ //   add to values;
+ //   wait for lock; release key lock; 
+ //   add it to hash;
+ // ]else{
+ //   wait for lock; release key lock;
+ //   replace value;
+ // }
+ //   
+ // 
+ R lv;
+}
+
+
 // k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
@@ -746,13 +767,27 @@ static DF2(jtdicput){F12IP;
  I vt=dic->bloc.vtype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // v must be a single value or an array of them, with correct shape
+ if(0&&af+wf+((dic->bloc.flags&DICFIHF+DICFICF)-(DICFIHF+DICFICF))==0){  // fast path?
+  // put of a single key using internal hash/compare - the fast path
+  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed
+  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
+  while(1){  // loop till we have processed all the resizes
+   lv=jtput1(dic,voidAV(w),voidAV(a),jt,lv); if(lv==0)goto errexit1; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the hash & put; abort if error if no resize, finish, good or bad
+   if(dicresize(dic,jt)==0)goto errexit1;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
+  }
+  A z=mtv; if(0){errexit1: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
+  goto abortexit;  // finish, releasing lock
+ }
+ // fall through for multiple keys, or user functions
  I cf=MIN(af,wf); ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // frames must be suffixes
  if(unlikely(AN(w)==0)){R mtv;}  // if no keys, return empty fast
- if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed
+ if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed.  Agreement error has priority over type
  I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,wf,AS(w))   // kn = number of keys to be looked up  vn=#values to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
  // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
- // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
+ // For the same reason, we do not have to worry about the order in which kvs are added and deleted.
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
@@ -997,8 +1032,8 @@ static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VI
  DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
- C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
- C *vbase=CAV(dic->bloc.vals)-TREENRES*vb;  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
+ C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // key address corresponding to tree value of 0.  Treevalues 0-1 are empty and do not take space in the key array
+ C *vbase=CAV(dic->bloc.vals)-TREENRES*vb;  // value address corresponding to tree value of 0.  Treevalues 0-1 are empty and do not take space in the value array
 
  // loop over keys (reverse order).  Find the key
  void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
@@ -1418,7 +1453,7 @@ static scafINLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
  C *kebase=CAV(dic->bloc.keys), *kbase=kebase-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
- C *vbase=CAV(dic->bloc.vals)-TREENRES*vb;  // same for value
+ C *vbase=CAV(dic->bloc.vals);  // same for value
 
  // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
  // Because we don't store parent info, we have to do each key separately, which requires keeping a write
@@ -1477,7 +1512,7 @@ static scafINLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i
   // extracted.  We now remove nodex from the tree, never to be referred to again.  It is always the
   // child of its parent, and only the chain field in the parent is modified - nothing in nodex
   I emptyx=RENCEMPTY(nodex);  // put new deletion at top of the free chain, unbiased
-  DELKV(kebase+emptyx*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+RENCEMPTY(nodex)*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
+  DELKV(kebase+emptyx*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+emptyx*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
   I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kebase[emptyx*(kib>>32)])  // chain old free chain from new deletion
   dic->bloc.emptyn=emptyx;  // set new head of chain
 
@@ -1490,7 +1525,7 @@ static scafINLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i
   }
   // no children.
   WLRC(parent&~1,parent&1,0,CBYTE(parent&~1)&1)   // parent[dir]=NULL.  This removes nodex from the tree
-  if(!(nodexlc&1)){printf("red leaf\n"); goto findel;}   // childless red node.  delete it (i. e. in the parent), finished
+  if(!(nodexlc&1))goto findel;   // childless red node.  delete it (i. e. in the parent), finished
   // black node without descendants.  full rebalance required
   DSOC(parent); I parentd,sibling; DSOC(sibling);  // parent names incl direction; sibling names
   I gparent;  // will hold node\dir of parent

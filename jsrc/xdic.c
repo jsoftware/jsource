@@ -773,7 +773,7 @@ static DF2(jtdicput){F12IP;
   UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
   void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
   while(1){  // loop till we have processed all the resizes
-   lv=jtput1(dic,voidAV(w),voidAV(a),jt,lv); if(lv==0)goto errexit1; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the hash & put; abort if error if no resize, finish, good or bad
+   lv=jtput1(dic,voidAV(w),voidAV(a),lv,jt); if(lv==0)goto errexit1; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the hash & put; abort if error if no resize, finish, good or bad
    if(dicresize(dic,jt)==0)goto errexit1;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
    lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
   }

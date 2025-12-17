@@ -578,14 +578,14 @@ static DF2(jtdicget){F12IP;A z;
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
- I t=dic->bloc.vtype; A sa=dic->bloc.vshape; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
+ I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
  if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),w),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
- GA0(z,t,kn*dic->bloc.vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
+ GA0(z,t,kn*vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
 // scaf have fast path for 1 key
  // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
  // nothing & use the value returned by keyprep, which will be the result area from the user hash.
@@ -606,6 +606,8 @@ static DF2(jtdicget){F12IP;A z;
 // put fast case: one key, no user hash or compare function.  We enter having requested a pre-write lock.
 // Result is 0 on error, otherwise is the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed
 static scafINLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
+ UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
+ UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  // hash the key and prefetch from the hashtable
  // wait till we become the current writer, then request write lock on k+v
  // look up the key in the hashtable
@@ -1092,7 +1094,7 @@ static DF2(jtdicgeto){F12IP;A z;
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
- I t=dic->bloc.vtype; A sa=dic->bloc.vshape; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has 
+ I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
  if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),w),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
@@ -1100,7 +1102,7 @@ static DF2(jtdicgeto){F12IP;A z;
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
 // obsolete  I t=dic->bloc.vtype; A sa=dic->bloc.vshape;
- GA0(z,t,kn*dic->bloc.vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
+ GA0(z,t,kn*vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
  // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
  // nothing & use the value returned by keyprep, which will be the result area from the user hash.
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer

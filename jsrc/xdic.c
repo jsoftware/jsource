@@ -906,26 +906,25 @@ static scafINLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
  UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen  compare func  base of hashtbl
- C *kbase=CAV(dic->bloc.keys)-HASHNRES*(kib>>32);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+ C *kbase=CAV(dic->bloc.keys);  // address corresponding to unbiased hash value.
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
 
- // first pass over keys.  If key found, add a record of kvslot\hashslot
+ // first pass over keys.  If key found, add a record of (unbiased kvslot)\hashslot
  I ndels;  // init old chain empty
  for(i=0,ndels=0;i<n;++i){
-  I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32); UI hval; // convert hash to slot#; place where biased kv# comes in
+  I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32); I hval; // convert hash to slot#; place where biased kv# comes in
   while(1){
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
-   if(withprob(hval<HASHNRES,0.3)){  // hole or tombstone
-    if(withprob(hval<HASHTSTN,0.8))break;   // hole, exit not found
-   }else if(withprob(keysne((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval,hsz&(DICFICF<<DICFBASE),errexit)==0,0.7)){s[ndels++]=((I8)hval<<32)+curslot; break;}  // match, exit found, putting departing hashslot on old chain
-   // no match.
+   if(withprob((hval-=HASHNRES)<0,0.3)){  // hole or tombstone
+    if(withprob(hval<HASHTSTN-HASHNRES,0.8))break;   // hole, exit not found
+   }else if(withprob(keysne((UI4)kib,(void*)((I)k+i*(kib>>32)),kbase+(kib>>32)*hval,hsz&(DICFICF<<DICFBASE),errexit)==0,0.7)){s[ndels++]=((I8)hval<<32)+curslot; break;}  // match, exit found
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
   }
  }
 
  DICLKWRRQ(dic,lv);   // request write lock
- I vb=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals)-HASHNRES*vb;  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+ I vb=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals);  // address corresponding to unbiased hash value of 0.
  UI emptyx=dic->bloc.emptyn; I cur; // starting root of free queue, current index, empty list
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))unbiasforcomp
  I ndel=0;  // number of deleted keys
@@ -933,7 +932,7 @@ static scafINLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt
 
  // process the list of kvslot\hashslot, turning each hashslot into a tombstone.  If it's already a tombstone, double del, ignore it & remove
  for(ndel=0,i=0;i<ndels;++i){
-  I8 curslot=s[i]; UI hval=_bzhi_u64(*(UI4*)&hashtbl[(UI4)curslot*(hsz>>56)],(hsz>>53));  // read hashtable index, to see if it's a tombstone already (double del)
+  I8 curslot=s[i]; UI hval=_bzhi_u64(*(UI4*)&hashtbl[(UI4)curslot*(hsz>>56)],(hsz>>53));  // read biased hashtable index, to see if it's a tombstone already (double del)
   if(likely(hval>=HASHNRES)){  // don't clear a slot more than once
    I t=HASHTSTN; WRHASH1234(t, hsz>>56, &hashtbl[(UI4)curslot*(hsz>>56)])  // mark the slot as a tombstone
    s[ndel++]=curslot;  // not a double delete, keep it for the last pass
@@ -944,10 +943,10 @@ static scafINLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt
 
  // process the list of kvslot\hashslot, putting the kv slots onto the empty chain & flipping trailing tombstones.  Flipping tombstones is safe since we are the lead writer
  for(i=0;i<ndel;++i){
-  UI8 curslot=s[i]; UI kvx=curslot>>32;  // get index of deleted kv
+  UI8 curslot=s[i]; UI kvx=curslot>>32;  // get unbiased index of deleted kv
   DELKV(kbase+kvx*(kib>>32),kib>>32,hsz&(DICFKINDIR<<DICFBASE)) DELKV(vbase+kvx*vb,vb,hsz&(DICFVINDIR<<DICFBASE))   // if k/v is indirect, free it & clear to 0
   I t=emptyx; WRHASH1234(t,hsz>>48,&kbase[kvx*(kib>>32)])  // chain old free chain from new deletion
-  emptyx=HENCEMPTY(kvx);  // put new deletion at top of the free chain, unbiased
+  emptyx=kvx;  // put new deletion at top of the free chain, unbiased
   // Whenever we add a tombstone, we turn it into an empty if it is followed by an empty; and we continue this back into previous tombstones
   UI cs=(UI4)curslot; I curslotn=cs-1; if(unlikely(curslotn<0))curslotn+=(UI4)hsz;   // point to next slot
   if(_bzhi_u64(*(UI4*)&hashtbl[curslotn*(hsz>>56)],(hsz>>53))==0){
@@ -1398,7 +1397,7 @@ static scafINLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,U
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
- C *kebase=CAV(dic->bloc.keys), *kbase=kebase-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty/tombstone/birthstone and do not take space in the key array
+ C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are parents and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals)-TREENRES*vb;  // same for value
 
  DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys to be modifiable.
@@ -1425,7 +1424,7 @@ static scafINLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,U
   // Install the new node as parent[comp], with color red.  parent[pi-1] matches parent
   ++pi;  // we don't need to push parent, but to align stack properly we need to leave a space for it so that [pi-2] is gparent
   nodex=dic->bloc.emptyn;  // next slot to allocate, as empty index
-  UI emptynxt=_bzhi_u64(*(UI4*)&kebase[nodex*(kib>>32)],(nodeb>>16));  // get next in free chain
+  UI emptynxt=_bzhi_u64(*(UI4*)&kbase[(nodex+TREENRES)*(kib>>32)],(nodeb>>16));  // get next in free chain
   if(emptynxt==nodex)goto resize;  // if chained to self, that's end of chain, resize
   dic->bloc.emptyn=emptynxt;   // set new head of free chain
   nodex=RDECEMPTY(nodex);   // convert empty index to tree-index with LSB=0
@@ -1533,7 +1532,7 @@ static scafINLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
- C *kebase=CAV(dic->bloc.keys), *kbase=kebase-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
+ C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals);  // same for value
 
  // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
@@ -1593,8 +1592,8 @@ static scafINLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i
   // extracted.  We now remove nodex from the tree, never to be referred to again.  It is always the
   // child of its parent, and only the chain field in the parent is modified - nothing in nodex
   I emptyx=RENCEMPTY(nodex);  // put new deletion at top of the free chain, unbiased
-  DELKV(kebase+emptyx*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+emptyx*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
-  I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kebase[emptyx*(kib>>32)])  // chain old free chain from new deletion
+  DELKV(kbase+(emptyx+TREENRES)*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+emptyx*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
+  I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kbase[(emptyx+TREENRES)*(kib>>32)])  // chain old free chain from new deletion
   dic->bloc.emptyn=emptyx;  // set new head of chain
 
   I child=(nodexlc|nodexr)&~1;  // the one child, if not 0

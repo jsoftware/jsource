@@ -5,8 +5,6 @@
 
 #include "j.h"
 
-
-#define scafINLINE NOINLINE  // scaf
 // Dictionary support
 
 #ifndef CRC32
@@ -27,7 +25,7 @@
 #endif
 
 // CRC32 of n floats.
-static scafINLINE UI4 crcfloats(UI8 *v, I n){
+static INLINE UI4 crcfloats(UI8 *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI4 crc0=-1;  // convert bytecount to words
@@ -39,7 +37,7 @@ static scafINLINE UI4 crcfloats(UI8 *v, I n){
 }
 
 // CRC32 of n Is
-static scafINLINE UI4 crcwords(UI *v, I n){
+static INLINE UI4 crcwords(UI *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI4 crc0=-1;  // convert bytecount to words
@@ -51,7 +49,7 @@ static scafINLINE UI4 crcwords(UI *v, I n){
 }
 
 // CRC32 of n bytes
-static scafINLINE UI4 crcbytes(C *v, I n){
+static INLINE UI4 crcbytes(C *v, I n){
  UI4 wdcrc=n&-SZI?crcwords((UI*)v,n>>LGSZI):~0;  // take CRC of the fullword part, if any
  if(n&(SZI-1)){wdcrc=HASHI(wdcrc,((UI*)v)[n>>LGSZI]<<((SZI-(n&(SZI-1)))<<LGSZI));}  // if there are bytes, take their CRC after discarding garb.  Avoid overfetch
  R wdcrc;  // return composite CRC
@@ -59,10 +57,10 @@ static scafINLINE UI4 crcbytes(C *v, I n){
 
 // CRC32 of n boxes
 static UI4 jtcrcy(J jt,A y);
-static scafINLINE UI4 crcboxes(A *v, I n, J jt){UI4 crc=0; A cur=v[0]; DO(n, A nxt=v[i+1]; crc=HASH4(crc,jtcrcy(jt,C(cur))); cur=nxt;) R crc;}  // overfetch OK
+static INLINE UI4 crcboxes(A *v, I n, J jt){UI4 crc=0; A cur=v[0]; DO(n, A nxt=v[i+1]; crc=HASH4(crc,jtcrcy(jt,C(cur))); cur=nxt;) R crc;}  // overfetch OK
 
 // CRC32 of n Xs
-static scafINLINE UI4 crcxnums(X *v, I n){UI4 crc=0; X cur=v[0]; DO(n, X nxt=v[i+1]; crc=HASH4(crc,likely(XLIMBLEN(v[i])!=0)?crcwords(UIAV(v[i]),XLIMBLEN(v[i])):~0); cur=nxt;) R crc;}
+static INLINE UI4 crcxnums(X *v, I n){UI4 crc=0; X cur=v[0]; DO(n, X nxt=v[i+1]; crc=HASH4(crc,likely(XLIMBLEN(v[i])!=0)?crcwords(UIAV(v[i]),XLIMBLEN(v[i])):~0); cur=nxt;) R crc;}
 
 // CRC32 of y.  Floats must observe -0.
 static UI4 jtcrcy(J jt,A y){
@@ -489,7 +487,7 @@ A self;   //
 // k is A for keys, n is #keys, s is place for slot#s.  Hash each key, store, prefetch (possibly using wrong hash)
 // if s is 0, we are using a user hash; use uits return area as s
 // result is 0 on error
-static scafINLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
+static INLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  if(likely(s!=0)) {
   // internal hash
@@ -511,7 +509,7 @@ static scafINLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
 // ********************************** get/has **********************************
 
 // Do the work for just 1 get. z is 0 for has
-static scafINLINE I jtget1(DIC *dic,void *k,A z,J jt,A adyad){
+static INLINE A jtget1(DIC *dic,void *k,A z,J jt,A adyad){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn;  // elesiz/hashsiz kbytelen/kitemlen hash function
  UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&CAV1(dic->bloc.hash)[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
@@ -556,7 +554,7 @@ exiterr:; z=0; goto retz;
 // resolve each key in the hash and copy the value (or default) to the result
 // a is default if given, 0 if not; or 1 if has
 // We take a read lock on the table and return with it
-static scafINLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
+static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;   // more nonresizable: kbytelen/kitemlen   compare fn   size of a value in bytes 
@@ -653,7 +651,7 @@ static DF2(jtdicget){F12IP;A z;
 
 // put fast case: one key, no user hash or compare function.  We enter having requested a pre-write lock.
 // Result is 0 on error, otherwise is the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed
-static scafINLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
+static INLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  // hash the key and prefetch from the hashtable
@@ -707,7 +705,7 @@ resize:;  // resize required.  We already have a write lock
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; return value of lv (to make release faster in caller), with RET bits set to indicate error or resize request
-static scafINLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
+static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // kbytelen/kitemlen  compare func unchanged by resize
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
@@ -899,7 +897,7 @@ abortexit:;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I i;
+static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;    // more nonresizable
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
@@ -1104,7 +1102,7 @@ DF2(jtdisprbdic){F12IP;
 // resolve each key in the hash and copy the value (or default) to the result
 // a is default if given, 0 if not; or 1 if has
 // We take a read lock on the table and release it
-static scafINLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
+static INLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT virt){I i;
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vb=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
@@ -1197,7 +1195,7 @@ static DF2(jtdicgeto){F12IP;A z;
 // k is A for key0,:key1, flags is (return k, return v, include key-0, include k-end)
 // We take a read lock on the table and release it
 // virt is used as virtuals for compare, and then repurposed to hold indexes of kvs to be copied
-static scafINLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
+static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
  PROLOG(000);
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
@@ -1389,7 +1387,7 @@ static DF2(jtdicgetkvo){F12IP;A z;
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
+static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
@@ -1524,7 +1522,7 @@ abortexit:;
 // resolve each key in the hash and delete them
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static scafINLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
+static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)

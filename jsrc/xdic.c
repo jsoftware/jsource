@@ -275,15 +275,16 @@ F1(jtcreatedic){F12IP;
 // DICLKRDWTV(dic,lv)   when finished with keys, wait for values to be available
 // DICLKRDRELK(dic,lv)   then release read lock on keys
 // DICLKRDRELV(dic,lv)   release read lock on values at end
-// DICLKRDRELKV(dic,lv)   if the read locks for keys & values finish simultaneously, release them both
+// DICLKRDRELKV(dic,lv)   if the read locks for keys & values finish simultaneously, release them both (replaces DICLKRDRELK and DICLKRDRELV)
 
 // Writers use the sequence
 // DICLKRWRQ(dic,lv)  // request read/write lock.  fairly soon...
-// DICLKRWWT(dic,lv)  // ...wait for read/write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock.
-// DICLKWRRQ(dic,lv)  // request write lock
-// DICLKWRWT(dic,lv)  // wait for write lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
-// DICLKWRRELK(dic,lv)  // release write lock on keys (optional)
-// DICLKWRRELV(dic,lv)  // release write lock on keys and values
+// DICLKRWWT(dic,lv)  // ...wait for read/write lock to be granted (i. e. current-write# is our seq#).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock.
+// DICLKWRRQ(dic,lv)  // request write lock on keys&values
+// DICLKWRWTK(dic,lv)  // wait for write lock on keys (i. e. no readers looking at them).  Readers may still be reading values
+// DICLKWRWTV(dic,lv)  // wait for write lock on values (i. e. no readers looking at them)
+// DICLKWRRELK(dic,lv)  // release write lock on keys (optional) - we must hold a lock on the values
+// DICLKWRRELV(dic,lv)  // release write lock on values (and keys if lock held).  This updates the current-writer #
 
 // A read lock guarantees that the control info and tables will not be modified by any thread in a way that could affect a get().  Other modifications are allowed.
 // A read-write lock guarantees that the control info and tables will not be modified by any other thread.  No modification by this thread mey affect a get() in progress.
@@ -326,11 +327,12 @@ F1(jtcreatedic){F12IP;
 // We start a write sequence by putting up the prewrite rewuest and waiting to become the lead writer.  If there is a resize, which happens only after we have become the lead writer and acquired a write lock,
 // we keep the same lock throughout the resize, and we use the existence of that lock as a flag to suppress requesting the write lock again.  That in turn means that we must ignore any write lock that we see before we have
 // become the lead writer.  We just mask it off here on the initial prewrite response.  When we become lead writer we can be sure the lock is clear.
-#define DICLKRWRQ(dic,lv,cond) (lv=!(cond)?__atomic_fetch_add(&AM((A)dic),LOWESTBIT(DICLMSKRW),__ATOMIC_ACQ_REL)&~(DICLMSKWRK+DICLMSKWRV):DICLSINGLETHREADED)   // put up prewrite request and read status, which establishes our sequence# in lv where it will remain until we have become lead writer.  Can overflow
+#define DICLKRWRQ(dic,lv,cond) (lv=!(cond)?__atomic_fetch_add(&AM((A)dic),LOWESTBIT(DICLMSKRW),__ATOMIC_ACQ_REL)&~(DICLMSKWRK+DICLMSKWRV):DICLSINGLETHREADED)   // put up prewrite request and read status, which establishes our sequence# in lv where it will remain until we have become lead writer.
+    // the only thing valid in lv is our sequence#
 #define DICLKRWWT(dic,lv) if(likely((lv&DICLMSKWRK+DICLMSKWRV)==0))if(unlikely((((LKRW(lv)^LKSEQ(lv)))&DICLMSKSEQ))!=0)diclkrwwt(dic,lv);  // wait until we are the lead writer; but if we already have a lock,
        // we must be in resize; our lv may be stale then so we keep the old lock
 // once we become the lead writer we know that no one else will change the lead writer, so we can safely update lv from the global
-#define DICLKWRRQ(dic,lv) if(likely((lv&DICLMSKWRK+DICLMSKWRV)==0))lv=__atomic_add_fetch(&AM((A)dic),DICLMSKWRK+DICLMSKWRV,__ATOMIC_ACQ_REL);   // put up write request for key & value (we are known to be the lead writer and own the write bits, which must be clear)
+#define DICLKWRRQ(dic,lv) if(likely((lv&DICLMSKWRK+DICLMSKWRV)==0))lv=__atomic_add_fetch(&AM((A)dic),DICLMSKWRK+DICLMSKWRV,__ATOMIC_ACQ_REL);   // put up write request for key & value (we are known to be the lead writer and own the write bits, which must be clear), & set those bits in lv
 #define DICLKWRWTK(dic,lv) if(unlikely(lv&DICLMSKRDK))lv=diclkwrwt(dic,0);  // wait until all reads have finished looking at keys.  If single-threading, test fails
    // we update that part of lv we don't control, so that the ultimate CAS will have a better chance of starting with the right value
 #define DICLKCKSTAT(dic) __atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)   // (optional) refetch status before we have to check it
@@ -1383,7 +1385,7 @@ static DF2(jtdicgetkvo){F12IP;A z;
 // k is address of keys, v is address of values
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
-// return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
+// return holding a write lock on this dic; rc=0 if error, otherwise current lv (which gives lock status), with OKRET set to be non0 and RESIZEREQ is a resize is needed
 static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
@@ -1395,7 +1397,7 @@ static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT 
  C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are parents and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals)-TREENRES*vb;  // same for value
 
- DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys to be modifiable.
+ DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys & values to be modifiable.
 
  // loop over keys.  Find the key
  // Because we don't store parent info, we have to do each key separately, which requires keeping a write
@@ -1495,7 +1497,9 @@ static DF2(jtdicputo){F12IP;
 
  VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
+// obsolete printf("put prerwrq, lk=0x%016llx\n",AM((A)dic));  // scaf
  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+// obsolete printf("put rwrq, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
 // obsolete   if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
@@ -1503,12 +1507,15 @@ static DF2(jtdicputo){F12IP;
 // obsolete     // we have to reinit s in the resize loop because putslots may have modified it
  
   lv=jtputslotso(dic,k,kn,v,vn,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; if no resize, finish, good or bad
+// obsolete printf("after putslotso, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
  }
  A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
  PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
+// obsolete printf("put before final relv, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
+// obsolete printf("put final relv, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  RETF(z);
 }
 
@@ -1518,7 +1525,7 @@ static DF2(jtdicputo){F12IP;
 // k is A for keys,
 // resolve each key in the hash and delete them
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
-// return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
+// return holding a write lock on this dic; rc=0 if error, otherwise current lv (which gives lock status), with OKRET set to be non0 and RESIZEREQ is a resize is needed
 static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
@@ -1529,6 +1536,8 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
  C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals);  // same for value
+
+ DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys & values to be modifiable.
 
  // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
  // Because we don't store parent info, we have to do each key separately, which requires keeping a write
@@ -1662,8 +1671,9 @@ notfound:;
   ki=(void *)((I)ki-(kib>>32));  // advance to next search key
 // obsolete printf("looping for next key\n");
  }
- R 1;  // good return
-errexit: R 0;  // error abort
+ R lv|DICLMSKOKRET;  // good return, holding lock
+// resize: R lv|DICLMSKOKRET+DICLMSKRESIZEREQ;  // signal need for resize; return holding write lock on keys & values
+errexit: R 0;
 }
 
 //  del.   w is keys   u was dic to self
@@ -1679,7 +1689,9 @@ static DF1(jtdicdelo){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
+// obsolete printf("del prerwrq, lk=0x%016llx\n",AM((A)dic));  // scaf
  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+// obsolete printf("del rwrq, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
@@ -1687,15 +1699,16 @@ static DF1(jtdicdelo){F12IP;
   else{A x; GATV0E(x,FL,kn,1,goto errexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
     // we must reinit s because it might have been change by keyprep
 
-  I rc=jtdelslotso(dic,k,kn,jt,lv,virt); if(likely(rc>0))break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
-  dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+  lv=jtdelslotso(dic,k,kn,jt,lv,virt); if(lv==0)goto errexit; if(1||likely(!(lv&DICLMSKRESIZEREQ)))break; // do the dels; if no resize (not supported yet), finish, good or bad
+// obsolete printf("del after delslotso, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
+  dicresize(dic,jt);  // If we have to resize, we abort with the dels partially complete, and then retry, keeping the dic under lock the whole time
  }
  A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
- DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
+// obsolete printf("del before final relv, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
+ DICLKWRRELV(dic,lv)    // we are finished.  advance sequence# and allow everyone to look at values.  We must have a lock
+// obsolete printf("del final relv, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  RETF(z);
 }
-
-
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*- user-level primitives *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 

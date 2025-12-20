@@ -164,7 +164,7 @@ typedef struct ADic {
 
 // u 16!:_1 y  adverb.  allocate hashtable.  Always called from the numbered locale of the dictionary.
 // u is the hash/compare verb OR the DIC block for a dictionary that is being resized.
-// y is (min #eles,max #eles,#hashslots);(flags: singlethreading (default 0));(key type;key shape);(value type;value shape)    to create a new dictionary
+// y is (min #eles,max #eles,#hashslots);(flags: singlethreading (default 1));(key type;key shape);(value type;value shape)    to create a new dictionary
 //      (min #eles,max #eles,#hashslots)   when a dictionary is being resized
 //     if #hashslots is omitted, the map is a red/black tree
 // result is DIC to use, ready for get/put, with hash/keys/vals/empty allocated, and 0 valid kvs
@@ -183,7 +183,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   // flags, key, value sizes
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==4,EVLENGTH)  // 4 boxes
   box=C(AAV(w)[1]); ASSERT(AR(box)<=1,EVRANK) ASSERT(AN(box)<=1,EVLENGTH)  // flags.  First is singlethreading (default 1), must have 0-1 values
-  I deffg=DICFSINGLETHREADED; if(AN(box)>0){if(!(AT(box)&B01))RZ(box=ccvt(B01,box,0)) if(!BAV(box)[0])deffg=0;}  // set concurrent if user wants it
+  I deffg=DICFSINGLETHREADED; if(AN(box)>0){if(!(AT(box)&B01))RZ(box=ccvt(B01,box,0)) if(!BAV(box)[0])deffg=0;}  // set concurrent if user specifies it
   flags|=deffg;  // remember user's choice
 
   // keyspec.  must be 2 boxes
@@ -567,7 +567,7 @@ static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT vi
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
 
- // convert the hash slot#s to index into kvs.  Prefetch each value to get a leg up on moving the data.  We don't prefetch more to avoid needless bus bandwidth; perhaps we should check the length   scaf
+ // convert the hash slot#s to index into kvs.  Prefetch each value to get a leg up on moving the data.  We don't prefetch more to avoid needless bus bandwidth; perhaps we should check the length
     // the only advantage of the prefetch is that the value reads will clear earlier, allowing the fence when we end our lock to finish earlier
  for(i=n;--i>=0;){
   k=(void*)((I)k-(kib>>32));  // back up to next key
@@ -620,13 +620,13 @@ static DF2(jtdicget){F12IP;A z;
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed when values are empty (only has)
+ if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
  if(wf+((dic->bloc.flags&DICFIHF+DICFICF)-(DICFIHF+DICFICF))==0){
   // fast path: no frame, and no user functions
   z=0; if(adyad!=(A)1){GA0(z,t,vaii,AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),IAV1(sa),AN(sa))}   // for get, allocate recursive result area & install shape; for has, result will be constant
   z=jtget1(dic,voidAV(w),z,jt,adyad);  // get the result
  }else{
   // general case, including multiple keys
-  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
   if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),w),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
   I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
@@ -712,7 +712,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
  UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz  base of hashtbl
-// obsolete  C *kebase=CAV(dic->bloc.keys), *kbase=kebase-HASHNRES*(kib>>32);  // ket 0 address for empties; address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array   scaf lose kbase here & elsewhere in hash
+// obsolete  C *kebase=CAV(dic->bloc.keys), *kbase=kebase-HASHNRES*(kib>>32);  // ket 0 address for empties; address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  C *kbase=CAV(dic->bloc.keys);  // key 0 address for empties; address corresponding to hash value of 0.
  C *vbase=CAV(dic->bloc.vals);  // pointer to values
 
@@ -761,7 +761,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
  }
  dic->bloc.emptyn=emptyx;  // We have allocated all the new blocks successfully.  Update the free root, freeing the old blocks
 
- DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys to be modifiable.  No resize is possible.  scaf could put rq up a little earlier
+ DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys to be modifiable.  No resize could be happening.
 
  // Now that we can freely modify the hash, put the biased hash index of the kv into the hash
  DQ(nnew, UI4 t=HDECEMPTY((*empties)[i][1]); WRHASH1234(t, hsz>>56, &hashtbl[(*empties)[i][0]*(hsz>>56)]))
@@ -872,7 +872,6 @@ static DF2(jtdicput){F12IP;
 
  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
-// scaf have fast path for 1 key
  while(1){  // loop till we have processed all the resizes
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
   else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
@@ -1132,8 +1131,6 @@ static INLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT v
   ki=(void *)ki-(kib>>32);  // back up to next key
  }
 
-
-
  // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore    scaf overstore
  if(a==(A)1){DICLKRDRELKV(dic,lv) DO(n, ((C*)zv)[i]=s[i]>=TREENRES<<1;)  // if processing has, just copy found status
  }else{
@@ -1383,11 +1380,11 @@ static DF2(jtdicgetkvo){F12IP;A z;
 
 // ********************************** put **********************************
 
-// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
+// k is address of keys, v is address of values
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
-static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
+static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
@@ -1471,7 +1468,8 @@ finput:;  // install the new value, and maybe the key, at the kv slot correspond
           // if LSB of nodex is set, suppress copying the key
   if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp
   if(!(nodex&1))PUTKVNEW(kbase+(nodex>>1)*(kib>>32),k,kib>>32,nodeb&(DICFKINDIR<<8));   // k/v base are biased
-  PUTKVOLD(vbase+(nodex>>1)*vb,(void*)((I)v+(likely(i<vn)?i:i%vn)*vb),vb,nodeb&(DICFVINDIR<<8));  // scaf could copy values at end without key lock
+  PUTKVOLD(vbase+(nodex>>1)*vb,(void*)((I)v+(likely(i<vn)?i:i%vn)*vb),vb,nodeb&(DICFVINDIR<<8));
+    // If we saved the kv#s, we could release the keys after the loop through the keys, and then copy the values at the end.  We don't because the search is so slow
 
   k=(void *)((I)k+(kib>>32));  // advance to next search key
  }
@@ -1495,22 +1493,21 @@ static DF2(jtdicputo){F12IP;
  // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
  // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
 
- VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
-  if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
-  else{A x; GATV0E(x,FL,kn,1,goto abortexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
-    // we have to reinit s in the resize loop because putslots may have modified it
+// obsolete   if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
+// obsolete   else{A x; GATV0E(x,FL,kn,1,goto abortexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
+// obsolete     // we have to reinit s in the resize loop because putslots may have modified it
  
-  lv=jtputslotso(dic,k,kn,v,vn,s,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; if no resize, finish, good or bad
+  lv=jtputslotso(dic,k,kn,v,vn,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; if no resize, finish, good or bad
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
  }
  A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
  PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
-abortexit:;
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
  RETF(z);
 }

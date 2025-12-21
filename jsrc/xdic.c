@@ -6,7 +6,6 @@
 #include "j.h"
 
 // Dictionary support
-
 #ifndef CRC32
 #define HASH4(crc,x) ((UI4)(crc)*0x85249421+(UI4)(x))
 #define HASH8(crc,x) HASH4(HASH4(crc,x),(UI8)(x)>>32)
@@ -549,7 +548,7 @@ notfound:;
  }
  GETV(CAV(z),vv,dic->bloc.vbytelen,hsz&(DICFVINDIR<<DICFBASE));   // move the data & advance pointer to next one   scaf JMC?
 retz:;   // release lock & return, with z set
-  DICLKRDRELV(dic,lv)  // remove lock on values
+  DICLKRDRELKV(dic,lv)  // remove lock on keys and values.  Not worth it to release keys early
   R z;
 exiterr:; z=0; goto retz;
 }
@@ -668,17 +667,18 @@ static INLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
  C *kbase=CAV(dic->bloc.keys);  // key 0 address for empties; Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals);  // pointer to values
 
- // first pass over keys.  If key found, remember the biased kv# (will go to old chain).  If not found, remember the hashslot# and whether it was occupied by a birthstone; and make it a birthstone - will go to new or conflict chain
- // wait till we become the current writer, then request write lock on k+v
- I8 curslot=(((UI8)hsh*(UI4)hsz)>>32); I hval; // first tombstone (init none); convert hash to slot#;  place to read biased kv slot# into
+ // Look up the key in the hashtable
+ I curslot=(((UI8)hsh*(UI4)hsz)>>32); I tomb1=-1; I hval; //  convert hash to slot#;  first tombstone (init none);place to read biased kv slot# into
  while(1){
-  hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
-  if((hval-=HASHNRES)<0)goto notfound;  // if we hit a hole, go allocate a new kv.  hval is now an empty index, not a hash index
-  if(((I (*)(I,void*,void*,J))*cf)((UI4)kib,k,kbase+(kib>>32)*hval,jt)==0)goto found;   // if key matches, hval is the kv slot
-  // no match
+  I bhval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. this is the (biased) hashndx
+  if(withprob((hval=bhval-HASHNRES)<0,0.3)){   // unbiased slot addr, in case found.  If hole or tombstone
+   tomb1=tomb1<0?curslot:tomb1;  // remember first spot we can store into, empty or tombstone, and its type
+   if(withprob(bhval<HASHTSTN,0.8))goto notfound;  // if we hit empty, we're done: mark first hole is birthstone; save its status before mark.  1 byte store for atomicity
+  }else{if(withprob(((I (*)(I,void*,void*,J))*cf)((UI4)kib,k,kbase+(kib>>32)*hval,jt)==0,0.7))goto found;}  // if key match, we're done: we have saved the hashslot in s[] with high 32 bits 0
+  // no match.  try next hashslot
   if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
  }  // never fall through
-notfound:;
+notfound:;  // tomb1 has the first slot we can store into
  DICLKWRWTK(dic,lv)  // wait for keys to be modifiable.  No resize is possible.
  // search ends at empty/tombstone, in hashslot (curslot).  Allocate a new empty, point curslot to it, move in the key, save the slot in s[cur] which is the first empty/tombstone found
    // in case of resize we have to keep the empty chain valid after each addition, since it is 
@@ -686,7 +686,7 @@ notfound:;
  I emptynxt=_bzhi_u64(*(UI4*)&kbase[hval*(kib>>32)],(hsz>>53));  // get next empty in chain
  if(unlikely(emptynxt==hval))goto resize;   // chain to self - indicates end of empties - must abort to resize
  dic->bloc.emptyn=emptynxt;   // save new root of empty chain
- emptynxt=HDECEMPTY(hval); WRHASH1234(emptynxt, hsz>>56, &hashtbl[(UI4)curslot*(hsz>>56)])   //  convert empty# to hashslot#; set hashtable to point to new kv (skipping over reserved hashslot#s)
+ emptynxt=HDECEMPTY(hval); WRHASH1234(emptynxt, hsz>>56, &hashtbl[tomb1*(hsz>>56)])   //  convert empty# to hashslot#; set hashtable to point to new kv (skipping over reserved hashslot#s)
  PUTKVNEW(kbase+hval*(kib>>32),k,kib>>32,hsz&(DICFKINDIR<<DICFBASE));    // copy the new key
  dic->bloc.cardinality++;  // account for the new keys
  goto copyval;

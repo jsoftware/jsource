@@ -79,7 +79,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
  // If we are only interested in replacing locatives, and there aren't any, exit fast
  if(aif&FIXALOCSONLY&&!hasimploc(w))R w;  // nothing to fix
  if(NAME&AT(w)){R sfn(0,w);}  // only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
- if(NOUN&AT(w)||VFIX&FAV(w)->flag)R w;
+ if(NOUN&AT(w)||VFIX&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX set), keep it
  v=FAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;  // for levels other than the top, use na to cuase replacement of $:
  if(v->id==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork
  if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't

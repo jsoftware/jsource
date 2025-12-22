@@ -782,7 +782,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
  // chase the conflict keys (in ascending order), updating everything.  They should be few.  For new kvs, also take an empty slot & update the keys.  Leave values in the conflict chain, in ascending order. s[i] indexes the hashslot
  // Since the original search searched all the way to a hole looking for a match, we know that the only match must come from a previous key in this put.  This key would necessarily have gone into the first tombstone found,
  // so we can stop the search when we hit a tombstone or a hole.
- if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
+ if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp   // first compare, then copy
  for(cur=croot,emptyx=dic->bloc.emptyn;cur>=0;){
   // cur is the current element of conflict chain, emptyx is the root of the empty chain
   I8 nxthsh=s[cur];  // fetch chain\hashslot
@@ -798,6 +798,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
 notfound:;
    // search ends at empty/tombstone, in hashslot (curslot).  Allocate a new empty, point curslot to it, move in the key, save the slot in s[cur] which is the first empty/tombstone found
      // in case of resize we have to keep the empty chain valid after each addition, since it is 
+   if(unlikely(!(hsz&(DICFICF<<DICFBASE))))unbiasforcomp   // copying coming up
    UI emptynxt=_bzhi_u64(*(UI4*)&kbase[emptyx*(kib>>32)],(hsz>>53));  // get next empty in chain
    if(unlikely(emptynxt==emptyx)){   // chain to self - indicates end of empties
     // no room in the empty chain - resize.  
@@ -811,12 +812,14 @@ notfound:;
    PUTKVNEW(kbase+hval*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32,hsz&(DICFKINDIR<<DICFBASE));    // copy the new key
    dic->bloc.cardinality++;  // account for the new keys
    emptyx=emptynxt;  // advance to next empty now that we have filled one in
+   if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp   // key copying finished, back to compares
    // fall through...
 found:;  // hval is the kv slot we compared with, or a new empty kv slot
   // copy the values later; save the kv index in s
   ((UI4*)(&s[cur]))[0]=hval;  // remember the unbiased slot the value must be moved into.  This changes s[i] from hashslot index to kv index
   cur=nxthsh>>32;  // advance to next
  }
+ // compares finished - no more copying of keys so no need for unbiascomp
  dic->bloc.emptyn=emptyx;   // save new root of empty chain
 
  if(!(hsz&(DICFRESIZE<<DICFBASE))){DICLKWRWTV(dic,lv) DICLKWRRELK(dic,lv)}    // wait for values to be free (at which point we automatically own them), then allow gets to look at hashtable & keys.  We still have a write lock.  But if we are resizing, leave the full lock
@@ -1537,7 +1540,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
- C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
+ C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32), *kbasei=kbase;  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals);  // same for value
 
  DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys & values to be modifiable.
@@ -1545,10 +1548,10 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
  // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
  // Because we don't store parent info, we have to do each key separately, which requires keeping a write
  // lock after the first key.
+ if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp   // we compare, not copy, and we use the original addr for the delete
  void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
  for(i=n-1;i>=0;--i){I nodex;
   UI8 chirn;  // both children
-  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
   UI4 pdir[64]; I pi=0;   // parent/direction history; next slot to fill
   UI parent=0, rootx=*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // biased node# of the root of the tree
   I comp=1;  // will be compare result.  The root is considered to have compared low
@@ -1599,8 +1602,8 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
   // extracted.  We now remove nodex from the tree, never to be referred to again.  It is always the
   // child of its parent, and only the chain field in the parent is modified - nothing in nodex
   I emptyx=RENCEMPTY(nodex);  // put new deletion at top of the free chain, unbiased
-  DELKV(kbase+(emptyx+TREENRES)*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+emptyx*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
-  I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kbase[(emptyx+TREENRES)*(kib>>32)])  // chain old free chain from new deletion
+  DELKV(kbasei+(emptyx+TREENRES)*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+emptyx*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
+  I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kbasei[(emptyx+TREENRES)*(kib>>32)])  // chain old free chain from new deletion
   dic->bloc.emptyn=emptyx;  // set new head of chain
 
   I child=(nodexlc|nodexr)&~1;  // the one child, if not 0

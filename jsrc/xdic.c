@@ -623,7 +623,7 @@ static DF2(jtdicget){F12IP;A z;
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed when values are empty (only has)
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
- if(wf+((dic->bloc.flags&DICFIHF+DICFICF)-(DICFIHF+DICFICF))==0){
+ if((wf|((dic->bloc.flags&DICFIHF+DICFICF)-(DICFIHF+DICFICF)))==0){
   // fast path: no frame, and no user functions
   z=0; if(adyad!=(A)1){GA0(z,t,vaii,AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),IAV1(sa),AN(sa))}   // for get, allocate recursive result area & install shape; for has, result will be constant
   z=jtget1(dic,voidAV(w),z,jt,adyad);  // get the result
@@ -853,7 +853,7 @@ static DF2(jtdicput){F12IP;A z;
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // v must be a single value or an array of them, with correct shape
  UI lv;   // will hold most recent value of lock
- if(af+wf+((dic->bloc.flags&DICFIHF+DICFICF)-(DICFIHF+DICFICF))==0){  // fast path?
+ if((af|wf|((dic->bloc.flags&DICFIHF+DICFICF)-(DICFIHF+DICFICF)))==0){  // fast path?
   // put of a single key using internal hash/compare - the fast path
   if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed
   DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)

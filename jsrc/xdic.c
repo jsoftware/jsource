@@ -898,7 +898,7 @@ abortexit:;
 
 // ********************************** del **********************************
 
-// k is A for keys, s is slot#s, z is result block (rank 1 for isin, >1 for get)
+// k is A for keys, s is slot#s/returned status area: ~0=key not found, other=found
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, rc=-1 to request a resize
@@ -913,15 +913,15 @@ static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I 
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
 
- // first pass over keys.  If key found, add a record of (unbiased kvslot)\hashslot
- I ndels;  // init old chain empty
- for(i=0,ndels=0;i<n;++i){
+ // first pass over keys.  If key found, add a record of (unbiased kvslot)\hashslot or ~0 for key not found
+// obsolete  I ndels;  // init old chain empty
+ for(i=0;i<n;++i){  // loop ascending to keep result order matching input
   I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32); I hval; // convert hash to slot#; place where biased kv# comes in
   while(1){
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
    if(withprob((hval-=HASHNRES)<0,0.3)){  // hole or tombstone
-    if(withprob(hval<HASHTSTN-HASHNRES,0.8))break;   // hole, exit not found
-   }else if(withprob(keysne((UI4)kib,kbase+(kib>>32)*hval,(void*)((I)k+i*(kib>>32)),hsz&(DICFICF<<DICFBASE),errexit)==0,0.7)){s[ndels++]=((I8)hval<<32)+curslot; break;}  // match, exit found
+    if(withprob(hval<HASHTSTN-HASHNRES,0.8)){s[i]=~0; break;}   // hole, exit not found
+   }else if(withprob(keysne((UI4)kib,kbase+(kib>>32)*hval,(void*)((I)k+i*(kib>>32)),hsz&(DICFICF<<DICFBASE),errexit)==0,0.7)){s[i]=((I8)hval<<32)+curslot; break;}  // match, exit found
    if(unlikely(--curslot<0))curslot+=(UI4)hsz;  // move to next hash slot, wrap to end if we hit 0
   }
  }
@@ -930,31 +930,39 @@ static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I 
  I vb=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals);  // address corresponding to unbiased hash value of 0.
  UI emptyx=dic->bloc.emptyn; I cur; // starting root of free queue, current index, empty list
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))unbiasforcomp
- I ndel=0;  // number of deleted keys
+// obsolete  I ndel=0;  // number of deleted keys
  DICLKWRWTK(dic,lv)  // wait for write lock for  to be granted.  No resize is possible
 
  // process the list of kvslot\hashslot, turning each hashslot into a tombstone.  If it's already a tombstone, double del, ignore it & remove
- for(ndel=0,i=0;i<ndels;++i){
-  I8 curslot=s[i]; UI hval=_bzhi_u64(*(UI4*)&hashtbl[(UI4)curslot*(hsz>>56)],(hsz>>53));  // read biased hashtable index, to see if it's a tombstone already (double del)
-  if(likely(hval>=HASHNRES)){  // don't clear a slot more than once
-   I t=HASHTSTN; WRHASH1234(t, hsz>>56, &hashtbl[(UI4)curslot*(hsz>>56)])  // mark the slot as a tombstone
-   s[ndel++]=curslot;  // not a double delete, keep it for the last pass
+ for(i=0;i<n;++i){
+  I8 curslot=s[i];
+  if(likely(curslot!=~0)){   // if slot not found, skip processing it
+   UI hval=_bzhi_u64(*(UI4*)&hashtbl[(UI4)curslot*(hsz>>56)],(hsz>>53));  // read biased hashtable index, to see if it's a tombstone already (double del)
+   if(likely(hval>=HASHNRES)){  // don't clear a slot more than once
+    I t=HASHTSTN; WRHASH1234(t, hsz>>56, &hashtbl[(UI4)curslot*(hsz>>56)])  // mark the slot as a tombstone
+// obsolete     s[i]=curslot;  // not a double delete, keep it for the last pass
+   }else s[i]=~0;  // mark a double delete like empty
   }
  }
 
  DICLKWRWTV(dic,lv) DICLKWRRELK(dic,lv)    // Wait for values to be modifiable; then since the hashtable doesn't refer to any deleted keys, allow gets to look at hashtable & keys
 
  // process the list of kvslot\hashslot, putting the kv slots onto the empty chain & flipping trailing tombstones.  Flipping tombstones is safe since we are the lead writer
- for(i=0;i<ndel;++i){
-  UI8 curslot=s[i]; UI kvx=curslot>>32;  // get unbiased index of deleted kv
-  DELKV(kbase+kvx*(kib>>32),kib>>32,hsz&(DICFKINDIR<<DICFBASE)) DELKV(vbase+kvx*vb,vb,hsz&(DICFVINDIR<<DICFBASE))   // if k/v is indirect, free it & clear to 0
-  I t=emptyx; WRHASH1234(t,hsz>>48,&kbase[kvx*(kib>>32)])  // chain old free chain from new deletion
-  emptyx=kvx;  // put new deletion at top of the free chain, unbiased
-  // Whenever we add a tombstone, we turn it into an empty if it is followed by an empty; and we continue this back into previous tombstones
-  UI cs=(UI4)curslot; I curslotn=cs-1; if(unlikely(curslotn<0))curslotn+=(UI4)hsz;   // point to next slot
-  if(_bzhi_u64(*(UI4*)&hashtbl[curslotn*(hsz>>56)],(hsz>>53))==0){
-   // curslot is followed by a hole.  Flip it & its predecessors to holes
-   do{hashtbl[cs*(hsz>>56)]=0; if(unlikely(++cs==(UI4)hsz))cs=0;}while(_bzhi_u64(*(UI4*)&hashtbl[cs*(hsz>>56)],(hsz>>53))==HASHTSTN);  // only the low byte needs to change
+ I ndel=0;  // count of actual deletions
+ for(i=0;i<n;++i){
+  UI8 curslot=s[i];
+  if(likely(curslot!=(UI8)~0)){  // if actual deletion...
+   ++ndel;  // count the number of keys deleted
+   UI kvx=curslot>>32;  // get unbiased index of deleted kv
+   DELKV(kbase+kvx*(kib>>32),kib>>32,hsz&(DICFKINDIR<<DICFBASE)) DELKV(vbase+kvx*vb,vb,hsz&(DICFVINDIR<<DICFBASE))   // if k/v is indirect, free it & clear to 0
+   I t=emptyx; WRHASH1234(t,hsz>>48,&kbase[kvx*(kib>>32)])  // chain old free chain from new deletion
+   emptyx=kvx;  // put new deletion at top of the free chain, unbiased
+   // Whenever we add a tombstone, we turn it into an empty if it is followed by an empty; and we continue this back into previous tombstones
+   UI cs=(UI4)curslot; I curslotn=cs-1; if(unlikely(curslotn<0))curslotn+=(UI4)hsz;   // point to next slot
+   if(_bzhi_u64(*(UI4*)&hashtbl[curslotn*(hsz>>56)],(hsz>>53))==0){
+    // curslot is followed by a hole.  Flip it & its predecessors to holes
+    do{hashtbl[cs*(hsz>>56)]=0; if(unlikely(++cs==(UI4)hsz))cs=0;}while(_bzhi_u64(*(UI4*)&hashtbl[cs*(hsz>>56)],(hsz>>53))==HASHTSTN);  // only the low byte needs to change
+   }
   }
  }
 
@@ -1003,7 +1011,7 @@ static DF1(jtdicdel){F12IP;
 
  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
- UI lv,nlv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
@@ -1012,14 +1020,16 @@ static DF1(jtdicdel){F12IP;
     // we must reinit s because it might have been changed by keyprep
 
   if(unlikely((s=jtkeyprep(dic,k,kn,s,jt,w))==0))goto errexit;  // hash keys & prefetch
-
-  nlv=jtdelslots(dic,k,kn,s,jt,lv,virt); if(nlv==0)goto errexit; if(likely(!(nlv&DICLMSKRESIZEREQ)))break;  // do the puts; abort if error if no resize, finish, good or bad
+  lv=jtdelslots(dic,k,kn,s,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; abort if error if no resize, finish, good or bad
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+  lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
 // obsolete   I rc=jtdelslots(dic,k,kn,s,jt,lv,virt); if(rc>0)break; if(rc==0)goto errexit;  // do the puts; if no resize, finish, good or bad
 // obsolete   dicresize(dic,jt);  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
  }
- A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
- DICLKWRRELV(dic,nlv)    // we are finished. advance sequence# and allow everyone to look at values
+ // s has the info about deletions.  Allocate a return area & return it
+ A z; GATVE(z,B01,kn,wf,AS(w),goto errexit;) C *zv=CAVn(wf,z); DO(kn, zv[i]=s[i]!=~0;)
+ if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
+ DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
  RETF(z);
 }
 
@@ -1532,7 +1542,8 @@ static DF2(jtdicputo){F12IP;
 // resolve each key in the hash and delete them
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, otherwise current lv (which gives lock status), with OKRET set to be non0 and RESIZEREQ is a resize is needed
-static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
+// zv is the return status for each key, indicating that the key was deleted (initialized to 'all found'
+static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
@@ -1547,7 +1558,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
 
  // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
  // Because we don't store parent info, we have to do each key separately, which requires keeping a write
- // lock after the first key.
+ // lock after the first key - so we go ahead and keep the write lock throughout.
  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp   // we compare, not copy, and we use the original addr for the delete
  void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
  for(i=n-1;i>=0;--i){I nodex;
@@ -1557,7 +1568,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt){I i;
   I comp=1;  // will be compare result.  The root is considered to have compared low
   // the root is pointed to by hash0/dir0.  In an empty database hash0/dir0=0.  In that case we fiddle things so that the first key is called new and the others are called conflict.  They all point to
   // hash0/dir0 as the end-of-search point.  The new will fill hash0/dir0 with a node, and the rest will start their search at that node, which is the true root of the tree.
-  if(unlikely(rootx<(TREENRES<<1)))break; // empty database: nothing to do
+  if(unlikely(rootx<(TREENRES<<1)))goto notfound; // empty database: nothing to do
   for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
    chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
    pdir[pi++]=parent+=SGNTO0(comp);  // stack parent/dir going into nodex
@@ -1672,7 +1683,7 @@ onephred:;   // opp nephew red
 findel:;  // here when balancing complete
 // obsolete printf("findel\n");
 // obsolete auditnode(jt,dic,*(UI4AV3(dic->bloc.hash))&_bzhi_u64(~(UI8)1,dic->bloc.hashelesiz<<LGBB),~0LL,1);  // scaf
-notfound:;
+  if(0){notfound: zv[i]=0;}  // if key not found, so indicate in return
   if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp
   ki=(void *)((I)ki-(kib>>32));  // advance to next search key
 // obsolete printf("looping for next key\n");
@@ -1693,23 +1704,19 @@ static DF1(jtdicdelo){F12IP;
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a 32-bit index with LSB=0
 
- VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
 // obsolete printf("del prerwrq, lk=0x%016llx\n",AM((A)dic));  // scaf
+ A z; GATVE(z,B01,kn,wf,AS(w),goto errexit;) C *zv=CAVn(wf,z); mvc(kn,zv,1,MEMSET01);   // allocate return area & init to 'all found'
  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
 // obsolete printf("del rwrq, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
-  if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
-  else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
-  else{A x; GATV0E(x,FL,kn,1,goto errexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
-    // we must reinit s because it might have been change by keyprep
-
-  lv=jtdelslotso(dic,k,kn,jt,lv,virt); if(lv==0)goto errexit; if(1||likely(!(lv&DICLMSKRESIZEREQ)))break; // do the dels; if no resize (not supported yet), finish, good or bad
+  lv=jtdelslotso(dic,k,kn,jt,lv,virt,zv); if(lv==0)goto errexit; if(1||likely(!(lv&DICLMSKRESIZEREQ)))break; // do the dels; if no resize (not supported yet), finish, good or bad
 // obsolete printf("del after delslotso, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
   dicresize(dic,jt);  // If we have to resize, we abort with the dels partially complete, and then retry, keeping the dic under lock the whole time
  }
- A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
+ if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
 // obsolete printf("del before final relv, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  DICLKWRRELV(dic,lv)    // we are finished.  advance sequence# and allow everyone to look at values.  We must have a lock
 // obsolete printf("del final relv, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf

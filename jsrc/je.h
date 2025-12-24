@@ -480,6 +480,7 @@ extern F2(jtdex);
 extern F2(jtdgrade2);
 extern DF1(jtdicdelc);
 extern DF2(jtdicempties);
+extern DF2(jtdicstats);
 extern DF1(jtdicgetc);
 extern DF1(jtdichasc);
 extern DF1(jtdicgetkvc);

@@ -687,7 +687,7 @@ notfound:;  // tomb1 has the first slot we can store into
  dic->bloc.emptyn=emptynxt;   // save new root of empty chain
  emptynxt=HDECEMPTY(hval); WRHASH1234(emptynxt, hsz>>56, &hashtbl[tomb1*(hsz>>56)])   //  convert empty# to hashslot#; set hashtable to point to new kv (skipping over reserved hashslot#s)
  PUTKVNEW(kbase+hval*(kib>>32),k,kib>>32,hsz&(DICFKINDIR<<DICFBASE));    // copy the new key
- dic->bloc.cardinality++;  // account for the new keys
+ dic->bloc.cardinality++;  // account for the new key
  goto copyval;
  // fall through...
 found:;  // hval is the kv slot we compared with, or a new empty kv slot
@@ -1441,6 +1441,7 @@ static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT 
   UI emptynxt=_bzhi_u64(*(UI4*)&kbase[(nodex+TREENRES)*(kib>>32)],(nodeb>>16));  // get next in free chain
   if(emptynxt==nodex)goto resize;  // if chained to self, that's end of chain, resize
   dic->bloc.emptyn=emptynxt;   // set new head of free chain
+  ++dic->bloc.cardinality;  // increment number of keys
   nodex=RDECEMPTY(nodex);   // convert empty index to tree-index with LSB=0
   UI parentd=SGNTO0(comp);  // parent's direction
   WLC(nodex,0,0) WR(nodex,0)   // new node is empty red
@@ -1616,6 +1617,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
   DELKV(kbasei+(emptyx+TREENRES)*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+emptyx*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
   I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kbasei[(emptyx+TREENRES)*(kib>>32)])  // chain old free chain from new deletion
   dic->bloc.emptyn=emptyx;  // set new head of chain
+  --dic->bloc.cardinality;  // remove deleted key from key count
 
   I child=(nodexlc|nodexr)&~1;  // the one child, if not 0
   if(child){  // is there a child?
@@ -1797,6 +1799,18 @@ DF2(jtdicempties){F12IP;
  if(x==1){dic->bloc.emptyn=-1;}  // set chain empty if we have deleted it.  The noun is still undisplayable
  RETF(z)
  }
+
+// x 16!:_8 dic   return dic stats
+DF2(jtdicstats){F12IP;A z;
+ ARGCHK2(a,w)
+ DIC *dic=(DIC*)w;
+ I type; RE(type=i0(a))   // get the stat arg
+ switch(type){
+ case 0: z=sc(dic->bloc.cardinality); break; // nkeys
+ default: ASSERT(0,EVDOMAIN)
+ }
+ RETF(z);
+}
 
 
 #endif

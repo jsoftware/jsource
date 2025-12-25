@@ -339,7 +339,8 @@ A jtjsignale(J jt,I eflg,A line,I info){
      if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such
      eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
      if(!jt->glock){  // suppress detail if locked
-      if((line!=0) && !(eflg&EMSGLINEISTERSE+EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
+// obsolete       if((line!=0) && !(eflg&EMSGLINEISTERSE+EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
+      if((line!=0) && !(eflg&EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
        // display the message in line, according to its mode
        C *text; I textlen;
        if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type

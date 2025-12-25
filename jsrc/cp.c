@@ -284,7 +284,7 @@ static DF2(jtgcr12){F12IP;PROLOG(0);
   I zipno=(((z==w)&~origjtfg) | ((z==a)&~(origjtfg>>!!z0)));  // if z=w, it must be dyadic & we look at original w.  If z=a it could be either & we look at dyad/monad depending
   I z0ipno=!!z0 & (((z0==w)&~origjtfg) | ((z0==a)&~(origjtfg>>!!z0)));  // same for z0, but never if monad
   jtfg=(J)((I)jt+((JTINPLACEA+JTINPLACEW)^(JTINPLACEA*z0ipno+JTINPLACEW*zipno)));  // inplace unless copied.  If monad, z0=w=0
-  z=CALL12IP(z0,FAV(ff)->valencefns[!!z0],z0?z0:z,z,ff);  // z=[z0] u^:power z
+  z=CALL12IP(z0,FAV(ff)->valencefns[!!z0],z0?z0:z,z0?z:ff,ff);  // (uses jtfg) z=[z0] u^:power z
  }
  EPILOG(z);
 }

@@ -1206,6 +1206,17 @@ static DF2(jtdicgeto){F12IP;A z;
 }
 
 // ********************************** getkv **********************************
+#define GETKVFLGEQ0 1  // equality OK for low key
+#define GETKVFLGGT 1  // return region above key
+#define GETKVFLGHEAD 1  // return region starts at min
+#define GETKVFLGEQ1 2  // equality OK for high key
+#define GETKVFLGEQ 2  // equality OK for single key key
+#define GETKVFLGK 4   // user wants to see keys
+#define GETKVFLGV 8   // user wants to see values
+#define GETKVK0 16  // 0 keys
+#define GETKVK1X 5  // 1 key
+#define GETKVK1 32  // 1 key
+#define GETKVK2 128  // 2 keys
 
 // k is A for key0,:key1, flags is (return k, return v, include key-0, include k-end)
 // We take a read lock on the table and release it
@@ -1250,7 +1261,7 @@ static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
  }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
  // falling through, there was no match.  Take the last value that is > min
  sp=res1[1+1];  //  the last (i. e. smallest) key > k01 is in slot 1.  remember sp+1 for starting node
- flags|=4;  // indicate we should out the first key (since it isn't the min)
+ flags|=GETKVFLGEQ0;  // indicate we should out the first key (since it isn't the min)
  if(unlikely(sp==0))goto retempty;  // if all comparisons were <, k0 > entire tree, nothing to return
 match:;   // here when match, with sp set from the push of the matching node
  // rstack[sp] holds (startx,startxr).  We will go up from there, stopping when we reach the max.  We would like to avoid
@@ -1282,7 +1293,7 @@ match:;   // here when match, with sp set from the push of the matching node
   if(unlikely(nodex<(TREENRES<<1))){break;}  // not found.  comp is set
  }
  // fall through: no match: use the last node where node key was < max (i. e. comp=-1) 
- flags|=8;   // no match: flag that we should keep the end node
+ flags|=GETKVFLGEQ1;   // no match: flag that we should keep the end node
  comp=-1;  // set so we look at the last key < max
 matchdown:;  // come here when comp=0, meaning exact match
  UI endx=res1[1+comp];  // remember last node in result
@@ -1290,15 +1301,15 @@ matchdown:;  // come here when comp=0, meaning exact match
  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp  // comparisons finished, prepare for copying
 
  // as we find the key indexes to return, prefetch key/value
- C *pfv=flags&1?kbase:vbase; I pfb=flags&1?(kib>>32):vb;   // base/stride for prefetch, keys if keys are written, else values
+ C *pfv=flags&GETKVFLGK?kbase:vbase; I pfb=flags&GETKVFLGK?(kib>>32):vb;   // base/stride for prefetch, keys if keys are written, else values
 
  // scan the tree/stack, starting at startx, and stopping when we get to endx.  sp points to nodex, so we will return to nodex's caller.  We will enter looking at nodex itself, as if the left side just returned
  UI4 *ziv=(UI4*)&virt; I zx=0;  // Repurpose virt area to store node#, used if there aren't many kvs; index of next slot in area
  // nodex is the node scan through the loop
  DLRC(nodex)
  nodex=rstack[sp][0]; nodexr=rstack[sp][1];    // init to first found node.   sp still holds its stackpos.  We don't need nodexl
- if(unlikely(nodex==endx)&&(flags&0b1100)!=0b1100)goto endscan;  // special case when there is only one node: if either boundary flag is clear (indicating indicating the boundary node should be elided), reject both boundaries for fast bypass
- if(flags&4)goto startmin; else goto startminex;  // Start moving right.  If we should out the min node, go there; otherwise to where we handle right side
+ if(unlikely(nodex==endx)&&(flags&GETKVFLGEQ0+GETKVFLGEQ1)!=GETKVFLGEQ0+GETKVFLGEQ1)goto endscan;  // special case when there is only one node: if either boundary flag is clear (indicating indicating the boundary node should be elided), reject both boundaries for fast bypass
+ if(flags&GETKVFLGEQ0)goto startmin; else goto startminex;  // Start moving right.  If we should out the min node, go there; otherwise to where we handle right side
  while(1){  // till we hit node >= max
   while(1){  // go down the left children, pushing onto the stack
    RLRC(nodex,nodex);  // read children
@@ -1317,7 +1328,7 @@ startmin:;  // enter first time going right only
    ziv[zx]=nodex;  // put the node out, in order
    PREFETCH(pfv+(nodex>>1)*pfb);  // prefetch the kv to be (possibly) moved
    // finish when we out the ending node
-   if(nodex==endx){zx+=(flags>>3)&1; goto endscan;}  // accept last node if not suppressed
+   if(nodex==endx){zx+=!!(flags&GETKVFLGEQ1); goto endscan;}  // accept last node if not suppressed
    ++zx;  // not end: accept the node
 startminex:;  // enter first time when first node is suppressed.  We know that is not also the end node
    if(nodexr>=(TREENRES<<1)){nodex=nodexr; break;}  // if there is a right child, enter it
@@ -1336,19 +1347,19 @@ endscan:;   // come here when we exnounter the end node, possibly without lookin
 
  // allocate the result(s), and run through the indexes, copying
  A zak=0, zav=0; I zn=zx;  // result keys, values; number of results
- if(flags&1){  // if user wants keys
+ if(flags&GETKVFLGK){  // if user wants keys
   GAE0(zak,dic->bloc.ktype,dic->bloc.kaii*zn,1+AN(dic->bloc.kshape),goto exitkeyvals) AS(zak)[0]=zn; MCISH(&AS(zak)[1],IAV1(dic->bloc.kshape),AN(dic->bloc.kshape)) C *zv=CAVn(1+AN(dic->bloc.kshape),zak);  // allocate result
   nodex=ziv[0];  // 1 unroll
   for(zx=0;zx<zn;++zx){  // for each node in result
    UI nextx=ziv[zx+1];  // unroll loop.  1 overfetch OK
    GETV(zv,kbase+(kib>>32)*(nodex>>1),kib>>32,nodeb&(DICFKINDIR<<8)); zv=(void *)((I)zv+(kib>>32));   // move the data & advance pointer to next one   scaf JMC?
-   if(flags&2)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
+   if(flags&GETKVFLGV)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
    nodex=nextx;  // advance to next
   }
  }
  DICLKRDRELK(dic,lv)   // release our lock on keys
 
- if(flags&2){  // if user wants values... 
+ if(flags&GETKVFLGV){  // if user wants values... 
   GAE0(zav,dic->bloc.vtype,dic->bloc.vaii*zn,1+AN(dic->bloc.vshape),goto exitvals) AS(zav)[0]=zn; MCISH(&AS(zav)[1],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(1+AN(dic->bloc.vshape),zav);  // allocate result
   DICLKRDWTV(dic,lv)   // wait for values to be ready
   nodex=ziv[0];  // 1 unroll
@@ -1365,8 +1376,8 @@ ret:;  // assemble & return result
 
 retempty:;  // empty result
  zak=zav=0;  // 0 if not requested
- if(flags&1)RZGOTO(zak=from(mtv,dic->bloc.keys),exitkeyvals)  // '' { keys
- if(flags&2)RZGOTO(zav=from(mtv,dic->bloc.vals),exitkeyvals)  // '' { values
+ if(flags&GETKVFLGK)RZGOTO(zak=from(mtv,dic->bloc.keys),exitkeyvals)  // '' { keys
+ if(flags&GETKVFLGV)RZGOTO(zav=from(mtv,dic->bloc.vals),exitkeyvals)  // '' { values
  DICLKRDRELKV(dic,lv)   // release lock on keys & values
  goto ret;
 
@@ -1386,8 +1397,14 @@ static DF2(jtdicgetkvo){F12IP;A z;
   DO(AN(a), flags&=~((BAV(a)[i]^1)<<i);)  // if bit i is 0, turn that bit off in flags
  }
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(likely(dic->bloc.vbytelen!=0)||!(flags&2),EVDOMAIN) ASSERT(AR(w)==kr+1,EVRANK) ASSERT(AS(w)[0]==2,EVLENGTH) ASSERTAGREE(AS(w)+1,ks,kr)   // can't read values if they are empty; w must be a single key or an array of them, with correct shape
- if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
+ ASSERT(likely(dic->bloc.vbytelen!=0)||!(flags&2),EVDOMAIN)
+ if(AR(w)==0){   // w is an atom
+  I ct; RE(ct=i0(w)) ASSERT(ct==1,EVNONCE) ASSERT(0,EVNONCE) flags|=GETKVK0;  // indic 0 key
+ }else{
+  ASSERT(AR(w)==kr+1,EVRANK) ASSERT(BETWEENC(AS(w)[0],1,2),EVLENGTH) flags|=AS(w)[0]<<GETKVK1X; ASSERTAGREE(AS(w)+1,ks,kr) ASSERT(AS(w)[0]==2,EVNONCE)
+    // can't read values if they are empty; w must be a list of 1 or 2 keys, with correct shape
+  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
+ }
 
  VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
  

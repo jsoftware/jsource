@@ -198,8 +198,8 @@ static A jtmerge2(J jtfg,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
  // initialization
  // if ind is axes, it has already been set up
  // if not, we treat it as a 1xAN(ind) array
- I an=AN(a);  // # atoms in a, negative if -@{`[`]}
- I acatoms; PROD(acatoms,acr,as) acatoms=an<0?an:acatoms;   // number of atoms in a major cell of a, negative (as flag) if -@{`[`]}
+ I an=AN(a);  // # atoms in a, negative if -@(|:){`[`]}
+ I acatoms; PROD(acatoms,acr,as) acatoms=an<0?an:acatoms;   // number of atoms in a major cell of a, negative (as flag) if -@(|:){`[`]}
  I avnreset=-(acatoms<<lgk);  // amount to add to an av that has overrun to get it back to av0; after setup, the reset adder for axis -1
  I acresetcell=avnreset;  // copy, used for rare case of split selector
  C * RESTRICT av=CAV(a);
@@ -217,9 +217,9 @@ static A jtmerge2(J jtfg,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
   // n0 is the length of a 'row' of ind, n1 is the # rows
   // first, handle the special cases of 0/1 cell.  We must handle 0 so that we can use UNTIL loops; we choose to handle 1
   // because it's common & avoids a lot of setup
-  if(AN(ind)<2){  // 0/1 cell to move (but only if not -@:{`[`]})  
+  if(AN(ind)<2){  // 0/1 cell to move (but only if not -@(|:){`[`]})  
    if(unlikely(AN(ind)==0))RCA(w);  // nothing to store - exit so we can use UNTIL loops to move
-   if(likely((an|-aframelen|-wframelen)>=0)){  // framelen!=0 means repeated store.  AN(a)<0 means we are running -@:{`[`]}, i. e. complementing FL atoms - so go through the code for that, below
+   if(likely((an|-aframelen|-wframelen)>=0)){  // framelen!=0 means repeated store.  AN(a)<0 means we are running -@(|:){`[`]}, i. e. complementing FL atoms - so go through the code for that, below
     if(!UCISRECUR(z)){mvc(cellsize<<lgk,CAV(z)+IAV(ind)[0]*(cellsize<<lgk),an<<lgk,CAV(a)); // nonrecursive: copy in all of a, repeating as needed to fill the cell
     }else{cellsize<<=(t>>RATX); I ix0=IAV(ind)[0]*cellsize; I as=an<<(t>>RATX); base=CAV(z); do{A *avv=AAV(a); DQU(as, INSTALLBOXNVRECUR(((A*)base),ix0,*avv) ++ix0; ++avv;)}while(cellsize-=as);  // recursive z: increment usecount while installing
     }
@@ -317,12 +317,12 @@ static A jtmerge2(J jtfg,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
  }
 
  // select routine to use based on argument size/type
- // cellsize is now atoms; change it to bytes when we have the routine, EXCEPT for recursive/-@{`[`]} types which stay as atoms
+ // cellsize is now atoms; change it to bytes when we have the routine, EXCEPT for recursive/-@(|:){`[`]} types which stay as atoms
  if(likely(((C)(amflags>>AMFLAGSPLITX))<(C)(r-1))){  // normal case with no split selector in last 2 axes
   if(!UCISRECUR(z)){
    // not replacement of recursive indirect blocks
    if(cellsize<=acatoms){
-    // a major cell of a is at least as big as a cell being replaced, and function is not -@{`[`]}
+    // a major cell of a is at least as big as a cell being replaced, and function is not -@(|:){`[`]}
     if(((LOWESTBIT(cellsize)-cellsize)|(SZI-(cellsize<<lgk))|-aframelen)>=0){  // if cellsize is power of 2 and total cell is <= 8 bytes, and is the only cell of a
      // the cell can be moved as a primitive type.  We will use a Duff loop.  Calculate the offets and index, which depends on whether the cell is repeated
      // We don't have a loop that moves a single cell and allows an av address (ex: 99 100 (<1 2;2 3)}"0 2 i. 5 6 where 99 & 100 need to be replicated), so we can't come here & have to treat them as general cells
@@ -341,7 +341,7 @@ static A jtmerge2(J jtfg,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
      avnreset+=(acatoms<<lgk)&~mvinc;  // if increment suppressed in loop, add the incr amount to avnreset
      JMCSETMASK(endmask,cellsize<<lgk,mvbytelen)   // prepare for repeated move
     }
-   }else if(unlikely(acatoms<0)){  // AN<0 is a flag indicating -@:{`[`]}.  Type must be CMPX/FL/QP.  There is no a
+   }else if(unlikely(acatoms<0)){  // AN<0 is a flag indicating -@(|:){`[`]}.  Type must be CMPX/FL/QP.  There is no a
     cellsize<<=lgk-LGSZD; lgk=LGSZD;  // lgk is 3 for FL, 4 for QP/CMPX.  Convert cellsize to count of D atoms, and switch atom size to SZD
     if(cellsize==1){  // just 1 word per cell, use duff loop
      I backupct=(-n0)&3;  //  duff backup
@@ -546,7 +546,7 @@ A jtamendn2(J jtfg,A a,A w,AD * RESTRICT ind,A self){F12IP;PROLOG(0007);A e,z; I
  if(likely(!ISSPARSE(wt|indt))){
   // non-sparse.
   I ar=AR(a), wr=AR(w), aframelen=ar-acr,wframelen=wr-wcr;  // number of axes in frame
-  // handle fast and common case, where ind selects a single non-DIRECT cell (must be no frame), and not -@{`[`]}
+  // handle fast and common case, where ind selects a single non-DIRECT cell (must be no frame), and not -@(|:){`[`]}
   I notonecelldirect=aframelen+wframelen+(wt&~DIRECT)+SGNTO0(AN(a));  // nonzero if cannot use single-cell code
   if((notonecelldirect+(AN(ind)^1)+(indt&~NUMERIC))==0){
    // get cell index and rank, and audit for validity
@@ -712,7 +712,7 @@ boxednumeric:
     cellframelen=AS(ind0)[AR(ind0)-1]; cellframelen=AR(ind0)==0?1:cellframelen;  // length of a row of ind0 - number of axes used
     ASSERTSUFF(cellframelen<=wcr,EVLENGTH,R jteformat(jt,self,a,w,ind););  // can't have more selectors than axes
     if((notonecelldirect+(AN(ind0)^cellframelen))==0){
-     // there is only one cell, and it can be handled by the fast code (i. e. direct and not -@{`[`]}).  The rank of the array it is in is immaterial, except for agreement with a
+     // there is only one cell, and it can be handled by the fast code (i. e. direct and not -@(|:){`[`]}).  The rank of the array it is in is immaterial, except for agreement with a
      // empty list (more precisely, empty 1-cells) also come through here for DIRECT one-cell types, and take the array in full (0 axes, with the rest taken in full)
 indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
      indframe=AR(ind0)-1; indframe^=REPSGN(indframe);  // number of leading singleton axes, to compare for agreement
@@ -895,12 +895,12 @@ static A jtgadv(J jt,A w){A hs;I n;
  R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 
-// Execution of x -@:{`[`]}"r y
+// Execution of x -@(|:){`[`]}"r y
 static DF2(jtamnegate){F12IP;
  ARGCHK2(a,w); 
  // if y is CMPX/FL/QP, execute markd x} y which means negate
  if(AT(w)&FL+CMPX+QP)R jtamendn2(jtfg,markd((AT(w)>>FLX)&(FL+CMPX>>FLX)),w,a,self);
- // otherwise, revert to x -@:{`[`]}"r y, processed by jtgav2
+ // otherwise, revert to x -@(|:){`[`]}"r y, processed by jtgav2
  US ranks=jt->ranks; RESETRANK;
  R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);
 }

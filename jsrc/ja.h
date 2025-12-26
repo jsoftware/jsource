@@ -345,7 +345,7 @@
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
 #define extnvr(x)                    jtextnvr(jt,(x))
-#if ((MEMAUDIT&5)==5) && SY_64
+#if 0 && ((MEMAUDIT&5)==5) && SY_64  // obsolete 
 #define scaft(x) testbuf(x); if(AFLAG(x)<0)SEGFAULT;
 #define scaft2(x)
 #endif

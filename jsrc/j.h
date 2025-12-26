@@ -2292,7 +2292,11 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
  C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
 #define WITHDEBUGOFF(stmt) MAYBEWITHDEBUG(0,jt,stmt)
-#define WITHEFORMATDEFERRED(stmt) {WITHDEBUGOFF(stmt) if(unlikely(jt->jerr!=0)){UC _d=jt->jerr; RESETERR ASSERT(0,_d)}}  // execute stmt with debug/eformat turned off; at end, if there is an error, re-signal it
+// obsolete #define WITHEFORMATDEFERRED(stmt) {WITHDEBUGOFF(stmt) if(unlikely(jt->jerr!=0)&&likely(jt->jerr!=0)){UC _d=jt->jerr; RESETERR ASSERT(0,_d)}}  // execute stmt with debug/eformat turned off; at end, if there is an error, re-signal it
+#define WITHEFORMATDEFERRED(stmt) {UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
+ C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
+ stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); _d=jt->emsgstate; jt->emsgstate=_e; if(unlikely(jt->jerr!=0)&&likely(_d&EMSGSTATENOTEXT)){_d=jt->jerr; RESETERR ASSERT(0,_d)}}  // WITHDEBUGOFF, but resignal any error so as to use caller's eformat.
+        //  Exception: in EMSGSTATENOTEXT was turned off (and not restored), we figure that user used 13!:8, which we don't eformat, so we don't resignal it
 // If the abandoned value we want to ra is likely the last thing on the tstack, look to see if it is.  If so, just back up the tstack (if that backs over to the chain field, that will never match
 // the ZAP pointer and we will not modify tpushnext).  Otherwise ZAP the block
 // It would be a disaster to back the tstack to in front of a valid 'old' pointer held somewhere.  The subsequent tpop would never end.  The case cannot occur, because we set 'old'

@@ -1289,7 +1289,7 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  R z;
 }
 
-#if ((MEMAUDIT&5)==5) && SY_64
+#if 0 && ((MEMAUDIT&5)==5) && SY_64   // obsolete
 #define ALLOSIZE (1024*1024)
 static C allohash[ALLOSIZE];  // 0 is empty, 1 is tombstone, 2 is valid
 static C * alloblocks[ALLOSIZE]; static US allolock=0; I nalloblocks=0; I allorunin=0;
@@ -1439,7 +1439,7 @@ if((I)jt&3)SEGFAULT;
 #if SHOWALLALLOC
 printf("%p+\n",z);
 #endif
-#if ((MEMAUDIT&5)==5) && SY_64
+#if 0 && ((MEMAUDIT&5)==5) && SY_64   // obsolete 
 if(JT(jt,peekdata))addbuf(jt,z);  // add to allocated list
 #endif
  R z;
@@ -1628,7 +1628,7 @@ printf("%p-\n",w);
 #if PYXES
   if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
 #endif
-#if ((MEMAUDIT&5)==5) && SY_64
+#if 0 && ((MEMAUDIT&5)==5) && SY_64   // obsolete 
 if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
 #endif
   AFCHAIN(w)=jt->mempool[blockx];  // append free list to the new addition...
@@ -1640,7 +1640,7 @@ if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
   }
  }else if(unlikely(blockx==FHRHBINISGMP)){jtmfgmp(jt,w);  // if GMP allocation, free it through GMP
  }else{    // buffer allocated from malloc
-#if ((MEMAUDIT&5)==5) && SY_64
+#if 0 && ((MEMAUDIT&5)==5) && SY_64   // obsolete
 if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
 #endif
   I allocsize = FHRHSYSSIZE(hrh);

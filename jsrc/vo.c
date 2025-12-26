@@ -453,7 +453,7 @@ static B jtopes2(J jt,A*zx,A*zy,B*b,A a,A e,A q,I wcr){A x;B*c;I dt,k,r,*s,t;P*p
 static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*av,c,dk,dt,*dv,i,j,k,m,m1,n,
      p,*s,*v,wcr,wr,xc,xk,yc,*yv,*zs;P*zp;
  n=AN(w); wr=AR(w); wv=AAV(w); wcr=AN(cs); dt=DTYPE(zt); dk=bpnoun(dt);
- RZ(opes1(&b,&a,&e,&m,cs,w)); an=AN(a); av=AV(a);
+ RZ(opes1(&b,&a,&e,&m,cs,w)); an=AN(a); av=AV(a);  // b=mask of sparse axes; a= I. b (sparse axes); e=sparse element; m=estimate of # nonsparse cells
  GASPARSE0(z,zt,1,wr+wcr); zs=AS(z); MCISH(zs,AS(w),wr); MCISH(zs+wr,AV(cs),wcr);
  zp=PAV(z); c=wcr-an; yc=wr+an;
  SPB(zp,e,cvt(dt,e)); e = SPA(zp,e);  // in case of reassignment by SPB

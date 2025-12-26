@@ -39,7 +39,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  RZ(z0&&y&&e);
  ASSERT(AN(e),EVDOMAIN);
  if(AN(z0)&&!(AT(z0)&SPARSABLE))R z0;  // no backdoor to sparse boxes.  If non-sparsable type, leave dense
- if(ISSPARSE(AT(e))){ep=PAV(e); ASSERT(all1(eq(SPA(ep,e),SPA(ep,x))),EVSPARSE); q=SPA(ep,e);}
+ if(ISSPARSE(AT(e))){ep=PAV(e); ASSERT(all1(eq(SPA(ep,e),SPA(ep,x))),EVSPARSE); q=SPA(ep,e);}  // 'sparse' sparse element comes from boxing.  If all elements identical, replace with sparse atom
  else{RZ(q=reshape(mtv,e)); ASSERT(all1(eq(q,e)),EVSPARSE);}
  if(!AS(z0)[0]){
   t=AT(q); zt=STYPE(t);
@@ -143,7 +143,7 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y
   av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;
  }
  RZ(z=ope(z)); AS(z)[0]=am;  // we did one cell of aa to get the shape, but now we have to set back to correct # indexes
- z=sprz(z,zi,CALL2(f2,ae,w,fs),f,as);
+ z=sprz(z,zi,CALL2(f2,ae,w,fs),f,as);  // apply the function to the sparse element
  EPILOG(z);
 }
 

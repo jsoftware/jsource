@@ -234,7 +234,7 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
     A *old=jt->tnextpushp;  // we must free all memory that we allocate here
     if((saverr=str(jt->etxn,jt->etxinfo->etx))!=0){  // save error code and message; if error in str, skip formatting
      A msg=0, m1ah=0, w1ah=0, a1ah=0; // indicate no formatted message; headers for the arguments, which we will delete before exit
-     if(self){
+    if(self){
       if(AT(self)!=0){   // if the self was FUNCTYPE0 eg, a placeholder, don't try to format with it
        // we are going to try to run eformat.
        // we have to reset the state of the error system after saving what we will need
@@ -253,8 +253,9 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
        // we also have to isolate the user's a/w/m so that we do not disturb any flags or usecounts.  We build headers for the nouns
        // The headers are like virtual blocks but they don't increment the usecount of the backer.  That means that if further execution frees the backer
        // the header is left pointing to garbage.  To avoid trouble we zap the headers here and free them by hand after we call eformat
+       // Since we can't gah() for sparse blocks, we abort eformatting if we encounter one.
        A awm=0;   // place to build the arg list for eformat
-       if(m){A m1; rnk=mtv; if((m1=m1ah=gahzap(jt,AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;  // if m exists, make it the last arg, and set rank to ''
+       if(m&&!ISSPARSE(AT(m))){A m1; rnk=mtv; if((m1=m1ah=gahzap(jt,AR(m),m))==0)goto noeformat; MCISH(AS(m1),AS(m),AR(m)) if((awm=box(m1))==0)goto noeformat;  // if m exists, make it the last arg, and set rank to ''
        }else if(e==EVASSEMBLY){
         // assembly errors are special.  They require an info vector, which has been stored in jt->etxinfo.  We pass this vector as m
         if((awm=box(vec(INT,jt->etxinfo->asseminfo.assemframelen+(offsetof(struct assem,assemshape)/sizeof(I)),&jt->etxinfo->asseminfo)))==0)goto noeformat;
@@ -262,9 +263,9 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
        // Convert self to AR.  If self is not a verb convert a/w to AR also
        I selft=AT(self);
        A selfar; if((selfar=arep(self))==0)goto noeformat;
-       if(w&&((selft&CONJ)||(AT(w)&NOUN)))  // if w is valid
+       if(w&&!ISSPARSE(AT(w))&&((selft&CONJ)||(AT(w)&NOUN)))  // if w is valid
          {A w1=w; if(AT(w1)&NOUN){ if((w1=w1ah=gahzap(jt,AR(w),w))==0)goto noeformat; MCISH(AS(w1),AS(w),AR(w)) } if(!(selft&VERB))if((w1=arep(w1))==0)goto noeformat; if((awm=awm?jlink(w1,awm):box(w1))==0)goto noeformat;}
-       if(a){A a1=a; if(AT(a1)&NOUN){if((a1=a1ah=gahzap(jt,AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(selft&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
+       if(a&&!ISSPARSE(AT(a))){A a1=a; if(AT(a1)&NOUN){if((a1=a1ah=gahzap(jt,AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(selft&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
        // run the analyzer.  Fold the unbalanced-paren info into the error number
        deba(DCJUNK,0,0,0);  // create spacer frame so eformat calls don't overwrite stack
 // obsolete        WITHDEBUGOFF(df1(msg,jlink(sc(e|(pareninfo<<8)),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val);)  // run eformat_j_

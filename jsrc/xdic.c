@@ -1659,8 +1659,8 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
  // loop over keys (reverse order).  Find the key, building parent info; then delete the key and value
  // Because we don't store parent info, we have to do each key separately, which requires keeping a write
  // lock after the first key - so we go ahead and keep the write lock throughout.
+ k=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp   // we compare, not copy, and we use the original addr for the delete
- void *ki=(void *)((I)k+(n-1)*(kib>>32));  // pointer to key being compared
  for(i=n-1;i>=0;--i){I nodex;
   UI8 chirn;  // both children
   UI4 pdir[64]; I pi=0;   // parent/direction history; next slot to fill
@@ -1672,7 +1672,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
   for(nodex=rootx;;){  // traverse the tree, searching for index k.  Current node is nodex
    chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
    pdir[pi++]=parent+=SGNTO0(comp);  // stack parent/dir going into nodex
-   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),ki,nodeb&(DICFICF<<8),errexit);  // compare node key vs k, so k > node is ~0
+   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k,nodeb&(DICFICF<<8),errexit);  // compare node key vs k, so k > node is ~0
    if(comp==0)break;  // found at node nodex.  chirn have the children, parent the parent\dir (also in pdir[])
    parent=nodex;  // we will fetch again.  remember the parent of the next fetch
    nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);  // choose left/right based on comparison, mask out garb.
@@ -1785,8 +1785,8 @@ findel:;  // here when balancing complete
 // obsolete printf("findel\n");
 // obsolete auditnode(jt,dic,*(UI4AV3(dic->bloc.hash))&_bzhi_u64(~(UI8)1,dic->bloc.hashelesiz<<LGBB),~0LL,1);  // scaf
   if(0){notfound: zv[i]=0;}  // if key not found, so indicate in return
-  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp
-  ki=(void *)((I)ki-(kib>>32));  // advance to next search key
+// obsolete   if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp
+  k=(void *)((I)k-(kib>>32));  // advance to next search key
 // obsolete printf("looping for next key\n");
  }
  R lv|DICLMSKOKRET;  // good return, holding lock

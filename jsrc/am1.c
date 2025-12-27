@@ -51,7 +51,7 @@ static A jtssel(J jt,A z,A ind){A a,*iv,p,q,x,y;B*b;I*av,c,i,j,m,n,*u,*v,*yv;P*z
  zp=PAV(z);
  y=SPA(zp,i); v=AS(y); m=v[0]; c=v[1]; yv=AV(y); 
  a=SPA(zp,a); n=AN(a); av=AV(a); 
- GATV0(p,B01,m,1); b=BAV1(p); mvc(m,b,1,MEMSET01);
+ GATV0(p,B01,m,1); b=BAV1(p); mvc(m,b,MEMSET01LEN,MEMSET01);
  GATV0(q,INT,m,1); v=AV1(q); iv=AAV(ind);  
  for(i=0;i<n;++i){
   j=av[i]; if(j>=AN(ind))break;

@@ -162,8 +162,8 @@ static SF(jtsortb){F12JT;A z;B up,*u,*v;I i,s;
  up=(~(I)jtfg>>JTDESCENDX)&1;  u=BAV(w);
  for(i=0;i<m;++i){
   s=bsum(n,u);
-  if(up){mvc(n-s,v,MEMSET00LEN,MEMSET00); mvc(s  ,v+n-s,1,MEMSET01);}
-  else  {mvc(s  ,v,1,MEMSET01); mvc(n-s,v+s,MEMSET00LEN,MEMSET00);}
+  if(up){mvc(n-s,v,MEMSET00LEN,MEMSET00); mvc(s  ,v+n-s,MEMSET01LEN,MEMSET01);}
+  else  {mvc(s  ,v,MEMSET01LEN,MEMSET01); mvc(n-s,v+s,MEMSET00LEN,MEMSET00);}
   u+=n; v+=n;
  }
  R z;

@@ -1060,7 +1060,7 @@ static DF1(jtdicdel){F12IP;A z;
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k if needed
 
  UI lv;   // will hold most recent value of lock
- if(0&&(wf+((dic->bloc.flags&DICFIHF+DICFICF)^(DICFIHF+DICFICF)))==0){  // fast path?
+ if((wf+((dic->bloc.flags&DICFIHF+DICFICF)^(DICFIHF+DICFICF)))==0){  // fast path?
   // put of a single key using internal hash/compare - the fast path
   if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) // convert type of k if needed
   DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
@@ -1079,7 +1079,7 @@ static DF1(jtdicdel){F12IP;A z;
 
   VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
-  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+  DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
   void *k=voidAV(w);  // point to the key and value data
   while(1){  // loop till we have processed all the resizes
    if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
@@ -1808,7 +1808,7 @@ static DF1(jtdicdelo){F12IP;
  VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
 // obsolete printf("del prerwrq, lk=0x%016llx\n",AM((A)dic));  // scaf
- A z; GATVE(z,B01,kn,wf,AS(w),goto errexit;) C *zv=CAVn(wf,z); mvc(kn,zv,1,MEMSET01);   // allocate return area & init to 'all found'
+ A z; GATVE(z,B01,kn,wf,AS(w),goto errexit;) C *zv=CAVn(wf,z); mvc(kn,zv,MEMSET01LEN,MEMSET01);   // allocate return area & init to 'all found'
  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
 // obsolete printf("del rwrq, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  void *k=voidAV(w);  // point to the key and value data

@@ -409,11 +409,11 @@ static A jtlocnlx(J jt,A a, A w, I zomb){A y,z=mtv;B*wv;I m=0;
  R grade2(z,ope(z));
 }
 
-F1(jtlocnl1){F12IP;A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w,0);}
+F1(jtlocnl1){F12IP;A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),MEMSET01LEN,MEMSET01);  R locnlx(a,w,0);}
     /* 18!:1 locale name list */
 
 // 18!:_3 locale name list, but including zombie locales
-F1(jtlocnlz1){F12IP;A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01);  R locnlx(a,w,1);}
+F1(jtlocnlz1){F12IP;A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),MEMSET01LEN,MEMSET01);  R locnlx(a,w,1);}
 
 // 18!:_4 locale header, including exec and del counts
 F1(jtlochdr){F12IP;

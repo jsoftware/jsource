@@ -486,7 +486,7 @@ static F2(jtmatchs){F12IP;A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,
  RZ(x=indexof(SPA(ap,i),SPA(wp,i))); v=AV(x);
  GATV0(p,B01,m,1); pv=BAV1(p);
  GATV0(q,B01,n,1); qv=BAV1(q); 
- mvc(m,pv,1,MEMSET01); DO(n, j=*v++; if(j<m)pv[j]=qv[i]=0; else qv[i]=1;);
+ mvc(m,pv,MEMSET01LEN,MEMSET01); DO(n, j=*v++; if(j<m)pv[j]=qv[i]=0; else qv[i]=1;);
  if(memchr(pv,C1,m)&&!all1(eq(we,repeat(p,ax))))R num(0);
  if(memchr(qv,C1,n)&&!all1(eq(ae,repeat(q,wx))))R num(0);
  j=0; DO(m, if(pv[i])++j;);

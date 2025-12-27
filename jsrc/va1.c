@@ -264,7 +264,7 @@ debsuffix
 #undef suffix
 #endif
 
-static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
+static AHDR1(oneB,C,C){mvc(n,z,MEMSET01LEN,MEMSET01); R EVOK;}
 
 extern AHDR1FN expI, expD, expE, logI, logD, logE;
 

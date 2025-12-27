@@ -1787,7 +1787,7 @@ F1(jthalve ){F12IP;ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R jtatomic2(jtfg,onehalf,w,(
 // pix moved to va1
 
 static AHDR2(zeroF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,MEMSET00LEN,MEMSET00);R EVOK;}
-static AHDR2(oneF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,1,MEMSET01);R EVOK;}
+static AHDR2(oneF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,MEMSET01LEN,MEMSET01);R EVOK;}
 
 // table of routines to handle = ~:
 static VF eqnetbl[2][16] = {

@@ -10,7 +10,7 @@ static A jtsprarg(J jt,I f,A x){A q;B*b,c;I r;P*xp;
  r=AR(x); xp=PAV(x);
  if(ISSPARSE(AT(x))){c=1; RZ(b=bfi(r,SPA(xp,a),1)); DO(f, if(!b[i]){c=0; break;});}
  else{c=0; GATV0(q,B01,r,1); b=BAV1(q); mvc(r,b,MEMSET00LEN,MEMSET00);}
- mvc(f,b,1,MEMSET01);
+ mvc(f,b,MEMSET01LEN,MEMSET01);
  R c||!r?x:reaxis(ifb(r,b),x);
 }    /* ensure frame axes are sparse */
 

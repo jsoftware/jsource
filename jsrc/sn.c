@@ -171,7 +171,7 @@ static F2(jtnlx){F12IP;A z=mtv;B b;I m=0,*v,x;
  R nub(grade2(z,ope(z)));
 }
 
-F1(jtnl1){F12IP;A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),1,MEMSET01); R nlx(a,w);}
+F1(jtnl1){F12IP;A a; GAT0(a,B01,256,1) mvc(256L,CAV1(a),MEMSET01LEN,MEMSET01); R nlx(a,w);}
      /* 4!:1  name list */
 
 F2(jtnl2){F12IP;UC*u;

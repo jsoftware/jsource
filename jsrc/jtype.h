@@ -1406,6 +1406,7 @@ typedef struct __attribute__((aligned(ABDY))) {I memhdr[AKXR(0)/SZI]; union { V 
 #define MEMSETFF ((C*)(validitymask+8))  // 2 words of FF, for memset (only 2 in 32-bit systems)
 #define MEMSETFFLEN (2*SZI)  // length of MEMSETFF
 #define MEMSET01 ((C*)(iotavec-IOTAVECBEGIN+1))  // 1 byte of 0x01, for memset
+#define MEMSET01LEN 1
 
 
 // parser stack - should be a qword for fast copying

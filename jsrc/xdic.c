@@ -445,6 +445,7 @@ A dicresize(DIC *dic,J jt){
   I kk=bplg(AT(newdic->bloc.keys)), kn=AN(newdic->bloc.keys), vk=bplg(AT(newdic->bloc.vals)), vn=AN(newdic->bloc.vals);  // kv, #atom & size of atom
   MC(voidAV(dic->bloc.keys), voidAV(newdic->bloc.keys), kn<<kk); AT(newdic->bloc.keys)=INT;   // copy & abandon the old keys, transferring ownership
   MC(voidAV(dic->bloc.vals), voidAV(newdic->bloc.vals), vn<<vk); AT(newdic->bloc.vals)=INT;   // copy & abandon the old values, transferring ownership
+  dic->bloc.cardinality=newdic->bloc.cardinality;  // record the moved keys in the key count
   UI nkold=AS(newdic->bloc.keys)[0]; dic->bloc.emptyn=nkold-1;  // the end of the free chain is always the last key, which is never allocated.  Point that to the first new key and make it the head of the free chain
   UI t=nkold; WRHASH1234(t, dic->bloc.emptysiz, &CAV(dic->bloc.keys)[(nkold-1)*newdic->bloc.kbytelen])  // hang the excess new empty chain off the old
 
@@ -462,7 +463,8 @@ exit:;  // clean up from error
 // kl is keylength in bytes, ku is void* 'pointer' to key, kh is 'pointer' to key in keys array
 // if we are calling a user compare function, the pointers are actually offsets and we use faux virtual blocks for the call
 #define keysne(kl,kh,ku,cond,exit) (likely(cond)?((I (*)(I,void*,void*,J))*cf)(kl,kh,ku,jt) :  /* internal compare function */ \
- ({ AK((A)virt.u)=(I)ku; AK((A)virt.h)=(I)kh; A ka; RZGOTO(ka=((A (*)(J,A,A,A))*cf)(jt,(A)virt.h,(A)virt.u,virt.self),exit) likely(AN(ka))?BIV0(ka):0; }) )  /* user compare function */
+ ({ AK((A)virt.u)=(I)ku; AK((A)virt.h)=(I)kh; A ka; RZGOTO(ka=((A (*)(J,A,A,A))*cf)(jt,(A)virt.h,(A)virt.u,virt.self),exit) \
+ if(unlikely(!(AT(ka)&B01+INT)))RZGOTO(ka=ccvt(INT,ka,0),exit) I kc=likely(AN(ka))?BIV0(ka):0; ASSERT(BETWEENC(kc,-1,1),EVDOMAIN); kc;}) )  /* user compare function */
 
 typedef struct {
 // obsolete I __attribute__((aligned(CACHELINESIZE))) u[16-AKXR(0)/SZI];   //  block used to access user's key
@@ -573,7 +575,7 @@ static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT vi
     // the only advantage of the prefetch is that the value reads will clear earlier, allowing the fence when we end our lock to finish earlier
  for(i=n;--i>=0;){
   k=(void*)((I)k-(kib>>32));  // back up to next key
-  I curslot=(((UI8)s[i]*(UI4)hsz)>>32)*(hsz>>56); I hval; // convert hash to slot# and then to byte offset;  place where biased kv slot# is read into
+  I curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32)*(hsz>>56); I hval; // convert hash to slot# and then to byte offset;  place where biased kv slot# is read into
   while(1){
    s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot],(hsz>>53))-HASHNRES;   // point to field beginning with hash value, clear higher bits. remember the unbiased hash value, which will be the index of the kv
    if(withprob(hval>=0,0.6)){if(withprob(keysne((UI4)kib,kbase+(kib>>32)*hval,k,hsz&(DICFICF<<DICFBASE),exitkeyvals)==0,0.7)){PREFETCH(vbase+s[i]*vn); break;}}  // if we hit a non-tombstone that matches the key, exit found
@@ -667,7 +669,7 @@ static INLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
  C *vbase=CAV(dic->bloc.vals);  // pointer to values
 
  // Look up the key in the hashtable
- I curslot=(((UI8)hsh*(UI4)hsz)>>32); I tomb1=-1; I hval; //  convert hash to slot#;  first tombstone (init none);place to read biased kv slot# into
+ I curslot=(((UI8)(UI4)hsh*(UI4)hsz)>>32); I tomb1=-1; I hval; //  convert hash to slot#;  first tombstone (init none);place to read biased kv slot# into
  while(1){
   I bhval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. this is the (biased) hashndx
   if(withprob((hval=bhval-HASHNRES)<0,0.3)){   // unbiased slot addr, in case found.  If hole or tombstone
@@ -726,7 +728,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
  // We search all the way to a hole so that if there is match we will find it before we take the write lock.  This has the benefit of speeding up the conflict search
  // We have to go in ascending order because later keys must overwrite earlier ones
  for(i=0;i<n;++i){
-  I8 tomb1=~0; I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32); I hval; // first tombstone (init none); convert hash to slot#;  place to read biased kv slot# into
+  I8 tomb1=~0; I8 curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32); I hval; // first tombstone (init none); convert hash to slot#;  place to read biased kv slot# into
   while(1){
    I bhval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. this is the (biased) hashndx
    if(withprob((hval=bhval-HASHNRES)<0,0.3)){   // unbiased slot addr, in case found.  If hole or tombstone
@@ -916,7 +918,7 @@ static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I 
  // first pass over keys.  If key found, add a record of (unbiased kvslot)\hashslot or ~0 for key not found
 // obsolete  I ndels;  // init old chain empty
  for(i=0;i<n;++i){  // loop ascending to keep result order matching input
-  I8 curslot=(((UI8)s[i]*(UI4)hsz)>>32); I hval; // convert hash to slot#; place where biased kv# comes in
+  I8 curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32); I hval; // convert hash to slot#; place where biased kv# comes in
   while(1){
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
    if(withprob((hval-=HASHNRES)<0,0.3)){  // hole or tombstone

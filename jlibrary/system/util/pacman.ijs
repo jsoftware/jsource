@@ -8,6 +8,7 @@ ISGUI=: 0
 INITDONE=: 0
 HASFILEACCESS=: 0
 HASADDONSDIR=: 0
+JINSTALL=: 0
 ONLINE=: 0
 PKGDATA=: 0 7$a:
 SECTION=: ,<'All'
@@ -778,7 +779,7 @@ many=. 1 < num
 msg=. 'Installing ',(":num),' package',many#'s'
 log msg
 installdo pkgs
-log 'Done.'
+if. -. JINSTALL do. log 'Done.' end.
 readlocal''
 pacman_init ''
 checkstatus''
@@ -861,6 +862,49 @@ write_config=: 3 : 0
 txt=. 'NB. Addon configuration',LF2
 txt=. txt,'ADDLABS=: 0 : 0',LF,ADDLABS,')',LF
 txt fwrites ADDCFGIJS
+)
+jinstall=: 3 : 0
+
+JINSTALL=: 1
+
+'j ide addons'=. 3 {. ;: y
+
+ifide=. -. ide -: 'none'
+ifaddons=. -. addons -: 'none'
+
+echo 'Installing ', 1 pick revinfo_j_''
+
+'update' jpkg ''
+echo 'Updating J engine...'
+je_update''
+
+if. -. 'Darwin'-:UNAME do.
+  if. 2~:ftype jpath'~/Desktop' do.
+    echo 'No Desktop folder, so shortcuts not installed'
+  else.
+    echo 'Installing shortcuts...'
+    shortcut'jbreak'
+    shortcut'jc'
+    shortcut'jhs'
+    if. ifide do. shortcut'jqt' end.
+  end.
+end.
+
+if. ifide do.
+  echo 'Installing Jqt IDE...'
+  'install' jpkg 'base library ide/qt'
+  getqtbin ide
+end.
+
+if. addons -: 'all' do.
+  echo 'Installing Addons...'
+  'install' jpkg addons
+end.
+
+echo 'Installation complete'
+
+exit 0
+
 )
 installer=: 3 : 0
 echo 'these steps can take several minutes'
@@ -985,6 +1029,8 @@ Linuxx y
 
 Linuxx=: 3 : 0
 select. y
+case.'jbreak' do.
+  linux'jbreak' ;'jbrk';'jyellow.png';LIB
 case.'jc' do.
   linux'jc' ;'jconsole';'jgray.png';LIB
 case. 'jhs' do.
@@ -1574,7 +1620,7 @@ je_get=: 3 : 0
 'jvno plat bits name'=. y
 arg=. (je_dlpath''),plat,'/',bits,'/',name
 ferase'~temp/',name
-echo 'get: ', arg
+if. -. JINSTALL do. echo 'get: ', arg end.
 httpget arg
 fread '~temp/',name
 )
@@ -1613,8 +1659,9 @@ m=. 2":>:(;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec')i.<3{.date
 date=. ((_4{.date),'-',m,'-',4 5{date)rplc' ';'0'
 (_20}.s),date,11}.dt
 )
-JQTVERSION=: '2.0.3'
+JQTVERSION=: '2.5.12'
 do_install=: 3 : 0
+if. 'system' -: 6 {. y do. jinstall y return. end.
 if. -. checkaccess_jpacman_ '' do. return. end.
 if. y -: 'gmp' do. do_getgmpbin '' return. end.
 if. ':' e. y do. install_gitrepo y return. end.
@@ -1732,13 +1779,13 @@ y=. (*#y){::0;y
 
 smoutput 'Installing Qt library...'
 if. IFWA64 do.
-  z=. 'qt68-win-arm64-slim.zip'
+  z=. 'qt610-win-arm64-slim.zip'
 elseif. linuxaio do.
-  z=. 'qt68-linux',((y-:'slim')#'-slim'),'.tar.gz'
+  z=. 'qt610-linux',((y-:'slim')#'-slim'),'.tar.gz'
 elseif. IFWIN do.
-  z=. 'qt68-win',((y-:'slim')#'-slim'),'.zip'
+  z=. 'qt610-win',((y-:'slim')#'-slim'),'.zip'
 elseif. do.
-  z=. 'qt68-mac',((y-:'slim')#'-slim'),'.zip'
+  z=. 'qt610-mac',((y-:'slim')#'-slim'),'.zip'
 end.
 'rc p'=. httpget_jpacman_ www,'/qtlib/',z
 if. rc do.

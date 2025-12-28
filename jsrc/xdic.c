@@ -968,7 +968,7 @@ static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I 
 
  // first pass over keys.  If key found, add a record of (unbiased kvslot)\hashslot or ~0 for key not found
 // obsolete  I ndels;  // init old chain empty
- for(i=0;i<n;++i){  // loop ascending to keep result order matching input
+ for(i=n-1;i>=0;--i){  // loop over keys, descending for comp. ease
   I8 curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32); I hval; // convert hash to slot#; place where biased kv# comes in
   while(1){
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
@@ -987,7 +987,7 @@ static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I 
  DICLKWRWTK(dic,lv)  // wait for write lock for  to be granted.  No resize is possible
 
  // process the list of kvslot\hashslot, turning each hashslot into a tombstone.  If it's already a tombstone, double del, ignore it & remove
- for(i=0;i<n;++i){
+ for(i=n-1;i>=0;--i){
   I8 curslot=s[i];
   if(likely(curslot!=~0)){   // if slot not found, skip processing it
    UI hval=_bzhi_u64(*(UI4*)&hashtbl[(UI4)curslot*(hsz>>56)],(hsz>>53));  // read biased hashtable index, to see if it's a tombstone already (double del)
@@ -1002,7 +1002,7 @@ static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I 
 
  // process the list of kvslot\hashslot, putting the kv slots onto the empty chain & flipping trailing tombstones.  Flipping tombstones is safe since we are the lead writer
  I ndel=0;  // count of actual deletions
- for(i=0;i<n;++i){
+ for(i=n-1;i>=0;--i){
   UI8 curslot=s[i];
   if(likely(curslot!=(UI8)~0)){  // if actual deletion...
    ++ndel;  // count the number of keys deleted
@@ -1291,10 +1291,28 @@ static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 #define GETKVK2 32  // 2 keys  K1-K2 must be spaced like EQ-EQ0
 #define GETKVK1 64  // 1 key
 
+// traverse tree in direction dir (0=left-to-right), counting down n as nodes are encountered.  Each encountered node is stored into
+// *lastnode, leaving it as the nth node from the end.  If dir=1, create the stack as we go along: *sp points to the entry for node and its child, and
+// pdir[*sp-1][0-1] give the parent and right child of node.  On exit *sp is the stack pointer when *lastnode is encountered, i. e. par[sp]=lastnode+child
+// decrement n as nodes are found, and abort out when n hits 0.
+// Result is # nodes remaining after the node just called.
+static I travn(I dir, C *hashtbl, I nodeb, I node, I n, UI4 par[64][2], I *sp, I *lastnode){
+ if(node<TREENRES)R n;  // if this node doesn't exist, do nothing
+ I isp=*sp;  // extract sp before recursion
+ DRLRC(node,node)  // fetch left/right children
+ I ch0=dir?noder:nodel, ch1=nodel+noder-ch0;  // first and second recursion sides
+ if(dir){par[isp][0]=node; par[isp][1]=noder;}  // if we should push, push us as the new parent
+ *sp=isp+1; if((n=travn(dir,hashtbl,nodeb,ch0,n,par,sp,lastnode))==0)R n;   // take first recursion; exit if n hits 0
+ *lastnode=node; if(--n==0){*sp=isp; R n;}  // account for current node; exit if n hits 0.  par[sp]
+ *sp=isp+1; if((n=travn(dir,hashtbl,nodeb,ch1,n,par,sp,lastnode))==0)R n;   // take second recursion; exit if n hits 0
+ R n;  // finished with this node, return to caller
+}
+
 // k is A for key0,:key1, flags is (return k, return v, include key-0, include k-end)
 // We take a read lock on the table and release it
 // virt is used as virtuals for compare, and then repurposed to hold indexes of kvs to be copied
-static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
+// htct is used in 0-key mode to indicate the desired length of head/tail
+static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt,I htct){I i;
  PROLOG(000);
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
@@ -1318,29 +1336,33 @@ static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt){I i;
  rstack[0][0]=rstack[0][1]=0;  // top of stack is the empty-tree pointer
  res1[1+1]=0;  // init 'stack at first key' to 0 (invalid).  If it is still there after the search there were no valid keys
  I sp=1; // sp points to last valid stack entry+1
- if(!(flags&GETKVK0)){  // the first search fills the parent list.  We don't need that for head/tail
-  cf=flags&GETKVK1+GETKVFLGGT==GETKVK1?alwaysgt:cf;  // if we are looking for the min values (below the given key), use routine that always says tree key>threshold
-  // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
-  // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
-  // This search builds the parent list and is always for the left side of the interval
-  do{  // traverse the tree, searching for index k.  Current node is nodex
-   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
-   rstack[sp][0]=nodex;  // store this node
-   rstack[sp][1]=(chirn>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack right child
-   chirn=((UI8)rstack[sp][1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left
-   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01 (key to be found), so node > min is 1
-   if(comp==0)goto match;  // found at node nodex.  sp points to the children
-   nodex=(chirn>>((UI)comp>>(BW-5)))&0xffffffff;  // choose left/right based on comparison
-   // No match.  drop down to next node.
-   res1[1+comp]=sp;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted
-   ++sp;  // advance sp to next empty slot, which we will fill presently
-  }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
-  // falling through, there was no match.  Take the last value that is > min
-  flags|=(flags>>GETKVK2X);   // indicate that we should include left endpoint, which does not match the key
-  sp=res1[1+1];  //  the last (i. e. smallest) key > k01 is in slot 1.  remember sp+1 for starting node
-    // indicate we should out the first key (since it isn't the min)
-  if(unlikely(sp==0))goto retempty;  // if all comparisons were <, k0 > entire tree, nothing to return
+ cf=(flags&GETKVK2+GETKVFLGGT)==0?alwaysgt:cf;  // if we are looking for the min values (below the given key), use routine that always says tree key>threshold.  This is < a single key, or head
+ cf=(flags&GETKVK0+GETKVFLGGT)==GETKVK0+GETKVFLGGT?alwayslt:cf;  // if looking for max values (only if tail), use routine that says tree key<threshold  
+ // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
+ // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
+ // This search builds the parent list and is always for the left side of the interval
+ do{  // traverse the tree, searching for index k.  Current node is nodex
+  chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
+  rstack[sp][0]=nodex;  // store this node
+  rstack[sp][1]=(chirn>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack right child
+  chirn=((UI8)rstack[sp][1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left
+  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01 (key to be found), so node > min is 1
+  if(comp==0)goto match;  // found at node nodex.  sp points to the children
+  nodex=(chirn>>((UI)comp>>(BW-5)))&0xffffffff;  // choose left/right based on comparison
+  // No match.  drop down to next node.
+  res1[1+comp]=sp;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted
+  ++sp;  // advance sp to next empty slot, which we will fill presently
+ }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
+ // falling through, there was no match.  Take the last value that is > min
+ flags|=(flags>>GETKVK2X);   // indicate that we should include left endpoint, which does not match the key
+ sp=res1[1+1];  //  the last (i. e. smallest) key > k01 is in slot 1.  remember sp+1 for starting node
+   // indicate we should out the first key (since it isn't the min)
+ if(unlikely(sp==0))goto retempty;  // if all comparisons were <, k0 > entire tree, nothing to return
 match:;   // here when match, with sp set from the push of the matching node
+
+ UI endx;  // will be the endpoint of the interval
+ if(!(flags&GETKVK0)){  // if 1 or 2 keys, we have to search the right side
+  // Not head/tail mode.
   // rstack[sp] holds (startx,startxr).  We will go up from there, stopping when we reach the max.  We would like to avoid
   // comparing against the max at every node, so we go up the stack looking for the lowest level that is >=max.  Since we expect that a single request will return
   // a small fraction of the tree, this shouldn't take long and will be faster than searching from the top of the tree down.
@@ -1360,23 +1382,33 @@ match:;   // here when match, with sp set from the push of the matching node
 
   nodex=dstartx;  // revert to search-down point, known to be <= max; we know end-of-region will be in a subtree of this node
   cf=dic->bloc.compfn; cf=(flags&GETKVK1+GETKVK2+GETKVFLGTAIL)==0?alwaysgt:cf; cf=(flags&GETKVK2+GETKVFLGTAIL)==GETKVFLGTAIL?alwayslt:cf;  // if we are looking for min or max, set compare function . gt if head, lt if tail or 1key-gt, otherwise normal comp
- }else{cf=flags&GETKVFLGTAIL?alwayslt:alwaysgt; flags|=GETKVFLGEQ;}   // head/tail.  nodex is still the root; keep that.  Set compare function to go down left or right of tree as appropriate; force EQ flag
- // The stack contained values that were tested and found to be > min.  We have gone up, finding the highest-up such value that is <= max.  That is the start point dstartx.
- //  We will be on the correct half of the tree, at least.  Find the ending node.  No stacking required
- while(1){  // traverse the tree, searching for index k.  Current node is nodex
-  chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
-  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01, so node > max is 1
-  res1[1+comp]=nodex;   // remember node of the first result in res1[1 or 2].  We could do this in endx, not using res1, but res1 doesn't require a register
-  if(unlikely(comp==0)){goto matchdown;}  // found at node nodex.  chirn have the children
-  nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);  // choose left/right based on comparison, mask out garb.
+  // The stack contained values that were tested and found to be > min.  We have gone up, finding the highest-up such value that is <= max.  That is the start point dstartx.
+  //  We will be on the correct half of the tree, at least.  Find the ending node.  No stacking required
+  while(1){  // traverse the tree, searching for index k.  Current node is nodex
+   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
+   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01, so node > max is 1
+   res1[1+comp]=nodex;   // remember node of the first result in res1[1 or 2].  We could do this in endx, not using res1, but res1 doesn't require a register
+   if(unlikely(comp==0)){goto matchdown;}  // found at node nodex.  chirn have the children
+   nodex=(chirn>>(comp&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);  // choose left/right based on comparison, mask out garb.
   if(unlikely(nodex<(TREENRES<<1))){break;}  // not found.  comp is set
- }
- // fall through: no match: use the last node where node key was < max (i. e. comp=-1 except when 1key-lt)
- // (note: always(lt|gt) compares never match) 
- comp=(flags&GETKVK2+GETKVFLGTAIL)==0?1:-1;  // -1 means last key < max; 1 means last key > max, used only for upper bound of left-wise compare
- flags|=GETKVFLGEQ1;   // no match: flag that we should keep the end node.  Pun: for 2key this is EQ1; for 1key it is EQ; for tail it is immaterial since EQ was forced earlier
-matchdown:;  // come here when comp=0, meaning exact match
- UI endx=res1[1+comp];  // remember last node in result
+  }
+  // fall through: no match: use the last node where node key was < max (i. e. comp=-1 except when 1key-lt)
+  // (note: always(lt|gt) compares never match) 
+  comp=(flags&GETKVK2+GETKVFLGTAIL)==0?1:-1;  // -1 means last key < max; 1 means last key > max, used only for upper bound of left-wise compare
+  flags|=GETKVFLGEQ1;   // no match: flag that we should keep the end node.  Pun: for 2key this is EQ1; for 1key it is EQ; for tail it is immaterial since EQ was forced earlier
+ matchdown:;  // come here when comp=0, meaning exact match
+   endx=res1[1+comp];  // remember last node in result
+  }else{
+   // head/tail mode.  We have to count off the number of items requested by the user.  When we finish, rstack[sp] is the node to start on and its right child, and endx is the node to end on
+   endx=rstack[sp][0];  // if there is only 1 return value, we don't need to search for an endpoint - put the startpoint into the endpoint, where we can see it
+   if(htct>1){  // if more than 1, find the end
+    // Searching for a head/tail of length>1.  We consider this case rare so we use a slower recursive traversal for the countoff.  We start somewhere up the stack, far enough that we know the requested section is inside
+    I sp2=sp-2*(CTLZI(htct+1)+1); sp2=MAX(sp2,1);  // sp2 is a stack pointer (never higher than the root) whose subtree is big enough to hold htct keys
+    I lastnode; travn(flags&GETKVFLGTAIL?1:0, hashtbl, nodeb, rstack[sp][0], htct, rstack, &sp2, &lastnode);  // set sp2 and lastnode from the nth-smallest/largest value
+    sp=flags&GETKVFLGTAIL?sp2:sp; endx=flags&GETKVFLGTAIL?endx:lastnode;  // tail goes from (travn result) to (end of first trav); head goes from (end of first trav) to (travn result)
+   }
+   cf=flags&GETKVFLGTAIL?alwayslt:alwaysgt; flags|=GETKVFLGEQ;   // head/tail.  Set compare function to go down left or right of tree as appropriate; force EQ flag
+  }
 
  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp  // comparisons finished, prepare for copying
  flags^=(0b00010010>>((flags&GETKVFLGGT+GETKVFLGEQ)<<1))&(flags&GETKVK1?3:0);  // in 1-key, transfer the /EQ flag to wherever the key is 00->10 01->01 1x->11
@@ -1389,7 +1421,6 @@ matchdown:;  // come here when comp=0, meaning exact match
  // nodex is the node scan through the loop
  DLRC(nodex)
  nodex=rstack[sp][0]; nodexr=rstack[sp][1];    // init to first found node.   sp still holds its stackpos.  We don't need nodexl
- nodex=flags&GETKVK0?endx:nodex;  // in 0-key mode, we found one endpoint (without parents); use it for both endpoints
  if(unlikely(nodex==endx)&&(flags&GETKVFLGEQ0+GETKVFLGEQ1)!=GETKVFLGEQ0+GETKVFLGEQ1)goto endscan;  // special case when there is only one node: if either boundary flag is clear (indicating indicating the boundary node should be elided), reject both boundaries for fast bypass
  if(flags&GETKVFLGEQ0)goto startmin; else goto startminex;  // Start moving right.  If we should out the min node, go there; otherwise to where we handle right side
  while(1){  // till we hit node >= max
@@ -1470,7 +1501,7 @@ exitkeyvals:; DICLKRDRELKV(dic,lv)  R 0;  // release lock & exit
 
 
 //   getkv.   Bivalent. w is k0,:kn, a is flags (#. k,v,min,max).  Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
-static DF2(jtdicgetkvo){F12IP;A z;
+static DF2(jtdicgetkvo){F12IP;A z;I htct=1;  // length of head/tail, specified by user
  ARGCHK2(a,w)
  I flags=0b1111;  // processing flags k,v,min,max
  if(w==self){w=a; // monad, keep default
@@ -1481,7 +1512,7 @@ static DF2(jtdicgetkvo){F12IP;A z;
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  ASSERT(likely(dic->bloc.vbytelen!=0)||!(flags&2),EVDOMAIN)
  if(AR(w)==0){   // w is an atom
-  I ct; RE(ct=i0(w)) ASSERT(ct==1,EVNONCE) ASSERT(0,EVNONCE) flags|=GETKVK0;  // indic 0 key
+  RE(htct=i0(w)) ASSERT(htct>0,EVDOMAIN) ASSERT(0,EVNONCE) flags|=GETKVK0;  // indic 0 key
  }else{
   ASSERT(AR(w)==kr+1,EVRANK) ASSERT(BETWEENC(AS(w)[0],1,2),EVLENGTH) flags|=(AS(w)[0]^3)<<GETKVK2X; ASSERTAGREE(AS(w)+1,ks,kr) ASSERT(AS(w)[0]==2,EVNONCE)
     // can't read values if they are empty; w must be a list of 1 or 2 keys, with correct shape
@@ -1491,7 +1522,7 @@ static DF2(jtdicgetkvo){F12IP;A z;
  VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
  
  void *k=voidAV(w);  // point to the key data.  tree may be empty
- z=jtgetkvslotso(dic,k,flags,jt,virt);  // get the values and take a read lock on the dic.  If error, pass error through
+ z=jtgetkvslotso(dic,k,flags,jt,virt,htct);  // get the values and take a read lock on the dic.  If error, pass error through
  RETF(z);
 }
 

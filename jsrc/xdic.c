@@ -1595,7 +1595,7 @@ static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT 
    CBYTE(parent)|=1; CBYTE(uncle)|=1; CBYTE(gparent)&=~1;   // mark parent & uncle black, gparent red.  This fixes snodex & parent but may leave a red vio at gparent
    snodex=gparent;  // the node to work on next, always red
    parent=pdir[pi-3]; parentd=PDIRDIR(parent); parent=PDIRNODE(parent);  // back up to parent
-   pi-=2;  // we pop up to the grandparent
+   if(unlikely((pi-=2)<0))goto finput;  // we pop up to the grandparent; if it does not exist, we're done, keep LSB of nodex=0 to copy key
   }
   // snodex is red, parent is red, grandparent & uncle are black.  We can get out in 1 or 2 rotations.
   if(gparentd!=parentd){

@@ -104,10 +104,21 @@ static KF1(jtEfromB){E *zv=yv; B *wv=BAV(w);
  R 1;
 }
 
-static KF1(jtEfromD){E *zv=yv; D *wv=DAV(w);
- I n=AN(w); DO(n, zv->hi=wv[i]; *(UI8*)&zv->lo=*(UI8*)&wv[i]&(UI8)0x8000000000000000; ++zv;)  // frac 0 must have same sign as upper
+
+static KF1(jtEfromD){UI zv=(UI)yv; UI wv=(UI)CAV(w);  // arg pointers as I
+ // Unroll loop & use compound addressing to get parallel copy, 2 atoms/clock on Alder Lake
+ UI zv2=zv>>1, wo=wv-zv2, zv2end, n=AN(w);  // zo is initial offset z-w; wv2 is 1/2 of w addr; when 1 add to wv2 we advance twice as far in w as in z.  wv2end is max valid wv2end; n is #atoms 
+ for(zv2end=zv2+(n-1)*sizeof(D);zv2<zv2end;zv2+=2*sizeof(D)){  // burst of 4 words, expecting 5 uops per cycle to allow the loop control to slip in (2 inst after fusion)
+  UI8 wv0=((UI8*)(wo+zv2))[0]; ((UI8*)(zv2+zv2))[0]=wv0; ((UI8*)(zv2+zv2))[1]=wv0&(UI8)0x8000000000000000; wv0=((UI8*)(wo+zv2))[1]; ((UI8*)(zv2+zv2))[2]=wv0; ((UI8*)(zv2+zv2))[3]=wv0&(UI8)0x8000000000000000; 
+ }
+ if(zv2==zv2end){UI8 wv0=((UI8*)(wo+zv2))[0]; ((UI8*)(zv2+zv2))[0]=wv0; ((UI8*)(zv2+zv2))[1]=wv0&(UI8)0x8000000000000000;}  // final store if odd length
+// obsolete  I n=AN(w); DO(n, zv[i]=wv->hi; ++wv;)
  R 1;
 }
+// obsolete static KF1(jtEfromD){E *zv=yv; D *wv=DAV(w);
+// obsolete  I n=AN(w); DO(n, zv->hi=wv[i]; *(UI8*)&zv->lo=*(UI8*)&wv[i]&(UI8)0x8000000000000000; ++zv;)  // frac 0 must have same sign as upper
+// obsolete  R 1;
+// obsolete }
 
 static KF1(jtEfromDS){E *zv=yv; DS *wv=DSAV(w);
  I n=AN(w); DO(n, zv->hi=wv[i]; zv->lo=zv->hi*0.; ++zv;)
@@ -213,8 +224,14 @@ static KF1F(jtXfromE){
  R 1;
 }
 
-static KF1(jtDfromE){D *zv=yv; E *wv=EAV(w);
- I n=AN(w); DO(n, zv[i]=wv->hi; ++wv;)
+static KF1(jtDfromE){UI zv=(UI)yv; UI wv=(UI)CAV(w);  // args as C*
+ // Unroll loop & use compound addressing to get parallel copy, 2 atoms/clock on Alder Lake
+ UI wv2=wv>>1, zo=zv-wv2, wv2end, n=AN(w);  // zo is initial offset z-w; wv2 is 1/2 of w addr; when 1 add to wv2 we advance twice as far in w as in z.  wv2end is max valid wv2end; n is #atoms 
+ for(wv2end=wv2+(n-4)*sizeof(D);wv2<=wv2end;wv2+=4*sizeof(D)){  // burst of 4 words, expecting 5 uops per cycle to allow the loop control to slip in (2 inst after fusion)
+  ((D*)(zo+wv2))[0]=((E*)(wv2+wv2))[0].hi; ((D*)(zo+wv2))[1]=((E*)(wv2+wv2))[1].hi; ((D*)(zo+wv2))[2]=((E*)(wv2+wv2))[2].hi; ((D*)(zo+wv2))[3]=((E*)(wv2+wv2))[3].hi;
+ }
+ for(wv2end+=4*sizeof(D);wv2<wv2end;wv2+=sizeof(D))((D*)(zo+wv2))[0]=((E*)(wv2+wv2))[0].hi;  // run out with single stores
+// obsolete  I n=AN(w); DO(n, zv[i]=wv->hi; ++wv;)
  R 1;
 }
 

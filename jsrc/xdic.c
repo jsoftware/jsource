@@ -1551,7 +1551,7 @@ static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT 
  for(i=0;i<n;++i){UI nodex;
   UI8 chirn;  // both children
   if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
-  UI4 pdir[64]; I pi=0;   // parent/direction history; next slot to fill
+  UI4 pdir[64]; pdir[0]=0; I pi=1;   // parent/direction history; next slot to fill.  Ensure initial gparent=0 if the tree is empty
   UI parent=0, rootx=*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // tree-node# of the root of the tree
   I comp=1;  // will be compare result.  The root is considered to have compared low
   // the root is pointed to by hash0/dir0.  In an empty database hash0/dir0=0.  In that case we fiddle things so that the first key is called new and the others are called conflict.  They all point to
@@ -1586,7 +1586,7 @@ static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT 
   while(1){
    // at top of loop snodex (directed child of parent) is red, i. e. LSB=0
    if(CBYTE(parent)&1)goto finput;  // parent black: no red vio, finished, keep LSB=0 to copy key
-   gparent=pdir[pi-2]; gparentd=PDIRDIR(gparent); gparent=PDIRNODE(gparent);   // grandparent\dir
+   gparent=pdir[pi-2]; gparentd=PDIRDIR(gparent); gparent=PDIRNODE(gparent);   // grandparent\dir.  The stack starts with two 0 entries so we know gparent will go to 0 if we exhaust the tree.
    if(unlikely(gparent==0)){CBYTE(parent)|=1; goto finput;}  // no grandparent; safe to make parent (the root) black
    uncle=RDIR(gparent,gparentd^1);  // get parent's sibling (w/o dir)
    if(uncle<(TREENRES<<1)||CBYTE(uncle)&1)break;  // if uncle is black,  we can get out
@@ -1595,7 +1595,7 @@ static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT 
    CBYTE(parent)|=1; CBYTE(uncle)|=1; CBYTE(gparent)&=~1;   // mark parent & uncle black, gparent red.  This fixes snodex & parent but may leave a red vio at gparent
    snodex=gparent;  // the node to work on next, always red
    parent=pdir[pi-3]; parentd=PDIRDIR(parent); parent=PDIRNODE(parent);  // back up to parent
-   if(unlikely((pi-=2)<0))goto finput;  // we pop up to the grandparent; if it does not exist, we're done, keep LSB of nodex=0 to copy key
+   pi-=2;  // pop up to the grandparent;
   }
   // snodex is red, parent is red, grandparent & uncle are black.  We can get out in 1 or 2 rotations.
   if(gparentd!=parentd){

@@ -868,7 +868,7 @@ static DF2(jtdicput){F12IP;A z;
  }else{
   // fall through for multiple keys, or user functions
   I cf=MIN(af,wf); ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // frames must be suffixes
-  if(unlikely(AN(w)==0)){R mtv;}  // if no keys, return empty fast
+  if(unlikely(AN(w)==0)){R mtm;}  // if no keys, return empty fast
   if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed.  Agreement error has priority over type
   I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,wf,AS(w))   // kn = number of keys to be looked up  vn=#values to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
@@ -891,7 +891,7 @@ static DF2(jtdicput){F12IP;A z;
    lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
   }
  }
- z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then.  errexit is also entered from fast case, if error
+ z=mtm; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then.  errexit is also entered from fast case, if error
  PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
 abortexit:;
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
@@ -1635,7 +1635,7 @@ static DF2(jtdicputo){F12IP;
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // v must be a single value or an array of them, with correct shape
  I cf=MIN(af,wf); ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // frames must be suffixes
- if(unlikely(AN(w)==0)){R mtv;}  // if no keys, return empty fast
+ if(unlikely(AN(w)==0)){R mtm;}  // if no keys, return empty fast
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed
  I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,wf,AS(w))   // kn = number of keys to be looked up  vn=#values to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
@@ -1658,7 +1658,7 @@ static DF2(jtdicputo){F12IP;
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
  }
- A z=mtv; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
+ A z=mtm; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
  PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
 // obsolete printf("put before final relv, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values

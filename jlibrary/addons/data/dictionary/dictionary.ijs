@@ -3,8 +3,12 @@ coclass 'jdictionary'
 SIZE_GROWTH_GEOMETRIC_STEP =: 2
 
 create =: {{)m
-'index_type creation_parameters' =. y
-
+if. 'literal' -: datatype y do.
+  index_type =. y
+  creation_parameters =. ''
+else.
+  'index_type creation_parameters' =. y
+end.
 NB. Default values of params.
 keytype =: 4
 keyshape =: i. 0
@@ -54,7 +58,7 @@ if. name -: '' do. prefix =. suffix =. '' else. 'prefix suffix' =. (,{:)&.>/\. s
 (prefix , 'put' , suffix) =: dict 16!:_3
 (prefix , 'del' , suffix) =: dict 16!:_4
 (prefix , 'has' , suffix) =: dict 16!:_12
-(prefix , 'len' , suffix) =: 0&(16!:_8)@dict
+(prefix , 'count' , suffix) =: 0&(16!:_8)@dict
 if. index_type -: 'tree' do. (prefix , 'getkv' , suffix) =: dict 16!:_6 end.  NB. getkv only on rb trees
 EMPTY
 }}

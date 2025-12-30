@@ -1,6 +1,10 @@
-require 'format/printf'   NB. for debug only
+prolog './gdic.ijs'
+NB. addon/dictionary
 
-PRBATCH =: 0   NB. 1 to display batch ops
+require 'data/dictionary'
+
+cocurrent 'base'
+
 INDEX_TYPES_CONCURRENT =: 'hash concurrent' ; 'tree concurrent'
 INDEX_TYPES =: INDEX_TYPES_CONCURRENT , 'hash' ; 'tree'
 KEYHASHES =: 16!:0`'' , 7"1`'' , {{ 16!:0 y }}"1`''
@@ -12,9 +16,9 @@ NB. Test name attribute.
 NB. x is boxed name of index type.
 NB. y is name of dictionary without locale (different locales are added in the test).
 test_dict_name =: {{)d
-op_names_boxed =. (y , '_del') ; (y , '_get') ; y , '_put'
+op_names_boxed =. (y , '_del') ; (y , '_get') ; (y , '_put') ; (y , '_has') ; (y , '_count')
 op_names_string =. ' ' joinstring op_names_boxed
-check_names_z_ =: [: (3 -: +/@,) op_names_boxed E."0 1 nl
+check_names_z_ =: [: (5 -: +/@,) op_names_boxed E."0 1 nl
 
 params =. x , < 'name' ; y , '_abc_'
 dict =. params conew 'jdictionary'
@@ -52,6 +56,7 @@ assert. 'length error' -: 'jdictionary' conew~ GetError y , < 'keyshape' ; 2 0 2
 assert. 'length error' -: 'jdictionary' conew~ GetError y , < 'keyshape' ; 0
 assert. 'length error' -: 'jdictionary' conew~ GetError y , < 'valueshape' ; 7 0
 assert. 'length error' -: 'jdictionary' conew~ GetError y , < 'valueshape' ; 0 0
+coreset ''
 jdict =. 'jdictionary' conew~ 'hash' ,&< 'keyhash' ,&< _1"0`''
 'domain error' -: put__jdict GetError~ 7
 destroy__jdict ''
@@ -84,20 +89,25 @@ EMPTY
 
 NB. BASIC.
 
+{{
+destroy__d '' [ put__d~ 1 [ d =. 'tree' conew 'jdictionary'
+EMPTY
+}} ''
+
 test_basic1 =: {{
 'index_type keyhash keycompare' =. <"0 y
 params =. index_type , < ('keyhash' ,&< keyhash) , ('keycompare' ,&< keycompare) , ('initsize' ; 4) , ('keytype' ; 'integer') , ('valueshape' ; 3) , ('keyshape' ; 2) ,: ('valuetype' ; 4)
 mydict =. params conew 'jdictionary'
-assert. 0 -: len__mydict ''
+assert. 0 -: count__mydict ''
 1 2 3 put__mydict 2 3
 assert. 1 2 3 -: get__mydict 2 3
 7 8 9 put__mydict 2 3
 assert. 7 8 9 -: get__mydict 2 3
 (1 2 3,:4 5 6) put__mydict 2 3,:2 3  NB. Double put existent
 assert. 4 5 6 -: get__mydict 2 3
-assert. 1 -: len__mydict ''
-del__mydict 2 3
-assert. 0 -: len__mydict ''
+assert. 1 -: count__mydict ''
+assert. 1 -: del__mydict 2 3
+assert. 0 -: count__mydict ''
 100 100 100 -: 100 100 100 get__mydict 2 3
 (5 6 7,:1 2 3) put__mydict 2 3,:2 3  NB. Double put nonexistent
 assert. 1 2 3 -: get__mydict 2 3
@@ -105,7 +115,7 @@ assert. 1 2 3 -: get__mydict 2 3
 assert. 4 5 6 -: get__mydict 1 3
 2 3 4 put__mydict 4 5
 3 4 5 put__mydict 5 6
-assert. 4 -: len__mydict ''
+assert. 4 -: count__mydict ''
 assert. (_3 ]\ 1 2 3 2 3 4 3 4 5) -: get__mydict 2 3 , 4 5 ,: 5 6
 assert. 4 5 6 -: get__mydict 1 3
 (4 5 6,:5 6 7) put__mydict 6 7,:7 8
@@ -125,11 +135,12 @@ assert. 70 71 72 -: get__mydict 8 8
 (80 81 82,83 84 85,:90 91 92) put__mydict 9 9,9 9,:9 9  NB. Triple put existent - keeps last
 assert. 90 91 92 -: get__mydict 9 9
 assert. 1 1 -: has__mydict 8 8,:9 9
-assert. 9 -: len__mydict ''
-del__mydict 9 9
+assert. 9 -: count__mydict ''
+assert. 1 -: del__mydict 9 9
 assert. 1 0 -: has__mydict 8 8,:9 9
-del__mydict 8 8
+assert. 1 -: del__mydict 8 8
 assert. 0 -: has__mydict 8 8
+assert. 0 0 -: del__mydict 8 8,:9 9
 destroy__mydict ''
 EMPTY
 }}"1
@@ -162,8 +173,8 @@ assert. 50 51 52 -: get__mydict <"(0) 9 9
 assert. 70 71 72 -: get__mydict <"(0) 8 8
 (80 81 82,83 84 85,:90 91 92) put__mydict <"(0) 9 9,9 9,:9 9  NB. Triple put existent - keeps last
 assert. 90 91 92 -: get__mydict <"(0) 9 9
-del__mydict <"(0) 8 8
-del__mydict <"(0) 9 9
+assert. 1 -: del__mydict <"(0) 8 8
+assert. 1 -: del__mydict <"(0) 9 9
 destroy__mydict ''
 EMPTY
 }}"1
@@ -203,7 +214,7 @@ assert. (# keys) -: # vals
 EMPTY
 }}
 
-len =: {{ # keys }}
+count =: {{ # keys }}
 
 cocurrent 'base'
 
@@ -230,13 +241,13 @@ naivedict =. '' conew 'naivedictionary'
 keyrank =. # keyshape
 valrank =. # valshape
 for. i. n_iter do.
-  assert. (len__x '') -: len__naivedict ''
+  assert. (count__x '') -: count__naivedict ''
   NB. Put.
   keys =. (batchshape , keyshape) genkey"0@$ 0
   vals =. (batchshape , valshape) genval"0@$ 0
   vals put__naivedict"(valrank , keyrank) keys
   vals put__x keys
-  assert. (len__x '') -: len__naivedict ''
+  assert. (count__x '') -: count__naivedict ''
   NB. Get.
   keys =. (batchshape , keyshape) genkey"0@$ 0
   vals =. (batchshape , valshape) genval"0@$ 0
@@ -259,8 +270,8 @@ for. i. n_iter do.
   naivemask =. has__naivedict"keyrank keys
   del__naivedict"keyrank keys
   jdelans =. del__x keys
-  assert. (len__x '') -: len__naivedict ''
-  assert. jdelans -: naivemask *. batchshapefordel ($ ,) ~: (_ , keyshape) ($ ,) keys
+  assert. (count__x '') -: count__naivedict ''
+  assert. jdelans -: naivemask *. batchshapefordel ($ ,) ~:&.|. (_ , keyshape) ($ ,) keys
 end.
 destroy__naivedict ''
 destroy__x ''
@@ -268,107 +279,110 @@ EMPTY
 }}
 
 0 1 {{
+n_iter =. 10
+
 keyshape =. 3 2
 valueshape =. 0:^:x 5 8
 params =. y , < ('keytype' ; 'boolean') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_boolean`'' ; rand_integer`'' ; keyshape ; valueshape ; 5 25 ; 100
+jdict test_type rand_boolean`'' ; rand_integer`'' ; keyshape ; valueshape ; 5 25 ; n_iter
 
 keyshape =. 2 3
 valueshape =. 0:^:x 4 5 4
 params =. y , < ('valuetype' ; 'floating') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_integer`'' ; rand_floating`'' ; keyshape ; valueshape ; 100 ; 100
+jdict test_type rand_integer`'' ; rand_floating`'' ; keyshape ; valueshape ; 100 ; n_iter
 
 keyshape =. 7 1
 valueshape =. 0:^:x 1 7
 params =. y , < ('keytype' ; 'floating') , ('valuetype' ; 'complex') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_floating`'' ; rand_complex`'' ; keyshape ; valueshape ; 10 10 ; 100
+jdict test_type rand_floating`'' ; rand_complex`'' ; keyshape ; valueshape ; 10 10 ; n_iter
 
 keyshape =. 3 3
 valueshape =. 0:^:x 2 2 2
 params =. y , < ('keytype' ; 'complex') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_complex`'' ; rand_integer`'' ; keyshape ; valueshape ; 2 3 4 5 ; 100
+jdict test_type rand_complex`'' ; rand_integer`'' ; keyshape ; valueshape ; 2 3 4 5 ; n_iter
 
 keyshape =. 9
 valueshape =. 0:^:x 10
 params =. y , < ('keytype' ; 'extended') , ('valuetype' ; 'rational') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_extended`'' ; rand_rational`'' ; keyshape ; valueshape ; 7 7 ; 100
+jdict test_type rand_extended`'' ; rand_rational`'' ; keyshape ; valueshape ; 7 7 ; n_iter
 
 keyshape =. 5
 valueshape =. 0:^:x 6
 params =. y , < ('keytype' ; 'rational') , ('valuetype' ; 'literal') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_rational`'' ; rand_byte`'' ; keyshape ; valueshape ; 3 2 ; 100
+jdict test_type rand_rational`'' ; rand_byte`'' ; keyshape ; valueshape ; 3 2 ; n_iter
 
 keyshape =. 8
 valueshape =. 0:^:x 5 5
 params =. y , < ('keytype' ; 'literal') , ('valuetype' ; 'extended') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_byte`'' ; rand_extended`'' ; keyshape ; valueshape ; 100 ; 100
+jdict test_type rand_byte`'' ; rand_extended`'' ; keyshape ; valueshape ; 100 ; n_iter
 
 keyshape =. 2 2
 valueshape =. 0:^:x 2 4
 params =. y , < ('keytype' ; 'boxed') , ('valuetype' ; 'boxed') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_boxed`'' ; rand_boxed`'' ; keyshape ; valueshape ; 25 2 ; 100
+jdict test_type rand_boxed`'' ; rand_boxed`'' ; keyshape ; valueshape ; 25 2 ; n_iter
 }}"0"_ 0 INDEX_TYPES
 
 0 1 {{
+n_iter =. 300
+
 keyshape =. 3 2
 valueshape =. 0:^:x 5 8
 params =. y , < ('keytype' ; 'boolean') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_boolean`'' ; rand_integer`'' ; keyshape ; valueshape ; (i. 0) ; 3000
+jdict test_type rand_boolean`'' ; rand_integer`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 2 3
 valueshape =. 0:^:x 4 5 4
 params =. y , < ('valuetype' ; 'floating') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_integer`'' ; rand_floating`'' ; keyshape ; valueshape ; (i. 0) ; 3000
+jdict test_type rand_integer`'' ; rand_floating`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 7 1
 valueshape =. 0:^:x 1 7
 params =. y , < ('keytype' ; 'floating') , ('valuetype' ; 'complex') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_floating`'' ; rand_complex`'' ; keyshape ; valueshape ; (i. 0) ; 3000
+jdict test_type rand_floating`'' ; rand_complex`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 3 3
 valueshape =. 0:^:x 2 2 2
 params =. y , < ('keytype' ; 'complex') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_complex`'' ; rand_integer`'' ; keyshape ; valueshape ; (i. 0) ; 3000
+jdict test_type rand_complex`'' ; rand_integer`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 9
 valueshape =. 0:^:x 10
 params =. y , < ('keytype' ; 'extended') , ('valuetype' ; 'rational') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_extended`'' ; rand_rational`'' ; keyshape ; valueshape ; (i. 0) ; 3000
+jdict test_type rand_extended`'' ; rand_rational`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 5
 valueshape =. 0:^:x 6
 params =. y , < ('keytype' ; 'rational') , ('valuetype' ; 'literal') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_rational`'' ; rand_byte`'' ; keyshape ; valueshape ; (i. 0) ; 3000
+jdict test_type rand_rational`'' ; rand_byte`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 8
 valueshape =. 0:^:x 5 5
 params =. y , < ('keytype' ; 'literal') , ('valuetype' ; 'extended') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_byte`'' ; rand_extended`'' ; keyshape ; valueshape ; (i. 0) ; 3000
+jdict test_type rand_byte`'' ; rand_extended`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 2 2
 valueshape =. 0:^:x 2 4
 params =. y , < ('keytype' ; 'boxed') , ('valuetype' ; 'boxed') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
 jdict =. params conew 'jdictionary'
-jdict test_type rand_boxed`'' ; rand_boxed`'' ; keyshape ; valueshape ; (i. 0) ; 3000
+jdict test_type rand_boxed`'' ; rand_boxed`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 }}"0"_ 0 INDEX_TYPES
 
 NB. GET, PUT, DEL, HAS IN BATCHES.
-
 NB. Keys are boxed strings, values are integers.
 
 NB. https://code.jsoftware.com/wiki/Essays/DataStructures
@@ -384,7 +398,6 @@ get =: ".@>@intern
 del =: erase@intern
 
 cocurrent 'base'
-9!:39 ] 3 13 NB. It makes refdictionary faster.
 
 NB. x is boxed name of index type.
 NB. y is initial size ; number of batches (iterations) ; size of batch ; max element.
@@ -396,15 +409,12 @@ jdict =. params conew 'jdictionary'
 for. i. n_iter do.
   keys =. <@":"0 vals =. sz ?@$ mx NB. Keys, vals for put.
   keys (>@[ set__refdict ])"0 vals
-qprintf^:PRBATCH'$keys keys $vals vals '
   vals put__jdict keys
   keys =. <@":"0 vals =. sz ?@$ mx NB. New keys, vals for queries.
-qprintf^:PRBATCH'$keys keys $vals vals '
   refmask =. has__refdict@> keys
   jgetans =. _1 get__jdict keys
   jhasans =. has__jdict keys
   jmask =. 0 <: jgetans
-qprintf^:PRBATCH'jgetans refmask jmask '
   assert. jmask -: jhasans
   assert. jmask -: refmask
   if. 1 -: +./ refmask do. NB. Reference dictionary fails for get__refdict@> 0 $ 0
@@ -421,11 +431,11 @@ EMPTY
 
 NB. RUN BATCHES.
 
-INDEX_TYPES test_batches 21 ; 10000 ; 10 ; 20
-INDEX_TYPES test_batches 3 ; 10000 ; 10 ; 20
-INDEX_TYPES test_batches 142 ; 1000 ; 100 ; 200
-INDEX_TYPES test_batches 7 ; 100 ; 1000 ; 2000
-INDEX_TYPES test_batches 200001 ; 5 ; 100000 ; 200000
+9!:39 ] 3 13 NB. It makes refdictionary faster.
+INDEX_TYPES test_batches 3 ; 1000 ; 10 ; 20
+INDEX_TYPES test_batches 142 ; 100 ; 100 ; 200
+INDEX_TYPES test_batches 20001 ; 3 ; 10000 ; 20000
+9!:39 ] 3 2
 
 NB. MULTITHREADING.
 
@@ -439,7 +449,7 @@ EMPTY
 }}
 
 NB. BASIC FROM MUTIPLE THREADS.
-NB. Each thread creates, uses and destorys its own dictionary.
+NB. Each thread creates, uses and destroys its own dictionary.
 
 NB. y is number of threads.
 test_basic_multithreading =: {{
@@ -551,8 +561,14 @@ EMPTY
 NB. RUN MULTITHREADING.
 {{
 test_basic_multithreading"0 i. 5
-INDEX_TYPES_CONCURRENT test_multithreading1 10000 5 200
+INDEX_TYPES_CONCURRENT test_multithreading1 1000 5 200
 INDEX_TYPES_CONCURRENT test_multithreading2 1 10000 3
-{{ for. i. 30 do. INDEX_TYPES_CONCURRENT test_multithreading2 100 200 5 end. }} ''
-{{ for. i. 30 do. INDEX_TYPES_CONCURRENT test_multithreading3 10000 5 end. }} ''
+{{ for. i. 10 do. INDEX_TYPES_CONCURRENT test_multithreading2 50 70 5 end. }} ''
+{{ for. i. 10 do. INDEX_TYPES_CONCURRENT test_multithreading3 1000 3 end. }} ''
+set_threads 0
+EMPTY
 }}^:IF64 ''
+
+
+epilog''
+

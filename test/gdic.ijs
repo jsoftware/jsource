@@ -1,4 +1,7 @@
-require '~addons/data/dictionary/dictionary.ijs'
+prolog './gdic.ijs'
+NB. addon/dictionary
+
+require 'data/dictionary'
 
 cocurrent 'base'
 
@@ -565,3 +568,7 @@ INDEX_TYPES_CONCURRENT test_multithreading2 1 10000 3
 set_threads 0
 EMPTY
 }}^:IF64 ''
+
+
+epilog''
+

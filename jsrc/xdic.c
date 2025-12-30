@@ -2,7 +2,7 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Dictionary support                                                      */
-
+#define scafINLINE 
 #include "j.h"
 // Dictionary support
 #ifndef CRC32
@@ -220,7 +220,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   hashelesiz=((DIC*)z)->bloc.hashelesiz=(CTLZI(maxeles+TREENRES-1)+1+1+(BB-1))>>LGBB;
  }else{   // hash, nothing reserved in index
   ASSERT(hashsiz>(maxeles+(maxeles>>4)),EVDEADLOCK)  // min, max, hash sizes.  Hash at least 6% spare
-  hashelesiz=((DIC*)z)->bloc.hashelesiz=(CTLZI(maxeles+(redblack?TREENRES:HASHNRES)-1)+1+(BB-1))>>LGBB;
+  hashelesiz=((DIC*)z)->bloc.hashelesiz=(CTLZI(maxeles+HASHNRES-1)+1+(BB-1))>>LGBB;
  }
  ((DIC*)z)->bloc.flags=flags;   // restore flags
  // Because we chain the empty keyslots on the empty chain, we must ensure that the length of that chain field
@@ -405,14 +405,14 @@ static UI diclkwrwt(DIC *dic,I type){I n;
 
 #else
 
-#define DICLKRDRQ(dic,lv,cond) (lv=0)
+#define DICLKRDRQ(dic,lv,cond) (lv=DICLSINGLETHREADED)
 #define DICLKRDWTK(dic,lv)
 #define DICLKRDRELK(dic,lv)
 #define DICLKRDWTV(dic,lv)
 #define DICLKRDRELV(dic,lv)
 #define DICLKRDRELKV(dic,lv)
 
-#define DICLKRWRQ(dic,lv,cond) lv=0;
+#define DICLKRWRQ(dic,lv,cond) lv=DICLSINGLETHREADED;
 #define DICLKRWWT(dic,lv)
 #define DICLKWRRQ(dic,lv)
 #define DICLKWRWTK(dic,lv)
@@ -631,7 +631,7 @@ static DF2(jtdicget){F12IP;A z;
   z=jtget1(dic,voidAV(w),z,jt,adyad);  // get the result
  }else{
   // general case, including multiple keys
-  if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),w),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
+  if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
   I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
@@ -728,7 +728,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
  // We search all the way to a hole so that if there is match we will find it before we take the write lock.  This has the benefit of speeding up the conflict search
  // We have to go in ascending order because later keys must overwrite earlier ones
  for(i=0;i<n;++i){
-  I8 tomb1=~0; I8 curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32); I hval; // first tombstone (init none); convert hash to slot#;  place to read biased kv slot# into
+  I8 tomb1=~0; I curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32); I hval; // first tombstone (init none); convert hash to slot#;  place to read biased kv slot# into
   while(1){
    I bhval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. this is the (biased) hashndx
    if(withprob((hval=bhval-HASHNRES)<0,0.3)){   // unbiased slot addr, in case found.  If hole or tombstone
@@ -902,7 +902,7 @@ abortexit:;
 
 // del fast case: one key, no user hash or compare function.  We enter having requested a pre-write lock.
 // Result has DICLKWRK=0 if the key did not exist, otherwise the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed.  Error is impossible
-static INLINE UI8 jtdel1(DIC *dic,void *k,UI8 lv,J jt){
+static scafINLINE UI8 jtdel1(DIC *dic,void *k,UI8 lv,J jt){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  // hash the key and prefetch from the hashtable
@@ -969,7 +969,7 @@ static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I 
  // first pass over keys.  If key found, add a record of (unbiased kvslot)\hashslot or ~0 for key not found
 // obsolete  I ndels;  // init old chain empty
  for(i=n-1;i>=0;--i){  // loop over keys, descending for comp. ease
-  I8 curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32); I hval; // convert hash to slot#; place where biased kv# comes in
+  I curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32); I hval; // convert hash to slot#; place where biased kv# comes in
   while(1){
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
    if(withprob((hval-=HASHNRES)<0,0.3)){  // hole or tombstone
@@ -1153,7 +1153,7 @@ static DF1(jtdicdel){F12IP;A z;
 // result is last key we used
 static A dumptree(J jt,DIC *dic, UI nodex, C *dirstack, I depth, I blackdepth, I parentcolor, A prevkey, I *leafblackdepth, I *noerr, UI excludednode, I doprint){PROLOG(000);
  if(nodex<(TREENRES<<1)||nodex==excludednode)R prevkey;  // 
- C *hashtbl=CAV3(dic->bloc.hash); I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19); DRLRC(curr,nodex)   // fetch tree info, then children+color
+ C *hashtbl=CAV3(dic->bloc.hash); I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19); DRLRC(curr,nodex)   // fetch tree info, then children+color
  dirstack[depth]='0'; prevkey=dumptree(jt,dic,currl,dirstack,depth+1,blackdepth+currc,currc,prevkey,leafblackdepth,noerr,excludednode,doprint);
  A k,v; RZ(k=from(sc(RENCEMPTY(nodex)),dic->bloc.keys)) RZ(v=from(sc(RENCEMPTY(nodex)),dic->bloc.vals))  // fetch current key/val
  A klr, vlr; RZ(klr=lrep(k)) RZ(vlr=lrep(v))  // displayable form of k,v
@@ -1191,7 +1191,7 @@ static INLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT v
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vb=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
- I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
+ I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
  DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
@@ -1256,7 +1256,7 @@ static DF2(jtdicgeto){F12IP;A z;
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
- if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),w),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
+ if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
@@ -1297,7 +1297,7 @@ static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 // decrement n as nodes are found, and abort out when n hits 0.
 // Result is # nodes remaining after the node just called.
 static I travn(I dir, C *hashtbl, I nodeb, I node, I n, UI4 par[64][2], I *sp, I *lastnode){
- if(node<TREENRES)R n;  // if this node doesn't exist, do nothing
+ if(node<(TREENRES<<1))R n;  // if this node doesn't exist, do nothing
  I isp=*sp;  // extract sp before recursion
  DRLRC(node,node)  // fetch left/right children
  I ch0=dir?noder:nodel, ch1=nodel+noder-ch0;  // first and second recursion sides
@@ -1317,7 +1317,7 @@ static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt,I htct){I 
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
- I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
+ I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
  DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
@@ -1532,10 +1532,10 @@ static DF2(jtdicgetkvo){F12IP;A z;I htct=1;  // length of head/tail, specified b
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, otherwise current lv (which gives lock status), with OKRET set to be non0 and RESIZEREQ is a resize is needed
-static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT virt){I i;
+static scafINLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
- I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
+ I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
  I vb=dic->bloc.vbytelen;   //  len of 1 value
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
@@ -1677,12 +1677,12 @@ static DF2(jtdicputo){F12IP;
 static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
- I nodeb=dic->bloc.hashelesiz*(0x1000000+SZI)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
+ I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
  I vb=dic->bloc.vbytelen;   //  len of 1 value
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
 
  C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
- C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32), *kbasei=kbase;  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
+ C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32), *kbasei=CAV(dic->bloc.keys);  // address corresponding to tree value of 0.  treevalues 0-1 are empty and do not take space in the key array
  C *vbase=CAV(dic->bloc.vals);  // same for value
 
  DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv)  // request write lock and wait for keys & values to be modifiable.
@@ -1744,8 +1744,8 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
   // extracted.  We now remove nodex from the tree, never to be referred to again.  It is always the
   // child of its parent, and only the chain field in the parent is modified - nothing in nodex
   I emptyx=RENCEMPTY(nodex);  // put new deletion at top of the free chain, unbiased
-  DELKV(kbasei+(emptyx+TREENRES)*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+emptyx*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
-  I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kbasei[(emptyx+TREENRES)*(kib>>32)])  // chain old free chain from new deletion
+  DELKV(kbasei+emptyx*(kib>>32),kib>>32,nodeb&(DICFKINDIR<<8)) DELKV(vbase+emptyx*vb,vb,nodeb&(DICFVINDIR<<8))   // if k/v is indirect, free it & clear to 0
+  I t=dic->bloc.emptyn; WRHASH1234(t, nodeb>>19, &kbasei[emptyx*(kib>>32)])  // chain old free chain from new deletion
   dic->bloc.emptyn=emptyx;  // set new head of chain
   --dic->bloc.cardinality;  // remove deleted key from key count
 

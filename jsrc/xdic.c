@@ -2,7 +2,6 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Dictionary support                                                      */
-#define scafINLINE 
 #include "j.h"
 // Dictionary support
 #ifndef CRC32
@@ -631,7 +630,7 @@ static DF2(jtdicget){F12IP;A z;
   z=jtget1(dic,voidAV(w),z,jt,adyad);  // get the result
  }else{
   // general case, including multiple keys
-  if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
+  if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
   I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
@@ -902,7 +901,7 @@ abortexit:;
 
 // del fast case: one key, no user hash or compare function.  We enter having requested a pre-write lock.
 // Result has DICLKWRK=0 if the key did not exist, otherwise the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed.  Error is impossible
-static scafINLINE UI8 jtdel1(DIC *dic,void *k,UI8 lv,J jt){
+static INLINE UI8 jtdel1(DIC *dic,void *k,UI8 lv,J jt){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  // hash the key and prefetch from the hashtable
@@ -1056,7 +1055,6 @@ static DF1(jtdicdel){F12IP;A z;
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
- if(unlikely(AN(w)==0)){R mtv;}  // if no keys, return empty fast
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k if needed
 
  UI lv;   // will hold most recent value of lock
@@ -1074,6 +1072,8 @@ static DF1(jtdicdel){F12IP;A z;
   if(likely(lv&DICLMSKWRK)){z=num(1);}else{z=num(0); lv|=DICLMSKWRK;}  // set return based on found status, reinstate known write lock (not required but saves a pass through the CAS loop)
  }else{
   // not fast path.  Do in batches
+  // general case, including multiple keys
+  if(unlikely(AN(w)==0)){R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),dic->bloc.vals);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
   I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
@@ -1256,7 +1256,7 @@ static DF2(jtdicgeto){F12IP;A z;
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
- if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.vshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-kshape) }. $w) $ values/''
+ if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
@@ -1532,7 +1532,7 @@ static DF2(jtdicgetkvo){F12IP;A z;I htct=1;  // length of head/tail, specified b
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; rc=0 if error, otherwise current lv (which gives lock status), with OKRET set to be non0 and RESIZEREQ is a resize is needed
-static scafINLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT virt){I i;
+static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
  I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
@@ -1831,7 +1831,7 @@ static DF1(jtdicdelo){F12IP;
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
- if(unlikely(AN(w)==0)){R mtv;}  // if no keys, return empty fast
+ if(unlikely(AN(w)==0)){R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),dic->bloc.vals);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k  if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a 32-bit index with LSB=0

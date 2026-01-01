@@ -1316,7 +1316,7 @@ static I travn(I dir, C *hashtbl, I nodeb, I node, I n, UI4 par[64][2], I *sp, I
 //  4 - no compare (infer direction from 1)
 // return is stack pointer for the node at end of search: its address\addr of 1 child.  If = original sp, no qualifying value was found
 // result of 0 indicates other error
-static INLINE UI4 (*searchtree(I type,I jt,C *hashtbl, UI8 kib, I nodeb, C *kbase, VIRT virt, I (*cf)(I,void*,void*), UI4 (*sp)[2], I *flags, C *k))[2]{
+static INLINE UI4 (*searchtree(I type,J jt,C *hashtbl, UI8 kib, I nodeb, C *kbase, VIRT virt, I (*cf)(I,void*,void*), UI4 (*sp)[2], I *flags, C *k))[2]{
  UI4 (*(res1)[3])[2];  // nodex or sp during tree search.  Values are stored into res1[comp+1] and the correct sign is selected at the end, giving the last thing stored with that sign
  UI8 chirn;  // both children
  if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp

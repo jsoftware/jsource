@@ -9,7 +9,7 @@ INDEX_TYPES_CONCURRENT =: 'hash concurrent' ; 'tree concurrent'
 INDEX_TYPES =: INDEX_TYPES_CONCURRENT , 'hash' ; 'tree'
 KEYHASHES =: 16!:0`'' , 7"1`'' , {{ 16!:0 y }}"1`''
 KEYCOMPARES =: 16!:0`'' , -@:(16!:0)`'' , {{ x 16!:0 y }}`''
-COMBINATIONS =: INDEX_TYPES ,"0 1"0 _ KEYHASHES ,."0 _ KEYCOMPARES
+COMBINATIONS =: INDEX_TYPES ,"1"0 _ KEYHASHES ,."0 _ KEYCOMPARES
 
 NB. INITIALIZATION.
 NB. Test name attribute.
@@ -73,26 +73,7 @@ destroy__jdict ''
 EMPTY
 }}"0 INDEX_TYPES
 
-NB. ERROR FROM CUSTOM KEYHASH/KEYCOMPARE.
-
-{{
-params =. y , < ('keycompare' ,&< 13!:8@16`'') ,: ('keyhash' ,&< 13!:8@16`'') NB. Return spelling error.
-jdict =. params conew 'jdictionary'
-42 put__jdict GetError 7 NB. No comparison for empty tree dictionary.
-assert. 'spelling error' -: 43 put__jdict GetError 8
-assert. 'spelling error' -: get__jdict GetError 7
-assert. 'spelling error' -: has__jdict GetError 7
-assert. 'spelling error' -: del__jdict GetError 7
-destroy__jdict ''
-EMPTY
-}}"0 INDEX_TYPES
-
 NB. BASIC.
-
-{{
-destroy__d '' [ put__d~ 1 [ d =. 'tree' conew 'jdictionary'
-EMPTY
-}} ''
 
 test_basic1 =: {{
 'index_type keyhash keycompare' =. <"0 y
@@ -108,7 +89,7 @@ assert. 4 5 6 -: get__mydict 2 3
 assert. 1 -: count__mydict ''
 assert. 1 -: del__mydict 2 3
 assert. 0 -: count__mydict ''
-100 100 100 -: 100 100 100 get__mydict 2 3
+assert. 100 100 100 -: 100 100 100 get__mydict 2 3
 (5 6 7,:1 2 3) put__mydict 2 3,:2 3  NB. Double put nonexistent
 assert. 1 2 3 -: get__mydict 2 3
 4 5 6 put__mydict 1 3
@@ -182,6 +163,47 @@ EMPTY
 test_basic1 COMBINATIONS
 test_basic2 COMBINATIONS
 
+NB. CUSTOM KEYHASH & KEYCOMPARE
+
+{{
+params =. y , < ('keycompare' ,&< 13!:8@16`'') ,: ('keyhash' ,&< 13!:8@16`'') NB. Return spelling error.
+jdict =. params conew 'jdictionary'
+42 put__jdict GetError 7 NB. No comparison for empty tree dictionary.
+assert. 'spelling error' -: 43 put__jdict GetError 8
+assert. 'spelling error' -: get__jdict GetError 7
+assert. 'spelling error' -: has__jdict GetError 7
+assert. 'spelling error' -: del__jdict GetError 7
+destroy__jdict ''
+EMPTY
+}}"0 INDEX_TYPES
+
+{{
+params =. y , < ('keycompare' ,&< 0:`'') ,: ('keyhash' ,&< 0"0`'')
+mydict =. params conew 'jdictionary'
+put__mydict~ i. 5 [ put__mydict~ 2 3 [ put__mydict~ 1
+assert. 1 -: count__mydict ''
+destroy__mydict ''
+EMPTY
+}}"0 INDEX_TYPES
+
+NB. EMPTY.
+
+{{
+'index_type keyshape valshape' =. y
+params =. index_type ,&< ('keyshape' ; keyshape) ,: ('valueshape' ; valshape)
+mydict =. params conew 'jdictionary'
+frames =. 0 0 ; 0 2 ; 2 0 3 4 ; , 0
+'keys vals' =. <"1 frames (0 $~ ,)&.>"_ 0 keyshape ; valshape
+assert. frames (-: $@:has__mydict)&> keys
+if. valshape -: 0 do.
+  assert. (4 # ,: 'domain error') -: get__mydict GetError@> keys
+else.
+  assert. vals (-: get__mydict)&> keys
+end.
+assert. frames (-: $@:del__mydict)&> keys
+destroy__mydict ''
+}}"1 INDEX_TYPES ,"1"0 _ (,."0 _ (0)&;) 7 ; 2 3 4 ; i. 0
+
 NB. TYPES AND SHAPES.
 
 coclass 'naivedictionary'
@@ -246,7 +268,7 @@ for. i. n_iter do.
   keys =. (batchshape , keyshape) genkey"0@$ 0
   vals =. (batchshape , valshape) genval"0@$ 0
   vals put__naivedict"(valrank , keyrank) keys
-  vals put__x keys
+  assert. EMPTY -: vals put__x keys
   assert. (count__x '') -: count__naivedict ''
   NB. Get.
   keys =. (batchshape , keyshape) genkey"0@$ 0
@@ -409,7 +431,7 @@ jdict =. params conew 'jdictionary'
 for. i. n_iter do.
   keys =. <@":"0 vals =. sz ?@$ mx NB. Keys, vals for put.
   keys (>@[ set__refdict ])"0 vals
-  vals put__jdict keys
+  assert. EMPTY -: vals put__jdict keys
   keys =. <@":"0 vals =. sz ?@$ mx NB. New keys, vals for queries.
   refmask =. has__refdict@> keys
   jgetans =. _1 get__jdict keys
@@ -477,9 +499,7 @@ prog =: {{)d
   sz =. # keys
   for_el. i. n_iter do.
     vals =. get__x keys
-NB. smoutput'put ',":el,{.3 T.''
     vals put__x keys NB. Put exactly the same keys and values.
-NB. smoutput'fin put ',":el,{.3 T.''
     keys =. vals
   end.
   }}

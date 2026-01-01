@@ -630,7 +630,7 @@ static DF2(jtdicget){F12IP;A z;
   z=jtget1(dic,voidAV(w),z,jt,adyad);  // get the result
  }else{
   // general case, including multiple keys
-  if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
+  if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=adyad==(A)1?mtv:avalues; R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
   I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
@@ -1073,7 +1073,7 @@ static DF1(jtdicdel){F12IP;A z;
  }else{
   // not fast path.  Do in batches
   // general case, including multiple keys
-  if(unlikely(AN(w)==0)){R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),dic->bloc.vals);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
+  if(unlikely(AN(w)==0)){R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),mtv);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ ''
   I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
@@ -1256,7 +1256,7 @@ static DF2(jtdicgeto){F12IP;A z;
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
- if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=FAV(self)->localuse.lu1.varno==0?avalues:mtv; R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
+ if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=adyad==(A)1?mtv:avalues; R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
@@ -1291,6 +1291,7 @@ static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 #define GETKVK2 32  // 2 keys  K1-K2 must be spaced like EQ-EQ0
 #define GETKVK1 64  // 1 key
 
+  
 // traverse tree in direction dir (0=left-to-right), counting down n as nodes are encountered.  Each encountered node is stored into
 // *lastnode, leaving it as the nth node from the end.  If dir=1, create the stack as we go along: *sp points to the entry for node and its child, and
 // pdir[*sp-1][0-1] give the parent and right child of node.  On exit *sp is the stack pointer when *lastnode is encountered, i. e. par[sp]=lastnode+child
@@ -1308,10 +1309,78 @@ static I travn(I dir, C *hashtbl, I nodeb, I node, I n, UI4 par[64][2], I *sp, I
  R n;  // finished with this node, return to caller
 }
 
+// search for a value in the tree, bulding a stack for it
+// bits of type indicate options:
+//  1 - direction (0 means >=, L-to-R)
+//  2 - no stack
+//  4 - no compare (infer direction from 1)
+// return is stack pointer for the node at end of search: its address\addr of 1 child.  If = original sp, no qualifying value was found
+// result of 0 indicates other error
+static INLINE UI4 (*searchtree(I type,I jt,C *hashtbl, UI8 kib, I nodeb, C *kbase, VIRT virt, I (*cf)(I,void*,void*), UI4 (*sp)[2], I *flags, C *k))[2]{
+ UI4 (*(res1)[3])[2];  // nodex or sp during tree search.  Values are stored into res1[comp+1] and the correct sign is selected at the end, giving the last thing stored with that sign
+ UI8 chirn;  // both children
+ if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
+ C *k01=(C*)k;  // pointer to the key we are comparing against: k0 to begin with
+ UI nodex=*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // search node.  Init to biased node# of the root of the tree
+ if(unlikely(nodex<(TREENRES<<1)))R sp; // empty database: nothing to do
+ I comp=1;  // will be compare result at end of search.  The root is considered to have compared low
+ (*sp)[0]=(*sp)[1]=0;  // top of stack is the empty-tree pointer
+ res1[1+1]=sp;  // init 'stack at first key' to initial sp (invalid).  If it is still there after the search there were no valid keys
+ ++sp; // sp points to last valid stack entry+1
+ cf=(*flags&GETKVK2+GETKVFLGGT)==0?alwaysgt:cf;  // if we are looking for the min values (below the given key), use routine that always says tree key>threshold.  This is < a single key, or head
+ cf=(*flags&GETKVK0+GETKVFLGGT)==GETKVK0+GETKVFLGGT?alwayslt:cf;  // if looking for max values (only if tail), use routine that says tree key<threshold  
+ // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
+ // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
+ // This search builds the parent list and is always for the left side of the interval
+ do{  // traverse the tree, searching for index k.  Current node is nodex
+  chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
+  (*sp)[0]=nodex;  // store this node
+  (*sp)[1]=(chirn>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack right child
+  chirn=((UI8)(*sp)[1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left
+  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),errexit);  // compare node key vs k01 (key to be found), so node > min is 1
+  if(comp==0)goto match;  // found at node nodex.  sp points to the children
+  nodex=(chirn>>((UI)comp>>(BW-5)))&0xffffffff;  // choose left/right based on comparison
+  // No match.  drop down to next node.
+  res1[1+comp]=sp;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted
+  ++sp;  // advance sp to next empty slot, which we will fill presently
+ }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
+ // falling through, there was no match.  Take the last value that is > min
+ *flags|=(*flags>>GETKVK2X);   // indicate that we should include left endpoint, which does not match the key
+ sp=res1[1+1];  //  the last (i. e. smallest) key > k01 is in slot 1.  remember sp+1 for starting node
+   // indicate we should out the first key (since it isn't the min)
+   // if all comparisons were <, k0 > entire tree, nothing to return, sp will be unchanged
+match:;   // here when match, with sp set from the push of the matching node
+ R sp;
+errexit: R 0;  //
+}
+
+// The basic operations are
+//  traverse looking for key, keeping stack
+//    variants: stack direction, indicating which search direction is supported using this stack
+//              no stack
+//              no compare (result inferred from direction)
+//  scan up looking for node > key
+//  scan from found key, counting n items, possibly converting stack from L to R
+//  scan forward to produce result, given left & right nodes
+
 // k is A for key0,:key1, flags is (return k, return v, include key-0, include k-end)
 // We take a read lock on the table and release it
 // virt is used as virtuals for compare, and then repurposed to hold indexes of kvs to be copied
-// htct is used in 0-key mode to indicate the desired length of head/tail
+// htct is used in to indicate the desired length of head/tail
+//
+// variants:
+// 2key       traverse stackR to find smallest value >= key      traverse no stack to find largest value <= key
+
+// 1key all < traverse stackR to find smallest value             traverse no stack to find largest value <= key
+// 1key N <   traverse stackL to find largest value <= key       scan L N items, changing stack from L to R
+// 1key 1 <   traverse stackL to find largest value <= key       scan L 0-1 item                                               end=start
+// 1key all > traverse stackR to find smallest value >= key      traverse no stack to find largest value
+// 1key N >   traverse stackR to find smallest value >= key      scan R N items
+// 1key 1 >   traverse stackR to find smallest value >= key      scan R 0-1 item
+
+// 0key N >   traverse stackR to find smallest value             scan R N items unless n=1
+// 0key N <   traverse stackL to find largest value              scan L N items, changing stack from L to R   unless n=1
+
 static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt,I htct){I i;
  PROLOG(000);
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
@@ -1831,7 +1900,7 @@ static DF1(jtdicdelo){F12IP;
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
- if(unlikely(AN(w)==0)){R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),dic->bloc.vals);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
+ if(unlikely(AN(w)==0)){R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),mtv);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ ''
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k  if needed
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a 32-bit index with LSB=0

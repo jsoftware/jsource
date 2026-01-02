@@ -655,7 +655,7 @@ static DF2(jtdicget){F12IP;A z;
 
 // put fast case: one key, no user hash or compare function.  We enter having requested a pre-write lock.
 // Result is the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed.  Error is impossible
-static UI8 INLINE jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
+static INLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  // hash the key and prefetch from the hashtable

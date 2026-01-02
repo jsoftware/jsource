@@ -226,7 +226,11 @@ void jtauditmemchains(J jt){
 #if MEMAUDIT&0x30
   I Wi,Wj;A Wx,prevWx=0; forcetomemory(&prevWx);  if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdata))){
  for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mempool[-PMINL+Wi]);
+#if SY_64
  NOUNROLL while(Wx){if(Wx->origin!=THREADID1(jt)||FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
+#else
+ NOUNROLL while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
+#endif
 }
 #endif
 }
@@ -1587,9 +1591,6 @@ extern void jgmpguard(X);
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
 void jtmf(J jt,A w,I hrh,I blockx){
-#if MEMAUDIT&16
-auditmemchains();
-#endif
 #if MEMAUDIT&15
 if((I)jt&3)SEGFAULT;
 #endif
@@ -1671,6 +1672,9 @@ if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
 #else
   FREECHK(w);  // free the block
+#endif
+#if MEMAUDIT&16
+auditmemchains();
 #endif
  }
 }

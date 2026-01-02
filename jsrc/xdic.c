@@ -48,7 +48,7 @@ static INLINE UI4 crcwords(UI *v, I n){
 // CRC32 of n bytes
 static INLINE UI4 crcbytes(C *v, I n){
  UI4 wdcrc=n&-SZI?crcwords((UI*)v,n>>LGSZI):~0;  // take CRC of the fullword part, if any
- if(n&(SZI-1)){wdcrc=HASHI(wdcrc,((UI*)v)[n>>LGSZI]<<((SZI-(n&(SZI-1)))<<LGSZI));}  // if there are bytes, take their CRC after discarding garb.  Avoid overfetch
+ if(n&(SZI-1)){wdcrc=HASHI(wdcrc,((UI*)v)[n>>LGSZI]<<((SZI-(n&(SZI-1)))<<LGBB));}  // if there are bytes, take their CRC after discarding garb.  Avoid overfetch
  R wdcrc;  // return composite CRC
 }
 
@@ -113,6 +113,9 @@ typedef struct ADic {
    // *** end of J value
   UI4 ktype;  // type of a key
   UI4 vtype;   // type of a value
+  UI4 kaii;   // atoms in a key
+  UI4 vaii;   // atoms in a value
+  I filler1;
   union {
    struct {
     UI4 kitemlen;  // number of hash/compare items in a key when using 16!:0
@@ -121,16 +124,15 @@ typedef struct ADic {
    UI8 klens;
   };
   UI4 vbytelen;  // number of bytes in a value, for copying
-  UI4 kaii;   // atoms in a key
-  UI4 vaii;   // atoms in a value
   C lgminsiz;  // lg(minimum cardinality).  When cardinality drops below 1LL<<lgminsiz, we resize.
-  I filler1;
+  I filler2;
   // end of second cacheline.  Following changed only by put/del
   UI cardinality;  // number of kvs in the hashtable
   UI emptyn;  // index to next empty kv/treeslot.  EOC loops back on itself.  Resize when empty
-  I filler2[SY_64?6:3];  // pad to cacheline (24 words on each system).
+  I filler3[SY_64?6:1];  // pad to cacheline (24 words on each system).
  } bloc;
 } DIC;
+_Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
 #define ST UI4   // type of hash slot
 #define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found
 #define STN 4  // width of hash slot
@@ -168,7 +170,7 @@ typedef struct ADic {
 static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  ARGCHK1(w);
  A a=FAV(self)->fgh[0];  // extract u from the verb
- A z; GAT0(z,BOX,20,1) AK(z)=offsetof(struct ADic,bloc.hash); AN(z)=AS(z)[0]=7;  // allocate nonrecursive box, long enough to make the total allo big enough in 32- and 64-bit.  Then restrict to the boxes in case of error
+ A z; GAT0(z,BOX,24,1) AK(z)=offsetof(struct ADic,bloc.hash); AN(z)=AS(z)[0]=7;  // allocate nonrecursive box, long enough to make the total allo big enough in 32- and 64-bit.  Then restrict to the boxes in case of error
  I flags;  // part of a union that gets overwritten
  if(AT(a)&VERB){  // initial creation
   //  install user's verb, & see if the user wants the internal functions
@@ -233,7 +235,6 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
 // obsolete   maxeles=(I)1<<(((DIC*)z)->bloc.kbytelen*SZI);  // no need for more slots than possible code points
 // obsolete   ((DIC*)z)->bloc.emptysiz=((DIC*)z)->bloc.kbytelen;  // don't overflow the key with the chain field
  else((DIC*)z)->bloc.emptysiz=4;   // not short key, use convenient chain length
-
 
  // allocate & protect hash/keys/vals, and put all keys on the empty chain
  // hashtbl is hashelsiz per entry
@@ -341,7 +342,7 @@ F1(jtcreatedic){F12IP;
 // obsolete #define DICLKWRRELV(dic,lv) {__atomic_fetch_add(&AM((A)dic),(I)1<<DICLMSKSEQX,__ATOMIC_ACQ_REL); __atomic_fetch_and(&AM((A)dic),~((I)0xffff<<DICLMSKWRX),__ATOMIC_ACQ_REL);}   // advance owner sequence#, then clear write req (which handles overflow on the seq#)
 #define DICLKWRRELV(dic,lv) if((lv&DICLMSKWRV)!=0){UI nv; do{nv=((lv&~DICLMSKWRK)+1)&~(DICLMSKWRK+DICLMSKWRV+DICLMSKOKRET+DICLMSKRESIZEREQ);}while(!casa(&AM((A)dic), &lv, nv));}    // if not single-threaded, advance owner sequence# (suppressing overflow), clear write req
 
-// scaf should these founctions yield after a while?
+// scaf should these functions yield after a while?
 // wait for read lock on keys+values in dic, which we have requested & found busy
 static UI diclkrdwtkv(DIC *dic, UI lv){I n;
  // We know we just put up a read request and saw busy.  Rescind our read request and then quietly poll for the write to go away
@@ -654,7 +655,7 @@ static DF2(jtdicget){F12IP;A z;
 
 // put fast case: one key, no user hash or compare function.  We enter having requested a pre-write lock.
 // Result is the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed.  Error is impossible
-static INLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
+static UI8 INLINE jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  // hash the key and prefetch from the hashtable

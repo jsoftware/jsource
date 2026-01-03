@@ -1312,7 +1312,7 @@ static I travn(I dir, C *hashtbl, I nodeb, I node, I n, UI4 par[64][2], I *sp, I
 
 // search for a value in the tree, bulding a stack for it
 // bits of type indicate options:
-//  1 - direction (0 means >=, L-to-R)
+//  1 - stack direction (0 means >=, L-to-R)
 //  2 - no stack
 //  4 - no compare (infer direction from 1)
 // return is stack pointer for the node at end of search: its address\addr of 1 child.  If = original sp, no qualifying value was found
@@ -1320,39 +1320,52 @@ static I travn(I dir, C *hashtbl, I nodeb, I node, I n, UI4 par[64][2], I *sp, I
 static INLINE UI4 (*searchtree(I type,J jt,C *hashtbl, UI8 kib, I nodeb, C *kbase, VIRT virt, I (*cf)(I,void*,void*), UI4 (*sp)[2], I *flags, C *k))[2]{
  UI4 (*(res1)[3])[2];  // nodex or sp during tree search.  Values are stored into res1[comp+1] and the correct sign is selected at the end, giving the last thing stored with that sign
  UI8 chirn;  // both children
- if(unlikely(!(nodeb&(DICFICF<<8))))biasforcomp
- C *k01=(C*)k;  // pointer to the key we are comparing against: k0 to begin with
  UI nodex=*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // search node.  Init to biased node# of the root of the tree
  if(unlikely(nodex<(TREENRES<<1)))R sp; // empty database: nothing to do
  I comp=1;  // will be compare result at end of search.  The root is considered to have compared low
  (*sp)[0]=(*sp)[1]=0;  // top of stack is the empty-tree pointer
  res1[1+1]=sp;  // init 'stack at first key' to initial sp (invalid).  If it is still there after the search there were no valid keys
  ++sp; // sp points to last valid stack entry+1
- cf=(*flags&GETKVK2+GETKVFLGGT)==0?alwaysgt:cf;  // if we are looking for the min values (below the given key), use routine that always says tree key>threshold.  This is < a single key, or head
- cf=(*flags&GETKVK0+GETKVFLGGT)==GETKVK0+GETKVFLGGT?alwayslt:cf;  // if looking for max values (only if tail), use routine that says tree key<threshold  
  // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
  // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
  // This search builds the parent list and is always for the left side of the interval
  do{  // traverse the tree, searching for index k.  Current node is nodex
   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
-  (*sp)[0]=nodex;  // store this node
-  (*sp)[1]=(chirn>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack right child
-  chirn=((UI8)(*sp)[1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left
-  comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k01,nodeb&(DICFICF<<8),errexit);  // compare node key vs k01 (key to be found), so node > min is 1
-  if(comp==0)goto match;  // found at node nodex.  sp points to the children
-  nodex=(chirn>>((UI)comp>>(BW-5)))&0xffffffff;  // choose left/right based on comparison
+  if(!(type&2)){  // if stacking requested
+   (*sp)[0]=nodex;  // store this node
+   (*sp)[1]=(chirn>>(type&1?0:nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack left/right child depending on flag
+  }
+  chirn=((UI8)(*sp)[1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left (31 bits each)
+  if(!(type&4)){  // normal case, do compare
+   chirn=((UI8)(*sp)[1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left (31 bits each)
+   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k,nodeb&(DICFICF<<8),errexit);  // compare node key vs k (key to be found), so node > min is 1
+   if(comp==0)goto match;  // found at node nodex.  sp points to the children
+   nodex=(chirn>>((UI)comp>>(BW-5)))&0xffffffff;  // choose left/right based on comparison
+  }else{  // comparison forced
+   comp=((type&1)<<1)-1;  // if L-to-R, stack R and go to L descendant: comp=-1
+   chirn=((UI8)(*sp)[1]<<31)+((chirn>>(type&1?nodeb&0xff:0))&_bzhi_u64(~(UI8)1,nodeb));  // extract selected child (type 0=L)
+  }
   // No match.  drop down to next node.
   res1[1+comp]=sp;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted
   ++sp;  // advance sp to next empty slot, which we will fill presently
  }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
  // falling through, there was no match.  Take the last value that is > min
- *flags|=(*flags>>GETKVK2X);   // indicate that we should include left endpoint, which does not match the key
+ *flags|=(*flags>>GETKVK2X);   // indicate that we should include endpoint, which does not match the key
  sp=res1[1+1];  //  the last (i. e. smallest) key > k01 is in slot 1.  remember sp+1 for starting node
    // indicate we should out the first key (since it isn't the min)
    // if all comparisons were <, k0 > entire tree, nothing to return, sp will be unchanged
 match:;   // here when match, with sp set from the push of the matching node
  R sp;
 errexit: R 0;  //
+}
+
+// scan n values from the starting point, in the direction of the stack, moving node#s to the result list res
+// bits of type indicate options:
+//  1 - stack direction (0 means >=, L-to-R).  If 1, convert the stack to L-to-R
+// result is number of values moved to start or end of list
+// result of 0 indicates other error
+static INLINE I scantree(I type,J jt,C *hashtbl, UI4 (*sp)[2], I *flags, I *res, I n){
+ R 0;
 }
 
 // The basic operations are
@@ -1377,7 +1390,7 @@ errexit: R 0;  //
 // 1key 1 <   traverse stackL to find largest value <= key       scan L 0-1 item                                               end=start
 // 1key all > traverse stackR to find smallest value >= key      traverse no stack to find largest value
 // 1key N >   traverse stackR to find smallest value >= key      scan R N items
-// 1key 1 >   traverse stackR to find smallest value >= key      scan R 0-1 item
+// 1key 1 >   traverse stackR to find smallest value >= key      scan R 0-1 item                                               end=start
 
 // 0key N >   traverse stackR to find smallest value             scan R N items unless n=1
 // 0key N <   traverse stackL to find largest value              scan L N items, changing stack from L to R   unless n=1

@@ -156,7 +156,7 @@ void jtforeigninit(J jt){UI i;
  MN(16,-12)  XPRIM(ADV, jtdichasc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-3)  XPRIM(ADV, jtdicputc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-4)  XPRIM(ADV, jtdicdelc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
- MN(16,-6)  XPRIM(ADV, jtdicgetkvc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(16,-6)  XPRIM(ADV, jtdicmgetc,     0,               VASGSAFE,VF2NONE,RMAX,   RMAX,RMAX);
  MN(128,2) XPRIM(VERB, 0,            jtapplystr,   VFLAGNONE,VF2NONE,RMAX,1,   RMAX);
  MN(128,5) XPRIM(VERB, jtisnan,      0,            VASGSAFE,VF2NONE,RMAX,RMAX,RMAX);
  MN(128,9) XPRIM(VERB, jtmvmsparse,  0,            VASGSAFE,VF2WILLOPEN1,RMAX,   RMAX,RMAX);

@@ -638,7 +638,7 @@ static DF2(jtdicget){F12IP;A z;
   GA0(z,t,kn*vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
   // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
   // nothing & use the value returned by keyprep, which will be the result area from the user hash.
-  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+  VIRT virt; I8 *s;  // place for virtuals (needed by user comp fns); key/hash workarea
   if(unlikely(!(dic->bloc.flags&DICFIHF)))s=0;   // user hash function, keyprep will allocate s
   else if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
   else{A x; GATV0(x,FL,kn,1) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
@@ -875,7 +875,7 @@ static DF2(jtdicput){F12IP;A z;
   // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
   // For the same reason, we do not have to worry about the order in which kvs are added and deleted.
 
-  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+  VIRT virt; I8 *s;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
 
   DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
   void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
@@ -1078,7 +1078,7 @@ static DF1(jtdicdel){F12IP;A z;
   I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
-  VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+  VIRT virt; I8 *s;  // place for virtuals (needed by user comp fns); key/hash workarea
 
   DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
   void *k=voidAV(w);  // point to the key and value data
@@ -1266,7 +1266,7 @@ static DF2(jtdicgeto){F12IP;A z;
  GA0(z,t,kn*vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
  // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
  // nothing & use the value returned by keyprep, which will be the result area from the user hash.
- VIRT virt; I8 *s; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ VIRT virt; I8 *s;  // place for virtuals (needed by user comp fns); key/hash workarea
  if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
  else{A x; GATV0(x,FL,kn,1) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes; we use as UI8
  
@@ -1275,24 +1275,23 @@ static DF2(jtdicgeto){F12IP;A z;
  RETF(z);
 }
 
-// ********************************** getkv **********************************
+// ********************************** mget **********************************
 static I alwaysgt(I n,void* a,void* b){R 1;}  // always return gt
 static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 
-#define GETKVFLGEQ0X 0  // equality OK for low key
-#define GETKVFLGEQ0 1  // equality OK for low key
-#define GETKVFLGGT 1  // return region above key
-#define GETKVFLGTAIL 1  // return region starts is tail
-#define GETKVFLGEQ1 2  // equality OK for high key
-#define GETKVFLGEQ 2  // equality OK for single key
-#define GETKVFLGK 4   // user wants to see keys
-#define GETKVFLGV 8   // user wants to see values
-#define GETKVK0 16  // 0 keys
-#define GETKVK2X 5  // 1 key
-#define GETKVK2 32  // 2 keys  K1-K2 must be spaced like EQ-EQ0
-#define GETKVK1 64  // 1 key
+#define MGETFLGEQ0X 0  // 2 keys: equality OK for low key  1key:equality OK for key
+#define MGETFLGEQ0 1  //
+// obsolete #define MGETFLGTAIL 1  // return region starts is tail
+#define MGETFLGEQ1 2  // 2 keys: equality OK for high key
+#define MGETFLGGT 2  // 1 key: return region above key
+#define MGETFLGK 4   // user wants to see keys
+#define MGETFLGV 8   // user wants to see values
+// obsolete #define MGETK0 16  // 0 keys
+// obsolete #define MGETK2X 5  // 1 key
+// obsolete #define MGETK2 32  // 2 keys  K1-K2 must be spaced like EQ-EQ0
+// obsolete #define MGETK1 64  // 1 key
 
-  
+#if 0 // obsolete
 // traverse tree in direction dir (0=left-to-right), counting down n as nodes are encountered.  Each encountered node is stored into
 // *lastnode, leaving it as the nth node from the end.  If dir=1, create the stack as we go along: *sp points to the entry for node and its child, and
 // pdir[*sp-1][0-1] give the parent and right child of node.  On exit *sp is the stack pointer when *lastnode is encountered, i. e. par[sp]=lastnode+child
@@ -1309,93 +1308,105 @@ static I travn(I dir, C *hashtbl, I nodeb, I node, I n, UI4 par[64][2], I *sp, I
  *sp=isp+1; if((n=travn(dir,hashtbl,nodeb,ch1,n,par,sp,lastnode))==0)R n;   // take second recursion; exit if n hits 0
  R n;  // finished with this node, return to caller
 }
+#endif
 
-// search for a value in the tree, bulding a stack for it
+// search for a value in the tree, possibly bulding a stack for it
 // bits of type indicate options:
-//  1 - stack direction (0 means >=, L-to-R)
+//  1 - stack direction (0 means >=, L-to-R, and also looking for >=)
 //  2 - no stack
 //  4 - no compare (infer direction from 1)
-// return is stack pointer for the node at end of search: its address\addr of 1 child.  If = original sp, no qualifying value was found
-// result of 0 indicates other error
-static INLINE UI4 (*searchtree(I type,J jt,C *hashtbl, UI8 kib, I nodeb, C *kbase, VIRT virt, I (*cf)(I,void*,void*), UI4 (*sp)[2], I *flags, C *k))[2]{
- UI4 (*(res1)[3])[2];  // nodex or sp during tree search.  Values are stored into res1[comp+1] and the correct sign is selected at the end, giving the last thing stored with that sign
+// at end, if there is a stack: stack has been created, and result is the index into the stack of the best node found; otherwise result is index of best node found
+// result of 0 indicates empty database; -1 for error
+static INLINE I searchtree(I type,J jt,C *hashtbl, UI8 kib, I nodeb, C *kbase, VIRT virt, I (*cf)(I,void*,void*), UI4 sp[][2], I *flags, C *k){
+ I res1[3];  // sp during tree search.  Values are stored into res1[comp+1] and the correct sign is selected at the end, giving the last thing stored with that sign
  UI8 chirn;  // both children
- UI nodex=*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // search node.  Init to biased node# of the root of the tree
- if(unlikely(nodex<(TREENRES<<1)))R sp; // empty database: nothing to do
- I comp=1;  // will be compare result at end of search.  The root is considered to have compared low
- (*sp)[0]=(*sp)[1]=0;  // top of stack is the empty-tree pointer
- res1[1+1]=sp;  // init 'stack at first key' to initial sp (invalid).  If it is still there after the search there were no valid keys
- ++sp; // sp points to last valid stack entry+1
+ UI nodex=type&2?sp[0][0]:*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // search node.  Init to biased node# of the root of the tree, or at the node given by the stack if we are resuming search
+ if(!(type&2))sp[0][0]=0;   // top of stack is the empty-tree pointer, when stack is being created
+ res1[2-2*(type&1)]=0;  // init 'stack at first key' to 0 (invalid).  If it is still there after the search there were no valid keys
+ I zx=type&2?0:1;  // next fill pointer in sp - if no stack, will remain at 0
+ if(unlikely(nodex<(TREENRES<<1)))R 0; // empty database: nothing to do
  // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
  // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
  // This search builds the parent list and is always for the left side of the interval
  do{  // traverse the tree, searching for index k.  Current node is nodex
   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
   if(!(type&2)){  // if stacking requested
-   (*sp)[0]=nodex;  // store this node
-   (*sp)[1]=(chirn>>(type&1?0:nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack left/right child depending on flag
+   sp[zx][0]=nodex;  // store this node
+   sp[zx][1]=(chirn>>(type&1?0:nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack left/right child depending on flag
   }
-  chirn=((UI8)(*sp)[1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left (31 bits each)
+  I comp;  // comparison result
   if(!(type&4)){  // normal case, do compare
-   chirn=((UI8)(*sp)[1]<<31)+((chirn>>(0&&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));  // extract left child, leave chirn as right\left (31 bits each)
-   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k,nodeb&(DICFICF<<8),errexit);  // compare node key vs k (key to be found), so node > min is 1
-   if(comp==0)goto match;  // found at node nodex.  sp points to the children
-   nodex=(chirn>>((UI)comp>>(BW-5)))&0xffffffff;  // choose left/right based on comparison
+   comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k,nodeb&(DICFICF<<8),errexit);  // compare node key vs k (key to be found), so node > k is 1
+   if(comp==0)R type&2?nodex:zx;  // found at node nodex.  sp points to the children
   }else{  // comparison forced
-   comp=((type&1)<<1)-1;  // if L-to-R, stack R and go to L descendant: comp=-1
-   chirn=((UI8)(*sp)[1]<<31)+((chirn>>(type&1?nodeb&0xff:0))&_bzhi_u64(~(UI8)1,nodeb));  // extract selected child (type 0=L)
+   comp=1-2*(type&1);  // if L-to-R, stack R and go to L descendant: comp=1
   }
   // No match.  drop down to next node.
-  res1[1+comp]=sp;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted
-  ++sp;  // advance sp to next empty slot, which we will fill presently
+  if(type&2)res1[1+comp]=nodex; else res1[1+comp]=zx++;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted.   advance sp to next empty slot, which we will fill presently
+  nodex=((chirn>>(comp&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));
  }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
- // falling through, there was no match.  Take the last value that is > min
- *flags|=(*flags>>GETKVK2X);   // indicate that we should include endpoint, which does not match the key
- sp=res1[1+1];  //  the last (i. e. smallest) key > k01 is in slot 1.  remember sp+1 for starting node
+ // falling through, there was no match.  Take the last value that was on the correct side
+ *flags|=type&2?MGETFLGEQ1:MGETFLGEQ0;   // indicate that we should include appropriate endpoint, which does not match the key
    // indicate we should out the first key (since it isn't the min)
    // if all comparisons were <, k0 > entire tree, nothing to return, sp will be unchanged
-match:;   // here when match, with sp set from the push of the matching node
- R sp;
-errexit: R 0;  //
+ R res1[2-2*(type&1)];   // (mode0) result: sp slot of node; (mode1) nodex of node 
+errexit: R -1;  //
 }
 
-// scan n values from the starting point, in the direction of the stack, moving node#s to the result list res
-// bits of type indicate options:
-//  1 - stack direction (0 means >=, L-to-R).  If 1, convert the stack to L-to-R
-// result is number of values moved to start or end of list
-// result of 0 indicates other error
-static INLINE I scantree(I type,J jt,C *hashtbl, UI4 (*sp)[2], I *flags, I *res, I n){
- R 0;
+// scan n values from the starting point, in the direction of the stack, moving node#s to the result list res (mode=0)
+// OR scan till nodex matches n (mode=1)
+// bits of dir indicate options:
+//  1 - stack direction (0 means >=, L-to-R, 1 means R-to-L).
+// result is number of values moved to start of list; -1 if error
+static INLINE UI scantree(I dir,I mode,J jt,C *hashtbl, UI4 (*sp)[2], I *flags, I nodeb, UI4 **res, UI nkvrq, UI endx){
+ UI zx=0;  // number of values moved
+ if((mode||nkvrq)==0)goto endscan;  // quit if 0 items requested
+ DSOC(nodex)   // declare nodexs, nodexo
+ UI nodex=(*sp)[0]; nodexo=(*sp)[1];   // read the starting node and its distal child
+ if(*flags&MGETFLGEQ0)goto startmin; else goto startminex;  // Start moving distal.  If we should out the min node, go there; otherwise to where we handle distal side
+ while(1){  // till we hit node >= max
+  // (*sp)[0] is nodex; nodexo is its distal child
+  while(1){  // go down the medial children, pushing onto the stack
+   RSOC(nodex,nodex,dir);  // read children, in same & opp direction
+   if(nodexs<(TREENRES<<1))break;  // exit loop when no medial child
+   PREFETCH(&hashtbl[nodexo*(nodeb>>24)]);   // prefetch the distal side of tree, which we will return to presently
+   (*sp)[0]=nodex; (*sp)[1]=nodexo; nodex=nodexs; ++sp;  // push return, advance to left child
+  }
+  // no more medial children.
+  while(1){  // process middle and distal nodes
+   // nodex is a middle node, with nodexo as distal child
+   if(zx+8*SZI/4==(LOWESTBIT(zx+8*SZI/4)&-(8*SZI))){  // if current allocation exceeded...  (when size+header size is a power of 2, at least 8*SZI - VIRT holds 32 Is, which is 32/64 UI4s)
+      // we could avoid the test if we allocated the max value given by the user, but he might give a very high value
+    A zia; GATV0E(zia,INT4,zx+zx+8*SZI/4,1,goto exiterr); MC(I4AV1(zia),*res,zx*4); *res=I4AV1(zia);  // double & copy
+   }
+startmin:;  // enter first time going distal only
+   // out the middle node
+   (*res)[zx]=nodex;  // put the node out, in order, advance to next slot
+// obsolete    PREFETCH(pfv+(nodex>>1)*pfb);  // prefetch the kv to be (possibly) moved
+   // finish when we have written enough
+   if(mode==1&&nodex==endx){zx+=!!(*flags&MGETFLGEQ1); goto endscan;}  // check last node; accept last node if not suppressed
+   ++zx;  // accept any non-last node
+   if(zx==nkvrq)goto endscan;  // quit when we have written the requested # values
+startminex:;  // enter first time when first node is suppressed.  We know that is not also the end node
+   if(nodexo>=(TREENRES<<1)){nodex=nodexo; break;}  // if there is a right child, enter it
+   // No right child, we must pop.  If the previous right child matches our nodex, we are returning to the right side
+   do{
+    --sp;  // pop back
+    nodexs=nodex;  // save nodex for test
+    nodex=(*sp)[0]; nodexo=(*sp)[1];  // restore nodex/nodexx for distal-side processing in caller
+    if(mode==0&&unlikely(nodex<TREENRES))goto endscan;  // if there aren't N values, we might pop off top-of-stack.  Can't happen if seaching for end node, which must exist
+   }while(nodexs==nodexo);  // if called from distal side, end the call and try up one level; if from left, continue through loop to process the middle and right nodes of caller
+  }
+  // we fall through to here to return from a left-side call
+ }
+endscan:;   // come here when we exnounter the end node, possibly without looking at anything
+ // finished, zx having the count
+ R zx;
+exiterr: R -1;
 }
 
-// The basic operations are
-//  traverse looking for key, keeping stack
-//    variants: stack direction, indicating which search direction is supported using this stack
-//              no stack
-//              no compare (result inferred from direction)
-//  scan up looking for node > key
-//  scan from found key, counting n items, possibly converting stack from L to R
-//  scan forward to produce result, given left & right nodes
-
-// k is A for key0,:key1, flags is (return k, return v, include key-0, include k-end)
-// We take a read lock on the table and release it
-// virt is used as virtuals for compare, and then repurposed to hold indexes of kvs to be copied
-// htct is used in to indicate the desired length of head/tail
-//
-// variants:
-// 2key       traverse stackR to find smallest value >= key      traverse no stack to find largest value <= key
-
-// 1key all < traverse stackR to find smallest value             traverse no stack to find largest value <= key
-// 1key N <   traverse stackL to find largest value <= key       scan L N items, changing stack from L to R
-// 1key 1 <   traverse stackL to find largest value <= key       scan L 0-1 item                                               end=start
-// 1key all > traverse stackR to find smallest value >= key      traverse no stack to find largest value
-// 1key N >   traverse stackR to find smallest value >= key      scan R N items
-// 1key 1 >   traverse stackR to find smallest value >= key      scan R 0-1 item                                               end=start
-
-// 0key N >   traverse stackR to find smallest value             scan R N items unless n=1
-// 0key N <   traverse stackL to find largest value              scan L N items, changing stack from L to R   unless n=1
-
-static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt,I htct){I i;
+#if 0  // obsolete
+static INLINE A jtmgetslotso(DIC *dic,void *k,I flags,J jt,VIRT virt,I htct){I i;
  PROLOG(000);
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
@@ -1419,8 +1430,8 @@ static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt,I htct){I 
  rstack[0][0]=rstack[0][1]=0;  // top of stack is the empty-tree pointer
  res1[1+1]=0;  // init 'stack at first key' to 0 (invalid).  If it is still there after the search there were no valid keys
  I sp=1; // sp points to last valid stack entry+1
- cf=(flags&GETKVK2+GETKVFLGGT)==0?alwaysgt:cf;  // if we are looking for the min values (below the given key), use routine that always says tree key>threshold.  This is < a single key, or head
- cf=(flags&GETKVK0+GETKVFLGGT)==GETKVK0+GETKVFLGGT?alwayslt:cf;  // if looking for max values (only if tail), use routine that says tree key<threshold  
+ cf=(flags&MGETK2+MGETFLGGT)==0?alwaysgt:cf;  // if we are looking for the min values (below the given key), use routine that always says tree key>threshold.  This is < a single key, or head
+ cf=(flags&MGETK0+MGETFLGGT)==MGETK0+MGETFLGGT?alwayslt:cf;  // if looking for max values (only if tail), use routine that says tree key<threshold  
  // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
  // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
  // This search builds the parent list and is always for the left side of the interval
@@ -1437,20 +1448,20 @@ static INLINE A jtgetkvslotso(DIC *dic,void *k,I flags,J jt,VIRT virt,I htct){I 
   ++sp;  // advance sp to next empty slot, which we will fill presently
  }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
  // falling through, there was no match.  Take the last value that is > min
- flags|=(flags>>GETKVK2X);   // indicate that we should include left endpoint, which does not match the key
+ flags|=(flags>>MGETK2X);   // indicate that we should include left endpoint, which does not match the key
  sp=res1[1+1];  //  the last (i. e. smallest) key > k01 is in slot 1.  remember sp+1 for starting node
    // indicate we should out the first key (since it isn't the min)
  if(unlikely(sp==0))goto retempty;  // if all comparisons were <, k0 > entire tree, nothing to return
 match:;   // here when match, with sp set from the push of the matching node
 
  UI endx;  // will be the endpoint of the interval
- if(!(flags&GETKVK0)){  // if 1 or 2 keys, we have to search the right side
+ if(!(flags&MGETK0)){  // if 1 or 2 keys, we have to search the right side
   // Not head/tail mode.
   // rstack[sp] holds (startx,startxr).  We will go up from there, stopping when we reach the max.  We would like to avoid
   // comparing against the max at every node, so we go up the stack looking for the lowest level that is >=max.  Since we expect that a single request will return
   // a small fraction of the tree, this shouldn't take long and will be faster than searching from the top of the tree down.
 
-  k01+=((kib&-(flags&GETKVK2))>>32);   // from now on, comparisons are against max key, if there are 2 keys
+  k01+=((kib&-(flags&MGETK2))>>32);   // from now on, comparisons are against max key, if there are 2 keys
 
   UI dstartx; I sp1;  // will be starting point for downward search, holding the highest stacked node index <= max; stack pointer+1 when nodex was the current node
   for(nodex=rstack[sp][0],sp1=sp;sp1>0;sp1--){   // do not look at sp=0, which is 0
@@ -1464,7 +1475,7 @@ match:;   // here when match, with sp set from the push of the matching node
   if(unlikely(sp1==sp))goto retempty;  // if startx was > max, there are no keys in the range
 
   nodex=dstartx;  // revert to search-down point, known to be <= max; we know end-of-region will be in a subtree of this node
-  cf=dic->bloc.compfn; cf=(flags&GETKVK1+GETKVK2+GETKVFLGTAIL)==0?alwaysgt:cf; cf=(flags&GETKVK2+GETKVFLGTAIL)==GETKVFLGTAIL?alwayslt:cf;  // if we are looking for min or max, set compare function . gt if head, lt if tail or 1key-gt, otherwise normal comp
+  cf=dic->bloc.compfn; cf=(flags&MGETK1+MGETK2+MGETFLGTAIL)==0?alwaysgt:cf; cf=(flags&MGETK2+MGETFLGTAIL)==MGETFLGTAIL?alwayslt:cf;  // if we are looking for min or max, set compare function . gt if head, lt if tail or 1key-gt, otherwise normal comp
   // The stack contained values that were tested and found to be > min.  We have gone up, finding the highest-up such value that is <= max.  That is the start point dstartx.
   //  We will be on the correct half of the tree, at least.  Find the ending node.  No stacking required
   while(1){  // traverse the tree, searching for index k.  Current node is nodex
@@ -1477,8 +1488,8 @@ match:;   // here when match, with sp set from the push of the matching node
   }
   // fall through: no match: use the last node where node key was < max (i. e. comp=-1 except when 1key-lt)
   // (note: always(lt|gt) compares never match) 
-  comp=(flags&GETKVK2+GETKVFLGTAIL)==0?1:-1;  // -1 means last key < max; 1 means last key > max, used only for upper bound of left-wise compare
-  flags|=GETKVFLGEQ1;   // no match: flag that we should keep the end node.  Pun: for 2key this is EQ1; for 1key it is EQ; for tail it is immaterial since EQ was forced earlier
+  comp=(flags&MGETK2+MGETFLGTAIL)==0?1:-1;  // -1 means last key < max; 1 means last key > max, used only for upper bound of left-wise compare
+  flags|=MGETFLGEQ1;   // no match: flag that we should keep the end node.  Pun: for 2key this is EQ1; for 1key it is EQ; for tail it is immaterial since EQ was forced earlier
  matchdown:;  // come here when comp=0, meaning exact match
    endx=res1[1+comp];  // remember last node in result
   }else{
@@ -1487,25 +1498,25 @@ match:;   // here when match, with sp set from the push of the matching node
    if(htct>1){  // if more than 1, find the end
     // Searching for a head/tail of length>1.  We consider this case rare so we use a slower recursive traversal for the countoff.  We start somewhere up the stack, far enough that we know the requested section is inside
     I sp2=sp-2*(CTLZI(htct+1)+1); sp2=MAX(sp2,1);  // sp2 is a stack pointer (never higher than the root) whose subtree is big enough to hold htct keys
-    I lastnode; travn(flags&GETKVFLGTAIL?1:0, hashtbl, nodeb, rstack[sp][0], htct, rstack, &sp2, &lastnode);  // set sp2 and lastnode from the nth-smallest/largest value
-    sp=flags&GETKVFLGTAIL?sp2:sp; endx=flags&GETKVFLGTAIL?endx:lastnode;  // tail goes from (travn result) to (end of first trav); head goes from (end of first trav) to (travn result)
+    I lastnode; travn(flags&MGETFLGTAIL?1:0, hashtbl, nodeb, rstack[sp][0], htct, rstack, &sp2, &lastnode);  // set sp2 and lastnode from the nth-smallest/largest value
+    sp=flags&MGETFLGTAIL?sp2:sp; endx=flags&MGETFLGTAIL?endx:lastnode;  // tail goes from (travn result) to (end of first trav); head goes from (end of first trav) to (travn result)
    }
-   cf=flags&GETKVFLGTAIL?alwayslt:alwaysgt; flags|=GETKVFLGEQ;   // head/tail.  Set compare function to go down left or right of tree as appropriate; force EQ flag
+   cf=flags&MGETFLGTAIL?alwayslt:alwaysgt; flags|=MGETFLGEQ;   // head/tail.  Set compare function to go down left or right of tree as appropriate; force EQ flag
   }
 
  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp  // comparisons finished, prepare for copying
- flags^=(0b00010010>>((flags&GETKVFLGGT+GETKVFLGEQ)<<1))&(flags&GETKVK1?3:0);  // in 1-key, transfer the /EQ flag to wherever the key is 00->10 01->01 1x->11
+ flags^=(0b00010010>>((flags&MGETFLGGT+MGETFLGEQ)<<1))&(flags&MGETK1?3:0);  // in 1-key, transfer the /EQ flag to wherever the key is 00->10 01->01 1x->11
 
  // as we find the key indexes to return, prefetch key/value
- C *pfv=flags&GETKVFLGK?kbase:vbase; I pfb=flags&GETKVFLGK?(kib>>32):vb;   // base/stride for prefetch, keys if keys are written, else values
+ C *pfv=flags&MGETFLGK?kbase:vbase; I pfb=flags&MGETFLGK?(kib>>32):vb;   // base/stride for prefetch, keys if keys are written, else values
 
  // scan the tree/stack, starting at startx, and stopping when we get to endx.  sp points to nodex, so we will return to nodex's caller.  We will enter looking at nodex itself, as if the left side just returned
  UI4 *ziv=(UI4*)&virt; I zx=0;  // Repurpose virt area to store node#, used if there aren't many kvs; index of next slot in area
  // nodex is the node scan through the loop
  DLRC(nodex)
  nodex=rstack[sp][0]; nodexr=rstack[sp][1];    // init to first found node.   sp still holds its stackpos.  We don't need nodexl
- if(unlikely(nodex==endx)&&(flags&GETKVFLGEQ0+GETKVFLGEQ1)!=GETKVFLGEQ0+GETKVFLGEQ1)goto endscan;  // special case when there is only one node: if either boundary flag is clear (indicating indicating the boundary node should be elided), reject both boundaries for fast bypass
- if(flags&GETKVFLGEQ0)goto startmin; else goto startminex;  // Start moving right.  If we should out the min node, go there; otherwise to where we handle right side
+ if(unlikely(nodex==endx)&&(flags&MGETFLGEQ0+MGETFLGEQ1)!=MGETFLGEQ0+MGETFLGEQ1)goto endscan;  // special case when there is only one node: if either boundary flag is clear (indicating indicating the boundary node should be elided), reject both boundaries for fast bypass
+ if(flags&MGETFLGEQ0)goto startmin; else goto startminex;  // Start moving right.  If we should out the min node, go there; otherwise to where we handle right side
  while(1){  // till we hit node >= max
   while(1){  // go down the left children, pushing onto the stack
    RLRC(nodex,nodex);  // read children
@@ -1524,7 +1535,7 @@ startmin:;  // enter first time going right only
    ziv[zx]=nodex;  // put the node out, in order
    PREFETCH(pfv+(nodex>>1)*pfb);  // prefetch the kv to be (possibly) moved
    // finish when we out the ending node
-   if(nodex==endx){zx+=!!(flags&GETKVFLGEQ1); goto endscan;}  // accept last node if not suppressed
+   if(nodex==endx){zx+=!!(flags&MGETFLGEQ1); goto endscan;}  // accept last node if not suppressed
    ++zx;  // not end: accept the node
 startminex:;  // enter first time when first node is suppressed.  We know that is not also the end node
    if(nodexr>=(TREENRES<<1)){nodex=nodexr; break;}  // if there is a right child, enter it
@@ -1543,19 +1554,19 @@ endscan:;   // come here when we exnounter the end node, possibly without lookin
 
  // allocate the result(s), and run through the indexes, copying
  A zak=0, zav=0; I zn=zx;  // result keys, values; number of results
- if(flags&GETKVFLGK){  // if user wants keys
+ if(flags&MGETFLGK){  // if user wants keys
   GAE0(zak,dic->bloc.ktype,dic->bloc.kaii*zn,1+AN(dic->bloc.kshape),goto exitkeyvals) AS(zak)[0]=zn; MCISH(&AS(zak)[1],IAV1(dic->bloc.kshape),AN(dic->bloc.kshape)) C *zv=CAVn(1+AN(dic->bloc.kshape),zak);  // allocate result
   nodex=ziv[0];  // 1 unroll
   for(zx=0;zx<zn;++zx){  // for each node in result
    UI nextx=ziv[zx+1];  // unroll loop.  1 overfetch OK
    GETV(zv,kbase+(kib>>32)*(nodex>>1),kib>>32,nodeb&(DICFKINDIR<<8)); zv=(void *)((I)zv+(kib>>32));   // move the data & advance pointer to next one   scaf JMC?
-   if(flags&GETKVFLGV)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
+   if(flags&MGETFLGV)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
    nodex=nextx;  // advance to next
   }
  }
  DICLKRDRELK(dic,lv)   // release our lock on keys
 
- if(flags&GETKVFLGV){  // if user wants values... 
+ if(flags&MGETFLGV){  // if user wants values... 
   GAE0(zav,dic->bloc.vtype,dic->bloc.vaii*zn,1+AN(dic->bloc.vshape),goto exitvals) AS(zav)[0]=zn; MCISH(&AS(zav)[1],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(1+AN(dic->bloc.vshape),zav);  // allocate result
   DICLKRDWTV(dic,lv)   // wait for values to be ready
   nodex=ziv[0];  // 1 unroll
@@ -1568,12 +1579,11 @@ endscan:;   // come here when we exnounter the end node, possibly without lookin
  DICLKRDRELV(dic,lv)   // release our lock on values 
 ret:;  // assemble & return result
  A z; if(zak==0||zav==0)z=(A)((I)zak+(I)zav); else z=jlink(zak,box(zav));  // return what was requested
- EPILOG(z);
 
 retempty:;  // empty result
  zak=zav=0;  // 0 if not requested
- if(flags&GETKVFLGK)RZGOTO(zak=from(mtv,dic->bloc.keys),exitkeyvals)  // '' { keys
- if(flags&GETKVFLGV)RZGOTO(zav=from(mtv,dic->bloc.vals),exitkeyvals)  // '' { values
+ if(flags&MGETFLGK)RZGOTO(zak=from(mtv,dic->bloc.keys),exitkeyvals)  // '' { keys
+ if(flags&MGETFLGV)RZGOTO(zav=from(mtv,dic->bloc.vals),exitkeyvals)  // '' { values
  DICLKRDRELKV(dic,lv)   // release lock on keys & values
  goto ret;
 
@@ -1581,33 +1591,154 @@ exitvals:; DICLKRDRELV(dic,lv)  R 0;  // release lock & exit
 exitkeyvals:; DICLKRDRELKV(dic,lv)  R 0;  // release lock & exit
   
 }
+#endif
 
+#define PLISTS1 0x3  // mask of stacked cmd
+#define S1LRCMP 0
+#define S1LRMIN 1
+#define S1RLCMP 2
+#define S1RLMAX 3
+#define PLISTS2 0xc  // mask of stacked cmd
+#define S2CMP 4
+#define S2LR 8
+#define S2RL 12
 
-//   getkv.   Bivalent. w is k0,:kn, a is flags (#. k,v,min,max).  Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
-static DF2(jtdicgetkvo){F12IP;A z;I htct=1;  // length of head/tail, specified by user
+//   mget.    Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
+// Forms: a=flags, w=list of 2 keys   flags are k v eq1 eq0
+//          a=(flags,count) w=1 key    flags are k v x eq  count is # keys, -1 for all
+//                          w= flags[,count]  flags are k v x x  count is # items wanted, +=head, -=tail (default +1)
+static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  ARGCHK2(a,w)
- I flags=0b1111;  // processing flags k,v,min,max
- if(w==self){w=a; // monad, keep default
- }else{   // extract for dyad
-  ASSERT(AR(a)<=1,EVRANK) ASSERT(AN(a)<=4,EVLENGTH) if(unlikely(!(AT(a)&B01)))RZ(ccvt(B01,a,0))   //  convert to binary list, length <= 4
-  DO(AN(a), flags&=~((BAV(a)[i]^1)<<i);)  // if bit i is 0, turn that bit off in flags
- }
- DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(likely(dic->bloc.vbytelen!=0)||!(flags&2),EVDOMAIN)
- if(AR(w)==0){   // w is an atom
-  RE(htct=i0(w)) ASSERT(htct>0,EVDOMAIN) ASSERT(0,EVNONCE) flags|=GETKVK0;  // indic 0 key
- }else{
-  ASSERT(AR(w)==kr+1,EVRANK) ASSERT(BETWEENC(AS(w)[0],1,2),EVLENGTH) flags|=(AS(w)[0]^3)<<GETKVK2X; ASSERTAGREE(AS(w)+1,ks,kr) ASSERT(AS(w)[0]==2,EVNONCE)
-    // can't read values if they are empty; w must be a list of 1 or 2 keys, with correct shape
-  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
- }
+ PROLOG(000);
 
- VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ UI nkvrq;  // number of kvs requested for 0key/1key.  -1 is MAX
+ I flags;  // processing flags k,v,min,max
+ void *k;  // will point to key if any
+ DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ I plist;  // operation sequence for this request
+ if(w!=self){ // dyad
+  k=voidAV(w);  // point to key data
+  if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0))   // force to int
+  ASSERT(AR(a)<=1,EVRANK)   // must be singleton or 2-list
+  flags=IAV(a)[0];
+  nkvrq=IAV(a)[1];  // get #items requested, if valid
+  if(AR(w)>AN(dic->bloc.kshape)){  // 2 keys
+   ASSERT(AR(w)==AN(dic->bloc.kshape)+1,EVRANK)  // list of 2 keys
+   ASSERT(AS(w)[0]==2,EVLENGTH)  // exactly 2 keys
+   plist=S1LRCMP+S2CMP;  // plist for 2keys: compare each key, convert to node#
+   nkvrq=AN(a)==2?nkvrq:~0;  // default request length to 'no limit'
+  }else{  // 1 key
+   plist=flags&MGETFLGGT?S1LRCMP+S2LR:S1RLCMP+S2RL;  // plist for 1key: compare for the first, count for the second
+   nkvrq=AN(a)==2?nkvrq:1;  // default request to 1 (head), otherwise leave signed with -1 meaning 'no limit'
+  } 
+  ASSERTAGREE(AS(w)+AR(w)-AN(dic->bloc.kshape),ks,kr)  // verify correct shape of key
+ }else{w=a;   // monad
+  if(unlikely(!(AT(w)&INT)))RZ(w=ccvt(INT,w,0))   // force to int
+  ASSERT(AR(w)<=1,EVRANK) ASSERT(BETWEENC(AN(w),1,2),EVLENGTH)  // must be singleton or 2-list
+  flags=IAV(w)[0];   // get flags
+  ASSERT((flags&MGETFLGEQ0+MGETFLGEQ1)==0,EVDOMAIN)   // eq flags not allowed
+  I htct=AN(w)==2?IAV(w)[1]:1; nkvrq=ABS(htct);  // get length (default 1); length of head/tail as #items requested
+  plist=htct>=0?S1LRMIN+S2LR:S1RLMAX+S2RL;  // plist for 0key: find min/max, then count
+ }
+ ASSERT((flags&~15)==0,EVDOMAIN) ASSERT((flags&MGETFLGK+MGETFLGV)!=0,EVDOMAIN)  // no extra flag bits, and must be asking for k or v or both
+ ASSERT(likely(dic->bloc.vbytelen!=0)||!(flags&MGETFLGV),EVDOMAIN)  // If values are empty, can't read them
  
- void *k=voidAV(w);  // point to the key data.  tree may be empty
- z=jtgetkvslotso(dic,k,flags,jt,virt,htct);  // get the values and take a read lock on the dic.  If error, pass error through
- RETF(z);
+ VIRT virt;  // place for virtuals (needed by user comp fns)
+ 
+ UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
+ if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
+ UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;  // more nonresizable: kbytelen/kitemlen   compare fn  prototype required to get arg converted to I
+ I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);  // number of bytes in a tree node; (#bytes in node index)\(#bytes in empty-chain field\(flags)\(number of bits in a node index)
+ DICLKRDWTK(dic,lv)   // wait for it to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
+ if(unlikely(nkvrq==0))goto retempty;     // if nothing request, return 0 items
+
+ C *hashtbl=CAV3(dic->bloc.hash);  // pointer to tree base
+ C *kbase=CAV(dic->bloc.keys)-TREENRES*(kib>>32);  // address corresponding to tree value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
+ C *vbase=CAV(dic->bloc.vals)-TREENRES*vn;  // address corresponding to tree value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
+ I vb=dic->bloc.vbytelen;   //  len of 1 value
+
+ // Step 1 - read & create stack
+ UI4 stack[64][2];  // stack we will use.  has node and node's distal child (i. e. for LR scan, distal=R)
+ I sx;  // index into stack.  On return from first scan, points to the stack entry for the found node
+ switch(plist&PLISTS1){
+ case S1LRCMP: sx=searchtree(0,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // LR search for starting node
+ case S1LRMIN: sx=searchtree(4,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // LR search for minimum node
+ case S1RLCMP: sx=searchtree(1,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // RL search for starting node
+ case S1RLMAX: sx=searchtree(5,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // RL search for maximum node
+ }
+ if(unlikely(sx<=0)){if(sx==0)goto retempty; goto exitkeyvals;}  // empty database or error
+
+ // Step 2 - search or scan to get list of kvs to copy
+ // establish the area where node#s are stored.  We reuse the virt area if possible
+ UI4 *nodens=(UI4*)&virt;  // pointer to area where the list of nodes will be stored.  Can be modified by scantree if reallocated
+ UI nkvs;  // number of kvs in result
+ switch(plist&PLISTS2){
+ case S2CMP:  // LR search for ending node, followed by scan to produce list of node#s
+  k=(void *)((I)k+(kib>>32));
+  UI nodex; I sx1;  // will be starting point for downward search, holding the highest stacked node index <= max; stack pointer+1 when nodex was the current node
+  for(nodex=stack[sx][0],sx1=sx;sx1>0;sx1--){   // do not look at sx=0, which is 0
+   UI nextx=stack[sx1-1][0];  // unroll 1 loop - parent of nodex
+   I comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k,nodeb&(DICFICF<<8),exitkeyvals);  // compare node key vs k01 (max), so node > max is 1
+   if(comp>0)break;  // stop when node > max.  If node=max, we want to start on it, so we go 1 more turn
+   PREFETCH(&hashtbl[stack[sx1][1]*(nodeb>>24)]);  // prefetch right side on the way up
+   nodex=nextx;  // advance to next
+  }
+  if(unlikely(sx1==sx))goto retempty;  // if startx was > max, there are no keys in the range
+  // nodex, which is stack[sx1][0], is > max.  That means we can start searching for the largest node at stack[sx1+1][0]
+  I endx=searchtree(3,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack+sx1+1,&flags,k); if(endx<0)goto exitkeyvals; // LR search for ending node, no stack.  Start of search is stack[sx1+1][0]
+  nkvs=scantree(0,1,jt,hashtbl,stack+sx,&flags,nodeb,&nodens,nkvrq,endx); break;   // LR scan from stack[sx][0] to nkvrq, creating list of nodes
+ case S2LR: nkvs=scantree(0,0,jt,hashtbl,stack+sx,&flags,nodeb,&nodens,nkvrq,-1); break;   // LR scan for N values
+ case S2RL:
+  nkvs=scantree(1,0,jt,hashtbl,stack+sx,&flags,nodeb,&nodens,nkvrq,-1);  // RL scan for N values
+  DO((I)nkvs>>1, UI4 t=nodens[i]; nodens[i]=nodens[nkvs-1-i]; nodens[nkvs-1-i]=t;)  //reverse to LR order
+  break;
+ }
+ if(unlikely((I)nkvs<=0)){if(nkvs==0)goto retempty; goto exitkeyvals;}  // empty result or error
+
+
+ // step 3 - copy the kvs
+ // allocate the result(s), and run through the indexes, copying
+ A zak=0, zav=0;  // result keys, values; number of results
+ if(flags&MGETFLGK){  // if user wants keys
+  GAE0(zak,dic->bloc.ktype,dic->bloc.kaii*nkvs,1+AN(dic->bloc.kshape),goto exitkeyvals) AS(zak)[0]=nkvs; MCISH(&AS(zak)[1],IAV1(dic->bloc.kshape),AN(dic->bloc.kshape)) C *zv=CAVn(1+AN(dic->bloc.kshape),zak);  // allocate result
+  UI zx,nodex=nodens[0];  // 1 unroll
+  for(zx=0;zx<nkvs;++zx){  // for each node in result
+   UI nextx=nodens[zx+1];  // unroll loop.  1 overfetch OK
+   GETV(zv,kbase+(kib>>32)*(nodex>>1),kib>>32,nodeb&(DICFKINDIR<<8)); zv=(void *)((I)zv+(kib>>32));   // move the data & advance pointer to next one   scaf JMC?
+   if(flags&MGETFLGV)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
+   nodex=nextx;  // advance to next
+  }
+ }
+ DICLKRDRELK(dic,lv)   // release our lock on keys
+
+ if(flags&MGETFLGV){  // if user wants values... 
+  GAE0(zav,dic->bloc.vtype,dic->bloc.vaii*nkvs,1+AN(dic->bloc.vshape),goto exitvals) AS(zav)[0]=nkvs; MCISH(&AS(zav)[1],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(1+AN(dic->bloc.vshape),zav);  // allocate result
+  DICLKRDWTV(dic,lv)   // wait for values to be ready
+  UI zx,nodex=nodens[0];  // 1 unroll
+  for(zx=0;zx<nkvs;++zx){  // for each node in result
+   UI nextx=nodens[zx+1];  // unroll loop.  1 overfetch OK
+   GETV(zv,vbase+vb*(nodex>>1),vb,nodeb&(DICFVINDIR<<8)); zv=(void *)((I)zv+vb);   // move the data & advance pointer to next one   scaf JMC?
+   nodex=nextx;  // advance to next
+  }
+ }
+ DICLKRDRELV(dic,lv)   // release our lock on values 
+ret:;  // assemble & return result
+ A z; if(zak==0||zav==0)z=(A)((I)zak+(I)zav); else z=jlink(zak,box(zav));  // return what was requested
+ EPILOG(z)
+
+retempty:;  // empty result
+ zak=zav=0;  // 0 if not requested
+ if(flags&MGETFLGK)RZGOTO(zak=from(mtv,dic->bloc.keys),exitkeyvals)  // '' { keys
+ if(flags&MGETFLGV)RZGOTO(zav=from(mtv,dic->bloc.vals),exitkeyvals)  // '' { values
+ DICLKRDRELKV(dic,lv)   // release lock on keys & values
+ goto ret;
+
+exitvals:; DICLKRDRELV(dic,lv)  R 0;  // release lock & exit with error
+exitkeyvals:; DICLKRDRELKV(dic,lv)  R 0;  // release lock & exit with error
+  
+
 }
+
 
 // ********************************** put **********************************
 
@@ -1725,7 +1856,7 @@ static DF2(jtdicputo){F12IP;
  // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
  // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
 
- VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ VIRT virt;  // place for virtuals (needed by user comp fns)
 
 // obsolete printf("put prerwrq, lk=0x%016llx\n",AM((A)dic));  // scaf
  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
@@ -1735,8 +1866,10 @@ static DF2(jtdicputo){F12IP;
 // obsolete   if((kn<=(I)(offsetof(VIRT,self)%8))>(~dic->bloc.flags&DICFICF))s=(I8*)&virt;  // if the workarea will fit into virt, and we don't need virt for compare fns, use it.  virt.self is available for overfetch
 // obsolete   else{A x; GATV0E(x,FL,kn,1,goto abortexit;) s=(I8*)voidAV1(x);}   // allocate a region.  FL is 8 bytes
 // obsolete     // we have to reinit s in the resize loop because putslots may have modified it
- 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
   lv=jtputslotso(dic,k,kn,v,vn,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; if no resize, finish, good or bad
+#pragma clang diagnostic pop
 // obsolete printf("after putslotso, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
   if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
@@ -1919,7 +2052,7 @@ static DF1(jtdicdelo){F12IP;
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a 32-bit index with LSB=0
 
- VIRT virt; virt.self=dic->bloc.hashcompself;  // place for virtuals (needed by user comp fns); key/hash workarea; fill in self pointer
+ VIRT virt;  // place for virtuals (needed by user comp fns)
 
 // obsolete printf("del prerwrq, lk=0x%016llx\n",AM((A)dic));  // scaf
  A z; GATVE(z,B01,kn,wf,AS(w),goto errexit;) C *zv=CAVn(wf,z); mvc(kn,zv,MEMSET01LEN,MEMSET01);   // allocate return area & init to 'all found'
@@ -1927,7 +2060,10 @@ static DF1(jtdicdelo){F12IP;
 // obsolete printf("del rwrq, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
  void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
   lv=jtdelslotso(dic,k,kn,jt,lv,virt,zv); if(lv==0)goto errexit; if(1||likely(!(lv&DICLMSKRESIZEREQ)))break; // do the dels; if no resize (not supported yet), finish, good or bad
+#pragma clang diagnostic pop
 // obsolete printf("del after delslotso, lv=%016llx lk=0x%016llx\n",lv,AM((A)dic));  // scaf
   dicresize(dic,jt);  // If we have to resize, we abort with the dels partially complete, and then retry, keeping the dic under lock the whole time
  }
@@ -1977,13 +2113,13 @@ DF1(jtdicdelc){F12IP;
  R fdef(0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicdel:jtdicdelo,jtvalenceerr, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
-// u 16!:_6  getkv: u=dic
+// u 16!:_6  mget: u=dic
 // We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF1(jtdicgetkvc){F12IP;
+DF1(jtdicmgetc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(((DIC*)w)->bloc.flags&DICFRB,EVDOMAIN)    // requires red/black tree
- R fdef(0,CMODX,VERB,jtdicgetkvo,jtdicgetkvo, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
+ R fdef(0,CMODX,VERB,jtdicmgeto,jtdicmgeto, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
 // x 16!:_5 dic   return list of empty keyslots.  If x=1, also delete the empty chainfields

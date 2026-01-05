@@ -207,9 +207,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result/emsg value
  // broadcast to wake up any tasks waiting for the result
  if(PYXWAIT==xchga((C*)&((PYXBLOK*)AAV0(pyx))->seqstate,PYXFULL))jfutex_wakea(&((PYXBLOK*)AAV0(pyx))->seqstate);
-// obsolete  // unprotect pyx.  It was raised when it was assigned to this owner; now it belongs to the system
-// obsolete fa(pyx);
- R 1;
+R 1;
 }
 
 // Allocate a pyx, marked as owned by (thread).  The tstack may have been hijacked (OK since we do just the 1 GA).  Set usecount to noninplaceable since it might be in a box at birth
@@ -456,8 +454,7 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
   // In this case we don't want to spin on this job, so we sleep till the next one.  If there is another block queued after this one, we clear AR in this job to indicate a request
   // for a kick when this job is removed from the queue
   if(unlikely(locbit&jobnsmask)){if(unlikely(jobnext!=0))AR(UNvoidAV1(job))=0; goto waitforkick;}  // req kick (by writing 0) only if there is another job.  Start waiting
-// obsolete  futexval=__atomic_load_n(&jobq->futex,__ATOMIC_ACQUIRE);
-  locbit=(I)jobn<0?locbit:1; job->ns_mask=jobnsmask+=locbit;   // increment task counter for next owner
+ locbit=(I)jobn<0?locbit:1; job->ns_mask=jobnsmask+=locbit;   // increment task counter for next owner
   JOB **writeptr=&jobq->ht[1]; writeptr=jobnext!=0?(JOB**)&jt->shapesink[0]:writeptr; writeptr=jobnsmask<jobn?(JOB**)&jt->shapesink[0]:writeptr; jobnext=jobnsmask<jobn?job:jobnext;  // calc head & tail ptrs
       // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns<jobn), divert write of tail; otherwise write the empty-queue value into tail.  If job finishing, set new headptr in jobnext
       // If this is a user job without locales, ns_mask is garbage but n=0, so jobns<jobn will never be true (because the vbls are unsigned).
@@ -488,9 +485,7 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
    A arg1=job->user.args[0],arg2=job->user.args[1],self=job->user.args[2];  // arg2=self if monad
    I initthread=job->initthread;  // extract thread# of thread that created the job
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish
-// obsolete    memcpy(jt,job->user.inherited,sizeof(job->user.inherited)); // copy inherited state; a little overcopy OK, cleared next
-// obsolete    memset(&jt->uflags.init0area,0,offsetof(JTT,initnon0area)-offsetof(JTT,uflags.init0area));    // clear what should be cleared - up to locsyms
-   // extract the address of the pyx and globals area from the job.  For a job with locales we have to get the value from the vectors
+  // extract the address of the pyx and globals area from the job.  For a job with locales we have to get the value from the vectors
    A pyx=UNvoidAV1(job)->mback.jobpyx; A startloc=UNvoidAV1(job)->kchain.global; // extract the pyx and globals pointer from the job
    if((I)jobn<0){  // user job with locales
     // this is a job with locales.  If we removed the job from the queue (mask=n), AND AR was 0 indicating that a thread is waiting for a kick, deliver the kick
@@ -503,11 +498,9 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
   // run the task, putting the starting locale into execution by raising & lowering the locale execct.  Bivalent
    jt->uflags.bstkreqd=1; INCREXECCTIF(startloc);  // start new exec chain; raise execcount of current locale to protect it while running
-// obsolete    I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; arg3=dyad?arg3:0;  // the call is either noun self self or noun noun self.  See which and select self.  Set arg3 to 0 if monad (we use it to free later)
-   jt->parserstackframe.sf=self;  // each thread starts a new recursion point
+  jt->parserstackframe.sf=self;  // each thread starts a new recursion point
    // Get the arg2/arg3 to use for u .  These will be the self of u, possibly repeated if there is no a
-// obsolete    A uself=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;  // get self, positioned after the last noun arg
-   A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // get self, positioned after the last noun arg
+  A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // get self, positioned after the last noun arg
    A *old=jt->tnextpushp;  // we leave a clear stack when we go
    // ***** this is where the user task is executed *******
    A z=(FAV(uself)->valencefns[arg2!=self])(jt,arg1,uarg2,uself);  // execute the u in u t. v
@@ -524,13 +517,11 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
    I taskended=0;  // 1 if this completion means the user task finished
    if(faprobe(UNvoidAV1(job))<2){  // if time to free...
     // we are the last (or only) thread using this job block.  Unprotect everything it protects, then free the job
-// obsolete   #fa(startloc);; remove the protection installed in taskrun()
-    // remove the ra() for the args that was issued to protect the args over the lifetime of this thread.  If the fa() results in freeing a virtual block,
+   // remove the ra() for the args that was issued to protect the args over the lifetime of this thread.  If the fa() results in freeing a virtual block,
     // we must also fa the backer.  This is different from the case of virtual args to explicit defns: there we know that the virtual arg is on the stack in the caller,
     // and will be freed from the stack, and thus that there is no chance that a virtual will be freed.  Here the caller has continued, and there may be nothing but this
     // virtual to hold the backer.  So, unlike in all other fa()s, we fa the backer if the virtual is freed.
-// obsolete     fa(UNvoidAV1(job)->mback.jobpyx) fa(UNvoidAV1(job)->kchain.global) faafterrav(arg1); faafterrav(arg2); if(arg3!=0)fa(arg3);  // unprotect args only after result has been safely installed
-    fa(UNvoidAV1(job)->mback.jobpyx) fa(UNvoidAV1(job)->kchain.global) faafterrav(arg1); if(arg2!=self)faafterrav(arg2); fanamedacv(self);  // unprotect args only after result has been safely installed
+   fa(UNvoidAV1(job)->mback.jobpyx) fa(UNvoidAV1(job)->kchain.global) faafterrav(arg1); if(arg2!=self)faafterrav(arg2); fanamedacv(self);  // unprotect args only after result has been safely installed
     mf(UNvoidAV1(job));  // free the job, which is never a recursive block
     taskended=1;  // if we free, we finished the task
    }
@@ -577,9 +568,7 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
  ARGCHK2(arg1,arg2);  // the verb is not the issue.
  A jobA;GAT0(jobA,INT,(sizeof(JOB)+SZI-1)>>LGSZI,1); ACINITUNPUSH(jobA);  // protect the job till it is finished
  JOB *job=(JOB*)AAV1(jobA);  // The job starts on the second cacheline of the A block.  When we free the job we will have to back up to the A block
-// obsolete  I dyad=!(AT(arg2)&VERB); A self=dyad?arg3:arg2; // the call is either noun self x or noun noun self.  See which, select self.  dyad is 0 or 1
-// obsolete // A self=AT(arg2)&VERB?arg2:arg3; // the call is either noun self self or noun noun self.  See which, select self.
- I taskflags=FAV(self)->localuse.lu1.forcetask, localesx=FAV(self)->localuse.lu1.forcetask>>16;  // flags: 0-7=pool, 8=workeronly, 9=mask0 set 10=locales given  16+=localesx (-1 if no locales)
+I taskflags=FAV(self)->localuse.lu1.forcetask, localesx=FAV(self)->localuse.lu1.forcetask>>16;  // flags: 0-7=pool, 8=workeronly, 9=mask0 set 10=locales given  16+=localesx (-1 if no locales)
  JOBQ *jobq=&(*JT(jt,jobqueues))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use, point to jobq info for selected thread
  // create the pyx/global info: if no locales, one pyx and the current jt->global; if locales, a list of pyxes and the user's list of locales.  We store these in the job.  They are what we ra and fa
  // Also fill in n, ns_mask
@@ -598,11 +587,8 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
   A *psv=jt->tnextpushp; jt->tnextpushp=AAV1(jobA->mback.jobpyx); DO(nlocs, if((p=jtcreatepyx(jt,-2,inf))==0)break;) jt->tnextpushp=psv;   // hijack tstack (see vo.c for discussion), allocate pyxes.  They have usecount 1, protected by the enclosing box.
   RZGOTO(p,errfajobA)   // exit if failure allocating a pyx
  }
-// obsolete  RZ(pyx=jtcreatepyx(jt,-2,inf));  // create pyx for the result, including ra().  threadid is not known yet
- // extract parms given to t.: threadpool number, worker-only flag
-// obsolete  UI forcetask=((FAV(self)->localuse.lu1.forcetask>>8)&1)-1;  // 0 if the user wants to force this job to queue, ~0 otherwise
-// obsolete  JOBQ *jobq=&(*JT(jt,jobqueues))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use
- UI forcetask=REPSGN((taskflags&0x500)-1);  // 0 if the user wants to force this job to queue (worker or locales specified), ~0 otherwise
+// extract parms given to t.: threadpool number, worker-only flag
+UI forcetask=REPSGN((taskflags&0x500)-1);  // 0 if the user wants to force this job to queue (worker or locales specified), ~0 otherwise
  if((((I)(forcetask&lda(&jobq->nuunfin))-jobq->nthreads)&(lda(&JT(jt,systemlock))-3))<0){  // more workers than unfinished jobs (ignoring # unfinished if forcetask was requested) - fast look
     // in suspension (systemlock state>2) we do not start any task anywhere
   // We will probably start the job, failing to do so only if another thread beats us to it.  Do anything costly before taking the lock.  And, once we start the job the JOB block is unreliable, so take out anything needed from there
@@ -640,12 +626,10 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
     A pyx=AAV1(ppyx)[0], startloc=jtfindnl(jt,IAV(ploc)[0]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)  // get pyx (AAV1 ok) and locale#; convert locale# to globals address
     ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
     A savlocsyms=jt->locsyms,savglobal=jt->global;jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK;  // init what needs initing.  Notably clear the local symbols
-// obsolete     jt->uflags.bstkreqd=1;
-    INCREXECCTIF(startloc);  // start new exec chain; raise execcount of current locale to protect it while running
+   INCREXECCTIF(startloc);  // start new exec chain; raise execcount of current locale to protect it while running
     jt->parserstackframe.sf=self;  // each thread starts a new recursion point
     A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // get self, positioned after the last noun arg
-// obsolete     A *old=jt->tnextpushp;  // we leave a clear stack when we go
-    A z=(FAV(uself)->valencefns[arg2!=self])(jt,arg1,uarg2,uself);  // execute the u in u t. v
+   A z=(FAV(uself)->valencefns[arg2!=self])(jt,arg1,uarg2,uself);  // execute the u in u t. v
     DECREXECCTIF(jt->global); SYMRESTORELOCALGLOBALS(savlocsyms,savglobal);  // remove exec-protection from finishing exec chain.  This may result in its deletion.  Reset symbol tables too (note there may be no locals & we have changed only globals)
     C errcode=0;
     if(unlikely(z==0)){fail: z=0; errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualERR(z,goto fail;);}  // realize virtual result before returning it
@@ -655,13 +639,11 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
 
  // No thread for the job.  Run it here
   }else{JOBUNLOCK(jobq,oldjob); fa(ploc)}  // return lock if there is no task to take the job, and undo the increment of the locale.  ppyx was not raised
-// obsolete   fa(arg1);fa(arg2); if(dyad)fa(arg3); // free these now to match ra before test.  We don't need faafterrav because any virtual cannot have usecount=1 since we ra()'d it
-  fa(arg1); if(arg2!=self)fa(arg2); fanamedacv(self); // free these now to match ra before test.  We don't need faafterrav because any virtual cannot have usecount=1 since we ra()'d it
+ fa(arg1); if(arg2!=self)fa(arg2); fanamedacv(self); // free these now to match ra before test.  We don't need faafterrav because any virtual cannot have usecount=1 since we ra()'d it
  }
  mf(jobA); //  mf to free jobA, whose usecount we might have raised.  pyx and locs if any are on tstack
  ASSERT(!(taskflags&0x400),EVUNTIMELY)   // if we wanted a locales job but didn't get one, we must have been in system lock (i. e. debug suspension).  Fail then
-// obsolete  A uarg3=FAV(self)->fgh[0], uarg2=dyad?arg2:uarg3;
- A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // args to u, with monad flagging
+A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // args to u, with monad flagging
  // u always starts a recursion point, whether in a new task or not
  A s=jt->parserstackframe.sf; jt->parserstackframe.sf=self; A z=(FAV(uself)->valencefns[arg2!=self])(jt,arg1,uarg2,uself); jt->parserstackframe.sf=s;
  R z;
@@ -855,8 +837,7 @@ F2(jttcapdot2){F12IP;A z;
 #if PYXES
   ASSERT(AN(w)==1,EVLENGTH) w=ccvt(FL,w,0); D atimeout=*DAV(w); // get the timeout value
   if(atimeout==0.)atimeout=inf; ASSERT(atimeout==inf||atimeout<=9e9,EVLIMIT); // 9e9 is approx 63 bits of ns.  This leaves ~300y; should be ok
-// obsolete   RZ(z=box(jtcreatepyx(jt,THREADID(jt),atimeout)));  // create the recursive pyx, owned by this thread
-  RZ(z=jtcreatepyx(jt,THREADID(jt),atimeout));  // create the recursive pyx, owned by this thread
+ RZ(z=jtcreatepyx(jt,THREADID(jt),atimeout));  // create the recursive pyx, owned by this thread
   AC(z)=ACUC2; R box(z); // ra the pyx to protect it until it is filled in, return the boxed pyx
 #else
 ASSERT(0,EVNONCE)

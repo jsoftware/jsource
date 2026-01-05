@@ -2095,8 +2095,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
 #undef YC
 
  D *mplrd=DAV(absfuzzmplr);  // pointer to absfuzz/mplr data
-// obsolete  __m256d pcoldh, pcoldl=_mm256_setzero_pd();  // value from pivotcolnon0, multiplying one row of Qkt
- __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from the col of Qkt
+__m256d prowdh, prowdl=_mm256_setzero_pd();  // values from the col of Qkt
  __m256d mabsfuzz=_mm256_set1_pd(ABS(*mplrd));  // comparison tolerance (if given)
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
  I dpflag=(I)(*mplrd<0.)<<5;  // qp precision flags: 1 2 4 res 8=mplr exists 16 res 32=Qkt update in batches of NPAR consecutive addrs
@@ -2106,9 +2105,7 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
  I *rowxv=IAV(pcx); E *prn0v=EAV(pivotrownon0);  // address of row indexes, values from pivot row (each of which modifies a row of Qkt)
  I *colxv=IAV(prx); E *pcn0v=EAV(pivotcolnon0);  // address of col indexes, data repeated for each row of Qkt Note: in scatter mode coln can be used instead of prnstride
  E *pcn1v=pcn0v+coln0;  // pairs index 2 Es in rowvalues per colx; singles index 1.  biasing the basepointer up makes the transition smooth
-// obsolete , coln1=ncvals-2*coln0
-// obsolete  I colstride=AN(pivotcolnon0);     // for ck mode only, hi&lo are separated to allow random addressing.  They are the first & last parts, holding Ds
- // for each row
+// for each row
  for(;rowx<slicen;++rowx){
   E *qkvrow=qkv+rowxv[rowx]*qksize;   // base of the row of Qkt being modified
   // fetch the pivotrow value into all lanes.  Change its sign so we subtract the product
@@ -2121,19 +2118,12 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
    __m256d endmask;  // mask for 'maskload' and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
    // first handle the paired columns.  They always come in pairs of pairs, never have a multiplier, never ck
    for(colx=0;colx<coln0*(I)sizeof(*colxv);colx+=2*sizeof(*colxv)){  // here colx is offset to colxv (16 bytes for two pairs) and also to pcn0v (64 bytes).  The value in *(colxv+colx) is byte offset to value in row
-// obsolete     endmask=sgnbit;
-// obsolete     __m256i rn0x;  // indexes of nonzero values in row of Qkt
-    // fetch pivotcol values (high-low), fetch the Qkt byte indexes to modify.  We may overfetch
-// obsolete     rn0x=_mm256_loadu_si256((__m256i*)(colxv+colx));  // load the byte indexes into Qkt
-    I o0=((I*)((I)colxv+colx))[0], o1=((I*)((I)colxv+colx))[1];  // fetch offset to pair0, pair1
-// obsolete     __m256d pcoldh0213=_mm256_loadu_pd(pcn0v+colx);  // load next 4 non0 values in pivotcol - high part
-// obsolete     __m256d pcoldl0213=_mm256_loadu_pd(pcn0v+colx+colstride);  // load next 4 non0 values in pivotcol - low part
-    __m256d pcoldh0213=_mm256_loadu_pd((D*)((I)pcn0v+colx*(2*sizeof(E)/sizeof(*colxv))));  // load next 4 non0 values in pivotcol - high part
+   // fetch pivotcol values (high-low), fetch the Qkt byte indexes to modify.  We may overfetch
+   I o0=((I*)((I)colxv+colx))[0], o1=((I*)((I)colxv+colx))[1];  // fetch offset to pair0, pair1
+   __m256d pcoldh0213=_mm256_loadu_pd((D*)((I)pcn0v+colx*(2*sizeof(E)/sizeof(*colxv))));  // load next 4 non0 values in pivotcol - high part
     __m256d pcoldl0213=_mm256_loadu_pd((D*)((I)pcn0v+(colx+sizeof(*colxv))*(2*sizeof(E)/sizeof(*colxv))));  // load next 4 non0 values in pivotcol - low part
     // gather the values from Qkt
-// obsolete      __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),(D*)qkvrow,rn0x,endmask,1);
-// obsolete      __m256d qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),(D*)qkvrow+1,rn0x,endmask,1);
-    __m256d h0l0h1l1=_mm256_loadu_pd((D*)((I)qkvrow+o0)),h2l2h3l3=_mm256_loadu_pd((D*)((I)qkvrow+o1));  // load     scaf use non-temporal load?
+   __m256d h0l0h1l1=_mm256_loadu_pd((D*)((I)qkvrow+o0)),h2l2h3l3=_mm256_loadu_pd((D*)((I)qkvrow+o1));  // load     scaf use non-temporal load?
     __m256d qkvh=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), qkvl=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // batch of Qkt, high & low separated in 0213 order
 
     // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
@@ -2160,26 +2150,12 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz (high part)
 
     // scatter the results (both parts)
-// obsolete    _mm256_mask_i64scatter_pd(qkvrow,okmsk,rn0x,qkvh,1);   // this is the instruction for it - needs one per mask
-    _mm256_storeu_pd((D*)((I)qkvrow+o0),_mm256_shuffle_pd(qkvh,qkvl,0b0000));  _mm256_storeu_pd((D*)((I)qkvrow+o1),_mm256_shuffle_pd(qkvh,qkvl,0b1111));   // scaf use non-temporal store?
-// obsolete     _mm_storeu_si128((__m128i*)((C*)qkvrow+_mm256_extract_epi64(rn0x,0)),_mm256_castsi256_si128(_mm256_castpd_si256(h0l0h2l2)));
-// obsolete     if(likely(okmsk&0b0010)){  // more than 1 needed
-// obsolete      __m256d h1l1h3l3=_mm256_shuffle_pd(qkvh,qkvl,0b1111);
-// obsolete      _mm_storeu_si128((__m128i*)((C*)qkvrow+_mm256_extract_epi64(rn0x,1)),_mm256_castsi256_si128(_mm256_castpd_si256(h1l1h3l3)));
-// obsolete      if(likely(okmsk&0b0100)){
-// obsolete       _mm_storeu_si128((__m128i*)((C*)qkvrow+_mm256_extract_epi64(rn0x,2)),_mm256_castsi256_si128(_mm256_castpd_si256(_mm256_permute4x64_pd(h0l0h2l2,0b111110))));  // more than 2 needed
-// obsolete       if(likely(okmsk&0b1000))_mm_storeu_si128((__m128i*)((C*)qkvrow+_mm256_extract_epi64(rn0x,3)),_mm256_castsi256_si128(_mm256_castpd_si256(_mm256_permute4x64_pd(h1l1h3l3,0b111110))));  // all 4 needed
-// obsolete      }
-// obsolete     }
-// obsolete    }
-   }
+   _mm256_storeu_pd((D*)((I)qkvrow+o0),_mm256_shuffle_pd(qkvh,qkvl,0b0000));  _mm256_storeu_pd((D*)((I)qkvrow+o1),_mm256_shuffle_pd(qkvh,qkvl,0b1111));   // scaf use non-temporal store?
+  }
    I okwds=NPAR;  // # valid words in a batch.  Starts at max; never modified until last batch EXCEPT when ck mode, then set always
    for(;colx-(ncvals-coln0)*(I)sizeof(*colxv)<0;colx+=okwds*sizeof(*colxv)){
-// obsolete     endmask=sgnbit;
-// obsolete     __m256i rn0x;  // indexes of nonzero values in row of Qkt
-    // fetch pivotcol values (high-low), fetch the Qkt byte indexes to modify.  We may overfetch
-// obsolete     rn0x=_mm256_loadu_si256((__m256i*)(colxv+colx));  // load the byte indexes into Qkt
-    I o3=((I*)((I)colxv+colx))[3],o2=((I*)((I)colxv+colx))[2],o1=((I*)((I)colxv+colx))[1],o0=((I*)((I)colxv+colx))[0];  // offset to 4 Es in pivotrow and Qkt
+   // fetch pivotcol values (high-low), fetch the Qkt byte indexes to modify.  We may overfetch
+   I o3=((I*)((I)colxv+colx))[3],o2=((I*)((I)colxv+colx))[2],o1=((I*)((I)colxv+colx))[1],o0=((I*)((I)colxv+colx))[0];  // offset to 4 Es in pivotrow and Qkt
     __m256d pcoldh0213, pcoldl0213;  // the next row multipliers, in 0213 order
     __m256d iph,ipl,isl;  // intermediate products and sums
     if(unlikely(dpflag&8)){   // modifying ck/Rk?
@@ -2193,41 +2169,18 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      TWOPRODQD(iph,ipl,mabsfuzz,pcoldh0213,pcoldl0213)  // take mplr (dp) * row values (qp), leave in position of row values, in 0213 order
      okwds=o3==o2?3:4; okwds=o3==o1?3:okwds; okwds=o3==o0?3:okwds; okwds=o2==o1?2:okwds; okwds=o2==o0?2:okwds; okwds=o1==o0?1:okwds;   // validity stops after last nonrepeated index
      if(unlikely(okwds<4)){o3=o0; o2=okwds<3?o0:o2; o1=okwds<2?o0:o1;}  // omit words by writing them to o0 which will be overwritten.  Shouldn't happen often
-// obsolete set endmask so as to stop before a repetition of index
-// obsolete      // compare 0-1 and 2-3
-// obsolete      __m256i cmp01012323=_mm256_cmpeq_epi64(rn0x,_mm256_shuffle_epi32(rn0x,0b01001110));  // 0=1 0=1 2=3 2=3
-// obsolete      // if 0=1, clear 1 2 3; if 2=3, clear 3
-// obsolete      endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_or_si256(_mm256_permute2x128_si256(cmp01012323,cmp01012323,0b00001000),_mm256_blend_epi32(_mm256_setzero_si256(),cmp01012323,0b11001100)),_mm256_castpd_si256(endmask)));
-// obsolete      // compare 0-2 and 1-3
-// obsolete      __m256i cmpxxxx0213=_mm256_cmpeq_epi64(rn0x,_mm256_permute4x64_epi64(rn0x,0b01000000));  // x x 0=2 1=3
-// obsolete      // if 0=2, clear 2 3; if 1=3, clear 3
-// obsolete      endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0213,0b01000100),cmpxxxx0213),0b11110000),_mm256_castpd_si256(endmask)));
-// obsolete      // compare 0-3 and 1-2
-// obsolete      __m256i cmpxxxx0312=_mm256_cmpeq_epi64(rn0x,_mm256_permute4x64_epi64(rn0x,0b00010000));  // x x 0=3 1=2
-// obsolete      // if 1=2, clear 2 3; if 0=3 clear 3
-// obsolete      endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0312,0b01000100),cmpxxxx0312),0b11110000),_mm256_castpd_si256(endmask)));
-// obsolete      mabsfuzz=_mm256_maskload_pd(mplrd+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
-// obsolete      okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
-// obsolete      okwds=(0b100000000110010010>>okmsk)&7;  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
-    }else{   // not ck mode
+   }else{   // not ck mode
      pcoldh0213=_mm256_loadu_pd((D*)((I)pcn1v+colx*(sizeof(E)/sizeof(*colxv))));  // load next 4 non0 values in pivotcol - high part (already put into 0213 order)
      pcoldl0213=_mm256_loadu_pd((D*)((I)pcn1v+(colx+2*sizeof(*colxv))*(sizeof(E)/sizeof(*colxv))));  // load next 4 non0 values in pivotcol - low part
-// obsolete      if(colx-ncvals*(I)sizeof(*colxv)+NPAR*(I)sizeof(*colxv)>0)okwds=(colx-ncvals*(I)sizeof(*colxv)+NPAR*(I)sizeof(*colxv))>>LGSZI;  // if this is a partial last block, get # valid words (not needed for ck, because all extra values are invalid repetitions
-// obsolete      endmask=_mm256_loadu_pd((double*)(validitymask+NPAR-(coln-colx)));  // mask of valid lanes
-// obsolete      okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
-// obsolete      rn0x=_mm256_and_si256(rn0x,_mm256_castpd_si256(endmask)); pcoldh=_mm256_and_pd(pcoldh,endmask); pcoldl=_mm256_and_pd(pcoldl,endmask);  // clear invalid indexes & values 
-    }
+   }
     // gather the values from Qkt
-// obsolete     __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),(D*)qkvrow,rn0x,endmask,1);
-// obsolete     __m256d qkvl=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),(D*)qkvrow+1,rn0x,endmask,1);
-    __m256d h0l0h1l1=_mm256_blend_pd(_mm256_loadu_pd((D*)((I)qkvrow+o0)),_mm256_loadu_pd((D*)((I)qkvrow+o1-sizeof(E))),0b1100);  // read accumulands 0-1 
+   __m256d h0l0h1l1=_mm256_blend_pd(_mm256_loadu_pd((D*)((I)qkvrow+o0)),_mm256_loadu_pd((D*)((I)qkvrow+o1-sizeof(E))),0b1100);  // read accumulands 0-1 
     __m256d h2l2h3l3=_mm256_blend_pd(_mm256_loadu_pd((D*)((I)qkvrow+o2)),_mm256_loadu_pd((D*)((I)qkvrow+o3-sizeof(E))),0b1100);  // read accumulands 2-3
     __m256d h0h2h1h3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), l0l2l1l3=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // convert to 0213 order, hi & lo
 
     // (iph,ipl) = - prowdh*pcoldh
     TWOPROD(prowdh,pcoldh0213,iph,ipl)  // (prowdh,pcoldh) to high precision
-// obsolete     __m256d magqh=h0h2h1h3;   // save high part of one addend
-    ipl=_mm256_fmadd_pd(prowdh,pcoldl0213,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh0213,ipl);  // accumulate middle pps
+   ipl=_mm256_fmadd_pd(prowdh,pcoldl0213,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh0213,ipl);  // accumulate middle pps
     // Because we added 3 low-order values (with the same shift) - 4 if mplr used - , we are limiting precision to 104 bits
     // (h0h2h1h3,l0l2l1l3) - (prowdh,prowdl) * (pcoldh,pcoldl)
     // Do high-precision add of h0h2h1h3 and iph.  If this decreases the absvalue of h0h2h1h3, we will lose precision because of insufficient
@@ -2252,19 +2205,6 @@ static unsigned char jtqktupdatex(J jt,struct ekctx* const ctx,UI4 ti){
     _mm_storeu_pd((D*)((I)qkvrow+o3),_mm256_castpd256_pd128(_mm256_permute4x64_pd(h2l2h3l3,0b01001110))); _mm_storeu_pd((D*)((I)qkvrow+o2),_mm256_castpd256_pd128(h2l2h3l3));   // store 3&2
     _mm_storeu_pd((D*)((I)qkvrow+o1),_mm256_castpd256_pd128(_mm256_permute4x64_pd(h0l0h1l1,0b01001110)));  _mm_storeu_pd((D*)((I)qkvrow+o0),_mm256_castpd256_pd128(h0l0h1l1));   // store 1&0
 
-// obsolete //   _mm256_mask_i64scatter_pd(qkvrow,okmsk,rn0x,qkvh,1);   // this is the instruction for it - needs one per mask
-// obsolete     __m256d h0l0h2l2=_mm256_shuffle_pd(qkvh,qkvl,0b0000);  // match up pairs of hl
-// obsolete     __m256d h1l1h3l3=_mm256_shuffle_pd(qkvh,qkvl,0b1111);
-// obsolete     _mm_storeu_si128((__m128i*)((C*)qkvrow+_mm256_extract_epi64(rn0x,0)),_mm256_castsi256_si128(_mm256_castpd_si256(h0l0h2l2)));
-// obsolete     if(likely(okmsk&0b0010)){  // more than 1 needed
-// obsolete      __m256d h1l1h3l3=_mm256_shuffle_pd(qkvh,qkvl,0b1111);
-// obsolete      _mm_storeu_si128((__m128i*)((C*)qkvrow+_mm256_extract_epi64(rn0x,1)),_mm256_castsi256_si128(_mm256_castpd_si256(h1l1h3l3)));
-// obsolete      if(likely(okmsk&0b0100)){
-// obsolete       _mm_storeu_si128((__m128i*)((C*)qkvrow+_mm256_extract_epi64(rn0x,2)),_mm256_castsi256_si128(_mm256_castpd_si256(_mm256_permute4x64_pd(h0l0h2l2,0b111110))));  // more than 2 needed
-// obsolete       if(likely(okmsk&0b1000))_mm_storeu_si128((__m128i*)((C*)qkvrow+_mm256_extract_epi64(rn0x,3)),_mm256_castsi256_si128(_mm256_castpd_si256(_mm256_permute4x64_pd(h1l1h3l3,0b111110))));  // all 4 needed
-// obsolete      }
-// obsolete     }
-// obsolete    }
 #if 0  // obsolete
   }else{
    // Batch Qkt update: always qp, of aligned 128-byte blocks, no check for duplicates
@@ -2326,27 +2266,17 @@ F2(jtqktupdate){F12IP;
  A pivotrownon0=box2; ASSERT(AT(pivotrownon0)&QP,EVDOMAIN) ASSERT(AR(pivotrownon0)==AR(pcx),EVRANK)
  A pivotcolnon0=box3; ASSERT(AT(pivotcolnon0)&QP,EVDOMAIN) ASSERT(AR(pivotcolnon0)==1,EVRANK)
  A absfuzzmplr=box4; ASSERT(AT(absfuzzmplr)&FL,EVDOMAIN) ASSERT(AR(absfuzzmplr)<=1,EVRANK)  // absfuzz is a float atom; mplr is a float list
-// obsolete I isbatch=0;  // set if we are doing batches of aligned accesses
- if(AR(absfuzzmplr)==1)ASSERT(AN(absfuzzmplr)==AN(prx),EVLENGTH)  // if mplr, must be one per input in row
+if(AR(absfuzzmplr)==1)ASSERT(AN(absfuzzmplr)==AN(prx),EVLENGTH)  // if mplr, must be one per input in row
  else ASSERT(DAV(absfuzzmplr)[0]>=0.,EVDOMAIN)  // neg threrashold not allowed any more
-// obsolete  isbatch=DAV(absfuzzmplr)[0]<0.;  // batch if negative threshold
- // agreement
+// agreement
  ASSERT(AR(w)==AR(pcx)+AR(prx),EVRANK)  // Qkt is nxn+1..4; bk is n, treated as a single row.
  if(AR(pcx)!=0){DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[0],EVINDEX))} else{ASSERT(IAV(pcx)[0]==0,EVINDEX)}  // valid row indexes
  ASSERT(AN(pcx)==AN(pivotrownon0),EVLENGTH)  // indexes and values must agree  scaf shapes should be identical
  I m=AN(pcx), n=AN(prx);  // # rows & columns/pairs to modify
  ASSERTSYS(((I)DAV(qk)&((SZD<<LGNPAR)-1))==0,"Qkt is not on cacheline bdy")  // we fetch along rows; insist on data alignment
  ASSERTSYS(AR(qk)<2||(AS(qk)[1]&(NPAR-1))==0,"stride of Qkt is not a cacheline multiple")  // we fetch along rows; insist on data alignment
-// obsolete  if(isbatch){
-// obsolete   // we are processing cache-aligned blocks
-// obsolete // no longer  ASSERTSYS(((I)DAV(pivotrownon0)&((SZD<<LGNPAR)-1))==0,"row values not on cacheline bdy")  // we fetch along rows; insist on data alignment
-// obsolete // no longer  ASSERTSYS((AS(pivotrownon0)[1]&(NPAR-1))==0,"stride of row values is not a cacheline multiple")  // we fetch along rows; insist on data alignment
-// obsolete   DO(n, ASSERT(IAV(prx)[i]<AS(w)[AR(w)-1],EVINDEX) ASSERTSYS((IAV(prx)[i]&(NPAR-1))==0,"prx not 0(mod NPAR)"))  // verify valid column indexes, aligned to batches
-// obsolete   n<<=LGNPAR;  // actually NPAR values per index
-// obsolete  }else{
- ASSERT(n<=AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH) // must have one index per value
+ASSERT(n<=AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH) // must have one index per value
  DO(n, ASSERT(IAV(prx)[i]<AS(w)[AR(w)-1],EVINDEX))  // verify valid column indexes
-// obsolete  }
 
  // transpose pivotcolnon0 into needed order
  I ncvals=AN(pivotcolnon0);  // # column values, which exceeds # column indexes if there are pairs
@@ -2365,8 +2295,6 @@ F2(jtqktupdate){F12IP;
    _mm256_storeu_pd((D*)&pcntv[i*4],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000)); _mm256_storeu_pd((D*)&pcntv[i*4+2],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111)); )
   pivotcolnon0=pcnt;   // use the transposed version
  }
-// obsolete   I colstride=AN(pcnt); DO(AN(pcnt), ((D*)pcntv)[i]=pcnv[i].hi; ((D*)pcntv)[i+colstride]=pcnv[i].lo;)  // separate high & low parts
-// obsolete  }
 
  // convert column #s to byte offset of Es, and repeat the last one 3 times for safety
  I *prxv=IAV(prx);  // col#s

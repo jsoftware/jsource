@@ -268,8 +268,7 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
        if(a&&!ISSPARSE(AT(a))){A a1=a; if(AT(a1)&NOUN){if((a1=a1ah=gahzap(jt,AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(selft&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
        // run the analyzer.  Fold the unbalanced-paren info into the error number
        deba(DCJUNK,0,0,0);  // create spacer frame so eformat calls don't overwrite stack
-// obsolete        WITHDEBUGOFF(df1(msg,jlink(sc(e|(pareninfo<<8)),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val);)  // run eformat_j_
-       WITHDEBUGOFF(msg=jtunquote(jt,jlink(sc(e|(pareninfo<<8)),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val,val););   // run eformat_j_
+      WITHDEBUGOFF(msg=jtunquote(jt,jlink(sc(e|(pareninfo<<8)),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val,val););   // run eformat_j_
        debz();
       }
      }else msg=a;  // self not given, use given message text
@@ -340,8 +339,7 @@ A jtjsignale(J jt,I eflg,A line,I info){
      if(eflg&EMSGFROMPYX)eputs(" (from pyx)");   // if the message came from a pyx, mark it as such
      eputc(eflg&EMSGSPACEAFTEREVM?' ':CLF);  // ... that's the first line, unless user wants added text on the same line
      if(!jt->glock){  // suppress detail if locked
-// obsolete       if((line!=0) && !(eflg&EMSGLINEISTERSE+EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
-      if((line!=0) && !(eflg&EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
+     if((line!=0) && !(eflg&EMSGNOMSGLINE) && !(jt->emsgstate&EMSGSTATENOLINE)){  // if there is a user line, and its display not suppressed
        // display the message in line, according to its mode
        C *text; I textlen;
        if(eflg&EMSGLINEISA){text=CAV(line); textlen=AN(line);}else{text=(C*)line; textlen=info;}  // addr/len of data to type

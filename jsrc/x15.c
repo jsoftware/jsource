@@ -1898,8 +1898,7 @@ F1(jtcddlopen){F12IP;HMODULE h;
  ASSERT(LIT&AT(w),EVDOMAIN);  // w must be a literal string or atom
  ASSERT(1>=AR(w),EVRANK);
  if(AN(w)){  // w is nonnull
-// obsolete  ASSERT(AN(w),EVLENGTH);
- C*lib=CAV(str0(w));
+C*lib=CAV(str0(w));
 #ifdef _WIN32
  wchar_t wlib[_MAX_PATH];
  MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,_MAX_PATH);

@@ -814,18 +814,15 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       // it always produces a noun and the only things executable from the stack are tridents
       if(withprob(!PTISNOTASGNNAME,0.1)){I targc;  //  Is this an assignment to a single name? targc is # refs in the assigned symbol that is allowed for inplaceables (depends on public/private).
        A zval=__atomic_load_n(&QCWORD(y)->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
-// obsolete        I symx=__atomic_load_n(&NAV(QCWORD(y))->symx,__ATOMIC_RELAXED);
-              // in case it's local, start a fetch of the symbol#, whose PTYPE is not 0 if defined.  y is the name, which has not been stacked yet
+             // in case it's local, start a fetch of the symbol#, whose PTYPE is not 0 if defined.  y is the name, which has not been stacked yet
        fs1=pt0ecam&FLGPLINE1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
        if(FAV(fs)->flag&FAV(fs1)->flag&VASGSAFE){  // do the verb(s) allow assignment in place?   this frees fs/fs1
         // Assignment to name, and not ill-behaved function (i. e. that may change locales)., that is, inplaceable assignment
         // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
         if(likely(TESTSTACK0PT(PTASGNLOCALX))){   // only sentences from explicit defns have ASGNLOCAL set
          // local assignment.  First check for primary symbol.  We expect this to succeed.  We fetch the unflagged address of the value
-// obsolete         if(likely((I)((pt0ecam&(ARLCLONED<<LOCSYMFLGX))<<(30-(ARLCLONEDX+LOCSYMFLGX)))<symx)){   //   (Is cloned local table) < symbol given? 
-         if(likely((I)(pt0ecam&(ARLCLONED<<LOCSYMFLGX))<QCPTYPE(zval))){   //   (Is cloned local table) < symbol given? 
-// obsolete            zval=QCWORD(symorigin[symx].fval);  // get value of symbol in primary table.  There may be no value; that's OK
-          zval=QCWORD(zval);  // get value of symbol in primary table.  There may be no value; that's OK
+        if(likely((I)(pt0ecam&(ARLCLONED<<LOCSYMFLGX))<QCPTYPE(zval))){   //   (Is cloned local table) < symbol given? 
+         zval=QCWORD(zval);  // get value of symbol in primary table.  There may be no value; that's OK
          }else{zval=unlikely((pt0ecam&((ARLCLONED+JTFROMEXEC)<<LOCSYMFLGX)))?QCWORD(jtprobelocal(symorigin,QCWORD(y),jt->locsyms)):0;}  // look up the name if it is in a cloned table or from ". .  The normal case of undefined name in an uncloned
             // table is an unassigned name, but it could also come from (". 'name =. ') or (7!:2 'name =.') or a line in a script.  We judge that the value of supporting inplacing in those cases, considerable though it may be,
             // does not justify a name lookup for every initial assignment in every script; but we go ahead and look up in ". because the test is free.
@@ -847,8 +844,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
         // path to here is to mispredict the assignment and then correctly predict the local path.  In that path we have loaded the symbol number followed by zval, and it will
         // not settle for 10 clocks.  We very much want to keep executing during the settlement so we don't want to risk a misprediction.  We should be executing
         // well into tpop* before zval settles.
-// obsolete         zval=AC(zval)==(REPSGN((AFLAG(zval)&(AFRO|AFVIRTUAL))-1)&(PEXTN(AFLAG(zval),AFNJAX,1)+targc))?zval:0;
-        I af=AFLAG(zval); zval=AC(zval)==((I)PEXTN(af,AFNJAX,1)+targc)?zval:0; zval=af&(AFRO|AFVIRTUAL)?0:zval;  // OK if count right, and not R-O/VIRT
+       I af=AFLAG(zval); zval=AC(zval)==((I)PEXTN(af,AFNJAX,1)+targc)?zval:0; zval=af&(AFRO|AFVIRTUAL)?0:zval;  // OK if count right, and not R-O/VIRT
 anchoredip:;  // here when we have detected that an anchored name is inplaceable
         jt->zombieval=zval;
        }

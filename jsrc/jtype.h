@@ -709,7 +709,6 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
 #define AFHADPARENX     3     // in an explicit-defn word, set if user's original had () around the value  matches FL
 #define AFHADPAREN      ((I)1<<AFHADPARENX)
-// obsolete  Note: bit 4 is LABANDONED which is merged here
 #define AFUNDISPLAYABLEX  4           // value is INDIRECT but may contain zeros or invalid pointers
 #define AFUNDISPLAYABLE   ((I)1<<AFUNDISPLAYABLEX)
 

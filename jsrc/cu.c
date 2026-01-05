@@ -403,7 +403,6 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
    if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // uid=id of u; b1=u is x/, then uid=id of x      cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
    b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. or m b./   where m is atomic int 16<=m<32
    C vv=IDD(v->fgh[1]);  // id of g1
- // obsolete   if(CIOTA==vv&&(!c)&&v->fgh[0]==ds(CALP)){   // w is   (  a.&i.  or  (a. i. ][)  )
    if(vv==CIOTA&&v->fgh[0]==ds(CALP)){   // w is   (  a.&i.  or  (a. i. ][)  )
     f1=b&b1?jtbitwiseinsertchar:f1;    // m b./ &. (  a.&i.  or  (a. i. ][)  )   or  f &. (  a.&i.  or  (a. i. ][)  )
     f2=((uid^CMIN)>>1)+b1?f2:(AF)jtcharfn2; f2=b>b1?(AF)jtbitwisechar:f2;   // {>. or <.} &. {a.&i.  or  (a. i. ][)}   or m b. &. {a.&i.  or  (a. i. ][)}
@@ -413,7 +412,6 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
     sundern=2; goto sunder;
    }
 
- // obsolete    if(vv==CFROM&&(!c)&&AT(v->fgh[0])&NOUN)goto sunder;  // u&.(m&{)) or u.&.(m { ][), structural under
    break;
   }
  case CCOMMA:  // u&., structural under

@@ -489,17 +489,14 @@ numloc: ;  // integer locale whether boxed or not
   }else{   // 
    ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v,0),exitfa);  // verify box
    x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0){y=x; goto numloc;}  // Boxed integer - use that as the locale number
-// obsolete     g=findnl(BIV0(x)); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // boxed integer, look it up
-// obsolete    }else{
-   xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
+  xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
    ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v,0),exitfa);   // verify list (or atom)
    ASSERTNGOTO(xn,EVLENGTH,nfs(k,v,0),exitfa);   // verify not empty
    ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v,0),exitfa);  // verify string
    ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v,0),exitfa);  // verify legal name
    I bucketx=BUCKETXLOC(xn,xv);
    RZGOTO(g=stfindcre(xn,xv,bucketx),exitfa);  // find st for the name
-// obsolete    }
-  }
+ }
  }
  g=g?g:locsym; R g;  // if we get here, good return.  If we stayed in the local table, return it
 exitfa: ;

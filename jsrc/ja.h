@@ -345,10 +345,6 @@
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
 #define extnvr(x)                    jtextnvr(jt,(x))
-#if 0 && ((MEMAUDIT&5)==5) && SY_64  // obsolete 
-#define scaft(x) testbuf(x); if(AFLAG(x)<0)SEGFAULT;
-#define scaft2(x)
-#endif
 // Handle top level of fa(), which decrements use count and decides whether recursion is needed.  We recur if the contents are traversible and
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the tpop system.

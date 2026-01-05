@@ -1041,9 +1041,6 @@ extern C        spellin(I,C*);
 extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
-#if 0 && ((MEMAUDIT&5)==5) && SY_64 // scaf obsolete 
-extern void testbuf(A);
-#endif
 extern I        sqrtE(J,I,E*,E*);
 extern void     vvsortqs8ai(IL*,I);
 extern void     vvsortqs8ao(IL*,IL*,I);

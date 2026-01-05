@@ -767,8 +767,7 @@ A jtincorpra(J jt, A w) {INCORPNC(w); ra(w); R w;}
 // If this code is called with inplacing turned on (* w inplaceable), we assume that w is going to be replaced by the virtual result,
 // and we make the virtual block inplaceable if w was
 RESTRICTF A jtvirtual(J jtfg, AD *RESTRICT w, I offset, I r){F12IP;AD* RESTRICT z;
-// obsolete  J jt=(J)(intptr_t)((I)jtfg&~JTFLAGMSK);  // get flag-free pointer to J block
- ASSERT(RMAX>=r,EVLIMIT);
+ASSERT(RMAX>=r,EVLIMIT);
  I t=AT(w);  // type of input
  offset<<=bplg(t);  // length of an atom of t
  I wf=AFLAG(w);  // flags in input
@@ -1293,95 +1292,6 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  R z;
 }
 
-#if 0 && ((MEMAUDIT&5)==5) && SY_64   // obsolete
-#define ALLOSIZE (1024*1024)
-static C allohash[ALLOSIZE];  // 0 is empty, 1 is tombstone, 2 is valid
-static C * alloblocks[ALLOSIZE]; static US allolock=0; I nalloblocks=0; I allorunin=0;
-static I alloring[2048]; static I alloringx=0, alloct[3]={0,0,0};
-I syslockactive=0;
-
-#define HASHBUF(buf) ((CRC32L((I)buf,~0)*ALLOSIZE)>>32)
-// look up buf starting in hashslot.  Return 0 if error, 1 if OK
-static NOINLINE I findbuf(I hashslot,void *buf,I probewrdel){I z;  // must have lock
- ++alloct[probewrdel];
- if(nalloblocks==0){nalloblocks=1; DO(ALLOSIZE, allohash[i]=0;) DO(sizeof(alloring)/sizeof(alloring)[0], alloring[i]=0;)}  // first time after enagagement or reengagement
- I maxstop=probewrdel&1;  // max stopper value to pause at: 0, except 1 for wr
- while(1){I stopper;
-  if((stopper=allohash[hashslot])<=maxstop){  // found a stopper (tombstone or empty)
-   if(unlikely((probewrdel&1)==0))R 0;  // probe or delete not found, error
-   if(maxstop==1){allohash[hashslot]=2; alloblocks[hashslot]=buf; maxstop=0;}  // first wr, store value and advance to finishing wr state
-   if(stopper==0)R 1;  // if we hit empty, we're finished
-  }else if(allohash[hashslot]==2&&alloblocks[hashslot]==buf){
-   if(probewrdel==2){  // found deletion point
-    allohash[hashslot]=1;  // install tombstone
-    if(allohash[(hashslot-1)&(ALLOSIZE-1)]==0){for(;allohash[hashslot]==1;hashslot=(hashslot+1)&(ALLOSIZE-1))allohash[hashslot]=0;}  // replace trailing tombstones with empty
-   }
-   R probewrdel!=1;  // match is failure for add, success for probe/del
-  }
-  hashslot=(hashslot-1)&(ALLOSIZE-1);  // advance to next slot to try
- }
-}
-
-static NOINLINE void printbufhist(void *buf){I arx=alloringx;
-DQ(sizeof(alloring)/sizeof(alloring)[0], arx=(arx-1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
- if((I)buf==(alloring[arx]&0x00ffffffffffffffLL))printf("pos %5lld: %16p\n",i,(void *)alloring[arx]); )
-printf("\n");
-}
-
-static void addbuf(J jt,void *buf){
-if(allorunin==0)R;
-I hashslot=HASHBUF(buf);  // starting slot
-WRITELOCK(allolock);
- if(++allorunin==0)allorunin=1; if(unlikely(JT(jt,peekdata==0)))allorunin=0;  // go into normal state after runin completes
- alloring[alloringx]=(THREADID(jt)<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
- if(unlikely(!findbuf(hashslot,buf,1))){
-  printf("allorunin=%lld: allocated %p which is already in the list\nRing history:\n",allorunin,buf);
-  printbufhist(buf);
-  printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
-  WRITEUNLOCK(allolock);
-  SEGFAULT;  // error if already in list
- }
-WRITEUNLOCK(allolock);
-}
-
-static void rembuf(J jt,A buf){
-if(allorunin==0)R;
-I hashslot=HASHBUF(buf);  // starting slot
-WRITELOCK(allolock);
- alloring[alloringx]=((128|THREADID(jt))<<56)+(I)buf; alloringx=(alloringx+1)&(sizeof(alloring)/sizeof(alloring)[0]-1);
- if(unlikely(!findbuf(hashslot,buf,2))){
-  if(__atomic_load_n(&JT(jt,systemlock),__ATOMIC_ACQUIRE)>2)goto exit;  // ignore audit failure during system lock, which might by a symbol change eg
-  if(allorunin<=0)goto exit;
-  printf("allorunin=%lld: removed %p which is not in the list\nRing history:\n",allorunin,buf);
-  printbufhist(buf);
-  WRITEUNLOCK(allolock);
-  printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
-  SEGFAULT;
- }  // error if not in list, except during runin
-exit: ;
-WRITEUNLOCK(allolock);
-}
-
-void testbuf(A buf){
-if(allorunin<=0)R;  // no test till initialized
-if((AT(buf)|AN(buf)|AFLAG(buf))&0xffffffff00000000)goto printblock;  // unfreed buf.  no sparse here
-if(AC(buf)&0x3fffffff00000000)goto printblock;  // unfreed buf
-if(!(AT(buf)&NOUN))R;  // check only nouns, since ACV might be very old
-if(AC(buf)&ACPERMANENT)R;  // PERMANENT is not included
-if(AFLAG(buf)&AFUNINCORPABLE)R;  // PERMANENT is not included
-I hashslot=HASHBUF(buf);  // starting slot
- if(unlikely(!findbuf(hashslot,buf,0))){
-  if(syslockactive)R;  // ignore audit failure during system lock, which might by a symbol change eg
-  printf("allorunin=%lld: testing %p which is not in the list\nRing history:\n",allorunin,buf);
-  printbufhist(buf);
-printblock:;
-  printf("block header for block %p: 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX " 0x" FMTX "\n",buf,((I*)buf)[0],((I*)buf)[1],((I*)buf)[2],((I*)buf)[3],((I*)buf)[4],((I*)buf)[5],((I*)buf)[6],((I*)buf)[7]);
-  SEGFAULT;  // error if not in list
- }
-}
-#endif
-
-
 // static auditmodulus = 0;
 // blockx is bit# of MSB in (length-1), i. e. lg2(bufsize)-1
 RESTRICTF A jtgaf(J jt,I blockx){A z;
@@ -1442,9 +1352,6 @@ if((I)jt&3)SEGFAULT;
 #endif
 #if SHOWALLALLOC
 printf("%p+\n",z);
-#endif
-#if 0 && ((MEMAUDIT&5)==5) && SY_64   // obsolete 
-if(JT(jt,peekdata))addbuf(jt,z);  // add to allocated list
 #endif
  R z;
 }
@@ -1629,9 +1536,6 @@ printf("%p-\n",w);
 #if PYXES
   if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
 #endif
-#if 0 && ((MEMAUDIT&5)==5) && SY_64   // obsolete 
-if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
-#endif
   AFCHAIN(w)=jt->mempool[blockx];  // append free list to the new addition...
   jt->mempool[blockx]=w;   //  ...and make new addition the new head
   I mfreeb = jt->memballo[blockx] -= allocsize;   // number of bytes allocated at this size (biased zero point)
@@ -1641,9 +1545,6 @@ if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
   }
  }else if(unlikely(blockx==FHRHBINISGMP)){jtmfgmp(jt,w);  // if GMP allocation, free it through GMP
  }else{    // buffer allocated from malloc
-#if 0 && ((MEMAUDIT&5)==5) && SY_64   // obsolete
-if(JT(jt,peekdata))rembuf(jt,w);  // remove from allocated list
-#endif
   I allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
   DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area

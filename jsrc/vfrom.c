@@ -595,19 +595,6 @@ DF2(jtfrom){F12IP;A z;
     I j; SETNDX(j,av,wi);  // j=positive index, audited
     I wcr=wr-1; wcr-=REPSGN(wcr);  // rank of cell of w: rank-1 or 0
     z=jtget1cell(jtfg,w,wcr,j,wt,wr);  // fetch the single cell, possibly as a virtual
-#if 0  // obsolete
-    I *ws=AS(w); I m; PROD(m,wcr,ws+wr-wcr);  // shape of w, number of atoms in a cell
-    if(m<MINVIRTSIZE){  // if cell too small for virtual, allocate & fill here
-     I k=bplg(wt); GA(z,wt,m,wcr,ws+wr-wcr) JMC(CAVn(wcr,z),CAV(w)+j*(m<<k),m<<k,0);  // copy in the data, possibly overstoring up to 7 bytes.  Nonrecursive block
-     // We transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
-     PRISTXFERF(z,w)  // this destroys w
-    }else{
-     RZ(z=virtualip(w,j*m,wcr));   // if w is rank 2, could reuse inplaceable a for this virtual block
-     // fill in shape and number of atoms.  ar can be anything.
-     AN(z)=m; MCISH(AS(z),ws+1,wcr)
-     // When we create a virtual block we do not actually copy anything out of w, so it remains pristine.  The virtual block is not.
-    }
-#endif
     RETF(z); // there have been no needless allocations, and thus no need for EPILOG
    }
   }else if(unlikely(AN(a)==0)){  // a is empty, so the result must be also.  Doesn't happen often but we save big when it does
@@ -721,10 +708,8 @@ DF2(jtfetch){F12IP;A*av, z;I n;
 #if AUDITBOXAC
    if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT;
 #endif
-// obsolete    RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.
-  }else{
-// obsolete   RZ(a=jtbox(JTIPAtoW,a));  // if not special case, box any unboxed a   scaf should call into call into frombu without boxing
-   RZ(z=jtfrombu(jtfg,a,w,0)); if(((AT(w)>>BOXX)&1)>AR(z))z=C(AAV(z)[0]);  // a must be scatter-indexes.  No need to box them, just fetch.  If atomic box returned, open it
+ }else{
+  RZ(z=jtfrombu(jtfg,a,w,0)); if(((AT(w)>>BOXX)&1)>AR(z))z=C(AAV(z)[0]);  // a must be scatter-indexes.  No need to box them, just fetch.  If atomic box returned, open it
   }
   PRISTCLRF(w) // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
   RETF(z); 

@@ -2292,7 +2292,6 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
  C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
 #define WITHDEBUGOFF(stmt) MAYBEWITHDEBUG(0,jt,stmt)
-// obsolete #define WITHEFORMATDEFERRED(stmt) {WITHDEBUGOFF(stmt) if(unlikely(jt->jerr!=0)&&likely(jt->jerr!=0)){UC _d=jt->jerr; RESETERR ASSERT(0,_d)}}  // execute stmt with debug/eformat turned off; at end, if there is an error, re-signal it
 #define WITHEFORMATDEFERRED(stmt) {UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
  C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); _d=jt->emsgstate; jt->emsgstate=_e; if(unlikely(jt->jerr!=0)&&likely(_d&EMSGSTATENOTEXT)){_d=jt->jerr; RESETERR ASSERT(0,_d)}}  // WITHDEBUGOFF, but resignal any error so as to use caller's eformat.
@@ -2511,7 +2510,6 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
 #define PEXTN(s,x,m)  _pext_u64((UI)(s),(UI)((m)<<(x)))  // x is bit#, m must be contiguous
 #define PDEP(s,m) _pdep_u64((UI)(s),(UI)(m))
-// obsolete #define BZHI(s,i) _bzhi_u64(s,i)
 #else
 // these emulations require that m be a sequence of 1 bits with no imbedded 0s
 // #define PEXT(s,m) (((s)>>CTTZI(m))&((m)>>CTTZI(m)))

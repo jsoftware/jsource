@@ -1,4 +1,4 @@
-/* Copyright 1990-2025, Jsoftware Inc.  All rights reserved. */
+/* Copyright 1990-2026, Jsoftware Inc.  All rights reserved. */
 /* License in license.txt.                                   */
 /*                                                           */
 /* avx2 emulation                                            */

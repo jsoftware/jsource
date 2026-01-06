@@ -1034,8 +1034,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERT)
 #define ASSERTAGREESEGFAULT (x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi
-#define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
-#define BETWEENO(x,lo,hi) ((UI)((x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
+#define BETWEENC(x,lo,hi) ((UI)(((I)x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
+#define BETWEENO(x,lo,hi) ((UI)(((I)x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
 // The Bloom filter is n bits per hashchain for a locale.  Because the locales have so many hashchains currently, we will use just 1 bit
 // per chain.  These bits appear immediately after the chains themselves so that a few cachelines will suffice for any number of names in z that are to be skipped
 #define BLOOMBASE(l) (C*)(SYMBAV0(l)+AN(l))   // start of the Bloom filter for locale l, 1 bit per chain including SYMLINFO

@@ -1659,7 +1659,7 @@ m=. 2":>:(;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec')i.<3{.date
 date=. ((_4{.date),'-',m,'-',4 5{date)rplc' ';'0'
 (_20}.s),date,11}.dt
 )
-JQTVERSION=: '2.5.12'
+JQTVERSION=: '2.6.1'
 do_install=: 3 : 0
 if. 'system' -: 6 {. y do. jinstall y return. end.
 if. -. checkaccess_jpacman_ '' do. return. end.
@@ -1765,9 +1765,9 @@ else.
   m=. m,'check that you have write permission for: ',LF,BINPATH
 end.
 smoutput m
-linuxaio=. (UNAME -: 'Linux') *. 907 <: VERNO
+linux=. (UNAME -: 'Linux') *. 907 <: VERNO
 
-if. linuxaio < (<UNAME)e.'Linux';'OpenBSD';'FreeBSD' do.
+if. linux < (<UNAME)e.'Linux';'OpenBSD';'FreeBSD' do.
   qt_ldd_test d1
   smoutput 'If libjqt cannot be loaded, see this guide for installing the Qt library'
   smoutput 'https://code.jsoftware.com/wiki/Guides/Qt_IDE/Install'
@@ -1780,7 +1780,7 @@ y=. (*#y){::0;y
 smoutput 'Installing Qt library...'
 if. IFWA64 do.
   z=. 'qt610-win-arm64-slim.zip'
-elseif. linuxaio do.
+elseif. linux do.
   z=. 'qt610-linux',((y-:'slim')#'-slim'),'.tar.gz'
 elseif. IFWIN do.
   z=. 'qt610-win',((y-:'slim')#'-slim'),'.zip'
@@ -1792,7 +1792,7 @@ if. rc do.
   smoutput 'unable to download: ',z return.
 end.
 d=. jpath IFWIN{::'~install';'~bin'
-if. IFWIN +. linuxaio do.
+if. IFWIN +. linux do.
   unzip_jpacman_ p;d
 else.
   hostcmd_jpacman_ 'unzip -o ',(dquote p),' -d ',dquote d

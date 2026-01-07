@@ -458,7 +458,7 @@ A self;   //
 #define PUTKVOLD(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; A da=dv[i]; ra(sa) dv[i]=sa; if(likely(da!=0))fa(da) sa=sa1;)}else{MC(d,s,n);}}   // when old kv might exist
 #define PUTKVNEW(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; ra(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}  // when old kv are empty
 #define GETV(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
-#define DELKV(s,n,ind) {if(ind){A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; fa(sa) sv[i]=0; sa=sa1;)}}   // deleting old kv
+#define DELKV(s,n,ind) {if(ind){A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; fa(sa) sv[i]=0; sa=sa1;)}}   // deleting old kv.  We clear the old to 0; perhaps better done in 16!:_5
 
 // k is A for keys, n is #keys, s is place for slot#s.  Hash each key, store, prefetch (possibly using wrong hash)
 // if s is 0, we are using a user hash; use uits return area as s
@@ -593,6 +593,7 @@ static DF2(jtdicget){F12IP;A z;
  ARGCHK2(a,w)
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed when values are empty (only has)
@@ -808,6 +809,7 @@ errexit: R 0;   // return with error
 static DF2(jtdicput){F12IP;A z;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.vtype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // v must be a single value or an array of them, with correct shape
@@ -986,6 +988,7 @@ errexit:; R 0;
 static DF1(jtdicdel){F12IP;A z;
  ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k if needed
@@ -1167,6 +1170,7 @@ static DF2(jtdicgeto){F12IP;A z;
  ARGCHK2(a,w)
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
@@ -1314,6 +1318,7 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  I flags;  // processing flags k,v,min,max
  void *k;  // will point to key if any
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I plist;  // operation sequence for this request
  if(w!=self){ // dyad
   k=voidAV(w);  // point to key data
@@ -1534,6 +1539,7 @@ errexit: R 0;
 static DF2(jtdicputo){F12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.vtype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // v must be a single value or an array of them, with correct shape
@@ -1706,6 +1712,7 @@ errexit: R 0;
 static DF1(jtdicdelo){F12IP;
  ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  if(unlikely(AN(w)==0)){R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),mtv);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ ''
@@ -1778,30 +1785,33 @@ DF1(jtdicmgetc){F12IP;
  R fdef(0,CMODX,VERB,jtdicmgeto,jtdicmgeto, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
-// x 16!:_5 dic   return list of empty keyslots.  If x=1, also delete the empty chainfields
+// x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, delete the empty chainfields and return ''
 // No locks; if you need a write lock, take it before calling.
 DF2(jtdicempties){F12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
- UI lv;
+ A z; I *zv;
  I x; RE(x=i0(a)); ASSERT(BETWEENC(x,0,1),EVDOMAIN)  // x must be 0 or 1
  I nodeb=(dic->bloc.emptysiz<<LGBB); UI kb=dic->bloc.kbytelen;  // #bits in empty-chain field; #bytes in key
  C *kv=CAV(dic->bloc.keys);   // point to start of keys
  I nempty=0; UI emptyx;  // # of empties & index of first one
- for(emptyx=dic->bloc.emptyn;;){
-  UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb); ++nempty;  // count this empty, get next one
-  if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
-  emptyx=emptynxt;  // advance to next
+ if(dic->bloc.emptyn==-1ULL){ASSERT(x==1,EVUNTIMELY) R mtv;}  // If we have already deleted the chain, we can't return it
+ if(x==0){  // if we return the empty list
+  for(emptyx=dic->bloc.emptyn;;){
+   UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb); ++nempty;  // count this empty, get next one
+   if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
+   emptyx=emptynxt;  // advance to next
+  }
+  GATV0(z,INT,nempty,1) zv=IAV1(z);  // allocate result; pointer to first atom
  }
- A z; GATV0(z,INT,nempty,1) I *zv=IAV1(z);  // allocate result; pointer to first atom
  for(nempty=0,emptyx=dic->bloc.emptyn;;){
-  zv[nempty]=emptyx;  // return index of empty
   UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb); ++nempty;  // count this empty, get next one
-  if(x==1){I t=0; WRHASH1234(t, nodeb>>3, &kv[emptyx*kb])}  // optionally erase the chain
+  if(x==0)zv[nempty]=emptyx;  // if we are not destroying the table, return index of empty
+  else{I t=0; WRHASH1234(t, nodeb>>3, &kv[emptyx*kb])}  // if destroying, erase the chain
   if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
   emptyx=emptynxt;  // advance to next
  }
- if(x==1){dic->bloc.emptyn=-1;}  // set chain empty if we have deleted it.  The noun is still undisplayable
+ if(x!=0){dic->bloc.emptyn=-1; z=mtv;}  // set chain empty if we have deleted it.  The noun is still undisplayable.  Return empty
  RETF(z)
  }
 

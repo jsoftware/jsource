@@ -110,6 +110,10 @@
 #define EMU_AVX2 1
 #endif
 
+#ifndef EMU_AVX2
+#define EMU_AVX2 0
+#endif
+
 // no EMU_AVX512; avx512 is not widespread yet, and older chips still downclock (so not worth it for small arrays), so still maintain avx2-specific paths
 
 #if C_AVX2
@@ -1462,7 +1466,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define GACOPY1(name,type,atoms,rank,shaape) {UI _r=(rank); NOUNROLL do{AS(name)[_r-1]=1;}while(--_r);} // copy all 1s to shape - rank must not be 0
 
 // GAE executes the given expression when there is an error
-#if SY_64
+#if SY_64 && (C_AVX2 || EMU_AVX2)
 #define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,((I)(r)<<32)+(t),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
 #else
 #define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,(I)(t),(I)(r),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
@@ -2396,6 +2400,17 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #elif defined (__SSE4_2__)
 #undef C_CRC32C
 #define C_CRC32C 1
+#endif
+
+#if PYXES && defined(__aarch64__) && !EMU_AVX2
+INLINE void _mm_pause(void)
+{
+#if defined(_MSC_VER) && !defined(__clang__)
+    __isb(_ARM64_BARRIER_SY);
+#else
+    __asm__ __volatile__("isb\n");
+#endif
+}
 #endif
 
 #define J struct JSTstruct *

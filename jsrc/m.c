@@ -1366,7 +1366,7 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
  R jtgaf(jt,(I)j);
 }
 
-#if SY_64
+#if SY_64 && (C_AVX2 || EMU_AVX2)
 // fill an INDIRECT block with 0s, starting with s[0].  m is #bytes requested for allo-1
 A zfillind(A w, I m){
  AS(w)[0]=0;  // the first byte by hand

@@ -9,7 +9,7 @@
 #include "vcomp.h"
 
 // platforms with hardware crc32c
-#if C_CRC32C && SY_64
+#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
 #include "viavx.h"
 
 #if !(C_AVX2 || EMU_AVX2)

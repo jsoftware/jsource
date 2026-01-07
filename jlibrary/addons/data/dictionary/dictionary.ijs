@@ -59,7 +59,7 @@ if. name -: '' do. prefix =. suffix =. '' else. 'prefix suffix' =. (,{:)&.>/\. s
 (prefix , 'del' , suffix) =: dict 16!:_4
 (prefix , 'has' , suffix) =: dict 16!:_12
 (prefix , 'count' , suffix) =: 0&(16!:_8)@dict
-if. index_type -: 'tree' do. (prefix , 'getkv' , suffix) =: dict 16!:_6 end.  NB. getkv only on rb trees
+if. index_type -: 'tree' do. (prefix , 'mget' , suffix) =: dict 16!:_6 end.  NB. getkv only on rb trees
 EMPTY
 }}
 

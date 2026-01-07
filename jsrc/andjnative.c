@@ -1,4 +1,4 @@
-/* Copyright (c) 1990-2025, Jsoftware Inc.  All rights reserved.           */
+/* Copyright (c) 1990-2026, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* java interface                                                          */
@@ -54,7 +54,7 @@ static jmethodID wdId = 0;
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 {
-  LOGD("OnLoad");
+//  LOGD("OnLoad");
   jvm = vm;
   if ((*vm)->GetEnv(vm, (void **)&local_jnienv, JNI_VERSION_1_6) != JNI_OK) {
     return -1;
@@ -68,7 +68,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 
 static int GetJavaVM(JavaVM ** pvm, JNIEnv ** penv)
 {
-  LOGD("GetJavaVM");
+//  LOGD("GetJavaVM");
   *pvm = jvm;
 //  (*jvm)->AttachCurrentThread(jvm,&local_jnienv,NULL);  // libj thread
   *penv = local_jnienv;
@@ -77,7 +77,7 @@ static int GetJavaVM(JavaVM ** pvm, JNIEnv ** penv)
 
 static char* javaInput(JNIEnv *env, jclass jcls, const char* chars)
 {
-  LOGD("javaInput");
+//  LOGD("javaInput");
   const char *line;
   /* this method blocks via sleep until a line is available */
   jstring str = (*env)->NewStringUTF(env,(chars)?chars:(char*)"");
@@ -93,7 +93,7 @@ static char* javaInput(JNIEnv *env, jclass jcls, const char* chars)
 
 static void javaOutput(JNIEnv *env, jclass jcls, int type, const char*chars)
 {
-  LOGD("javaOutput");
+//  LOGD("javaOutput");
   jstring str = (*env)->NewStringUTF(env,chars);
   (*env)->CallStaticVoidMethod(env,jcls,outputId,(jint)type,str);
   (*env)->DeleteLocalRef(env,str);
@@ -101,7 +101,7 @@ static void javaOutput(JNIEnv *env, jclass jcls, int type, const char*chars)
 
 static int javaWd(JNIEnv *env, jclass jcls, int type, A w, A *pz, const char*locale)
 {
-  LOGD("javaWd");
+//  LOGD("javaWd");
   int i,j=0,len,rc=0;
   if(wdId == 0) {
     LOGD("failed to get the method id for wd" );
@@ -246,7 +246,7 @@ const char * _stdcall inputHandler(J jt,const char* chars)
 
 void _stdcall outputHandler(J jt,int type, const char* s)
 {
-  LOGD("outputHandler");
+//  LOGD("outputHandler");
   javaOutput(local_jnienv,local_basecls,type,s);
 }
 
@@ -258,7 +258,7 @@ int _stdcall wdHandler(J jt,int type, A w, A *pz)
 JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_JDo
 (JNIEnv *env, jclass jcls, jstring js)
 {
-  LOGD("JDo");
+//  LOGD("JDo");
   local_jnienv = env;
 
   const char *nativeString = (*env)->GetStringUTFChars(env, js, 0);
@@ -270,7 +270,7 @@ JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_JDo
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JFree
 (JNIEnv *env, jclass jcls)
 {
-  LOGD("JFree");
+//  LOGD("JFree");
   jefree();
   inputId = 0;
   outputId = 0;
@@ -280,14 +280,14 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JFree
 JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JGetLocale
 (JNIEnv *env, jclass jcls)
 {
-  LOGD("JGetLocale");
+//  LOGD("JGetLocale");
   return (*env)->NewStringUTF(env,jegetlocale());
 }
 
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetEnv
 (JNIEnv *env, jclass jcls, jstring jkey, jstring jval)
 {
-  LOGD("JSetEnv");
+//  LOGD("JSetEnv");
   const char* key =  (*env)->GetStringUTFChars(env, jkey, 0);
   const char* val =  (*env)->GetStringUTFChars(env, jval, 0);
 #ifdef MMSC_VER
@@ -308,7 +308,7 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetEnv
 JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
 (JNIEnv *env, jclass jcls, jstring libpath)
 {
-  LOGD("JInit");
+//  LOGD("JInit");
   return Java_com_jsoftware_j_JInterface_JInit2(env, jcls, libpath, 0);
 }
 
@@ -320,7 +320,7 @@ JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
 JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit2
   (JNIEnv *env, jclass jcls, jstring libpath, jstring libj)
 {
-  LOGD("JInit2");
+//  LOGD("JInit2");
   local_jnienv = env;
   local_basecls = (*env)->NewGlobalRef(env,jcls);
   (*env)->ExceptionClear(env);
@@ -502,7 +502,7 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetc
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JInterrupt
 (JNIEnv *env, jclass jcls)
 {
-  LOGD("JInterrupt");
+//  LOGD("JInterrupt");
   jeinterrupt();
   inputId = 0;
   outputId = 0;

@@ -1,4 +1,4 @@
-/* Copyright (c) 1990-2025, Jsoftware Inc.  All rights reserved.           */
+/* Copyright (c) 1990-2026, Jsoftware Inc.  All rights reserved.           */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Interpreter Utilities                                                   */
@@ -331,7 +331,7 @@ void jtlogtrace(J jt,C *fmt, void *a0, void *a1, void *a2){
    if(a){if(AT(a)&SYMB){a2=fmtlocnm(jt,a,wkarea[i]); l2=strlen((C*)a2);}else{a2=AT(a)&NAME?NAV(a)->s:CAV(a); l2=AN(a);}}else a2=0;
   )
  }
- if(BETWEENC(jt->usertracefn,1,2)){   // writing to stdout or stderr
+ if(BETWEENC((I)jt->usertracefn,1,2)){   // writing to stdout or stderr
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace",fmt,l0,a0,l1,a1,l2,a2);   // write line
 #else

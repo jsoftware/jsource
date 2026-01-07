@@ -15,6 +15,7 @@ colortab   ~addons/graphics/color/colortab.ijs
 csv        ~addons/tables/csv/csv.ijs
 dd         ~addons/data/odbc/odbc.ijs
 debug      ~addons/ide/qt/debugs.ijs
+dictionary ~addons/data/dictionary/dictionary.ijs
 gl2        ~addons/graphics/gl2/gl2.ijs
 gles       ~addons/api/gles/gles.ijs
 graph      ~addons/graphics/graph/graph.ijs

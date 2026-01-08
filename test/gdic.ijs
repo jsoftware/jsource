@@ -91,10 +91,13 @@ assert. 1 -: del__mydict 2 3
 assert. 0 -: count__mydict ''
 assert. 100 100 100 -: 100 100 100 get__mydict 2 3
 (5 6 7,:1 2 3) put__mydict 2 3,:2 3  NB. Double put nonexistent
+assert. 1 -: count__mydict ''
 assert. 1 2 3 -: get__mydict 2 3
 4 5 6 put__mydict 1 3
+assert. 2 -: count__mydict ''
 assert. 4 5 6 -: get__mydict 1 3
 2 3 4 put__mydict 4 5
+assert. 3 -: count__mydict ''
 3 4 5 put__mydict 5 6
 assert. 4 -: count__mydict ''
 assert. (_3 ]\ 1 2 3 2 3 4 3 4 5) -: get__mydict 2 3 , 4 5 ,: 5 6

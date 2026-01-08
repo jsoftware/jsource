@@ -1201,6 +1201,8 @@ static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 #define MGETFLGGT 2  // 1 key: return region above key
 #define MGETFLGK 4   // user wants to see keys
 #define MGETFLGV 8   // user wants to see values
+#define MGETFLG1KEY 16  // the request is for 1 key
+#define MGETFLG2KEY 32  // the request is for 2 keys
 
 // search for a value in the tree, possibly bulding a stack for it
 // bits of type indicate options:
@@ -1329,9 +1331,11 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
   if(AR(w)>AN(dic->bloc.kshape)){  // 2 keys
    ASSERT(AR(w)==AN(dic->bloc.kshape)+1,EVRANK)  // list of 2 keys
    ASSERT(AS(w)[0]==2,EVLENGTH)  // exactly 2 keys
+   ASSERT(!(flags&MGETFLG1KEY),EVRANK)   // if the user used a 1key cover name with 2 keys, give rank error
    plist=S1LRCMP+S2CMP;  // plist for 2keys: compare each key, convert to node#
    nkvrq=AN(a)==2?nkvrq:~0;  // default request length to 'no limit'
   }else{  // 1 key
+   ASSERT(!(flags&MGETFLG2KEY),EVRANK)   // if the user used a 2key cover name with only 1 key, give rank error
    plist=flags&MGETFLGGT?S1LRCMP+S2LR:S1RLCMP+S2RL;  // plist for 1key: compare for the first, count for the second
    nkvrq=AN(a)==2?nkvrq:1;  // default request to 1 (head), otherwise leave signed with -1 meaning 'no limit'
   } 
@@ -1344,7 +1348,7 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
   I htct=AN(w)==2?IAV(w)[1]:1; nkvrq=ABS(htct);  // get length (default 1); length of head/tail as #items requested
   plist=htct>=0?S1LRMIN+S2LR:S1RLMAX+S2RL;  // plist for 0key: find min/max, then count
  }
- ASSERT((flags&~15)==0,EVDOMAIN) ASSERT((flags&MGETFLGK+MGETFLGV)!=0,EVDOMAIN)  // no extra flag bits, and must be asking for k or v or both
+ ASSERT((flags&~0b111111)==0,EVDOMAIN) ASSERT((flags&MGETFLGK+MGETFLGV)!=0,EVDOMAIN)  // no extra flag bits, and must be asking for k or v or both
  ASSERT(likely(dic->bloc.vbytelen!=0)||!(flags&MGETFLGV),EVDOMAIN)  // If values are empty, can't read them
  
  VIRT virt;  // place for virtuals (needed by user comp fns)

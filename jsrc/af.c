@@ -80,35 +80,37 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
  if(aif&FIXALOCSONLY&&!hasimploc(w))R w;  // nothing to fix
  if(NAME&AT(w)){R sfn(0,w);}  // only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
  if(NOUN&AT(w)||VFIX&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX set), keep it
- v=FAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;  // for levels other than the top, use na to cuase replacement of $:
+ v=FAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;  // for levels other than the top, use na to cause replacement of $:
  if(v->id==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork
+ A fo=f, go=g, ho=h;  // remember the constituents before they were fixed
  if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  switch(v->id){  // we know that modifiers have been executed to produce verb/nouns
+ // we reexecute the modifiers to use the new values.  But if the constituents were not changed by REFIXA, return the original w without reexecuting
  case CSLASH: 
-  R df1(z,REFIXA(2,f),wf);
+  if(fo==(f=REFIXA(2,f)))R w; R df1(z,f,wf);
  case CSLDOT: case CSLDOTDOT: case CBSLASH: case CBSDOT:
-  R df1(z,REFIXA(1,f),wf);
+  if(fo==(f=REFIXA(1,f)))R w; R df1(z,f,wf);
  case CTDOT:
-  f=REFIXA(0,f); g=REFIXA(na,g); R df2(z,f,g,wf);  // recur and rebuild.  t. starts a new recursion, so don't replace $: in it
+  f=REFIXA(0,f); g=REFIXA(na,g); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R df2(z,f,g,wf);  // recur and rebuild.  t. starts a new recursion, so don't replace $: in it
  case CATCO:
   if(FAV(g)->id==CTDOT)R REFIXA(na,g);   // t. is internally <@:t. .  Remove the <@: and continue.
 // otherwise fall through to...
  case CAT: case CCUT:
-  f=REFIXA(1,f); g=REFIXA(na,g); R df2(z,f,g,wf);  // rerun the compound after fixing the args
+  f=REFIXA(1,f); g=REFIXA(na,g); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R df2(z,f,g,wf);  // rerun the compound after fixing the args
  case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
-  f=REFIXA(na,f); g=REFIXA(1,g); R df2(z,f,g,wf);
+  f=REFIXA(na,f); g=REFIXA(1,g); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R df2(z,f,g,wf);
  case CCOLONE:  // Original m : n had VFIX set & never gets here.  This is (1) a nameref for an explicit modifier-plus-args, flagged as VXOP; (2) a namerefop for debug, flagged as PSEUDONAME+VXOPCALL+inherited flags;
                 // a namerefop for a modifier locative, which looks like a debug namerefop but has the locative in g.
   if(unlikely(FAV(w)->flag2&VF2PSEUDONAME)){R REFIXA(0,h);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
-  f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h?h:g,g);  // here for nameref: xop2 is bivalent; rebuild operator with original self and fixed f/h
+  f=REFIXA(0,f); h=REFIXA(0,h); if((((I)fo^(I)f)|((I)ho^(I)h))==0)R w; R xop2(f,h?h:g,g);  // here for nameref: xop2 is bivalent; rebuild operator with original self and fixed f/h
  case CCOLON:
-  f=REFIXA(1,f); g=REFIXA(2,g); R df2(z,f,g,wf);  // v : v, similarly
+  f=REFIXA(1,f); g=REFIXA(2,g); if((((I)fo^(I)f)|((I)go^(I)g)|((I)ho^(I)h))==0)R w; R df2(z,f,g,wf);  // v : v, similarly
  case CADVF:
-  f=REFIXA(3,f); g=REFIXA(3,g); if(h)h=REFIXA(3,h); R hook(f,g,h);
+  f=REFIXA(3,f); g=REFIXA(3,g); if(h)h=REFIXA(3,h); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R hook(f,g,h);
  case CHOOK:
-  f=REFIXA(2,f); g=REFIXA(1,g); R hook(f,g,0);
+  f=REFIXA(2,f); g=REFIXA(1,g); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R hook(f,g,0);
  case CFORK:
-  f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); R folk(f,g,h);  // f first in case it's [:
+  f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); if((((I)fo^(I)f)|((I)go^(I)g)|((I)ho^(I)h))==0)R w;R folk(f,g,h);  // f first in case it's [:
  case CATDOT: case CGRCO:
   IAV(aa)[0]=(aif|na);
   RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
@@ -163,7 +165,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
    RE(z);
    ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVTYPECHG);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
    R z;
-  }else R df1(z,REFIXA(2,f),wf);
+  }else{if(fo==(f=REFIXA(2,f)))R w; R df1(z,f,wf);}
 // bug ^: and m} should process gerund args
  case COBVERSE:
   if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
@@ -171,7 +173,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
  default:
   if(f)RZ(f=REFIXA(na,f));
   if(g)RZ(g=REFIXA(na,g));
-  R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
+  if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
  }
 }   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
 

@@ -1785,33 +1785,30 @@ DF1(jtdicmgetc){F12IP;
  R fdef(0,CMODX,VERB,jtdicmgeto,jtdicmgeto, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
 }
 
-// x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, delete the empty chainfields and return ''
+// x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, also delete the empty chainfields.  If empties have already been deleted, return empty
 // No locks; if you need a write lock, take it before calling.
 DF2(jtdicempties){F12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
- A z; I *zv;
  I x; RE(x=i0(a)); ASSERT(BETWEENC(x,0,1),EVDOMAIN)  // x must be 0 or 1
  I nodeb=(dic->bloc.emptysiz<<LGBB); UI kb=dic->bloc.kbytelen;  // #bits in empty-chain field; #bytes in key
  C *kv=CAV(dic->bloc.keys);   // point to start of keys
  I nempty=0; UI emptyx;  // # of empties & index of first one
- if(dic->bloc.emptyn==-1ULL){ASSERT(x==1,EVUNTIMELY) R mtv;}  // If we have already deleted the chain, we can't return it
- if(x==0){  // if we return the empty list
-  for(emptyx=dic->bloc.emptyn;;){
-   UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb); ++nempty;  // count this empty, get next one
-   if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
-   emptyx=emptynxt;  // advance to next
-  }
-  GATV0(z,INT,nempty,1) zv=IAV1(z);  // allocate result; pointer to first atom
- }
- for(nempty=0,emptyx=dic->bloc.emptyn;;){
+ if(dic->bloc.emptyn+1==0){ASSERT(x!=0,EVUNTIMELY) R mtv;}  // If we have already deleted the chain, we can't return it
+ for(emptyx=dic->bloc.emptyn;;){
   UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb); ++nempty;  // count this empty, get next one
-  if(x==0)zv[nempty]=emptyx;  // if we are not destroying the table, return index of empty
-  else{I t=0; WRHASH1234(t, nodeb>>3, &kv[emptyx*kb])}  // if destroying, erase the chain
   if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
   emptyx=emptynxt;  // advance to next
  }
- if(x!=0){dic->bloc.emptyn=-1; z=mtv;}  // set chain empty if we have deleted it.  The noun is still undisplayable.  Return empty
+ A z; GATV0(z,INT,nempty,1) I *zv=IAV1(z);  // allocate result; pointer to first atom
+ for(nempty=0,emptyx=dic->bloc.emptyn;;){
+  UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb);   // count this empty, get next one
+  zv[nempty++]=emptyx;  // if we are not destroying the table, return index of empty
+  if(x!=0){I t=0; WRHASH1234(t, nodeb>>3, &kv[emptyx*kb])}  // if destroying, erase the chain
+  if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
+  emptyx=emptynxt;  // advance to next
+ }
+ if(x!=0)dic->bloc.emptyn=-1;  // set chain invalid if we have deleted it.  The noun is still undisplayable.
  RETF(z)
  }
 
@@ -1819,6 +1816,7 @@ DF2(jtdicempties){F12IP;
 DF2(jtdicstats){F12IP;A z;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
+ ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I type; RE(type=i0(a))   // get the stat arg
  switch(type){
  case 0: z=sc(dic->bloc.cardinality); break; // nkeys

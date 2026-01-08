@@ -166,6 +166,21 @@ EMPTY
 test_basic1 COMBINATIONS
 test_basic2 COMBINATIONS
 
+NB. DESTROY.
+
+{{
+jdict =. 'jdictionary' conew~ > y
+put__jdict~ i. 7
+assert. 'rank error' -: destroy__jdict GetError 0
+assert. 'untimely request' -: get__jdict GetError 0
+assert. 'untimely request' -: put__jdict GetError~ i. 10
+assert. 'untimely request' -: has__jdict GetError i. 10
+assert. 'untimely request' -: del__jdict GetError 0
+assert. 'untimely request' -: count__jdict GetError ''
+assert. 1 -: destroy__jdict ''
+EMPTY
+}}"0 INDEX_TYPES
+
 NB. CUSTOM KEYHASH & KEYCOMPARE
 
 {{

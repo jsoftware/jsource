@@ -228,7 +228,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  // For simplicity, we just use 4-byte empty chains unless the key is shorter than that.
  // We must bias/unbias these indexes for use in the hash/tree.
  if(unlikely(((DIC*)z)->bloc.kbytelen<4)){((DIC*)z)->bloc.emptysiz=((DIC*)z)->bloc.kbytelen; maxeles=MIN(maxeles,(UI)1<<(((DIC*)z)->bloc.kbytelen*SZI));}  // no need to allow for more elements than addressable keypoints.  Use chain len of 4 unless key shorter
-else((DIC*)z)->bloc.emptysiz=4;   // not short key, use convenient chain length
+ else((DIC*)z)->bloc.emptysiz=4;   // not short key, use convenient chain length
 
  // allocate & protect hash/keys/vals, and put all keys on the empty chain
  // hashtbl is hashelsiz per entry
@@ -593,7 +593,7 @@ static DF2(jtdicget){F12IP;A z;
  ARGCHK2(a,w)
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+ ASSERT(dic->bloc.emptyn+1==0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed when values are empty (only has)
@@ -671,7 +671,7 @@ found:;  // hval is the kv slot we compared with, or a new empty kv slot
  DICLKWRWTV(dic,lv) DICLKWRRELK(dic,lv)  // wait for values to be modifiable, then release keys (questionable decision).  Return with lock on values
  I vb=dic->bloc.vbytelen; 
  PUTKVOLD(vbase+hval*vb,v,vb,hsz&(DICFVINDIR<<DICFBASE)); // copy the value
-R lv|DICLMSKOKRET;  // good return, holding write lock on values or values/keys
+ R lv|DICLMSKOKRET;  // good return, holding write lock on values or values/keys
 
 resize:;  // resize required.  We already have a write lock
  R lv|DICLMSKOKRET+DICLMSKRESIZEREQ;  // signal need for resize; return holding write lock on keys & values
@@ -689,7 +689,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
     // with this lock we can add new kvs, or change an empty/tombstone to a birthstone; but no other hash changes, and no value overwrites
 
  UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz  base of hashtbl
-C *kbase=CAV(dic->bloc.keys);  // key 0 address for empties; address corresponding to hash value of 0.
+ C *kbase=CAV(dic->bloc.keys);  // key 0 address for empties; address corresponding to hash value of 0.
  C *vbase=CAV(dic->bloc.vals);  // pointer to values
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
@@ -749,7 +749,7 @@ C *kbase=CAV(dic->bloc.keys);  // key 0 address for empties; address correspondi
  for(cur=croot,emptyx=dic->bloc.emptyn;cur>=0;){
   // cur is the current element of conflict chain, emptyx is the root of the empty chain
   I8 nxthsh=s[cur];  // fetch chain\hashslot
- I curslot=(UI4)nxthsh;  I hval; // slot was originally birthstone where the search ended.  Now it has been filled in, and we resume the search there.  It could match right there.  hval is biased kv slot# from hashtable
+  I curslot=(UI4)nxthsh;  I hval; // slot was originally birthstone where the search ended.  Now it has been filled in, and we resume the search there.  It could match right there.  hval is biased kv slot# from hashtable
   while(1){
    hval=_bzhi_u64(*(UI4*)&hashtbl[curslot*(hsz>>56)],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv.  high 32 0='old key'
    if((hval-=HASHNRES)<0)goto notfound;  // if we hit a hole (birthstones have been filled), go allocate a new kv
@@ -788,10 +788,10 @@ found:;  // hval is the kv slot we compared with, or a new empty kv slot
 
  // we have updated the keys and hash.  Now move the (non-new) values, indexed by s[i] (unbiased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
  if(vb!=0){   // Skip all value moves if values not empty
- ((I4*)(&s[otail]))[1]=croot; oroot=oroot<0?croot:oroot;  // append conflict chain to old chain (if old chain is empty otail=0, which is OK to store into because ele 0 can never be a conflict); start on combined chain
+  ((I4*)(&s[otail]))[1]=croot; oroot=oroot<0?croot:oroot;  // append conflict chain to old chain (if old chain is empty otail=0, which is OK to store into because ele 0 can never be a conflict); start on combined chain
   for(cur=oroot;cur>=0;){I8 nxtkv=s[cur]; if(likely((UI4)nxtkv!=(UI4)~0))PUTKVOLD(vbase+(UI4)nxtkv*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE)); cur=nxtkv>>32;} // chase the old keys, copying the value (except the last during resize)
  }
-R lv|DICLMSKOKRET+(hsz&(DICFRESIZE<<DICFBASE)?DICLMSKRESIZEREQ:0);  // return, holding write lock on values or values/keys
+ R lv|DICLMSKOKRET+(hsz&(DICFRESIZE<<DICFBASE)?DICLMSKRESIZEREQ:0);  // return, holding write lock on values or values/keys
 
 lockforresize:; DICLKWRRQ(dic,lv); DICLKWRWTK(dic,lv) goto lockvforresize;  // come here when we detect resize early.  Catch up by requesting a write lock
 
@@ -809,7 +809,7 @@ errexit: R 0;   // return with error
 static DF2(jtdicput){F12IP;A z;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+ ASSERT(dic->bloc.emptyn+1==0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.vtype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // v must be a single value or an array of them, with correct shape
@@ -893,7 +893,7 @@ found:;  // hval is the kv slot we compared with, curslot points to the hashslot
  I vb=dic->bloc.vbytelen; DELKV(vbase+hval*vb,vb,hsz&(DICFVINDIR<<DICFBASE))   // erase the value
  dic->bloc.emptyn=hval;  // Store new deletion as updated base of free chain
  dic->bloc.cardinality--;  // account for the deleted key
-// Whenever we add a tombstone, we turn it into an empty if it is followed by an empty; and we continue this back into previous tombstones
+ // Whenever we add a tombstone, we turn it into an empty if it is followed by an empty; and we continue this back into previous tombstones
  UI cs=(UI4)curslot; I curslotn=cs-1; if(unlikely(curslotn<0))curslotn+=(UI4)hsz;   // point to next slot
  if(_bzhi_u64(*(UI4*)&hashtbl[curslotn*(hsz>>56)],(hsz>>53))==0){
   // curslot is followed by a hole.  Flip it & its predecessor tombstones to holes
@@ -924,7 +924,7 @@ static INLINE UI8 jtdelslots(DIC *dic,void *k,I n,I8 *s,J jt,UI lv,VIRT virt){I 
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
 
- // first pass over keys.  If key found, add a record of (unbiased kvslot)\hashslot or ~0 for key not found
+// first pass over keys.  If key found, add a record of (unbiased kvslot)\hashslot or ~0 for key not found
 for(i=n-1;i>=0;--i){  // loop over keys, descending for comp. ease
   I curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32); I hval; // convert hash to slot#; place where biased kv# comes in
   while(1){
@@ -940,7 +940,7 @@ for(i=n-1;i>=0;--i){  // loop over keys, descending for comp. ease
  I vb=dic->bloc.vbytelen; C *vbase=CAV(dic->bloc.vals);  // address corresponding to unbiased hash value of 0.
  UI emptyx=dic->bloc.emptyn; I cur; // starting root of free queue, current index, empty list
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))unbiasforcomp
-DICLKWRWTK(dic,lv)  // wait for write lock for  to be granted.  No resize is possible
+ DICLKWRWTK(dic,lv)  // wait for write lock for  to be granted.  No resize is possible
 
  // process the list of kvslot\hashslot, turning each hashslot into a tombstone.  If it's already a tombstone, double del, ignore it & remove
  for(i=n-1;i>=0;--i){
@@ -949,7 +949,7 @@ DICLKWRWTK(dic,lv)  // wait for write lock for  to be granted.  No resize is pos
    UI hval=_bzhi_u64(*(UI4*)&hashtbl[(UI4)curslot*(hsz>>56)],(hsz>>53));  // read biased hashtable index, to see if it's a tombstone already (double del)
    if(likely(hval>=HASHNRES)){  // don't clear a slot more than once
     I t=HASHTSTN; WRHASH1234(t, hsz>>56, &hashtbl[(UI4)curslot*(hsz>>56)])  // mark the slot as a tombstone
-  }else s[i]=~0;  // mark a double delete like empty
+   }else s[i]=~0;  // mark a double delete like empty
   }
  }
 
@@ -974,7 +974,7 @@ DICLKWRWTK(dic,lv)  // wait for write lock for  to be granted.  No resize is pos
   }
  }
 
-dic->bloc.emptyn=emptyx;  // Store updated free chain after all deletions
+ dic->bloc.emptyn=emptyx;  // Store updated free chain after all deletions
  dic->bloc.cardinality-=ndel;  // account for the deleted keys
 
  R lv|DICLMSKOKRET+(hsz&(DICFRESIZE<<DICFBASE)?DICLMSKRESIZEREQ:0);  // return, holding write lock on values or values/keys.  Use flag to force non0 for no error
@@ -988,7 +988,7 @@ errexit:; R 0;
 static DF1(jtdicdel){F12IP;A z;
  ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+ ASSERT(dic->bloc.emptyn+1==0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))  // convert type of k if needed
@@ -1027,7 +1027,7 @@ static DF1(jtdicdel){F12IP;A z;
    lv=jtdelslots(dic,k,kn,s,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; abort if error if no resize, finish, good or bad
    if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
    lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
- }
+  }
   // s has the info about deletions.  Allocate a return area & return it
   GATVE(z,B01,kn,wf,AS(w),goto errexit;) C *zv=CAVn(wf,z); DO(kn, zv[i]=s[i]!=~0;)
  }
@@ -1170,7 +1170,7 @@ static DF2(jtdicgeto){F12IP;A z;
  ARGCHK2(a,w)
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+ ASSERT(dic->bloc.emptyn+1==0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed on empty value
@@ -1179,7 +1179,7 @@ static DF2(jtdicgeto){F12IP;A z;
  I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
 
-GA0(z,t,kn*vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
+ GA0(z,t,kn*vaii,wf+AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,IAV1(sa),AN(sa))   // allocate recursive result area & install shape
  // establish the area to use for s.  To avoid wasting a lot of stack space we use the virt-block area if that is not needed for user comp.  And if there is a user hash, we allocate
  // nothing & use the value returned by keyprep, which will be the result area from the user hash.
  VIRT virt; I8 *s;  // place for virtuals (needed by user comp fns); key/hash workarea
@@ -1274,7 +1274,7 @@ static INLINE UI scantree(I dir,I mode,J jt,C *hashtbl, UI4 (*sp)[2], I *flags, 
 startmin:;  // enter first time going distal only
    // out the middle node
    (*res)[zx]=nodex;  // put the node out, in order, advance to next slot
-  // finish when we have written enough
+   // finish when we have written enough
    if(mode==1&&nodex==endx){zx+=!!(*flags&MGETFLGEQ1); goto endscan;}  // check last node; accept last node if not suppressed
    ++zx;  // accept any non-last node
    if(zx==nkvrq)goto endscan;  // quit when we have written the requested # values
@@ -1318,7 +1318,7 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  I flags;  // processing flags k,v,min,max
  void *k;  // will point to key if any
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+ ASSERT(dic->bloc.emptyn+1==0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I plist;  // operation sequence for this request
  if(w!=self){ // dyad
   k=voidAV(w);  // point to key data
@@ -1507,19 +1507,19 @@ static INLINE UI8 jtputslotso(DIC *dic,void *k,I n,void *v,I vn,J jt,UI lv,VIRT 
    uncle=RDIR(gparent,gparentd^1);  // get parent's sibling (w/o dir)
    if(uncle<(TREENRES<<1)||CBYTE(uncle)&1)break;  // if uncle is black,  we can get out
    // exit criteria not matched.  Go up two levels to work on this node's grandparent & greatgrandparent;
-  CBYTE(parent)|=1; CBYTE(uncle)|=1; CBYTE(gparent)&=~1;   // mark parent & uncle black, gparent red.  This fixes snodex & parent but may leave a red vio at gparent
+   CBYTE(parent)|=1; CBYTE(uncle)|=1; CBYTE(gparent)&=~1;   // mark parent & uncle black, gparent red.  This fixes snodex & parent but may leave a red vio at gparent
    snodex=gparent;  // the node to work on next, always red
    parent=pdir[pi-3]; parentd=PDIRDIR(parent); parent=PDIRNODE(parent);  // back up to parent
    pi-=2;  // pop up to the grandparent;
   }
   // snodex is red, parent is red, grandparent & uncle are black.  We can get out in 1 or 2 rotations.
   if(gparentd!=parentd){
-  // snodex is an inner child, i. e. left child of right child or the reverse.  Rotate snodex to where the parent is.
-  ROT(parent,parentd,gparent,gparentd,snodex)  // rotate inner child to parent
+   // snodex is an inner child, i. e. left child of right child or the reverse.  Rotate snodex to where the parent is.
+   ROT(parent,parentd,gparent,gparentd,snodex)  // rotate inner child to parent
    parent=snodex;  // snodex moves to the parent position for the final rotate
- }
+  }
   
- ROT(gparent,gparentd,PDIRNODE(pdir[pi-3]),PDIRDIR(pdir[pi-3]),parent)  // rotate parent (original red snodex if we did first rotate) over black grandparent
+  ROT(gparent,gparentd,PDIRNODE(pdir[pi-3]),PDIRDIR(pdir[pi-3]),parent)  // rotate parent (original red snodex if we did first rotate) over black grandparent
   CBYTE(gparent)^=1; CBYTE(parent)^=1;  // make parent black, gparent red, removing the violation
 
 finput:;  // install the new value, and maybe the key, at the kv slot corresponding to tree-node nodex
@@ -1539,7 +1539,7 @@ errexit: R 0;
 static DF2(jtdicputo){F12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+ ASSERT(dic->bloc.emptyn+1==0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.vtype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // v must be a single value or an array of them, with correct shape
@@ -1553,20 +1553,20 @@ static DF2(jtdicputo){F12IP;
 
  VIRT virt;  // place for virtuals (needed by user comp fns)
 
-UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
-void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
+ UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
+ void *k=voidAV(w), *v=voidAV(a);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
   lv=jtputslotso(dic,k,kn,v,vn,jt,lv,virt); if(lv==0)goto errexit; if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the puts; if no resize, finish, good or bad
 #pragma clang diagnostic pop
- if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
+  if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
   lv&=~(DICLMSKRESIZEREQ+DICLMSKOKRET);  // remove return flags from lv
  }
  A z=mtm; if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
  PRISTCLRF(w);    // we have taken from w; remove pristinity.  This destroys w.  We do this even in case of error because we may have moved some values before the error happened
-DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
-RETF(z);
+ DICLKWRRELV(dic,lv)    // we are finished. advance sequence# and allow everyone to look at values
+ RETF(z);
 }
 
 
@@ -1614,9 +1614,9 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
   }
   // we found the node to be deleted: nodex, whose children are in chirn.  pdir[pi-1] matches parent
   I nodexlc=_bzhi_u64(chirn,nodeb), nodexr=(chirn>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);  // the children\color
- if((nodexlc&~1)&&nodexr){  // 2 children
-  // 2 children.  find in-order successor (last consecutive left child of right subtree), swap nodex with successor, continue
-  I nodexpi=pi; UI lsucc=nodexr; ++pi;   // remember level of parent that will be swapped; init leftmost successor;  skip parent slot holding to-be-swapped node
+  if((nodexlc&~1)&&nodexr){  // 2 children
+   // 2 children.  find in-order successor (last consecutive left child of right subtree), swap nodex with successor, continue
+   I nodexpi=pi; UI lsucc=nodexr; ++pi;   // remember level of parent that will be swapped; init leftmost successor;  skip parent slot holding to-be-swapped node
    DLRC(lsucc)  // decls for reading chirn
    while(1){
     // drop down to probe, updating parent chain
@@ -1627,7 +1627,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
    // now lsucc is the successor\0, lsuccl (always 0) and lsuccr are its children.  Put it where nodex was - keeping old colors
    WLRC(parent&~1,parent&1,lsucc,CBYTE(parent&~1)&1)   // parent[dir]=successor
    pdir[nodexpi]=lsucc|1;   // successor is parent of right chain if any
-  WLC(nodex,0,lsuccc) WR(nodex,lsuccr)   // put succ's children/color into nodex.  successor has no left child.  Keep color in tree, which means swapping it between nodes
+   WLC(nodex,0,lsuccc) WR(nodex,lsuccr)   // put succ's children/color into nodex.  successor has no left child.  Keep color in tree, which means swapping it between nodes
    WLC(lsucc,nodexlc&~1,nodexlc&1) WR(lsucc,nodexr)  // put nodex's children/color into succ.  Keep color unchanged
    parent=pdir[pi-1];  // restore parent\dir to that of successor
    // no need to write nodex into parent - we are about to expunge nodex which will modify parent
@@ -1646,7 +1646,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
 
   I child=(nodexlc|nodexr)&~1;  // the one child, if not 0
   if(child){  // is there a child?
-  // the node has 1 child.  color the child black, and replace the node with the child (i. e. in the parent)
+   // the node has 1 child.  color the child black, and replace the node with the child (i. e. in the parent)
    CBYTE(child)|=1;  WLRC(parent&~1,parent&1,child,CBYTE(parent&~1)&1)   // parent[dir]=child
    goto findel;  // finished
   }
@@ -1667,18 +1667,18 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
    RSOC(parent,parent,parentd) sibling=parento;  // fetch parents' children.  Same is the current node, opposite is the sibling.  Both must exist, but at the bottom the same has a stale pointer to the successor
    if(!(CBYTE(sibling)&1)){  // sibling red?
     // sibling is red.  We rotate it to be grandparent, which will leave snodex with a red parent
-   ROT(parent,parentd^1,PDIRNODE(gparent),PDIRDIR(gparent),sibling)  // rotate parentn (red sibling) into parent.  It is in parent[parentd^1]
+    ROT(parent,parentd^1,PDIRNODE(gparent),PDIRDIR(gparent),sibling)  // rotate parentn (red sibling) into parent.  It is in parent[parentd^1]
     CBYTE(sibling)|=1; CBYTE(parent)&=~1; parentc=0; // set sibling black, parent red (and update saved parent color to red, which will get us out of loop)
     gparent=sibling+parentd;  // old sibling is now black grandparent; but keep the original parent direction in node\dir
     sibling=RDIR(parent,parentd^1);   // Fetch new sibling, which is perforce black
-  }
+   }
    // Here sibling is black (it may have been a same-child, now swapped into that position)
    RSOC(sibling,sibling,parentd)  //  fetch sibling's children, as same/opp
    if(siblingo&&!(CBYTE(siblingo)&1))goto onephred;  // opp nephew red, go handle it in 1 rotation
    if(siblings&&!(CBYTE(siblings)&1))goto snephred;  // otherwise, same nephew red, go handle it in 2 rotations
    // sibling is black and has only black children
    if(!parentc)goto parred;  // parent red, go handle it
-  // parent, sibling, nephews (if any) all black.
+   // parent, sibling, nephews (if any) all black.
    CBYTE(sibling)&=~1;   //  Turn the sibling red (which makes the tree rooted in parent balanced but still shorter than the one rooted in the parent's sibling).
    parent=gparent; --pi;  // Move up one level, continue rebalancing there
   }  // never fall through
@@ -1686,23 +1686,23 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
   // rebalancing runout.  We have seen red, and can finish in at most 3 rotations
 
 parred:;  // parent red, no red in sibling
- CBYTE(parent)|=1; CBYTE(sibling)&=~1;  // set sibling red, parent black
+  CBYTE(parent)|=1; CBYTE(sibling)&=~1;  // set sibling red, parent black
   goto findel;  // finished
 snephred:;  // opp nephew black, but same nephew red
- ++pi; ROT(sibling,parentd,parent,parentd^1,siblings) --pi;  // rotate red same nephew into sibling
+  ++pi; ROT(sibling,parentd,parent,parentd^1,siblings) --pi;  // rotate red same nephew into sibling
   CBYTE(sibling)&=~1; CBYTE(siblings)|=1;  // set sibling red, former same nephew (now parent of sibling) black
- siblingo=sibling; sibling=siblings;  // set up assignments for after fallthrough and rotation
+  siblingo=sibling; sibling=siblings;  // set up assignments for after fallthrough and rotation
   // fall through to...
 onephred:;   // opp nephew red
- ROT(parent,parentd^1,PDIRNODE(gparent),PDIRDIR(gparent),sibling)  // rotate sibling up to parent
+  ROT(parent,parentd^1,PDIRNODE(gparent),PDIRDIR(gparent),sibling)  // rotate sibling up to parent
   CBYTE(sibling)=(CBYTE(sibling)&~1)|parentc;  // move parent's color to new parent
   CBYTE(parent)|=1;  // mark old parent (now near sibling) black
   CBYTE(siblingo)|=1;  // mark old opp nephew (now sibling) black
   // fall through to...
 findel:;  // here when balancing complete
- if(0){notfound: zv[i]=0;}  // if key not found, so indicate in return
- k=(void *)((I)k-(kib>>32));  // advance to next search key
-}
+  if(0){notfound: zv[i]=0;}  // if key not found, so indicate in return
+  k=(void *)((I)k-(kib>>32));  // advance to next search key
+ }
  R lv|DICLMSKOKRET;  // good return, holding lock
 // resize: R lv|DICLMSKOKRET+DICLMSKRESIZEREQ;  // signal need for resize; return holding write lock on keys & values
 errexit: R 0;
@@ -1712,7 +1712,7 @@ errexit: R 0;
 static DF1(jtdicdelo){F12IP;
  ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- ASSERT(dic->bloc.emptyn!=-1ULL,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+ ASSERT(dic->bloc.emptyn+1==0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  if(unlikely(AN(w)==0)){R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),mtv);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ ''
@@ -1722,19 +1722,19 @@ static DF1(jtdicdelo){F12IP;
 
  VIRT virt;  // place for virtuals (needed by user comp fns)
 
-A z; GATVE(z,B01,kn,wf,AS(w),goto errexit;) C *zv=CAVn(wf,z); mvc(kn,zv,MEMSET01LEN,MEMSET01);   // allocate return area & init to 'all found'
+ A z; GATVE(z,B01,kn,wf,AS(w),goto errexit;) C *zv=CAVn(wf,z); mvc(kn,zv,MEMSET01LEN,MEMSET01);   // allocate return area & init to 'all found'
  UI lv; DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
-void *k=voidAV(w);  // point to the key and value data
+ void *k=voidAV(w);  // point to the key and value data
  while(1){  // loop till we have processed all the resizes
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
   lv=jtdelslotso(dic,k,kn,jt,lv,virt,zv); if(lv==0)goto errexit; if(1||likely(!(lv&DICLMSKRESIZEREQ)))break; // do the dels; if no resize (not supported yet), finish, good or bad
 #pragma clang diagnostic pop
- dicresize(dic,jt);  // If we have to resize, we abort with the dels partially complete, and then retry, keeping the dic under lock the whole time
+  dicresize(dic,jt);  // If we have to resize, we abort with the dels partially complete, and then retry, keeping the dic under lock the whole time
  }
  if(0){errexit: z=0; lv=DICLMSKWRV;}   // set lv so as to allow updating the current-owner flag - even if singlethreaded, since it doesn't matter then
-DICLKWRRELV(dic,lv)    // we are finished.  advance sequence# and allow everyone to look at values.  We must have a lock
-RETF(z);
+ DICLKWRRELV(dic,lv)    // we are finished.  advance sequence# and allow everyone to look at values.  We must have a lock
+ RETF(z);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*- user-level primitives *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-

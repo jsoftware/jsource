@@ -105,6 +105,11 @@
 #endif
 #endif
 
+#if !(defined(__x86_64__) || defined(__aarch64__) || defined(_M_ARM64))
+#undef EMU_AVX2
+#define EMU_AVX2 0
+#endif
+
 #if !defined(EMU_AVX2) && ((defined(__SSE2__) && defined(__x86_64__)) || defined(__aarch64__) || defined(_M_ARM64))
 #undef EMU_AVX2
 #define EMU_AVX2 1

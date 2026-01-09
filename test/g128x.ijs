@@ -80,14 +80,14 @@ for_dim. 2 + 20 ?@$ 40 do.
   assert. 1e_7 > >./ | , (p { a) - lrtoa lr
 end.
 1
-}}^:IF64 1 NB. all J64 support EMU_AVX2 emulated fma
+}}^:((9!:56'avx2')+.9!:56'emu_avx2') 1
 
 NB. LU rational
 lrtoar =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
 (-: (0&{:: /:~ lrtoar@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
 
 t=: 3 : 0''
-if. (-.IF64) +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
+if. (0=(9!:56'avx2')+.9!:56'emu_avx2') +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
   EMPTY return.
 end.
 for_i. (>: , 500&+) (i.15) do.

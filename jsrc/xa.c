@@ -443,6 +443,10 @@ F1(jtcpufeature){F12IP;
 #endif
  } else if(!strcasecmp(CAV(w),"SUPPORTAFFINITY")) {
   R sc(supportaffinity);
+ } else if(!strcasecmp(CAV(w),"EMU_AVX2")) {
+  R sc(EMU_AVX2);
+ } else if(!strcasecmp(CAV(w),"PYXES")) {
+  R sc(PYXES);
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

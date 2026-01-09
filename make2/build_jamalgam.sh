@@ -267,6 +267,8 @@ case "$jplatform64" in
 esac
 if [ $USE_EMU_AVX -eq 1 ] ; then
  common="$common -DEMU_AVX2=1"
+else
+ common="$common -DEMU_AVX2=0"
 fi
 
 NO_SHA_ASM="${NO_SHA_ASM:=0}"

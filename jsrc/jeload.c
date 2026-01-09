@@ -384,8 +384,9 @@ int jefirst(int type,char* arg)
 	if(0==type)
 	{
 #ifdef ANDROID
-		strcat(input,"(3 : '0!:0 y')<INSTALLROOT,'");
-		strcat(input,"/bin");
+//		strcat(input,"(3 : '0!:0 y')<INSTALLROOT,'");
+//		strcat(input,"/bin");
+		strcat(input,"(3 : '0!:0 y')<BINPATH,'");
 #else
   if (!FHS)
 		strcat(input,"(3 : '0!:0 y')<BINPATH,'");

@@ -261,23 +261,25 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // stats I totalpops;
 // stats I nonnullpops;
 // the following lines are engaged only for low-performance builds, and must not be set in 64-bit builds lest blocks get too big
-#if !SY_64
-#if !C_CRC32C
+#if !(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
 #endif
-#if !(C_CRC32C && SY_64)
+#if !(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))
  I    min;              /* the r result from irange                        */
 #endif
-#if !(C_CRC32C && SY_64)
+#if !(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
-#endif
 #endif
 
 };
 typedef struct JTTstruct JTT;
 typedef JTT* JJ;  // thread-specific part of struct
+#if SY_64 && !(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))
+#define LGTHREADBLKSIZE 10 // log2 of threaddata
+#else
 #define LGTHREADBLKSIZE 9  // log2 of threaddata
+#endif
 
 // Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
 typedef struct JSTstruct {

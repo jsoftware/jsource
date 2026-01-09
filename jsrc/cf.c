@@ -145,7 +145,7 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
    } break;
   }
 
-#if C_CRC32C && SY_64
+#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
   if(unlikely(fi==CLEFT)){
    I d=gv->id; d=d==CFIT&&gv->localuse.lu1.cct==1.0?FAV(gv->fgh[0])->id:d;  // middle -. of [-.-. .  We implement as if !.0 given on g, so we allow the user to give that
    I c=hv->id; I e=c; if(unlikely(e==CFIT)){cct=hv->localuse.lu1.cct; e=FAV(hv->fgh[0])->id;}  // comparison op, possibly from u!.f

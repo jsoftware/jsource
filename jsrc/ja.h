@@ -202,7 +202,7 @@
 #define cut2bx(x,y,z)               jtcut2bx(jt,(x),(y),(z))
 #define cut2sx(x,y,z)               jtcut2sx(jt,(x),(y),(z))
 #define cvt(x,y)                    jtcvt(jt,(x),(y))
-#if !C_CRC32C
+#if !(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))
 #define cvt0(x)                     jtcvt0(jt,(x))
 #endif
 #define cvt2bit(x,y)                jtcvt2bit(jt,(x),(y))

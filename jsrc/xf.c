@@ -160,10 +160,13 @@ DF2(jtjfwrite){F12IP;B b;F f;
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
  RE(f=stdf(w));   // f=0 if w is filename, else 1-6 for special files
  if(2==(I)f){jtjpr((J)((I)jt+MTYOFILE),a); R a;}  // 2=write to console, convert to printable string and type out, with NOSTDOUT off
+#ifdef ANDROID
+ if(4==(I)f){A z=tocesu8(a); R (U)AN(z)!=fwrite(CAV(z),sizeof(C),AN(z),stdout)?jerrno():a;}  // 4=stdout
+ if(5==(I)f){A z=tocesu8(a); R (U)AN(z)!=fwrite(CAV(z),sizeof(C),AN(z),stderr)?jerrno():a;}  // 5=stderr
+ if(6==(I)f){A z=tocesu8(a); (CAV(z))[AN(z)]=0; __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",CAV(z)); R a;}  // Android logcat
+#else
  if(4==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stdout)?jerrno():a;}  // 4=stdout
  if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}  // 5=stderr
-#ifdef ANDROID
- if(6==(I)f){A z=tocesu8(w); __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",CAV(z)); R a;}  // 6=Android logcat
 #endif
  if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f));    // b='w is a filename'.  If so, open the file; otherwise (file#) lock the file
 // erase previous content of opened file

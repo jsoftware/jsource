@@ -24,7 +24,7 @@ static DF2(jtfitctkey){F12IP;A fs=FAV(self)->fgh[0]; R jtkeyct(jt,a,w,fs,FAV(sel
 
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
 static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey,
-#if SY_64
+#if SY_64 && (C_AVX2 || EMU_AVX2)
  jtsfu,   // only in viavx.c
 #else
  0,

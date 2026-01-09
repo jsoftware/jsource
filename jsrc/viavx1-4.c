@@ -4,7 +4,7 @@
 /* Verbs: Index-of                                                         */
 
 #include "j.h"
-#if C_CRC32C && SY_64
+#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
 #define suff 2
 #define TH UI4
 #include "viavx1.h"

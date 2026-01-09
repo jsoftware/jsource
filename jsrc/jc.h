@@ -124,7 +124,7 @@
 #define CAT        (C)0x39  // @
 #define CATDOT     (C)0x3a  // @. paired with `:
 #define CGRCO      (C)0x3b  // `:
-#define CSELF      (C)0x3c  // $: @. `: $: all in a row
+#define CSELF      (C)0x3c  // @ @. `: $: all in a row
 #define CCOLON     (C)0x3d  // :
 #define CUDOT      (C)0x3e  // u.  must be paired v.
 #define CVDOT      (C)0x3f  // v.

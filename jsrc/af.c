@@ -73,17 +73,22 @@ EVERYFS(arofixaself,jtaro,jtfixa,0,VFLAGNONE)  // create A block to be used in e
 static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; fauxINT(aa,fauxself,2,0); IAV0(aa)[1]=IAV(a)[1];  // place to build recursion parm - make the AK field right, and pass the AM field along
 #define REFIXA(a,x) (IAV0(aa)[0]=(aif|(a)), fixa((A)aa,(x)))
  ARGCHK1(w);
+ // If we are only interested in replacing locatives, and there aren't any, exit fast
+// obsolete  if(NOUN&AT(w)||VFIX&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX set), keep it
+// obsolete  if(unlikely((NAME&AT(w))!=0)){R sfn(0,w);}
+ if(NOUN&AT(w)){R w;}  // return noun value; only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
+ v=FAV(w); f=v->fgh[0]; g=v->fgh[1];   // fetch f, g of compound
+// if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
+ if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // return if primitive.  combinations always have f or g; and u./v. must be replaced even though it doesn't
+ h=v->fgh[2];  // fetch h
+ if(v->id==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork
+ if(VFIX&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX set), keep it
  I ai=IAV(a)[0];  // value of a
  I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV); // extract control flags
- ai^=aif;   // now ai = state without flags
- // If we are only interested in replacing locatives, and there aren't any, exit fast
- if(aif&FIXALOCSONLY&&!hasimploc(w))R w;  // nothing to fix
- if(NAME&AT(w)){R sfn(0,w);}  // only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
- if(NOUN&AT(w)||VFIX&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX set), keep it
- v=FAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;  // for levels other than the top, use na to cause replacement of $:
- if(v->id==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork
+ ai^=aif; I na=ai==0?3:ai;  // now ai = state without flags; for levels other than the top, use na to cause replacement of $:
+ if(unlikely(aif&FIXALOCSONLY)&&!hasimploc(w))R w;  // if looking for implicit locatives, and there aren't any, nothing to fix
+ wf=ds(v->id);   // fetch self for w
  A fo=f, go=g, ho=h;  // remember the constituents before they were fixed
- if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  switch(v->id){  // we know that modifiers have been executed to produce verb/nouns
  // we reexecute the modifiers to use the new values.  But if the constituents were not changed by REFIXA, return the original w without reexecuting
  case CSLASH: 

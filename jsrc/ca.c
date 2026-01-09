@@ -285,7 +285,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
    // We can't lex a general sentence because lexing requires context to know how to treat assignments.  And,
    // there's no use for ".@const besides delayed name resolution
    // We give the w the strange flagging of NAME AND ALSO LIT - it will be handled as a name when executed, but as a string for representations
-   if(AR(w)<=1 && (g=tokens(vs(w),1)) && AN(g)==1 && AT(AAV(g)[0])&NAME){w=rifvs(AAV(g)[0]); AT(w)|=LIT;}
+   if(AR(w)<=1){RZ(g=tokens(vs(w),1)) if(AN(g)==1 && AT(g=QCWORD(AAV(g)[0]))&NAME){RZ(w=rifvs(g)) AT(w)|=LIT;}}
   }
   fdeffill(z,0,CAT,VERB, onconst12,onconst12, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX); R z;
  }

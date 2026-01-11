@@ -226,8 +226,8 @@ NB. SPARSE ARRAYS.
 
 {{
 'index_type sparsetype' =. y
-assert. 'domain error' -: 'jdictionary' conew~ GetError y , < 'keytype' ; sparsetype
-assert. 'domain error' -: 'jdictionary' conew~ GetError y , < 'valuetype' ; sparsetype
+assert. 'domain error' -: 'jdictionary' conew~ GetError index_type ,&< 'keytype' ; sparsetype
+assert. 'domain error' -: 'jdictionary' conew~ GetError index_type ,&< 'valuetype' ; sparsetype
 EMPTY
 }}"1 INDEX_TYPES (, <)"0"_ 0 ] 2 ^ 10 + i. 6
 

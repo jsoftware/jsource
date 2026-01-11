@@ -318,23 +318,23 @@ REDUCEPFX( plusinsI4, I, I4, pfxplus, plus1I4I4I, plus1I4II )
 // version for QP with AVX2.  Bandwidth is not an issue, so we accumulate into memory for rank > 1
 I plusinsE(I d,I n,I m,E* RESTRICTI x,E* RESTRICTI z,J jt){I i;  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
   if(d==1){x += m*n; z+=m;
-   __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff});  /* needed masks: sign, mantissa */
-   /* we will read twice, masking.  We may read the first half twice to avoid overfetch */
-   __m256i rdmask=_mm256_castps_si256(_mm256_permutevar_ps(_mm256_castpd_ps(_mm256_broadcast_sd((D*)&maskec4123[n&(NPAR-1)])),_mm256_loadu_si256((__m256i*)&validitymask[2]))); /* masks for the 2 reads */
-   for(i=m;i;--i){   /* for each accumulated row */
-    I rematom;  /* # atoms to accumulate */
+   __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff});  // needed masks: sign, mantissa
+   // we will read twice, masking.  We may read the first half twice to avoid overfetch/
+   __m256i rdmask=_mm256_castps_si256(_mm256_permutevar_ps(_mm256_castpd_ps(_mm256_broadcast_sd((D*)&maskec4123[n&(NPAR-1)])),_mm256_loadu_si256((__m256i*)&validitymask[2]))); // masks for the 2 reads
+   for(i=m;i;--i){   // for each accumulated row
+    I rematom;  // # atoms to accumulate
     __m256d x0,x1,y0,y1,z0,z1;
-    x -= ((n-1)&(NPAR-1))+1;  /* back up to beginning of last NPAR-atom section */
+    x -= ((n-1)&(NPAR-1))+1;  // back up to beginning of last NPAR-atom section 
     x0=_mm256_maskload_pd((D*)(x),rdmask);
     x1=_mm256_maskload_pd((D*)(x+((n-1)&(NPAR/2))),_mm256_slli_epi64(rdmask,1));
     SHUFIN(0,x0,x1,z0,z1);
-    for(rematom=(n-1)&-NPAR;rematom;rematom-=NPAR){  /* for each full batch */
-     x-=NPAR; x0=_mm256_loadu_pd((D*)x); x1=_mm256_loadu_pd((D*)(x+NPAR/2)); SHUFIN(0,x0,x1,y0,y1);  /* read 4 values, put into lanes */ 
-     PLUSEE(y0,y1,z0,z1,z0,z1);  /* add to total */
+    for(rematom=(n-1)&-NPAR;rematom;rematom-=NPAR){  // for each full batch
+     x-=NPAR; x0=_mm256_loadu_pd((D*)x); x1=_mm256_loadu_pd((D*)(x+NPAR/2)); SHUFIN(0,x0,x1,y0,y1);  // read 4 values, put into lanes
+     PLUSEE(y0,y1,z0,z1,z0,z1);  //add to total
     }
-    y0=_mm256_permute_pd(z0,0b1111); y1=_mm256_permute_pd(z1,0b1111);  /* atoms 0+1, 2+3 */
+    y0=_mm256_permute_pd(z0,0b1111); y1=_mm256_permute_pd(z1,0b1111);  // atoms 0+1, 2+3
     PLUSEE(y0,y1,z0,z1,z0,z1);
-    y0=_mm256_permute4x64_pd(z0,0b10101010); y1=_mm256_permute4x64_pd(z1,0b10101010);  /* atoms 0+2 */
+    y0=_mm256_permute4x64_pd(z0,0b10101010); y1=_mm256_permute4x64_pd(z1,0b10101010);  // atoms 0+2
     PLUSEE(y0,y1,z0,z1,z0,z1);
     CANONE(z0,z1)
     --z; *(I*)&z->hi=_mm256_extract_epi64(_mm256_castpd_si256(z0),0x0); *(I*)&z->lo=_mm256_extract_epi64(_mm256_castpd_si256(z1),0x0);

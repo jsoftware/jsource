@@ -77,19 +77,18 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
 // obsolete  if(NOUN&AT(w)||VFIX&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX set), keep it
 // obsolete  if(unlikely((NAME&AT(w))!=0)){R sfn(0,w);}
  if(NOUN&AT(w)){R w;}  // return noun value; only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
- v=FAV(w); f=v->fgh[0]; g=v->fgh[1];   // fetch f, g of compound
-// if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
- if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // return if primitive.  combinations always have f or g; and u./v. must be replaced even though it doesn't
+ v=FAV(w); f=v->fgh[0]; g=v->fgh[1]; I id=v->id;   // fetch f, g of compound, and the type
+ if(!(((I)f|(I)g)||unlikely((id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  h=v->fgh[2];  // fetch h
- if(v->id==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork
- if(VFIX&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX set), keep it
+ if(unlikely(((id^CFORK)|(I)h)==0)){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork, which has h=0
+ if(unlikely(VFIX&v->flag))R w;  // if value already fixed (or m : n which gets VFIX set), keep it
  I ai=IAV(a)[0];  // value of a
  I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV); // extract control flags
  ai^=aif; I na=ai==0?3:ai;  // now ai = state without flags; for levels other than the top, use na to cause replacement of $:
  if(unlikely(aif&FIXALOCSONLY)&&!hasimploc(w))R w;  // if looking for implicit locatives, and there aren't any, nothing to fix
- wf=ds(v->id);   // fetch self for w
+ wf=ds(id);   // fetch self for w
  A fo=f, go=g, ho=h;  // remember the constituents before they were fixed
- switch(v->id){  // we know that modifiers have been executed to produce verb/nouns
+ switch(id){  // we know that modifiers have been executed to produce verb/nouns
  // we reexecute the modifiers to use the new values.  But if the constituents were not changed by REFIXA, return the original w without reexecuting
  case CSLASH: 
   if(fo==(f=REFIXA(2,f)))R w; R df1(z,f,wf);
@@ -142,7 +141,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
     A thisname=v->fgh[0];// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
     if(thisname){ // name given
      NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-     if(thisnameinfo->flag&NMIMPLOC){     //  implicit locative
+     if(unlikely(thisnameinfo->flag&NMIMPLOC)){     //  implicit locative
        if(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)){  // name is defined
        // If our ONLY mission is to replace implicit locatives, we are finished after replacing this locative IF
        // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement

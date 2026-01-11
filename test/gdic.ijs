@@ -222,6 +222,15 @@ assert. frames (-: $@:del__mydict)&> keys
 destroy__mydict ''
 }}"1 INDEX_TYPES ,"1"0 _ (,."0 _ (0)&;) 7 ; 2 3 4 ; i. 0
 
+NB. SPARSE ARRAYS.
+
+{{
+'index_type sparsetype' =. y
+assert. 'domain error' -: 'jdictionary' conew~ GetError y , < 'keytype' ; sparsetype
+assert. 'domain error' -: 'jdictionary' conew~ GetError y , < 'valuetype' ; sparsetype
+EMPTY
+}}"1 INDEX_TYPES (, <)"0"_ 0 ] 2 ^ 10 + i. 6
+
 NB. TYPES AND SHAPES.
 
 coclass 'naivedictionary'

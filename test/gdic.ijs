@@ -231,6 +231,8 @@ assert. 'domain error' -: 'jdictionary' conew~ GetError index_type ,&< 'valuetyp
 EMPTY
 }}"1 INDEX_TYPES (, <)"0"_ 0 ] 2 ^ 10 + i. 6
 
+coreset ''
+
 NB. TYPES AND SHAPES.
 
 coclass 'naivedictionary'

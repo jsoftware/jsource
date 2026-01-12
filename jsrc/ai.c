@@ -279,8 +279,8 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
 xco:
  case CXCO:     R amp(num(-1),w);
  case CSPARSE:  R fdef(0,CPOWOP,VERB,jtdenseit,jtvalenceerr, w,num(-1),0L, VFLAGNONE, RMAX,RMAX,RMAX);
- case CICAP:    R fdef(0,CPOWOP,VERB,jticapdotinv,jtvalenceerr, w,num(-1),0L, VFLAGNONE, RMAX,RMAX,RMAX);
- case CPCO:     R fdef(0,CPOWOP,VERB,jtplt,    jtvalenceerr, w,num(-1),0L, 0L, 0L,  0L,  0L  );
+ case CICAP:    R fdef(0,CPOWOP,VERB,jticapdotinv,jtvalenceerr, w,num(-1),0L, VFIX, RMAX,RMAX,RMAX);
+ case CPCO:     R fdef(0,CPOWOP,VERB,jtplt,    jtvalenceerr, w,num(-1),0L, VFIX, 0L,  0L,  0L  );
  case CQCO:     R eval("*/\"1");   // primes, inverse is prime factors
  case CUCO:     R amp(num(3),w);
  case CUNDER:   R under(invrecur(f),g);
@@ -326,7 +326,7 @@ xco:
   }
   break;
  case CCUT:
-  if(CBOX==IDD(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,VFLAGNONE, RMAX,RMAX,RMAX);
+  if(CBOX==IDD(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,FAV(w)->flag&VFIX, RMAX,RMAX,RMAX);
   break;
  case CIBEAM:   // inverse of 3!:1/3 is 3!:2; inverse of 3!:2 is 3!:1
   if(FAV(w)->localuse.lu1.foreignmn[0]==3 && BETWEENC(FAV(w)->localuse.lu1.foreignmn[1],1,3))R foreign(num(3),num((FAV(w)->localuse.lu1.foreignmn[1]&1)+1));  // 1 2 3 -> 2 1 2

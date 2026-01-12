@@ -255,7 +255,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
 // u 16!:_1 y.  For some reason jtlr won't display CIBEAM when it is a conjunction, so we have to make it an adverb.  We save u (the dictionary) for the verb
 F1(jtcreatedic){F12IP;
  ARGCHK1(w)
- R fdef(0,CIBEAM,VERB,jtcreatedic1,jtvalenceerr,w,0,0,VFLAGNONE,RMAX,RMAX,RMAX);
+ R fdef(0,CIBEAM,VERB,jtcreatedic1,jtvalenceerr,w,0,0,VFIX,RMAX,RMAX,RMAX);  // Must mark VFIX to void reinterpreting the dic during f.
 }
 
 // Dic locking ************************************************************
@@ -1197,11 +1197,16 @@ static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 
 #define MGETFLGEQ0X 0  // 2 keys: equality OK for low key  1key:equality OK for key
 #define MGETFLGEQ0 1  //
+#define MGETFLGTAIL 1  // 0 keys: take from tail
 #define MGETFLGEQ1 2  // 2 keys: equality OK for high key
 #define MGETFLGGT 2  // 1 key: return region above key
 #define MGETFLGK 4   // user wants to see keys
 #define MGETFLGV 8   // user wants to see values
-#define MGETFLG1KEY 16  // the request is for 1 key
+#define MGETFLGK1X 4   // the length was a default 1, meaning the result should be a single key/value or ''
+#define MGETFLGK1 16 
+// the following are set in the input flags to match the rank of keys
+#define MGETFLG0KEY 16  // the request is for 0 key
+#define MGETFLG1KEY 32  // the request is for 1 key
 #define MGETFLG2KEY 32  // the request is for 2 keys
 
 // search for a value in the tree, possibly bulding a stack for it
@@ -1308,10 +1313,10 @@ exiterr: R -1;
 #define S2LR 8
 #define S2RL 12
 
-//   mget.    Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
-// Forms: a=flags, w=list of 2 keys   flags are k v eq1 eq0
-//          a=(flags,count) w=1 key    flags are k v x eq  count is # keys, -1 for all
-//                          w= flags[,count]  flags are k v x x  count is # items wanted, +=head, -=tail (default +1)
+//   mget.    dic was u to self
+// Forms: a=(flags,count) w=list of 2 keys   flags are k v eq1 eq0
+//          a=(flags,count) w=1 key    flags are k v x eq  count is # keys, -1 for all default 1
+//          a=(flags,count)  w= ''  flags are k v x dir  count is # items wanted, dir is 0 for head, 1 for tail (default +1)
 static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  ARGCHK2(a,w)
  PROLOG(000);
@@ -1322,33 +1327,34 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I plist;  // operation sequence for this request
- if(w!=self){ // dyad
+ if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0))   // force to int
+ ASSERT(AR(a)<=1,EVRANK) ASSERT(BETWEENC(AN(a),1,2),EVLENGTH)  // must be singleton or 2-list
+ I iflags=IAV(a)[0]; flags=iflags&0b1111;  // init flags we will use
+ nkvrq=IAV(a)[1];  // get #items requested, if valid
+ if(AN(w)>0){ // 1 or 2 keys
   k=voidAV(w);  // point to key data
-  if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0))   // force to int
-  ASSERT(AR(a)<=1,EVRANK)   // must be singleton or 2-list
-  flags=IAV(a)[0];
-  nkvrq=IAV(a)[1];  // get #items requested, if valid
   if(AR(w)>AN(dic->bloc.kshape)){  // 2 keys
    ASSERT(AR(w)==AN(dic->bloc.kshape)+1,EVRANK)  // list of 2 keys
    ASSERT(AS(w)[0]==2,EVLENGTH)  // exactly 2 keys
-   ASSERT(!(flags&MGETFLG1KEY),EVRANK)   // if the user used a 1key cover name with 2 keys, give rank error
+   ASSERT(!(iflags&MGETFLG0KEY+MGETFLG1KEY),EVRANK)   // if the user used a 0 or 1key cover name with 2 keys, give rank error
    plist=S1LRCMP+S2CMP;  // plist for 2keys: compare each key, convert to node#
    nkvrq=AN(a)==2?nkvrq:~0;  // default request length to 'no limit'
   }else{  // 1 key
-   ASSERT(!(flags&MGETFLG2KEY),EVRANK)   // if the user used a 2key cover name with only 1 key, give rank error
-   plist=flags&MGETFLGGT?S1LRCMP+S2LR:S1RLCMP+S2RL;  // plist for 1key: compare for the first, count for the second
-   nkvrq=AN(a)==2?nkvrq:1;  // default request to 1 (head), otherwise leave signed with -1 meaning 'no limit'
-  } 
+   ASSERT(AR(w)==AN(dic->bloc.kshape),EVRANK)  // single key
+   ASSERT(!(iflags&MGETFLG0KEY+MGETFLG2KEY),EVRANK)   // if the user used a 0 or 2key cover name with only 1 key, give rank error
+   plist=iflags&MGETFLGGT?S1LRCMP+S2LR:S1RLCMP+S2RL;  // plist for 1key: compare for the first, count for the second
+   nkvrq=AN(a)==2?nkvrq:1;  // default request to 1 (head)
+   flags|=(AN(a)&1)<<MGETFLGK1X;  // remember if the length defaulted so we return a single kv
+  }
   ASSERTAGREE(AS(w)+AR(w)-AN(dic->bloc.kshape),ks,kr)  // verify correct shape of key
- }else{w=a;   // monad
-  if(unlikely(!(AT(w)&INT)))RZ(w=ccvt(INT,w,0))   // force to int
-  ASSERT(AR(w)<=1,EVRANK) ASSERT(BETWEENC(AN(w),1,2),EVLENGTH)  // must be singleton or 2-list
-  flags=IAV(w)[0];   // get flags
-  ASSERT((flags&MGETFLGEQ0+MGETFLGEQ1)==0,EVDOMAIN)   // eq flags not allowed
-  I htct=AN(w)==2?IAV(w)[1]:1; nkvrq=ABS(htct);  // get length (default 1); length of head/tail as #items requested
-  plist=htct>=0?S1LRMIN+S2LR:S1RLMAX+S2RL;  // plist for 0key: find min/max, then count
+ }else{   // 0key
+  ASSERT(!(iflags&MGETFLG1KEY+MGETFLG2KEY),EVRANK)   // if the user used a 1 or 2key cover name with only 0 key, give rank error
+  ASSERT((iflags&MGETFLGGT)==0,EVDOMAIN)   // gt flags not allowed
+  plist=iflags&MGETFLGTAIL?S1RLMAX+S2RL:S1LRMIN+S2LR;  // plist for 0key: find min/max, then count
+  nkvrq=AN(a)==2?nkvrq:1;  // default request to 1 (head)
+  flags|=(AN(a)&1)<<MGETFLGK1X;  // remember if the length defaulted so we return a single kv
  }
- ASSERT((flags&~0b111111)==0,EVDOMAIN) ASSERT((flags&MGETFLGK+MGETFLGV)!=0,EVDOMAIN)  // no extra flag bits, and must be asking for k or v or both
+ ASSERT((iflags&~0b1111111)==0,EVDOMAIN) ASSERT((flags&MGETFLGK+MGETFLGV)!=0,EVDOMAIN)  // no extra flag bits, and must be asking for k or v or both
  ASSERT(likely(dic->bloc.vbytelen!=0)||!(flags&MGETFLGV),EVDOMAIN)  // If values are empty, can't read them
  
  VIRT virt;  // place for virtuals (needed by user comp fns)
@@ -1407,8 +1413,10 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  // step 3 - copy the kvs
  // allocate the result(s), and run through the indexes, copying
  A zak=0, zav=0;  // result keys, values; number of results
+ I leadax=1-(flags>>MGETFLGK1X);  // number of leading axes to prepend - 0 if single key
  if(flags&MGETFLGK){  // if user wants keys
-  GAE0(zak,dic->bloc.ktype,dic->bloc.kaii*nkvs,1+AN(dic->bloc.kshape),goto exitkeyvals) AS(zak)[0]=nkvs; MCISH(&AS(zak)[1],IAV1(dic->bloc.kshape),AN(dic->bloc.kshape)) C *zv=CAVn(1+AN(dic->bloc.kshape),zak);  // allocate result
+  GAE0(zak,dic->bloc.ktype,dic->bloc.kaii*nkvs,leadax+AN(dic->bloc.kshape),goto exitkeyvals)
+  AS(zak)[0]=nkvs; MCISH(&AS(zak)[leadax],IAV1(dic->bloc.kshape),AN(dic->bloc.kshape)) C *zv=CAVn(leadax+AN(dic->bloc.kshape),zak);  // allocate result
   UI zx,nodex=nodens[0];  // 1 unroll
   for(zx=0;zx<nkvs;++zx){  // for each node in result
    UI nextx=nodens[zx+1];  // unroll loop.  1 overfetch OK
@@ -1420,7 +1428,8 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  DICLKRDRELK(dic,lv)   // release our lock on keys
 
  if(flags&MGETFLGV){  // if user wants values... 
-  GAE0(zav,dic->bloc.vtype,dic->bloc.vaii*nkvs,1+AN(dic->bloc.vshape),goto exitvals) AS(zav)[0]=nkvs; MCISH(&AS(zav)[1],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(1+AN(dic->bloc.vshape),zav);  // allocate result
+  GAE0(zav,dic->bloc.vtype,dic->bloc.vaii*nkvs,leadax+AN(dic->bloc.vshape),goto exitvals)
+  AS(zav)[0]=nkvs; MCISH(&AS(zav)[leadax],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(leadax+AN(dic->bloc.vshape),zav);  // allocate result
   DICLKRDWTV(dic,lv)   // wait for values to be ready
   UI zx,nodex=nodens[0];  // 1 unroll
   for(zx=0;zx<nkvs;++zx){  // for each node in result
@@ -1749,8 +1758,9 @@ static DF1(jtdicdelo){F12IP;
 DF1(jtdicgetc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
+ ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  A z; fdefallo(z);
- fdeffillall(z,0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,w,self,0, VFLAGNONE, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.varno=0);
+ fdeffillall(z,0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,w,self,0, VFIX, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.varno=0);
  R z;
 }
 
@@ -1759,8 +1769,9 @@ DF1(jtdicgetc){F12IP;
 DF1(jtdichasc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
+ ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  A z; fdefallo(z);
- fdeffillall(z,0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,jtvalenceerr,w,self,0, VFLAGNONE, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.varno=1);
+ fdeffillall(z,0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,jtvalenceerr,w,self,0, VFIX, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.varno=1);
  R z;
 }
 
@@ -1769,7 +1780,8 @@ DF1(jtdichasc){F12IP;
 DF1(jtdicputc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
- R fdef(0,CMODX,VERB, jtvalenceerr,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicput:jtdicputo, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
+ ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
+ R fdef(0,CMODX,VERB, jtvalenceerr,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicput:jtdicputo, w,self,0, VFIX, RMAX,RMAX,RMAX); 
 }
 
 // u 16!:_4  del: u=dic
@@ -1777,7 +1789,8 @@ DF1(jtdicputc){F12IP;
 DF1(jtdicdelc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
- R fdef(0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicdel:jtdicdelo,jtvalenceerr, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
+ ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
+ R fdef(0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicdel:jtdicdelo,jtvalenceerr, w,self,0, VFIX, RMAX,RMAX,RMAX); 
 }
 
 // u 16!:_6  mget: u=dic
@@ -1785,14 +1798,16 @@ DF1(jtdicdelc){F12IP;
 DF1(jtdicmgetc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
+ ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  ASSERT(((DIC*)w)->bloc.flags&DICFRB,EVDOMAIN)    // requires red/black tree
- R fdef(0,CMODX,VERB,jtdicmgeto,jtdicmgeto, w,self,0, VFLAGNONE, RMAX,RMAX,RMAX); 
+ R fdef(0,CMODX,VERB,jtvalenceerr,jtdicmgeto, w,self,0, VFIX, RMAX,RMAX,RMAX); 
 }
 
 // x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, also delete the empty chainfields.  If empties have already been deleted, return empty
 // No locks; if you need a write lock, take it before calling.
 DF2(jtdicempties){F12IP;
  ARGCHK2(a,w)
+ ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  DIC *dic=(DIC*)w;
  I x; RE(x=i0(a)); ASSERT(BETWEENC(x,0,1),EVDOMAIN)  // x must be 0 or 1
  I nodeb=(dic->bloc.emptysiz<<LGBB); UI kb=dic->bloc.kbytelen;  // #bits in empty-chain field; #bytes in key

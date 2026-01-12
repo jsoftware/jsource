@@ -944,10 +944,10 @@ F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(
 ;
  ARGCHK1(w);
  A z; fdefallo(z)
- if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fixw, VGERL|flag, RMAX,0L,RMAX); RETF(z);}
+ if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fixw, VGERL|(flag&~VFIX), RMAX,0L,RMAX); RETF(z);}  // leave VFIX
  // falling through, w is verb
  v=FAV(w);  // v is the u in u\ y
- flag|=v->flag&VASGSAFE;  // if u is asgsafe, so is u\ y
+ flag&=~VFIX; flag|=v->flag&VASGSAFE+VFIX;  // if u is asgsafe, so is u\ y
  switch(v->id){
  case CSLASH: ;  // never gerund/ which is coded as GRCO
   A u=v->fgh[0];  // the u in u/\ y

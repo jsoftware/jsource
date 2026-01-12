@@ -393,10 +393,10 @@ static DF2(jtofxassoc){F12IP;A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 a
 
 static DF1(jtiota1rev){F12IP;I j; SETIC(w,j); R apv(j,j,-1L);}
 
-F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;  // init flag is IRS1
+F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag&~VFIX;C id;V*v;  // init flag is IRS1
  ARGCHK1(w);
  A z; fdefallo(z)
- if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|FAV(ds(CBSDOT))->flag, RMAX,0L,RMAX); RETF(z);}
+ if(NOUN&AT(w)){A fixw; RZ(fixw=fxeachv(1L,w)); fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|(FAV(ds(CBSDOT))->flag), RMAX,0L,RMAX); RETF(z);}
  v=FAV(w);  // verb info for w
  switch(v->id){
  default: break;
@@ -410,7 +410,7 @@ F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C 
   {CCMWDS(xassoc) CCMCAND(xassoc,cand,id) f2=CCMTST(cand,id)?jtofxassoc:f2;}
   break;
  }
- fdeffillall(z,0,CBSDOT,VERB,f1,f2,w,0L,0L,flag,RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
+ fdeffillall(z,0,CBSDOT,VERB,f1,f2,w,0L,0L,flag|(v->flag&VFIX),RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .   f is nonnull if f/\ .
  RETF(z);
  // Fill in the lvp[1] field: with 0 if not f/\.; with the lookup field for f/ if f/\. .

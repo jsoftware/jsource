@@ -745,8 +745,12 @@ static F1(jtxopcall){F12IP;R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dct
 // self->flag always has VXOPR+VFIX
 DF2(jtxop2){F12IP;A ff,x;
  ARGCHK2(a,w);
- self=AT(w)&(ADV|CONJ)?w:self; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
- ff=fdef(0,CCOLONE,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w, (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX);  // inherit other flags,
+ A aw=a; self=AT(w)&(ADV|CONJ)?w:self; aw=AT(w)&(ADV|CONJ)?aw:w; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
+ I flags=(FAV(self)->flag|VXOP)&~VFIX; /*flags|=(((AT(aw)&NOUN)||(FAV(a)->flag&VFIX))&((AT(a)&NOUN)||(FAV(a)->flag&VFIX)))<<VFIXX;*/  // set VXOP
+   // We would rather set VFIX is a and w are VFIX, so that fixing the result would be quick.  But the explicit def may be a locative, which causes our result to be put into a nameref with
+   // an inherited locative.  Applying f. to that result must remove the inherited locative, so we mustn't flag VFIX in that case.  Since we have no way to tell whether this use of
+   // self was a locative or not, we leave VFIX off for all such compounds.  If each component has VFIX set the slowdown is small.
+ ff=fdef(0,CCOLONE,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w, flags, RMAX,RMAX,RMAX);  // inherit other flags,
  R unlikely(x=xopcall(0))?namerefop(x,ff):ff;  // install a nameref only if we are debugging and the original modifier was named
 }
 
@@ -1203,7 +1207,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   // If nested v : v, prune the tree
   if(unlikely(CCOLON==FAV(a)->id))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v)
   if(unlikely(CCOLON==FAV(w)->id))w=FAV(w)->fgh[1];
-  fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w)) // derived verb is ASGSAFE if both parents are 
+  fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE+VFIX),mr(a),lr(w),rr(w)) // derived verb is ASGSAFE if both parents are 
    R z;
  }
  ASSERT(AT(w)&NOUN,EVDOMAIN);   // noun : verb is an error

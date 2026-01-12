@@ -889,9 +889,9 @@ static A jtgadv(J jt,A w){A hs;I n;
  // hs is a BOX array, but its elements are ARs and cannot be pyxes
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  I alr=atoplr(AAV(hs)[0]);   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
- I flag=VASGSAFE;  // where we will build verb flags, inited as if wn<3
- if(wn==3){if(FAV(AAV(hs)[2])->id==CRIGHT)AS(hs)[0]=2; else flag=FAV(AAV(hs)[2])->flag;}  // if v2=], remove it from gerund count in shape (leave in AN for free); if 3 gerunds, init from v2
- flag=(flag&FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&VASGSAFE)+(VGERL)+(alr-2>0?alr-2:alr);  // wn may be 2 or 3
+ I flag=VASGSAFE+VFIX;  // where we will build verb flags, inited as if wn<3
+ if(wn==3){if(FAV(AAV(hs)[2])->id==CRIGHT)AS(hs)[0]=2; else flag=FAV(AAV(hs)[2])->flag|VFIX;}  // if v2=], remove it from gerund count in shape (leave in AN for free); if 3 gerunds, init from v2
+ flag=(flag&FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&VASGSAFE+VFIX)+(VGERL)+(alr-2>0?alr-2:alr);  // wn may be 2 or 3
  R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 
@@ -908,7 +908,7 @@ static DF2(jtamnegate){F12IP;
 // u} handling.  This is not inplaceable but the derived verb is.  Self can be 0 to indicate this is a recursive call from a subroutine of jtamend
 DF1(jtamend){F12IP;
  ARGCHK1(w);
- if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,VASGSAFE, RMAX,RMAX,RMAX);  // verb} 
+ if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,FAV(w)->flag&VASGSAFE+VFIX, RMAX,RMAX,RMAX);  // verb} 
  else if(AT(w)&BOX&&unlikely(ger(jt,w))){A z;  // gerund}
   ASSERT(self!=0,EVNONCE);  // execute exception if gerund returns gerund
   RZ(z=gadv(w))   // get verbs for v0`v1`v2}, as verbs
@@ -918,5 +918,5 @@ DF1(jtamend){F12IP;
    FAV(z)->flag|=VIRS2;  // also support IRS for this case
   }
   R z;
- }else R fdef(0,CRBRACE,VERB,(AF)mergn1,(AF)jtamendn2c,w,0L,0L,VASGSAFE|VIRS2, RMAX,RMAX,RMAX);   // m}"r with IRS
+ }else R fdef(0,CRBRACE,VERB,(AF)mergn1,(AF)jtamendn2c,w,0L,0L,VFIX|VASGSAFE|VIRS2, RMAX,RMAX,RMAX);   // m}"r with IRS
 }

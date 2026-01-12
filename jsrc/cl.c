@@ -83,7 +83,7 @@ static DF2(jtlscapco12){F12IP;PROLOG(556);A z;
  EPILOG(z); // always returns non-pristine
 }
 
-
+// common routine for L: S:
 static A jtlsub(J jt,C id,A a,A w){A h,t;I*hv,n,*v;
  ARGCHK2(a,w);
  ASSERT((SGNIF(AT(a),VERBX)&-(AT(w)&NOUN))<0,EVDOMAIN);
@@ -94,7 +94,7 @@ static A jtlsub(J jt,C id,A a,A w){A h,t;I*hv,n,*v;
  I4 d0=v[3==n]; d0=d0!=v[3==n]?0x7fffffff+SGNTO0(v[3==n]):d0;  // left dyad; if there is upper significance, use I4 IMIN/IMAX
  I4 d1=v[n-1]; d1=d1!=v[n-1]?0x7fffffff+SGNTO0(v[n-1]):d1;  // right dyad; if there is upper significance, use I4 IMIN/IMAX
  I4 m=v[2==n]; m=m!=v[2==n]?0x7fffffff+SGNTO0(v[2==n]):m;  // monad; if there is upper significance, use I4 IMIN/IMAX
- A z; fdefallo(z); fdeffillall(z,0,id,VERB, jtlscapco12,jtlscapco12, a,w,0, VFLAGNONE, RMAX,RMAX,RMAX,fffv->localuse.lslevels[0]=d0;fffv->localuse.lslevels[1]=d1,fffv->localuse.lslevels[2]=m);
+ A z; fdefallo(z); fdeffillall(z,0,id,VERB, jtlscapco12,jtlscapco12, a,w,0, FAV(a)->flag&VFIX, RMAX,RMAX,RMAX,fffv->localuse.lslevels[0]=d0;fffv->localuse.lslevels[1]=d1,fffv->localuse.lslevels[2]=m);
  R z;
 
 }

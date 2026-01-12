@@ -12,7 +12,7 @@ static DF2(obv2){F12IP; PREF2IP(obv12cell); R obv12cell(jtfg,a,w,self);}  // Pas
 
 
 // Set ASGSAFE from a&w; set INPLACE from a
-F2(jtobverse){F12IP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)),mr(a),lr(a),rr(a));}
+F2(jtobverse){F12IP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VASGSAFE+VFIX)),mr(a),lr(a),rr(a));}
 
 // Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun).  Bivalent  a,w,self or w,self,self
 static DF2(ad12){F12IP;A z; A childself=FAV(self)->fgh[0]; 
@@ -29,5 +29,5 @@ static DF2(ad12){F12IP;A z; A childself=FAV(self)->fgh[0];
 }
 
 // Set ASGSAFE from operands.  Noun operand is always safe
-F2(jtadverse){F12IP;ASSERTVVn(a,w); R fdef(0L,CADVERSE,VERB,ad12,ad12,a,w ,0L,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
+F2(jtadverse){F12IP;ASSERTVVn(a,w); R fdef(0L,CADVERSE,VERB,ad12,ad12,a,w ,0L,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE+VFIX),RMAX,RMAX,RMAX);}
 

@@ -287,7 +287,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
    // We give the w the strange flagging of NAME AND ALSO LIT - it will be handled as a name when executed, but as a string for representations
    if(AR(w)<=1){RZ(g=tokens(vs(w),1)) if(AN(g)==1 && AT(g=QCWORD(AAV(g)[0]))&NAME){RZ(w=rifvs(g)) AT(w)|=LIT;}}
   }
-  fdeffill(z,0,CAT,VERB, onconst12,onconst12, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX); R z;
+  fdeffill(z,0,CAT,VERB, onconst12,onconst12, a,w,h, FAV(a)->flag&VFIX, RMAX,RMAX,RMAX); R z;
  }
  // The rest is u@v verbs
  wv=FAV(w); d=wv->id;
@@ -296,12 +296,12 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the  // monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  fdeffill(z,flag2,CAT,VERB, jtonright12,d&1?jtonright12:onleft2, a,0,0, (av->flag&VASGSAFE), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
+  fdeffill(z,flag2,CAT,VERB, jtonright12,d&1?jtonright12:onleft2, a,0,0, (av->flag&VASGSAFE+VFIX), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
- flag = ((av->flag&wv->flag)&VASGSAFE);
+ flag = ((av->flag&wv->flag)&VASGSAFE+VFIX);
  // special cases of u
  UI mrecip=0;  // used only for m&|@^, where it is non0
 #define IDBIT(c) ((UI8)1<<((c)&0x3f))   // mask for c
@@ -414,12 +414,12 @@ F2(jtatco){F12IP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
-  fdeffill(z,flag2,CATCO,VERB, jtonright12,d&1?jtonright12:onleft2, a,w,0, (av->flag&VASGSAFE), RMAX,RMAX,RMAX); R z;  // must go through onright1 to set self
+  fdeffill(z,flag2,CATCO,VERB, jtonright12,d&1?jtonright12:onleft2, a,w,0, (av->flag&VASGSAFE+VFIX), RMAX,RMAX,RMAX); R z;  // must go through onright1 to set self
  }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
- flag = ((av->flag&wv->flag)&VASGSAFE);
+ flag = ((av->flag&wv->flag)&VASGSAFE+VFIX);
 #define SPECATCO (IDBIT(CFIT)|IDBIT(CEXP)|IDBIT(CBOX)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CSEMICO)|IDBIT(CNOT)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR))  // mask for all special cases
  if(unlikely((I)(SPECATCO>>(c&0x3f))&BETWEENC(c,CFIT,CPOUND))){
   switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECATCO test above! ****
@@ -508,7 +508,7 @@ F2(jtampco){F12IP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
  A z; fdefallo(z)
  c=FAV(a)->id; wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
- flag = ((FAV(a)->flag&wv->flag)&VASGSAFE);
+ flag = ((FAV(a)->flag&wv->flag)&VASGSAFE+VFIX);
  if(unlikely(c==CBOX)){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(unlikely(BOTHEQ8(c,d,CSLASH,CCOMMA))){f1=jtredravel;}    // f/&:, y
  else if(unlikely(BOTHEQ8(c,d,CRAZE,CCUT)))if(boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2 y
@@ -589,7 +589,7 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
   f1=on1; f2=on2;
   v=FAV(w); c=v->id; r=v->mr;   // c=pseudochar for v; overall rank is monad rank of v
   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
-  flag = ((FAV(a)->flag&v->flag)&VASGSAFE);
+  flag = ((FAV(a)->flag&v->flag)&VASGSAFE+VFIX);
   if(unlikely((c&~(CFORK^CAMP))==CFORK)){C d=CLEFT;  // u&(FORK/&)
    if(c==CFORK)d=ID(v->fgh[2]);  // d is CLEFT if &, 0 if capped fork, otherwise from h of fork
    if(CIOTA==FAV(v->fgh[1])->id&&(d&~1)==CLEFT&&v->fgh[0]==ds(CALP)){  // (FORK/&) is a.&i. or (a. i. ][)  avoid subrt call to equ()

@@ -1136,7 +1136,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF(STACKPOS>=jt->cstackmin,EVSTACK,suff);}
 #define EPDYAD (w!=self)  // for any call (i. e. verb or modifier), true if w is an operand
 #define EPMONAD (w==self)  // for any call (i. e. verb or modifier), true if w is self, not an operand
-#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
+#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VIRS1+VASGSAFE+VFIX, RMAX,RMAX,RMAX)  // used for _9: to 9:
 // fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
 #define FUZZ            0.000000000000056843418860808015   // tolerance
 #define FUZZDS          0.0000152588  // for SP integer conversions

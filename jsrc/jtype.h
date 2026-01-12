@@ -1303,7 +1303,8 @@ typedef struct {
 // bit 15 free
 #define VLOCK           (I)0x10000        /* function is locked              */
 #define VWASUNARY       (I)0x20000       // 17 this verb replaces the original, which was something like -: that is replaced by 0.5 *
-#define VFIX            (I)0x40000       /* f. applied                      */
+#define VFIXX           18  // f. can skip over this word because it is the same after being fixed (noun or no named descendants)
+#define VFIX            ((I)1<<VFIXX)      
 #define VXOPRX          19                // the definition is an explicit modifier that refers to x or y
 #define VXOPR           ((I)1<<VXOPRX)
 #define VXOP            (I)0x100000      // this is the result of giving [u]/v args to a defn that had VXOPR set.  u and v are in fgh[0/2]

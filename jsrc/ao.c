@@ -829,7 +829,7 @@ F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
  A z; fdefallo(z)
- if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}
+ if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}else flag=FAV(w)->flag&VFIX;
  v=FAV(w);  // w could be a gerund but we won't use v then
  switch(IDD(w)){  // no default for f2: every path must set it
  case CBOX: f2=jtkeybox; break;  // </.

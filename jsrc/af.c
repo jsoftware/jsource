@@ -77,13 +77,13 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
 // obsolete  if(NOUN&AT(w)||VFIX&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX set), keep it
 // obsolete  if(unlikely((NAME&AT(w))!=0)){R sfn(0,w);}
  if(NOUN&AT(w)){R w;}  // return noun value; only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
- v=FAV(w); f=v->fgh[0]; g=v->fgh[1]; I id=v->id;   // fetch f, g of compound, and the type
- if(!(((I)f|(I)g)||unlikely((id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
+ v=FAV(w); if(v->flag&VFIX)R w;  // if value already fixed (or m : n which gets VFIX set), keep it.  This prunes all branches with no names, since VFIX is propagated from the bottom up during tree creation
+ // continuing, there is a name in the branch and we have to plot through the tree to find it
+ f=v->fgh[0]; g=v->fgh[1]; I id=v->id;   // fetch f, g of compound, and the type
+// obsolete  if(!(((I)f|(I)g)||unlikely((id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  h=v->fgh[2];  // fetch h
- if(unlikely(((id^CFORK)|(I)h)==0)){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork, which has h=0
- if(unlikely(VFIX&v->flag))R w;  // if value already fixed (or m : n which gets VFIX set), keep it
- I ai=IAV(a)[0];  // value of a
- I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV); // extract control flags
+// obsolete  if(unlikely(((id^CFORK)|(I)h)==0)){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork, which has h=0
+ I ai=IAV(a)[0]; I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV); //get value of control input a; extract control flags
  ai^=aif; I na=ai==0?3:ai;  // now ai = state without flags; for levels other than the top, use na to cause replacement of $:
  if(unlikely(aif&FIXALOCSONLY)&&!hasimploc(w))R w;  // if looking for implicit locatives, and there aren't any, nothing to fix
  wf=ds(id);   // fetch self for w
@@ -114,12 +114,13 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
  case CHOOK:
   f=REFIXA(2,f); g=REFIXA(1,g); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R hook(f,g,0);
  case CFORK:
+  if(h==0){ho=h=g; go=g=f; fo=f=ds(CCAP);}  // reconstitute capped fork, which has h=0
   f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); if((((I)fo^(I)f)|((I)go^(I)g)|((I)ho^(I)h))==0)R w;R folk(f,g,h);  // f first in case it's [:
  case CATDOT: case CGRCO:
   IAV(aa)[0]=(aif|na);
   RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
   RZ(g=REFIXA(na,g));
-  R df2(z,f,g,wf);
+  R df2(z,f,g,wf);  // scaf this sucks - avoid conversion to AR and back
  case CIBEAM: R w;  // m, n carried in localuse
  case CUDOT:
   R REFIXA(ai,JT(jt,implocref)[0]);  // u. is equivalent to 'u.'~ for fix purposes
@@ -175,6 +176,8 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
   if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
   // otherwise fall through to normal processing
  default:
+  if(!((I)f|(I)g))
+R w;  // should not occur.  f and g are both off only in primitives, where VFIX should be set (except u./v.)
   if(f)RZ(f=REFIXA(na,f));
   if(g)RZ(g=REFIXA(na,g));
   if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
@@ -184,7 +187,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
 // On internal calls, self is an integer whose value contains flags.  Otherwise zeroionei is used
 DF1(jtfix){F12IP;PROLOG(0005);A z;
  ARGCHK1(w);
- if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w),0));}
+ if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w),0));}   // convert string to name, to allow us to fix modifiers
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
  STACKCHKOFL  // make sure we can't recur to a name by removing the name

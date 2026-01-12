@@ -435,7 +435,7 @@ F2(jtforeign){F12IP;I p,q;A z;
  }else{
   // 11!:n (wd) has a wide range of options, but they all go through one routine.  We allocate each time
   fdefallo(z);  // allocate the block
-  fdeffillall(z,0,CIBEAM,VERB, jtwd,jtvalenceerr, 0,0,0L, VASGSAFE, 1L,RMAX,RMAX,fffv->localuse.lu1.foreignmn[0]=p,fffv->localuse.lu1.foreignmn[1]=q);
+  fdeffillall(z,0,CIBEAM,VERB, jtwd,jtvalenceerr, 0,0,0L, VASGSAFE+VFIX, 1L,RMAX,RMAX,fffv->localuse.lu1.foreignmn[0]=p,fffv->localuse.lu1.foreignmn[1]=q);
   R z;
  }
 }

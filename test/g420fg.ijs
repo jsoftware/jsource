@@ -231,7 +231,7 @@ assert. 0 0= (1.0"0 +/@:*"1!.1 ]) 1e_20 6e_20 _1e_20 _6e_20
 assert. 0 2 -: $ (i. 0 4) +/@:*"1!.1 (i. 0 4)
 assert. (14 38,.0) -: (i. 2 4) +/@:*"1!.1 (i. 4)
 y
-}}^:IF64 1
+}}^:((9!:56'c_avx2')+.9!:56'emu_avx2') 1
 
 NB. Test for NaN
 2 -: 0 _ 1 (+/@:*"1!.0) _ 0 2   NB. in exact calculation, any infinity causes a NaN - failover to normal dotproduct

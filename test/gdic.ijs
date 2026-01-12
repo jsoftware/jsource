@@ -616,7 +616,7 @@ INDEX_TYPES_CONCURRENT test_multithreading2 1 10000 3
 {{ for. i. 10 do. INDEX_TYPES_CONCURRENT test_multithreading3 1000 3 end. }} ''
 set_threads 0
 EMPTY
-}}^:IF64 ''
+}}^:(9!:56'PYXES') ''
 
 
 epilog''

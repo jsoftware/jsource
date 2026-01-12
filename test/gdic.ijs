@@ -226,10 +226,12 @@ NB. SPARSE ARRAYS.
 
 {{
 'index_type sparsetype' =. y
-assert. 'domain error' -: 'jdictionary' conew~ GetError y , < 'keytype' ; sparsetype
-assert. 'domain error' -: 'jdictionary' conew~ GetError y , < 'valuetype' ; sparsetype
+assert. 'domain error' -: 'jdictionary' conew~ GetError index_type ,&< 'keytype' ; sparsetype
+assert. 'domain error' -: 'jdictionary' conew~ GetError index_type ,&< 'valuetype' ; sparsetype
 EMPTY
 }}"1 INDEX_TYPES (, <)"0"_ 0 ] 2 ^ 10 + i. 6
+
+coreset ''
 
 NB. TYPES AND SHAPES.
 
@@ -614,7 +616,7 @@ INDEX_TYPES_CONCURRENT test_multithreading2 1 10000 3
 {{ for. i. 10 do. INDEX_TYPES_CONCURRENT test_multithreading3 1000 3 end. }} ''
 set_threads 0
 EMPTY
-}}^:IF64 ''
+}}^:(9!:56'PYXES') ''
 
 
 epilog''

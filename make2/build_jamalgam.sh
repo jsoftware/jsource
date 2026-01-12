@@ -267,6 +267,8 @@ case "$jplatform64" in
 esac
 if [ $USE_EMU_AVX -eq 1 ] ; then
  common="$common -DEMU_AVX2=1"
+else
+ common="$common -DEMU_AVX2=0"
 fi
 
 NO_SHA_ASM="${NO_SHA_ASM:=0}"
@@ -433,7 +435,7 @@ case $jplatform64 in
 
  raspberry/j64*) # linux arm64
   TARGET=jamalgam
-  CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
+  CFLAGS="$common -march=armv8-a+crc -DRASPI "    # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP"
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
@@ -457,7 +459,7 @@ case $jplatform64 in
 
  openbsd/j64arm) # openbsd arm64
   TARGET=jamalgam
-  CFLAGS="$common -march=armv8-a+crc -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
+  CFLAGS="$common -march=armv8-a+crc "    # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -lm -lkvm $LDTHREAD $LDOPENMP"
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
@@ -515,7 +517,7 @@ case $jplatform64 in
 
  freebsd/j64arm) # freebsd arm64
   TARGET=jamalgam
-  CFLAGS="$common -march=armv8-a+crc -DC_CRC32C=1 "    # mno-outline-atomics unavailable on clang-7
+  CFLAGS="$common -march=armv8-a+crc "    # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -lm $LDTHREAD $LDOPENMP"
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
@@ -593,7 +595,7 @@ case $jplatform64 in
 
  darwin/j64arm*) # darwin arm
   TARGET=jamalgam
-  CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
+  CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
@@ -603,7 +605,7 @@ case $jplatform64 in
 
  darwin/j64iphoneos) # iphone
   TARGET=jamalgam
-  CFLAGS="$common $macmin -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics -DC_CRC32C=1 "
+  CFLAGS="$common $macmin -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
@@ -613,7 +615,7 @@ case $jplatform64 in
 
  darwin/j64iphonesimulator) # iphone simulator
   TARGET=jamalgam
-  CFLAGS="$common $macmin -D IMPORTGMPLIB -DC_CRC32C=1 "
+  CFLAGS="$common $macmin -D IMPORTGMPLIB "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"

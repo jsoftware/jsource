@@ -368,7 +368,7 @@ x_asdf_=: i.1e4
 'limit error'   -: _16 lcreate etx <'asdf'
 'limit error'   -: 15 lcreate etx <'asdf'
 
-NB. obsolete 18!:55 e,f
+18!:55 e,f
 
 
 NB. 18!:4 accessible only through cocurrent ---------------------------------------------------------------

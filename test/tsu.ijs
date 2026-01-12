@@ -43,24 +43,20 @@ end.
 EMPTY
 )
 
-NB. 15!:0 available
-3 : 0 ''
-try. cdok=: 15!:23'' catch. cdok=: 1 end.
-EMPTY
-)
-
 NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
 blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
 blacklist=: blacklist, (IFRASPI<(IF64<UNAME-:'Linux')+.(IFWIN>IF64)+.IFIOS+.(UNAME-:'Wasm'))#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
-blacklist=: blacklist, (-.IF64)#(<testpath),each 'g6x14.ijs';'g128x14.ijs';'g128x19.ijs' NB. require 64-bit
-blacklist=: blacklist, (1=1 { 8 T. '')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. require multithreading
-blacklist=: blacklist, (-.cdok)#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs'  NB. 15!:0 unavailable
+blacklist=: blacklist, (0=(9!:56'c_avx2')+.9!:56'emu_avx2')#(<testpath),each 'g6x14.ijs';'g128x14.ijs';'g128x19.ijs' NB. avx2 or emu_avx2
+blacklist=: blacklist, (0=9!:56'PYXES')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. require multithreading
+blacklist=: blacklist, (0=15!:23'')#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs'  NB. 15!:0 unavailable
 blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each <'gstack.ijs'  NB. crash
 blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp422.ijs';'gsp432.ijs'  NB. crash
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
+
+blacklist=: blacklist, (1 e. 'MEMAUDIT' E. 9!:14'')#(<testpath),each <'g100i.ijs'  NB. too slow, skip
 
 blacklist=: ~.blacklist
 ddall    =: blacklist -.~ testfiles 'g'

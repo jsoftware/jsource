@@ -420,6 +420,7 @@ int jefirst(int type,char* arg)
 	strcat(input,"'");
   }
 	strcat(input,"[UNAME_z_=:'Android'");
+#if 0
 	strcat(input,"[INSTALLROOT_z_=:'");
 #if defined(JAMALGAM)
 	strcpy(install,path);
@@ -432,6 +433,7 @@ int jefirst(int type,char* arg)
 	strcat(input,"[AndroidPackage_z_=:'");
 	if(strstr(jversion,"beta")) strcat(input,AndroidPackageBeta); else strcat(input,AndroidPackage);
 	strcat(input,"'");
+#endif
 #endif
 #if defined(RASPI)
 	strcat(input,"[IFRASPI_z_=:1");

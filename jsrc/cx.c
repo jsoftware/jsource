@@ -319,7 +319,7 @@ DF2(jtxdefn){F12IP;
   if(a!=0){
    if(unlikely(AFLAG(a)&AFANCHORED)&&AC(a)>=0){RZ(a=ca(a))}  // make a copy if ANCHORED
    L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
-   if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
+   if(!(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    I vtype=unlikely(ISSPARSE(AT(a)))?QCNAMED+QCRAREQD+VALTYPESPARSE:QCNAMED+QCNOUN;   // install QCSYMVAL flags: named, with type; FA needed iff sparse
    SETFVAL(MAKEFVAL(a,vtype),xbuckptr)  xbuckptr->sn=jt->currslistx;
    if(likely(a!=w)&(SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtfg>>JTINPLACEAX))){

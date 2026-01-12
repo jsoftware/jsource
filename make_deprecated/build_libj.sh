@@ -175,7 +175,7 @@ GASM_FLAGS=""
 
 raspberry_j64) # linux arm64
 TARGET=libj.so
-COMPILE="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
+COMPILE="$common -march=armv8-a+crc -DRASPI "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD -o libj.so "
 OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_RASPI}"

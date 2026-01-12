@@ -105,6 +105,11 @@
 #endif
 #endif
 
+#if !(defined(__x86_64__) || defined(__aarch64__) || defined(_M_ARM64))
+#undef EMU_AVX2
+#define EMU_AVX2 0
+#endif
+
 #if !defined(EMU_AVX2) && ((defined(__SSE2__) && defined(__x86_64__)) || defined(__aarch64__) || defined(_M_ARM64))
 #undef EMU_AVX2
 #define EMU_AVX2 1
@@ -740,6 +745,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Debugging options
 
+#undef MEMAUDIT
+#define MEMAUDIT 0x30   // test
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #ifndef MEMAUDIT
 #define MEMAUDIT 0x0    // Bitmask for memory audits: 
@@ -2392,14 +2399,17 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 
 
 #if !defined(C_CRC32C)
+#if C_AVX2 ||  defined (__SSE4_2__) || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX2
+#define C_CRC32C 1
+#else
 #define C_CRC32C 0
 #endif
-#if C_AVX2 || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX2
+#endif
+
+// JE source assumption of C_CRC32C
+#if !(C_AVX2 || EMU_AVX2)
 #undef C_CRC32C
-#define C_CRC32C 1
-#elif defined (__SSE4_2__)
-#undef C_CRC32C
-#define C_CRC32C 1
+#define C_CRC32C 0
 #endif
 
 #if PYXES && defined(__aarch64__) && !EMU_AVX2

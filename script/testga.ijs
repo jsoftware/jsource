@@ -37,6 +37,9 @@ NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
+echo 'C_AVX2: ',":9!:56'c_avx2'
+echo 'EMU_AVX2: ',":9!:56'emu_avx2'
+echo 'PYXES: ',":9!:56'pyxes'
 echo 'avx512f: ',":9!:56'avx512f'
 echo 'avx512vl: ',":9!:56'avx512vl'
 echo 'avx512bw: ',":9!:56'avx512bw'

@@ -56,6 +56,8 @@ blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp4
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
 
+blacklist=: blacklist, (1 e. 'MEMAUDIT' E. 9!:14'')#(<testpath),each <'g100i.ijs'  NB. too slow, skip
+
 blacklist=: ~.blacklist
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays

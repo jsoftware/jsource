@@ -443,6 +443,10 @@ F1(jtcpufeature){F12IP;
 #endif
  } else if(!strcasecmp(CAV(w),"SUPPORTAFFINITY")) {
   R sc(supportaffinity);
+ } else if(!strcasecmp(CAV(w),"C_AVX2")) {
+  R sc(C_AVX2);
+ } else if(!strcasecmp(CAV(w),"C_AVX512")) {
+  R sc(C_AVX512);
  } else if(!strcasecmp(CAV(w),"EMU_AVX2")) {
   R sc(EMU_AVX2);
  } else if(!strcasecmp(CAV(w),"PYXES")) {

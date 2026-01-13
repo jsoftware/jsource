@@ -330,7 +330,7 @@ EMPTY
 }}
 
 0 1 {{
-n_iter =. 10
+n_iter =. QKTEST{10 3
 
 keyshape =. 3 2
 valueshape =. 0:^:x 5 8
@@ -382,7 +382,7 @@ jdict test_type rand_boxed`'' ; rand_boxed`'' ; keyshape ; valueshape ; 25 2 ; n
 }}"0"_ 0 INDEX_TYPES
 
 0 1 {{
-n_iter =. 300
+n_iter =. QKTEST{300 30
 
 keyshape =. 3 2
 valueshape =. 0:^:x 5 8

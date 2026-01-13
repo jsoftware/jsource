@@ -209,8 +209,8 @@ NB. f/\.y ----------------------------------------------------------------
 (%/\.x)  -: */\.&.(^&((#x)$_1^1 0+#x)) x=:>:?101 7$200
 
 NB. Verify boxed results run in the right direction without overwriting
-zzz =: 0 + z =: i. QKTEST{1e7 1e5
-((QKTEST{9999999 99999), 0) -: {: (2 2"_)/\. z
+zzz =: 0 + z =: i. QKTEST{1e7 1e3
+((QKTEST{9999999 999), 0) -: {: (2 2"_)/\. z
 zzz -: z
 
 NB. Failed because # result was nonrecursive but /\. made the virtual block recursive, which led to erroneous free inside every2

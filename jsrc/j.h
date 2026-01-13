@@ -745,7 +745,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Debugging options
 
+#undef MEMAUDIT
+#define MEMAUDIT 0x30   // test
 // Use MEMAUDIT to sniff out errant memory alloc/free
+#ifndef MEMAUDIT
 #define MEMAUDIT 0x0    // Bitmask for memory audits: 
 //        1:  make sure  headers match pool#
 //        2:  full audit of tpush/tpop
@@ -763,6 +766,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // being used after they are freed, or freed prematurely. If you
 // get a wild free, turn on bit 0x2. 2 will detect double-frees
 // before they happen, at the time of the erroneous tpush
+#endif
 #define MEMAUDITPCALLENABLE 1     // expression for enabling stack auditing - enable auditing when true and enabled by MEMAUDIT&0x20 || jt->peekdata
 #ifndef AUDITEXECRESULTS
 #define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
@@ -1139,7 +1143,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define STACKCHKOFLSUFF(suff) {D stackpos; ASSERTSUFF(STACKPOS>=jt->cstackmin,EVSTACK,suff);}
 #define EPDYAD (w!=self)  // for any call (i. e. verb or modifier), true if w is an operand
 #define EPMONAD (w==self)  // for any call (i. e. verb or modifier), true if w is self, not an operand
-#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VIRS1+VASGSAFE+VFIX, RMAX,RMAX,RMAX)  // used for _9: to 9:
+#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VIRS1+VASGSAFE, RMAX,RMAX,RMAX)  // used for _9: to 9:
 // fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
 #define FUZZ            0.000000000000056843418860808015   // tolerance
 #define FUZZDS          0.0000152588  // for SP integer conversions

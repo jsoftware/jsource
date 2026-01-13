@@ -48,8 +48,8 @@ NB. 'domain error' -: x: etx _.
 ((,%)    ! 10*i.10) -: x:^:_1   (,%)    ! 10*i.10x
 (12345 % ! 10*i.10) -: x:^:_1 ] 12345 % ! 10*i.10x
 
-(+/&.(x:!.0)"1 -:!.0 ([:_1&x: [:+/"1 x:!.0)) (QKTEST{::20 20;10 10)?@$0
-(+/&.(x:!.0)   -:!.0 ([:_1&x: [:+/   x:!.0)) (QKTEST{1000 100)?@$0     NB.todo bump this to a more reasonable value--in particular, one that can properly stress the large superaccumulator--once extended-precision operations are fast
+(+/&.(x:!.0)"1 -:!.0 ([:_1&x: [:+/"1 x:!.0)) (QKTEST{::20 20;5 5)?@$0
+(+/&.(x:!.0)   -:!.0 ([:_1&x: [:+/   x:!.0)) (QKTEST{1000 50)?@$0     NB.todo bump this to a more reasonable value--in particular, one that can properly stress the large superaccumulator--once extended-precision operations are fast
 
 
 (= x:) ,1 _1 */ 1e43 1e_43
@@ -81,7 +81,7 @@ f=: 4 : 0
  1
 )
 
-(((QKTEST{10000 100),4) {~ 9!:57 (0) [ 9!:57 (1)) f"0 ]2*10^(QKTEST{::2 3 9;2 3 3)
+(((QKTEST{10000 50),4) {~ 9!:57 (0) [ 9!:57 (1)) f"0 ]2*10^(QKTEST{::2 3 9;2 3 3)
 
 f1=: 4 : 0
  p=: (_1^x ?@$ 2) * x ?@$ y

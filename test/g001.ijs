@@ -376,21 +376,21 @@ NB. assignment messages
 '|domain error: ex02|public assignment to a name with a private value|   y    =:5' -:&(1 {:: <;._1) {{ y=: 5 }} eftx ''
 
 NB. Test that arithmetic dyads migrate outer loop to inner loop
-p =: 0.5 * i. 10000 [ q =: 0.5
+p =: 0.5 * i. (QKTEST{10000 100) [ q =: 0.5
 (p +"+"1 _ q) -: (p +"1 _ q)
-THRESHOLD +. ((10000) 6!:2 'p + q') > 0.5 * (10000) 6!:2 'p +"1 _ q'
+THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"1 _ q'
 (p +"+"0 _ q) -: (p +"0 _ q)
-THRESHOLD +. ((10000) 6!:2 'p + q') > 0.5 * (10000) 6!:2 'p +"0 _ q'
+THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"0 _ q'
 p =: +"0 0
 (,'+') -: 5!:5 <'p'
 (p +"+"+ q) -: (p +"+ q)
-THRESHOLD +. ((10000) 6!:2 'p + q') > 0.5 * (10000) 6!:2 'p +"+ q'
-p =: i. 10000 2 [ q =: i. 10000 2
+THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"+ q'
+p =: i. (QKTEST{10000 100), 2 [ q =: i. (QKTEST{10000 100), 2
 (p +"+"1 q) -: (p +"1 q)
-THRESHOLD +. ((10000) 6!:2 'p + q') > 0.5 * (10000) 6!:2 'p +"1 q'
-p =: i. 10000 2 [ q =: i. 10000
+THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"1 q'
+p =: i. (QKTEST{10000 100), 2 [ q =: i. (QKTEST{10000 100)
 (p +"+"1 0 q) -: (p +"1 0 q)
-THRESHOLD +. ((10000) 6!:2 'p + q') > 0.6 * (10000) 6!:2 'p +"1 0 q'
+THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.6 * ((QKTEST{10000 100)) 6!:2 'p +"1 0 q'
 
 p =: 1 : 0
 u 5

@@ -63,16 +63,16 @@ IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$20
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$2e9
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: o.?5$20
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: j./?2 5$20
-0&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:' miasma chthonic chronic kakistocracy dado'
-0&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: (u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
-0&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: (10&u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
-0&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: s:@<"0&.> ;:' miasma chthonic chronic kakistocracy dado'
-0&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: <"0@s: ;:' miasma chthonic chronic kakistocracy dado'
-0&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: x: ?5$20
-0&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: %/0 1+x:?2 5$20
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u: ?5$65536
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: RAND32 ?5$C4MAX
-IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kakistocracy dado'
+IF64&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kakistocracy dado'
+0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:' miasma chthonic chronic kakistocracy dado'
+0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: (u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
+0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: (10&u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
+0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: s:@<"0&.> ;:' miasma chthonic chronic kakistocracy dado'
+0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: <"0@s: ;:' miasma chthonic chronic kakistocracy dado'
+0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: x: ?5$20
+0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: %/0 1+x:?2 5$20
 
 NB. compatibility of ~. ~: /.
 test =: 4 : 0
@@ -108,12 +108,12 @@ for. i. x do.
 end.
 1
 }}"0 1
-1000 test 0 1
-1000 test i. 10
-1000 test i. 400
-1000 test o. i. 400
-1000 test 100 * i. 400
-1000 test j.~ i. 400
+(QKTEST{1000 100) test 0 1
+(QKTEST{1000 100) test i. 10
+(QKTEST{1000 100) test i. 400
+(QKTEST{1000 100) test o. i. 400
+(QKTEST{1000 100) test 100 * i. 400
+(QKTEST{1000 100) test j.~ i. 400
 
 test =: {{
 for. i. x do.
@@ -123,9 +123,9 @@ for. i. x do.
 end.
 1
 }}"0 1
-100 test <"0 i. 100  NB. NOT inplace
-100 test i. 100x
-100 test 4 %~ i. 100x
+(QKTEST{100 10) test <"0 i. 100  NB. NOT inplace
+(QKTEST{100 10) test i. 100x
+(QKTEST{100 10) test 4 %~ i. 100x
 
 
 

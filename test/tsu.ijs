@@ -56,6 +56,8 @@ blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp4
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
 
+blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g0.ijs';'g128x19.ijs';'g128x5.ijs';'g320.ijs';'g320ip.ijs'
+
 blacklist=: ~.blacklist
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays
@@ -169,10 +171,10 @@ comb=: 4 : 0
 
 randuni=: 3 : 0
  initsymbolstate =: 0 s:^:(0 = {. ". 'NORESETSTABLE') 10  NB. Preserve init symbol state so it doesn't keep growing
- l2max=. 1024       NB. #literal2 sample   multiple of 256
- l4max=. 1024       NB. #literal4 sample   multiple of 256
- sbmax=. 1024       NB. #symbol sample     multiple of 256
- sblen=. 10         NB. max symbol length
+ l2max=. QKTEST{1024 64     NB. #literal2 sample   multiple of 256
+ l4max=. QKTEST{1024 64     NB. #literal4 sample   multiple of 256
+ sbmax=. QKTEST{1024 64     NB. #symbol sample     multiple of 256
+ sblen=. QKTEST{10 3        NB. max symbol length
 NB. unique random literal2
  adot1=: u: /:~ l2max?65536
 NB. unique random literal4
@@ -194,12 +196,12 @@ NB. validation
  assert. l2max=#adot1
  assert. l4max=#adot2
  assert. sbmax=#sdot0
- assert. 256<:#adot1
- assert. 256<:#adot2
- assert. 256<:#sdot0
- assert. 0=256|#adot1
- assert. 0=256|#adot2
- assert. 0=256|#sdot0
+ assert. (QKTEST{256 64)<:#adot1
+ assert. (QKTEST{256 64)<:#adot2
+ assert. (QKTEST{256 64)<:#sdot0
+ assert. 0=(QKTEST{256 64)|#adot1
+ assert. 0=(QKTEST{256 64)|#adot2
+ assert. 0=(QKTEST{256 64)|#sdot0
  assert. l2max=#~.adot1
  assert. l4max=#~.adot2
  assert. sbmax=#~.sdot0

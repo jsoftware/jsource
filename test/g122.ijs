@@ -157,7 +157,7 @@ g"0 i.25
 h"0 i.25
 
 NB. Test all boundaries of length and mismatch point
-4 : 0 "0/~ i. 300
+4 : 0 "0/~ i. QKTEST{300 30
 r =. y {. }. a.  NB. y is length
 if. x < y do. l =. (0{a.) x} r else. l =. y {. }. a. end.  NB. x is mismatch point
 l test r
@@ -263,8 +263,8 @@ NB. boxed
 (<u:'asdf') test <u:'foob'
 (<10&u:'asdf') test <10&u:'asdf'
 (<10&u:'asdf') test <10&u:'foob'
-a test a=:<"1 ?300 3$1e9
-((}:a),<9) test a=:<"1 ?300 3$1e9
+a test a=:<"1 ?(QKTEST{::300 3;100 3)$1e9
+((}:a),<9) test a=:<"1 ?(QKTEST{::300 3;100 3)$1e9
 
 a (-:!.0 = *./@:(=!.0)&,) a=:o._1e9+?100$2e9
 (}:a,4j5)   (-:!.0 = *./@:(=!.0)&,) a=:o._1e9+?100$2e9
@@ -296,25 +296,25 @@ NB. x-:"r y -------------------------------------------------------------
 1 0 0 0 1 -: 0 1 2 -:"1[5$i.4 3
 (10$1) -: x-:"1 x=:?10 7$1e6
 
-n=: 300
+n=: QKTEST{300 30
 match=: 4 : 'x-:y'
 test1=: 3 : '(c-:"1 d) -: c match"1 d=:((i.n)-?n$2){c=:((n,y)?@$2){''ab'''
 test2=: 3 : '(c-:"1 e) -: c match"1 e=:(?n        ){c=:((n,y)?@$2){''ab'''
 
-test1"0 i.30 10
-test2"0 i.30 10
+test1"0 i.QKTEST{::30 10;10 5
+test2"0 i.QKTEST{::30 10;10 5
 
 test1=: 3 : '(c-:"1 d) -: c match"1 d=:((i.n)-?n$2){c=:((n,y)?@$2){u:''ab'''
 test2=: 3 : '(c-:"1 e) -: c match"1 e=:(?n        ){c=:((n,y)?@$2){u:''ab'''
 
-test1"0 i.30 10
-test2"0 i.30 10
+test1"0 i.QKTEST{::30 10;10 5
+test2"0 i.QKTEST{::30 10;10 5
 
 test1=: 3 : '(c-:"1 d) -: c match"1 d=:((i.n)-?n$2){c=:((n,y)?@$2){10&u:''ab'''
 test2=: 3 : '(c-:"1 e) -: c match"1 e=:(?n        ){c=:((n,y)?@$2){10&u:''ab'''
 
-test1"0 i.30 10
-test2"0 i.30 10
+test1"0 i.QKTEST{::30 10;10 5
+test2"0 i.QKTEST{::30 10;10 5
 
 (-:"0/~ -: match"0/~) x=:?20$2
 (-:"0/~ -: match"0/~) x=:a{~?20$#a=:'aleatoric'
@@ -407,12 +407,12 @@ test4=: 4 : 0
  1
 )
 
-0 1         test4"1 0 i.3 10
-'abc'       test4"1 0 i.3 10
-0 1 2       test4"1 0 i.3 10
-0 1 2.3     test4"1 0 i.3 10
-0 1 2j3     test4"1 0 i.3 10
-(0 1;2;i.7) test4"1 0 i.3 10
+0 1         test4"1 0 i.QKTEST{::3 10;2 5
+'abc'       test4"1 0 i.QKTEST{::3 10;2 5
+0 1 2       test4"1 0 i.QKTEST{::3 10;2 5
+0 1 2.3     test4"1 0 i.QKTEST{::3 10;2 5
+0 1 2j3     test4"1 0 i.QKTEST{::3 10;2 5
+(0 1;2;i.7) test4"1 0 i.QKTEST{::3 10;2 5
 
 
 randfini''

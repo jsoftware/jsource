@@ -84,14 +84,14 @@ end.
 
 NB. LU rational
 lrtoar =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle form, result is original a
-(-: (0&{:: /:~ lrtoar@(1&{::))@(128!:10))@(1000x ?@$~ ,~)"0 i. 15
+(-: (0&{:: /:~ lrtoar@(1&{::))@(128!:10))@((QKTEST{1000x 100x) ?@$~ ,~)"0 i. 15
 
 t=: 3 : 0''
 if. (0=(9!:56'c_avx2')+.9!:56'emu_avx2') +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
   EMPTY return.
 end.
 for_i. (>: , 500&+) (i.15) do.
- a1=. 128!:10 r=. (1000 ?@$~ ,~) i
+ a1=. 128!:10 r=. ((QKTEST{1000 100) ?@$~ ,~) i
  echo b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) a1  NB. floating point
  assert. 1e_4 > b
 end.
@@ -100,7 +100,7 @@ EMPTY
 
 1: 0 : 0
 sm =. ((1. todiag (2#[) $ (0.01 * ?@$&0@])`((? *:)~)`(0. #~ *:@[)})   [: <. 0.001 * *:) 1000
-dm =.lrtoa@:(1.&todiag)@:(0.01&*)@:(0 ?@$~ ,~) 1000
+dm =.lrtoa@:(1.&todiag)@:(0.01&*)@:(0 ?@$~ ,~) QKTEST{1000 100
 )
 
 NB. 128!:10 -------------------------------------------------------------
@@ -133,9 +133,9 @@ if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
 end.
 echo 9!:14''
 echo '128!:10  cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
-t IF64{250 500
+t QKTEST{(IF64{250 500), 50
 if. ((9!:56)'cblas') +. (9!:56)'fma' do. NB. otherwise too slow
-  t IF64{500 1000
+  t QKTEST{(IF64{500 1000), 80
 end.
 EMPTY
 )

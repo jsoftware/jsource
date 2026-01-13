@@ -38,7 +38,7 @@ NB. Test mixtures of pyxes and non-pyxes
 1: 0 T. ''
 1: 0 T. ''  NB. create threads
 
-a =: i.&.> (20 ?@$ 10)
+a =: i.&.> ((QKTEST{20 5) ?@$ 10)
 (;a) -: ; (0.30 > (#a) ?@$ 0) >@] t.'worker'^:["0 a
 (;a) -: ; >@] t.'worker'"0 a
 (;a) -: ;@:((0.30 > (#a) ?@$ 0) >@] t.'worker'^:["0 ]) a

@@ -15,7 +15,7 @@ delth''  NB. make sure we start with an empty system
 NB. leave us with y worker threads
 setth =: {{ while. t =. * y-1 T. '' do. '' T.~ t{0 0 55 end. 1 }} 
 
-N=: <: 1 { 8 T. ''  NB. max # worker threads
+N=: (4&<.)^:QKTEST <: 1 { 8 T. ''  NB. max # worker threads
 N > 0
 N1=: <.@%: N
 N1 > 0
@@ -155,7 +155,7 @@ f=: 3 : 0''
 {{0 T.0}}^:] 0 >. (1&T.'') -~ <: {: 8 T. ''
 mx=: 10 T. 0
 for_i. i.10 do.
-  1:&> (f1 t. '')"0 i. QKTEST{1e5 1e3
+  1:&> (f1 t. '')"0 i. QKTEST{1e5 1e2
 end.
 ''
 )

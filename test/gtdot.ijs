@@ -25,7 +25,7 @@ N > 0
 N1=: <.@%: N
 N1 > 0
 N >: N1*N1
-N2=: ((QKTEST+.4>9!:56'cores'){32 16) <. <.@%: 20 * N+2
+N2=: ((QKTEST+.4>9!:56'cores'){32 4) <. <.@%: 20 * N+2
 N2 > 0
 
 NB. create all available threads

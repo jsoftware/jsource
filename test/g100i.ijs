@@ -88,7 +88,6 @@ plus=: 4 : 'x+y'
 NB. +/!.0 D ----------------------------------------------------------------
 
 f =: 4 : 0"0 1  NB. y is shape of region, x is rank of sums
-if. QKTEST do. 0 0 0 return. end.
 xasrank =. x (1 : ']"m')
 big =. (, -@:(+/))@}:"xasrank y ?@$ 1e8   NB. large integers adding to 0
 small =. y ?@$ 0   NB. floats in range 0-1
@@ -96,13 +95,17 @@ bigfloat =. big+small  NB. floats with large & small components
 smalltrunc =. bigfloat-big  NB. the actual small parts of bigfloat
 ((+/"xasrank smalltrunc) + +/"xasrank big) ; (+/"xasrank bigfloat) ; (+/!.0"xasrank bigfloat)  NB. correct total, +/ version, +/!.0 version
 )
-QKTEST +. 0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 x =: 1e7 + i. 17
-QKTEST +. 0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 x =: >: i. 32
-0 -: +/!.0 i. 0
-QKTEST +. 0.05 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: (1e6 + i. 20) ,"0 ] 6
-QKTEST +. 0.005 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: (1e5) ,"0 ] >: i. 20
-QKTEST +. , 1 2 3 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20)
-QKTEST +. , 1 2 3 4 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20) ; (>: i. 20)
+3 : 0''
+assert. 0 -: +/!.0 i. 0
+if. QKTEST do. 1 return. end.
+assert. 0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 x =: 1e7 + i. 17
+assert. 0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 x =: >: i. 32
+assert. 0.05 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: (1e6 + i. 20) ,"0 ] 6
+assert. 0.005 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: (1e5) ,"0 ] >: i. 20
+assert. , 1 2 3 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20)
+assert. , 1 2 3 4 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20) ; (>: i. 20)
+1
+)
 
 NB. failover for infinities
 _ = (+/!.0) _ 0 _

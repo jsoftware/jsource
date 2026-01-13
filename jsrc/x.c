@@ -71,7 +71,7 @@ static DF2(jtanchor2){F12IP; I newval=b0(a); RE(0);
 
 
 // the table of A blocks for each foreign.  m and n are in localuse.  Last A block is for 18!:4, which is not available directly
-static PRIM foreignA[320] = { {{AKXR(0),VERB&TRAVERSIBLE,0,VERB,ACPERMANENT,0,0},{{.valencefns={jtvalenceerr,jtvalenceerr},.fgh={0,0,0},.localuse.lu1.foreignmn={0xfff,0xfff},.flag=VASGSAFE,.flag2=0,.lrr=(RANK2T)((RMAX<<RANKTX)+RMAX),.mr=(RANKT)RMAX,.id=CIBEAM,}}} };
+static PRIM foreignA[320] = { {{AKXR(0),VERB&TRAVERSIBLE,0,VERB,ACPERMANENT,0,0},{{.valencefns={jtvalenceerr,jtvalenceerr},.fgh={0,0,0},.localuse.lu1.foreignmn={0xfff,0xfff},.flag=VASGSAFE+VFIX,.flag2=0,.lrr=(RANK2T)((RMAX<<RANKTX)+RMAX),.mr=(RANKT)RMAX,.id=CIBEAM,}}} };
 
 #ifndef CRC32
 #define CRC32(m,n) (2401*(m))
@@ -108,7 +108,7 @@ void jtforeigninit(J jt){UI i;
 #define XPRIM(ps,fn1,fn2,flg1,flg2,m,lr,rr) \
  if((ps)!=VERB)AT((A)&foreignA[Andx])=(ps); \
  if((fn1)!=0)FAV((A)&foreignA[Andx])->valencefns[0]=(fn1); if((fn2)!=0)FAV((A)&foreignA[Andx])->valencefns[1]=(fn2); \
- if((flg1)!=VASGSAFE)FAV((A)&foreignA[Andx])->flag=(flg1); if((flg2)!=0)FAV((A)&foreignA[Andx])->flag2=(flg2); \
+ if((flg1)!=VASGSAFE)FAV((A)&foreignA[Andx])->flag=(flg1)|VFIX; if((flg2)!=0)FAV((A)&foreignA[Andx])->flag2=(flg2); \
  if((m)!=RMAX)FAV((A)&foreignA[Andx])->mr=(m); if((((lr)<<RANKTX)+(rr))!=((RMAX<<RANKTX)+RMAX))FAV((A)&foreignA[Andx])->lrr=((lr)<<RANKTX)+(rr);
 
  // Create all the blocks.  They must not produce CONJ

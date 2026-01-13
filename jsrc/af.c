@@ -80,7 +80,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
  v=FAV(w); if(v->flag&VFIX)R w;  // if value already fixed (or m : n which gets VFIX set), keep it.  This prunes all branches with no names, since VFIX is propagated from the bottom up during tree creation
  // continuing, there is a name in the branch and we have to plot through the tree to find it
  f=v->fgh[0]; g=v->fgh[1]; I id=v->id;   // fetch f, g of compound, and the type
-// obsolete  if(!(((I)f|(I)g)||unlikely((id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
+ if(!(((I)f|(I)g)||unlikely((id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  h=v->fgh[2];  // fetch h
 // obsolete  if(unlikely(((id^CFORK)|(I)h)==0)){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork, which has h=0
  I ai=IAV(a)[0]; I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV); //get value of control input a; extract control flags

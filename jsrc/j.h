@@ -745,10 +745,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Debugging options
 
-#undef MEMAUDIT
-#define MEMAUDIT 0x30   // test
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#ifndef MEMAUDIT
 #define MEMAUDIT 0x0    // Bitmask for memory audits: 
 //        1:  make sure  headers match pool#
 //        2:  full audit of tpush/tpop
@@ -766,7 +763,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // being used after they are freed, or freed prematurely. If you
 // get a wild free, turn on bit 0x2. 2 will detect double-frees
 // before they happen, at the time of the erroneous tpush
-#endif
 #define MEMAUDITPCALLENABLE 1     // expression for enabling stack auditing - enable auditing when true and enabled by MEMAUDIT&0x20 || jt->peekdata
 #ifndef AUDITEXECRESULTS
 #define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0

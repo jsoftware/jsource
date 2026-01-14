@@ -231,7 +231,7 @@ test ,&.>'f';;:'sui generis'
 test 'Opposable';'thumbs'
 test 'Opposable';'thumbs '
 test 2 3$'foobar';?2 3$183164
-test 'abcd';5$233{a.
+test 'abcd';5$(QKTEST{233 112){a.
 test <0;'abcd'
 test <(,0);'abcd'
 test 5!:1<'test'
@@ -257,7 +257,7 @@ test ,&.>(u:'f');(u:&.>) ;:'sui generis'
 test u:&.>'Opposable';'thumbs'
 test u:&.>'Opposable';'thumbs '
 test 2 3$(u:'foobar');?2 3$183164
-test (u:'abcd');5$233{adot1
+test (u:'abcd');5$(QKTEST{233 112){adot1
 test <0;u:'abcd'
 test <(,0);u:'abcd'
 test 5!:1<u:'test'
@@ -281,7 +281,7 @@ test ,&.>(10&u:'f');(10&u:&.>) ;:'sui generis'
 test 10&u:&.>'Opposable';'thumbs'
 test 10&u:&.>'Opposable';'thumbs '
 test 2 3$(10&u:'foobar');?2 3$183164
-test (10&u:'abcd');5$233{adot1
+test (10&u:'abcd');5$(QKTEST{233 112){adot1
 test <0;10&u:'abcd'
 test <(,0);10&u:'abcd'
 test 5!:1<10&u:'test'
@@ -686,8 +686,11 @@ test2 <'a'
 
 NB. Verify that all trains produce an equivalent result after going through 5!:5
 
+0!:_1`1:@.(0=9!:56'memaudit') '$'   NB. skip if memaudit
+
 NB. y is a character string representing a possibly-invalid train
 testlr=: {{
+if. 0~:9!:56'memaudit' do. 1 return. end.
 a =: y
 try.
  0!:0 'asdf=.',;y
@@ -699,6 +702,8 @@ assert. (ar <'newy') -: ar <'asdf'
 1
 }}"1
 (1 2 3 4 5 6) (testlr @:({."1))"0 _ ({~   [: (#: i.@:(*/)) 6 # #) ;: '+ [. 3 ]: ( )'
+
+NB.$  end of skip
 
 NB. Verify all modifier trains valid
 

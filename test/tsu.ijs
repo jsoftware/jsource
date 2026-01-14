@@ -59,7 +59,15 @@ blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ij
 blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g0.ijs';'g128x19.ijs';'g128x5.ijs';'g320.ijs';'g320ip.ijs';'g421.ijs';'g422os.ijs';'g430a2.ijs';'g600.ijs';'g621.ijs';'g631.ijs';'gibs.ijs';'gipht.ijs';'gmean.ijs';'gnan.ijs';'gqco.ijs'
 
 blacklist=: ~.blacklist
-ddall    =: blacklist -.~ testfiles 'g'
+
+ddall    =: testfiles 'g'
+3 : 0'' [ 'gsp420'          NB. skip until
+if. #y do.
+  y=. '/',y,'.ijs'
+  if. _1~: i=. {.!._1 I. (1 e. y&E.)&> ddall do. ddall=: i}.ddall end.
+end.
+)
+ddall    =: blacklist -.~ ddall
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays
 ddgsp    =: blacklist -.~ testfiles 'gsp'     NB. sparse arrays
 ddgsc    =: blacklist -.~ testfiles 'gsc'     NB. symbol arrays
@@ -79,12 +87,6 @@ gif.ijs
 gipht.ijs
 git.ijs
 gss.ijs
-)
-
-3 : 0'' [ '/gsco.ijs'
-if. #y do.
-  if. _1~: i=. {.!._1 I. (1 e. y&E.)&> ddall do. ddall=: i}.ddall end.
-end.
 )
 
 NB. When a name executes cocurrent, all subsequent calls from that name use a slower linkage.  Thus we don't want RUN to call

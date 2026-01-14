@@ -3,7 +3,7 @@ NB. regex ------------------------------------------------------------------
 
 load 'regex'
 
-techo^:PRINTMSG pcre2dll_jregex_
+echo pcre2dll_jregex_
 jpcre2_compile_jregex_
 
 rxutf8 1

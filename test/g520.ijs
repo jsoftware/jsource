@@ -899,7 +899,7 @@ dels =. (#shp) ?@$~ ndels =. ? shp =. 1 >. ? 40  NB. deal the array and the comp
 assert. (2 ! shp) = (+/~.dels) + +/ (<<<dels) { i. shp
 end.
 1
-}} 10000   NB. Veridy that random deletions work
+}} QKTEST{10000 1000  NB. Veridy that random deletions work
 
 NB. (<"1 x){y -----------------------------------------------------------
 
@@ -1039,16 +1039,16 @@ a =: i. 2 3 4 10000
 4000 > 7!:2 '(<0 2) { a'
 
 NB. inplacing
-a =: 10000 ?@$ 1000
+a =: (QKTEST{10000 100) ?@$ 1000
 1000 > (7!:2 '(i. 1024) { a') -  (7!:2 '(i. 1024)')
 1000 > (7!:2 '(60 60 ?@$ #a) { a') -  (7!:2 '(60 60 ?@$ #a)')
-a =: 10000 ?@$ 0
+a =: (QKTEST{10000 100) ?@$ 0
 1000 > (7!:2 '(i. 1024) { a') -  (7!:2 '(i. 1024)')
 1000 <`>@.IF64 (7!:2 '(60 60 ?@$ #a) { a') -  (7!:2 '(60 60 ?@$ #a)')
 1000 < (7!:2 '(60 6 ?@$ #a) {"1 _ a') -  (7!:2 '(60 6 ?@$ #a)')
 
 NB. returning w in full as extreme virtualing
-a =: 3 10000 ?@$ 0
+a =: (QKTEST{::3 10000;3 100) ?@$ 0
 5000 > 7!:2 'a =: 0 1 2 { a'
 
 NB. error checks

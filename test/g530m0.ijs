@@ -48,7 +48,7 @@ h =. e.&(s:@<"0 ' ') {"0 1 ,"0&(s:@<"0 '_')
 NB. a=: c}x,y,... ,:z ---------------------------------------------------
 
 f=: 3 : 0
- b=: ?5 7 11 13 17$2
+ b=: ?(QKTEST{::5 7 11 13 17;2 3 5 7 9)$2
  c=: ?($b)$3
  select. y 
   case. 'B' do.
@@ -415,8 +415,8 @@ test1 0 1
 test1 'abcdefghijklmno'
 test1 0.4 + i. 10
 test1 5 j. i. 10
-test1 i. 10x
-test1 1r2 + i. 10x
+test1 i. QKTEST{10x 2x
+test1 1r2 + i. QKTEST{10x 2x
 test1 (1;'a';4x) , <"0 i. 7
 test1 2 u: 'abcdefghijklmno'
 test1 10 u: 'abcdefghijklmno'
@@ -460,8 +460,8 @@ test1 0 1
 test1 'abcdefghijklmno'
 test1 0.4 + i. 10
 test1 5 j. i. 10
-test1 i. 10x
-test1 1r2 + i. 10x
+test1 i. QKTEST{10x 2x
+test1 1r2 + i. QKTEST{10x 2x
 test1 (1;'a';4x) , <"0 i. 7
 test1 2 u: 'abcdefghijklmno'
 test1 10 u: 'abcdefghijklmno'
@@ -504,16 +504,16 @@ test2 =: {{
 ((#: i.@(*/)) x # 4) test1 y
 1
 }}"0 _
-0 1 2 3 4 5 test2 i. 4 3 4 5 7 6 3
-0 1 2 3 4 5 test2 0. + i. 4 3 4 5 7 6 4
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 i. 4 3 4 5 7 6 3
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 0. + i. 4 3 4 5 7 6 4
 0 1 2 3  test2 0x + i. 4 3 4 5 3
 0 1 2 3  test2 1r2 + i. 4 3 4 5 3
 0 1 2 3 test2 <"0 i. 4 3 4 5 2
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 1) $ a.
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 2) $ a.
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 3) $ a.
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 4) $ a.
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 5) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 1) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 2) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 3) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 4) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 5) $ a.
 
 _10 -: (_10) (<0$4)} 4
 
@@ -595,7 +595,7 @@ sp     =: 7!:2
 b32    =: 100>#3!:1 i.8  NB. 1 if 32-bit; 0 if 64-bit
 
 foo =. 3 : 0
- pqr=.xyz =. i.10000
+ pqr=.xyz =. i.(QKTEST{10000 10000)
  z=.''
  xyza =. 15!:19 xyz
  z=.z, xyza = 15!:19 xyz=. _123 (4)}xyz   NB. create copy
@@ -612,13 +612,13 @@ foo =. 3 : 0
  z=.z, xyza = 15!:19 xyz=. 8 9 >:@[`[`(,~)} xyz  NB. in place only if 9!:53]1
  xyza =. 15!:19 xyz
  z=.z, xyza = 15!:19 xyz=. xyz >:@]`]`,} 11 12  NB. in place only if 9!:53]1
- assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 12 13 13 15 16 18 17, (18}.(i.10000)) , 8 9 11 12
- assert. pqr -: i. 10000
+ assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 12 13 13 15 16 18 17, (18}.(i.(QKTEST{10000 10000))) , 8 9 11 12
+ assert. pqr -: i. (QKTEST{10000 10000)
  z
 )
 
 goo =. 3 : 0
- pqr=.xyz =. i.10000
+ pqr=.xyz =. i.(QKTEST{10000 10000)
  xyza =. 15!:19 xyz
  z=.''
  z=.z, xyza = 15!:19 xyz=. xyz 4}~ _123   NB. create copy
@@ -626,13 +626,13 @@ goo =. 3 : 0
  z=.z, xyza = 15!:19 xyz=. xyz 5}~ _456   NB. in place
  z=.z, xyza = 15!:19 xyz=. xyz 6}~ _789   NB. in place
  z=.z, xyza = 15!:19 qqq=. xyz 7}~ _123   NB. create copy
- assert. xyz -: 0 1 2 3 _123 _456 _789,7}.i.10000
- assert. pqr -: i. 10000
+ assert. xyz -: 0 1 2 3 _123 _456 _789,7}.i.QKTEST{10000 10000
+ assert. pqr -: i. (QKTEST{10000 10000)
  z
 )
 
 hoo =. 3 : 0
- pqr=.xyz =: i.10000
+ pqr=.xyz =: i.(QKTEST{10000 10000)
  z=:''
  z=:z,sp 'xyz=: _123 (4)}xyz'   NB. create copy
  z=:z,sp 'xyz=: _456 (5)}xyz'   NB. in place
@@ -646,8 +646,8 @@ hoo =. 3 : 0
  z=:z,sp 'xyz=: 8 9 >:@[`[`(,~)} xyz'  NB. in place only if 9!:53]1
  z=:z,sp 'xyz=: xyz >:@]`]`,} 11 12'  NB. in place only if 9!:53]1
  z=:z,sp 'xyz=: 11 13 (>:@{)`[} xyz'  NB. in place, 2 gerunds
- assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 13 13 14 15 16 18 17, (18}.(i.10000)) , 8 9 11 12
- assert. pqr -: i. 10000
+ assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 13 13 14 15 16 18 17, (18}.(i.(QKTEST{10000 10000))) , 8 9 11 12
+ assert. pqr -: i. (QKTEST{10000 10000)
  z
 )
 
@@ -839,7 +839,7 @@ for. i. ntests do.
   testm 0.02 0.1 0.5 0.9;(2-?4);(?4);(?4);(?2);(?2);prec
 end.
 }}"1
-testn 10000 ,. 1 2 4 8 16 64 128  NB. Reduce count after burn-in
+testn (QKTEST{10000 100) ,. 1 2 4 8 16 64 128  NB. Reduce count after burn-in
 
 (,:~"2 i. 3 4 5) -:  (i. 3 4 5) (<a:,&<a:)}"2 i. 3 2 4 5  NB. verify last axis can't be removed
 

@@ -150,21 +150,21 @@ _13.9    f =i.9
 
 {{
 if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
-echo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?(QKTEST{::2000 2000;500 500)$12200
-echo e=. >./|,(id a)-a X c
+techo^:PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?(QKTEST{::2000 2000;500 500)$12200
+techo^:PRINTMSG e=. >./|,(id a)-a X c
 assert. 1e_8>e
-echo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?(2, (QKTEST{::2000 2000;500 500))$12200
-echo e=. >./|,(id b)-b X c
+techo^:PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?(2, (QKTEST{::2000 2000;500 500))$12200
+techo^:PRINTMSG e=. >./|,(id b)-b X c
 assert. 1e_8>e
 ''
 }}^:(9!:56 'cblas')''
 
 {{
-echo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?(QKTEST{::2000 1500;500 300)$12200
-echo e=. >./|,a - (a X c) X a
+techo^:PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?(QKTEST{::2000 1500;500 300)$12200
+techo^:PRINTMSG e=. >./|,a - (a X c) X a
 assert. 1e_8>e
-echo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?(2, (QKTEST{::2000 1500;500 300))$12200
-echo e=. >./|,b - (b X c) X b
+techo^:PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?(2, (QKTEST{::2000 1500;500 300))$12200
+techo^:PRINTMSG e=. >./|,b - (b X c) X b
 assert. 1e_8>e
 ''
 }}''

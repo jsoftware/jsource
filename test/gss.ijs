@@ -129,7 +129,7 @@ NB. *./,   ~: compss/~ vv2
 NB. ! is slower, especially for big values
 compssp =: 1 : 0 (&>)
 :
-smoutput x,y
+NB. smoutput x,y
 (x u f. etx y) -: (x ({.@:(u f.&(2 $ ,:))) etx y)
 )
 v =: 0;1;(<"0 (2.0-2.0)+0 1),((<"0)2 - 1 2),((<"0) 5 ?@$ 1e6),((<"0)100000 * 5 ?@$ 0)
@@ -184,8 +184,8 @@ NB. Monads
 NB. Verify each verb goes through a faster path
 compst =: 1 : 0
 :
-timesing =. (QKTEST{2000 100) (6!:2) 'u f.&>~ y'
-timearray =. (QKTEST{2000 100) (6!:2) 'u f.&>~ x'
+timesing =. (10) (6!:2) 'u f.&>~ y'
+timearray =. (10) (6!:2) 'u f.&>~ x'
 timesing,timearray return.
 u x  NB. to force dyad
 )
@@ -243,8 +243,8 @@ NB. no ss THRESHOLD +. 0.75 > %/ vv1 _1&o.@] compst vv0
 NB. Repeat for monad
 compst =: 1 : 0
 :
-timesing =. (QKTEST{2000 100) (6!:2) 'u f.&> y'
-timearray =. (QKTEST{2000 100) (6!:2) 'u f.&> x'
+timesing =. (10) (6!:2) 'u f.&> y'
+timearray =. (10) (6!:2) 'u f.&> x'
 timesing,timearray return.
 u x
 )
@@ -257,7 +257,7 @@ THRESHOLD +. 0.9 > %/ vv1 | compst vv0
 THRESHOLD +. 0.9 > %/ vv1 ! compst vv0
 THRESHOLD +. 0.9 > %/ vv1 %: compst vv0
 THRESHOLD +. 0.9 > %/ vv1 ^. compst vv0
-echo  %/ vv1 o. compst vv0
+techo^:PRINTMSG  %/ vv1 o. compst vv0
 THRESHOLD +. 0.9 > %/ vv1 o. compst vv0
 
 NB. Verify that operations are performed in-place where possible

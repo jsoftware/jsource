@@ -177,7 +177,7 @@ NB. test utf8 in proc name - windows FIXWINUFT8
 NB. ugh - windows ignores trailing blanks in file names
 f=: 3 : 0
 if. UNAME-:'Android' do. 2 0 return. end.
-echo 'LIBTSDLL:',LIBTSDLL
+techo^:PRINTMSG 'LIBTSDLL:',LIBTSDLL
 i=. LIBTSDLL i:'.'
 ,(":2!:6''),'_',":3&T.''
 t=. dltb jpath '~temp',(}.~ i:&'/') jpathsep (i{.LIBTSDLL),(":2!:6''),'_',(":{.3&T.''),(8 u: 16b1f601),'ê',i}.LIBTSDLL

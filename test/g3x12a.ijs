@@ -45,14 +45,14 @@ end.
 
 fn=. y{::' lower';' upper'
 techo^:PRINTMSG 'short literal',fn
-techo^:PRINTMSG 20&(6!:2) 'PA=. case1&.> A'
-techo^:PRINTMSG 20&(6!:2) 'QA=. case2&.> A'
+techo^:PRINTMSG 5&(6!:2) 'PA=. case1&.> A'
+techo^:PRINTMSG 5&(6!:2) 'QA=. case2&.> A'
 assert. (PA-:QA)
 techo^:PRINTMSG 'long literal',fn
 techo^:PRINTMSG 5&(6!:2) 'PB=. case1&.> B'
-techo^:PRINTMSG 10&(6!:2) 'QB=. case2&.> B'
+techo^:PRINTMSG 5&(6!:2) 'QB=. case2&.> B'
 techo^:PRINTMSG 5&(6!:2) 'PC=. case1&.> C'
-techo^:PRINTMSG 10&(6!:2) 'QC=. case2&.> C'
+techo^:PRINTMSG 5&(6!:2) 'QC=. case2&.> C'
 assert. (PB-:QB)
 assert. (PC-:QC)
 

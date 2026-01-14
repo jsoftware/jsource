@@ -79,11 +79,11 @@ B=. 1#<(3, 123*L0)$x
 C=. 1#<(3, 543*L0)$x
 
 techo^:PRINTMSG 'short literal'
-techo^:PRINTMSG 20&(6!:2) 'PA=.  tobase64_old"1&.> A'
-techo^:PRINTMSG 20&(6!:2) 'QA=.  (3!:10)&.> A'
+techo^:PRINTMSG 1&(6!:2) 'PA=.  tobase64_old"1&.> A'
+techo^:PRINTMSG 5&(6!:2) 'QA=.  (3!:10)&.> A'
 assert. (PA-:QA)
-techo^:PRINTMSG 20&(6!:2) 'P=.  frombase64_old"1&.> PA'
-techo^:PRINTMSG 20&(6!:2) 'Q=.  (3!:11)&.> QA'
+techo^:PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PA'
+techo^:PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QA'
 assert. (P-:Q)
 techo^:PRINTMSG 'long literal'
 techo^:PRINTMSG 1&(6!:2) 'PB=.  tobase64_old"1&.> B'

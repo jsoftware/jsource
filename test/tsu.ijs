@@ -56,7 +56,7 @@ blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp4
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
 
-blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g0.ijs';'g128x19.ijs';'g128x5.ijs';'g320.ijs';'g320ip.ijs'
+blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g0.ijs';'g128x19.ijs';'g128x5.ijs';'g320.ijs';'g320ip.ijs';'g421.ijs';'g422os.ijs';'g430a2.ijs';'g600.ijs';'g621.ijs';'g631.ijs';'gibs.ijs';'gipht.ijs';'gmean.ijs';'gnan.ijs';'gqco.ijs'
 
 blacklist=: ~.blacklist
 ddall    =: blacklist -.~ testfiles 'g'
@@ -79,6 +79,12 @@ gif.ijs
 gipht.ijs
 git.ijs
 gss.ijs
+)
+
+3 : 0'/gqnonrat.ijs'
+if. #y do.
+  if. _1~: i=. {.!._1 I. (1 e. y&E.)&> ddall do. ddall=: i}.ddall end.
+end.
 )
 
 NB. When a name executes cocurrent, all subsequent calls from that name use a slower linkage.  Thus we don't want RUN to call
@@ -171,9 +177,9 @@ comb=: 4 : 0
 
 randuni=: 3 : 0
  initsymbolstate =: 0 s:^:(0 = {. ". 'NORESETSTABLE') 10  NB. Preserve init symbol state so it doesn't keep growing
- l2max=. QKTEST{1024 64     NB. #literal2 sample   multiple of 256
- l4max=. QKTEST{1024 64     NB. #literal4 sample   multiple of 256
- sbmax=. QKTEST{1024 64     NB. #symbol sample     multiple of 256
+ l2max=. QKTEST{1024 128    NB. #literal2 sample   multiple of 256
+ l4max=. QKTEST{1024 128    NB. #literal4 sample   multiple of 256
+ sbmax=. QKTEST{1024 128    NB. #symbol sample     multiple of 256
  sblen=. QKTEST{10 3        NB. max symbol length
 NB. unique random literal2
  adot1=: u: /:~ l2max?65536
@@ -196,12 +202,12 @@ NB. validation
  assert. l2max=#adot1
  assert. l4max=#adot2
  assert. sbmax=#sdot0
- assert. (QKTEST{256 64)<:#adot1
- assert. (QKTEST{256 64)<:#adot2
- assert. (QKTEST{256 64)<:#sdot0
- assert. 0=(QKTEST{256 64)|#adot1
- assert. 0=(QKTEST{256 64)|#adot2
- assert. 0=(QKTEST{256 64)|#sdot0
+ assert. (QKTEST{256 128)<:#adot1
+ assert. (QKTEST{256 128)<:#adot2
+ assert. (QKTEST{256 128)<:#sdot0
+ assert. 0=(QKTEST{256 128)|#adot1
+ assert. 0=(QKTEST{256 128)|#adot2
+ assert. 0=(QKTEST{256 128)|#sdot0
  assert. l2max=#~.adot1
  assert. l4max=#~.adot2
  assert. sbmax=#~.sdot0

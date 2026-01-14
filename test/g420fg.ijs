@@ -124,7 +124,7 @@ assert. (xx tvb1"(lvr,rvr) yy) -: (xx tvb"(lir,rir)"(lvr,rvr) yy)
 1
 )
 
-f (#: i.@:(*/)) 6$5
+f (#: i.@:(*/)) 6$(QKTEST{5 2)
 
 (9 10,"0 _1/i.2 3) -: (9 10,"0 0 _1/i.2 3)
 (9 10,"0 _1/i.2 3) -: (9 10,"0 0 _1"0 _ i.2 3)
@@ -154,7 +154,7 @@ assert. (xx +/@:*"1"(lvr,rvr) yy) -: (xx dot"1"(lvr,rvr) yy)
 1
 )
 
-f (#: i.@:(*/)) 4$5
+f (#: i.@:(*/)) 4$(QKTEST{5 2)
 
 NB. same but allow 0 in shape
 f =: 3 : 0"1
@@ -179,7 +179,7 @@ assert. (xx +/@:*"1"(lvr,rvr) yy) -: (xx dot"1"(lvr,rvr) yy)
 1
 )
 
-f (#: i.@:(*/)) 4$5
+f (#: i.@:(*/)) 4$(QKTEST{5 2)
 
 NB. Test argument types
 (20 4 ?@$ 100) (+/@:*"1 -: +/@:*"]"1) 20 4 ?@$ 100

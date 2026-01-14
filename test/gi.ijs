@@ -772,7 +772,7 @@ f =: 4 : 0&>   NB. returns 1 if sequential search selected.  x is shape min 2 in
 xop =: _2 (_2}) _1 (_1)} 0 (0}) 10 * >: 1e6 ?@$~ x
 yop1 =: y {. xop  NB. integer 0 finishes search too fast - it makes hash-on-w look like sequential
 yopn =: >: xop {~  y ?@$ #xop  NB. randomly misses, finishes slow but perhaps not so slow if hashing
-%/ 10000&(6!:2) 'xop i. yop1' ,: 'xop i. yopn'
+%/ 100&(6!:2) 'xop i. yop1' ,: 'xop i. yopn'
 )
 THRESHOLD +.  0.5 > %/"1 (1000 2000) f/ 7 8  NB. 7 is sequential, has lower ratio = higher discrepancy
 THRESHOLD +.  0.8 > %/ (10 11) f/ 1000 2000  NB. 10 is sequential, has lower ratio = higher discrepancy

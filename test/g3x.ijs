@@ -121,8 +121,10 @@ f=: 1 : 0  NB. empty arrays
  assert. test x=: ?3 0$1e6
  assert. test x=: ?3 5 0$1e6
  assert. test x=: ?3 5 7 0$1e6
+if. -.QKTEST do.
  assert. test x=: ?3 5 7 11 0$1e6
  assert. test x=: ?3 5 7 11 13 0$1e6
+end.
  assert. test x=: (?20$2)$0
  assert. test x=: (?1 2 4#4 3 2)$'a'
  assert. test x=: (?1 2 4#4 3 2)$u:'a'
@@ -144,20 +146,26 @@ f=: 1 : 0  NB. extended integer and rational
  assert. test x=: ?3$1000x
  assert. test x=: ?3 5$1000x
  assert. test x=: ?3 5 7$1000x
+if. -.QKTEST do.
  assert. test x=: ?3 5 7 11$1000x
  assert. test x=: ?3 5 7 11 13$1000x
+end.
  assert. test x=: !?20x
  assert. test x=: !?2$20x
  assert. test x=: !?2 3$20x
  assert. test x=: !?2 3 5$20x
+if. -.QKTEST do.
  assert. test x=: !?2 3 5 7$20x
  assert. test x=: !?2 3 5 7 11$20x
+end.
  assert. test x=: %/?2$20x
  assert. test x=: %/?2 11$20x
  assert. test x=: %/?2 11 7$20x
+if. -.QKTEST do.
  assert. test x=: %/?2 11 7 5$20x
  assert. test x=: %/?2 11 7 5 3$20x
  assert. test x=: %/?2 11 7 5 3 2$20x
+end.
  1 [ y
 :
 ''
@@ -172,11 +180,15 @@ f=: 1 : 0  NB. boxed arrays
  assert. test x=: t{~?3       $#t=: (5!:1 <'test');;:'Cogito, ergo sum. jarl is the root of earl'
  assert. test x=: t{~?3 5     $#t
  assert. test x=: t{~?3 5 7   $#t
+if. -.QKTEST do.
  assert. test x=: t{~?3 5 7 11$#t
+end.
  assert. test x=: t{~?3       $#t=: (?20$2);(?2 3 4$1e6);(o.?2 3$1e6);(j./?2 3 4$1e6);(x:?17$1e6);%/?2 3 4 5$100000x
  assert. test x=: t{~?3 5     $#t
  assert. test x=: t{~?3 5 7   $#t
+if. -.QKTEST do.
  assert. test x=: t{~?3 5 7 11$#t
+end.
  assert. test x=: <0
  assert. test x=: <<<<<<0
  assert. test x=: +&.>   ?3 4 5$20

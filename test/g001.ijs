@@ -329,7 +329,7 @@ NB. lookups of nonassigned names skip local lookup if there have been no assignm
 
 gval_z_ =: 0
 fa =. 3 : '(y) =. 1 [ one =. 1 for. i. 10000 do. gval ] gval ] gval  ] gval  ] gval  ] gval  ] gval  ] gval  ] gval end. gval'
-NB. too close to rely on now (100 (6!:2) 'fa ''one''') < (100 (6!:2) 'fa ''two''')  NB. Not much difference, but it should be faster
+NB. too close to rely on now (10 (6!:2) 'fa ''one''') < (10 (6!:2) 'fa ''two''')  NB. Not much difference, but it should be faster
 
 NB. leaks that have been fixed
 NB. a =. 4 - 3  NB. allocate a as an integer
@@ -378,19 +378,19 @@ NB. assignment messages
 NB. Test that arithmetic dyads migrate outer loop to inner loop
 p =: 0.5 * i. (QKTEST{10000 100) [ q =: 0.5
 (p +"+"1 _ q) -: (p +"1 _ q)
-THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"1 _ q'
+THRESHOLD +. ((10) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"1 _ q'
 (p +"+"0 _ q) -: (p +"0 _ q)
-THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"0 _ q'
+THRESHOLD +. ((10) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"0 _ q'
 p =: +"0 0
 (,'+') -: 5!:5 <'p'
 (p +"+"+ q) -: (p +"+ q)
-THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"+ q'
+THRESHOLD +. ((10) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"+ q'
 p =: i. (QKTEST{10000 100), 2 [ q =: i. (QKTEST{10000 100), 2
 (p +"+"1 q) -: (p +"1 q)
-THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"1 q'
+THRESHOLD +. ((10) 6!:2 'p + q') > 0.5 * ((QKTEST{10000 100)) 6!:2 'p +"1 q'
 p =: i. (QKTEST{10000 100), 2 [ q =: i. (QKTEST{10000 100)
 (p +"+"1 0 q) -: (p +"1 0 q)
-THRESHOLD +. (((QKTEST{10000 100)) 6!:2 'p + q') > 0.6 * ((QKTEST{10000 100)) 6!:2 'p +"1 0 q'
+THRESHOLD +. ((10) 6!:2 'p + q') > 0.6 * ((QKTEST{10000 100)) 6!:2 'p +"1 0 q'
 
 p =: 1 : 0
 u 5

@@ -45,7 +45,7 @@ h =. e.&(s:@<"0 ' ') {"0 1 ,"0&(s:@<"0 '_')
 NB. a=: c}x,y,... ,:z ---------------------------------------------------
 
 f=: 3 : 0
- b=: ?5 7 11 13 17$2
+ b=: ?(QKTEST{::5 7 11 13 17;2 3 5 7 9)$2
  c=: ?($b)$3
  select. y 
   case. 'B' do.
@@ -412,8 +412,8 @@ test1 0 1
 test1 'abcdefghijklmno'
 test1 0.4 + i. 10
 test1 5 j. i. 10
-test1 i. 10x
-test1 1r2 + i. 10x
+test1 i. QKTEST{10x 2x
+test1 1r2 + i. QKTEST{10x 2x
 test1 (1;'a';4x) , <"0 i. 7
 test1 2 u: 'abcdefghijklmno'
 test1 10 u: 'abcdefghijklmno'
@@ -457,8 +457,8 @@ test1 0 1
 test1 'abcdefghijklmno'
 test1 0.4 + i. 10
 test1 5 j. i. 10
-test1 i. 10x
-test1 1r2 + i. 10x
+test1 i. QKTEST{10x 2x
+test1 1r2 + i. QKTEST{10x 2x
 test1 (1;'a';4x) , <"0 i. 7
 test1 2 u: 'abcdefghijklmno'
 test1 10 u: 'abcdefghijklmno'
@@ -501,16 +501,16 @@ test2 =: {{
 ((#: i.@(*/)) x # 4) test1 y
 1
 }}"0 _
-0 1 2 3 4 5 test2 i. 4 3 4 5 7 6 3
-0 1 2 3 4 5 test2 0. + i. 4 3 4 5 7 6 4
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 i. 4 3 4 5 7 6 3
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 0. + i. 4 3 4 5 7 6 4
 0 1 2 3  test2 0x + i. 4 3 4 5 3
 0 1 2 3  test2 1r2 + i. 4 3 4 5 3
 0 1 2 3 test2 <"0 i. 4 3 4 5 2
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 1) $ a.
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 2) $ a.
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 3) $ a.
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 4) $ a.
-0 1 2 3 4 5 test2 (4 3 4 5 7 6 5) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 1) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 2) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 3) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 4) $ a.
+(QKTEST{::0 1 2 3 4 5;0 1 2 3) test2 (4 3 4 5 7 6 5) $ a.
 
 NB. lists of boxes get opened and go through the list-of-numbers code
 
@@ -768,7 +768,7 @@ for. i. ntests do.
   testm 0.02 0.1 0.5 0.9;(2-?4);(?4);(?4);(?2);(?2);prec
 end.
 }}"1
-testn 10000 ,. 1 2 4 8 16 64 128  NB. Reduce count after burn-in
+testn (QKTEST{10000 10),. 1 2 4 8 16 64 128  NB. Reduce count after burn-in
 
 (,:~"2 i. 3 4 5) -:  (i. 3 4 5) (<a:,&<a:)}"2 i. 3 2 4 5  NB. verify last axis can't be removed
 

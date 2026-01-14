@@ -14,7 +14,7 @@ for. i. N do.
   XT=: X t.''
 
   empty thr (9!:58)"0 i.3
-  echo 'Test blas integer'
+  techo^:PRINTMSG 'Test blas integer'
   'a b'=: (1000?@$~2,,~QKTEST{500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
@@ -23,7 +23,7 @@ for. i. N do.
   (a +/@(*"1 _) b) -: a X b
 
   empty thr (9!:58)"0 i.3
-  echo 'Test blas floating'
+  techo^:PRINTMSG 'Test blas floating'
   'a b'=: (0?@$~2,,~QKTEST{500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
@@ -32,7 +32,7 @@ for. i. N do.
   (a +/@(*"1 _) b) -: a X b
 
   empty thr (9!:58)"0 i.3
-  echo 'Test blas complex'
+  techo^:PRINTMSG 'Test blas complex'
   'a b'=: (0?@$~2,,~QKTEST{500 100) j. (0?@$~2,,~QKTEST{500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas

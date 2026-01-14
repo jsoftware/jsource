@@ -81,7 +81,7 @@ git.ijs
 gss.ijs
 )
 
-3 : 0'/gqnonrat.ijs'
+3 : 0'' [ '/gsco.ijs'
 if. #y do.
   if. _1~: i=. {.!._1 I. (1 e. y&E.)&> ddall do. ddall=: i}.ddall end.
 end.

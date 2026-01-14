@@ -257,7 +257,7 @@ THRESHOLD +. 0.9 > %/ vv1 | compst vv0
 THRESHOLD +. 0.9 > %/ vv1 ! compst vv0
 THRESHOLD +. 0.9 > %/ vv1 %: compst vv0
 THRESHOLD +. 0.9 > %/ vv1 ^. compst vv0
-techo^:PRINTMSG  %/ vv1 o. compst vv0
+NB. THRESHOLD +. 0.9 > %/ vv1 o. compst vv0
 THRESHOLD +. 0.9 > %/ vv1 o. compst vv0
 
 NB. Verify that operations are performed in-place where possible

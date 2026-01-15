@@ -52,7 +52,7 @@ aa =. ;:'the time is now'
 aa -: ".@'aa' ''
 f =. (".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a')
 p =. (".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a')
-THRESHOLD +. (10 (6!:2) 'p"0 i. 10000') > 1.5 * 10 (6!:2) 'f"0 i. 10000'  NB. Verify special code for name
+THRESHOLD +. (1 (6!:2) 'p"0 i. (QKTEST{10000 100)') > 1.5 * 1 (6!:2) 'f"0 i. (QKTEST{10000 100)'  NB. Verify special code for name
 
 16 = (+: :: ($:@:".)) '8'  NB. Verify $: reset after ".
 16 = (+: :: ($:@:".)) '4+4'

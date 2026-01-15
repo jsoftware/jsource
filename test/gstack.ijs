@@ -68,7 +68,7 @@ for_loc. i. y do.
   coerase <'A',": loc
 end.
 )
-f 10000
+f QKTEST{10000 1000
 NB. test for self-replicating gerund
 {{ J=. ((<@:((":0) ,&:< ]) , ])([.].))(`:6)
  CRASH=. 5!:1@<'J'
@@ -80,13 +80,13 @@ catch.
 end.
 }} ''
 
-gerund =: ]F.:('@:' ,:@:<@:(,&<) ,~) 3e5 # < '+'
+gerund =: ]F.:('@:' ,:@:<@:(,&<) ,~) (QKTEST{3e5 3e3) # < '+'
 'stack error' -: ". etx 'gerund`:6' NB. JE crash.
 
 
 NB. Check handling of deeply nested boxes.
 NB. Nesting level.
-N =: 1e6 NB. Change to 1e1 to check that tests are correct.
+N =: QKTEST{1e6 1e3 NB. Change to 1e1 to check that tests are correct.
 NB. Utils.
 arraytolist =: (0 $ 0)&(]F.:(,&<))
 listtoarray =: [: 0&{::"1@}: >@{:^:(0 < #)^:a:

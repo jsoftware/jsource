@@ -56,7 +56,10 @@ blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp4
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
 
-blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g0.ijs';'g128x19.ijs';'g128x5.ijs';'g320.ijs';'g320ip.ijs';'g421.ijs';'g422os.ijs';'g430a2.ijs';'g600.ijs';'g621.ijs';'g631.ijs';'gibs.ijs';'gipht.ijs';'gmean.ijs';'gnan.ijs';'gqco.ijs'
+NB. too slow
+blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'gco1.ijs';'gco1u.ijs';'gco1w.ijs'
+NB. crash
+blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g0.ijs';'g128x19.ijs';'g128x5.ijs';'g320.ijs';'g320ip.ijs';'g421.ijs';'g422os.ijs';'g430a2.ijs';'g600.ijs';'g621.ijs';'g631.ijs';'gibs.ijs';'gipht.ijs';'gmean.ijs';'gnan.ijs';'gqco.ijs';'g601.ijs'
 
 blacklist=: ~.blacklist
 

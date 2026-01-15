@@ -80,7 +80,7 @@ catch.
 end.
 }} ''
 
-gerund =: ]F.:('@:' ,:@:<@:(,&<) ,~) (QKTEST{3e5 3e3) # < '+'
+gerund =: ]F.:('@:' ,:@:<@:(,&<) ,~) 3e5 # < '+'
 'stack error' -: ". etx 'gerund`:6' NB. JE crash.
 
 

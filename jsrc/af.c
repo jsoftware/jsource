@@ -84,7 +84,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
 
  h=v->fgh[2];  // fetch h
 // obsolete  if(unlikely(((id^CFORK)|(I)h)==0)){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork, which has h=0
- I ai=IAV(a)[0]; I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV); //get value of control input a; extract control flags
+ I ai=IAV(a)[0]; I aif=ai&~3; //get value of control input a; extract control flags
  ai^=aif; I na=ai==0?3:ai;  // now ai = state without flags; for levels other than the top, use na to cause replacement of $:
  if(unlikely(aif&FIXALOCSONLY)&&!hasimploc(w))R w;  // if looking for implicit locatives, and there aren't any, nothing to fix
  wf=ds(id);   // fetch self for w
@@ -142,43 +142,63 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
   R REFIXA(ai,JT(jt,implocref)[1]);
  case CTILDE:
   if(f&&NAME&AT(f)){  // f is the name in name~
-   RZ(y=sfn(0,f));
-   if(all1(eps(box(y),(A)IAV0(aa)[1])))R w;  // break out of loop if recursive name lookup
-   ASSERT(AN((A)IAV0(aa)[1])<248,EVLIMIT);  // error if too many names in expansion
+   I initn=AN((A)IAV0(aa)[1]);  // save name depth coming in
+// obsolete    RZ(y=sfn(0,f));
+// obsolete    if(all1(eps(box(y),(A)IAV0(aa)[1])))R w;  // break out of loop if recursive name lookup
+   if(unlikely(initn>100)){
+    // the number of names processed has gotten large: check for name cycle.  If we find a cycle we return the start of the cycle+1 as the result: always < 256
+    ASSERT(initn<248,EVLIMIT);  // error if too many names in expansion
+    A *av=AAV1((A)IAV0(aa)[1]);  // pointer to list of names encountered so far
+    I cyc1;  // start of lowest cycle; loc being checked for cycle; scan index
+    C *cycs=NAV(av[initn-1])->s; I cycn=NAV(av[initn-1])->n; UI4 cych=NAV(av[initn-1])->hash;  // string and hash of the name we are checking for cycle
+    DO(initn-2, NM *nm=NAV(av[i]); if(nm->hash==cych && cycn==nm->n && 0==memcmp(cycs,nm->s,cycn)){cyc1=i; goto cycfound;})
+    goto nocycle;  // no cycle found: exit the loop
+cycfound:;  // cycle found, running from cyci to cycn; now back it down to find its starting position
+    I cycl=initn-1-cyc1;  // end-start of cycle
+    for(--cyc1;cyc1>=0;--cyc1){NM *nm1=NAV(av[cyc1]),  *nmn=NAV(av[cyc1+cycl]); if(!(nm1->hash==nmn->hash && nm1->n==nmn->n && 0==memcmp(nm1->s,nmn->s,nm1->n)))break;}   // back up to before start of cycle
+    ++cyc1;  // advance to start of cycle
+    R (A)(cyc1+1);  // return start of cycle+1, which signals abort
+nocycle:;  // cycle not found yet, continue
+   }
    // recursion check finished.  Now replace the name with its value
-   if(x=symbrdlock(f)){   // locked returns a ref to the same name
+   if(x=symbrdlock(f)){   // locked returns a ref to the same name; not found returns error
     // since the name is supposed to be executable, we have to guard against a type pun on the name
-    ASSERT(PARTOFSPEECHEQACV(AT(w),AT(x)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
+    ASSERT(PARTOFSPEECHEQACV(AT(w),AT(x)),EVTYPECHG);   // make sure its part of speech has not changed since the name was parsed
     if(unlikely(AFLAG(x)&AFRO))R w;  // If name has readonly value (like cocurrent), leave it as a reference
     // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
     // The value we get from the lookup must be interpreted in the environment of the higher level
     A savloc=jt->locsyms, savglob=jt->global;  // initial locales
-    A thisname=v->fgh[0];// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
-    if(thisname){ // name given
-     NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-     if(unlikely(thisnameinfo->flag&NMIMPLOC)){     //  implicit locative
-       if(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)){  // name is defined
-       // If our ONLY mission is to replace implicit locatives, we are finished after replacing this locative IF
-       // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement
-       if(aif&FIXALOCSONLYLOWEST)R x;  // return looked-up value once we hit one
-       // If we have to continue after the replacement, we must do so in the environment of the implicit locative.
-       SYMSWITCHTOLOCAL((A)AM(jt->locsyms));
-       // NO FAILURES ALLOWED FROM HERE TO RESTORE
-      }
-     }
+// obsolete     A thisname=v->fgh[0];// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
+// obsolete if(thisname!=f)SEGFAULT;  // scaf
+// obsolete     if(thisname){ // name given
+// obsolete      NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
+    if(unlikely(NAV(f)->flag&NMIMPLOC)){     //  implicit locative
+// obsolete       if(probex(NAV(thisname)->m,NAV(thisname)->s,SYMORIGIN,NAV(thisname)->hash,jt->locsyms)){  // name is defined
+     // If our ONLY mission is to replace implicit locatives, we are finished after replacing this locative IF
+     // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement
+     if(aif&FIXALOCSONLYLOWEST)R x;  // return looked-up value once we hit one
+     // If we have to continue after the replacement, we must do so in the environment of the implicit locative.
+     SYMSWITCHTOLOCAL((A)AM(jt->locsyms));
+     // NO FAILURES ALLOWED FROM HERE TO RESTORE
+// obsolete       }else SEGFAULT;  // scaf
+// obsolete      }
     }
     // Before we recur on the contents of the name, add the name we are currently looking up to the list of encountered names
     // so that we abort if we hit a loop.  BUT if the current name is uv defined in a higher level, it can't be part of
     // a loop (since we are advancing the symbol pointer) and the name, which is just 'u', might well come up again; so we don't
     // add the name to the table in that case.  NOTE bug: an indirect locative a__b, if it appeared twice, would be detected as a loop even
     // if it evaluated to different locales
-    I initn=AN((A)IAV0(aa)[1]);  // save name depth coming in
-    if(savloc==jt->locsyms){AAV1((A)IAV0(aa)[1])[AN((A)IAV0(aa)[1])]=rifvs(y); AN((A)IAV0(aa)[1])++; AS((A)IAV0(aa)[1])[0]++;} // add name-string to list of visited names for recursion check
-    if(z=REFIXA(na,x)){
-     if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
-    }
-    SYMRESTORELOCALGLOBAL(savloc,savglob);  // make sure we restore current symbols  THIS IS THE RESTORE
+// obsolete     if(savloc==jt->locsyms){AAV1((A)IAV0(aa)[1])[AN((A)IAV0(aa)[1])]=rifvs(y); AN((A)IAV0(aa)[1])++; AS((A)IAV0(aa)[1])[0]++;} // add name-string to list of visited names for recursion check
+    if(savloc==jt->locsyms){AAV1((A)IAV0(aa)[1])[AN((A)IAV0(aa)[1])]=f; AN((A)IAV0(aa)[1])++; AS((A)IAV0(aa)[1])[0]++;} // add name to list of visited names for recursion check
+    z=REFIXA(na,x);  // recur on the name
     AN((A)IAV0(aa)[1])=AS((A)IAV0(aa)[1])[0]=initn;   // restore name count
+    SYMRESTORELOCALGLOBAL(savloc,savglob);  // make sure we restore current symbols  THIS IS THE RESTORE
+    if(likely(((I)z&~255)!=0)){   // if no error or recursion limit
+     if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
+    }else if(z!=0){  // no error...
+     if(initn>=(I)z)R z;     // we found a cycle, which started at z-1.  If this call is the start of the cycle, have it return w to close the cycle.  Keep the cycle up until that happens
+     z=w;
+    }
     RZ(z);
    }
    RE(z);
@@ -223,18 +243,4 @@ DF2(jtfix){F12IP;PROLOG(0005);A z;
  // we set VFIX.  We only do so if the node has descendants (or a name). We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives or inverses.
  if(!(rqtype&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX;}}  // f is clear for anything in the pst
  EPILOG(z);
-}
-
-DF1(jtfixco){F12IP;PROLOG(0005);A z;
- ARGCHK1(w);
- if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w),0));}   // convert string to name, to allow us to fix modifiers
- // only verbs/noun can get in through the parser, but internally we also vet adv/conj
- ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
-
-   A x=symbrdlock(w);   // locked returns a ref to the same name
-    // since the name is supposed to be executable, we have to guard against a type pun on the name
-    ASSERT(PARTOFSPEECHEQACV(AT(w),AT(x)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
-    if(unlikely(AFLAG(x)&AFRO))R w;  // If name has readonly value (like cocurrent), leave it as a reference
-    // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
-R 0;
 }

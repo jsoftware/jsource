@@ -124,7 +124,7 @@ extern F1(jtexg);
 extern F1(jtfactor);
 extern F1(jtfh15);
 extern A jtfiller(J,I,I,I*);
-extern DF1(jtfix);
+extern DF2(jtfix);
 // extern F1(jtfloor1);
 extern F1(jtfmt01);
 extern F1(jtfmt11);

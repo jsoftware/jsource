@@ -1200,8 +1200,8 @@ static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 #define MGETFLGTAIL 1  // 0 keys: take from tail
 #define MGETFLGEQ1 2  // 2 keys: equality OK for high key
 #define MGETFLGGT 2  // 1 key: return region above key
-#define MGETFLGK 4   // user wants to see keys
-#define MGETFLGV 8   // user wants to see values
+#define MGETFLGV 4   // user wants to see values
+#define MGETFLGK 8   // user wants to see keys
 #define MGETFLGK1X 4   // the length was a default 1, meaning the result should be a single key/value or ''
 #define MGETFLGK1 16 
 // the following are set in the input flags to match the rank of keys

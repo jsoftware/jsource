@@ -66,7 +66,7 @@ EVERYFS(arofixaself,jtaro,jtfixa,0,VFLAGNONE)  // create A block to be used in e
 // Higher flag bits restrict the search:
 // FIXALOCSONLY set if we will replace only implicit locatives.  We don't go down a branch that doesn't contain one
 // FIXALOCSONLYLOWEST set if we replace only lowest-level locatives (suitable for function return).  We stop in a branch when we hit a locative reference
-// FIXASTOPATINV set if we halt at a defined oberse
+// FIXASTOPATINV set if we halt at a defined obverse
 // a has to be an A type because it goes into every2.  It is always an I type with rank 0 so it can go into every, but it has multiple items.
 //   It may be virtual in callbacks from every2 so must not use IAV0
 // IAV0(aa)[1] points to the recursion name-list and must be passed to all recursion levels
@@ -117,11 +117,24 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
  case CFORK:
   if(h==0){ho=h=g; go=g=f; fo=f=ds(CCAP);}  // reconstitute capped fork, which has h=0
   f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); if((((I)fo^(I)f)|((I)go^(I)g)|((I)ho^(I)h))==0)R w;R folk(f,g,h);  // f first in case it's [:
- case CATDOT: case CGRCO:
+ case CATDOT:
+  // we fix each gerund; for each component that changed, we calculate the AR of the corresponding f
+// obsolete   IAV(aa)[0]=(aif|na); RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
+  IAV(aa)[0]=(aif|na); A h1; RZ(h1=every2(aa,h,(A)&arofixaself)); A *h1v=AAV(h1), *hv=AAV(h); // fix each component of gerund h, point to boxes
+  RZ(g=REFIXA(na,g)); RZ(f=ca(f)); A *fv=AAV(f);  // fix g, and make a nonrecursive copy of f where we will record changes to h
+  I flag=VASGSAFE+VFIX&FAV(g)->flag;  // we will collect combined ASGSAFE/VFIX over g/h
+  DO(AN(h), flag&=FAV(h1v[i])->flag; if(h1v[i]!=hv[i]){A t;RZ(t=aro(h1v[i])) INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
+// obsolete  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL)|(FAV(ds(CATDOT))->flag&~VFIX)), RMAX, RMAX, RMAX);
+// obsolete   ra00(f,BOX);  // make f recursive, incrementing its descendants
+  fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], f,g,h1, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags
+// obsolete   R df2(z,f,g,wf);
+ case CGRCO:
+  // we fix each gerund, and then convert it to AR and back.  This is needless potentially expensive conversions.  We should
+  // fix each gerund, but AR only the ones that changed so that we keep f matching h; and use the fixed ones without un-AR scaf
   IAV(aa)[0]=(aif|na);
   RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
   RZ(g=REFIXA(na,g));
-  R df2(z,f,g,wf);  // scaf this sucks - avoid conversion to AR and back
+  R df2(z,f,g,wf);
  case CIBEAM: R w;  // m, n carried in localuse
  case CUDOT:
   R REFIXA(ai,JT(jt,implocref)[0]);  // u. is equivalent to 'u.'~ for fix purposes
@@ -164,7 +177,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself)
     if(z=REFIXA(na,x)){
      if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
     }
-    SYMRESTORELOCALGLOBAL(savloc,savglob);  // make sure we restore current symbols
+    SYMRESTORELOCALGLOBAL(savloc,savglob);  // make sure we restore current symbols  THIS IS THE RESTORE
     AN((A)IAV0(aa)[1])=AS((A)IAV0(aa)[1])[0]=initn;   // restore name count
     RZ(z);
    }
@@ -186,20 +199,42 @@ R w;  // should not occur.  f and g are both off only in primitives, where VFIX 
 }   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
 
 // On internal calls, self is an integer whose value contains flags.  Otherwise zeroionei is used
-DF1(jtfix){F12IP;PROLOG(0005);A z;
+// bivalent; called by user as f./f: with w omitted or flags.  self is ds(f./f:)
+// called internally with w holding internal flags, and self=0
+// w=repl level: 0=top only 1=each name once 2=all names (default) 3=not locatives 4=not globals
+DF2(jtfix){F12IP;PROLOG(0005);A z;
+ ARGCHK1(a);
+ if(LIT&AT(a)){ASSERT(1>=AR(a),EVRANK); RZ(a=nfs(AN(a),CAV(a),0));}   // convert string to name, to allow us to fix modifiers
+ // only verbs/noun can get in through the parser, but internally we also vet adv/conj
+ ASSERT(AT(a)&NAME+VERB+ADV+CONJ,EVDOMAIN);
+ STACKCHKOFL  // make sure we can't recur to a name by removing the name
+ w=w==self?num(2):w;   // monad defaults to full replace
+ I rqtype=i0(w); RE(0);  // get the requested operation
+ if(self!=0){  // if not internal call, convert req to flags
+  ASSERT(BETWEENC(rqtype,0,4),EVDOMAIN) rqtype=((I)1<<FIXAFCOX)<<rqtype;  // audit value & convert to one-hot
+ } 
+// obsolete  self=AT(self)&NOUN?self:zeroionei(0);  // default to 0 if noun not given
+ // To avoid infinite recursion ae keep an array of names that we have looked up.  We create that array here, initialized to empty.  To pass it into fixa, we create
+ // a faux INT block to hold the value, and use AM in that block to point to the list of names.  The fauxblock has rank 0 but 2 items
+ A namelist; GAT0(namelist,BOX,248,1); AS(namelist)[0]=AN(namelist)=0;  // allocate 248 slots with rank 1, but initialize to empty
+ fauxblock(fauxself); A augself; fauxINT(augself,fauxself,2,0); IAV0(augself)[0]=rqtype; IAV0(augself)[1]=(I)namelist;  // transfer value to writable block; install empty name array
+ RZ(z=fixa(augself,AT(a)&VERB+ADV+CONJ?a:symbrdlock(a)));  // name comes from string a
+ // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this
+ // we set VFIX.  We only do so if the node has descendants (or a name). We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives or inverses.
+ if(!(rqtype&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX;}}  // f is clear for anything in the pst
+ EPILOG(z);
+}
+
+DF1(jtfixco){F12IP;PROLOG(0005);A z;
  ARGCHK1(w);
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w),0));}   // convert string to name, to allow us to fix modifiers
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
- STACKCHKOFL  // make sure we can't recur to a name by removing the name
- self=AT(self)&NOUN?self:zeroionei(0);  // default to 0 if noun not given
- // To avoid infinite recursion we keep an array of names that we have looked up.  We create that array here, initialized to empty.  To pass it into fixa, we create
- // a faux INT block to hold the value, and use AM in that block to point to the list of names.  The fauxblock has rank 0 but 2 items
- A namelist; GAT0(namelist,BOX,248,1); AS(namelist)[0]=AN(namelist)=0;  // allocate 248 slots with rank 1, but initialize to empty
- fauxblock(fauxself); A augself; fauxINT(augself,fauxself,2,0); IAV0(augself)[0]=IAV(self)[0]; IAV0(augself)[1]=(I)namelist;  // transfer value to writable block; install empty name array
- RZ(z=fixa(augself,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name comes from string a
- // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this
- // we set VFIX.  We only do so if the node has descendants (or a name). We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives or inverses.
- if(!(IAV(self)[0]&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX;}}  // f is clear for anything in the pst
- EPILOG(z);
+
+   A x=symbrdlock(w);   // locked returns a ref to the same name
+    // since the name is supposed to be executable, we have to guard against a type pun on the name
+    ASSERT(PARTOFSPEECHEQACV(AT(w),AT(x)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
+    if(unlikely(AFLAG(x)&AFRO))R w;  // If name has readonly value (like cocurrent), leave it as a reference
+    // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
+R 0;
 }

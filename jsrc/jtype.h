@@ -800,7 +800,13 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 
 #define FIXALOCSONLYLOWEST 4  // to fixa: replace only the first occurrence of u/v in each branch
 #define FIXALOCSONLY 8  // to fixa: replace only u/v (IMPLOC)
-#define FIXASTOPATINV 16  // to fixa: stop afixing a branch when it gets to a an explicit obverse
+#define FIXASTOPATINV 16  // to fixa: stop fixing a branch when it gets to a an explicit obverse 
+#define FIXAFCOX 5  // starting bit# of options given by f:
+#define FIXAFCONAMEONLY ((I)1<<FIXAFCOX)  // 32 fix only top name
+#define FIXAFCONAMESONCE ((I)2<<FIXAFCOX)  // 64 fix each name only once
+  // 128 all names
+#define FIXAFCONOTLOCATIVES ((I)8<<FIXAFCOX)  // 256 don't fix locatives
+#define FIXAFCONOTPUBLIC ((I)16<<FIXAFCOX)  // 512 don't fix any nonlocal name
 
 // AH field of all blocks
 #define AFHRH(a) ((a)->h)    // the workarea

@@ -75,8 +75,10 @@ F1(jtnmcaches){F12IP;
  jt->namecaching|=(C)((arg<<1)+!!arg); if(arg==0)jt->namecaching=0; R mtv;  // save bits separately, clear if both 0, return empty vec
 }
 
-F1(jtdispq){F12IP;A z; ASSERTMTV(w); GATV0(z,INT,*JT(jt,disp),1); ICPY(AV1(z),1+JT(jt,disp),*JT(jt,disp)); R z;}
+// 9!:2 query display modes
+F1(jtdispq){F12IP;A z; ASSERTMTV(w); GATV0(z,INT,*JT(jt,disp),1); DO(AN(z), IAV1(z)[i]=JT(jt,disp)[1+i];) R z;}
 
+// 9!:3 set display modes
 F1(jtdisps){F12IP;UC n;
  RZ(w=vi(w));
  n=(UC)AN(w);

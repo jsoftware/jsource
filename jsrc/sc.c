@@ -415,11 +415,11 @@ F1(jtcreatecachedref){F12IP;A z;
  RETF(z);
 }
 
-// Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=name, h=actual entity to execute. g can be filled in with a locale for modifier locative
+// Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=name (input a), h=actual entity to execute (input w). g can be filled in with a locale for modifier locative
 F2(jtnamerefop){F12IP;V*v;
  ARGCHK2(a,w);
  v=FAV(w);
- R fdef(VF2PSEUDONAME,CCOLONE,VERB,  jtunquote,jtunquote, a,0L,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
+ R fdef(VF2PSEUDONAME,CCOLONE,VERB,  jtunquote,jtunquote, a,0L,w, VXOPCALL|(v->flag&~VFIX), v->mr,lrv(v),rrv(v));   // since it's named, no VFIX
    // VXOPCALL is checked by representations; VF2PSEUDONAME is checked by unquote.  They could be merged
 }    
 

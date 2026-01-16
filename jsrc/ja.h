@@ -432,7 +432,7 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 // x is locale number, result is address of symbol table, or 0 if nonexistent locale
 // only for non-reuse #define findnlz(x,z)                {if((UI)(n)>=jt->numlocsize)z=0; else {z=(A)(jt->numloctbl[n]); z=((UI)((I*)z-jt->numloctbl)<jt->numlocsize)?0:z;}}
 #define fit(x,y)                    jtfit(jt,(x),(y))
-#define fix(x,y)                    jtfix(jt,(x),(y))
+#define fix(x,y)                    jtfix(jt,(x),(y),0)
 #define fixa(x,y)                   jtfixa(jt,(x),(y))
 #define fixrecursive(x,y)           jtfixrecursive(jt,(x),(y))
 #define floor1(x)                   jtatomic1(jt,(x),ds(CFLOOR))

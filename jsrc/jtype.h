@@ -1306,7 +1306,8 @@ typedef struct {
 #define VIRS2           (((I)1)<<VIRS2X)         /* 12 dyad  has integral rank support */
 #define VFLR            (I)0x2000         /* function is <.@g                */
 #define VCEIL           (I)0x4000       /* function is >.@g                */
-// bit 15 free
+#define VNOSELFX        15  // this node and its descndants DO NOT contain $:
+#define VNOSELF         ((I)1<<VNOSELFX)      
 #define VLOCK           (I)0x10000        /* function is locked              */
 #define VWASUNARY       (I)0x20000       // 17 this verb replaces the original, which was something like -: that is replaced by 0.5 *
 #define VFIXX           18  // f. can skip over this word because it is the same after being fixed (noun or no named descendants)

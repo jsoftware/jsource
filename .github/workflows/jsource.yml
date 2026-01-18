@@ -1557,8 +1557,6 @@ jobs:
       USE_OPENMP: 0
       _MEMAUDIT: 127
      run: |
-     env:
-      _MEMAUDIT: 127
       script/buildga.sh wasm || exit 1
       script/testga.sh wasm || exit 1
       ls -l j32

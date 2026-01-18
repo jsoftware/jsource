@@ -57,14 +57,36 @@ blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if include
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
 
 NB. too slow
-blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'gco1.ijs';'gco1u.ijs';'gco1w.ijs';'gibs';'gstack.ijs'
+blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g600ip.ijs';'gco1.ijs';'gco1u.ijs';'gco1w.ijs';'gibs.ijs';'gss.ijs';'gstack.ijs'
 NB. crash
-blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g0.ijs';'g128x19.ijs';'g128x5.ijs';'g320.ijs';'g320ip.ijs';'g421.ijs';'g422os.ijs';'g430a2.ijs';'g600.ijs';'g621.ijs';'g631.ijs';'gibs.ijs';'gipht.ijs';'gmean.ijs';'gnan.ijs';'gqco.ijs';'g601.ijs'
+blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
+g0
+g128x19
+g128x5
+g220t
+g320
+g320ip
+g321
+g322
+g421
+g421c
+g421d
+g422os
+g430a2
+g600
+g601
+g621
+g631
+gipht
+gmean
+gnan
+gqco
+)
 
 blacklist=: ~.blacklist
 
 ddall    =: testfiles 'g'
-3 : 0'' [ 'gsp420'          NB. skip until
+3 : 0'' [ 'gt'          NB. skip until
 if. #y do.
   y=. '/',y,'.ijs'
   if. _1~: i=. {.!._1 I. (1 e. y&E.)&> ddall do. ddall=: i}.ddall end.

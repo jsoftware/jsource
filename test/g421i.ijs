@@ -4,7 +4,7 @@ NB.  x f//. y special code for + +. *. >. <. = ~: -----------------------
 randuni''
 bigval =: imax-1000
 test=: 1 : 0
- n=. 1000
+ n=. QKTEST{1000 100
  v=: 3 : ((5!:5 <'u'),'/y')
  yy=: y {~ n ?@$ #y
  assert. (xx=:      ? n   $2    ) (u//. -: v/.) yy

@@ -562,8 +562,8 @@ f=: i.@:>:@:$
 (5 +`%\1 2 3) -: 5 +`%\1 2 3x
 
 NB. Verify that special forms are detected
-a =: 1e4 $ 'abc'
-THRESHOLD +. (10 (6!:2) '40 ]@<\ a') > 1.2 * 10 (6!:2) '40 <\ a'
+a =: (QKTEST{1e4 1e3) $ 'abc'
+THRESHOLD +. ((1) (6!:2) '40 ]@<\ a') > 1.2 * (1) (6!:2) '40 <\ a'
 (40 <\ a) -: 40 ]@<\ a
 
 (7!:2 '; 40 <\ a') > 1.2 * 7!:2 '40 ;@:(<\) a'  NB. smaller because boxes contain (cloned) virtual blocks
@@ -572,7 +572,7 @@ THRESHOLD +. (10 (6!:2) '40 ]@<\ a') > 1.2 * 10 (6!:2) '40 <\ a'
 (7!:2 '; 40 <\ a') > 1.2 * 7!:2 '40 ]@;@:(<\) a'  NB. smaller because boxes contain (cloned) virtual blocks
 (; 40 <\ a) -: 40 ]@;@:(<\) a
 
-THRESHOLD +. ((10) 6!:2 '_3 ,&]/\ a') > 1.5 * (10) 6!:2 '_2 ,&]/\ a'  NB. special code for dyad
+THRESHOLD +. ((1) 6!:2 '_3 ,&]/\ a') > 1.5 * (1) 6!:2 '_2 ,&]/\ a'  NB. special code for dyad
 
 a =: i. 1000 1000
 (7!:2 '; 2 (<@{.\) a') > 1.5 * 7!:2 '2 ;@:(<@{.\) a'

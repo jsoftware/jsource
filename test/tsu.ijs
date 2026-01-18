@@ -61,6 +61,7 @@ blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each 'g600ip.ijs';'gco1.
 NB. crash
 blacklist=: blacklist, (0~:9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
 g0
+g128x14
 g128x19
 g128x5
 g220t
@@ -71,12 +72,14 @@ g322
 g421
 g421c
 g421d
+g421i
 g422os
 g430a2
 g600
 g601
 g621
 g631
+gdic
 gipht
 gmean
 gnan

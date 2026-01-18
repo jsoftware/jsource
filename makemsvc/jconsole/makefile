@@ -12,6 +12,9 @@ ifneq ($(_DEBUG),)
 FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 endif
+ifneq ($(_MEMAUDIT),)
+FDEBUG := $(FDEBUG) /D_MEMAUDIT=$(_MEMAUDIT)
+endif
 
 ifeq (ARM64,$(TARGET_CPU))
 CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor

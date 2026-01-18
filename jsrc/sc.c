@@ -169,7 +169,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
      ACSETPERM(fs);  // make the cached value immortal
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
      // to use the flags.  If we do PPPP, this will be too late
-     FAV(self)->flag=FAV(fs)->flag&(VIRS1+VIRS2+VASGSAFE);  // combining flags, do not require looking into id
+     FAV(self)->flag=FAV(fs)->flag&(VIRS1+VIRS2+VASGSAFE+VFIX+VNOSELF);  // combining flags, do not require looking into id
      FAV(self)->flag2=(FAV(fs)->flag2&(VF2WILLOPEN1+VF2USESITEMCOUNT1+VF2WILLOPEN2W+VF2WILLOPEN2A+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A))|(VF2CACHED+VF2CACHEABLE);  // combining flags, do not require looking into id
          // indicate cached has been filled in, preventing any further changes to the caching
 // flag2: if we look through name(s) when replacing f[12] and fs, we could support VF2BOXATOP1+VF2BOXATOP2+VF2ATOPOPEN1+VF2ATOPOPEN2W+VF2ATOPOPEN2A+
@@ -380,7 +380,8 @@ A jtnamerefacv(J jt, A a, A val){A y;V*v;
  // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name
  // In any case we install the current asgnct and the looked-up value (unflagged).  We will know that the cached value is not a pun in type
  I flag2=(!!(NAV(a)->flag&NMCACHED) | (jt->namecaching & !(NAV(a)->flag&(NMILOC|NMMNUVXY|NMIMPLOC))))<<VF2CACHEABLEX;  // enable caching if called for
- A z=fdefnoerr(flag2,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ A z=fdefnoerr(flag2,CTILDE,AT(y), jtunquote,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+VNOSELF, v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
+    // because each call to unquote pushes the $: stack, we mark this reference as NOT having $:, for purposes of higher nodes
  if(likely(val!=0)){if(ISFAOWED(val))fa(QCWORD(val))}else val=(A)QCVERB;  // release the value, now that we don't need it (if global).  If val was 0, get flags to install into reference to indicate [: is a verb
  RZ(z);  // abort if reference not allocated
  // We would like to give a start to short-caching by remembering the lookup and time, but the time must be BEFORE the point when the lookup is protected by its syrd(), and we don't have that value
@@ -409,7 +410,7 @@ F1(jtcreatecachedref){F12IP;A z;
  A val=QCWORD(syrd(nm,(A)(*JT(jt,emptylocale))[THREADID(jt)]));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
  ASSERT(val!=0,EVVALUE);  // return if error or name not defined
  ASSERT(!(AT(val)&NOUN),EVDOMAIN)
- z=fdef(VF2CACHED+VF2CACHEABLE,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (val->flag&VASGSAFE), FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));// create reference
+ z=fdef(VF2CACHED+VF2CACHEABLE,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (FAV(val)->flag&VASGSAFE)+VNOSELF, FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));// create reference - always NOSELF since we stack $: in unquote
  FAV(z)->localuse.lu1.cachedlkp=val;  // install cached address of value, no QC
  ACSETPERM(val);  // now that the value is cached, it lives forever
  RETF(z);
@@ -419,7 +420,7 @@ F1(jtcreatecachedref){F12IP;A z;
 F2(jtnamerefop){F12IP;V*v;
  ARGCHK2(a,w);
  v=FAV(w);
- R fdef(VF2PSEUDONAME,CCOLONE,VERB,  jtunquote,jtunquote, a,0L,w, VXOPCALL|(v->flag&~VFIX), v->mr,lrv(v),rrv(v));   // since it's named, no VFIX
+ R fdef(VF2PSEUDONAME,CCOLONE,VERB,  jtunquote,jtunquote, a,0L,w, VXOPCALL|(v->flag&~(VFIX)), v->mr,lrv(v),rrv(v));   // since it's named, no VFIX+VNOSELF
    // VXOPCALL is checked by representations; VF2PSEUDONAME is checked by unquote.  They could be merged
 }    
 

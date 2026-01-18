@@ -79,7 +79,7 @@ F2(jthgeom){F12IP;A c,d,h=0;B p,q;I at,wt;
  if(p){c=a; ASSERT(!AN(a)||at&NUMERIC,EVDOMAIN); ASSERT(1>=AR(a),EVRANK);}
  if(q){d=w; ASSERT(!AN(w)||wt&NUMERIC,EVDOMAIN); ASSERT(1>=AR(w),EVRANK);}
  RZ(h=cancel(c,d));
- R fdef(0,CHGEOM,VERB, jthgeom1,jthgeom2, a,w,h, FAV(p?ds(CPLUS):a)->flag&FAV(q?ds(CPLUS):w)->flag&VFIX, 0L,0L,0L);
+ R fdef(0,CHGEOM,VERB, jthgeom1,jthgeom2, a,w,h, FAV(p?ds(CPLUS):a)->flag&FAV(q?ds(CPLUS):w)->flag&VFIX+VNOSELF, 0L,0L,0L);
 }    /* a H. w */
 
 DF1(jthgcoeff){F12IP;PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=FAV(self);

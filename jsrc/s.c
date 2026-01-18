@@ -698,6 +698,22 @@ A jtprobequiet(J jt,A a){A g;
  R QCWORD(res);
 }
 
+
+#if 0  // for testing 
+static B jtselfq(J jt,A w){A hs,*u;V*v;
+ ARGCHK1(w);
+ if(AT(w)&NOUN+NAME+SYMB)R 0;
+ v=FAV(w);
+ if(unlikely(BETWEENC(v->id,CATDOT,CSELF))){
+  if(v->id==CSELF)R 1;  // found!
+  if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(jtselfq(jt,u[i]))R 1;);}  // @. or `: - traverse the gerund
+ }else{
+  DO(3, if(v->fgh[i]&&jtselfq(jt,v->fgh[i]))R 1;)  // anything else - traverse
+ }
+ R 0;
+}    /* 1 iff w contains $: */
+#endif
+
 // assign symbol: assign name a in symbol table g to the value w
 // g is the current local or global symbol table, or possibly a separate local table to simulate assignments in 13 : n.  g is ignored if a is a locative.  If a is not a locative and g is a local table,
 // public assignment is an error if the symbol is defined in the local table, but that test can be disabled by setting ARLCLONED in AR of the table

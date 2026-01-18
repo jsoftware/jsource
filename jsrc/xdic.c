@@ -255,7 +255,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
 // u 16!:_1 y.  For some reason jtlr won't display CIBEAM when it is a conjunction, so we have to make it an adverb.  We save u (the dictionary) for the verb
 F1(jtcreatedic){F12IP;
  ARGCHK1(w)
- R fdef(0,CIBEAM,VERB,jtcreatedic1,jtvalenceerr,w,0,0,VFIX,RMAX,RMAX,RMAX);  // Must mark VFIX to void reinterpreting the dic during f.
+ R fdef(0,CIBEAM,VERB,jtcreatedic1,jtvalenceerr,w,0,0,VFIX+VNOSELF,RMAX,RMAX,RMAX);  // Must mark VFIX+VNOSELF to void reinterpreting the dic during f.
 }
 
 // Dic locking ************************************************************
@@ -1760,7 +1760,7 @@ DF1(jtdicgetc){F12IP;
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  A z; fdefallo(z);
- fdeffillall(z,0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,w,self,0, VFIX, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.varno=0);
+ fdeffillall(z,0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,w,self,0, VFIX+VNOSELF, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.varno=0);
  R z;
 }
 
@@ -1771,7 +1771,7 @@ DF1(jtdichasc){F12IP;
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  A z; fdefallo(z);
- fdeffillall(z,0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,jtvalenceerr,w,self,0, VFIX, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.varno=1);
+ fdeffillall(z,0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicget:jtdicgeto,jtvalenceerr,w,self,0, VFIX+VNOSELF, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.varno=1);
  R z;
 }
 
@@ -1781,7 +1781,7 @@ DF1(jtdicputc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
- R fdef(0,CMODX,VERB, jtvalenceerr,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicput:jtdicputo, w,self,0, VFIX, RMAX,RMAX,RMAX); 
+ R fdef(0,CMODX,VERB, jtvalenceerr,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicput:jtdicputo, w,self,0, VFIX+VNOSELF, RMAX,RMAX,RMAX); 
 }
 
 // u 16!:_4  del: u=dic
@@ -1790,7 +1790,7 @@ DF1(jtdicdelc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
- R fdef(0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicdel:jtdicdelo,jtvalenceerr, w,self,0, VFIX, RMAX,RMAX,RMAX); 
+ R fdef(0,CMODX,VERB, !(((DIC*)w)->bloc.flags&DICFRB)?jtdicdel:jtdicdelo,jtvalenceerr, w,self,0, VFIX+VNOSELF, RMAX,RMAX,RMAX); 
 }
 
 // u 16!:_6  mget: u=dic
@@ -1800,7 +1800,7 @@ DF1(jtdicmgetc){F12IP;
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  ASSERT(((DIC*)w)->bloc.flags&DICFRB,EVDOMAIN)    // requires red/black tree
- R fdef(0,CMODX,VERB,jtvalenceerr,jtdicmgeto, w,self,0, VFIX, RMAX,RMAX,RMAX); 
+ R fdef(0,CMODX,VERB,jtvalenceerr,jtdicmgeto, w,self,0, VFIX+VNOSELF, RMAX,RMAX,RMAX); 
 }
 
 // x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, also delete the empty chainfields.  If empties have already been deleted, return empty

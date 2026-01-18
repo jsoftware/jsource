@@ -767,7 +767,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   r[0]=hv[0]=mr(w);
   r[1]=hv[1]=lr(w);
   r[2]=hv[2]=rr(w);
-  vf=FAV(w)->flag&VFIX;  // set FIX if verb not named
+  vf=FAV(w)->flag&VFIX+VNOSELF;  // set FIX if verb not named
  }else{A t;
   // Noun v. Extract and turn into 3 values, stored in h
   n=AN(w);
@@ -777,7 +777,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   hv[0]=v[2==n]; hv[0]=hv[0]>RMAX?RMAX:hv[0]; hv[0]=hv[0]<-RMAX?-RMAX:hv[0]; r[0]=DR(hv[0]);
   hv[1]=v[3==n]; hv[1]=hv[1]>RMAX?RMAX:hv[1]; hv[1]=hv[1]<-RMAX?-RMAX:hv[1]; r[1]=DR(hv[1]);
   hv[2]=v[n-1];  hv[2]=hv[2]>RMAX?RMAX:hv[2]; hv[2]=hv[2]<-RMAX?-RMAX:hv[2]; r[2]=DR(hv[2]);
-  vf=VFIX;  // n oun is always VFIX
+  vf=VFIX+VNOSELF;  // n oun is always VFIX+VNOSELF
  }
  // r is the actual verb ranks, i. e. _ if given ranks are negative.  h may be negative
 
@@ -786,7 +786,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   // gerund requires: some rank not RMAX; boxed m; rank of m=1; and then the gerund must be well formed
   if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && !((AR(a)^1) | (AT(a)&(NOUN&~BOX))) && (ger=fxeachv(1LL,a))){
    f1=cycr1; f2=cycr2;  // process this with the cyclic-gerund routines
-   vf=VFLAGNONE;   // the cyclic processor does not inplace or IRS and we don't bother figuring out whether it is ASGSAFE    // scaf VFIX
+   vf=gflg(ger)&~VASGSAFE;   // the cyclic processor does not inplace or IRS
    r[0]=r[1]=r[2]=RMAX;  // actual rank of gerund"n is _; the gerund is applied at rank n
   } else {
    RESETERR;  // the gerund check may have raised an error
@@ -807,7 +807,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
-  vf|=av->flag&VASGSAFE; vf&=av->flag|~VFIX;  // inherit ASGSAFE from u; keep VFIX only if both args allow it
+  vf|=av->flag&VASGSAFE; vf&=av->flag|~(VFIX+VNOSELF);  // inherit ASGSAFE from u; keep VFIX+VNOSELF only if both args allow it
   // For monads: atomic verbs ignore rank, but they require the localuse field, so we can't just point the rank verb at them; we use a passthrough routine instead.  Otherwise, if the verb supports
   // IRS, go to the appropriate routine depending on the sign of rank; otherwise we will be doing an explicit rank loop: distinguish
   // rank-0, quick rank (rank is positive and a is NOT a rankonly type that may need to be combined), and all-purpose cases

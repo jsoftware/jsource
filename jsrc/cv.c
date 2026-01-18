@@ -41,7 +41,7 @@ static A jtfitct(J jt,A a,A w,I cno,A z){
  // u!.ct, unless u is > in which case it could be anything
  if(cno!=5){ASSERT(dw,EVDOMAIN) ASSERT(0<=d&&d<5.82076609134675e-11,EVLIMIT)}  // fit is ct, must be float and can't be greater than 2^_34
   // >!.f   we can't audit till we get the valence.  If error converting to float, make d give a runtime error.  Any w is OK for fill
- fdeffillall(z,0,CFIT,VERB,cno==5?(AF)(jtfitfill12):(AF)(jtfitct1),aff2[cno&~4],a,w ,0L,FAV(a)->flag&(VIRS1|VIRS2|VISATOMIC1|VFCOMPCOMP|VASGSAFE|VFIX),(I)(FAV(a)->mr),lrv(FAV(a)),rrv(FAV(a)),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
+ fdeffillall(z,0,CFIT,VERB,cno==5?(AF)(jtfitfill12):(AF)(jtfitct1),aff2[cno&~4],a,w ,0L,FAV(a)->flag&(VIRS1|VIRS2|VISATOMIC1|VFCOMPCOMP|VASGSAFE|VFIX+VNOSELF),(I)(FAV(a)->mr),lrv(FAV(a)),rrv(FAV(a)),fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct = 1.0-d);  // preserve INPLACE flags
  R z;
 }
 
@@ -88,17 +88,17 @@ F2(jtfit){F12IP;A f;C c;I k,l,m,r;
   case CQQ: ;
    RE(wval=i0(w)); ASSERT(BETWEENC(wval,0,1),EVDOMAIN);  // only f"r!.[01] is supported
    ASSERT(FAV(a)->valencefns[1]==jtsumattymes1,EVDOMAIN)  // Must be +/@:*"1!.[01]
-   fdeffillall(z,0L,CFIT,VERB,jtvalenceerr,jtsumattymes1,a,w,0L,FAV(a)->flag&(VIRS2|VFCOMPCOMP|VASGSAFE|VFIX),m,l,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.fittype=wval) RETF(z);  // supports IRS
+   fdeffillall(z,0L,CFIT,VERB,jtvalenceerr,jtsumattymes1,a,w,0L,FAV(a)->flag&(VIRS2|VFCOMPCOMP|VASGSAFE|VFIX+VNOSELF),m,l,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.fittype=wval) RETF(z);  // supports IRS
   case CSLASH: ;
    RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
    ASSERT(FAV(FAV(a)->fgh[0])->id==CPLUS,EVDOMAIN)  // Must be +/!.0
-   fdeffill(z,0L,CFIT,VERB,jtcompsum,jtvalenceerr,a,w,0L,VIRS1+VASGSAFE+VFIX,m,l,r) RETF(z);  // supports IRS
+   fdeffill(z,0L,CFIT,VERB,jtcompsum,jtvalenceerr,a,w,0L,VIRS1+VASGSAFE+VFIX+VNOSELF,m,l,r) RETF(z);  // supports IRS
   case CEXP:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
-   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitexp2,a,w,0L,VFLAGNONE+VASGSAFE+VFIX,m,l,r) RETF(z);  // ^!.f
+   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitexp2,a,w,0L,VFLAGNONE+VASGSAFE+VFIX+VNOSELF,m,l,r) RETF(z);  // ^!.f
   case CPOLY:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
-   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitpoly2,a,w,0L,VFLAGNONE+VASGSAFE+VFIX,m,l,r) RETF(z);  // p.!.f
+   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitpoly2,a,w,0L,VFLAGNONE+VASGSAFE+VFIX+VNOSELF,m,l,r) RETF(z);  // p.!.f
 
   case CHOOK:   // only ($,)
    if(FAV(a)->valencefns[1]==jtreshape)goto fillreshape;
@@ -106,7 +106,7 @@ F2(jtfit){F12IP;A f;C c;I k,l,m,r;
   case CPOWOP:  // support for #^:_1!.n
    if(FAV(a)->fgh[1]!=num(-1))R jtfitct(jt,a,w,0,z);
    f=FAV(a)->fgh[0]; c=FAV(f)->id;
-   if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill12,a,w,0L,VFLAGNONE+VASGSAFE+VFIX,m,l,r) RETF(z);}  // #^:_1!.f
+   if(c==CPOUND){ASSERT(!AR(w),EVRANK); fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtfitfill12,a,w,0L,VFLAGNONE+VASGSAFE+VFIX+VNOSELF,m,l,r) RETF(z);}  // #^:_1!.f
    ASSERT(c==CAMP,EVDOMAIN);
    f=FAV(f)->fgh[1]; ASSERT(CPOUND==IDD(f),EVDOMAIN);
     // fall through for x&#^:_1!.f
@@ -117,26 +117,26 @@ F2(jtfit){F12IP;A f;C c;I k,l,m,r;
 fillreshape:;
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
-   fdeffill(z,0L,CFIT,VERB,jtfitfill12,jtfitfill12,a,w,0L,FAV(a)->flag&(VIRS1|VIRS2|VASGSAFE|VFIX),m,l,r) RETF(z);  // various allowing empty fill
+   fdeffill(z,0L,CFIT,VERB,jtfitfill12,jtfitfill12,a,w,0L,FAV(a)->flag&(VIRS1|VIRS2|VASGSAFE|VFIX+VNOSELF),m,l,r) RETF(z);  // various allowing empty fill
 
   case CTHORN:
    RE(w=sc(k=i0(w)));
    ASSERT(0<k,EVDOMAIN);
    ASSERT(k<=NPP,EVLIMIT); 
-   fdeffill(z,0L,CFIT,VERB,jtfitpp1,FAV(a)->valencefns[1],a,w,0L,VFIX,m,l,r) RETF(z);  // ":!.f
+   fdeffill(z,0L,CFIT,VERB,jtfitpp1,FAV(a)->valencefns[1],a,w,0L,VFIX+VNOSELF,m,l,r) RETF(z);  // ":!.f
   case CCYCLE:
    RE(k=i0(w)); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
-   fdeffill(z,0L,CFIT,VERB,jtpparity,jtvalenceerr,a,w,0L,VFIX,m,RMAX,RMAX) RETF(z);  // C.!.2
+   fdeffill(z,0L,CFIT,VERB,jtpparity,jtvalenceerr,a,w,0L,VFIX+VNOSELF,m,RMAX,RMAX) RETF(z);  // C.!.2
   case CTILDE:   // noun~!.n - what in the world is that?
    ASSERT(NOUN&AT(FAV(a)->fgh[0]),EVDOMAIN);
-   fdeffill(z,0L,CFIT,VERB,jtfitf1,jtfitf2,a,w,0L,VFIX,m,l,r) RETF(z);
+   fdeffill(z,0L,CFIT,VERB,jtfitf1,jtfitf2,a,w,0L,VFIX+VNOSELF,m,l,r) RETF(z);
   // other cases continue on to error
   }
  }else{
   // v is a verb.  Supported now only in $[!.n]!.v or ($,)[!.n]!.v
   AF rtn1=FAV(a)->valencefns[1]; if(rtn1==jtfitfill12)rtn1=FAV(FAV(a)->fgh[0])->valencefns[1];  // what routine will process?  (if fit, look back to underlying function)
   if(rtn1==jtreshape||rtn1==jtreitem)
-   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtreshapeblankfn,a,w,0L,(FAV(a)->flag&(VIRS1|VIRS2|VASGSAFE))+(FAV(w)->flag&VFIX),m,l,r) FAV(z)->localuse.lu1.fittype=rtn1==jtreitem; RETF(z);  // fittype tells whether ($,) or $
+   fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtreshapeblankfn,a,w,0L,(FAV(a)->flag&(VIRS1|VIRS2|VASGSAFE))+(FAV(w)->flag&VFIX+VNOSELF),m,l,r) FAV(z)->localuse.lu1.fittype=rtn1==jtreitem; RETF(z);  // fittype tells whether ($,) or $
  }
  ASSERT(0,EVDOMAIN);
 } 

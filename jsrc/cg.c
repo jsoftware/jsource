@@ -155,7 +155,7 @@ F2(jtevger){F12IP;A hs;I k;
  RZ(hs=fxeachv(RMAX,a));
  ASSERT(BETWEENC(k^1,GAPPEND^1,GINSERT^1),EVDOMAIN)   // require valid type
  AF f1=k==GAPPEND?(AF)jtcon1:(AF)jtinsert; AF f2=k==GAPPEND?(AF)jtcon2:(AF)jtvalenceerr; I r2=k==GAPPEND?RMAX:0;  // variable parts
- R fdef(0,CGRCO,VERB, f1,f2,   a,w,hs, VGERL, RMAX,r2,r2); // `:0: jtcon1/jtcon2   `:6:jtinsert/err
+ R fdef(0,CGRCO,VERB, f1,f2,   a,w,hs, gflg(hs)+VGERL, RMAX,r2,r2); // `:0: jtcon1/jtcon2   `:3:jtinsert/err
 }
 
 // u`v.  Allow append-in-place to m
@@ -366,9 +366,9 @@ F2(jtagendai){F12IP;I flag;
  if(unlikely(NOUN&AT(w)))R exg(gerfrom(w,a));  // noun form, as before
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = incorp(fxeachv(1L,a)));
-  // Calculate ASGSAFE/VFIX from all of the verbs (both a and w), provided the user can handle it
- flag = VASGSAFE+VFIX&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag&=FAV(avbv[i])->flag;);  // Don't increment inside FAV!
-// obsolete  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL)|(FAV(ds(CATDOT))->flag&~VFIX)), RMAX, RMAX, RMAX);
- R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+VGERL, RMAX, RMAX, RMAX);
+  // Calculate ASGSAFE/VFIX+VNOSELF from all of the verbs (both a and w), provided the user can handle it
+// obsolete  flag = VASGSAFE+VFIX+VNOSELF&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag&=FAV(avbv[i])->flag;);  // Don't increment inside FAV!
+// obsolete  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL)|(FAV(ds(CATDOT))->flag&~VFIX+VNOSELF)), RMAX, RMAX, RMAX);
+ R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, (gflg(avb)&FAV(w)->flag)+VGERL, RMAX, RMAX, RMAX);
 }
 

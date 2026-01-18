@@ -829,7 +829,7 @@ F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
  A z; fdefallo(z)
- if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}else flag=FAV(w)->flag&VFIX;
+ if(NOUN&AT(w)){RZ(h=fxeachv(1L,w)); flag|=gflg(h)|VGERL;}else flag=FAV(w)->flag&VFIX+VNOSELF;   // flags from all components.  ASGSAFE too? scaf
  v=FAV(w);  // w could be a gerund but we won't use v then
  switch(IDD(w)){  // no default for f2: every path must set it
  case CBOX: f2=jtkeybox; break;  // </.
@@ -855,12 +855,11 @@ F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
 }
 
 // f/.. - looks like /. except for id
-F1(jtsldotdot){F12IP;A h=0; I flag=0;
+F1(jtsldotdot){F12IP;A h=0;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
- if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}
- AF f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE);  // pass through ASGSAFE.
- R fdef(0,CSLDOTDOT,VERB,jtvalenceerr,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
+ I flag; if(NOUN&AT(w)){RZ(h=fxeachv(1L,w)); flag=gflg(h)+VGERL;}else flag=(FAV(w)->flag&VFIX+VNOSELF);  // pass through rollup flags
+ R fdef(0,CSLDOTDOT,VERB,jtvalenceerr,jtkey, w,0L,h, flag, RMAX,RMAX,RMAX);
 }
 

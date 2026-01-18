@@ -57,7 +57,7 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2.  Turn off inplacing that neither f nor h can handle
  if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
   // f will be INCORPed by fdef
-  flag=((gv->flag&hv->flag)&VASGSAFE+VFIX);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
+  flag=((gv->flag&hv->flag)&VASGSAFE+VFIX+VNOSELF);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
   fline=5;  // set left argtype
   if(unlikely(f==num(0))&&unlikely(BOTHEQ8(gi,hi,CEPS,CDOLLAR)))f1=jtisempty;  // 0 e. $, accepting only SDT boolean 0
   if(unlikely(LIT&AT(f))&&unlikely(1==AR(f))&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==IDD(gv->fgh[0])){   // lit-list x~ fork...
@@ -70,11 +70,11 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
   // create the inherited flags
   if(fi!=CCAP){
    // vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
-   flag=((fv->flag&gv->flag&hv->flag)&VASGSAFE+VFIX);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
+   flag=((fv->flag&gv->flag&hv->flag)&VASGSAFE+VFIX+VNOSELF);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
    // work out open/raze status.  But for now we'll skip it, because it would apply only if both tines of the fork were the same.  Unlikely unless one is ][
   }else{
    // capped fork  inplace if h can handle it, ASGSAFE if gh are safe
-   flag=((gv->flag&hv->flag)&VASGSAFE+VFIX);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are, and inplacing if h handles it
+   flag=((gv->flag&hv->flag)&VASGSAFE+VFIX+VNOSELF);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are, and inplacing if h handles it
    // Copy the open/raze status from v into u@:v
    flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
    // If v propagates OPEN status, copy from av
@@ -315,7 +315,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    u=FAV(a); c=u->id; f1=jthook1cell; f2=jthook2cell;
    v=FAV(w); d=v->id; e=ID(v->fgh[0]);
    // Set flag to use: ASGSAFE if both operands are safe; and FLGOK init to OK as for hook, but change as needed to match f1,f2
-   flag=((u->flag&v->flag)&VASGSAFE+VFIX);  // start with in-place enabled, as befits hook1/hook2
+   flag=((u->flag&v->flag)&VASGSAFE+VFIX+VNOSELF);  // start with in-place enabled, as befits hook1/hook2
    if(d==CCOMMA){   // all forms except for ($,) is handled by virtual blocks
     if(c==CDOLLAR){f2=jtreshape; flag+=VIRS2;}  // ($,) is inplace
    }else if(d==CBOX){
@@ -370,7 +370,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
   // if the unexecutable bident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.  This is aimed mostly at each and every
 
-  I flag2=VF2NAMELESS, ffix=VFIX; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); ffix&=FAV(ta)->flag;  // CPLUS to make nouns look primitive
+  I flag2=VF2NAMELESS, ffix=VFIX+VNOSELF; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); ffix&=FAV(ta)->flag;  // CPLUS to make nouns look primitive
                          ta=w; ta=AT(w)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); ffix&=FAV(ta)->flag;
   fdeffill(z,flag2,CADVF, t, rtn,rtn, a,w,0, flag+ffix, 0L,0L,0L) R z;  // only one of the rtns is ever used.  h=0 to indicate bident
 
@@ -391,7 +391,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork
   if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
   // if the unexecutable trident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.
-  flag=VFIX;  // we will set VFIX if all branches are set
+  flag=VFIX+VNOSELF;  // we will set VFIX+VNOSELF if all branches are set
   I flag2=VF2NAMELESS; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); flag&=FAV(ta)->flag;  // CPLUS to make nouns look primitive
                          ta=w; ta=AT(w)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); flag&=FAV(ta)->flag;
                          ta=h; ta=AT(h)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); flag&=FAV(ta)->flag;

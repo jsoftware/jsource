@@ -389,7 +389,7 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
  f1=0; f2=0; I sundern;   // type of structural under
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
- I flag = (FAV(a)->flag&v->flag&VASGSAFE+VFIX);
+ I flag = (FAV(a)->flag&v->flag&VASGSAFE+VFIX+VNOSELF);
  // Look for special cases of v.  If v is WILLOPEN, so will the compound be - for all valences
  switch(v->id&gside){  // never special if gerund - this could evaluate to 0 or 1, neither of which is one of these codes
  case COPE:   // u&.>
@@ -456,7 +456,7 @@ F2(jtundco){F12IP;AF f1=0,f2;I gside=-1, flag=0;
  }
  ASSERTVV(a,wvb);
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
- flag=FAV(a)->flag&FAV(wvb)->flag&VASGSAFE+VFIX;
+ flag=FAV(a)->flag&FAV(wvb)->flag&VASGSAFE+VFIX+VNOSELF;
  // Create the standard g^:_1 @ (f & g) to use if we have no special processing (not needed if a.&i., but that's rare)
  // if gerund form, use (f g)"lf mg  for a:`v or (f~ g)~"mg rf for v`a:
  // First, create the part after the inverse

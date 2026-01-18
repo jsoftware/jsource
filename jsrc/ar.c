@@ -1011,7 +1011,7 @@ F1(jtslash){F12IP;A h;AF f1;C c;V*v;
  // falling through w is a verb
  A z; fdefallo(z)
  v=FAV(w); 
- I flag=v->flag&VASGSAFE+VFIX;  // if u is asgsafe, so is u/
+ I flag=v->flag&VASGSAFE+VFIX+VNOSELF;  // if u is asgsafe, so is u/
  switch(v->id){  // select the monadic case
  case CCOMMA:  f1=jtredcat;  break;   // ,/
  case CCOMDOT: f1=jtredstitch; break;    // ,./
@@ -1020,7 +1020,7 @@ F1(jtslash){F12IP;A h;AF f1;C c;V*v;
  default: f1=jtreduce; break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
- fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|(FAV(ds(CSLASH))->flag&~VFIX), RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VISATOMIC2?((VA*)((I)va+v->localuse.lu1.uavandx[1]))->rps:&rpsnull);
+ fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|(FAV(ds(CSLASH))->flag&~(VFIX+VNOSELF)), RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VISATOMIC2?((VA*)((I)va+v->localuse.lu1.uavandx[1]))->rps:&rpsnull);
  // set localuse to point to the VARPSA block for w if w is atomic dyad; otherwise to the null VARPSA block
  R z;
 }
@@ -1252,7 +1252,7 @@ exitpop:;   // here to abort on error, after popping stack
 DF2(jtfold){F12IP;
  ASSERTVV(a,w);  // must be verb ops
  A z; fdefallo(z);   // allocate verb result
- fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, FAV(a)->flag&FAV(w)->flag&VFIX, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
+ fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, FAV(a)->flag&FAV(w)->flag&VFIX+VNOSELF, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
  R z;
 }
 

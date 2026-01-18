@@ -82,9 +82,6 @@ ifneq ($(_SSE4_2),)
 FDEBUG := $(FDEBUG) -msse4.1 -msse4.2
 endif
 endif
-ifneq ($(_MEMAUDIT),)
-FDEBUG := $(FDEBUG) /D_MEMAUDIT=$(_MEMAUDIT)
-endif
 
 ifeq (ARM64,$(TARGET_CPU))
 CF1= -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype

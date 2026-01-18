@@ -60,30 +60,27 @@ FDEBUG = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
 !endif
 !if ""!="$(_MEMAUDIT)"
-FDEBUG := $(FDEBUG) /DMEMAUDIT=$(_MEMAUDIT)
+FDEBUG = $(FDEBUG) /DMEMAUDIT=$(_MEMAUDIT)
 !endif
 !if ""!="$(_ASSERT)"
-FDEBUG := $(FDEBUG) /D_ASSERT
+FDEBUG = $(FDEBUG) /D_ASSERT
 !endif
 !if ""!="$(_ASSERT2)"
-FDEBUG := $(FDEBUG) /D_ASSERT2
+FDEBUG = $(FDEBUG) /D_ASSERT2
 !endif
 !if ""!="$(_NAN)"
-FDEBUG := $(FDEBUG) /D_NAN
+FDEBUG = $(FDEBUG) /D_NAN
 !endif
 !if ""!="$(_NAMETRACK)"
-FDEBUG := $(FDEBUG) /DNAMETRACK=$(_NAMETRACK)
+FDEBUG = $(FDEBUG) /DNAMETRACK=$(_NAMETRACK)
 !endif
 !if "1"=="$(USE_BOXEDSPARSE)"
 FBOXEDSPARSE = /DBOXEDSPARSE
 !endif
 !if "x64"=="$(TARGET_CPU)"
 !if ""!="$(_SSE4_2)"
-FDEBUG := $(FDEBUG) -msse4.1 -msse4.2
+FDEBUG = $(FDEBUG) -msse4.1 -msse4.2
 !endif
-!endif
-!if ""!="$(_MEMAUDIT)"
-FDEBUG := $(FDEBUG) /D_MEMAUDIT=$(_MEMAUDIT)
 !endif
 
 !if "ARM64"=="$(TARGET_CPU)"

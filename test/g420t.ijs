@@ -68,19 +68,19 @@ y=: timer 'f ',"1 ":,. x=: 2^8+i.12
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
 f=: 3 : ';/(y,4 3)$''a'''
-y=: timer 'f ',"1 ":,. x=: 2^8+i.12
+y=: timer 'f ',"1 ":,. x=: 2^8+i.QKTEST{12 8
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
 f=: 3 : ';/(y,4 3)$u:''a'''
-y=: timer 'f ',"1 ":,. x=: 2^8+i.12
+y=: timer 'f ',"1 ":,. x=: 2^8+i.QKTEST{12 8
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
 f=: 3 : ';/(y,4 3)$10&u:''a'''
-y=: timer 'f ',"1 ":,. x=: 2^8+i.12
+y=: timer 'f ',"1 ":,. x=: 2^8+i.QKTEST{12 8
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
 f=: 3 : ';/(y,4 3)$s:@<"0 ''a'''
-y=: timer 'f ',"1 ":,. x=: 2^8+i.12
+y=: timer 'f ',"1 ":,. x=: 2^8+i.QKTEST{12 8
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
 

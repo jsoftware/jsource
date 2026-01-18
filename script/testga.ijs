@@ -13,6 +13,8 @@ os=: os, ((<os)e.'openbsd';'freebsd')#(('arm64'-:9!:56'cpu'){::'';'arm64')
 os=: os, ((<os)e.<'darwin')#('ARM64'-:2!:5'RUNNER_ARCH'){::'';'arm'
 os=: os, ((<os)e.<'win')#(('arm64'-:9!:56'cpu'){::'';'arm64')
 os=: os, ((,'3')-:2!:5'_DEBUG'){::'';'d'
+os=: os, ((<ma) -.@e. (0;,'0')){::'';'ma' [ ma=. 2!:5'_MEMAUDIT'
+4!:55 <'ma'
 testres=: 'test',os,'.txt'
 IFWA64=: IFWIN*.'arm64'-:9!:56'cpu'
 

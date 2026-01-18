@@ -746,7 +746,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // Debugging options
 
 // #undef MEMAUDIT
-// #define MEMAUDIT 0x30   // test
+// #define MEMAUDIT 0x7f   // test
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #ifndef MEMAUDIT
 #define MEMAUDIT 0x0    // Bitmask for memory audits: 

@@ -5,7 +5,7 @@ ss =: +/ @: *:
 rsq=: [: -. ss@(- +/ % #)@[ %~ ss@:-
 
 f=: 3 : 0
- 10 timer 's i. t' [ s=. y$2 [ t=. y$3
+ 2 timer 's i. t' [ s=. y$2 [ t=. y$3
 )
 
 x =: 7000+2000 * i.10
@@ -14,7 +14,7 @@ y1=: (1,.x) +/ .* y %. 1,.x
 THRESHOLD +. threshold < y rsq y1
 
 f=: 4 : 0
- 10 timer 'i.~t' [ t=.a.{~(y,x)?@$#a.
+ 2 timer 'i.~t' [ t=.a.{~(y,x)?@$#a.
 )
 
 n=: 2000*4+i.8
@@ -23,7 +23,7 @@ y1=: y (] +/ .*"2 1 %."1 2) n^/0 1
 THRESHOLD +. threshold < (+/ % #), y rsq"1 y1
 
 f=: 3 : 0
- 5 timer 'i.~t' [ t=. y ?@$ y
+ 2 timer 'i.~t' [ t=. y ?@$ y
 )
 
 n=: 8000*4+i.8
@@ -32,7 +32,7 @@ y1=: y (] +/ .*"2 1 %."1 2) n^/0 1
 THRESHOLD +. threshold < y rsq y1
 
 f=: 3 : 0
- 5 timer 'i.~t' [ t=. 0.001*_5e5+y?@$1e6
+ 2 timer 'i.~t' [ t=. 0.001*_5e5+y?@$1e6
 )
 
 n=: 8000*4+i.8

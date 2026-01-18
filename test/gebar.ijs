@@ -106,9 +106,9 @@ ystg =. (xstg,xstg) (, randpos +/ i.x)} ystg
 assert. xstg (ebar -: E.) ystg [ xstgsav =: xstg [ ystgsav =: ystg
 1
 )
-(30 + 1000 ?@$ 10) f 5000 + 1000 ?@$ 100
+(30 + (QKTEST{1000 100) ?@$ 10) f 5000 + (QKTEST{1000 100) ?@$ 100
 
-2 f 64 + 2000 ?@$ 10
+2 f 64 + (QKTEST{2000 200) ?@$ 10
 
 NB. literal2
 adot3=: /:~ (#adot1){.~.(u:'ABCabc'),adot1,u: (#adot1)?65536

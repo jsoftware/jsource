@@ -88,9 +88,9 @@ k (<\.   -: < bsd) ,a   [ k=:_4+?11
 k (]\.   -: ] bsd) a    [ k=:_4+?11
 
 NB. Verify special code for 2 irs/\ y
-THRESHOLD +. (6!:2 '2 +/\ a') < 0.4 *  (6!:2 '2 +"+/\ a') [ a =: i. 100000
-THRESHOLD +. (6!:2 '2 ~:/\ a') < 0.4 *  (6!:2 '2 ~:"+/\ a') [ a =: 100000 $ 'abcdefgh'
-THRESHOLD +. (6!:2 '2 */\ a') < 0.4 *  (6!:2 '2 *"+/\ a') [ a =: i. 100000
+THRESHOLD +. (6!:2 '2 +/\ a') < 0.4 *  (6!:2 '2 +"+/\ a') [ a =: i. (QKTEST{100000 1000)
+THRESHOLD +. (6!:2 '2 ~:/\ a') < 0.4 *  (6!:2 '2 ~:"+/\ a') [ a =: (QKTEST{100000 1000) $ 'abcdefgh'
+THRESHOLD +. (6!:2 '2 */\ a') < 0.4 *  (6!:2 '2 *"+/\ a') [ a =: i. (QKTEST{100000 1000)
 
 
 NB. x f/\. y ------------------------------------------------------------
@@ -108,8 +108,8 @@ testa=: 1 : 0
  1
 )
 
-<. testa&> t , < sdot0{~ 100 ?@$ #sdot0
->. testa&> t , < sdot0{~ 100 ?@$ #sdot0
+<. testa&> t , < sdot0{~ (QKTEST{100 50) ?@$ #sdot0
+>. testa&> t , < sdot0{~ (QKTEST{100 50) ?@$ #sdot0
 +  testa&> t , < j./ 2 100 ?@$ 1000
 *  testa&> t , < j./ 2 100 ?@$ 1000
 +. testa&> 0 1; 100 ?@$ 1000

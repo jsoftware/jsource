@@ -370,30 +370,30 @@ testinplacer =: 1 : 0
 NB. Test for validity.  Checks for inplacing too much
 NB. Choose a random shape, then try all combinations of prefixes.
 if. 'V' e. resultprec do.
-  ((u f.) testinplace (resultprec;''))"1 ,"0/~ a: , <\ >: ? 4 # 10
+  ((u f.) testinplace (resultprec;''))"1 ,"0/~ a: , <\ >: ? 4 # (QKTEST{10 3)
   NB. Repeat for other ranks of u.  Also create a random cell-shape and use a prefix of it for each argument
   asrank =: 1 : ']"m'  NB. as a verb-rank, m can always be applied
-  ((u f.)"(0 0 asrank) testinplace (resultprec;''))"1 (0 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(0 1 asrank) testinplace (resultprec;''))"1 (0 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(1 0 asrank) testinplace (resultprec;''))"1 (1 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(1 1 asrank) testinplace (resultprec;''))"1 (1 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
-  ((u f.)"(0 2 asrank) testinplace (resultprec;''))"1 (0 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
-  ((u f.)"(1 2 asrank) testinplace (resultprec;''))"1 (1 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
-  ((u f.)"(2 2 asrank) testinplace (resultprec;''))"1 (2 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(2 1 asrank) testinplace (resultprec;''))"1 (2 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(2 0 asrank) testinplace (resultprec;''))"1 (2 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(0 3 asrank) testinplace (resultprec;''))"1 (0 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(1 3 asrank) testinplace (resultprec;''))"1 (1 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(2 3 asrank) testinplace (resultprec;''))"1 (2 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(3 3 asrank) testinplace (resultprec;''))"1 (3 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(3 2 asrank) testinplace (resultprec;''))"1 (3 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(3 1 asrank) testinplace (resultprec;''))"1 (3 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-  ((u f.)"(3 0 asrank) testinplace (resultprec;''))"1 (3 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  ((u f.)"(0 0 asrank) testinplace (resultprec;''))"1 (0 0) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(0 1 asrank) testinplace (resultprec;''))"1 (0 1) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(1 0 asrank) testinplace (resultprec;''))"1 (1 0) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(1 1 asrank) testinplace (resultprec;''))"1 (1 1) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # (QKTEST{10 3)
+  ((u f.)"(0 2 asrank) testinplace (resultprec;''))"1 (0 2) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # (QKTEST{10 3)
+  ((u f.)"(1 2 asrank) testinplace (resultprec;''))"1 (1 2) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # (QKTEST{10 3)
+  ((u f.)"(2 2 asrank) testinplace (resultprec;''))"1 (2 2) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(2 1 asrank) testinplace (resultprec;''))"1 (2 1) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(2 0 asrank) testinplace (resultprec;''))"1 (2 0) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(0 3 asrank) testinplace (resultprec;''))"1 (0 3) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(1 3 asrank) testinplace (resultprec;''))"1 (1 3) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(2 3 asrank) testinplace (resultprec;''))"1 (2 3) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(3 3 asrank) testinplace (resultprec;''))"1 (3 3) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(3 2 asrank) testinplace (resultprec;''))"1 (3 2) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(3 1 asrank) testinplace (resultprec;''))"1 (3 1) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
+  ((u f.)"(3 0 asrank) testinplace (resultprec;''))"1 (3 0) (] ,&.> [ {.&.> [: < (QKTEST{10 3) ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # (QKTEST{10 3)
 end.
 
 NB. Verify size of large operands.  Checks for inplacing too little
-(u f.) testinplace (resultprec;(predr -. 'b'))"1 (16000;16000)  NB. 'b' means inplace only if rank not specified
-(u f.)"1 testinplace (resultprec;predr)"1 (10 1600;10 1600)
+(u f.) testinplace (resultprec;(predr -. 'b'))"1 (QKTEST{::(16000;16000);<(160;160))  NB. 'b' means inplace only if rank not specified
+(u f.)"1 testinplace (resultprec;predr)"1 (QKTEST{::(10 1600;10 1600);<(10 16;10 16))
 )
 NB. Full test with everything allowed
 9!:53 (2)

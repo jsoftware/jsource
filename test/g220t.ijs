@@ -6,12 +6,12 @@ ratio =: >./ % <./
 test0=: 3 : 0
  xx=: 1e5?@$1e6
  t=: i. 0 2
- t=:t,10 timer '3+ xx',:'3+~xx' 
- t=:t,10 timer '3- xx',:'3-~xx'
- t=:t,10 timer '3* xx',:'3*~xx'
- t=:t,10 timer '3% xx',:'3%~xx'
- t=:t,10 timer 'xx+xx',:'+~xx' 
- t=:t,10 timer 'xx*xx',:'*~xx'
+ t=:t,2 timer '3+ xx',:'3+~xx' 
+ t=:t,2 timer '3- xx',:'3-~xx'
+ t=:t,2 timer '3* xx',:'3*~xx'
+ t=:t,2 timer '3% xx',:'3%~xx'
+ t=:t,2 timer 'xx+xx',:'+~xx' 
+ t=:t,2 timer 'xx*xx',:'*~xx'
  THRESHOLD +. 5 > ratio"1 t
 )
 

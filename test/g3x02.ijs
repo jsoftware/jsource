@@ -1,4 +1,4 @@
-prolog './g3xbak.ijs'
+prolog './g3x02.ijs'
 NB.  old x: 64 bit --------------------------------------------------
 
 assert (7927^i.4x) -: t=: 3!:2>cutLF {{)n

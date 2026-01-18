@@ -20,7 +20,7 @@ F1(jtswap){F12IP;A y;C*s;I n;
  ARGCHK1(w); 
  if(VERB&AT(w)){
   // reflexive/passive.  Create verb that swaps.  Most flags do not apply to the derived verb
-  I flag = FAV(w)->flag&VIRS2; flag = (FAV(w)->flag&VASGSAFE+VFIX+VNOSELF)+flag+(flag>>1);  // set ASGSAFE, both irs bits from dyad; ISATOMIC immaterial, since always dyad
+  I flag = FAV(w)->flag&VIRS2; flag = (FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF)+flag+(flag>>1);  // set NOLOCCHG, both irs bits from dyad; ISATOMIC immaterial, since always dyad
   I flag2 = ((FAV(w)->flag2&(VF2WILLOPEN2WPROP|VF2WILLOPEN2W))<<(VF2WILLOPEN2APROPX-VF2WILLOPEN2WPROPX)) | ((FAV(w)->flag2&(VF2WILLOPEN2APROP|VF2WILLOPEN2A))>>(VF2WILLOPEN2APROPX-VF2WILLOPEN2WPROPX));   // exchange WILLOPEN for dyad, clear for monad
   R fdef(flag2,CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{
@@ -68,7 +68,7 @@ static DF1(jtbasis1){F12IP;A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
 F1(jtbdot){F12IP;A b,h=0;I j=0,n,*v;
  ARGCHK1(w);
  A z; fdefallo(z)
- if(VERB&AT(w)){fdeffill(z,0,CBDOT,VERB,(AF)(jtbasis1),jtvalenceerr,w,0L,0L,VFIX+VNOSELF,0,0,0) RETF(z);}
+ if(VERB&AT(w)){fdeffill(z,0,CBDOT,VERB,(AF)(jtbasis1),jtvalenceerr,w,0L,0L,VNONAME+VNOSELF,0,0,0) RETF(z);}
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  if(1==n){j=*v; ASSERT(BETWEENC(j,-16,34),EVINDEX);}
@@ -76,7 +76,7 @@ F1(jtbdot){F12IP;A b,h=0;I j=0,n,*v;
  if(j<16){
   GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV2(b),booltab,64L);
   RZ(h=rifvs(cant2(IX(AR(w)),from(w,b))));  // h is an array representing b.  One cell for each atom of b; cell is 4 values
-  fdeffill(z,0,CBDOT,VERB, jtbdot1,jtbdot2, 0L,w,h, VFIX+VNOSELF, RMAX,0L,0L); RETF(z);
+  fdeffill(z,0,CBDOT,VERB, jtbdot1,jtbdot2, 0L,w,h, VNONAME+VNOSELF, RMAX,0L,0L); RETF(z);
  }else{
   z=ca(ds(j-16+CBW0000)); RZ(z); RZ(FAV(z)->fgh[1]=rifvs(w)); FAV(z)->id=CBDOT; RETF(z);  // use g field not f to avoid interfering with atomic2
  }
@@ -174,7 +174,7 @@ F1(jtmemo){F12IP;PROLOG(300);A h,*hv;I m;
  // the tables are standard extendible, with # items in AM, thus must be zapped
  // So, we defer initializing them until they have been made recursive inside fdef
  GAT0(hv[0],INT,m,0) ACINITUNPUSH(hv[0]) GAT0(hv[1],INT,2*(m>>1),2) ACINITUNPUSH(hv[1]) GAT0(hv[2],BOX,m>>1,0) ACINITUNPUSH(hv[2])  // allo hash/keys/results
- A z=fdef(0,CMCAP,VERB,jtmemo12,jtmemo12,w,0L,h,FAV(w)->flag&VASGSAFE+VFIX+VNOSELF,v->mr,lrv(v),rrv(v));
+ A z=fdef(0,CMCAP,VERB,jtmemo12,jtmemo12,w,0L,h,FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF,v->mr,lrv(v),rrv(v));
  AM(hv[0])=0; mvc(m*SZI,AAV0(hv[0]),1,MEMSETFF);  // clear hash table
  AM(hv[1])=0; AS(hv[1])[0]=m>>1;  // init empty key table, 2 INTs each row
  AM(hv[2])=0;   // init empty result table, recursive

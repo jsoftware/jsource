@@ -159,11 +159,11 @@ xco:
   if(nf&&CXCO==FAV(FAV(g)->fgh[0])->id) goto xco; // m&(x:!.n)^:_1 is (-m)&(x:!.n)
   ASSERT(nf&&CPOUND==FAV(FAV(g)->fgh[0])->id,EVDOMAIN);  // otherwise must be m&(#!.n)^:_1
   ASSERT(1==AR(x),EVRANK);
-  R fdef(0,CPOWOP,VERB, jtexpandg,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VFIX+VNOSELF, RMAX,0L,0L);
+  R fdef(0,CPOWOP,VERB, jtexpandg,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
  case CPOUND:
   ASSERT(nf!=0,EVDOMAIN);  // (m&#)^:_1
   ASSERT(1>=AR(x),EVRANK);
-  R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VFIX+VNOSELF, RMAX,0L,0L);
+  R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
   break;
  case CPOWOP:
   if(VGERL&u->flag){ff=AAV(u->fgh[2])[1]; R amp(nf?x:ff,nf?ff:x);} 
@@ -278,9 +278,9 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
  case CBANG:    R eval("3 : '(-(y -~ !)%0.001&* (0.001%~[:-/[:! 0.001 0 +/ ]) ])^:_<.&170^:(-:+)^.y' :. !");
 xco:
  case CXCO:     R amp(num(-1),w);
- case CSPARSE:  R fdef(0,CPOWOP,VERB,jtdenseit,jtvalenceerr, w,num(-1),0L, VFIX+VNOSELF, RMAX,RMAX,RMAX);
- case CICAP:    R fdef(0,CPOWOP,VERB,jticapdotinv,jtvalenceerr, w,num(-1),0L, VFIX+VNOSELF, RMAX,RMAX,RMAX);
- case CPCO:     R fdef(0,CPOWOP,VERB,jtplt,    jtvalenceerr, w,num(-1),0L, VFIX+VNOSELF, 0L,  0L,  0L  );
+ case CSPARSE:  R fdef(0,CPOWOP,VERB,jtdenseit,jtvalenceerr, w,num(-1),0L, VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+ case CICAP:    R fdef(0,CPOWOP,VERB,jticapdotinv,jtvalenceerr, w,num(-1),0L, VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+ case CPCO:     R fdef(0,CPOWOP,VERB,jtplt,    jtvalenceerr, w,num(-1),0L, VNONAME+VNOSELF, 0L,  0L,  0L  );
  case CQCO:     R eval("*/\"1");   // primes, inverse is prime factors
  case CUCO:     R amp(num(3),w);
  case CUNDER:   R under(invrecur(f),g);
@@ -326,7 +326,7 @@ xco:
   }
   break;
  case CCUT:
-  if(CBOX==IDD(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,FAV(w)->flag&VFIX+VNOSELF, RMAX,RMAX,RMAX);
+  if(CBOX==IDD(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,FAV(w)->flag&VNONAME+VNOSELF, RMAX,RMAX,RMAX);
   break;
  case CIBEAM:   // inverse of 3!:1/3 is 3!:2; inverse of 3!:2 is 3!:1
   if(FAV(w)->localuse.lu1.foreignmn[0]==3 && BETWEENC(FAV(w)->localuse.lu1.foreignmn[1],1,3))R foreign(num(3),num((FAV(w)->localuse.lu1.foreignmn[1]&1)+1));  // 1 2 3 -> 2 1 2

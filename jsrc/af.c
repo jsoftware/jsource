@@ -61,10 +61,10 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
 #define R255(x) if(unlikely((I)(x)&-256)==0)R x;
  ARGCHK1(w);
  // If we are only interested in replacing locatives, and there aren't any, exit fast
-// obsolete  if(NOUN&AT(w)||VFIX+VNOSELF&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VFIX+VNOSELF set), keep it
+// obsolete  if(NOUN&AT(w)||VNONAME+VNOSELF&FAV(w)->flag)R w;  // if value already fixed (or m : n which gets VNONAME+VNOSELF set), keep it
 // obsolete  if(unlikely((NAME&AT(w))!=0)){R sfn(0,w);}
  if(NOUN&AT(w)){R w;}  // return noun value; only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
- if(FAV(w)->flag&VFIX)R w;  // if value already fixed (or m : n which gets VFIX+VNOSELF set), keep it.  This prunes all branches with no names, since VFIX+VNOSELF is propagated from the bottom up during tree creation
+ if(FAV(w)->flag&VNONAME)R w;  // if value already fixed (or m : n which gets VNONAME+VNOSELF set), keep it.  This prunes all branches with no names, since VNONAME+VNOSELF is propagated from the bottom up during tree creation
  // continuing, there is a name in the branch and we have to plod through the tree to find it
  fauxblock(fauxself); A aa; fauxINT(aa,fauxself,3,0); AN(aa)=1; IAV0(aa)[1]=IAV(a)[1]; IAV0(aa)[2]=IAV(a)[2];  // place to build recursion parm - make the AK field right, and pass the AM field along
  A f=FAV(w)->fgh[0]; A g=FAV(w)->fgh[1]; A h=FAV(w)->fgh[2]; I id=FAV(w)->id;   // fetch fgh of compound, and the type
@@ -90,7 +90,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
   f=REFIXA(1,f); R255(f); g=REFIXA(na,g); R255(g); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R df2(z,f,g,wf);  // rerun the compound after fixing the args
  case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
   f=REFIXA(na,f); R255(f) g=REFIXA(1,g); R255(g) if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R df2(z,f,g,wf);
- case CCOLONE:  // Original m : n had VFIX+VNOSELF set & never gets here.  This is (1) a nameref for an explicit modifier-plus-args, flagged as VXOP; (2) a namerefop for debug, flagged as PSEUDONAME+VXOPCALL+inherited flags;
+ case CCOLONE:  // Original m : n had VNONAME+VNOSELF set & never gets here.  This is (1) a nameref for an explicit modifier-plus-args, flagged as VXOP; (2) a namerefop for debug, flagged as PSEUDONAME+VXOPCALL+inherited flags;
                 // a namerefop for a modifier locative, which looks like a debug namerefop but has the locative in g.
   if(unlikely(FAV(w)->flag2&VF2PSEUDONAME)){R REFIXA(0,h);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
   f=REFIXA(0,f); R255(f) h=REFIXA(0,h); R255(h) if((((I)fo^(I)f)|((I)ho^(I)h))==0)R w; R xop2(f,h?h:g,g);  // here for nameref: xop2 is bivalent; rebuild operator with original self and fixed f/h
@@ -108,9 +108,9 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
 // obsolete   IAV(aa)[0]=(aif|na); RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
   IAV0(aa)[0]=(aif|na); A h1; RZ(h1=every2(aa,h,(A)&arofixaself)); A *h1v=AAV(h1), *hv=AAV(h); // fix each component of gerund h, point to boxes
   g=REFIXA(na,g); R255(g); RZ(f=ca(f)); A *fv=AAV(f);  // fix g, and make a nonrecursive copy of f where we will record changes to h
-  I flag=VASGSAFE+VFIX+VNOSELF&FAV(g)->flag;  // we will collect combined ASGSAFE/VFIX+VNOSELF over g/h
+  I flag=VNOLOCCHG+VNONAME+VNOSELF&FAV(g)->flag;  // we will collect combined NOLOCCHG/VNONAME+VNOSELF over g/h
   DO(AN(h), flag&=FAV(h1v[i])->flag; if(h1v[i]!=hv[i]){A t;RZ(t=aro(h1v[i])) INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
-// obsolete  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL)|(FAV(ds(CATDOT))->flag&~VFIX+VNOSELF)), RMAX, RMAX, RMAX);
+// obsolete  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL)|(FAV(ds(CATDOT))->flag&~VNONAME+VNOSELF)), RMAX, RMAX, RMAX);
 // obsolete   ra00(f,BOX);  // make f recursive, incrementing its descendants
   fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], f,g,h1, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags
 // obsolete   R df2(z,f,g,wf);
@@ -199,7 +199,7 @@ cycfound:;  // cycle found, running from cyci to cycn; now back it down to find 
   if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
   // otherwise fall through to normal processing
  default:
-  ASSERTSYS(((I)f|(I)g),"f anf g both 0, but VFIX+VNOSELF not set")     // should not occur.  f and g are both off only in primitives, where VFIX+VNOSELF should be set (except u./v.)
+  ASSERTSYS(((I)f|(I)g),"f anf g both 0, but VNONAME+VNOSELF not set")     // should not occur.  f and g are both off only in primitives, where VNONAME+VNOSELF should be set (except u./v.)
   if(f){f=REFIXA(na,f); R255(f);}
   if(g){g=REFIXA(na,g); R255(g);}
   if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
@@ -230,7 +230,7 @@ DF2(jtfix){F12IP;PROLOG(0005);A z;
  RZ(z=fixa(augself,AT(a)&VERB+ADV+CONJ?a:symbrdlock(a)));  // name comes from string a
  // the fixed version may still contain a name, if there was a cycle
 // obsolete  // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this
-// obsolete  // we set VFIX+VNOSELF.  We only do so if the node has descendants (or a name). We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives or inverses.
-// obsolete  if(!(rqtype&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX+VNOSELF;}}  // f is clear for anything in the pst
+// obsolete  // we set VNONAME+VNOSELF.  We only do so if the node has descendants (or a name). We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives or inverses.
+// obsolete  if(!(rqtype&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VNONAME+VNOSELF;}}  // f is clear for anything in the pst
  EPILOG(z);
 }

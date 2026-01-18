@@ -641,7 +641,7 @@ F2(jtmdot){F12IP;A z=0;
  // Create the result function.  h points to the original n as XNUM, lu0 points to the function for one atom, lu1 is the reciprocal of n if valid
  fdefallo(z)
  // we mark the compound as NAMELESS to avoid lookup overhead
- fdeffillall(z,VF2NAMELESS,CMDOT,VERB, fn1,fn2, a,w,h,VASGSAFE+VFIX+VNOSELF, 0,0,0,fffv->localuse.lu0.modatomfn=modoptbl[fnx][nrecip==0],FAV(z)->localuse.lu1.mrecip=nrecip);
+ fdeffillall(z,VF2NAMELESS,CMDOT,VERB, fn1,fn2, a,w,h,VNOLOCCHG+VNONAME+VNOSELF, 0,0,0,fffv->localuse.lu0.modatomfn=modoptbl[fnx][nrecip==0],FAV(z)->localuse.lu1.mrecip=nrecip);
  R z;
 }
 

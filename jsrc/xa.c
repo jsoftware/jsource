@@ -921,5 +921,5 @@ F1(jtcheckcompfeatures){F12IP;UI i;I v1,v2,temp;
 F1(jtgsignal){F12IP;I m;
  RE(m=i0(vib(w)));
  if(-1==m)SEGFAULT;
- R sc(raise(m));
+ R sc(raise(m));  // return the result from raise()
 }

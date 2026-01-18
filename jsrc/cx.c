@@ -275,9 +275,9 @@ DF2(jtxdefn){F12IP;
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
   // Symbols may have been allocated, and we have pushed the symbol table.  DO NOT TAKE ERROR RETURNS AFTER THIS POINT: use BASSERT, GAE, BZ
 #define SETFVAL(val,sym) SETLOCALFVALTEST(val,sym,NPGpysfmtdl&32)  // set fval, with copy to lookaside if primary
-  // zombieval should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
-  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  Invalid inplacing may have been done already.
-  // User workaround would be to start the name as [: which is not ASGSAFE; or to f. the derived verb after the pun
+  // zombieval should never be set here; if it is, there must have been a pun-in-NOLOCCHG that caused us to mark a
+  // derived verb as NOLOCCHG and it was later overwritten with an unsafe verb.  Invalid inplacing may have been done already.
+  // User workaround would be to start the name as [: which is not NOLOCCHG; or to f. the derived verb after the pun
 
   // Assign the special names x y m n u v.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
   // For low-rank short verbs, this takes a significant amount of time using symbis, because the name doesn't have bucket info and is
@@ -741,16 +741,16 @@ static F1(jtxopcall){F12IP;R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dct
 // This handles explicit adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb as f/h, self as g, and copy the flags
 // bivalent adv/conj
 // If we have to add a name for debugging purposes, do so
-// Flag the resulting operator with VXOP, and remove VFIX+VNOSELF for it so that the compound can be fixed
-// self->flag always has VXOPR+VFIX+VNOSELF
+// Flag the resulting operator with VXOP, and remove VNONAME+VNOSELF for it so that the compound can be fixed
+// self->flag always has VXOPR+VNONAME+VNOSELF
 DF2(jtxop2){F12IP;A ff,x;
  ARGCHK2(a,w);
  A aw=a; self=AT(w)&(ADV|CONJ)?w:self; aw=AT(w)&(ADV|CONJ)?aw:w; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
-// obsolete  I flags=(FAV(self)->flag|VXOP)&~VFIX+VNOSELF; flags|=(((AT(aw)&NOUN)||(FAV(a)->flag&VFIX+VNOSELF))&((AT(a)&NOUN)||(FAV(a)->flag&VFIX+VNOSELF)))<<VFIX+VNOSELFX;  // set VXOP
-// obsolete  I flags=(FAV(self)->flag|VXOP)&~(VFIX+VNOSELF); flags|=(AT(aw)&NOUN?VFIX+VNOSELF:FAV(aw)->flag)&(AT(a)&NOUN?VFIX+VNOSELF:FAV(a)->flag)&VFIX+VNOSELF;  // set VXOP and perhaps VFIX+VNOSELF
- I flags=(FAV(self)->flag|VXOP)&~(VFIX+VNOSELF); flags|=FAV((AT(aw)&NOUN?ds(CDUMMY):aw))->flag&FAV((AT(a)&NOUN?ds(CDUMMY):a))->flag&VFIX+VNOSELF;  // set VXOP and perhaps VFIX+VNOSELF
-   // We VFIX+VNOSELF is a and w are VFIX+VNOSELF, so that fixing the result will be quick.  If the explicit def is a locative, it will be wrapped with one or two
-   // pesudonames, which are never VFIX+VNOSELF - those names are discarded by f. but not the values a/w/h.
+// obsolete  I flags=(FAV(self)->flag|VXOP)&~VNONAME+VNOSELF; flags|=(((AT(aw)&NOUN)||(FAV(a)->flag&VNONAME+VNOSELF))&((AT(a)&NOUN)||(FAV(a)->flag&VNONAME+VNOSELF)))<<VNONAME+VNOSELFX;  // set VXOP
+// obsolete  I flags=(FAV(self)->flag|VXOP)&~(VNONAME+VNOSELF); flags|=(AT(aw)&NOUN?VNONAME+VNOSELF:FAV(aw)->flag)&(AT(a)&NOUN?VNONAME+VNOSELF:FAV(a)->flag)&VNONAME+VNOSELF;  // set VXOP and perhaps VNONAME+VNOSELF
+ I flags=(FAV(self)->flag|VXOP)&~(VNONAME+VNOSELF); flags|=FAV((AT(aw)&NOUN?ds(CDUMMY):aw))->flag&FAV((AT(a)&NOUN?ds(CDUMMY):a))->flag&VNONAME+VNOSELF;  // set VXOP and perhaps VNONAME+VNOSELF
+   // We VNONAME+VNOSELF is a and w are VNONAME+VNOSELF, so that fixing the result will be quick.  If the explicit def is a locative, it will be wrapped with one or two
+   // pesudonames, which are never VNONAME+VNOSELF - those names are discarded by f. but not the values a/w/h.
  ff=fdef(0,CCOLONE,VERB, AAV1(FAV(self)->fgh[2])[3]?(AF)jtxdefn:(AF)jtvalenceerr,AAV1(FAV(self)->fgh[2])[HN+3]?(AF)jtxdefn:(AF)jtvalenceerr, a,self,w, flags, RMAX,RMAX,RMAX);  // inherit other flags,
  R unlikely(x=xopcall(0))?namerefop(x,ff):ff;  // install a nameref only if we are debugging and the original modifier was named
 }
@@ -1208,7 +1208,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   // If nested v : v, prune the tree
   if(unlikely(CCOLON==FAV(a)->id))a=FAV(a)->fgh[0];  // look for (v : delenda) : (delenda : v)
   if(unlikely(CCOLON==FAV(w)->id))w=FAV(w)->fgh[1];
-  fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE+VFIX+VNOSELF),mr(a),lr(w),rr(w)) // derived verb is ASGSAFE if both parents are 
+  fdeffill(z,0,CCOLON,VERB,xv12,xv12,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VNOLOCCHG+VNONAME+VNOSELF),mr(a),lr(w),rr(w)) // derived verb is NOLOCCHG if both parents are 
    R z;
  }
  ASSERT(AT(w)&NOUN,EVDOMAIN);   // noun : verb is an error
@@ -1292,7 +1292,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
    }
   }
   // at this point m is in 1..4
-  flag|=VFIX+VNOSELF;  // ensures that f. will not look inside m : n itself.  It will look into an operator that has the operands, which will have VXOP set: there it just fixes each operand
+  flag|=VNONAME+VNOSELF;  // ensures that f. will not look inside m : n itself.  It will look into an operator that has the operands, which will have VXOP set: there it just fixes each operand
   // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
   // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
   // the components of the explicit def, we'd better do it now, so that the usecounts are all identical

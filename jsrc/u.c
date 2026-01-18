@@ -216,8 +216,8 @@ A jtcstr(J jt,C*s){A z; RZ(z=mkwris(str((I)strlen(s),s))); CAV(z)[AN(z)]=0; R z;
 // Return 1 iff w is the evocation of a name.  w must be a FUNC
 B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->fgh[0]&&NAME&AT(v->fgh[0]);}
 
-// h is from a gerund: a "BOX" holding verbs.  Result is AND of the VASGSAFE+VFIX+VNOSELF flags - i. e. the ones that roll up through compounds
-I gflg(A h){I gflg=VASGSAFE+VFIX+VNOSELF; DO(AN(h), gflg&=FAV(AAV(h)[i])->flag;) R gflg;} 
+// h is from a gerund: a "BOX" holding verbs.  Result is AND of the VNOLOCCHG+VNONAME+VNOSELF flags - i. e. the ones that roll up through compounds
+I gflg(A h){I gflg=VNOLOCCHG+VNONAME+VNOSELF; DO(AN(h), gflg&=FAV(AAV(h)[i])->flag;) R gflg;} 
 
 // return 1 if (,w) -: i. # ,w
 // if there is an error, we just return 0

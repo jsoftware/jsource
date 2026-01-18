@@ -387,9 +387,9 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
  }
  ASSERTVV(a,wvb); v=FAV(wvb);  // v is V* for w
  f1=0; f2=0; I sundern;   // type of structural under
- // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
+ // Set flag with NOLOCCHG status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
- I flag = (FAV(a)->flag&v->flag&VASGSAFE+VFIX+VNOSELF);
+ I flag = (FAV(a)->flag&v->flag&VNOLOCCHG+VNONAME+VNOSELF);
  // Look for special cases of v.  If v is WILLOPEN, so will the compound be - for all valences
  switch(v->id&gside){  // never special if gerund - this could evaluate to 0 or 1, neither of which is one of these codes
  case COPE:   // u&.>
@@ -455,8 +455,8 @@ F2(jtundco){F12IP;AF f1=0,f2;I gside=-1, flag=0;
   wvb=fx(AAV(w)[gside]);  // turn the gerund into a verb
  }
  ASSERTVV(a,wvb);
- // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
- flag=FAV(a)->flag&FAV(wvb)->flag&VASGSAFE+VFIX+VNOSELF;
+ // Set flag with NOLOCCHG status of u/v, and inplaceability of f1/f2
+ flag=FAV(a)->flag&FAV(wvb)->flag&VNOLOCCHG+VNONAME+VNOSELF;
  // Create the standard g^:_1 @ (f & g) to use if we have no special processing (not needed if a.&i., but that's rare)
  // if gerund form, use (f g)"lf mg  for a:`v or (f~ g)~"mg rf for v`a:
  // First, create the part after the inverse
@@ -473,6 +473,6 @@ F2(jtundco){F12IP;AF f1=0,f2;I gside=-1, flag=0;
  if(nameless(wvb)){h=atop(inv(wvb),h); ASSERT(h!=0,EVDOMAIN); flag|=VFUNDERHASINV; } // h must be valid for free.  If no names in w, take the inverse and maek it as done
  // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
  // just in case the calculated verb is not inplaceable
- if(!f1)f1=flag&VFUNDERHASINV?jtunderh1:jtundco1; f2=flag&VFUNDERHASINV?jtunderh2:jtundco2; flag |= (FAV(a)->flag&FAV(wvb)->flag&VASGSAFE);
+ if(!f1)f1=flag&VFUNDERHASINV?jtunderh1:jtundco1; f2=flag&VFUNDERHASINV?jtunderh2:jtundco2; flag |= (FAV(a)->flag&FAV(wvb)->flag&VNOLOCCHG);
  fdeffillall(z,0,CUNDCO,VERB,(AF)(f1),(AF)(f2),a,w,h,flag,RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.wvb=wvb); R z;
 }

@@ -940,19 +940,19 @@ static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt
 
 static DF1(jtiota1){F12IP;I j; R apv(SETIC(w,j),1L,1L);}
 
-F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag&~(VASGSAFE+VFIX+VNOSELF);
+F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag&~(VNOLOCCHG+VNONAME+VNOSELF);
 ;
  ARGCHK1(w);
  A z; fdefallo(z)
  if(NOUN&AT(w)){
   A fixw; RZ(fixw=fxeachv(1L,w));  // convert gerunds to verbs
- // obsolete  I gflg=VASGSAFE+VFIX+VNOSELF; DO(AN(fixw), gflg&=AAV(fixw)[i]->flag;)   // collect flags common across all gerunds
+ // obsolete  I gflg=VNOLOCCHG+VNONAME+VNOSELF; DO(AN(fixw), gflg&=AAV(fixw)[i]->flag;)   // collect flags common across all gerunds
   fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);   // install common flags
  }
  // falling through, w is verb
  v=FAV(w);  // v is the u in u\ y
-// obsolete  flag&=~VFIX+VNOSELF;
- flag|=v->flag&VASGSAFE+VFIX+VNOSELF;  // if u is asgsafe, so is u\ y
+// obsolete  flag&=~VNONAME+VNOSELF;
+ flag|=v->flag&VNOLOCCHG+VNONAME+VNOSELF;  // if u is asgsafe, so is u\ y
  switch(v->id){
  case CSLASH: ;  // never gerund/ which is coded as GRCO
   A u=v->fgh[0];  // the u in u/\ y

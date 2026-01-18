@@ -11,8 +11,8 @@ static DF1(obv1){F12IP; PREF1IP(obv12cell); R obv12cell(jtfg,w,self,self);}  // 
 static DF2(obv2){F12IP; PREF2IP(obv12cell); R obv12cell(jtfg,a,w,self);}  // Pass inplaceability through
 
 
-// Set ASGSAFE from a&w; set INPLACE from a
-F2(jtobverse){F12IP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VASGSAFE+VFIX+VNOSELF)),mr(a),lr(a),rr(a));}
+// Set NOLOCCHG from a&w; set INPLACE from a
+F2(jtobverse){F12IP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF)),mr(a),lr(a),rr(a));}
 
 // Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun).  Bivalent  a,w,self or w,self,self
 static DF2(ad12){F12IP;A z; A childself=FAV(self)->fgh[0]; 
@@ -28,6 +28,6 @@ static DF2(ad12){F12IP;A z; A childself=FAV(self)->fgh[0];
  childself=FAV(self)->fgh[1];  w=dyad?w:childself; R AT(childself)&NOUN?childself:CALL2(FAV(childself)->valencefns[dyad],a,dyad?w:childself,childself);
 }
 
-// Set ASGSAFE from operands.  Noun operand is always safe
-F2(jtadverse){F12IP;ASSERTVVn(a,w); R fdef(0L,CADVERSE,VERB,ad12,ad12,a,w ,0L,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE+VFIX+VNOSELF),RMAX,RMAX,RMAX);}
+// Set NOLOCCHG from operands.  Noun operand is always safe
+F2(jtadverse){F12IP;ASSERTVVn(a,w); R fdef(0L,CADVERSE,VERB,ad12,ad12,a,w ,0L,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VNOLOCCHG+VNONAME+VNOSELF),RMAX,RMAX,RMAX);}
 

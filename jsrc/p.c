@@ -404,7 +404,7 @@ static A nameundco(J jtfg, A name, A y){F12IP;
 //
 // The first rule is to have no truck with inplacing unless the execution is known to be locative-safe,
 // i. e. will not change locale, path, or any name that might go into a locative.  This is marked by a
-// flag ASGSAFE in the verb.
+// flag NOLOCCHG in the verb.
 //
 // If jt->zombieval is set, the (necessarily inplaceable) verb may choose to perform an in-place
 // operation.  It will check usecounts and addresses to decide whether to do this
@@ -805,7 +805,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       PSTK *fsa1=&stack[1]; fsa=pt0ecam&FLGPLINE2+FLGPLINE1?fsa:fsa1;    // pointer to the operator's stack slot  1 2 2
       AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>2],__ATOMIC_RELAXED);  // the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call.  Stop using pmask $$$
       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
-      // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->zombieval we are warranting
+      // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be NOLOCCHG.  When we set jt->zombieval we are warranting
       // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
       // this may be over two verbs
       // Consider the case name =. name , 3 + +
@@ -816,7 +816,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
        A zval=__atomic_load_n(&QCWORD(y)->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
              // in case it's local, start a fetch of the symbol#, whose PTYPE is not 0 if defined.  y is the name, which has not been stacked yet
        fs1=pt0ecam&FLGPLINE1?fs1:fs;  // fs1 points to stack[1] for line 1 (i. e. V0); for other lines it is a copy of fs
-       if(FAV(fs)->flag&FAV(fs1)->flag&VASGSAFE){  // do the verb(s) allow assignment in place?   this frees fs/fs1
+       if(FAV(fs)->flag&FAV(fs1)->flag&VNOLOCCHG){  // do the verb(s) allow assignment in place?   this frees fs/fs1
         // Assignment to name, and not ill-behaved function (i. e. that may change locales)., that is, inplaceable assignment
         // Here we have an assignment to check.  We will call subroutines, thus losing all volatile registers
         if(likely(TESTSTACK0PT(PTASGNLOCALX))){   // only sentences from explicit defns have ASGNLOCAL set

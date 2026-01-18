@@ -1310,8 +1310,8 @@ typedef struct {
 #define VNOSELF         ((I)1<<VNOSELFX)      
 #define VLOCK           (I)0x10000        /* function is locked              */
 #define VWASUNARY       (I)0x20000       // 17 this verb replaces the original, which was something like -: that is replaced by 0.5 *
-#define VFIXX           18  // f. can skip over this word because it is the same after being fixed (noun or no named descendants)
-#define VFIX            ((I)1<<VFIXX)      
+#define VNONAMEX           18  // f. can skip over this word because it is the same after being fixed (noun or no named descendants)
+#define VNONAME            ((I)1<<VNONAMEX)      
 #define VXOPRX          19                // the definition is an explicit modifier that refers to x or y
 #define VXOPR           ((I)1<<VXOPRX)
 #define VXOP            (I)0x100000      // this is the result of giving [u]/v args to a defn that had VXOPR set.  u and v are in fgh[0/2]
@@ -1322,10 +1322,10 @@ typedef struct {
 #define VUNARYCODE1     ((I)1<<VUNARYCODEX)
 #define VUNARYCODE2     ((I)2<<VUNARYCODEX)
 #define VUNARYCODE3     ((I)3<<VUNARYCODEX)
-// bit VASGSAFE is wired into a flag reg in parser
+// bit VNOLOCCHG is wired into a flag reg in parser
 #define VXOPCALL       (I)0x2000000      // 25 this verb is a namerefop, interposed to hang a name for debugging onto an anyymous verb.  f is 0, the name is in g, the actual verb in h     overlaps SYMB/ASGNLOCAL
-#define VASGSAFEX     26
-#define VASGSAFE      (((I)1)<<VASGSAFEX)     // Execution does not alter locale/path.
+#define VNOLOCCHGX     26
+#define VNOLOCCHG      (((I)1)<<VNOLOCCHGX)     // Execution does not alter locale/path.
 // 27 free   it appears that u !: n forms were envisaged
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb

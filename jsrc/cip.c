@@ -1101,7 +1101,7 @@ F2(jtdot){F12IP;A f,h=0;AF f2=jtdotprod;C c,d;
    if(c==CMINUS)RZ(h=eval("[: -/\"1 {.\"2 * |.\"1@:({:\"2)"));  // -/ . * - calculate some function used by determinant?
   }
  }
- R fdef(0,CDOT,VERB, jtdet,f2, a,w,h, FAV(a)->flag&FAV(w)->flag&VFIX+VNOSELF, 2L,RMAX,RMAX);
+ R fdef(0,CDOT,VERB, jtdet,f2, a,w,h, FAV(a)->flag&FAV(w)->flag&VNONAME+VNOSELF, 2L,RMAX,RMAX);
 }
 
 // general LU decomp using generic arithmetic

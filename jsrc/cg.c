@@ -366,9 +366,9 @@ F2(jtagendai){F12IP;I flag;
  if(unlikely(NOUN&AT(w)))R exg(gerfrom(w,a));  // noun form, as before
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = incorp(fxeachv(1L,a)));
-  // Calculate ASGSAFE/VFIX+VNOSELF from all of the verbs (both a and w), provided the user can handle it
-// obsolete  flag = VASGSAFE+VFIX+VNOSELF&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag&=FAV(avbv[i])->flag;);  // Don't increment inside FAV!
-// obsolete  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL)|(FAV(ds(CATDOT))->flag&~VFIX+VNOSELF)), RMAX, RMAX, RMAX);
+  // Calculate NOLOCCHG/VNONAME+VNOSELF from all of the verbs (both a and w), provided the user can handle it
+// obsolete  flag = VNOLOCCHG+VNONAME+VNOSELF&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag&=FAV(avbv[i])->flag;);  // Don't increment inside FAV!
+// obsolete  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL)|(FAV(ds(CATDOT))->flag&~VNONAME+VNOSELF)), RMAX, RMAX, RMAX);
  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, (gflg(avb)&FAV(w)->flag)+VGERL, RMAX, RMAX, RMAX);
 }
 

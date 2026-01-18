@@ -199,7 +199,7 @@ cycfound:;  // cycle found, running from cyci to cycn; now back it down to find 
   if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
   // otherwise fall through to normal processing
  default:
-  ASSERTSYS(((I)f|(I)g),"f anf g both 0, but VNONAME+VNOSELF not set")     // should not occur.  f and g are both off only in primitives, where VNONAME+VNOSELF should be set (except u./v.)
+  ASSERTSYS(((I)f|(I)g),"f and g both 0, but VNONAME not set")     // should not occur.  f and g are both off only in primitives, where VNONAME+VNOSELF should be set (except u./v.)
   if(f){f=REFIXA(na,f); R255(f);}
   if(g){g=REFIXA(na,g); R255(g);}
   if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;

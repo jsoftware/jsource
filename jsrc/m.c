@@ -1225,7 +1225,7 @@ A jtrifvs(J jt, AD * RESTRICT w) { ARGCHK1(w); realizeifvirtual(w); R w; }  // s
 A jtmkwris(J jt, AD * RESTRICT w) { ARGCHK1(w); makewritable(w); R w; }  // subroutine version of makewritable() to save space and be an rvalue
 
 #if MEMAUDIT&8
-static I lfsr = 1;  // holds varying memory pattern
+static I lfsr = 0xfeeefeee00000000LL;  // holds varying memory pattern
 #endif
 // call tp, but return the value passed in as z.  Used to save a register in caller
 __attribute__((noinline)) A jttgz(J jt,A *tp, A z){RZ(tp=tg(tp)); jt->tnextpushp=tp; R z;}
@@ -1336,7 +1336,8 @@ if((I)jt&3)SEGFAULT;
   RZ(z=jtgafalloos(jt,blockx,((I)2<<blockx)+TAILPAD+ALIGNTOCACHE*CACHELINESIZE));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
  }
 #if MEMAUDIT&8
- DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=2&&i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word or zaploc
+// obsolete DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=2&&i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word or zaploc
+ I fv=lfsr++; DO((((I)1)<<(1+blockx-LGSZI)), if(i!=2&&i!=6)((I*)z)[i] = fv;);   // fill block with garbage - but not the allocation word or zaploc
 #endif
  AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
   // we do not attempt to combine the AFLAG write into a 64-bit operation
@@ -1494,7 +1495,9 @@ static void jtmfgmp(J jt,A w){mfgmp(w);}
 #if MEMAUDIT&0x40
 extern void jgmpguard(X);
 #endif
-
+#if MEMAUDIT&4
+I frfillvalue=0xdeadbeef00000000;  // value to write before free
+#endif
 // free a block.  The usecount must make it freeable.  If the block was a small block allocated in a different thread,
 // repatriate it
 void jtmf(J jt,A w,I hrh,I blockx){
@@ -1531,7 +1534,7 @@ printf("%p-\n",w);
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   I allocsize = FHRHPOOLBINTOSIZE(blockx);
 #if MEMAUDIT&4
-  DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
+  I fv=frfillvalue++; DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
 #endif
 #if PYXES
   if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
@@ -1547,7 +1550,7 @@ printf("%p-\n",w);
  }else{    // buffer allocated from malloc
   I allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
-  DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
+  I fv=frfillvalue++; DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=6)((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
 #if PYXES

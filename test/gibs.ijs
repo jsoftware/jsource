@@ -45,7 +45,7 @@ test=: 4 : 0
  1
 )
 
-x test y [ x=: <"(1) (QKTEST{::1019 2;119 2)?@$100 [ y=: <"(1) (QKTEST{::877 2;77 2)?@$100
+x test y [ x=: <"(1) (QKTEST{::1019 2;119 2)?@$100 [ y=: <"(1) (QKTEST{::877 2;877 2)?@$100
 y test y
 
 x test y [ x=: i.&.> (QKTEST{::1000 100) ?@# 750 [ y=: i.&.> (QKTEST{::1019 119) ?@# 880
@@ -55,30 +55,30 @@ NB. literal
 a=: ;:'chthonic kakistocracy kleptocracy eleemosynary amanuensis paronomasiac'
 a=: a,;:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
 a=: a,(<"0 ] 20 ?@$ 100)
-x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;47 2) ?@$#a
+x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;947 2) ?@$#a
 y test y
 
-x test y [ x=: (QKTEST{::811 0;81 0) $a: [ y=: (QKTEST{::947 2;47 0) $a:
+x test y [ x=: (QKTEST{::811 0;81 0) $a: [ y=: (QKTEST{::947 0;47 0) $a:
 y test y
 
 NB. literal2
 a=: ([: u: 128+a.&i.)&.> ;:'chthonic kakistocracy kleptocracy eleemosynary amanuensis paronomasiac'
 a=: a,([: u: 128+a.&i.)&.> ;:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
 a=: a,(<"0 ] 20 ?@$ 100)
-x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;47 2) ?@$#a
+x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;947 2) ?@$#a
 y test y
 
-x test y [ x=: (QKTEST{::811 0;81 0) $a: [ y=: (QKTEST{::947 2;47 0) $a:
+x test y [ x=: (QKTEST{::811 0;81 0) $a: [ y=: (QKTEST{::947 0;47 0) $a:
 y test y
 
 NB. literal4
 a=: (10 u: 65536+3&u:)&.> ;:'chthonic kakistocracy kleptocracy eleemosynary amanuensis paronomasiac'
 a=: a,(10 u: 65536+3&u:)&.> ;:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
 a=: a,(<"0 ] 20 ?@$ 100)
-x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;47 2) ?@$#a
+x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;947 2) ?@$#a
 y test y
 
-x test y [ x=: (QKTEST{::811 0;81 0)$a: [ y=: (QKTEST{::947 2;47 0)$a:
+x test y [ x=: (QKTEST{::811 0;81 0)$a: [ y=: (QKTEST{::947 0;47 0)$a:
 y test y
 
 NB. symbol
@@ -88,16 +88,14 @@ a=: a,s:@<"0&.> ;:'onomatopoeia metonymic metronymic paraclete parousia pauline 
 a=: a,<"0@s: ' onomatopoeia paraclete parousia paronomasiac parousia paraclete onomatopoeia paraclete'
 a=: a,<"0@s: ;:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
 a=: a,(<"0 ] 20 ?@$ 100)
-x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;47 2) ?@$#a
+x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;947 2) ?@$#a
 y test y
 
-x test y [ x=: (QKTEST{::811 0;81 0) $a: [ y=: (QKTEST{::947 2;47 0) $a:
+x test y [ x=: (QKTEST{::811 0;81 0) $a: [ y=: (QKTEST{::947 0;47 0) $a:
 y test y
 
 (600 ?@$ 1000) (I.@e. -: I.@(e."e.)) 465 ?@$ 1000
 (7!:2 'a I.@e. i. 4') > 2 * (7!:2 'a I.@(e."e.) i. 4') [ a =: i. 2000
-
-
 
 
 epilog''

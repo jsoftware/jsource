@@ -80,13 +80,14 @@ catch.
 end.
 }} ''
 
-gerund =: ]F.:('@:' ,:@:<@:(,&<) ,~) 3e5 # < '+'
+gerund =: ]F.:('@:' ,:@:<@:(,&<) ,~) (QKTEST{3e5 3e5) # < '+'
+
 'stack error' -: ". etx 'gerund`:6' NB. JE crash.
 
 
 NB. Check handling of deeply nested boxes.
 NB. Nesting level.
-N =: QKTEST{1e6 1e3 NB. Change to 1e1 to check that tests are correct.
+N =: QKTEST{1e6 1e6 NB. Change to 1e1 to check that tests are correct.
 NB. Utils.
 arraytolist =: (0 $ 0)&(]F.:(,&<))
 listtoarray =: [: 0&{::"1@}: >@{:^:(0 < #)^:a:

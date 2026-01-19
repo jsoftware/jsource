@@ -59,15 +59,8 @@ blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ij
 NB. too slow
 blacklist=: blacklist, '' [ (0~:9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
 g600ip
-gco1
-gco1u
-gco1w
 gibs
-gsco1
-gsco1u
-gsco1w
 gss
-gstack
 gtdot2
 )
 
@@ -121,7 +114,7 @@ gxco1
 blacklist=: ~.blacklist
 
 ddall    =: testfiles 'g'
-3 : 0'' [ 'gtdot5'          NB. skip until
+3 : 0'' [ 'gtdot'          NB. skip until
 if. #y do.
   y=. '/',y,'.ijs'
   if. _1~: i=. {.!._1 I. (1 e. y&E.)&> ddall do. ddall=: i}.ddall end.

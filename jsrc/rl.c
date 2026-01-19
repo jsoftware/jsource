@@ -24,14 +24,15 @@ static DF1X(jtlrr);
 #define parfn ((I)jtfg&JTPARENS?jtlcpb:jtlcpa)
 #define tiefn ((I)jtfg&JTPARENS?jtltieb:jtltiea) 
 
-// w is the displayable string for an entity.  esult is 1 if it needs parens if next to anything else; or -1 if a primitive that never needs parens
-static I jtlp(J jtfg,A w){F12JT;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
+// w is the displayable string for an entity.  Result is 1 if it needs parens if next to anything else; or -1 if a primitive that never needs parens
+static I jtlp(J jtfg,A w){F12JT;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;  // default to 'need parens'
  ARGCHK1(w);
  n=AN(w); v=CAV(w); c=*v; d=v[n-1];
  if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R -1;  // if a primitive or name, it doesn't need parens
  if(C9==ctype[(UC)c])DQ(n-1, d=c; c=ctype[(UC)*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)  // numeric field: parens if contains nonnumeric char or space followed by non-(digit/sign)
  else if(c==q)   DQ(n-1, c=*v++; p^=(c==q); if(b=(p^1)&(c!=q)){break;})  // quoted string: paren if there is any non-quote after the matching quote
  else if(c=='(') DQ(n-1, c=*v++; j+=c=='('?1:c==')'?-1:0; if(b=!j)break;)  // (: paren if there is a character after matching )
+ else if(c=='{' && v[1]=='{')R -1;  // {{ must be a function that never needs parens
  R b;
 }    /* 1 iff put parens around w */
 
@@ -286,7 +287,7 @@ static B laa(A a,A w){C c,d;
  R ((c|d)&(0xf&~(CA|C9)))^1;  // 1 if c,d both alphameric
 }
 
-// Is a string a number?  Must start with a digit and end with digit, x, or .
+// Are 2 numerics adjacent?  first must end with a number, second must begin with a number
 static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=CAV(a)[AN(a)-1]; R ('x'==c||'.'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)CAV(w)[0]];}
 
 // a is boxes for fgh, w is A to be represented
@@ -299,8 +300,8 @@ static F2X(jtlinsert){F12JT;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V
  if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);}  // scb to simplify display
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
 // ?t tells whether () is needed around the f/g/h component
- if(1<=n){f=C(av[0]); t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||id==CFORK)&&NOUN&AT(t)&&(lp(f)>0);}  // f: () if it's invisible   or   noun left end of nvv or n (op)
- if(2<=n){g=C(av[1]); t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CADVF):((BETWEENC(id,CHOOK,CADVF))|lp(g))>0;}  // g: paren any invisible modifier
+ if(1<=n){f=C(av[0]); t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||BETWEENC(id,CHOOK,CADVF))&&NOUN&AT(t)&&(lp(f)>0);}  // f: () if it's invisible   or   noun left end of nvv or n (op)
+ if(2<=n){g=C(av[1]); t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CADVF):((BETWEENC(id,CHOOK,CADVF))|lp(g))>0;}  // g: paren any invisible modifier, or in invisible modifier if it needs parens
  if(3<=n){h=C(av[2]); t=hs; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK:((BETWEENC(id,CHOOK,CADVF)&&!b)|lp(h))>0;}  // h: in verb fork, paren hook; in trident, paren any train
  switch(!(b||BETWEENC(id,CHOOK,CADVF))?id:2==n?CHOOK:CFORK){  // if operator or invisible, ignore the type and space based on length
  case CADVF:

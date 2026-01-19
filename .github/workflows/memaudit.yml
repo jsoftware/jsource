@@ -1,0 +1,595 @@
+name: MEMAUDIT
+
+on:
+ push:
+  branches: [ master ]
+
+# trigger workflow on file change
+#on:
+# push:
+#  paths:
+#   - 'version.txt'
+
+# if: ${{ false }}
+
+jobs:
+
+# linux memaudit -------------------------------------------------------
+ jelinuxma:
+  name: JE (Linux memaudit)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux memaudit)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Build JE (Linux memaudit)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      _MEMAUDIT: 46
+     run: |
+      script/buildga.sh linux || exit 1
+
+   - name: Test JE (Linux memaudit)
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script/testga.sh linux || exit 1
+#       ls -l j64
+#       zip -r l64ma.zip j64
+# 
+#    - name: Release JE (Linux memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "l64ma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (Linux memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: dist
+#        path: testlinuxma.txt
+#        overwrite: true
+
+# macOS memaudit -------------------------------------------------------
+ jemacosma:
+  name: JE (macOS memaudit)
+  runs-on: macos-15-intel
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (macOS memaudit)
+     run: |
+      bash script/install-mac.sh
+
+   - name: Build JE (macOS memaudit)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      _MEMAUDIT: 46
+     run: |
+      script/buildga.sh darwin || exit 1
+
+   - name: Test JE (macOS memaudit)
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script/testga.sh darwin || exit 1
+#       cd j64
+#       strip -S jconsole
+#       strip -S libj.dylib
+#       strip -S libjavx2.dylib || true
+#       strip -S libjavx512.dylib || true
+#       strip -S libtsdll.dylib
+#       strip -S jamalgam || true
+#       cd -
+#       ls -l j64
+#       zip -r m64ma.zip j64
+# 
+#    - name: Release JE (macOS memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "m64ma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (macOS memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: dist
+#        path: testdarwinma.txt
+#        overwrite: true
+
+# macOS arm64 memaudit -------------------------------------------------
+ jemacosarmma:
+  name: JE (macOS arm64 memaudit)
+  runs-on: macos-15
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (macOS arm64 memaudit)
+     run: |
+      bash script/install-mac.sh
+
+   - name: Build JE (macOS arm64 memaudit)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      _MEMAUDIT: 46
+     run: |
+      script/buildga.sh darwin || exit 1
+
+   - name: Test JE (macOS arm64 memaudit)
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script/testga.sh darwin || exit 1
+#       cd j64
+#       strip -S jconsole
+#       strip -S libj.dylib
+#       strip -S libjavx2.dylib || true
+#       strip -S libjavx512.dylib || true
+#       strip -S libtsdll.dylib
+#       strip -S jamalgam || true
+#       cd -
+#       ls -l j64
+#       zip -r m64armma.zip j64
+# 
+#    - name: Release JE (macOS arm64 memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "m64armma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (macOS arm64 memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: dist
+#        path: testdarwinarmma.txt
+#        overwrite: true
+
+# rpi64arm memaudit ----------------------------------------------------
+ jerpi64armma:
+  name: JE (Linux arm64 memaudit)
+  runs-on: ubuntu-22.04-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux arm64 memaudit)
+     run: |
+      script/install-rpi.sh
+
+   - name: Build JE (Linux arm64 memaudit)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      _MEMAUDIT: 46
+     run: |
+      script/buildga.sh raspberry arm64 || exit 1
+
+   - name: Test JE (Linux arm64 memaudit)
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script/testga.sh raspberry arm64 || exit 1
+#       cd j64
+#       strip -S jconsole
+#       strip -S libj.so
+#       strip -S libtsdll.so
+#       strip -S jamalgam || true
+#       strip -S libgmp.so
+#       cd -
+#       ls -l j64
+#       zip -r rpi64ma.zip j64
+# 
+#    - name: Release JE (Linux arm64 memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "rpi64ma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (Linux arm64 memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: dist
+#        path: testrpi64ma.txt
+#        overwrite: true
+
+# rpi32arm memaudit ----------------------------------------------------
+ jerpi32armma:
+  name: JE (Linux arm32 memaudit)
+  runs-on: ubuntu-22.04-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux arm32 memaudit)
+     run: |
+      script/install-rpi.sh
+
+   - name: Build JE (Linux arm32 memaudit)
+     env:
+      CC: arm-linux-gnueabihf-gcc
+      USE_SLEEF: 1
+      USE_SLEEFQUAD: 1
+      USE_OPENMP: 0
+      _MEMAUDIT: 46
+     run: |
+      script/buildga.sh raspberry armv6l || exit 1
+
+#    - name: Test JE (Linux arm32 memaudit)
+#      env:
+#       _MEMAUDIT: 46
+#      run: |
+#       script/testga.sh raspberry armv6l || exit 1
+#       cd j32
+#       strip -S jconsole
+#       strip -S libj.so
+#       strip -S libtsdll.so
+#       strip -S jamalgam || true
+#       strip -S libgmp.so
+#       cd -
+#       ls -l j32
+#       zip -r rpi32ma.zip j32
+# 
+#    - name: Release JE (Linux arm32 memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "rpi32ma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (Linux arm32 memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: dist
+#        path: testrpi32ma.txt
+#        overwrite: true
+
+# freebsd memaudit -----------------------------------------------------
+ jefreebsd2ma:
+  name: JE (FreeBSD cross-platform-actions)
+  runs-on: ubuntu-latest
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Build, Test JE (FreeBSD memaudit)
+     uses: cross-platform-actions/action@v0.32.0
+     with:
+      operating_system: freebsd
+      architecture: x86-64
+      version: '15.0'
+      shell: bash
+
+      run: |
+       rm -f jobdone
+       export IGNORE_OSVERSION=yes
+       sudo pkg upgrade -y
+       sudo rdate time.cloudflare.com || true
+       sudo pkg search openblas 1>&2
+       sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo find / -type f -name 'liblapack.so*' 1>&2
+       sudo find / -type f -name 'libopenblas.so*' 1>&2
+       /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       sudo cat ~/.ssh/config || true
+       export CC=clang
+       export USE_SLEEF=1
+       export USE_OPENMP=0
+       export _MEMAUDIT=46
+       script/buildga.sh freebsd || exit 1
+       script/testga.sh freebsd || exit 1
+#        cd j64
+#        strip -S jconsole
+#        strip -S libj.so
+#        strip -S libjavx2.so || true
+#        strip -S libjavx512.so || true
+#        strip -S libtsdll.so
+#        strip -S jamalgam || true
+#        strip -S libgmp.so
+#        cd -
+#        ls -l j64
+#        zip -r fbsd64.zip j64
+#        touch jobdone
+# 
+#    - name: Check Status (FreeBSD memaudit)
+#      run: |
+#       test -f jobdone || exit 1
+# 
+#    - name: Release JE (FreeBSD memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "fbsd64.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (FreeBSD memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#       name: dist
+#       path: testfreebsd.txt
+#       overwrite: true
+
+# freebsdarm64 memaudit ------------------------------------------------------
+ jefreebsdarm64ma:
+  name: JE (FreeBSD arm64 memaudit)
+  runs-on: ubuntu-latest
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Build, Test JE (FreeBSD arm64 memaudit)
+     uses: cross-platform-actions/action@v0.32.0
+     with:
+      operating_system: freebsd
+      architecture: arm64
+      version: '15.0'
+      shell: bash
+
+      run: |
+       rm -f jobdone
+       export IGNORE_OSVERSION=yes
+       sudo pkg upgrade -y
+       sudo rdate time.cloudflare.com || true
+       sudo pkg search openblas 1>&2
+       sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo find / -type f -name 'liblapack.so*' 1>&2
+       sudo find / -type f -name 'libopenblas.so*' 1>&2
+       /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       sudo cat ~/.ssh/config || true
+       export CC=clang
+       export USE_SLEEF=1
+       export USE_OPENMP=0
+       export _MEMAUDIT=46
+       script/buildga.sh freebsd || exit 1
+       script/testga.sh freebsd || exit 1
+#        cd j64
+#        strip -S jconsole
+#        strip -S libj.so
+#        strip -S libjavx2.so || true
+#        strip -S libjavx512.so || true
+#        strip -S libtsdll.so
+#        strip -S jamalgam || true
+#        strip -S libgmp.so
+#        cd -
+#        ls -l j64
+#        zip -r fbsdarm64.zip j64
+#        touch jobdone
+# 
+#    - name: Check Status (FreeBSD arm64 memaudit)
+#      run: |
+#       test -f jobdone || exit 1
+# 
+#    - name: Release JE (FreeBSD arm64 memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "fbsdarm64.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (FreeBSD arm64 memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#       name: dist
+#       path: testfreebsdarm64.txt
+#       overwrite: true
+
+# wasm memaudit --------------------------------------------------------
+ jewasmma:
+  name: JE (wasm memaudit)
+  runs-on: ubuntu-latest
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (wasm memaudit)
+     uses: mymindstorm/setup-emsdk@v14
+
+   - name: Build, Test JE (wasm memaudit)
+     env:
+      CC: emcc
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      _MEMAUDIT: 46
+     run: |
+      script/buildga.sh wasm || exit 1
+      script/testga.sh wasm || exit 1
+#       ls -l j32
+#       zip -r wasm32ma.zip j32
+# 
+#    - name: Release JE (wasm memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "wasm32ma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#   - name: Copy Test (wasm memaudit)
+
+# windows memaudit -----------------------------------------------------
+ jewinma:
+  name: JE (Windows memaudit)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows memaudit)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64
+
+   - name: Build JE (Windows memaudit)
+     shell: cmd
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script\buildga.cmd x64
+
+   - name: Test JE (Windows memaudit)
+     shell: cmd
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script\testga.cmd x64
+
+#    - name: Compress Files (Windows memaudit)
+#      shell: pwsh
+#      run: Compress-Archive j64 w64ma.zip
+# 
+#    - name: Release JE (Windows memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "w64ma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (Windows memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#       name: dist
+#       path: testwinma.txt
+#       overwrite: true
+
+# windows 32bit memaudit -----------------------------------------------
+ jewin32ma:
+  name: JE (Windows 32 memaudit)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows 32 memaudit)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: x86
+
+   - name: Build JE (Windows 32 memaudit)
+     shell: cmd
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script\buildga.cmd x86
+
+   - name: Test JE (Windows 32 memaudit)
+     shell: cmd
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script\testga.cmd x86
+
+#    - name: Compress Files (Windows 32 memaudit)
+#      shell: pwsh
+#      run: Compress-Archive j32 w32ma.zip
+# 
+#    - name: Release JE (Windows 32 memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "w32ma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (Windows 32 memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#       name: dist
+#       path: testwin32ma.txt
+#       overwrite: true
+
+# windows arm64 memaudit -----------------------------------------------
+ jewinarm64ma:
+  name: JE (Windows arm64 memaudit)
+  runs-on: windows-11-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows arm64 memaudit)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64_arm64
+
+   - name: Build JE (Windows arm64 memaudit)
+     shell: cmd
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script\buildga.cmd arm64
+
+   - name: Test JE (Windows arm64 memaudit)
+     shell: cmd
+     env:
+      _MEMAUDIT: 46
+     run: |
+      script\testga.cmd arm64
+
+#    - name: Compress Files (Windows arm64 memaudit)
+#      shell: pwsh
+#      run: Compress-Archive jarm64 warm64ma.zip
+# 
+#    - name: Release JE (Windows arm64 memaudit)
+#      uses: ncipollo/release-action@v1
+#      with:
+#       tag: build
+#       artifacts: "warm64ma.zip"
+#       token: ${{ secrets.GITHUB_TOKEN }}
+#       allowUpdates: true
+#       replacesArtifacts: true
+# 
+#    - name: Copy Test (Windows arm64 memaudit)
+#      uses: actions/upload-artifact@v4
+#      with:
+#       name: dist
+#       path: testwinarm64ma.txt
+#       overwrite: true
+

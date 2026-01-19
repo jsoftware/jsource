@@ -31,6 +31,7 @@ IGNOREIFFVI 1  NB. allow garbage collection to run
 s0=: 7!:3 ''
 b0=: 7!:0 ''
 
+0!:_1`1:@.(0=* 2 (17 b.) 9!:56'memaudit') '$'   NB. skip slow
 s=: s: t
 t -: 5 s: s
 
@@ -49,6 +50,7 @@ t -: 5 s: s
 1!:55 <jpath '~temp/foo.x'
 
 10 s: data
+NB.$  end of skip
 0 s: 11
  
 d=:p=:s=: 911

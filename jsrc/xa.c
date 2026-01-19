@@ -828,7 +828,7 @@ F1(jtboxedsparse){F12IP;I k;
 #endif
 }
 
-// enable/disable tstack auditing, since some testcases run too long with it enabled
+// 9!:57 enable/disable tstack auditing, since some testcases run too long with it enabled
 // bit 0 is set to disable, bit 1 is a one-shot to ask for an audit
 // result is old value
 F1(jtaudittdisab){F12IP;

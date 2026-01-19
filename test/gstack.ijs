@@ -1,6 +1,7 @@
 prolog './gstack.ijs'
 NB. stack issues (function call limit) ----------------------------------
 
+0!:_1`1:@.(0=* 2 (17 b.) 9!:56'memaudit') '$'   NB. skip slow
 
 NB. f=: 3 : 'f c=:>:y'
 NB. f=: 3 : 'f c=:>:y'
@@ -142,8 +143,7 @@ NB. Tests.
 
 (;: '3 :') -.@-: (;: '3:')   NB. failed once
 
-
-
+NB.$  end of skip
 
 epilog''
 

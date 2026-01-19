@@ -118,7 +118,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A z,A w,C*x,I somefill){I d,n,p=c*m;  // p=#
   if(likely(n!=0)){  // nonempty cell, must copy in the data
    if(withprob(n<p,0.1)){  // incoming cell smaller than result area: take to result-cell size (uses fill)
     fauxblockINT(sh,0,1); AK((A)sh)=(C*)(&AS(z)[d])-(C*)sh; AT((A)sh)=INT; AR((A)sh)=1; AN((A)sh)=AS((A)sh)[0]=AR(w);  // create arg to take: INT vector with shape of item of result
-#if MEMAUDIT&0xe
+#if MEMAUDIT&0x3e
     AFLAG((A)sh)=0;  // audits check it
 #endif
     AS(z)[0]=m; RZ(w=take((A)sh,w));  // do the take, with fill

@@ -166,6 +166,7 @@ void jtforeigninit(J jt){UI i;
  MN(128,13) XPRIM(VERB, jtfindspr,   0,            VNOLOCCHG,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
  MN(128,14) XPRIM(VERB, jtbatchop,   jtbatchop,            VNOLOCCHG,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
  MN(128,22) XPRIM(VERB, 0,           jtqktupdate,   VNOLOCCHG,VF2WILLOPEN2A,RMAX,RMAX,RMAX);
+ MN(9,-5)   XPRIM(VERB, jtpeekdata,   0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);  // turn on to provide a J window into the running system
 
 // infrequently-used fns follow
 
@@ -239,7 +240,6 @@ void jtforeigninit(J jt){UI i;
  MN(6,2)   XPRIM(VERB, jttsit1,      jttsit2,      VFLAGNONE,VF2NONE,1,   0,   1   );
  MN(6,3)   XPRIM(VERB, jtdl,         0,            VNOLOCCHG,VF2NONE,0,   RMAX,RMAX);
  MN(6,4)   XPRIM(VERB, jtparsercalls,0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
- MN(6,5)   XPRIM(VERB, jtpeekdata,   0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);  // turn on to provide a J window into the running system
   // MN(6,6)   XPRIM(VERB, jtprocarch,   0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);   // read whether AVX supported
   // MN(6,7)   XPRIM(VERB, jtprocfeat,   0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);   // report cpu features
  MN(6,8)   XPRIM(VERB, jtqpfreq,     0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);

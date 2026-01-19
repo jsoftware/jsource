@@ -2681,7 +2681,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  I stripex=ti;  // initial stripe reservation, from thread#
  // state needed to release one row of ring (viz relstart). 
 #define RELEASEBLOCKCT 8  // number of RBLOCKS to handle at a time.  This should be as big as we can make it without filling write buffers. 2 blocks=1 cacheline
- UI releaseblockmask=0; I releasect; __m256d *releaseqktringbasecurr;  // mask of blocks in row, index of row being released, normal burst length, amount of processing before next burst, actual burst length, Qkt addr of burst
+ UI releaseblockmask=0; I releasect; __m256d *releaseqktringbasecurr;  // mask of blocks in row, normal burst length,Qkt addr of burst
 #define CYCBETWEENRELEASE0 500  // estimated clocks to receive DRAM data.  We try to burst only this often so that write buffers can drain
 #define CYCPERINSERT 12   // number of cycles per insertion
 #define RELEASEDELAYCT0 ((CYCBETWEENRELEASE0/CYCPERINSERT)*sizeof(US))  // unbiased delay, measured in #offsets processed
@@ -2793,7 +2793,7 @@ finclass:;  // we have classified the blocks
      E *r0=ring[ringx];  // base the offsets will be applied against
      releaserowmask[releasex]|=currop->rbmask;  // make note of the resultblocks that will be modified by this row
      __m256d colh=_mm256_set1_pd(currop->colvalahead.hi), coll=_mm256_set1_pd(currop->colvalahead.lo);  // copy column value into all lanes
-     currop->colndxahead=currop->acolndxs[++rowindex]; currop->colvalahead=currop->acolvals[rowindex];  // read ahead for next row
+     currop->colndxahead=currop->acolndxs[++rowindex]; currop->colvalahead=currop->acolvals[rowindex];  // read ahead for next row.  this read takes a LONG time to complete
      I andx=0;  // counts in steps of RESBLKE*sizeof(one offset).  With this stride we can use andx to point to offsets and andx*sizeof(E)/sizeof(one offset) (=8) to point to row values
      // Calculate one row of the op
      I alen;  // ending offset for a section

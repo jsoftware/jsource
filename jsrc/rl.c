@@ -289,7 +289,7 @@ static B laa(A a,A w){C c,d;
 // Is a string a number?  Must start with a digit and end with digit, x, or .
 static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=CAV(a)[AN(a)-1]; R ('x'==c||'.'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)CAV(w)[0]];}
 
-// ? insert spacing between components of trains
+// a is boxes for fgh, w is A to be represented
 static F2X(jtlinsert){F12JT;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
  ARGCHK2(a,w);
  n=AN(a); av=AAV(a);  

@@ -75,7 +75,7 @@ static F2(jttk){F12IP;PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,
 
 F2(jttake){F12IP;A s;I acr,af,ar,n,*v,wcr,wf,wr;
  
- ARGCHK2(a,w); I wt = AT(w);  // wt=type of w
+ ARGCHK2(a,w); I wt=AT(w);  // wt=type of w
  acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
  if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  //if a is empty this destroys jt->ranks
  if(likely(!ISSPARSE(wt)))RZ(w=jtsetfv1(jt,w,AT(w)));   // pity to do this before we know we need fill

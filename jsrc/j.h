@@ -749,7 +749,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // #define MEMAUDIT 0x7f   // test
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #ifndef MEMAUDIT
-#define MEMAUDIT 0x0    // Bitmask for memory audits: 
+#define MEMAUDIT 0x0   // Bitmask for memory audits: 
 //        1:  make sure  headers match pool#
 //        2:  full audit of tpush/tpop
 //            detect double-frees before they happen,
@@ -758,8 +758,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 //            4+1 is special, used for chasing down multithreading problems
 //        8:  fill block with other garbage after we allocate it
 //     0x10:  (or 16) audit freelist at every alloc/free
-//            (starting after you have run 6!:5 (1) to turn it on)
-//     0x20:  audit freelist at end of every sentence regardless of 6!:5
+//            (starting after you have run 9!:_5 (1) to turn it on)
+//     0x20:  audit freelist at end of every sentence regardless of 9!:_5
 //     0x40:  enable guard blocks (libgmp mallocs only)
 //
 // Thus 1+4+8 (or 13 or 0xD) will verify that there are no blocks

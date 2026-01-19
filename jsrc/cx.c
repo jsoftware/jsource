@@ -746,8 +746,6 @@ static F1(jtxopcall){F12IP;R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dct
 DF2(jtxop2){F12IP;A ff,x;
  ARGCHK2(a,w);
  A aw=a; self=AT(w)&(ADV|CONJ)?w:self; aw=AT(w)&(ADV|CONJ)?aw:w; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
-// obsolete  I flags=(FAV(self)->flag|VXOP)&~VNONAME+VNOSELF; flags|=(((AT(aw)&NOUN)||(FAV(a)->flag&VNONAME+VNOSELF))&((AT(a)&NOUN)||(FAV(a)->flag&VNONAME+VNOSELF)))<<VNONAME+VNOSELFX;  // set VXOP
-// obsolete  I flags=(FAV(self)->flag|VXOP)&~(VNONAME+VNOSELF); flags|=(AT(aw)&NOUN?VNONAME+VNOSELF:FAV(aw)->flag)&(AT(a)&NOUN?VNONAME+VNOSELF:FAV(a)->flag)&VNONAME+VNOSELF;  // set VXOP and perhaps VNONAME+VNOSELF
  I flags=(FAV(self)->flag|VXOP)&~(VNONAME+VNOSELF); flags|=FAV((AT(aw)&NOUN?ds(CDUMMY):aw))->flag&FAV((AT(a)&NOUN?ds(CDUMMY):a))->flag&VNONAME+VNOSELF;  // set VXOP and perhaps VNONAME+VNOSELF
    // We VNONAME+VNOSELF is a and w are VNONAME+VNOSELF, so that fixing the result will be quick.  If the explicit def is a locative, it will be wrapped with one or two
    // pesudonames, which are never VNONAME+VNOSELF - those names are discarded by f. but not the values a/w/h.

@@ -946,12 +946,10 @@ F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(
  A z; fdefallo(z)
  if(NOUN&AT(w)){
   A fixw; RZ(fixw=fxeachv(1L,w));  // convert gerunds to verbs
- // obsolete  I gflg=VNOLOCCHG+VNONAME+VNOSELF; DO(AN(fixw), gflg&=AAV(fixw)[i]->flag;)   // collect flags common across all gerunds
   fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);   // install common flags
  }
  // falling through, w is verb
  v=FAV(w);  // v is the u in u\ y
-// obsolete  flag&=~VNONAME+VNOSELF;
  flag|=v->flag&VNOLOCCHG+VNONAME+VNOSELF;  // if u is asgsafe, so is u\ y
  switch(v->id){
  case CSLASH: ;  // never gerund/ which is coded as GRCO

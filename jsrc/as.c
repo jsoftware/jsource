@@ -398,7 +398,6 @@ F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag&~(
  A z; fdefallo(z)
  if(NOUN&AT(w)){
   A fixw; RZ(fixw=fxeachv(1L,w));
-// obsolete   I gflg=VNOLOCCHG+VNONAME+VNOSELF; DO(AN(fixw), gflg&=AAV(fixw)[i]->flag;)   // collect flags common across all gerunds
   fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);
  }
  v=FAV(w);  // verb info for w

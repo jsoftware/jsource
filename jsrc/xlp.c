@@ -2111,8 +2111,7 @@ __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from the col of Qkt
   // fetch the pivotrow value into all lanes.  Change its sign so we subtract the product
   prowdh=_mm256_xor_pd(sgnbit,_mm256_set1_pd(prn0v[rowx].hi));  // fetch high part of pivotrow value into all lanes
   prowdl=_mm256_xor_pd(sgnbit,_mm256_set1_pd(prn0v[rowx].lo));  // fetch low part of pivotrow value into all lanes
- // obsolete  if(!(dpflag&32)){  // if not batch mode...
-   I colx;
+    I colx;
 // I okmsk=(1LL<<NPAR)-1;  //  number/mask of valid wds in block
    // for each column-group in Qkt (4 lanes)
    __m256d endmask;  // mask for 'maskload' and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
@@ -2205,7 +2204,7 @@ __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from the col of Qkt
     _mm_storeu_pd((D*)((I)qkvrow+o3),_mm256_castpd256_pd128(_mm256_permute4x64_pd(h2l2h3l3,0b01001110))); _mm_storeu_pd((D*)((I)qkvrow+o2),_mm256_castpd256_pd128(h2l2h3l3));   // store 3&2
     _mm_storeu_pd((D*)((I)qkvrow+o1),_mm256_castpd256_pd128(_mm256_permute4x64_pd(h0l0h1l1,0b01001110)));  _mm_storeu_pd((D*)((I)qkvrow+o0),_mm256_castpd256_pd128(h0l0h1l1));   // store 1&0
 
-#if 0  // obsolete
+#if 0    // obsolete
   }else{
    // Batch Qkt update: always qp, of aligned 128-byte blocks, no check for duplicates
    UI colx;  //  index to work on
@@ -2281,9 +2280,9 @@ ASSERT(n<=AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH) // must have one index 
  // transpose pivotcolnon0 into needed order
  I ncvals=AN(pivotcolnon0);  // # column values, which exceeds # column indexes if there are pairs
  I coln0=ncvals-AN(prx);   // number of pairs is # by which #values exceeds #indexes
-#if 0  // obsolete 
- if(isbatch){  // obsolete 
-  // batch mode transpose selected parts of pivotcolnon0 (which is the entire pivot column) into 0213 order, by cachelines
+#if 0   // obsolete 
+ if(isbatch){    // obsolete 
+// batch mode transpose selected parts of pivotcolnon0 (which is the entire pivot column) into 0213 order, by cachelines
   DO(AN(prx), __m256d h0l0h1l1=_mm256_loadu_pd((D*)&pcnv[prxv[i]]); __m256d h2l2h3l3=_mm256_loadu_pd((D*)&pcnv[prxv[i]+2]);
    _mm256_storeu_pd((D*)&pcntv[i*4],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000)); _mm256_storeu_pd((D*)&pcntv[i*4+2],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111)); )
   pivotcolnon0=pcnt;   // use the transposed version

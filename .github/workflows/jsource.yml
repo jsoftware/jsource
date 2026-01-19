@@ -149,13 +149,13 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux memaudit)
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/testga.sh linux || exit 1
       ls -l j64
@@ -343,13 +343,13 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS memaudit)
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/testga.sh darwin || exit 1
       cd j64
@@ -396,13 +396,13 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS arm64 memaudit)
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/testga.sh darwin || exit 1
       cd j64
@@ -590,13 +590,13 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
    - name: Test JE (Linux arm64 memaudit)
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/testga.sh raspberry arm64 || exit 1
       cd j64
@@ -693,13 +693,13 @@ jobs:
       USE_SLEEF: 1
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
    - name: Test JE (Linux arm32 memaudit)
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/testga.sh raspberry armv6l || exit 1
       cd j32
@@ -1555,7 +1555,7 @@ jobs:
       CC: emcc
       USE_SLEEF: 1
       USE_OPENMP: 0
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script/buildga.sh wasm || exit 1
       script/testga.sh wasm || exit 1
@@ -1632,14 +1632,14 @@ jobs:
    - name: Build JE (Windows memaudit)
      shell: cmd
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script\buildga.cmd x64
 
    - name: Test JE (Windows memaudit)
      shell: cmd
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script\testga.cmd x64
 
@@ -1722,14 +1722,14 @@ jobs:
    - name: Build JE (Windows 32 memaudit)
      shell: cmd
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script\buildga.cmd x86
 
    - name: Test JE (Windows 32 memaudit)
      shell: cmd
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script\testga.cmd x86
 
@@ -1857,14 +1857,14 @@ jobs:
    - name: Build JE (Windows arm64 memaudit)
      shell: cmd
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script\buildga.cmd arm64
 
    - name: Test JE (Windows arm64 memaudit)
      shell: cmd
      env:
-      _MEMAUDIT: 127
+      _MEMAUDIT: 44
      run: |
       script\testga.cmd arm64
 

@@ -63,8 +63,12 @@ gco1
 gco1u
 gco1w
 gibs
+gsco1
+gsco1u
+gsco1w
 gss
 gstack
+gtdot2
 )
 
 NB. crash
@@ -73,6 +77,7 @@ g0
 g128x14
 g128x19
 g128x5
+g212
 g220t
 g131
 g300
@@ -81,6 +86,7 @@ g320ip
 g320ipt
 g321
 g322
+g331
 g3x02
 g421
 g421c
@@ -105,12 +111,17 @@ gmmf1w
 gnan
 gq
 gqco
+gtdot
+gtdot1
+gtdot3
+gtdot5
+gxco1
 )
 
 blacklist=: ~.blacklist
 
 ddall    =: testfiles 'g'
-3 : 0'' [ 'gq'          NB. skip until
+3 : 0'' [ 'gtdot5'          NB. skip until
 if. #y do.
   y=. '/',y,'.ijs'
   if. _1~: i=. {.!._1 I. (1 e. y&E.)&> ddall do. ddall=: i}.ddall end.

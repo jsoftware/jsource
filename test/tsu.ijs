@@ -57,53 +57,25 @@ blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if include
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
 
 NB. too slow
-blacklist=: blacklist, '' [ (0~:9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
-g600ip
-gibs
-gss
+blacklist=: blacklist, '' ] (0~:9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
 gtdot2
 )
 
 NB. crash
 blacklist=: blacklist, '' [ (0~:9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
-g0
 g128x14
-g128x19
-g128x5
-g212
-g220t
 g131
 g300
-g320
-g320ip
 g320ipt
-g321
-g322
 g331
-g3x02
-g421
-g421c
-g421d
-g421i
-g422os
-g430a2
-g600
-g601
-g621
-g631
 g7x5
 gdic
 gfold
-gibst
-gipht
-gmean
 gmmf
 gmmf1s
 gmmf1u
 gmmf1w
-gnan
 gq
-gqco
 gtdot
 gtdot1
 gtdot3

@@ -2599,9 +2599,10 @@ struct __attribute__((aligned(CACHELINESIZE))) bopctx {
  E *qkt;    // pointer to the array - must be cache-aligned and cache-multiple in each row
  D threshold;  // Result |values| below this are clamped to 0
  // atomics, in new cacheline
- I4 colndxct;  // next column index to create, initialized to nthreads
+ I4 colndxct;  // next column index to create, initialized to 0
  I4 colndx9ct;  // early completion of column indexes (first 9 values created), inited to nopct and decremented
  I4 resvx;   // next stripe to reserve, initialized to nthreads
+ I4 activect;  // number of threads still using the column indexes, initialized to nthreads
 };
 
  typedef struct opi {
@@ -2643,13 +2644,14 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
  while(opno<2*nops){A ma;  // if the first reservation is too high, we have more threads than ops.  skip it then
   // calculate column index for the op - the offset into mask/cols as we process each stripe
   if(opno<nops){
-   // first job: calculate stripe index for the op
+   // first job for the op: calculate stripe index
    I bsumtodate=0; C *mask=CAV(oprowmasks[opno]);  // total 1s found, running pointer to mask
    DO(nstripes-1, I start=(*stripestartend1)[i][0], end=(*stripestartend1)[i][1]-SZI, bsum=0; while(start<end){bsum+=*(I*)&mask[start]; start+=SZI;} bsum+=*(I*)&mask[start]<<(start==end?0:BW/2);
      bsum+=bsum>>32; bsum+=bsum>>16; bsum+=bsum>>8; bsumtodate+=(C)bsum; __atomic_store_n(&(*opstripebsum)[i][opno],bsumtodate,__ATOMIC_RELEASE);)  // add; if last word incomplete, it must have exactly 32 bits
    __atomic_store_n(&(*opstripebsum)[nstripes-1][opno],AN(oprowvals[opno]),__ATOMIC_RELEASE);  // infer the length of the last stripe so that we don't have to mask garbage bytes if the mask is short
    __atomic_fetch_add(&ctx->colndx9ct,-1,__ATOMIC_ACQ_REL);  // the stripe is required for early release
   }else{
+   // second job for the op: indexes of non0s
    opno-=nops;  // convert back to op#
    I ncvals=AN(opcolvals[opno]); __m256i *cmask=(__m256i*)BAV(opcolmasks[opno]);  // # non0s left in op column, pointer to mask
    GATV0(ma,INT4,ncvals+1,1)  // allocate space for index (incl 1 sentinel), on cacheline boundary
@@ -2662,9 +2664,9 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
    }  finndx:;
    if(unlikely(mav<mavn))__atomic_fetch_add(&ctx->colndx9ct,-1,__ATOMIC_ACQ_REL); *mav=HIGHVALUEI4;  // Signal first completion if we haven't already; install sentinel at end
   }
-
   opno=__atomic_fetch_add(&ctx->colndxct,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation, which may be the first one
  }
+ // indexes have been calculated for all ops
 
  // initialize internal areas while we wait for indexes to settle.
  mvc(sizeof(ring),ring,MEMSET00LEN,MEMSET00);  // clear the ring to all 0.0
@@ -2941,8 +2943,14 @@ caughtup:;  // here when we have removed the ring-full situation
   }  // end 'while aops'
   stripex=__atomic_fetch_add(&ctx->resvx,1,__ATOMIC_ACQ_REL);  // reserve next row.  Every thread will finish with one failing reservation
  }
- if(releaseblockmask){releasect=HIGHVALUEI4; goto releaserow;}  // all stripes done - keep releasing any remnant
+ // we have accumulated all the ops.  The results are in the ring, ready to be added into memory
+ // Here we have to interlock with the other threads.  We allocated indexes for some of the ops in this thread, and other threads may still be using those indexes,
+ // which will be freed as soon as we return.  We wait until all threads have gotten to this point before we allow a return from any thread.
+ I activect=__atomic_add_fetch(&ctx->activect,-1,__ATOMIC_ACQ_REL);  // release this thread's lock on the indexes.  Set activect so that last thread doesn't need a final RFO   
+
+ if(releaseblockmask){releasect=HIGHVALUEI4; goto releaserow;}  // all stripes done - keep releasing any remnant.  This will run a while, allowing all threads but the last to finish
 finis:;  // here we have flushed the ring at the end
+ yd=30; while(activect){johnson(20*nthreads); if(--yd<0){YIELD};activect=__atomic_load_n(&ctx->activect,__ATOMIC_ACQUIRE);}  // delay until we have early completion on each op.  We allow 1 read every 20ns
  R 0;
 }
 
@@ -2997,7 +3005,7 @@ F2(jtbatchop){F12IP;PROLOG(000);
  box=C(AAV(w)[4]);  // col values
  ASSERTGOTO(AT(box)&BOX,EVDOMAIN,errexit) ASSERTGOTO(AR(w)<=1,EVRANK,errexit) ASSERTGOTO(AN(box)==opctx.nops,EVLENGTH,errexit) opctx.opcolvals=AAV(box);  // must be list of boxes; save number and address
  DO(opctx.nops, A sb=C(opctx.opcolvals[i]); ASSERTGOTO(AT(sb)==QP,EVDOMAIN,errexit) ASSERTGOTO(AR(sb)<=1,EVRANK,errexit) ASSERTGOTO(AN(sb)<=opctx.qktnrows,EVLENGTH,errexit) )  // must be quadprec no longer than the col
- opctx.colndxct=opctx.resvx=opctx.nthreads; opctx.colndx9ct=2*opctx.nops;  // each thread will fetch at least once; those with a job# less than nops will fetch again.  When all have missed once, we are synced.  9ct is early completion, counting down, one for stripe index one for top of column index
+ opctx.colndxct=opctx.resvx=opctx.nthreads; opctx.colndx9ct=2*opctx.nops; opctx.colndxct=opctx.activect=opctx.nthreads;  // each thread will fetch at least once; those with a job# less than nops will fetch again.  When all have missed once, we are synced.  9ct is early completion, counting down, one for stripe index one for top of column index
   // run the operation
  jtjobrun(jt,(unsigned char (*)(JJ, void *, UI4))jtbatchopx,&opctx,opctx.nthreads,0);  // execute on all threads
  z=qkt;  // good return

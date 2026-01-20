@@ -70,35 +70,35 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
  ai^=aif; I na=ai==0?3:ai;  // now ai = state without flags; for levels other than the top, use na to cause replacement of $:
  if(unlikely(aif&FIXALOCSONLY)&&!hasimploc(w))R w;  // if looking for implicit locatives, and there aren't any, nothing to fix
  A wf=ds(id);   // fetch self for w
- A fo=f, go=g, ho=h;  // remember the constituents before they were fixed
+// obsolete  A fo=f, go=g, ho=h;  // remember the constituents before they were fixed
  switch(id){  // we know that modifiers have been executed to produce verb/nouns
- // we reexecute the modifiers to use the new values.  But if the constituents were not changed by REFIXA, return the original w without reexecuting
+ // we reexecute the modifiers to use the new values.
  case CSLASH: 
-  f=REFIXA(2,f); R255(f) if(fo==f)R w; R df1(z,f,wf);
+  f=REFIXA(2,f); R255(f) R df1(z,f,wf);
  case CSLDOT: case CSLDOTDOT: case CBSLASH: case CBSDOT:
-  f=REFIXA(1,f); R255(f) if(fo==f)R w; R df1(z,f,wf);
+  f=REFIXA(1,f); R255(f) R df1(z,f,wf);
  case CTDOT:
-  f=REFIXA(0,f); R255(f); g=REFIXA(na,g); R255(g); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R df2(z,f,g,wf);  // recur and rebuild.  t. starts a new recursion, so don't replace $: in it
+  f=REFIXA(0,f); R255(f); g=REFIXA(na,g); R255(g); R df2(z,f,g,wf);  // recur and rebuild.  t. starts a new recursion, so don't replace $: in it
  case CATCO:
   if(FAV(g)->id==CTDOT)R REFIXA(na,g);   // t. is internally <@:t. .  Remove the <@: and continue.
 // otherwise fall through to...
  case CAT: case CCUT:
-  f=REFIXA(1,f); R255(f); g=REFIXA(na,g); R255(g); if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R df2(z,f,g,wf);  // rerun the compound after fixing the args
+  f=REFIXA(1,f); R255(f); g=REFIXA(na,g); R255(g); R df2(z,f,g,wf);  // rerun the compound after fixing the args
  case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
-  f=REFIXA(na,f); R255(f) g=REFIXA(1,g); R255(g) if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R df2(z,f,g,wf);
+  f=REFIXA(na,f); R255(f) g=REFIXA(1,g); R255(g) R df2(z,f,g,wf);
  case CCOLONE:  // Original m : n had VNONAME+VNOSELF set & never gets here.  This is (1) a nameref for an explicit modifier-plus-args, flagged as VXOP; (2) a namerefop for debug, flagged as PSEUDONAME+VXOPCALL+inherited flags;
                 // a namerefop for a modifier locative, which looks like a debug namerefop but has the locative in g.
   if(unlikely(FAV(w)->flag2&VF2PSEUDONAME)){R REFIXA(0,h);}  // If the operator is a pseudo-name, we have to fish the actual operator block out of h
-  f=REFIXA(0,f); R255(f) h=REFIXA(0,h); R255(h) if((((I)fo^(I)f)|((I)ho^(I)h))==0)R w; R xop2(f,h?h:g,g);  // here for nameref: xop2 is bivalent; rebuild operator with original self and fixed f/h
+  f=REFIXA(0,f); R255(f) if(h){h=REFIXA(0,h); R255(h)} R xop2(f,h?h:g,g);  // here for nameref: xop2 is bivalent; rebuild operator with original self and fixed f/h
  case CCOLON:
-  f=REFIXA(1,f); R255(f) g=REFIXA(2,g); R255(g) if((((I)fo^(I)f)|((I)go^(I)g)|((I)ho^(I)h))==0)R w; R df2(z,f,g,wf);  // v : v, similarly
+  f=REFIXA(1,f); R255(f) g=REFIXA(2,g); R255(g) R df2(z,f,g,wf);  // v : v, similarly
  case CADVF:
-  f=REFIXA(3,f); R255(f) g=REFIXA(3,g); R255(g) if(h){h=REFIXA(3,h); R255(h)} if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R hook(f,g,h);
+  f=REFIXA(3,f); R255(f) g=REFIXA(3,g); R255(g) if(h){h=REFIXA(3,h); R255(h)} R hook(f,g,h);
  case CHOOK:
-  f=REFIXA(2,f); R255(f) g=REFIXA(1,g); R255(g) if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R hook(f,g,0);
+  f=REFIXA(2,f); R255(f) g=REFIXA(1,g); R255(g) R hook(f,g,0);
  case CFORK:
-  if(h==0){ho=h=g; go=g=f; fo=f=ds(CCAP);}  // reconstitute capped fork, which has h=0
-  f=REFIXA(na,f); R255(f) g=REFIXA(ID(f)==CCAP?1:2,g); R255(g) h=REFIXA(na,h); R255(h) if((((I)fo^(I)f)|((I)go^(I)g)|((I)ho^(I)h))==0)R w;R folk(f,g,h);  // f first in case it's [:
+  if(h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork, which has h=0
+  f=REFIXA(na,f); R255(f) g=REFIXA(ID(f)==CCAP?1:2,g); R255(g) h=REFIXA(na,h); R255(h) R folk(f,g,h);  // f first in case it's [:
  case CATDOT:
   // we fix each gerund; for each component that changed, we calculate the AR of the corresponding f
   IAV0(aa)[0]=(aif|na); A h1; RZ(h1=every2(aa,h,(A)&arofixaself)); A *h1v=AAV(h1), *hv=AAV(h); // fix each component of gerund h, point to boxes
@@ -128,7 +128,6 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
     I cyc1;  // start of cycle including last element
     C *cycs=NAV(av[initn-1])->s; I cycn=NAV(av[initn-1])->n; UI4 cych=NAV(av[initn-1])->hash;  // string and hash of the name we are checking for cycle
     DO(initn-2, NM *nm=NAV(av[i]); if(nm->hash==cych && cycn==nm->n && 0==memcmp(cycs,nm->s,cycn)){cyc1=i; goto cycfound;})
-    ASSERT(initn<125,EVLIMIT);  // error if too many names in expansion
     ASSERT(0,EVLIMIT)  // no cycle found: too many names, abort
 cycfound:;  // cycle found, running from cyci to cycn; now back it down to find its starting position
     I cycl=initn-1-cyc1;  // end-start of cycle
@@ -162,14 +161,14 @@ cycfound:;  // cycle found, running from cyci to cycn; now back it down to find 
    IAV0(aa)[1]=initn;   // restore name count for later uses at this level
    SYMRESTORELOCALGLOBAL(savloc,savglob);  // make sure we restore current symbols  THIS IS THE RESTORE
    if(likely(((I)z&~255)!=0)){   // if no error or cycle
-    if(unlikely((ai!=0)>(FAV(x)->flag&VNOSELF))){RZ(z=fixrecursive(sc(ai),z))}  // if a lower name contains $:, replace the whole named verb with an explicit equivalent
+    if(unlikely((ai!=0)>(FAV(x)->flag&VNOSELF))){RZ(z=fixrecursive(sc(ai),z))}  // if a name not at top level contains $:, replace the whole named verb with an explicit equivalent
     ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVTYPECHG);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
    }else if(z!=0){  // cycle found
     if(initn>=(I)z)R z;     // we found a cycle, which started at z-1.  If this call is the start of the cycle, have it return w to close the cycle.  Keep the cycle up until that happens
     z=w;
    }else R z;  // error, abort
    R z;
-  }else{f=REFIXA(2,f); R255(f) if(fo==f)R w; R df1(z,f,wf);}
+  }else{f=REFIXA(2,f); R255(f)  R df1(z,f,wf);}
 // bug ^: and m} should process gerund args
  case COBVERSE:
   if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
@@ -178,7 +177,7 @@ cycfound:;  // cycle found, running from cyci to cycn; now back it down to find 
   ASSERTSYS(((I)f|(I)g),"f and g both 0, but VNONAME not set")     // should not occur.  f and g are both off only in primitives, where VNONAME+VNOSELF should be set (except u./v.)
   if(f){f=REFIXA(na,f); R255(f);}
   if(g){g=REFIXA(na,g); R255(g);}
-  if((((I)fo^(I)f)|((I)go^(I)g))==0)R w; R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
+  R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
  }
 }   // fix name, with a containing flags
 

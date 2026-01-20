@@ -18,7 +18,7 @@ A jtac2(J jt,AF f){R fdef(0,0,VERB, jtvalenceerr,f, 0L,0L,0L, VFLAGNONE, RMAX,RM
 
 F1(jtvalenceerr){F12IP; ASSERT(0,EVVALENCE);}  // used for undefined valences, including [:
 
-// return 1 if w contains no names (including ~ references) or explicit definitions
+// return 1 if w contains no names (including ~ references) or explicit definitions   scaf just use VNONAME & NOLOCCHG flag
 B nameless(A w){A f,g,h;C id;V*v;
  if(!w||NOUN&AT(w))R 1;
  v=FAV(w);

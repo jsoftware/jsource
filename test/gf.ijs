@@ -182,6 +182,10 @@ f=: (C +:)"0 f.
 4!:55 ;:'C'
 (f -: (!+:)) y=: 10 ?@$ 6
 
+f =: +
+sss =: 1 : 'u / y'
+(+ 1 : 'u / y') eq f sss f.
+
 'domain error' -: ". etx '18!:4'
 NB. f. special names
 (<'cocurrent_z_') -: 5!:1 <'cocurrent'

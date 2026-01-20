@@ -808,7 +808,7 @@ F2(jttdot){F12IP;
  // set defaults for omitted parms
  nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0 (no mask given)
  // parms read, install them into the block for t. verb
- A z; RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,FAV(a)->flag&VNONAME+VNOSELF,RMAX,RMAX,RMAX))
+ A z; RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,FAV(a)->flag&VNONAME+VNOSELF,RMAX,RMAX,RMAX))  // NOSELF because t. does $: stacking
  FAV(z)->localuse.lu1.forcetask=poolno+(nolocal<<8)+(localex<<16);  // save the t. options for execution.  Bits 0-7=poolno, 8=worker only, 16+=box# in w of the locales keyword (-1 if none) 
  if(localex<0)z=atco(ds(CBOX),z);  // non-locales call returns a single pyx (to match local execution) and it must be boxed.  use <@: to get BOXATOP flags.  locales call must always run in threads
  RETF(z)  

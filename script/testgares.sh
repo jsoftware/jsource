@@ -5,7 +5,10 @@
 T=tests.txt
 > $T
 
-f() { if [ -e $1 ]; then cat $1 >> $T; fi }
+f()
+{
+ if [ -e $1 ]; then cat $1 >> $T; fi
+}
 
 f "testrpi32.txt"
 f "testrpi64.txt"

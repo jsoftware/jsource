@@ -1,7 +1,7 @@
 #!/bin/sh
 if [[ $# -ne 1 ]]; then
-    echo "parameter of form: j9.7-beta0"
-    exit 2
+ echo "parameter of form: j9.7-beta0"
+ exit 2
 fi
 
 cd ~/git/jsource
@@ -10,4 +10,3 @@ git tag -a $1 -m "$1"
 git commit -a -m "$1"
 git push origin $1
 git push --follow-tags
-

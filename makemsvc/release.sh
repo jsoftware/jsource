@@ -2,7 +2,7 @@
 
 # copy windows binaries from makemsvc to jlibrary/bin
 
-cd "`dirname "$0"`"
+cd "$(dirname "$0")"
 
 S=.
 A=../jlibrary/bin

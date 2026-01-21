@@ -31,11 +31,11 @@ else
 fi
 uname -a
 uname -m
-if [ "$2" = "arm64" ] ; then
-  m64=1
-elif [ "$2" = "armv6l" ] ; then
-  m64=0
-elif [ "`uname -m`" != "armv6l" ] && [ "`uname -m`" != "i386" ] && [ "`uname -m`" != "i686" ] ; then
+if [ "$2" = "arm64" ]; then
+ m64=1
+elif [ "$2" = "armv6l" ]; then
+ m64=0
+elif [ "$(uname -m)" != "armv6l" ] && [ "$(uname -m)" != "i386" ] && [ "$(uname -m)" != "i686" ]; then
  if [ "$1" = "wasm" ]; then
   m64=0
  else
@@ -75,7 +75,7 @@ elif [ "$1" = "darwin" ]; then
  cp pcre2/apple/macos/libjpcre2.dylib tools/regex/.
 elif [ "$1" = "openbsd" ]; then
  # cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
- if [ "`uname -m`" = "amd64" ] ; then
+ if [ "$(uname -m)" = "amd64" ]; then
   cp mpir/openbsd/x86_64/libgmp.so j64
   cp pcre2/openbsd/x86_64/libjpcre2.so tools/regex/.
  else
@@ -84,7 +84,7 @@ elif [ "$1" = "openbsd" ]; then
  fi
 elif [ "$1" = "freebsd" ]; then
  # cp /usr/local/lib/libgmp.so.10 j64/libgmp.so
- if [ "`uname -m`" = "amd64" ] ; then
+ if [ "$(uname -m)" = "amd64" ]; then
   cp mpir/freebsd/x86_64/libgmp.so j64
   cp pcre2/freebsd/x86_64/libjpcre2.so tools/regex/.
  else
@@ -95,17 +95,17 @@ fi
 
 cp version.txt jsrc/jversion.h
 echo "#define jplatform \"$1\"" >> jsrc/jversion.h
-echo "#define jlicense  \"commercial\"" >> jsrc/jversion.h
-echo "#define jbuilder  \"www.jsoftware.com\"" >> jsrc/jversion.h
+echo '#define jlicense  "commercial"' >> jsrc/jversion.h
+echo '#define jbuilder  "www.jsoftware.com"' >> jsrc/jversion.h
 
-if [ "x$MAKEFLAGS" = x'' ] ; then
- if [ "$1" = "wasm" ] ; then
+if [ "x$MAKEFLAGS" = x'' ]; then
+ if [ "$1" = "wasm" ]; then
   par=2
- elif [ "$1" = "linux" ] || [ "$1" = "raspberry" ] ; then
-  par=`nproc` 
- elif [ "$1" = "darwin" ] || [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] || [ "$1" = "android" ] ; then
-  par=`sysctl -n hw.ncpu` 
- else 
+ elif [ "$1" = "linux" ] || [ "$1" = "raspberry" ]; then
+  par=$(nproc)
+ elif [ "$1" = "darwin" ] || [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] || [ "$1" = "android" ]; then
+  par=$(sysctl -n hw.ncpu)
+ else
   par=2
  fi
  export MAKEFLAGS=-j$par
@@ -123,7 +123,7 @@ if [ "$1" = "android" ]; then
  # build binary for armeabi-v7a x86 x86_64 arm64-v8a
  cd android
  ndk-build
-# static library not copied by ndk-build
+ # static library not copied by ndk-build
  cp obj/local/armeabi-v7a/libj.a libs/armeabi-v7a/.
  cp obj/local/arm64-v8a/libj.a libs/arm64-v8a/.
  cp obj/local/x86/libj.a libs/x86/.
@@ -168,19 +168,19 @@ fi
 # hostdefs netdefs
 cd hostdefs
 if [ "$1" = "linux" ] && [ $m64 -eq 1 ]; then
-$CC hostdefs.c -o hostdefs && ./hostdefs
-$CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
-cd ../netdefs
-$CC netdefs.c -o netdefs && ./netdefs
-$CC -m32 netdefs.c -o netdefs32 && ./netdefs32
+ $CC hostdefs.c -o hostdefs && ./hostdefs
+ $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
+ cd ../netdefs
+ $CC netdefs.c -o netdefs && ./netdefs
+ $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
 elif [ "$1" = "raspberry" ] && [ $m64 -eq 0 ]; then
-$CC --target=arm-arm-none-eabi hostdefs.c -o hostdefs && ./hostdefs
-cd ../netdefs
-$CC --target=arm-arm-none-eabi netdefs.c -o netdefs && ./netdefs
+ $CC --target=arm-arm-none-eabi hostdefs.c -o hostdefs && ./hostdefs
+ cd ../netdefs
+ $CC --target=arm-arm-none-eabi netdefs.c -o netdefs && ./netdefs
 else
-$CC hostdefs.c -o hostdefs && ./hostdefs
-cd ../netdefs
-$CC netdefs.c -o netdefs && ./netdefs
+ $CC hostdefs.c -o hostdefs && ./hostdefs
+ cd ../netdefs
+ $CC netdefs.c -o netdefs && ./netdefs
 fi
 cd ..
 
@@ -209,7 +209,7 @@ if [ $m64 -eq 1 ]; then
   # j64x=j32 USE_OPENMP=0 ./build_jamalgam.sh
  fi
  ./clean.sh
- if ( [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ) && ( [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ] ) ; then
+ if ([ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]) && ([ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
   j64x=j64arm ./build_jconsole.sh
   j64x=j64arm ./build_tsdll.sh
   j64x=j64arm ./build_libj.sh
@@ -218,11 +218,11 @@ if [ $m64 -eq 1 ]; then
   j64x=j64 ./build_jconsole.sh
   j64x=j64 ./build_tsdll.sh
   j64x=j64 ./build_libj.sh
-  if [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
+  if [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ]; then
    j64x=j64 ./build_jamalgam.sh
   fi
  fi
- if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "amd64" ] || [ "$1" = "darwin" ] ; then
+ if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "amd64" ] || [ "$1" = "darwin" ]; then
   ./clean.sh
   j64x=j64avx2 ./build_libj.sh
   ./clean.sh
@@ -239,7 +239,7 @@ fi
 cd -
 
 if [ $m64 -eq 1 ]; then
- if ( [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] ) && ( [ "`uname -m`" = "aarch64" ] || [ "`uname -m`" = "arm64" ] ) ; then
+ if ([ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]) && ([ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
   cp bin/$1/j64arm/* j64
  else
   cp bin/$1/j64/* j64
@@ -265,11 +265,11 @@ if [ -d "bin/$1/j64iphonesimulator" ]; then
  cp -r bin/$1/j64iphonesimulator j64/ios/.
 fi
 
-if [ -f bin/$1/j64avx2/libj.$ext ] ; then
+if [ -f bin/$1/j64avx2/libj.$ext ]; then
  cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
 fi
 
-if [ -f bin/$1/j64avx512/libj.$ext ] ; then
+if [ -f bin/$1/j64avx512/libj.$ext ]; then
  cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 fi
 

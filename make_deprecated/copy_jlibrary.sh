@@ -13,4 +13,3 @@ cd ~
 cp -r $jgit/jlibrary/* $jbld/j32
 cp -r $jgit/jlibrary/* $jbld/j64
 exit 0
-

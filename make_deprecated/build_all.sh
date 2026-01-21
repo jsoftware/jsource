@@ -12,9 +12,7 @@ fi
 $jmake/clean.sh
 
 $jmake/build_jconsole.sh j64
-$jmake/build_tsdll.sh    j64
-$jmake/build_libj.sh     j64
-$jmake/build_libj.sh     j64avx
-$jmake/build_libj.sh     j64avx2
-
-
+$jmake/build_tsdll.sh j64
+$jmake/build_libj.sh j64
+$jmake/build_libj.sh j64avx
+$jmake/build_libj.sh j64avx2

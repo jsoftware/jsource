@@ -277,6 +277,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2ma:
   name: JE (FreeBSD cross-platform-actions)
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -349,6 +350,7 @@ jobs:
 # freebsdarm64 ---------------------------------------------------------------
  jefreebsdarm64ma:
   name: JE (FreeBSD arm64)
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository

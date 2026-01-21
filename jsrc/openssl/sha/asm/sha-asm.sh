@@ -61,8 +61,8 @@ perl sha1-armv8.pl ios64 sha1-armv8-ios.S
 perl sha512-armv8.pl linux sha512-armv8-elf.S
 perl sha512-armv8.pl ios64 sha512-armv8-ios.S
 
-perl sha512-armv8.pl linux sha256-armv8-elf.S  # output contain 256 will generate sha256
-perl sha512-armv8.pl ios64 sha256-armv8-ios.S  # output contain 256 will generate sha256
+perl sha512-armv8.pl linux sha256-armv8-elf.S # output contain 256 will generate sha256
+perl sha512-armv8.pl ios64 sha256-armv8-ios.S # output contain 256 will generate sha256
 
 # keccak1600-armv4.pl sha1-armv4-large.pl sha256-armv4.pl sha512-armv4.pl
 
@@ -73,4 +73,3 @@ perl sha1-armv4-large.pl linux sha1-armv4-elf.S
 perl sha256-armv4.pl linux sha256-armv4-elf.S
 
 perl sha512-armv4.pl linux sha512-armv4-elf.S
-

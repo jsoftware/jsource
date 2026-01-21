@@ -24,4 +24,3 @@ echo "$jgit/license.txt"
 
 cat $jgit/license.txt
 exit 0
-

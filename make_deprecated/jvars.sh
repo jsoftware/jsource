@@ -1,14 +1,14 @@
 #!/bin/bash
 # source shell script (read with . jvars.sh) so stuff is easy to find
 
-# edit following if your install is not standard 
+# edit following if your install is not standard
 jgit=~/git/jsource # git jsource folder
 jbld=~/jbld        # test libraries and binaries will be put here
 
 # platform and shared library suffix
-jplatform=`uname|tr '[:upper:]' '[:lower:]'`
+jplatform=$(uname | tr '[:upper:]' '[:lower:]')
 jsuffix=so
-if [ $jplatform = "darwin" ] ; then jsuffix=dylib ; fi
+if [ $jplatform = "darwin" ]; then jsuffix=dylib; fi
 
 CC=clang # compiler
 

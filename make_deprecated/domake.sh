@@ -6,7 +6,7 @@
 
 echo "domake: $1 $TARGET CC=$CC"
 
-if [ $1 = "j32" ] ; then
+if [ $1 = "j32" ]; then
  bits=j32
 else
  bits=j64
@@ -20,14 +20,13 @@ OUT=$jbld/jout/$1/bld-$TARGET
 
 mkdir -p $OUT/blis
 mkdir -p $OUT/txt
-cd       $OUT
+cd $OUT
 
 echo "        $OUT/txt/build.txt"
 echo ""
 
-make -f $jmake/makefile >$jbld/jout/$1/$bld$TARGET/txt/build.txt 2>&1
+make -f $jmake/makefile > $jbld/jout/$1/$bld$TARGET/txt/build.txt 2>&1
 
 egrep -w 'warning|error|note' -B 2 $OUT/txt/build.txt
 
 cp $TARGET $jbld/$bits/bin
-

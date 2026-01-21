@@ -2,25 +2,41 @@
 set -e
 
 cd "$(dirname "$0")"
-echo "entering `pwd`"
+echo "entering $(pwd)"
 
 jplatform64=$(./jplatform64.sh)
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
-	# OPTLEVEL is probably overly elaborate, but it works
+ # OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
-  3) OPTLEVEL=" -O2 -g " ; DEBUG=1
-   NASM_FLAGS="-g";;
-  2) OPTLEVEL=" -O0 -ggdb -DOPTMO0 " ; DEBUG=1
-   NASM_FLAGS="-g";;
-  1) OPTLEVEL=" -O2 -g " ; DEBUG=1
+  3)
+   OPTLEVEL=" -O2 -g "
+   DEBUG=1
    NASM_FLAGS="-g"
-   jplatform64=$(./jplatform64.sh)-debug;;
-  *) OPTLEVEL=" -O2 "; DEBUG=0 ;;
+   ;;
+  2)
+   OPTLEVEL=" -O0 -ggdb -DOPTMO0 "
+   DEBUG=1
+   NASM_FLAGS="-g"
+   ;;
+  1)
+   OPTLEVEL=" -O2 -g "
+   DEBUG=1
+   NASM_FLAGS="-g"
+   jplatform64=$(./jplatform64.sh)-debug
+   ;;
+  *)
+   OPTLEVEL=" -O2 "
+   DEBUG=0
+   ;;
  esac
 else
- case "$CFLAGS" in *-O0*) OPTLEVEL=" -DOPTMO0 " ; DEBUG=1 ;; *) DEBUG=0 ;; esac
+ case "$CFLAGS" in *-O0*)
+  OPTLEVEL=" -DOPTMO0 "
+  DEBUG=1
+  ;;
+ *) DEBUG=0 ;; esac
 fi
 echo "jplatform64=$jplatform64"
 
@@ -32,70 +48,77 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 # too early to move main linux release package to gcc 5
 
 case "$jplatform64" in
-	darwin/j64iphoneos)
-	 USE_OPENMP=0
-	 LDTHREAD=" -pthread "
-	 CC="$(xcrun --sdk iphoneos --find clang)"
-	 AR="$(xcrun --sdk iphoneos --find libtool)"
-	 macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64";;
-	darwin/j64iphonesimulator)
-	 USE_OPENMP=0
-	 LDTHREAD=" -pthread "
-	 CC="$(xcrun --sdk iphonesimulator --find clang)"
-	 AR="$(xcrun --sdk iphonesimulator --find libtool)"
-	 macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64";;
-	darwin/j64arm)
-	 CC="$(xcrun --sdk macosx --find clang)"
-	 AR="$(xcrun --sdk macosx --find libtool)"
-	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11";;
-	darwin/*)
-	 CC="$(xcrun --sdk macosx --find clang)"
-	 AR="$(xcrun --sdk macosx --find libtool)"
-	 macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6";;
-	openbsd/*) make=gmake;;
-	freebsd/*) make=gmake;;
+ darwin/j64iphoneos)
+  USE_OPENMP=0
+  LDTHREAD=" -pthread "
+  CC="$(xcrun --sdk iphoneos --find clang)"
+  AR="$(xcrun --sdk iphoneos --find libtool)"
+  macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  ;;
+ darwin/j64iphonesimulator)
+  USE_OPENMP=0
+  LDTHREAD=" -pthread "
+  CC="$(xcrun --sdk iphonesimulator --find clang)"
+  AR="$(xcrun --sdk iphonesimulator --find libtool)"
+  macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  ;;
+ darwin/j64arm)
+  CC="$(xcrun --sdk macosx --find clang)"
+  AR="$(xcrun --sdk macosx --find libtool)"
+  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  ;;
+ darwin/*)
+  CC="$(xcrun --sdk macosx --find clang)"
+  AR="$(xcrun --sdk macosx --find libtool)"
+  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  ;;
+ openbsd/*) make=gmake ;;
+ freebsd/*) make=gmake ;;
  wasm*)
-	 USE_OPENMP=0
-	 LDTHREAD=" -pthread "
-	 NO_SHA_ASM=1;USE_OPENMP=0;USE_PYXES=0;;
+  USE_OPENMP=0
+  LDTHREAD=" -pthread "
+  NO_SHA_ASM=1
+  USE_OPENMP=0
+  USE_PYXES=0
+  ;;
 esac
 make="${make:=make}"
 
-CC=${CC-"$(which cc clang gcc 2>/dev/null | head -n1 | xargs basename)"}
+CC=${CC-"$(which cc clang gcc 2> /dev/null | head -n1 | xargs basename)"}
 echo "CC=$CC"
-if [ 1 -eq $($CC -dM -E - </dev/null | grep -c __clang__) ] ; then
-compiler=clang
-elif [ 1 -eq $($CC -dM -E - </dev/null | grep -c __GNUC__) ] ; then
-compiler=gcc
+if [ 1 -eq $($CC -dM -E - < /dev/null | grep -c __clang__) ]; then
+ compiler=clang
+elif [ 1 -eq $($CC -dM -E - < /dev/null | grep -c __GNUC__) ]; then
+ compiler=gcc
 else
-compiler=$(readlink -f $(which $CC) || which $CC)
+ compiler=$(readlink -f $(which $CC) || which $CC)
 fi
 echo "compiler=$compiler"
 
 USE_OPENMP="${USE_OPENMP:=0}"
-if [ $USE_OPENMP -eq 1 ] ; then
+if [ $USE_OPENMP -eq 1 ]; then
  case $jplatform64 in
   darwin/j64arm*)
    # assume libomp installed at /opt/homebrew/
    OPENMP=" -Xpreprocessor -fopenmp -I/opt/homebrew/include "
    LDOPENMP=" -L/opt/homebrew/lib -Wl,-rpath,/opt/homebrew/lib -lomp "
-  ;;
+   ;;
   darwin/*)
    # assume libomp installed at /usr/local/
    OPENMP=" -Xpreprocessor -fopenmp -I/usr/local/include "
    LDOPENMP=" -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lomp "
-  ;;
+   ;;
   *)
    OPENMP=" -fopenmp "
    LDOPENMP=" -fopenmp "
    if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
     LDOPENMP32=" -l:libgomp.so.1 " # gcc
-   elif [ -f /etc/redhat-release ] ; then
-    LDOPENMP32=" -l:libomp.so "    # clang
+   elif [ -f /etc/redhat-release ]; then
+    LDOPENMP32=" -l:libomp.so " # clang
    else
-    LDOPENMP32=" -l:libomp.so.5 "  # clang
+    LDOPENMP32=" -l:libomp.so.5 " # clang
    fi
-  ;;
+   ;;
  esac
 fi
 
@@ -174,69 +197,72 @@ fi
 
 common="$common -DJAMALGAM"
 
-if [ $DEBUG -eq 1 ] ; then
-common="$common -DDEBUG"
+if [ $DEBUG -eq 1 ]; then
+ common="$common -DDEBUG"
 fi
 
 case "$jplatform64" in
- darwin/*) common="$common -fno-common" ;;  # other platforms already default to this
+ darwin/*) common="$common -fno-common" ;; # other platforms already default to this
 esac
 
 case "$jplatform64" in
-	darwin/j64) # darwin intel 64bit nonavx
+ darwin/j64) # darwin intel 64bit nonavx
   common="$common -msse4.1 -msse4.2 "
   ;;
-	*/j64)
-  if [ $_SSE4_2 -eq 1 ] ; then
-  common="$common -msse4.1 -msse4.2 "
+ */j64)
+  if [ $_SSE4_2 -eq 1 ]; then
+   common="$common -msse4.1 -msse4.2 "
   fi
   ;;
 esac
 
-if [ $USE_OPENMP -eq 1 ] ; then
+if [ $USE_OPENMP -eq 1 ]; then
  common="$common -I../../../../openmp/include"
 fi
 
 USE_BOXEDSPARSE="${USE_BOXEDSPARSE:=0}"
-if [ $USE_BOXEDSPARSE -eq 1 ] ; then
+if [ $USE_BOXEDSPARSE -eq 1 ]; then
  common="$common -DBOXEDSPARSE"
 fi
 
 USE_PYXES="${USE_PYXES:=1}"
-if [ $USE_PYXES -eq 1 ] ; then
+if [ $USE_PYXES -eq 1 ]; then
  common="$common -DPYXES=1"
  LDTHREAD=" -pthread "
 else
  common="$common -DPYXES=0"
 fi
 
-case "$jplatform64" in 
- */j64) USE_SLEEF=0;USE_SLEEFQUAD=1;;
- raspberry/j32*) USE_SLEEF=0;;
- wasm*) USE_SLEEF=0;;
- *) USE_SLEEF="${USE_SLEEF:=1}";;
+case "$jplatform64" in
+ */j64)
+  USE_SLEEF=0
+  USE_SLEEFQUAD=1
+  ;;
+ raspberry/j32*) USE_SLEEF=0 ;;
+ wasm*) USE_SLEEF=0 ;;
+ *) USE_SLEEF="${USE_SLEEF:=1}" ;;
 esac
 USE_SLEEFQUAD="${USE_SLEEFQUAD:=$USE_SLEEF}"
-if [ $USE_SLEEF -eq 1 ] ; then
+if [ $USE_SLEEF -eq 1 ]; then
  common="$common -DSLEEF=1"
 else
  common="$common -DSLEEF=0"
 fi
-if [ $USE_SLEEFQUAD -eq 1 ] ; then
+if [ $USE_SLEEFQUAD -eq 1 ]; then
  common="$common -DSLEEFQUAD=1"
 else
  common="$common -DSLEEFQUAD=0"
 fi
 
-if [ "${USE_GMP_H:=1}" -eq 1 ] ; then
+if [ "${USE_GMP_H:=1}" -eq 1 ]; then
  common="$common -I../../../../mpir/include"
 fi
 
-if [ "$USE_LINENOISE" -ne "1" ] ; then
-common="$common -DREADLINE"
+if [ "$USE_LINENOISE" -ne "1" ]; then
+ common="$common -DREADLINE"
 else
-common="$common -DREADLINE -DUSE_LINENOISE"
-OBJSLN="linenoise.o"
+ common="$common -DREADLINE -DUSE_LINENOISE"
+ OBJSLN="linenoise.o"
 fi
 
 if [ -n "$_MEMAUDIT" ]; then
@@ -261,11 +287,11 @@ if [ -n "$_NAMETRACK" ]; then
 fi
 
 case "$jplatform64" in
- *32*) USE_EMU_AVX=0;;
- wasm*) USE_EMU_AVX=0;;
-  *) USE_EMU_AVX="${USE_EMU_AVX:=1}";;
+ *32*) USE_EMU_AVX=0 ;;
+ wasm*) USE_EMU_AVX=0 ;;
+ *) USE_EMU_AVX="${USE_EMU_AVX:=1}" ;;
 esac
-if [ $USE_EMU_AVX -eq 1 ] ; then
+if [ $USE_EMU_AVX -eq 1 ]; then
  common="$common -DEMU_AVX2=1"
 else
  common="$common -DEMU_AVX2=0"
@@ -273,7 +299,7 @@ fi
 
 NO_SHA_ASM="${NO_SHA_ASM:=0}"
 
-if [ $NO_SHA_ASM -ne 0 ] ; then
+if [ $NO_SHA_ASM -ne 0 ]; then
 
  common="$common -DNO_SHA_ASM"
 
@@ -388,7 +414,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
   FLAGS_BASE64=""
- ;;
+  ;;
 
  linux/j64avx512*) # linux intel 64bit avx512
   TARGET=jamalgam
@@ -400,7 +426,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
- ;;
+  ;;
 
  linux/j64avx2*) # linux intel 64bit avx2
   TARGET=jamalgam
@@ -412,7 +438,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
- ;;
+  ;;
 
  linux/j64*) # linux intel 64bit nonavx
   TARGET=jamalgam
@@ -422,7 +448,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
   FLAGS_BASE64=""
- ;;
+  ;;
 
  raspberry/j32*) # linux raspbian arm
   TARGET=jamalgam
@@ -431,17 +457,17 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_RASPI32}"
   GASM_FLAGS=""
   FLAGS_BASE64=""
- ;;
+  ;;
 
  raspberry/j64*) # linux arm64
   TARGET=jamalgam
-  CFLAGS="$common -march=armv8-a+crc -DRASPI "    # mno-outline-atomics unavailable on clang-7
+  CFLAGS="$common -march=armv8-a+crc -DRASPI " # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP"
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
- ;;
+  ;;
 
  openbsd/j32*) # openbsd x86
   TARGET=jamalgam
@@ -455,17 +481,17 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
   FLAGS_BASE64=""
- ;;
+  ;;
 
  openbsd/j64arm) # openbsd arm64
   TARGET=jamalgam
-  CFLAGS="$common -march=armv8-a+crc "    # mno-outline-atomics unavailable on clang-7
+  CFLAGS="$common -march=armv8-a+crc " # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -lm -lkvm $LDTHREAD $LDOPENMP"
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
- ;;
+  ;;
 
  openbsd/j64avx512*) # openbsd intel 64bit avx512
   TARGET=jamalgam
@@ -477,7 +503,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
- ;;
+  ;;
 
  openbsd/j64avx2*) # openbsd intel 64bit avx2
   TARGET=jamalgam
@@ -489,7 +515,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
- ;;
+  ;;
 
  openbsd/j64*) # openbsd intel 64bit nonavx
   TARGET=jamalgam
@@ -499,8 +525,8 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
   FLAGS_BASE64=""
- ;;
- 
+  ;;
+
  freebsd/j32*) # freebsd x86
   TARGET=jamalgam
   # faster, but sse2 not available for 32-bit amd cpu
@@ -513,17 +539,17 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
   FLAGS_BASE64=""
- ;;
+  ;;
 
  freebsd/j64arm) # freebsd arm64
   TARGET=jamalgam
-  CFLAGS="$common -march=armv8-a+crc "    # mno-outline-atomics unavailable on clang-7
+  CFLAGS="$common -march=armv8-a+crc " # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -lm $LDTHREAD $LDOPENMP"
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
- ;;
+  ;;
 
  freebsd/j64avx512*) # freebsd intel 64bit avx512
   TARGET=jamalgam
@@ -535,7 +561,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
- ;;
+  ;;
 
  freebsd/j64avx2*) # freebsd intel 64bit avx2
   TARGET=jamalgam
@@ -547,7 +573,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUXAVX2}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
- ;;
+  ;;
 
  freebsd/j64*) # freebsd intel 64bit nonavx
   TARGET=jamalgam
@@ -557,8 +583,8 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
   FLAGS_BASE64=""
- ;;
- 
+  ;;
+
  darwin/j32*) # darwin x86
   TARGET=jamalgam
   CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
@@ -579,7 +605,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
- ;;
+  ;;
 
  darwin/j64avx2*) # darwin intel 64bit
   TARGET=jamalgam
@@ -591,7 +617,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
- ;;
+  ;;
 
  darwin/j64arm*) # darwin arm
   TARGET=jamalgam
@@ -601,7 +627,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
- ;;
+  ;;
 
  darwin/j64iphoneos) # iphone
   TARGET=jamalgam
@@ -611,7 +637,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
- ;;
+  ;;
 
  darwin/j64iphonesimulator) # iphone simulator
   TARGET=jamalgam
@@ -621,7 +647,7 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
   FLAGS_BASE64=""
- ;;
+  ;;
 
  darwin/j64*) # darwin intel 64bit nonavx
   TARGET=jamalgam
@@ -631,11 +657,11 @@ case $jplatform64 in
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
   FLAGS_BASE64=" -DHAVE_SSE42=1 "
- ;;
+  ;;
 
  windows/j32*) # windows x86
   jolecom="${jolecom:=0}"
-  if [ $jolecom -eq 1 ] ; then
+  if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
   TARGET=jamalgam
@@ -645,7 +671,7 @@ case $jplatform64 in
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP32 $LDTHREAD"
-  if [ $jolecom -eq 1 ] ; then
+  if [ $jolecom -eq 1 ]; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
@@ -658,18 +684,18 @@ case $jplatform64 in
   OBJS_ASM="${OBJS_ASM_WIN32}"
   GASM_FLAGS=""
   FLAGS_BASE64=""
- ;;
+  ;;
 
  windows/j64avx512*) # windows intel 64bit avx512
   jolecom="${jolecom:=0}"
-  if [ $jolecom -eq 1 ] ; then
+  if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
   TARGET=jamalgam
   CFLAGS="$common $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDTHREAD $LDOPENMP"
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
-  if [ $jolecom -eq 1 ] ; then
+  if [ $jolecom -eq 1 ]; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
@@ -683,18 +709,18 @@ case $jplatform64 in
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
- ;;
+  ;;
 
  windows/j64avx2*) # windows intel 64bit avx2
   jolecom="${jolecom:=0}"
-  if [ $jolecom -eq 1 ] ; then
+  if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
   TARGET=jamalgam
   CFLAGS="$common $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDTHREAD $LDOPENMP"
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
-  if [ $jolecom -eq 1 ] ; then
+  if [ $jolecom -eq 1 ]; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
@@ -708,17 +734,17 @@ case $jplatform64 in
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
- ;;
+  ;;
 
  windows/j64*) # windows intel 64bit nonavx
   jolecom="${jolecom:=0}"
-  if [ $jolecom -eq 1 ] ; then
+  if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
   TARGET=jamalgam
   CFLAGS="$common -msse3 $DOLECOM -D_FILE_OFFSET_BITS=64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDTHREAD $LDOPENMP"
-  if [ $jolecom -eq 1 ] ; then
+  if [ $jolecom -eq 1 ]; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
@@ -731,15 +757,15 @@ case $jplatform64 in
   OBJS_ASM="${OBJS_ASM_WIN}"
   GASM_FLAGS=""
   FLAGS_BASE64=""
- ;;
+  ;;
 
  wasm/j32) # webassembly
   TARGET=jamalgam.js
-# 948KB stack on v8
+  # 948KB stack on v8
   CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=1007616 -D CSTACKRESERVE=100000 -Wno-cast-function-type-mismatch -D TESTS "
-# these flags do not work on iOS
-# -msse2 -msimd128
-# EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
+  # these flags do not work on iOS
+  # -msse2 -msimd128
+  # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
   LDFLAGS=" -L../../../../mpir/linux/wasm32 -lgmp \
  -s WASM=1 -s ASSERTIONS=1 -s INITIAL_MEMORY=220MB -s TOTAL_MEMORY=600MB -s ALLOW_MEMORY_GROWTH=1 -s STACK_SIZE=984KB \
  -s BINARYEN_EXTRA_PASSES="--pass-arg=max-func-params@80" -s EMULATE_FUNCTION_POINTER_CASTS=1 -s EXIT_RUNTIME=1 \
@@ -751,18 +777,18 @@ case $jplatform64 in
   SRC_ASM=""
   GASM_FLAGS=""
   FLAGS_BASE64=""
- ;;
+  ;;
 
  *)
   echo no case for those parameters
   exit
- ;;
+  ;;
 esac
 
 echo "CFLAGS=$CFLAGS"
 
-if [ ! -f ../jsrc/jversion.h ] ; then
-  cp ../jsrc/jversion-x.h ../jsrc/jversion.h
+if [ ! -f ../jsrc/jversion.h ]; then
+ cp ../jsrc/jversion-x.h ../jsrc/jversion.h
 fi
 
 mkdir -p ../bin/$jplatform64
@@ -770,8 +796,8 @@ mkdir -p obj/$jplatform64/
 cp makefile-jamalgam obj/$jplatform64/.
 export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform64
 cd obj/$jplatform64/
-if [ "x$MAKEFLAGS" = x'' ] ; then
- if [ `uname` = Linux ]; then par=`nproc`; else par=`sysctl -n hw.ncpu`; fi
+if [ "x$MAKEFLAGS" = x'' ]; then
+ if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi
  $make -j$par -f makefile-jamalgam
 else
  $make -f makefile-jamalgam

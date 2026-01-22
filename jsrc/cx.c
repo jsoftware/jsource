@@ -1239,7 +1239,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  // obsolete    if(likely(col1==0)){   // if  Discard it from w
     if(1){RZ(w=beheadW(w)) // no :, the whole line is control.  discard the control line
     }else{ 
-colonfound:   // : given.  takeafter the : for the first line, and taketo for the control line.  If SP follows :, treat the SP as the end char
+colonfound:;   // : given.  takeafter the : for the first line, and taketo for the control line.  If SP follows :, treat the SP as the end char
      I coln=col1+(cv1[col1+1]==' ');  // end on SP if :SP
      RZ(w=jtamendn2(jtfg,box(drop(sc(coln+1),line1)),w,zeroionei(0),ds(CAMEND)));  // w =. (< (>:hlen) }. line1) 0} w   discard first char after : if it is SP (overfetch OK)
      RZ(line1=take(sc(col1),line1));   // line1 =. hlen {. line1, taking before :

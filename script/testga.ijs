@@ -80,7 +80,11 @@ NB. echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax
 3 : 0^:(1 e. 'arm' E. 9!:56'cpu') 1
 qk=. QKTEST
 QKTEST=: 1
-50 RUN2 'gctrl'
+for_i. i.50 do.
+  RES=: RUN4 (<testpath),each <'gctrl.ijs'
+  exit^:(*@#RES) *@#RES
+end.
+RES=: ''
 QKTEST=: qk
 1
 )

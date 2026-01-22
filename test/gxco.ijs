@@ -81,7 +81,7 @@ f=: 4 : 0
  1
 )
 
-(((QKTEST{10000 50),4) {~ 9!:57 (0) [ 9!:57 (1)) f"0 ]2*10^(QKTEST{::2 3 9;2 3 3)
+(10000 4 {~ 16b30 *@:(17 b.) 9!:56'memaudit') f"0 ]2*10^(QKTEST{::2 3 9;2 3 3)
 
 f1=: 4 : 0
  p=: (_1^x ?@$ 2) * x ?@$ y
@@ -104,7 +104,7 @@ NB. silently truncate small rationals to zero in the
 NB. part of jtDfromQ which this test exercises.
 NB.
 NB. FIXME: make this work right
-NB. (1000 4 {~ 9!:57 (0) [ 9!:57 (1)) f1"0 ]10^2 3
+NB. (1000 4 {~ 16b30 *@:(17 b.) 9!:56'memaudit') f1"0 ]10^2 3
 
 64 = 3!:0 x: 6 c. i. 10
 64 = 3!:0 x: 7 c. i. 10

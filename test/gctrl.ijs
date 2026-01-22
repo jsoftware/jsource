@@ -1,22 +1,22 @@
 prolog './gctrl.ijs'
 NB. control word parsing ------------------------------------------------
 
-f0 =. 3 : 'if. if. 1 do. 2 end. do. 3 else. 4 end.'
-f1 =. 3 : 'if. while. 1 do. 2 end. do. 3 end.'
-f2 =. 3 : 'if. try. 1 catch. 2 end. do. 3 else. 4 end.'
-f3 =. 3 : 'if. 1 do. while. 2 do. 3 end. end.'
+f0 =: 3 : 'if. if. 1 do. 2 end. do. 3 else. 4 end.'
+f1 =: 3 : 'if. while. 1 do. 2 end. do. 3 end.'
+f2 =: 3 : 'if. try. 1 catch. 2 end. do. 3 else. 4 end.'
+f3 =: 3 : 'if. 1 do. while. 2 do. 3 end. end.'
 
-g0 =. 3 : 'while. try. 1  catch. 2 end. do. 3 end.'
-g1 =. 3 : 'while. 0 try. 1  catch. 2 end. do. 3 end.'
-g2 =. 3 : 'while. if. 1 do. 2 else. 3 end. do. 4 end.'
-g3 =. 3 : 'while. 1 do. if. 2 do. 3 else. 4 end. end.'
-g4 =. 3 : 'while. 0 if. 1 do. break.    end. 2 do. 3 end.' 
-g5 =. 3 : 'while. 0 if. 1 do. continue. end. 2 do. 3 end.' 
+g0 =: 3 : 'while. try. 1  catch. 2 end. do. 3 end.'
+g1 =: 3 : 'while. 0 try. 1  catch. 2 end. do. 3 end.'
+g2 =: 3 : 'while. if. 1 do. 2 else. 3 end. do. 4 end.'
+g3 =: 3 : 'while. 1 do. if. 2 do. 3 else. 4 end. end.'
+g4 =: 3 : 'while. 0 if. 1 do. break.    end. 2 do. 3 end.'
+g5 =: 3 : 'while. 0 if. 1 do. continue. end. 2 do. 3 end.'
 
 
 NB. control words -------------------------------------------------------
 
-test =. 3 : '''control error'' -: ". etx ''3 : y'''
+test =: 3 : '''control error'' -: ". etx ''3 : y'''
 
 test 'if.'
 test 'else.'
@@ -71,7 +71,7 @@ NB. Direct definition {{ }} ----------------------------------------------------
 'open quote' -: ". etx '{{ a. =. }}'  NB. used to crash
 
 NB. Note SP added after {{ and }}
-f0=. 3 : 0
+f0 =: 3 : 0
 NB.
 ; {{
   '<', (|. y), '>'
@@ -83,7 +83,7 @@ NB.
  }}  &.> |. 'one'; 'two'; 'three'
 )
 
-f0=. {{     NB. empty first line
+f0=: {{     NB. empty first line
   idxmut=. I. x >: (*/$y) ?@$ 0
   (populate idxmut) idxmut"_} y
 }}
@@ -104,18 +104,18 @@ _1 = 4!:0 u
 (<'y') r  NB. x/y not defined in non-operator modifier execution
 
 NB. {{ }} in single-line defs
-f0 =. 3 : ' 5 {{ x + y }} y'
+f0 =: 3 : ' 5 {{ x + y }} y'
 'control error' -: ". etx '3 : '' 5 {{ x + y y'''
 '3 : '' 5 {{ x + y }}  y''' -: 5!:5 <'f0'
-0!:0 'f1 =. ',5!:5 <'f0'
+0!:0 'f1 =: ',5!:5 <'f0'
 '3 : '' 5 {{ x + y }}   y''' -: 5!:5 <'f1'
-f0 =. 3 : '5 {{ x + y }} y'
+f0 =: 3 : '5 {{ x + y }} y'
 '3 : ''5 {{ x + y }}  y''' -: 5!:5 <'f0'
-0!:0 'f1 =. ',5!:5 <'f0'
+0!:0 'f1 =: ',5!:5 <'f0'
 '3 : ''5 {{ x + y }}   y''' -: 5!:5 <'f1'
 
 NB. {{ }} in boxed def
-f0 =. 3 : (<'vb =. {{ 0 }}')
+f0 =: 3 : (<'vb =. {{ 0 }}')
 '3 : ''vb =. {{ 0 }}''' -: 5!:5 <'f0'
 
 NB. verb DD followed by noun DD
@@ -144,38 +144,38 @@ y
 +: y
 }})`'') 5!:0 (5)
 
-f0 =. {{ u }}
+f0 =: {{ u }}
 1 = 4!:0<'f0'
-f0 =. {{ u v }}
+f0 =: {{ u v }}
 2 = 4!:0<'f0'
-f0 =. {{ v }}
+f0 =: {{ v }}
 2 = 4!:0<'f0'
-f0 =. {{ u. }}
+f0 =: {{ u. }}
 1 = 4!:0<'f0'
-f0 =. {{ v. }}
+f0 =: {{ v. }}
 2 = 4!:0<'f0'
-f0 =. {{ u. v. }}
+f0 =: {{ u. v. }}
 2 = 4!:0<'f0'
 
 NB. DD displays as DD
-f0 =. {{ y }}
+f0 =: {{ y }}
 echo '' 5!:5 <'f0'
 '{{ y }}' -: '' 5!:5 <'f0'
-f0 =. {{ u y }}
+f0 =: {{ u y }}
 echo '' 5!:5 <'f0'
 '{{ u y }}' -:  '' 5!:5 <'f0'
-f0 =. {{ 5
+f0 =: {{ 5
 x }}
 echo '' 5!:5 <'f0'
 (}: 0 : 0) -:  '' 5!:5 <'f0'
 {{ 5
 x }}
 )
-f0 =. {{
+f0 =: {{
 x + y }}"0
 echo '' 5!:5 <'f0'
 '{{ x + y }}"0' -:  '' 5!:5 <'f0'
-f0 =. {{
+f0 =: {{
 x + y
 5
 }}
@@ -184,7 +184,7 @@ echo '' 5!:5 <'f0'
 {{ x + y
 5}}
 )
-f0 =. {{x
+f0 =: {{x
 :
 x+y
 }}
@@ -194,14 +194,14 @@ echo '' 5!:5 <'f0'
 :
 x+y}}
 )
-f0 =. {{)a
+f0 =: {{)a
 y
 }}
 echo '' 5!:5 <'f0'
 (}: 0 : 0) -:  '' 5!:5 <'f0'
 {{)a: y}}
 )
-f0 =. {{)c
+f0 =: {{)c
 x + y
 }}
 echo '' 5!:5 <'f0'
@@ -210,41 +210,41 @@ echo '' 5!:5 <'f0'
 :
 x + y}}
 )
-f0 =. {{)*
+f0 =: {{)*
 x + y
 }}
 echo '' 5!:5 <'f0'
 (}: 0 : 0) -:  '' 5!:5 <'f0'
 {{)d: x + y}}
 )
-f0 =. {{)m
+f0 =: {{)m
 x + y
 }}
 echo '' 5!:5 <'f0'
 (}: 0 : 0) -:  '' 5!:5 <'f0'
 {{)m: x + y}}
 )
-f0 =. {{)*
+f0 =: {{)*
 y
 }}
 echo '' 5!:5 <'f0'
 (}: 0 : 0) -:  '' 5!:5 <'f0'
 {{)m: y}}
 )
-f0 =. {{)d: y }}
+f0 =: {{)d: y }}
 echo '' 5!:5 <'f0'
 '{{)d: y }}' -: '' 5!:5 <'f0'
-f0 =. {{)d:y }}
+f0 =: {{)d:y }}
 echo '' 5!:5 <'f0'
 '{{)d: y }}' -: '' 5!:5 <'f0'
 
 
 NB. Assigned vbl not detected as auto
-f0 =. {{ x =. y }}
+f0 =: {{ x =. y }}
 'valence error' -: 3 f0 etx 5
-f0 =. {{ m =. y }}
+f0 =: {{ m =. y }}
 3 = 4!:0 <'f0'
- 
+
 
 
 
@@ -255,11 +255,11 @@ NB. names are cached
 vb_z_ =: 5:
 
 9!:5 (0)
-g0 =. 3 : 0
+g0 =: 3 : 0
 vb y
 )
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 vb y  NB. This ref should be cached
 )
 9!:5 (0)
@@ -283,7 +283,7 @@ vb_z_ =: 7:
 5 -: g1 ''
 
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 vb y
 )
 9!:5 (0)
@@ -293,7 +293,7 @@ vb y
 NB. cached name removed after deletion
 vb__ =: 3:
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 vb y
 )
 9!:5 (0)
@@ -309,7 +309,7 @@ NB. deleting locale leaves cached name
 vb_a_ =: 4:
 
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 vb y
 )
 9!:5 (0)
@@ -321,7 +321,7 @@ vb y
 
 NB. reference using ''~ not cached
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 'vb'~ y
 )
 9!:5 (0)
@@ -335,7 +335,7 @@ vb__ =: 6:
 NB. Not even if caching continuously on
 4!:55 <'vb__'
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 'vb'~ y
 )
 7 -: g0 ''
@@ -351,9 +351,9 @@ NB. Repeat for tacit verb
 vb_z_ =: 5:
 
 9!:5 (0)
-g0 =. >:@<:@vb
+g0 =: >:@<:@vb
 9!:5 (2)
-g1 =. >:@<:@vb
+g1 =: >:@<:@vb
 9!:5 (0)
 
 5 -: g0 ''
@@ -375,7 +375,7 @@ vb_z_ =: 7:
 5 -: g1 ''
 
 9!:5 (2)
-g1 =. >:@<:@vb
+g1 =: >:@<:@vb
 9!:5 (0)
 7 -: g0 ''
 7 -: g1 ''
@@ -383,7 +383,7 @@ g1 =. >:@<:@vb
 NB. cached name removed after deletion
 vb__ =: 3:
 9!:5 (2)
-g1 =. >:@<:@vb
+g1 =: >:@<:@vb
 9!:5 (0)
 3 -: g0 ''
 3 -: g1 ''
@@ -397,7 +397,7 @@ NB. deleting locale leaves cached name
 vb_a_ =: 4:
 
 9!:5 (2)
-g1 =. >:@<:@vb
+g1 =: >:@<:@vb
 9!:5 (0)
 4 -: g0 ''
 4 -: g1 ''
@@ -407,7 +407,7 @@ g1 =. >:@<:@vb
 
 NB. reference using ''~ not cached
 9!:5 (2)
-g1 =. >:@<:@('vb'~)
+g1 =: >:@<:@('vb'~)
 9!:5 (0)
 7 -: g0 ''
 7 -: g1 ''
@@ -419,7 +419,7 @@ vb__ =: 6:
 NB. Not even if caching continuously on
 4!:55 <'vb__'
 9!:5 (2)
-g1 =. >:@<:@('vb'~)
+g1 =: >:@<:@('vb'~)
 7 -: g0 ''
 7 -: g1 ''
 
@@ -431,12 +431,12 @@ vb__ =: 6:
 NB. numbered locale not cached
 4!:55 <'vb__'
 vb_z_=: 7:
-l =. cocreate''
+l =: cocreate''
 (l,<'z') copath <'base'
 vb__l =: 8:
 
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 vb y
 )
 9!:5 (0)
@@ -448,7 +448,7 @@ vb y
 
 NB. local name not cached
 9!:5 (2)
-g1 =. 4 : 0
+g1 =: 4 : 0
 (x) =. y"_
 s ''
 )
@@ -462,8 +462,8 @@ NB. indirect locative not cachable
 vb_z_ =: 5:
 
 9!:5 (2)
-g1 =. 3 : 0
-l=.<'base'
+g1 =: 3 : 0
+l=: <'base'
 vb__l y
 )
 9!:5 (0)
@@ -478,7 +478,7 @@ NB. direct locative cachable and applies locative
 vb_z_ =: 1: # coname
 vb__ -: 2: # coname
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 vb_z_ y
 )
 9!:5 (0)
@@ -493,7 +493,7 @@ NB. reference is cachable outside original context
 4!:55 <'vb__'
 vb_z_ =: 5:
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 gvb =: vb
 ''
 )
@@ -507,7 +507,7 @@ vb__=: 2:
 NB. reference remains cachable after verb deleted
 4!:55 <'vb__'
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 gvb =: vb
 ''
 )
@@ -525,7 +525,7 @@ NB. reference is cached before verb is deleted
 4!:55 <'vb__'
 vb_z_ =: 5:
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 gvb =: vb
 ''
 )
@@ -544,11 +544,11 @@ NB. names are cached
 vb_z_ =: @5:
 
 9!:5 (0)
-g0 =. 3 : 0
+g0 =: 3 : 0
 ]vb y
 )
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 ]vb y
 )
 9!:5 (0)
@@ -572,7 +572,7 @@ vb_z_ =: @7:
 5 -: g1 ''
 
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 ]vb y
 )
 9!:5 (0)
@@ -582,7 +582,7 @@ g1 =. 3 : 0
 NB. cached name removed after deletion
 vb__ =: @3:
 9!:5 (2)
-g1 =. 3 : 0
+g1 =: 3 : 0
 ]vb y
 )
 9!:5 (0)
@@ -620,21 +620,21 @@ g1__numloc2''
 NB. Combining attributes are cached, making the second execution faster
 9!:5 (2)
 vb__ =: +
-f0 =. 3 : 0
+f0 =: 3 : 0
 y vb"+ y
-) 
+)
 9!:5 (0)
-r =: 1e6 ?@$ 0
+r =: (QKTEST{1e6 1e5) ?@$ 0
 THRESHOLD +. (6!:2 'f0 r') < 0.5 * (6!:2 'f0 r')
 
 9!:5 (2)
 vb__ =: ;
-f0 =. 4 : 0
+f0 =: 4 : 0
 x vb@:((<@{.)"0 _) y
-) 
+)
 9!:5 (0)
-l =. 1000 + i. 100
-r =: 1e6 ?@$ 0
+l =: 1000 + i. 100
+r =: (QKTEST{1e6 1e5) ?@$ 0
 (7!:2 'l f0 r') < 0.5 * (7!:2 'l f0 r')
 
 
@@ -659,31 +659,31 @@ testhetrf''
 
 NB. PPPP
 4!:55 ;:'f0 f1 f3'
-f0 =. 1000
-f0 =. 7!:0''
-f1 =. f0
-f3 =. 3 : 'i. 1e6'
+f0 =: 1000
+f0 =: 7!:0''
+f1 =: f0
+f3 =: 3 : 'i. 1e6'
 f0 > _5000 + 7!:0''
-f3 =. 3 : '(i. 1e6)'
+f3 =: 3 : '(i. 1e6)'
 f0 > _5000 + 7!:0''
-f3 =. 3 : '] ] ] ] ] ] y'
-f1 =. 7!:0''
-f3 =. 3 : '(] ] ] ] ] ]) y'
+f3 =: 3 : '] ] ] ] ] ] y'
+f1 =: 7!:0''
+f3 =: 3 : '(] ] ] ] ] ]) y'
 f1 < _250 + 7!:0''
-f3 =. 3 : '((i. 1e6))'
+f3 =: 3 : '((i. 1e6))'
 f0 < 100000 + 7!:0''
 
 '|syntax error in efx, executing 3:...|       ((3 3$0 1 2 1 2 3 2 3 4))+' -:&(10&{. , i:&' ' }. ]) efx '3 : ''((+/~ i. 3)) +'' 5'
 1: {{)n
 9!:41(0)  NB. lose comments
-f0 =. 3 : '(+/ #  *) y'
+f0 =: 3 : '(+/ #  *) y'
 '3 : ''(+/#*)y''' -: 5!:5 <'f0'
-f0 =. 3 : '(*: >:) (/  / ) y'
+f0 =: 3 : '(*: >:) (/  / ) y'
 '3 : ''(*:>:)(//)y''' -: 5!:5 <'f0'
-f0 =. 3 : '((+/~ i. 3)) + y'
+f0 =: 3 : '((+/~ i. 3)) + y'
 '3 : ''((3 3$0 1 2 1 2 3 2 3 4))+y''' -: 5!:5 <'f0'
 
-f0 =. {{ (u. f. b. 0) }}   NB. u. does not invoke PPPP
+f0 =: {{ (u. f. b. 0) }}   NB. u. does not invoke PPPP
 
 9!:41(1)
 }}

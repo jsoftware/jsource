@@ -1235,12 +1235,14 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
    flag|=VISDD;  // indicate this defn was created by a DD
    if(likely(AN(w)!=0))if(likely(AN(C(AAV(w)[0])))&&unlikely(CAV(C(AAV(w)[0]))[0]==')')){
     // there is a control line.  Everything up to : is the control part
-    A line1=C(AAV(w)[0]); C *cv1=CAV(line1); C *col1=strchr(cv1,':');  // extract first line & see if it contains ':'   line1 = 0 {:: w
-    if(likely(col1==0)){   // if no :, the whole line is control.  Discard it from w
-     RZ(w=beheadW(w)); // discard the control line
-    }else{  // : given.  takeafter the : for the first line, and taketo for the control line
-     RZ(w=jtamendn2(jtfg,box(drop(sc(col1-cv1+1+(col1[1]==' ')),line1)),w,zeroionei(0),ds(CAMEND)));  // w =. (< (>:hlen) }. line1) 0} w   discard first char after : if it is SP
-     RZ(line1=take(sc(col1-cv1),line1));   // line1 =. hlen {. line1
+    A line1=C(AAV(w)[0]); C *cv1=CAV(line1); I col1; DO(AN(line1), if(cv1[i]==':'){col1=i; goto colonfound;})  // extract first line & see if it contains ':'   line1 = 0 {:: w
+ // obsolete    if(likely(col1==0)){   // if  Discard it from w
+    if(1){RZ(w=beheadW(w)) // no :, the whole line is control.  discard the control line
+    }else{ 
+colonfound:   // : given.  takeafter the : for the first line, and taketo for the control line.  If SP follows :, treat the SP as the end char
+     I coln=col1+(cv1[col1+1]==' ');  // end on SP if :SP
+     RZ(w=jtamendn2(jtfg,box(drop(sc(coln+1),line1)),w,zeroionei(0),ds(CAMEND)));  // w =. (< (>:hlen) }. line1) 0} w   discard first char after : if it is SP (overfetch OK)
+     RZ(line1=take(sc(col1),line1));   // line1 =. hlen {. line1, taking before :
     }
     // now line1 has the control line, and w is updated as needed
     flag|=VDDHASCTL;  // indicate that the DD had a control line
@@ -1453,7 +1455,7 @@ A jtddtokens(J jtfg,A w,I env){F12IP;
    A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-firstcharx,wv+firstcharx));
    // append the string for the start/end of DD
    I bodystart=AN(w), bodylen=AN(ddqu), trailstart=wilv[ddendx][1];  // start/len of body in w, and start of after-DD text
-   RZ(ddqu=jtapip(jtfg,ddqu,str(8,") ( 9 : ")));
+   RZ(ddqu=jtapip(jtfg,ddqu,str(8,") ( 9 : ")));  // trailer )   then header  which will be followed by body.  This will be 2 words out of order
    // append the new stuff to w
    RZ(w=jtapip(jtfg,w,ddqu));
    wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes

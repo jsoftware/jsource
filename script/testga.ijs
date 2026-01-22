@@ -77,6 +77,14 @@ NB. this failed on windows arm64
 NB. echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 NB. echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
+3 : 0^:(1 e. 'arm' E. 9!:56'cpu') 1
+qk=. QKTEST
+QKTEST=: 1
+50 RUN2 'gctrl'
+QKTEST=: qk
+1
+)
+
 3 : 0^:(1<{:8 T.'') ''
 echo 9!:56 'supportaffinity'
 echo n=. <: <.2^9!:56'cores'

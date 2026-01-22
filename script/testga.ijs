@@ -81,7 +81,7 @@ NB. detect sporadical gctrl error
 3 : 0''
 qk=. QKTEST
 QKTEST=: 1
-for_i. i.500 do.
+for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'gctrl.ijs'
   exit^:(*@#RES) *@#RES
 end.

@@ -78,10 +78,10 @@ NB. echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:ima
 NB. echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
 NB. detect sporadical gctrl error
-3 : 0^:(1 [ 1 e. 'arm' E. 9!:56'cpu') 1
+3 : 0''
 qk=. QKTEST
 QKTEST=: 1
-for_i. i.50 do.
+for_i. i.500 do.
   RES=: RUN4 (<testpath),each <'gctrl.ijs'
   exit^:(*@#RES) *@#RES
 end.

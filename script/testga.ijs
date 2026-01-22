@@ -78,17 +78,17 @@ NB. echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:ima
 NB. echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
 NB. detect sporadical gctrl error
-3 : 0''
-qk=. QKTEST
-QKTEST=: 1
-for_i. i.100 do.
-  RES=: RUN4 (<testpath),each <'gctrl.ijs'
-  exit^:(*@#RES) *@#RES
-end.
-RES=: ''
-QKTEST=: qk
-1
-)
+NB. 3 : 0''
+NB. qk=. QKTEST
+NB. QKTEST=: 1
+NB. for_i. i.100 do.
+NB.   RES=: RUN4 (<testpath),each <'gctrl.ijs'
+NB.   exit^:(*@#RES) *@#RES
+NB. end.
+NB. RES=: ''
+NB. QKTEST=: qk
+NB. 1
+NB. )
 
 3 : 0^:(1<{:8 T.'') ''
 echo 9!:56 'supportaffinity'

@@ -615,7 +615,8 @@ f QKTEST{7700892415753674751x 3674751x
 1
 )
 
-0!:_1`1:@.(16b42 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip if memaudit sparse
+NB. 0!:_1`1:@.(16b42 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip if memaudit sparse
+0!:_1`1:@.(-.@* 9!:56'memaudit') '$'   NB. skip if memaudit
 
 a =: (<"0 i: 8) , (<"0 <. 2 ^ (2 2 p. IF64) * 1 + i. 10) , (<"0 ] 10 ?@$ 2^100x)
 mod =: (<"0 ] _5 _2 3 7 9) ,  (<"0 <. 2 ^ (1 + IF64) * 1 + i. 10) , (<"0 ] 10 ?@$ 2^100x)

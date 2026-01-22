@@ -765,6 +765,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFLAGINIT(a,v)  {AFLAG(a)=(v);}  // used when it is known that a has just been allocated & is not shared
 #define AFLAGRESET(a,v) {AFLAG(a)=(v);} // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
 #define AFLAGFAUX(a,v)  {AFLAG(a)=(v);}  // used when a is known to be a faux block
+#define AFLAGFAUXAUDIT(a,v)  {if(MEMAUDIT&0x3e)AFLAGFAUX(a,v)}  // on faux blocks that go through ARGCHK
 #define AFLAGANDLOCAL(a,v)   {AFLAG(a)&=(v);}  // LOCAL functions are used when the block is known not to be shared
 #define AFLAGORLOCAL(a,v)    {AFLAG(a)|=(v);}
 // Once a block has been shared, the flags do not change except for PRISTINE, KNOWNNAMED, ANCHORED.  (Pristine only gets cleared, KNOWNNAMED is set and cleared).

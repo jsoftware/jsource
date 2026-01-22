@@ -79,7 +79,7 @@ A jtcreatecycliciterator(J jt, A z, A w){
  // AT is 0 to suppress eformat, as this 'verb' has invalid fgh
  ACFAUX(z,ACPERMANENT) AT(z)=0; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lu1.gercut.cgerx=0;
  FAV(z)->flag2=0; FAV(z)->id=CCYCITER;   // clear flags, and give this verb a proper id so it can be checked for
- if(MEMAUDIT&0xc)AFLAGFAUX(z,0)  // in debug, flags must be valid
+ AFLAGFAUXAUDIT(z,0)  // in audit, flags must be valid
  R z;
 }
 // Similar, but also install r, the list of gerund results that will select the verb to run.  Used when there are few cells.
@@ -93,7 +93,7 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
  FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lu1.gercut.cgerx=0;
  FAV(z)->localuse.lu0.gerundself=w;  // save the self for m@.v so we can call eformat with it
  FAV(z)->flag2=0;
- if(MEMAUDIT&0xc)AFLAGFAUX(z,0)  // in debug, flags must be valid
+ AFLAGFAUXAUDIT(z,0)  // in audit, flags must be valid
  R z;
 }
 

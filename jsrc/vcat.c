@@ -117,10 +117,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A z,A w,C*x,I somefill){I d,n,p=c*m;  // p=#
   if((~somefill|(-n&(d-1)))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: fill needed somewhere, and w empty or shape short (d>0).  Fills unnecessarily if axis was extended with 1s and the other arg needed fill
   if(likely(n!=0)){  // nonempty cell, must copy in the data
    if(withprob(n<p,0.1)){  // incoming cell smaller than result area: take to result-cell size (uses fill)
-    fauxblockINT(sh,0,1); AK((A)sh)=(C*)(&AS(z)[d])-(C*)sh; AT((A)sh)=INT; AR((A)sh)=1; AN((A)sh)=AS((A)sh)[0]=AR(w);  // create arg to take: INT vector with shape of item of result
-#if MEMAUDIT&0x3e
-    AFLAG((A)sh)=0;  // audits check it
-#endif
+    fauxblockINT(sh,0,1); AK((A)sh)=(C*)(&AS(z)[d])-(C*)sh; AT((A)sh)=INT; AR((A)sh)=1; AN((A)sh)=AS((A)sh)[0]=AR(w); AFLAGFAUXAUDIT((A)sh,0); // create arg to take: INT vector with shape of item of result
     AS(z)[0]=m; RZ(w=take((A)sh,w));  // do the take, with fill
    }
    JMC(x,AV(w),k*AN(w),1);  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy

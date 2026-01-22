@@ -34,7 +34,7 @@ x f0 0+x=:           1e4   ?@$ 0
 x f0 0+x=:           1e4 4 ?@$ 0
 x f0 0+x=: j./_1e4+2 1e4   ?@$ 2e4
 x f0 0+x=: j./_1e4+2 1e4 4 ?@$ 2e4  
-0!:_1`1:@.(16b30 *@:(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
 x f0 0+x=:        x: 1e4   ?@$ 3e3
 x f0 0+x=:        x: 1e4 4 ?@$ 3e3
 x f0 0+x=: %/x:0 1+2 1e4   ?@$ 3e3

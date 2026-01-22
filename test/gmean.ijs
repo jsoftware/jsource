@@ -25,7 +25,7 @@ f=: 4 : 0
 0 1 2 3 f"0 _ t=: 3r7 * 2 3 5 ?@$ 1e4
   1 2 3 f"0 _ t=: $.       (2 3 5 ?@$ 2000) * 2 3 5 ?@$ 2 
   1 2 3 f"0 _ t=: $. 0.1 * (2 3 5 ?@$ 2000) * 2 3 5 ?@$ 2 
-0!:_1`1:@.(16b30 *@:(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
 0 1 2 3 f"0 _ t=: x:    13 17 37 ?@$ 1e4
 0 1 2 3 f"0 _ t=: 3r7 * 13 17 37 ?@$ 1e4
   1 2 3 f"0 _ t=: $.       (13 17 37 ?@$ 2000) * 13 17 37 ?@$ 2 

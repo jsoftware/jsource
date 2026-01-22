@@ -1,6 +1,6 @@
 prolog './g128x19.ijs'
 
-0!:_1`1:@.(0=* 2 (17 b.) 9!:56'memaudit') '$'   NB. skip slow
+0!:_1`1:@.(2 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip slow
 
 CacheLine=: 9!:56'cachelinesize'
 padc=: (CacheLine%16)&{."1

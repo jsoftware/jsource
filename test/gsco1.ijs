@@ -11,16 +11,15 @@ c=: ;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'
 d=: <;._1 ' 00 01 02 03 04 05 06 07 08 09'
 e=: ;:'open high low close'
 
-0!:_1`1:@.(16b30 *@:(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(16b32 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
 t=: }.@;&.>{' ',&.>&.>a;b;c;d;<e
 NB.$  end of skip
 
 q=: ":&.>?100$1e9
-
-1 [ ":&.>2 3 2 2 3 {. t
 1 [ ":&.>q
 
-0!:_1`1:@.(16b30 *@:(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(16b32 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+1 [ ":&.>2 3 2 2 3 {. t
 1 [ ":&.>t
 NB.$  end of skip
 
@@ -34,7 +33,7 @@ s1=: 7!:3 ''
 s0=: 7!:3 ''
 b0=: 7!:0 ''
 
-0!:_1`1:@.(0=* 2 (17 b.) 9!:56'memaudit') '$'   NB. skip slow
+0!:_1`1:@.(16b32 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip slow
 s=: s: t
 t -: 5 s: s
 0 s: 11

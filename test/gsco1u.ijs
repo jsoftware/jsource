@@ -11,13 +11,13 @@ c=: ([: 10&u: 65536+a.&i.)&.> ;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
 d=: ([: 10&u: 65536+a.&i.)&.> <;._1 ' 00 01 02 03 04 05 06 07 08 09'
 e=: ([: 10&u: 65536+a.&i.)&.> ;:'open high low close'
 
-0!:_1`1:@.(16b30 *@:(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
 t=: }.@;&.>{' ',&.>&.>a;b;c;d;<e
 NB.$  end of skip
 
 q=: ":&.>?100$1e9
 
-0!:_1`1:@.(16b30 *@:(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
 1 [ ":&.>t
 NB.$  end of skip
 1 [ ":&.>q
@@ -31,7 +31,7 @@ IGNOREIFFVI 1  NB. allow garbage collection to run
 s0=: 7!:3 ''
 b0=: 7!:0 ''
 
-0!:_1`1:@.(0=* 2 (17 b.) 9!:56'memaudit') '$'   NB. skip slow
+0!:_1`1:@.(2 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip slow
 s=: s: t
 t -: 5 s: s
 

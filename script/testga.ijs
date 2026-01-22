@@ -77,7 +77,8 @@ NB. this failed on windows arm64
 NB. echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 NB. echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
-3 : 0^:(1 e. 'arm' E. 9!:56'cpu') 1
+NB. detect sporadical gctrl error
+3 : 0^:(1 [ 1 e. 'arm' E. 9!:56'cpu') 1
 qk=. QKTEST
 QKTEST=: 1
 for_i. i.50 do.

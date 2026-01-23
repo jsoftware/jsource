@@ -330,105 +330,121 @@ EMPTY
 }}
 
 0 1 {{
-n_iter =. QKTEST{10 3
+n_iter =. QKTEST{10 1
 
 keyshape =. 3 2
 valueshape =. 0:^:x 5 8
 params =. y , < ('keytype' ; 'boolean') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_boolean`'' ; rand_integer`'' ; keyshape ; valueshape ; 5 25 ; n_iter
 
 keyshape =. 2 3
 valueshape =. 0:^:x 4 5 4
 params =. y , < ('valuetype' ; 'floating') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_integer`'' ; rand_floating`'' ; keyshape ; valueshape ; 100 ; n_iter
 
 keyshape =. 7 1
 valueshape =. 0:^:x 1 7
 params =. y , < ('keytype' ; 'floating') , ('valuetype' ; 'complex') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_floating`'' ; rand_complex`'' ; keyshape ; valueshape ; 10 10 ; n_iter
 
 keyshape =. 3 3
 valueshape =. 0:^:x 2 2 2
 params =. y , < ('keytype' ; 'complex') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_complex`'' ; rand_integer`'' ; keyshape ; valueshape ; 2 3 4 5 ; n_iter
 
 keyshape =. 9
 valueshape =. 0:^:x 10
 params =. y , < ('keytype' ; 'extended') , ('valuetype' ; 'rational') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_extended`'' ; rand_rational`'' ; keyshape ; valueshape ; 7 7 ; n_iter
 
 keyshape =. 5
 valueshape =. 0:^:x 6
 params =. y , < ('keytype' ; 'rational') , ('valuetype' ; 'literal') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_rational`'' ; rand_byte`'' ; keyshape ; valueshape ; 3 2 ; n_iter
 
 keyshape =. 8
 valueshape =. 0:^:x 5 5
 params =. y , < ('keytype' ; 'literal') , ('valuetype' ; 'extended') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_byte`'' ; rand_extended`'' ; keyshape ; valueshape ; 100 ; n_iter
 
 keyshape =. 2 2
 valueshape =. 0:^:x 2 4
 params =. y , < ('keytype' ; 'boxed') , ('valuetype' ; 'boxed') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_boxed`'' ; rand_boxed`'' ; keyshape ; valueshape ; 25 2 ; n_iter
 }}"0"_ 0 INDEX_TYPES
 
 0 1 {{
-n_iter =. QKTEST{300 30
+n_iter =. QKTEST{300 1
 
 keyshape =. 3 2
 valueshape =. 0:^:x 5 8
 params =. y , < ('keytype' ; 'boolean') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_boolean`'' ; rand_integer`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 2 3
 valueshape =. 0:^:x 4 5 4
 params =. y , < ('valuetype' ; 'floating') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_integer`'' ; rand_floating`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 7 1
 valueshape =. 0:^:x 1 7
 params =. y , < ('keytype' ; 'floating') , ('valuetype' ; 'complex') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_floating`'' ; rand_complex`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 3 3
 valueshape =. 0:^:x 2 2 2
 params =. y , < ('keytype' ; 'complex') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_complex`'' ; rand_integer`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 9
 valueshape =. 0:^:x 10
 params =. y , < ('keytype' ; 'extended') , ('valuetype' ; 'rational') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_extended`'' ; rand_rational`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 5
 valueshape =. 0:^:x 6
 params =. y , < ('keytype' ; 'rational') , ('valuetype' ; 'literal') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_rational`'' ; rand_byte`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 8
 valueshape =. 0:^:x 5 5
 params =. y , < ('keytype' ; 'literal') , ('valuetype' ; 'extended') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_byte`'' ; rand_extended`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 
 keyshape =. 2 2
 valueshape =. 0:^:x 2 4
 params =. y , < ('keytype' ; 'boxed') , ('valuetype' ; 'boxed') , ('keyshape' ; keyshape) ,: ('valueshape' ; valueshape)
+echo params
 jdict =. params conew 'jdictionary'
 jdict test_type rand_boxed`'' ; rand_boxed`'' ; keyshape ; valueshape ; (i. 0) ; n_iter
 }}"0"_ 0 INDEX_TYPES

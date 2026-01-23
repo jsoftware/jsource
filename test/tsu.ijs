@@ -459,6 +459,17 @@ allorcmdline=: 3 :0
   end.
 )
 
+NB. y is log filtered to contain epilog output only
+NB. like
+NB. ./g0.ijs  time(sec): 0.018  memory used: 3724736 60556928 27545600 70737920
+NB. ./g000.ijs  time(sec): 0.041  memory used: 3782176 60556928 27729920 70737920
+NB. result is log sorted by execution time
+timelog=: 3 : 0
+a=. (<<<1 3 4)&{@cut@deb;._2 (,&LF)^:(LF~:{:) toJ y
+b=. <@(>"1)@|: ((_4&}.)@(2&}.)&.>{."1 a),. ,:@".&.> }."1 a
+c=. (</:1{:: b) {&.> b  NB. sort by execution time
+)
+
 oldnl=: (;:'x y') -.~ ('IgnoredLocal';'RB';'RF';'oldnl';'RLAST';'save_ran'),~ (nl__ i.4)
 IgnoredLocal=: ;:'x y x123 y123 y234 y234_index'
 

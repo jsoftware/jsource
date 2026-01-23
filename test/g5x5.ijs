@@ -686,11 +686,10 @@ test2 <'a'
 
 NB. Verify that all trains produce an equivalent result after going through 5!:5
 
-0!:_1`1:@.(16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip if full memory auditing
+0!:_1`1:@.(16b32 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip if full memory auditing
 
 NB. y is a character string representing a possibly-invalid train
 testlr=: {{
-if. 0~:9!:56'memaudit' do. 1 return. end.
 a =: y
 try.
  0!:0 'asdf=.',;y

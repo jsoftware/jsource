@@ -3,6 +3,8 @@ NB. %. ------------------------------------------------------------------
 
 cblas=: 9!:56'cblas'
 0 (9!:56) 'cblas'
+thr=: (9!:58)"0 i.3
+_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
 
 NB. mdiv failed on small ct
 ct   =: 9!:18''
@@ -200,6 +202,7 @@ assert. 1e_8>e
 9!:19 ct
 
 cblas (9!:56) 'cblas'
+empty thr (9!:58)"0 i.3
 
 epilog''
 

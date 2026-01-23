@@ -1,8 +1,5 @@
-prolog './g300.ijs'
+prolog './g300cblas.ijs'
 NB. +/ .* ---------------------------------------------------------------
-
-cblas=: 9!:56'cblas'
-0 (9!:56) 'cblas'
 
 NB. test failed on small ct
 ct   =: 9!:18''
@@ -266,8 +263,6 @@ _= (-/ .*) x: 4 4$_ __ 0 0 1 1 0 0 0 0 1 0 0 0 0 1         NB. test for crash
 1= (+/ .*) ::1: x: 4 4$_ __ 0 0 1 1 0 0 0 0 1 0 0 0 0 1    NB. test for crash
 
 9!:19 ct
-
-cblas (9!:56) 'cblas'
 
 epilog''
 

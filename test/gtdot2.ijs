@@ -2,7 +2,7 @@ prolog './gtdot2.ijs'
 NB. T. t. ------------------------------------------------------------------
 NB. locale
 
-void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
+NB. void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
 NB. 64-bit only
 NB. delete all worker threads
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}

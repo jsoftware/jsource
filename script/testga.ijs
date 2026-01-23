@@ -114,6 +114,30 @@ QKTEST=: qk
 1
 )
 
+3 : 0''
+qk=. QKTEST
+QKTEST=: 1
+for_i. i.100 do.
+  RES=: RUN4 (<testpath),each <'g131cblas.ijs'
+  exit^:(*@#RES) *@#RES
+end.
+RES=: ''
+QKTEST=: qk
+1
+)
+
+3 : 0''
+qk=. QKTEST
+QKTEST=: 1
+for_i. i.100 do.
+  RES=: RUN4 (<testpath),each <'g300cblas.ijs'
+  exit^:(*@#RES) *@#RES
+end.
+RES=: ''
+QKTEST=: qk
+1
+)
+
 3 : 0^:(1<{:8 T.'') ''
 echo 9!:56 'supportaffinity'
 echo n=. <: <.2^9!:56'cores'

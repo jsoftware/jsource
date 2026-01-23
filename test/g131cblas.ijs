@@ -1,8 +1,5 @@
-prolog './g131.ijs'
+prolog './g131cblas.ijs'
 NB. %. ------------------------------------------------------------------
-
-cblas=: 9!:56'cblas'
-0 (9!:56) 'cblas'
 
 NB. mdiv failed on small ct
 ct   =: 9!:18''
@@ -56,6 +53,9 @@ id=: =&i.&#
 delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
 
+cblas=: 9!:56'cblas'
+0 (9!:56) 'cblas'
+
 {{
 N=: 3 <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
 for. i. N do.
@@ -101,6 +101,7 @@ end.
 1
 }} ''
 delth''
+cblas (9!:56) 'cblas'
 
 x -: %. x=:=i.1
 x -: %. x=:=i.2
@@ -198,8 +199,6 @@ assert. 1e_8>e
 'length error' -: 3 4 5  %. etx ?7 4$100
 
 9!:19 ct
-
-cblas (9!:56) 'cblas'
 
 epilog''
 

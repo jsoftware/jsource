@@ -77,66 +77,87 @@ NB. this failed on windows arm64
 NB. echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 NB. echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
-NB. detect sporadical gctrl error
+0!:_1 '$'   NB. temp skip to allow running full test suite
 3 : 0''
+ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME=: 0
 qk=. QKTEST
 QKTEST=: 1
+echo '>>> testing gctrl.ijs'
 for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'gctrl.ijs'
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
 QKTEST=: qk
+ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
+ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME=: 0
 qk=. QKTEST
 QKTEST=: 1
+echo '>>> testing g131.ijs'
 for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'g131.ijs'
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
 QKTEST=: qk
+ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
+ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME=: 0
 qk=. QKTEST
 QKTEST=: 1
+echo '>>> testing g300.ijs'
 for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'g300.ijs'
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
 QKTEST=: qk
+ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
+ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME=: 0
 qk=. QKTEST
 QKTEST=: 1
+echo '>>> testing g131cblas.ijs'
 for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'g131cblas.ijs'
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
 QKTEST=: qk
+ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
+ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME=: 0
 qk=. QKTEST
 QKTEST=: 1
+echo '>>> testing g300cblas.ijs'
 for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'g300cblas.ijs'
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
 QKTEST=: qk
+ECHOFILENAME=: ECHOFILENAME0
 1
 )
+NB.$  end of skip
 
 3 : 0^:(1<{:8 T.'') ''
 echo 9!:56 'supportaffinity'

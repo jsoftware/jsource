@@ -12,6 +12,7 @@ NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1)
 void delay(I n){if(uncommon(n>36))DONOUNROLL((n-7)/36,_mm_pause();)else johnson(n);}
 #else
 #define delay(n)
+A jtpyxvalid(J jt,A pyx){R 0;}   // else linking error
 #endif
 //36ns TUNE; ~60clk on zen, ~160clk on intel; consider adding more general uarch tuning capabilities (eg for cache size)
 //7ns mispredict penalty (15-20clk) + mul latency (3clk)

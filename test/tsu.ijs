@@ -443,13 +443,24 @@ allorcmdline=: 3 :0
   end.
 )
 
-NB. y is log filtered to contain epilog output only
+NB. y is log
 NB. like
 NB. ./g0.ijs  time(sec): 0.018  memory used: 3724736 60556928 27545600 70737920
 NB. ./g000.ijs  time(sec): 0.041  memory used: 3782176 60556928 27729920 70737920
 NB. result is log sorted by execution time
 timelog=: 3 : 0
-a=. (<<<1 3 4)&{@cut@deb;._2 (,&LF)^:(LF~:{:) toJ y
+t=. <;._2 (,&LF)^:(LF~:{:) toJ y
+a=. cut@deb&> t #~ (1&e.)@(' time(sec): '&E.)&> t
+if. 0=#a do. i.0 0 return. end.
+if. 28= #t=. >{.{.a do.
+  if. ('20'-:2{.t) *. 'Z'={:t do.    NB. timestamp in github action log
+    a=. (<<<0 2 4 5)&{"1 a
+  else.
+    a=. (<<<1 3 4)&{"1 a
+  end.
+else.
+  a=. (<<<1 3 4)&{"1 a
+end.
 b=. <@(>"1)@|: ((_4&}.)@(2&}.)&.>{."1 a),. ,:@".&.> }."1 a
 c=. (</:1{:: b) {&.> b  NB. sort by execution time
 )

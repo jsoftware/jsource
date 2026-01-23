@@ -347,9 +347,12 @@ f=: 3 : 0
  1
 )
 
+cond=: (-. ('x86_64'-:9!:56'cpu') *. IFWIN *. IF64 *. 2 *@(17 b.) 9!:56'memaudit')
+0!:_1`1:@.(cond) '$'   NB. skip because full memory auditing is slow
 *./@f"0 >:       i.3 10
 *./@f"1 >:  5 6#:i.3 10
 *./@f"1 >:5 3 2#:i.3 10
+NB.$  end of skip
 
 g=: 3 : '0 1 -: /: ,:~ t=. y$t,<t=.1 2 3;''abc'' '
 g"0 i.3 10

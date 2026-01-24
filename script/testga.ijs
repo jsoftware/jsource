@@ -84,8 +84,8 @@ ECHOFILENAME0=. ECHOFILENAME
 ECHOFILENAME=: 0
 qk=. QKTEST
 QKTEST=: 1
-echo '>>> testing g128x14.ijs'
-RES=: RUN4 (<testpath),each <'g128x14.ijs'
+echo '>>> testing g331.ijs'
+RES=: RUN4 (<testpath),each <'g331.ijs'
 exit^:(*@#RES) *@#RES
 echo '>>> testing g7x5.ijs'
 RES=: RUN4 (<testpath),each <'g7x5.ijs'
@@ -98,9 +98,6 @@ RES=: RUN4 (<testpath),each <'gq.ijs'
 exit^:(*@#RES) *@#RES
 echo '>>> testing gxco1.ijs'
 RES=: RUN4 (<testpath),each <'gxco1.ijs'
-exit^:(*@#RES) *@#RES
-echo '>>> testing g331.ijs'
-RES=: RUN4 (<testpath),each <'g331.ijs'
 exit^:(*@#RES) *@#RES
 RES=: ''
 QKTEST=: qk

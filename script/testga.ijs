@@ -51,10 +51,12 @@ echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 NB. base64 failed on avx512?
 echo 3!:10 'f'
 echo 'Zg==' -: 3!:10 'f'
+exit^:('Zg==' -.@-: 3!:10 'f') 1
 
 NB. lone surrogate failed on avx512?
 echo a. i. ":7 u: 16bd800 + i.8
 echo 237 160 128 237 160 129 237 160 130 237 160 131 237 160 132 237 160 133 237 160 134 237 160 135-:a.i.":7 u: 16bd800 + i.8
+exit^:(237 160 128 237 160 129 237 160 130 237 160 131 237 160 132 237 160 133 237 160 134 237 160 135-:a.i.":7 u: 16bd800 + i.8) 1
 
 NB. this crash on OpenBSD v7.6
 echo '(128!:6)   ', (128!:6)   'abc'
@@ -74,23 +76,8 @@ echo '14&(128!:6) ', 14&(128!:6) 'abc'
 echo '15&(128!:6) ', 15&(128!:6) 'abc'
 
 NB. this failed on windows arm64
-NB. echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
-NB. echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
-
-0!:_1 '$'   NB. temp skip to allow running full test suite
-3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
-ECHOFILENAME=: 0
-qk=. QKTEST
-QKTEST=: 1
-echo '>>> testing gdic.ijs'
-RES=: RUN4 (<testpath),each <'gdic.ijs'
-exit^:(*@#RES) *@#RES
-RES=: ''
-QKTEST=: qk
-ECHOFILENAME=: ECHOFILENAME0
-1
-)
+echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
+echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
 3 : 0''
 ECHOFILENAME0=. ECHOFILENAME
@@ -102,6 +89,21 @@ for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'gctrl.ijs'
   exit^:(*@#RES) *@#RES
 end.
+RES=: ''
+QKTEST=: qk
+ECHOFILENAME=: ECHOFILENAME0
+1
+)
+
+0!:_1 '$'   NB. temp skip to allow running full test suite
+3 : 0''
+ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME=: 0
+qk=. QKTEST
+QKTEST=: 1
+echo '>>> testing gdic.ijs'
+RES=: RUN4 (<testpath),each <'gdic.ijs'
+exit^:(*@#RES) *@#RES
 RES=: ''
 QKTEST=: qk
 ECHOFILENAME=: ECHOFILENAME0

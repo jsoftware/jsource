@@ -36,12 +36,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 4
+      _DEBUG: 3
      run: |
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux)
      env:
       _MEMAUDIT: 4
+      _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
 #       ls -l j64

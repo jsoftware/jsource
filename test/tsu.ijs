@@ -62,9 +62,17 @@ gtdot2
 )
 
 NB. crash
-blacklist=: blacklist, '' [ (0~:9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
+blacklist=: blacklist, '' [ (('x86'-:9!:56'cpu') *. IFUNIX *. 4 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
+gctrl
+)
+
+NB. crash
+blacklist=: blacklist, '' ] (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
 g131
 g300
+g131cblas
+g300cblas
+gdic
 )
 
 blacklist=: ~.blacklist

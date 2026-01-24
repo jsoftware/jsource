@@ -79,10 +79,11 @@ NB. this failed on windows arm64
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
-3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+4!:55 ;:'x y'
+4!:55 ;:'x y'
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+qk=: QKTEST
 QKTEST=: 1
 echo '>>> testing g331.ijs'
 RES=: RUN4 (<testpath),each <'g331.ijs'
@@ -102,8 +103,7 @@ exit^:(*@#RES) *@#RES
 RES=: ''
 QKTEST=: qk
 ECHOFILENAME=: ECHOFILENAME0
-1
-)
+4!:55 ;'qk ECHOFILENAME0'
 
 0!:_1 '$'   NB. temp skip to allow running full test suite
 3 : 0''

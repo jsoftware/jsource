@@ -173,30 +173,30 @@ jobs:
       version: '15.0'
       shell: bash
 
-     run: |
-      rm -f jobdone
-      export IGNORE_OSVERSION=yes
-      sudo pkg upgrade -y
-      sudo rdate time.cloudflare.com || true
-      sudo pkg search openblas 1>&2
-      sudo pkg install -y curl zip gmake nasm pcre2 openblas
-      sudo find / -type f -name 'liblapack.so*' 1>&2
-      sudo find / -type f -name 'libopenblas.so*' 1>&2
-      /sbin/ldconfig -r
-      ls -al ~/
-      ls -al ~/.ssh
-      sudo echo "Host *" >>~/.ssh/config || true
-      sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-      sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-      echo "client ssh config"
-      sudo cat ~/.ssh/config || true
-      export CC=clang
-      export USE_SLEEF=1
-      export USE_OPENMP=0
-      export _MEMAUDIT=32
-      script/buildga.sh freebsd || exit 1
-      script/testga.sh freebsd || exit 1
-      touch jobdone
+      run: |
+       rm -f jobdone
+       export IGNORE_OSVERSION=yes
+       sudo pkg upgrade -y
+       sudo rdate time.cloudflare.com || true
+       sudo pkg search openblas 1>&2
+       sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo find / -type f -name 'liblapack.so*' 1>&2
+       sudo find / -type f -name 'libopenblas.so*' 1>&2
+       /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       sudo cat ~/.ssh/config || true
+       export CC=clang
+       export USE_SLEEF=1
+       export USE_OPENMP=0
+       export _MEMAUDIT=32
+       script/buildga.sh freebsd || exit 1
+       script/testga.sh freebsd || exit 1
+       touch jobdone
 
    - name: Check Status (FreeBSD)
      run: |
@@ -220,30 +220,30 @@ jobs:
       version: '15.0'
       shell: bash
 
-     run: |
-      rm -f jobdone
-      export IGNORE_OSVERSION=yes
-      sudo pkg upgrade -y
-      sudo rdate time.cloudflare.com || true
-      sudo pkg search openblas 1>&2
-      sudo pkg install -y curl zip gmake nasm pcre2 openblas
-      sudo find / -type f -name 'liblapack.so*' 1>&2
-      sudo find / -type f -name 'libopenblas.so*' 1>&2
-      /sbin/ldconfig -r
-      ls -al ~/
-      ls -al ~/.ssh
-      sudo echo "Host *" >>~/.ssh/config || true
-      sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-      sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-      echo "client ssh config"
-      sudo cat ~/.ssh/config || true
-      export CC=clang
-      export USE_SLEEF=1
-      export USE_OPENMP=0
-      export _MEMAUDIT=32
-      script/buildga.sh freebsd || exit 1
-      script/testga.sh freebsd || exit 1
-      touch jobdone
+      run: |
+       rm -f jobdone
+       export IGNORE_OSVERSION=yes
+       sudo pkg upgrade -y
+       sudo rdate time.cloudflare.com || true
+       sudo pkg search openblas 1>&2
+       sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo find / -type f -name 'liblapack.so*' 1>&2
+       sudo find / -type f -name 'libopenblas.so*' 1>&2
+       /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       sudo echo "Host *" >>~/.ssh/config || true
+       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       sudo cat ~/.ssh/config || true
+       export CC=clang
+       export USE_SLEEF=1
+       export USE_OPENMP=0
+       export _MEMAUDIT=32
+       script/buildga.sh freebsd || exit 1
+       script/testga.sh freebsd || exit 1
+       touch jobdone
 
    - name: Check Status (FreeBSD arm64)
      run: |

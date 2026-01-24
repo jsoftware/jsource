@@ -15,9 +15,9 @@ on:
 jobs:
 
 # linux ----------------------------------------------------------------
- jelinuxma:
+ jelinux:
   name: JE (Linux)
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -44,27 +44,9 @@ jobs:
       _MEMAUDIT: 8
      run: |
       script/testga.sh linux || exit 1
-#       ls -l j64
-#       zip -r l64ma.zip j64
-# 
-#    - name: Release JE (Linux)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "l64ma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (Linux)
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: dist
-#        path: testlinuxma.txt
-#        overwrite: true
 
 # macOS ----------------------------------------------------------------
- jemacosma:
+ jemacos:
   name: JE (macOS)
   runs-on: macos-15-intel
   steps:
@@ -89,35 +71,9 @@ jobs:
       _MEMAUDIT: 8
      run: |
       script/testga.sh darwin || exit 1
-#       cd j64
-#       strip -S jconsole
-#       strip -S libj.dylib
-#       strip -S libjavx2.dylib || true
-#       strip -S libjavx512.dylib || true
-#       strip -S libtsdll.dylib
-#       strip -S jamalgam || true
-#       cd -
-#       ls -l j64
-#       zip -r m64ma.zip j64
-# 
-#    - name: Release JE (macOS)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "m64ma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (macOS)
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: dist
-#        path: testdarwinma.txt
-#        overwrite: true
 
 # macOS arm64 ----------------------------------------------------------
- jemacosarmma:
+ jemacosarm:
   name: JE (macOS arm64)
   runs-on: macos-15
   steps:
@@ -142,37 +98,11 @@ jobs:
       _MEMAUDIT: 8
      run: |
       script/testga.sh darwin || exit 1
-#       cd j64
-#       strip -S jconsole
-#       strip -S libj.dylib
-#       strip -S libjavx2.dylib || true
-#       strip -S libjavx512.dylib || true
-#       strip -S libtsdll.dylib
-#       strip -S jamalgam || true
-#       cd -
-#       ls -l j64
-#       zip -r m64armma.zip j64
-# 
-#    - name: Release JE (macOS arm64)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "m64armma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (macOS arm64)
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: dist
-#        path: testdarwinarmma.txt
-#        overwrite: true
 
 # rpi64arm -------------------------------------------------------------
- jerpi64armma:
+ jerpi64arm:
   name: JE (Linux arm64)
-  runs-on: ubuntu-22.04-arm
+  runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -195,36 +125,11 @@ jobs:
       _MEMAUDIT: 8
      run: |
       script/testga.sh raspberry arm64 || exit 1
-#       cd j64
-#       strip -S jconsole
-#       strip -S libj.so
-#       strip -S libtsdll.so
-#       strip -S jamalgam || true
-#       strip -S libgmp.so
-#       cd -
-#       ls -l j64
-#       zip -r rpi64ma.zip j64
-# 
-#    - name: Release JE (Linux arm64)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "rpi64ma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (Linux arm64)
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: dist
-#        path: testrpi64ma.txt
-#        overwrite: true
 
 # rpi32arm -------------------------------------------------------------
- jerpi32armma:
+ jerpi32arm:
   name: JE (Linux arm32)
-  runs-on: ubuntu-22.04-arm
+  runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -243,41 +148,16 @@ jobs:
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
-#    - name: Test JE (Linux arm32)
-#      env:
-#       _MEMAUDIT: 8
-#      run: |
-#       script/testga.sh raspberry armv6l || exit 1
-#       cd j32
-#       strip -S jconsole
-#       strip -S libj.so
-#       strip -S libtsdll.so
-#       strip -S jamalgam || true
-#       strip -S libgmp.so
-#       cd -
-#       ls -l j32
-#       zip -r rpi32ma.zip j32
-# 
-#    - name: Release JE (Linux arm32)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "rpi32ma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (Linux arm32)
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: dist
-#        path: testrpi32ma.txt
-#        overwrite: true
+   - name: Test JE (Linux arm32)
+     env:
+      _MEMAUDIT: 8
+     run: |
+      script/testga.sh raspberry armv6l || exit 1
 
 # freebsd --------------------------------------------------------------
- jefreebsd2ma:
+ jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-  if: ${{ false }}
+#  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -291,67 +171,41 @@ jobs:
       version: '15.0'
       shell: bash
 
-      run: |
-       rm -f jobdone
-       export IGNORE_OSVERSION=yes
-       sudo pkg upgrade -y
-       sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 openblas
-       sudo find / -type f -name 'liblapack.so*' 1>&2
-       sudo find / -type f -name 'libopenblas.so*' 1>&2
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       sudo echo "Host *" >>~/.ssh/config || true
-       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       sudo cat ~/.ssh/config || true
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export _MEMAUDIT=46
-       script/buildga.sh freebsd || exit 1
-       script/testga.sh freebsd || exit 1
-#        cd j64
-#        strip -S jconsole
-#        strip -S libj.so
-#        strip -S libjavx2.so || true
-#        strip -S libjavx512.so || true
-#        strip -S libtsdll.so
-#        strip -S jamalgam || true
-#        strip -S libgmp.so
-#        cd -
-#        ls -l j64
-#        zip -r fbsd64.zip j64
-#        touch jobdone
-# 
-#    - name: Check Status (FreeBSD)
-#      run: |
-#       test -f jobdone || exit 1
-# 
-#    - name: Release JE (FreeBSD)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "fbsd64.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (FreeBSD)
-#      uses: actions/upload-artifact@v4
-#      with:
-#       name: dist
-#       path: testfreebsd.txt
-#       overwrite: true
+     run: |
+      rm -f jobdone
+      export IGNORE_OSVERSION=yes
+      sudo pkg upgrade -y
+      sudo rdate time.cloudflare.com || true
+      sudo pkg search openblas 1>&2
+      sudo pkg install -y curl zip gmake nasm pcre2 openblas
+      sudo find / -type f -name 'liblapack.so*' 1>&2
+      sudo find / -type f -name 'libopenblas.so*' 1>&2
+      /sbin/ldconfig -r
+      ls -al ~/
+      ls -al ~/.ssh
+      sudo echo "Host *" >>~/.ssh/config || true
+      sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+      sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+      echo "client ssh config"
+      sudo cat ~/.ssh/config || true
+      export CC=clang
+      export USE_SLEEF=1
+      export USE_OPENMP=0
+      export _MEMAUDIT=32
+      script/buildga.sh freebsd || exit 1
+      script/testga.sh freebsd || exit 1
+      touch jobdone
+
+   - name: Check Status (FreeBSD)
+     run: |
+      test -f jobdone || exit 1
 
 # freebsdarm64 ---------------------------------------------------------------
- jefreebsdarm64ma:
+ jefreebsdarm64:
   name: JE (FreeBSD arm64)
-  if: ${{ false }}
-  runs-on: ubuntu-latest
+#  if: ${{ false }}
+  runs-on: ubuntu-24.04-arm
+#  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -364,64 +218,37 @@ jobs:
       version: '15.0'
       shell: bash
 
-      run: |
-       rm -f jobdone
-       export IGNORE_OSVERSION=yes
-       sudo pkg upgrade -y
-       sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 openblas
-       sudo find / -type f -name 'liblapack.so*' 1>&2
-       sudo find / -type f -name 'libopenblas.so*' 1>&2
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       sudo echo "Host *" >>~/.ssh/config || true
-       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       sudo cat ~/.ssh/config || true
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export _MEMAUDIT=46
-       script/buildga.sh freebsd || exit 1
-       script/testga.sh freebsd || exit 1
-#        cd j64
-#        strip -S jconsole
-#        strip -S libj.so
-#        strip -S libjavx2.so || true
-#        strip -S libjavx512.so || true
-#        strip -S libtsdll.so
-#        strip -S jamalgam || true
-#        strip -S libgmp.so
-#        cd -
-#        ls -l j64
-#        zip -r fbsdarm64.zip j64
-#        touch jobdone
-# 
-#    - name: Check Status (FreeBSD arm64)
-#      run: |
-#       test -f jobdone || exit 1
-# 
-#    - name: Release JE (FreeBSD arm64)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "fbsdarm64.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (FreeBSD arm64)
-#      uses: actions/upload-artifact@v4
-#      with:
-#       name: dist
-#       path: testfreebsdarm64.txt
-#       overwrite: true
+     run: |
+      rm -f jobdone
+      export IGNORE_OSVERSION=yes
+      sudo pkg upgrade -y
+      sudo rdate time.cloudflare.com || true
+      sudo pkg search openblas 1>&2
+      sudo pkg install -y curl zip gmake nasm pcre2 openblas
+      sudo find / -type f -name 'liblapack.so*' 1>&2
+      sudo find / -type f -name 'libopenblas.so*' 1>&2
+      /sbin/ldconfig -r
+      ls -al ~/
+      ls -al ~/.ssh
+      sudo echo "Host *" >>~/.ssh/config || true
+      sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+      sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+      echo "client ssh config"
+      sudo cat ~/.ssh/config || true
+      export CC=clang
+      export USE_SLEEF=1
+      export USE_OPENMP=0
+      export _MEMAUDIT=32
+      script/buildga.sh freebsd || exit 1
+      script/testga.sh freebsd || exit 1
+      touch jobdone
+
+   - name: Check Status (FreeBSD arm64)
+     run: |
+      test -f jobdone || exit 1
 
 # wasm -----------------------------------------------------------------
- jewasmma:
+ jewasm:
   name: JE (wasm)
   runs-on: ubuntu-latest
   steps:
@@ -440,22 +267,9 @@ jobs:
      run: |
       script/buildga.sh wasm || exit 1
       script/testga.sh wasm || exit 1
-#       ls -l j32
-#       zip -r wasm32ma.zip j32
-# 
-#    - name: Release JE (wasm)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "wasm32ma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#   - name: Copy Test (wasm)
 
 # windows --------------------------------------------------------------
- jewinma:
+ jewin:
   name: JE (Windows)
   runs-on: windows-2022
   steps:
@@ -481,28 +295,8 @@ jobs:
      run: |
       script\testga.cmd x64
 
-#    - name: Compress Files (Windows)
-#      shell: pwsh
-#      run: Compress-Archive j64 w64ma.zip
-# 
-#    - name: Release JE (Windows)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "w64ma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (Windows)
-#      uses: actions/upload-artifact@v4
-#      with:
-#       name: dist
-#       path: testwinma.txt
-#       overwrite: true
-
 # windows 32bit --------------------------------------------------------
- jewin32ma:
+ jewin32:
   name: JE (Windows 32)
   runs-on: windows-2022
   steps:
@@ -528,28 +322,9 @@ jobs:
      run: |
       script\testga.cmd x86
 
-#    - name: Compress Files (Windows 32)
-#      shell: pwsh
-#      run: Compress-Archive j32 w32ma.zip
-# 
-#    - name: Release JE (Windows 32)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "w32ma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (Windows 32)
-#      uses: actions/upload-artifact@v4
-#      with:
-#       name: dist
-#       path: testwin32ma.txt
-#       overwrite: true
 
 # windows arm64 --------------------------------------------------------
- jewinarm64ma:
+ jewinarm64:
   name: JE (Windows arm64)
   runs-on: windows-11-arm
   steps:
@@ -574,24 +349,4 @@ jobs:
       _MEMAUDIT: 8
      run: |
       script\testga.cmd arm64
-
-#    - name: Compress Files (Windows arm64)
-#      shell: pwsh
-#      run: Compress-Archive jarm64 warm64ma.zip
-# 
-#    - name: Release JE (Windows arm64)
-#      uses: ncipollo/release-action@v1
-#      with:
-#       tag: build
-#       artifacts: "warm64ma.zip"
-#       token: ${{ secrets.GITHUB_TOKEN }}
-#       allowUpdates: true
-#       replacesArtifacts: true
-# 
-#    - name: Copy Test (Windows arm64)
-#      uses: actions/upload-artifact@v4
-#      with:
-#       name: dist
-#       path: testwinarm64ma.txt
-#       overwrite: true
 

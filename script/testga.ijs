@@ -84,6 +84,21 @@ ECHOFILENAME0=. ECHOFILENAME
 ECHOFILENAME=: 0
 qk=. QKTEST
 QKTEST=: 1
+echo '>>> testing gdic.ijs'
+RES=: RUN4 (<testpath),each <'g331.ijs'
+exit^:(*@#RES) *@#RES
+RES=: ''
+QKTEST=: qk
+ECHOFILENAME=: ECHOFILENAME0
+1
+)
+
+0!:_1 '$'   NB. temp skip to allow running full test suite
+3 : 0''
+ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME=: 0
+qk=. QKTEST
+QKTEST=: 1
 echo '>>> testing gctrl.ijs'
 for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'gctrl.ijs'
@@ -95,7 +110,6 @@ ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
-0!:_1 '$'   NB. temp skip to allow running full test suite
 3 : 0''
 ECHOFILENAME0=. ECHOFILENAME
 ECHOFILENAME=: 0

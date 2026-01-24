@@ -38,6 +38,8 @@ extern UC fboxedsparse;
 
 #include <signal.h>
 
+extern UC* tohex(UC* dest, UC* src, I len);
+
 // 9!:32-33 #tries for elliptic-curve factoring
 F1(jtecmtriesq){F12IP;ASSERTMTV(w); R sc(jt->ecmtries);}
 F1(jtecmtriess){F12IP;I i; RE(i=i0(w)); ASSERT(BETWEENC(i,1,255),EVLIMIT) jt->ecmtries=i; R mtm;}
@@ -457,6 +459,28 @@ F1(jtcpufeature){F12IP;
   R sc(MEMAUDIT);
  } else if(!strcasecmp(CAV(w),"PYXES")) {
   R sc(PYXES);
+ } else if(!strcasecmp(CAV(w),"NAN.C")) {
+#if (defined(__has_builtin) && __has_builtin(__builtin_nan))
+  double a = __builtin_nan("");
+  UC dh[2*8];
+  R str(16, tohex(dh,(UC*)&a,8));
+#else
+  R cstr("");
+#endif
+ } else if(!strcasecmp(CAV(w),"INFINITY.C")) {
+#if (defined(__has_builtin) && __has_builtin(__builtin_inf))
+  double a = __builtin_inf();
+  UC dh[2*8];
+  R str(16, tohex(dh,(UC*)&a,8));
+#else
+  R cstr("");
+#endif
+ } else if(!strcasecmp(CAV(w),"NAN")) {
+  UC dh[2*8];
+  R str(16, tohex(dh,(UC*)XNAN,8));
+ } else if(!strcasecmp(CAV(w),"INFINITY")) {
+  UC dh[2*8];
+  R str(16, tohex(dh,(UC*)XINF,8));
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

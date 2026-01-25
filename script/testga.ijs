@@ -103,7 +103,7 @@ exit^:(*@#RES) *@#RES
 RES=: ''
 QKTEST=: qk
 ECHOFILENAME=: ECHOFILENAME0
-4!:55 ;'qk ECHOFILENAME0'
+4!:55 ;:'qk ECHOFILENAME0'
 
 0!:_1 '$'   NB. temp skip to allow running full test suite
 3 : 0''

@@ -277,6 +277,7 @@ RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 RUNFILE=: ''       NB. dummy
 QKTEST=: (*9!:56'MEMAUDIT')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
+QKTEST0=: QKTEST [ ECHOFILENAME0=: ECHOFILENAME
 
 RUND1=: 4 : 0
 x123=. x>.1

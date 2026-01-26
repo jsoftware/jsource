@@ -106,9 +106,9 @@ ECHOFILENAME=: ECHOFILENAME0
 
 0!:_1 '$'   NB. temp skip to allow running full test suite
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing gctrl.ijs'
 for_i. i.100 do.
@@ -116,29 +116,29 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing gdic.ijs'
 RES=: RUN4 (<testpath),each <'gdic.ijs'
 exit^:(*@#RES) *@#RES
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g131.ijs'
 for_i. i.100 do.
@@ -146,15 +146,15 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g300.ijs'
 for_i. i.100 do.
@@ -162,15 +162,15 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g131cblas.ijs'
 for_i. i.100 do.
@@ -178,15 +178,15 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g300cblas.ijs'
 for_i. i.100 do.
@@ -194,7 +194,7 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )

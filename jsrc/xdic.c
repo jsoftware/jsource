@@ -206,6 +206,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   ((DIC*)z)->bloc=((DIC*)a)->bloc;  // init everything from the previous dic
   box=w;  // w is nothing but size parms
  }
+ // remaining code is common to create & resize
 
  // box has the size parameters.  Audit & install into dic, overwriting anything that was copied.
  ASSERT(AR(box)<=1,EVRANK) ASSERT(BETWEENC(AN(box),2,3),EVLENGTH) if(!AT(box)&INT)RZ(box=ccvt(INT,box,0));  // sizes. must be box of 3 integers
@@ -270,7 +271,7 @@ F1(jtcreatedic){F12IP;
 // DICLKRDRELKV(dic,lv)   if the read locks for keys & values finish simultaneously, release them both (replaces DICLKRDRELK and DICLKRDRELV)
 
 // Writers use the sequence
-// DICLKRWRQ(dic,lv)  // request read/write lock.  fairly soon...
+// DICLKRWRQ(dic,lv,cond)  // request read/write lock.  fairly soon...
 // DICLKRWWT(dic,lv)  // ...wait for read/write lock to be granted (i. e. current-write# is our seq#).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock.
 // DICLKWRRQ(dic,lv)  // request write lock on keys&values
 // DICLKWRWTK(dic,lv)  // wait for write lock on keys (i. e. no readers looking at them).  Readers may still be reading values
@@ -1803,13 +1804,14 @@ DF1(jtdicmgetc){F12IP;
  R fdef(0,CMODX,VERB,jtvalenceerr,jtdicmgeto, w,self,0, VNONAME+VNOSELF, RMAX,RMAX,RMAX); 
 }
 
-// x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, also delete the empty chainfields.  If empties have already been deleted, return empty
+// x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, also erase the empty chainfields.  If empties have already been deleted, error
+// If x=2, clear the database: free all INDIRECT kvs, reset the free chain to hold all keys, clear stats
 // No locks; if you need a write lock, take it before calling.
 DF2(jtdicempties){F12IP;
  ARGCHK2(a,w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  DIC *dic=(DIC*)w;
- I x; RE(x=i0(a)); ASSERT(BETWEENC(x,0,1),EVDOMAIN)  // x must be 0 or 1
+ I x; RE(x=i0(a)); ASSERT(BETWEENC(x,0,2),EVDOMAIN)  // x must be 0-2
  I nodeb=(dic->bloc.emptysiz<<LGBB); UI kb=dic->bloc.kbytelen;  // #bits in empty-chain field; #bytes in key
  C *kv=CAV(dic->bloc.keys);   // point to start of keys
  I nempty=0; UI emptyx;  // # of empties & index of first one
@@ -1823,13 +1825,29 @@ DF2(jtdicempties){F12IP;
  for(nempty=0,emptyx=dic->bloc.emptyn;;){
   UI emptynxt=_bzhi_u64(*(UI4*)&kv[emptyx*kb],nodeb);   // count this empty, get next one
   zv[nempty++]=emptyx;  // if we are not destroying the table, return index of empty
-  if(x!=0){I t=0; WRHASH1234(t, nodeb>>3, &kv[emptyx*kb])}  // if destroying, erase the chain
+  if(x==1){I t=0; WRHASH1234(t, nodeb>>3, &kv[emptyx*kb])}  // if destroying, erase the chain
   if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
   emptyx=emptynxt;  // advance to next
  }
- if(x!=0)dic->bloc.emptyn=-1;  // set chain invalid if we have deleted it.  The noun is still undisplayable.
- RETF(z)
+ if(x==1)dic->bloc.emptyn=-1;  // set chain invalid if we have deleted it.  The noun is still undisplayable.
+ else if(x==2){   // 'clear' request
+  if(dic->bloc.flags&DICFKINDIR){A *av=AAV(dic->bloc.keys); DO((dic->bloc.kbytelen*AN(dic->bloc.keys))>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // delete keys...
+  if(dic->bloc.flags&DICFVINDIR){A *av=AAV(dic->bloc.vals); DO((dic->bloc.vbytelen*AN(dic->bloc.vals))>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // ...and values
+  // go back and reinitialize everything as if after create.  Why not just destroy/recreate?  Questionable decision.  Doing it this way keeps the dic in place, avoiding invalidating pointers.  Start with the hash:
+  if(dic->bloc.flags&DICFRB){  // red/black: allocate n2nxh block for tree
+   IAVn(3,dic->bloc.hash)[0]=2*0+0; IAVn(3,dic->bloc.hash)[1]=2*0+0;// empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
+  }else{  // hash: allocate hashtable, as a LIT list
+   mvc(dic->bloc.hashsiz*dic->bloc.hashelesiz,voidAV1(dic->bloc.hash),MEMSET00LEN,MEMSET00);   // allocate hash table & fill with empties
+  }
+  // keys
+  void *ev=voidAVn(AN(dic->bloc.kshape)+1,dic->bloc.keys); DO(AS(dic->bloc.keys)[0]-1, *(UI4*)ev=i+1; ev=(void *)((I)ev+((DIC*)z)->bloc.kbytelen);)   // allocate empty list & chain empties together
+  dic->bloc.emptyn=0; *(UI4*)ev=AS(dic->bloc.keys)[0]-1; // / set root of empty chain as unbiased 0; install end of chain loopback.  overstore OK
+  // values can be left as is
+  // other info
+  dic->bloc.cardinality=0;  // now the dic is empty
  }
+ RETF(z)
+}
 
 // x 16!:_8 dic   return dic stats
 DF2(jtdicstats){F12IP;A z;
@@ -1844,4 +1862,21 @@ DF2(jtdicstats){F12IP;A z;
  RETF(z);
 }
 
-
+// x 16!:_9 dic   lock/unlock the dictionary
+// x is (0 to lock, 1 to unlock),(0 for read lock, 1 for write lock)
+// Result is ''.  We return when the requested lock status has been achieved.  If the user takes a lock they MUST release it
+DF2(jtdiclock){F12IP;
+ ARGCHK2(a,w)
+ DIC *dic=(DIC*)w;
+ ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+ if(unlikely(AT(a)!=B01))RZ(a=ccvt(B01,a,0)) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==2,EVLENGTH)   // 2 flags: lock/un read/write
+ I lv;   // most recent result from RFO cycle
+ switch(2*BAV(a)[1]+BAV(a)[0]){
+ case 0b00: DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED); DICLKRDWTK(dic,lv) DICLKRDWTV(dic,lv) break;  // request read lock, wait till we have keys & values
+ case 0b01: DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED); DICLKRWWT(dic,lv) DICLKWRRQ(dic,lv) DICLKWRWTK(dic,lv) DICLKWRWTV(dic,lv) break; // write lock on keys & values
+ case 0b10: if(!(dic->bloc.flags&DICFSINGLETHREADED)){lv=DICLMSKRDV; DICLKRDRELKV(dic,lv)} break;  // read unlock
+ case 0b11: if(!(dic->bloc.flags&DICFSINGLETHREADED)){lv=DICLMSKRDV; DICLKWRRELV(dic,lv)} break; // write unlock
+default: ASSERT(0,EVDOMAIN)
+ }
+ RETF(mtv);
+}

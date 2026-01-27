@@ -342,6 +342,7 @@ struct AD {
 #define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1 - used for internal tables that need alignment or need AS[0])
 #define IAV2(x)         ((I*)((C*)(x)+AKXR(2)))  // integer in a stack- or heap-allocated list (rank 2)
 #define UIAV1(x)         ((UI*)((C*)(x)+AKXR(1)))  // unsigned integer "limb" in an X (or Q) value
+#define UI8AV1(x)         ((UI8*)((C*)(x)+AKXR(1)))  // unsigned integer "limb" in an X (or Q) value
 #define BAV0(x)         ( (C*)((C*)(x)+AKXR(0)) )  // Boolean when rank is 0 - fixed position (known to avoid segfault)
 #define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Symbol when rank is 0 - fixed position (for SYMB hash tables).  Note AK() is used in SYMB tables
 #define LAV0(x)         ( (L*)((C*)(x)+AKXR(0)) )  // Symbol array when rank is 0 - used for the symbol pool

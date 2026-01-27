@@ -1219,7 +1219,7 @@ static DF2(jtfold12){F12IP;A z,vz;
       AAV1(zz)[newslot]=z; AN(zz)=newslot+1;  // install the new value & account for it in len
      }else{
       // Fold Single.  Replace the value in zz
-      if(AN(zz)!=0){fa(AAV0(zz)[0]);} else{AN(zz)=1;}  // free old value if any, mark value now valid
+      if(AN(zz)!=0){A t=AAV0(zz)[0]; if(MEMAUDIT&0x3e)AAV0(zz)[0]=0; fa(t);} else{AN(zz)=1;}  // free old value if any, mark value now valid  (clear value in buffer before auditing)
       AAV0(zz)[0]=z;  // install new value
      }
     }

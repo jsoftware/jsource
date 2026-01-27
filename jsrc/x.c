@@ -201,6 +201,7 @@ void jtforeigninit(J jt){UI i;
  MN(16,-1)  XPRIM(ADV, jtcreatedic,  0,               VNOLOCCHG,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-5)  XPRIM(VERB, 0,     jtdicempties,               VNOLOCCHG,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-8)  XPRIM(VERB, 0,     jtdicstats,               VNOLOCCHG,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(16,-9)  XPRIM(VERB, 0,     jtdiclock,               VNOLOCCHG,VF2NONE,RMAX,   RMAX,RMAX);
  MN(2,0)   XPRIM(VERB, jthost,       0,            VNOLOCCHG,VF2NONE,1,   RMAX,RMAX);
  MN(2,1)   XPRIM(VERB, jthostne,     0,            VNOLOCCHG,VF2NONE,1,   RMAX,RMAX);
 #if 0  // doesn't work
@@ -221,6 +222,7 @@ void jtforeigninit(J jt){UI i;
  MN(3,4)   XPRIM(VERB, 0,            jtic2,        VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,5)   XPRIM(VERB, 0,            jtfc2,        VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,6)   XPRIM(VERB, jtlock1,      jtlock2,      VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
+ MN(3,7)   XPRIM(VERB, 0,            jtpackbyte,        VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,9)   XPRIM(VERB, 0,            jtnouninfo2,  VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
  MN(4,1)   XPRIM(VERB, jtnl1,        jtnl2,        VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
  MN(4,3)   XPRIM(VERB, jtsnl,        0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);

@@ -539,12 +539,19 @@ F1(jtunbin){F12IP;A q;B b,d;C*v;I c,i,k,m,n,r,t;
 }    /* 3!:2 w, inverse for binrep/hexrep */
 
 // 3!:4
-F2(jtic2){F12IP;A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
+F2(jtic2){F12IP;A z;I j,m,n,p,zt;I4* RESTRICT y;UI4* RESTRICT y1;S*s;U short*u;
  ARGCHK2(a,w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
- RE(j=i0(a));
- if(7==j||-7==j){I4 *v1,*x1;
+ RE(j=i0(a)); ASSERT(BETWEENC(j,-7,7),EVDOMAIN) I j1hot=(I)1<<(j-(-7));  // x must be [_7,7], get 1hot form
+// obsolete  if(7==j||-7==j){I4 *v1,*x1;
+ if(unlikely(j1hot&0x6003)){I4 *v1,*x1;   // _7, _6, 6, 7
+  p=j1hot&0x4001?2:1; I wt=(INT2>>1)<<p;  // lg2 of length of atoms, type of atoms
+  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),wt))RZ(w=cvt(wt,w));}
+  else   {m=n>>p; zt=wt; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
+  GA10(z,zt,m); MC(voidAV1(z),voidAV(w),j<0?n:m);
+#if 0   // obsolete 
+ {RETF(z);}v1=I4AV(z); x1=I4AV(w);
  p=2;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),INT4))RZ(w=cvt(INT4,w));}
  else   {m=n>>p; zt=INT4; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
@@ -564,39 +571,41 @@ F2(jtic2){F12IP;A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  case -6: MC(v1,x1,n); {RETF(z);}
  case  6: MC(v1,x1,m); {RETF(z);}
  }
- } else {
-#if SY_64
- ASSERT(ABS(j)<=4,EVDOMAIN);
-#else
- ASSERT(ABS(j)<=2,EVDOMAIN);
 #endif
-// p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
- p=ABS(j); p+=(I )(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2
- if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w));}
- else   {m=n>>p; zt=INT; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
- GA10(z,zt,m); v=AV(z); x=AV(w); 
- switch(j){
- default: ASSERT(0,EVDOMAIN);
- case -4: y1=(UI4*)x;    DQ(m, *v++=    *y1++;); {RETF(z);}
- case  4: y1=(UI4*)v;    DQ(n, *y1++=(UI4)*x++;); {RETF(z);}
- case -3: ICPY(v,x,m); {RETF(z);}
- case  3: MC(v,x,m);   {RETF(z);}
- case -2: y=(I4*)x;      DQ(m, *v++=    *y++;); {RETF(z);}
- case  2: y=(I4*)v;      DQ(n, *y++=(I4)*x++;); {RETF(z);}
- case -1: s=(S*)x;       DQ(m, *v++=    *s++;); {RETF(z);}
- case  1: s=(S*)v;       DQ(n, *s++=(S) *x++;); {RETF(z);}
- case  0: u=(U short*)x; DQ(m, *v++=    *u++;); {RETF(z);}
+ } else {
+#if !SY_64
+// obsolete  ASSERT(ABS(j)<=4,EVDOMAIN);
+// obsolete #else
+  ASSERT(j1hot&(SY_64?0x0ff8:0x0be8,EVDOMAIN);   // 3, -3 are 64-bit conversions; 5, -5 not allowed
+#endif
+  // p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
+  p=ABS(j); p+=(I )(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2
+  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w));}
+  else   {m=n>>p; zt=INT; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
+  GA10(z,zt,m); I * RESTRICT v=AV(z); I * RESTRICT x=AV(w); 
+  switch(j){
+// obsolete  default: ASSERT(0,EVDOMAIN);
+  case -4: y1=(UI4*)x;    DQ(m, *v++=    *y1++;); break;  // unsigned 32-bit
+  case  4: y1=(UI4*)v;    DQ(n, *y1++=(UI4)*x++;); break;
+  case -3: ICPY(v,x,m); break;  // 64-bit
+  case  3: MC(v,x,m);   break;
+  case -2: y=(I4*)x;      DQ(m, *v++=    *y++;); break;  // signed 32-bit
+  case  2: y=(I4*)v;      DQ(n, *y++=(I4)*x++;); break;
+  case -1: s=(S*)x;       DQ(m, *v++=    *s++;); break;  // signed 16-bit
+  case  1: s=(S*)v;       DQ(n, *s++=(S) *x++;); break;
+  case  0: u=(U short*)x; DQ(m, *v++=    *u++;); break;  // unsigned 16-bit
+  }
  }
- }
+ RETF(z);
 }
 
 // 3!:5
-F2(jtfc2){F12IP;A z;D*x,*v;I j,m,n,p,zt;float*s;
+F2(jtfc2){F12IP;A z;I j,m,n,p,zt;float*s;
  ARGCHK2(a,w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
  RE(j=i0(a));
- if(11==j||-11==j){E*x1,*v1;    // quad precision
+ if(11==j||-11==j){E * RESTRICT x1,* RESTRICT v1;    // quad precision
  p=4;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),QP))RZ(w=ccvt(QP,w,0));}
  else   {m=n>>p; zt=QP; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
@@ -607,7 +616,7 @@ F2(jtfc2){F12IP;A z;D*x,*v;I j,m,n,p,zt;float*s;
  case  11: MC(v1,x1,m); {RETF(z);}
  }
 #if 0
- } else if(10==j||-10==j){float*x1,*v1;    // single precsion
+ } else if(10==j||-10==j){float * RESTRICT x1, * RESTRICT v1;    // single precision
  p=2;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),SP))RZ(w=ccvt(SP,w,0));}
  else   {m=n>>p; zt=SP; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
@@ -617,7 +626,7 @@ F2(jtfc2){F12IP;A z;D*x,*v;I j,m,n,p,zt;float*s;
  case -10: MC(v1,x1,n); {RETF(z);}
  case  10: MC(v1,x1,m); {RETF(z);}
  }
- } else if(9==j||-9==j){uint16_t*x1,*v1;    // half precison
+ } else if(9==j||-9==j){uint16_t * RESTRICT x1, * RESTRICT v1;    // half precison
  p=1;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),HP))RZ(w=ccvt(HP,w,0));}
  else   {m=n>>p; zt=HP; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
@@ -632,7 +641,7 @@ F2(jtfc2){F12IP;A z;D*x,*v;I j,m,n,p,zt;float*s;
  p=2==j||-2==j?LGSZD:2;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),FL))RZ(w=ccvt(FL,w,0));}
  else   {m=n>>p; zt=FL; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
- GA10(z,zt,m); v=DAV(z); x=DAV(w);
+ GA10(z,zt,m); D * RESTRICT v=DAV(z); D * RESTRICT x=DAV(w);
  switch(j){
  default: ASSERT(0,EVDOMAIN);
  case -2: MC(v,x,n); {RETF(z);}
@@ -641,6 +650,40 @@ F2(jtfc2){F12IP;A z;D*x,*v;I j,m,n,p,zt;float*s;
  case  1: s=(float*)v; DQ(n, *s++=(float)*x++;); {RETF(z);}
  }
  }
+}
+
+// _1 3!:7 y - convert boolean to packed integer
+static DF1(jtpackbytem1){F12IP;
+ I wn=AN(w); if(unlikely(wn==0))R mtvi; if(unlikely(!(AT(w)&B01)))RZ(w=ccvt(B01,w,0)) UI8 * RESTRICT wv=I8AV(w);  // if no bits, empty result; point to first input bit
+ A z; GATV0(z,INT,(wn+BW-1)>>(LGBW),1) C * RESTRICT zv=CAV1(z);  // allocate result & point to it
+#ifdef PEXT
+ DO((wn+8-1)>>3, zv[i]=PEXT(wv[i],VALIDBOOLEAN);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
+#else
+ DO((wn+8-1)>>3, zv[i]=wv[i]*(I8)0x0102040810204080LL>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
+#endif
+ if(wn&(BW-1))((I*)zv)[((wn+BW-1)>>(LGBW))-1]&=~((I)~0<<(wn&(BW-1)));   // if the last I is not full, mask out trailing upper bits
+ RETF(z);
+}
+
+// 1 3!:7 y - convert packed integers to boolean
+static DF1(jtpackbyte1){F12IP;
+ I wn=AN(w); if(unlikely(wn==0))R mtv; if(unlikely(!(AT(w)&INT)))RZ(w=ccvt(INT,w,0)) C *  wv=CAV(w);  // if no bits, empty result; point to first input bit
+ A z; GATV0(z,B01,wn<<LGBW,1) I *  zv=IAV1(z);  // allocate result & point to it.  There is always a full I free at the end
+#if defined(PDEP) && SY_64
+ DO(wn<<LGSZI, zv[i]=PDEP(wv[i],VALIDBOOLEAN);)   // read 8 bits, unpack, write out.
+#else
+ DO(wn<<LGSZI, I t=wv[i]; t|=t<<7; t|=t<<14; if(SY_64)t|=t<<28; zv[i]=t&VALIDBOOLEAN;)   // read 8 bits, pack, write out.
+#endif
+ // We have always written out exactly the bits in y
+ RETF(z);
+}
+
+// 3!:7 Convert from/to packed bits
+DF2(jtpackbyte){F12IP;
+ ARGCHK2(a,w);
+ I j; RE(j=i0(a)); ASSERT(((j+1)&~2)==0,EVDOMAIN) // x is -1 or 1
+ AF cellrtn=j>=0?jtpackbyte1:jtpackbytem1;  // routine for 1 cell
+ DF1RANK(1,cellrtn,self);
 }
 
 // a  0: tolower  1: toupper

@@ -460,18 +460,26 @@ F1(jtcpufeature){F12IP;
  } else if(!strcasecmp(CAV(w),"PYXES")) {
   R sc(PYXES);
  } else if(!strcasecmp(CAV(w),"NAN.C")) {
-#if (defined(__has_builtin) && __has_builtin(__builtin_nan))
+#if defined(__has_builtin)
+#if  __has_builtin(__builtin_nan)
   double a = __builtin_nan("");
   UC dh[2*8];
   R str(16, tohex(dh,(UC*)&a,8));
 #else
   R cstr("");
 #endif
+#else
+  R cstr("");
+#endif
  } else if(!strcasecmp(CAV(w),"INFINITY.C")) {
-#if (defined(__has_builtin) && __has_builtin(__builtin_inf))
+#if defined(__has_builtin)
+#if __has_builtin(__builtin_inf)
   double a = __builtin_inf();
   UC dh[2*8];
   R str(16, tohex(dh,(UC*)&a,8));
+#else
+  R cstr("");
+#endif
 #else
   R cstr("");
 #endif

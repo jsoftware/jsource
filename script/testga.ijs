@@ -83,7 +83,7 @@ echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i:
 4!:55 ;:'x y'
 ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=: QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g331.ijs'
 RES=: RUN4 (<testpath),each <'g331.ijs'
@@ -101,15 +101,14 @@ echo '>>> testing gxco1.ijs'
 RES=: RUN4 (<testpath),each <'gxco1.ijs'
 exit^:(*@#RES) *@#RES
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
-4!:55 ;:'qk ECHOFILENAME0'
 
 0!:_1 '$'   NB. temp skip to allow running full test suite
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing gctrl.ijs'
 for_i. i.100 do.
@@ -117,29 +116,29 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing gdic.ijs'
 RES=: RUN4 (<testpath),each <'gdic.ijs'
 exit^:(*@#RES) *@#RES
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g131.ijs'
 for_i. i.100 do.
@@ -147,15 +146,15 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g300.ijs'
 for_i. i.100 do.
@@ -163,15 +162,15 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g131cblas.ijs'
 for_i. i.100 do.
@@ -179,15 +178,15 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
 
 3 : 0''
-ECHOFILENAME0=. ECHOFILENAME
+ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
-qk=. QKTEST
+QKTEST0=: QKTEST
 QKTEST=: 1
 echo '>>> testing g300cblas.ijs'
 for_i. i.100 do.
@@ -195,7 +194,7 @@ for_i. i.100 do.
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
-QKTEST=: qk
+QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )

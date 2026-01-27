@@ -277,6 +277,7 @@ RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 RUNFILE=: ''       NB. dummy
 QKTEST=: (*9!:56'MEMAUDIT')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
+QKTEST0=: QKTEST [ ECHOFILENAME0=: ECHOFILENAME
 
 RUND1=: 4 : 0
 x123=. x>.1
@@ -492,7 +493,3 @@ techo 'cblas: ',(":9!:56'cblas'),'   cblasfile: ',9!:56'cblasfile'
 techo 'cachelinesize(hardware): ',":9!:56'cachelinesizehw'
 techo 'cachelinesize(compile): ',":9!:56'cachelinesize'
 techo 'cpusetsize: ',":9!:56'cpusetsize'
-techo 'nan:   ',9!:56'nan'
-techo 'nan.c: ',9!:56'nan.c'
-techo 'infinity:   ',9!:56'infinity'
-techo 'infinity.c: ',9!:56'infinity.c'

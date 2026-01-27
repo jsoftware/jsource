@@ -206,8 +206,8 @@ jobs:
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
 #  if: ${{ false }}
-  runs-on: ubuntu-24.04-arm
-#  runs-on: ubuntu-latest
+#  runs-on: ubuntu-24.04-arm
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

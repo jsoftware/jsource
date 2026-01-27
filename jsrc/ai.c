@@ -206,9 +206,9 @@ xco:
   break;
  case CIBEAM:  // h is x!:y
   if(likely(nf!=0)){   // n&(x!:y)
-   if(FAV(h)->localuse.lu1.foreignmn[0]==3){  // 3!:y
+   if(FAV(h)->localuse.lu1.foreignmn[0]==3){  // 3!:n
     RE(n=i0(f));
-    if(BETWEENC(FAV(h)->localuse.lu1.foreignmn[1],4,5)){ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN); R amp(num(-n),g);}  // inverse of _2..2&(3!:(4..5)) is (-n)&(3!:(4..5))
+    if(BETWEENC(FAV(h)->localuse.lu1.foreignmn[1],4,7)&&likely(FAV(h)->localuse.lu1.foreignmn[1]!=6)){ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN); R amp(num(-n),g);}  // inverse of _2..2&(3!:(4 5 7)) is (-n)&(3!:(4 5 7))
     if((FAV(h)->localuse.lu1.foreignmn[1]&~2)==1){ASSERT(0==n||1==n||10==n||11==n,EVDOMAIN); R foreign(num(3),num(2));}  // inverse of [0/1/10/11]&(3!:[1/3]) is 3!:2
    }
   }

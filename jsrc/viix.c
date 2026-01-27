@@ -98,7 +98,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
 // large values unsuitable for a branch table, and also took advantage of the fact that
 // codes produced by multiple combinations, such as LIT,B01 and B01,FL which both produce
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
-#define CVCASE(a,b)     (6*((0xc28c>>(a))&7)+((0xc28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7 13->4 3 1 0 2 5 6  1100001010001100
+#define CVCASE(a,b)     (8*((0xde8c>>(a))&7)+((0xde8c>>(b))&7))   // Must distinguish 0 2 3 4 6 7 9 10 13->4 3 1 0 2 5 7 7 6  11011110 10001100
 #define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases and SBT
 
 // parallel implementations of I. in assembly

@@ -1868,15 +1868,17 @@ DF2(jtdicstats){F12IP;A z;
 DF2(jtdiclock){F12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
- ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
- if(unlikely(AT(a)!=B01))RZ(a=ccvt(B01,a,0)) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==2,EVLENGTH)   // 2 flags: lock/un read/write
- I lv;   // most recent result from RFO cycle
- switch(2*BAV(a)[1]+BAV(a)[0]){
- case 0b00: DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED); DICLKRDWTK(dic,lv) DICLKRDWTV(dic,lv) break;  // request read lock, wait till we have keys & values
- case 0b01: DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED); DICLKRWWT(dic,lv) DICLKWRRQ(dic,lv) DICLKWRWTK(dic,lv) DICLKWRWTV(dic,lv) break; // write lock on keys & values
- case 0b10: if(!(dic->bloc.flags&DICFSINGLETHREADED)){lv=DICLMSKRDV; DICLKRDRELKV(dic,lv)} break;  // read unlock
- case 0b11: if(!(dic->bloc.flags&DICFSINGLETHREADED)){lv=DICLMSKRDV; DICLKWRRELV(dic,lv)} break; // write unlock
-default: ASSERT(0,EVDOMAIN)
+ if(likely(!(dic->bloc.flags&DICFSINGLETHREADED))){  // if singlethreaded, take no locks
+  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
+  if(unlikely(AT(a)!=B01))RZ(a=ccvt(B01,a,0)) ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==2,EVLENGTH)   // 2 flags: lock/un read/write
+  I lv;   // most recent result from RFO cycle
+  switch(2*BAV(a)[1]+BAV(a)[0]){
+  case 0b00: DICLKRDRQ(dic,lv,1); DICLKRDWTK(dic,lv) DICLKRDWTV(dic,lv) break;  // request read lock, wait till we have keys & values
+  case 0b01: DICLKRWRQ(dic,lv,1); DICLKRWWT(dic,lv) DICLKWRRQ(dic,lv) DICLKWRWTK(dic,lv) DICLKWRWTV(dic,lv) break; // write lock on keys & values
+  case 0b10: lv=DICLMSKRDV; DICLKRDRELKV(dic,lv) break;  // read unlock
+  case 0b11: lv=DICLMSKRDV; DICLKWRRELV(dic,lv) break; // write unlock
+  default: ASSERT(0,EVDOMAIN)
+  }
  }
  RETF(mtv);
 }

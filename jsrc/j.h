@@ -963,6 +963,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ADDBYTESINIn(t) (t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff, then xxxx03ff, then 000003ff
 #define VALIDBOOLEAN 0x01010101   // valid bits in a Boolean
 #endif
+#define VALIDBOOLEAN8 (UI8)0x0101010101010101LL   // valid bits in an 8-byte Boolean
 #define ADDBYTESINI(t) (ADDBYTESINI1(t) , ADDBYTESINIn(t)) // sig in 01ff01ff, then xxxx03ff, then 000003ff
 #define BOOLEANSIGN (VALIDBOOLEAN<<(BB-1))
 

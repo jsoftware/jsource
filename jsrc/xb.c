@@ -657,25 +657,23 @@ static DF1(jtpackbytem1){F12IP;
  I wn=AN(w); if(unlikely(wn==0))R mtvi; if(unlikely(!(AT(w)&B01)))RZ(w=ccvt(B01,w,0)) UI8 * RESTRICT wv=I8AV(w);  // if no bits, empty result; point to first input bit
  A z; GATV0(z,INT,(wn+BW-1)>>(LGBW),1) C * RESTRICT zv=CAV1(z);  // allocate result & point to it
 #ifdef PEXT
- DO((wn+8-1)>>3, zv[i]=PEXT(wv[i],VALIDBOOLEAN);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
+ DO((wn+8-1)>>3, zv[i]=PEXT(wv[i],VALIDBOOLEAN8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
 #else
  DO(((wn+8-1)>>3)-1, zv[i]=wv[i]*(UI8)0x0102040810204080LL>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
- zv[((wn+8-1)>>3)-1]=(wv[((wn+8-1)>>3)-1]&VALIDBOOLEAN)*(UI8)0x0102040810204080LL>>(64-8);  // mask off invalid bits in last section
+ zv[((wn+8-1)>>3)-1]=(wv[((wn+8-1)>>3)-1]&VALIDBOOLEAN8)*(UI8)0x0102040810204080LL>>(64-8);  // mask off invalid bits in last section
 #endif
- DO(((wn+8-1)>>3)-1, zv[i]=wv[i]*(UI8)0x0102040810204080LL>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
- zv[((wn+8-1)>>3)-1]=(wv[((wn+8-1)>>3)-1]&VALIDBOOLEAN)*(UI8)0x0102040810204080LL>>(64-8);  // mask off invalid bits in last section
  if(wn&(BW-1))((I*)zv)[((wn+BW-1)>>(LGBW))-1]&=~((I)~0<<(wn&(BW-1)));   // if the last I is not full, mask out trailing upper bits
  RETF(z);
 }
 
-// 1 3!:7 y - convert packed integers to boolean
+// 1 3!:7 y - convert any type (normally packed integers) to boolean
 static DF1(jtpackbyte1){F12IP;
- I wn=AN(w); if(unlikely(wn==0))R mtv; if(unlikely(!(AT(w)&INT)))RZ(w=ccvt(INT,w,0)) C *  wv=CAV(w);  // if no bits, empty result; point to first input bit
- A z; GATV0(z,B01,wn<<LGBW,1) I *  zv=IAV1(z);  // allocate result & point to it.  There is always a full I free at the end
+ I wn=AN(w); if(unlikely(wn==0))R mtv; C * RESTRICT wv=CAV(w); wn<<=bplg(AT(w)); // if no bits, empty result; point to first input bit; get # bytes in input
+ A z; GATV0(z,B01,wn<<LGBB,1) UI8 * RESTRICT zv=UI8AV1(z);  // allocate result & point to it.  The allocation is always an integral # of I8s
 #if defined(PDEP) && SY_64
- DO(wn<<LGSZI, zv[i]=PDEP(wv[i],VALIDBOOLEAN);)   // read 8 bits, unpack, write out.
+ DO(wn, zv[i]=PDEP(wv[i],VALIDBOOLEAN);)   // read 8 bits, unpack, write out.
 #else
- DO(wn<<LGSZI, I t=wv[i]; t|=t<<7; t|=t<<14; if(SY_64)t|=t<<28; zv[i]=t&VALIDBOOLEAN;)   // read 8 bits, pack, write out.
+ DO(wn, UI8 t=wv[i]; t|=t<<7; t|=t<<14; t|=t<<28; zv[i]=t&VALIDBOOLEAN8;)   // read 8 bits, pack, write out.
 #endif
  // We have always written out exactly the bits in y
  RETF(z);

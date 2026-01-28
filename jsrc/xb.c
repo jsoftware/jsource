@@ -659,8 +659,11 @@ static DF1(jtpackbytem1){F12IP;
 #ifdef PEXT
  DO((wn+8-1)>>3, zv[i]=PEXT(wv[i],VALIDBOOLEAN);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
 #else
- DO((wn+8-1)>>3, zv[i]=wv[i]*(I8)0x0102040810204080LL>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
+ DO(((wn+8-1)>>3)-1, zv[i]=wv[i]*(UI8)0x0102040810204080LL>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
+ zv[((wn+8-1)>>3)-1]=(wv[((wn+8-1)>>3)-1]&VALIDBOOLEAN)*(UI8)0x0102040810204080LL>>(64-8);  // mask off invalid bits in last section
 #endif
+ DO(((wn+8-1)>>3)-1, zv[i]=wv[i]*(UI8)0x0102040810204080LL>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
+ zv[((wn+8-1)>>3)-1]=(wv[((wn+8-1)>>3)-1]&VALIDBOOLEAN)*(UI8)0x0102040810204080LL>>(64-8);  // mask off invalid bits in last section
  if(wn&(BW-1))((I*)zv)[((wn+BW-1)>>(LGBW))-1]&=~((I)~0<<(wn&(BW-1)));   // if the last I is not full, mask out trailing upper bits
  RETF(z);
 }

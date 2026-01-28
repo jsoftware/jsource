@@ -1875,8 +1875,8 @@ DF2(jtdiclock){F12IP;
   switch(2*BAV(a)[1]+BAV(a)[0]){
   case 0b00: DICLKRDRQ(dic,lv,1); DICLKRDWTK(dic,lv) DICLKRDWTV(dic,lv) break;  // request read lock, wait till we have keys & values
   case 0b01: DICLKRWRQ(dic,lv,1); DICLKRWWT(dic,lv) DICLKWRRQ(dic,lv) DICLKWRWTK(dic,lv) DICLKWRWTV(dic,lv) break; // write lock on keys & values
-  case 0b10: lv=DICLMSKRDV; DICLKRDRELKV(dic,lv) break;  // read unlock
-  case 0b11: lv=DICLMSKRDV; DICLKWRRELV(dic,lv) break; // write unlock
+  case 0b10: lv=(I)DICLMSKRDV; DICLKRDRELKV(dic,lv) break;  // read unlock
+  case 0b11: lv=(I)DICLMSKRDV; DICLKWRRELV(dic,lv) break; // write unlock
   default: ASSERT(0,EVDOMAIN)
   }
  }

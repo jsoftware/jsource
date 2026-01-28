@@ -131,7 +131,6 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -std=gnu17 -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
  -Werror -Wextra -Wno-unknown-warning-option \
- -Wconstant-conversion \
  -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \

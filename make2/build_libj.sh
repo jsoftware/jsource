@@ -131,6 +131,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -std=gnu17 -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
  -Werror -Wextra -Wno-unknown-warning-option \
+ -Wconstant-conversion \
  -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \
@@ -149,7 +150,6 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-pointer-sign \
  -Wno-pointer-to-int-cast \
  -Wno-return-local-addr \
- \
  -Wno-shift-negative-value \
  -Wno-sign-compare \
  -Wno-string-plus-int \
@@ -163,9 +163,10 @@ else
  # clang
  common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv \
  -Werror -Wextra -Wno-unknown-warning-option \
- -Wtypedef-redefinition \
+ -Wconstant-conversion \
  -Wsign-compare \
  -Wtautological-constant-out-of-range-compare \
+ -Wtypedef-redefinition \
  -Wuninitialized \
  -Wno-cast-function-type-mismatch \
  -Wno-char-subscripts \
@@ -187,7 +188,6 @@ else
  -Wno-pass-failed \
  -Wno-pointer-sign \
  -Wno-pointer-to-int-cast \
- \
  -Wno-sometimes-uninitialized \
  -Wno-string-plus-int \
  -Wno-unknown-pragmas \

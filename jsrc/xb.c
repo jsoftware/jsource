@@ -576,7 +576,7 @@ F2(jtic2){F12IP;A z;I j,m,n,p,zt;I4* RESTRICT y;UI4* RESTRICT y1;S*s;U short*u;
 #if !SY_64
 // obsolete  ASSERT(ABS(j)<=4,EVDOMAIN);
 // obsolete #else
-  ASSERT(j1hot&(SY_64?0x0ff8:0x0be8,EVDOMAIN);   // 3, -3 are 64-bit conversions; 5, -5 not allowed
+  ASSERT(j1hot&(SY_64?0x0ff8:0x0be8),EVDOMAIN);   // 3, -3 are 64-bit conversions; 5, -5 not allowed
 #endif
   // p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
   p=ABS(j); p+=(I )(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2

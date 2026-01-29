@@ -278,6 +278,7 @@ Debug=: 0
 RUNFILE=: ''       NB. dummy
 QKTEST=: (*9!:56'MEMAUDIT')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
 QKTEST0=: QKTEST [ ECHOFILENAME0=: ECHOFILENAME
+WINMEM2=: ('x86_64'-:9!:56'cpu') *. IFWIN *. 2 *@(17 b.) 9!:56'memaudit'   NB. skip some check
 
 RUND1=: 4 : 0
 x123=. x>.1

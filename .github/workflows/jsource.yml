@@ -468,6 +468,34 @@ jobs:
       path: testrpi32.txt
       overwrite: true
 
+# rpi32armd ------------------------------------------------------------
+ jerpi32armd:
+  name: JE (Linux arm32 debug)
+  runs-on: ubuntu-24.04-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux arm32 debug)
+     run: |
+      script/install-rpi.sh
+
+   - name: Build JE (Linux arm32 debug)
+     env:
+      CC: arm-linux-gnueabihf-gcc
+      USE_SLEEF: 1
+      USE_SLEEFQUAD: 1
+      USE_OPENMP: 0
+      _DEBUG: 3
+     run: |
+      script/buildga.sh raspberry armv6l || exit 1
+
+   - name: Test JE (Linux arm32 debug)
+     env:
+      _DEBUG: 3
+     run: |
+      script/testga.sh raspberry armv6l || exit 1
+
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)

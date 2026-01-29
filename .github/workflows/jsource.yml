@@ -668,7 +668,7 @@ jobs:
       overwrite: true
 
 # rpi32arm debug -------------------------------------------------------
- jerpi32armd:
+ jerpi32armd2:
   name: JE (Linux arm32 debug)
   if: ${{ false }}
   runs-on: ubuntu-24.04-arm

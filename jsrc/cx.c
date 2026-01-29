@@ -1089,6 +1089,7 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
    // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
    A *lvv=lv+(cwv[j].tcesx&TCESXSXMSK);  // pointer to sentence words
    I startx=0;   // start and end+1 index of sentence
+   jt->pppprunning=1;  // indicate that we are scanning for PPPP and must reject 
    // loop till we have found all the parens
    while(1){
     // Look forward for )
@@ -1098,8 +1099,8 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
     while(--startx>=0 && !(AT(QCWORD(lvv[startx]))==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
      if(AT(QCWORD(lvv[startx]))&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
      if(AT(QCWORD(lvv[startx]))&VERB && FAV(QCWORD(lvv[startx]))->flag2&VF2IMPLOC)break;  // u. v. not allowed: they are half-names
-     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)break;  // !: not allowed: might produce adverb/conj to do who-knows-what  scaf should have safe list
-     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(AT(QCWORD(lvv[startx-1]))&VERB))break;  // : allowed only in u : v form
+// obsolete      if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)break;  // !: not allowed: might produce adverb/conj to do who-knows-what  scaf should have safe list
+// obsolete      if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(AT(QCWORD(lvv[startx-1]))&VERB))break;  // : allowed only in u : v form
     }
     if(startx>=0 && (startx+2<rparx) && (AT(QCWORD(lvv[startx]))==LPAR)){  // ( ... ) but not () or ( word )
      // The ) was matched and the () can be processed.
@@ -1116,18 +1117,19 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
       WITHMSGSOFF(parseok=(I)parsea(fragv,rparx-startx-1);)    // trial parse, no msg formatting needed.   Remember if it was OK
      }
      if(parseok){
-      // no error: parse the actual () block, which should not fail
+      // no error: parse the actual () block, which should not fail unless out of memory
       // mark the block as PPPP if it will need extra parens: (( )) or noun or non-noun & not invisible modifier, which always has ( ) added
-      A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1)); makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
+      A pfrag; RZGOTO(pfrag=parsea(&lvv[startx+1],rparx-startx-1),parseerr); makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
       // Replace the () block with its parse, close up the sentence
       lvv[startx]=QCINSTALLTYPE(pfrag,ATYPETOVALTYPE(AT(pfrag))); DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];)
       // Adjust the end pointer and the ) position
       endx-=rparx-startx; rparx=startx;  // back up to account for discarded tokens; resume as if the parse result was at ) position
-     }else{RESETERR} // skipping because of error; clear error indic
+     }else{parseerr: RESETERR} // skipping because of error; clear error indic
     }
     // Whether we skipped or not, rpar now has the adjusted position of the ) and endx is correct relative to it.  Advance to next ) search
     startx=rparx+1;  // continue look after )
    }
+   jt->pppprunning=0;  // we are done with PPPP scanning
   }
   // copy the result to the end of the previous sentence, adjust pointer
   I sent1=cwv[j].tcesx&TCESXSXMSK; cwv[j].tcesx=(cwv[j].tcesx&~TCESXSXMSK)|outsent; DQ(endx, lv[outsent++]=lv[sent1++];)  // pack sentences together
@@ -1210,6 +1212,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
    R z;
  }
  ASSERT(AT(w)&NOUN,EVDOMAIN);   // noun : verb is an error
+ ASSERT(!(jt->pppprunning),EVUNTIMELY)  // pppp must never execute an explicit definition: scaf  would be OK to define it, though, if exec could be suppressed
  RE(m=i0(a));  // m : n; set m=value of a argument
  I col0;  // set if it was m : 0
  if(col0=equ(w,num(0))){RZ(w=colon0(m)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited

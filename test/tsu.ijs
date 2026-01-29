@@ -55,6 +55,7 @@ blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each <'gstack.ijs'  NB. crash
 blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp422.ijs';'gsp432.ijs'  NB. crash
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
+blacklist=: blacklist, (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. multithreading block in multiple tstacks
 
 NB. too slow
 blacklist=: blacklist, '' ] (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
@@ -278,6 +279,7 @@ Debug=: 0
 RUNFILE=: ''       NB. dummy
 QKTEST=: (*9!:56'MEMAUDIT')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
 QKTEST0=: QKTEST [ ECHOFILENAME0=: ECHOFILENAME
+WINMEM2=: ('x86_64'-:9!:56'cpu') *. IFWIN *. 2 *@(17 b.) 9!:56'memaudit'   NB. skip some check
 
 RUND1=: 4 : 0
 x123=. x>.1

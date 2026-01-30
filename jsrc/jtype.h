@@ -1208,7 +1208,7 @@ typedef struct {
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block; for $!.v, 0 if the ultimate routine is ($,), 1 if $
     I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
     UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
-    S foreignmn[2];  // in m!:n, the arguments
+    S foreignmn[4];  // in m!:n, the arguments; in 3!:8, [2] is the m argument
     I poweratom;  // for u^:atom or u^:<any, the encoded arg status: bit0=multiple (i. e. boxed n) bit1=nonneg power bits2-31=|power|
     AF bondfn;  // for m&v u&n, the dyad entry point for u/v
     I sundern;  // for u&.v structural under, form of u: 0=, 1=m&{ 2=m&(];.0)

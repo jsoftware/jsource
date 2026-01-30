@@ -51,7 +51,7 @@ static DF1(jthdrinfo){F12IP;A z;
  R z;
 }
 
-// 15!:24 <'name', query/set anchored.  name must be a global namwe found in the starting locale
+// 15!:24 <'name', query/set anchored.  name must be a global name found in the starting locale
 static DF1(jtanchor1){F12IP;
  ARGCHK1(w); ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AN(w)==1,EVLENGTH) A bc=C(AAV(w)[0]); ASSERT(AT(bc)&LIT,EVDOMAIN) ASSERT(AR(bc)<2,EVRANK) A nm; RZ(nm=nfs(AN(bc),CAV(bc),0)) ASSERT(vnm(NAV(nm)->n,NAV(nm)->s),EVILNAME) // audit name & get NM block
  ASSERT((w=jtprobequiet(jt,nm))!=0,EVVALUE) // look up the symbol, get its value.  scaf kludge! the value could be disappearing.  That seems vanishingly unlikely for the anchored flag in particular
@@ -128,6 +128,10 @@ void jtforeigninit(J jt){UI i;
  MN(1,12)  XPRIM(VERB, 0,            jtjiwrite,    VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,1   );
 
  MN(3,0)   XPRIM(VERB, jtstype,      0,            VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(3,4)   XPRIM(VERB, 0,            jtic2,        VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(3,5)   XPRIM(VERB, 0,            jtfc2,        VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(3,7)   XPRIM(VERB, 0,            jtpackbyte,        VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(3,8)   XPRIM(ADV, jtpkbyte,             0,        VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,10)  XPRIM(VERB, jttobase64,   0,            VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,11)  XPRIM(VERB, jtfrombase64, 0,            VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,12)  XPRIM(VERB, 0,            jtlowerupper, VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
@@ -221,10 +225,7 @@ void jtforeigninit(J jt){UI i;
  MN(3,1)   XPRIM(VERB, jtbinrep1,    jtbinrep2,    VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,2)   XPRIM(VERB, jtunbin,      0,            VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,3)   XPRIM(VERB, jthexrep1,    jthexrep2,    VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
- MN(3,4)   XPRIM(VERB, 0,            jtic2,        VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
- MN(3,5)   XPRIM(VERB, 0,            jtfc2,        VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,6)   XPRIM(VERB, jtlock1,      jtlock2,      VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
- MN(3,7)   XPRIM(VERB, 0,            jtpackbyte,        VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(3,9)   XPRIM(VERB, 0,            jtnouninfo2,  VNOLOCCHG+VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(4,1)   XPRIM(VERB, jtnl1,        jtnl2,        VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(4,3)   XPRIM(VERB, jtsnl,        0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);

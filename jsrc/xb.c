@@ -687,6 +687,73 @@ DF2(jtpackbyte){F12IP;
  DF1RANK(1,cellrtn,self);
 }
 
+// operations on a packed-bit array, originating from (m (3!:8))
+// y is the bit array.  x is indexes
+// m is
+//  _1 - read from bits
+//  0 - store 0 into bits
+//  1 - leave unchanged
+//  2 - complement bits
+//  3 - store 1
+// others TBD
+static DF2(jtpkbyterdcell){F12IP;
+ A z;GATV0(z,B01,AN(a),1) C *zv=BAV1(z);    // allocate result area and pointer to it
+ C *wv=CAV(w); UI wn=AN(w)<<(bplg(AT(w))+LGBB);  // point to the bytes.  We don't care what type.  get total # bits in arg
+ UI *av=UIAV(a);  // point to indexes
+ DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[i]=(wv[ax>>LGBB]>>(ax&(BB-1)))&1;)  // extract each byte, copy to result
+ RETF(z);
+}
+static DF2(jtpkbyterd){F12IP;
+ ARGCHK2(a,w)  // verify arguments present
+ if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0))  // indexes must be INT
+ DF2RANK(1,1,jtpkbyterdcell,self)
+}
+
+#if 0
+static DF2(jtpkbytewrcell){F12IP;
+R 0;
+}
+#endif
+// 3!:8 modify packed bits.  We use non-RMW cycles, 1 byte long.  A byte should not be shared for modification between two threads.
+static DF2(jtpkbytewr){F12IP;A z;
+ ARGCHK2(a,w)  // verify arguments present
+ ASSERT(AT(w)&DIRECT,EVDOMAIN)  // mustn't modify bits in INDIRECT pointers
+ if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0))  // indexes must be INT
+// not with rank _   DF2RANK(1,1,jtpkbytewrcell,self)
+ if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w))z=w; else z=ca(w);  // inplace is possible, otherwise copy
+ C *zv=BAV(z);    // pointer to result area
+ C *wv=CAV(w); UI wn=AN(w)<<(bplg(AT(w))+LGBB);  // point to the bytes.  We don't care what type.  get total # bits in arg
+ UI *av=UIAV(a);  // point to indexes
+ // modify the array.
+ switch(FAV(self)->localuse.lu1.foreignmn[2]){
+ case 0: DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[ax>>LGBB]&=~(1<<(ax&(BB-1)));) break;  // clear bit
+ case 1: break;  // unchanged
+ case 2: DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[ax>>LGBB]^=(1<<(ax&(BB-1)));) break;  // complement bit bit
+ case 3: DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[ax>>LGBB]|=(1<<(ax&(BB-1)));) break;  // set bit
+ }
+ RETF(z);
+}
+
+// (m (3!:8)) modify packed but array.  y is the bit array.  x is indexes
+// m is
+//  _1 - read from bits
+//  0 - store 0 into bits
+//  1 - leave unchanged
+//  2 - complement bits
+//  3 - store 1
+// others TBD
+DF1(jtpkbyte){F12IP;
+ ARGCHK1(w)   // verify arg present
+ I j; RE(j=i0(w)); ASSERT(BETWEENC(j,-1,3),EVDOMAIN) // x is -1..3
+ AF f=j<0?jtpkbyterd:jtpkbytewr;  // _1 for read, others for write
+ I r=j<0?1:RMAX;  // read has rsank 1, write has rank _
+ A z=fdef(VF2NONE,CIBEAM,VERB,jtvalenceerr,f,w,0,0,VNOLOCCHG+VNONAME+VNOSELF,0,r,r);
+ FAV(z)->localuse.lu1.foreignmn[0]=FAV(self)->localuse.lu1.foreignmn[0]; FAV(z)->localuse.lu1.foreignmn[1]=FAV(self)->localuse.lu1.foreignmn[1]; FAV(z)->localuse.lu1.foreignmn[2]=j;
+ RETF(z);
+}
+
+
+
 // a  0: tolower  1: toupper
 // w  only process LIT C2T C4T
 F2(jtlowerupper){F12IP;I k,n;A z;

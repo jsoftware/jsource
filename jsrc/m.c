@@ -1599,7 +1599,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  R z;
 }    /* allocate header */ 
 
-// clone w, returning the address of the cloned area.  Result is NOT recursive, not AFRO, not virtual
+// clone noun w, returning the address of the cloned area.  Result is NOT recursive, not AFRO, not virtual
 // LSB of jt is 1 only in NAME blocks that should NOT clear AM
 F1(jtca){F12IP;A z;P*wp,*zp;
  ARGCHK1(w);

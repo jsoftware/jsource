@@ -588,6 +588,7 @@ extern F2(jtpco2);
 extern DF2(jtpderiv2);
 extern F2(jtpdt);
 extern F2(jtpdtsp);
+extern DF1(jtpkbyte);
 extern F2(jtpmarea2);
 extern DF2(jtpoly2);
 extern F2(jtqco2);

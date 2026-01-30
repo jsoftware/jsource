@@ -327,7 +327,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
       len=WideCharToMultiByte(CP_UTF8,0,bstr,(int)SysStringLen(bstr),0,0,0,0);
 		else
 			len=SysStringByteLen(bstr);
-		GAT0(a,LIT, len, 1);
+		GATV0(a,LIT, len, 1);
 		if(uniflag)
 			toutf8n(bstr, (C*)AV(a), len);
 		else
@@ -364,7 +364,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 			ASSERT(psa->cDims==1 && pb[0].cElements==1, EVDOMAIN);
 			r = 0;
 		}
-		GAT(a,BOX, k, r, (I*)&shape);
+		GATV(a,BOX, k, r, (I*)&shape);
 		ASSERT(S_OK==SafeArrayAccessData(psa, (void **)&pv),EVFACE);
 		boxes = AAV(a);
 		while(k--)
@@ -382,7 +382,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 	}
 	case VT_BOOL | VT_ARRAY:
-		GAT(a,B01, k, r, (I*)&shape);
+		GATV(a,B01, k, r, (I*)&shape);
 		pboolsrc = (VARIANT_BOOL*)psa->pvData;
 		pboolsnk = BAV(a);
 		// J bool returned from VB boolean, a -1 and 0 mess.
@@ -396,22 +396,22 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_UI1 | VT_ARRAY:
-		GAT(a,LIT, k, r, (I*)&shape);
+		GATV(a,LIT, k, r, (I*)&shape);
 		memcpy(AV(a), psa->pvData, k * sizeof(char));
 		break;
 
 	case VT_UI2 | VT_ARRAY:
-		GAT(a,C2T, k, r, (I*)&shape);
+		GATV(a,C2T, k, r, (I*)&shape);
 		memcpy(AV(a), psa->pvData, k * sizeof(short));
 		break;
 
 	case VT_UI4 | VT_ARRAY:
-		GAT(a,C4T, k, r, (I*)&shape);
+		GATV(a,C4T, k, r, (I*)&shape);
 		memcpy(AV(a), psa->pvData, k * sizeof(int));
 		break;
 
 	case VT_I2 | VT_ARRAY:
-		GAT(a,INT, k, r, (I*)&shape);
+		GATV(a,INT, k, r, (I*)&shape);
 		pshortsrc = (short*)psa->pvData;
 		pintsnk = AV(a);
 		while(k--)
@@ -419,7 +419,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_I4 | VT_ARRAY:
-		GAT(a,INT, k, r, (I*)&shape);
+		GATV(a,INT, k, r, (I*)&shape);
 #if SY_64
 		pint32src = (int*)psa->pvData;
 		pintsnk = AV(a);
@@ -431,7 +431,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_I8 | VT_ARRAY:
-		GAT(a,INT, k, r, (I*)&shape);
+		GATV(a,INT, k, r, (I*)&shape);
 #if SY_64
 		memcpy(AV(a), psa->pvData, k * sizeof(I));
 #else
@@ -443,7 +443,7 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_R4 | VT_ARRAY:
-		GAT(a,FL, k, r, (I*)&shape);
+		GATV(a,FL, k, r, (I*)&shape);
 		pfloatsrc = (float*)psa->pvData;
 		pdoublesnk = (double*)AV(a);
 		while(k--)
@@ -451,53 +451,53 @@ static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 		break;
 
 	case VT_R8 | VT_ARRAY:
-		GAT(a,FL, k, r, (I*)&shape);
+		GATV(a,FL, k, r, (I*)&shape);
 		memcpy(AV(a), psa->pvData, k * sizeof(double));
 		break;
 
 	case VT_UI1:
-		GAT0(a,LIT, 1, 0);
+		GATV0(a,LIT, 1, 0);
 		*CAV(a) = OPTREF(v,bVal);
 		break;
 
 	case VT_UI2:
-		GAT0(a,C2T, 1, 0);
+		GATV0(a,C2T, 1, 0);
 		*USAV(a) = (US)OPTREF(v,iVal);
 		break;
 
 	case VT_UI4:
-		GAT0(a,C4T, 1, 0);
+		GATV0(a,C4T, 1, 0);
 		*C4AV(a) = (C4)OPTREF(v,lVal);
 		break;
 
 	case VT_BOOL:
-		GAT0(a,B01, 1, 0);
+		GATV0(a,B01, 1, 0);
 		// array case above explains this messy phrase:
 		*BAV(a) = OPTREF(v,boolVal)!=VARIANT_FALSE;
 		break;
 
 	case VT_I2:
-		GAT0(a,INT, 1, 0);
+		GATV0(a,INT, 1, 0);
 		*IAV(a) = OPTREF(v,iVal);
 		break;
 
 	case VT_I4:
-		GAT0(a,INT, 1, 0);
+		GATV0(a,INT, 1, 0);
 		*IAV(a) = OPTREF(v,lVal);
 		break;
 
 	case VT_I8:
-		GAT0(a,INT, 1, 0);
+		GATV0(a,INT, 1, 0);
 		*IAV(a) = (I)OPTREF(v,llVal);
 		break;
 
 	case VT_R4:
-		GAT0(a,FL, 1, 0);
+		GATV0(a,FL, 1, 0);
 		*DAV(a) = OPTREF(v,fltVal);
 		break;
 
 	case VT_R8:
-		GAT0(a,FL, 1, 0);
+		GATV0(a,FL, 1, 0);
 		*DAV(a) = OPTREF(v,dblVal);
 		break;
 
@@ -876,7 +876,7 @@ int setfileattr(char*p, unsigned int x)
 F1(jtts){A z;D*x;SYSTEMTIME t;
  ASSERTMTV(w);
  GetLocalTime(&t);
- GAT0(z,FL,6,1); x=DAV(z);
+ GATV0(z,FL,6,1); x=DAV(z);
  x[0]=t.wYear;
  x[1]=t.wMonth;
  x[2]=t.wDay;

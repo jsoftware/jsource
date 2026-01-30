@@ -306,7 +306,7 @@ test_dx=: 3 : 0
  1
 )
 
-0!:_1`1:@.(cond *. 16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(WINMEM2 < 16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
 test_dx 1
 NB.$  end of skip
 

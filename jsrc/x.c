@@ -208,6 +208,7 @@ void jtforeigninit(J jt){UI i;
  MN(16,-5)  XPRIM(VERB, 0,     jtdicempties,               VNONAME+VNOSELF,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-8)  XPRIM(VERB, 0,     jtdicstats,               VNONAME+VNOSELF,VF2NONE,RMAX,   RMAX,RMAX);
  MN(16,-9)  XPRIM(VERB, 0,     jtdiclock,               VNONAME+VNOSELF,VF2NONE,RMAX,   RMAX,RMAX);
+ MN(16,-10) XPRIM(VERB, 0,     jtdicload,               VNONAME+VNOSELF,VF2NONE,RMAX,   RMAX,RMAX);
  MN(2,0)   XPRIM(VERB, jthost,       0,            VNONAME+VNOSELF,VF2NONE,1,   RMAX,RMAX);
  MN(2,1)   XPRIM(VERB, jthostne,     0,            VNONAME+VNOSELF,VF2NONE,1,   RMAX,RMAX);
 #if 0  // doesn't work

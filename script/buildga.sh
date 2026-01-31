@@ -2,7 +2,7 @@
 #
 # build linux/macOS on github actions
 #
-# argument is linux|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l]
+# argument is linux|linux32|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l]
 # wasm is experimental
 
 set -e
@@ -11,7 +11,7 @@ USE_SLEEF=${USE_SLEEF:=1}
 USE_SLEEFQUAD=${USE_SLEEFQUAD:=$USE_SLEEF}
 export CC USE_SLEEF USE_SLEEFQUAD
 
-if [ "$1" = "linux" ]; then
+if [ "$1" = "linux" ] || [ "$1" = "linux32" ] ; then
  ext="so"
 elif [ "$1" = "raspberry" ]; then
  ext="so"
@@ -26,13 +26,15 @@ elif [ "$1" = "freebsd" ]; then
 elif [ "$1" = "wasm" ]; then
  ext=""
 else
- echo "argument is linux|darwin|raspberry|android|openbsd|freebsd|wasm"
+ echo "argument is linux|linux32|darwin|raspberry|android|openbsd|freebsd|wasm"
  exit 1
 fi
 uname -a
 uname -m
 if [ "$2" = "arm64" ]; then
  m64=1
+elif [ "$1" = "linux32" ]; then
+ m64=0
 elif [ "$2" = "armv6l" ]; then
  m64=0
 elif [ "$(uname -m)" != "armv6l" ] && [ "$(uname -m)" != "i386" ] && [ "$(uname -m)" != "i686" ]; then
@@ -61,6 +63,10 @@ if [ "$1" = "linux" ]; then
  # cp mpir/linux/x86_64/libgmp.so j64
  cp mpir/linux/x86_64/libgmpd.so j64/libgmp.so
  cp pcre2/linux/x86_64/libjpcre2.so tools/regex/.
+elif [ "$1" = "linux32" ]; then
+ # cp mpir/linux/i386/libgmp.so j32
+ cp mpir/linux/i386/libgmpd.so j32/libgmp.so
+ cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
 elif [ "$1" = "raspberry" ]; then
  if [ $m64 -eq 1 ]; then
   cp mpir/linux/aarch64/libgmp.so j64
@@ -101,7 +107,7 @@ echo '#define jbuilder  "www.jsoftware.com"' >> jsrc/jversion.h
 if [ "x$MAKEFLAGS" = x'' ]; then
  if [ "$1" = "wasm" ]; then
   par=2
- elif [ "$1" = "linux" ] || [ "$1" = "raspberry" ]; then
+ elif [ "$1" = "linux" ] || [ "$1" = "linux32" ] || [ "$1" = "raspberry" ]; then
   par=$(nproc)
  elif [ "$1" = "darwin" ] || [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] || [ "$1" = "android" ]; then
   par=$(sysctl -n hw.ncpu)
@@ -169,9 +175,13 @@ fi
 cd hostdefs
 if [ "$1" = "linux" ] && [ $m64 -eq 1 ]; then
  $CC hostdefs.c -o hostdefs && ./hostdefs
- $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
+# $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
  cd ../netdefs
  $CC netdefs.c -o netdefs && ./netdefs
+# $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
+elif [ "$1" = "linux32" ] ; then
+ $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
+ cd ../netdefs
  $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
 elif [ "$1" = "raspberry" ] && [ $m64 -eq 0 ]; then
  $CC --target=arm-arm-none-eabi hostdefs.c -o hostdefs && ./hostdefs
@@ -201,11 +211,11 @@ if [ $m64 -eq 1 ]; then
   j64x=j64iphonesimulator _DEBUG=0 ./build_jconsole.sh
   j64x=j64iphonesimulator _DEBUG=0 ./build_tsdll.sh
   j64x=j64iphonesimulator _DEBUG=0 ./build_libj.sh
- elif [ "$1" = "linux" ]; then
-  ./clean.sh
-  j64x=j32 ./build_jconsole.sh
-  j64x=j32 ./build_tsdll.sh
-  j64x=j32 USE_OPENMP=0 ./build_libj.sh
+# elif [ "$1" = "linux" ]; then
+#  ./clean.sh
+#  j64x=j32 ./build_jconsole.sh
+#  j64x=j32 ./build_tsdll.sh
+#  j64x=j32 USE_OPENMP=0 ./build_libj.sh
   # j64x=j32 USE_OPENMP=0 ./build_jamalgam.sh
  fi
  ./clean.sh
@@ -273,14 +283,14 @@ if [ -f bin/$1/j64avx512/libj.$ext ]; then
  cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
 fi
 
-if [ "$1" = "linux" ]; then
- mkdir -p j32
- cp bin/profile.ijs j32
- cp bin/$1/j32/* j32
- # cp mpir/linux/i386/libgmp.so j32
- cp mpir/linux/i386/libgmpd.so j32/libgmp.so
- cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
-fi
+# if [ "$1" = "linux" ]; then
+#  mkdir -p j32
+#  cp bin/profile.ijs j32
+#  cp bin/$1/j32/* j32
+#  # cp mpir/linux/i386/libgmp.so j32
+#  cp mpir/linux/i386/libgmpd.so j32/libgmp.so
+#  cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
+# fi
 
 if [ -d j64 ]; then
  find j64 -type d -exec chmod 755 {} \;

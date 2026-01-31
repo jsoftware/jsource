@@ -45,6 +45,42 @@ jobs:
      run: |
       script/testga.sh linux || exit 1
 
+# linux32 --------------------------------------------------------------
+ jelinux32:
+  name: JE (Linux32)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux32)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Commit
+     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
+
+   - name: Build JE (Linux32)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      _MEMAUDIT: 8
+      _DEBUG: 3
+     run: |
+      script/buildga.sh linux32 || exit 1
+
+   - name: Test JE (Linux32)
+     env:
+      _MEMAUDIT: 8
+      _DEBUG: 3
+     run: |
+      script/testga.sh linux32 || exit 1
+
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)

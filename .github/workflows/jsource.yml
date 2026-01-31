@@ -128,6 +128,62 @@ jobs:
       path: testlinuxgcc.txt
       overwrite: true
 
+# linux32 --------------------------------------------------------------
+ jelinux32:
+  name: JE (Linux32)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux32)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Commit
+     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
+
+   - name: Build JE (Linux32)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+     run: |
+      script/buildga.sh linux32 || exit 1
+
+   - name: Test JE (Linux32)
+     run: |
+      script/testga.sh linux32 || exit 1
+      cd j32
+      strip -S jconsole
+      strip -S libj.so
+      strip -S libtsdll.so
+      strip -S jamalgam || true
+      strip -S libgmp.so
+      cd -
+      ls -l j32
+      zip -r l32.zip j32
+
+   - name: Release JE (Linux32)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "l32.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (Linux32)
+     uses: actions/upload-artifact@v4
+     with:
+      name: dist
+      path: testlinux32.txt
+      overwrite: true
+
 # linux debug ----------------------------------------------------------
  jelinuxd:
   name: JE (Linux debug)
@@ -1488,7 +1544,7 @@ jobs:
   runs-on: ubuntu-22.04
 #  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
 #  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+  needs: [jelinux, jelinux-gcc, jelinux32, jelinuxd, jemacos, jemacosarm, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

@@ -44,6 +44,11 @@ elif [ "$(uname -m)" != "armv6l" ] && [ "$(uname -m)" != "i386" ] && [ "$(uname 
 else
  m64=0
 fi
+if [ "$1" = "linux32" ] ; then
+ dest="linux"
+else
+ dest=$1
+fi
 if [ "$1" = "darwin" ]; then
  sysctl -a | grep cpu
 elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then

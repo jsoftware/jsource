@@ -46,6 +46,11 @@ elif [ "$(uname -m)" != "armv6l" ] && [ "$(uname -m)" != "i386" ] && [ "$(uname 
 else
  m64=0
 fi
+if [ "$1" = "linux32" ] ; then
+ dest="linux"
+else
+ dest=$1
+fi
 
 cp -R jlibrary/* .
 cp script/testga.ijs .
@@ -100,7 +105,7 @@ elif [ "$1" = "freebsd" ]; then
 fi
 
 cp version.txt jsrc/jversion.h
-echo "#define jplatform \"$1\"" >> jsrc/jversion.h
+echo "#define jplatform \"$dest\"" >> jsrc/jversion.h
 echo '#define jlicense  "commercial"' >> jsrc/jversion.h
 echo '#define jbuilder  "www.jsoftware.com"' >> jsrc/jversion.h
 
@@ -163,7 +168,7 @@ if [ "$1" = "wasm" ]; then
  ./clean.sh
  USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_libj.sh
  cd ..
- cp bin/$1/j32/* j32
+ cp bin/$dest/j32/* j32
  find j32 -type d -exec chmod 755 {} \;
  find j32 -type f -exec chmod 644 {} \;
  find j32 \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
@@ -250,43 +255,43 @@ cd -
 
 if [ $m64 -eq 1 ]; then
  if ([ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]) && ([ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
-  cp bin/$1/j64arm/* j64
+  cp bin/$dest/j64arm/* j64
  else
-  cp bin/$1/j64/* j64
+  cp bin/$dest/j64/* j64
  fi
 else
- cp bin/$1/j32/* j32
+ cp bin/$dest/j32/* j32
 fi
 
-if [ "$1" = "darwin" ] && [ -f "bin/$1/j64arm/libj.$ext" ]; then
- lipo bin/$1/j64/jconsole bin/$1/j64arm/jconsole -create -output j64/jconsole
- lipo bin/$1/j64/libtsdll.$ext bin/$1/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
- lipo bin/$1/j64/libj.$ext bin/$1/j64arm/libj.$ext -create -output j64/libj.$ext
- lipo bin/$1/j64/jamalgam bin/$1/j64arm/jamalgam -create -output j64/jamalgam
+if [ "$1" = "darwin" ] && [ -f "bin/$dest/j64arm/libj.$ext" ]; then
+ lipo bin/$dest/j64/jconsole bin/$dest/j64arm/jconsole -create -output j64/jconsole
+ lipo bin/$dest/j64/libtsdll.$ext bin/$dest/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
+ lipo bin/$dest/j64/libj.$ext bin/$dest/j64arm/libj.$ext -create -output j64/libj.$ext
+ lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output j64/jamalgam
 fi
 
-if [ -d "bin/$1/j64iphoneos" ]; then
+if [ -d "bin/$dest/j64iphoneos" ]; then
  mkdir -p j64/ios
- cp -r bin/$1/j64iphoneos j64/ios/.
+ cp -r bin/$dest/j64iphoneos j64/ios/.
 fi
 
-if [ -d "bin/$1/j64iphonesimulator" ]; then
+if [ -d "bin/$dest/j64iphonesimulator" ]; then
  mkdir -p j64/ios
- cp -r bin/$1/j64iphonesimulator j64/ios/.
+ cp -r bin/$dest/j64iphonesimulator j64/ios/.
 fi
 
-if [ -f bin/$1/j64avx2/libj.$ext ]; then
- cp bin/$1/j64avx2/libj.$ext j64/libjavx2.$ext
+if [ -f bin/$dest/j64avx2/libj.$ext ]; then
+ cp bin/$dest/j64avx2/libj.$ext j64/libjavx2.$ext
 fi
 
-if [ -f bin/$1/j64avx512/libj.$ext ]; then
- cp bin/$1/j64avx512/libj.$ext j64/libjavx512.$ext
+if [ -f bin/$dest/j64avx512/libj.$ext ]; then
+ cp bin/$dest/j64avx512/libj.$ext j64/libjavx512.$ext
 fi
 
 # if [ "$1" = "linux" ]; then
 #  mkdir -p j32
 #  cp bin/profile.ijs j32
-#  cp bin/$1/j32/* j32
+#  cp bin/$dest/j32/* j32
 #  # cp mpir/linux/i386/libgmp.so j32
 #  cp mpir/linux/i386/libgmpd.so j32/libgmp.so
 #  cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so

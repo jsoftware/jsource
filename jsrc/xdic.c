@@ -1886,14 +1886,14 @@ DF2(jtdiclock){F12IP;
 // create the red/black tree for nodes min..max, which have currdepth nodes in the path already.  Result is the (biased) index to the root of the tree created (thus 0 if empty)
 // The child pointers are all filled in, with a node of depth minreddepth being colored red
 static I initrb(I min,I max,I currdepth,I minreddepth,C *hashtbl,I nodeb){
- if(min==max)R 0;  // if null interval, parent pointer will be empty
+ if(min>max)R 0;  // min<max is an empty interval: return empty pointer
  I mid=min+((max-min)>>1);  // choose midpoint, avoiding overflow
  I bmid=RDECEMPTY(mid), bleft=initrb(min,mid-1,currdepth+1,minreddepth,hashtbl,nodeb), bright=initrb(mid+1,max,currdepth+1,minreddepth,hashtbl,nodeb);  // recur to get biased node#s for mid & children
  WLC(bmid,bleft,currdepth!=minreddepth) WR(bmid,bright)   // install chains & color, which is black except perhaps at bottom level
  R bmid;
 }
 
-// (keys;values) 16!:_10 dic   Install sorted keys/values into red/black tree
+// (keys;values) 16!:_10 dic   Install sorted keys/values into red/black tree en bloc
 // No locks.
 DF2(jtdicload){F12IP;
  ARGCHK2(a,w)
@@ -1902,7 +1902,7 @@ DF2(jtdicload){F12IP;
  ASSERT(dic->bloc.cardinality==0,EVUNTIMELY)  // dic must be empty
  ASSERT(dic->bloc.flags&DICFRB,EVDOMAIN)  // dic must be red/black tree
  ASSERT(AT(w)&BOX,EVDOMAIN)  // x must be boxed
- ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==2,EVLENGTH)  // must be keys;boxes
+ ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==2,EVLENGTH)  // must be keys;values
  // Audit keys
  I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  A boxk=C(AAV(a)[0]); ASSERT(AR(boxk)==kr+1,EVRANK) ASSERT(AS(boxk)[0]<AN(dic->bloc.vals),EVLENGTH) ASSERTAGREE(AS(boxk)+1,ks,kr) if(!(kt&AT(boxk)))RZ(boxk=ccvt(kt,boxk,0))   // keys must have correct  shape & type, & not be too big
@@ -1916,7 +1916,7 @@ DF2(jtdicload){F12IP;
  // Init database stats
  I nn=dic->bloc.cardinality=AS(boxk)[0];  // total number of kvs to be moved
  // copy in keys
- UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
+ UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV3(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
  I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.emptysiz<<19)+(dic->bloc.flags<<8);  // (#bytes in node index)\(#bits in empty-chain field\(flags)\(number of bits in a node index)
  C *kbase=CAV(dic->bloc.keys);  // key 0 address for empties; Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
  C *k=CAV(boxk);  // base of input key array
@@ -1932,7 +1932,7 @@ DF2(jtdicload){F12IP;
  void *ev=hashtbl+nn*(kib>>32); DO(AS(dic->bloc.keys)[0]-nn-1, *(UI4*)ev=nn+i+1; ev=(void *)((I)ev+dic->bloc.kbytelen);)   // allocate empty list & chain empties together
  *(UI4*)ev=nn-1; // install end of chain loopback.  overstore OK
  // All kvs have been moved & inited.  Now build the red/black tree
- I minred=(I)1<<CTLZI(nn+1);   // Nodes with depth <= (minred-1) are all black.  There are 2^j-1 of them.  The remainder are at extra hegith and are colored red.
+ I minred=CTLZI(nn+1);   // Nodes with depth <= (minred-1) are all black.  There are 2^j-1 of them.  The remainder are at extra height and are colored red.
  *(UI4*)hashtbl=initrb(0,nn-1,0,minred,hashtbl,nodeb);  // build the tree, recursively.  The root is at hashtbl[0], as a (biased) red node.  Overstore there OK.
  R mtv;
 }

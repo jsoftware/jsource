@@ -527,6 +527,7 @@ jobs:
 # rpi32armd ------------------------------------------------------------
  jerpi32armd:
   name: JE (Linux arm32 debug)
+  if: ${{ false }}
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -831,7 +832,6 @@ jobs:
 # rpi32 debug ----------------------------------------------------------
  jerpi32d:
   name: JE (Raspberry32 debug)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository

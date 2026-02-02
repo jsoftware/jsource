@@ -151,12 +151,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
    - name: Test JE (Linux arm64)
      env:
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/testga.sh raspberry arm64 || exit 1
 

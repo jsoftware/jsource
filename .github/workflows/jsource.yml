@@ -10,9 +10,10 @@ on:
 #  paths:
 #   - 'version.txt'
 
-if: ${{ false }}
+#  if: ${{ false }}
 
 jobs:
+ if: ${{ false }}
 
 # linux ----------------------------------------------------------------
  jelinux:

@@ -58,7 +58,7 @@ blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ij
 blacklist=: blacklist, (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. multithreading block in multiple tstacks
 
 NB. too slow
-blacklist=: blacklist, '' ] (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
+blacklist=: blacklist, '' [ (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
 gtdot2
 )
 
@@ -68,7 +68,7 @@ gctrl
 )
 
 NB. crash
-blacklist=: blacklist, '' ] (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
+blacklist=: blacklist, '' [ (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
 g131
 g300
 g131cblas

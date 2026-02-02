@@ -70,14 +70,12 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 8
-      _DEBUG: 3
      run: |
       script/buildga.sh linux32 || exit 1
 
    - name: Test JE (Linux32)
      env:
       _MEMAUDIT: 8
-      _DEBUG: 3
      run: |
       script/testga.sh linux32 || exit 1
 

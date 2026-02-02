@@ -12,9 +12,9 @@ IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B
 IF "%~1" NEQ "x64" EXIT /b 1
 dir j64
-j64\jconsole -lib j.dll testga.ijs
-IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 j64\jconsole -lib javx2.dll testga.ijs
+IF %ERRORLEVEL% NEQ 0 EXIT /b 1
+j64\jconsole -lib j.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01A
@@ -24,6 +24,6 @@ IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01B
 dir jarm64
-jarm\jconsole testga.ijs
+jarm64\jconsole testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01C

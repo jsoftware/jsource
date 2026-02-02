@@ -442,7 +442,7 @@ F2(jtforeign){F12IP;I p,q;A z;
   fdefallo(z);  // allocate the block
   fdeffillall(z,0,CIBEAM,VERB, jtwd,jtvalenceerr, 0,0,0L,VNONAME+VNOSELF, 1L,RMAX,RMAX,fffv->localuse.lu1.foreignmn[0]=p,fffv->localuse.lu1.foreignmn[1]=q);
  }
- if(unlikely(jt->pppprunning))ASSERT(FAV(z)->flag&VNOLOCCHG,EVUNTIMELY)  // if the foreign is not a pure function, don't allow it in pppp
+// obsolete  if(unlikely(jt->pppprunning))ASSERT(FAV(z)->flag&VNOLOCCHG,EVUNTIMELY)  // if the foreign is not a pure function, don't allow it in pppp
  RETF(z);  // return the block we found
 }
 

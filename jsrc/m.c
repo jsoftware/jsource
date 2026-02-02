@@ -895,8 +895,10 @@ A jtgc(J jt,A w,A* old){
   if(*old==w){   // does the start of tstack point to w?
    // w is the first element on the tstack.  
    A *old1=old+1; if(unlikely(((UI)old1&(NTSTACKBLOCK-1))==0)){A *curblk=pushp; while(((A*)*(curblk=(A*)((UI)curblk&-NTSTACKBLOCK))!=old))curblk=(A*)*curblk; old1=curblk+1;}  // old1=next element in stack (must exist)
-   if(unlikely(old1==pushp))/* do nothing */;  //  If w is the ONLY element, we can stand pat; no need to make w recursive.  But why did the user bother to call us?
-   else{radescend(w); tpop(old1);}   // there are other elements on tstack, we have to make w recursive (if not already) because freeing one might otherwise delete contents of w.  We can leave inplace status unchanged for w
+   radescend(w);  // We have to make w recursive (if not already) because freeing something on the stack might otherwise delete contents of w.  We can leave inplace status unchanged for w
+        //  Even if w is the ONLY element, we have to make w recursive, because it may have contents inherited from up the stack that would be freed on an upper pop
+        // example: f @ g y where y is boxed abandoned and g returns (< > y) nonrecursive.  After g, @ will free the abandoned y, but that will also free >g unless it is made recursive
+   if(likely(old1!=pushp))tpop(old1);   // if there are other elements on tstack, free them
   }else if(((UI)REPSGN(AC(w))&(UI)AZAPLOC(w))>=(UI)old && likely((((UI)old^(UI)pushp)&-NTSTACKBLOCK)==0)){  // inplaceable zaploc>=old - but that is valid only when we know pushp and old are in the same stack block
    // We can see that w is abandoned and is about to be freed.  Swap it with *old and proceed, leaving it unpopped on the stack
    radescend(w); *AZAPLOC(w)=*old; *old=w; AZAPLOC(w)=old; tpop(old+1);  // update ZAPLOC to point to new position in stack

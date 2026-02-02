@@ -22,7 +22,7 @@ static DF1(jtonf1){F12IP;A gs=FAV(self)->fgh[1]; PROLOG(0021);I flag=FAV(self)->
  RETF(z);
 }
 
-// <.@ >.@ and the like, dyad   scaf make bivalent
+// <.@ >.@ and the like, dyad
 static DF2(jtuponf2){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; A gs=FAV(self)->fgh[1]; AF g2=FAV(gs)->valencefns[1]; PROLOG(0022);A z;I flag=FAV(self)->flag,m=jt->xmode;
  ARGCHK2(a,w);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
@@ -126,6 +126,7 @@ DF1(jtintceillog2cap) {F12IP; R jtintceillog2(jt,w,FAV(self)->fgh[1]);}  // [: >
 static DF2(jtintceillog2left) {F12IP; R jtintceillog2(jt,a,FAV(self)->fgh[0]);} // >.[!.f]@[:](2 ^. [)   bivalent
 static DF2(jtintceillog2right) {F12IP; a=EPMONAD?a:w;  R jtintceillog2(jt,a,FAV(self)->fgh[0]);} // >.[!.f]@[:](2 ^. ])   bivalent
 
+// scaf replace all these modular functions with (u m.)
 static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
  if(!(XNUM&AT(a)))RZ(a=cvt(XNUM,a));
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));

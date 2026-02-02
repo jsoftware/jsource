@@ -360,10 +360,10 @@ DF2(jtpowop){F12IP;B b;V*v;
     h=0;    // inverse, if we can calculate it (we no longer need the list of powers)
     if(likely((n<<1)==-2)){  //  u^:_1 or u^:_
      if(n<0){  // u^:_1
-      // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,    scaf names not in the obverse are immaterial
-      // must wait until we get arguments.  We can't trust the inverse to be NOLOCCHG
+      // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names
+      // must wait until we get arguments.  We can't trust the inverse to be NOLOCCHG.  nameless means no name, no locchg.  If there is a locchg there can't be an inverse anyway
       f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;flag=FAV(h)->flag&VNOLOCCHG+VNONAME+VNOSELF;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-     }else flag=FAV(a)->flag&VNONAME+VNOSELF;     // if u^:_, never allow inplacing since we are converging
+     }else flag=FAV(a)->flag&VNONAME+VNOSELF;     // if u^:_, never allow inplace assignment since we are converging
      // Note: negative powers other than _1 are resolved in the action routine
     }
     encn=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0); encn=n==IMIN?((I)-1*POWERABS)+POWERADOWHILE:encn;  // save the power, in flagged form, for powatom12

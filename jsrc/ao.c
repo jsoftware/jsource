@@ -220,7 +220,7 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
  if(unlikely(ISSPARSE(AT(w))))R jtkeyspw(jt,a,w,self);  // if w sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
  PUSHCCT(toler);  // now that partitioning is over, reset ct for the executions of u
- RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct  scaf this should be inplace for /.
+ RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct
  POPCCT
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
  // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
@@ -829,7 +829,8 @@ F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
  A z; fdefallo(z)
- if(NOUN&AT(w)){RZ(h=fxeachv(1L,w)); flag|=gflg(h)|VGERL;}else flag=FAV(w)->flag&VNONAME+VNOSELF;   // flags from all components.  NOLOCCHG too? scaf
+ if(NOUN&AT(w)){RZ(h=fxeachv(1L,w)); flag|=gflg(h)|VGERL;}else flag=FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF;   // flags from all components.
+// obsolete   NOLOCCHG too? scaf
  v=FAV(w);  // w could be a gerund but we won't use v then
  switch(IDD(w)){  // no default for f2: every path must set it
  case CBOX: f2=jtkeybox; break;  // </.

@@ -1186,12 +1186,12 @@ static DF2(jtfold12){F12IP;A z,vz;
   if(dmfr&STATEFWD+STATEREV){
    if(dmfr&ZZFLAGVIRTAINPLACE)ACRESET(virtw,ACUC1+ACINPLACE);  // in case it was modified, restore inplaceability to the UNINCORPABLE block
    tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // fwd/rev.  newitem v vz   a is inplaceable if y was (set above).  w is inplaceable first time based on initial-item status
-   if(unlikely(tz==virtw)){if(unlikely((tz=clonevirtual(tz))==0))goto exitpop;}
+   if(unlikely(tz==virtw)){RZGOTO(tz=clonevirtual(tz),exitpop)}
    AK(virtw)+=wstride;  // advance item pointer to next/prev if there is one
-   jtfg=(J)((I)jtfg|JTINPLACEW);  // w inplaceable on all iterations after the first - if the operation supports flags
-  }else if(dmfr&STATEDYAD){tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // directionless dyad  x v vz  scaf set inplaceable?
-  }else tz=CALL1IP(FAV(vself)->valencefns[0],vz,vself);   // directionless monad   v vz scaf set inplaceable?
-
+// obsolete   }else if(dmfr&STATEDYAD){tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // directionless dyad  x v vz  scaf set inplaceable?
+// obsolete   }else tz=CALL1IP(FAV(vself)->valencefns[0],vz,vself);   // directionless monad   v vz scaf set inplaceable?
+  }else tz=CALL21IP(dmfr>>STATEDYADX,FAV(vself)->valencefns[dmfr>>STATEDYADX],virtw,vz,vself);  // directionless dyad/monad  [x] v vz
+  jtfg=(J)((I)jtfg|JTINPLACEW);  // w inplaceable on all iterations after the first
   zstatus|=foldinfo.zstatus;  // remember termination flags from zstatus
   if(unlikely(zstatus&0b00011))goto errfinish;  // z stopped iteration: finish up
   vz=tz!=0?tz:vz;   //  if v ran to completion, use its result for the next iteration
@@ -1259,7 +1259,7 @@ DF2(jtfold){F12IP;
 // Z: y
 DF1(jtfoldZ1){F12IP;
  ARGCHK1(w)
- ASSERT(jt->afoldinfo,EVSYNTAX);  // If fold not running, fail.  scaf Should be a semantic error rather than syntax
+ ASSERT(jt->afoldinfo,EVUNTIMELY);  // If fold not running, fail.
  I type; RE(type=i0(w));  // verify atomic integer
  ASSERT(BETWEENC(type,0,2),EVINDEX)  //  requested stat index must be in range
  RETF(sc(jt->afoldinfo->exestats[type]));  // return the value
@@ -1267,7 +1267,7 @@ DF1(jtfoldZ1){F12IP;
 // x Z: y
 DF2(jtfoldZ2){F12IP;
  ARGCHK2(a,w)
- ASSERT(jt->afoldinfo,EVSYNTAX);  // If fold not running, fail.  scaf Should be a semantic error rather than syntax
+ ASSERT(jt->afoldinfo,EVUNTIMELY);  // If fold not running, fail.
  I type; RE(type=i0(a));  // verify atomic integer
  ASSERT(BETWEENC(type,-3,1),EVINDEX)  //  requested action index must be in range
  I y;

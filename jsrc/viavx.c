@@ -747,7 +747,7 @@ A jtindexofsub(J jtfg,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(0079)
   // IIOREPS indicates i./i:/e./key, which are candidates for reversed search and sequential search.  key will never cause a reversed search, but
   // it must not use sequential search if the comparison is inexact, because then it would conflict with nub and just generally fail because values not in
   // the nub could match later values leaving omitted values
-  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((0x100000&((UI4*)&jt->cct)[1])>=(UI)((at)&(FL|CMPX|QP|SP|BOX))                                                                 )<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash) /. is OK if a is not float
+  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((0x100000&((UI4*)&jt->cct)[1])>=(UI)((at)&(FL|CMPX|QP|SP|BOX)))<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash) /. is OK if a is not float
   // *************************************** test for linear search *******************************************
   // The comparison uses the fact that cct can never go above 1.0, which is 0x3ff0000000000000 in double precision.  To avoid integer-float conversions, we just strip out the bit that signifies
   // 1.0.  The expression then means 'tolerance=1.0 or intolerant comparison'
@@ -1071,7 +1071,7 @@ inplace:;
  default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
  case IIDOT:
  case IICO:
-  // i./i: can run inplace on w if w is abandoned, not the same block as a, rank matches rank needed, item size<=SZI, DIRECT, and (not UNINCORPABLE or same type as result)
+  // i./i: can run inplace on w if w is abandoned, not the same block as a, rank matches rank needed, item size>=SZI, DIRECT, and (not UNINCORPABLE or same type as result)
   if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(-(AT(w)&(INT+SY_64*FL))&AC(w)&SGNIF(jtfg,JTINPLACEWX)&((AR(w)^(f+f1))-1))<0){z=w; AT(z)=INT; break;}  // inplace w if not disqualified
   // if can't inplace fall through to...
  case IFORKEY:
@@ -1163,7 +1163,7 @@ DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>
 // w is the arg to be applied to the index
 // hs is the hashtable
 A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;IFN fn;I ar,*as,at,c,f1,k,m,mode,n,
-     r,t,*xv,wr,*ws,wt;
+     r,t,*xv,wr,*ws,wt;PROLOG(000);
  ARGCHK3(a,w,hs);
  // hv is (info vector);(hashtable);(byte index validity)
  hv=AAV(hs); x=hv[0]; h=hv[1]; 
@@ -1212,7 +1212,7 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;IFN fn;I ar,*
  // save info used by the routines
  // noavx jt->hin=AN(hi); jt->hiv=AV(hi);
  RZ(fn(jt,mode+IPHOFFSET,n,m,c,(I)1,(I)1,a,w,z,k,(I)0,(I)0,h))
- R z;
+ EPILOG(z);  // necessary to make result recursive
 }
 
 // x i. y, supports inplacing (in subroutine)

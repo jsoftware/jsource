@@ -144,6 +144,8 @@ NB. rational
 'length error' -: (i.3 4) = etx i.5 4
 'length error' -: (i.3 4) =~etx i.5 4    
 
+(,<'now') -:  ~. @ (-.&(;:'gosh darn')) ;:'now'   NB. This failed when -. returned nonrecursive box
+
 
 randfini''
 

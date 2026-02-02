@@ -335,11 +335,12 @@ xco:
  case CHOOK:
   if(BOTHEQ8(FAV(f)->id,FAV(g)->id,CFROM,CEQ))R eval("i.\"1&1");   // ({ =)
   break;
+ case CSELF: ASSERT(0,EVDOMAIN)
  }
  // Failure - no inverse found.  If there are names in w, try fixing w and try on that.
- // But only fix once, at the top recursion level, (1) to avoid an infinite loop if
- // there is a circular reference that leaves names in the fixed form of w; (2) to avoid
- // repeated fixing of lower branches, which will only be tried again when higher levels are fixed
+ // But only fix once, at the top recursion level, to avoid an infinite loop if
+ // there is a circular reference that leaves names in the fixed form of w;
+ if(!recur&&!nameless(w))R invrecur(fix(w,zeroionei(0)));
  if(!recur&&!nameless(w))R invrecur(fix(w,zeroionei(0)));
  ASSERT(0,EVDOMAIN);
 }

@@ -1097,9 +1097,14 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CALL2COMMON(f,a,w,fs,j,pop)   ({A carg1=(a), carg2=(w), carg3=(A)(fs), cargz; cargz=(f)(j,carg1,carg2,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,carg2,0);} cargz;})
 #define CALL2(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jt,)
 #define CALL2IP(f,a,w,fs)   CALL2COMMON(f,a,w,fs,jtfg,)
+// CALL12 executes (f a) or (a f w)
 #define CALL12COMMON(dyad,f,a,w,fs,j,pop)   ({A carg1=(a), carg3=(A)(fs), carg2=(dyad)?(w):carg3, cargz; cargz=(f)(j,carg1,carg2,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,AT(carg2)&VERB?0:carg2,0);} cargz;})
 #define CALL12(dyad,f,a,w,fs)   CALL12COMMON(dyad,f,a,w,fs,jt,)
 #define CALL12IP(dyad,f,a,w,fs)   CALL12COMMON(dyad,f,a,w,fs,jtfg,)
+// CALL21 executes ([a] f w)
+#define CALL21COMMON(dyad,f,a,w,fs,j,pop)   ({A carg3=(A)(fs), carg1=(dyad)?(a):(w), carg2=(dyad)?(w):carg3, cargz; cargz=(f)(j,carg1,carg2,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,AT(carg2)&VERB?0:carg2,0);} cargz;})
+#define CALL21(dyad,f,a,w,fs)   CALL21COMMON(dyad,f,a,w,fs,jt,)
+#define CALL21IP(dyad,f,a,w,fs)   CALL21COMMON(dyad,f,a,w,fs,jtfg,)
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
 #define MODESRESET(jm)      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c

@@ -176,7 +176,7 @@ DF2(jtboxcut0){F12IP;A z;I i;
  I resatoms; PROD(resatoms,f,AS(a)); I cellsize; PROD(cellsize,wr-1,AS(w)+1);
  I k=bplg(t); C *wv=CAV(w);  // k is length of an atom of w
  // allocate the result area
- GATV(z,BOX,resatoms,f,AS(a)); if(resatoms==0){RETF(z);}  // scaf could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+ GATV(z,INT,resatoms,f,AS(a)); AT(z)=BOX; if(resatoms==0){RETF(z);}  // allocate as INT to avoid clearing the area to 0
   // We have allocated the result; now we allocate a block for each cell of w and copy
   // the w values to the new block.
  A *pushxsave;  // place to restore tstack to
@@ -192,10 +192,10 @@ DF2(jtboxcut0){F12IP;A z;I i;
  A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
  for(i=0;i<resatoms;++i){
   I start=av[i][0]; I endorlen=av[i][1];
-  if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);}  // verify start in range - failover if not
+  if(!(BETWEENO(start,0,wi))){AN(z)=jt->tnextpushp-AAV(z); jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);}  // verify start in range - failover if not
   endorlen+=start&abslength;  // convert len to end+1 form
   endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
-  if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
+  if(endorlen<0){AN(z)=jt->tnextpushp-AAV(z); jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtfg,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
   I substratoms=endorlen*cellsize;
   // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
   if(!((I)jtfg&JTWILLBEOPENED)){
@@ -216,6 +216,7 @@ DF2(jtboxcut0){F12IP;A z;I i;
  }
  // raise the backer for all the virtual blocks taken from it.  The first one requires ra() to force the backer recursive; after that we can just add to the usecount.  And make w noninplaceable, since it now has an alias at large
  if(unlikely((I)jtfg&JTWILLBEOPENED)){I nboxes=jt->tnextpushp-AAV(z); if(likely(nboxes!=0)){ACIPNO(w); ra(wback); ACADD(wback,nboxes-1);}}  // get # boxes allocated without error
+ if(unlikely(y==0))AN(z)=jt->tnextpushp-AAV(z);   // if there was an error, reduce the size of the list to match the # valid allocations - since we didn't clear them
  jt->tnextpushp=pushxsave;   // restore tstack pointer
  // OK to fail now - memory is restored ******************************************************************************************************
  ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents

@@ -135,9 +135,9 @@ NB. illegal *&.s           eq (* &.monad      )
 + F:: - {{ (5!:5 <'u') -: (5!:5 <'v') return. u v}} (+ F:: - f.)
 + F:. - {{ (5!:5 <'u') -: (5!:5 <'v') return. u v}} (+ F:. - f.)
 
-'domain error' -: ex '*&.$:'
+'domain error' -: *&.$: etx  5 
 'domain error' -: ex '*&.i.'
-'domain error' -: ex '*&.:$:'
+'domain error' -: *&.:$: etx 5
 'domain error' -: ex '*&.:i.'
 
 1: 0 : 0

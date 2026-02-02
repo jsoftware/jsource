@@ -434,7 +434,7 @@ sunder:  // come here for all structural under
  }
  ASSERT(h!=0,EVDOMAIN);
  // If we can calculate the inverse now, do it and so indicate
- if(nameless(wvb)){h=atop(inv(wvb),h); ASSERT(h!=0,EVDOMAIN); flag|=VFUNDERHASINV; } // h must be valid for free.  If no names in w, take the inverse and mark it as done  names not in obverse are ok
+ if(nameless(wvb)){h=atop(inv(wvb),h); ASSERT(h!=0,EVDOMAIN); flag|=VFUNDERHASINV; } // h must be valid for free.  If no names or locchg in w, take the inverse and mark it as done  names not in obverse are ok
  // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
  // just in case the calculated verb is not inplaceable
  // The standard verbs start with a rank loop; set the flag indicating that
@@ -470,7 +470,7 @@ F2(jtundco){F12IP;AF f1=0,f2;I gside=-1, flag=0;
  }
  ASSERT(h!=0,EVDOMAIN);
  // If we can calculate the inverse now, do it and so indicate
- if(nameless(wvb)){h=atop(inv(wvb),h); ASSERT(h!=0,EVDOMAIN); flag|=VFUNDERHASINV; } // h must be valid for free.  If no names in w, take the inverse and maek it as done    scaf names not in obverse are ok
+ if(nameless(wvb)){h=atop(inv(wvb),h); ASSERT(h!=0,EVDOMAIN); flag|=VFUNDERHASINV; } // h must be valid for free.  If no names or locchg in w, take the inverse and mark it as done
  // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
  // just in case the calculated verb is not inplaceable
  if(!f1)f1=flag&VFUNDERHASINV?jtunderh1:jtundco1; f2=flag&VFUNDERHASINV?jtunderh2:jtundco2; flag |= (FAV(a)->flag&FAV(wvb)->flag&VNOLOCCHG);

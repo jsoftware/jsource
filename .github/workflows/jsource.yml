@@ -1297,7 +1297,7 @@ jobs:
       overwrite: true
 
 # windows arm64 nopyxes ------------------------------------------------
- jewinarm64:
+ jewinarm64pyx0:
   name: JE (Windows arm64 no pyxes)
   runs-on: windows-11-arm
   steps:

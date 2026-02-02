@@ -462,7 +462,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 
 #if SY_WASM
 #define XINF            "\000\000\000\000\000\000\360\177"
-#define XNAN            "\000\000\000\000\000\000\370\177"
+#define XNAN            "\000\000\000\000\000\000\370\377"
 #endif
 
 #if C_LE

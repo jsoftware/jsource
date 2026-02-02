@@ -10,7 +10,7 @@ on:
 #  paths:
 #   - 'version.txt'
 
-# if: ${{ false }}
+  if: ${{ false }}
 
 jobs:
 
@@ -36,12 +36,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 8
+      _DEBUG: 3
      run: |
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux)
      env:
       _MEMAUDIT: 8
+      _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
 
@@ -153,12 +155,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 8
+      _DEBUG: 3
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
    - name: Test JE (Linux arm64)
      env:
       _MEMAUDIT: 8
+      _DEBUG: 3
      run: |
       script/testga.sh raspberry arm64 || exit 1
 
@@ -181,19 +185,21 @@ jobs:
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
       _MEMAUDIT: 8
+      _DEBUG: 3
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
    - name: Test JE (Linux arm32)
      env:
       _MEMAUDIT: 8
+      _DEBUG: 3
      run: |
       script/testga.sh raspberry armv6l || exit 1
 
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-#  if: ${{ false }}
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository

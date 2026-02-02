@@ -10,7 +10,7 @@ on:
 #  paths:
 #   - 'version.txt'
 
-# if: ${{ false }}
+#  if: ${{ false }}
 
 jobs:
 
@@ -38,6 +38,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh linux || exit 1
 
@@ -72,6 +73,38 @@ jobs:
       path: testlinux.txt
       overwrite: true
 
+# linux no pyxes -------------------------------------------------------
+ jelinuxpyx0:
+  name: JE (Linux no pyxes)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux no pyxes)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Commit
+     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
+
+   - name: Build JE (Linux no pyxes)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 0
+     run: |
+      script/buildga.sh linux || exit 1
+
+   - name: Test JE (Linux no pyxes)
+     run: |
+      script/testga.sh linux || exit 1
+
 # linux gcc ------------------------------------------------------------
  jelinux-gcc:
   name: JE (Linux gcc)
@@ -93,6 +126,7 @@ jobs:
       CC: gcc
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh linux || exit 1
 
@@ -152,6 +186,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
      run: |
       script/buildga.sh linux32 || exit 1
 
@@ -205,6 +240,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
       _DEBUG: 3
      run: |
       script/buildga.sh linux || exit 1
@@ -250,6 +286,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh darwin || exit 1
 
@@ -300,6 +337,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh darwin || exit 1
 
@@ -333,97 +371,30 @@ jobs:
       path: testdarwinarm.txt
       overwrite: true
 
-# macOS debug ----------------------------------------------------------
- jemacosd:
-  name: JE (macOS debug)
-  if: ${{ false }}
-  runs-on: macos-15-intel
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Setup Environment (macOS debug)
-     run: |
-      bash script/install-mac.sh
-
-   - name: Build JE (macOS debug)
-     env:
-      CC: clang
-      USE_SLEEF: 1
-      USE_OPENMP: 0
-      _DEBUG: 3
-     run: |
-      script/buildga.sh darwin || exit 1
-
-   - name: Test JE (macOS debug)
-     env:
-      _DEBUG: 3
-     run: |
-      script/testga.sh darwin || exit 1
-      ls -l j64
-      zip -r m64d.zip j64
-
-   - name: Release JE (macOS debug)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "m64d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (macOS debug)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testdarwind.txt
-      overwrite: true
-
-# macOS arm64 debug ----------------------------------------------------
- jemacosarmd:
-  name: JE (macOS arm64 debug)
-  if: ${{ false }}
+# macOS arm64 no pyxes -------------------------------------------------
+ jemacosarmpyx0:
+  name: JE (macOS arm64 nopyx)
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup Environment (macOS arm64 debug)
+   - name: Setup Environment (macOS arm64 nopyx)
      run: |
       bash script/install-mac.sh
 
-   - name: Build JE (macOS arm64 debug)
+   - name: Build JE (macOS arm64 nopyx)
      env:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
-      _DEBUG: 3
+      USE_PYXES: 0
      run: |
       script/buildga.sh darwin || exit 1
 
-   - name: Test JE (macOS arm64 debug)
-     env:
-      _DEBUG: 3
+   - name: Test JE (macOS arm64 nopyx)
      run: |
       script/testga.sh darwin || exit 1
-      ls -l j64
-      zip -r m64armd.zip j64
-
-   - name: Release JE (macOS arm64 debug)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "m64armd.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (macOS arm64 debug)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testdarwinarmd.txt
-      overwrite: true
 
 # rpi64arm -------------------------------------------------------------
  jerpi64arm:
@@ -442,6 +413,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
@@ -492,10 +464,14 @@ jobs:
       USE_SLEEF: 1
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
+      _DEBUG: 3
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
    - name: Test JE (Linux arm32)
+     env:
+      _DEBUG: 3
      run: |
       script/testga.sh raspberry armv6l || exit 1
       cd j32
@@ -524,35 +500,6 @@ jobs:
       path: testrpi32.txt
       overwrite: true
 
-# rpi32armd ------------------------------------------------------------
- jerpi32armd:
-  name: JE (Linux arm32 debug)
-  if: ${{ false }}
-  runs-on: ubuntu-24.04-arm
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Setup Environment (Linux arm32 debug)
-     run: |
-      script/install-rpi.sh
-
-   - name: Build JE (Linux arm32 debug)
-     env:
-      CC: arm-linux-gnueabihf-gcc
-      USE_SLEEF: 1
-      USE_SLEEFQUAD: 1
-      USE_OPENMP: 0
-      _DEBUG: 3
-     run: |
-      script/buildga.sh raspberry armv6l || exit 1
-
-   - name: Test JE (Linux arm32 debug)
-     env:
-      _DEBUG: 3
-     run: |
-      script/testga.sh raspberry armv6l || exit 1
-
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
@@ -575,6 +522,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64 || exit 1
        cd j64
@@ -638,6 +586,7 @@ jobs:
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
        export USE_OPENMP=0
+       export USE_PYXES=0
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
@@ -678,213 +627,6 @@ jobs:
       path: testrpi32.txt
       overwrite: true
 
-# rpi64arm debug -------------------------------------------------------
- jerpi64armd:
-  name: JE (Linux arm64 debug)
-  if: ${{ false }}
-  runs-on: ubuntu-24.04-arm
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Setup Environment (Linux arm64 debug)
-     run: |
-      script/install-rpi.sh
-
-   - name: Build JE (Linux arm64 debug)
-     env:
-      CC: clang
-      USE_SLEEF: 1
-      USE_OPENMP: 0
-      _DEBUG: 3
-     run: |
-      script/buildga.sh raspberry arm64 || exit 1
-
-   - name: Test JE (Linux arm64 debug)
-     env:
-      _DEBUG: 3
-     run: |
-      script/testga.sh raspberry arm64 || exit 1
-      ls -l j64
-      zip -r rpi64d.zip j64
-
-   - name: Release JE (Linux arm64 debug)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "rpi64d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Linux arm64 debug)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testrpi64d.txt
-      overwrite: true
-
-# rpi32arm debug -------------------------------------------------------
- jerpi32armd2:
-  name: JE (Linux arm32 debug)
-  if: ${{ false }}
-  runs-on: ubuntu-24.04-arm
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Setup Environment (Linux arm32 debug)
-     run: |
-      script/install-rpi.sh
-
-   - name: Build JE (Linux arm32 debug)
-     env:
-      CC: arm-linux-gnueabihf-gcc
-      USE_SLEEF: 1
-      USE_SLEEFQUAD: 1
-      USE_OPENMP: 0
-      _DEBUG: 3
-     run: |
-      script/buildga.sh raspberry armv6l || exit 1
-
-   - name: Test JE (Linux arm32 debug)
-     env:
-      _DEBUG: 3
-     run: |
-      script/testga.sh raspberry armv6l || exit 1
-      cd j32
-      cd -
-      ls -l j32
-      zip -r rpi32d.zip j32
-
-   - name: Release JE (Linux arm32 debug)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "rpi32d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Linux arm32 debug)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testrpi32d.txt
-      overwrite: true
-
-# rpi64 debug ----------------------------------------------------------
- jerpi64d:
-  name: JE (Raspberry deubg)
-  if: ${{ false }}
-  runs-on: ubuntu-latest
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Build, Test JE (Raspberry deubg)
-     uses: pguyot/arm-runner-action@v2
-     with:
-      cpu: cortex-a53
-      cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
-      base_image: raspios_lite_arm64:2023-05-03
-      image_additional_mb: 1024
-      copy_artifact_path: j64
-      commands: |
-       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export _DEBUG=3
-       script/buildga.sh raspberry arm64 || exit 1
-       script/testga.sh raspberry arm64 || exit 1
-       zip -r rpi64d.zip j64
-       zip rpi64d.zip /usr/bin/zip
-       zip rpi64d.zip /usr/bin/unzip
-       rm -rf j64
-       mkdir j64
-       mv rpi64d.zip j64/.
-       mv testrpi64d.txt j64/.
-       find j64 -type d -exec chmod a+rwx {} \;
-       find j64 -type f -exec chmod a+rw {} \;
-
-   - name: Compress Files (Raspberry deubg)
-     run: |
-      ls -l j64
-      mv j64/* .
-
-   - name: Release JE (Raspberry deubg)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "rpi64d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Raspberry deubg)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testrpi64d.txt
-      overwrite: true
-
-# rpi32 debug ----------------------------------------------------------
- jerpi32d:
-  name: JE (Raspberry32 debug)
-  runs-on: ubuntu-latest
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Build, Test JE (Raspberry 32)
-     uses: pguyot/arm-runner-action@v2
-     with:
-      cpu: arm1176
-      cpu_info: cpuinfo/raspberrypi_zero2_w
-      base_image: raspios_lite:2023-05-03
-      image_additional_mb: 1024
-      copy_artifact_path: j32
-      commands: |
-       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
-       export CC=gcc
-       export USE_SLEEF=0
-       export USE_SLEEFQUAD=1
-       export USE_OPENMP=0
-       export _DEBUG=3
-       script/buildga.sh raspberry armv6l || exit 1
-       script/testga.sh raspberry armv6l || exit 1
-       find j32 -type d -exec chmod a+rwx {} \;
-       find j32 -type f -exec chmod a+rw {} \;
-       zip -r rpi32d.zip j32
-       rm -rf j32
-       mkdir j32
-       mv rpi32d.zip j32/.
-       mv testrpi32d.txt j32/.
-       find j32 -type d -exec chmod a+rwx {} \;
-       find j32 -type f -exec chmod a+rw {} \;
-
-   - name: Compress Files (Raspberry32 debug)
-     run: |
-      ls -l j32
-      mv j32/* .
-
-   - name: Release JE (Raspberry32 debug)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "rpi32d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Raspberry)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testrpi32d.txt
-      overwrite: true
-
 # openbsd --------------------------------------------------------------
  jeopenbsd:
   name: JE (OpenBSD vmactions)
@@ -917,6 +659,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        cd j64
@@ -984,6 +727,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        cd j64
@@ -1052,6 +796,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh openbsd || exit 1
        cd j64
        strip -S jconsole
@@ -1120,6 +865,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        cd j64
@@ -1191,6 +937,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        cd j64
@@ -1263,6 +1010,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        cd j64
@@ -1317,6 +1065,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh android || exit 1
 
@@ -1347,6 +1096,7 @@ jobs:
       CC: emcc
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
      run: |
       script/buildga.sh wasm || exit 1
       script/testga.sh wasm || exit 1
@@ -1379,6 +1129,8 @@ jobs:
 
    - name: Build JE (Windows)
      shell: cmd
+     env:
+      USE_PYXES: 1
      run: |
       script\buildga.cmd x64
 
@@ -1407,6 +1159,31 @@ jobs:
       path: testwin.txt
       overwrite: true
 
+# windows no pyxes -----------------------------------------------------
+ jewinpyx0:
+  name: JE (Windows nopyxes)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows nopyxes)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64
+
+   - name: Build JE (Windows nopyxes)
+     shell: cmd
+     env:
+      USE_PYXES: 0
+     run: |
+      script\buildga.cmd x64
+
+   - name: Test JE (Windows nopyxes)
+     shell: cmd
+     run: |
+      script\testga.cmd x64
+
 # windows 32bit --------------------------------------------------------
  jewin32:
   name: JE (Windows 32)
@@ -1422,6 +1199,8 @@ jobs:
 
    - name: Build JE (Windows 32)
      shell: cmd
+     env:
+      USE_PYXES: 0
      run: |
       script\buildga.cmd x86
 
@@ -1466,6 +1245,8 @@ jobs:
 
    - name: Build JE (Windows arm64)
      shell: cmd
+     env:
+      USE_PYXES: 1
      run: |
       script\buildga.cmd arm64
 
@@ -1510,6 +1291,8 @@ jobs:
 
    - name: Build JE (Windows arm64)
      shell: cmd
+     env:
+      USE_PYXES: 1
      run: |
       script\buildga.cmd arm64
 
@@ -1538,12 +1321,35 @@ jobs:
       path: testwinarm64.txt
       overwrite: true
 
+# windows arm64 nopyxes ------------------------------------------------
+ jewinarm64pyx0:
+  name: JE (Windows arm64 no pyxes)
+  runs-on: windows-11-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows arm64 no pyxes)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64_arm64
+
+   - name: Build JE (Windows arm64 no pyxes)
+     shell: cmd
+     env:
+      USE_PYXES: 0
+     run: |
+      script\buildga.cmd arm64
+
+   - name: Test JE (Windows arm64 no pyxes)
+     shell: cmd
+     run: |
+      script\testga.cmd arm64
+
 # get tests ------------------------------------------------------------
  tests:
   name: Test Results
   runs-on: ubuntu-22.04
-#  needs: [jelinux, jelinux-gcc, jemacos, jerpi64, jerpi32, jewin, jewin32, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
-#  needs: [jelinux, jelinux-gcc, jelinuxd, jemacos, jemacosarm, jemacosd, jemacosarmd, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   needs: [jelinux, jelinux-gcc, jelinux32, jelinuxd, jemacos, jemacosarm, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
   steps:
    - name: Checkout Git repository

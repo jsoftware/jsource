@@ -101,6 +101,9 @@ exit^:(*@#RES) *@#RES
 echo '>>> testing gxco1.ijs'
 RES=: RUN4 (<testpath),each <'gxco1.ijs'
 exit^:(*@#RES) *@#RES
+echo '>>> testing gdic.ijs'
+RES=: RUN4 (<testpath),each <'gdic.ijs'
+exit^:(*@#RES) *@#RES
 RES=: ''
 QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
@@ -116,20 +119,6 @@ for_i. i.100 do.
   RES=: RUN4 (<testpath),each <'gctrl.ijs'
   exit^:(*@#RES) *@#RES
 end.
-RES=: ''
-QKTEST=: QKTEST0
-ECHOFILENAME=: ECHOFILENAME0
-1
-)
-
-3 : 0''
-ECHOFILENAME0=: ECHOFILENAME
-ECHOFILENAME=: 0
-QKTEST0=: QKTEST
-QKTEST=: 1
-echo '>>> testing gdic.ijs'
-RES=: RUN4 (<testpath),each <'gdic.ijs'
-exit^:(*@#RES) *@#RES
 RES=: ''
 QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0

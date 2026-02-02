@@ -9,7 +9,8 @@ set -e
 CC=${CC-clang}
 USE_SLEEF=${USE_SLEEF:=1}
 USE_SLEEFQUAD=${USE_SLEEFQUAD:=$USE_SLEEF}
-export CC USE_SLEEF USE_SLEEFQUAD
+USE_PYXES=${USE_PYXES:=1}
+export CC USE_SLEEF USE_SLEEFQUAD USE_PYXES
 
 if [ "$1" = "linux" ] || [ "$1" = "linux32" ] ; then
  ext="so"

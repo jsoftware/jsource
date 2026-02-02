@@ -38,6 +38,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh linux || exit 1
 
@@ -72,6 +73,38 @@ jobs:
       path: testlinux.txt
       overwrite: true
 
+# linux no pyxes -------------------------------------------------------
+ jelinuxpyx0:
+  name: JE (Linux no pyxes)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux no pyxes)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Commit
+     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
+
+   - name: Build JE (Linux no pyxes)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 0
+     run: |
+      script/buildga.sh linux || exit 1
+
+   - name: Test JE (Linux no pyxes)
+     run: |
+      script/testga.sh linux || exit 1
+
 # linux gcc ------------------------------------------------------------
  jelinux-gcc:
   name: JE (Linux gcc)
@@ -93,6 +126,7 @@ jobs:
       CC: gcc
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh linux || exit 1
 
@@ -152,6 +186,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
      run: |
       script/buildga.sh linux32 || exit 1
 
@@ -205,6 +240,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
       _DEBUG: 3
      run: |
       script/buildga.sh linux || exit 1
@@ -250,6 +286,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh darwin || exit 1
 
@@ -300,6 +337,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh darwin || exit 1
 
@@ -350,6 +388,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
@@ -400,6 +439,7 @@ jobs:
       USE_SLEEF: 1
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
       _DEBUG: 3
      run: |
       script/buildga.sh raspberry armv6l || exit 1
@@ -457,6 +497,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64 || exit 1
        cd j64
@@ -520,6 +561,7 @@ jobs:
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
        export USE_OPENMP=0
+       export USE_PYXES=0
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
@@ -592,6 +634,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        cd j64
@@ -659,6 +702,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh openbsd || exit 1
        script/testga.sh openbsd || exit 1
        cd j64
@@ -727,6 +771,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh openbsd || exit 1
        cd j64
        strip -S jconsole
@@ -795,6 +840,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        cd j64
@@ -866,6 +912,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        cd j64
@@ -938,6 +985,7 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
        cd j64
@@ -992,6 +1040,7 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
      run: |
       script/buildga.sh android || exit 1
 
@@ -1022,6 +1071,7 @@ jobs:
       CC: emcc
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
      run: |
       script/buildga.sh wasm || exit 1
       script/testga.sh wasm || exit 1
@@ -1245,6 +1295,31 @@ jobs:
       name: dist
       path: testwinarm64.txt
       overwrite: true
+
+# windows arm64 nopyxes ------------------------------------------------
+ jewinarm64:
+  name: JE (Windows arm64 no pyxes)
+  runs-on: windows-11-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows arm64 no pyxes)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64_arm64
+
+   - name: Build JE (Windows arm64 no pyxes)
+     shell: cmd
+     env:
+      USE_PYXES: 0
+     run: |
+      script\buildga.cmd arm64
+
+   - name: Test JE (Windows arm64 no pyxes)
+     shell: cmd
+     run: |
+      script\testga.cmd arm64
 
 # get tests ------------------------------------------------------------
  tests:

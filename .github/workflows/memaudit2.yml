@@ -36,12 +36,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux)
      env:
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
 
@@ -70,12 +72,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/buildga.sh linux32 || exit 1
 
    - name: Test JE (Linux32)
      env:
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/testga.sh linux32 || exit 1
 
@@ -97,12 +101,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS)
      env:
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/testga.sh darwin || exit 1
 
@@ -124,12 +130,14 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS arm64)
      env:
       _MEMAUDIT: 2
+      _DEBUG: 3
      run: |
       script/testga.sh darwin || exit 1
 
@@ -195,7 +203,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-#  if: ${{ false }}
+  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository

@@ -13,7 +13,6 @@ on:
 #  if: ${{ false }}
 
 jobs:
- if: ${{ false }}
 
 # linux ----------------------------------------------------------------
  jelinux:
@@ -493,10 +492,13 @@ jobs:
       USE_SLEEF: 1
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
+      _DEBUG: 3
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
    - name: Test JE (Linux arm32)
+     env:
+      _DEBUG: 3
      run: |
       script/testga.sh raspberry armv6l || exit 1
       cd j32

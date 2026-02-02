@@ -326,6 +326,7 @@ jobs:
    - name: Build JE (Windows)
      shell: cmd
      env:
+      USE_PYXES: 1
       _MEMAUDIT: 2
      run: |
       script\buildga.cmd x64
@@ -333,6 +334,35 @@ jobs:
    - name: Test JE (Windows)
      shell: cmd
      env:
+      _MEMAUDIT: 2
+     run: |
+      script\testga.cmd x64
+
+# windows no pyxes -----------------------------------------------------
+ jewinpyx0:
+  name: JE (Windows nopyxes)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows nopyxes)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64
+
+   - name: Build JE (Windows nopyxes)
+     shell: cmd
+     env:
+      USE_PYXES: 0
+      _MEMAUDIT: 2
+     run: |
+      script\buildga.cmd x64
+
+   - name: Test JE (Windows nopyxes)
+     shell: cmd
+     env:
+      USE_PYXES: 0
       _MEMAUDIT: 2
      run: |
       script\testga.cmd x64
@@ -353,6 +383,7 @@ jobs:
    - name: Build JE (Windows 32)
      shell: cmd
      env:
+      USE_PYXES: 0
       _MEMAUDIT: 2
      run: |
       script\buildga.cmd x86
@@ -381,6 +412,7 @@ jobs:
    - name: Build JE (Windows arm64)
      shell: cmd
      env:
+      USE_PYXES: 1
       _MEMAUDIT: 2
      run: |
       script\buildga.cmd arm64

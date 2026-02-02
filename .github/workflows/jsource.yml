@@ -371,6 +371,31 @@ jobs:
       path: testdarwinarm.txt
       overwrite: true
 
+# macOS arm64 no pyxes -------------------------------------------------
+ jemacosarmpyx0:
+  name: JE (macOS arm64 nopyx)
+  runs-on: macos-15
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (macOS arm64 nopyx)
+     run: |
+      bash script/install-mac.sh
+
+   - name: Build JE (macOS arm64 nopyx)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 0
+     run: |
+      script/buildga.sh darwin || exit 1
+
+   - name: Test JE (macOS arm64 nopyx)
+     run: |
+      script/testga.sh darwin || exit 1
+
 # rpi64arm -------------------------------------------------------------
  jerpi64arm:
   name: JE (Linux arm64)

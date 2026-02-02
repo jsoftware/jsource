@@ -101,14 +101,12 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 2
-      _DEBUG: 3
      run: |
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS)
      env:
       _MEMAUDIT: 2
-      _DEBUG: 3
      run: |
       script/testga.sh darwin || exit 1
 
@@ -130,14 +128,12 @@ jobs:
       USE_SLEEF: 1
       USE_OPENMP: 0
       _MEMAUDIT: 2
-      _DEBUG: 3
      run: |
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS arm64)
      env:
       _MEMAUDIT: 2
-      _DEBUG: 3
      run: |
       script/testga.sh darwin || exit 1
 

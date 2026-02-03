@@ -44,6 +44,9 @@ jobs:
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux)
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
      run: |
       script/testga.sh linux || exit 1
       cd j64
@@ -101,6 +104,9 @@ jobs:
       script/buildga.sh linux || exit 1
 
    - name: Test JE (Linux gcc)
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
      run: |
       script/testga.sh linux || exit 1
       mv testlinux.txt  testlinuxgcc.txt
@@ -162,6 +168,9 @@ jobs:
       script/buildga.sh linux32 || exit 1
 
    - name: Test JE (Linux32)
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
      run: |
       script/testga.sh linux32 || exit 1
       cd j32
@@ -219,6 +228,8 @@ jobs:
 
    - name: Test JE (Linux debug)
      env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
@@ -264,6 +275,9 @@ jobs:
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS)
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
      run: |
       script/testga.sh darwin || exit 1
       cd j64
@@ -316,6 +330,9 @@ jobs:
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS arm64)
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
      run: |
       script/testga.sh darwin || exit 1
       cd j64
@@ -368,6 +385,9 @@ jobs:
       script/buildga.sh raspberry arm64 || exit 1
 
    - name: Test JE (Linux arm64)
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
      run: |
       script/testga.sh raspberry arm64 || exit 1
       cd j64
@@ -422,6 +442,8 @@ jobs:
 
    - name: Test JE (Linux arm32)
      env:
+      USE_OPENMP: 0
+      USE_PYXES: 0
       _DEBUG: 3
      run: |
       script/testga.sh raspberry armv6l || exit 1
@@ -1098,6 +1120,9 @@ jobs:
 
    - name: Test JE (Windows)
      shell: cmd
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
      run: |
       script\testga.cmd x64
 
@@ -1144,6 +1169,9 @@ jobs:
 
    - name: Test JE (Windows 32)
      shell: cmd
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
      run: |
       script\testga.cmd x86
 
@@ -1192,6 +1220,9 @@ jobs:
    - name: Test JE (Windows arm64)
      if: ${{ false }}
      shell: cmd
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
      run: |
       script\testga.cmd arm64
 
@@ -1238,6 +1269,9 @@ jobs:
 
    - name: Test JE (Windows arm64)
      shell: cmd
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
      run: |
       script\testga.cmd arm64
 

@@ -46,6 +46,8 @@ jobs:
 
    - name: Test JE (Linux no pyxes)
      env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
@@ -82,6 +84,8 @@ jobs:
 
    - name: Test JE (Linux no emu)
      env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
@@ -118,6 +122,8 @@ jobs:
 
    - name: Test JE (Linux no pyxes/emu)
      env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
@@ -145,6 +151,9 @@ jobs:
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS arm64 no pyxes)
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
      run: |
       script/testga.sh darwin || exit 1
 
@@ -171,6 +180,9 @@ jobs:
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS arm64 no emu)
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
      run: |
       script/testga.sh darwin || exit 1
 
@@ -197,6 +209,9 @@ jobs:
       script/buildga.sh darwin || exit 1
 
    - name: Test JE (macOS arm64 no pyxes/emu)
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
      run: |
       script/testga.sh darwin || exit 1
 
@@ -225,6 +240,8 @@ jobs:
 
    - name: Test JE (Linux arm64 no pyxes)
      env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
       script/testga.sh raspberry arm64 || exit 1
@@ -254,6 +271,8 @@ jobs:
 
    - name: Test JE (Linux arm64 no emu)
      env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
       script/testga.sh raspberry arm64 || exit 1
@@ -283,6 +302,8 @@ jobs:
 
    - name: Test JE (Linux arm64 no pyxes/emu)
      env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
       script/testga.sh raspberry arm64 || exit 1
@@ -310,6 +331,9 @@ jobs:
 
    - name: Test JE (Windows no pyxes)
      shell: cmd
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
      run: |
       script\testga.cmd x64
 
@@ -336,6 +360,9 @@ jobs:
 
    - name: Test JE (Windows no emu)
      shell: cmd
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
      run: |
       script\testga.cmd x64
 
@@ -362,6 +389,9 @@ jobs:
 
    - name: Test JE (Windows no pyxes/emu)
      shell: cmd
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
      run: |
       script\testga.cmd x64
 
@@ -388,6 +418,9 @@ jobs:
 
    - name: Test JE (Windows arm64 no pyxes)
      shell: cmd
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
      run: |
       script\testga.cmd arm64
 
@@ -414,6 +447,9 @@ jobs:
 
    - name: Test JE (Windows arm64 no emu)
      shell: cmd
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
      run: |
       script\testga.cmd arm64
 
@@ -440,6 +476,9 @@ jobs:
 
    - name: Test JE (Windows arm64 no pyxes/emu)
      shell: cmd
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
      run: |
       script\testga.cmd arm64
 

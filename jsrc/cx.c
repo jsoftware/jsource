@@ -964,7 +964,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   t=QCWORD(lv[j-1]);  // t is the previous word
   // look for 'names' =./=: .  If found (and the names do not begin with `), replace the string with a special form: a list of boxes where each box contains a name.
   // This form can appear only in compiled definitions
-  if(AT(QCWORD(lv[j]))&ASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
+  if((QCSENTTYPE(lv[j])&~(QCASGNISLOCAL+QCASGNISTONAME))==QCASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
    A neww; RZ(neww=words(t));  // find names; if string ill-formed, we might as well catch it now
    if(AN(neww)){  // ignore blank string
     A newt; WITHMSGSOFF(newt=every(neww,(A)&onmself);)  // convert every word to a NAME block
@@ -972,8 +972,8 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    }
   }
 
-  if((AT(QCWORD(lv[j]))&ASGN+ASGNLOCAL)==(ASGN+ASGNLOCAL)) {  // local assignment
-   if(AT(QCWORD(lv[j]))&ASGNTONAME){    // preceded by name?
+  if((QCSENTTYPE(lv[j])&~QCASGNISTONAME)==(QCASGN+QCASGNISLOCAL)) {  // local assignment
+   if(QCSENTTYPE(lv[j])&QCASGNISTONAME){    // preceded by name?
     // Lookup the name, which will create the symbol-table entry for it
     // name_: causes a little trouble.  The name carries with it the _: flag, but we will eventually replace all refs with the shared ref from
     // this table.  That means we have to remove the _: flag from the stored value, lest every reference appear flagged just because the last one was.
@@ -1092,30 +1092,30 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
    // loop till we have found all the parens
    while(1){
     // Look forward for )
-    while(startx<endx && !(AT(QCWORD(lvv[startx]))&RPAR))++startx; if(startx==endx)break;  // find ), exit loop if none, finished
+    while(startx<endx && QCSENTTYPE(lvv[startx])!=QCRPAR)++startx; if(startx==endx)break;  // find ), exit loop if none, finished
     // Scan backward looking for (, to get length, and checking for disqualifying entities
-    I rparx=startx; I creverb=0;  // remember where the ) is; clear flag that says we hit m : or !:
+    I rparx=startx; I creverb=0;  // remember where the ) is; clear flag that says we hit m : or !:, which might create anything
     while(--startx>=0 && !(AT(QCWORD(lvv[startx]))==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
      if(AT(QCWORD(lvv[startx]))&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
      if(AT(QCWORD(lvv[startx]))&VERB && FAV(QCWORD(lvv[startx]))->flag2&VF2IMPLOC)break;  // u. v. not allowed: they are half-names
      if(AT(QCWORD(lvv[startx]))&VERB && (FAV(QCWORD(lvv[startx]))->flag&VNOLOCCHG+VNONAME)!=VNOLOCCHG+VNONAME)break;  // if any verb is not loc & name safe, don't execute
-     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)creverb=1;;  // remember if we hit !: ...
-     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(AT(QCWORD(lvv[startx-1]))&VERB))creverb=1;  // ... or m :
+     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)creverb=1;  // remember if we hit !: ...
+     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(QCSENTTYPE(lvv[startx-1])==QCVERB))creverb=1;  // ... or m :
     }
-    if(startx>=0 && (startx+2<rparx) && (AT(QCWORD(lvv[startx]))==LPAR)){  // ( ... ) but not () or ( word )
+    if(startx>=0 && (startx+2<rparx) && (QCSENTTYPE(lvv[startx])==QCLPAR)){  // ( ... ) but not () or ( word )
      // The ) was matched and the () can be processed.
      // !: and m : are special in that they can return any part of speech.  Thus, we can't let them loose in a sentence that is not supposed to execute any verbs.
      // We process them only when they are (m!:n) or (m : noun), 5 words.   This has the salutary effect of preparsing DDs
-     if(creverb && !(startx+4==rparx && (AT(QCWORD(lvv[startx+1]))&NOUN) && (AT(QCWORD(lvv[startx+3]))&NOUN)))goto parseerr;
+     if(creverb && !(startx+4==rparx && (QCSENTTYPE(lvv[startx+1])==QCNOUN) && (QCSENTTYPE(lvv[startx+3])==QCNOUN)))goto parseerr;
      // See if the () block was a (( )) block.  If it is, we will execute it even if it contains verbs
-     I doublep = (rparx+1<endx) && (AT(QCWORD(lvv[rparx+1]))==RPAR) && (startx>0) && (AT(QCWORD(lvv[startx-1]))==LPAR);  // is (( ))?
+     I doublep = (rparx+1<endx) && (QCSENTTYPE(lvv[rparx+1])==QCRPAR) && (startx>0) && (QCSENTTYPE(lvv[startx-1])==QCLPAR);  // is (( ))?
      I parseok=doublep;  // indic OK to run parse
      if(doublep){--startx, ++rparx;  // (( )), expand the look to include outer ()
      }else{
       // Not (( )).  We have to make sure no verbs in the fragment will be executed.  They might have side effects, such as increased space usage.
       // copy the fragment between () to a temp buffer, replacing any verb with [:
       if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
-      DO(rparx-startx-1, fragv[i]=AT(QCWORD(lvv[startx+i+1]))&VERB?QCINSTALLTYPE(ds(CCAP),QCVERB):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
+      DO(rparx-startx-1, fragv[i]=QCSENTTYPE(lvv[startx+i+1])==QCVERB?QCINSTALLTYPE(ds(CCAP),QCVERB):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
       // parse the temp for error, which will usually be an attempt to execute a verb
       WITHMSGSOFF(parseok=(I)parsea(fragv,rparx-startx-1);)    // trial parse, no msg formatting needed.   Remember if it was OK
      }

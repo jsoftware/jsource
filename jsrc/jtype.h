@@ -931,10 +931,10 @@ typedef DST* DC;
 #define ISRAREQD(w) ((I)(w)&QCRAREQD)  // true if value should be ra()d before stacking
 #define SETRAREQD(w) (A)((I)(w)|QCRAREQD)
 #define CLRRAREQD(w) (A)((I)(w)&~QCRAREQD)
-// value types set when the value is stored into the symbol table:
+// value types set when the value is stored into the symbol table (NAMELESS replaces the usual QCNOUN/QCVERB/QCADV/QCCONJ:
 #define VALTYPENAMELESS ((SYMBX-LASTNOUNX)+1) // 6 set in nameless non-locative ACV, to suppress reference creation.
 #define VALTYPESPARSE ((CONWX-LASTNOUNX)+1)  // 7 set in sparse noun, which is the only type of a stored value that requires traverse.  Has bit 0 set, as befits a noun
-#define NAMELESSQCTOTYPEDQC(q) q=(A)(((I)q&~0xf)+ATYPETOVALTYPEACV(AT(QCWORD(q))));  // q is name of NAMELESS QC; result has QC type for AT(q) with unchanged semantics
+#define NAMELESSQCTOTYPEDQC(q) q=(A)(((I)q&~0xf)+ATYPETOVALTYPEACV(AT(QCWORD(q))));  // q is NAMELESS QC; result has QC type for AT(q) with unchanged semantics
 // In the LSBs returned by syrd1() bit 4 has QCNAMEDLOC semantics (bit 5 is garbage):
 #define QCNAMEDLOCX 4  // set if the value was found in a named locale, clear if numbered
 #define QCNAMEDLOC ((I)1<<QCNAMEDLOCX)  // set if the value was found in a named locale, clear if numbered

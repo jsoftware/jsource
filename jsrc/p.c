@@ -285,7 +285,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
 #endif
 
 #if 0  // for debugging
-static SYMWALK(jtchkval0k, I,INT,1,1, AT(QCWORD(d->fval))&NOUN&&AK(QCWORD(d->fval))==0?SEGFAULT:0 , ;)
+static SYMWALK(jtchkval0k, I,INT,1,1, QCSENTTYPE(d->fval)==QCNOUN&&AK(QCWORD(d->fval))==0?SEGFAULT:0 , ;)
 #endif
 
 // Run parser, creating a new debug frame.  Explicit defs, which make other tests first, go through jtparsea except during debug/pm
@@ -355,7 +355,7 @@ static A nameundco(J jtfg, A name, A y){F12IP;
  WRITEUNLOCK(locfound->lock)
  // The name has been deleted.  The value is still protected by the ra() made in syrd or before we were called.
  // convert here (notionally) to QCFAOWED semantics, with the knowledge that every block has had a ra() at this point.  We explicitly set FAOWED status here
- if(likely(!ISSPARSE(AT(QCWORD(y))))&&likely(AC(QCWORD(y))==ACUC1)){
+ if(likely(QCSENTTYPE(y)!=VALTYPESPARSE)&&likely(AC(QCWORD(y))==ACUC1)){
   // The usecount has gone down to 1 (including the ra from syrd): the block can become inplaceable again.  We have to give it a valid zaploc in case anyone wants to use it.
   // In this case the tpush undoes the ra() from syrd and we do not set FAOWED.
   ACSET(QCWORD(y),ACINPLACE+ACUC1); AZAPLOC(QCWORD(y))=jt->tnextpushp; tpushna(QCWORD(y)); R CLRFAOWED(y);

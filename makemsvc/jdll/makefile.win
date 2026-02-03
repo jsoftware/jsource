@@ -1,58 +1,57 @@
 !if ""!="$(_DEBUG)"
- COPTION = /FS /Zi /DDEBUG=1
- LDEBUG = /DEBUG
+COPTION = /FS /Zi /DDEBUG=1
+LDEBUG = /DEBUG
 else
-DUMMY =  125
 COPTION =
 !endif
 CINCLUDE = -I../../mpir/include
 !if "1"=="$(USE_PYXES)"
- !if "ARM64"=="$(TARGET_CPU)"
-  PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-arm64.lib
- !elseif "x64"=="$(TARGET_CPU)"
-   PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
- !else
-   PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
- !endif
- CINCLUDE = $(CINCLUDE) -I../../pthreads4w/include
- COPTION = $(COPTION) /DPYXES=1
+!if "ARM64"=="$(TARGET_CPU)"
+PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-arm64.lib
+!elseif "x64"=="$(TARGET_CPU)"
+PTHREADLIB = ../../pthreads4w/lib/pthreadVC3.lib
 !else
- COPTION = $(COPTION) /DPYXES=0
+PTHREADLIB = ../../pthreads4w/lib/pthreadVC3-w32.lib
+!endif
+CINCLUDE = $(CINCLUDE) -I../../pthreads4w/include
+COPTION = $(COPTION) /DPYXES=1
+!else
+COPTION = $(COPTION) /DPYXES=0
 !endif
 !if "0"=="$(USE_EMU_AVX)"
- COPTION = $(COPTION) /DEMU_AVX2=0
+COPTION = $(COPTION) /DEMU_AVX2=0
 !else
- COPTION = $(COPTION) /DEMU_AVX2=1
+COPTION = $(COPTION) /DEMU_AVX2=1
 !endif
 
 !if "1"=="$(JAVX512)"
- COPTION = $(COPTION) /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512 -mno-vzeroupper
+COPTION = $(COPTION) /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512 -mno-vzeroupper
 !elseif "1"=="$(JAVX2)"
- COPTION = $(COPTION) /DC_AVX2=1 -DHAVE_AVX2=1 -march=skylake -mno-vzeroupper
+COPTION = $(COPTION) /DC_AVX2=1 -DHAVE_AVX2=1 -march=skylake -mno-vzeroupper
 !endif
 !if "1"=="$(USE_OPENMP)"
- COPTION = $(COPTION) -Xclang -fopenmp
+COPTION = $(COPTION) -Xclang -fopenmp
 # LOPENMP = libomp.lib
- !if "ARM64"=="$(TARGET_CPU)"
-  LOPENMP = ../../openmp/obj/windows/libomparm64.lib
- !elseif "x64"=="$(TARGET_CPU)"
-  LOPENMP = ../../openmp/obj/windows/libomp.lib
- !else
-  LOPENMP = ../../openmp/obj/windows/libomp32.lib
- !endif
+!if "ARM64"=="$(TARGET_CPU)"
+LOPENMP = ../../openmp/obj/windows/libomparm64.lib
+!elseif "x64"=="$(TARGET_CPU)"
+LOPENMP = ../../openmp/obj/windows/libomp.lib
+!else
+LOPENMP = ../../openmp/obj/windows/libomp32.lib
+!endif
 !endif
 !if "ARM64"=="$(TARGET_CPU)"
- COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
+COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
 !elseif "x64"=="$(TARGET_CPU)"
- !if "1"=="$(JAVX512)"
-  COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
- !elseif "1"=="$(JAVX2)"
-  COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
- !else
-  COPTION = $(COPTION) /DSLEEF=0 /DSLEEFQUAD=1
- !endif
+!if "1"=="$(JAVX512)"
+COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
+!elseif "1"=="$(JAVX2)"
+COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
 !else
- COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
+COPTION = $(COPTION) /DSLEEF=0 /DSLEEFQUAD=1
+!endif
+!else
+COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
 !endif
 !if "ARM64"=="$(TARGET_CPU)"
 # MPIRLIB = ../../mpir/dll/arm64/mpir.lib
@@ -63,49 +62,49 @@ CINCLUDE = -I../../mpir/include
 !endif
 
 !if "1"=="$(NOSYNCHLIB)"
- COPTION = $(COPTION) /DNOSYNCHLIB=1
+COPTION = $(COPTION) /DNOSYNCHLIB=1
 !endif
 !if ""!="$(_MEMAUDIT)"
- COPTION = $(COPTION) /DMEMAUDIT =$(_MEMAUDIT)
+COPTION = $(COPTION) /DMEMAUDIT =$(_MEMAUDIT)
 !endif
 !if ""!="$(_ASSERT)"
- COPTION = $(COPTION) /D_ASSERT
+COPTION = $(COPTION) /D_ASSERT
 !endif
 !if ""!="$(_ASSERT2)"
- COPTION = $(COPTION) /D_ASSERT2
+COPTION = $(COPTION) /D_ASSERT2
 !endif
 !if ""!="$(_NAN)"
- COPTION = $(COPTION) /D_NAN
+COPTION = $(COPTION) /D_NAN
 !endif
 !if ""!="$(_NAMETRACK)"
- COPTION = $(COPTION) /DNAMETRACK =$(_NAMETRACK)
+COPTION = $(COPTION) /DNAMETRACK =$(_NAMETRACK)
 !endif
 !if "1"=="$(USE_BOXEDSPARSE)"
- COPTION = $(COPTION) /DBOXEDSPARSE
+COPTION = $(COPTION) /DBOXEDSPARSE
 !endif
 !if "x64"=="$(TARGET_CPU)"
- !if ""!="$(_SSE4_2)"
-  COPTION = $(COPTION) -msse4.1 -msse4.2
- !endif
+!if ""!="$(_SSE4_2)"
+COPTION = $(COPTION) -msse4.1 -msse4.2
+!endif
 !endif
 
 !if "ARM64"=="$(TARGET_CPU)"
- CF1 = -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
- CFLAGS = $(COPTION) $(CINCLUDE) -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto /DHAVE_NEON64=1 /D_JDLL /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
- FLAGS = $(LDEBUG) /DLL /MACHINE:ARM64 /SUBSYSTEM:WINDOWS,10.0
- ASMFLAGS = /Cx
+CF1 = -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
+CFLAGS = $(COPTION) $(CINCLUDE) -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto /DHAVE_NEON64=1 /D_JDLL /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS = $(LDEBUG) /DLL /MACHINE:ARM64 /SUBSYSTEM:WINDOWS,10.0
+ASMFLAGS = /Cx
 !elseif "x64"=="$(TARGET_CPU)"
- CF1 = -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
- CFLAGS = $(COPTION) $(CINCLUDE) /D_JDLL /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
- FLAGS = $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
- ASMFLAGS = /Cx
+CF1 = -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
+CFLAGS = $(COPTION) $(CINCLUDE) /D_JDLL /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS = $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
+ASMFLAGS = /Cx
 !else
 CF1 = -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
- CFLAGS = $(COPTION) $(CINCLUDE) $(DPYXES) /D_JDLL /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
- FLAGS = $(LDEBUG) psapi.lib /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
- ASMFLAGS = /Cx /coff
+CFLAGS = $(COPTION) $(CINCLUDE) $(DPYXES) /D_JDLL /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS = $(LDEBUG) psapi.lib /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
+ASMFLAGS = /Cx /coff
 !endif
 
 .SUFFIXES: .o .S
@@ -326,7 +325,7 @@ DEF = ../../dllsrc/jdll.def
 RCS = ../../dllsrc/jdll.rc
 
 !ifndef LD
- LD = lld-link
+LD = lld-link
 !endif
 
 .c.o:
@@ -342,23 +341,23 @@ RCS = ../../dllsrc/jdll.rc
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
 !if "ARM64"=="$(TARGET_CPU)"
- TARGET = jarm64.dll
+TARGET = jarm64.dll
 !elseif "x64"=="$(TARGET_CPU)"
- !if "1"=="$(JAVX512)"
-  TARGET = javx512.dll
- !elseif "1"=="$(JAVX2)"
-  TARGET = javx2.dll
- !else
-  TARGET = j.dll
- !endif
+!if "1"=="$(JAVX512)"
+TARGET = javx512.dll
+!elseif "1"=="$(JAVX2)"
+TARGET = javx2.dll
 !else
- TARGET = j32.dll
+TARGET = j.dll
+!endif
+!else
+TARGET = j32.dll
 !endif
 
 !if "1"=="$(NOSYNCHLIB)"
- SYNCLIB =
+SYNCLIB =
 !else
- SYNCLIB = synchronization.lib
+SYNCLIB = synchronization.lib
 !endif
 
 $(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(ASM) $(PTHREADLIB) jdll.res

@@ -5,7 +5,7 @@
 # argument is linux|linux32|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l]
 # openbsd/freebsd is experimental
 #
-# if $USE_EMU_AVX = 0 skip test avx2 and avx512
+# if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip test avx2 and avx512
 #
 # current Linux github builder supports avx512
 # when cpu is Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz
@@ -68,7 +68,7 @@ if [ "$1" = "wasm" ]; then
 fi
 
 # avx2
-if [ "$USE_EMU_AVX" != "0" ]; then
+if [ "$USE_EMU_AVX" != "0" ] && [ "$USE_PYXES" != "0" ]; then
  if [ $1 = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
@@ -135,7 +135,7 @@ else
 fi
 
 # avx512
-if [ "$USE_EMU_AVX" != "0" ]; then
+if [ "$USE_EMU_AVX" != "0" ] && [ "$USE_PYXES" != "0" ]; then
  if [ $1 = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then

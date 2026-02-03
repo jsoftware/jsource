@@ -5,7 +5,7 @@
 # argument is linux|linux32|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l]
 # wasm is experimental
 #
-# if $USE_EMU_AVX = 0 skip build avx2 and avx512
+# if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip build avx2 and avx512
 
 set -e
 CC=${CC-clang}
@@ -240,7 +240,7 @@ if [ $m64 -eq 1 ]; then
    j64x=j64 ./build_jamalgam.sh
   fi
  fi
- if [ "$USE_EMU_AVX" != "0" ]; then
+ if [ "$USE_EMU_AVX" != "0" ] && [ "$USE_PYXES" != "0" ]; then
   if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "amd64" ] || [ "$1" = "darwin" ]; then
    ./clean.sh
    j64x=j64avx2 ./build_libj.sh

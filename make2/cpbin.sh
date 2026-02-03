@@ -8,8 +8,7 @@ else
  DEBUGDIR=
 fi
 
-realpath()
-{
+realpath() {
  oldpath=$(pwd)
  if ! cd $1 > /dev/null 2>&1; then
   cd ${1##*/} > /dev/null 2>&1
@@ -28,8 +27,7 @@ echo "entering $(pwd)"
 jplatform64="$(./jplatform64.sh)"
 # jplatform="$(dirname "$(jplatform64)")"
 
-cop()
-{
+cop() {
  # $1 src
  # $2 srclib
  # $3 dest

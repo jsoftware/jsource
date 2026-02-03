@@ -2,7 +2,6 @@ prolog './gcip.ijs'
 NB. +/ . * ------------------------------------------------------------------
 
 NB. **************************************** matrix product **********************************
-delth=: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
 
 thr=: (9!:58)"0 i.3

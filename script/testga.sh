@@ -13,7 +13,7 @@
 
 set -e
 
-if [ "$1" = "linux" ] || [ "$1" = "linux32" ] ; then
+if [ "$1" = "linux" ] || [ "$1" = "linux32" ]; then
  ext="so"
 elif [ $1 = "raspberry" ]; then
  ext="so"
@@ -44,7 +44,7 @@ elif [ "$(uname -m)" != "armv6l" ] && [ "$(uname -m)" != "i386" ] && [ "$(uname 
 else
  m64=0
 fi
-if [ "$1" = "linux32" ] ; then
+if [ "$1" = "linux32" ]; then
  dest="linux"
 else
  dest=$1
@@ -141,14 +141,14 @@ if [ $1 = "darwin" ]; then
   fi
  fi
 elif [ $1 = "linux" ]; then
-#  if [ -f "j32/libj.$ext" ]; then
-#   if [ "$_DEBUG" = "3" ]; then
-#    echo "running debug"
-#    LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
-#   else
-#    LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs
-#   fi
-#  fi
+ #  if [ -f "j32/libj.$ext" ]; then
+ #   if [ "$_DEBUG" = "3" ]; then
+ #    echo "running debug"
+ #    LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
+ #   else
+ #    LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs
+ #   fi
+ #  fi
  if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ]; then
   if [ "$_DEBUG" = "3" ]; then
    echo "running debug"
@@ -158,7 +158,7 @@ elif [ $1 = "linux" ]; then
   fi
  fi
 elif [ $1 = "openbsd" ] || [ $1 = "freebsd" ]; then
- if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ] ; then
+ if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ]; then
   LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
  fi
 fi

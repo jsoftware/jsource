@@ -35,6 +35,8 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
       _MEMAUDIT: 2
       _DEBUG: 3
      run: |
@@ -71,6 +73,8 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
       _MEMAUDIT: 2
       _DEBUG: 3
      run: |
@@ -100,6 +104,8 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
       _MEMAUDIT: 2
      run: |
       script/buildga.sh darwin || exit 1
@@ -127,6 +133,8 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
       _MEMAUDIT: 2
      run: |
       script/buildga.sh darwin || exit 1
@@ -154,6 +162,8 @@ jobs:
       CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
       _MEMAUDIT: 2
       _DEBUG: 3
      run: |
@@ -184,6 +194,8 @@ jobs:
       USE_SLEEF: 1
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
       _MEMAUDIT: 2
       _DEBUG: 3
      run: |
@@ -233,6 +245,8 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
+       export USE_EMU_AVX=1
        export _MEMAUDIT=32
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
@@ -280,6 +294,8 @@ jobs:
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
+       export USE_PYXES=1
+       export USE_EMU_AVX=1
        export _MEMAUDIT=32
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
@@ -305,6 +321,8 @@ jobs:
       CC: emcc
       USE_SLEEF: 1
       USE_OPENMP: 0
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
       _MEMAUDIT: 2
      run: |
       script/buildga.sh wasm || exit 1
@@ -327,6 +345,7 @@ jobs:
      shell: cmd
      env:
       USE_PYXES: 1
+      USE_EMU_AVX: 1
       _MEMAUDIT: 2
      run: |
       script\buildga.cmd x64
@@ -355,6 +374,7 @@ jobs:
      shell: cmd
      env:
       USE_PYXES: 0
+      USE_EMU_AVX: 1
       _MEMAUDIT: 2
      run: |
       script\buildga.cmd x64
@@ -362,7 +382,6 @@ jobs:
    - name: Test JE (Windows nopyxes)
      shell: cmd
      env:
-      USE_PYXES: 0
       _MEMAUDIT: 2
      run: |
       script\testga.cmd x64
@@ -384,6 +403,7 @@ jobs:
      shell: cmd
      env:
       USE_PYXES: 0
+      USE_EMU_AVX: 0
       _MEMAUDIT: 2
      run: |
       script\buildga.cmd x86
@@ -413,6 +433,7 @@ jobs:
      shell: cmd
      env:
       USE_PYXES: 1
+      USE_EMU_AVX: 1
       _MEMAUDIT: 2
      run: |
       script\buildga.cmd arm64

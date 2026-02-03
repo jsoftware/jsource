@@ -14,7 +14,7 @@ clang-cl
 
 add the path of clang-cl.exe that you selected to %PATH% using windows control panel.
 the 64-bit version of clang-cl is recommanded.
-eg, 
+eg,
 C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\Llvm\x64\bin
 
 **************************************************************************

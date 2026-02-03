@@ -2,7 +2,6 @@ prolog './gcip1.ijs'
 NB. +/ . * ------------------------------------------------------------------
 
 NB. **************************************** matrix product **********************************
-delth=: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
 
 mm=: 4 : 0
@@ -17,7 +16,7 @@ t1=: 3 : 0
 if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
   '' return.  NB. no real hardware fma
 end.
-if. (1<1 { 8 T. '') do. {{0 T.0}}^:] 0 >. (1&T.'') -~ 4 <. 9!:56'cores' end.
+if. 9!:56'PYXES' do. {{0 T.0}}^:] 0 >. (1&T.'') -~ 4 <. 9!:56'cores' end.
 echo 9!:14''
 echo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 if. UNAME-:'Darwin' do.

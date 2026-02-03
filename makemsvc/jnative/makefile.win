@@ -1,40 +1,42 @@
 !if "1"=="$(_DEBUG)"
-FDEBUG = /FS /Zi /DDEBUG=1
-LDEBUG = /DEBUG
+ COPTION = /FS /Zi /DDEBUG=1
+ LDEBUG = /DEBUG
+!else
+ COPTION =
 !endif
 !if "ARM64"=="$(TARGET_CPU)"
-CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(FDEBUG) -target arm64-pc-windows-msvc -march=armv8-a+crc /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) /DLL /MACHINE:ARM64 /SUBSYSTEM:WINDOWS,5.02
+ CF1 = -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
+ CFLAGS = $(COPTION) -target arm64-pc-windows-msvc -march=armv8-a+crc /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+ FLAGS = $(LDEBUG) /DLL /MACHINE:ARM64 /SUBSYSTEM:WINDOWS,5.02
 !elseif "x64"=="$(TARGET_CPU)"
-CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(FDEBUG) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
+ CF1 = -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
+ CFLAGS = $(COPTION) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+ FLAGS = $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 !else
-CF1= -m32 -msse2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(FDEBUG) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
+ CF1 = -m32 -msse2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
+ CFLAGS = $(COPTION) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+ FLAGS = $(LDEBUG) /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 !endif
 
 .SUFFIXES: .o
 
-OBJS=  ../../jsrc/andjnative.o ../../jsrc/jeload.o
+OBJS =  ../../jsrc/andjnative.o ../../jsrc/jeload.o
 
-DEF= ../../makemsvc/jnative/jnative.def
+DEF = ../../makemsvc/jnative/jnative.def
 
 !ifndef LD
-LD=lld-link
+ LD = lld-link
 !endif
 
 .c.o:
 	$(CC) $(CFLAGS) /I "%JAVA_HOME%/include" /I "%JAVA_HOME%/include/win32" /Fo$@ /c $<
 
 !if "ARM64"=="$(TARGET_CPU)"
-TARGET= jnativearm64.dll
+ TARGET = jnativearm64.dll
 !elseif "x64"=="$(TARGET_CPU)"
-TARGET= jnative.dll
+ TARGET = jnative.dll
 !else
-TARGET= jnative32.dll
+ TARGET = jnative32.dll
 !endif
 
 $(TARGET) : $(OBJS)

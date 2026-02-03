@@ -12,7 +12,7 @@ USE_SLEEFQUAD=${USE_SLEEFQUAD:=$USE_SLEEF}
 USE_PYXES=${USE_PYXES:=1}
 export CC USE_SLEEF USE_SLEEFQUAD USE_PYXES
 
-if [ "$1" = "linux" ] || [ "$1" = "linux32" ] ; then
+if [ "$1" = "linux" ] || [ "$1" = "linux32" ]; then
  ext="so"
 elif [ "$1" = "raspberry" ]; then
  ext="so"
@@ -47,7 +47,7 @@ elif [ "$(uname -m)" != "armv6l" ] && [ "$(uname -m)" != "i386" ] && [ "$(uname 
 else
  m64=0
 fi
-if [ "$1" = "linux32" ] ; then
+if [ "$1" = "linux32" ]; then
  dest="linux"
 else
  dest=$1
@@ -181,11 +181,11 @@ fi
 cd hostdefs
 if [ "$1" = "linux" ] && [ $m64 -eq 1 ]; then
  $CC hostdefs.c -o hostdefs && ./hostdefs
-# $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
+ # $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
  cd ../netdefs
  $CC netdefs.c -o netdefs && ./netdefs
 # $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
-elif [ "$1" = "linux32" ] ; then
+elif [ "$1" = "linux32" ]; then
  $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
  cd ../netdefs
  $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
@@ -217,11 +217,11 @@ if [ $m64 -eq 1 ]; then
   j64x=j64iphonesimulator _DEBUG=0 ./build_jconsole.sh
   j64x=j64iphonesimulator _DEBUG=0 ./build_tsdll.sh
   j64x=j64iphonesimulator _DEBUG=0 ./build_libj.sh
-# elif [ "$1" = "linux" ]; then
-#  ./clean.sh
-#  j64x=j32 ./build_jconsole.sh
-#  j64x=j32 ./build_tsdll.sh
-#  j64x=j32 USE_OPENMP=0 ./build_libj.sh
+  # elif [ "$1" = "linux" ]; then
+  #  ./clean.sh
+  #  j64x=j32 ./build_jconsole.sh
+  #  j64x=j32 ./build_tsdll.sh
+  #  j64x=j32 USE_OPENMP=0 ./build_libj.sh
   # j64x=j32 USE_OPENMP=0 ./build_jamalgam.sh
  fi
  ./clean.sh

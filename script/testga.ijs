@@ -29,7 +29,7 @@ echo 'RUNNER_ARCH: ',": 2!:5'RUNNER_ARCH'
 
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gstack.ijs' NB. temporarily disable
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. temporarily disable
-ddall=: ~. ddall ,~ (-.IFWA64)#((<UNAME)e.'Win';'Darwin')#(<testpath),each <'glapack.ijs'
+ddall=: ~. ddall ,~ (-.IFWA64)#((<UNAME)e.'Win';'Darwin')#(<testpath),each 'glapack.ijs';'glapackcb.ijs'
 
 
 oldnl=: (;:'x y') -.~ ~. oldnl, (nl__ i.4) , ;:'FINISH RES'
@@ -40,9 +40,6 @@ NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
 NB. exit^:(*@#RES) *@#RES
 
-echo 'C_AVX2: ',":9!:56'c_avx2'
-echo 'EMU_AVX2: ',":9!:56'emu_avx2'
-echo 'PYXES: ',":9!:56'pyxes'
 echo 'avx512f: ',":9!:56'avx512f'
 echo 'avx512vl: ',":9!:56'avx512vl'
 echo 'avx512bw: ',":9!:56'avx512bw'
@@ -162,9 +159,9 @@ ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
 QKTEST0=: QKTEST
 QKTEST=: 1
-echo '>>> testing g131cblas.ijs'
+echo '>>> testing g131cb.ijs'
 for_i. i.100 do.
-  RES=: RUN4 (<testpath),each <'g131cblas.ijs'
+  RES=: RUN4 (<testpath),each <'g131cb.ijs'
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''
@@ -178,9 +175,9 @@ ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
 QKTEST0=: QKTEST
 QKTEST=: 1
-echo '>>> testing g300cblas.ijs'
+echo '>>> testing g300cb.ijs'
 for_i. i.100 do.
-  RES=: RUN4 (<testpath),each <'g300cblas.ijs'
+  RES=: RUN4 (<testpath),each <'g300cb.ijs'
   exit^:(*@#RES) *@#RES
 end.
 RES=: ''

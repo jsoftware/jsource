@@ -2,7 +2,6 @@ prolog './g7x.ijs'
 NB. 7!: -----------------------------------------------------------------
 
 NB. Testing malloc/free; try  f 200  or  g 40000, etc.
-delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 
 NB. We use whatever threads the system defines
 

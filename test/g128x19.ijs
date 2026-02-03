@@ -16,7 +16,6 @@ end.
 
 NB. wait until there are y waiting threads
 wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
-delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
 delth''  NB. make sure we start with an empty system
 
 N=: <: 1 { 8 T. ''  NB. max # worker threads
@@ -157,7 +156,7 @@ epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
 epcanon=. (epadd   0 $~ $)
 dptoqp=. 2 {. ,:
-delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
+delth =. {{ if. 9!:56'PYXES' do. while. 1 T. '' do. 55 T. '' end. end. 1 }}  NB. delete all worker threads
 
 delth''  NB. start with no threads
 
@@ -658,7 +657,7 @@ epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
 epcanon=. (epadd   0 $~ $)
 dptoqp=. 2 {. ,:
-delth =. {{ while. 1 T. '' do. 55 T. '' end. 1 }}  NB. delete all worker threads
+delth =. {{ if. 9!:56'PYXES' do. while. 1 T. '' do. 55 T. '' end. end. 1 }}  NB. delete all worker threads
 
 delth''  NB. start with no threads
 

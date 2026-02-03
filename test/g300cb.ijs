@@ -1,5 +1,8 @@
-prolog './g300cblas.ijs'
+prolog './g300cb.ijs'
 NB. +/ .* ---------------------------------------------------------------
+
+thr=: (9!:58)"0 i.3
+0 (9!:58)"0 i.3       NB.  +/ .*  always use blas
 
 NB. test failed on small ct
 ct   =: 9!:18''
@@ -263,6 +266,8 @@ _= (-/ .*) x: 4 4$_ __ 0 0 1 1 0 0 0 0 1 0 0 0 0 1         NB. test for crash
 1= (+/ .*) ::1: x: 4 4$_ __ 0 0 1 1 0 0 0 0 1 0 0 0 0 1    NB. test for crash
 
 9!:19 ct
+
+empty thr (9!:58)"0 i.3
 
 epilog''
 

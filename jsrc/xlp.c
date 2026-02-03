@@ -804,7 +804,7 @@ return4:;  // we have a preemptive result.  store and set minimp =-inf to cut of
 //  
 // Rank is infinite
 F1(jtmvmsparse){F12IP;PROLOG(832);
-#if C_AVX2 || EMU_AVX2
+#if PYXES && (C_AVX2 || EMU_AVX2)
  if(AN(w)==0){
   // empty arg just returns stats; none defined yet
   R mtv;
@@ -1682,7 +1682,7 @@ return4:;  // we have a preemptive result.  store and set minimp =-inf to cut of
 //  
 // Rank is infinite
 F1(jtmvmsparsee){F12IP;PROLOG(832);
-#if C_AVX2 || EMU_AVX2
+#if PYXES && (C_AVX2 || EMU_AVX2)
  if(AN(w)==0){
   // empty arg just returns stats; none defined yet
   R mtv;
@@ -2568,7 +2568,7 @@ F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #endif
 
 
-#if (C_AVX2 || EMU_AVX2)
+#if PYXES && (C_AVX2 || EMU_AVX2)
 
 // everything we need for one core's execution
 #define RINGROWS 64  // must be power of 2

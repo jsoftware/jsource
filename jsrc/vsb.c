@@ -879,12 +879,12 @@ F2(jtsb2){F12IP;A z;I j,k,n;
 
 // This is an initialization routine, so memory allocations performed here are NOT
 // automatically freed by tpop()
-B jtsbtypeinit(JS jjt){A x;I c=sizeof(SBU)/SZI,s[4],p;JJ jt=MTHREAD(jjt);
+B jtsbtypeinit(JS jjt){A x;I c=sizeof(SBU)/SZI,s[4];JJ jt=MTHREAD(jjt);
  s[0]=2000; s[1]=c; s[2]=1; s[3]=1;
  GATVR(x,INT,s[0]*c,4,s);          INITJT(jjt,sbu)=x;  // ras() not required
  GA10(x,LIT,20000); SETSTRINGTABLE(x);
  AM(STRINGTABLE)=0;  // size too big for GAT; initialization anyway
- FULLHASHSIZE(2000,INTSIZE,1,0,p);  // initial allo
+ I p=FULLHASHSIZE(2000,INTSIZE,1,0);  // initial allo
  RZ(x=apvwr(p,-1L,0L)); SETHASHTABLE(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;

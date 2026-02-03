@@ -166,17 +166,18 @@ static DF2(jtmemo12){F12IP;A fs=FAV(self)->fgh[0];A z;I x,y;   // w is 0 for mon
 }
 
 // Create the memoed verb.  We create an h argument of hashtable;key;value, as described above
-F1(jtmemo){F12IP;PROLOG(300);A h,*hv;I m;
+F1(jtmemo){F12IP;PROLOG(300);A h,*hv;
  ARGCHK1(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
- V *v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate
+ V *v=FAV(w);
+// obsolete  FULLHASHSIZE(30,BOXSIZE,1,0);  // m = # items to allocate
  GAT0(h,BOX,3,0); hv=AAV0(h); AFLAGINIT(h,BOX)  // the components of fdef must be recursive if recursible
  // the tables are standard extendible, with # items in AM, thus must be zapped
  // So, we defer initializing them until they have been made recursive inside fdef
- GAT0(hv[0],INT,m,0) ACINITUNPUSH(hv[0]) GAT0(hv[1],INT,2*(m>>1),2) ACINITUNPUSH(hv[1]) GAT0(hv[2],BOX,m>>1,0) ACINITUNPUSH(hv[2])  // allo hash/keys/results
+ GAT0(hv[0],INT,FULLHASHSIZE(30,BOXSIZE,1,0),0) ACINITUNPUSH(hv[0]) GAT0(hv[1],INT,2*(FULLHASHSIZE(30,BOXSIZE,1,0)>>1),2) ACINITUNPUSH(hv[1]) GAT0(hv[2],BOX,FULLHASHSIZE(30,BOXSIZE,1,0)>>1,0) ACINITUNPUSH(hv[2])  // allo hash/keys/results
  A z=fdef(0,CMCAP,VERB,jtmemo12,jtmemo12,w,0L,h,FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF,v->mr,lrv(v),rrv(v));
- AM(hv[0])=0; mvc(m*SZI,AAV0(hv[0]),1,MEMSETFF);  // clear hash table
- AM(hv[1])=0; AS(hv[1])[0]=m>>1;  // init empty key table, 2 INTs each row
+ AM(hv[0])=0; mvc(FULLHASHSIZE(30,BOXSIZE,1,0)*SZI,AAV0(hv[0]),1,MEMSETFF);  // clear hash table
+ AM(hv[1])=0; AS(hv[1])[0]=FULLHASHSIZE(30,BOXSIZE,1,0)>>1;  // init empty key table, 2 INTs each row
  AM(hv[2])=0;   // init empty result table, recursive
  R z;
  // Now we have converted the verb result to recursive usecount, and gotten rid of the pending tpops for the components of h

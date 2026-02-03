@@ -759,8 +759,8 @@ static void convertup(void *pi,I n,C t,C sizes){
 // AM(cdhashl) is # entries filled, max (NLIBS)
 
 // allocate hashtable, fill with -1.  Result is address
-static A jtcdgahash(J jt,I n){A z;I hn;
- FULLHASHSIZE(n,INTSIZE,0,0,hn);
+static A jtcdgahash(J jt,I n){A z;
+ I hn=FULLHASHSIZE(n,INTSIZE,0,0);
  GATV0(z,INT,hn,0); ACINITZAP(z); mvc(hn*SZI,AV0(z),1,MEMSETFF);  // no rank - use all words for table
  R z;
 }

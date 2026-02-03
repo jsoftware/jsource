@@ -1551,7 +1551,7 @@ static JOCOLFT(D,jtjocold,hid(*v),    hid(tl*x),hid(tr*x),!TEQ(*v,av[c*hj]))
 static JOCOLFT(Z,jtjocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[c*hj]))
 
 // support for a i."1 &.|:w or a i:"1 &.|:w   used only by some sparse-array stuff
-A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
+A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,t,wr,*ws,wt;void(*fn)();
  ARGCHK2(a,w);
  // require ct!=0   why??
  ASSERT(1.0!=jt->cct,EVNONCE);
@@ -1563,8 +1563,7 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  if(TYPESNE(t,at))RZ(a=cvt(t,a));
  if(TYPESNE(t,wt))RZ(w=cvt(t,w));
  // allocate hash table and result
- FULLHASHSIZE(m+m,INTSIZE,1,0,p);
- GATV0(h,INT,p,1);
+ GATV0(h,INT,FULLHASHSIZE(m+m,INTSIZE,1,0),1);
  GATV(z,INT,AN(w),wr,ws);
  // call routine based on types.  Only float and CMPX are supported
  switch(CTTZ(t)){

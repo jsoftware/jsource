@@ -797,8 +797,8 @@ DF2(jtdeal){F12IP;A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->r
   A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); NOUNROLL do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); RZ(z=jttake(JTIPW,a,z));
 #else
   if(unlikely(n==IMAX&&XNUM&AT(w))){A h= plus(num(2),a); NOUNROLL do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m);R take(a,z);}
-  A h,y; I d,*hv,i,i1,p,q,*v,*yv;
-  FULLHASHSIZE(2*m,INTSIZE,1,0,p);
+  A h,y; I d,*hv,i,i1,q,*v,*yv;
+  I p=FULLHASHSIZE(2*m,INTSIZE,1,0);
   GATV0(h,INT,p,1); hv=AV1(h); DO(p, hv[i]=0;);
   GATV0(y,INT,2+2*m,1); yv=AV1(y); d=2;
   GATV0(z,INT,m,1); zv=AV1(z);
@@ -1016,7 +1016,7 @@ static F1(jtrolldot){F12IP;A z;B b=0;I m,wt;
 
 #undef deal
 #define deal(a,w) jtdealdot(jt,(a),(w),ds(CQRYDOT))
-static DF2(jtdealdot){F12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
+static DF2(jtdealdot){F12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
@@ -1025,7 +1025,7 @@ static DF2(jtdealdot){F12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){
-  FULLHASHSIZE(2*m,INTSIZE,1,0,p);
+  I p=FULLHASHSIZE(2*m,INTSIZE,1,0);
   GATV0(h,INT,p,1); hv=AV1(h); DO(p, hv[i]=0;);
   GATV0(y,INT,2+2*m,1); yv=AV1(y); d=2;
   GATV0(z,INT,m,1); zv=AV1(z);

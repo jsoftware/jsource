@@ -88,8 +88,8 @@ void jterasenl(J jt, I n){
 // Initialize the numbered-locale system.  Called during initialization, so no need for ras()
 // Runs in master thread
 static A jtinitnl(J jt){A q;
- I s; FULLHASHSIZE(5*1,INTSIZE,0,0,s);  // at least 5 slots, so we always have at least 2 empties
- GATV0(q,INT,s,1); mvc(s*SZI,IAV1(q),MEMSET00LEN,MEMSET00);  // allocate hashtable and clear to 0.  Init no 
+// obsolete  I s; FULLHASHSIZE(5*1,INTSIZE,0,0);  // at least 5 slots, so we always have at least 2 empties
+ GAT0(q,INT,FULLHASHSIZE(5*1,INTSIZE,0,0),1); mvc(FULLHASHSIZE(5*1,INTSIZE,0,0)*SZI,IAV1(q),MEMSET00LEN,MEMSET00);  // allocate hashtable and clear to 0.  Init no 
  JT(jt,stnum)=q;  // save address of block
  AS(JT(jt,stnum))[0]=0;  // set next number to allocate
  AM(JT(jt,stnum))=0;  // set number in use
@@ -252,19 +252,17 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  INITJT(jjt,locsize)[0]=3;  /* default hash table size for named    locales */
  INITJT(jjt,locsize)[1]=2;  /* default hash table size for numbered locales */
  RZ(jtsymext(jt));     /* initialize symbol pool                       */
- I p; FULLHASHSIZE(100,SYMBSIZE,1,SYMLINFOSIZE,p);  // table of named locales
- GATV0(q,SYMB,p,0); AFLAGORLOCAL(q,SYMB) INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc.  All SYMBs are recursive (though this one, which will never be freed, needn't be)
+// obsolete  I p; FULLHASHSIZE(100,SYMBSIZE,1,SYMLINFOSIZE,p);  // table of named locales
+ GATV0(q,SYMB,FULLHASHSIZE(100,SYMBSIZE,1,SYMLINFOSIZE),0); AFLAGORLOCAL(q,SYMB) INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc.  All SYMBs are recursive (though this one, which will never be freed, needn't be)
  jtinitnl(jt);  // init numbered locales, using master thread to allocate
- // init z locale
- FULLHASHSIZE(1LL<<8,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^9 chains
- SYMRESERVE(2) RZ(zloc=stcreate(0,p,1L,"z      ")); ACX(zloc);   // make the z locale permanent.  6 trailing spaces (plus the NUL) avoids overfetch, which Address Sanitizer tests for
+ // init z locale about 2^9 chains
+ SYMRESERVE(2) RZ(zloc=stcreate(0,FULLHASHSIZE(1LL<<8,SYMBSIZE,1,SYMLINFOSIZE),1L,"z      ")); ACX(zloc);   // make the z locale permanent.  6 trailing spaces (plus the NUL) avoids overfetch, which Address Sanitizer tests for
  // create zpath, the default path to use for all other locales
  GAT0(q,BOX,2,1); AAV1(q)[0]=0; AAV1(q)[1]=zloc; ACX(q); JT(jt,zpath)=&AAV1(q)[1];   // install ending 0 & z locale; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
  LOCPATH(zloc)=&AAV1(q)[0];   // make z locale have no path.  The path is already permanent
  // init the symbol tables for the master thread.  Worker threads must copy when they start execution
  // init base locale
- FULLHASHSIZE(1LL<<9,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^10 chains
- SYMRESERVE(2) RZ(q=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
+ SYMRESERVE(2) RZ(q=stcreate(0,FULLHASHSIZE(1LL<<9,SYMBSIZE,1,SYMLINFOSIZE),sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));  // about 2^10 chains
  jt->global=q;  // init baselocale in master.  workers must init on each call
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
  // NOTE: you must apply a name from a private locale ONLY to the locale it was created in, or to a global locale.  Private names contain bucket info & symbol pointers that would
@@ -556,7 +554,7 @@ static F2(jtloccre){F12IP;A g,y,z=0;C*s;I n,p;A v;
   // new named locale needed
   I type=REPSGN(p);  // -1 if impermanent, 0 if permanent
   if(unlikely(p<0))ASSERTSUFF(THREADID(jt)==0,EVLOCALE,goto exit;)  // permanent locale can be created/deleted only from master thread.
-  FULLHASHSIZE(1LL<<((REPSGN(p)^p)+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^|p|+5 minus a little
+  p=FULLHASHSIZE(1LL<<((REPSGN(p)^p)+5),SYMBSIZE,1,SYMLINFOSIZE);  // get table, size 2^|p|+5 minus a little
   p-=(UI)p/(sizeof(LX)*BB)+1;  // leave room for Bloom filter
   if(unlikely(stcreate(type,p,n,s)==0))goto exit;   // create the locale, but if error, cause this routine to exit with failure
  }
@@ -570,8 +568,8 @@ exit:
 static F1(jtloccrenum){F12IP;C s[20];I k,p;A x;
  ARGCHK1(w);
  if(MARK&AT(w))p=JT(jt,locsize)[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
- FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
-  p-=(UI)p/(sizeof(LX)*BB)+1;  // leave room for Bloom filter
+ p=FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE);  // get table, size 2^p+6 minus a little
+ p-=(UI)p/(sizeof(LX)*BB)+1;  // leave room for Bloom filter
  SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert
  sprintf(s,FMTI,LOCNUM(x));   // extract locale# and convert to boxed string 
  R boxW(cstr(s));  // result is boxed string of name

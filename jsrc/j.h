@@ -1358,7 +1358,8 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 }
 
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
-#define FULLHASHSIZE(n,s,r,w,z) {UI4 zzz=CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1); z = ((((I)1<<(zzz+1)) - AKXR(r)) / (s) - 1) | (1&~(w)); }
+// obsolete #define FULLHASHSIZE(n,s,r,w,z) {UI4 zzz=CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1); z = ((((I)1<<(zzz+1)) - AKXR(r)) / (s) - 1) | (1&~(w)); }
+#define FULLHASHSIZE(n,s,r,w) (((((I)1<<(CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1)+1)) - AKXR(r)) / (s) - 1) | (1&~(w)))
 // Memory-allocation macros
 #if MEMHISTO   // create histogram of allocation calls
 #define HISTOCALL memhashadd(__LINE__,__FILE__);

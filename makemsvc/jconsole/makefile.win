@@ -5,7 +5,8 @@
  COPTION = /FS /Zi /DDEBUG=1
  LDEBUG = /DEBUG
 !else
- COPTION = ""
+DUMMY = 124
+COPTION =
 !endif
 CINCLUDE = -I../../mpir/include
 !if "1"=="$(USE_PYXES)"

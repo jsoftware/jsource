@@ -2,6 +2,9 @@
 
 @rem if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip build avx2 avx512
 
+echo "%USE_EMU_AVX%"
+echo "%USE_PYXES%"
+
 @rem x64 x86 arm64
 IF "%~1"=="x86" GOTO L0
 IF "%~1"=="arm64" GOTO L0
@@ -90,8 +93,11 @@ cd jdll
 IF "%~1"=="x86" GOTO L03A
 IF "%~1"=="arm64" GOTO L03B
 IF "%~1" NEQ "x64" EXIT /b 1
+echo "B1"
 IF "%USE_EMU_AVX%"=="0" GOTO L03F
+echo "B2"
 IF "%USE_PYXES%"=="0" GOTO L03F
+echo "B3"
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=1 clean
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
@@ -99,6 +105,7 @@ nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=1 clean
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L03F
+echo "B4"
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0 clean
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
@@ -114,6 +121,7 @@ nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64 NO_SHA_ASM=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L03C
 
+GOTO L05C
 cd ..
 cd jamalgam
 IF "%~1"=="x86" GOTO L05A
@@ -141,17 +149,17 @@ IF "%~1" NEQ "x64" EXIT /b 1
 copy jconsole\jconsole.exe ..\j64
 copy jdll\*.dll ..\j64
 copy tsdll\tsdll.dll ..\j64
-copy jamalgam\jamalgam.exe ..\j64
+@rem copy jamalgam\jamalgam.exe ..\j64
 GOTO L06C
 :L06A
 copy jconsole\jconsole32.exe ..\j32\jconsole.exe
 copy jdll\j32.dll ..\j32\j.dll
 copy tsdll\tsdll32.dll ..\j32\tsdll.dll
-copy jamalgam\jamalgam32.exe ..\j32\jamalgam.exe
+@rem copy jamalgam\jamalgam32.exe ..\j32\jamalgam.exe
 GOTO L06C
 :L06B
 copy jconsole\jconsole-arm64.exe ..\jarm64\jconsole.exe
 copy jdll\jarm64.dll ..\jarm64\j.dll
 copy tsdll\tsdllarm64.dll ..\jarm64\tsdll.dll
-copy jamalgam\jamalgam-arm64.exe ..\jarm64\jamalgam.exe
+@rem copy jamalgam\jamalgam-arm64.exe ..\jarm64\jamalgam.exe
 :L06C

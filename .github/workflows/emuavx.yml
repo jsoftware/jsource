@@ -1,0 +1,290 @@
+name: EMUAVX
+
+on:
+ push:
+  branches: [ master ]
+
+# trigger workflow on file change
+#on:
+# push:
+#  paths:
+#   - 'version.txt'
+
+#  if: ${{ false }}
+
+jobs:
+
+# linux no pyxes -------------------------------------------------------
+ jelinuxpyx0:
+  name: JE (Linux no pyxes)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux no pyxes)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Commit
+     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
+
+   - name: Build JE (Linux no pyxes)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
+     run: |
+      script/buildga.sh linux || exit 1
+
+   - name: Test JE (Linux no pyxes)
+     run: |
+      script/testga.sh linux || exit 1
+
+# linux no emu ---------------------------------------------------------
+ jelinuxemu0:
+  name: JE (Linux no emu)
+  runs-on: ubuntu-22.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux no emu)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Commit
+     run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
+
+   - name: Build JE (Linux no emu)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
+     run: |
+      script/buildga.sh linux || exit 1
+
+   - name: Test JE (Linux no emu)
+     run: |
+      script/testga.sh linux || exit 1
+
+# macOS arm64 no pyxes -------------------------------------------------
+ jemacosarmpyx0:
+  name: JE (macOS arm64 no pyxes)
+  runs-on: macos-15
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (macOS arm64 no pyxes)
+     run: |
+      bash script/install-mac.sh
+
+   - name: Build JE (macOS arm64 no pyxes)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
+     run: |
+      script/buildga.sh darwin || exit 1
+
+   - name: Test JE (macOS arm64 no pyxes)
+     run: |
+      script/testga.sh darwin || exit 1
+
+# macOS arm64 no emu ---------------------------------------------------
+ jemacosarmemu0:
+  name: JE (macOS arm64 no emu)
+  runs-on: macos-15
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (macOS arm64 no emu)
+     run: |
+      bash script/install-mac.sh
+
+   - name: Build JE (macOS arm64 no emu)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
+     run: |
+      script/buildga.sh darwin || exit 1
+
+   - name: Test JE (macOS arm64 no emu)
+     run: |
+      script/testga.sh darwin || exit 1
+
+# rpi64arm no pyxes ----------------------------------------------------
+ jerpi64armpyx0:
+  name: JE (Linux arm64 no pyxes)
+  runs-on: ubuntu-24.04-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux arm64 no pyxes)
+     run: |
+      script/install-rpi.sh
+
+   - name: Build JE (Linux arm64 no pyxes)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
+     run: |
+      script/buildga.sh raspberry arm64 || exit 1
+
+   - name: Test JE (Linux arm64 no pyxes)
+     run: |
+      script/testga.sh raspberry arm64 || exit 1
+
+# rpi64arm no emu ------------------------------------------------------
+ jerpi64armemu0:
+  name: JE (Linux arm64 no emu)
+  runs-on: ubuntu-24.04-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Linux arm64 no emu)
+     run: |
+      script/install-rpi.sh
+
+   - name: Build JE (Linux arm64 no emu)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
+     run: |
+      script/buildga.sh raspberry arm64 || exit 1
+
+   - name: Test JE (Linux arm64 no emu)
+     run: |
+      script/testga.sh raspberry arm64 || exit 1
+
+# windows no pyxes -----------------------------------------------------
+ jewinpyx0:
+  name: JE (Windows no pyxes)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows no pyxes)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64
+
+   - name: Build JE (Windows no pyxes)
+     shell: cmd
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
+     run: |
+      script\buildga.cmd x64
+
+   - name: Test JE (Windows no pyxes)
+     shell: cmd
+     run: |
+      script\testga.cmd x64
+
+# windows no emu -------------------------------------------------------
+ jewinemu0:
+  name: JE (Windows no emu)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows no emu)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64
+
+   - name: Build JE (Windows no emu)
+     shell: cmd
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
+     run: |
+      script\buildga.cmd x64
+
+   - name: Test JE (Windows no emu)
+     shell: cmd
+     run: |
+      script\testga.cmd x64
+
+# windows arm64 no pyxes ------------------------------------------------
+ jewinarm64pyx0:
+  name: JE (Windows arm64 no pyxes)
+  runs-on: windows-11-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows arm64 no pyxes)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64_arm64
+
+   - name: Build JE (Windows arm64 no pyxes)
+     shell: cmd
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 1
+     run: |
+      script\buildga.cmd arm64
+
+   - name: Test JE (Windows arm64 no pyxes)
+     shell: cmd
+     run: |
+      script\testga.cmd arm64
+
+# windows arm64 no emu --------------------------------------------------
+ jewinarm64emu0:
+  name: JE (Windows arm64 no emu)
+  runs-on: windows-11-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows arm64 no emu)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: amd64_arm64
+
+   - name: Build JE (Windows arm64 no emu)
+     shell: cmd
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
+     run: |
+      script\buildga.cmd arm64
+
+   - name: Test JE (Windows arm64 no emu)
+     shell: cmd
+     run: |
+      script\testga.cmd arm64
+

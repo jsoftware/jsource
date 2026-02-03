@@ -1707,7 +1707,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <5 (<9 on avx512), subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the testing
-// len is # words in shape  scaf no subrt call
+// len is # words in shape
 #if C_AVX512
 #define MCISH(dest,src,n) \
  {I *_d=(I*)(dest),*_s=(I*)(src); I _n=(I)(n);\
@@ -2540,8 +2540,8 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 
 // For older processors, TZCNT is executed as BSF, which differs from TZCNT in that it does not
 // set the Z flag if the result is 0.  The optimizer sometimes turns a switch into tests rather than a branch
-// table, and it expects TZCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
-#define CTTZNOFLAG(w) (CTTZ(w)&31)    // scaf get rid of this
+// table, and it expects TZCNT to set the Z flag properly.  We use CTTZNOFLAG to keep it in range
+#define CTTZNOFLAG(w) (CTTZ(w)&31)
 
 // parallel bit extract/deposit.  Operate on UI types.  In our use, the second argument is constant, so that if the compiler has to emulate
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this

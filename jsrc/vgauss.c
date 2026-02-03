@@ -106,7 +106,7 @@ F1(jtgaussdet){F12IP;A z;I*s;
  s=AS(w);
  ASSERT(s[0]==s[1],EVLENGTH);
  if(!ISSPARSE(AT(w)))
-  switch(CTTZNOFLAG(AT(w))){
+  switch(CTTZ(AT(w))){
   case FLX:   z=detd(ca(w));      break;
   default:   ASSERT(0,EVDOMAIN);
   case B01X:

@@ -21,17 +21,19 @@ F1(jtravel){F12IP;A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; // r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(likely(!ISSPARSE(AT(w)))){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
-  CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
-  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
-   // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
-   // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
-   // the number of atoms
-   // We preserve pristinity between the input and the output
-   AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);
-  }
-  // Not self-virtual.  Create a (noninplace) virtual copy, but not if NJA memory (because we avoid virtualing from NJA, which makes the NJA unmodifiable)
-  // Transfer pristinity from w to z, if w is abandoned.  Taking the virtual block will clear prist from w
-  if(!(AFLAG(w)&(AFNJA))){I wprist=PRISTFROMW(w); RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; AFLAGORLOCAL(z,wprist) RETF(z);}
+  if(likely(AR(w)>0)){  // don't bother creating a virtual block for an atom
+   CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
+   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
+    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
+    // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
+    // the number of atoms
+    // We preserve pristinity between the input and the output
+    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);
+   }
+   // Not self-virtual.  Create a (noninplace) virtual copy, but not if NJA memory (because we avoid virtualing from NJA, which makes the NJA unmodifiable)
+   // Transfer pristinity from w to z, if w is abandoned.  Taking the virtual block will clear prist from w
+   if(!(AFLAG(w)&(AFNJA))){I wprist=PRISTFROMW(w); RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; AFLAGORLOCAL(z,wprist) RETF(z);}
+  }else m=1;  // if w is an atom, that's just one atom
 
   // If we have to allocate a new block, do so.  In that rare case, revoke pristinity of w
   GA00(z,AT(w),AN(w),1+f); MCISH(AS(z),AS(w),f) AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape (don't overfetch AS(w)

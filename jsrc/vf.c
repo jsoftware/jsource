@@ -312,7 +312,7 @@ F2(jtreshape){F12IP;A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRIC
  ASSERT(likely(n!=0)||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
  t=AT(w); filling = 0;
  if(m<=n){  // no wraparound
-  if(c==1) {  // if there is only 1 cell of w...
+  if((c^1)<(wr!=0)) {  // if there is exactly 1 cell of w, and w is not an atom... (don't bother creating a virtual for an atom)
    // If no fill required, we can probably use a virtual result, or maybe even an inplace one.  Check for inplace first.  Mustn't inplace an indirect that shortens the data,
    // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those).  Since it must be DIRECT, there's no question about PRISTINE, but that would be OK to transfer if inplaceable
    if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right, equal atom count if not DIRECT

@@ -361,7 +361,7 @@ I jtmaxtype(J jt,I s,I t){
 // Copy m bytes from w to z, repeating every n bytes if n<m
 // This overfetches from z and w, but does not overstore z
 void mvc(I m,void*z,I n,void*w){
- if(m<=n){if(m==SZI)*(I*)z=*(I*)w; else MC(z,w,m); R;}  // if no replication, use simple copy, which will be short  scaf could check here for length 1,8....
+ if(m<=n){if(m==SZI)*(I*)z=*(I*)w; else MC(z,w,m); R;}  // if no replication, use simple copy, which will be short
 #if C_AVX2 || EMU_AVX2
  PREFETCH(w);  /* start bringing in the start of data */ 
  // The main use of mvc is memset and fill.

@@ -267,7 +267,7 @@ static F2(jtfmtprecomp) {F12IP;A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  if(1==nf){MC(ib,AV(C(*u)),SZI*3); mvc(SZI*nc,ib+3,MEMSET00LEN,MEMSET00); DO(NMODVALS, *as++=incorp(C(u[i+1]));)}
  else DQ(nf, MC(ib,AV(C(*u)),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(C(u[1])); ++u;) ++u; )
  bits=BAV(fb);
- switch(CTTZNOFLAG(wt)) {
+ switch(CTTZ(wt)) {
  case B01X:
   bw=BAV(w); ib=AV(base);
   DQ(n, *bits|=BITSz*!*bw; bits++; bw++;);  /* BITSe, BITS_, BITS__, and BITS_d are 0 */

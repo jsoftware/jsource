@@ -234,7 +234,7 @@ static B jtfmte(J jt,B e,I m,I d,C*s,I t,E*wv,A*cellbuf){
 }
 
 static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv,A*cellbuf){D y;
- switch(CTTZNOFLAG(t)){
+ switch(CTTZ(t)){
  case INTX:;
 #if SY_64
   // If I is 64 bits, and the format string ends with '.0f', change the format to lld

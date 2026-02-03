@@ -733,7 +733,7 @@ F2(jtpdt){F12IP;PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
  p1=p-1;
  // Perform the inner product according to the type
- switch(CTTZNOFLAG(t)){
+ switch(CTTZ(t)){
  case B01X:
   if(0==(n&(SZI-1))||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
    nw=(n+SZI-1)>>LGSZI;

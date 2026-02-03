@@ -557,8 +557,8 @@ static VARPSA rpsminus = {RATX+1 , {
 }};
 static VARPSA rpsplus = {QPX+1 , {
 {(VARPSF)plusinsB,VCVTIP+VI}, {0}, {(VARPSF)plusinsI,VCVTIP+VI}, {(VARPSF)plusinsD,VCVTIP+VD}, {(VARPSF)plusinsZ,VCVTIP+VZ},        {0}, {0}, {0}, {0}, {(VARPSF)plusinsI2,VCVTIP+VI}, {(VARPSF)plusinsI4,VCVTIP+VI}, {0}, {0}, {(SY_64 && (C_AVX2 || EMU_AVX2))?(VARPSF)plusinsE:0,VCVTIP+VUNCH},
-{(VARPSF)pluspfxB,VCVTIP+VI}, {0}, {(VARPSF)pluspfxI,VCVTIP+VI}, {(VARPSF)pluspfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)pluspfxZ,VCVTIP+VZ}, {0}, {(VARPSF)pluspfxX,VCVTIP+VX}, {(VARPSF)pluspfxQ,VCVTIP+VQ}, {0}, {(VARPSF)pluspfxI2,VCVTIP+VI}, {(VARPSF)pluspfxI4,VCVTIP+VI}, {0}, {0}, {0},
-{(VARPSF)plussfxB,VCVTIP+VI}, {0}, {(VARPSF)plussfxI,VCVTIP+VI}, {(VARPSF)plussfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)plussfxZ,VCVTIP+VZ}, {0}, {(VARPSF)plussfxX,VCVTIP+VX}, {(VARPSF)plussfxQ,VCVTIP+VQ}, {0}, {(VARPSF)plussfxI2,VCVTIP+VI}, {(VARPSF)plussfxI4,VCVTIP+VI}, {0}, {0}, {0},
+{(VARPSF)pluspfxB,VCVTIP+VI}, {0}, {(VARPSF)pluspfxI,VCVTIP+VI}, {(VARPSF)pluspfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)pluspfxZ,VCVTIP+VZ}, {0}, {(VARPSF)pluspfxX,VCVTIP+VX}, {(VARPSF)pluspfxQ,VCVTIP+VQ}, {0}, {(VARPSF)pluspfxI2,VRNONE+VCVTIP+VUNCH+VIP}, {(VARPSF)pluspfxI4,VRNONE+VCVTIP+VUNCH+VIP}, {0}, {0}, {0},
+{(VARPSF)plussfxB,VCVTIP+VI}, {0}, {(VARPSF)plussfxI,VCVTIP+VI}, {(VARPSF)plussfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)plussfxZ,VCVTIP+VZ}, {0}, {(VARPSF)plussfxX,VCVTIP+VX}, {(VARPSF)plussfxQ,VCVTIP+VQ}, {0}, {(VARPSF)plussfxI2,VRNONE+VCVTIP+VUNCH+VIP}, {(VARPSF)plussfxI4,VRNONE+VCVTIP+VUNCH+VIP}, {0}, {0}, {0},
 {(VARPSF)plusinsO,VCVTIP+VD},{(VARPSF)pluspfxO,VCVTIP+VD},{(VARPSF)plussfxO,VCVTIP+VD},  // integer-overflow routines
 }};
 static VARPSA rpstymes = {RATX+1 , {

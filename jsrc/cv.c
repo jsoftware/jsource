@@ -62,8 +62,10 @@ static DF1(jtfitpp1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
  RETF(z);
 }
 
+#if 0  // unimplemented
 static DF1(jtfitf1){F12IP;V*sv=FAV(self); A z; R dfv1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n scaf combine?  Who calls?
 static DF2(jtfitf2){F12IP;V*sv=FAV(self); A z; R dfv2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
+#endif
 
 // Fit conjunction u!.v
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
@@ -123,13 +125,15 @@ fillreshape:;
    RE(w=sc(k=i0(w)));
    ASSERT(0<k,EVDOMAIN);
    ASSERT(k<=NPP,EVLIMIT); 
-   fdeffill(z,0L,CFIT,VERB,jtfitpp1,FAV(a)->valencefns[1],a,w,0L,VNONAME+VNOSELF,m,l,r) RETF(z);  // ":!.f
+   fdeffill(z,0L,CFIT,VERB,jtfitpp1,FAV(a)->valencefns[1],a,w,0L,VNOLOCCHG+VNONAME+VNOSELF,m,l,r) RETF(z);  // ":!.f
   case CCYCLE:
    RE(k=i0(w)); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
-   fdeffill(z,0L,CFIT,VERB,jtpparity,jtvalenceerr,a,w,0L,VNONAME+VNOSELF,m,RMAX,RMAX) RETF(z);  // C.!.2
+   fdeffill(z,0L,CFIT,VERB,jtpparity,jtvalenceerr,a,w,0L,VNOLOCCHG+VNONAME+VNOSELF,m,RMAX,RMAX) RETF(z);  // C.!.2
+#if 0  // unimplemented
   case CTILDE:   // noun~!.n - what in the world is that?
    ASSERT(NOUN&AT(FAV(a)->fgh[0]),EVDOMAIN);
    fdeffill(z,0L,CFIT,VERB,jtfitf1,jtfitf2,a,w,0L,VNONAME+VNOSELF,m,l,r) RETF(z);
+#endif
   // other cases continue on to error
   }
  }else{

@@ -77,7 +77,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
  memlimit=MIN(4*n+1,(I)((JT(jt,mmax)-100)>>LGSZI));  // maximum size we will allow our d to reach.  Used only for I type.
   // 4*the size of the search area seems big enough; but not more than what a single memory allocation supports.  The size
   // is measured in Is.  The 100 is to account for memory-manager overhead.  Minimum value must be > 0 for the <= test below
- switch(CTTZNOFLAG(t)){
+ switch(CTTZ(t)){
  // calculate the number of distinct values in the range of the two operands.
  // for strings, we just assume the worst (all codes)
  // for ints, actually look at the data to get the range (min and #values+1).  If the min is > 0, and
@@ -259,7 +259,7 @@ F2(jti1ebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  if(unlikely(d<0)){
   switch(d){
   case -1: R sc(n);
-  case -4: R indexof(ebarvec(a,w),num(1));  // scaf revert simpler
+  case -4: R indexof(ebarvec(a,w),num(1));
  }
  }
 #if C_AVX2 || EMU_AVX2
@@ -290,7 +290,7 @@ F2(jtsumebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  if(unlikely(d<0)){
   switch(d){
   case -1: R num(0);
-  case -4: R aslash(CPLUS,ebarvec(a,w));  // scaf revert simpler
+  case -4: R aslash(CPLUS,ebarvec(a,w));
   }
  }
  if((-m&-n)>=0){R sc(n);}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it
@@ -322,7 +322,7 @@ F2(jtanyebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  if(unlikely(d<0)){
   switch(d){
   case -1: R num(0);
-  case -4: R aslash(CPLUSDOT,ebarvec(a,w));  // scaf revert simpler
+  case -4: R aslash(CPLUSDOT,ebarvec(a,w));
   }
  }
  if((-m&-n)>=0){R num(SGNTO0(-n));}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it - 0/1 only

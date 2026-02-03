@@ -211,7 +211,7 @@ DF1(jtjfsize){F12IP;B b;F f;I m;
 // if the result is non0, vfn has been called to lock the file#
 static F jtixf(J jt,A w){F f;
  ASSERT(2<=AN(w),EVLENGTH);
- switch(CTTZNOFLAG(AT(w))){
+ switch(CTTZ(AT(w))){
  default:  ASSERT(0,EVDOMAIN);
  case B01X: ASSERT(0,EVFNUM);
  case BOXX: ASSERT(2==AN(w),EVLENGTH); f=stdf(head(w)); break; 

@@ -1051,11 +1051,15 @@ CDPROC int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdat
  return z;
 }
 
+static C typelen[32]={[B01X]=sizeof(B),[LITX]=sizeof(C),[C2TX]=sizeof(US),[INT2X]=sizeof(US),[C4TX]=sizeof(UI4),[INT4X]=sizeof(UI4),[INTX]=sizeof(I),[SBTX]=sizeof(I),[FLX]=sizeof(D),[CMPXX]=sizeof(Z),[QPX]=sizeof(E)};
 static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {JJ jt=MTHREAD(jtt);   // use master thread always since there is no execution
  A a;
  I k=1,i,n;
  char gn[256];
+
+ASSERT((n=typelen[CTTZNOFLAG(*jtype)])!=0,EVDOMAIN);
+#if 0 // obsolete
 
  switch(CTTZNOFLAG(*jtype)){
  case LITX:
@@ -1087,7 +1091,7 @@ static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  default:
   return EVDOMAIN; 
  }
-
+#endif
  // validate name
  if(strlen(name) >= sizeof(gn)) return EVILNAME;
  if(valid(name, gn)) return EVILNAME; 

@@ -135,8 +135,8 @@ AHDRS(plussfxD,D,D){I i;
 SUFFIXNAN( plussfxZ, Z, Z, zplus, plusZZ )
 SUFFIXPFX( plussfxX, X, X, xplus, plusXX, HDR1JERR; )
 SUFFIXPFX( plussfxQ, Q, Q, qplus, plusQQ, HDR1JERR; )
-SUFFIXPFX( plussfxI2, I, I2, pfxplus, plus1I2II, R EVOK; )
-SUFFIXPFX( plussfxI4, I, I4, pfxplus, plus1I4II, R EVOK; )
+SUFFIXPFX( plussfxI2, I2, I2, pfxplus, plusI2I2, R EVOK; )
+SUFFIXPFX( plussfxI4, I4, I4, pfxplus, plusI4I4, R EVOK; )
 
 SUFFIXPFX(minussfxB, I, B, MINUS, minusBI, R EVOK; )
 SUFFIXNAN(minussfxD, D, D, MINUS, minusDD )

@@ -475,7 +475,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
   j=vv[3]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j),!!(t&XNUM+RAT)));
   j=vv[4]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,x,unbinr(b,d,pre601,m    -j,(A)(u+j),!!(t&XNUM+RAT)));
  }else if(n)
-  switch(CTTZNOFLAG(t)){
+  switch(CTTZ(t)){
   case B01X:  {B c,*zv=BAV(z); DO(n, c=v[i]; ASSERT(c==C0||c==C1,EVDOMAIN); zv[i]=c;);} break; 
   case SBTX:
   case INTX:  RZ(mvw(CAV(z),v,n,  BU,b,SY_64,d)); break;

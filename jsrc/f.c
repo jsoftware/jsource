@@ -192,7 +192,7 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I dec=REPSGN(n);n=n^dec;I
  RZ(w&&n);
  wn=AN(w); wt=AT(w); x=CAV(w); thcase(wt,&wd,&fmt);
  I isiz=2;  // will be size of integer in bytes
- switch(CTTZNOFLAG(wt)){
+ switch(CTTZ(wt)){
  case INTX:
 #if SY_64
  isiz<<=1;  // 8-byte int

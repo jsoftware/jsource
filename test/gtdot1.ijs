@@ -5,7 +5,6 @@ NB. files
 NB. **************************************** threads & tasks **********************************
 NB. 64-bit only
 NB. delete all worker threads
-delth =: {{ while. 1 T. '' do. 55 T. '' end. 1 }}
 delth''  NB. make sure we start with an empty system
 
 TASK=: <: 1 { 8 T. ''  NB. max # worker threads

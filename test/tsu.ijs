@@ -46,7 +46,7 @@ EMPTY
 NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
-blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
+blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs';'glapackcb.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
 blacklist=: blacklist, (IFRASPI<(IF64<UNAME-:'Linux')+.(IFWIN>IF64)+.IFIOS+.(UNAME-:'Wasm'))#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (0=(9!:56'c_avx2')+.9!:56'emu_avx2')#(<testpath),each 'g6x14.ijs';'g128x14.ijs';'g128x19.ijs' NB. avx2 or emu_avx2
 blacklist=: blacklist, (0=9!:56'PYXES')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs';'g128x14.ijs';'g128x19.ijs' NB. require multithreading
@@ -71,8 +71,8 @@ NB. crash
 blacklist=: blacklist, '' [ (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
 g131
 g300
-g131cblas
-g300cblas
+g131cb
+g300cb
 gdic
 )
 
@@ -122,12 +122,13 @@ eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
 efx      =: ". eftx
 
 currlocals_z_ =: (4!:1)@0 1 2 3  NB. create list of local names plus any in the current locale
+delth=: {{ if. 9!:56'PYXES' do. while. 1 T. '' do. 55 T. '' end. end. EMPTY }}  NB. delete all worker threads
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-prolog=: {{ 1: xyziniloc__ =: x [ (dbr bind Debug)@:(9!:19)2^_44[techo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}~ currlocals_p38s4jf7_
+prolog=: {{ 1: xyziniloc__ =: x [ delth'' [ (dbr bind Debug)@:(9!:19)2^_44[techo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}~ currlocals_p38s4jf7_
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0 @: (4!:55) @: (currlocals_p38s4jf7_ -. ".@'xyziniloc__')  NB. Erase locals defined since prolog
+delth''
 10 s: GLOBALSYMBOL
-empty 0&T.^:(0=1&T.) ::1:''
 if. 'Linux'-:UNAME do.
  'libc.so.6 malloc_trim > i x'&cd <.64*1024
 end.
@@ -487,11 +488,14 @@ see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 )
 
 
-empty 0&T.^:(0=1&T.) ::1:''
+delth''
 techo 9!:14''
 techo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
-techo 'memaudit: ',":9!:56'memaudit'
 techo 'cblas: ',(":9!:56'cblas'),'   cblasfile: ',9!:56'cblasfile'
 techo 'cachelinesize(hardware): ',":9!:56'cachelinesizehw'
 techo 'cachelinesize(compile): ',":9!:56'cachelinesize'
 techo 'cpusetsize: ',":9!:56'cpusetsize'
+techo 'C_AVX2: ',":9!:56'c_avx2'
+techo 'EMU_AVX2: ',":9!:56'emu_avx2'
+techo 'MEMAUDIT: ',":9!:56'memaudit'
+techo 'PYXES: ',":9!:56'pyxes'

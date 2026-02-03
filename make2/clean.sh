@@ -6,8 +6,7 @@ if [ "$1" = "noclean" ]; then
  exit 0
 fi
 
-realpath()
-{
+realpath() {
  oldpath=$(pwd)
  if ! cd $1 > /dev/null 2>&1; then
   cd ${1##*/} > /dev/null 2>&1

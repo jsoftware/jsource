@@ -5,8 +5,7 @@
 T=tests.txt
 > $T
 
-f()
-{
+f() {
  if [ -e $1 ]; then cat $1 >> $T; fi
 }
 

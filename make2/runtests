@@ -2,7 +2,7 @@
 set -e
 cd "$(dirname "$0")"
 clear # should be easy to find first compiler error if any occur
-jplatform64=`./jplatform64.sh`
+jplatform64=$(./jplatform64.sh)
 CC=${CC-clang}
 CFLAGS="-ggdb -O0 $CFLAGS"
 export CC CFLAGS
@@ -14,7 +14,7 @@ if [ ! -r $BIN/libtsdll.* ]; then ./build_tsdll.sh; fi
 (
  cd ../bin/$(dirname $jplatform64)
  for l in ../../jlibrary/*/.; do
-	 d=$(dirname $l)
+  d=$(dirname $l)
   rm -f $(basename $d)
   ln -fs $d
  done
@@ -29,12 +29,12 @@ clear # build was successful, focus terminal session on j tests
 if [ "$1" = "-i" ]; then
  shift
  gdb -iex 'set pagination off' -ex run -ex where -ex echo \n \
-	 -ex up -ex up -ex up -ex up --args \
-	 $jconsole -js "load'tsu.ijs'" "9!:29]1[9!:27'RUND]allorcmdline(0)'return." "$@"
+  -ex up -ex up -ex up -ex up --args \
+  $jconsole -js "load'tsu.ijs'" "9!:29]1[9!:27'RUND]allorcmdline(0)'return." "$@"
 else
  gdb -iex 'set pagination off' -ex run -ex where -ex echo \n \
-	 -ex up -ex up -ex up -ex up --args \
-	 $jconsole tsu.ijs <<___ "$@"
+  -ex up -ex up -ex up -ex up --args \
+  $jconsole tsu.ijs "$@" << ___
 RUND allorcmdline''
 ___
 fi

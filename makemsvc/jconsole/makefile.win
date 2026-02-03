@@ -1,61 +1,63 @@
 !if "1"=="$(USE_LINENOISE)"
-READLINE=1
+READLINE = 1
 !endif
-!if "1"=="$(USE_PYXES)"
-PTHREADINC = -I../../pthreads4w/include
-DPYXES = /DPYXES=1
-!else
-DPYXES = /DPYXES=0
-!endif
-MPIRINC = -I../../mpir/include
 !if ""!="$(_DEBUG)"
-FDEBUG = /FS /Zi /DDEBUG=1
+COPTION = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
+!else
+COPTION =
+!endif
+CINCLUDE = -I../../mpir/include
+!if "1"=="$(USE_PYXES)"
+CINCLUDE = $(CINCLUDE) -I../../pthreads4w/include
+COPTION = $(COPTION) /DPYXES=1
+!else
+COPTION = $(COPTION) /DPYXES=0
 !endif
 !if ""!="$(_MEMAUDIT)"
-FDEBUG = $(FDEBUG) /D_MEMAUDIT=$(_MEMAUDIT)
+COPTION = $(COPTION) /D_MEMAUDIT =$(_MEMAUDIT)
 !endif
 
 !if "ARM64"=="$(TARGET_CPU)"
-CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) $(DPYXES) -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) /STACK:0xc00000 /MACHINE:ARM64 /SUBSYSTEM:CONSOLE,5.02
+CF1 = -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-unused-variable
+CFLAGS = $(COPTION) $(CINCLUDE) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS = $(LDEBUG) /STACK:0xc00000 /MACHINE:ARM64 /SUBSYSTEM:CONSOLE,5.02
 !elseif "x64"=="$(TARGET_CPU)"
-CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) $(DPYXES) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
+CF1 = -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-unused-variable
+CFLAGS = $(COPTION) $(CINCLUDE) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS = $(LDEBUG) /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
 !else
-CF1= -m32 -msse2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(PTHREADINC) $(MPIRINC) $(FDEBUG) $(DPYXES) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
-FLAGS= $(LDEBUG) /STACK:0xc00000 /MACHINE:X86 /SUBSYSTEM:CONSOLE,5.01
+CF1 = -m32 -msse2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-unused-variable
+CFLAGS = $(COPTION) $(CINCLUDE) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+FLAGS = $(LDEBUG) /STACK:0xc00000 /MACHINE:X86 /SUBSYSTEM:CONSOLE,5.01
 !endif
 
 .SUFFIXES: .o
 
-OBJS=  \
+OBJS =  \
  ../../jsrc/jconsole.o \
  ../../jsrc/jeload.o
 
 !ifdef READLINE
-OBJSLN=  ../../jsrc/linenoise.o
-CFLAGSLN= -DREADLINE -DUSE_LINENOISE
+OBJSLN =  ../../jsrc/linenoise.o
+CFLAGSLN = -DREADLINE -DUSE_LINENOISE
 !endif
 
-RCS= ../../makevs/jconsole/jconsole.rc
+RCS = ../../makevs/jconsole/jconsole.rc
 
 !ifndef LD
-LD=lld-link
+LD = lld-link
 !endif
 
 .c.o:
 	$(CC) $(CFLAGS) $(CFLAGSLN) /Fo$@ /c $<
 
 !if "ARM64"=="$(TARGET_CPU)"
-TARGET= jconsole-arm64.exe
+TARGET = jconsole-arm64.exe
 !elseif "x64"=="$(TARGET_CPU)"
-TARGET= jconsole.exe
+TARGET = jconsole.exe
 !else
-TARGET= jconsole32.exe
+TARGET = jconsole32.exe
 !endif
 
 $(TARGET) : $(OBJS) $(OBJSLN) jconsole.res

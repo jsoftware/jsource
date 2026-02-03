@@ -1,10 +1,8 @@
-prolog './glapack.ijs'
+prolog './glapackcb.ijs'
 NB. LAPACK --------------------------------------------------------------
 
-cblas=: 9!:56'cblas'
-0 (9!:56) 'cblas'
 thr=: (9!:58)"0 i.3
-_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
+0 (9!:58)"0 i.3       NB.  +/ .*  always use blas
 
 delth''  NB. make sure we start with an empty system
 0!:_1`1:@.(9!:56'PYXES') '$'   NB. skip slow
@@ -110,7 +108,6 @@ test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 11
 
 delth''  NB. make sure we start with an empty system
 
-cblas (9!:56) 'cblas'
 empty thr (9!:58)"0 i.3
 
 epilog''

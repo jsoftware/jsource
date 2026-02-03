@@ -90,8 +90,8 @@ cd jdll
 IF "%~1"=="x86" GOTO L03A
 IF "%~1"=="arm64" GOTO L03B
 IF "%~1" NEQ "x64" EXIT /b 1
-IF %USE_EMU_AVX% EQ 0 GOTO L03F
-IF %USE_PYXES% EQ 0 GOTO L03F
+IF "%USE_EMU_AVX%"=="0" GOTO L03F
+IF "%USE_PYXES%"=="0" GOTO L03F
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=1 clean
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%

@@ -14,8 +14,8 @@ IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B
 IF "%~1" NEQ "x64" EXIT /b 1
 dir j64
-IF %USE_EMU_AVX% EQ 0 GOTO L01F
-IF %USE_PYXES% EQ 0 GOTO L01F
+IF "%USE_EMU_AVX%"=="0" GOTO L01F
+IF "%USE_PYXES%"=="0" GOTO L01F
 j64\jconsole -lib javx2.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01F

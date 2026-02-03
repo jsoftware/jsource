@@ -1,5 +1,7 @@
 @rem build windows on github actions
 
+@rem if $USE_EMU_AVX = 0 build test avx2 avx512
+
 @rem x64 x86 arm64
 IF "%~1"=="x86" GOTO L0
 IF "%~1"=="arm64" GOTO L0
@@ -88,12 +90,14 @@ cd jdll
 IF "%~1"=="x86" GOTO L03A
 IF "%~1"=="arm64" GOTO L03B
 IF "%~1" NEQ "x64" EXIT /b 1
+IF %USE_EMU_AVX% EQ 0 GOTO L03F
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=1 clean
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=1 clean
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
+:L03F
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0 clean
 nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%

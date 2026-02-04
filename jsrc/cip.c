@@ -65,7 +65,7 @@ static F2(jtpdtby){F12IP;A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
      DQ(nn, if(*u++){vi=(UI*)v; d=ti; DQ(nw, *d+++=*vi++;);} v+=n;);  \
      x=zv; c=tc; DQ(n, *x+++=*c++;);
 
-#if PYXES && (C_AVX2 || EMU_AVX2)
+#if (C_AVX2 || EMU_AVX2)
 // blocked multiply, processing vertical mx16 strips of y.  Good when y has few rows
 // *av is mxp, *wv is pxn, *zv is mxn
 // flgs is 0 for float, 1 for complex, i. e. lg2(# values per atom), 2 for upper-tri, 4 for INT.  If FLGCMP is set, n and p are even, and give the lengths of the arguments in values
@@ -524,8 +524,8 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
 // Result is 0 if error, which must be NaN error
 // For historical reason (i. e. to match the non-AVX2 version) n and p have been multiplied by 2 for complex multiplies
 I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
-// TODO: bug when EMU_AVX2
- if(((((24-m)&(24-n)&(16-p)&((DCACHED_THRESn-1)-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // TUNE blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
+// splitting applicable only if PYXES=1
+ if((!PYXES)||(((((24-m)&(24-n)&(16-p)&((DCACHED_THRESn-1)-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0)){  // TUNE blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
   // small problem, not worth splitting.  there is no size limit on the blocks
   // 16x16 multiply takes about 1us; we are guessing task-wakeup takes a similar amount of time.  So it's not worth a split unless the time gets substantially above 1us
   R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }

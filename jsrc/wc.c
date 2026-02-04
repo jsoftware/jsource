@@ -384,12 +384,12 @@ static F1(jtgetsen){F12IP;A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
 
 /* preparse - return tokenized lines and control information     */
 /* argument is a list of boxed explicit defn lines               */
-/* result is 1 iff try is seen                                   */
 /* zl - list of lines of tokens                                  */
 /* zc - corresp list of control info                             */
 // zs - local symbol table, to use and copy
 /* control info has 3 I values for each line                     */
 /* control info values - type, goto linenum, source linenum      */
+// result is 0 if error; bit 0 set if OK, bit 1 set if there is a try. block
 
 #define ASSERTCW(b,j)  {if(!(b)){I jj=(j); jsignal3(EVCTRL,wv[jj],jj); R 0;}}
 
@@ -435,11 +435,12 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
   cv[n].tcesx=m;  // append sentinel cw with final length
   ASSERT(m<EXPWMAX,EVLIMIT);  // limit on total # words in a definition
  }
- RE(0);
+// obsolete  RE(0);
+if(jt->jerr)SEGFAULT;  //  scaf
  ASSERTCW(!as,p-1);
  ASSERTCW(!b||0>(i=congoto(n,cv,lv)),(i+cv)->source); // Audit control structures and point the go line correctly
  ASSERTCW(    0>(i= conall(n,cv   )),(i+cv)->source); // Install the number of words and cws into the return blocks, and return those blocks
  AN(l)=AS(l)[0]=m; AT(l)=BOX; *zl=incorp(l);
  AN(c)=AS(c)[0]=n; *zc=incorp(c);
- R try;
+ R 2*try+1;
 }

@@ -248,7 +248,9 @@ f0 =: {{ x =. y }}
 f0 =: {{ m =. y }}
 3 = 4!:0 <'f0'
 
-
+NB. Internal syntax error deferred
+f0 =: {{ h =. {{ 2r3r4 + y }} }}
+'3 : ''h =. {{ 2r3r4 + y }}  ''' -: 5!:5 <'f0'
 
 
 
@@ -699,7 +701,10 @@ f2 =: 7!:0''
 f3 =: 3 : '((3!:10) ] ] ] ] ] ] ]) 5'
 f2 =: 7!:0''
 f1 < _250 + f2  NB. pppp
-'domain error' -: ". etx '3 : ''(((3!:10) 5))'''  NB. 3!:10 allows execution
+f3 =. 3 : '(((3!:10) 1e5 $ a.))'  NB. 3!:10 allows execution
+f2 =: 7!:0''
+2e5 < f2 - f1
+f3 =. 3 : '(((3!:10) 5))'  NB.  no message on error
 
 f3 =: 3 : '3 : (''y'') 3 : (''y'') 3 : (''y'') 3 : (''y'') 3 : (''y'') (y)'
 f1 =: 7!:0''

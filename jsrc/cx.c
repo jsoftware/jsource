@@ -1123,7 +1123,7 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
       // no error: parse the actual () block.  (( )) may fail, which is a real error.  Ignore errors in () which are usually [:
       // mark the block as PPPP if it will need extra parens: (( )) or noun or non-noun & not invisible modifier, which always has ( ) added
 // obsolete       jt->pppprunning=1;  // indicate that we are scanning for PPPP and must reject ".   m :    unsafe !:
-      A pfrag; pfrag=parsea(&lvv[startx+1],rparx-startx-1); if(unlikely(pfrag==0)){if(doublep)R 0; goto parseerr;}  // if error running verbs, it's a real error.  Otherwise ignore the error
+      A pfrag; pfrag=parsea(&lvv[startx+1],rparx-startx-1); if(unlikely(pfrag==0)){goto parseerr;}  // Ignore any error.  If we are running verbs, it could be a real error, but it's hard to give a good msg, so wait till run time
       makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
       // Replace the () block with its parse, close up the sentence
       lvv[startx]=QCINSTALLTYPE(pfrag,ATYPETOVALTYPE(AT(pfrag))); DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];)
@@ -1279,7 +1279,7 @@ colonfound:;   // : given.  takeafter the : for the first line, and taketo for t
   if(4==m){if((-AN(v1)&(AN(v2)-1))<0)v2=v1; v1=mtv;}  //  for 4 :, make the single def given the dyadic one, leave monadic empty
   // preparse to create the control-word structures
   GAT0(h,BOX,2*HN,1); hv=AAV1(h);   // always allocated at rank 1
-  DO(2, A vv=i?v2:v1; I b; RE(b=(I)preparse(vv,&hv[HN*i+0],&hv[HN*i+1])); flag|=(b*VTRY1)<<i; hv[HN*i+2]=vv;)
+  DO(2, A vv=i?v2:v1; I b; RZ(b=(I)preparse(vv,&hv[HN*i+0],&hv[HN*i+1])); flag|=((b>>1)*VTRY1)<<i; hv[HN*i+2]=vv;)
   // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text);(local symbol table)
   // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
   if((1LL<<m)&0x206){  // types 1, 2, 9

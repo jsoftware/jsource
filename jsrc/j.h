@@ -911,7 +911,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Tuning options for cip.c
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
+#if ((C_AVX2 || EMU_AVX2) && !PYXES)
+// cachedmmult accuracy issue
+#define DCACHED_THRESn  (10*10*10)    // when m*n*p less than this, don't even look for multithreads; use blocked
+#else
 #define DCACHED_THRESn  (24*24*24)    // when m*n*p less than this, don't even look for multithreads; use blocked
+#endif
 #if defined(__aarch64__) || defined(__APPLE__)
 #define IGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
@@ -922,12 +927,18 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #elif defined(_WIN32)
 // tuned for windows
+#if ((C_AVX2 || EMU_AVX2) && !PYXES)
+#define IGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
+#define ZGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
+#else
 #define IGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (300*300*300)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
+#endif
 #else
 // tuned for linux
-#if defined(_OPENMP)
+#if defined(_OPENMP) || ((C_AVX2 || EMU_AVX2) && !PYXES)
 #define IGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'
 #define ZGEMM_THRES  DCACHED_THRESn     // when m*n*p less than this use cached; when higher, use BLAS   0 means 'always'

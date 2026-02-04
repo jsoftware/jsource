@@ -394,6 +394,7 @@ static DF1X(jtlrr){F12JT;A hs,t,*tv;C id;I fl,m;V*v;
 // This routine MUST NOT be called with normal inplacing bits
 F1(jtlrep){F12JT;PROLOG(0056);A z;A ltextb=0, *ltext=&ltextb;
  RE(z=jtlrr((J)((I)jtfg&~(JTNORESETERR|JTPARENS)),w,w,ltext));  // the w for self is just any nonzero to indicate top-level call.  Clear paren flags to start.  Exit if error
+ if((I)jtfg&JTOUTERPARENS&&!(CAV(z)[0]=='{'&&CAV(z)[1]=='{'))RZ(z=over(scc('('),apip(z,scc(')'))));   // if result needs (), perhaps for PPPP, add them; but not around {{ }}
  if(*ltext)z=apip(z,*ltext);
  EPILOG(z);
 }

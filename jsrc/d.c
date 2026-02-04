@@ -102,10 +102,12 @@ EVERYFS(sfn0overself,jtsfn0,jtover,0,VFLAGNONE)
 // print a word; nflag bits if (space needed before name/numeric),(parens needed),(space before { needed); return new value of nflag
 // maintenance note: don't use GA().  This gets called after jbreak, which causes all memory requests to fail.
 static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;   // b if this is name or numeric, which needs a space before the next name/numeric
- // if this is a noun from a (( )) block, we have to take its linear rep, since it might not be displayable in 1 line
- if(AFLAG(w)&AFDPAREN&&AT(w)&NOUN){
+ // if this is a noun from a (( )) block or anything from (), we have to take its linear rep, since it might not be displayable in 1 line
+ if(AFLAG(w)&AFDPAREN){
+  I wisnoun=AT(w)&NOUN; if(wisnoun)eputc('(');  // noun must have come from (( )), so add one ()
   // linear rep may fail, or parts of it may fail; so we must reset errors.  We set etxn neg to indicate that the error line is frozen
-  eputc('('); eputc('('); I se=jt->jerr; jt->jerr=0; I sn=jt->etxn; jt->etxn=-sn; w=lrep(w); jt->jerr=se; jt->etxn=sn; RZ(w); ep(AN(w),CAV(w)); eputc(')'); eputc(')');  // out the lin rep
+  I se=jt->jerr; jt->jerr=0; I sn=jt->etxn; jt->etxn=-sn; w=jtlrep((J)((I)jt|JTOUTERPARENS+JTPRFORSCREEN),w); jt->jerr=se; jt->etxn=sn; RZ(w); ep(AN(w),CAV(w)); // out (lin rep)
+  if(wisnoun)eputc(')'); 
   R 0;  // new nflag - none since we added )
  }
  // If this is a PPPP, enclose it in ()

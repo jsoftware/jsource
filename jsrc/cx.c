@@ -1094,21 +1094,21 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
     // Look forward for )
     while(startx<endx && QCSENTTYPE(lvv[startx])!=QCRPAR)++startx; if(startx==endx)break;  // find ), exit loop if none, finished
     // Scan backward looking for (, to get length, and checking for disqualifying entities
-    I rparx=startx; I creverb=0;  // remember where the ) is; clear flag that says we hit m : or !:, which might create anything
+    I rparx=startx; I sflags=0;  // remember where the ) is; flags: 1=there is an unsafe verb 2=we hit m : or !:, which might create anything
     while(--startx>=0 && !(AT(QCWORD(lvv[startx]))==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
      if(AT(QCWORD(lvv[startx]))&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
      if(AT(QCWORD(lvv[startx]))&VERB && FAV(QCWORD(lvv[startx]))->flag2&VF2IMPLOC)break;  // u. v. not allowed: they are half-names
-     if(AT(QCWORD(lvv[startx]))&VERB && (FAV(QCWORD(lvv[startx]))->flag&VNOLOCCHG+VNONAME)!=VNOLOCCHG+VNONAME)break;  // if any verb is not loc & name safe, don't execute
-     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)creverb=1;  // remember if we hit !: ...
-     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(QCSENTTYPE(lvv[startx-1])==QCVERB))creverb=1;  // ... or m :
+     if(AT(QCWORD(lvv[startx]))&VERB+ADV+CONJ && (FAV(QCWORD(lvv[startx]))->flag&VNOLOCCHG+VNONAME)!=VNOLOCCHG+VNONAME){if(AT(QCWORD(lvv[startx]))&ADV+CONJ)break; sflags|=1;}  // if unsafe adv/conj, abort - we can't even try the fragment.  If unsafe verb, mark so we suppress (( ))
+     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)sflags|=2;  // remember if we hit !: ...
+     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(QCSENTTYPE(lvv[startx-1])==QCVERB))sflags|=2;  // ... or m :
     }
     if(startx>=0 && (startx+2<rparx) && (QCSENTTYPE(lvv[startx])==QCLPAR)){  // ( ... ) but not () or ( word )
      // The ) was matched and the () can be processed.
      // !: and m : are special in that they can return any part of speech.  Thus, we can't let them loose in a sentence that is not supposed to execute any verbs.
      // We process them only when they are (m!:n) or (m : noun), 5 words.   This has the salutary effect of preparsing DDs
-     if(creverb && !(startx+4==rparx && (QCSENTTYPE(lvv[startx+1])==QCNOUN) && (QCSENTTYPE(lvv[startx+3])==QCNOUN)))goto parseerr;
-     // See if the () block was a (( )) block.  If it is, we will execute it even if it contains verbs
-     I doublep = (rparx+1<endx) && (QCSENTTYPE(lvv[rparx+1])==QCRPAR) && (startx>0) && (QCSENTTYPE(lvv[startx-1])==QCLPAR);  // is (( ))?
+     if((sflags&2) && !(startx+4==rparx && (QCSENTTYPE(lvv[startx+1])==QCNOUN) && (QCSENTTYPE(lvv[startx+3])==QCNOUN)))goto parseerr;
+     // See if the () block was a (( )) block.  If it is, we will execute it even if it contains verbs, as long as none is unsafe
+     I doublep = ~sflags & ((rparx+1<endx) && (QCSENTTYPE(lvv[rparx+1])==QCRPAR) && (startx>0) && (QCSENTTYPE(lvv[startx-1])==QCLPAR));  // is (( ))?  but only if no unsafe verbs
      I parseok=doublep;  // indic OK to run parse
      if(doublep){--startx, ++rparx;  // (( )), expand the look to include outer ()
      }else{
@@ -1120,10 +1120,11 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
       WITHMSGSOFF(parseok=(I)parsea(fragv,rparx-startx-1);)    // trial parse, no msg formatting needed.   Remember if it was OK
      }
      if(parseok){
-      // no error: parse the actual () block, which should not fail unless out of memory
+      // no error: parse the actual () block.  (( )) may fail, which is a real error.  Ignore errors in () which are usually [:
       // mark the block as PPPP if it will need extra parens: (( )) or noun or non-noun & not invisible modifier, which always has ( ) added
 // obsolete       jt->pppprunning=1;  // indicate that we are scanning for PPPP and must reject ".   m :    unsafe !:
-      A pfrag; RZGOTO(pfrag=parsea(&lvv[startx+1],rparx-startx-1),parseerr); makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
+      A pfrag; pfrag=parsea(&lvv[startx+1],rparx-startx-1); if(unlikely(pfrag==0)){if(doublep)R 0; goto parseerr;}  // if error running verbs, it's a real error.  Otherwise ignore the error
+      makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
       // Replace the () block with its parse, close up the sentence
       lvv[startx]=QCINSTALLTYPE(pfrag,ATYPETOVALTYPE(AT(pfrag))); DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];)
       // Adjust the end pointer and the ) position

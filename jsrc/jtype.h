@@ -151,6 +151,9 @@ typedef I SI;
 #define JTEXPVALENCEOFF  (((I)3)<<JTEXPVALENCEOFFX)
 #define JTEXPVALENCEOFFM  (((I)1)<<JTEXPVALENCEOFFX)  // monad flag
 #define JTEXPVALENCEOFFD  (((I)2)<<JTEXPVALENCEOFFX)  // dyad flag
+#define JTOUTERPARENSX       5   // create fully parenthesized output
+#define JTOUTERPARENS     (((I)1)<<JTOUTERPARENSX)
+
 // following is passed from ^:_. to u^:v which is the only thing ^:_. can call
 #define JTDOWHILEX 2   // return A(1) if v returns false
 #define JTDOWHILE  (((I)1)<<JTDOWHILEX)
@@ -708,8 +711,9 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFNJA           ((I)1<<AFNJAX)
 #define AFDEBUGRESULTX  2           // special flag for values that alter debug state matches INT
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
-#define AFHADPARENX     3     // in an explicit-defn word, set if user's original had () around the value  matches FL
-#define AFHADPAREN      ((I)1<<AFHADPARENX)
+// 3 free
+// obsolete #define AFHADPARENX     3     // in an explicit-defn word, set if user's original had () around the value  matches FL
+// obsolete #define AFHADPAREN      ((I)1<<AFHADPARENX)
 #define AFUNDISPLAYABLEX  4           // value is INDIRECT but may contain zeros or invalid pointers
 #define AFUNDISPLAYABLE   ((I)1<<AFUNDISPLAYABLEX)
 

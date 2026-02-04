@@ -1,9 +1,5 @@
 name: MEMAUDIT2
 
-variables:
-- name: runjob
-  value: false 
-
 on:
  push:
   branches: [ master ]
@@ -15,12 +11,16 @@ on:
 #   - 'version.txt'
 
 # if: ${{ false }}
+
+env:
+ runjob: false 
+
 jobs:
 
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
@@ -58,7 +58,7 @@ jobs:
 # linux32 --------------------------------------------------------------
  jelinux32:
   name: JE (Linux32)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -99,7 +99,7 @@ jobs:
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
@@ -131,7 +131,7 @@ jobs:
 # macOS arm64 ----------------------------------------------------------
  jemacosarm:
   name: JE (macOS arm64)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
@@ -163,7 +163,7 @@ jobs:
 # rpi64arm -------------------------------------------------------------
  jerpi64arm:
   name: JE (Linux arm64)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -197,7 +197,7 @@ jobs:
 # rpi32arm -------------------------------------------------------------
  jerpi32arm:
   name: JE (Linux arm32)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -329,7 +329,7 @@ jobs:
 # wasm -----------------------------------------------------------------
  jewasm:
   name: JE (wasm)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -353,7 +353,7 @@ jobs:
 # windows --------------------------------------------------------------
  jewin:
   name: JE (Windows)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -385,7 +385,7 @@ jobs:
 # windows 32bit --------------------------------------------------------
  jewin32:
   name: JE (Windows 32)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -418,7 +418,7 @@ jobs:
 # windows arm64 --------------------------------------------------------
  jewinarm64:
   name: JE (Windows arm64)
-  if: ${{ variables.runjob }}
+  if: ${{ env.runjob }}
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository

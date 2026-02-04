@@ -298,7 +298,7 @@ X jtXmpzcommon(J jt, mpz_t mpz, I numeric) {
  XSGN(x)= mpz->_mp_size;            // size of number and its sign
  I n= AN(x);                        // length of memory allocated for number
  I sz= XHSZ+n;                      // bytes allocated
-#if SY_64
+#if PYXES
  x->origin= THREADID1(jt);           // track thread which created this array
 #endif
  jt->bytes+= sz;                    // summarize the size of the new space

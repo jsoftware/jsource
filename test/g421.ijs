@@ -152,6 +152,9 @@ pru=: [: ^ 0j2p1&%               NB. principal n-th root of unity
 
 conv=: +//.@(*/)                 NB. convolution
 
+thr=: (9!:58)"0 i.3
+(1000 _1{~9!:56'pyxes') (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+
 conv1=: 4 : 0
  n=. #x
  A=. (pru 2*n)^*/~i.2*n          NB. (%.A) = (2*n)%~r^-*/~i.2*n  
@@ -172,6 +175,7 @@ eq=: 1e_8&> @: (>./) @: | @: -
 s ( conv eq  conv1) t
 s (pconv eq pconv1) t
 
+empty thr (9!:58)"0 i.3
 
 NB.  x f/. y ------------------------------------------------------------
 

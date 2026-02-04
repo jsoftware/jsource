@@ -44,7 +44,7 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
-# use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
+# use -DC_NOMULTINTRINSIC to continue to use more standard c in gcc 4
 # too early to move main linux release package to gcc 5
 
 case "$jplatform64" in

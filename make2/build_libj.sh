@@ -46,7 +46,7 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
-# use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
+# use -DC_NOMULTINTRINSIC to continue to use more standard c in gcc 4
 # too early to move main linux release package to gcc 5
 
 case "$jplatform64" in
@@ -129,13 +129,12 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
- common="$OPENMP -std=gnu17 -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
+ common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \
  -Wno-empty-body \
- -Wno-error=stringop-overflow \
  -Wno-format-overflow \
  -Wno-implicit-fallthrough \
  -Wno-incompatible-function-pointer-types \
@@ -157,6 +156,14 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-unused-parameter \
  -Wno-unused-value \
  $CFLAGS"
+
+ GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
+ GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
+ if [ $GNUC_MAJOR -ge 5 ]; then
+  common="$common -std=gnu17 -Wno-error=stringop-overflow"
+ else
+  common="$common -std=gnu99 -DC_NOMULTINTRINSIC"
+ fi
 
 else
  # clang
@@ -454,7 +461,7 @@ case $jplatform64 in
 
  raspberry/j32*) # linux raspbian arm
   TARGET=libj.so
-  CFLAGS="$common -std=gnu99 -Wno-overflow -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
+  CFLAGS="$common -Wno-overflow -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   SRC_ASM="${SRC_ASM_RASPI32}"
   GASM_FLAGS=""

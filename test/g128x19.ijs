@@ -168,7 +168,6 @@ for_t. i. 4 do.
   bkbeta =. (>.&.(%&(CacheLine%16)) 6) $ 0.
   bk =. ,:~ bkbeta
   beta =. (#rvt) $ 0.  NB. one beta per column
-echo 'a1'
   assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;parms;bkbeta;beta 
   assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(_7 (0}) parms);bkbeta;beta 
   assert. '' ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;parms;bkbeta;beta 
@@ -186,7 +185,6 @@ echo 'a1'
   assert. '' ('' run128_9) Ax;Am;Av;M;('1' 6} rvt);bndrowmask;bk;'';6;parms;bkbeta;beta 
   assert. '' ('' run128_9) Ax;Am;Av;M;('9' 6} rvt);bndrowmask;bk;'';6;parms;bkbeta;beta 
   assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';7;(1e_10 (3}) parms);bkbeta;beta   NB. Store threshold
-echo 'a2'
   NB. Test every different length.  Different size of M are not so important
   for_l. (2 + i. (*1 T. ''){51 5) , (250 + ?@$/ (*1 T. ''){10 100,:20 1000) do.  NB. l is #rows in Qk including Fk if any
     'nQcol nAcol' =. 10 5  NB. number of cols in Qk, A0
@@ -203,9 +201,7 @@ echo 'a2'
     bk =. ,:~ bkbeta
     beta =. (#rvt) $ 0.  NB. one beta per column
     for_ndx. i. #rvt do.  NB. for each basic and non-basic column
-echo 'a3'
       assert. '' ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';ndx;((_1&-^:(?2) nQcol) 0} parms);bkbeta;beta 
-echo 'a4'
     end.
   end.
 
@@ -220,7 +216,6 @@ echo 'a4'
   bkbeta =. (0 ?@$~ #bndrowix) bndrowix} bkbeta [ bndrowix =. bndrowmask I.@e. '01'  NB. random bkbeta where not used
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   parms =.              1         0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.       __   _1.
-echo 'a5'
   assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;parms;bkbeta;beta
   assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(_2 (0)} parms);bkbeta;beta
   assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;(1 |."_1 M);rvt;bndrowmask;(1 |."_1 bk);'';00;parms;bkbeta;beta
@@ -244,11 +239,9 @@ echo 'a5'
   assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(6 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 6 |."_1 bk);'';00;(_2 (0)} parms);(padc _4 }. bkbeta);beta
   assert. 0 1 1 8 0.5 ('' run128_9) Ax;Am;Av;(7 |."_1 M);rvt;bndrowmask;(7 |."_1 bk);'';00;(parms);bkbeta;beta
   assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 7 |."_1 bk);'';00;parms;(padc _4 }. bkbeta);beta
-echo 'a6'
 NB. obsolete empty  assert. 0 0 1 4 1 ('' run128_9) Ax;Am;Av;(7 }."_1 (1) |."_1  M);rvt;bndrowmask;(padc _4 (}."1) 7 |."_1 bk);'';00;(_2 (0)} parms);(padc _4 }. bkbeta);beta
 
   NB. bound column has hidden row with SPR=beta
-echo 'a7'
   assert. 0 8 1 8 0.4 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
   beta =. (#rvt) $ 0.75
   assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
@@ -259,25 +252,19 @@ echo 'a7'
   assert. 0 8 1 8 0.75 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
   beta =. (#rvt) $ 1.5
   assert. 0 2 1 8 1.0 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;(parms);bkbeta;beta
-echo 'a8'
 
   NB. Bound row allows both values
-echo 'a9'
   assert. 0 2 1 8 0.2 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
   assert. 0 2 1 8 0.2 ('' run128_9) Ax;Am;Av;M;rvt;('1' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
   assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 3} bndrowmask);bk;'';00;(parms);bkbeta;beta
   assert. 0 0 1 8 0.5 ('' run128_9) Ax;Am;Av;M;('0' 0} rvt);('0' 4} bndrowmask);bk;'';00;(parms);bkbeta;beta  NB. nonenforcing
   assert. 0 4 1 8 0.1 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);('0' 4} bndrowmask);bk;'';00;(parms);bkbeta;beta  NB. enforcing col
-echo 'a10'
   for_r. i. 8 do. assert. (0, (8 | 2-r), 1 8 0.2) ('' run128_9) Ax;Am;Av;(r |."_1 M);rvt;(r |. '1' 2} bndrowmask);(r |."_1 bk);'';00;(parms);(r |. bkbeta);beta end.
-echo 'a11'
 
   NB. first col not taken unless valid
   M =. 2 {. ,: ,.               1. 0 0 0  0 1. 0 0
   bk =. 2 {. ,: ($bkbeta) $     1.
-echo 'a12'
   assert. 0 5 1 8 1 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
-echo 'a13'
 
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
   M =. 2 {. ,: ,.                2.   1    1    1    2    1    1    1
@@ -290,7 +277,6 @@ echo 'a13'
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   parms =.             1          0.      1e_25           1e_25    0      1e_11        1e_6       1e_12         0.        __    _1.
 
-echo 'a14'
   NB. tie goes to last, if not in same batch
   assert. 0 4 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
   M =. 2 {. ,: ,.                2.   2    1    1    1    1    1    1
@@ -301,24 +287,20 @@ echo 'a14'
   assert. 0 6 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
   M =. 2 {. ,: ,.                2.   1    1    1    1    1    1    2
   assert. 0 7 1 8 0.5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);bk;'';00;(parms);bkbeta;beta
-echo 'a15'
 
   NB. thresholds
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   M =. 2 {. ,: ,.              8 $ 1e_4
   bk =. 2 {. ,: ($bkbeta) $    0.5 , 7 # 1.
-echo 'a16'
   assert. 0 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
   assert. 4 _1 1 8 _ ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 (2)} parms);bkbeta;beta
   assert. 1 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_2 (6)} parms);bkbeta;beta
   assert. 1 0 1 8 5000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(1e_3 1e_2 (5 6)} parms);bkbeta;beta
   assert. 4 _2 0 0 0 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 0. (7 9)} parms);bkbeta;beta  NB. row 0 now below threshold but 0 cuts off, 0 SPR
   assert. 2 0 1 8 _10000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(0.75 (7)} parms);bkbeta;beta  NB. row 0 now below threshold, nonimp
-echo 'a17'
   M =. 2 {. ,: ,.              8 $ 1000.
   bk =. 2 {. ,: ($bkbeta) $    8 $ 1.
   assert. 0 4 1 8 0.001 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta
-echo 'a18'
 NB. The following not changed since 128!:9 and the tests are not proted
 NB. NB. put nothing here! savy is carried over to the next line
 NB.   NB. Verify random pickup of 0 bk values.  This kludge relies on a side effect left by run128_9
@@ -345,7 +327,6 @@ NB.   end.
   beta =. (#rvt) $ 2.0
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       __   _1.
-echo 'a19'
   assert. 1 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous pivot
   assert. 1 0 1 8 1e9 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 (5)} parms);bkbeta;beta  NB. below dangerous ignored
   assert. 1 1 1 8 1e10 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. col 0 disabled
@@ -353,7 +334,6 @@ echo 'a19'
   assert. 0 8 1 8 2 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;bk;'';00;(2e_12 2e_3 (2 7)} parms);bkbeta;beta  NB. bound row has hidden SPR=beta
   assert. 1 2 1 8 1 ('' run128_9) Ax;Am;Av;M;('1' 0} rvt);bndrowmask;((2^_36) (<0 2)} bk);'';00;(2e_12 (2)} parms);bkbeta;beta  NB. enforcing value comes up
   assert. 1 2 1 8 1 ('' run128_9) Ax;Am;Av;M;(rvt);('0' 2} bndrowmask);(bk);'';00;(2e_12 (2)} parms);bkbeta;beta  NB. enforcing value comes up
-echo 'a20'
 
   M =. 2 {. ,: ,.               1e_14  0    0    0    0    0    0    0
   bk =. 2 {. ,: ($bkbeta) $       1.   0    0    0    0    0    0    0
@@ -363,7 +343,6 @@ echo 'a20'
   assert. 3 4 1 8 _1e14 ((,:3) run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving with no safe pivot
   M =. 2 {. ,: ,.               1e_14  0    0    0  1e_14  0  1e_5   0
   assert. 2 6 1 8 _100000 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous, then nonimproving safe
-echo 'a21'
 
   NB. Maximum nonimproving pivot
   Ax =. 0 2 1 $ 00 [ Am =. 0$00 [ Av =. 0$0.
@@ -375,19 +354,16 @@ echo 'a21'
   beta =. (#rvt) $ 2.0
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       __   _1.
-echo 'a22'
   assert. 3 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. dangerous nonimp pivot
   assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(_1e_6 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. nondangerous pivot
   assert. 3 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(1e_6 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. dangerous pivot
   assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);bkbeta;beta  NB. nondangerous pivot
   assert. 2 2 1 8 _1e4 ('' run128_9) Ax;Am;Av;M;rvt;('0' 2} bndrowmask);(1e_14 (<0 1)} bk);'';00;(parms);((1+1e_13) 2} bkbeta);beta  NB. nondangerous pivot
-echo 'a23'
   NB. Repeat with different Imp/NonImp thresholds
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivotImp,ColOkPivotNonImp,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6           1e_13           1e_12         0.       __   _1.
   assert. 2 0 1 8 _1e12 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;bk;'';00;(parms);bkbeta;beta  NB. nondangerous nonimp pivot
   assert. 3 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(_1e_6 (<0 1)} bk);'';00;(1e_3 (7}) parms);bkbeta;beta  NB. nondangerous pivot
-echo 'a24'
   NB.   parms is #cols(flagged),maxAx,Col0Threshold,Store0Thresh,x,ColDangerPivot,ColOkPivot,Bk0Threshold,BkOvershoot,MinSPR,PriRow
   parms =.            1           0.      1e_15           1e_25    0      1e_15        1e_6       1e_12         0.       __   _1.
 
@@ -400,7 +376,6 @@ echo 'a24'
   beta =. (#rvt) $ 2.0
   assert. 2 1 1 8 _1e5 ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;(_1e_6 (<0 1)} bk);'';01;(parms);bkbeta;beta  NB. nondangerous pivot
   assert. 'index error' -: 1 0 1 8 _1e12 ('' run128_9) etx Ax;Am;Av;M;rvt;bndrowmask;(1e_6 (<0 1)} bk);'';2;(parms);bkbeta;beta
-echo 'a24'
 
   NB. gradient mode
 NB.  y is Ax;Am;Av;(M, shape 2,m,n);RVT;bndrowmask;(sched);cutoffinfo;ndx;parms;Frow  where ndx is a list
@@ -425,12 +400,10 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
   Frow =.  _4.     _3   _2   _1 _1
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 0 4 704 1.788854381999831; _2 ]\ 512 5 128 3 64 2 0 1 0 0) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(parms);Frow
-echo 'a25'
   if. 0 = 1 T. '' do.  NB. can't chain cutoffinfo multithreaded, because the problems change size
     NB. roll cutoffinfo into the next test, to verify it is picked up
     assert. (0 0 4 1216 1.788854381999831; _2 ]\ 512 5 512 5 384 23 512 5 0 0) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;3 2 1 0;(parms);Frow  NB. reversed col order
   end.
-echo 'a26'
   NB. bound column adds 1 to total
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 0 4 1920 1.788854381999831; _2 ]\ 512 5 512 6 384 23 512 5 0 0) ('' run128_9) Ax;Am;Av;M;('0' 1} rvt);bndrowmask;'';cutoffinfo;3 2 1 0;(parms);Frow  NB. reversed col order
@@ -438,7 +411,6 @@ echo 'a26'
   Frow =.  _1.     _2   _3   _4 _1
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 3 4 1856 1.788854381999831; _2 ]\ 512 5 512 5 320 23 512 5 0 0) ('' run128_9) Ax;Am;Av;M;rvt;('0' 4} bndrowmask);'';cutoffinfo;0 1 2 3;(parms);Frow
-echo 'a27'
 
   NB. bndrowmask in detail
   M =. 2 {. ,: 4 {."1 ,. >: i. 128
@@ -452,7 +424,6 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
   assert. 0 0 1 128 1.18907409169273915565e_3 -: 128!:19 Ax;Am;Av;(15!:18 (11) c. |: {. M);rvtb;bndrowmaskb;'';((2 ,~ #rvt) $ 0.);(,00);(parms);Frow
   bndrowmaskb =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($!.0~  64 ,~ >.@(64 %~ #)) 0 ,~ (1) 127} 128 $ 0    NB. 0 is for Fk
   assert. 0 0 1 128 1.17553622522872849160e_3 -: 128!:19 Ax;Am;Av;(15!:18 (11) c. |: {. M);rvtb;bndrowmaskb;'';((2 ,~ #rvt) $ 0.);(,00);(parms);Frow
-echo 'a28'
 
   NB. MinGradient: 4{parms is mingrad.  Finish any column with higher gradient
   Ax =. 1 2 1 $ 00 1 [ Am =. 1$00 [ Av =. 1$0.  NB. Ax must not be empty
@@ -474,7 +445,6 @@ NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),Min
   assert. (0 _1 4 1856 0; _2 ]\ 512 5 512 5 320 30 512 5 0 0) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(0.4 (4}) parms);Frow
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 _1 4 1536 0; _2 ]\ 512 5 512 5 320 30 192 4 0 0) ('' run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 3;(0.51 (4}) parms);Frow
-echo 'a29'
 
   NB. MinGradImp
   cutoffinfo =. (2 ,~ #rvt) $ 0.
@@ -483,7 +453,6 @@ echo 'a29'
   assert. (0 1 4 704  1.341640786499873838; _2 ]\ 192 4 512 5 0 1 0 1 0 0) ((0 1.341640786499873838,:0 1.788854381999831) run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;1 0 2 3;(_0.4 (4}) parms);Frow
   cutoffinfo =. (2 ,~ #rvt) $ 0.
   assert. (0 1 4 832 1.341640786499873838; _2 ]\ 256 5 512 5 64 2 0 1 0 0) ((0 1.341640786499873838,:0 1.788854381999831) run128_9) Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;1 0 2 3;(_0.3 (4}) parms);Frow
-echo 'a30'
 
 
   NB. column audit
@@ -491,7 +460,6 @@ echo 'a30'
 NB.   parms is #cols(flagged),maxAx,Col0Threshold,expandQk (testcase option),MinGradient/MinGradImp,x
   parms =.            4         0.      1e_25        0                                  0           0    NB. We expand each row to its own comparison block
   assert. 'index error' -: (0 0 0 0 0; _2 ]\ 10$0) ('' run128_9) etx Ax;Am;Av;M;rvt;bndrowmask;'';cutoffinfo;0 1 2 5;(parms);Frow
-echo 'a31'
 
   NB. Large random test
   nqcols=.20
@@ -520,9 +488,7 @@ NB.   parms is #cols(flagged),maxAx,                x,expandQk (testcase option)
       bndrowmask =. {&a.@:#.@:(|."1) _8 ]\ , (|."1) 0 2 1 |: 16 4&$"1 ($~  64 ,~ >.@(64 %~ #)) 0 ,~ Yt e. '01'  NB. 0 is for Fk
       'rc9 col9 ncol ndot grad9' =. 128!:19 Ax;Am;Av;Qktqp;rvt;bndrowmask;'';cuti;nttcols;parms;frow
 NB. rerun      'rc9 col9 ncol ndot grad9' =. 128!:19 Ax;Am;Av;Qktqp;rvt;bndrowmask;'';((2 ,~ #Vt) $ 0.);nttcols;parms;frow
-echo 'a31'
       assert. (col,maxgrad) -: col9,grad9
-echo 'a32'
     end.
   end.
 

@@ -5,7 +5,7 @@ NB. **************************************** matrix product ********************
 delth''  NB. make sure we start with an empty system
 
 thr=: (9!:58)"0 i.3
-_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
+(_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
 echo 'never use blas'
 
 {{
@@ -52,7 +52,6 @@ end.
 }} ''
 delth''
 empty thr (9!:58)"0 i.3
-
 
 epilog''
 

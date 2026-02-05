@@ -326,6 +326,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _DEBUG: 3
      run: |
       script\buildga.cmd x64
 
@@ -334,6 +335,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _DEBUG: 3
      run: |
       script\testga.cmd x64
 
@@ -355,6 +357,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _DEBUG: 3
      run: |
       script\buildga.cmd x64
 
@@ -363,6 +366,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _DEBUG: 3
      run: |
       script\testga.cmd x64
 
@@ -384,6 +388,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _DEBUG: 3
      run: |
       script\buildga.cmd x64
 
@@ -392,6 +397,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _DEBUG: 3
      run: |
       script\testga.cmd x64
 
@@ -413,6 +419,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _DEBUG: 3
      run: |
       script\buildga.cmd arm64
 
@@ -421,6 +428,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _DEBUG: 3
      run: |
       script\testga.cmd arm64
 
@@ -442,6 +450,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _DEBUG: 3
      run: |
       script\buildga.cmd arm64
 
@@ -450,6 +459,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _DEBUG: 3
      run: |
       script\testga.cmd arm64
 
@@ -471,6 +481,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _DEBUG: 3
      run: |
       script\buildga.cmd arm64
 
@@ -479,6 +490,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _DEBUG: 3
      run: |
       script\testga.cmd arm64
 

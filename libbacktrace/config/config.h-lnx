@@ -177,7 +177,11 @@
 #if defined(__LP64__)
 /* #undef _FILE_OFFSET_BITS */
 #else
+#if defined(ANDROID) && __ANDROID_API__ < 21
+/* #undef _FILE_OFFSET_BITS */
+#else
 #define _FILE_OFFSET_BITS 64
+#endif
 #endif
 
 /* Define for large files, on AIX-style hosts. */

@@ -28,25 +28,15 @@ matchcleanf=: 0 *./ . neareqf 5e_5&clean@,@:-
 cleanf=: 5e_5&clean
 
 test=: 3 : 0
-echo 'a1'
  t=. dgeev_jlapack_ A=: y
-echo 'a2'
  assert. (,3) -: $t
-echo 'a3'
  assert. 32 = 3!:0 t
-echo 'a4'
  assert. ($&.>t) -: 3$(,~n);,n=.#A
-echo 'a5'
  'L e R' =: t
-echo 'a6'
  assert. *./ 1 = +/ +/"1 *: +. L
-echo 'a7'
  assert. *./ 1 = +/ +/"1 *: +. R
-echo 'a8'
  assert. (A mp R)      matchcleanf e *"1 R
-echo 'a9'
  assert. ((+|:L) mp A) matchcleanf e *"0 1 +|:L
-echo 'a19'
  1
 )
 

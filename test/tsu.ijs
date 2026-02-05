@@ -122,6 +122,13 @@ eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
 efx      =: ". eftx
 
 currlocals_z_ =: (4!:1)@0 1 2 3  NB. create list of local names plus any in the current locale
+NB. make at least y threads
+maketh=: 3 : 0
+if. 9!:56'pyxes' do.
+  {{0 T.0}}^:] 0 >. (1&T.'') -~  y <. <: <./ 8&T.''
+end.
+EMPTY
+)
 delth=: {{ if. 9!:56'PYXES' do. while. 1 T. '' do. 55 T. '' end. end. EMPTY }}  NB. delete all worker threads
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
 prolog=: {{ 1: xyziniloc__ =: x [ delth'' [ (dbr bind Debug)@:(9!:19)2^_44[techo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}~ currlocals_p38s4jf7_

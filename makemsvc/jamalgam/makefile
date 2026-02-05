@@ -2,7 +2,7 @@ ifeq (1,$(USE_LINENOISE))
  READLINE = 1
 endif
 ifneq ($(_DEBUG),)
- COPTION = /FS /Zi /DDEBUG=1
+ COPTION = /FS /Z7 /DDEBUG=1
  LDEBUG = /DEBUG
 else
  COPTION =
@@ -71,7 +71,7 @@ ifeq (1,$(NOSYNCHLIB))
  COPTION := $(COPTION) /DNOSYNCHLIB=1
 endif
 ifneq ($(_MEMAUDIT),)
- COPTION := $(COPTION) /DMEMAUDIT =$(_MEMAUDIT)
+ COPTION := $(COPTION) /DMEMAUDIT=$(_MEMAUDIT)
 endif
 ifneq ($(_ASSERT),)
  COPTION := $(COPTION) /D_ASSERT

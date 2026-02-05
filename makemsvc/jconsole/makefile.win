@@ -2,7 +2,7 @@
 READLINE = 1
 !endif
 !if ""!="$(_DEBUG)"
-COPTION = /FS /Zi /DDEBUG=1
+COPTION = /FS /Z7 /DDEBUG=1
 LDEBUG = /DEBUG
 !else
 COPTION =
@@ -13,9 +13,6 @@ CINCLUDE = $(CINCLUDE) -I../../pthreads4w/include
 COPTION = $(COPTION) /DPYXES=1
 !else
 COPTION = $(COPTION) /DPYXES=0
-!endif
-!if ""!="$(_MEMAUDIT)"
-COPTION = $(COPTION) /D_MEMAUDIT =$(_MEMAUDIT)
 !endif
 
 !if "ARM64"=="$(TARGET_CPU)"

@@ -28,7 +28,7 @@
 #include "j.h"
 #include "jeload.h"
 
-#if defined(__APPLE__) || defined(_WIN32) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__wasm__) //temporary
+#if defined(_WIN32) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__wasm__) //temporary
 #undef LIBBACKTRACE
 #else
 #undef LIBBACKTRACE

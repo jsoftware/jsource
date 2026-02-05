@@ -3,6 +3,9 @@ NB. +/ . * ------------------------------------------------------------------
 
 NB. **************************************** matrix product **********************************
 delth''  NB. make sure we start with an empty system
+maketh 4  NB. create 4 threads
+
+thr=: (9!:58)"0 i.3
 
 mm=: 4 : 0
 f=. 9!:56'cblasfile'
@@ -37,7 +40,7 @@ N=. IF64{QKTEST{::2000 4000;500 800
 'A B'=. 0?@$~2,,~N
 echo '$A= ',":$A
 
-_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
+(_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
 t1=. 6!:2'c1=. A+/ .*B'
 echo ' never  blas ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
 0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
@@ -66,8 +69,8 @@ end.
 )
 t1''
 
-delth''  NB. make sure we start with an empty system
-
+delth''
+empty thr (9!:58)"0 i.3
 
 epilog''
 

@@ -4,7 +4,7 @@ NB. LAPACK --------------------------------------------------------------
 cblas=: 9!:56'cblas'
 0 (9!:56) 'cblas'
 thr=: (9!:58)"0 i.3
-_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
+(_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
 
 delth''  NB. make sure we start with an empty system
 0!:_1`1:@.(9!:56'PYXES') '$'   NB. skip slow
@@ -30,25 +30,15 @@ matchcleanf=: 0 *./ . neareqf 5e_5&clean@,@:-
 cleanf=: 5e_5&clean
 
 test=: 3 : 0
-echo 'a1'
  t=. dgeev_jlapack_ A=: y
-echo 'a2'
  assert. (,3) -: $t
-echo 'a3'
  assert. 32 = 3!:0 t
-echo 'a4'
  assert. ($&.>t) -: 3$(,~n);,n=.#A
-echo 'a5'
  'L e R' =: t
-echo 'a6'
  assert. *./ 1 = +/ +/"1 *: +. L
-echo 'a7'
  assert. *./ 1 = +/ +/"1 *: +. R
-echo 'a8'
  assert. (A mp R)      matchcleanf e *"1 R
-echo 'a9'
  assert. ((+|:L) mp A) matchcleanf e *"0 1 +|:L
-echo 'a19'
  1
 )
 

@@ -1,6 +1,9 @@
 prolog './g200.ijs'
 NB. ^y ------------------------------------------------------------------
 
+delth''  NB. make sure we start with an empty system
+maketh 4  NB. create 4 threads
+
 x =: 0.001 * _900+?4 5$2000
 y =: 0.001 * _900+?4 5$2000
 a =: x j. (*y)*(o.1)|y
@@ -653,6 +656,8 @@ NB.$  end of skip
 NB. library fns
 13 1 7 0 4 13 6 11 3 -: , (%. m. 15) 3 3 $ 7 2 0 9 6 8 3 4 1
 13 -: (-/ . * m. 15) 3 3 $ 7 2 0 9 6 8 3 4 1
+
+delth''
 
 epilog''
 

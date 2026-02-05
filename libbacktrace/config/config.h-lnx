@@ -33,7 +33,11 @@
 #define HAVE_DLFCN_H 1
 
 /* Define if dl_iterate_phdr is available. */
+#if defined(ANDROID) && __ANDROID_API__ < 21
+/* #undef HAVE_DL_ITERATE_PHDR */
+#else
 #define HAVE_DL_ITERATE_PHDR 1
+#endif
 
 /* Define to 1 if you have the fcntl function */
 #define HAVE_FCNTL 1
@@ -177,7 +181,11 @@
 #if defined(__LP64__)
 /* #undef _FILE_OFFSET_BITS */
 #else
+#if defined(ANDROID) && __ANDROID_API__ < 21
+/* #undef _FILE_OFFSET_BITS */
+#else
 #define _FILE_OFFSET_BITS 64
+#endif
 #endif
 
 /* Define for large files, on AIX-style hosts. */

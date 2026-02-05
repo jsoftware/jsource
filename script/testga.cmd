@@ -13,6 +13,8 @@ IF "%~1" NEQ "x64" EXIT /b 1
 
 systeminfo
 
+copy "C:\Program Files\LLVM\bin\lldb\liblldb.dll" "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\"
+
 IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B
 IF "%~1" NEQ "x64" EXIT /b 1
@@ -27,7 +29,8 @@ j64\jconsole -lib j.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01H
-"C:\Program Files\LLVM\bin\lldb" -b -o run -k bt -k quit -- j64\jconsole -lib j.dll testga.ijs
+@rem "C:\Program Files\LLVM\bin\lldb" -b -o run -k bt -k quit -- j64\jconsole -lib j.dll testga.ijs
+lldb -b -o run -k bt -k quit -- j64\jconsole -lib j.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01A
@@ -42,6 +45,7 @@ jarm64\jconsole testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01I
-"C:\Program Files\LLVM\bin\lldb" -b -o run -k bt -k quit -- jarm64\jconsole -lib j.dll testga.ijs
+@rem "C:\Program Files\LLVM\bin\lldb" -b -o run -k bt -k quit -- jarm64\jconsole -lib j.dll testga.ijs
+lldb -b -o run -k bt -k quit -- jarm64\jconsole -lib j.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01C

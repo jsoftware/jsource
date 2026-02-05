@@ -1,5 +1,5 @@
 ifeq (1,$(_DEBUG))
- COPTION = /FS /Zi /DDEBUG=1
+ COPTION = /FS /Z7 /DDEBUG=1
  LDEBUG = /DEBUG
 else
  COPTION =

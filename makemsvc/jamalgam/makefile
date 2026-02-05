@@ -2,7 +2,7 @@ ifeq (1,$(USE_LINENOISE))
  READLINE = 1
 endif
 ifneq ($(_DEBUG),)
- COPTION = /FS /Zi /DDEBUG=1
+ COPTION = /FS /Z7 /DDEBUG=1
  LDEBUG = /DEBUG
 else
  COPTION =

@@ -2570,7 +2570,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define PEXTN(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m must be contiguous
 // emulation of general PDEP
 // too slow #define PDEP(s,m) ({UI bits=(s), msk=(m), res=0, i=BW; do{res=(res>>1)+SGNIF(bits&msk,0); bits>>=(msk&1); --i; msk>>=1;}while(msk);)  res>>i;})
-#define _bzhi_u64(s,i) ((UI8)(s)<<(64-((i)&63))>>(64-((i)&63)))  // does not allow i=0
+#define _bzhi_u64(s,i) ((UI8)(s)<<(64-((i)&255))>>(64-((i)&255)))  // does not allow i=0
 #endif
 #ifndef offsetof
 #ifdef __GNUC__

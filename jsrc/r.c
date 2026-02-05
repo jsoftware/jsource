@@ -189,10 +189,10 @@ A jtunDD(J jtfg, A w){F12JT;
    if(wilx==AS(wil)[0])break;  // break if no more DDs
    if(shortres&&currc==CLF){wv[outx++]='.'; wv[outx++]='.'; wv[outx++]='.'; break;}  // stop if we exceeded single line
    // install leading DD delimiter
-   wv[outx++]='{'; wv[outx++]='{'; if(!shortres)wv[outx++]=' ';
-   // dequote the string and move it down into the result
+   inx=wilv[wilx+3][0]+1; endx=wilv[wilx+3][1]-1;   // start/end+1 of string (skipping enclosing quotes)
+   wv[outx++]='{'; wv[outx++]='{'; if(!shortres&&wv[inx]!=')')wv[outx++]=' ';  // add {{, and a space if it's short display and there is no )
    I startddx=outx;  // remember where the DD starts, because its length may be reduced
-   inx=wilv[wilx+3][0]+1; endx=wilv[wilx+3][1]-1; NOUNROLL while(inx<endx){if(wv[inx]=='\'')++inx; wv[outx++]=wv[inx++];}
+   NOUNROLL while(inx<endx){if(wv[inx]=='\'')++inx; wv[outx++]=wv[inx++];}   // dequote the string and move it down into the result
    inx=wilv[wilx+4][1];  // next input character will pick up after the final )
    // recur on the string to handle any 9 : it holds; update length when finished
    fauxblock(fauxw); A z; fauxvirtual(z,fauxw,w,1,ACUC1); AK(z)+=startddx; AN(z)=AS(z)[0]=outx-startddx;

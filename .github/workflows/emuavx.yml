@@ -339,8 +339,8 @@ jobs:
       _DEBUG: 3
      run: |
       where lldb.exe
-      dir C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin
-      dir C:\Program Files\LLVM\bin
+      dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin"
+      dir "C:\Program Files\LLVM\bin"
       script\buildga.cmd x64
 
    - name: Test JE (Windows no pyxes)
@@ -440,8 +440,8 @@ jobs:
       _DEBUG: 3
      run: |
       where lldb.exe
-      dir C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin
-      dir C:\Program Files\LLVM\bin
+      dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin"
+      dir "C:\Program Files\LLVM\bin"
       script\buildga.cmd arm64
 
    - name: Test JE (Windows arm64 no pyxes)

@@ -1,7 +1,7 @@
 !if ""!="$(_DEBUG)"
 COPTION = /FS /Zi /DDEBUG=1
 LDEBUG = /DEBUG
-else
+!else
 COPTION =
 !endif
 CINCLUDE = -I../../mpir/include

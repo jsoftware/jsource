@@ -13,7 +13,7 @@ IF "%~1" NEQ "x64" EXIT /b 1
 
 systeminfo
 
-copy "C:\Program Files\LLVM\bin\lldb\liblldb.dll" "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\"
+copy "C:\Program Files\LLVM\bin\liblldb.dll" "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\"
 
 IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B

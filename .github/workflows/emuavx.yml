@@ -338,9 +338,6 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
-      where lldb.exe
-      dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin"
-      dir "C:\Program Files\LLVM\bin"
       script\buildga.cmd x64
 
    - name: Test JE (Windows no pyxes)
@@ -373,7 +370,6 @@ jobs:
       USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
-      where lldb.exe
       script\buildga.cmd x64
 
    - name: Test JE (Windows no emu)
@@ -406,7 +402,6 @@ jobs:
       USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
-      where lldb.exe
       script\buildga.cmd x64
 
    - name: Test JE (Windows no pyxes/emu)
@@ -439,9 +434,6 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
-      where lldb.exe
-      dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin"
-      dir "C:\Program Files\LLVM\bin"
       script\buildga.cmd arm64
 
    - name: Test JE (Windows arm64 no pyxes)
@@ -474,7 +466,6 @@ jobs:
       USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
-      where lldb.exe
       script\buildga.cmd arm64
 
    - name: Test JE (Windows arm64 no emu)
@@ -507,7 +498,6 @@ jobs:
       USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
-      where lldb.exe
       script\buildga.cmd arm64
 
    - name: Test JE (Windows arm64 no pyxes/emu)

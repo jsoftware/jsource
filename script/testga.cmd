@@ -29,11 +29,7 @@ j64\jconsole -lib j.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01H
-cd j64
-@rem "C:\Program Files\LLVM\bin\lldb" -b -o run -k bt -k quit -- j64\jconsole -lib j.dll testga.ijs
-which lldb
-lldb -b -o run -k bt -k quit -- jconsole.exe -lib j.dll testga.ijs
-cd ..
+lldb -b -o run -k bt -k quit -- j64\jconsole.exe -lib j.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01A
@@ -48,10 +44,6 @@ jarm64\jconsole testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01I
-cd jarm64
-@rem "C:\Program Files\LLVM\bin\lldb" -b -o run -k bt -k quit -- jarm64\jconsole -lib j.dll testga.ijs
-which lldb
-lldb -b -o run -k bt -k quit -- jconsole.exe -lib j.dll testga.ijs
-cd ..
+lldb -b -o run -k bt -k quit -- jarm64\jconsole.exe -lib j.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01C

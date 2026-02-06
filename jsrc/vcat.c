@@ -294,7 +294,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  q=AS(w)[wr-1];   //  q=len of last axis of cell
  if(((MAX(acr,wcr)-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))<0){  // r<=2, neither arg empty,  (sum of ranks<3 (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom) OR items (which are lists) have same length)
   // joining atoms, rows, row/atom, or table/row with same lengths, or table/atom; possibly with frame.  In any case no fill is possible, but scalar replication might be
-  // scaf this could be generalized to any time ranks differ by at most 1 and the items agree or one is atomic
+  // this could be generalized to any time (ranks differ by at most 1 and the items agree) or (one is atomic); no fill needed then.  But it complicates the computation too much, because p/q need to become pairs, and registers are dear.  The high-rank case is rare.
   I awcrflg=4*acr+wcr;  // incredible register pressure.  Combine af/wf, and shift in flags as we calculate them
   I cc2a=__atomic_load_n(&AS(a)[ar-2],__ATOMIC_RELAXED); p=awcrflg&0b1100?p:1; cc2a=awcrflg&0b1000?cc2a:1; ma=cc2a*p; ma=awcrflg==0b0010?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w; i. e. #atoms to fill from an item of a
   I cc2w=__atomic_load_n(&AS(w)[wr-2],__ATOMIC_RELAXED); q=awcrflg&0b0011?q:1; cc2w=awcrflg&0b0010?cc2w:1; cc2a+=cc2w; mw=cc2w*q; mw=awcrflg==0b1000?p:mw;  // sim for w; cc2a is combined length of axis -2 f can increment only once

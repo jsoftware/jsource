@@ -1148,17 +1148,14 @@ void freetstackallo(J jt){
  jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
 }
 
-// measureI tpopscaf[10];  // # tpops requested
 // pop stack,  ending when we have freed the entry with tnextpushp==old.  tnextpushp is left pointing to an empty slot
 // If the block has recursive usecount, decrement usecount in children if we free it
-// stats I totalpops=0, nonnullpops=0, frees=0;
 void jttpop(J jt,A *old,A *pushp){A *endingtpushp;
  // pushp points to an empty cell.  old points to the last cell to be freed.  decrement pushp to point to the cell to free (or to the chain).  decr old to match
  // if jttg failed to allocate a new block, we will have left pushp pointing to the cell after the last valid cell.  This may be in unmapped memory, but
  // that's OK, because we start by decrementing it to point to the last valid push
  // errors that could not be eformatted at once might do tpop on the way out.  We ignore these if there is a pmstack.
  if(unlikely(jt->pmstacktop!=0))R;
-// measure if(EXPLICITRUNNING){I scafn=pushp-old; scafn=(UI)scafn>9?9:scafn; ++tpopscaf[scafn];}  // histo the stack size
  jt->tnextpushp = old;  // when we finish, this will be the new start point.  Set it early so we don't audit things in the middle of popping
  --pushp; --old;
  while(1) {A np;  // loop till end.  Return is at bottom of loop
@@ -1173,9 +1170,7 @@ void jttpop(J jt,A *old,A *pushp){A *endingtpushp;
    // It is OK to prefetch the next box even on the last pass, because the next pointer IS a pointer to a valid box, or a chain pointer
    // to the previous free block (or 0 at end), all of which is OK to read and then prefetch from
    np0=*pushp;   // point to block for next pass through loop
-// stats totalpops++;
    if(np){
-// stats nonnullpops++;
     I c=AC(np);  // fetch usecount.
     // We never tpush a PERMANENT block, but a block can become PERMANENT during the run, so we have to check
     if(likely(!ACISPERM(c))){     // if block not PERMANENT...
@@ -1184,7 +1179,6 @@ void jttpop(J jt,A *old,A *pushp){A *endingtpushp;
      // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
      // Otherwise just decrement the count
      if(c<=1||ACDECRNOPERM(np)<=1){  // avoid RFO if count is 1
-// stats ++frees;
       // The block is going to be destroyed.  See if there are further ramifications
       if(!(flg&AFVIRTUAL)){fanapop(np,flg);}   // do the recursive POP only if RECURSIBLE block; then free np
       else{A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
@@ -1409,7 +1403,6 @@ A zfillind(A w, I m){
  }
  R w;
 }
-// stats I statsnga=0, statsngashape=0;
 // like jtga, but don't copy shape.   Never called for SPARSE type
 // We pack rank+type into one reg to save registers (it also helps the LIMIT test).  With this, the compiler should be able to save/restore
 // only 2 regs (ranktype and bytes) but the prodigal compiler saves 3.  We accept this to be able to save AK AR AT here, so that the caller doesn't have to preserve them over the call.
@@ -1425,7 +1418,6 @@ RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
  if(unlikely(!(((I4)ranktype&DIRECT)>0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
-// stats  ++statsnga; statsngashape+=shaape!=0;
  R z;
 }
 #else

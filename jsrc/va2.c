@@ -1829,7 +1829,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    // B I D Z  X  Q Symb DS  E I2 I4 
    pri=4+((0x5affcbf476ffffffLL>>(pri<<2))&0xf);  // 4 is II, lower than the lowest routine# we can call for here
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
-   I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions  scaf would be nice to avoid conversion of left arg of o.
+   I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions
    cvtflgs=selva2.cv&(VBB|VII|VDD|VZZ)?0:cvtflgs;  //  If the routine already forces a conversion, don't override.  Most DD, SP, QP specify no conversion, but +. or bitwise require bool or integer 
    selva2.cv|=cvtflgs;
    R selva2;

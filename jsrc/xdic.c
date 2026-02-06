@@ -1087,8 +1087,7 @@ static A dumptree(J jt,DIC *dic, UI nodex, C *dirstack, I depth, I blackdepth, I
  A k,v; RZ(k=from(sc(RENCEMPTY(nodex)),dic->bloc.keys)) RZ(v=from(sc(RENCEMPTY(nodex)),dic->bloc.vals))  // fetch current key/val
  A klr, vlr; RZ(klr=lrep(k)) RZ(vlr=lrep(v))  // displayable form of k,v
  if(doprint)printf("%.*s: node=0x%x key=%.*s val=%.*s c=%d l=0x%x r=0x%x",(int)depth,dirstack,(int)nodex,(int)AN(klr),CAV(klr),(int)AN(vlr),CAV(vlr),(int)currc,(int)currl,(int)currr);
- if(prevkey&&IAV(jttao(jt,prevkey,k))[0]>=0)
-{jttao(jt,prevkey,k);  /* scaf */if(doprint)printf(" key vio"); *noerr=0;}
+ if(prevkey&&IAV(jttao(jt,prevkey,k))[0]>=0){if(doprint)printf(" key vio"); *noerr=0;}
 // obsolete  if(currc==1&&((currr|currl)&~1)==0){if(*leafblackdepth>=0&&*leafblackdepth!=blackdepth){if(doprint)printf(" black vio"); *noerr=0;} *leafblackdepth=blackdepth;}  // black & leaf, check depth
  if(((parentcolor|currc)&1)==0){if(doprint)printf(" red vio"); *noerr=0;}
  if(doprint)printf("\n");
@@ -1109,7 +1108,7 @@ static I auditnode(J jt,DIC *dic,UI nodex,UI excludednode, I doprint){A z;
 // Result is 1 if OK, 0 if error
 DF2(jtdisprbdic){F12IP;
  ARGCHK1(w)
- if(!(((DIC*)w)->bloc.flags&DICFRB)){printf("not a tree dict\n"); R -1;}
+ ASSERTSYS(((DIC*)w)->bloc.flags&DICFRB,"not a tree dic")
  A na=w==self?zeroionei(1):a; w=w==self?a:w; I opts; RE(opts=b0(na));   // get print options
  R sc(auditnode(jt,(DIC*)w,*(UI4AV3(((DIC*)w)->bloc.hash))&_bzhi_u64(~(UI8)1,((DIC*)w)->bloc.hashelesiz<<LGBB),~0LL,opts));
 }

@@ -23,7 +23,7 @@ static DF1(jtscfn){F12IP;
 // AM(self) is the block for u
 static DF1(jtlev1){F12IP;
  ARGCHK1(w);  // self is never 0
- if(levelle(jt,w,FAV(self)->localuse.lslevels[2])){A z, fs=(A)AM(self); RZ(z=CALL1(FAV(fs)->valencefns[0],w,fs)); if(FAV(self)->id!=CSCAPCO)RETF(z); R scfn(z,self);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack  scaf if abandoned inplaceable, could have a version of every that replaces boxes in place
+ if(levelle(jt,w,FAV(self)->localuse.lslevels[2])){A z, fs=(A)AM(self); RZ(z=CALL1(FAV(fs)->valencefns[0],w,fs)); if(FAV(self)->id!=CSCAPCO)RETF(z); R scfn(z,self);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack
 }
 
 // Like monad, but AT(self) is left trigger level, AC(self) is the right trigger level 

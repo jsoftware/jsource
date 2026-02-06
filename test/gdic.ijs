@@ -1,6 +1,13 @@
 prolog './gdic.ijs'
 NB. addon/dictionary
 
+dumpchk=: 4 : 0
+echo x,':'
+echo count__y''
+(1) 16!:_7 dict__y
+EMPTY
+)
+
 require 'data/dictionary'
 
 cocurrent 'base'
@@ -298,6 +305,7 @@ for. i. n_iter do.
   vals =. (batchshape , valshape) genval"0@$ 0
   vals put__naivedict"(valrank , keyrank) keys
   assert. EMPTY -: vals put__x keys
+  'put'dumpchk x
   assert. (count__x '') -: count__naivedict ''
   NB. Get.
   keys =. (batchshape , keyshape) genkey"0@$ 0
@@ -305,6 +313,7 @@ for. i. n_iter do.
   naivemask =. has__naivedict"keyrank keys
   jhasans =. has__x keys
   assert. jhasans -: naivemask
+  'get'dumpchk x
   if. -. valshape -: 0 do.
     fillatom =. {. valuetype__x c. ''
     jgetans =. (valshape $ fillatom) get__x keys
@@ -321,6 +330,7 @@ for. i. n_iter do.
   naivemask =. has__naivedict"keyrank keys
   del__naivedict"keyrank keys
   jdelans =. del__x keys
+  'del'dumpchk x
   assert. (count__x '') -: count__naivedict ''
   assert. jdelans -: naivemask *. batchshapefordel ($ ,) ~:&.|. (_ , keyshape) ($ ,) keys
 end.

@@ -1253,7 +1253,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  if(unlikely(MIN(ai,wi)==0)&&(ar!=0))RCA(a);  // if either arg has no items, there's nothing to remove, return a, unless atom must become a list
  jtfg=MOVEIP0A(jtfg);  // only our a argument can be inplaced, and it moves to y in all uses
- if(ar==wr+1){  // is just 1 cell of y?
+ if(unlikely(ar==wr+1)){  // is just 1 cell of y, with x a list of such cells?
 // obsolete   if(wr==0){RZ(x=jtrepeat(jtfg,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
 // obsolete   }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtfg,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
 // obsolete   }
@@ -1279,22 +1279,22 @@ DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
  if(unlikely(MIN(ai,wi)==0))R take(zeroionei(0),a);  // if either arg is empty, nothing can be common, return no items
- if(ar==wr+1){  // is just 1 cell of y?
-  if(wr==0)x=eq(a,w); else IRS2(a,w,0,wr,wr,jtmatch,x); RZ(x) RZ(x=jtrepeat(jtfg,x,a))  // y has rank 1 less than x, execute as ((x = y) # x) (y atomic) or ((x -:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
+ PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it  *** no errors till cct restored ***
+ if(unlikely(ar==wr+1)){  // is just 1 cell of y, with x a list of such cells?
+  if(wr==0)x=eq(a,w); else IRS2(a,w,0,wr,wr,jtmatch,x); RZGOTO(x,errexit) x=jtrepeat(jtfg,x,a);  // y has rank 1 less than x, execute as ((x = y) # x) (y atomic) or ((x -:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
  }else{
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
-  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
+  if(unlikely((-wr&-(r^wr))<0)){RZGOTO(x=virtual(w,0,r),errexit); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
   // comparison tolerance may be encoded in h - apply it if so
   D savcct = jt->cct;
-  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it
   // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (x e. y) # x 
   // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
   // Don't revert to fork!  localuse.lu1.fork2hfn is not set
   x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(MOVEIP0A(jtfg),IINTER,x,a):
       repeat(eps(a,x),a);
-  POPCCT
-  RZ(x);
  }
+errexit:;
+ POPCCT RZ(x);  // *** errors OK now ***
  if(unlikely(at&BOX))PRISTXFERAF(x,a)  // the boxes in w cannot get to the result, even though their values participate; so pristinity depends entirely on a
  EPILOG(x);
 }

@@ -1077,8 +1077,13 @@ extern I (*taocomproutine[])();
 extern I taoc(I,UC*,UC*);
 extern I taoi(I,I*,I*);
 extern I taox(I,X*,X*,J);
+extern I taoq(I,Q*,Q*,J);
 extern I taof(I,D*,D*);
 extern I taor(I,A*,A*,J);
+extern I taos(I,I2*,I2*);
+extern I taol(I,I4*,I4*);
+extern I taou(I,US*,US*);
+extern I taot(I,C4*,C4*);
 struct __attribute__((aligned(ABDY))) Bi1 {I hdr[AKXR(0)/SZI]; I v[1];};  // data is one integer atom
 struct __attribute__((aligned(ABDY))) Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};  // data is one float atom
 struct __attribute__((aligned(ABDY))) Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // data for the multi-word atom is aligned to cacheline

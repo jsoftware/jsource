@@ -182,25 +182,34 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   I deffg=DICFSINGLETHREADED; if(AN(box)>0){if(!(AT(box)&B01))RZ(box=ccvt(B01,box,0)) if(!BAV(box)[0])deffg=0;}  // set concurrent if user specifies it
   flags|=deffg;  // remember user's choice
 
-  // keyspec.  must be 2 boxes
-  box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
-  box1=C(AAV(box)[0]); I t; RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFKINDIR; // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
-  box1=C(AAV(box)[1]); I r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) I n, *s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.kaii=n; ASSERT(n>0,EVLENGTH) // shape. copy to allow IAV1.  get # atoms in item & save
-  ASSERT(AN(box1)<=9 || flags&DICFICF,EVNONCE)  // if the user has a compare function, we want virt to be on the stack to save registers.  Make sure the rank is OK then
-  INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
-  UI4 (*fn2)()=l&(SZI-1)?(UI4 (*)())crcbytes:(UI4 (*)())crcwords; fn2=(t&XNUM+RAT)?crcxnums:fn2; fn2=(t&CMPX+FL+QP)?crcfloats:fn2; fn2=(t&BOX)?crcboxes:fn2; fn2=flags&DICFIHF?fn2:(UI4 (*)())FAV(a)->valencefns[0]; ((DIC*)z)->bloc.hashfn=fn2; // save internal or external hash function  
-  I (*fn3)()=l&(SZI-1)?(I (*)())taoc:(I (*)())taoi; fn3=(t&XNUM+RAT)?taox:fn3; fn3=(t&CMPX+FL+QP)?taof:fn3; fn3=(t&BOX)?taor:fn3; fn3=flags&DICFICF?fn3:(I (*)())FAV(a)->valencefns[1]; ((DIC*)z)->bloc.compfn=fn3; // save int/ext comp function.  We care only about equality  
-  I lsh=l&(SZI-1)?0:LGSZI; lsh=(t&BOX+XNUM+RAT)?LGSZI:lsh; lsh=(t&CMPX+FL+QP)?FLX:lsh; ((DIC*)z)->bloc.kitemlen=l>>lsh;  // length to use for internal hash/comp
-
+  I t, r, n, *s;    //  type, rank, #atoms in item, pointer to shape of value then key
   // valuespec.  must be 2 boxes
   box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
   box1=C(AAV(box)[0]); RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFVINDIR;  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
   box1=C(AAV(box)[1]); r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.vaii=n;  // shape. copy to allow IAV1.  get # atoms in item & save
   ASSERT(likely(n>0)||r==1,EVLENGTH)   // empty value only allowed at rank 1
   INCORPNV(box1); ((DIC*)z)->bloc.vshape=box1; ((DIC*)z)->bloc.vtype=t; ((DIC*)z)->bloc.vbytelen=n<<bplg(t);  // save shape & type; save # bytes for copy
+
+  // keyspec.  must be 2 boxes
+  box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
+  box1=C(AAV(box)[0]); RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFKINDIR; // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
+  box1=C(AAV(box)[1]); r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.kaii=n; ASSERT(n>0,EVLENGTH) // shape. copy to allow IAV1.  get # atoms in item & save
+  ASSERT(AN(box1)<=9 || flags&DICFICF,EVNONCE)  // if the user has a compare function, we want virt to be on the stack to save registers.  Make sure the rank is OK then
+  INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
+  UI4 (*fn2)()=l&(SZI-1)?(UI4 (*)())crcbytes:(UI4 (*)())crcwords; fn2=(t&XNUM+RAT)?crcxnums:fn2; fn2=(t&CMPX+FL+QP)?crcfloats:fn2; fn2=(t&BOX)?crcboxes:fn2; fn2=flags&DICFIHF?fn2:(UI4 (*)())FAV(a)->valencefns[0]; ((DIC*)z)->bloc.hashfn=fn2; // save internal or external hash function
+
   box=C(AAV(w)[0]);  // fetch size parameters
   ((DIC*)z)->bloc.flags=flags|=AN(box)==2?DICFRB:0;  // now that we have all the flags, save them.  Remember hash/tree type
 
+  // Now that we know the key type (in t) & map type (in flags), set up its comparison function. l has the byte length of the key
+  // If the map is hashed, the comparison is only against equality.  In that case we don't care about the atom size and can just compare in bulk.
+  I (*fn3)()=l&(SZI-1)?(I (*)())taoc:(I (*)())taoi; fn3=(t&XNUM)?taox:fn3; fn3=(t&RAT)?taoq:fn3; fn3=(t&CMPX+FL+QP)?taof:fn3; fn3=(t&BOX)?taor:fn3;
+  I lsh=l&(SZI-1)?0:LGSZI; lsh=(t&RAT)?(LGSZI+1):lsh; lsh=(t&CMPX+FL+QP)?LGSZD:lsh;  // 
+  if(flags&DICFRB){
+   // for ordered maps we need ordering, and we must break up the values into cells scanned bigendian
+   fn3=(t&B01+LIT)?(I (*)())taoc:fn3; lsh=(t&B01+LIT)?0:lsh; fn3=(t&INT2)?taos:fn3; fn3=(t&C2T)?taou:fn3; lsh=(t&INT2+C2T)?1:lsh; fn3=(t&INT4)?taol:fn3; fn3=(t&C4T)?taot:fn3; lsh=(t&INT4+C4T)?2:lsh; 
+  }
+  fn3=flags&DICFICF?fn3:(I (*)())FAV(a)->valencefns[1]; ((DIC*)z)->bloc.compfn=fn3; ((DIC*)z)->bloc.kitemlen=l>>lsh; // save int/ext comp function; length to use for internal hash/comp
  }else{  // resize
   flags=((DIC*)a)->bloc.flags;  // preserve flags over hashsiz write
   ((DIC*)z)->bloc=((DIC*)a)->bloc;  // init everything from the previous dic
@@ -1078,7 +1087,8 @@ static A dumptree(J jt,DIC *dic, UI nodex, C *dirstack, I depth, I blackdepth, I
  A k,v; RZ(k=from(sc(RENCEMPTY(nodex)),dic->bloc.keys)) RZ(v=from(sc(RENCEMPTY(nodex)),dic->bloc.vals))  // fetch current key/val
  A klr, vlr; RZ(klr=lrep(k)) RZ(vlr=lrep(v))  // displayable form of k,v
  if(doprint)printf("%.*s: node=0x%x key=%.*s val=%.*s c=%d l=0x%x r=0x%x",(int)depth,dirstack,(int)nodex,(int)AN(klr),CAV(klr),(int)AN(vlr),CAV(vlr),(int)currc,(int)currl,(int)currr);
- if(prevkey&&IAV(jttao(jt,prevkey,k))[0]>=0){if(doprint)printf(" key vio"); *noerr=0;}
+ if(prevkey&&IAV(jttao(jt,prevkey,k))[0]>=0)
+{jttao(jt,prevkey,k);  /* scaf */if(doprint)printf(" key vio"); *noerr=0;}
 // obsolete  if(currc==1&&((currr|currl)&~1)==0){if(*leafblackdepth>=0&&*leafblackdepth!=blackdepth){if(doprint)printf(" black vio"); *noerr=0;} *leafblackdepth=blackdepth;}  // black & leaf, check depth
  if(((parentcolor|currc)&1)==0){if(doprint)printf(" red vio"); *noerr=0;}
  if(doprint)printf("\n");
@@ -1099,6 +1109,7 @@ static I auditnode(J jt,DIC *dic,UI nodex,UI excludednode, I doprint){A z;
 // Result is 1 if OK, 0 if error
 DF2(jtdisprbdic){F12IP;
  ARGCHK1(w)
+ if(!(((DIC*)w)->bloc.flags&DICFRB)){printf("not a tree dict\n"); R -1;}
  A na=w==self?zeroionei(1):a; w=w==self?a:w; I opts; RE(opts=b0(na));   // get print options
  R sc(auditnode(jt,(DIC*)w,*(UI4AV3(((DIC*)w)->bloc.hash))&_bzhi_u64(~(UI8)1,((DIC*)w)->bloc.hashelesiz<<LGBB),~0LL,opts));
 }

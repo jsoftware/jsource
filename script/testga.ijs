@@ -77,6 +77,16 @@ NB. this failed on windows arm64
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
+NB. debug rpi32
+load 'dictionary'
+echo params=:'tree',&<('initsize';200),('keytype';4),('valueshape';''),('keyshape';''),:('valuetype';4)
+mydict=: params conew 'jdictionary'
+(i. 10) put__mydict 100 + ?~ 10
+echo count__mydict''
+(1) 16!:_7 dict__mydict
+destroy__mydict''
+4!:55 'mydict';'params'
+
 4!:55 ;:'x y'
 4!:55 ;:'x y'
 ECHOFILENAME0=: ECHOFILENAME

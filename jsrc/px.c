@@ -34,7 +34,6 @@ static F1(jtexec1cell){F12IP;A z;PROLOG(000);
 }
 DF1(jtexec1){F12IP;A z;
  ARGCHK1(w);
-// obsolete  ASSERT(!(jt->pppprunning),EVUNTIMELY)   // since this might execute a name, suppress it during pppp
  if(AT(w)&NAME){z=nameref(w,jt->locsyms);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
   protectlocals(jt,0);  // protect any locals on the stack already in this sentence

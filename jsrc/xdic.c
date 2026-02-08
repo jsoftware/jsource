@@ -1085,13 +1085,14 @@ static DF1(jtdicdel){F12IP;A z;
 static A dumptree(J jt,DIC *dic, UI nodex, C *dirstack, I depth, I blackdepth, I parentcolor, A prevkey, I *leafblackdepth, I *noerr, UI excludednode, I doprint){PROLOG(000);
  if(nodex<(TREENRES<<1)){if(*leafblackdepth>=0&&*leafblackdepth!=blackdepth){if(doprint)printf(" black vio"); *noerr=0;} *leafblackdepth=blackdepth;}  // leaf, check depth & save
  if(nodex<(TREENRES<<1)||nodex==excludednode)R prevkey;  // 
- C *hashtbl=CAV3(dic->bloc.hash); I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19); DRLRC(curr,nodex)   // fetch tree info, then children+color
+ C *hashtbl=CAV3(dic->bloc.hash); I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);
+DRLRC(curr,nodex)   // fetch tree info, then children+color
+ if(doprint)printf("%.*s: node=0x%x c=%d l=0x%x r=0x%x\n",(int)depth,dirstack,(int)nodex,(int)currc,(int)currl,(int)currr);   // scaf for debug
  dirstack[depth]='0'; prevkey=dumptree(jt,dic,currl,dirstack,depth+1,blackdepth+currc,currc,prevkey,leafblackdepth,noerr,excludednode,doprint);
  A k,v; RZ(k=from(sc(RENCEMPTY(nodex)),dic->bloc.keys)) RZ(v=from(sc(RENCEMPTY(nodex)),dic->bloc.vals))  // fetch current key/val
  A klr, vlr; RZ(klr=lrep(k)) RZ(vlr=lrep(v))  // displayable form of k,v
  if(doprint)printf("%.*s: node=0x%x key=%.*s val=%.*s c=%d l=0x%x r=0x%x",(int)depth,dirstack,(int)nodex,(int)AN(klr),CAV(klr),(int)AN(vlr),CAV(vlr),(int)currc,(int)currl,(int)currr);
  if(prevkey&&IAV(jttao(jt,prevkey,k))[0]>=0){if(doprint)printf(" key vio"); *noerr=0;}
-// obsolete  if(currc==1&&((currr|currl)&~1)==0){if(*leafblackdepth>=0&&*leafblackdepth!=blackdepth){if(doprint)printf(" black vio"); *noerr=0;} *leafblackdepth=blackdepth;}  // black & leaf, check depth
  if(((parentcolor|currc)&1)==0){if(doprint)printf(" red vio"); *noerr=0;}
  if(doprint)printf("\n");
   // remember depth of each leaf

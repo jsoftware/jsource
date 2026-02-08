@@ -591,9 +591,6 @@ static I jtsyrdinternal(J jt, A a, I component){A g=0;L *l;
 gotval: ;
  // found: l points to the symbol.  We hold a lock on g, if it is nonzero
  I res=0;
-// obsolete  if(component==0){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)l;}  // 15!:_1, symbol address
-// obsolete  else if(component==1){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)voidAV(QCWORD(l->fval));}  // 15!:14, data address
-// obsolete  else if(component==2){ASSERTGOTO(NOUN&AT(QCWORD(l->fval)),EVDOMAIN,exitlock) res=(I)(QCWORD(l->fval));}  // 15!:12, header address
  if(component==0){ASSERTGOTO(QCSENTTYPE(l->fval)&QCNOUN,EVDOMAIN,exitlock) res=(I)l;}  // 15!:_1, symbol address
  else if(component==1){ASSERTGOTO(QCSENTTYPE(l->fval)&QCNOUN,EVDOMAIN,exitlock) res=(I)voidAV(QCWORD(l->fval));}  // 15!:14, data address
  else if(component==2){ASSERTGOTO(QCSENTTYPE(l->fval)&QCNOUN,EVDOMAIN,exitlock) res=(I)(QCWORD(l->fval));}  // 15!:12, header address

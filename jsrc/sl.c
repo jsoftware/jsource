@@ -88,7 +88,6 @@ void jterasenl(J jt, I n){
 // Initialize the numbered-locale system.  Called during initialization, so no need for ras()
 // Runs in master thread
 static A jtinitnl(J jt){A q;
-// obsolete  I s; FULLHASHSIZE(5*1,INTSIZE,0,0);  // at least 5 slots, so we always have at least 2 empties
  GAT0(q,INT,FULLHASHSIZE(5*1,INTSIZE,0,0),1); mvc(FULLHASHSIZE(5*1,INTSIZE,0,0)*SZI,IAV1(q),MEMSET00LEN,MEMSET00);  // allocate hashtable and clear to 0.  Init no 
  JT(jt,stnum)=q;  // save address of block
  AS(JT(jt,stnum))[0]=0;  // set next number to allocate
@@ -252,7 +251,6 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  INITJT(jjt,locsize)[0]=3;  /* default hash table size for named    locales */
  INITJT(jjt,locsize)[1]=2;  /* default hash table size for numbered locales */
  RZ(jtsymext(jt));     /* initialize symbol pool                       */
-// obsolete  I p; FULLHASHSIZE(100,SYMBSIZE,1,SYMLINFOSIZE,p);  // table of named locales
  GATV0(q,SYMB,FULLHASHSIZE(100,SYMBSIZE,1,SYMLINFOSIZE),0); AFLAGORLOCAL(q,SYMB) INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc.  All SYMBs are recursive (though this one, which will never be freed, needn't be)
  jtinitnl(jt);  // init numbered locales, using master thread to allocate
  // init z locale about 2^9 chains

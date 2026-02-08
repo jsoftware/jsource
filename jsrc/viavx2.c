@@ -337,7 +337,7 @@ IOF(f){ \
   case IIDOT: case IICO: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;,zv[i]=fndx;,4,wsct,lbls0,ALG) zv+=wsct; } break;  \
   case IIDOT|IIMODREFLEX: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;,zv[i]=fndx;,16,wsct,lbls1,ALG) zv+=wsct; } break;  \
   case IICO|IIMODREFLEX: {XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;,zv[i]=fndx;,256+16,wsct,lbls2,ALG) zv+=wsct; } break;  \
-  case IFORKEY|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;zv[fndx]++;,zv[i]=i+1;++wsct;,64,asct,lbls3,ALG) AM(h)=wsct; zv+=wsct; } break; /* scaf zv+ not needed */ \
+  case IFORKEY|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,STRIDE,zv[i]=fndx;zv[fndx]++;,zv[i]=i+1;++wsct;,64,asct,lbls3,ALG) AM(h)=wsct; } break; /* zv+ not needed since only 1 cell */ \
   case INUBSV|IIMODREFLEX:{XSEARCH##ALG(T,TH,w,a,hash,mismatch,mismatchx,STRIDE,((B*)zv)[i]=0;,((B*)zv)[i]=1;,64+8,wsct,lbls4,ALG) zv=(I*)((I)zv+wsct);} break;  /* zv must keep running */  \
   case INUB|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,STRIDE,,((T*)zv)[wsct++]=wv[i];,64+8,asct,lbls5,ALG) AS(z)[0]=AN(z)=wsct; }    break;  \
   case INUBIP|IIMODREFLEX: {wsct=0; XSEARCH##ALG(T,TH,a,a,hash,mismatch,mismatchx,STRIDE,,((T*)zv)[wsct++]=wv[i];,128+8,asct,lbls6,ALG) AS(z)[0]=AN(z)=wsct; }    break;  \

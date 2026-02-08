@@ -1059,39 +1059,6 @@ static int setterm(JS jtt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  char gn[256];
 
 ASSERT((n=typelen[CTTZNOFLAG(*jtype)])!=0,EVDOMAIN);
-#if 0 // obsolete
-
- switch(CTTZNOFLAG(*jtype)){
- case LITX:
- case B01X:
-  n = sizeof(char);
-  break;
-
- case C2TX: case INT2X:
-  n = sizeof(unsigned short);
-  break;
-
- case C4TX: case INT4X:
-  n = sizeof(unsigned int);
-  break;
-
- case INTX:
- case SBTX:
-  n = sizeof(I);
-  break;
-  
- case FLX:
-  n = sizeof(double);
-  break;
-  
- case CMPXX: case QPX:
-  n = 2 * sizeof(double);
-  break;
-  
- default:
-  return EVDOMAIN; 
- }
-#endif
  // validate name
  if(strlen(name) >= sizeof(gn)) return EVILNAME;
  if(valid(name, gn)) return EVILNAME; 

@@ -70,7 +70,6 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
  ai^=aif; I na=ai==0?3:ai;  // now ai = state without flags; for levels other than the top, use na to cause replacement of $:
  if(unlikely(aif&FIXALOCSONLY)&&!hasimploc(w))R w;  // if looking for implicit locatives, and there aren't any, nothing to fix
  A wf=ds(id);   // fetch self for w
-// obsolete  A fo=f, go=g, ho=h;  // remember the constituents before they were fixed
  switch(id){  // we know that modifiers have been executed to produce verb/nouns
  // we reexecute the modifiers to use the new values.
  case CSLASH: 

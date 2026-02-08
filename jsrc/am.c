@@ -842,17 +842,15 @@ B jtgerexact(J jt, A w){A*wv;
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
-// verb executed for v0`v1`v2} y
+// verb executed for [v0`]v1`v2} y
 static DF1(jtgav1){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
  I hn=AN(sv->fgh[2]);  // hn=# gerunds in h
- dfv1(ffm,w,hv[hn-2]);  // x v1 y - no inplacing
- RZ(ffm);
- RZ(ff=jtamend(jt,ffm,0));  // now ff represents (v1 y)}.  scaf avoid this call, go straight to mergn1
- RZ(dfv1(ffx,w,hv[hn-1]))
- R dfv1(ffm,ffx,ff);
+ RZ(dfv1(ffm,w,hv[hn-2]))  // x v1 y - no inplacing
+ RZ(dfv1(ffx,w,hv[hn-1]))   // x v2 y - no inplacing
+ R jtmerge1(jt,ffx,ffm);   // do the m}
 }
 
 // verb executed for x v0`v1`v2} y

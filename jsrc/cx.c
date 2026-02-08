@@ -1122,7 +1122,6 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
      if(parseok){
       // no error: parse the actual () block.  (( )) may fail, which is a real error.  Ignore errors in () which are usually [:
       // mark the block as PPPP if it will need extra parens: (( )) or noun or non-noun & not invisible modifier, which always has ( ) added
-// obsolete       jt->pppprunning=1;  // indicate that we are scanning for PPPP and must reject ".   m :    unsafe !:
       A pfrag; pfrag=parsea(&lvv[startx+1],rparx-startx-1); if(unlikely(pfrag==0)){goto parseerr;}  // Ignore any error.  If we are running verbs, it could be a real error, but it's hard to give a good msg, so wait till run time
       makewritable(pfrag); INCORP(pfrag); AFLAGORLOCAL(pfrag,(doublep | !!(AT(pfrag)&NOUN) | (AT(pfrag)&FUNC && !BETWEENC(FAV(pfrag)->id,CHOOK,CADVF)))<<AFDPARENX);  // indicate that the value came from ( non-hook )  or (( ))
       // Replace the () block with its parse, close up the sentence
@@ -1130,7 +1129,6 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
       // Adjust the end pointer and the ) position
       endx-=rparx-startx; rparx=startx;  // back up to account for discarded tokens; resume as if the parse result was at ) position
      }else{parseerr: RESETERR} // skipping because of error; clear error indic
-// obsolete      jt->pppprunning=0;  // we are done with PPPP scanning
     }
     // Whether we skipped or not, rpar now has the adjusted position of the ) and endx is correct relative to it.  Advance to next ) search
     startx=rparx+1;  // continue look after )
@@ -1217,7 +1215,6 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
    R z;
  }
  ASSERT(AT(w)&NOUN,EVDOMAIN);   // noun : verb is an error
-// obsolete  ASSERT(!(jt->pppprunning),EVUNTIMELY)  // pppp must never execute an explicit definition:
  RE(m=i0(a));  // m : n; set m=value of a argument
  I col0;  // set if it was m : 0
  if(col0=equ(w,num(0))){RZ(w=colon0(m)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
@@ -1244,7 +1241,6 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
    if(likely(AN(w)!=0))if(likely(AN(C(AAV(w)[0])))&&unlikely(CAV(C(AAV(w)[0]))[0]==')')){
     // there is a control line.  Everything up to : is the control part
     A line1=C(AAV(w)[0]); C *cv1=CAV(line1); I col1; DO(AN(line1), if(cv1[i]==':'){col1=i; goto colonfound;})  // extract first line & see if it contains ':'   line1 = 0 {:: w
- // obsolete    if(likely(col1==0)){   // if  Discard it from w
     if(1){RZ(w=beheadW(w)) // no :, the whole line is control.  discard the control line
     }else{ 
 colonfound:;   // : given.  takeafter the : for the first line, and taketo for the control line.  If SP follows :, treat the SP as the end char

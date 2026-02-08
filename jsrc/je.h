@@ -1034,7 +1034,6 @@ extern void     jststop(J);
 extern I        level(J,A);
 extern I        levelle(J,A,I);
 extern void     mvc(I,void*,I,void*);
-// obsolete extern B        nameless(A);
 extern I        plus1I2II AH2A(I,I,I2*,I*,I*,J);
 extern I        plus1I4II AH2A(I,I,I4*,I*,I*,J);
 extern void     protectlocals(J,I);

@@ -7,8 +7,6 @@
 #include "vg.h"
 
 #define TTYPE UI4
-// obsolete #define RANKINGSUMSCAN(p)   \
-// obsolete  {I s=0; TTYPE *u=yv; TTYPE *uend=u+(p); while(u!=uend){t=*u; *u=(TTYPE)s; s+=t; ++u;}}
 // calculate +/\ *yv
 extern AHDRP(  pluspfxI4,I4, I4 );
 #define RANKINGSUMSCAN(p) pluspfxI4(1,(p),1,(I4*)yv,(I4*)yv,jt)
@@ -21,24 +19,7 @@ extern AHDRP(  pluspfxI4,I4, I4 );
 // ranking booleans of k bytes, k=2 or 4
 static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYPE yv[17];
  p=(I)1<<k; wv=CAV(w);  // p=# code points in input, wv points to input
-// obsolete  p=2==k?4:16; wv=CAV(w);
  GATV0(z,INT,m*n,1+wf); MCISH(AS(z),AS(w),wf+1-!wcr) if(!wcr)AS(z)[wf]=1; zv=AVn(1+wf,z);
-// obsolete if(2==k){US*v;
-// obsolete   for(i=0;i<m;++i){
-// obsolete    mvc(p*sizeof(*yv),yv,MEMSET00LEN,MEMSET00); 
-// obsolete    for(j=0,v=(US*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb>>=8; ++yv[(bb&3)+1];} // convert 2 bits to 1 value, big-endian
-// obsolete    RANKINGSUMSCAN(p);
-// obsolete    for(j=0,v=(US*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb>>=8; *zv++=yv[bb&3]++;}  // fetch the value
-// obsolete    wv+=n*k;
-// obsolete   }
-// obsolete  }else{int*v;
-// obsolete   for(i=0;i<m;++i){
-// obsolete    mvc(p*sizeof(*yv),yv,MEMSET00LEN,MEMSET00); 
-// obsolete    for(j=0,v=(int*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb|=bb<<18; bb>>=24; ++yv[(bb&0xf)+1];}  // big-endian
-// obsolete       RANKINGSUMSCAN(p);
-// obsolete       for(j=0,v=(int*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb|=bb<<18; bb>>=24; *zv++=yv[bb&0xf]++;}
-// obsolete       wv+=n*k;
-// obsolete      }
  unsigned int*v;
  for(i=0;i<m;++i){  // loop for each cell
   mvc(p*sizeof(*yv),yv,MEMSET00LEN,MEMSET00);  // clear histogram 
@@ -74,9 +55,6 @@ F1(jtranking){F12IP;A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TT
   if(wt&C2T){rng=condrange2((C2*)wv,wn,-1,0,maxrange);  // 2-byte char: get range
   }else if(wt&IS1BYTE){rng.min=0; rng.range=(1LL<<((k-(wt&B01))<<3))+((wt&B01)<<(k-1)); if(rng.range>=maxrange)rng.range=0;  // 1 or 2 B01/LIT: 2, 256, 258, or 65536, see if too big
   }else rng.range=0;  // Must be I2 or 2 I1s, can't do smallrange
-// obsolete   We assume the worst on range, i. e. 8 bits/byte, EXCEPT that for B01 type we know that the value can never exceed
-// obsolete   // 1 so we add 2 instead of the last 8 bits
-// obsolete   rng.min=0; rng.range=(1LL<<((k-(wt&B01))<<3))+((wt&B01)<<(k-1));  // 2, 256, 258, or 65536
  }else rng.range=0;
  if(!rng.range){I *yv;
   // small-range not possible.  Do the grade and install each value into its location
@@ -97,19 +75,10 @@ F1(jtranking){F12IP;A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TT
 #endif
    RANKINGLOOP(C4,*v); break;
   case sizeof(C):   RANKINGLOOP(UC,*v); break;
-// obsolete #if C_LE
   case sizeof(S):
    if(wt&IS1BYTE){RANKINGLOOP(US,(US)(*v<<8)+(US)(*v>>8))  // if 1-byte, swap to bigendian
-// obsolete I c,d,s,t;US*v;TTYPE *u;
-// obsolete     {US *v=(US*)wv;  DQ(n, ++yu[()+1]; ++v;); RANKINGSUMSCAN(rng.range); v=(US*)wv;  DQ(n, *zv++=yu[(*v<<8)+(*v>>8)]++;); ++v;}
-// obsolete     v=(US*)wv; DQ(n, ++yu[*v++];);
-// obsolete     s=0;       DO(256, c=0; d=i; DQ(256, u=yv+(c+d); c+=256; if(*u){t=*u; *u=(TTYPE)s; s+=t;}););
-// obsolete     v=(US*)wv; DQ(n, *zv++=yu[*v++]++;);
    }else RANKINGLOOP(US,*v);  // keep 2-byte as is
    break;
-// obsolete #else
-// obsolete   case sizeof(S):   RANKINGLOOP(US);
-// obsolete #endif
   }
   wv+=n*k;
  }

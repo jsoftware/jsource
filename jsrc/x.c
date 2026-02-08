@@ -111,7 +111,6 @@ void jtforeigninit(J jt){UI i;
  if((flg1)!=VNOLOCCHG+VNONAME+VNOSELF)FAV((A)&foreignA[Andx])->flag=(flg1); if((flg2)!=0)FAV((A)&foreignA[Andx])->flag2=(flg2); \
  if((m)!=RMAX)FAV((A)&foreignA[Andx])->mr=(m); if((((lr)<<RANKTX)+(rr))!=((RMAX<<RANKTX)+RMAX))FAV((A)&foreignA[Andx])->lrr=((lr)<<RANKTX)+(rr);
 
-// obsolete  if((flg1)!=VNOLOCCHG)FAV((A)&foreignA[Andx])->flag=(flg1)|VNONAME+VNOSELF;
  // Create all the blocks.  They must not produce CONJ
  // order the creation of blocks by importance, because the earliest blocks added to the hash will resolve with fewest misses
  // Most of the first section resolve in a single probe.  Avg # probes 2.3
@@ -442,7 +441,6 @@ F2(jtforeign){F12IP;I p,q;A z;
   fdefallo(z);  // allocate the block
   fdeffillall(z,0,CIBEAM,VERB, jtwd,jtvalenceerr, 0,0,0L,VNONAME+VNOSELF, 1L,RMAX,RMAX,fffv->localuse.lu1.foreignmn[0]=p,fffv->localuse.lu1.foreignmn[1]=q);
  }
-// obsolete  if(unlikely(jt->pppprunning))ASSERT(FAV(z)->flag&VNOLOCCHG,EVUNTIMELY)  // if the foreign is not a pure function, don't allow it in pppp
  RETF(z);  // return the block we found
 }
 

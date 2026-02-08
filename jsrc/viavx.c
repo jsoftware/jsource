@@ -1254,9 +1254,6 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  if(unlikely(MIN(ai,wi)==0)&&(ar!=0))RCA(a);  // if either arg has no items, there's nothing to remove, return a, unless atom must become a list
  jtfg=MOVEIP0A(jtfg);  // only our a argument can be inplaced, and it moves to y in all uses
  if(unlikely(ar==wr+1)){  // is just 1 cell of y, with x a list of such cells?
-// obsolete   if(wr==0){RZ(x=jtrepeat(jtfg,ne(a,w),a))   // ((x ~: y) # x), inplaceable on the #
-// obsolete   }else{IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x=jtrepeat(jtfg,x,a))  // ((x ~.@-:"yr) # x), inplaceable on the #
-// obsolete   }
   if(wr==0)x=ne(a,w); else IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x) RZ(x=jtrepeat(jtfg,x,a))  // y has rank 1 less than x, execute as ((x ~: y) # x) (y atomic) or ((x -.@-:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
  }else{
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells

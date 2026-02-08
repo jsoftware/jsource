@@ -712,8 +712,6 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFDEBUGRESULTX  2           // special flag for values that alter debug state matches INT
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
 // 3 free
-// obsolete #define AFHADPARENX     3     // in an explicit-defn word, set if user's original had () around the value  matches FL
-// obsolete #define AFHADPAREN      ((I)1<<AFHADPARENX)
 #define AFUNDISPLAYABLEX  4           // value is INDIRECT but may contain zeros or invalid pointers
 #define AFUNDISPLAYABLE   ((I)1<<AFUNDISPLAYABLEX)
 

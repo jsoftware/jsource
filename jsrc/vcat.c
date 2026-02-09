@@ -320,6 +320,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  }
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
  // no special cases apply, perform general copy with rank and fill
+ // scaf should move jtovg here, allocate the entire result at once, and loop through cells here, avoiding recopy
  RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); RETF(z);  // ovg calls other functions, so we clear rank.  rank2ex does EPILOG
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 

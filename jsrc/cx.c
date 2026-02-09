@@ -1238,10 +1238,10 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
   // If there is a control line )x at the top of the definition, parse it now and discard it from n
   if(m==9){
    flag|=VISDD;  // indicate this defn was created by a DD
-   if(likely(AN(w)!=0))if(likely(AN(C(AAV(w)[0])))&&unlikely(CAV(C(AAV(w)[0]))[0]==')')){
+   if(likely(AN(w)!=0)&&likely(AN(C(AAV(w)[0])))&&unlikely(CAV(C(AAV(w)[0]))[0]==')')){
     // there is a control line.  Everything up to : is the control part
     A line1=C(AAV(w)[0]); C *cv1=CAV(line1); I col1; DO(AN(line1), if(cv1[i]==':'){col1=i; goto colonfound;})  // extract first line & see if it contains ':'   line1 = 0 {:: w
-    if(1){RZ(w=beheadW(w)) // no :, the whole line is control.  discard the control line
+    if(1){RZ(w=beheadW(w)) // no :, the whole line is control.  discard the control line, which may leave a definition with no lines
     }else{ 
 colonfound:;   // : given.  takeafter the : for the first line, and taketo for the control line.  If SP follows :, treat the SP as the end char
      I coln=col1+(cv1[col1+1]==' ');  // end on SP if :SP

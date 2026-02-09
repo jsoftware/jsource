@@ -68,7 +68,7 @@ static UI4 jtcrcy(J jt,A y){
  if(yt&FL+CMPX+QP)R crcfloats(yv,yn<<(((UI)yt>=CMPX)));  // float
  if(yt&BOX){R crcboxes(yv,yn,jt);}  // box, take CRC of all the boxes
  if(yt&RAT+XNUM){R crcxnums(yv,yn<<((UI)yt>=RAT));}  // RAT/XNUM, take CRC of all of them
- else SEGFAULT;  // scaf
+ R 0;
 }
 
 // 16!:0 monad create 32-bit hash of y.  For float types, +-0 must have the same hash
@@ -247,19 +247,19 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  if(redblack){  // red/black: allocate n2nxh block for tree
   GATV0(box,LIT,(maxeles+TREENRES)*htelesiz*2,3) AS(box)[0]=maxeles+TREENRES; AS(box)[1]=2; AS(box)[2]=hashelesiz; INCORPNV(box)  // alloc incl res eles, the root pointer
   IAVn(3,box)[0]=2*0+0; IAVn(3,box)[1]=2*0+0;// empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
-mvc(AN(box),voidAV(box),MEMSET00LEN,MEMSET00);  // scaf clear for debug
+// obsolete mvc(AN(box),voidAV(box),MEMSET00LEN,MEMSET00);  // clear for debug
  }else{  // hash: allocate hashtable, as a LIT list
   GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,voidAV1(box),MEMSET00LEN,MEMSET00);   // allocate hash table & fill with empties
  }
  ((DIC*)z)->bloc.emptyn=0; ((DIC*)z)->bloc.hash=box;   // save tree/hash, and set root of empty chain as unbiased 0
  I t=((DIC*)z)->bloc.ktype; A sa=((DIC*)z)->bloc.kshape;   // key type & shape
  GA0(box,t,maxeles*((DIC*)z)->bloc.kaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE)|(t&DIRECT?0:AFUNDISPLAYABLE); INCORPNV(box) AS(box)[0]=maxeles; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.keys=box;   // allocate array of keys, recursive and undisplayable if indirect because of empty chain
-mvc(AN(box)<<bplg(t),voidAV(box),MEMSET00LEN,MEMSET00);  // scaf clear for debug
+// obsolete mvc(AN(box)<<bplg(t),voidAV(box),MEMSET00LEN,MEMSET00);  //  clear for debug
  void *ev=voidAVn(AN(sa)+1,box); DO(maxeles-1, *(UI4*)ev=i+1; ev=(void *)((I)ev+((DIC*)z)->bloc.kbytelen);)   // chain keys on empty list
  *(UI4*)ev=maxeles-1; // install end of chain loopback.  overstore OK
  t=((DIC*)z)->bloc.vtype; sa=((DIC*)z)->bloc.vshape;   // value type & shape
  GA0(box,t,maxeles*((DIC*)z)->bloc.vaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE)|(t&DIRECT?0:AFUNDISPLAYABLE); INCORPNV(box) AS(box)[0]=maxeles; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.vals=box;   // allocate array of vals, recursive
-mvc(AN(box)<<bplg(t),voidAV(box),MEMSET00LEN,MEMSET00);  // scaf clear for debug
+// obsolete mvc(AN(box)<<bplg(t),voidAV(box),MEMSET00LEN,MEMSET00);  //  clear for debug
  ((DIC*)z)->bloc.cardinality=0;  // init the dic is empty
  ra0(z); INCORP(z); AM(z)=0;  // make z recursive, protecting descendants; INCORP and clear the lock
  RETF(z)
@@ -1085,9 +1085,8 @@ static DF1(jtdicdel){F12IP;A z;
 static A dumptree(J jt,DIC *dic, UI nodex, C *dirstack, I depth, I blackdepth, I parentcolor, A prevkey, I *leafblackdepth, I *noerr, UI excludednode, I doprint){PROLOG(000);
  if(nodex<(TREENRES<<1)){if(*leafblackdepth>=0&&*leafblackdepth!=blackdepth){if(doprint)printf(" black vio"); *noerr=0;} *leafblackdepth=blackdepth;}  // leaf, check depth & save
  if(nodex<(TREENRES<<1)||nodex==excludednode)R prevkey;  // 
- C *hashtbl=CAV3(dic->bloc.hash); I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);
-DRLRC(curr,nodex)   // fetch tree info, then children+color
- if(doprint)printf("%.*s: node=0x%x c=%d l=0x%x r=0x%x\n",(int)depth,dirstack,(int)nodex,(int)currc,(int)currl,(int)currr);   // scaf for debug
+ C *hashtbl=CAV3(dic->bloc.hash); I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);DRLRC(curr,nodex)   // fetch tree info, then children+color
+// obsolete  if(doprint)printf("%.*s: node=0x%x c=%d l=0x%x r=0x%x\n",(int)depth,dirstack,(int)nodex,(int)currc,(int)currl,(int)currr);   //  for debug
  dirstack[depth]='0'; prevkey=dumptree(jt,dic,currl,dirstack,depth+1,blackdepth+currc,currc,prevkey,leafblackdepth,noerr,excludednode,doprint);
  A k,v; RZ(k=from(sc(RENCEMPTY(nodex)),dic->bloc.keys)) RZ(v=from(sc(RENCEMPTY(nodex)),dic->bloc.vals))  // fetch current key/val
  A klr, vlr; RZ(klr=lrep(k)) RZ(vlr=lrep(v))  // displayable form of k,v

@@ -63,7 +63,7 @@ static DF1(jtfitpp1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
 }
 
 #if 0  // unimplemented
-static DF1(jtfitf1){F12IP;V*sv=FAV(self); A z; R dfv1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n scaf combine?  Who calls?
+static DF1(jtfitf1){F12IP;V*sv=FAV(self); A z; R dfv1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}  // ?? noun~!.n 
 static DF2(jtfitf2){F12IP;V*sv=FAV(self); A z; R dfv2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
 #endif
 

@@ -11,13 +11,17 @@ IF "%~1"=="arm64" GOTO L0
 IF "%~1" NEQ "x64" EXIT /b 1
 :L0
 
-copy "C:\Program Files\LLVM\bin\liblldb.dll" "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\"
 systeminfo
-lldb --version
 
 IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B
 IF "%~1" NEQ "x64" EXIT /b 1
+@rem copy "C:\Program Files\LLVM\bin\liblldb.dll" "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\"
+curl --output-dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\" -O "https://www.jsoftware.com/download/winlib/x64/liblldb.dll"
+curl --output-dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\" -O "https://www.jsoftware.com/download/winlib/x64/lldb.exe"
+"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\lldb" --version
+lldb --version
+
 dir j64
 IF "%USE_EMU_AVX%"=="0" GOTO L01F
 IF "%USE_PYXES%"=="0" GOTO L01F

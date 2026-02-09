@@ -1223,7 +1223,7 @@ static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 // the following are set in the input flags to match the rank of keys
 #define MGETFLG0KEY 16  // the request is for 0 key
 #define MGETFLG1KEY 32  // the request is for 1 key
-#define MGETFLG2KEY 32  // the request is for 2 keys
+#define MGETFLG2KEY 64  // the request is for 2 keys
 
 // search for a value in the tree, possibly bulding a stack for it
 // bits of type indicate options:

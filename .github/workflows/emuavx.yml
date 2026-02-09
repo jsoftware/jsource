@@ -17,7 +17,7 @@ jobs:
 # linux no pyxes -------------------------------------------------------
  jelinuxpyx0:
   name: JE (Linux no pyxes)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -56,7 +56,7 @@ jobs:
 # linux no emu ---------------------------------------------------------
  jelinuxemu0:
   name: JE (Linux no emu)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -95,7 +95,7 @@ jobs:
 # linux no pyxes/emu ---------------------------------------------------
  jelinuxpyxemu0:
   name: JE (Linux no pyxes/emu)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -134,7 +134,7 @@ jobs:
 # macOS arm64 no pyxes -------------------------------------------------
  jemacosarmpyx0:
   name: JE (macOS arm64 no pyxes)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
@@ -164,7 +164,7 @@ jobs:
 # macOS arm64 no emu ---------------------------------------------------
  jemacosarmemu0:
   name: JE (macOS arm64 no emu)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
@@ -194,7 +194,7 @@ jobs:
 # macOS arm64 no pyxes/emu ---------------------------------------------
  jemacosarmpyxemu0:
   name: JE (macOS arm64 no pyxes/emu)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
@@ -224,7 +224,7 @@ jobs:
 # rpi64arm no pyxes ----------------------------------------------------
  jerpi64armpyx0:
   name: JE (Linux arm64 no pyxes)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -256,7 +256,7 @@ jobs:
 # rpi64arm no emu ------------------------------------------------------
  jerpi64armemu0:
   name: JE (Linux arm64 no emu)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -288,7 +288,7 @@ jobs:
 # rpi64arm no pyxes/emu ------------------------------------------------
  jerpi64armpyxemu0:
   name: JE (Linux arm64 no pyxes/emu)
-  if: ${{ false }}
+  if: ${{ true }}
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -336,7 +336,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\buildga.cmd x64
 
@@ -345,7 +345,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\testga.cmd x64
 
@@ -368,7 +368,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\buildga.cmd x64
 
@@ -377,7 +377,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\testga.cmd x64
 
@@ -400,7 +400,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\buildga.cmd x64
 
@@ -409,7 +409,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\testga.cmd x64
 
@@ -432,7 +432,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\buildga.cmd arm64
 
@@ -441,7 +441,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\testga.cmd arm64
 
@@ -464,7 +464,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\buildga.cmd arm64
 
@@ -473,7 +473,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\testga.cmd arm64
 
@@ -496,7 +496,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\buildga.cmd arm64
 
@@ -505,7 +505,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script\testga.cmd arm64
 

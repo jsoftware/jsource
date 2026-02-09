@@ -108,6 +108,9 @@ exit^:(*@#RES) *@#RES
 echo '>>> testing gxco1.ijs'
 RES=: RUN4 (<testpath),each <'gxco1.ijs'
 exit^:(*@#RES) *@#RES
+echo '>>> testing gdic2.ijs'
+RES=: RUN4 (<testpath),each <'gdic2.ijs'
+exit^:(*@#RES) *@#RES
 echo '>>> testing gdic.ijs'
 RES=: RUN4 (<testpath),each <'gdic.ijs'
 exit^:(*@#RES) *@#RES

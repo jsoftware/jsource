@@ -3,8 +3,8 @@ NB. addon/dictionary
 
 dumpchk=: 4 : 0
 echo x,':'
-echo count__y''
-assert. (1) 16!:_7 dict__y
+echo 'count: ', ":count__y''
+(1) 16!:_7 dict__y
 EMPTY
 )
 
@@ -99,17 +99,22 @@ NB. Delete.
 batchshapefordel=. <. -: batchshape
 keys=. (batchshapefordel , keyshape) $ 0
 echo 'delete'
+echo 'keys shape: ',":$keys
 echo 'keys'
 echo keys
 naivemask=. has__naivedict"keyrank keys
 del__naivedict"keyrank keys
 jdelans=. del__mydict keys
 'del'dumpchk mydict
+echo 'count mydict ',": count__mydict ''
+echo 'count naivedict ',": count__naivedict ''
 assert. (count__mydict '') -: count__naivedict ''
+echo 'count ok'
 assert. jdelans -: naivemask *. batchshapefordel ($ ,) ~:&.|. (_ , keyshape) ($ ,) keys
-
+echo 'jdelans ok'
 destroy__naivedict ''
 destroy__mydict ''
+echo 'finish test_type'
 EMPTY
 }}''
 

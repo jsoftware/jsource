@@ -51,7 +51,7 @@ test_type=: {{)m
 batchshape=. 1
 keyshape=. 3
 valshape=. 5
-params=. (<'tree') , <,. ('keytype' ; 'boolean') , ('keyshape' ; keyshape) ,: ('valueshape' ; valshape)
+params=. y , <,. ('keytype' ; 'boolean') , ('keyshape' ; keyshape) ,: ('valueshape' ; valshape)
 echo params
 mydict=. params conew 'jdictionary'
 
@@ -116,7 +116,7 @@ destroy__naivedict ''
 destroy__mydict ''
 echo 'finish test_type'
 EMPTY
-}}''
+}}"0 'tree concurrent';'tree'
 
 
 

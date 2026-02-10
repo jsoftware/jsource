@@ -1459,7 +1459,7 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  }
  DICLKRDRELV(dic,lv)   // release our lock on values 
 ret:;  // assemble & return result
- A z; if(zak==0||zav==0)z=(A)((I)zak+(I)zav); else{GAT0(z,BOX,2,1) AAV1(z)[0]=zak; AAV1(z)[1]=zav;}  // return what was requested - EPILOG will make the result recursive
+ A z; if(zak==0||zav==0)z=(A)((I)zak+(I)zav); else{GAT0(z,BOX,2,1) INCORP(zak) AAV1(z)[0]=zak; INCORP(zav) AAV1(z)[1]=zav;}  // return what was requested - EPILOG will make the result recursive
  EPILOG(z)
 
 retempty:;  // empty result

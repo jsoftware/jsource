@@ -340,10 +340,10 @@ static F1X(jtlcolon){F12JT;A*v,x,y;C*s,*s0;I m,n;
     C pos='v'; pos=FAV(w)->valencefns[0]==jtvalenceerr?'d':pos; pos=FAV(w)->valencefns[1]==jtvalenceerr?'m':pos; // type, if verb
     pos=AT(w)&ADV?'a':pos; pos=AT(w)&CONJ?'c':pos;   // override if not verb
     hdr[hdrl++]=pos;  // install type, giving {{)tLF
-    if(n==0){RZ(y=box(aqq))  // if definition empty, give a box that we can amend into
+    if(n==0){RZ(y=ds(CACE))  // if definition empty, give a box that we can amend into
     }else if(n==1){hdr[hdrl++]=':'; hdr[hdrl++]=' ';}else{hdr[hdrl++]=CLF;}  // Append :SP for oneliners, LF for others
   }else hdr[hdrl++]=' ';  // ordinary DD: {{SP
-  R raze(over(dfv2(z,box(str(hdrl,hdr)),ravel(stitch(ds(CACE),y)),amend(num(0))),box(str(2,"}}"))));  //  ; ((<hdr) 0} , (<LF) ,. y) ,  <tlr
+  R raze(over(dfv2(z,box(str(hdrl,hdr)),ravel(stitch(box(scc(CLF)),y)),amend(num(0))),box(str(2,"}}"))));  //  ; ((<hdr) 0} , (<LF) ,. y) ,  <tlr
  }
  if(!((I)jtfg&JTEXPVALENCEOFF)&&(2>n||2==n&&1==AN(v[0])&&':'==CAV(C(v[0]))[0])){  // if all valences requested, and only one line, or monadic valence empty (i. e. first line is ':')
   // return one-line definition m : 'string'.  m will come from x

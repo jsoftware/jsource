@@ -103,7 +103,7 @@ echo 'keys shape: ',":$keys
 echo 'keys'
 echo keys
 naivemask=. has__naivedict"keyrank keys
-del__naivedict"keyrank keys
+del__naivedict"keyrank^:([: -. (0 e. $)) keys
 jdelans=. del__mydict keys
 'del'dumpchk mydict
 echo 'count mydict ',": count__mydict ''

@@ -8,6 +8,9 @@ NB. obsolete assert. (1) 16!:_7 dict__y
 NB. obsolete EMPTY
 NB. obsolete )
 
+c1=: 9!:36 ''
+9!:37[ 0 10000 0 10000
+
 require 'data/dictionary'
 
 cocurrent 'base'
@@ -303,6 +306,9 @@ for. i. n_iter do.
   NB. Put.
   keys =. (batchshape , keyshape) genkey"0@$ 0
   vals =. (batchshape , valshape) genval"0@$ 0
+  echo 'put:'
+  echo 5!:5<'keys'
+  echo 5!:5<'vals'
   vals put__naivedict"(valrank , keyrank) keys
   assert. EMPTY -: vals put__x keys
 NB. obsolete   'put'dumpchk x
@@ -310,6 +316,9 @@ NB. obsolete   'put'dumpchk x
   NB. Get.
   keys =. (batchshape , keyshape) genkey"0@$ 0
   vals =. (batchshape , valshape) genval"0@$ 0
+  echo 'get:'
+  echo 5!:5<'keys'
+  echo 5!:5<'vals'
   naivemask =. has__naivedict"keyrank keys
   jhasans =. has__x keys
   assert. jhasans -: naivemask
@@ -327,10 +336,14 @@ NB. obsolete   'get'dumpchk x
   NB. Delete.
   batchshapefordel =. <. -: batchshape
   keys =. (batchshapefordel , keyshape) genkey"0@$ 0
+  echo 'del:'
+  echo 5!:5<'keys'
   naivemask =. has__naivedict"keyrank keys
   del__naivedict"keyrank keys
   jdelans =. del__x keys
 NB. obsolete   'del'dumpchk x
+  echo 'count__x:',":count__x ''
+  echo 'count__:naivedict ',":count__naivedict''
   assert. (count__x '') -: count__naivedict ''
   assert. jdelans -: naivemask *. batchshapefordel ($ ,) ~:&.|. (_ , keyshape) ($ ,) keys
 end.
@@ -644,6 +657,7 @@ set_threads 0
 EMPTY
 }}^:((2 *@(17 b.) 9!:56'MEMAUDIT') < (9!:56'PYXES') *. 0=dbq'') ''
 
+9!:37 c1
 
 epilog''
 

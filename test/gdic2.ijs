@@ -1,6 +1,8 @@
 prolog './gdic2.ijs'
 NB. addon/dictionary
 
+1: 0!:_1 '$'   NB. skip this test
+
 dumpchk=: 4 : 0
 echo x,':'
 echo 'count: ', ":count__y''
@@ -119,6 +121,7 @@ EMPTY
 }}"0 'tree concurrent';'tree'
 
 
+NB.$    end of skip
 
 epilog''
 

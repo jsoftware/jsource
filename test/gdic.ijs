@@ -9,7 +9,7 @@ NB. obsolete EMPTY
 NB. obsolete )
 
 c1=: 9!:36 ''
-9!:37[ 0 10000 0 10000
+9!:37[ 0 100000 0 100000
 
 require 'data/dictionary'
 
@@ -298,6 +298,8 @@ NB.      shape of batch ;
 NB.      number of iterations
 test_type =: {{)d
 'genkey genval keyshape valshape batchshape n_iter' =. y
+echo x
+echo 5!:5 <'y'
 naivedict =. '' conew 'naivedictionary'
 keyrank =. # keyshape
 valrank =. # valshape

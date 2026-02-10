@@ -1,7 +1,7 @@
 prolog './gdic2.ijs'
 NB. addon/dictionary
 
-1: 0!:_1 '$'   NB. skip this test
+NB. 1: 0!:_1 '$'   NB. skip this test
 
 dumpchk=: 4 : 0
 echo x,':'

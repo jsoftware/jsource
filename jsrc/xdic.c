@@ -21,6 +21,8 @@
 #define HASHI(crc,x) HASH4(crc,x)
 #endif
 
+#define scafINLINE
+
 // CRC32 of n floats.
 static INLINE UI4 crcfloats(UI8 *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
@@ -1228,40 +1230,40 @@ static I alwayslt(I n,void* a,void* b){R -1;}  // always return lt
 // search for a value in the tree, possibly bulding a stack for it
 // bits of type indicate options:
 //  1 - stack direction (0 means >=, L-to-R, and also looking for >=)
-//  2 - no stack
-//  4 - no compare (infer direction from 1)
+//  2 - no compare (infer direction from 1)
+//  4 - no stack
 // at end, if there is a stack: stack has been created, and result is the index into the stack of the best node found; otherwise result is index of best node found
 // result of 0 indicates empty database; -1 for error
 static INLINE I searchtree(I type,J jt,C *hashtbl, UI8 kib, I nodeb, C *kbase, VIRT virt, I (*cf)(I,void*,void*), UI4 sp[][2], I *flags, C *k){
  I res1[3];  // sp during tree search.  Values are stored into res1[comp+1] and the correct sign is selected at the end, giving the last thing stored with that sign
  UI8 chirn;  // both children
- UI nodex=type&2?sp[0][0]:*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // search node.  Init to biased node# of the root of the tree, or at the node given by the stack if we are resuming search
- if(!(type&2))sp[0][0]=0;   // top of stack is the empty-tree pointer, when stack is being created
+ UI nodex=type&4?sp[0][0]:*(UI4*)hashtbl&_bzhi_u64(~(UI8)1,nodeb);  // search node.  Init to biased node# of the root of the tree, or at the node given by the stack if we are resuming search
+ if(!(type&4))sp[0][0]=0;   // top of stack is the empty-tree pointer, when stack is being created
  res1[2-2*(type&1)]=0;  // init 'stack at first key' to 0 (invalid).  If it is still there after the search there were no valid keys
- I zx=type&2?0:1;  // next fill pointer in sp - if no stack, will remain at 0
+ I zx=type&4?0:1;  // next fill pointer in sp - if no stack, will remain at 0
  if(unlikely(nodex<(TREENRES<<1)))R 0; // empty database: nothing to do
  // search down, looking for the min value, building the stack.  Call the end-of-search point L & compare result (tree-min) LC.
  // the search ends on a match (LC=0), or on a leaf node whose successor (i. e. the parent on the stack) is > min (LC<0), or on the last leaf, if the result is empty (LC>0)
  // This search builds the parent list and is always for the left side of the interval
  do{  // traverse the tree, searching for index k.  Current node is nodex
   chirn=*(UI8*)&hashtbl[nodex*(nodeb>>24)];  // fetch both children
-  if(!(type&2)){  // if stacking requested
+  if(!(type&4)){  // if stacking requested
    sp[zx][0]=nodex;  // store this node
    sp[zx][1]=(chirn>>(type&1?0:nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb);   // stack left/right child depending on flag
   }
   I comp;  // comparison result
-  if(!(type&4)){  // normal case, do compare
+  if(!(type&2)){  // normal case, do compare
    comp=keysne((UI4)kib,kbase+(kib>>32)*(nodex>>1),k,nodeb&(DICFICF<<8),errexit);  // compare node key vs k (key to be found), so node > k is 1
-   if(comp==0)R type&2?nodex:zx;  // found at node nodex.  sp points to the children
+   if(comp==0)R type&4?nodex:zx;  // found at node nodex.  sp points to the children
   }else{  // comparison forced
    comp=1-2*(type&1);  // if L-to-R, stack R and go to L descendant: comp=1
   }
   // No match.  drop down to next node.
-  if(type&2)res1[1+comp]=nodex; else res1[1+comp]=zx++;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted.   advance sp to next empty slot, which we will fill presently
+  if(type&4)res1[1+comp]=nodex; else res1[1+comp]=zx++;  // remember sp of the first result in res1[1 or 2].  Stores to res[0] are wasted.   advance sp to next empty slot, which we will fill presently
   nodex=((chirn>>(comp&nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb));
  }while(nodex>=(TREENRES<<1));  // loop till we hit end of tree
  // falling through, there was no match.  Take the last value that was on the correct side
- *flags|=type&2?MGETFLGEQ1:MGETFLGEQ0;   // indicate that we should include appropriate endpoint, which does not match the key
+ *flags|=type&4?MGETFLGEQ1:MGETFLGEQ0;   // indicate that we should include appropriate endpoint, which does not match the key
    // indicate we should out the first key (since it isn't the min)
    // if all comparisons were <, k0 > entire tree, nothing to return, sp will be unchanged
  R res1[2-2*(type&1)];   // (mode0) result: sp slot of node; (mode1) nodex of node 
@@ -1278,6 +1280,7 @@ static INLINE UI scantree(I dir,I mode,J jt,C *hashtbl, UI4 (*sp)[2], I *flags, 
  if((mode||nkvrq)==0)goto endscan;  // quit if 0 items requested
  DSOC(nodex)   // declare nodexs, nodexo
  UI nodex=(*sp)[0]; nodexo=(*sp)[1];   // read the starting node and its distal child
+ if(mode==1&&nodex==endx&&(*flags&MGETFLGEQ0+MGETFLGEQ1)!=MGETFLGEQ0+MGETFLGEQ1)goto endscan;  // if end=start, we must produce nothing unless equality is accepted on both limits, and we can't do the normal check the first time
  if(*flags&MGETFLGEQ0)goto startmin; else goto startminex;  // Start moving distal.  If we should out the min node, go there; otherwise to where we handle distal side
  while(1){  // till we hit node >= max
   // (*sp)[0] is nodex; nodexo is its distal child
@@ -1296,7 +1299,7 @@ static INLINE UI scantree(I dir,I mode,J jt,C *hashtbl, UI4 (*sp)[2], I *flags, 
    }
 startmin:;  // enter first time going distal only
    // out the middle node
-   (*res)[zx]=nodex;  // put the node out, in order, advance to next slot
+   (*res)[zx]=nodex;  // provisionally put the node out, in order, advance to next slot
    // finish when we have written enough
    if(mode==1&&nodex==endx){zx+=!!(*flags&MGETFLGEQ1); goto endscan;}  // check last node; accept last node if not suppressed
    ++zx;  // accept any non-last node
@@ -1313,7 +1316,7 @@ startminex:;  // enter first time when first node is suppressed.  We know that i
   }
   // we fall through to here to return from a left-side call
  }
-endscan:;   // come here when we exnounter the end node, possibly without looking at anything
+endscan:;   // come here when we encounter the end node, possibly without looking at anything
  // finished, zx having the count
  R zx;
 exiterr: R -1;
@@ -1321,13 +1324,13 @@ exiterr: R -1;
 
 #define PLISTS1 0x3  // mask of stacked cmd
 #define S1LRCMP 0
-#define S1LRMIN 1
-#define S1RLCMP 2
+#define S1LRMIN 2
+#define S1RLCMP 1
 #define S1RLMAX 3
-#define PLISTS2 0xc  // mask of stacked cmd
-#define S2CMP 4
-#define S2LR 8
-#define S2RL 12
+#define PLISTS2X 2   // bit# of command
+#define S2CMP (0<<PLISTS2X)   // routine index after shift
+#define S2LR (1<<PLISTS2X)
+#define S2RL (2<<PLISTS2X)
 
 //   mget.    dic was u to self
 // Forms: a=(flags,count) w=list of 2 keys   flags are k v eq1 eq0
@@ -1390,20 +1393,21 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  // Step 1 - read & create stack
  UI4 stack[64][2];  // stack we will use.  has node and node's distal child (i. e. for LR scan, distal=R)
  I sx;  // index into stack.  On return from first scan, points to the stack entry for the found node
- switch(plist&PLISTS1){
- case S1LRCMP: sx=searchtree(0,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // LR search for starting node
- case S1LRMIN: sx=searchtree(4,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // LR search for minimum node
- case S1RLCMP: sx=searchtree(1,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // RL search for starting node
- case S1RLMAX: sx=searchtree(5,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // RL search for maximum node
- }
+// obsolete  switch(plist&PLISTS1){
+// obsolete  case S1LRCMP: sx=searchtree(0,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // LR search for starting node
+// obsolete  case S1LRMIN: sx=searchtree(4,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // LR search for minimum node
+// obsolete  case S1RLCMP: sx=searchtree(1,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // RL search for starting node
+// obsolete  case S1RLMAX: sx=searchtree(5,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k); break;  // RL search for maximum node
+// obsolete  }
+ sx=searchtree(plist&PLISTS1,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k);  // search as requested, for min/start, LR/RL
  if(unlikely(sx<=0)){if(sx==0)goto retempty; goto exitkeyvals;}  // empty database or error
 
  // Step 2 - search or scan to get list of kvs to copy
  // establish the area where node#s are stored.  We reuse the virt area if possible
  UI4 *nodens=(UI4*)&virt;  // pointer to area where the list of nodes will be stored.  Can be modified by scantree if reallocated
  UI nkvs;  // number of kvs in result
- switch(plist&PLISTS2){
- case S2CMP:  // LR search for ending node, followed by scan to produce list of node#s
+ switch(plist>>PLISTS2X){
+ case S2CMP>>PLISTS2X:  // LR search for ending node, followed by scan to produce list of node#s
   k=(void *)((I)k+(kib>>32));
   UI nodex; I sx1;  // will be starting point for downward search, holding the highest stacked node index <= max; stack pointer+1 when nodex was the current node
   for(nodex=stack[sx][0],sx1=sx;sx1>0;sx1--){   // do not look at sx=0, which is 0
@@ -1415,16 +1419,15 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
   }
   if(unlikely(sx1==sx))goto retempty;  // if startx was > max, there are no keys in the range
   // nodex, which is stack[sx1][0], is > max.  That means we can start searching for the largest node at stack[sx1+1][0]
-  I endx=searchtree(3,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack+sx1+1,&flags,k); if(endx<0)goto exitkeyvals; // LR search for ending node, no stack.  Start of search is stack[sx1+1][0]
+  I endx=searchtree(5,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack+sx1+1,&flags,k); if(endx<0)goto exitkeyvals; // LR search for ending node, no stack.  Start of search is stack[sx1+1][0]
   nkvs=scantree(0,1,jt,hashtbl,stack+sx,&flags,nodeb,&nodens,nkvrq,endx); break;   // LR scan from stack[sx][0] to nkvrq, creating list of nodes
- case S2LR: nkvs=scantree(0,0,jt,hashtbl,stack+sx,&flags,nodeb,&nodens,nkvrq,-1); break;   // LR scan for N values
- case S2RL:
+ case S2LR>>PLISTS2X: nkvs=scantree(0,0,jt,hashtbl,stack+sx,&flags,nodeb,&nodens,nkvrq,-1); break;   // LR scan for N values
+ case S2RL>>PLISTS2X:
   nkvs=scantree(1,0,jt,hashtbl,stack+sx,&flags,nodeb,&nodens,nkvrq,-1);  // RL scan for N values
   DO((I)nkvs>>1, UI4 t=nodens[i]; nodens[i]=nodens[nkvs-1-i]; nodens[nkvs-1-i]=t;)  //reverse to LR order
   break;
  }
  if(unlikely((I)nkvs<=0)){if(nkvs==0)goto retempty; goto exitkeyvals;}  // empty result or error
-
 
  // step 3 - copy the kvs
  // allocate the result(s), and run through the indexes, copying
@@ -1456,7 +1459,7 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  }
  DICLKRDRELV(dic,lv)   // release our lock on values 
 ret:;  // assemble & return result
- A z; if(zak==0||zav==0)z=(A)((I)zak+(I)zav); else z=jlink(zak,box(zav));  // return what was requested
+ A z; if(zak==0||zav==0)z=(A)((I)zak+(I)zav); else{GAT0(z,BOX,2,1) AAV1(z)[0]=zak; AAV1(z)[1]=zav;}  // return what was requested - EPILOG will make the result recursive
  EPILOG(z)
 
 retempty:;  // empty result

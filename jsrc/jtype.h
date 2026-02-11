@@ -235,13 +235,13 @@ struct AD {
  RANKT r;  // 6 rank.  Used as flags in SYMB types (i. e. locales)
  UC filler;
  US h;   // reserved for allocator.  Not used for AFNJA memory
-#if 0 || BW==64
+#if PYXES
   // these two values initialized with a single store - must be in order
  US origin;  // 
  S lock;   // can be used as a lock
 #endif
 #else
-#if 0 || BW==64
+#if PYXES
  S lock;   // can be used as a lock
  US origin;
 #endif

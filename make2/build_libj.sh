@@ -174,6 +174,7 @@ else
  -Wtautological-constant-out-of-range-compare \
  -Wtypedef-redefinition \
  -Wuninitialized \
+ -Wno-braced-scalar-init \
  -Wno-cast-function-type-mismatch \
  -Wno-char-subscripts \
  -Wno-consumed \

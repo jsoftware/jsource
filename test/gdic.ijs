@@ -11,40 +11,6 @@ KEYHASHES =: 16!:0`'' , 7"1`'' , {{ 16!:0 y }}"1`''
 KEYCOMPARES =: 16!:0`'' , -@:(16!:0)`'' , {{ x 16!:0 y }}`''
 COMBINATIONS =: INDEX_TYPES ,"1"0 _ KEYHASHES ,."0 _ KEYCOMPARES
 
-NB. INITIALIZATION.
-NB. Test name attribute.
-NB. x is boxed name of index type.
-NB. y is name of dictionary without locale (different locales are added in the test).
-test_dict_name =: {{)d
-op_names_boxed =. (y , '_del') ; (y , '_get') ; (y , '_put') ; (y , '_has') ; (y , '_count')
-op_names_string =. ' ' joinstring op_names_boxed
-check_names_z_ =: [: (5 -: +/@,) op_names_boxed E."0 1 nl
-
-params =. x , < 'name' ; y , '_abc_'
-dict =. params conew 'jdictionary'
-assert. check_names_abc_ ''
-assert. destroy__dict ''
-erase_abc_ op_names_string
-
-params =. x , < 'name' ; y
-dict =. params conew 'jdictionary'
-assert. check_names_base_ ''
-assert. destroy__dict ''
-erase_base_ op_names_string
-
-params =. x , < 'name' ; y , '__'
-dict =. params conew 'jdictionary'
-assert. check_names__ ''
-assert. destroy__dict ''
-erase__ op_names_string
-
-EMPTY
-}}"0 _
-
-INDEX_TYPES test_dict_name 'mydict'
-INDEX_TYPES test_dict_name 'my_d_ict'
-INDEX_TYPES test_dict_name 'd_i_c_t'
-
 NB. INCORRECT KEYS/VALUES.
 
 GetError =: {{)a
@@ -220,6 +186,7 @@ else.
 end.
 assert. frames (-: $@:del__mydict)&> keys
 destroy__mydict ''
+EMPTY
 }}"1 INDEX_TYPES ,"1"0 _ (,."0 _ (0)&;) 7 ; 2 3 4 ; i. 0
 
 NB. SPARSE ARRAYS.
@@ -288,7 +255,7 @@ NB.      shape of batch ;
 NB.      number of iterations
 test_type =: {{)d
 'genkey genval keyshape valshape batchshape n_iter' =. y
-echo 5!:5 <'y'
+NB. echo 5!:5 < 'y'
 naivedict =. '' conew 'naivedictionary'
 keyrank =. # keyshape
 valrank =. # valshape
@@ -618,6 +585,147 @@ INDEX_TYPES_CONCURRENT test_multithreading2 1 10000 3
 set_threads 0
 EMPTY
 }}^:((2 *@(17 b.) 9!:56'MEMAUDIT') < (9!:56'PYXES') *. 0=dbq'') ''
+
+NB. TEST APPLICATIONS (SINGLETHREADED).
+
+NB. x is graph, y is source vertex.
+NB. Result is array of two boxes:
+NB. * array of shortest-path distances from the source to every vertex
+NB. * predecessor array for shortest-path tree.
+dijkstra =: {{
+  q =. conew&'jdictionary' 'tree' ,&< ('keyshape' ; 2)  ,: 'valueshape' ; 0
+  'ds ps' =. ($&_ ; $&_1)@# x  NB. Initialize distances and predecessors.
+  '' put__q 0 , y [ ds =. 0 y} ds  NB. Distance to source is 0.
+  while. 0 < count__q '' do.
+    'd i' =. ([ del__q) min__q ''  NB. Extract vertex with minimum distance.
+    if. d > i { ds do. continue. end.  NB. Skip outdated entry.
+    'js ws' =. i { x  NB. Adjacent vertices and edge weights.
+    NB. Filter out edges that do not improve shortest paths.
+    'js ws' =. (#&js (~.@[ ; <.//.) #&ws) (d + ws) < js { ds
+    ds =. ds js}~ d + ws  NB. Update distances.
+    ps =. i js} ps  NB. Update predecessors.
+    '' put__q js ,.~ d + ws  NB. Insert the updated distance–vertex pairs.
+  end.
+  assert. (0) 16!:_7 dict__q
+  destroy__q ''
+  ds ; ps
+}}"2 0
+
+NB. x is density.
+NB. y is number of vertices.
+NB. Result is table (rank 2) of edges.
+randedges =: ] |:@:(?@$~) 2 , *
+
+NB. x is number of vertices.
+NB. y is table (rank 2) of weighted edges.
+NB. Result is graph: adjacency ,. weights
+digraph =: {{
+  idxs =. {."1 y
+  (idxs ;/@|:/. }."1 y) (~. idxs)} a: $~ x , 2
+}}
+
+NB. Convert table of edges to adjacency matrix.
+NB. x is number of vertices (vertices are 0, 1, ..., x - 1).
+NB. y is table (rank 2). Each row u v w ... represents directed edge u -> v with weight w with optional ignored other attributes.
+matrix =: {{
+  y =. y (, (,.&0)@:,.~@:i.) x NB. Add edges u -> u with weight 0.
+  idxs =. 2&{."1 y NB. Edges u -> v are indices (u, v) to adjacency matrix.
+  ws =. , idxs <.//. 2&{"1 y NB. Weights.
+  ws (~. idxs)} (2 # x) $ _
+}}
+
+NB. https://code.jsoftware.com/wiki/Essays/Floyd
+NB. y is adjacency matrix (rank 2).
+floyd =: {{
+  for_k. i. # y do.
+    y =. y <. k ({"1 +/ {) y
+  end.
+}}
+
+NB. x is density (average number of edges per vertex).
+NB. y is number of vertices.
+testdijkstra =: {{
+  es =. (,. ?@$&1000@#) x randedges y
+  g1 =. y digraph es
+  g2 =. y matrix es
+  r1 =. >@:({."1) g1 dijkstra i. y
+  r2 =. floyd g2
+  assert. r1 -: r2
+  EMPTY
+}}"0
+
+3 testdijkstra 10 30 100 300
+
+NB. x is the maximum height for jumping and falling.
+NB. y is table (rank 2) where each row represents a platform (y, x_left, x_right)
+NB. The result is an array of boxes, where each box contains indices of platforms
+NB. such that any platform in the box is reachable from any other.
+partition =: {{
+  ids =: i. # y
+  find =. {{
+    js =. ids {~^:a: y
+    ids =: ids js}~ {: js
+    {: js
+  }}"0
+  NB. Dictionary s will be used as sweep line.
+  NB. Key is x-coord of platform right end (r).
+  NB. Value is ((l , h) ; id) where:
+  NB. * l is x-coord of platform left end
+  NB. * h is y-coord of platform
+  NB. * id is unique platform ID.
+  s =. 'jdictionary' conew~ 'tree concurrent' ,&< ('keytype' ; datatype y) , ('valuetype' ; 'boxed') ,: 'valueshape' ; 2
+  NB. Is key r in y greater then l from value ((l , h) ; id) in x.
+  NB. This tells whether entry represents non-empty platform.
+  ok =. (> (0 ; 0)&{::)~
+  idxs =. /: y
+  for_p. idxs { y do. NB. Process platforms in ascending order of h.
+    'h l r' =. p
+    NB. Find all entries in s that may be reachable from the platform p.
+    'r0 val0' =. 1&since__s r
+    r0 =. r0"_^:(r > ])  0&{::^:3`(r"_)@.(0 -: */@$) val0
+    'rs vals' =. 0 1 range__s l , r0
+    if. 0 < # rs do. NB. If there are entries that may be reachable for the platform.
+      'lhs js' =. |: vals NB. lhs is array (ls ,. hs). js is array of IDs.
+      NB. Replace all of them by 3 platforms: left, middle (p) and right, so that they do not overlap.
+      del__s rs NB. First, remove found entries.
+      ({. vals) put__s^:ok l NB. Put left platform if it represents non-empty line segment.
+      ((({: ,~ r >. {.)@{: lhs) ; {: js) put__s^:ok {: rs NB. Similarly put right platform.
+      js =. find js #~ x >: h - {:"1 lhs NB. Filter out entries that are distant more then by h.
+      root =. find p_index
+      ids =: root js} ids NB. Mark that those entries are reachable from the platform p.
+    end.
+    r put__s~ p_index ;~ l , h NB. Always put p as middle platform.
+  end.
+  assert. (0) 16!:_7 dict__s
+  destroy__s ''
+  NB. Map every index to its group root in ids and compute groups.
+  ((find i. # y) {~ /: idxs) </. i. # y
+}}"0 2
+
+NB. x is the maximum height for jumping and falling.
+NB. y is table (rank 2) where each row represents a platform (y, x_left, x_right)
+NB. The result is boolean matrix where 0 means not directly reachable, 1 means reachable.
+NB. y-coords are compared and pairs of x_coords.
+matrix =: ((>: |@:-"1 0~) {."1) *. ([: (>.&{. < <.&{:)"1"1 2~ }."1)@]
+
+NB. y is boolean square matrix.
+NB. Result is transitive closure of y.
+transitiveclosure =: {{
+  for_k. i. # y do.
+    y =. y +. k ({"1 *./ {) y
+  end.
+}}
+
+NB. x is the maximum height for jumping and falling.
+NB. y is table (rank 2) where each row represents a platform (y, x_left, x_right)
+testpartition =: {{
+  r1 =. x partition y
+  r2 =. (transitiveclosure x matrix y) </. (i. # y)
+  assert. r1 -: r2
+  EMPTY
+}}
+
+{{ (>: ? 5) testpartition (?@$~ y) ,. 0 1&+"1 /:"1~ (?@$~ ,&2) y }}"0 >: i. 200
 
 epilog''
 

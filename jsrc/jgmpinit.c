@@ -52,11 +52,11 @@ void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
 struct BDV1 {I k;I f;I m;I t;I c;I n;
 #if C_LE
  RANKT r;UC filler;US h;
-#if 1 || SY_64
+#if 0 || SY_64
  US origin;S lock;
 #endif
 #else
- #if 1 || SY_64
+ #if 0 || SY_64
   S lock;US origin;
  #endif
  US h;UC filler;RANKT r;

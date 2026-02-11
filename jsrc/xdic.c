@@ -315,7 +315,7 @@ F1(jtcreatedic){F12IP;
 #define DICLSINGLETHREADED DICLMSKWRK  // WR=10 is impossible and used internally to indicate singlethreading.  DICLMSKRDV=0 is used as flag during read to indicate singlethreading.  DICLMSKWRK says we have the lock, which may persist over resize
      //  No RFO cycles are performed.  If we chance to detect overlapping puts/gets we will abort, but there are no guarantees.  
 
-#if PYXES
+#if PYXES && SY_64
 // throughout the locking sequence the value lv holds the last info read from the lock in AM(dic).  We keep this as up-to-date as possible to avoid extra reads.  If the lock is not contended it will be read seldom
 #define DICLKRDRQ(dic,lv,cond) (lv=!(cond)?__atomic_add_fetch(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL):DICLSINGLETHREADED)  // put up read request and read current status. Cannot overflow
 #define DICLKRDWTK(dic,lv) if(unlikely((lv&DICLMSKWRK)!=0))if((lv&DICLMSKWRV)!=0)lv=diclkrdwtkv(dic,lv);  // wait till current owner finishes with hash/keys, and update status.  Skip if single-threaded (WR=10)

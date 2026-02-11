@@ -1063,7 +1063,11 @@ static DF1(jtdicdel){F12IP;A z;
 #define RLRC(name,node) name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>24)]; name##l=name##ch&_bzhi_u64(~(UI8)1,nodeb); name##r=(name##ch>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;  // clears LSBs in ##l and ##r
 #define DRLRC(name,node) DLRC(name) RLRC(name,node)
 #define DSOC(name) UI8 name##ch; UI name##s,name##o,name##c;  // declare names for chrn, ,clr, s (child in same direction as dir), o (child in opposite direction from dir)
+#if defined(RASPI) && !SY_64
+#define RSOC(name,node,dir) {C taddr[30]; sprintf(taddr,"%p",(hashtbl+(node)*(nodeb>>24)));name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>24)]; I ss=(dir)?(C)nodeb:0, os=(dir)?0:(C)nodeb; name##s=(name##ch>>ss)&_bzhi_u64(~(UI8)1,nodeb); name##o=(name##ch>>os)&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;}
+#else
 #define RSOC(name,node,dir) {name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>24)]; I ss=(dir)?(C)nodeb:0, os=(dir)?0:(C)nodeb; name##s=(name##ch>>ss)&_bzhi_u64(~(UI8)1,nodeb); name##o=(name##ch>>os)&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;}
+#endif
 #define DRSOC(name,node,dir) DSOC(name) RSOC(name,node,dir)
 #define SIB(node,lnode,rnode) ((lnode)^(rnode)^(node))  // sibling of current node
 #define WLRC(node,num,val,clr) {UI4 t=(val)+(clr); WRHASH1234(t, (nodeb>>24), &hashtbl[((node)+(num))*(nodeb>>24)]);}
@@ -1705,21 +1709,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
     sibling=RDIR(parent,parentd^1);   // Fetch new sibling, which is perforce black
    }
    // Here sibling is black (it may have been a same-child, now swapped into that position)
-#if defined(RASPI) && !SY_64
-   {
-// fprintf(stderr,">>> sibling "FMTI" nodeb "FMTI" nodeb>>24 "FMTI" \n",sibling, nodeb, (nodeb>>24));
-// fprintf(stderr,">>> hashtbl[..] "FMTI" \n",(sibling)*(nodeb>>24));
-// fprintf(stderr,">>> hashtbl[] %p \n",(hashtbl+(sibling)*(nodeb>>24)));
-// fprintf(stderr,">>> hashtbl[.] %c \n",hashtbl[(sibling)*(nodeb>>24)]);
-   C taddr[30]; sprintf(taddr,"%p",(hashtbl+(sibling)*(nodeb>>24)));
-   siblingch=*(UI8*)&hashtbl[(sibling)*(nodeb>>24)];
-   I ss=(parentd)?(C)nodeb:0, os=(parentd)?0:(C)nodeb;
-   siblings=(siblingch>>ss)&_bzhi_u64(~(UI8)1,nodeb);
-   siblingo=(siblingch>>os)&_bzhi_u64(~(UI8)1,nodeb); siblingc=siblingch&1;
-   }
-#else
    RSOC(sibling,sibling,parentd)  //  fetch sibling's children, as same/opp
-#endif
    if(siblingo&&!(CBYTE(siblingo)&1))goto onephred;  // opp nephew red, go handle it in 1 rotation
    if(siblings&&!(CBYTE(siblings)&1))goto snephred;  // otherwise, same nephew red, go handle it in 2 rotations
    // sibling is black and has only black children

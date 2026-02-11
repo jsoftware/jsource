@@ -2,7 +2,6 @@ prolog './gdic2.ijs'
 NB. addon/dictionary
 
 dumpchk=: 4 : 0
-echo x,':'
 echo 'count: ', ":count__y''
 (1) 16!:_7 dict__y
 EMPTY
@@ -118,7 +117,7 @@ end.
 NB. Delete.
 batchshapefordel=. <. -: batchshape
 keys=. 2 12 3 2$1 0 1 1 1 0 1 0 0 1 1 0 1 1 1 0 0 1 0 0 1 1 1 1 0 0 1 0 1 0 0 1 1 0 1 1 0 1 1 1 1 0 0 1 1 0 0 0 0 1 0 1 0 0 1 1 1 1 1 0 1 0 0 1 1 0 0 1 0 0 1 1 0 1 1 1 1 1 0 0 1 0 0 1 1 1 1 1 0 0 1 0 0 0 0 1 1 1 1 0 0 0 0 1 1 0 0 1 0 1 0 1 0 1 1 1 0 0 0 0 1 0 0 0 0 0 0 1 1 0 0 0 0 0 1 1 1 1 0 1 0 0 1 0
-echo 'delete'
+echo 'del'
 naivemask=. has__naivedict"keyrank keys
 del__naivedict"keyrank^:([: -. (0 e. $)) keys
 jdelans=. del__mydict keys

@@ -1712,7 +1712,8 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
 // fprintf(stderr,">>> hashtbl[] %p \n",(hashtbl+(sibling)*(nodeb>>24)));
 // fprintf(stderr,">>> hashtbl[.] %c \n",hashtbl[(sibling)*(nodeb>>24)]);
 //   siblingch=*(volatile UI8*)&hashtbl[(sibling)*(nodeb>>24)];
-   siblingch=*(UI8*)((volatile C*)hashtbl+(sibling)*(nodeb>>24));
+   C* taddr=(hashtbl+(sibling)*(nodeb>>24));
+   siblingch=*(UI8*)((C*)hashtbl+(sibling)*(nodeb>>24));
    I ss=(parentd)?(C)nodeb:0, os=(parentd)?0:(C)nodeb;
    siblings=(siblingch>>ss)&_bzhi_u64(~(UI8)1,nodeb);
    siblingo=(siblingch>>os)&_bzhi_u64(~(UI8)1,nodeb); siblingc=siblingch&1;

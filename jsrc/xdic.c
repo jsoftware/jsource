@@ -312,7 +312,7 @@ F1(jtcreatedic){F12IP;
 #define DICLSINGLETHREADED DICLMSKWRK  // WR=10 is impossible and used internally to indicate singlethreading.  DICLMSKRDV=0 is used as flag during read to indicate singlethreading.  DICLMSKWRK says we have the lock, which may persist over resize
      //  No RFO cycles are performed.  If we chance to detect overlapping puts/gets we will abort, but there are no guarantees.  
 
-#if PYXES
+#if PYXES && SY_64
 // throughout the locking sequence the value lv holds the last info read from the lock in AM(dic).  We keep this as up-to-date as possible to avoid extra reads.  If the lock is not contended it will be read seldom
 #define DICLKRDRQ(dic,lv,cond) (lv=!(cond)?__atomic_add_fetch(&AM((A)dic),LOWESTBIT(DICLMSKRDK)+LOWESTBIT(DICLMSKRDV),__ATOMIC_ACQ_REL):DICLSINGLETHREADED)  // put up read request and read current status. Cannot overflow
 #define DICLKRDWTK(dic,lv) if(unlikely((lv&DICLMSKWRK)!=0))if((lv&DICLMSKWRV)!=0)lv=diclkrdwtkv(dic,lv);  // wait till current owner finishes with hash/keys, and update status.  Skip if single-threaded (WR=10)
@@ -1060,7 +1060,12 @@ static DF1(jtdicdel){F12IP;A z;
 #define RLRC(name,node) name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>24)]; name##l=name##ch&_bzhi_u64(~(UI8)1,nodeb); name##r=(name##ch>>(nodeb&0xff))&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;  // clears LSBs in ##l and ##r
 #define DRLRC(name,node) DLRC(name) RLRC(name,node)
 #define DSOC(name) UI8 name##ch; UI name##s,name##o,name##c;  // declare names for chrn, ,clr, s (child in same direction as dir), o (child in opposite direction from dir)
+#if defined(RASPI) && !SY_64
+// #define RSOC(name,node,dir) {C taddr[30]; sprintf(taddr,"%p",(hashtbl+(node)*(nodeb>>24)));name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>24)]; I ss=(dir)?(C)nodeb:0, os=(dir)?0:(C)nodeb; name##s=(name##ch>>ss)&_bzhi_u64(~(UI8)1,nodeb); name##o=(name##ch>>os)&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;}
+#define RSOC(name,node,dir) {forcetomemory(hashtbl+(node)*(nodeb>>24));name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>24)]; I ss=(dir)?(C)nodeb:0, os=(dir)?0:(C)nodeb; name##s=(name##ch>>ss)&_bzhi_u64(~(UI8)1,nodeb); name##o=(name##ch>>os)&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;}
+#else
 #define RSOC(name,node,dir) {name##ch=*(UI8*)&hashtbl[(node)*(nodeb>>24)]; I ss=(dir)?(C)nodeb:0, os=(dir)?0:(C)nodeb; name##s=(name##ch>>ss)&_bzhi_u64(~(UI8)1,nodeb); name##o=(name##ch>>os)&_bzhi_u64(~(UI8)1,nodeb); name##c=name##ch&1;}
+#endif
 #define DRSOC(name,node,dir) DSOC(name) RSOC(name,node,dir)
 #define SIB(node,lnode,rnode) ((lnode)^(rnode)^(node))  // sibling of current node
 #define WLRC(node,num,val,clr) {UI4 t=(val)+(clr); WRHASH1234(t, (nodeb>>24), &hashtbl[((node)+(num))*(nodeb>>24)]);}

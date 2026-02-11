@@ -73,7 +73,7 @@
 #define INLINE __inline__ __attribute__((__always_inline__,__gnu_inline__))
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
+#if defined(_WIN64)||defined(__LP64__)
 #ifndef C_AVX512
 #define C_AVX512 0
 #endif
@@ -89,6 +89,8 @@
 #define C_AVX512 0
 #undef C_AVX2
 #define C_AVX2 0
+#undef EMU_AVX2
+#define EMU_AVX2 0
 #endif
 
 #ifdef _WIN32
@@ -843,11 +845,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define EMSGNOMSGLINE 0x80000  // set to append 'invalid inflection' to msg
 
 #ifndef PYXES
+#if SY_64
 #define PYXES 1
-#endif
-#if !SY_64
-#undef PYXES
+#else
 #define PYXES 0
+#endif
 #endif
 
 // if we are not multithreading, report the master thread only

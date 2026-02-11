@@ -77,16 +77,6 @@ NB. this failed on windows arm64
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
-NB. debug rpi32
-load 'dictionary'
-echo params=:'tree',&<('initsize';200),('keytype';4),('valueshape';''),('keyshape';''),:('valuetype';4)
-mydict=: params conew 'jdictionary'
-(i. 10) put__mydict 100 + ?~ 10
-echo count__mydict''
-(1) 16!:_7 dict__mydict
-destroy__mydict''
-4!:55 'mydict';'params'
-
 4!:55 ;:'x y'
 4!:55 ;:'x y'
 ECHOFILENAME0=: ECHOFILENAME
@@ -108,33 +98,11 @@ exit^:(*@#RES) *@#RES
 echo '>>> testing gxco1.ijs'
 RES=: RUN4 (<testpath),each <'gxco1.ijs'
 exit^:(*@#RES) *@#RES
-echo '>>> testing gdic2.ijs'
-RES=: RUN4 (<testpath),each <'gdic2.ijs'
-exit^:(*@#RES) *@#RES
-echo '>>> testing gdic.ijs'
-RES=: RUN4 (<testpath),each <'gdic.ijs'
-exit^:(*@#RES) *@#RES
 RES=: ''
 QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 
 0!:_1 '$'   NB. temp skip to allow running full test suite
-3 : 0''
-ECHOFILENAME0=: ECHOFILENAME
-ECHOFILENAME=: 0
-QKTEST0=: QKTEST
-QKTEST=: 1
-echo '>>> testing gctrl.ijs'
-for_i. i.100 do.
-  RES=: RUN4 (<testpath),each <'gctrl.ijs'
-  exit^:(*@#RES) *@#RES
-end.
-RES=: ''
-QKTEST=: QKTEST0
-ECHOFILENAME=: ECHOFILENAME0
-1
-)
-
 3 : 0''
 ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0

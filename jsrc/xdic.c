@@ -1705,7 +1705,7 @@ static INLINE UI8 jtdelslotso(DIC *dic,void *k,I n,J jt,UI lv,VIRT virt,B *zv){I
     sibling=RDIR(parent,parentd^1);   // Fetch new sibling, which is perforce black
    }
    // Here sibling is black (it may have been a same-child, now swapped into that position)
-#if defined(RASPI)
+#if 0 && defined(RASPI)
   {
 fprintf(stderr,">>> sibling "FMTI" nodeb "FMTI" nodeb>>24 "FMTI" \n",sibling, nodeb, (nodeb>>24));
 fprintf(stderr,">>> hashtbl[..] "FMTI" \n",(sibling)*(nodeb>>24));

@@ -73,7 +73,7 @@
 #define INLINE __inline__ __attribute__((__always_inline__,__gnu_inline__))
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
+#if defined(_WIN64)||defined(__LP64__)
 #ifndef C_AVX512
 #define C_AVX512 0
 #endif
@@ -89,6 +89,8 @@
 #define C_AVX512 0
 #undef C_AVX2
 #define C_AVX2 0
+#undef EMU_AVX2
+#define EMU_AVX2 0
 #endif
 
 #ifdef _WIN32

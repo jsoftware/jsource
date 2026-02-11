@@ -11,7 +11,7 @@ NB. obsolete )
 c1=: 9!:36 ''
 9!:37[ 0 100000 0 100000
 
-require 'data/dictionary'
+load 'dictionary'
 
 cocurrent 'base'
 

@@ -845,11 +845,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define EMSGNOMSGLINE 0x80000  // set to append 'invalid inflection' to msg
 
 #ifndef PYXES
+#if SY_64
 #define PYXES 1
-#endif
-#if 0 && !SY_64
-#undef PYXES
+#else
 #define PYXES 0
+#endif
 #endif
 
 // if we are not multithreading, report the master thread only

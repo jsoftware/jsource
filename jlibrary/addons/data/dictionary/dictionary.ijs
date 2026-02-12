@@ -17,7 +17,6 @@ valueshape =: i. 0
 keyhash =: 16!:0`''
 keycompare =: 16!:0`''
 initsize =: 100
-name =: ''
 
 if. (-: (index_type {.~ -@#)) 'concurrent' do.
   singlethreaded =. 0
@@ -53,13 +52,23 @@ size =: initsize
 dict =: keyfn f. (16!:_1) internal_parameters
 
 NB. Assign names.
-if. name -: '' do. prefix =. suffix =. '' else. 'prefix suffix' =. (,{:)&.>/\. split_name name end.
-(prefix , 'get' , suffix) =: dict 16!:_2
-(prefix , 'put' , suffix) =: dict 16!:_3
-(prefix , 'del' , suffix) =: dict 16!:_4
-(prefix , 'has' , suffix) =: dict 16!:_12
-(prefix , 'count' , suffix) =: 0&(16!:_8)@dict
-if. index_type -: 'tree' do. (prefix , 'mget' , suffix) =: dict 16!:_6 end.  NB. getkv only on rb trees
+get =: dict 16!:_2
+put =: dict 16!:_3
+del =: dict 16!:_4
+has =: dict 16!:_12
+count =: 0&(16!:_8)@dict
+if. index_type -: 'tree' do.
+  valuemask =. 2b100 * valueshape -.@-: 0
+  check1x =: (_1:^:(_&-:))@:(13!:8@3^:(<&0))@:(13!:8@14^:('' -.@-: $))
+  mget =: dict 16!:_6
+  min =: [: 13!:8@6^:(0 = +/@:(#@>)) (2b11000 + valuemask)&mget
+  max =: [: 13!:8@6^:(0 = +/@:(#@>)) (2b11001 + valuemask)&mget
+  after =: _&$: : ((mget~ (2b101010 + valuemask) , check1x)~)
+  since =: _&$: : ((mget~ (2b101011 + valuemask) , check1x)~)
+  before =: _&$: : ((mget~ (2b101000 + valuemask) , check1x)~)
+  until =: _&$: : ((mget~ (2b101001 + valuemask) , check1x)~)
+  range =: 1 1&$: : ((mget~ 2b1001000 + valuemask + #.@:|.@:(13!:8@3^:(1 1 -.@-: e.&0 1))@:(13!:8@14^:((, 2) -.@-: $)))~)
+end.
 EMPTY
 }}
 
@@ -111,11 +120,3 @@ end.
 (attribute) =: value
 EMPTY
 }}"1
-
-NB. y is string representing a name with possibly specified locale. Returns two boxes: name ; suffix with locale.
-NB. Right part of hook.
-NB. If '_' is the last character of y then the name has explicitly specified locale, so get the indexes of '_'.
-NB. Left part of hook.
-NB. Use the indexes to split the name or if the number of indexes is less than 2 then suppose name is from base.
-NB. Note that number of indexes may be smaller then number of '_' e.g. 0 when condition from right part of the hook was false.
-split_name =: ('__' ,~&< [)`(({. ,&< }.)~ _2&{)@.(2 <: #@])  ''"_`([: I. '_'&=)@.('_' -: {:)

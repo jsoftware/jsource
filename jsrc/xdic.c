@@ -1398,7 +1398,7 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  I vb=dic->bloc.vbytelen;   //  len of 1 value
 
  // Step 1 - read & create stack
- UI4 stack[64][2];  // stack we will use.  has node and node's distal child (i. e. for LR scan, distal=R)
+ UI4 stack[64][2];  // stack we will use.  has node and node's distal child (i. e. for LR scan, distal=R).  This allows quick recovery of distal child for recursion on it
  I sx;  // index into stack.  On return from first scan, points to the stack entry for the found node
  sx=searchtree(plist&PLISTS1,jt,hashtbl,kib,nodeb,kbase,virt,cf,stack,&flags,k);  // search as requested, for min/start, LR/RL
  if(unlikely(sx<=0)){if(sx==0)goto retempty; goto exitkeyvals;}  // empty database or error

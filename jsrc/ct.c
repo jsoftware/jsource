@@ -244,7 +244,7 @@ A jtpyxval(J jt,A pyx){UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   }
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
   if(unlikely(lda(&JT(jt,adbreak)[0])>1)){err=EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
-  if(uncommon(-1ull==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
+  if(uncommon(UIMAX==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
    if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;  // if time wrapped around, reset to infinite
    else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
   sta(&jt->futexwt,&blok->seqstate); // make sure systemlock knows how to wake us up.  It will clear this field after the wakeup, so we get only one wakeup per systemlock
@@ -700,7 +700,7 @@ C jtjobrun(J jt,unsigned char(*f)(J,void*,UI4),void *ctx,UI4 n,I poolno){JOBQ *j
   ++job->internal.nf;  // we have finished a block - account for it
   i=job->ns_mask; err=job->internal.err;  // account for the work unit we are taking, fetch current composite error status
   // whether we started threads or not, there is work to do.  We will pitch in and work, but only on our job
-  if(unlikely(i==lastqueuedtask)){
+  if(unlikely((I)i==lastqueuedtask)){
    // We are taking the last task.
    if(job==oldjob&&job->next==0){
     // special case where the job we are working on is the only job in the queue.  This is the usual case, but its importance is in debug suspension, where as noted

@@ -213,7 +213,7 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, w
    if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
    if(i==-1){r=-1;goto fail;} //if the kernel says we timed out, trust it rather than doing another syscall to check the time
 retime:
-   if(-1ull==(ns=jtmdif(tgt))){r=-1;goto fail;} //update delta, abort if timed out
+   if(UIMAX==(ns=jtmdif(tgt))){r=-1;goto fail;} //update delta, abort if timed out
   }
   CLRFUTEXWT;  // remove wakeup to this thread
  }
@@ -249,7 +249,7 @@ C jtjsleep(J jt,UI ns){
   if(unlikely(i>0)){r=EVFACE;break;}
   if(i==-1){r=0;break;} //timed out
 retime:
-  if(-1ull==(ns=jtmdif(tgt))){r=0;break;}}  // recalculate time-to-target
+  if(UIMAX==(ns=jtmdif(tgt))){r=0;break;}}  // recalculate time-to-target
  CLRFUTEXWT;
  R r;}
 #endif //PYXES

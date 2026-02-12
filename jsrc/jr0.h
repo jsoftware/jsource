@@ -45,7 +45,7 @@
 #define ASSERTSUFF(b,e,suff)   {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); {suff}}}  // when the cleanup is more than a goto
 #define ASSERTGOTO(b,e,lbl)   ASSERTSUFF(b,e,goto lbl;)
 #define ASSERTTHREAD(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
-#define ASSERTD(b,s)    {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsigd((s)); R 0;}}
+#define ASSERTD(b,s)    {if(unlikely(!(b))){fprintf(stderr,"error msg: %s : file %s line %d\n",s,__FILE__,__LINE__); jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jtjsignale(jt,(e)|EMSGLINEISNAME|EMSGNOMSGLINE,(nm),0); R 0;}}  // signal error, overriding the running name with a different one
 #define ASSERTNGOTO(b,e,nm,lbl) {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jtjsignale(jt,(e)|EMSGLINEISNAME|EMSGNOMSGLINE,(nm),0); goto lbl;}}  // same, but without the exit

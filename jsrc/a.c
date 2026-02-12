@@ -93,7 +93,7 @@ F1(jtbdot){F12IP;A b,h=0;I j=0,n,*v;
 /*     unused entries are set to 0                  */
 
 #if PYXES
-#define INITHASH(tbl,x,y) ((((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UI)AN(tbl))>>32)  // starting hash index for a given x,y
+#define INITHASH(tbl,x,y) ((((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UIL)AN(tbl))>>32)  // starting hash index for a given x,y
 #define LOCKLOC ht3->lock
 #else
 #define INITHASH(tbl,x,y) (((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UIL)AN(tbl))>>32;  // starting hash index for a given x,y

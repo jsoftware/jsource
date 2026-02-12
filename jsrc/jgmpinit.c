@@ -30,13 +30,13 @@ void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
 // see jgmp.h for some notes on type X
 //
 #if C_LE
- #if SY_64
+ #if PYXES
   #define Xrh 1,0,FHRHISGMP,0,0
  #else
   #define Xrh 1,0,FHRHISGMP
  #endif
 #else
- #if SY_64
+ #if PYXES
   #define Xrh 0,0,FHRHISGMP,0,1
  #else
   #define Xrh  FHRHISGMP,0,1

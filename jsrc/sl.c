@@ -530,7 +530,7 @@ noextend: ;
 // a is MARK (default size, permanent) or combined size/perm flag
 static F2(jtloccre){F12IP;A g,y,z=0;C*s;I n,p;A v;
  ARGCHK2(a,w);
- if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(BETWEENC(p,-15,14),EVLIMIT);}
+ if(MARK&AT(a))p=JT(jt,locsize)[0]; else{p=rei0(a); ASSERT(BETWEENC(p,-15,14),EVLIMIT);}
  y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
  SYMRESERVE(2)  // make sure we have symbols to insert, for the locale itself
  A op=0;  // old path, if there is one
@@ -565,7 +565,7 @@ exit:
 
 static F1(jtloccrenum){F12IP;C s[20];I k,p;A x;
  ARGCHK1(w);
- if(MARK&AT(w))p=JT(jt,locsize)[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
+ if(MARK&AT(w))p=JT(jt,locsize)[1]; else{p=rei0(w); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  p=FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE);  // get table, size 2^p+6 minus a little
  p-=(UI)p/(sizeof(LX)*BB)+1;  // leave room for Bloom filter
  SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert

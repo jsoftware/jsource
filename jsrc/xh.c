@@ -217,7 +217,7 @@ DF1(jthostio){F12IP;C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
  R z;
 }
 
-F1(jtjwait){F12IP;I k;int s; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}  // 2!:3
+F1(jtjwait){F12IP;I k;int s; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}  // 2!:3
 
 #endif
 #endif

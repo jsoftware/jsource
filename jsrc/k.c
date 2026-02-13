@@ -1058,7 +1058,7 @@ F2(jtxco2){F12IP;A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  ARGCHK2(a,w);
  n=AN(w); r=AR(w); t=AT(w);
  ASSERT(!ISSPARSE(t),EVNONCE);
- RE(j=i0(a));
+ j=rei0(a);
  switch(j){
  case -2: R aslash1(CDIV,w);
  case -1: R bcvt(1,w);

@@ -781,7 +781,7 @@ F2(jtdgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J
 DF2(jtordstat){F12IP;A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  I i=NRANDS-1;  // i points to the next random number to draw
  ARGCHK2(a,w);
- n=AN(w); wt=AT(w); RE(j=i0(a));
+ n=AN(w); wt=AT(w); j=rei0(a);
  if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R jthook2cell(jt,a,w,self);  // if not int/float, or short, or not (atom a and list w), do full grade
  if((UI)j>=(UI)n){j+=n; ASSERT((UI)j<(UI)n,EVINDEX);}
  // deal a bunch of random floats to provide pivots.  We reuse them if needed

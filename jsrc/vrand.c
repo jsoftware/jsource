@@ -439,7 +439,7 @@ static void jtsm_init(J jt,UI s){
 /* ----------------------------------------------------------------------- */
 
 F1(jtrngraw){F12IP;A z;I n,*v;SETNEXT
- RE(n=i0(w));
+ n=rei0(w);
  ASSERT(0<=n,EVDOMAIN);
  GATV0(z,INT,n,1); v=AV1(z);
  DQ(n, *v++=NEXT;);
@@ -481,7 +481,7 @@ static B jtrngga(J jt,I i,struct rngparms*vv){
 }
 
 F1(jtrngselects){F12IP;I i;struct rngparms*vv=jt->rngdata->rngparms;
- RE(i=i0(w));
+ i=rei0(w);
  ASSERT(BETWEENO(i,0,NRNG),EVDOMAIN);
  jt->rngdata->rngparms[jt->rngdata->rng].rngI=jt->rngdata->rngi;
  switch(jt->rngdata->rng=i){
@@ -788,7 +788,7 @@ DF2(jtdeal){F12IP;A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->r
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
  F2RANK(0,0,jtdeal,self);
- RE(m=i0(a)); RE(c=n=i0(w));  // c starts as max#+1
+ m=rei0(a); RE(c=n=i0(w));  // c starts as max#+1
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m*3.0<n||(x&&x<=(UI)n)){  // TUNE for about m=100000; the cutoff would be higher for smaller n
@@ -1021,7 +1021,7 @@ static DF2(jtdealdot){F12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,q,*v,wt,*yv,*zv;UI c
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
  F2RANK(0,0,jtdealdot,self);
- RE(m=i0(a)); RE(c=n=i0(w));
+ m=rei0(a); RE(c=n=i0(w));
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){

@@ -376,7 +376,7 @@ F2(jtdbpasss){F12IP;I t=AT(w); w=t&NOUN?w:a; a=t&NOUN?a:mtm; RETF(AFLAG(w)&AFDEB
 // of exit (run, step, clear, etc).  Other boxes give values for the run and ret types.  EXCEPTION: 13!:0 returns i. 0 0 for compatibility, but still flagged as AFDEBUGRESULT
 F1(jtdbc){F12IP;I k;
  ARGCHK1(w);
- RE(k=i0(w));
+ k=rei0(w);
  ASSERT(!(k&~(TRACEDBDEBUGENTRY|TRACEDBSUSFROMSCRIPT|TRACEDB1)),EVDOMAIN);
  ASSERT(!k||!jt->glock,EVDOMAIN);  // can't turn on debug if script locked
  // turn debugging on/off in all threads

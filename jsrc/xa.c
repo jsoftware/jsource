@@ -42,7 +42,7 @@ extern UC* tohex(UC* dest, UC* src, I len);
 
 // 9!:32-33 #tries for elliptic-curve factoring
 F1(jtecmtriesq){F12IP;ASSERTMTV(w); R sc(jt->ecmtries);}
-F1(jtecmtriess){F12IP;I i; RE(i=i0(w)); ASSERT(BETWEENC(i,1,255),EVLIMIT) jt->ecmtries=i; R mtm;}
+F1(jtecmtriess){F12IP;I i=rei0(w); ASSERT(BETWEENC(i,1,255),EVLIMIT) jt->ecmtries=i; R mtm;}
 
 // 9!:34-35 assertion enable
 F1(jtassertq){F12IP;ASSERTMTV(w); R scb(JT(jt,assert));}
@@ -205,7 +205,7 @@ F1(jtseclevq){F12IP;ASSERTMTV(w); R sc(JT(jt,seclev));}   // 9!:24  security lev
 
 // 9!:25 security level
 F1(jtseclevs){F12IP;I k;
- RE(k=i0(w));
+ k=rei0(w);
  ASSERT(0==k||1==k,EVDOMAIN);
  if(!JT(jt,seclev)&&1==k)JT(jt,seclev)=(UC)k;
  R mtm;
@@ -213,7 +213,7 @@ F1(jtseclevs){F12IP;I k;
 
 #if 0  // not implemented
 F1(jtsysparmq){F12IP;I k;
- RE(k=i0(w));
+ k=rei0(w);
  switch(k){
  default: ASSERT(0,EVINDEX);
  case 0:  R sc(jt->fdepn);
@@ -259,7 +259,7 @@ F1(jtasgzombq){F12IP;ASSERTMTV(w); R sc(JT(jt,asgzomblevel));}
 
 // 9!:53
 F1(jtasgzombs){F12IP;I k;
- RE(k=i0(w));
+ k=rei0(w);
  ASSERT(BETWEENC(k,0,2),EVDOMAIN);
  JT(jt,asgzomblevel)=(C)k;
  R mtm;
@@ -597,7 +597,7 @@ F2(jtcpufeature2){F12IP;I k;
  ASSERT(AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
- RE(k=i0(a));  // get arg
+ k=rei0(a);  // get arg
  ASSERT(k==0||k==1,EVDOMAIN);
  w=str0(w);
  if(k){
@@ -816,7 +816,7 @@ F1(jtgemmtune){F12IP;I k;
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);
  ASSERT(1==AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
- RE(k=i0(w));  // get arg
+ k=rei0(w);  // get arg
  ASSERT(k==0||k==1||k==2,EVDOMAIN);
  R sc((I)FLOAT16TOFLOAT((0==k)?JT(jt,igemm_thres):(1==k)?JT(jt,dgemm_thres):JT(jt,zgemm_thres)));
 }
@@ -830,8 +830,8 @@ F2(jtgemmtune2){F12IP;I j,k;
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);
  ASSERT(1==AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
- RE(j=i0(a));  // get arg: limit
- RE(k=i0(w));  // get arg: selected type
+ j=rei0(a);  // get arg: limit
+ k=rei0(w);  // get arg: selected type
  ASSERT(j>=-1,EVDOMAIN);
  ASSERT(k==0||k==1||k==2,EVDOMAIN);
  FLOAT16 j16=FLOATTOFLOAT16(j);
@@ -853,7 +853,7 @@ F1(jtboxedsparse){F12IP;I k;
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);
  ASSERT(1==AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
- RE(k=i0(w));  // get arg
+ k=rei0(w);  // get arg
  ASSERT(k==0||k==1,EVDOMAIN);
  fboxedsparse=k;
  R mtv;
@@ -867,7 +867,7 @@ F1(jtaudittdisab){F12IP;
 #if MEMAUDIT&2
  I k,oldval;
  oldval = JT(jt,audittstackdisabled);  // return value
- RE(k=i0(w));  // get arg
+ k=rei0(w);  // get arg
  if(k&2){JT(jt,audittstackdisabled)=0; audittstack(jt);}  // run once if so requested
  JT(jt,audittstackdisabled)=k;
  R sc(oldval);

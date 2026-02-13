@@ -822,7 +822,7 @@ F2(jttdot){F12IP;
 // x T. y - various thread and task operations
 F2(jttcapdot2){F12IP;A z;
  ARGCHK2(a,w)
- I m; RE(m=i0(a))   // get the x argument, which must be an atom
+ I m=rei0(a);   // get the x argument, which must be an atom
  switch(m){
  case 4: { // rattle the boxes of y and return status of each
   ASSERT((SGNIF(AT(w),BOXX)|(AN(w)-1))<0,EVDOMAIN)   // must be boxed or empty

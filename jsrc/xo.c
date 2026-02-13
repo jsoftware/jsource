@@ -37,11 +37,11 @@ A jtunvfn(J jt,F x,A dummy){READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); DQ(A
 // w is a user argument, either a number or a filename string.  If a number, return it (with error if it is 0); if a string return the file# if found, or 0 if not found
 // return of 0 is not ipso facto an error
 I jtfnum(J jt,A w){A y;I h,j,z=0;
- if(AT(w)&B01+INT){RE(h=i0(w)) ASSERT(h!=0,EVFNUM); R h;}  // return numeric arg forthwith
+ if(AT(w)&B01+INT){h=rei0(w); ASSERT(h!=0,EVFNUM); R h;}  // return numeric arg forthwith
  ASSERT(AT(w)&BOX,EVDOMAIN);
  y=C(AAV(w)[0]);
  ASSERT(AN(y),EVLENGTH);
- if(AT(y)&B01+INT){RE(h=i0(y)) ASSERT(h!=0,EVFNUM); R h;}
+ if(AT(y)&B01+INT){h=rei0(y); ASSERT(h!=0,EVFNUM); R h;}
  RZ(y=fullname(vslit(y)));  // get name to match
  READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); 
  DO(AM(JT(jt,fopafl)), if(equ(v[i],y)){z=AM(v[i]); break;} )  // if filename found, return its file#
@@ -51,7 +51,7 @@ I jtfnum(J jt,A w){A y;I h,j,z=0;
 
 // returns 0 if given file# is not open, otherwise the string name of the file
 F1(jtfname){F12IP;I j; A z=0;
- I h; RE(h=i0(w)) ASSERT(h!=0,EVFNUM);
+ I h=rei0(w); ASSERT(h!=0,EVFNUM);
  READLOCK(JT(jt,flock))  A*v=AAV0(JT(jt,fopafl));
  DO(AM(JT(jt,fopafl)), if(h==AM(v[i])){z=ca(v[i]); break;} )  // if filename found, return its file#.  Clone the string because we need the AM field in the table; also we don't do EPILOG
  READUNLOCK(JT(jt,flock))

@@ -1411,7 +1411,7 @@ F2(jtcut){F12IP;A h=0;I flag=0,k;
 // by /. and ;.1 must be the same as far as flags etc.  For the shared case, inplacing is OK
  ARGCHK2(a,w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
- RE(k=i0(w));
+ k=rei0(w);
  A z; fdefallo(z)
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(BETWEENC(k,-2,2),EVNONCE);}else{flag=FAV(a)->flag&VNOLOCCHG+VNONAME+VNOSELF;}
  switch(k){

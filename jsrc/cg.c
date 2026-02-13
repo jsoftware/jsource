@@ -150,7 +150,7 @@ F2(jtevger){F12IP;A hs;I k;
  ARGCHK2(a,w);
  ASSERT((AT(w)&VERB)==0,EVDOMAIN)   // must be m `: n
  STACKCHKOFL  // because this is an execution, we must check the stack to avoid self-executions
- RE(k=i0(w)); 
+ k=rei0(w); 
  if(k==GTRAIN)R exg(a);  // `:6
  RZ(hs=fxeachv(RMAX,a));
  ASSERT(BETWEENC(k^1,GAPPEND^1,GINSERT^1),EVDOMAIN)   // require valid type

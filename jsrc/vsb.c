@@ -797,12 +797,12 @@ F2(jtsb2){F12IP;A z;I j,k,n;
  I*zv;
 #endif
  ARGCHK2(a,w);
- RE(j=i0(a)); n=AN(w);
+ j=rei0(a); n=AN(w);
  ASSERT(!BETWEENC(j,1,7)||!n||SBT&AT(w),EVDOMAIN);
  switch(j){
  default:   ASSERT(0,EVDOMAIN);
  case 0:
-  RE(k=i0(w));
+  k=rei0(w);
   switch(k){
   default: ASSERT(0,EVDOMAIN);
   case 0:  R sc(AM(JT(jt,sbu)));

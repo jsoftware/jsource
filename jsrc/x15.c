@@ -1442,10 +1442,10 @@ F1(jtcderx){F12IP;I4 t;C buf[1024];
  R jlink(sc(t),cstr(buf));
 }    /* 15!:11  GetLastError information */
 
-F1(jtmema){F12IP;I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); R sc((I)MALLOC(k));} /* ce */
+F1(jtmema){F12IP;I k; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); R sc((I)MALLOC(k));} /* ce */
      /* 15!:3  memory allocate */
 
-F1(jtmemf){F12IP;I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); FREE((void*)k); R num(0);}
+F1(jtmemf){F12IP;I k; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); FREE((void*)k); R num(0);}
      /* 15!:4  memory free */
 
 // memr
@@ -1532,7 +1532,7 @@ F1(jtmemu) {F12IP;  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtfg&JTI
 }
 F2(jtmemu2) {F12IP; ASSERT(!JT(jt,seclev),EVSECURE) RETF(ca(w)); }  // dyad - force copy willy-nilly
 
-F1(jtgh15){F12IP;A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=i0(w)); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header
+F1(jtgh15){F12IP;A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header
      /* 15!:8  get header */
 
 F1(jtfh15){F12IP;A k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=(A)i0(w)); ASSERT(AT(k)==LOWESTBIT(AT(k))&&(AT(k)&DIRECT),EVDOMAIN) fr(k); R num(0);}
@@ -1872,7 +1872,7 @@ F2(jtcallback2){F12IP;I k1;
  else
  {
   I k;
-  RE(k=i0(w));
+  k=rei0(w);
   ASSERT(0==k1,EVDOMAIN);
   ASSERT((UI)k<(UI)sizeof(cbv)/SZI, EVINDEX);
   R sc(cbv[k]);
@@ -1881,7 +1881,7 @@ F2(jtcallback2){F12IP;I k1;
 
 F1(jtnfes){F12IP;I k;I r;
  ASSERT(!JT(jt,seclev),EVSECURE)
- RE(k=i0(w));
+ k=rei0(w);
  ASSERT(BETWEENC(k,0,1),EVDOMAIN);
  r=JT(jt,nfe);
  JT(jt,nfe)=k;

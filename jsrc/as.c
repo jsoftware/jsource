@@ -332,7 +332,7 @@ static DF1(jtsscan){F12IP;A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
 
 static F2(jtomask){F12IP;A c,r,x,y;I m,n,p;
  ARGCHK2(a,w);
- RE(m=i0(a)); p=ABS(m); SETIC(w,n);
+ m=rei0(a); p=ABS(m); SETIC(w,n);
  r=sc(0>m?(n+p-1)/p:MAX(0,1+n-m)); c=tally(w);
  x=reshape(sc(p),  num(0));
  y=reshape(0>m?c:r,num(1) );
@@ -360,7 +360,7 @@ static DF2(jtofxinv){F12IP;A f,fs,z;C c;I t;V*v;
 
 static DF2(jtofxassoc){F12IP;A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANKW(0,RMAX,jtofxassoc,self);
- SETIC(w,m); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
+ SETIC(w,m); k=rei0(a); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
  f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)AV(v->fgh[1])[0]:v->id;  // self = f/\. f = f/  x = f  v = verb info for f
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);  // if there is not >1 outfix, do general code which handles empties
  if(-1<=k){d=m-c;     RZ(i=IX(d)); RZ(j=apv(d,c,1L));}

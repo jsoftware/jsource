@@ -66,7 +66,7 @@ F1(jtstype){F12IP;ARGCHK1(w); R sc(toonehottype(AT(w)));}
 // (3!:0-type) c. w - convert
 F2(jtcdot2){F12IP;A z;
  ARGCHK2(a,w);
- I t; RE(t=i0(a)) ASSERT(t=fromonehottype(t,jt),EVDOMAIN)  // convert from 3!:0 form, which must  be to atomic integer, to internal type, which must be valid
+ I t=rei0(a); ASSERT(t=fromonehottype(t,jt),EVDOMAIN)  // convert from 3!:0 form, which must  be to atomic integer, to internal type, which must be valid
  if(t!=AT(w))w=cvt(t,w);  // if the type doesn't match the desired, convert it
  RETF(w);
 }
@@ -371,14 +371,14 @@ F1(jthexrep1){F12IP;ARGCHK1(w); PROLOG(000); ASSERT(NOUN&AT(w),EVDOMAIN); A z=hr
 
 F2(jtbinrep2){F12IP;I k;
  ARGCHK2(a,w);
- RE(k=i0(a)); if(10<=k)k-=8;
+ k=rei0(a); if(10<=k)k-=8;
  ASSERT(BETWEENC(k,0,3),EVDOMAIN);
  R brep((B)(k&1),(B)(2<=k),w);
 }    /* a 3!:1 w */
 
 F2(jthexrep2){F12IP;I k;
  ARGCHK2(a,w); 
- RE(k=i0(a)); if(10<=k)k-=8;
+ k=rei0(a); if(10<=k)k-=8;
  ASSERT(BETWEENC(k,0,3),EVDOMAIN);
  R hrep((B)(k&1),(B)(2<=k),w);
 }    /* a 3!:3 w */
@@ -543,7 +543,7 @@ F2(jtic2){F12IP;A z;I j,m,n,p,zt;I4* RESTRICT y;UI4* RESTRICT y1;S*s;U short*u;
  ARGCHK2(a,w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
- RE(j=i0(a)); ASSERT(BETWEENC(j,-7,7),EVDOMAIN) I j1hot=(I)1<<(j-(-7));  // x must be [_7,7], get 1hot form
+ j=rei0(a); ASSERT(BETWEENC(j,-7,7),EVDOMAIN) I j1hot=(I)1<<(j-(-7));  // x must be [_7,7], get 1hot form
  if(unlikely(j1hot&0x6003)){I4 *v1,*x1;   // _7, _6, 6, 7
   p=j1hot&0x4001?2:1; I wt=(INT2>>1)<<p;  // lg2 of length of atoms, type of atoms
   if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),wt))RZ(w=cvt(wt,w));}
@@ -578,7 +578,7 @@ F2(jtfc2){F12IP;A z;I j,m,n,p,zt;float*s;
  ARGCHK2(a,w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
- RE(j=i0(a));
+ j=rei0(a);
  if(11==j||-11==j){E * RESTRICT x1,* RESTRICT v1;    // quad precision
  p=4;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),QP))RZ(w=ccvt(QP,w,0));}
@@ -664,7 +664,7 @@ static DF1(jtpackbyte1){F12IP;
 // 3!:7 Convert from/to packed bits
 DF2(jtpackbyte){F12IP;
  ARGCHK2(a,w);
- I j; RE(j=i0(a)); ASSERT(BETWEENC(j,-1,1),EVDOMAIN) // x is -1/0/1
+ I j=rei0(a); ASSERT(BETWEENC(j,-1,1),EVDOMAIN) // x is -1/0/1
  AF cellrtn=jtpackbyte1; cellrtn=j==0?jtpopcount:cellrtn; cellrtn=j<0?jtpackbytem1:cellrtn;  // routine for 1 cell
  DF1RANK(1,cellrtn,self);  // loop over all cells of implied w arg
 }
@@ -726,7 +726,7 @@ static DF2(jtpkbytewr){F12IP;A z;
 // others TBD
 DF1(jtpkbyte){F12IP;
  ARGCHK1(w)   // verify arg present
- I j; RE(j=i0(w)); ASSERT(BETWEENC(j,-1,3),EVDOMAIN) // x is -1..3
+ I j=rei0(w); ASSERT(BETWEENC(j,-1,3),EVDOMAIN) // x is -1..3
  AF f=j<0?jtpkbyterd:jtpkbytewr;  // _1 for read, others for write
  I r=j<0?1:RMAX;  // read has rsank 1, write has rank _
  A z=fdef(VF2NONE,CIBEAM,VERB,jtvalenceerr,f,w,0,0,VNOLOCCHG+VNONAME+VNOSELF,0,r,r);
@@ -741,7 +741,7 @@ DF1(jtpkbyte){F12IP;
 F2(jtlowerupper){F12IP;I k,n;A z;
  ARGCHK2(a,w);
  ASSERT(1==AN(a),EVDOMAIN);
- RE(k=i0(a));
+ k=rei0(a);
  ASSERT(BETWEENC(k,0,1),EVDOMAIN);
  ASSERT(!(ISSPARSE(AT(w))&&(LIT+C2T+C4T)&AT(w)),EVNONCE);
  if(ISSPARSE(AT(w))||!((LIT+C2T+C4T)&AT(w))) RETF(ca(w));
@@ -762,7 +762,7 @@ F2(jtlowerupper){F12IP;I k,n;A z;
 F2(jtlrtrim){F12IP;I k;
  ARGCHK2(a,w);
  ASSERT(1==AN(a),EVDOMAIN);
- RE(k=i0(a));
+ k=rei0(a);
  ASSERT(BETWEENC(k,0,2),EVDOMAIN);
  if(0==k) R rtrim(w);
  else if(1==k) R ltrim(w);

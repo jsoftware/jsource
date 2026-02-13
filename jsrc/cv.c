@@ -127,7 +127,7 @@ fillreshape:;
    ASSERT(k<=NPP,EVLIMIT); 
    fdeffill(z,0L,CFIT,VERB,jtfitpp1,FAV(a)->valencefns[1],a,w,0L,VNOLOCCHG+VNONAME+VNOSELF,m,l,r) RETF(z);  // ":!.f
   case CCYCLE:
-   RE(k=i0(w)); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
+   k=rei0(w); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
    fdeffill(z,0L,CFIT,VERB,jtpparity,jtvalenceerr,a,w,0L,VNOLOCCHG+VNONAME+VNOSELF,m,RMAX,RMAX) RETF(z);  // C.!.2
 #if 0  // unimplemented
   case CTILDE:   // noun~!.n - what in the world is that?

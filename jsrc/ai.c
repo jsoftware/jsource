@@ -117,7 +117,7 @@ A jtinvamp(J jt, A f, A g, A fampg){A ff,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  case COBVERSE: ff=FAV(h)->fgh[1]; R amp(nf?x:ff,nf?ff:x);
  case CPDERIV:  if(nf&&!AR(x))R ds(CPDERIV); break;  // only atom&p.. is invertible
 xco:
- case CXCO:     RE(n=i0(x)); ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN);  // fall through to create (-x)&u
+ case CXCO:     n=rei0(x); ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN);  // fall through to create (-x)&u
  case CROT:          // fall through to create (-x)&u
  case CCIRCLE:       // fall through to create (-x)&u
  case CSPARSE:  if(nf)R amp(negate(x),h);   break;
@@ -129,18 +129,18 @@ xco:
   else{ff=unname(h); R jtinvamp(jt,nf?x:ff,nf?ff:x,0);}
  case CSCO:     
   ASSERT(nf!=0,EVDOMAIN); 
-  RE(n=i0(x)); ASSERT(n&&BETWEENC(n,-6,6),EVDOMAIN);
+  n=rei0(x); ASSERT(n&&BETWEENC(n,-6,6),EVDOMAIN);
   R amp(sc(-n),h);
  case CUCO:
   ASSERT(nf!=0,EVDOMAIN); 
-  RE(n=i0(x)); ASSERT(BETWEENC(n,1,8)&!BETWEENC(n,5,6),EVDOMAIN);
+  n=rei0(x); ASSERT(BETWEENC(n,1,8)&!BETWEENC(n,5,6),EVDOMAIN);
   R amp(sc(-(1^(-n))),h);
  case CCANT:    
   ASSERT(nf!=0,EVDOMAIN); 
   R obverse(ev12(x,0,"(]: C.^:_1 i.@#@$) |: ]"),fampg?fampg:amp(f,g));
  case CPCO:
   if(nf){
-   RE(n=i0(x));
+   n=rei0(x);
    switch(n){
    case -4: case 4: R amp(negate(x),h);
    case -1:         R ds(CPCO);
@@ -207,14 +207,14 @@ xco:
  case CIBEAM:  // h is x!:y
   if(likely(nf!=0)){   // n&(x!:y)
    if(FAV(h)->localuse.lu1.foreignmn[0]==3){  // 3!:n
-    RE(n=i0(f));
+    n=rei0(f);
     if(BETWEENC(FAV(h)->localuse.lu1.foreignmn[1],4,7)&&likely(FAV(h)->localuse.lu1.foreignmn[1]!=6)){ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN); R amp(num(-n),g);}  // inverse of _2..2&(3!:(4 5 7)) is (-n)&(3!:(4 5 7))
     if((FAV(h)->localuse.lu1.foreignmn[1]&~2)==1){ASSERT(0==n||1==n||10==n||11==n,EVDOMAIN); R foreign(num(3),num(2));}  // inverse of [0/1/10/11]&(3!:[1/3]) is 3!:2
    }
   }
   break;
  case CBDOT:
-  RE(n=i0(x));
+  n=rei0(x);
   switch(i0(FAV(h)->fgh[1])){
   case 22: case 25:          R fampg?fampg:amp(f,g);
   case 19: case 28:          if(!nf)R fampg?fampg:amp(f,g); break;
@@ -296,7 +296,7 @@ xco:
  case CFIT:     if(CXCO==IDD(f))goto xco; //_1 x:!.n y is the same as _1 x: y, and n was already verified to be valid, so treat this the same as plain x:
   // otherwise fall through to...
  case CPOWOP:   
-  if(vf&&ng){RE(p=i0(g)); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}
+  if(vf&&ng){p=rei0(g); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}
   if(VGERL&v->flag)R AAV(v->fgh[2])[1];
   break;
  case CTILDE:

@@ -352,7 +352,7 @@ A cw57rep(J jt, A x){I i, q[3];
 // 5!:7
 static F2(jtxrep){F12IP;A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
  ARGCHK2(a,w);
- RE(j=i0(a)); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
+ j=rei0(a); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
  ASSERT(AT(w)&VERB+ADV+CONJ,EVDOMAIN);
  wv=FAV(w); h=wv->fgh[2];
  if(!(h&&CCOLONE==wv->id))R reshape(v2(0L,3L),ds(CACE));   // if not explicit defn or no body, return empty

@@ -1269,7 +1269,7 @@ DF2(jtfoldZ2){F12IP;
  I type; RE(type=i0(a));  // verify atomic integer
  ASSERT(BETWEENC(type,-3,1),EVINDEX)  //  requested action index must be in range
  I y;
- if(type==-3){RE(y=i0(w)); y=jt->afoldinfo->exestats[0]>=y;  // set y if current v count high enough
+ if(type==-3){y=rei0(w); y=jt->afoldinfo->exestats[0]>=y;  // set y if current v count high enough
  }else RE(y=b0(w));  // verify boolean
  if(y){
   I ymask=1<<(type-(-3));  // convert type to one-hot

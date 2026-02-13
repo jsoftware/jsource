@@ -1825,7 +1825,7 @@ DF2(jtdicempties){F12IP;
  ARGCHK2(a,w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  DIC *dic=(DIC*)w;
- I x; RE(x=i0(a)); ASSERT(BETWEENC(x,0,2),EVDOMAIN)  // x must be 0-2
+ I x=rei0(a); ASSERT(BETWEENC(x,0,2),EVDOMAIN)  // x must be 0-2
  I nodeb=(dic->bloc.emptysiz<<LGBB); UI kb=dic->bloc.kbytelen;  // #bits in empty-chain field; #bytes in key
  C *kv=CAV(dic->bloc.keys);   // point to start of keys
  I nempty=0; UI emptyx;  // # of empties & index of first one

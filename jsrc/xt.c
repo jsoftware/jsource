@@ -243,7 +243,7 @@ F1(jttss){F12IP;ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 DF2(jttsit2){F12IP;A z;D t;I n;I stackallo=0,i;
  F2RANK(0,1,jttsit2,self);
  PROLOG(000);
- RE(n=i0(a));
+ n=rei0(a);
  RZ(w=ddtokens(vs(w),4+1+!!EXPLICITRUNNING));   // tokenize outside of timer.  We time as if the sentence were executed in an explicit defn
  // apply pppp to the sentence.  Create a 1-sentence block of control words
  A cwa; GAT0(cwa,LIT,2*sizeof(CW),1) AN(cwa)=1; CW *cwv=(CW*)voidAV1(cwa); cwv[0].tcesx=0+(CBBLOCK<<TCESXTYPEX); cwv[1].tcesx=AN(w);  // allo 2 CWs, of which 1 is the end marker
@@ -335,7 +335,7 @@ F1(jtqpctr ){F12IP;ASSERTMTV(w); R scf(qpc());}
 
 // 6!:12
 F1(jtpmctr){F12IP;D x;I q;
- RE(q=i0(w));
+ q=rei0(w);
  ASSERT(JT(jt,pma),EVDOMAIN);
  x=q+(D)((PM0*)(CAV1(JT(jt,pma))))->pmctr;
  ASSERT(IMIN<=x&&x<FLIMAX,EVDOMAIN);

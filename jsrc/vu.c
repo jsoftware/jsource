@@ -115,7 +115,7 @@ F1(jtuco1){F12IP;I t;
 
 F2(jtuco2){F12IP;I j;
  ARGCHK2(a,w);
- RE(j=i0(a));
+ j=rei0(a);
  switch(j){
  case 1: R toc1(1,w);
  case 2: R toc2(w);

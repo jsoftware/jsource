@@ -388,7 +388,7 @@ static F1(jtdetmr){F12IP;A z;B*zv;I d,h,i,n,wn,*wv;
 F2(jtpco2){F12IP;A z;B*b;I k;
  ARGCHK2(a,w);
  RZ(init4792(jt));
- RE(k=i0(a));
+ k=rei0(a);
  switch(k){
  default: ASSERT(0,EVDOMAIN);
  case -4: R prevprime(w);
@@ -430,7 +430,7 @@ F2(jtqco2){F12IP;A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  }
  RZ(y=vi(plt(q))); yv=AV(y);
  k=-1; DO(AN(y), if(k<yv[i])k=yv[i];); ++k;
- if(bb)m=k; else RE(m=i0(a));
+ if(bb)m=k; else m=rei0(a);
  if(b){
   q=repeat(ge(y,sc(k-m)),q);
   R lamin2(nub(q),dfv2(z,q,q,sldot(ds(CPOUND))));

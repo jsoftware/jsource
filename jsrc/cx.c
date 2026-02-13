@@ -1215,7 +1215,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
    R z;
  }
  ASSERT(AT(w)&NOUN,EVDOMAIN);   // noun : verb is an error
- RE(m=i0(a));  // m : n; set m=value of a argument
+ m=rei0(a);  // m : n; set m=value of a argument
  I col0;  // set if it was m : 0
  if(col0=equ(w,num(0))){RZ(w=colon0(m)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
  if(m==0){ra0(w); RCA(w);}  // noun - it's a string, return it.  Give it recursive usecount

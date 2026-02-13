@@ -397,7 +397,7 @@ static F2(jtdbsig){F12IP;I e;
  if(a==ds(CACE)){RESETERR; jt->jerr=e; jt->emsgstate|=EMSGSTATEFORMATTED;  // secret debug trick: a: sets err# but no msg, suppresses eformat
  }else{
   jt->emsgstate&=~(EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATEFORMATTED);  // user's message overrides anything that was given before; turn off ignore bits to ensure we process it
-  if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGLINEISTERSE+EMSGNOEFORMAT,a,0);} else jsignal(e|EMSGNOEFORMAT);  // must not run eformat, since self does not apply
+  if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGLINEISTERSE+EMSGNOMSGLINE+EMSGNOEFORMAT,a,0);} else jsignal(e|EMSGNOEFORMAT);  // must not run eformat, since self does not apply.  Display user string as terse msg, not line
  }
  R 0;
 }    

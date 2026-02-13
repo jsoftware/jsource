@@ -550,7 +550,8 @@ extern void jfree4gmp(void*,size_t);
 #define hook1(x,y)                  jthook1(jt,(x),(y))
 #define hparm(x,y,z)                jthparm(jt,(x),(y),(z))
 #define hrep(x,y,z)                 jthrep(jt,(x),(y),(z))
-#define i0(x)                       jti0(jt,(x))
+#define i0(x)                       ({I r; A xa=(x); if(unlikely((xa)==0))r=0;else if(likely(ISDENSETYPE(AT(xa),INT+B01))){ASSERT(!AR(xa),EVRANK); r=BIV0(xa);}else r=jti0(jt,xa); r;})  // INT/B01 quickly
+#define rei0(x)                     ({I r; A xa=(x); if(unlikely((xa)==0)R0; if(likely(ISDENSETYPE(AT(xa),INT+B01))){ASSERT(!AR(xa),EVRANK); r=BIV0(xa);}else{RE(r=jti0(jt,xa)} r;})  // INT/B01 quickly
 #define iaddr(x0,x1,x2,x3)          jtiaddr(jt,(x0),(x1),(x2),(x3))
 #define icap(x)                     jticap(jt,(x),ds(CICAP))
 #define icor(x,y)                   jticor(jt,(x),(y))  

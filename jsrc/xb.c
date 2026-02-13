@@ -640,6 +640,14 @@ static DF1(jtpackbytem1){F12IP;
  RETF(z);
 }
 
+// 0 3!:7 y - count # 1-bits in y
+static DF1(jtpopcount){F12IP;
+ I wn=AN(w); if(unlikely(wn==0))R zeroionei(0); UI * RESTRICT wv=IAV(w); wn<<=bplg(AT(w)); // if no bits, empty result; point to first input bit; get # bytes in input
+ I count=0; DO(wn>>LGSZI, count+=__builtin_popcountg(wv[i]);)  // count 1-bits in full Is
+ if(unlikely(wn&(SZI-1)))count+=__builtin_popcountg(wv[wn>>LGSZI]<<((-wn&(SZI-1))<<LGBB));  // add on any remnant
+ R sc(count);  // return total
+}
+
 // 1 3!:7 y - convert any type (normally packed integers) to boolean
 static DF1(jtpackbyte1){F12IP;
  I wn=AN(w); if(unlikely(wn==0))R mtv; C * RESTRICT wv=CAV(w); wn<<=bplg(AT(w)); // if no bits, empty result; point to first input bit; get # bytes in input
@@ -656,9 +664,9 @@ static DF1(jtpackbyte1){F12IP;
 // 3!:7 Convert from/to packed bits
 DF2(jtpackbyte){F12IP;
  ARGCHK2(a,w);
- I j; RE(j=i0(a)); ASSERT(((j+1)&~2)==0,EVDOMAIN) // x is -1 or 1
- AF cellrtn=j>=0?jtpackbyte1:jtpackbytem1;  // routine for 1 cell
- DF1RANK(1,cellrtn,self);
+ I j; RE(j=i0(a)); ASSERT(BETWEENC(j,-1,1),EVDOMAIN) // x is -1/0/1
+ AF cellrtn=jtpackbyte1; cellrtn=j==0?jtpopcount:cellrtn; cellrtn=j<0?jtpackbytem1:cellrtn;  // routine for 1 cell
+ DF1RANK(1,cellrtn,self);  // loop over all cells of implied w arg
 }
 
 // operations on a packed-bit array, originating from (m (3!:8))

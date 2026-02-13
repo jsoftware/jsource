@@ -1832,7 +1832,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
 #endif
 }
 
-#if C_AVX2 || EMU_AVX2
+#if PYXES && (C_AVX2 || EMU_AVX2)
 // everything we need for one core's execution
 struct __attribute__((aligned(CACHELINESIZE))) ekctx {
  I rowsperthread;  // number of rows of prx for each thread to handle
@@ -2328,7 +2328,7 @@ F2(jtekupdate){F12IP;ASSERT(0,EVNONCE);}
 F2(jtqktupdate){F12IP;ASSERT(0,EVNONCE);}
 #endif
 
-#if C_AVX2 || EMU_AVX2
+#if PYXES && (C_AVX2 || EMU_AVX2)
 // everything we need for one core's execution
 struct __attribute__((aligned(CACHELINESIZE))) sprctx {
  I rowsperthread;  // number of rows of prx for each thread to handle

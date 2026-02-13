@@ -128,9 +128,6 @@ if [ $USE_OPENMP -eq 1 ]; then
 fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
-# -Wno-shift-count-overflow \
-# -Wno-stringop-overflow \
-
  # gcc
  common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
  -Werror -Wextra -Wno-unknown-warning-option \
@@ -169,9 +166,6 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  fi
 
 else
-# -Wno-shift-count-overflow \
-# -Wno-integer-overflow \
-
  # clang
  common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv \
  -Werror -Wextra -Wno-unknown-warning-option \

@@ -432,7 +432,7 @@ typedef struct JSTstruct {
  FLOAT16 dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  FLOAT16 zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
 //  2 bytes free
-#if PYXES || 1
+#if PYXES
  JOBQ (*jobqueues)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
  I filler7[1];
 #else

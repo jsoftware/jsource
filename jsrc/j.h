@@ -2441,13 +2441,17 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define C_CRC32C 0
 #endif
 
-#if PYXES && defined(__aarch64__) && !EMU_AVX2
+#if PYXES && (defined(__aarch64__) || defined(__arm32__)) && !EMU_AVX2
 INLINE void _mm_pause(void)
 {
 #if defined(_MSC_VER) && !defined(__clang__)
     __isb(_ARM64_BARRIER_SY);
 #else
+#if defined(__aarch64__)
     __asm__ __volatile__("isb\n");
+#else
+    __asm__ __volatile__("nop" ::: "memory");
+#endif
 #endif
 }
 #endif

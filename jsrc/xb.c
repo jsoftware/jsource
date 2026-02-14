@@ -641,12 +641,16 @@ static DF1(jtpackbytem1){F12IP;
 }
 
 // 0 3!:7 y - count # 1-bits in y
+#if defined(__has_builtin)
 #if !__has_builtin(__builtin_popcountg)
  #if SY_64
   #define __builtin_popcountg __builtin_popcountll
  #else
   #define __builtin_popcountg __builtin_popcountl
  #endif
+#endif
+#else
+ #define __builtin_popcountg __builtin_popcountl
 #endif
 static DF1(jtpopcount){F12IP;
  I wn=AN(w); if(unlikely(wn==0))R zeroionei(0); UI * RESTRICT wv=IAV(w); wn<<=bplg(AT(w)); // if no bits, empty result; point to first input bit; get # bytes in input

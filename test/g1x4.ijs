@@ -12,7 +12,7 @@ mac =: x e. 3
 unix=: x e. 5 7
 pc  =: x e. 0 1 2 6
 
-p =: >{:4!:3 ''
+p =: >{.4!:3 ''  NB. Use directfory of first file, which never changes
 p =: < p ([ }.~ [: - |.@[ i. ]) (pc#'/'),(mac#':'),unix#'/'
 d =: dir p,&.><'*.ijs'
 (>2{"1 d) -: size p,&.>{."1 d

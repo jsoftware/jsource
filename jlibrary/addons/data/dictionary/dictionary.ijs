@@ -22,7 +22,7 @@ if. (-: (index_type {.~ -@#)) 'concurrent' do.
   singlethreaded =. 0
   index_type =. (- # ' concurrent') }. index_type
 else.
-  singlethreaded =. 1
+  singlethreaded =. 0
 end.
 
 select. index_type   NB. set up params for create, based on map type

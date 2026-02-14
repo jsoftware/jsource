@@ -349,7 +349,11 @@ typedef struct jobstruct {
  union {
   struct {
    A args[3];  // w,u,u if monad; a,w,u if dyad
+#if SY_64
    I inherited[(offsetof(JTT,uflags.init0area)+SZI-1)>>LGSZI]; // inherited sections of JT, plus a bit.
+#else
+   I8 inherited[(offsetof(JTT,uflags.init0area)+8-1)>>3]; // inherited sections of JT, plus a bit.
+#endif
    //  AM(job) is *pyx, AK is jt->global.  For user jobs with locales, AM is *pyx array, AN is mask of enabled threads, AK is *locale#s A, which must be freed
   } user;
   struct uiint {
@@ -482,7 +486,11 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
    // user job, which may or may not specify locales.  If there are locales, each will revisit the job block & perhaps we should move the first cacheline to a quiet spot.  For the time
    // being we will copy out of the block quickly.  If no locales, there is no thundering herd, and we can read from the job block undisturbed (it has been dequeued)
    // set up jt state here only; for internal tasks, such setup is not needed
+#if SY_64
    ((I*)jt)[0]=job->user.inherited[0]; ((I*)jt)[1]=job->user.inherited[1]&(((I)1<<((offsetof(JTT,uflags.init0area)-SZI)*BB))-1);  // copy inherited part, zero the following
+#else
+   ((I8*)jt)[0]=job->user.inherited[0]; ((I8*)jt)[1]=job->user.inherited[1]&(((I8)1<<((offsetof(JTT,uflags.init0area)-8)*BB))-1);  // copy inherited part, zero the following
+#endif
    A arg1=job->user.args[0],arg2=job->user.args[1],self=job->user.args[2];  // arg2=self if monad
    I initthread=job->initthread;  // extract thread# of thread that created the job
    jtsettaskrunning(jt);  // go to RUNNING state, perhaps after waiting for system lock to finish

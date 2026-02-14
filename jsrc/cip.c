@@ -529,6 +529,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
   // small problem, not worth splitting.  there is no size limit on the blocks
   // 16x16 multiply takes about 1us; we are guessing task-wakeup takes a similar amount of time.  So it's not worth a split unless the time gets substantially above 1us
   R blockedmmult(jt,av,wv,zv,m,n,p,p,flgs); }
+#if PYXES
  UI nfulltasks, nremnant, tailtasks, endtasksize, fulltasksize;
  // big problem, split into tasks.  The tasks may be either cached or blocked
  UI nthreads=__atomic_load_n(&(*JT(jt,jobqueues))[0].nthreads,__ATOMIC_ACQUIRE)+(jt->threadpoolno!=0);  // get # running threads, just once so we have a consistent view.  We count our thread too, if it's not in pool 0, since it runs tasks for the job
@@ -555,6 +556,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  CACHEMMSTATE ctx={.av=av,.wv=wv,.zv=zv,.m=m,.n=n,.p=p,.flgs=flgs,.nbigtasks={nfulltasks,nfulltasks+nremnant},.taskm={fulltasksize,endtasksize}};
    // number of full tasks, followed by number that have size 'endtasksize'.  Later tasks have size endtasksize-CACHEHEIGHT
  R !jtjobrun(jt,cachedmmultx,&ctx,nfulltasks+tailtasks,0);  // go run the tasks - default to threadpool 0.  Switch return from job semantice to JE error samantics - 0 if error, 1 if OK
+#endif   // PYXES
 }
 
 #else

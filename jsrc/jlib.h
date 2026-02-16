@@ -6,6 +6,14 @@
 #ifndef JLIB_H
 #define JLIB_H
 
+#ifndef PYXES
+#if defined(_WIN64)||defined(__LP64__)
+#define PYXES 1
+#else
+#define PYXES 0
+#endif
+#endif
+
 /* maintainer note: define JFRONTEND for non jsource front-ends */
 // #define JFRONTEND
 #ifdef JFRONTEND
@@ -29,7 +37,15 @@ typedef long I;
 typedef char C;
 typedef void* JS;
 typedef struct A_RECORD {
+#if defined(_WIN64)||defined(__LP64__)
   I k,flag,m,t,c,n,r,s[1];
+#else
+#if PYXES
+  I k,flag,m,t,c,n,r,p,s[1];            /* assume little endian            */
+#else
+  I k,flag,m,t,c,n,r,s[1];
+#endif
+#endif
 }* A;
 typedef struct AREP_RECORD {
   I n,t,c,r,s[1];
@@ -49,6 +65,12 @@ typedef struct AREP_RECORD {
 #define BOX             ((I)1L<<5)           // A  boxed
 #define XNUM            ((I)1L<<6)           // X  extended precision integer
 #define RAT             ((I)1L<<7)           // Q  rational number
+#define INT1            ((I)1L<<8)           //    1-byte INT precision 5
+#define INT2            ((I)1L<<9)           //    2-byte INT precision 6
+#define INT4            ((I)1L<<10)          //    4-byte INT precision 7
+#define HP              ((I)1L<<11)          //    half-precision floating-point precision 9
+#define SP              ((I)1L<<12)          //    single-precision floating-point precision 10
+#define QP              ((I)1L<<13)          // E  quad-precision floating-point precision 11
 #define PYX             ((I)1L<<30) // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
 #define SBT             ((I)1L<<16)          // SB symbol
 #define C2T             ((I)1L<<17)          // C2 unicode (2-byte characters)

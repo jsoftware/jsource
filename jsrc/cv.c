@@ -139,8 +139,9 @@ fillreshape:;
  }else{
   // v is a verb.  Supported now only in $[!.n]!.v or ($,)[!.n]!.v
   AF rtn1=FAV(a)->valencefns[1]; if(rtn1==jtfitfill12)rtn1=FAV(FAV(a)->fgh[0])->valencefns[1];  // what routine will process?  (if fit, look back to underlying function)
-  if(rtn1==jtreshape||rtn1==jtreitem)
+  if(rtn1==jtreshape||rtn1==jtreitem){
    fdeffill(z,0L,CFIT,VERB,jtvalenceerr,jtreshapeblankfn,a,w,0L,(FAV(a)->flag&(VIRS1|VIRS2|VNOLOCCHG))+(FAV(w)->flag&VNONAME+VNOSELF),m,l,r) FAV(z)->localuse.lu1.fittype=rtn1==jtreitem; RETF(z);  // fittype tells whether ($,) or $
+  }
  }
  ASSERT(0,EVDOMAIN);
 } 

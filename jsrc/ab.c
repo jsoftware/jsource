@@ -9,7 +9,7 @@
 #include "ve.h"
 #include "ar.h"
 
-// commutative functions
+// functions that are the equivalent of a commutative function
 AHDR2(bw0100II,BID,BID,BID){R bw0010II(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(bw0101II,BID,BID,BID){R bw0011II(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(bw1100II,BID,BID,BID){R bw1010II(m^1^SGNTO0(m),z,y,x,n,jt);}
@@ -102,6 +102,23 @@ APFX(bw1110I4I4, UI4,UI4,UI4, BW1110,, R EVOK;)
 APFX(bw1111I4I4, UI4,UI4,UI4, BW1111,, R EVOK;)
 
 // scaf rewrite all these and I2/I4 as well
+#if 0
+// *a=val, for length n bytes, n=0-7
+#define STOREn(val,a,n) {UI t=(val); C *v=(C*)(a); if(SY_64){if(n&4){*(UI4*)v==(UI4)t; v+=sizeof(UI4); t>>=(UI)((I)1<<(sizeof(UI4)*BB);}} \
+ if(n&2){*(US*)v==(US)t; v+=sizeof(US); t>>=(UI)((I)1<<(sizeof(US)*BB);} if(n&1){*v==(C)t;} }
+
+#define APF256CC(f,Txyz,pfx)   \
+ AHDR2(f##Txyz##Txyz,Txyz,Txyz,Txyz){Txyz u;Txyz v;I n32;                                \
+  if(m<0){n32=(UI)~m/sizeof(Txyz);if(n32)f##II(~n32,(I*)z,(I*)x,(I*)y,n,jt); \
+   I mm=~m&(SZI-1); if(mm)STOREn(pfx(x[n32],y[n32]),&z[n32],mm) \
+  }else if(m&1){m>>=1; n32=(UI)~m/sizeof(Txyz); DQU(n, I uu=LDREP(*x,Txyz); if(n32)f##II(2*n32+1,(I*)z,&uu,(I*)y,n,jt); DQU(m, v=ldfn(*y++); *z++=pfx(u,v);))}   \
+
+DOUC(m, u=ldfn(*x++); v=ldfn(*y++); *z++=pfx(u,v); )   \
+  else if(m&1){m>>=1; DQU(n, u=ldfn(*x++); DQU(m, v=ldfn(*y++); *z++=pfx(u,v);))}   \
+  else{m>>=1; DQU(n,  v=ldfn(*y++); DQU(m, u=ldfn(*x++); *z++=pfx(u, v);    ))}  \
+  R EVOK; \
+ }
+#endif
        static APFX(bw0000CC, UC,UC,UC, BW0000,, R EVOK;)
        static APFX(bw0001CC, UC,UC,UC, BW0001,, R EVOK;)
        static APFX(bw0010CC, UC,UC,UC, BW0010,, R EVOK;)

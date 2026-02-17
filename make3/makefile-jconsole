@@ -1,0 +1,29 @@
+vpath % ../../../../jsrc
+
+ifndef jplatform
+jplatform=linux
+endif
+ifndef j64x
+j64x=j64
+endif
+
+ODIR=../../../../bin/$(jplatform)/$(j64x)
+
+.SUFFIXES: .o
+
+OBJS=  \
+ jconsole.o \
+ jeload.o
+
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJSLN)
+	$(CC) -o $@ $(OBJS) $(OBJSLN) $(LDFLAGS)
+
+all: $(ODIR)/$(TARGET)
+
+clean:
+	rm -f $(OBJS) $(OBJSLN) linenoise.o
+
+.PHONY: all clean

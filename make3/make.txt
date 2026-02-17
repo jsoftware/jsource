@@ -1,0 +1,69 @@
+how to build/test j32/j64/j64avx/j64avx2 for linux/darwin/raspberry/...
+
+**************************************************************************
+# commands are assumed to run in make2 folder
+
+# make sure shell scripts are executable
+chmod +x *.sh
+
+# ensure proper jsrc/jversion.h (default jversion-x.h template)
+
+# !!! make2 build commands will be confused if there are *.o files in jsrc
+# !!! makefiles do not have h file dependencies !!!
+# after h file changes, run ./clean.sh to rm all *.o files for clean build
+./clean.sh
+
+# general format for build_... commands 
+# don't miss the ./ part when typing commands
+jplatform=(..) j64x=(..) ./build_libj.sh
+
+where 
+jplatform : linux darwin raspberry  (default host)
+j64x : j64 j64avx j64avx2 j64arm j32  (default host or j64avx)
+
+# binaries generated inside the bin folder under jsource
+
+# eg. build j64 binaries
+jplatform=linux j64x=j64 ./build_libj.sh
+
+# target apple m1
+jplatform=darwin j64x=j64arm ./build_libj.sh
+
+# target apple intel/m1
+jplatform=darwin j64x=j64 ./build_libj.sh
+
+# target apple intel
+jplatform=darwin j64x=j64avx ./build_libj.sh
+jplatform=darwin j64x=j64avx2 ./build_libj.sh
+
+# linux and j64 is the default on 64-bit linux, so this is fine
+./build_libj.sh
+
+# the easiest way to build all binaries
+# this will run ./clean.sh and can detect the host platform
+./build_all.sh
+
+# target apple m1
+j64x=j64arm ./build_all.sh
+
+# target apple intel/m1
+j64x=j64 ./build_all.sh
+
+# target apple intel
+j64x=j64avx ./build_all.sh
+j64x=j64avx2 ./build_all.sh
+
+# test
+# copy binaries to jlibrary/bin folder 
+./cpbin.sh
+
+# cd the jlibrary/bin or jlibrary/bin32 folder and run depending on the cpu architecture
+# avx2 / x86 / arm
+./jconsole ../../test/tsu.ijs
+# avx
+./jconsole -lib libjavx.so ../../test/tsu.ijs
+# nonavx
+./jconsole -lib libj-nonavx.so ../../test/tsu.ijs
+
+# and follow instructions there
+

@@ -129,7 +129,10 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->cu
  if(JT(jt,seclev)){
   y=C(AAV(w)[0]); n=AN(y); s=CAV(y); 
   ASSERT(LIT&AT(y),EVDOMAIN); 
-  ASSERT(3<n&&!memcmpne(s+n-3,".js",3L)||4<n&&!memcmpne(s+n-4,".ijs",4L),EVSECURE);
+  ASSERT(3<n&&!memcmpne(s+n-3,".js",3L)
+	 ||4<n&&!memcmpne(s+n-4,".ijs",4L)
+	 ||2<n&&!memcmpne(s+n-2,".j",2L),
+	 EVSECURE);
  }
  PROLOG(000);
  RZ(x=jfread(w));

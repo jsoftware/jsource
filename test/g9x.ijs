@@ -511,6 +511,34 @@ empty ferase f
 18!:55 numloc_loc2_
 4!:55 ;:'foo1_z_ foo2_z_'
 
+NB. 9!:67 ---------------------------------------------------------------
+NB. log current execution line
+
+empty 9!:67[0
+0= 9!:67[0
+0= 9!:67[1
+1= 9!:67[2
+2= 9!:67[0
+empty ferase f=: jpath'~temp/jtrace.txt'
+0= 9!:67[f
+foo4=: 3 : 0
+i.4 5 [ 'abc'
+9!:30''
+)
+
+'foo4' -: foo4''
+empty 9!:67[0
+
+(toJ^:IFWIN fread f) -: (0 : 0) 
+foo4=: 3 : 0
+i.4 5 [ 'abc'
+9!:30''
+
+'foo4' -: foo4''
+empty 9!:67[0
+)
+empty ferase f
+
 NB. 9!:_4 ---------------------------------------------------------------
 NB. toggle dissect status.  Bivalent.  Monad result is y, dyad result is current setting
 

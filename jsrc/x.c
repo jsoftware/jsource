@@ -323,6 +323,7 @@ void jtforeigninit(J jt){UI i;
  MN(9,59)  XPRIM(VERB, jtemsglevel,  0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,65)  XPRIM(VERB, jtboxedsparse, 0,           VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,66)  XPRIM(VERB, jtcheckcompfeatures, 0,     VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,67)  XPRIM(VERB, jttraceexc,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,0)  XPRIM(VERB, jtdbc,        0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,1)  XPRIM(VERB, jtdbstack,    0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(13,2)  XPRIM(VERB, jtdbstopq,    0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);

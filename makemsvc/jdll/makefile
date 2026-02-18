@@ -23,6 +23,11 @@ ifeq (0,$(USE_EMU_AVX))
 else
  COPTION := $(COPTION) /DEMU_AVX2=1
 endif
+ifeq (1,$(USE_NORMAH8))
+ COPTION := $(COPTION) /DNORMAH8=1
+else
+ COPTION := $(COPTION) /DNORMAH8=0
+endif
 
 ifeq (1,$(JAVX512))
  COPTION := $(COPTION) /DC_AVX2=1 /DC_AVX512=1 -DHAVE_AVX2=1 -march=skylake-avx512 -mno-vzeroupper

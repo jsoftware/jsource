@@ -249,6 +249,9 @@ struct AD {
  UC filler;
  RANKT r;  // rank  Used as flags in SYMB types (i. e. locales)
 #endif
+#if NORMAH8 && (SY_64 || !PYXES)
+ I p;    // dummy for debugging assumption of AD header length=7
+#endif
  I s[1];   // 7 shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
   // when AFUNIFORMITEMS is set, s[0] holds the number of items in the raze of the block
 };
@@ -275,8 +278,13 @@ struct AD {
 #else
 #define ARINIT(x,v)     *(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */
 #endif
+#if NORMAH8 || (!SY_64 && PYXES)
+#define SMMAH           8L   // number of header words in old-fashioned SMM alloc
+#define NORMAH          8L   // number of header words in new system
+#else
 #define SMMAH           7L   // number of header words in old-fashioned SMM alloc
 #define NORMAH          7L   // number of header words in new system
+#endif
 #define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.
 
 // The following fields are used for private communication between /. and ;. and inside ;. for the fret buffer.

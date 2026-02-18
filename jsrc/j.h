@@ -846,6 +846,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define EMSGINVINFL 0x40000  // set to append 'invalid inflection' to msg
 #define EMSGNOMSGLINE 0x80000  // set to append 'invalid inflection' to msg
 
+// debugging AD header length
+#ifndef NORMAH8
+#define NORMAH8 0
+#endif
+
 #ifndef PYXES
 #if SY_64
 #define PYXES 1

@@ -340,7 +340,7 @@ F1(jtstackfault){F12IP;C stackbyte,buf[80],*stackptr=&stackbyte;
 // query/set trace explicit status. result is previous setting  0: disable  1: stdout  2: stderr  3: disabled because of error  string: file name *traceexpfile
 // result is previous setting, but 3 if there was an error logging
 F1(jttraceexf){F12IP;A z;
- ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); RZ(z=(I)jt->usertracefn&~3?drop(sc(-1),jt->usertracefn):sc((I)jt->usertracefn)) // error if rank>1, set return to starting status (remove trailing NUL from fn)
+ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); RZ(z=(I)jt->usertracefn1&~3?drop(sc(-1),jt->usertracefn1):sc((I)jt->usertracefn1)) // error if rank>1, set return to starting status (remove trailing NUL from fn)
  if(AN(w)){   // if w empty, skip the modification
   // user is setting the value
   if(AT(w)&LIT){     // set output file name
@@ -350,8 +350,27 @@ F1(jttraceexf){F12IP;A z;
   }else{  // 0: disable  1: stdout  2: stderr
    I s=i0(w); RE(s) ASSERT(BETWEENC(s,0,2),EVDOMAIN); w=(A)(intptr_t)s;  // indicate no file, save logging mode in place of filename
   }
-  if((I)jt->usertracefn&~3)tpush(jt->usertracefn); jt->usertracefn=w;  // free old file if any, set new file if any
+  if((I)jt->usertracefn1&~3)tpush(jt->usertracefn1); jt->usertracefn1=w;  // free old file if any, set new file if any
   jt->uflags.spfreeneeded=(jt->uflags.spfreeneeded&~SPFREETRACEON)|((w!=0)?SPFREETRACEON:0);
+ }
+ RETF(z);
+}
+
+// 9!:67   '': query  0: disable  1: stdout  2: stderr  string: file name *traceexcfile
+// query/set trace execution status. result is previous setting  0: disable  1: stdout  2: stderr  3: disabled because of error  string: file name *traceexcfile
+// result is previous setting, but 3 if there was an error logging
+F1(jttraceexc){F12IP;A z;
+ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); RZ(z=(I)jt->usertracefn2&~3?drop(sc(-1),jt->usertracefn2):sc((I)jt->usertracefn2)) // error if rank>1, set return to starting status (remove trailing NUL from fn)
+ if(AN(w)){   // if w empty, skip the modification
+  // user is setting the value
+  if(AT(w)&LIT){     // set output file name
+   ASSERT(' '!=CAV(w)[0],EVDOMAIN) ASSERT(0!=CAV(w)[0],EVDOMAIN)  // must not begin with SP or NUL
+   RZ(w=str0(w)) FILE * p; ASSERT((p=fopen(CAV1(w),"a"))!=0,EVFACE)  // append NUL and open file as a test
+   fclose(p); ACINITZAP(w)  // close the file and protect w, which will be stored as the filename
+  }else{  // 0: disable  1: stdout  2: stderr
+   I s=i0(w); RE(s) ASSERT(BETWEENC(s,0,2),EVDOMAIN); w=(A)(intptr_t)s;  // indicate no file, save logging mode in place of filename
+  }
+  if((I)jt->usertracefn2&~3)tpush(jt->usertracefn2); jt->usertracefn2=w;  // free old file if any, set new file if any
  }
  RETF(z);
 }

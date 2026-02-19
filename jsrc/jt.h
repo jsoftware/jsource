@@ -236,8 +236,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I4 getlasterror;     // DLL error info from previous DLL call
  I4 dlllasterror;     // DLL domain error info (before DLL call)
  A *pmttop;  // tstack top to free to when releasing the postmortem stack.  Non0 indicates pm debugging session is active  Could move to JST
- A usertracefn;  // parm to jtlogtrace and 9!:31: points to A block for log filename, or 0=trace disabled 1=to stdout 2=to stderr 3=trace disabled because to error
- I filler6[2];
+ A usertracefn1;  // parm to jtlogtrace and 9!:31: points to A block for log filename, or 0=trace disabled 1=to stdout 2=to stderr 3=trace disabled because to error
+ A usertracefn2;  // parm to jtexctrace and 9!:67: points to A block for log filename, or 0=trace disabled 1=to stdout 2=to stderr 3=trace disabled because to error
+ I filler6[1];
 // end of cacheline 6
 
  C _cl7[0];

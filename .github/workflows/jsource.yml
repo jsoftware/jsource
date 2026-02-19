@@ -100,6 +100,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: 3
      run: |
       script/buildga.sh linux || exit 1
 
@@ -107,6 +108,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
       mv testlinux.txt  testlinuxgcc.txt

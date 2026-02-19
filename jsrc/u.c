@@ -321,7 +321,22 @@ C *fmtlocnm(J jt,A a,C *wkarea){
  if(!(AR(a)&ARNAMED)){snprintf(wkarea+stglen,128-stglen,"(%.*s)",(int)AN(LOCNAME(*LOCPATH(a))),NAV(LOCNAME(*LOCPATH(a)))->s);}
  R wkarea;  // return the string (NUL-terminated by sprintf)
 }
-// log trace data: write *s using *fmt, with destination depending on jt->usertracefn
+
+// log execution line: write current execution line depending on jt->usertracefn2
+void jtexctrace(J jt,A w){
+ if(BETWEENC((I)jt->usertracefn2,1,2)){   // writing to stdout or stderr
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace","%.*s\n",(int)AN(w),CAV(w));   // write line
+#else
+  fprintf((I)jt->usertracefn2==1?stdout:stderr,"%.*s\n",(int)AN(w),CAV(w));   // write line
+#endif
+ }else if((I)jt->usertracefn2&~3){FILE *p;  // jt->usertracefn2 has have a NUL-terminated filename
+  if((p=fopen(CAV1(jt->usertracefn2), "a"))==0){jt->usertracefn2=(A)3;} // try to open file; fail if can't, disabling further logging, incl test
+  else{fprintf(p,"%.*s\n",(int)AN(w),CAV(w)); fclose(p);}  // write to the file, close the file
+ }  // otherwise do nothing: trace disabled or error
+}
+
+// log trace data: write *s using *fmt, with destination depending on jt->usertracefn1
 // if a0 is 0, we write the null-terminated a2
 // otherwise, a? can be a SYMB, NM, or LIT, which we write as string using ptr/length.
 void jtlogtrace(J jt,C *fmt, void *a0, void *a1, void *a2){
@@ -334,14 +349,14 @@ void jtlogtrace(J jt,C *fmt, void *a0, void *a1, void *a2){
    if(a){if(AT(a)&SYMB){a2=fmtlocnm(jt,a,wkarea[i]); l2=strlen((C*)a2);}else{a2=AT(a)&NAME?NAV(a)->s:CAV(a); l2=AN(a);}}else a2=0;
   )
  }
- if(BETWEENC((I)jt->usertracefn,1,2)){   // writing to stdout or stderr
+ if(BETWEENC((I)jt->usertracefn1,1,2)){   // writing to stdout or stderr
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_DEBUG, (const char*)"jtrace",fmt,l0,a0,l1,a1,l2,a2);   // write line
 #else
-  fprintf((I)jt->usertracefn==1?stdout:stderr,fmt,l0,a0,l1,a1,l2,a2);   // write line
+  fprintf((I)jt->usertracefn1==1?stdout:stderr,fmt,l0,a0,l1,a1,l2,a2);   // write line
 #endif
- }else if((I)jt->usertracefn&~3){FILE *p;  // jt->usertracefn has have a NUL-terminated filename
-  if((p=fopen(CAV1(jt->usertracefn), "a"))==0){jt->usertracefn=(A)3; jt->uflags.spfreeneeded&=~SPFREETRACEON;} // try to open file; fail if can't, disabling further logging, incl test
+ }else if((I)jt->usertracefn1&~3){FILE *p;  // jt->usertracefn1 has have a NUL-terminated filename
+  if((p=fopen(CAV1(jt->usertracefn1), "a"))==0){jt->usertracefn1=(A)3; jt->uflags.spfreeneeded&=~SPFREETRACEON;} // try to open file; fail if can't, disabling further logging, incl test
   else{fprintf(p,fmt,l0,a0,l1,a1,l2,a2); fclose(p);}  // write to the file, close the file
  }  // otherwise do nothing: trace disabled or error
 }

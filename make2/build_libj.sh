@@ -244,6 +244,13 @@ else
  common="$common -DPYXES=0"
 fi
 
+USE_NORMAH8="${USE_NORMAH8:=0}"
+if [ $USE_NORMAH8 -eq 1 ]; then
+ common="$common -DNORMAH8=1"
+else
+ common="$common -DNORMAH8=0"
+fi
+
 case "$jplatform64" in
  */j64)
   USE_SLEEF=0

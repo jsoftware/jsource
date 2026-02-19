@@ -3,6 +3,16 @@ NB. addon/dictionary
 
 load 'dictionary'
 
+d =: ('hash' ,&< 'valueshape' ; 0) conew 'jdictionary'
+'' put__d i. 1000
+echo 'hash ',": 100 (6!:2) 'has__d f."0 k' [ k =. 10 # i. 1000
+destroy__d ''
+
+d =: ('tree' ,&< 'valueshape' ; 0) conew 'jdictionary'
+'' put__d i. 1000
+echo 'tree ',": 100 (6!:2) 'has__d f."0 k' [ k =. 10 # i. 1000
+destroy__d ''
+
 cocurrent 'base'
 
 INDEX_TYPES_CONCURRENT =: 'hash concurrent' ; 'tree concurrent'

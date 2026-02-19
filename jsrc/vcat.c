@@ -337,7 +337,7 @@ F1(jtlamin1){F12IP;A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
  fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=IAV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
- R jtreshape(jtfg,x,w);
+ R jtreshape(jtfg,x,w);   // scaf do the virtual here - too much overhead in reshape
 }    /* ,:"r w */
 
 DF2(jtlamin2){F12IP;A z;I ar,p,q,wr;

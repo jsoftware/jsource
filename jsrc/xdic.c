@@ -5,9 +5,21 @@
 #include "j.h"
 // Dictionary support
 #ifndef CRC32
-#define HASH4(crc,x) ((UI4)(crc)*0x85249421+(UI4)(x))
+#define HPOLISH(x) (UI4)((UI4)2654435769*(UI4)(x))  // without CRC, hash is not distributed through all bits equally.  This is a workaround
+// This is FNV-0, but unrolled to avoid the carried dependency between multiplies
+#define FNVP1 (UI4)0x01000193
+#define FNVP2 (UI4)(FNVP1*FNVP1)
+#define FNVP3 (UI4)(FNVP2*FNVP1)
+#define FNVP4 (UI4)(FNVP2*FNVP2)
+   // byte 0 has weight 1, but it carries bytes 1-3 along with it.  We have to remoove their excess weighting
+#define FNVP1eff (UI4)(FNVP1-256)  // byte 1 had an extra weight 256 from byte 0
+#define FNVP2eff (UI4)(FNVP2-65536-256*FNVP1eff)  // byte 2 had an extra weight 65536 from byte 0, plus 256*FNVP1eff from byte 1
+#define FNVP3eff (UI4)(FNVP3-16777216-65536*FNVP1eff-256*FNVP2eff)  // byte 2 had an extra weight 65536 from byte 0, plus 256*FNVP1eff from byte 1
+// This is bigendian order on the bytes of x.  Byte 0 is added last
+#define HASH4(crc,x) ((UI4)((UI4)(x)+((UI4)(x)>>8)*FNVP1eff+((UI4)(x)>>16)*FNVP2eff+((UI4)(x)>>24)*FNVP3eff+(crc)*FNVP4))
 #define HASH8(crc,x) HASH4(HASH4(crc,x),(UI8)(x)>>32)
 #else
+#define HPOLISH(x) (x)
 #define HASH4(crc,x) CRC32(crc,x)
 #if BW==64
 #define HASH8(crc,x) CRC32L(crc,x)
@@ -27,7 +39,7 @@
 static INLINE UI4 crcfloats(UI8 *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
- UI4 crc0=-1;  // convert bytecount to words
+ UI4 crc0=-1;  
  if((n-=3)<0){crc0=HASH8(crc0,v[0]==0x8000000000000000?0:v[0]); if(n==-1)crc0=HASH8(crc0,v[1]==0x8000000000000000?0:v[1]); R crc0;}   // fast path for the common short case
  UI4 crc1=crc0, crc2=crc0;  // init all CRCs
  do{crc0=HASH8(crc0,v[n]==0x8000000000000000?0:v[n]); crc1=HASH8(crc1,v[n+1]==0x8000000000000000?0:v[n+1]); crc2=HASH8(crc2,v[n+2]==0x8000000000000000?0:v[n+2]);}while((n-=3)>=0);  // Do blocks of 24 bytes
@@ -39,7 +51,7 @@ static INLINE UI4 crcfloats(UI8 *v, I n){
 static INLINE UI4 crcwords(UI *v, I n){
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
- UI4 crc0=-1;  // convert bytecount to words
+ UI4 crc0=-1;
  if((n-=3)<0){crc0=HASHI(crc0,v[0]); if(n==-1)crc0=HASHI(crc0,v[1]); R crc0;}   // fast path for the common short case
  UI4 crc1=crc0, crc2=crc0;  // init all CRCs
  do{crc0=HASHI(crc0,v[n]); crc1=HASHI(crc1,v[n+1]); crc2=HASHI(crc2,v[n+2]);}while((n-=3)>=0);  // Do blocks of 3 words
@@ -482,7 +494,7 @@ static INLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
   k=(void*)((I)k+n*(kib>>32));  // move to end+1 key to save a reg by counting down.  This puts prefetches in the right order for get, wrong for put.  Pity.
   for(i=n;--i>=0;){
    k=(void*)((I)k-(kib>>32));  // back up to next key
-   s[i]=(I8)(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)s[i]*(UI4)hsz)>>32)*(hsz>>56)]);
+   s[i]=HPOLISH((I8)(*hf)(k,(UI4)kib,jt)); PREFETCH(&hashtbl[(((UI8)s[i]*(UI4)hsz)>>32)*(hsz>>56)]);
   }
  }else{
   // user hash.  Call their function
@@ -499,7 +511,7 @@ static INLINE I8* jtkeyprep(DIC *dic, void *k, I n, I8 *s,J jt,A ka){I i;
 // Do the work for just 1 get. z is 0 for has
 static INLINE A jtget1(DIC *dic,void *k,A z,J jt,A adyad){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn;  // elesiz/hashsiz kbytelen/kitemlen hash function
- UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&CAV1(dic->bloc.hash)[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
+ UI4 hsh=HPOLISH((*hf)(k,(UI4)kib,jt)); PREFETCH(&CAV1(dic->bloc.hash)[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
  I (*cf)(I,void*,void*)=dic->bloc.compfn; I vn=dic->bloc.vbytelen;   // more nonresizable: kbytelen/kitemlen   compare fn   size of a value in bytes 
  DICLKRDWTK(dic,lv)   // wait for read lock to be granted.  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
@@ -642,7 +654,7 @@ static DF2(jtdicget){F12IP;A z;
 // Result is the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed.  Error is impossible
 static INLINE UI8 jtput1(DIC *dic,void *k,void *v,UI8 lv,J jt){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
- UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
+ UI4 hsh=HPOLISH((*hf)(k,(UI4)kib,jt)); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  // hash the key and prefetch from the hashtable
  I (*cf)(I,void*,void*)=dic->bloc.compfn;   // kbytelen/kitemlen  compare func unchanged by resize
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
@@ -875,7 +887,7 @@ abortexit:;
 // Result has DICLKWRK=0 if the key did not exist, otherwise the current lv with DICLMSKOKRET set and DICLMSKRESIZEREQ set if resize is needed.  Error is impossible
 static INLINE UI8 jtdel1(DIC *dic,void *k,UI8 lv,J jt){
  UI8 hsz=dic->bloc.hashsiz; UI8 kib=dic->bloc.klens; UI4 (*hf)(void*,I,J)=dic->bloc.hashfn; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz kbytelen/kitemlen
- UI4 hsh=(*hf)(k,(UI4)kib,jt); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
+ UI4 hsh=HPOLISH((*hf)(k,(UI4)kib,jt)); PREFETCH(&hashtbl[(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56)]);
  // hash the key and prefetch from the hashtable
  I (*cf)(I,void*,void*)=dic->bloc.compfn;   // kbytelen/kitemlen  compare func unchanged by resize
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock

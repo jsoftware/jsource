@@ -1,23 +1,30 @@
 prolog './gunderai.ijs'
 NB. u&.(a.&i.) ----------------------------------------------------------
 
+1: {{)n
+NB. These forms are not recognized
 s=: 1000  ?@$ 256
 t=: 13 47 ?@$ 256
 
+
 f=: 256|>:
+'f s' >&(7!:2) 'f f.&.(a.&i.) ss' [ ss =. s { a.
 (a.{~ f s) -: f f.&.(a.&i.) a.{~s
 (a.{~ f t) -: f f.&.(a.&i.) a.{~t
 
 f=: 256|<:
+'f s' >&(7!:2) 'f f.&.(a.&i.) ss' [ ss =. s { a.
 (a.{~ f s) -: f f.&.(a.&i.) a.{~s
 (a.{~ f t) -: f f.&.(a.&i.) a.{~t
 
 f=: -
+'f s' >&(7!:2) 'f f.&.(a.&i.) ss' [ ss =. s { a.
 (a.{~ f s) -: f f.&.(a.&i.) a.{~s
 (a.{~ f t) -: f f.&.(a.&i.) a.{~t
 
 p=: 22 (2?256)} 123 (22 b.) i.256
 f=: {&p 
+'f s' >&(7!:2) 'f f.&.(a.&i.) ss' [ ss =. s { a.
 (a.{~ f s) -: f f.&.(a.&i.) a.{~s
 (a.{~ f t) -: f f.&.(a.&i.) a.{~t
 
@@ -34,24 +41,80 @@ test1=: 4 : 0 " 0
 )
 
 *./ , (16+i.16) test1/ i.256
-
+}}
 
 NB. x m b.&.(a.&i.) y -------------------------------------------------
+
+'s 16 b. s' >&(7!:2) 'ss 16 b. &.(a.&i.) ss' [ ss =. s { a. [ s =: 10000 ?@$ 256
 
 test2=: 3 : 0 " 0
  g=: y b.
  f=: y b.&.(a.&i.)
- assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13 47 ?@$ 256 [ q=: 13 47 ?@$ 256
- assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13 47 ?@$ 256 [ q=:       ?   256
- assert. (a.{~p g q) -: (p{a.) f q{a. [ p=:       ?   256 [ q=: 13 47 ?@$ 256
- assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13 47 ?@$ 256 [ q=: 13    ?@$ 256
- assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13    ?@$ 256 [ q=: 13 47 ?@$ 256
- assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13 48 ?@$ 256 [ q=: 13    ?@$ 256
- assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13    ?@$ 256 [ q=: 13 48 ?@$ 256
+ toshort =: {&a.
+ max =. 256
+ bias =.0
+ for. i. 10 do.
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ 256 [ q=: bias +  (31) ?@$ 256
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ 256 [ q=: bias +  (? 47) ?@$ 256
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ 256 [ q=: bias +  (? 13 47) ?@$ 256
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  (? 47) ?@$ 256 [ q=: bias +  ?   256
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  (? 13 47) ?@$ 256 [ q=: bias +  ?   256
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ? 256 [ q=: bias +  (? 47) ?@$ 256
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ? 256 [ q=: bias +  (? 13 47) ?@$ 256
+  assert. (toshort p g q) -: p f&toshort q [ q=: bias +  ({. $ p) ?@$ 256 [ p=: bias +  (? 13 47) ?@$ 256
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ({. $ q) ?@$ 256 [ q=: bias +  (? 13 47) ?@$ 256
+ end.
  1
 )
 
 test2 16+i.16
+
+test2=: 3 : 0 " 0
+ g=: y b.
+ f=: y b.
+ toshort =: 6&c.
+ max =. 65536
+ bias =._32768
+ for. i. 10 do.
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ max [ q=: bias +  (31) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ max [ q=: bias +  (? 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ max [ q=: bias +  (? 13 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  (? 47) ?@$ max [ q=: bias +  ?   max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  (? 13 47) ?@$ max [ q=: bias +  ?   max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ? max [ q=: bias +  (? 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ? max [ q=: bias +  (? 13 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ q=: bias +  ({. $ p) ?@$ max [ p=: bias +  (? 13 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ({. $ q) ?@$ max [ q=: bias +  (? 13 47) ?@$ max
+ end.
+ 1
+)
+
+
+test2 16+i.16
+
+test2=: 3 : 0 " 0
+ g=: y b.
+ f=: y b.
+ toshort =: 7&c.
+ max =. 4294967296
+ bias =. _2147483648
+ for. i. 10 do.
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ max [ q=: bias +  (31) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ max [ q=: bias +  (? 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ max [ q=: bias +  (? 13 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  (? 47) ?@$ max [ q=: bias +  ?   max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  (? 13 47) ?@$ max [ q=: bias +  ?   max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ? max [ q=: bias +  (? 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ? max [ q=: bias +  (? 13 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ q=: bias +  ({. $ p) ?@$ max [ p=: bias +  (? 13 47) ?@$ max
+  assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ({. $ q) ?@$ max [ q=: bias +  (? 13 47) ?@$ max
+ end.
+ 1
+)
+
+
+test2 16+i.16
+
 
 NB. x0=: a. {~ 10 100000 ?@$ 256
 NB. x1=: a. {~ 10 100001 ?@$ 256

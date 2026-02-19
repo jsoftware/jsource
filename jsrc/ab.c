@@ -14,14 +14,14 @@ AHDR2(bw0100II,BID,BID,BID){R bw0010II(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(bw0101II,BID,BID,BID){R bw0011II(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(bw1100II,BID,BID,BID){R bw1010II(m^1^SGNTO0(m),z,y,x,n,jt);}
 AHDR2(bw1101II,BID,BID,BID){R bw1011II(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(bw0100I2I2,UI2,UI2,UI2){R bw0010I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(bw0101I2I2,UI2,UI2,UI2){R bw0011I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(bw1100I2I2,UI2,UI2,UI2){R bw1010I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(bw1101I2I2,UI2,UI2,UI2){R bw1011I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(bw0100I4I4,UI4,UI4,UI4){R bw0010I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(bw0101I4I4,UI4,UI4,UI4){R bw0011I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(bw1100I4I4,UI4,UI4,UI4){R bw1010I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
-AHDR2(bw1101I4I4,UI4,UI4,UI4){R bw1011I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0100I2I2,I2,I2,I2){R bw0010I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0101I2I2,I2,I2,I2){R bw0011I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1100I2I2,I2,I2,I2){R bw1010I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1101I2I2,I2,I2,I2){R bw1011I2I2(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0100I4I4,I4,I4,I4){R bw0010I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw0101I4I4,I4,I4,I4){R bw0011I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1100I4I4,I4,I4,I4){R bw1010I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
+AHDR2(bw1101I4I4,I4,I4,I4){R bw1011I4I4(m^1^SGNTO0(m),z,y,x,n,jt);}
 
 #if C_AVX2 || EMU_AVX2
 primop256(bw0000II,1,,zz=_mm256_setzero_pd(),R EVOK;)
@@ -67,74 +67,94 @@ APFX(bw10010I2I2, UI2,I2,I2, BW10010,, R EVOK;)
 APFX(bw10000I4I4, UI4,I4,UI4, BW10000,, R EVOK;)
 APFX(bw10001I4I4, UI4,I4,UI4, BW10001,, R EVOK;)
 APFX(bw10010I4I4, UI4,I4,I4, BW10010,, R EVOK;)
-APFX(bw0000I2I2, UI2,UI2,UI2, BW0000,, R EVOK;)
-APFX(bw0001I2I2, UI2,UI2,UI2, BW0001,, R EVOK;) 
-APFX(bw0010I2I2, UI2,UI2,UI2, BW0010,, R EVOK;)
-APFX(bw0011I2I2, UI2,UI2,UI2, BW0011,, R EVOK;)
-// commutative APFX(bw0100I2I2, UI2,UI2,UI2, BW0100,, R EVOK;)
-// commutative APFX(bw0101I2I2, UI2,UI2,UI2, BW0101,, R EVOK;)
-APFX(bw0110I2I2, UI2,UI2,UI2, BW0110,, R EVOK;)
-APFX(bw0111I2I2, UI2,UI2,UI2, BW0111,, R EVOK;)
-APFX(bw1000I2I2, UI2,UI2,UI2, BW1000,, R EVOK;)
-APFX(bw1001I2I2, UI2,UI2,UI2, BW1001,, R EVOK;)
-APFX(bw1010I2I2, UI2,UI2,UI2, BW1010,, R EVOK;)
-APFX(bw1011I2I2, UI2,UI2,UI2, BW1011,, R EVOK;)
-// commutative APFX(bw1100I2I2, UI2,UI2,UI2, BW1100,, R EVOK;)
-// commutative APFX(bw1101I2I2, UI2,UI2,UI2, BW1101,, R EVOK;)
-APFX(bw1110I2I2, UI2,UI2,UI2, BW1110,, R EVOK;)
-APFX(bw1111I2I2, UI2,UI2,UI2, BW1111,, R EVOK;)
-
-APFX(bw0000I4I4, UI4,UI4,UI4, BW0000,, R EVOK;)
-APFX(bw0001I4I4, UI4,UI4,UI4, BW0001,, R EVOK;) 
-APFX(bw0010I4I4, UI4,UI4,UI4, BW0010,, R EVOK;)
-APFX(bw0011I4I4, UI4,UI4,UI4, BW0011,, R EVOK;)
-// commutative APFX(bw0100I4I4, UI4,UI4,UI4, BW0100,, R EVOK;)
-// commutative APFX(bw0101I4I4, UI4,UI4,UI4, BW0101,, R EVOK;)
-APFX(bw0110I4I4, UI4,UI4,UI4, BW0110,, R EVOK;)
-APFX(bw0111I4I4, UI4,UI4,UI4, BW0111,, R EVOK;)
-APFX(bw1000I4I4, UI4,UI4,UI4, BW1000,, R EVOK;)
-APFX(bw1001I4I4, UI4,UI4,UI4, BW1001,, R EVOK;)
-APFX(bw1010I4I4, UI4,UI4,UI4, BW1010,, R EVOK;)
-APFX(bw1011I4I4, UI4,UI4,UI4, BW1011,, R EVOK;)
-// commutative APFX(bw1100I4I4, UI4,UI4,UI4, BW1100,, R EVOK;)
-// commutative APFX(bw1101I4I4, UI4,UI4,UI4, BW1101,, R EVOK;)
-APFX(bw1110I4I4, UI4,UI4,UI4, BW1110,, R EVOK;)
-APFX(bw1111I4I4, UI4,UI4,UI4, BW1111,, R EVOK;)
 
 // scaf rewrite all these and I2/I4 as well
-#if 0
-// *a=val, for length n bytes, n=0-7
-#define STOREn(val,a,n) {UI t=(val); C *v=(C*)(a); if(SY_64){if(n&4){*(UI4*)v==(UI4)t; v+=sizeof(UI4); t>>=(UI)((I)1<<(sizeof(UI4)*BB);}} \
- if(n&2){*(US*)v==(US)t; v+=sizeof(US); t>>=(UI)((I)1<<(sizeof(US)*BB);} if(n&1){*v==(C)t;} }
+#if 1
+// *a=val, for length n&7 bytes
+#define STOREn(val,a,n) {UI t=(val); C *v=(C*)(a); if(SY_64){if((n)&4){*(UI4*)v=(UI4)t; v+=sizeof(UI4); t>>=sizeof(UI4)*BB;}} \
+ if((n)&2){*(US*)v=(US)t; v+=sizeof(US); t>>=sizeof(US)*BB;} if((n)&1){*v=(C)t;} }
 
-#define APF256CC(f,Txyz,pfx)   \
- AHDR2(f##Txyz##Txyz,Txyz,Txyz,Txyz){Txyz u;Txyz v;I n32;                                \
-  if(m<0){n32=(UI)~m/sizeof(Txyz);if(n32)f##II(~n32,(I*)z,(I*)x,(I*)y,n,jt); \
-   I mm=~m&(SZI-1); if(mm)STOREn(pfx(x[n32],y[n32]),&z[n32],mm) \
-  }else if(m&1){m>>=1; n32=(UI)~m/sizeof(Txyz); DQU(n, I uu=LDREP(*x,Txyz); if(n32)f##II(2*n32+1,(I*)z,&uu,(I*)y,n,jt); DQU(m, v=ldfn(*y++); *z++=pfx(u,v);))}   \
+// repeat *a to fill an I
+#define UT_for_C C
+#define UT_for_I2 US
+#define UT_for_I4 UI4
+#define Spread_for_C (UI)0x0101010101010101
+#define Spread_for_I2 (UI)0x0001000100010001
+#define Spread_for_I4 (UI)0x0000000100000001
+#define LDREP(v,Txyz) (*(UT_for_##Txyz*)(v)*Spread_for_##Txyz)
 
-DOUC(m, u=ldfn(*x++); v=ldfn(*y++); *z++=pfx(u,v); )   \
-  else if(m&1){m>>=1; DQU(n, u=ldfn(*x++); DQU(m, v=ldfn(*y++); *z++=pfx(u,v);))}   \
-  else{m>>=1; DQU(n,  v=ldfn(*y++); DQU(m, u=ldfn(*x++); *z++=pfx(u, v);    ))}  \
+// Do a byte-by-byte operation by doing Is as possible, then finishing the remnant.  Overfetches but does not overstore.
+// mode bits: 1=can throw error; 2=use atomic loop for remnant
+#define APF256CC(mode,f,Txyz,pfx)   \
+ AHDR2(f##Txyz##Txyz,Txyz,Txyz,Txyz){I mm,n32; \
+  if(m<0){n32=(UI)~m/(SZI/sizeof(Txyz));if(n32){mm=f##II(~n32,(I*)z,(I*)x,(I*)y,n,jt); if((mode&1)&&(mm<EVOK))R mm;} \
+   if(mode&2){mm=~m&(SZI/sizeof(Txyz)-1); x+=~m; y+=~m; z+=~m; DPNOUNROLL(mm, z[i]=pfx(x[i],y[i]);) \
+   }else{mm=~m*sizeof(Txyz); if(mm&(SZI-1))STOREn(pfx(((I*)x)[n32],((I*)y)[n32]),&((I*)z)[n32],mm)} \
+  }else if(m&1){m>>=1; n32=(UI)m/(SZI/sizeof(Txyz));\
+   DQU(n, I uu=LDREP(x,Txyz); if(n32){mm=f##II(2*n32+1,(I*)z,&uu,(I*)y,1,jt); if((mode&1)&&(mm<EVOK))R mm;} \
+    if(mode&2){mm=m&(SZI/sizeof(Txyz)-1); y+=m; z+=m; DPNOUNROLL(mm, z[i]=pfx((Txyz)uu,y[i]);) \
+    }else{mm=m*sizeof(Txyz); if(mm&(SZI-1))STOREn(pfx(uu,((I*)y)[n32]),&((I*)z)[n32],mm) y+=m; z+=m;} \
+   ++x;) \
+  }else{m>>=1; n32=(UI)m/(SZI/sizeof(Txyz)); \
+   DQU(n, I vv=LDREP(y,Txyz); if(n32){mm=f##II(2*n32,(I*)z,(I*)x,&vv,1,jt); if((mode&1)&&(mm<EVOK))R mm;} \
+    if(mode&2){mm=m&(SZI/sizeof(Txyz)-1); x+=m; z+=m; DPNOUNROLL(mm, z[i]=pfx(x[i],(Txyz)vv);) \
+    }else{mm=m*sizeof(Txyz); if(mm&(SZI-1))STOREn(pfx(((I*)x)[n32],vv),&((I*)z)[n32],mm) x+=m; z+=m;} \
+   ++y;) \
+  } \
   R EVOK; \
  }
+#else
+#define APF256CC(mode,f,Txyz,pfx) APFX(f##Txyz##Txyz, Txyz,Txyz,Txyz, pfx,, R EVOK;)
 #endif
-       static APFX(bw0000CC, UC,UC,UC, BW0000,, R EVOK;)
-       static APFX(bw0001CC, UC,UC,UC, BW0001,, R EVOK;)
-       static APFX(bw0010CC, UC,UC,UC, BW0010,, R EVOK;)
-       static APFX(bw0011CC, UC,UC,UC, BW0011,, R EVOK;)
-       static APFX(bw0100CC, UC,UC,UC, BW0100,, R EVOK;)
-       static APFX(bw0101CC, UC,UC,UC, BW0101,, R EVOK;)
-       static APFX(bw0110CC, UC,UC,UC, BW0110,, R EVOK;)
-       static APFX(bw0111CC, UC,UC,UC, BW0111,, R EVOK;)
-       static APFX(bw1000CC, UC,UC,UC, BW1000,, R EVOK;)
-       static APFX(bw1001CC, UC,UC,UC, BW1001,, R EVOK;)
-       static APFX(bw1010CC, UC,UC,UC, BW1010,, R EVOK;)
-       static APFX(bw1011CC, UC,UC,UC, BW1011,, R EVOK;)
-       static APFX(bw1100CC, UC,UC,UC, BW1100,, R EVOK;)
-       static APFX(bw1101CC, UC,UC,UC, BW1101,, R EVOK;)
-       static APFX(bw1110CC, UC,UC,UC, BW1110,, R EVOK;)
-       static APFX(bw1111CC, UC,UC,UC, BW1111,, R EVOK;)
+ static APF256CC(0,bw0000,C, BW0000)
+ static APF256CC(0,bw0001,C, BW0001)
+ static APF256CC(0,bw0010,C, BW0010)
+ static APF256CC(0,bw0011,C, BW0011)
+ static APF256CC(0,bw0100,C, BW0100)
+ static APF256CC(0,bw0101,C, BW0101)
+ static APF256CC(0,bw0110,C, BW0110)
+ static APF256CC(0,bw0111,C, BW0111)
+ static APF256CC(0,bw1000,C, BW1000)
+ static APF256CC(0,bw1001,C, BW1001)
+ static APF256CC(0,bw1010,C, BW1010)
+ static APF256CC(0,bw1011,C, BW1011)
+ static APF256CC(0,bw1100,C, BW1100)
+ static APF256CC(0,bw1101,C, BW1101)
+ static APF256CC(0,bw1110,C, BW1110)
+ static APF256CC(0,bw1111,C, BW1111)
+APF256CC(0,bw0000,I2, BW0000)
+APF256CC(0,bw0001,I2, BW0001) 
+APF256CC(0,bw0010,I2, BW0010)
+APF256CC(0,bw0011,I2, BW0011)
+// commutative APF256CC(0,bw0100,I2, BW0100)
+// commutative APF256CC(0,bw0101,I2, BW0101)
+APF256CC(0,bw0110,I2, BW0110)
+APF256CC(0,bw0111,I2, BW0111)
+APF256CC(0,bw1000,I2, BW1000)
+APF256CC(0,bw1001,I2, BW1001)
+APF256CC(0,bw1010,I2, BW1010)
+APF256CC(0,bw1011,I2, BW1011)
+// commutative APF256CC(0,bw1100,I2, BW1100)
+// commutative APF256CC(0,bw1101,I2, BW1101)
+APF256CC(0,bw1110,I2, BW1110)
+APF256CC(0,bw1111,I2, BW1111)
+
+APF256CC(0,bw0000,I4, BW0000)
+APF256CC(0,bw0001,I4, BW0001) 
+APF256CC(0,bw0010,I4, BW0010)
+APF256CC(0,bw0011,I4, BW0011)
+// commutative APF256CC(0,bw010,I4, BW0100)
+// commutative APF256CC(0,bw0101,I4, BW0101)
+APF256CC(0,bw0110,I4, BW0110)
+APF256CC(0,bw0111,I4, BW0111)
+APF256CC(0,bw1000,I4, BW1000)
+APF256CC(0,bw1001,I4, BW1001)
+APF256CC(0,bw1010,I4, BW1010)
+APF256CC(0,bw1011,I4, BW1011)
+// commutative APF256CC(0,bw110,I4, BW1100)
+// commutative APF256CC(0,bw1101,I4, BW1101)
+APF256CC(0,bw1110,I4, BW1110)
+APF256CC(0,bw1111,I4, BW1111)
 
 /* see below */                        /* see below */
 REDUCEPFX(bw0001insI, UI,UI, BW0001, bw0001II, bw0001II)   static REDUCEPFX(bw0001insC, UC,UC, BW0001, bw0001CC, bw0001CC)
@@ -177,25 +197,26 @@ DF1(jtbitwise1){F12IP;R CALL2IP(FAV(self)->valencefns[1],zeroionei(0),w,self);}
 static AHDR2FN* bwC[16]={(AHDR2FN*)bw0000CC,(AHDR2FN*)bw0001CC,(AHDR2FN*)bw0010CC,(AHDR2FN*)bw0011CC, (AHDR2FN*)bw0100CC,(AHDR2FN*)bw0101CC,(AHDR2FN*)bw0110CC,(AHDR2FN*)bw0111CC,
                    (AHDR2FN*)bw1000CC,(AHDR2FN*)bw1001CC,(AHDR2FN*)bw1010CC,(AHDR2FN*)bw1011CC, (AHDR2FN*)bw1100CC,(AHDR2FN*)bw1101CC,(AHDR2FN*)bw1110CC,(AHDR2FN*)bw1111CC};
 
-static AHDR2FN* bwI[16]={(AHDR2FN*)bw0000II,(AHDR2FN*)bw0001II,(AHDR2FN*)bw0010II,(AHDR2FN*)bw0011II, (AHDR2FN*)bw0100II,(AHDR2FN*)bw0101II,(AHDR2FN*)bw0110II,(AHDR2FN*)bw0111II,
-                   (AHDR2FN*)bw1000II,(AHDR2FN*)bw1001II,(AHDR2FN*)bw1010II,(AHDR2FN*)bw1011II, (AHDR2FN*)bw1100II,(AHDR2FN*)bw1101II,(AHDR2FN*)bw1110II,(AHDR2FN*)bw1111II};
-
+// obsolete static AHDR2FN* bwI[16]={(AHDR2FN*)bw0000II,(AHDR2FN*)bw0001II,(AHDR2FN*)bw0010II,(AHDR2FN*)bw0011II, (AHDR2FN*)bw0100II,(AHDR2FN*)bw0101II,(AHDR2FN*)bw0110II,(AHDR2FN*)bw0111II,
+// obsolete                    (AHDR2FN*)bw1000II,(AHDR2FN*)bw1001II,(AHDR2FN*)bw1010II,(AHDR2FN*)bw1011II, (AHDR2FN*)bw1100II,(AHDR2FN*)bw1101II,(AHDR2FN*)bw1110II,(AHDR2FN*)bw1111II};
+// obsolete 
 /* a m b.&.(a.&i.) w */
 /* a m b.&.(a.i.]) w */
 /* m e. 16+i.16      */
+// no IRS
 DF2(jtunderh2);
 DF2(jtbitwisechar){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I b;I j,m,n,zn;AHDR2FN* ado;
  ARGCHK2(a,w);
  A x=a, y=w; I an=AN(a), wn=AN(w);
- if((-an&-wn&-(AT(a)&AT(w))&LIT)>=0)R jtunderh2(jt,a,w,self);  // empty or not LIT, revert
- b=AR(a)<=AR(w); zn=b?wn:an; m=b?an:wn; n=zn/m;  // b = 'x is repeated'  m=length of low-rank arg n=#repeats of low-rank arg 
+ if((-an&-wn&-(AT(a)&AT(w)&LIT))>=0)R jtunderh2(jt,a,w,self);  // empty or not LIT, revert
+ b=AR(a)<=AR(w); zn=b?wn:an; m=b?an:wn; n=zn/m;  // b = 'x is repeated'  m=length of low-rank arg n=#repeats of low-rank arg   scaf lose divide
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
  j=i0(FAV(fs)->fgh[1])-16;  // fetch boolean fn #
- GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
- if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}  // for single loop we overwrite.  This means no inplacing
- else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; A zz; RZ(p=IRS2(num(SZI),b?x:y,0L,0L,0L,jtrepeat,zz)); x=b?p:x; y=b?y:p;} // a atom or w atom, or multiple of SZI.  Replicate bytes to words in repeated arg
- else                      ado=bwC[j];
- ado AH2A(m,n==1?~m:2*(n^-b)+b,AV(x),AV(y),AV(z),jt);  // convert m to encoded length/repct
+ GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // allocate result area   scaf should inplace
+// obsolete  if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}  // for single loop we overwrite.  This means no inplacing
+// obsolete  else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; A zz; RZ(p=IRS2(num(SZI),b?x:y,0L,0L,0L,jtrepeat,zz)); x=b?p:x; y=b?y:p;} // a atom or w atom, or multiple of SZI.  Replicate bytes to words in repeated arg
+// obsolete  else                      ado=bwC[j];
+ bwC[j] AH2A(m,n==1?~m:2*n+b,AV(x),AV(y),AV(z),jt);  // convert m to encoded length/repct
  RETF(z);
 }
 

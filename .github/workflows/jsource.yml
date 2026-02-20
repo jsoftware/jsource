@@ -111,7 +111,7 @@ jobs:
       _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
-      mv testlinux.txt  testlinuxgcc.txt
+      mv -f testlinux.txt  testlinuxgcc.txt
       cd j64
       strip -S jconsole
       strip -S libj.so
@@ -232,7 +232,7 @@ jobs:
       _DEBUG: 3
      run: |
       script/testga.sh linux32 || exit 1
-      mv testlinux32.txt  testlinux32gcc.txt
+      mv -f testlinux32.txt  testlinux32gcc.txt
       cd j32
       strip -S jconsole
       strip -S libj.so

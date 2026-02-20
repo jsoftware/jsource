@@ -96,8 +96,7 @@ test2=: 3 : 0 " 0
  g=: y b.
  f=: y b.
  toshort =: 7&c.
- max =. 4294967296
- bias =. _2147483648
+ 'max bias' =. IF64 {:: 2147483647 _1073741824 ; 4294967296 _2147483648
  for. i. 10 do.
   assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ max [ q=: bias +  (31) ?@$ max
   assert. (toshort p g q) -: p f&toshort q [ p=: bias +  ($q) ?@$ max [ q=: bias +  (? 47) ?@$ max

@@ -71,7 +71,7 @@ APFX(bw10010I4I4, UI4,I4,I4, BW10010,, R EVOK;)
 // scaf rewrite all these and I2/I4 as well
 #if 1
 // *a=val, for length n&7 bytes
-#define STOREn(val,a,n) {UI t=(val); C *v=(C*)(a); if(SY_64){if((n)&4){*(UI4*)v=(UI4)t; v+=sizeof(UI4); t>>=sizeof(UI4)*BB;}} \
+#define STOREn(val,a,n) {UI t=(val); C *v=(C*)(a); if(SY_64){if((n)&4){*(UI4*)v=(UI4)t; v+=sizeof(UI4); t>>=(BW-1)&(sizeof(UI4)*BB);}} \
  if((n)&2){*(US*)v=(US)t; v+=sizeof(US); t>>=sizeof(US)*BB;} if((n)&1){*v=(C)t;} }
 
 // repeat *a to fill an I

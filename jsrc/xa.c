@@ -508,6 +508,8 @@ F1(jtcpufeature){F12IP;
  } else if(!strcasecmp(CAV(w),"INFINITY")) {
   UC dh[2*8];
   R str(16, tohex(dh,(UC*)XINF,8));
+ } else if(!strcasecmp(CAV(w),"NORMAH")) {
+  R sc(NORMAH);
  }
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));

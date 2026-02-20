@@ -92,7 +92,7 @@ DF2(jthashy){F12IP; ARGCHK2(a,w) RETF(sc(jtcrcy(jt,w)));}
 // cacheline is the lock for the dic.  The data starts at AS[1], the second cacheline.  The block
 // is a recursive BOX but AK points past the areas that do not need to be freed, i.e to the boxed arrays
 typedef struct ADic {
- I header[8];  // A header up through s[0].  DIC is always allocated with rank 1.
+ I header[NORMAH+1];  // A header up through s[0].  DIC is always allocated with rank 1.
  struct Dic { // *** this group of values is updated atomically en bloc to make sure hashelesiz matches hash when possible.
   union {
    struct {
@@ -145,7 +145,11 @@ typedef struct ADic {
   I filler3[SY_64?6:1];  // pad to cacheline (24 words on each system).
  } bloc;
 } DIC;
+#if 7==NORMAH
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
+#else
+_Static_assert(sizeof(DIC)==33*SZI,"DIC not 33 Is");
+#endif
 #define ST UI4   // type of hash slot
 #define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found
 #define STN 4  // width of hash slot
@@ -1311,10 +1315,17 @@ static UI scantree(I dir,J jt,C *hashtbl, UI4 (*sp)[2], I *flags, I nodeb, UI4 *
   // no more medial children.
   while(1){  // process middle and distal nodes
    // nodex is a middle node, with nodexo as distal child
+#if 7==NORMAH
    if(zx+8*SZI/4==(LOWESTBIT(zx+8*SZI/4)&-(8*SZI))){  // if current allocation exceeded...  (when size+header size is a power of 2, at least 8*SZI - VIRT holds 32 Is, which is 32/64 UI4s)
       // we could avoid the test if we allocated the max value given by the user, but he might give a very high value
     A zia; GATV0E(zia,INT4,zx+zx+8*SZI/4,1,goto exiterr); MC(I4AV1(zia),*res,zx*4); *res=I4AV1(zia);  // double & copy
    }
+#else
+   if(zx+9*SZI/4==(LOWESTBIT(zx+9*SZI/4)&-(9*SZI))){  // if current allocation exceeded...  (when size+header size is a power of 2, at least 8*SZI - VIRT holds 32 Is, which is 32/64 UI4s)
+      // we could avoid the test if we allocated the max value given by the user, but he might give a very high value
+    A zia; GATV0E(zia,INT4,zx+zx+9*SZI/4,1,goto exiterr); MC(I4AV1(zia),*res,zx*4); *res=I4AV1(zia);  // double & copy
+   }
+#endif
 startmin:;  // enter first time going distal only
    // out the middle node
    (*res)[zx]=nodex;  // provisionally put the node out, in order, advance to next slot

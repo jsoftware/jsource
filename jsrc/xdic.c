@@ -138,7 +138,8 @@ typedef struct ADic {
   };
   UI4 vbytelen;  // number of bytes in a value, for copying
   C lgminsiz;  // lg(minimum cardinality).  When cardinality drops below 1LL<<lgminsiz, we resize.
-  I filler2;
+// 3 bytes free
+  I maxeles;  // number of kvs allocated.  We clear AN/AS[0] in the k/v to avoid errors on free, and restore it before destroy
   // end of second cacheline.  Following changed only by put/del
   UI cardinality;  // number of kvs in the hashtable
   UI emptyn;  // index to next empty kv/treeslot.  EOC loops back on itself.  Resize when empty
@@ -264,13 +265,16 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  }else{  // hash: allocate hashtable, as a LIT list
   GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,voidAV1(box),MEMSET00LEN,MEMSET00);   // allocate hash table & fill with empties
  }
+ // keys.  We clear AN/AS[0] to 0 so that the block is harmless for display etc.
+ ((DIC*)z)->bloc.maxeles=maxeles;  // save the actual size for eventual destroy
  ((DIC*)z)->bloc.emptyn=0; ((DIC*)z)->bloc.hash=box;   // save tree/hash, and set root of empty chain as unbiased 0
  I t=((DIC*)z)->bloc.ktype; A sa=((DIC*)z)->bloc.kshape;   // key type & shape
- GA0(box,t,maxeles*((DIC*)z)->bloc.kaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE)|(t&DIRECT?0:AFUNDISPLAYABLE); INCORPNV(box) AS(box)[0]=maxeles; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.keys=box;   // allocate array of keys, recursive and undisplayable if indirect because of empty chain
+ GA0(box,t,maxeles*((DIC*)z)->bloc.kaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE); INCORPNV(box) AN(box)=AS(box)[0]=0; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.keys=box;   // allocate array of keys, recursive and undisplayable if indirect because of empty chain
  void *ev=voidAVn(AN(sa)+1,box); DO(maxeles-1, *(UI4*)ev=i+1; ev=(void *)((I)ev+((DIC*)z)->bloc.kbytelen);)   // chain keys on empty list
  *(UI4*)ev=maxeles-1; // install end of chain loopback.  overstore OK
+ // values.  We clear AN/AS[0] to 0 so that the block is harmless for display etc.
  t=((DIC*)z)->bloc.vtype; sa=((DIC*)z)->bloc.vshape;   // value type & shape
- GA0(box,t,maxeles*((DIC*)z)->bloc.vaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE)|(t&DIRECT?0:AFUNDISPLAYABLE); INCORPNV(box) AS(box)[0]=maxeles; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.vals=box;   // allocate array of vals, recursive
+ GA0(box,t,maxeles*((DIC*)z)->bloc.vaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE); INCORPNV(box) AN(box)=AS(box)[0]=0; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.vals=box;   // allocate array of vals, recursive
  ((DIC*)z)->bloc.cardinality=0;  // init the dic is empty
  ra0(z); INCORP(z); AM(z)=0;  // make z recursive, protecting descendants; INCORP and clear the lock
  RETF(z)
@@ -433,18 +437,19 @@ A dicresize(DIC *dic,J jt){
   &&((val&&LOWESTBIT(AT(val))&VERB))),EVVALUE, exit)   // make sure the result is a verb
  A newdica; RZ(newdica=jtunquote(jt,(A)dic,val,val)); DIC *newdic=(DIC*)newdica;  // execute resize on the dic, returning new dic
  struct Dic t=dic->bloc; dic->bloc=newdic->bloc; newdic->bloc=t;  // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be freed when the new dic is.
+ AN(newdic->bloc.keys)=newdic->bloc.maxeles*newdic->bloc.kaii; AN(newdic->bloc.vals)=newdic->bloc.maxeles*newdic->bloc.vaii;  // newdic is going away - restore its AN values for the free.  AS immaterial 
  // NOTE: we keep the old blocks hanging around until the new have been allocated.  This seems unnecessary for the hashtable, but we do it because other threads still have the old pointers and may prefetch from
  //  the old hash.  This won't crash, but it might be slow if the old hash is no longer in mapped memory
  if(dic->bloc.flags&DICFRB){
   UI nhold=2*AS(newdic->bloc.hash)[0]; C *iv=CAV(newdic->bloc.hash), *ov=CAV(dic->bloc.hash); I il=newdic->bloc.hashelesiz, ol=dic->bloc.hashelesiz;  // number of half-tree-nodes to copy, including hidden ones; addr, len
   DO(nhold, *(UI4*)ov=_bzhi_u64(*(UI4*)iv,il<<LGBB); iv+=il; ov+=ol;)   // copy all the old nodes, zero-extending if needed.  Fails on a downsize!
   // for trees, we copy the old tree into the new one because it's still a valid prefix of the new larger tree and recreating it is slow.  The tree element may have changed size!
-  // we must then copy the keys and values too, which is tricky because of empties.  To avoid looking at atoms we copy the keys and values en bloc and then switch the type of the old kv to INT, in effect freeing them one tme
+  // we must then copy the keys and values too, which is tricky because of empties.  To avoid looking at atoms we copy the keys and values en bloc and then switch the type of the old kv to INT, in effect freeing them one time
   I kk=bplg(AT(newdic->bloc.keys)), kn=AN(newdic->bloc.keys), vk=bplg(AT(newdic->bloc.vals)), vn=AN(newdic->bloc.vals);  // kv, #atom & size of atom
   MC(voidAV(dic->bloc.keys), voidAV(newdic->bloc.keys), kn<<kk); AT(newdic->bloc.keys)=INT;   // copy & abandon the old keys, transferring ownership
   MC(voidAV(dic->bloc.vals), voidAV(newdic->bloc.vals), vn<<vk); AT(newdic->bloc.vals)=INT;   // copy & abandon the old values, transferring ownership
   dic->bloc.cardinality=newdic->bloc.cardinality;  // record the moved keys in the key count
-  UI nkold=AS(newdic->bloc.keys)[0]; dic->bloc.emptyn=nkold-1;  // the end of the free chain is always the last key, which is never allocated.  Point that to the first new key and make it the head of the free chain
+  UI nkold=newdic->bloc.maxeles; dic->bloc.emptyn=nkold-1;  // the end of the free chain is always the last key, which is never allocated.  Point that to the first new key and make it the head of the free chain
   UI t=nkold; WRHASH1234(t, dic->bloc.emptysiz, &CAV(dic->bloc.keys)[(nkold-1)*newdic->bloc.kbytelen])  // hang the excess new empty chain off the old
 
  }
@@ -706,7 +711,7 @@ resize:;  // resize required.  We already have a write lock
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; return value of lv (to make release faster in caller), with RET bits set to indicate error or resize request
-static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
+static scafINLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // kbytelen/kitemlen  compare func unchanged by resize
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
@@ -743,7 +748,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
    // conflict if BSTN was set; otherwise old if high part of s[i]=0 
 
  // If the operation is going to run out of slots, abort before we start.
- if(unlikely(dic->bloc.cardinality+nnew>=(UI)AS(dic->bloc.keys)[0]))goto lockforresize;  // if this would fill the last key, resize
+ if(unlikely(dic->bloc.cardinality+nnew>=(UI)dic->bloc.maxeles))goto lockforresize;  // if this would fill the last key, resize
  dic->bloc.cardinality+=nnew;  // account for the new keys
 
  // Now we move the new kvs into empty slots.  This wipes out the chain fields in the empties, so we have to create a separate list of where the empties were
@@ -853,7 +858,7 @@ static DF2(jtdicput){F12IP;A z;
   I cf=MIN(af,wf); ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // frames must be suffixes
   if(unlikely(AN(w)==0)){R mtm;}  // if no keys, return empty fast
   if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed.  Agreement error has priority over type
-  I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,wf,AS(w))   // kn = number of keys to be looked up  vn=#values to be looked up
+  I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,af,AS(a))   // kn = number of keys to be looked up  vn=#values to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
   // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
   // For the same reason, we do not have to worry about the order in which kvs are added and deleted.
@@ -1101,7 +1106,9 @@ static A dumptree(J jt,DIC *dic, UI nodex, C *dirstack, I depth, I blackdepth, I
  if(nodex<(TREENRES<<1)||nodex==excludednode)R prevkey;  // 
  C *hashtbl=CAV3(dic->bloc.hash); I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);DRLRC(curr,nodex)   // fetch tree info, then children+color
  dirstack[depth]='0'; prevkey=dumptree(jt,dic,currl,dirstack,depth+1,blackdepth+currc,currc,prevkey,leafblackdepth,noerr,excludednode,doprint);
- A k,v; RZ(k=from(sc(RENCEMPTY(nodex)),dic->bloc.keys)) RZ(v=from(sc(RENCEMPTY(nodex)),dic->bloc.vals))  // fetch current key/val
+ A k; RZ(k=virtual(dic->bloc.keys,RENCEMPTY(nodex)*dic->bloc.kaii,AR(dic->bloc.keys)-1)) AN(k)=dic->bloc.kaii; MCISH(AS(k),AS(dic->bloc.keys)+1,AR(dic->bloc.keys)-1)
+// obsolete RZ(k=from(sc(RENCEMPTY(nodex)),dic->bloc.keys)) RZ(v=from(sc(RENCEMPTY(nodex)),dic->bloc.vals))  // fetch current key/val
+ A v; RZ(v=virtual(dic->bloc.vals,RENCEMPTY(nodex)*dic->bloc.vaii,AR(dic->bloc.vals)-1)) AN(v)=dic->bloc.vaii; MCISH(AS(v),AS(dic->bloc.keys)+1,AR(dic->bloc.keys)-1)
  A klr, vlr; RZ(klr=lrep(k)) RZ(vlr=lrep(v))  // displayable form of k,v
  if(doprint)printf("%.*s: node=0x%x key=%.*s val=%.*s c=%d l=0x%x r=0x%x",(int)depth,dirstack,(int)nodex,(int)AN(klr),CAV(klr),(int)AN(vlr),CAV(vlr),(int)currc,(int)currl,(int)currr);
  if(prevkey){A comp;
@@ -1586,7 +1593,7 @@ static DF2(jtdicputo){F12IP;
  I cf=MIN(af,wf); ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // frames must be suffixes
  if(unlikely(AN(w)==0)){R mtm;}  // if no keys, return empty fast
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed
- I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,wf,AS(w))   // kn = number of keys to be looked up  vn=#values to be looked up
+ I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,af,AS(a))   // kn = number of keys to be looked up  vn=#values to be looked up
  ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
  // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
  // For the same reason, we do not have to worry about the order inwhich kvs are added and deleted.
@@ -1830,8 +1837,9 @@ DF1(jtdicmgetc){F12IP;
  R fdef(0,CMODX,VERB,jtvalenceerr,jtdicmgeto, w,self,0, VNONAME+VNOSELF, RMAX,RMAX,RMAX); 
 }
 
-// x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, also erase the empty chainfields.  If empties have already been deleted, error
-// If x=2, clear the database: free all INDIRECT kvs, reset the free chain to hold all keys, clear stats
+// x 16!:_5 dic  If x=0,  return list of empty keyslots.  If x=1, we are preparing for destroy: also erase the empty chainfields,
+//  and restore the AN fields for eventual free.  If empties have already been deleted, error
+// If x=2, clear the database: free all INDIRECT kvs, reset the free chain to hold all keys, clear stats.  This leaves the database usable but empty
 // No locks; if you need a write lock, take it before calling.
 DF2(jtdicempties){F12IP;
  ARGCHK2(a,w)
@@ -1855,10 +1863,13 @@ DF2(jtdicempties){F12IP;
   if(emptynxt==emptyx)break;  // If loopback (EOC), stop counting
   emptyx=emptynxt;  // advance to next
  }
- if(x==1)dic->bloc.emptyn=-1;  // set chain invalid if we have deleted it.  The noun is still undisplayable.
- else if(x==2){   // 'clear' request
-  if(dic->bloc.flags&DICFKINDIR){A *av=AAV(dic->bloc.keys); DO((dic->bloc.kbytelen*AN(dic->bloc.keys))>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // delete keys...
-  if(dic->bloc.flags&DICFVINDIR){A *av=AAV(dic->bloc.vals); DO((dic->bloc.vbytelen*AN(dic->bloc.vals))>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // ...and values
+ if(x==1){
+  // 'destroy' request.  Clear chain to mark destroyed, and reinstate the AN fields
+  dic->bloc.emptyn=-1;  // set chain invalid if we have deleted it.  The noun is still undisplayable.
+  AN(dic->bloc.keys)=dic->bloc.maxeles*dic->bloc.kaii; AN(dic->bloc.vals)=dic->bloc.maxeles*dic->bloc.vaii;  // dic is going away - restore its AN values for the destroy.  AS immaterial
+ }else if(x==2){   // 'clear' request
+  if(dic->bloc.flags&DICFKINDIR){A *av=AAV(dic->bloc.keys); DO((dic->bloc.kbytelen*=dic->bloc.maxeles*dic->bloc.kaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // delete keys...
+  if(dic->bloc.flags&DICFVINDIR){A *av=AAV(dic->bloc.vals); DO((dic->bloc.vbytelen*dic->bloc.maxeles*dic->bloc.vaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // ...and values
   // go back and reinitialize everything as if after create.  Why not just destroy/recreate?  Questionable decision.  Doing it this way keeps the dic in place, avoiding invalidating pointers.  Start with the hash:
   if(dic->bloc.flags&DICFRB){  // red/black: allocate n2nxh block for tree
    IAVn(3,dic->bloc.hash)[0]=2*0+0; IAVn(3,dic->bloc.hash)[1]=2*0+0;// empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
@@ -1866,8 +1877,8 @@ DF2(jtdicempties){F12IP;
    mvc(dic->bloc.hashsiz*dic->bloc.hashelesiz,voidAV1(dic->bloc.hash),MEMSET00LEN,MEMSET00);   // allocate hash table & fill with empties
   }
   // keys
-  void *ev=voidAVn(AN(dic->bloc.kshape)+1,dic->bloc.keys); DO(AS(dic->bloc.keys)[0]-1, *(UI4*)ev=i+1; ev=(void *)((I)ev+((DIC*)z)->bloc.kbytelen);)   // allocate empty list & chain empties together
-  dic->bloc.emptyn=0; *(UI4*)ev=AS(dic->bloc.keys)[0]-1; // / set root of empty chain as unbiased 0; install end of chain loopback.  overstore OK
+  void *ev=voidAVn(AN(dic->bloc.kshape)+1,dic->bloc.keys); DO(dic->bloc.maxeles-1, *(UI4*)ev=i+1; ev=(void *)((I)ev+((DIC*)z)->bloc.kbytelen);)   // allocate empty list & chain empties together
+  dic->bloc.emptyn=0; *(UI4*)ev=dic->bloc.maxeles-1; // / set root of empty chain as unbiased 0; install end of chain loopback.  overstore OK
   // values can be left as is
   // other info
   dic->bloc.cardinality=0;  // now the dic is empty
@@ -1875,14 +1886,16 @@ DF2(jtdicempties){F12IP;
  RETF(z)
 }
 
-// x 16!:_8 dic   return dic stats
-DF2(jtdicstats){F12IP;A z;
+// x 16!:_8 dic   return dic info. x=0: cardinality 1=virtual block for keys 2=virtual block for vals
+DF2(jtdicstats){F12IP;A z;I r;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I type; RE(type=i0(a))   // get the stat arg
  switch(type){
  case 0: z=sc(dic->bloc.cardinality); break; // nkeys
+ case 1: r=AR(dic->bloc.keys); RZ(z=virtual(dic->bloc.keys,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.kaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.keys)+1,r-1) break;  // virtual for all keys
+ case 2: r=AR(dic->bloc.vals); RZ(z=virtual(dic->bloc.vals,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.vaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.vals)+1,r-1) break;  // virtual for all vals
  default: ASSERT(0,EVDOMAIN)
  }
  RETF(z);
@@ -1931,7 +1944,7 @@ DF2(jtdicload){F12IP;
  ASSERT(AR(a)==1,EVRANK) ASSERT(AN(a)==2,EVLENGTH)  // must be keys;values
  // Audit keys
  I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
- A boxk=C(AAV(a)[0]); ASSERT(AR(boxk)==kr+1,EVRANK) ASSERT(AS(boxk)[0]<AN(dic->bloc.vals),EVLENGTH) ASSERTAGREE(AS(boxk)+1,ks,kr) if(!(kt&AT(boxk)))RZ(boxk=ccvt(kt,boxk,0))   // keys must have correct  shape & type, & not be too big
+ A boxk=C(AAV(a)[0]); ASSERT(AR(boxk)==kr+1,EVRANK) ASSERT(AS(boxk)[0]<dic->bloc.maxeles,EVLENGTH) ASSERTAGREE(AS(boxk)+1,ks,kr) if(!(kt&AT(boxk)))RZ(boxk=ccvt(kt,boxk,0))   // keys must have correct  shape & type, & not be too big
  // Audit values
  A boxv;
  if(dic->bloc.vaii!=0){  // if this map has values...
@@ -1955,7 +1968,7 @@ DF2(jtdicload){F12IP;
   DO(nn, PUTKVNEW(vbase+i*vb,v+i*vb,vb,nodeb&(DICFVINDIR<<8));)  // copy in all the values
  }
  // Init the free chain to comprise the uninitialized keys
- void *ev=hashtbl+nn*(kib>>32); DO(AS(dic->bloc.keys)[0]-nn-1, *(UI4*)ev=nn+i+1; ev=(void *)((I)ev+dic->bloc.kbytelen);)   // allocate empty list & chain empties together
+ void *ev=hashtbl+nn*(kib>>32); DO(dic->bloc.maxeles-nn-1, *(UI4*)ev=nn+i+1; ev=(void *)((I)ev+dic->bloc.kbytelen);)   // allocate empty list & chain empties together
  *(UI4*)ev=nn-1; // install end of chain loopback.  overstore OK
  // All kvs have been moved & inited.  Now build the red/black tree
  I minred=CTLZI(nn+1);   // Nodes with depth <= (minred-1) are all black.  There are 2^j-1 of them.  The remainder are at extra height and are colored red.

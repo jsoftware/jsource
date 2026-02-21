@@ -1123,8 +1123,8 @@ extern struct Bd1 Bmarkd[];
 #define markd(n) ((A)&Bmarkd[n])  // QP,FL,CMPX
 extern I Bchrspace[];
 #define chrspace ((A)&Bchrspace)
-extern struct Bs1 Bundispstg;
-#define undispstg ((A)&Bundispstg)
+// obsolete extern struct Bs1 Bundispstg;
+// obsolete #define undispstg ((A)&Bundispstg)
 #if !SY_64
 extern long long validitymask[];
 #else

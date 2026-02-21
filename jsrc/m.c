@@ -495,7 +495,7 @@ void jtspendtracking(J jt){I i;
 // Make sure all deletecounts start at 0
 static void auditsimverify0(J jt,A w){
  if(!w)R;
- if(AFLAG(w)&AFUNDISPLAYABLE)R;  // if the block is known to have garbage atoms, don't check it
+// obsolete  if(AFLAG(w)&AFUNDISPLAYABLE)R;  // if the block is known to have garbage atoms, don't check it
  if(AFLAG(w)>>AFAUDITUCX){
   fprintf(stderr, "auditsimverify0 w: %llx, AFLAG(w)>>AFUDITUCX: %llx, ", (UI)w, AFLAG(w)>>AFAUDITUCX);
   fprintf(stderr,"AK(w): %llx (%lli), ", AK(w), AK(w));
@@ -527,7 +527,7 @@ static void auditsimverify0(J jt,A w){
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
 static void auditsimdelete(J jt,A w){I delct;
  if(!w)R;
- if(AFLAG(w)&AFUNDISPLAYABLE)R;  // if the block is known to have garbage atoms, don't check it
+// obsolete  if(AFLAG(w)&AFUNDISPLAYABLE)R;  // if the block is known to have garbage atoms, don't check it
  if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT;
  if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT;   // hang if too many deletes
@@ -556,7 +556,7 @@ static void auditsimdelete(J jt,A w){I delct;
 // clear delete counts back to 0 for next run
 static void auditsimreset(J jt,A w){I delct;
  if(!w)R;
- if(AFLAG(w)&AFUNDISPLAYABLE)R;  // if the block is known to have garbage atoms, don't check it
+// obsolete  if(AFLAG(w)&AFUNDISPLAYABLE)R;  // if the block is known to have garbage atoms, don't check it
  delct = AFLAG(w)>>AFAUDITUCX;   // did this recur?
  AFLAG(w) &= AFAUDITUC-1;   // clear count for next time
  if(AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);

@@ -855,12 +855,36 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 
 // debugging AD header length
-#ifndef NORMAH8
-#define NORMAH8 0
+#ifndef NORMAHX
+#define NORMAHX 0
 #endif
 #if !SY_64 && PYXES
-#undef NORMAH8
-#define NORMAH8 1
+#undef NORMAHX
+#define NORMAHX 1
+#endif
+
+#if NORMAHX!=0 && NORMAHX!=1 && NORMAHX!=2 && NORMAHX!=3 && NORMAHX!=4 && NORMAHX!=5 && NORMAHX!=6 && NORMAHX!=7 && NORMAHX!=8
+#error NORMAHX only supports 0 .. 8
+#endif
+
+#if NORMAHX==1
+#define Xrh0 0,
+#elif NORMAHX==2
+#define Xrh0 0,0,
+#elif NORMAHX==3
+#define Xrh0 0,0,0,
+#elif NORMAHX==4
+#define Xrh0 0,0,0,0,
+#elif NORMAHX==5
+#define Xrh0 0,0,0,0,0,
+#elif NORMAHX==6
+#define Xrh0 0,0,0,0,0,0,
+#elif NORMAHX==7
+#define Xrh0 0,0,0,0,0,0,0,
+#elif NORMAHX==8
+#define Xrh0 0,0,0,0,0,0,0,0,
+#else
+#define Xrh0
 #endif
 
 // if we are not multithreading, report the master thread only

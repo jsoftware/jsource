@@ -11,21 +11,29 @@
 #pragma warning(disable : 4056)  // negative infinity overflow
 
 // globals start - set by globinit in initialization
-#define CREBLOCKATOMV2(name,t,v1,v2) struct Bd2 B##name={{AKXR(1),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1,v2}};
+#define CREBLOCKATOMV2(name,t,v1,v2) struct Bd2 B##name={{Xrh0 AKXR(1),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1,v2}};
 CREBLOCKATOMV2(a0j1,CMPX,0.0,1.0)  // 0j1
 #if SY_64
-#define CBAIVALM(t,v,m) {7*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,(v)}
+#define CBAIVALM(t,v,m) {Xrh0 NORMAH*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,(v)}
 #else
-#define CBAIVALM(t,v,m) {8*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,0,(v)}
+#if NORMAHX==0 || NORMAHX==2 || NORMAHX==4 || NORMAHX==6 || NORMAHX==8   // even number, then NORMAHX is odd
+#define CBAIVALM(t,v,m) {Xrh0 (NORMAH+1)*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,0,(v)}
+#else
+#define CBAIVALM(t,v,m) {Xrh0 (NORMAH)*SZI,(t)&TRAVERSIBLE,m,(t),ACPERMANENT,1,0,(v)}
+#endif
 #endif
 #define CBAIVAL(t,v) CBAIVALM(t,v,0)
-#define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(ABDY))) B##name[9-SY_64]=CBAIVAL(t,v);
+#if NORMAHX
+#define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(2*ABDY))) B##name[(8-NORMAHX)+NORMAH+2-SY_64]=CBAIVAL(t,v);
+#else
+#define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(ABDY))) B##name[NORMAH+2-SY_64]=CBAIVAL(t,v);
+#endif
 struct Bxnum0 {I hdr[AKXR(0)/SZI]; X v[1];};
-#define CREBLOCKVEC0(name,t) I __attribute__((aligned(ABDY))) B##name[8]={8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
+#define CREBLOCKVEC0(name,t) I __attribute__((aligned(ABDY))) B##name[NORMAH+1]={Xrh0 (NORMAH+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
 CREBLOCKVEC0(aqq,LIT)  // ''
 CREBLOCKVEC0(mtv,B01)  // i.0 boolean
 CREBLOCKVEC0(mtvi,INT)  // i.0 integer
-#define CREBLOCKATOMV1(name,t,v1) struct Bd1 B##name={{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1}};
+#define CREBLOCKATOMV1(name,t,v1) struct Bd1 B##name={{Xrh0 AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1}};
 CREBLOCKATOMV1(onehalf,FL,0.5)  // 0.5
 CREBLOCKATOMV1(ainf,FL,INFINITY)  // _
 CREBLOCKATOMV1(ainfm,FL,-INFINITY)  // __
@@ -52,12 +60,12 @@ CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special val
 CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
-struct Bd1 Bmarkd[3]={{{AKXR(0),QP&TRAVERSIBLE,0,QP,ACPERMANENT,-1,0},{0.}},{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,-1,0},{0.}},{{AKXR(0),CMPX&TRAVERSIBLE,0,CMPX,ACPERMANENT,-1,0},{0.}}};  // weird double mark: atomic FL with AN<0.  Used to indicate a special case
+struct Bd1 Bmarkd[3]={{{Xrh0 AKXR(0),QP&TRAVERSIBLE,0,QP,ACPERMANENT,-1,0},{0.}},{{Xrh0 AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,-1,0},{0.}},{{Xrh0 AKXR(0),CMPX&TRAVERSIBLE,0,CMPX,ACPERMANENT,-1,0},{0.}}};  // weird double mark: atomic FL with AN<0.  Used to indicate a special case
     // order is QP,FL,CMPX
-#define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(ABDY))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
+#define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(ABDY))) B##name[NORMAH+2]={Xrh0 (NORMAH+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
 CREBLOCKVEC1I(iv0,INT,0)    /* ,0                                                          */
 CREBLOCKVEC1I(iv1,INT,1)     /* ,1                                                          */
-#define CREBLOCKVEC2I(name,t) I __attribute__((aligned(ABDY)))  B##name[9]={(7+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
+#define CREBLOCKVEC2I(name,t) I __attribute__((aligned(ABDY)))  B##name[NORMAH+2]={Xrh0 (NORMAH+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
 CREBLOCKVEC2I(mtm,B01)    // i. 0 0, but boolean
 CREBLOCKVEC2I(mtmi,INT)    // i. 0 0 integer
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
@@ -77,7 +85,11 @@ I __attribute__((aligned(ABDY))) maskec4123[4]={0xc0000000c0000000, 0x8000000000
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
 
-__attribute__((aligned(ABDY))) I Bnum[NUMMAX-NUMMIN+1+2][8*(2-SY_64)] = {   // A blocks for the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
+#if NORMAHX
+__attribute__((aligned(2*ABDY))) I Bnum[NUMMAX-NUMMIN+1+2][((8-NORMAHX)+NORMAH+1)*(2-SY_64)] = {   // A blocks for the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
+#else
+__attribute__((aligned(ABDY))) I Bnum[NUMMAX-NUMMIN+1+2][(NORMAH+1)*(2-SY_64)] = {   // A blocks for the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
+#endif
 CBAIVAL(INT,0), CBAIVAL(INT,1),
 // minimal CBAIVAL(INT,-20), CBAIVAL(INT,-19), CBAIVAL(INT,-18), CBAIVAL(INT,-17), CBAIVAL(INT,-16), CBAIVAL(INT,-15), CBAIVAL(INT,-14), CBAIVAL(INT,-13), CBAIVAL(INT,-12), CBAIVAL(INT,-11), 
 CBAIVAL(INT,-10), CBAIVAL(INT,-9), CBAIVAL(INT,-8), CBAIVAL(INT,-7), CBAIVAL(INT,-6), CBAIVAL(INT,-5), CBAIVAL(INT,-4), CBAIVAL(INT,-3), CBAIVAL(INT,-2), CBAIVAL(INT,-1), 
@@ -87,28 +99,28 @@ CBAIVAL(INT,2), CBAIVAL(INT,3), CBAIVAL(INT,4), CBAIVAL(INT,5), CBAIVAL(INT,6), 
 };
 
 struct Bd1 Bnumvr[] = {  // floating-point -0, 1, 2, used for constants
-{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},-0.0}, //used for -y; -y is _0.0 - y.  Data value also used as a mask
-{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},1.0},
-{{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0},
+{{Xrh0 AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},-0.0}, //used for -y; -y is _0.0 - y.  Data value also used as a mask
+{{Xrh0 AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},1.0},
+{{Xrh0 AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0},
 };
 
 struct Bi1 Bnumi2[] = {  // I2 0, 1, 2 used for constants
-{{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},0}, //used for -y
-{{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},1}, //
-{{AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},2}, //
+{{Xrh0 AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},0}, //used for -y
+{{Xrh0 AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},1}, //
+{{Xrh0 AKXR(0),INT2&TRAVERSIBLE,0,INT2,ACPERMANENT,1,0},2}, //
 };
 
 struct Bi1 Bnumi4[] = {  // I4 0, 1, 2 used for constants
-{{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},0}, //used for -y
-{{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},1}, //
-{{AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},2}, //
+{{Xrh0 AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},0}, //used for -y
+{{Xrh0 AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},1}, //
+{{Xrh0 AKXR(0),INT4&TRAVERSIBLE,0,INT4,ACPERMANENT,1,0},2}, //
 };
 
 D   inf=INFINITY;                // _
 D   infm=-INFINITY;              // __
 D   pf=0;                        // performance frequency
 Z   zeroZ={0,0};                 // 0j0; also used for QP zero and Sleef QP 0
-// obsolete struct Bs1 Bundispstg = {{AKXR(1),LIT&TRAVERSIBLE,0,LIT,ACPERMANENT,13,1,13} , {'u','n','d','i','s','p','l','a','y','a','b','l','e'}}  ;    // 'undisplayable'
+// obsolete struct Bs1 Bundispstg = {{Xrh0 AKXR(1),LIT&TRAVERSIBLE,0,LIT,ACPERMANENT,13,1,13} , {'u','n','d','i','s','p','l','a','y','a','b','l','e'}}  ;    // 'undisplayable'
 /*
 extended-precision pi generated by sollya:
 > display=hexadecimal!;

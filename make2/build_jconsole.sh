@@ -182,19 +182,19 @@ fi
 if [ $USE_PYXES -eq 1 ]; then
  common="$common -DPYXES=1"
  case "$j64x" in
-  j32*) USE_NORMAH8=1 ;;
-  *) USE_NORMAH8="${USE_NORMAH8:=0}" ;;
+  j32*) NORMAHX=1 ;;
+  *) NORMAHX="${NORMAHX:=0}" ;;
  esac
 else
  common="$common -DPYXES=0"
- USE_NORMAH8="${USE_NORMAH8:=0}"
+ NORMAHX="${NORMAHX:=0}"
 fi
 
-USE_NORMAH8="${USE_NORMAH8:=0}"
-if [ $USE_NORMAH8 -eq 1 ]; then
- common="$common -DNORMAH8=1"
+NORMAHX="${NORMAHX:=0}"
+if [ $NORMAHX -eq 1 ]; then
+ common="$common -DNORMAHX=1"
 else
- common="$common -DNORMAH8=0"
+ common="$common -DNORMAHX=0"
 fi
 
 if [ "${USE_GMP_H:=1}" -eq 1 ]; then

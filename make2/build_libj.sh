@@ -304,18 +304,17 @@ if [ $USE_PYXES -eq 1 ]; then
    ;;
  esac
  case "$j64x" in
-  j32*) USE_NORMAH8=1 ;;
-  *) USE_NORMAH8="${USE_NORMAH8:=0}" ;;
+  j32*) NORMAHX="${NORMAHX:=1}" ;;
  esac
 else
  common="$common -DPYXES=0"
- USE_NORMAH8="${USE_NORMAH8:=0}"
 fi
 
-if [ $USE_NORMAH8 -eq 1 ]; then
- common="$common -DNORMAH8=1"
+NORMAHX="${NORMAHX:=0}"
+if [ $NORMAHX -ne 0 ]; then
+ common="$common -DNORMAHX=${NORMAHX}"
 else
- common="$common -DNORMAH8=0"
+ common="$common -DNORMAHX=0"
 fi
 
 case "$jplatform/$j64x" in

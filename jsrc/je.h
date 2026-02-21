@@ -1086,7 +1086,7 @@ extern I taou(I,US*,US*);
 extern I taot(I,C4*,C4*);
 struct __attribute__((aligned(ABDY))) Bi1 {I hdr[AKXR(0)/SZI]; I v[1];};  // data is one integer atom
 struct __attribute__((aligned(ABDY))) Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};  // data is one float atom
-struct __attribute__((aligned(ABDY))) Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // data for the multi-word atom is aligned to cacheline
+struct __attribute__((aligned(ABDY))) Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // data for the multi-word atom is aligned to cacheline (always 64 bytes, see QCMASK)
 struct __attribute__((aligned(ABDY))) Bs1 {I hdr[AKXR(1)/SZI]; C v[16];};  // data is literal list
 extern struct Bd2 Ba0j1;
 #define a0j1 ((A)&Ba0j1)
@@ -1140,7 +1140,11 @@ extern I Biv1[];
 #define iv1 ((A)&Biv1)
 extern A        mnuvxynam[6];
 extern void     moveparseinfotosi(J);
-extern I Bnum[][8*(2-SY_64)];
+#if NORMAHX
+extern I Bnum[][((8-NORMAHX)+NORMAH+1)*(2-SY_64)];
+#else
+extern I Bnum[][(NORMAH+1)*(2-SY_64)];
+#endif
 #define zeroionei(n) ((A)(Bnum+(n)))
 #define num(n) ((A)(Bnum+2+(n)-NUMMIN))
 #define I1mem (iotavec-IOTAVECBEGIN+1)  // 1 stored in memory

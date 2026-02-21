@@ -14,6 +14,14 @@
 #endif
 #endif
 
+#ifndef NORMAHX
+#define NORMAHX 0
+#endif
+#if !(defined(_WIN64)||defined(__LP64__)) && PYXES
+#undef NORMAHX
+#define NORMAHX 1
+#endif
+
 /* maintainer note: define JFRONTEND for non jsource front-ends */
 // #define JFRONTEND
 #ifdef JFRONTEND
@@ -37,14 +45,10 @@ typedef long I;
 typedef char C;
 typedef void* JS;
 typedef struct A_RECORD {
-#if defined(_WIN64)||defined(__LP64__)
-  I k,flag,m,t,c,n,r,s[1];
-#else
-#if PYXES
-  I k,flag,m,t,c,n,r,p,s[1];            /* assume little endian            */
+#if NORMAHX
+  I p[NORMAHX],k,flag,m,t,c,n,r,s[1];
 #else
   I k,flag,m,t,c,n,r,s[1];
-#endif
 #endif
 }* A;
 typedef struct AREP_RECORD {

@@ -620,7 +620,7 @@ dijkstra =: {{
   'ds ps' =. ($&_ ; $&_1)@# x  NB. Initialize distances and predecessors.
   '' put__q 0 , y [ ds =. 0 y} ds  NB. Distance to source is 0.
   while. 0 < count__q '' do.
-    'd i' =. ([ del__q) min__q ''  NB. Extract vertex with minimum distance.
+    del__q 'd i' =. min__q ''  NB. Extract vertex with minimum distance.
     if. d > i { ds do. continue. end.  NB. Skip outdated entry.
     'js ws' =. i { x  NB. Adjacent vertices and edge weights.
     NB. Filter out edges that do not improve shortest paths.
@@ -629,7 +629,6 @@ dijkstra =: {{
     ps =. i js} ps  NB. Update predecessors.
     '' put__q js ,.~ d + ws  NB. Insert the updated distance–vertex pairs.
   end.
-  assert. (0) 16!:_7 dict__q
   destroy__q ''
   ds ; ps
 }}"2 0
@@ -679,6 +678,16 @@ testdijkstra =: {{
 
 3 testdijkstra 10 30 100 300
 
+NB. x is density (average number of edges per vertex).
+NB. y is number of vertices.
+benchmarkdijkstra =: {{
+  es =. (,. ?@$&1000@#) x randedges y
+  g =. y digraph es
+  6!:2 'g dijkstra 0'
+}}"0
+
+echo 'Dijkstra (1e5 vertices, 3e5 edges): ' , (": 3 benchmarkdijkstra 1e5) , 's'
+
 NB. x is the maximum height for jumping and falling.
 NB. y is table (rank 2) where each row represents a platform (y, x_left, x_right)
 NB. The result is an array of boxes, where each box contains indices of platforms
@@ -718,8 +727,8 @@ partition =: {{
       ids =: root js} ids NB. Mark that those entries are reachable from the platform p.
     end.
     r put__s~ p_index ;~ l , h NB. Always put p as middle platform.
+    assert. (0) 16!:_7 dict__s
   end.
-  assert. (0) 16!:_7 dict__s
   destroy__s ''
   NB. Map every index to its group root in ids and compute groups.
   ((find i. # y) {~ /: idxs) </. i. # y

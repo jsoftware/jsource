@@ -16,13 +16,13 @@ valuetype =: 4
 valueshape =: i. 0
 keyhash =: 16!:0`''
 keycompare =: 16!:0`''
-initsize =: 100
+initcapacity =: 100
 
 if. (-: (index_type {.~ -@#)) 'concurrent' do.
   singlethreaded =. 0
   index_type =. (- # ' concurrent') }. index_type
 else.
-  singlethreaded =. 0
+  singlethreaded =. 1
 end.
 
 select. index_type   NB. set up params for create, based on map type
@@ -31,7 +31,7 @@ case. 'hash' do.
   occupancy =: 0.5   NB. default for occupancy
   NB. Parse params and update above attributes.
   parse^:(*@#) creation_parameters
-  internal_parameters =. (0 , initsize , <. initsize % occupancy) ; singlethreaded ; (keytype ; keyshape) ; < (valuetype ; valueshape)
+  internal_parameters =. (0 , initcapacity , <. initcapacity % occupancy) ; singlethreaded ; (keytype ; keyshape) ; < (valuetype ; valueshape)
 case. 'tree' do.
   itype =: 1  NB. index type 1 is tree
   NB. Parse params and update above attributes.
@@ -39,7 +39,7 @@ case. 'tree' do.
   if. 0 <: 4!:0 < 'occupancy' do.
      13!:8 (3) [ 'Parameter not supported in tree dictionary: occupancy'
   end.
-  internal_parameters =. (0 , initsize) ; singlethreaded ; (keytype ; keyshape) ; < (valuetype ; valueshape)
+  internal_parameters =. (0 , initcapacity) ; singlethreaded ; (keytype ; keyshape) ; < (valuetype ; valueshape)
 case. do.
   13!:8 (3) [ 'Incorrect index type'
 end.
@@ -48,7 +48,7 @@ NB. Create the map, which remains as dict.  dict is marked nondisplayable becaus
 NB. If 1 {:: dict (keys) is an indirect type, it is death to touch or display any part of 1 {:: dict that is on the empty list.
 NB. It might be better not to assign dict, to make it impossible to access 1 {:: dict from console level.  But we have to be able to run 16!:_5 on it - make 16!:_5 an adverb
 if. keyhash -: keycompare do. keyfn =. keyhash `: 6 else. keyfn =. keyhash `: 6 : (keycompare `: 6) end.
-size =: initsize
+size =: initcapacity
 dict =: keyfn f. (16!:_1) internal_parameters
 
 NB. Assign names.

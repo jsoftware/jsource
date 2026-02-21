@@ -111,34 +111,6 @@ jobs:
       _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
-      mv testlinux.txt  testlinuxgcc.txt
-      cd j64
-      strip -S jconsole
-      strip -S libj.so
-      strip -S libjavx2.so || true
-      strip -S libjavx512.so || true
-      strip -S libtsdll.so
-      strip -S jamalgam || true
-      strip -S libgmp.so
-      cd -
-      ls -l j64
-      zip -r lgcc64.zip j64
-
-   - name: Release JE (Linux gcc)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "lgcc64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Linux gcc)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testlinuxgcc.txt
-      overwrite: true
 
 # linux32 --------------------------------------------------------------
  jelinux32:
@@ -232,32 +204,6 @@ jobs:
       _DEBUG: 3
      run: |
       script/testga.sh linux32 || exit 1
-      mv testlinux32.txt  testlinux32gcc.txt
-      cd j32
-      strip -S jconsole
-      strip -S libj.so
-      strip -S libtsdll.so
-      strip -S jamalgam || true
-      strip -S libgmp.so
-      cd -
-      ls -l j32
-      zip -r lgcc32.zip j32
-
-   - name: Release JE (Linux32)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "lgcc32.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Linux32)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testlinux32gcc.txt
-      overwrite: true
 
 # linux debug ----------------------------------------------------------
  jelinuxd:
@@ -293,24 +239,6 @@ jobs:
       _DEBUG: 3
      run: |
       script/testga.sh linux || exit 1
-      ls -l j64
-      zip -r l64d.zip j64
-
-   - name: Release JE (Linux debug)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "l64d.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (Linux debug)
-     uses: actions/upload-artifact@v4
-     with:
-      name: dist
-      path: testlinuxd.txt
-      overwrite: true
 
 # macOS ----------------------------------------------------------------
  jemacos:

@@ -84,7 +84,7 @@ DF1(jtcrcfixedleft){F12IP;A h,*hv;I n;UINT*t,z;UC*v;
 #endif
 DF2(jtqhash12){F12IP; I hsiz; UI crc;
  ARGCHK2(a,w);
- if(EPDYAD){RE(hsiz=i0(vib(a)));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
+ if(EPDYAD){hsiz=rei0(vib(a));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
  ASSERT(hsiz>=0,EVDOMAIN);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // not sparse for now
  if((AT(w)&DIRECT)>0){ // Direct value, calculate CRC of atoms
@@ -211,7 +211,7 @@ DF2(jtxxhash2){F12IP;
   I n,s;
   A z;
   UC *v;
-  if(AT(w)&NOUN){s=i0(a);} else {w=a; s=4;}
+  if(AT(w)&NOUN){s=rei0(a);} else {w=a; s=4;}
   ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // not sparse for now
   ASSERT(((AT(w)&DIRECT)>0),EVNONCE);
   n=AN(w)<<bplg(AT(w));

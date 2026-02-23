@@ -687,7 +687,7 @@ F1(jtmap){F12IP;R mapx(ds(CACE),w);}
 
 // extract the single box a from w and open it.  Don't mark it no-inplace.  If w is not boxed, it had better be an atom, and we return it after auditing the index
 static F2(jtquicksel){F12IP;I index;
- RE(index=i0(a));  // extract the index
+ index=rei0(a);  // extract the index
  SETNDX(index,index,AN(w))   // remap negative index, check range
  R AT(w)&BOX?C(AAV(w)[index]):w;  // select the box, or return the entire unboxed w
 }

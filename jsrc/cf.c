@@ -252,7 +252,7 @@ static DF1(jthkindexofmaxmin){F12IP;
 // (compare L.) dyadic
 static DF2(jthklvl2){F12IP;
  F2RANK(0,RMAX,jthklvl2,self);
- I comparand; RE(comparand=i0(a));  // get value to compare against
+ I comparand; comparand=rei0(a);  // get value to compare against
  RETF(num(((FAV(self)->flag>>VFHKLVLGTX)&1)^levelle(jt,w,comparand-(FAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 

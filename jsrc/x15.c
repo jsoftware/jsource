@@ -1844,7 +1844,7 @@ F1(jtcallback){F12IP;
 F2(jtcallback2){F12IP;I k1;
  cbjt=jt; /* callbacks don't work with multiple instances of j */
  ARGCHK2(a,w);
- RE(k1=i0(a));
+ k1=rei0(a);
  ASSERT(BETWEENC(k1,0,9),EVDOMAIN);
  if(LIT&AT(w))
  {

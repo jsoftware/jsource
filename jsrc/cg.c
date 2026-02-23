@@ -336,7 +336,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
 assemblyerror: RESETERR jt->etxinfo->asseminfo.assemframelen=0; jt->jerr=EVASSEMBLY;  // framelen=0 means we can't localize it; switch error to assembly.  Will be eformatted up the line
  }else{
   // There was only 1 cell in the result.  Apply the selected verb, inplace if possible
-  I vx=i0(vres); RE(0);  // fetch index of gerund
+  I vx=rei0(vres);  // fetch index of gerund
   vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERTGOTO(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
   A ger=C(AAV(FAV(self)->fgh[2])[vx]);  // the selected gerund
   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(jtfg,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it

@@ -546,15 +546,15 @@ F1(jtrngstates){F12IP;A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
  ASSERT(AN(w)==(jt->rngdata->rng?3:9),EVLENGTH);
  switch(jt->rngdata->rng){
  case SMI: vv=jt->rngdata->rngparms0;
-            RE(k=i0(C(wv[1]))); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); jt->rngdata->rngparms0[GBI].rngI=k;  // We accept 0-55 even though we never produce 55 ourselves
-            RE(k=i0(C(wv[3]))); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[4]),0)); jt->rngdata->rngparms0[MTI].rngI=k;
-            RE(k=i0(C(wv[5]))); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[6]),1)); jt->rngdata->rngparms0[DXI].rngI=k;
-            RE(k=i0(C(wv[7]))); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[8]),0)); jt->rngdata->rngparms0[MRI].rngI=k;
+            k=rei0(C(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); jt->rngdata->rngparms0[GBI].rngI=k;  // We accept 0-55 even though we never produce 55 ourselves
+            k=rei0(C(wv[3])); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[4]),0)); jt->rngdata->rngparms0[MTI].rngI=k;
+            k=rei0(C(wv[5])); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[6]),1)); jt->rngdata->rngparms0[DXI].rngI=k;
+            k=rei0(C(wv[7])); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[8]),0)); jt->rngdata->rngparms0[MRI].rngI=k;
             break;
- case GBI: RE(k=i0(C(wv[1]))); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); break;  // We accept 0-55 even though we never produce 55 ourselves
- case MTI: RE(k=i0(C(wv[1]))); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[2]),0)); break;
- case DXI: RE(k=i0(C(wv[1]))); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[2]),1)); break;
- case MRI: RE(k=i0(C(wv[1]))); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[2]),0)); break;
+ case GBI: k=rei0(C(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,C(wv[2]),1)); break;  // We accept 0-55 even though we never produce 55 ourselves
+ case MTI: k=rei0(C(wv[1])); RZ(rngstates1(MTI,MTN,vv,0,k,C(wv[2]),0)); break;
+ case DXI: k=rei0(C(wv[1])); RZ(rngstates1(DXI,DXN,vv,0,k,C(wv[2]),1)); break;
+ case MRI: k=rei0(C(wv[1])); RZ(rngstates1(MRI,MRN,vv,0,k,C(wv[2]),0)); break;
  }
  R mtv;
 }
@@ -589,7 +589,7 @@ F1(jtrngseeds){F12IP;I k,r;
 
 F2(jtrollksub){F12IP;A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
- an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
+ an=AN(a); m1=rei0(w); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AVn(an,z);
  if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}  // floating-point output
@@ -788,7 +788,7 @@ DF2(jtdeal){F12IP;A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->r
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
  F2RANK(0,0,jtdeal,self);
- m=rei0(a); RE(c=n=i0(w));  // c starts as max#+1
+ m=rei0(a); c=n=rei0(w);  // c starts as max#+1
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m*3.0<n||(x&&x<=(UI)n)){  // TUNE for about m=100000; the cutoff would be higher for smaller n
@@ -839,7 +839,7 @@ DF2(jtdeal){F12IP;A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->r
 #define rollksub(a,w) jtrollksubdot(jt,(a),(w))
 static F2(jtrollksubdot){F12IP;A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
- an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
+ an=AN(a); m1=rei0(w); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AVn(an,z);
  if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}
@@ -1021,7 +1021,7 @@ static DF2(jtdealdot){F12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,q,*v,wt,*yv,*zv;UI c
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
  F2RANK(0,0,jtdealdot,self);
- m=rei0(a); RE(c=n=i0(w));
+ m=rei0(a); c=n=rei0(w);
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){

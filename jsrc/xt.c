@@ -71,7 +71,7 @@ F1(jtsp){F12IP;ASSERTMTV(w); R sc(spbytesinuse());}  //  7!:0
 // If arg is an atom, reset hwmk to it
 F1(jtsphwmk){F12IP;
   I curr = jt->malloctotal+jt->malloctotalremote; I hwmk = jt->malloctotalhwmk;
-  if(AN(w)){I new; RE(new=i0(w)); jt->malloctotalhwmk=new;}
+  if(AN(w)){I new; new=rei0(w); jt->malloctotalhwmk=new;}
   R v2(curr,hwmk);
 }
 
@@ -147,11 +147,11 @@ F1(jtparsercalls){F12IP;ASSERTMTV(w); R sc(jt->parsercalls);}
 
 // 9!:_5, window into the running J code
 F1(jtpeekdata){F12IP;ARGCHK1(w);  I opeek=JT(jt,peekdata);
- JT(jt,peekdata)=i0(w);
+ JT(jt,peekdata)=rei0(w);
  R sc(opeek); }
 
 // 13!:_9, set/get recurstate
-F1(jtsetgetrecurstate){F12IP;I orstate=jt->recurstate; if(AN(w)){jt->recurstate=i0(w);} R sc(orstate); }
+F1(jtsetgetrecurstate){F12IP;I orstate=jt->recurstate; if(AN(w)){jt->recurstate=rei0(w);} R sc(orstate); }
 
 // 13!:_10, call JDo to execute sentence
 F1(jtcallJDo){F12IP;ARGCHK1(w); PROLOG(0); ASSERT(AR(w)<=1,EVRANK) RZ(w=mkwris(str(AN(w),CAV(w)))) CAV(w)[AN(w)]=0; A z=sc(JDo(JJTOJ(jt),CAV(w))); EPILOG(z)  }

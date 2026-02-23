@@ -677,7 +677,7 @@ F1(jtsetpermanent){F12IP;A g;
 DF2(jtlocexmark){F12IP;A g,*wv,y,z;B *zv;C*u;I i,m,n;
  ACVCACHECLEAR;  // destroying a locale invalidates all lookups
  if(unlikely(EPDYAD)){  // dyadic call
-  I x; x=i0(a); if(jt->jerr){RESETERR; ASSERT(0,EVVALENCE)} ASSERT(x==271828,EVVALENCE)  // if not 271828, valence error
+  I x=i0(a); if(jt->jerr){RESETERR; ASSERT(0,EVVALENCE)} ASSERT(x==271828,EVVALENCE)  // if not 271828, valence error
   // leave a non0 to indicate dyadic call
  }else{w=a; a=0;}  // a=0 normally
  RZ(vlocnl(1,w));

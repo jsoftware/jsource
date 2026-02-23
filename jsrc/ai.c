@@ -201,8 +201,7 @@ xco:
  case CQQ:
   if(!nf&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ),0);
   break;
- case CBSLASH:
-  if(nf&&(n=i0(x),0>n)&&(d=IDD(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT
+ case CBSLASH: if(nf&&(n=i0(x),0>n)&&(d=IDD(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // [\  ]\  slack
   break;
  case CIBEAM:  // h is x!:y
   if(likely(nf!=0)){   // n&(x!:y)
@@ -326,7 +325,7 @@ xco:
   }
   break;
  case CCUT:
-  if(CBOX==IDD(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,FAV(w)->flag&VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+  if(CBOX==IDD(f)&&ng&&(p=i0(g),((p-1)&~1)==0))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,FAV(w)->flag&VNONAME+VNOSELF, RMAX,RMAX,RMAX);
   break;
  case CIBEAM:   // inverse of 3!:1/3 is 3!:2; inverse of 3!:2 is 3!:1
   if(FAV(w)->localuse.lu1.foreignmn[0]==3 && BETWEENC(FAV(w)->localuse.lu1.foreignmn[1],1,3))R foreign(num(3),num((FAV(w)->localuse.lu1.foreignmn[1]&1)+1));  // 1 2 3 -> 2 1 2

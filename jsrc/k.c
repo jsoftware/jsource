@@ -1084,7 +1084,7 @@ F2(jtxco2){F12IP;A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
 F2(jtindaudit){F12IP;PROLOG(365);
  ARGCHK2(a,w)
  ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // need 2 boxes
- I type; RE(type=i0(C(AAV(w)[0]))); ASSERT(BETWEENC(type,0,1),EVDOMAIN)  // first box must hold integer type 0 or 1
+ I type=rei0(C(AAV(w)[0])); ASSERT(BETWEENC(type,0,1),EVDOMAIN)  // first box must hold integer type 0 or 1
  I min=IMIN, max=IMAX; A mma=C(AAV(w)[1]); ASSERT(AR(mma)<=1,EVRANK) ASSERT(AN(mma)<=2,EVLENGTH) if(!(AT(mma)&INT))RZ(mma=cvt(INT,mma))  // second box must hold 0-2 int values
  if(AN(mma)>=1)min=IAV(mma)[0]; if(AN(mma)>=2)max=IAV(mma)[1];  // extract min/max
  A ind=a, origind=ind; if(ISSPARSE(AT(ind))){ind=SPA(PAV(ind),x);}  // point to the indexes; if sparse, to the unique indexes

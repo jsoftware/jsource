@@ -439,7 +439,7 @@ F1(jtmmaxq){F12IP;ASSERTMTV(w); RETF(sc(JT(jt,mmax)));}
      /* 9!:20 space limit query */
 
 F1(jtmmaxs){F12IP;I j,m=MLEN,n;
- RE(n=i0(vib(w)));
+ n=rei0(vib(w));
  ASSERT(1E5<=n,EVLIMIT);
  j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
  JT(jt,mmax)=(I)1<<j;
@@ -644,7 +644,7 @@ void audittstack(J jt){
 // result 0=ok, 1=pyx found with usecount<x 2=pyx found with usecount<0 (maybe deadbeef) 3=nonrecursive block found 4=dead value found
 F2(jtauditpyx){F12IP;I mindepth;
  ARGCHK2(a,w);
- RE(mindepth=i0(a));   // minimum expected depth
+ mindepth=rei0(a);   // minimum expected depth
  I n=AN(w); // number of boxes
  ASSERT(n==0||AT(w)&BOX,EVDOMAIN)
  if(!AFLAG(w)&BOX)R num(3);

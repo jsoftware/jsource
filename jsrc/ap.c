@@ -452,7 +452,7 @@ static DF2(jtinfix){F12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m;
  // If length is infinite, convert to large integer
  // kludge - test for ==ainf should be replaced with a test for value; will fail if _ is result of expression like {._
  if(a==ainf)m=IMAX;
- else RE(m=i0(vib(a))); // get infix length as an integer
+ else m=rei0(vib(a)); // get infix length as an integer
  // Create table of infix positions
  RZ(x=ifxi(m,w));
  // If there are infixes, apply fs@:jtseg (ac2 creates an A verb for jtseg)
@@ -478,7 +478,7 @@ static DF1(jtinfix2){F12IP;PROLOG(0019);A f;
 }    /* 2 f/\w, where f supports IRS */
 
 static DF2(jtginfix){F12IP;A h,*hv,x,z,*zv;I d,m,n;
- RE(m=i0(vib(a))); 
+ m=rei0(vib(a)); 
  RZ(x=ifxi(m,w));
  h=FAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
  if(SETIC(x,n)){
@@ -546,7 +546,7 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
  if(a!=mark){
   // infix.
 //  ilnval; RE(ilnval=i0(vib(a))); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
-  RE(ilnval=i0(vib(a))); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
+  ilnval=rei0(vib(a)); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
   if(ilnval>=0){
    // positive infix.  Stride is 1 cell.
    ilnabs=ilnval;
@@ -707,7 +707,7 @@ static DF1(jtpscan){F12IP;A z;I f,n,r,t,wn,wr,*ws,wt;
 static DF2(jtinfixd){F12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
  F2RANKW(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);   // n=#items of w
- RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);  // m=x arg, p=abs(m)
+ m=rei0(vib(a)); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);  // m=x arg, p=abs(m)
  if(0>m){p=MIN(p,n); if(likely(p!=0))d=(n+p-1)/p;else d=0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}  // d=#partitions; error if n-m+1 overflows
  if(unlikely(CCOMMA==FAV(FAV(self)->fgh[0])->id)){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}  // c=#atoms in item of w; zc=#atoms in cell of result; r=result rank
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}   // if w has no items, proceed allocating 0 items of result
@@ -774,7 +774,7 @@ static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
 
 static DF2(jtmovavg){F12IP;I m,j;
  F2RANK(0,RMAX,jtmovavg,self);
- RE(m=i0(vib(a)));SETIC(w,j);
+ m=rei0(vib(a));SETIC(w,j);
  if(0<m&&m<=j&&AT(w)&B01+FL+INT)R movsumavg(m,w,self,1);   // j may be 0
  R jtinfixprefix2(jt,a,w,self);
 }    /* a (+/ % #)\w */
@@ -904,7 +904,7 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
 static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  F2RANK(0,RMAX,jtmovfslash,self);
  SETIC(w,p); wt=AT(w);   // p=#items of w
- RE(m0=i0(vib(a))); m=REPSGN(m0); m=(m^m0)-m; m^=REPSGN(m);  // m0=infx x,  m=abs(m0), handling IMIN
+ m0=rei0(vib(a)); m=REPSGN(m0); m=(m^m0)-m; m^=REPSGN(m);  // m0=infx x,  m=abs(m0), handling IMIN
  if(m==1)R AR(w)?w:ravel(w);  // 1 f/\ w is always w, except on an atom
  if((SGNIF((m0==2)&FAV(self)->flag,VFSCANIRSX)&SGNIFDENSE(wt)&(1-p))<0)R jtinfix2(jt,w,self);  // if  2 u/\ y supports IRS, go do (}: u }.) y - faster than cells - if >1 cell and dense  uses VFSCANIRSX=0
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0 or 2, or if there is just 1 infix, go to general case

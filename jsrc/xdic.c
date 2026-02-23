@@ -204,14 +204,14 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   I t, r, n, *s;    //  type, rank, #atoms in item, pointer to shape of value then key
   // valuespec.  must be 2 boxes
   box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
-  box1=C(AAV(box)[0]); RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFVINDIR;  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
+  box1=C(AAV(box)[0]); t=rei0(box1); ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFVINDIR;  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
   box1=C(AAV(box)[1]); r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.vaii=n;  // shape. copy to allow IAV1.  get # atoms in item & save
   ASSERT(likely(n>0)||r==1,EVLENGTH)   // empty value only allowed at rank 1
   INCORPNV(box1); ((DIC*)z)->bloc.vshape=box1; ((DIC*)z)->bloc.vtype=t; ((DIC*)z)->bloc.vbytelen=n<<bplg(t);  // save shape & type; save # bytes for copy
 
   // keyspec.  must be 2 boxes
   box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
-  box1=C(AAV(box)[0]); RE(t=i0(box1)) ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFKINDIR; // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
+  box1=C(AAV(box)[0]); t=rei0(box1); ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFKINDIR; // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
   box1=C(AAV(box)[1]); r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.kaii=n; ASSERT(n>0,EVLENGTH) // shape. copy to allow IAV1.  get # atoms in item & save
   ASSERT(AN(box1)<=9 || flags&DICFICF,EVNONCE)  // if the user has a compare function, we want virt to be on the stack to save registers.  Make sure the rank is OK then
   INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
@@ -361,7 +361,7 @@ F1(jtcreatedic){F12IP;
    // we update that part of lv we don't control, so that the ultimate CAS will have a better chance of starting with the right value
 #define DICLKWRRELV(dic,lv) if((lv&DICLMSKWRV)!=0){UI nv; do{nv=((lv&~DICLMSKWRK)+1)&~(DICLMSKWRK+DICLMSKWRV+DICLMSKOKRET+DICLMSKRESIZEREQ);}while(!casa(&AM((A)dic), &lv, nv));}    // if not single-threaded, advance owner sequence# (suppressing overflow), clear write req
 
-// scaf should these functions yield after a while?
+// scaf* should these functions yield after a while?
 // wait for read lock on keys+values in dic, which we have requested & found busy
 static UI diclkrdwtkv(DIC *dic, UI lv){I n;
  // We know we just put up a read request and saw busy.  Rescind our read request and then quietly poll for the write to go away
@@ -715,7 +715,7 @@ resize:;  // resize required.  We already have a write lock
 // resolve each key in the hash and copy new kvs
 // We have requested a prewrite lock; we may even have a full write lock on the keys and value
 // return holding a write lock on this dic; return value of lv (to make release faster in caller), with RET bits set to indicate error or resize request
-static scafINLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
+static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,VIRT virt){I i;
  if(unlikely(!(dic->bloc.flags&DICFICF))){initvirt((A)virt.u,dic); initvirt((A)virt.h,dic); virt.self=dic->bloc.hashcompself; }   // fill in nonresizable info
  UI8 kib=dic->bloc.klens; I (*cf)(I,void*,void*)=dic->bloc.compfn;   // kbytelen/kitemlen  compare func unchanged by resize
  DICLKRWWT(dic,lv)  // wait for pre-write lock to be granted (NOP if we already have a write lock).  The DIC may have been resized during the wait, so pointers and limits must be refreshed after the lock
@@ -1902,7 +1902,7 @@ DF2(jtdicstats){F12IP;A z;I r;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
- I type; RE(type=i0(a))   // get the stat arg
+ I type=rei0(a);  // get the stat arg
  switch(type){
  case 0: z=sc(dic->bloc.cardinality); break; // nkeys
  case 1: r=AR(dic->bloc.keys); RZ(z=virtual(dic->bloc.keys,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.kaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.keys)+1,r-1) break;  // virtual for all keys

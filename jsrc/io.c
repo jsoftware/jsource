@@ -1102,12 +1102,13 @@ CDPROC int _stdcall JErrorTextM(JS jt, I ec, I* p)
  return 0;
 }
 
+// 13!:_11 turn on host debugging
 #if 0  // for debugging
 int enabledebug=0;
 F1(jttest1){F12IP;
  ARGCHK1(w);
  if((AT(w)&B01+INT)&&AN(w)){
-  enabledebug=i0(w);
+  enabledebug=rei0(w);
  }
  R sc(1);
 }

@@ -810,7 +810,7 @@ F1(jtabase1){F12IP;A d,z;B*zv;I c,n,p,r,t,*v;UI x;
   // calculate that as (0 = >./ ({."1 z)).  If so, return }."1 z ,  otherwise z
   // But we can't delete a digit if any of the values were negative - all are significant then
   // We also can't delete a digit if there is only 1 digit in the numbers
-  if(AS(z)[AR(z)-1]<=1 || i0(aslash(CPLUSDOT,ravel(lt(w,zeroionei(0))))))R z;
+  if(AS(z)[AR(z)-1]<=1 || i0(aslash(CPLUSDOT,ravel(lt(w,zeroionei(0))))))R z;   // scaf check for error here?
   IRS1(z,0L,1L,jthead,d); if(0==i0(aslash(CMAX,ravel(d))))R IRS1(z,0L,1L,jtbehead,d);
   RETF(z);
  }

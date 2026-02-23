@@ -1211,7 +1211,7 @@ DF2(jtiso8601toe){F12IP;A z;I prec;I local;
   ASSERT(AT(aprec)&LIT,EVDOMAIN); ASSERT(AN(aprec)==1,EVLENGTH); ASSERT(AR(aprec)<=1,EVRANK);  // a must be a 1-character list or atom
   // convert precision character to precision to use (_1 for date, 0-9)
   if(CAV(aprec)[0]=='d')prec=-1; else {prec=CAV(aprec)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(((I)1<<prec)&0x209,EVNONCE);}  // 0 3 9 allowed
-  RE(local=i0(alocal)); ASSERT(BETWEENO(local,-24*3600,24*3600),EVDOMAIN) local=local*1000000000;   // fetch timezone offset if any
+  local=rei0(alocal); ASSERT(BETWEENO(local,-24*3600,24*3600),EVDOMAIN) local=local*1000000000;   // fetch timezone offset if any
  }else{
   w=a; prec=9; local=0; // monad: switch argument, set defaults
  }
@@ -1350,16 +1350,3 @@ DF2(jtstringtoe){F12IP;A z;I prec;
  RETF(efstring(jt,w,prec));
 }
 
-#if 0
-// check argument for debugging
-F2(jttest2){F12IP;
- ARGCHK2(a,w);
- I x=i0(a);
- if(x==0){
-  R sc(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w)); // inplaceable
- } else if(x==1){
-  R sc(((I)DAV(w)&((SZD<<LGNPAR)-1))==0);          // on cacheline bdy
- }
- R sc(0);
-}
-#endif

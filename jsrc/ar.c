@@ -1203,8 +1203,9 @@ static DF2(jtfold12){F12IP;A z,vz;
     if(unlikely(z==0))goto errfinish;   // error in u, exit
     if(!(zstatus&0b01000)){  // if store of result not suppressed... */
      // ******************** the u result is to be added to the total (possibly replacing it)
-     ++foldinfo.exestats[2]; realizeifvirtual(z); razaptstackend(z);  // we are adding uz to a recursible block, with transfer of ownership using zap if possible.  If uz is abandoned it is safe to zap even if it is x.  Sets new uz
+     ++foldinfo.exestats[2]; realizeifvirtual(z);
      if(dmfr&STATEMULT){   // is Fold Multiple?
+      razaptstackend(z);  // we are adding uz to a recursible block, with transfer of ownership.  The new owner protects the block.  If uz is abandoned it is safe to zap even if it is x.  Sets new uz
       // Fold Multiple.  Add the new value to the result array
       UI newslot=AN(zz);  // where the new value will go
       if(withprob(newslot==zzalloc,0.03)){  // current alloc full?
@@ -1217,6 +1218,7 @@ static DF2(jtfold12){F12IP;A z,vz;
       AAV1(zz)[newslot]=z; AN(zz)=newslot+1;  // install the new value & account for it in len
      }else{
       // Fold Single.  Replace the value in zz
+      ra(z)  // uz is not guaranteed to stay in the result till the end; therefore we must not zap it for fold single since it might be w also.
       if(AN(zz)!=0){A t=AAV0(zz)[0]; if(MEMAUDIT&0x3e)AAV0(zz)[0]=0; fa(t);} else{AN(zz)=1;}  // free old value if any, mark value now valid  (clear value in buffer before auditing)
       AAV0(zz)[0]=z;  // install new value
      }
@@ -1258,7 +1260,7 @@ DF2(jtfold){F12IP;
 DF1(jtfoldZ1){F12IP;
  ARGCHK1(w)
  ASSERT(jt->afoldinfo,EVUNTIMELY);  // If fold not running, fail.
- I type; RE(type=i0(w));  // verify atomic integer
+ I type; type=rei0(w);  // verify atomic integer
  ASSERT(BETWEENC(type,0,2),EVINDEX)  //  requested stat index must be in range
  RETF(sc(jt->afoldinfo->exestats[type]));  // return the value
 }
@@ -1266,7 +1268,7 @@ DF1(jtfoldZ1){F12IP;
 DF2(jtfoldZ2){F12IP;
  ARGCHK2(a,w)
  ASSERT(jt->afoldinfo,EVUNTIMELY);  // If fold not running, fail.
- I type; RE(type=i0(a));  // verify atomic integer
+ I type; type=rei0(a);  // verify atomic integer
  ASSERT(BETWEENC(type,-3,1),EVINDEX)  //  requested action index must be in range
  I y;
  if(type==-3){y=rei0(w); y=jt->afoldinfo->exestats[0]>=y;  // set y if current v count high enough

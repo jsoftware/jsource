@@ -398,7 +398,7 @@ F1(jtdbnext){F12IP;ASSERTMTV(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwr
 F1(jtdbret ){F12IP;ARGCHK1(w); ASSERT(jt->pmttop==0,EVUNTIMELY) A z; RZ(z=mkwris(jlink(sc(SUSRET),box(w)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:6  exit with result */
 
-F1(jtdbjump){F12IP;ASSERT(jt->pmttop==0,EVUNTIMELY) I jump; RE(jump=i0(w)); A z; RZ(z=mkwris(jlink(sc(SUSJUMP),sc(jump)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jtdbjump){F12IP;ASSERT(jt->pmttop==0,EVUNTIMELY) I jump; jump=rei0(w); A z; RZ(z=mkwris(jlink(sc(SUSJUMP),sc(jump)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:7  resume at line n (return result error if out of range) */
 
 static F2(jtdbrr){F12IP;DC d;
@@ -415,7 +415,7 @@ F2(jtdbrr2 ){F12IP;ASSERT(jt->pmttop==0,EVUNTIMELY) R dbrr(a, w);}
 
 // T. y - set debugging thread #
 // This is a suspension command, but not suspension-ending
-F1(jttcapdot1){F12IP;I thno; RE(thno=i0(w)); ASSERT(BETWEENO(thno,0,THREADIDFORWORKER(JT(jt,wthreadhwmk))),EVDOMAIN) A z; RZ(z=mkwris(jlink(sc(SUSTHREAD),sc(thno)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
+F1(jttcapdot1){F12IP;I thno; thno=rei0(w); ASSERT(BETWEENO(thno,0,THREADIDFORWORKER(JT(jt,wthreadhwmk))),EVDOMAIN) A z; RZ(z=mkwris(jlink(sc(SUSTHREAD),sc(thno)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
 
 // 13!:14, query suspension trap sentence
 F1(jtdbtrapq){F12IP;

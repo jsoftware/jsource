@@ -116,7 +116,7 @@ NOUNROLL do{  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
  if((store!=2||hj<hsrc##sct)&&likely(!mismatch(warg,hsrc##v[hj]))){if(store==2)hv[harg]=(TH)(hsrc##sct+1); if(store!=4){fstmt} break;} /* compare warg against the implied hsrc##v[hj] */ \
   /* the likely in the line above is vital, to prevent the compiler from misallocating registers so as to do arithmetic on */ \
   /* hv instead of harg when to loop continues.  As it is the compiler needlessly duplicates earlier instructions below */ \
- if(likely(--harg>=0))continue;  /* miscompare, must continue search  scaf generates excess LEA */ \
+ if(likely(--harg>=0))continue;  /* miscompare, must continue search  scaf* generates excess LEA */ \
  harg+=p;   /* if index goes below 0, wrap to top */  \
 }while(1);
 // Traverse the hash table for an argument with a type, i. e. one that can be indexed by i

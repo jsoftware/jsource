@@ -337,7 +337,7 @@ F1(jtfsmvfya){F12IP;PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*s
  ASSERT(BOX&AT(a),EVDOMAIN);
  an=AN(a); av=AAV(a); 
  ASSERT(BETWEENC(an,2,4),EVLENGTH);
- RE(f=i0(C(av[0])));
+ f=rei0(C(av[0]));
  ASSERT((UI)f<=(UI)5,EVINDEX);
  RZ(s=vi(C(av[1]))); sv=AV(s);
  ASSERT(3==AR(s),EVRANK);
@@ -365,7 +365,7 @@ F1(jtfsmvfya){F12IP;PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*s
  EPILOG(z);
 }    /* check left argument of x;:y */
 
-// handle x ;: y; if chka=0, x is in intercal fsm form
+// handle x ;: y; if chka=0, x is in internal fsm form
 static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijrd,k,n,q,*v;
  ARGCHK2(a,w);
  if(chka)RZ(a=fsmvfya(a)); 

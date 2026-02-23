@@ -420,7 +420,7 @@ F2(jtqco2){F12IP;A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  ARGCHK2(a,w);
  wn=AN(w); wr=AR(w); b=all1(lt(a,zeroionei(0))); xt=1&&AT(w)&XNUM+RAT;  // b: every a is < 0
  if(AR(a)||wr&&(b||xt))R rank2ex0(a,w,DUMMYSELF,jtqco2);
- if(!b&&xt){RE(m=i0(vib(a))); if(BETWEENO(m,0,1229))R qco2x(m,w);}  /* 1229=p:^:_1 XBASE */
+ if(!b&&xt){m=rei0(vib(a)); if(BETWEENO(m,0,1229))R qco2x(m,w);}  /* 1229=p:^:_1 XBASE */
  RZ(q=factor(w)); qv=AV(q);  // q is factors of w
  if(b)RZ(a=negate(a));
  bb=equ(a,ainf);  // bb: a is _ or __
@@ -663,7 +663,7 @@ static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){
 
 static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,*pv;X x[3];
  A *old=jt->tnextpushp;
- lg=log((D)b1); RE(m=i0(plt(sc(b1))));
+ lg=log((D)b1); m=rei0(plt(sc(b1)));
  if(m<=AN(JT(jt,p4792)))pv=AV(JT(jt,p4792)); else{RZ(tt=prime1(IX(m))); pv=AV(tt);}
  x[0]=q[0]; x[1]=q[1]; x[2]=q[2];
  DQ(m, d=(D)*pv++; dd=(I)pow(d,jfloor(5e-14+lg/log(d))); RZ(ecm(n,a,b,dd,x,x)););

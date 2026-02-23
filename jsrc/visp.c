@@ -36,7 +36,7 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
   m=AN(ax); n=AS(a)[0];
   j=ioev(mode,a);
   if(equ(ae,e))SPB(zp,e,sc(j))
-  else{RE(k=i0(indexofsub(mode,ax,e))); SPB(zp,e,sc(AN(ay)?(m>k?yv[k]:n):k));}
+  else{k=rei0(indexofsub(mode,ax,e)); SPB(zp,e,sc(AN(ay)?(m>k?yv[k]:n):k));}
   RZ(q=indexofsub(mode,ax,x)); v=AV(q);
   if(AN(ay)||AN(SPA(ap,a))){
    DQ(AN(x), k=*v; *v++=m>k?yv[k]:n;);

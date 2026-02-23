@@ -47,7 +47,7 @@ static A jtfitct(J jt,A a,A w,I cno,A z){
 
 static DF2(jtfitexp2){F12IP;
  F2RANK(0,0,jtfitexp2,self);
- ASSERT(0<=i0(w)&&!jt->jerr,EVDOMAIN);
+ ASSERT(0<=rei0(w),EVDOMAIN);  // power must be nonnegative integral
  A z; R aslash(CSTAR,plus(a,dfv2(z,iota(w),FAV(self)->fgh[1],slash(ds(CSTAR)))));
 }    /* a ^!.s w */
 
@@ -88,11 +88,11 @@ F2(jtfit){F12IP;A f;C c;I k,l,m,r;
   case CNOT:   case CXCO:   case CSPARSE:   case CEBAR:
    R jtfitct(jt,a,w,cno,z);
   case CQQ: ;
-   RE(wval=i0(w)); ASSERT(BETWEENC(wval,0,1),EVDOMAIN);  // only f"r!.[01] is supported
+   wval=rei0(w); ASSERT(BETWEENC(wval,0,1),EVDOMAIN);  // only f"r!.[01] is supported
    ASSERT(FAV(a)->valencefns[1]==jtsumattymes1,EVDOMAIN)  // Must be +/@:*"1!.[01]
    fdeffillall(z,0L,CFIT,VERB,jtvalenceerr,jtsumattymes1,a,w,0L,FAV(a)->flag&(VIRS2|VFCOMPCOMP|VNOLOCCHG|VNONAME+VNOSELF),m,l,r,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.fittype=wval) RETF(z);  // supports IRS
   case CSLASH: ;
-   RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
+   wval=rei0(w); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
    ASSERT(FAV(FAV(a)->fgh[0])->id==CPLUS,EVDOMAIN)  // Must be +/!.0
    fdeffill(z,0L,CFIT,VERB,jtcompsum,jtvalenceerr,a,w,0L,VIRS1+VNOLOCCHG+VNONAME+VNOSELF,m,l,r) RETF(z);  // supports IRS
   case CEXP:
@@ -122,7 +122,7 @@ fillreshape:;
    fdeffill(z,0L,CFIT,VERB,jtfitfill12,jtfitfill12,a,w,0L,FAV(a)->flag&(VIRS1|VIRS2|VNOLOCCHG|VNONAME+VNOSELF),m,l,r) RETF(z);  // various allowing empty fill
 
   case CTHORN:
-   RE(w=sc(k=i0(w)));
+   RZ(w=sc(k=rei0(w)))
    ASSERT(0<k,EVDOMAIN);
    ASSERT(k<=NPP,EVLIMIT); 
    fdeffill(z,0L,CFIT,VERB,jtfitpp1,FAV(a)->valencefns[1],a,w,0L,VNOLOCCHG+VNONAME+VNOSELF,m,l,r) RETF(z);  // ":!.f

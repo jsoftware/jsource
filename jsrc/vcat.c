@@ -130,7 +130,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A z,A w,C*x,I somefill){I d,n,p=c*m;  // p=#
 
 static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,*sv,t,wr,*ws,zn;
  ARGCHK2(a,w);
- // scaf most of this should move back to the caller so it can be outside the rank loop
+ // scaf* most of this should move back to the caller so it can be outside the rank loop
  ar=AR(a); wr=AR(w);
  // First loop: calculate zn=#result atoms, c=#atoms in result item.  We go through the loop once for each number in the result-rank, fetch m/n (the values).  For all except the first,
  // we process by finding the result axis-length and multiplying it into the total size.  The result axis-length is the larger of the arg axis lengths; the arg lengths come from the shape
@@ -320,7 +320,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  }
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
  // no special cases apply, perform general copy with rank and fill
- // scaf should move jtovg here, allocate the entire result at once, and loop through cells here, avoiding recopy
+ // scaf* should move jtovg here, allocate the entire result at once, and loop through cells here, avoiding recopy
  RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); RETF(z);  // ovg calls other functions, so we clear rank.  rank2ex does EPILOG
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 

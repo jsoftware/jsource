@@ -43,7 +43,7 @@ static DF2(jtfindrange2){F12IP;
  R v2(rng.min,rng.range);
 }  // 13!:_3
 
-// 13!:_4  Return header info: t, flag, m, type, c, n, r
+// 13!:_4  Return header info: k, flag, m, type, c, n, r
 static DF1(jthdrinfo){F12IP;A z;
  ARGCHK1(w);
  GAT0(z,INT,7,1);
@@ -413,8 +413,7 @@ MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VNONAME+VNOSELF,VF2NONE,RMAX,R
  MN(18,-3) XPRIM(VERB, jtlocnlz1,    0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,-4) XPRIM(VERB, jtlochdr,     0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(18,-5) XPRIM(VERB, jtquerybloom,     0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
-//  MN(128,110) XPRIM(VERB, jttest1,    0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
-//  MN(3,-1) XPRIM(VERB, 0,            jttest2,     VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+//  MN(13,-11) XPRIM(VERB, jttest1,    0,            VNOLOCCHG,VF2NONE,RMAX,RMAX,RMAX);
 
 // TUNE printf("avg # probes=%7.3f\n",(double)totprobes/(double)totslots);
 }
@@ -433,7 +432,7 @@ I jtforeignassigninit(J jt){A nm;L *e;
 F2(jtforeign){F12IP;I p,q;A z;
  ARGCHK2(a,w);
  ASSERT(!((AT(a)|AT(w))&VERB),EVDOMAIN)
- p=i0(a); q=i0(w); RE(0);
+ p=rei0(a); q=rei0(w);
  if(p!=11){  // normal m!:n
   ASSERT(BETWEENC(p,0,128),EVDOMAIN) ASSERT(BETWEENC(q,-20,111),EVDOMAIN)   // check reasonable inputs
   ASSERT((z=findslot(p,q))!=0,EVDOMAIN)  // look up the (m,n), fail if not found

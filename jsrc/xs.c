@@ -110,7 +110,8 @@ static F1(jtaddscriptname){F12IP;I i;A z;
  z=indexof(JT(jt,slist),boxw);  // look up only in the defined names
  AN(JT(jt,slist))=savn;  // restore count; shape is immaterial
  if(z==0)goto exit;  // if error in indexof, abort
- i=i0(z);  // get the index at which found
+// obsolete  i=i0(z);  // get the index at which found
+ i=BIV0(z);  // get the index at which found
  if(AM(JT(jt,slist))==i){  // if string must be added...
   NOUNROLL while(AM(JT(jt,slist))==AN(JT(jt,slist)))RZ(jtextendunderlock(jt,&JT(jt,slist),&JT(jt,startlock),0))  // extend if list full
   ras(w); AAV(JT(jt,slist))[i]=w;
@@ -160,7 +161,7 @@ F1(jtscriptstring){F12IP;
 
 // 4!:7 set script number to use and return previous value
 F1(jtscriptnum){F12IP;
- I i=i0(w);  // fetch index
+ I i=rei0(w);  // fetch index
  READLOCK(JT(jt,startlock)) I scriptn=AM(JT(jt,slist)); READUNLOCK(JT(jt,startlock))   // no problem if we lose lock since list only grows
  ASSERT(BETWEENO(i,-1,scriptn),EVINDEX);  // make sure it's _1 or valid index
  A rv=sc(jt->currslistx);  // save the old value

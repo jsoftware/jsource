@@ -73,7 +73,7 @@ F1(jtcts){F12IP;D d;
 // 9!:4 and 9!:5 name caching
 F1(jtnmcacheq){F12IP;ASSERTMTV(w); R sc(jt->namecaching>>1);}
 F1(jtnmcaches){F12IP;
- I arg=i0(w); RE(0); ASSERT(BETWEENO(arg,0,3),EVDOMAIN);  // arg must be 0, 1, or 2
+ I arg=rei0(w); ASSERT(BETWEENO(arg,0,3),EVDOMAIN);  // arg must be 0, 1, or 2
  jt->namecaching|=(C)((arg<<1)+!!arg); if(arg==0)jt->namecaching=0; R mtv;  // save bits separately, clear if both 0, return empty vec
 }
 
@@ -192,7 +192,8 @@ F1(jtppq){F12IP;C*end;I k;
 
 // 9!:10 set print precision
 F1(jtpps){F12IP;I k;
- RE(sc(k=i0(w))); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
+// obsolete  sc(k=rei0(w)); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
+ k=rei0(w); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
  jt->ppn=k;
  R mtv;
 }
@@ -229,12 +230,12 @@ F1(jtsysparms){F12IP;A*wv;I k,m;
  ASSERT(1==AR(w),EVRANK);
  ASSERT(2==AN(w),EVLENGTH);
  wv=AAV(w);
- RE(k=i0(wv[0]));
+ k=rei0(wv[0]);
  switch(k){
  default: ASSERT(0,EVINDEX);
- case 0:  RE(m=i0(wv[1])); jt->fdepn =(I4)m; break;
+ case 0:  m=rei0(wv[1]); jt->fdepn =(I4)m; break;
  case 1:  ASSERT(0,EVDOMAIN);  /* jt->fdepi  can not be set */
- case 2:  RE(m=i0(wv[1])); jt->fcalln=(I4)m; break;
+ case 2:  m=rei0(wv[1]); jt->fcalln=(I4)m; break;
  case 3:  ASSERT(0,EVDOMAIN);  /* jt->fcalli can not be set */
  }
  R mtm;
@@ -295,7 +296,7 @@ F1(jtdeprecxs){F12IP;A ct, excl;
   ct=C(AAV(w)[0]); excl=AN(w)>1?C(AAV(w)[1]):mtv;  // extract count and exclusion list
  }
  I cti;  // integer value of count
- RE(cti=i0(ct));  // ct must be integral atomic
+ cti=rei0(ct);  // ct must be integral atomic
  RZ(excl=vi(excl));  // excl mst be integral
  ASSERT(AR(excl)<2,EVRANK);  // and atomic or list
  // install values
@@ -348,7 +349,7 @@ F1(jttraceexf){F12IP;A z;
    RZ(w=str0(w)) FILE * p; ASSERT((p=fopen(CAV1(w),"a"))!=0,EVFACE)  // append NUL and open file as a test
    fclose(p); ACINITZAP(w)  // close the file and protect w, which will be stored as the filename
   }else{  // 0: disable  1: stdout  2: stderr
-   I s=i0(w); RE(s) ASSERT(BETWEENC(s,0,2),EVDOMAIN); w=(A)(intptr_t)s;  // indicate no file, save logging mode in place of filename
+   I s=rei0(w); ASSERT(BETWEENC(s,0,2),EVDOMAIN); w=(A)(intptr_t)s;  // indicate no file, save logging mode in place of filename
   }
   if((I)jt->usertracefn1&~3)tpush(jt->usertracefn1); jt->usertracefn1=w;  // free old file if any, set new file if any
   jt->uflags.spfreeneeded=(jt->uflags.spfreeneeded&~SPFREETRACEON)|((w!=0)?SPFREETRACEON:0);
@@ -368,7 +369,7 @@ F1(jttraceexc){F12IP;A z;
    RZ(w=str0(w)) FILE * p; ASSERT((p=fopen(CAV1(w),"a"))!=0,EVFACE)  // append NUL and open file as a test
    fclose(p); ACINITZAP(w)  // close the file and protect w, which will be stored as the filename
   }else{  // 0: disable  1: stdout  2: stderr
-   I s=i0(w); RE(s) ASSERT(BETWEENC(s,0,2),EVDOMAIN); w=(A)(intptr_t)s;  // indicate no file, save logging mode in place of filename
+   I s=rei0(w); ASSERT(BETWEENC(s,0,2),EVDOMAIN); w=(A)(intptr_t)s;  // indicate no file, save logging mode in place of filename
   }
   if((I)jt->usertracefn2&~3)tpush(jt->usertracefn2); jt->usertracefn2=w;  // free old file if any, set new file if any
  }
@@ -971,8 +972,8 @@ F1(jtcheckcompfeatures){F12IP;UI i;I v1,v2,temp;
 }
 
 // 2!:10   raise a signal. _1 calls SEGFAULT
-F1(jtgsignal){F12IP;I m;
- RE(m=i0(vib(w)));
+F1(jtgsignal){F12IP;
+ I m=rei0(vib(w));
  if(-1==m)SEGFAULT;
  R sc(raise(m));  // return the result from raise()
 }

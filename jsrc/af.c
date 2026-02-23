@@ -191,7 +191,7 @@ DF2(jtfix){F12IP;PROLOG(0005);A z;
  ASSERT(AT(a)&NAME+VERB+ADV+CONJ,EVDOMAIN);
  STACKCHKOFL  // make sure we can't recur to a name by removing the name
  w=w==self?num(2):w;   // monad defaults to full replace
- I rqtype=i0(w); RE(0);  // get the requested operation
+ I rqtype=rei0(w);   // get the requested operation
  if(self!=0){  // if not internal call, convert req to flags
   ASSERT(BETWEENC(rqtype,0,4),EVDOMAIN) rqtype=((I)1<<FIXAFCOX)<<rqtype;  // audit value & convert to one-hot
  } 

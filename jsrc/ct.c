@@ -868,7 +868,7 @@ ASSERT(0,EVNONCE)
   // set value of pyx.  y is pyx;value
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // must be pyx and value
   A pyx=AAV(w)[0], val=C(AAV(w)[1]);  // get the components to store
-  ASSERT((AT(pyx)&BOX+PYX)==BOX+PYX,EVDOMAIN) I err=i0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
+  ASSERT((AT(pyx)&BOX+PYX)==BOX+PYX,EVDOMAIN) I err=rei0(val); ASSERT(BETWEENC(err,1,255),EVDOMAIN)  // get the error number
   ASSERT(jtsetpyxval(jt,pyx,0,err)!=0,EVRO) fa(pyx)  // install error value.  Will fail if previously set.  The pyx is protected until it gets a value; then it returns to ownership of its caller
   z=mtm;  // good quiet value
 #else
@@ -899,7 +899,7 @@ ASSERT(0,EVNONCE)
    athread=C(AAV(w)[0]); if(AN(w)==2)acoremask=C(AAV(w)[1]);   // get thread#, coremask args
   }else athread=w;  // if bare thread#, take it
   if(!supportaffinity)ASSERT(0,EVNONCE)
-  I threadno; RE(threadno=i0(athread)) ASSERT(threadno==0,EVNONCE)  // get thread#, which must be 0
+  I threadno=rei0(athread); ASSERT(threadno==0,EVNONCE)  // get thread#, which must be 0
   if(acoremask){ASSERT(AR(acoremask)<=1,EVRANK) ASSERT(AN(acoremask)!=0,EVLENGTH) if(unlikely(AT(acoremask)&FL+B01))acoremask=cvt(INT,acoremask); ASSERT(AT(acoremask)&INT+LIT,EVDOMAIN)} // verify coremask valid if given
   pthread_attr_t tattr; cpu_set_t cpuset; size_t cpusetsize=sizeof(cpu_set_t); // attributes for the current task
 #if defined(ANDROID)
@@ -1075,7 +1075,7 @@ ASSERT(0,EVNONCE)
   break;}
  case 10: {  // create a mutex.  w indicates recursive status
 #if PYXES
-  I recur; RE(recur=i0(w)) ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
+  I recur=rei0(w); ASSERT((recur&~1)==0,EVDOMAIN)  // recur must be 0 or 1
   A zz;GAT0(zz,INT,(sizeof(jtpthread_mutex_t)+SZI-1)>>LGSZI,0); ACINITUNPUSH(zz); AN(zz)=1; AM(zz)=CREDMUTEX;  // allocate mutex, make it immortal and atomic, install credential
   jtpthread_mutex_init((jtpthread_mutex_t*)IAV0(zz),recur);
   z=box(zz);  // protect in a box in case the mutex is copied
@@ -1121,7 +1121,7 @@ ASSERT(0,EVNONCE)
   break;}
  case 16: {  // create an AMV.  w is initial value
 #if PYXES
-  I initval; RE(initval=i0(w))  // recur must be integer
+  I initval=rei0(w);  // recur must be integer
   A zz; GAT0(zz,INT,1,0);  ACINITUNPUSH(zz); AN(zz)=1; AM(zz)=CREDAMV; IAV0(zz)[0]=initval;  // AMV is a boxed integer atom.  The boxing is needed to protect the value from being virtualized and then realized in a different place
   z=box(zz); 
 #else
@@ -1132,7 +1132,7 @@ ASSERT(0,EVNONCE)
 #if PYXES
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==2,EVLENGTH)  // w is 2 boxes
   A amv=AAV(w)[0]; ASSERT(AT(amv)&INT,EVDOMAIN) ASSERT(AN(amv)==1,EVLENGTH) ASSERT(AM(amv)==CREDAMV,EVDOMAIN)  // amv is singleton integer - we don't verify anything else
-  I imod; RE(imod=i0(AAV(w)[1]))  // addend must be integer
+  I imod=rei0(AAV(w)[1]);  // addend must be integer
   z=sc(__atomic_fetch_add(&IAV(amv)[0],imod,__ATOMIC_ACQ_REL));  // do the add, return unincremented value
 #else
   ASSERT(0,EVNONCE)
@@ -1142,8 +1142,8 @@ ASSERT(0,EVNONCE)
 #if PYXES
   ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==3,EVLENGTH)  // w is 2 boxes
   A amv=AAV(w)[0]; ASSERT(AT(amv)&INT,EVDOMAIN) ASSERT(AN(amv)==1,EVLENGTH) ASSERT(AM(amv)==CREDAMV,EVDOMAIN)  // amv is singleton integer - we don't verify anything else
-  I desired; RE(desired=i0(AAV(w)[1]))  // replacement value
-  I expected; RE(expected=i0(AAV(w)[2]))  // expected value
+  I desired=rei0(AAV(w)[1]);  // replacement value
+  I expected=rei0(AAV(w)[2]);  // expected value
   z=mtv; if(!__atomic_compare_exchange_n(&IAV(amv)[0], &expected, desired, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))z=sc(expected);  // if no match for expected, return new value; otherwise modify & return ''
 #else
   ASSERT(0,EVNONCE)
@@ -1171,7 +1171,7 @@ ASSERT(0,EVNONCE)
   // Result is # of terminated thread, 0 if none
 #if PYXES
   I threadpool;   // the threadpool to look in, if any
-  if(AR(w)!=0){ASSERTMTV(w); threadpool=-1;}else{RE(threadpool=i0(w)); ASSERT(BETWEENO(threadpool,0,MAXTHREADPOOLS),EVLIMIT) }
+  if(AR(w)!=0){ASSERTMTV(w); threadpool=-1;}else{threadpool=rei0(w); ASSERT(BETWEENO(threadpool,0,MAXTHREADPOOLS),EVLIMIT) }
   I resthread;  //  the thread# we will delete
   JOBQ *jobq;  // JOBQ for the thread
   JOB *job;  // the first job on the JOBQ

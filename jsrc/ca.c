@@ -662,8 +662,8 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
     mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=FAV(va)->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
     {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; vbf2=0; flag&=~(VIRS1); RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
-   }else if(unlikely(FAV(va)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; vbf2=0; flag&=~(VIRS1);   // m&;:
-   }else if(unlikely(FAV(va)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; vbf2=0; flag&=~(VIRS1); // m&128!:3
+   }else if(unlikely(FAV(w)->valencefns[0]==jtwords)){RZ(a=fsmvfya(a)); f1=jtfsmfx; vbf2=0; flag&=~(VIRS1);   // m&;:
+   }else if(unlikely(FAV(w)->valencefns[0]==jtcrc1)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; vbf2=0; flag&=~(VIRS1); // m&128!:3
    } 
   }else{  // forms that use atomic or empty noun
    if(unlikely(a==num(1)&&FAV(w)->valencefns[0]==jtbitwise1&&FAV(w)->lu2.lc==VA2CBW0001)){f1=jtisodd;}  // 1&(17 b.) - keeps IRS

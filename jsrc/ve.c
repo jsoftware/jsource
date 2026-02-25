@@ -17,6 +17,12 @@
 #define TYMESDI(u,v)  (   v?u*v:0)
 #define TYMESDD(u,v)  TYMES(u,v)
 
+// create clang builtin to perform op, setting zz (for AEXP)
+#define OFOPTEST(op) if(unlikely(__builtin_##op##_overflow(u,v,&zz)))R EVOFLO;
+#define OFLPLUS(u,v) ({if(unlikely(__builtin_add_overflow(u,v,&zz)))R EVOFLO; zz;})
+#define OFLMINUS(u,v) ({if(unlikely(__builtin_sub_overflow(u,v,&zz)))R EVOFLO; zz;})
+
+
 // commutative function sharing.  We can share only if the function produces no error codes, because sparse code doesn't know how to run recovery
 // We swap the x & y args and switch the specification of repeated arg if there is one
 AHDR2(plusID,PVD,PVI,PVD){R plusDI(m^1^SGNTO0(m),z,y,x,n,jt);}
@@ -64,6 +70,14 @@ primop256(plusDB,0xa06,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusII,0x23,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
+primop256(plusI4II,0x23,__m256d oflo=_mm256_setzero_pd();,
+ zz=_mm256_castsi256_pd(_mm256_add_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
+ R 0x88888888&_mm256_movemask_epi8(_mm256_castpd_si256(oflo))?EVOFLO:EVOK;)  //any oflo
+APF256CC(3,plus,I4,I4,OFLPLUS)
+primop256(plusI2II,0x23,__m256d oflo=_mm256_setzero_pd();,
+ zz=_mm256_castsi256_pd(_mm256_add_epi16(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
+ R 0xaaaaaaaa&_mm256_movemask_epi8(_mm256_castpd_si256(oflo))?EVOFLO:EVOK;)  //any oflo
+APF256CC(3,plus,I2,I2,OFLPLUS)
 // commutative primop256(plusBI,0x860,__m256d oflo=_mm256_setzero_pd();,
 // commutative zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(yy),_mm256_castpd_si256(zz))));,
 // commutative R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPPLUSBI:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
@@ -79,6 +93,14 @@ primop256(minusBD,0x102,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
 primop256(minusII,0x22,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_and_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPMINUSII:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
+primop256(minusI4II,0x22,__m256d oflo=_mm256_setzero_pd();,
+ zz=_mm256_castsi256_pd(_mm256_sub_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_and_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
+ R 0x88888888&_mm256_movemask_epi8(_mm256_castpd_si256(oflo))?EVOFLO:EVOK;)  //any oflo
+APF256CC(3,minus,I4,I4,OFLMINUS)
+primop256(minusI2II,0x22,__m256d oflo=_mm256_setzero_pd();,
+ zz=_mm256_castsi256_pd(_mm256_sub_epi16(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_and_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
+ R 0xaaaaaaaa&_mm256_movemask_epi8(_mm256_castpd_si256(oflo))?EVOFLO:EVOK;)  //any oflo
+APF256CC(3,minus,I2,I2,OFLMINUS)
 primop256(minusBI,0x42,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));oflo=_mm256_or_pd(oflo,_mm256_and_pd(zz,yy));,  // only oflo is 0 - imin
  R !_mm256_testc_pd(_mm256_setzero_pd(),oflo)?EWOVIP+EWOVIPMINUSBI:EVOK;)  // ~0 & oflo, testc if =0 which means no overflow
@@ -98,11 +120,20 @@ primop256(minIB,0x80,,zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si25
 #else
 primop256(minII,1,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+// obsolete primop256(minI4II,1,,
+// obsolete  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+// obsolete primop256(minI2II,1,,
+// obsolete  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi16(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 // commutative primop256(minBI,0x40,,
 // commutative  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(minIB,0x80,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 #endif
+primop256(minI4II,1,,   zz=_mm256_castsi256_pd(_mm256_min_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+primop256(minI2II,1,,   zz=_mm256_castsi256_pd(_mm256_min_epi16(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+primop256(minCII,1,__m256i sgnbit=_mm256_set1_epi64x(0x8080808080808080LL);,   zz=_mm256_castsi256_pd(_mm256_xor_si256(sgnbit,_mm256_min_epi8(_mm256_xor_si256(sgnbit,_mm256_castpd_si256(xx)),_mm256_xor_si256(sgnbit,_mm256_castpd_si256(yy))))),R EVOK;)
+APF256CC(2,min,I4,I4,MIN)
+APF256CC(2,min,I2,I2,MIN)
 primop256(maxDI,0x16,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(maxDB,0x206,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 // commutative primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
@@ -114,11 +145,20 @@ primop256(maxIB,0x80,,zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si25
 #else
 primop256(maxII,1,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+// obsolete primop256(maxI4II,1,,
+// obsolete  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+// obsolete primop256(maxI2II,1,,
+// obsolete  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi16(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(maxIB,0x80,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 // commutative primop256(maxBI,0x40,,
 // commutative  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 #endif
+primop256(maxI4II,1,,   zz=_mm256_castsi256_pd(_mm256_max_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+primop256(maxI2II,1,,   zz=_mm256_castsi256_pd(_mm256_max_epi16(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))),R EVOK;)
+primop256(maxCII,1,__m256i sgnbit=_mm256_set1_epi64x(0x8080808080808080LL);,   zz=_mm256_castsi256_pd(_mm256_xor_si256(sgnbit,_mm256_max_epi8(_mm256_xor_si256(sgnbit,_mm256_castpd_si256(xx)),_mm256_xor_si256(sgnbit,_mm256_castpd_si256(yy))))),R EVOK;)
+APF256CC(2,max,I4,I4,MAX)
+APF256CC(2,max,I2,I2,MAX)
 // commutative primop256(tymesDI,0x10,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(unlikely(NANTEST)){z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
 // commutative primop256(tymesDB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;)
 primop256(tymesID,0xa,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(unlikely(NANTEST)){z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
@@ -139,6 +179,24 @@ primop256(divBD,0x104,D *zsav=z; C *bsav=(C*)x; I msav=m;NAN0;,zz=_mm256_div_pd(
   if(unlikely(NANTEST)){ORIGMN z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*bsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divBI,0x134,D *zsav=z; C *bsav=(C*)x; I msav=m;NAN0;,zz=_mm256_div_pd(xx,yy),  // x B->D, y I->D, no unroll, 0s at end
   if(unlikely(NANTEST)){ORIGMN z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*bsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(gtCII,1,__m256i sgnbit=_mm256_set1_epi64x(0x8080808080808080LL); __m256i boolbit=_mm256_set1_epi64x(VALIDBOOLEAN);, \
+   zz=_mm256_castsi256_pd(_mm256_and_si256(boolbit, \
+   _mm256_cmpgt_epi8(_mm256_xor_si256(sgnbit,_mm256_castpd_si256(xx)),_mm256_xor_si256(sgnbit,_mm256_castpd_si256(yy))))), \
+   R EVOK;)
+primop256(ltCII,1,__m256i sgnbit=_mm256_set1_epi64x(0x8080808080808080LL); __m256i boolbit=_mm256_set1_epi64x(VALIDBOOLEAN);, \
+   zz=_mm256_castsi256_pd(_mm256_and_si256(boolbit, \
+   _mm256_cmpgt_epi8(_mm256_xor_si256(sgnbit,_mm256_castpd_si256(yy)),_mm256_xor_si256(sgnbit,_mm256_castpd_si256(xx))))), \
+   R EVOK;)
+primop256(geCII,1,__m256i sgnbit=_mm256_set1_epi64x(0x8080808080808080LL); __m256i boolbit=_mm256_set1_epi64x(VALIDBOOLEAN);, \
+   zz=_mm256_castsi256_pd(_mm256_and_si256(boolbit, \
+   _mm256_or_si256(_mm256_cmpeq_epi8(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)), \
+    _mm256_cmpgt_epi8(_mm256_xor_si256(sgnbit,_mm256_castpd_si256(xx)),_mm256_xor_si256(sgnbit,_mm256_castpd_si256(yy)))))), \
+   R EVOK;)
+primop256(leCII,1,__m256i sgnbit=_mm256_set1_epi64x(0x8080808080808080LL); __m256i boolbit=_mm256_set1_epi64x(VALIDBOOLEAN);, \
+   zz=_mm256_castsi256_pd(_mm256_and_si256(boolbit, \
+   _mm256_or_si256(_mm256_cmpeq_epi8(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)), \
+    _mm256_cmpgt_epi8(_mm256_xor_si256(sgnbit,_mm256_castpd_si256(yy)),_mm256_xor_si256(sgnbit,_mm256_castpd_si256(xx)))))), \
+   R EVOK;)
 #else
 AIFX(minusDI, D,D,I, -) AIFX(minusID, D,I,D, -    ) 
 // commutative APFX(  minID, D,I,D, MIN,,R EVOK;)
@@ -249,16 +307,15 @@ AIFX(minusBB, I,B,B, -     )    /* minusBI */
 APFX(  divIB, D,I,B, DIVI ,,R EVOK;)
    APFX(  divII, D,I,I, DIVI,,R EVOK;)    
 AIFX( plusBB, I,B,B, +     )    /* plusBI */
-#endif
 APFX(minI2I2, I2,I2,I2, MIN,,R EVOK;)
 APFX(minI4I4, I4,I4,I4, MIN,,R EVOK;)
 APFX(maxI2I2, I2,I2,I2, MAX,,R EVOK;)
 APFX(maxI4I4, I4,I4,I4, MAX,,R EVOK;)
-#define OFOPTEST(op) if(unlikely(__builtin_##op##_overflow(u,v,&zz)))R EVOFLO;
 AEXP(plusI2I2, I2,I2,I2,OFOPTEST(add))
 AEXP(plusI4I4, I4,I4,I4,OFOPTEST(add))
 AEXP(minusI2I2, I2,I2,I2,OFOPTEST(sub))
 AEXP(minusI4I4, I4,I4,I4,OFOPTEST(sub))
+#endif
 AEXP(tymesI2I2, I2,I2,I2,OFOPTEST(mul))
 AEXP(tymesI4I4, I4,I4,I4,OFOPTEST(mul))
 

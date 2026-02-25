@@ -1276,6 +1276,7 @@ DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
  if(unlikely(MIN(ai,wi)==0))R take(zeroionei(0),a);  // if either arg is empty, nothing can be common, return no items
+ jtfg=MOVEIP0A(jtfg);  // only our a argument can be inplaced, and it moves to y in all uses
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it  *** no errors till cct restored ***
  if(unlikely(ar==wr+1)){  // is just 1 cell of y, with x a list of such cells?
   if(wr==0)x=eq(a,w); else IRS2(a,w,0,wr,wr,jtmatch,x); RZGOTO(x,errexit) x=jtrepeat(jtfg,x,a);  // y has rank 1 less than x, execute as ((x = y) # x) (y atomic) or ((x -:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
@@ -1287,12 +1288,12 @@ DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
   // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (x e. y) # x 
   // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
   // Don't revert to fork!  localuse.lu1.fork2hfn is not set
-  x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(MOVEIP0A(jtfg),IINTER,x,a):
+  x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?jtindexofsub(jtfg,IINTER,x,a):
       repeat(eps(a,x),a);
  }
 errexit:;
  POPCCT RZ(x);  // *** errors OK now ***
- if(unlikely(at&BOX))PRISTXFERAF(x,a)  // the boxes in w cannot get to the result, even though their values participate; so pristinity depends entirely on a
+ if(unlikely(at&BOX)){jtfg=MOVEIPA0(jtfg); PRISTXFERAF(x,a)}  // the boxes in w cannot get to the result, even though their values participate; so pristinity depends entirely on original a
  EPILOG(x);
 }
 

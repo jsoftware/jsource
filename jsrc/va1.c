@@ -185,8 +185,8 @@ AHDR1(absD,D,D){
   R EVOK;
  )
 }
-
-AHDR1(absI,D,D){
+// scaf* have I2, I4 versions
+AHDR1(absI,D,D){   // linkage requires D
  AVXATOMLOOP(0,
  __m256d zero=_mm256_setzero_pd();
  __m256d uneg; __m256d anyneg=zero;

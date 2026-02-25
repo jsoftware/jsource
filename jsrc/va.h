@@ -277,6 +277,41 @@
 
 #define APFX(f,Tz,Tx,Ty,pfx,pref,suff)  APFXL(f,Tz,Tx,Ty,,pfx,pref,suff)
 
+// *a=val, for length n&7 bytes
+#define STOREn(val,a,n) {UI t=(val); C *v=(C*)(a); if(SY_64){if((n)&4){*(UI4*)v=(UI4)t; v+=sizeof(UI4); t>>=(BW-1)&(sizeof(UI4)*BB);}} \
+ if((n)&2){*(US*)v=(US)t; v+=sizeof(US); t>>=sizeof(US)*BB;} if((n)&1){*v=(C)t;} }
+
+// repeat *a to fill an I
+#define UT_for_C C
+#define UT_for_I2 US
+#define UT_for_I4 UI4
+#define Spread_for_C (UI)0x0101010101010101
+#define Spread_for_I2 (UI)0x0001000100010001
+#define Spread_for_I4 (UI)0x0000000100000001
+#define LDREP(v,Txyz) (*(UT_for_##Txyz*)(v)*Spread_for_##Txyz)
+
+// Do a byte-by-byte operation by doing Is as possible, then finishing the remnant.  Overfetches but does not overstore.
+// mode bits: 1=can throw error; 2=use atomic loop for remnant
+// qual is the precision used in 256-bit ops, or omitted if I
+#define APF256CC(mode,f,Txyz,qual,pfx)   \
+ AHDR2(f##Txyz##Txyz,Txyz,Txyz,Txyz){I mm,n32;Txyz zz;  \
+  if(m<0){n32=(UI)~m/(SZI/sizeof(Txyz));if(n32){mm=f##qual##II(~n32,(I*)z,(I*)x,(I*)y,n,jt); if((mode&1)&&(mm<EVOK))R mm;} \
+   if(mode&2){mm=~m&(SZI/sizeof(Txyz)-1); x+=~m; y+=~m; z+=~m; DPNOUNROLL(mm, z[i]=pfx(x[i],y[i]);) \
+   }else{mm=~m*sizeof(Txyz); if(mm&(SZI-1))STOREn(pfx(((I*)x)[n32],((I*)y)[n32]),&((I*)z)[n32],mm)} \
+  }else if(m&1){m>>=1; n32=(UI)m/(SZI/sizeof(Txyz));\
+   DQU(n, I uu=LDREP(x,Txyz); if(n32){mm=f##qual##II(2*n32+1,(I*)z,&uu,(I*)y,1,jt); if((mode&1)&&(mm<EVOK))R mm;} \
+    if(mode&2){mm=m&(SZI/sizeof(Txyz)-1); y+=m; z+=m; DPNOUNROLL(mm, z[i]=pfx((Txyz)uu,y[i]);) \
+    }else{mm=m*sizeof(Txyz); if(mm&(SZI-1))STOREn(pfx(uu,((I*)y)[n32]),&((I*)z)[n32],mm) y+=m; z+=m;} \
+   ++x;) \
+  }else{m>>=1; n32=(UI)m/(SZI/sizeof(Txyz)); \
+   DQU(n, I vv=LDREP(y,Txyz); if(n32){mm=f##qual##II(2*n32,(I*)z,(I*)x,&vv,1,jt); if((mode&1)&&(mm<EVOK))R mm;} \
+    if(mode&2){mm=m&(SZI/sizeof(Txyz)-1); x+=m; z+=m; DPNOUNROLL(mm, z[i]=pfx(x[i],(Txyz)vv);) \
+    }else{mm=m*sizeof(Txyz); if(mm&(SZI-1))STOREn(pfx(((I*)x)[n32],vv),&((I*)z)[n32],mm) x+=m; z+=m;} \
+   ++y;) \
+  } \
+  R EVOK; \
+ }
+
 // TUNE as of 20210330 Skylake 2.5GHz
 // measurements with  2.5e9*(#i)%~(*/$a0)%~6!:2'3 : ''for. i do. a2>.a3 end. 0'' 0'  on length 1e3, aligned or not
 // units: cycles/word on +

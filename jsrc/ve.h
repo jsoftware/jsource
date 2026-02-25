@@ -312,6 +312,14 @@ extern ADECL2(  minDI,PVD,PVD,PVI);
 extern ADECL2(  minIB,PVI,PVI,PVB);
 extern ADECL2(  minID,PVD,PVI,PVD);
 extern ADECL2(  minII,PVI,PVI,PVI);
+#if C_AVX2 || EMU_AVX2
+extern ADECL2(  minCII,PVI,PVI,PVI);
+extern ADECL2(  maxCII,PVI,PVI,PVI);
+extern ADECL2(  ltCII,PVI,PVI,PVI);
+extern ADECL2(  gtCII,PVI,PVI,PVI);
+extern ADECL2(  geCII,PVI,PVI,PVI);
+extern ADECL2(  leCII,PVI,PVI,PVI);
+#endif
 extern ADECL2(  minQQ,Q,Q,Q);
 extern ADECL2(  minSS,SB,SB,SB);
 extern ADECL2(  minXX,X,X,X);

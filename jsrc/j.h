@@ -1994,7 +1994,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 
 #define MOVEIPWW(j) (J)(intptr_t)(((I)j&~JTINPLACEA)+2*((I)j&JTINPLACEW))  // copy w inplaceability to both args
 #define MOVEIPWA(j) (J)(intptr_t)((I)j^((JTINPLACEW+JTINPLACEA)&(0x3C>>(2*((I)j&JTINPLACEW+JTINPLACEA)))))  // exchange inplaceability of w and a
-#define MOVEIP0A(j) (J)(intptr_t)((((I)j&~(JTINPLACEW+JTINPLACEA))+((((I)j>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW))))  // move a inplaceability to w, a's is garbage
+#define MOVEIP0A(j) (J)(intptr_t)((((I)j&~(JTINPLACEW+JTINPLACEA))+((((I)j>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW))))  // move a inplaceability to w, a's is 0
+#define MOVEIPA0(j) (J)(intptr_t)((((I)j+JTINPLACEW)))  // move w inplaceability to a, w's is garbage
 
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]

@@ -311,6 +311,14 @@
   } \
   R EVOK; \
  }
+// monadic version
+#define APF256C(mode,f,Txz,qual,pfx)   \
+ AHDR1(f##Txz,Txz,Txz){Txz zz;I rc;  \
+  I n32=(UI)n/(SZI/sizeof(Txz));if(n32){rc=f##qual##I(jt,n32,(void*)z,(void*)x); if((mode&1)&&(rc<EVOK))R rc;} \
+  if(mode&2){I m=n&(SZI/sizeof(Txz)-1); x+=n; z+=n; DPNOUNROLL(m, z[i]=pfx(x[i]);) \
+  }else{I m=n*sizeof(Txz); if(m&(SZI-1))STOREn(pfx(((I*)x)[n32]),&((I*)z)[n32],m)} \
+  R EVOK; \
+ }
 
 // TUNE as of 20210330 Skylake 2.5GHz
 // measurements with  2.5e9*(#i)%~(*/$a0)%~6!:2'3 : ''for. i do. a2>.a3 end. 0'' 0'  on length 1e3, aligned or not

@@ -185,21 +185,44 @@ AHDR1(absD,D,D){
   R EVOK;
  )
 }
-// scaf* have I2, I4 versions
-AHDR1(absI,D,D){   // linkage requires D
- AVXATOMLOOP(0,
- __m256d zero=_mm256_setzero_pd();
- __m256d uneg; __m256d anyneg=zero;
 
+AHDR1(absI,D,D){
+ AVXATOMLOOP(0,
+ __m256d zero=_mm256_setzero_pd(); __m256d uneg; __m256d anyneg=zero;
  ,
   uneg=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(zero),_mm256_castpd_si256(u))); u=_mm256_blendv_pd(u,uneg,u); // take abs
   anyneg=_mm256_or_pd(anyneg,u);  // remember if any overflow
-
  ,
  R (!_mm256_testc_pd(zero,anyneg))?EWIMAG:EVOK;  // if there are any negative values, call for a postpass.  Could just convert in place
  )
 }
 
+// I4 version on Is
+AHDR1(absI4I,D,D){   // linkage requires D
+ AVXATOMLOOP(0,
+ __m256d anyneg=_mm256_setzero_pd();
+ ,
+  u=_mm256_castsi256_pd(_mm256_abs_epi32(_mm256_castpd_si256(u))); // take abs
+  anyneg=_mm256_or_pd(anyneg,u);  // remember if any overflow
+ ,
+ R 0x88888888&_mm256_movemask_epi8(_mm256_castpd_si256(anyneg))?EVOFLO:EVOK;  //any oflo
+ )
+}
+// I2 version on Is
+AHDR1(absI2I,D,D){   // linkage requires D
+ AVXATOMLOOP(0,
+ __m256d anyneg=_mm256_setzero_pd();
+ ,
+  u=_mm256_castsi256_pd(_mm256_abs_epi16(_mm256_castpd_si256(u))); // take abs
+  anyneg=_mm256_or_pd(anyneg,u);  // remember if any overflow
+ ,
+ R 0xaaaaaaaa&_mm256_movemask_epi8(_mm256_castpd_si256(anyneg))?EVOFLO:EVOK;  //any oflo
+ )
+}
+#define XABSI2(u) ({ I2 us=(u)>>(BB*sizeof(I2)-1); u^=us; if(unlikely((u-=us)<0))R EVOFLO; u; })
+#define XABSI4(u) ({ I4 us=(u)>>(BB*sizeof(I4)-1); u^=us; if(unlikely((u-=us)<0))R EVOFLO; u; })
+static APF256C(3,abs,I2,I2,XABSI2)
+static APF256C(3,abs,I4,I4,XABSI4)
 
 #else
 static AMONPS(sqrtD,  D,D, I ret=EVOK; , if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
@@ -209,9 +232,9 @@ static AMON(absD,   I,I, *z= *x&IMAX;)
 #else
 static AMON(absD,   D,D, *z= ABS(*x);)
 #endif
-#endif
 static AMONPS(absI2,   I2,I2, I ret=EVOK;  , I2 val=*x; I2 nval; if(unlikely(__builtin_sub_overflow((I2)0,val,&nval)))ret=EVOFLO; val=nval>0?nval:val; *z=val; , R ret;)
 static AMONPS(absI4,   I4,I4, I ret=EVOK;  , I4 val=*x; I4 nval; if(unlikely(__builtin_sub_overflow((I4)0,val,&nval)))ret=EVOFLO; val=nval>0?nval:val; *z=val; , R ret;)
+#endif
 
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
 AMONPS(sqrtE,  E,E, I ret=EVOK; , D l; D h; D rh; D rl; D dh; D dl; D th; D tl; *(UIL*)&l=*(UIL*)&x->lo^(*(UIL*)&x->hi&*(UIL*)&minus0); *(UIL*)&h=*(UIL*)&x->hi&~*(UIL*)&minus0; \

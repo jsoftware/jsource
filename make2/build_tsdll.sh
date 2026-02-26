@@ -36,24 +36,44 @@ echo "jplatform64=$jplatform64"
 
 case "$jplatform64" in
  darwin/j64iphoneos)
-  CC="$(xcrun --sdk iphoneos --find clang)"
-  AR="$(xcrun --sdk iphoneos --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  USE_OPENMP=0
+  LDTHREAD=" -pthread "
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphoneos --find clang)"
+   AR="$(xcrun --sdk iphoneos --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  else
+   macmin="-arch arm64"
+  fi
   ;;
  darwin/j64iphonesimulator)
-  CC="$(xcrun --sdk iphonesimulator --find clang)"
-  AR="$(xcrun --sdk iphonesimulator --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  USE_OPENMP=0
+  LDTHREAD=" -pthread "
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphonesimulator --find clang)"
+   AR="$(xcrun --sdk iphonesimulator --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  else
+   macmin="-arch x86_64"
+  fi
   ;;
  darwin/j64arm)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  else
+   macmin="-arch arm64 -mmacosx-version-min=11"
+  fi
   ;;
  darwin/*)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  else
+   macmin="-arch x86_64 -mmacosx-version-min=10.6"
+  fi
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;

@@ -6,6 +6,8 @@
 // utilities for JFE to load JE, initiallize, and run profile sentence
 // JFEs are jconsole, jwdw, and jwdp
 #ifdef _WIN32
+ #define __iamcu__
+ #define WIN32_LEAN_AND_MEAN
  #include <windows.h>
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)
  #define PLEN _MAX_PATH // path length

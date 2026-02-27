@@ -154,6 +154,8 @@ FORCE_INLINE int64_t sse2neon_recast_f64_s64(double val)
 #include <intrin.h>
 #if SSE2NEON_INCLUDE_WINDOWS_H
 #include <processthreadsapi.h>
+#define __iamcu__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 

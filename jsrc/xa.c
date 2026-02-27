@@ -6,6 +6,8 @@
 #define _GNU_SOURCE
 
 #ifdef _WIN32
+#define __iamcu__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
 #include <unistd.h>

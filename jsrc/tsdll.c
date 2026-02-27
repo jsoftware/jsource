@@ -4,6 +4,8 @@
 /* used to build tsdll.dll for validating cd                               */
 
 #ifdef _WIN32
+#define __iamcu__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 {

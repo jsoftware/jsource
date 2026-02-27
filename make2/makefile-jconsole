@@ -21,7 +21,8 @@ ODIR=../../../../bin/$(jplatform64)
 #  read.o
 #  testlib.o
 
-ifneq (bsd,$(findstring bsd,$(jplatform64))) 
+ifneq (bsd,$(findstring bsd,$(jplatform64)))
+ifneq (windows,$(findstring windows,$(jplatform64)))
 
 BACKTRACE_OBJS := \
  atomic.o \
@@ -42,6 +43,7 @@ else
 BACKTRACE_OBJS := $(BACKTRACE_OBJS) elf.o
 endif
 
+endif
 endif
 
 OBJS=  \

@@ -249,12 +249,12 @@ case $jplatform64 in
   ;;
  windows/j32)
   TARGET=jconsole.exe
-  CFLAGS="$common -m32 "
+  CFLAGS="$common -Wno-psabi -m32 -D_WIN32 "
   LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
   ;;
  windows/j64*)
   TARGET=jconsole.exe
-  CFLAGS="$common"
+  CFLAGS="$common -D_WIN32 -D_WIN64 "
   LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
   ;;
  *)

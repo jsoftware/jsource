@@ -240,6 +240,18 @@ case $jplatform64 in
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin "
   ;;
 
+ windows/j32*) # windows x86
+  TARGET=tsdll.dll
+  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
+  LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -m32 -lm -static-libgcc -static-libstdc++ "
+  ;;
+
+ windows/j64*) # windows intel 64bit
+  TARGET=tsdll.dll
+  CFLAGS="$common "
+  LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ "
+  ;;
+
  *)
   echo no case for those parameters
   exit

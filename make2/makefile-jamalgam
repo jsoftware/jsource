@@ -21,7 +21,8 @@ ODIR=../../../../bin/$(jplatform64)
 #  read.o
 #  testlib.o
 
-ifneq (bsd,$(findstring bsd,$(jplatform64)))
+ifneq (bsd,$(findstring bsd,$(jplatform64))
+ifneq (windows,$(findstring windows,$(jplatform64)))
 
 BACKTRACE_OBJS := \
  atomic.o \
@@ -42,6 +43,7 @@ else
 BACKTRACE_OBJS := $(BACKTRACE_OBJS) elf.o
 endif
 
+endif
 endif
 
 # note: the slowest builds have been placed at the top, to avoid starvation in parallel builds
@@ -230,8 +232,13 @@ $(OBJS_FMA) : CFLAGS_FMA := -mfma
 $(OBJS_AESNI) : CFLAGS_AESNI := -maes
 $(OBJS_AESARM) : CFLAGS_AESARM := -march=armv8-a+crc+crypto
 $(OBJS_BASE64) : CFLAGS_BASE64 := $(FLAGS_BASE64)
+ifneq (windows,$(findstring windows,$(jplatform64)))
 $(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN)
 	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS) $(OBJSLN)
+else
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN)
+	$(CXX) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS) $(OBJSLN)
+endif
 
 $(LIBJRES): jamalgam.rc
 	$(WINDRES) -o$@ $^

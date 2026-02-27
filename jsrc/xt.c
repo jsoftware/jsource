@@ -4,6 +4,8 @@
 /* Xenos: time and space                                                   */
 
 #ifdef _WIN32
+#define __iamcu__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winbase.h>
 #ifndef _WIN64

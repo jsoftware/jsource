@@ -6,6 +6,8 @@
 #include "cpuinfo.h"
 
 #ifdef _WIN32
+#define __iamcu__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #elif defined(__APPLE__)
 #include <sys/param.h>

@@ -70,6 +70,7 @@
 #ifdef __MINGW32__
 // original definition
 // #define INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#undef INLINE
 #define INLINE __inline__ __attribute__((__always_inline__,__gnu_inline__))
 #endif
 
@@ -354,7 +355,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #endif
 
 #if SY_WIN32
-#if defined(_WIN32) && !defined(OLECOM)
+#if defined(_WIN32) && !defined(OLECOM) && !defined(__MINGW32__)
 #define OLECOM
 #endif
 #endif

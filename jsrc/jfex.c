@@ -9,6 +9,8 @@
 
 #ifdef _WIN32
  #define _CRT_SECURE_NO_WARNINGS
+ #define __iamcu__
+ #define WIN32_LEAN_AND_MEAN
  #include <windows.h>
  #include <direct.h>
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)

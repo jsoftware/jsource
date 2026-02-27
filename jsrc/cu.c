@@ -199,11 +199,12 @@ A jtevery2(J jtfg, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
  }else{
   fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
  }
- // Get jt flags to pass to next level - take them from  fs, so that we always inplace this verb, which will allow us to set pristinity better
+ // Get jt flags to pass to next level - take them from fs, so that we always inplace this verb, which will allow us to set pristinity better
  // We must remove raze flags since we are using them here
  // If the arguments are the same, we turn off inplacing for the function but not for the argument blocks.  It only matters if a block is returned: then
  // it's OK to treat the return as pristine the arguments are zombie, even if noninplaceable ones
- jtfg=(J)((I)jt+(a!=w)*(JTINPLACEW+JTINPLACEA));
+// obsolete  jtfg=(J)((I)jt+(a!=w)*(JTINPLACEW+JTINPLACEA));
+ if(likely(a!=w))jtfg=(J)((I)jt+(JTINPLACEW+JTINPLACEA));
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
  if(AFLAG(a)&AFVIRTUAL)a=ABACK(a);

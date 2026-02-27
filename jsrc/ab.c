@@ -68,7 +68,6 @@ APFX(bw10000I4I4, UI4,I4,UI4, BW10000,, R EVOK;)
 APFX(bw10001I4I4, UI4,I4,UI4, BW10001,, R EVOK;)
 APFX(bw10010I4I4, UI4,I4,I4, BW10010,, R EVOK;)
 
-// scaf* rewrite all these and I2/I4 as well
 #if 1  // obsolete
 #else
 #define APF256CC(mode,f,Txyz,pfx) APFX(f##Txyz##Txyz, Txyz,Txyz,Txyz, pfx,, R EVOK;)
@@ -174,12 +173,18 @@ static AHDR2FN* bwC[16]={(AHDR2FN*)bw0000CC,(AHDR2FN*)bw0001CC,(AHDR2FN*)bw0010C
 DF2(jtunderh2);
 DF2(jtbitwisechar){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I b;I j,m,n,zn;AHDR2FN* ado;
  ARGCHK2(a,w);
- A x=a, y=w; I an=AN(a), wn=AN(w);
+ A x=a, y=w; I an=AN(a), wn=AN(w), ar=AR(a), wr=AR(w);
  if((-an&-wn&-(AT(a)&AT(w)&LIT))>=0)R jtunderh2(jt,a,w,self);  // empty or not LIT, revert
- b=AR(a)<=AR(w); zn=b?wn:an; m=b?an:wn; n=zn/m;  // b = 'x is repeated'  m=length of low-rank arg n=#repeats of low-rank arg   scaf* lose divide
- ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
+ b=ar<=wr; I minr=b?ar:wr; A longs=b?w:a; zn=b?wn:an; m=b?an:wn;  // b = 'x is repeated'  m=length of low-rank arg 
+// obsolete  n=zn/m;   // n=#repeats of low-rank arg
+ ASSERTAGREE(AS(a),AS(w),minr)
+ PROD(n,AR(longs)-minr,AS(longs)+minr)  // n=#repeats of low-rank arg
  j=i0(FAV(fs)->fgh[1])-16;  // fetch boolean fn #
- GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // allocate result area   scaf* should inplace
+ if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEW+JTINPLACEA));  // remove inplaceability if blocks identical
+ if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&~(wr-ar),w))z=w;  // try inplacing w, unless a is longer
+ else if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEAX)&~(ar-wr),a))z=a;  // try inplacing a, unless w is longer
+ else GATV(z,LIT,zn,AR(longs),AS(longs));  // can't inplace, allocate the result
+    // allocate result area   scaf* should inplace
 // obsolete  if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}  // for single loop we overwrite.  This means no inplacing
 // obsolete  else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; A zz; RZ(p=IRS2(num(SZI),b?x:y,0L,0L,0L,jtrepeat,zz)); x=b?p:x; y=b?y:p;} // a atom or w atom, or multiple of SZI.  Replicate bytes to words in repeated arg
 // obsolete  else                      ado=bwC[j];

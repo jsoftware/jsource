@@ -408,6 +408,10 @@ _5280 1448 _132 4 -: p. (7 c. 4);(7 c. 10 11 12)
 -/ :: 1: "2 (6) c. 0 (,:"1) 7 7 $ 7 {. _32768  NB. oflo detection at each lane
 -/ :: 1: "2 (7) c. 0 (,:"1) 32 32 $ 33 {. _2147483648  NB. oflo detection at each lane
 -/ :: 1: "2 (7) c. 0 (,:"1) 7 7 $ 7 {. _2147483648  NB. oflo detection at each lane
+| :: 1: "2 (6) c. 0 (,:"1) 32 32 $ 33 {. _32768  NB. oflo detection at each lane
+| :: 1: "2 (6) c. 0 (,:"1) 7 7 $ 7 {. _32768  NB. oflo detection at each lane
+| :: 1: "2 (7) c. 0 (,:"1) 32 32 $ 33 {. _2147483648  NB. oflo detection at each lane
+| :: 1: "2 (7) c. 0 (,:"1) 7 7 $ 7 {. _2147483648  NB. oflo detection at each lane
 
 epilog''
 

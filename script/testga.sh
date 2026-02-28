@@ -60,7 +60,7 @@ if [ "$1" = "wasm" ]; then
  ls -l j32
  cd j32
  node jamalgam.js
- exit 0
+ exit $?
 fi
 
 # avx2

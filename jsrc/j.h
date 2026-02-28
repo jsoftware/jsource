@@ -355,7 +355,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #endif
 
 #if SY_WIN32
-#if defined(_WIN32) && !defined(OLECOM) && !defined(__MINGW32__)
+#if defined(_WIN32) && !defined(OLECOM)
 #define OLECOM
 #endif
 #endif

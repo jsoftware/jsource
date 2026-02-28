@@ -198,25 +198,41 @@ fi
 #  read.o
 #  testlib.o
 
-BACKTRACE_OBJS=" \
- atomic.o \
- backtrace.o \
- dwarf.o \
- fileline.o \
- mmap.o \
- mmapio.o \
- posix.o \
- print.o \
- simple.o \
- sort.o \
- state.o "
-
 case "$jplatform64" in
- windows*) BACKTRACE_OBJS= ;;
- openbsd/*) BACKTRACE_OBJS= ;;
- freebsd/*) BACKTRACE_OBJS= ;;
- darwin/*) BACKTRACE_OBJS= "$BACKTRACE_OBJS macho.o " ;;
- *) BACKTRACE_OBJS= "$BACKTRACE_OBJS elf.o " ;;
+ freebsd/*) BACKTRACE_OBJS="" ;;
+ openbsd/*) BACKTRACE_OBJS="" ;;
+ wasm/*) BACKTRACE_OBJS="" ;;
+ windows/*) BACKTRACE_OBJS="" ;;
+ darwin/*)
+  BACKTRACE_OBJS=" \
+   atomic.o \
+   backtrace.o \
+   dwarf.o \
+   fileline.o \
+   mmap.o \
+   mmapio.o \
+   posix.o \
+   print.o \
+   simple.o \
+   sort.o \
+   state.o \
+   macho.o "
+  ;;
+ *)
+  BACKTRACE_OBJS=" \
+   atomic.o \
+   backtrace.o \
+   dwarf.o \
+   fileline.o \
+   mmap.o \
+   mmapio.o \
+   posix.o \
+   print.o \
+   simple.o \
+   sort.o \
+   state.o \
+   elf.o "
+  ;;
 esac
 
 case $jplatform64 in

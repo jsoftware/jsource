@@ -27,6 +27,7 @@ elif [ $1 = "freebsd" ]; then
  ext="so"
 elif [ "$1" = "windows" ]; then
  ext="dll"
+ export jplatform=windows
 elif [ $1 = "wasm" ]; then
  ext=""
 else

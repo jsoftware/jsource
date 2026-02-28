@@ -1,9 +1,5 @@
 vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
 
-ifndef jplatform64
-jplatform64=linux/j64x
-endif
-
 ODIR=../../../../bin/$(jplatform64)
 
 .SUFFIXES: .o

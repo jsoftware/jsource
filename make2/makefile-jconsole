@@ -1,9 +1,5 @@
 vpath % ../../../../jsrc % ../../../../libbacktrace
 
-ifndef jplatform64
-jplatform64=linux/j64x
-endif
-
 ODIR=../../../../bin/$(jplatform64)
 
 .SUFFIXES: .o

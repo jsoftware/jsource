@@ -224,14 +224,14 @@ case $jplatform64 in
   TARGET_a=libtsdll.a
   CFLAGS="$common $macmin -march=armv8-a+crc "
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm $macmin  "
-  LDFLAGS_a=" -o "
+  LDFLAGS_a=" r "
   ;;
 
  darwin/j64iphonesimulator) # iphone simulator
   TARGET_a=libtsdll.a
   CFLAGS="$common $macmin "
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm $macmin "
-  LDFLAGS_a=" -o "
+  LDFLAGS_a=" r "
   ;;
 
  darwin/j64*) # darwin intel 64bit

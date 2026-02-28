@@ -28,6 +28,7 @@ elif [ "$1" = "freebsd" ]; then
  ext="so"
 elif [ "$1" = "windows" ]; then
  ext="dll"
+ export jplatform=windows
 elif [ "$1" = "wasm" ]; then
  ext=""
 else
@@ -99,6 +100,17 @@ elif [ "$1" = "freebsd" ]; then
  else
   cp mpir/freebsd/aarch64/libgmp.so j64
   cp pcre2/freebsd/aarch64/libjpcre2.so tools/regex/.
+ fi
+elif [ "$1" = "windows" ]; then
+ if [ "$2" = "x86_64" ]; then
+  cp mpir/windows/x64/mpir.dll j64
+  cp pcre2/windows/x64/libjpcre2.dll tools/regex/.
+ elif [ "$2" = "i386" ]; then
+  cp mpir/windows/x86/mpir.dll j64
+  cp pcre2/windows/x86/libjpcre2.dll tools/regex/.
+ else
+  cp mpir/windows/arm64/mpir.dll j64
+  cp pcre2/windows/arm64/libjpcre2.dll tools/regex/.
  fi
 fi
 

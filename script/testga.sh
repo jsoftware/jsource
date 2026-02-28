@@ -2,10 +2,10 @@
 #
 # test linux/macOS on github actions
 #
-# argument is linux|linux32|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l]
+# argument is linux|windows|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l|i386|x86_64|wasm32]
 # openbsd/freebsd is experimental
 #
-# if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip test avx2 and avx512
+# if !x86_64 skip test avx2 and avx512
 #
 # current Linux github builder supports avx512
 # when cpu is Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz
@@ -15,7 +15,7 @@
 
 set -e
 
-if [ "$1" = "linux" ] || [ "$1" = "linux32" ]; then
+if [ "$1" = "linux" ]; then
  ext="so"
 elif [ $1 = "raspberry" ]; then
  ext="so"
@@ -25,38 +25,34 @@ elif [ $1 = "openbsd" ]; then
  ext="so"
 elif [ $1 = "freebsd" ]; then
  ext="so"
+elif [ "$1" = "windows" ]; then
+ ext="dll"
 elif [ $1 = "wasm" ]; then
  ext=""
 else
- echo "argument is linux|linux32|darwin|raspberry|android|openbsd|freebsd|wasm"
+ echo "argument is linux|windows|darwin|raspberry|android|openbsd|freebsd|wasm"
  exit 1
 fi
-if [ "$2" = "arm64" ]; then
+uname -a
+uname
+uname -m
+if [ "$2" = "arm64" ] || [ "$2" = "x86_64" ]; then
  m64=1
-elif [ "$1" = "linux32" ]; then
+elif [ "$2" = "armv6l" ] || [ "$2" = "i386" ]; || [ "$2" = "wasm32" ]; then
  m64=0
-elif [ "$2" = "armv6l" ]; then
- m64=0
-elif [ "$(uname -m)" != "armv6l" ] && [ "$(uname -m)" != "i386" ] && [ "$(uname -m)" != "i686" ]; then
- if [ "$1" = "wasm" ]; then
-  m64=0
- else
-  m64=1
- fi
 else
- m64=0
+ echo "argument is [arm64|armv6l|i386|x86_64|wasm32]"
+ exit 1
 fi
-if [ "$1" = "linux32" ]; then
- dest="linux"
-else
- dest=$1
-fi
-if [ "$1" = "darwin" ]; then
+
+dest=$1
+
+if [ "$(uname)" = "Darwin" ]; then
  sysctl -a | grep cpu
-elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
+elif [ "$(uname)" = "OpenBSD" ] || [ "$(uname)" = "FreeBSD" ]; then
  grep -i cpu /var/run/dmesg.boot
 else
- cat /proc/cpuinfo
+ cat /proc/cpuinfo || true
 fi
 ulimit -a || true
 
@@ -68,7 +64,7 @@ if [ "$1" = "wasm" ]; then
 fi
 
 # avx2
-if [ "$USE_EMU_AVX" != "0" ] && [ "$USE_PYXES" != "0" ]; then
+if [ "$2 = "x86_64" ]; then
  if [ $1 = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
@@ -135,7 +131,7 @@ else
 fi
 
 # avx512
-if [ "$USE_EMU_AVX" != "0" ] && [ "$USE_PYXES" != "0" ]; then
+if [ "$2 = "x86_64" ]; then
  if [ $1 = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
@@ -161,18 +157,3 @@ if [ "$USE_EMU_AVX" != "0" ] && [ "$USE_PYXES" != "0" ]; then
  fi
 fi
 
-# if [ $m64 -eq 1 ]; then
-#  if [ -f "j64/jamalgam" ] ; then
-#   ls -l j64
-#   if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
-#    LC_ALL=fr_FR.UTF-8 j64/jamalgam testga.ijs
-#   fi
-#  fi
-# else
-#  if [ -f "j32/jamalgam" ] ; then
-#   ls -l j32
-#   if [ "$1" != "raspberry" ] && [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ] ; then
-#    LC_ALL=fr_FR.UTF-8 j32/jamalgam testga.ijs
-#   fi
-#  fi
-# fi

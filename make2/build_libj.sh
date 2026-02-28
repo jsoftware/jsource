@@ -691,7 +691,7 @@ case $jplatform64 in
 
  darwin/j64iphonesimulator) # iphone simulator
   TARGET_a=libj.a
-  CFLAGS="$common $macmin -D IMPORTGMPLIB "
+  CFLAGS="$common $macmin -D IMPORTGMPLIB -msse4.1 -msse4.2 "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   LDFLAGS_a=" rcs "
   OBJS_AESNI=" aes-ni.o "

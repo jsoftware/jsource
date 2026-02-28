@@ -966,7 +966,7 @@ static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allr
     PRODRNK(n,fr-shortr,AS((I)jtfg&VIPWCRLONG?w:a)+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
    // notionally we now repurpose fr to be frame/rank, with the frame 0
     shortr=((I)jtfg>>VIPOKWX);  // only if supported by routine
-    shortr=a==w?0:shortr;  // not if args equal
+    if(unlikely(a==w))shortr=0;  // not if args equal
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
     nf= 3 + mf*2 + nf;  // set inplaceability here: only if nonrepeated cell
@@ -1052,7 +1052,7 @@ static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allr
 #else
     nf=((I)jtfg>>VIPOKWX)&(((allranks>>(2*RANKTX-1-1))&2)+((allranks>>(RANKTX-1))&1));  // extract inplaceability from ranks   allranks free
 #endif
-    nf=a==w?0:nf;  // not inplaceable if args identical
+    if(unlikely(a==w))nf=0;  // not inplaceable if args identical
     nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of jtfg.  This is a long dependency chain through nf but it will overlap the PRODs coming up
     jtfg = (J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free
     f=fr>>(2*RANKTX); f&=RANKTMSK;  // recover (shorter frame len) from upper fr

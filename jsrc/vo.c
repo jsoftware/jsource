@@ -136,7 +136,8 @@ ARGCHK2(a,w);
  // if (,<) and a is not boxed singleton atom/list, revert
  if(unlikely((optype&1)>((AT(a)>>BOXX)&SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtfg,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing - WILLOPEN is impossible
  I unboxempty=SGNIFNOT(AT(w),BOXX)|(AN(w)-1)|optype;  // sign set if w unboxed or empty, or the operation is (,<) or ,&< or (;<) which will always box w
- I aband=(a!=w)&SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // 1 if w is abandoned, 0 otherwise.  Must not accept a==w as it could lead to w containing itself
+ I aband=SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // 1 if w is abandoned, 0 otherwise.
+ if(unlikely(a==w))aband=0;   // Must not accept a==w as it could lead to w containing itself
  if((unboxempty|((AN(w)|AR(w))-2))<0){A neww;   // unboxed/empty or force-boxed w, or AN(w)<2 and AR(w)<2
   // Here to start building the right-to-left result area.  We can do this is w is a singleton box or w must be boxed here
   // if w is unboxed/empty or is a singleton rank<2, allocate a  vector of 8 boxes, point AK to the next-last, and put w there as the new w.  Vector is recursive unless WILLBEOPENED
@@ -172,7 +173,8 @@ ARGCHK2(a,w);
    AFLAGINIT(neww,AFLAG(w)) AFLAGANDLOCAL(w,~RECURSIBLE)  // If w recursive: transfer ownership of old blocks to new, making neww recursive (& maybe PRISTINE) and w nonrecursive.  If w nonrecursive, so is neww and they are independent
    w=neww;  // start adding to the new block
   }
-  aband=SGNTO0(AC(a))&((I)jtfg>>JTINPLACEAX)&&(a!=w);  // bit 0 = 1 if a is abandoned and is not the same as x
+  aband=SGNTO0(AC(a))&((I)jtfg>>JTINPLACEAX);  // bit 0 = 1 if a is abandoned and is not the same as w
+  if(unlikely(a==w))aband=0;   // Must not accept a==w as it could lead to w containing itself
   if(unlikely(optype&1)){  // if verb is (,<) we deal with contents of a
    // if verb is (,<), a must be a boxed singleton.  move the contents of a into w, then ra/zap as above if w recursive.  This doesn't propagate WILLOPEN so boxed virtuals in a are impossible
    // a was boxed, & a known singleton.  Put the single value into w, then ra or zap.  w loses pristinity unless a is abandoned pristine

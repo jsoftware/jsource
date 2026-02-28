@@ -2062,7 +2062,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // same, but with an added condition (in bit 0)
 #define PRISTXFERFIF(z,w,cond)AFLAGORLOCAL(z,AFLAG(w)&(((cond)&SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX))<<AFPRISTINEX)) PRISTCLRF(w)
 // transfer pristinity from a AND w to z (not if a==w)
-#define PRISTXFERF2(z,a,w) AFLAGORLOCAL(z,AFLAG(a)&AFLAG(w)&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtfg>>JTINPLACEAX)&((I)jtfg>>JTINPLACEWX))<<AFPRISTINEX)) \
+#define PRISTXFERF2(z,a,w) if(likely(a!=w))AFLAGORLOCAL(z,AFLAG(a)&AFLAG(w)&((SGNTO0(AC(a)&AC(w))&((I)jtfg>>JTINPLACEAX)&((I)jtfg>>JTINPLACEWX))<<AFPRISTINEX)) \
                            PRISTCLRF(a) PRISTCLRF(w)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free

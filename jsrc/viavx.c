@@ -768,7 +768,7 @@ A jtindexofsub(J jtfg,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(0079)
    I zt; A z;  // type of result to allocate; address of block
    if((mode&IIOPMSK)==IEPS)zt=B01;
    else{
-    if(likely(a!=w)&&(at&INT+SY_64*FL)&-(SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX))){z=w; goto inplace;}  // if inplaceable (not including assignment) and items have the right size
+    if(((at&INT+SY_64*FL)&-(SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX)))&&likely(a!=w)){z=w; goto inplace;}  // if inplaceable (not including assignment) and items have the right size
     zt=INT;  // the result type depends on the operation.
    }
    GA(z,zt,wn,wr,AS(w));  // allocate result area
@@ -881,7 +881,7 @@ inplace:;
 
   if(unlikely((t&BOX+XNUM+RAT)!=0)){
    if(t&BOX){I t1; fnx=(fnx&1)&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:(fnx&1)?FNTBLBOXINTOLERANT:
-             (t1=utype(a,ac))&&((mode&IPHCALC)||a==w||TYPESEQ(t1,utype(w,wc)))?FNTBLBOXUNIFORM:FNTBLBOXUNKNOWN;
+             (t1=utype(a,ac))&&(unlikely(mode&IPHCALC)||TYPESEQ(t1,utype(w,wc))||unlikely(a==w))?FNTBLBOXUNIFORM:FNTBLBOXUNKNOWN;
    }else fnx=CTTZ(t)+(FNTBLXNUM-XNUMX);
   }else if(unlikely(1==k)){p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fnx=FNTBLSMALL1;}   // 1-byte ops, just use small-range code: checking takes too much time
   else{
@@ -982,7 +982,7 @@ inplace:;
    // be spent range-checking w) and BASE0 (which clears the hashtable, at a cost of 1 cycle per 2/4 entries, or 4x that if we use fast instructions)
    // First check FULL, which is always the right decision if possible - except for self-classify which assumes FULL, or prehash which doesn't go through w at all
    // Don't bother to check if the decision has already been made (this will be set for full hashes, which ignore this bit and require FORCE0)
-   if(likely(a!=w)&&unlikely(!(mode&(IIMODFULL|IPHCALC|IREVERSED)))){CR crres;
+   if(unlikely(!(mode&(IIMODFULL|IPHCALC|IREVERSED)))&&likely(a!=w)){CR crres;
     // We can get here only if IIMODFULL is off, which happens only if fmods is 0, which means we are doing a forward small-range hash.  In addition, the
     // number of bytes in an item will be 2 or SZI.  We must convert the # atoms to a # of 2- or SZI-sized pieces
     I allowrange;  // where we will build the max allowed range of w
@@ -1072,13 +1072,13 @@ inplace:;
  case IIDOT:
  case IICO:
   // i./i: can run inplace on w if w is abandoned, not the same block as a, rank matches rank needed, item size>=SZI, DIRECT, and (not UNINCORPABLE or same type as result)
-  if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(-(AT(w)&(INT+SY_64*FL))&AC(w)&SGNIF(jtfg,JTINPLACEWX)&((AR(w)^(f+f1))-1))<0){z=w; AT(z)=INT; break;}  // inplace w if not disqualified
+  if((-(AT(w)&(INT+SY_64*FL))&AC(w)&SGNIF(jtfg,JTINPLACEWX)&((AR(w)^(f+f1))-1))<0&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&likely(a!=w)){z=w; AT(z)=INT; break;}  // inplace w if not disqualified
   // if can't inplace fall through to...
  case IFORKEY:
   GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
  case ILESS: case IINTER:
   // -./([-.-.) can run inplace if w is abandoned, not the same block as a, rank not 0, DIRECT, not UNINCORPABLE (since we don't want to change shape of an unincorpable)
-  if(likely(a!=w)&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&(((AT(w)&~DIRECT)-1)&AC(w)&SGNIF(jtfg,JTINPLACEWX)&-(AR(w)))<0){z=w; break;}  // inplace w if not disqualified
+  if((((AT(w)&~DIRECT)-1)&AC(w)&SGNIF(jtfg,JTINPLACEWX)&-(AR(w)))<0&&likely(!(AFLAG(w)&AFUNINCORPABLE+AFRO))&&likely(a!=w)){z=w; break;}  // inplace w if not disqualified
   ws=wr==0?&AN(w):ws; GA(z,AT(w),AN(w),MAX(1,wr),ws); break;  // if wr is an atom, use 1 for the shape
  case INUB:
   // ~. can run inplace if abandoned, rank>0, DIRECT

@@ -518,10 +518,13 @@ F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
  }
  // There are atoms.  If there is only 1 cell to compare, do it quickly
  if(wf==0){
- I nocall = (-(a!=w)&((AN(a)^AN(w))-1));
- if(nocall>=0)nocall=SGNTO0(nocall)+(a==w); else nocall=((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // compare value, 0/1
- RE(0)  // abort if error, presumably stack error
- RETF(num(nocall^eqis0));
+  if(unlikely(a==w))RETF(num(1^eqis0));  // same block matches
+  if(AN(a)!=AN(w))RETF(num(eqis0));  // different # elements mismatches
+// obsolete   I nocall = (-(a!=w)&((AN(a)^AN(w))-1));
+// obsolete   if(nocall>=0)nocall=SGNTO0(nocall)+(a==w); else
+  I res=((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // compare value, 0/1
+  RE(0)  // abort if error, presumably stack error
+  RETF(num(res^eqis0));  // return compare result
  }
  // Otherwise we are doing match with rank.  Set up for the repetition in matchsub
  // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated

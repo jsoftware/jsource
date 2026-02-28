@@ -271,10 +271,10 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
      // We can't transfer ownership if one of the args is VIRTUAL, because a virtual block doesn't really own its contents
      // We can't transfer ownership if a=w, because the counts for the blocks would be one too low
 
-     // The result can be pristine if both inputs are abandoned pristine, and are not the same block (note: if one is boxed, no coonversion will ever happen)
-     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
+     // The result can be pristine if both inputs are abandoned pristine, and are not the same block (note: if one is boxed, no conversion will ever happen)
      I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
-     xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtfg))&AC(a)&AC(w))&-(a!=w);  // flags, if abandoned inplaceable and not the same block
+     xfer=aflg&wflg&REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)&(I)jtfg))&AC(a)&AC(w));  // flags, if abandoned inplaceable and not the same block
+     if(unlikely(a==w))xfer=0;       // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
      if(unlikely((xfer&=AFPRISTINE|((aflg|wflg)&AFVIRTUAL?0:RECURSIBLE))!=0)){  // preserve the PRISTINE flag and RECURSIBLE too, if not VIRTUAL
       // a and w are both non-shared blocks, and not VIRTUAL or PERMANENT.  xfer is the transferable recursibility if any, plus inherited pristinity
       AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGANDLOCAL(a,~xfer) AFLAGANDLOCAL(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
@@ -401,7 +401,8 @@ F2(jtapip){F12IP;A h;
    // usecount of a if any part of w refers to a (3) make the eventual incrementing of usecount in a quicker.  After we have resolved w we see if the usecount of a has budged.  If not, we can proceed with inplacing.
    if(unlikely(at&BOX)){
     // result is pristine if a and w both are, and they are not the same block, and there is no fill, w is abandoned and not atomic
-    fgwd|=(((a!=w)&((I)jtfg>>JTINPLACEWX)&SGNTO0(AC(w)&-wr))<<AFPRISTINEX)&AFLAG(w);  // set if w qualifies as pristine before extension
+    fgwd|=((((I)jtfg>>JTINPLACEWX)&SGNTO0(AC(w)&-wr))<<AFPRISTINEX)&AFLAG(w);  // set if w qualifies as pristine before extension
+    if(unlikely(a==w))fgwd&=~AFPRISTINE;   // not pristine if the other block is the same
     an&=virtreqd-1;  // turn off inplacing if the result must be virtual
     ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
     an=(AC(a)>ac)?0:an;  // turn off inplacing if w referred to a

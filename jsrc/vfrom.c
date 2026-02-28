@@ -410,7 +410,9 @@ F2(jtifrom){F12IP;A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
  // if no frame, w cell-rank is 1, a is inplaceable, and an atom of w is the same size as an atom of a, preserve inplaceability of a (.ind is already filled in)
  // since inplacing may change the type, we further require that the block not be UNINCORPABLE, and the result also must be DIRECT since
  // the copy may be interrupted by index error and be left with invalid atoms, and if boxed may be to a recursive block.  Also, a must not be the same block as w
- jtfg=(J)((I)jtfg&~((((a!=w)&SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT)))<=(UI)(wf|(wcr^1)|(LGSZI^bplg(AT(w)))))<<JTINPLACEAX));
+ I clripa=(SGNTO0(AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX)&-(AT(w)&DIRECT)))<=(UI)(wf|(wcr^1)|(LGSZI^bplg(AT(w))));
+ if(unlikely(a==w))clripa=1;  // a & w not equal
+ jtfg=(J)((I)jtfg&~(clripa<<JTINPLACEAX));
  RETF(jtaxisfrom(jtfg,w,axes,(wncr<<24)+(wf<<16)+((ar+wr-(I)(0<wcr))<<8)+r*0x81))  // move the values and return the result
 }    /* a{"r w for numeric a */
 

@@ -2842,7 +2842,7 @@ static INLINE void aligned_free(void *ptr) {
 #endif
 #endif
 
-#if C_AVX2 && !defined(_bzhi_u32)
+#if C_AVX512 && defined(__MINGW32__)
 INLINE uint32_t _bzhi_u32( uint32_t val, uint32_t i ){
 __asm__ ("bzhi %0,%1,%2" : "=r"(val) : "r"(val), "r"(i) : );
 }

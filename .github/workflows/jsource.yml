@@ -1296,6 +1296,12 @@ jobs:
    - name: Setup Environment (Windows MSYS2)
      uses: msys2/setup-msys2@v2
      with:
+      # Name	      Prefix	     Toolchain	Architecture	C Library	C++ Library
+      # MSYS	      /usr	       gcc	      x86_64	      cygwin	   libstdc++
+      # UCRT64	    /ucrt64	    gcc	      x86_64	      ucrt	     libstdc++
+      # CLANG64	   /clang64	   llvm	     x86_64	      ucrt	     libc++
+      # CLANGARM64	/clangarm64	llvm	     aarch64	     ucrt	     libc++
+      # MINGW64	   /mingw64	   gcc	      x86_64	      msvcrt	   libstdc++
       # { sys: mingw64, env: x86_64 }
       # { sys: mingw32, env: i686 }
       # { sys: ucrt64,  env: ucrt-x86_64 }

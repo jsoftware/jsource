@@ -8,44 +8,6 @@ ODIR=../../../../bin/$(jplatform64)
 
 .SUFFIXES: .o
 
-# elf.o
-# pecoff.o
-# alloc.o -- alternative to mmap.o
-# read.o -- alternative to mmapio.o; probably mmap is more robust in this case
-# not included
-#  alloc.o
-#  allocfail.o
-#  instrumented_alloc.o
-#  nounwind.o
-#  pecoff.o
-#  read.o
-#  testlib.o
-
-ifneq (bsd,$(findstring bsd,$(jplatform64)))
-ifneq (windows,$(findstring windows,$(jplatform64)))
-
-BACKTRACE_OBJS := \
- atomic.o \
- backtrace.o \
- dwarf.o \
- fileline.o \
- mmap.o \
- mmapio.o \
- posix.o \
- print.o \
- simple.o \
- sort.o \
- state.o
-
-ifeq (darwin,$(findstring darwin,$(jplatform64)))
-BACKTRACE_OBJS := $(BACKTRACE_OBJS) macho.o
-else
-BACKTRACE_OBJS := $(BACKTRACE_OBJS) elf.o
-endif
-
-endif
-endif
-
 # note: the slowest builds have been placed at the top, to avoid starvation in parallel builds
 # (viavx is still longer than everything else combined--should maybe be broken up into multiple tus...)
 OBJS=  \

@@ -302,6 +302,40 @@ else
  OBJSLN="linenoise.o"
 fi
 
+# elf.o
+# pecoff.o
+# alloc.o -- alternative to mmap.o
+# read.o -- alternative to mmapio.o; probably mmap is more robust in this case
+# not included
+#  alloc.o
+#  allocfail.o
+#  instrumented_alloc.o
+#  nounwind.o
+#  pecoff.o
+#  read.o
+#  testlib.o
+
+BACKTRACE_OBJS=" \
+ atomic.o \
+ backtrace.o \
+ dwarf.o \
+ fileline.o \
+ mmap.o \
+ mmapio.o \
+ posix.o \
+ print.o \
+ simple.o \
+ sort.o \
+ state.o "
+
+case "$jplatform64" in
+ windows*) BACKTRACE_OBJS= ;;
+ openbsd/*) BACKTRACE_OBJS= ;;
+ freebsd/*) BACKTRACE_OBJS= ;;
+ darwin/*) BACKTRACE_OBJS= "$BACKTRACE_OBJS macho.o " ;;
+ *) BACKTRACE_OBJS= "$BACKTRACE_OBJS elf.o " ;;
+esac
+
 if [ -n "$_MEMAUDIT" ]; then
  common="$common -DMEMAUDIT=$_MEMAUDIT"
 fi
@@ -835,7 +869,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-jamalgam obj/$jplatform64/.
-export CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform64
+export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi

@@ -18,24 +18,24 @@ set -e
 export jplatform="$1"
 if [ "$1" = "linux" ]; then
  ext="so"
-elif [ $1 = "raspberry" ]; then
+elif [ "$1" = "raspberry" ]; then
  ext="so"
 elif [ "$1" = "darwin" ]; then
  ext="dylib"
-elif [ $1 = "openbsd" ]; then
+elif [ "$1" = "openbsd" ]; then
  ext="so"
-elif [ $1 = "freebsd" ]; then
+elif [ "$1" = "freebsd" ]; then
  ext="so"
 elif [ "$1" = "windows" ]; then
  ext="dll"
-elif [ $1 = "wasm" ]; then
+elif [ "$1" = "wasm" ]; then
  ext=""
 else
  echo "argument is linux|windows|darwin|raspberry|android|openbsd|freebsd|wasm"
  exit 1
 fi
 uname -a
-uname -s
+uname -o
 uname -m
 if [ "$2" = "arm64" ] || [ "$2" = "x86_64" ]; then
  m64=1
@@ -66,8 +66,8 @@ if [ "$1" = "wasm" ]; then
 fi
 
 # avx2
-if [ "$2 = "x86_64" ]; then
- if [ $1 = "darwin" ]; then
+if [ "$2" = "x86_64" ]; then
+ if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
     echo "running debug"
@@ -76,7 +76,7 @@ if [ "$2 = "x86_64" ]; then
     LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs
    fi
   fi
- elif [ $1 = "linux" ]; then
+ elif [ "$1" = "linux" ]; then
   if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
     echo "running debug"
@@ -85,7 +85,7 @@ if [ "$2 = "x86_64" ]; then
     LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs
    fi
   fi
- elif [ $1 = "openbsd" ] || [ $1 = "freebsd" ]; then
+ elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   if [ "$(cat /var/run/dmesg.boot | grep -c AVX2)" -ne 0 ] && [ -f "j64/libjavx2.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
     echo "running debug"
@@ -94,7 +94,7 @@ if [ "$2 = "x86_64" ]; then
     LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx2.$ext testga.ijs
    fi
   fi
- elif [ $1 = "windows" ]; then
+ elif [ "$1" = "windows" ]; then
   if [ -f "j64/libjavx2.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
     echo "running debug"
@@ -109,7 +109,7 @@ fi
 # non avx2
 if [ $m64 -eq 1 ]; then
  ls -l j64
- if [ $1 = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
+ if [ "$1" = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
   if [ "$_DEBUG" = "3" ]; then
    echo "running debug"
    LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
@@ -118,7 +118,7 @@ if [ $m64 -eq 1 ]; then
    LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 j64/jconsole -lib libj.$ext testga.ijs
    LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 j64/jconsole -lib libj.$ext testga.ijs
   fi
- elif [ $1 = "darwin" ]; then
+ elif [ "$1" = "darwin" ]; then
   # lldb -b -o run -k bt -k quit -- j64/jconsole -lib libj.$ext testga.ijs
   if [ "$_DEBUG" = "3" ]; then
    echo "running debug"
@@ -126,7 +126,7 @@ if [ $m64 -eq 1 ]; then
   else
    LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libj.$ext testga.ijs
   fi
- elif [ $1 = "windows" ]; then
+ elif [ "$1" = "windows" ]; then
   if [ "$_DEBUG" = "3" ]; then
    echo "running debug"
    LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j64/jconsole -lib j.$ext testga.ijs
@@ -145,17 +145,17 @@ else
  ls -l j32
  if [ "$_DEBUG" = "3" ]; then
   echo "running debug"
-  if [ $1 = "raspberry" ] && [ "$(uname -m)" = "aarch64" ] ; then
+  if [ "$1" = "raspberry" ] && [ "$(uname -m)" = "aarch64" ] ; then
    LC_ALL=fr_FR.UTF-8 gdb-multiarch -batch -return-child-result -ex "set architecture arm6" -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
   else
-   if [ $1 = "windows" ]; then
+   if [ "$1" = "windows" ]; then
     LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib j.$ext testga.ijs
    else
     LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
    fi
   fi
  else
-  if [ $1 = "windows" ]; then
+  if [ "$1" = "windows" ]; then
    LC_ALL=fr_FR.UTF-8 j32/jconsole -lib j.$ext testga.ijs
   else
    LC_ALL=fr_FR.UTF-8 j32/jconsole -lib libj.$ext testga.ijs
@@ -164,8 +164,8 @@ else
 fi
 
 # avx512
-if [ "$2 = "x86_64" ]; then
- if [ $1 = "darwin" ]; then
+if [ "$2" = "x86_64" ]; then
+ if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
     echo "running debug"
@@ -174,11 +174,11 @@ if [ "$2 = "x86_64" ]; then
     LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
    fi
   fi
- elif [ $1 = "openbsd" ] || [ $1 = "freebsd" ]; then
+ elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ]; then
    LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
   fi
- elif [ $1 = "windows" ]; then
+ elif [ "$1" = "windows" ]; then
   # no way to detect avx512 capacity
   #    if [ "$_DEBUG" = "3" ]; then
   #     echo "running debug"

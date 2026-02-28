@@ -36,7 +36,7 @@ else
  exit 1
 fi
 uname -a
-uname -s
+uname -o
 uname -m
 if [ "$2" = "arm64" ] || [ "$2" = "x86_64" ]; then
  m64=1

@@ -773,10 +773,35 @@ case $jplatform64 in
   fi
   LIBJRES=" jdllres.o "
   OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_WIN32}"
+  SRC_ASM=""
   OBJS_ASM="${OBJS_ASM_WIN32}"
   GASM_FLAGS=""
   FLAGS_BASE64=""
+  ;;
+
+ windows/j64arm) # windows arm64
+  jolecom="${jolecom:=1}"
+  if [ $jolecom -eq 1 ]; then
+   DOLECOM="-DOLECOM"
+  fi
+  WINDRES="${WINDRES:=windres}"
+  TARGET=j.dll
+  CFLAGS="$common -march=armv8-a+crc -Wno-incompatible-pointer-types -DNO_SHA_ASM $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
+  if [ $jolecom -eq 1 ]; then
+   DLLOBJS=" jdll.o jdllcomx.o "
+   LIBJDEF=" ../../../../dllsrc/jdll.def "
+  else
+   DLLOBJS=" jdll.o "
+   LIBJDEF=" ../../../../dllsrc/jdll2.def "
+  fi
+  LIBJRES=" jdllres.o "
+  OBJS_AESARM=" aes-arm.o "
+  SRC_ASM=""
+  OBJS_ASM=""
+  GASM_FLAGS=""
+  FLAGS_BASE64=" -DHAVE_NEON64=1 "
   ;;
 
  windows/j64avx512*) # windows intel 64bit avx512

@@ -1315,7 +1315,7 @@ jobs:
      env:
       CC: x86_64-w64-mingw32-gcc
       CXX: x86_64-w64-mingw32-g++
-      WINDRES: x86_64-w64-mingw32-windres
+      WINDRES: windres
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 1

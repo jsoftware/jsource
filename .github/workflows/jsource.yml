@@ -1320,15 +1320,16 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
    - name: Test JE (Windows MSYS2)
+     shell: msys2 {0}
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/testga.sh windows x86_64 || exit 1
 

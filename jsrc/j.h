@@ -2841,3 +2841,10 @@ static INLINE void aligned_free(void *ptr) {
   #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
 #endif
 #endif
+
+#if C_AVX2 && !defined(_bzhi_u32)
+INLINE uint32_t _bzhi_u32( uint32_t val, uint32_t i ){
+__asm__ ("bzhi %0,%1,%2" : "=r"(val) : "r"(val), "r"(i) : );
+}
+#endif
+

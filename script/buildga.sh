@@ -240,7 +240,7 @@ if [ $m64 -eq 1 ]; then
   j64x=j64arm ./build_jconsole.sh
   j64x=j64arm ./build_tsdll.sh
   j64x=j64arm ./build_libj.sh
-  # j64x=j64arm ./build_jamalgam.sh
+  j64x=j64arm ./build_jamalgam.sh
  else
   j64x=j64 ./build_jconsole.sh
   j64x=j64 ./build_tsdll.sh
@@ -280,7 +280,7 @@ if [ "$1" = "darwin" ] && [ -f "bin/$dest/j64arm/libj.$ext" ]; then
  lipo bin/$dest/j64/jconsole bin/$dest/j64arm/jconsole -create -output j64/jconsole
  lipo bin/$dest/j64/libtsdll.$ext bin/$dest/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
  lipo bin/$dest/j64/libj.$ext bin/$dest/j64arm/libj.$ext -create -output j64/libj.$ext
- lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output j64/jamalgam
+ lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output j64/jamalgam || true
 fi
 
 if [ -d "bin/$dest/j64iphoneos" ]; then

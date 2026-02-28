@@ -36,7 +36,8 @@ else
  exit 1
 fi
 uname -a
-uname -o
+unameop=$(uname -o || uname -s)
+echo $unameop
 uname -m
 if [ "$2" = "arm64" ] || [ "$2" = "x86_64" ]; then
  m64=1
@@ -109,9 +110,9 @@ elif [ "$1" = "windows" ]; then
   cp pthreads4w/bin/pthreadVC3.dll j64
   curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
  elif [ "$2" = "i386" ]; then
-  cp mpir/windows/x86/mpir.dll j64
+  cp mpir/windows/x86/mpir.dll j32
   cp pcre2/windows/x86/jpcre2.dll tools/regex/.
-  cp pthreads4w/bin/pthreadVC3-w32.dll j64
+  cp pthreads4w/bin/pthreadVC3-w32.dll j32
   curl --output-dir "j32" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
  else
   cp mpir/windows/arm64/mpir.dll j64
@@ -127,9 +128,9 @@ echo '#define jlicense  "commercial"' >> jsrc/jversion.h
 echo '#define jbuilder  "www.jsoftware.com"' >> jsrc/jversion.h
 
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ "$(uname -o)" = "Linux" ]; then
+ if [ "$unameop" = "Linux" ]; then
   par=$(nproc)
- elif [ "$(uname -o)" = "Darwin" ] || [ "$(uname -o)" = "OpenBSD" ] || [ "$(uname -o)" = "FreeBSD" ]; then
+ elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
   par=$(sysctl -n hw.ncpu)
  else
   par=2

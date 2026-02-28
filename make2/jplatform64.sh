@@ -13,15 +13,17 @@ if [ $USE_WASM -eq 1 ]; then
  exit 0
 fi
 
-if ([ "$(uname -o)" = "Linux" ]) && ([ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
+unameop=$(uname -o || uname -s)
+
+if ([ "$unameop" = "Linux" ]) && ([ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
  jplatform="${jplatform:=raspberry}"
-elif [ "$(uname -o)" = "Darwin" ]; then
+elif [ "$unameop" = "Darwin" ]; then
  jplatform="${jplatform:=darwin}"
-elif [ "$(uname -o)" = "OpenBSD" ]; then
+elif [ "$unameop" = "OpenBSD" ]; then
  jplatform="${jplatform:=openbsd}"
-elif [ "$(uname -o)" = "FreeBSD" ]; then
+elif [ "$unameop" = "FreeBSD" ]; then
  jplatform="${jplatform:=freebsd}"
-elif [ "$(uname -o)" = "MINGW64" ] || [ "$(uname -o)" = "MINGW32" ] || [ "$(uname -o)" = "CYGWIN" ] || [ "$(uname -o)" = "MSYS" ]; then
+elif [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ]; then
  jplatform="${jplatform:=windows}"
 else
  jplatform="${jplatform:=linux}"

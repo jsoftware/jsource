@@ -35,7 +35,8 @@ else
  exit 1
 fi
 uname -a
-uname -o
+unameop=$(uname -o || uname -s)
+echo $unameop
 uname -m
 if [ "$2" = "arm64" ] || [ "$2" = "x86_64" ]; then
  m64=1
@@ -49,11 +50,11 @@ fi
 
 dest=$1
 
-if [ "$(uname -o)" = "Linux" ]; then
+if [ "$unameop" = "Linux" ]; then
  cat /proc/cpuinfo || true
-elif [ "$(uname -o)" = "Darwin" ]; then
+elif [ "$unameop" = "Darwin" ]; then
  sysctl -a | grep cpu
-elif [ "$(uname -o)" = "OpenBSD" ] || [ "$(uname -o)" = "FreeBSD" ]; then
+elif [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
  grep -i cpu /var/run/dmesg.boot
 fi
 ulimit -a || true

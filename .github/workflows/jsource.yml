@@ -1363,8 +1363,8 @@ jobs:
     # Run your build commands within the MSYS2 shell
      shell: msys2 {0}
      env:
-      CC: mingw-w64-i686-gcc
-      CXX: mingw-w64-i686-g++
+      CC: i686-w64-mingw32-gcc
+      CXX: i686-w64-mingw32-g++
       WINDRES: windres
       USE_SLEEF: 1
       USE_OPENMP: 0
@@ -1386,7 +1386,7 @@ jobs:
 # windows msys2 arm64 --------------------------------------------------
  jewin-msys2-arm64:
   name: JE (Windows MSYS2 arm64)
-  runs-on: windows-2022
+  runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

@@ -13,14 +13,16 @@ if [ $USE_WASM -eq 1 ]; then
  exit 0
 fi
 
-if ([ "$(uname)" = "Linux" ]) && ([ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
+if ([ "$(uname -s)" = "Linux" ]) && ([ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
  jplatform="${jplatform:=raspberry}"
-elif [ "$(uname)" = "Darwin" ]; then
+elif [ "$(uname -s)" = "Darwin" ]; then
  jplatform="${jplatform:=darwin}"
-elif [ "$(uname)" = "OpenBSD" ]; then
+elif [ "$(uname -s)" = "OpenBSD" ]; then
  jplatform="${jplatform:=openbsd}"
-elif [ "$(uname)" = "FreeBSD" ]; then
+elif [ "$(uname -s)" = "FreeBSD" ]; then
  jplatform="${jplatform:=freebsd}"
+elif [ "$(uname -s)" = "MINGW64" ] || [ "$(uname -s)" = "MINGW32" ] || [ "$(uname -s)" = "CYGWIN" ] || [ "$(uname -s)" = "MSYS" ]; then
+ jplatform="${jplatform:=windows}"
 else
  jplatform="${jplatform:=linux}"
 fi
@@ -28,11 +30,7 @@ fi
 if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "amd64" ]; then
  j64x="${j64x:=j64avx2}"
 elif [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
- if [ -z "${jplatform##*raspberry*}" ]; then
-  j64x="${j64x:=j64}"
- else
-  j64x="${j64x:=j64arm}"
- fi
+ 64x="${j64x:=j64arm}"
 elif [ "$(uname -m)" = "armv6l" ]; then
  j64x="${j64x:=j32}"
 else

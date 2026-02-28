@@ -36,12 +36,12 @@ copy pcre2\windows\x86\jpcre2.dll tools\regex\.
 curl --output-dir "j32" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
 GOTO L01C
 :L01B
-mkdir jarm64
-copy bin\profile.ijs jarm64
-copy pthreads4w\bin\pthreadVC3-arm64.dll jarm64\pthreadVC3.dll
-copy mpir\windows\arm64\mpir.dll jarm64
+mkdir j64
+copy bin\profile.ijs j64
+copy pthreads4w\bin\pthreadVC3-arm64.dll j64\pthreadVC3.dll
+copy mpir\windows\arm64\mpir.dll j64
 copy pcre2\windows\arm64\jpcre2.dll tools\regex\.
-curl --output-dir "jarm64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
+curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
 :L01C
 
 copy version.txt jsrc\jversion.h
@@ -154,8 +154,8 @@ copy tsdll\tsdll32.dll ..\j32\tsdll.dll
 @rem copy jamalgam\jamalgam32.exe ..\j32\jamalgam.exe
 GOTO L06C
 :L06B
-copy jconsole\jconsole-arm64.exe ..\jarm64\jconsole.exe
-copy jdll\jarm64.dll ..\jarm64\j.dll
-copy tsdll\tsdllarm64.dll ..\jarm64\tsdll.dll
-@rem copy jamalgam\jamalgam-arm64.exe ..\jarm64\jamalgam.exe
+copy jconsole\jconsole-arm64.exe ..\j64\jconsole.exe
+copy jdll\jarm64.dll ..\j64\j.dll
+copy tsdll\tsdllarm64.dll ..\j64\tsdll.dll
+@rem copy jamalgam\jamalgam-arm64.exe ..\j64\jamalgam.exe
 :L06C

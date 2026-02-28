@@ -160,13 +160,13 @@ case $jplatform64 in
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
   ;;
 
- raspberry/j32) # linux raspbian arm
+ raspberry/j32*) # linux raspbian arm
   TARGET=libtsdll.so
   CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
   ;;
 
- raspberry/j64) # linux arm64
+ raspberry/j64*) # linux arm64
   TARGET=libtsdll.so
   CFLAGS="$common -march=armv8-a+crc -DRASPI "
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
@@ -224,14 +224,14 @@ case $jplatform64 in
   TARGET_a=libtsdll.a
   CFLAGS="$common $macmin -march=armv8-a+crc "
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm $macmin  "
-  LDFLAGS_a=" r "
+  LDFLAGS_a=" rcs "
   ;;
 
  darwin/j64iphonesimulator) # iphone simulator
   TARGET_a=libtsdll.a
   CFLAGS="$common $macmin "
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm $macmin "
-  LDFLAGS_a=" r "
+  LDFLAGS_a=" rcs "
   ;;
 
  darwin/j64*) # darwin intel 64bit

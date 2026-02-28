@@ -682,7 +682,7 @@ case $jplatform64 in
   TARGET_a=libj.a
   CFLAGS="$common $macmin -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
-  LDFLAGS_a=" -static -o "
+  LDFLAGS_a=" rcs "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
@@ -693,7 +693,7 @@ case $jplatform64 in
   TARGET_a=libj.a
   CFLAGS="$common $macmin -D IMPORTGMPLIB "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
-  LDFLAGS_a=" -static -o "
+  LDFLAGS_a=" rcs "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"

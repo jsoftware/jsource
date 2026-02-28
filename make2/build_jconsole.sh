@@ -245,11 +245,11 @@ case $jplatform64 in
   CFLAGS="$common"
   LDFLAGS=" -ldl $LDTHREAD "
   ;;
- raspberry/j32)
+ raspberry/j32*)
   CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
   LDFLAGS=" -ldl $LDTHREAD "
   ;;
- raspberry/j64)
+ raspberry/j64*)
   CFLAGS="$common -march=armv8-a+crc -DRASPI"
   LDFLAGS=" -ldl $LDTHREAD "
   ;;

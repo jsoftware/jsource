@@ -184,12 +184,12 @@ case $jplatform64 in
   CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "
   ;;
- raspberry/j32)
+ raspberry/j32*)
   TARGET=libjnative.so
   CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "
   ;;
- raspberry/j64)
+ raspberry/j64*)
   TARGET=libjnative.so
   CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "

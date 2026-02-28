@@ -607,7 +607,7 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2
+       pkg_add curl zip gmake nasm pcre2 gdb
 
       run: |
        rm -f jobdone
@@ -679,7 +679,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2
+       sudo pkg_add curl zip gmake nasm pcre2 gdb
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -749,7 +749,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2
+       sudo pkg_add curl zip gmake gmp pcre2 gdb
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -813,7 +813,7 @@ jobs:
        pkg upgrade -y
        rdate time.cloudflare.com || true
        pkg search openblas 1>&2
-       pkg install -y curl zip find gmake nasm pcre2 openblas
+       pkg install -y curl zip find gmake nasm pcre2 gdb openblas
        find / -type f -name 'liblapack.so*' 1>&2
        find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
@@ -890,7 +890,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
@@ -964,7 +964,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
@@ -1064,6 +1064,8 @@ jobs:
    - name: Build, Test JE (wasm)
      env:
       CC: emcc
+      AR: emar
+      USE_WASM: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0

@@ -1203,9 +1203,15 @@ static DF2(jtfold12){F12IP;A z,vz;
     if(unlikely(z==0))goto errfinish;   // error in u, exit
     if(!(zstatus&0b01000)){  // if store of result not suppressed... */
      // ******************** the u result is to be added to the total (possibly replacing it)
+     // we install z into the result zz, which takes over its protection as long as that result survives.  We would like to do this with ZAP
+     // if possible, because that way the usecount will never get to 2 and we can avoid RFO cycles.
+     // If zz is destroyed, its protection of z will be lost.   That is OK unless somehow a value from up the stack, with protection ONLY on the stack.
+     // The only way such a value can get to us is through the arguments a/w - any named value is protected in its executing sentence, and any value in a box
+     // is protected in the box.  Thus we ZAP unless the result is our a input
      ++foldinfo.exestats[2]; realizeifvirtual(z);
+     if(likely(z!=a)){razaptstackend(z);}else ra(z)  // raise the block we are adding to the recursive result
      if(dmfr&STATEMULT){   // is Fold Multiple?
-      razaptstackend(z);  // we are adding uz to a recursible block, with transfer of ownership.  The new owner protects the block.  If uz is abandoned it is safe to zap even if it is x.  Sets new uz
+        // we are adding uz to a recursible block, with transfer of ownership.  The new owner protects the block.  If uz is abandoned it is safe to zap even if it is x.  Sets new uz
       // Fold Multiple.  Add the new value to the result array
       UI newslot=AN(zz);  // where the new value will go
       if(withprob(newslot==zzalloc,0.03)){  // current alloc full?
@@ -1222,7 +1228,7 @@ static DF2(jtfold12){F12IP;A z,vz;
       AAV1(zz)[newslot]=z; AN(zz)=newslot+1;  // install the new value & account for it in len
      }else{
       // Fold Single.  Replace the value in zz
-      ra(z)  // uz is not guaranteed to stay in the result till the end; therefore we must not zap it for fold single since it might be w also.
+// obsolete      ra(z)  // uz is not guaranteed to stay in the result till the end; therefore we must not zap it for fold single since it might be w also.
       if(AN(zz)!=0){A t=AAV0(zz)[0]; if(MEMAUDIT&0x3e)AAV0(zz)[0]=0; fa(t);} else{AN(zz)=1;}  // free old value if any, mark value now valid  (clear value in buffer before auditing)
       AAV0(zz)[0]=z;  // install new value
      }

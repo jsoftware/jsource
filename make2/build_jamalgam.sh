@@ -228,7 +228,7 @@ case "$jplatform64" in
   common="$common -msse4.1 -msse4.2 "
   ;;
  */j64)
-  if [ $_SSE4_2 -eq 1 ]; then
+  if [ -n "$_SSE4_2" ]; then
    common="$common -msse4.1 -msse4.2 "
   fi
   ;;

@@ -198,7 +198,7 @@ $(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESA
 	$(CXX) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS) $(OBJSLN)
 endif
 
-$(LIBJRES): jamalgam.rc
+$(LIBJRES): jdll.rc
 	$(WINDRES) -o$@ $^
 
 all: $(ODIR)/$(TARGET)

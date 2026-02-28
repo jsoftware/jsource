@@ -42,8 +42,6 @@ else
 fi
 echo "jplatform64=$jplatform64"
 
-USE_LINENOISE="${USE_LINENOISE:=1}"
-
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in gcc 4
@@ -238,7 +236,7 @@ case "$jplatform64" in
   common="$common -msse4.1 -msse4.2 "
   ;;
  */j64)
-  if [ $_SSE4_2 -eq 1 ]; then
+  if [ -n "$_SSE4_2" ]; then
    common="$common -msse4.1 -msse4.2 "
   fi
   ;;

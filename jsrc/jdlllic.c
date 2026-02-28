@@ -4,6 +4,8 @@
 /* Private Jsoftware encode/decode routines - license keys and ijl         */
 
 #ifdef _WIN32
+#define __iamcu__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 

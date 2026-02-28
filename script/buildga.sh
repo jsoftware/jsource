@@ -2,10 +2,10 @@
 #
 # build linux/macOS on github actions
 #
-# argument is linux|linux32|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l]
+# argument is linux|windows|darwin|raspberry|android|openbsd|freebsd|wasm [arm64|armv6l|i386|x86_64|wasm32]
 # wasm is experimental
 #
-# if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip build avx2 and avx512
+# if !x86_64 skip build avx2 and avx512
 
 set -e
 CC=${CC-clang}
@@ -14,7 +14,8 @@ USE_SLEEFQUAD=${USE_SLEEFQUAD:=$USE_SLEEF}
 USE_PYXES=${USE_PYXES:=1}
 export CC USE_SLEEF USE_SLEEFQUAD USE_PYXES
 
-if [ "$1" = "linux" ] || [ "$1" = "linux32" ]; then
+export jplatform="$1"
+if [ "$1" = "linux" ]; then
  ext="so"
 elif [ "$1" = "raspberry" ]; then
  ext="so"
@@ -26,34 +27,29 @@ elif [ "$1" = "openbsd" ]; then
  ext="so"
 elif [ "$1" = "freebsd" ]; then
  ext="so"
+elif [ "$1" = "windows" ]; then
+ ext="dll"
 elif [ "$1" = "wasm" ]; then
  ext=""
 else
- echo "argument is linux|linux32|darwin|raspberry|android|openbsd|freebsd|wasm"
+ echo "argument is linux|windows|darwin|raspberry|android|openbsd|freebsd|wasm"
  exit 1
 fi
 uname -a
+unameop=$(uname -o || uname -s)
+echo $unameop
 uname -m
-if [ "$2" = "arm64" ]; then
+if [ "$2" = "arm64" ] || [ "$2" = "x86_64" ]; then
  m64=1
-elif [ "$1" = "linux32" ]; then
+elif [ "$2" = "armv6l" ] || [ "$2" = "i386" ] || [ "$2" = "wasm32" ]; then
+ export j64x=j32
  m64=0
-elif [ "$2" = "armv6l" ]; then
- m64=0
-elif [ "$(uname -m)" != "armv6l" ] && [ "$(uname -m)" != "i386" ] && [ "$(uname -m)" != "i686" ]; then
- if [ "$1" = "wasm" ]; then
-  m64=0
- else
-  m64=1
- fi
 else
- m64=0
+ echo "argument is [arm64|armv6l|i386|x86_64|wasm32]"
+ exit 1
 fi
-if [ "$1" = "linux32" ]; then
- dest="linux"
-else
- dest=$1
-fi
+
+dest=$1
 
 cp -R jlibrary/* .
 cp script/testga.ijs .
@@ -68,13 +64,15 @@ else
 fi
 
 if [ "$1" = "linux" ]; then
- # cp mpir/linux/x86_64/libgmp.so j64
- cp mpir/linux/x86_64/libgmpd.so j64/libgmp.so
- cp pcre2/linux/x86_64/libjpcre2.so tools/regex/.
-elif [ "$1" = "linux32" ]; then
- # cp mpir/linux/i386/libgmp.so j32
- cp mpir/linux/i386/libgmpd.so j32/libgmp.so
- cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
+ if [ $m64 -eq 1 ]; then
+  # cp mpir/linux/x86_64/libgmp.so j64
+  cp mpir/linux/x86_64/libgmpd.so j64/libgmp.so
+  cp pcre2/linux/x86_64/libjpcre2.so tools/regex/.
+ else
+  # cp mpir/linux/i386/libgmp.so j32
+  cp mpir/linux/i386/libgmpd.so j32/libgmp.so
+  cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
+ fi
 elif [ "$1" = "raspberry" ]; then
  if [ $m64 -eq 1 ]; then
   cp mpir/linux/aarch64/libgmp.so j64
@@ -89,7 +87,7 @@ elif [ "$1" = "darwin" ]; then
  cp pcre2/apple/macos/libjpcre2.dylib tools/regex/.
 elif [ "$1" = "openbsd" ]; then
  # cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
- if [ "$(uname -m)" = "amd64" ]; then
+ if [ "$2" = "x86_64" ]; then
   cp mpir/openbsd/x86_64/libgmp.so j64
   cp pcre2/openbsd/x86_64/libjpcre2.so tools/regex/.
  else
@@ -98,12 +96,29 @@ elif [ "$1" = "openbsd" ]; then
  fi
 elif [ "$1" = "freebsd" ]; then
  # cp /usr/local/lib/libgmp.so.10 j64/libgmp.so
- if [ "$(uname -m)" = "amd64" ]; then
+ if [ "$2" = "x86_64" ]; then
   cp mpir/freebsd/x86_64/libgmp.so j64
   cp pcre2/freebsd/x86_64/libjpcre2.so tools/regex/.
  else
   cp mpir/freebsd/aarch64/libgmp.so j64
   cp pcre2/freebsd/aarch64/libjpcre2.so tools/regex/.
+ fi
+elif [ "$1" = "windows" ]; then
+ if [ "$2" = "x86_64" ]; then
+  cp mpir/windows/x64/mpir.dll j64
+  cp pcre2/windows/x64/jpcre2.dll tools/regex/.
+  cp pthreads4w/bin/pthreadVC3.dll j64
+  curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
+ elif [ "$2" = "i386" ]; then
+  cp mpir/windows/x86/mpir.dll j32
+  cp pcre2/windows/x86/jpcre2.dll tools/regex/.
+  cp pthreads4w/bin/pthreadVC3-w32.dll j32
+  curl --output-dir "j32" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
+ else
+  cp mpir/windows/arm64/mpir.dll j64
+  cp pcre2/windows/arm64/jpcre2.dll tools/regex/.
+  cp pthreads4w/bin/pthreadVC3-arm64.dll j64
+  curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
  fi
 fi
 
@@ -113,11 +128,9 @@ echo '#define jlicense  "commercial"' >> jsrc/jversion.h
 echo '#define jbuilder  "www.jsoftware.com"' >> jsrc/jversion.h
 
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ "$1" = "wasm" ]; then
-  par=2
- elif [ "$1" = "linux" ] || [ "$1" = "linux32" ] || [ "$1" = "raspberry" ]; then
+ if [ "$unameop" = "Linux" ]; then
   par=$(nproc)
- elif [ "$1" = "darwin" ] || [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ] || [ "$1" = "android" ]; then
+ elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
   par=$(sysctl -n hw.ncpu)
  else
   par=2
@@ -181,24 +194,20 @@ fi
 
 # hostdefs netdefs
 cd hostdefs
-if [ "$1" = "linux" ] && [ $m64 -eq 1 ]; then
- $CC hostdefs.c -o hostdefs && ./hostdefs
- # $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
- cd ../netdefs
- $CC netdefs.c -o netdefs && ./netdefs
-# $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
-elif [ "$1" = "linux32" ]; then
- $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
- cd ../netdefs
- $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
-elif [ "$1" = "raspberry" ] && [ $m64 -eq 0 ]; then
+if [ "$1" = "raspberry" ] && [ $m64 -eq 0 ] && [ "$(uname -m)" = "aarch64" ]; then
  $CC --target=arm-arm-none-eabi hostdefs.c -o hostdefs && ./hostdefs
  cd ../netdefs
  $CC --target=arm-arm-none-eabi netdefs.c -o netdefs && ./netdefs
 else
- $CC hostdefs.c -o hostdefs && ./hostdefs
- cd ../netdefs
- $CC netdefs.c -o netdefs && ./netdefs
+ if [ $m64 -eq 1 ]; then
+  $CC hostdefs.c -o hostdefs && ./hostdefs
+  cd ../netdefs
+  $CC netdefs.c -o netdefs && ./netdefs
+ else
+  $CC -m32 hostdefs.c -o hostdefs32 && ./hostdefs32
+  cd ../netdefs
+  $CC -m32 netdefs.c -o netdefs32 && ./netdefs32
+ fi
 fi
 cd ..
 
@@ -207,10 +216,17 @@ cd make2
 if [ $m64 -eq 1 ]; then
  if [ "$1" = "darwin" ]; then
   ./clean.sh
-  j64x=j64arm ./build_jconsole.sh
-  j64x=j64arm ./build_tsdll.sh
-  j64x=j64arm ./build_libj.sh
-  j64x=j64arm ./build_jamalgam.sh
+  if [ "$2" = "x86_64" ]; then
+   j64x=j64arm ./build_jconsole.sh
+   j64x=j64arm ./build_tsdll.sh
+   j64x=j64arm ./build_libj.sh
+   j64x=j64arm ./build_jamalgam.sh
+  else
+   j64x=j64 ./build_jconsole.sh
+   j64x=j64 ./build_tsdll.sh
+   j64x=j64 ./build_libj.sh
+   j64x=j64 ./build_jamalgam.sh
+  fi
   ./clean.sh
   j64x=j64iphoneos _DEBUG=0 ./build_jconsole.sh
   j64x=j64iphoneos _DEBUG=0 ./build_tsdll.sh
@@ -219,19 +235,13 @@ if [ $m64 -eq 1 ]; then
   j64x=j64iphonesimulator _DEBUG=0 ./build_jconsole.sh
   j64x=j64iphonesimulator _DEBUG=0 ./build_tsdll.sh
   j64x=j64iphonesimulator _DEBUG=0 ./build_libj.sh
-  # elif [ "$1" = "linux" ]; then
-  #  ./clean.sh
-  #  j64x=j32 ./build_jconsole.sh
-  #  j64x=j32 ./build_tsdll.sh
-  #  j64x=j32 USE_OPENMP=0 ./build_libj.sh
-  # j64x=j32 USE_OPENMP=0 ./build_jamalgam.sh
  fi
  ./clean.sh
- if ([ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]) && ([ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
+ if [ "$2" = "arm64" ]; then
   j64x=j64arm ./build_jconsole.sh
   j64x=j64arm ./build_tsdll.sh
   j64x=j64arm ./build_libj.sh
-  # j64x=j64arm ./build_jamalgam.sh
+  j64x=j64arm ./build_jamalgam.sh
  else
   j64x=j64 ./build_jconsole.sh
   j64x=j64 ./build_tsdll.sh
@@ -240,14 +250,16 @@ if [ $m64 -eq 1 ]; then
    j64x=j64 ./build_jamalgam.sh
   fi
  fi
- if [ "$USE_EMU_AVX" != "0" ] && [ "$USE_PYXES" != "0" ]; then
-  if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "amd64" ] || [ "$1" = "darwin" ]; then
-   ./clean.sh
-   j64x=j64avx2 ./build_libj.sh
+
+ if [ "$2" = "x86_64" ] || [ "$1" = "darwin" ]; then
+  ./clean.sh
+  j64x=j64avx2 ./build_libj.sh
+  if [ "$1" != "windows" ]; then
    ./clean.sh
    j64x=j64avx512 ./build_libj.sh
   fi
  fi
+
 else
 
  j64x=j32 ./build_jconsole.sh
@@ -259,7 +271,7 @@ fi
 cd -
 
 if [ $m64 -eq 1 ]; then
- if ([ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]) && ([ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
+ if [ "$2" = "arm64" ]; then
   cp bin/$dest/j64arm/* j64
  else
   cp bin/$dest/j64/* j64
@@ -272,7 +284,7 @@ if [ "$1" = "darwin" ] && [ -f "bin/$dest/j64arm/libj.$ext" ]; then
  lipo bin/$dest/j64/jconsole bin/$dest/j64arm/jconsole -create -output j64/jconsole
  lipo bin/$dest/j64/libtsdll.$ext bin/$dest/j64arm/libtsdll.$ext -create -output j64/libtsdll.$ext
  lipo bin/$dest/j64/libj.$ext bin/$dest/j64arm/libj.$ext -create -output j64/libj.$ext
- lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output j64/jamalgam
+ lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output j64/jamalgam || true
 fi
 
 if [ -d "bin/$dest/j64iphoneos" ]; then
@@ -292,15 +304,6 @@ fi
 if [ -f bin/$dest/j64avx512/libj.$ext ]; then
  cp bin/$dest/j64avx512/libj.$ext j64/libjavx512.$ext
 fi
-
-# if [ "$1" = "linux" ]; then
-#  mkdir -p j32
-#  cp bin/profile.ijs j32
-#  cp bin/$dest/j32/* j32
-#  # cp mpir/linux/i386/libgmp.so j32
-#  cp mpir/linux/i386/libgmpd.so j32/libgmp.so
-#  cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
-# fi
 
 if [ -d j64 ]; then
  find j64 -type d -exec chmod 755 {} \;

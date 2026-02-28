@@ -1,9 +1,5 @@
 vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
 
-ifndef jplatform64
-jplatform64=linux/j64x
-endif
-
 ODIR=../../../../bin/$(jplatform64)
 
 .SUFFIXES: .o
@@ -192,8 +188,13 @@ $(OBJS_AESNI) : CFLAGS_AESNI := -maes
 $(OBJS_AESARM) : CFLAGS_AESARM := -march=armv8-a+crc+crypto
 $(OBJS_BASE64) : CFLAGS_BASE64 := $(FLAGS_BASE64)
 ifdef TARGET
+ifneq (windows,$(findstring windows,$(jplatform64)))
 $(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
 	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
+else
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
+	$(CXX) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
+endif
 endif
 
 ifdef TARGET_a

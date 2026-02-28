@@ -51,26 +51,42 @@ case "$jplatform64" in
  darwin/j64iphoneos)
   USE_OPENMP=0
   LDTHREAD=" -pthread "
-  CC="$(xcrun --sdk iphoneos --find clang)"
-  AR="$(xcrun --sdk iphoneos --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphoneos --find clang)"
+   AR="$(xcrun --sdk iphoneos --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  else
+   macmin="-arch arm64"
+  fi
   ;;
  darwin/j64iphonesimulator)
   USE_OPENMP=0
   LDTHREAD=" -pthread "
-  CC="$(xcrun --sdk iphonesimulator --find clang)"
-  AR="$(xcrun --sdk iphonesimulator --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphonesimulator --find clang)"
+   AR="$(xcrun --sdk iphonesimulator --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  else
+   macmin="-arch x86_64"
+  fi
   ;;
  darwin/j64arm)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  else
+   macmin="-arch arm64 -mmacosx-version-min=11"
+  fi
   ;;
  darwin/*)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  else
+   macmin="-arch x86_64 -mmacosx-version-min=10.6"
+  fi
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;
@@ -85,6 +101,7 @@ esac
 make="${make:=make}"
 
 CC=${CC-"$(which cc clang gcc 2> /dev/null | head -n1 | xargs basename)"}
+CXX="${CXX:=$CC}"
 echo "CC=$CC"
 if [ 1 -eq $($CC -dM -E - < /dev/null | grep -c __clang__) ]; then
  compiler=clang
@@ -211,7 +228,7 @@ case "$jplatform64" in
   common="$common -msse4.1 -msse4.2 "
   ;;
  */j64)
-  if [ $_SSE4_2 -eq 1 ]; then
+  if [ -n "$_SSE4_2" ]; then
    common="$common -msse4.1 -msse4.2 "
   fi
   ;;
@@ -228,8 +245,24 @@ fi
 
 USE_PYXES="${USE_PYXES:=1}"
 if [ $USE_PYXES -eq 1 ]; then
- common="$common -DPYXES=1"
- LDTHREAD=" -pthread "
+case "$jplatform64" in
+ windows/j32*)
+  common="$common -DPYXES=1 -I../../../../pthreads4w/include"
+  LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3-w32.lib "
+  ;;
+ windows/j64arm)
+  common="$common -DPYXES=1 -I../../../../pthreads4w/include"
+  LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3-arm64.lib "
+  ;;
+ windows/*)
+  common="$common -DPYXES=1 -I../../../../pthreads4w/include"
+  LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3.lib "
+  ;;
+ *)
+  common="$common -DPYXES=1"
+  LDTHREAD=" -pthread "
+  ;;
+ esac
 else
  common="$common -DPYXES=0"
 fi
@@ -272,6 +305,56 @@ else
  common="$common -DREADLINE -DUSE_LINENOISE"
  OBJSLN="linenoise.o"
 fi
+
+# elf.o
+# pecoff.o
+# alloc.o -- alternative to mmap.o
+# read.o -- alternative to mmapio.o; probably mmap is more robust in this case
+# not included
+#  alloc.o
+#  allocfail.o
+#  instrumented_alloc.o
+#  nounwind.o
+#  pecoff.o
+#  read.o
+#  testlib.o
+
+case "$jplatform64" in
+ freebsd/*) BACKTRACE_OBJS="" ;;
+ openbsd/*) BACKTRACE_OBJS="" ;;
+ wasm/*) BACKTRACE_OBJS="" ;;
+ windows/*) BACKTRACE_OBJS="" ;;
+ darwin/*)
+  BACKTRACE_OBJS=" \
+   atomic.o \
+   backtrace.o \
+   dwarf.o \
+   fileline.o \
+   mmap.o \
+   mmapio.o \
+   posix.o \
+   print.o \
+   simple.o \
+   sort.o \
+   state.o \
+   macho.o "
+  ;;
+ *)
+  BACKTRACE_OBJS=" \
+   atomic.o \
+   backtrace.o \
+   dwarf.o \
+   fileline.o \
+   mmap.o \
+   mmapio.o \
+   posix.o \
+   print.o \
+   simple.o \
+   sort.o \
+   state.o \
+   elf.o "
+  ;;
+esac
 
 if [ -n "$_MEMAUDIT" ]; then
  common="$common -DMEMAUDIT=$_MEMAUDIT"
@@ -668,17 +751,19 @@ case $jplatform64 in
   ;;
 
  windows/j32*) # windows x86
-  jolecom="${jolecom:=0}"
+  jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
+  WINDRES="${WINDRES:=windres}"
   TARGET=jamalgam
   # faster, but sse2 not available for 32-bit amd cpu
   # sse does not support mfpmath=sse in 32-bit gcc
-  CFLAGS="$common $DOLECOM -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 "
+  CFLAGS="$common -Wno-psabi -Wno-incompatible-pointer-types $DOLECOM -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_WIN32 "
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP32 $LDTHREAD"
+  CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -Wno-psabi $DOLECOM -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
+  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -lpsapi -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
@@ -688,20 +773,47 @@ case $jplatform64 in
   fi
   LIBJRES=" jdllres.o "
   OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_WIN32}"
+  SRC_ASM=""
   OBJS_ASM="${OBJS_ASM_WIN32}"
   GASM_FLAGS=""
   FLAGS_BASE64=""
   ;;
 
- windows/j64avx512*) # windows intel 64bit avx512
-  jolecom="${jolecom:=0}"
+ windows/j64arm) # windows arm64
+  jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
+  WINDRES="${WINDRES:=windres}"
+  TARGET=j.dll
+  CFLAGS="$common -march=armv8-a+crc -Wno-incompatible-pointer-types -DNO_SHA_ASM $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
+  if [ $jolecom -eq 1 ]; then
+   DLLOBJS=" jdll.o jdllcomx.o "
+   LIBJDEF=" ../../../../dllsrc/jdll.def "
+  else
+   DLLOBJS=" jdll.o "
+   LIBJDEF=" ../../../../dllsrc/jdll2.def "
+  fi
+  LIBJRES=" jdllres.o "
+  OBJS_AESARM=" aes-arm.o "
+  SRC_ASM=""
+  OBJS_ASM=""
+  GASM_FLAGS=""
+  FLAGS_BASE64=" -DHAVE_NEON64=1 "
+  ;;
+
+ windows/j64avx512*) # windows intel 64bit avx512
+  jolecom="${jolecom:=1}"
+  if [ $jolecom -eq 1 ]; then
+   DOLECOM="-DOLECOM"
+  fi
+  WINDRES="${WINDRES:=windres}"
   TARGET=jamalgam
-  CFLAGS="$common $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDTHREAD $LDOPENMP"
+  CFLAGS="$common -Wno-incompatible-pointer-types $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_WIN32 -D_WIN64 "
+  CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" jdll.o jdllcomx.o "
@@ -720,13 +832,15 @@ case $jplatform64 in
   ;;
 
  windows/j64avx2*) # windows intel 64bit avx2
-  jolecom="${jolecom:=0}"
+  jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
+  WINDRES="${WINDRES:=windres}"
   TARGET=jamalgam
-  CFLAGS="$common $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDTHREAD $LDOPENMP"
+  CFLAGS="$common -Wno-incompatible-pointer-types $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_WIN32 -D_WIN64 "
+  CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" jdll.o jdllcomx.o "
@@ -745,13 +859,15 @@ case $jplatform64 in
   ;;
 
  windows/j64*) # windows intel 64bit nonavx
-  jolecom="${jolecom:=0}"
+  jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
+  WINDRES="${WINDRES:=windres}"
   TARGET=jamalgam
-  CFLAGS="$common -msse3 $DOLECOM -D_FILE_OFFSET_BITS=64 "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDTHREAD $LDOPENMP"
+  CFLAGS="$common -Wno-incompatible-pointer-types -msse3 $DOLECOM -D_FILE_OFFSET_BITS=64 -D_WIN32 -D_WIN64 "
+  CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" jdll.o jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
@@ -802,7 +918,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-jamalgam obj/$jplatform64/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform64
+export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform64 WINDRES
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi

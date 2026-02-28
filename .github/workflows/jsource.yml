@@ -41,14 +41,14 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      script/buildga.sh linux || exit 1
+      script/buildga.sh linux x86_64 || exit 1
 
    - name: Test JE (Linux)
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      script/testga.sh linux || exit 1
+      script/testga.sh linux x86_64 || exit 1
       cd j64
       strip -S jconsole
       strip -S libj.so
@@ -102,7 +102,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
-      script/buildga.sh linux || exit 1
+      script/buildga.sh linux x86_64 || exit 1
 
    - name: Test JE (Linux gcc)
      env:
@@ -110,7 +110,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
-      script/testga.sh linux || exit 1
+      script/testga.sh linux x86_64 || exit 1
 
 # linux32 --------------------------------------------------------------
  jelinux32:
@@ -136,14 +136,14 @@ jobs:
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
-      script/buildga.sh linux32 || exit 1
+      script/buildga.sh linux i386 || exit 1
 
    - name: Test JE (Linux32)
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
-      script/testga.sh linux32 || exit 1
+      script/testga.sh linux i386 || exit 1
       cd j32
       strip -S jconsole
       strip -S libj.so
@@ -195,7 +195,7 @@ jobs:
       USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
-      script/buildga.sh linux32 || exit 1
+      script/buildga.sh linux i386 || exit 1
 
    - name: Test JE (Linux32 gcc)
      env:
@@ -203,7 +203,7 @@ jobs:
       USE_EMU_AVX: 0
       _DEBUG: 3
      run: |
-      script/testga.sh linux32 || exit 1
+      script/testga.sh linux i386 || exit 1
 
 # linux debug ----------------------------------------------------------
  jelinuxd:
@@ -230,7 +230,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
-      script/buildga.sh linux || exit 1
+      script/buildga.sh linux x86_64 || exit 1
 
    - name: Test JE (Linux debug)
      env:
@@ -238,7 +238,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: 3
      run: |
-      script/testga.sh linux || exit 1
+      script/testga.sh linux x86_64 || exit 1
 
 # macOS ----------------------------------------------------------------
  jemacos:
@@ -260,14 +260,14 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      script/buildga.sh darwin || exit 1
+      script/buildga.sh darwin x86_64 || exit 1
 
    - name: Test JE (macOS)
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      script/testga.sh darwin || exit 1
+      script/testga.sh darwin x86_64 || exit 1
       cd j64
       strip -S jconsole
       strip -S libj.dylib
@@ -315,14 +315,14 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      script/buildga.sh darwin || exit 1
+      script/buildga.sh darwin arm64 || exit 1
 
    - name: Test JE (macOS arm64)
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      script/testga.sh darwin || exit 1
+      script/testga.sh darwin arm64 || exit 1
       cd j64
       strip -S jconsole
       strip -S libj.dylib
@@ -607,7 +607,7 @@ jobs:
       prepare: |
        pkg_add -u
        rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2
+       pkg_add curl zip gmake nasm pcre2 gdb
 
       run: |
        rm -f jobdone
@@ -624,8 +624,8 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
-       script/buildga.sh openbsd || exit 1
-       script/testga.sh openbsd || exit 1
+       script/buildga.sh openbsd x86_64 || exit 1
+       script/testga.sh openbsd x86_64 || exit 1
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -679,7 +679,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2
+       sudo pkg_add curl zip gmake nasm pcre2 gdb
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -693,8 +693,8 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
-       script/buildga.sh openbsd || exit 1
-       script/testga.sh openbsd || exit 1
+       script/buildga.sh openbsd x86_64 || exit 1
+       script/testga.sh openbsd x86_64 || exit 1
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -749,7 +749,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2
+       sudo pkg_add curl zip gmake gmp pcre2 gdb
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -763,7 +763,7 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
-       script/buildga.sh openbsd || exit 1
+       script/buildga.sh openbsd arm64 || exit 1
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -813,7 +813,7 @@ jobs:
        pkg upgrade -y
        rdate time.cloudflare.com || true
        pkg search openblas 1>&2
-       pkg install -y curl zip find gmake nasm pcre2 openblas
+       pkg install -y curl zip find gmake nasm pcre2 gdb openblas
        find / -type f -name 'liblapack.so*' 1>&2
        find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
@@ -833,8 +833,8 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
-       script/buildga.sh freebsd || exit 1
-       script/testga.sh freebsd || exit 1
+       script/buildga.sh freebsd x86_64 || exit 1
+       script/testga.sh freebsd x86_64 || exit 1
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -890,7 +890,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
@@ -906,8 +906,8 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
-       script/buildga.sh freebsd || exit 1
-       script/testga.sh freebsd || exit 1
+       script/buildga.sh freebsd x86_64 || exit 1
+       script/testga.sh freebsd x86_64 || exit 1
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -964,7 +964,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
@@ -980,8 +980,8 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
-       script/buildga.sh freebsd || exit 1
-       script/testga.sh freebsd || exit 1
+       script/buildga.sh freebsd arm64 || exit 1
+       script/testga.sh freebsd arm64 || exit 1
        cd j64
        strip -S jconsole
        strip -S libj.so
@@ -1037,7 +1037,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      script/buildga.sh android || exit 1
+      script/buildga.sh android arm64 || exit 1
 
    - name: Release JE (android)
      uses: ncipollo/release-action@v1
@@ -1064,13 +1064,15 @@ jobs:
    - name: Build, Test JE (wasm)
      env:
       CC: emcc
+      AR: emar
+      USE_WASM: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
-      script/buildga.sh wasm || exit 1
-      script/testga.sh wasm || exit 1
+      script/buildga.sh wasm wasm32 || exit 1
+      script/testga.sh wasm wasm32 || exit 1
       ls -l j32
       zip -r wasm32.zip j32
 
@@ -1216,7 +1218,7 @@ jobs:
 
    - name: Compress Files (Windows arm64)
      shell: pwsh
-     run: Compress-Archive jarm64 warm64.zip
+     run: Compress-Archive j64 warm64.zip
 
    - name: Release JE (Windows arm64)
      uses: ncipollo/release-action@v1
@@ -1265,7 +1267,7 @@ jobs:
 
    - name: Compress Files (Windows arm64)
      shell: pwsh
-     run: Compress-Archive jarm64 warm64.zip
+     run: Compress-Archive j64 warm64.zip
 
    - name: Release JE (Windows arm64)
      uses: ncipollo/release-action@v1
@@ -1282,6 +1284,148 @@ jobs:
       name: dist
       path: testwinarm64.txt
       overwrite: true
+
+      # Name	      Prefix	     Toolchain	Architecture	C Library	C++ Library
+      # MSYS	      /usr	       gcc	      x86_64	      cygwin	   libstdc++
+      # UCRT64	    /ucrt64	    gcc	      x86_64	      ucrt	     libstdc++
+      # CLANG64	   /clang64	   llvm	     x86_64	      ucrt	     libc++
+      # CLANGARM64	/clangarm64	llvm	     aarch64	     ucrt	     libc++
+      # MINGW64	   /mingw64	   gcc	      x86_64	      msvcrt	   libstdc++
+      # { sys: mingw64, env: x86_64 }
+      # { sys: mingw32, env: i686 }
+      # { sys: ucrt64,  env: ucrt-x86_64 }
+      # { sys: clang64, env: clang-x86_64 }
+      # { sys: clang64arm, env: clang-aarch64 }
+
+# windows msys2 x64 ----------------------------------------------------
+ jewin-msys2-x64:
+  name: JE (Windows MSYS2 x64)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows MSYS2 x64)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: MINGW64
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-x86_64-gcc
+        mingw-w64-x86_64-gdb
+        make
+
+   - name: Build JE (Windows MSYS2 x64)
+    # Run your build commands within the MSYS2 shell
+     shell: msys2 {0}
+     env:
+      CC: x86_64-w64-mingw32-gcc
+      CXX: x86_64-w64-mingw32-g++
+      WINDRES: windres
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
+     run: |
+      script/buildga.sh windows x86_64 || exit 1
+
+   - name: Test JE (Windows MSYS2 x64)
+     shell: msys2 {0}
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
+     run: |
+      script/testga.sh windows x86_64 || exit 1
+
+# windows msys2 x86 ----------------------------------------------------
+ jewin-msys2-x86:
+  name: JE (Windows MSYS2 x86)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows MSYS2 x86)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: MINGW32
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-i686-gcc
+        mingw-w64-i686-gdb
+        make
+
+   - name: Build JE (Windows MSYS2 x86)
+    # Run your build commands within the MSYS2 shell
+     shell: msys2 {0}
+     env:
+      CC: i686-w64-mingw32-gcc
+      CXX: i686-w64-mingw32-g++
+      WINDRES: windres
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
+      _DEBUG: 0
+     run: |
+      script/buildga.sh windows i386 || exit 1
+
+   - name: Test JE (Windows MSYS2 x86)
+     shell: msys2 {0}
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
+      _DEBUG: 0
+     run: |
+      script/testga.sh windows i386 || exit 1
+
+# windows msys2 arm64 --------------------------------------------------
+ jewin-msys2-arm64:
+  name: JE (Windows MSYS2 arm64)
+  if: ${{ false }}
+  runs-on: windows-11-arm
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows MSYS2 arm64)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: CLANGARM64
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-clang-aarch64-clang
+        mingw-w64-clang-aarch64-lldb
+        make
+
+   - name: Build JE (Windows MSYS2 arm64)
+    # Run your build commands within the MSYS2 shell
+     shell: msys2 {0}
+     env:
+      CC: aarch64-w64-mingw32-clang
+      CXX: aarch64-w64-mingw32-clang++
+      WINDRES: windres
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
+     run: |
+      script/buildga.sh windows arm64 || exit 1
+
+   - name: Test JE (Windows MSYS2 arm64)
+     shell: msys2 {0}
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
+     run: |
+      script/testga.sh windows arm64 || exit 1
 
 # get tests ------------------------------------------------------------
  tests:

@@ -6,6 +6,7 @@
 /* File functions accept file number or boxed file name or 1 or 2          */
 
 #ifdef _WIN32
+#define __iamcu__
 #include <windows.h>
 #include <winbase.h>
 #define filesep '\\'

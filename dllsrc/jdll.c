@@ -20,6 +20,7 @@
 // 9. add setting of dll proc address in smj32.dll (getprocaddress)
 // 10. run jreg with new tlb files
 
+#define __iamcu__
 #include <windows.h>
 #include "../jsrc/j.h"
 #include "../jsrc/jlib.h"
@@ -36,6 +37,8 @@ C* esub(JS jt, long ec);
 
 #ifdef OLECOM
 extern int uniflag;
+#else
+int uniflag = -1;       // -1 not set (unicode), 0 ansi, 1 unicode
 #endif
 
 

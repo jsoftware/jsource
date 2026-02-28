@@ -5,6 +5,8 @@
 
 #define JGMPINIT    // tell jgmp.h to declare storage rather than externs
 #ifdef _WIN32
+ #define __iamcu__
+ #define WIN32_LEAN_AND_MEAN
  #include <windows.h>
 #else
 #if !defined(__wasm__)

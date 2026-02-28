@@ -42,12 +42,12 @@ j32\jconsole testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01B
-dir jarm64
+dir j64
 IF "%_DEBUG%"=="3" GOTO L01I
-jarm64\jconsole testga.ijs
+j64\jconsole testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01I
-lldb -b -o run -k bt -k quit -- jarm64\jconsole.exe -lib j.dll testga.ijs
+lldb -b -o run -k bt -k quit -- j64\jconsole.exe -lib j.dll testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01C

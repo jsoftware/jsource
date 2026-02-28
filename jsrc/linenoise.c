@@ -841,6 +841,8 @@ void sb_clear(stringbuf *sb)
  */
 
 #ifdef _WIN32 /* Windows platform, either MinGW or Visual Studio (MSVC) */
+#define __iamcu__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <fcntl.h>
 #define USE_WINCONSOLE

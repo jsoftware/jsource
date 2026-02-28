@@ -38,26 +38,42 @@ case "$jplatform64" in
  darwin/j64iphoneos)
   USE_OPENMP=0
   LDTHREAD=" -pthread "
-  CC="$(xcrun --sdk iphoneos --find clang)"
-  AR="$(xcrun --sdk iphoneos --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphoneos --find clang)"
+   AR="$(xcrun --sdk iphoneos --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  else
+   macmin="-arch arm64"
+  fi
   ;;
  darwin/j64iphonesimulator)
   USE_OPENMP=0
   LDTHREAD=" -pthread "
-  CC="$(xcrun --sdk iphonesimulator --find clang)"
-  AR="$(xcrun --sdk iphonesimulator --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphonesimulator --find clang)"
+   AR="$(xcrun --sdk iphonesimulator --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  else
+   macmin="-arch x86_64"
+  fi
   ;;
  darwin/j64arm)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  else
+   macmin="-arch arm64 -mmacosx-version-min=11"
+  fi
   ;;
  darwin/*)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  else
+   macmin="-arch x86_64 -mmacosx-version-min=10.6"
+  fi
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;
@@ -168,12 +184,12 @@ case $jplatform64 in
   CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "
   ;;
- raspberry/j32)
+ raspberry/j32*)
   TARGET=libjnative.so
   CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "
   ;;
- raspberry/j64)
+ raspberry/j64*)
   TARGET=libjnative.so
   CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "

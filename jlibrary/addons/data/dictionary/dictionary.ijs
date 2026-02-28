@@ -45,8 +45,7 @@ case. do.
 end.
 
 NB. Create the map, which remains as dict.  dict is marked nondisplayable because 1 {:: dict is.
-NB. If 1 {:: dict (keys) is an indirect type, it is death to touch or display any part of 1 {:: dict that is on the empty list.
-NB. It might be better not to assign dict, to make it impossible to access 1 {:: dict from console level.  But we have to be able to run 16!:_5 on it - make 16!:_5 an adverb
+NB. 1 2{::dict appear to be empty so that the user can't crash by touching them.  To see the actual values, use 1 2 (16!:_8) dict which returns a virtual block.
 if. keyhash -: keycompare do. keyfn =. keyhash `: 6 else. keyfn =. keyhash `: 6 : (keycompare `: 6) end.
 size =: initcapacity
 dict =: keyfn f. (16!:_1) internal_parameters
@@ -87,10 +86,11 @@ select. itype
 case. 0 do.
   newdict =. dict (16!:_1) 0 , size , <. size * % occupancy  NB. allocate new DIC (hashed)
 NB. for hashing: call (newdict 16!:_3) to rehash all the keys.  Limit the number of kvs per install to reduce temp space needed.
-NB. Install the kvs from dict into newdict.  (e =. 1&(16!:_5) dict) (1) returns the list of empty key indexes; (2) erase the empty chains
+NB. Install the kvs from dict into newdict.
 NB. to allow the key block to be freed.  Then (<<<e) { keys/vals gives the kvs:
-  empties =. (1) 16!:_5 dict   NB. get list of empties in dict, then erase the empty chains.  Prevents free error when releasing dict
-  (newdict 16!:_3)&((<<<empties)&{)&:>/ 2 1 { dict  NB. Install all keys from dict into newdict
+  empties =. (0) 16!:_5 dict   NB. get list of empties in dict
+  (2 (16!:_8) dict) (newdict 16!:_3)&((<<<empties)&{) (1 (16!:_8) dict)  NB. Install all keys from dict into newdict
+  (1) 16!:_5 dict  NB. Delete chains; prevents free error when releasing dict
 case. 1 do.
   newdict =. dict (16!:_1) 0 , size  NB. allocate new DIC (tree)
   NB. for red/black: copying the keys, vals, and tree from dict to newdict is done in JE when we return

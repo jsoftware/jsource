@@ -6,7 +6,7 @@
 // included in both JEXE and JDLL servers
 
 // #undef _UNICODE
-#include "windows.h"
+#include <windows.h>
 #include "jdllcom.h"
 #include "jdlltype.h"
 #define EVLENGTH        9

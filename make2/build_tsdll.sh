@@ -36,24 +36,44 @@ echo "jplatform64=$jplatform64"
 
 case "$jplatform64" in
  darwin/j64iphoneos)
-  CC="$(xcrun --sdk iphoneos --find clang)"
-  AR="$(xcrun --sdk iphoneos --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  USE_OPENMP=0
+  LDTHREAD=" -pthread "
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphoneos --find clang)"
+   AR="$(xcrun --sdk iphoneos --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  else
+   macmin="-arch arm64"
+  fi
   ;;
  darwin/j64iphonesimulator)
-  CC="$(xcrun --sdk iphonesimulator --find clang)"
-  AR="$(xcrun --sdk iphonesimulator --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  USE_OPENMP=0
+  LDTHREAD=" -pthread "
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphonesimulator --find clang)"
+   AR="$(xcrun --sdk iphonesimulator --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  else
+   macmin="-arch x86_64"
+  fi
   ;;
  darwin/j64arm)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  else
+   macmin="-arch arm64 -mmacosx-version-min=11"
+  fi
   ;;
  darwin/*)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  else
+   macmin="-arch x86_64 -mmacosx-version-min=10.6"
+  fi
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;
@@ -140,13 +160,13 @@ case $jplatform64 in
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
   ;;
 
- raspberry/j32) # linux raspbian arm
+ raspberry/j32*) # linux raspbian arm
   TARGET=libtsdll.so
   CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
   ;;
 
- raspberry/j64) # linux arm64
+ raspberry/j64*) # linux arm64
   TARGET=libtsdll.so
   CFLAGS="$common -march=armv8-a+crc -DRASPI "
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
@@ -204,20 +224,32 @@ case $jplatform64 in
   TARGET_a=libtsdll.a
   CFLAGS="$common $macmin -march=armv8-a+crc "
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm $macmin  "
-  LDFLAGS_a=" -static -o "
+  LDFLAGS_a=" rcs "
   ;;
 
  darwin/j64iphonesimulator) # iphone simulator
   TARGET_a=libtsdll.a
   CFLAGS="$common $macmin "
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm $macmin "
-  LDFLAGS_a=" -static -o "
+  LDFLAGS_a=" rcs "
   ;;
 
  darwin/j64*) # darwin intel 64bit
   TARGET=libtsdll.dylib
   CFLAGS="$common $macmin"
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin "
+  ;;
+
+ windows/j32*) # windows x86
+  TARGET=tsdll.dll
+  CFLAGS="$common -Wno-psabi -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
+  LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -m32 -lm -static-libgcc -static-libstdc++ "
+  ;;
+
+ windows/j64*) # windows intel 64bit
+  TARGET=tsdll.dll
+  CFLAGS="$common -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ "
   ;;
 
  *)

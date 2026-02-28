@@ -50,25 +50,43 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 case "$jplatform64" in
  darwin/j64iphoneos)
   USE_OPENMP=0
-  CC="$(xcrun --sdk iphoneos --find clang)"
-  AR="$(xcrun --sdk iphoneos --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  LDTHREAD=" -pthread "
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphoneos --find clang)"
+   AR="$(xcrun --sdk iphoneos --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64"
+  else
+   macmin="-arch arm64"
+  fi
   ;;
  darwin/j64iphonesimulator)
   USE_OPENMP=0
-  CC="$(xcrun --sdk iphonesimulator --find clang)"
-  AR="$(xcrun --sdk iphonesimulator --find libtool)"
-  macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  LDTHREAD=" -pthread "
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk iphonesimulator --find clang)"
+   AR="$(xcrun --sdk iphonesimulator --find libtool)"
+   macmin="-isysroot $(xcrun --sdk iphonesimulator --show-sdk-path) -arch x86_64"
+  else
+   macmin="-arch x86_64"
+  fi
   ;;
  darwin/j64arm)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch arm64 -mmacosx-version-min=11"
+  else
+   macmin="-arch arm64 -mmacosx-version-min=11"
+  fi
   ;;
  darwin/*)
-  CC="$(xcrun --sdk macosx --find clang)"
-  AR="$(xcrun --sdk macosx --find libtool)"
-  macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  if [ -z "$CC" ]; then
+   CC="$(xcrun --sdk macosx --find clang)"
+   AR="$(xcrun --sdk macosx --find libtool)"
+   macmin="-isysroot $(xcrun --sdk macosx --show-sdk-path) -arch x86_64 -mmacosx-version-min=10.6"
+  else
+   macmin="-arch x86_64 -mmacosx-version-min=10.6"
+  fi
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;
@@ -156,6 +174,10 @@ else
  common="$common -DPYXES=0"
 fi
 
+if [ "${USE_GMP_H:=1}" -eq 1 ]; then
+ common="$common -I../../../../mpir/include"
+fi
+
 if [ "$USE_LINENOISE" -ne "1" ]; then
  common="$common -DREADLINE"
 else
@@ -163,9 +185,55 @@ else
  OBJSLN="linenoise.o"
 fi
 
-if [ "${USE_GMP_H:=1}" -eq 1 ]; then
- common="$common -I../../../../mpir/include"
-fi
+# elf.o
+# pecoff.o
+# alloc.o -- alternative to mmap.o
+# read.o -- alternative to mmapio.o; probably mmap is more robust in this case
+# not included
+#  alloc.o
+#  allocfail.o
+#  instrumented_alloc.o
+#  nounwind.o
+#  pecoff.o
+#  read.o
+#  testlib.o
+
+case "$jplatform64" in
+ freebsd/*) BACKTRACE_OBJS="" ;;
+ openbsd/*) BACKTRACE_OBJS="" ;;
+ wasm/*) BACKTRACE_OBJS="" ;;
+ windows/*) BACKTRACE_OBJS="" ;;
+ darwin/*)
+  BACKTRACE_OBJS=" \
+   atomic.o \
+   backtrace.o \
+   dwarf.o \
+   fileline.o \
+   mmap.o \
+   mmapio.o \
+   posix.o \
+   print.o \
+   simple.o \
+   sort.o \
+   state.o \
+   macho.o "
+  ;;
+ *)
+  BACKTRACE_OBJS=" \
+   atomic.o \
+   backtrace.o \
+   dwarf.o \
+   fileline.o \
+   mmap.o \
+   mmapio.o \
+   posix.o \
+   print.o \
+   simple.o \
+   sort.o \
+   state.o \
+   elf.o "
+  ;;
+esac
 
 case $jplatform64 in
 
@@ -177,11 +245,11 @@ case $jplatform64 in
   CFLAGS="$common"
   LDFLAGS=" -ldl $LDTHREAD "
   ;;
- raspberry/j32)
+ raspberry/j32*)
   CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
   LDFLAGS=" -ldl $LDTHREAD "
   ;;
- raspberry/j64)
+ raspberry/j64*)
   CFLAGS="$common -march=armv8-a+crc -DRASPI"
   LDFLAGS=" -ldl $LDTHREAD "
   ;;
@@ -231,12 +299,12 @@ case $jplatform64 in
   ;;
  windows/j32)
   TARGET=jconsole.exe
-  CFLAGS="$common -m32 "
+  CFLAGS="$common -Wno-psabi -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_WIN32 "
   LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
   ;;
  windows/j64*)
   TARGET=jconsole.exe
-  CFLAGS="$common"
+  CFLAGS="$common -D_FILE_OFFSET_BITS=64 -D_WIN32 -D_WIN64 "
   LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
   ;;
  *)
@@ -254,7 +322,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64
 cp makefile-jconsole obj/$jplatform64/.
-export CC AR CFLAGS LDFLAGS TARGET OBJSLN jplatform64
+export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi

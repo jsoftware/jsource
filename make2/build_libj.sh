@@ -711,7 +711,7 @@ case $jplatform64 in
   ;;
 
  windows/j32*) # windows x86
-  jolecom="${jolecom:=0}"
+  jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
@@ -739,7 +739,7 @@ case $jplatform64 in
   ;;
 
  windows/j64avx512*) # windows intel 64bit avx512
-  jolecom="${jolecom:=0}"
+  jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
@@ -766,7 +766,7 @@ case $jplatform64 in
   ;;
 
  windows/j64avx2*) # windows intel 64bit avx2
-  jolecom="${jolecom:=0}"
+  jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
@@ -792,7 +792,7 @@ case $jplatform64 in
   ;;
 
  windows/j64*) # windows intel 64bit nonavx
-  jolecom="${jolecom:=0}"
+  jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi

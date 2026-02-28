@@ -1729,7 +1729,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // Copy shapes.  Optimized for length <5 (<9 on avx512), subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the testing
 // len is # words in shape
-#if C_AVX512
+#if C_AVX512 && !defined(__MINGW32__)
 #define MCISH(dest,src,n) \
  {I *_d=(I*)(dest),*_s=(I*)(src); I _n=(I)(n);\
   if(unlikely(_n>8))do{_mm512_storeu_si512(_d,_mm512_loadu_si512(_s)); _d+=8; _s+=8;}while((_n-=8)>8); \

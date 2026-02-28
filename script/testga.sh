@@ -49,11 +49,11 @@ fi
 
 dest=$1
 
-if [ "$(uname -s)" = "Linux" ]; then
+if [ "$(uname -o)" = "Linux" ]; then
  cat /proc/cpuinfo || true
-elif [ "$(uname -s)" = "Darwin" ]; then
+elif [ "$(uname -o)" = "Darwin" ]; then
  sysctl -a | grep cpu
-elif [ "$(uname -s)" = "OpenBSD" ] || [ "$(uname -s)" = "FreeBSD" ]; then
+elif [ "$(uname -o)" = "OpenBSD" ] || [ "$(uname -o)" = "FreeBSD" ]; then
  grep -i cpu /var/run/dmesg.boot
 fi
 ulimit -a || true

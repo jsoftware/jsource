@@ -127,9 +127,9 @@ echo '#define jlicense  "commercial"' >> jsrc/jversion.h
 echo '#define jbuilder  "www.jsoftware.com"' >> jsrc/jversion.h
 
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ "$(uname -s)" = "Linux" ]; then
+ if [ "$(uname -o)" = "Linux" ]; then
   par=$(nproc)
- elif [ "$(uname -s)" = "Darwin" ] || [ "$(uname -s)" = "OpenBSD" ] || [ "$(uname -s)" = "FreeBSD" ]; then
+ elif [ "$(uname -o)" = "Darwin" ] || [ "$(uname -o)" = "OpenBSD" ] || [ "$(uname -o)" = "FreeBSD" ]; then
   par=$(sysctl -n hw.ncpu)
  else
   par=2

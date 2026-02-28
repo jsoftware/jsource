@@ -258,6 +258,10 @@ case "$jplatform64" in
   common="$common -DPYXES=1 -I../../../../pthreads4w/include"
   LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3-w32.lib "
   ;;
+ windows/j64arm)
+  common="$common -DPYXES=1 -I../../../../pthreads4w/include"
+  LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3-arm64.lib "
+  ;;
  windows/*)
   common="$common -DPYXES=1 -I../../../../pthreads4w/include"
   LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3.lib "
@@ -713,6 +717,7 @@ case $jplatform64 in
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
+  WINDRES="${WINDRES:=windres}"
   TARGET=j.dll
   # faster, but sse2 not available for 32-bit amd cpu
   # sse does not support mfpmath=sse in 32-bit gcc
@@ -741,6 +746,7 @@ case $jplatform64 in
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
+  WINDRES="${WINDRES:=windres}"
   TARGET=j.dll
   CFLAGS="$common -Wno-incompatible-pointer-types $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
@@ -768,6 +774,7 @@ case $jplatform64 in
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
+  WINDRES="${WINDRES:=windres}"
   TARGET=j.dll
   CFLAGS="$common -Wno-incompatible-pointer-types $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
@@ -794,6 +801,7 @@ case $jplatform64 in
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
+  WINDRES="${WINDRES:=windres}"
   TARGET=j.dll
   CFLAGS="$common -Wno-incompatible-pointer-types -msse3 $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
@@ -841,7 +849,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-libj obj/$jplatform64/.
-export CC AR CFLAGS CPPFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform64 LDFLAGS_b
+export CC AR CFLAGS CPPFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform64 WINDRES LDFLAGS_b
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi

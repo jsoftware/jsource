@@ -249,11 +249,14 @@ if [ $m64 -eq 1 ]; then
    j64x=j64 ./build_jamalgam.sh
   fi
  fi
+
  if [ "$2" = "x86_64" ] || [ "$1" = "darwin" ]; then
   ./clean.sh
   j64x=j64avx2 ./build_libj.sh
-  ./clean.sh
-  j64x=j64avx512 ./build_libj.sh
+  if [ "$1" != "windows" ]; then
+   ./clean.sh
+   j64x=j64avx512 ./build_libj.sh
+  fi
  fi
 
 else

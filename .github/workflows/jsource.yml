@@ -1285,17 +1285,6 @@ jobs:
       path: testwinarm64.txt
       overwrite: true
 
-# windows msys2 --------------------------------------------------------
- jewin-msys2:
-  name: JE (Windows MSYS2)
-  runs-on: windows-2022
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Setup Environment (Windows MSYS2)
-     uses: msys2/setup-msys2@v2
-     with:
       # Name	      Prefix	     Toolchain	Architecture	C Library	C++ Library
       # MSYS	      /usr	       gcc	      x86_64	      cygwin	   libstdc++
       # UCRT64	    /ucrt64	    gcc	      x86_64	      ucrt	     libstdc++
@@ -1307,6 +1296,18 @@ jobs:
       # { sys: ucrt64,  env: ucrt-x86_64 }
       # { sys: clang64, env: clang-x86_64 }
       # { sys: clang64arm, env: clang-aarch64 }
+
+# windows msys2 x64 ----------------------------------------------------
+ jewin-msys2-x64:
+  name: JE (Windows MSYS2 x64)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows MSYS2 x64)
+     uses: msys2/setup-msys2@v2
+     with:
       msystem: MINGW64
       update: true
       # Install necessary packages (e.g., your build tools, gcc, make)
@@ -1315,7 +1316,7 @@ jobs:
         mingw-w64-x86_64-gdb
         make
 
-   - name: Build JE (Windows MSYS2)
+   - name: Build JE (Windows MSYS2 x64)
     # Run your build commands within the MSYS2 shell
      shell: msys2 {0}
      env:
@@ -1330,7 +1331,7 @@ jobs:
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
-   - name: Test JE (Windows MSYS2)
+   - name: Test JE (Windows MSYS2 x64)
      shell: msys2 {0}
      env:
       USE_PYXES: 1
@@ -1338,6 +1339,92 @@ jobs:
       _DEBUG: 0
      run: |
       script/testga.sh windows x86_64 || exit 1
+
+# windows msys2 x86 ----------------------------------------------------
+ jewin-msys2-x86:
+  name: JE (Windows MSYS2 x86)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows MSYS2 x86)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: MINGW32
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-i686-gcc
+        mingw-w64-i686-gdb
+        make
+
+   - name: Build JE (Windows MSYS2 x86)
+    # Run your build commands within the MSYS2 shell
+     shell: msys2 {0}
+     env:
+      CC: mingw-w64-i686-gcc
+      CXX: mingw-w64-i686-g++
+      WINDRES: windres
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
+      _DEBUG: 0
+     run: |
+      script/buildga.sh windows i386 || exit 1
+
+   - name: Test JE (Windows MSYS2 x86)
+     shell: msys2 {0}
+     env:
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
+      _DEBUG: 0
+     run: |
+      script/testga.sh windows i386 || exit 1
+
+# windows msys2 arm64 --------------------------------------------------
+ jewin-msys2-arm64:
+  name: JE (Windows MSYS2 arm64)
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows MSYS2 arm64)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: CLANGARM64
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-clang-aarch64-clang
+        mingw-w64-clang-aarch64-lldb
+        make
+
+   - name: Build JE (Windows MSYS2 arm64)
+    # Run your build commands within the MSYS2 shell
+     shell: msys2 {0}
+     env:
+      CC: aarch64-w64-mingw32-clang
+      CXX: aarch64-w64-mingw32-clang++
+      WINDRES: windres
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
+     run: |
+      script/buildga.sh windows arm64 || exit 1
+
+   - name: Test JE (Windows MSYS2 arm64)
+     shell: msys2 {0}
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
+     run: |
+      script/testga.sh windows arm64 || exit 1
 
 # get tests ------------------------------------------------------------
  tests:

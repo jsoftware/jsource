@@ -1218,7 +1218,7 @@ jobs:
 
    - name: Compress Files (Windows arm64)
      shell: pwsh
-     run: Compress-Archive jarm64 warm64.zip
+     run: Compress-Archive j64 warm64.zip
 
    - name: Release JE (Windows arm64)
      uses: ncipollo/release-action@v1
@@ -1267,7 +1267,7 @@ jobs:
 
    - name: Compress Files (Windows arm64)
      shell: pwsh
-     run: Compress-Archive jarm64 warm64.zip
+     run: Compress-Archive j64 warm64.zip
 
    - name: Release JE (Windows arm64)
      uses: ncipollo/release-action@v1

@@ -179,14 +179,15 @@ if [ "$2 = "x86_64" ]; then
    LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
   fi
  elif [ $1 = "windows" ]; then
-# no way to detect avx512 capacity
-#    if [ "$_DEBUG" = "3" ]; then
-#     echo "running debug"
-#     LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j64/jconsole -lib javx512.$ext testga.ijs
-#    else
-#     LC_ALL=fr_FR.UTF-8 j64/jconsole -lib javx512.$ext testga.ijs
-#    fi
-#   fi
+  # no way to detect avx512 capacity
+  #    if [ "$_DEBUG" = "3" ]; then
+  #     echo "running debug"
+  #     LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j64/jconsole -lib javx512.$ext testga.ijs
+  #    else
+  #     LC_ALL=fr_FR.UTF-8 j64/jconsole -lib javx512.$ext testga.ijs
+  #    fi
+  #   fi
+  true
  else
   if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
@@ -198,4 +199,3 @@ if [ "$2 = "x86_64" ]; then
   fi
  fi
 fi
-

@@ -30,7 +30,7 @@ fi
 if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "amd64" ]; then
  j64x="${j64x:=j64avx2}"
 elif [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
- 64x="${j64x:=j64arm}"
+ j64x="${j64x:=j64arm}"
 elif [ "$(uname -m)" = "armv6l" ]; then
  j64x="${j64x:=j32}"
 else

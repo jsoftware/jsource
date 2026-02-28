@@ -38,7 +38,7 @@ uname
 uname -m
 if [ "$2" = "arm64" ] || [ "$2" = "x86_64" ]; then
  m64=1
-elif [ "$2" = "armv6l" ] || [ "$2" = "i386" ]; || [ "$2" = "wasm32" ]; then
+elif [ "$2" = "armv6l" ] || [ "$2" = "i386" ] || [ "$2" = "wasm32" ]; then
  m64=0
 else
  echo "argument is [arm64|armv6l|i386|x86_64|wasm32]"

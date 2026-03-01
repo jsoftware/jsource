@@ -1317,7 +1317,7 @@ if((I)jt&3)SEGFAULT;
    jt->mempool[-PMINL+1+blockx] = AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this
    if(unlikely((((jt->memballo[-PMINL+1+blockx]+=(I)2<<blockx)&MFREEBCOUNTING)!=0))){
-    jt->bytes += (I)2<<blockx; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+    jt->bytes+=(I)2<<blockx; if(unlikely(jt->bytes>jt->bytesmax))jt->bytesmax=jt->bytes;
    }
    // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
    // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine

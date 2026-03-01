@@ -81,17 +81,21 @@ b=: 32 ?@$ 2
 'domain error' -: 123           f etx 3j4 5
 'domain error' -: 123           f etx 3r4 5
 
-'domain error' -: '34'          f etx 'xyz'
-'domain error' -: (u:'34')      f etx 'xyz'
-'domain error' -: (10&u:'34')   f etx 'xyz'
-'domain error' -: (s:@<"0 '34') f etx 'xyz'
 'domain error' -: 3.4           f etx 'xyz'
 'domain error' -: 3j4           f etx 'xyz'
-'domain error' -: (<'abc')      f etx 'xyz'
-'domain error' -: (<u:'abc')    f etx 'xyz'
-'domain error' -: (<10&u:'abc') f etx 'xyz'
 'domain error' -: (34;'a')      f etx 'xyz'
 'domain error' -: (b;'a')       f etx 'xyz'
+'domain error' -: (<'a')      f etx 'xyz'
+'domain error' -: (<u:'a')    f etx 'xyz'
+'domain error' -: (<10&u:'a') f etx 'xyz'
+'domain error' -: (s:@<'34') f etx 'xyz'
+'rank error' -: '34'          f etx 'xyz'
+'rank error' -: (u:'34')      f etx 'xyz'
+'rank error' -: (10&u:'34')   f etx 'xyz'
+'rank error' -: (s:@<"0 '34') f etx 'xyz'
+'rank error' -: (<'abc')      f etx 'xyz'
+'rank error' -: (<u:'abc')    f etx 'xyz'
+'rank error' -: (<10&u:'abc') f etx 'xyz'
 
 'length error' -: (34;56;3)     f etx 'xyz'
 'length error' -: (b;_1;3)      f etx 'xyz'

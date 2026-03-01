@@ -1218,12 +1218,11 @@ static DF2(jtfold12){F12IP;A z,vz;
        // current alloc is full.  Double the allocation, swap it with zz (transferring ownership), and copy the data
        zzalloc=2*zzalloc+(AKXR(1)>>LGSZI);  // new allocation, cacheline multiple
 // obsolete        A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) A *zznewzap=AZAPLOC(zznew); A *zzzap=AZAPLOC(zz);  // allocate, & get pointers to tstack slots old & new
-       A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) ACINITUNPUSH(zznew) A *zzzap=AZAPLOC(zz);  // allocate, & get pointers to tstack slots old & new
+       A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) ACINITUNPUSH(zznew)  // allocate & zap new block
 // obsolete  AT(zz)=INT; AFLAG(zz)=0;
-       JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) *zzzap=zznew; mf(zz); zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it; free zz
+       JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) AZAPLOC(zznew)=AZAPLOC(zz); *AZAPLOC(zz)=zznew; mf(zz); zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it; free zz using mf to avoid traversing boxes
 // obsolete  *zznewzap=zz;
-       AZAPLOC(zz)=zzzap; AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks and to its dedicated zaploc
-// scaf* should ZAP zznew, putting it into zzzap, and immediately free zzold
+       AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks and to its dedicated zaploc
       }
       AAV1(zz)[newslot]=z; AN(zz)=newslot+1;  // install the new value & account for it in len
      }else{

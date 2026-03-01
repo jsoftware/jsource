@@ -181,10 +181,10 @@ DF2(jtbitwisechar){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I
  PROD(n,AR(longs)-minr,AS(longs)+minr)  // n=#repeats of low-rank arg
  j=i0(FAV(fs)->fgh[1])-16;  // fetch boolean fn #
  if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEW+JTINPLACEA));  // remove inplaceability if blocks identical
+ // allocate result area, inplace if possible
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&~(wr-ar),w))z=w;  // try inplacing w, unless a is longer
  else if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEAX)&~(ar-wr),a))z=a;  // try inplacing a, unless w is longer
  else GATV(z,LIT,zn,AR(longs),AS(longs));  // can't inplace, allocate the result
-    // allocate result area   scaf* should inplace
 // obsolete  if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}  // for single loop we overwrite.  This means no inplacing
 // obsolete  else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; A zz; RZ(p=IRS2(num(SZI),b?x:y,0L,0L,0L,jtrepeat,zz)); x=b?p:x; y=b?y:p;} // a atom or w atom, or multiple of SZI.  Replicate bytes to words in repeated arg
 // obsolete  else                      ado=bwC[j];

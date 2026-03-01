@@ -472,7 +472,8 @@ NB. s: errors -----------------------------------------------------------
 'domain error' -:  0  s: etx 4.3
 'domain error' -:  0  s: etx 4j3
 'domain error' -:  0  s: etx 4r3
-'domain error' -:  0  s: etx 'abc'
+'domain error' -:  0  s: etx 'a'
+'rank error' -:  0  s: etx 'abc'
 'domain error' -: _9  s: etx 0
 
 'domain error' -: ex ' 0&s: b. _1'

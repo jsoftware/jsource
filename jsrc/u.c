@@ -228,9 +228,10 @@ I jtisravelix(J jt,A w){
  R 1;  // return 1 if all match
 }
 
-// Extract the integer value from w, return it.  Set error if non-integral or non-atomic (and return 0).  Values whose abs > IMAX are converted to IMAX/-IMAX
+// Extract the integer value from w, return it.  Set error ifnon-atomic  or non-integral (and return 0).  Values whose abs > IMAX are converted to IMAX/-IMAX
 I jti0(J jt,A w){ARGCHK1(w);
-// obsolete  if(likely(ISDENSETYPE(AT(w),INT+B01))){ASSERT(!AR(w),EVRANK); R BIV0(w);}  // INT/B01 quickly
+ ASSERT(!AR(w),EVRANK);
+ if(unlikely(ISDENSETYPE(AT(w),INT+B01))){R BIV0(w);}  // INT/B01 quickly, but would normally have been caught in rei0
  if(likely(ISDENSETYPE(AT(w),FL))){I cval;  // FL also "quickly"
   D d=DAV(w)[0];  // fetch value
   if(ABS(d)<-(D)IMIN){
@@ -252,10 +253,10 @@ I jti0(J jt,A w){ARGCHK1(w);
   }
   if (XSGN(x)>0) R IMAX; else R -IMAX;
  }
- if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK);
+ if(!(w=vi(w)))R 0; 
  if (ISGMP(w)||AT(w)&RAT) SEGFAULT; // this should never happen
  R IAV(w)[0];
-}  // can't move the ASSERT earlier without breaking a lot of tests
+}
 
 A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv; 
  p=bsum(n,b); 

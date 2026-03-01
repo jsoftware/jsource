@@ -12,6 +12,13 @@ domerr=: 1 : 0
   assert. 'domain error' -: (10&u: 'xyz') u etx 2
   assert. 'domain error' -: (10&u: 'xyz') u etx 10&u: 'abc'
  end.
+ if. 3 e. y do.
+  assert. 'domain error' -: 2          u f. etx u: 'abc'
+  assert. 'domain error' -: (u: 'x') u f. etx 2
+  assert. 'domain error' -: (u: 'x') u f. etx u: 'abc'
+  assert. 'rank error' -: (u: 'xyz') u f. etx 2
+  assert. 'rank error' -: (u: 'xyz') u f. etx u: 'abc'
+ end.
  if. 'l' e. y do.
   assert. 'domain error' -: (10&u: 'ab')  u etx i.2 3
  end.
@@ -202,7 +209,7 @@ p.      domerr 1 2
 p:      domerr 1
 q:      domerr 1 2
 r.      domerr 1 2
-x:      domerr 1 2
+x:      domerr 1 3
 
 
 NB. = -------------------------------------------------------------------

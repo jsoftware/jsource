@@ -836,9 +836,11 @@ NB. x: ------------------------------------------------------------------
 
 'domain error' -:   x: etx y
 
-'domain error' -: y x: etx 3
+'rank error' -: y x: etx 3
+'domain error' -: ('' ($,) y) x: etx 3
 'domain error' -: 3 x: etx y
-'domain error' -: x x: etx y
+'rank error' -: x x: etx y
+'domain error' -: ('' ($,) x) x: etx y
 
 0 s: 11
 

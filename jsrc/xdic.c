@@ -320,8 +320,8 @@ F1(jtcreatedic){F12IP;
 #define DICLMSKSEQ 0x7fffLL  // sequence# of current write owner
 #define DICLMSKWRK 0x8000LL  // Current write owner request lock on keys  Invalid to request keys w/o values.  Must be carry-out from incrementing DICLMSKSEQ
 #define DICLMSKWRV 0x10000LL  // Current write owner request lock on values
-#define DICLMSKOKRET 0x20000LL  // in return value, indicates OK return
-#define DICLMSKRESIZEREQ 0x40000LL  // in return value, indicates resize required
+#define DICLMSKOKRET 0x20000LL  // in return value, indicates OK return (not used in AM field)
+#define DICLMSKRESIZEREQ 0x40000LL  // in return value, indicates resize required (not used in AM field)
 #define DICLMSKRDK       0x3fff80000LL  // #read locks for keys outstanding
 #define DICLMSKRDV   0x1fffc00000000LL  // #read locks for values outstanding
 #define DICLMSKRW 0xfffe000000000000LL  // seq# of write ownership requests
@@ -361,7 +361,6 @@ F1(jtcreatedic){F12IP;
    // we update that part of lv we don't control, so that the ultimate CAS will have a better chance of starting with the right value
 #define DICLKWRRELV(dic,lv) if((lv&DICLMSKWRV)!=0){UI nv; do{nv=((lv&~DICLMSKWRK)+1)&~(DICLMSKWRK+DICLMSKWRV+DICLMSKOKRET+DICLMSKRESIZEREQ);}while(!casa(&AM((A)dic), &lv, nv));}    // if not single-threaded, advance owner sequence# (suppressing overflow), clear write req
 
-// scaf* should these functions yield after a while?
 // wait for read lock on keys+values in dic, which we have requested & found busy
 static UI diclkrdwtkv(DIC *dic, UI lv){I n;
  // We know we just put up a read request and saw busy.  Rescind our read request and then quietly poll for the write to go away
@@ -370,6 +369,7 @@ static UI diclkrdwtkv(DIC *dic, UI lv){I n;
   for(n=5;;--n){
    delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
    if((__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)&DICLMSKWRK+DICLMSKWRV)!=DICLMSKWRK+DICLMSKWRV)break;  // lightweight wait until resource is available
+   if(n<-1000){YIELD n=-1;}  // after a long delay, give up the core to prevent a deadlock
   }
  }while(((DICLKRDRQ(dic,lv,0))&DICLMSKWRK+DICLMSKWRV)==DICLMSKWRK+DICLMSKWRV);  // put up our rd request again, wait for not-busy.  Usually succeeds
  R lv;
@@ -381,6 +381,7 @@ static UI diclkrdwtv(DIC *dic){I n;UI lv;
  for(n=5;;--n){
   delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
   if(((lv=__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE))&DICLMSKWRK+DICLMSKWRV)!=DICLMSKWRV)break;  // lightweight wait until resource is available
+  if(n<-1000){YIELD n=-1;}  // after a long delay, give up the core to prevent a deadlock
  }
  R lv;
 }
@@ -389,10 +390,12 @@ static UI diclkrdwtv(DIC *dic){I n;UI lv;
 static UI diclkrwwt(DIC *dic, UI lv){I n;
  // We know we just put up a read-write request and saw that we were not the first read-write requester.  Wait till we our seq# makes it to the top.  At that point we can change only flags in empties/tombstones, with no further action needed
  UI ourseq=LKRW(lv)&0x7fff;  // get our sequence#.  When the current sequence# matches and writes have cleared, we have the resource
- UI curseq=LKSEQ(lv)&0x7fff;  // next sequence# to grant, and the write-request bits
+ UI curseq=LKSEQ(lv)&0x7fff, prevcurseq=curseq;  // next sequence# to grant, and the write-request bits
+ I chgct=0;  // if writer hasn't changed for 50x1000ns, yield in case we are blocking it
 do{
   delay((US)ourseq-(US)curseq>1?50:20);  // delay a bit.  the long delay uses mm_pause.  We use it when we are not the next requester
-  curseq=LKSEQ((lv=__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)))&0x7fff;  // refresh write bits\sequence#
+  curseq=LKSEQ((lv=__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE)))&0x7fff;  // refresh sequence#
+  if(curseq!=prevcurseq){prevcurseq=curseq; chgct=0;}else{if(++chgct==1000){YIELD chgct=0;}}
  }while(ourseq!=curseq);   // exit when we get to the top
  R lv;
 }
@@ -405,6 +408,7 @@ static UI diclkwrwt(DIC *dic,I type){I n;
   delay(n<0?50:10);  // delay a bit.  the long delay uses mm_pause.
   lv=__atomic_load_n(&AM((A)dic),__ATOMIC_ACQUIRE);  // get current value
   if((((LKRDV(lv)&type)^LKRDK(lv))&0x7fff)==0)R lv;  // wait till requests clear (keys or keys^values depending on type)
+  if(n<-1000){YIELD n=-1;}  // after a long delay, give up the core to prevent a deadlock
  }
 }
 

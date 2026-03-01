@@ -109,16 +109,15 @@
 #define HASHalgi(dest,src,HASH) {dest=(HASH(src)*(UIL)(p))>>32; PREFETCH((C*)&hv[dest]);}
 // Pass the hash table for one value, like above
 #define FINDalgi(warg,harg,T,TH,hsrc,mismatch,fstmt,nfstmt,store) \
-NOUNROLL do{  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
+NOUNROLL while(1){  /* loop until we hit a match or an empty slot (hj==hsrc##sct) */ \
  I hj=hv[harg];  /* fetch the hash index, which points back into the source table */ \
  if(store==4){nfstmt if(hj==hsrc##sct)break;}  /* i./i: the index always comes from the hash lookup */ \
  else if(hj==hsrc##sct){if(store==1)hv[harg]=(TH)i; if(store==3)hv[harg]=wsct; nfstmt break;}  /* this is the not-found case: possibly write, execute nfstmt */ \
  if((store!=2||hj<hsrc##sct)&&likely(!mismatch(warg,hsrc##v[hj]))){if(store==2)hv[harg]=(TH)(hsrc##sct+1); if(store!=4){fstmt} break;} /* compare warg against the implied hsrc##v[hj] */ \
   /* the likely in the line above is vital, to prevent the compiler from misallocating registers so as to do arithmetic on */ \
   /* hv instead of harg when to loop continues.  As it is the compiler needlessly duplicates earlier instructions below */ \
- if(likely(--harg>=0))continue;  /* miscompare, must continue search  scaf* generates excess LEA */ \
- harg+=p;   /* if index goes below 0, wrap to top */  \
-}while(1);
+ if(unlikely(--harg<0))harg+=p;  /* miscompare, must continue search at next harg; if < 0, wrap to end of hash */ \
+};
 // Traverse the hash table for an argument with a type, i. e. one that can be indexed by i
 #define XSEARCHalgi(T,TH,src,hsrc,hash,mismatch,stride,fstmt,nfstmt,store,initi,endi) \
 { \

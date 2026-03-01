@@ -103,6 +103,8 @@
 #endif
 
 #if !defined (__SSSE3__)
+#define _mm_abs_epi16 _mm_abs_epi16_SSE2
+#define _mm_abs_epi32 _mm_abs_epi32_SSE2
 #define _mm_maddubs_epi16 _mm_maddubs_epi16_SSE2
 #define _mm_shuffle_epi8 _mm_shuffle_epi8_REF
 #endif
@@ -120,7 +122,13 @@
 #undef _mm_insert_epi32
 #undef _mm_insert_epi64
 #undef _mm_insert_epi8
+#undef _mm_max_epi8
+#undef _mm_max_epi16
+#undef _mm_max_epi32
 #undef _mm_max_epu32
+#undef _mm_min_epi8
+#undef _mm_min_epi16
+#undef _mm_min_epi32
 #undef _mm_testc_si128
 #undef _mm_testnzc_si128
 #undef _mm_testz_si128
@@ -136,7 +144,11 @@
 #define _mm_insert_epi32 _mm_insert_epi32_REF
 #define _mm_insert_epi64 _mm_insert_epi64_REF
 #define _mm_insert_epi8 _mm_insert_epi8_REF
+#define _mm_max_epi8 _mm_max_epi8_SSE2
+#define _mm_max_epi32 _mm_max_epi32_SSE2
 #define _mm_max_epu32 _mm_max_epu32_REF
+#define _mm_min_epi8 _mm_min_epi8_SSE2
+#define _mm_min_epi32 _mm_min_epi32_SSE2
 #define _mm_testc_si128 _mm_testc_si128_REF
 #define _mm_testnzc_si128 _mm_testnzc_si128_REF
 #define _mm_testz_si128 _mm_testz_si128_REF
@@ -365,6 +377,22 @@ static __emu_inline __emu##type __emu_mm256_##func##256( __emu##type m256_param1
     return ( res ); \
 }
 
+/** \SSE4_1{SSE2,_mm_min_epi8} */
+static __emu_inline __m128i _mm_min_epi8_SSE2( __m128i a, __m128i b )
+{
+    __m128i mask  = _mm_cmplt_epi8( a, b );                             // FFFFFFFF where a < b
+    a = ssp_logical_bitwise_select_SSE2( a, b, mask );
+    return a;
+}
+
+/** \SSE4_1{SSE2,_mm_max_epi8} */
+static __emu_inline __m128i _mm_max_epi8_SSE2( __m128i a, __m128i b )
+{
+    __m128i mask  = _mm_cmpgt_epi8( a, b );                             // FFFFFFFF where a > b
+    a = ssp_logical_bitwise_select_SSE2( a, b, mask );
+    return a;
+}
+
 /** \SSE4_1{Reference,_mm_blend_pd} */
 static __emu_inline __m128d _mm_blend_pd_REF        ( __m128d a, __m128d b, const int mask )
 {
@@ -501,6 +529,22 @@ static __emu_inline __m128i _mm_cmpeq_epi64_REF( __m128i a, __m128i b )
     else
         A[1] = 0x0ll;
     return A;
+}
+
+/** \SSE4_1{SSE2,_mm_min_epi32} */
+static __emu_inline __m128i _mm_min_epi32_SSE2( __m128i a, __m128i b )
+{
+    __m128i mask  = _mm_cmplt_epi32( a, b );                            // FFFFFFFF where a < b
+    a = ssp_logical_bitwise_select_SSE2( a, b, mask );
+    return a;
+}
+
+/** \SSE4_1{SSE2,_mm_max_epi32} */
+static __emu_inline __m128i _mm_max_epi32_SSE2( __m128i a, __m128i b )
+{
+    __m128i mask  = _mm_cmpgt_epi32( a, b );                            // FFFFFFFF where a > b
+    a = ssp_logical_bitwise_select_SSE2( a, b, mask );
+    return a;
 }
 
 #define SSP_SET_MIN( sd, s) sd=((sd)<(s))?(sd):(s);
@@ -654,6 +698,26 @@ static __emu_inline __m128i _mm_shuffle_epi8_REF (__m128i a, __m128i mask)
 
  memcpy(&ret,B,16);
  return ret;
+}
+
+/** \SSSE3{SSE2,_mm_abs_epi16} */
+static __emu_inline __m128i _mm_abs_epi16_SSE2( __m128i a)
+{
+    __m128i mask = _mm_cmplt_epi16( a, _mm_setzero_si128() ); // FFFF   where a < 0
+    a    = _mm_xor_si128 ( a, mask  );                        // Invert where a < 0
+    mask = _mm_srli_epi16( mask, 15 );                        // 0001   where a < 0
+    a    = _mm_add_epi16 ( a, mask  );                        // Add 1  where a < 0
+    return a;
+}
+
+/** \SSSE3{SSE2,_mm_abs_epi32} */
+static __emu_inline __m128i _mm_abs_epi32_SSE2( __m128i a)
+{
+    __m128i mask = _mm_cmplt_epi32( a, _mm_setzero_si128() ); // FFFF   where a < 0
+    a    = _mm_xor_si128 ( a, mask );                         // Invert where a < 0
+    mask = _mm_srli_epi32( mask, 31 );                        // 0001   where a < 0
+    a = _mm_add_epi32( a, mask );                             // Add 1  where a < 0
+	return a;
 }
 
 /** \SSSE3{SSE2,_mm_maddubs_epi16} 
@@ -1236,6 +1300,8 @@ __EMU_M256_IMPL_M1_HL( __m128i, __m256d, cvtpd_epi32);
 __EMU_M256_IMPL_M1_RET( __m256i, __m256, cvttps_epi32 );
 
 // avx2
+__EMU_M256_IMPL_M1( __m256i, abs_epi16 );
+__EMU_M256_IMPL_M1( __m256i, abs_epi32 );
 __EMU_M256_IMPL_M2( __m256i, add_epi16 );
 __EMU_M256_IMPL_M2( __m256i, add_epi32 );
 __EMU_M256_IMPL_M2( __m256i, add_epi8 );
@@ -1243,9 +1309,19 @@ __EMU_M256_IMPL_M2( __m256i, cmpeq_epi16 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi64 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi8 );
+__EMU_M256_IMPL_M2( __m256i, max_epi8  );
+__EMU_M256_IMPL_M2( __m256i, max_epu8  );
+__EMU_M256_IMPL_M2( __m256i, max_epi16 );
+__EMU_M256_IMPL_M2( __m256i, max_epi32 );
 __EMU_M256_IMPL_M2( __m256i, max_epu32 );
+__EMU_M256_IMPL_M2( __m256i, min_epi8  );
+__EMU_M256_IMPL_M2( __m256i, min_epu8  );
+__EMU_M256_IMPL_M2( __m256i, min_epi16 );
+__EMU_M256_IMPL_M2( __m256i, min_epi32 );
 __EMU_M256_IMPL_M2( __m256i, mul_epu32 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi8 );
+__EMU_M256_IMPL_M2( __m256i, sub_epi16 );
+__EMU_M256_IMPL_M2( __m256i, sub_epi32 );
 __EMU_M256_128_IMPL_M2( __m256i, and_si  );
 __EMU_M256_128_IMPL_M2( __m256i, xor_si  );
 __EMU_M256_128_IMPL_M2( __m256i, or_si  );
@@ -1977,17 +2053,27 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #undef _mm256_castps128_ps256
 #undef _mm256_castpd128_pd256
 #undef _mm256_castsi128_si256
+#undef _mm256_abs_epi16
+#undef _mm256_abs_epi32
 #undef _mm256_add_epi16
 #undef _mm256_add_epi32
 #undef _mm256_add_epi8
 #undef _mm256_add_epi64
+#undef _mm256_sub_epi16
+#undef _mm256_sub_epi32
 #undef _mm256_sub_epi64
 #undef _mm256_and_si256
 #undef _mm256_andnot_si256
 #undef _mm256_or_si256
 #undef _mm256_xor_si256
 #undef _mm256_sub_epi8
+#undef _mm256_max_epi8
+#undef _mm256_max_epi16
+#undef _mm256_max_epi32
 #undef _mm256_max_epu32
+#undef _mm256_min_epi8
+#undef _mm256_min_epi16
+#undef _mm256_min_epi32
 #undef _mm256_mul_epu32
 #undef _mm256_blendv_epi8
 #undef _mm256_slli_epi64
@@ -2250,6 +2336,8 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_castsi128_si256 __emu_mm256_castsi128_si256
 
 // avx2
+#define _mm256_abs_epi16 __emu_mm256_abs_epi16
+#define _mm256_abs_epi32 __emu_mm256_abs_epi32
 #define _mm256_add_epi16 __emu_mm256_add_epi16
 #define _mm256_add_epi32 __emu_mm256_add_epi32
 #define _mm256_add_epi8 __emu_mm256_add_epi8
@@ -2261,8 +2349,16 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_or_si256 __emu_mm256_or_si256
 #define _mm256_xor_si256 __emu_mm256_xor_si256
 #define _mm256_sub_epi8 __emu_mm256_sub_epi8
+#define _mm256_sub_epi16 __emu_mm256_sub_epi16
+#define _mm256_sub_epi32 __emu_mm256_sub_epi32
 
+#define _mm256_max_epi8  __emu_mm256_max_epi8
+#define _mm256_max_epi16 __emu_mm256_max_epi16
+#define _mm256_max_epi32 __emu_mm256_max_epi32
 #define _mm256_max_epu32 __emu_mm256_max_epu32
+#define _mm256_min_epi8  __emu_mm256_min_epi8
+#define _mm256_min_epi16 __emu_mm256_min_epi16
+#define _mm256_min_epi32 __emu_mm256_min_epi32
 #define _mm256_mul_epu32 __emu_mm256_mul_epu32
 #define _mm256_blendv_epi8 __emu_mm256_blendv_epi8
 #define _mm256_slli_epi64 __emu_mm256_slli_epi64

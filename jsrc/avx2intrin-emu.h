@@ -1,7 +1,7 @@
 /* Copyright 1990-2026, Jsoftware Inc.  All rights reserved. */
 /* License in license.txt.                                   */
 /*                                                           */
-/* avx2 emulation                                            */
+/* obsolete. avx2 emulation using avx                        */
 
 #ifndef __EMU_M256_AVX2IMMINTRIN_EMU_H__
 #define __EMU_M256_AVX2IMMINTRIN_EMU_H__

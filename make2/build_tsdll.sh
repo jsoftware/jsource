@@ -4,6 +4,7 @@ set -e
 cd "$(dirname "$0")"
 echo "entering $(pwd)"
 
+unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 jplatform64="$jplatform"/"$j64x"
 
@@ -267,11 +268,17 @@ cp makefile-tsdll obj/$jplatform64/.
 export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a jplatform j64x jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi
- $make -j$par -f makefile-tsdll all
-else
- $make -f makefile-tsdll all
+ if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
+  par=$(nproc)
+ elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
+  par=$(sysctl -n hw.ncpu)
+ else
+  par=2
+ fi
+ export MAKEFLAGS=-j$par
 fi
+echo "MAKEFLAGS=$MAKEFLAGS"
+$make -f makefile-tsdll all
 retval=$?
 cd -
 exit $retval

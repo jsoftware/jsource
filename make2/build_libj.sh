@@ -4,6 +4,7 @@ set -e
 cd "$(dirname "$0")"
 echo "entering $(pwd)"
 
+unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 jplatform64="$jplatform"/"$j64x"
 
@@ -885,11 +886,17 @@ cp makefile-libj obj/$jplatform64/.
 export CC AR CFLAGS CPPFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform j64x jplatform64 WINDRES LDFLAGS_b
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi
- $make -j$par -f makefile-libj all
-else
- $make -f makefile-libj all
+ if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
+  par=$(nproc)
+ elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
+  par=$(sysctl -n hw.ncpu)
+ else
+  par=2
+ fi
+ export MAKEFLAGS=-j$par
 fi
+echo "MAKEFLAGS=$MAKEFLAGS"
+$make -f makefile-libj all
 retval=$?
 cd -
 exit $retval

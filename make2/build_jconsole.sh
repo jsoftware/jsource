@@ -4,6 +4,7 @@ set -e
 cd "$(dirname "$0")"
 echo "entering $(pwd)"
 
+unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 jplatform64="$jplatform"/"$j64x"
 
@@ -342,11 +343,17 @@ cp makefile-jconsole obj/$jplatform64/.
 export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN jplatform j64x jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi
- $make -j$par -f makefile-jconsole all
-else
- $make -f makefile-jconsole all
+ if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
+  par=$(nproc)
+ elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
+  par=$(sysctl -n hw.ncpu)
+ else
+  par=2
+ fi
+ export MAKEFLAGS=-j$par
 fi
+echo "MAKEFLAGS=$MAKEFLAGS"
+$make -f makefile-jconsole all
 retval=$?
 cd -
 exit $retval

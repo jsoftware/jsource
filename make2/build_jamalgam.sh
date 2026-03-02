@@ -4,6 +4,7 @@ set -e
 cd "$(dirname "$0")"
 echo "entering $(pwd)"
 
+unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 jplatform64="$jplatform"/"$j64x"
 
@@ -89,7 +90,10 @@ case "$jplatform64" in
    macmin="-arch x86_64 -mmacosx-version-min=10.6"
   fi
   ;;
- openbsd/*) make=gmake ;;
+ openbsd/*)
+  NO_SHA_ASM=1
+  make=gmake
+  ;;
  freebsd/*) make=gmake ;;
  wasm*)
   USE_OPENMP=0
@@ -928,11 +932,17 @@ cp makefile-jamalgam obj/$jplatform64/.
 export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform j64x jplatform64 WINDRES
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi
- $make -j$par -f makefile-jamalgam
-else
- $make -f makefile-jamalgam
+ if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
+  par=$(nproc)
+ elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
+  par=$(sysctl -n hw.ncpu)
+ else
+  par=2
+ fi
+ export MAKEFLAGS=-j$par
 fi
+echo "MAKEFLAGS=$MAKEFLAGS"
+$make -f makefile-jamalgam
 retval=$?
 cd -
 exit $retval

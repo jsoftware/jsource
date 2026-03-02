@@ -15,7 +15,7 @@ fi
 
 unameop=$(uname -o || uname -s)
 
-if ([ "$unameop" = "Linux" ]) && ([ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
+if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]) && ([ "$(uname -m)" = "armv6l" ] || [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]); then
  jplatform="${jplatform:=raspberry}"
 elif [ "$unameop" = "Darwin" ]; then
  jplatform="${jplatform:=darwin}"

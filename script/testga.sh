@@ -50,7 +50,7 @@ fi
 
 dest=$1
 
-if [ "$unameop" = "Linux" ]; then
+if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
  cat /proc/cpuinfo || true
 elif [ "$unameop" = "Darwin" ]; then
  sysctl -a | grep cpu

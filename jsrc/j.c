@@ -175,6 +175,8 @@ I4 charfill=0x20;  // SP, used for filling LIT/C2T/C4T
 #define hw "avx2"
 #elif __arm64__ || __aarch64__ || __arm__
 #define hw "arm"
+#elif defined(__wasm__)
+#define hw "wasm"
 #else
 #define hw ""
 #endif

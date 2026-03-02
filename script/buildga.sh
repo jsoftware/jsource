@@ -41,8 +41,11 @@ echo $unameop
 uname -m
 if [ "$2" = "arm64" ] || [ "$2" = "x86_64" ]; then
  m64=1
-elif [ "$2" = "armv6l" ] || [ "$2" = "i386" ] || [ "$2" = "wasm32" ]; then
+elif [ "$2" = "i386" ] || [ "$2" = "wasm32" ]; then
  export j64x=j32
+ m64=0
+elif [ "$2" = "armv6l" ]; then
+ export j64x=j32arm
  m64=0
 else
  echo "argument is [arm64|armv6l|i386|x86_64|wasm32]"
@@ -128,7 +131,7 @@ echo '#define jlicense  "commercial"' >> jsrc/jversion.h
 echo '#define jbuilder  "www.jsoftware.com"' >> jsrc/jversion.h
 
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ "$unameop" = "Linux" ]; then
+ if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
   par=$(nproc)
  elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
   par=$(sysctl -n hw.ncpu)
@@ -262,7 +265,7 @@ if [ $m64 -eq 1 ]; then
 
 else
 
- if [ "$2" != "armv6l" ]; then
+ if [ "$2" = "armv6l" ]; then
   j64x=j32arm ./build_jconsole.sh
   j64x=j32arm ./build_tsdll.sh
   j64x=j32arm ./build_libj.sh
@@ -283,7 +286,7 @@ if [ $m64 -eq 1 ]; then
   cp bin/$dest/j64/* j64
  fi
 else
- if [ "$2" != "armv6l" ]; then
+ if [ "$2" = "armv6l" ]; then
   cp bin/$dest/j32arm/* j32
  else
   cp bin/$dest/j32/* j32

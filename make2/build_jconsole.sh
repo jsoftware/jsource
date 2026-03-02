@@ -4,7 +4,8 @@ set -e
 cd "$(dirname "$0")"
 echo "entering $(pwd)"
 
-jplatform64=$(./jplatform64.sh)
+eval "$(./jplatform64.sh)"
+jplatform64="$jplatform"/"$j64x"
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -322,7 +323,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64
 cp makefile-jconsole obj/$jplatform64/.
-export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN jplatform64
+export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN jplatform j64x jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi

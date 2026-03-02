@@ -262,10 +262,16 @@ if [ $m64 -eq 1 ]; then
 
 else
 
- j64x=j32 ./build_jconsole.sh
- j64x=j32 ./build_tsdll.sh
- j64x=j32 ./build_libj.sh
+ if [ "$2" != "armv6l" ]; then
+  j64x=j32arm ./build_jconsole.sh
+  j64x=j32arm ./build_tsdll.sh
+  j64x=j32arm ./build_libj.sh
+ else
+  j64x=j32 ./build_jconsole.sh
+  j64x=j32 ./build_tsdll.sh
+  j64x=j32 ./build_libj.sh
  # j64x=j32 ./build_jamalgam.sh
+ fi
 fi
 
 cd -
@@ -277,7 +283,11 @@ if [ $m64 -eq 1 ]; then
   cp bin/$dest/j64/* j64
  fi
 else
- cp bin/$dest/j32/* j32
+ if [ "$2" != "armv6l" ]; then
+  cp bin/$dest/j32arm/* j32
+ else
+  cp bin/$dest/j32/* j32
+ fi
 fi
 
 if [ "$1" = "darwin" ] && [ -f "bin/$dest/j64arm/libj.$ext" ]; then

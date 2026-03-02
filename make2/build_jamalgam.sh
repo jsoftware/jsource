@@ -4,7 +4,8 @@ set -e
 cd "$(dirname "$0")"
 echo "entering $(pwd)"
 
-jplatform64=$(./jplatform64.sh)
+eval "$(./jplatform64.sh)"
+jplatform64="$jplatform"/"$j64x"
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -245,23 +246,23 @@ fi
 
 USE_PYXES="${USE_PYXES:=1}"
 if [ $USE_PYXES -eq 1 ]; then
-case "$jplatform64" in
- windows/j32*)
-  common="$common -DPYXES=1 -I../../../../pthreads4w/include"
-  LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3-w32.lib "
-  ;;
- windows/j64arm)
-  common="$common -DPYXES=1 -I../../../../pthreads4w/include"
-  LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3-arm64.lib "
-  ;;
- windows/*)
-  common="$common -DPYXES=1 -I../../../../pthreads4w/include"
-  LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3.lib "
-  ;;
- *)
-  common="$common -DPYXES=1"
-  LDTHREAD=" -pthread "
-  ;;
+ case "$jplatform64" in
+  windows/j32*)
+   common="$common -DPYXES=1 -I../../../../pthreads4w/include"
+   LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3-w32.lib "
+   ;;
+  windows/j64arm)
+   common="$common -DPYXES=1 -I../../../../pthreads4w/include"
+   LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3-arm64.lib "
+   ;;
+  windows/*)
+   common="$common -DPYXES=1 -I../../../../pthreads4w/include"
+   LDTHREAD=" ../../../../pthreads4w/lib/pthreadVC3.lib "
+   ;;
+  *)
+   common="$common -DPYXES=1"
+   LDTHREAD=" -pthread "
+   ;;
  esac
 else
  common="$common -DPYXES=0"
@@ -918,7 +919,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-jamalgam obj/$jplatform64/.
-export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform64 WINDRES
+export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform j64x jplatform64 WINDRES
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi

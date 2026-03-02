@@ -146,7 +146,7 @@ else
  ls -l j32
  if [ "$_DEBUG" = "3" ]; then
   echo "running debug"
-  if [ "$1" = "raspberry" ] && [ "$(uname -m)" = "aarch64" ] ; then
+  if [ "$1" = "raspberry" ] && [ "$(uname -m)" = "aarch64" ]; then
    LC_ALL=fr_FR.UTF-8 gdb-multiarch -batch -return-child-result -ex "set architecture arm6" -ex "run" -ex "thread apply all bt" --args j32/jconsole -lib libj.$ext testga.ijs
   else
    if [ "$1" = "windows" ]; then

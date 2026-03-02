@@ -9,7 +9,7 @@ USE_WASM="${USE_WASM:=0}"
 if [ $USE_WASM -eq 1 ]; then
  jplatform="${jplatform:=wasm}"
  j64x="${j64x:=j32}"
- echo "$jplatform/$j64x"
+ echo jplatform="$jplatform"";" j64x="$j64x"
  exit 0
 fi
 
@@ -34,9 +34,9 @@ if [ "$(uname -m)" = "x86_64" ] || [ "$(uname -m)" = "amd64" ]; then
 elif [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
  j64x="${j64x:=j64arm}"
 elif [ "$(uname -m)" = "armv6l" ]; then
- j64x="${j64x:=j32}"
+ j64x="${j64x:=j32arm}"
 else
  j64x="${j64x:=j32}"
 fi
 
-echo "$jplatform/$j64x"
+echo jplatform="$jplatform"";" j64x="$j64x"

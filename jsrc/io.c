@@ -924,6 +924,8 @@ JS _Initializer(void* hDLL){
 #else
  getsopath(sopath);
 #endif
+// extern int getsize_xdic_DIC(void);
+// fprintf(stderr,"sizeof(DIC) "FMTI" \n",(I)getsize_xdic_DIC());
  JS jt=jvmreservea(sizeof(JST),__builtin_ctz(JTALIGNBDY));
  if(!jt)R 0;
  I sz=offsetof(JST,threaddata[1]); // #relevant bytes: just JS and the first JT.  This makes MDTHREAD() valid

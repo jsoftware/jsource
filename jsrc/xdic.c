@@ -149,7 +149,11 @@ typedef struct ADic {
 #if 7==NORMAH
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
 #else
+#if SY_64
 _Static_assert(sizeof(DIC)==33*SZI,"DIC not 33 Is");
+#else
+_Static_assert(sizeof(DIC)==34*SZI,"DIC not 34 Is");
+#endif
 #endif
 int getsize_xdic_DIC(void){return (int)sizeof(DIC);} // temp for debugging
 

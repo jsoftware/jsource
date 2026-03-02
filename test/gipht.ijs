@@ -5,7 +5,7 @@ randuni''
 
 3 : 0 ''
 if. (IFRASPI+.UNAME-:'Android') do.
- echo'gipht Android/IFRASPI ignores timings, but runs all sentences (coarse timer??)'
+ techo'gipht Android/IFRASPI ignores timings, but runs all sentences (coarse timer??)'
 end.
 )
 

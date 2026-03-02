@@ -114,8 +114,9 @@ ex02=:0!:2
 ex03=:0!:3
 ex04=:0!:4
 
-etx      =: ::(<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)  NB. error message from error number
-ex       =: ". etx
+etx1     =: ::(<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)  NB. error message from error number
+etx      =: 1 : '([ techo^:PRINTMSG) @: (u etx1)' NB. echo or error message from error number
+ex       =: ". etx1
 fex      =: }. @ (i.&(10{a.) {. ]) @ (13!:12) @ i. @ 0: @ (0!:110)
 eftxs     =: ::((10{a.) -.~ (13!:12) @ i. @ 0:)   NB. only the terse part
 eftx     =: (&([ 9!:59@0)) eftxs   NB. full text of error message
@@ -286,7 +287,7 @@ RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 RUNFILE=: ''       NB. dummy
 QKTEST=: (*9!:56'MEMAUDIT')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
-QKTEST0=: QKTEST [ ECHOFILENAME0=: ECHOFILENAME
+PRINTMSG0=: PRINTMSG [ QKTEST0=: QKTEST [ ECHOFILENAME0=: ECHOFILENAME
 WINMEM2=: ('x86_64'-:9!:56'cpu') *. IFWIN *. 2 *@(17 b.) 9!:56'memaudit'   NB. skip some check
 
 RUND1=: 4 : 0

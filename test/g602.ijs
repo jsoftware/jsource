@@ -93,8 +93,8 @@ NB. ": on unboxed literal should have no extra null
 NB. literal2
 (8 u: x) perr ":x=: u: i.128                 NB. ascii
 (8 u: x) perr ":x=: u: 128+i.128             NB. literal2
-echo a. i. ":x=: 7 u: y=: 16bd800 + i.8   NB. lone surrogate
-echo a. i. (8 u: y)
+techo a. i. ":x=: 7 u: y=: 16bd800 + i.8   NB. lone surrogate
+techo a. i. (8 u: y)
 (8 u: y) perr ":x=: 7 u: y=: 16bd800 + i.8   NB. lone surrogate
 (8 u: y) perr ":x=: 7 u: y=: 16b10000 + i.8  NB. non-bmp
 NB. literal4

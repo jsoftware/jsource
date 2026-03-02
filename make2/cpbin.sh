@@ -35,10 +35,10 @@ cop() {
  # MUST rename/remove object first; overwrite cause cache error
  if [ -f "../bin/${jplatform}/$1$DEBUGDIR/$2" ]; then
   if [ -f "../jlibrary/$3/$4" ]; then
-   mv -f "../jlibrary/$3/$4" "/tmp/$4.old.$$"
+   mv -f "../jlibrary/$3/$4" "/tmp/$4.old.$$" || true
   fi
   echo \# cp "../bin/${jplatform}/$1$DEBUGDIR/$2" "../jlibrary/$3/$4"
-  cp "../bin/${jplatform}/$1$DEBUGDIR/$2" "../jlibrary/$3/$4"
+  cp "../bin/${jplatform}/$1$DEBUGDIR/$2" "../jlibrary/$3/$4" || true
  fi
 }
 
@@ -127,7 +127,7 @@ if [ $jplatform = "darwin" ]; then
 
 else
 
- # linux/raspberry 64-bit
+ # x86_64
  cop j64 jconsole bin jconsole
  cop j64 jconsole bin jconsole-lx
  cop j64 jamalgam bin jamalgam
@@ -137,16 +137,16 @@ else
  cop j64avx2 libj.so bin libjavx2.so
  cop j64avx512 libj.so bin libjavx512.so
 
- # linux/raspberry 32-bit
+ # arm64
+ cop j64arm jconsole bin jconsole
+ cop j64arm jamalgam bin jamalgam
+ cop j64arm libtsdll.so bin libtsdll.so
+ cop j64arm libj.so bin libj.so
+
+ # x86 arm32
  cop j32 jconsole bin32 jconsole
  cop j32 jamalgam bin32 jamalgam
  cop j32 libtsdll.so bin32 libtsdll.so
  cop j32 libj.so bin32 libj.so
 
- if [ $jplatform = "openbsd" ]; then
-  cop j64arm jconsole bin jconsole
-  cop j64arm jamalgam bin jamalgam
-  cop j64arm libtsdll.so bin libtsdll.so
-  cop j64arm libj.so bin libj.so
- fi
 fi

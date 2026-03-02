@@ -21,7 +21,6 @@ IFWA64=: IFWIN*.'arm64'-:9!:56'cpu'
 
 0!:0 <testpath,'tsu.ijs'
 ECHOFILENAME=: 1   NB. echo file name
-PRINTMSG=: 1       NB. print diagnosis message
 
 stdout LF ,~ 9!:14''
 

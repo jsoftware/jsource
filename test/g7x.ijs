@@ -59,10 +59,10 @@ x -: y
 
 x =: spa ''
 s =: h 3+?7
-empty echo^:chk 'g7x a1'
+empty techo^:chk 'g7x a1'
 NB. the following line hang on freebsd
 1: 6!:3 ] 3.00  NB. must give the task a chance to be dequeued, 0.01 is insufficient
-empty echo^:chk 'g7x a2'
+empty techo^:chk 'g7x a2'
 y =: spa ''
 x -: y
 

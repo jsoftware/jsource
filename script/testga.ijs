@@ -73,6 +73,9 @@ echo '13&(128!:6) ', 13&(128!:6) 'abc'
 echo '14&(128!:6) ', 14&(128!:6) 'abc'
 echo '15&(128!:6) ', 15&(128!:6) 'abc'
 
+echo '| 7 c. _2147483648'
+echo | etx1 7 c. _2147483648
+
 NB. this failed on windows arm64
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20

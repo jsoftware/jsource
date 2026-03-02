@@ -149,8 +149,14 @@ typedef struct ADic {
 #if 7==NORMAH
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
 #else
+#if SY_64
 _Static_assert(sizeof(DIC)==33*SZI,"DIC not 33 Is");
+#else
+_Static_assert(sizeof(DIC)==34*SZI,"DIC not 34 Is");
 #endif
+#endif
+int getsize_xdic_DIC(void){return (int)sizeof(DIC);} // temp for debugging
+
 #define ST UI4   // type of hash slot
 #define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found
 #define STN 4  // width of hash slot

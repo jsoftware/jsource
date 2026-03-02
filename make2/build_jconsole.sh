@@ -4,7 +4,9 @@ set -e
 cd "$(dirname "$0")"
 echo "entering $(pwd)"
 
-jplatform64=$(./jplatform64.sh)
+unameop=$(uname -o || uname -s)
+eval "$(./jplatform64.sh)"
+jplatform64="$jplatform"/"$j64x"
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -90,6 +92,11 @@ case "$jplatform64" in
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;
+ wasm*) USE_PYXES=0 ;;
+esac
+case "$j64x" in
+ j32*) USE_PYXES="${USE_PYXES:=0}" ;;
+ *) USE_PYXES="${USE_PYXES:=1}" ;;
 esac
 make="${make:=make}"
 
@@ -167,11 +174,22 @@ else
  common="$common -DEMU_AVX2=0"
 fi
 
-USE_PYXES="${USE_PYXES:=1}"
 if [ $USE_PYXES -eq 1 ]; then
  common="$common -DPYXES=1"
+ case "$j64x" in
+  j32*) USE_NORMAH8=1 ;;
+  *) USE_NORMAH8="${USE_NORMAH8:=0}" ;;
+ esac
 else
  common="$common -DPYXES=0"
+ USE_NORMAH8="${USE_NORMAH8:=0}"
+fi
+
+USE_NORMAH8="${USE_NORMAH8:=0}"
+if [ $USE_NORMAH8 -eq 1 ]; then
+ common="$common -DNORMAH8=1"
+else
+ common="$common -DNORMAH8=0"
 fi
 
 if [ "${USE_GMP_H:=1}" -eq 1 ]; then
@@ -322,14 +340,20 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64
 cp makefile-jconsole obj/$jplatform64/.
-export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN jplatform64
+export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN jplatform j64x jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
- if [ $(uname) = Linux ]; then par=$(nproc); else par=$(sysctl -n hw.ncpu); fi
- $make -j$par -f makefile-jconsole all
-else
- $make -f makefile-jconsole all
+ if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
+  par=$(nproc)
+ elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
+  par=$(sysctl -n hw.ncpu)
+ else
+  par=2
+ fi
+ export MAKEFLAGS=-j$par
 fi
+echo "MAKEFLAGS=$MAKEFLAGS"
+$make -f makefile-jconsole all
 retval=$?
 cd -
 exit $retval

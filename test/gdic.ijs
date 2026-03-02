@@ -5,12 +5,12 @@ load 'dictionary'
 
 d =: ('hash' ,&< 'valueshape' ; 0) conew 'jdictionary'
 '' put__d i. 1000
-echo 'hash ',": 100 (6!:2) 'has__d f."0 k' [ k =. 10 # i. 1000
+techo 'hash ',": 100 (6!:2) 'has__d f."0 k' [ k =. 10 # i. 1000
 destroy__d ''
 
 d =: ('tree' ,&< 'valueshape' ; 0) conew 'jdictionary'
 '' put__d i. 1000
-echo 'tree ',": 100 (6!:2) 'has__d f."0 k' [ k =. 10 # i. 1000
+techo 'tree ',": 100 (6!:2) 'has__d f."0 k' [ k =. 10 # i. 1000
 destroy__d ''
 
 cocurrent 'base'
@@ -278,7 +278,7 @@ NB.      shape of batch ;
 NB.      number of iterations
 test_type =: {{)d
 'genkey genval keyshape valshape batchshape n_iter' =. y
-NB. echo 5!:5 < 'y'
+NB. techo 5!:5 < 'y'
 naivedict =. '' conew 'naivedictionary'
 keyrank =. # keyshape
 valrank =. # valshape
@@ -686,7 +686,7 @@ benchmarkdijkstra =: {{
   6!:2 'g dijkstra 0'
 }}"0
 
-echo 'Dijkstra (1e5 vertices, 3e5 edges): ' , (": 3 benchmarkdijkstra 1e5) , 's'
+techo 'Dijkstra (1e5 vertices, 3e5 edges): ' , (": 3 benchmarkdijkstra 1e5) , 's'
 
 NB. x is the maximum height for jumping and falling.
 NB. y is table (rank 2) where each row represents a platform (y, x_left, x_right)

@@ -95,9 +95,12 @@ case "$jplatform64" in
   USE_OPENMP=0
   LDTHREAD=" -pthread "
   NO_SHA_ASM=1
-  USE_OPENMP=0
   USE_PYXES=0
   ;;
+esac
+case "$j64x" in
+ j32*) USE_PYXES="${USE_PYXES:=0}" ;;
+ *) USE_PYXES="${USE_PYXES:=1}" ;;
 esac
 make="${make:=make}"
 
@@ -244,7 +247,6 @@ if [ $USE_BOXEDSPARSE -eq 1 ]; then
  common="$common -DBOXEDSPARSE"
 fi
 
-USE_PYXES="${USE_PYXES:=1}"
 if [ $USE_PYXES -eq 1 ]; then
  case "$jplatform64" in
   windows/j32*)
@@ -264,11 +266,15 @@ if [ $USE_PYXES -eq 1 ]; then
    LDTHREAD=" -pthread "
    ;;
  esac
+ case "$j64x" in
+  j32*) USE_NORMAH8=1 ;;
+  *) USE_NORMAH8="${USE_NORMAH8:=0}" ;;
+ esac
 else
  common="$common -DPYXES=0"
+ USE_NORMAH8="${USE_NORMAH8:=0}"
 fi
 
-USE_NORMAH8="${USE_NORMAH8:=0}"
 if [ $USE_NORMAH8 -eq 1 ]; then
  common="$common -DNORMAH8=1"
 else

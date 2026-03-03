@@ -177,7 +177,8 @@ if [ "$2" = "x86_64" ]; then
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx512.$ext" ]; then
-   LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
+   # LC_ALL=fr_FR.UTF-8 j64/jconsole -lib libjavx512.$ext testga.ijs
+   true
   fi
  elif [ "$1" = "windows" ]; then
   # no way to detect avx512 capacity

@@ -219,8 +219,10 @@ AHDR1(absI2I,D,D){   // linkage requires D
  R 0xaaaaaaaa&_mm256_movemask_epi8(_mm256_castpd_si256(anyneg))?EVOFLO:EVOK;  //any oflo
  )
 }
-#define XABSI2(u) ({ I2 us=(u)>>(BB*sizeof(I2)-1); u^=us; if(unlikely((u=(I2)((US)u-(US)us))<0))R EVOFLO; u; })
-#define XABSI4(u) ({ I4 us=(u)>>(BB*sizeof(I4)-1); u^=us; if(unlikely((u=(I4)((UI4)u-(UI4)us))<0))R EVOFLO; u; })
+#define XABSI2(u) ({ I2 us=(u)>>(BB*sizeof(I2)-1); u^=us; if(unlikely((u-=us)<0))R EVOFLO; u; })
+#define XABSI4(u) ({ I4 us=(u)>>(BB*sizeof(I4)-1); u^=us; if(unlikely((u-=us)<0))R EVOFLO; u; })
+// #define XABSI2(u) ({ I2 us=(u)>>(BB*sizeof(I2)-1); u^=us; if(unlikely((u=(I2)((US)u-(US)us))<0))R EVOFLO; u; })
+// #define XABSI4(u) ({ I4 us=(u)>>(BB*sizeof(I4)-1); u^=us; if(unlikely((u=(I4)((UI4)u-(UI4)us))<0))R EVOFLO; u; })
 static APF256C(3,abs,I2,I2,XABSI2)
 static APF256C(3,abs,I4,I4,XABSI4)
 

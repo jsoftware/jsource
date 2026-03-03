@@ -5,7 +5,7 @@
 #ifdef _WIN32
 // Tip o'hat to Michaelangel007 on StackOverflow
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include <windows.h>
 #include <stdint.h> // portable: uint64_t   MSVC: __int64 
 #include "jerr.h"
 

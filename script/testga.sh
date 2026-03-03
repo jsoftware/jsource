@@ -96,7 +96,7 @@ if [ "$2" = "x86_64" ]; then
    fi
   fi
  elif [ "$1" = "windows" ]; then
-  if [ -f "j64/libjavx2.$ext" ]; then
+  if [ -f "j64/javx2.$ext" ]; then
    if [ "$_DEBUG" = "3" ]; then
     echo "running debug"
     LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args j64/jconsole -lib javx2.$ext testga.ijs

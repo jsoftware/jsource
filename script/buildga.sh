@@ -254,13 +254,11 @@ if [ $m64 -eq 1 ]; then
   fi
  fi
 
- if [ "$2" = "x86_64" ] || [ "$1" = "darwin" ]; then
+ if [ "$2" = "x86_64" ] || [ "$1" = "darwin" ] || [ "$1" = "windows" ]; then
   ./clean.sh
   j64x=j64avx2 ./build_libj.sh
-  if [ "$1" != "windows" ]; then
-   ./clean.sh
-   j64x=j64avx512 ./build_libj.sh
-  fi
+  ./clean.sh
+  j64x=j64avx512 ./build_libj.sh
  fi
 
 else

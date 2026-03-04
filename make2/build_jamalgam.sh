@@ -119,6 +119,7 @@ else
  compiler=$(readlink -f $(which $CC) || which $CC)
 fi
 echo "compiler=$compiler"
+$CC --version
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ]; then

@@ -120,7 +120,7 @@ case "$jplatform" in
     cop $j64x jconsole.exe bin32 jconsole.exe
     cop $j64x jamalgam.exe bin32 jamalgam.exe
     cop $j64x tsdll.dll bin32 tsdll.dll
-    cop $j64x libj.so bin32 libj.so
+    cop $j64x j.dll bin32 j.dll
     ;;
    j64arm)
     # arm64

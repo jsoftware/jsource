@@ -299,10 +299,10 @@ else
  fi
 fi
 
-if [ "$1" = "darwin" ] && [ -f "bin/$dest/j64arm/$(libj).$(ext)" ]; then
+if [ "$1" = "darwin" ] && [ -f "bin/$dest/j64arm/${libj}.${ext}" ]; then
  lipo bin/$dest/j64/jconsole bin/$dest/j64arm/jconsole -create -output j64/jconsole
- lipo bin/$dest/j64/libtsdll.$(ext) bin/$dest/j64arm/libtsdll.$(ext) -create -output j64/libtsdll.$(ext)
- lipo bin/$dest/j64/$(libj).$(ext) bin/$dest/j64arm/$(libj).$(ext) -create -output j64/$(libj).$(ext)
+ lipo bin/$dest/j64/libtsdll.${ext} bin/$dest/j64arm/libtsdll.${ext} -create -output j64/libtsdll.${ext}
+ lipo bin/$dest/j64/${libj}.${ext} bin/$dest/j64arm/${libj}.${ext} -create -output j64/${libj}.${ext}
  lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output j64/jamalgam || true
 fi
 
@@ -316,12 +316,12 @@ if [ -d "bin/$dest/j64iphonesimulator" ]; then
  cp -r bin/$dest/j64iphonesimulator j64/ios/.
 fi
 
-if [ -f bin/$dest/j64avx2/$(libj).$(ext) ]; then
- cp bin/$dest/j64avx2/$(libj).$(ext) j64/$(libj)avx2.$(ext)
+if [ -f bin/$dest/j64avx2/${libj}.${ext} ]; then
+ cp bin/$dest/j64avx2/${libj}.${ext} j64/${libj}avx2.${ext}
 fi
 
-if [ -f bin/$dest/j64avx512/$(libj).$(ext) ]; then
- cp bin/$dest/j64avx512/$(libj).$(ext) j64/$(libj)avx512.$(ext)
+if [ -f bin/$dest/j64avx512/${libj}.${ext} ]; then
+ cp bin/$dest/j64avx512/${libj}.${ext} j64/${libj}avx512.${ext}
 fi
 
 if [ -d j64 ]; then

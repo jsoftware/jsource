@@ -8,8 +8,8 @@ NB. tests were roughly moved here from original gdll
 NB. there are tests here that could and should be moved back to gdll
 NB. e.g. test with dec of d *d *d would work on raspberry
  
-load'dll'
-
+techo 'LIBFILE:',LIBFILE
+techo 'LIBTSDLL:',LIBTSDLL
 lib=: LIBTSDLL
 
 dcd=: 4 : '(lib,x) cd y'

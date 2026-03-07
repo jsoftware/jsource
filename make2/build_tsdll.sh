@@ -247,12 +247,14 @@ case $jplatform64 in
   TARGET=tsdll.dll
   CFLAGS="$common -Wno-psabi -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -m32 -lm -static-libgcc -static-libstdc++ "
+  LIBJDEF=" ../../../../makevs/tsdll/tsdll.def
   ;;
 
  windows/j64*) # windows intel 64bit
   TARGET=tsdll.dll
   CFLAGS="$common -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ "
+  LIBJDEF=" ../../../../makevs/tsdll/tsdll.def
   ;;
 
  *)
@@ -266,7 +268,7 @@ echo "CFLAGS=$CFLAGS"
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-tsdll obj/$jplatform64/.
-export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a jplatform j64x jplatform64
+export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a LIBJDEF jplatform j64x jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then

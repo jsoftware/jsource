@@ -38,6 +38,7 @@ cop() {
   if [ -f "../jlibrary/$3/$4" ]; then
    mv -f "../jlibrary/$3/$4" "/tmp/$4.old.$$" || true
   fi
+  mkdir -p ../jlibrary/$3 || true
   echo \# cp "../bin/${jplatform64}$DEBUGDIR/$2" "../jlibrary/$3/$4"
   cp "../bin/${jplatform64}$DEBUGDIR/$2" "../jlibrary/$3/$4" || true
  fi
@@ -45,6 +46,7 @@ cop() {
 
 case "$jplatform" in
  darwin)
+  mkdir -p ../jlibrary/bin || true
   # copy libgmp to bin
   if ! [ -f "../jlibrary/bin/libgmp.dylib" ]; then
    cp ../mpir/apple/macos/libgmp.dylib ../jlibrary/bin/libgmp.dylib

@@ -247,14 +247,14 @@ case $jplatform64 in
   TARGET=tsdll.dll
   CFLAGS="$common -Wno-psabi -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -m32 -lm -static-libgcc -static-libstdc++ "
-  LIBJDEF=" ../../../../makevs/tsdll/tsdll.def
+  LIBJDEF=" ../../../../makevs/tsdll/tsdll.def "
   ;;
 
  windows/j64*) # windows intel 64bit
   TARGET=tsdll.dll
   CFLAGS="$common -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ "
-  LIBJDEF=" ../../../../makevs/tsdll/tsdll.def
+  LIBJDEF=" ../../../../makevs/tsdll/tsdll.def "
   ;;
 
  *)

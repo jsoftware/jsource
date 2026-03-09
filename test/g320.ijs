@@ -664,6 +664,34 @@ xx =: i. 1e6  1 1
 NB. fill not used if not needed
 1: (i. 2 3 2 5 6) ,!.'a'"3 i. 2 5 6
 
+NB. x fill t v y, checking ,!.fill"v
+t =: {{ xx =: x [ yy =: y [ mm =: m [ nn =: n
+        if. 0=#m do. assert. (x {{ x , y }}"n y) -: x ,"n y else. assert. (x m {{ x ,!.m y }}"n y) -: x ,!.m"n y end. }}
+
+NB. try all ranks of x/y, and with a 0 at each position
+tt =: {{
+xxx =: x [ yyy =: y
+cr =: x ,&#&$ y  NB. x and y are always a cell of result
+x (m t _) y  NB. check the single cell
+for_r. ,/ ,"0/~ 0 1 2 do.
+  'prefx prefy' =: pref =: {.&(?5 5)&.> r
+  xs =. (prefx , $x) ($!.'',) y [ ys =. (prefy , $y) ($!.'',) x 
+  xs (m t cr) ys  NB. check rank without 0 insertion
+  for_s.  ,/ x ,"0/&i.&#&$ y do.  NB. insert 0 in each position
+    'sx sy' =: s
+    ((($!.'',)~  prefx , 0 sx} $) x) (m t cr) ((($!.'',)~   prefy , 0 sy} $) y)
+  end.
+end.
+1
+}}
+
+(>: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) ('' tt) (>: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) 
+(>: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) (100 tt) (>: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) 
+(>: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100x) ('' tt) (>: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) 
+(>: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100x) (100x tt) (>: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) 
+(<"0 >: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) ('' tt) (<"0 >: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) 
+(<"0 >: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100) ((<5) tt) (<"0 >: ((>: 0.2 0.5 0.8 I. ? 0) ?@$ 8) ?@$ 100)
+
 
 randfini''
 

@@ -734,17 +734,22 @@ static DF2(jtinfixd){F12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 #define SETZ    {s=yv; DQ(c, *zv++=*s++;  );}
 #define SETZD   {s=yv; DQ(c, *zv++=*s++/d;);}
 
+// check for infinity/NaN, EVNAN if so
+#define CKINFB(addr)
+#define CKINFI(addr)
+#define CKINFD(addr) ASSERT(((US*)(addr))[3]&0x7ffc!=0x7ffc,EVNAN)
+
 #define MOVSUMAVG(Tw,Ty,ty,Tz,tz,xd,SET)  \
  {Tw*u,*v;Ty*s,x=0,*yv;Tz*zv;                                  \
   GATVS(z,tz,c*(1+p),AR(w),AS(w),tz##SIZE,GACOPYSHAPE,R 0); AS(z)[0]=1+p;                    \
   zv=(Tz*)AV(z); u=v=(Tw*)AV(w);                               \
   if(1==c){                                                    \
-   DQ(m, x+=*v++;); *zv++=xd;                                  \
-   DQ(p, x+=(Ty)*v++-(Ty)*u++; *zv++=xd;);                     \
+   DQ(m, CKINF##Tw(v) x+=*v++;); *zv++=xd;                                  \
+   DQ(p, CKINF##Tw(v) x+=(Ty)*v++-(Ty)*u++; *zv++=xd;);                     \
   }else{                                                       \
    GATVS(y,ty,c,1,0,ty##SIZE,GACOPYSHAPE0,R 0); s=yv=(Ty*)AV1(y); DQ(c, *s++=0;);            \
-   DQ(m, s=yv; DQ(c, *s+++=*v++;);); SET;                      \
-   DQ(p, s=yv; DQ(c, x=*s+++=(Ty)*v++-(Ty)*u++; *zv++=xd;););  \
+   DQ(m, s=yv; DQ(c, CKINF##Tw(v) *s+++=*v++;);); SET;                      \
+   DQ(p, s=yv; DQ(c, CKINF##Tw(v) x=*s+++=(Ty)*v++-(Ty)*u++; *zv++=xd;););  \
  }}
 
 static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;

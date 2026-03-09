@@ -10,16 +10,20 @@ F1(jtcurtail){F12IP; R jtdrop(jtfg,num(-1),w);}
 
 F1(jtshift1){F12IP;R drop(num(-1),over(num(1),w));}
 
-static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
+// take empty or from empty, a=take shape, w=takefrom. b=1 if a DOES NOT contain a 0
+// scaf* pass n and u as args
+static INLINE A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  r=AR(w); n=AN(a); u=AV(a); 
  if(!b){PRODX(m,n,u,1) ASSERT(m>IMIN,EVLIMIT); PRODX(m,r-n,n+AS(w),ABS(m))}
  GA(z,AT(w),m,r,AS(w)); 
+// scaf* if take not empty, set fill; if take empty, return
  s=AS(z); DO(n, p=u[i]; ASSERT(p>IMIN,EVLIMIT); *s++=ABS(p););
  if(m){k=bpnoun(AT(w)); mvc(k*m,AVn(r,z),k,jt->fillv);}
  R z;
 }
 
-static F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
+// scaf* pass an and u as args
+static INLINE F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  an=AN(a); u=AV(a); r=AR(w); s=AS(w); 
  GASPARSE(z,AT(w),1,r,s); v=AS(z); DO(an, v[i]=ABS(u[i]););
  zp=PAV(z); wp=PAV(w);
@@ -48,12 +52,16 @@ static F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*z
  EPILOG(z);
 }    /* take on sparse array w */
 
-// general take routine.  a is result frame followed by signed take values i. e. shape of result, w is array
-static F2(jttk){F12IP;PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
+// general take/drop routine.  a is result frame followed by signed take values i. e. shape of result, w is array
+// scaf* pass n and u as args
+static F2(jttk){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
  if(unlikely(ISSPARSE(t)))R tks(a,w);
- DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
- if(((b-1)&AN(w))==0)R tk0(b,a,w);   // this handles empty w, so PROD OK below   b||!AN(w)
+// obsolete  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
+ DO(n, if(!u[i])goto emptytake;); DO(r-n, if(!s[n+i])goto emptytake;);  // if empty take, or take from empty cell, set b
+ if(unlikely(AN(w)==0)){B b=0; if(0){emptytake: b=1;} R tk0(b,a,w);}
+// obsolete  if(((b-1)&AN(w))==0)R tk0(b,a,w);   // this handles empty w, so PROD OK below   b||!AN(w)
+#if 1   // obsolete 
  k=bpnoun(t); z=w; c=q=1;  // c will be #cells for this axis
  // process take one axis at a time
  for(i=0;i<n;++i){I itemsize;
@@ -62,7 +70,7 @@ static F2(jttk){F12IP;PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,
    PROD(itemsize,r-i-1,s+i+1);  // size of item of cell
    DPMULDE(c*itemsize,q,d); GA(y,t,d,r,AS(z)); AS(y)[i]=q;  // this catches q=IMIN: mult error or GA error   d=#cells*itemsize*#taken items
    if(q>m)mvc(k*AN(y),CAVn(r,y),k,jt->fillv);   // overtake - fill the whole area
-   itemsize *= k; e=itemsize*MIN(m,q);  //  itemsize=in bytes; e=total bytes moved per item
+   itemsize*=k; e=itemsize*MIN(m,q);  //  itemsize=in bytes; e=total bytes moved per item
    dy=itemsize*q; yv=CAV(y);
    dz=itemsize*m; zv=CAV(z);
    m-=q; I yzdiff=dy-dz; yv+=REPSGN(p&m)&yzdiff; zv-=REPSGN(p&-m)&yzdiff;
@@ -70,15 +78,17 @@ static F2(jttk){F12IP;PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,
    z=y;
   }
  }
+#else
+// scaf* set fill if needed
+#endif
  EPILOG(z);
 }
 
 F2(jttake){F12IP;A s;I acr,af,ar,n,*v,wcr,wf,wr;
- 
  ARGCHK2(a,w); I wt=AT(w);  // wt=type of w
  acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
  if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  //if a is empty this destroys jt->ranks
- if(likely(!ISSPARSE(wt)))RZ(w=jtsetfv1(jt,w,AT(w)));   // pity to do this before we know we need fill
+ if(likely(!ISSPARSE(wt)))RZ(w=jtsetfv1(jt,w,AT(w)));   // scaf* wrong to do this before we know we need fill
  ar=AR(a); acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=wr<wcr?wr:wcr; wf=wr-wcr;
  if(((af-1)&(acr-2))>=0){
@@ -99,6 +109,7 @@ F2(jttake){F12IP;A s;I acr,af,ar,n,*v,wcr,wf,wr;
   if(i<AN(s)){
    s=ca(s); if(!ISDENSETYPE(AT(a),FL))RZ(a=ccvt(FL,a,0));  // copy area we are going to change; put a in a form where we can recognize infinity
    for(;i<AN(s);++i){if(DAV(a)[i]==IMIN)IAV(s)[i]=IMIN;else if(INF(DAV(a)[i]))IAV(s)[i]=wcr?ws[wf+i]:1;}  // kludge.  The problem is which huge values to consider infinite.  This is how it was done
+// scaf what's this IMIN business?  32-bit? avoid all the conversions
   }
  }
  a=s;
@@ -107,7 +118,7 @@ F2(jttake){F12IP;A s;I acr,af,ar,n,*v,wcr,wf,wr;
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
   I tkasign = REPSGN(tklen);  // 0 if tklen nonneg, ~0 if neg
   I nitems = ws[0];  // number of items of w
-  I tkabs = (tklen^tkasign)-tkasign;  // ABS(tklen)
+  I tkabs = (tklen^tkasign)-tkasign;  // (UI)ABS(tklen)
   if((UI)tkabs<=(UI)nitems) {  // if this is not an overtake...  (unsigned to handle overflow, if tklen=IMIN).
    // calculate offset
    I woffset = tkasign&(tklen + nitems);   // x+#y if x neg, 0 if x pos
@@ -191,7 +202,7 @@ static F1(jtrsh0){F12IP;A x,y;I wcr,wf,wr,*ws;
 }
 
 F1(jthead){F12IP;I wcr,wf,wr;
- 
+
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK so that we can pass rank into other code
  if(unlikely(!wcr)){RETF(RETARG(w))  // {."0, a NOP

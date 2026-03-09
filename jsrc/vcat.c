@@ -107,6 +107,7 @@ static F2(jtovs){F12IP;A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*
  RETF(z);
 }    /* a,"r w where a or w or both are sparse */
 
+#if 1 // obsolete
 // k is length of an atom; c is atoms/result item; m is #items to move; z is result; w->arg to move; x->area to move to; z is A block for output area; somefill is neg if there is any fill
 // result points to end+1 of area filled
 // NOTE: AS(z)[0] is overwritten
@@ -160,7 +161,7 @@ emptyresult:;   // abort loop to come here if a result axis length is 0, which a
  AS(z)[0]=m+n;  // m and n are left to first value in (1-extended) rank
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
-
+#endif
 // these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition.  No fill.
 // here when ma=mw=SZI
 static void moveawVVI(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
@@ -228,8 +229,8 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  // Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
  if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t)+RPAR; t+=t&AT(a)?0:CONJ;}  // t is result type; if it contains RPAR, a conversion is needed, CONJ is set if a must convert
  ar=AR(a); wr=AR(w);
- acr=jtr>>RANKTX; acr=ar<acr?ar:acr; UI af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
- wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; UI wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
+ acr=jtr>>RANKTX; acr=ar<acr?ar:acr; I af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
+ wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; I wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
  // no RESETRANK - not required by ovv or main line here
  PROLOG(000);   // we will allocate our result first so that we can tpop back to it without EPILOG.
  if(af+wf==0){
@@ -318,68 +319,125 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
   }else{moveawS(zv,av,wv,framect,k,ma,mw,arptreset,replct,!!(t&(0b110000<<23)));}   // if scalar rep
   if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
  }
- // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
- // no special cases apply, perform general copy with rank and fill
+ // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case including fill
+#if 1  // obsolete 
  // scaf* should move jtovg here, allocate the entire result at once, and loop through cells here, avoiding recopy
  RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); RETF(z);  // ovg calls other functions, so we clear rank.  rank2ex does EPILOG
-}    /* overall control, and a,w and a,"r w for cell rank <: 2 */
+#else
+ // calculate number of repeats of each outer cell, and the total # cells
+ I *as=AS(a), *ws=AS(w);
+ I minf=MIN(af,wf), maxf=MAX(af,wf); ASSERTAGREE(as,ws,minf)   // verify frames agree
+ I awn[2][2];  // for a then w, number of times to repeat this cell-1,number of times to repeat each cell
+ PRODX(t,af-wf,as+wf,1) awn[1][0]=awn[1][1]=t-1; PRODX(t,wf-af,ws+af,1) awn[0][0]=awn[0][1]=t-1;   // count outer repeat counts for each arg (surplus frame of other arg); save as initial cell/restart counts-1
+ I *smaxf=AS(af>wf?a:w);   // shape of arg with longer frame, which gives # cells (could be 0)
+ I ncells; PRODX(ncells,af>wf?af:wf,smaxf,1)  // total # cells: common frame * larger repeat count
 
-#if 0
-
-static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,*sv,t,wr,*ws,zn;
- ARGCHK2(a,w);
- // scaf* most of this should move back to the caller so it can be outside the rank loop
- ar=AR(a); wr=AR(w);
  // First loop: calculate zn=#result atoms, c=#atoms in result item.  We go through the loop once for each number in the result-rank, fetch m/n (the values).  For all except the first,
  // we process by finding the result axis-length and multiplying it into the total size.  The result axis-length is the larger of the arg axis lengths; the arg lengths come from the shape
  // until the shape is exhausted; then the shape is extended with 1 for arrays, 0 for atoms (scalar extension, which takes the cell-shape from the other argument even if it contains a 0).
  // This overfetches ?r[-1], which is OK.
- as=AS(a); ws=AS(w); I ax=ar-1; I wx=wr-1; c=1; I extenmin=SGNTO0(~(ax|wx));  // if either arg is scalar, extend shape with 0; otherwise 1
- while(1){m=as[ax]; m=ax<0?extenmin:m; ax=ax<0?0:ax; n=ws[wx]; n=wx<0?extenmin:n; wx=wx<0?0:wx; if(ax+wx==0)break; I axlen=MAX(m,n); DPMULDDECLS DPMULDZ(c,axlen,c); if(axlen==0)goto emptyresult; --ax, --wx;}  // fetches AS[-1] which is OK.
+ I needfill=0;  // set if either arg needs fill, i. e. if item has differing shape
+ I aas,was;  // axis size of a/w, after extension
+ I ax=ar-1; I wx=wr-1; I c=1; I extenmin=SGNTO0(-acr&-wcr);  // c will be outer cell size; if either inner arg is scalar, extend item shape with 0; otherwise 1
+ while(1){aas=as[ax]; aas=ax<af?extenmin:aas; ax=ax<af?af:ax; was=ws[wx]; was=wx<wf?extenmin:was; wx=wx<wf?wf:wx; if(ax+wx==af+wf)break; needfill=aas==was?needfill:1; I axlen=MAX(aas,was); DPMULDDECLS DPMULDZ(c,axlen,c); if(axlen==0)goto emptyresult; --ax, --wx;}  // fetches AS[-1] which is OK.
  ASSERT(c>0,EVLIMIT);   // we end the loop with 0 product only if some product overflowed and was set to 0
-emptyresult:;   // abort loop to come here if a result axis length is 0, which always produces a true empty result
- m=ar==0?1:m; n=wr==0?1:n;  // a scalar arg always has exactly one item
- DPMULDDECLS DPMULDE(c,m+n,zn);  // get total # atoms in result.  m, n invalid if c==0, no problem
- // Now that we have figured out the result size we can decide whether we need fill
- I somefill; I an=AN(a); I wn=AN(w);   // set if we must have a fill atom
- if(unlikely((somefill=((an+wn-zn)&(-MIN(ar,wr))))<0)){    // we need fill only if there are more result atoms than input atoms, and neither arg is an atom (which would replicate). 
-  RZ(w=setfv(a,w)); t=AT(w); if(!(/*an!=0&&*/t&AT(a)))RZ(a=cvt(t,a)) // set fill, and convert w to its type.  Then convert a with different type,  Alas, we have to convert empties because take uses fill in ovgmove
+ if(0){emptyresult: aas=as[af]; aas=acr<wcr?1:aas; was=ws[wf]; was=wcr<acr?1:was;}   // abort loop to come here if a result axis length is 0, which always produces a true empty result-cell.  ?as is not set in that case - reestablish it
+ // c is the number of atoms in 1 result cell
+ aas=acr==0?1:aas; was=wcr==0?1:was; aas+=was;  // Set ?as (=#items) to 1 if ? is atom.  repurpose aas to total # result-items per result-cell to save a register
+
+ // now that we know whether there is fill, convert the arguments (and fill) to a common type
+ // aas,was have the number of items in each arg. convert arguments, including fill-type if needed
+ if(unlikely(needfill&extenmin)){    // we need fill if cell axes differed, and neither arg is an atom (which would replicate). 
+// obsolete  RZ(w=setfv(a,w)); t=AT(w); if(!(/*an!=0&&*/t&AT(a)))RZ(a=cvt(t,a)) // set fill, and convert w to its type.  Then convert nonempty a with different type.
+  RZ(w=setfv(a,w)); t=AT(w); if(unlikely((UI)(t&AT(a))<(UI)-AN(a)))RZ(a=cvt(t,a)) // set fill, and convert w to its type.  Then convert nonempty a with different type.
  }else if(unlikely(AT(a)!=(t=AT(w)))){   // if no fill but dissimilar types...
-  t=maxtypedne(AT(a)|((UI)-an<(UI)wn),t|((UI)-wn<(UI)an)); t=LOWESTBIT(t);   // If types not the same, get result type.  Treat empty arg as boolean if the other is nonempty.
-  /*if((-an&-wn)<0)*/{I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}  // if both args nonempty, convert low arg to result precision.
+  t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t);   // If types not the same, get result type.  Treat empty arg as boolean if the other is nonempty.
+  if((-AN(a)&-AN(w))<0){I atdiff=TYPESXOR(t,AT(a)); RZ(z=cvt(t,atdiff?a:w)) a=atdiff?z:a; w=atdiff?w:z;}  // if both args nonempty, convert low arg to result precision.
  }
- I r=MAX(ar,wr); r=MAX(r,1); GA00(z,t,zn,r); x=CAVn(r,z); k=bpnoun(t);  // allocate result; get pointer to data & len of an atom
- as=AS(a); ws=AS(w); ax=ar-1; wx=wr-1; I *zs=&AS(z)[MAX(ax,wx)];  // zs is immaterial if both args are atoms
+
+ C *awv[2][2]; awv[0][0]=awv[0][1]=CAV(a); awv[1][0]=awv[1][1]=CAV(w);   // store the starting and reset values for a/w, each to the start of the argument
+ I cmax[2];  // number of copy axes a/w, all but possibly the last having fill
+
+ // allocate result area and fill in its shape with the outer frame, # inner items, and shape of each composite inner item
+ DPMULDDECLS DPMULDE(c,aas,zn); DPMULDE(ncells,zn,zn)  // get total # atoms in result.  m invalid if c==0, no problem
+ I zr=MAX(acr,wcr); zr=MAX(zr,1); zr+=maxf; GA00(z,t,zn,zr); I klg=bplg(t);  // allocate result; get pointer to data & len of an atom
+ MCISH(AS(z),smaxf,maxf) AS(z)[maxf]=aas;
+ ax=ar-1; wx=wr-1; I *zs=&AS(z)[zr-1];  // zs is immaterial if both arg-cells are atoms
  // Second loop: fill in shape of z, except for the first value which is overwritten by ovgmove.
- while(1){m=as[ax]; m=ax<0?extenmin:m; ax=ax<0?0:ax; n=ws[wx]; n=wx<0?extenmin:n; wx=wx<0?0:wx; if(ax+wx==0)break; *zs=MAX(m,n); --ax, --wx, --zs;}  // Store max of extended shapes.  fetches AS[-1] which is OK.
- m=ar==0?1:m; n=wr==0?1:n;  // a scalar arg always has exactly one item
- RZ(x=jtovgmove(jt,k,c,m,z,a,x,somefill));
- RZ(x=jtovgmove(jt,k,c,n,z,w,x,somefill));
- AS(z)[0]=m+n;  // m and n are left to first value in (1-extended) rank
- RETF(z);
-}    /* a,w general case for dense array with the same type; jt->ranks=~0 */
+ while(1){aas=as[ax]; aas=ax<af?extenmin:aas; ax=ax<af?af:ax; was=ws[wx]; was=wx<wf?extenmin:was; wx=wx<wf?wf:wx; if(ax+wx==af+wf)break; *zs=MAX(aas,was); --ax, --wx, --zs;}  // Store max of extended shapes.  fetches AS[-1] which is OK.
+ if(unlikely(zn==0))RETF(z);  // return fast if empty, may not be recursive result
+ C *d=CAVn(zr,z);   // running output pointer
 
-
-static C*jtovgmove(J jt,I k,I c,I m,A z,A w,C*x,I somefill){I d,n,p=c*m;  // p=#atoms in result
-   // z may not be boxed; but if it is, w must be also.
- if(likely(AR(w))){
-  n=AN(w); d=AR(z)-AR(w);   // d is number of added axes required to bring w up to shape of result
-  if((~somefill|(-n&(d-1)))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: fill needed somewhere, and w empty or shape short (d>0).  Fills unnecessarily if axis was extended with 1s and the other arg needed fill
-  if(likely(n!=0)){  // nonempty cell, must copy in the data
-   if(withprob(n<p,0.1)){  // incoming cell smaller than result area: take to result-cell size (uses fill)
-    fauxblockINT(sh,0,1); AK((A)sh)=(C*)(&AS(z)[d])-(C*)sh; AT((A)sh)=INT; AR((A)sh)=1; AN((A)sh)=AS((A)sh)[0]=AR(w); AFLAGFAUXAUDIT((A)sh,0); // create arg to take: INT vector with shape of item of result
-    AS(z)[0]=m; RZ(w=take((A)sh,w));  // do the take, with fill
+ // for each argument, convert the shape to a sequence of copy-then-fill, referring to the length of each corresponding result-item axis
+ // AS(z)[maxf+1..zr-1] is the shape of an inner result item, which must have rank 1 or higher   AS(?)[..?r-1] is the shape of an input item.  Convert shape to data/fill counts
+ zs=AS(z)+zr;   // point to end of result item shape
+ I aw, cr, *s; I dlen[2][RMAX], flen[2][RMAX];  // selector a/w; cell-rank a/w; shape ptr a/w; length in atoms of data to be copied for each fill section, length in atoms of each fill to be copied after the data. dlen<0 means scalar replication
+ for(aw=0, s=as+ar, cr=acr;aw<2;++aw, s=ws+wr, cr=wcr){  // for a, then w...
+  UI prevdsize, prevfsize;  // previous copy section's parameters, for loop reduction.  Init to 'cannot add to previous'
+  I csize=1, dsize=1, zx, zfx;  // will accumulate full size of cell including fill; will accumulate unfilled axes; index to shape, running backwards; index to coalesced fill section, running forwards from 0
+  for(zx=-1,zfx=0;zx>=maxf-zr;--zx){  // init negative index from end of zs to next axis; init output axis to 0
+   I zrn=zs[zx], rn=s[zx]; I extend0=zx==maxf-zr?1:extenmin; rn=zx<-cr?extend0:rn;  // get length of result axis & data axis; extend short axis with 0/1, but always extend #items with 1
+   dsize*=rn;  // coalesce consecutive unfilled axes.  dlen is the number of repeats of lower axes
+   if(((rn-zrn)|(zx-(maxf-zr+1)))<0){  // if this axis has fill or is the first axis
+    zrn=zx<maxf-zr+1?rn:zrn;  // first axis does not add fill by definition.  The cell must not be empty, so will have created 1 cell already
+    // calculate the amount of data & fill (multiples of lower cell size) & write out; reset coalesced-axis count
+    // loop reduction: if a new copy section has length 1 (except for the last axis, which comes first), coalesce it with the previous: keep prev len, add fill counts
+    I coal=SGNTO0((dsize-2)&(1-zfx)); zfx-=coal; dsize=coal?prevdsize:dsize; prevfsize=coal?prevfsize:0; dlen[aw][zfx]=prevdsize=dsize; flen[aw][zfx]=prevfsize+=(zrn-rn)*csize; ++zfx; dsize=1;
    }
-   JMC(x,AV(w),k*AN(w),1);  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy
+   csize*=zrn;  // accumulate size of result-item including fill; at end, is total size of the result-cell contruted by this arg (#items * size of each)
   }
- }else{  // scalar replication
-  mvc(k*p,x,k,AV(w));
+  // if the arg was an atom or empty, discard the above and call for a full result of the atom (datalen=-1) or fill if empty
+  if(cr==0){zfx=1; dlen[aw][0]=-1; flen[aw][0]=csize;  // special axis that does atomic replication
+  }else if(unlikely(AN(aw?w:a)==0)){zfx=1; dlen[aw][0]=0; flen[aw][0]=csize;  // empty arg can produce only fill
+  }
+  cmax[aw]=zfx;  // remember number of copy sections
  }
- R x+k*p;
-}    /* move an argument into the result area */
+
+ // copy the result.  For each output item, move an item of a then w, with fill
+ I celli=ncells;  // loop counter
+ do{  // for each cell-pair of inputs
+  for(aw=0;aw<2;++aw){  // for a, then w
+   // move one cell of a/w, with fill
+   I adv=SGNTO0(--awn[aw][0]);   // get an early start reading the repeat count.  This must settle before end-of-loop so we don't have unknown addresses plugging the write queue
+   I rx, ndx[RMAX];  // odometer into copy sections
+   C *s=awv[aw][0];  // init input pointer to the cell data
+   I dl=dlen[aw][0]<<klg, fl=flen[aw][0]<<klg;  // len of first level of data and fill
+   for(rx=0;rx<cmax[aw];++rx)ndx[rx]=0;   // init all levels
+   while(1){
+    if(dl<0){mvc(fl,d,1LL<<klg,s); d+=fl; s+=(I)1<<klg; goto endcell;}  // atomic replication across the entire cell area
+    // falling through, not atomic
+    MC(d,s,dl); d+=dl, s+=dl; if(fl){mvc(fl,d,1LL<<klg,jt->fillv); d+=fl;}   // copy data+fill for lowest cell.  This is the only place data comes from; the rest is fill
+    rx=1;  // start looking at higher axes
+    while(1){  // go up through the axes, adding fill if we get to the end of the axis
+     if(rx==cmax[aw])goto endcell;  // when we fill out the first axis, we have copied the whole cell
+     if(++ndx[rx]<dlen[aw][rx])break;  // until we hit end, just go back to move another cell
+     if(flen[aw][rx]!=0){mvc(flen[aw][rx]<<klg,d,(I)1<<klg,jt->fillv); d+=flen[aw][rx]<<klg;}
+     ndx[rx]=0; ++rx;  // we have moved fill for this axis; restart the axis & check the next
+    }
+   }
+endcell:;  // here when we have moved all the data & fill for a or w
+
+   // advance to the next item, repeating the previous outer cell if needed
+   awv[aw][0]=s;  // save source pointer after advance
+   awv[aw][adv]=awv[aw][1-adv]; awn[aw][0]=awn[aw][adv];  // decr repeat count; if repeat ends (value<0), copy [0] (next cell address) to [1]; otherwise, copy [1] (repeat address) to 0 and reset repeat count
+  }
+  // one cell has been moved, a then w.  Advance to the next one
+ }while(--celli!=0);
+
+ // All copied.
+ if(!(t&DIRECT)){
+  // Type is INDIRECT, update the usecounts in the result and fill.  We update the counts in the blocks in the input, which allows us to increment by more than 1 at a time
+  if(unlikely(needfill&extenmin)){
+   I nfilled=0;  // accumulator for # fill cells
+   for(aw=0;aw<2;++aw){if(dlen[aw][0]>=0){I fillacc=0; DO(cmax[aw], fillacc=fillacc*dlen[aw][i]+flen[aw][i];) nfilled+=fillacc;}}  // count total # fills for each arg, skipping atomic args
+   A *filla=(A*)jt->fillv; DO(1LL<<(klg-LGSZI), raN(filla[i],nfilled*ncells);)  // add to the usecount for each copy.  fillv must be pointer(s) to A block(s)
+   A *tv=AAV(a); I tn=AN(a); DO(2, I rptct=awn[i][1]+1; DO(tn<<(klg-LGSZI), raN(tv[i],rptct);) tv=AAV(w); tn=AN(w);)  // add to the usercount for each repeat of the arg
+   AFLAGORLOCAL(z,t&RECURSIBLE);  // mark the block recursive now that we have updated the childrens' usecounts
+  }
+ }
+ RETF(z);  // no EPILOG needed - we made the result recursive
 #endif
-
-
+}    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 DF2(jtstitch){F12IP;I ar,wr; A z;
  ARGCHK2(a,w);

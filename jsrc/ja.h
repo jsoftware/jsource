@@ -920,6 +920,7 @@ extern void jfree4gmp(void*,size_t);
 #define raincr(x) __atomic_fetch_add(&AC(x),1,__ATOMIC_ACQ_REL)
 #define rasv(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else raincr(x); radescend(x,sv)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
 #define ra(x)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+ACUC1));else raincr(x); radescend(x)}}  // better a misbranch than an atomic instruction if c<0.  Could avoid recur check if AC>1
+#define raN(x,n)   {I c=AC(x); if(likely(!ACISPERM(c))){if(c<0)AC(x)=(I)((UI)c+(ACINPLACE+(n)));else __atomic_fetch_add(&AC(x),(n),__ATOMIC_ACQ_REL); radescend(x)}}  // add N to usecount all at once
 #define racontents(x)   {I c=AC(x); if(MEMAUDIT!=0&&c<0)SEGFAULT; if(likely(!ACISPERM(c))){raincr(x); radescend(x)}}  // Used on contents of box, which cannot have AC<0
 #define rareccontents(x)   {I c=AC(x); if(MEMAUDIT!=0&&c<0)SEGFAULT; if(likely(!ACISPERM(c))){raincr(x);}}  // Used on contents of recursive box, which cannot have AC<0 and does not need recursion
 #define raname(x) {if(likely(!ACISPERM(AC(x))))raincr(x);}  // NAME is not inplaceable, seldom local; just add 1.  No traverse needed on ra

@@ -22,7 +22,7 @@ F2(jtsetfv){F12IP;A q=jt->fill;
   jt->fillv=CAV(q); jt->fillvlen=bpnoun(t);  // jt->fillv points to the fill atom
  }else{fillv0(t);}    // empty or no fill.  create std fill in fillv0 and point jt->fillv at it
  w=TYPESEQ(t,AT(w))?w:cvt(t,w);  // convert w to dest type.  note if w is boxed and nonempty this won't change it
- if(w==0&&jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; // if we got an error here (always called DOMAIN), show it as EVHOMO when we eformat
+ if(unlikely(w==0)&&jt->jerr==EVDOMAIN)jt->jerr=EVINHOMO; // if we got an error here (always called DOMAIN), show it as EVHOMO when we eformat
  R w;
 }
 // simpler version when there is only w.  We make AT(w) an argument to save a fetch

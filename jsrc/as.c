@@ -354,8 +354,9 @@ static DF2(jtofxinv){F12IP;A f,fs,z;C c;I t;V*v;
  F2RANKW(0,RMAX,jtofxinv,self);
  fs=FAV(self)->fgh[0]; f=FAV(fs)->fgh[0]; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||((c&-2)==CEQ)&&t&B01))R outfix(a,w,self);  // if not +/\. or m b./\. or =/\. or ~:/\.
- A z0,z1; z=irs2(dfv1(z0,w,fs),dfv2(z1,a,w,bslash(fs)),c==CPLUS?ds(CMINUS):f, RMAX,-1L,jtatomic2);
- if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
+ A z0; RZ(dfv1(z0,w,fs)) if(t&FL&&unlikely(!all0(jtisnan(jt,z0)))){RESETERR; R outfix(a,w,self);}  // take u/ y; if FL, see if result contains NaN, failover if so to slow version
+ A z1; z=irs2(z0,dfv2(z1,a,w,bslash(fs)),c==CPLUS?ds(CMINUS):f, RMAX,-1L,jtatomic2);  // x u/\. y = (u/ y) uinv x u/\ y
+ if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;  // failover if NaN
 }    /* a f/\. w where f has an "undo" */
 
 static DF2(jtofxassoc){F12IP;A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;

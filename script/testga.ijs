@@ -195,16 +195,16 @@ else.
 end.
 msg fappends testres
 echo^:(*@#RES) RES
-exit *@#RES
 )
 
 echo 'RUN4 ddall'
 9!:27'FINISH RES=: RUN4 ddall'
 9!:29]1
+exit *@#RES
 
-1: 0 : 0
-if. IFWIN *. 1 e. 'avx/' E. 9!:14'' do.
-  13!:99''
-end.
-)
+NB. 1: 0 : 0
+NB. if. IFWIN *. 1 e. 'avx/' E. 9!:14'' do.
+NB.   13!:99''
+NB. end.
+NB. )
 

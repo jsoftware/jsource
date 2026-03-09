@@ -2,8 +2,10 @@
 # rm all *.o for clean builds - makefile dependencies are not set
 set -e
 
-if [ "$1" = "noclean" ]; then
- exit 0
+if [ x"noclean" = x"$1" ]; then
+  exit 0
+elif [ "1" = "$NOCLEAN" ]; then
+  exit 0
 fi
 
 realpath() {
@@ -20,5 +22,5 @@ realpath() {
 cd "$(realpath $(dirname "$0"))"
 echo "entering $(pwd)"
 
-find .. -not -path "*/.*" -not -path "../openssl-asm/*" -not -path "../asm/*" \( -name "*.o" -o -name "*.tmp" \) -type f -delete || true
+find .. -not -path "*/.*" -not -path "../openssl-asm/*" -not -path "../asm/*" \( -name "*.o" -o name "*.res" -o -name "*.tmp" \) -type f -delete || true
 find .. -not -path "*/.*" -not -path "../openssl-asm/*" -not -path "../asm/*" -name "*.dSYM" -type d -delete || true

@@ -25,8 +25,6 @@ echo "entering $(pwd)"
 # copy binaries in bin/ to jlibrary/bin
 
 eval "$(./jplatform64.sh)"
-jplatform64="$jplatform"/"$j64x"
-echo \# jplatform $jplatform64
 
 cop() {
  # $1 src
@@ -34,13 +32,13 @@ cop() {
  # $3 dest
  # $4 destlib
  # MUST rename/remove object first; overwrite cause cache error
- if [ -f "../bin/${jplatform64}$DEBUGDIR/$2" ]; then
+ if [ -f "../bin/${jplatform}/${j64x}$DEBUGDIR/$2" ]; then
   if [ -f "../jlibrary/$3/$4" ]; then
    mv -f "../jlibrary/$3/$4" "/tmp/$4.old.$$" || true
   fi
   mkdir -p ../jlibrary/$3 || true
-  echo \# cp "../bin/${jplatform64}$DEBUGDIR/$2" "../jlibrary/$3/$4"
-  cp "../bin/${jplatform64}$DEBUGDIR/$2" "../jlibrary/$3/$4" || true
+  echo \# cp "../bin/${jplatform}/${j64x}$DEBUGDIR/$2" "../jlibrary/$3/$4"
+  cp "../bin/${jplatform}/${j64x}$DEBUGDIR/$2" "../jlibrary/$3/$4" || true
  fi
 }
 

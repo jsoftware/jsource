@@ -1,6 +1,4 @@
-vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
-
-ODIR=../../../../bin/$(jplatform64)
+ODIR=../bin/$(jplatform)/$(j64x)
 
 .SUFFIXES: .o
 
@@ -31,11 +29,11 @@ OBJS=  \
  ar.o \
  as.o \
  au.o \
- gemm_c-ref.o \
- gemm_int-aarch64.o \
- gemm_int-avx.o \
- gemm_int-sse2.o \
- gemm_vec-ref.o \
+ blis/gemm_c-ref.o \
+ blis/gemm_int-aarch64.o \
+ blis/gemm_int-avx.o \
+ blis/gemm_int-sse2.o \
+ blis/gemm_vec-ref.o \
  cblas.o \
  c.o \
  ca.o \
@@ -160,16 +158,16 @@ OBJS=  \
  crc32c.o \
  str.o \
  strptime.o \
- keccak1600.o \
- md4_dgst.o \
- md4_one.o \
- md5_dgst.o \
- md5_one.o \
- openssl-util.o \
- sha1_one.o \
- sha256.o \
- sha3.o \
- sha512.o
+ openssl/sha/keccak1600.o \
+ openssl/sha/md4_dgst.o \
+ openssl/sha/md4_one.o \
+ openssl/sha/md5_dgst.o \
+ openssl/sha/md5_one.o \
+ openssl/sha/openssl-util.o \
+ openssl/sha/sha1_one.o \
+ openssl/sha/sha256.o \
+ openssl/sha/sha3.o \
+ openssl/sha/sha512.o
 
 %.o: %.cpp
 	$(CXX) -c $(CPPFLAGS) -o$@ $^
@@ -188,26 +186,26 @@ $(OBJS_AESNI) : CFLAGS_AESNI := -maes
 $(OBJS_AESARM) : CFLAGS_AESARM := -march=armv8-a+crc+crypto
 $(OBJS_BASE64) : CFLAGS_BASE64 := $(FLAGS_BASE64)
 ifdef TARGET
-ifneq (windows,$(findstring windows,$(jplatform64)))
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
-	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
+ifneq (windows,$(findstring windows,$(jplatform)))
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM)
+	$(CC) -o $@ $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_ASM) $(SRC_ASM) $(LDFLAGS)
 else
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
-	$(CXX) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES)
+	$(CXX) -o $@ $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
 endif
 endif
 
 ifdef TARGET_a
-$(ODIR)/$(TARGET_a) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
-	$(AR) $(LDFLAGS_a) $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS_b)
+$(ODIR)/$(TARGET_a) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM) $(DLLOBJS)
+	$(AR) $(LDFLAGS_a) $@ $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LDFLAGS_b)
 endif
 
-$(LIBJRES): jdll.rc
-	$(WINDRES) -o$@ $^
+%.res: %.rc
+	$(WINDRES) -l 0x409 -D _USING_V110_SDK71_ -r -O COFF -o $@ $^
 
 all: $(ODIR)/$(TARGET) $(ODIR)/$(TARGET_a)
 
 clean:
-	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(OBJS_BASE64) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
+	rm -f $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SIMDUTF8) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
 
 .PHONY: all clean

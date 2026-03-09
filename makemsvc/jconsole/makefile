@@ -1,21 +1,34 @@
+ODIR = ../bin/$(jplatform)/$(j64x)
+
+COPTION =
+ifeq (j64arm,$(j64x))
+ TARGET_CPU = arm64
+else ifeq (j64avx512,$(j64x))
+ TARGET_CPU = x64
+else ifeq (j64avx2,$(j64x))
+ TARGET_CPU = x64
+else ifeq (j64,$(j64x))
+ TARGET_CPU = x64
+else
+ TARGET_CPU = x86
+endif
+
 ifeq (1,$(USE_LINENOISE))
  READLINE = 1
 endif
 ifneq ($(_DEBUG),)
- COPTION = /FS /Z7 /DDEBUG=1
+ COPTION := $(COPTION) /FS /Z7 /DDEBUG=1
  LDEBUG = /DEBUG
-else
- COPTION =
 endif
-CINCLUDE = -I../../mpir/include
+CINCLUDE = -I../mpir/include
 ifeq (1,$(USE_PYXES))
- CINCLUDE := $(CINCLUDE) -I../../pthreads4w/include
+ CINCLUDE := $(CINCLUDE) -I../pthreads4w/include
  COPTION := $(COPTION) /DPYXES=1
 else
  COPTION := $(COPTION) /DPYXES=0
 endif
 
-ifeq (ARM64,$(TARGET_CPU))
+ifeq (arm64,$(TARGET_CPU))
  CF1 = -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-unused-variable
  CFLAGS = $(COPTION) $(CINCLUDE) /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
  FLAGS = $(LDEBUG) /STACK:0xc00000 /MACHINE:ARM64 /SUBSYSTEM:CONSOLE,5.02
@@ -32,15 +45,15 @@ endif
 .SUFFIXES: .o
 
 OBJS = \
- ../../jsrc/jconsole.o \
- ../../jsrc/jeload.o
+ jconsole.o \
+ jeload.o
 
 ifdef READLINE
- OBJSLN =  ../../jsrc/linenoise.o
+ OBJSLN =  linenoise.o
  CFLAGSLN = -DREADLINE -DUSE_LINENOISE
 endif
 
-RCS = ../../makevs/jconsole/jconsole.rc
+RCS = ../makevs/jconsole/jconsole.res
 
 ifndef LD
  LD = lld-link
@@ -49,26 +62,20 @@ endif
 %.o : %.c
 	$(CC) $(CFLAGS) $(CFLAGSLN) /Fo$@ /c $<
 
-ifeq (ARM64,$(TARGET_CPU))
- TARGET = jconsole-arm64.exe
-else ifeq (x64,$(TARGET_CPU))
- TARGET = jconsole.exe
-else
- TARGET = jconsole32.exe
-endif
+%.res : %.rc
+	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $<
 
-$(TARGET) : $(OBJS) $(OBJSLN) jconsole.res
-	$(LD) /NOLOGO $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) jconsole.res
+TARGET = jconsole.exe
 
-jconsole.res : $(RCS)
-	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJSLN) $(RCS)
+	$(LD) /NOLOGO $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(RCS)
 
-all : $(TARGET)
+all : $(ODIR)/$(TARGET)
 
 noclean :
 	#
 
 clean :
-	rm -f *.ilk *.pdb $(OBJS) $(OBJSLN)
+	rm -f $(ODIR)/*.ilk $(ODIR)/*.pdb $(OBJS) $(OBJSLN) $(RCS)
 
 .PHONY: all clean noclean

@@ -2,17 +2,18 @@
 set -e
 cd "$(dirname "$0")"
 clear # should be easy to find first compiler error if any occur
-jplatform64=$(./jplatform64.sh)
+unameop=$(uname -o || uname -s)
+eval "$(./jplatform64.sh)"
 CC=${CC-clang}
 CFLAGS="-ggdb -O0 $CFLAGS"
 export CC CFLAGS
-BIN=../bin/$jplatform64
+BIN=../bin/$jplatform/$j64x
 jconsole=$BIN/jconsole
 if [ ! -r $jconsole ]; then ./build_jconsole.sh; fi
 if [ ! -r $BIN/libtsdll.* ]; then ./build_tsdll.sh; fi
 ./build_libj.sh
 (
- cd ../bin/$(dirname $jplatform64)
+ cd ../bin/$(dirname $jplatform)/$j64x
  for l in ../../jlibrary/*/.; do
   d=$(dirname $l)
   rm -f $(basename $d)
@@ -20,7 +21,7 @@ if [ ! -r $BIN/libtsdll.* ]; then ./build_tsdll.sh; fi
  done
 )
 (
- cd ../bin/$jplatform64
+ cd ../bin/$jplatform/$j64x
  rm -f profile.ijs
  ln -fs ../../../bin/profile.ijs
 )

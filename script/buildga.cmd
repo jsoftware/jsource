@@ -31,18 +31,19 @@ GOTO L01C
 :L01A
 mkdir j32
 copy bin\profile.ijs j32
-copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3.dll
-copy mpir\windows\x86\mpir.dll j32
-copy openmp\obj\windows\libomp32.dll j32\libomp.dll
-copy pcre2\windows\x86\jpcre2.dll tools\regex\.
-curl --output-dir "j32" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
+copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3-w32.dll
+copy mpir\windows\x86\mpir.dll j32\mpir32.dll
+copy openmp\obj\windows\libomp32.dll j32\libomp32.dll
+copy pcre2\windows\x86\jpcre2.dll tools\regex\jpcre2_32.dll
+curl --output-dir "j32" -O "https://www.jsoftware.com/dowoad/lapackbin/libopenblas_32.dll"
 GOTO L01C
 :L01B
 mkdir j64
 copy bin\profile.ijs j64
-copy pthreads4w\bin\pthreadVC3-arm64.dll j64\pthreadVC3.dll
-copy mpir\windows\arm64\mpir.dll j64
-copy pcre2\windows\arm64\jpcre2.dll tools\regex\.
+copy pthreads4w\bin\pthreadVC3-arm64.dll j64\pthreadVC3-arm64.dll
+copy mpir\windows\arm64\mpir-a64.dll j64
+copy openmp\obj\windows\libomp.dll j64\libomparm64.dll
+copy pcre2\windows\arm64\jpcre2.dll tools\regex\jpcre2_arm64.dll
 curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
 :L01C
 
@@ -51,92 +52,90 @@ echo #define jplatform "windows" >> jsrc\jversion.h
 echo #define jlicense "commercial" >> jsrc\jversion.h
 echo #define jbuilder "www.jsoftware.com" >> jsrc\jversion.h
 
-cd makemsvc\tsdll
+cd jsrc
+set jplatform=windows
+set CC=CC=clang-cl
+
 IF "%~1"=="x86" GOTO L04A
 IF "%~1"=="arm64" GOTO L04B
 IF "%~1" NEQ "x64" EXIT /b 1
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64
+nmake -f ..\makemsvc\tsdll\makefile.win j64x=j64 clean
+nmake -f ..\makemsvc\tsdll\makefile.win j64x=j64
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L04C
 :L04A
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86
+nmake -f ..\makemsvc\tsdll\makefile.win j64x=j32 clean
+nmake -f ..\makemsvc\tsdll\makefile.win j64x=j32
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L04C
 :L04B
-nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64
+nmake -f ..\makemsvc\tsdll\makefile.win j64x=j64arm clean
+nmake -f ..\makemsvc\tsdll\makefile.win j64x=j64arm
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L04C
 
-cd ..
-cd jconsole
 IF "%~1"=="x86" GOTO L02A
 IF "%~1"=="arm64" GOTO L02B
 IF "%~1" NEQ "x64" EXIT /b 1
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64
+nmake -f ..\makemsvc\jconsole\makefile.win j64x=j64 clean
+nmake -f ..\makemsvc\jconsole\makefile.win j64x=j64
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L02C
 :L02A
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86
+nmake -f ..\makemsvc\jconsole\makefile.win j64x=j32 clean
+nmake -f ..\makemsvc\jconsole\makefile.win j64x=j32
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L02C
 :L02B
-nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64
+nmake -f ..\makemsvc\jconsole\makefile.win j64x=j64arm clean
+nmake -f ..\makemsvc\jconsole\makefile.win j64x=j64arm
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L02C
 
-cd ..
-cd jdll
 IF "%~1"=="x86" GOTO L03A
 IF "%~1"=="arm64" GOTO L03B
 IF "%~1" NEQ "x64" EXIT /b 1
 IF "%USE_EMU_AVX%"=="0" GOTO L03F
 IF "%USE_PYXES%"=="0" GOTO L03F
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=1 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=1
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j64avx512 clean
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j64avx512
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=1 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=1
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j64avx2 clean
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j64avx2
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L03F
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j64 clean
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j64
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L03C
 :L03A
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j32 clean
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j32
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L03C
 :L03B
-nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64 NO_SHA_ASM=1 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64 NO_SHA_ASM=1
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j64arm NO_SHA_ASM=1 clean
+nmake -f ..\makemsvc\jdll\makefile.win j64x=j64arm NO_SHA_ASM=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L03C
 
 GOTO L05C
-cd ..
-cd jamalgam
+
 IF "%~1"=="x86" GOTO L05A
 IF "%~1"=="arm64" GOTO L05B
 IF "%~1" NEQ "x64" EXIT /b 1
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x64 JAVX512=0 JAVX2=0
+nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j64 clean
+nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j64
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L05C
 :L05A
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=x86
+nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j32 jclean
+nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j32
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L05C
 :L05B
-nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64 NO_SHA_ASM=1 clean
-nmake -f makefile.win CC=clang-cl TARGET_CPU=ARM64 NO_SHA_ASM=1
+nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j64arm NO_SHA_ASM=1 clean
+nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j64arm NO_SHA_ASM=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L05C
 
@@ -144,20 +143,19 @@ cd ..
 IF "%~1"=="x86" GOTO L06A
 IF "%~1"=="arm64" GOTO L06B
 IF "%~1" NEQ "x64" EXIT /b 1
-copy jconsole\jconsole.exe ..\j64
-copy jdll\*.dll ..\j64
-copy tsdll\tsdll.dll ..\j64
-@rem copy jamalgam\jamalgam.exe ..\j64
+copy bin\windows\j64\jconsole.exe ..\j64
+copy bin\windows\j64\*.dll ..\j64
+copy bin\windows\j64avx512\j.dll ..\j64\javx512.dll
+copy bin\windows\j64avx2\j.dll ..\j64\javx2.dll
+@rem copy bin\windows\j64\jamalgam.exe ..\j64
 GOTO L06C
 :L06A
-copy jconsole\jconsole32.exe ..\j32\jconsole.exe
-copy jdll\j32.dll ..\j32\j.dll
-copy tsdll\tsdll32.dll ..\j32\tsdll.dll
-@rem copy jamalgam\jamalgam32.exe ..\j32\jamalgam.exe
+copy bin\windows\j32\console32.exe ..\j32
+copy bin\windows\j32\*.dll ..\j32
+@rem copy bin\windows\j32\jamalgam.exe ..\j32
 GOTO L06C
 :L06B
-copy jconsole\jconsole-arm64.exe ..\j64\jconsole.exe
-copy jdll\jarm64.dll ..\j64\j.dll
-copy tsdll\tsdllarm64.dll ..\j64\tsdll.dll
-@rem copy jamalgam\jamalgam-arm64.exe ..\j64\jamalgam.exe
+copy bin\windows\j64arm\console32.exe ..\j64
+copy bin\windows\j64arm\*.dll ..\j64
+@rem copy bin\windows\j64arm\jamalgam.exe ..\j64
 :L06C

@@ -1,23 +1,23 @@
-vpath % ../../../../jsrc % ../../../../libbacktrace
-
-ODIR=../../../../bin/$(jplatform64)
+ODIR=../bin/$(jplatform)/$(j64x)
 
 .SUFFIXES: .o
 
 OBJS=  \
  jconsole.o \
- jeload.o \
- $(BACKTRACE_OBJS)
+ jeload.o
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJSLN)
-	$(CC) -o $@ $(OBJS) $(OBJSLN) -g $(LDFLAGS)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJSLN) $(BACKTRACE_OBJS) $(LIBJRES)
+	$(CC) -o $@ $(OBJS) $(OBJSLN) $(BACKTRACE_OBJS) $(LIBJRES) -g $(LDFLAGS)
+
+%.res: %.rc
+	$(WINDRES) -l 0x409 -D _USING_V110_SDK71_ -r -O COFF -o $@ $^
 
 all: $(ODIR)/$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(OBJSLN) linenoise.o
+	rm -f $(OBJS) $(OBJSLN) $(BACKTRACE_OBJS) $(LIBJRES)
 
 .PHONY: all clean

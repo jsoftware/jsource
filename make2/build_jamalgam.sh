@@ -119,6 +119,7 @@ else
  compiler=$(readlink -f $(which $CC) || which $CC)
 fi
 echo "compiler=$compiler"
+echo "$($CC --version)"
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ]; then
@@ -776,10 +777,10 @@ case $jplatform64 in
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -Wno-psabi $DOLECOM -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -lpsapi -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -801,10 +802,10 @@ case $jplatform64 in
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -827,10 +828,10 @@ case $jplatform64 in
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -854,10 +855,10 @@ case $jplatform64 in
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -880,10 +881,10 @@ case $jplatform64 in
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -929,7 +930,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-jamalgam obj/$jplatform64/.
-export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform j64x jplatform64 WINDRES
+export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform j64x jplatform64
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then

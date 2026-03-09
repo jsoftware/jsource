@@ -5,7 +5,12 @@ set -e
 cd "$(dirname "$0")"
 echo "entering $(pwd)"
 
-./clean.sh "$1" || true
-./build_jconsole.sh
-./build_libj.sh
-./build_tsdll.sh
+unameop=$(uname -o || uname -s)
+eval "$(./jplatform64.sh)"
+jplatform64="$jplatform"/"$j64x"
+
+jplatform=${jplatform} j64x=${j64x} ./clean.sh "$1" || true
+jplatform=${jplatform} j64x=${j64x} ./build_jconsole.sh
+jplatform=${jplatform} j64x=${j64x} ./build_libj.sh
+jplatform=${jplatform} j64x=${j64x} ./build_tsdll.sh
+jplatform=${jplatform} j64x=${j64x} ./cpbin.sh

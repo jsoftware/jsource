@@ -23,7 +23,7 @@ elif [ "$unameop" = "OpenBSD" ]; then
  jplatform="${jplatform:=openbsd}"
 elif [ "$unameop" = "FreeBSD" ]; then
  jplatform="${jplatform:=freebsd}"
-elif [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ]; then
+elif [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ] || [ "$unameop" = "Msys" ]; then
  jplatform="${jplatform:=windows}"
 else
  jplatform="${jplatform:=linux}"

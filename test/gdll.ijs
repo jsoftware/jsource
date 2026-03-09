@@ -1,8 +1,8 @@
 prolog './gdll.ijs'
 NB. DLL call ------------------------------------------------------------
 
-load'dll'
-
+techo 'LIBFILE:',LIBFILE
+techo 'LIBTSDLL:',LIBTSDLL
 lib=: LIBTSDLL
 
 dcd=: 4 : '(lib,x) cd y'

@@ -1,3 +1,4 @@
+$(CC) --version
 ifneq ($(_DEBUG),)
  COPTION = /FS /Z7 /DDEBUG=1
  LDEBUG = /DEBUG

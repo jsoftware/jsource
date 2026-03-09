@@ -151,6 +151,8 @@ NB. 6!:6 arch   NB. Restore AVX
 1
 )
 
+NB. display for debug
+techo 0     +/ .* _
 0 -: 0     +/ .* _
 0 -: 0     +/ .*~_
 0 -: 0     +/ .* __

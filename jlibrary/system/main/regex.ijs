@@ -180,6 +180,7 @@ NB. pcre2 library is in bin or tools/regex
 select. UNAME
 case. 'Win' do. t=. 'jpcre2.dll'
 case. 'Darwin' do. t=. 'libjpcre2.dylib'
+case. 'Android' do. pcre2dll=: 'libjpcre2.so' return.
 case. do. t=. 'libjpcre2.so'
 end.
 

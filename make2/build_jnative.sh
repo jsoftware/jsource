@@ -99,6 +99,7 @@ else
  compiler=$(readlink -f $(which $CC) || which $CC)
 fi
 echo "compiler=$compiler"
+echo "$($CC --version)"
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc

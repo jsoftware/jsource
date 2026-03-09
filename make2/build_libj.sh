@@ -120,6 +120,7 @@ else
  compiler=$(readlink -f $(which $CC) || which $CC)
 fi
 echo "compiler=$compiler"
+echo "$($CC --version)"
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ]; then
@@ -152,6 +153,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
  -Werror -Wextra -Wno-unknown-warning-option \
+ -fsignaling-nans \
  -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \
@@ -730,16 +732,16 @@ case $jplatform64 in
   TARGET=j.dll
   # faster, but sse2 not available for 32-bit amd cpu
   # sse does not support mfpmath=sse in 32-bit gcc
-  CFLAGS="$common -Wno-psabi -Wno-incompatible-pointer-types -m32 -msse2 -mfpmath=sse -fno-finite-math-only $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
+  CFLAGS="$common -Wno-psabi -Wno-incompatible-pointer-types -m32 -msse2 -mfpmath=sse $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   # slower, use 387 fpu and truncate extra precision
   # CFLAGS="$common -m32 -ffloat-store "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -Wno-psabi $DOLECOM -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -lpsapi -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -757,14 +759,14 @@ case $jplatform64 in
   fi
   WINDRES="${WINDRES:=windres}"
   TARGET=j.dll
-  CFLAGS="$common -march=armv8-a+crc -Wno-incompatible-pointer-types -fno-finite-math-only -DNO_SHA_ASM $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  CFLAGS="$common -march=armv8-a+crc -Wno-incompatible-pointer-types -DNO_SHA_ASM $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -782,15 +784,15 @@ case $jplatform64 in
   fi
   WINDRES="${WINDRES:=windres}"
   TARGET=j.dll
-  CFLAGS="$common -Wno-incompatible-pointer-types -fno-finite-math-only $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  CFLAGS="$common -Wno-incompatible-pointer-types $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -810,15 +812,15 @@ case $jplatform64 in
   fi
   WINDRES="${WINDRES:=windres}"
   TARGET=j.dll
-  CFLAGS="$common -Wno-incompatible-pointer-types -fno-finite-math-only $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  CFLAGS="$common -Wno-incompatible-pointer-types $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -837,14 +839,14 @@ case $jplatform64 in
   fi
   WINDRES="${WINDRES:=windres}"
   TARGET=j.dll
-  CFLAGS="$common -Wno-incompatible-pointer-types -msse3 -fno-finite-math-only $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
+  CFLAGS="$common -Wno-incompatible-pointer-types -msse3 $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
-   DLLOBJS=" jdll.o jdllcomx.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o ../../../../dllsrc/jdllcomx.o "
    LIBJDEF=" ../../../../dllsrc/jdll.def "
   else
-   DLLOBJS=" jdll.o "
+   DLLOBJS=" ../../../../dllsrc/jdll.o "
    LIBJDEF=" ../../../../dllsrc/jdll2.def "
   fi
   LIBJRES=" jdllres.o "
@@ -883,7 +885,7 @@ fi
 mkdir -p ../bin/$jplatform64
 mkdir -p obj/$jplatform64/
 cp makefile-libj obj/$jplatform64/.
-export CC AR CFLAGS CPPFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform j64x jplatform64 WINDRES LDFLAGS_b
+export CC AR CFLAGS CPPFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_ASM SRC_ASM jplatform j64x jplatform64 WINDRES LDFLAGS_b
 cd obj/$jplatform64/
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then

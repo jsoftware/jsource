@@ -1475,7 +1475,7 @@ jobs:
  webhook:
   name: Run Webhook
   runs-on: ubuntu-22.04
-# this needs is also given in tests above
+# this needs is also in tests above
 # comment out any needs not used by the webhook
   needs:
    - jelinux

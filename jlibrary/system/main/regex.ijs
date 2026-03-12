@@ -178,22 +178,38 @@ NB. =========================================================
 NB. pcre2 library is in bin or tools/regex
 3 : 0''
 select. UNAME
-case. 'Win' do. t=. 'jpcre2.dll'
-case. 'Darwin' do. t=. 'libjpcre2.dylib'
 case. 'Android' do. pcre2dll=: 'libjpcre2.so' return.
-case. do. t=. 'libjpcre2.so'
+case. 'Darwin' do. t0=. 'libjpcre2' [ ext=. '.dylib' [ arch=. ''
+case. 'Win' do. t0=. 'jpcre2' [ ext=. '.dll' [ arch=. ((-.IF64)#<'_32'),(('arm64'-:9!:56'cpu')#<'_arm64')
+case. do.
+  t0=. 'libjpcre2' [ ext=. '.so'
+  if. IFRASPI do.
+    arch=. ((-.IF64)#<'_32')
+  else.
+    arch=. ((-.IF64)#<'_32'),(('arm64'-:9!:56'cpu')#<'_arm64')
+  end.
 end.
 
-f=. BINPATH,'/',t
-if. 0 = 1!:4 :: 0: <f do.
-  f=. jpath '~tools/regex/',t
+found=. 0
+for_ar. arch do.
+  if. 1= ftype f=. BINPATH,'/',t0,(>ar),ext do.
+    found=. 1 break.
+  elseif. 1= ftype f=. jpath '~tools/regex/',t0,(>ar),ext do.
+    found=. 1 break.
+  end.
+end.
+
+if. -.found do.
+  if. 1= ftype f=. BINPATH,'/',t0,ext do.
+    found=. 1
+  elseif. 1= ftype f=. jpath '~tools/regex/',t0,ext do.
+    found=. 1
+  end.
 end.
 
 NB. fall back one more time
-if. IFUNIX *. 0 = 1!:4 :: 0: <f do.
-  f=. unxlib 'pcre2'
-elseif. 0 = 1!:4 :: 0: <f do.
-  f=. t
+if. -.found do.
+  if. IFUNIX do. f=. unxlib 'pcre2' else. f=. 'pcre2-8',ext end.
 end.
 
 pcre2dll=: f

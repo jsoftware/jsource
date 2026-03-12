@@ -901,14 +901,14 @@ case "$jplatform/$j64x" in
   # these flags do not work on iOS
   # -msse2 -msimd128
   # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1
-  LDFLAGS=" -L../../../../mpir/linux/wasm32 -lgmp \
+  LDFLAGS=" -L../mpir/linux/wasm32 -lgmp \
  -s WASM=1 -s ASSERTIONS=1 -s INITIAL_MEMORY=220MB -s TOTAL_MEMORY=600MB -s ALLOW_MEMORY_GROWTH=1 -s STACK_SIZE=984KB \
  -s BINARYEN_EXTRA_PASSES="--pass-arg=max-func-params@80" -s EMULATE_FUNCTION_POINTER_CASTS=1 -s EXIT_RUNTIME=1 \
  -s EXPORTED_FUNCTIONS='[\"_main\"]' \
  -s EXPORTED_RUNTIME_METHODS='[\"cwrap\",\"ccall\", \"UTF8ToString\", \"lengthBytesUTF8\", \"stringToUTF8\"]' \
- --embed-file ../../../../jlibrary/@/home/web_user/j --exclude-file *.dylib --exclude-file *.so --exclude-file *.dll \
+ --embed-file ../jlibrary/@/home/web_user/j --exclude-file *.dylib --exclude-file *.so --exclude-file *.dll \
  --exclude-file *.exe --exclude-file jconsole* --exclude-file jamalgam* --exclude-file bin32 \
- --embed-file ../../../../test/@/home/web_user/j/test "
+ --embed-file ../test/@/home/web_user/j/test "
   SRC_ASM=""
   GASM_FLAGS=""
   FLAGS_BASE64=""

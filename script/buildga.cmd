@@ -53,42 +53,41 @@ echo #define jlicense "commercial" >> jsrc\jversion.h
 echo #define jbuilder "www.jsoftware.com" >> jsrc\jversion.h
 
 cd jsrc
-set jplatform=windows
 set CC=clang-cl
 
 IF "%~1"=="x86" GOTO L04A
 IF "%~1"=="arm64" GOTO L04B
 IF "%~1" NEQ "x64" EXIT /b 1
-nmake -f ..\makemsvc\tsdll\makefile.win j64x=j64 clean
-nmake -f ..\makemsvc\tsdll\makefile.win j64x=j64
+nmake -f ..\makemsvc\tsdll\makefile.win jplatform=windows j64x=j64 clean
+nmake -f ..\makemsvc\tsdll\makefile.win jplatform=windows j64x=j64
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L04C
 :L04A
-nmake -f ..\makemsvc\tsdll\makefile.win j64x=j32 clean
-nmake -f ..\makemsvc\tsdll\makefile.win j64x=j32
+nmake -f ..\makemsvc\tsdll\makefile.win jplatform=windows j64x=j32 clean
+nmake -f ..\makemsvc\tsdll\makefile.win jplatform=windows j64x=j32
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L04C
 :L04B
-nmake -f ..\makemsvc\tsdll\makefile.win j64x=j64arm clean
-nmake -f ..\makemsvc\tsdll\makefile.win j64x=j64arm
+nmake -f ..\makemsvc\tsdll\makefile.win jplatform=windows j64x=j64arm clean
+nmake -f ..\makemsvc\tsdll\makefile.win jplatform=windows j64x=j64arm
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L04C
 
 IF "%~1"=="x86" GOTO L02A
 IF "%~1"=="arm64" GOTO L02B
 IF "%~1" NEQ "x64" EXIT /b 1
-nmake -f ..\makemsvc\jconsole\makefile.win j64x=j64 clean
-nmake -f ..\makemsvc\jconsole\makefile.win j64x=j64
+nmake -f ..\makemsvc\jconsole\makefile.win jplatform=windows j64x=j64 clean
+nmake -f ..\makemsvc\jconsole\makefile.win jplatform=windows j64x=j64
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L02C
 :L02A
-nmake -f ..\makemsvc\jconsole\makefile.win j64x=j32 clean
-nmake -f ..\makemsvc\jconsole\makefile.win j64x=j32
+nmake -f ..\makemsvc\jconsole\makefile.win jplatform=windows j64x=j32 clean
+nmake -f ..\makemsvc\jconsole\makefile.win jplatform=windows j64x=j32
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L02C
 :L02B
-nmake -f ..\makemsvc\jconsole\makefile.win j64x=j64arm clean
-nmake -f ..\makemsvc\jconsole\makefile.win j64x=j64arm
+nmake -f ..\makemsvc\jconsole\makefile.win jplatform=windows j64x=j64arm clean
+nmake -f ..\makemsvc\jconsole\makefile.win jplatform=windows j64x=j64arm
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L02C
 
@@ -97,25 +96,25 @@ IF "%~1"=="arm64" GOTO L03B
 IF "%~1" NEQ "x64" EXIT /b 1
 IF "%USE_EMU_AVX%"=="0" GOTO L03F
 IF "%USE_PYXES%"=="0" GOTO L03F
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j64avx512 clean
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j64avx512
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512 clean
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j64avx2 clean
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j64avx2
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx2 clean
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx2
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L03F
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j64 clean
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j64
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64 clean
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L03C
 :L03A
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j32 clean
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j32
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j32 clean
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j32
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L03C
 :L03B
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j64arm NO_SHA_ASM=1 clean
-nmake -f ..\makemsvc\jdll\makefile.win j64x=j64arm NO_SHA_ASM=1
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1 clean
+nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L03C
 
@@ -124,18 +123,18 @@ GOTO L05C
 IF "%~1"=="x86" GOTO L05A
 IF "%~1"=="arm64" GOTO L05B
 IF "%~1" NEQ "x64" EXIT /b 1
-nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j64 clean
-nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j64
+nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64 clean
+nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L05C
 :L05A
-nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j32 jclean
-nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j32
+nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j32 jclean
+nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j32
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 GOTO L05C
 :L05B
-nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j64arm NO_SHA_ASM=1 clean
-nmake -f ..\makemsvc\jamalgam\makefile.win j64x=j64arm NO_SHA_ASM=1
+nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1 clean
+nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 :L05C
 

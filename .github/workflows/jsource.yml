@@ -56,7 +56,7 @@ jobs:
       strip -S libjavx512.so || true
       strip -S libtsdll.so
       strip -S jamalgam || true
-      strip -S libgmp.so
+      strip -S libgmp.so || true
       cd -
       ls -l j64
       zip -r l64.zip j64
@@ -149,7 +149,7 @@ jobs:
       strip -S libj.so
       strip -S libtsdll.so
       strip -S jamalgam || true
-      strip -S libgmp.so
+      strip -S libgmp.so || true
       cd -
       ls -l j32
       zip -r l32.zip j32
@@ -383,7 +383,7 @@ jobs:
       strip -S libj.so
       strip -S libtsdll.so
       strip -S jamalgam || true
-      strip -S libgmp.so
+      strip -S libgmp.so || true
       cd -
       ls -l j64
       zip -r rpi64.zip j64
@@ -440,7 +440,7 @@ jobs:
       strip -S libj.so
       strip -S libtsdll.so
       strip -S jamalgam || true
-      strip -S libgmp.so
+      strip -S libgmp.so || true
       cd -
       ls -l j32
       zip -r rpi32.zip j32
@@ -492,7 +492,7 @@ jobs:
        strip -S libj.so
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        zip -r rpi64.zip j64
        zip rpi64.zip /usr/bin/zip
@@ -559,7 +559,7 @@ jobs:
        strip -S libj.so
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        zip -r rpi32.zip j32
        rm -rf j32
@@ -633,7 +633,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r obsd64.zip j64
@@ -702,7 +702,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r obsd64.zip j64
@@ -769,7 +769,7 @@ jobs:
        strip -S libj.so
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r obsdarm64.zip j64
@@ -842,7 +842,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S jamalgam || true
        strip -S libtsdll.so
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r fbsd64.zip j64
@@ -915,7 +915,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r fbsd64.zip j64
@@ -989,7 +989,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r fbsdarm64.zip j64
@@ -1105,7 +1105,6 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      jplatform: windows
      run: |
       script\buildga.cmd x64
 
@@ -1155,7 +1154,6 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      jplatform: windows
      run: |
       script\buildga.cmd x86
 
@@ -1206,7 +1204,6 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      jplatform: windows
      run: |
       script\buildga.cmd arm64
 
@@ -1257,7 +1254,6 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      jplatform: windows
      run: |
       script\buildga.cmd arm64
 

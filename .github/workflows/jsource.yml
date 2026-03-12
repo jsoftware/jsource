@@ -1105,6 +1105,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      jplatform: windows
      run: |
       script\buildga.cmd x64
 
@@ -1154,6 +1155,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      jplatform: windows
      run: |
       script\buildga.cmd x86
 
@@ -1204,6 +1206,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      jplatform: windows
      run: |
       script\buildga.cmd arm64
 
@@ -1254,6 +1257,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      jplatform: windows
      run: |
       script\buildga.cmd arm64
 

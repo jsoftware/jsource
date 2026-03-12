@@ -54,7 +54,7 @@ echo #define jbuilder "www.jsoftware.com" >> jsrc\jversion.h
 
 cd jsrc
 set jplatform=windows
-set CC=CC=clang-cl
+set CC=clang-cl
 
 IF "%~1"=="x86" GOTO L04A
 IF "%~1"=="arm64" GOTO L04B

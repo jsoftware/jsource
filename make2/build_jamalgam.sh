@@ -926,7 +926,7 @@ if [ ! -f ../jsrc/jversion.h ]; then
  cp ../jsrc/jversion-x.h ../jsrc/jversion.h
 fi
 
-mkdir -p ../bin/$jplatform$/$j64x
+mkdir -p ../bin/$jplatform/$j64x
 export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then

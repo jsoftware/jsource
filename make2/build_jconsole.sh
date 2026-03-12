@@ -340,7 +340,7 @@ if [ ! -f ../jsrc/jversion.h ]; then
  cp ../jsrc/jversion-x.h ../jsrc/jversion.h
 fi
 
-mkdir -p ../bin/$jplatform$/$j64x
+mkdir -p ../bin/$jplatform/$j64x
 export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN LIBJRES jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then

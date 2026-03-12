@@ -265,7 +265,7 @@ esac
 
 echo "CFLAGS=$CFLAGS"
 
-mkdir -p ../bin/$jplatform$/$j64x
+mkdir -p ../bin/$jplatform/$j64x
 export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a LIBJDEF jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then

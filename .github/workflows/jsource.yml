@@ -1103,7 +1103,7 @@ jobs:
    - name: Build JE (Windows)
      shell: cmd
      env:
-      NASM: ${{github.workspace}}/openssl-asm/nasm
+      NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1153,7 +1153,7 @@ jobs:
    - name: Build JE (Windows 32)
      shell: cmd
      env:
-      NASM: ${{github.workspace}}/openssl-asm/nasm
+      NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |

@@ -401,6 +401,8 @@ else
  common="$common -DEMU_AVX2=0"
 fi
 
+NASM="${NASM:=nasm}"
+
 NO_SHA_ASM="${NO_SHA_ASM:=0}"
 
 if [ $NO_SHA_ASM -ne 0 ]; then
@@ -540,6 +542,7 @@ case "$jplatform/$j64x" in
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
+  NASM_FLAGS="$NASM_FLAGS -felf64"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
   ;;
@@ -617,6 +620,7 @@ case "$jplatform/$j64x" in
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
+  NASM_FLAGS="$NASM_FLAGS -felf64"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
   ;;
@@ -675,6 +679,7 @@ case "$jplatform/$j64x" in
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
+  NASM_FLAGS="$NASM_FLAGS -felf64"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
   ;;
@@ -719,6 +724,7 @@ case "$jplatform/$j64x" in
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
+  NASM_FLAGS="$NASM_FLAGS -felf64"
   GASM_FLAGS="$macmin"
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
   ;;
@@ -945,7 +951,7 @@ if [ ! -f ../jsrc/jversion.h ]; then
 fi
 
 mkdir -p ../bin/$jplatform/$j64x
-export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform j64x
+export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
   par=$(nproc)

@@ -22,5 +22,5 @@ realpath() {
 cd "$(realpath $(dirname "$0"))"
 echo "entering $(pwd)"
 
-find .. -not -path "*/.*" -not -path "../openssl-asm/*" -not -path "../asm/*" \( -name "*.o" -o name "*.res" -o -name "*.tmp" \) -type f -delete || true
+find .. -not -path "*/.*" -not -path "../openssl-asm/*" -not -path "../asm/*" \( -name "*.o" -o -name "*.res" -o -name "*.tmp" \) -type f -delete || true
 find .. -not -path "*/.*" -not -path "../openssl-asm/*" -not -path "../asm/*" -name "*.dSYM" -type d -delete || true

@@ -303,7 +303,7 @@ OBJS = \
 ifdef NO_SHA_ASM
  CFLAGS1 = /DNO_SHA_ASM
 else ifeq (arm64,$(TARGET_CPU))
- OBJS_ASM = \
+ OBJS_ASM0 = \
  ../openssl-asm/md5-aarch64-nasm.o \
  ../openssl-asm/keccak1600-armv8-nasm.o \
  ../openssl-asm/sha1-armv8-nasm.o \
@@ -317,7 +317,7 @@ else ifeq (x64,$(TARGET_CPU))
  openssl/sha/asm/sha256-x86_64-nasm.o \
  openssl/sha/asm/sha512-x86_64-nasm.o
 
- OBJS_ASM = \
+ OBJS_ASM0 = \
  ../openssl-asm/md5-x86_64-nasm.o \
  ../openssl-asm/keccak1600-x86_64-nasm.o \
  ../openssl-asm/sha1-x86_64-nasm.o \
@@ -331,7 +331,7 @@ else
  openssl/sha/asm/sha256-586-nasm.o \
  openssl/sha/asm/sha512-586-nasm.o
 
- OBJS_ASM = \
+ OBJS_ASM0 = \
  ../openssl-asm/md5-586-nasm.o \
  ../openssl-asm/keccak1600-mmx-nasm.o \
  ../openssl-asm/sha1-586-nasm.o \

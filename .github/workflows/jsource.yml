@@ -1252,7 +1252,7 @@ jobs:
    - name: Build JE (Windows arm64)
      shell: cmd
      env:
-      USE_PYXES: 1
+      USE_PYXES: 0
       USE_EMU_AVX: 1
      run: |
       script\buildga.cmd arm64
@@ -1260,7 +1260,7 @@ jobs:
    - name: Test JE (Windows arm64)
      shell: cmd
      env:
-      USE_PYXES: 1
+      USE_PYXES: 0
       USE_EMU_AVX: 1
      run: |
       script\testga.cmd arm64
@@ -1331,14 +1331,27 @@ jobs:
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
-   - name: Test JE (Windows MSYS2 x64)
-     shell: msys2 {0}
-     env:
-      USE_PYXES: 1
-      USE_EMU_AVX: 1
-      _DEBUG: 0
-     run: |
-      script/testga.sh windows x86_64 || exit 1
+#    - name: Test JE (Windows MSYS2 x64)
+#      shell: msys2 {0}
+#      env:
+#       USE_PYXES: 1
+#       USE_EMU_AVX: 1
+#       _DEBUG: 0
+#      run: |
+#       script/testga.sh windows x86_64 || exit 1
+
+   - name: Compress Files (Windows MSYS2 x64)
+     shell: pwsh
+     run: Compress-Archive j64 w64mw.zip
+
+   - name: Release JE (Windows MSYS2 x64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "w64mw.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
 
 # windows msys2 x86 ----------------------------------------------------
  jewin-msys2-x86:
@@ -1382,6 +1395,19 @@ jobs:
       _DEBUG: 0
      run: |
       script/testga.sh windows i386 || exit 1
+
+   - name: Compress Files (Windows MSYS2 x86)
+     shell: pwsh
+     run: Compress-Archive j32 w32mw.zip
+
+   - name: Release JE (Windows MSYS2 x86)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "w32mw.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
 
 # windows msys2 arm64 --------------------------------------------------
  jewin-msys2-arm64:

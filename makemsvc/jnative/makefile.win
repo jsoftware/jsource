@@ -55,6 +55,6 @@ noclean:
 	#
 
 clean:
-	erase /q $(ODIR)/*.lib $(ODIR)/*.exp $(OBJS)
+	erase /q andjnative.o jeload.o
 
 .PHONY: all clean noclean

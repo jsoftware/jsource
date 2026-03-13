@@ -78,6 +78,6 @@ noclean:
 	#
 
 clean:
-	erase /q $(ODIR)/*.ilk $(ODIR)/*.pdb $(OBJS) $(OBJSLN) $(RCS)
+	erase /q jconsole.o jeload.o linenoise.o
 
 .PHONY: all clean noclean

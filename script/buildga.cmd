@@ -46,8 +46,8 @@ mkdir j64
 mkdir bin\windows\j64arm
 copy bin\profile.ijs j64
 copy pthreads4w\bin\pthreadVC3-arm64.dll j64\pthreadVC3-arm64.dll
-copy mpir\windows\arm64\mpir-a64.dll j64
-copy openmp\obj\windows\libomp.dll j64\libomparm64.dll
+copy mpir\windows\arm64\mpir.dll j64
+copy openmp\obj\windows\libomp.dll j64
 copy pcre2\windows\arm64\jpcre2.dll tools\regex\jpcre2_arm64.dll
 curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
 :L01C

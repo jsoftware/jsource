@@ -338,33 +338,33 @@ case "$jplatform/$j64x" in
  windows/*) BACKTRACE_OBJS="" ;;
  darwin/*)
   BACKTRACE_OBJS=" \
-   atomic.o \
-   backtrace.o \
-   dwarf.o \
-   fileline.o \
-   mmap.o \
-   mmapio.o \
-   posix.o \
-   print.o \
-   simple.o \
-   sort.o \
-   state.o \
-   macho.o "
+   ../libbacktrace/atomic.o \
+   ../libbacktrace/backtrace.o \
+   ../libbacktrace/dwarf.o \
+   ../libbacktrace/fileline.o \
+   ../libbacktrace/mmap.o \
+   ../libbacktrace/mmapio.o \
+   ../libbacktrace/posix.o \
+   ../libbacktrace/print.o \
+   ../libbacktrace/simple.o \
+   ../libbacktrace/sort.o \
+   ../libbacktrace/state.o \
+   ../libbacktrace/macho.o "
   ;;
  *)
   BACKTRACE_OBJS=" \
-   atomic.o \
-   backtrace.o \
-   dwarf.o \
-   fileline.o \
-   mmap.o \
-   mmapio.o \
-   posix.o \
-   print.o \
-   simple.o \
-   sort.o \
-   state.o \
-   elf.o "
+   ../libbacktrace/atomic.o \
+   ../libbacktrace/backtrace.o \
+   ../libbacktrace/dwarf.o \
+   ../libbacktrace/fileline.o \
+   ../libbacktrace/mmap.o \
+   ../libbacktrace/mmapio.o \
+   ../libbacktrace/posix.o \
+   ../libbacktrace/print.o \
+   ../libbacktrace/simple.o \
+   ../libbacktrace/sort.o \
+   ../libbacktrace/state.o \
+   ../libbacktrace/elf.o "
   ;;
 esac
 
@@ -409,82 +409,81 @@ if [ $NO_SHA_ASM -ne 0 ]; then
 else
 
  SRC_ASM_LINUXAVX512=" \
- md5-x86_64-elf.o \
- keccak1600-avx512-elf.o \
- sha1-x86_64-elf.o \
- sha256-x86_64-elf.o \
- sha512-x86_64-elf.o \
+ openssl/sha/asm/md5-x86_64-elf.o \
+ openssl/sha/asm/keccak1600-avx512-elf.o \
+ openssl/sha/asm/sha1-x86_64-elf.o \
+ openssl/sha/asm/sha256-x86_64-elf.o \
+ openssl/sha/asm/sha512-x86_64-elf.o \
  viixamd64.o "
 
  SRC_ASM_LINUXAVX2=" \
- md5-x86_64-elf.o \
- keccak1600-avx2-elf.o \
- sha1-x86_64-elf.o \
- sha256-x86_64-elf.o \
- sha512-x86_64-elf.o \
- viixamd64.o "
+ openssl/sha/asm/md5-x86_64-elf.o \
+ openssl/sha/asm/keccak1600-avx2-elf.o \
+ openssl/sha/asm/sha1-x86_64-elf.o \
+ openssl/sha/asm/sha256-x86_64-elf.o \
+ openssl/sha/asm/sha512-x86_64-elf.o "
 
  SRC_ASM_LINUX=" \
- md5-x86_64-elf.o \
- keccak1600-x86_64-elf.o \
- sha1-x86_64-elf.o \
- sha256-x86_64-elf.o \
- sha512-x86_64-elf.o "
+ openssl/sha/asm/md5-x86_64-elf.o \
+ openssl/sha/asm/keccak1600-x86_64-elf.o \
+ openssl/sha/asm/sha1-x86_64-elf.o \
+ openssl/sha/asm/sha256-x86_64-elf.o \
+ openssl/sha/asm/sha512-x86_64-elf.o "
 
  SRC_ASM_LINUX32=" \
- md5-586-elf.o \
- keccak1600-mmx-elf.o \
- sha1-586-elf.o \
- sha256-586-elf.o \
- sha512-586-elf.o "
+ openssl/sha/asm/md5-586-elf.o \
+ openssl/sha/asm/keccak1600-mmx-elf.o \
+ openssl/sha/asm/sha1-586-elf.o \
+ openssl/sha/asm/sha256-586-elf.o \
+ openssl/sha/asm/sha512-586-elf.o "
 
  SRC_ASM_RASPI=" \
- md5-aarch64-elf.o \
- keccak1600-armv8-elf.o \
- sha1-armv8-elf.o \
- sha256-armv8-elf.o \
- sha512-armv8-elf.o "
+ openssl/sha/asm/md5-aarch64-elf.o \
+ openssl/sha/asm/keccak1600-armv8-elf.o \
+ openssl/sha/asm/sha1-armv8-elf.o \
+ openssl/sha/asm/sha256-armv8-elf.o \
+ openssl/sha/asm/sha512-armv8-elf.o "
 
  SRC_ASM_RASPI32=" \
- keccak1600-armv4-elf.o \
- sha1-armv4-elf.o \
- sha256-armv4-elf.o \
- sha512-armv4-elf.o "
+ openssl/sha/asm/keccak1600-armv4-elf.o \
+ openssl/sha/asm/sha1-armv4-elf.o \
+ openssl/sha/asm/sha256-armv4-elf.o \
+ openssl/sha/asm/sha512-armv4-elf.o "
 
  SRC_ASM_MAC=" \
- md5-x86_64-macho.o \
- keccak1600-x86_64-macho.o \
- sha1-x86_64-macho.o \
- sha256-x86_64-macho.o \
- sha512-x86_64-macho.o "
+ openssl/sha/asm/md5-x86_64-macho.o \
+ openssl/sha/asm/keccak1600-x86_64-macho.o \
+ openssl/sha/asm/sha1-x86_64-macho.o \
+ openssl/sha/asm/sha256-x86_64-macho.o \
+ openssl/sha/asm/sha512-x86_64-macho.o "
 
  SRC_ASM_MAC32=" \
- md5-586-macho.o \
- keccak1600-mmx-macho.o \
- sha1-586-macho.o \
- sha256-586-macho.o \
- sha512-586-macho.o "
+ openssl/sha/asm/md5-586-macho.o \
+ openssl/sha/asm/keccak1600-mmx-macho.o \
+ openssl/sha/asm/sha1-586-macho.o \
+ openssl/sha/asm/sha256-586-macho.o \
+ openssl/sha/asm/sha512-586-macho.o "
 
  SRC_ASM_IOS=" \
- md5-aarch64-ios.o \
- keccak1600-armv8-ios.o \
- sha1-armv8-ios.o \
- sha256-armv8-ios.o \
- sha512-armv8-ios.o "
+ openssl/sha/asm/md5-aarch64-ios.o \
+ openssl/sha/asm/keccak1600-armv8-ios.o \
+ openssl/sha/asm/sha1-armv8-ios.o \
+ openssl/sha/asm/sha256-armv8-ios.o \
+ openssl/sha/asm/sha512-armv8-ios.o "
 
  OBJS_ASM_WIN=" \
- openssl-asm/md5-x86_64-nasm.o \
- openssl-asm/keccak1600-x86_64-nasm.o \
- openssl-asm/sha1-x86_64-nasm.o \
- openssl-asm/sha256-x86_64-nasm.o \
- openssl-asm/sha512-x86_64-nasm.o "
+ ../openssl-asm/md5-x86_64-nasm.o \
+ ../openssl-asm/keccak1600-x86_64-nasm.o \
+ ../openssl-asm/sha1-x86_64-nasm.o \
+ ../openssl-asm/sha256-x86_64-nasm.o \
+ ../openssl-asm/sha512-x86_64-nasm.o "
 
  OBJS_ASM_WIN32=" \
- openssl-asm/md5-586-nasm.o \
- openssl-asm/keccak1600-mmx-nasm.o \
- openssl-asm/sha1-586-nasm.o \
- openssl-asm/sha256-586-nasm.o \
- openssl-asm/sha512-586-nasm.o "
+ ../openssl-asm/md5-586-nasm.o \
+ ../openssl-asm/keccak1600-mmx-nasm.o \
+ ../openssl-asm/sha1-586-nasm.o \
+ ../openssl-asm/sha256-586-nasm.o \
+ ../openssl-asm/sha512-586-nasm.o "
 
 fi
 

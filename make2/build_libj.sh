@@ -374,11 +374,11 @@ else
  openssl/sha/asm/sha512-x86_64-elf.o "
 
  SRC_ASM_LINUX=" \
- openssl/sha/asm/openssl/sha/asm/md5-x86_64-elf.o \
- openssl/sha/asm/openssl/sha/asm/keccak1600-x86_64-elf.o \
- openssl/sha/asm/openssl/sha/asm/sha1-x86_64-elf.o \
- openssl/sha/asm/openssl/sha/asm/sha256-x86_64-elf.o \
- openssl/sha/asm/openssl/sha/asm/sha512-x86_64-elf.o "
+ openssl/sha/asm/md5-x86_64-elf.o \
+ openssl/sha/asm/keccak1600-x86_64-elf.o \
+ openssl/sha/asm/sha1-x86_64-elf.o \
+ openssl/sha/asm/sha256-x86_64-elf.o \
+ openssl/sha/asm/sha512-x86_64-elf.o "
 
  SRC_ASM_LINUX32=" \
  openssl/sha/asm/md5-586-elf.o \

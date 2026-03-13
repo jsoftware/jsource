@@ -21,6 +21,7 @@ IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B
 IF "%~1" NEQ "x64" EXIT /b 1
 mkdir j64
+mkdir bin\windows\j64
 copy bin\profile.ijs j64
 copy pthreads4w\bin\pthreadVC3.dll j64
 copy mpir\windows\x64\mpir.dll j64
@@ -30,6 +31,7 @@ curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopen
 GOTO L01C
 :L01A
 mkdir j32
+mkdir bin\windows\j32
 copy bin\profile.ijs j32
 copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3-w32.dll
 copy mpir\windows\x86\mpir.dll j32\mpir32.dll
@@ -39,6 +41,7 @@ curl --output-dir "j32" -O "https://www.jsoftware.com/dowoad/lapackbin/libopenbl
 GOTO L01C
 :L01B
 mkdir j64
+mkdir bin\windows\j64arm
 copy bin\profile.ijs j64
 copy pthreads4w\bin\pthreadVC3-arm64.dll j64\pthreadVC3-arm64.dll
 copy mpir\windows\arm64\mpir-a64.dll j64

@@ -35,7 +35,7 @@ GOTO L01C
 mkdir j32
 mkdir bin\windows\j32
 copy bin\profile.ijs j32
-copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3-w32.dll
+copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3.dll
 copy mpir\windows\x86\mpir.dll j32\mpir32.dll
 copy openmp\obj\windows\libomp32.dll j32\libomp32.dll
 copy pcre2\windows\x86\jpcre2.dll tools\regex\jpcre2_32.dll
@@ -45,7 +45,7 @@ GOTO L01C
 mkdir j64
 mkdir bin\windows\j64arm
 copy bin\profile.ijs j64
-copy pthreads4w\bin\pthreadVC3-arm64.dll j64\pthreadVC3-arm64.dll
+copy pthreads4w\bin\pthreadVC3-arm64.dll j64\pthreadVC3.dll
 copy mpir\windows\arm64\mpir.dll j64
 copy openmp\obj\windows\libomp.dll j64
 copy pcre2\windows\arm64\jpcre2.dll tools\regex\jpcre2_arm64.dll

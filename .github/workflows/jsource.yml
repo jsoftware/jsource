@@ -1252,7 +1252,7 @@ jobs:
    - name: Build JE (Windows arm64)
      shell: cmd
      env:
-      USE_PYXES: 0
+      USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
       script\buildga.cmd arm64
@@ -1260,7 +1260,7 @@ jobs:
    - name: Test JE (Windows arm64)
      shell: cmd
      env:
-      USE_PYXES: 0
+      USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
       script\testga.cmd arm64
@@ -1331,14 +1331,14 @@ jobs:
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
-#    - name: Test JE (Windows MSYS2 x64)
-#      shell: msys2 {0}
-#      env:
-#       USE_PYXES: 1
-#       USE_EMU_AVX: 1
-#       _DEBUG: 0
-#      run: |
-#       script/testga.sh windows x86_64 || exit 1
+   - name: Test JE (Windows MSYS2 x64)
+     shell: msys2 {0}
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
+     run: |
+      script/testga.sh windows x86_64 || exit 1
 
    - name: Compress Files (Windows MSYS2 x64)
      shell: pwsh

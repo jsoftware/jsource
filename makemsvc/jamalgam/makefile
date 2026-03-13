@@ -349,8 +349,7 @@ endif
 ifeq (j64avx512,$(j64x))
  OBJS_SIMDUTF8= \
  utf/utf8_to_utf16le_avx512.o \
- utf/utf16le_to_utf8_avx512.o \
- viixamd64.o
+ utf/utf16le_to_utf8_avx512.o
 endif
 
 ifdef READLINE

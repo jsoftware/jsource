@@ -44,13 +44,6 @@ LD = lld-link
 .c.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
-# !if "arm64"=="$(TARGET_CPU)"
-# TARGET = tsdllarm64.dll
-# !elseif "x64"=="$(TARGET_CPU)"
-# TARGET = tsdll.dll
-# !else
-# TARGET = tsdll32.dll
-# !endif
 TARGET = tsdll.dll
 
 $(ODIR)/$(TARGET) : $(OBJS)

@@ -330,7 +330,7 @@ else
  ../openssl-asm/sha512-586-nasm.o
 endif
 
-ifeq (1,$(JAVX512))
+ifeq (j64avx512,$(j64x))
  OBJS_SIMDUTF8= \
  utf/utf8_to_utf16le_avx512.o \
  utf/utf16le_to_utf8_avx512.o
@@ -360,17 +360,6 @@ endif
 %.res : %.rc
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $<
 
-# ifeq (arm64,$(TARGET_CPU))
-#  TARGET = jamalgam-arm64.exe
-# else ifeq (x64,$(TARGET_CPU))
-#  ifeq (1,$(JAVX2))
-#   TARGET = jamalgam-avx2.exe
-#  else
-#   TARGET = jamalgam.exe
-#  endif
-# else
-#  TARGET = jamalgam32.exe
-# endif
 TARGET = jamalgam.exe
 
 ifeq (1,$(NOSYNCHLIB))

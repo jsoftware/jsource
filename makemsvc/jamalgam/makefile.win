@@ -328,7 +328,7 @@ OBJS_ASM = \
  ../openssl-asm/sha512-586-nasm.o
 !endif
 
-!if "1"=="$(JAVX512)"
+!if "j64avx512"=="$(j64x)"
 OBJS_SIMDUTF8= \
  utf/utf8_to_utf16le_avx512.o \
  utf/utf16le_to_utf8_avx512.o
@@ -358,17 +358,6 @@ LD = lld-link
 .rc.res:
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $<
 
-# !if "arm64"=="$(TARGET_CPU)"
-# TARGET = jamalgam-arm64.exe
-# !elseif "x64"=="$(TARGET_CPU)"
-# !if "1"=="$(JAVX2)"
-# TARGET = jamalgam-avx2.exe
-# !else
-# TARGET = jamalgam.exe
-# !endif
-# !else
-# TARGET = jamalgam32.exe
-# !endif
 TARGET = jamalgam.exe
 
 !if "1"=="$(NOSYNCHLIB)"

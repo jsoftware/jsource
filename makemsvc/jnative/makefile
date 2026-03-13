@@ -44,13 +44,6 @@ endif
 %.o : %.c
 	$(CC) $(CFLAGS) /I "$(JAVA_HOME)/include" /I "$(JAVA_HOME)/include/win32" /Fo$@ /c $<
 
-# ifeq (arm64,$(TARGET_CPU))
-#  TARGET = jnativearm64.dll
-# else ifeq (x64,$(TARGET_CPU))
-#  TARGET = jnative.dll
-# else
-#  TARGET = jnative32.dll
-# endif
 TARGET = jnative.dll
 
 $(ODIR)/$(TARGET) : $(OBJS)

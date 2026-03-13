@@ -44,13 +44,6 @@ LD = lld-link
 .c.o:
 	$(CC) $(CFLAGS) /I "%JAVA_HOME%/include" /I "%JAVA_HOME%/include/win32" /Fo$@ /c $<
 
-# !if "arm64"=="$(TARGET_CPU)"
-# TARGET = jnativearm64.dll
-# !elseif "x64"=="$(TARGET_CPU)"
-# TARGET = jnative.dll
-# !else
-# TARGET = jnative32.dll
-# !endif
 TARGET = jnative.dll
 
 $(ODIR)/$(TARGET) : $(OBJS)

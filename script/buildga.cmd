@@ -154,12 +154,12 @@ copy bin\windows\j64avx2\j.dll j64\javx2.dll
 @rem copy bin\windows\j64\jamalgam.exe j64
 GOTO L06C
 :L06A
-copy bin\windows\j32\console.exe j32
+copy bin\windows\j32\jconsole.exe j32
 copy bin\windows\j32\*.dll j32
 @rem copy bin\windows\j32\jamalgam.exe j32
 GOTO L06C
 :L06B
-copy bin\windows\j64arm\console.exe j64
+copy bin\windows\j64arm\jconsole.exe j64
 copy bin\windows\j64arm\*.dll j64
 @rem copy bin\windows\j64arm\jamalgam.exe j64
 :L06C

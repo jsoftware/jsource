@@ -22,6 +22,8 @@ IF "%~1"=="arm64" GOTO L01B
 IF "%~1" NEQ "x64" EXIT /b 1
 mkdir j64
 mkdir bin\windows\j64
+mkdir bin\windows\j64avx2
+mkdir bin\windows\j64avx512
 copy bin\profile.ijs j64
 copy pthreads4w\bin\pthreadVC3.dll j64
 copy mpir\windows\x64\mpir.dll j64
@@ -152,7 +154,7 @@ copy bin\windows\j64avx2\j.dll ..\j64\javx2.dll
 @rem copy bin\windows\j64\jamalgam.exe ..\j64
 GOTO L06C
 :L06A
-copy bin\windows\j32\console32.exe ..\j32
+copy bin\windows\j32\console.exe ..\j32
 copy bin\windows\j32\*.dll ..\j32
 @rem copy bin\windows\j32\jamalgam.exe ..\j32
 GOTO L06C

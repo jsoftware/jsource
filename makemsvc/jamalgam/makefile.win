@@ -1,7 +1,7 @@
 ODIR = ../bin/$(jplatform)/$(j64x)
 
 COPTION =
-!if "arm64"=="$(j64x)"
+!if "j64arm"=="$(j64x)"
 TARGET_CPU = arm64
 COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
 !elseif "j64avx512"=="$(j64x)"

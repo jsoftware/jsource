@@ -1103,6 +1103,7 @@ jobs:
    - name: Build JE (Windows)
      shell: cmd
      env:
+      NASM: $GITHUB_WORKSPACE/openssl-asm/nasm
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1152,6 +1153,7 @@ jobs:
    - name: Build JE (Windows 32)
      shell: cmd
      env:
+      NASM: $GITHUB_WORKSPACE/openssl-asm/nasm
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
@@ -1323,6 +1325,7 @@ jobs:
       CC: x86_64-w64-mingw32-gcc
       CXX: x86_64-w64-mingw32-g++
       WINDRES: windres
+      NASM: $GITHUB_WORKSPACE/openssl-asm/nasm
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 1
@@ -1379,6 +1382,7 @@ jobs:
       CC: i686-w64-mingw32-gcc
       CXX: i686-w64-mingw32-g++
       WINDRES: windres
+      NASM: $GITHUB_WORKSPACE/openssl-asm/nasm
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0

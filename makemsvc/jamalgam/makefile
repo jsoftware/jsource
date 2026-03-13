@@ -111,6 +111,7 @@ else ifeq (x64,$(TARGET_CPU))
  CFLAGS = $(COPTION) $(CINCLUDE) /D JAMALGAM /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
  FLAGS = $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
  ASMFLAGS = /Cx
+ NASM_FLAGS = -fwin64
 else
  CF1 = -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable
 # /Og fail g310r
@@ -118,6 +119,7 @@ else
  CFLAGS = $(COPTION) $(CINCLUDE) /D JAMALGAM /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
  FLAGS = $(LDEBUG) psapi.lib /NOLOGO /STACK:0xc00000 /MACHINE:X86 /SUBSYSTEM:CONSOLE,5.01
  ASMFLAGS = /Cx /coff
+ NASM_FLAGS = -fwin32
 endif
 
 .SUFFIXES: .o
@@ -315,6 +317,13 @@ else ifeq (arm64,$(TARGET_CPU))
  ../openssl-asm/sha256-armv8-nasm.o \
  ../openssl-asm/sha512-armv8-nasm.o
 else ifeq (x64,$(TARGET_CPU))
+ SRC_ASM= \
+ openssl/sha/asm/md5-x86_64-nasm.o \
+ openssl/sha/asm/keccak1600-x86_64-nasm.o \
+ openssl/sha/asm/sha1-x86_64-nasm.o \
+ openssl/sha/asm/sha256-x86_64-nasm.o \
+ openssl/sha/asm/sha512-x86_64-nasm.o
+
  OBJS_ASM = \
  ../openssl-asm/md5-x86_64-nasm.o \
  ../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -322,6 +331,13 @@ else ifeq (x64,$(TARGET_CPU))
  ../openssl-asm/sha256-x86_64-nasm.o \
  ../openssl-asm/sha512-x86_64-nasm.o
 else
+ SRC_ASM= \
+ openssl/sha/asm/md5-586-nasm.o \
+ openssl/sha/asm/keccak1600-mmx-nasm.o \
+ openssl/sha/asm/sha1-586-nasm.o \
+ openssl/sha/asm/sha256-586-nasm.o \
+ openssl/sha/asm/sha512-586-nasm.o
+
  OBJS_ASM = \
  ../openssl-asm/md5-586-nasm.o \
  ../openssl-asm/keccak1600-mmx-nasm.o \
@@ -348,6 +364,10 @@ ifndef LD
  LD = lld-link
 endif
 
+ifndef NASM
+ NASM = nasm
+endif
+
 %.o : %.c
 	$(CC) $(CFLAGS) $(CFLAGS1) /Fo$@ /c $<
 
@@ -355,7 +375,7 @@ endif
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
 %.o : %.asm
-	$(ML) $(ASMFLAGS) /Fo$@ /c $<
+	$(NASM) $(NASM_FLAGS) -o $@ $<
 
 %.res : %.rc
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $<

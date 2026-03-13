@@ -114,6 +114,7 @@ elif [ "$1" = "freebsd" ]; then
   cp pcre2/freebsd/aarch64/libjpcre2.so tools/regex/.
  fi
 elif [ "$1" = "windows" ]; then
+ export NASM=$GITHUB_WORKSPACE/openssl-asm/nasm
  if [ "$2" = "x86_64" ]; then
   cp mpir/windows/x64/mpir.dll j64
   cp pcre2/windows/x64/jpcre2.dll tools/regex/.

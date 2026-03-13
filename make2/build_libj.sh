@@ -33,6 +33,7 @@ if [ "" = "$CFLAGS" ]; then
   *)
    OPTLEVEL=" -O2 "
    DEBUG=0
+   NASM_FLAGS=""
    ;;
  esac
 else
@@ -421,6 +422,20 @@ else
  openssl/sha/asm/sha256-armv8-ios.o \
  openssl/sha/asm/sha512-armv8-ios.o "
 
+ SRC_ASM_WIN=" \
+ openssl/sha/asm/md5-x86_64-nasm.o \
+ openssl/sha/asm/keccak1600-x86_64-nasm.o \
+ openssl/sha/asm/sha1-x86_64-nasm.o \
+ openssl/sha/asm/sha256-x86_64-nasm.o \
+ openssl/sha/asm/sha512-x86_64-nasm.o "
+
+ SRC_ASM_WIN32=" \
+ openssl/sha/asm/md5-586-nasm.o \
+ openssl/sha/asm/keccak1600-mmx-nasm.o \
+ openssl/sha/asm/sha1-586-nasm.o \
+ openssl/sha/asm/sha256-586-nasm.o \
+ openssl/sha/asm/sha512-586-nasm.o "
+
  OBJS_ASM_WIN=" \
  ../openssl-asm/md5-x86_64-nasm.o \
  ../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -744,8 +759,9 @@ case "$jplatform/$j64x" in
   fi
   LIBJRES=" ../dllsrc/jdll.res "
   OBJS_AESNI=" aes-ni.o "
-  SRC_ASM=""
-  OBJS_ASM="${OBJS_ASM_WIN32}"
+  SRC_ASM="${SRC_ASM_WIN32}"
+  OBJS_ASM=""
+  NASM_FLAGS="$NASM_FLAGS -fwin32"
   GASM_FLAGS=""
   FLAGS_BASE64=""
   ;;
@@ -798,7 +814,8 @@ case "$jplatform/$j64x" in
   OBJS_AESNI=" aes-ni.o "
   OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_WIN}"
-  OBJS_ASM="${OBJS_ASM_WIN}"
+  OBJS_ASM=""
+  NASM_FLAGS="$NASM_FLAGS -fwin64"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX512F=1 "
   ;;
@@ -825,7 +842,8 @@ case "$jplatform/$j64x" in
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_WIN}"
-  OBJS_ASM="${OBJS_ASM_WIN}"
+  OBJS_ASM=""
+  NASM_FLAGS="$NASM_FLAGS -fwin64"
   GASM_FLAGS=""
   FLAGS_BASE64=" -DHAVE_AVX2=1 "
   ;;
@@ -850,7 +868,8 @@ case "$jplatform/$j64x" in
   LIBJRES=" ../dllsrc/jdll.res "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_WIN}"
-  OBJS_ASM="${OBJS_ASM_WIN}"
+  OBJS_ASM=""
+  NASM_FLAGS="$NASM_FLAGS -fwin64"
   GASM_FLAGS=""
   FLAGS_BASE64=""
   ;;

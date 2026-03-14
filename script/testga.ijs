@@ -1,5 +1,7 @@
 (9!:14'') 1!:2 [2
 
+exformat_j_=: eformat_j_ f.
+
 load'pacman'
 'update'jpkg''
 'upgrade'jpkg'dev/eformat dev/lu'
@@ -80,9 +82,11 @@ NB. this failed on windows arm64
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
-NB. this sometimes failed on linux
+NB. this sometimes failed on linux O2
+4!:55<'eformat_j_'
 echo '(1x&(]F::(++:))) [58#0'
-echo (1x&(]F::(++:))) [58#0
+empty (1x&(]F::(++:))) [58#0
+eformat_j_=: exformat_j_ f.
 
 4!:55 ;:'x y'
 4!:55 ;:'x y'

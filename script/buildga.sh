@@ -191,9 +191,9 @@ if [ "$1" = "wasm" ]; then
  export _DEBUG=0
  cd make2
  ./clean.sh
- USE_WASM=1 jplatform=wasm j64x=j32 ./build_jamalgam.sh
- ./clean.sh
  USE_WASM=1 jplatform=wasm j64x=j32 ./build_libj.sh
+ ./clean.sh
+ USE_WASM=1 jplatform=wasm j64x=j32 ./build_jamalgam.sh
  cd ..
  cp bin/$dest/j32/* j32
  find j32 -type d -exec chmod 755 {} \;

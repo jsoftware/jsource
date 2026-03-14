@@ -154,7 +154,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
  -Werror -Wextra -Wno-unknown-warning-option \
- -fsignaling-nans \
+ -fsignaling-nans -fpeel-loops \
  -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \

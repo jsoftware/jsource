@@ -80,6 +80,10 @@ NB. this failed on windows arm64
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
+NB. this sometimes failed on linux
+echo '(1x&(]F::(++:))) [58#0'
+echo (1x&(]F::(++:))) [58#0
+
 4!:55 ;:'x y'
 4!:55 ;:'x y'
 ECHOFILENAME0=: ECHOFILENAME

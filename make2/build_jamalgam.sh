@@ -97,6 +97,7 @@ case "$jplatform/$j64x" in
   ;;
  freebsd/*) make=gmake ;;
  wasm*)
+  USE_LINENOISE=0
   USE_OPENMP=0
   LDTHREAD=" -pthread "
   NO_SHA_ASM=1

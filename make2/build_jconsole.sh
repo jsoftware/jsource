@@ -92,7 +92,11 @@ case "$jplatform/$j64x" in
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;
- wasm*) USE_PYXES=0 ;;
+ wasm*) 
+  USE_LINENOISE=0
+  USE_OPENMP=0
+  USE_PYXES=0
+  ;;
 esac
 case "$j64x" in
  j32*) USE_PYXES="${USE_PYXES:=0}" ;;

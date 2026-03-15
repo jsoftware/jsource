@@ -1365,6 +1365,7 @@ readlocal=: 3 : 0
 readlin''
 ADDONS=: fixjal freads ADDCFG,'addons.txt'
 ADDINS=: fixjal2 freads ADDCFG,'addins.txt'
+ADDINS=: ADDINS {~ <<< I. -. ({."1 ADDINS) e. {."1 ADDONS
 REV=: fixrev freads ADDCFG,'revision.txt'
 LASTUPD=: fixupd freads ADDCFG,'lastupdate.txt'
 LIBS=: fixlibs freads ADDCFG,'library.txt'

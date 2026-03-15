@@ -1,6 +1,7 @@
 @rem build windows on github actions
 
-echo clang-cl --version
+set
+clang-cl --version
 
 @rem if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip build avx2 avx512
 

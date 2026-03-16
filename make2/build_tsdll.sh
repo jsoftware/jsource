@@ -12,7 +12,7 @@ if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
   3)
-   OPTLEVEL=" -O2 -g "
+   OPTLEVEL=" -Og -g "
    NASM_FLAGS="-g"
    ;;
   2)
@@ -20,7 +20,7 @@ if [ "" = "$CFLAGS" ]; then
    NASM_FLAGS="-g"
    ;;
   1)
-   OPTLEVEL=" -O2 -g "
+   OPTLEVEL=" -Og -g "
    NASM_FLAGS="-g"
    j64x=$64x-debug
    ;;

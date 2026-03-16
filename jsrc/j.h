@@ -847,17 +847,21 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define EMSGINVINFL 0x40000  // set to append 'invalid inflection' to msg
 #define EMSGNOMSGLINE 0x80000  // set to append 'invalid inflection' to msg
 
-// debugging AD header length
-#ifndef NORMAH8
-#define NORMAH8 0
-#endif
-
 #ifndef PYXES
 #if SY_64
 #define PYXES 1
 #else
 #define PYXES 0
 #endif
+#endif
+
+// debugging AD header length
+#ifndef NORMAH8
+#define NORMAH8 0
+#endif
+#if !SY_64 && PYXES
+#undef NORMAH8
+#define NORMAH8 1
 #endif
 
 // if we are not multithreading, report the master thread only
@@ -1418,6 +1422,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define ACVCACHEWRITEUNLOCK ++JT(jt,fnasgnct);  // increment cache count
 #define ACVCACHECLEAR ++JT(jt,fnasgnct);  // increment cache count - used when we aren't freeing the only reference to the acv
 #endif
+#if C_AVX2 || EMU_AVX2
 // Support for int-to-float, in parallel.  Input is u, 64-bit int with a type of float; result is 64-bit floats.  Define DECLS first.
 // we use initecho() to initialize zero and one because the compiler moves the initialization to inside the loop
 #define CVTEPI64DECLS  __m256i magic_i_lo = _mm256_castpd_si256(_mm256_broadcast_sd(&two_52)); /* 2^52 */ \
@@ -1437,6 +1442,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
                           u_hi = _mm256_xor_si256(u_hi, magic_i_hi32); /* Flip the msb of u_hi and blend with 0x45300000 */ \
                         __m256d u_hi_dbl = _mm256_sub_pd(_mm256_castsi256_pd(u_hi), _mm256_castsi256_pd(magic_i_all)); /* Compute in double precision:  */ \
                          z = _mm256_add_pd(u_hi_dbl, _mm256_castsi256_pd(u_lo));}  /* (u_hi - magic_d_all) + u_lo  Do not assume associativity of floating point addition !! */
+#endif
 #endif
 // # turns through a Duff loop of m1+1 elements, with 1<<lgduff instances in the loop.  We assume we are handling [1,NPAR] elements at the end
 #define DUFFLPCTV(m1,lgduff,lgeleperiter) ((((m1)+((((I)1<<(lgduff))-1)<<(lgeleperiter)))>>((lgeleperiter)+(lgduff))))

@@ -150,9 +150,11 @@ IF "%~1"=="arm64" GOTO L06B
 IF "%~1" NEQ "x64" EXIT /b 1
 copy bin\windows\j64\jconsole.exe j64
 copy bin\windows\j64\*.dll j64
+@rem copy bin\windows\j64\jamalgam.exe j64
+IF "%USE_EMU_AVX%"=="0" GOTO L06C
+IF "%USE_PYXES%"=="0" GOTO L06C
 copy bin\windows\j64avx512\j.dll j64\javx512.dll
 copy bin\windows\j64avx2\j.dll j64\javx2.dll
-@rem copy bin\windows\j64\jamalgam.exe j64
 GOTO L06C
 :L06A
 copy bin\windows\j32\jconsole.exe j32

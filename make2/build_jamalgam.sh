@@ -12,7 +12,7 @@ if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
   3)
-   OPTLEVEL=" -O2 -g "
+   OPTLEVEL=" -Og -g "
    DEBUG=1
    NASM_FLAGS="-g"
    ;;
@@ -22,7 +22,7 @@ if [ "" = "$CFLAGS" ]; then
    NASM_FLAGS="-g"
    ;;
   1)
-   OPTLEVEL=" -O2 -g "
+   OPTLEVEL=" -Og -g "
    DEBUG=1
    NASM_FLAGS="-g"
    j64x=$64x-debug
@@ -154,7 +154,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
  common="$OPENMP -std=gnu17 -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
  -Werror -Wextra -Wno-unknown-warning-option \
- -fsignaling-nans -fpeel-loops \
+ -fsignaling-nans \
  -Wno-attributes \
  -Wno-cast-function-type \
  -Wno-clobbered \

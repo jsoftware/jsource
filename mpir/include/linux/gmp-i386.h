@@ -2317,7 +2317,7 @@ enum
 
 /* Define CC and CFLAGS which were used to build this version of GMP */
 #define __GMP_CC "gcc"
-#define __GMP_CFLAGS "-O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-strong -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -m32 -march=x86-64 -mtune=generic -mfpmath=sse -mstackrealign -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection -fplugin=annobin"
+#define __GMP_CFLAGS "-Og -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-strong -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -m32 -march=x86-64 -mtune=generic -mfpmath=sse -mstackrealign -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection -fplugin=annobin"
 
 /* Major version number is the value of __GNU_MP__ too, above. */
 #define __GNU_MP_VERSION            6

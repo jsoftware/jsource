@@ -1,10 +1,23 @@
-!if "1"=="$(_DEBUG)"
-COPTION = /FS /Z7 /DDEBUG=1
-LDEBUG = /DEBUG
-!else
+ODIR = ../bin/$(jplatform)/$(j64x)
+
 COPTION =
+!if "j64arm"=="$(j64x)"
+TARGET_CPU = arm64
+!elseif "j64avx512"=="$(j64x)"
+TARGET_CPU = x64
+!elseif "j64avx2"=="$(j64x)"
+TARGET_CPU = x64
+!elseif "j64"=="$(j64x)"
+TARGET_CPU = x64
+!else
+TARGET_CPU = x86
 !endif
-!if "ARM64"=="$(TARGET_CPU)"
+
+!if "1"=="$(_DEBUG)"
+COPTION = $(COPTION) /FS /Z7 /DDEBUG=1
+LDEBUG = /DEBUG
+!endif
+!if "arm64"=="$(TARGET_CPU)"
 CF1 = -target arm64-pc-windows-msvc -march=armv8-a+crc -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-unused-variable
 CFLAGS = $(COPTION) /WX /W3 /Ot /Ob1 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS = $(LDEBUG) /DLL /MACHINE:ARM64 /SUBSYSTEM:WINDOWS,5.02
@@ -20,9 +33,9 @@ FLAGS = $(LDEBUG) /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 
 .SUFFIXES: .o
 
-OBJS =  ../../jsrc/tsdll.o
+OBJS =  tsdll.o
 
-DEF = ../../makevs/tsdll/tsdll.def
+DEF = ../makevs/tsdll/tsdll.def
 
 !ifndef LD
 LD = lld-link
@@ -31,26 +44,17 @@ LD = lld-link
 .c.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
-!if "ARM64"=="$(TARGET_CPU)"
-TARGET = tsdllarm64.dll
-!elseif "x64"=="$(TARGET_CPU)"
 TARGET = tsdll.dll
-!else
-TARGET = tsdll32.dll
-!endif
 
-$(TARGET) : $(OBJS)
+$(ODIR)/$(TARGET) : $(OBJS)
 	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS)
 
-jddll.res : $(RCS)
-	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)
-
-all: $(TARGET)
+all: $(ODIR)/$(TARGET)
 
 noclean:
 	#
 
 clean:
-	erase /q *.lib *.exp *.res ..\..\jsrc\tsdll.o
+	erase /q tsdll.o
 
 .PHONY: all clean noclean

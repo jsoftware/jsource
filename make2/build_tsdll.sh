@@ -6,7 +6,6 @@ echo "entering $(pwd)"
 
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
-jplatform64="$jplatform"/"$j64x"
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -23,20 +22,21 @@ if [ "" = "$CFLAGS" ]; then
   1)
    OPTLEVEL=" -O2 -g "
    NASM_FLAGS="-g"
-   jplatform64=$(./jplatform64.sh)-debug
+   j64x=$64x-debug
    ;;
   *) OPTLEVEL=" -O2 " ;;
  esac
 
 fi
-echo "jplatform64=$jplatform64"
+echo "jplatform=$jplatform"
+echo "j64x=$j64x"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in gcc 4
 # too early to move main linux release package to gcc 5
 
-case "$jplatform64" in
+case "$jplatform/$j64x" in
  darwin/j64iphoneos)
   USE_OPENMP=0
   LDTHREAD=" -pthread "
@@ -145,7 +145,7 @@ else
 
 fi
 
-case $jplatform64 in
+case "$jplatform/$j64x" in
 
  linux/j32) # linux x86
   TARGET=libtsdll.so
@@ -247,14 +247,14 @@ case $jplatform64 in
   TARGET=tsdll.dll
   CFLAGS="$common -Wno-psabi -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -m32 -lm -static-libgcc -static-libstdc++ "
-  LIBJDEF=" ../../../../makevs/tsdll/tsdll.def "
+  LIBJDEF=" ../makevs/tsdll/tsdll.def "
   ;;
 
  windows/j64*) # windows intel 64bit
   TARGET=tsdll.dll
   CFLAGS="$common -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ "
-  LIBJDEF=" ../../../../makevs/tsdll/tsdll.def "
+  LIBJDEF=" ../makevs/tsdll/tsdll.def "
   ;;
 
  *)
@@ -265,11 +265,8 @@ esac
 
 echo "CFLAGS=$CFLAGS"
 
-mkdir -p ../bin/$jplatform64
-mkdir -p obj/$jplatform64/
-cp makefile-tsdll obj/$jplatform64/.
-export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a LIBJDEF jplatform j64x jplatform64
-cd obj/$jplatform64/
+mkdir -p ../bin/$jplatform/$j64x
+export CC AR CFLAGS LDFLAGS LDFLAGS_a LDFLAGS_b TARGET TARGET_a LIBJDEF jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
   par=$(nproc)
@@ -281,7 +278,11 @@ if [ "x$MAKEFLAGS" = x'' ]; then
  export MAKEFLAGS=-j$par
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"
-$make -f makefile-tsdll all
+cd ../jsrc/
+if [ "1" != "$NOCLEAN" ]; then
+$make -f ../make2/makefile-tsdll clean
+fi
+$make -f ../make2/makefile-tsdll all
 retval=$?
 cd -
 exit $retval

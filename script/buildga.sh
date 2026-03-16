@@ -80,8 +80,7 @@ if [ "$1" = "linux" ]; then
   cp mpir/linux/x86_64/libgmpd.so j64/libgmp.so
   cp pcre2/linux/x86_64/libjpcre2.so tools/regex/.
  else
-  # cp mpir/linux/i386/libgmp.so j32
-  cp mpir/linux/i386/libgmpd.so j32/libgmp.so
+  cp mpir/linux/i386/libgmpd.so j32/libgmp32.so
   cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
  fi
 elif [ "$1" = "raspberry" ]; then
@@ -89,8 +88,8 @@ elif [ "$1" = "raspberry" ]; then
   cp mpir/linux/aarch64/libgmp.so j64
   cp pcre2/linux/aarch64/libjpcre2.so tools/regex/.
  else
-  cp mpir/linux/arm/libgmp.so j32
-  cp pcre2/linux/arm/libjpcre2.so tools/regex/.
+  cp mpir/linux/arm/libgmp.so j32/libgmp32.so
+  cp pcre2/linux/arm/libjpcre2.so tools/regex/libjpcre2_32.so
  fi
 elif [ "$1" = "darwin" ]; then
  brew install libomp
@@ -115,19 +114,20 @@ elif [ "$1" = "freebsd" ]; then
   cp pcre2/freebsd/aarch64/libjpcre2.so tools/regex/.
  fi
 elif [ "$1" = "windows" ]; then
+ export NASM=$GITHUB_WORKSPACE/openssl-asm/nasm
  if [ "$2" = "x86_64" ]; then
   cp mpir/windows/x64/mpir.dll j64
   cp pcre2/windows/x64/jpcre2.dll tools/regex/.
   cp pthreads4w/bin/pthreadVC3.dll j64
   curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
  elif [ "$2" = "i386" ]; then
-  cp mpir/windows/x86/mpir.dll j32
-  cp pcre2/windows/x86/jpcre2.dll tools/regex/.
+  cp mpir/windows/x86/mpir.dll j32/mpir32.dll
+  cp pcre2/windows/x86/jpcre2.dll tools/regex/jpcre2_32.dll
   cp pthreads4w/bin/pthreadVC3-w32.dll j32
   curl --output-dir "j32" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
  else
   cp mpir/windows/arm64/mpir.dll j64
-  cp pcre2/windows/arm64/jpcre2.dll tools/regex/.
+  cp pcre2/windows/arm64/jpcre2.dll tools/regex/jpcre2_arm64.dll
   cp pthreads4w/bin/pthreadVC3-arm64.dll j64
   curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
  fi
@@ -191,9 +191,9 @@ if [ "$1" = "wasm" ]; then
  export _DEBUG=0
  cd make2
  ./clean.sh
- USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_jamalgam.sh
+ USE_WASM=1 jplatform=wasm j64x=j32 ./build_libj.sh
  ./clean.sh
- USE_WASM=1 jplatform=wasm j64x=j32 CC=emcc AR=emar ./build_libj.sh
+ USE_WASM=1 jplatform=wasm j64x=j32 ./build_jamalgam.sh
  cd ..
  cp bin/$dest/j32/* j32
  find j32 -type d -exec chmod 755 {} \;

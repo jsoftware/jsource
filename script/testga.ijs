@@ -1,5 +1,7 @@
 (9!:14'') 1!:2 [2
 
+exformat_j_=: eformat_j_ f.
+
 load'pacman'
 'update'jpkg''
 'upgrade'jpkg'dev/eformat dev/lu'
@@ -79,6 +81,12 @@ echo | etx1 7 c. _2147483648
 NB. this failed on windows arm64
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
+
+NB. this sometimes failed on linux O2
+4!:55<'eformat_j_'
+echo '(1x&(]F::(++:))) [58#0'
+empty (1x&(]F::(++:))) [58#0
+eformat_j_=: exformat_j_ f.
 
 4!:55 ;:'x y'
 4!:55 ;:'x y'
@@ -195,16 +203,16 @@ else.
 end.
 msg fappends testres
 echo^:(*@#RES) RES
-exit *@#RES
 )
 
 echo 'RUN4 ddall'
 9!:27'FINISH RES=: RUN4 ddall'
 9!:29]1
+exit *@#RES
 
-1: 0 : 0
-if. IFWIN *. 1 e. 'avx/' E. 9!:14'' do.
-  13!:99''
-end.
-)
+NB. 1: 0 : 0
+NB. if. IFWIN *. 1 e. 'avx/' E. 9!:14'' do.
+NB.   13!:99''
+NB. end.
+NB. )
 

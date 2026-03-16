@@ -325,6 +325,9 @@ Q jtQmpq(J jt, mpq_t mpq, I number) {
 #ifdef _WIN32
  #define LIBEXT ".dll"
  #define LIBGMPNAME "mpir" LIBEXT
+#if !defined(_WIN64)
+ #define LIBGMPNAME2 "mpir32" LIBEXT
+#endif
 #else
  #ifdef __APPLE__
   #define LIBEXT ".dylib"
@@ -340,6 +343,7 @@ Q jtQmpq(J jt, mpq_t mpq, I number) {
   #endif
  #endif
  #define LIBGMPNAME "libgmp" LIBEXT
+ #define LIBGMPNAME2 "libgmp32" LIBEXT
  #define LIBGMPNAME10 "libgmp" LIBEXT10
  #define LIBJGMPNAME "libjgmp" LIBEXT
 #endif
@@ -379,12 +383,23 @@ void jgmpinit(C*libpath) {
 #if defined(__wasm__)
  libgmp= 0;
 #elif defined(_WIN32)
+#if !defined(_WIN64)
+ if(libpath&&*libpath){
+  strcpy(dllpath,libpath);strcat(dllpath,"\\");strcat(dllpath,LIBGMPNAME2);
+  if(!(libgmp= LoadLibraryA(dllpath)))  /* first try current directory */
+  libgmp= LoadLibraryA(LIBGMPNAME2);
+ } else libgmp= LoadLibraryA(LIBGMPNAME2);
+ if(!libgmp){
+#endif
  if(libpath&&*libpath){
   strcpy(dllpath,libpath);strcat(dllpath,"\\");strcat(dllpath,LIBGMPNAME);
   if(!(libgmp= LoadLibraryA(dllpath)))  /* first try current directory */
   libgmp= LoadLibraryA(LIBGMPNAME);
  } else libgmp= LoadLibraryA(LIBGMPNAME);
  if (!libgmp) {fprintf(stderr,"%s\n","error loading gmp library");R;}
+#if !defined(_WIN64)
+ }
+#endif
 #else
  if(libpath&&*libpath){
   int FHS=0,i=0;
@@ -392,16 +407,24 @@ void jgmpinit(C*libpath) {
    if(!strcmp(libpath,usrlib[i])) {FHS=1; break;}
    i++;
   }
-  strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
   if((libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY))){
    if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
     dlclose(libgmp); libgmp= 0;
    }
   }
 //  fprintf(stderr, "%s\n", (libgmp)?"using system libgmp":"not using system libgmp");
-  if(!libgmp)
-  if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
-  libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
+#if !SY_64
+  if(!libgmp) {
+   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME2);
+   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
+   libgmp= dlopen(LIBGMPNAME2, RTLD_LAZY);
+  }
+#endif
+  if(!libgmp) {
+   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
+   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
+   libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
+  }
  } else libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);
  if (!libgmp) {dldiag();R;}
 #endif

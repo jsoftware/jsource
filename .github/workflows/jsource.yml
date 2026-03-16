@@ -56,7 +56,7 @@ jobs:
       strip -S libjavx512.so || true
       strip -S libtsdll.so
       strip -S jamalgam || true
-      strip -S libgmp.so
+      strip -S libgmp.so || true
       cd -
       ls -l j64
       zip -r l64.zip j64
@@ -149,7 +149,7 @@ jobs:
       strip -S libj.so
       strip -S libtsdll.so
       strip -S jamalgam || true
-      strip -S libgmp.so
+      strip -S libgmp.so || true
       cd -
       ls -l j32
       zip -r l32.zip j32
@@ -383,7 +383,7 @@ jobs:
       strip -S libj.so
       strip -S libtsdll.so
       strip -S jamalgam || true
-      strip -S libgmp.so
+      strip -S libgmp.so || true
       cd -
       ls -l j64
       zip -r rpi64.zip j64
@@ -440,7 +440,7 @@ jobs:
       strip -S libj.so
       strip -S libtsdll.so
       strip -S jamalgam || true
-      strip -S libgmp.so
+      strip -S libgmp.so || true
       cd -
       ls -l j32
       zip -r rpi32.zip j32
@@ -492,7 +492,7 @@ jobs:
        strip -S libj.so
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        zip -r rpi64.zip j64
        zip rpi64.zip /usr/bin/zip
@@ -559,7 +559,7 @@ jobs:
        strip -S libj.so
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        zip -r rpi32.zip j32
        rm -rf j32
@@ -633,7 +633,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r obsd64.zip j64
@@ -702,7 +702,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r obsd64.zip j64
@@ -769,7 +769,7 @@ jobs:
        strip -S libj.so
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r obsdarm64.zip j64
@@ -842,7 +842,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S jamalgam || true
        strip -S libtsdll.so
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r fbsd64.zip j64
@@ -915,7 +915,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r fbsd64.zip j64
@@ -989,7 +989,7 @@ jobs:
        strip -S libjavx512.so || true
        strip -S libtsdll.so
        strip -S jamalgam || true
-       strip -S libgmp.so
+       strip -S libgmp.so || true
        cd -
        ls -l j64
        zip -r fbsdarm64.zip j64
@@ -1103,6 +1103,7 @@ jobs:
    - name: Build JE (Windows)
      shell: cmd
      env:
+      NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1152,6 +1153,7 @@ jobs:
    - name: Build JE (Windows 32)
      shell: cmd
      env:
+      NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
@@ -1285,12 +1287,12 @@ jobs:
       path: testwinarm64.txt
       overwrite: true
 
-      # Name	      Prefix	     Toolchain	Architecture	C Library	C++ Library
-      # MSYS	      /usr	       gcc	      x86_64	      cygwin	   libstdc++
-      # UCRT64	    /ucrt64	    gcc	      x86_64	      ucrt	     libstdc++
-      # CLANG64	   /clang64	   llvm	     x86_64	      ucrt	     libc++
-      # CLANGARM64	/clangarm64	llvm	     aarch64	     ucrt	     libc++
-      # MINGW64	   /mingw64	   gcc	      x86_64	      msvcrt	   libstdc++
+      # Name        Prefix       Toolchain  Architecture  C Library C++ Library
+      # MSYS        /usr         gcc        x86_64        cygwin    libstdc++
+      # UCRT64      /ucrt64      gcc        x86_64        ucrt      libstdc++
+      # CLANG64     /clang64     llvm       x86_64        ucrt      libc++
+      # CLANGARM64  /clangarm64  llvm       aarch64       ucrt      libc++
+      # MINGW64     /mingw64     gcc        x86_64        msvcrt    libstdc++
       # { sys: mingw64, env: x86_64 }
       # { sys: mingw32, env: i686 }
       # { sys: ucrt64,  env: ucrt-x86_64 }
@@ -1340,6 +1342,19 @@ jobs:
      run: |
       script/testga.sh windows x86_64 || exit 1
 
+   - name: Compress Files (Windows MSYS2 x64)
+     shell: pwsh
+     run: Compress-Archive j64 w64mw.zip
+
+   - name: Release JE (Windows MSYS2 x64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "w64mw.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
 # windows msys2 x86 ----------------------------------------------------
  jewin-msys2-x86:
   name: JE (Windows MSYS2 x86)
@@ -1382,6 +1397,19 @@ jobs:
       _DEBUG: 0
      run: |
       script/testga.sh windows i386 || exit 1
+
+   - name: Compress Files (Windows MSYS2 x86)
+     shell: pwsh
+     run: Compress-Archive j32 w32mw.zip
+
+   - name: Release JE (Windows MSYS2 x86)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "w32mw.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
 
 # windows msys2 arm64 --------------------------------------------------
  jewin-msys2-arm64:
@@ -1431,7 +1459,26 @@ jobs:
  tests:
   name: Test Results
   runs-on: ubuntu-22.04
-  needs: [jelinux, jelinux-gcc, jelinux32, jelinuxd, jemacos, jemacosarm, jerpi64arm, jerpi32arm, jewin, jewin32, jewinarm64, jeandroid, jefreebsd2, jefreebsdarm64, jeopenbsd2, jeopenbsdarm64 ]
+# the needs definition below is also given later in webhook
+# this allows tests to be run that can be ignored for the webhook
+# AFAIK there is no cleaner way to do this
+  needs:
+   - jelinux
+   - jelinux-gcc
+   - jelinux32
+   - jelinuxd
+   - jemacos
+   - jemacosarm
+   - jerpi64arm
+   - jerpi32arm
+   - jewin
+   - jewin32
+   - jewinarm64
+   - jeandroid
+   - jefreebsd2
+   - jefreebsdarm64
+   - jeopenbsd2
+   - jeopenbsdarm64
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -1456,7 +1503,25 @@ jobs:
  webhook:
   name: Run Webhook
   runs-on: ubuntu-22.04
-  needs: tests
+# this needs is also in tests above
+# comment out any needs not used by the webhook
+  needs:
+   - jelinux
+#   - jelinux-gcc
+   - jelinux32
+   - jelinuxd
+   - jemacos
+   - jemacosarm
+   - jerpi64arm
+   - jerpi32arm
+   - jewin
+   - jewin32
+   - jewinarm64
+   - jeandroid
+   - jefreebsd2
+   - jefreebsdarm64
+   - jeopenbsd2
+   - jeopenbsdarm64
   steps:
    - name: update server
      uses: distributhor/workflow-webhook@v2

@@ -1,6 +1,4 @@
-vpath % ../../../../jsrc
-
-ODIR=../../../../bin/$(jplatform64)
+ODIR=../bin/$(jplatform)/$(j64x)
 
 .SUFFIXES: .o
 

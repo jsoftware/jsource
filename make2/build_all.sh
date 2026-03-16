@@ -7,7 +7,6 @@ echo "entering $(pwd)"
 
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
-jplatform64="$jplatform"/"$j64x"
 
 jplatform=${jplatform} j64x=${j64x} ./clean.sh "$1" || true
 jplatform=${jplatform} j64x=${j64x} ./build_jconsole.sh

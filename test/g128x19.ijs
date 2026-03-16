@@ -973,7 +973,7 @@ while. 4 > 1. T. '' do.
 1 -: (128!:13) (|: _2 ]\ 2. 0 2 1e_20 );(|: _2 ]\ 1. 0 1. 0);1e_9 1e_22
 
 NB. one SPR smaller than all the others
-ftype =: 0
+fftype =: 0
 f =: {{
  cbhi =. 1. 0.5e_18 1. 0.25e_18 [ cblo =. 1. 0.50000000001e_18 1. 0.25e_18
  cbtbl =. cblo , cbhi *"1 0 y ?@$ 100   NB. 1 small SPR
@@ -989,7 +989,7 @@ f =: {{
 400 f 10000  NB. multithreads
 
 NB. random SPRs, all contenders
-ftype =: 1
+fftype =: 1
 f =: {{
  locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
  cbtbl =. (*   [: (0}~   1 >. {.) 100 ?@$~ #) 1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b, scaled.  Smallest must not go to 0; others can
@@ -1004,7 +1004,7 @@ f =: {{
 400 f 10000  NB. multithreads
 
 NB. Random variation in all of chi and blo (which must be the same everywhere)
-ftype =: 2
+fftype =: 2
 f =: {{
  locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
  for. i. x do.
@@ -1020,7 +1020,7 @@ f =: {{
 
 
 NB. Some noncontenders
-ftype =: 3
+fftype =: 3
 f =: {{
  locparts =. (}.~   ] i:!.0 {.) \:~ 4 * 1e_19 * _0.5 + y ?@$ 0  NB. min 2 LSBs separation; ensure min unique
  cbtbl =. 1.0 ,. locparts ,"(0 1)  1.0 , 1e_18 * _0.5 * ? 0  NB. different c, same b

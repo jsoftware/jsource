@@ -6,7 +6,6 @@ echo "entering $(pwd)"
 
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
-jplatform64="$jplatform"/"$j64x"
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -26,7 +25,7 @@ if [ "" = "$CFLAGS" ]; then
    OPTLEVEL=" -O2 -g "
    DEBUG=1
    NASM_FLAGS="-g"
-   jplatform64=$(./jplatform64.sh)-debug
+   j64x=$64x-debug
    ;;
   *)
    OPTLEVEL=" -O2 "
@@ -40,7 +39,8 @@ else
   ;;
  *) DEBUG=0 ;; esac
 fi
-echo "jplatform64=$jplatform64"
+echo "jplatform=$jplatform"
+echo "j64x=$j64x"
 
 USE_LINENOISE="${USE_LINENOISE:=1}"
 
@@ -49,7 +49,7 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in gcc 4
 # too early to move main linux release package to gcc 5
 
-case "$jplatform64" in
+case "$jplatform/$j64x" in
  darwin/j64iphoneos)
   USE_OPENMP=0
   LDTHREAD=" -pthread "
@@ -92,7 +92,11 @@ case "$jplatform64" in
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;
- wasm*) USE_PYXES=0 ;;
+ wasm*) 
+  USE_LINENOISE=0
+  USE_OPENMP=0
+  USE_PYXES=0
+  ;;
 esac
 case "$j64x" in
  j32*) USE_PYXES="${USE_PYXES:=0}" ;;
@@ -165,7 +169,7 @@ fi
 
 TARGET=jconsole
 
-case "$jplatform64" in
+case "$jplatform/$j64x" in
  *32*) USE_EMU_AVX=0 ;;
  *) USE_EMU_AVX="${USE_EMU_AVX:=1}" ;;
 esac
@@ -194,7 +198,7 @@ else
 fi
 
 if [ "${USE_GMP_H:=1}" -eq 1 ]; then
- common="$common -I../../../../mpir/include"
+ common="$common -I../mpir/include"
 fi
 
 if [ "$USE_LINENOISE" -ne "1" ]; then
@@ -217,44 +221,44 @@ fi
 #  read.o
 #  testlib.o
 
-case "$jplatform64" in
+case "$jplatform/$j64x" in
  freebsd/*) BACKTRACE_OBJS="" ;;
  openbsd/*) BACKTRACE_OBJS="" ;;
  wasm/*) BACKTRACE_OBJS="" ;;
  windows/*) BACKTRACE_OBJS="" ;;
  darwin/*)
   BACKTRACE_OBJS=" \
-   atomic.o \
-   backtrace.o \
-   dwarf.o \
-   fileline.o \
-   mmap.o \
-   mmapio.o \
-   posix.o \
-   print.o \
-   simple.o \
-   sort.o \
-   state.o \
-   macho.o "
+   ../libbacktrace/atomic.o \
+   ../libbacktrace/backtrace.o \
+   ../libbacktrace/dwarf.o \
+   ../libbacktrace/fileline.o \
+   ../libbacktrace/mmap.o \
+   ../libbacktrace/mmapio.o \
+   ../libbacktrace/posix.o \
+   ../libbacktrace/print.o \
+   ../libbacktrace/simple.o \
+   ../libbacktrace/sort.o \
+   ../libbacktrace/state.o \
+   ../libbacktrace/macho.o "
   ;;
  *)
   BACKTRACE_OBJS=" \
-   atomic.o \
-   backtrace.o \
-   dwarf.o \
-   fileline.o \
-   mmap.o \
-   mmapio.o \
-   posix.o \
-   print.o \
-   simple.o \
-   sort.o \
-   state.o \
-   elf.o "
+   ../libbacktrace/atomic.o \
+   ../libbacktrace/backtrace.o \
+   ../libbacktrace/dwarf.o \
+   ../libbacktrace/fileline.o \
+   ../libbacktrace/mmap.o \
+   ../libbacktrace/mmapio.o \
+   ../libbacktrace/posix.o \
+   ../libbacktrace/print.o \
+   ../libbacktrace/simple.o \
+   ../libbacktrace/sort.o \
+   ../libbacktrace/state.o \
+   ../libbacktrace/elf.o "
   ;;
 esac
 
-case $jplatform64 in
+case "$jplatform/$j64x" in
 
  linux/j32)
   CFLAGS="$common -m32 -msse2 -mfpmath=sse "
@@ -320,11 +324,13 @@ case $jplatform64 in
   TARGET=jconsole.exe
   CFLAGS="$common -Wno-psabi -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_WIN32 "
   LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
+  LIBJRES=" ../makevs/jconsole/jconsole.res "
   ;;
  windows/j64*)
   TARGET=jconsole.exe
   CFLAGS="$common -D_FILE_OFFSET_BITS=64 -D_WIN32 -D_WIN64 "
   LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
+  LIBJRES=" ../makevs/jconsole/jconsole.res "
   ;;
  *)
   echo no case for those parameters
@@ -338,11 +344,8 @@ if [ ! -f ../jsrc/jversion.h ]; then
  cp ../jsrc/jversion-x.h ../jsrc/jversion.h
 fi
 
-mkdir -p ../bin/$jplatform64
-mkdir -p obj/$jplatform64
-cp makefile-jconsole obj/$jplatform64/.
-export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN jplatform j64x jplatform64
-cd obj/$jplatform64/
+mkdir -p ../bin/$jplatform/$j64x
+export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN LIBJRES jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
   par=$(nproc)
@@ -354,7 +357,11 @@ if [ "x$MAKEFLAGS" = x'' ]; then
  export MAKEFLAGS=-j$par
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"
-$make -f makefile-jconsole all
+cd ../jsrc/
+if [ "1" != "$NOCLEAN" ]; then
+$make -f ../make2/makefile-jconsole clean
+fi
+$make -f ../make2/makefile-jconsole all
 retval=$?
 cd -
 exit $retval

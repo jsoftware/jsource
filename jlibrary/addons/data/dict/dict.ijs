@@ -1,4 +1,4 @@
-coclass 'jdictionary'
+coclass 'jdict'
 
 SIZE_GROWTH_GEOMETRIC_STEP =: 2
 
@@ -17,6 +17,18 @@ valueshape =: i. 0
 keyhash =: 16!:0`''
 keycompare =: 16!:0`''
 initcapacity =: 100
+NB. Names of params.
+long_param_names =: <;._2 {{)n
+keytype
+keyshape
+valuetype
+valueshape
+keyhash
+keycompare
+initcapacity
+}}
+short_param_names =: 4 2 $ 'ktksvtvs'
+search_short_param_names =: short_param_names&i.
 
 if. (-: (index_type {.~ -@#)) 'concurrent' do.
   singlethreaded =. 0
@@ -30,18 +42,18 @@ case. 'hash' do.
   itype =: 0   NB. index type 0 is hash
   occupancy =: 0.5   NB. default for occupancy
   NB. Parse params and update above attributes.
+  long_param_names =: long_param_names , < 'occupancy'
+  search_long_param_names =: long_param_names&i.
   parse^:(*@#) creation_parameters
   internal_parameters =. (0 , initcapacity , <. initcapacity % occupancy) ; singlethreaded ; (keytype ; keyshape) ; < (valuetype ; valueshape)
 case. 'tree' do.
   itype =: 1  NB. index type 1 is tree
   NB. Parse params and update above attributes.
+  search_long_param_names =: long_param_names&i.
   parse^:(*@#) creation_parameters
-  if. 0 <: 4!:0 < 'occupancy' do.
-     13!:8 (3) [ 'Parameter not supported in tree dictionary: occupancy'
-  end.
   internal_parameters =. (0 , initcapacity) ; singlethreaded ; (keytype ; keyshape) ; < (valuetype ; valueshape)
 case. do.
-  13!:8 (3) [ 'Incorrect index type'
+  13!:8&3 'Incorrect index type'
 end.
 
 NB. Create the map, which remains as dict.  dict is marked nondisplayable because 1 {:: dict is.
@@ -114,6 +126,11 @@ n {~ (<;._1 t) i. < y
 NB. Parse attribute and set its value.
 parse =: {{)m
 'attribute value' =: y
+if. (# short_param_names) > idx =. search_short_param_names attribute do.
+  attribute =. idx {:: long_param_names
+end.
+incorrect =. (# long_param_names) -: search_long_param_names < attribute
+13!:8&3^:incorrect attribute , ' parameter not supported'
 if. ('literal' -: datatype value) *. (attribute -: 'keytype') +. attribute -: 'valuetype' do.
   value =. typeid_from_typename value
 end.

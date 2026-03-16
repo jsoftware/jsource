@@ -1,12 +1,14 @@
 (9!:14'') 1!:2 [2
 
-exformat_j_=: eformat_j_ f.
+GITHUBCI=: 'true'-:2!:5'GITHUB_ACTIONS'
 
+testpath=: (1!:43''),'/test/'
+0!:0 <testpath,'tsu.ijs'
+
+0!:_1`1:@.(GITHUBCI) '?'   NB. skip if not github action
 load'pacman'
 'update'jpkg''
 'upgrade'jpkg'dev/eformat dev/lu'
-
-testpath=: (1!:43''),'/test/'
 
 os=: (('Linux';'Darwin';'OpenBSD';'FreeBSD') i. <UNAME) pick ;:'linux darwin openbsd freebsd win'
 os=: ((IF64{::'rpi32';'rpi64')"_)^:IFRASPI os
@@ -19,13 +21,9 @@ NB. os=: os, ((,'3')-:2!:5'_DEBUG'){::'';'d'
 os=: os, ((<ma) -.@e. (0;,'0')){::'';'ma' [ ma=. 2!:5'_MEMAUDIT'
 4!:55 <'ma'
 testres=: 'test',os,'.txt'
-IFWA64=: IFWIN*.'arm64'-:9!:56'cpu'
 
-0!:0 <testpath,'tsu.ijs'
 ECHOFILENAME=: 1   NB. echo file name
-
 stdout LF ,~ 9!:14''
-
 echo '_DEBUG: ',": 2!:5'_DEBUG'
 echo 'RUNNER_ARCH: ',": 2!:5'RUNNER_ARCH'
 
@@ -33,10 +31,8 @@ ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gs
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. temporarily disable
 ddall=: ~. ddall ,~ (-.IFWA64)#((<UNAME)e.'Win';'Darwin')#(<testpath),each 'glapack.ijs';'glapackcb.ijs'
 
-
-oldnl=: (;:'x y') -.~ ~. oldnl, (nl__ i.4) , ;:'FINISH RES'
-
 NB. smoke test
+
 NB. RES=: RUN4 (<testpath),each IF64{:: (<'gstack.ijs') ,&< 'gtdot1.ijs';'gtdot5.ijs'
 NB. echo^:(*@#RES) RES
 NB. RUN1 ::0:@dtb"1^:(*@#RES) RES
@@ -47,6 +43,17 @@ echo 'avx512vl: ',":9!:56'avx512vl'
 echo 'avx512bw: ',":9!:56'avx512bw'
 echo 'avx512vbmi: ',":9!:56'avx512vbmi'
 echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
+
+3 : 0^:(1<{:8 T.'') ''
+echo 9!:56 'supportaffinity'
+echo n=. <: <.2^9!:56'cores'
+try. echo 22 T. 0 catch. echo 'get affinity error' end.
+try. echo 22 T. 0;6 catch. echo 'set affinity error' end.
+try. echo 22 T. 0 catch. echo 'get affinity error' end.
+try. echo 22 T. 0;n catch. echo 'set affinity error' end.
+try. echo 22 T. 0 catch. echo 'get affinity error' end.
+''
+)
 
 NB. base64 failed on avx512?
 echo 3!:10 'f'
@@ -59,7 +66,7 @@ echo 237 160 128 237 160 129 237 160 130 237 160 131 237 160 132 237 160 133 237
 exit^:(237 160 128 237 160 129 237 160 130 237 160 131 237 160 132 237 160 133 237 160 134 237 160 135 -.@-:a.i.":7 u: 16bd800 + i.8) 1
 
 NB. this crash on OpenBSD v7.6
-echo '(128!:6)   ', (128!:6)   'abc'
+echo '(128!:6)   ', (128!:6) 'abc'
 echo '2&(128!:6) ', 2&(128!:6) 'abc'
 echo '3&(128!:6) ', 3&(128!:6) 'abc'
 echo '4&(128!:6) ', 4&(128!:6) 'abc'
@@ -83,10 +90,18 @@ echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i
 echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
 NB. this sometimes failed on linux O2
+exformat_j_=: eformat_j_ f.
 4!:55<'eformat_j_'
 echo '(1x&(]F::(++:))) [58#0'
 empty (1x&(]F::(++:))) [58#0
 eformat_j_=: exformat_j_ f.
+
+NB. echo (2&^.) _.
+NB. echo datatype (2&^.) _.
+
+NB. end of smoke test
+
+0!:_1 '$'   NB. temp skip to allow running full test suite
 
 4!:55 ;:'x y'
 4!:55 ;:'x y'
@@ -113,7 +128,6 @@ RES=: ''
 QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 
-0!:_1 '$'   NB. temp skip to allow running full test suite
 3 : 0''
 ECHOFILENAME0=: ECHOFILENAME
 ECHOFILENAME=: 0
@@ -177,21 +191,12 @@ QKTEST=: QKTEST0
 ECHOFILENAME=: ECHOFILENAME0
 1
 )
+
 NB.$  end of skip
 
-3 : 0^:(1<{:8 T.'') ''
-echo 9!:56 'supportaffinity'
-echo n=. <: <.2^9!:56'cores'
-try. echo 22 T. 0 catch. echo 'get affinity error' end.
-try. echo 22 T. 0;6 catch. echo 'set affinity error' end.
-try. echo 22 T. 0 catch. echo 'get affinity error' end.
-try. echo 22 T. 0;n catch. echo 'set affinity error' end.
-try. echo 22 T. 0 catch. echo 'get affinity error' end.
-''
-)
+NB.?  end of skip if not github action
 
-NB. echo (2&^.) _.
-NB. echo datatype (2&^.) _.
+oldnl=: (;:'x y') -.~ ~. oldnl, (nl__ i.4) , ;:'FINISH RES'
 
 FINISH=: 3 : 0
 msg=. 9!:14''
@@ -205,14 +210,10 @@ msg fappends testres
 echo^:(*@#RES) RES
 )
 
-echo 'RUN4 ddall'
+0!:_1`1:@.(GITHUBCI) '?'
 9!:27'FINISH RES=: RUN4 ddall'
 9!:29]1
 exit *@#RES
+NB.?  end of skip
 
-NB. 1: 0 : 0
-NB. if. IFWIN *. 1 e. 'avx/' E. 9!:14'' do.
-NB.   13!:99''
-NB. end.
-NB. )
-
+RES=: RUN ddall

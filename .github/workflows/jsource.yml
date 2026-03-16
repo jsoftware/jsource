@@ -49,15 +49,11 @@ jobs:
       USE_EMU_AVX: 1
      run: |
       script/testga.sh linux x86_64 || exit 1
-      cd j64
-      strip -S jconsole
-      strip -S libj.so
-      strip -S libjavx2.so || true
-      strip -S libjavx512.so || true
-      strip -S libtsdll.so
-      strip -S jamalgam || true
-      strip -S libgmp.so || true
-      cd -
+      cp jlibrary/bin/* j64
+      rm -f j64/profile.ijs
+      strip -S j64/jconsole || true
+      strip -S j64/jamalgam || true
+      strip -S j64/*so || true
       ls -l j64
       zip -r l64.zip j64
 
@@ -144,13 +140,11 @@ jobs:
       USE_EMU_AVX: 0
      run: |
       script/testga.sh linux i386 || exit 1
-      cd j32
-      strip -S jconsole
-      strip -S libj.so
-      strip -S libtsdll.so
-      strip -S jamalgam || true
-      strip -S libgmp.so || true
-      cd -
+      cp jlibrary/bin/* j32
+      rm -f j32/profile.ijs
+      strip -S j32/jconsole || true
+      strip -S j32/jamalgam || true
+      strip -S j32/*so || true
       ls -l j32
       zip -r l32.zip j32
 
@@ -268,14 +262,11 @@ jobs:
       USE_EMU_AVX: 1
      run: |
       script/testga.sh darwin x86_64 || exit 1
-      cd j64
-      strip -S jconsole
-      strip -S libj.dylib
-      strip -S libjavx2.dylib || true
-      strip -S libjavx512.dylib || true
-      strip -S libtsdll.dylib
-      strip -S jamalgam || true
-      cd -
+      cp jlibrary/bin/* j64
+      rm -f j64/profile.ijs
+      strip -S j64/jconsole || true
+      strip -S j64/jamalgam || true
+      strip -S j64/*dylib || true
       ls -l j64
       zip -r m64.zip j64
 
@@ -323,14 +314,11 @@ jobs:
       USE_EMU_AVX: 1
      run: |
       script/testga.sh darwin arm64 || exit 1
-      cd j64
-      strip -S jconsole
-      strip -S libj.dylib
-      strip -S libjavx2.dylib || true
-      strip -S libjavx512.dylib || true
-      strip -S libtsdll.dylib
-      strip -S jamalgam || true
-      cd -
+      cp jlibrary/bin/* j64
+      rm -f j64/profile.ijs
+      strip -S j64/jconsole || true
+      strip -S j64/jamalgam || true
+      strip -S j64/*dylib || true
       ls -l j64
       zip -r m64arm.zip j64
 
@@ -378,13 +366,11 @@ jobs:
       USE_EMU_AVX: 1
      run: |
       script/testga.sh raspberry arm64 || exit 1
-      cd j64
-      strip -S jconsole
-      strip -S libj.so
-      strip -S libtsdll.so
-      strip -S jamalgam || true
-      strip -S libgmp.so || true
-      cd -
+      cp jlibrary/bin/* j64
+      rm -f j64/profile.ijs
+      strip -S j64/jconsole || true
+      strip -S j64/jamalgam || true
+      strip -S j64/*so || true
       ls -l j64
       zip -r rpi64.zip j64
 
@@ -435,13 +421,11 @@ jobs:
       _DEBUG: 3
      run: |
       script/testga.sh raspberry armv6l || exit 1
-      cd j32
-      strip -S jconsole
-      strip -S libj.so
-      strip -S libtsdll.so
-      strip -S jamalgam || true
-      strip -S libgmp.so || true
-      cd -
+      cp jlibrary/bin/* j32
+      rm -f j32/profile.ijs
+      strip -S j32/jconsole || true
+      strip -S j32/jamalgam || true
+      strip -S j32/*so || true
       ls -l j32
       zip -r rpi32.zip j32
 
@@ -487,13 +471,11 @@ jobs:
        export USE_EMU_AVX=1
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64 || exit 1
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so || true
-       cd -
+       cp jlibrary/bin/* j64
+       rm -f j64/profile.ijs
+       strip -S j64/jconsole || true
+       strip -S j64/jamalgam || true
+       strip -S j64/*so || true
        zip -r rpi64.zip j64
        zip rpi64.zip /usr/bin/zip
        zip rpi64.zip /usr/bin/unzip
@@ -554,13 +536,11 @@ jobs:
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
-       cd j32
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so || true
-       cd -
+       cp jlibrary/bin/* j32
+       rm -f j32/profile.ijs
+       strip -S j32/jconsole || true
+       strip -S j32/jamalgam || true
+       strip -S j32/*so || true
        zip -r rpi32.zip j32
        rm -rf j32
        mkdir j32
@@ -626,15 +606,11 @@ jobs:
        export USE_EMU_AVX=1
        script/buildga.sh openbsd x86_64 || exit 1
        script/testga.sh openbsd x86_64 || exit 1
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libjavx2.so || true
-       strip -S libjavx512.so || true
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so || true
-       cd -
+       cp jlibrary/bin/* j64
+       rm -f j64/profile.ijs
+       strip -S j64/jconsole || true
+       strip -S j64/jamalgam || true
+       strip -S j64/*so || true
        ls -l j64
        zip -r obsd64.zip j64
        touch jobdone
@@ -695,15 +671,11 @@ jobs:
        export USE_EMU_AVX=1
        script/buildga.sh openbsd x86_64 || exit 1
        script/testga.sh openbsd x86_64 || exit 1
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libjavx2.so || true
-       strip -S libjavx512.so || true
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so || true
-       cd -
+       cp jlibrary/bin/* j64
+       rm -f j64/profile.ijs
+       strip -S j64/jconsole || true
+       strip -S j64/jamalgam || true
+       strip -S j64/*so || true
        ls -l j64
        zip -r obsd64.zip j64
        touch jobdone
@@ -764,13 +736,11 @@ jobs:
        export USE_PYXES=1
        export USE_EMU_AVX=1
        script/buildga.sh openbsd arm64 || exit 1
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so || true
-       cd -
+       cp jlibrary/bin/* j64
+       rm -f j64/profile.ijs
+       strip -S j64/jconsole || true
+       strip -S j64/jamalgam || true
+       strip -S j64/*so || true
        ls -l j64
        zip -r obsdarm64.zip j64
        touch jobdone
@@ -835,15 +805,11 @@ jobs:
        export USE_EMU_AVX=1
        script/buildga.sh freebsd x86_64 || exit 1
        script/testga.sh freebsd x86_64 || exit 1
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libjavx2.so || true
-       strip -S libjavx512.so || true
-       strip -S jamalgam || true
-       strip -S libtsdll.so
-       strip -S libgmp.so || true
-       cd -
+       cp jlibrary/bin/* j64
+       rm -f j64/profile.ijs
+       strip -S j64/jconsole || true
+       strip -S j64/jamalgam || true
+       strip -S j64/*so || true
        ls -l j64
        zip -r fbsd64.zip j64
        touch jobdone
@@ -908,15 +874,11 @@ jobs:
        export USE_EMU_AVX=1
        script/buildga.sh freebsd x86_64 || exit 1
        script/testga.sh freebsd x86_64 || exit 1
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libjavx2.so || true
-       strip -S libjavx512.so || true
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so || true
-       cd -
+       cp jlibrary/bin/* j64
+       rm -f j64/profile.ijs
+       strip -S j64/jconsole || true
+       strip -S j64/jamalgam || true
+       strip -S j64/*so || true
        ls -l j64
        zip -r fbsd64.zip j64
        touch jobdone
@@ -982,15 +944,11 @@ jobs:
        export USE_EMU_AVX=1
        script/buildga.sh freebsd arm64 || exit 1
        script/testga.sh freebsd arm64 || exit 1
-       cd j64
-       strip -S jconsole
-       strip -S libj.so
-       strip -S libjavx2.so || true
-       strip -S libjavx512.so || true
-       strip -S libtsdll.so
-       strip -S jamalgam || true
-       strip -S libgmp.so || true
-       cd -
+       cp jlibrary/bin/* j64
+       rm -f j64/profile.ijs
+       strip -S j64/jconsole || true
+       strip -S j64/jamalgam || true
+       strip -S j64/*so || true
        ls -l j64
        zip -r fbsdarm64.zip j64
        touch jobdone
@@ -1119,7 +1077,11 @@ jobs:
 
    - name: Compress Files (Windows)
      shell: pwsh
-     run: Compress-Archive j64 w64.zip
+     run: |
+#      copy jlibrary/bin/* j64
+      del j64/profile.ijs
+      del j64/libopenblas*.dll
+      Compress-Archive j64 w64.zip
 
    - name: Release JE (Windows)
      uses: ncipollo/release-action@v1
@@ -1169,7 +1131,11 @@ jobs:
 
    - name: Compress Files (Windows 32)
      shell: pwsh
-     run: Compress-Archive j32 w32.zip
+     run: |
+#      copy jlibrary/bin/* j32
+      del j32/profile.ijs
+      del j32/libopenblas*.dll
+      Compress-Archive j64 w32.zip
 
    - name: Release JE (Windows 32)
      uses: ncipollo/release-action@v1
@@ -1220,7 +1186,11 @@ jobs:
 
    - name: Compress Files (Windows arm64)
      shell: pwsh
-     run: Compress-Archive j64 warm64.zip
+     run: |
+#      copy jlibrary/bin/* j64
+      del j64/profile.ijs
+      del j64/libopenblas*.dll
+      Compress-Archive j64 warm64.zip
 
    - name: Release JE (Windows arm64)
      uses: ncipollo/release-action@v1
@@ -1269,7 +1239,11 @@ jobs:
 
    - name: Compress Files (Windows arm64)
      shell: pwsh
-     run: Compress-Archive j64 warm64.zip
+     run: |
+#      copy jlibrary/bin/* j64
+      del j64/profile.ijs
+      del j64/libopenblas*.dll
+      Compress-Archive j64 warm64.zip
 
    - name: Release JE (Windows arm64)
      uses: ncipollo/release-action@v1
@@ -1344,7 +1318,11 @@ jobs:
 
    - name: Compress Files (Windows MSYS2 x64)
      shell: pwsh
-     run: Compress-Archive j64 w64mw.zip
+     run: |
+      copy jlibrary/bin/* j64
+      del j64/profile.ijs
+      del j64/libopenblas*.dll
+      Compress-Archive j64 w64mw.zip
 
    - name: Release JE (Windows MSYS2 x64)
      uses: ncipollo/release-action@v1
@@ -1400,7 +1378,11 @@ jobs:
 
    - name: Compress Files (Windows MSYS2 x86)
      shell: pwsh
-     run: Compress-Archive j32 w32mw.zip
+     run: |
+      copy jlibrary/bin/* j32
+      del j32/profile.ijs
+      del j32/libopenblas*.dll
+      Compress-Archive j64 w32mw.zip
 
    - name: Release JE (Windows MSYS2 x86)
      uses: ncipollo/release-action@v1
@@ -1454,6 +1436,23 @@ jobs:
       _DEBUG: 0
      run: |
       script/testga.sh windows arm64 || exit 1
+
+   - name: Compress Files (Windows MSYS2 arm64)
+     shell: pwsh
+     run: |
+      copy jlibrary/bin/* j64
+      del j64/profile.ijs
+      del j64/libopenblas*.dll
+      Compress-Archive j64 warm64mw.zip
+
+   - name: Release JE (Windows MSYS2 arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "warm64mw.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
 
 # get tests ------------------------------------------------------------
  tests:

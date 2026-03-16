@@ -92,7 +92,7 @@ case "$jplatform/$j64x" in
   ;;
  openbsd/*) make=gmake ;;
  freebsd/*) make=gmake ;;
- wasm*) 
+ wasm*)
   USE_LINENOISE=0
   USE_OPENMP=0
   USE_PYXES=0
@@ -359,7 +359,7 @@ fi
 echo "MAKEFLAGS=$MAKEFLAGS"
 cd ../jsrc/
 if [ "1" != "$NOCLEAN" ]; then
-$make -f ../make2/makefile-jconsole clean
+ $make -f ../make2/makefile-jconsole clean
 fi
 $make -f ../make2/makefile-jconsole all
 retval=$?

@@ -280,7 +280,7 @@ fi
 echo "MAKEFLAGS=$MAKEFLAGS"
 cd ../jsrc/
 if [ "1" != "$NOCLEAN" ]; then
-$make -f ../make2/makefile-tsdll clean
+ $make -f ../make2/makefile-tsdll clean
 fi
 $make -f ../make2/makefile-tsdll all
 retval=$?

@@ -281,12 +281,19 @@ RECHO4=: 13 : '+/ RESUB4 y'
 NB. bill extensions
 
 GITHUBCI=: 'true'-:2!:5'GITHUB_ACTIONS'       NB. running on github action
-ECHOFILENAME=: IFIOS+.IFRASPI+.((<UNAME)e.'Android';'Wasm')  NB. echo file name
+3 : 0''
+if. 0~:4!:0<'ECHOFILENAME' do.
+  ECHOFILENAME=: IFIOS+.IFRASPI+.((<UNAME)e.'Android';'Wasm')  NB. echo file name
+end.
+if. 0~:4!:0<'QKTEST' do.
+  QKTEST=: (*9!:56'MEMAUDIT')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
+end.
+''
+)
 PRINTMSG=: 0       NB. print diagnosis message
 RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 RUNFILE=: ''       NB. dummy
-QKTEST=: (*9!:56'MEMAUDIT')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
 PRINTMSG0=: PRINTMSG [ QKTEST0=: QKTEST [ ECHOFILENAME0=: ECHOFILENAME
 WINMEM2=: ('x86_64'-:9!:56'cpu') *. IFWIN *. 2 *@(17 b.) 9!:56'memaudit'   NB. skip some check
 

@@ -3,9 +3,9 @@
 set -e
 
 if [ x"noclean" = x"$1" ]; then
-  exit 0
+ exit 0
 elif [ "1" = "$NOCLEAN" ]; then
-  exit 0
+ exit 0
 fi
 
 realpath() {

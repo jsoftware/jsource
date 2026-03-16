@@ -62,74 +62,76 @@ fi
 
 dest=$1
 
-cp -R jlibrary/* .
-cp script/testga.ijs .
-cp script/ver.ijs .
+A=jlibrary
+B=jlibrary/bin
+C=jlibrary/bin32
+
+cp script/testga.ijs $A
+cp script/ver.ijs $A
 
 if [ $m64 -eq 1 ]; then
  mkdir -p j64
- cp bin/profile.ijs j64
 else
  mkdir -p j32
- cp bin/profile.ijs j32
+ mkdir -p $C
+ cp $B/profile.ijs $C
 fi
 
 if [ "$1" = "linux" ]; then
  if [ $m64 -eq 1 ]; then
-  # cp mpir/linux/x86_64/libgmp.so j64
-  cp mpir/linux/x86_64/libgmpd.so j64/libgmp.so
-  cp pcre2/linux/x86_64/libjpcre2.so tools/regex/.
+  cp mpir/linux/x86_64/libgmp.so $B
+  cp pcre2/linux/x86_64/libjpcre2.so $A/tools/regex/.
  else
-  cp mpir/linux/i386/libgmpd.so j32/libgmp32.so
-  cp pcre2/linux/i386/libjpcre2.so tools/regex/libjpcre2_32.so
+  cp mpir/linux/i386/libgmpd.so $C/libgmp32.so
+  cp pcre2/linux/i386/libjpcre2.so $A/tools/regex/libjpcre2_32.so
  fi
 elif [ "$1" = "raspberry" ]; then
  if [ $m64 -eq 1 ]; then
-  cp mpir/linux/aarch64/libgmp.so j64
-  cp pcre2/linux/aarch64/libjpcre2.so tools/regex/.
+  cp mpir/linux/aarch64/libgmp.so $B
+  cp pcre2/linux/aarch64/libjpcre2.so $A/tools/regex/.
  else
-  cp mpir/linux/arm/libgmp.so j32/libgmp32.so
-  cp pcre2/linux/arm/libjpcre2.so tools/regex/libjpcre2_32.so
+  cp mpir/linux/arm/libgmp.so $C/libgmp32.so
+  cp pcre2/linux/arm/libjpcre2.so $A/tools/regex/libjpcre2_32.so
  fi
 elif [ "$1" = "darwin" ]; then
  brew install libomp
- cp mpir/apple/macos/libgmp.dylib j64
- cp pcre2/apple/macos/libjpcre2.dylib tools/regex/.
+ cp mpir/apple/macos/libgmp.dylib $B
+ cp pcre2/apple/macos/libjpcre2.dylib $A/tools/regex/.
 elif [ "$1" = "openbsd" ]; then
- # cp /usr/local/lib/libgmp.so.11.0 j64/libgmp.so
+ # cp /usr/local/lib/libgmp.so.11.0 $B/libgmp.so
  if [ "$2" = "x86_64" ]; then
-  cp mpir/openbsd/x86_64/libgmp.so j64
-  cp pcre2/openbsd/x86_64/libjpcre2.so tools/regex/.
+  cp mpir/openbsd/x86_64/libgmp.so $B
+  cp pcre2/openbsd/x86_64/libjpcre2.so $A/tools/regex/.
  else
-  cp mpir/openbsd/aarch64/libgmp.so j64
-  cp pcre2/openbsd/aarch64/libjpcre2.so tools/regex/.
+  cp mpir/openbsd/aarch64/libgmp.so $B
+  cp pcre2/openbsd/aarch64/libjpcre2.so $A/tools/regex/.
  fi
 elif [ "$1" = "freebsd" ]; then
- # cp /usr/local/lib/libgmp.so.10 j64/libgmp.so
+ # cp /usr/local/lib/libgmp.so.10 $B/libgmp.so
  if [ "$2" = "x86_64" ]; then
-  cp mpir/freebsd/x86_64/libgmp.so j64
-  cp pcre2/freebsd/x86_64/libjpcre2.so tools/regex/.
+  cp mpir/freebsd/x86_64/libgmp.so $B
+  cp pcre2/freebsd/x86_64/libjpcre2.so $A/tools/regex/.
  else
-  cp mpir/freebsd/aarch64/libgmp.so j64
-  cp pcre2/freebsd/aarch64/libjpcre2.so tools/regex/.
+  cp mpir/freebsd/aarch64/libgmp.so $B
+  cp pcre2/freebsd/aarch64/libjpcre2.so $A/tools/regex/.
  fi
 elif [ "$1" = "windows" ]; then
  export NASM=$GITHUB_WORKSPACE/openssl-asm/nasm
  if [ "$2" = "x86_64" ]; then
-  cp mpir/windows/x64/mpir.dll j64
-  cp pcre2/windows/x64/jpcre2.dll tools/regex/.
-  cp pthreads4w/bin/pthreadVC3.dll j64
-#  curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
+  cp mpir/windows/x64/mpir.dll $B
+  cp pcre2/windows/x64/jpcre2.dll $A/tools/regex/.
+  cp pthreads4w/bin/pthreadVC3.dll $B
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
  elif [ "$2" = "i386" ]; then
-  cp mpir/windows/x86/mpir.dll j32/mpir32.dll
-  cp pcre2/windows/x86/jpcre2.dll tools/regex/jpcre2_32.dll
-  cp pthreads4w/bin/pthreadVC3-w32.dll j32
-#  curl --output-dir "j32" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
+  cp mpir/windows/x86/mpir.dll $C/mpir32.dll
+  cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
+  cp pthreads4w/bin/pthreadVC3-w32.dll $C
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
  else
-  cp mpir/windows/arm64/mpir.dll j64
-  cp pcre2/windows/arm64/jpcre2.dll tools/regex/jpcre2_arm64.dll
-  cp pthreads4w/bin/pthreadVC3-arm64.dll j64
-#  curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
+  cp mpir/windows/arm64/mpir.dll $B
+  cp pcre2/windows/arm64/jpcre2.dll $A/tools/regex/jpcre2_arm64.dll
+  cp pthreads4w/bin/pthreadVC3-arm64.dll $B
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
  fi
 fi
 
@@ -195,10 +197,12 @@ if [ "$1" = "wasm" ]; then
  ./clean.sh
  USE_WASM=1 jplatform=wasm j64x=j32 ./build_jamalgam.sh
  cd ..
- cp bin/$dest/j32/* j32
- find j32 -type d -exec chmod 755 {} \;
- find j32 -type f -exec chmod 644 {} \;
- find j32 \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
+ cp bin/$dest/j32/* $C
+ find $C -type d -exec chmod 755 {} \;
+ find $C -type f -exec chmod 644 {} \;
+ find $C \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
+ rm -f $C/profile.ijs
+ cp $C/* j32
  ls -l j32
  exit 0
 fi
@@ -262,7 +266,7 @@ if [ $m64 -eq 1 ]; then
   fi
  fi
 
- if [ "$USE_PYXES" = "1" ] &&  [ "$USE_EMU_AVX" = "1" ] && ([ "$2" = "x86_64" ] || [ "$1" = "darwin" ] || [ "$1" = "windows" ]); then
+ if [ "$USE_PYXES" = "1" ] && [ "$USE_EMU_AVX" = "1" ] && ([ "$2" = "x86_64" ] || [ "$1" = "darwin" ] || [ "$1" = "windows" ]); then
   ./clean.sh
   j64x=j64avx2 ./build_libj.sh
   ./clean.sh
@@ -287,53 +291,53 @@ cd -
 
 if [ $m64 -eq 1 ]; then
  if [ "$2" = "arm64" ]; then
-  cp bin/$dest/j64arm/* j64
+  cp bin/$dest/j64arm/* $B
  else
-  cp bin/$dest/j64/* j64
+  cp bin/$dest/j64/* $B
  fi
 else
  if [ "$2" = "armv6l" ]; then
-  cp bin/$dest/j32arm/* j32
+  cp bin/$dest/j32arm/* $C
  else
-  cp bin/$dest/j32/* j32
+  cp bin/$dest/j32/* $C
  fi
 fi
 
 if [ "$1" = "darwin" ] && [ -f "bin/$dest/j64arm/${libj}.${ext}" ]; then
- lipo bin/$dest/j64/jconsole bin/$dest/j64arm/jconsole -create -output j64/jconsole
- lipo bin/$dest/j64/libtsdll.${ext} bin/$dest/j64arm/libtsdll.${ext} -create -output j64/libtsdll.${ext}
- lipo bin/$dest/j64/${libj}.${ext} bin/$dest/j64arm/${libj}.${ext} -create -output j64/${libj}.${ext}
- lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output j64/jamalgam || true
+ lipo bin/$dest/j64/jconsole bin/$dest/j64arm/jconsole -create -output $B/jconsole
+ lipo bin/$dest/j64/libtsdll.${ext} bin/$dest/j64arm/libtsdll.${ext} -create -output $B/libtsdll.${ext}
+ lipo bin/$dest/j64/${libj}.${ext} bin/$dest/j64arm/${libj}.${ext} -create -output $B/${libj}.${ext}
+ lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output $B/jamalgam || true
 fi
 
 if [ -d "bin/$dest/j64iphoneos" ]; then
- mkdir -p j64/ios
- cp -r bin/$dest/j64iphoneos j64/ios/.
+ mkdir -p $B/ios
+ cp -r bin/$dest/j64iphoneos $B/ios/.
 fi
 
 if [ -d "bin/$dest/j64iphonesimulator" ]; then
- mkdir -p j64/ios
- cp -r bin/$dest/j64iphonesimulator j64/ios/.
+ mkdir -p $B/ios
+ cp -r bin/$dest/j64iphonesimulator $B/ios/.
 fi
 
 if [ -f bin/$dest/j64avx2/${libj}.${ext} ]; then
- cp bin/$dest/j64avx2/${libj}.${ext} j64/${libj}avx2.${ext}
+ cp bin/$dest/j64avx2/${libj}.${ext} $B/${libj}avx2.${ext}
 fi
 
 if [ -f bin/$dest/j64avx512/${libj}.${ext} ]; then
- cp bin/$dest/j64avx512/${libj}.${ext} j64/${libj}avx512.${ext}
+ cp bin/$dest/j64avx512/${libj}.${ext} $B/${libj}avx512.${ext}
 fi
 
-if [ -d j64 ]; then
- find j64 -type d -exec chmod 755 {} \;
- find j64 -type f -exec chmod 644 {} \;
- find j64 \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
- ls -l j64
+if [ -d $B ]; then
+ find $B -type d -exec chmod 755 {} \;
+ find $B -type f -exec chmod 644 {} \;
+ find $B \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
+ ls -l $B
 fi
 
-if [ -d j32 ]; then
- find j32 -type d -exec chmod 755 {} \;
- find j32 -type f -exec chmod 644 {} \;
- find j32 \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
- ls -l j32
+if [ -d $C ]; then
+ find $C -type d -exec chmod 755 {} \;
+ find $C -type f -exec chmod 644 {} \;
+ find $C \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
+ ls -l $C
 fi

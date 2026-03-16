@@ -1284,7 +1284,7 @@ DF2(jtfoldZ2){F12IP;
  ASSERT(BETWEENC(type,-3,1),EVINDEX)  //  requested action index must be in range
  I y;
  if(type==-3){y=rei0(w); y=jt->afoldinfo->exestats[0]>=y;  // set y if current v count high enough
- }else y=reb0(w);  // verify boolean
+ }else RE(y=b0(w));  // verify boolean scaf* reb0
  if(y){
   I ymask=1<<(type-(-3));  // convert type to one-hot
   jt->afoldinfo->zstatus|=ymask;  // accumulate zstatus

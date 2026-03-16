@@ -1093,7 +1093,7 @@ static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allr
  RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We clear in case the action routine calls a function with IRS
 
  // Signal domain error if appropriate. Must do this after agreement tests
- ASSERT(aadocv->f,EVDOMAIN);
+ if(!(aadocv->f))SEGFAULT; ASSERT(aadocv->f,EVDOMAIN);
  if(likely(jtfg!=0)){   // if not sparse...
   // Not sparse.
 

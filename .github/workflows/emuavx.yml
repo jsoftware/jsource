@@ -334,6 +334,7 @@ jobs:
    - name: Build JE (Windows no pyxes)
      shell: cmd
      env:
+      NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 0
       USE_EMU_AVX: 1
       _DEBUG: 0
@@ -366,6 +367,7 @@ jobs:
    - name: Build JE (Windows no emu)
      shell: cmd
      env:
+      NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 1
       USE_EMU_AVX: 0
       _DEBUG: 0
@@ -398,6 +400,7 @@ jobs:
    - name: Build JE (Windows no pyxes/emu)
      shell: cmd
      env:
+      NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: 0

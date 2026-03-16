@@ -1224,7 +1224,9 @@ static DF2(jtfold12){F12IP;A z,vz;
        JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) AZAPLOC(zznew)=AZAPLOC(zz);
        AT(zznew)=BOX; AFLAG(zznew)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks and to its dedicated zaploc
        AN(zznew)=newslot+1; AAV(zznew)[newslot]=z;  // AAV not AAV1
-       *AZAPLOC(zz)=zznew; mf(zz); zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it; free zz using mf to avoid traversing boxes
+       *AZAPLOC(zz)=zznew;
+// obsolete  mf(zz);
+       zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it; free zz using mf to avoid traversing boxes
 // obsolete  *zznewzap=zz;
       }else{AAV1(zz)[newslot]=z; AN(zz)=newslot+1;}  // install the new value & account for it in len
 #else

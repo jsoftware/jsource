@@ -1102,7 +1102,7 @@ DF2(jtfoldZ){F12IP;
 #define STATEDYADX 29   // call is dyadic.  Must be the MSB of the flags
 #define STATEDYAD ((I)1<<STATEDYADX)
 static DF2(jtfold12){F12IP;A z,vz;
- struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z:   zstatus: fold limit; abort; abort iteration; quiet iteration; halt after current
+ struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z: exestatus[3] followed by zstatus mask: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);
  I dyad=EPDYAD; w=EPDYAD?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
  if(unlikely(((UI)a^(UI)w)<(UI)dyad))jtfg=(J)((I)jtfg&~(JTINPLACEA|JTINPLACEW));  // can't inplace equal args
@@ -1115,7 +1115,9 @@ static DF2(jtfold12){F12IP;A z,vz;
  I wr=AR(w); I wcr=wr-SGNTO0(-wr);  // rank of w, rank of an item of w
  UI wni; SETIC(w,wni); UI nitems=wni+(dmfr>>STATEDYADX);  // #items of y; # items to process into u including x if given; number of turns through loop
  UI zzalloc=64-(AKXR(1)>>LGSZI); zzalloc=MIN(nitems,zzalloc); zzalloc=dmfr&STATEFWD+STATEREV?zzalloc:16-(AKXR(1)>>LGSZI); zzalloc=dmfr&STATEMULT?zzalloc:1;  // initial result allo.  zzalloc is #boxes in zz; AN(zz) is # valid
- A zz; GATV0E(zz,INT,zzalloc,dmfr&STATEMULT?1:0,goto exitpop;) AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE; AN(zz)=0;   // alloc result area.  avoid init of BOX area
+ A zz; GATV0E(zz,INT,zzalloc,dmfr&STATEMULT?1:0,goto exitpop;) AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE; AN(zz)=0;   // alloc recursive result area.  avoid init of BOX area
+ // Track the items of y (x arg into v) using a virtual arg
+ fauxblock(virtwfaux);
  A virtw;  // virtual block for items of y, if needed
  I wstride;  // dist between items of y, in bytes, pos/neg/0 based on fwd/rev
  if(likely((dmfr&STATEFWD+STATEREV)!=0)){
@@ -1125,13 +1127,13 @@ static DF2(jtfold12){F12IP;A z,vz;
    // Create the cell to run u on: one given argument or a cell of fills
    if(nitems==1){
     // 1 item.  Could come from x (if y is empty) or y.  Apply u to it, to give the final result
-    ++foldinfo.exestats[0]; foldinfo.zstatus=0; dfv1(z,dmfr&STATEDYAD?a:head(w),uself);
+    ++foldinfo.exestats[0]; foldinfo.zstatus=0; dfv1(z,dmfr&STATEDYAD?a:head(w),uself);  // scaf* should be stats[1]
    }else{
     // 0 items (necessarily monadic).  Error if fold multiple.  Create a neutral for v from an item of y, and apply u to it
     ASSERT(!(dmfr&STATEMULT),EVDOMAIN)  // empty multiple fold is < 0 applications of v, error
     A fillcell=jtred0(jt,w,vself);  // a neutral with the shape of an item of y
     ASSERTGOTO(fillcell!=0,EVDOMAIN,exitpop)   // error if v has no neutral
-    ++foldinfo.exestats[0]; foldinfo.zstatus=0; dfv1(z,fillcell,uself);
+    ++foldinfo.exestats[0]; foldinfo.zstatus=0; dfv1(z,fillcell,uself);   // scaf* should be stats[1]
    }
    // we have applied u to the single cell.
    ASSERTGOTO(!(foldinfo.zstatus&0b01111),EVNORESULT,exitpop)  // z stopped iteration and no result was created: that's a no result error
@@ -1142,8 +1144,6 @@ static DF2(jtfold12){F12IP;A z,vz;
    zz=z; goto abortexit;  // return z
   }else{
    // At least 2 items.  Run the fold loop.
-   // Track the items of y (x arg into v) using a virtual arg
-   fauxblock(virtwfaux);
    // if the original block was direct inplaceable, make the virtual block inplaceable.  (We can't do this for indirect blocks because a virtual block is not marked recursive - rather it increments
    // the usecount of the entire backing block - and modifying the virtual contents would leave the usecounts invalid since the backing block is always recursive (having been ra'd).  Maybe could do this if it isn't?)
    I wcn; PROD(wcn,wcr,AS(w)+1);   // number of atoms in a cell
@@ -1174,87 +1174,73 @@ static DF2(jtfold12){F12IP;A z,vz;
   jtfg = (J)((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA));  // never inplace x, which repeats if given; pass along original inplaceability of y
   virtw=a; vz=w;  // v starts on w and then reapplies to the result; save a reg by moving a to virtw
  }
- A *_old=jt->tnextpushp;  // pop back to here to clear everything except the result & any early allocation
+ A *_old=jt->tnextpushp;  // pop back to here to clear everything except the result & any early allocation.  We make sure each new result allocation uses the same tstack location
 
  I zstatus;  // combined Z: results from this exec of v/u
  // Loop executing u/v
  do{
   A tz;   // will hold result from v while we are deciding whether to keep it
   zstatus=0;  // saved zstatus for this turn through the loop
-  ++foldinfo.exestats[0]; foldinfo.zstatus=0;  // incr stats for exec
+  ++foldinfo.exestats[0]; foldinfo.zstatus=0;  // incr v execct
   // ************* run v
-  if(dmfr&STATEFWD+STATEREV){
+  if(dmfr&STATEFWD+STATEREV){   // not directionless
    if(dmfr&ZZFLAGVIRTAINPLACE)ACRESET(virtw,ACUC1+ACINPLACE);  // in case it was modified, restore inplaceability to the UNINCORPABLE block
    tz=CALL2IP(FAV(vself)->valencefns[1],virtw,vz,vself);  // fwd/rev.  newitem v vz   a is inplaceable if y was (set above).  w is inplaceable first time based on initial-item status
    if(unlikely(tz==virtw)){RZGOTO(tz=clonevirtual(tz),exitpop)}
    AK(virtw)+=wstride;  // advance item pointer to next/prev if there is one
   }else tz=CALL21IP(dmfr>>STATEDYADX,FAV(vself)->valencefns[dmfr>>STATEDYADX],virtw,vz,vself);  // directionless dyad/monad  [x] v vz
+
   jtfg=(J)((I)jtfg|JTINPLACEW);  // w inplaceable on all iterations after the first
   zstatus|=foldinfo.zstatus;  // remember termination flags from zstatus
   if(unlikely(zstatus&0b00011))goto errfinish;  // z stopped iteration: finish up
   vz=tz!=0?tz:vz;   //  if v ran to completion, use its result for the next iteration
-  if(likely(!(zstatus&0b00100))){  // is 'abort iteration'? (has z=0).  If so, skip u & result store
-   if(unlikely(tz==0))goto errfinish;   // error in v, exit
-   // ************** run u
-   ++foldinfo.exestats[1]; foldinfo.zstatus=0; z=CALL1(FAV(uself)->valencefns[0],tz,uself);  // never inplace
-   zstatus|=foldinfo.zstatus;  // remember termination flags from zstatus
-   if(unlikely(zstatus&0b00011))goto errfinish;  // z stopped iteration: finish up
-   if(likely(!(zstatus&0b00100))){  // is 'abort iteration'? (has z=0)  if so, skip result store
-    if(unlikely(z==0))goto errfinish;   // error in u, exit
-    if(!(zstatus&0b01000)){  // if store of result not suppressed... */
-     // ******************** the u result is to be added to the total (possibly replacing it)
-     // we install z into the result zz, which takes over its protection as long as that result survives.  We would like to do this with ZAP
-     // if possible, because that way the usecount will never get to 2 and we can avoid RFO cycles.
-     // If zz is destroyed, its protection of z will be lost.   That is OK unless somehow a value from up the stack, with protection ONLY on the stack.
-     // The only way such a value can get to us is through the arguments a/w - any named value is protected in its executing sentence, and any value in a box
-     // is protected in the box.  Thus we ZAP unless the result is our a input
-     ++foldinfo.exestats[2]; realizeifvirtual(z);
-     if(likely(z!=a)){razaptstackend(z);}else ra(z)  // raise the block we are adding to the recursive result
-     if(dmfr&STATEMULT){   // is Fold Multiple?
-        // we are adding uz to a recursible block, with transfer of ownership.  The new owner protects the block.  If uz is abandoned it is safe to zap even if it is x.  Sets new uz
-      // Fold Multiple.  Add the new value to the result array
-      UI newslot=AN(zz);  // where the new value will go
-#if 1   // test version to try to eliminate crash
-      if(withprob(newslot==zzalloc,0.03)){  // current alloc full?
-       // current alloc is full.  Double the allocation, swap it with zz (transferring ownership), and copy the data
-       zzalloc=2*zzalloc+(AKXR(1)>>LGSZI);  // new allocation, cacheline multiple
+  if(unlikely(zstatus&0b00100))goto abortiter;  // is 'abort iteration'? (has z=0).  If so, skip u & result store
+  if(unlikely(tz==0))goto errfinish;   // error in v, exit
+  // ************** run u
+  ++foldinfo.exestats[1]; foldinfo.zstatus=0; z=CALL1(FAV(uself)->valencefns[0],tz,uself);  // never inplace.  Increment count of executions of u
+
+  zstatus|=foldinfo.zstatus;  // remember termination flags from zstatus
+  if(unlikely(zstatus&0b00011))goto errfinish;  // z stopped iteration: finish up
+  if(unlikely(zstatus&0b00100))goto abortiter;  // is 'abort iteration'? (has z=0)  if so, skip result store
+  if(unlikely(z==0))goto errfinish;   // error in u, exit
+  if(!(zstatus&0b01000)){  // if store of result not suppressed... */
+   // ******************** the u result is to be added to the total (possibly replacing it)
+   // we install z into the result zz, which takes over its protection as long as that result survives.  We would like to do this with ZAP
+   // if possible, because that way the usecount will never get to 2 and we can avoid RFO cycles.
+   // If zz is destroyed, its protection of z will be lost.   That is OK unless somehow z is a value from up the stack, with protection ONLY on the stack.
+   // The only way such a value can get to us is through the arguments a/w - any named value is protected in its executing sentence, and any value in a box
+   // is protected in the box.  Thus we ZAP unless the result is our a input
+   ++foldinfo.exestats[2]; realizeifvirtual(z);   // Increment count of results added
+   if(likely(z!=a)){razaptstackend(z);}else ra(z)  // raise the block we are adding to the recursive result
+   if(dmfr&STATEMULT){   // is Fold Multiple?
+      // we are adding uz to a recursible block, with transfer of ownership.  The new owner protects the block.  If uz is abandoned it is safe to zap even if it is x.  Sets new uz
+    // Fold Multiple.  Add the new value to the result array
+    UI newslot=AN(zz);  // where the new value will go
+    if(withprob(newslot==zzalloc,0.03)){  // current alloc full?
+     // current alloc is full.  Double the allocation, swap it with zz (transferring ownership), and copy the data
+     zzalloc=2*zzalloc+(AKXR(1)>>LGSZI);  // new allocation, cacheline multiple
 // obsolete        A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) A *zznewzap=AZAPLOC(zznew); A *zzzap=AZAPLOC(zz);  // allocate, & get pointers to tstack slots old & new
-       A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) ACINITUNPUSH(zznew)  // allocate & zap new block
+     A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) ACINITUNPUSH(zznew)  // allocate & zap new block
 // obsolete  AT(zz)=INT; AFLAG(zz)=0;
-       JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) AZAPLOC(zznew)=AZAPLOC(zz);
-       AT(zznew)=BOX; AFLAG(zznew)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks and to its dedicated zaploc
-       AN(zznew)=newslot+1; AAV(zznew)[newslot]=z;  // AAV not AAV1
-       *AZAPLOC(zz)=zznew;
-// obsolete  mf(zz);
-       zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it; free zz using mf to avoid traversing boxes
+     JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) AZAPLOC(zznew)=AZAPLOC(zz); *AZAPLOC(zz)=zznew; mf(zz); zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it; free zz using mf to avoid traversing boxes
 // obsolete  *zznewzap=zz;
-      }else{AAV1(zz)[newslot]=z; AN(zz)=newslot+1;}  // install the new value & account for it in len
-#else
-      if(withprob(newslot==zzalloc,0.03)){  // current alloc full?
-       // current alloc is full.  Double the allocation, swap it with zz (transferring ownership), and copy the data
-       zzalloc=2*zzalloc+(AKXR(1)>>LGSZI);  // new allocation, cacheline multiple
-// obsolete        A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) A *zznewzap=AZAPLOC(zznew); A *zzzap=AZAPLOC(zz);  // allocate, & get pointers to tstack slots old & new
-       A zznew; GATV0E(zznew,INT,zzalloc,1,goto exitpop;) ACINITUNPUSH(zznew)  // allocate & zap new block
-// obsolete  AT(zz)=INT; AFLAG(zz)=0;
-       JMC(AAV1(zznew),AAV1(zz),newslot<<LGSZI,0) AZAPLOC(zznew)=AZAPLOC(zz); *AZAPLOC(zz)=zznew; mf(zz); zz=zznew;  // swap buffers, transferring ownership to zznew & protecting it; free zz using mf to avoid traversing boxes
-// obsolete  *zznewzap=zz;
-       AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks and to its dedicated zaploc
-      }
-      AAV1(zz)[newslot]=z; AN(zz)=newslot+1;  // install the new value & account for it in len
-#endif
-     }else{
-      // Fold Single.  Replace the value in zz
-// obsolete      ra(z)  // uz is not guaranteed to stay in the result till the end; therefore we must not zap it for fold single since it might be w also.
-      if(AN(zz)!=0){A t=AAV0(zz)[0]; if(MEMAUDIT&0x3e)AAV0(zz)[0]=0; fa(t);} else{AN(zz)=1;}  // free old value if any, mark value now valid  (clear value in buffer before auditing)
-      AAV0(zz)[0]=z;  // install new value
-     }
+     AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE;    // new zz now has pointers to allocated blocks and to its dedicated zaploc
     }
-   }else RESETERR  // 'abort iteration' from u: clear error for next time
-  }else RESETERR  // 'abort iteration' from v: clear error for next time
+    AAV1(zz)[newslot]=z; AN(zz)=newslot+1;  // install the new value & account for it in len
+   }else{
+    // Fold Single.  Replace the value in zz
+// obsolete      ra(z)  // uz is not guaranteed to stay in the result till the end; therefore we must not zap it for fold single since it might be w also.
+    if(AN(zz)!=0){A t=AAV0(zz)[0]; if(MEMAUDIT&0x3e)AAV0(zz)[0]=0; fa(t);} else{AN(zz)=1;}  // free old value if any, mark value now valid  (clear value in buffer before auditing)
+    AAV0(zz)[0]=z;  // install new value
+   }
+  }
+
+  if(0){abortiter: RESETERR}  // 'abort iteration': clear error for next time
   // ready for next iteration, whether the previous one completed or not
   if(unlikely(zstatus&0b10000))break;  // if early termination, exit loop
   // it is possible that virtw has been passed through to vz.  In that case, we have to copy it
   // because we are about to relocate virtw.  It is OK to keep vz virtual.
+  // ***************** free any result we aren't keeping
   if(unlikely((vz=gc(vz,_old))==0))goto exitpop;  // pop back everything but vz, result & virtuals (removing z at least)
  }while(--nitems);
 loopend:;
@@ -1298,7 +1284,7 @@ DF2(jtfoldZ2){F12IP;
  ASSERT(BETWEENC(type,-3,1),EVINDEX)  //  requested action index must be in range
  I y;
  if(type==-3){y=rei0(w); y=jt->afoldinfo->exestats[0]>=y;  // set y if current v count high enough
- }else RE(y=b0(w));  // verify boolean
+ }else y=reb0(w);  // verify boolean
  if(y){
   I ymask=1<<(type-(-3));  // convert type to one-hot
   jt->afoldinfo->zstatus|=ymask;  // accumulate zstatus

@@ -143,18 +143,14 @@ typedef struct ADic {
   // end of second cacheline.  Following changed only by put/del
   UI cardinality;  // number of kvs in the hashtable
   UI emptyn;  // index to next empty kv/treeslot.  EOC loops back on itself.  Resize when empty
+#if NORMAH8
+  I filler3[SY_64?5:0];  // pad to cacheline (24 words on each system).
+#else
   I filler3[SY_64?6:1];  // pad to cacheline (24 words on each system).
+#endif
  } bloc;
 } DIC;
-#if 7==NORMAH
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
-#else
-#if SY_64
-_Static_assert(sizeof(DIC)==33*SZI,"DIC not 33 Is");
-#else
-_Static_assert(sizeof(DIC)==34*SZI,"DIC not 34 Is");
-#endif
-#endif
 int getsize_xdic_DIC(void){return (int)sizeof(DIC);} // temp for debugging
 
 #define ST UI4   // type of hash slot

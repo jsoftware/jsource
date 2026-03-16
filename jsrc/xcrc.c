@@ -3,7 +3,7 @@
 /*                                                                         */
 /* Xenos: CRC calculation and base64 encode/decode                         */
 
-#define XXH_NO_INLINE_HINTS
+#define XXH_NO_INLINE_HINTS 1
 #define XXH_NO_STREAM
 #define XXH_CPU_LITTLE_ENDIAN 1
 #define XXH_PRIVATE_API

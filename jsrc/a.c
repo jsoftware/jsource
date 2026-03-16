@@ -96,7 +96,7 @@ F1(jtbdot){F12IP;A b,h=0;I j=0,n,*v;
 #define INITHASH(tbl,x,y) ((((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UIL)AN(tbl))>>32)  // starting hash index for a given x,y
 #define LOCKLOC ht3->lock
 #else
-#define INITHASH(tbl,x,y) (((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UIL)AN(tbl))>>32;  // starting hash index for a given x,y
+#define INITHASH(tbl,x,y) ((((UI4)(7*(UI)x+10495464745870458733U*(UI)y))*(UIL)AN(tbl))>>32)  // starting hash index for a given x,y
 #define LOCKLOC jt->etxn1  // any address will do, since locks are NOPs in 32-bit
 #endif
 

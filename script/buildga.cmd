@@ -8,15 +8,18 @@ clang-cl --version
 echo "%USE_EMU_AVX%"
 echo "%USE_PYXES%"
 
+set A=jlibrary
+set B=jlibrary\bin
+set C=jlibrary\bin32
+
 @rem x64 x86 arm64
 IF "%~1"=="x86" GOTO L0
 IF "%~1"=="arm64" GOTO L0
 IF "%~1" NEQ "x64" EXIT /b 1
 :L0
 
-xcopy /Y /I /S jlibrary\*
-copy script\testga.ijs
-copy script\ver.ijs
+copy script\testga.ijs %A%
+copy script\ver.ijs %A%
 
 IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B
@@ -25,32 +28,30 @@ mkdir j64
 mkdir bin\windows\j64
 mkdir bin\windows\j64avx2
 mkdir bin\windows\j64avx512
-copy bin\profile.ijs j64
-copy pthreads4w\bin\pthreadVC3.dll j64
-copy mpir\windows\x64\mpir.dll j64
-copy openmp\obj\windows\libomp.dll j64
-copy pcre2\windows\x64\jpcre2.dll tools\regex\.
-curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
+copy pthreads4w\bin\pthreadVC3.dll %B%
+copy mpir\windows\x64\mpir.dll %B%
+copy openmp\obj\windows\libomp.dll %B%
+copy pcre2\windows\x64\jpcre2.dll %A%\tools\regex\.
+curl --output-dir "%B%" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
 GOTO L01C
 :L01A
 mkdir j32
 mkdir bin\windows\j32
-copy bin\profile.ijs j32
-copy pthreads4w\bin\pthreadVC3-w32.dll j32\pthreadVC3.dll
-copy mpir\windows\x86\mpir.dll j32\mpir32.dll
-copy openmp\obj\windows\libomp32.dll j32\libomp32.dll
-copy pcre2\windows\x86\jpcre2.dll tools\regex\jpcre2_32.dll
-curl --output-dir "j32" -O "https://www.jsoftware.com/dowoad/lapackbin/libopenblas_32.dll"
+copy %B%\profile.ijs %C%
+copy pthreads4w\bin\pthreadVC3-w32.dll %C%\pthreadVC3.dll
+copy mpir\windows\x86\mpir.dll %C%\mpir32.dll
+copy openmp\obj\windows\libomp32.dll %C%\libomp32.dll
+copy pcre2\windows\x86\jpcre2.dll %A%\tools\regex\jpcre2_32.dll
+curl --output-dir "%C%" -O "https://www.jsoftware.com/dowoad/lapackbin/libopenblas_32.dll"
 GOTO L01C
 :L01B
 mkdir j64
 mkdir bin\windows\j64arm
-copy bin\profile.ijs j64
-copy pthreads4w\bin\pthreadVC3-arm64.dll j64\pthreadVC3.dll
-copy mpir\windows\arm64\mpir.dll j64
-copy openmp\obj\windows\libomp.dll j64
-copy pcre2\windows\arm64\jpcre2.dll tools\regex\jpcre2_arm64.dll
-curl --output-dir "j64" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
+copy pthreads4w\bin\pthreadVC3-arm64.dll %B%\pthreadVC3.dll
+copy mpir\windows\arm64\mpir.dll %B%
+copy openmp\obj\windows\libomp.dll %B%
+copy pcre2\windows\arm64\jpcre2.dll %A%\tools\regex\jpcre2_arm64.dll
+curl --output-dir "%B%" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
 :L01C
 
 copy version.txt jsrc\jversion.h
@@ -148,21 +149,21 @@ cd ..
 IF "%~1"=="x86" GOTO L06A
 IF "%~1"=="arm64" GOTO L06B
 IF "%~1" NEQ "x64" EXIT /b 1
-copy bin\windows\j64\jconsole.exe j64
-copy bin\windows\j64\*.dll j64
-@rem copy bin\windows\j64\jamalgam.exe j64
+copy bin\windows\j64\jconsole.exe %B%
+copy bin\windows\j64\*.dll %B%
+@rem copy bin\windows\j64\jamalgam.exe %B%
 IF "%USE_EMU_AVX%"=="0" GOTO L06C
 IF "%USE_PYXES%"=="0" GOTO L06C
-copy bin\windows\j64avx512\j.dll j64\javx512.dll
-copy bin\windows\j64avx2\j.dll j64\javx2.dll
+copy bin\windows\j64avx512\j.dll %B%\javx512.dll
+copy bin\windows\j64avx2\j.dll %B%\javx2.dll
 GOTO L06C
 :L06A
-copy bin\windows\j32\jconsole.exe j32
-copy bin\windows\j32\*.dll j32
-@rem copy bin\windows\j32\jamalgam.exe j32
+copy bin\windows\j32\jconsole.exe %C%
+copy bin\windows\j32\*.dll %C%
+@rem copy bin\windows\j32\jamalgam.exe %C%
 GOTO L06C
 :L06B
-copy bin\windows\j64arm\jconsole.exe j64
-copy bin\windows\j64arm\*.dll j64
-@rem copy bin\windows\j64arm\jamalgam.exe j64
+copy bin\windows\j64arm\jconsole.exe %B%
+copy bin\windows\j64arm\*.dll %B%
+@rem copy bin\windows\j64arm\jamalgam.exe %B%
 :L06C

@@ -1078,6 +1078,7 @@ jobs:
    - name: Compress Files (Windows)
      shell: pwsh
      run: |
+      copy jlibrary/bin/* j64
       del j64/profile.ijs
       del j64/libopenblas*.dll
       Compress-Archive j64 w64.zip
@@ -1131,6 +1132,7 @@ jobs:
    - name: Compress Files (Windows 32)
      shell: pwsh
      run: |
+      copy jlibrary/bin32/* j32
       del j32/profile.ijs
       del j32/libopenblas*.dll
       Compress-Archive j32 w32.zip
@@ -1185,6 +1187,7 @@ jobs:
    - name: Compress Files (Windows arm64)
      shell: pwsh
      run: |
+      copy jlibrary/bin/* j64
       del j64/profile.ijs
       del j64/libopenblas*.dll
       Compress-Archive j64 warm64.zip
@@ -1237,6 +1240,7 @@ jobs:
    - name: Compress Files (Windows arm64)
      shell: pwsh
      run: |
+      copy jlibrary/bin/* j64
       del j64/profile.ijs
       del j64/libopenblas*.dll
       Compress-Archive j64 warm64.zip

@@ -967,7 +967,7 @@ fi
 echo "MAKEFLAGS=$MAKEFLAGS"
 cd ../jsrc/
 if [ "1" != "$NOCLEAN" ]; then
-$make -f ../make2/makefile-jamalgam clean
+ $make -f ../make2/makefile-jamalgam clean
 fi
 $make -f ../make2/makefile-jamalgam
 retval=$?

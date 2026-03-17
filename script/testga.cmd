@@ -5,9 +5,13 @@
 echo "%USE_EMU_AVX%"
 echo "%USE_PYXES%"
 
-set A=jlibrary
-set B=jlibrary\bin
-set C=jlibrary\bin32
+set "A=jlibrary"
+set "B=jlibrary\bin"
+set "C=jlibrary\bin32"
+
+echo %A%
+echo %B%
+echo %C%
 
 @rem x64 x86 arm64
 IF "%~1"=="x86" GOTO L0

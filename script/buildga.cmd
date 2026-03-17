@@ -22,9 +22,6 @@ IF "%~1"=="arm64" GOTO L0
 IF "%~1" NEQ "x64" EXIT /b 1
 :L0
 
-copy script\testga.ijs %A%
-copy script\ver.ijs %A%
-
 IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B
 IF "%~1" NEQ "x64" EXIT /b 1

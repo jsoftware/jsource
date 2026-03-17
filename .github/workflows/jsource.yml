@@ -140,7 +140,7 @@ jobs:
       USE_EMU_AVX: 0
      run: |
       script/testga.sh linux i386 || exit 1
-      cp jlibrary/bin/* j32
+      cp jlibrary/bin32/* j32
       rm -f j32/profile.ijs
       strip -S j32/jconsole || true
       strip -S j32/jamalgam || true
@@ -421,7 +421,7 @@ jobs:
       _DEBUG: 3
      run: |
       script/testga.sh raspberry armv6l || exit 1
-      cp jlibrary/bin/* j32
+      cp jlibrary/bin32/* j32
       rm -f j32/profile.ijs
       strip -S j32/jconsole || true
       strip -S j32/jamalgam || true
@@ -536,7 +536,7 @@ jobs:
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
-       cp jlibrary/bin/* j32
+       cp jlibrary/bin32/* j32
        rm -f j32/profile.ijs
        strip -S j32/jconsole || true
        strip -S j32/jamalgam || true
@@ -1133,7 +1133,7 @@ jobs:
      run: |
       del j32/profile.ijs
       del j32/libopenblas*.dll
-      Compress-Archive j64 w32.zip
+      Compress-Archive j32 w32.zip
 
    - name: Release JE (Windows 32)
      uses: ncipollo/release-action@v1
@@ -1375,10 +1375,10 @@ jobs:
    - name: Compress Files (Windows MSYS2 x86)
      shell: pwsh
      run: |
-      copy jlibrary/bin/* j32
+      copy jlibrary/bin32/* j32
       del j32/profile.ijs
       del j32/libopenblas*.dll
-      Compress-Archive j64 w32mw.zip
+      Compress-Archive j32 w32mw.zip
 
    - name: Release JE (Windows MSYS2 x86)
      uses: ncipollo/release-action@v1

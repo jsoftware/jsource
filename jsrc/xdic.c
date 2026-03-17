@@ -216,7 +216,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   box1=C(AAV(box)[0]); t=rei0(box1); ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFKINDIR; // type.  convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
   box1=C(AAV(box)[1]); r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n1,r,s,1) ((DIC*)z)->bloc.kaii=n1; ASSERT(n1>0,EVLENGTH) // shape. copy to allow IAV1.  get # atoms in item & save
   ASSERT(AN(box1)<=9 || flags&DICFICF,EVNONCE)  // if the user has a compare function, we want virt to be on the stack to save registers.  Make sure the rank is OK then
-  INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
+  INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n1<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
   UI4 (*fn2)()=l&(SZI-1)?(UI4 (*)())crcbytes:(UI4 (*)())crcwords; fn2=(t&XNUM+RAT)?crcxnums:fn2; fn2=(t&CMPX+FL+QP)?crcfloats:fn2; fn2=(t&BOX)?crcboxes:fn2; fn2=flags&DICFIHF?fn2:(UI4 (*)())FAV(a)->valencefns[0]; ((DIC*)z)->bloc.hashfn=fn2; // save internal or external hash function
 
   box=C(AAV(w)[0]);  // fetch size parameters
@@ -1149,7 +1149,7 @@ static I auditnode(J jt,DIC *dic,UI nodex,UI excludednode, I doprint){A z;
 DF2(jtdisprbdic){F12IP;
  ARGCHK1(w)
  ASSERTSYS(((DIC*)w)->bloc.flags&DICFRB,"not a tree dic")
- A na=w==self?zeroionei(1):a; w=w==self?a:w; I opts; RE(opts=b0(na));   // get print options
+ A na=w==self?zeroionei(1):a; w=w==self?a:w; I opts; RE(opts=jtb0(jt,na));   // get print options  scaf* reb0
  R sc(auditnode(jt,(DIC*)w,*(UI4AV3(((DIC*)w)->bloc.hash))&_bzhi_u64(~(UI8)1,((DIC*)w)->bloc.hashelesiz<<LGBB),~0LL,opts));
 }
 // ********************************** get/has **********************************

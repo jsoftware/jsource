@@ -41,6 +41,7 @@ dir %B%
 GOTO L01C
 :L01A
 mkdir j32
+mkdir %C%
 mkdir bin\windows\j32
 copy %B%\profile.ijs %C%
 copy pthreads4w\bin\pthreadVC3-w32.dll %C%\pthreadVC3.dll

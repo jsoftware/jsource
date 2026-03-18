@@ -338,3 +338,5 @@ if [ -d $C ]; then
  find $C \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
  ls -l $C
 fi
+
+exit 0

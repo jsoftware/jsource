@@ -314,7 +314,9 @@ if [ "${USE_GMP_H:=1}" -eq 1 ]; then
  common="$common -I../mpir/include"
 fi
 
-if [ "$USE_LINENOISE" -ne "1" ]; then
+if [ $jplatform = wasm ]; then
+ true
+elif [ "$USE_LINENOISE" -ne 1 ]; then
  common="$common -DREADLINE"
 else
  common="$common -DREADLINE -DUSE_LINENOISE"
@@ -965,11 +967,20 @@ if [ "x$MAKEFLAGS" = x'' ]; then
  export MAKEFLAGS=-j$par
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"
-cd ../jsrc/
-if [ "1" != "$NOCLEAN" ]; then
- $make -f ../make2/makefile-jamalgam clean
+if [ $jplatform != wasm ]; then
+ cd ../jsrc/
+ if [ "1" != "$NOCLEAN" ]; then
+  $make -f ../make2/makefile-jamalgam clean
+ fi
+ $make -f ../make2/makefile-jamalgam
+else
+# emcc stupidity. jconsole public symbol defined twice is compiled at jsrc folder
+ cd ../script
+ if [ "1" != "$NOCLEAN" ]; then
+  $make -f ../make2/makefile-jamalgam2 clean
+ fi
+ $make -f ../make2/makefile-jamalgam2
 fi
-$make -f ../make2/makefile-jamalgam
 retval=$?
 cd -
 exit $retval

@@ -115,7 +115,10 @@ static void addargv(int argc, char* argv[], char* d)
  *p=0;
 }
 
-#if defined(ANDROID) || defined(_WIN32) || defined(__wasm__)
+#if defined(__wasm__)
+#undef READLINE
+#undef USE_LINENOISE
+#elif defined(ANDROID) || defined(_WIN32)
 #undef USE_LINENOISE
 #ifdef READLINE
 #define USE_LINENOISE

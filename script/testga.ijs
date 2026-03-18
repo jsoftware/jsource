@@ -211,12 +211,14 @@ msg fappends testres
 echo^:(*@#RES) RES
 )
 
-0!:_1`1:@.(GITHUBCI) '$'
-echo 'RUN4'
-9!:27'FINISH RES=: RUN4 ddall'
-9!:29]1
-exit *@#RES
-NB.$  end of skip
-
-echo 'RUN'
-RES=: RUN ddall
+3 : 0''
+if. -.GITHUBCI do.
+  echo 'RUN'
+  RES=: RUN ddall
+else.
+  echo 'RUN4'
+  9!:27'FINISH RES=: RUN4 ddall'
+  9!:29]1
+  exit *@#RES
+end.
+)

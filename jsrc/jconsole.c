@@ -93,6 +93,28 @@ static void sigsegv(int k){
 
 static char input[30000];
 
+static void addargv(int argc, char* argv[], char* d)
+{
+ C *p,*q; I i;
+
+ p=(C*)d+strlen(d);
+ for(i=0;i<argc;++i)
+ {
+  if(sizeof(input)<(100+strlen(d)+2*strlen(argv[i]))) exit(100);
+  if(1==argc){*p++=',';*p++='<';}
+  if(i)*p++=';';
+  *p++='\'';
+  q=(C*)argv[i];
+  while(*q)
+  {
+   *p++=*q++;
+   if('\''==*(p-1))*p++='\'';
+  }
+  *p++='\'';
+ }
+ *p=0;
+}
+
 #if defined(ANDROID) || defined(_WIN32) || defined(__wasm__)
 #undef USE_LINENOISE
 #ifdef READLINE
@@ -122,28 +144,6 @@ static char* rl_readline_name;
 
 static int hist=1;
 static char histfile[512];
-
-static void addargv(int argc, char* argv[], char* d)
-{
- C *p,*q; I i;
-
- p=(C*)d+strlen(d);
- for(i=0;i<argc;++i)
- {
-  if(sizeof(input)<(100+strlen(d)+2*strlen(argv[i]))) exit(100);
-  if(1==argc){*p++=',';*p++='<';}
-  if(i)*p++=';';
-  *p++='\'';
-  q=(C*)argv[i];
-  while(*q)
-  {
-   *p++=*q++;
-   if('\''==*(p-1))*p++='\'';
-  }
-  *p++='\'';
- }
- *p=0;
-}
 
 static void rlexit(int c){	if(!hist&&histfile[0]) write_history(histfile);}
 
@@ -192,7 +192,7 @@ static int readlineinit()
 }
 #endif
 
-char* Jinput_rl(char* prompt)
+static char* Jinput_rl(char* prompt)
 {
 	static char* line=0;
 if(hist)

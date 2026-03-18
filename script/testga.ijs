@@ -213,11 +213,10 @@ echo^:(*@#RES) RES
 3 : 0''
 if. -.GITHUBCI do.
   echo 'RUN'
-  RES=: RUN ddall
+  echo RES=: RUN ddall
 else.
   echo 'RUN4'
-  9!:27'FINISH RES=: RUN4 ddall'
-  9!:29]1
+  FINISH RES=: RUN4 ddall
   exit *@#RES
 end.
 )

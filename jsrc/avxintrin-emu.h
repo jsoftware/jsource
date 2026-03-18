@@ -1171,6 +1171,15 @@ __emu_mm256_test_impl( __emu_mm, nzc, ps, ps, __emu__m256 );
 
 #endif
 
+#if defined(__clang__)
+#define XM "xm"
+#elif defined( __GNUC__ )
+#define XM "x"
+#else
+#define XM "x"
+#endif
+
+
 #if defined(_WIN32) || ( !defined(__clang__) && defined( __GNUC__ ) && ( __GNUC__ == 4 ) && (__GNUC_MINOR__ < 4 ) ) || defined(OPTMO0)
 /* use macro implementation instead of inline functions to allow -O0 for GCC pre 4.4 */
 
@@ -1180,15 +1189,15 @@ __emu_mm256_test_impl( __emu_mm, nzc, ps, ps, __emu__m256 );
 ({ \
     __m128 res_ = (m1), m2_ = (m2); \
     if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); \
-    __asm__ ( "cmpps %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] "xm" (m2_), [pred_] "i" (predicate) ); \
+    __asm__ ( "cmpps %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] XM (m2_), [pred_] "i" (predicate) ); \
     res_; })
 
 #define __emu_mm256_cmp_ps(m1, m2, predicate) \
 ({ \
     __emu__m256 res_ = (m1), m2_ = (m2); \
     if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
-    __asm__ ( "cmpps %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[0]) : [m2_] "xm" (m2_.__emu_m128[0]), [pred_] "i" (predicate) ); \
-    __asm__ ( "cmpps %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[1]) : [m2_] "xm" (m2_.__emu_m128[1]), [pred_] "i" (predicate) ); \
+    __asm__ ( "cmpps %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[0]) : [m2_] XM (m2_.__emu_m128[0]), [pred_] "i" (predicate) ); \
+    __asm__ ( "cmpps %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[1]) : [m2_] XM (m2_.__emu_m128[1]), [pred_] "i" (predicate) ); \
     res_; })
 
 
@@ -1196,15 +1205,15 @@ __emu_mm256_test_impl( __emu_mm, nzc, ps, ps, __emu__m256 );
 ({ \
     __m128d res_ = (m1), m2_ = (m2); \
     if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
-    __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] "xm" (m2_), [pred_] "i" (predicate) ); \
+    __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] XM (m2_), [pred_] "i" (predicate) ); \
     res_; })
 
 #define __emu_mm256_cmp_pd(m1, m2, predicate) \
 ({ \
     __emu__m256d res_ = (m1), m2_ = (m2); \
     if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
-    __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[0]) : [m2_] "xm" (m2_.__emu_m128[0]), [pred_] "i" (predicate) ); \
-    __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[1]) : [m2_] "xm" (m2_.__emu_m128[1]), [pred_] "i" (predicate) ); \
+    __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[0]) : [m2_] XM (m2_.__emu_m128[0]), [pred_] "i" (predicate) ); \
+    __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[1]) : [m2_] XM (m2_.__emu_m128[1]), [pred_] "i" (predicate) ); \
     res_; })
 
 
@@ -1212,14 +1221,14 @@ __emu_mm256_test_impl( __emu_mm, nzc, ps, ps, __emu__m256 );
 ({ \
     __m128 res_ = (m1), m2_ = (m2); \
     if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
-    __asm__ ( "cmpss %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] "xm" (m2_), [pred_] "i" (predicate) ); \
+    __asm__ ( "cmpss %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] XM (m2_), [pred_] "i" (predicate) ); \
     res_; })
 
 #define __emu_mm_cmp_sd(m1, m2, predicate) \
 ({ \
     __m128 res_ = (m1), m2_ = (m2); \
     if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
-    __asm__ ( "cmpsd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] "xm" (m2_), [pred_] "i" (predicate) ); \
+    __asm__ ( "cmpsd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] XM (m2_), [pred_] "i" (predicate) ); \
     res_; })
 
 
@@ -1233,7 +1242,7 @@ static __emu_inline __m128 __emu_mm_cmp_ps(__m128 m1, __m128 m2, const int predi
 
     if (__builtin_constant_p(predicate) && predicate >= 0 && predicate <= 7 ) {
         res = m1;
-        __asm__ ( "cmpps %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] "xm" (m2), [pred_] "i" (predicate) );
+        __asm__ ( "cmpps %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] XM (m2), [pred_] "i" (predicate) );
     } else {
         res = _mm_setzero_ps();
         __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */
@@ -1249,7 +1258,7 @@ static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, const int pr
 
     if ( predicate >= 0 && predicate <= 7 ) {
         res = m1;
-        __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] "xm" (m2), [pred_] "i" (predicate) );
+        __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] XM (m2), [pred_] "i" (predicate) );
     } else {
         __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */
     }
@@ -1265,7 +1274,7 @@ static __emu_inline __m128d __emu_mm_cmp_sd(__m128d m1, __m128d m2, const int pr
 
     if ( predicate >= 0 && predicate <= 7 ) {
         res = m1;
-        __asm__ ( "cmpsd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] "xm" (m2), [pred_] "i" (predicate) );
+        __asm__ ( "cmpsd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] XM (m2), [pred_] "i" (predicate) );
     } else {
         __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */
     }
@@ -1279,7 +1288,7 @@ static __emu_inline __m128 __emu_mm_cmp_ss(__m128 m1, __m128 m2, const int predi
 
     if ( predicate >= 0 && predicate <= 7 ) {
         res = m1;
-        __asm__ ( "cmpss %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] "xm" (m2), [pred_] "i" (predicate) );
+        __asm__ ( "cmpss %[pred_], %[m2_], %[res_]" : [res_] "+x" (res) : [m2_] XM (m2), [pred_] "i" (predicate) );
     } else {
         __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */
     }
@@ -2412,5 +2421,7 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_stream_load_si256 _mm256_load_si256
 
 #endif /* __EMU_M256_NOMAP */
+
+#undef XM
 
 #endif /* __EMU_M256_AVXIMMINTRIN_EMU_H__ */

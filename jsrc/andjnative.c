@@ -35,6 +35,8 @@
 #define LOGFD(...)
 #endif
 
+JST* jt;
+
 typedef struct A_RECORD {
   I k,flag,m,t,c,n,r,s[1];
 }* _A;

@@ -933,7 +933,7 @@ case "$jplatform/$j64x" in
  -s EXPORTED_FUNCTIONS='[\"_main\"]' \
  -s EXPORTED_RUNTIME_METHODS='[\"cwrap\",\"ccall\", \"UTF8ToString\", \"lengthBytesUTF8\", \"stringToUTF8\"]' \
  --embed-file ../jlibrary/@/home/web_user/j --exclude-file *.dylib --exclude-file *.so --exclude-file *.dll \
- --exclude-file *.exe --exclude-file jconsole* --exclude-file jamalgam* --exclude-file bin32 \
+ --exclude-file *.exe --exclude-file jconsole* --exclude-file jamalgam* --exclude-file bin32 --exclude-file bin \
  --embed-file ../test/@/home/web_user/j/test "
   SRC_ASM=""
   GASM_FLAGS=""

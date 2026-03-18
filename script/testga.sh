@@ -193,4 +193,4 @@ if [ "$2" = "x86_64" ]; then
   true
  fi
 fi
-exit 0
+touch jobdone || true

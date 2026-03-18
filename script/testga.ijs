@@ -1,6 +1,5 @@
 (9!:14'') 1!:2 [2
 
-echo 'GITHUBCI';2!:5'GITHUB_ACTIONS'
 GITHUBCI=: 'true'-:2!:5'GITHUB_ACTIONS'
 
 testpath=: (1!:43''),'/test/'

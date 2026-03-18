@@ -1304,7 +1304,7 @@ jobs:
       WINDRES: windres
       USE_SLEEF: 1
       USE_OPENMP: 0
-      USE_PYXES: 0
+      USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: 0
      run: |

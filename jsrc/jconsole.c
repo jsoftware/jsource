@@ -8,7 +8,7 @@
 #define __iamcu__
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <io.h> 
+#include <io.h>
 #include <fcntl.h>
 #else
 #include <unistd.h>
@@ -118,10 +118,34 @@ static READ_HISTORY read_history;
 static WRITE_HISTORY write_history;
 static PREADLINE readline;
 static USING_HISTORY using_history;
-char* rl_readline_name;
+static char* rl_readline_name;
 
-int hist=1;
-char histfile[512];
+static int hist=1;
+static char histfile[512];
+
+static void addargv(int argc, char* argv[], char* d)
+{
+ C *p,*q; I i;
+
+ p=(C*)d+strlen(d);
+ for(i=0;i<argc;++i)
+ {
+  if(sizeof(input)<(100+strlen(d)+2*strlen(argv[i]))) exit(100);
+  if(1==argc){*p++=',';*p++='<';}
+  if(i)*p++=';';
+  *p++='\'';
+  q=(C*)argv[i];
+  while(*q)
+  {
+   *p++=*q++;
+   if('\''==*(p-1))*p++='\'';
+  }
+  *p++='\'';
+ }
+ *p=0;
+}
+
+static void rlexit(int c){	if(!hist&&histfile[0]) write_history(histfile);}
 
 #if !defined(ANDROID) && !defined(_WIN32) && !defined(__wasm__)
 static int readlineinit()
@@ -168,8 +192,6 @@ static int readlineinit()
 }
 #endif
 
-void rlexit(int c){	if(!hist&&histfile[0]) write_history(histfile);}
-
 char* Jinput_rl(char* prompt)
 {
 	static char* line=0;
@@ -197,7 +219,7 @@ if(hist)
 	if(line) free(line); /* free last input */
 	line = readline(prompt);
 	if(!line) return "2!:55''"; /* ^d eof */
-	if(*line) add_history(line); 
+	if(*line) add_history(line);
 	return line;
 }
 #endif
@@ -228,7 +250,7 @@ C* _stdcall Jinput(JST* jt,C* prompt){
 #ifdef READLINE
     if(!norl&&_isatty(_fileno(stdin))){
 		return (C*)Jinput_rl((char*)prompt);
-    } else 
+    } else
 #endif
 	return (C*)Jinput_stdio((char*)prompt);
 }
@@ -251,28 +273,6 @@ void _stdcall Joutput(JST* jt,int type, C* s)
  fputs((char*)s,stdout);
  fflush(stdout);
  }
-}
-
-void addargv(int argc, char* argv[], char* d)
-{
- C *p,*q; I i;
-
- p=(C*)d+strlen(d);
- for(i=0;i<argc;++i)
- {
-  if(sizeof(input)<(100+strlen(d)+2*strlen(argv[i]))) exit(100);
-  if(1==argc){*p++=',';*p++='<';}
-  if(i)*p++=';';	
-  *p++='\'';
-  q=(C*)argv[i];
-  while(*q)
-  {
-   *p++=*q++;
-   if('\''==*(p-1))*p++='\'';
-  }
-  *p++='\'';
- } 
- *p=0;
 }
 
 JST* jt;
@@ -310,7 +310,7 @@ int main(int argc, char* argv[])
  jepath(argv[0],(poslibpath)?argv[poslibpath]:"");
  // remove processed arg
  if(poslib||poslibpath||posnorl||posnoel||posprmpt||posscrpt||posjversion){
-  int j=0; 
+  int j=0;
   char **argvv = malloc(argc*sizeof(char*));
   argvv[j++]=argv[0];
   for(i=1;i<argc;i++){
@@ -379,7 +379,7 @@ int main(int argc, char* argv[])
 #else
   signal(SIGINT,sigint);
 #endif
- 
+
 #ifdef READLINE
  if(!norl){
  rl_readline_name="jconsole"; /* argv[0] varies too much*/

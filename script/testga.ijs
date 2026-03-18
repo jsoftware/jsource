@@ -210,14 +210,6 @@ msg fappends testres
 echo^:(*@#RES) RES
 )
 
-3 : 0''
-if. -.GITHUBCI do.
-  echo 'RUN'
-  echo RES=: RUN ddall
-else.
-  echo 'RUN4'
-  9!:27'FINISH RES=: RUN4 ddall'
-  9!:29]1
-  exit *@#RES
-end.
-)
+9!:27'FINISH RES=: RUN4 ddall'
+9!:29]1
+exit *@#RES

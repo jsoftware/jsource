@@ -976,7 +976,7 @@ if [ $jplatform != wasm ]; then
 else
 # emcc stupidity. jconsole public symbol defined twice is compiled at jsrc folder
  cd ../script
- if [ "1" != "$NOCLEAN" ]; then
+ if [ "1" != "$NOCLEAN" ] && [ "$1" != "noclean" ]; then
   $make -f ../make2/makefile-jamalgam2 clean
  fi
  $make -f ../make2/makefile-jamalgam2

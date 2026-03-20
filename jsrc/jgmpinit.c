@@ -47,7 +47,7 @@ void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
 
 #define XFIXED0(nam, typ,val) \
  struct AD __attribute__((aligned(ABDY))) B##nam= \
- {AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,{(I)val}}; \
+ {AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,(I)val}; \
  X nam= (X)&B##nam
 
 /* like struct AD but a data element */

@@ -74,11 +74,23 @@ if. index_type -: 'tree' do.
   mget =: dict 16!:_6
   min =: [: 13!:8@6^:(0 = +/@:(#@>)) (2b11000 + valuemask)&mget
   max =: [: 13!:8@6^:(0 = +/@:(#@>)) (2b11001 + valuemask)&mget
+  items =:(_1 ,~ 2b11001 + valuemask)&mget
   after =: _&$: : ((mget~ (2b101010 + valuemask) , check1x)~)
   since =: _&$: : ((mget~ (2b101011 + valuemask) , check1x)~)
   before =: _&$: : ((mget~ (2b101000 + valuemask) , check1x)~)
   until =: _&$: : ((mget~ (2b101001 + valuemask) , check1x)~)
   range =: 1 1&$: : ((mget~ 2b1001000 + valuemask + #.@:|.@:(13!:8@3^:(1 1 -.@-: e.&0 1))@:(13!:8@14^:((, 2) -.@-: $)))~)
+else.
+  items =: {{
+    (0 0) 16!:_9 dict NB. read-lock.
+    cnt =. count ''
+    r =. memu (<<<0 (16!:_5) dict) { 1 (16!:_8) dict
+    if. -. valueshape -: 0 do.
+      r =. r ,&< memu (<<<0 (16!:_5) dict) { 2 (16!:_8) dict
+    end.
+    (1 0) 16!:_9 dict
+    r
+  }}
 end.
 EMPTY
 }}

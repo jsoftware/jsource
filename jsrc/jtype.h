@@ -1147,7 +1147,7 @@ typedef struct{
  I n;                   /* maximum number of records                       */
  I i;                   /* index of next record to be written              */
  I s;                   /* initial bytesmax value                          */
- I pmlvl;               // sampling level, set > 0 to start sampling
+ I pmlvl;               // counter, set > 0 to start sampling
  B rec;                 /* what to record (0 entry & exit; 1 all)          */
  B trunc;               /* what to do on overflow (0 wrap; 1 truncate)     */
  B wrapped;             /* 1 iff wrapping has happened                     */
@@ -1199,6 +1199,7 @@ typedef struct {
     A cachedloc;   //  for namerefs ('name'~), the locale address if the name is a direct named lookup (after the first reference)
     A gerundself;  // in gerund iterators, the address of the self block for m@.v, for diagnostic purposes
     AF modatomfn;  // in u m. n, the verb to process atoms of u
+    D cct;  // cct if given for setintersect -.^:2    [-.-.    [e.#
    } lu0;
    // end of first cacheline, which is not used much during execution
    // the rest do not require both cachelines in 64-bit

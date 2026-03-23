@@ -319,7 +319,7 @@ DF2(jtpowop){F12IP;B b;V*v;
  A z; fdefallo(z)  // allocate normal result area
  AF f1,f2; I flag;  // derived-verb handlers; flags for the verb we build
  A h;  // A block for the power list converted to integer (initially, remaining for jtply12 only); u^:_1 (for jtinv[12]); 0 for others
- I encn;  // the encoded form of the integer power to be passed to pow12n
+ I encn; D cct=0.0;  // the encoded form of the integer power to be passed to pow12n; cct for setintersect (default to none)
  if(AT(w)&VERB){
   // u^:v.  Create derived verb to handle it. The action routines are inplaceable; take NOLOCCHG from u and v, inplaceability from u
   f1=f2=jtpowv12cell; h=0; flag=(FAV(a)->flag&FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF);
@@ -368,13 +368,23 @@ DF2(jtpowop){F12IP;B b;V*v;
       f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;flag=FAV(h)->flag&VNOLOCCHG+VNONAME+VNOSELF;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
      }else flag=FAV(a)->flag&VNONAME+VNOSELF;     // if u^:_, never allow inplace assignment since we are converging
      // Note: negative powers other than _1 are resolved in the action routine
-    }else if(n==2&&a==ds(CLESS)){f2=jtintersect;}  // -.^:2, set intersection, which allows inplacing
+    }
+#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
+    else if(unlikely(n==2)){
+     I aid=FAV(a)->id; if(unlikely(aid==CFIT)){cct=FAV(a)->localuse.lu1.cct; aid=FAV(FAV(a)->fgh[0])->id;}
+     if(aid==CLESS){  // -.^:2  and -.!.f^:2
+      f2=jtintersect;  // treat the compound as a primitive of its own
+      flag|=(7+(((IINTER-II0EPS)&0xf)<<3));  // flag it like -.
+      // if tolerance given on second -., it is now in cct
+     }
+    }
+#endif
     encn=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0); encn=n==IMIN?((I)-1*POWERABS)+POWERADOWHILE:encn;  // save the power, in flagged form, for powatom12
    }else{f1=f2=jtply12; flag=FAV(a)->flag&VNONAME+VNOSELF;}  // non-atomic power: handle general case, which does not support inplacing (since it might converge)
    // fall through to create result
   }  // end of 'u^:numeric'
  }  // end of 'u^:n'
  fdeffill(z,0,CPOWOP,VERB, f1,f2, a,w,h,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers or inverse as h
- FAV(z)->localuse.lu1.poweratom=encn;   // pass power info for powatom12, garbage for others
+ FAV(z)->localuse.lu1.poweratom=encn; FAV(z)->localuse.lu0.cct=cct;  // pass power info for powatom12, garbage for others
  RETF(z);
 }

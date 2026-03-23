@@ -1268,6 +1268,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  EPILOG(x);
 }    /* a-.w */
 
+#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
 // x ([ -. -.[!.f]) y.  does not have IRS, supports inplacing on a (the unhashed argument)
 DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  ARGCHK2(a,w);
@@ -1277,14 +1278,14 @@ DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
  if(unlikely(MIN(ai,wi)==0))R take(zeroionei(0),a);  // if either arg is empty, nothing can be common, return no items
  jtfg=MOVEIP0A(jtfg);  // only our a argument can be inplaced, and it moves to y in all uses
- PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it  *** no errors till cct restored ***
+ PUSHCCTIF(FAV(self)->localuse.lu0.cct,FAV(self)->localuse.lu0.cct!=0)   // if there is a CT, use it  *** no errors till cct restored ***
  if(unlikely(ar==wr+1)){  // is just 1 cell of y, with x a list of such cells?
   if(wr==0)x=eq(a,w); else IRS2(a,w,0,wr,wr,jtmatch,x); RZGOTO(x,errexit) x=jtrepeat(jtfg,x,a);  // y has rank 1 less than x, execute as ((x = y) # x) (y atomic) or ((x -:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
  }else{
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
   if(unlikely((-wr&-(r^wr))<0)){RZGOTO(x=virtual(w,0,r),errexit); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
   // comparison tolerance may be encoded in h - apply it if so
-  D savcct = jt->cct;
+// obsolete   D savcct = jt->cct;
   // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (x e. y) # x 
   // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
   // Don't revert to fork!  localuse.lu1.fork2hfn is not set
@@ -1296,6 +1297,7 @@ errexit:;
  if(unlikely(at&BOX)){jtfg=MOVEIPA0(jtfg); PRISTXFERAF(x,a)}  // the boxes in w cannot get to the result, even though their values participate; so pristinity depends entirely on original a
  EPILOG(x);
 }
+#endif
 
 // x e. y
 F2(jteps){F12IP;I l,r;

@@ -1190,12 +1190,15 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define FFEQ(u,v)        (ABS((u)-(v))<=FUZZ*MAX(ABS(u),ABS(v)))
 #define FFIEQ(u,v)       (ABS((u)-(v))<=FUZZ*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
 // see if i is close enough to f that it can be used in place of f without loss of significance.  i is round(f).
-#if SY_64
-#define ISFTOIOK(f,i)    (ABS(f)<-(D)IMIN && ((f)==(i) || FFIEQ(f,i)))  // 64 bit: a float of IMIN does not equal integer IMIN
-#else
-#define ISFTOIOK(f,i)    ((f)==(I)(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
-#endif
-#define ISFTOIOKFZ(f,i,fuzz) (ABS(f)<-(D)IMIN && ((f)==(i) || FIEQ(f,i,fuzz))) // same, but variable fuzz
+// obsolete #if SY_64
+// obsolete #define ISFTOIOK(f,i)    (ABS(f)<-(D)IMIN && ((f)==(i) || FFIEQ(f,i)))  // 64 bit: a float of IMIN does not equal integer IMIN
+#define ISFTOIOK(f,i)    (likely((f)<FLIMAX) && likely((f)>=FLIMIN) && (likely((f)==(i)) || FFIEQ(f,i)))  // a float of IMAX does not equal integer IMAX in 64-bit
+// obsolete #else
+// obsolete #define ISFTOIOK(f,i)    ((f)==(I)(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
+// obsolete #define ISFTOIOK(f,i)    ((f)==(I)(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
+// obsolete #endif
+// obsolete #define ISFTOIOKFZ(f,i,fuzz) (ABS(f)<-(D)IMIN && ((f)==(i) || FIEQ(f,i,fuzz))) // same, but variable fuzz
+#define ISFTOIOKFZ(f,i,fuzz) (likely((f)<FLIMAX) && likely((f)>=FLIMIN) && (likely((f)==(i)) || FIEQ(f,i,fuzz))) // same, but variable fuzz
 #define F1(f)           A f(JJ jtfg,    A w)  // whether in an interface routine or not, these must use the internal parameter type
 #define F2(f)           A f(JJ jtfg,A a,A w)
 #define F12IP JJ jt=(JJ)(intptr_t)((I)jtfg&~JTFLAGMSK)

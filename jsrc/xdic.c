@@ -91,7 +91,7 @@ DF2(jthashy){F12IP; ARGCHK2(a,w) RETF(sc(jtcrcy(jt,w)));}
 // everything about the dictionary.  This struct overlays the entire block.  AM of the first
 // cacheline is the lock for the dic.  The data starts at AS[1], the second cacheline.  The block
 // is a recursive BOX but AK points past the areas that do not need to be freed, i.e to the boxed arrays
-typedef struct __attribute__((packed)) ADic {
+typedef struct ADic {
  I header[NORMAH+1];  // A header up through s[0].  DIC is always allocated with rank 1.
  struct Dic { // *** this group of values is updated atomically en bloc to make sure hashelesiz matches hash when possible.
   union {
@@ -150,7 +150,9 @@ typedef struct __attribute__((packed)) ADic {
 #endif
  } bloc;
 } DIC;
+#if !NORMAH8
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
+#endif
 /*
 // temp for debugging
 int getsize_xdic_DIC(int i){

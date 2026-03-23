@@ -314,7 +314,9 @@ if [ "${USE_GMP_H:=1}" -eq 1 ]; then
  common="$common -I../mpir/include"
 fi
 
-if [ "$USE_LINENOISE" -ne "1" ]; then
+if [ $jplatform = wasm ]; then
+ true
+elif [ "$USE_LINENOISE" -ne 1 ]; then
  common="$common -DREADLINE"
 else
  common="$common -DREADLINE -DUSE_LINENOISE"
@@ -933,7 +935,7 @@ case "$jplatform/$j64x" in
  -s EXPORTED_FUNCTIONS='[\"_main\"]' \
  -s EXPORTED_RUNTIME_METHODS='[\"cwrap\",\"ccall\", \"UTF8ToString\", \"lengthBytesUTF8\", \"stringToUTF8\"]' \
  --embed-file ../jlibrary/@/home/web_user/j --exclude-file *.dylib --exclude-file *.so --exclude-file *.dll \
- --exclude-file *.exe --exclude-file jconsole* --exclude-file jamalgam* --exclude-file bin32 \
+ --exclude-file *.exe --exclude-file jconsole* --exclude-file jamalgam* --exclude-file bin32 --exclude-file bin \
  --embed-file ../test/@/home/web_user/j/test "
   SRC_ASM=""
   GASM_FLAGS=""
@@ -965,11 +967,20 @@ if [ "x$MAKEFLAGS" = x'' ]; then
  export MAKEFLAGS=-j$par
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"
-cd ../jsrc/
-if [ "1" != "$NOCLEAN" ]; then
- $make -f ../make2/makefile-jamalgam clean
+if [ $jplatform != wasm ]; then
+ cd ../jsrc/
+ if [ "1" != "$NOCLEAN" ]; then
+  $make -f ../make2/makefile-jamalgam clean
+ fi
+ $make -f ../make2/makefile-jamalgam
+else
+# emcc stupidity. jconsole public symbol defined twice is compiled at jsrc folder
+ cd ../script
+ if [ "1" != "$NOCLEAN" ] && [ "$1" != "noclean" ]; then
+  $make -f ../make2/makefile-jamalgam2 clean
+ fi
+ $make -f ../make2/makefile-jamalgam2
 fi
-$make -f ../make2/makefile-jamalgam
 retval=$?
 cd -
 exit $retval

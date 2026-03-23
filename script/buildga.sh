@@ -66,9 +66,6 @@ A=jlibrary
 B=jlibrary/bin
 C=jlibrary/bin32
 
-cp script/testga.ijs $A
-cp script/ver.ijs $A
-
 if [ $m64 -eq 1 ]; then
  mkdir -p j64
 else
@@ -341,3 +338,5 @@ if [ -d $C ]; then
  find $C \( -name 'jconsole' -o -name 'jamalgam' \) -type f -exec chmod 755 {} \;
  ls -l $C
 fi
+
+exit 0

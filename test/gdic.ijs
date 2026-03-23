@@ -315,6 +315,13 @@ for. i. n_iter do.
   assert. (count__x '') -: count__naivedict ''
   assert. jdelans -: naivemask *. batchshapefordel ($ ,) ~:&.|. (_ , keyshape) ($ ,) keys
 end.
+if. valshape -: 0 do.
+  assert. (/:~ > keys__naivedict) -: /:~ items__x ''
+else.
+  'keys vals' =. items__x ''
+  assert. (/:~ > keys__naivedict) -: /:~ keys
+  assert. (# vals) -: # keys
+end.
 destroy__naivedict ''
 destroy__x ''
 EMPTY

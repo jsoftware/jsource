@@ -274,7 +274,7 @@ if [ "x$MAKEFLAGS" = x'' ]; then
 fi
 echo "MAKEFLAGS=$MAKEFLAGS"
 cd ../jsrc/
-if [ "1" != "$NOCLEAN" ]; then
+if [ "1" != "$NOCLEAN" ] && [ "$1" != "noclean" ]; then
  $make -f ../make2/makefile-jnative clean
 fi
 $make -f ../make2/makefile-jnative

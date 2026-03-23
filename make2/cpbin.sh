@@ -116,7 +116,7 @@ case "$jplatform" in
  windows)
   case "$j64x" in
    j32)
-    # x86 arm32
+    # x86
     cop $j64x jconsole.exe bin32 jconsole.exe
     cop $j64x jamalgam.exe bin32 jamalgam.exe
     cop $j64x tsdll.dll bin32 tsdll.dll
@@ -156,7 +156,14 @@ case "$jplatform" in
  *)
   case "$j64x" in
    j32)
-    # x86 arm32
+    # x86
+    cop $j64x jconsole bin32 jconsole
+    cop $j64x jamalgam bin32 jamalgam
+    cop $j64x libtsdll.so bin32 libtsdll.so
+    cop $j64x libj.so bin32 libj.so
+    ;;
+   j32arm)
+    # arm32
     cop $j64x jconsole bin32 jconsole
     cop $j64x jamalgam bin32 jamalgam
     cop $j64x libtsdll.so bin32 libtsdll.so

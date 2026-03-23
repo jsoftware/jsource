@@ -44,7 +44,7 @@ echo 'avx512bw: ',":9!:56'avx512bw'
 echo 'avx512vbmi: ',":9!:56'avx512vbmi'
 echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 
-3 : 0^:(1<{:8 T.'') ''
+3 : 0^:(9!:56'pyxes') ''
 echo 9!:56 'supportaffinity'
 echo n=. <: <.2^9!:56'cores'
 try. echo 22 T. 0 catch. echo 'get affinity error' end.
@@ -210,10 +210,6 @@ msg fappends testres
 echo^:(*@#RES) RES
 )
 
-0!:_1`1:@.(GITHUBCI) '?'
 9!:27'FINISH RES=: RUN4 ddall'
 9!:29]1
 exit *@#RES
-NB.?  end of skip
-
-RES=: RUN ddall

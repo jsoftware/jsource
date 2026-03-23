@@ -42,7 +42,7 @@
 #include <stdint.h>
 
 static void* hjdll=0;
-static JST* jt;
+extern JST* jt;
 static JDoType jdo;
 static JInterruptType jinterrupt;
 static JFreeType jfree;

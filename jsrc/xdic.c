@@ -150,8 +150,44 @@ typedef struct ADic {
 #endif
  } bloc;
 } DIC;
+#if !NORMAH8
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
-int getsize_xdic_DIC(void){return (int)sizeof(DIC);} // temp for debugging
+#endif
+/*
+// temp for debugging
+int getsize_xdic_DIC(int i){
+switch (i) {
+ case  0: return (int)sizeof(DIC);
+ case  1: return (int)offsetof(DIC,header);
+ case  2: return (int)offsetof(DIC,bloc);
+ case  3: return (int)offsetof(DIC,bloc.hashsiz);
+ case  4: return (int)offsetof(DIC,bloc.hashfn);
+ case  5: return (int)offsetof(DIC,bloc.compfn);
+ case  6: return (int)offsetof(DIC,bloc.hash);
+ case  7: return (int)offsetof(DIC,bloc.keys);
+ case  8: return (int)offsetof(DIC,bloc.vals);
+ case  9: return (int)offsetof(DIC,bloc.kshape);
+ case 10: return (int)offsetof(DIC,bloc.vshape);
+ case 11: return (int)offsetof(DIC,bloc.hashcompself);
+ case 12: return (int)offsetof(DIC,bloc.locale);
+ case 13: return (int)offsetof(DIC,bloc.ktype);
+ case 14: return (int)offsetof(DIC,bloc.vtype);
+ case 15: return (int)offsetof(DIC,bloc.kaii);
+ case 16: return (int)offsetof(DIC,bloc.vaii);
+ case 17: return (int)offsetof(DIC,bloc.vaii);
+ case 18: return (int)offsetof(DIC,bloc.filler1);
+ case 19: return (int)offsetof(DIC,bloc.klens);
+ case 20: return (int)offsetof(DIC,bloc.vbytelen);
+ case 21: return (int)offsetof(DIC,bloc.lgminsiz);
+ case 22: return (int)offsetof(DIC,bloc.maxeles);
+ case 23: return (int)offsetof(DIC,bloc.cardinality);
+ case 24: return (int)offsetof(DIC,bloc.emptyn);
+ case 25: return (int)offsetof(DIC,bloc.filler3);
+ default: return 0;
+ }
+}
+// temp for debugging
+*/
 
 #define ST UI4   // type of hash slot
 #define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found

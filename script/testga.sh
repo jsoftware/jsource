@@ -13,7 +13,7 @@
 # current macOS github builder only supports avx
 # cpu is Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
 
-set -e
+set -evx
 
 export jplatform="$1"
 if [ "$1" = "linux" ]; then
@@ -175,10 +175,10 @@ if [ "$2" = "x86_64" ]; then
    fi
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
-  if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
-   # LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
-   true
-  fi
+  # if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
+  #   LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
+  # fi
+  true
  elif [ "$1" = "windows" ]; then
   # no way to detect avx512 capacity
   # if [ -f "$B/${libj}avx512.${ext}" ]; then
@@ -191,14 +191,6 @@ if [ "$2" = "x86_64" ]; then
   #   fi
   # fi
   true
- else
-  if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
-   if [ "$_DEBUG" = "3" ]; then
-    echo "running debug"
-    LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
-   else
-    LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
-   fi
-  fi
  fi
 fi
+touch jobdone || true

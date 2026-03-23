@@ -5,6 +5,14 @@
 echo "%USE_EMU_AVX%"
 echo "%USE_PYXES%"
 
+set "A=jlibrary"
+set "B=jlibrary\bin"
+set "C=jlibrary\bin32"
+
+echo %A%
+echo %B%
+echo %C%
+
 @rem x64 x86 arm64
 IF "%~1"=="x86" GOTO L0
 IF "%~1"=="arm64" GOTO L0
@@ -22,32 +30,32 @@ IF "%~1" NEQ "x64" EXIT /b 1
 @rem "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\lldb" --version
 @rem lldb --version
 
-dir j64
+dir %B%
 IF "%USE_EMU_AVX%"=="0" GOTO L01F
 IF "%USE_PYXES%"=="0" GOTO L01F
-j64\jconsole -lib javx2.dll testga.ijs
+%B%\jconsole -lib javx2.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01F
 IF "%_DEBUG%"=="3" GOTO L01H
-j64\jconsole -lib j.dll testga.ijs
+%B%\jconsole -lib j.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01H
-lldb -b -o run -k bt -k quit -- j64\jconsole.exe -lib j.dll testga.ijs
+lldb -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01A
-dir j32
-j32\jconsole testga.ijs
+dir %C%
+%C%\jconsole script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01B
-dir j64
+dir %B%
 IF "%_DEBUG%"=="3" GOTO L01I
-j64\jconsole testga.ijs
+%B%\jconsole script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01I
-lldb -b -o run -k bt -k quit -- j64\jconsole.exe -lib j.dll testga.ijs
+lldb -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01C

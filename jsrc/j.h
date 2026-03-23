@@ -381,7 +381,6 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define IMAX            9223372036854775807LL
 #define IMAXPRIME       9223372036854775783LL
 #define IMIN            (~9223372036854775807LL)   /* ANSI C LONG_MIN is  -LONG_MAX */
-#define FLIMAX          9223372036854775296.     // largest FL value that can be converted to I
 #define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
 #define FMTI            "%lli"
 #define FMTI02          "%02lli"
@@ -400,7 +399,6 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define IMAX            2147483647L
 #define IMAXPRIME       IMAX
 #define IMIN            (~2147483647L)   /* ANSI C LONG_MIN is  -LONG_MAX */
-#define FLIMAX          ((D)IMAX+0.4)     // largest FL value that can be converted to I
 #define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
 #define FMTI            "%d"
 #define FMTI02          "%02d"
@@ -410,6 +408,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define UIMAX           -1ul
 #define strtoI          strtol
 #endif
+#define FLIMAX          (-(D)IMIN)     // smallest FL value that cannot be converted to I
 
 #define NEGATIVE0       (UIL)0x8000000000000000LL   // IEEE -0 (double precision)
 

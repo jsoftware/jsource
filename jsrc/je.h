@@ -284,7 +284,7 @@ extern DF1(jtpinv);
 extern DF1(jtpix);
 extern F1(jtplt);
 extern F1(jtpmarea1);
-extern F1(jtpmctr);
+extern F1(jtpmlvl);
 extern F1(jtpmstats);
 extern F1(jtpmunpack);
 extern F1(jtpolar);

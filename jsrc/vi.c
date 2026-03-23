@@ -1142,7 +1142,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
  }else{B b=1.0==jt->cct;I t1;
   AF fn=0; // we haven't figured it out yet
   UI booladj = (mode&(IIOPMSK&~(IIDOT^IICO)))?5:0; // init table length not found; booladj = 5 if boolean hashvalue is OK, 0 if full index needed
-  p = (UI)MIN(FLIMAX,(2.1*MAX(m,c)));  // length we will use for hashtable, if small-range not used.
+  p = (UI)MIN((D)IMAX,(2.1*MAX(m,c)));  // length we will use for hashtable, if small-range not used.
   if(!b&&t&BOX+FL+CMPX)ctmask(jt);
   if     (t&BOX)          fn=b&&(1<n||usebs(a,ac,m))?jtiobs:1<n?jtioa:b?jtioax1:
                               (t1=utype(a,ac))&&(mk||a==w||TYPESEQ(t1,utype(w,wc)))?jtioau:jtioa1;

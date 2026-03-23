@@ -251,7 +251,7 @@ void jtforeigninit(J jt){UI i;
  MN(6,9)   XPRIM(VERB, jtqpctr,      0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(6,10)  XPRIM(VERB, jtpmarea1,    jtpmarea2,    VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(6,11)  XPRIM(VERB, jtpmunpack,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
- MN(6,12)  XPRIM(VERB, jtpmctr,      0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(6,12)  XPRIM(VERB, jtpmlvl,      0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(6,13)  XPRIM(VERB, jtpmstats,    0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(7,0)   XPRIM(VERB, jtsp,         0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(7,1)   XPRIM(VERB, jtsphwmk,     0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);

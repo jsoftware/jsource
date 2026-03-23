@@ -1024,13 +1024,14 @@ A jtbcvt(J jtfg,C mode,A w){F12IP; A z=w;
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 
+// w is a D type with integral values.  If it can be converted to integer without overflow, do so and return the integer version, otherwise return w
 F1(jticvt){F12IP;A z;D*v,x;I i,n,*u;
  ARGCHK1(w);
  n=AN(w); v=DAV(w);
  I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); u=AVn(zr,z);
  for(i=0;i<n;++i){
-  x=*v++; if(x<IMIN||FLIMAX<=x)R w;  // if conversion will fail, skip it
-  *u++=(I)x;
+  x=v[i]; if(unlikely(x<FLIMIN||x>=FLIMAX))R w;  // if conversion will fail, skip it
+  u[i]=(I)x;
  }
  R z;
 }

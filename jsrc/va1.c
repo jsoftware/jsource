@@ -39,7 +39,8 @@ INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  case SSINGCASE(VA1CMIN-VA1ORIGIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA1CMIN-VA1ORIGIN,SSINGENC(FL)):
    {D x=wdv; wdv=jround(x); wdv-=TGT(wdv,x);}  // do round/floor in parallel
-   if(likely(wdv==(D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
+// obsolete    if(likely(wdv==(D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
+   if(likely(wdv>=FLIMIN&&wdv<FLIMAX))SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
 
 
@@ -47,7 +48,8 @@ INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  case SSINGCASE(VA1CMAX-VA1ORIGIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA1CMAX-VA1ORIGIN,SSINGENC(FL)):
    {D x=wdv; wdv=jround(x); wdv+=TLT(wdv,x);}  // do round/ceil in parallel
-   if(likely(wdv==(D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
+// obsolete     if(likely(wdv==(D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
+   if(likely(wdv>=FLIMIN&&wdv<FLIMAX))SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
 
 
@@ -125,11 +127,11 @@ static AMONPS(floorDI,I,D,
   R rc?rc:EVOK;
  ; )  // x100 0011 1100 =>2^61
 #else
-static AMON(floorDI,I,D, {D d=tfloor(*x); *z=(I)d; ASSERTWR(d==*z,EWOV);})
+static AMON(floorDI,I,D, { D d=tfloor(*x); ASSERTWR(d>=FLIMIN&&d<FLIMAX,EWOV) *z=(I)d;})
 #endif
 static AMON(floorD, D,D, *z=tfloor(*x);)
 static AMON(floorZ, Z,Z, *z=zfloor(*x);)
-static AMON(floorEI,I,E, {D d=tfloor(x->hi); *z=(I)d; ASSERTWR(d==*z,EWOV1);})  // tolerant floor of high part only...
+static AMON(floorEI,I,E, {D d=tfloor(x->hi); ASSERTWR(d>=FLIMIN&&d<FLIMAX,EWOV1) *z=(I)d;})  // tolerant floor of high part only...
 static AMON(floorE, E,E, *z=efloor(*x);)  // ... if INT overflow, keep as extended to preserve precision
 
 #if BW==64
@@ -142,9 +144,9 @@ static AMONPS(ceilDI,I,D,
   R rc?rc:EVOK;
  ; )  // x100 0011 1100 =>2^61
 #else
-static AMON(ceilDI, I,D, {D d=tceil(*x);  *z=(I)d; ASSERTWR(d==*z,EWOV);})
+static AMON(ceilDI, I,D, {D d=tceil(*x); ASSERTWR(d>=FLIMIN&&d<FLIMAX,EWOV) *z=(I)d;})
 #endif
-static AMON(ceilEI,I,E, {D d=tceil(x->hi); *z=(I)d; ASSERTWR(d==*z,EWOV1);})
+static AMON(ceilEI,I,E, {D d=tceil(x->hi); ASSERTWR(d>=FLIMIN&&d<FLIMAX,EWOV1) *z=(I)d;})
 static AMON(ceilD,  D,D, *z=tceil(*x);)
 static AMON(ceilZ,  Z,Z, *z=zceil(*x);)
 static AMON(ceilE,  E,E, *z=eceil(*x);)

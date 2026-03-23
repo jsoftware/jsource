@@ -71,7 +71,8 @@ AMONPS(factI,  D,I, , *z=dgamma(1.0+(D)*x); , HDR1JERR)
 AMONPS(factD,  D,D, , *z=_isnan(*x)?*x:dgamma(1.0+*x); , HDR1JERR)
 AMONPS(factZ,  Z,Z, , *z=zgamma(zplus(z1,*x)); , HDR1JERR)
 
-static D pq(D h,D m,D*c,D*d){D x=*c,y=*d;I n=(I)MIN(m,FLIMAX);  // x and y cannot be 0
+// ??
+static D pq(D h,D m,D*c,D*d){D x=*c,y=*d;I n=(I)MIN(m,(D)IMAX);  // x and y cannot be 0
  if(0>=m)R h;
  D xsgn=x<0?-1.0:1.0, ysgn=y<0?-1.0:1.0;
  if(ABS(x)!=ABS(y)){

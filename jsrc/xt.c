@@ -336,14 +336,14 @@ F1(jtqpfreq){F12IP;ASSERTMTV(w); R scf(pf);}
 F1(jtqpctr ){F12IP;ASSERTMTV(w); R scf(qpc());}
 
 // 6!:12
-F1(jtpmctr){F12IP;D x;I q;
+F1(jtpmlvl){F12IP;I x;I q;
  q=rei0(w);
  ASSERT(JT(jt,pma),EVDOMAIN);
- x=q+(D)((PM0*)(CAV1(JT(jt,pma))))->pmctr;
- ASSERT(IMIN<=x&&x<FLIMAX,EVDOMAIN);
- ((PM0*)(CAV1(JT(jt,pma))))->pmctr=q=(I)x; if(q)jt->uflags.trace|=TRACEPM;else{jt->uflags.trace&=~TRACEPM; pmrecord(0,0,-3,0);} // tell cx and unquote to look for pm; if turning off sampling, emit lacuna
+ if(__builtin_add_overflow(q,((PM0*)(CAV1(JT(jt,pma))))->pmlvl,&x)){ASSERT(0,EVDOMAIN)}
+// obsolete  ASSERT(FLIMIN<=x&&x<FLIMAX,EVDOMAIN);
+ ((PM0*)(CAV1(JT(jt,pma))))->pmlvl=q=x; if(q)jt->uflags.trace|=TRACEPM;else{jt->uflags.trace&=~TRACEPM; pmrecord(0,0,-3,0);} // tell cx and unquote to look for pm; if turning off sampling, emit lacuna
  R sc(q);
-}    /* add w to pmctr */
+}    /* add w to pmlvl */
 
 static F1(jtpmfree){F12IP;A x,y;C*c;I m;PM*v;PM0*u;
  if(w){
@@ -384,7 +384,7 @@ F2(jtpmarea2){F12IP;A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;
   u->s=jt->bytesmax=spbytesinuse();
   u->trunc=a1; 
   u->wrapped=0;
-  u->pmctr=0;
+  u->pmlvl=0;
  }
  R sc(n);
 }
@@ -462,7 +462,7 @@ F1(jtpmstats){F12IP;A x,z;I*zv;PM0*u;
   zv[2]=u->n;
   zv[3]=u->wrapped?u->n:u->i;
   zv[4]=u->wrapped;
-  zv[5]=((PM0*)(CAV1(JT(jt,pma))))->pmctr;
+  zv[5]=((PM0*)(CAV1(JT(jt,pma))))->pmlvl;
  }else zv[0]=zv[1]=zv[2]=zv[3]=zv[4]=zv[5]=0;
  R z;
 }

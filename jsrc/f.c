@@ -797,7 +797,7 @@ static C*dropl(C*zu,C*zv,I lb,I la,C*eol){C ec0,ec1,*u,*v;I n,p,zn=zv-zu;
 // maxlen is JT(jt,outmaxlen): max length of a line (later chars replaced by ...)
 // lb is JT(jt,outmaxbefore): number of leading lines to display
 // la is JT(jt,outmaxafter): number of trailing lines to display
-static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*zu,*zv;D lba;
+static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*zu,*zv;
      I c,c1,h,i,j,k,lc,m,nbx,nq,p,q,r,*s,t,zn;
      static C bdc[]="123456789_123456\214\254\220\234\274\244\224\264\230\202\200";
  // Convert w to a character array; set t=1 if it's LIT, t=2 if C2T, 4 if C4T
@@ -812,11 +812,12 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // if w is empty the values could overflow.  In that case, just display nothing
  SHAPEN(y,r-2,q); SHAPEN(y,r-1,c); nq=prod(r-1,s); if(jt->jerr){RESETERR z=str(m+1,eov); makewritable(z) CAV(z)[m]=0; AN(z)=AS(z)[0]=m; R z;}
  // c1=#characters to put out per line, lba=max # lines to put out
- c1=MIN(c,maxlen); lba=(D)lb+la;
+ c1=MIN(c,maxlen);
+// obsolete  lba=(D)lb+la;
  // calculate p=total # lines of spacing needed, as sum of (#k-cells-1) for k>=2
- p=2<r?2-r:0; h=1; DO(r-2, if(s[i]){h*=s[i]; p+=h;}else{p=0; break;});
+ p=2<r?2-r:0; h=1; if(AN(w)==0)p=0; else{DO(r-2, if(s[i]){h*=s[i]; if(__builtin_add_overflow(p,h,&p)){p=IMAX-1; break;}}else{p=0; break;})}  // h cannot overflow if AN!=0; but p can
  // Set h = max#lines to output, the smaller of (the # before spacing) and (the number we allow)
- h=lba<FLIMAX?lb+la:IMAX; h=MIN(nq,h);
+ I lba; if(__builtin_add_overflow(lb,la,&lba))lba=IMAX; lba=MIN(lba,IMAX-1); h=MIN(nq,lba);
  // zn=# characters in result string.  Start with enough for '...\n', plus '\n' for each line of spacing,
  // plus, for each line, the max length:
  //   if character type, max line length + '\n' + room for '...\n' to continue the line till all characters are displayed
@@ -830,7 +831,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // Now we can allocate the result array.  Set zu,zv->beginning of the data area
  GATV0(z,LIT,zn,1); zu=zv=CAV1(z);
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number
- h=lba<nq+(q?p:0)?lb:IMAX;
+ h=lba-(q?p:0)<nq?lb:IMAX-1;
  // Loop for each line of output.  lc gives number of lines emitted so far, including ones called for by EOL inside character data
  for(i=lc=0;i<nq;++i){
   // Emit leading EOLs according to number of boundary crossings - only when we cross a 2-cell boundary

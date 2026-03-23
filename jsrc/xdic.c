@@ -150,11 +150,8 @@ typedef struct __attribute__((packed)) ADic {
 #endif
  } bloc;
 } DIC;
-#if NORMAH8
-_Static_assert(sizeof(DIC)==33*SZI,"DIC not 33 Is");
-#else
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
-#endif
+/*
 // temp for debugging
 int getsize_xdic_DIC(int i){
 switch (i) {
@@ -188,6 +185,7 @@ switch (i) {
  }
 }
 // temp for debugging
+*/
 
 #define ST UI4   // type of hash slot
 #define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found

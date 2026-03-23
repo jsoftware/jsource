@@ -349,7 +349,7 @@ DF2(jtpowop){F12IP;B b;V*v;
    // unboxed n.
    //  scalar   int/boolean   n of 0/1
    // scalar 0/1 bool/int handled earlier; check other cases (including non-B01/INT)
-   if(w==ds(CUSDOT)){   // power is _.
+   if(unlikely(w==ds(CUSDOT))){   // power is _.
     ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs
     n=IMIN; // u^:v^:_. inherits assignsafe from u^:v, set exponent IMIN to indic u^:v^:_.
    }else{   // normal power, not _.
@@ -368,7 +368,7 @@ DF2(jtpowop){F12IP;B b;V*v;
       f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;flag=FAV(h)->flag&VNOLOCCHG+VNONAME+VNOSELF;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
      }else flag=FAV(a)->flag&VNONAME+VNOSELF;     // if u^:_, never allow inplace assignment since we are converging
      // Note: negative powers other than _1 are resolved in the action routine
-    }
+    }else if(n==2&&a==ds(CLESS)){f2=jtintersect;}  // -.^:2, set intersection, which allows inplacing
     encn=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0); encn=n==IMIN?((I)-1*POWERABS)+POWERADOWHILE:encn;  // save the power, in flagged form, for powatom12
    }else{f1=f2=jtply12; flag=FAV(a)->flag&VNONAME+VNOSELF;}  // non-atomic power: handle general case, which does not support inplacing (since it might converge)
    // fall through to create result

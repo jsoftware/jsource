@@ -343,12 +343,12 @@ assert. 4 -: type ". '_9223372036854775807'
 assert. 4 -: type ". '_9223372036854775808'  NB. imin is int
 assert. 8 -: type ". '_9223372036854775809'  NB. below imin stays float
 
+assert. (=  4 c. 8 c. ]) _9223372036854775808  NB. IMIN can be converted to float and back
+assert. (=  4 c. 8 c. ]) 9223372036854774784  NB. IMAX rounds down
+assert. (~:  4 c. 8 c. ]) 9223372036854774785
 1
 )
 
-(=  4 c. 8 c. ]) _9223372036854775808  NB. IMIN can be converted to float and back
-(=  4 c. 8 c. ]) 9223372036854774784  NB. IMAX rounds down
-(~:  4 c. 8 c. ]) 9223372036854774785
 
 
 ((i. 0 0);,.3 4 0 5 6) -:  __&".@>&.> '';'34 56'

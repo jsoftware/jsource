@@ -108,6 +108,7 @@ static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
  R 1;
 }
 
+// return 0 if overflow or not numeric, 1 otherwise
 static NUMH(jtnumi){UI neg;UI j;  // must be UI to avoid signed overflow
  neg='-'==s[0]; s+=neg; n-=neg; if(!n)R 0;  // extract & skip sign; exit if no digits
  for(;*s=='0';--n,++s);  // skip leading zeros, even down to nothing, which will be 0 value
@@ -312,7 +313,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
  k=bpnoun(t);   // size in bytes of 1 result value
  GA0(z,t,m,1!=m); v=CAVn(1!=m,z);
  if(t==INT){  // if we think the values are ints, see if they really are
-  DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){t=FL; break;} v+=k;);  // read all values, stopping if a value overflows
+  DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){t=FL; bcvtmask|=6; break;} v+=k;);  // read all values, stopping if a value overflows.  In that case, suppress conversion to INT
   if(t!=INT){f=jtnumfd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAVn(1!=m,z);}  // if there was overflow, repurpose/allocate the input with enough space for floats
  }
  if(t!=INT)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);  // read the values as larger-than-int
@@ -348,14 +349,14 @@ static EXEC2F(jtexec2z,numbpx,CMPX,Z)
 
 // Try to convert a numeric field to integer.  Result is the integer, and *out is the
 // output pointer after the integer - this will be either the \0 at the end of the field, or
-// ==in to indicate failure.  Result is 0 on failure, and the output pointer equals the input.
+// ==in to indicate failure.  On failure, the output pointer equals the input; the result is 0 for invalid number, 1 for overflow.
 // This routine must recognize all valid ints,  We accept at most one sign, followed by any number
 // of digits or commas, followed optionally by a decimal point, followed optionally by a
 // string of 0s.  So, 123,456.00 is recognized as an integer.  If the input overflows an
 // integer, failure.  For compatibility with non-integer code, we allow commas anywhere in
 // the number except the beginning or end.
 // This routine assumes 64-bit signed integers.
-I strtoint(C* in, C** out) {
+static I strtoint(C* in, C** out) {
  UI res = 0; // init result
  I neg, dig;  // negative flag, digit value
  *out = in;  // assume failure
@@ -370,7 +371,7 @@ I strtoint(C* in, C** out) {
   if((UI)dig<=(UI)9){  // numeric digit.  Accept it and check for overflow
    if(res >= 1+IMAX/10) R 0;  // fail if this will overflow for sure.  res could be IMIN
    res = res * 10 + dig; // accept the digit.  This may overflow, but that's not fatal yet if it overflows to IMIN
-   if((I)((UI)0-res) > 0)R 0;  // If result overflowed to neg, fail.  We allow IMIN to continue on, representing IMAX+1
+   if((I)((UI)0-res) > 0)R 1;  // If result overflowed to neg, fail.  We allow IMIN to continue on, representing IMAX+1
    continue;
   }
   if(*in==C0 || *in=='.')break;  // end-of-field or end-of-integer part: exit
@@ -403,9 +404,10 @@ I strtoint(C* in, C** out) {
 static A jtexec2r(J jt,A a,A w,I n,I m,I c,I fillreqd){A z;B b,e;C d,*u,*uu,*v,*x,*y;D a0,*zv;I k,j,mc,r;
  B tryingint; // set if we have to attempt to convert to int before float, if ints can hold
    // higher precision than float
-B valueisint; // set if the value we are processing is really an int
+ B valueisint; // set if the value we are processing is really an int
   // Calculate total # result values; set input scan pointer u; set &next row of input y; set end-of-input pointer uu
  // set end-of-result-row counter j
+ B intoflo=0;  // if we hit integer overflow, we must return CONJ in type to suppress conversion to INT
  k=0; mc=m*c; u=CAV(w); y=u+n; j=c; uu=u+AN(w);
  // Rank of result is rank of w, unless the rows have only 1 value; make rows atoms then, removing them from rank
  r=AR(w)-(I )(1==c); r=MAX(0,r); 
@@ -429,11 +431,11 @@ B valueisint; // set if the value we are processing is really an int
   if(k>=mc)break;   // exit loop if all inputs processed
   // Read a number from the input, leaving v pointing to the character that stopped the conversion
   // If we are trying ints first to avoid floating-point truncation, do so
-  if(valueisint = tryingint) {
-    ((I *)zv)[k] = strtoint(u,&v);  // returns an I, which we store into the nominally-D result array
-    if(u==v){valueisint = 0;}
+  if(valueisint = tryingint) {I ival;
+    ((I *)zv)[k]=ival=strtoint(u,&v);  // returns an I, which we store into the nominally-D result array
+    if(u==v){valueisint = 0; intoflo|=ival;}
       // The conversion to int failed, but that's not enough for us to write off ints.  Maybe the
-      // value was invalid, and we will use the default, which is known to be int.
+      // value was invalid, and we will use the default, which is known to be int.  If overflow, remember that fact
   }
   if(!valueisint)zv[k]=strtod(u,(char**)&v);
   // We have read a number, either as an int or a float.  Analyze the stopper character
@@ -478,7 +480,7 @@ B valueisint; // set if the value we are processing is really an int
   }
  }
  // All done.  If we ended still looking for ints, the whole result must be int, so flag it as such
- if(tryingint)AT(z) = INT;
+ if(tryingint)AT(z)=INT; if(unlikely(intoflo))AT(z)|=CONJ;  // set CONJ as flag in type if integer overflow, which must suppress conversion to INT
  R z;
 }
 
@@ -524,6 +526,7 @@ F2(jtexec2){F12IP;A z;B b,p;C d,*v;I at,c,i,k,m,n,r,*s;
  // Select the precision to use: the smallest that can hold the data, but never less than the precision of x
  C cvtmask=(~AT(a)&B01)<<1;  // if x is not B01, set mask to suppress conversion to B01
  cvtmask=AT(a)&B01+INT?cvtmask:6;  // if not B01 or INT, suppress conversion to INT (but it may be INT already)
+ if(unlikely(AT(z)&CONJ)){cvtmask=6; AT(z)&=~CONJ;}  // if there was integer overflow, suppress conversion to INT/B01
  cvtmask=AT(a)&B01+INT+FL?cvtmask:14;  // if not B01/INT/FL, suppress conversion to FL
  R bcvt(cvtmask,z);
 }

@@ -346,6 +346,11 @@ assert. 8 -: type ". '_9223372036854775809'  NB. below imin stays float
 1
 )
 
+(=  4 c. 8 c. ]) _9223372036854775808  NB. IMIN can be converted to float and back
+(=  4 c. 8 c. ]) 9223372036854774784  NB. IMAX rounds down
+(~:  4 c. 8 c. ]) 9223372036854774785
+
+
 ((i. 0 0);,.3 4 0 5 6) -:  __&".@>&.> '';'34 56'
 
 'domain error' -: '9'   ". etx '1 2 3 4'

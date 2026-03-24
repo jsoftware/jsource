@@ -41,6 +41,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _MEMAUDIT: 63
       _DEBUG: 3
      run: |
       script/buildga.sh linux x86_64 || exit 1
@@ -80,6 +81,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
       _DEBUG: 3
      run: |
       script/buildga.sh linux x86_64 || exit 1
@@ -119,6 +121,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
       _DEBUG: 3
      run: |
       script/buildga.sh linux x86_64 || exit 1
@@ -151,6 +154,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _MEMAUDIT: 63
      run: |
       script/buildga.sh darwin arm64 || exit 1
 
@@ -181,6 +185,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
      run: |
       script/buildga.sh darwin arm64 || exit 1
 
@@ -211,6 +216,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
      run: |
       script/buildga.sh darwin arm64 || exit 1
 
@@ -241,6 +247,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _MEMAUDIT: 63
       _DEBUG: 3
      run: |
       script/buildga.sh raspberry arm64 || exit 1
@@ -273,6 +280,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
       _DEBUG: 3
      run: |
       script/buildga.sh raspberry arm64 || exit 1
@@ -305,6 +313,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
       _DEBUG: 3
      run: |
       script/buildga.sh raspberry arm64 || exit 1
@@ -337,6 +346,7 @@ jobs:
       NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _MEMAUDIT: 63
      run: |
       script\buildga.cmd x64
 
@@ -368,6 +378,7 @@ jobs:
       NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
      run: |
       script\buildga.cmd x64
 
@@ -399,6 +410,7 @@ jobs:
       NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
      run: |
       script\buildga.cmd x64
 
@@ -429,6 +441,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      _MEMAUDIT: 63
      run: |
       script\buildga.cmd arm64
 
@@ -459,6 +472,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
      run: |
       script\buildga.cmd arm64
 
@@ -489,6 +503,7 @@ jobs:
      env:
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _MEMAUDIT: 63
      run: |
       script\buildga.cmd arm64
 

@@ -526,7 +526,7 @@ F2(jtexec2){F12IP;A z;B b,p;C d,*v;I at,c,i,k,m,n,r,*s;
  // Select the precision to use: the smallest that can hold the data, but never less than the precision of x
  C cvtmask=(~AT(a)&B01)<<1;  // if x is not B01, set mask to suppress conversion to B01
  cvtmask=AT(a)&B01+INT?cvtmask:6;  // if not B01 or INT, suppress conversion to INT (but it may be INT already)
- if(unlikely(AT(z)&CONJ)){cvtmask=6; AT(z)&=~CONJ;}  // if there was integer overflow, suppress conversion to INT/B01
+ if(z&&unlikely(AT(z)&CONJ)){cvtmask=6; AT(z)&=~CONJ;}  // if there was integer overflow, suppress conversion to INT/B01
  cvtmask=AT(a)&B01+INT+FL?cvtmask:14;  // if not B01/INT/FL, suppress conversion to FL
  R bcvt(cvtmask,z);
 }

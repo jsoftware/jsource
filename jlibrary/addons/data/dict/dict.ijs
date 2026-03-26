@@ -83,7 +83,6 @@ if. index_type -: 'tree' do.
 else.
   items =: {{
     (0 0) 16!:_9 dict NB. read-lock.
-    cnt =. count ''
     r =. memu (<<<0 (16!:_5) dict) { 1 (16!:_8) dict
     if. -. valueshape -: 0 do.
       r =. r ,&< memu (<<<0 (16!:_5) dict) { 2 (16!:_8) dict

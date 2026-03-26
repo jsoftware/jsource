@@ -188,6 +188,8 @@ assert. 1e_8>e
 0 -: %.~$~0x
 0 -: %.~$~0r4
 
+'NaN error' -: %. etx 2 2 $ 0 1 2 _
+'NaN error' -: %. etx 2 2$0 1e_309 10 10
 
 'domain error' -:        %. etx 4 4$'abc'
 'domain error' -:        %. etx 4 4$u:'abc'

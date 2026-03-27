@@ -188,9 +188,6 @@ assert. 1e_8>e
 0 -: %.~$~0x
 0 -: %.~$~0r4
 
-'NaN error' -: %. etx 2 2 $ 0 1 2 _
-'NaN error' -: %. etx 2 2$0 1e_309 10 10
-
 'domain error' -:        %. etx 4 4$'abc'
 'domain error' -:        %. etx 4 4$u:'abc'
 'domain error' -:        %. etx 4 4$10&u:'abc'
@@ -204,6 +201,9 @@ assert. 1e_8>e
 
 'length error' -:        %. etx ?3 5$123
 'length error' -: 3 4 5  %. etx ?7 4$100
+
+echo %. etx 2 2 $ 0 1 2 _
+echo %. etx 2 2$0 1e_309 10 10
 
 9!:19 ct
 

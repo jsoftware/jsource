@@ -359,7 +359,7 @@ F1(jttraceexf){F12IP;A z;
  RETF(z);
 }
 
-// 9!:67   '': query  0: disable  1: stdout  2: stderr  string: file name *traceexcfile
+// 9!:51   '': query  0: disable  1: stdout  2: stderr  string: file name *traceexcfile
 // query/set trace execution status. result is previous setting  0: disable  1: stdout  2: stderr  3: disabled because of error  string: file name *traceexcfile
 // result is previous setting, but 3 if there was an error logging
 F1(jttraceexc){F12IP;A z;

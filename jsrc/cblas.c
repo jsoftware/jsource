@@ -76,15 +76,21 @@ void cblasinit(C*libpath) {
 #elif defined(__wasm__)
  libcblas= 0;
 #elif defined(_WIN32)
+ fprintf(stderr, "a1\n");
  if(libpath&&*libpath){
+ fprintf(stderr, "a2 %s\n",libpath);
   strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME);
+  fprintf(stderr, "a3 %s\n",cblasfile);
   if(!(libcblas= LoadLibraryA(cblasfile))){  /* first try current directory */
    strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME);
+  fprintf(stderr, "a4 %s\n",cblasfile);
    if(!(libcblas= LoadLibraryA(cblasfile)))  /* lapack2 addon lib folder */
+ fprintf(stderr, "a5\n");
     libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
   }
  } else libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
  if(libcblas && !GetProcAddress(libcblas,"cblas_dgemm")){   /* check cblas routine */
+ fprintf(stderr, "a6\n");
   FreeLibrary(libcblas); libcblas= 0;
  }
 #else

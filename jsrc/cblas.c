@@ -30,14 +30,11 @@ char hasopenmp=0;
 #define LIBCBLASNAME "/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/vecLib"
 #endif
 #elif defined(_WIN32)
-#if defined(_WIN64)
-#if defined(__aarch64__)||defined(_M_ARM64)
-#define LIBCBLASNAME "libopenblas_arm64.dll"
-#else
 #define LIBCBLASNAME "libopenblas.dll"
-#endif
-#else
-#define LIBCBLASNAME "libopenblas_32.dll"
+#if defined(__aarch64__)||defined(_M_ARM64)
+#define LIBCBLASNAME2 "libopenblas_arm64.dll"
+#elif !defined(_WIN64)
+#define LIBCBLASNAME2 "libopenblas_32.dll"
 #endif
 #elif defined(ANDROID) || defined(__OpenBSD__)
 #define LIBCBLASNAME "liblapack.so"
@@ -78,22 +75,31 @@ void cblasinit(C*libpath) {
 #elif defined(__wasm__)
  libcblas= 0;
 #elif defined(_WIN32)
- fprintf(stderr, "a1\n");
+#if defined(__aarch64__)||defined(_M_ARM64)||!defined(_WIN64)
  if(libpath&&*libpath){
- fprintf(stderr, "a2 %s\n",libpath);
-  strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME);
-  fprintf(stderr, "a3 %s\n",cblasfile);
+  strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME2);
   if(!(libcblas= LoadLibraryA(cblasfile))){  /* first try current directory */
-   strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME);
-  fprintf(stderr, "a4 %s\n",cblasfile);
+   strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME2);
    if(!(libcblas= LoadLibraryA(cblasfile)))  /* lapack2 addon lib folder */
- fprintf(stderr, "a5\n");
-    libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
+    libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME2));
   }
- } else libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
+ } else libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME2));
  if(libcblas && !GetProcAddress(libcblas,"cblas_dgemm")){   /* check cblas routine */
- fprintf(stderr, "a6\n");
   FreeLibrary(libcblas); libcblas= 0;
+ }
+#endif
+ if(!libcblas){
+  if(libpath&&*libpath){
+   strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME);
+   if(!(libcblas= LoadLibraryA(cblasfile))){  /* first try current directory */
+    strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME);
+    if(!(libcblas= LoadLibraryA(cblasfile)))  /* lapack2 addon lib folder */
+     libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
+   }
+  } else libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
+  if(libcblas && !GetProcAddress(libcblas,"cblas_dgemm")){   /* check cblas routine */
+   FreeLibrary(libcblas); libcblas= 0;
+  }
  }
 #else
  if(libpath&&*libpath){

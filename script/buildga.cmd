@@ -44,7 +44,7 @@ copy pthreads4w\bin\pthreadVC3-w32.dll %C%\pthreadVC3.dll
 copy mpir\windows\x86\mpir.dll %C%\mpir32.dll
 copy openmp\obj\windows\libomp32.dll %C%\libomp32.dll
 copy pcre2\windows\x86\jpcre2.dll %A%\tools\regex\jpcre2_32.dll
-curl --output-dir "%C%" -O "https://www.jsoftware.com/dowoad/lapackbin/libopenblas_32.dll"
+curl --output-dir "%C%" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
 GOTO L01C
 :L01B
 mkdir j64

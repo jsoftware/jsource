@@ -294,7 +294,10 @@ case "$jplatform/$j64x" in
   USE_SLEEF=0
   USE_SLEEFQUAD=1
   ;;
- raspberry/j32*) USE_SLEEF=0 ;;
+ raspberry/j32*)
+  USE_SLEEF=0
+  USE_SLEEFQUAD=1
+  ;;
  wasm*) USE_SLEEF=0 ;;
  *) USE_SLEEF="${USE_SLEEF:=1}" ;;
 esac

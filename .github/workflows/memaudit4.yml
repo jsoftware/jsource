@@ -207,7 +207,7 @@ jobs:
    - name: Build JE (Linux arm32)
      env:
       CC: arm-linux-gnueabihf-gcc
-      USE_SLEEF: 1
+      USE_SLEEF: 0
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
       USE_PYXES: 0

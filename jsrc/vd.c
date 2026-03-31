@@ -71,18 +71,18 @@ static F1(jtqrr){F12IP;PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p
  if(2>AR(w)){p=AN(w); n=1;}else{s=AS(w); p=s[0]; n=s[1];}  // p=#rows, n=#columns
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  if(1>=n){  // just 1 col
-  t=norm(ravel(w));  // norm of col 
+  t=norm(ravel(w));  // norm of col
   ASSERT(!AN(w)||!equ(t,num(0)),EVDOMAIN);  // norm must not be 0 unless column is empty
   RZ(q=tymes(w,recip(t)));
   R jlink(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num(1)));
  }
  // construe w as w0 w1 w0t w1t
  RZ(t0=qrr(take(v2(p,m),w)));  // find QR of w0 pxm   w0t
- tv=AAV(t0); q0=C(tv[0]); r0=C(tv[1]);  // point to Q and R of w0  pxm mxm  w0t    
+ tv=AAV(t0); q0=C(tv[0]); r0=C(tv[1]);  // point to Q and R of w0  pxm mxm  w0t
  RZ(a1=drop(v2(0L,m),w));  // a1=w1  pxn-m  w1t
  RZ(y=pdt(conjug(cant1(q0)),a1));  // q0* w1 mxpxn-m     w1t q0t*   q0t*=/q0      result is mxn-m
- RZ(t1=qrr(minus(a1,pdt(q0,y))));  // pxmxn-m  get QR of w1-(q0 q0* w1)    w1t-(w1t q0t* q0t)    
- tv=AAV(t1); q1=C(tv[0]); r1=C(tv[1]);  
+ RZ(t1=qrr(minus(a1,pdt(q0,y))));  // pxmxn-m  get QR of w1-(q0 q0* w1)    w1t-(w1t q0t* q0t)
+ tv=AAV(t1); q1=C(tv[0]); r1=C(tv[1]);
  RZ(q=stitch(q0,q1));  // overall q is q0t    Q of (w1t-(w1t q0t* q0t))
  RZ(r=over(stitch(r0,y),take(v2(n-m,-n),r1)));
  // r is   r0    q0* w1
@@ -145,7 +145,7 @@ ARGCHK1(w);
  // construe w as w0 w1
  fauxvirtual(q0,virtwq0,w,2,ACUC1|ACINPLACE); AS(q0)[0]=m; AS(q0)[1]=cl; AN(q0)=m*cl;
  RZ(l0=jtltqip(jt,q0));  // form q0 in place, return l0
- A q1; fauxblock(virtwq1);  fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl; 
+ A q1; fauxblock(virtwq1);  fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl;
  // calculate w1 - (w1 q0*) q0
 #if (C_AVX2 || EMU_AVX2)
  if(AT(w)&FL && (m<50 || m*m*cl<(64*64*64))){
@@ -167,7 +167,7 @@ ARGCHK1(w);
   RZ(y=pdt(q1,conjug(cant1(q0))));  // w1 q0*   n-mxpxm
   RZ(z=minusA(q1,pdt(y,q0))); verifyinplace(q1,z);   // w1 - (w1 q0*) q0   n-mxmxp
  }
- RZ(l1=jtltqip(jt,q1));  //  get QR of   w1 - (w1 q0*) q0  
+ RZ(l1=jtltqip(jt,q1));  //  get QR of   w1 - (w1 q0*) q0
  // copy in the pieces, line by line
  I leftlen = m<<bplg(AT(w)); I rightlen=(rw-m)<<bplg(AT(w));
  GA(z,AT(w),rw*rw,2,AS(w)); AS(z)[1]=rw; void *zr=voidAV2(z);  // allocate result, set pointer to output
@@ -200,6 +200,246 @@ DF1(jtqr){F12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);
 RETF(z);
 }
+
+// documentation of LAPACK functions used
+/*
+dgetrf()
+subroutine dgetrf	(	integer	m,
+integer	n,
+double precision, dimension( lda, * )	a,
+integer	lda,
+integer, dimension( * )	ipiv,
+integer	info )
+
+Purpose:
+!>
+!> DGETRF computes an LU factorization of a general M-by-N matrix A
+!> using partial pivoting with row interchanges.
+!>
+!> The factorization has the form
+!>    A = P * L * U
+!> where P is a permutation matrix, L is lower triangular with unit
+!> diagonal elements (lower trapezoidal if m > n), and U is upper
+!> triangular (upper trapezoidal if m < n).
+!>
+!> This is the right-looking Level 3 BLAS version of the algorithm.
+!>
+Parameters
+[in]	M
+!>          M is INTEGER
+!>          The number of rows of the matrix A.  M >= 0.
+!>
+[in]	N
+!>          N is INTEGER
+!>          The number of columns of the matrix A.  N >= 0.
+!>
+[in,out]	A
+!>          A is DOUBLE PRECISION array, dimension (LDA,N)
+!>          On entry, the M-by-N matrix to be factored.
+!>          On exit, the factors L and U from the factorization
+!>          A = P*L*U; the unit diagonal elements of L are not stored.
+!>
+[in]	LDA
+!>          LDA is INTEGER
+!>          The leading dimension of the array A.  LDA >= max(1,M).
+!>
+[out]	IPIV
+!>          IPIV is INTEGER array, dimension (min(M,N))
+!>          The pivot indices; for 1 <= i <= min(M,N), row i of the
+!>          matrix was interchanged with row IPIV(i).
+!>
+[out]	INFO
+!>          INFO is INTEGER
+!>          = 0:  successful exit
+!>          < 0:  if INFO = -i, the i-th argument had an illegal value
+!>          > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+!>                has been completed, but the factor U is exactly
+!>                singular, and division by zero will occur if it is used
+!>                to solve a system of equations.
+!>
+*/
+
+/*
+zgetrf()
+subroutine zgetrf	(	integer	m,
+integer	n,
+complex*16, dimension( lda, * )	a,
+integer	lda,
+integer, dimension( * )	ipiv,
+integer	info )
+
+Purpose:
+!>
+!> ZGETRF computes an LU factorization of a general M-by-N matrix A
+!> using partial pivoting with row interchanges.
+!>
+!> The factorization has the form
+!>    A = P * L * U
+!> where P is a permutation matrix, L is lower triangular with unit
+!> diagonal elements (lower trapezoidal if m > n), and U is upper
+!> triangular (upper trapezoidal if m < n).
+!>
+!> This is the right-looking Level 3 BLAS version of the algorithm.
+!>
+Parameters
+[in]	M
+!>          M is INTEGER
+!>          The number of rows of the matrix A.  M >= 0.
+!>
+[in]	N
+!>          N is INTEGER
+!>          The number of columns of the matrix A.  N >= 0.
+!>
+[in,out]	A
+!>          A is COMPLEX*16 array, dimension (LDA,N)
+!>          On entry, the M-by-N matrix to be factored.
+!>          On exit, the factors L and U from the factorization
+!>          A = P*L*U; the unit diagonal elements of L are not stored.
+!>
+[in]	LDA
+!>          LDA is INTEGER
+!>          The leading dimension of the array A.  LDA >= max(1,M).
+!>
+[out]	IPIV
+!>          IPIV is INTEGER array, dimension (min(M,N))
+!>          The pivot indices; for 1 <= i <= min(M,N), row i of the
+!>          matrix was interchanged with row IPIV(i).
+!>
+[out]	INFO
+!>          INFO is INTEGER
+!>          = 0:  successful exit
+!>          < 0:  if INFO = -i, the i-th argument had an illegal value
+!>          > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+!>                has been completed, but the factor U is exactly
+!>                singular, and division by zero will occur if it is used
+!>                to solve a system of equations.
+!>
+*/
+
+/*
+dgetri()
+subroutine dgetri	(	integer	n,
+double precision, dimension( lda, * )	a,
+integer	lda,
+integer, dimension( * )	ipiv,
+double precision, dimension( * )	work,
+integer	lwork,
+integer	info )
+
+Purpose:
+!>
+!> DGETRI computes the inverse of a matrix using the LU factorization
+!> computed by DGETRF.
+!>
+!> This method inverts U and then computes inv(A) by solving the system
+!> inv(A)*L = inv(U) for inv(A).
+!>
+Parameters
+[in]	N
+!>          N is INTEGER
+!>          The order of the matrix A.  N >= 0.
+!>
+[in,out]	A
+!>          A is DOUBLE PRECISION array, dimension (LDA,N)
+!>          On entry, the factors L and U from the factorization
+!>          A = P*L*U as computed by DGETRF.
+!>          On exit, if INFO = 0, the inverse of the original matrix A.
+!>
+[in]	LDA
+!>          LDA is INTEGER
+!>          The leading dimension of the array A.  LDA >= max(1,N).
+!>
+[in]	IPIV
+!>          IPIV is INTEGER array, dimension (N)
+!>          The pivot indices from DGETRF; for 1<=i<=N, row i of the
+!>          matrix was interchanged with row IPIV(i).
+!>
+[out]	WORK
+!>          WORK is DOUBLE PRECISION array, dimension (MAX(1,LWORK))
+!>          On exit, if INFO=0, then WORK(1) returns the optimal LWORK.
+!>
+[in]	LWORK
+!>          LWORK is INTEGER
+!>          The dimension of the array WORK.  LWORK >= max(1,N).
+!>          For optimal performance LWORK >= N*NB, where NB is
+!>          the optimal blocksize returned by ILAENV.
+!>
+!>          If LWORK = -1, then a workspace query is assumed; the routine
+!>          only calculates the optimal size of the WORK array, returns
+!>          this value as the first entry of the WORK array, and no error
+!>          message related to LWORK is issued by XERBLA.
+!>
+[out]	INFO
+!>          INFO is INTEGER
+!>          = 0:  successful exit
+!>          < 0:  if INFO = -i, the i-th argument had an illegal value
+!>          > 0:  if INFO = i, U(i,i) is exactly zero; the matrix is
+!>                singular and its inverse could not be computed.
+!>
+*/
+
+/*
+zgetri()
+subroutine zgetri	(	integer	n,
+complex*16, dimension( lda, * )	a,
+integer	lda,
+integer, dimension( * )	ipiv,
+complex*16, dimension( * )	work,
+integer	lwork,
+integer	info )
+
+Purpose:
+!>
+!> ZGETRI computes the inverse of a matrix using the LU factorization
+!> computed by ZGETRF.
+!>
+!> This method inverts U and then computes inv(A) by solving the system
+!> inv(A)*L = inv(U) for inv(A).
+!>
+Parameters
+[in]	N
+!>          N is INTEGER
+!>          The order of the matrix A.  N >= 0.
+!>
+[in,out]	A
+!>          A is COMPLEX*16 array, dimension (LDA,N)
+!>          On entry, the factors L and U from the factorization
+!>          A = P*L*U as computed by ZGETRF.
+!>          On exit, if INFO = 0, the inverse of the original matrix A.
+!>
+[in]	LDA
+!>          LDA is INTEGER
+!>          The leading dimension of the array A.  LDA >= max(1,N).
+!>
+[in]	IPIV
+!>          IPIV is INTEGER array, dimension (N)
+!>          The pivot indices from ZGETRF; for 1<=i<=N, row i of the
+!>          matrix was interchanged with row IPIV(i).
+!>
+[out]	WORK
+!>          WORK is COMPLEX*16 array, dimension (MAX(1,LWORK))
+!>          On exit, if INFO=0, then WORK(1) returns the optimal LWORK.
+!>
+[in]	LWORK
+!>          LWORK is INTEGER
+!>          The dimension of the array WORK.  LWORK >= max(1,N).
+!>          For optimal performance LWORK >= N*NB, where NB is
+!>          the optimal blocksize returned by ILAENV.
+!>
+!>          If LWORK = -1, then a workspace query is assumed; the routine
+!>          only calculates the optimal size of the WORK array, returns
+!>          this value as the first entry of the WORK array, and no error
+!>          message related to LWORK is issued by XERBLA.
+!>
+[out]	INFO
+!>          INFO is INTEGER
+!>          = 0:  successful exit
+!>          < 0:  if INFO = -i, the i-th argument had an illegal value
+!>          > 0:  if INFO = i, U(i,i) is exactly zero; the matrix is
+!>                singular and its inverse could not be computed.
+!>
+*/
+
 
 // return inverse of w, calculated by lq applied to adjoint
 // result has rank 2
@@ -328,7 +568,7 @@ static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  w=conjug(cant1(w));  // create w*, where the result will be built inplace
  RZ(l=jtltqip(jt,w)); n=AS(l)[0]; n1=1+n;
  // build determinant for integer correction, if that is enabled (i. e. nonzero)
- if(FL&AT(l)){D*v=DAV(l); D determ=*det; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); *det=determ;} 
+ if(FL&AT(l)){D*v=DAV(l); D determ=*det; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); *det=determ;}
  else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);
  RETF(pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w));  // engage fast reciprocal for float matrices
@@ -372,13 +612,13 @@ F1(jtminv){F12IP;D detv; R jtminvdet(jt,w,&detv);}
 static B jttridiag(J jt,I n,A a,A x){D*av,d,p,*xv;I i,j,n1=n-1;
  av=DAV(a); xv=DAV(x); d=xv[0];
  for(i=j=0;i<n1;++i){
-  ASSERT(d!=0,EVDOMAIN);  
-  p=xv[j+2]/d;  
-  d=xv[j+3]-=p*xv[j+1]; 
-  av[i+1]-=p*av[i]; 
+  ASSERT(d!=0,EVDOMAIN);
+  p=xv[j+2]/d;
+  d=xv[j+3]-=p*xv[j+1];
+  av[i+1]-=p*av[i];
   j+=3;
  }
- ASSERT(d!=0,EVDOMAIN); 
+ ASSERT(d!=0,EVDOMAIN);
  i=n-1; j=AN(x)-1; av[i]/=d;
  for(i=n-2;i>=0;--i){j-=3; av[i]=(av[i]-xv[j+1]*av[i+1])/xv[j];}
  R 1;
@@ -386,8 +626,8 @@ static B jttridiag(J jt,I n,A a,A x){D*av,d,p,*xv;I i,j,n1=n-1;
 
 static F2(jtmdivsp){F12IP;A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
  ASSERT(2==AR(w),EVRANK);
- v=AS(w); n=v[0]; 
- ASSERT(n>=v[1]&&n==AN(a),EVLENGTH); 
+ v=AS(w); n=v[0];
+ ASSERT(n>=v[1]&&n==AN(a),EVLENGTH);
  ASSERT(n==v[1],EVNONCE);
  wp=PAV(w); x=SPA(wp,x); y=SPA(wp,i); a1=SPA(wp,a);
  ASSERT(2==AN(a1),EVNONCE);

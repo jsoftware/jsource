@@ -51,7 +51,7 @@ static F2(jtpdtby){F12IP;A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
   default:   ASSERT(0,EVDOMAIN);
   case CMPXX:  if(at&B01)PDTBY(Z,Z,ZINC) else PDTXB(Z,Z,ZINC,c=*u++   ); break;
   case FLX:    if(at&B01)PDTBY(D,D,DINC) else PDTXB(D,D,DINC,c=*u++   ); break;
-  case INTX:   if(at&B01)PDTBY(I,I,IINC) else PDTXB(I,I,IINC,c=*u++   ); 
+  case INTX:   if(at&B01)PDTBY(I,I,IINC) else PDTXB(I,I,IINC,c=*u++   );
              if(er>=EWOV){
               RZ(z=ipprep(a,w,FL,&m,&n,&p)); zk=n*sizeof(D); u=BAV(a); v=wv=BAV(w);
               if(at&B01)PDTBY(D,I,IINC) else PDTXB(D,I,IINC,c=(D)*u++);
@@ -91,7 +91,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  //   if AUTRI, advance a & w start pointers & decr #ps to process
  // for(last partial strip of w)
  //  do it all again, under mask
- // 
+ //
 #define INITTO0(reg) _mm256_setzero_pd()   // should be _mm256_xor_pd(reg,reg)  but compiler complains
 #define LD4EXP(wr,wc,base) _mm256_loadu_pd(base+(wr)*n+(wc)*NPAR)
 #define LD4(wr,wc) wt=LD4EXP(wr,wc,wv1);
@@ -151,7 +151,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
    }
    // store the 2x16.  If WMINUSZ, do that first
    if(flgs&FLGWMINUSZ){WMZ(0,0) WMZ(1,0) if(nrem>=2*NPAR){WMZ(0,1) WMZ(1,1)} if(nrem>=3*NPAR){WMZ(0,2) WMZ(1,2)} if(nrem>=4*NPAR){WMZ(0,3) WMZ(1,3)}}
-   ST2(0) if(nrem>=2*NPAR)ST2(1) if(nrem>=3*NPAR)ST2(2) if(nrem>=4*NPAR)ST2(3) 
+   ST2(0) if(nrem>=2*NPAR)ST2(1) if(nrem>=3*NPAR)ST2(2) if(nrem>=4*NPAR)ST2(3)
    av1=svav1+2*pstored; zv1+=2*n;  // since we go through two rows of a at a time, we must skip exactly one row at the end
    // if AUTRI, advance the a and w startpoints (by 2 cols and 2 rows respectively) and decrement the number of products in each row
    if(flgs&FLGAUTRI){av1+=2; wvtri+=2*n; ptri-=2;}  // a skips over 2 more values each row
@@ -449,7 +449,7 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
        z3base+=OPWIDTH;  // This is normal loop housekeeping, but needed only on the last pass when z3base is used.  We save the cycle
       }
       zilblock+=OPHEIGHT*OPWIDTH;  // step over the zs to the next sequential input position
-     
+
      }else{
       // CMPX case.  Do the multiply.
       I a5rem=MIN(a2rem,4);  // number of valid rows in a for the current pass.  if only 1 we mustn't do the bottom sample
@@ -458,7 +458,7 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
       do{
        I a4rem=nvalidops;  // number of outer products
        D * RESTRICT c4base=c3base;  // pointer to top of w block
-       // First get the 
+       // First get the
        // initialize accumulator with the z values accumulated so far.
        __m256d z00r,z00i,z01r,z01i,z10r,z10i,z11r,z11i;   // (complex) zijr has row i real x col j; ziji has row i imag x col j.  Result goes into the rs
        z00i = z01i = z10i = z11i = _mm256_setzero_pd();   // values are accumulated & stored in r vbls
@@ -582,7 +582,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
  // process each 64-float vertical stripe of w, producing the corresponding columns of z
  D* w0base = wv; D* z0base = zv; I w0rem = n;
  for(;w0rem>0;w0rem-=CACHEWIDTH,w0base+=CACHEWIDTH,z0base+=CACHEWIDTH){
-  // process each 16x64 section of w, adding each result to the columns of z.  Each section goes through a different set of 16/32 columns of a 
+  // process each 16x64 section of w, adding each result to the columns of z.  Each section goes through a different set of 16/32 columns of a
   D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=p>>(flgs&FLGCMP);
   for(;w1rem>0;w1rem-=CACHEHEIGHT,a1base+=CACHEHEIGHT<<(flgs&FLGCMP),w1base+=CACHEHEIGHT*n){D* RESTRICT cvx;D* w1next=w1base;I i;
    // read the 16x64 section of w into the cache area (8KB, 2 ways of cache), with prefetch of rows
@@ -647,7 +647,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
      I a4rem=MIN(w1rem,CACHEHEIGHT);
      D * RESTRICT c4base=c3base;
      if(!(flgs&(FLGCMP|FLGINT))){  // real
-      D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
+      D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1;
       do{  // loop for each small outer product
        // read the 2x1 a values and the 1x4 cache values
        // form outer product, add to accumulator
@@ -663,7 +663,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
        c4base+=CACHEWIDTH;
       }while(--a4rem>0);
      }else if(flgs&FLGINT){  // INT
-      I* RESTRICT a4base0=(I*)a2base0; I* RESTRICT a4base1=(I*)a2base1; 
+      I* RESTRICT a4base0=(I*)a2base0; I* RESTRICT a4base1=(I*)a2base1;
       do{  // loop for each small outer product
        // read the 2x1 a values and the 1x4 cache values
        // form outer product, add to accumulator
@@ -680,7 +680,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
       }while(--a4rem>0);
      }else{
       // complex.  The 1x4 cache values represent 1x2 complex values.  The a is fetched as 2x1 complex values.  Result is 2x2 conplex values
-      D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
+      D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1;
       do{  // loop for each small outer product
        // read the 2x1 a values and the 1x4 cache values
        // form outer product, add to accumulator
@@ -807,7 +807,7 @@ oflo2:
    }
 #else
    // 32-bit version - old style, converting to float
-  {I smallprob; 
+  {I smallprob;
    NAN0;
    if(n==1){D* RESTRICT zv; I* RESTRICT av, * RESTRICT wv;
     zv=DAV(z); av=AV(a);
@@ -833,7 +833,7 @@ oflo2:
   }
   break;
  case FLX:
-  {I smallprob; 
+  {I smallprob;
    // As for INT, handle the cases where n=1 separately, because they are used internally & don't require as much setup as matrix multiply
    NAN0;
    if(n==1){
@@ -843,7 +843,7 @@ oflo2:
 #if 0   // for TUNEing
 // %.: 100 .0008, 200 0.005, 500 0.62, 1000 0.4, 10000 285
 // Results 10/2019
-// m n 
+// m n
 // 2 2  blocked always; smallprob beats cached up to 100000
 // 3 3  blocked always; smallprob beats cached up to 10000
 // 4 4  blocked always; smallprob beats cached up to 200
@@ -1009,7 +1009,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
   case CPLUSDOT: case CMAX:             c0=IPBXW;  c1=IPBX1;  break;
   case CSTARDOT: case CMIN: case CSTAR: c0=IPBX0;  c1=IPBXW;  break;
   case CLT:                             c0=IPBXW;  c1=IPBX0;  break;
-  case CGT:                             c0=IPBX0;  c1=IPBXNW; break; 
+  case CGT:                             c0=IPBX0;  c1=IPBXNW; break;
   case CLE:                             c0=IPBX1;  c1=IPBXW;  break;
   case CGE:                             c0=IPBXNW; c1=IPBX1;  break;
   case CPLUSCO:                         c0=IPBXNW; c1=IPBX0;  break;
@@ -1079,7 +1079,7 @@ static DF2(jtdotprod){F12IP;A fs,gs;C c;I r;V*sv;
 
 static F1(jtminors){F12IP;A d,z;
  RZ(d=apvwr(3L,-1L,1L)); AV(d)[0]=0;
- R drop(d,dfv2(z,num(1),w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
+ R drop(d,dfv2(z,num(1),w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w
 }
 
 DF1(jtdet){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; AF f1=FAV(fs)->valencefns[0]; A h=FAV(self)->fgh[2];I c,r,*s;
@@ -1088,7 +1088,7 @@ DF1(jtdet){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; AF f1=FAV(fs)->
  A z; if(h&&1<r&&2==s[r-1]&&s[r-2]==s[r-1])R dfv1(z,w,h);
  F1RANK(2,jtdet,self);
  c=2>r?1:s[1];
- R !c ? dfv1(z,mtv,slash(gs)) : 1==c ? CALL1(f1,ravel(w),fs) : h && c==s[0] ? gaussdet(w) : detxm(w,self); 
+ R !c ? dfv1(z,mtv,slash(gs)) : 1==c ? CALL1(f1,ravel(w),fs) : h && c==s[0] ? gaussdet(w) : detxm(w,self);
 }
 
 DF1(jtdetxm){F12IP;A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}
@@ -1119,7 +1119,8 @@ DF1(jtludecompg){F12IP;PROLOG(823);
  R z;
 }
 
-// LAPACK version
+// LAPACK version for double
+// see vd.c comments for documentation of LAPACK function dgetrf_
 // 128!:10 LU decomposition for square real arrays LU=P{A
 // returns permutation P ; L+U-I (Doolittle form)
 // the ith element of the permutation is the original row# in A of row i of LU
@@ -1143,7 +1144,8 @@ DF1(jtludecompblas){F12IP;PROLOG(823);
  EPILOG(jlink(aresultperm,cant1(z)));
 }
 
-// LAPACK version
+// LAPACK version for complex
+// see vd.c comments for documentation of LAPACK function zgetrf_
 // 128!:10 LU decomposition for square complex arrays LU=P{A
 // returns permutation P ; L+U-I (Doolittle form)
 // the ith element of the permutation is the original row# in A of row i of LU
@@ -1228,7 +1230,7 @@ DF2(jtludecomp){F12IP;PROLOG(823);
   __m256d a00,a01,a02,a03,a10,a11,a12,a13,nexta0,nexta1,nexta2,nexta3,recips;  // double accumulators for the 4x4 block; staging area for A data; reciprocals to use to propagate down the column of L
   // process one ring: the corner block, a column of L, a row of U
   D (*scv)[BLKSZ][BLKSZ];  // where the current block will be stored: c/l going south, u going northwest
-  D __attribute__((aligned(CACHELINESIZE))) linv[BLKSZ][BLKSZ], uinv[BLKSZ][BLKSZ];  // 'inverses' of the corner block, used to calculate L and U blocks 
+  D __attribute__((aligned(CACHELINESIZE))) linv[BLKSZ][BLKSZ], uinv[BLKSZ][BLKSZ];  // 'inverses' of the corner block, used to calculate L and U blocks
   // initialize A[nr-1-r,nr-1-r] (pointed to by wclv) into nexta0..3
   // on every corner block, decide the status of sparse checking.  For the first few rings, we look for zero blocks and count them.
   // We also make a decision before each ring whether it is worthwhile to look for zeros.  After a few rings, we give up on counting if we haven't seen many
@@ -1247,7 +1249,7 @@ DF2(jtludecomp){F12IP;PROLOG(823);
    nexta0=_mm256_loadu_pd(wv+resultperm[(nr-1-r)*BLKSZ]*wn+(nr-1-r)*BLKSZ); nexta1=_mm256_loadu_pd(wv+resultperm[(nr-1-r)*BLKSZ+1]*wn+(nr-1-r)*BLKSZ); nexta2=_mm256_loadu_pd(wv+resultperm[(nr-1-r)*BLKSZ+2]*wn+(nr-1-r)*BLKSZ); nexta3=_mm256_loadu_pd(wv+resultperm[(nr-1-r)*BLKSZ+3]*wn+(nr-1-r)*BLKSZ);  // lots of cache misses here
   }else{
    // last block, containing 1-4 rows/cols.  Read in the valid bits, replacing the others with 0 so they don't get selected as pivots
-   nexta0=_mm256_maskload_pd(wv+resultperm[(nr-1-r)*BLKSZ]*wn+(nr-1-r)*BLKSZ,endmask); 
+   nexta0=_mm256_maskload_pd(wv+resultperm[(nr-1-r)*BLKSZ]*wn+(nr-1-r)*BLKSZ,endmask);
    nexta1=((wn-1)&(BLKSZ-1))>0?_mm256_maskload_pd(wv+resultperm[(nr-1-r)*BLKSZ+1]*wn+(nr-1-r)*BLKSZ,endmask):_mm256_setzero_pd();
    nexta2=((wn-1)&(BLKSZ-1))>1?_mm256_maskload_pd(wv+resultperm[(nr-1-r)*BLKSZ+2]*wn+(nr-1-r)*BLKSZ,endmask):_mm256_setzero_pd();
    nexta3=((wn-1)&(BLKSZ-1))>2?_mm256_maskload_pd(wv+resultperm[(nr-1-r)*BLKSZ+3]*wn+(nr-1-r)*BLKSZ,endmask):_mm256_setzero_pd();
@@ -1408,7 +1410,7 @@ finrle: ;
     // If no permutation of these 4 rows works, we keep as many as do work (0-3 rows) and go back to get 4 more to try
     // perma is the list of values inherited from earlier blocks in this column
     // ngoodperma is the number of values in perma inherited from earlier blocks
-    
+
     UI permx=0; C perm=0xE4;  // index of perm we are using, and that perm
     static C perms8[25] = {0xE4,0xB4,0xD8,0x78,0x9C,0x6C,0xE1,0xB1,0xC9,0x39,0x8D,0x2D,0xD2,0x72,0xC6,0x36,0x4E,0x1E,0x93,0x63,0x87,0x27,0x4B,0x1B,~0x1B};   // perms in order of reversed bitpos, i. e. 3 2 1 0 first
     I bestnperma=ngoodperma; C bestperm=perm;  // best incomplete value so far
@@ -1417,7 +1419,7 @@ finrle: ;
     _mm256_storeu_pd((D*)&perma[ngoodperma],a00); _mm256_storeu_pd((D*)&perma[ngoodperma+1],a01); _mm256_storeu_pd((D*)&perma[ngoodperma+2],a02); _mm256_storeu_pd((D*)&perma[ngoodperma+3],a03);  // save the input for possible perm calc
     if(unlikely(wrappedcorner)){
      // Our search for pivots has wrapped around to the original corner.  We are looking at corners for a second time.  In that rare situation we must take steps to ensure that we
-     // do not repeat a row, because roundoff may cause it to be reselected (even though it is dependent).  To avoid that we zero the row completely if it has been used before. 
+     // do not repeat a row, because roundoff may cause it to be reselected (even though it is dependent).  To avoid that we zero the row completely if it has been used before.
      DO(ngoodperma, if((srclines[i]>>LGBLKSZ)==(nr-1-r+permblkofst))perma[ngoodperma+(srclines[i]&(BLKSZ-1))]=_mm256_setzero_pd();)
     }
     while(1){
@@ -1427,7 +1429,7 @@ finrle: ;
       if(_mm256_cvtsd_f64(_mm256_andnot_pd(sgnbit,a00))<=maxoobpivot)goto pivotmiss0;  // nothing else to do while waiting for recip, so check for quick exit
      }else{
       // we are looking for a permutation.  a00..a03 must be reloaded.  The first ngoodperma regs are loaded from perma[0..2]; the rest come from ngoodperma+(permutation value)
-      I permtemp=perm;  // 
+      I permtemp=perm;  //
       I findex; findex=(permtemp&3)+ngoodperma; findex=ngoodperma>0?0:findex; permtemp=ngoodperma>0?permtemp:permtemp>>2; a00=_mm256_loadu_pd((D*)&perma[findex]);
       recips=_mm256_div_pd(ones,a00);  // 1/U00 x x x  // start the first reciprocal
       findex=(permtemp&3)+ngoodperma; findex=ngoodperma>1?1:findex; permtemp=ngoodperma>1?permtemp:permtemp>>2; a01=_mm256_loadu_pd((D*)&perma[findex]);
@@ -1515,7 +1517,7 @@ finrle: ;
     _mm256_storeu_pd(&uinv[3][0],a13);  // row 3 is 0 0 0 I33=1/U33.
     a12=_mm256_blend_pd(_mm256_blend_pd(_mm256_mul_pd(_mm256_permute_pd(recips,0b0001),_mm256_fnmadd_pd(a02,recips,_mm256_setzero_pd())),recips,0b0100),_mm256_setzero_pd(),0b0011);             // U22*I23+U23*I33=0, so I23=(-U23*I33)/U22
     _mm256_storeu_pd(&uinv[2][0],a12);  // row 2 is 0 0 I22=1/U22 I23
-      //  U11*I12+U12*I22=0   U11*I13+U12*I23+U13*I33=0 
+      //  U11*I12+U12*I22=0   U11*I13+U12*I23+U13*I33=0
     a11=_mm256_blend_pd(_mm256_blend_pd(_mm256_mul_pd(_mm256_permute4x64_pd(recips,0b01010101),_mm256_fnmadd_pd(a13,a01,_mm256_fnmadd_pd(a12,_mm256_permute_pd(a01,0b0011),_mm256_setzero_pd()))),recips,0b0010),_mm256_setzero_pd(),0b0001);
     _mm256_storeu_pd(&uinv[1][0],a11);  // row 1 is 0 I11=1/U11 I12 I23
       // U00*I01+U01*I11=0    U00*I02+U01*I12+U02*I22=0    U00*I03+U01*I13+U02*I23+U03*I33=0
@@ -1544,13 +1546,13 @@ finrle: ;
      _mm256_storeu_pd(&lmem[0][0],a00); _mm256_storeu_pd(&lmem[1][0],a01); _mm256_storeu_pd(&lmem[2][0],a02); _mm256_storeu_pd(&lmem[3][0],a03);
      __m256d tmp;  // where we bring in rows of U^-1
      tmp=_mm256_loadu_pd(&uinv[0][0]);  // row 0 of U^-1
-     a00=_mm256_mul_pd(_mm256_set1_pd(lmem[0][0]),tmp); a01=_mm256_mul_pd(_mm256_set1_pd(lmem[1][0]),tmp); a02=_mm256_mul_pd(_mm256_set1_pd(lmem[2][0]),tmp); a03=_mm256_mul_pd(_mm256_set1_pd(lmem[3][0]),tmp); 
+     a00=_mm256_mul_pd(_mm256_set1_pd(lmem[0][0]),tmp); a01=_mm256_mul_pd(_mm256_set1_pd(lmem[1][0]),tmp); a02=_mm256_mul_pd(_mm256_set1_pd(lmem[2][0]),tmp); a03=_mm256_mul_pd(_mm256_set1_pd(lmem[3][0]),tmp);
      tmp=_mm256_loadu_pd(&uinv[1][0]);  // row 1 of U^-1
-     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][1]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][1]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][1]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][1]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][1]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][1]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][1]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][1]),tmp,a03);
      tmp=_mm256_loadu_pd(&uinv[2][0]);  // row 2 of U^-1
-     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][2]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][2]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][2]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][2]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][2]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][2]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][2]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][2]),tmp,a03);
      tmp=_mm256_loadu_pd(&uinv[3][0]);  // row 3 of U^-1
-     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][3]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][3]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][3]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][3]),tmp,a03); 
+     a00=_MM256_FMADD_PD(_mm256_set1_pd(lmem[0][3]),tmp,a00); a01=_MM256_FMADD_PD(_mm256_set1_pd(lmem[1][3]),tmp,a01); a02=_MM256_FMADD_PD(_mm256_set1_pd(lmem[2][3]),tmp,a02); a03=_MM256_FMADD_PD(_mm256_set1_pd(lmem[3][3]),tmp,a03);
      // block created; advance pointers
      // get the address of the bitmask for this block, in the L bitmap
      bma=LBIT(r0+nr-1,nr-1-r); bmx=LBITX(r0+nr-1,nr-1-r);  // point to the bit to store all-0 status to    row is (nr-1-r)+(r0-(-r))
@@ -1579,7 +1581,7 @@ finrle: ;
     }else if(r0==0){     // last block of L - truncated at bottom
      _mm256_storeu_pd(resultaddr,a00); if(((wn-1)&(BLKSZ-1))>0){_mm256_storeu_pd(resultaddr+wn,a01); if(((wn-1)&(BLKSZ-1))>1){_mm256_storeu_pd(resultaddr+2*wn,a02); if(((wn-1)&(BLKSZ-1))>2){_mm256_storeu_pd(resultaddr+3*wn,a03); }}}
     }else{     // normal full block
-     _mm256_storeu_pd(resultaddr,a00);  _mm256_storeu_pd(resultaddr+wn,a01);  _mm256_storeu_pd(resultaddr+2*wn,a02);  _mm256_storeu_pd(resultaddr+3*wn,a03); 
+     _mm256_storeu_pd(resultaddr,a00);  _mm256_storeu_pd(resultaddr+wn,a01);  _mm256_storeu_pd(resultaddr+2*wn,a02);  _mm256_storeu_pd(resultaddr+3*wn,a03);
     }
    }else{  // bottom-right corner
     _mm256_maskstore_pd(resultaddr,endmask,a00); if(((wn-1)&(BLKSZ-1))>0){_mm256_maskstore_pd(resultaddr+wn,endmask,a01); if(((wn-1)&(BLKSZ-1))>1){_mm256_maskstore_pd(resultaddr+2*wn,endmask,a02); if(((wn-1)&(BLKSZ-1))>2){_mm256_maskstore_pd(resultaddr+3*wn,endmask,a03); }}}

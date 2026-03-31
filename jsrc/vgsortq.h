@@ -35,6 +35,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
    case -1: case 0:;
    }
    // that batch is sorted; move to the next
+batchfinished: ; // come here if the entire partition is known to be in order
    if(--stackp<0)R;  // back up stack; if we're finishing the last call, we're through
    l=stack[stackp][0]; r=stack[stackp][1];  // resume the next 
   }
@@ -44,9 +45,9 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
   {
    // actually we advance the first/last to quartile positions, to avoid a worst-case when an almost-sorted list has some very small numbers
    // added to the end.  In that case a small value is chosen as the pivot and replaced at the end with another small value
-   I ll=l+((r-l)>>2), rr=r-((r-l)>>2); 
-   I pivotcomp = 0xc6>>(4*(v[ll]>v[(ll+rr)>>1]) + 2*(v[ll]>v[rr]) + (v[(ll+rr)>>1]>v[rr]));  // l>m, l>r, m>r 000 lmr  001 lrm  010 -  011 rlm  100 mlr  101 -  110 mrl  111 rml
-      // encode l as 00 r as 11 m as 01/10, the sequence is mr-ll-rm 01 11 10 00 00 01 11 10  0 1 1 0 0 0 1 1 0 (LE) -> 011000110  0xc6
+   I ll=l+((r-l)>>2), rr=r-((r-l)>>2), mm=(rr+ll)>>1;  // we don't worry about overflow - we need to match the mm computation below
+   I pivotcomp = 0xc6>>(4*(v[ll]>v[mm]) + 2*(v[ll]>v[rr]) + (v[mm]>v[rr]));  // l>m, l>r, m>r 000 lmr  001 lrm  010 -  011 rlm  100 mlr  101 -  110 mrl  111 rml
+      // encode l as 00 r as 11 m as 01/10, the 8 possibilities are mr-ll-rm (LE) -> 01 11 10 00 00 01 11 10  -> 0 1 1 0 0 0 1 1 0 (LE) -> 011000110  0xc6
    I pivotx=((pivotcomp&1?rr:ll)+(pivotcomp&2?rr:ll))>>1; pivot=v[pivotx]; v[pivotx]=v[r];  // pick the median pivot, swap it (notionally) with the last 
   }
 #if SORTQCOND
@@ -63,7 +64,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
    SORTQTYPE *v0=v+l;  // base of the partitioned region
    UI cstk=0;  // will hold comparison results.  Init to 0 for MSBs so as not to interfere with finding highest 1
 #if SORTQCOND
-   // go back to front, shifting bits up from the bottom
+   // go back to front, shifting bits up from the bottom.  A 1 bit means the value should go to cide 0
    {
    __m256i endmask;
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-(r-l))&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
@@ -83,17 +84,17 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
      // the upper partition and we will enter a worst-case where we partition only one item each pass.  To prevent that, we will repartition using the same pivot, but
      // this time moving the equal values to the lower partition.  If this produces a better partition, we will use it.  If not, we must be processing a block of
      // ALL equal values, and we stop partitioning.  We thus process a block with many equals as follows: scan & partition to strip elements lower than the equals; scan, rescan, & partition to
-     // strip elements higher than the equals; scan & rescan to detect the all-equals case & stop partitioning
+     // strip elements higher than the equals; scan & rescan to detect the all-equals case & stop partitioning  scaf* replace this with the pivot-patitioning below
      DQ(r-l, cstk=2*cstk+(v0[i]<=pivot);)  // this time equality moves to the lower side (cstk is already 0 to start)
      // There MUST have been at least 1 equal value, because the pivot was the median of three and yet nothing compared low the first time; one value at least must compare equal.
      if(!(cstk&(cstk+1))) {
       // There are still no exchanges.  Find the partition sizes.
       UI4 xchgx04=CTLZI(cstk); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition
       if(xchgx1!=r-l)goto finmedxchg;  // there are no exchanges, but we have to process both partitions (one of which might be empty)
-      r=l; continue;  // all equal -- abort this partition and go to the next one
+      goto batchfinished;  // all equal -- abort this partition and go to the next one
      }
      // ...falling through if there are exchanges after a rescan
-    } else {
+    }else{
      // The lower partition is not empty.  Set the partition pointer above the lowest 1-bit
      UI4 xchgx04=CTLZI(cstk); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition
      goto finmedxchg;
@@ -159,7 +160,7 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
       I bittofill=BW-ncmp1;  // get the running index of where we will put new bits
       SORTQTYPE *vv=v+in1-BW-(NPAR-1);  // pointer to beginning of the 4-word section ending at in1 
       // fill 4-bit sections up to the last, which will be 1-4 bits
-      // if AVX2, use permute4x rather than the 2 insts here
+      // scaf* if AVX2, use permute4x rather than the 2 insts here
       while(bittofill<BW-NPAR){cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQULOAD((SORTQULOADTYPE)vv) SORTQCMPTYPE)),SORTQCASTTOPD(pivot256),0x01),0x5))<<bittofill); vv-=NPAR; bittofill+=NPAR;}
       cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQMASKLOAD(vv,endmask) SORTQCMPTYPE)),SORTQCASTTOPD(pivot256),0x01),0x5))<<bittofill);
 
@@ -195,11 +196,31 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
 
   // exchange the end of the array with the start of the right side
   v[r]=v[xchgx1]; v[xchgx1]=pivot;
-
-  // push stack for the larger partition; modify batch pointers for the smaller
   // recursions are l..xchgx0 and xchgx1+1..r    the +1 to step over the pivot from this pass
   ++xchgx1;  // the upper partition starts AFTER the pivot
-  I lenl=xchgx0-l, lenr=r-xchgx1, l0=l, r0=r;
+  I lenl=xchgx0-l, lenr=r-xchgx1, l0=l, r0=r;  // actually, len-1
+
+  // if the partitioning is very bad, it is probably because the partition is almost all the same value, which is the pivot.  Since pivots can go to either side, one side may move much faster - 64x faster - than the other,
+  // leaving an imbalance.  To ameliorate the problem, we go through the longer side in this case, swapping the pivots to the middle of the partition
+  if(unlikely((MAX(lenl,lenr)>>3)>MIN(lenl,lenr))){   // check is one side 8x larger than the other.  We will abort the copy if the long side is not >50% pivots
+   if(lenl>lenr){
+    // left is much larger than right.  Move values that equal the pivot to the center partition, where they will stay undisturbed.  Make sure the partition has a lot of pivot values
+    DQ(lenl+1, xchgx0=i; if(v[l+i]!=pivot)break;) xchgx0+=l;  // first discard trailing pivot values, leaving xchgx0 at a non-pivot
+    DQ(xchgx0-l+1, I rdx=l+i; rdx=v[rdx]==pivot?xchgx0:rdx; xchgx0-=v[l+i]==pivot; v[l+i]=v[rdx]; if(xchgx0-(l+i)>(xchgx1+10)-xchgx0)break;) // if [i]=pivot, move[xchgx0] down, else rewrite in place; if # not moved exceeds 10+#moved, abort, it's not lopsided enough
+    // now xchgx0 is the index of the end of the left partition (could be l-1)
+    DQ((xchgx1-1)-(xchgx0+1), v[xchgx0+1+i]=pivot;)  // install pivots from xchgx0+1 to before xchgx1-1.  This creates a middle partition from the pivots
+    lenl=xchgx0-l;  // shorten the left partition to exclude the middles
+   }else{
+    // similarly, when the right partition is the larger
+    I nonpivx; DO(lenr+1, nonpivx=i; if(v[xchgx1+i]!=pivot)break;) xchgx1=nonpivx+=xchgx1;  // first discard leading pivot values, leaving nonpivx and xchgx1 at a non-pivot.  xchgx1 will always point to the first unswapped non-pivot
+    DO(r-nonpivx+1, I rdx=nonpivx+i; rdx=v[rdx]==pivot?xchgx1:rdx; xchgx1+=v[nonpivx+i]==pivot; v[nonpivx+i]=v[rdx]; if((nonpivx+i)-xchgx1>(xchgx1+10)-xchgx0)break;) // if [i]=pivot, move[xchgx1] up, else rewrite in place; if # not moved exceeds 10+#moved, abort, it's not lopsided enough
+    // now xchgx0 is the index of the end of the left partition (could be l-1)
+    DO(xchgx1-nonpivx, v[nonpivx+i]=pivot;)  // install pivots from xchgx0+1 to before xchgx1-1.  This creates a middle partition from the pivots
+    lenr=r-xchgx1;  // shorten the right partition to exclude the middles
+   }
+  }
+
+  // push stack for the larger partition; modify batch pointers for the smaller
   // make l,r the smaller partition and l0,r0 the larger;  then stack l0,r0
   l0=lenl>lenr?l0:xchgx1; l=lenl>lenr?xchgx1:l; r0=lenl>lenr?xchgx0:r0; r=lenl>lenr?r:xchgx0; 
   stack[stackp][0]=l0; stack[stackp][1]=r0; ++stackp;

@@ -8,7 +8,8 @@ NB. lapack definitions
 path=: jpath '~addons/math/lapack/'
 
 3 : 0''
-if. UNAME-:'Linux' do.
+if. 0: ~: 4!:0 @ <'IFWA64' do. IFWA64=. 0 end.
+if. (<UNAME)e.'Linux';'FreeBSD';'OpenBSD' do.
   dll=: 'liblapack.so.3'
   JLAPACK=: 'F'
 elseif. UNAME-:'Darwin' do.
@@ -23,31 +24,25 @@ elseif. UNAME-:'Darwin' do.
   end.
 elseif. UNAME-:'Win' do.
   if. IF64 do.
-    if. fexist path,'jlapack64.dll' do.
-      dll=: '"',path,'jlapack64.dll"'
-      JLAPACK=: 'J'
-    else.
-      dll=: 'liblapack.dll'
+    if. IFWA64 do.
+      dll=: 'libopenblas',((-.IFWA64){::'_arm64';(-.IF64)#'_32'),'.dll'
       JLAPACK=: 'F'
+    else.
+      if. fexist path,'jlapack64.dll' do.
+        dll=: '"',path,'jlapack64.dll"'
+        JLAPACK=: 'J'
+      else.
+        dll=: 'libopenblas',((-.IFWA64){::'_arm64';(-.IF64)#'_32'),'.dll'
+        JLAPACK=: 'F'
+      end.
     end.
   else.
     dll=: '"',path,'jlapack.dll"'
     JLAPACK=: 'J'
   end.
-elseif. UNAME-:'Android' do.
-  JLAPACK=: 'J'
-  arch=. LF-.~ 2!:0'getprop ro.product.cpu.abi'
-  if. IF64 < arch-:'arm64-v8a' do.
-    arch=. 'armeabi-v7a'
-  elseif. IF64 < arch-:'x86_64' do.
-    arch=. 'x86'
-  end.
-  dll=: '"',(jpath'~bin/../libexec/android-libs/',arch,'/liblapack.so'),'"'
-  if. 0=fexist dltb dll -. '"' do.
-    smoutput 'lapack error: please run install_jlapack_'''' to install liblapack.so'
-  end.
 elseif. do.
-  'platform not supported' 13!:8[10
+  dll=: 'liblapack.so'
+  JLAPACK=: 'F'
 end.
 ''
 )

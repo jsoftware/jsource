@@ -331,7 +331,7 @@ Q jtQmpq(J jt, mpq_t mpq, I number) {
 #else
  #ifdef __APPLE__
   #define LIBEXT ".dylib"
-  #define LIBEXT10 LIBEXT 
+  #define LIBEXT10 ".10.dylib"
  #else
   #define LIBEXT ".so"
   #ifdef __OpenBSD__

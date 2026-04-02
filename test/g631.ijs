@@ -216,7 +216,7 @@ a =: ". x  NB. Sets prist
 assert. ((xisprist *. virtprist +. wpristx) = isprist) 13!:_4 a [ 'left'
 NB. Verify pristinity is passed to an only successor but not a shared successor
 assert. ((rprist , virtnip) = ispristorunbox , isvirt) (".x) (0: 13!:_4@] u) <"boxr i. boxs
-assert. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:_4@[ 0:) <"boxr i. boxs
+assert. (-.9!:56'c_viavx') +. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:_4@[ 0:) <"boxr i. boxs
 1 return. y
 )
 {. ckprist 0 1 ] 5

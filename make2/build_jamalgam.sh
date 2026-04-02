@@ -413,12 +413,24 @@ if [ -n "$_ASSERT2" ]; then
  common="$common -D_ASSERT2"
 fi
 
+if [ -n "$C_CRC32C" ]; then
+ common="$common -DC_CRC32C=$C_CRC32C"
+fi
+
 if [ -n "$_NAN" ]; then
  common="$common -D_NAN"
 fi
 
 if [ -n "$_NAMETRACK" ]; then
  common="$common -DNAMETRACK=$_NAMETRACK"
+fi
+
+if [ -n "$MAX_ERRORS" ]; then
+  if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
+   common="$common -fmax-errors=$MAX_ERRORS "
+  else
+   common="$common -ferror-limit=$MAX_ERRORS "
+  fi
 fi
 
 case "$jplatform/$j64x" in

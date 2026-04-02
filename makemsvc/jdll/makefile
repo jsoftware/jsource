@@ -92,6 +92,9 @@ endif
 ifneq ($(_ASSERT2),)
  COPTION := $(COPTION) /D_ASSERT2
 endif
+ifneq ($(C_CRC32C),)
+ COPTION := $(COPTION) /DC_CRC32C=$(C_CRC32C)
+endif
 ifneq ($(_NAN),)
  COPTION := $(COPTION) /D_NAN
 endif

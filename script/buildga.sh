@@ -9,10 +9,11 @@
 
 set -evx
 CC=${CC-clang}
+_SSE4_2=${_SSE4_2:=1}
 USE_SLEEF=${USE_SLEEF:=1}
 USE_SLEEFQUAD=${USE_SLEEFQUAD:=$USE_SLEEF}
 USE_PYXES=${USE_PYXES:=1}
-export CC USE_SLEEF USE_SLEEFQUAD USE_PYXES
+export CC _SSE4_2 USE_SLEEF USE_SLEEFQUAD USE_PYXES
 
 export jplatform="$1"
 if [ "$1" = "linux" ]; then

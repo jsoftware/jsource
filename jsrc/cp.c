@@ -369,7 +369,7 @@ DF2(jtpowop){F12IP;B b;V*v;
      }else flag=FAV(a)->flag&VNONAME+VNOSELF;     // if u^:_, never allow inplace assignment since we are converging
      // Note: negative powers other than _1 are resolved in the action routine
     }
-#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_VIAVX
     else if(unlikely(n==2)){
      I aid=FAV(a)->id; if(unlikely(aid==CFIT)){cct=FAV(a)->localuse.lu1.cct; aid=FAV(FAV(a)->fgh[0])->id;}
      if(aid==CLESS){  // -.^:2  and -.!.f^:2

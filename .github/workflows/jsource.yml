@@ -1053,6 +1053,7 @@ jobs:
      shell: cmd
      env:
       NASM: ${{github.workspace}}\openssl-asm\nasm
+      _SSE4_2: 1
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
@@ -1297,6 +1298,7 @@ jobs:
       CC: x86_64-w64-mingw32-gcc
       CXX: x86_64-w64-mingw32-g++
       WINDRES: windres
+      _SSE4_2: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0

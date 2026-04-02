@@ -345,6 +345,7 @@ jobs:
      shell: cmd
      env:
       NASM: ${{github.workspace}}\openssl-asm\nasm
+      _SSE4_2: 1
       USE_PYXES: 0
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
@@ -377,6 +378,7 @@ jobs:
      shell: cmd
      env:
       NASM: ${{github.workspace}}\openssl-asm\nasm
+      _SSE4_2: 1
       USE_PYXES: 1
       USE_EMU_AVX: 0
       PTHREADS4WSRC: 1
@@ -409,6 +411,7 @@ jobs:
      shell: cmd
      env:
       NASM: ${{github.workspace}}\openssl-asm\nasm
+      _SSE4_2: 1
       USE_PYXES: 0
       USE_EMU_AVX: 0
       PTHREADS4WSRC: 1

@@ -9,12 +9,8 @@
 #include "vcomp.h"
 
 // platforms with hardware crc32c
-#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_VIAVX
 #include "viavx.h"
-
-#if !(C_AVX2 || EMU_AVX2)
-#error need avx or emulation to work
-#endif
 
 // Routine to allocate sections of the hash tables
 // *hh is the hash table we have selected, p is the number of hash entries we need, asct is the maximum+1 value that needs to be stored in an entry
@@ -458,7 +454,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
 // The return is a CR struct holding max and range+1.  But if the range+1 is > maxrange,
 // we abort and return 0 range.
 // min and max are initial values for min/max
-#if C_AVX2 || EMU_AVX2
+#if 1
 CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  if(unlikely(n==0))goto fail;
  I nqw=(n-1)>>LGNPAR;  // number of full-or-partial widewords-1
@@ -1268,7 +1264,6 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  EPILOG(x);
 }    /* a-.w */
 
-#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
 // x ([ -. -.[!.f]) y.  does not have IRS, supports inplacing on a (the unhashed argument)
 DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  ARGCHK2(a,w);
@@ -1297,7 +1292,6 @@ errexit:;
  if(unlikely(at&BOX)){jtfg=MOVEIPA0(jtfg); PRISTXFERAF(x,a)}  // the boxes in w cannot get to the result, even though their values participate; so pristinity depends entirely on original a
  EPILOG(x);
 }
-#endif
 
 // x e. y
 F2(jteps){F12IP;I l,r;
@@ -1457,4 +1451,4 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,t,wr,*ws,wt;IOCOLFN fn;
  fn(jt,m,c,d,a,w,z,h,ctmask);
  R z;
 }    /* a i."1 &.|:w or a i:"1 &.|:w */
-#endif // C_AVX2
+#endif // C_VIAVX

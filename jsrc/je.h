@@ -70,7 +70,7 @@ extern F1(jtctq);
 extern F1(jtcts);
 extern F1(jtcurtail);
 extern F1(jtcurnameq);
-#if !(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))
+#if !(C_VIAVX)
 extern F1(jtcvt0);
 #endif
 extern F1(jtdbc);
@@ -555,7 +555,7 @@ extern DF2(jtlamin2);
 extern F2(jtlcapco);
 extern F2(jtleft2);
 extern F2(jtless);
-#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_VIAVX
 extern DF2(jtintersect);
 #endif
 extern F2(jtlev);
@@ -808,7 +808,7 @@ extern void*    jvmreservea(I,I);
 extern void*    jvmalloca(I,I);
 extern B        jvmwire(void*,I);
 extern void     jvmunwire(void*,I);
-#if SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
 extern RESTRICTF A jtga0(J,I,I);
 #else
 extern RESTRICTF A jtga0(J,I,I,I);

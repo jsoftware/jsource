@@ -250,7 +250,7 @@ static INLINE I icmpeq(I *x, I *y, I n, __mmask8 em) {
   x+=8;y+=8;
   if(_mm512_cmpneq_epi64_mask(u,v))R 1;)
  R !!_mm512_cmpneq_epi64_mask(_mm512_maskz_loadu_epi64(em,x),_mm512_maskz_loadu_epi64(em,y));}
-#elif C_AVX2 || EMU_AVX2
+#elif 1
 #define COMPSETUP \
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
 #define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)

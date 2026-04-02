@@ -45,7 +45,7 @@ test=: 4 : 0
  yy=: y
  xx=: ~. yy
  assert. (~.y) -: (~. memu y)
- assert. x = (15!:19@~. = 15!:19) memu y
+ assert. ((9!:56'c_viavx') *. x) = (15!:19@~. = 15!:19) memu y
  assert. xx -:&(#@$ ) yy
  assert. xx -:&(}.@$) yy
  assert. xx <:&# yy
@@ -76,7 +76,7 @@ IF64&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chth
 
 NB. compatibility of ~. ~: /.
 test =: 4 : 0
-if. -. IF64 do. 1 return. end.  NB. The 32-bit code has the old bug, plus a crash on u/. with lots of tolerant equals
+if. -. (9!:56'c_viavx') do. 1 return. end.  NB. The 32-bit code has the old bug, plus a crash on u/. with lots of tolerant equals
 assert. (~.y) -: (~. memu y)
 assert. x = (15!:19@~. = 15!:19) memu y
 yy =: y
@@ -104,7 +104,7 @@ test =: {{
 for. i. x do.
  val =: y {~ ((0. 0.5 I. ?0) ?@$ 50) ?@$ #y
  assert. (~.val) -: (~. memu val)
- assert. IF64 = (15!:19@~. = 15!:19) memu val
+ assert. (9!:56'c_viavx') = (15!:19@~. = 15!:19) memu val
 end.
 1
 }}"0 1

@@ -635,6 +635,14 @@ l =: 1000 + i. 100
 r =: (QKTEST{1e6 1e5) ?@$ 0
 (7!:2 'l f0 r') < 0.5 * (7!:2 'l f0 r')
 
+NB. deleting locale removes short caching of the locale
+numloc1=:cocreate''
+('a_',(>numloc1),'_') =: +:
+b =: ('a_',(>numloc1),'_')~
+4 = b 2
+18!:55 numloc1
+'locale error' -: b etx 2
+
 
 
 fp=: ([ C."1 C.) :. ([ C.^:_1"1 C.^:_1)

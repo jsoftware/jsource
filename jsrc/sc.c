@@ -85,7 +85,7 @@ DF2(jtunquote){F12IP;A z;
          // is removed by the next named call
      } // simple names just use the cached value
      goto finlookup; // all caches bypass the check for change of type since that would be the least of our worries
-    }else{ACVCACHEREADUNLOCK FAV(self)->localuse.lu1.cachedlkp=0;}  // timestamp changed, removed cacheability to avoid another miss
+    }else{ACVCACHEREADUNLOCK FAV(self)->localuse.lu1.cachedlkp=0; FAV(self)->localuse.lu0.cachedloc=0;}  // timestamp changed, remove cacheability to avoid another miss, invalidate cached locale
    }
   }
   // here the address was not cached, or the cache was stale.  For namerefs caching we go through here to refetch the value because we need QCNAMEDLOC semantics

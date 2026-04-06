@@ -51,9 +51,6 @@ jobs:
       script/testga.sh linux x86_64 || exit 1
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
-      strip -S j64/jconsole || true
-      strip -S j64/jamalgam || true
-      strip -S j64/*so || true
       ls -l j64
       zip -r l64.zip j64
 
@@ -142,9 +139,6 @@ jobs:
       script/testga.sh linux i386 || exit 1
       cp jlibrary/bin32/* j32 || true
       rm -f j32/profile.ijs
-      strip -S j32/jconsole || true
-      strip -S j32/jamalgam || true
-      strip -S j32/*so || true
       ls -l j32
       zip -r l32.zip j32
 
@@ -265,9 +259,6 @@ jobs:
       rm -rf jlibrary/bin/ios
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
-      strip -S j64/jconsole || true
-      strip -S j64/jamalgam || true
-      strip -S j64/*dylib || true
       ls -l j64
       zip -r m64.zip j64
 
@@ -318,9 +309,6 @@ jobs:
       rm -rf jlibrary/bin/ios
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
-      strip -S j64/jconsole || true
-      strip -S j64/jamalgam || true
-      strip -S j64/*dylib || true
       ls -l j64
       zip -r m64arm.zip j64
 
@@ -370,9 +358,6 @@ jobs:
       script/testga.sh raspberry arm64
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
-      strip -S j64/jconsole || true
-      strip -S j64/jamalgam || true
-      strip -S j64/*so || true
       ls -l j64
       zip -r rpi64.zip j64
 
@@ -412,7 +397,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
@@ -420,14 +405,11 @@ jobs:
      env:
       USE_OPENMP: 0
       USE_PYXES: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/testga.sh raspberry armv6l
       cp jlibrary/bin32/* j32 || true
       rm -f j32/profile.ijs
-      strip -S j32/jconsole || true
-      strip -S j32/jamalgam || true
-      strip -S j32/*so || true
       ls -l j32
       zip -r rpi32.zip j32
 
@@ -475,9 +457,6 @@ jobs:
        script/testga.sh raspberry arm64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
-       strip -S j64/jconsole || true
-       strip -S j64/jamalgam || true
-       strip -S j64/*so || true
        zip -r rpi64.zip j64
        zip rpi64.zip /usr/bin/zip
        zip rpi64.zip /usr/bin/unzip
@@ -540,9 +519,6 @@ jobs:
        find j32 -type f -exec chmod a+rw {} \;
        cp jlibrary/bin32/* j32 || true
        rm -f j32/profile.ijs
-       strip -S j32/jconsole || true
-       strip -S j32/jamalgam || true
-       strip -S j32/*so || true
        zip -r rpi32.zip j32
        rm -rf j32
        mkdir j32
@@ -610,9 +586,6 @@ jobs:
        script/testga.sh openbsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
-       strip -S j64/jconsole || true
-       strip -S j64/jamalgam || true
-       strip -S j64/*so || true
        ls -l j64
        zip -r obsd64.zip j64
        touch jobdone
@@ -675,9 +648,6 @@ jobs:
        script/testga.sh openbsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
-       strip -S j64/jconsole || true
-       strip -S j64/jamalgam || true
-       strip -S j64/*so || true
        ls -l j64
        zip -r obsd64.zip j64
        touch jobdone
@@ -740,9 +710,6 @@ jobs:
        script/buildga.sh openbsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
-       strip -S j64/jconsole || true
-       strip -S j64/jamalgam || true
-       strip -S j64/*so || true
        ls -l j64
        zip -r obsdarm64.zip j64
        touch jobdone
@@ -809,9 +776,6 @@ jobs:
        script/testga.sh freebsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
-       strip -S j64/jconsole || true
-       strip -S j64/jamalgam || true
-       strip -S j64/*so || true
        ls -l j64
        zip -r fbsd64.zip j64
        touch jobdone
@@ -878,9 +842,6 @@ jobs:
        script/testga.sh freebsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
-       strip -S j64/jconsole || true
-       strip -S j64/jamalgam || true
-       strip -S j64/*so || true
        ls -l j64
        zip -r fbsd64.zip j64
        touch jobdone
@@ -949,9 +910,6 @@ jobs:
        script/testga.sh freebsd arm64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
-       strip -S j64/jconsole || true
-       strip -S j64/jamalgam || true
-       strip -S j64/*so || true
        ls -l j64
        zip -r fbsdarm64.zip j64
        touch jobdone

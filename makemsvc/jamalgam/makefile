@@ -49,11 +49,11 @@ ifeq (1,$(USE_OPENMP))
  COPTION := $(COPTION) -Xclang -fopenmp
 # LOPENMP = libomp.lib
  ifeq (arm64,$(TARGET_CPU))
-  LOPENMP = ../openmp/obj/windows/libomparm64.lib
+  LOPENMP = ../openmp/obj/windows/arm64/libomp.lib
  else ifeq (x64,$(TARGET_CPU))
-  LOPENMP = ../openmp/obj/windows/libomp.lib
+  LOPENMP = ../openmp/obj/windows/x64/libomp.lib
  else
-  LOPENMP = ../openmp/obj/windows/libomp32.lib
+  LOPENMP = ../openmp/obj/windows/x86/libomp.lib
  endif
 endif
 ifeq (1,$(USE_PYXES))

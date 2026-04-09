@@ -136,6 +136,18 @@ if [ $USE_OPENMP -eq 1 ]; then
    OPENMP=" -Xpreprocessor -fopenmp -I/usr/local/include "
    LDOPENMP=" -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lomp "
    ;;
+  windows/j32*)
+   OPENMP=" -fopenmp "
+   LDOPENMP = ../openmp/obj/windows/x86/libomp.lib
+   ;;
+  windows/j64arm)
+   OPENMP=" -fopenmp "
+   LDOPENMP = ../openmp/obj/windows/arm64/libomp.lib
+   ;;
+  windows/*)
+   OPENMP=" -fopenmp "
+   LDOPENMP = ../openmp/obj/windows/x64/libomp.lib
+   ;;
   *)
    OPENMP=" -fopenmp "
    LDOPENMP=" -fopenmp "

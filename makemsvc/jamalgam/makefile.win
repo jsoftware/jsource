@@ -56,11 +56,11 @@ COPTION = $(COPTION) /DNORMAH8=0
 COPTION = $(COPTION) -Xclang -fopenmp
 # LOPENMP = libomp.lib
 !if "arm64"=="$(TARGET_CPU)"
-LOPENMP = ../openmp/obj/windows/libomparm64.lib
+LOPENMP = ../openmp/obj/windows/arm64/libomp.lib
 !elseif "x64"=="$(TARGET_CPU)"
-LOPENMP = ../openmp/obj/windows/libomp.lib
+LOPENMP = ../openmp/obj/windows/x64/libomp.lib
 !else
-LOPENMP = ../openmp/obj/windows/libomp32.lib
+LOPENMP = ../openmp/obj/windows/x86/libomp.lib
 !endif
 !endif
 !if "arm64"=="$(TARGET_CPU)"

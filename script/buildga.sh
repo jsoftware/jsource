@@ -7,7 +7,7 @@
 #
 # if !x86_64 skip build avx2 and avx512
 
-set -e
+set -evx
 CC=${CC-clang}
 USE_SLEEF=${USE_SLEEF:=1}
 USE_SLEEFQUAD=${USE_SLEEFQUAD:=$USE_SLEEF}
@@ -122,7 +122,7 @@ elif [ "$1" = "windows" ]; then
   curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
  elif [ "$2" = "i386" ]; then
   cp mpir/windows/x86/mpir.dll $C/mpir32.dll
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $B
+  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
   cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
   cp pthreads4w/bin/pthreadVC3-w32.dll $C
   curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"

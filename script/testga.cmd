@@ -1,5 +1,6 @@
 @rem test windows on github actions
 
+@echo on
 @rem if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip test avx2
 
 echo "%USE_EMU_AVX%"

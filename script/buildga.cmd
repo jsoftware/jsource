@@ -1,11 +1,14 @@
 @rem build windows on github actions
 
+@echo on
 set
 clang-cl --version
 
 @rem if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip build avx2 avx512
 
 powershell -command " Get-ChildItem -Recurse -Filter 'libomp.dll' -File -ErrorAction SilentlyContinue -Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\' "
+powershell -command " Get-ChildItem -Recurse -Filter 'libomp.lib' -File -ErrorAction SilentlyContinue -Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\' "
+powershell -command " Get-ChildItem -Recurse -Filter '*lldb*.*' -File -ErrorAction SilentlyContinue -Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\' "
 
 echo "%USE_EMU_AVX%"
 echo "%USE_PYXES%"
@@ -46,7 +49,7 @@ copy %B%\profile.ijs %C%
 copy pthreads4w\bin\pthreadVC3-w32.dll %C%\pthreadVC3.dll
 copy mpir\windows\x86\mpir.dll %C%\mpir32.dll
 @rem copy openmp\obj\windows\libomp32.dll %C%\libomp32.dll
-copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin\libomp.dll" %B%
+copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin\libomp.dll" %C%
 copy pcre2\windows\x86\jpcre2.dll %A%\tools\regex\jpcre2_32.dll
 curl --output-dir "%C%" -O "https://www.jsoftware.com/download/lapackbin/x86/libopenblas.dll"
 GOTO L01C

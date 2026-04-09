@@ -5,7 +5,7 @@ clang-cl --version
 
 @rem if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip build avx2 avx512
 
-gci -Recurse -Filter "libomp.dll" -File -ErrorAction SilentlyContinue -Path "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\"
+Get-ChildItem -Recurse -Filter "libomp.dll" -File -ErrorAction SilentlyContinue -Path "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\"
 
 echo "%USE_EMU_AVX%"
 echo "%USE_PYXES%"

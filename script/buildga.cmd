@@ -8,7 +8,6 @@ clang-cl --version
 
 powershell -command " Get-ChildItem -Recurse -Filter 'libomp.dll' -File -ErrorAction SilentlyContinue -Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\' "
 powershell -command " Get-ChildItem -Recurse -Filter 'libomp.lib' -File -ErrorAction SilentlyContinue -Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\' "
-powershell -command " Get-ChildItem -Recurse -Filter '*lldb*.*' -File -ErrorAction SilentlyContinue -Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\' "
 
 echo "%USE_EMU_AVX%"
 echo "%USE_PYXES%"
@@ -38,6 +37,7 @@ copy pthreads4w\bin\pthreadVC3.dll %B%
 copy mpir\windows\x64\mpir.dll %B%
 @rem copy openmp\obj\windows\libomp.dll %B%
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\libomp.dll" %B%
+copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\lib\libomp.lib" %B%
 copy pcre2\windows\x64\jpcre2.dll %A%\tools\regex\.
 curl --output-dir "%B%" -O "https://www.jsoftware.com/download/lapackbin/x64/libopenblas.dll"
 GOTO L01C
@@ -50,6 +50,7 @@ copy pthreads4w\bin\pthreadVC3-w32.dll %C%\pthreadVC3.dll
 copy mpir\windows\x86\mpir.dll %C%\mpir32.dll
 @rem copy openmp\obj\windows\libomp32.dll %C%\libomp32.dll
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin\libomp.dll" %C%
+copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\lib\libomp.lib" %C%
 copy pcre2\windows\x86\jpcre2.dll %A%\tools\regex\jpcre2_32.dll
 curl --output-dir "%C%" -O "https://www.jsoftware.com/download/lapackbin/x86/libopenblas.dll"
 GOTO L01C
@@ -60,6 +61,7 @@ copy pthreads4w\bin\pthreadVC3-arm64.dll %B%\pthreadVC3.dll
 copy mpir\windows\arm64\mpir.dll %B%
 @rem copy openmp\obj\windows\libomp.dll %B%
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\ARM64\bin\libomp.dll" %B%
+copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\ARM64\lib\libomp.lib" %B%
 copy pcre2\windows\arm64\jpcre2.dll %A%\tools\regex\jpcre2_arm64.dll
 curl --output-dir "%B%" -O "https://www.jsoftware.com/download/lapackbin/arm64/libopenblas.dll"
 :L01C

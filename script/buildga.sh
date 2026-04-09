@@ -117,18 +117,21 @@ elif [ "$1" = "windows" ]; then
  if [ "$2" = "x86_64" ]; then
   cp mpir/windows/x64/mpir.dll $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/bin/libomp.dll" $B
+  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/lib/libomp.lib" $B
   cp pcre2/windows/x64/jpcre2.dll $A/tools/regex/.
   cp pthreads4w/bin/pthreadVC3.dll $B
   curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
  elif [ "$2" = "i386" ]; then
   cp mpir/windows/x86/mpir.dll $C/mpir32.dll
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
+  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C
   cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
   cp pthreads4w/bin/pthreadVC3-w32.dll $C
   curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
  else
   cp mpir/windows/arm64/mpir.dll $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B
+  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/lib/libomp.lib" $B
   cp pcre2/windows/arm64/jpcre2.dll $A/tools/regex/jpcre2_arm64.dll
   cp pthreads4w/bin/pthreadVC3-arm64.dll $B
   curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"

@@ -33,7 +33,7 @@ mkdir j64
 mkdir bin\windows\j64
 mkdir bin\windows\j64avx2
 mkdir bin\windows\j64avx512
-copy pthreads4w\x64\pthreadVC3.dll %B%
+@rem copy pthreads4w\x64\pthreadVC3.dll %B%
 copy mpir\windows\x64\mpir.dll %B%
 @rem copy openmp\obj\windows\x64\libomp.dll %B%
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\libomp.dll" %B%
@@ -46,7 +46,7 @@ mkdir j32
 mkdir %C%
 mkdir bin\windows\j32
 copy %B%\profile.ijs %C%
-copy pthreads4w\x86\pthreadVC3.dll %C%\pthreadVC3.dll
+@rem copy pthreads4w\x86\pthreadVC3.dll %C%\pthreadVC3.dll
 copy mpir\windows\x86\mpir.dll %C%\mpir32.dll
 @rem copy openmp\obj\windows\x86\libomp.dll %C%
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin\libomp.dll" %C%
@@ -57,7 +57,7 @@ GOTO L01C
 :L01B
 mkdir j64
 mkdir bin\windows\j64arm
-copy pthreads4w\arm64\pthreadVC3.dll %B%\pthreadVC3.dll
+@rem copy pthreads4w\arm64\pthreadVC3.dll %B%\pthreadVC3.dll
 copy mpir\windows\arm64\mpir.dll %B%
 @rem copy openmp\obj\windows\arm64\libomp.dll %B%
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\ARM64\bin\libomp.dll" %B%

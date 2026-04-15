@@ -29,6 +29,8 @@ test*.txt
 *.exp
 *.res
 *.exe
+*.dll
+*.lib
 .vs
 **/.vs/**
 
@@ -72,6 +74,5 @@ jlibrary/
 
 # misc
 jsrc/toc.txt
-pthreads4w/src/
 makemsvc/jdll/*.asm
 makemsvc/jamalgam/*.asm

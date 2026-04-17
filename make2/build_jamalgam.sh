@@ -271,15 +271,27 @@ if [ $USE_PYXES -eq 1 ]; then
  case "$jplatform/$j64x" in
   windows/j32*)
    common="$common -DPYXES=1 -I../pthreads4w/include"
-   LDTHREAD=" ../pthreads4w/lib/pthreadVC3-w32.lib "
+   if [ -n "$PTHREADS4WSRC" ]; then
+    OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
+   else
+    LDTHREAD=" ../pthreads4w/lib/pthreadVC3-w32.lib "
+   fi
    ;;
   windows/j64arm)
    common="$common -DPYXES=1 -I../pthreads4w/include"
-   LDTHREAD=" ../pthreads4w/lib/pthreadVC3-arm64.lib "
+   if [ -n "$PTHREADS4WSRC" ]; then
+    OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
+   else
+    LDTHREAD=" ../pthreads4w/lib/pthreadVC3-arm64.lib "
+   fi
    ;;
   windows/*)
    common="$common -DPYXES=1 -I../pthreads4w/include"
-   LDTHREAD=" ../pthreads4w/lib/pthreadVC3.lib "
+   if [ -n "$PTHREADS4WSRC" ]; then
+    OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
+   else
+    LDTHREAD=" ../pthreads4w/lib/pthreadVC3.lib "
+   fi
    ;;
   *)
    common="$common -DPYXES=1"
@@ -560,6 +572,7 @@ case "$jplatform/$j64x" in
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   NASM_FLAGS="$NASM_FLAGS -felf64"
   GASM_FLAGS=""
@@ -638,6 +651,7 @@ case "$jplatform/$j64x" in
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   NASM_FLAGS="$NASM_FLAGS -felf64"
   GASM_FLAGS=""
@@ -697,6 +711,7 @@ case "$jplatform/$j64x" in
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_LINUXAVX512}"
   NASM_FLAGS="$NASM_FLAGS -felf64"
   GASM_FLAGS=""
@@ -742,6 +757,7 @@ case "$jplatform/$j64x" in
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
+  OBJS_SIMDUTF8="${OBJS_SIMDUTF8_ASM}"
   SRC_ASM="${SRC_ASM_MAC}"
   NASM_FLAGS="$NASM_FLAGS -felf64"
   GASM_FLAGS="$macmin"
@@ -970,7 +986,7 @@ if [ ! -f ../jsrc/jversion.h ]; then
 fi
 
 mkdir -p ../bin/$jplatform/$j64x
-export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM OBJSLN jplatform j64x
+export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_PTHREADS4 WOBJS_ASM SRC_ASM OBJSLN jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
   par=$(nproc)

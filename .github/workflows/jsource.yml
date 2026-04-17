@@ -14,9 +14,20 @@ on:
 
 jobs:
 
+# to run all jobs, enable all
+# for selected jobs, disable all and disable the selected needs
+
+ all:
+  #if: false
+  if: true
+  runs-on: ubuntu-latest
+  steps:
+    - run: echo "Runall jobs"
+
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)
+  needs: all
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -73,6 +84,7 @@ jobs:
 # linux gcc ------------------------------------------------------------
  jelinux-gcc:
   name: JE (Linux gcc)
+  needs: all
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
@@ -108,6 +120,7 @@ jobs:
 # linux32 --------------------------------------------------------------
  jelinux32:
   name: JE (Linux32)
+  needs: all
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -161,6 +174,7 @@ jobs:
 # linux32 gcc ----------------------------------------------------------
  jelinux32-gcc:
   name: JE (Linux32 gcc)
+  needs: all
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -196,6 +210,7 @@ jobs:
 # linux debug ----------------------------------------------------------
  jelinuxd:
   name: JE (Linux debug)
+  needs: all
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
@@ -231,6 +246,7 @@ jobs:
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)
+  needs: all
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
@@ -281,6 +297,7 @@ jobs:
 # macOS arm64 ----------------------------------------------------------
  jemacosarm:
   name: JE (macOS arm64)
+  needs: all
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
@@ -331,6 +348,7 @@ jobs:
 # rpi64arm -------------------------------------------------------------
  jerpi64arm:
   name: JE (Linux arm64)
+  needs: all
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -380,6 +398,7 @@ jobs:
 # rpi32arm -------------------------------------------------------------
  jerpi32arm:
   name: JE (Linux arm32)
+  needs: all
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -432,6 +451,7 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
+  needs: all
   if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
@@ -491,6 +511,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
+  needs: all
   if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
@@ -551,6 +572,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd:
   name: JE (OpenBSD vmactions)
+  needs: all
   if: ${{ false }}
   runs-on: macos-15-intel
   steps:
@@ -613,6 +635,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
+  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -676,6 +699,7 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
+  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -737,6 +761,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD vmactions)
+  needs: all
   if: ${{ false }}
   runs-on: macos-15-intel
   steps:
@@ -803,6 +828,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
+  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -870,6 +896,7 @@ jobs:
 # freebsdarm64  --------------------------------------------------------------
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
+  needs: all
 #  runs-on: ubuntu-24.04-arm
   runs-on: ubuntu-latest
   steps:
@@ -937,6 +964,7 @@ jobs:
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
+  needs: all
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
@@ -972,6 +1000,7 @@ jobs:
 # wasm -----------------------------------------------------------------
  jewasm:
   name: JE (wasm)
+  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -1009,6 +1038,7 @@ jobs:
 # windows --------------------------------------------------------------
  jewin:
   name: JE (Windows)
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1063,6 +1093,7 @@ jobs:
 # windows 32bit --------------------------------------------------------
  jewin32:
   name: JE (Windows 32)
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1117,6 +1148,7 @@ jobs:
 # windows arm64 old ----------------------------------------------------
  jewinarm64old:
   name: JE (Windows arm64 old)
+  needs: all
   if: ${{ false }}
   runs-on: windows-2022
   steps:
@@ -1172,6 +1204,7 @@ jobs:
 # windows arm64 --------------------------------------------------------
  jewinarm64:
   name: JE (Windows arm64)
+  needs: all
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
@@ -1237,6 +1270,7 @@ jobs:
 # windows msys2 x64 ----------------------------------------------------
  jewin-msys2-x64:
   name: JE (Windows MSYS2 x64)
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1297,6 +1331,7 @@ jobs:
 # windows msys2 x86 ----------------------------------------------------
  jewin-msys2-x86:
   name: JE (Windows MSYS2 x86)
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1357,6 +1392,7 @@ jobs:
 # windows msys2 arm64 --------------------------------------------------
  jewin-msys2-arm64:
   name: JE (Windows MSYS2 arm64)
+  needs: all
   if: ${{ false }}
   runs-on: windows-11-arm
   steps:

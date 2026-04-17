@@ -1,7 +1,7 @@
 cocurrent <'z'
 3 : 0 ''
 
-JLIB=: '9.7.11'
+JLIB=: '9.7.16'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -54,7 +54,7 @@ if. notdef 'RUNJSCRIPT' do.
   RUNJSCRIPT=: 0
 end.
 if. notdef 'IFRASPI' do.
-  if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
+  if. ((<UNAME)e.<'Linux') do.
     IFRASPI=: (<9!:56'cpu') e. 'arm';'arm64'
   else.
     IFRASPI=: 0

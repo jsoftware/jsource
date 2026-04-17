@@ -14,10 +14,19 @@ on:
 
 jobs:
 
+# to run all jobs, enable all
+# for selected jobs, disable all and disable the selected needs
+
+ all:
+  if: false
+  #if: true
+  runs-on: ubuntu-latest
+  steps:
+    - run: echo "Runall jobs"
+
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)
-  if: ${{ false }}
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
@@ -55,7 +64,6 @@ jobs:
 # linux32 --------------------------------------------------------------
  jelinux32:
   name: JE (Linux32)
-  if: ${{ false }}
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -96,7 +104,6 @@ jobs:
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)
-  if: ${{ false }}
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
@@ -128,7 +135,6 @@ jobs:
 # macOS arm64 ----------------------------------------------------------
  jemacosarm:
   name: JE (macOS arm64)
-  if: ${{ false }}
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
@@ -160,7 +166,6 @@ jobs:
 # rpi64arm -------------------------------------------------------------
  jerpi64arm:
   name: JE (Linux arm64)
-  if: ${{ false }}
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -194,7 +199,6 @@ jobs:
 # rpi32arm -------------------------------------------------------------
  jerpi32arm:
   name: JE (Linux arm32)
-  if: ${{ false }}
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -229,7 +233,6 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -277,7 +280,6 @@ jobs:
 # freebsdarm64 ---------------------------------------------------------------
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
-  if: ${{ false }}
 #  runs-on: ubuntu-24.04-arm
   runs-on: ubuntu-latest
   steps:
@@ -326,7 +328,6 @@ jobs:
 # wasm -----------------------------------------------------------------
  jewasm:
   name: JE (wasm)
-  if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -350,7 +351,6 @@ jobs:
 # windows --------------------------------------------------------------
  jewin:
   name: JE (Windows)
-  if: ${{ false }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -382,7 +382,6 @@ jobs:
 # windows 32bit --------------------------------------------------------
  jewin32:
   name: JE (Windows 32)
-  if: ${{ false }}
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -415,7 +414,6 @@ jobs:
 # windows arm64 --------------------------------------------------------
  jewinarm64:
   name: JE (Windows arm64)
-  if: ${{ false }}
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository

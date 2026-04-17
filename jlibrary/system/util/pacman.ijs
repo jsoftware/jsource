@@ -936,6 +936,11 @@ echo LF,'ALL DONE!',LF,'exit this J session and start new session with double cl
 i.0 0
 )
 shortcut=: 3 : 0
+if. ''-:y do.
+ shortcut each 'jc';'jqt';'jhs';'jbreak'
+ i.0 0
+ return.
+end.
 if. ((<UNAME)e.'OpenBSD';'FreeBSD') do. uname=. 'Linux' else. uname=. UNAME end.
 try. ".uname,' y' catchd. echo 'create ',y,' launch icon failed' end.
 )
@@ -966,6 +971,8 @@ Winx y
 
 Winx=: 3 : 0
 select. y
+case.'jbreak' do.
+  win'jbreak' ;'jbreak.bat';'jyellow.ico';LIB
 case.'jc' do.
   win'jc' ;'jconsole';'jgray.ico';LIB
 case. 'jhs' do.
@@ -1107,6 +1114,8 @@ Darwinx y
 
 Darwinx=: 3 : 0
 select. y
+case.'jbreak' do.
+  darwin'jbreak' ;'jbrk';'jyellow.png';LIB
 case.'jc' do.
   darwin'jc' ;'jconsole';'jgray.icns';LIB
 case. 'jhs' do.
@@ -1124,6 +1133,8 @@ n=. type,N
 f=. L,type,N,DS
 c=. hostpathsep jpath '~bin/',bin
 select. type
+case. 'jbreak' do.
+  r=. '#!/bin/sh',LF,'"',c,'.command" ',LIB
 case.'jc' do.
   r=. new_launch rplc '<COM>';COM;'<C>';(hostpathsep jpath '~bin/jconsole');'<A>';LIB
 case. 'jhs' do.
@@ -1706,25 +1717,27 @@ do_getqtbin=: 3 : 0
 
 bin=. 'JQt ',(((y-:'slim')#'slim ')),'binaries.'
 
+slim=. (y-:'slim')#'-slim'
+
 suffix=. IFUNIX{::'dll';('Darwin'-:UNAME){::'so';'dylib'
 vsuffix=. IFUNIX{::(JQTVERSION,'.dll');('Darwin'-:UNAME){::('so.',JQTVERSION);(JQTVERSION,'.dylib')
 smoutput 'Installing ',bin,'..'
 
 if. ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') do.
   if. IFRASPI do.
-    z=. 'jqt-raspberry',((-.IF64)#'-arm32'),((y-:'slim')#'-slim'),'.tar.gz'
+    z=. 'jqt-raspberry',((-.IF64)#'-arm32'),slim,'.tar.gz'
   else.
-    z=. 'jqt-',(tolower UNAME),(('arm64'-:9!:56'cpu')#'-arm64'),((y-:'slim')#'-slim'),'.tar.gz'
+    z=. 'jqt-',(tolower UNAME),(('arm64'-:9!:56'cpu')#'-arm64'),slim,'.tar.gz'
   end.
   z1=. 'libjqt.',suffix
 elseif. IFWA64 do.
-  z=. 'jqt-win-arm64-slim.zip'
+  z=. 'jqt-win-arm64',slim,'.zip'
   z1=. 'jqt.',suffix
 elseif. IFWIN do.
-  z=. 'jqt-win',((y-:'slim')#'-slim'),'.zip'
+  z=. 'jqt-win',slim,'.zip'
   z1=. 'jqt.',suffix
 elseif. do.
-  z=. 'jqt-mac',((y-:'slim')#'-slim'),'.zip'
+  z=. 'jqt-mac',slim,'.zip'
   z1=. 'libjqt.',suffix
 end.
 
@@ -1783,11 +1796,15 @@ smoutput 'Installing Qt library...'
 if. IFWA64 do.
   z=. 'qt610-win-arm64-slim.zip'
 elseif. linux do.
-  z=. 'qt610-linux',((y-:'slim')#'-slim'),'.tar.gz'
+  if. IFRASPI do.
+    z=. 'qt610-raspi',slim,'.tar.gz'
+  else.
+    z=. 'qt610-linux',slim,'.tar.gz'
+  end.
 elseif. IFWIN do.
-  z=. 'qt610-win',((y-:'slim')#'-slim'),'.zip'
+  z=. 'qt610-win',slim,'.zip'
 elseif. do.
-  z=. 'qt610-mac',((y-:'slim')#'-slim'),'.zip'
+  z=. 'qt610-mac',slim,'.zip'
 end.
 'rc p'=. httpget_jpacman_ www,'/qtlib/',z
 if. rc do.

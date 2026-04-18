@@ -279,7 +279,7 @@ if [ $USE_PYXES -eq 1 ]; then
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else
-    LDTHREAD=" ../pthreads4w/lib/pthreadVC3-w32.lib "
+    LDTHREAD=" ../pthreads4w/x86/pthreadVC3.lib "
    fi
    ;;
   windows/j64arm)
@@ -287,7 +287,7 @@ if [ $USE_PYXES -eq 1 ]; then
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else
-    LDTHREAD=" ../pthreads4w/lib/pthreadVC3-arm64.lib "
+    LDTHREAD=" ../pthreads4w/arm64/pthreadVC3.lib "
    fi
    ;;
   windows/*)
@@ -295,7 +295,7 @@ if [ $USE_PYXES -eq 1 ]; then
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else
-    LDTHREAD=" ../pthreads4w/lib/pthreadVC3.lib "
+    LDTHREAD=" ../pthreads4w/x64/pthreadVC3.lib "
    fi
    ;;
   *)

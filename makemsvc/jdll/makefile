@@ -30,19 +30,19 @@ ifeq (1,$(USE_PYXES))
   ifneq ($(PTHREADS4WSRC),)
    OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
   else
-   PTHREADLIB = ../pthreads4w/lib/pthreadVC3-arm64.lib
+   PTHREADLIB = ../pthreads4w/arm64/pthreadVC3.lib
   endif
  else ifeq (x64,$(TARGET_CPU))
   ifneq ($(PTHREADS4WSRC),)
    OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
   else
-   PTHREADLIB = ../pthreads4w/lib/pthreadVC3.lib
+   PTHREADLIB = ../pthreads4w/x64/pthreadVC3.lib
   endif
  else
   ifneq ($(PTHREADS4WSRC),)
    OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
   else
-   PTHREADLIB = ../pthreads4w/lib/pthreadVC3-w32.lib
+   PTHREADLIB = ../pthreads4w/x86/pthreadVC3.lib
   endif
  endif
  CINCLUDE := $(CINCLUDE) -I../pthreads4w/include

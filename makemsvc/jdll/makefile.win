@@ -27,19 +27,19 @@ LDEBUG = /DEBUG
 CINCLUDE = -I../mpir/include
 !if "1"=="$(USE_PYXES)"
 !if "arm64"=="$(TARGET_CPU)"
-!if ""!="$(PTHREADS4WSRC)")"
+!if ""!="$(PTHREADS4WSRC)"
 OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
 !else
 PTHREADLIB = ../pthreads4w/lib/pthreadVC3-arm64.lib
 !endif
 !elseif "x64"=="$(TARGET_CPU)"
-!if ""!="$(PTHREADS4WSRC)")"
+!if ""!="$(PTHREADS4WSRC)"
 OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
 !else
 PTHREADLIB = ../pthreads4w/lib/pthreadVC3.lib
 !endif
 !else
-!if ""!="$(PTHREADS4WSRC)")"
+!if ""!="$(PTHREADS4WSRC)"
 OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
 !else
 PTHREADLIB = ../pthreads4w/lib/pthreadVC3-w32.lib

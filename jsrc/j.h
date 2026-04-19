@@ -874,11 +874,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 
 #if PYXES
-#if _WIN32
-#define YIELD Sleep(0);  // if we are spinning on other threads, give them a chance to run in case they might be on this core
-#else
 #define YIELD sched_yield();  // if we are spinning on other threads, give them a chance to run in case they might be on this core
-#endif
 #define REPATGCLIM 0x100000   // When this many bytes have been repatriated to a thread, call a GC in that thread
 #define REPATOLIM (REPATGCLIM/32) // When an outgoing repatriation queue contains this many bytes, flush it
 #else

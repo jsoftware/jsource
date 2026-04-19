@@ -1393,7 +1393,6 @@ jobs:
  jewin-msys2-arm64:
   name: JE (Windows MSYS2 arm64)
   needs: all
-  if: ${{ false }}
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository

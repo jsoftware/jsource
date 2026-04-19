@@ -44,7 +44,7 @@ echo 'avx512bw: ',":9!:56'avx512bw'
 echo 'avx512vbmi: ',":9!:56'avx512vbmi'
 echo 'avx512vbmi2: ',":9!:56'avx512vbmi2'
 
-3 : 0^:(9!:56'pyxes') ''
+3 : 0^:(IFWA64<9!:56'pyxes') ''
 echo 9!:56 'supportaffinity'
 echo n=. <: <.2^9!:56'cores'
 try. echo 22 T. 0 catch. echo 'get affinity error' end.

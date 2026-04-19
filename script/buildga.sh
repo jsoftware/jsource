@@ -126,14 +126,14 @@ elif [ "$1" = "windows" ]; then
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C
   cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
-  cp pthreads4w/x86/pthreadVC3.dll $C/pthreadVC3-w32.dll
+  cp pthreads4w/x86/pthreadVC3.dll $C
   curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
  else
   cp mpir/windows/arm64/mpir.dll $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/lib/libomp.lib" $B
   cp pcre2/windows/arm64/jpcre2.dll $A/tools/regex/jpcre2_arm64.dll
-  cp pthreads4w/arm64/pthreadVC3.dll $B/pthreadVC3-arm64.dll
+  cp pthreads4w/arm64/pthreadVC3.dll $B
   curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
  fi
 fi

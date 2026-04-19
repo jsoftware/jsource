@@ -269,7 +269,7 @@ if [ $m64 -eq 1 ]; then
   fi
  fi
 
- if [ "$USE_PYXES" = "1" ] && [ "$USE_EMU_AVX" = "1" ] && ([ "$2" = "x86_64" ] || [ "$1" = "darwin" ] || [ "$1" = "windows" ]); then
+ if [ "$USE_PYXES" = "1" ] && [ "$USE_EMU_AVX" = "1" ] && ([ "$2" = "x86_64" ] || [ "$1" = "darwin" ]); then
   ./clean.sh
   j64x=j64avx2 ./build_libj.sh
   ./clean.sh

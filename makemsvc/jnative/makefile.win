@@ -55,6 +55,6 @@ noclean:
 	#
 
 clean:
-	erase /q andjnative.o jeload.o
+	del /f /q andjnative.o jeload.o
 
 .PHONY: all clean noclean

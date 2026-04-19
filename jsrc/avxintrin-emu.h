@@ -168,7 +168,7 @@ extern "C" {
  * This is an emulation of Intel AVX
  */
 
-#if defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#if defined( MMSC_VER ) || defined( __INTEL_COMPILER )
     #define __EMU_M256_ALIGN( a ) __declspec(align(a))
     #define __emu_inline          __forceinline
     #define __emu_int64_t         __int64

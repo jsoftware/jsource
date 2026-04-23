@@ -1927,6 +1927,8 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #undef _mm256_div_pd
 #undef _mm256_div_ps
 #undef _mm256_dp_ps
+#undef _mm256_floor_pd
+#undef _mm256_floor_ps
 #undef _mm256_hadd_pd
 #undef _mm256_hadd_ps
 #undef _mm256_hsub_pd

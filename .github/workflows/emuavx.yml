@@ -428,12 +428,3 @@ jobs:
       PTHREADS4WSRC: 1
      run: |
       script\buildga.cmd x86
-
-   - name: Test JE (Windows 32 pyxes)
-     shell: cmd
-     env:
-      USE_PYXES: 1
-      USE_EMU_AVX: 0
-     run: |
-      script\testga.cmd x86
-

@@ -2868,7 +2868,11 @@ static INLINE void aligned_free(void *ptr) {
   #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
 
 #else   // we use CRC32 for fast hashing; if not fast, we'll do it another way
+#if defined(_WIN64)||defined(__LP64__)
   extern uint64_t crc32csb8(uint64_t crc, uint64_t value);
+#else
+  extern uint32_t crc32csb8(uint32_t crc, uint64_t value);
+#endif
   extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
   #define CRC32(x,y)  crc32csb4(x,y) // returns UI4
   #define CRC32L(x,y) crc32csb8(x,y) // returns UI

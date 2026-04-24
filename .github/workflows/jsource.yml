@@ -508,12 +508,11 @@ jobs:
       path: testrpi64.txt
       overwrite: true
 
-# rpi32 ----------------------------------------------------------------
- jerpi32:
+# rpi32a ----------------------------------------------------------------
+ jerpi32a:
   name: JE (Raspberry32)
   needs: all
-  if: ${{ false }}
-  runs-on: ubuntu-latest
+  runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -976,6 +975,7 @@ jobs:
      uses: vmactions/freebsd-vm@v1
      with:
       arch: aarch64
+      release: "14.4"
       usesh: true
       sync: sshfs
       prepare: |

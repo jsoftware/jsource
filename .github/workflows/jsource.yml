@@ -894,12 +894,13 @@ jobs:
       path: testfreebsd.txt
       overwrite: true
 
-# freebsdarm64  --------------------------------------------------------------
- jefreebsdarm64:
+# freebsdarm64a --------------------------------------------------------------
+ jefreebsdarm64a:
   name: JE (FreeBSD arm64)
+  if: ${{ false }}
   needs: all
-  runs-on: ubuntu-24.04-arm
-  #runs-on: ubuntu-latest
+  #runs-on: ubuntu-24.04-arm
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -929,6 +930,73 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
+       export CC=clang
+       export USE_SLEEF=1
+       export USE_OPENMP=0
+       export USE_PYXES=1
+       export USE_EMU_AVX=1
+       script/buildga.sh freebsd arm64 || exit 1
+       script/testga.sh freebsd arm64
+       cp jlibrary/bin/* j64 || true
+       rm -f j64/profile.ijs
+       ls -l j64
+       zip -r fbsdarm64.zip j64
+       touch jobdone
+
+   - name: Check Status (FreeBSD arm64)
+     run: |
+      test -f jobdone || exit 1
+
+   - name: Release JE (FreeBSD arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "fbsdarm64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (FreeBSD arm64)
+     uses: actions/upload-artifact@v4
+     with:
+      name: dist
+      path: testfreebsdarm64.txt
+      overwrite: true
+
+# freebsdarm64 --------------------------------------------------------------
+ jefreebsdarm64:
+  name: JE (FreeBSD arm64 vmactions)
+  needs: all
+  runs-on: macos-15
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Build, Test JE (FreeBSD arm64)
+     uses: vmactions/freebsd-vm@v1
+     with:
+      arch: aarch64
+      usesh: true
+      sync: sshfs
+      prepare: |
+       pkg upgrade -y
+       rdate time.cloudflare.com || true
+       pkg search openblas 1>&2
+       pkg install -y curl zip find gmake nasm pcre2 gdb openblas
+       find / -type f -name 'liblapack.so*' 1>&2
+       find / -type f -name 'libopenblas.so*' 1>&2
+       /sbin/ldconfig -r
+
+      run: |
+       rm -f jobdone
+       /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       echo "Host *" >>~/.ssh/config || true
+       echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       cat ~/.ssh/config || true
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0

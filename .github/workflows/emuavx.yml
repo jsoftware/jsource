@@ -405,3 +405,35 @@ jobs:
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
+# windows 32bit no pyxes -----------------------------------------------
+ jewin32pyx1:
+  name: JE (Windows 32 pyxes)
+  needs: all
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows 32 pyxes)
+     uses: ilammy/msvc-dev-cmd@v1
+     with:
+      arch: x86
+
+   - name: Build JE (Windows 32 pyxes)
+     shell: cmd
+     env:
+      NASM: ${{github.workspace}}\openssl-asm\nasm
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
+      PTHREADS4WSRC: 1
+     run: |
+      script\buildga.cmd x86
+
+   - name: Test JE (Windows 32 pyxes)
+     shell: cmd
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 0
+     run: |
+      script\testga.cmd x86
+

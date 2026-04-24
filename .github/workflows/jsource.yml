@@ -700,7 +700,8 @@ jobs:
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
   needs: all
-  runs-on: ubuntu-latest
+  #runs-on: ubuntu-latest
+  runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4

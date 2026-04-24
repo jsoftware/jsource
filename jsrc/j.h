@@ -869,21 +869,21 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // static global initializer
 #if NORMAHX==1
-#define Xrh0 {0},
+#define Xrh0 0,
 #elif NORMAHX==2
-#define Xrh0 {0,0},
+#define Xrh0 0,0,
 #elif NORMAHX==3
-#define Xrh0 {0,0,0},
+#define Xrh0 0,0,0,
 #elif NORMAHX==4
-#define Xrh0 {0,0,0,0},
+#define Xrh0 0,0,0,0,
 #elif NORMAHX==5
-#define Xrh0 {0,0,0,0,0},
+#define Xrh0 0,0,0,0,0,
 #elif NORMAHX==6
-#define Xrh0 {0,0,0,0,0,0},
+#define Xrh0 0,0,0,0,0,0,
 #elif NORMAHX==7
-#define Xrh0 {0,0,0,0,0,0,0},
+#define Xrh0 0,0,0,0,0,0,0,
 #elif NORMAHX==8
-#define Xrh0 {0,0,0,0,0,0,0,0},
+#define Xrh0 0,0,0,0,0,0,0,0,
 #else
 #define Xrh0
 #endif
@@ -929,6 +929,27 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 #else
 #define Xrh1
+#endif
+
+// static global initializer
+#if NORMAHX==1
+#define Xrh2 {0},
+#elif NORMAHX==2
+#define Xrh2 {0,0},
+#elif NORMAHX==3
+#define Xrh2 {0,0,0},
+#elif NORMAHX==4
+#define Xrh2 {0,0,0,0},
+#elif NORMAHX==5
+#define Xrh2 {0,0,0,0,0},
+#elif NORMAHX==6
+#define Xrh2 {0,0,0,0,0,0},
+#elif NORMAHX==7
+#define Xrh2 {0,0,0,0,0,0,0},
+#elif NORMAHX==8
+#define Xrh2 {0,0,0,0,0,0,0,0},
+#else
+#define Xrh2
 #endif
 
 // if we are not multithreading, report the master thread only

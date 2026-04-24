@@ -508,11 +508,12 @@ jobs:
       path: testrpi64.txt
       overwrite: true
 
-# rpi32a ----------------------------------------------------------------
- jerpi32a:
+# rpi32 ----------------------------------------------------------------
+ jerpi32:
   name: JE (Raspberry32)
+  if: ${{ false }}
   needs: all
-  runs-on: ubuntu-24.04-arm
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -893,10 +894,9 @@ jobs:
       path: testfreebsd.txt
       overwrite: true
 
-# freebsdarm64a --------------------------------------------------------------
- jefreebsdarm64a:
+# freebsdarm64 --------------------------------------------------------------
+ jefreebsdarm64:
   name: JE (FreeBSD arm64)
-  if: ${{ false }}
   needs: all
   #runs-on: ubuntu-24.04-arm
   runs-on: ubuntu-latest
@@ -962,9 +962,10 @@ jobs:
       path: testfreebsdarm64.txt
       overwrite: true
 
-# freebsdarm64 --------------------------------------------------------------
- jefreebsdarm64:
+# freebsdarm64a --------------------------------------------------------------
+ jefreebsdarm64a:
   name: JE (FreeBSD arm64 vmactions)
+  if: ${{ false }}
   needs: all
   runs-on: macos-15
   steps:
@@ -975,7 +976,6 @@ jobs:
      uses: vmactions/freebsd-vm@v1
      with:
       arch: aarch64
-      release: "14.4"
       usesh: true
       sync: sshfs
       prepare: |

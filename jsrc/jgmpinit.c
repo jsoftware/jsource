@@ -47,7 +47,7 @@ void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
 
 #define XFIXED0(nam, typ,val) \
  struct AD __attribute__((aligned(ABDY))) B##nam= \
- {Xrh0 AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,(I)val}; \
+ {Xrh1 AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,(I)val}; \
  X nam= (X)&B##nam
 
 /* like struct AD but a data element */
@@ -80,7 +80,7 @@ struct BDV1 {
 
 #define XFIXED1(nam, typ,sgn,val) \
  struct BDV1 __attribute__((aligned(ABDY))) B##nam= \
- {Xrh0 XHSZ,typ,0,typ,ACPERMANENT,1,Xrh,sgn,(UI)val}; \
+ {Xrh1 XHSZ,typ,0,typ,ACPERMANENT,1,Xrh,sgn,(UI)val}; \
  X nam= (X)&B##nam
 
 XFIXED1(X_1,LIT,-1,1);  // _1x (not an array)

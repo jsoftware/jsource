@@ -867,24 +867,68 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #error NORMAHX only supports 0 .. 8
 #endif
 
+// static global initializer
 #if NORMAHX==1
-#define Xrh0 0,
+#define Xrh0 {0},
 #elif NORMAHX==2
-#define Xrh0 0,0,
+#define Xrh0 {0,0},
 #elif NORMAHX==3
-#define Xrh0 0,0,0,
+#define Xrh0 {0,0,0},
 #elif NORMAHX==4
-#define Xrh0 0,0,0,0,
+#define Xrh0 {0,0,0,0},
 #elif NORMAHX==5
-#define Xrh0 0,0,0,0,0,
+#define Xrh0 {0,0,0,0,0},
 #elif NORMAHX==6
-#define Xrh0 0,0,0,0,0,0,
+#define Xrh0 {0,0,0,0,0,0},
 #elif NORMAHX==7
-#define Xrh0 0,0,0,0,0,0,0,
+#define Xrh0 {0,0,0,0,0,0,0},
 #elif NORMAHX==8
-#define Xrh0 0,0,0,0,0,0,0,0,
+#define Xrh0 {0,0,0,0,0,0,0,0},
 #else
 #define Xrh0
+#endif
+
+// for struct AD initializer
+#if NORMAHX
+#if SY_64 || !PYXES
+#if NORMAHX==1
+#define Xrh1 {0},
+#elif NORMAHX==2
+#define Xrh1 {0,0},
+#elif NORMAHX==3
+#define Xrh1 {0,0,0},
+#elif NORMAHX==4
+#define Xrh1 {0,0,0,0},
+#elif NORMAHX==5
+#define Xrh1 {0,0,0,0,0},
+#elif NORMAHX==6
+#define Xrh1 {0,0,0,0,0,0},
+#elif NORMAHX==7
+#define Xrh1 {0,0,0,0,0,0,0},
+#elif NORMAHX==8
+#define Xrh1 {0,0,0,0,0,0,0,0},
+#endif
+#else
+#if NORMAHX==1
+#define Xrh1 {},0,0,
+#elif NORMAHX==2
+#define Xrh1 {0},0,0,
+#elif NORMAHX==3
+#define Xrh1 {0,0},0,0,
+#elif NORMAHX==4
+#define Xrh1 {0,0,0},0,0,
+#elif NORMAHX==5
+#define Xrh1 {0,0,0,0},0,0,
+#elif NORMAHX==6
+#define Xrh1 {0,0,0,0,0},0,0,
+#elif NORMAHX==7
+#define Xrh1 {0,0,0,0,0,0},0,0,
+#elif NORMAHX==8
+#define Xrh1 {0,0,0,0,0,0,0},0,0,
+#endif
+#endif
+#else
+#define Xrh1
 #endif
 
 // if we are not multithreading, report the master thread only

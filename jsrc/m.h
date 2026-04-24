@@ -73,7 +73,7 @@
 // For GMP allocations, h has a special value and we free them through mfgmp
 #define FHRHISGMP 0x4000  // this block was allocated by GMP
 #define FHRHBINISGMP 14  // this block was allocated by GMP
-#if NORMAHX
+#if 0 && NORMAHX
 #define FHRHPOOLBIN(h) (5==CTTZ(h))?6:CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
 #else
 #define FHRHPOOLBIN(h) CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo

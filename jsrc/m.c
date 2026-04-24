@@ -1345,10 +1345,6 @@ if((I)jt&3)SEGFAULT;
   // small block: allocate from pool
   z=jt->mempool[-PMINL+1+blockx];   // head of free list.  We wait till blockx is valid because an allo of 2^29 bytes could fetch out of JTT.  Rearranging could get to 2^33, not enough
 #if MEMAUDIT&1
-  if((uintptr_t)z&QCMASK2){
-  fprintf(stderr,"ckpt01 z z&msk index PMINL blockx %p "FMTX" "FMTI" %d "FMTI" \n",z,(uintptr_t)z&QCMASK2,(-PMINL+1+blockx),PMINL,blockx);
-  CHKQCMASK(z); 
-  }
   CHKAFCHAIN(z);
 #endif
   if(likely(z!=0)){         // allocate from a chain of free blocks

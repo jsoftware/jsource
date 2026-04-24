@@ -906,7 +906,7 @@ typedef DST* DC;
 // type of 0000 is reserved to indicate 'no value'; 1-11 are the type bits (following LASTNOUNX) in order
 // in the words of an explicit definition the words have QCNAMELKP semantics in bit 4-5:
 #define QCMASK 0x3fLL   // all the LSB flags
-#if NORMAHX
+#if 0 && NORMAHX
 #define QCMASK2 0x7fLL  // for NORMAHX
 #else
 #define QCMASK2 QCMASK

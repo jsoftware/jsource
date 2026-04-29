@@ -18,6 +18,19 @@
 
 #include "j.h"
 
+#if MEMAUDIT&1
+#define CHKAFCHAIN0   {if(jt->mempool[1]&&AFCHAIN(jt->mempool[1])&&(0x100>(uintptr_t)AFCHAIN(jt->mempool[1])))SEGFAULT;}
+#define CHKAFCHAIN1   {if(jt->mempool[-PMINL+1+blockx]&&AFCHAIN(jt->mempool[-PMINL+1+blockx])&&(0x100>(uintptr_t)AFCHAIN(jt->mempool[-PMINL+1+blockx])))SEGFAULT;}
+#define CHKAFCHAIN(z) {if(z&&AFCHAIN(z)&&(((uintptr_t)AFCHAIN(z)&QCMASK2)||(0x100>(uintptr_t)AFCHAIN(z))))SEGFAULT;}
+#define CHKQCMASK(z)  {if((uintptr_t)z&QCMASK2)SEGFAULT;}
+#else
+#define CHKAFCHAIN0
+#define CHKAFCHAIN1
+#define CHKAFCHAIN(z)
+#define CHKQCMASK(z)
+#endif
+
+#if 0    // already defined in m.h
 #define LEAKSNIFF 0
 #define SHOWALLALLOC 0 // to display log of allo/free
 /*  to analyze
@@ -33,6 +46,7 @@
 #define SBFREEBLG (14+PMINL)   // lg2(SBFREEB)
 #define SBFREEB (1L<<SBFREEBLG)   // number of bytes that need to be freed before we rescan
 #define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
+#endif
 
 #if (MEMAUDIT==0 || !_WIN32) || 1  // windows makes free() a void
 #define FREECHK(x) FREE(x)
@@ -229,7 +243,17 @@ void jtauditmemchains(J jt){
   I Wi,Wj;A Wx,prevWx=0; forcetomemory(&prevWx);  if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdata))){
  for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mempool[-PMINL+Wi]);
 #if PYXES
+#if MEMAUDIT&1
+ NOUNROLL while(Wx){
+if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000){
+fprintf(stderr,"AFHRH(Wx) %d FHRHPOOLBIN(AFHRH(Wx)) %d Wx %p Wi "FMTI" PMINL %d (Wi-PMINL) "FMTI" Wj 0x"FMTX" \n",AFHRH(Wx),FHRHPOOLBIN(AFHRH(Wx)),Wx,Wi,PMINL,(Wi-PMINL),Wj);
+}
+if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; 
+prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}
+}
+#else
  NOUNROLL while(Wx){if(Wx->origin!=THREADID1(jt)||FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
+#endif
 #else
  NOUNROLL while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
 #endif
@@ -285,6 +309,8 @@ B jtspfree(J jt){I i;A p;
    I nexpats=IMIN;  // number of expats repatriated
    for(p=jt->mempool[i];p;){
 #if MEMAUDIT&1
+    CHKQCMASK(p);
+    CHKAFCHAIN(p);
     if(FHRHPOOLBIN(AFHRH(p))!=i)SEGFAULT;  // make sure chains are valid
     if(ISGMP(p)&&!ACISPERM(p)&&!AZAPLOC(p))SEGFAULT; // catch an old libgmp integration failure mode
 #endif
@@ -1236,7 +1262,7 @@ __attribute__((noinline)) A jtgafallopool(J jt){
 #if ALIGNPOOLTOCACHE   // with smaller headers, always align pool allo to cache bdy
  // align the buffer list on a cache-line boundary
  I *v; ASSERT(v=MALLOC(PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE),EVWSFULL);
- A z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+ A z=(A)(((I)v+(ALIGNPOOLTOCACHE*CACHELINESIZE))&-(ALIGNPOOLTOCACHE*CACHELINESIZE));   // get cache-aligned section
  ((I**)z)[-1] = v;   // save address of entire allocation in the word before the aligned section
 #else
  // allocate without alignment
@@ -1262,6 +1288,11 @@ __attribute__((noinline)) A jtgafallopool(J jt){
  DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT(u));    // chain blocks to each other; set chain of last block to 0
 #endif
  AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
+#if MEMAUDIT&1
+ CHKQCMASK((A)((C*)u));
+ CHKQCMASK((A)((C*)u+n));
+ CHKAFCHAIN((A)((C*)u+n));
+#endif
  jt->mempool[-PMINL+1+blockx]=(A)((C*)u+n);  // the second block becomes the head of the free list
  if(unlikely((((jt->memballo[-PMINL+1+blockx]+=n-PSIZE)&MFREEBCOUNTING)!=0))){     // We are adding a bunch of free blocks now...
   I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
@@ -1276,7 +1307,7 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  // Allocate the block, and start it on a cache-line boundary
  I *v;
  ASSERT(v=MALLOC(n),EVWSFULL)   // allocate the memory
- z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+ z=(A)(((I)v+(ALIGNTOCACHE*CACHELINESIZE))&-(ALIGNTOCACHE*CACHELINESIZE));   // get cache-aligned section
  ((I**)z)[-1] = v;    // save address of original allocation
 #else
  ASSERT(z=MALLOC(n),EVWSFULL);
@@ -1313,6 +1344,9 @@ if((I)jt&3)SEGFAULT;
  if(likely(blockx<PLIML)){
   // small block: allocate from pool
   z=jt->mempool[-PMINL+1+blockx];   // head of free list.  We wait till blockx is valid because an allo of 2^29 bytes could fetch out of JTT.  Rearranging could get to 2^33, not enough
+#if MEMAUDIT&1
+  CHKAFCHAIN(z);
+#endif
   if(likely(z!=0)){         // allocate from a chain of free blocks
    jt->mempool[-PMINL+1+blockx] = AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this
@@ -1337,7 +1371,8 @@ if((I)jt&3)SEGFAULT;
   RZ(z=jtgafalloos(jt,blockx,((I)2<<blockx)+TAILPAD+ALIGNTOCACHE*CACHELINESIZE));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
  }
 #if MEMAUDIT&8
- I fv=lfsr++; DO((((I)1)<<(1+blockx-LGSZI)), if(i!=2&&i!=6)((I*)z)[i] = fv;);   // fill block with garbage - but not the allocation word or zaploc
+// NOTE!! z[i] dependency on struct AD
+ I fv=lfsr++; DO((((I)1)<<(1+blockx-LGSZI)), if(i!=(NORMAHX+2)&&i!=(NORMAHX+6))((I*)z)[i] = fv;);   // fill block with garbage - but not the allocation word or zaploc
 #endif
  AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
   // we do not attempt to combine the AFLAG write into a 64-bit operation
@@ -1363,11 +1398,14 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
  j=CTLZI((UI)bytes);  // 3 or 4 should return 2; 5 should return 3
+#if NORMAHX
+ j=(6>j)?6:j;
+#endif
  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }
 
-#if SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
 // fill an INDIRECT block with 0s, starting with s[0].  m is #bytes requested for allo-1
 A zfillind(A w, I m){
  AS(w)[0]=0;  // the first byte by hand
@@ -1532,7 +1570,7 @@ printf("%p-\n",w);
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   I allocsize = FHRHPOOLBINTOSIZE(blockx);
 #if MEMAUDIT&4
-  I fv=frfillvalue++; DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
+  I fv=frfillvalue++; DO((allocsize>>LGSZI), if(i!=(NORMAHX+6))((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
 #endif
 #if PYXES
   if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
@@ -1548,7 +1586,7 @@ printf("%p-\n",w);
  }else{    // buffer allocated from malloc
   I allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
-  I fv=frfillvalue++; DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=6)((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
+  I fv=frfillvalue++; DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=(NORMAHX+6))((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
 #if PYXES

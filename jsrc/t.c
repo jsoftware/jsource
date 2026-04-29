@@ -39,10 +39,10 @@ static __attribute__((aligned(CACHELINESIZE))) const C alp[256]={
 0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xc8,0xc9,0xca,0xcb,0xcc,0xcd,0xce,0xcf,0xd0,0xd1,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,0xd8,0xd9,0xda,0xdb,0xdc,0xdd,0xde,0xdf,
 0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,0xe9,0xea,0xeb,0xec,0xed,0xee,0xef,0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfa,0xfb,0xfc,0xfd,0xfe,0xff};
 
-#define PRIMNOUN(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primint=val} }
-#define PRIMNOUNFL(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primfl=val} }
+#define PRIMNOUN(id,t,an,ar,val) [id]={{Xrh0 AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primint=val} }
+#define PRIMNOUNFL(id,t,an,ar,val) [id]={{Xrh0 AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primfl=val} }
 #define PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) \
- ={{0,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
+ ={{Xrh0 0,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
 #define PRIMALL(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) [idda]PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc)
 #define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=0,0,rm,rl,rr,vflg,vflg2,0,0,0)
 #define PRIMACVPARM(id,t,f0,f1,rm,rl,rr,vflg,vflg2,initpm1,initpm2) PRIMALL(id,id,t,f0,f1,0,0,0,initpm1,initpm2,rm,rl,rr,vflg,vflg2,0,0,0)
@@ -115,7 +115,7 @@ PRIM primtab[256] = {
  /*  *. */  PRIMATOMIC2(CSTARDOT,CSTARDOT,VERB, jtpolar,   jtatomic2,    0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF,VF2NONE|VF2PRIM),
  /*  *: */  PRIMATOMIC2(CSTARCO,CSTARCO, VERB, jtsquare,  jtatomic2,   0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF,VF2NONE|VF2PRIM),
  /*  -  */  PRIMATOMIC2UV(CMINUS,CMINUS,VA1CNEG-VA1ORIGIN,  VERB, jtnegate,  jtatomic2,  0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF,VF2NONE|VF2PRIM),
- /*  -. */  PRIMACV(CNOT,    VERB, jtnot,     jtless,   0,   RMAX,RMAX,VISATOMIC1|VNOLOCCHG+VNONAME+VNOSELF|((7+(((ILESS-II0EPS)&0xf)<<3))&-SY_64),VF2NONE|VF2PRIM),  // native compound allowing &n - 64-bit only
+ /*  -. */  PRIMACV(CNOT,    VERB, jtnot,     jtless,   0,   RMAX,RMAX,VISATOMIC1|VNOLOCCHG+VNONAME+VNOSELF|((7+(((ILESS-II0EPS)&0xf)<<3))&-C_VIAVX),VF2NONE|VF2PRIM),  // native compound allowing &n - viavx.c only
  /*  -: */  PRIMACV(CHALVE,  VERB, jthalve,   jtmatch,  0,   RMAX,RMAX,VISATOMIC1|VIRS2|VNOLOCCHG+VNONAME+VNOSELF,VF2NONE|VF2PRIM),  // alias CMATCH
  /*  %  */  PRIMATOMIC2UV(CDIV,CDIV,VA1CRECIP-VA1ORIGIN,    VERB, jtrecip,   jtatomic2, 0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF,VF2NONE|VF2PRIM),
  /*  %. */  PRIMACV(CDOMINO, VERB, jtminv,    jtmdiv,   2,   RMAX,2   ,VNOLOCCHG+VNONAME+VNOSELF,VF2NONE|VF2PRIM),

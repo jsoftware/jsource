@@ -7,7 +7,7 @@
 #include "vcomp.h"
 
 // platforms without hardware crc32c
-#if !(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))
+#if !(C_VIAVX)
 
 /* Floating point (type D) byte order:               */
 /* Archimedes              3 2 1 0 7 6 5 4           */
@@ -1575,4 +1575,4 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,t,wr,*ws,wt;void(*fn)();
  R z;
 }    /* a i."1 &.|:w or a i:"1 &.|:w */
 
-#endif /* !(C_CRC32C && SY_64) */
+#endif // !(C_VIAVX)

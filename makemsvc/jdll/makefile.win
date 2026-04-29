@@ -27,11 +27,23 @@ LDEBUG = /DEBUG
 CINCLUDE = -I../mpir/include
 !if "1"=="$(USE_PYXES)"
 !if "arm64"=="$(TARGET_CPU)"
-PTHREADLIB = ../pthreads4w/lib/pthreadVC3-arm64.lib
-!elseif "x64"=="$(TARGET_CPU)"
-PTHREADLIB = ../pthreads4w/lib/pthreadVC3.lib
+!if ""!="$(PTHREADS4WSRC)"
+OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
 !else
-PTHREADLIB = ../pthreads4w/lib/pthreadVC3-w32.lib
+PTHREADLIB = ../pthreads4w/arm64/pthreadVC3.lib
+!endif
+!elseif "x64"=="$(TARGET_CPU)"
+!if ""!="$(PTHREADS4WSRC)"
+OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+!else
+PTHREADLIB = ../pthreads4w/x64/pthreadVC3.lib
+!endif
+!else
+!if ""!="$(PTHREADS4WSRC)"
+OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+!else
+PTHREADLIB = ../pthreads4w/x86/pthreadVC3.lib
+!endif
 !endif
 CINCLUDE = $(CINCLUDE) -I../pthreads4w/include
 COPTION = $(COPTION) /DPYXES=1
@@ -43,10 +55,10 @@ COPTION = $(COPTION) /DEMU_AVX2=0
 !else
 COPTION = $(COPTION) /DEMU_AVX2=1
 !endif
-!if "1"=="$(USE_NORMAH8)"
-COPTION = $(COPTION) /DNORMAH8=1
+!if ""!="$(NORMAHX)"
+COPTION = $(COPTION) /DNORMAHX=$(NORMAHX)
 !else
-COPTION = $(COPTION) /DNORMAH8=0
+COPTION = $(COPTION) /DNORMAHX=0
 !endif
 
 !if "1"=="$(USE_OPENMP)"
@@ -80,6 +92,9 @@ COPTION = $(COPTION) /D_ASSERT
 !if ""!="$(_ASSERT2)"
 COPTION = $(COPTION) /D_ASSERT2
 !endif
+!if ""!="$(C_CRC32C)"
+COPTION = $(COPTION) /DC_CRC32C=$(C_CRC32C)
+!endif
 !if ""!="$(_NAN)"
 COPTION = $(COPTION) /D_NAN
 !endif
@@ -96,18 +111,18 @@ COPTION = $(COPTION) -msse4.1 -msse4.2
 !endif
 
 !if "arm64"=="$(TARGET_CPU)"
-CF1 = -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable
+CF1 = -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable -Wno-single-bit-bitfield-constant-conversion
 CFLAGS = $(COPTION) $(CINCLUDE) /DHAVE_NEON64=1 /D_JDLL /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS = $(LDEBUG) /DLL /MACHINE:ARM64 /SUBSYSTEM:WINDOWS,10.0
 ASMFLAGS = /Cx
 !elseif "x64"=="$(TARGET_CPU)"
-CF1 = -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable
+CF1 = -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable -Wno-single-bit-bitfield-constant-conversion
 CFLAGS = $(COPTION) $(CINCLUDE) /D_JDLL /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS = $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,10.0
 ASMFLAGS = /Cx
 NASM_FLAGS = -fwin64
 !else
-CF1 = -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable
+CF1 = -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable -Wno-single-bit-bitfield-constant-conversion
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
 CFLAGS = $(COPTION) $(CINCLUDE) $(DPYXES) /D_JDLL /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
@@ -378,8 +393,8 @@ SYNCLIB =
 SYNCLIB = synchronization.lib
 !endif
 
-$(ODIR)/$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(ASM) $(PTHREADLIB) $(RCS)
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(ASM) $(PTHREADLIB) $(RCS) $(MPIRLIB) ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) $(LOPENMP)
+$(ODIR)/$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(OBJS_PTHREADS4W) $(ASM) $(PTHREADLIB) $(RCS)
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(OBJS_PTHREADS4W) $(ASM) $(PTHREADLIB) $(RCS) $(MPIRLIB) ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) $(LOPENMP)
 
 all: $(ODIR)/$(TARGET)
 
@@ -387,6 +402,6 @@ noclean:
 	#
 
 clean:
-	erase /q *.o blis\*.o openssl\sha\*.o ..\dllsrc\*.o  utf\*.o  ..\base64\lib\*.o ..\base64\lib\tables\*.o ..\base64\lib\arch\avx\*.o ..\base64\lib\arch\avx2\*.o ..\base64\lib\arch\avx512\*.o ..\base64\lib\arch\generic\*.o ..\base64\lib\arch\generic\32\*.o ..\base64\lib\arch\generic\64\*.o ..\base64\lib\arch\neon64\*.o ..\base64\lib\arch\ssse3\*.o ..\base64\lib\arch\sse41\*.o ..\base64\lib\arch\sse42\*.o
+	del /f /q *.o blis\*.o openssl\sha\*.o ..\dllsrc\*.o  utf\*.o ..\pthreads4w\src\*.o ..\base64\lib\*.o ..\base64\lib\tables\*.o ..\base64\lib\arch\avx\*.o ..\base64\lib\arch\avx2\*.o ..\base64\lib\arch\avx512\*.o ..\base64\lib\arch\generic\*.o ..\base64\lib\arch\generic\32\*.o ..\base64\lib\arch\generic\64\*.o ..\base64\lib\arch\neon64\*.o ..\base64\lib\arch\ssse3\*.o ..\base64\lib\arch\sse41\*.o ..\base64\lib\arch\sse42\*.o
 
 .PHONY: all clean noclean

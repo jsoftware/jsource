@@ -39,10 +39,10 @@ ifeq (0,$(USE_EMU_AVX))
 else
  COPTION := $(COPTION) /DEMU_AVX2=1
 endif
-ifeq (1,$(USE_NORMAH8))
- COPTION := $(COPTION) /DNORMAH8=1
+ifneq ($(NORMAHX),)
+ COPTION := $(COPTION) /DNORMAHX=$(NORMAHX)
 else
- COPTION := $(COPTION) /DNORMAH8=0
+ COPTION := $(COPTION) /DNORMAHX=0
 endif
 
 ifeq (1,$(USE_OPENMP))
@@ -58,11 +58,23 @@ ifeq (1,$(USE_OPENMP))
 endif
 ifeq (1,$(USE_PYXES))
  ifeq (arm64,$(TARGET_CPU))
-  PTHREADLIB = ../pthreads4w/lib/pthreadVC3-arm64.lib
+  ifneq ($(PTHREADS4WSRC),)
+   OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+  else
+    PTHREADLIB = ../pthreads4w/arm64/pthreadVC3.lib
+  endif
  else ifeq (x64,$(TARGET_CPU))
-  PTHREADLIB = ../pthreads4w/lib/pthreadVC3.lib
+  ifneq ($(PTHREADS4WSRC),)
+   OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+  else
+    PTHREADLIB = ../pthreads4w/x64/pthreadVC3.lib
+  endif
  else
-  PTHREADLIB = ../pthreads4w/lib/pthreadVC3-w32.lib
+  ifneq ($(PTHREADS4WSRC),)
+   OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+  else
+   PTHREADLIB = ../pthreads4w/x86/pthreadVC3.lib
+  endif
  endif
 endif
 
@@ -86,6 +98,9 @@ endif
 ifneq ($(_ASSERT2),)
  COPTION := $(COPTION) /D_ASSERT2
 endif
+ifneq ($(C_CRC32C),)
+ COPTION := $(COPTION) /DC_CRC32C=$(C_CRC32C)
+endif
 ifneq ($(_NAN),)
  COPTION := $(COPTION) /D_NAN
 endif
@@ -102,18 +117,18 @@ ifeq (x64,$(TARGET_CPU))
 endif
 
 ifeq (arm64,$(TARGET_CPU))
- CF1 = -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable
+ CF1 = -target arm64-pc-windows-msvc -march=armv8-a+crc+crypto -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable -Wno-single-bit-bitfield-constant-conversion
  CFLAGS = $(COPTION) $(CINCLUDE) /DHAVE_NEON64=1 /D JAMALGAM /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
  FLAGS = $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:ARM64 /SUBSYSTEM:CONSOLE,5.02
  ASMFLAGS = /Cx
 else ifeq (x64,$(TARGET_CPU))
- CF1 = -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable
+ CF1 = -maes -msse3 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable -Wno-single-bit-bitfield-constant-conversion
  CFLAGS = $(COPTION) $(CINCLUDE) /D JAMALGAM /DC_NA=0 /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
  FLAGS = $(LDEBUG) /NOLOGO /STACK:0xc00000 /MACHINE:X64 /SUBSYSTEM:CONSOLE,5.02
  ASMFLAGS = /Cx
  NASM_FLAGS = -fwin64
 else
- CF1 = -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable
+ CF1 = -m32 -maes -msse2 -fno-strict-aliasing -Wno-unknown-warning-option -Wsign-compare -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-missing-field-initializers -Wno-null-pointer-arithmetic -Wno-char-subscripts -Wno-pointer-to-int-cast -Wno-unused-but-set-variable -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor -Wno-deprecated-non-prototype -Wno-unused-variable -Wno-single-bit-bitfield-constant-conversion
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
  CFLAGS = $(COPTION) $(CINCLUDE) /D JAMALGAM /WX /W3 /O2 /GS- /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
@@ -388,8 +403,8 @@ else
  SYNCLIB = synchronization.lib
 endif
 
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(ASM) $(PTHREADLIB) $(RCS)
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(ASM) $(PTHREADLIB) $(RCS) $(MPIRLIB) ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) $(LOPENMP)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(OBJS_PTHREADS4W) $(ASM) $(PTHREADLIB) $(RCS)
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SIMDUTF8) $(OBJS_PTHREADS4W) $(ASM) $(PTHREADLIB) $(RCS) $(MPIRLIB) ole32.lib advapi32.lib oleaut32.lib onecore.lib $(SYNCLIB) $(LOPENMP)
 
 all : $(ODIR)/$(TARGET)
 
@@ -397,6 +412,6 @@ noclean :
 	#
 
 clean :
-	rm -f $(ODIR)/*.lib $(ODIR)/*.exp $(ODIR)/*.ilk $(ODIR)/*.pdb $(OBJS) $(OBJSLN) $(OBJS_SIMDUTF8) $(SRC_ASM) $(RCS)
+	rm -f $(ODIR)/*.lib $(ODIR)/*.exp $(ODIR)/*.ilk $(ODIR)/*.pdb $(OBJS) $(OBJSLN) $(OBJS_SIMDUTF8) $(OBJS_PTHREADS4W) $(SRC_ASM) $(RCS)
 
 .PHONY: all clean nonclean

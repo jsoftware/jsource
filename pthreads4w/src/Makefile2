@@ -1,0 +1,64 @@
+# clang-cl
+
+# TARGET_CPU is an environment variable set by Visual Studio Command Prompt
+
+PTW32_VER= 3$(EXTRAVERSION)
+
+DLLS= pthreadVC$(PTW32_VER).dll
+INLINED_STATIC_STAMPS= pthreadVC$(PTW32_VER).lib
+
+# Uncomment this if config.h defines RETAIN_WSALASTERROR
+#XLIBS= wsock32.lib
+
+# Default cleanup style
+CLEANUP= __PTW32_CLEANUP_C
+
+ifeq (ARM64,$(TARGET_CPU))
+CF1= -target arm64-pc-windows-msvc -march=armv8-a+crc
+else ifeq (x64,$(TARGET_CPU))
+CF1= -msse3 
+else ifeq (x86,$(TARGET_CPU))
+CF1= -m32 -msse2
+endif
+
+# VC:
+XCFLAGS= /MD /D__PTW32_BUILD_INLINED 
+FLAGS= /DLL /MACHINE:$(TARGET_CPU) /SUBSYSTEM:WINDOWS,5.02
+
+# VC-static:
+# XCFLAGS= /MT /D__PTW32_STATIC_LIB /D__PTW32_BUILD_INLINED
+# FLAGS= /MACHINE:$(TARGET_CPU) /SUBSYSTEM:WINDOWS,5.02
+
+VCFLAGS= $(CF1) -Wno-single-bit-bitfield-constant-conversion /I. /DHAVE_CONFIG_H /W3 /O2 /Ob2 $(XCFLAGS)
+
+DLL_OBJS= pthread.o
+STATIC_OBJS= pthread.o
+
+ifndef LD
+LD=lld-link
+endif
+
+ifndef CLRC
+CLRC=llvm-rc
+endif
+
+clean:
+	rm -f *.exp version.res $(DLL_OBJS) $(STATIC_OBJS) $(DLLS) $(INLINED_STATIC_STAMPS)
+
+$(DLLS): $(DLL_OBJS) version.res pthread.def
+	$(LD) /NOLOGO $(FLAGS) /DEF:pthread.def /implib:pthreadVC$(PTW32_VER).lib /out:$@ $(DLL_OBJS) $(XLIBS) version.res
+
+$(INLINED_STATIC_STAMPS): $(STATIC_OBJS) version.res
+	$(LIBEXE) /NOLOGO $(STATIC_OBJS) $(XLIBS) version.res /out:$@
+
+%.o: %.c
+	$(CC) $(VCFLAGS) /D$(CLEANUP) /Fo$@ /c $<
+
+version.res: version.rc
+	$(CLRC) /I. /D__PTW32_ARCHx86 /D__PTW32_RC_MSC /D$(CLEANUP) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ version.rc
+
+all: $(DLLS)
+# all: $(INLINED_STATIC_STAMPS)
+
+.PHONY: all clean
+

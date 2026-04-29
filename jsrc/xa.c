@@ -41,6 +41,7 @@ extern UC fboxedsparse;
 #include <signal.h>
 
 extern UC* tohex(UC* dest, UC* src, I len);
+extern B nogmp(void);
 
 // 9!:32-33 #tries for elliptic-curve factoring
 F1(jtecmtriesq){F12IP;ASSERTMTV(w); R sc(jt->ecmtries);}
@@ -475,8 +476,12 @@ F1(jtcpufeature){F12IP;
   R sc(C_AVX512);
  } else if(!strcasecmp(CAV(w),"C_CRC32C")) {
   R sc(C_CRC32C);
+ } else if(!strcasecmp(CAV(w),"C_VIAVX")) {
+  R sc(C_VIAVX);
  } else if(!strcasecmp(CAV(w),"EMU_AVX2")) {
   R sc(EMU_AVX2);
+ } else if(!strcasecmp(CAV(w),"GMP")) {
+  R sc(!nogmp());
  } else if(!strcasecmp(CAV(w),"MEMAUDIT")) {
   R sc(MEMAUDIT);
  } else if(!strcasecmp(CAV(w),"PYXES")) {

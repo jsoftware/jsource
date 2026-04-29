@@ -503,7 +503,7 @@ static KF1(jtDfromB){
  R 1;
 }
 
-#if SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
 static KF1(jtDfromI){I n=AN(w); D *x=DAV(w); D *z=yv;
 /* Optimized full range int64_t to double conversion           */
 /* Emulate _mm256_cvtepi64_pd()                                */
@@ -1041,7 +1041,7 @@ A jtpcvt(J jt,I t,A w){B b;RANK2T oqr=jt->ranks;
  RESETERR; R z?z:w;
 }    /* convert w to type t, if possible, otherwise just return w.  Leave ranks unaffected */
 
-#if !(C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2))
+#if !(C_VIAVX)
 F1(jtcvt0){F12IP;I n,t;D *u;
  ARGCHK1(w);
  t=AT(w); n=AN(w); 

@@ -24,7 +24,7 @@ static DF2(jtfitctkey){F12IP;A fs=FAV(self)->fgh[0]; R jtkeyct(jt,a,w,fs,FAV(sel
 
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
 static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey,
-#if SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_VIAVX
  jtsfu,   // only in viavx.c
 #else
  0,
@@ -37,7 +37,7 @@ static A jtfitct(J jt,A a,A w,I cno,A z){
  D d=1.0; A dw=w; // ct, when that's what we have (init to invalid); w converted to float
  if(likely(w==num(0)))d=0.0; else{if(!ISDENSETYPE(AT(w),FL))dw=ccvt(FL,w,0); if(dw)d=DAV(dw)[0]; RESETERR}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0  It's not a hard error
  // Handle i.!.1 specially; otherwise drop i. back to normal for i.!.0 of i.!.f
- if(unlikely(cno==3)){if(d==1.0){d=1.0-jt->cct; if(!SY_64)cno=0;}else cno=0;}   // i.!.1 is special on 64-bit systems; others just specify fit
+ if(unlikely(cno==3)){if(d==1.0){d=1.0-jt->cct; if(!C_VIAVX)cno=0;}else cno=0;}   // i.!.1 is special on viavx.c systems; others just specify fit
  // u!.ct, unless u is > in which case it could be anything
  if(cno!=5){ASSERT(dw,EVDOMAIN) ASSERT(0<=d&&d<5.82076609134675e-11,EVLIMIT)}  // fit is ct, must be float and can't be greater than 2^_34
   // >!.f   we can't audit till we get the valence.  If error converting to float, make d give a runtime error.  Any w is OK for fill

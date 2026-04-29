@@ -55,7 +55,12 @@ ZF2(jtzdiv){ZF2DECL;D t;
 #endif
   else d=0.0;  t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
  }else if(ZNZ(u)){  // division by 0
+#if !EMU_AVX2 && defined(__aarch64__)
+  if(a!=0){__asm__("" ::: "cc");zr=a/0.0;}
+  if(b!=0){__asm__("" ::: "cc");zi=b/0.0;}  // set any nonzero to infinity
+#else
   if(a!=0)zr=a/0.0; if(b!=0)zi=b/0.0;  // set any nonzero to infinity
+#endif
  }
  ZEPILOG;
 }

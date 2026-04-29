@@ -9,10 +9,11 @@
 
 set -evx
 CC=${CC-clang}
+_SSE4_2=${_SSE4_2:=1}
 USE_SLEEF=${USE_SLEEF:=1}
 USE_SLEEFQUAD=${USE_SLEEFQUAD:=$USE_SLEEF}
 USE_PYXES=${USE_PYXES:=1}
-export CC USE_SLEEF USE_SLEEFQUAD USE_PYXES
+export CC _SSE4_2 USE_SLEEF USE_SLEEFQUAD USE_PYXES
 
 export jplatform="$1"
 if [ "$1" = "linux" ]; then
@@ -119,21 +120,21 @@ elif [ "$1" = "windows" ]; then
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/bin/libomp.dll" $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/lib/libomp.lib" $B
   cp pcre2/windows/x64/jpcre2.dll $A/tools/regex/.
-  cp pthreads4w/bin/pthreadVC3.dll $B
+  cp pthreads4w/x64/pthreadVC3.dll $B
   curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
  elif [ "$2" = "i386" ]; then
   cp mpir/windows/x86/mpir.dll $C/mpir32.dll
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C
   cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
-  cp pthreads4w/bin/pthreadVC3-w32.dll $C
+  cp pthreads4w/x86/pthreadVC3.dll $C
   curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
  else
   cp mpir/windows/arm64/mpir.dll $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/lib/libomp.lib" $B
   cp pcre2/windows/arm64/jpcre2.dll $A/tools/regex/jpcre2_arm64.dll
-  cp pthreads4w/bin/pthreadVC3-arm64.dll $B
+  cp pthreads4w/arm64/pthreadVC3.dll $B
   curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
  fi
 fi
@@ -269,7 +270,7 @@ if [ $m64 -eq 1 ]; then
   fi
  fi
 
- if [ "$USE_PYXES" = "1" ] && [ "$USE_EMU_AVX" = "1" ] && ([ "$2" = "x86_64" ] || [ "$1" = "darwin" ] || [ "$1" = "windows" ]); then
+ if [ "$USE_PYXES" = "1" ] && [ "$USE_EMU_AVX" = "1" ] && ([ "$2" = "x86_64" ] || [ "$1" = "darwin" ]); then
   ./clean.sh
   j64x=j64avx2 ./build_libj.sh
   ./clean.sh

@@ -168,7 +168,7 @@ extern "C" {
  * This is an emulation of Intel AVX
  */
 
-#if defined( _MSC_VER ) || defined( __INTEL_COMPILER )
+#if defined( MMSC_VER ) || defined( __INTEL_COMPILER )
     #define __EMU_M256_ALIGN( a ) __declspec(align(a))
     #define __emu_inline          __forceinline
     #define __emu_int64_t         __int64
@@ -1074,6 +1074,8 @@ __EMU_M256_IMPL_M3( __m256, blendv_ps );
 __EMU_M256_IMPL_M2I_DUP( __m256, dp_ps );
 __EMU_M256_IMPL_M1I_DUP( __m256d, round_pd );
 #endif
+#undef _mm256_ceil_pd
+#undef _mm256_floor_pd
 #define _mm256_ceil_pd(val)   _mm256_round_pd((val), 0x0A);
 #define _mm256_floor_pd(val)  _mm256_round_pd((val), 0x09);
 
@@ -1087,6 +1089,8 @@ __EMU_M256_IMPL_M1I_DUP( __m256d, round_pd );
 #else
 __EMU_M256_IMPL_M1I_DUP( __m256, round_ps );
 #endif
+#undef _mm256_ceil_ps
+#undef _mm256_floor_ps
 #define _mm256_ceil_ps(val)   _mm256_round_ps((val), 0x0A);
 #define _mm256_floor_ps(val)  _mm256_round_ps((val), 0x09);
 

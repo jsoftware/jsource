@@ -6,9 +6,9 @@ testpath=: (1!:43''),'/test/'
 0!:0 <testpath,'tsu.ijs'
 
 0!:_1`1:@.(GITHUBCI) '?'   NB. skip if not github action
-load'pacman'
-'update'jpkg''
-'upgrade'jpkg'dev/eformat dev/lu'
+NB. load'pacman'
+NB. 'update'jpkg''
+NB. 'upgrade'jpkg'dev/eformat dev/lu'
 
 os=: (('Linux';'Darwin';'OpenBSD';'FreeBSD') i. <UNAME) pick ;:'linux darwin openbsd freebsd win'
 os=: ((IF64{::'rpi32';'rpi64')"_)^:IFRASPI os

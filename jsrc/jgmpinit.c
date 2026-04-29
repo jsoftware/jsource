@@ -32,42 +32,55 @@ void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
 // see jgmp.h for some notes on type X
 //
 #if C_LE
- #if PYXES
+ #if PYXES && SY_64
   #define Xrh 1,0,FHRHISGMP,0,0
  #else
   #define Xrh 1,0,FHRHISGMP
  #endif
 #else
- #if PYXES
+ #if PYXES && SY_64
   #define Xrh 0,0,FHRHISGMP,0,1
  #else
-  #define Xrh  FHRHISGMP,0,1
+  #define Xrh FHRHISGMP,0,1
  #endif
 #endif
 
 #define XFIXED0(nam, typ,val) \
  struct AD __attribute__((aligned(ABDY))) B##nam= \
- {AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,(I)val}; \
+ {Xrh1 AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,(I)val}; \
  X nam= (X)&B##nam
 
 /* like struct AD but a data element */
-struct BDV1 {I k;I f;I m;I t;I c;I n;
+struct BDV1 {
+#if NORMAHX
+#if SY_64 || !PYXES
+ I p[NORMAHX];
+#else
+ I p[NORMAHX-1];
+#if C_LE
+ US origin;S lock;
+#else
+ S lock;US origin;
+#endif
+#endif
+#endif
+ I k;I f;I m;I t;I c;I n;
 #if C_LE
  RANKT r;UC filler;US h;
-#if PYXES
+#if PYXES && SY_64
  US origin;S lock;
 #endif
 #else
- #if PYXES
-  S lock;US origin;
+ #if PYXES && SY_64
+ S lock;US origin;
  #endif
  US h;UC filler;RANKT r;
 #endif
  I s[1];UI d;};
- 
+
 #define XFIXED1(nam, typ,sgn,val) \
  struct BDV1 __attribute__((aligned(ABDY))) B##nam= \
- {XHSZ,typ,0,typ,ACPERMANENT,1,Xrh,sgn,(UI)val}; \
+ {Xrh1 XHSZ,typ,0,typ,ACPERMANENT,1,Xrh,sgn,(UI)val}; \
  X nam= (X)&B##nam
 
 XFIXED1(X_1,LIT,-1,1);  // _1x (not an array)
@@ -100,10 +113,10 @@ Q Q_  = RATIO( 1, 0);  //   1r0 (not an array)
 // See jgmp.h for additional notes
 //
 // we use raw malloc/free here because libgmp
-// does not know which thread we're running in. 
+// does not know which thread we're running in.
 // and we finish initialization if/when this reaches J
 
-// see: https://gmplib.org/manual/Custom-Allocation 
+// see: https://gmplib.org/manual/Custom-Allocation
 #ifndef IMPORTGMPLIB
 static void (*jmp_set_memory_functions) (
  void *(*alloc_func_ptr) (size_t),
@@ -113,7 +126,7 @@ static void (*jmp_set_memory_functions) (
 #endif
 
 #if PYXES==1
-static pthread_mutex_t gemp_mutex; 
+static pthread_mutex_t gemp_mutex;
 #define GMPLOCKINIT pthread_mutex_init(&gemp_mutex, NULL);
 #define GMPLOCK pthread_mutex_lock(&gemp_mutex)
 #define GMPUNLOCK pthread_mutex_unlock(&gemp_mutex)
@@ -190,7 +203,7 @@ void jgmpguard(X x) {
  */
 #if MEMAUDIT&8
  static I lfsr= 1;
- DO(size/SZI, lfsr= (lfsr<<1) ^ (lfsr<0 ?0x1b :0); if (i!=2&&i!=6)((I*)(XHSZ+(C*)z))[i]= lfsr;);
+ DO(size/SZI, lfsr= (lfsr<<1) ^ (lfsr<0 ?0x1b :0); if (i!=(NORMAHX+2)&&i!=(NORMAHX+6))((I*)(XHSZ+(C*)z))[i]= lfsr;);
 #endif
  R CAV1(z);
 }
@@ -241,7 +254,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
 #if MEMAUDIT&8
  static I lfsr= 1;
  if (new > old) {
-  DO((new-old)/SZI, lfsr= (lfsr<<1)^(lfsr<0 ?0x1b :0); if (i!=2&&i!=6)((I*)(old+XHSZ+(C*)z))[i]= lfsr;);
+  DO((new-old)/SZI, lfsr= (lfsr<<1)^(lfsr<0 ?0x1b :0); if (i!=(NORMAHX+2)&&i!=(NORMAHX+6))((I*)(old+XHSZ+(C*)z))[i]= lfsr;);
  }
 #endif
  R CAV1(z);
@@ -331,7 +344,7 @@ Q jtQmpq(J jt, mpq_t mpq, I number) {
 #else
  #ifdef __APPLE__
   #define LIBEXT ".dylib"
-  #define LIBEXT10 LIBEXT 
+  #define LIBEXT10 ".10.dylib"
  #else
   #define LIBEXT ".so"
   #ifdef __OpenBSD__
@@ -360,14 +373,14 @@ static void dldiag(){}
 #define jgmpfn(fn) j##fn= GetProcAddress(libgmp,"__g"#fn); if(!(j##fn)){fprintf(stderr,"%s\n","error loading "#fn);};
 #elif defined(__wasm__)
 static void dldiag(){}
-#define jgmpfn(fn) 
+#define jgmpfn(fn)
 #else
 static void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
 #define jgmpfn(fn) j##fn= dlsym(libgmp,"__g"#fn); dldiag();
 #endif
 
 // referenced gmp routines are declared twice:
-// once here for dynamic linking and 
+// once here for dynamic linking and
 // also in jgmp.h for global name declaration
 void jgmpinit(C*libpath) {
  if (SZI != sizeof (mp_limb_t)) SEGFAULT; // verify a fundamental assumption

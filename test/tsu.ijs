@@ -47,7 +47,7 @@ NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
 blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs';'glapackcb.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
-blacklist=: blacklist, (IFIOS+.(UNAME-:'Wasm'))#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
+blacklist=: blacklist, (IFIOS)#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (0=(9!:56'c_avx2')+.9!:56'emu_avx2')#(<testpath),each 'g6x14.ijs';'g128x14.ijs';'g128x19.ijs' NB. avx2 or emu_avx2
 blacklist=: blacklist, (0=9!:56'PYXES')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs';'g128x14.ijs';'g128x19.ijs' NB. require multithreading
 blacklist=: blacklist, (0=15!:23'')#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs';'gfft.ijs';'glapack.ijs';'glapackcb.ijs';'gregex.ijs'  NB. 15!:0 unavailable
@@ -56,6 +56,7 @@ blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp4
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
 blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
 blacklist=: blacklist, (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. multithreading block in multiple tstacks
+NB. blacklist=: blacklist, (UNAME-:'Wasm')#(<testpath),each <'g331ps.ijs'    NB. crash on special code for [: ; <@f;.n 
 
 NB. too slow
 blacklist=: blacklist, '' [ (2 *@(17 b.) 9!:56'MEMAUDIT')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
@@ -511,6 +512,8 @@ NB. techo 'cachelinesize(hardware): ',":9!:56'cachelinesizehw'
 NB. techo 'cachelinesize(compile): ',":9!:56'cachelinesize'
 NB. techo 'cpusetsize: ',":9!:56'cpusetsize'
 techo 'c_avx2: ',":9!:56'c_avx2'
+techo 'c_crc32c: ',":9!:56'c_crc32c'
+techo 'c_viavx: ',":9!:56'c_viavx'
 techo 'emu_avx2: ',":9!:56'emu_avx2'
 techo 'memaudit: ',":9!:56'memaudit'
 techo 'pyxes: ',":9!:56'pyxes'

@@ -95,7 +95,7 @@
 #endif
 
 #ifdef _WIN32
-#if EMU_AVX2 || C_AVX2
+#if C_AVX2 || EMU_AVX2
 #ifndef _WIN64
 #error not 64-bit compiler
 #endif
@@ -855,12 +855,101 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 
 // debugging AD header length
-#ifndef NORMAH8
-#define NORMAH8 0
+#ifndef NORMAHX
+#define NORMAHX 0
 #endif
 #if !SY_64 && PYXES
-#undef NORMAH8
-#define NORMAH8 1
+#undef NORMAHX
+#define NORMAHX 1
+#endif
+
+#if NORMAHX!=0 && NORMAHX!=1 && NORMAHX!=2 && NORMAHX!=3 && NORMAHX!=4 && NORMAHX!=5 && NORMAHX!=6 && NORMAHX!=7 && NORMAHX!=8
+#error NORMAHX only supports 0 .. 8
+#endif
+
+// static global initializer
+#if NORMAHX==1
+#define Xrh0 0,
+#elif NORMAHX==2
+#define Xrh0 0,0,
+#elif NORMAHX==3
+#define Xrh0 0,0,0,
+#elif NORMAHX==4
+#define Xrh0 0,0,0,0,
+#elif NORMAHX==5
+#define Xrh0 0,0,0,0,0,
+#elif NORMAHX==6
+#define Xrh0 0,0,0,0,0,0,
+#elif NORMAHX==7
+#define Xrh0 0,0,0,0,0,0,0,
+#elif NORMAHX==8
+#define Xrh0 0,0,0,0,0,0,0,0,
+#else
+#define Xrh0
+#endif
+
+// for struct AD initializer
+#if NORMAHX
+#if SY_64 || !PYXES
+#if NORMAHX==1
+#define Xrh1 {0},
+#elif NORMAHX==2
+#define Xrh1 {0,0},
+#elif NORMAHX==3
+#define Xrh1 {0,0,0},
+#elif NORMAHX==4
+#define Xrh1 {0,0,0,0},
+#elif NORMAHX==5
+#define Xrh1 {0,0,0,0,0},
+#elif NORMAHX==6
+#define Xrh1 {0,0,0,0,0,0},
+#elif NORMAHX==7
+#define Xrh1 {0,0,0,0,0,0,0},
+#elif NORMAHX==8
+#define Xrh1 {0,0,0,0,0,0,0,0},
+#endif
+#else
+#if NORMAHX==1
+#define Xrh1 {},0,0,
+#elif NORMAHX==2
+#define Xrh1 {0},0,0,
+#elif NORMAHX==3
+#define Xrh1 {0,0},0,0,
+#elif NORMAHX==4
+#define Xrh1 {0,0,0},0,0,
+#elif NORMAHX==5
+#define Xrh1 {0,0,0,0},0,0,
+#elif NORMAHX==6
+#define Xrh1 {0,0,0,0,0},0,0,
+#elif NORMAHX==7
+#define Xrh1 {0,0,0,0,0,0},0,0,
+#elif NORMAHX==8
+#define Xrh1 {0,0,0,0,0,0,0},0,0,
+#endif
+#endif
+#else
+#define Xrh1
+#endif
+
+// static global initializer
+#if NORMAHX==1
+#define Xrh2 {0},
+#elif NORMAHX==2
+#define Xrh2 {0,0},
+#elif NORMAHX==3
+#define Xrh2 {0,0,0},
+#elif NORMAHX==4
+#define Xrh2 {0,0,0,0},
+#elif NORMAHX==5
+#define Xrh2 {0,0,0,0,0},
+#elif NORMAHX==6
+#define Xrh2 {0,0,0,0,0,0},
+#elif NORMAHX==7
+#define Xrh2 {0,0,0,0,0,0,0},
+#elif NORMAHX==8
+#define Xrh2 {0,0,0,0,0,0,0,0},
+#else
+#define Xrh2
 #endif
 
 // if we are not multithreading, report the master thread only
@@ -1507,7 +1596,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
 // Use when shape is known to be present but rank is not SDT.
-#if C_AVX2 || EMU_AVX2
+#if SY_64
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
 #else
 // in this version one value is always written to shape
@@ -1516,7 +1605,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define GACOPY1(name,type,atoms,rank,shaape) {UI _r=(rank); NOUNROLL do{AS(name)[_r-1]=1;}while(--_r);} // copy all 1s to shape - rank must not be 0
 
 // GAE executes the given expression when there is an error
-#if SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_AVX2 || EMU_AVX2
 #define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,((I)(r)<<32)+(t),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
 #else
 #define GAE0(v,t,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0(jt,(I)(t),(I)(r),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
@@ -2454,12 +2543,19 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #else
 #define C_CRC32C 0
 #endif
-#endif
 
 // JE source assumption of C_CRC32C
 #if !(C_AVX2 || EMU_AVX2)
 #undef C_CRC32C
 #define C_CRC32C 0
+#endif
+#endif
+
+// use viavx.c instead of vi.c
+#if C_CRC32C && (C_AVX2 || EMU_AVX2)
+#define C_VIAVX 1
+#else
+#define C_VIAVX 0
 #endif
 
 #if PYXES && (defined(__aarch64__) || defined(__arm__)) && !EMU_AVX2
@@ -2820,7 +2916,7 @@ static INLINE void aligned_free(void *ptr) {
 #endif
 
 // Supported in architecture ARMv8.1 and later
-#if (C_CRC32C && (defined(__aarch64__)||defined(_M_ARM64)))
+#if defined(__aarch64__) || defined(_M_ARM64)
   #define CRC32CW(crc, value) __asm__("crc32cw %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(value))
   #define CRC32CX(crc, value) __asm__("crc32cx %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
   #define CRC32(crc,value)  ({ uint32_t crci=crc; CRC32CW(crci, value); crci; })
@@ -2829,30 +2925,26 @@ static INLINE void aligned_free(void *ptr) {
 
 // The following definitions are used only in builds for the AVX instruction set
 // 64-bit Atom cpu in android has hardware crc32c but not AVX
-#elif C_CRC32C && (defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86))
-  #if C_AVX2 || defined(ANDROID) || defined (__SSE4_2__)
-    #if defined(MMSC_VER)  // SY_WIN32
-      // Visual Studio definitions
-      #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4
-      #define CRC32L(x,y) _mm_crc32_u64(x,y)  // takes UI, returns UI (top 32 bits 0)
-    #else
-      // gcc/clang definition
-      #define CRC32(x,y) __builtin_ia32_crc32si(x,y)  // returns UI4
-      #define CRC32L(x,y) __builtin_ia32_crc32di(x,y)  // returns UI
-    #endif
+#elif defined(__SSE4_2__)
+  #if defined(MMSC_VER)  // SY_WIN32
+    // Visual Studio definitions
+    #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4
+    #define CRC32L(x,y) _mm_crc32_u64(x,y)  // takes UI, returns UI (top 32 bits 0)
   #else
-    extern uint64_t crc32csb8(uint64_t crc, uint64_t value);
-    extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
-    #define CRC32(x,y)  crc32csb4(x,y) // returns UI4
-    #define CRC32L(x,y) crc32csb8(x,y) // returns UI
+    // gcc/clang definition
+    #define CRC32(x,y) __builtin_ia32_crc32si(x,y)  // returns UI4
+    #define CRC32L(x,y) __builtin_ia32_crc32di(x,y)  // returns UI
   #endif
   #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
-#else   // CRC32 not defined
-#if 0   // we use CRC32 for fast hashing; if not fast, we'll do it another way
+
+#else   // we use CRC32 for fast hashing; if not fast, we'll do it another way
+#if defined(_WIN64)||defined(__LP64__)
   extern uint64_t crc32csb8(uint64_t crc, uint64_t value);
+#else
+  extern uint32_t crc32csb8(uint32_t crc, uint64_t value);
+#endif
   extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
   #define CRC32(x,y)  crc32csb4(x,y) // returns UI4
   #define CRC32L(x,y) crc32csb8(x,y) // returns UI
   #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
-#endif
 #endif

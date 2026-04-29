@@ -4,7 +4,7 @@
 /* Verbs: Index-of                                                         */
 
 #include "j.h"
-#if C_CRC32C && SY_64 && (C_AVX2 || EMU_AVX2)
+#if C_VIAVX
 #include "viavx.h"
 
 // ******************* i., fourth class: sequential comparison ***************************************
@@ -127,7 +127,7 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
  SCDO(RATX,Q,!QEQ(x, av[j]));
  SCDO(SBTX,SB,x!=av[j]      );
  SCDO(BOXX,A,!equ(C(x),C(av[j])));
-#if C_AVX2 || EMU_AVX2
+#if 1
  // The instruction set is too quirky to do this with macros
  case IOSCCASE(XDX,0,IIDOT): seqsch256(seqschidotDD0,0x0000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break;
  case IOSCCASE(XDX,0,IFORKEY): seqsch256(seqschkeyDD0,0x4000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
@@ -143,7 +143,7 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
  SCDO(FLX,D,!TCMPEQ(jt->cct,x,av[j]));
 #endif
 
-#if C_AVX2 || EMU_AVX2
+#if 1
  case IOSCCASE(INTX,0,IIDOT): seqsch256(seqschidotII,0x0000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
  case IOSCCASE(INTX,0,IFORKEY): seqsch256(seqschkeyII,0x4000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
  case IOSCCASE(INTX,0,IICO): seqsch256(seqschicoII,0x1000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 

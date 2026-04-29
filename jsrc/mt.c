@@ -22,11 +22,6 @@
 // - Attempt to detect deadlock, perhaps in a debug mode of some sort (cf freebsd kernel WITNESS)
 
 #include"j.h"
-#if PYXES
-#define YIELD sched_yield();  // if we are spinning on other threads, give them a chance to run in case they might be on this core
-#else
-#define YIELD ;   // if no other processes, no reason to delay
-#endif
 
 // timing shenanigans
 struct jtimespec jtmtil(UI ns){ //returns the time ns ns in the future

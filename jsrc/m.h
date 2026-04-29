@@ -46,9 +46,14 @@
 ;@:(<@({.~  2 | #)/.)~ (#~ ('0000' -: 4&{.)@>) {.@;:;._2 wd 'clippaste'
 */
 
-//NOTE: alignment to cache is now required because of LSB flags in enqueue()
+//NOTE: alignment to cache is now required because of LSB flags in enqueue() QCMASK
+#if CACHELINESIZE==128
 #define ALIGNTOCACHE 1   // set to 1 to align each OS-allocated block block to cache-line boundary.  Will reduce cache usage for headers
 #define ALIGNPOOLTOCACHE 1   // set to 1 to align each pool block to cache-line boundary.  Will reduce cache usage for headers
+#else
+#define ALIGNTOCACHE (1+!!NORMAHX)   // set to 1 to align each OS-allocated block block to cache-line boundary.  Will reduce cache usage for headers
+#define ALIGNPOOLTOCACHE (1+!!NORMAHX)   // set to 1 to align each pool block to cache-line boundary.  Will reduce cache usage for headers
+#endif
 #define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last byte doesn't run off into unallocated memory
 
 #define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
@@ -68,7 +73,11 @@
 // For GMP allocations, h has a special value and we free them through mfgmp
 #define FHRHISGMP 0x4000  // this block was allocated by GMP
 #define FHRHBINISGMP 14  // this block was allocated by GMP
+#if 0 && NORMAHX
+#define FHRHPOOLBIN(h) (5==CTTZ(h))?6:CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
+#else
 #define FHRHPOOLBIN(h) CTTZ(h)     // pool bin# for free (0 means allo of size PMIN, etc).  If this gives PLIML-PMINL+1, the allocation is a system allo
+#endif
 #define FHRHBINISPOOL(h) ((h)&((2LL<<(PLIML-PMINL))-1))      // true is this is a pool allo, false if system (h is mask from block)
 #define FHRHBININPOOL(bin) ((bin)<PLIML-PMINL+1)      // true is this is a pool allo, false if system or GMP (h is bin#)
 #define ALLOJISPOOL(j) ((j)<=PLIML)     // true if pool allo, false if system (j is lg2(requested size))

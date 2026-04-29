@@ -14,9 +14,20 @@ on:
 
 jobs:
 
+# to run all jobs, enable all
+# for selected jobs, disable all and disable the selected needs
+
+ all:
+  #if: false
+  if: true
+  runs-on: ubuntu-latest
+  steps:
+    - run: echo "Runall jobs"
+
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)
+  needs: all
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -73,6 +84,7 @@ jobs:
 # linux gcc ------------------------------------------------------------
  jelinux-gcc:
   name: JE (Linux gcc)
+  needs: all
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
@@ -108,6 +120,7 @@ jobs:
 # linux32 --------------------------------------------------------------
  jelinux32:
   name: JE (Linux32)
+  needs: all
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -161,6 +174,7 @@ jobs:
 # linux32 gcc ----------------------------------------------------------
  jelinux32-gcc:
   name: JE (Linux32 gcc)
+  needs: all
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
@@ -196,6 +210,7 @@ jobs:
 # linux debug ----------------------------------------------------------
  jelinuxd:
   name: JE (Linux debug)
+  needs: all
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
@@ -231,6 +246,7 @@ jobs:
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)
+  needs: all
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
@@ -281,6 +297,7 @@ jobs:
 # macOS arm64 ----------------------------------------------------------
  jemacosarm:
   name: JE (macOS arm64)
+  needs: all
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
@@ -331,6 +348,7 @@ jobs:
 # rpi64arm -------------------------------------------------------------
  jerpi64arm:
   name: JE (Linux arm64)
+  needs: all
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -380,6 +398,7 @@ jobs:
 # rpi32arm -------------------------------------------------------------
  jerpi32arm:
   name: JE (Linux arm32)
+  needs: all
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -432,6 +451,7 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
+  needs: all
   if: ${{ false }}
   runs-on: ubuntu-latest
   steps:
@@ -492,6 +512,7 @@ jobs:
  jerpi32:
   name: JE (Raspberry32)
   if: ${{ false }}
+  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -551,6 +572,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd:
   name: JE (OpenBSD vmactions)
+  needs: all
   if: ${{ false }}
   runs-on: macos-15-intel
   steps:
@@ -613,6 +635,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
+  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -676,7 +699,9 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
+  needs: all
   runs-on: ubuntu-latest
+  #runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -737,6 +762,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD vmactions)
+  needs: all
   if: ${{ false }}
   runs-on: macos-15-intel
   steps:
@@ -803,6 +829,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
+  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -867,10 +894,11 @@ jobs:
       path: testfreebsd.txt
       overwrite: true
 
-# freebsdarm64  --------------------------------------------------------------
+# freebsdarm64 --------------------------------------------------------------
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
-#  runs-on: ubuntu-24.04-arm
+  needs: all
+  #runs-on: ubuntu-24.04-arm
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -934,9 +962,78 @@ jobs:
       path: testfreebsdarm64.txt
       overwrite: true
 
+# freebsdarm64a --------------------------------------------------------------
+ jefreebsdarm64a:
+  name: JE (FreeBSD arm64 vmactions)
+  if: ${{ false }}
+  needs: all
+  runs-on: macos-15
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Build, Test JE (FreeBSD arm64)
+     uses: vmactions/freebsd-vm@v1
+     with:
+      arch: aarch64
+      usesh: true
+      sync: sshfs
+      prepare: |
+       pkg upgrade -y
+       rdate time.cloudflare.com || true
+       pkg search openblas 1>&2
+       pkg install -y curl zip find gmake nasm pcre2 gdb openblas
+       find / -type f -name 'liblapack.so*' 1>&2
+       find / -type f -name 'libopenblas.so*' 1>&2
+       /sbin/ldconfig -r
+
+      run: |
+       rm -f jobdone
+       /sbin/ldconfig -r
+       ls -al ~/
+       ls -al ~/.ssh
+       echo "Host *" >>~/.ssh/config || true
+       echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       echo "client ssh config"
+       cat ~/.ssh/config || true
+       export CC=clang
+       export USE_SLEEF=1
+       export USE_OPENMP=0
+       export USE_PYXES=1
+       export USE_EMU_AVX=1
+       script/buildga.sh freebsd arm64 || exit 1
+       script/testga.sh freebsd arm64
+       cp jlibrary/bin/* j64 || true
+       rm -f j64/profile.ijs
+       ls -l j64
+       zip -r fbsdarm64.zip j64
+       touch jobdone
+
+   - name: Check Status (FreeBSD arm64)
+     run: |
+      test -f jobdone || exit 1
+
+   - name: Release JE (FreeBSD arm64)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "fbsdarm64.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+   - name: Copy Test (FreeBSD arm64)
+     uses: actions/upload-artifact@v4
+     with:
+      name: dist
+      path: testfreebsdarm64.txt
+      overwrite: true
+
 # android --------------------------------------------------------------
  jeandroid:
   name: JE (android)
+  needs: all
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
@@ -972,6 +1069,7 @@ jobs:
 # wasm -----------------------------------------------------------------
  jewasm:
   name: JE (wasm)
+  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -1009,6 +1107,7 @@ jobs:
 # windows --------------------------------------------------------------
  jewin:
   name: JE (Windows)
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1023,8 +1122,10 @@ jobs:
      shell: cmd
      env:
       NASM: ${{github.workspace}}\openssl-asm\nasm
+      _SSE4_2: 1
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      PTHREADS4WSRC: 1
      run: |
       script\buildga.cmd x64
 
@@ -1063,6 +1164,7 @@ jobs:
 # windows 32bit --------------------------------------------------------
  jewin32:
   name: JE (Windows 32)
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1117,6 +1219,7 @@ jobs:
 # windows arm64 old ----------------------------------------------------
  jewinarm64old:
   name: JE (Windows arm64 old)
+  needs: all
   if: ${{ false }}
   runs-on: windows-2022
   steps:
@@ -1133,6 +1236,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      PTHREADS4WSRC: 1
      run: |
       script\buildga.cmd arm64
 
@@ -1172,6 +1276,7 @@ jobs:
 # windows arm64 --------------------------------------------------------
  jewinarm64:
   name: JE (Windows arm64)
+  needs: all
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
@@ -1187,6 +1292,7 @@ jobs:
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      PTHREADS4WSRC: 1
      run: |
       script\buildga.cmd arm64
 
@@ -1237,6 +1343,7 @@ jobs:
 # windows msys2 x64 ----------------------------------------------------
  jewin-msys2-x64:
   name: JE (Windows MSYS2 x64)
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1260,10 +1367,12 @@ jobs:
       CC: x86_64-w64-mingw32-gcc
       CXX: x86_64-w64-mingw32-g++
       WINDRES: windres
+      _SSE4_2: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 1
+      PTHREADS4WSRC: 1
       _DEBUG: 0
      run: |
       script/buildga.sh windows x86_64 || exit 1
@@ -1297,6 +1406,7 @@ jobs:
 # windows msys2 x86 ----------------------------------------------------
  jewin-msys2-x86:
   name: JE (Windows MSYS2 x86)
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1324,6 +1434,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      PTHREADS4WSRC: 1
       _DEBUG: 0
      run: |
       script/buildga.sh windows i386 || exit 1
@@ -1357,7 +1468,7 @@ jobs:
 # windows msys2 arm64 --------------------------------------------------
  jewin-msys2-arm64:
   name: JE (Windows MSYS2 arm64)
-  if: ${{ false }}
+  needs: all
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
@@ -1383,8 +1494,9 @@ jobs:
       WINDRES: windres
       USE_SLEEF: 1
       USE_OPENMP: 0
-      USE_PYXES: 1
+      USE_PYXES: 0
       USE_EMU_AVX: 1
+      PTHREADS4WSRC: 1
       _DEBUG: 0
      run: |
       script/buildga.sh windows arm64 || exit 1
@@ -1392,7 +1504,7 @@ jobs:
    - name: Test JE (Windows MSYS2 arm64)
      shell: msys2 {0}
      env:
-      USE_PYXES: 1
+      USE_PYXES: 0
       USE_EMU_AVX: 1
       _DEBUG: 0
      run: |

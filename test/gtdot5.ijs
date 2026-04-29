@@ -10,7 +10,7 @@ wthr=: {{ while. y ~: {. 2 T.'' do. 6!:3]0.001 end. 1 }}
 NB. tests of locales keyword
 delth''
 
-0!:_1`1:@.(9!:56'supportafinity') '$'   NB. skip if not supportaffinity
+0!:_1`1:@.(9!:56'supportaffinity') '$'   NB. skip if not supportaffinity
 NB. populate shared locale
 create_shared_ =: {{ gbl =: >y }}
 destroy_shared_ =: 4!:55@coname
@@ -18,24 +18,30 @@ double_shared =: {{ ({. 3 T. '') , gbl =: +: gbl }}
 
 1: (0 T. [: < 'coremask';2&^)"0 ] 1 2 3  NB. create 3 threads, tied to 3 worker cores
 locs =: 0&".@>@(conew&'shared')@> locgbls =: 10;20;30;i. 10    NB. Create 4 numbered locales as instances of shared
-(1 2 3 (, 2&+)&.> }. locgbls) -: {{ ({. 3 T. '') , gbl =: gbl + y }} t. (<'locales';<14;1 2 3{locs) 2
+(1 2 3 (, 2&+)&.> }. locgbls) -: {{ ({. 3 T. '') , gbl =: gbl + y }} t. (<'locales';<14;locs) 2
 (0 2 2 2 +&.> locgbls) -: {{ gbl__y }}&.> locs
-(0 1 2 3 ,&.> 3&*&.> 0 2 2 2 +&.> locgbls) -: {{ ({. 3 T. '') , gbl =: gbl * y }} t. (<'locales';<15;locs) 3
-(3&*&.> 0 2 2 2 +&.> locgbls) -: {{ gbl__y }}&.> locs
+gbl =: 42  NB. for master thread
+(0 1 2 3 ,&.> 3&*&.> (<42) (0}) 0 2 2 2 +&.> locgbls) -: {{ ({. 3 T. '') , gbl =: gbl * y }} t. (<'locales';<15;locs) 3
+(3&*&.> 2 2 2 +&.> }. locgbls) -: {{ gbl__y }}&.> }. locs
 
-'domain error' -: ". etx {{)n + t. ('locales' ,&< 7 ; i. 4) }}
+(<<'base') = {{ coname y }} t. (<'locales';14) ''
+(<<'base') = {{ coname y }} t. (<'locales';<15) ''
+(<"0 ] 1 2 3) -: {{ 2 { 3 T. '' [ 6!:3 ? 0 }} t. (<'locales';14) ''
+(<"0 ] 0 1 2 3) -: {{ 2 { 3 T. '' [ 6!:3 ? 0 }} t. (<'locales';15) ''
+(<"0 ] ,3) -: {{ 2 { 3 T. '' [ 6!:3 ? 0 }} t. (<'locales';8) ''
+(<"0 ] 1 3) -: {{ 2 { 3 T. '' [ 6!:3 ? 0 }} t. (<'locales';10) ''
+(<"0 ] 1 2) -: {{ 2 { 3 T. '' [ 6!:3 ? 0 }} t. (<'locales';6) ''
+
+'length error' -: ". etx {{)n + t. (<'locales' ,&< 7 ; i. 2) }}  NB. not enough locs
 'domain error' -: ". etx {{)n + t. (<<'locales') }}
-'domain error' -: ". etx {{)n + t. (<'locales' ,&< i. 2) }}
+'rank error' -: ". etx {{)n + t. (<'locales' ,&< i. 2) }}
 'rank error' -: ". etx {{)n + t. (<'locales' ,&< ,: 1;2) }}
 'length error' -: ". etx {{)n + t. (<'locales' ,&< 1;2;3) }}
 'domain error' -: ". etx {{)n + t. (<'locales' ,&< 1.5;2) }}
 'rank error' -: ". etx {{)n + t. (<'locales' ,&< (,2);2) }}
 'domain error' -: ". etx {{)n + t. (<'locales' ,&< 3;0 1) }}
 'rank error' -: ". etx {{)n + t. (<'locales' ,&< 3;i. 1 2) }}
-'would deadlock' -: ". etx {{)n + t. (<'locales' ,&< 3;0 1 2) }}
-'would deadlock' -: ". etx {{)n + t. (<'locales' ,&< 1;2) }}
-'' -: ". etx {{)n + t. (<'locales' ,&< 2;2) }}
-'domain error' -: ". etx {{)n + t. ((<'locales' ,&< 2;2),(<'locales' ,&< 2;2)) }}
+'domain error' -: ". etx {{)n + t. ((<'locales';2),(<'locales';2)) }}
 18!:55 ;:'shared'
 18!:55 locs
 NB.$

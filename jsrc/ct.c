@@ -459,7 +459,7 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
   // In this case we don't want to spin on this job, so we sleep till the next one.  If there is another block queued after this one, we clear AR in this job to indicate a request
   // for a kick when this job is removed from the queue
   if(unlikely(locbit&jobnsmask)){if(unlikely(jobnext!=0))AR(UNvoidAV1(job))=0; goto waitforkick;}  // req kick (by writing 0) only if there is another job.  Start waiting
- locbit=(I)jobn<0?locbit:1; job->ns_mask=jobnsmask+=locbit;   // increment task counter for next owner
+  locbit=(I)jobn<0?locbit:1; job->ns_mask=jobnsmask+=locbit;   // increment task counter for next owner
   JOB **writeptr=&jobq->ht[1]; writeptr=jobnext!=0?(JOB**)&jt->shapesink[0]:writeptr; writeptr=jobnsmask<jobn?(JOB**)&jt->shapesink[0]:writeptr; jobnext=jobnsmask<jobn?job:jobnext;  // calc head & tail ptrs
       // if there are more jobs (jobnext!=0) OR more tasks in the current job (jobns<jobn), divert write of tail; otherwise write the empty-queue value into tail.  If job finishing, set new headptr in jobnext
       // If this is a user job without locales, ns_mask is garbage but n=0, so jobns<jobn will never be true (because the vbls are unsigned).
@@ -498,10 +498,11 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
    A pyx=UNvoidAV1(job)->mback.jobpyx; A startloc=UNvoidAV1(job)->kchain.global; // extract the pyx and globals pointer from the job
    if((I)jobn<0){  // user job with locales
     // this is a job with locales.  If we removed the job from the queue (mask=n), AND AR was 0 indicating that a thread is waiting for a kick, deliver the kick
-   if(unlikely(((jobn^jobnsmask)|AR(UNvoidAV1(job)))==0)){JOB *job=JOBLOCK(jobq); ++jobq->futex; JOBUNLOCK(jobq,job); jfutex_wakea(&jobq->futex);}  // wakeall sequence: lock the pool; advance futex value; unlock; kick.  No new work added
+    if(unlikely(((jobn^jobnsmask)|AR(UNvoidAV1(job)))==0)){JOB *job=JOBLOCK(jobq); ++jobq->futex; JOBUNLOCK(jobq,job); jfutex_wakea(&jobq->futex);}  // wakeall sequence: lock the pool; advance futex value; unlock; kick.  No new work added
     // pyx points to a vector of pyxes, startloc to a vector of locale#s.  Extract the pyx and global for this thread
-    I vecx=__builtin_popcountll((UI)(AN(UNvoidAV1(job))<<(BW-jt->ndxinthreadpool)));  // AN is mask of threads.  Convert thread index to index into vectors, by counting the 1s after discarding higher bits in mask
-    pyx=AAV1(pyx)[vecx]; startloc=jtfindnl(jt,IAV(startloc)[vecx]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)  // get pyx (AAV1 ok) and locale#; convert locale# to globals address
+// obsolete     I vecx=__builtin_popcountll((UI)(AN(UNvoidAV1(job))<<(BW-jt->ndxinthreadpool)));  // AN is mask of threads.  Convert thread index to index into vectors, by counting the 1s after discarding higher bits in mask
+    pyx=AAV1(pyx)[__builtin_popcountll((UI)(AN(UNvoidAV1(job))<<(BW-ndxinthreadpool)))];  // get pyx for this thread (AAV1 ok)
+    if((I)startloc&1){startloc=jtfindnl(jt,IAV((A)(I*)~(I)startloc)[ndxinthreadpool]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)}  // get locale#; convert to globals address
    }
    ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
    jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
@@ -530,7 +531,7 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
     // we must also fa the backer.  This is different from the case of virtual args to explicit defns: there we know that the virtual arg is on the stack in the caller,
     // and will be freed from the stack, and thus that there is no chance that a virtual will be freed.  Here the caller has continued, and there may be nothing but this
     // virtual to hold the backer.  So, unlike in all other fa()s, we fa the backer if the virtual is freed.
-   fa(UNvoidAV1(job)->mback.jobpyx) fa(UNvoidAV1(job)->kchain.global) faafterrav(arg1); if(arg2!=self)faafterrav(arg2); fanamedacv(self);  // unprotect args only after result has been safely installed
+    fa(UNvoidAV1(job)->mback.jobpyx) A ga=UNvoidAV1(job)->kchain.global; ga=(A)((I)ga^-((I)ga&1)); fa(ga) faafterrav(arg1); if(arg2!=self)faafterrav(arg2); fanamedacv(self);  // unprotect args only after result has been safely installed
     mf(UNvoidAV1(job));  // free the job, which is never a recursive block
     taskended=1;  // if we free, we finished the task
    }
@@ -580,20 +581,26 @@ static A jttaskrun(J jtfg,A arg1, A arg2, A self){F12JT;
 I taskflags=FAV(self)->localuse.lu1.forcetask, localesx=FAV(self)->localuse.lu1.forcetask>>16;  // flags: 0-7=pool, 8=workeronly, 9=mask0 set 10=locales given  16+=localesx (-1 if no locales)
  JOBQ *jobq=&(*JT(jt,jobqueues))[FAV(self)->localuse.lu1.forcetask&0xff];  // bits 0-7 = threadpool number to use, point to jobq info for selected thread
  // create the pyx/global info: if no locales, one pyx and the current jt->global; if locales, a list of pyxes and the user's list of locales.  We store these in the job.  They are what we ra and fa
- // Also fill in n, ns_mask
+  // Also fill in n, ns_mask
+ jobA->kchain.global=jt->global;  // use current locales unless a locale-lisrt is given
  if(localesx<0){   // locales given?
   // no locales
-  RZ(jobA->mback.jobpyx=jtcreatepyx(jt,-2,inf)) jobA->kchain.global=jt->global; job->n=0;  // pyx is secreted in header  threadid is not known yet
- }else{A p;
-  // there are locales.
-  A masklocs=AAV(AAV(FAV(self)->fgh[1])[localesx])[1],maska=AAV(masklocs)[0],locsa=AAV(masklocs)[1];  // point to mask/loc parameters
-  ASSERTGOTO(!ACISPERM(AC(locsa)),EVRO,errfajobA)   // surely the locales block is not permanent, but check to be safe
-  UI mask=BIV0(maska); I nlocs=AN(locsa);  // extract mask value, number of locales
+  RZ(jobA->mback.jobpyx=jtcreatepyx(jt,-2,inf)) job->n=0;  // pyx is secreted in header  threadid is not known yet
+ }else{A p;  // there are locales:  masklocs is mask [ ; [locales] ]
+  // there are locales, i. e. multiple execution.  If locsa is 0, replace it with jt->global, otherwise with ~locsa
+  A masklocs=AAV(AAV(FAV(self)->fgh[1])[localesx])[1];
+  A maska;  // A blocks for mask
+  if(AT(masklocs)&BOX){  // (<mask) [, <locales]
+   maska=C(AAV(masklocs)[0]);  // extract mask
+   if(AN(masklocs)==2){A boxx=C(AAV(masklocs)[1]); ASSERTGOTO(!ACISPERM(AC(boxx)),EVRO,errfajobA) jobA->kchain.global=(A)~(I)boxx;}  // surely the locales block is not permanent, but check to be safe, store flagged as ~ in job
+  }else{maska=masklocs;   // mask only, leave current globals setting
+  }  // extract mask/locs.  locs is current globals or ~&locale-list
+  UI mask=BIV0(maska); I nmaskbits=__builtin_popcountll(mask);   // extract mask value, number of locales
   ASSERTGOTO((mask>>jobq->nthreads)<=1,EVDEADLOCK,errfajobA)  // exit if the mask calls for threads that are not active.  Mask bit 0 is for current thread.  If user deletes a thread while this job is running, we may deadlock
   taskflags|=(2+(mask&1))<<9;  // set flags indicating whether mask bit0 is set (=this enqueueing thread must run a locale), and whether locales given
-  jobA->kchain.global=locsa; AN(jobA)=mask; job->n=-1; job->ns_mask=1|~mask; AC(jobA)=nlocs-(mask&1);  // fill in job info: locale list, threadmask, locales type, mask of threads NOT to use.  Usecount of job is #worker threads, to count down to find completion of last thread
-  GATV0E(jobA->mback.jobpyx,BOX,nlocs,1,goto errfajobA;) AFLAGINIT(jobA->mback.jobpyx,BOX)  // allocate recursive list of pyxes which will be our result
-  A *psv=jt->tnextpushp; jt->tnextpushp=AAV1(jobA->mback.jobpyx); DO(nlocs, if((p=jtcreatepyx(jt,-2,inf))==0)break;) jt->tnextpushp=psv;   // hijack tstack (see vo.c for discussion), allocate pyxes.  They have usecount 1, protected by the enclosing box.
+  AN(jobA)=mask; job->n=-1; job->ns_mask=1|~mask; AC(jobA)=nmaskbits-(mask&1);  // fill in job info: threadmask, locales type, mask of threads NOT to use.  Usecount of job is #worker threads, to count down to find completion of last thread
+  GATV0E(jobA->mback.jobpyx,BOX,nmaskbits,1,goto errfajobA;) AFLAGINIT(jobA->mback.jobpyx,BOX)  // allocate recursive list of pyxes which will be our result
+  A *psv=jt->tnextpushp; jt->tnextpushp=AAV1(jobA->mback.jobpyx); DO(nmaskbits, if((p=jtcreatepyx(jt,-2,inf))==0)break;) jt->tnextpushp=psv;   // hijack tstack (see vo.c for discussion), allocate pyxes.  They have usecount 1, protected by the enclosing box.
   RZGOTO(p,errfajobA)   // exit if failure allocating a pyx
  }
 // extract parms given to t.: threadpool number, worker-only flag
@@ -615,7 +622,7 @@ UI forcetask=REPSGN((taskflags&0x500)-1);  // 0 if the user wants to force this 
   job->initthread=THREADID(jt);  // indicate this is a user job.  ns is immaterial since it will always trigger a deq.  Install initing thread# for repatriation
   job->user.args[0]=arg1;job->user.args[1]=arg2;job->user.args[2]=self;memcpy(job->user.inherited,jt,sizeof(job->user.inherited));  // Move in all parms for starting the job.  A little overcopy OK on inherited.  arg2 has not changed for monads, =self
   // protect anything that we have to ensure stays valid for the verb.  This is the pyx or list thereof, and the locales or list thereof.  Also extract them from the evanescent job block
-  A ppyx=jobA->mback.jobpyx, ploc=jobA->kchain.global;  // values that need protecting/extracting
+  A ppyx=jobA->mback.jobpyx, ploc=jobA->kchain.global; ploc=(A)((I)ploc^-((I)ploc&1));  // values that need protecting/extracting. uncomplement the address of locales list
   raincr(ploc);   // protect globals: known nonrecursive, and were allocated here or came from boxes or jt->global, thus positive usecount; and not ACPERMANENT
   JOB *oldjob=JOBLOCK(jobq);  // pointer to next job entry, simultaneously locking
   if(likely((UI)jobq->nthreads>(forcetask&jobq->nuunfin))){  // recheck after lock
@@ -630,16 +637,16 @@ UI forcetask=REPSGN((taskflags&0x500)-1);  // 0 if the user wants to force this 
    (taskflags&0x400?jfutex_wakea:jfutex_wake1)(&jobq->futex);  // wake 1 waiting thread, if there is one; for locales type, wake them all
    if(taskflags&0x200){
     // bit 0 of the mask was set, indicating that this thread should pitch in with locale 0.  Run as if in a thread, and report any error in the pyx.  This is copied from threadmain
-    // We start in the console locale for this thread, with globals as called for by the task.  When we finish we must restore local & both global pointers to the current
-    // state of this thread
-    A pyx=AAV1(ppyx)[0], startloc=jtfindnl(jt,IAV(ploc)[0]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)  // get pyx (AAV1 ok) and locale#; convert locale# to globals address
+    // For this execution we do not change the current locale.  This decision allows us to bypass tasks when the user gives a mask with no worker threads.  It's reasonable anyway.
+    A pyx=AAV1(ppyx)[0]; // get pyx (AAV1 ok)
+// obsolete , startloc=jtfindnl(jt,IAV(ploc)[0]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)  // get pyx (AAV1 ok) and locale#; convert locale# to globals address
     ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
-    A savlocsyms=jt->locsyms,savglobal=jt->global;jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK;  // init what needs initing.  Notably clear the local symbols
-   INCREXECCTIF(startloc);  // start new exec chain; raise execcount of current locale to protect it while running
-    jt->parserstackframe.sf=self;  // each thread starts a new recursion point
+// obsolete     A savlocsyms=jt->locsyms,savglobal=jt->global;jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK;  // init what needs initing.  Notably clear the local symbols
+// obsolete    INCREXECCTIF(startloc);  // start new exec chain; raise execcount of current locale to protect it while running
+    RESETRANK; jt->parserstackframe.sf=self;  // each thread starts a new recursion point
     A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // get self, positioned after the last noun arg
    A z=(FAV(uself)->valencefns[arg2!=self])(jt,arg1,uarg2,uself);  // execute the u in u t. v
-    DECREXECCTIF(jt->global); SYMRESTORELOCALGLOBALS(savlocsyms,savglobal);  // remove exec-protection from finishing exec chain.  This may result in its deletion.  Reset symbol tables too (note there may be no locals & we have changed only globals)
+// obsolete     DECREXECCTIF(jt->global); SYMRESTORELOCALGLOBALS(savlocsyms,savglobal);  // remove exec-protection from finishing exec chain.  This may result in its deletion.  Reset symbol tables too (note there may be no locals & we have changed only globals)
     C errcode=0;
     if(unlikely(z==0)){fail: z=0; errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualERR(z,goto fail;);}  // realize virtual result before returning it
     jtsetpyxval(jt,pyx,z,errcode);  // install completion info into pyx 0
@@ -767,6 +774,7 @@ F2(jttdot){F12IP;
  I localex=-1;  // this will hold the index of the box containing the locales keyword
  I poolno=0;  // default to using threadpool 0
  A afixed=0;  // the fixed-format args if any
+ A z;
  // parse the options
  // Go through each box, analyzing.  If we hit leading fixed-format options, remember where and skip for later
  DO(AN(w),
@@ -789,20 +797,27 @@ F2(jttdot){F12IP;
    }
   }else if(AT(w)&NUMERIC){afixed=w; break;  // numeric arg must be fixed-format
   }else{akw=w; if(!(AT(akw)&LIT))RZ(akw=cvt(LIT,akw)) aval=0;  // string arg is a valueless keyword
-  }
+  };
   // we have the keyword/value; examine them one by one
   if(strncmp(CAV(akw),"worker",AN(akw))==0){
    ASSERT(nolocal<0,EVDOMAIN)  // can't set same parm twice
    aval=aval==0?num(1):aval;  // if value omitted, assume 1
    RE(nolocal=b0(aval))   // extract binary value
-  }else if(strncmp(CAV(akw),"locales",AN(akw))==0){
+  }else if(strncmp(CAV(akw),"locales",AN(akw))==0){  // 'locales' ,&< mask [; locale-list]
+   // the multiple-execution is indicated by localex>=0; if there is no locale-list, alocs is 0 and we use the incumbent locale
    ASSERT(localex<0,EVDOMAIN)  // can't set same parm twice
    ASSERT(aval!=0,EVDOMAIN)  // value must be given
-   ASSERT(AT(aval)&BOX,EVDOMAIN) ASSERT(AR(aval)==1,EVRANK) ASSERT(AN(aval)==2,EVLENGTH) // value must be 2-box list
-   A boxx=C(AAV(aval)[0]); ASSERT(AT(boxx)&INT+B01,EVDOMAIN) ASSERT(AR(boxx)==0,EVRANK) I mask=BIV0(boxx);  // mask must be bool/int
-   boxx=C(AAV(aval)[1]); ASSERT(AT(boxx)&INT,EVDOMAIN) ASSERT(AR(boxx)<=1,EVRANK) ASSERT(AN(boxx)==__builtin_popcountll(mask),EVDEADLOCK)  // must have 1 locale per 1-bit in mask
-   I *bv=IAV(boxx); DO(AN(boxx), ASSERT(bv[i]>=0,EVLOCALE))  // verify locale #s nonnegative
-   ASSERT((mask&~1)!=0,EVDEADLOCK)  // must have at least 1 locale outside of the master
+   A amask, alocs;  // A blocks for mask and locs
+   if(AT(aval)&BOX){ASSERT(AR(aval)==1,EVRANK) ASSERT(BETWEENC(AN(aval),1,2),EVLENGTH) amask=C(AAV(aval)[0]); alocs=AN(aval)==2?C(AAV(aval)[1]):0;  // 2 boxes: extract mask and locs
+   }else{amask=aval; alocs=0;
+   }
+   ASSERT(AT(amask)&INT+B01,EVDOMAIN) ASSERT(AR(amask)==0,EVRANK) I mask=BIV0(amask);  // mask must be bool/int
+   if(alocs!=0){  // if locale list given, it must have enough values go reach the end of the mask
+    ASSERT(AR(alocs)<=1,EVRANK) if(likely(AN(alocs)!=0)){ASSERT(AT(alocs)&INT,EVDOMAIN) ASSERT(AN(alocs)>CTLZI(mask),EVLENGTH)}    // must have 1 locale per 1-bit in mask; if empty, no locales
+    I *bv=IAV(alocs); DO(AN(alocs), ASSERT(bv[i]>=0,EVLOCALE))  // verify locale #s nonnegative
+   }
+   ASSERT(mask!=0,EVDEADLOCK)  // must have at least 1 thread to use - might be master
+   if(mask==1){z=a; goto finnotask;}  // if we run only in master, don't make a task
    localex=i;  // remember the index we found the keyword at
   }else{ASSERT(0,EVDOMAIN)}   // error if keyword is unknown
   if(!(AT(w)&BOX))break;  // unboxed must be a single value
@@ -817,8 +832,9 @@ F2(jttdot){F12IP;
  // set defaults for omitted parms
  nolocal=nolocal<0?0:nolocal;  // nolocal defaults to 0 (no mask given)
  // parms read, install them into the block for t. verb
- A z; RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,FAV(a)->flag&VNONAME+VNOSELF,RMAX,RMAX,RMAX))  // NOSELF because t. does $: stacking
+ RZ(z=fdef(0,CTDOT,VERB,jttaskrun,jttaskrun,a,w,0,FAV(a)->flag&VNONAME+VNOSELF,RMAX,RMAX,RMAX))  // NOSELF because t. does $: stacking
  FAV(z)->localuse.lu1.forcetask=poolno+(nolocal<<8)+(localex<<16);  // save the t. options for execution.  Bits 0-7=poolno, 8=worker only, 16+=box# in w of the locales keyword (-1 if none) 
+finnotask: ;  // come here with z=a to return <@u with no task, is there are no locales to run
  if(localex<0)z=atco(ds(CBOX),z);  // non-locales call returns a single pyx (to match local execution) and it must be boxed.  use <@: to get BOXATOP flags.  locales call must always run in threads
  RETF(z)  
 }

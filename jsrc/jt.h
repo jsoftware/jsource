@@ -82,7 +82,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C _cl0[0];          // marker for the start of cacheline 0
 // task-initialized values
 // *********************************** the starting area contains values that are inherited from the spawning task en bloc.  Some of these are reinitialized
- D cct;              // complementary comparison tolerance inherit for task  could be a float if non-complementary
+ D cct;              // complementary comparison tolerance inherit for task  could be a float if non-complementary, or 32-bit fixed-point
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C ppn;              // print precision (field width for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task  could merge into .db or boxpos
@@ -122,7 +122,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I4 parsercalls;      // # times parser was called
  B iepdo;            // 1 iff do iep on going to immex  bit 0 = requested, bit 1 = running
  C xmode;            // extended integer operating mode
- C emsgstate;   // disposition of error messages, which determines how detailed we make the message
+ US emsgstate;   // disposition of error messages, which determines how detailed we make the message
 #define EMSGSTATENOTEXT 1  // Set to suppress message text
 #define EMSGSTATENOLINE 2  // Set to suppress line/col msgs
 #define EMSGSTATENOEFORMAT 4  // Set to suppress call to eformat_j_ for detailed analysis.  bits 0-2 are pushed/popped en bloc by u :: v (but not try.).  Otherwise under user control
@@ -134,7 +134,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define EMSGSTATETRAPPINGX 6  // set if we are in a trapping construct, u :: v or try.
 #define EMSGSTATETRAPPING (1<<EMSGSTATETRAPPINGX)
 #define EMSGSTATEFORMATTED 0x80  // line has been through eformat - do not call again until errors reset.  This is the fastest way to turn off all error detection and remembrance
- I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
+#define EMSGSTATEUSERMSG 0x100  // line contains a user message and should not be touched
  S etxn;             // strlen(etx) but set negative to freeze changes to the error line
  S etxn1;            // last non-zero etxn
  UC jerr;             // error number (0 means no error)
@@ -147,7 +147,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  C initnon0area[0];
  void* fillv;            // &fill value, during primitive execution - used during parsing to hold pointer to routine to execute - init immaterial
  US ranks;            // low half: rank of w high half: rank of a; for IRS. init for task to 3F3F
- C filler0[6];
+ I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
+ C filler0[5];
 // end of cacheline 0, heavily used
  C _cl1[0];
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?

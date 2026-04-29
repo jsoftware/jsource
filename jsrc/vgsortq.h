@@ -179,8 +179,8 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
      xchgx0=in0+cstklsb0; xchgx1=in1-cstklsb1;  // remember the successful exchange, so that we don't move a pointer past it
      SORTQTYPE temp=v[xchgx0]; v[xchgx0]=v[xchgx1]; v[xchgx1]=temp;
      // Remove the bit we processed, and update the lsb for the next swap.  If there is no swap here, advance LSB to end of word to free up stack space
-     if(cstk0&=cstk0-1)cstklsb0=CTTZI(cstk0); else{cstklsb0=BW; break;}  // We hope the processor predicts these branches to fail always, so that we will get one misbranch to exit the loop
-     if(cstk1&=cstk1-1)cstklsb1=CTTZI(cstk1); else{cstklsb1=BW; goto testcstk1;}
+     if(likely(cstk0&=cstk0-1))cstklsb0=CTTZI(cstk0); else{cstklsb0=BW; break;}  // predicts these branches to fail, so that we will get one misbranch to exit the loop
+     if(likely(cstk1&=cstk1-1))cstklsb1=CTTZI(cstk1); else{cstklsb1=BW; goto testcstk1;}
     }
     // Here when cstk0 ended: we have not updated cstk1 yet
     cstk1&=cstk1-1; cstklsb1=CTTZI(cstk1); cstklsb1=cstk1==0?BW:cstklsb1;

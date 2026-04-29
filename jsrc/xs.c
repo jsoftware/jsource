@@ -76,7 +76,7 @@ PROLOG(000);
  J jtfg=(J)((I)jt+d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
  d->dcss=1;  // indicate this script is not overridden by suspension
  A *old=jt->tnextpushp;
- C se=jt->emsgstate;   // save init TRAPPING status, which we will restore
+ US se=jt->emsgstate;   // save init TRAPPING status, which we will restore
  switch(ce){
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
  // since these loops may continue after error, we don't automatically fail on a 0 result from immex.  This causes a problem at end of suspension, because the combination of result=0/jerr=0

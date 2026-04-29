@@ -230,7 +230,7 @@ static A gahzap(J jt,I r,A w){RZ(w=gah(r,w)) ACINITUNPUSH(w); R w;}  // allocate
 // the args to eformat_j_ are error#;curname;jt->ranks/empty if m};AR of self;a/AR(a)[;w/AR(w)}[;m]
 // Result is always 0
 A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
-  if(!(jt->emsgstate&EMSGSTATEFORMATTED+EMSGSTATENOEFORMAT)&&likely(self!=DUMMYSELF)){  // If we have already formatted, don't do it again.  If we expect error, return fast.  If we are called without a real self, we must be executing something internal.  Format it later when we have a real self
+  if(!(jt->emsgstate&EMSGSTATEUSERMSG+EMSGSTATEFORMATTED+EMSGSTATENOEFORMAT)&&likely(self!=DUMMYSELF)){  // If we have already formatted or have a user msg, don't do it again.  If we expect error, return fast.  If we are called without a real self, we must be executing something internal.  Format it later when we have a real self
   C e=jt->jerr;
   if(e!=0 && e!=EVABORTEMPTY && e!=EVSTACK && e!=EVWSFULL){   // if no error, don't do it again.  Don't waste time on aborts.  If we have run out of memory or stack, don't call eformat, which will probably fail too
    if(!jt->glock){ // if we are locked, show nothing;
@@ -315,7 +315,7 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
 A jtjsignale(J jt,I eflg,A line,I info){
  // if a message has already been stored, ignore any subsequent one.  This should happen only in code that generates the same error in an inner loop over data
  if(likely(jt->jerr==0)){
-  if(unlikely(!(jt->emsgstate&EMSGSTATEFORMATTED))){   // if not first error or formatting the line is in progress, ignore altogether.  Also used when we expect an error and don't need jt->jerr set, which is why the paradoxical unlikely
+  if(unlikely(!(jt->emsgstate&EMSGSTATEUSERMSG+EMSGSTATEFORMATTED))){   // if not first error or formatting the line is in progress, ignore altogether.  Also used when we expect an error and don't need jt->jerr set, which is why the paradoxical unlikely
    C e=eflg&EMSGE; jt->jerr1=jt->jerr=jt->jerrraw=e;   // extract error# & save it.  Even if eformat is running we need to set the error to cut off invalid internal paths.  jerr1 is for later sentences, jerrraw for more detail about this sentence
    if(jt->etxn>=0){  // if the error line is frozen, don't touch it
     jt->etxn=0;  // clear error-message area indicating message not installed yet
@@ -400,11 +400,12 @@ static F2(jtdbsig){F12IP;I e;
  }else{
   jt->emsgstate&=~(EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATEFORMATTED);  // user's message overrides anything that was given before; turn off ignore bits to ensure we process it
   if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jtjsignale(jt,e|EMSGLINEISA+EMSGLINEISTERSE+EMSGNOMSGLINE+EMSGNOEFORMAT,a,0);} else jsignal(e|EMSGNOEFORMAT);  // must not run eformat, since self does not apply.  Display user string as terse msg, not line
+  jt->emsgstate|=EMSGSTATEUSERMSG;  // indicate that the line contains a user message that should never be reformatted
  }
  R 0;
 }    
 
-F1(jtdbsig1){F12IP;R dbsig(0L,w);}   /* 13!:8  signal error */
+F1(jtdbsig1){F12IP;R dbsig(0L,w);}   /* 13!:8  signal error scaf bivalent */
 F2(jtdbsig2){F12IP;R dbsig(a, w);}
 
 // 9!:59 set emsgslvl, return previous

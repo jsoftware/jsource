@@ -2152,10 +2152,11 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
 #define REGOTO(exp,lbl) {if(unlikely(((exp),jt->jerr!=0)))goto lbl;}
-#define RESETERRT(t)    {t->etxn=t->jerr=0;t->emsgstate&=~(EMSGSTATEFORMATTED|EMSGSTATEPAREN);}
+#define RESETERRT(t)    {t->etxn=t->jerr=0;t->emsgstate&=~(EMSGSTATEUSERMSG+EMSGSTATEFORMATTED|EMSGSTATEPAREN);}
 #define RESETERR        RESETERRT(jt)
-#define RESETERRC       {jt->jerr=0; jt->etxn=MIN(jt->etxn,0);}  // clear error; clear error text too, but not if frozen.  Used only when formatting ARs
+#define RESETERRC       {jt->jerr=0; jt->etxn=MIN(jt->etxn,0);}  // clear error; clear error text too, but not if frozen.  Used only when formatting ARs or 13!:8
 #define RESETERRNO      {jt->jerr=0;jt->emsgstate&=~(EMSGSTATEFORMATTED|EMSGSTATEPAREN);}  // reset the number but not the message; used in adverse/throw. to keep the user's message
+#define RESIGERR(e)     if(unlikely(jt->emsgstate&EMSGSTATEUSERMSG))R 0; else {RESETERR ASSERT(0,e)}  // clear error and resignal, unless the message was frozen
 #define RESETRANK       (jt->ranks=R2MAX)
 #define RZSUFF(exp,suff) {if(unlikely(!(exp))){suff}}
 #define RZ(exp)         RZSUFF(exp,R0)
@@ -2344,13 +2345,17 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define POPMSGS jt->emsgstate=_e;  // restore previous state
 #define MAYBEWITHMSGSOFF(offcond,stmt) {MAYBEPUSHNOMSGS(offcond) stmt POPMSGS}  // execute stmt, optionally with msgs off.  Use only around internal functions
 #define WITHMSGSOFF(stmt) MAYBEWITHMSGSOFF(1,stmt)  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
+// scaf* in next line, remove TRAPPING if TRACEDB is not set, so that an error will offer post-mortem debug
 #define MAYBEWITHDEBUG(dbg,jt,stmt) if(dbg){stmt}else{UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
- C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
+ US _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
 #define WITHDEBUGOFF(stmt) MAYBEWITHDEBUG(0,jt,stmt)
-#define WITHEFORMATDEFERRED(stmt) {UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
- C _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
- stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); _d=jt->emsgstate; jt->emsgstate=_e; if(unlikely(jt->jerr!=0)&&likely(_d&EMSGSTATENOTEXT)){_d=jt->jerr; RESETERR ASSERT(0,_d)}}  // WITHDEBUGOFF, but resignal any error so as to use caller's eformat.
+// scaf* in next line, remove TRAPPING if TRACEDB is not set, so that an error will offer post-mortem debug
+#define WITHEFORMATDEFERRED(stmt) {/* obsolete UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; */ \
+ US _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT; \
+ stmt /* obsolete jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB);*/ US _f=jt->emsgstate; jt->emsgstate=_e|(_f&EMSGSTATEUSERMSG); \
+ if(unlikely(jt->jerr!=0)&&likely(_f&EMSGSTATENOTEXT)){UC _d=jt->jerr; RESIGERR(_d)}}  // run stmt, but suppress eformatting & resignal any error so as to use caller's eformat.  If stmt set USERMSG, keep it to preserve the msg line
+// obsolete  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); _d=jt->emsgstate; jt->emsgstate=_e; if(unlikely(jt->jerr!=0)&&likely(_d&EMSGSTATENOTEXT)){_d=jt->jerr; RESETERR ASSERT(0,_d)}}  // WITHDEBUGOFF, but resignal any error so as to use caller's eformat.
         //  Exception: in EMSGSTATENOTEXT was turned off (and not restored), we figure that user used 13!:8, which we don't eformat, so we don't resignal it
 // If the abandoned value we want to ra is likely the last thing on the tstack, look to see if it is.  If so, just back up the tstack (if that backs over to the chain field, that will never match
 // the ZAP pointer and we will not modify tpushnext).  Otherwise ZAP the block

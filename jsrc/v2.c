@@ -420,7 +420,7 @@ F2(jtqco2){F12IP;A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  ARGCHK2(a,w);
  wn=AN(w); wr=AR(w); b=all1(lt(a,zeroionei(0))); xt=1&&AT(w)&XNUM+RAT;  // b: every a is < 0
  if(AR(a)||wr&&(b||xt))R rank2ex0(a,w,DUMMYSELF,jtqco2);
- if(!b&&xt){m=rei0(vib(a)); if(BETWEENO(m,0,1229))R qco2x(m,w);}  /* 1229=p:^:_1 XBASE */
+ if(!b&&xt){m=rei0(a); if(BETWEENO(m,0,1229))R qco2x(m,w);}  /* 1229=p:^:_1 XBASE */
  RZ(q=factor(w)); qv=AV(q);  // q is factors of w
  if(b)RZ(a=negate(a));
  bb=equ(a,ainf);  // bb: a is _ or __

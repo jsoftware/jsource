@@ -76,7 +76,7 @@
 #define axbytes(x,y)                jtaxbytes(jt,(x),(y))
 #define axbytes1(x0,x1,x2,x3,x4)    jtaxbytes1(jt,(x0),(x1),(x2),(x3),(x4))
 #define axtally(x,y)                jtaxtally(jt,(x),(y))
-#define b0(x)                       jtb0(jt,(x))
+// obsolete #define b0(x)                       jtb0(jt,(x))
 #define baddson(x,y,z)              jtbaddson(jt,(x),(y),(z))
 #define badjust(x,y)                jtbadjust(jt,(x),(y))
 #define base2(x,y)                  jtbase2(jt,(x),(y))
@@ -551,7 +551,8 @@ extern void jfree4gmp(void*,size_t);
 #define hparm(x,y,z)                jthparm(jt,(x),(y),(z))
 #define hrep(x,y,z)                 jthrep(jt,(x),(y),(z))
 #define i0(x)                       ({I r; A xa=(x); if(unlikely((xa)==0))r=0;else if(likely(ISDENSETYPE(AT(xa),INT+B01))){ASSERT(!AR(xa),EVRANK); r=BIV0(xa);}else r=jti0(jt,xa); r;})  // INT/B01 quickly
-#define rei0(x)            ({I r; A xa=(x); if(unlikely((xa)==0))R0; if(likely(ISDENSETYPE(AT(xa),INT+B01))){ASSERT(!AR(xa),EVRANK); r=BIV0(xa);}else{RE(r=jti0(jt,xa))} r;})  // INT/B01 quickly
+#define reb0(x)            ({I r; A xa=(x); if(unlikely(xa==0))R0; if(likely(ISDENSETYPE(AT(xa),INT+B01))){ASSERT(!AR(xa),EVRANK); r=BIV0(xa); ASSERT((r&~1)==0,EVDOMAIN)}else{RE(r=jtb0(jt,xa))} r;})  // INT/B01 quickly
+#define rei0(x)            ({I r; A xa=(x); if(unlikely(xa==0))R0; if(likely(ISDENSETYPE(AT(xa),INT+B01))){ASSERT(!AR(xa),EVRANK); r=BIV0(xa);}else{RE(r=jti0(jt,xa))} r;})  // INT/B01 quickly
 #define iaddr(x0,x1,x2,x3)          jtiaddr(jt,(x0),(x1),(x2),(x3))
 #define icap(x)                     jticap(jt,(x),ds(CICAP))
 #define icor(x,y)                   jticor(jt,(x),(y))  
@@ -1348,7 +1349,8 @@ extern void jfree4gmp(void*,size_t);
 #define vfn(x)                      jtvfn(jt,(x))
 #define vger2(x,y,z)                jtvger2(jt,(x),(y),(z))
 #define vi(x)                       jtvi(jt,(x))
-#define vib(x)                      jtvib(jt,(x))
+// obsolete #define vib(x)                      jtvib(jt,(x))
+#define vib(x)                      ({A xa=(x); if(likely(xa!=0)&&unlikely(!ISDENSETYPE(AT(xa),INT)))xa=jtvib(jt,xa); xa;})  // INT/B01 quickly
 #define vip(x)                      jtvip(jt,(x))
 #define virtual(x,y,z)              jtvirtual(jt,(x),(y),(z))
 #define virtualip(x,y,z)            jtvirtual(jtfg,(x),(y),(z))

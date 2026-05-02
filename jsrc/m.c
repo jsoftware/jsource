@@ -467,7 +467,7 @@ F1(jtmmaxq){F12IP;ASSERTMTV(w); RETF(sc(JT(jt,mmax)));}
      /* 9!:20 space limit query */
 
 F1(jtmmaxs){F12IP;I j,m=MLEN,n;
- n=rei0(vib(w));
+ n=rei0(w);
  ASSERT(1E5<=n,EVLIMIT);
  j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
  JT(jt,mmax)=(I)1<<j;

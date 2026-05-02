@@ -57,7 +57,7 @@ static DF1(jtanchor1){F12IP;
  ASSERT((w=jtprobequiet(jt,nm))!=0,EVVALUE) // look up the symbol, get its value.  scaf kludge! the value could be disappearing.  That seems vanishingly unlikely for the anchored flag in particular
  RETF(num(!!(AFLAG(w)&AFANCHORED)))  // return old value
 }
-static DF2(jtanchor2){F12IP; I newval=b0(a); RE(0);
+static DF2(jtanchor2){F12IP; I newval=reb0(a);
  ARGCHK1(w); ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AN(w)==1,EVLENGTH) A bc=C(AAV(w)[0]); ASSERT(AT(bc)&LIT,EVDOMAIN) ASSERT(AR(bc)<2,EVRANK) A nm; RZ(nm=nfs(AN(bc),CAV(bc),0)) ASSERT(vnm(NAV(nm)->n,NAV(nm)->s),EVILNAME)  // audit name & get NM block
  ASSERT((w=jtprobequiet(jt,nm))!=0,EVVALUE) // look up the symbol, get its value.  scaf kludge! the value could be disappearing.  That seems vanishingly unlikely for the anchored flag in particular
  ASSERT(!(AFLAG(w)&AFRO+AFVIRTUAL),EVRO) ASSERT(AC(w)==ACUC1,EVUNTIMELY) ASSERT(!(newval&(AFLAG(w)>>AFANCHOREDX)),EVUNTIMELY)   // error if value is read-only or already aliased, or has been anchored already

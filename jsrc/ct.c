@@ -802,7 +802,7 @@ F2(jttdot){F12IP;
   if(strncmp(CAV(akw),"worker",AN(akw))==0){
    ASSERT(nolocal<0,EVDOMAIN)  // can't set same parm twice
    aval=aval==0?num(1):aval;  // if value omitted, assume 1
-   RE(nolocal=b0(aval))   // extract binary value
+   nolocal=reb0(aval);   // extract binary value
   }else if(strncmp(CAV(akw),"locales",AN(akw))==0){  // 'locales' ,&< mask [; locale-list]
    // the multiple-execution is indicated by localex>=0; if there is no locale-list, alocs is 0 and we use the incumbent locale
    ASSERT(localex<0,EVDOMAIN)  // can't set same parm twice

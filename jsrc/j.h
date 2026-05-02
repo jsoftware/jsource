@@ -2185,12 +2185,14 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 #if SY_64
 // I have been unable to make clang produce a simple loop that doesn't end with a backward branch.  So I am going to handle ranks 0-2 here and call a subroutine for the rest
 #define PRODX(z,n,v,init) \
- {I nn=(n); \
-  if(likely(nn<3)){I temp=(init);  /* must use temp because init may depend on z */ \
-   I *_zzt=(v); _zzt+=nn-2; z=(I)&oneone; _zzt=nn>=1?_zzt:(I*)z; z=nn>1?(I)_zzt:z;   /* set up pointers to args, and init value */ \
-   z=((I*)z)[0]; if(likely(z!=0)){DPMULDZ(z,_zzt[1],z); if(likely(_zzt[1]!=0)){DPMULDZ(z,temp,z);if(likely(temp!=0)){ASSERT(z!=0,EVLIMIT)}}}  /* no error if any nonzero */ \
-  }else{DPMULDE(init,prod(nn,v),z) RE(0)} /* error if error inside prod */ \
- }
+ {I nn=(n), temp=(init), *_zzt=(v); \
+  if(likely(nn<3)){  /* must use temp because init may depend on z */ \
+   _zzt+=nn-2; z=(I)&oneone; _zzt=nn>=1?_zzt:(I*)z; z=nn>1?(I)_zzt:z;   /* set up pointers to args, and init value */ \
+   z=((I*)z)[0]; if(unlikely(z==0))goto had0##z; DPMULDZ(z,_zzt[1],z) if(unlikely(_zzt[1]==0))goto had0##z; DPMULDZ(z,temp,z)   /* no error if any nonzero */ \
+  }else{z=temp; DQ(nn, DPMULDZ(z,_zzt[i],z) if(unlikely(_zzt[i]==0))goto had0##z;)} /* error if overflow */ \
+  if(likely(temp!=0))ASSERT(z!=0,EVLIMIT) had0##z:; \
+}
+// obsolete   }else{DPMULDE(init,prod(nn,v),z) RE(0)} /* error if error inside prod */ 
 #else
 #define PRODX(z,n,v,init) RE(z=mult(init,prod(n,v)))
 #endif

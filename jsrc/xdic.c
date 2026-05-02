@@ -1181,7 +1181,7 @@ static I auditnode(J jt,DIC *dic,UI nodex,UI excludednode, I doprint){A z;
 DF2(jtdisprbdic){F12IP;
  ARGCHK1(w)
  ASSERTSYS(((DIC*)w)->bloc.flags&DICFRB,"not a tree dic")
- A na=w==self?zeroionei(1):a; w=w==self?a:w; I opts; RE(opts=jtb0(jt,na));   // get print options  scaf* reb0
+ A na=w==self?zeroionei(1):a; w=w==self?a:w; I opts=reb0(na);   // get print options
  R sc(auditnode(jt,(DIC*)w,*(UI4AV3(((DIC*)w)->bloc.hash))&_bzhi_u64(~(UI8)1,((DIC*)w)->bloc.hashelesiz<<LGBB),~0LL,opts));
 }
 // ********************************** get/has **********************************

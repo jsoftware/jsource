@@ -371,7 +371,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  // for each argument, convert the shape to a sequence of copy-then-fill, referring to the length of each corresponding result-item axis
  // AS(z)[maxf+1..zr-1] is the shape of an inner result item, which must have rank 1 or higher   AS(?)[..?r-1] is the shape of an input item.  Convert shape to data/fill counts
  zs=AS(z)+zr;   // point to end of result item shape
- I aw, cr, *s; I dlen[2][RMAX], flen[2][RMAX];  // selector a/w; cell-rank a/w; shape ptr a/w; length in atoms of data to be copied for each fill section, length in atoms of each fill to be copied after the data. dlen<0 means scalar replication
+ I aw, cr, *s; I dlen[2][RMAX+1], flen[2][RMAX+1];  // selector a/w; cell-rank a/w; shape ptr a/w; length in atoms of data to be copied for each fill section, length in atoms of each fill to be copied after the data. dlen<0 means scalar replication
  for(aw=0, s=as+ar, cr=acr;aw<2;++aw, s=ws+wr, cr=wcr){  // for a, then w...
   UI prevdsize, prevfsize;  // previous copy section's parameters, for loop reduction.  Init to 'cannot add to previous'
   I csize=1, dsize=1, zx, zfx;  // will accumulate full size of cell including fill; will accumulate unfilled axes; index to shape, running backwards; index to coalesced fill section, running forwards from 0
@@ -399,7 +399,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
   for(aw=0;aw<2;++aw){  // for a, then w
    // move one cell of a/w, with fill
    I adv=SGNTO0(--awn[aw][0]);   // get an early start reading the repeat count.  This must settle before end-of-loop so we don't have unknown addresses plugging the write queue
-   I rx, ndx[RMAX];  // odometer into copy sections
+   I rx, ndx[RMAX+1];  // odometer into copy sections
    C *s=awv[aw][0];  // init input pointer to the cell data
    I dl=dlen[aw][0]<<klg, fl=flen[aw][0]<<klg;  // len of first level of data and fill
    for(rx=0;rx<cmax[aw];++rx)ndx[rx]=0;   // init all levels

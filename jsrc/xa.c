@@ -49,7 +49,7 @@ F1(jtecmtriess){F12IP;I i=rei0(w); ASSERT(BETWEENC(i,1,255),EVLIMIT) jt->ecmtrie
 
 // 9!:34-35 assertion enable
 F1(jtassertq){F12IP;ASSERTMTV(w); R scb(JT(jt,assert));}
-F1(jtasserts){F12IP;B b; RE(b=b0(w)); JT(jt,assert)=b; R mtm;}
+F1(jtasserts){F12IP;B b=reb0(w); JT(jt,assert)=b; R mtm;}
 
 F1(jtboxq){F12IP;ASSERTMTV(w); R str(sizeof(JT(jt,bx)),JT(jt,bx));}
 
@@ -124,7 +124,7 @@ F1(jtfxx){F12IP;
 F1(jtiepdoq){F12IP;ASSERTMTV(w); R sc(jt->iepdo);}
 
 // 9!:29, immex flag
-F1(jtiepdos){F12IP;B b; RE(b=b0(w)); jt->iepdo|=b; R mtm;}
+F1(jtiepdos){F12IP;B b=reb0(w); jt->iepdo|=b; R mtm;}
 
 // 9!:26, immex sentence
 F1(jtiepq){F12IP;
@@ -980,7 +980,7 @@ F1(jtcheckcompfeatures){F12IP;UI i;I v1,v2,temp;
 
 // 2!:10   raise a signal. _1 calls SEGFAULT
 F1(jtgsignal){F12IP;
- I m=rei0(vib(w));
+ I m=rei0(w);
  if(-1==m)SEGFAULT;
  R sc(raise(m));  // return the result from raise()
 }

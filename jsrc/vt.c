@@ -10,17 +10,33 @@ F1(jtcurtail){F12IP; R jtdrop(jtfg,num(-1),w);}
 
 F1(jtshift1){F12IP;R drop(num(-1),over(num(1),w));}
 
+static I shape1[RMAX+1]={[0 ... RMAX]=1};  // use as cell-shape for atomic cell, to allow extension to any rank
+#if 0  // obsolete 
 // take empty or from empty, a=take shape, w=takefrom. b=1 if a DOES NOT contain a 0
-// scaf* pass n and u as args
 static INLINE A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  r=AR(w); n=AN(a); u=AV(a); 
- if(!b){PRODX(m,n,u,1) ASSERT(m>IMIN,EVLIMIT); PRODX(m,r-n,n+AS(w),ABS(m))}
+ if(!b){PRODX(p,n,u,1) ASSERT(p>IMIN,EVLIMIT); PRODX(m,r-n,n+AS(w),ABS(p))}
  GA(z,AT(w),m,r,AS(w)); 
-// scaf* if take not empty, set fill; if take empty, return
  s=AS(z); DO(n, p=u[i]; ASSERT(p>IMIN,EVLIMIT); *s++=ABS(p););
  if(m){k=bpnoun(AT(w)); mvc(k*m,AVn(r,z),k,jt->fillv);}
  R z;
 }
+#endif
+
+// take empty or from empty, a=take shape, w=takefrom. b=1 if result is empty (i. e. an axis in u, or an axis in w outside of u, is 0).  istake is 1 if take, 0 if drop
+static A jttk02(J jt,B empty,I *u, I n,A w, I wf, I istake){A z;I m,r,*s;DPMULDDECLS
+ r=AR(w); I cellnon0=r^wf;  // set flag if cell is not an atom
+ if(!empty){  // w was empty but the result is nonempty.  Can happen only for take
+  I p=1; DO(n, I m=ABS(u[i]); if(unlikely(m==IMAX))m=cellnon0?AS(w)[wf+i]:1; DPMULDE(p,m,p)) PRODX(m,r-n,&AS(w)[n],ABS(p))
+  RZ(w=jtsetfv1(jt,w,AT(w)));  // if cell is not empty, count its atoms in m.  Handle axes taken in full  Set the fill value
+ }else{m=0;}  // cell is empty and thus has 0 components.
+ if(unlikely(!cellnon0))r+=n;  // if cell is an atom, extend its shape with 1s for each axis in u
+ GA(z,AT(w),m,r,AS(w));   // allocate result; init shape to w shape
+ s=&AS(z)[wf]; DO(n, I m=ABS(u[i]); if(istake){if(unlikely(m==IMAX))m=cellnon0?AS(w)[wf+i]:1;}else{m=(cellnon0?AS(w)[wf+i]:1)-m; m=m<0?0:m;} s[i]=ABS(m););  // install cell-shape from u; handle axes taken in full, convert drop counts to take counts
+ if(m){I k=bpnoun(AT(w)); mvc(k*m,AVn(r,z),k,jt->fillv);}
+ R z;
+}
+
 
 // scaf* pass an and u as args
 static INLINE F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
@@ -52,16 +68,16 @@ static INLINE F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;
  EPILOG(z);
 }    /* take on sparse array w */
 
+#if 0   // obsolete 
 // general take/drop routine.  a is result frame followed by signed take values i. e. shape of result, w is array
-// scaf* pass n and u as args
-static F2(jttk){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
- n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
+static F2(jttk){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,n,p,q,r,t,*u;
+ n=AN(a); u=AV(a); r=AR(w); t=AT(w);
  if(unlikely(ISSPARSE(t)))R tks(a,w);
 // obsolete  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
- DO(n, if(!u[i])goto emptytake;); DO(r-n, if(!s[n+i])goto emptytake;);  // if empty take, or take from empty cell, set b
- if(unlikely(AN(w)==0)){B b=0; if(0){emptytake: b=1;} R tk0(b,a,w);}
+ I d, *s=AS(w);
+ DO(n, if(!u[i])goto emptytake;);   // if empty take, or take from empty cell, set b
+ if(unlikely(AN(w)==0)){B b=0; DO(r-n, if(!s[n+i])goto emptytake;); if(0){emptytake: b=1;} R tk0(b,a,w);}
 // obsolete  if(((b-1)&AN(w))==0)R tk0(b,a,w);   // this handles empty w, so PROD OK below   b||!AN(w)
-#if 1   // obsolete 
  k=bpnoun(t); z=w; c=q=1;  // c will be #cells for this axis
  // process take one axis at a time
  for(i=0;i<n;++i){I itemsize;
@@ -78,42 +94,126 @@ static F2(jttk){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
    z=y;
   }
  }
-#else
-// scaf* set fill if needed
-#endif
  EPILOG(z);
 }
+#endif
 
-F2(jttake){F12IP;A s;I acr,af,ar,n,*v,wcr,wf,wr;
+// general take/drop routine.  *u (length n) is the signed take values, w is array, wf is frame of operation.
+// istake is 1 for take, 0 for drop
+static A jttk2(A w, I *u, I n, I wf, J jtfg, I istake){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,p,q,r;
+ I wr=AR(w), *ws=AS(w); I t=AT(w);
+ if(unlikely(ISSPARSE(t))){
+  // sparse: reconstruct old parameters
+  A s; RZ(s=vec(INT,wf+n,AS(w))); I *v=IAV(s);  // create safe place to build axes.  This is a kludge and overfetches from w, but that's how it was done
+  if(istake){
+   DO(n, I m=u[i]; I ms=REPSGN(m); if(unlikely((m^ms)-ms==IMAX))m=wf!=wr?ws[wf+i]:1; v[wf+i]=m;)  // see if there are infinities.  They are IMAX/-IMAX, so take abc & see if result is IMAX
+  }else{  // drop
+   DO(n, I m=u[i]; I ut=ws[wf+i]; ut-=ABS(m); ut=ut<0?0:ut; m=~REPSGN(m); ut=(ut^m)-m; v[wf+i]=ut;)   // convert the drops to takes
+  }
+// obsolete   if(wf==wr||wf!=0){   // if cell of y is an atom, or y has multiple cells:
+// obsolete    if(wf==wr){DO(n,v[wf+i]=1;); RZ(w=reshape(s,w));}  // if w is an atom, change it to a singleton of rank #$a, changing s to have 1s in the added axes
+  if(wf==wr){A z;IRS2(s,w,0,1,0,jtreshape,z);RZ(z);w=z;}  // if w is an atom, change it to a singleton of rank #$a
+// obsolete    MCISH(&v[wf],u,n);   // whether w was an atom or not, replace the axes of w-cell with values from a.  This leaves s with the final shape of the result
+// obsolete   }
+  R tks(s,w);
+ }
+// obsolete  B b;    // b=0: nonempty take from empty cell; b=1: empty take (any u or w-frame 0), i. e. no cells
+// obsolete  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
+// obsolete  if(istake){
+// obsolete   DO(n, if(unlikely(!u[i]))goto emptytake;);   // 0 take length
+// obsolete   if(unlikely(AN(w)==0)){B b; DONOUNROLL(wf, if(!ws[i])goto emptytake;) DONOUNROLL(wr-(wf+n), if(!ws[wf+n+i])goto emptytake;) goto emptyw;}  // empty: to emptyw if cells are empty
+// obsolete  }else{ // drop
+// obsolete   DO(n, if(ABS(u[i])>=ws[wf+i])goto emptytake;);   // dropping all of axis, including empty axis
+// obsolete   if(unlikely(AN(w)==0)){goto emptyw;}   // or if w empty but axis-length not
+// obsolete  }
+
+ if(unlikely(wf==wr)){ASSERT(wf+n<=RMAX,EVLIMIT) ws=shape1;}   // if cell of y is an atom, give it 1s as rank extension; make sure the extension doesn't exceed rank max
+ // u is the take shape, which applies to axes of w starting with wf.   Discard leading and trailing axes taken in full, leaving axes ux0 to uxn to process.
+ // Each axis of u, whether checked here or in the next loop, must check for empty
+ I ux0, uxn;  // scaf* remove these loops
+ if(istake){
+  for(ux0=0;ux0<n;++ux0){if(unlikely(u[ux0]==0))goto emptytake; if(ABS(u[ux0])!=ws[wf+ux0]&&(UI)ABS(u[ux0])<(UI)IMAX)break;} for(uxn=n-1;uxn>=ux0;--uxn){if(unlikely(u[ux0]==0))goto emptytake; if(ABS(u[uxn])!=ws[wf+uxn]&&(UI)ABS(u[uxn])<(UI)IMAX)break;}   // ux0..uxn have gaps (takecount not length of axis)
+ }else{
+  for(ux0=0;ux0<n;++ux0){if(unlikely(ABS(u[ux0])>=ws[wf+ux0]))goto emptytake; if(u[ux0]!=0)break;} for(uxn=n-1;uxn>=ux0;--uxn){if(unlikely(ABS(u[ux0])>=ws[wf+ux0]))goto emptytake; if(u[uxn]!=0)break;}   // ux0..uxn have gaps (dropcount not 0)
+ }
+
+ I dlen[RMAX+1], flen[RMAX+1];  // shape ptr into w; length in atoms of data to be copied for each fill section, length in atoms of each fill to be copied after the data. dlen<0 means scalar replication
+ I cn, zcn, ux, zfx=0; PROD(zcn,wr-(wf+uxn+1),&ws[wf+uxn+1]) cn=zcn; // size of next-lower cell of w; size of next-lower cell of z; index to shape, running backwards; index to coalesced fill section, running forwards from 0; size of largest undivided cell
+ I lowerreps=zcn; // # inherited repeats of lower axis, incremented by axes taken in full.  First time, must include the size of the inner cell
+ I ifill=0, iskip=0, anyfill=0;  // init # atoms of initial fill and initial skip; flag is there is any fill
+ if(unlikely(ux0>uxn)){if(wf!=wr)R w; else {dlen[0]=1, flen[0]=0, zfx=1; goto endaxes;}}  // if all axes taken in full, return input unchanged EXCEPT when taking from an atom; continue then with 1 atomic axis, to get the shape
+ for(ux=uxn;ux>=ux0;--ux){  // for each active axis (starting at the last)
+  I ui=u[ux], wsi=ws[ux+wf], absui=ABS(ui);  // fetch take/drop count and axis length for the next axis, and |ui|
+  // put count into take form, in range [0,axislen]
+  if(istake){if(unlikely((UI)absui>=(UI)IMAX))absui=wsi;  // take: replace infinite length with length of axis
+  }else{absui=wsi-absui; absui=absui<0?0:absui; ui=(absui^~REPSGN(ui))-~REPSGN(ui);} // drop: convert drop count to equivalent take count
+  if(unlikely(absui==0))goto emptytake;   // if empty take axis, go create empty result
+  // move into flen/dlen
+  if(unlikely(absui==wsi)){lowerreps*=absui;  // if axis is taken in full, do not copy - we will simply run the previous level more times
+  }else{  // normal case with a change in axis length
+   dlen[zfx]=MIN(absui,wsi)*lowerreps; // dlen=#repeats of next-lower cell (at bottom, # atoms to copy)
+   if(istake){flen[zfx]=absui-wsi>0?zcn:cn; flen[zfx]*=absui-wsi; anyfill|=-flen[zfx]; // (take) flen=fill amount if + (z-cells), skip amount if - (w cells); remember of fill positive
+   }else{flen[zfx]=absui-wsi>0?0:cn; flen[zfx]*=absui-wsi;}   // (drop) no fill possible
+     // any fill needed?
+   ifill+=REPSGN(ui&-flen[zfx])&flen[zfx]; iskip+=REPSGN(ui&flen[zfx])&flen[zfx];   // if ui neg, add to initial fill/skip counts  scaf no fill on drop
+   lowerreps=1; ++zfx;  // this has fill or skip: write out a record for it and reinit the lower-cell count
+  }
+  DPMULDE(zcn,absui,zcn); cn*=wsi;  // update total size of z cell
+ }
+endaxes:;  // come here when there are NO axes but we have to allocate the result anyway: that's when the cell is an atom and all the values in u are 1
+ if(unlikely(AN(w)==0)){if(istake){DONOUNROLL(wf, if(!AS(w)[i])goto emptytake;) DONOUNROLL(wr-(wf+n), if(!AS(w)[wf+n+i])goto emptytake;)} goto emptyovertake;}  // w is empty: if it has a 0 among the surviving axes, call it an empty take, otherwise empty w.  Use original AS(w)
+ dlen[zfx]=IMAX;  // in case there is only 1 axis, give it an unlimited second axis for loop reduction
+
+ PRODX(zcn,wf+(wf==wr?0:ux0),AS(w),zcn)  // include all leading axes taken in full and the frame
+ if(istake&&anyfill<0){RZ(w=jtsetfv1(jt,w,AT(w))); t=AT(w);}  // if fill is required, set the fill atom and convert it & w to common type
+ GA0(z,t,zcn,MAX(wr,wf+n)); MCISH(AS(z),AS(w),wr) if(unlikely(wf==wr))MCISH(&AS(z)[wr],shape1,n) // allocate result, copy w shape, which includes trailing 1s if atomic cell
+ for(;ux0<=uxn;++ux0){I absui=ABS(u[ux0]); if(istake){if(unlikely((UI)absui>=(UI)IMAX))absui=ws[wf+ux0];}else{absui=ws[wf+ux0]-absui;} AS(z)[wf+ux0]=absui;}   // overwrite the shape given by u if not taken in full.  Final absui must be >0
+ I klg=bplg(t);
+ C *s=CAV(w), *d=CAV(z), *endd=d+(zcn<<klg);  // pointer to source, pointer to start/end of filled area
+ if(ifill!=0){mvc(ifill<<klg,d,1LL<<klg,jt->fillv); d+=ifill<<klg;} s-=iskip<<klg;  // install initial fill, take initial skip
+
+ I dl=dlen[0]<<klg, fl=flen[0]<<klg, dl1=dlen[1];  // len of first level of data and fill; number of repeats at second level
+ I rx, ndx[RMAX];  // odometer into copy sections
+ for(rx=0;rx<zfx;++rx)ndx[rx]=0;   // init all levels (topmost omitted since we test for exit using the address)
+ while(1){
+  I dl1i=dl1; do{MC(d,s,dl); d+=dl; if(d==endd)goto endcopy; s+=dl; if(fl>0){mvc(fl,d,1LL<<klg,jt->fillv); d+=fl; if(d==endd)goto endcopy;}else s-=fl;}while(--dl1i);   // copy data+fill for lowest cell.  This is the only place data comes from; the rest is fill
+  rx=1;  // start looking at higher axes
+  while(1){  // go up through the axes, adding fill if we get to the end of the axis.  We enter this loop in the logical middle, since we have already half-processed level 1
+   if(istake&&flen[rx]>0){I l=flen[rx]<<klg; if(unlikely((I)((endd-d)-l)<0))l=endd-d; mvc(l,d,(I)1<<klg,jt->fillv); d+=l; if(d==endd)goto endcopy;}  // copy fill if there is any.  Fill after the first axis may overrun the end; check for that
+   else s-=flen[rx]<<klg;  // if no fill, skip over unused input if any
+   ++rx;  // we have moved fill for this axis; restart the axis & check the next
+   if(rx==zfx)break;  // when we fill out the first axis, we have copied the whole cell
+   if(++ndx[rx]<dlen[rx])break;  // until we hit end, just go back to move another cell.  This increments the odometer
+   ndx[rx]=0;  // if odometer rolled over to end value, continue to next wheel after resetting the one that rolled
+  }
+ }
+endcopy:;
+ EPILOG(z);
+ I empty; if(1){emptytake: empty=1;} else{emptyovertake: empty=0;} R jttk02(jt,empty,u,n,w,wf,istake);  // return empty cell. b=0: nonempty take from empty cell; b=1: empty take (any u or w-frame 0), i. e. no cells
+}
+
+// x {."r y, which allows infinities in x
+F2(jttake){F12IP;A z;I acr,af,ar,n,*v,wcr,wf,wr;
  ARGCHK2(a,w); I wt=AT(w);  // wt=type of w
  acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
  if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  //if a is empty this destroys jt->ranks
- if(likely(!ISSPARSE(wt)))RZ(w=jtsetfv1(jt,w,AT(w)));   // scaf* wrong to do this before we know we need fill
  ar=AR(a); acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=wr<wcr?wr:wcr; wf=wr-wcr;
- if(((af-1)&(acr-2))>=0){
-  s=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
+ if(((af-1)&(acr-2))>=0){  // af>0 || acr>1   a has frame, or cell of a has rank > 1
+  z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
   // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
   PRISTCLRF(w)
-  RETF(s);
+  RETF(z);
  }
  // canonicalize x
  n=AN(a);    // n = #axes in a
- ASSERT(BETWEENC(n,1,wcr),EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 is always true
+ ASSERT(BETWEENC(n,1,wcr),EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 always tests true
  I * RESTRICT ws=AS(w);  // ws->shape of w
- RZ(s=vib(a));  // convert input to integer, auditing for illegal values; and convert infinities to IMAX/-IMAX
+ RZ(a=vib(a));  // convert input to integer, auditing for illegal values; and convert infinities to IMAX/-IMAX
  // if the input was not INT/bool, we go through and replace any infinities with the length of the axis.  If we do this, we have
  // to clone the area, because vib might return a canned value
- if(!(AT(a)&B01+INT)){
-  I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=REPSGN(m); if((m^ms)-ms == IMAX)break;}  // see if there are infinities.  They are IMAX/-IMAX, so take abc & see if result is IMAX
-  if(i<AN(s)){
-   s=ca(s); if(!ISDENSETYPE(AT(a),FL))RZ(a=ccvt(FL,a,0));  // copy area we are going to change; put a in a form where we can recognize infinity
-   for(;i<AN(s);++i){if(DAV(a)[i]==IMIN)IAV(s)[i]=IMIN;else if(INF(DAV(a)[i]))IAV(s)[i]=wcr?ws[wf+i]:1;}  // kludge.  The problem is which huge values to consider infinite.  This is how it was done
-// scaf what's this IMIN business?  32-bit? avoid all the conversions
-  }
- }
- a=s;
- if(!(ar|wf|(((NOUN&~(DIRECT|RECURSIBLE))|SPARSE)&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic; and avoid virtualling NJA
+// obsolete  a=s;
+ if(!(ar|wf|(((NOUN&~(DIRECT|RECURSIBLE))|SPARSE)&wt)|!wcr)&&likely(!(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic; and avoid virtualling NJA  scaf* move into jttake
   // if the length of take is within the bounds of the first axis
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
   I tkasign = REPSGN(tklen);  // 0 if tklen nonneg, ~0 if neg
@@ -126,27 +226,23 @@ F2(jttake){F12IP;A s;I acr,af,ar,n,*v,wcr,wf,wr;
    I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
    I offset = woffset * wcellsize;  // offset in atoms of the virtual data
    // allocate virtual block, passing in the in-place status from w
-   RZ(s = virtualip(w,offset,wr));    // allocate block
+   RZ(z=virtualip(w,offset,wr));    // allocate block
    // fill in shape.  Note that s and w may be the same block, so ws is destroyed
-   I* RESTRICT ss=AS(s); ss[0]=tkabs; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
-   AN(s)=tkabs*wcellsize;  // install # atoms
+   I* RESTRICT zs=AS(z); zs[0]=tkabs; MCISH(&zs[1],&ws[1],wr-1)  // shape of virtual matches shape of w except for #items
+// obsolete  DO(wr-1, ss[i+1]=ws[i+1];);
+   AN(z)=tkabs*wcellsize;  // install # atoms
    // virtual block does not affect pristinity of w
-   RETF(s);
+   RETF(z);
   }
  }
  // full processing for more complex a
- if((-wcr&(wf-1))>=0){   // if y is an atom, or y has multiple cells:
-  RZ(s=vec(INT,wf+n,AS(w))); v=wf+AV(s);   // s is a block holding shape of a cell of input to the result: w-frame followed by #$a axes, all taken from w.  vec is never virtual
-  if(!wcr){DO(n,v[i]=1;); RZ(w=reshape(s,w));}  // if w is an atom, change it to a singleton of rank #$a
-  MCISH(v,AV(a),n);   // whether w was an atom or not, replace the axes of w-cell with values from a.  This leaves s with the final shape of the result
- }
- s=tk(s,w);  // go do the general take/drop
+ z=jttk2(w,IAV(a),AN(a),wf,jt,1);  // go do the general take/drop
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
  PRISTCLRF(w)
- RETF(s);
+ RETF(z);
 }
 
-F2(jtdrop){F12IP;A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
+F2(jtdrop){F12IP;A z;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  
  RZ((a=vib(a))&&w);  // convert & audit a
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
@@ -154,10 +250,10 @@ F2(jtdrop){F12IP;A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  // special case: if a is atomic 0, and cells of w are not atomic
  if((-wcr&(ar-1))<0&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
  if(((af-1)&(acr-2))>=0){
-  s=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtdrop);  // if multiple x values, loop over them  af>0 or acr>1
+  z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtdrop);  // if multiple x values, loop over them  af>0 or acr>1
   // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication, so we don't pass pristinity through  We overwrite w because it is no longer in use
   PRISTCLRF(w)
-  RETF(s);
+  RETF(z);
  }
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a
@@ -172,22 +268,23 @@ F2(jtdrop){F12IP;A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
   I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
   I offset = woffset * wcellsize;  // offset in bytes of the virtual data
   // allocate virtual block.  May use inplace w
-  RZ(s = virtualip(w,offset,wr));    // allocate block
+  RZ(z=virtualip(w,offset,wr));    // allocate block
   // fill in shape.  s and w may be the same block, so ws is destroyed
-  I* RESTRICT ss=AS(s); ss[0]=remlen; MCISH(ss+1,ws+1,MAX(wr-1,0));
-  AN(s)=remlen*wcellsize;  // install # atoms
+  I* RESTRICT zs=AS(z); zs[0]=remlen; MCISH(zs+1,ws+1,MAX(wr-1,0));
+  AN(z)=remlen*wcellsize;  // install # atoms
   // Any pristinity adjustment would be in virtualip.  But there isn't any
-  RETF(s);
+  RETF(z);
  }
 
-   // length error if too many axes
- fauxblockINT(sfaux,4,1);
- if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; m=d<0?m:-m; m+=d; v[i]=m&=REPSGN(m^d););}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
- else{fauxINT(s,sfaux,wr+n,1) v=AV(s); MCISH(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
- RZ(s=tk(s,w));
+ ASSERT(BETWEENC(n,1,wcr),EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 always tests true
+// obsolete   fauxblockINT(sfaux,4,1);
+// obsolete  if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; m=d<0?m:-m; m+=d; v[i]=m&=REPSGN(m^d););}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
+// obsolete  else{fauxINT(s,sfaux,wr+n,1) v=AV(s); MCISH(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
+// obsolete  RZ(s=tk(s,w));
+ z=jttk2(w,IAV(a),AN(a),wf,jt,0);  // go do the general take/drop
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
- PRISTXFERF(s,w)
- RETF(s);
+ PRISTXFERF(z,w)   // scaf* this should clear pristinity
+ RETF(z);
 }
 
 

@@ -154,8 +154,8 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
  if(!(wt&RAT))RZ(w=cvt(RAT,w)); wv=QAV(w);
  rdx=maxdenom(1+m,wv);  // rdx = max denominator in the polynomial, in rational form
  RZ(x=cvt(CMPX,w)); xv=ZAV(x); // set x = complex form of w, xv->first complex coeff
- RZ(y=take(sc(1+m),x)); makewritable(y); yv=ZAV(y);  // y = complex form with degree m, yv->first coeff.  These are modified by deflate[q]() and must not be virtual
- RZ(q=take(sc(1+m),w)); makewritable(q); qv=QAV(q);  // q = rational form with degree m, qv->first coeff
+ RZ(y=take(sc(1+m),x)); if(y==x)RZ(y=ca(x)) else makewritable(y); yv=ZAV(y);  // y = complex form with degree m, yv->first coeff.  These are modified by deflate[q]() and must not be virtual or copies
+ RZ(q=take(sc(1+m),w)); if(q==w)RZ(q=ca(w)) else makewritable(q); qv=QAV(q);  // q = rational form with degree m, qv->first coeff.  Also deflated
  GATV0(z,RAT,m,1); zv=QAV1(z);        // allocate space for exact rational roots, zv->first result location
  i=j=0;
  // loop to find each root by Laguerre's method

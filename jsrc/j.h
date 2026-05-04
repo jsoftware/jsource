@@ -747,7 +747,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    // Whether we should do so is a tricky question.  Surely, if the argument is big, since we may save a large indexed copy.
    // If the argument is small, the virtual is still better if it doesn't have to be realized; but it might be
    // realized in effect if it is unavailable for inplacing.  OTOH, if the argument is indirect the virtual does
-   // not require individual usecounting of the atoms.
+   // not require individual usecounting of the atoms.  We should accept virtuals of any size for indirects
    //
    // It would be good if we could know if the result is going to be assigned, perhaps jt->zombieval=1.  We could
    // suppress the virtual then.

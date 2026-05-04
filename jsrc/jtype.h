@@ -602,7 +602,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define ANY             -1L
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+INT2+INT4+SP+QP)
 #define EXACTNUMERIC    (B01+INT+XNUM+RAT+INT2+INT4)
-#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+INT2+INT4+SP+QP+CONW)|SPARSE)  // AND must be >0
+#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+INT2+INT4+SP+QP+CONW)|SPARSE)  // AND must be >0  scaf why CONW?
 #define JCHAR           (LIT+C2T+C4T)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBT)
 #define FUNC            (VERB+ADV+CONJ)

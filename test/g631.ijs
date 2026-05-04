@@ -180,11 +180,12 @@ NB. n is (0 if verb produces normal block, 1 if virtual, 2 if self-virtual, 3 if
 NB.      (1 if verb produces pristine/unboxed block on inplaceable input),
 NB.      (1 if x/y remains pristine or becomes unboxed, 2 if y only, 3 if x only),
 NB.      (1 if result pristine/unboxed on noninplaceable input)
-NB. If y is negative a pristine scalar box is used
+NB. If y is _1 negative a pristine scalar box is used; if y is other negative we run on unboxed arg of i. y
 ckprist =: 2 : 0
-boxr =. 0 [ boxs =. y
+boxr =. 0 [ boxs =. y [. dobox =. <
 if. 8 = 3!:0 y do. iboxs =. y
-elseif. y < 0 do. boxr =. _ [ iboxs =. i. 1000   NB. scalar box, not RO
+elseif. y= _1 do. boxr =. _ [ iboxs =. i. 1000   NB. scalar box, not RO
+elseif. y < 0 do. iboxs =. i. boxs [. dobox =. [
 else. iboxs =. i. boxs end.
 'virt prist wprist rprist' =. 4 {. n
 NB. virt: produces virtual result when applied inplace
@@ -192,47 +193,57 @@ NB. virtnip: produces virtual result when applied not-in-place
 NB. virtprist: produces virtual result leaves pristine set in the arg it came from
 'virt virtnip virtprist' =. virt { _3 ]\ 0 0 0  1 1 1  0 1 1  1 1 0
 NB. Verify taking from a pristine loses its pristinity
-a =: <"boxr memu iboxs  NB. Sets prist
+a =: dobox f."boxr memu iboxs  NB. Sets prist
 1: u a
 assert. ((virtprist +. wprist) = ispristorunbox) 13!:_4 a   NB. Making a virtual does not turn off pristinity in the backer
 NB. Verify pristinity is passed to an only successor but not a shared successor
-assert. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:_4@] u) <"boxr memu iboxs
-assert. ((prist , virt) = ispristorunbox , isvirt) (u 13!:_4@[ 0:) <"boxr memu iboxs
+assert. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:_4@] u) dobox f."boxr memu iboxs
+assert. ((prist , virt) = ispristorunbox , isvirt) (u 13!:_4@[ 0:) dobox f."boxr memu iboxs
 1 return. y
 :
 NB. Verify taking from a pristine loses its pristinity
-boxr =. 0 [ boxs =. y
-if. y < 0 do. boxr =. _ [ boxs =. 1000 end.   NB. scalar box, not RO
+boxr =. 0 [ boxs =. y [. dobox =. <
+if. y = _1 do. boxr =. _ [ boxs =. 1000   NB. scalar box, not RO
+elseif. y < 0 do. boxr =. _ [. dobox =. [
+end.
 'virt prist wprist rprist' =. 4 {. n
 'virt virtnip virtprist' =. virt { _3 ]\ 0 0 0  1 1 1  0 1 1  1 1 0
 'wpristx wpristy' =. wprist { _2 ]\ 0 0   1 1   0 1   1 0
 xisprist =. isprist 13!:_4 ". x
 yisprist =. isprist 13!:_4 <"boxr i. boxs
-a =: <"boxr i. boxs  NB. Sets prist
+a =: dobox f."boxr i. boxs  NB. Sets prist
 1: (".x) u a
 assert. ((yisprist *. virtprist +. wpristy) = isprist) 13!:_4 a [ 'right'
 a =: ". x  NB. Sets prist
-1: a u <"boxr i. boxs
+1: a u dobox f."boxr i. boxs
 assert. ((xisprist *. virtprist +. wpristx) = isprist) 13!:_4 a [ 'left'
 NB. Verify pristinity is passed to an only successor but not a shared successor
-assert. ((rprist , virtnip) = ispristorunbox , isvirt) (".x) (0: 13!:_4@] u) <"boxr i. boxs
-assert. (-.9!:56'c_viavx') +. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:_4@[ 0:) <"boxr i. boxs
+assert. ((rprist , virtnip) = ispristorunbox , isvirt) (".x) (0: 13!:_4@] u) dobox f."boxr i. boxs
+assert. (-.9!:56'c_viavx') +. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:_4@[ 0:) dobox f."boxr i. boxs
 1 return. y
 )
 {. ckprist 0 1 ] 5
-{. ckprist 1 1 ] 4 5
-'2' {. ckprist 1 1 ] 5  NB. virtual, and pristine if inplaceable
-'2' {. ckprist 1 1 ] 2 5
-'2 2' {. ckprist 0 0 ] 2 5  NB. complex take does not check pristinity
+{. ckprist 0 1 ] 4 5  NB. too short for virtual because of from
+{. ckprist 2 1 1 1 ] _4 50  NB. long enough but is self-virtual
+{: ckprist 0 1 ] 5
+{: ckprist 0 1 ] 4 5  NB. too short for virtual because of from
+{: ckprist 2 1 1 1 ] _4 50  NB. long enough; self-virtual if inplaceable
+'2' {. ckprist 1 1 ] 5  NB. too short for virtual, and pristine if inplaceable
+'2' {. ckprist 0 1 1 1 ] 2 5  NB. Return arg in full
+'2' {. ckprist 1 1 ] 3 5
+'2 2' {. ckprist 0 0 ] 3 5  NB. complex take does not check pristinity
 }. ckprist 1 1 ] 5
 }. ckprist 1 1 ] 4 5
+}. ckprist 0 1 1 1 ] _4 3
+}. ckprist 2 1 1 1 ] _4 50
 '2' }. ckprist 1 1 ] 5
-'2' }. ckprist 1 1 ] 2 5
-'2 2' }. ckprist 0 1 ] 2 5
+'2' }. ckprist 1 1 ] 3 5
+'2' }. ckprist 0 0 1 0 ] 2 5  NB. empty drop
+'2 2' }. ckprist 0 0 1 0 ] 2 5
 }: ckprist 1 1 ] 5
 }: ckprist 1 1 ] 4 5
-{: ckprist 0 1 ] 5  NB. not virtual for atom
-{: ckprist 1 1 ] 4 5   NB. virtual for list
+}: ckprist 0 1 1 1 ] _4 3
+}: ckprist 2 1 1 1 ] _4 50
 = ckprist 0 1 1 1 ] 5
 > ckprist 0 1 0 1 ] _1  NB. result exposes a
 > ckprist 0 1 1 1 ] 5  NB. result is unboxed, but doesn't disturb a

@@ -1351,7 +1351,7 @@ extern void jfree4gmp(void*,size_t);
 #define vger2(x,y,z)                jtvger2(jt,(x),(y),(z))
 #define vi(x)                       jtvi(jt,(x))
 // obsolete #define vib(x)                      jtvib(jt,(x))
-#define vib(x)                      ({A xa=(x); if(likely(xa!=0)&&unlikely(!ISDENSETYPE(AT(xa),INT)))xa=jtvib(jt,xa); xa;})  // INT/B01 quickly  scaf* accept B01 atomic
+#define vib(x)                      ({A xa=(x); if(likely(xa!=0)&&unlikely(!ISDENSETYPE(AT(xa),INT))){xa=(AT(xa)&SPARSE+B01)>AR(xa)?num(BAV(xa)[0]):jtvib(jt,xa);} xa;})  // INT quickly; convert B01 dense atomic to INT
 #define vip(x)                      jtvip(jt,(x))
 #define virtual(x,y,z)              jtvirtual(jt,(x),(y),(z))
 #define virtualip(x,y,z)            jtvirtual(jtfg,(x),(y),(z))

@@ -15,6 +15,13 @@ eq=: -:!.0
 0 =   123 gt '123'
 1 =   3j4 gt 2j7
 
+'abcd' gt 'abc '
+'abc ' gt 'abc',LF
+('abc',LF) gt 'abc'
+'abcd' gt&,: 'abc '
+'abc ' gt&,: 'abc',LF
+('abc',LF) gt&,: 'abc'
+
 
 epilog''
 

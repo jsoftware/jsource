@@ -580,13 +580,12 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
   ZZPARMS(1,zi,1,1)
 #define ZZINSTALLFRAME(optr) *optr++=zi;
 
-  // Allocate a virtual block for the argument, and give it initial shape and atomcount
-  A virtw, virta;
   I vr=AR(w); vr+=(vr==0);  // rank of infix is same as rank of w, except that atoms are promoted to singleton lists
 
+  // Allocate a virtual block for the argument, and give it initial shape and atomcount
+  fauxblock(virtafaux); fauxblock(virtwfaux); A virtw, virta;
   // check for special case of 2 u/\ y; if found, set new function and allocate a second virtual argument
   // NOTE: gerund/ is encoded as `:, so we can be sure id==SLASH does not have gerund
-  fauxblock(virtafaux); fauxblock(virtwfaux);
   if(((FAV(fs)->id^CSLASH)|((ilnabs|(wi&(SGNTO0(ilnval))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
    // normal case, infix/prefix.  Allocate a virtual block
    fauxvirtual(virtw,virtwfaux,w,vr,ACUC1);

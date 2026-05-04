@@ -100,8 +100,8 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
 #if C_AVX2 || EMU_AVX2
  D ipa[8], *ipv;
 #endif
-ARGCHK1(w);
- A q0; fauxblock(virtwq0); D *w0v=DAV(w);  // q0 & q1 data
+ ARGCHK1(w);
+ fauxblock(virtwq0); A q0; D *w0v=DAV(w);  // q0 & q1 data
  I rw=AS(w)[0]; I cl=AS(w)[1];  // # rows, # columns
   // handle case of 2 rows
  if(rw<=2) {
@@ -145,7 +145,7 @@ ARGCHK1(w);
  // construe w as w0 w1
  fauxvirtual(q0,virtwq0,w,2,ACUC1|ACINPLACE); AS(q0)[0]=m; AS(q0)[1]=cl; AN(q0)=m*cl;
  RZ(l0=jtltqip(jt,q0));  // form q0 in place, return l0
- A q1; fauxblock(virtwq1);  fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl;
+ fauxblock(virtwq1); A q1; fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl;
  // calculate w1 - (w1 q0*) q0
 #if C_AVX2 || EMU_AVX2
  if(AT(w)&FL && (m<50 || m*m*cl<(64*64*64))){

@@ -1268,7 +1268,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
 DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  ARGCHK2(a,w);
  PROLOG(000);
- at=AT(a); ar=AR(a); 
+ at=AT(a); ar=AR(a);
  wr=AR(w); r=MAX(1,ar); I wn=AN(w); I wi,ai; SETIC(w,wi); SETIC(a,ai);
  if(unlikely(ar>1+wr))R take(zeroionei(0),a);  // if w's rank is smaller than that of a cell of a, nothing can be common, return no items
  if(unlikely(MIN(ai,wi)==0))R take(zeroionei(0),a);  // if either arg is empty, nothing can be common, return no items

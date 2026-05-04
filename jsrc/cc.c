@@ -64,8 +64,7 @@ static DF2(jtcut02){F12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROL
  I wcellsize;  // size of a cell in atoms of w.
  I origoffset;  // offset from virtual block to start of w
  I wcellbytes;  // size of a cell in bytes
- A virtw;  // virtual block to use if any
- fauxblock(virtwfaux);
+ fauxblock(virtwfaux); A virtw;  // virtual block to use if any
  if(c==1){
   PROD(wcellsize,wr-1,ws+1);  // size in atoms of w cell
   // allocate virtual block
@@ -624,7 +623,7 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
  AF f1=FAV(fs)->valencefns[issldotdot];  // point to the action routine now that we have handled gerunds
   // for /.. we take the dyad; but we don't support <@ yet; so we call it f1 always
 
- A virta; fauxblock(virtafaux); C *origav0; I *origaiv; I ka; I ndxa; I valmska;   // for /.. - pointer to a data; pointer to ai data (fret frequency table or small-range table); len of item of a; ndx of next a; mask of valid bytes in a
+ fauxblock(virtafaux); A virta; C *origav0; I *origaiv; I ka; I ndxa; I valmska;   // for /.. - pointer to a data; pointer to ai data (fret frequency table or small-range table); len of item of a; ndx of next a; mask of valid bytes in a
  // Time to find the frets.  If we are acting on behalf of Key /. or /.., frets are already in the single buffer
  if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.[.]  Fall through if not
   pfx=(I)FAV(self)->localuse.lu1.gercut.cutn; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
@@ -915,7 +914,7 @@ skipspecial:;
   if(m){
    // There are cells.  Run the result loop over them
    // Allocate the virtual block we will use for arguments
-   A virtw; fauxblock(virtwfaux); fauxvirtual(virtw,virtwfaux,w,r,ACUC1);  // allocate UNINCORPORABLE block
+   fauxblock(virtwfaux); A virtw; fauxvirtual(virtw,virtwfaux,w,r,ACUC1);  // allocate UNINCORPORABLE block
    // Copy in the shape of a cell.  The number of cells in a subarray will depend on d
    MCISH(AS(virtw)+1,AS(w)+1,r-1);
    // Set the offset to the first data
@@ -1064,7 +1063,7 @@ static F2(jttesa){F12IP;A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
 #define STATEREFLECTX 0x400  // subarray must be reflected
 #define STATEREFLECTY 0x800
 #define STATETAKE 0x1000  // subarray must be shortened at the end
-static DF2(jttess2){F12IP;A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
+static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
  PROLOG(600);
  F2RANK(2,RMAX,jttess2,self)
 #define ZZFLAGWORD state
@@ -1137,7 +1136,7 @@ static DF2(jttess2){F12IP;A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv
  vmv=av[0]; vsz=av[axisct+0];  // v movement vector and size
  PROD(cellatoms,wr-axisproc,ws+axisproc); cellbytes = cellatoms<<bplg(wt);  // get # atoms in cell, then #bytes
  // Figure out the size of the cells we will be making blocks of.  They have all but the first 1 or 2 axes of a/w
- fauxblock(virtwfaux);
+ fauxblock(virtwfaux); A virtw;
  if(axisproc==1){
   // Here there is just one axis.  We will never have to move anything.
   // Set up the variables for the 2-D loop, most of which we don't need

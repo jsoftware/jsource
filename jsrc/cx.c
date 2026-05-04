@@ -1395,7 +1395,7 @@ A jtddtokens(J jtfg,A w,I env){F12IP;
    // Remove the trailing comment if any from wil, and add a word for the added LF
    makewritable(wil);  // We will modify the block rather than curtailing it
    AS(wil)[0]=scanstart; AN(wil)=2*scanstart;  // set AS and AN to discard comment
-   A lfwd; fauxblockINT(lffaux,2,2); fauxINT(lfwd,lffaux,2,2)  AS(lfwd)[0]=2; AS(lfwd)[1]=1; IAV(lfwd)[0]=oldchn-1; IAV(lfwd)[1]=oldchn; 
+   fauxblockINT(lffaux,2,2); A lfwd; fauxINT(lfwd,lffaux,2,2)  AS(lfwd)[0]=2; AS(lfwd)[1]=1; IAV(lfwd)[0]=oldchn-1; IAV(lfwd)[1]=oldchn; 
    RZ(wil=jtapip(jtfg,wil,lfwd));  // add a new word for added LF.  # words in wil is now scanstart+1
    ++scanstart;  // update count of words already examined so we start after the added LF word
    A newwil; RZ(newwil=wordil(neww));  // get index to new words

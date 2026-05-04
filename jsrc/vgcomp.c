@@ -71,51 +71,66 @@ B compqd(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->j
 
 // this is used by routines outside of sort/merge & therefore a & w can be dissimilar
 // jt has the JTDESCEND flag
-I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJT;
+I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
  ARGCHK2(a,w); 
- an=AN(a); at=an?AT(a):B01; ar=AR(a); as=AS(a);
- wn=AN(w); wt=wn?AT(w):B01; wr=AR(w); ws=AS(w); t=maxtyped(at,wt);
+ I an=AN(a), wn=AN(w); I at=an?AT(a):B01, wt=wn?AT(w):B01; t=maxtyped(at,wt);  // types & common type
+#if 1  // scaf* obsolete
  if(unlikely(!HOMO(at,wt))){
-  ar=(at>>SBTX)&1; ar=wt&JCHAR?0:ar; ar=at&JCHAR?1:ar; ar=wt&BOX?0:ar; ar=at&BOX?1:ar; R RETGT(ar);
+  t=(at>>SBTX)&1; t=wt&JCHAR?0:t; t=at&JCHAR?1:t; t=wt&BOX?0:t; t=at&BOX?1:t; R RETGT(t);
  }
- if(unlikely(ar!=wr))R RETGT(ar>wr);  // unequal ranks, higher rank is bigger
- if(unlikely(1<ar))if(ICMP(1+as,1+ws,ar)){A s;I*v;fauxblockINT(sfaux,4,1);
-  // dissimilar shapes - bring to common shape
+#else
+ if(unlikely(!HOMO(at,wt))){t=t&JCHAR?JCHAR:t; R t&wt?1:-1;}  // t must not be numeric; make it a mask of everything HOMO to t; if w has that type, it is bigger
+#endif
+ I ar=AR(a), wr=AR(w); if(unlikely(ar!=wr))R RETGT(ar>wr);  // unequal ranks, higher rank is bigger
+ I *as=AS(a), *ws=AS(w);  // pointers to shapes
+#if 1   // scaf* obsolete 
+ if(unlikely(1<ar))if(ICMP(1+as,1+ws,ar)){I*v;fauxblockINT(sfaux,4,1);A s;
+  // dissimilar shapes - bring to common shape  scaf* this is wrong - spec should change and we should not fill
   fauxINT(s,sfaux,ar,1) v=AV(s);
   DO(ar, v[i]=MAX(as[i],ws[i]);); v[0]=MIN(as[0],ws[0]);
   RZ(a=take(s,a)); an=wn=AN(a);
   RZ(w=take(s,w));
  }
- m=MIN(an,wn); 
+ m=MIN(an,wn);
  if(unlikely((-(t&XNUM+RAT)&-((at|wt)&FL+CMPX+QP))<0)){A p,q;B*u,*v;
   // indirect numeric type vs flt/complex: create boolean vector for each value in turn   this does extra work
   RZ(p=lt(a,w)); u=BAV(p);
   RZ(q=gt(a,w)); v=BAV(q);
-  DO(m, if(u[i]|v[i])R RETGT(!u[i]););
+  DO(m, if(u[i]|v[i])R RETGT(!u[i]););  // scaf* use eq then check the 1 atom
  }else{   // normal 
-  if(unlikely(TYPESNE(t,at)))RZ(a=cvt(t,a));  // convert to common types
-  if(unlikely(TYPESNE(t,wt)))RZ(w=cvt(t,w));
-  av=CAV(a); wv=CAV(w);
-  switch(CTTZ(t)){
-  case INTX:  COMPLOOQ (I, m  );         break;
-  default:   COMPLOOQ (UC,m  );         break;
-  case C2TX:  COMPLOOQ (US,m  );         break;
-  case C4TX:  COMPLOOQ (C4,m  );         break;
-  case SBTX:  COMPLOOS (SB,m  );         break;
-  case FLX:   COMPLOOQ (D, m  );         break;
-  case QPX:
-  case CMPXX: COMPLOOQ (D, m+m);         break;
-  case XNUMX: COMPLOOQG(X, m, xcompare); break;
-  case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
-  case INT2X:  COMPLOOQ (I2, m  );         break;
-  case INT4X:  COMPLOOQ (I4, m  );         break;
-  case BOXX:  {COMPDCLQ(A);I j; STACKCHKOFL if(x!=y)DO(m, if(j=jtcompare(jtfg,x[i],y[i]))R j;);} break;
-  }
+#else
+ // If the shapes are different, we compare items of the first cell (if they are equal, the longer comes last).  The item of the cell is the largest one where args have the same shape.
+ I negifaislong=0;  // negative if a has the longer cell, 0 if all ranks =, neg if w longer.  Init to 0 in case atoms
+ m=1; DQ(ar, m*=MIN(as[i],ws[i]); if((negifaislong=ws[i]-as[i])!=0)break;)  // count size of largest cell whose items are the same shape
+#endif
+ if(unlikely(TYPESNE(t,at)))RZ(a=cvt(t,a));  // convert to common types
+ if(unlikely(TYPESNE(t,wt)))RZ(w=cvt(t,w));
+ av=CAV(a); wv=CAV(w);
+ switch(CTTZ(t)){
+ case INTX:  COMPLOOQ (I, m  );         break;
+ default:   COMPLOOQ (UC,m  );         break;
+ case C2TX:  COMPLOOQ (US,m  );         break;
+ case C4TX:  COMPLOOQ (C4,m  );         break;
+ case SBTX:  COMPLOOS (SB,m  );         break;
+ case FLX:   COMPLOOQ (D, m  );         break;
+ case QPX:
+ case CMPXX: COMPLOOQ (D, m+m);         break;
+ case XNUMX: COMPLOOQG(X, m, xcompare); break;
+ case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
+ case INT2X:  COMPLOOQ (I2, m  );         break;
+ case INT4X:  COMPLOOQ (I4, m  );         break;
+ case BOXX:  {COMPDCLQ(A);I j; STACKCHKOFL if(x!=y)DO(m, if(j=jtcompare(jtfg,x[i],y[i]))R j;);} break;
+ }
+ // falling though, we must have equality on the compared part
+#if 1 // scaf* obsolete
  }
  if(1>=ar)R an==wn?0:RETGT(an>wn);   // all compared items matched.  If they weren't the same length, the longer is bigger
  DQ(ar, c=as[i]; d=ws[i]; if(c!=d)R RETGT(c>d););  // finally, compare original shape, lowest axis first
  R 0;
-}    /* compare 2 arbitrary dense arrays; _1 0 1 per a<w, a=w, a>w */
+#else
+ R SGNTO0(negifaislong)-SGNTO0(-negifaislong);  // the longer is higher, 0 if equal
+#endif
+}    /* compare 2 arbitrary dense arrays as by a-w; _1 0 1 per a<w, a=w, a>w */
 
 
 #define COMPSPSS(f,T,e1init,esel)  \

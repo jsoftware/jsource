@@ -528,7 +528,10 @@ A self;   //
 // Macros to install/delete kvs or unload values, which have extra work to do for indirect types.  ind is a condition that is non0 for indirect type
 #define PUTKVOLD(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; A da=dv[i]; ra(sa) dv[i]=sa; if(likely(da!=0))fa(da) sa=sa1;)}else{MC(d,s,n);}}   // when old kv might exist
 #define PUTKVNEW(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; ra(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}  // when old kv are empty
-#define GETV(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
+// obsolete #define GETV(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
+// obsolete #define GETVRmc(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
+#define GETV(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{JMC(d,s,n,0);}}   // move value to result, allowing overstore - single use
+#define GETVR(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{JMCR(d,s,n,0,endmask);}}   // move value to result, allowing overstore - in loop
 #define DELKV(s,n,ind) {if(ind){A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; fa(sa) sv[i]=0; sa=sa1;)}}   // deleting old kv.  We clear the old to 0; perhaps better done in 16!:_5
 
 // k is A for keys, n is #keys, s is place for slot#s.  Hash each key, store, prefetch (possibly using wrong hash)
@@ -590,7 +593,7 @@ notfound:;
   vv=CAV(adyad);  // get address of values to move
   PRISTCLRF(adyad);  // Since we are taking out of a, it is no longer pristine.  this destroys a, but leaves it non0.
  }
- GETV(CAV(z),vv,dic->bloc.vbytelen,hsz&(DICFVINDIR<<DICFBASE));   // move the data & advance pointer to next one   scaf JMC?
+ GETV(CAV(z),vv,dic->bloc.vbytelen,hsz&(DICFVINDIR<<DICFBASE));   // move the data & advance pointer to next one
 retz:;   // release lock & return, with z set
   DICLKRDRELKV(dic,lv)  // remove lock on keys and values.  Not worth it to release keys early
   R z;
@@ -629,10 +632,12 @@ static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT vi
  }
 
  
- // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore    scaf overstore
+ // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore
  if(a==(A)1){DICLKRDRELKV(dic,lv) DO(n, ((C*)zv)[i]=s[i]>=0;)   // if processing has, just copy found status, then release lock
  }else{
   DICLKRDWTV(dic,lv) DICLKRDRELK(dic,lv) // We have finished our use of the keys, but we must wait till the values are safe to copy
+  JMCDECL(endmask) JMCSETMASK(endmask,vn,0)  // declare & set length of copy - with overstore
+
   void *av=0;  // init to 'no default data pointer yet'.  We avoid checking the default until we know we need it
   I cur=s[0];  // unroll loop once.  cur if current value to work on
   for(i=0;i<n;++i){void *vv;  // pointer to value to move
@@ -649,7 +654,7 @@ static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT vi
     }
     vv=av;    // use the default after it has been audited
    }
-   GETV(zv,vv,vn,hsz&(DICFVINDIR<<DICFBASE)); zv=(void *)((I)zv+vn);   // move the data & advance pointer to next one   scaf JMC?
+   GETVR(zv,vv,vn,hsz&(DICFVINDIR<<DICFBASE)); zv=(void *)((I)zv+vn);   // move the data & advance pointer to next one
    cur=nxt;
   }
   DICLKRDRELV(dic,lv)  // remove lock on values
@@ -1220,10 +1225,11 @@ static INLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT v
  }
  if(unlikely(!(nodeb&(DICFICF<<8))))unbiasforcomp
 
- // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore    scaf overstore
+ // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore
  if(a==(A)1){DICLKRDRELKV(dic,lv) DO(n, ((C*)zv)[i]=s[i]>=TREENRES<<1;)  // if processing has, just copy found status
  }else{
   DICLKRDWTV(dic,lv) DICLKRDRELK(dic,lv)  // signal we are finished with keys; wait till values are safe to copy
+  JMCDECL(endmask) JMCSETMASK(endmask,vb,0)  // declare & set length of copy - with overstore
   void *av=0;  // init to 'no default data pointer yet'.  We avoid checking the default until we know we need it
   I cur=s[0];  // unroll loop once.  cur if current value to work on
   for(i=0;i<n;++i){void *vv;  // index of kv to free
@@ -1240,7 +1246,7 @@ static INLINE B jtgetslotso(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT v
     }
     vv=av;    // use the default after it has been audited
    }
-   GETV(zv,vv,vb,nodeb&(DICFVINDIR<<8)); zv=(void *)((I)zv+vb);   // move the data & advance pointer to next one   scaf JMC?
+   GETVR(zv,vv,vb,nodeb&(DICFVINDIR<<8)); zv=(void *)((I)zv+vb);   // move the data & advance pointer to next one
    cur=nxt;
   }
   DICLKRDRELV(dic,lv)  // values copied, release lock on them
@@ -1497,13 +1503,15 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  // allocate the result(s), and run through the indexes, copying
  A zak=0, zav=0;  // result keys, values; number of results
  I leadax=1-(flags>>MGETFLGK1X);  // number of leading axes to prepend - 0 if single key
+ JMCDECL(endmask)  // declare copy mask
  if(flags&MGETFLGK){  // if user wants keys
   GAE0(zak,dic->bloc.ktype,dic->bloc.kaii*nkvs,leadax+AN(dic->bloc.kshape),goto exitkeyvals)
   AS(zak)[0]=nkvs; MCISH(&AS(zak)[leadax],IAV1(dic->bloc.kshape),AN(dic->bloc.kshape)) C *zv=CAVn(leadax+AN(dic->bloc.kshape),zak);  // allocate result
   UI zx,nodex=nodens[0];  // 1 unroll
+  JMCSETMASK(endmask,kib>>32,0)
   for(zx=0;zx<nkvs;++zx){  // for each node in result
    UI nextx=nodens[zx+1];  // unroll loop.  1 overfetch OK
-   GETV(zv,kbase+(kib>>32)*(nodex>>1),kib>>32,nodeb&(DICFKINDIR<<8)); zv=(void *)((I)zv+(kib>>32));   // move the data & advance pointer to next one   scaf JMC?
+   GETVR(zv,kbase+(kib>>32)*(nodex>>1),kib>>32,nodeb&(DICFKINDIR<<8)); zv=(void *)((I)zv+(kib>>32));   // move the data & advance pointer to next one
    if(flags&MGETFLGV)PREFETCH(vbase+(nodex>>1)*vb);   // prefetch the corresponding value
    nodex=nextx;  // advance to next
   }
@@ -1515,9 +1523,10 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
   AS(zav)[0]=nkvs; MCISH(&AS(zav)[leadax],IAV1(dic->bloc.vshape),AN(dic->bloc.vshape)) C *zv=CAVn(leadax+AN(dic->bloc.vshape),zav);  // allocate result
   DICLKRDWTV(dic,lv)   // wait for values to be ready
   UI zx,nodex=nodens[0];  // 1 unroll
+  JMCSETMASK(endmask,vb,0)
   for(zx=0;zx<nkvs;++zx){  // for each node in result
    UI nextx=nodens[zx+1];  // unroll loop.  1 overfetch OK
-   GETV(zv,vbase+vb*(nodex>>1),vb,nodeb&(DICFVINDIR<<8)); zv=(void *)((I)zv+vb);   // move the data & advance pointer to next one   scaf JMC?
+   GETVR(zv,vbase+vb*(nodex>>1),vb,nodeb&(DICFVINDIR<<8)); zv=(void *)((I)zv+vb);   // move the data & advance pointer to next one
    nodex=nextx;  // advance to next
   }
  }
@@ -1951,7 +1960,7 @@ DF2(jtdicstats){F12IP;A z;I r;
 }
 
 // x 16!:_9 dic   lock/unlock the dictionary
-// x is (0 to lock, 1 to unlock),(0 for read lock, 1 for write lock)
+// x is (0 to lock, 1 to unlock),(0 for read lock, 1 for write lock).  Locks are for keys & values simultaneously.
 // Result is ''.  We return when the requested lock status has been achieved.  If the user takes a lock they MUST release it
 DF2(jtdiclock){F12IP;
  ARGCHK2(a,w)

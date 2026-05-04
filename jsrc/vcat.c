@@ -447,10 +447,10 @@ DF2(jtstitch){F12IP;I ar,wr; A z;
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
-F1(jtlamin1){F12IP;A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
+F1(jtlamin1){F12IP;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
- fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=IAV(x);
+ fauxblockINT(wfaux,4,1); A x; fauxINT(x,wfaux,1+wr,1) v=IAV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
  R jtreshape(jtfg,x,w);   // scaf do the virtual here - too much overhead in reshape
 }    /* ,:"r w */

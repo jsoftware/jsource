@@ -1117,8 +1117,7 @@ static DF2(jtfold12){F12IP;A z,vz;
  UI zzalloc=64-(AKXR(1)>>LGSZI); zzalloc=MIN(nitems,zzalloc); zzalloc=dmfr&STATEFWD+STATEREV?zzalloc:16-(AKXR(1)>>LGSZI); zzalloc=dmfr&STATEMULT?zzalloc:1;  // initial result allo.  zzalloc is #boxes in zz; AN(zz) is # valid
  A zz; GATV0E(zz,INT,zzalloc,dmfr&STATEMULT?1:0,goto exitpop;) AT(zz)=BOX; AFLAG(zz)=BOX&RECURSIBLE; AN(zz)=0;   // alloc recursive result area.  avoid init of BOX area
  // Track the items of y (x arg into v) using a virtual arg
- fauxblock(virtwfaux);
- A virtw;  // virtual block for items of y, if needed
+ fauxblock(virtwfaux); A virtw;  // virtual block for items of y, if needed
  I wstride;  // dist between items of y, in bytes, pos/neg/0 based on fwd/rev
  if(likely((dmfr&STATEFWD+STATEREV)!=0)){
   // fwd/reverse fold, the usual case

@@ -244,7 +244,7 @@ DF2(atcomp){F12IP;A z;AF f;
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0.0)
  if(f!=0){
   // a suitable processing function was found apply it
-  z=f(jt,a,w,self);  // these founctions do not benefit from inplacing
+  z=f(jt,a,w,self);  // these functions do not benefit from inplacing
   // postprocessing needed: 0x=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
   if(likely(z!=0)){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else z=(FAV(self)->fgh[2]?jtfolk2:jtupon2)(jt,a,w,self);   // revert if can't use special code - not inplace

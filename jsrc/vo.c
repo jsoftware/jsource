@@ -583,9 +583,9 @@ F1(jtope){F12IP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
 
 // ; y general case, where rank > 1 (therefore items are not atoms)
 // w is the data to raze (boxed), t is type of nonempties (or empties/fill if there are no nonempties), n=#,w, r=max rank of contents of w, v->w data,
-static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;I p;
+static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;I p;
  // Calculate the shape of a result-cell (it has rank r-1); c, the number of result-cells
- fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); mvc(r*SZI,s,MEMSET00LEN,MEMSET00);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
+ fauxblockINT(hfaux,4,1); A h; fauxINT(h,hfaux,r,1) s=AV(h); mvc(r*SZI,s,MEMSET00LEN,MEMSET00);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  I sigman=0, sigmascalars=0;  // total # atoms, # scalars
  for(i=0;i<n;++i){   // loop over all contents
   // y->A block for contents of w[i]; yr=rank of y; ys->shape of y
@@ -606,7 +606,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,
 
  // Now we know the type of the result.  Create the result.
  k=bpnoun(t); p*=k;  // k=#bytes in atom of result; p=#bytes/result cell
- fauxblockINT(h1faux,4,1); fauxINT(h1,h1faux,r,1) v1=AV(h1);  // create place to hold shape of cell after rank extension
+ fauxblockINT(h1faux,4,1); A h1; fauxINT(h1,h1faux,r,1) v1=AV(h1);  // create place to hold shape of cell after rank extension
  GA(z,t,m,r,s);    // create result area, shape s; zrel now is relocation offset for result
  zu=CAVn(r,z);  // output pointers
  // loop through each contents and copy to the result area

@@ -37,11 +37,11 @@ A jtevery(J jtfg, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
  GATV(z,BOX,natoms,wr,AS(w));
  if(!natoms)R z;  // exit if no result atoms
  AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
- A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was recursive inplaceable pristine, contents can be inplaced AFPRISTINE=w must be marked non-PRIST
+ I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was recursive inplaceable pristine, contents can be inplaced AFPRISTINE=w must be marked non-PRIST
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags=ACINPLACE|((I)jtfg&JTWILLBEOPENED)|(wt&BOX);
  // Get input pointer
- fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
+ fauxblockINT(virtblockw,0,0); A virtw;  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){virtw=C(*(wv=AAV(w)));  // if input is boxed, point to first box
   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
  }else{
@@ -179,9 +179,8 @@ A jtevery2(J jtfg, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags|=ACINPLACE|((I)jtfg&JTWILLBEOPENED)|(AT(w)&BOX)|((AT(a)&BOX)<<1);
  AFLAGINIT(z,(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX)  // if WILLBEOPENED is NOT set, make the result a recursive box
- A virtw;
  // Get input pointer
- fauxblockINT(virtblockw,0,0);  // virtual block of rank 0, 0 atoms
+ fauxblockINT(virtblockw,0,0); A virtw;  // virtual block of rank 0, 0 atoms
  if(likely((flags&BOX)!=0)){
   virtw=C(*(wv=AAV(w)));  // if input is boxed, point to first box
   if(ASGNINPLACESGN(SGNIF((I)jtfg&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1)&-(AFLAG(w)&RECURSIBLE);  // indicates inplaceability of boxed contents.  Never if arg repeated, only if recursive
@@ -191,8 +190,7 @@ A jtevery2(J jtfg, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
   // If not boxed, can't be pristine
  }
  // repeat for a
- A virta;
- fauxblockINT(virtblocka,0,0);  // virtual block of rank 0, 0 atoms
+ fauxblockINT(virtblocka,0,0); A virta;  // virtual block of rank 0, 0 atoms
  if(likely((flags&(BOX<<1))!=0)){
   virta=C(*(av=AAV(a)));
   if(ASGNINPLACESGN(SGNIF((I)jtfg&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT&-(AFLAG(a)&RECURSIBLE);

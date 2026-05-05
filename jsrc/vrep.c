@@ -59,12 +59,10 @@ static REPF(jtrepbdx){F12IP;A z;I c,k,m,p;
  // We retain the old block as long as the new one is at least half as big, without looking at total size of the allocation,
  // This could result in a very small block's remaining in a large allocation after repeated trimming.  We will accept the risk.
  // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
-#if C_AVX2 || EMU_AVX2
  I flgs;  // will be 1 if overstore is not allowed on copy
-#define FLGSNOOSTORE 1  // set if overstore on copy is allowed
+#define FLGSNOOSTORE 1  // set if overstore on copy is allowed 
 #define FLGSNPAROK -2  // set if we should enable the NPAR loop (the upper bits are 0 to disable)
  flgs=FLGSNPAROK*SGNTO0((5*m-6*p)|-(k^SZI));  // Enable NPAR loop if p>0.85m or k is not SZI
-#endif
  if(!ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy.   we copy in NPAR batches, and the last one might overstore.
   I pad=((NPAR*SZI)>>klg)-1;  //  We allocate enough extra atoms to cover one NPAR block to the last valid result atom.

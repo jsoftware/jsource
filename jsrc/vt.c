@@ -26,8 +26,8 @@ static INLINE A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
 // take empty or from empty, a=take shape, w=takefrom. empty=1 if result is empty (i. e. an axis in u, or an axis in w outside of u, is 0).  istake is 1 if take, 0 if drop
 static A jttk0(J jt,B empty,I *u, I n,A w, I wf, I istake){A z;I m,r,*s;DPMULDDECLS
  r=AR(w); I *ws=r==wf?shape1:AS(w);  // ws points to shape of w, or all 1s if cell of w is an atom
- if(!empty){  // w was empty but the result is nonempty.  Can happen only for take
-  I p=1; DO(n, I m=ABS(u[i]); if(unlikely(m==IMAX))m=ws[wf+i]; DPMULDE(p,m,p)) PRODX(m,r-n,&AS(w)[n],ABS(p))
+ if(!empty){  // w was empty but the result is nonempty.  Can happen only for take.
+  I p=1; DO(n, I m=ABS(u[i]); if(unlikely(m==IMAX))m=ws[wf+i]; DPMULDE(p,m,p)) PRODX(p,r-n,&AS(w)[n],ABS(p)) PRODX(m,wf,AS(w),p)  // count atoms, applying infinities.  We have values from a, then tail of w, then frame of w
   RZ(w=jtsetfv1(jt,w,AT(w)));  // if cell is not empty, count its atoms in m.  Handle axes taken in full  Set the fill value
  }else{m=0;}  // cell is empty and thus has 0 components.
  if(unlikely(r==wf))r+=n;  // if cell is an atom, extend its shape with 1s for each axis in u

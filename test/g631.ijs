@@ -195,10 +195,10 @@ NB. virtprist: produces virtual result leaves pristine set in the arg it came fr
 NB. Verify taking from a pristine loses its pristinity
 a =: dobox f."boxr memu iboxs  NB. Sets prist
 1: u a
-assert. ((virtprist +. wprist) = ispristorunbox) 13!:_4 a   NB. Making a virtual does not turn off pristinity in the backer
+assert. emsk =. ((virtprist +. wprist) = ispristorunbox) 13!:_4 a   NB. Making a virtual does not turn off pristinity in the backer
 NB. Verify pristinity is passed to an only successor but not a shared successor
-assert. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:_4@] u) dobox f."boxr memu iboxs
-assert. ((prist , virt) = ispristorunbox , isvirt) (u 13!:_4@[ 0:) dobox f."boxr memu iboxs
+assert. emsk =. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:_4@] u) dobox f."boxr memu iboxs
+assert. emsk =. ((prist , virt) = ispristorunbox , isvirt) (u 13!:_4@[ 0:) dobox f."boxr memu iboxs
 1 return. y
 :
 NB. Verify taking from a pristine loses its pristinity
@@ -210,16 +210,16 @@ end.
 'virt virtnip virtprist' =. virt { _3 ]\ 0 0 0  1 1 1  0 1 1  1 1 0
 'wpristx wpristy' =. wprist { _2 ]\ 0 0   1 1   0 1   1 0
 xisprist =. isprist 13!:_4 ". x
-yisprist =. isprist 13!:_4 <"boxr i. boxs
+yisprist =. isprist 13!:_4 dobox f."boxr i. boxs
 a =: dobox f."boxr i. boxs  NB. Sets prist
 1: (".x) u a
-assert. ((yisprist *. virtprist +. wpristy) = isprist) 13!:_4 a [ 'right'
+assert. emsk =. ((yisprist *. virtprist +. wpristy) = isprist) 13!:_4 a [ 'right'
 a =: ". x  NB. Sets prist
 1: a u dobox f."boxr i. boxs
-assert. ((xisprist *. virtprist +. wpristx) = isprist) 13!:_4 a [ 'left'
+assert. emsk =. ((xisprist *. virtprist +. wpristx) = isprist) 13!:_4 a [ 'left'
 NB. Verify pristinity is passed to an only successor but not a shared successor
-assert. ((rprist , virtnip) = ispristorunbox , isvirt) (".x) (0: 13!:_4@] u) dobox f."boxr i. boxs
-assert. (-.9!:56'c_viavx') +. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:_4@[ 0:) dobox f."boxr i. boxs
+assert. emsk =. ((rprist , virtnip) = ispristorunbox , isvirt) (".x) (0: 13!:_4@] u) dobox f."boxr i. boxs
+assert. emsk =. (-.9!:56'c_viavx') +. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:_4@[ 0:) dobox f."boxr i. boxs
 1 return. y
 )
 {. ckprist 0 1 ] 5
@@ -252,7 +252,9 @@ assert. (-.9!:56'c_viavx') +. ((prist , virt) = ispristorunbox , isvirt) (".x) (
 NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 < ckprist 0 0 0 0 ] 5
 <"0 ckprist 0 0 0 0 ] 5
-'32' $ ckprist 1 0 0 0 ] 36   NB. produces virtual not pristine len >= MINVIRTSIZE
+'4' $ ckprist 1 0 0 0 ] 36   NB. produces virtual not pristine len >= MINVIRTSIZE
+'4' $ ckprist 0 1 1 1 ] _36   NB. produces virtual not pristine len >= MINVIRTSIZE
+'32' $ ckprist 2 1 1 1 ] _36   NB. produces virtual not pristine len >= MINVIRTSIZE
 '36' $ ckprist 0 0 0 0 ] 35
 '32' $"1 ckprist 0 0 0 0 ] 4 36
 '6' $"1 ckprist 0 0 0 0 ] 4 5
@@ -291,9 +293,11 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '<"0 i. 5' ,: ckprist 0 0 0 0 ] 5
 '<i. 1000' ,: ckprist 0 0 0 0 ] _1  NB. not virtual - too short
 ,: ckprist 0 0 0 0 ] _1
-,: ckprist 0 0 0 0 ] 4 5
+,: ckprist 1 0 ] 4 5
+,: ckprist 0 1 1 1 ] _4 5  NB. too short for unboxed
+,: ckprist 1 1 1 1 ] _4 50  NB. long enough
 ,: ckprist 1 0 0 0 ] 3 4 5  NB. this is long enough
-,: ckprist 0 0 0 0 ] 5
+,: ckprist 1 0 ] 5
 '<"0 i. 5' ,: ckprist 0 0 0 0 ] 4 5
 '<"0 i. 4 5' ,: ckprist 0 0 0 0 ] 4 5
 ]@]"1 ckprist 0 0 ] 4 5   NB. Not prist because virtual boxed doesn't inplace

@@ -96,7 +96,6 @@ f=: f
 'domain error' -: 2 3 4 (4 : 'x o. y')"0 etx 'abc'
 
 'domain error' -: ex '+"''abc'' '
-'domain error' -: ex '+"1e20 1e30 1e40 '
 'domain error' -: ex '+"(<4)    '
 'domain error' -: ex '+"3j4     '
 'domain error' -: ex '+"1.2     '

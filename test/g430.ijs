@@ -555,7 +555,7 @@ f=: i.@:>:@:$
 'domain error' -: (10&u:'a')      <\ etx i.12
 'domain error' -: (s:@<"0 'a')      <\ etx i.12
 'domain error' -: 3.5      <\ etx i.12
-'domain error' -: (o._1e12)<\ etx i.12
+'domain error' -: (o._1e7)<\ etx i.12
 'domain error' -: 3j4      <\ etx i.12
 'domain error' -: (<9)     <\ etx i.12
 

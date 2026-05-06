@@ -633,6 +633,7 @@ F1(jtvi){F12IP;ARGCHK1(w);
 }
 
 // Audit w to ensure valid integer value(s).  Error (i. e. 0 return) if non-integral.  Result is A block for integer array.  Infinities converted to IMAX/-IMAX.  Non-infinities greater than integer precision give error
+// Called when the result must be in moderate integral range, and thus IMAX or big floats can be considered infinite
 F1(jtvib){F12IP;A z;I i,n,*zv;
  ARGCHK1(w);
  if(ISDENSETYPE(AT(w),INT))R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
@@ -654,7 +655,7 @@ F1(jtvib){F12IP;A z;I i,n,*zv;
     // infinities will always round to themselves
     ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
    }else{
-    ASSERT(ABS(d)==inf,EVDOMAIN);  // if beyond int, must be infinite
+//    ASSERT(ABS(d)==inf,EVDOMAIN);  // if beyond int, call it infinite
     cval=d>0?IMAX:-IMAX;  // if beyond integral, treat as infinity
    }
    zv[i]=cval;

@@ -38,7 +38,7 @@ static A jttk0(J jt,B empty,I *u, I n,A w, I wf, I istake){A z;I m,r,*s;DPMULDDE
 }
 
 
-static INLINE F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
+static F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  an=AN(a); u=AV(a); r=AR(w); s=AS(w); 
  GASPARSE(z,AT(w),1,r,s); v=AS(z); DO(an, v[i]=ABS(u[i]););
  zp=PAV(z); wp=PAV(w);
@@ -213,7 +213,7 @@ static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F
  }
 endcopy:;
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
- PRISTCLRF(w)
+ PRISTCLRF(w)  // scaf if w was abandoned, mark z pristine
  EPILOG(z);
  I empty; if(1){emptytake: empty=1;} else{emptyovertake: empty=0;} R jttk0(jt,empty,u,n,w,wf,istake);  // return empty cell. b=0: nonempty take from empty cell; b=1: empty take (any u or w-frame 0), i. e. no cells
 }

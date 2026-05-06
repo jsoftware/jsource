@@ -79,7 +79,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
  I *as=AS(a), *ws=AS(w);  // pointers to shapes
 #if 0   // obsolete 
  if(unlikely(1<ar))if(ICMP(1+as,1+ws,ar)){I*v;fauxblockINT(sfaux,4,1);A s;
-  // dissimilar shapes - bring to common shape  scaf* this is wrong - spec should change and we should not fill
+  // dissimilar shapes - bring to common shape this is wrong - spec should change and we should not fill
   fauxINT(s,sfaux,ar,1) v=AV(s);
   DO(ar, v[i]=MAX(as[i],ws[i]);); v[0]=MIN(as[0],ws[0]);
   RZ(a=take(s,a)); an=wn=AN(a);
@@ -90,7 +90,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
   // indirect numeric type vs flt/complex: create boolean vector for each value in turn   this does extra work
   RZ(p=lt(a,w)); u=BAV(p);
   RZ(q=gt(a,w)); v=BAV(q);
-  DO(m, if(u[i]|v[i])R RETGT(!u[i]););  // scaf* use eq then check the 1 atom
+  DO(m, if(u[i]|v[i])R RETGT(!u[i]););
  }else{   // normal 
 #else
  // If the shapes are different, we compare leading items of the first cell (if all are equal, the longer arg comes last).  The item of the cell is the largest one where args have the same shape.

@@ -1126,13 +1126,13 @@ static DF2(jtfold12){F12IP;A z,vz;
    // Create the cell to run u on: one given argument or a cell of fills
    if(nitems==1){
     // 1 item.  Could come from x (if y is empty) or y.  Apply u to it, to give the final result
-    ++foldinfo.exestats[0]; foldinfo.zstatus=0; dfv1(z,dmfr&STATEDYAD?a:head(w),uself);  // scaf* should be stats[1]
+    ++foldinfo.exestats[1]; foldinfo.zstatus=0; dfv1(z,dmfr&STATEDYAD?a:head(w),uself);
    }else{
     // 0 items (necessarily monadic).  Error if fold multiple.  Create a neutral for v from an item of y, and apply u to it
     ASSERT(!(dmfr&STATEMULT),EVDOMAIN)  // empty multiple fold is < 0 applications of v, error
     A fillcell=jtred0(jt,w,vself);  // a neutral with the shape of an item of y
     ASSERTGOTO(fillcell!=0,EVDOMAIN,exitpop)   // error if v has no neutral
-    ++foldinfo.exestats[0]; foldinfo.zstatus=0; dfv1(z,fillcell,uself);   // scaf* should be stats[1]
+    ++foldinfo.exestats[1]; foldinfo.zstatus=0; dfv1(z,fillcell,uself);
    }
    // we have applied u to the single cell.
    ASSERTGOTO(!(foldinfo.zstatus&0b01111),EVNORESULT,exitpop)  // z stopped iteration and no result was created: that's a no result error

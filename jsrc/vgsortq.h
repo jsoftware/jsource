@@ -84,7 +84,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
      // the upper partition and we will enter a worst-case where we partition only one item each pass.  To prevent that, we will repartition using the same pivot, but
      // this time moving the equal values to the lower partition.  If this produces a better partition, we will use it.  If not, we must be processing a block of
      // ALL equal values, and we stop partitioning.  We thus process a block with many equals as follows: scan & partition to strip elements lower than the equals; scan, rescan, & partition to
-     // strip elements higher than the equals; scan & rescan to detect the all-equals case & stop partitioning  scaf* replace this with the pivot-patitioning below
+     // strip elements higher than the equals; scan & rescan to detect the all-equals case & stop partitioning  replace this with the pivot-patitioning below
      DQ(r-l, cstk=2*cstk+(v0[i]<=pivot);)  // this time equality moves to the lower side (cstk is already 0 to start)
      // There MUST have been at least 1 equal value, because the pivot was the median of three and yet nothing compared low the first time; one value at least must compare equal.
      if(!(cstk&(cstk+1))) {

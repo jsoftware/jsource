@@ -2435,7 +2435,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define POPMSGS jt->emsgstate=_e;  // restore previous state
 #define MAYBEWITHMSGSOFF(offcond,stmt) {MAYBEPUSHNOMSGS(offcond) stmt POPMSGS}  // execute stmt, optionally with msgs off.  Use only around internal functions
 #define WITHMSGSOFF(stmt) MAYBEWITHMSGSOFF(1,stmt)  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
-// scaf* in next line, remove TRAPPING if TRACEDB is not set, so that an error will offer post-mortem debug
+// scaf! in next line, remove TRAPPING if TRACEDB is not set, so that an error will offer post-mortem debug
 #define MAYBEWITHDEBUG(dbg,jt,stmt) if(dbg){stmt}else{UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
  US _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code

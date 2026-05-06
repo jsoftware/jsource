@@ -107,7 +107,7 @@ static F2(jtovs){F12IP;A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*
  RETF(z);
 }    /* a,"r w where a or w or both are sparse */
 
-#if 1 // obsolete
+#if 0 // obsolete
 // k is length of an atom; c is atoms/result item; m is #items to move; z is result; w->arg to move; x->area to move to; z is A block for output area; somefill is neg if there is any fill
 // result points to end+1 of area filled
 // NOTE: AS(z)[0] is overwritten
@@ -131,7 +131,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A z,A w,C*x,I somefill){I d,n,p=c*m;  // p=#
 
 static F2(jtovg){F12IP;A s,z;C*x;I ar,*as,c,k,m,n,*sv,t,wr,*ws,zn;
  ARGCHK2(a,w);
- // scaf* most of this should move back to the caller so it can be outside the rank loop
+ // most of this should move back to the caller so it can be outside the rank loop
  ar=AR(a); wr=AR(w);
  // First loop: calculate zn=#result atoms, c=#atoms in result item.  We go through the loop once for each number in the result-rank, fetch m/n (the values).  For all except the first,
  // we process by finding the result axis-length and multiplying it into the total size.  The result axis-length is the larger of the arg axis lengths; the arg lengths come from the shape
@@ -320,15 +320,15 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
   if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
  }
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case including fill
-#if 1  // obsolete 
- // scaf* should move jtovg here, allocate the entire result at once, and loop through cells here, avoiding recopy
+#if 0  // obsolete 
+ // should move jtovg here, allocate the entire result at once, and loop through cells here, avoiding recopy
  RESETRANK; z=rank2ex(a,w,self,acr,wcr,acr,wcr,jtovg); RETF(z);  // ovg calls other functions, so we clear rank.  rank2ex does EPILOG
 #else
  // calculate number of repeats of each outer cell, and the total # cells
  I *as=AS(a), *ws=AS(w);
  I minf=MIN(af,wf), maxf=MAX(af,wf); ASSERTAGREE(as,ws,minf)   // verify frames agree
  I awn[2][2];  // for a then w, number of times to repeat this cell-1,number of times to repeat each cell
- PRODX(t,af-wf,as+wf,1) awn[1][0]=awn[1][1]=t-1; PRODX(t,wf-af,ws+af,1) awn[0][0]=awn[0][1]=t-1;   // count outer repeat counts for each arg (surplus frame of other arg); save as initial cell/restart counts-1
+ PRODX(t,af-wf,as+wf,1) awn[1][0]=awn[1][1]=t-1; I tt; PRODX(tt,wf-af,ws+af,1) awn[0][0]=awn[0][1]=tt-1;   // count outer repeat counts for each arg (surplus frame of other arg); save as initial cell/restart counts-1
  I *smaxf=AS(af>wf?a:w);   // shape of arg with longer frame, which gives # cells (could be 0)
  I ncells; PRODX(ncells,af>wf?af:wf,smaxf,1)  // total # cells: common frame * larger repeat count
 

@@ -223,15 +223,16 @@ assert. emsk =. (-.9!:56'c_viavx') +. ((prist , virt) = ispristorunbox , isvirt)
 1 return. y
 )
 {. ckprist 0 1 ] 5
-{. ckprist 0 1 ] 4 5  NB. too short for virtual because of from
+{. ckprist 1 1 ] 4 5  NB.
 {. ckprist 2 1 1 1 ] _4 50  NB. long enough but is self-virtual
 {: ckprist 0 1 ] 5
-{: ckprist 0 1 ] 4 5  NB. too short for virtual because of from
+{: ckprist 1 1 ] 4 5  NB.
 {: ckprist 2 1 1 1 ] _4 50  NB. long enough; self-virtual if inplaceable
-'2' {. ckprist 1 1 ] 5  NB. too short for virtual, and pristine if inplaceable
+'2' {. ckprist 1 1 ] 5  NB. and pristine if inplaceable
 '2' {. ckprist 0 1 1 1 ] 2 5  NB. Return arg in full
 '2' {. ckprist 1 1 ] 3 5
 '2 2' {. ckprist 0 0 ] 3 5  NB. complex take does not check pristinity
+}. ckprist 0 0 ] 2  NB. too short for 
 }. ckprist 1 1 ] 5
 }. ckprist 1 1 ] 4 5
 }. ckprist 0 1 1 1 ] _4 3
@@ -322,7 +323,7 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 ];.1 ckprist 0 0 ] 5  NB. Cannot inplace the partition because it's not DIRECT
 ]@];.1 ckprist 0 0 ] 5
 ]&.>;.1 ckprist 0 0 ] 5  NB. doesn't inplace because w is used internally
->;.1 ckprist 0 1 1 1 ] 5
+>;.1 ckprist 0 1 0 1 ] 5
 1 0 1 0 1&#;.1 ckprist 0 0 ] 5  NB. Cannot inplace the partition because it's not DIRECT
 1 0 2 0 1&#;.1 ckprist 0 0 ] 5
 '1 0 0 1 0' ]&.>;.1 ckprist 0 1 ] 5  NB. inplaces when &.>
@@ -358,12 +359,16 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 '<"0 i. 5' ]"0 ckprist 0 1 1 1 ] 5  NB. passes y through unmodified
 '<"0 i. 5' ["0 ckprist 0 1 1 1 ] 5  NB. passes x through unmodified
 '<"0 i. 5' ["0 ckprist 0 0 2 ] 5 2  NB. y arg ignored - x is marked as repeated
-'2' { ckprist 0 1  ] 4 5   NB. pristine because too short for virtual
-'2' { ckprist 1 1  ] 4 64   NB. virtual+pristine because this goes through virtualip
+'2' { ckprist 1 1  ] 4 5   NB. virtual indirect
+'2' { ckprist 1 1  ] 4 64   NB. virtual indirect
+'2' { ckprist 0 1 1 1  ] _4 5   NB. not virtual, too short
+'2' { ckprist 2 1 1 1  ] _4 64   NB. long enough, self-virtual since direct
 '1' { ckprist 1 1  ] 4 64
 '1 3' { ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated
-'2 3' { ckprist 0 0  ] 4 5   NB. pristine because too short for virtual
+'2 3' { ckprist 1 1  ] 4 5   NB. pristine because too short for virtual
 '2 3' { ckprist 1 1  ] 4 50   NB. virtual+pristine because this goes through virtualip
+'2 3' { ckprist 0 1 1 1  ] _4 5   NB. pristine because too short for virtual
+'2 3' { ckprist 2 1 1 1  ] _4 50   NB. self-virtual, direct
 '<1' { ckprist 1 1  ] 4 50   NB. virtual block, does not clear w prist
 '<1' { ckprist 0 1  ] 4 1   NB. nonvirtual block, clears w prist, result pristine on abandoned pristine input because only 1 cell
 '1;2' { ckprist 0 0  ] 4 1   NB. nonvirtual block, clears w prist, not pristine with 2 cells
@@ -454,13 +459,13 @@ NB. x,y transfers ownership to result if both args are abandoned pristine (but n
 16b20 = 16b20 (17 b.) 1 { 13!:_4 (;:'a b c d e f g') , (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
 16b20 = 16b20 (17 b.) 1 { 13!:_4 (;:'a b c d e f g h') , (4) { <"0 i. 6  NB. no apip; new block not recursible
 16b1000020 = 16b1000020 (17 b.) 1 { 13!:_4 (;:'a b c d e f g h') , (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
-16b1000020 = 16b1000020 (17 b.) 1 { 13!:_4 (;:'a b c d e f g h') , (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
+16b1000020 = 16b1000020 (17 b.) 1 { 13!:_4 (;:'a b c d e f g h') , (}. ;:'a b c')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
 16b0000020 = 16b1000020 (17 b.) 1 { 13!:_4 ,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
 
 16b20 = 16b20 (17 b.) 1 { (;:'a b c d e f g') 13!:_4@, (4) { <"0 i. 6  NB. RHS is not recursible.  But apip keeps result recursible
 16b20 = 16b20 (17 b.) 1 {  (2 1 3 2 4 3 5 4&{ 13!:_4@, 2 1&{)   <"0 i. 6  NB. no apip; but EPILOG makes result recursible
 16b1000020 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:_4@, (;:'a b')  NB. both sides abandoned recursible pristine, transferred to result
-16b1000000 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:_4@, (}. ;:'a b')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
+16b1000000 = 16b1000020 (17 b.) 1 {  (;:'a b c d e f g h') 13!:_4@, (}. ;:'a b c')  NB. if a value is virtual, can't transfer ownership, because the virtual doesn't really own it
 16b0000000 = 16b1000020 (17 b.) 1 { 13!:_4@,~ (;:'a b c d e f g h')  NB. if sides equal, blocks are repeated, not pristine, and cannot take ownership because usecount repeated
 
 

@@ -125,9 +125,9 @@ static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F
   I nitems=ws[0];  // number of items of w
   I tkasign=REPSGN(tdlen), tkabs;  // 0 if tklen nonneg, ~0 if neg; |len|
   if(!istake){tkabs=ABS(tdlen); tkabs=nitems-tkabs; tkabs=tkabs<0?0:tkabs; tkasign=~tkasign; tdlen=(tkabs^tkasign)-tkasign;} else tkabs = (tdlen^tkasign)-tkasign;  // convert dropct to takect; set (UI)ABS(tdlen)
-  I minvirt=wt&DIRECT?MINVIRTSIZE:1; minvirt=minvirt>AN(w)?AN(w):minvirt;  // minimum len to create v virtual of this type, never more than the # items we have
+  I minvirt=MINVIRTSIZE(wt); minvirt=minvirt>AN(w)?AN(w):minvirt;  // minimum len to create v virtual of this type, never more than the # items we have
   I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
-  if(BETWEENO((UI)(tkabs*wcellsize),minvirt,AN(w))){  // if this is not an overtake, and big enough to make virtual...  (unsigned to handle overflow, if tklen=IMIN).
+  if(BETWEENO(tkabs*wcellsize,minvirt,AN(w))){  // if this is not an overtake or take in full, and big enough to make virtual...  (unsigned to handle overflow, if tklen=IMIN).
    I woffset=tkasign&(tdlen+nitems);   // offset to data if w, in cells: x+#y if x neg, 0 if x pos
    I offset = woffset*wcellsize;  // offset in atoms of the virtual data
    // allocate virtual block, passing in the in-place status from w

@@ -743,14 +743,13 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define TOOMANYATOMSX 47  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
-#define MINVIRTSIZE 32  // must have this many atoms to be virtual.  This is just a suggestion, and not honored everywhere
+#define MINVIRTSIZE(t) ((t)&DIRECT?32:2)   // t is type; result min len that is enough to create a virtual block.  must have this many atoms to be virtual.  This is just a suggestion, and not honored everywhere
    // Whether we should do so is a tricky question.  Surely, if the argument is big, since we may save a large indexed copy.
    // If the argument is small, the virtual is still better if it doesn't have to be realized; but it might be
-   // realized in effect if it is unavailable for inplacing.  OTOH, if the argument is indirect the virtual does
-   // not require individual usecounting of the atoms.  We should accept virtuals of any size for indirects
-   //
+   // realized in effect if it is unavailable for inplacing.  An indirect should usually be virtualized to save ra/fa on individual blocks
    // It would be good if we could know if the result is going to be assigned, perhaps jt->zombieval=1.  We could
    // suppress the virtual then.
+   // The thresholds above suggest that a ra/fa of the backer takes as long as copying 32 atoms.
 
 // Debugging options
 

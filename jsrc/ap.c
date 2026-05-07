@@ -561,7 +561,7 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
    stride=ilnabs;  // advance by the stride
    remlen=wi;  // since there are no overlaps, set length-to-do to total length
   }
-  strideb = (stride * wc) <<bplg(wt);  // get stride in bytes, for incrementing virtual-block offsets
+  strideb = (stride*wc)<<bplg(wt);  // get stride in bytes, for incrementing virtual-block offsets
  }else{
   // prefix.
   zi=wi;  // one prefix per item

@@ -1265,9 +1265,9 @@ a =: 1 (3}) a
 150000 > 7!:2 'f 0'
 
 NB. User test, crashed when <@": inplaced an unabandoned input
-dbgsucceed2=. 1 : '[ 1:@(m ; ''SUCCEED'' ; coname@'''' , ''result'' ; <@":)'
-dbgarg2=. 2 : '] [ 1:@(n ; ''MONAD''"_ : (''DYAD''"_) ; m ; coname@'''' , (''y'' ; dbgshape ; <@":) : ((''x'' ; ''y'') ,@,. ,:&(dbgshape ; <@":)))'
-dbg2=. 2 : '(n dbgsucceed2)@u^:(1:`((u b. 0) dbgarg2 n)) ::0:'
+dbgsucceed2=: 1 : '[ 1:@(m ; ''SUCCEED'' ; coname@'''' , ''result'' ; <@":)'
+dbgarg2=: 2 : '] [ 1:@(n ; ''MONAD''"_ : (''DYAD''"_) ; m ; coname@'''' , (''y'' ; dbgshape ; <@":) : ((''x'' ; ''y'') ,@,. ,:&(dbgshape ; <@":)))'
+dbg2=: 2 : '(n dbgsucceed2)@u^:(1:`((u b. 0) dbgarg2 n)) ::0:'
 X=. (((= { (; |.))@(+ i.)) $L:0 <"0@('ABCD' $~ #~)) 2
 1: (3 : '(, dbg2 '','')"(#$y)&.>/y'^:(#@$)) X
 

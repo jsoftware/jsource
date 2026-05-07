@@ -646,6 +646,7 @@ F2(jtmdot){F12IP;A z=0;
 }
 
 B jtxquad(J jt,E *Z,X W){
+ ASSERT(ABS(AS(W)[0])<=(1023>>LGBW),EVLIMIT)  // GMP crashes if value exceeds float range
  mpX(W); mpX0(Z); D h=jmpz_get_d(mpW); jmpz_set_d(mpZ,h); jmpz_sub(mpZ,mpW,mpZ); D l=jmpz_get_d(mpZ); FREEXmp(Z);  // high & low parts as D
  D th,tl; TWOSUMBS1(h,l,th,tl) *Z=CANONE1(th,tl);   // if jmpz_get_d rounds correctly, h and l will both overlap.  In case not, we make sure they do.  convert to canonical form
  R 1;

@@ -333,6 +333,9 @@ NB. <. >. return integer when possible
 'domain error' -: 4.5 c. etx 1
 'rank error' -: (,4) c. etx 1
 
+'limit error' -: 11 c. etx 10x^400x
+'limit error' -: 11 c. etx - 10x^400x
+
 NB.? end of skip
 
 

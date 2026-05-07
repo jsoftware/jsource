@@ -45,10 +45,10 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  if(likely(!f)){
   // single box: fast path.  Allocate a scalar box and point it to w.
   INCORPNC(w);  // this realizes w if virtual or ANCHORED
-  I aband=SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
+  I aband=SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // aband = 1 if w is abandoned
   // it's not worth checking WILLBEOPENED, because the only reasonable time to box is at the end of a compound, which has its own result
-  // if w is inplaceable and is the last thing on the tstack (somewhat likely, from the tests), back up the tstack so that the GA writes over it, effecting a ra().  We still have to make sure the block is recursive
-  if(AC(w)<0&&withprob(jt->tnextpushp-1==AZAPLOC(w),0.3)){jt->tnextpushp=jt->tnextpushp-1; razapwhenatend(w);} else ra(w)  // INCORPNC+this=INCORPRA
+  // if w is abandoned and is the last thing on the tstack (somewhat likely, from the tests), back up the tstack so that the GA writes over it, effecting a ra().  We still have to make sure the block is recursive
+  if(withprob(aband&(jt->tnextpushp-1==AZAPLOC(w)),0.3)){jt->tnextpushp=jt->tnextpushp-1; razapwhenatend(w);} else ra(w)  // INCORPNC+this=INCORPRA
   GAT0E(z,BOX,1,0,tpush(w); R0);  // allocate the result; if error, undo the ra()
   // If the input is DIRECT and abandoned inplaceable, mark the result as PRISTINE
   AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)))

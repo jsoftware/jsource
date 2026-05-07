@@ -596,6 +596,6 @@ F2(jtapip){F12IP;A h;
    }  // end 'a and w compatible in rank and type'
   }   // end 'inplaceable usecount'
  }  // end 'inplaceable'
- R(jtover(jtfg,a,w,ds(CCOMMA)));  // if there was trouble, failover to non-in-place code
+ RETF(a=jtover(jtfg,a,w,ds(CCOMMA)))  // if there was trouble, failover to non-in-place code
 
 }    /* append in place if possible */

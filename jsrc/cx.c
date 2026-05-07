@@ -731,7 +731,7 @@ bodyend: ;  // we branch to here to exit with z set to result
 }
 
 // execution of u : v, selecting the version of self & function to use based on valence.  Bivalent, called only from parse/unquote with w,self,self or a,w,self
-static DF2(xv12){F12IP;I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; R (FAV(self)->valencefns[dyad])(jt,a,w,self);}
+static DF2(xv12){F12IP;I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; RETF((FAV(self)->valencefns[dyad])(jt,a,w,self))}
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are

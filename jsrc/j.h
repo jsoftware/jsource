@@ -1316,7 +1316,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // bit8 is 1 when h is not given (@: &: hook)
 // hook is 110
 // @: &: is 160
-#define RZEFCALL(resval,call,callself,calla,callw) {if(unlikely((resval=call)==0))R jteformat(jt,callself,calla,callw,0);}  // resval=call, as a format point since we have self
+#define RZEFCALL(resval,call,callself,calla,callw) {if(unlikely((resval=call)==0))RETF(jteformat(jt,callself,calla,callw,0))}  // resval=call, as a format point since we have self
 
 // FORK1 and FORK2 are NOT bivalent
 #define FORK1(name,opt) \

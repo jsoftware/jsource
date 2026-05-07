@@ -623,19 +623,19 @@ A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
 }
 
 
-static DF1(cons1a){F12IP;R FAV(self)->fgh[0];}
-static DF2(cons2a){F12IP;R FAV(self)->fgh[0];}
+static DF1(cons1a){F12IP;RETF(FAV(self)->fgh[0])}  // scaf bivalent
+static DF2(cons2a){F12IP;RETF(FAV(self)->fgh[0])}
 
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
 static DF1(cons1){F12IP;
  ARGCHK1(w);
  I mr; efr(mr,AR(w),(I)FAV(self)->localuse.lu1.srank[0]);
- R rank1ex(w,self,mr,cons1a);
+ RETF(rank1ex(w,self,mr,cons1a))
 }
 static DF2(cons2){F12IP;
  ARGCHK2(a,w);
  I lr2,rr2; efr(lr2,AR(a),(I)FAV(self)->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)FAV(self)->localuse.lu1.srank[2]);
- R rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a);
+ RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a))
 }
 
 // cyclic-gerund verbs for m"n create an iterator from the gerund and pass that into rank processing, looping over cells
@@ -643,13 +643,13 @@ static DF1(cycr1){F12IP;V*sv=FAV(self); I cger[128/SZI];
  ARGCHK1(w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I mr; efr(mr,AR(w),(I)sv->localuse.lu1.srank[0]);
- R rank1ex(w,self,mr,FAV(self)->valencefns[0]);  // callback is to the cyclic-execution function
+ RETF(rank1ex(w,self,mr,FAV(self)->valencefns[0]))  // callback is to the cyclic-execution function
 }
 static DF2(cycr2){F12IP;V*sv=FAV(self); I cger[128/SZI];
  ARGCHK2(a,w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)sv->localuse.lu1.srank[2]);
- R rank2ex(a,w,self,lr2,rr2,lr2,rr2,FAV(self)->valencefns[1]);  // callback is to the cyclic-execution function
+ RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,FAV(self)->valencefns[1]))  // callback is to the cyclic-execution function
 }
 
 
@@ -687,7 +687,7 @@ static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; I 
    m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
   }
  }
- R m<wr?jtrank1ex(jtfg,w,fs,m,f1):CALL1IP(f1,w,fs);
+ RETF(m<wr?jtrank1ex(jtfg,w,fs,m,f1):CALL1IP(f1,w,fs))
 }
 #define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
 #define LEMIN0(a,b,c) ((b-a)|(c-a)) // sign is 0 if a<=MIN(b,c): a<=b and a<=c
@@ -704,12 +704,12 @@ static DF1(rank1q){F12IP;  // fast version: nonneg rank, no check for multiple R
  I um=FAV(fs)->mr;
  if(unlikely(GEMIN0(m,r,um)>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
  r=r>m?m:r;  // clamp rank at arg rank - MIN(n, rankarg)
- R jtrank1ex(jtfg,w,fs,r,FAV(fs)->valencefns[0]);
+ RETF(jtrank1ex(jtfg,w,fs,r,FAV(fs)->valencefns[0]))
 }
 
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
-static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  Pass inplaceability through
-static DF1(jtrank10){F12IP;R jtrank1ex0(jtfg,w,self,jtrank10atom);}  // pass inplaceability through.
+static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; RETF(CALL1IP(FAV(fs)->valencefns[0],w,fs))}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  Pass inplaceability through
+static DF1(jtrank10){F12IP;RETF(jtrank1ex0(jtfg,w,self,jtrank10atom))}  // pass inplaceability through.
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 
@@ -735,7 +735,7 @@ static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; I 
    fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];   // advance to the new function
   }
  }
- R rank2exip(a,w,fs,llr,lrr,l,r,f2);
+ RETF(rank2exip(a,w,fs,llr,lrr,l,r,f2))
 }
 
 // This version for use when the ranks are nonnegative and u is not RANKONLY
@@ -754,9 +754,9 @@ static DF2(rank2q){F12IP;
 }
 
 // Version for rank 0.  Call rank2ex0, pointing to the u"r
-static DF2(jtrank20atom){F12IP; A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[1])(jtfg,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
+static DF2(jtrank20atom){F12IP; A fs=FAV(self)->fgh[0]; RETF((FAV(fs)->valencefns[1])(jtfg,a,w,fs))}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
 
-static DF2(jtrank20){F12IP;R jtrank2ex0(jtfg,a,w,self,jtrank20atom);}  // pass inplaceability through.
+static DF2(jtrank20){F12IP;RETF(jtrank2ex0(jtfg,a,w,self,jtrank20atom))}  // pass inplaceability through.
 
 
 // a"w; result is a verb
@@ -836,5 +836,5 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
 
  // Create the derived verb.  The derived verb (u"n) inplaces if the action verb u supports inplacing; it supports IRS only for monadic rank 0
  fdeffillall(z,flag2,CQQ,VERB, f1,f2, a,w,ger, vf, r[0],r[1],r[2],FAV(z)->lu2.lc=lc,FAV(z)->localuse.lu1.srank[0]=(I4)hv[0]; FAV(z)->localuse.lu1.srank[1]=(I4)hv[1]; FAV(z)->localuse.lu1.srank[2]=(I4)hv[2]; FAV(z)->localuse.lu1.srank[3]=isfloat);
- R z;
+ RETF(z)
 }

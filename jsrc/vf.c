@@ -304,8 +304,8 @@ F2(jtreshape){F12IP;A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRIC
  r=AN(a); u=AV(a);   // r=length of a   u->values of a
  if(unlikely(ISSPARSE(AT(w)))){RETF(reshapesp(a,w,wf,wcr));}  // handle sparse separately
  if(unlikely((-(AT(w)&B01+INT)&(wf-1)&(r-3)&(0-r))<0) && u[0]==0){   // common special cases: int/bool, no w frame, rank 1 or 2, and a all 0
-  if(r==1){R AT(w)&INT?mtvi:mtv;}  // 0 $ int/bool
-  if(r==2&&u[1]==0){R AT(w)&INT?mtmi:mtm;}  // 0 0 $ int/bool
+  if(r==1){RETF(AT(w)&INT?mtvi:mtv)}  // 0 $ int/bool
+  if(r==2&&u[1]==0){RETF(AT(w)&INT?mtmi:mtm)}  // 0 0 $ int/bool
  }
  PRODX(m,r,u,1)  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  CPROD(,c,wf,ws); CPROD(,n,wcr,wf+ws);
@@ -328,7 +328,7 @@ F2(jtreshape){F12IP;A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRIC
  k=bpnoun(t); p=k*m; q=k*n;
  DPMULDE(c,m,zn);
  GA00(z,t,zn,r+wf); s=AS(z); MCISH(s,ws,wf); MCISH(s+wf,u,r);
- if(!zn)R z;
+ if(!zn)RETF(z)
  zv=CAV(z); wv=CAV(w); 
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats
  PRISTCLRF(w)
@@ -352,7 +352,7 @@ F2(jtreitem){F12IP;A y,z;I acr,an,ar,r,*v,wcr,wr;
   fauxINT(y,yfaux,an+r,1) v=AV(y);
   MCISH(v,AV(a),an); MCISH(v+an,AS(w)+wr-r,r);
  }
- R wr==wcr?jtreshape(jtfg,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z);  // Since a has no frame, we don't have to check agreement
+ RETF(wr==wcr?jtreshape(jtfg,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z))  // Since a has no frame, we don't have to check agreement
 }    /* a $"r w */
 
 // x $[!.n]!.v y or x ($,)[!.n]!.v y which uses fn v if needed to resolve _ in x

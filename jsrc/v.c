@@ -149,7 +149,7 @@ DF1(jtnum1){F12IP;A z=0;
  mvc(natoms<<k,voidAV(z),1LL<<k,voidAV(a));  // could use voidAV0(a)
  R z;
 }
-DF2(jtnum2){F12IP;ARGCHK3(a,w,self); R FAV(self)->fgh[2];}
+DF2(jtnum2){F12IP;ARGCHK3(a,w,self); RETF(FAV(self)->fgh[2])}
 
 F2(jtfromr  ){F12IP;ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is infinite - no frame  {"_ 1
 F2(jtrepeatr){F12IP;ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}  // #"_ 1

@@ -263,6 +263,12 @@ NB. obsolete 'domain error' -: f etx 1 2
 
 100000 100000 -: $  +./ . *.~ 1$.1e5 1e5;0 1;0   NB. formerly crashed not detecting sparse
 
+mx=. 0 $. _2 _2 {. 1  NB. sparse boolean 2*2-matrix filled by values 0 and 1
+vy0=. {. mx           NB. sparse boolean 2-vector filled by 0
+vy1=. {: mx           NB. sparse boolean 2-vector filled by values 0 and 1
+1: mx ,"1 vy1  NB. error here as values from short arg bled into sparse ele
+1: vy1 ,"1 mx
+
 
 
 

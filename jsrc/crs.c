@@ -124,7 +124,7 @@ static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG(0044);A we,ww,y
   wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;
  }
  RZ(z=ope(z)); AS(z)[0]=wm;  // we did one cell of aa to get the shape, but now we have to set back to correct # indexes
- z=sprz(z,zi,CALL2(f2,a,we,fs),f,ws);
+ z=sprz(z,zi,CALL2(f2,ISSPARSE(AT(a))?SPA(PAV(a),e):a,we,fs),f,ws);
  EPILOG(z);
 }
 
@@ -143,7 +143,7 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y
   av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;
  }
  RZ(z=ope(z)); AS(z)[0]=am;  // we did one cell of aa to get the shape, but now we have to set back to correct # indexes
- z=sprz(z,zi,CALL2(f2,ae,w,fs),f,as);  // apply the function to the sparse element
+ z=sprz(z,zi,CALL2(f2,ae,ISSPARSE(AT(w))?SPA(PAV(w),e):w,fs),f,as);  // apply the function to the sparse element
  EPILOG(z);
 }
 

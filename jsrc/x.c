@@ -65,6 +65,22 @@ static DF2(jtanchor2){F12IP; I newval=reb0(a);
  RETF(sc(newval))  // return the value we set
 } // error if trying to mark a block that is already aliased
 
+// 9!:48 and 9!:49, query/set exit sentence
+static DF1(jtexitsq){F12IP;
+ ARGCHK1(w); ASSERTMTV(w);  // w must be empty
+ A exp=0; while(!__atomic_compare_exchange_n(&JT(jt,exitsentence), &exp, (A)~0, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))exp=exp==(A)~0?0:exp;  // wait till we have read the sentence & written ~0 to it.  Ignore ~0, which means busy
+ // We have the value, and have stored ~0 as a busy signal.  Protect the block, restore it to jt, and return it
+ if(exp){ra(exp) tpush(exp)} __atomic_store_n(&JT(jt,exitsentence),exp,__ATOMIC_RELEASE);
+ RETF(exp?exp:aqq)  // return empty string if no value
+}
+
+static DF1(jtexitss){F12IP;
+ ARGCHK1(w) RZ(w=vs(w)) if(AN(w)!=0){ra(w)}else w=0;  // w must be a string; protect it is not empty, otherwise set to 0
+ A exp=0; while(!__atomic_compare_exchange_n(&JT(jt,exitsentence), &exp, w, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))exp=exp==(A)~0?0:exp;  // wait till we have read the sentence & written w to it.  Ignore ~0, which means busy
+ if(exp!=0)fa(exp)   // if there was an old value, free it
+ RETF(mtv);  // no return
+}
+
 // TUNE static I totprobes=0, totslots=0;  // umber of probes/slots
 
 
@@ -307,6 +323,8 @@ void jtforeigninit(J jt){UI i;
  MN(9,45)  XPRIM(VERB, jtrngstates,  0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,46)  XPRIM(VERB, jtbreakfnq,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,47)  XPRIM(VERB, jtbreakfns,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,48)  XPRIM(VERB, jtexitsq,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,49)  XPRIM(VERB, jtexitss,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,52)  XPRIM(VERB, jtasgzombq,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,53)  XPRIM(VERB, jtasgzombs,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,54)  XPRIM(VERB, jtdeprecxq,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);

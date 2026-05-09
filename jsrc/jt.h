@@ -369,7 +369,8 @@ typedef struct JSTstruct {
  UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo  */
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
- I filler3[4];
+ A exitsentence;  // sentence to be executed after 2!:55, before returning
+ I filler3[3];
 // end of cacheline 3
 
 // Cacheline 4: Files

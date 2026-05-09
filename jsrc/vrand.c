@@ -777,9 +777,9 @@ F1(jtroll){F12IP;A z;B b=0;I m,wt;
  if(wt&B01)R rollbool(w);
  if(wt&XNUM+RAT)R rollxnum(w);
  RZ(w=vi(w)); m=AV(w)[0];
- if(    2==m)RZ(z=roll2   (w,&b));
- if(!b&&0!=m)RZ(z=rollnot0(w,&b));
- if(!b      )RZ(z=rollany (w,&b));
+ if(    2==m)RZ(z=roll2   (w,&b));   // if first y is 2, see if all are
+ if(!b&&0!=m)RZ(z=rollnot0(w,&b));  // if first y not 0, see if all are not
+ if(!b      )RZ(z=rollany (w,&b));  // general roll
  RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 

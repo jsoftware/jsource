@@ -269,6 +269,15 @@ vy1=. {: mx           NB. sparse boolean 2-vector filled by values 0 and 1
 1: mx ,"1 vy1  NB. error here as values from short arg bled into sparse ele
 1: vy1 ,"1 mx
 
+NB. rank on empty sparse array
+13!:8@3"1 ((]:@$.)([. -: ].)) i. 3 0 3
+13!:8@3"2 ((]:@$.)([. -: ].)) i. 0 3 3
+
+>:"1 ((]:@$.)([. -: ].)) i. 3 0 3
+>:"2 ((]:@$.)([. -: ].)) i. 0 3 3
+
+2&#"1 ((]:@$.)([. -: ].)) i. 3 0 3
+2&#"2 ((]:@$.)([. -: ].)) i. 0 3 3
 
 
 

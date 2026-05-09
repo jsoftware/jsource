@@ -443,6 +443,9 @@ void breakclose(JS jt)
 F1(jtjoff){F12IP;I x;
  ARGCHK1(w);
  x=i0(w);  // use 0 for any nonnumeric arg
+ // Execute user's exit sentence if given
+ A exp=0; while(!__atomic_compare_exchange_n(&IJT(jt,exitsentence), &exp, 0, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))exp=exp==(A)~0?0:exp;  // wait till we have read the sentence & written 0 to it.  Ignore ~0, which means busy
+ if(exp!=0)jtimmex(jt,exp);  // run the exit sentence if any.  Ignore return, since we don't pass it on
  jt->jerr=EVEXIT; jt->etxn=0; // clear old errors, replacing with the higher-priority EVEXIT
  if(IJT(jt,sesm))jsto(jt, MTYOEXIT,(C*)x); else JFree(JJTOJ(jt));
  // let front-end handle exit.

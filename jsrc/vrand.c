@@ -19,15 +19,17 @@
 #define X64         5.42101086242752217004e-20
 
 #define SETNEXT     UF nextfn=jt->rngdata->rngparms[jt->rngdata->rng].rngF;
+static INLINE UI nextrand(J jt, UF f){R (*f)(jt);}
 #define NEXT        (nextrand(jt,nextfn))
-// call the rng efficiently.  The call is an indirect call from many places & thus likely to mispredict.  To help out, we make
-// all calls through a common routine that does the indirect call; in the one location it is more likely to be predicted
-// SETNEXT must appear in every function that calls NEXT
-static NOINLINE UI nextrand(J jt, UF f){R (*f)(jt);}  // scaf this is a bad idea - just inline it
 
 #if SY_64
 #define INITD       {sh=mk=1;}
-#define NEXTD1      ((0.5+X52/2)+X64*(I)(NEXT&(UI)0xfffffffffffff000))
+// obsolete #define NEXTD1      ((0.5+X52/2)+X64*(I)(NEXT&(UI)0xfffffffffffff000))
+// create the value in binary.  The top 52 bits will be the mantissa; the exponent comes from the low 53 bits.  We look for the lowest 1 bit so as to get the right probability for each exponent.  This way
+// we get 52 good fractional bits for values down to 2^-12.  Below that the overlap means we lose fractional bits, but we keep 64 bits total doen to 2^-52, which means that at that point there are 12 good fraction bits.
+// The effect is a random distribution of 2^64 values, but truncated to DP accuracy.
+// We set a minimum of 2^-53 to correspond to the max value of 1-2^-53.  This leaves a very small bias.
+#define NEXTD1      ({UI i=NEXT; i=((i>>12)+0x3fe0000000000000)-((UI)CTTZI(i|((UI)1<<52))<<52); *(D*)&i;})
 #define NEXTD0      NEXTD1
 #else
 #define INITD       {sh=32-jt->rngdata->rngw; mk=0x003fffff>>(2-sh);}

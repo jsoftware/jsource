@@ -23,7 +23,7 @@
 // call the rng efficiently.  The call is an indirect call from many places & thus likely to mispredict.  To help out, we make
 // all calls through a common routine that does the indirect call; in the one location it is more likely to be predicted
 // SETNEXT must appear in every function that calls NEXT
-static NOINLINE UI nextrand(J jt, UF f){R (*f)(jt);}
+static NOINLINE UI nextrand(J jt, UF f){R (*f)(jt);}  // scaf this is a bad idea - just inline it
 
 #if SY_64
 #define INITD       {sh=mk=1;}

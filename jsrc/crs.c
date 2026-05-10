@@ -42,6 +42,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  if(ISSPARSE(AT(e))){ep=PAV(e); ASSERT(all1(eq(SPA(ep,e),SPA(ep,x))),EVSPARSE); q=SPA(ep,e);}  // 'sparse' sparse element comes from boxing.  If all elements identical, replace with sparse atom
  else{RZ(q=reshape(mtv,e)); ASSERT(all1(eq(q,e)),EVSPARSE);}
  if(!AS(z0)[0]){
+  // no values.  create empty result
   t=AT(q); zt=STYPE(t);
   GASPARSE(z,zt,1L,f+AR(e),s); ICPY(f+AS(z),AS(e),AR(e));
   zp=PAV(z); SPB(zp,e,q); SPB(zp,a,mtv); 
@@ -74,9 +75,10 @@ A jtsprank1(J jt,A w,A fs,I mr,AF f1){PROLOG(0043);A q,wx,wy,wy1,ww,z,ze,zi,*zv;
  ARGCHK1(w);
  wr=AR(w); ws=AS(w); efr(wcr,wr,mr); wf=wr-wcr;
  if(!wf)R CALL1(f1,w,fs);
- DO(wf, ASSERT(ws[i]!=0,EVNONCE););
+ DO(wf, if(ws[i]==0)goto fillcell;)   // if 0 in frame, create fill cell
  RZ(w=sprarg(wf,w)); wp=PAV(w); wx=SPA(wp,x); wy=SPA(wp,i); 
  if(mr){
+  // normal case: nonempty cells to execute on
   wt=AT(w); 
   v=AS(wy); n=v[0]; c=v[1]; wv=AV(wy); RZ(wy1=dropr(wf,wy));
   RZ(wb=spredge(wy,wf,&m));
@@ -92,9 +94,18 @@ A jtsprank1(J jt,A w,A fs,I mr,AF f1){PROLOG(0043);A q,wx,wy,wy1,ww,z,ze,zi,*zv;
    j+=k;
   }
   RZ(z=ope(z));
- }else{RZ(zi=ca(wy)); RZ(z=rank1ex(wx,fs,mr,f1)); RZ(ze=CALL1(f1,SPA(wp,e),fs));}  // mr is 0
+ }else{RZ(zi=ca(wy)); RZ(z=rank1ex(wx,fs,mr,f1)); RZ(ze=CALL1(f1,SPA(wp,e),fs));}       // no 0 in frame, we have an empty cell.  
  z=sprz(z,zi,ze,wf,ws);
+epilog:;
  EPILOG(z);
+fillcell:
+ // empty arg, execute on cell of fills to get shape and type
+ // we could get out through sprz but I don't understand the code & don't know what it would do with empty frame
+ A wc; RZ(wc=reshape(drop(sc(wf),shape(w)),head(ravel(w))))   // create a (sparse) cell of fills - should be framing fill, not sparse fill
+ WITHDEBUGOFF(z=CALL1(f1,wc,fs);)  // run the verb on the cell of fills
+ if(unlikely(z==0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=jtsparse1(jt,zeroionei(0)); RESETERR;}  // use sparse 0 as result if error encountered
+ z=reitem(take(sc(wf),shape(w)),lamin1(z));   // (wf{.$w) $ ,:z    one result per (empty) frame
+ goto epilog;
 }    /* f"r w on sparse arrays */
 
 static I jtspradv(J jt,I n,B*b,I f,I r,I j,P*p,A*z){A s,x;I k;P*q;
@@ -143,7 +154,9 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y
   av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;
  }
  RZ(z=ope(z)); AS(z)[0]=am;  // we did one cell of aa to get the shape, but now we have to set back to correct # indexes
- z=sprz(z,zi,CALL2(f2,ae,ISSPARSE(AT(w))?SPA(PAV(w),e):w,fs),f,as);  // apply the function to the sparse element
+// scaf z=sprz(z,zi,CALL2(f2,ae,ISSPARSE(AT(w))?SPA(PAV(w),e):w,fs),f,as);  // apply the function to the sparse element
+ A aef; RZ(aef=CALL2(f2,ae,w,fs)) if(ISSPARSE(AT(aef))){SPB(PAV(aef),x,mtv)}  // apply function to fill ele, but discard results that are not the fill ele
+ z=sprz(z,zi,aef,f,as);  // apply the function to the sparse element
  EPILOG(z);
 }
 

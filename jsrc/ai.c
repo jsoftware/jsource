@@ -104,41 +104,42 @@ A jtinvamp(J jt, A f, A g, A fampg){A ff,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  nf=!!(NOUN&AT(f));  // nf  is 1 if m&v
  h=nf?g:f; x=nf?f:g; c=FAV(h)->id; u=FAV(h);   // h=verb arg, x=noun arg. c is ID of the verb.  u is VB struct for the verb
  switch(c){
- case CPLUS:    R amp(negate(x),h);
- case CSTAR:    R amp(recip(x), h);
- case CMINUS:   R nf?fampg?fampg:amp(f,g):amp(x,ds(CPLUS));
- case CDIV:     R nf?fampg?fampg:amp(f,g):amp(x,ds(CSTAR));
- case CROOT:    R amp(ds(nf?CEXP:CLOG),x);
- case CEXP:     R !nf&&equ(x,num(2))?ds(CROOT):amp(x,ds(nf?CLOG:CROOT));
- case CLOG:     R nf?amp(x,ds(CEXP)):amp(ds(CROOT),x);
- case CJDOT:    R nf?atop(invrecur(ds(CJDOT)),amp(ds(CMINUS),x)):amp(ds(CMINUS),jdot1(x));
- case CRDOT:    R nf?atop(invrecur(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));
- case CLBRACE:  if(!nf)R amp(x,ds(CIOTA)); break;
- case COBVERSE: ff=FAV(h)->fgh[1]; R amp(nf?x:ff,nf?ff:x);
+ case CPLUS:    R amp(negate(x),h);  // +
+ case CSTAR:    R amp(recip(x), h);  // *
+ case CMINUS:   R nf?fampg?fampg:amp(f,g):amp(x,ds(CPLUS));  // -
+ case CDIV:     R nf?fampg?fampg:amp(f,g):amp(x,ds(CSTAR));  // %
+ case CROOT:    R amp(ds(nf?CEXP:CLOG),x);  // %:
+ case CEXP:     R !nf&&equ(x,num(2))?ds(CROOT):amp(x,ds(nf?CLOG:CROOT));   // ^
+ case CLOG:     R nf?amp(x,ds(CEXP)):amp(ds(CROOT),x);  // ^.
+ case CJDOT:    R nf?atop(invrecur(ds(CJDOT)),amp(ds(CMINUS),x)):amp(ds(CMINUS),jdot1(x));  // j.
+ case CRDOT:    R nf?atop(invrecur(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));  // r.
+ case CLBRACE:  if(!nf)R amp(x,ds(CIOTA)); break;  // {
+ case COBVERSE: ff=FAV(h)->fgh[1]; R amp(nf?x:ff,nf?ff:x);  // u :. v
  case CPDERIV:  if(nf&&!AR(x))R ds(CPDERIV); break;  // only atom&p.. is invertible
 xco:
- case CXCO:     n=rei0(x); ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN);  // fall through to create (-x)&u
- case CROT:          // fall through to create (-x)&u
- case CCIRCLE:       // fall through to create (-x)&u
- case CSPARSE:  if(nf)R amp(negate(x),h);   break;
- case CABASE:   if(nf)R amp(x,ds(CBASE));   break;
- case CIOTA:    if(nf)R amp(ds(CLBRACE),x); break;
- case CTHORN:   if(nf)R ds(CEXEC);          break;
- case CTILDE:   
-  if(ff=FAV(h)->fgh[0],VERB&AT(ff))R jtinvamp(jt,nf?ff:x,nf?x:ff,0);
-  else{ff=unname(h); R jtinvamp(jt,nf?x:ff,nf?ff:x,0);}
- case CSCO:     
+ case CXCO:     n=rei0(x); ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN);  // fall through to create (-x)&u  x:
+ case CROT:          // fall through to create (-x)&|.
+ case CCIRCLE:       // fall through to create (-x)&o.
+ case CSPARSE:  if(nf)R amp(negate(x),h);   break;  // $.
+ case CABASE:   if(nf)R amp(x,ds(CBASE));   break;  // #:
+ case CIOTA:    if(nf)R amp(ds(CLBRACE),x); break;   // i.
+ case CTHORN:   if(nf)R ds(CEXEC);          break;  // ":
+ case CEXEC:   if(nf)R ds(CTHORN);          break;  // ".
+ case CTILDE:      
+  if(ff=FAV(h)->fgh[0],VERB&AT(ff))R jtinvamp(jt,nf?ff:x,nf?x:ff,0);   // u~
+  else{ff=unname(h); R jtinvamp(jt,nf?x:ff,nf?ff:x,0);}    // name~
+ case CSCO:     // s:
   ASSERT(nf!=0,EVDOMAIN); 
   n=rei0(x); ASSERT(n&&BETWEENC(n,-6,6),EVDOMAIN);
   R amp(sc(-n),h);
- case CUCO:
+ case CUCO:   // u:
   ASSERT(nf!=0,EVDOMAIN); 
   n=rei0(x); ASSERT(BETWEENC(n,1,8)&!BETWEENC(n,5,6),EVDOMAIN);
   R amp(sc(-(1^(-n))),h);
- case CCANT:    
+ case CCANT:    // |:
   ASSERT(nf!=0,EVDOMAIN); 
   R obverse(ev12(x,0,"(]: C.^:_1 i.@#@$) |: ]"),fampg?fampg:amp(f,g));
- case CPCO:
+ case CPCO:   // p:
   if(nf){
    n=rei0(x);
    switch(n){
@@ -149,37 +150,37 @@ xco:
    }
   }
   break;
- case CQCO:     
+ case CQCO:     // q:
   if(nf){
    ASSERT(!AR(x),EVRANK);
    R obverse(eval(all1(lt(x,zeroionei(0)))?"*/@(^/)\"2":"(p:@i.@# */ .^ ])\"1"),fampg?fampg:amp(f,g));
   }
   break;
- case CFIT:
+ case CFIT:    // !.
   if(nf&&CXCO==FAV(FAV(g)->fgh[0])->id) goto xco; // m&(x:!.n)^:_1 is (-m)&(x:!.n)
   ASSERT(nf&&CPOUND==FAV(FAV(g)->fgh[0])->id,EVDOMAIN);  // otherwise must be m&(#!.n)^:_1
   ASSERT(1==AR(x),EVRANK);
   R fdef(0,CPOWOP,VERB, jtexpandg,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
- case CPOUND:
+ case CPOUND:   // #
   ASSERT(nf!=0,EVDOMAIN);  // (m&#)^:_1
   ASSERT(1>=AR(x),EVRANK);
   R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
   break;
- case CPOWOP:
+ case CPOWOP:  // ^:
   if(VGERL&u->flag){ff=AAV(u->fgh[2])[1]; R amp(nf?x:ff,nf?ff:x);} 
   break;
- case CCOMMA:  
+ case CCOMMA:  // ,
   SETIC(x,n); 
   R obverse(1==n?ds(nf?CDROP:CCTAIL):amp(sc(nf?n:-n),ds(CDROP)),fampg?fampg:amp(f,g));
- case CBASE:   
+ case CBASE:   // #.
   if(!nf)break;
   R AR(x) ? amp(x,ds(CABASE)) : 
   obverse(ev12(x,0,"($&]:@>:@<. ([.@((^.~|)&].)))@(1&>.)@(>./)@:|@, #: ]"),fampg?fampg:amp(f,g));
- case CATOMIC:
+ case CATOMIC:   // A.
   if(!nf){ASSERT(equ(x,nub(x)),EVDOMAIN); R obverse(atop(f,amp(x,ds(CIOTA))),fampg?fampg:amp(f,g));}  // fall through to common obverse (?)
- case CCYCLE:
+ case CCYCLE:   // C.
   if(nf&&AR(x)<=(c==CCYCLE))R obverse(ev12(fampg?fampg:amp(f,g),0,"/:@]:@(i.@#) { ]"),fampg?fampg:amp(f,g)); break;
- case CDROP:
+ case CDROP:   // }.
   if(!(nf&&1>=AR(x)))break;
   RZ(x=cvt(INT,x));
   RZ(y=eps(v2(-1L,1L),signum(x))); yv=CAV(y);
@@ -187,23 +188,23 @@ xco:
   g=1==AN(x)?ds(CPOUND):atop(amp(tally(x),ds(CTAKE)),ds(CDOLLAR));
   h=!yv[1]?f:atop(!yv[0]?ds(CMINUS):amp(negate(signum(x)),ds(CSTAR)),f);
   R obverse(hook(swap(ds(CTAKE)),atop(h,g),0),fampg?fampg:amp(f,g));
- case CDOMINO:
+ case CDOMINO:  // %.
   if(!(2==AR(x)&&AS(x)[0]==AS(x)[1]))break;
   ff=eval("+/ .*");
   R nf?atop(h,amp(ff,minv(x))):amp(x,ff);
- case CDOT:
+ case CDOT:   // u . v
   if(ip(h,CPLUS,CSTAR)){
    ASSERT(2==AR(x),EVRANK);
    ASSERT(AS(x)[0]==AS(x)[1],EVLENGTH);
    R nf?amp(ds(CDOMINO),x):amp(h,minv(x));
   }
   break;
- case CQQ:
+ case CQQ:   // "
   if(!nf&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ),0);
   break;
  case CBSLASH: if(nf&&(n=i0(x),0>n)&&(d=IDD(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // [\  ]\  slack
   break;
- case CIBEAM:  // h is x!:y
+ case CIBEAM:  // !:    h is x!:y
   if(likely(nf!=0)){   // n&(x!:y)
    if(FAV(h)->localuse.lu1.foreignmn[0]==3){  // 3!:n
     n=rei0(f);
@@ -212,7 +213,7 @@ xco:
    }
   }
   break;
- case CBDOT:
+ case CBDOT:   // b.
   n=rei0(x);
   switch(i0(FAV(h)->fgh[1])){
   case 22: case 25:          R fampg?fampg:amp(f,g);
@@ -221,7 +222,7 @@ xco:
   case 32: case 33: case 34: ASSERT(nf!=0,EVDOMAIN); R amp(negate(x),h);
   }
   break;
- case CPOLY:
+ case CPOLY:   // p.
   if(nf&&1==AR(x)&&2==AN(x)&&NUMERIC&AT(x)&&!equ(zeroionei(0),tail(x))){  // linear polynomial only
    RZ(y=recip(tail(x)));
    R amp(apip(tymes(y,negate(head(x))),y),h);

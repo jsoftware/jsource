@@ -901,8 +901,8 @@ const char *sym_name = "JGetLocale";
   Dl_info info;
   if (dladdr(sym_ptr,&info)){ // non-zero is success
    strcpy(path,info.dli_fname);
-   char *p1;
-   if((p1=strrchr(info.dli_fname,filesep))){path[p1-(char*)info.dli_fname]=0;}
+   const char *p1;
+   if((p1=strrchr(info.dli_fname,filesep))){path[p1-info.dli_fname]=0;}
   } else *path=0;
  } else *path=0;
 #endif

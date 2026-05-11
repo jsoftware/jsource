@@ -113,7 +113,7 @@ test4=: 4 : 0
 13 97 7     test4 1000
 
 NB. Deal some binaries, verify plausible
-1: smoutput^:(1000 <: | ((* >:) 192) - 4 * +/ (>: i. 192) ([: +/ ?@$)"0 (2)) '1 in 200 error (1) in g640k'
+1: 1!:3&(testpath,'errors_log.txt')^:(1000 <: | ((* >:) 192) - 4 * +/ (>: i. 192) ([: +/ ?@$)"0 (2)) '1 in 200 error (1) in g640k',LF
 
 test5=: 4 : 0
  h=: ,1{"2 g

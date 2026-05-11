@@ -621,22 +621,31 @@ F2(jtrollksub){F12IP;A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->
   X*xv=XAV(z); RZ(xv); AT(z)= XNUM; mvc(n*SZI, xv, SZI, MEMSET00); DO(n,(*xv++)=XAV(roll(w))[0];)
  }else{
   // integer output
+  if(BW==64){
+   if(!(m&(m-1))){
+    // power-of-2 modulus (including 1 which puts out all 0)
+    k=CTTZI(m); p=0; mk=m-1;  // k=lg(m), p is # bits in t, mk is mask of bits for value
+    DQ(n, if((p-=k)<0){t=NEXT; p=BW-k;} u[i]=t&mk; t>>=k;)
+    goto exit;
+   }
+   if(m<(1LL<<50)){ 
+    // If we can do the calculation in the floating-point unit, do.  2^50 max to avoid rounding up
+    D md=m*X64; DQ(n, u[i]=(I)(md*((D)(I)NEXT+(D)x63)); )   // avoid unsigned conversion, which requires conditional correction
+    goto exit;
+   }
+  }   // 32-bit or m>2^50 and not a power of 2, the slow way
   r=n; s=GMOF(m,x); if(s==x)s=0;
-  if(m>1&&!(m&(m-1))){
-   if(s==0)s=0-m;  // since we reject t>=s, we must make s less than IMAX.  This is the max possible multiple of s.  We don't check for s=0 in this path.  s==0 possible only in 32-bit
+  if(!(m&(m-1))&&m>1){   //  scaf this code sucks
    // here if w is a power of 2, >2; take bits from each value.  s cannot be 0
+   if(s==0)s=0-m;  // since we reject t>=s, we must make s less than IMAX.  This is the max possible multiple of s.  We don't check for s=0 in this path.  s==0 possible only in 32-bit
    k=CTTZI(m);  // lg(m)
    p=jt->rngdata->rngw/k; mk=m-1;  // p=#results per random number; r is number of values left after bit processing
    r-=p; NOUNROLL while(r>=0){NOUNROLL do{t=NEXT;}while(s<=t); DQU(p, *u++=mk&t; t>>=k;) r-=p;}  // deal p at a time till we are as close to n as we can get
    r+=p;  // rebias to get # values still needed
   }
-  if(BW==64&&m<(1LL<<50)){ 
-   // If we can do the calculation in the floating-point unit, do
-   D md=m*X64; DQ(r, *u++=(I)(md*((D)(I)NEXT+(D)x63)); )   // avoid unsigned conversion, which requires conditional correction
-  }else{
-   if(r&&s)DQ(r, NOUNROLL while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
-  }
+  if(r&&s)DQ(r, NOUNROLL while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
  }
+exit:;
  R z;
 }
 

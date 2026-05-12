@@ -156,6 +156,8 @@ testx=: 2 : '(u b._1)-:lr<''v'''
 ". test ":
 C. test C.
 p. test p.
+<;.1 testx ;
+<;.2 testx ;
 q: testx (*/"1)
 0&".  testx ":
 
@@ -368,7 +370,7 @@ NB. special forms detected properly
 
 (-: ]&.((1 0 1;1 1 0 1)&(<;.1))) i. 3 4
 'length error' -: ]&.((1 0 1;1 1 0 1)&(<;.1)) etx i. 4 4
-ajaghasdf -: |.&.(<;.1) 'asdfaghaj'
+'ajaghasdf' -: |.&.(<;.1) 'asdfaghaj'
 
 NB. DoWhile and Converge
 5.684341886080801487e_14 -: _1 + -:&.<:^:1:^:_ ] 2

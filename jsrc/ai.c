@@ -231,6 +231,7 @@ xco:
    RZ(y=recip(tail(x)));
    R amp(apip(tymes(y,negate(head(x))),y),h);
   }
+  break;
  case CCUT:;   // <;.[12]
   if(nf&&FAV(FAV(g)->fgh[0])->id==CBOX&&BETWEENC(i0(FAV(g)->fgh[1]),1,2))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, fampg,num(-1), 0L,VNONAME+VNOSELF, RMAX,RMAX,RMAX);
   break;
@@ -333,7 +334,8 @@ xco:
   }
   break;
  case CCUT:   // <;.[12]
-  if(CBOX==IDD(f)&&ng&&(p=i0(g),((p-1)&~1)==0))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,FAV(w)->flag&VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+  if(CBOX==IDD(f)&&ng&&(p=i0(g),((p-1)&~1)==0))R ds(CRAZE);
+// obsolete  fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,FAV(w)->flag&VNONAME+VNOSELF, RMAX,RMAX,RMAX);
   break;
  case CIBEAM:   // inverse of 3!:1/3 is 3!:2; inverse of 3!:2 is 3!:1
   if(FAV(w)->localuse.lu1.foreignmn[0]==3 && BETWEENC(FAV(w)->localuse.lu1.foreignmn[1],1,3))R foreign(num(3),num((FAV(w)->localuse.lu1.foreignmn[1]&1)+1));  // 1 2 3 -> 2 1 2

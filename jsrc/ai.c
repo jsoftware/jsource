@@ -66,34 +66,38 @@ static F2(jtdiag){F12IP;I m,p,r,t,*v;
   ASSERT(0,EVNONCE);
 }}
 
+// Roger's version of this was stubbed out.  It allowed a list in a box to represent a diagonal matrix with the length inferred from the other boxes in the row/column.
+// This fails when a row/column is full of diagonals: there is no way to infer the shape.
+// We remove the diagonal support, which also removes most of the need for auditing
 static F1(jtbminv){F12IP;A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  ARGCHK1(w);
- ASSERT(0,EVNONCE);
- ASSERT(BOX&AT(w),EVDOMAIN);
- wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); 
- if(1>=wr)R raze(w);
- if(!wn)R iota(reshape(sc(wr),num(0)));
- GATV0(x,INT,wr,1); u=AV1(x); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
- GATV0(x,INT,wr,1); v=(I**)AV1(x);
- DO(wr, m=ws[i]; GATV0(x,INT,m,1); mvc(m*SZI,v[i]=AV1(x),1,MEMSETFF););
- for(i=0;i<wn;++i){
-  x=C(wv[i]); r=AR(x); s=AS(x);
-  if(AN(x)){if(!t)t=AT(x); ASSERT(HOMO(t,AT(x)),EVDOMAIN);}
-  ASSERT(2>r||r==wr,EVRANK);
-  if(2>r)z=0;
-  else DO(wr, y=v[i]+u[i]; if(0>*y)*y=s[i]; else ASSERT(*y==s[i],EVLENGTH););
-  j=wr; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}
- }
- if(!z){A f,h,*zv;I*hv;
-  GATVR(z,BOX,wn,2,ws); zv=AAV2(z);
-  GATV0(h,INT,wr,1); hv=AV1(h);
-  RZ(f=jtfiller(jt,t,0,(I*)jt)); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);
-  for(i=0;i<wn;++i){
-   zv[i]=x=C(wv[i]);
-   if(2>AR(x)){DO(wr, hv[i]=v[i][u[i]];); RZ(zv[i]=diag(x,reshape(h,f)));}
-   j=wr-1; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}
- }}
- DO(wr, A t=z; RZ(dfv1(z,t,slash(under(qq(ds(CCOMMA),sc(wr-i)),ds(COPE))))););
+// doesn't work  ASSERT(0,EVNONCE);
+ ASSERT(BOX&AT(w),EVDOMAIN);    // must be boxed
+ wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w);    // info about w
+ if(1>=wr)R raze(w);   // if w has no more than 1 axis, simply raze it
+ if(!wn)R iota(reshape(sc(wr),num(0)));  //  if there is an empty axis, contents are meaningless - return i. (#$w) # 0
+// doesn't work  GATV0(x,INT,wr,1); u=AV1(x); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);   // odometer holding index list of cell being worked on
+// doesn't work  GATV0(x,INT,wr,1); v=(I**)AV1(x);  // shape workarea int  v[i][u[i]] will be length of axis i in cell u[*]
+// doesn't work  DO(wr, m=ws[i]; GATV0(x,INT,m,1); mvc(m*SZI,v[i]=AV1(x),1,MEMSETFF););  // init v[i][...] to -1
+// doesn't work  for(i=0;i<wn;++i){   // for each box in the array...
+// doesn't work   x=C(wv[i]); r=AR(x); s=AS(x);   // fetch rank & shape of box
+// doesn't work   if(AN(x)){if(!t)t=AT(x); ASSERT(HOMO(t,AT(x)),EVDOMAIN);}   // if not empty, must be HOMO with others
+// doesn't work   ASSERT(2>r||r==wr,EVRANK);   // rank must match rank of w, or be <= 1 (which indicates diagonal)
+// doesn't work   if(2>r)z=0;  // if diagonal, flag with z=0
+// doesn't work   else DO(wr, y=&v[i][u[i]]; if(0>*y)*y=s[i]; else ASSERT(*y==s[i],EVLENGTH););  // not diagonal, set len first time; verify length of each axis matches predecessors
+// doesn't work   j=wr; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}   // update index list for next cell
+// doesn't work  }
+// doesn't work  if(!z){A f,h,*zv;I*hv;
+// doesn't work   // one of the boxes called for a diagonal
+// doesn't work   GATVR(z,BOX,wn,wr,ws); zv=AAV2(z);  // allocate new input area; will be copied from w with diagonals replaced
+// doesn't work   GATV0(h,INT,wr,1); hv=AV1(h);
+// doesn't work   RZ(f=jtfiller(jt,t,0,(I*)jt)); mvc(wr*SZI,u,MEMSET00LEN,MEMSET00);  // se f with fill-cell; clear odometer back to 000
+// doesn't work   for(i=0;i<wn;++i){
+// doesn't work    zv[i]=x=C(wv[i]);  // copy box contents to z in case not diagonal
+// doesn't work    if(2>AR(x)){DO(wr, hv[i]=v[i][u[i]];); RZ(zv[i]=diag(x,reshape(h,f)));}  // diagonal: reshape it to implied shape
+// doesn't work    j=wr-1; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}  // advance odometer
+// doesn't work  }}
+ DO(wr, A t=z; RZ(dfv1(z,t,slash(under(qq(ds(CCOMMA),sc(wr-i)),ds(COPE))))););  // ,"(wr-i)&.>/
  RETF(jtopenforassembly(jt,z));
 }    /* <;.1 or <;.2 inverse on matrix argument */
 
@@ -227,6 +231,9 @@ xco:
    RZ(y=recip(tail(x)));
    R amp(apip(tymes(y,negate(head(x))),y),h);
   }
+ case CCUT:;   // <;.[12]
+  if(nf&&FAV(FAV(g)->fgh[0])->id==CBOX&&BETWEENC(i0(FAV(g)->fgh[1]),1,2))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, fampg,num(-1), 0L,VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+  break;
  }
  ASSERT(0,EVDOMAIN);
 }
@@ -325,7 +332,7 @@ xco:
    }
   }
   break;
- case CCUT:
+ case CCUT:   // <;.[12]
   if(CBOX==IDD(f)&&ng&&(p=i0(g),((p-1)&~1)==0))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, w,num(-1), 0L,FAV(w)->flag&VNONAME+VNOSELF, RMAX,RMAX,RMAX);
   break;
  case CIBEAM:   // inverse of 3!:1/3 is 3!:2; inverse of 3!:2 is 3!:1

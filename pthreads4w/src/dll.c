@@ -140,14 +140,14 @@ extern int __ptw32_on_process_exit(void)
 }
 
 #if defined(__GNUC__) && !defined(__clang__)
-__attribute__((section(".ctors"), used)) extern int (*gcc_ctor)(void) = __ptw32_on_process_init;
-__attribute__((section(".dtors"), used)) extern int (*gcc_dtor)(void) = __ptw32_on_process_exit;
+__attribute__((section(".ctors"), used)) int (*gcc_ctor)(void) = __ptw32_on_process_init;
+__attribute__((section(".dtors"), used)) int (*gcc_dtor)(void) = __ptw32_on_process_exit;
 #elif defined(_MSC_VER) && !defined(__clang__)
 #  if _MSC_VER >= 1400 /* MSVC8+ */
 #    pragma section(".CRT$XCU", long, read)
 #    pragma section(".CRT$XPU", long, read)
-__declspec(allocate(".CRT$XCU")) extern int (*msc_ctor)(void) = __ptw32_on_process_init;
-__declspec(allocate(".CRT$XPU")) extern int (*msc_dtor)(void) = __ptw32_on_process_exit;
+__declspec(allocate(".CRT$XCU")) int (*msc_ctor)(void) = __ptw32_on_process_init;
+__declspec(allocate(".CRT$XPU")) int (*msc_dtor)(void) = __ptw32_on_process_exit;
 #  else
 #    pragma data_seg(".CRT$XCU")
 extern int (*msc_ctor)(void) = __ptw32_on_process_init;

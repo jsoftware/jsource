@@ -25,18 +25,18 @@ systeminfo
 switch ($arch) {
     "x86" {
         Write-Output (Get-ChildItem -Path $C)
-        & "$C\jconsole.exe" "script\testga.ijs"
+        "$C\jconsole.exe" "script\testga.ijs"
         if ($LASTEXITCODE -ne 0) { exit 1 }
         break
     }
     "arm64" {
         Write-Output (Get-ChildItem -Path $B)
         if ($env:_DEBUG -eq "3") {
-            & lldb -b -o run -k bt -k quit -- "$B\jconsole.exe" -lib j.dll "script\testga.ijs"
+            lldb -b -o run -k bt -k quit -- "$B\jconsole.exe" -lib j.dll "script\testga.ijs"
             if ($LASTEXITCODE -ne 0) { exit 1 }
         }
         else {
-            & "$B\jconsole.exe" "script\testga.ijs"
+            "$B\jconsole.exe" "script\testga.ijs"
             if ($LASTEXITCODE -ne 0) { exit 1 }
         }
         break
@@ -46,16 +46,16 @@ switch ($arch) {
         if ($env:USE_EMU_AVX -eq "0" -or $env:USE_PYXES -eq "0") {
             # Skip AVX2 test
             if ($env:_DEBUG -eq "3") {
-                & lldb -b -o run -k bt -k quit -- "$B\jconsole.exe" -lib j.dll "script\testga.ijs"
+                lldb -b -o run -k bt -k quit -- "$B\jconsole.exe" -lib j.dll "script\testga.ijs"
                 if ($LASTEXITCODE -ne 0) { exit 1 }
             }
             else {
-                & "$B\jconsole.exe" -lib j.dll "script\testga.ijs"
+                "$B\jconsole.exe" -lib j.dll "script\testga.ijs"
                 if ($LASTEXITCODE -ne 0) { exit 1 }
             }
         }
         else {
-            & "$B\jconsole.exe" -lib javx2.dll "script\testga.ijs"
+            "$B\jconsole.exe" -lib javx2.dll "script\testga.ijs"
             if ($LASTEXITCODE -ne 0) { exit 1 }
         }
         break

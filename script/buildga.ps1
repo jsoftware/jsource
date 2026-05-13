@@ -169,34 +169,6 @@ switch ($arch) {
     }
 }
 
-if ($false) {
-    switch ($arch) {
-        "x86" {
-            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j32 jclean
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j32
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            # GOTO L05C
-        }
-        "arm64" {
-            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1 clean
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        }
-        "x64" {
-            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64 clean
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        }
-        default {
-            Write-Error "Unsupported architecture: $arch"
-            exit 1
-        }
-    }
-}
-
 Set-Location ..
 
 switch ($arch) {

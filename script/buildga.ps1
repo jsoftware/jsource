@@ -1,3 +1,9 @@
+param(
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("x86","x64","arm64")]
+    [string]$arch
+)
+
 Write-Host "Build windows on github actions"
 
 Write-Host "Environment variables:"
@@ -23,12 +29,6 @@ $C = "jlibrary\bin32"
 Write-Host $A
 Write-Host $B
 Write-Host $C
-
-param(
-    [Parameter(Mandatory=$true)]
-    [ValidateSet("x86","x64","arm64")]
-    [string]$arch
-)
 
 switch ($arch) {
     "x86" {

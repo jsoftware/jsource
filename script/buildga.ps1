@@ -136,30 +136,25 @@ switch ($arch) {
 switch ($arch) {
     "x86" {
         nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j32 clean
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j32
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     "arm64" {
         nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1 clean
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     "x64" {
         if ("$env:USE_EMU_AVX" -ne "0" -and "$env:USE_PYXES" -ne "0") {
             nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512 clean
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
             nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx2 clean
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx2
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         }
         nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64 clean
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
@@ -170,6 +165,7 @@ switch ($arch) {
 }
 
 Set-Location ..
+Write-Host Get-Location
 
 switch ($arch) {
     "x86" {

@@ -30,6 +30,10 @@ Write-Host $A
 Write-Host $B
 Write-Host $C
 
+if ($arch -ne "x86" -and $arch -ne "arm64" -and $arch -ne "x64") {
+    exit 1
+}
+
 switch ($arch) {
     "x86" {
         New-Item -ItemType Directory -Force -Path "j32" | Out-Null
@@ -129,3 +133,91 @@ switch ($arch) {
     }
 }
 
+switch ($arch) {
+    "x86" {
+        nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j32 clean
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j32
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    "arm64" {
+        nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1 clean
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    "x64" {
+        if ("$env:USE_EMU_AVX" -ne "0" -and "$env:USE_PYXES" -ne "0") {
+            nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512 clean
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx2 clean
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx2
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
+        nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64 clean
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    default {
+        Write-Error "Unsupported architecture: $arch"
+        exit 1
+    }
+}
+
+if ($false) {
+    switch ($arch) {
+        "x86" {
+            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j32 jclean
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j32
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            # GOTO L05C
+        }
+        "arm64" {
+            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1 clean
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64arm NO_SHA_ASM=1
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
+        "x64" {
+            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64 clean
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            nmake -f ..\makemsvc\jamalgam\makefile.win jplatform=windows j64x=j64
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
+        default {
+            Write-Error "Unsupported architecture: $arch"
+            exit 1
+        }
+    }
+}
+
+Set-Location ..
+
+switch ($arch) {
+    "x86" {
+        Copy-Item -Path "bin\windows\j32\jconsole.exe" -Destination "$env:C"
+        Copy-Item -Path "bin\windows\j32\*.dll" -Destination "$env:C"
+    }
+    "arm64" {
+        Copy-Item -Path "bin\windows\j64arm\jconsole.exe" -Destination "$env:B"
+        Copy-Item -Path "bin\windows\j64arm\*.dll" -Destination "$env:B"
+    }
+    "x64" {
+        Copy-Item -Path "bin\windows\j64\jconsole.exe" -Destination "$env:B"
+        Copy-Item -Path "bin\windows\j64\*.dll" -Destination "$env:B"
+        if ("$env:USE_EMU_AVX" -ne "0" -and "$env:USE_PYXES" -ne "0") {
+            Copy-Item -Path "bin\windows\j64avx512\j.dll" -Destination "$env:B\javx512.dll"
+            Copy-Item -Path "bin\windows\j64avx2\j.dll" -Destination "$env:B\javx2.dll"
+        }
+    }
+    default {
+        Write-Error "Unsupported architecture: $arch"
+        exit 1
+    }
+}

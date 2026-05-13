@@ -237,7 +237,7 @@ static DF1(jtinv1){F12IP;A fs=FAV(self)->fgh[0];  A z; ARGCHK1(w);A i; RZ(i=inv(
 // for the dyad, look up the inverse of x&u
 static DF2(jtinv2){F12IP; A fs=FAV(self)->fgh[0];  A z; ARGCHK2(a,w); A i; RZ(i=invamp(a,fs,0)); STACKCHKOFL WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(jtfg,w,i,i);) RETF(z); }  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 // if u has no names, meaning we can take the inverse early for the monadic case:
-static DF1(jtinvh1){F12IP;A hs=FAV(self)->fgh[2]; A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtfg,w,hs); RETF(z);}  // monadic inverse was already looked up in h
+DF1(jtinvh1){F12IP;A hs=FAV(self)->fgh[2]; A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtfg,w,hs); RETF(z);}  // monadic inverse was already looked up in h
 static DF1(jtinverr){F12IP; ASSERT(0,EVDOMAIN);}  // uninvertible monad: come here if inverse invoked as a monad (x&u^:_1 might be OK as a dyad) 
 
 

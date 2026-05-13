@@ -506,7 +506,7 @@ EDX[bit 23]  AVX512_FP16
 #define HWCAP2_FSGSBASE        (1 << 1)
 #endif
   unsigned long hwcaps2= getauxval(AT_HWCAP2);
-  if (hwcaps2 & HWCAP2_FSGSBASE) g_cpuFeatures2 |= CPU_X86_FEATURE2_RING3MWAIT;
+  if (hwcaps2 & HWCAP2_RING3MWAIT) g_cpuFeatures2 |= CPU_X86_FEATURE2_RING3MWAIT;
   if (hwcaps2 & HWCAP2_FSGSBASE) g_cpuFeatures2 |= CPU_X86_FEATURE2_FSGSBASE;
 #endif
 

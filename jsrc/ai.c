@@ -97,7 +97,7 @@ static F1(jtbminv){F12IP;A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
 // doesn't work    if(2>AR(x)){DO(wr, hv[i]=v[i][u[i]];); RZ(zv[i]=diag(x,reshape(h,f)));}  // diagonal: reshape it to implied shape
 // doesn't work    j=wr-1; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}  // advance odometer
 // doesn't work  }}
- DO(wr, A t=z; RZ(dfv1(z,t,slash(under(qq(ds(CCOMMA),sc(wr-i)),ds(COPE))))););  // ,"(wr-i)&.>/
+ DO(wr, A t=z; RZ(dfv1(z,t,slash(under(qq(ds(CCOMMA),sc(wr-i)),ds(COPE))))););  // ,"(wr-i)&.>/  scaf this sucks for high-rank w but is not worth fixing
  RETF(jtopenforassembly(jt,z));
 }    /* <;.1 or <;.2 inverse on matrix argument */
 
@@ -171,7 +171,8 @@ xco:
   R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
   break;
  case CPOWOP:  // ^:
-  if(VGERL&u->flag){ff=AAV(u->fgh[2])[1]; R amp(nf?x:ff,nf?ff:x);} 
+  if(VGERL&u->flag){ff=AAV(u->fgh[2])[1]; R amp(nf?x:ff,nf?ff:x);}
+  if(u->valencefns[0]==jtinvh1)R invamp(nf?f:u->fgh[2],nf?u->fgh[2]:g,0);  // m&(#.^:_1) : try new inverse after moving to old
   break;
  case CCOMMA:  // ,
   SETIC(x,n); 

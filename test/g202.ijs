@@ -160,6 +160,7 @@ p. test p.
 <;.2 testx ;
 q: testx (*/"1)
 0&".  testx ":
+44&(#.^:_1) testx (44&#.)
 
 ({=) test (i."1&1)
 

@@ -837,6 +837,7 @@ extern A        jtindexofxx(J,I,A,A);
 extern A        jtintceillog2cap(J,A,A);
 extern A        jtintfloorlog2cap(J,A,A);
 extern A        jtinvamp(J,A,A,A);
+extern DF1(jtinvh1);
 extern A        jtiocol(J,I,A,A);
 extern A        jtiovsd(J,I,A,A);
 extern A        jtiovxs(J,I,A,A);

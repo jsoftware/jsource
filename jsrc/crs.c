@@ -137,7 +137,6 @@ static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG(0044);A we,ww,y
  RZ(z=ope(z)); AS(z)[0]=wm;  // we did one cell of aa to get the shape, but now we have to set back to correct # indexes
  A wef; RZ(wef=CALL2(f2,a,we,fs)) if(ISSPARSE(AT(wef))){SPB(PAV(wef),x,mtv)}  // apply function to fill ele, but discard results that are not the fill ele
  z=sprz(z,zi,wef,f,ws);
-// obsolete  z=sprz(z,zi,CALL2(f2,a,we,fs),f,ws);
  EPILOG(z);
 }
 
@@ -156,7 +155,6 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y
   av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;
  }
  RZ(z=ope(z)); AS(z)[0]=am;  // we did one cell of aa to get the shape, but now we have to set back to correct # indexes
-// obsolete  z=sprz(z,zi,CALL2(f2,ae,ISSPARSE(AT(w))?SPA(PAV(w),e):w,fs),f,as);  // apply the function to the sparse element
  A aef; RZ(aef=CALL2(f2,ae,w,fs)) if(ISSPARSE(AT(aef))){SPB(PAV(aef),x,mtv)}  // apply function to fill ele, but discard results that are not the fill ele
  z=sprz(z,zi,aef,f,as);  // apply the function to the sparse element
  EPILOG(z);

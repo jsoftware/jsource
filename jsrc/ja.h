@@ -76,7 +76,6 @@
 #define axbytes(x,y)                jtaxbytes(jt,(x),(y))
 #define axbytes1(x0,x1,x2,x3,x4)    jtaxbytes1(jt,(x0),(x1),(x2),(x3),(x4))
 #define axtally(x,y)                jtaxtally(jt,(x),(y))
-// obsolete #define b0(x)                       jtb0(jt,(x))
 #define baddson(x,y,z)              jtbaddson(jt,(x),(y),(z))
 #define badjust(x,y)                jtbadjust(jt,(x),(y))
 #define base2(x,y)                  jtbase2(jt,(x),(y))
@@ -1350,7 +1349,6 @@ extern void jfree4gmp(void*,size_t);
 #define vfn(x)                      jtvfn(jt,(x))
 #define vger2(x,y,z)                jtvger2(jt,(x),(y),(z))
 #define vi(x)                       jtvi(jt,(x))
-// obsolete #define vib(x)                      jtvib(jt,(x))
 #define vib(x)                      ({A xa=(x); if(likely(xa!=0)&&unlikely(!ISDENSETYPE(AT(xa),INT))){xa=(AT(xa)&SPARSE+B01)>AR(xa)?num(BAV(xa)[0]):jtvib(jt,xa);} xa;})  // INT quickly; convert B01 dense atomic to INT
 #define vip(x)                      jtvip(jt,(x))
 #define virtual(x,y,z)              jtvirtual(jt,(x),(y),(z))

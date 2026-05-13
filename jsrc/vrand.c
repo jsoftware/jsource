@@ -24,7 +24,6 @@ static INLINE UI nextrand(J jt, UF f){R (*f)(jt);}
 
 #if SY_64
 #define INITD       {sh=mk=1;}
-// obsolete #define NEXTD1      ((0.5+X52/2)+X64*(I)(NEXT&(UI)0xfffffffffffff000))
 // create the value in binary.  The top 52 bits will be the mantissa; the exponent comes from the low 53 bits.  We look for the lowest 1 bit so as to get the right probability for each exponent.  This way
 // we get 52 good fractional bits for values down to 2^-12.  Below that the overlap means we lose fractional bits, but we keep 64 bits total doen to 2^-52, which means that at that point there are 12 good fraction bits.
 // The effect is a random distribution of 2^64 values, but truncated to DP accuracy.

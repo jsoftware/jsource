@@ -77,32 +77,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
 
    if(!(cstk&(cstk+1))) {
     // Here there is no 0-bit with a higher 1-bit, i. e. no exchange to be  performed.  We have to check this separately because CT[LT]ZI is unpredictable on all-0 input.
-#if 0 // obsolete
-    // The cases are: 00000 (lower partition empty), 11111 (upper partition empty), 00111 (no partition required)
-    if(cstk==0){
-     // The case 00000 is ominous: we might be handling a partition with many repeated values (equal to the pivot).  If we don't take action, all those repeated values will be mapped to
-     // the upper partition and we will enter a worst-case where we partition only one item each pass.  To prevent that, we will repartition using the same pivot, but
-     // this time moving the equal values to the lower partition.  If this produces a better partition, we will use it.  If not, we must be processing a block of
-     // ALL equal values, and we stop partitioning.  We thus process a block with many equals as follows: scan & partition to strip elements lower than the equals; scan, rescan, & partition to
-     // strip elements higher than the equals; scan & rescan to detect the all-equals case & stop partitioning  replace this with the pivot-patitioning below
-     DQ(r-l, cstk=2*cstk+(v0[i]<=pivot);)  // this time equality moves to the lower side (cstk is already 0 to start)
-     // There MUST have been at least 1 equal value, because the pivot was the median of three and yet nothing compared low the first time; one value at least must compare equal.
-     if(!(cstk&(cstk+1))) {
-      // There are still no exchanges.  Find the partition sizes.
-      UI4 xchgx04=CTLZI(cstk); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition
-      if(xchgx1!=r-l)goto finmedxchg;  // there are no exchanges, but we have to process both partitions (one of which might be empty)
-      goto batchfinished;  // all equal -- abort this partition and go to the next one
-     }
-     // ...falling through if there are exchanges after a rescan
-    }else{
-     // The lower partition is not empty.  Set the partition pointer above the lowest 1-bit
-     UI4 xchgx04=CTLZI(cstk); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition.
-     goto finmedxchg;
-    }
-    // ...falling through if there are exchanges after a rescan
-#else
     xchgx0=cstk==0?-1:CTLZI(cstk); xchgx1=xchgx0+1; // low partition always ends right below the high - no middle partition.  The bad case of cpmpletely empty partition is handled in common code below
-#endif
    }else{
     // There is at least 1 exchange.  Do them.  We swap the highest 1-bit with the lowest 0-bit, and complement both bits.  When the pointers cross, they are left after the cross pointing to the
     // end of the opposite partition.  So, we use xchgx1 for the left side, xchgx0 for the right side.

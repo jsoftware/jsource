@@ -173,7 +173,6 @@ static A jtmerge2(J jtfg,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
  // the stack is empty, so if there is a virtual block it must be in a higher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
  I ip = ASGNINPLACESGNNJA(SGNIF(jtfg,JTINPLACEWX),w)
-// obsolete       &&( ((AT(w)&t&(DIRECT|RECURSIBLE))>0)&(w!=a)&(w!=ind)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) );
       && likely((AT(w)&t&(DIRECT|RECURSIBLE))>0) && likely(w!=a) && likely(w!=ind) && (likely(w!=ABACK(a))||!(AFLAG(a)&AFVIRTUAL));
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(-ip&t&RECURSIBLE){
@@ -570,7 +569,6 @@ onecellframe:;   // come here when we detect single cell, possibly of higher ran
    I k=bplg(t);  // lg2 of an atom of result
    // inplaceability is explained in the main logic in merge2n
    if(ASGNINPLACESGNNJA(SGNIF(jtfg,JTINPLACEWX),w)
-// obsolete       &&( ((AT(w)&t)>0)&(w!=a)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) )){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}  // inplaceable, use it.  w==ind OK
       && likely((AT(w)&t)>0) && likely(w!=a) && (likely(w!=ABACK(a))||!(AFLAG(a)&AFVIRTUAL)) ){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}  // inplaceable, use it.  w==ind OK
    else{RZ(z=cvt(t,w));}  // copy old block, converting if needed
    mvc(cellsize<<k,CAV(z)+(cellsize<<k)*cellx,AN(a)<<k,voidAV(a)); // copy a to the cell, replicating as needed

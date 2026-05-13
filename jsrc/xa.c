@@ -195,7 +195,6 @@ F1(jtppq){F12IP;C*end;I k;
 
 // 9!:10 set print precision
 F1(jtpps){F12IP;I k;
-// obsolete  sc(k=rei0(w)); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
  k=rei0(w); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
  jt->ppn=k;
  R mtv;

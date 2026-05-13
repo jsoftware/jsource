@@ -39,7 +39,6 @@ INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  case SSINGCASE(VA1CMIN-VA1ORIGIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA1CMIN-VA1ORIGIN,SSINGENC(FL)):
    {D x=wdv; wdv=jround(x); wdv-=TGT(wdv,x);}  // do round/floor in parallel
-// obsolete    if(likely(wdv==(D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    if(likely(wdv>=FLIMIN&&wdv<FLIMAX))SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
 
@@ -48,7 +47,6 @@ INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  case SSINGCASE(VA1CMAX-VA1ORIGIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA1CMAX-VA1ORIGIN,SSINGENC(FL)):
    {D x=wdv; wdv=jround(x); wdv+=TLT(wdv,x);}  // do round/ceil in parallel
-// obsolete     if(likely(wdv==(D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    if(likely(wdv>=FLIMIN&&wdv<FLIMAX))SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
 

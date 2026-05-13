@@ -520,8 +520,6 @@ F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
  if(wf==0){
   if(unlikely(a==w))RETF(num(1^eqis0));  // same block matches
   if(AN(a)!=AN(w))RETF(num(eqis0));  // different # elements mismatches
-// obsolete   I nocall = (-(a!=w)&((AN(a)^AN(w))-1));
-// obsolete   if(nocall>=0)nocall=SGNTO0(nocall)+(a==w); else
   I res=((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // compare value, 0/1
   RE(0)  // abort if error, presumably stack error
   RETF(num(res^eqis0));  // return compare result

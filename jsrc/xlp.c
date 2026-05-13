@@ -2204,40 +2204,6 @@ __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from the col of Qkt
     _mm_storeu_pd((D*)((I)qkvrow+o3),_mm256_castpd256_pd128(_mm256_permute4x64_pd(h2l2h3l3,0b01001110))); _mm_storeu_pd((D*)((I)qkvrow+o2),_mm256_castpd256_pd128(h2l2h3l3));   // store 3&2
     _mm_storeu_pd((D*)((I)qkvrow+o1),_mm256_castpd256_pd128(_mm256_permute4x64_pd(h0l0h1l1,0b01001110)));  _mm_storeu_pd((D*)((I)qkvrow+o0),_mm256_castpd256_pd128(h0l0h1l1));   // store 1&0
 
-#if 0    // obsolete
-  }else{
-   // Batch Qkt update: always qp, of aligned 128-byte blocks, no check for duplicates
-   UI colx;  //  index to work on
-   // for each block
-   for(colx=0;colx<coln;++colx){
-    I blockx=colxv[colx];  // get byte index of next batch in row
-    __m256d iph,ipl,isl;  // intermediate products and sums
-    // we do not use aligned loads for the row values, because sometimes they have been copied to an unaligned temp buffer (as on a swap).  They will be from fast local cache anyway
-
-    __m256d pcoldh=_mm256_loadu_pd(pcn0v+colx*8), pcoldl=_mm256_loadu_pd(pcn0v+colx*8+4);  // next 4 pivotcol values, high then low in 0213 order
-    __m256d h0l0h1l1=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i*)((I)qkvrow+blockx))), h2l2h3l3=_mm256_castsi256_pd(_mm256_stream_load_si256((__m256i*)((I)qkvrow+blockx)+1));  // batch of Qkt, as Es
-    __m256d qkvh=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), qkvl=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // batch of Qkt, high & low separated in 0213 order
-
-    TWOPROD(prowdh,pcoldh,iph,ipl)  // (prowdh,pcoldh) to high precision
-    __m256d magqh;   // will hold combined relative+absolute zero tolerance
-    ipl=_mm256_fmadd_pd(prowdh,pcoldl,ipl); ipl=_mm256_fmadd_pd(prowdl,pcoldh,ipl);  // accumulate middle pps - can skip for b0 when both mpcands are dp
-    // Because we added 3 low-order values (with the same shift), we are limiting precision to 104 bits
-    // (qkvh,qkvl) - (prowdh,prowdl) * (pcoldh,pcoldl)
-    // Do high-precision add of qkvh and iph.  If this decreases the absvalue of qkvh, we will lose precision because of insufficient
-    // bits of qkv.  If this increases the absvalue of qkvh, all of qkvl will contribute and the limit of validity will be
-    // from the product.  In either case it is safe to accumulate all the partial products and ipl into qkvl
-    // thresholding - combine mabsfuzz with relative max;  if > |qphi|, means result should be forced to 0
-    magqh=_mm256_fmadd_pd(_mm256_andnot_pd(sgnbit,qkvh),_mm256_set1_pd(RELSIGMAX),mabsfuzz);  // composite threshold: a fraction of the magnitude of one arg, plus an absolute min
-    qkvl=_mm256_add_pd(qkvl,ipl);  // the middle pps.  low*low will never contribute unless qkv is exhausted & thus noise
-    TWOSUM(qkvh,iph,qkvh,isl)   // combine the high parts
-    isl=_mm256_add_pd(isl,qkvl);  // add the combined low parts
-    // Make sure qkvl is much less than qkvh
-    TWOSUM(qkvh,isl,qkvh,qkvl)  // put qkvh into canonical form
-    magqh=_mm256_cmp_pd(_mm256_andnot_pd(sgnbit,qkvh),magqh,_CMP_GT_OQ);   // maxqh = 0 if result too small
-    qkvl=_mm256_and_pd(qkvl,magqh); qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz
-    _mm256_stream_pd((D*)(__m256i*)((I)qkvrow+blockx),_mm256_shuffle_pd(qkvh,qkvl,0b0000)); _mm256_stream_pd((D*)((__m256i*)((I)qkvrow+blockx)+1),_mm256_shuffle_pd(qkvh,qkvl,0b1111));  // write out the new Qk.
-   }
-#endif
   }
  }  // loop to next row
  R 0;
@@ -2280,14 +2246,6 @@ ASSERT(n<=AS(pivotcolnon0)[AR(pivotcolnon0)-1],EVLENGTH) // must have one index 
  // transpose pivotcolnon0 into needed order
  I ncvals=AN(pivotcolnon0);  // # column values, which exceeds # column indexes if there are pairs
  I coln0=ncvals-AN(prx);   // number of pairs is # by which #values exceeds #indexes
-#if 0   // obsolete 
- if(isbatch){    // obsolete 
-// batch mode transpose selected parts of pivotcolnon0 (which is the entire pivot column) into 0213 order, by cachelines
-  DO(AN(prx), __m256d h0l0h1l1=_mm256_loadu_pd((D*)&pcnv[prxv[i]]); __m256d h2l2h3l3=_mm256_loadu_pd((D*)&pcnv[prxv[i]+2]);
-   _mm256_storeu_pd((D*)&pcntv[i*4],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000)); _mm256_storeu_pd((D*)&pcntv[i*4+2],_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111)); )
-  pivotcolnon0=pcnt;   // use the transposed version
- }else{
-#endif
  if(AR(absfuzzmplr)!=1){  // if no mplr given, we will be doing full batches in ALU and will always fetch 4 values at a time.  Put them into 0213 order
   A pcnt; GATV0(pcnt,QP,((ncvals-1)|3)+1,1) E *pcntv=EAV1(pcnt); E *pcnv=EAV(pivotcolnon0);
   DO((ncvals+(NPAR-1))>>LGNPAR, __m256d h0l0h1l1=_mm256_loadu_pd((D*)&pcnv[i*NPAR]); __m256d h2l2h3l3=_mm256_loadu_pd((D*)&pcnv[i*NPAR+2]);

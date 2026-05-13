@@ -248,7 +248,6 @@ static DF2(jtpowv12cell){F12IP;A z;PROLOG(0110);
  A u,uc; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
  RZ(u=CALL12(w,FAV(gs)->valencefns[!!w],a,w,gs));  // execute v, not inplace
  if(likely(((AT(u)&~(B01+INT))|AR(u)|((u0=BIV0(u))&~1))==0)||(AR(u)==0&&AT(u)&NUMERIC&&(uc=cvt(INT,u))!=0&&!((u0=IAV(uc)[0])&~1))){  // v result is atomic bool/int 0/1 (if statement)  overfetch possible but harmless
-// obsolete   if(u0){jtfg=(J)((I)jtfg&~(a==w?JTDOWHILE+JTINPLACEA+JTINPLACEW:JTDOWHILE)); z=CALL12IP(w,uf,a,w,fs);}   // v result is atomic INT/B01 1: execute u, inplace if possible - but suppress the DOWHILE flag, and all inplacing if a=w
   if(u0){jtfg=(J)((I)jtfg&~JTDOWHILE); if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEA+JTINPLACEW)); z=CALL12IP(w,uf,a,w,fs);}   // v result is atomic INT/B01 1: execute u, inplace if possible - but suppress the DOWHILE flag, and all inplacing if a=w
   else{z=w?w:a; if((I)jtfg&JTDOWHILE)R (A)1;}  // v result is atomic INT/B01 0: bypass.  If ^:_. return 1 to indicate u returned 0 - skips EPILOG but powatom12 will soon do one
  }else{ASSERT(!((I)jtfg&JTDOWHILE),EVDOMAIN) RZ(u=powop(fs,u,(A)1));  // not a simple if statement: fail if called from ^:_.; create u^:n form of powop;
@@ -262,7 +261,6 @@ static DF2(jtpowv12cell){F12IP;A z;PROLOG(0110);
 // Apply the gerunds to xy, then  apply u^:n
 static DF2(jtgcr12){F12IP;PROLOG(0);
  w=EPMONAD?0:w;  // throughout this bivalent routine a is w/a w is 0/w  (monad/dyad) w!=0 is the dyad flag
-// obsolete  jtfg=(J)((I)jtfg&((a==w)?~(JTINPLACEA+JTINPLACEW):~0));  // cannot inplace a/w if they are equal
  if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEA+JTINPLACEW));  // cannot inplace a/w if they are equal
  I origjtfg=(I)jtfg;  // remember initial inplacing status of args - after equality check
  A *hv=AAV(FAV(self)->fgh[2]); I hn=AN(FAV(self)->fgh[2]);  // hv->v0`v1`v2.  These cannot be pyxes.  hn is their number

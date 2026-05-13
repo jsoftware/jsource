@@ -120,10 +120,6 @@ primop256(minIB,0x80,,zz=_mm256_castsi256_pd(_mm256_min_epi64(_mm256_castpd_si25
 #else
 primop256(minII,1,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
-// obsolete primop256(minI4II,1,,
-// obsolete  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
-// obsolete primop256(minI2II,1,,
-// obsolete  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi16(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 // commutative primop256(minBI,0x40,,
 // commutative  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(minIB,0x80,,
@@ -145,10 +141,6 @@ primop256(maxIB,0x80,,zz=_mm256_castsi256_pd(_mm256_max_epi64(_mm256_castpd_si25
 #else
 primop256(maxII,1,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
-// obsolete primop256(maxI4II,1,,
-// obsolete  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
-// obsolete primop256(maxI2II,1,,
-// obsolete  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi16(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(maxIB,0x80,,
  zz=_mm256_castsi256_pd(BLENDVI(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx),_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 // commutative primop256(maxBI,0x40,,

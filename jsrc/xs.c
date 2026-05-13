@@ -112,7 +112,6 @@ static F1(jtaddscriptname){F12IP;I i;A z;
  z=indexof(JT(jt,slist),boxw);  // look up only in the defined names
  AN(JT(jt,slist))=savn;  // restore count; shape is immaterial
  if(z==0)goto exit;  // if error in indexof, abort
-// obsolete  i=i0(z);  // get the index at which found
  i=BIV0(z);  // get the index at which found
  if(AM(JT(jt,slist))==i){  // if string must be added...
   NOUNROLL while(AM(JT(jt,slist))==AN(JT(jt,slist)))RZ(jtextendunderlock(jt,&JT(jt,slist),&JT(jt,startlock),0))  // extend if list full

@@ -528,8 +528,6 @@ A self;   //
 // Macros to install/delete kvs or unload values, which have extra work to do for indirect types.  ind is a condition that is non0 for indirect type
 #define PUTKVOLD(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; A da=dv[i]; ra(sa) dv[i]=sa; if(likely(da!=0))fa(da) sa=sa1;)}else{MC(d,s,n);}}   // when old kv might exist
 #define PUTKVNEW(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; ra(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}  // when old kv are empty
-// obsolete #define GETV(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
-// obsolete #define GETVRmc(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{MC(d,s,n);}}   // move value to result
 #define GETV(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{JMC(d,s,n,0);}}   // move value to result, allowing overstore - single use
 #define GETVR(d,s,n,ind) {if(ind){A *dv=(A*)(d); A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; rareccontents(sa) dv[i]=sa; sa=sa1;)}else{JMCR(d,s,n,0,endmask);}}   // move value to result, allowing overstore - in loop
 #define DELKV(s,n,ind) {if(ind){A *sv=(A*)(s); A sa=sv[0]; DO((n)>>LGSZI, A sa1=sv[i+1]; fa(sa) sv[i]=0; sa=sa1;)}}   // deleting old kv.  We clear the old to 0; perhaps better done in 16!:_5
@@ -1154,7 +1152,6 @@ static A dumptree(J jt,DIC *dic, UI nodex, C *dirstack, I depth, I blackdepth, I
  C *hashtbl=CAV3(dic->bloc.hash); I nodeb=dic->bloc.hashelesiz*(0x1000000+BB)+(dic->bloc.flags<<8)+(dic->bloc.emptysiz<<19);DRLRC(curr,nodex)   // fetch tree info, then children+color
  dirstack[depth]='0'; prevkey=dumptree(jt,dic,currl,dirstack,depth+1,blackdepth+currc,currc,prevkey,leafblackdepth,noerr,excludednode,doprint);
  A k; RZ(k=virtual(dic->bloc.keys,RENCEMPTY(nodex)*dic->bloc.kaii,AR(dic->bloc.keys)-1)) AN(k)=dic->bloc.kaii; MCISH(AS(k),AS(dic->bloc.keys)+1,AR(dic->bloc.keys)-1)
-// obsolete RZ(k=from(sc(RENCEMPTY(nodex)),dic->bloc.keys)) RZ(v=from(sc(RENCEMPTY(nodex)),dic->bloc.vals))  // fetch current key/val
  A v; RZ(v=virtual(dic->bloc.vals,RENCEMPTY(nodex)*dic->bloc.vaii,AR(dic->bloc.vals)-1)) AN(v)=dic->bloc.vaii; MCISH(AS(v),AS(dic->bloc.keys)+1,AR(dic->bloc.keys)-1)
  A klr, vlr; RZ(klr=lrep(k)) RZ(vlr=lrep(v))  // displayable form of k,v
  if(doprint)printf("%.*s: node=0x%x key=%.*s val=%.*s c=%d l=0x%x r=0x%x",(int)depth,dirstack,(int)nodex,(int)AN(klr),CAV(klr),(int)AN(vlr),CAV(vlr),(int)currc,(int)currl,(int)currr);

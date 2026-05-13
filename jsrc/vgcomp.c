@@ -77,26 +77,9 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
  if(unlikely(!HOMO(at,wt))){t=(at>>SBTX)&1; t=wt&JCHAR?0:t; t=at&JCHAR?1:t; t=wt&BOX?0:t; t=at&BOX?1:t; R RETGT(t);}  // inhomogeneous: priority is BOX/CHAR/SYMBOL/NUM
  I ar=AR(a), wr=AR(w); if(unlikely(ar!=wr))R RETGT(ar>wr);  // unequal ranks, higher rank is bigger
  I *as=AS(a), *ws=AS(w);  // pointers to shapes
-#if 0   // obsolete 
- if(unlikely(1<ar))if(ICMP(1+as,1+ws,ar)){I*v;fauxblockINT(sfaux,4,1);A s;
-  // dissimilar shapes - bring to common shape this is wrong - spec should change and we should not fill
-  fauxINT(s,sfaux,ar,1) v=AV(s);
-  DO(ar, v[i]=MAX(as[i],ws[i]);); v[0]=MIN(as[0],ws[0]);
-  RZ(a=take(s,a)); an=wn=AN(a);
-  RZ(w=take(s,w));
- }
- m=MIN(an,wn);
- if(unlikely((-(t&XNUM+RAT)&-((at|wt)&FL+CMPX+QP))<0)){A p,q;B*u,*v;
-  // indirect numeric type vs flt/complex: create boolean vector for each value in turn   this does extra work
-  RZ(p=lt(a,w)); u=BAV(p);
-  RZ(q=gt(a,w)); v=BAV(q);
-  DO(m, if(u[i]|v[i])R RETGT(!u[i]););
- }else{   // normal 
-#else
  // If the shapes are different, we compare leading items of the first cell (if all are equal, the longer arg comes last).  The item of the cell is the largest one where args have the same shape.
  I negifaislong=0;  // negative if a has the longer cell, 0 if all ranks =, neg if w longer.  Init to 0 in case atoms
  m=1; DQ(ar, m*=MIN(as[i],ws[i]); if((negifaislong=ws[i]-as[i])!=0)break;)  // count size of largest cell whose items are the same shape
-#endif
  if(unlikely(TYPESNE(t,at)))RZ(a=cvt(t,a));  // convert to common types
  if(unlikely(TYPESNE(t,wt)))RZ(w=cvt(t,w));
  av=CAV(a); wv=CAV(w);
@@ -116,14 +99,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
  case BOXX:  {COMPDCLQ(A);I j; STACKCHKOFL if(x!=y)DO(m, if(j=jtcompare(jtfg,x[i],y[i]))R j;);} break;
  }
  // falling though, we must have equality on the compared part
-#if 0 //  obsolete
- }
- if(1>=ar)R an==wn?0:RETGT(an>wn);   // all compared items matched.  If they weren't the same length, the longer is bigger
- DQ(ar, c=as[i]; d=ws[i]; if(c!=d)R RETGT(c>d););  // finally, compare original shape, lowest axis first
- R 0;
-#else
  R SGNTO0(negifaislong)-SGNTO0(-negifaislong);  // the longer is higher, 0 if equal length
-#endif
 }    /* compare 2 arbitrary dense arrays as by a-w; _1 0 1 per a<w, a=w, a>w */
 
 

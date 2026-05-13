@@ -660,7 +660,6 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
    // If C2T output not allowed, just convert to UTF-8 bytes
    z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV(prxthornuni)[0]&1?RoutineC:jttoutf8a);
    break;
-// obsolete  case BOXX:  z=likely(!(AFLAG(w)&AFUNDISPLAYABLE))?thbox(w,prxthornuni):undispstg; break;
   case BOXX:  z=thbox(w,prxthornuni); break;
   case SBTX:  READLOCK(JT(jt,sblock)) z=thsb(w,prxthornuni); READUNLOCK(JT(jt,sblock)) break;
   case NAMEX: z=sfn(0,w);                  break;
@@ -813,7 +812,6 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  SHAPEN(y,r-2,q); SHAPEN(y,r-1,c); nq=prod(r-1,s); if(jt->jerr){RESETERR z=str(m+1,eov); makewritable(z) CAV(z)[m]=0; AN(z)=AS(z)[0]=m; R z;}
  // c1=#characters to put out per line, lba=max # lines to put out
  c1=MIN(c,maxlen);
-// obsolete  lba=(D)lb+la;
  // calculate p=total # lines of spacing needed, as sum of (#k-cells-1) for k>=2
  p=2<r?2-r:0; h=1; if(AN(w)==0)p=0; else{DO(r-2, if(s[i]){h*=s[i]; if(__builtin_add_overflow(p,h,&p)){p=IMAX-1; break;}}else{p=0; break;})}  // h cannot overflow if AN!=0; but p can
  // Set h = max#lines to output, the smaller of (the # before spacing) and (the number we allow)

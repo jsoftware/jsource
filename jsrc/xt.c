@@ -340,7 +340,6 @@ F1(jtpmlvl){F12IP;I x;I q;
  q=rei0(w);
  ASSERT(JT(jt,pma),EVDOMAIN);
  if(__builtin_add_overflow(q,((PM0*)(CAV1(JT(jt,pma))))->pmlvl,&x)){ASSERT(0,EVDOMAIN)}
-// obsolete  ASSERT(FLIMIN<=x&&x<FLIMAX,EVDOMAIN);
  ((PM0*)(CAV1(JT(jt,pma))))->pmlvl=q=x; if(q)jt->uflags.trace|=TRACEPM;else{jt->uflags.trace&=~TRACEPM; pmrecord(0,0,-3,0);} // tell cx and unquote to look for pm; if turning off sampling, emit lacuna
  R sc(q);
 }    /* add w to pmlvl */

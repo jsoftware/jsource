@@ -1278,14 +1278,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define FFEQ(u,v)        (ABS((u)-(v))<=FUZZ*MAX(ABS(u),ABS(v)))
 #define FFIEQ(u,v)       (ABS((u)-(v))<=FUZZ*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
 // see if i is close enough to f that it can be used in place of f without loss of significance.  i is round(f).
-// obsolete #if SY_64
-// obsolete #define ISFTOIOK(f,i)    (ABS(f)<-(D)IMIN && ((f)==(i) || FFIEQ(f,i)))  // 64 bit: a float of IMIN does not equal integer IMIN
 #define ISFTOIOK(f,i)    (likely((f)<FLIMAX) && likely((f)>=FLIMIN) && (likely((f)==(i)) || FFIEQ(f,i)))  // a float of IMAX does not equal integer IMAX in 64-bit
-// obsolete #else
-// obsolete #define ISFTOIOK(f,i)    ((f)==(I)(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
-// obsolete #define ISFTOIOK(f,i)    ((f)==(I)(i) || (ABS(f)<-(D)IMIN && FFIEQ(f,i)))  // 32 bit: float IMIN is exactly integer IMIN
-// obsolete #endif
-// obsolete #define ISFTOIOKFZ(f,i,fuzz) (ABS(f)<-(D)IMIN && ((f)==(i) || FIEQ(f,i,fuzz))) // same, but variable fuzz
 #define ISFTOIOKFZ(f,i,fuzz) (likely((f)<FLIMAX) && likely((f)>=FLIMIN) && (likely((f)==(i)) || FIEQ(f,i,fuzz))) // same, but variable fuzz
 #define F1(f)           A f(JJ jtfg,    A w)  // whether in an interface routine or not, these must use the internal parameter type
 #define F2(f)           A f(JJ jtfg,A a,A w)
@@ -2191,7 +2184,6 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
   }else{z=temp; DQ(nn, DPMULDZ(z,_zzt[i],z) if(unlikely(_zzt[i]==0))goto had0##z;)} /* error if overflow */ \
   if(likely(temp!=0))ASSERT(z!=0,EVLIMIT) had0##z:; \
 }
-// obsolete   }else{DPMULDE(init,prod(nn,v),z) RE(0)} /* error if error inside prod */ 
 #else
 #define PRODX(z,n,v,init) RE(z=mult(init,prod(n,v)))
 #endif
@@ -2440,11 +2432,9 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
  US _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
 #define WITHDEBUGOFF(stmt) MAYBEWITHDEBUG(0,jt,stmt)
-#define WITHEFORMATDEFERRED(stmt) {/* obsolete UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; */ \
- US _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT; \
- stmt /* obsolete jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB);*/ US _f=jt->emsgstate; jt->emsgstate=_e|(_f&EMSGSTATEUSERMSG); \
+#define WITHEFORMATDEFERRED(stmt) {US _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT; \
+ stmt US _f=jt->emsgstate; jt->emsgstate=_e|(_f&EMSGSTATEUSERMSG); \
  if(unlikely(jt->jerr!=0)&&likely(_f&EMSGSTATENOTEXT)){UC _d=jt->jerr; RESIGERR(_d)}}  // run stmt, but suppress eformatting & resignal any error so as to use caller's eformat.  If stmt set USERMSG, keep it to preserve the msg line
-// obsolete  stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); _d=jt->emsgstate; jt->emsgstate=_e; if(unlikely(jt->jerr!=0)&&likely(_d&EMSGSTATENOTEXT)){_d=jt->jerr; RESETERR ASSERT(0,_d)}}  // WITHDEBUGOFF, but resignal any error so as to use caller's eformat.
         //  Exception: in EMSGSTATENOTEXT was turned off (and not restored), we figure that user used 13!:8, which we don't eformat, so we don't resignal it
 // If the abandoned value we want to ra is likely the last thing on the tstack, look to see if it is.  If so, just back up the tstack (if that backs over to the chain field, that will never match
 // the ZAP pointer and we will not modify tpushnext).  Otherwise ZAP the block

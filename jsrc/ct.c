@@ -500,7 +500,6 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
     // this is a job with locales.  If we removed the job from the queue (mask=n), AND AR was 0 indicating that a thread is waiting for a kick, deliver the kick
     if(unlikely(((jobn^jobnsmask)|AR(UNvoidAV1(job)))==0)){JOB *job=JOBLOCK(jobq); ++jobq->futex; JOBUNLOCK(jobq,job); jfutex_wakea(&jobq->futex);}  // wakeall sequence: lock the pool; advance futex value; unlock; kick.  No new work added
     // pyx points to a vector of pyxes, startloc to a vector of locale#s.  Extract the pyx and global for this thread
-// obsolete     I vecx=__builtin_popcountll((UI)(AN(UNvoidAV1(job))<<(BW-jt->ndxinthreadpool)));  // AN is mask of threads.  Convert thread index to index into vectors, by counting the 1s after discarding higher bits in mask
     pyx=AAV1(pyx)[__builtin_popcountll((UI)(AN(UNvoidAV1(job))<<(BW-ndxinthreadpool)))];  // get pyx for this thread (AAV1 ok)
     if((I)startloc&1){startloc=jtfindnl(jt,IAV((A)(I*)~(I)startloc)[ndxinthreadpool]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)}  // get locale#; convert to globals address
    }
@@ -639,14 +638,10 @@ UI forcetask=REPSGN((taskflags&0x500)-1);  // 0 if the user wants to force this 
     // bit 0 of the mask was set, indicating that this thread should pitch in with locale 0.  Run as if in a thread, and report any error in the pyx.  This is copied from threadmain
     // For this execution we do not change the current locale.  This decision allows us to bypass tasks when the user gives a mask with no worker threads.  It's reasonable anyway.
     A pyx=AAV1(ppyx)[0]; // get pyx (AAV1 ok)
-// obsolete , startloc=jtfindnl(jt,IAV(ploc)[0]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)  // get pyx (AAV1 ok) and locale#; convert locale# to globals address
     ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
-// obsolete     A savlocsyms=jt->locsyms,savglobal=jt->global;jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK;  // init what needs initing.  Notably clear the local symbols
-// obsolete    INCREXECCTIF(startloc);  // start new exec chain; raise execcount of current locale to protect it while running
     RESETRANK; jt->parserstackframe.sf=self;  // each thread starts a new recursion point
     A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // get self, positioned after the last noun arg
    A z=(FAV(uself)->valencefns[arg2!=self])(jt,arg1,uarg2,uself);  // execute the u in u t. v
-// obsolete     DECREXECCTIF(jt->global); SYMRESTORELOCALGLOBALS(savlocsyms,savglobal);  // remove exec-protection from finishing exec chain.  This may result in its deletion.  Reset symbol tables too (note there may be no locals & we have changed only globals)
     C errcode=0;
     if(unlikely(z==0)){fail: z=0; errcode=jt->jerr; errcode=(errcode==0)?EVSYSTEM:errcode;}else{realizeifvirtualERR(z,goto fail;);}  // realize virtual result before returning it
     jtsetpyxval(jt,pyx,z,errcode);  // install completion info into pyx 0

@@ -545,7 +545,6 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
  // set up for prefix/infix.  Calculate # result slots
  if(a!=mark){
   // infix.
-// obsolete  ilnval; RE(ilnval=i0(vib(a))); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
   ilnval=rei0(a); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
   if(ilnval>=0){
    // positive infix.  Stride is 1 cell.

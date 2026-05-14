@@ -125,7 +125,7 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){
   Q Qp; Qp= QgetX(Xp);
   Q Qm= QmulQQ(y, Qp);                 // scaled number
   X Xr= XroundQ(Qm);                   // rounded to nearest integer
-  if(!d)R fmtx(e,m,d,s,XNUM,&Xr,cellbuf);// integer format?
+  if(!d)R fmtx(e,m,d,s,XNUM,&Xr,cellbuf); // integer format?
   C*str= SgetX(Xr);                    // corresponding digit sequence
   I L= strlen(str);                    // length of that representation
   if (0==XSGN(Xr)) n= 0;

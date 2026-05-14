@@ -299,7 +299,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  UI htelesiz=hashelesiz*(1+redblack);   // length of tree/hash entry
  if(redblack){  // red/black: allocate n2nxh block for tree
   GATV0(box,LIT,(maxeles+TREENRES)*htelesiz*2,3) AS(box)[0]=maxeles+TREENRES; AS(box)[1]=2; AS(box)[2]=hashelesiz; INCORPNV(box)  // alloc incl res eles, the root pointer
-  IAVn(3,box)[0]=2*0+0; IAVn(3,box)[1]=2*0+0;// empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
+  IAVn(3,box)[0]=2*0+0; IAVn(3,box)[1]=2*0+0;  // empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
  }else{  // hash: allocate hashtable, as a LIT list
   GATV0(box,LIT,hashsiz*hashelesiz,1) INCORPNV(box) mvc(hashsiz*hashelesiz,voidAV1(box),MEMSET00LEN,MEMSET00);   // allocate hash table & fill with empties
  }
@@ -1072,7 +1072,7 @@ static DF1(jtdicdel){F12IP;A z;
   // put of a single key using internal hash/compare - the fast path
   if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) // convert type of k if needed
   DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
-  void *k=voidAV(w);// point to the key and value data
+  void *k=voidAV(w);  // point to the key and value data
   while(1){  // loop till we have processed all the resizes
    lv=jtdel1(dic,voidAV(w),lv,jt); if(likely(!(lv&DICLMSKRESIZEREQ)))break;  // do the hash & put; no error possible
    if(dicresize(dic,jt)==0)goto errexit;  // If we have to resize, we abort with the puts partially complete, and then retry, keeping the dic under lock the whole time
@@ -1927,7 +1927,7 @@ DF2(jtdicempties){F12IP;
   if(dic->bloc.flags&DICFVINDIR){A *av=AAV(dic->bloc.vals); DO((dic->bloc.vbytelen*dic->bloc.maxeles*dic->bloc.vaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // ...and values
   // go back and reinitialize everything as if after create.  Why not just destroy/recreate?  Questionable decision.  Doing it this way keeps the dic in place, avoiding invalidating pointers.  Start with the hash:
   if(dic->bloc.flags&DICFRB){  // red/black: allocate n2nxh block for tree
-   IAVn(3,dic->bloc.hash)[0]=2*0+0; IAVn(3,dic->bloc.hash)[1]=2*0+0;// empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
+   IAVn(3,dic->bloc.hash)[0]=2*0+0; IAVn(3,dic->bloc.hash)[1]=2*0+0;  // empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
   }else{  // hash: allocate hashtable, as a LIT list
    mvc(dic->bloc.hashsiz*dic->bloc.hashelesiz,voidAV1(dic->bloc.hash),MEMSET00LEN,MEMSET00);   // allocate hash table & fill with empties
   }

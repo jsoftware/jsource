@@ -745,7 +745,7 @@ static F1(jtsbsetdata2){F12IP;A *wv;I c,i,offset=0;SBU*uv,*v;C*sv;
  wv=AAV(w); 
  RZ(sbcheck2(C(wv[0]),C(wv[1]),C(wv[2]),C(wv[3])));
  c=AV(C(wv[0]))[0];                         // cardinality
- if(1<AN(C(wv[0])))offset=AV(C(wv[0]))[1];// offset
+ if(1<AN(C(wv[0])))offset=AV(C(wv[0]))[1]; // offset
  uv=(SBU*)AV(C(wv[2]));                   // table of symbols
  sv=CAV(C(wv[3]));                        // global string table
  if(!offset)resetdata(jt);

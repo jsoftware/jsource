@@ -53,7 +53,7 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
 
 A jtiovsd(J jt,I mode,A a,A w){A ae,ax,ay,p,z;B h,*pv;I at,j,m,n,t,wt,*v,*yv;P*ap;
  ap=PAV(a); ax=SPA(ap,x); ay=SPA(ap,i);
- if(!AS(ay)[1])R indexofsub(mode,ravel(ax),w);// special case if no sparse axes: just like dense i.  
+ if(!AS(ay)[1])R indexofsub(mode,ravel(ax),w); // special case if no sparse axes: just like dense i.  
  m=AN(ax); n=AS(a)[0]; yv=AV(ay); ae=SPA(ap,e);
  at=DTYPE(AT(a)); wt=AT(w); if(h=HOMO(at,wt))t=maxtype(at,wt);
  if(h&&TYPESNE(t,wt))RZ(w=cvt(t,w));

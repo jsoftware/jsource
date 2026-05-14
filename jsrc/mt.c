@@ -62,7 +62,7 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
  if(r==-ETIMEDOUT)R -1;
  if(r==-EINTR||r==-EFAULT)R 0; //manifest EINTR as a spurious wake, triggering a look at adbreak, instead of returning EVATTN.  The caller will have to look at adbreak anyway, since the signal might have come right after waking up, also because attention interrupt might be disabled anyway...
                                //(also, there is a race, in the case when ^C is pressed right _before_ going to sleep.  Fixable; annoying; but the window is small and the user can just press ^C again so low-priority)
- if(r==-ENOMEM)R EVWSFULL;//lol
+ if(r==-ENOMEM)R EVWSFULL;  //lol
  R EVFACE;}
 #else
 // but for the x86 case, we keep compatibility with older macos.  Revisit in the future

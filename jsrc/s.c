@@ -61,7 +61,7 @@ A jtsymext(J jt){A x,y;I j,m,n,*v,xn,yn;L*u;
 
 // Make sure there are n symbols available for allocation.  Extend the symbol table if not.
 // This must be called outside of any lock and only when the local free-symbol queue has fewer than n values
-I jtreservesym(J jt,I n){L *sympv=SYMORIGIN;// start of symbol block
+I jtreservesym(J jt,I n){L *sympv=SYMORIGIN;  // start of symbol block
  // add the overflow chain to the main chain, if it is not empty
  if(SYMNEXT(jt->symfreehead[1])!=0){
   sympv[SYMNEXT(jt->symfreetail1)].next=SYMNEXT(jt->symfreehead[0]); jt->symfreehead[0]=jt->symfreehead[1];  // install overflow at start of main

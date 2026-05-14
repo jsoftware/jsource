@@ -183,13 +183,13 @@ typedef struct pyxcondmutex{
  S pyxorigthread;  // thread number that is working on this pyx, or _1 if the value is available
  C errcode;  // 0 if no error, or error code
 #if PYXES
- UI4 seqstate;//one of the below pyx states
+ UI4 seqstate;  // one of the below pyx states
 #endif
 } PYXBLOK;
 enum{  // pyx state is low byte of seqstate.  High 3 bytes are the wakeup sequence number
- PYXEMPTY=0, //the pyx is not filled in, and no one is waiting
- PYXWAIT=3,  //at least 1 thread is waiting, and the pyx is not filled in.  We can OR WAIT into pyx state to move to WAIT state
- PYXFULL=1}; //the pyx is filled in
+ PYXEMPTY=0, // the pyx is not filled in, and no one is waiting
+ PYXWAIT=3,  // at least 1 thread is waiting, and the pyx is not filled in.  We can OR WAIT into pyx state to move to WAIT state
+ PYXFULL=1}; // the pyx is filled in
 #if PYXES
 
 // Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.

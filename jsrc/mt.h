@@ -16,10 +16,10 @@ __attribute__((cold)) void jfutex_wakea(UI4 *p); //wake all threads waiting on p
 
 typedef struct {
  B recursive;
- I owner; //user-provided; task id.  Must be nonzero
- UI4 v; //the current state of the mutex; see enumeration in mt.c
- UI4 ct; //lock count for recursive locks
-}jtpthread_mutex_t;//todo should split into multiple cache lines?
+ I owner; // user-provided; task id.  Must be nonzero
+ UI4 v; // the current state of the mutex; see enumeration in mt.c
+ UI4 ct; // lock count for recursive locks
+}jtpthread_mutex_t;  // todo should split into multiple cache lines?
 
 //'self' is a task id (stored in 'owner').  Currently just 1+THREADID(jt), but in the future it should be associated with the task in question (perhaps the pyx pointer).  Must be non-zero (hence the 1+)
 void jtpthread_mutex_init(jtpthread_mutex_t*,B recursive);

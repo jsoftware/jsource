@@ -28,7 +28,25 @@ static INLINE UI nextrand(J jt, UF f){R (*f)(jt);}
 // we get 52 good fractional bits for values down to 2^-12.  Below that the overlap means we lose fractional bits, but we keep 64 bits total doen to 2^-52, which means that at that point there are 12 good fraction bits.
 // The effect is a random distribution of 2^64 values, but truncated to DP accuracy.
 // We set a minimum of 2^-53 to correspond to the max value of 1-2^-53.  This leaves a very small bias.
-#define NEXTD1      ({UI i=NEXT; i=((i>>12)+0x3fe0000000000000)-((UI)CTTZI(i|((UI)1<<52))<<52); *(D*)&i;})
+// Analysis of bias:
+// Exp   lg(Prob.)   Average                                             Total weight = Prob * avg
+// the first 12 exponents have no overlap between the exponent and mantissa calculation
+// -1    -1          (1-2^_53 + 1/2)/2 = 3/4 - 2^_54                     3/8 - 2^_55
+// -2    -2          1/2 * (1-2^_53 + 1/2)/2 = 1/2 * (3/4 - 2^_54)       1/4 * (3/8 - 2^_55)
+// ...
+// -11   -11         1/2^10 * (1-2^_53 + 1/2)/2 = 2^_10 * (3/4 - 2^_54)  1/2^20 * (3/8 - 2^_55)
+// exponents _12-_26 have mantissas ending in 1000
+// -12   -12         1/2^11 * (1-2^-52 + 1/2 + 2^_52)/2 = 3/(2^13)       3/(2^25)
+// ...
+// _26   -26         1/2^25 * (1-2^-38 + 1/2 + 2^_38)/2 = 3/(2^27)       3/(2^53)
+// exponent _27 has mantissas ending in x000
+// _27   -26         1/2^26 * (1-2^-37 + 1/2)/2 = 3/(2^28)-(2^_65)       3/(2^54)-(2^_91)
+// weight -1.._12: (3/8 - 2^_55) * 4/3(1 - 2^_22) = 1/2 - 2^_23 - 2^_53/3 + 2^_75/3
+// weight _13.._51: 4/3*(3/2^25 - 3/2^55) = 2^_23 - 2^_53
+// weight _52: 3/(2^54)-(2^_91)
+// total weight: 1/2 - 2^_53/3 + 2^75/3 - 2^_53 + 3*2^_54 - 2^_91 ~ 1/2 + (2^_54)/3 which is less than 1 ULP high usually
+// we could add on some weight by XORing into the LSBs, which would change the 0-extension for exponents _12 & higher, but it doesn't seem worth the 1 instruction
+#define NEXTD1      ({UI i=NEXT; i=((i>>12)+0x3fe0000000000000)-((UI)CTTZI(i|((UI)1<<27))<<52); *(D*)&i;})
 #define NEXTD0      NEXTD1
 #else
 #define INITD       {sh=32-jt->rngdata->rngw; mk=0x003fffff>>(2-sh);}

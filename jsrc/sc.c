@@ -410,7 +410,7 @@ F1(jtcreatecachedref){F12IP;A z;
  A val=QCWORD(syrd(nm,(A)(*JT(jt,emptylocale))[THREADID(jt)]));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
  ASSERT(val!=0,EVVALUE);  // return if error or name not defined
  ASSERT(!(AT(val)&NOUN),EVDOMAIN)
- z=fdef(VF2CACHED+VF2CACHEABLE,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (FAV(val)->flag&VNOLOCCHG)+VNOSELF, FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));// create reference - always NOSELF since we stack $: in unquote
+ z=fdef(VF2CACHED+VF2CACHEABLE,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (FAV(val)->flag&VNOLOCCHG)+VNOSELF, FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));  // create reference - always NOSELF since we stack $: in unquote
  FAV(z)->localuse.lu1.cachedlkp=val;  // install cached address of value, no QC
  ACSETPERM(val);  // now that the value is cached, it lives forever
  RETF(z);

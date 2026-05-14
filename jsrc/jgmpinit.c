@@ -91,7 +91,7 @@ XFIXED1(X2, LIT, 1,2);  //  2x (not an array
 mpz_t mpX1= {1,1,(mp_limb_t*)&BX1.s[1]};
 
 // one-off special case relying on X/A type pun, among other things
-// XFIXED0(AX1,XNUM,(X)&BX1);// ''$1x
+// XFIXED0(AX1,XNUM,(X)&BX1);   // ''$1x
 
 #undef Xrh
 #undef XFIXED0
@@ -235,7 +235,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
   memcpy(m, m0, oldsize);
   GMPUNLOCK;
  }
- if(!m)R 0; // assert(m);// FIXME (but can't without replacing libgmp)
+ if(!m)R 0; // assert(m);  // FIXME (but can't without replacing libgmp)
 #if MEMAUDIT&0x40
  memcpy(m+GUARDSIZE+XHSZ+new, GUARDBLOCK, GUARDSIZE); guard(m+GUARDSIZE+XHSZ+new);
 #endif
@@ -504,7 +504,7 @@ void jgmpinit(C*libpath) {
  jgmpfn(mpz_out_str);      // (for debugging) https://gmplib.org/manual/I_002fO-of-Integers
  jgmpfn(mpz_powm);         // https://gmplib.org/manual/Integer-Exponentiation
  jgmpfn(mpz_pow_ui);       // https://gmplib.org/manual/Integer-Exponentiation
- jgmpfn(mpz_probab_prime_p);//https://gmplib.org/manual/Number-Theoretic-Functions
+ jgmpfn(mpz_probab_prime_p); //https://gmplib.org/manual/Number-Theoretic-Functions
  jgmpfn(mpz_ui_pow_ui);    // https://gmplib.org/manual/Integer-Exponentiation
  jgmpfn(mpz_root);         // https://gmplib.org/manual/Integer-Roots
  jgmpfn(mpz_set);          // https://gmplib.org/manual/Assigning-Integers

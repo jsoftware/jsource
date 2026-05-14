@@ -164,29 +164,31 @@ switch ($arch) {
     }
 }
 
-Get-Location
 Set-Location ..
-Write-Output (Get-Location)
+Get-Location
 
 switch ($arch) {
     "x86" {
+        ls $C
         Copy-Item -Path "bin\windows\j32\jconsole.exe" -Destination "$env:C"
         Copy-Item -Path "bin\windows\j32\*.dll" -Destination "$env:C"
-        Get-Location "$env:C"
+        ls $C
     }
     "arm64" {
+        ls $B
         Copy-Item -Path "bin\windows\j64arm\jconsole.exe" -Destination "$env:B"
         Copy-Item -Path "bin\windows\j64arm\*.dll" -Destination "$env:B"
-        Get-Location "$env:B"
+        ls $B
     }
     "x64" {
+        ls $B
         Copy-Item -Path "bin\windows\j64\jconsole.exe" -Destination "$env:B"
         Copy-Item -Path "bin\windows\j64\*.dll" -Destination "$env:B"
         if ("$env:USE_EMU_AVX" -ne "0" -and "$env:USE_PYXES" -ne "0") {
             Copy-Item -Path "bin\windows\j64avx512\j.dll" -Destination "$env:B\javx512.dll"
             Copy-Item -Path "bin\windows\j64avx2\j.dll" -Destination "$env:B\javx2.dll"
         }
-        Get-Location "$env:B"
+        ls $B
     }
     default {
         Write-Error "Unsupported architecture: $arch"

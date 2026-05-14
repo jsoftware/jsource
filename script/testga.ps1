@@ -22,7 +22,9 @@ if ($arch -ne "x86" -and $arch -ne "arm64" -and $arch -ne "x64") {
 # Show system info
 systeminfo
 
-Write-Output (Get-Location)
+pwd
+Write-Output $env:C
+ls $env:C
 
 switch ($arch) {
     "x86" {

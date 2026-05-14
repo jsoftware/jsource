@@ -22,7 +22,7 @@ if ($arch -ne "x86" -and $arch -ne "arm64" -and $arch -ne "x64") {
 # Show system info
 systeminfo
 
-Write-Host Get-Location
+Write-Output (Get-Location)
 
 switch ($arch) {
     "x86" {

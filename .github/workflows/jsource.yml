@@ -1127,7 +1127,7 @@ jobs:
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
      run: |
-      powershell -command " script\buildga.ps1 x64 "
+      script\buildga.cmd x64
 
    - name: Test JE (Windows)
      shell: cmd
@@ -1135,7 +1135,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      powershell -command " script\testga.ps1 x64 "
+      script\testga.cmd x64
 
    - name: Compress Files (Windows)
      shell: pwsh
@@ -1182,7 +1182,7 @@ jobs:
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
-      powershell -command " script\buildga.ps1 x86 "
+      script\buildga.cmd x86
 
    - name: Test JE (Windows 32)
      shell: cmd
@@ -1190,7 +1190,7 @@ jobs:
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
-      powershell -command " script\testga.ps1 x86 "
+      script\testga.cmd x86
 
    - name: Compress Files (Windows 32)
      shell: pwsh
@@ -1238,7 +1238,7 @@ jobs:
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
      run: |
-      powershell -command " script\buildga.ps1 arm64 "
+      script\buildga.cmd arm64
 
    - name: Test JE (Windows arm64)
      if: ${{ false }}
@@ -1247,7 +1247,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      powershell -command " script\testga.ps1 arm64 "
+      script\testga.cmd arm64
 
    - name: Compress Files (Windows arm64)
      shell: pwsh
@@ -1294,7 +1294,7 @@ jobs:
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
      run: |
-      powershell -command " script\buildga.ps1 arm64 "
+      script\buildga.cmd arm64
 
    - name: Test JE (Windows arm64)
      shell: cmd
@@ -1302,7 +1302,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
-      powershell -command " script\testga.ps1 arm64 "
+      script\testga.cmd arm64
 
    - name: Compress Files (Windows arm64)
      shell: pwsh

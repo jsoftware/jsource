@@ -22,9 +22,9 @@ Get-ChildItem -Recurse -Filter 'libomp.lib' -File -ErrorAction SilentlyContinue 
 Write-Host $env:USE_EMU_AVX
 Write-Host $env:USE_PYXES
 
-$A = "jlibrary"
-$B = "jlibrary\bin"
-$C = "jlibrary\bin32"
+$A = "$pwd\jlibrary"
+$B = "$pwd\jlibrary\bin"
+$C = "$pwd\jlibrary\bin32"
 
 Write-Host $A
 Write-Host $B
@@ -165,27 +165,31 @@ switch ($arch) {
 }
 
 Set-Location ..
-Write-Host Get-Location
+pwd
 
 switch ($arch) {
     "x86" {
-        Copy-Item -Path "bin\windows\j32\jconsole.exe" -Destination "$env:C"
-        Copy-Item -Path "bin\windows\j32\*.dll" -Destination "$env:C"
+        Copy-Item -Path "bin\windows\j32\jconsole.exe" -Destination "$C"
+        Copy-Item -Path "bin\windows\j32\*.dll" -Destination "$C"
+        ls $C
     }
     "arm64" {
-        Copy-Item -Path "bin\windows\j64arm\jconsole.exe" -Destination "$env:B"
-        Copy-Item -Path "bin\windows\j64arm\*.dll" -Destination "$env:B"
+        Copy-Item -Path "bin\windows\j64arm\jconsole.exe" -Destination "$B"
+        Copy-Item -Path "bin\windows\j64arm\*.dll" -Destination "$B"
+        ls $B
     }
     "x64" {
-        Copy-Item -Path "bin\windows\j64\jconsole.exe" -Destination "$env:B"
-        Copy-Item -Path "bin\windows\j64\*.dll" -Destination "$env:B"
+        Copy-Item -Path "bin\windows\j64\jconsole.exe" -Destination "$B"
+        Copy-Item -Path "bin\windows\j64\*.dll" -Destination "$B"
         if ("$env:USE_EMU_AVX" -ne "0" -and "$env:USE_PYXES" -ne "0") {
-            Copy-Item -Path "bin\windows\j64avx512\j.dll" -Destination "$env:B\javx512.dll"
-            Copy-Item -Path "bin\windows\j64avx2\j.dll" -Destination "$env:B\javx2.dll"
+            Copy-Item -Path "bin\windows\j64avx512\j.dll" -Destination "$B\javx512.dll"
+            Copy-Item -Path "bin\windows\j64avx2\j.dll" -Destination "$B\javx2.dll"
         }
+        ls $B
     }
     default {
         Write-Error "Unsupported architecture: $arch"
         exit 1
     }
 }
+

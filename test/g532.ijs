@@ -34,10 +34,6 @@ NB. literal4
 (curtail -: }:) 1=?0 3$256
 
 NB. symbol
-(curtail -: }:) s:@<"0 'a'
-(curtail -: }:) sdot0{~?4$(#sdot0)
-(curtail -: }:) sdot0{~?3 4$(#sdot0)
-(curtail -: }:) sdot0{~?2 3 4$(#sdot0)
 (curtail -: }:) 1=?0 3$256
 
 NB. integer

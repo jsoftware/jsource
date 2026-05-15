@@ -253,7 +253,6 @@ static F1X(jtlnoun0){F12JT;A s,x;B r1;
  case QPX:   R apip(s,cstr("$0fq"   ));
  case XNUMX: R apip(s,cstr("$0x"    ));
  case RATX:  R apip(s,cstr("$0r0"   ));
- case SBTX:  R apip(s,cstr("$s: ' '"));
  }
 }   /* empty dense array */
 
@@ -271,7 +270,6 @@ static F1X(jtlnoun){F12JT;I t;
  case C2TX: R over(cstr("u: "),lnum(uco2(num(3),w)));
  case C4TX: R over(cstr("10&u: "),lnum(uco2(num(3),w)));
  case BOXX: R lbox(w);
- case SBTX: R over(cstr("s: "),lbox(sb2(num(5),w)));
  }
 }
 

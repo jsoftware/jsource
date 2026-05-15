@@ -36,9 +36,6 @@ f=: 3 : 0
    yy=: adot2{~?($b)$#adot2
    zz=: adot2{~?($b)$#adot2
   case. 'S' do.
-   xx=: sdot0{~?($b)$#sdot0
-   yy=: sdot0{~?($b)$#sdot0
-   zz=: sdot0{~?($b)$#sdot0
   end.
  i.0 0
 )

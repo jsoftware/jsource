@@ -237,7 +237,6 @@ NB. ;: various errors ---------------------------------------------------
 
 'domain error' -: ;: etx ('asdf'),(u:256),('asdf')
 'domain error' -: ;: etx ('asdf'),(10&u:65536),('asdf')
-'domain error' -: ;: etx s:<'asdf'
 
 'spelling error' -: ex '10:'
 'spelling error' -: ex '_10:'

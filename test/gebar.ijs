@@ -18,10 +18,6 @@ randuni''
 1 0 0 0 0 -: E.~ 10&u:'abcde'
 0 0 0 0 0 -: (10&u:'xy') E. 10&u:'asfdd'
 
-1 0 1 0 0 -: (s:@<"0 'co') E. s:@<"0 'cocoa'
-1 1 1 1 0 -: (s:@<"0 'aa') E. 5$s:@<"0 'a'
-1 0 0 0 0 -: E.~ s:@<"0 'abcde'
-0 0 0 0 0 -: (s:@<"0 'xy') E. s:@<"0 'asfdd'
 
 (($j)$0)  -: (a.{~j,j) E. a.{~j=:?(?100)$256
 (($j)$0)  -: (a.{~j,j) E. a.{~j=:?(?100)$256
@@ -183,7 +179,6 @@ NB. adot4    (ebar -: E.) 10&u:'a'
 'aaa'    (ebar -: E.) 50$10&u:'aaa'
 
 NB. symbol5
-adot5=: /:~ (#sdot0){.~.(s:' ABC abc a b c A B C'),sdot0,s:'zz',"1 ":i.100
 ebar =: 4 : 0
  assert. (0 e.$x) +. 65536 e.~ type x
  assert. (0 e.$y) +. 65536 e.~ type y
@@ -206,17 +201,6 @@ ebar =: 4 : 0
 )
 
 adot5         (ebar -: E.) adot5
-adot5         (ebar -: E.) s:' a b c'
-(s:<'abc')    (ebar -: E.) adot5
-(s:<'ABC')    (ebar -: E.) adot5
-(s:'')        (ebar -: E.) adot5
-adot5         (ebar -: E.) s:''
-(s:'')        (ebar -: E.) s:''
-(s:<'abc')    (ebar -: E.) adot5
-NB. adot5         (ebar -: E.) s:<'abc'
-(s:<'abc')    (ebar -: E.) s:<'abc'
-(s:<'abc')    (ebar -: E.) s:<'b'
-(s:<'abc')    (ebar -: E.) 50$s:<'abc'
 
 
 x=: a.{~ ?31$#a.
@@ -231,9 +215,6 @@ x=: adot2{~ ?31$#adot2
 y=: x (<"0(?40$y-&#x)+/i.#x)}y=: adot2{~ ?9111$#adot2
 (x E. y) -: x E.&(adot2&i.) y
 
-x=: sdot0{~ ?31$#sdot0
-y=: x (<"0(?40$y-&#x)+/i.#x)}y=: sdot0{~ ?9111$#sdot0
-(x E. y) -: x E.&(sdot0&i.) y
 
 x=: ?31$1000
 i=: ?40$y-&#x

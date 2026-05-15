@@ -68,7 +68,6 @@ B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
  // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
  pf=qpf();  // init performance monitor count info
  pinit();  // init block for a.
- jtsbtypeglobinit();  // init empty symbol
  cpuInit();  // get CPU characteristics
 #if defined(__aarch64__)
  hwaes=(getCpuFeatures()&ARM_HWCAP_AES)?1:0;
@@ -277,7 +276,6 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
  RZ(jtxsinit(jjt));  // must be before symbinit  master only
  RZ(jtsymbinit(jjt));  // must be after consinit   master only - global/locsyms must init at start of op
  RZ(jtxoinit(jjt));  // master only
- RZ(jtsbtypeinit(jjt));  // master only
  RZ(jtrnginit(jt));
  RZ(jtforeignassigninit(jt));  // master only
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)

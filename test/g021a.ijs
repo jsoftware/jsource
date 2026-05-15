@@ -157,27 +157,11 @@ y=: o._1e5+?100$2e5
 
 NB. SB >. SB ---------------------------------------------------------------
 
-(s:' a b c d') -: (s:' a b c d') >. (s:' A b c D')
-(s:' a ba ca d') -: (s:' a b c d') >. (s:' Aa ba ca Da')
-(s:' a bb ccc dddd') -: (s:' a bb ccc dddd') >. (s:' Aa baa cacc Daddd')
-(s:' a bbb cccc dddd') -: (s:' a bb ccc dddd') >. (s:' Aa bbb cccc Daddd')
 
-(s:' a b c d') -:  (s:' A b c D') >. (s:' a b c d')
-(s:' a ba ca d') -:  (s:' Aa ba ca Da') >. (s:' a b c d')
-(s:' a bb ccc dddd') -:  (s:' Aa baa cacc Daddd') >. (s:' a bb ccc dddd')
-(s:' a bbb cccc dddd') -:  (s:' Aa bbb cccc Daddd') >. (s:' a bb ccc dddd')
 
-(}.sdot0) -: (}:sdot0) >. (}.sdot0)
-(}.sdot0) -: (}.sdot0) >. (}:sdot0)
 
-(((-:@#sdot0){.|.sdot0),((-@-:@#sdot0){.sdot0)) -: (|.sdot0) >. (sdot0)
-(((-:@#sdot0){.|.sdot0),((-@-:@#sdot0){.sdot0)) -: (sdot0) >. (|.sdot0)
 
-((2 4, 8%~#sdot0)$ }.sdot0) -: ((2 4, 8%~#sdot0)$ }:sdot0) >. ((2 4, 8%~#sdot0)$ }.sdot0)
-((2 4, 8%~#sdot0)$ }.sdot0) -: ((2 4, 8%~#sdot0)$ }.sdot0) >. ((2 4, 8%~#sdot0)$ }:sdot0)
 
-(({.(2 4, 8%~#sdot0)$ |.sdot0),:({:(2 4, 8%~#sdot0)$ sdot0)) -: ((2 4, 8%~#sdot0)$ |.sdot0) >. ((2 4, 8%~#sdot0)$ sdot0)
-(({.(2 4, 8%~#sdot0)$ |.sdot0),:({:(2 4, 8%~#sdot0)$ sdot0)) -: ((2 4, 8%~#sdot0)$ sdot0) >. ((2 4, 8%~#sdot0)$ |.sdot0)
 
 randfini''
 

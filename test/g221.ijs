@@ -16,8 +16,6 @@ b-:~.b=:^0j1*i.1 0 3
 b-:~.b=:1 3 2$;:'Cogito, ergo sum.'
 b-:~.b=:1 3 2$(u:&.>) ;:'Cogito, ergo sum.'
 b-:~.b=:1 3 2$(10&u:&.>) ;:'Cogito, ergo sum.'
-b-:~.b=:1 3 2$s:@<"0&.> ;:'Cogito, ergo sum.'
-b-:~.b=:1 3 2$<"0@s: ;:'Cogito, ergo sum.'
 
 b-:~.b=:0$0
 b-:~.b=:0 3 4$a.
@@ -27,8 +25,6 @@ b-:~.b=:^0j1*i.0 2 0 3
 b-:~.b=:0 3 2$;:'Cogito, ergo sum.'
 b-:~.b=:0 3 2$(u:&.>) ;:'Cogito, ergo sum.'
 b-:~.b=:0 3 2$(10&u:&.>) ;:'Cogito, ergo sum.'
-b-:~.b=:0 3 2$s:@<"0&.> ;:'Cogito, ergo sum.'
-b-:~.b=:0 3 2$<"0@s: ;:'Cogito, ergo sum.'
 
 (1{.b)-:~.b=:5#1
 (1{.b)-:~.b=:5#1 3 4$a.
@@ -38,8 +34,6 @@ b-:~.b=:0 3 2$<"0@s: ;:'Cogito, ergo sum.'
 (1{.b)-:~.b=:5#1 3 2$;:'Cogito, ergo sum.'
 (1{.b)-:~.b=:5#1 3 2$(u:&.>) ;:'Cogito, ergo sum.'
 (1{.b)-:~.b=:5#1 3 2$(10&u:&.>) ;:'Cogito, ergo sum.'
-(1{.b)-:~.b=:5#1 3 2$s:@<"0&.> ;:'Cogito, ergo sum.'
-(1{.b)-:~.b=:5#1 3 2$<"0@s: ;:'Cogito, ergo sum.'
 
 test=: 4 : 0
  yy=: y
@@ -58,19 +52,15 @@ IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 'abcde'
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u:'abcde'
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u:'abcde'
-IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:@<"0 'abcde'
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$20
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$2e9
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: o.?5$20
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: j./?2 5$20
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u: ?5$65536
 IF64&test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: RAND32 ?5$C4MAX
-IF64&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kakistocracy dado'
 0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:' miasma chthonic chronic kakistocracy dado'
 0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: (u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
 0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: (10&u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
-0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: s:@<"0&.> ;:' miasma chthonic chronic kakistocracy dado'
-0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: <"0@s: ;:' miasma chthonic chronic kakistocracy dado'
 0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: x: ?5$20
 0&test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: %/0 1+x:?2 5$20
 

@@ -85,10 +85,10 @@
 // jtioa* BOX
 // jtiox  XNUM
 // jtioq  RAT
-// jtioi1 k==SZI, INT/SBT/char/bool not small-range
+// jtioi1 k==SZI, INT/char/bool not small-range
 // jtioi  list of >1 INT
 // jtioCk k-sized bool/char
-// jtioc  k!=SZI, bool (must be list of em)/char/INT/SBT
+// jtioc  k!=SZI, bool (must be list of em)/char/INT
 // jtioc01 intolerant FL atom
 // jtioc0 intolerant FL array
 // jtioz01 intolerant CMPX atom

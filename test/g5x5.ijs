@@ -322,7 +322,6 @@ test 0$0
 test 0$'abc'
 test 0$u:'abc'
 test 0$10&u:'abc'
-test 0$s: ' a b c'
 test 0$3 4
 test 0$3.4
 test 0$3j4
@@ -335,7 +334,6 @@ test s$0             [ s=: 0 (?#s)}s=: ?10$5
 test s$'abc'         [ s=: 0 (?#s)}s=: ?10$5
 test s$u:'abc'       [ s=: 0 (?#s)}s=: ?10$5
 test s$10&u:'abc'    [ s=: 0 (?#s)}s=: ?10$5
-test s$s: ' a b c'   [ s=: 0 (?#s)}s=: ?10$5
 test s$3 4           [ s=: 0 (?#s)}s=: ?10$5
 test s$3.4           [ s=: 0 (?#s)}s=: ?10$5
 test s$3j4           [ s=: 0 (?#s)}s=: ?10$5

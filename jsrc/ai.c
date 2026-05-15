@@ -132,10 +132,6 @@ xco:
  case CTILDE:      
   if(ff=FAV(h)->fgh[0],VERB&AT(ff))R jtinvamp(jt,nf?ff:x,nf?x:ff,0);   // u~
   else{ff=unname(h); R jtinvamp(jt,nf?x:ff,nf?ff:x,0);}    // name~
- case CSCO:     // s:
-  ASSERT(nf!=0,EVDOMAIN); 
-  n=rei0(x); ASSERT(n&&BETWEENC(n,-6,6),EVDOMAIN);
-  R amp(sc(-n),h);
  case CUCO:   // u:
   ASSERT(nf!=0,EVDOMAIN); 
   n=rei0(x); ASSERT(BETWEENC(n,1,8)&!BETWEENC(n,5,6),EVDOMAIN);
@@ -301,7 +297,6 @@ xco:
  case CSLASH:   if(CSTAR==IDD(f))R ds(CQCO);                  break;
  case CQQ:      if(vf)R qq(invrecur(f),g);                   break;
  case COBVERSE: if(vf&&vg)R obverse(g,f);                    break;  // if defined obverse, return it
- case CSCO:     R amp(num(5),w);
  case CFIT:     if(CXCO==IDD(f))goto xco; //_1 x:!.n y is the same as _1 x: y, and n was already verified to be valid, so treat this the same as plain x:
   // otherwise fall through to...
  case CPOWOP:   
@@ -370,6 +365,7 @@ static F1(jtneutral){F12IP;A x,y;B b;V*v;
  ASSERT(0,EVDOMAIN);
 }    /* neutral of arbitrary rank-0 function */
 
+// return neutral element for verb, if known
 F1(jtiden){F12IP;A f,g,x=0;V*u,*v;
  RZ(w=fix(w,zeroionei(0))); ASSERT(VERB&AT(w),EVDOMAIN);
  v=FAV(w); f=v->fgh[0]; g=v->fgh[1];
@@ -407,18 +403,6 @@ F1(jtiden){F12IP;A f,g,x=0;V*u,*v;
    x=num(bi);
   }
   break;
- }
- ASSERT(x!=0,EVDOMAIN);
- R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
-}
-
-F1(jtidensb){F12IP;A x=0,w0=w;V*v;
- RZ(w=fix(w,zeroionei(0))); ASSERT(VERB&AT(w),EVDOMAIN);
- v=FAV(w);
- switch(v->id){
- default:      R iden(w0);
- case CMAX:    GATV0(x,SBT,1,0);SBAV0(x)[0]=0; break;
-// no max symbol  case CMIN:    GATV0(x,SBT,1,0);SBAV0(x)[0]=SBUV4(JT(jt,sbu))[0].down; break;
  }
  ASSERT(x!=0,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));

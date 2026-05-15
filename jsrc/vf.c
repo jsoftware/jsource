@@ -44,7 +44,7 @@ A jtfiller(J jt, I wt, I r, I* s){A z; I n,klg; CPROD(1,n,r,s); klg=bplg(wt); fi
 
 // Point jt->fillv to fill(s) of type t, and the # bytes of them into jt->fillv0len
 void jtfillv0(J jt,I t){
- if(likely(t&B01+INT+INT2+INT4+FL+CMPX+HP+SP+QP+SBT)){jt->fillv=NUMERIC0; jt->fillvlen=4*SZI;}  // numeric & symbols that fill with 0
+ if(likely(t&B01+INT+INT2+INT4+FL+CMPX+HP+SP+QP)){jt->fillv=NUMERIC0; jt->fillvlen=4*SZI;}  // numeric & symbols that fill with 0
  else{
   jt->fillvlen=bpnoun(t);  // for others, just 1 atom of fill
   void *fill=&charfill; fill=t&BOX?voidAV0(ds(CACE)):fill; fill=t&XNUM+RAT?&Q0:fill; jt->fillv=fill;  // point to 1 atom of fill for the type

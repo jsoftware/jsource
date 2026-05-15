@@ -31,7 +31,6 @@ gmapped =: 3 : 0  NB. contiguous header only
 (f -: g) 'a'
 (f -: g) u:'a'
 (f -: g) 10&u:'a'
-(f -: g) {.s: ' a'
 
 (f -: g)@($&    0 1 )"0 ]200+i.4 10
 (f -: g)@($&    'x' )"0 ]200+i.4 10
@@ -59,7 +58,6 @@ gmapped =: 3 : 0  NB. contiguous header only
 (f -: g) x=: (?1e4)$'ab'
 (f -: g) x=: (?1e4)$u:'ab'
 (f -: g) x=: (?1e4)$10&u:'ab'
-(f -: g) x=: (?1e4)$s: ' a b'
 
 (f -: g) x=: (?100 100)$1 0
 (f -: g) x=: (?100 100)$2 3
@@ -69,7 +67,6 @@ gmapped =: 3 : 0  NB. contiguous header only
 (f -: g) x=: (?100 100)$'ab'
 (f -: g) x=: (?100 100)$'ab'
 (f -: g) x=: (?100 100)$10&u:'ab'
-(f -: g) x=: (?100 100)$s: ' a b'
 
 (f -: g) x=: (?100 10 50)$1 0
 (f -: g) x=: (?100 10 50)$2 3
@@ -79,7 +76,6 @@ gmapped =: 3 : 0  NB. contiguous header only
 (f -: g) x=: (?100 10 50)$'ab'
 (f -: g) x=: (?100 10 50)$u:'ab'
 (f -: g) x=: (?100 10 50)$10&u:'ab'
-(f -: g) x=: (?100 10 50)$s: ' a b'
 
 (sp ;:'f g sp') -: (sp <'f'),(sp <'g'),sp <'sp'
 
@@ -125,14 +121,12 @@ x=: 2 : 0
 'domain error'    -: 7!:5 etx <1 2.3 4
 'domain error'    -: 7!:5 etx <1 2j3 4
 'domain error'    -: 7!:5 etx <10&u:'abc'
-'domain error'    -: 7!:5 etx <s: ' a b c'
 'domain error'    -: 7!:5 etx <<'abc'
 'domain error'    -: 7!:5 etx i.4
 'domain error'    -: 7!:5 etx 1 2.3 4
 'domain error'    -: 7!:5 etx 1 2j3 4
 'domain error'    -: 7!:5 etx u:'abc'
 'domain error'    -: 7!:5 etx 10&u:'abc'
-'domain error'    -: 7!:5 etx s: ' a b c'
 
 'rank error'      -: 7!:5 etx <,:'abc'
 
@@ -163,9 +157,6 @@ map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 (fmapped -: gmapped) q [ q=:x=: (?100 100)?@$1e6
 (fmapped -: gmapped) q [ q=:x=: o.(?30 30 30)?@$1e6
 (fmapped -: gmapped) q [ q=:x=: j./(2,?100 100)?@$1e6
-(fmapped -: gmapped) q [ q=:x=: s: <"0 a.{~(?1e4)?@$#a.
-(fmapped -: gmapped) q [ q=:x=: s: <"0 adot1{~(?1e4)?@$#adot1
-(fmapped -: gmapped) q [ q=:x=: s: <"0 adot2{~(?1e4)?@$#adot2
 
 'valence error' -: 3!:9 etx q
 'domain error' -: (1) 3!:9 etx q

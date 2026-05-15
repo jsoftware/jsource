@@ -486,10 +486,8 @@ APFX( tymesEE, E,E,E, TYMESE,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
    /* andBB */                 /* tymesBI */                   /* tymesBD */            
 
      /* orBB */
-APFX(  minSS, SB,SB,SB, SBMIN,,R EVOK;)
 
     /* andBB */              
-APFX(  maxSS, SB,SB,SB, SBMAX,,R EVOK;)
 
 D jtremdd(J jt,D a,D b){D q,x,y;
  if(!a)R b;

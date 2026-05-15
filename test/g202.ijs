@@ -333,9 +333,6 @@ Expand=: (* +/\)@[ { -@>:@#@] {. ]
 'length error' -: 1 0 1 0 0 1&#^:_1 etx 10&u:'ab'
 'length error' -: 1 0 1 0 0 1&#^:_1 etx 10&u:'abcd'
 'length error' -: 1 0 1 0 0 1&#^:_1 etx ,10&u:'a'
-'length error' -: 1 0 1 0 0 1&#^:_1 etx s:@<"0 'ab'
-'length error' -: 1 0 1 0 0 1&#^:_1 etx s:@<"0 'abcd'
-'length error' -: 1 0 1 0 0 1&#^:_1 etx ,s:@<"0 'a'
 
 'length error' -: 1 0 1 0 0 1&#^:_1 etx i.2 4
 'length error' -: 1 0 1 0 0 1&#^:_1 etx i.4 6

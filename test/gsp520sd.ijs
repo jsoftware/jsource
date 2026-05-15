@@ -33,9 +33,6 @@ stsp -~ 7!:0'' }} ''   NB. At one point this leaked memory
 'nonce error'  -: ($.i.2 3)        { etx 10&u:&.> ;:'a b c d e f'
 'nonce error'  -: ($.i.2 3)        { etx i.7x
 'nonce error'  -: ($.i.2 3)        { etx 9 % 1+i.7x
-'nonce error'  -: ($.i.2 3)        { etx s: ' a b c d e f'
-'nonce error'  -: ($.i.2 3)        { etx s: u: 128+a.i. ' a b c d e f'
-'nonce error'  -: ($.i.2 3)        { etx s: 10&u: 65536+a.i. ' a b c d e f'
 
 'domain error' -: ($.o.i.2 3)      { etx i.9
 

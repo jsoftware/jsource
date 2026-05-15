@@ -125,7 +125,6 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
  SCDO(QPX,E,NEE(x, av[j]));
  SCDO(XNUMX,A,!equx(x, av[j]));
  SCDO(RATX,Q,!QEQ(x, av[j]));
- SCDO(SBTX,SB,x!=av[j]      );
  SCDO(BOXX,A,!equ(C(x),C(av[j])));
 #if 1
  // The instruction set is too quirky to do this with macros
@@ -161,7 +160,6 @@ A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*
  SCDON(XNUMX,A, !equ(wvv[jj], avv[jj]));
  SCDON(RATX,Q, !QEQ(wvv[jj], avv[jj]));
  SCDON(INTX,I, wvv[jj]!=avv[jj]      );
- SCDON(SBTX,SB,wvv[jj]!=avv[jj]      );
  SCDON(BOXX,A, !equ(C(wvv[jj]),C(avv[jj])));
  SCDON(XDX,D, wvv[jj]!=avv[jj]) ;
  SCDON(FLX,D, !TCMPEQ(jt->cct,wvv[jj],avv[jj]));

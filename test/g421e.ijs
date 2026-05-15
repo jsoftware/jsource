@@ -16,7 +16,6 @@ data=: 4 : 0
   case. 'z' do. j./ 1e_4 * _5e6 + (2,y) ?@$ 1e7
   case. 'x' do. x:         _5e8 +    y  ?@$ 1e9
   case. 'q' do. x:  1e_4 * _5e8 +    y  ?@$ 1e9
-  case. 's' do. sdot0{~ y ?@$ #sdot0
  end.
 )
 

@@ -157,27 +157,11 @@ y=: o._1e5+?100$2e5
 
 NB. SB > SB ---------------------------------------------------------------
 
-0 1 1 0 -: (s:' a b c d') <: (s:' A b c D')
-0 1 1 0 -: (s:' a b c d') <: (s:' Aa ba ca Da')
-0 0 0 0 -: (s:' a bb ccc dddd') <: (s:' Aa baa cacc Daddd')
-0 1 1 0 -: (s:' a bb ccc dddd') <: (s:' Aa bbb cccc Daddd')
 
-1 1 1 1 -:  (s:' A b c D') <: (s:' a b c d')
-1 0 0 1 -:  (s:' Aa ba ca Da') <: (s:' a b c d')
-1 1 1 1 -:  (s:' Aa baa cacc Daddd') <: (s:' a bb ccc dddd')
-1 0 0 1 -:  (s:' Aa bbb cccc Daddd') <: (s:' a bb ccc dddd')
 
-((<:#sdot0)$1) -: (}:sdot0) <: (}.sdot0)
-((<:#sdot0)#0) -: (}.sdot0) <: (}:sdot0)
 
-(((-:@#sdot0)#0),((-:@#sdot0)#1)) -: (|.sdot0) <: (sdot0)
-(((-:@#sdot0)#1),((-:@#sdot0)#0)) -: (sdot0) <: (|.sdot0)
 
-((2 4, 8%~#sdot0)$1) -: ((2 4, 8%~#sdot0)$ }:sdot0) <: ((2 4, 8%~#sdot0)$ }.sdot0)
-((2 4, 8%~#sdot0)$0) -: ((2 4, 8%~#sdot0)$ }.sdot0) < ((2 4, 8%~#sdot0)$ }:sdot0)
 
-(((4, 8%~#sdot0)$0),:((4, 8%~#sdot0)$1)) -: ((2 4, 8%~#sdot0)$ |.sdot0) <: ((2 4, 8%~#sdot0)$ sdot0)
-(((4, 8%~#sdot0)$1),:((4, 8%~#sdot0)$0)) -: ((2 4, 8%~#sdot0)$ sdot0) <: ((2 4, 8%~#sdot0)$ |.sdot0)
 
 randfini''
 

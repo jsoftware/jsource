@@ -596,14 +596,6 @@ INDB( i0eqC,C,C,ACNE)  INDB( i0neC,C,C,ACEQ)
 JNDB( j0eqC,C,C,ACNE)  JNDB( j0neC,C,C,ACEQ)
 SUMB(sumeqC,C,C,ACEQB)  SUMB(sumneC,C,C,ACNEB)
 
-INDF( i0eqS,SB,SB,ANE) INDF( i0neS,SB,SB,AEQ) 
-JNDF( j0eqS,SB,SB,ANE) JNDF( j0neS,SB,SB,AEQ) 
-SUMF(sumeqS,SB,SB,AEQ) SUMF(sumneS,SB,SB,ANE)
-
-INDF( i0ltS,SB,SB,SBGE) INDF( i0leS,SB,SB,SBGT) INDF( i0geS,SB,SB,SBLT) INDF( i0gtS,SB,SB,SBLE)
-JNDF( j0ltS,SB,SB,SBGE) JNDF( j0leS,SB,SB,SBGT) JNDF( j0geS,SB,SB,SBLT) JNDF( j0gtS,SB,SB,SBLE)
-SUMF(sumltS,SB,SB,SBLT) SUMF(sumleS,SB,SB,SBLE) SUMF(sumgeS,SB,SB,SBGE) SUMF(sumgtS,SB,SB,SBGT)
-
 static AF atcomp124S[][3][6]={   // tables for different byte lengths.  Character are allowed only = ~:
 {  // parallel character comparisons
  {i0eqC,  i0neC, 0L,0L,0L,0L},
@@ -619,11 +611,6 @@ static AF atcomp124S[][3][6]={   // tables for different byte lengths.  Characte
  {i0eqI4, i0neI4, i0ltI4, i0leI4, i0geI4, i0gtI4},
  {j0eqI4, j0neI4, j0ltI4, j0leI4, j0geI4, j0gtI4},
  {sumeqI4, sumneI4, sumltI4, sumleI4, sumgeI4, sumgtI4},
-},
-{  // symbol
- {i0eqS, i0neS, i0ltS, i0leS, i0geS, i0gtS},
- {j0eqS, j0neS, j0ltS, j0leS, j0geS, j0gtS},
- {sumeqS, sumneS, sumltS, sumleS, sumgeS, sumgtS},
 },
 };
 
@@ -676,8 +663,8 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
 #endif
   }
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
-  if(ISDENSETYPE(AT(a)&AT(w)|((AT(a)|AT(w))&SPARSE),LIT+C2T+C4T+INT2+INT4+SBT)){
-   I tableno=(AT(a)&C2T+INT2+SBT?1:0)+(AT(a)&C4T+INT4+SBT?2:0);    // select table based on length: 1, 2, 4, symbol
+  if(ISDENSETYPE(AT(a)&AT(w)|((AT(a)|AT(w))&SPARSE),LIT+C2T+C4T+INT2+INT4)){
+   I tableno=(AT(a)&C2T+INT2?1:0)+(AT(a)&C4T+INT4?2:0);    // select table based on length: 1, 2, 4, symbol
    tableno=(UI)(AT(a)&C2T+C4T)>(UI)(comp-2)?0:tableno;   // if comparison is ordered (comp>1) and operands are character, it's illegal: we move multibyte chars to first line to return no function so that we fail eventually
    AF actrtn=atcomp124S[tableno][search][comp];  //  processing routine
 #if !defined(__wasm__)

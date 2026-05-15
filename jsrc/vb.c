@@ -27,7 +27,7 @@ static F2(jtebarmat){F12IP;A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i
  sj=as[1]; n=1+ws[1]-sj;
  t=AT(w); k=bpnoun(t); c=ws[1]; r=k*c; s=k*sj;
  GATVR(z,B01,AN(w),2,ws); zv=BAV2(z); mvc(AN(z),zv,MEMSET00LEN,MEMSET00);
- if(t&B01+LIT+C2T+C4T+INT+INT2+INT4+SBT||1.0==jt->cct&&t&FL+CMPX+QP)
+ if(t&B01+LIT+C2T+C4T+INT+INT2+INT4||1.0==jt->cct&&t&FL+CMPX+QP)
   for(i=0;i<m;++i){
    DO(n, u=av; b=1; DO(si,                         if(memcmpne(u,v,s)){b=0; break;} u+=s; v+=r;); v=v0+=k; zv[i]=b;);
    zv+=c; v=v0=wv+=r;
@@ -48,7 +48,7 @@ static F2(jtebarvec){F12IP;A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
  t=AT(w); k=bpnoun(t); s=k*an;
  GATV0(z,B01,wn,AR(w)?1:0); zv=BAV(z); 
  if((-an&(an-wn))<0)mvc(wn-n,zv+n,MEMSET00LEN,MEMSET00); else mvc(wn,zv,MEMSET00LEN,MEMSET00);
- if(t&B01+LIT+C2T+C4T+INT+INT2+INT4+SBT||1.0==jt->cct&&t&FL+CMPX+QP)DO(n, zv[i]=!memcmpne(av,wv,s); wv+=k;)
+ if(t&B01+LIT+C2T+C4T+INT+INT2+INT4||1.0==jt->cct&&t&FL+CMPX+QP)DO(n, zv[i]=!memcmpne(av,wv,s); wv+=k;)
  else{I yr=AR(a); GA0(y,t,an,AR(a)); yv=CAVn(yr,y); DO(n, MC(yv,wv,s); zv[i]=equ(a,C(y)); wv+=k;);}
  RETF(z);
 }    /* E. on vector arguments */
@@ -87,7 +87,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
  case C2TX:
  case LITX:
  case B01X: rng.min=0; rng.range=65536; rng.range=t&B01?2:rng.range; rng.range=t&LIT?256:rng.range; break;
- case INTX: case SBTX: rng=condrange(AV(a),m,IMAX,IMIN,memlimit);
+ case INTX: rng=condrange(AV(a),m,IMAX,IMIN,memlimit);
             if(rng.range){rng=condrange(AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
  case C4TX: rng=condrange4(C4AV(a),m,-1,0,memlimit);
             if(rng.range){rng=condrange4(C4AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
@@ -96,7 +96,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
  *zc=rng.min;  // Now that we know c, return it
  // if the range of integers is too big, revert to simple search.
  // Also revert for continuous type.  But always use fast search for character/boolean types
- R t&B01+LIT+C2T||t&INT+SBT+C4T&&BETWEENC(rng.range,1,memlimit) ? rng.range : -4;
+ R t&B01+LIT+C2T||t&INT+C4T&&BETWEENC(rng.range,1,memlimit) ? rng.range : -4;
 }
 
 #define EBLOOP(T,SUB0,SUB1,ZFUNC)  \
@@ -236,8 +236,6 @@ F2(jtebar){F12IP;PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  switch(CTTZ(AT(w))){
  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(I, u[i],  v[k+m],   zv[k]=i==m); break;
- case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, zv[k]=i==m) 
-            else EBLOOP(SB,u[i],  v[k+m],   zv[k]=i==m); break;
  case C2TX:      EBLOOP(US,u[i],  v[k+m],   zv[k]=i==m); break;
  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(C4,u[i],  v[k+m],   zv[k]=i==m); break;
@@ -269,8 +267,6 @@ F2(jti1ebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  switch(CTTZ(AT(w))){
  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R sc(k)); break;
- case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
-            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)R sc(k)); break;
  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R sc(k)); break;
  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R sc(k)); break;
@@ -301,8 +297,6 @@ F2(jtsumebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  switch(CTTZ(AT(w))){
  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)++z); break;
- case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)++z) 
-            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)++z); break;
  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)++z); break;
  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)++z); break;
@@ -333,8 +327,6 @@ F2(jtanyebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  switch(CTTZ(AT(w))){
  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R num(1)); break;
- case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
-            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)R num(1)); break;
  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R num(1)); break;
  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R num(1)); break;
@@ -367,8 +359,6 @@ DF2(jtifbebar){F12IP;A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  switch(CTTZ(AT(w))){
  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)IFB1); break;
- case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)IFB1)
-            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)IFB1); break;
  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)IFB1); break;
  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)IFB1); break;

@@ -100,15 +100,7 @@ test     adot2{~  ?7001 $# adot2
 test     adot2{~  ?7002 $# adot2
 test     adot2{~  ?7003 $# adot2
 
-test     sdot0{~  ?1000 $# sdot0
-test     sdot0{~  ?1001 $# sdot0
-test     sdot0{~  ?1002 $# sdot0
-test     sdot0{~  ?1003 $# sdot0
 
-test     sdot0{~  ?7000 $# sdot0
-test     sdot0{~  ?7001 $# sdot0
-test     sdot0{~  ?7002 $# sdot0
-test     sdot0{~  ?7003 $# sdot0
 
 test        1000 ?@$ 1e4
 test        1001 ?@$ 1e4

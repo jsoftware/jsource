@@ -24,10 +24,6 @@ a.  f"1 0 i.10
 (/:@/:   -: rk  ) x=: 10&u: RAND32   1e5 ?@$ C4MAX
 (/:@/:"1 -: rk"1) x=: 10&u: RAND32 5 1e5 ?@$ C4MAX
 
-(/:@/:   -: rk  ) x=: sdot0{~   1e4 ?@$#sdot0
-(/:@/:"1 -: rk"1) x=: sdot0{~ 5 1e4 ?@$#sdot0
-(/:@/:   -: rk  ) x=: sdot0{~   1e6 ?@$#sdot0
-(/:@/:"1 -: rk"1) x=: sdot0{~ 5 1e6 ?@$#sdot0
 
 g=: 3 : 0
  assert. (/:@/:   -: rk  ) xx=:   1e4 ?@$ y
@@ -44,8 +40,6 @@ g"0 ] 10^IF64#11 12 13 18
 (/:@/:   -: rk  ) x=: y{~    1e3 5 ?@$ #y=: 'abc';1 2 3;7.5;;:'bush kerry nader'
 (/:@/:   -: rk  ) x=: y{~    1e3 5 ?@$ #y=: (u:'abc');1 2 3;7.5;(u:&.>) ;:'bush kerry nader'
 (/:@/:   -: rk  ) x=: y{~    1e3 5 ?@$ #y=: (10&u:'abc');1 2 3;7.5;(10&u:&.>) ;:'bush kerry nader'
-(/:@/:   -: rk  ) x=: y{~    1e3 5 ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;s:@<"0&.> ;:'bush kerry nader'
-(/:@/:   -: rk  ) x=: y{~    1e3 5 ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;<"0@s: ;:'bush kerry nader'
 
 (/:@/:   -: rk  ) x=:        (QKTEST{::1e5 5;1e2 5) ?@$ 0
 (/:@/:   -: rk  ) x=: <"0 ]  (QKTEST{::1e5 5;1e2 5) ?@$ 1e4
@@ -53,8 +47,6 @@ g"0 ] 10^IF64#11 12 13 18
 (/:@/:   -: rk  ) x=: y{~    (QKTEST{::1e5 5;1e2 5) ?@$ #y=: 'abc';1 2 3;7.5;;:'bush kerry nader'
 (/:@/:   -: rk  ) x=: y{~    (QKTEST{::1e5 5;1e2 5) ?@$ #y=: (u:'abc');1 2 3;7.5;(u:&.>) ;:'bush kerry nader'
 (/:@/:   -: rk  ) x=: y{~    (QKTEST{::1e5 5;1e2 5) ?@$ #y=: (10&u:'abc');1 2 3;7.5;(10&u:&.>) ;:'bush kerry nader'
-(/:@/:   -: rk  ) x=: y{~    (QKTEST{::1e5 5;1e2 5) ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;s:@<"0&.> ;:'bush kerry nader'
-(/:@/:   -: rk  ) x=: y{~    (QKTEST{::1e5 5;1e2 5) ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;<"0@s: ;:'bush kerry nader'
 
 (/:@/:"2 -: rk"2) x=:      (QKTEST{::3 1e3 5;3 1e2 5) ?@$ 0
 (/:@/:"2 -: rk"2) x=: <"0 ](QKTEST{::3 1e3 5;3 1e2 5) ?@$ 1e4
@@ -62,8 +54,6 @@ g"0 ] 10^IF64#11 12 13 18
 (/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e3 5;3 1e2 5) ?@$ #y=: 'abc';1 2 3;7.5;;:'bush kerry nader'
 (/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e3 5;3 1e2 5) ?@$ #y=: (u:'abc');1 2 3;7.5;(u:&.>) ;:'bush kerry nader'
 (/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e3 5;3 1e2 5) ?@$ #y=: (10&u:'abc');1 2 3;7.5;(10&u:&.>) ;:'bush kerry nader'
-(/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e3 5;3 1e2 5) ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;s:@<"0&.> ;:'bush kerry nader'
-(/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e3 5;3 1e2 5) ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;<"0@s: ;:'bush kerry nader'
 
 (/:@/:"2 -: rk"2) x=:      (QKTEST{::3 1e5 5;3 1e2 5) ?@$ 0
 (/:@/:"2 -: rk"2) x=: <"0 ](QKTEST{::3 1e5 5;3 1e2 5) ?@$ 1e4
@@ -71,14 +61,11 @@ g"0 ] 10^IF64#11 12 13 18
 (/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e5 5;3 1e2 5) ?@$ #y=: 'abc';1 2 3;7.5;;:'bush kerry nader'
 (/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e5 5;3 1e2 5) ?@$ #y=: (u:'abc');1 2 3;7.5;(u:&.>) ;:'bush kerry nader'
 (/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e5 5;3 1e2 5) ?@$ #y=: (10&u:'abc');1 2 3;7.5;(10&u:&.>) ;:'bush kerry nader'
-(/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e5 5;3 1e2 5) ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;s:@<"0&.> ;:'bush kerry nader'
-(/:@/:"2 -: rk"2) x=: y{~  (QKTEST{::3 1e5 5;3 1e2 5) ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;<"0@s: ;:'bush kerry nader'
 
 (/:@/:"0 -: rk"0) x=:     3 12 ?@$ 2
 (/:@/:"0 -: rk"0) x=: a.{~3 12 ?@$ #a.
 (/:@/:"0 -: rk"0) x=: adot1{~3 12 ?@$ #adot1
 (/:@/:"0 -: rk"0) x=: adot2{~3 12 ?@$ #adot2
-(/:@/:"0 -: rk"0) x=: sdot0{~3 12 ?@$ #sdot0
 (/:@/:"0 -: rk"0) x=:     3 12 ?@$ 2e9
 (/:@/:"0 -: rk"0) x=:     3 12 ?@$ 0
 (/:@/:"0 -: rk"0) x=: u:  3 12 ?@$ 65536
@@ -86,8 +73,6 @@ g"0 ] 10^IF64#11 12 13 18
 (/:@/:"0 -: rk"0) x=: y{~ 3 12 ?@$ #y=: 'abc';1 2 3;7.5;;:'bush kerry nader'
 (/:@/:"0 -: rk"0) x=: y{~ 3 12 ?@$ #y=: (u:'abc');1 2 3;7.5;(u:&.>) ;:'bush kerry nader'
 (/:@/:"0 -: rk"0) x=: y{~ 3 12 ?@$ #y=: (10&u:'abc');1 2 3;7.5;(10&u:&.>) ;:'bush kerry nader'
-(/:@/:"0 -: rk"0) x=: y{~ 3 12 ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;s:@<"0&.> ;:'bush kerry nader'
-(/:@/:"0 -: rk"0) x=: y{~ 3 12 ?@$ #y=: (s:@<"0 'abc');1 2 3;7.5;<"0@s: ;:'bush kerry nader'
 
 x=: 1e4 ?@$ 1e4
 y=: 1e4 ?@$ 5000

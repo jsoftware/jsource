@@ -37,9 +37,6 @@ _  = ^  709.783
 'domain error' -: ^ etx <u:'abc'
 'domain error' -: ^ etx 10&u:'abc'
 'domain error' -: ^ etx <10&u:'abc'
-'domain error' -: ^ etx s:@<"0 'abc'
-'domain error' -: ^ etx s:@<"0&.> <'abc'
-'domain error' -: ^ etx <"0@s: <'abc'
 
 0 = ^_744.441j2e9
 0 = ^_744.441j_2e9
@@ -135,8 +132,6 @@ x (^ -: pow) -n
 'domain error' -: 3   ^~etx u:'abc'
 'domain error' -: 3   ^ etx 10&u:'abc'
 'domain error' -: 3   ^~etx 10&u:'abc'
-'domain error' -: 3   ^ etx s:@<"0 'abc'
-'domain error' -: 3   ^~etx s:@<"0 'abc'
 'domain error' -: 2   ^ etx 2;4 5
 'domain error' -: 2   ^~etx 2;4 5
 

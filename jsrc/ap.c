@@ -374,7 +374,6 @@ PREFIXPFX(  maxpfxD, D, D,  MAX , maxDD   ,R EVOK;)
 #endif
 PREFIXPFX(  maxpfxX, X, X,  XMAX, maxXX   ,R EVOK;)
 PREFIXPFX(  maxpfxQ, Q, Q,  QMAX, maxQQ   ,R EVOK;)
-PREFIXPFX(  maxpfxS, SB,SB, SBMAX, maxSS  ,R EVOK;)
 
 PREFIXPFX(  minpfxI, I, I,  MIN, minII    ,R EVOK;)
 #if C_AVX2 || (EMU_AVX2 && defined(__aarch64__))   // not better in emulation
@@ -384,7 +383,6 @@ PREFIXPFX(  minpfxD, D, D,  MIN, minDD    ,R EVOK;)
 #endif
 PREFIXPFX(  minpfxX, X, X,  XMIN, minXX   ,R EVOK;)
 PREFIXPFX(  minpfxQ, Q, Q,  QMIN, minQQ   ,R EVOK;)
-PREFIXPFX(  minpfxS, SB,SB, SBMIN, minSS  ,R EVOK;)
 
 PREFIXPFX(bw0000pfxI, UI,UI, BW0000, bw0000II,R EVOK;)
 PREFIXPFX(bw0001pfxI, UI,UI, BW0001, bw0001II,R EVOK;)
@@ -827,17 +825,14 @@ static DF2(jtmovavg){F12IP;I m,j;
 static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
  SETIC(w,p); p-=m; wt=AT(w); c=aii(w);
  GA(z,AT(w),c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
- switch(max + ((wt>>(INTX-1))&6)){
-// no max sym now  case 0: MOVMINMAXS(SB,SBT,SBUV4(JT(jt,sbu))[0].down,SBLE); break;
- case 0: MOVMINMAXS(SB,SBT,0,SBLE); break;
- case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
- case 2: MOVMINMAX(I,INT,IMAX,<=); break;
- case 3: MOVMINMAX(I,INT,IMIN,>=); break;
- case 4: MOVMINMAX(D,FL, inf ,<=); break;
- case 5: MOVMINMAX(D,FL, infm,>=); break;
+ switch(wt+max){
+ case INT+0: MOVMINMAX(I,INT,IMAX,<=); break;
+ case INT+1: MOVMINMAX(I,INT,IMIN,>=); break;
+ case FL+0: MOVMINMAX(D,FL, inf ,<=); break;
+ case FL+1: MOVMINMAX(D,FL, infm,>=); break;
  }
  RETF(z);
-}    /* a <./\w (0=max) or a >./\ (1=max); vector w; integer/float/symbol; 0<m */
+}    /* a <./\w (0=max) or a >./\ (1=max); vector w; integer/float; 0<m */
 
 static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,*zv;I c,i,j,p;
  SETIC(w,p); p-=m; c=aii(w); x=b0=or^1; b1=or;
@@ -916,8 +911,8 @@ static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt
  if(id==CBDOT&&(x=FAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)AV(x)[0];
  switch(AR(w)&&BETWEENC(m0,0,AS(w)[0])?id:0){
  case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
- case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;
- case CMAX:     if(wt&SBT+INT+FL)R movminmax(m,w,self,1); break;
+ case CMIN:     if(wt&INT+FL)R movminmax(m,w,self,0); break;
+ case CMAX:     if(wt&INT+FL)R movminmax(m,w,self,1); break;
  case CSTARDOT: if(wt&B01       )R  movandor(m,w,self,0); break;
  case CPLUSDOT: if(wt&B01       )R  movandor(m,w,self,1); break;
  case CNE:      if(wt&B01       )R   movneeq(m,w,self,0); break;

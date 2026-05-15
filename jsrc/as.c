@@ -154,13 +154,11 @@ SUFFIXPFX(  maxsfxI, I, I, MAX, maxII   ,R EVOK;)
 SUFFIXPFX(  maxsfxD, D, D, MAX, maxDD   ,R EVOK;)
 SUFFIXPFX(  maxsfxX, X, X, XMAX, maxXX  ,R EVOK;)
 SUFFIXPFX(  maxsfxQ, Q, Q, QMAX, maxQQ  ,R EVOK;)
-SUFFIXPFX(  maxsfxS, SB,SB,SBMAX, maxSS ,R EVOK;)
 
 SUFFIXPFX(  minsfxI, I, I, MIN, minII  ,R EVOK;)
 SUFFIXPFX(  minsfxD, D, D, MIN, minDD  ,R EVOK;)
 SUFFIXPFX(  minsfxX, X, X, XMIN, minXX  ,R EVOK;)
 SUFFIXPFX(  minsfxQ, Q, Q, QMIN, minQQ  ,R EVOK;)
-SUFFIXPFX(  minsfxS, SB,SB,SBMIN, minSS ,R EVOK;)
 
 SUFFIXPFX(bw0000sfxI, UI,UI, BW0000, bw0000II,R EVOK;)
 SUFFIXPFX(bw0001sfxI, UI,UI, BW0001, bw0001II,R EVOK;)

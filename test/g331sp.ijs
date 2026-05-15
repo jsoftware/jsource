@@ -54,7 +54,6 @@ $    f x
 <@}. f x
 box  f x
 
-<    f x=: sdot0{~ ?101 1 7$#sdot0
 $    f x
 [    f x
 ,    f x
@@ -106,12 +105,10 @@ _1 test t
 2  test t
 _2 test t
 
-1  test t=: sdot0{~ ?300$#sdot0
 _1 test t
 2  test t
 _2 test t
 
-1  test t=: sdot0{~?101 2 3$#sdot0
 _1 test t
 2  test t
 _2 test t

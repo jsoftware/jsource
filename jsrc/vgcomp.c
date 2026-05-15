@@ -23,7 +23,7 @@ I (*taocomproutine[])()=   // routines for different datatypes. index is [precis
 {[B01X]=taoc, [LITX]=taoc, [INTX]=taoi, [FLX]=taof,
 [CMPXX]=taoz,[BOXX]=taor, [XNUMX]=taox, [RATX]=taoq,
 [QPX]=taoe,
-[C2TX]=taou, [C4TX]=taot, [SBTX]=taol,
+[C2TX]=taou, [C4TX]=taot,
 [INT2X]=taos, [INT4X]=taol,
 };
 
@@ -64,9 +64,7 @@ B compqd(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->j
 #define RETGT(x) (((x)<<1)-1) 
 
 #define COMPDCLQ(T)      T*x=(T*)av,*y=(T*)wv
-#define COMPDCLS(T)      T*x=(T*)SBAV(a),*y=(T*)SBAV(w)
 #define COMPLOOQ(T,m)    {COMPDCLQ(T); if(x!=y)DO(m, if(x[i]!=y[i])R RETGT(x[i]>y[i]);)}
-#define COMPLOOS(T,m)    {COMPDCLS(T); if(x!=y)DO(m, if(SBNE(x[i],y[i]))R RETGT(SBGT(x[i],y[i])););}
 #define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; if(x!=y)DO(m, if(j=f(x[i],y[i]))R RETGT(j>0););}
 
 // this is used by routines outside of sort/merge & therefore a & w can be dissimilar
@@ -74,7 +72,7 @@ B compqd(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->j
 I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
  ARGCHK2(a,w); 
  I an=AN(a), wn=AN(w); I at=an?AT(a):B01, wt=wn?AT(w):B01; t=maxtyped(at,wt);  // types & common type
- if(unlikely(!HOMO(at,wt))){t=(at>>SBTX)&1; t=wt&JCHAR?0:t; t=at&JCHAR?1:t; t=wt&BOX?0:t; t=at&BOX?1:t; R RETGT(t);}  // inhomogeneous: priority is BOX/CHAR/SYMBOL/NUM
+ if(unlikely(!HOMO(at,wt))){t=wt&JCHAR?0:t; t=at&JCHAR?1:t; t=wt&BOX?0:t; t=at&BOX?1:t; R RETGT(t);}  // inhomogeneous: priority is NUM(low, cannot be maxtype)/CHAR/BOX
  I ar=AR(a), wr=AR(w); if(unlikely(ar!=wr))R RETGT(ar>wr);  // unequal ranks, higher rank is bigger
  I *as=AS(a), *ws=AS(w);  // pointers to shapes
  // If the shapes are different, we compare leading items of the first cell (if all are equal, the longer arg comes last).  The item of the cell is the largest one where args have the same shape.
@@ -88,7 +86,6 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
  default:   COMPLOOQ (UC,m  );         break;
  case C2TX:  COMPLOOQ (US,m  );         break;
  case C4TX:  COMPLOOQ (C4,m  );         break;
- case SBTX:  COMPLOOS (SB,m  );         break;
  case FLX:   COMPLOOQ (D, m  );         break;
  case QPX:
  case CMPXX: COMPLOOQ (D, m+m);         break;

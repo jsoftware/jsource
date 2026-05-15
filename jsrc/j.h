@@ -2128,12 +2128,12 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define bp(i) (likely(CTTZ(i)<=LASTNOUNX)?bpnoun(i):bpnonnoun(i))
 
 // conversion from priority index to bit# in a type with that priority
-#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+SBTX)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+SPX)<<4)+HPX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+FLX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+0)<<4)+0)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))  // 0 for C2TX/C4Tx to avoid field overflow
+#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+0)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+SPX)<<4)+HPX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+FLX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+0)<<4)+0)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))  // 0 for C2TX/C4Tx to avoid field overflow
 // Conversion from type to priority
-//  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F    10
-// B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX SBT
+//  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F  
+// B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
 #define TYPEPRIORITYNUM(t) ((I)(((UI8)0x00edcba9765f8410>>(CTTZ(t)*4))&0xf))  // used for types below 0x10000, which includes all numerics
-#define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?(0x030210>>((CTTZ(t)&0x3)<<3)&0x1f):TYPEPRIORITYNUM(t))
+#define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?((CTTZ(t)&0x3)+1):TYPEPRIORITYNUM(t))
 
 // same but destroy w
 #define PRISTCLRF(w) {if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGPRISTNO(w)}   // used only at end, when w can be destroyed
@@ -2298,8 +2298,6 @@ if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else
 // Input is the name of word of bytes.  Result is modified name, 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
 #define ZBYTESTOZBITS(b) (b=b|((b|(~b+VALIDBOOLEAN))>>7))  // for each byte: zero if b0 off, b7 off, and b7 turns on when you subtract 1 or 2
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (!(AT(retfff)&SPARSE) && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; }
-#define SBSV(x)         (CAV1(JT(jt,sbstrings))+(I)(x))
-#define SBUV(x)         (SBUV4(JT(jt,sbu))+(I)(x))
 // #define SEGFAULT        (__builtin_trap())
 #ifdef _WIN32
 #define FSYNC_STDERR

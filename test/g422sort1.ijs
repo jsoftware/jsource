@@ -46,8 +46,6 @@ test  10&u: RAND32 100000  2 ?@$ C4MAX
 test     adot2{~  ?100000 $# adot2
 test     adot2{~  ?100000 2 $# adot2
 
-test     sdot0{~  ?100000 $# sdot0
-test     sdot0{~  ?100000 2$ # sdot0
 
 test        100000 ?@$ 1e4
 test    -1+ 100000 ?@$ 1e4

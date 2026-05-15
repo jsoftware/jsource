@@ -29,9 +29,6 @@ NB. literal4
 262144 = type 10&u:''
 
 NB. symbol
-65536 = type sdot0 
-65536 = type s:@<"0 'abc'
-65536 = type s:''
 
 NB. integer
 4 = type 4 5 6
@@ -56,8 +53,6 @@ NB. boxed
 32 = type ;:'Cogito, ergo sum.'
 32 = type (u:&.>) ;:'Cogito, ergo sum.'
 32 = type (10&u:&.>) ;:'Cogito, ergo sum.'
-32 = type s:@<"0&.> ;:'Cogito, ergo sum.'
-32 = type <"0@s: ;:'Cogito, ergo sum.'
 32 = type 0$<''
 
 NB. extended integer
@@ -85,8 +80,6 @@ f=: 1 : 0  NB. miscellaneous arrays
  assert. test x=: adot1{~?2 34$#adot1
  assert. test x=: adot2
  assert. test x=: adot2{~?2 34$#adot2
- assert. test x=: sdot0
- assert. test x=: sdot0{~?2 34$#sdot0
  assert. test x=: _4e5+?100$8e5
  assert. test x=: o._4e5+?100$8e5
  assert. test x=: j./_500+?2 50$1000
@@ -129,7 +122,6 @@ end.
  assert. test x=: (?1 2 4#4 3 2)$'a'
  assert. test x=: (?1 2 4#4 3 2)$u:'a'
  assert. test x=: (?1 2 4#4 3 2)$10&u:'a'
- assert. test x=: (?1 2 4#4 3 2)$s:@<"0 'a'
  assert. test x=: (?10$!.2[3 4 5)$3.4
  assert. test x=: (i.30)$3j4
  1 [ y
@@ -198,7 +190,6 @@ end.
  assert. test x=: (1=?100$10) <;.1 (?100$#a.){a.
  assert. test x=: (1=?100$10) <;.1 (?100$#adot1){adot1
  assert. test x=: (1=?100$10) <;.1 (?100$#adot2){adot2
- assert. test x=: (1=?100$10) <;.1 (?100$#sdot0){sdot0
  assert. test x=: (1=?100$10) <;.1 ?100$1000
  assert. test x=: (1=?100$20) <;.1 o.?100$10000
  assert. test x=: (1=?100$20) <;.1 j./?2 100$5
@@ -211,12 +202,6 @@ end.
  assert. test x=: 23$<10&u:'the same'
  assert. test x=: 2 3$<10&u:'the same'
  assert. test x=: 3 7 5$<10&u:'the same'
- assert. test x=: 23$s:@<"0&.> <'the same'
- assert. test x=: 23$<"0@s: <'the same'
- assert. test x=: 2 3$s:@<"0&.> <'the same'
- assert. test x=: 2 3$<"0@s: <'the same'
- assert. test x=: 3 7 5$s:@<"0&.> <'the same'
- assert. test x=: 3 7 5$<"0@s: <'the same'
  assert. test x=: 5!:1 <'test'
  assert. test x=: 5!:2 <'test'
  g=: test f.
@@ -280,10 +265,6 @@ test (i.30)$3j4
 (-: ]&.( 0&(3!:1))) x=: 3 41$(u:&.>) ;:'4 score and 7 years ago, +/ . *'
 (-: ]&.( 0&(3!:1))) x=: (10&u:&.>) ;:'bou stro phe don ic'
 (-: ]&.( 0&(3!:1))) x=: 3 41$(10&u:&.>) ;:'4 score and 7 years ago, +/ . *'
-(-: ]&.( 0&(3!:1))) x=: s:@<"0&.> ;:'bou stro phe don ic'
-(-: ]&.( 0&(3!:1))) x=: <"0@s: ;:'bou stro phe don ic'
-(-: ]&.( 0&(3!:1))) x=: 3 41$s:@<"0&.> ;:'4 score and 7 years ago, +/ . *'
-(-: ]&.( 0&(3!:1))) x=: 3 41$<"0@s: ;:'4 score and 7 years ago, +/ . *'
 
 (-: ]&.( 1&(3!:1))) x=: ?2000$2
 (-: ]&.( 1&(3!:1))) x=: ?29 7$2
@@ -301,10 +282,6 @@ test (i.30)$3j4
 (-: ]&.( 1&(3!:1))) x=: 3 41$(u:&.>) ;:'4 score and 7 years ago, +/ . *'
 (-: ]&.( 1&(3!:1))) x=: (10&u:&.>) ;:'bou stro phe don ic'
 (-: ]&.( 1&(3!:1))) x=: 3 41$(10&u:&.>) ;:'4 score and 7 years ago, +/ . *'
-(-: ]&.( 1&(3!:1))) x=: s:@<"0&.> ;:'bou stro phe don ic'
-(-: ]&.( 1&(3!:1))) x=: <"0@s: ;:'bou stro phe don ic'
-(-: ]&.( 1&(3!:1))) x=: 3 41$s:@<"0&.> ;:'4 score and 7 years ago, +/ . *'
-(-: ]&.( 1&(3!:1))) x=: 3 41$<"0@s: ;:'4 score and 7 years ago, +/ . *'
 
 (-: ]&.(10&(3!:1))) x=: ?2000$2
 (-: ]&.(10&(3!:1))) x=: ?29 7$2
@@ -314,8 +291,6 @@ test (i.30)$3j4
 (-: ]&.(10&(3!:1))) x=: adot1{~?29 7$#adot1
 (-: ]&.(10&(3!:1))) x=: adot2{~?2000$#adot2
 (-: ]&.(10&(3!:1))) x=: adot2{~?29 7$#adot2
-(-: ]&.(10&(3!:1))) x=: sdot0{~?2000$#sdot0
-(-: ]&.(10&(3!:1))) x=: sdot0{~?29 7$#sdot0
 (-: ]&.(10&(3!:1))) x=: ?2000$2e6
 (-: ]&.(10&(3!:1))) x=: ?29 7$2e6
 (-: ]&.(10&(3!:1))) x=: o.?2000$2e6
@@ -328,10 +303,6 @@ test (i.30)$3j4
 (-: ]&.(10&(3!:1))) x=: 3 41$(u:&.>) ;:'4 score and 7 years ago, +/ . *'
 (-: ]&.(10&(3!:1))) x=: (10&u:&.>) ;:'bou stro phe don ic'
 (-: ]&.(10&(3!:1))) x=: 3 41$(10&u:&.>) ;:'4 score and 7 years ago, +/ . *'
-(-: ]&.(10&(3!:1))) x=: s:@<"0&.> ;:'bou stro phe don ic'
-(-: ]&.(10&(3!:1))) x=: <"0@s: ;:'bou stro phe don ic'
-(-: ]&.(10&(3!:1))) x=: 3 41$s:@<"0&.> ;:'4 score and 7 years ago, +/ . *'
-(-: ]&.(10&(3!:1))) x=: 3 41$<"0@s: ;:'4 score and 7 years ago, +/ . *'
 
 (-: ]&.(11&(3!:1))) x=: ?2000$2
 (-: ]&.(11&(3!:1))) x=: ?29 7$2
@@ -341,8 +312,6 @@ test (i.30)$3j4
 (-: ]&.(11&(3!:1))) x=: adot1{~?29 7$#adot1
 (-: ]&.(11&(3!:1))) x=: adot2{~?2000$#adot2
 (-: ]&.(11&(3!:1))) x=: adot2{~?29 7$#adot2
-(-: ]&.(11&(3!:1))) x=: sdot0{~?2000$#sdot0
-(-: ]&.(11&(3!:1))) x=: sdot0{~?29 7$#sdot0
 (-: ]&.(11&(3!:1))) x=: ?2000$2e6
 (-: ]&.(11&(3!:1))) x=: ?29 7$2e6
 (-: ]&.(11&(3!:1))) x=: o.?2000$2e6
@@ -355,10 +324,6 @@ test (i.30)$3j4
 (-: ]&.(11&(3!:1))) x=: 3 41$(u:&.>) ;:'4 score and 7 years ago, +/ . *'
 (-: ]&.(11&(3!:1))) x=: (10&u:&.>) ;:'bou stro phe don ic'
 (-: ]&.(11&(3!:1))) x=: 3 41$(10&u:&.>) ;:'4 score and 7 years ago, +/ . *'
-(-: ]&.(11&(3!:1))) x=: s:@<"0&.> ;:'bou stro phe don ic'
-(-: ]&.(11&(3!:1))) x=: <"0@s: ;:'bou stro phe don ic'
-(-: ]&.(11&(3!:1))) x=: 3 41$s:@<"0&.> ;:'4 score and 7 years ago, +/ . *'
-(-: ]&.(11&(3!:1))) x=: 3 41$<"0@s: ;:'4 score and 7 years ago, +/ . *'
 
 NB. empty array type
 x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
@@ -397,8 +362,6 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep ;:'Cogito, ergo sum.'
 'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep (u:&.>) ;:'Cogito, ergo sum.'
 'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep (10&u:&.>) ;:'Cogito, ergo sum.'
-'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep s:@<"0&.> ;:'Cogito, ergo sum.'
-'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep <"0@s: ;:'Cogito, ergo sum.'
 'index error'  -: unbin etx (_1{a.) (>IF64{(24+i.4);48+i.8)}x
 'index error'  -: unbin etx ( 7{a.) (>IF64{(28+i.4);56+i.8)}x
 'index error'  -: unbin etx (_1{a.) (>IF64{(32+i.4);64+i.8)}x
@@ -414,8 +377,6 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'index error'  -: unbin etx 'f' 6}x
 'index error'  -: unbin etx '7' 7}x
 'index error'  -: unbin etx 'f' 8}x
-'index error'  -: unbin etx '7' 5}x=: hexrep s:@<"0&.> ;:'Cogito, ergo sum.'
-'index error'  -: unbin etx '7' 5}x=: hexrep <"0@s: ;:'Cogito, ergo sum.'
 'index error'  -: unbin etx 'f' 6}x
 'index error'  -: unbin etx '7' 7}x
 'index error'  -: unbin etx 'f' 8}x
@@ -425,7 +386,6 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'length error' -: unbin etx _5}.binrep 4 5$'sesquipedalian'
 'length error' -: unbin etx (IF64{_5 _9)}.binrep 4 5$u:'sesquipedalian'
 'length error' -: unbin etx (IF64{_5 _9)}.binrep 4 5$10&u:'sesquipedalian'
-'length error' -: unbin etx (IF64{_5 _9)}.binrep 4 5$s:@<"0 'sesquipedalian'
 'length error' -: unbin etx (IF64{_5 _9)}.binrep 3 4 5
 
 NB. 3!:1 working space --------------------------------------------------
@@ -476,18 +436,12 @@ test y=: (u:&.>) ;:'Cogito, ergo sum.'
 test y=: 0$<u:'abcde'
 test y=: (10&u:&.>) ;:'Cogito, ergo sum.'
 test y=: 0$<10&u:'abcde'
-test y=: s:@<"0&.> ;:'Cogito, ergo sum.'
-test y=: <"0@s: ;:'Cogito, ergo sum.'
-test y=: 0$s:@<"0&.> <'abcde'
-test y=: 0$<"0@s: <'abcde'
 test y=: <''
 test y=: {:: <''
 test y=: <u:''
 test y=: {:: <u:''
 test y=: <10&u:''
 test y=: {:: <10&u:''
-test y=: <s:''
-test y=: {:: <s:''
 test y=: 5!:1 <'binrep_pre601'
 test y=: {:: 5!:1 <'binrep_pre601'
 test y=: !i.10x
@@ -552,13 +506,9 @@ rx=: 3 : 0
 (-:!.0 rx@xr) ;:'Cogito, ergo sum.'
 (-:!.0 rx@xr) (u:&.>) ;:'Cogito, ergo sum.'
 (-:!.0 rx@xr) (10&u:&.>) ;:'Cogito, ergo sum.'
-NB. (-:!.0 rx@xr) s:@<"0&.> ;:'Cogito, ergo sum.'
-NB. (-:!.0 rx@xr) <"0@s: ;:'Cogito, ergo sum.'
 (-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. ;:'Cogito, ergo sum.'
 (-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. (u:&.>) ;:'Cogito, ergo sum.'
 (-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. (10&u:&.>) ;:'Cogito, ergo sum.'
-NB. (-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. s:@<"0&.> ;:'Cogito, ergo sum.'
-NB. (-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. <"0@s: ;:'Cogito, ergo sum.'
 (-:!.0 rx@xr) !100x
 (-:!.0 rx@xr) +/ .*~^:(10) 2 2$0 1 1 1x
 (-:!.0 rx@xr) (+%)/\44$1x

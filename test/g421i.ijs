@@ -20,7 +20,6 @@ test=: 1 : 0
  assert. (xx=:      ?(n,2)$100  ) (u//. -: v/.) yy
  assert. (xx=:    u:? n   $65536) (u//. -: v/.) yy
  assert. (xx=: 10&u: RAND32 ? n $C4MAX) (u//. -: v/.) yy
- assert. (xx=: sdot0{~? n $#sdot0) (u//. -: v/.) yy
  1
 )
 
@@ -130,10 +129,7 @@ x (>.//. -: 3 : '>./y'/.) y=: 0<?($x)$100
 x (>.//. -: 3 : '>./y'/.) y=:   ?($x)$1e6
 x (>.//. -: 3 : '>./y'/.) y=: o.?($x)$1e6
 
-x=: sdot0{~ 7183 2 ?@$ #sdot0
-x (<.//. -: 3 : '<./y'/.) y=: sdot0{~  ?($x)$$sdot0
 
-x (>.//. -: 3 : '>./y'/.) y=: sdot0{~  ?($x)$$sdot0
 
 'domain error' -: x + //. etx (#x)$ 'abc' 
 'domain error' -: x + //. etx (#x)$<'abc' 

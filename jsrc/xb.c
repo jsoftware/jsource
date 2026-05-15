@@ -38,7 +38,7 @@ static I4 type3x0[][2]={  // 1st arg is bit#, 2nd is 1 iff sparse type
 #define T3X0A(t)  [t##X]={t##EXTTYPE,0}   // when bit must be represented as a different value
 T3X0SP(B01), T3X0SP(LIT), T3X0SP(INT), T3X0SP(FL), T3X0SP(CMPX), T3X0SP(BOX), T3X0(XNUM), T3X0(RAT),
 /* T3X0A(INT1),*/ T3X0A(INT2), T3X0A(INT4), T3X0A(HP), T3X0A(SP), T3X0A(QP), 
-T3X0(SBT), T3X0(C2T), T3X0(C4T), 
+T3X0(C2T), T3X0(C4T), 
 T3X0(NAME), T3X0(MARK), T3X0(ADV), T3X0(ASGN), T3X0(SYMB), T3X0(CONW), T3X0(VERB), T3X0(LPAR), T3X0(CONJ), T3X0(RPAR), 
 
 };
@@ -46,7 +46,7 @@ static S f3x0new[]={
 [B01]=B01, [LIT]=LIT,  [INT]=INT,  [FL]=FL, /*[INT1EXTTYPE]=INT1,*/ [INT2EXTTYPE]=INT2, [INT4EXTTYPE]=INT4, /*[HPEXTTYPE]=HP,*/ [SPEXTTYPE]=SP, [QPEXTTYPE]=QP,
 };
 #define F3X0(t) [t##X-CMPXX]=t
-static I4 f3x0bit[]={F3X0(CMPX), F3X0(BOX), F3X0(XNUM), F3X0(RAT), F3X0(SBT), F3X0(C2T), F3X0(C4T), 
+static I4 f3x0bit[]={F3X0(CMPX), F3X0(BOX), F3X0(XNUM), F3X0(RAT), F3X0(C2T), F3X0(C4T), 
 F3X0(NAME), F3X0(MARK), F3X0(ADV), F3X0(ASGN), F3X0(SYMB), F3X0(CONW), F3X0(VERB), F3X0(LPAR), F3X0(CONJ), F3X0(RPAR), 
 };
 // conversion from internal type to the result in 3!:x, which matches the published types
@@ -134,7 +134,7 @@ static A jthrep(J jt,B b,B d,A w);
 static I bsize(J jt,B d,B tb,I t,I n,I r){
  I w=WS(d);                                 // SZI for target architecture
  I z=BH(d)+w*r;                             // bytes in header (1 each: f,t,n,r and r shape words)
- I k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bpnoun(t);  // bytes occupied by one atom in w (in target arch, for the pointers)
+ I k=t&INT+BOX+XNUM?w:t&RAT?w+w:bpnoun(t);  // bytes occupied by one atom in w (in target arch, for the pointers)
  I maxpad= ((t&LAST0)&&tb)+w-1;             // largest null terminator and alignment padding for strings
  I totalsize= z+(n*k+maxpad)&(-w);          // roll sum back to word boundary
  R totalsize;
@@ -306,7 +306,6 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){
  if((t&DIRECT)>0){
   I blksize=bsizer(jt,d,1,w);  // get size of this block (never needs recursion)
   switch(CTTZ(t)){
-  case SBTX:
   case INTX:  RZ(mvw(zv,u,n,  b,BU,d,SY_64)); break;
   case FLX:   RZ(mvw(zv,u,n,  b,BU,1,1    )); break;
   case CMPXX: RZ(mvw(zv,u,n+n,b,BU,1,1    )); break;
@@ -477,7 +476,6 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
  }else if(n)
   switch(CTTZ(t)){
   case B01X:  {B c,*zv=BAV(z); DO(n, c=v[i]; ASSERT(c==C0||c==C1,EVDOMAIN); zv[i]=c;);} break; 
-  case SBTX:
   case INTX:  RZ(mvw(CAV(z),v,n,  BU,b,SY_64,d)); break;
   case FLX:   RZ(mvw(CAV(z),v,n,  BU,b,1,    1)); break;
   case CMPXX: RZ(mvw(CAV(z),v,n+n,BU,b,1,    1)); break;

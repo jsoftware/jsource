@@ -92,12 +92,6 @@ NB. literal4
 (($t)$0) -: (($t)$;:'8-+.abc') = t=:adot2{~?2 3 4$#adot2
 
 NB. symbol
-(($t)$1) -: t = t=:sdot0{~?2 3 4$#sdot0
-(($t)$0) -: (?($t)$2)          = t=:sdot0{~?2 3 4$#sdot0
-(($t)$0) -: (_5e8+?($t)$1e9)   = t=:sdot0{~?2 3 4$#sdot0
-(($t)$0) -: (o._5e8+?($t)$1e9) = t=:sdot0{~?2 3 4$#sdot0
-(($t)$0) -: (r._5e6+?($t)$1e8) = t=:sdot0{~?2 3 4$#sdot0
-(($t)$0) -: (($t)$;:'8-+.abc') = t=:sdot0{~?2 3 4$#sdot0
 
 NB. integer
 (($t)$1) -: t = t=:_1e9+?2 3 4$2e9

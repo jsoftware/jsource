@@ -27,7 +27,6 @@ f =: 3!:10
 'domain error' -: f etx 2 3j4
 'domain error' -: f etx 2 3r4
 'domain error' -: f etx 2 3;4
-'domain error' -: f etx s:@<"0 'abc'
 'domain error' -: f etx u: 'abc'
 'domain error' -: f etx 10&u: 'abc'
 
@@ -47,7 +46,6 @@ f =: 3!:11
 'domain error' -: f etx 2 3j4
 'domain error' -: f etx 2 3r4
 'domain error' -: f etx 2 3;4
-'domain error' -: f etx s:@<"0 'abc'
 'domain error' -: f etx u: 'abc'
 'domain error' -: f etx 10&u: 'abc'
 'domain error' -: 3!:11 etx 'a'

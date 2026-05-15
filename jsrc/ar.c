@@ -363,12 +363,10 @@ REDUCENAN(  divinsZ, Z, Z, zdiv, divZZ  )
 REDUCEPFXIDEM2(  maxinsI, I, I, MAX, maxII   )
 REDUCEPFXIDEM2PRIM256(  maxinsD, D, D, MAX, maxDD, _mm256_max_pd, infm  )
 REDUCEPFX(  maxinsX, X, X, XMAX, maxXX , maxXX )
-REDUCEPFX(  maxinsS, SB,SB,SBMAX, maxSS, maxSS )
 
 REDUCEPFXIDEM2(  mininsI, I, I, MIN, minII   )
 REDUCEPFXIDEM2PRIM256(  mininsD, D, D, MIN, minDD, _mm256_min_pd, inf   )
 REDUCEPFX(  mininsX, X, X, XMIN, minXX, minXX  )
-REDUCEPFX(  mininsS, SB,SB,SBMIN, minSS, minSS )
 
 // +/!.0"r, compensated summation
 static DF1(jtreduce);  // forward declaration
@@ -507,7 +505,7 @@ DF1(jtcompsum){F12IP;
 static DF1(jtred0){F12IP;A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
  if(likely(!ISSPARSE(AT(w)))){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}  // x exists only for type and shape
- R reitem(vec(INT,f,s),lamin1(dfv1(z,x,(AT(w)&SBT)?idensb(self):iden(self))));
+ R reitem(vec(INT,f,s),lamin1(dfv1(z,x,iden(self))));
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
@@ -785,12 +783,6 @@ static A jtreduce2(J jt,A w,I cv,I f){A z=(A)1;B *zv;I m,*ws;
   case BR2CASE(C2TX,CNE     ): TYPEDPAIRS(US,x!=y); break;
   case BR2CASE(C4TX,CEQ     ): TYPEDPAIRS(C4,x==y); break;
   case BR2CASE(C4TX,CNE     ): TYPEDPAIRS(C4,x!=y); break;
-  case BR2CASE(SBTX,CEQ     ): TYPEDPAIRS(SB,x==y); break;
-  case BR2CASE(SBTX,CLT     ): TYPEDPAIRS(SB,SBLT(x,y)); break;
-  case BR2CASE(SBTX,CLE     ): TYPEDPAIRS(SB,SBLE(x,y)); break;
-  case BR2CASE(SBTX,CGT     ): TYPEDPAIRS(SB,SBGT(x,y)); break;
-  case BR2CASE(SBTX,CGE     ): TYPEDPAIRS(SB,SBGE(x,y)); break;
-  case BR2CASE(SBTX,CNE     ): TYPEDPAIRS(SB,x!=y); break;
   case BR2CASE(INTX,CEQ     ): TYPEDPAIRS(I,x==y); break;
   case BR2CASE(INTX,CLT     ): TYPEDPAIRS(I,x<y); break;
   case BR2CASE(INTX,CLE     ): TYPEDPAIRS(I,x<=y); break;
@@ -812,17 +804,17 @@ static A jtreduce2(J jt,A w,I cv,I f){A z=(A)1;B *zv;I m,*ws;
 #define TW2(x,y) ((BR2CASE(x,y)>>LGBW)==2?1LL<<(BR2CASE(x,y)&(BW-1)):0)
 #define TW3(x,y) ((BR2CASE(x,y)>>LGBW)==3?1LL<<(BR2CASE(x,y)&(BW-1)):0)
 #define TWV0 TW0(B01X,CEQ)+TW0(B01X,CNE)+TW0(B01X,CLT)+TW0(B01X,CLE)+TW0(B01X,CGT)+TW0(B01X,CGE)+TW0(B01X,CMAX)+TW0(B01X,CPLUSDOT)+TW0(B01X,CPLUSCO)+TW0(B01X,CMIN)+TW0(B01X,CSTAR)+TW0(B01X,CSTARDOT)+ \
-TW0(B01X,CSTARCO)+TW0(LITX,CEQ)+TW0(LITX,CNE)+TW0(C2TX,CEQ)+TW0(C2TX,CNE)+TW0(C4TX,CEQ)+TW0(C4TX,CNE)+TW0(SBTX,CEQ)+TW0(SBTX,CLT)+TW0(SBTX,CLE)+TW0(SBTX,CGT)+TW0(SBTX,CGE)+TW0(SBTX,CNE)+ \
+TW0(B01X,CSTARCO)+TW0(LITX,CEQ)+TW0(LITX,CNE)+TW0(C2TX,CEQ)+TW0(C2TX,CNE)+TW0(C4TX,CEQ)+TW0(C4TX,CNE)+ \
 TW0(INTX,CEQ)+TW0(INTX,CLT)+TW0(INTX,CLE)+TW0(INTX,CGT)+TW0(INTX,CGE)+TW0(INTX,CNE)+TW0(FLX, CEQ)+TW0(FLX, CLT)+TW0(FLX, CLE)+TW0(FLX, CGT)+TW0(FLX, CGE)+TW0(FLX, CNE)
 #define TWV1 TW1(B01X,CEQ)+TW1(B01X,CNE)+TW1(B01X,CLT)+TW1(B01X,CLE)+TW1(B01X,CGT)+TW1(B01X,CGE)+TW1(B01X,CMAX)+TW1(B01X,CPLUSDOT)+TW1(B01X,CPLUSCO)+TW1(B01X,CMIN)+TW1(B01X,CSTAR)+TW1(B01X,CSTARDOT)+ \
-TW1(B01X,CSTARCO)+TW1(LITX,CEQ)+TW1(LITX,CNE)+TW1(C2TX,CEQ)+TW1(C2TX,CNE)+TW1(C4TX,CEQ)+TW1(C4TX,CNE)+TW1(SBTX,CEQ)+TW1(SBTX,CLT)+TW1(SBTX,CLE)+TW1(SBTX,CGT)+TW1(SBTX,CGE)+TW1(SBTX,CNE)+ \
+TW1(B01X,CSTARCO)+TW1(LITX,CEQ)+TW1(LITX,CNE)+TW1(C2TX,CEQ)+TW1(C2TX,CNE)+TW1(C4TX,CEQ)+TW1(C4TX,CNE)+ \
 TW1(INTX,CEQ)+TW1(INTX,CLT)+TW1(INTX,CLE)+TW1(INTX,CGT)+TW1(INTX,CGE)+TW1(INTX,CNE)+TW1(FLX, CEQ)+TW1(FLX, CLT)+TW1(FLX, CLE)+TW1(FLX, CGT)+TW1(FLX, CGE)+TW1(FLX, CNE)
 #if !SY_64
 #define TWV2 TW2(B01X,CEQ)+TW2(B01X,CNE)+TW2(B01X,CLT)+TW2(B01X,CLE)+TW2(B01X,CGT)+TW2(B01X,CGE)+TW2(B01X,CMAX)+TW2(B01X,CPLUSDOT)+TW2(B01X,CPLUSCO)+TW2(B01X,CMIN)+TW2(B01X,CSTAR)+TW2(B01X,CSTARDOT)+ \
-TW2(B01X,CSTARCO)+TW2(LITX,CEQ)+TW2(LITX,CNE)+TW2(C2TX,CEQ)+TW2(C2TX,CNE)+TW2(C4TX,CEQ)+TW2(C4TX,CNE)+TW2(SBTX,CEQ)+TW2(SBTX,CLT)+TW2(SBTX,CLE)+TW2(SBTX,CGT)+TW2(SBTX,CGE)+TW2(SBTX,CNE)+ \
+TW2(B01X,CSTARCO)+TW2(LITX,CEQ)+TW2(LITX,CNE)+TW2(C2TX,CEQ)+TW2(C2TX,CNE)+TW2(C4TX,CEQ)+TW2(C4TX,CNE)+ \
 TW2(INTX,CEQ)+TW2(INTX,CLT)+TW2(INTX,CLE)+TW2(INTX,CGT)+TW2(INTX,CGE)+TW2(INTX,CNE)+TW2(FLX, CEQ)+TW2(FLX, CLT)+TW2(FLX, CLE)+TW2(FLX, CGT)+TW2(FLX, CGE)+TW2(FLX, CNE)
 #define TWV3 TW3(B01X,CEQ)+TW3(B01X,CNE)+TW3(B01X,CLT)+TW3(B01X,CLE)+TW3(B01X,CGT)+TW3(B01X,CGE)+TW3(B01X,CMAX)+TW3(B01X,CPLUSDOT)+TW3(B01X,CPLUSCO)+TW3(B01X,CMIN)+TW3(B01X,CSTAR)+TW3(B01X,CSTARDOT)+ \
-TW3(B01X,CSTARCO)+TW3(LITX,CEQ)+TW3(LITX,CNE)+TW3(C2TX,CEQ)+TW3(C2TX,CNE)+TW3(C4TX,CEQ)+TW3(C4TX,CNE)+TW3(SBTX,CEQ)+TW3(SBTX,CLT)+TW3(SBTX,CLE)+TW3(SBTX,CGT)+TW3(SBTX,CGE)+TW3(SBTX,CNE)+ \
+TW3(B01X,CSTARCO)+TW3(LITX,CEQ)+TW3(LITX,CNE)+TW3(C2TX,CEQ)+TW3(C2TX,CNE)+TW3(C4TX,CEQ)+TW3(C4TX,CNE)+ \
 TW3(INTX,CEQ)+TW3(INTX,CLT)+TW3(INTX,CLE)+TW3(INTX,CGT)+TW3(INTX,CGE)+TW3(INTX,CNE)+TW3(FLX, CEQ)+TW3(FLX, CLT)+TW3(FLX, CLE)+TW3(FLX, CGT)+TW3(FLX, CGE)+TW3(FLX, CNE)
 #endif
 static DF1(jtreduce){F12IP;A z;I d,f,m,n,r,t,wr,*ws,zt;
@@ -837,7 +829,7 @@ static DF1(jtreduce){F12IP;A z;I d,f,m,n,r,t,wr,*ws,zt;
  if(unlikely(n<=2)){
   if(unlikely(n==1))RETF(head(w));   // 1 item: the result is the item.  Rank is still set
   if(unlikely(n==0))RETF(red0(w,FAV(self)->fgh[0]));  // 0 item: return a neutral using shape and rank.  Rank is still set
-  if(unlikely(r==1))if(likely(wt&B01+LIT+INT+FL+SBT+C2T+C4T)){  // 2 items: special processing only if the operation is on rank 1: then we avoid loop overheads
+  if(unlikely(r==1))if(likely(wt&B01+LIT+INT+FL+C2T+C4T)){  // 2 items: special processing only if the operation is on rank 1: then we avoid loop overheads
    C id=FAV(FAV(self)->fgh[0])->id; 
    if(unlikely(BETWEENC(id,CSTARCO,CMAX))){  // only boolean results are supported
     I cv=BR2CASE(CTTZ(wt),id); UI cwd=TWV0; cwd=(cv>>LGBW)==1?TWV1:cwd;  // figure the case, and see if it is one of those in the big macros above

@@ -21,9 +21,6 @@ f"0 x=:>:i.2 10
 'domain error' -: +:/\. etx u:&.> ;:'professors in New England'
 'domain error' -: +:/\. etx 10&u:'deipnosophist'
 'domain error' -: +:/\. etx 10&u:&.> ;:'professors in New England'
-'domain error' -: +:/\. etx s:@<"0 'deipnosophist'
-'domain error' -: +:/\. etx s:@<"0&.> ;:'professors in New England'
-'domain error' -: +:/\. etx <"0@s: ;:'professors in New England'
 
 
 

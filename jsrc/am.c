@@ -85,8 +85,8 @@ F1(jtcasev){F12IP;A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
     // then look up the symbol entry for word[0]
  }
  if(p)z=u[c]; else GA(z,t,n,r,s);   // z = output area, which may be in-place
-// 0 B01+LIT 1 INT 2 FL 3 CMPX/QP 4 C2T/INT2 5 C4T/INT4 6 SBT 7 unused
- r=6; r=t&C4T+INT4?5:r;  r=t&C2T+INT2?4:r;  r=t&CMPX+QP?3:r;  r=t&FL?2:r;  r=t&INT?1:r;  r=t&B01+LIT?0:r; 
+// 0 B01+LIT 1 INT 2 FL 3 CMPX/QP 4 C2T/INT2 5 C4T/INT4 6-7 unused
+ r=5;  r=t&C2T+INT2?4:r;  r=t&CMPX+QP?3:r;  r=t&FL?2:r;  r=t&INT?1:r;  r=t&B01+LIT?0:r; 
  switch((!q?24:!p?0:c==0?8:16)+r){   // choose a comparison based on data
   case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
   case  4: CASE2Z(US); case  5: CASE2Z(C4); case  6: CASE2Z(I);

@@ -370,7 +370,7 @@ void jtlogtrace(J jt,C *fmt, void *a0, void *a1, void *a2){
 // this code is repeated in result.h
 I jtmaxtype(J jt,I s,I t){
  I resultbit = PRIORITYTYPE(MAX(TYPEPRIORITY(s),TYPEPRIORITY(t)));  // Get the higher-priority type
- if(unlikely(ISSPARSE(s|t))){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R SPARSE|((I)1 << resultbit);}  // If either operand sparse, return sparse version
+ if(unlikely(ISSPARSE(s|t))){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT)),EVDOMAIN); R SPARSE|((I)1 << resultbit);}  // If either operand sparse, return sparse version
  R (I)1 << resultbit;   // otherwise, return normal version
 }
 

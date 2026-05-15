@@ -27,9 +27,6 @@ _ __ -: >. _ __
 'domain error' -: >. etx <u:'abc'   
 'domain error' -: >. etx 10&u:'abc'        
 'domain error' -: >. etx <10&u:'abc'   
-'domain error' -: >. etx s:@<"0 'abc'        
-'domain error' -: >. etx s:@<"0&.> <'abc'   
-'domain error' -: >. etx <"0@s: <'abc'   
 
 
 NB. x>.y ----------------------------------------------------------------
@@ -46,7 +43,6 @@ _3 -: _3 >. _5
 ((i.10) >. 3) -: (i.10) >. 0{3 5j6
 
 NB. symbol
-(s:@<"0 'cbcCBC') -: (s:@<"0 'cbaCBA') >. s:@<"0 'abcABC'
 
 'domain error' -: 'abc' >. etx 3 4 5      
 'domain error' -: 'abc' >.~etx 3 4 5  
@@ -54,8 +50,6 @@ NB. symbol
 'domain error' -: (u:'abc') >.~etx 3 4 5  
 'domain error' -: (10&u:'abc') >. etx 3 4 5      
 'domain error' -: (10&u:'abc') >.~etx 3 4 5  
-'domain error' -: (s:@<"0 'abc') >. etx 3 4 5      
-'domain error' -: (s:@<"0 'abc') >.~etx 3 4 5  
 'domain error' -: 3j4   >. etx 3 4 5    
 'domain error' -: 3j4   >.~etx 3 4 5        
 'domain error' -: (<34) >. etx 3 4 5       

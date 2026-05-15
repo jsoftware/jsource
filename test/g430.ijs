@@ -55,12 +55,6 @@ a=:adot2{~32+?10 5$95
 (<\,a)  -: < bs ,a
 (]\a)  -: ] bs a
 
-NB. symbol
-a=:sdot0{~32+?10 5$95
-(<\a)   -: < bs a
-(<\,a)  -: < bs ,a
-(]\a)  -: ] bs a
-
 NB. integer
 a=:?10 5$100
 (<\ -: < bs) a
@@ -156,8 +150,6 @@ NB. f/\y ----------------------------------------------------------------
 (| /\ -: | / bs) |:#:i.32
 (! /\ -: ! / bs) |:#:i.32
 
-(<./\ -: <./ bs) sdot0{~ 20?#sdot0
-(>./\ -: >./ bs) sdot0{~ 20?#sdot0
 
 (i.1+n) -: 0,+/\n$1 [ n=:?1000
 (n$1)   -: +/\n{.1  [ n=:?1000
@@ -433,17 +425,6 @@ a=:'d'
 k (<\ -: < bs) a     [ k=:0
 k (<\ -: < bs) a     [ k=:4
 
-NB. symbol
-a=:sdot0{~32+?11 5$95
-k (<\ -: < bs) a     [ k=:_4+?11
-k (<\ -: < bs) ,a    [ k=:_4+?11
-k (]\ -: ] bs) a     [ k=:_4+?11
-k (<\ -: < bs) a     [ k=:0
-k (<\ -: < bs) a     [ k=:1+#a
-a=:'d'
-k (<\ -: < bs) a     [ k=:0
-k (<\ -: < bs) a     [ k=:4
-
 NB. integer
 a=:?11 5$110
 k (<\  -: < bs) a    [ k=:_4+?11
@@ -553,7 +534,6 @@ f=: i.@:>:@:$
 'domain error' -: 'a'      <\ etx i.12
 'domain error' -: (u:'a')      <\ etx i.12
 'domain error' -: (10&u:'a')      <\ etx i.12
-'domain error' -: (s:@<"0 'a')      <\ etx i.12
 'domain error' -: 3.5      <\ etx i.12
 'domain error' -: (o._1e7)<\ etx i.12
 'domain error' -: 3j4      <\ etx i.12

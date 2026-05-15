@@ -28,10 +28,6 @@ s -: $ s $ (10&u:'abc') [ s =. ?20 30
 s -: $ s $ (10&u:'abc') [ s =. ?(?7)$5
 
 NB. symbol
-s -: $ s $ (s:@<"0 'abc') [ s =. $0
-s -: $ s $ (s:@<"0 'abc') [ s =. ,?20
-s -: $ s $ (s:@<"0 'abc') [ s =. ?20 30
-s -: $ s $ (s:@<"0 'abc') [ s =. ?(?7)$5
 
 NB. integer
 s -: $ s $ 4 0 [ s =. $0
@@ -61,29 +57,23 @@ s -: $ s $ 0j1;'abc' [ s =. ?(?7)$5
 '' -: $ 'a'
 '' -: $ u:'a'
 '' -: $ 10&u:'a'
-'' -: $ s:@<"0 'a'
 '' -: $ 4
 '' -: $ _3.456
 '' -: $ 3j4
 '' -: $ <'Cogito'
 '' -: $ <u:'Cogito'
 '' -: $ <10&u:'Cogito'
-'' -: $ s:@<"0&.> <'Cogito'
-'' -: $ <"0@s: <'Cogito'
 
 (,1) -: $ ,0
 (,1) -: $ ,'x'
 (,1) -: $ ,u:'x'
 (,1) -: $ ,10&u:'x'
-(,1) -: $ ,s:@<"0 'x'
 (,1) -: $ ,_5
 (,1) -: $ ,3.4
 (,1) -: $ ,5j6.7
 (,1) -: $ ,<'ergo'
 (,1) -: $ ,<u:'ergo'
 (,1) -: $ ,<10&u:'ergo'
-(,1) -: $ ,s:@<"0&.> <'ergo'
-(,1) -: $ ,<"0@s: <'ergo'
 
 (3!:0 ]10x) -: 3!:0 $ 10 20 30x
 (3!:0 ]10x) -: 3!:0 $ 5 % 10 20 30x
@@ -126,10 +116,6 @@ NB. literal4
 (4 5 0 res 6 0 7$b) -: 4 5 0$6 0 7$b
 
 NB. symbol
-(4 5 res s:@<"0 'x')       -: 4 5$s:@<"0 'x'
-(4 5 res b)         -: 4 5$b=.sdot0{~?20$$sdot0
-(4 5 res 3 4$b)     -: 4 5$3 4$b=.sdot0{~?20$$sdot0
-(4 5 0 res b)       -: 4 5 0$b=.sdot0{~?20$$sdot0
 (4 5 0 res 0 6$b)   -: 4 5 0$0 6$b
 (4 5 0 res 6 0 7$b) -: 4 5 0$6 0 7$b
 
@@ -170,7 +156,6 @@ NB. boxed
 1 2 3 -: $(-j.j.1 2 3)$'abc'
 1 2 3 -: $(-j.j.1 2 3)$u:'abc'
 1 2 3 -: $(-j.j.1 2 3)$10&u:'abc'
-1 2 3 -: $(-j.j.1 2 3)$s:@<"0 'abc'
 
 0 0 0 0 0 0     -: 6$0
 0 1 1 0 0 1     -: 6$0 1 1 0
@@ -198,13 +183,6 @@ NB. boxed
 'lieb l'        -: 6$10&u:'lieb '
 'lieber'        -: 6$10&u:'lieber'
 'Weltan'        -: 6$10&u:'Weltanschauung'
-(s:@<"0 'eeeeee')        -: 6$s:@<"0 'e'
-(s:@<"0 'eieiei')        -: 6$s:@<"0 'ei'
-(s:@<"0 'eioeio')        -: 6$s:@<"0 'eio'
-(s:@<"0 'romero')        -: 6$s:@<"0 'rome'
-(s:@<"0 'lieb l')        -: 6$s:@<"0 'lieb '
-(s:@<"0 'lieber')        -: 6$s:@<"0 'lieber'
-(s:@<"0 'Weltan')        -: 6$s:@<"0 'Weltanschauung'
 
 0 1 2 3 0 1     -: 6$i.4
 0 1 2 3 4 5     -: 6$i.6
@@ -276,16 +254,10 @@ NB. literal4
 'domain error' -: 3j4  $ etx 10&u:'abc'
 'domain error' -: (<5) $ etx 10&u:'abc'
 'domain error' -: _3   $ etx 10&u:'abc'
-'domain error' -: 'abc'$ etx s:@<"0 'abc'
-'domain error' -: 3.5  $ etx s:@<"0 'abc'
-'domain error' -: 3j4  $ etx s:@<"0 'abc'
-'domain error' -: (<5) $ etx s:@<"0 'abc'
-'domain error' -: _3   $ etx s:@<"0 'abc'
 
 'length error' -: 3 4  $ etx ''
 'length error' -: 3 4  $ etx u:''
 'length error' -: 3 4  $ etx 10&u:''
-'length error' -: 3 4  $ etx s:''
 'length error' -: 3 4  $ etx i.0 1 2
 
 
@@ -301,8 +273,6 @@ f =: 4 : 'x$y' " 1 _
 2 3 4 (f"1 -: $"1) 2 3 4$;:'Cogito, ergo sum. sui generis'
 2 3 4 (f"1 -: $"1) 2 3 4$(u:&.>) ;:'Cogito, ergo sum. sui generis'
 2 3 4 (f"1 -: $"1) 2 3 4$(10&u:&.>) ;:'Cogito, ergo sum. sui generis'
-2 3 4 (f"1 -: $"1) 2 3 4$s:@<"0&.> ;:'Cogito, ergo sum. sui generis'
-2 3 4 (f"1 -: $"1) 2 3 4$<"0@s: ;:'Cogito, ergo sum. sui generis'
  
 2 3 4 (f"2 -: $"2) ?2 3 4$2
 2 3 4 (f"2 -: $"2) a.{~?2 3 4$256
@@ -312,8 +282,6 @@ f =: 4 : 'x$y' " 1 _
 2 3 4 (f"2 -: $"2) 2 3 4$;:'When eras die their thoughts are left to strange police'
 2 3 4 (f"2 -: $"2) 2 3 4$(u:&.>) ;:'When eras die their thoughts are left to strange police'
 2 3 4 (f"2 -: $"2) 2 3 4$(10&u:&.>) ;:'When eras die their thoughts are left to strange police'
-2 3 4 (f"2 -: $"2) 2 3 4$s:@<"0&.> ;:'When eras die their thoughts are left to strange police'
-2 3 4 (f"2 -: $"2) 2 3 4$<"0@s: ;:'When eras die their thoughts are left to strange police'
 
 2     (f"2 -: $"2) ?7 3 4$2
 2     (f"2 -: $"2) a.{~?7 3 4$256
@@ -323,8 +291,6 @@ f =: 4 : 'x$y' " 1 _
 2     (f"2 -: $"2) 7 3 4$;:'salt of the earth boustrophedonic bull of Bashan'
 2     (f"2 -: $"2) 7 3 4$(u:&.>) ;:'salt of the earth boustrophedonic bull of Bashan'
 2     (f"2 -: $"2) 7 3 4$(10&u:&.>) ;:'salt of the earth boustrophedonic bull of Bashan'
-2     (f"2 -: $"2) 7 3 4$s:@<"0&.> ;:'salt of the earth boustrophedonic bull of Bashan'
-2     (f"2 -: $"2) 7 3 4$<"0@s: ;:'salt of the earth boustrophedonic bull of Bashan'
 
 1e6 2 3 4 5 0 1e4 -: $ 2 3 4 5 0 $"1 2 i.1e6 0 1e4 
 1e6 2 3 4 5 0 0   -: $ 2 3 4 5 0 $"1 2 i.1e6 1e4 0
@@ -360,8 +326,6 @@ f r./?2 2 3 4$1000
 f 2 3 4$;:'Cogito, ergo sum. sui generis'
 f 2 3 4$(u:&.>) ;:'Cogito, ergo sum. sui generis'
 f 2 3 4$(10&u:&.>) ;:'Cogito, ergo sum. sui generis'
-f 2 3 4$s:@<"0&.> ;:'Cogito, ergo sum. sui generis'
-f 2 3 4$<"0@s: ;:'Cogito, ergo sum. sui generis'
 
 NB. Verify virtuals created properly
 0 = 2 | 5 { 13!:_4 ] 0 $ memu i. 7 8  NB. self-virtual, detected by blocksize>64
@@ -379,9 +343,6 @@ NB. x$!.f y -------------------------------------------------------------
 (2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.(u:&.>) ;:'Cogito, ergo sum.'
 (2 3 4$'chthonic',16$' ') -: 2 3 4$!.'' 10&u:'chthonic'
 (2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.(10&u:&.>) ;:'Cogito, ergo sum.'
-(2 3 4$(s:@<"0 'chthonic'),16${.s:'') -: 2 3 4$!.'' s:@<"0 'chthonic'
-(2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.s:@<"0&.> ;:'Cogito, ergo sum.'
-(2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.<"0@s: ;:'Cogito, ergo sum.'
 
 (2 15$0 1 0,27$1  ) -: 2 15$!.1   [ 0 1 0
 (2 15$1 2 3,27$1  ) -: 2 15$!.1   [ 1 2 3
@@ -421,12 +382,6 @@ NB. x$!.f y -------------------------------------------------------------
 'domain error' -: 9 3 $!.4    etx 10&u:'sui generis'
 'domain error' -: 9 3 $!.4    etx 10&u:&.> ;:'Cogito, ergo sum.'
 'domain error' -: 9 3 $!.(<4) etx 10&u:'eleemosynary'
-'domain error' -: 9 3 $!.(s:@<"0 'a')  etx 4
-'domain error' -: 9 3 $!.(s:@<"0 'a')  etx <"0@s: 'b';'c';'d'
-'domain error' -: 9 3 $!.4    etx s:@<"0 'sui generis'
-'domain error' -: 9 3 $!.4    etx s:@<"0&.> ;:'Cogito, ergo sum.'
-'domain error' -: 9 3 $!.4    etx <"0@s: ;:'Cogito, ergo sum.'
-'domain error' -: 9 3 $!.(<4) etx s:@<"0 'eleemosynary'
 'domain error' -: 9 3 $!.(<4) etx i.2 3
 
 NB. x $ y where x contains _

@@ -4,7 +4,6 @@ cocurrent 'base'
 
 9!:19[2^_44   NB. default but some tests require a larger ct
 NB. set NORESETSTABLE to 1 to prevent restoring symbol table between files
-GLOBALSYMBOL=: 0 s: 10
 
 NB. settings to change when compiling the JE in a debug mode
 NB. If FORCEVIRTUALINPUTS is set, space consumption changes.  Set IGNOREIFFVI to 1: in that case
@@ -137,7 +136,6 @@ prolog=: {{ 1: xyziniloc__ =: x [ delth'' [ (dbr bind Debug)@:(9!:19)2^_44[techo
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0 @: (4!:55) @: (currlocals_p38s4jf7_ -. ".@'xyziniloc__')  NB. Erase locals defined since prolog
 delth''
-10 s: GLOBALSYMBOL
 if. 'Linux'-:UNAME do.
  'libc.so.6 malloc_trim > i x'&cd <.64*1024
 end.
@@ -206,11 +204,8 @@ comb=: 4 : 0
 )
 
 randuni=: 3 : 0
- initsymbolstate =: 0 s:^:(0 = {. ". 'NORESETSTABLE') 10  NB. Preserve init symbol state so it doesn't keep growing
  l2max=. QKTEST{1024 128    NB. #literal2 sample   multiple of 256
  l4max=. QKTEST{1024 128    NB. #literal4 sample   multiple of 256
- sbmax=. QKTEST{1024 128    NB. #symbol sample     multiple of 256
- sblen=. QKTEST{10 3        NB. max symbol length
 NB. unique random literal2
  adot1=: u: /:~ l2max?65536
 NB. unique random literal4
@@ -219,32 +214,18 @@ NB. unique random literal4
  else.
   adot2=: /:~ 10&u: RAND32 l4max?C4MAX
  end.
-NB. unique random symbols
- a=.((sblen#1),~1+?(256-sblen)#sblen) [ b=. /:~ 256?256
- s0=. a (] s:@:<@({&a.)@:+ i.@[)"0 b
- a=.(1+?((65536-sblen)<.65536<.sbmax)#sblen) [ b=. /:~ 128 + ((65536-sblen)<.65536<.sbmax)?(65536-128)-sblen
- s1=. a (] s:@:<@u:@:+ i.@[)"0 b
- a=.(1+?sbmax#sblen) [ b=. RAND32 /:~ 65536 + ((C4MAX-sblen)<.sbmax)?(C4MAX-65536)-sblen
- s2=. /:~^:(-.IF64) a (] s:@:<@(10&u:)@:+ i.@[)"0 b
- s=. ~.(?~#ss){ss=. s0,s1,s2
- sdot0=: /:~ (sbmax?#s){s
 NB. validation
  assert. l2max=#adot1
  assert. l4max=#adot2
- assert. sbmax=#sdot0
  assert. (QKTEST{256 128)<:#adot1
  assert. (QKTEST{256 128)<:#adot2
- assert. (QKTEST{256 128)<:#sdot0
  assert. 0=(QKTEST{256 128)|#adot1
  assert. 0=(QKTEST{256 128)|#adot2
- assert. 0=(QKTEST{256 128)|#sdot0
  assert. l2max=#~.adot1
  assert. l4max=#~.adot2
- assert. sbmax=#~.sdot0
  ''
 )
 randfini =: 3 : 0
-if. 32 = 3!:0 initsymbolstate do. 10 s: initsymbolstate end.  NB. Reset symbol table if it was saved
 4!:55 <'initsymbolstate'
 )
 
@@ -308,11 +289,9 @@ for_y234. y123 do.
  for. i.x123 do.
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
-  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  techo (+/ % #) 0 s: 12
  end.
 end.
 dbr 0
@@ -331,11 +310,9 @@ while. x123~:0 do.
   save_ran=:9!:44''
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
-  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  techo (+/ % #) 0 s: 12
  end.
  x123=. <:x123
 end.
@@ -353,11 +330,9 @@ assert. (<'base')-:18!:5''
 while. x123~:0 do.
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2<testpath,y123,'.ijs'
-  assert. 0 s: 11
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  techo (+/ % #) 0 s: 12
   x123=. <:x123
 end.
 dbr 0
@@ -375,11 +350,9 @@ for_y234. y123{~?~#y123 do.
  for. i.x123 do.
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   0!:2 y234
-  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. _1 = 4!:0 <"1 ,/ ' 0123456789' ,"0/~ a.{~,|:(i.26)+/ a.i.'Aa'
   assert. (<'base')-:18!:5''
   assert. 0= (;:'x y') e. nl__ i.4
-  techo (+/ % #) 0 s: 12
  end.
 end.
 dbr 0

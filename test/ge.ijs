@@ -22,16 +22,13 @@ y =: 10&u:&.>'abc';'dc';'a'
 x =: 1 0 0 1 0 1 (<;.1) 3#"1,.10&u:'abcdca'
 (e.x) -: e.y
 
-y =: s:@<"0&.> 'abc';'dc';'a'
 (e.y) -: 1 1 1 0 1 1,0 0 1 1 1 0,:1 0 0 0 0 1
 
-x =: 1 0 0 1 0 1 (<;.1) 3#"1,.s:@<"0 'abcdca'
 (e.x) -: e.y
 
 (e.'') -: i.0 0
 (e.u:'') -: i.0 0
 (e.10&u:'') -: i.0 0
-(e.s:'') -: i.0 0
 
 NB. Similar to e.'' are cases of fills with a rank loop that alters boxing
 0 1 -: $ i.@(3!:0)@> 0$a:
@@ -74,9 +71,6 @@ NB. x e.y ---------------------------------------------------------------
 1 0 0 -: (10&u:'foo') e.10&u:'f'
 0 0 0 -: (10&u:'foo') e.10&u:'x'
 0 0 0 -: (10&u:'foo') e.4
-1 0 0 -: (s:@<"0 'foo') e.s:@<"0 'f'
-0 0 0 -: (s:@<"0 'foo') e.s:@<"0 'x'
-0 0 0 -: (s:@<"0 'foo') e.4
 1 0 0 -: 1 0 0 e.1
 1 0 0 -: 2 1 4 e.2
 1 0 0 -: (o.3 1 2)e.o.3
@@ -84,12 +78,9 @@ NB. x e.y ---------------------------------------------------------------
 0 0     -: (i.2 3) e. 4 3$'a'
 0 0     -: (i.2 3) e. 4 3$u:'a'
 0 0     -: (i.2 3) e. 4 3$10&u:'a'
-0 0     -: (i.2 3) e. 4 3$s:@<"0 'a'
 0 0 0   -: (i.3 2 4) e. 1 2 4$<'a'
 0 0 0   -: (i.3 2 4) e. 1 2 4$<u:'a'
 0 0 0   -: (i.3 2 4) e. 1 2 4$<10&u:'a'
-0 0 0   -: (i.3 2 4) e. 1 2 4$s:@<"0&.> <'a'
-0 0 0   -: (i.3 2 4) e. 1 2 4$<"0@s: <'a'
 (3 2$0) -: (3 2 4$'a') e. i.2 4
 (3 2$0) -: (3 2 4$u:'a') e. i.2 4
 (3 2$0) -: (3 2 4$10&u:'a') e. i.2 4
@@ -117,7 +108,6 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 'abcde'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u:'abcde'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u:'abcde'
-test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:@<"0 'abcde'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$2e9
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: o.?5$20
@@ -125,21 +115,15 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: j./?2 5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:' miasma chthonic chronic kakistocracy dado'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: (u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: (10&u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
-test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: s:@<"0&.> ;:' miasma chthonic chronic kakistocracy dado'
-test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: <"0@s: ;:' miasma chthonic chronic kakistocracy dado'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: x: ?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: %/0 1+x:?2 5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u: ?5$65536
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: RAND32 ?5$C4MAX
-test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kakistocracy dado'
-test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: u: 128+a.i. ' miasma chthonic chronic kakistocracy dado'
-test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: 10&u: 65536+a.i. ' miasma chthonic chronic kakistocracy dado'
 
 0 0 -: (i.2 3) e. i.2 4
 0 0 -: (i.2 3) e. 4 5$'a'
 0 0 -: (i.2 3) e. 4 5$u:'a'
 0 0 -: (i.2 3) e. 4 5$10&u:'a'
-0 0 -: (i.2 3) e. 4 5$s:@<"0 'a'
 
 0   -: 3 e. i.4 3
 

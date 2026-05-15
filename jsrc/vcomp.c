@@ -67,28 +67,24 @@ APFX(ltIB, B,I,B, CMPLT,, R EVOK;)    ACMP0(ltID, B,I,D, TLT, <  )
 ACMP0(ltDB, B,D,B, TLT, <  )  ACMP0(ltDI, B,D,I, TLT, <  )  
 APFX(ltXX, B,X,X, -1==xcompare,, R EVOK;)
 APFX(ltQQ, B,Q,Q, QLT,, R EVOK;)
-APFX(ltSS, B,SB,SB, SBLT,, R EVOK;)
 
 APFX(leBI, B,B,I, CMPLE,, R EVOK;)  ACMP0(leBD, B,B,D, TLE, <=  )
 APFX(leIB, B,I,B, CMPLE,, R EVOK;)   ACMP0(leID, B,I,D, TLE, <=  )
 ACMP0(leDB, B,D,B, TLE, <=  )  ACMP0(leDI, B,D,I, TLE, <=  )  
 APFX(leXX, B,X,X,  1!=xcompare,, R EVOK;)
 APFX(leQQ, B,Q,Q, QLE,, R EVOK;)
-APFX(leSS, B,SB,SB, SBLE,, R EVOK;)
 
 APFX(geBI, B,B,I, CMPGE,, R EVOK;)  ACMP0(geBD, B,B,D, TGE, >=  )
 APFX(geIB, B,I,B, CMPGE,, R EVOK;)    ACMP0(geID, B,I,D, TGE, >=  )
 ACMP0(geDB, B,D,B, TGE, >=  )  ACMP0(geDI, B,D,I, TGE, >=  )  
 APFX(geXX, B,X,X, -1!=xcompare,, R EVOK;)
 APFX(geQQ, B,Q,Q, QGE,, R EVOK;)
-APFX(geSS, B,SB,SB, SBGE,, R EVOK;)
 
 APFX(gtBI, B,B,I, CMPGT,, R EVOK;)  ACMP0(gtBD, B,B,D, TGT, >  )
 APFX(gtIB, B,I,B, CMPGT,, R EVOK;)     ACMP0(gtID, B,I,D, TGT, >  )
 ACMP0(gtDB, B,D,B, TGT, >  )   ACMP0(gtDI, B,D,I, TGT, > )  
 APFX(gtXX, B,X,X,  1==xcompare,, R EVOK;)
 APFX(gtQQ, B,Q,Q, QGT,, R EVOK;)
-APFX(gtSS, B,SB,SB, SBGT,, R EVOK;)
 
 // 
 #define PCOMPDO(zzop,xy,lineno,LOADFN)  if(xy&2)u=_mm256_loadu_pd(x+(lineno)*NPAR); if(xy&1)v=LOADFN(_mm256_loadu_pd(y+(lineno)*NPAR)); \

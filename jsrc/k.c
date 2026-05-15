@@ -799,7 +799,7 @@ static KF1(jtZfromD){
 A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflagged&(NOUN|SPARSE);
  ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); n=AN(w);
- if(unlikely(((t|wt)&SPARSE+BOX+SBT+FUNC)!=0)){
+ if(unlikely(((t|wt)&SPARSE+BOX+FUNC)!=0)){
   // Unusual cases: box, ticker, sparse, func (should not occur).
   ASSERTSYS(!((t|wt)&FUNC),"non-noun in cvt");
   // Handle sparse
@@ -820,12 +820,12 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
    // must be sparse to dense.  Carry on now that w is dense
    jt->ranks=oqr;
   }else{
-   // conversion of BOXED or SBT.  Types better be equal
+   // conversion of BOXED.  Types better be equal
    ASSERT(n==0||TYPESEQ(t,wt),EVINHOMO)
    // fall through to make clone
   }
  }
- // Now known to be non-sparse, and numeric or literal except when empty or BOX or SBT not being changed
+ // Now known to be non-sparse, and numeric or literal except when empty or BOX not being changed
  // If type is already correct, return a clone - used to force a copy.  Should get rid of this kludge
  if(unlikely(TYPESEQ(t,AT(w)))){RZ(z=ca(w)); R z;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVINHOMO); RZ(*y=uco1(w)); R 1;}
@@ -854,10 +854,10 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the literal conversions into one block, and
  // the rest in another
- if(unlikely((t|wt)&(LIT+C2T+C4T+SBT+XD+XZ))) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
+ if(unlikely((t|wt)&(LIT+C2T+C4T+XD+XZ))) {   // there are no XD+XZ conversions, but we have to show domain error  scaf ???
    // one of the types is literal.
    // we must account for all NOUN types.  If there is a non-char, that's an error
-  ASSERT(!((t|wt)&(SBT+XD+XZ+NUMERIC+BOX)),EVINHOMO);  // No conversions for these types
+  ASSERT(!((t|wt)&(XD+XZ+NUMERIC+BOX)),EVINHOMO);  // No conversions for these types
 #define CVCASECHAR(a,b) ((2*(C2T>>(a))+(C2T>>(b))))  // distinguish character cases - note last case is impossible (equal types)
   switch (CVCASECHAR(CTTZ(t),CTTZ(wt))){
   case CVCASECHAR(LITX, C2TX): R (C1fromC2(w, yv))?z:0;

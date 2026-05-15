@@ -19,7 +19,6 @@
 
 #if SY_64
 typedef long long          I;
-typedef long long          SB;
 typedef unsigned long long UI;
 typedef unsigned long long UIL;   /* for typecast 8 byte double */
 typedef long long          IL;
@@ -29,7 +28,6 @@ typedef long long          IL;
 
 #else
 typedef int                I;
-typedef int                SB;
 typedef unsigned int       UI;
 typedef unsigned long long UIL;
 typedef long long          IL;
@@ -393,11 +391,6 @@ struct AD {
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
 #define FAVV(x)         ( (volatile V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj volatile to avoid delayed fetch
 #define PAV(x)          ( (P*)((C*)(x)+AK(x)))  /* sparse                  */
-#define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
-#define SBAVn(n,x)        ((SB*)((C*)(x)+AKXR(n)))  // local symbol
-#define SBAV0(x)        ((SB*)((C*)(x)+AKXR(0)))  // local symbol atom
-#define SBAV1(x)        ((SB*)((C*)(x)+AKXR(1)))  // local symbol list
-#define SBUV4(x)        ((SBU*)((C*)(x)+AKXR(4)))  // symbol, nonvirtual rank 4
 #define SYMBAV0(x)       ((LX*)((C*)(x)+AKXR(0)))  // symbol-table (LX) values (always alliocated at rank 0)
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
 #define voidAVn(n,x)     ((void*)((C*)(x)+AKXR(n)))  // unknown, but rank is known
@@ -447,7 +440,7 @@ struct AD {
 #define RATSIZE sizeof(Q)
 // new types.  We could encode these as length+attributes, saving several bits, but since one-hot is good enough for now, we stay with it.
 // The best encoded form I found is
-// LEN1 LEN2 LEN4 CHAR LEN16/FL x SBT x   x C2T C4T     with the option of deleting C2T/C4T and turning on CHAR
+// LEN1 LEN2 LEN4 CHAR LEN16/FL x x x   x C2T C4T     with the option of deleting C2T/C4T and turning on CHAR
 // this allows clever encoding/decoding by keeping the length repetitive over byte-shifts
 #define INT1X 8
 #define INT1          ((I)1L<<INT1X)  // As the lowest set bit, 1-byte INT precision 5
@@ -473,10 +466,7 @@ struct AD {
 #define QP          ((I)1L<<QPX)  // As the lowest set bit, quad-precision floating-point precision 11
 #define QPSIZE sizeof(E)
 #define QPEXTTYPE 11
-// 14-15 free
-#define SBTX 16
-#define SBT             ((I)1L<<SBTX)       // SB symbol
-#define SBTSIZE sizeof(SB)
+// 14-16 free
 #define C2TX 17
 #define C2T             ((I)1L<<C2TX)       // C2 unicode (2-byte characters)
 #define C2TSIZE sizeof(US)
@@ -602,9 +592,9 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define ANY             -1L
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+INT2+INT4+SP+QP)
 #define EXACTNUMERIC    (B01+INT+XNUM+RAT+INT2+INT4)
-#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT+INT2+INT4+SP+QP+CONW)|SPARSE)  // AND must be >0  scaf why CONW?
+#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+INT2+INT4+SP+QP+CONW)|SPARSE)  // AND must be >0  scaf why CONW?
 #define JCHAR           (LIT+C2T+C4T)
-#define NOUN            (NUMERIC+JCHAR+BOX+SBT)
+#define NOUN            (NUMERIC+JCHAR+BOX)
 #define FUNC            (VERB+ADV+CONJ)
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)
@@ -639,7 +629,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 //
 // Note: arithmetic dyads on bytes have similar issues, because the 8-byte-at-a-time operations may execute outside the cell of the array.  We detect
 // those cases inside the atomic-dyad code in va2.c.
-#define TYPEVIPOK       (FL+CMPX+SBT+(SZI==SZD?INT:0))  // sparse is never inplaceable
+#define TYPEVIPOK       (FL+CMPX+(SZI==SZD?INT:0))  // sparse is never inplaceable
 #define TYPESEQ(x,y)    ((x)==(y))  // types are equal
 #define TYPESXOR(x,y)    ((x)^(y))  // types are not equal using full-word logical
 #define TYPESNE(x,y)    ((x)!=(y))  // types are not equal
@@ -652,7 +642,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 // Utility: keep the lowest 1 only
 #define LOWESTBIT(x)    ((x)&-(x))
 
-#define POSIFHOMO(s,t)  ( -(((s)^(t))&(BOX|SBT|JCHAR|MARK)) & -(((s)^(t))&(BOX|SBT|NUMERIC|MARK)) )
+#define POSIFHOMO(s,t)  ( -(((s)^(t))&(BOX|JCHAR|MARK)) & -(((s)^(t))&(BOX|NUMERIC|MARK)) )
 #define NEGIFHOMO(s,t)  ( ~POSIFHOMO(s,t) )
 #define HOMO(s,t)       ( POSIFHOMO(s,t)>=0 )
 #define HOMONE(s,t)     HOMO(s,t)
@@ -734,7 +724,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFSENTENCEWORD      ((I)1<<AFSENTENCEWORDX)   // this block comes from an executing sentence and is protected by it
 #define AFANCHOREDX     9     // matches INT2X
 #define AFANCHORED      ((I)1<<AFANCHOREDX)   // this block must not be aliased (it is needed inplace)
-#define AFUNINCORPABLEX SBTX      // matches SBTX 16
+#define AFUNINCORPABLEX 16      // 16
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes and is probably on the C stack rather than 
                                 // allocated memory.  It must never become part of a named value (except that it can be assigned to the entirety of local x and y).  AFVIRTUAL must also be set.  If this block is
@@ -1167,38 +1157,14 @@ typedef struct{
  C unused[1];           /* padding                                         */
 } PM0;
 
-
-// ***************************** red/black balanced trees ****************************
-/* each unique symbol has a row in JT(jt,sbu)                                 */
-/* a row is interpreted per SBU                                            */
-/* for best results make sizeof(SBU) a multiple of sizeof(I)               */
- 
-typedef struct{
- I  i;                  /* index into sbs                                  */
- I  n;                  /* length                                          */
- UI h;                  /* hash value                                      */
- I  color;              /* binary tree: color                              */
- I  parent;             /* binary tree: index of parent                    */
- I  left;               /* binary tree: index of left  child               */
- I  right;              /* binary tree: index of right child               */
- I  order;              /* order number                                    */
- I  down;               /* predecessor in ordering                         */
- I  up;                 /* successor   in ordering                         */
- I  flag;               /* bit flags                                       */
-} SBU;
-
-#define SBC2  1         /* 1 iff 2-byte character                          */
-#define SBC4  2         /* 2 iff 4-byte character                          */
-
 // Info for calling an atomic verb
 typedef struct {VF f;I cv;} VA2;  // for dyads
 typedef struct {VA1F f;I cv;} VA1;  // for monads
 typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
 
 typedef struct {I nprec; VARPS actrtns[];} VARPSA;
-typedef struct {VA2 p2[17];VARPSA *rps;} VA;  // 9 main types, CMPX, XNUM, RAT, SBT, SP, QP, INT2, INT4
+typedef struct {VA2 p2[17];VARPSA *rps;} VA;  // 9 main types (B01/INT/FL), CMPX, XNUM, RAT, x, SP, QP, INT2, INT4  scaf! close up & simplify order
 typedef struct {VA1 p1[10];} UA;  // B01, INT, FL, CMPX, XNUM, RAT, SP, QP, INT2, INT4
-
 // ********************** layout of a FUNC (starts at AS[0]) ************************************
 typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.

@@ -394,17 +394,13 @@ typedef struct JSTstruct {
 
 // Cacheline 5: User symbols, also used for front-end locks
  C _cl5[0];
- A sbu;              /* SB data for each unique symbol                  */
- A sbhash;              // hashtable for symbols
- A sbstrings;          // string data for symbols
- S sblock;           // r/w lock for sbu
  S felock;           // r/w lock for host functions, accessed only at start/end of immex
  // rest of cacheline used only in exceptional paths
-// 4 bytes free
+// 6 bytes free
  I peekdata;         /* our window into the interpreter                 */
  A iep;              /* immediate execution phrase                      */
  A pma;              /* perf. monitor: data area                        */
- I filler5[1];
+ I filler5[4];
 // end of cacheline 5
 
 // Cacheline 6: debug, which is written so seldom that it can have read-only data

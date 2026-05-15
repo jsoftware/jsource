@@ -525,8 +525,8 @@ F1(jtope){F12IP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // So, we don't check compatibility for empty boxes.
  // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is contiguous for each cell and we just copy into the result area
  if(likely(t!=0)){
-  // no mixed nonempties: t is homo num/char or all boxed or all symbol.
-  ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVINHOMO)
+  // no mixed nonempties: t is homo num/char or all boxed.
+  ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)),EVINHOMO)
   ASSERT(((t^SPARSE)&SPARSE+XNUM+RAT)<=0,EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
  }
@@ -652,7 +652,7 @@ F1(jtraze){F12IP;A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
   // So, we don't check compatibility for empty boxes.
   if(t){  // there was a nonempty
-   ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT)),EVDOMAIN)  // no mixed nonempties: t is homo num/char or all boxed or all symbol
+   ASSERT(0<=(POSIFHOMO(t,0)&-(t^BOX)),EVDOMAIN)  // no mixed nonempties: t is homo num/char or all boxed
    te=t;  // te holds the type to use
   }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given; otherwise keep te as combined empty types
   t=te&-te; NOUNROLL while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type among all the set bits in either (all empties) or (all nonempties) or (fill)

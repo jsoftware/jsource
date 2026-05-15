@@ -54,7 +54,6 @@ k (<\.   -: < bsd) ,a   [ k=:_4+?11
 k (]\.   -: ] bsd) a    [ k=:_4+?11
 
 NB. symbol
-a=:sdot0{~32+?11 5$95
 k (<\.   -: < bsd) a    [ k=:_4+?11
 k (<\.   -: < bsd) ,a   [ k=:_4+?11
 k (]\.   -: ] bsd) a    [ k=:_4+?11
@@ -108,8 +107,6 @@ testa=: 1 : 0
  1
 )
 
-<. testa&> t , < sdot0{~ (QKTEST{100 50) ?@$ #sdot0
->. testa&> t , < sdot0{~ (QKTEST{100 50) ?@$ #sdot0
 +  testa&> t , < j./ 2 100 ?@$ 1000
 *  testa&> t , < j./ 2 100 ?@$ 1000
 +. testa&> 0 1; 100 ?@$ 1000

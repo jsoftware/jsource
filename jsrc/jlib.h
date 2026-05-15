@@ -76,7 +76,6 @@ typedef struct AREP_RECORD {
 #define SP              ((I)1L<<12)          //    single-precision floating-point precision 10
 #define QP              ((I)1L<<13)          // E  quad-precision floating-point precision 11
 #define PYX             ((I)1L<<30) // if BOX set, this flag is set if the value is a pyx.  A pyx is an atomic box (which may be an element of an array).
-#define SBT             ((I)1L<<16)          // SB symbol
 #define C2T             ((I)1L<<17)          // C2 unicode (2-byte characters)
 #define C4T             ((I)1L<<18)          // C4 unicode (4-byte characters)
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */

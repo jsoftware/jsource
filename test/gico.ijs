@@ -159,34 +159,6 @@ a-:(i:~a){a
 20 mtchontally a =: adot2 {~ (5 + ? 10 10 10) ?@$ #adot2
 20 mtchonreshape a =: adot2 {~ (5 + ? 10 10 10) ?@$ #adot2
 
-NB. symbol
-a=:sdot0{~32+?10 5$95
-a-:(i:~a){a
-(i:~a)-:i:~<"_1 a
-0=a i:0{a
-(#a)=a i:4 5 6 7 8
-(b{({:(a=s:@<"0 'a')#i.#a),#a) -: (a=:(>:?40)$s:@<"0 'axy') i: (b=:?30$2){s:@<"0 'ab'
-(1|.a) -: (a i:1|.a){a=:sdot0{~?117 1$#sdot0
-(1|.a) -: (a i:1|.a){a=:sdot0{~?117 2$#sdot0
-(1|.a) -: (a i:1|.a){a=:sdot0{~?117 3$#sdot0
-(1|.a) -: (a i:1|.a){a=:sdot0{~?117 4$#sdot0
-(1|.a) -: (a i:1|.a){a=:sdot0{~?117 5$#sdot0
-(1|.a) -: (a i:1|.a){a=:sdot0{~?117 6$#sdot0
-(1|.a) -: (a i:1|.a){a=:sdot0{~?117 7$#sdot0
-(1|.a) -: (a i:1|.a){a=:sdot0{~?117 8$#sdot0
-
-(1|.a) -: (a i: 1|.a){a=:sdot0{~?23000 2$#sdot0
-(1|.a) -: (a i: 1|.a){a=:sdot0{~?12000 4$#sdot0
-(1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:sdot0{~?7 23000 2$#sdot0
-(1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:sdot0{~?7 12000 4$#sdot0
-(#a)=a i: (}.$a)$s: 'dlfdlgjd '  NB. shouldn't match
-20 mtchontally a =: sdot0 {~ (5 + ? 100) ?@$ #sdot0
-20 mtchonreshape a =: sdot0 {~ (5 + ? 100) ?@$ #sdot0
-20 mtchontally a =: sdot0 {~ (5 + ? 20 20) ?@$ #sdot0
-20 mtchonreshape a =: sdot0 {~ (5 + ? 20 20) ?@$ #sdot0
-20 mtchontally a =: sdot0 {~ (5 + ? 10 10 10) ?@$ #sdot0
-20 mtchonreshape a =: sdot0 {~ (5 + ? 10 10 10) ?@$ #sdot0
-
 NB. integer
 a=:?10 5$100
 a-:(i:~a){a
@@ -287,7 +259,6 @@ a-:(i:!.0~a){a
 (b{({:(a=x)#i.#a),#a) -: (a=:(>:?40)$x,<'lieben') i: (b=:?50$2){(x=:<4;'aj95'),<1234
 (b{({:(a=x)#i.#a),#a) -: (a=:(>:?40)$x,<u:'lieben') i: (b=:?50$2){(x=:<4;u:'aj95'),<1234
 (b{({:(a=x)#i.#a),#a) -: (a=:(>:?40)$x,<10&u:'lieben') i: (b=:?50$2){(x=:<4;10&u:'aj95'),<1234
-(b{({:(a=x)#i.#a),#a) -: (a=:(>:?40)$x,<s:@<"0 'lieben') i: (b=:?50$2){(x=:<4;s:@<"0 'aj95'),<1234
 ((i:   ~x){x) -: x=:;:'i:~(?20$3){3 4;([&.o.3 4);[&.(0j1&*)3 4'
 ((i:!.0~x){x) -: x=:;:'i:~(?20$3){3 4;([&.o.3 4);[&.(0j1&*)3 4'
 (20$<:#x) -: i:   ~x=:(?20$3){'';($0);(0$<'')
@@ -365,16 +336,11 @@ test 1000
 2 2 2 -: (i.2 3) i: etx 3 4$10&u:'a'
 2 2 2 -: (i.2 3) i: etx 3 4$(10&u:&.>) ;:'Cogito, erogeneous'
 3 3   -: (2 3 4$'x') i:"2 etx 10&u:'kakistocracy' 
-2 2 2 -: (i.2 3) i: etx 3 4$s:@<"0 'a'
-2 2 2 -: (i.2 3) i: etx 3 4$s:@<"0&.> ;:'Cogito, erogeneous'
-2 2 2 -: (i.2 3) i: etx 3 4$<"0@s: ;:'Cogito, erogeneous'
-3 3   -: (2 3 4$s:@<"0 'x') i:"2 etx s:@<"0 'kakistocracy' 
 
 2     -: (i.2 3) i: etx 4
 3 3   -: (2 3 4 6$'x') i:"3 etx 'lieben'
 3 3   -: (2 3 4 6$'x') i:"3 etx u:'lieben'
 3 3   -: (2 3 4 6$'x') i:"3 etx 10&u:'lieben'
-3 3   -: (2 3 4 6$s:@<"0 'x') i:"3 etx s:@<"0 'lieben'
 
 
 NB. x i:y for strings x and y -------------------------------------------
@@ -403,16 +369,6 @@ f =: i: -: ciof
 ((?3000$(#adot2)){adot2) f (?4 80$(#adot2)){adot2
 ((?3000$(#adot2)){adot2) f (? 300$(#adot2)){adot2
 
-
-NB. x i:y for symbol x and y -------------------------------------------
-
-map  =: 3 : '(i.#y) (sdot0 i.y)}(#sdot0)$#y'
-ciof =: sdot0&i.@] { map@[
-
-f =: i: -: ciof
-
-((?3000$(#sdot0)){sdot0) f (?4 80$(#sdot0)){sdot0
-((?3000$(#sdot0)){sdot0) f (? 300$(#sdot0)){sdot0
 
 NB. x i:y on boxed numerics ---------------------------------------------
 
@@ -459,7 +415,6 @@ g =: 4 : 'x i: y'
 (i.3 5) (g"1 -: i:"1) 3 7$'a'
 (i.3 5) (g"1 -: i:"1) 3 7$u:'a'
 (i.3 5) (g"1 -: i:"1) 3 7$10&u:'a'
-(i.3 5) (g"1 -: i:"1) 3 7$s:@<"0 'a'
 (i.3 5) (g"1 -: i:"1) 3 7$<5
 'abc'   (g"1 -: i:"1) 7 5$3
 'abc'   (g"1 -: i:"1) 7 5$<3
@@ -539,30 +494,6 @@ x (g"2  -: i:"2 ) y=:adot2{~?(14,   c)$#adot2
 x (g"2  -: i:"2 ) x
 x (g"2  -: i:"2 ) y=:adot2{~?(117 3,c)$#adot2
 x (g"_1 -: i:"_1) y=:adot2{~?(117,  c)$#adot2
-
-NB. symbol
-(i.6)       -: x i:"1 0 (<0 1)|:x=:sdot0{~6 16$32+96?96
-(15-i.6)    -: x i:"1 0 (<0 1)|:|."1 x
-(6$0)       -: x i:"1 0 {."1 x
-(6$15)      -: x i:"1 0 {:"1 x
-(($x)$i.16) -: x i:"1 x
-(x=:0=5|?20 19$2) (g"1 -: i:"1) 1
-
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:3
-x (g"2  -: i:"2 ) y=:sdot0{~?(14,   c)$#sdot0 
-x (g"2  -: i:"2 ) x
-x (g"2  -: i:"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i:"_1) y=:sdot0{~?(117,  c)$#sdot0
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:4
-x (g"2  -: i:"2 ) y=:sdot0{~?(14,   c)$#sdot0 
-x (g"2  -: i:"2 ) x
-x (g"2  -: i:"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i:"_1) y=:sdot0{~?(117,  c)$#sdot0
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:11
-x (g"2  -: i:"2 ) y=:sdot0{~?(14,   c)$#sdot0 
-x (g"2  -: i:"2 ) x
-x (g"2  -: i:"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i:"_1) y=:sdot0{~?(117,  c)$#sdot0
 
 x=:p+?117 7$q [ p=:0 [ q=:14
 x (g"1  -: i:"1 ) y=:p+?q
@@ -711,30 +642,6 @@ x (g"2  -: i:!.0"2 ) y=:adot2{~?(14,   c)$#adot2
 x (g"2  -: i:!.0"2 ) x
 x (g"2  -: i:!.0"2 ) y=:adot2{~?(117 3,c)$#adot2
 x (g"_1 -: i:!.0"_1) y=:adot2{~?(117,  c)$#adot2
-
-NB. symbol
-(i.6)       -: x i:!.0"1 0 (<0 1)|:x=:sdot0{~6 16$32+96?96
-(15-i.6)    -: x i:!.0"1 0 (<0 1)|:|."1 x
-(6$0)       -: x i:!.0"1 0 {."1 x
-(6$15)      -: x i:!.0"1 0 {:"1 x
-(($x)$i.16) -: x i:!.0"1 x
-(x=:0=5|?20 19$2) (g"1 -: i:!.0"1) 1
-
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:3
-x (g"2  -: i:!.0"2 ) y=:sdot0{~?(14,   c)$#sdot0 
-x (g"2  -: i:!.0"2 ) x
-x (g"2  -: i:!.0"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i:!.0"_1) y=:sdot0{~?(117,  c)$#sdot0
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:4
-x (g"2  -: i:!.0"2 ) y=:sdot0{~?(14,   c)$#sdot0 
-x (g"2  -: i:!.0"2 ) x
-x (g"2  -: i:!.0"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i:!.0"_1) y=:sdot0{~?(117,  c)$#sdot0
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:11
-x (g"2  -: i:!.0"2 ) y=:sdot0{~?(14,   c)$#sdot0 
-x (g"2  -: i:!.0"2 ) x
-x (g"2  -: i:!.0"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i:!.0"_1) y=:sdot0{~?(117,  c)$#sdot0
 
 x=:p+?117 7$q [ p=:0 [ q=:14
 x (g"1  -: i:!.0"1 ) y=:p+?q

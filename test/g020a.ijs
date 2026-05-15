@@ -180,27 +180,11 @@ x > f y
 
 NB. SB > SB ---------------------------------------------------------------
 
-1 0 0 1 -: (s:' a b c d') > (s:' A b c D')
-1 0 0 1 -: (s:' a b c d') > (s:' Aa ba ca Da')
-1 1 1 1 -: (s:' a bb ccc dddd') > (s:' Aa baa cacc Daddd')
-1 0 0 1 -: (s:' a bb ccc dddd') > (s:' Aa bbb cccc Daddd')
 
-0 0 0 0 -:  (s:' A b c D') > (s:' a b c d')
-0 1 1 0 -:  (s:' Aa ba ca Da') > (s:' a b c d')
-0 0 0 0 -:  (s:' Aa baa cacc Daddd') > (s:' a bb ccc dddd')
-0 1 1 0 -:  (s:' Aa bbb cccc Daddd') > (s:' a bb ccc dddd')
 
-((<:#sdot0)$0) -: (}:sdot0) > (}.sdot0)
-((<:#sdot0)#1) -: (}.sdot0) > (}:sdot0)
 
-(((-:@#sdot0)#1),((-:@#sdot0)#0)) -: (|.sdot0) > (sdot0)
-(((-:@#sdot0)#0),((-:@#sdot0)#1)) -: (sdot0) > (|.sdot0)
 
-((2 4, 8%~#sdot0)$0) -: ((2 4, 8%~#sdot0)$ }:sdot0) > ((2 4, 8%~#sdot0)$ }.sdot0)
-((2 4, 8%~#sdot0)$1) -: ((2 4, 8%~#sdot0)$ }.sdot0) > ((2 4, 8%~#sdot0)$ }:sdot0)
 
-(((4, 8%~#sdot0)$1),:((4, 8%~#sdot0)$0)) -: ((2 4, 8%~#sdot0)$ |.sdot0) > ((2 4, 8%~#sdot0)$ sdot0)
-(((4, 8%~#sdot0)$0),:((4, 8%~#sdot0)$1)) -: ((2 4, 8%~#sdot0)$ sdot0) > ((2 4, 8%~#sdot0)$ |.sdot0)
 
 randfini''
 

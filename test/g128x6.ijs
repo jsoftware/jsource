@@ -398,7 +398,6 @@ f=: 128!:6
 'domain error' -: f etx 2 3j4
 'domain error' -: f etx 2 3r4
 'domain error' -: f etx 2 3;4
-'domain error' -: f etx s:@<"0 'abc'
 'domain error' -: f etx u: 'abc'
 'domain error' -: f etx 10 u: 'abc'
 
@@ -420,7 +419,6 @@ f=: 128!:6
 'domain error' -: '34'          f etx 'xyz'
 'domain error' -: (u:'34')      f etx 'xyz'
 'domain error' -: (10&u:'34')   f etx 'xyz'
-'domain error' -: (s:@<"0 '34') f etx 'xyz'
 'domain error' -: 3.4           f etx 'xyz'
 'domain error' -: 3j4           f etx 'xyz'
 'domain error' -: (<'abc')      f etx 'xyz'

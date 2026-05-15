@@ -47,7 +47,6 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
  R 1;
 }    /* a I. w where a is a list of small range integers */
 
-#define SBCOMP(x,y) (SBGT((x),(y))-SBLT((x),(y)))
 #define COMPVLOOP(T,c)       \
  {T*u=(T*)uu,*v=(T*)vv; DQ(c, if(*u!=*v){cc=*u<*v?-1:1; break;} ++u; ++v;);}
 #define COMPVLOOF(T,c,COMP)  \
@@ -99,7 +98,8 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
 // codes produced by multiple combinations, such as LIT,B01 and B01,FL which both produce
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
 #define CVCASE(a,b)     (8*((0xde8c>>(a))&7)+((0xde8c>>(b))&7))   // Must distinguish 0 2 3 4 6 7 9 10 13->4 3 1 0 2 5 7 7 6  11011110 10001100
-#define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases and SBT
+// obsolete #define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases LIT=2 C2T=1 C4T=0
+#define CVCASECHAR(a,b) (((a)>>(C2TX-2))+((b)>>C2TX)&0xf)  // distinguish character cases LIT=2 C2T=1 C4T=0
 
 // parallel implementations of I. in assembly
 // currently not supported on windows because fsgsbase isn't enabled there.  But once it is: the windows abi doc says you have to always have a valid stack pointer and we clobber it; probably SEH related stuff or something?  Do we have to actually do that?
@@ -207,7 +207,6 @@ DF2(jticap2){F12IP;A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r
  case C4TX:  COMPVLOOP(C4,c);           break;
  case INT2X: COMPVLOOP(I2,c);           break;
  case INT4X: COMPVLOOP(I4,c);           break;
- case SBTX:  COMPVLOOF(SB,c, SBCOMP  ); break;
  case XNUMX: COMPVLOOF(X, c, xcompare); break;
  case RATX:  COMPVLOOF(Q, c, qcompare); break;
  case BOXX:  
@@ -215,18 +214,17 @@ DF2(jticap2){F12IP;A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r
   DO(c, if(cc=compare(C(av[i]),C(av[i+c*(n-1)])))break;);
  }
  ge=cc; gt=-ge;
- if(unlikely(t&JCHAR+SBT)){
-  switch(CVCASECHAR(CTTZ(at),CTTZ(wt))){
-  case CVCASECHAR(LITX, C2TX): BSLOOP(UC,US); break;
-  case CVCASECHAR(LITX, C4TX): BSLOOP(UC,C4); break;
-  case CVCASECHAR(LITX, LITX): BSLOOP(UC,UC); break;
-  case CVCASECHAR(C2TX, C2TX): BSLOOP(US,US); break;
-  case CVCASECHAR(C2TX, C4TX): BSLOOP(US,C4); break;
-  case CVCASECHAR(C2TX, LITX): BSLOOP(US,UC); break;
-  case CVCASECHAR(C4TX, C2TX): BSLOOP(C4,US); break;
-  case CVCASECHAR(C4TX, C4TX): BSLOOP(C4,C4); break;
-  case CVCASECHAR(C4TX, LITX): BSLOOP(C4,UC); break;
-  case CVCASECHAR(SBTX, SBTX): BSLOOF(SB,SB, SBCOMP); break;
+ if(unlikely(t&JCHAR)){
+  switch(CVCASECHAR(at,wt)){
+  case CVCASECHAR(LIT, C2T): BSLOOP(UC,US); break;
+  case CVCASECHAR(LIT, C4T): BSLOOP(UC,C4); break;
+  case CVCASECHAR(LIT, LIT): BSLOOP(UC,UC); break;
+  case CVCASECHAR(C2T, C2T): BSLOOP(US,US); break;
+  case CVCASECHAR(C2T, C4T): BSLOOP(US,C4); break;
+  case CVCASECHAR(C2T, LIT): BSLOOP(US,UC); break;
+  case CVCASECHAR(C4T, C2T): BSLOOP(C4,US); break;
+  case CVCASECHAR(C4T, C4T): BSLOOP(C4,C4); break;
+  case CVCASECHAR(C4T, LIT): BSLOOP(C4,UC); break;
   default:   ASSERT(0,EVNONCE);
   }
  }else if(unlikely(t&BOX)){

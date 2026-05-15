@@ -50,7 +50,6 @@ NB. Use smaller arrays if doing full memory audit
 arglen =: 100 2 {~ WINMEM2 +. 16b30 *@:(17 b.) 9!:56'memaudit'
 NB. v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
 v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20<.arglen),((<"0) arglen ?@$ 1e6),((<"0) 100000 * (20 <. arglen) ?@$ 0),((<"0) (,-) 0.999999999999999 1. 1.00000000000001)
-NB. vv0 =: ((<"0) sdot0{~ arglen ?@$ #sdot0)
 NB. vv1 =: ((<"0) adot1{~ arglen ?@$ #adot1)
 NB. vv2 =: ((<"0) adot2{~ arglen ?@$ #adot2)
 

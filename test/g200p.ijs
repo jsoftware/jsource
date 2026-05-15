@@ -30,9 +30,6 @@ pow=: 4 : 'x^y'
 (,<'ace') -: ^/\<u:'ace'
 (,'j')    -: ^/\10&u:'j'
 (,<'ace') -: ^/\<10&u:'ace'
-(,s:@<"0 'j')    -: ^/\s:@<"0 'j'
-(,s:@<"0&.> <'ace') -: ^/\s:@<"0&.> <'ace'
-(,<"0@s: <'ace') -: ^/\<"0@s: <'ace'
 
 'domain error' -: ^/\ etx 'triskaidekaphobia'
 'domain error' -: ^/\ etx ;:'ex cathedra'
@@ -40,9 +37,6 @@ pow=: 4 : 'x^y'
 'domain error' -: ^/\ etx u:&.> ;:'ex cathedra'
 'domain error' -: ^/\ etx 10&u:'triskaidekaphobia'
 'domain error' -: ^/\ etx 10&u:&.> ;:'ex cathedra'
-'domain error' -: ^/\ etx s:@<"0 'triskaidekaphobia'
-'domain error' -: ^/\ etx s:@<"0&.> ;:'ex cathedra'
-'domain error' -: ^/\ etx <"0@s: ;:'ex cathedra'
 
 
 

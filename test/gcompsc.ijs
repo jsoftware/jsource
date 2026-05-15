@@ -30,14 +30,11 @@ data=: 3 : 0
  xb=:               10000?@$2   [ yb=:               10000?@$2
  xi=:        _5e5 + 10000?@$1e6 [ yi=:        _5e5 + 10000?@$1e6
  xd=: (*   [: >: 2e_13 * _0.5 + $ ?@$ 0:) 0.01 * _5e5 + 10000?@$1e6 [ yd=: (*   [: >: 2e_13 * _0.5 + $ ?@$ 0:) 0.01 * _5e5 + 10000?@$1e6  NB. Have some overlap if tolerant
- xs=: s: ' ',": 1000?@$4000    [ ys=: s: ' ',":1000?@$4000
  ai=:        _5e8 + ?1e9
  ad=: 0.01 * _5e8 + ?1e9
- as=: {. s: ":?4000
  zb=: 0$0
  zi=: 0$2
  zd=: 0$2.3
- zs=: 0$as
  xb1=:(QKTEST{1001 91)?@$2 [ yb1=:(QKTEST{1001 91)?@$2
  xb2=:(QKTEST{1002 92)?@$2 [ yb2=:(QKTEST{1002 92)?@$2
  xb3=:(QKTEST{1003 93)?@$2 [ yb3=:(QKTEST{1003 93)?@$2
@@ -61,7 +58,6 @@ testvv=: 2 : 0  NB. vector vector
  assert. (u xd v yb) -: xd (u f.)@:(v f.) yb
  assert. (u xd v yi) -: xd (u f.)@:(v f.) yi
  assert. (u xd v yd) -: xd (u f.)@:(v f.) yd
- assert. (u xs v ys) -: xs (u f.)@:(v f.) ys
  f=: u ftab v
  assert. (u xb v yb) -: xb f      yb
  assert. (u xb v yi) -: xb f      yi
@@ -72,7 +68,6 @@ testvv=: 2 : 0  NB. vector vector
  assert. (u xd v yb) -: xd f      yb
  assert. (u xd v yi) -: xd f      yi
  assert. (u xd v yd) -: xd f      yd
- assert. (u xs v ys) -: xs f      ys
  1
 )
 
@@ -98,7 +93,6 @@ testsv=: 2 : 0  NB. scalar vector
  assert. (u ad v yb) -: ad (u f.)@:(v f.) yb
  assert. (u ad v yi) -: ad (u f.)@:(v f.) yi
  assert. (u ad v yd) -: ad (u f.)@:(v f.) yd
- assert. (u as v ys) -: as (u f.)@:(v f.) ys
  f=: u ftab v
  assert. (u 0  v yb) -: 0  f      yb
  assert. (u 0  v yi) -: 0  f      yi
@@ -112,7 +106,6 @@ testsv=: 2 : 0  NB. scalar vector
  assert. (u ad v yb) -: ad f      yb
  assert. (u ad v yi) -: ad f      yi
  assert. (u ad v yd) -: ad f      yd
- assert. (u as v ys) -: as f      ys
  1
 )
 
@@ -132,7 +125,6 @@ testvs=: 2 : 0  NB. vector scalar
  assert. (u xd v 1 ) -: xd (u f.)@:(v f.) 1
  assert. (u xd v ai) -: xd (u f.)@:(v f.) ai
  assert. (u xd v ad) -: xd (u f.)@:(v f.) ad
- assert. (u xs v as) -: xs (u f.)@:(v f.) as
  f=: u ftab v
  assert. (u xb v 0 ) -: xb f      0
  assert. (u xb v 1 ) -: xb f      1
@@ -146,7 +138,6 @@ testvs=: 2 : 0  NB. vector scalar
  assert. (u xd v 1 ) -: xd f      1
  assert. (u xd v ai) -: xd f      ai
  assert. (u xd v ad) -: xd f      ad
- assert. (u xs v as) -: xs f      as
  1
 )
 
@@ -168,7 +159,6 @@ testss=: 2 : 0  NB. scalar scalar
  assert. (u ad v 1 ) -: ad (u f.)@:(v f.) 1
  assert. (u ad v ai) -: ad (u f.)@:(v f.) ai
  assert. (u ad v ad) -: ad (u f.)@:(v f.) ad
- assert. (u as v as) -: as (u f.)@:(v f.) as
  f=: u ftab v
  assert. (u 0  v 0 ) -: 0  f      0
  assert. (u 0  v 1 ) -: 0  f      1
@@ -186,7 +176,6 @@ testss=: 2 : 0  NB. scalar scalar
  assert. (u ad v 1 ) -: ad f      1
  assert. (u ad v ai) -: ad f      ai
  assert. (u ad v ad) -: ad f      ad
- assert. (u as v as) -: as f      as
  1
 )
 
@@ -309,7 +298,6 @@ testsp=: 2 : 0
  assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yb
  assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yi
  assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yd
- assert. (SPTOLER >./ - <./) ".expression [ xx=. xs [ yy=. ys
  f=: u ftab v
  expression=:  4#,:'sp ''xx f yy'' [ xx=. ,~xx [ yy=. ,~yy'
  assert. (SPTOLER >./ - <./) ".expression [ xx=. xb [ yy=. yb
@@ -321,7 +309,6 @@ testsp=: 2 : 0
  assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yb
  assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yi
  assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yd
- assert. (SPTOLER >./ - <./) ".expression [ xx=. xs [ yy=. ys
  1
 )
 

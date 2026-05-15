@@ -82,11 +82,6 @@ x test y [ x=: (QKTEST{::811 0;81 0)$a: [ y=: (QKTEST{::947 0;47 0)$a:
 y test y
 
 NB. symbol
-a=: s:@<"0&.> ;:'chthonic kakistocracy kleptocracy eleemosynary amanuensis paronomasiac'
-a=: <"0@s: ;:'chthonic kakistocracy kleptocracy eleemosynary amanuensis paronomasiac'
-a=: a,s:@<"0&.> ;:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
-a=: a,<"0@s: ' onomatopoeia paraclete parousia paronomasiac parousia paraclete onomatopoeia paraclete'
-a=: a,<"0@s: ;:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
 a=: a,(<"0 ] 20 ?@$ 100)
 x test y [ x=: a{~ (QKTEST{::811 2;81 2) ?@$ #a [ y=: a{~ (QKTEST{::947 2;947 2) ?@$#a
 y test y

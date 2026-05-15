@@ -259,7 +259,6 @@ t=. (1;key;iv;mode) 128!:7 s
 'domain error' -: '34'          f etx 'xyz'
 'domain error' -: (u:'34')      f etx 'xyz'
 'domain error' -: (10&u:'34')   f etx 'xyz'
-'domain error' -: (s:@<"0 '34') f etx 'xyz'
 'domain error' -: 3.4           f etx 'xyz'
 'domain error' -: 3j4           f etx 'xyz'
 'length error' -: (<'abc')      f etx 'xyz'

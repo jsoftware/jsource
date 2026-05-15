@@ -18,7 +18,6 @@ f=: 3 : ',/(y,2 3)$10&u:''x'''
 y=: timer 'f ',"1 ": ,. x=: 2^8+i.12
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
-f=: 3 : ',/(y,2 3)$s:@<"0 ''x'''
 y=: timer 'f ',"1 ": ,. x=: 2^8+i.12
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
@@ -34,7 +33,6 @@ f=: 3 : ',./(y,5 3)$10&u:''a'''
 y=: timer 'f ',"1 ":,. x=: 2^8+i.12
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
-f=: 3 : ',./(y,5 3)$s:@<"0 ''a'''
 y=: timer 'f ',"1 ":,. x=: 2^8+i.12
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
@@ -48,7 +46,6 @@ t=: (timer ',./x'),timer '|:x' [ x=: adot1{~7001 131?@$#adot1
 t=: (timer ',./x'),timer '|:x' [ x=: adot2{~7001 131?@$#adot2
 1: THRESHOLD +. (1-threshold) > s=: (|@-/ % >./) t
 
-t=: (timer ',./x'),timer '|:x' [ x=: sdot0{~7001 131?@$#sdot0
 1: THRESHOLD +. (1-threshold) > s=: (|@-/ % >./) t
 
 f=: 3 : ',.&.>/y$(5 3$''a'');5 2$''b'''
@@ -63,7 +60,6 @@ f=: 3 : ',.&.>/y$(5 3$10&u:''a'');5 2$10&u:''b'''
 y=: timer 'f ',"1 ":,. x=: 2^8+i.12
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
-f=: 3 : ',.&.>/y$(5 3$s:@<"0 ''a'');5 2$s:@<"0 ''b'''
 y=: timer 'f ',"1 ":,. x=: 2^8+i.12
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
@@ -79,7 +75,6 @@ f=: 3 : ';/(y,4 3)$10&u:''a'''
 y=: timer 'f ',"1 ":,. x=: 2^8+i.QKTEST{12 8
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 
-f=: 3 : ';/(y,4 3)$s:@<"0 ''a'''
 y=: timer 'f ',"1 ":,. x=: 2^8+i.QKTEST{12 8
 THRESHOLD +. threshold < y rsq y (] +/ .* %.) x^/0 1
 

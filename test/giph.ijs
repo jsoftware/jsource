@@ -52,9 +52,6 @@ h=: 4 : 0
 2 3 g adot2
 37  g adot2
 
-''  g sdot0
-2 3 g sdot0
-37  g sdot0
 
 ''  g u: (QKTEST{1000 200) ?@# 256
 2 3 g u: (QKTEST{1000 200) ?@# 256
@@ -97,12 +94,7 @@ h=: 4 : 0
 ''  g (10&u:&.>) ;:'Cogito, ergo sum. 4 20 and 10 years ago'
 1 2 g (10&u:&.>) ;:'Cogito, ergo sum. 4 20 and 10 years ago'
 
-''  g s:@<"0&.> ;:'Cogito, ergo sum. 4 20 and 10 years ago'
-''  g <"0@s: ;:'Cogito, ergo sum. 4 20 and 10 years ago'
-1 2 g s:@<"0&.> ;:'Cogito, ergo sum. 4 20 and 10 years ago'
-1 2 g <"0@s: ;:'Cogito, ergo sum. 4 20 and 10 years ago'
 
-2 3 g s: ":&.> 20 ?@$1000
 
 
 ''  g      1000 ?@$ m=: 1e1

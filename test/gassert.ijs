@@ -31,7 +31,6 @@ f=: 3 : 0
 'assertion failure' -: f etx 1 2j3
 'assertion failure' -: f etx 1 2r3
 'assertion failure' -: f etx 1 233x
-'assertion failure' -: f etx s: ' 1 2 3'
 
 s=: 1 (5!:7) <'f'
 (2{.>s{~<0;1) -: 25 2

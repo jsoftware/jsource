@@ -568,15 +568,15 @@ static VARPSA rpstymes = {RATX+1 , {
 {(VARPSF)tymesinsO,VCVTIP+VD},{(VARPSF)tymespfxO,VCVTIP+VD},{(VARPSF)tymessfxO,VCVTIP+VD},  // integer-overflow routines
 }};
 
-static VARPSA rpsmin = {SBTX+1 , {
-{(VARPSF)andinsB,VCVTIP+VB}, {0}, {(VARPSF)mininsI,VCVTIP+VI}, {(VARPSF)mininsD,VCVTIP+VD}, {(VARPSF)mininsD,VCVTIP+VD+VDD}, {0}, {(VARPSF)mininsX,VCVTIP+VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)mininsS,VCVTIP+VSB},
-{(VARPSF)andpfxB,VCVTIP+VB}, {0}, {(VARPSF)minpfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)minpfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)minpfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)minpfxX,VCVTIP+VX}, {(VARPSF)minpfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minpfxS,VCVTIP+VSB},
-{(VARPSF)andsfxB,VCVTIP+VB}, {0}, {(VARPSF)minsfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)minsfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)minsfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)minsfxX,VCVTIP+VX}, {(VARPSF)minsfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minsfxS,VCVTIP+VSB},
+static VARPSA rpsmin = {RATX+1 , {
+{(VARPSF)andinsB,VCVTIP+VB}, {0}, {(VARPSF)mininsI,VCVTIP+VI}, {(VARPSF)mininsD,VCVTIP+VD}, {(VARPSF)mininsD,VCVTIP+VD+VDD}, {0}, {(VARPSF)mininsX,VCVTIP+VX}, {0},
+{(VARPSF)andpfxB,VCVTIP+VB}, {0}, {(VARPSF)minpfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)minpfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)minpfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)minpfxX,VCVTIP+VX}, {(VARPSF)minpfxQ,VCVTIP+VQ},
+{(VARPSF)andsfxB,VCVTIP+VB}, {0}, {(VARPSF)minsfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)minsfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)minsfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)minsfxX,VCVTIP+VX}, {(VARPSF)minsfxQ,VCVTIP+VQ},
 }};
-static VARPSA rpsmax = {SBTX+1 , {
-{(VARPSF)orinsB,VCVTIP+VB}, {0}, {(VARPSF)maxinsI,VCVTIP+VI}, {(VARPSF)maxinsD,VCVTIP+VD}, {(VARPSF)maxinsD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxinsX,VCVTIP+VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxinsS,VCVTIP+VSB},
-{(VARPSF)orpfxB,VCVTIP+VB}, {0}, {(VARPSF)maxpfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)maxpfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)maxpfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxpfxX,VCVTIP+VX}, {(VARPSF)maxpfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxpfxS,VCVTIP+VSB},
-{(VARPSF)orsfxB,VCVTIP+VB}, {0}, {(VARPSF)maxsfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)maxsfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)maxsfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxsfxX,VCVTIP+VX}, {(VARPSF)maxsfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxsfxS,VCVTIP+VSB},
+static VARPSA rpsmax = {RATX+1 , {
+{(VARPSF)orinsB,VCVTIP+VB}, {0}, {(VARPSF)maxinsI,VCVTIP+VI}, {(VARPSF)maxinsD,VCVTIP+VD}, {(VARPSF)maxinsD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxinsX,VCVTIP+VX}, {0},
+{(VARPSF)orpfxB,VCVTIP+VB}, {0}, {(VARPSF)maxpfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)maxpfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)maxpfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxpfxX,VCVTIP+VX}, {(VARPSF)maxpfxQ,VCVTIP+VQ},
+{(VARPSF)orsfxB,VCVTIP+VB}, {0}, {(VARPSF)maxsfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)maxsfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)maxsfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxsfxX,VCVTIP+VX}, {(VARPSF)maxsfxQ,VCVTIP+VQ},
 }};
 
 
@@ -763,7 +763,7 @@ VA va[]={
  {{(VF)ltBB,VRNONE+VCVTIP+VB+VIP}, {(VF)ltBI,VRNONE+VCVTIP+VB+VIPOKA}, {(VF)ltBD,VRNONE+VCVTIP+VB+VIPOKA},
   {(VF)ltIB,VRNONE+VCVTIP+VB+VIPOKW}, {(VF)ltII,VRNONE+VCVTIP+VB}, {(VF)ltID,VRNONE+VCVTIP+VB},
   {(VF)ltDB,VRNONE+VCVTIP+VB+VIPOKW}, {(VF)ltDI,VRNONE+VCVTIP+VB}, {(VF)ltDD,VRNONE+VCVTIP+VB}, 
-  {(VF)ltDD,VRNONE+VCVTIP+VB+VDD+VIP}, {(VF)ltXX,VRNONE+VCVTIP+VB+VXFC}, {(VF)ltQQ,VRNONE+VCVTIP+VB+VQQ}, {(VF)ltSS,VRNONE+VCVTIP+VB}, {(VF)0,VRNONE+VCVTIP+VB}, {(VF)ltEE,VRNONE+VCVTIP+VB}, {(VF)ltI2I2,VRNONE+VCVTIP+VB}, {(VF)ltI4I4,VRNONE+VCVTIP+VB}},
+  {(VF)ltDD,VRNONE+VCVTIP+VB+VDD+VIP}, {(VF)ltXX,VRNONE+VCVTIP+VB+VXFC}, {(VF)ltQQ,VRNONE+VCVTIP+VB+VQQ}, {0,0}, {(VF)0,VRNONE+VCVTIP+VB}, {(VF)ltEE,VRNONE+VCVTIP+VB}, {(VF)ltI2I2,VRNONE+VCVTIP+VB}, {(VF)ltI4I4,VRNONE+VCVTIP+VB}},
   &rpslt},
 
 /* 3d =  */ {
@@ -777,7 +777,7 @@ VA va[]={
  {{(VF)gtBB,VRNONE+VCVTIP+VB+VIP}, {(VF)gtBI,VRNONE+VCVTIP+VB+VIPOKA}, {(VF)gtBD,VRNONE+VCVTIP+VB+VIPOKA},
   {(VF)gtIB,VRNONE+VCVTIP+VB+VIPOKW}, {(VF)gtII,VRNONE+VCVTIP+VB}, {(VF)gtID,VRNONE+VCVTIP+VB},
   {(VF)gtDB,VRNONE+VCVTIP+VB+VIPOKW}, {(VF)gtDI,VRNONE+VCVTIP+VB}, {(VF)gtDD,VRNONE+VCVTIP+VB}, 
-  {(VF)gtDD,VRNONE+VCVTIP+VB+VDD+VIP}, {(VF)gtXX,VRNONE+VCVTIP+VB+VXCF}, {(VF)gtQQ,VRNONE+VCVTIP+VB+VQQ}, {(VF)gtSS,VRNONE+VCVTIP+VB}, {(VF)0,VRNONE+VCVTIP+VB}, {(VF)gtEE,VRNONE+VCVTIP+VB}, {(VF)gtI2I2,VRNONE+VCVTIP+VB}, {(VF)gtI4I4,VRNONE+VCVTIP+VB}},
+  {(VF)gtDD,VRNONE+VCVTIP+VB+VDD+VIP}, {(VF)gtXX,VRNONE+VCVTIP+VB+VXCF}, {(VF)gtQQ,VRNONE+VCVTIP+VB+VQQ}, {0,0}, {(VF)0,VRNONE+VCVTIP+VB}, {(VF)gtEE,VRNONE+VCVTIP+VB}, {(VF)gtI2I2,VRNONE+VCVTIP+VB}, {(VF)gtI4I4,VRNONE+VCVTIP+VB}},
   &rpsgt},
 
 /* 8a *. */ {
@@ -798,28 +798,28 @@ VA va[]={
  {{(VF)geBB,VRNONE+VCVTIP+VB+VIP}, {(VF)geBI,VRNONE+VCVTIP+VB+VIPOKA}, {(VF)geBD,VRNONE+VCVTIP+VB+VIPOKA},
   {(VF)geIB,VRNONE+VCVTIP+VB+VIPOKW}, {(VF)geII,VRNONE+VCVTIP+VB}, {(VF)geID,VRNONE+VCVTIP+VB},
   {(VF)geDB,VRNONE+VCVTIP+VB+VIPOKW}, {(VF)geDI,VRNONE+VCVTIP+VB}, {(VF)geDD,VRNONE+VCVTIP+VB}, 
-  {(VF)geDD,VRNONE+VCVTIP+VB+VDD+VIP}, {(VF)geXX,VRNONE+VCVTIP+VB+VXFC}, {(VF)geQQ,VRNONE+VCVTIP+VB+VQQ}, {(VF)geSS,VRNONE+VCVTIP+VB}, {(VF)0,VRNONE+VCVTIP+VB}, {(VF)geEE,VRNONE+VCVTIP+VB}, {(VF)geI2I2,VRNONE+VCVTIP+VB}, {(VF)geI4I4,VRNONE+VCVTIP+VB}},
+  {(VF)geDD,VRNONE+VCVTIP+VB+VDD+VIP}, {(VF)geXX,VRNONE+VCVTIP+VB+VXFC}, {(VF)geQQ,VRNONE+VCVTIP+VB+VQQ}, {0,0}, {(VF)0,VRNONE+VCVTIP+VB}, {(VF)geEE,VRNONE+VCVTIP+VB}, {(VF)geI2I2,VRNONE+VCVTIP+VB}, {(VF)geI4I4,VRNONE+VCVTIP+VB}},
   &rpsge},
 
 /* 83 <: */ {
  {{(VF)leBB,VRNONE+VCVTIP+VB+VIP}, {(VF)leBI,VRNONE+VCVTIP+VB+VIPOKA}, {(VF)leBD,VRNONE+VCVTIP+VB+VIPOKA},
   {(VF)leIB,VRNONE+VCVTIP+VB+VIPOKW}, {(VF)leII,VRNONE+VCVTIP+VB}, {(VF)leID,VRNONE+VCVTIP+VB},
   {(VF)leDB,VRNONE+VCVTIP+VB+VIPOKW}, {(VF)leDI,VRNONE+VCVTIP+VB}, {(VF)leDD,VRNONE+VCVTIP+VB}, 
-  {(VF)leDD,VRNONE+VCVTIP+VB+VDD+VIP}, {(VF)leXX,VRNONE+VCVTIP+VB+VXCF}, {(VF)leQQ,VRNONE+VCVTIP+VB+VQQ}, {(VF)leSS,VRNONE+VCVTIP+VB}, {(VF)0,VRNONE+VCVTIP+VB}, {(VF)leEE,VRNONE+VCVTIP+VB}, {(VF)leI2I2,VRNONE+VCVTIP+VB}, {(VF)leI4I4,VRNONE+VCVTIP+VB}},
+  {(VF)leDD,VRNONE+VCVTIP+VB+VDD+VIP}, {(VF)leXX,VRNONE+VCVTIP+VB+VXCF}, {(VF)leQQ,VRNONE+VCVTIP+VB+VQQ}, {0,0}, {(VF)0,VRNONE+VCVTIP+VB}, {(VF)leEE,VRNONE+VCVTIP+VB}, {(VF)leI2I2,VRNONE+VCVTIP+VB}, {(VF)leI4I4,VRNONE+VCVTIP+VB}},
   &rpsle},
 
 /* 82 <. */ {
  {{(VF)andBB,VRNONE+VCVTIP+VB+VIP}, {(VF)minBI,VRNONE+VCVTIP+VI+VIPOKW}, {(VF)minBD,VRNONE+VCVTIP+VD+VIPOKW},
   {(VF)minIB,VRNONE+VCVTIP+VI+VIPOKA}, {(VF)minII,VRNONE+VCVTIP+VI+VIP}, {(VF)minID,VRNONE+VCVTIP+VD+VIPID},
   {(VF)minDB,VRNONE+VCVTIP+VD+VIPOKA}, {(VF)minDI,VRNONE+VCVTIP+VD+VIPDI}, {(VF)minDD,VRNONE+VCVTIP+VD+VIP}, 
-  {(VF)minDD,VRNONE+VCVTIP+VD+VDD+VIP}, {(VF)minXX,VRNONE+VCVTIP+VX+VXX}, {(VF)minQQ,VRNONE+VCVTIP+VQ+VQQ}, {(VF)minSS,VRNONE+VCVTIP+VSB}, {(VF)0,VRNONE+VCVTIP+VIP}, {(VF)minEE,VRNONE+VCVTIP+VIP}, {(VF)minI2I2,VRNONE+VCVTIP+VUNCH+VIP}, {(VF)minI4I4,VRNONE+VCVTIP+VUNCH+VIP}},  // always VIP a forced conversion
+  {(VF)minDD,VRNONE+VCVTIP+VD+VDD+VIP}, {(VF)minXX,VRNONE+VCVTIP+VX+VXX}, {(VF)minQQ,VRNONE+VCVTIP+VQ+VQQ}, {0,0}, {(VF)0,VRNONE+VCVTIP+VIP}, {(VF)minEE,VRNONE+VCVTIP+VIP}, {(VF)minI2I2,VRNONE+VCVTIP+VUNCH+VIP}, {(VF)minI4I4,VRNONE+VCVTIP+VUNCH+VIP}},  // always VIP a forced conversion
   &rpsmin},
 
 /* 84 >. */ {
  {{(VF)orBB,VRNONE+VCVTIP+VB+VIP}, {(VF)maxBI,VRNONE+VCVTIP+VI+VIPOKW}, {(VF)maxBD,VRNONE+VCVTIP+VD+VIPOKW},
   {(VF)maxIB,VRNONE+VCVTIP+VI+VIPOKA}, {(VF)maxII,VRNONE+VCVTIP+VI+VIP}, {(VF)maxID,VRNONE+VCVTIP+VD+VIPID},
   {(VF)maxDB,VRNONE+VCVTIP+VD+VIPOKA}, {(VF)maxDI,VRNONE+VCVTIP+VD+VIPDI}, {(VF)maxDD,VRNONE+VCVTIP+VD+VIP}, 
-  {(VF)maxDD,VRNONE+VCVTIP+VD+VDD+VIP}, {(VF)maxXX,VRNONE+VCVTIP+VX+VXX}, {(VF)maxQQ,VRNONE+VCVTIP+VQ+VQQ}, {(VF)maxSS,VRNONE+VCVTIP+VSB}, {(VF)0,VRNONE+VCVTIP+VIP}, {(VF)maxEE,VRNONE+VCVTIP+VIP}, {(VF)maxI2I2,VRNONE+VCVTIP+VUNCH+VIP}, {(VF)maxI4I4,VRNONE+VCVTIP+VUNCH+VIP}},
+  {(VF)maxDD,VRNONE+VCVTIP+VD+VDD+VIP}, {(VF)maxXX,VRNONE+VCVTIP+VX+VXX}, {(VF)maxQQ,VRNONE+VCVTIP+VQ+VQQ}, {0,0}, {(VF)0,VRNONE+VCVTIP+VIP}, {(VF)maxEE,VRNONE+VCVTIP+VIP}, {(VF)maxI2I2,VRNONE+VCVTIP+VUNCH+VIP}, {(VF)maxI4I4,VRNONE+VCVTIP+VUNCH+VIP}},
   &rpsmax},
 
 /* 2b +  */ {
@@ -1790,10 +1790,10 @@ static AHDR2(zeroF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n
 static AHDR2(oneF,B,void,void){n=m<0?1:n; m>>=!SGNTO0(m); m^=REPSGN(m); mvc(m*n,z,MEMSET01LEN,MEMSET01);R EVOK;}
 
 // table of routines to handle = ~:
-static VF eqnetbl[2][16] = {
-//    11        12        14        BX        21        22        24       x       41        42        44        x      x      x      SB      INHOMO  // char len of aw, or HOMO SB BX
-{ (VF)eqCC, (VF)eqCS, (VF)eqCU, (VF)eqAA, (VF)eqSC, (VF)eqSS, (VF)eqSU, (VF)0, (VF)eqUC, (VF)eqUS, (VF)eqUU, (VF)0, (VF)0, (VF)0, (VF)eqII, (VF)zeroF },
-{ (VF)neCC, (VF)neCS, (VF)neCU, (VF)neAA, (VF)neSC, (VF)neSS, (VF)neSU, (VF)0, (VF)neUC, (VF)neUS, (VF)neUU, (VF)0, (VF)0, (VF)0, (VF)neII, (VF)oneF },
+static VF eqnetbl[2][11] = {
+//    11        12        14        BX        21        22        24     INHOMO        41        42        44        char len of aw, or HOMO BX
+{ (VF)eqCC, (VF)eqCS, (VF)eqCU, (VF)eqAA, (VF)eqSC, (VF)eqSS, (VF)eqSU, (VF)zeroF, (VF)eqUC, (VF)eqUS, (VF)eqUU },
+{ (VF)neCC, (VF)neCS, (VF)neCU, (VF)neAA, (VF)neSC, (VF)neSS, (VF)neSU, (VF)oneF,  (VF)neUC, (VF)neUS, (VF)neUU },
 };
 
 // Analyze the verb and arguments and come up with *ado, address of the routine to handle one
@@ -1811,22 +1811,22 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // vaptr converts the character pseudocode into an entry in va;
   // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
   // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
-  // B,I,D; then [9] CMPX [10] XNUM (but not RAT) [11] RAT [12] SBT (symbol) [13] SP [14] QP [15] INT2 [16] INT4
-  // then [17-25] are for verb/, with precisions B I D Z X Q Symb INT2 INT4
+  // B,I,D; then [9] CMPX [10] XNUM (but not RAT) [11] RAT [12] x [13] SP [14] QP [15] INT2 [16] INT4
+  // then [17-25] are for verb/, with precisions B I D Z X Q x INT2 INT4
   // [26-34] for verb\, and [35-43] for verb\.
   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
   if(withprob(!((t=(at|wt))&(NOUN&~(B01|INT|FL))),0.1)){  // the normal case was tested for in va2()
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    R vainfo->p2[(at*3+(wt&INT+FL))>>INTX];
 
-  }else if(likely(!(t&(NOUN&~NUMERIC)))) {
+  }else if(likely(!(t&(NOUN&~NUMERIC)))){
    // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
-   //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F    10   // priorities
-   // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX SBT
+   //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F     // priorities
+   // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
    // 0 4 8 9 10 11   12 13 14 15 16 routine indexes for homogeneous args
    //   0 4 5  6  7    8  9 10 11 12 biased by 4, the smallest we use here
-   // B I D Z  X  Q Symb DS  E I2 I4 
+   // B I D Z  X  Q    x DS  E I2 I4 
    pri=4+((0x5affcbf476ffffffLL>>(pri<<2))&0xf);  // 4 is II, lower than the lowest routine# we can call for here
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions
@@ -1839,14 +1839,12 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
     // = or ~:, possibly inhomogeneous
     if(likely(HOMO(at,wt))){
-     opcode=((at>>(C2TX-2))&0b1100)+((wt>>C2TX)&0b0011); opcode=at&SBT?0b1110:opcode; opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 1110 if symbol, 0011 if box.
-    }else opcode=15;  // inhomogeneous line
+     opcode=((at>>(C2TX-2))&0b1100)+((wt>>C2TX)&0b0011); opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 1110 if symbol, 0011 if box.
+    }else opcode=7;  // inhomogeneous line
     retva2.f=eqnetbl[(UC)FAV(self)->id&1][opcode];  // return the comparison
     R retva2;
    }
-   // not = ~:, better be a symbol
-   if(at&wt&SBT)R vainfo->p2[12];  // symbol on symbol - process it through the optbl
-   retva2.f=0; R retva2;  // if not symbol, return not found
+   retva2.f=0; R retva2;  // not = ~:, return not found
   }
  }else{VA2 retva2;
   // Here there was an error in a previous run.  We see if we have a way to retry the operation

@@ -18,7 +18,6 @@ p -: iota q
 'domain error' -: i. etx 'abc'
 'domain error' -: i. etx u:'abc'
 'domain error' -: i. etx 10&u:'abc'
-'domain error' -: i. etx s:@<"0 'abc'
 'domain error' -: i. etx 3.4 5
 'domain error' -: i. etx 3j4 5
 'domain error' -: i. etx 3 4;5
@@ -142,34 +141,11 @@ a-:(i.~a){a
 20 mtchonreshape a =: adot2 {~ (5 + ? 10 10 10) ?@$ #adot2
 
 NB. symbol
-a=:sdot0{~32+?10 5$95
 a-:(i.~a){a
 (i.~a)-:i.~<"_1 a
 0=a i.0{a
 (#a)=a i.4 5 6 7 8
-(#a)=a i. (}.$a)$s: 'jlisgdflgjhgf '
-(b*#a) -: (a=:(>:?40)$s:@<"0 'axy') i. (b=:?30$2){s:@<"0 'ab'
-(1|.a) -: (a i.1|.a){a=:sdot0{~?117 1$#sdot0
-(1|.a) -: (a i.1|.a){a=:sdot0{~?117 2$#sdot0
-(1|.a) -: (a i.1|.a){a=:sdot0{~?117 3$#sdot0
-(1|.a) -: (a i.1|.a){a=:sdot0{~?117 4$#sdot0
-(1|.a) -: (a i.1|.a){a=:sdot0{~?117 5$#sdot0
-(1|.a) -: (a i.1|.a){a=:sdot0{~?117 6$#sdot0
-(1|.a) -: (a i.1|.a){a=:sdot0{~?117 7$#sdot0
-(1|.a) -: (a i.1|.a){a=:sdot0{~?117 8$#sdot0
-(#a)=a i. (}.$a)$s: 'dlfdlgjd '  NB. shouldn't match
 
-(1|.a) -: (a i. 1|.a){a=:sdot0{~?7000 2$#sdot0
-(1|.a) -: (a i. 1|.a){a=:sdot0{~?7000 4$#sdot0
-(1|."2 a) -: (a i."(2) 1|."2 a){"_1 a=:sdot0{~?7 5000 2$#sdot0
-(1|."2 a) -: (a i."(2) 1|."2 a){"_1 a=:sdot0{~?7 5000 4$#sdot0
-(#a)=a i. (}.$a)$s: 'dlfdlgjd '  NB. shouldn't match
-20 mtchontally a =: sdot0 {~ (5 + ? 100) ?@$ #sdot0
-20 mtchonreshape a =: sdot0 {~ (5 + ? 100) ?@$ #sdot0
-20 mtchontally a =: sdot0 {~ (5 + ? 20 20) ?@$ #sdot0
-20 mtchonreshape a =: sdot0 {~ (5 + ? 20 20) ?@$ #sdot0
-20 mtchontally a =: sdot0 {~ (5 + ? 10 10 10) ?@$ #sdot0
-20 mtchonreshape a =: sdot0 {~ (5 + ? 10 10 10) ?@$ #sdot0
 
 
 NB. integer
@@ -274,7 +250,6 @@ a-:(i.!.0~a){a
 (#a)=a i. (}.$a)$<'kjgfjldgf'
 (b*#a) -: (a=:(>:?40)$(<4;u:'aj95'),<u:'lieben') i. (b=:?50$2){(<4;u:'aj95'),<1234
 (b*#a) -: (a=:(>:?40)$(<4;10&u:'aj95'),<10&u:'lieben') i. (b=:?50$2){(<4;10&u:'aj95'),<1234
-(b*#a) -: (a=:(>:?40)$(<4;s:@<"0 'aj95'),<s:@<"0 'lieben') i. (b=:?50$2){(<4;s:@<"0 'aj95'),<1234
 ((i.   ~x){x) -: x=:;:'i.~(?20$3){3 4;([&.o.3 4);[&.(0j1&*)3 4'
 ((i.!.0~x){x) -: x=:;:'i.~(?20$3){3 4;([&.o.3 4);[&.(0j1&*)3 4'
 (20$0) -: i.   ~(?20$3){'';($0);(0$<'')
@@ -372,13 +347,9 @@ f =: i. -: ciof
 
 NB. x i.y for symbol x and y -------------------------------------------
 
-map  =: 3 : '(i.-#y) (sdot0 i.|.y)}(#sdot0)$#y'
-ciof =: sdot0&i.@] { map@[
 
 f =: i. -: ciof
 
-((?3000$(#sdot0)){sdot0) f (?4 80$(#sdot0)){sdot0
-((?3000$(#sdot0)){sdot0) f (? 300$(#sdot0)){sdot0
 
 NB. x i.y on boxed numerics ---------------------------------------------
 
@@ -486,21 +457,9 @@ x (g"2  -: i."2 ) y=:adot2{~?(117 3,c)$#adot2
 x (g"_1 -: i."_1) y=:adot2{~?(117,  c)$#adot2
 
 NB. symbol
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:3
-x (g"2  -: i."2 ) y=:sdot0{~?(14,   c)$#sdot0 
 x (g"2  -: i."2 ) x
-x (g"2  -: i."2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i."_1) y=:sdot0{~?(117,  c)$#sdot0
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:4
-x (g"2  -: i."2 ) y=:sdot0{~?(14,   c)$#sdot0 
 x (g"2  -: i."2 ) x
-x (g"2  -: i."2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i."_1) y=:sdot0{~?(117,  c)$#sdot0
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:11
-x (g"2  -: i."2 ) y=:sdot0{~?(14,   c)$#sdot0 
 x (g"2  -: i."2 ) x
-x (g"2  -: i."2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i."_1) y=:sdot0{~?(117,  c)$#sdot0
 
 x=:p+?117 7$q [ p=:0 [ q=:14
 x (g"1  -: i."1 ) y=:p+?q
@@ -637,21 +596,9 @@ x (g"2  -: i.!.0"2 ) y=:adot2{~?(117 3,c)$#adot2
 x (g"_1 -: i.!.0"_1) y=:adot2{~?(117,  c)$#adot2
 
 NB. symbol
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:3
-x (g"2  -: i.!.0"2 ) y=:sdot0{~?(14,   c)$#sdot0 
 x (g"2  -: i.!.0"2 ) x
-x (g"2  -: i.!.0"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i.!.0"_1) y=:sdot0{~?(117,  c)$#sdot0
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:4
-x (g"2  -: i.!.0"2 ) y=:sdot0{~?(14,   c)$#sdot0 
 x (g"2  -: i.!.0"2 ) x
-x (g"2  -: i.!.0"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i.!.0"_1) y=:sdot0{~?(117,  c)$#sdot0
-x=:sdot0{~?(117 7,c)$#sdot0 [ c=:11
-x (g"2  -: i.!.0"2 ) y=:sdot0{~?(14,   c)$#sdot0 
 x (g"2  -: i.!.0"2 ) x
-x (g"2  -: i.!.0"2 ) y=:sdot0{~?(117 3,c)$#sdot0
-x (g"_1 -: i.!.0"_1) y=:sdot0{~?(117,  c)$#sdot0
 
 x=:p+?117 7$q [ p=:0 [ q=:14
 x (g"1  -: i.!.0"1 ) y=:p+?q

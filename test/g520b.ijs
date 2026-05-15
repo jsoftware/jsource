@@ -75,8 +75,6 @@ f2=: 3 : 0
  assert. (b{x) -: i{x=: x{~ ?  2$#x=: ;:'Cogito, ergo sum. kakistocracy'
  assert. (b{x) -: i{x=: x{~ ?  2$#x=: (u:&.>) ;:'Cogito, ergo sum. kakistocracy'
  assert. (b{x) -: i{x=: x{~ ?  2$#x=: (10&u:&.>) ;:'Cogito, ergo sum. kakistocracy'
- assert. (b{x) -: i{x=: x{~ ?  2$#x=: s:@<"0&.> ;:'Cogito, ergo sum. kakistocracy'
- assert. (b{x) -: i{x=: x{~ ?  2$#x=: <"0@s: ;:'Cogito, ergo sum. kakistocracy'
  1
 )
 

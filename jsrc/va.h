@@ -8,6 +8,7 @@
 // bits 2-3 should be forced to 1 jtflags;
 #define VCVTIP          0xc  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
 #define VARGX           4           // bit position for arg flags
+// scaf! convert VARGMSK (incl COPY[AW]) to 4 bits
 #define VBB             (B01<<VARGX)         // convert arguments to B 4   could put VARGMSK into 3 bits
 #define VII             (INT<<VARGX)         /* convert arguments to I 6             */
 #define VDD             (FL<<VARGX)          /* convert arguments to D 7             */
@@ -18,15 +19,16 @@
 #define VQQ             (RAT<<VARGX)         /* convert arguments to RAT  11          */
 #define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ|VCOPYW|VCOPYA)  // mask for argument requested type
 #define VRESX           12           // bit position for result flags
+// scaf! convert VRES to 3 bits
 #define VB              (B01<<VRESX)  // result type B  bit 12   could put VRESMSK into 3 bits
 #define VI              (INT<<VRESX)/* result type I  bit 14                     */
 #define VD              (FL<<VRESX) /* result type D  bit 15                     */
 #define VZ              (CMPX<<VRESX)/* result type Z bit 16                      */
 #define VX              (XNUM<<VRESX)/* result type XNUM  bit 18                  */
 #define VQ              (RAT<<VRESX) /* result type RAT  bit 19                   */
-#define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */   // could use VUNCH if force conversion
+// bit 28 unused
 #define VUNCH           (0<<VRESX)  // leave result unchanged
-#define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type - if all 0, take result type from the args
+#define VRESMSK         (VB|VI|VD|VZ|VX|VQ)  // mask for result-type - if all 0, take result type from the args
 #define VRMSK           ((I)0x8800<<VRESX) // mask for result-conversion spec 23,27
 #define VRD             ((I)0x800<<VRESX) // convert result to D if possible 23
 #define VRI             ((I)0x8000<<VRESX) // convert result to I if possible  27
@@ -137,17 +139,6 @@
 #define DIVE(u,v) ({E vr; if(unlikely((u).hi==0)){vr.hi=0.; vr.lo=0.;}else{vr=RECIPE(v);} TYMESE(u,vr); })
 #define MAXE(u,v) ({E vr; if(u.hi>v.hi)vr=u; else if(u.hi<v.hi)vr=v; else{vr.hi=u.hi; vr.lo=MAX(u.lo,v.lo);} vr;})
 #define MINE(u,v) ({E vr; if(u.hi<v.hi)vr=u; else if(u.hi>v.hi)vr=v; else{vr.hi=u.hi; vr.lo=MIN(u.lo,v.lo);} vr;})
-
-#define SBORDER(v)      (SBUV(v)->order)
-
-#define SBNE(u,v)       (SBORDER(u)!=SBORDER(v))
-#define SBLT(u,v)       (SBORDER(u)< SBORDER(v))
-#define SBLE(u,v)       (SBORDER(u)<=SBORDER(v))
-#define SBGT(u,v)       (SBORDER(u)> SBORDER(v))
-#define SBGE(u,v)       (SBORDER(u)>=SBORDER(v))
-
-#define SBMIN(u,v)      (SBORDER(u)<=SBORDER(v)?(u):(v))
-#define SBMAX(u,v)      (SBORDER(u)>=SBORDER(v)?(u):(v))
 
 #define BOV(exp)        if(exp){er=EWOV; break;}
 

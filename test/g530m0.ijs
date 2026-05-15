@@ -16,10 +16,6 @@ h =. e.&' ' {"0 1 ,"0&'_'
 (g -: h) 2 3 4$u:'Now is the time, all good mean, to ergo sum.'
 (g -: h) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
 
-g =. e.&(s:@<"0 ' ')@{.} @ (,:&(s:@<"0 '_'))
-h =. e.&(s:@<"0 ' ') {"0 1 ,"0&(s:@<"0 '_')
-(g -: h) s:@<"0 'Cogito, ergo sum.'
-(g -: h) 2 3 4$s:@<"0 'Now is the time, all good mean, to ergo sum.'
 
 ((<0 1)&|: -: i.@}.@$}) i.,~?20
 ((<0 1)&|: -: i.@}.@$}) i.,~?20
@@ -80,9 +76,6 @@ f=: 3 : 0
    yy=: adot2{~?($b)$#adot2
    zz=: adot2{~?($b)$#adot2
   case. 'S' do.
-   xx=: sdot0{~?($b)$#sdot0
-   yy=: sdot0{~?($b)$#sdot0
-   zz=: sdot0{~?($b)$#sdot0
   end.
  i.0 0
 )
@@ -298,13 +291,8 @@ h  =. e.&' ' {"0 1 ,"0&'_'
 (f -: h) 10&u:'Cogito, ergo sum.'
 (f -: h) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
 
-(s:@<"0 'Cogito,*ergo*sum.') -: (s:@<"0 '*') ((s:@<"0 ' ')&= # i.@#)@]} s:@<"0 'Cogito, ergo sum.'
 
-f1  =. (s:@<"0 '_')&(((s:@<"0 ' ')&= # i.@#)@,@]})
-h1  =. e.&(s:@<"0 ' ') {"0 1 ,"0&(s:@<"0 '_')
 
-(f1 -: h1) s:@<"0 'Cogito, ergo sum.'
-(f1 -: h1) 2 3 4$s:@<"0 'Now is the time, all good mean, to ergo sum.'
 
 C =. 2 : 'u & ((#i.@#)@,@v@] })'
 
@@ -320,9 +308,6 @@ a -: ' ' C('_'&=) '_' C(' '&=) a =. 2 3 4$u:'Now is the time, all good mean, '
 (f -: '_' C (' '&=)) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
 a -: ' ' C('_'&=) '_' C(' '&=) a =. 2 3 4$10&u:'Now is the time, all good mean, '
 
-(f1 -: (s:@<"0 '_') C ((s:@<"0 ' ')&=)) s:@<"0 'Cogito, ergo sum.'
-(f1 -: (s:@<"0 '_') C ((s:@<"0 ' ')&=)) 2 3 4$s:@<"0 'Now is the time, all good mean, to ergo sum.'
-a -: (s:@<"0 ' ') C ((s:@<"0 '_')&=) (s:@<"0 '_') C((s:@<"0 ' ')&=) a =. 2 3 4$s:@<"0 'Now is the time, all good mean, '
 
 *./ (=@i. -: 1&((<0 1)&|:ia})@($&0)@(,~))"0 ?5$10
 
@@ -334,7 +319,6 @@ a -: (s:@<"0 ' ') C ((s:@<"0 '_')&=) (s:@<"0 '_') C((s:@<"0 ' ')&=) a =. 2 3 4$s
 2   -: type 'a' ''}''
 131072-: type 'a' ''}u:''
 262144-: type 'a' ''}10&u:''
-65536 -: type (s:@<"0 'a') ''}s:''
 4   -: type 'a' ''}i.0
 8   -: type 'a' ''}0$3.5
 16  -: type 'a' ''}0$3j5
@@ -359,13 +343,6 @@ j=: ?13$50
 k=: ?17$7
 x=: ?11 13 17$1e6
 (x (<i;j;k)}y) -: x (>{i;j;k)}y
-
-test=: 4 : 'y -: x (i.0)}y'
-y=: 0 1 1;'235';2 3 5;2 3.5 6;2 3j5 6;(2;3;5);(u: 'abc');s: ' a b c'
-(0$&.>y) test&>/ y
-
-y=: 0 1 1;'235';2 3 5;2 3.5 6;2 3j5 6;(2;3;5);(10&u: 'abc');s: ' a b c'
-(0$&.>y) test&>/ y
 
 y -: (0$a:) ($0)} y=: 5 ?@$ 1e6
 y -: ''     ($0)} y
@@ -420,7 +397,6 @@ test1 1r2 + i. QKTEST{10x 2x
 test1 (1;'a';4x) , <"0 i. 7
 test1 2 u: 'abcdefghijklmno'
 test1 10 u: 'abcdefghijklmno'
-test1 s: ' now is the time for all good men'
 
 NB. boxed-boxed-list indexing
 NB. y is list of atoms to choose from
@@ -465,7 +441,6 @@ test1 1r2 + i. QKTEST{10x 2x
 test1 (1;'a';4x) , <"0 i. 7
 test1 2 u: 'abcdefghijklmno'
 test1 10 u: 'abcdefghijklmno'
-test1 s: ' now is the time for all good men'
 
 NB. complementary indexing and axes in full
 NB. x has an atom for each leading axis of y to be fetched from:

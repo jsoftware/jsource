@@ -72,7 +72,6 @@ f2=: 3 : 0
 (] -: f2) 'only Hugh can prevent florist friars'
 (] -: f2) u:'only Hugh can prevent florist friars'
 (] -: f2) 10&u:'only Hugh can prevent florist friars'
-(] -: f2) s:@<"0 'only Hugh can prevent florist friars'
 (] -: f2) ?1000$1e6
 (] -: f2) 100 $ ;:'only Hugh can prevent florist friars'
 
@@ -86,7 +85,6 @@ f2=: 3 : 0
 (] -: f2) 'only Hugh can prevent florist friars'
 (] -: f2) u:'only Hugh can prevent florist friars'
 (] -: f2) 10&u:'only Hugh can prevent florist friars'
-(] -: f2) s:@<"0 'only Hugh can prevent florist friars'
 (] -: f2) ?1000$1e6
 (] -: f2) 100 $ ;:'only Hugh can prevent florist friars'
 
@@ -109,11 +107,6 @@ f4=: 3 : 0
  a =: 4 27$10&u:'a'
  a1=: 4 27$10&u:'a'
  b =: 3 17$(10$10&u:'b'),10&u:'1234567'
- a =: a,b
- assert. a -: a1,b
- a =: 4 27$s:@<"0 'a'
- a1=: 4 27$s:@<"0 'a'
- b =: 3 17$(10$s:@<"0 'b'),s:@<"0 '1234567'
  a =: a,b
  assert. a -: a1,b
  1

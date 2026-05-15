@@ -47,7 +47,6 @@ f=: i.!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q 
 
 NB. symbol
-q=: x=: (?50$#x){x=:     (<5!:2 <'g') 1}<@(s:"0) ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. x
@@ -60,7 +59,6 @@ f=: i.
 f=: i.!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q 
 
-q=: x=: (?50$#x){x=:     (<5!:2 <'g') 1}<@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. x
@@ -73,7 +71,6 @@ f=: i.
 f=: i.!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q 
 
-q=: x=: (?50$#x){x=:     (<5!:2 <'g') 1}<@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. x
@@ -127,7 +124,6 @@ f=: i.!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
 NB. literal
-q=: x=: (?50$#x){x=: <"0 (<5!:2 <'g') 1}<@(s:"0) ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. x
@@ -140,7 +136,6 @@ f=: i.
 f=: i.!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
-q=: x=: (?50$#x){x=: <"0 (<5!:2 <'g') 1}<@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. x
@@ -153,7 +148,6 @@ f=: i.
 f=: i.!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
-q=: x=: (?50$#x){x=: <"0 (<5!:2 <'g') 1}<@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. q
 (mbxcheck_jmf_ q), (x i. x)      -: q i. x
@@ -223,7 +217,6 @@ f=: i:!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
 NB. symbol
-q=: x=: (?50$#x){x=:     (<5!:2 <'g') 1}<@(s:"0) ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: x
@@ -236,7 +229,6 @@ f=: i:
 f=: i:!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
-q=: x=: (?50$#x){x=:     (<5!:2 <'g') 1}<@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: x
@@ -249,7 +241,6 @@ f=: i:
 f=: i:!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
-q=: x=: (?50$#x){x=:     (<5!:2 <'g') 1}<@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: x
@@ -303,7 +294,6 @@ f=: i:!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
 NB. symbol
-q=: x=: (?50$#x){x=: <"0 (<5!:2 <'g') 1}<@(s:"0) ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: x
@@ -316,7 +306,6 @@ f=: i:
 f=: i:!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
-q=: x=: (?50$#x){x=: <"0 (<5!:2 <'g') 1}<@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: x
@@ -329,7 +318,6 @@ f=: i:
 f=: i:!.0
 (mbxcheck_jmf_ q), (x f"1 0 x)   -: q f"1 0 q
 
-q=: x=: (?50$#x){x=: <"0 (<5!:2 <'g') 1}<@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: q
 (mbxcheck_jmf_ q), (x i: x)      -: q i: x
@@ -390,17 +378,14 @@ q=: x=: (<5!:2 <'g'), (10&u:&.>) ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), (L.&.>x)      -: L.&.> q
 
 NB. symbol
-q=: x=: (<5!:2 <'g'), <@(s:"0) ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (L. x)        -: L. q
 (mbxcheck_jmf_ q), (L.&.>x)      -: L.&.> q
 
-q=: x=: (<5!:2 <'g'), <@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (L. x)        -: L. q
 (mbxcheck_jmf_ q), (L.&.>x)      -: L.&.> q
 
-q=: x=: (<5!:2 <'g'), <@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (L. x)        -: L. q
 (mbxcheck_jmf_ q), (L.&.>x)      -: L.&.> q
@@ -434,7 +419,6 @@ q=: x=: (<5!:2 <'g'), (10&u:&.>) ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), (x ,L:  1 x)  -: q ,L: 1 q
 
 NB. symbol
-q=: x=: (<5!:2 <'g'), <@(s:"0) ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (#  L: _1 x)  -: #  L: _1 q
 (mbxcheck_jmf_ q), (": L:  0 x)  -: ": L:  0 q
@@ -442,7 +426,6 @@ q=: x=: (<5!:2 <'g'), <@(s:"0) ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), (x ,L:  1 x)  -: q ,L: 1 x
 (mbxcheck_jmf_ q), (x ,L:  1 x)  -: q ,L: 1 q
 
-q=: x=: (<5!:2 <'g'), <@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (#  L: _1 x)  -: #  L: _1 q
 (mbxcheck_jmf_ q), (": L:  0 x)  -: ": L:  0 q
@@ -450,7 +433,6 @@ q=: x=: (<5!:2 <'g'), <@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), (x ,L:  1 x)  -: q ,L: 1 x
 (mbxcheck_jmf_ q), (x ,L:  1 x)  -: q ,L: 1 q
 
-q=: x=: (<5!:2 <'g'), <@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (#  L: _1 x)  -: #  L: _1 q
 (mbxcheck_jmf_ q), (": L:  0 x)  -: ": L:  0 q

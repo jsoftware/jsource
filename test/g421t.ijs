@@ -24,7 +24,6 @@ test 1 0
 test a.
 test adot1
 test adot2
-test sdot0
 test      i.900
 test _450+i.900
 test  1e6+i.900

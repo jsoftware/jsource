@@ -240,7 +240,6 @@ UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
  case LITX:  R hic(n,yv);
  case C2TX:  R hic2(2*n,yv);
  case C4TX:  R hic4(4*n,yv);
- case SBTX:  R hic(n*SZI,yv);
  case B01X:  d=*(B*)yv; break;
  case FLX: 
  case CMPXX: d=*(D*)yv; break;
@@ -909,8 +908,8 @@ inplace:;
     }
    }
    if(likely(fnx<0)){  // if we don't have it yet, it will be a hash or small-range integers.  Decide which one
-    if(((k&~(t&FL))==SZI)|(4==k)){  // non-float (relies on FL==8), might be INT or SBT, or characters.  FL has -0 problem   requires SZI==FL
-     if(likely((t&INT+SBT+(4==k?C4T+INT4:0))!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I/SBT/4-byte-char types
+    if(((k&~(t&FL))==SZI)|(4==k)){  // non-float (relies on FL==8), might be INT, or characters.  FL has -0 problem   requires SZI==FL
+     if(likely((t&INT+(4==k?C4T+INT4:0))!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I/4-byte-char types
       // small-range processing is a possibility, but we need to decide whether we are going to do a reversed hash, so we will
       // know which range to check.  For i./i:, we reverse if c is much shorter than m; for e., we have to consider whether
       // the forward hash will benefit from bits mode, so we have to estimate the size of each hash table

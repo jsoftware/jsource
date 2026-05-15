@@ -262,87 +262,6 @@ static F1(jtthn){F12IP;A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt
  RETF(z);
 }
 
-// cvt SB string to utf8
-// return byte length and display width
-static I sbtou8size(J jt,SBU*u,I*dw){I q=u->n;
- if(dw)*dw=q;
- if(u->flag&SBC4){
-  q=utomsize((C4*)SBSV(u->i),u->n>>2);
-  q=(q<0)?-q:q;
-  if(dw&&q>0)*dw=stringdisplaywidth(jt, 2,(void*)SBSV(u->i),u->n>>2);
- }else if(u->flag&SBC2){
-  q=wtomsize((US*)SBSV(u->i),u->n>>1);
-  q=(q<0)?-q:q;
-  if(dw&&q>0)*dw=stringdisplaywidth(jt, 1,(void*)SBSV(u->i),u->n>>1);
- }else{
-  if(dw&&q>0)*dw=stringdisplaywidth(jt, 0,(void*)SBSV(u->i),u->n);
- }
- R q;
-}
-
-// cvt SB string to utf8
-static void sbtou8(J jt,SBU*u,C*s){
- if(u->flag&SBC4)
-  utom((C4*)SBSV(u->i),u->n>>2,s);
- else if(u->flag&SBC2)
-  wtom((US*)SBSV(u->i),u->n>>1,s);
- else
-  MC(s,SBSV(u->i),u->n);
-}
-
-static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,r,*s;SB*x,*y;SBU*u;
- PROLOG(0000);
- n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w);
- if(1>=r){
-  c=n; 
-  RZ(d=apvwr(c,0L,0L)); dv=AV(d);
-  p=2*n-1; DO(c, p+=dv[i]=sbtou8size(jt,SBUV(*x++),0););
-  GATV0(z,LIT,  p,1); zv=CAV1(z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' ');
-        DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=2+dv[i];);
- }else{
-  if(BAV(prxthornuni)[0]&2){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;  // jprx flag, set when result going to display
-   c=s[r-1]; m=n/c; 
-   RZ(d =apvwr(c,0L,0L)); dv =AV(d);      // col max byte
-   RZ(dw=apvwr(c,0L,0L)); dwv=AV(dw);     // col max display width
-   RZ(dd=apvwr(c,0L,0L)); ddv=AV(dd);     // col max element byte - display width
-   RZ(e =apvwr(n,0L,0L)); ev =AV(e);      // element byte
-   RZ(ew=apvwr(n,0L,0L)); ewv=AV(ew);     // element display width
-   j=0;
-   DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),ewv+j); ev[j]=p; dv[i]=MAX(dv[i],p); dwv[i]=MAX(dwv[i],ewv[j]);j++;););
-   j=0;
-   DO(m, DO(c, ddv[i]=MAX(ddv[i],ev[j]-ewv[j]);j++;););
-         DO(c, dv[i]+=ddv[i];);         // add col padding space
-   p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
-// first pass to reduce padding space
-   I q=IMAX,p0;
-   j=0;
-   DO(m, p0=0;
-         DO(c, 
-//                 `   utf8    col max - disp width  space
-               p0+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
-               if(i==c-1)q=MIN(q,p-(p0-1));
-               j++;););
-// second pass real work
-   p-=q==IMAX?0:q;
-   GATV(z,LIT,m*p,r+!r,s); zv=CAVn(r+!r,z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' '); AS(z)[AR(z)-1]=p;
-   j=0;
-   DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row
-         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
-//                 `   utf8    col max - disp width  space
-               zv+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
-// change trailing padding space to NUL, all NUL will be removed in jtprx
-               if(i==c-1)mvc(p-((zv-zv1)-1),zv,MEMSET00LEN,MEMSET00);
-               j++;););
-  }else{
-   c=s[r-1]; m=n/c; RZ(d=apvwr(c,0L,0L)); dv=AV(d);
-   DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),0); dv[i]=MAX(dv[i],p);););
-   p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
-   GATV(z,LIT,m*p,r+!r,s); zv=CAVn(r+!r,z); mvc(AN(z),zv,1,iotavec-IOTAVECBEGIN+' '); AS(z)[AR(z)-1]=p;
-   DO(m, DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=dv[i];););
-  }
- }
- EPILOG(z);
-}
 
 static F1(jtthx1){F12IP;
  C*s=SgetX(w); // base 10 representation
@@ -661,7 +580,6 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
    z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV(prxthornuni)[0]&1?RoutineC:jttoutf8a);
    break;
   case BOXX:  z=thbox(w,prxthornuni); break;
-  case SBTX:  READLOCK(JT(jt,sblock)) z=thsb(w,prxthornuni); READUNLOCK(JT(jt,sblock)) break;
   case NAMEX: z=sfn(0,w);                  break;
   case ASGNX: z=spellout(CAV(w)[0]);         break;
   case VERBX: case ADVX:  case CONJX:
@@ -802,7 +720,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // Convert w to a character array; set t=1 if it's LIT, t=2 if C2T, 4 if C4T
  RZ(y=thorn1u(w)); t=bpnoun(AT(y));
  // set ch iff input w is a character type.
- ch=ISDENSETYPE(AT(w),LIT+C2T+C4T+SBT);
+ ch=ISDENSETYPE(AT(w),LIT+C2T+C4T);
  // r=rank of result (could be anything), s->shape, v->1st char
  r=AR(y); s=AS(y); v=CAV(y);
  // m=length of EOL sequence; *eov=EOL sequence

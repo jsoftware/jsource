@@ -64,8 +64,6 @@ x (   I. @(e.!.0)) R y
 
 
 NB. symbol
-x=: <"1 ] (_100{.sdot0){~ 23 2 ?@$ 100
-y=: <"1 ] (_100{.sdot0){~ 3581 2 ?@$ 100
 
 NB. !!! always failed
 NB. y i.!.0 L x

@@ -103,7 +103,6 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
   case LITX:  R hic(n,yv);
   case C2TX:  R hic2(2*n,yv);
   case C4TX:  R hic4(4*n,yv);
-  case SBTX:  R hic(n*SZI,yv);
   case B01X:  d=*(B*)yv; break;
   case INTX:  d=(D)*(I*)yv; break;
   case FLX: 
@@ -720,7 +719,6 @@ static A jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,*z
   case XNUMX:             SCDO(A, *wv,icmpXX(x, av[j])); break;
   case RATX:              SCDO(Q, *wv,!QEQ(x, av[j])); break;
   case INTX:              SCDO(I, *wv,x!=av[j]      ); break;
-  case SBTX:              SCDO(SB,*wv,x!=av[j]      ); break;
   case BOXX:  {RDECL;     SCDO(A, *wv,!equ(C(x),C(av[j])));} break;
   case FLX:   if(1.0==jt->cct)SCDO(D, *wv,x!=av[j]) 
              else{D cct=jt->cct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
@@ -1175,15 +1173,15 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
    if(!fn){  // if we don't have it yet, it will be a hash.  Decide which one
     if(cvtsneeded&1)RZ(a=cvt0(a));  // Convert negative 0 to positive 0. Should do this in the hash
     if(cvtsneeded&2)RZ(w=cvt0(w));
-    if(k==SZI&&!(t&FL)){  // non-float, might be INT or SBT
-     if(t&INT+SBT){  // same here, for I types
+    if(k==SZI&&!(t&FL)){  // non-float, might be INT
+     if(t&INT){  // same here, for I types
       CR crres = condrange(AV(a),(AN(a)*k1)>>LGSZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);
       if(crres.range){
        datamin=crres.min;
        p=crres.range; fn=jtio42;
       }else{booladj=0; fn=jtioi;}  // leave p as is; clear booladj since not small-range; select integer hashing
      }else{booladj=0; fn=jtioi;}
-    }else{                    fn=b||t&B01+JCHAR+INT+SBT?jtioc:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;}  // select other hashing
+    }else{                    fn=b||t&B01+JCHAR+INT?jtioc:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;}  // select other hashing
    }
   }
 

@@ -1458,7 +1458,7 @@ F1(jtmemr){F12IP;C*u;I m,n,t,*v;US*us;C4*c4;
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);  // m=length in items; t=type to create; u=address to read from
- ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
+ ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX,EVDOMAIN);
  if(-1==m){
   ASSERT(t&LIT+C2T+C4T,EVDOMAIN);
   if(t&LIT) m=strlen(u);
@@ -1486,7 +1486,7 @@ F2(jtmemw){F12IP;C*u;I m,n,t,*v;
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
- ASSERT(ISDENSETYPE(t,B01+LIT+C2T+C4T+INT+FL+CMPX+SBT),EVDOMAIN);
+ ASSERT(ISDENSETYPE(t,B01+LIT+C2T+C4T+INT+FL+CMPX),EVDOMAIN);
  ASSERT(m==AN(a)||t&LIT+C2T+C4T&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
  if(B01&AT(a)&&t&INT) RZ(a=cvt(INT,a));
  if(INT&AT(a)&&t&B01) RZ(a=cvt(B01,a));

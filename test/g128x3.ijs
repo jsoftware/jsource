@@ -68,12 +68,10 @@ b=: 32 ?@$ 2
 'domain error' -: f etx 2 3j4
 'domain error' -: f etx 2 3r4
 'domain error' -: f etx 2 3;4
-'domain error' -: f etx s:@<"0 'abc'
 
 'rank error'   -: f etx 3 4$'abc'
 'rank error'   -: f etx 3 4$u:'abc'
 'rank error'   -: f etx 3 4$10&u:'abc'
-'rank error'   -: f etx 3 4$s:@<"0 'abc'
 
 'domain error' -: 123           f etx 3 4 5
 'domain error' -: 123           f etx 3 4 5x
@@ -88,11 +86,9 @@ b=: 32 ?@$ 2
 'domain error' -: (<'a')      f etx 'xyz'
 'domain error' -: (<u:'a')    f etx 'xyz'
 'domain error' -: (<10&u:'a') f etx 'xyz'
-'domain error' -: (s:@<'34') f etx 'xyz'
 'rank error' -: '34'          f etx 'xyz'
 'rank error' -: (u:'34')      f etx 'xyz'
 'rank error' -: (10&u:'34')   f etx 'xyz'
-'rank error' -: (s:@<"0 '34') f etx 'xyz'
 'rank error' -: (<'abc')      f etx 'xyz'
 'rank error' -: (<u:'abc')    f etx 'xyz'
 'rank error' -: (<10&u:'abc') f etx 'xyz'

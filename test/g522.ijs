@@ -10,14 +10,9 @@ tail =: _1&{
 '.'       -: {: 'Cogito, ergo sum.'
 (u:'.')   -: {: u:'Cogito, ergo sum.'
 (10&u:'.')-: {: 10&u:'Cogito, ergo sum.'
-(s:@<"0 '.')   -: {: s:@<"0 'Cogito, ergo sum.'
 (<'sum.') -: {: ;:'Cogito, ergo sum.'
 (<u:'sum.') -: {: (u:&.>) ;:'Cogito, ergo sum.'
 (<10&u:'sum.') -: {: (10&u:&.>) ;:'Cogito, ergo sum.'
-(s:@<"0&.> <'sum.') -: {: s:@<"0&.> ;:'Cogito, ergo sum.'
-(<"0@s: <'sum.') -: {: <"0@s: ;:'Cogito, ergo sum.'
-(s:@<"0&.> <'sum.') -: {: s:@<"0&.> ;:'Cogito, ergo sum.'
-(<"0@s: <'sum.') -: {: <"0@s: ;:'Cogito, ergo sum.'
 8 9 10 11 -: {: i.3 4
 
 NB. Boolean
@@ -45,10 +40,6 @@ NB. literal4
 (tail -: {:) adot2{~?2 3 4$(#adot2)
 
 NB. symbol
-(tail -: {:) s:@<"0 'a'
-(tail -: {:) sdot0{~?4$(#sdot0)
-(tail -: {:) sdot0{~?3 4$(#sdot0)
-(tail -: {:) sdot0{~?2 3 4$(#sdot0)
 
 NB. integer
 (tail -: {:) 12345

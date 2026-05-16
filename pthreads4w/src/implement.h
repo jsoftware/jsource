@@ -201,7 +201,7 @@ struct __ptw32_thread_t_
   int sched_priority;		/* As set, not as currently is */
   int cancelState;
   int cancelType;
-  int implicit:1;
+  unsigned int implicit:1;
   DWORD thread;			/* Windows thread ID */
 #if defined(HAVE_CPU_AFFINITY)
   size_t cpuset;		/* Thread CPU affinity set */

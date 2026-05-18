@@ -95,6 +95,8 @@
 #else						/* unspecified support level */
 # define __PTW32_LEVEL  __PTW32_LEVEL_MAX	/* include everything anyway */
 #endif
+#undef  __PTW32_LEVEL
+#define __PTW32_LEVEL  __PTW32_LEVEL_MAX /* include everything anyway */
 
 /*
  * -------------------------------------------------------------

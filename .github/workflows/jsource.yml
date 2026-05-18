@@ -1433,7 +1433,7 @@ jobs:
       USE_SLEEF: 0
       USE_SLEEFQUAD: 1
       USE_OPENMP: 0
-      USE_PYXES: 0
+      USE_PYXES: 1
       USE_EMU_AVX: 0
       PTHREADS4WSRC: 1
       _DEBUG: 0
@@ -1443,7 +1443,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x86)
      shell: msys2 {0}
      env:
-      USE_PYXES: 0
+      USE_PYXES: 1
       USE_EMU_AVX: 0
       _DEBUG: 0
      run: |

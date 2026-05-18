@@ -12,7 +12,11 @@
 #endif
 
 #if PYXES
+#if defined(_WIN32)
+#include "../pthreads4w/include/pthread.h"
+#else
 #include <pthread.h>
+#endif
 #if defined(__APPLE__)
 #include "thread.h"
 #endif

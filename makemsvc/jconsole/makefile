@@ -22,7 +22,6 @@ ifneq ($(_DEBUG),)
 endif
 CINCLUDE = -I../mpir/include
 ifeq (1,$(USE_PYXES))
- CINCLUDE := $(CINCLUDE) -I../pthreads4w/include
  COPTION := $(COPTION) /DPYXES=1
 else
  COPTION := $(COPTION) /DPYXES=0

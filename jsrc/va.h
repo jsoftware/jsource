@@ -7,64 +7,76 @@
 // bits 0-1 kept open for jtflags
 // bits 2-3 should be forced to 1 jtflags;
 #define VCVTIP          0xc  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
-#define VARGX           4           // bit position for arg flags
-// scaf! convert VARGMSK (incl COPY[AW]) to 4 bits
-#define VBB             (B01<<VARGX)         // convert arguments to B 4   could put VARGMSK into 3 bits
-#define VII             (INT<<VARGX)         /* convert arguments to I 6             */
-#define VDD             (FL<<VARGX)          /* convert arguments to D 7             */
-#define VZZ             (CMPX<<VARGX)        /* convert arguments to Z 8             */
+#define VICX            4           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
+#define VBB             ((I)(15-B01X)<<VICX)
+#define VII             ((I)(15-INTX)<<VICX)
+#define VDD             ((I)(15-FLX)<<VICX)   // this must not change VBB or VII if ORed with either
+#define VZZ             ((I)(15-CMPXX)<<VICX)
+#define VXX             ((I)(15-XNUMX)<<VICX)  // XNUM conversion, extended into bits 22 & 24 (MARK/ASGN) below
+#define VQQ             ((I)(15-RATX)<<VICX)
+#define VI2I2           ((I)(15-INT2X)<<VICX)
+#define VI4I4           ((I)(15-INT4X)<<VICX)
+#define VEE             ((I)(15-QPX)<<VICX)
+#define VICMSK          ((I)15<<VICX) // mask for argument conversion 4-7, giving type to convert to.  0=no conversion
+// bit 8 free
 #define VIPWCRLONGX     9  // internal use in va2, overlaps BOX 9 means 'w has longer cell-rank, so x is repeated'
 #define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
-#define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM 10  moved to CONW 26 in arg to cvt          */
-#define VQQ             (RAT<<VARGX)         /* convert arguments to RAT  11          */
-#define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ|VCOPYW|VCOPYA)  // mask for argument requested type
-#define VRESX           12           // bit position for result flags
-// scaf! convert VRES to 3 bits
-#define VB              (B01<<VRESX)  // result type B  bit 12   could put VRESMSK into 3 bits
-#define VI              (INT<<VRESX)/* result type I  bit 14                     */
-#define VD              (FL<<VRESX) /* result type D  bit 15                     */
-#define VZ              (CMPX<<VRESX)/* result type Z bit 16                      */
-#define VX              (XNUM<<VRESX)/* result type XNUM  bit 18                  */
-#define VQ              (RAT<<VRESX) /* result type RAT  bit 19                   */
-// bit 28 unused
-#define VUNCH           (0<<VRESX)  // leave result unchanged
-#define VRESMSK         (VB|VI|VD|VZ|VX|VQ)  // mask for result-type - if all 0, take result type from the args
-#define VRMSK           ((I)0x8800<<VRESX) // mask for result-conversion spec 23,27
-#define VRD             ((I)0x800<<VRESX) // convert result to D if possible 23
-#define VRI             ((I)0x8000<<VRESX) // convert result to I if possible  27
-#define VRNONE          ((I)0x8800<<VRESX) // do not convert result 23,27  for now this is only in the atomic dyads - other leave the field at 00
-#define VRERR           ((I)0x0<<VRESX) // result-conversion removed by error (including EVNOCONV) 23,27
-#define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
-#define VCOPYW          ((I)1<<VCOPYWX)
-#define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
-#define VCOPYA          ((I)1<<VCOPYAX)
-#define VIPWFLONGX     17  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX  Means 'w has longer frame, so x is repeated in outer loops'
-#define VIPWFLONG      ((I)1<<VIPWFLONGX)
+#define VRCX            10           // bit position for optional final result-conversion 10-11
+#define VRD             ((I)1<<VRCX) // convert result to D if possible   must be 1 bit below VRI
+#define VRI             ((I)2<<VRCX) // convert result to I if possible
+#define VRNONE          ((I)3<<VRCX) // do not convert result  for now this is only in the atomic dyads - other leave the field at 00
+#define VRERR           ((I)0<<VRCX) // result-conversion removed by error (including EVNOCONV)
+#define VRMSK           ((I)3<<VRCX) // mask for result-conversion spec 10-11
+#define VOTX            12           // bit position for allocated result-type
+#define VB              ((I)B01X<<VOTX)
+#define VI              ((I)INTX<<VOTX)
+#define VD              ((I)FLX<<VOTX)
+#define VZ              ((I)CMPXX<<VOTX)
+#define VX              ((I)XNUMX<<VOTX)
+#define VQ              ((I)RATX<<VOTX)
+#define VI2             ((I)INT2X<<VOTX)
+#define VI4             ((I)INT4X<<VOTX)
+#define VE              ((I)QPX<<VOTX)
+#define VOTMSK          ((I)15<<VOTX) // mask for result type from function 12-15.  always present
+// obsolete #define VUNCH           (0<<VRESX)  // leave result unchanged
+// obsolete #define VRESMSK         (VB|VI|VD|VZ|VX|VQ)  // mask for result-type - if all 0, take result type from the args
+// obsolete #define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
+// obsolete #define VCOPYW          ((I)1<<VCOPYWX)
+// obsolete #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
+// obsolete #define VCOPYA          ((I)1<<VCOPYAX)
+// bit 16 free
+#define VIPWFLONGX      17  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX  Means 'w has longer frame, so x is repeated in outer loops'
+#define VIPWFLONG       ((I)1<<VIPWFLONGX)
+// bits 18-19 free
 #define VIPOKWX         20      // This routine can put its result over W
 #define VIPOKW          ((I)1<<VIPOKWX)
 #define VIPOKAX         21      // This routine can put its result over A
 #define VIPOKA          ((I)1<<VIPOKAX)
+// the conversion info for Vxx is in bits 22 and 24:
+#define VXEX            (VXX|XMODETOCVT((I)XMEXACT))  // exact conversion
+#define VXEQ            (VXX|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */
+#define VXCF            (VXX|XMODETOCVT((I)XMCEIL))   /* convert to XNUM ceiling/floor       */
+#define VXFC            (VXX|XMODETOCVT((I)XMFLR))  /* convert to XNUM floor/ceiling       */
 #define VCANHALT        0  // ((I)1<<VCANHALTX) was 25, but no longer used
+// bits 23 & 25 free
 #define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
-// the conversion info for Vxx is in bits 22 and 24:
-#define VXX             (Vxx|XMODETOCVT((I)XMEXACT))  // exact conversion
-#define VXEQ            (Vxx|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */
-#define VXCF            (Vxx|XMODETOCVT((I)XMCEIL))   /* convert to XNUM ceiling/floor       */
-#define VXFC            (Vxx|XMODETOCVT((I)XMFLR))  /* convert to XNUM floor/ceiling       */
-// bit 31 must not be used - it may be a sign bit, which has a meaning
 #define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
-#define VIPOKRNKWX         28      // filled by va2 if the ranks allow inplacing w
+// bit 27 free
+#define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
 #define VIPOKRNKW          ((I)1<<VIPOKRNKWX)
-#define VIPOKRNKAX         30      // filled by va2 if the ranks allow inplacing a
+// bit 29 free
+#define VIPOKRNKAX         30      // filled internally by va2 if the ranks allow inplacing a
 #define VIPOKRNKA          ((I)1<<VIPOKRNKAX)
+// bit 31 must not be used - it may be a sign bit, which has a meaning
 
 // Extract the argument-conversion type from cv coming from the table
-#define atype(x) (((x)>>VARGX)&(VARGMSK>>VARGX))
+#define isatype(x) (((x)&VICMSK)!=0)  // 1 if there is input conversion
+#define atype(x) (((I)1<<(VICMSK>>VICX))>>(PEXTN((x),VICX,VICMSK>>VICX)))  // result is AT from flags
 
 // Extract the result type from cv coming from the table
-#define rtype(x) (((x)>>VRESX)&(VRESMSK>>VRESX))
-#define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
+#define rtype(x) ((I)1<<(PEXTN((x),VOTX,VOTMSK>>VOTX)))
+// obsolete #define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
 
 #define NOT(v) ((v)^VALIDBOOLEAN)
 

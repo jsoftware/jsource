@@ -584,7 +584,7 @@ static KF1F(jtI2fromD){D p,q,*v;I i,n; I2 *x;
 
 static KF1F(jtI4fromD){D p,q,*v;I i,n; I4 *x;
  n=AN(w); v=DAV(w); x=(I4*)yv;
- q=-0x80000000*(1+fuzz); D r=0x7fffffff*(1+fuzz);
+ q=-0x80000000LL*(1+fuzz); D r=0x7fffffff*(1+fuzz);
  DO(n, p=v[i]; ASSERT(!(p<q||r<p),EVDOMAIN) );
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);

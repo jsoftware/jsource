@@ -859,17 +859,18 @@ static DF1(jtreduce){F12IP;A z;I d,f,m,n,r,t,wr,*ws,zt;
  PROD(m,f,ws);
  RESETRANK;   // clear rank now that we've used it - not really required here?
  // Allocate the result area
- zt=rtypew(adocv.cv,wt);  // Use specified type if given, otherwise use type of argument
+ zt=rtype(adocv.cv);  // Use specified type
  GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
  if(m*d==0){RETF(z);}  // mustn't call the function on an empty argument!
  // Convert inputs if needed 
- if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
+ if(unlikely(isatype(adocv.cv))&&(t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  // call the selected reduce routine.
  I rc=((AHDRRFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
  // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
  // have to do is change the type of the result.
- if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))RETF(z); if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF((adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z);}
+// obsolete  if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))RETF(z); if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF((adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z);}
+ if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))RETF(z); if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);}
 }    /* f/"r w main control */
 
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;

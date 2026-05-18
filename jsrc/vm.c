@@ -524,7 +524,7 @@ AHDR2(cirDD,D,D,D){I k=(I)jround(*x);
 
 AHDR2(cirEE,E,E,E){I k=(I)jround(x->hi);
  ASSERTWR(k==x->hi,EVDOMAIN); 
- n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EWIMAG); 
+ n=m<0?1:n; ASSERTWR(m==~1||(n==1&&m>=0&&((m&1)||m==2*1)),EVNONCE);   // we can't go to IMAG and back on E
  n=REPSGN(m)^(m>>SGNTO0(~m)); R jtcire(jt,n,k,z,y);
 }
 

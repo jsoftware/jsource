@@ -137,7 +137,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
       I bittofill=BW-ncmp1;  // get the running index of where we will put new bits
       SORTQTYPE *vv=v+in1-BW-(NPAR-1);  // pointer to beginning of the 4-word section ending at in1 
       // fill 4-bit sections up to the last, which will be 1-4 bits
-      // scaf* if AVX2, use permute4x rather than the 2 insts here
+      // scaf! if AVX2, use permute4x rather than the 2 insts here
       while(bittofill<BW-NPAR){cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQULOAD((SORTQULOADTYPE)vv) SORTQCMPTYPE)),SORTQCASTTOPD(pivot256),0x01),0x5))<<bittofill); vv-=NPAR; bittofill+=NPAR;}
       cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQMASKLOAD(vv,endmask) SORTQCMPTYPE)),SORTQCASTTOPD(pivot256),0x01),0x5))<<bittofill);
 

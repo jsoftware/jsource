@@ -882,7 +882,7 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
   // no need to turn off pristinity in w, because we handle only DIRECT types here
   VARPS adocv; varps(adocv,fs,wt,0);  // qualify the operation, returning action routine and conversion info
   if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...  z0 will hold a neutral if we have to calculate one
-   zt=rtypew(adocv.cv,wt);
+   zt=rtype(adocv.cv);
 #if SY_64
    GA(zz,zt,m*wcn,r,AS(w)); AS(zz)[0]=m; 
 #else
@@ -893,7 +893,7 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
    if(!AN(zz))R zz;  // don't run function on empty arg
    I atomsize=bpnoun(zt);
    zc=CAV(zz); zk=wcn*atomsize;
-   if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
+   if(unlikely(isatype(adocv.cv))&&(t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
    I rc=EVOK;   // accumulate error code
    EACHCUT(if(d>1){ I lrc=((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); rc=lrc<rc?lrc:rc;} else if(d==1){copyTT(zc,v1,wcn,zt,wt);} else{if(!z0){z0=idenv0(a,w,FAV(self),zt,&z); // compared to normal reduces, c means d and d means n
        if(!z0){if(z)R z; else{rc=jt->jerr; break;}}} mvc(zk,zc,atomsize,z0);} zc+=zk;
@@ -902,7 +902,8 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
     jsignal(rc);
     if(FAV(self)->id!=CCUT)CUTFRETCOUNT(a)=m;  // if we are going to retry, we have to reset the # frets indicator which has been destroyed
     R rc>=EWOV?cut2(a,w,self):0;
-   }else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,zz):zz;
+// obsolete    }else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,zz):zz;
+   }else RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,zz):zz);
    break;
   }
  }
@@ -1010,8 +1011,8 @@ DF2(jtrazecut2){F12IP;A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=
  r=MAX(1,AR(w)); s=AR(w)?AS(w):&AN(w); wv=CAV(w); PROD(d,AR(w)-1,AS(w)+1) k=d<<bplg(wt);  // d=#atoms in an item of w.  If w is an atom point shape to AN to get the correct item count
  if(pfx){u=v+wi; while(u>v&&sep!=*v)++v; p=u-v;}
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
- if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w); wt=t;}
- zt=rtypew(adocv.cv,wt); zk=d<<bplg(zt);
+ if(unlikely(isatype(adocv.cv))&&(t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w); wt=t;}
+ zt=rtype(adocv.cv); zk=d<<bplg(zt);
  GA(z,zt,AN(w),r,s); zv=CAVn(r,z); // allocate size of w, which is as big as it can get if there are no discarded items
  I rc=EVOK;
  while(p){I n;
@@ -1024,7 +1025,8 @@ DF2(jtrazecut2){F12IP;A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=
   }
   p-=q; v=u;  
  }
- AS(z)[0]=m; AN(z)=m*d; R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
+// obsolete  AS(z)[0]=m; AN(z)=m*d; R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
+ AS(z)[0]=m; AN(z)=m*d; RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);
 }   
 
 DF1(jtrazecut1){F12IP;R jtrazecut2(jtfg,mark,w,self);}  // pass inplaceability through

@@ -294,25 +294,25 @@ static AHDR1(oneB,C,C){mvc(n,z,MEMSET01LEN,MEMSET01); R EVOK;}
 extern AHDR1FN expI, expD, expE, logI, logD, logE;
 
 UA va1tab[]={
- /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}, {0,VI}, {floorEI,VI}, {  0, VUNCH}, {0, VUNCH}}},
- /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}, {0,VI}, {ceilEI,VI}, {  0, VUNCH}, {0, VUNCH}}},
- /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}, {  0, VUNCH}, {0, VUNCH}, {  0, VUNCH}, {0, VUNCH}}},
- /* *  */ {{{ 0,VB}, { sgnI,VI+VIPW}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}, {0,VI}, {sgnE,VI}, {sgnI2,VI}, {sgnI4,VI}}},
- /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIPW}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}, {0,0}, {expE,VUNCH}, { expD,VDD+VD}, { expD,VDD+VD}}},
- /* |  */ {{{ 0,VB}, { absI,VI+VIPW}, {   absD,VD+VIPW}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}, {0,0}, {absE,VUNCH+VIPW}, { absI2,VUNCH+VIPW}, { absI4,VUNCH+VIPW}}},
+ /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}, {0,VI}, {floorEI,VI}, {  0, VI2}, {0, VI4}}},
+ /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}, {0,VI}, {ceilEI,VI}, {  0, VI2}, {0, VI4}}},
+ /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}, {  0, 0}, {0, VE}, {  0, VI2}, {0, VI4}}},
+ /* *  */ {{{ 0,VB}, { sgnI,VI+VIPW}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}, {0,0}, {sgnE,VI}, {sgnI2,VI}, {sgnI4,VI}}},
+ /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIPW}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}, {0,0}, {expE,VE}, { expD,VDD+VD}, { expD,VDD+VD}}},
+ /* |  */ {{{ 0,VB}, { absI,VI+VIPW}, {   absD,VD+VIPW}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}, {0,0}, {absE,VE+VIPW}, { absI2,VI2+VIPW}, { absI4,VI4+VIPW}}},
  /* !  */ {{{oneB,VB}, {factI,VD}, {  factD,VD}, { factZ,VZ}, {factX,VX}, {factQ,VQ}, {0,0}, {factD,VD+VDD}, {factD,VD+VDD}, {factD,VD+VDD}}},
  /* o. */ {{{  0L,0L}, {   0L,0L}, {     0L,0L}, {    0L,0L}, { pixX,VX}, {0L,0L}, {0L,0L}, {0L,0L}, {0L,0L}, {0L,0L}}}, // others handled as dyads
- /* %: */ {{{ 0,VB}, {sqrtI,VD}, {sqrtD,VD+VIPW}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}, {0,0}, {sqrtE,VUNCH}, {sqrtD,VD+VDD+VIPW}, {sqrtD,VD+VDD+VIPW}}},  // most cannot inplace lest CMPX
- /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}, {0,0}, {logE,VUNCH}, {logD,VD+VDD}, {logD,VD+VDD}}},
- /* 10 - (QP only) */ {{{}, {}, {}, {}, {}, {}, {}, {negE,VUNCH+VIPW}}},
- /* 11 % (QP only) */ {{{}, {}, {}, {}, {}, {}, {}, {recipE,VUNCH+VIPW}}},
+ /* %: */ {{{ 0,VB}, {sqrtI,VD}, {sqrtD,VD+VIPW}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}, {0,0}, {sqrtE,VE}, {sqrtD,VD+VDD+VIPW}, {sqrtD,VD+VDD+VIPW}}},  // most cannot inplace lest CMPX
+ /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}, {0,0}, {logE,VE}, {logD,VD+VDD}, {logD,VD+VDD}}},
+ /* 10 - (QP only) */ {{{}, {}, {}, {}, {}, {}, {}, {negE,VE+VIPW}}},
+ /* 11 % (QP only) */ {{{}, {}, {}, {}, {}, {}, {}, {recipE,VE+VIPW}}},
 };
 
 
 static A jtva1(J,A,A);
 
 static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P*wp,*zp;
- t=atype(cv); zt=rtype(cv);
+ t=isatype(cv)?atype(cv):0; zt=rtype(cv);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); c=t&&TYPESNE(t,AT(e));
  if(c)RZ(e=cvt(t,e)); GA00(ze,zt,1,0); oprc=((AHDR1FN*)ado)(jt,1L,AV0(ze),AV(e));
  if(c)RZ(e=cvt(t,x)); n=AN(x); if(oprc==EVOK){GA(zx,zt,n,AR(x),AS(x)); if(n){oprc=((AHDR1FN*)ado)(jt,n, AV(zx),AV(x));}}
@@ -324,7 +324,8 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
   J jtfg=(J)((I)jt+JTRETRY);  // tell va1 it's a retry
   RZ(ze=jtva1(jtfg,e,self)); 
   jt->jerr=(UC)oprc; RZ(zx=jtva1(jtfg,x,self));   // restore restart signal for the main data too
- }else if(cv&VRI+VRD&&oprc!=EVNOCONV){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
+// obsolete  }else if(cv&VRI+VRD&&oprc!=EVNOCONV){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
+ }else if(unlikely(((cv+VRD)&VRI))&&likely(oprc!=EVNOCONV)){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
  GASPARSE(z,STYPE(AT(ze)),1,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,a,ca(SPA(wp,a)));
  SPB(zp,i,ca(SPA(wp,i)));
@@ -335,7 +336,7 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
 
 #define VA1CASE(e,f) (10*(e)+(f))
 
-static DF1(jtva1){F12IP;A z;I cv,n,t,wt,zt;VA1F ado;
+static DF1(jtva1){F12IP;A z;I cv,n,wt,zt;VA1F ado;
  UA *u=((UA*)((I)va1tab+FAV(self)->localuse.lu1.uavandx[0]));
  ARGCHK1(w);
  wt=AT(w); n=AN(w);
@@ -351,8 +352,8 @@ static DF1(jtva1){F12IP;A z;I cv,n,t,wt,zt;VA1F ado;
   // all these cases are needed because sparse code may fail over to them
   case VA1CASE(EWOV,  VA1CMIN-VA1ORIGIN): cv=VD;       ado=floorD;               break;
   case VA1CASE(EWOV,  VA1CMAX-VA1ORIGIN): cv=VD;       ado=ceilD;                break;
-  case VA1CASE(EWOV1,  VA1CMIN-VA1ORIGIN): cv=VUNCH;       ado=floorE;               break;
-  case VA1CASE(EWOV1,  VA1CMAX-VA1ORIGIN): cv=VUNCH;       ado=ceilE;                break;
+  case VA1CASE(EWOV1,  VA1CMIN-VA1ORIGIN): cv=VD+VDD;       ado=floorD;               break;  // overflow on E produces D result
+  case VA1CASE(EWOV1,  VA1CMAX-VA1ORIGIN): cv=VD+VDD;       ado=ceilD;                break;  // overflow on E produces D result
   case VA1CASE(EWOV,  VA1CSTILE-VA1ORIGIN): cv=VD+VDD;   ado=absD;                 break;
   case VA1CASE(EWIRR, VA1CROOT-VA1ORIGIN): cv=VD+VDD;   ado=sqrtD;                break;
   case VA1CASE(EWIRR, VA1CEXP-VA1ORIGIN): cv=VD+VDD;   ado=expD;                 break;
@@ -365,19 +366,19 @@ static DF1(jtva1){F12IP;A z;I cv,n,t,wt,zt;VA1F ado;
   }
   RESETERR;
  }
- zt=rtypew(cv,wt);  // Extract output type; if none given, means 'keep same type'
+ zt=rtype(cv);  // Extract output type, always given
  if(unlikely(ado==0)){  // the function is an identity function
   if(((zt^AT(w))&NUMERIC)==0)RCA(w);  // if the argument has the correct type, return the argument
   GA(z,zt,n,AR(w),AS(w)); RETF(z);  // if not, must be empty, make an appropriate empty and return it
  }
  if(unlikely((SGNIFSPARSE(AT(w))&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
- t=atype(cv);  // extract required type of input and result
- if(t&~wt){RZ(w=cvt(t,w)); jtfg=(J)((I)jtfg|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
+ if(unlikely(isatype(cv))){I t=atype(cv); if(!(t&wt)){RZ(w=cvt(t,w)); jtfg=(J)((I)jtfg|JTINPLACEW);}}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w)); if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;}  // move 16-byte values to 16-byte bdy
  if(!n){RETF(z);}
  I oprc = ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms, save result status.  If an error was signaled it will be reported here, but not necessarily vice versa
- if(likely(!(oprc&(255&~EVNOCONV)))){RETF(unlikely(cv&VRI+VRD&&oprc!=EVNOCONV)?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
+// obsolete  if(likely(!(oprc&(255&~EVNOCONV)))){RETF(unlikely(cv&VRI+VRD&&oprc!=EVNOCONV)?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
+ if(likely(!(oprc&(255&~EVNOCONV)))){RETF(unlikely(((cv+VRD)&VRI))&&likely(oprc!=EVNOCONV)?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
  else{
   // There was an error.  If it is recoverable in place, handle the cases here
   // positive result gives error type to use for retrying the operation; negative is 1's complement of the restart point (first value NOT stored)

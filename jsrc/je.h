@@ -1006,7 +1006,7 @@ extern B        jtxsinit(JS);
 extern B        all0(A);
 extern B        all1(A);
 extern I        allosize(A);
-extern I        atype(I);
+// obsolete extern I        atype(I);
 extern I        boxat(A,I,I,I);
 extern I        bsum(I,B*);
 

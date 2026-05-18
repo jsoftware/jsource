@@ -311,15 +311,41 @@ NB. 9!:11 ] 30
 NB. qy%qx
 NB. 9!:11 t
 
-NB. <. >. return integer when possible
+NB. <. >. return integer when possible, float otherwise
 3 4 _4 _4 -:  <. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001
 4 -: 3!:0 <. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001
 4 4 _3 _4 -:  >. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001
 4 -: 3!:0 >. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001
 3 4 _4 _4 _ -:  <. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001 _
-11 -: 3!:0 <. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001 _
+8 -: 3!:0 <. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001 _
 4 4 _3 _4 _ -:  >. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001 _
-11 -: 3!:0 >. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001 _
+8 -: 3!:0 >. 11 c. 3.5 4.0000000000000001 _3.5 _4.0000000000000001 _
+
+NB. Test type priority and conversion
+NB.  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F     // priorities
+NB. B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
+tpri =: 4 64 128 8 6 7 11 16   NB. the 3!:0 values in priority order
+args =. , tpri c.&.>/ 3 4 5  NB. all the different types
+vbs =. =`<`<.`<:`>`>.`>:`+`+.`*`*.`-`%`^`^.`!`(17 b.)`(32 b.)`(34 b.)   NB. o. cannot handle extended with multiple x
+f =. {{  NB. adverb.  u is list of dyad gerunds, x and y are values. Verify that the result of verb matches the conversion rules
+xx =: x [ yy =: y
+mp =: x >.&.(tpri&i.)&(3!:0) y  NB. higher pri
+px =. mp c. x [ py =. mp c. y  NB. the expected conversion
+for_g. m do.
+ gg =: g`:6  NB. Turn gerund into verb
+ for_r. ]`(,~)`((?10)&#) do.
+  rr =: r`:6
+  assert. x gg  ((&(mp&c.)) ([. (-: *. =&(3!:0 * 0~:#)) ].)) y
+  assert. x gg  ((&(mp&c.)) ((((([.~)`rr)(`:6))~) (-: *. =&(3!:0 * 0~:#)) (rr@].))) y
+  assert. x gg  ((&(mp&c.)) ((([.`rr)(`:6)) (-: *. =&(3!:0 * 0~:#)) (rr@].))) y
+  assert. x (gg  ((&(mp&c.)) ([. (-: *. =&(3!:0 * 0~:#)) ].)))&rr y
+ end.
+end.
+1
+}}&>
+vbs f/~ args   NB. Run most of the dyads on all pairs of types
+(<'|') f/~ 3 }. args  NB. | is different since it converts back to INT; we don't use INT
+(<'%:') f/~ (<<<12 13 14 15 16 17) { args  NB. int %: int2 fails  
 
 
 -. (15!:19 -: 15!:19@(11&c.)) 0. + i. 10   NB. new block allocated

@@ -779,7 +779,7 @@ __PTW32_END_C_DECLS
 # define  __PTW32_TO_VLONG64PTR(ptr) (ptr)
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !(defined(__aarch64__)
 # if defined(_WIN64)
 # define  __PTW32_INTERLOCKED_COMPARE_EXCHANGE_64(location, value, comparand) \
     ({                                                                     \

@@ -1369,7 +1369,7 @@ jobs:
       WINDRES: windres
       _SSE4_2: 1
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: 1
       USE_PYXES: 0
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
@@ -1380,7 +1380,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x64)
      shell: msys2 {0}
      env:
-      USE_PYXES: 0
+      USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: 0
      run: |
@@ -1494,7 +1494,7 @@ jobs:
       WINDRES: windres
       USE_SLEEF: 1
       USE_OPENMP: 0
-      USE_PYXES: 0
+      USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
       _DEBUG: 0
@@ -1504,7 +1504,7 @@ jobs:
    - name: Test JE (Windows MSYS2 arm64)
      shell: msys2 {0}
      env:
-      USE_PYXES: 0
+      USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: 0
      run: |

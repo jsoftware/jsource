@@ -405,7 +405,7 @@ macho_add_dwarf_segment (struct backtrace_state *state, int descriptor,
   secoffset = 0;
   for (i = 0; i < nsects; ++i)
     {
-      if (secoffset + sec_header_size > sizesecs)
+      if (secoffset > sizesecs || sec_header_size > sizesecs - secoffset)
 	{
 	  error_callback (data, "section overflow withing segment", 0);
 	  return 0;
@@ -540,7 +540,8 @@ macho_add_symtab (struct backtrace_state *state, int descriptor,
   else
     symsize = sizeof (struct macho_nlist);
 
-  if (!backtrace_get_view (state, descriptor, symoff, nsyms * symsize,
+  if (!backtrace_get_view (state, descriptor, symoff,
+			   (uint64_t) nsyms * symsize,
 			   error_callback, data, &sym_view))
     goto fail;
   sym_view_valid = 1;

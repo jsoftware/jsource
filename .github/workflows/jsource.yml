@@ -1369,7 +1369,7 @@ jobs:
       WINDRES: windres
       _SSE4_2: 1
       USE_SLEEF: 1
-      USE_OPENMP: 1
+      USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
@@ -1432,7 +1432,7 @@ jobs:
       WINDRES: windres
       USE_SLEEF: 0
       USE_SLEEFQUAD: 1
-      USE_OPENMP: 1
+      USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
       PTHREADS4WSRC: 1
@@ -1494,7 +1494,7 @@ jobs:
       CXX: aarch64-w64-mingw32-clang++
       WINDRES: windres
       USE_SLEEF: 1
-      USE_OPENMP: 1
+      USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1

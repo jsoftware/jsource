@@ -199,6 +199,7 @@ f =: cocurrent_z_ f.
 'cocurrent_z_' -: 5!:5 <'coclass'
 
 
+0 = $:^:*@<:$::@6: 5
 
 
 epilog''

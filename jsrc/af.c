@@ -160,7 +160,7 @@ cycfound:;  // cycle found, running from cyci to cycn; now back it down to find 
    IAV0(aa)[1]=initn;   // restore name count for later uses at this level
    SYMRESTORELOCALGLOBAL(savloc,savglob);  // make sure we restore current symbols  THIS IS THE RESTORE
    if(likely(((I)z&~255)!=0)){   // if no error or cycle
-    if(unlikely((ai!=0)>(FAV(x)->flag&VNOSELF))){RZ(z=fixrecursive(sc(ai),z))}  // if a name not at top level contains $:, replace the whole named verb with an explicit equivalent
+    if(unlikely((ai!=0)>(FAV(x)->flag&VNOSELF))){RZ(z=jtdolcoco(jt,z))}  // if a name not at top level contains $:, replace the verb with verb $:: to set a recursion point
     ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVTYPECHG);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
    }else if(z!=0){  // cycle found
     if(initn>=(I)z)R z;     // we found a cycle, which started at z-1.  If this call is the start of the cycle, have it return w to close the cycle.  Keep the cycle up until that happens

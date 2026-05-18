@@ -34,6 +34,7 @@ static C spellintab3[][4] = {
 /* & */ {0, CUNDCO, 0, 0},
 /* F */ {CFDOTDOT, CFDOTCO, CFCODOT, CFCOCO},
 /* / */ {CSLDOTDOT, 0, 0, 0},
+/* $ */ {0, 0, 0, CSETSELF},
 };
 // The spelling is encoded (littleendian) as (graphic) followed by 2 bits of inflection1 followed by 2 bits of inflection2: 00=NUL 01=. 10=: 11=SP
 #define DOT0 0x100
@@ -65,7 +66,7 @@ static US spellouttab[256] = {
 [CMATCH  ]=(UC)'-'+CO0,       [CDOMINO ]=(UC)'%'+DOT0,      [CSQRT   ]=(UC)'%'+CO0,
 [CLOG    ]=(UC)'^'+DOT0,      [CPOWOP  ]=(UC)'^'+CO0,       [CSPARSE ]=(UC)'$'+DOT0,      [CSELF   ]=(UC)'$'+CO0,       
 [CNUB    ]=(UC)'~'+DOT0,      [CNE     ]=(UC)'~'+CO0,       [CREV    ]=(UC)'|'+DOT0,
-[CCANT   ]=(UC)'|'+CO0,       [COBVERSE]=(UC)':'+DOT0,       
+[CCANT   ]=(UC)'|'+CO0,       [COBVERSE]=(UC)':'+DOT0,      [CSETSELF]=(UC)'$'+CO0+CO1,
 [CADVERSE]=(UC)':'+CO0,       [CCOMDOT ]=(UC)','+DOT0,      [CLAMIN  ]=(UC)','+CO0,       [CCUT    ]=(UC)';'+DOT0,       
 [CWORDS  ]=(UC)';'+CO0,       [CBASE   ]=(UC)'#'+DOT0,      [CABASE  ]=(UC)'#'+CO0,       [CFIT    ]=(UC)'!'+DOT0,       
 [CIBEAM  ]=(UC)'!'+CO0,       [CSLDOT  ]=(UC)'/'+DOT0,      [CGRADE  ]=(UC)'/'+CO0,       [CBSDOT  ]=(UC)'\\'+DOT0,       
@@ -107,7 +108,7 @@ C spellin(I n,C*s){
  // 3-byte characters.  Rare, so handle individually.  Most likely these will be names that are being checked to see if they are primitives
  if(p!='_'){
   // translate the base char to a table index.  Not worth the cache misses to have a full table.  This table fits in 1/2 cache line
-  I ind=0; ind=p=='{'?1:ind; ind=p=='}'?2:ind; ind=p=='p'?3:ind; ind=p=='&'?4:ind; ind=p=='F'?5:ind; ind=p=='/'?6:ind;
+  I ind=0; ind=p=='{'?1:ind; ind=p=='}'?2:ind; ind=p=='p'?3:ind; ind=p=='&'?4:ind; ind=p=='F'?5:ind; ind=p=='/'?6:ind;  ind=p=='$'?7:ind;
   // there are 4 possible inflections: decode them, checking for erroneous inflection
   I inf1=-16; inf1=s[1]==CESC1?0:inf1; inf1=s[1]==CESC2?1:inf1; I inf2=-16; inf2=s[2]==CESC1?0:inf2; inf2=s[2]==CESC2?1:inf2; inf2=2*inf1+inf2;  // inf2=0-3, or neg if error
   C *bp=&spellintab3[ind][inf2]; bp=inf2<0?&spellintab3[0][0]:bp;   // point to the result; if erroneous inflection, point to error return

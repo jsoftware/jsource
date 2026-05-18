@@ -514,7 +514,7 @@ extern DF2(jtfoldZ2);
 extern DF2(jtfoldZ);
 extern DF2(jtfolk2);
 extern F2(jtforeign);
-extern F2(jtforeignextra);
+// obsolete extern F2(jtforeignextra);
 extern DF2(jtfrom);
 extern F2(jtfrombs);
 extern F2(jtfromis);
@@ -613,6 +613,7 @@ extern DF2(jtsct2);
 extern DF2(jtscy2);
 extern DF2(jtscz2);
 extern DF2(jtself12);
+extern F1(jtdolcoco);
 extern F2(jtsetfv);
 extern DF2(jtsfrom);
 #if SY_64

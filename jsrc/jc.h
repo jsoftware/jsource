@@ -149,7 +149,7 @@
 #define CPDERIV    (C)0x4f  // p..
 #define CXCO       (C)0x50  // x:
 #define CTHORN     (C)0x51  // ":
-// 0x52 unused
+#define CSETSELF   (C)0x52  // $::
 #define CUCO       (C)0x53  // u:
 #define CDGRADE    (C)0x54  // \:
 #define CWORDS     (C)0x55  // ;:

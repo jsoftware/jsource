@@ -43,15 +43,15 @@
  */
 #define  __PTW32_VERSION_MAJOR 3
 #define  __PTW32_VERSION_MINOR 0
-#define  __PTW32_VERSION_MICRO 3
+#define  __PTW32_VERSION_MICRO 1
 #define  __PTW32_VERION_BUILD 0
-#define  __PTW32_VERSION 3,0,3,0
-#define  __PTW32_VERSION_STRING "3, 0, 3, 0\0"
+#define  __PTW32_VERSION 3,0,0,1
+#define  __PTW32_VERSION_STRING "3, 0, 1, 0\0"
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
 # pragma GCC system_header
 # if ! defined __declspec
-// #  error "Please upgrade your GNU compiler to one that supports __declspec."
+#  error "Please upgrade your GNU compiler to one that supports __declspec."
 # endif
 #endif
 

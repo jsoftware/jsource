@@ -45,7 +45,6 @@ ifeq (1,$(USE_PYXES))
    PTHREADLIB = ../pthreads4w/x86/pthreadVC3.lib
   endif
  endif
- CINCLUDE := $(CINCLUDE) -I../pthreads4w/include
  COPTION := $(COPTION) /DPYXES=1
 else
  COPTION := $(COPTION) /DPYXES=0

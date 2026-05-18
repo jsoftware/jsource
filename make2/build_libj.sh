@@ -138,15 +138,15 @@ if [ $USE_OPENMP -eq 1 ]; then
    ;;
   windows/j32*)
    OPENMP=" -fopenmp "
-   LDOPENMP = ../openmp/obj/windows/x86/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/x86/libomp.lib "
    ;;
   windows/j64arm)
    OPENMP=" -fopenmp "
-   LDOPENMP = ../openmp/obj/windows/arm64/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/arm64/libomp.lib "
    ;;
   windows/*)
    OPENMP=" -fopenmp "
-   LDOPENMP = ../openmp/obj/windows/x64/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/x64/libomp.lib "
    ;;
   *)
    OPENMP=" -fopenmp "
@@ -275,7 +275,7 @@ fi
 if [ $USE_PYXES -eq 1 ]; then
  case "$jplatform/$j64x" in
   windows/j32*)
-   common="$common -DPYXES=1 -I../pthreads4w/include"
+   common="$common -DPYXES=1"
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else
@@ -283,7 +283,7 @@ if [ $USE_PYXES -eq 1 ]; then
    fi
    ;;
   windows/j64arm)
-   common="$common -DPYXES=1 -I../pthreads4w/include"
+   common="$common -DPYXES=1"
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else
@@ -291,7 +291,7 @@ if [ $USE_PYXES -eq 1 ]; then
    fi
    ;;
   windows/*)
-   common="$common -DPYXES=1 -I../pthreads4w/include"
+   common="$common -DPYXES=1"
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else

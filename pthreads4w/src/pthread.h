@@ -175,7 +175,7 @@ enum
 };
 
 #include <time.h>
-#include <sched.h>
+#include "sched.h"
 
 /*
  * -------------------------------------------------------------

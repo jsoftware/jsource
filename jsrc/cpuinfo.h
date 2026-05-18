@@ -17,7 +17,11 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#if defined(_WIN32)
+#include "../pthreads4w/include/sched.h"
+#else
 #include <sched.h>
+#endif
 #endif
 #include <stdint.h>
 

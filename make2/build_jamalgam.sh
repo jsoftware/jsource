@@ -138,15 +138,15 @@ if [ $USE_OPENMP -eq 1 ]; then
    ;;
   windows/j32*)
    OPENMP=" -fopenmp "
-   LDOPENMP = ../openmp/obj/windows/x86/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/x86/libomp.lib "
    ;;
   windows/j64arm)
    OPENMP=" -fopenmp "
-   LDOPENMP = ../openmp/obj/windows/arm64/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/arm64/libomp.lib "
    ;;
   windows/*)
    OPENMP=" -fopenmp "
-   LDOPENMP = ../openmp/obj/windows/x64/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/x64/libomp.lib "
    ;;
   *)
    OPENMP=" -fopenmp "
@@ -270,7 +270,7 @@ fi
 if [ $USE_PYXES -eq 1 ]; then
  case "$jplatform/$j64x" in
   windows/j32*)
-   common="$common -DPYXES=1 -I../pthreads4w/include"
+   common="$common -DPYXES=1"
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else
@@ -278,7 +278,7 @@ if [ $USE_PYXES -eq 1 ]; then
    fi
    ;;
   windows/j64arm)
-   common="$common -DPYXES=1 -I../pthreads4w/include"
+   common="$common -DPYXES=1"
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else
@@ -286,7 +286,7 @@ if [ $USE_PYXES -eq 1 ]; then
    fi
    ;;
   windows/*)
-   common="$common -DPYXES=1 -I../pthreads4w/include"
+   common="$common -DPYXES=1"
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
    else
@@ -998,7 +998,7 @@ if [ ! -f ../jsrc/jversion.h ]; then
 fi
 
 mkdir -p ../bin/$jplatform/$j64x
-export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_PTHREADS4 WOBJS_ASM SRC_ASM OBJSLN jplatform j64x
+export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_PTHREADS4W WOBJS_ASM SRC_ASM OBJSLN jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
   par=$(nproc)

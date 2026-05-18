@@ -138,15 +138,15 @@ if [ $USE_OPENMP -eq 1 ]; then
    ;;
   windows/j32*)
    OPENMP=" -fopenmp "
-   LDOPENMP= ../openmp/obj/windows/x86/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/x86/libomp.lib "
    ;;
   windows/j64arm)
    OPENMP=" -fopenmp "
-   LDOPENMP= ../openmp/obj/windows/arm64/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/arm64/libomp.lib "
    ;;
   windows/*)
    OPENMP=" -fopenmp "
-   LDOPENMP= ../openmp/obj/windows/x64/libomp.lib
+   LDOPENMP=" ../openmp/obj/windows/x64/libomp.lib "
    ;;
   *)
    OPENMP=" -fopenmp "

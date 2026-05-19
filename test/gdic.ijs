@@ -316,10 +316,10 @@ for. i. n_iter do.
   assert. jdelans -: naivemask *. batchshapefordel ($ ,) ~:&.|. (_ , keyshape) ($ ,) keys
 end.
 if. valshape -: 0 do.
-  assert. (/:~ > keys__naivedict) -: /:~ items__x ''
+  assert. (> keys__naivedict) (-: +. *.&(0=#))&(/:~) items__x ''  NB. naive matches dict, or both are empty
 else.
   'keys vals' =. items__x ''
-  assert. (/:~ > keys__naivedict) -: /:~ keys
+  assert. (> keys__naivedict) (-: +. *.&(0=#))&(/:~) keys  NB. naive matches dict, or both are empty
   assert. (# vals) -: # keys
 end.
 destroy__naivedict ''

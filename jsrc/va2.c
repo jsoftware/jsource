@@ -910,7 +910,7 @@ static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)
-static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks
+static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks
  A z;I m,mf,n,nf,zn;VA2 adocv,*aadocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  {I at=AT(a);
@@ -972,10 +972,10 @@ static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allr
     if(unlikely(a==w))shortr=0;  // not if args equal
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
-    nf= 3 + mf*2 + nf;  // set inplaceability here: only if nonrepeated cell
+    nf=3+mf*2+nf;  // set inplaceability here: only if nonrepeated cell
     nf&=shortr;  // we use shortr to shorten dependency chain on nf
     nf+=4*nf-16;  // make 2 copies of the 2 bits, bits 4+=1  This is a long dependency chain through nf
-    jtfg = (J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable
+    jtfg=(J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable
     // parm aawwzknfxrz[5] is orig m, i. e. the length of the inner or only loop.
     n=2*n-mf;  // parm m if there are 2 loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
@@ -1057,7 +1057,7 @@ static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allr
 #endif
     if(unlikely(a==w))nf=0;  // not inplaceable if args identical
     nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of jtfg.  This is a long dependency chain through nf but it will overlap the PRODs coming up
-    jtfg = (J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free
+    jtfg = (J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free   rest of jtfg survives
     f=fr>>(2*RANKTX); f&=RANKTMSK;  // recover (shorter frame len) from upper fr
     PRODRNK(nf,((fr>>3*RANKTX)-f),f+AS(((I)jtfg&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
@@ -1073,15 +1073,17 @@ static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allr
     I migrmf=mf;
     DPMULDE(nf,mf,mf);  // mf is total # iterations
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
-    I flagorign=((I)jtfg>>VIPWCRLONGX)&(n!=1);  // if n was not 1 before migration, it must be flagged if WCRLONG is set; in this case nf must be 1 and there is no further flagging
-    if(unlikely(((C)(nf!=1)+(C)(n!=1)-(C)(m==1))<=(C)0)){  // 2 values=1, can lose a loop
+    I fmnne1=2*(2*(nf!=1)+(m!=1))+(n!=1);  // set flags for values!=1.  We roll the bits into a register to save regs
+    n=2*n;  // parm m if there are 2 loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame).  Here we make room for the LSB flag
+    if(unlikely((1LL<<fmnne1)&0b10111)){   // 2 values=1, can lose a loop (0 or 1 compare bits set)
+ // obsolete    if(unlikely(((C)(nf!=1)+(C)(n!=2)-(C)(m==1))<=(C)0)){
      // migration is possible
-     flagorign|=((I)jtfg>>VIPWFLONGX)&(nf!=1);  // repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus nop flag set yet
      m*=migrmf; n*=nf;   // propagate mf and nf down
+     n|=((I)jtfg>>VIPWFLONGX)&(fmnne1>>2);  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
     }else{aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];}     // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration
-    // Use new semantics for m and n
+    // encode major-axis in LSB of n, and complement m if there in only 1 loop
+    n|=((I)jtfg>>VIPWCRLONGX)&fmnne1&1;  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; in this case nf must be 1 and there is no further flagging
     aawwzknfxrz[5]=m;  // parm n is orig m, i. e. the length of the inner or only loop.
-    n=2*n+flagorign;  // parm m if there are 2 loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
     m=n>3?n:m;  // if inner-loop len > 1, there are 2 loops, use mf; if inner-loop len=1, use the 1-loop value
    }else{  // sparse case
@@ -1107,8 +1109,8 @@ static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allr
   // Because of the priority of errors we mustn't check the type until we have verified agreement above
   if(unlikely(isatype((I)jtfg))&&likely(zn>0)){  // input conversion required (rare), and the result is not empty
    I at=AT(a), wt=AT(w), t=atype((I)jtfg);
-   if(likely((at|wt)!=t)){    // if an argument needs to be converted (probably will, but not necessarily if arg are not BID
-    I bt=bplg(t);  // get shared input type
+   if(likely((at|wt)!=t)){    // if an argument needs to be converted (probably will, but not necessarily if arg are not BID)
+    I bt=bplg(t);  // get shared required input type
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
     // bits 2-3 of jtfg indicate whether inplaceability is allowed by the op, the ranks, and the addresses
@@ -1131,19 +1133,24 @@ static A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allr
   if((ipw|ipa)<0){  // see if either w or a is inplaceable
    // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
    z=ipw<0?w:a;  // z=inplaceable arg; 
-   if(unlikely((zt&~AT(z))!=0)){   // if type changes (zt!=incumbent and zt!=0)...  zt does not have upper flag bits
+// scaf! zt always given
+   if(unlikely(zt!=AT(z))){   // if type changes (zt!=incumbent and zt!=0)...  zt does not have upper flag bits
     // the type of inplaceable z must change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
     // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
     if(AFLAG(z)&AFUNINCORPABLE){
-     if((ipa&((zt&~AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
+// obsolete      if((ipa&((zt&~AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
+     if((ipa&((zt^AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
         // we could use a even if it changes type, if it is not UNINCORPABLE.  But if w is UNINCORPABLE and a is inplaceable, it's surely because a is an unrepeated UNINCORPABLE cell in dyad u"n - not worth checking
      z=a;  // we can use a as is, do so
     }else AT(z)=zt;  // OK to change type of z to match the result, do so
    }
   }else{
 allocate:;  // come here if no inplaceable block could have the type changed
-   I wt=AT(w); zt=zt?zt:wt; GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)
-   if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
+// scaf! zt always given; make all 0x...>>const use PEXTN; try to advance all bplg/bp
+// obsolete   I wt=AT(w); zt=zt?zt:wt; 
+   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)
+// obsolete    if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy  scaf test this in jtfg
+   if(unlikely(rtype((I)jtfg)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy  scaf test this in jtfg
 #define scell AS((I)jtfg&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
    MCISH(AS(z),AS(((I)jtfg&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));  // copy shape

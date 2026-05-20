@@ -433,7 +433,7 @@ I infererrtok(J jt){I errtok;
   // see if ( was executable
   pmask|=jt->parserstackframe.parserstkend1[0].pt&PTNOTLPAR?0:0x100;  // ( any any any is line 8 - but it couldn't fail
   // Get the number that was executed.  Take the token# from entry (9-0): 2 1 1 1 1 2 2 2 2 1 (line 9 is no match, must be ending syntax error)
-  errtok=jt->parserstackframe.parserstkend1[((0x21e>>CTTZI(pmask|0x200))&1)+1].t;  // get failing token#
+  errtok=jt->parserstackframe.parserstkend1[PEXTN(0x21e,CTTZI(pmask|0x200),1)+1].t;  // get failing token#
  }
  // see if the sentence had unbalanced parens.
  I lastlwd, lastrwd, nesting=0;   // 1-origin wd# of leftwost unmatched ( and rightmost unmatched ) found so far, and nesting level

@@ -737,7 +737,7 @@ static DF1(jtreducesp){F12IP;A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  R jt->jerr>=EWOV?IRS1(w,self,r,jtreducesp,z):z;
 }    /* f/"r for sparse w */
 
-#define BR2CASE(t,id)   ((((id)-CSTARCO)*7)+((0x160008>>(t))&7))  // unique inputs are 0 1 2 3 16 17 18-> 0 4 2 1 6 3 5    10110 .... .... .... 1000
+#define BR2CASE(t,id)   ((((id)-CSTARCO)*7)+PEXTNC(0x160008,(t),7))  // unique inputs are 0 1 2 3 16 17 18-> 0 4 2 1 6 3 5    10110 .... .... .... 1000
 // perform expression op on x and y, which have booleans in alternate bytes
 // m is the number of bytes
 #if SY_64

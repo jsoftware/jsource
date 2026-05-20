@@ -34,7 +34,7 @@ B jtvnm(J jt,I n,C *s){C c,t;I j;
  // We do this with a state machine that scans 3 characters at a time, creating 3 bits: [0]='_' [1]='_' [2]=digit (including _).  We always start pointing to the first '_'.  State result tells
  // how many characters to advance, 0 meaning error.  We stop when there are <2 characters left.  The word cannot end with '_'.  If it ends xx9_9 we will go to 9_9 and then _9?, i. e. overfetch the buffer by 1.  But that's OK on literal data.
  // advance counts are: xxa=3, xx9=2, x_a=0, x_9=1, _xa=0, _x9=0, __a=3, __9=0 
- ++j; while(j<n-1){I state=4*(s[j]=='_')+2*(s[j+1]=='_')+(ctype[(UC)s[j+2]]>>3); state=(0x03001023L>>(state<<2))&3; if(state==0)R 0; j+=state;};
+ ++j; while(j<n-1){I state=4*(s[j]=='_')+2*(s[j+1]=='_')+(ctype[(UC)s[j+2]]>>3); state=PEXTN(0x03001023L,state<<2,3); if(state==0)R 0; j+=state;};
  R 1;
 }    /* validate name s, return 1 if name well-formed or 0 if error */
 

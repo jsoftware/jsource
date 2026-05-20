@@ -233,7 +233,7 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
    A freq;  // for mean, save frequencies here
    I keyslashfn=(FAV(self)->flag>>VFKEYSLASHFX)&3; // 0-3 for <. >. + mean
    // Figure out the type of result, and which routine will handle the operation
-   I ztoride=(0x0e010000>>((4*keyslashfn+((AT(w)>>INTX)&3))<<1))&3;  // z type override. 00=none, 01=B to I 10=B to FL 11=I to FL  bits are opFI, values are (0) 0 3 2 (0) 0 x 1 (0) 0 0 0 (0) 0 0 0
+   I ztoride=PEXTN(0x0e010000,((4*keyslashfn+PEXTN(AT(w),INTX,3))<<1),3);  // z type override. 00=none, 01=B to I 10=B to FL 11=I to FL  bits are opFI, values are (0) 0 3 2 (0) 0 x 1 (0) 0 0 0 (0) 0 0 0
    ztoride=AT(w)&FL+INT+B01?ztoride:0;  // no override for other types
    I zt=AT(w)^(((((INT+FL)<<12)+((B01+FL)<<8)+((B01+INT)<<4))>>(ztoride<<2))&0xf);  // switch result precision as needed
    I celllen = cellatoms<<bplg(zt);  // length of a cell of z, in bytes

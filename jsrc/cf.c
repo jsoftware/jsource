@@ -186,7 +186,7 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
  hcol=atoplr(h);  // codes are none,[,],@[,@] in h
 
  // if we are using the default functions, pull them from the tables
- if(likely(!f1))f1=fork1tbl[(0x200110>>(fline<<2))&3][(0b00110>>hcol)&1];  // fline: 0/3/4->0,  1/2->1, 5->2   hcol: / 0/3/4->0,  1/2->1
+ if(likely(!f1))f1=fork1tbl[PEXTN(0x200110,fline<<2,3)][PEXTN(0b00110,hcol,1)];  // fline: 0/3/4->0,  1/2->1, 5->2   hcol: / 0/3/4->0,  1/2->1
  if(likely(!f2)){
   f2=fork2tbl[fline][hcol]; f2=(I)jtfg&JTFOLKNOHFN?jtfolk2:f2;  // NOHFN means the caller is going to fool with the result fork, so the EP is unreliable
  }else{hcol=-1;}   // select the value we will put into localuse: hcol=-1 means cct, other hcol=routine address of h or h@]

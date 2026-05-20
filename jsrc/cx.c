@@ -1220,7 +1220,7 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
  if(col0=equ(w,num(0))){RZ(w=colon0(m)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
  if(m==0){ra0(w); RCA(w);}  // noun - it's a string, return it.  Give it recursive usecount
  // the rest is non-noun cases
- ASSERT(((UI)m&-16)<((0x221f>>m)&1),EVDOMAIN)  // m must be one of 1 2 3 4 9 13
+ ASSERT(((UI)m&-16)<PEXTN(0x221f,m,1),EVDOMAIN)  // m must be one of 1 2 3 4 9 13
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  I splitloc=-1;   // will hold line number of : line
  A v1, v2;  // pointers to monad and dyad forms
@@ -1282,7 +1282,7 @@ colonfound:;   // : given.  takeafter the : for the first line, and taketo for t
    I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 8=mu 4=nv 2=x 1=y, combined for both valences
    // for 9 : n, figure out best type after looking at n
    if(m==9){
-    I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; m=CTLZI(defflg); m=(0x2143>>(m<<2))&0xf; // replace 9 by value depending on what was seen; if : seen, ignore x
+    I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; m=CTLZI(defflg); m=PEXTN(0x2143,m<<2,0xf); // replace 9 by value depending on what was seen; if : seen, ignore x
     if(m==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=((flag&~VTRY2)+VTRY1)&~VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad.  Clear TRY1 to avoid spurious activity
    }
    if(m<=2){  // adv or conj after autodetection

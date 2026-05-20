@@ -910,7 +910,7 @@ static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)
-static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks
+static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks   scaf!
  A z;I m,mf,n,nf,zn;VA2 adocv,*aadocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  {I at=AT(a);
@@ -1133,7 +1133,6 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
   if((ipw|ipa)<0){  // see if either w or a is inplaceable
    // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
    z=ipw<0?w:a;  // z=inplaceable arg; 
-// scaf! zt always given
    if(unlikely(zt!=AT(z))){   // if type changes (zt!=incumbent and zt!=0)...  zt does not have upper flag bits
     // the type of inplaceable z must change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
     // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
@@ -1148,7 +1147,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
 allocate:;  // come here if no inplaceable block could have the type changed
 // scaf! zt always given; make all 0x...>>const use PEXTN; try to advance all bplg/bp
 // obsolete   I wt=AT(w); zt=zt?zt:wt; 
-   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)
+   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
 // obsolete    if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy  scaf test this in jtfg
    if(unlikely(rtype((I)jtfg)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy  scaf test this in jtfg
 #define scell AS((I)jtfg&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
@@ -1840,7 +1839,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    //  0               4       10  11  8     15 16    13 14  9   routine indexes for homogeneous args (final pri)
    //                          6   7   4     11 12    9  10  5   biased by 4, the smallest we use here (values stored in the shift constant)
    // (B)             (I)      X   Q   D     I2 I4    DS  E  Z   internal type for each precision 
-   pri=4+((0x5affcbf476ffffffLL>>(pri<<2))&0xf);  // 4 is II, lower than the lowest routine# we can call for here
+   pri=4+PEXTN(0x5affcbf476ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
    if(unlikely(pri==8))selva2.cv|=VDD;      // We allow input conversion to be omitted for BID, so if we are using the DD line we have to install DD conversion
 // obsolete    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions

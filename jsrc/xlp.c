@@ -1566,7 +1566,7 @@ startspr0:;  // come here for the first 0-SPR batch, after mode switch.  The new
      I candlanes=_mm256_movemask_pd(_mm256_cmp_pd(validcol,maxvalidcol,_CMP_EQ_OQ));   // mask of lanes that could be the result
      // Select a lane: if only one, take it, otherwise select a random lane containing the new maximum.  This distribution is not uniform, but that's OK since we are just trying to break cycles
      I randval=-1;  // init to no random value drawn  Low quality is OK.  We leave RNG unseeded so that repeated runs will give different sequences
-     I lanehere=rowx+(3&(0xffffa5a0>>((LOWESTBIT(candlanes)|(likely(candlanes==LOWESTBIT(candlanes))?0:(candlanes&(randval=rand()))))<<1)));  // If multiple matches, randomly turn off candidates above the lowest; then find highest survivor   0213->0123
+     I lanehere=rowx+PEXTN(0xffffa5a0,(LOWESTBIT(candlanes)|(likely(candlanes==LOWESTBIT(candlanes))?0:(candlanes&(randval=rand()))))<<1,3);  // If multiple matches, randomly turn off candidates above the lowest; then find highest survivor   0213->0123
      if(likely(!_mm256_testz_pd(_mm256_cmp_pd(validcol,sharedspr,_CMP_GT_OQ),cgt0))){  // Zf if validcol<=old max in all valid lanes.  If not, we have a new undisputed high
       nzerobatches=1.0; limitrowx=lanehere;  // new maximum batch.  unconditionally take the value and set to 1 in equal group
       sharedspr=_mm256_max_pd(sharedspr,maxvalidcol);  // update shared max value to date
@@ -1909,7 +1909,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
      endmask=_mm256_castsi256_pd(_mm256_andnot_si256(_mm256_blend_epi32(_mm256_setzero_si256(),_mm256_or_si256(_mm256_shuffle_epi32(cmpxxxx0312,0b01000100),cmpxxxx0312),0b11110000),_mm256_castpd_si256(endmask)));
      mabsfuzz=_mm256_maskload_pd(mplrd+colx,_mm256_castpd_si256(endmask));  // load next 4 non0 values in pivotrow
      okmsk=_mm256_movemask_pd(endmask);  // mask of valid words in this block - always at least 1
-     okwds=(0b100000000110010010>>okmsk)&7;  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
+     okwds=PEXTN(0b100000000110010010,okmsk,7);  // Advance to next nonrepeated column.  valid values are 1 3 7 15 for which we want results 1 2 3 4
     }
     // gather the high parts of Qk
     __m256d qkvh=_mm256_mask_i64gather_pd(_mm256_setzero_pd(),qkvrow,prn0x,endmask,SZI);

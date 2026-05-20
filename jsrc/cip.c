@@ -497,8 +497,8 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
          if(a5rem>1){_mm256_storeu_pd(z4base+n,z10r); _mm256_storeu_pd(z4base+n+NPAR,z11r);}
         } else {
          __m256i mask0, mask1;  // horizontal masks for w values, if needed
-         mask0=_mm256_loadu_si256((__m256i*)(validitymask+((0x00001234>>(a3rem<<2))&0x7)));  // a3rem { 4 3 2 1 0 0 0 0
-         mask1=_mm256_loadu_si256((__m256i*)(validitymask+((0x12344444>>(a3rem<<2))&0x7)));  // a3rem { 4 4 4 4 4 3 2 1
+         mask0=_mm256_loadu_si256((__m256i*)(validitymask+PEXTN(0x00001234,a3rem<<2,0x7)));  // a3rem { 4 3 2 1 0 0 0 0
+         mask1=_mm256_loadu_si256((__m256i*)(validitymask+PEXTN(0x12344444,a3rem<<2,0x7)));  // a3rem { 4 4 4 4 4 3 2 1
          _mm256_maskstore_pd(z4base,mask0,z00r); _mm256_maskstore_pd(z4base+NPAR,mask1,z01r);
          if(a5rem>1){_mm256_maskstore_pd(z4base+n,mask0,z10r); _mm256_maskstore_pd(z4base+n+NPAR,mask1,z11r);}
         }

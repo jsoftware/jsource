@@ -6,7 +6,9 @@
                                     /*   cv - control vector               */
 // bits 0-1 kept open for jtflags
 // bits 2-3 should be forced to 1 jtflags;
-#define VCVTIP          0xc  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
+#define VIPRES          0x3   // reserved for JT inplacing flags
+#define VCVTIX          2  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
+#define VCVTIP          ((I)0x3<<VCVTIX)
 #define VICX            4           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
 #define VBB             ((I)(15-B01X)<<VICX)
 #define VII             ((I)(15-INTX)<<VICX)

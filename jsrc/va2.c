@@ -945,6 +945,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    // Don't signal domain error on the types yet, because domain has lower priority than agreement
   }
  }
+if(aadocv->f!=0&&(aadocv->cv&VCVTIP)!=VCVTIP)SEGFAULT;  // scaf!
 
  // finish up the computation of sizes.  We have to defer this till after var() because
  // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
@@ -1848,7 +1849,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    R selva2;
   }else{
    // No retry, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
-   VA2 retva2;  retva2.cv=VRNONE+VB; // where we build the return value   cv indicates no input conversion, boolean result, no result conversion
+   VA2 retva2;  retva2.cv=VCVTIP+VRNONE+VB; // where we build the return value   cv indicates no input conversion, boolean result, no result conversion
    if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
     // = or ~:, possibly inhomogeneous
     if(likely(HOMO(at,wt))){
@@ -1863,20 +1864,20 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // Here there was an error in a previous run.  We see if we have a way to retry the operation
   retva2.f=0;  // error if not filled in
   switch((UC)FAV(self)->id){
-  case CCIRCLE: if(jt->jerr==EWIMAG){retva2.f=(VF)cirZZ; retva2.cv=VRD+VZ+VZZ;} break;
-  case CEXP: if(jt->jerr==EWIMAG){retva2.f=(VF)powZZ; retva2.cv=VRNONE+VZ+VZZ;}
-             else if(jt->jerr==EWRAT){retva2.f=(VF)powQQ; retva2.cv=VRNONE+VQ+VQQ;}
-             else if(jt->jerr==EWIRR){retva2.f=(VF)powDD; retva2.cv=VRNONE+VD+VDD;} break;
-  case CBANG: if(jt->jerr==EWIRR){retva2.f=(VF)binDD; retva2.cv=VRNONE+VD+VDD;} break;
-  case CDIV: if(jt->jerr==EWRAT){retva2.f=(VF)divQQ; retva2.cv=VRNONE+VQ+VQQ;}
-             else if(jt->jerr==EWDIV0){retva2.f=(VF)divDD; retva2.cv=VRNONE+VD+VDD;} break;
+  case CCIRCLE: if(jt->jerr==EWIMAG){retva2.f=(VF)cirZZ; retva2.cv=VCVTIP+VRD+VZ+VZZ;} break;
+  case CEXP: if(jt->jerr==EWIMAG){retva2.f=(VF)powZZ; retva2.cv=VCVTIP+VRNONE+VZ+VZZ;}
+             else if(jt->jerr==EWRAT){retva2.f=(VF)powQQ; retva2.cv=VCVTIP+VRNONE+VQ+VQQ;}
+             else if(jt->jerr==EWIRR){retva2.f=(VF)powDD; retva2.cv=VCVTIP+VRNONE+VD+VDD;} break;
+  case CBANG: if(jt->jerr==EWIRR){retva2.f=(VF)binDD; retva2.cv=VCVTIP+VRNONE+VD+VDD;} break;
+  case CDIV: if(jt->jerr==EWRAT){retva2.f=(VF)divQQ; retva2.cv=VCVTIP+VRNONE+VQ+VQQ;}
+             else if(jt->jerr==EWDIV0){retva2.f=(VF)divDD; retva2.cv=VCVTIP+VRNONE+VD+VDD;} break;
 // the following errors are normally retryable in place.  We keep the alternate code for sparse
-  case CPLUS: if(jt->jerr==EWOVIP+EWOVIPPLUSII||jt->jerr==EWOVIP+EWOVIPPLUSBI||jt->jerr==EWOVIP+EWOVIPPLUSIB){retva2.f=(VF)plusIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CMINUS: if(jt->jerr==EWOVIP+EWOVIPMINUSII||jt->jerr==EWOVIP+EWOVIPMINUSBI||jt->jerr==EWOVIP+EWOVIPMINUSIB){retva2.f=(VF)minusIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CSTAR: if(jt->jerr==EWOVIP+EWOVIPMULII){retva2.f=(VF)tymesIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CPLUSDOT: if(jt->jerr==EWOV){retva2.f=(VF)gcdIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CSTARDOT: if(jt->jerr==EWOV){retva2.f=(VF)lcmIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CSTILE: if(jt->jerr==EWOV){retva2.f=(VF)remDD; retva2.cv=VRNONE+VD+VDD+VIP;} break;
+  case CPLUS: if(jt->jerr==EWOVIP+EWOVIPPLUSII||jt->jerr==EWOVIP+EWOVIPPLUSBI||jt->jerr==EWOVIP+EWOVIPPLUSIB){retva2.f=(VF)plusIO; retva2.cv=VCVTIP+VRNONE+VD+VII;} break;
+  case CMINUS: if(jt->jerr==EWOVIP+EWOVIPMINUSII||jt->jerr==EWOVIP+EWOVIPMINUSBI||jt->jerr==EWOVIP+EWOVIPMINUSIB){retva2.f=(VF)minusIO; retva2.cv=VCVTIP+VRNONE+VD+VII;} break;
+  case CSTAR: if(jt->jerr==EWOVIP+EWOVIPMULII){retva2.f=(VF)tymesIO; retva2.cv=VCVTIP+VRNONE+VD+VII;} break;
+  case CPLUSDOT: if(jt->jerr==EWOV){retva2.f=(VF)gcdIO; retva2.cv=VCVTIP+VRNONE+VD+VII;} break;
+  case CSTARDOT: if(jt->jerr==EWOV){retva2.f=(VF)lcmIO; retva2.cv=VCVTIP+VRNONE+VD+VII;} break;
+  case CSTILE: if(jt->jerr==EWOV){retva2.f=(VF)remDD; retva2.cv=VCVTIP+VRNONE+VD+VDD+VIP;} break;
   }
   if(likely(retva2.f)){RESETERR}else{if(jt->jerr>NEVM){RESETERR jsignal(EVSYSTEM);}}  // system error if unhandled exception.  Otherwise reset error only if we handled it
   R retva2;

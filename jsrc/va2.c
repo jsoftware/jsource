@@ -945,7 +945,6 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    // Don't signal domain error on the types yet, because domain has lower priority than agreement
   }
  }
-if(aadocv->f!=0&&(aadocv->cv&VCVTIP)!=VCVTIP)SEGFAULT;  // scaf!
 
  // finish up the computation of sizes.  We have to defer this till after var() because
  // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
@@ -962,21 +961,21 @@ if(aadocv->f!=0&&(aadocv->cv&VCVTIP)!=VCVTIP)SEGFAULT;  // scaf!
     I an=AN(a); m=zn=AN(w);
     I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
     zn=raminusw<0?zn:an; aawwzknfxrz[5]=m=raminusw<0?an:m;  // zn=# atoms in higher-rank operand, m=#atoms in lower-rank
-    jtfg = (J)(((I)jtfg&3)+aadocv->cv+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags, and VIPWCRLONG if a repeated (safely in the negative part of raminusw)
+    jtfg = (J)(((I)jtfg&VIPRES)+aadocv->cv+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags, and VIPWCRLONG if a repeated (safely in the negative part of raminusw)
     mf=REPSGN(raminusw);  // mf=-1 if w has longer frame, means cannot inplace a
     raminusw=-raminusw;   // now wr-ar
     nf=REPSGN(raminusw);  // nf=-1 if a has longer frame, means cannot inplace w
+    nf=3+mf*2+nf;  // set inplaceability here: only if nonrepeated cell
+    nf&=((I)jtfg>>VIPOKWX); nf*=((I)1<<VIPRNKX)+1; nf+=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; replicate rank/routine inplaceability flags; set other bits to 1
     raminusw=raminusw&mf; fr+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r.  f (high part of fr) is 0
     PRODRNK(n,fr-shortr,AS((I)jtfg&VIPWCRLONG?w:a)+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
    // notionally we now repurpose fr to be frame/rank, with the frame 0
-    shortr=((I)jtfg>>VIPOKWX);  // only if supported by routine
-    if(unlikely(a==w))shortr=0;  // not if args equal
-    // Non-sparse setup for copy loop, no rank
-      // get number of inner cells
-    nf=3+mf*2+nf;  // set inplaceability here: only if nonrepeated cell
-    nf&=shortr;  // we use shortr to shorten dependency chain on nf
-    nf+=4*nf-16;  // make 2 copies of the 2 bits, bits 4+=1  This is a long dependency chain through nf
-    jtfg=(J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable
+// obsolete     if(unlikely(a==w))shortr=0;  // not if args equal
+// obsolete     // Non-sparse setup for copy loop, no rank
+// obsolete       // get number of inner cells
+// obsolete     nf&=shortr;  // we use shortr to shorten dependency chain on nf
+// obsolete     nf+=(nf<<VIPRNKX)+  // make 2 copies of the 2 bits, bits 4+=1  This is a long dependency chain through nf
+    if(likely(a!=w))jtfg=(J)((I)jtfg&nf); else jtfg=(J)((I)jtfg&~(VCVTIP+VIPRES));  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable; but never if args equal
     // parm aawwzknfxrz[5] is orig m, i. e. the length of the inner or only loop.
     n=2*n-mf;  // parm m if there are 2 loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
@@ -1003,7 +1002,14 @@ if(aadocv->f!=0&&(aadocv->cv&VCVTIP)!=VCVTIP)SEGFAULT;  // scaf!
     jtfg = (J)((I)jtfg&3);  // remove all but the inplacing bits
     jtfg = (J)((I)jtfg+aadocv->cv);  // insert flag bits for routine (always has bits 0-3=0xc); set bits 2-3 (converted inplacing bits)
 
-    jtfg = (J)((I)jtfg+(((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)))) & (((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1))))) <<(VIPWCRLONGX-(RANKTX-1))));  // set flag for 'w has longer cell-rank' (VIPWCRLONG) and 'w has longer frame (wrt verb)' (VIPWFLONG)
+// obsolete     jtfg = (J)((I)jtfg+(((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)))) & (((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1))))) <<(VIPWCRLONGX-(RANKTX-1))));  // set flag for 'w has longer cell-rank' (VIPWCRLONG) and 'w has longer frame (wrt verb)' (VIPWFLONG)
+    ak=((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)))) & (((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1)))));  // bit 7='w has longer cell-rank' (VIPWCRLONG), 15='w has longer frame (wrt verb)' (VIPWFLONG)
+#ifdef PEXT
+    jtfg=(J)((I)jtfg+(PEXT(ak,0x8080)<<VIPWCRLONGX));  // move flags into position
+#else
+    jtfg=(J)((I)jtfg+((ak&0x80)>>(7-VIPWCRLONGX))+((ak&0x8000)>>(15-VIPWFLONGX)));  // move flags into position
+#endif
+
     wcr+=acr<<2*RANKTX;  // afr/acr/wfr/wcr
 
     PRODRNK(ak,acr, AS(a)+(wcr>>(3*RANKTX))); PRODRNK(wk,wcr,AS(w)+((wcr>>RANKTX)&RANKTMSK));   // left/right #atoms/cell  length is assigned first
@@ -1021,7 +1027,7 @@ if(aadocv->f!=0&&(aadocv->cv&VCVTIP)!=VCVTIP)SEGFAULT;  // scaf!
     aawwzknfxrz[4]=zn<<bplg(cvt);  // calc result-cell size and move it out of registers
     ak<<=bplg(at); wk<<=bplg(wt);  // convert cell sizes to bytes
     aawwzknfxrz[0]=ak; aawwzknfxrz[2]=wk; ak=((I)jtfg&VIPWFLONG)?0:ak; wk=((I)jtfg&VIPWFLONG)?wk:0; aawwzknfxrz[1]=ak; aawwzknfxrz[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
-    I shortr=wcr>>(((I)jtfg>>(VIPWCRLONGX-LGRANK2TX))&(VIPWCRLONG>>(VIPWCRLONGX-LGRANK2TX))); fr=wcr>>((((I)jtfg>>(VIPWCRLONGX-LGRANK2TX))&(VIPWCRLONG>>(VIPWCRLONGX-LGRANK2TX)))^RANK2TX); // shortr=frame(short cell)/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
+    I shortr=wcr>>(((I)jtfg<<(LGRANK2TX-VIPWCRLONGX))&RANK2TX); fr=wcr>>((((I)jtfg<<(LGRANK2TX-VIPWCRLONGX))&RANK2TX)^RANK2TX); // shortr=frame(short cell)/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
     shortr&=RANKTMSK; fr&=RANK2TMSK; // cellrank(short cell)
     shortr*=((I)1<<2*RANKTX)+((I)1<<RANKTX)-1;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  100000000+10000+ffffffffffffffff
     shortr+=fr;  // cellrank(short cell)/frame(long cell)+cellrank(short cell)/cellrank(long cell)-cellrank(short cell)
@@ -1035,7 +1041,7 @@ if(aadocv->f!=0&&(aadocv->cv&VCVTIP)!=VCVTIP)SEGFAULT;  // scaf!
     UI f=wcr>>RANKTX; f&=~(RANKTMSK<<RANKTX); f=(RANK2T)(f+(f>>RANKTX)); // 0/0/aframe/wframe; 
 #endif
     f+=f<<2*RANKTX;   //  aframe/wframe/aframe/wframe
-    f>>=((I)jtfg&VIPWFLONG)>>(VIPWFLONGX-LGRANKTX);  // shift by 0/8 (8 if w has long frame) to give x/x/longframe/shortframe
+    f>>=((I)jtfg>>(VIPWFLONGX-LGRANKTX))&RANKTX;  // shift by 0/8 (8 if w has long frame) to give x/x/longframe/shortframe
     f&=RANKTMSK*(1+(1LL<<RANKTX)); f=(f<<2*RANKTX)+(f>>RANKTX);  // longframe/shortframe/0/longframe
 #if SY_64
     f+=wcr<<4*RANKTX;  // afr/acr/wfr/wcr/long frame/short frame/0/long frame   wcr free
@@ -1052,14 +1058,16 @@ if(aadocv->f!=0&&(aadocv->cv&VCVTIP)!=VCVTIP)SEGFAULT;  // scaf!
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
 #ifdef PEXT
-    nf=((I)jtfg>>VIPOKWX)&PEXT(allranks,(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)));  // extract inplaceability from ranks   allranks free
+    nf=PEXT(allranks,(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)));  // extract inplaceability from ranks   allranks free
 #else
-    nf=((I)jtfg>>VIPOKWX)&(((allranks>>(2*RANKTX-1-1))&2)+((allranks>>(RANKTX-1))&1));  // extract inplaceability from ranks   allranks free
+    nf=(((allranks>>(2*RANKTX-1-1))&2)+((allranks>>(RANKTX-1))&1));  // extract inplaceability from ranks   allranks free
 #endif
-    if(unlikely(a==w))nf=0;  // not inplaceable if args identical
-    nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of jtfg.  This is a long dependency chain through nf but it will overlap the PRODs coming up
-    jtfg = (J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free   rest of jtfg survives
-    f=fr>>(2*RANKTX); f&=RANKTMSK;  // recover (shorter frame len) from upper fr
+    nf&=((I)jtfg>>VIPOKWX); nf*=((I)1<<VIPRNKX)+1; nf+=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; replicate rank/routine inplaceability flags; set other bits to 1
+// obsolete    nf+=(nf<<VIPRNKX)+~(VCVTIP+VIPRES);  // make 2 copies of the 2 bits, bits 4+=1  This is a long dependency chain through nf but it will overlap the PRODs coming up
+// obsolete     nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of jtfg.  This is a long dependency chain through nf
+    if(likely(a!=w))jtfg=(J)((I)jtfg&nf); else jtfg=(J)((I)jtfg&~(VCVTIP+VIPRES));  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable; but never if args equal
+// obsolete     jtfg=(J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free   rest of jtfg survives
+    f=PEXTN(fr,2*RANKTX,RANKTMSK);  // recover (shorter frame len) from upper fr
     PRODRNK(nf,((fr>>3*RANKTX)-f),f+AS(((I)jtfg&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
     PRODRNK(mf,f,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
@@ -1115,8 +1123,8 @@ if(aadocv->f!=0&&(aadocv->cv&VCVTIP)!=VCVTIP)SEGFAULT;  // scaf!
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
     // bits 2-3 of jtfg indicate whether inplaceability is allowed by the op, the ranks, and the addresses
-    if(TYPESNE(t,at)){I ba=bplg(at); aawwzknfxrz[0]=(aawwzknfxrz[0]>>ba)<<bt; aawwzknfxrz[1]=(aawwzknfxrz[1]>>ba)<<bt; RZ(a=cvt(t|((I)jtfg&XCVTXNUMORIDEMSK),a)); jtfg = (J)(intptr_t)((I)jtfg | (((I)jtfg>>2)&JTINPLACEA));}
-    if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzknfxrz[2]=(aawwzknfxrz[2]>>bw)<<bt; aawwzknfxrz[3]=(aawwzknfxrz[3]>>bw)<<bt; RZ(w=cvt(t|((I)jtfg&XCVTXNUMORIDEMSK),w)); jtfg = (J)(intptr_t)((I)jtfg | (((I)jtfg>>2)&JTINPLACEW));}
+    if(TYPESNE(t,at)){I ba=bplg(at); aawwzknfxrz[0]=(aawwzknfxrz[0]>>ba)<<bt; aawwzknfxrz[1]=(aawwzknfxrz[1]>>ba)<<bt; RZ(a=cvt(t|((I)jtfg&XCVTXNUMORIDEMSK),a)); jtfg = (J)(intptr_t)((I)jtfg | (((I)jtfg>>VIPRNKX)&JTINPLACEA));}
+    if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzknfxrz[2]=(aawwzknfxrz[2]>>bw)<<bt; aawwzknfxrz[3]=(aawwzknfxrz[3]>>bw)<<bt; RZ(w=cvt(t|((I)jtfg&XCVTXNUMORIDEMSK),w)); jtfg = (J)(intptr_t)((I)jtfg | (((I)jtfg>>VIPRNKX)&JTINPLACEW));}
    }
   }
 

@@ -7,9 +7,9 @@
 // bits 0-1 kept open for jtflags
 // bits 2-3 should be forced to 1 jtflags;
 #define VIPRES          0x3   // reserved for JT inplacing flags
-#define VCVTIX          2  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
-#define VCVTIP          ((I)0x3<<VCVTIX)
-#define VICX            4           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
+#define VIPRNKX         8  // bits 2-3 should always be set, indicating that a converted argument can be inplaced; holds copy of inplaceability of repeat/rank/type
+#define VCVTIP          ((I)0x3<<VIPRNKX)
+#define VICX            16           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
 #define VBB             ((I)(15-B01X)<<VICX)
 #define VII             ((I)(15-INTX)<<VICX)
 #define VDD             ((I)(15-FLX)<<VICX)   // this must not change VBB or VII if ORed with either
@@ -21,7 +21,7 @@
 #define VEE             ((I)(15-QPX)<<VICX)
 #define VICMSK          ((I)15<<VICX) // mask for argument conversion 4-7, giving type to convert to.  0=no conversion
 // bit 8 free
-#define VIPWCRLONGX     9  // internal use in va2, overlaps BOX 9 means 'w has longer cell-rank, so x is repeated'
+#define VIPWCRLONGX     2  // internal use in va2, overlaps BOX 9 means 'w has longer cell-rank, so x is repeated'
 #define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
 #define VRCX            10           // bit position for optional final result-conversion 10-11
 #define VRD             ((I)1<<VRCX) // convert result to D if possible   must be 1 bit below VRI
@@ -47,7 +47,7 @@
 // obsolete #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
 // obsolete #define VCOPYA          ((I)1<<VCOPYAX)
 // bit 16 free
-#define VIPWFLONGX      17  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX  Means 'w has longer frame, so x is repeated in outer loops'
+#define VIPWFLONGX      3  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX  Means 'w has longer frame, so x is repeated in outer loops'
 #define VIPWFLONG       ((I)1<<VIPWFLONGX)
 // bits 18-19 free
 #define VIPOKWX         20      // This routine can put its result over W

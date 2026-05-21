@@ -961,8 +961,8 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     I an=AN(a); m=zn=AN(w);
     I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
     zn=raminusw<0?zn:an; aawwzknfxrz[5]=m=raminusw<0?an:m;  // zn=# atoms in higher-rank operand, m=#atoms in lower-rank
-    jtfg = (J)(((I)jtfg&VIPRES)+aadocv->cv+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags, and VIPWCRLONG if a repeated (safely in the negative part of raminusw)
     mf=REPSGN(raminusw);  // mf=-1 if w has longer frame, means cannot inplace a
+    jtfg=(J)(((I)jtfg&VIPRES)+aadocv->cv+(mf&VIPWCRLONG));  // inplaceability plus routine flags, and VIPWCRLONG if a repeated
     raminusw=-raminusw;   // now wr-ar
     nf=REPSGN(raminusw);  // nf=-1 if a has longer frame, means cannot inplace w
     nf=3+mf*2+nf;  // set inplaceability here: only if nonrepeated cell
@@ -999,11 +999,11 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     // allranks is noun 0/0/anr/wnr
    }
    if(likely(jtfg!=0)){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.
-    jtfg = (J)((I)jtfg&3);  // remove all but the inplacing bits
+    jtfg = (J)((I)jtfg&VIPRES);  // remove all but the inplacing bits
     jtfg = (J)((I)jtfg+aadocv->cv);  // insert flag bits for routine (always has bits 0-3=0xc); set bits 2-3 (converted inplacing bits)
 
 // obsolete     jtfg = (J)((I)jtfg+(((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)))) & (((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1))))) <<(VIPWCRLONGX-(RANKTX-1))));  // set flag for 'w has longer cell-rank' (VIPWCRLONG) and 'w has longer frame (wrt verb)' (VIPWFLONG)
-    ak=((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)))) & (((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1)))));  // bit 7='w has longer cell-rank' (VIPWCRLONG), 15='w has longer frame (wrt verb)' (VIPWFLONG)
+    ak=wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)));  // bit 7='w has longer cell-rank' (VIPWCRLONG), 15='w has longer frame (wrt verb)' (VIPWFLONG)
 #ifdef PEXT
     jtfg=(J)((I)jtfg+(PEXT(ak,0x8080)<<VIPWCRLONGX));  // move flags into position
 #else
@@ -1041,7 +1041,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     UI f=wcr>>RANKTX; f&=~(RANKTMSK<<RANKTX); f=(RANK2T)(f+(f>>RANKTX)); // 0/0/aframe/wframe; 
 #endif
     f+=f<<2*RANKTX;   //  aframe/wframe/aframe/wframe
-    f>>=((I)jtfg>>(VIPWFLONGX-LGRANKTX))&RANKTX;  // shift by 0/8 (8 if w has long frame) to give x/x/longframe/shortframe
+    f>>=((I)jtfg<<(LGRANKTX-VIPWFLONGX))&RANKTX;  // shift by 0/8 (8 if w has long frame) to give x/x/longframe/shortframe
     f&=RANKTMSK*(1+(1LL<<RANKTX)); f=(f<<2*RANKTX)+(f>>RANKTX);  // longframe/shortframe/0/longframe
 #if SY_64
     f+=wcr<<4*RANKTX;  // afr/acr/wfr/wcr/long frame/short frame/0/long frame   wcr free

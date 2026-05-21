@@ -16,6 +16,7 @@ csv        ~addons/tables/csv/csv.ijs
 dd         ~addons/data/odbc/odbc.ijs
 debug      ~addons/ide/qt/debugs.ijs
 dict       ~addons/data/dict/dict.ijs
+dissect    ~addons/debug/dissect/dissect.ijs
 gl2        ~addons/graphics/gl2/gl2.ijs
 gles       ~addons/api/gles/gles.ijs
 graph      ~addons/graphics/graph/graph.ijs
@@ -40,6 +41,7 @@ plot       ~addons/graphics/plot/plot.ijs
 png        ~addons/graphics/png/png.ijs
 primitives ~addons/general/primitives/primitives.ijs
 print      ~addons/graphics/print/print.ijs
+printf     ~addons/format/printf/printf.ijs
 project    ~system/util/project.ijs
 qtide      ~addons/ide/qt/qt.ijs
 regex      ~system/main/regex.ijs
@@ -53,5 +55,6 @@ trig       ~addons/math/misc/trig.ijs
 unicode    ~addons/convert/misc/unicode.ijs
 validate   ~addons/general/misc/validate.ijs
 viewmat    ~addons/graphics/viewmat/viewmat.ijs
+viewmax    ~addons/graphics/viewmax/viewmax.ijs
 wdooo      ~addons/tables/wdooo/wdooo.ijs
 )

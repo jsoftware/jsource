@@ -1620,7 +1620,7 @@ else.
     2!:0 ::0: 'chmod 755 "',DLL,'"'
     if. 'root'-: user=. 2!:5'user' do.
       2!:0 ::0: 'chown ',user,':',user,' "',DLL,'"'
-      2!:0 ::0: ^:((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') '/sbin/ldconfig'
+      2!:0 ::0: ^:((<UNAME)e.'Linux';'OpenBSD';'FreeBSD') '/usr/sbin/ldconfig'
     end.
   end.
 end.
@@ -1762,8 +1762,8 @@ else.
     end.
     echo 'install libjqt.',suffix,' to ',d1
     hostcmd_jpacman_ 'rm -f ',BINPATH,'/jqt'
-    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-',RELNO,' && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
-    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-',RELNO,' && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /sbin/ldconfig'
+    echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-',RELNO,' && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /usr/sbin/ldconfig'
+    hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt ',BINPATH,'/jqt-',RELNO,' && cp libjqt.',suffix,' ',d1,'/libjqt.',vsuffix,' && chmod 755 ',d1,'/libjqt.',vsuffix, ((<UNAME)e.'Linux';'OpenBSD';'FreeBSD')#' && /usr/sbin/ldconfig'
     if. 'Linux'-:UNAME do.
       echo 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-',RELNO,' ',RELNO,' || true'
       hostcmd_jpacman_ 'update-alternatives --install ',BINPATH,'/jqt jqt ',BINPATH,'/jqt-',RELNO,' ',RELNO,' || true'

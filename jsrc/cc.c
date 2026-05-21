@@ -662,7 +662,7 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
    __m256i fretbyte=_mm256_set1_epi8(*(C*)fret);
    __m256i bitpipe00,bitpipe01,bitpipe10,bitpipe11;  // place to read in booleans and packed bits
 #define BSIZE 32  // # bytes in a block
-   __m256i bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+((-n>>LGSZI)&(NPAR-1))));  // since alignment never changes, we can predict the validity for the last block
+   __m256i bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+PEXTN(-n,LGSZI,NPAR-1)));  // since alignment never changes, we can predict the validity for the last block
    if(n>=2*BSIZE){bitpipe10=_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)(avv)),fretbyte); bitpipe11=_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)(avv+BSIZE)),fretbyte);}  // if there is a first FULL batch, prefetch it
    while(n>0){    // n is # bytes left to process
     // We process 64 bytes at a time, always reading ahead one block.  If there are >=64 items to do, bitpipe1 has the next set to process, from *avv

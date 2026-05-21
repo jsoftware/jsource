@@ -1402,7 +1402,7 @@ w = PTROP(w,+,(I)jtfg&JTINPLACEW); a = PTROP(a,+,(I)jtfg&JTINPLACEA);  /* if arg
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
 A hx; \
 if(opt&0x2){hx=w; \
-}else if(opt&0x1){hx=PTROP(a,-,((I)a>>JTINPLACEAX)&(JTINPLACEA>>JTINPLACEAX)); \
+}else if(opt&0x1){hx=PTROP(a,-,PEXTN((I)a,JTINPLACEAX,JTINPLACEW)); \
 }else{J jtf; \
  I wof = (FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, propagate willopen */ \
  if(opt&0xc){ \
@@ -1791,7 +1791,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define JTIPA           ((J)((I)jt+JTINPLACEA))
 #define JTIPAW          ((J)((I)jt+(JTINPLACEA+JTINPLACEW)))
 #define JTIPW           ((J)((I)jt+JTINPLACEW))
-#define JTIPAtoW        (J)((I)jt+(((I)jtfg>>JTINPLACEAX)&JTINPLACEW))  // jtfg, with a' inplaceability transferred to w
+#define JTIPAtoW        (J)((I)jt+PEXTN((I)jtfg,JTINPLACEAX,JTINPLACEW))  // jtfg, with a' inplaceability transferred to w
 #define JTIPWonly       (J)((I)jtfg&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS))  // dyad jt converted to monad for w
 #define JTIPEX1(name,arg) jt##name(JTIPW,arg)   // like name(arg) but inplace
 #define JTIPEX1S(name,arg,self) jt##name(JTIPW,arg,self)   // like name(arg,self) but inplace
@@ -1924,7 +1924,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
  preloop \
  UI n0=n; \
  if(!((parms)&1)){ /* Duff loop called for */ \
-  I alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
+  I alignreq=4-PEXTN((I)z,LGSZI,NPAR-1); /* alignment len, 1-4 */ \
   alignreq=alignreq>n-1?n-1:alignreq;  /* never more than len-1; leave remlen>0 */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   u=_mm256_and_pd(_mm256_castsi256_pd(endmask),_mm256_loadu_pd(x));  /*  fetch 1st NPAR words.  >=1 must be valid, and the rest mapped  init invalid lanes, esp. for SLEEF */ \
@@ -1948,7 +1948,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
   z+=((n0-1)&(NPAR-1))+1; /* advance z over final remnant */  \
  }else{ /* Use single loop to minimize Icache footprint */ \
   x=(D*)((I)x-(I)z);  /* convert x to offset */ \
-  UI thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* align len 1-4, clamped at len */ \
+  UI thisl=4-PEXTN((I)z,LGSZI,NPAR-1);  /* align len 1-4, clamped at len */ \
   NOUNROLL do { \
    thisl=thisl>n0?n0:thisl; \
    u=_mm256_loadu_pd((D*)((I)x+(I)z));  /* overfetch the last word */ \
@@ -1969,7 +1969,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
  preloop \
  I n0=n; \
- I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
+ I alignreq=PEXTN(-(I)z,LGSZI,NPAR-1); \
  if((-alignreq&(NPAR-n0))<0){ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask)); \
@@ -2083,8 +2083,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #endif
 
 #define MOVEIPWW(j) (J)(intptr_t)(((I)j&~JTINPLACEA)+2*((I)j&JTINPLACEW))  // copy w inplaceability to both args
-#define MOVEIPWA(j) (J)(intptr_t)((I)j^((JTINPLACEW+JTINPLACEA)&(0x3C>>(2*((I)j&JTINPLACEW+JTINPLACEA)))))  // exchange inplaceability of w and a
-#define MOVEIP0A(j) (J)(intptr_t)((((I)j&~(JTINPLACEW+JTINPLACEA))+((((I)j>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW))))  // move a inplaceability to w, a's is 0
+#define MOVEIPWA(j) (J)(intptr_t)((I)j^PEXTN(0x3C,2*((I)j&JTINPLACEW+JTINPLACEA),JTINPLACEW+JTINPLACEA))  // exchange inplaceability of w and a
+#define MOVEIP0A(j) (J)(intptr_t)((((I)j&~(JTINPLACEW+JTINPLACEA))+PEXTN((I)j,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)))  // move a inplaceability to w, a's is 0
 #define MOVEIPA0(j) (J)(intptr_t)((((I)j+JTINPLACEW)))  // move w inplaceability to a, w's is garbage
 
 #define NUMMAX          9    // largest number represented in num[]

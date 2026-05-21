@@ -235,9 +235,9 @@ static void wtomnull(US* src, I srcn, UC* snk){ US w,w1;I nignulls = 0;
     else
     {
      C4 t=(((w&0x3ff)<<10)|(w1&0x3ff))+0x10000;
-     *snk++=0xf0|((t>>18)&0x07);
-     *snk++=0x80|((t>>12)&0x3f);
-     *snk++=0x80|((t>>6)&0x3f);
+     *snk++=0xf0|PEXTN(t,18,0x07);
+     *snk++=0x80|PEXTN(t,12,0x3f);
+     *snk++=0x80|PEXTN(t,6,0x3f);
      *snk++=0x80|(t&0x3f);
      if(eatnull)nignulls = extrawidth(t);  // extra nulls only possible in upper pages.  See if there are any
      src++;srcn--;  // next code unit of surrogate pair
@@ -298,9 +298,9 @@ static void utomnull(C4* src, I srcn, UC* snk){ C4 w;I nignulls = 0;
   }
   else
   {
-     *snk++=0xf0|((w>>18)&0x07);
-     *snk++=0x80|((w>>12)&0x3f);
-     *snk++=0x80|((w>>6)&0x3f);
+     *snk++=0xf0|PEXTN(w,18,0x07);
+     *snk++=0x80|PEXTN(w,12,0x3f);
+     *snk++=0x80|PEXTN(w,6,0x3f);
      *snk++=0x80|(w&0x3f);
    if(eatnull)nignulls = extrawidth(w);  // extra nulls only possible in upper pages.  See if there are any
   }

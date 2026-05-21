@@ -215,7 +215,7 @@ static DF1(jton10atom){F12IP; if(unlikely(AN(w)>1&&JT(jt,deprecct)!=0))RZ(jtdepr
 static DF2(jtupon20atom){F12IP; if(unlikely((AN(a)|AN(w))>1&&JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,6,"(006) f@atomic executed on multiple cells; use f\"0@:atomic (or f@:atomic if f has 0 rank)\n")); R jtrank2ex0(jtfg,a,w,self,jtupon2cell);}  // pass inplaceability through
 
 // special lightweight case for u@[ and u@].
-static DF2(onleft2){F12IP; jtfg=(J)(((I)jtfg&~(JTINPLACEA+JTINPLACEW))+(((I)jtfg>>(JTINPLACEAX-JTINPLACEWX))&(JTINPLACEA>>(JTINPLACEAX-JTINPLACEWX)))); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],a,fs);}  // move inplaceable a to w, pass other JT flags
+static DF2(onleft2){F12IP; jtfg=(J)(((I)jtfg&~(JTINPLACEA+JTINPLACEW))+PEXTN((I)jtfg,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],a,fs);}  // move inplaceable a to w, pass other JT flags
 static DF2(jtonright12){F12IP; jtfg=(J)((I)jtfg&~JTINPLACEA); A fs=FAV(self)->fgh[0]; R CALL1IP(FAV(fs)->valencefns[0],VERB&AT(w)?a:w,fs);}  // keep inplaceability of w; turn a off for monad
 
 // u@n
@@ -659,7 +659,7 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
     }else if(unlikely((c&(visa|2))==CLBRACE)&&na==ds(CALP)){f1=jtfromadotifchar;   // {&a., keep IRS  (must be a., not some equal value)
     }
    }else if(unlikely(visa==((7^~2)^(p&7)))){  // e.-compound&n  p=7 & a is verb
-    mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
+    mode=((II0EPS-1+PEXTN(p,3,VFCOMPCOMP>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=FAV(va)->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
     {PUSHCCTIF(FAV(va)->localuse.lu1.cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; vbf2=0; flag&=~(VIRS1); RZ(h)}  // e./-.[!.f]&n, and remember cct when we created the table
    }else if(unlikely((visa|(c^CWORDS))==0)){RZ(a=fsmvfya(a)); f1=jtfsmfx; vbf2=0; flag&=~(VIRS1);   // m&;:

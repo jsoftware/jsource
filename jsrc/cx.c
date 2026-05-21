@@ -31,7 +31,7 @@
 
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
 // line-> box 0 - executable words/control words/go/tcesx; n (in flag word)=#control words; cwsent->array of control-word data, a CW struct for each
-#define LINE(sv) {A x=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0]; cwsent=CWBASE(x);  NPGpysfmtdl&=((I)1<<CWCTX)-1; NPGpysfmtdl|=-(CWNC(x)<<CWCTX);}  // h allocated at rank 1
+#define LINE(sv) {A x=AAV1(sv->fgh[2])[HN*PEXTN(NPGpysfmtdl,6,1)+0]; cwsent=CWBASE(x);  NPGpysfmtdl&=((I)1<<CWCTX)-1; NPGpysfmtdl|=-(CWNC(x)<<CWCTX);}  // h allocated at rank 1
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
@@ -404,12 +404,12 @@ nextlinedebug:;
     if(NPGpysfmtdl&16){
       if(jt->sitop->dcredef&&(siparent=jt->sitop->dclnk)&&siparent->dctype==DCCALL&&siparent->dcc!=0&&siparent->dcnmlev==0&&self!=siparent->dcf){A *hv;  // must be DCCALL; dcc not0 and lvl 0 means direct call
        // the top-of-stack (a PARSE entry) indicates redefined, and it is a direct named call to here
-       self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0];  // LINE sets pointers for subsequent line lookups
+       self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=AAV1(sv->fgh[2])[HN*PEXTN(NPGpysfmtdl,6,1)+0];  // LINE sets pointers for subsequent line lookups
        // Clear all local bucket info in the definition, since it doesn't match the symbol table now
        // This will affect the current definition and all pyx executions of this definition.  We allow it because
        // it's for debug only.  The symbol table itself persists
-       A *base=CWBASE(AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0]);
-       DO(AN(AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)]),A l=base[i]; if((I)l&QCISLKPNAME){NAV(QCWORD(l))->bucket=0;});
+       A *base=CWBASE(AAV1(sv->fgh[2])[HN*PEXTN(NPGpysfmtdl,6,1)+0]);
+       DO(AN(AAV1(sv->fgh[2])[HN*PEXTN(NPGpysfmtdl,6,1)]),A l=base[i]; if((I)l&QCISLKPNAME){NAV(QCWORD(l))->bucket=0;});
       }
      jt->sitop->dcredef=0;
     }
@@ -421,7 +421,7 @@ nextlinedebug:;
   // the names cwsent, ic, NPGpysfmtdl, tcesx, t, z, jt, and old fit into the 8 nonvolatile non-SP registers
   // **************** switch by line type ********************
 
-  switch((((tcesx)>>TCESXTYPEX)&31)){  // highest cw is 33, but it aliases to 1 & there is no 32.  32 is used as a multipurpose flag
+  switch(PEXTN(tcesx,TCESXTYPEX,31)){  // highest cw is 33, but it aliases to 1 & there is no 32.  32 is used as a multipurpose flag
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
   // if there is nothing but if./while/end. most of the branches are internal
   case CBBLOCK:  // (also BLOCKEND) placed first because likely case for unpredicted first line of definition
@@ -560,7 +560,7 @@ dobblock:
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
    } 
-   BZ(forinitnames(jt,cv,(tcesx>>TCESXTYPEX)&0x1f,cwsent[tcesx&TCESXSXMSK],ic,CWGO(cwsent,CNSTOREDCW,ic)));  // setup the names and start/end line#s, before we see the iteration value
+   BZ(forinitnames(jt,cv,PEXTN(tcesx,TCESXTYPEX,0x1f),cwsent[tcesx&TCESXSXMSK],ic,CWGO(cwsent,CNSTOREDCW,ic)));  // setup the names and start/end line#s, before we see the iteration value
    --ic; if(likely(FLAGGEDNOTRACE(tcesx)))goto knowntblock;   // We should be at a tblock; if so process it without fetching
    goto nextline;
   case CDOF:   // do. after for.
@@ -708,7 +708,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=QCWORD(ybuckptr->fval); if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){SETFVAL(0,ybuckptr) symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
-   DC d; RZ(d=deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)],self));  // push a debug frame for this error.  We know we didn't free locsym
+   DC d; RZ(d=deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*PEXTN(NPGpysfmtdl,6,1)],self));  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
   }
  }
@@ -1085,7 +1085,7 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
  I outsent=0;
  for(j=0;j<cn;++j) {   // look at each control word
   I endx=(cwv[j+1].tcesx-cwv[j].tcesx)&TCESXSXMSK;   // # words in sentence
-  if(((((I)1<<(BW-CBBLOCK-1))|((I)1<<(BW-CTBLOCK-1)))<<((cwv[j].tcesx>>TCESXTYPEX)&31))<0){  // BBLOCK[END] or TBLOCK
+  if(((((I)1<<(BW-CBBLOCK-1))|((I)1<<(BW-CTBLOCK-1)))<<PEXTN(cwv[j].tcesx,TCESXTYPEX,31))<0){  // BBLOCK[END] or TBLOCK
    // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
    A *lvv=lv+(cwv[j].tcesx&TCESXSXMSK);  // pointer to sentence words
    I startx=0;   // start and end+1 index of sentence
@@ -1161,17 +1161,17 @@ static A compiledefn(J jt, A sw, A cw){A z;
  //  goto./break./continue. where go is bblock[end]
  //  try. where NSI is bblock
 #define CWMB(x) ((I)1<<(x))
-#define CWIS1(msk,x) ((msk)>>(((x)>>TCESXTYPEX)&31))
+#define CWIS1(msk,x) ((msk)>>PEXTN((x),TCESXTYPEX,31))
 #define CWFLGNSITBLOCK (CWMB(CIF)+CWMB(CWHILE)+CWMB(CFOR)+CWMB(CSELECT)+CWMB(CSELECTN))
 #define CWFLGNSIBBLOCK (CWMB(CENDSEL)+CWMB(CDOF)+CWMB(CTRY))
 #define CWFLGGOBBLOCK (CWMB(CELSE)+CWMB(CELSEIF)+CWMB(CWHILST)+CWMB(CEND)+CWMB(CCASE)+CWMB(CFCASE)+CWMB(CGOTO)+CWMB(CBREAKS)+CWMB(CBREAK)+CWMB(CCONT)+CWMB(CBREAKF)+CWMB(CCONTS)+CWMB(CRETURN))
 #define CWFLGNSIGOBBLOCK (CWMB(CDO))
 #define CWFLGGOEQNSITBLOCK (CWMB(CCASE)+CWMB(CFCASE))
  UI4 prevt=0;
- DO(ncw, I go=cwv[i].go; go=go>ncw-1?ncw-1:go; UI4 tcesx=cwv[i].tcesx, otcesx=tcesx; if(prevt==CBBLOCKEND&&(tcesx>>TCESXTYPEX)==CEND&&go==i+1&&((cwv[i+1].tcesx>>TCESXTYPEX)&31)==CBBLOCK)tcesx^=(CBBLOCKEND^CEND)<<TCESXTYPEX; prevt=otcesx>>TCESXTYPEX;
-   tcesx|=((CWIS1(CWFLGNSITBLOCK,tcesx)&(cwv[i+1].tcesx>>TCESXTYPEX)==CTBLOCK)|(CWIS1(CWFLGNSIBBLOCK,tcesx)&((cwv[i+1].tcesx>>TCESXTYPEX)&31)==CBBLOCK)|  // check modified tcesx so we don't pick up replaced END
+ DO(ncw, I go=cwv[i].go; go=go>ncw-1?ncw-1:go; UI4 tcesx=cwv[i].tcesx, otcesx=tcesx; if(prevt==CBBLOCKEND&&(tcesx>>TCESXTYPEX)==CEND&&go==i+1&&PEXTN(cwv[i+1].tcesx,TCESXTYPEX,31)==CBBLOCK)tcesx^=(CBBLOCKEND^CEND)<<TCESXTYPEX; prevt=otcesx>>TCESXTYPEX;
+   tcesx|=((CWIS1(CWFLGNSITBLOCK,tcesx)&(cwv[i+1].tcesx>>TCESXTYPEX)==CTBLOCK)|(CWIS1(CWFLGNSIBBLOCK,tcesx)&PEXTN(cwv[i+1].tcesx,TCESXTYPEX,31)==CBBLOCK)|  // check modified tcesx so we don't pick up replaced END
    (CWIS1(CWFLGGOEQNSITBLOCK,tcesx)&(go==i+1)&(cwv[i+1].tcesx>>TCESXTYPEX)==CTBLOCK)|  // first case/fcase
-   (CWIS1(CWFLGGOBBLOCK,tcesx)&((cwv[go].tcesx>>TCESXTYPEX)&31)==CBBLOCK)|(CWIS1(CWFLGNSIGOBBLOCK,tcesx)&((cwv[go].tcesx>>TCESXTYPEX)&31)==CBBLOCK&((cwv[i+1].tcesx>>TCESXTYPEX)&31)==CBBLOCK))<<(TCESXTYPEX+5);
+   (CWIS1(CWFLGGOBBLOCK,tcesx)&PEXTN(cwv[go].tcesx,TCESXTYPEX,31)==CBBLOCK)|(CWIS1(CWFLGNSIGOBBLOCK,tcesx)&PEXTN(cwv[go].tcesx,TCESXTYPEX,31)==CBBLOCK&PEXTN(cwv[i+1].tcesx,TCESXTYPEX,31)==CBBLOCK))<<(TCESXTYPEX+5);
    CWTCESX(base,~i)=tcesx; CWGO(base,-ncw,~i)=~go; CWSOURCE(base,-ncw,~i)=cwv[i].source;)  // create the output block
  R z;
 }

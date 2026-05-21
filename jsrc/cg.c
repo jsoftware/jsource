@@ -201,7 +201,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    // grade the results, as a list
    A gradepm; RZ(gradepm=grade1(ravel(vres)));
    // decide how many result boxes to allocate based on min/max result - it's a byte or an int
-   I bmsk=-((AT(vres)>>(INTX-1))&2)+1;  // mask for getting valid bits from vres
+   I bmsk=-PEXTN(AT(vres),INTX-1,2)+1;  // mask for getting valid bits from vres
    I bsiz=AT(vres)&B01?1:SZI;  // size of element of vres
    I minx=*(I*)(CAV(vres)+IAV(gradepm)[0]*bsiz)&bmsk;   // smallest result
    I maxx=*(I*)(CAV(vres)+IAV(gradepm)[AN(gradepm)-1]*bsiz)&bmsk;  // largest result
@@ -230,7 +230,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    I ak,wk=bpnoun(AT(w)); wk&=REPSGN(~wr);  // size of atom of w, but 0 if w is an atom (so we don't advance)
    if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
     if(ar>=0){
-     RZ(a=jtredcatcell((J)((I)jt+(((I)jtfg>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
+     RZ(a=jtredcatcell((J)((I)jt+PEXTN((I)jtfg,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)),a,ar));  // move inplaceability of original a to w
      RZ(sorta=from(gradepm,a));
     ZZFLAGWORD |= SGNTO0((-(AT(sorta)&TYPEVIPOK))&AC(sorta))<<ZZFLAGVIRTAINPLACEX;
      ZZFLAGWORD|=ZZFLAGARRAYA;

@@ -187,7 +187,7 @@ AHDRP(lepfxB,B,B){pscanlt(m,d,n,z,x,C0);R EVOK;}
 
 // result is alternating pp,~pp,... till a is encountered; then one atom from pa,~pa (as if started from 0), then one atom from ~ps,ps,... repeated
 static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,I apas){
- I a=apas&1, pp=(apas>>1)&1, pa=(apas>>2)&1, ps=apas>>3;  // extract values from mask
+ I a=apas&1, pp=PEXTN(apas,1,1), pa=PEXTN(apas,2,1), ps=apas>>3;  // extract values from mask
  if(d==1){I i;
   for(i=0;i<m;++i){
    A t;B b,*cc="\000\001\000\001\000\001\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;  // *p must be overfetchable
@@ -750,7 +750,7 @@ static DF2(jtinfixd){F12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 
 static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
  SETIC(w,p); p-=m; wt=AT(w); c=aii(w);
- switch(((wt>>(INTX-1))&6)+avg){
+ switch(PEXTN(wt,INTX-1,6)+avg){
  case 0:       MOVSUMAVG(B,I,INT,I,INT,x,  SETZ ); break;
  case 1:       MOVSUMAVG(B,I,INT,D,FL, x/d,SETZD); break;
  case 2: 

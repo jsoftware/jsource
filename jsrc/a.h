@@ -10,7 +10,7 @@
 
 #define COMPOSE(c)  (BETWEENC((c),CAMPCO,CAT))   // &: & @: @ 
 
-#define CONJCASET(at,wt) ((((at)>>(VERBX-1))+((wt)>>VERBX))&3)
+#define CONJCASET(at,wt) (((at)>>(VERBX-1))+PEXTNC((wt),VERBX,3))
 #define CONJCASE(a,w)   CONJCASET(AT(a),AT(w))
 #define NN              CONJCASET(NOUN,NOUN)               /* NOUN NOUN                       */
 #define NV              CONJCASET(NOUN,VERB)               /* NOUN VERB                       */

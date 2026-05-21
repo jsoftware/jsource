@@ -591,7 +591,7 @@ jobs:
 
       run: |
        rm -f jobdone
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
        echo "Host *" >>~/.ssh/config || true
@@ -654,7 +654,7 @@ jobs:
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 gdb
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -719,7 +719,7 @@ jobs:
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 gdb
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -781,11 +781,11 @@ jobs:
        pkg install -y curl zip find gmake nasm pcre2 gdb openblas
        find / -type f -name 'liblapack.so*' 1>&2
        find / -type f -name 'libopenblas.so*' 1>&2
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
 
       run: |
        rm -f jobdone
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
        echo "Host *" >>~/.ssh/config || true
@@ -852,7 +852,7 @@ jobs:
        sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -921,7 +921,7 @@ jobs:
        sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
        sudo echo "Host *" >>~/.ssh/config || true
@@ -985,11 +985,11 @@ jobs:
        pkg install -y curl zip find gmake nasm pcre2 gdb openblas
        find / -type f -name 'liblapack.so*' 1>&2
        find / -type f -name 'libopenblas.so*' 1>&2
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
 
       run: |
        rm -f jobdone
-       /usr/sbin/ldconfig -r
+       /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
        echo "Host *" >>~/.ssh/config || true

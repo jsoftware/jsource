@@ -339,7 +339,7 @@ DF2(jtpoly2){F12IP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*
   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
   if(n==0){RETF(za);}  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);
-  b+=(t>>FLX)&3; // must be FL/CMPX, add 1 or 2
+  b+=PEXTN(t,FLX,3); // must be FL/CMPX, add 1 or 2
  }else{if(postfn)R jtupon2cell(jt,a,w,self);  // revert if there is a postfn, and we are using the eval path.  type must be FL
  }
  switch(b){  // 1=FL, coeffs 2=CMPX, coeffs 0=other, coeffs 4=FL, mplr/roots  5=CMPX, mplr/roots 3=other, mplr/roots

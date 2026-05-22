@@ -650,9 +650,9 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // split m into search and comparison
   I search=m>>3; I comp=m&7;
   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address
-  I postflags=(0xc0>>search)&3; search=PEXTN(0x0143210,search<<2,15);  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
+  I postflags=(0xc0>>search)&3; search=PEXTNC(0x0143210,search<<2,15);  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
   // Change i.&1@:comp to i.&0@:compx, sim for i:  XOR comp with 000 001 000 110 000 110
-  comp^=PEXTN(0x606010,((search&1)+(comp&6))<<2,7); search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
+  comp^=PEXTNC(0x606010,((search&1)+(comp&6))<<2,7); search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
   if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01+INT+FL)))){
    // numeric types that we can handle here, for sure
 #if !defined(__wasm__)

@@ -750,7 +750,7 @@ static DF2(jtinfixd){F12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 
 static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
  SETIC(w,p); p-=m; wt=AT(w); c=aii(w);
- switch(PEXTN(wt,INTX-1,6)+avg){
+ switch(PEXTNC(wt,INTX-1,6)+avg){
  case 0:       MOVSUMAVG(B,I,INT,I,INT,x,  SETZ ); break;
  case 1:       MOVSUMAVG(B,I,INT,D,FL, x/d,SETZD); break;
  case 2: 

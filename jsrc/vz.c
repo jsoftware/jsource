@@ -118,7 +118,7 @@ ZF2(jtzgcd){D a,b;Z t,z,t1;I lim;
  // Move result into first quadrant, and off the real axis
  I RrIi=(((v.re>0)*2+(v.re==0))*2+(v.im>0))*2+(v.im==0);  // classify result signs en bloc
  z.re=ABS(v.re); z.im=ABS(v.im);
- if(PEXTN(0xf1f4,RrIi,1)){D zt=z.re; z.re=z.im; z.im=zt;}  // swap if re==0, or im!=0&(re>0!=im>0) 1111 0001 1111 0100
+ if(PEXTNC(0xf1f4,RrIi,1)){D zt=z.re; z.re=z.im; z.im=zt;}  // swap if re==0, or im!=0&(re>0!=im>0) 1111 0001 1111 0100
  R z;
 }
 

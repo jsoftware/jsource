@@ -244,7 +244,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
   I awcrflg=4*acr+wcr;  // incredible register pressure.  Combine af/wf, and shift in flags as we calculate them
   I cc2a=__atomic_load_n(&AS(a)[ar-2],__ATOMIC_RELAXED); p=awcrflg&0b1100?p:1; cc2a=awcrflg&0b1000?cc2a:1; ma=cc2a*p; ma=awcrflg==0b0010?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w; i. e. #atoms to fill from an item of a
   I cc2w=__atomic_load_n(&AS(w)[wr-2],__ATOMIC_RELAXED); q=awcrflg&0b0011?q:1; cc2w=awcrflg&0b0010?cc2w:1; cc2a+=cc2w; mw=cc2w*q; mw=awcrflg==0b1000?p:mw;  // sim for w; cc2a is combined length of axis -2 f can increment only once
-  p=awcrflg&0b1100?p:q; awcrflg=2*awcrflg+PEXTN(0b100000100,awcrflg,p>1);   // len of 1-cell of result (if r=2); new low flag: scalar extension of more than 1 atom (lens are 2 and 0, len (which can't be 0) > 1
+  p=awcrflg&0b1100?p:q; awcrflg=2*awcrflg+PEXTNC(0b100000100,awcrflg,p>1);   // len of 1-cell of result (if r=2); new low flag: scalar extension of more than 1 atom (lens are 2 and 0, len (which can't be 0) > 1
   awcrflg=2*awcrflg+(wf>=af);  t+=awcrflg<<23;  // save flags in t to free up awcrflg
      // new low flag wf>=af, i. e. a is short frame: a must repeat |replct| times between advances, while long frame advances every time (setting ct to 1)
      // *** awcrflg has been shifted and moved into t<<23, low flags are bit 1=(scalar exten) bit 0=(a is short frame) ***

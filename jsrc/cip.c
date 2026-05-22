@@ -497,8 +497,8 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
          if(a5rem>1){_mm256_storeu_pd(z4base+n,z10r); _mm256_storeu_pd(z4base+n+NPAR,z11r);}
         } else {
          __m256i mask0, mask1;  // horizontal masks for w values, if needed
-         mask0=_mm256_loadu_si256((__m256i*)(validitymask+PEXTN(0x00001234,a3rem<<2,0x7)));  // a3rem { 4 3 2 1 0 0 0 0
-         mask1=_mm256_loadu_si256((__m256i*)(validitymask+PEXTN(0x12344444,a3rem<<2,0x7)));  // a3rem { 4 4 4 4 4 3 2 1
+         mask0=_mm256_loadu_si256((__m256i*)(validitymask+PEXTNC(0x00001234,a3rem<<2,0x7)));  // a3rem { 4 3 2 1 0 0 0 0
+         mask1=_mm256_loadu_si256((__m256i*)(validitymask+PEXTNC(0x12344444,a3rem<<2,0x7)));  // a3rem { 4 4 4 4 4 3 2 1
          _mm256_maskstore_pd(z4base,mask0,z00r); _mm256_maskstore_pd(z4base+NPAR,mask1,z01r);
          if(a5rem>1){_mm256_maskstore_pd(z4base+n,mask0,z10r); _mm256_maskstore_pd(z4base+n+NPAR,mask1,z11r);}
         }
@@ -1025,7 +1025,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
 #define Q9(f,c0,c1) ((I)(((c1)<<2)+(c0))<<(((f)-CSTARCO)<<2))
 #define PMSK Q9(CSTARCO,IPBX1,IPBXNW)+Q9(CPLUSCO,IPBXNW,IPBX0)+Q9(CSTAR,IPBX0,IPBXW)+Q9(CPLUS,0,0)+Q9(CPLUSDOT,IPBXW,IPBX1)+Q9(CSTARDOT,IPBX0,IPBXW)+Q9(CEQ,IPBXNW,IPBXW)+Q9(CNE,IPBXW,IPBXNW)+Q9(CLT,IPBXW,IPBX0)+Q9(CLE,IPBX1,IPBXW)+Q9(CGE,IPBXNW,IPBX1)+Q9(CGT,IPBX0,IPBXNW)+Q9(CEBAR,0,0)+Q9(CEPS,0,0)+Q9(CMIN,IPBX0,IPBXW)+Q9(CMAX,IPBXW,IPBX1)
  I pmsk=0; pmsk=BETWEENC(d,CSTARCO,CMAX)?PMSK:pmsk; pmsk&=-(B01&AT(w));
- c0=PEXTN(pmsk,(d-CSTARCO)<<2,3); c1=PEXTN(pmsk,((d-CSTARCO)<<2+2),2)&3;  // get control bits if known fn, (0,0) if unknown
+ c0=PEXTNC(pmsk,(d-CSTARCO)<<2,3); c1=PEXTNC(pmsk,(((d-CSTARCO)<<2)+2),3);  // get control bits if known fn, (0,0) if unknown
  // create x0 and x1, the result of (g 0) and (g 1).  If we know the function we can avoid invoking g sometimes
  if(c0+c1==0){
   // unsupported g.  Set c0/c1 to invalid and execute g to find x0/x1
@@ -1472,12 +1472,12 @@ finrle: ;
 
      if(0){pivotmiss0: ngood=0;}  // come here when the first column is invalid as a pivot
      // advance to next permutation.   skip anything that repeats the first failing index, since that will fail in the same place
-     do{++permx;}while(PEXTN(perms8[permx]^perm,2*ngood,3)==0); perm=perms8[permx];  // find first perm that doesn't repeat the failure
+     do{++permx;}while(PEXTNC(perms8[permx]^perm,2*ngood,3)==0); perm=perms8[permx];  // find first perm that doesn't repeat the failure
      if(permx<sizeof(perms8)/sizeof(perms8[0])-1)continue;  // if there is another permutation to check, go try it
 
      // here we were unable to find a full set of pivots with any ordering of the input block.  Update the permutation for the pivots we did find, and go back to dot-product to get the next batch of rows.
      if(bestnperma>ngoodperma)scanstart=permblkofst;  // if we made any improvement, restart the scan for the next improvement
-     DO(bestnperma-ngoodperma, perma[6-i]=perma[ngoodperma+PEXTN(bestperm,2*i,3)];)  // save selected pivots at end of perma, in reverse order of use
+     DO(bestnperma-ngoodperma, perma[6-i]=perma[ngoodperma+PEXTNC(bestperm,2*i,3)];)  // save selected pivots at end of perma, in reverse order of use
      I i; for(i=6;ngoodperma<bestnperma;--i,++ngoodperma,bestperm>>=2){perma[ngoodperma]=perma[i]; srclines[ngoodperma]=(nr-1-r+permblkofst)*BLKSZ+(bestperm&3);} // install the selected pivots, and the source of each found row
 
      if(++permblkofst>r)permblkofst=0;   // step south to try the next 'corner' block, wrapping around at end

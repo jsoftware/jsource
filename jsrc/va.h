@@ -361,7 +361,7 @@
 // align stores. We do this always to avoid a misbranch.  We calculate the amount of alignment needed
 // as 0-4 words, but never more than the total length-1
 #define PRMALIGN(zzop,xy,fz,len) \
-  UI alignreq=4-(((I)z>>LGSZI)&(NPAR-1)); /* alignment len, 1-4 */ \
+  UI alignreq=4-PEXTN((I)z,LGSZI,NPAR-1); /* alignment len, 1-4 */ \
   alignreq=alignreq>len-1?len-1:alignreq;   /* never more than len-1 */ \
   len-=alignreq;  /* leave remlen>0 */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=0000, 01=1000, 10=1100, 11=1110, 100=1111 */ \
@@ -396,7 +396,7 @@
 
 // version to save I-cache, with only one instance of zzop and load
 #define PRMMASKLP(zzop,xy,fz) { \
-  UI thisl=4-(((I)z>>LGSZI)&(NPAR-1));  /* rem len, align len 1-4, clamped at len */ \
+  UI thisl=4-PEXTN((I)z,LGSZI,NPAR-1);  /* rem len, align len 1-4, clamped at len */ \
   NOUNROLL do { \
    thisl=thisl>m0?m0:thisl; /* don't overrun input */ \
    /* fetch args, with conversion if needed */ \
@@ -677,7 +677,7 @@ AHDR2(f,void,void,void){ I u,v;       \
     _mm256_storeu_pd(z, fuv); x=(C*)x+NPAR*SZI; y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
    ) \
   } \
-  DQ(((m-1)>>LGSZI)&(NPAR-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);   \
+  DQ(PEXTN(m-1,LGSZI,NPAR-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);   \
   u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
  }else if(m&1){m>>=1;                      \
   DQU(n, \
@@ -688,7 +688,7 @@ AHDR2(f,void,void,void){ I u,v;       \
     ) \
    } \
    u=_mm_extract_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(u256)),0); x=(C*)x+1; \
-   DQ(((m-1)>>LGSZI)&(NPAR-1), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
+   DQ(PEXTN(m-1,LGSZI,NPAR-1), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
    v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1)); y=(I*)((UC*)y+(((m-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((m-1)&(SZI-1))+1)); \
   ) \
  }else{m>>=1;  \
@@ -700,7 +700,7 @@ AHDR2(f,void,void,void){ I u,v;       \
     ) \
    } \
    v=_mm_extract_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(v256)),0); y=(C*)y+1; \
-   DQ(((m-1)>>LGSZI)&(NPAR-1), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
+   DQ(PEXTN(m-1,LGSZI,NPAR-1), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
    u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1)); x=(I*)((UC*)x+(((m-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((m-1)&(SZI-1))+1)); \
   ) \
  } \

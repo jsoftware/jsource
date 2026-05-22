@@ -113,7 +113,7 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
   while((currbit>=0||i==1)&&nextexp>=0){  // carry on till integer part finished.  Break at end of valid bits, but only if there are no more coming later
    // The next bit is integer.  Double the incumbent value and add the bit.
    I nadd=ndig;  // number of places to add: all valid digits
-   I cry=nextexp>currexp?0:PEXTN(bits,currbit,1);  // carry-in to lowest position: the bit we are working on (0 if a skipped exp)
+   I cry=nextexp>currexp?0:PEXTNC(bits,currbit,1);  // carry-in to lowest position: the bit we are working on (0 if a skipped exp)
    I ext=(buf[0]>=5)|((ndig==0)&cry);  // set if this doubling will overflow into the next digit.
    if(nadd+ext>bsz){cry=buf[ndig-1]>=5; --nadd;}  // if we are trying to extend a full field, forget the new bit and round up the exiting digit
    DQ(nadd, I dig=2*buf[i]+cry; cry=dig>9; dig-=10&-cry; buf[i+ext]=dig;)  // double the digit string
@@ -128,7 +128,7 @@ struct fmtbuf fmtlong(struct fmtbuf fb, E v){
   while(currbit>=0){
    // The next bit is fractional.  If it is nonzero, add its fractional rep
       if(bits<i)goto finish;  // if no more fractional significance (must be in low part), stop 
-   if(nextexp==currexp&&PEXTN(bits,currbit,1)){  // non-skipped 1 bit
+   if(nextexp==currexp&&PEXTNC(bits,currbit,1)){  // non-skipped 1 bit
     I nadd=MIN(fbuflen,bsz-(dp-fbufdp));  // dp-fbufdp is MSD of where the significance of fbuf will be added in.  Truncate the add to buffer size
     if(nadd<=0)goto finish;  //  if the significance of the fraction is too small, stop
     I cry=0;  // init no carry in

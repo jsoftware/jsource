@@ -34,7 +34,7 @@ B jtvnm(J jt,I n,C *s){C c,t;I j;
  // We do this with a state machine that scans 3 characters at a time, creating 3 bits: [0]='_' [1]='_' [2]=digit (including _).  We always start pointing to the first '_'.  State result tells
  // how many characters to advance, 0 meaning error.  We stop when there are <2 characters left.  The word cannot end with '_'.  If it ends xx9_9 we will go to 9_9 and then _9?, i. e. overfetch the buffer by 1.  But that's OK on literal data.
  // advance counts are: xxa=3, xx9=2, x_a=0, x_9=1, _xa=0, _x9=0, __a=3, __9=0 
- ++j; while(j<n-1){I state=4*(s[j]=='_')+2*(s[j+1]=='_')+(ctype[(UC)s[j+2]]>>3); state=PEXTN(0x03001023L,state<<2,3); if(state==0)R 0; j+=state;};
+ ++j; while(j<n-1){I state=4*(s[j]=='_')+2*(s[j+1]=='_')+(ctype[(UC)s[j+2]]>>3); state=PEXTNC(0x03001023L,state<<2,3); if(state==0)R 0; j+=state;};
  R 1;
 }    /* validate name s, return 1 if name well-formed or 0 if error */
 
@@ -61,7 +61,13 @@ A jtnfs(J jt,I n,C*s,I notlocal){A z;C f,*t;I m,p;NM*zv;
  ASSERT(BETWEENO(n,1,32767),EVILNAME);   // error if name is empty or too long
  // If the name is the special mnuvxy, return a copy of the preallocated block for that name (we may have to add flags to it)
  if(SGNTO0(n-2)&BETWEENC(f,'m','y')&(p=(0x1b03>>(f-'m')))){  // M N o p q r s t U V w X Y 1101100000011
-  RZ(z=jtca((J)((I)jt|notlocal),mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]))  // create a clone of the argument block (because flags/buckets may be added)
+  RZ(z=jtca((J)((I)jt|notlocal),mnuvxynam[5-
+#ifdef PEXT
+     PEXT(p,0x80a)
+#else
+     ((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))
+#endif
+    ]))  // create a clone of the argument block (because flags/buckets may be added).  We get the index by looking at the bits of the letter
  }else{
   // The name may not be valid, but we will allocate a NAME block for it anyway
   GATV0(z,NAME,n,1); AC(z)=ACUC1; zv=NAV(z); if(likely(!notlocal))z->mback.lookaside=0;   // the block is cleared to 0 with no lookaside value.  This is the only place where a NAME is allocated (except for cloning).  NAME is always non-ip

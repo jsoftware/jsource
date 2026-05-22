@@ -99,7 +99,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*wv
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
 #define CVCASE(a,b)     (8*SHMSK(0xde8c,(a),7)+SHMSK(0xde8c,(b),7))   // Must distinguish 0 2 3 4 6 7 9 10 13->4 3 1 0 2 5 7 7 6  11011110 10001100
 // obsolete #define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases LIT=2 C2T=1 C4T=0
-#define CVCASECHAR(a,b) (((a)>>(C2TX-2))+((b)>>C2TX)&0xf)  // distinguish character cases LIT=2 C2T=1 C4T=0
+#define CVCASECHAR(a,b) SHMSK(((a)<<2)+(b),C2TX,0xf)  // distinguish character cases LIT=0 C2T=1 C4T=2
 
 // parallel implementations of I. in assembly
 // currently not supported on windows because fsgsbase isn't enabled there.  But once it is: the windows abi doc says you have to always have a valid stack pointer and we clobber it; probably SEH related stuff or something?  Do we have to actually do that?

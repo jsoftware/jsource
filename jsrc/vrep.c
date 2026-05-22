@@ -107,7 +107,7 @@ static REPF(jtrepbdx){F12IP;A z;I c,k,m,p;
   __m256i i1=_mm256_set1_epi8(1);
   __m256i bitpipe00,bitpipe01,bitpipe10,bitpipe11;  // place to read in booleans and packed bits
 #define BSIZE 32  // # bytes in a block
-  __m256i bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+((-n>>LGSZI)&(NPAR-1))));  // since alignment never changes, we can predict the validity for the last block
+  __m256i bitendmask=_mm256_loadu_si256((__m256i*)(validitymask+SHMSK(-n,LGSZI,NPAR-1)));  // since alignment never changes, we can predict the validity for the last block
   if(n>=2*BSIZE){bitpipe10=_mm256_loadu_si256((__m256i*)(avv)); bitpipe11=_mm256_loadu_si256((__m256i*)(avv+BSIZE));}  // if there is a first FULL batch, prefetch it
   while(n>0){    // n is # bytes left to process
    // We process 64 bytes at a time, always reading ahead one block.  If there are >=64 items to do, bitpipe1 has the next set to process, from *avv
@@ -259,7 +259,7 @@ static REPF(jtrepidx){F12IP;A y;I j,m,p=0,*v,*x;A z;
       // we can overstore 4 words, so we write out one copy forthwith.  We then copy 2 blocks at a time.  We may repeat the first address to get in sync
       // start with a store to allow aligning the output pointer.  Advance zv1 to a store boundary, but never past the end-of-area+1.  Decr count
 //      _mm256_storeu_si256((__m256i*)zv1,wd);  // first store, which may be overwritten
-      I wdadj=NPAR-(((I)zv>>LGSZI)&(NPAR-1));  // #words to end-of-block
+      I wdadj=NPAR-SHMSK((I)zv,LGSZI,NPAR-1);  // #words to end-of-block
       _mm256_maskstore_epi64((I*)zv,_mm256_loadu_si256((__m256i*)(validitymask+4-wdadj)),wd);  // first store, which may be overwritten
       C *zv1=zv;  // local store pointer, which may overwrite
       zv+=wdstomove*SZI;  // advance the real store pointer to the next valid output location for the next loop

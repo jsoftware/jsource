@@ -89,13 +89,13 @@ static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r,CW*con){I e,m,t;
   // we will skip over break. for inner loops, which have already been processed). 
   CWASSERT(b&&d); b->go=(US)(1+k); m=i-k-1;   // get # cws between (after while.) and (before end.)
   // fill in break. to go after end., or continue. to go after while.; leave others unchanged
-  DQ(m, ++d; t=(d->tcesx>>TCESXTYPEX); if(CWMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(US)e :(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)(1+k):(US)CWMAX;);
+  DQ(m, ++d; t=(d->tcesx>>TCESXTYPEX); if(CWMAX==d->go)d->go=SHMSK((((I)1<<CBREAK)|((I)1<<CBREAKS)),t,1)?(US)e :SHMSK(((I)1<<CCONT)|((I)1<<CCONTS),t&31,1)?(US)(1+k):(US)CWMAX;);
  }else if(BOTHEQUS(CFOR,CDOF,bothcw)){    // for. do. end.
   // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
   // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
   // was previously marked as in select.
   CWASSERT(b&&d); b->go=(US)j;    d->go=i;   m=i-k-1;  // point for. to end. to allow detecting branchouts
-  DQ(m, ++d; t=(d->tcesx>>TCESXTYPEX); if(CWMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->tcesx=(d->tcesx&~TCESXTYPE)|(CBREAKF<<TCESXTYPEX),(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)CWMAX;);  // replace 'goto CWMAX' with actual end value
+  DQ(m, ++d; t=(d->tcesx>>TCESXTYPEX); if(CWMAX==d->go)d->go=SHMSK(((I)1<<CBREAK)|((I)1<<CBREAKS),t,1)?(d->tcesx=(d->tcesx&~TCESXTYPE)|(CBREAKF<<TCESXTYPEX),(US)e):SHMSK(((I)1<<CCONT)|((I)1<<CCONTS),t&31,1)?(US)j:(US)CWMAX;);  // replace 'goto CWMAX' with actual end value
  }else CWASSERT(0);
  c->go=(US)e;   // Set previous control to come to NSI.  This could be the do. of if./do. or loop/do., or the else. of else./do.
  R -1;
@@ -124,8 +124,8 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  // any hitherto not-processed throw. to go to the catch. (if it exists) or catchd. (if no catch.).
  // That way, unfielded throw. counts as an error that can be picked up in catch.
  // kludge if break/continue encountered:  while. do. try. break. catch. end. end.  leaves the break pointing past the outer end, and the try stack unpopped
- if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(CWMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>((v->tcesx>>TCESXTYPEX)&31))&1))v->go=ii;);}
- else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(CWMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>((v->tcesx>>TCESXTYPEX)&31))&1))v->go=ii;);}
+ if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(CWMAX==v->go&&!SHMSK(((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS),SHMSK(v->tcesx,TCESXTYPEX,31),1))v->go=ii;);}
+ else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(CWMAX==v->go&&!SHMSK(((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS),SHMSK(v->tcesx,TCESXTYPEX,31),1))v->go=ii;);}
  R top;  //return stack pointer with the try. ... end. removed
 }    /* result is new value of top */
 
@@ -200,7 +200,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
    }
    stack[top++]=i; ++tb;  break;            // push addr of cw, increment t-block count
   case CDO:                                   // do. - classify according to what structure we are in
-   CWASSERT(((((I)1<<CIF)|((I)1<<CELSEIF)|((I)1<<CSELECT)|((I)1<<CWHILE)|((I)1<<CWHILST)|((I)1<<CFOR)|((I)1<<CCASE)|((I)1<<CFCASE))>>(q&31))&1);   // first, make sure do. is allowed here
+   CWASSERT(SHMSK(((I)1<<CIF)|((I)1<<CELSEIF)|((I)1<<CSELECT)|((I)1<<CWHILE)|((I)1<<CWHILST)|((I)1<<CFOR)|((I)1<<CCASE)|((I)1<<CFCASE),q&31,1));   // first, make sure do. is allowed here
     // classify the do. based on struct: if for. do., call it DOF; if [f]case. do, call it DOSEL;
     // otherwise (if./elseif., while./whilst.) leave it as DO
    b->tcesx=(b->tcesx&~TCESXTYPE)|((q==CFOR?CDOF:q==CCASE||q==CFCASE?CDOSEL:CDO)<<TCESXTYPEX);
@@ -252,7 +252,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
   for(i=n-1;i>=0;--i){
    I origcanend=CANEND(i);
    if(!(origcanend&3)){  // if the value is filled in with a final already, we won't change it
-    switch((con[i].tcesx>>TCESXTYPEX)&31) {
+    switch(SHMSK(con[i].tcesx,TCESXTYPEX,31)) {
     case CBBLOCK: case CBBLOCKEND: case CTHROW:
      CANEND(i) = 8+2; break;  // These are by definition not an end
     case CRETURN:
@@ -416,7 +416,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    d->tcesx=(k?(C)k:2==as?CASSERT:CBBLOCK)<<TCESXTYPEX;  // init type; if not cw, call it BBLOCK unless it's the block after assert.  Rest of field to 0
    d->source=(US)i;                     /* source line number for this sentence   */
    // If this cw ends a loop/select, set a special goto line number; otherwise point to NSI
-   d->go= (((((I)1<<0)|((I)1<<CCONT)|((I)1<<CBREAK)|((I)1<<CCONTS)|((I)1<<CBREAKS)|((I)1<<CTHROW))>>k)&1) ? (US)CWMAX : k==CRETURN ? (US)CWMAX-1 : (US)(1+n);
+   d->go=SHMSK(((I)1<<0)|((I)1<<CCONT)|((I)1<<CBREAK)|((I)1<<CCONTS)|((I)1<<CBREAKS)|((I)1<<CTHROW),k,1) ? (US)CWMAX : k==CRETURN ? (US)CWMAX-1 : (US)(1+n);
    b|=k==CGOTO;                         // remember if we see a goto_.
    // if not cw (ie executable sentence), turn words into an executable queue.  If cw, check for cw with data.  Set x to queue/cw, or 1 if cw w/o data
    if(!k){RZ(x=enqueue(w1,w0,2))}else{x=k==CLABEL||k==CGOTO||k==CFOR?w0:0L;}  // FOR must always go out; the length of the name is always needed, even if 0

@@ -2115,12 +2115,12 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // bp(type) returns the number of bytes in an atom of the type - not used for sparse args
 // bplg(type) works for NOUN types and returns the lg of the size - for sparse args, the size of the underlying dense type
 #if SY_64
-#define bplg(i) (I)SHMSK((I8)0x008b0222888dc6c0LL,3*CTTZ(i),(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
+#define bplg(i) (I)SHMSK8((I8)0x008b0222888dc6c0LL,3*CTTZ(i),(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
 #else
-#define bplg(i) (I)SHMSK((I8)0x008a022288694680LL,3*CTTZ(i),(I)7)  //  010 001 010   000 000 100 010 001 010 001 000   011 010 010 100 011 010 000 000 =  0 1000 1010 0000 0010 0010 0010 1000 1000 0110 1001 0100 0110 1000 0000
+#define bplg(i) (I)SHMSK8((I8)0x008a022288694680LL,3*CTTZ(i),(I)7)  //  010 001 010   000 000 100 010 001 010 001 000   011 010 010 100 011 010 000 000 =  0 1000 1010 0000 0010 0010 0010 1000 1000 0110 1001 0100 0110 1000 0000
 #endif
 // bpnonnoun is like 1<<bplg but we know that the value is not a noun
-#define bpnonnoun(i) (I)SHMSK((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
+#define bpnonnoun(i) (I)SHMSK8((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
  ((I8)SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+((I8)ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+((I8)MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+((I8)NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \
  ,5*(CTTZ(i)-(LASTNOUNX+1)),31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   8 8 8 8 12 4 8 8 8 (1) 
 // bpnoun is like bp but for NOUN types, and not sparse
@@ -2132,7 +2132,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // Conversion from type to priority
 //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F  
 // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
-#define TYPEPRIORITYNUM(t) ((I)SHMSK((UI8)0x00edcba9765f8410LL,CTTZ(t)*4,0xf))  // used for types below 0x10000, which includes all numerics
+#define TYPEPRIORITYNUM(t) ((I)SHMSK8((UI8)0x00edcba9765f8410LL,CTTZ(t)*4,0xf))  // used for types below 0x10000, which includes all numerics
 #define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?((CTTZ(t)&0x3)+1):TYPEPRIORITYNUM(t))
 
 // same but destroy w
@@ -2670,6 +2670,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // parallel bit extract/deposit.  Operate on UI types.  In our use, the second argument is constant, so that if the compiler has to emulate
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
 #define SHMSK(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m need not be contiguous.  x and m can be variables.  Use this version in constant expressions
+#define SHMSK8(s,x,m)  (((UI8)(s)>>(x))&(m))  // x is bit#, m need not be contiguous.  x and m can be variables.  Use this version in constant expressions
 #if C_AVX2  // more precisely, BMI2 support
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
 #define PEXT0(s,x,m)  _pext_u64((UI)(s),((UI)(m)<<(x)))  // x is bit#, m must be contiguous starting at bit 0.  x and m should be compile-time constants; otherwise use SHMSK

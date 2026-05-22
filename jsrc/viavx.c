@@ -30,7 +30,7 @@ I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-  UI fillval = (((1LL<<INUBSV)|(1LL<<ILESS)|(1LL<<INUB)|(1LL<<INUBI)|(1LL<<INUBIP))>>(md&(IIMODPACK+IIOPMSK)))&1; UI temp=md&IIMODPACK?255:1; fillval=md&IREVERSED?temp:fillval;  // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
+  UI fillval = SHMSK((1LL<<INUBSV)|(1LL<<ILESS)|(1LL<<INUB)|(1LL<<INUBI)|(1LL<<INUBIP),md&(IIMODPACK+IIOPMSK),1); UI temp=md&IIMODPACK?255:1; fillval=md&IREVERSED?temp:fillval;  // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
   mvc(p,hh->data.UI,1,&fillval);  // fill with repeated copies of fillval
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
@@ -311,7 +311,7 @@ static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I t;
 #define XDOWSAPB(T,TH,earlyexit) {I j, hj; DO(asct, \
   j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(!(hj&bitmsk)){hv[BYTENO(j)]=(TH)(hj^=bitmsk); if(--chainct==0)goto earlyexit;})}
 // After the results have been calculated, go through the indirect table and copy the result for any value that is not start-of-class
-#define XDOWGETRESULTPB(T,TZ,zptr) {DO(wsct, zptr[i]=(TZ)((hv[BYTENO(wv[i])]>>BITNO(wv[i]))&1);)}
+#define XDOWGETRESULTPB(T,TZ,zptr) {DO(wsct, zptr[i]=(TZ)SHMSK(hv[BYTENO(wv[i])],BITNO(wv[i]),1);)}
 
 // convert the hashtable in *hv to a packed-bit hashtable in *hvp, preserving the validity limits
 #define XDOWREPACK(T,TH) {I *hvpw = (I*)hvp+((maximum+1)>>LGBW); TH *hv2=hv+maximum; I q = 0; DQ((maximum+1)&(BW-1), q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q; \
@@ -937,7 +937,8 @@ inplace:;
      fnx=FNTBL16;
     }else{  // it's a hash.  Type must be QP/CMPX/FL/INT*/chars.  The case of 2/4/8-byte atoms was handled above
 #define RTNLINE ((1LL<<INTX*4)+(1LL<<INT2X*4)+(1LL<<INT4X*4)+(2LL<<FLX*4)+(3LL<<CMPXX*4)+(4LL<<QPX*4))   // line# for each type (0 for chars or INT[24])
-     I rtnno=unlikely(((t)&0xffff)==0)?((0x000000<<2)>>((CTTZ(t)&0x3)<<3)&0b1111100) : ((RTNLINE<<2)>>(CTTZ(t)*4))&0b111100;  // type: 0..4=chars/INT/FL/CMPX/QP
+// obsolete      I rtnno=unlikely(((t)&0xffff)==0)?((0x000000<<2)>>((CTTZ(t)&0x3)<<3)&0b1111100) : ((RTNLINE<<2)>>(CTTZ(t)*4))&0b111100;  // type: 0..4=chars/INT/FL/CMPX/QP
+     I rtnno=unlikely(((t)&0xffff)==0)?0 : SHMSK(RTNLINE<<2,CTTZ(t)*4,0b111100);  // type: 0..4=chars/INT/FL/CMPX/QP
      fnx=rtnno+((n==1)?2:0)+fnx+2;  // index: (datatype)/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
     }
    }
@@ -1151,7 +1152,7 @@ inplace:;
 
 // verb to vector combine@e. compounds.  The i. code is in the self
 // because these are e. compounds we swap a and w
-DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
+DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+SHMSK(FAV(self)->flag,3,7),w,a);}
 
 // verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 // a is the arg that was indexed, used only if we have to revert to rerunning the operation

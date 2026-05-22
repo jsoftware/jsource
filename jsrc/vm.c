@@ -426,7 +426,7 @@ static Sleef_quad etof128(E w){
  R *(Sleef_quad*)&(IL[2]){elo,ehi};  // return the value
 }
 E f128toe(Sleef_quad w){
- UIL exp=(((UIL*)&w)[1]>>48)&0x7fff;  // extract 15-bit biased SLEEF exponent
+ UIL exp=SHMSK(((UIL*)&w)[1],48,0x7fff);  // extract 15-bit biased SLEEF exponent
  if(unlikely(!BETWEENO(exp,0x3c00,0x4400))){  // exponent too big or too small
   R (E){.hi=exp<0x4000?0.:copysign(inf,((D*)&w)[1]),.lo=0.};   // clamp at limit
  }
@@ -434,7 +434,7 @@ E f128toe(Sleef_quad w){
  ihi=((ihi+0x4000000000000000ll)&0x7fffffffffffffffLL)|(((IL*)&w)[1]&0x8000000000000000ll);  // rebias exp and replace sign
  D hi1=*(D*)&(IL){ihi&0xfff0000000000000ll};  // 1.0 with sign+exponent of hi, i. e. exponent of hidden bit of hi which is bit 104 of combined mantissa
  hi1*=4.9303806576313238e-32;  // mult by 2^_104 to get value of LSB of combined mantissa
- IL ilo=(((IL*)&w)[0]>>8)&0x000fffffffffffffll;   // low significance of mantissa, bits 8-59 
+ IL ilo=SHMSK(((IL*)&w)[0],8,0x000fffffffffffffll);   // low significance of mantissa, bits 8-59 
  D dlo=hi1*ilo;  // low significance, with correct weight and sign
  D hi,lo; TWOSUMBS1(*(D*)&ihi,dlo,hi,lo)  // remove any overlap
  R CANONE1(hi,lo);  // return canonical form

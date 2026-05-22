@@ -134,7 +134,7 @@ ARGCHK2(a,w);
  optype|=((I)jtfg&JTWILLBEOPENED)<<(BOXX-JTWILLBEOPENEDX);  // fold in BOX flag that tells us to allow virtual boxed results
  if(likely(!(optype&BOX))){realizeifvirtual(w);}  // it's going into an array, so realize it unless virtual results allowed
  // if (,<) and a is not boxed singleton atom/list, revert
- if(unlikely((optype&1)>((AT(a)>>BOXX)&SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtfg,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing - WILLOPEN is impossible
+ if(unlikely((optype&1)>SHMSK(AT(a),BOXX,SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtfg,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing - WILLOPEN is impossible
  I unboxempty=SGNIFNOT(AT(w),BOXX)|(AN(w)-1)|optype;  // sign set if w unboxed or empty, or the operation is (,<) or ,&< or (;<) which will always box w
  I aband=SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // 1 if w is abandoned, 0 otherwise.
  if(unlikely(a==w))aband=0;   // Must not accept a==w as it could lead to w containing itself
@@ -489,7 +489,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 F1(jtope){F12IP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  ARGCHK1(w);
  v=AAV(w);
- if(likely((RANKT)((AT(w)>>BOXX)&(BOX>>BOXX))>AR(w))){   // boxed and rank=0
+ if(likely((RANKT)SHMSK(AT(w),BOXX,1)>AR(w))){   // boxed and rank=0
   // scalar box: Turn off pristine in w since we are pulling an address from it.  Contents must not be inplaceable
   z=C(*v);
 #if AUDITBOXAC

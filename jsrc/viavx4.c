@@ -79,7 +79,7 @@ name##out: \
    }else{ \
     n2<<=3; \
     orign2-=n2; orign2<<=LGNPAR; \
-    orign2+=(((fz)&0x1000?inv?0x4322111100000000:0x0000000011112234:inv?0x4010201030102010:0x0102010301020104)>>(maskatend<<2))&7; if((fz)&0x1000){orign2=n0-1-orign2; orign2=orign2<0?n0:orign2;} \
+    orign2+=SHMSK8((fz)&0x1000?inv?0x4322111100000000:0x0000000011112234:inv?0x4010201030102010:0x0102010301020104,maskatend<<2,7); if((fz)&0x1000){orign2=n0-1-orign2; orign2=orign2<0?n0:orign2;} \
     *(I*)zv=orign2; if((fz)&0x4000){nuniq+=(orign2-wsct+nw)==0; ((I*)zv)[orign2-wsct+nw]++;} zv=(I*)zv+1;  /* if key, look back to incr the first in class */ \
    } \
    INCRBID(y,q,fz,0x10,0x80,0x200) \

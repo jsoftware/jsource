@@ -870,7 +870,7 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
   }
  }
  // types here must both be among B01 INT FL CMPX XNUM RAT INT2 INT4 SP QP  0 2 3 4 6 7 9 10 12 13
-#define CVNUMTYPE(a) PEXTNC(0xff98f76f54f321f0LL,CTTZ(a)<<2,0xf)
+#define CVNUMTYPE(a) SHMSK(0xff98f76f54f321f0LL,CTTZ(a)<<2,0xf)
 #define CVCASE(a,b)     (CVNUMTYPE(a)*10+CVNUMTYPE(b))
  switch (CVCASE(t,wt)){  // to,from
  case CVCASE(INT, B01): R (jtIfromB(jt, w, yv))?z:0;

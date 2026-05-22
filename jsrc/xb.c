@@ -942,7 +942,7 @@ static I eft(I n,UI* e,UI* t)
    D+=(((Y/100)>>2)-(Y/100))-((2000/400)-(2000/100));  // 1900 2100 2200 2300 2500 etc are NOT leapyears.  Create correction from Y2000 count
   }
   // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)
-  D+=PEXTNC(0x765544322110000LL,4*M,0xf);  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
+  D+=SHMSK(0x765544322110000LL,4*M,0xf);  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
   // Calculate day from YMD.  Bias from day# of 20000101, accounting for leap-years from year 0 to that date.  Note 20000101 is NOT in a leapyear - it is in year 1999 here
   // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gregorian leapyears up to 2000
   I temp=(I)(365*Y + 30*M + D) - 730531;  // day# from epoch - can be negative
@@ -1012,7 +1012,7 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
   t=(t%1461)>>2;  // day number within year, which starts Mar 1
   m=(t*5+461)/153;  // razzmatazz to convert day# to month, 3-14
 // Richards version  d=((t*5+2)%153)/5;
-  d=(t+PEXTNC(0x444332221100000,m<<2,0xf))%31+1;  // # days   start-of-month must advance to be on 31-day multiple, by month: x x x 0(Mar) 0(Apr) 1 1 2 2 2 3 3 4 4 4
+  d=(t+SHMSK(0x444332221100000,m<<2,0xf))%31+1;  // # days   start-of-month must advance to be on 31-day multiple, by month: x x x 0(Mar) 0(Apr) 1 1 2 2 2 3 3 4 4 4
   I4 janfeb=(I4)(12-m)>>(32-1); y-=janfeb; m-=janfeb&12;  // move jan-feb into next year number
   // Now write the result yyyy-mm-ddThh:mm:ss.nnnnnnnnn
   if(linelen!=7*SZI){  // normal case of LIT output
@@ -1137,7 +1137,7 @@ gottime: ;
    D+=(((Y/100)>>2)-(Y/100))-((2000/400)-(2000/100));  // 1900 2100 2200 2300 2500 etc are NOT leapyears.  Create correction from Y2000 count
   }
   // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)
-  D+=PEXTNC(0x765544322110000LL,4*M,0xf);  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
+  D+=SHMSK(0x765544322110000LL,4*M,0xf);  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
   // Calculate day from YMD.  Bias from day# of 20000101, accounting for leap-years from year 0 to that date.  Note 20000101 is NOT in a leapyear - it is in year 1999 here
   // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gregorian leapyears up to 2000
   I t=(I)(365*Y + 30*M + D) - 730531;  // day# from epoch.  May be negative

@@ -17,7 +17,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
     // Then read the ordering value from the table.  This read may miss in cache but we don't care too much, since there is no dependency on the result of the read
     f=orderfromcomp5[((a>b)<<9) + ((a>c)<<8) + ((a>d)<<7) + ((a>e)<<6) + ((b>c)<<5) + ((b>d)<<4) + ((b>e)<<3) + ((c>d)<<2) + ((c>e)<<1) + (d>e)];
     // Store each value in its correct spot  Code to minimize the # instructions held waiting for the fetch to complete
-    vv[f&7]=a; vv[(f>>3)&7]=b; vv[(f>>6)&7]=c; vv[(f>>9)&7]=d; vv[f>>12]=e;
+    vv[f&7]=a; vv[PEXT0(f,3,7)]=b; vv[PEXT0(f,6,7)]=c; vv[PEXT0(f,9,7)]=d; vv[f>>12]=e;
     break;
    case 1:
     a=vv[0]; b=vv[1]; f=a>b; vv[f]=a; vv[f^1]=b;
@@ -25,12 +25,12 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
    case 2:
     a=vv[0]; b=vv[1]; c=vv[2];
     f=orderfromcomp3[((a>b)<<2) + ((a>c)<<1) + (b>c)];
-    vv[f&3]=a; vv[(f>>2)&3]=b; vv[f>>4]=c;
+    vv[f&3]=a; vv[PEXT0(f,2,3)]=b; vv[f>>4]=c;
     break;
    case 3:
     a=vv[0]; b=vv[1]; c=vv[2]; d=vv[3];
     f=orderfromcomp4[((a>b)<<5) + ((a>c)<<4) + ((a>d)<<3) + ((b>c)<<2) + ((b>d)<<1) + (c>d)];
-    vv[f&3]=a; vv[(f>>2)&3]=b; vv[(f>>4)&3]=c; vv[f>>6]=d;
+    vv[f&3]=a; vv[PEXT0(f,2,3)]=b; vv[PEXT0(f,4,3)]=c; vv[f>>6]=d;
     break;
    case -1: case 0:;
    }

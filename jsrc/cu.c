@@ -326,7 +326,7 @@ static A jtrightcut0inv(J jt, A w, A vz, A uz, I negifipw,A sself){I t;
   wv=(void*)((I)voidAV(w)+((a0*in)<<kg));  // address of destination
  }
  I na=AN(vz), nb=na<<kg;   // number of atoms and bytes to copy
- if(AFLAG(w)&RECURSIBLE){na<<=PEXTN(t,RATX,1); DO(na, ra(AAV(uz)[i])); DO(na, fa(((A*)wv)[i]);) } // if w is recursive, raise the new blocks then lower the old
+ if(AFLAG(w)&RECURSIBLE){na<<=PEXT0(t,RATX,1); DO(na, ra(AAV(uz)[i])); DO(na, fa(((A*)wv)[i]);) } // if w is recursive, raise the new blocks then lower the old
  MC(wv,voidAV(uz),nb);  // copy the data into the hole
  R w;   // return the block we copied into
 }

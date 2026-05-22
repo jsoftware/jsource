@@ -133,8 +133,8 @@ static struct {
 // General grade.  jt has the JTDESCEND flag.  Build the control block to hold merge info
 static GF(jtgrx){F1PREFJT;A x;I ck,t,*xv;I c=ai*n;
  t=AT(w); SORT sortblok;
- void **(*sortfunc)() = sortroutines[CTTZ(t)][(~(I)jtfg>>JTDESCENDX)&1].sortfunc;  // the major routine to use (normal merge or minimum comparisons)
- sortblok.f=sortroutines[CTTZ(t)][(~(I)jtfg>>JTDESCENDX)&1].comproutine;  // comparison function
+ void **(*sortfunc)() = sortroutines[CTTZ(t)][PEXT0(~(I)jtfg,JTDESCENDX,1)].sortfunc;  // the major routine to use (normal merge or minimum comparisons)
+ sortblok.f=sortroutines[CTTZ(t)][PEXT0(~(I)jtfg,JTDESCENDX,1)].comproutine;  // comparison function
  sortblok.jt=jtfg;  // jt including direction bit
  I natoms=ai<<!!(t&CMPX+QP);   // number of atoms to compare in loop
  sortblok.n=natoms;  // pass in as parm
@@ -335,7 +335,8 @@ static GF(jtgrd){F1PREFJT;A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c
   // in x, then the postpass ends in z
   g=b?xv:zv; h=b?zv:xv;
   // sort from LSB to MSB.  Sort in the order requested UNLESS all the values are negative; then reverse the order and save the postpass
-  colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,(((~(I)jtfg>>(JTDESCENDX-1))&2)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
+// obsolete   colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,(((~(I)jtfg>>(JTDESCENDX-1))&2)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
+  colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,(PEXT0((I)jtfg,JTDESCENDX,1)^SGNTO0(nneg-n))<<1);  // 'up' in bit 1, inverted if all neg (i. e. nneg-n==0)
   colflags=grcol(65536,0L,yv,n,h, g,sizeof(D)/sizeof(US),u+=WDINC,colflags);
   colflags=grcol(65536,0L,yv,n,g, h,sizeof(D)/sizeof(US),u+=WDINC,colflags);
   // for the MSB, which is signed, do the same thing, but to save a few cycles tell grcol if all the values are negative or nonnegative.  grcol will
@@ -390,7 +391,7 @@ static GF(jtgri1){F1PREFJT;A x,y;I*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  for(i=0;i<m;++i){I colflags;
   // process each 16-bit section of input
   u=(US*)wv+INTLSBWDX;   // point to LSB
-  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,(~(I)jtfg>>(JTDESCENDX-1))&2);  // move 'up' to bit 1
+  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,SHMSK((I)jtfg,JTDESCENDX-1,2)^2);  // move 'up' to bit 1
 #if SY_64
   colflags=grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+=WDINC,colflags);
   colflags=grcol(65536,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),u+=WDINC,colflags);
@@ -409,7 +410,7 @@ static GF(jtgru1){F1PREFJT;A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  GATV0(x,INT,n,1); xv=AV1(x);
  for(i=0;i<m;++i){I colflags;
   u=(US*)wv+INTLSBWDX;   // point to LSB
-  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,(~(I)jtfg>>(JTDESCENDX-1))&2);  // move 'up' to bit 1
+  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,SHMSK((I)jtfg,JTDESCENDX-1,2)^2);  // move 'up' to bit 1
   grcol(65536,0L,yv,n,xv,zv,sizeof(C4)/sizeof(US),u+=WDINC,colflags);
   wv+=c; zv+=n;
  }
@@ -557,7 +558,7 @@ static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,* RESTRICT v,*wv,*xv;UI4 * RESTRICT y
  if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range   TUNE
 #endif
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
- GATV0(y,C4T,rng.range,1); yvb=C4AV1(y); yv=yvb-rng.min; up=(~(I)jtfg>>JTDESCENDX)&1;
+ GATV0(y,C4T,rng.range,1); yvb=C4AV1(y); yv=yvb-rng.min; up=PEXT0((I)jtfg,JTDESCENDX,1)^1;
  // if there are multiple ints per item, we have to do multiple passes.  Allocate a workarea
  // should start in correct position to end in z
  if(1<ai){GATV0(x,INT,n,1); xv=AV1(x);
@@ -608,7 +609,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);   //  TUNE
  }else rng.range=0;
  if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
- GATV0(y,C4T,rng.range,1); yvb=C4AV1(y); yv=yvb-rng.min; up=(~(I)jtfg>>JTDESCENDX)&1;
+ GATV0(y,C4T,rng.range,1); yvb=C4AV1(y); yv=yvb-rng.min; up=PEXT0((I)jtfg,JTDESCENDX,1)^1;
  if(1<ai){GATV0(x,INT,n,1); xv=AV1(x);
  }
  for(i=0;i<m;++i){
@@ -659,7 +660,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 static GF(jtgrb){F1PREFJT;A x;B b,up;I *g,*h,i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
  UI4 lgn=CTLZI(n);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
- q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=(~(I)jtfg>>JTDESCENDX)&1;
+ q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=PEXT0((I)jtfg,JTDESCENDX,1)^1;
  if(1<q){GATV0(x,INT,n,1); xv=AV1(x);}
  for(i=0;i<m;++i){
   vv=wv+ai; b=(q&1);
@@ -673,8 +674,8 @@ static GF(jtgrb){F1PREFJT;A x;B b,up;I *g,*h,i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=a
 static GF(jtgrc){F1PREFJT;A x;B b,q,up;I *g,*h,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  UI4 lgn=CTLZI(n);
  if((UI)ai>lgn)R grx(m,ai,n,w,zv);   // TUNE
- ai<<=((AT(w)>>C2TX)&1);
- p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=(~(I)jtfg>>JTDESCENDX)&1;
+ ai<<=PEXT0(AT(w),C2TX,1);
+ p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=PEXT0((I)jtfg,JTDESCENDX,1)^1;
  q=C2T&AT(w) && C_LE;
  if(1<ai){GATV0(x,INT,n,1); xv=AV1(x);}
  for(i=0;i<m;++i){

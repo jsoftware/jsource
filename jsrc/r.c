@@ -266,7 +266,7 @@ A jtunDD(J jtfg, A w){F12JT;
 // y is unparse of previous CWs found on the line
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  // for BBLOCK/TBLOCK types, convert the lines to displayable by displaying them as if for error messages, and copying the result
- switch(t=PEXTN(c->tcesx,TCESXTYPEX,31)){
+ switch(t=PEXT0(c->tcesx,TCESXTYPEX,31)){
  case CBBLOCK: case CBBLOCKEND: case CTBLOCK: RZ(z=unparse(x));  break;
  case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV1(z); 
                              MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;

@@ -30,7 +30,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  }
  // fall through for other types & shapes
  if(1>=n)R recip(w);  // if an atom, inverse = reciprocal.  Must be CMPX/RAT/QP
- m=n>>1; I tom=PEXTNC(0x01222100,(n&7)<<2,3); m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
+ m=n>>1; I tom=SHMSK(0x01222100,(n&7)<<2,3); m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
  RZ(ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp))  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
  RZ(di=jtrinvip(jt,drop(v2(m,m),w),n-m,ncomp))  // take inverse of w11
@@ -69,7 +69,7 @@ DF1(jtrinv){F12IP;
 static F1(jtqrr){F12IP;PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  ARGCHK1(w);
  if(2>AR(w)){p=AN(w); n=1;}else{s=AS(w); p=s[0]; n=s[1];}  // p=#rows, n=#columns
- m=n>>1; I tom=PEXTNC(0x01222100,(n&7)<<2,3); m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
+ m=n>>1; I tom=SHMSK(0x01222100,(n&7)<<2,3); m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  if(1>=n){  // just 1 col
   t=norm(ravel(w));  // norm of col
   ASSERT(!AN(w)||!equ(t,num(0)),EVDOMAIN);  // norm must not be 0 unless column is empty
@@ -141,7 +141,7 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
   }
  }
  // continue for blocks that must be subdivided
- I m=rw>>1; I tom=PEXTNC(0x01222100,(rw&7)<<2,3); m=(m+tom<rw)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
+ I m=rw>>1; I tom=SHMSK(0x01222100,(rw&7)<<2,3); m=(m+tom<rw)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as w0 w1
  fauxvirtual(q0,virtwq0,w,2,ACUC1|ACINPLACE); AS(q0)[0]=m; AS(q0)[1]=cl; AN(q0)=m*cl;
  RZ(l0=jtltqip(jt,q0));  // form q0 in place, return l0

@@ -116,9 +116,9 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
    case 3: c= 0; ya=yv+yc*ia; yb=yv+yc*ib; DO(p, if(c=ya[i]-yb[i]){c=0>c?-1:1; break;});                \
    }                                                                                                     \
    switch(c){                                                                                            \
-   case -1: DO(xc, if(xa[i] <(esel))R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >(esel))R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia;               break;  \
-   case  1: DO(xc, if((esel)<xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if((esel)>xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1););               xb+=xc; ++ib; break;  \
-   case  0: DO(xc, if(xa[i] <xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;         \
+   case -1: DO(xc, if(xa[i] <(esel))R (int)PEXT0((I)sortblok->jt,JTDESCENDX,1)^1; else if(xa[i] >(esel))R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia;               break;  \
+   case  1: DO(xc, if((esel)<xb[i] )R (int)PEXT0((I)sortblok->jt,JTDESCENDX,1)^1; else if((esel)>xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1););               xb+=xc; ++ib; break;  \
+   case  0: DO(xc, if(xa[i] <xb[i] )R (int)PEXT0((I)sortblok->jt,JTDESCENDX,1)^1; else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;         \
  }}}
 
 #define COMPSPDS(f,T,e1init,esel)  \
@@ -138,9 +138,9 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I c,d,j,m,t;F1PREFJT;
    case 3: c= 0; ya=yv+yc*ia; yb=yv+yc*ib; DO(p, if(c=ya[i]-yb[i]){c=0>c?-1:1; break;});                \
    }                                                                                                     \
    switch(c){                                                                                            \
-   case -1: DO(n, if(xa[i] <(esel))R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >(esel))R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia;               break;   \
-   case  1: DO(n, if((esel)<xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if((esel)>xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1););               xb+=xc; ++ib; break;   \
-   case  0: DO(n, if(xa[i] <xb[i] )R (int)((~(I)sortblok->jt>>JTDESCENDX)&1); else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;          \
+   case -1: DO(n, if(xa[i] <(esel))R (int)PEXT0((I)sortblok->jt,JTDESCENDX,1)^1; else if(xa[i] >(esel))R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia;               break;   \
+   case  1: DO(n, if((esel)<xb[i] )R (int)PEXT0((I)sortblok->jt,JTDESCENDX,1)^1; else if((esel)>xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1););               xb+=xc; ++ib; break;   \
+   case  0: DO(n, if(xa[i] <xb[i] )R (int)PEXT0((I)sortblok->jt,JTDESCENDX,1)^1; else if(xa[i] >xb[i] )R (int)(((I)sortblok->jt>>JTDESCENDX)&1);); xa+=xc; ++ia; xb+=xc; ++ib;          \
  }}}
 
 COMPSPDS(compspdsB,B,0,                   (e1,e)       )

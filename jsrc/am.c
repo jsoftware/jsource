@@ -422,7 +422,7 @@ do{ \
 skippre:;
    // move one _1-cell using the indexes.  We are in a loop through the _1-cells; each case in the switch below copies one _1-cell
    UI i0=n0;  /* number of duff loops for last axis */ \
-   scan0-=PEXTN(amflags,AMFLAGDUFFWX,0x7);  // pointer to first 0-cell index, biased by duff adj
+   scan0-=PEXT0(amflags,AMFLAGDUFFWX,0x7);  // pointer to first 0-cell index, biased by duff adj
    av-=cellsize*(amflags>>AMFLAGDUFFAX);  // bias output pointer too, but not if it is repeated
    switch(amflags&AMFLAGRTN){
    CP11neg break; CP1xvneg break; // negate FL atoms

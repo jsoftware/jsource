@@ -87,7 +87,7 @@ struct __attribute__((aligned(ABDY))) faxis {
 // move 8-byte aligned cells using gather
 #define fcopygather8(val)  {__m256i sl; \
  /* we want to keep the stores aligned on a cacheline boundary, so we back up the pointers accordingly */ \
- I bun=((I)zbase>>LGSZI)&(NPAR-1); I zvtoss=(I)ss-(I)zbase; C *zv=(C*)((I*)zbase-bun); /* backup amount, offset to bv, aligned zv */ \
+ I bun=PEXT0((I)zbase,LGSZI,NPAR-1); I zvtoss=(I)ss-(I)zbase; C *zv=(C*)((I*)zbase-bun); /* backup amount, offset to bv, aligned zv */ \
  endmask=_mm256_loadu_si256((__m256i*)(validitymask+2*NPAR-bun));  /* valid part of first batch */ \
  C *lastzv=(C*)((I*)zv+((bun+ns-1)&-NPAR));  /* start of the block containing the last word */ \
  if(zv!=lastzv){  /* if there is a section using only the leading mask... */ \
@@ -111,7 +111,7 @@ struct __attribute__((aligned(ABDY))) faxis {
 // atom {"1 array.  Go down the next-last axis, gathering groups of lines
 #define fcopygatherinfull { \
  /* we want to keep the stores aligned on a cacheline boundary, so we back up the pointers accordingly */ \
- I bun=((I)zbase>>LGSZI)&(NPAR-1); C *zv=(C*)((I*)zbase-bun); /* backup amount, aligned zv */ \
+ I bun=PEXT0((I)zbase,LGSZI,NPAR-1); C *zv=(C*)((I*)zbase-bun); /* backup amount, aligned zv */ \
  /* we have to avoid fetching out of bounds, lest we take a microprogram check that is slow. */ \
  /* For the first batch (including when it is last also), leave bv pointing to item 0 and put invalid indexes at 0 */ \
  I *bv=(I*)base;  /* back base to match adj to zbase */ \
@@ -181,7 +181,7 @@ zbase=zv; }
 // rflags is w minor cell rank/len of w frame/1B rank of result/1B /6B dimension of axes-1
 // if a is inplaceable in jt, ind in the last axis is the area that can be used for the result
 static A jtaxisfrom(J jtfg,A w,struct faxis *axes,I rflags){F12IP;I i;
- I r=rflags&0x3f, zr=(C)(rflags>>8), wf=(C)(rflags>>16), wcr=(C)(rflags>>24), hasr=(rflags>>7)&1;  // number of axes-1; result rank; w framelen; 1 iff 1st axis is from rank
+ I r=rflags&0x3f, zr=PEXT0(rflags,8,0xff), wf=PEXT0(rflags,16,0xff), wcr=PEXT0(rflags,24,0xf), hasr=PEXT0(rflags,7,1);  // number of axes-1; result rank; w framelen; 1 iff 1st axis is from rank
  C *base=voidAV(w);  // will be starting cell number in all axes before last
  // convert lencell to bytes & roll it up; calculate base from sel0 values
  I wt=AT(w);
@@ -292,7 +292,7 @@ novirtual:;  // abort to here if virtual not allowed because indexes are not con
  axflags=axes[r].nsel<0?0b00111:axflags;   // for complementary axis, use single block-copying routine 0b00111
  I ns=axes[r].nsel, nl=axes[r].lenaxis, *ss=axes[r].sels; ns=REPSGN(ns)^ns;  // bring last-axis info into registers
  void *zbase=voidAV(z);  // running output pointer
- if(unlikely((UI)(~(axflags>>2)&SGNTO0(axes[r].nsel-2))>(UI)axes[r-((UI)r>0)].sels)){  // atom {"1 y &c.  last axis is 1 long, length 1/2/4/8 non-complementary, and previous axis taken in full
+ if(unlikely((UI)SHMSK(~axflags,2,SGNTO0(axes[r].nsel-2))>(UI)axes[r-((UI)r>0)].sels)){  // atom {"1 y &c.  last axis is 1 long, length 1/2/4/8 non-complementary, and previous axis taken in full
   // atom {"1 y, with short cells.  Process last 2 axes together; switch to code that goes down the column
   I sel=*ss; sel+=REPSGN(sel)&nl; ASSERT((UI)sel<(UI)nl,EVINDEX)  // validate the single selector in the last axis
   base+=sel*celllen;  // offset base to account for indexing in the discarded axis
@@ -704,21 +704,21 @@ DF2(jtfetch){F12IP;A*av, z;I n;
  }
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
-  if(((AT(w)>>BOXX)&1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or list of boxes   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))
+  if(PEXT0(AT(w),BOXX,1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or list of boxes   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))
    RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
    // if the result is w, leave its inplaceability.  If contents, it will perforce be uninplaceable
 #if AUDITBOXAC
    if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT;
 #endif
  }else{
-  RZ(z=jtfrombu(jtfg,a,w,0)); if(((AT(w)>>BOXX)&1)>AR(z))z=C(AAV(z)[0]);  // a must be scatter-indexes.  No need to box them, just fetch.  If atomic box returned, open it
+  RZ(z=jtfrombu(jtfg,a,w,0)); if(PEXT0(AT(w),BOXX,1)>AR(z))z=C(AAV(z)[0]);  // a must be scatter-indexes.  No need to box them, just fetch.  If atomic box returned, open it
   }
   PRISTCLRF(w) // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
   RETF(z); 
  }
  n=AN(a); av=AAV(a); 
  if(!n)R w; z=w;
- DO(n, A next=C(av[i]); if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
+ DO(n, A next=C(av[i]); if(PEXT0(AT(z),BOXX,1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
       else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
  // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w

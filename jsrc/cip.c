@@ -250,10 +250,10 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
  I moffset=ti*pd->taskm[0]+tishort*(m-pd->taskm[0])+((mtailct&REPSGN(mtailct))<<CACHEHEIGHTX);  // combine to get position of task: size if big blocks, minus adj for blocks in second group, minus single-block adj for third group
  m+=REPSGN(mtailct-1)<<CACHEHEIGHTX; m=MIN(m,pd->m-moffset);  // if third group, reduce the size by one block; truncate the last task if it goes beyond the overall size
  I n=pd->n;
- I pnom=pd->p-(((moffset)&-PEXTN(flgs,FLGAUTRIX,1))<<(flgs&FLGCMP));  // for upper-tri, shorten the rows of a to the nonzero part
+ I pnom=pd->p-(((moffset)&-PEXT0(flgs,FLGAUTRIX,1))<<(flgs&FLGCMP));  // for upper-tri, shorten the rows of a to the nonzero part
  I pstored=pd->p;
- D *av=pd->av+(moffset*(pd->p+(PEXTN(flgs,FLGAUTRIX,1)<<(flgs&FLGCMP))));   // for upper-triangular, horizontally skip the zeros of a
- D *wv=pd->wv+((n*moffset)&-PEXTN(flgs,FLGAUTRIX,1)); // for upper-tri, vertically skip the zeroed-out rows of w
+ D *av=pd->av+(moffset*(pd->p+(PEXT0(flgs,FLGAUTRIX,1)<<(flgs&FLGCMP))));   // for upper-triangular, horizontally skip the zeros of a
+ D *wv=pd->wv+((n*moffset)&-PEXT0(flgs,FLGAUTRIX,1)); // for upper-tri, vertically skip the zeroed-out rows of w
  D *zv=pd->zv+(n*moffset);
  // Small problems should use a multiplier that does not use full cacheblock.  For jobs, we make the decision for each task
  if(((((50-m)&(50-n)&(16-pstored)&((DCACHED_THRES-1)-m*n*pnom))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
@@ -397,7 +397,7 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
       // We defer the prefetches till here to fill the time between the fetch of z above and the main multiply
       // We don't prefetch z because it is sequentially accessed in zilblock and we will prefetch there if we need it
       if(a3rem&OPWIDTH){
-       I lineno = PEXTN(-a3rem,OPWIDTHX+1,(CACHEWIDTH>>(OPWIDTHX+1))-1);  // iteration number, 0-3
+       I lineno = PEXT0(-a3rem,OPWIDTHX+1,(CACHEWIDTH>>(OPWIDTHX+1))-1);  // iteration number, 0-3
        D *base = a2base0 + (lineno+2*OPHEIGHT)*p;  // address to prefetch from - >=1 full OPHEIGHT block after the current base pointers
        PREFETCH((C*)base); PREFETCH((C*)base+CACHELINESIZE); PREFETCH((C*)base+2*CACHELINESIZE);
       }
@@ -440,7 +440,7 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
         __m256i mask0, mask1;  // horizontal masks for w values, if needed
         I nvalids=0x048cdef0>>(a3rem<<2);  // 4 bits: f1f0 l1l0 where f10 is the offset to use for first 4 values, l10 if offset-1 for last 4.  Offset0=4 words, 1=3 words, 2-2 words, 3=1 word.  Can't have 0 words for f, can for l
         mask0=_mm256_loadu_si256((__m256i*)(validitymask+(nvalids&0x3)));  // a3rem { 4 3 2 1 0 0 0 0
-        mask1=_mm256_loadu_si256((__m256i*)(validitymask+1+PEXTN(nvalids,2,0x3)));  // a3rem { 4 4 4 4 4 3 2 1
+        mask1=_mm256_loadu_si256((__m256i*)(validitymask+1+PEXT0(nvalids,2,0x3)));  // a3rem { 4 4 4 4 4 3 2 1
         _mm256_maskstore_pd(z3base,mask0,z00); _mm256_maskstore_pd(z3base+NPAR,mask1,z01);
         if(a2rem>1){_mm256_maskstore_pd(z3base+n,mask0,z10); _mm256_maskstore_pd(z3base+n+NPAR,mask1,z11);}
         if(a2rem>2){_mm256_maskstore_pd(z3base+2*n,mask0,z20); _mm256_maskstore_pd(z3base+2*n+NPAR,mask1,z21);}
@@ -497,8 +497,8 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
          if(a5rem>1){_mm256_storeu_pd(z4base+n,z10r); _mm256_storeu_pd(z4base+n+NPAR,z11r);}
         } else {
          __m256i mask0, mask1;  // horizontal masks for w values, if needed
-         mask0=_mm256_loadu_si256((__m256i*)(validitymask+PEXTNC(0x00001234,a3rem<<2,0x7)));  // a3rem { 4 3 2 1 0 0 0 0
-         mask1=_mm256_loadu_si256((__m256i*)(validitymask+PEXTNC(0x12344444,a3rem<<2,0x7)));  // a3rem { 4 4 4 4 4 3 2 1
+         mask0=_mm256_loadu_si256((__m256i*)(validitymask+SHMSK(0x00001234,a3rem<<2,0x7)));  // a3rem { 4 3 2 1 0 0 0 0
+         mask1=_mm256_loadu_si256((__m256i*)(validitymask+SHMSK(0x12344444,a3rem<<2,0x7)));  // a3rem { 4 4 4 4 4 3 2 1
          _mm256_maskstore_pd(z4base,mask0,z00r); _mm256_maskstore_pd(z4base+NPAR,mask1,z01r);
          if(a5rem>1){_mm256_maskstore_pd(z4base+n,mask0,z10r); _mm256_maskstore_pd(z4base+n+NPAR,mask1,z11r);}
         }
@@ -1025,7 +1025,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
 #define Q9(f,c0,c1) ((I)(((c1)<<2)+(c0))<<(((f)-CSTARCO)<<2))
 #define PMSK Q9(CSTARCO,IPBX1,IPBXNW)+Q9(CPLUSCO,IPBXNW,IPBX0)+Q9(CSTAR,IPBX0,IPBXW)+Q9(CPLUS,0,0)+Q9(CPLUSDOT,IPBXW,IPBX1)+Q9(CSTARDOT,IPBX0,IPBXW)+Q9(CEQ,IPBXNW,IPBXW)+Q9(CNE,IPBXW,IPBXNW)+Q9(CLT,IPBXW,IPBX0)+Q9(CLE,IPBX1,IPBXW)+Q9(CGE,IPBXNW,IPBX1)+Q9(CGT,IPBX0,IPBXNW)+Q9(CEBAR,0,0)+Q9(CEPS,0,0)+Q9(CMIN,IPBX0,IPBXW)+Q9(CMAX,IPBXW,IPBX1)
  I pmsk=0; pmsk=BETWEENC(d,CSTARCO,CMAX)?PMSK:pmsk; pmsk&=-(B01&AT(w));
- c0=PEXTNC(pmsk,(d-CSTARCO)<<2,3); c1=PEXTNC(pmsk,(((d-CSTARCO)<<2)+2),3);  // get control bits if known fn, (0,0) if unknown
+ c0=SHMSK(pmsk,(d-CSTARCO)<<2,3); c1=SHMSK(pmsk,(((d-CSTARCO)<<2)+2),3);  // get control bits if known fn, (0,0) if unknown
  // create x0 and x1, the result of (g 0) and (g 1).  If we know the function we can avoid invoking g sometimes
  if(c0+c1==0){
   // unsupported g.  Set c0/c1 to invalid and execute g to find x0/x1
@@ -1472,12 +1472,12 @@ finrle: ;
 
      if(0){pivotmiss0: ngood=0;}  // come here when the first column is invalid as a pivot
      // advance to next permutation.   skip anything that repeats the first failing index, since that will fail in the same place
-     do{++permx;}while(PEXTNC(perms8[permx]^perm,2*ngood,3)==0); perm=perms8[permx];  // find first perm that doesn't repeat the failure
+     do{++permx;}while(SHMSK(perms8[permx]^perm,2*ngood,3)==0); perm=perms8[permx];  // find first perm that doesn't repeat the failure
      if(permx<sizeof(perms8)/sizeof(perms8[0])-1)continue;  // if there is another permutation to check, go try it
 
      // here we were unable to find a full set of pivots with any ordering of the input block.  Update the permutation for the pivots we did find, and go back to dot-product to get the next batch of rows.
      if(bestnperma>ngoodperma)scanstart=permblkofst;  // if we made any improvement, restart the scan for the next improvement
-     DO(bestnperma-ngoodperma, perma[6-i]=perma[ngoodperma+PEXTNC(bestperm,2*i,3)];)  // save selected pivots at end of perma, in reverse order of use
+     DO(bestnperma-ngoodperma, perma[6-i]=perma[ngoodperma+SHMSK(bestperm,2*i,3)];)  // save selected pivots at end of perma, in reverse order of use
      I i; for(i=6;ngoodperma<bestnperma;--i,++ngoodperma,bestperm>>=2){perma[ngoodperma]=perma[i]; srclines[ngoodperma]=(nr-1-r+permblkofst)*BLKSZ+(bestperm&3);} // install the selected pivots, and the source of each found row
 
      if(++permblkofst>r)permblkofst=0;   // step south to try the next 'corner' block, wrapping around at end

@@ -231,13 +231,13 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
   if((((AR(w)-2)|((AT(w)&CMPX+XNUM+RAT)-1))&((AT(w)&FAV(self)->flag&VFKEYSLASHT)-1))>=0){  // rank>=2 and extended, or type we can handle locally  flag is B01+INT+FL for <. >., B01+FL for +  (we don't handle int ovfl)
    // We are going to handle the //. locally
    A freq;  // for mean, save frequencies here
-   I keyslashfn=PEXTN(FAV(self)->flag,VFKEYSLASHFX,3); // 0-3 for <. >. + mean
+   I keyslashfn=PEXT0(FAV(self)->flag,VFKEYSLASHFX,3); // 0-3 for <. >. + mean
    // Figure out the type of result, and which routine will handle the operation
-   I ztoride=PEXTNC(0x0e010000,((4*keyslashfn+PEXTN(AT(w),INTX,3))<<1),3);  // z type override. 00=none, 01=B to I 10=B to FL 11=I to FL  bits are opFI, values are (0) 0 3 2 (0) 0 x 1 (0) 0 0 0 (0) 0 0 0
+   I ztoride=SHMSK(0x0e010000,((4*keyslashfn+PEXT0(AT(w),INTX,3))<<1),3);  // z type override. 00=none, 01=B to I 10=B to FL 11=I to FL  bits are opFI, values are (0) 0 3 2 (0) 0 x 1 (0) 0 0 0 (0) 0 0 0
    ztoride=AT(w)&FL+INT+B01?ztoride:0;  // no override for other types
-   I zt=AT(w)^PEXTNC(((INT+FL)<<12)+((B01+FL)<<8)+((B01+INT)<<4),ztoride<<2,0xf);  // switch result precision as needed
+   I zt=AT(w)^SHMSK(((INT+FL)<<12)+((B01+FL)<<8)+((B01+INT)<<4),ztoride<<2,0xf);  // switch result precision as needed
    I celllen = cellatoms<<bplg(zt);  // length of a cell of z, in bytes
-#define RTNCASE(r,t) ((r)*4+PEXTNC((t),INTX,3))
+#define RTNCASE(r,t) ((r)*4+SHMSK((t),INTX,3))
    I routineid; VA2 adocv;   // case index to use 
    if(AR(w)<=1){
     // partitions have rank 1, so operations are on atoms.  set the index
@@ -245,7 +245,7 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
    }else{
     // partitions are arrays.  Operate on them in the output area
     routineid=RTNCASE(ztoride,INT+FL);  // special case index for action routine: 3 for normal (for <. >.), 7 for BtoI (for +), 11 for BtoF (for mean), 15 for ItoF (for mean) 17 = FL mean 16 for other mean e. g. INTX
-    I meanrtn=16+PEXTN(zt,FLX,1);  // 17 if FL result, 16 if not
+    I meanrtn=16+PEXT0(zt,FLX,1);  // 17 if FL result, 16 if not
     routineid=keyslashfn==routineid?meanrtn:routineid;  // 'other mean': only way they can be = is if both are 3.  Switch to 16/17, which differ in type of freq result
     A accfn=FAV(FAV(self)->fgh[0])->fgh[0]; accfn=keyslashfn==3?ds(CPLUS):accfn;
     adocv=var(accfn,AT(w),zt);  // get dyadic action routine for f out of f//. or (+/%#)/. for the given arguments

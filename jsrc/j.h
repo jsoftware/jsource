@@ -1402,7 +1402,7 @@ w = PTROP(w,+,(I)jtfg&JTINPLACEW); a = PTROP(a,+,(I)jtfg&JTINPLACEA);  /* if arg
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
 A hx; \
 if(opt&0x2){hx=w; \
-}else if(opt&0x1){hx=PTROP(a,-,PEXTN((I)a,JTINPLACEAX,JTINPLACEW)); \
+}else if(opt&0x1){hx=PTROP(a,-,PEXT0((I)a,JTINPLACEAX,JTINPLACEW)); \
 }else{J jtf; \
  I wof = (FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, propagate willopen */ \
  if(opt&0xc){ \
@@ -1791,7 +1791,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define JTIPA           ((J)((I)jt+JTINPLACEA))
 #define JTIPAW          ((J)((I)jt+(JTINPLACEA+JTINPLACEW)))
 #define JTIPW           ((J)((I)jt+JTINPLACEW))
-#define JTIPAtoW        (J)((I)jt+PEXTN((I)jtfg,JTINPLACEAX,JTINPLACEW))  // jtfg, with a' inplaceability transferred to w
+#define JTIPAtoW        (J)((I)jt+PEXT0((I)jtfg,JTINPLACEAX,JTINPLACEW))  // jtfg, with a' inplaceability transferred to w
 #define JTIPWonly       (J)((I)jtfg&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS))  // dyad jt converted to monad for w
 #define JTIPEX1(name,arg) jt##name(JTIPW,arg)   // like name(arg) but inplace
 #define JTIPEX1S(name,arg,self) jt##name(JTIPW,arg,self)   // like name(arg,self) but inplace
@@ -1924,7 +1924,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
  preloop \
  UI n0=n; \
  if(!((parms)&1)){ /* Duff loop called for */ \
-  I alignreq=4-PEXTN((I)z,LGSZI,NPAR-1); /* alignment len, 1-4 */ \
+  I alignreq=4-PEXT0((I)z,LGSZI,NPAR-1); /* alignment len, 1-4 */ \
   alignreq=alignreq>n-1?n-1:alignreq;  /* never more than len-1; leave remlen>0 */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   u=_mm256_and_pd(_mm256_castsi256_pd(endmask),_mm256_loadu_pd(x));  /*  fetch 1st NPAR words.  >=1 must be valid, and the rest mapped  init invalid lanes, esp. for SLEEF */ \
@@ -1948,7 +1948,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
   z+=((n0-1)&(NPAR-1))+1; /* advance z over final remnant */  \
  }else{ /* Use single loop to minimize Icache footprint */ \
   x=(D*)((I)x-(I)z);  /* convert x to offset */ \
-  UI thisl=4-PEXTN((I)z,LGSZI,NPAR-1);  /* align len 1-4, clamped at len */ \
+  UI thisl=4-PEXT0((I)z,LGSZI,NPAR-1);  /* align len 1-4, clamped at len */ \
   NOUNROLL do { \
    thisl=thisl>n0?n0:thisl; \
    u=_mm256_loadu_pd((D*)((I)x+(I)z));  /* overfetch the last word */ \
@@ -1969,7 +1969,7 @@ static inline __m256d LOADV32D(void *x) { return _mm256_loadu_pd(x); }
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
  preloop \
  I n0=n; \
- I alignreq=PEXTN(-(I)z,LGSZI,NPAR-1); \
+ I alignreq=PEXT0(-(I)z,LGSZI,NPAR-1); \
  if((-alignreq&(NPAR-n0))<0){ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask)); \
@@ -2083,8 +2083,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #endif
 
 #define MOVEIPWW(j) (J)(intptr_t)(((I)j&~JTINPLACEA)+2*((I)j&JTINPLACEW))  // copy w inplaceability to both args
-#define MOVEIPWA(j) (J)(intptr_t)((I)j^PEXTNC(0x3C,2*((I)j&JTINPLACEW+JTINPLACEA),JTINPLACEW+JTINPLACEA))  // exchange inplaceability of w and a
-#define MOVEIP0A(j) (J)(intptr_t)((((I)j&~(JTINPLACEW+JTINPLACEA))+PEXTN((I)j,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)))  // move a inplaceability to w, a's is 0
+#define MOVEIPWA(j) (J)(intptr_t)((I)j^SHMSK(0x3C,2*((I)j&JTINPLACEW+JTINPLACEA),JTINPLACEW+JTINPLACEA))  // exchange inplaceability of w and a
+#define MOVEIP0A(j) (J)(intptr_t)((((I)j&~(JTINPLACEW+JTINPLACEA))+PEXT0((I)j,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)))  // move a inplaceability to w, a's is 0
 #define MOVEIPA0(j) (J)(intptr_t)((((I)j+JTINPLACEW)))  // move w inplaceability to a, w's is garbage
 
 #define NUMMAX          9    // largest number represented in num[]
@@ -2115,12 +2115,12 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // bp(type) returns the number of bytes in an atom of the type - not used for sparse args
 // bplg(type) works for NOUN types and returns the lg of the size - for sparse args, the size of the underlying dense type
 #if SY_64
-#define bplg(i) (I)PEXTNC((I8)0x008b0222888dc6c0LL,3*CTTZ(i),(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
+#define bplg(i) (I)SHMSK((I8)0x008b0222888dc6c0LL,3*CTTZ(i),(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
 #else
-#define bplg(i) (I)PEXTNC((I8)0x008a022288694680LL,3*CTTZ(i),(I)7)  //  010 001 010   000 000 100 010 001 010 001 000   011 010 010 100 011 010 000 000 =  0 1000 1010 0000 0010 0010 0010 1000 1000 0110 1001 0100 0110 1000 0000
+#define bplg(i) (I)SHMSK((I8)0x008a022288694680LL,3*CTTZ(i),(I)7)  //  010 001 010   000 000 100 010 001 010 001 000   011 010 010 100 011 010 000 000 =  0 1000 1010 0000 0010 0010 0010 1000 1000 0110 1001 0100 0110 1000 0000
 #endif
 // bpnonnoun is like 1<<bplg but we know that the value is not a noun
-#define bpnonnoun(i) (I)PEXTNC((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
+#define bpnonnoun(i) (I)SHMSK((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
  ((I8)SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+((I8)ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+((I8)MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+((I8)NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \
  ,5*(CTTZ(i)-(LASTNOUNX+1)),31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   8 8 8 8 12 4 8 8 8 (1) 
 // bpnoun is like bp but for NOUN types, and not sparse
@@ -2132,7 +2132,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // Conversion from type to priority
 //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F  
 // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
-#define TYPEPRIORITYNUM(t) ((I)PEXTNC((UI8)0x00edcba9765f8410LL,CTTZ(t)*4,0xf))  // used for types below 0x10000, which includes all numerics
+#define TYPEPRIORITYNUM(t) ((I)SHMSK((UI8)0x00edcba9765f8410LL,CTTZ(t)*4,0xf))  // used for types below 0x10000, which includes all numerics
 #define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?((CTTZ(t)&0x3)+1):TYPEPRIORITYNUM(t))
 
 // same but destroy w
@@ -2669,21 +2669,14 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 
 // parallel bit extract/deposit.  Operate on UI types.  In our use, the second argument is constant, so that if the compiler has to emulate
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
-#define PEXTNC(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m must be contiguous.  Use this version in constant expressions
-#if C_AVX2
+#define SHMSK(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m need not be contiguous.  x and m can be variables.  Use this version in constant expressions
+#if C_AVX2  // more precisely, BMI2 support
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
-// scafdebug #define PEXTN(s,x,m)  _pext_u64((UI)(s),((UI)(m)<<(x)))  // x is bit#, m must be contiguous
-#define PEXTN(s,x,m)  ((m)&((m)+1)?SEGFAULT:_pext_u64((UI)(s),((UI)(m)<<(x))))  //use this to ensure masks OK after major changes it bit numbering
+#define PEXT0(s,x,m)  _pext_u64((UI)(s),((UI)(m)<<(x)))  // x is bit#, m must be contiguous starting at bit 0.  x and m should be compile-time constants; otherwise use SHMSK
+// scafdebug #define PEXT0(s,x,m)  ((m)&((m)+1)?SEGFAULT:_pext_u64((UI)(s),((UI)(m)<<(x))))  //use this to ensure masks OK after major changes it bit numbering
 #define PDEP(s,m) _pdep_u64((UI)(s),(UI)(m))
 #else
-// these emulations require that m be a sequence of 1 bits with no imbedded 0s
-// #define PEXT(s,m) (((s)>>CTTZI(m))&((m)>>CTTZI(m)))
-// #define PDEP(s,m) (((s)&((m)>>CTTZI(m)))<<CTTZI(m))
-// requires special insts#define PEXT(s,m) _pext_u32(s,m)
-// requires special insts#define PDEP(s,m) _pdep_u32(s,m)
-#define PEXTN(s,x,m)  PEXTNC(s,x,m)  // x is bit#, m must be contiguous
-// emulation of general PDEP
-// too slow #define PDEP(s,m) ({UI bits=(s), msk=(m), res=0, i=BW; do{res=(res>>1)+SGNIF(bits&msk,0); bits>>=(msk&1); --i; msk>>=1;}while(msk);)  res>>i;})
+#define PEXT0(s,x,m)  SHMSK(s,x,m)  // x is bit#, m must be contiguous
 #define _bzhi_u64(s,i) ((UI8)(s)<<(64-((i)&255))>>(64-((i)&255)))  // does not allow i=0
 #endif
 #ifndef offsetof
@@ -2858,9 +2851,14 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 
 // define single+double-precision integer add
 #if SY_64
+#define ADDCI(a,b,ci,co) __builtin_addcll(a,b,ci,&co)
+#define SUBCI(a,b,ci,co) __builtin_subcll(a,b,ci,&co)
 #if defined(MMSC_VER)  // SY_WIN32
 #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u64(0,addend,sumlo,&sumlo); _addcarry_u64(c,0,sumhi,&sumhi);}
 #endif
+#else
+#define ADDCI(a,b,ci,co) __builtin_addcl(a,b,ci,&co)
+#define SUBCI(a,b,ci,co) __builtin_subcl(a,b,ci,&co)
 #endif
 
 #ifndef SPDPADD   // default version for systems without addcarry

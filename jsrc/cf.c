@@ -186,7 +186,7 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
  hcol=atoplr(h);  // codes are none,[,],@[,@] in h
 
  // if we are using the default functions, pull them from the tables
- if(likely(!f1))f1=fork1tbl[PEXTNC(0x200110,fline<<2,3)][PEXTNC(0b00110,hcol,1)];  // fline: 0/3/4->0,  1/2->1, 5->2   hcol: / 0/3/4->0,  1/2->1
+ if(likely(!f1))f1=fork1tbl[SHMSK(0x200110,fline<<2,3)][SHMSK(0b00110,hcol,1)];  // fline: 0/3/4->0,  1/2->1, 5->2   hcol: / 0/3/4->0,  1/2->1
  if(likely(!f2)){
   f2=fork2tbl[fline][hcol]; f2=(I)jtfg&JTFOLKNOHFN?jtfolk2:f2;  // NOHFN means the caller is going to fool with the result fork, so the EP is unreliable
  }else{hcol=-1;}   // select the value we will put into localuse: hcol=-1 means cct, other hcol=routine address of h or h@]
@@ -253,7 +253,7 @@ static DF1(jthkindexofmaxmin){F12IP;
 static DF2(jthklvl2){F12IP;
  F2RANK(0,RMAX,jthklvl2,self);
  I comparand; comparand=rei0(a);  // get value to compare against
- RETF(num(PEXTN(FAV(self)->flag,VFHKLVLGTX,1)^levelle(jt,w,comparand-(FAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
+ RETF(num(PEXT0(FAV(self)->flag,VFHKLVLGTX,1)^levelle(jt,w,comparand-(FAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 
 // table of half-verbs for executing (compare |).  We back the address to the phantom start of the verb block.
@@ -385,7 +385,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    // unexecutable trident.  Fail as a syntax error and call eformat as a pre-exec error with a holding an INT
    // list of the parts of speech of the unexecutable fragment
    jsignal(EVSYNTAX);
-   GAT0(z,INT,2,1); IAV1(z)[0]=rtnx&3; IAV1(z)[1]=PEXTN(rtnx,2,3); IAV1(z)[2]=rtnx>>4;  // install parts of speech in order
+   GAT0(z,INT,2,1); IAV1(z)[0]=rtnx&3; IAV1(z)[1]=PEXT0(rtnx,2,3); IAV1(z)[2]=rtnx>>4;  // install parts of speech in order
    jteformat(jt,ds(CENQUEUE),z,zeroionei(1),0); R0;
   }
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork

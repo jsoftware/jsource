@@ -954,7 +954,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
  // We detect agreement error before domain error
  {aawwzknfxrz[9]=0;  // init to stop outer loop after first iteration
   if(likely((allranks&RANK2TMSK)==0)){ // rank 0 0 means no outer frames, sets up faster
-   fr=allranks>>(3*RANKTX); UI shortr=PEXTN(allranks,2*RANKTX,RANKTMSK);  // fr,shortr = ar,wr to begin with.  Changes later
+   fr=allranks>>(3*RANKTX); UI shortr=PEXT0(allranks,2*RANKTX,RANKTMSK);  // fr,shortr = ar,wr to begin with.  Changes later
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
    if(likely(jtfg!=0)){  // nonsparse
@@ -1012,7 +1012,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
 
     wcr+=acr<<2*RANKTX;  // afr/acr/wfr/wcr
 
-    PRODRNK(ak,acr, AS(a)+(wcr>>(3*RANKTX))); PRODRNK(wk,wcr,AS(w)+((wcr>>RANKTX)&RANKTMSK));   // left/right #atoms/cell  length is assigned first
+    PRODRNK(ak,acr, AS(a)+(wcr>>(3*RANKTX))); PRODRNK(wk,wcr,AS(w)+PEXT0(wcr,RANKTX,RANKTMSK));   // left/right #atoms/cell  length is assigned first
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun  acr free
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks
     // fr has the longer cell-rank
@@ -1067,7 +1067,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
 // obsolete     nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of jtfg.  This is a long dependency chain through nf
     if(likely(a!=w))jtfg=(J)((I)jtfg&nf); else jtfg=(J)((I)jtfg&~(VCVTIP+VIPRES));  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable; but never if args equal
 // obsolete     jtfg=(J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free   rest of jtfg survives
-    f=PEXTN(fr,2*RANKTX,RANKTMSK);  // recover (shorter frame len) from upper fr
+    f=PEXT0(fr,2*RANKTX,RANKTMSK);  // recover (shorter frame len) from upper fr
     PRODRNK(nf,((fr>>3*RANKTX)-f),f+AS(((I)jtfg&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
     PRODRNK(mf,f,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
@@ -1154,7 +1154,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    }
   }else{
 allocate:;  // come here if no inplaceable block could have the type changed
-// scaf! zt always given; make all 0x...>>const use PEXTN; try to advance all bplg/bp
+// scaf! zt always given; make all 0x...>>const use PEXT0; try to advance all bplg/bp
 // obsolete   I wt=AT(w); zt=zt?zt:wt; 
    GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
 // obsolete    if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy  scaf test this in jtfg
@@ -1231,7 +1231,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
      }
     } else {   // not multiply repair, but something else to do inplace
      AHDR2FN *repairfn = (AHDR2FN*)repairip[(aawwzknfxrz[8]-EWOVIP)&3];   // fetch ep from table
-     I nipw = ((z!=w) & (aawwzknfxrz[8]-EWOVIP)) ^ (((aawwzknfxrz[8]-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
+     I nipw = ((z!=w) & (aawwzknfxrz[8]-EWOVIP)) ^ PEXT0((aawwzknfxrz[8]-EWOVIP),2,1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
      // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
      // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
      // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
@@ -1287,7 +1287,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
       } \
       if(it&LIT&&jj>1){--i; av+=dplen; zv+=ndpi;} \
      ) \
-     if((jj-=(((it>>LITX)&(LIT>>LITX))+1))<=0)break; \
+     if((jj-=(PEXT0(it,LITX,1))+1)<=0)break; \
      if(it&BOX)av=ov0;else wv=ov0; \
     } \
    ) \
@@ -1848,7 +1848,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    //  0               4       10  11  8     15 16    13 14  9   routine indexes for homogeneous args (final pri)
    //                          6   7   4     11 12    9  10  5   biased by 4, the smallest we use here (values stored in the shift constant)
    // (B)             (I)      X   Q   D     I2 I4    DS  E  Z   internal type for each precision 
-   pri=4+PEXTNC(0x5affcbf476ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here
+   pri=4+SHMSK(0x5affcbf476ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
    if(unlikely(pri==8))selva2.cv|=VDD;      // We allow input conversion to be omitted for BID, so if we are using the DD line we have to install DD conversion
 // obsolete    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions
@@ -1861,7 +1861,8 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
     // = or ~:, possibly inhomogeneous
     if(likely(HOMO(at,wt))){
-     opcode=((at>>(C2TX-2))&0b1100)+((wt>>C2TX)&0b0011); opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 1110 if symbol, 0011 if box.
+// obsolete      opcode=((at>>(C2TX-2))&0b1100)+((wt>>C2TX)&0b0011); opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 0011 if box.
+     opcode=PEXT0((at<<2)+wt,C2TX,0xf); opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 0011 if box.
     }else opcode=7;  // inhomogeneous line
     retva2.f=eqnetbl[(UC)FAV(self)->id&1][opcode];  // return the comparison
     R retva2;

@@ -433,7 +433,7 @@ I infererrtok(J jt){I errtok;
   // see if ( was executable
   pmask|=jt->parserstackframe.parserstkend1[0].pt&PTNOTLPAR?0:0x100;  // ( any any any is line 8 - but it couldn't fail
   // Get the number that was executed.  Take the token# from entry (9-0): 2 1 1 1 1 2 2 2 2 1 (line 9 is no match, must be ending syntax error)
-  errtok=jt->parserstackframe.parserstkend1[PEXTNC(0x21e,CTTZI(pmask|0x200),1)+1].t;  // get failing token#
+  errtok=jt->parserstackframe.parserstkend1[SHMSK(0x21e,CTTZI(pmask|0x200),1)+1].t;  // get failing token#
  }
  // see if the sentence had unbalanced parens.
  I lastlwd, lastrwd, nesting=0;   // 1-origin wd# of leftwost unmatched ( and rightmost unmatched ) found so far, and nesting level
@@ -731,7 +731,7 @@ endname: ;
      stack[0].t = (US)pt0ecam;  // install the original token number for the word
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // back to the word we just fetched, which might be garbage
-     stack[0].a = (A)((savy&~QCMASK)+PEXTN(savy,QCNAMEDX-STKNAMEDX,STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
+     stack[0].a = (A)((savy&~QCMASK)+PEXT0(savy,QCNAMEDX-STKNAMEDX,STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
      pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
      UI tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
      pt0ecam&=(I)(UI4)(~((0b111LL<<CONJX)|FLGPMSK));  // clear the pull queue, PMSK, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
@@ -843,7 +843,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
         // path to here is to mispredict the assignment and then correctly predict the local path.  In that path we have loaded the symbol number followed by zval, and it will
         // not settle for 10 clocks.  We very much want to keep executing during the settlement so we don't want to risk a misprediction.  We should be executing
         // well into tpop* before zval settles.
-       I af=AFLAG(zval); zval=AC(zval)==((I)PEXTN(af,AFNJAX,1)+targc)?zval:0; zval=af&(AFRO|AFVIRTUAL)?0:zval;  // OK if count right, and not R-O/VIRT
+       I af=AFLAG(zval); zval=AC(zval)==((I)PEXT0(af,AFNJAX,1)+targc)?zval:0; zval=af&(AFRO|AFVIRTUAL)?0:zval;  // OK if count right, and not R-O/VIRT
 anchoredip:;  // here when we have detected that an anchored name is inplaceable
         jt->zombieval=zval;
        }
@@ -905,10 +905,10 @@ RECURSIVERESULTSCHECK
        if(withprob(ISSTKREFRESHRQD(freep),0.05)){   // if the stack has been altered...
         // here the execution of this verb required going through the stack to raise the usecount of local values on the stack.  The raised values were
         // flagged as having STKFAOWED+STKNAMED.  Since any STKNAMED arg put the arg into tpop[aw], we refresh the tpop[aw] values to get the correct setting of FAOWED for any that is STKNAMED
-        A freea=stack[-1].a; tpopa=(PEXTN(pt0ecam,FLGPMSKX+2,1)<<STKNAMED)&(I)freea?(A*)freea:tpopa;  // refresh tpopa if dyad and the x arg was STKNAMED
+        A freea=stack[-1].a; tpopa=(PEXT0(pt0ecam,FLGPMSKX+2,1)<<STKNAMED)&(I)freea?(A*)freea:tpopa;  // refresh tpopa if dyad and the x arg was STKNAMED
         freea=stack[1].a;   // fetch y arg of verb
-        tpopw=(PEXTN(pt0ecam,FLGPMSKX+2,1)<<STKNAMED)&(I)freea?(A*)freea:tpopw;  // refresh tpopw if dyad and the y arg was STKNAMED
-        tpopa=((PEXTN(pt0ecam,FLGPMSKX+2,1)^1)<<STKNAMED)&(I)freea?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
+        tpopw=(PEXT0(pt0ecam,FLGPMSKX+2,1)<<STKNAMED)&(I)freea?(A*)freea:tpopw;  // refresh tpopw if dyad and the y arg was STKNAMED
+        tpopa=((PEXT0(pt0ecam,FLGPMSKX+2,1)^1)<<STKNAMED)&(I)freea?(A*)freea:tpopa;  // refresh tpopa if monad and the y arg was STKNAMED
        }
 
        // tpopa and tpopw are valid.  Transfer FAOWED from (at most 1 of) them to y (they can match only if STKNAMED).  Then put y into the result area, freeing the vbl
@@ -958,12 +958,12 @@ RECURSIVERESULTSCHECK
       // Each of these tests saves considerable work
       // (*) The abnormal case is where there is a conjunction following the executable part, such as +: 2 &  or (+: 2 & ).  To handle these we branch straight back to reexecute if this is not a final exec.
       // the withprobs below are needed to tip the compiler into keeping queue in a register.  That way the NEXTY is 1 fetch instead of 2.
-      if(withprob(GETSTACK0PT&PEXTN(pt0ecam,FLGPMSKX+1,1),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask=0; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
+      if(withprob(GETSTACK0PT&PEXT0(pt0ecam,FLGPMSKX+1,1),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask=0; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
       if(unlikely(endstkpt!=(PTRPAR>>16))){jt=(J)(((I)jt+3^2)-1); continue;}   // if not final exec check for reexec
           // On its own the compiler makes a couple of bad optimization decisions, both involving jt, that don't improve the code but hoist some invariants outside the loop.
           // To avoid calculating these invariants we razzle-dazzle the compiler into not relying on constant jt. 
       if(withprob(!TESTSTACK0PT(PTNOTLPARX),0.2))goto execlpar;  // if (, go execute that immediately.  could save a test there since we know stack[1] is VN
-      pt0ecam&=~((GETSTACK0PT|PEXTN(pt0ecam,FLGPMSKX+1,1))<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull.  May clear bit 29; 30-31 immaterial
+      pt0ecam&=~((GETSTACK0PT|PEXT0(pt0ecam,FLGPMSKX+1,1))<<CONJX);  // If EDGE ... or line 1, suppress stacking 2; otherwise leave CONJ if we will have CAVN AVN N x (never executable) after the next pull.  May clear bit 29; 30-31 immaterial
       break;   // go back to the stacking phase.  We could check for end here, but end-of-sentence when there is no assignment is predictable: m=0, then final exec, then exit.  We trust the branch predictors with that.
      }else{
       A yy;  // will be the result of the operation, stored after we have freed the args on the stack

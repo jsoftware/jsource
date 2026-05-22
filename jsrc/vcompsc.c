@@ -100,7 +100,7 @@ A name(J jt,A a,A w){ \
  out0: natend=0; goto out;  out1: natend=1; goto out;  out2: natend=2; goto out;  out3: natend=3; goto out; \
  out4: natend=4; goto out;  out5: natend=5; goto out;  out6: natend=6; goto out;  out7: natend=7; out: \
  n2<<=3; orign2<<=3; orign2+=natend+backoff+1; \
- outs0: orign2-=n2; orign2<<=LGNPAR; orign2+=(((fz)&0x1000?inv?0x4322111100000000:0x0000000011112234:inv?0x4010201030102010:0x0102010301020104)>>(maskatend<<2))&7; if((fz)&0x1000){orign2=n0-1-orign2; orign2=orign2<0?n0:orign2;} R sc(orign2); \
+ outs0: orign2-=n2; orign2<<=LGNPAR; orign2+=SHMSK(((fz)&0x1000?inv?0x4322111100000000:0x0000000011112234:inv?0x4010201030102010:0x0102010301020104),maskatend<<2,7); if((fz)&0x1000){orign2=n0-1-orign2; orign2=orign2<0?n0:orign2;} R sc(orign2); \
  /* add accums, which give negative result.  Convert to positive; if inv, that's the result, otherwise subtract from i0 */ \
  outs1: acc0=_mm256_add_epi64(acc0,acc1); acc2=_mm256_add_epi64(acc2,acc3); acc4=_mm256_add_epi64(acc4,acc5); acc6=_mm256_add_epi64(acc6,acc7); acc0=_mm256_add_epi64(acc0,acc2); acc4=_mm256_add_epi64(acc4,acc6); acc0=_mm256_add_epi64(acc0,acc4); \
   acc0=_mm256_add_epi64(acc0,_mm256_permute4x64_epi64(acc0,0b11111110)); acc0=_mm256_add_epi64(acc0,_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(acc0),0x0f))); \
@@ -650,9 +650,9 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // split m into search and comparison
   I search=m>>3; I comp=m&7;
   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address
-  I postflags=(0xc0>>search)&3; search=PEXTNC(0x0143210,search<<2,15);  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
+  I postflags=SHMSK(0xc0,search,3); search=SHMSK(0x0143210,search<<2,15);  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
   // Change i.&1@:comp to i.&0@:compx, sim for i:  XOR comp with 000 001 000 110 000 110
-  comp^=PEXTNC(0x606010,((search&1)+(comp&6))<<2,7); search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
+  comp^=SHMSK(0x606010,((search&1)+(comp&6))<<2,7); search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
   if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01+INT+FL)))){
    // numeric types that we can handle here, for sure
 #if !defined(__wasm__)

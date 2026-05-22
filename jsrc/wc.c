@@ -124,8 +124,8 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  // any hitherto not-processed throw. to go to the catch. (if it exists) or catchd. (if no catch.).
  // That way, unfielded throw. counts as an error that can be picked up in catch.
  // kludge if break/continue encountered:  while. do. try. break. catch. end. end.  leaves the break pointing past the outer end, and the try stack unpopped
- if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(CWMAX==v->go&&!SHMSK(((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS),SHMSK(v->tcesx,TCESXTYPEX,31),1))v->go=ii;);}
- else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(CWMAX==v->go&&!SHMSK(((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS),SHMSK(v->tcesx,TCESXTYPEX,31),1))v->go=ii;);}
+ if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(CWMAX==v->go&&!PEXT0(((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS),PEXT0(v->tcesx,TCESXTYPEX,31),1))v->go=ii;);}
+ else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(CWMAX==v->go&&!PEXT0(((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS),PEXT0(v->tcesx,TCESXTYPEX,31),1))v->go=ii;);}
  R top;  //return stack pointer with the try. ... end. removed
 }    /* result is new value of top */
 
@@ -252,7 +252,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
   for(i=n-1;i>=0;--i){
    I origcanend=CANEND(i);
    if(!(origcanend&3)){  // if the value is filled in with a final already, we won't change it
-    switch(SHMSK(con[i].tcesx,TCESXTYPEX,31)) {
+    switch(PEXT0(con[i].tcesx,TCESXTYPEX,31)) {
     case CBBLOCK: case CBBLOCKEND: case CTHROW:
      CANEND(i) = 8+2; break;  // These are by definition not an end
     case CRETURN:

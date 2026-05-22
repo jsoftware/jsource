@@ -654,7 +654,7 @@ static void docall(FARPROC fpi, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B altern
   // the first 4 are encoded as lg2(# bytes to keep):
   // 64b  11111101xxxx111110xxxx1100 = 3f43e0c
   // 32b  10101001xxxx101010xxxx1000 = 2a22a08
-  I shiftamt=BW-((1LL<<(((SY_64?0x3f43e0c:0x2a22a08)>>(charcode<<1))&3))<<3);  // # high bits to fill
+  I shiftamt=BW-((1LL<<SHMSK(SY_64?0x3f43e0c:0x2a22a08,charcode<<1,3))<<3);  // # high bits to fill
   r=(r<<shiftamt)>>shiftamt;  // fill em
   r=zl=='n'?0:r;  // handle 'n' specially: store 0
   *v=r;  // write out the formatted return code
@@ -1005,15 +1005,15 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
   c=!SY_64&&c=='x'?'i':c;  // replace x with i in 32-bit
 #define F2C(c,n) ((UI8)(n)<<(2*(c-'a')))
   cc->starlett[i].jtype=(UI4)cdjtype(c); cc->starlett[i].jtype=cc->starlett[i].jtype&INT1+INT2+INT4?INT:cc->starlett[i].jtype; // get the desired result type  For compatibility, don't allow result type INT[124], push them to INT
-  cc->starlett[i].type=((F2C('c',0)|F2C('w',0)|F2C('u',0)|F2C('b',1)|F2C('s',1)|F2C('i',1)|F2C('l',1)|F2C('x',1)|F2C('f',2)|F2C('d',2)|F2C('z',3)|F2C('j',3))>>(2*(c-'a')))&3;  //0=char 1=int 2=fl 3=cmpx
-  cc->starlett[i].lgsz=((F2C('c',0)|F2C('w',1)|F2C('u',2)|F2C('b',0)|F2C('s',1)|F2C('i',2)|F2C('l',3)|F2C('x',3)|F2C('f',2)|F2C('d',3)|F2C('z',2)|F2C('j',3))>>(2*(c-'a')))&3;  // lg(atom len needed)
+  cc->starlett[i].type=SHMSK(F2C('c',0)|F2C('w',0)|F2C('u',0)|F2C('b',1)|F2C('s',1)|F2C('i',1)|F2C('l',1)|F2C('x',1)|F2C('f',2)|F2C('d',2)|F2C('z',3)|F2C('j',3),2*(c-'a'),3);  //0=char 1=int 2=fl 3=cmpx
+  cc->starlett[i].lgsz=SHMSK(F2C('c',0)|F2C('w',1)|F2C('u',2)|F2C('b',0)|F2C('s',1)|F2C('i',2)|F2C('l',3)|F2C('x',3)|F2C('f',2)|F2C('d',3)|F2C('z',2)|F2C('j',3),2*(c-'a'),3);  // lg(atom len needed)
 #define F1C(c) ((I)1<<(c-'a'))
 #define F1CN(c,n) ((I)(n)<<(c-'a'))
-  cc->starlett[i].flags=((F1C('b')|F1C('s')|F1C('f')|F1C('i'))>>(c-'a'))&1;  // integer/float type that can be sourced from a LIT
+  cc->starlett[i].flags=SHMSK(F1C('b')|F1C('s')|F1C('f')|F1C('i'),c-'a',1);  // integer/float type that can be sourced from a LIT
 #ifdef C_CD_NODF // platform does not support f or d args
  CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].type!=2),der);
 #endif
-  cc->starlett[i].flags|=2*(((F1C('b')|F1C('c')|F1C('w')|F1C('u')|F1C('s')|F1C('i')|F1C('x')|F1CN('d',(I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)))>>(c-'a'))&1);
+  cc->starlett[i].flags+=2*SHMSK(F1C('b')|F1C('c')|F1C('w')|F1C('u')|F1C('s')|F1C('i')|F1C('x')|F1CN('d',(I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)),c-'a',1);
 
  }
  CDASSERT(0<=i||'1'!=cc->cc,DEDEC+256);
@@ -1036,7 +1036,7 @@ strcpy(proc,"x15lseek32");
  R cc;
 }
 
-#define CDT(x,y) (8*((0x161C04>>(x))&7)+((0x161C04>>(y))&0x7))  // encode 0 1 2 3 9 10 17 18-> 4 2 1 0 6 7 3 5  1011. .... .... .... 0100
+#define CDT(x,y) (8*SHMSK(0x161C04,x,7)+SHMSK(0x161C04,y,0x7))  // encode 0 1 2 3 9 10 17 18-> 4 2 1 0 6 7 3 5  1011. .... .... .... 0100
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
  if(unlikely((zt|wt)&((NOUN|SPARSE)&~(B01+LIT+INT+INT2+INT4+FL+C2T+C4T))))R 0;  // if unallowed type, abort
@@ -1155,7 +1155,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 // long way    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x!=0,per);}
    // perform non-in-place conversions.  These are conversions to larger atoms, or to different formats.
 #define F2T(t,n) ((UI8)n<<(2*CTTZ(t)))
-   I xtype=(((F2T(LIT,0)|F2T(C2T,0)|F2T(C4T,0)|F2T(B01,1)|F2T(INT,1)|F2T(INT1,1)|F2T(INT2,1)|F2T(INT4,1)|F2T(HP,2)|F2T(SP,2)|F2T(FL,2)|F2T(QP,2)|F2T(CMPX,3)))>>(2*CTTZ(xt)))&3;  // type 0123
+   I xtype=SHMSK(F2T(LIT,0)|F2T(C2T,0)|F2T(C4T,0)|F2T(B01,1)|F2T(INT,1)|F2T(INT1,1)|F2T(INT2,1)|F2T(INT4,1)|F2T(HP,2)|F2T(SP,2)|F2T(FL,2)|F2T(QP,2)|F2T(CMPX,3),2*CTTZ(xt),3);  // type 0123
    xtype|=xt&XNUM+RAT;  // indirect types are in a class by themselves & must always be converted
    xlgsz=bplg(xt);  // lg(actual atom len)
    if(unlikely(((t-1)|litsgn|boxatomsgn|(((ctype^xtype)-1)&(clgsz-xlgsz-1)))>=0)){ x=cvt(xt=t,x); xlgsz=bplg(xt); CDASSERT(x!=0,per); }  // convert if result type known & (not what we have, or bigger than what we have)

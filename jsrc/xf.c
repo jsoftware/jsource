@@ -120,7 +120,7 @@ A jtrd(J jt,F f,I j,I n){A z;C*x;I p=0;size_t q=1;
 
 static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
  RZ(f&&w);
-n=AN(w)<<((AT(w)>>C2TX)&3); x=CAV(w);
+n=AN(w)<<PEXT0(AT(w),C2TX,3); x=CAV(w);
 
 #if !SY_WINCE
  {INT64 v; v= j+((0>j)?fsize(f):0); fsetpos(f,(fpos_t*)&v);}

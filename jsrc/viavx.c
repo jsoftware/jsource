@@ -1152,7 +1152,7 @@ inplace:;
 
 // verb to vector combine@e. compounds.  The i. code is in the self
 // because these are e. compounds we swap a and w
-DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+SHMSK(FAV(self)->flag,3,7),w,a);}
+DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+PEXT0(FAV(self)->flag,3,7),w,a);}
 
 // verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 // a is the arg that was indexed, used only if we have to revert to rerunning the operation

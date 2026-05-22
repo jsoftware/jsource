@@ -480,7 +480,7 @@ F1(jtfactor){F12IP;PROLOG(0063);A y,z;
   I codesize=2*((code&0x3f)==0)+((code&0x7)==0); nbits-=3*codesize+3; bits>>=3*codesize+3;  // codesize is 0/1/3; code length is 3 6 or 12
   // decode the gap length.  It would be OK to fetch from a table since this is out of the dependency loop
   I maskshiftbias=0x3f6f000007370700>>(codesize<<4);  // mask (8), shift (4), bias(4) for each code length
-  I gap=(((code>>SHMSK(maskshiftbias,4,0xf))&SHMSK(maskshiftbias,8,0xff))+(maskshiftbias&0xf))<<1;  // gap till next prime
+  I gap=(((code>>PEXT0(maskshiftbias,4,0xf))&PEXT0(maskshiftbias,8,0xff))+(maskshiftbias&0xf))<<1;  // gap till next prime
   if(gap==156)break;  // max gap in first million is 154: this is the end code
   d+=gap;  // value of next prime
   while(n%d==0){*v++=d; n=n/d; if(n<d)goto endfac;}  // remove all multiples of d

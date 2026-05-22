@@ -174,7 +174,7 @@ F1(jtoutparms){F12IP;I*v;
  R mtv;
 }
 
-F1(jtposq){F12IP;ASSERTMTV(w); R v2((jt->boxpos>>JTTHORNXX)&(JTTHORNX>>JTTHORNXX),(jt->boxpos>>JTTHORNYX)&(JTTHORNY>>JTTHORNYX));}
+F1(jtposq){F12IP;ASSERTMTV(w); R v2(SHMSK(jt->boxpos,JTTHORNXX,JTTHORNX>>JTTHORNXX),SHMSK(jt->boxpos,JTTHORNYX,JTTHORNY>>JTTHORNYX));}
 
 F1(jtposs){F12IP;I n,p,q,*v;
  RZ(w=vi(w));
@@ -311,7 +311,7 @@ F1(jtdeprecxs){F12IP;A ct, excl;
 
 //9!:54
 F1(jtdeprecxq){F12IP;A zd;
- GAT0(zd,INT,16,1); I zdi=0; DO(15, if((JT(jt,deprecex)>>i)&1)IAV1(zd)[zdi++]=i;) AN(zd)=AS(zd)[0]=zdi;  // create vector of exclusions
+ GAT0(zd,INT,16,1); I zdi=0; DO(15, if(SHMSK(JT(jt,deprecex),i,1))IAV1(zd)[zdi++]=i;) AN(zd)=AS(zd)[0]=zdi;  // create vector of exclusions
  READLOCK(JT(jt,startlock))
  A z=jlink(sc(JT(jt,deprecct)),zd);  // return current status
  READUNLOCK(JT(jt,startlock))

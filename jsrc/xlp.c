@@ -304,7 +304,7 @@ endpipem2: ;  // come here in runout where pipe input is invalid
     if(likely(zv&ZVSHARINGMIN))*(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE); vv0=&qkt0[qktrowstride*ppp->colx];  // leave an=-1
   }else{if(an==-2)goto usefullrowtotal; goto abortcol;  // immediate termination/abort.  DO NOT fetch sharedmin, as we will be checking it presently.  rowx, accumsumsq needed
   }
-if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it must leave us on a bndrowmask bdy
+if((rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaaf  if just part of a col, it must leave us on a bndrowmask bdy
 
   __m256d accnorm4=_mm256_setzero_pd();  // accumulator for sumsq, in short bursts
 
@@ -426,7 +426,7 @@ usefullrowtotal:;  // come here when we started knowing the row total, in accums
   if(1)impcolincr=0x100000001; else abortcol: impcolincr=1; // jump here if column aborted early, possibly on insufficient gain.  This is the normal path if abort, don't incr # completed columns
   ndotprods+=rowx*(an+1-REPSGN(an)); nimpandcols+=impcolincr; // accumulate # products performed, including the one we aborted out of; and 1 column, 0/1 improvements
   // save the total we accumulated.
-if(rowx<nqkrows && (rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf
+if(rowx<nqkrows && (rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaaf
   rowx=rowx>nqkrows?nqkrows:rowx;  // If rowx>nrows, back it up so accounting of reused products is accurate
   D Drowx=rowx;
   __atomic_store((I*)&cutoffstatus[ppp->colx][0],(I*)&Drowx,__ATOMIC_RELEASE);  // only integers can be atomic args
@@ -633,7 +633,7 @@ endqp: ;
   if((I)zv&ZVNEGATECOL){dotproducth=_mm256_xor_pd(sgnbit,dotproducth); dotproductl=_mm256_xor_pd(sgnbit,dotproductl);}  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
   dotproducth=_mm256_and_pd(dotproducth,okmask); dotproductl=_mm256_and_pd(dotproductl,okmask); // set values < threshold to +0, high and low parts
   _mm256_store_pd(remflgs(zv)+rowx,dotproducth); _mm256_store_pd(remflgs(zv)+rowx+zstride,dotproductl);   // store high & low.  This may overstore, and must always be aligned
-if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaf
+if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaaf
   // We treat Fk as part of the column, except that we don't want to include it in the SPR calculation.
   if(unlikely(rowx==frowbatchx)){
    // We hit the Fk batch.  Turn off the last lane of endmask, which must hold Fk
@@ -656,7 +656,7 @@ if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaf
     // calculate the SPR
     bk4=_mm256_and_pd(bk4,bknon0);  // make near0 bk exactly 0
     __m256d ratios=_mm256_fmsub_pd(sharedspr,bnddotproducth,bk4);  // minspr*c-b: sign set if b>minspr*c => b/c>minspr => not new min-or-tied SPR.  minspr, c, and b are all nonneg in valid lanes, so no -0
-if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharedspr,bnddotproducth)),cgt0))ASSERTSYS(0,"neg0");  // scaf verify no -0
+if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharedspr,bnddotproducth)),cgt0))ASSERTSYS(0,"neg0");  // scaaf verify no -0
     if(!_mm256_testc_pd(ratios,cgt0)){  // CF is 1 if ~(not new min-or-tied)&(valid) is all 0, so 0 if any (min-or-tied)
      // SPR is a new low-or-tied.  If any valid bk is 0, we will be returning a nonimproving pivot
      // by simulation this code runs 4.7 times in 64 batches
@@ -1162,7 +1162,7 @@ endpipem2: ;  // come here in runout where pipe input is invalid
     if(likely(zv&ZVSHARINGMIN))*(I*)&sharedmin=__atomic_load_n(&ctx->sharedmin.I,__ATOMIC_ACQUIRE); vv0=&qkt0[qktrowstride*ppp->colx];  // leave an=-1
   }else{if(an==-2)goto usefullrowtotal; goto abortcol;  // immediate termination/abort.  DO NOT fetch sharedmin, as we will be checking it presently.  rowx2, accumsumsq needed
   }
-if((rowx2&(2*BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf  if just part of a col, it must leave us on a bndrowmask bdy
+if((rowx2&(2*BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaaf  if just part of a col, it must leave us on a bndrowmask bdy
 
   __m256d accnorm4=_mm256_setzero_pd();  // accumulator for sumsq, in short bursts
 
@@ -1298,7 +1298,7 @@ usefullrowtotal:;  // come here when we started knowing the row total, in accums
   if(1)impcolincr=0x100000001; else abortcol: impcolincr=1; // jump here if column aborted early, possibly on insufficient gain.  This is the normal path if abort, don't incr # completed columns
   ndotprods+=rowx2*(an+1-REPSGN(an)); nimpandcols+=impcolincr; // accumulate # products performed, including the one we aborted out of; and 1 column, 0/1 improvements
   // save the total we accumulated.
-if(rowx2<nqkrows2 && (rowx2&(2*BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaf
+if(rowx2<nqkrows2 && (rowx2&(2*BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaaf
   rowx2=rowx2>nqkrows2?nqkrows2:rowx2;  // If rowx>nrows, back it up so accounting of reused products is accurate
   D Drowx2=rowx2>>1;   // convert from D to E index
   __atomic_store((I*)&cutoffstatus[ppp->colx][0],(I*)&Drowx2,__ATOMIC_RELEASE);  // only integers can be atomic args
@@ -1511,7 +1511,7 @@ endqp: ;
   if((I)zv&ZVNEGATECOL){dotproducth=_mm256_xor_pd(sgnbit,dotproducth); dotproductl=_mm256_xor_pd(sgnbit,dotproductl);}  // Handle Enforcing column. branch will predict correctly and will seldom need the XOR
   dotproducth=_mm256_and_pd(dotproducth,okmask); dotproductl=_mm256_and_pd(dotproductl,okmask); // set values < threshold to +0, high and low parts
   _mm256_store_pd((D*)((__m256i*)((E*)remflgs(zv)+rowx)),_mm256_shuffle_pd(dotproducth,dotproductl,0b0000)); _mm256_store_pd((D*)(((__m256i*)((E*)remflgs(zv)+rowx))+1),_mm256_shuffle_pd(dotproducth,dotproductl,0b1111));  // write out the value, 0123
-if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaf
+if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaaf
   // We treat Fk as part of the column, except that we don't want to include it in the SPR calculation.
   if(unlikely(rowx==frowbatchx)){
    // We hit the Fk batch.  Turn off the last lane of endmask, which must hold Fk
@@ -1534,7 +1534,7 @@ if((rowx+NPAR-1)>=zstride)SEGFAULT;  // scaf
     // calculate the SPR
     bk4=_mm256_and_pd(bk4,bknon0);  // make near0 bk exactly 0
     __m256d ratios=_mm256_fmsub_pd(sharedspr,bnddotproducth,bk4);  // minspr*c-b: sign set if b>minspr*c => b/c>minspr => not new min-or-tied SPR.  minspr, c, and b are all nonneg in valid lanes, so no -0
-if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharedspr,bnddotproducth)),cgt0))ASSERTSYS(0,"neg0");  // scaf verify no -0
+if(!_mm256_testz_pd(_mm256_or_pd(bk4,_mm256_or_pd(sharedspr,bnddotproducth)),cgt0))ASSERTSYS(0,"neg0");  // scaaf verify no -0
     if(!_mm256_testc_pd(ratios,cgt0)){  // CF is 1 if ~(not new min-or-tied)&(valid) is all 0, so 0 if any (min-or-tied)
      // SPR is a new low-or-tied.  If any valid bk is 0, we will be returning a nonimproving pivot
      // by simulation this code runs 4.7 times in 64 batches
@@ -2122,7 +2122,7 @@ __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from the col of Qkt
    __m256d pcoldh0213=_mm256_loadu_pd((D*)((I)pcn0v+colx*(2*sizeof(E)/sizeof(*colxv))));  // load next 4 non0 values in pivotcol - high part
     __m256d pcoldl0213=_mm256_loadu_pd((D*)((I)pcn0v+(colx+sizeof(*colxv))*(2*sizeof(E)/sizeof(*colxv))));  // load next 4 non0 values in pivotcol - low part
     // gather the values from Qkt
-   __m256d h0l0h1l1=_mm256_loadu_pd((D*)((I)qkvrow+o0)),h2l2h3l3=_mm256_loadu_pd((D*)((I)qkvrow+o1));  // load     scaf use non-temporal load?
+   __m256d h0l0h1l1=_mm256_loadu_pd((D*)((I)qkvrow+o0)),h2l2h3l3=_mm256_loadu_pd((D*)((I)qkvrow+o1));  // load     scaaf use non-temporal load?
     __m256d qkvh=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b0000), qkvl=_mm256_shuffle_pd(h0l0h1l1,h2l2h3l3,0b1111);  // batch of Qkt, high & low separated in 0213 order
 
     // create max(abs(qkvh),abs(pcoldh*prowdh)) which will go into threshold calc
@@ -2149,7 +2149,7 @@ __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from the col of Qkt
     qkvh=_mm256_and_pd(qkvh,magqh); // zero if lower than fuzz (high part)
 
     // scatter the results (both parts)
-   _mm256_storeu_pd((D*)((I)qkvrow+o0),_mm256_shuffle_pd(qkvh,qkvl,0b0000));  _mm256_storeu_pd((D*)((I)qkvrow+o1),_mm256_shuffle_pd(qkvh,qkvl,0b1111));   // scaf use non-temporal store?
+   _mm256_storeu_pd((D*)((I)qkvrow+o0),_mm256_shuffle_pd(qkvh,qkvl,0b0000));  _mm256_storeu_pd((D*)((I)qkvrow+o1),_mm256_shuffle_pd(qkvh,qkvl,0b1111));   // scaaf use non-temporal store?
   }
    I okwds=NPAR;  // # valid words in a batch.  Starts at max; never modified until last batch EXCEPT when ck mode, then set always
    for(;colx-(ncvals-coln0)*(I)sizeof(*colxv)<0;colx+=okwds*sizeof(*colxv)){
@@ -2236,7 +2236,7 @@ if(AR(absfuzzmplr)==1)ASSERT(AN(absfuzzmplr)==AN(prx),EVLENGTH)  // if mplr, mus
 // agreement
  ASSERT(AR(w)==AR(pcx)+AR(prx),EVRANK)  // Qkt is nxn+1..4; bk is n, treated as a single row.
  if(AR(pcx)!=0){DO(AN(pcx), ASSERT(IAV(pcx)[i]<AS(w)[0],EVINDEX))} else{ASSERT(IAV(pcx)[0]==0,EVINDEX)}  // valid row indexes
- ASSERT(AN(pcx)==AN(pivotrownon0),EVLENGTH)  // indexes and values must agree  scaf shapes should be identical
+ ASSERT(AN(pcx)==AN(pivotrownon0),EVLENGTH)  // indexes and values must agree  scaaf shapes should be identical
  I m=AN(pcx), n=AN(prx);  // # rows & columns/pairs to modify
  ASSERTSYS(((I)DAV(qk)&((SZD<<LGNPAR)-1))==0,"Qkt is not on cacheline bdy")  // we fetch along rows; insist on data alignment
  ASSERTSYS(AR(qk)<2||(AS(qk)[1]&(NPAR-1))==0,"stride of Qkt is not a cacheline multiple")  // we fetch along rows; insist on data alignment
@@ -2636,7 +2636,7 @@ static unsigned char jtbatchopx(J jt,struct bopctx* const ctx,UI4 ti){
 
  I yd=10; while(__atomic_load_n(&ctx->colndx9ct,__ATOMIC_ACQUIRE)!=0){johnson(20*nthreads); if(--yd<0){YIELD};}  // delay until we have early completion on each op.  We allow 1 read every 20ns
 
- DONOUNROLL(nops, opstat[i].acolndxs=(*colndxs)[i]; if((*colndxs)[i]==0)SEGFAULT;)  // scaf  get start address of index for each op.  This is generally coming from another core so no reason to unroll
+ DONOUNROLL(nops, opstat[i].acolndxs=(*colndxs)[i]; if((*colndxs)[i]==0)SEGFAULT;)  // scaaf  get start address of index for each op.  This is generally coming from another core so no reason to unroll
 
  I stripex=ti;  // initial stripe reservation, from thread#
  // state needed to release one row of ring (viz relstart). 
@@ -2674,7 +2674,7 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
   for(io=0;io<nops;++io){   // for each op:
    I stripeval0x=unlikely(stripe==0)?0:(*opstripebsum)[(stripe-1)][io];  // starting index of offsets/values in this stripe
    I ssize=(*opstripebsum)[stripe][io]-stripeval0x;  // number of non0 values in this stripe
-if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;   // scaf
+if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;   // scaaf
    if(ssize){    // if this op intersects this stripe...
     opstat[io].rowindex=0; I4 nx=opstat[io].colndxahead=opstat[io].acolndxs[0]; opstat[io].colvalahead=opstat[io].acolvals[0];  // start on first row; prefetch first.
     minnextrow=nx<minnextrow?nx:minnextrow; // Keep track of smallest start value.  The readahead will take a long time, but we do not use minnextrow in this loop 
@@ -2694,7 +2694,7 @@ if(!BETWEENC(ssize,0,MAXNON0))SEGFAULT;   // scaf
       if(bitvec==0){bitofst+=nrembits; break;}  // no more bits in this section, advance to next
       I low1=CTTZI(bitvec); bitvec>>=low1; bitofst+=low1; nrembits-=low1;   // shift out low 0s
       I vallimit=MIN(ssize-nvalsfnd,4); I validbits=bitvec&~(~0<<vallimit);   // max # 1s that can be valid; discard bits that must be after the last valid value
-      I sizefoundx=(validbits>>1)&1; sizefoundx=validbits==0b1111?2:sizefoundx; I sizefound=1LL<<sizefoundx;   // sizefound is 1/2/4, # consecutive low bits found
+      I sizefoundx=PEXT0(validbits,1,1); sizefoundx=validbits==0b1111?2:sizefoundx; I sizefound=1LL<<sizefoundx;   // sizefound is 1/2/4, # consecutive low bits found
       US sizepos=(sizefoundx<<14)+bitofst; non0pos[nvalsfnd]=sizepos; non0pos[nvalsfnd+1]=sizepos+1; non0pos[nvalsfnd+2]=sizepos+2; non0pos[nvalsfnd+3]=sizepos+3;  // add 4 copies to result in case we need them
       if(unlikely(sizefound+nvalsfnd==ssize)){  // if this block exhausts the non0 values, remember them and exit
        sizn+=sizefound<<(sizefoundx<<4); nvalsfnd+=sizefound;  // count # vals at this size, step over the valid ones
@@ -2714,11 +2714,11 @@ finclass:;  // we have classified the blocks
     US *offsetsbase=&stripeofst[nextopofstvalx]; E *valsbase0213=&stripe0213[nextopofstvalx];  // start of offsets for this stripe, start of values in 0213 order
     E *valsbasein=&EAV(oprowvals[io])[stripeval0x];  // position of first compacted value for this stripe
     UI8 locn=(sizn>>16)+(sizn>>32);  // starting position in each size, running total of sizes.  3 packed US values.  We don't use an array because the carried dependency of an update is too long
-    DO(nvalsfnd, I lgsz=non0pos[i]>>10; I rowofst=(non0pos[i]&0x03ff)*sizeof(E); I slot=(locn>>lgsz)&0x3ff; locn+=(UI8)1<<lgsz; offsetsbase[slot]=rowofst; valsbase0213[slot]=valsbasein[i];)  // assemble values and byte-offsets into Qk
+    DO(nvalsfnd, I lgsz=non0pos[i]>>10; I rowofst=(non0pos[i]&0x03ff)*sizeof(E); I slot=SHMSK(locn,lgsz,0x3ff); locn+=(UI8)1<<lgsz; offsetsbase[slot]=rowofst; valsbase0213[slot]=valsbasein[i];)  // assemble values and byte-offsets into Qk
     // square the offsets up to RESBLK boundaries.
     if(unlikely((sizn&0xffff)==0)){
      // there are no 1-blocks.  If there are an odd# 2-blocks, replicate the last one (we always replicate, then change only if odd)
-     I locn1=(locn>>16)&0xffff;  // index of end+1 2-block
+     I locn1=PEXT0(locn,16,0xffff);  // index of end+1 2-block
      offsetsbase[locn1]=offsetsbase[locn1-2]; offsetsbase[locn1+1]=offsetsbase[locn1-1]; valsbase0213[locn1]=valsbase0213[locn1-2]; valsbase0213[locn1+1]=valsbase0213[locn1-1]; locn+=0x20002; 
     }else{
      // If there are 1-3 1-blocks replicate (we always replicate, change # only if remnant)
@@ -2758,7 +2758,7 @@ finclass:;  // we have classified the blocks
      // Calculate one row of the op
      I alen;  // ending offset for a section
      // the 4-blocks
-     for(alen=(endofsts>>32)&0xffff;andx<alen;andx+=(RESBLKE*sizeof(aof[0]))){__m256d h0l0h1l1,h2l2h3l3;  // temps needed
+     for(alen=PEXT0(endofsts,32,0xffff);andx<alen;andx+=(RESBLKE*sizeof(aof[0]))){__m256d h0l0h1l1,h2l2h3l3;  // temps needed
       I o0=((US*)((C*)aof+andx))[0];  // offsets to ring values to accumulate into
       __m256d rowh=_mm256_load_pd((D*)((C*)ava+andx*sizeof(E)/sizeof(aof[0]))), rowl=_mm256_load_pd((D*)((C*)(ava+1)+andx*sizeof(E)/sizeof(aof[0])));  // the outer-product values
       __m256d iph,ipl,isl;  // intermediate products and sums
@@ -2786,7 +2786,7 @@ finclass:;  // we have classified the blocks
       _mm256_storeu_pd((D*)((I)r0+o0),h0l0h1l1); _mm256_storeu_pd((D*)((I)r0+o0+sizeof(__m256d)),h2l2h3l3);    // store results
      }
      // the 2-blocks
-     for(alen=(endofsts>>16)&0xffff;andx<alen;andx+=(RESBLKE*sizeof(aof[0]))){__m256d h0l0h1l1,h2l2h3l3;  // temps needed
+     for(alen=PEXT0(endofsts,16,0xffff);andx<alen;andx+=(RESBLKE*sizeof(aof[0]))){__m256d h0l0h1l1,h2l2h3l3;  // temps needed
       I o0=((US*)((C*)aof+andx))[0]; I o2=((US*)((C*)aof+andx))[2];  // offsets to ring values to accumulate into
       __m256d rowh=_mm256_load_pd((D*)((C*)ava+andx*sizeof(E)/sizeof(aof[0]))), rowl=_mm256_load_pd((D*)((C*)(ava+1)+andx*sizeof(E)/sizeof(aof[0])));  // the outer-product values
       __m256d iph,ipl,isl;  // intermediate products and sums

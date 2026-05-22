@@ -499,7 +499,7 @@ static INLINE void sort_10v_descendings8(__m512i *d01, __m512i *d02, __m512i *d0
 
 static NOINLINE void sort_01v_alts8(I *d, I *s, M1 mask) {
 
-    __m512i d01 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+    __m512i d01 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
                                           mask,
                                           (I const *) ((__m512i const *) s + 0));
     sort_01v_ascendings8(&d01);
@@ -509,7 +509,7 @@ static NOINLINE void sort_01v_alts8(I *d, I *s, M1 mask) {
 static NOINLINE void sort_02v_alts8(I *d, I *s, M1 mask) {
 
     __m512i d01 = _mm512_loadu_si512((__m512i const *) s + 0);;
-    __m512i d02 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+    __m512i d02 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
                                           mask,
                                           (I const *) ((__m512i const *) s + 1));
     sort_02v_ascendings8(&d01, &d02);
@@ -521,7 +521,7 @@ static NOINLINE void sort_03v_alts8(I *d, I *s, M1 mask) {
 
     __m512i d01 = _mm512_loadu_si512((__m512i const *) s + 0);;
     __m512i d02 = _mm512_loadu_si512((__m512i const *) s + 1);;
-    __m512i d03 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+    __m512i d03 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
                                           mask,
                                           (I const *) ((__m512i const *) s + 2));
     sort_03v_ascendings8(&d01, &d02, &d03);
@@ -535,7 +535,7 @@ static NOINLINE void sort_04v_alts8(I *d, I *s, M1 mask) {
     __m512i d01 = _mm512_loadu_si512((__m512i const *) s + 0);;
     __m512i d02 = _mm512_loadu_si512((__m512i const *) s + 1);;
     __m512i d03 = _mm512_loadu_si512((__m512i const *) s + 2);;
-    __m512i d04 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+    __m512i d04 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
                                           mask,
                                           (I const *) ((__m512i const *) s + 3));
     sort_04v_ascendings8(&d01, &d02, &d03, &d04);
@@ -551,7 +551,7 @@ static NOINLINE void sort_05v_alts8(I *d, I *s, M1 mask) {
     __m512i d02 = _mm512_loadu_si512((__m512i const *) s + 1);;
     __m512i d03 = _mm512_loadu_si512((__m512i const *) s + 2);;
     __m512i d04 = _mm512_loadu_si512((__m512i const *) s + 3);;
-    __m512i d05 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+    __m512i d05 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
                                           mask,
                                           (I const *) ((__m512i const *) s + 4));
     sort_05v_ascendings8(&d01, &d02, &d03, &d04, &d05);
@@ -569,7 +569,7 @@ static NOINLINE void sort_06v_alts8(I *d, I *s, M1 mask) {
     __m512i d03 = _mm512_loadu_si512((__m512i const *) s + 2);;
     __m512i d04 = _mm512_loadu_si512((__m512i const *) s + 3);;
     __m512i d05 = _mm512_loadu_si512((__m512i const *) s + 4);;
-    __m512i d06 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+    __m512i d06 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
                                           mask,
                                           (I const *) ((__m512i const *) s + 5));
     sort_06v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06);
@@ -589,7 +589,7 @@ static NOINLINE void sort_07v_alts8(I *d, I *s, M1 mask) {
     __m512i d04 = _mm512_loadu_si512((__m512i const *) s + 3);;
     __m512i d05 = _mm512_loadu_si512((__m512i const *) s + 4);;
     __m512i d06 = _mm512_loadu_si512((__m512i const *) s + 5);;
-    __m512i d07 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+    __m512i d07 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
                                           mask,
                                           (I const *) ((__m512i const *) s + 6));
     sort_07v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06, &d07);
@@ -611,7 +611,7 @@ static NOINLINE void sort_08v_alts8(I *d, I *s, M1 mask) {
     __m512i d05 = _mm512_loadu_si512((__m512i const *) s + 4);;
     __m512i d06 = _mm512_loadu_si512((__m512i const *) s + 5);;
     __m512i d07 = _mm512_loadu_si512((__m512i const *) s + 6);;
-    __m512i d08 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+    __m512i d08 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
                                           mask,
                                           (I const *) ((__m512i const *) s + 7));
     sort_08v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06, &d07, &d08);
@@ -633,7 +633,7 @@ static NOINLINE void sort_09v_alts8(I *d, I *s, M1 mask) {
  __m512i d06 = _mm512_loadu_si512((__m512i const *) s + 5);;
  __m512i d07 = _mm512_loadu_si512((__m512i const *) s + 6);;
  __m512i d08 = _mm512_loadu_si512((__m512i const *) s + 7);;
- __m512i d09 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+ __m512i d09 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
    mask,
    (I const *) ((__m512i const *) s + 8));
  sort_09v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06, &d07, &d08, &d09);
@@ -658,7 +658,7 @@ static NOINLINE void sort_10v_alts8(I *d, I *s, M1 mask) {
  __m512i d07 = _mm512_loadu_si512((__m512i const *) s + 6);;
  __m512i d08 = _mm512_loadu_si512((__m512i const *) s + 7);;
  __m512i d09 = _mm512_loadu_si512((__m512i const *) s + 8);;
- __m512i d10 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807ll),
+ __m512i d10 = _mm512_mask_loadu_epi64(_mm512_set1_epi64(9223372036854775807LL),
    mask,
    (I const *) ((__m512i const *) s + 9));
  sort_10v_ascendings8(&d01, &d02, &d03, &d04, &d05, &d06, &d07, &d08, &d09, &d10);

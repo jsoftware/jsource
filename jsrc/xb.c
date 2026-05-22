@@ -82,7 +82,7 @@ F2(jtnouninfo2){F12IP;A z;
  DQ(AN(z),   // install the requested info
   switch(*av++){
   default: ASSERT(0,EVDOMAIN); break;
-  case 0: *zv++=(AFLAG(w)>>AFNJAX)&1; break;
+  case 0: *zv++=PEXT0(AFLAG(w),AFNJAX,1); break;
   }
  )
  RETF(z);
@@ -147,7 +147,7 @@ static I bsize(J jt,B d,B tb,I t,I n,I r){
 static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
  I totalsize = bsize(jt,d,tb&&!ISGMP(w), AT(w), BSZ(d, w), AR(w));
  I t= AT(w); if((t&DIRECT)>0)R totalsize;
- I nchildren= AN(w)<<((t>>RATX)&1);  // # subblocks
+ I nchildren=AN(w)<<PEXT0(t,RATX,1);  // # subblocks
  DO(nchildren, totalsize+=bsizer(jt,d,tb,C(wv[i]));)
  R totalsize;
 }
@@ -331,7 +331,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){
  // we have already written the header for the indirect block.  Skip over the indirect pointers; they will be replaced by
  // offsets to each block
  A *wv=AAV(w); 
- n<<=(t>>RATX)&1;  // if RAT, double the number of indirects
+ n<<=PEXT0(t,RATX,1);  // if RAT, double the number of indirects
  C* zvx=zv; zv += n*kk;  // save start of index, step over index
  // move in the blocks: first the offset, writing over the indirect block, then the data
  // the offsets are all relative to the start of the block, which is origzv
@@ -631,8 +631,8 @@ static DF1(jtpackbytem1){F12IP;
 #ifdef PEXT
  DO((wn+8-1)>>3, zv[i]=PEXT(wv[i],VALIDBOOLEAN8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
 #else
- DO(((wn+8-1)>>3)-1, zv[i]=wv[i]*(UI8)0x0102040810204080LL>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
- zv[((wn+8-1)>>3)-1]=(wv[((wn+8-1)>>3)-1]&VALIDBOOLEAN8)*(UI8)0x0102040810204080LL>>(64-8);  // mask off invalid bits in last section
+ DO(((wn+8-1)>>3)-1, zv[i]=(wv[i]*(UI8)0x0102040810204080LL)>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
+ zv[((wn+8-1)>>3)-1]=((wv[((wn+8-1)>>3)-1]&VALIDBOOLEAN8)*(UI8)0x0102040810204080LL)>>(64-8);  // mask off invalid bits in last section
 #endif
  if(wn&(BW-1))((I*)zv)[((wn+BW-1)>>(LGBW))-1]&=~((I)~0<<(wn&(BW-1)));   // if the last I is not full, mask out trailing upper bits
  RETF(z);
@@ -691,7 +691,7 @@ static DF2(jtpkbyterdcell){F12IP;
  A z;GATV0(z,B01,AN(a),1) C *zv=BAV1(z);    // allocate result area and pointer to it
  C *wv=CAV(w); UI wn=AN(w)<<(bplg(AT(w))+LGBB);  // point to the bytes.  We don't care what type.  get total # bits in arg
  UI *av=UIAV(a);  // point to indexes
- DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[i]=(wv[ax>>LGBB]>>(ax&(BB-1)))&1;)  // extract each byte, copy to result
+ DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[i]=SHMSK(wv[ax>>LGBB],ax&(BB-1),1);)  // extract each byte, copy to result
  RETF(z);
 }
 static DF2(jtpkbyterd){F12IP;
@@ -719,7 +719,7 @@ static DF2(jtpkbytewr){F12IP;A z;
  switch(FAV(self)->localuse.lu1.foreignmn[2]){
  case 0: DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[ax>>LGBB]&=~(1<<(ax&(BB-1)));) break;  // clear bit
  case 1: break;  // unchanged
- case 2: DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[ax>>LGBB]^=(1<<(ax&(BB-1)));) break;  // complement bit bit
+ case 2: DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[ax>>LGBB]^=(1<<(ax&(BB-1)));) break;  // complement bit
  case 3: DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[ax>>LGBB]|=(1<<(ax&(BB-1)));) break;  // set bit
  }
  RETF(z);
@@ -883,7 +883,7 @@ F1(jtltrim){F12IP;I stride,ln,lh,n,ar,*pi;A z=0;C *u,*v;I as[63];
 // w is a box, result is 1 if it contains a  NaN
 static B jtisnanq(J jt,A w){
  ARGCHK1(w);
- if(AT(w)&FL+CMPX+QP){D *v=DAV(w); I stride=AT(w)&QP?2:1; DQ(AN(w)<<((AT(w)>>CMPXX)&1), if(_isnan(*v))R 1; v+=stride;);}  // if there might be a NaN, return if there is one
+ if(AT(w)&FL+CMPX+QP){D *v=DAV(w); I stride=AT(w)&QP?2:1; DQ(AN(w)<<PEXT0(AT(w),CMPXX,1), if(_isnan(*v))R 1; v+=stride;);}  // if there might be a NaN, return if there is one
  else if(AT(w)&BOX){A *v=AAV(w); STACKCHKOFL DQ(AN(w), if(isnanq(C(v[i])))R 1;);}  // if boxed, check each one recursively; ensure no stack overflow
  // other types never have NaN
  R 0;  // if we get here, there must be no NaN

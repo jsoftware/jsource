@@ -96,7 +96,7 @@ void mtow(UC* src, I srcn, US* snk){ US c,c1,c2,c3; UINT t;
           if(t>=0x10000)
           {
             t-=0x10000;
-            *snk++=0xd800|((t>>10)&0x3ff);
+            *snk++=0xd800|PEXT0(t,10,0x3ff);
             t=0xdc00|(t&0x3ff);
           }
           *snk++=(US)t;
@@ -449,9 +449,9 @@ void wtom(US* src, I srcn, UC* snk){ US w,w1; UINT t;
     else
     {
      t=(((w&0x3ff)<<10)|(w1&0x3ff))+0x10000;
-     *snk++=0xf0|((t>>18)&0x07);
-     *snk++=0x80|((t>>12)&0x3f);
-     *snk++=0x80|((t>>6)&0x3f);
+     *snk++=0xf0|PEXT0(t,18,0x07);
+     *snk++=0x80|PEXT0(t,12,0x3f);
+     *snk++=0x80|PEXT0(t,6,0x3f);
      *snk++=0x80|(t&0x3f);
      src++;srcn--;  // next code unit of surrogate pair
     }
@@ -582,13 +582,13 @@ void utom(C4* src, I srcn, UC* snk){ C4 w;
   else if(BETWEENC(w,0x800,0xffff)&&!BETWEENC(w,0xd800,0xdfff))
   {
    *snk++=0xe0|w>>12;
-   *snk++=0x80|(0x3f&(w>>6));
+   *snk++=0x80|PEXT0(w,6,0x3f);
    *snk++=0x80|(0x3f&w);
   }
   else if(BETWEENC(w,0xd800,0xdfff)) // utf-16 surrogate invalid in utf-32
   {
    *snk++=0xe0|w>>12;
-   *snk++=0x80|(0x3f&(w>>6));
+   *snk++=0x80|PEXT0(w,6,0x3f);
    *snk++=0x80|(0x3f&w);
   }
   else if(w>0x10ffff)          // invalid range
@@ -598,9 +598,9 @@ void utom(C4* src, I srcn, UC* snk){ C4 w;
   }
   else
   {
-     *snk++=0xf0|((w>>18)&0x07);
-     *snk++=0x80|((w>>12)&0x3f);
-     *snk++=0x80|((w>>6)&0x3f);
+     *snk++=0xf0|PEXT0(w,18,0x07);
+     *snk++=0x80|PEXT0(w,12,0x3f);
+     *snk++=0x80|PEXT0(w,6,0x3f);
      *snk++=0x80|(w&0x3f);
   }
  }
@@ -644,7 +644,7 @@ void utow(C4* src, I srcn, US* snk){ C4 w;
    if(w>=0x10000)
    {
     w-=0x10000;
-    *snk++=0xd800|((w>>10)&0x3ff);
+    *snk++=0xd800|PEXT0(w,10,0x3ff);
     w=0xdc00|(w&0x3ff);
    }
    *snk++=(US)w;

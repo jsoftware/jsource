@@ -489,7 +489,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 F1(jtope){F12IP;A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  ARGCHK1(w);
  v=AAV(w);
- if(likely((RANKT)SHMSK(AT(w),BOXX,1)>AR(w))){   // boxed and rank=0
+ if(likely((RANKT)PEXT0(AT(w),BOXX,1)>AR(w))){   // boxed and rank=0
   // scalar box: Turn off pristine in w since we are pulling an address from it.  Contents must not be inplaceable
   z=C(*v);
 #if AUDITBOXAC

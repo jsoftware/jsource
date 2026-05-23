@@ -389,7 +389,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
  // n=#boxes in w, wv->&first box
  n=AN(w); wv=AAV(w);
  // Get centering info for x and y, 012 for MinCenterMax
- xp=((I)jtfg>>JTTHORNXX)&(JTTHORNX>>JTTHORNXX); yp=((I)jtfg>>JTTHORNYX)&(JTTHORNY>>JTTHORNYX);
+ xp=SHMSK((I)jtfg,JTTHORNXX,JTTHORNX>>JTTHORNXX); yp=SHMSK((I)jtfg,JTTHORNYX,JTTHORNY>>JTTHORNYX);
  // get xn=# rows, xv->height; & similarly for y
  xn=AN(x); xv=AV(x); yn=AN(y); yv=AV(y);
  // Loop through each box, installing it in the proper position
@@ -614,7 +614,7 @@ F1(jtthorn1){F12IP; R jtthorn1xy(jt,w,jt->boxpos); }
 #define BDC(zv,x)  {if(BETWEENC((x),16,26)){*zv++='\342'; *zv++='\224'; *zv++=bdc[x];}else *zv++=x;}
 #define UUC(zv,x)  {if((x)<=127)*zv++=(C)(x);else if((x)<=2047){*zv++=(C)(0xc0+((x)>>6));*zv++=(C)(0x80+((x)&0x3f));}else{*zv++=(C)(0xe0+((x)>>12));*zv++=(C)(0x80+PEXT0((x),6,0x3f));*zv++=(C)(0x80+((x)&0x3f));}}
 #define UUC4(zv,x)  {if((x)<=127)*zv++=(C)(x);else if((x)<=2047){*zv++=(C)(0xc0+((x)>>6));*zv++=(C)(0x80+((x)&0x3f));}else if((x)<=65535){*zv++=(C)(0xe0+((x)>>12));*zv++=(C)(0x80+PEXT0((x),6,0x3f));*zv++=(C)(0x80+((x)&0x3f));} \
-else{*zv++=(C)(0xf0+((x)>>18));*zv++=(C)(0x80+(((x)>>12)&0x3f));*zv++=(C)(0x80+(((x)>>6)&0x3f));*zv++=(C)(0x80+((x)&0x3f));}}
+else{*zv++=(C)(0xf0+((x)>>18));*zv++=(C)(0x80+PEXT0((x),12,0x3f));*zv++=(C)(0x80+PEXT0((x),6,0x3f));*zv++=(C)(0x80+((x)&0x3f));}}
 
 
 // Apply a counting function to the input characters

@@ -298,7 +298,7 @@ F1(jtparse){F12IP;A z;I stackallo=0;
  // parse a sentence in the time it takes to allocate a frame, that is unacceptable overhead.  We come through here for keyboard, script, and ". .
  // We need a DCPARSE frame to get error messages displayed, but we use the dcm field in it to indicate how many levels of ". are active
  if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop==0)||unlikely(jt->sitop->dctype!=DCPARSE)){RZ(deba(DCPARSE,queue,(A)m,0L)); stackallo=1;}
- I oexct=jt->sitop->dcm; jt->sitop->dcm+=((I)jtfg>>JTFROMEXECX)&1;   // if this is "., raise the exec count in the PARSE frame
+ I oexct=jt->sitop->dcm; jt->sitop->dcm+=SHMSK((I)jtfg,JTFROMEXECX,1);   // if this is "., raise the exec count in the PARSE frame
  z=jtparsea(jtfg,queue,m);
  jt->sitop->dcm=oexct; if(unlikely(stackallo))debz();   // remove the exec count, pop stack if pushed
  // It is vital that we NOT issue EPILOG here, in case there are deleted values on the stack that need protection
@@ -756,8 +756,8 @@ endname: ;
    // words have been pulled from queue.
 
    // Repurpose pt0ecam&CONJX during the execution phase to indicate next word is AVN/name, which guarantees the next word will be CAVN.  This will request a second pull during the next stacking if it is not cleared.
-   pt0ecam|=(((((UI8)1<<QCADV)|((UI8)1<<QCVERB)|((UI8)1<<QCNOUN)|((UI8)1<<QCISLKPNAME)|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE))|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
-      >>(QCPTYPE(y)))&(UI8)1)<<CONJX;  // We have read 1 word ahead.  remember next-is-CAVN status in CONJ (which will become the request for a 2nd pull).  If y is garbage this is immaterial because there will be no more pulls anyway
+   pt0ecam|=SHMSK8((((UI8)1<<QCADV)|((UI8)1<<QCVERB)|((UI8)1<<QCNOUN)|((UI8)1<<QCISLKPNAME)|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE))|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
+      ,QCPTYPE(y),(UI8)1)<<CONJX;  // We have read 1 word ahead.  remember next-is-CAVN status in CONJ (which will become the request for a 2nd pull).  If y is garbage this is immaterial because there will be no more pulls anyway
 
 #define NEXTY queue[0]
 
@@ -867,7 +867,7 @@ anchoredip:;  // here when we have detected that an anchored name is inplaceable
 #ifdef PEXT
 #define jtlsbs PEXT(pt0ecam,FLGPLINE2|FLG1)  // bit 1 if dyad, and always bit 0
 #else
-#define jtlsbs (((pt0ecam>>(FLGPMSKX+1))&2)|1)
+#define jtlsbs (SHMSK(pt0ecam,FLGPMSKX+1,2)|1)
 #endif
       y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
       // When we don't break we lose time waiting for stack->a to be read and masked, but not much.

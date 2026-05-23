@@ -1062,7 +1062,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define FAST_AADD 0
 #endif
 
-#define ADDBYTESINI1(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
+#define ADDBYTESINI1(t) (t=(t&ALTBYTES)+SHMSK(t,8,ALTBYTES)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
 #if BW==64
 #define ALTBYTES 0x00ff00ff00ff00ffLL
 #define ALTSHORTS 0x0000ffff0000ffffLL

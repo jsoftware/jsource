@@ -910,7 +910,7 @@ static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)
-static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks   scaf!
+static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks
  A z;I m,mf,n,nf,zn;VA2 adocv,*aadocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  {I at=AT(a);
@@ -1082,16 +1082,35 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     I migrmf=mf;
     DPMULDE(nf,mf,mf);  // mf is total # iterations
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
-    I fmnne1=2*(2*(nf!=1)+(m!=1))+(n!=1);  // set flags for values!=1.  We roll the bits into a register to save regs
-    n=2*n;  // parm m if there are 2 loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame).  Here we make room for the LSB flag
-    if(unlikely((1LL<<fmnne1)&0b10111)){   // 2 values=1, can lose a loop (0 or 1 compare bits set)
- // obsolete    if(unlikely(((C)(nf!=1)+(C)(n!=2)-(C)(m==1))<=(C)0)){
+#if 0   // clang will not generate ADC as called for here
+    UI cry1, cry2; UI nmnfne1;  // place to hold carry, and the 3 comparisons against 1.  bit 2 (VIPWCRLONG) matches n, bit 0 (will be VIPWFLONG) matches nf, leaving bit 1 to match m
+// obsolete     _addcarry_u64(_addcarry_u64(0, n, ~1, &junk), 0, 0, &nmnfne1); _addcarry_u64(_addcarry_u64(0, m, ~1, &junk), nmnfne1, nmnfne1, &nmnfne1);  _addcarry_u64(_addcarry_u64(0, nf, ~1, &junk), nmnfne1, nmnfne1, &nmnfne1); 
+    ADDCI(n,~1,0,cry1); nmnfne1=ADDCI(0,0,cry1,cry2); ADDCI(m,~1,0,cry1); nmnfne1=ADDCI(nmnfne1,nmnfne1,cry1,cry2); ADDCI(nf,~1,0,cry1); nmnfne1=ADDCI(nmnfne1,nmnfne1,cry1,cry2);  // create the 3 comparison bits
+    if(unlikely((1LL<<nmnfne1)&0b10111)){   // 2 values=1, can lose a loop (0 or 1 compare bits set)
      // migration is possible
      m*=migrmf; n*=nf;   // propagate mf and nf down
-     n|=((I)jtfg>>VIPWFLONGX)&(fmnne1>>2);  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
+     nmnfne1+=8*nmnfne1; nmnfne1&=0xf;  // move nf bit to match VIPWFLONG, mask out upper copied bits
+    }else{aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];}     // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration
+    ADDCI((UI)jtfg&nmnfne1,~(VIPWCRLONG-1),0,cry1); n=ADDCI(n,n,cry1,cry2);  // if WCRLONG & n!=1, or enabled WFLONG and nf!=1, flag loop order in LSB of n, shifting other bits of n up
+#else  // obsolete 
+// obsolete      I fmnne1=2*(2*(nf!=1)+(m!=1))+(n!=1);  // set flags for values!=1.  We roll the bits into a register to save regs
+    I mmeq1=REPSGN(m-2), nne1=SGNTO0(1-n), nfne1=SGNTO0(1-nf);  // compare each value for >1; m's result is complemented
+// obsolete     if(unlikely((1LL<<fmnne1)&0b10111)){   // 2 values=1, can lose a loop (0 or 1 compare bits set)
+// obsolete    if(unlikely(((C)(nf!=1)+(C)(n!=2)-(C)(m==1))<=(C)0)){
+    if(unlikely(nfne1+mmeq1+nne1<=0)){  // m=1 + n=1 + nf=1 > 1 => m=1 + (1 - n!=1) + (1 - nf!=1) > 1 => m=1 - nf!=1 > n!=1 - 1 => m=1 - nf!=1 >= n!=1: any 2 values = 1
+     // migration is possible
+     m*=migrmf; n*=nf;   // propagate mf and nf down
+// obsolete      n|=((I)jtfg>>VIPWFLONGX)&(fmnne1>>2);  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
+     nne1+=2*nfne1;  // (nf!=1) w repetition also comes if nf is not 1 and WFLONG.
     }else{aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];}     // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration
     // encode major-axis in LSB of n, and complement m if there in only 1 loop
-    n|=((I)jtfg>>VIPWCRLONGX)&fmnne1&1;  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; in this case nf must be 1 and there is no further flagging
+// obsolete     n|=((I)jtfg>>VIPWCRLONGX)&fmnne1&1;  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; in this case nf must be 1 and there is no further flagging
+// no good  _addcarry_u64((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),n,n,&n);  does not generate the carry efficiently
+// no good      n=n+n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  does not generate ADC - uses lea - same as the ADDCI solution
+// no good      n=n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  generates ADC but requires separate shift of n
+// obsolete     n=__builtin_addcll(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),&nne1);;
+    n=ADDCI(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),nne1);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
+#endif
     aawwzknfxrz[5]=m;  // parm n is orig m, i. e. the length of the inner or only loop.
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
     m=n>3?n:m;  // if inner-loop len > 1, there are 2 loops, use mf; if inner-loop len=1, use the 1-loop value
@@ -1154,11 +1173,10 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    }
   }else{
 allocate:;  // come here if no inplaceable block could have the type changed
-// scaf! zt always given; make all 0x...>>const use PEXT0; try to advance all bplg/bp
 // obsolete   I wt=AT(w); zt=zt?zt:wt; 
    GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
-// obsolete    if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy  scaf test this in jtfg
-   if(unlikely(rtype((I)jtfg)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy  scaf test this in jtfg
+// obsolete    if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
+   if(unlikely(rtype((I)jtfg)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
 #define scell AS((I)jtfg&VIPWCRLONG?w:a)+((RANK2T)fr>>RANKTX)  // address of start of cell shape     shape of long cell+frame(long cell)
     // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
    MCISH(AS(z),AS(((I)jtfg&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));  // copy shape

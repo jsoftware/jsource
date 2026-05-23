@@ -7,22 +7,13 @@
 // bits 0-1 kept open for jtflags
 // bits 2-3 should be forced to 1 jtflags;
 #define VIPRES          0x3   // reserved for JT inplacing flags
-#define VIPRNKX         8  // bits 2-3 should always be set, indicating that a converted argument can be inplaced; holds copy of inplaceability of repeat/rank/type
-#define VCVTIP          ((I)0x3<<VIPRNKX)
-#define VICX            16           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
-#define VBB             ((I)(15-B01X)<<VICX)
-#define VII             ((I)(15-INTX)<<VICX)
-#define VDD             ((I)(15-FLX)<<VICX)   // this must not change VBB or VII if ORed with either
-#define VZZ             ((I)(15-CMPXX)<<VICX)
-#define VXX             ((I)(15-XNUMX)<<VICX)  // XNUM conversion, extended into bits 22 & 24 (MARK/ASGN) below
-#define VQQ             ((I)(15-RATX)<<VICX)
-#define VI2I2           ((I)(15-INT2X)<<VICX)
-#define VI4I4           ((I)(15-INT4X)<<VICX)
-#define VEE             ((I)(15-QPX)<<VICX)
-#define VICMSK          ((I)15<<VICX) // mask for argument conversion 4-7, giving type to convert to.  0=no conversion
-// bit 8 free
 #define VIPWCRLONGX     2  // internal use in va2, overlaps BOX 9 means 'w has longer cell-rank, so x is repeated'
 #define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
+#define VIPWFLONGX      3  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX  Means 'w has longer frame, so x is repeated in outer loops'
+#define VIPWFLONG       ((I)1<<VIPWFLONGX)
+// bits 4-7 free
+#define VIPRNKX         8  // bits 8-9 should always be set, indicating that a converted argument can be inplaced; holds copy of inplaceability of repeat/rank/type
+#define VCVTIP          ((I)0x3<<VIPRNKX)   // this should always be set in any cv
 #define VRCX            10           // bit position for optional final result-conversion 10-11
 #define VRD             ((I)1<<VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible
@@ -40,16 +31,23 @@
 #define VI4             ((I)INT4X<<VOTX)
 #define VE              ((I)QPX<<VOTX)
 #define VOTMSK          ((I)15<<VOTX) // mask for result type from function 12-15.  always present
+#define VICX            16           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
+#define VBB             ((I)(15-B01X)<<VICX)
+#define VII             ((I)(15-INTX)<<VICX)
+#define VDD             ((I)(15-FLX)<<VICX)   // this must not change VBB or VII if ORed with either
+#define VZZ             ((I)(15-CMPXX)<<VICX)
+#define VXX             ((I)(15-XNUMX)<<VICX)  // XNUM conversion, extended into bits 22 & 24 (MARK/ASGN) below
+#define VQQ             ((I)(15-RATX)<<VICX)
+#define VI2I2           ((I)(15-INT2X)<<VICX)
+#define VI4I4           ((I)(15-INT4X)<<VICX)
+#define VEE             ((I)(15-QPX)<<VICX)
+#define VICMSK          ((I)15<<VICX) // mask for argument conversion 16-19, giving type to convert to.  0=no conversion
 // obsolete #define VUNCH           (0<<VRESX)  // leave result unchanged
 // obsolete #define VRESMSK         (VB|VI|VD|VZ|VX|VQ)  // mask for result-type - if all 0, take result type from the args
 // obsolete #define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
 // obsolete #define VCOPYW          ((I)1<<VCOPYWX)
 // obsolete #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
 // obsolete #define VCOPYA          ((I)1<<VCOPYAX)
-// bit 16 free
-#define VIPWFLONGX      3  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX  Means 'w has longer frame, so x is repeated in outer loops'
-#define VIPWFLONG       ((I)1<<VIPWFLONGX)
-// bits 18-19 free
 #define VIPOKWX         20      // This routine can put its result over W
 #define VIPOKW          ((I)1<<VIPOKWX)
 #define VIPOKAX         21      // This routine can put its result over A

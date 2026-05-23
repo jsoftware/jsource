@@ -2670,14 +2670,16 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // parallel bit extract/deposit.  Operate on UI types.  In our use, the second argument is constant, so that if the compiler has to emulate
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
 #define SHMSK(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m need not be contiguous.  x and m can be variables.  Use this version in constant expressions
-#define SHMSK8(s,x,m)  (((UI8)(s)>>(x))&(m))  // x is bit#, m need not be contiguous.  x and m can be variables.  Use this version in constant expressions
+#define SHMSK8(s,x,m)  (UI)(((UI8)(s)>>(x))&(m))  // x is bit#, m need not be contiguous.  x and m can be variables.  Use this version in constant expressions
 #if C_AVX2  // more precisely, BMI2 support
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
 #define PEXT0(s,x,m)  _pext_u64((UI)(s),((UI)(m)<<(x)))  // x is bit#, m must be contiguous starting at bit 0.  x and m should be compile-time constants; otherwise use SHMSK
 // scafdebug #define PEXT0(s,x,m)  ((m)&((m)+1)?SEGFAULT:_pext_u64((UI)(s),((UI)(m)<<(x))))  //use this to ensure masks OK after major changes it bit numbering
+#define PEXT08(s,x,m) PEXT0(s,x,m)
 #define PDEP(s,m) _pdep_u64((UI)(s),(UI)(m))
 #else
-#define PEXT0(s,x,m)  SHMSK(s,x,m)  // x is bit#, m must be contiguous
+#define PEXT0(s,x,m) SHMSK(s,x,m)  // x is bit#, m must be contiguous
+#define PEXT08(s,x,m) SHMSK8(s,x,m)  // x is bit#, m must be contiguous
 #define _bzhi_u64(s,i) ((UI8)(s)<<(64-((i)&255))>>(64-((i)&255)))  // does not allow i=0
 #endif
 #ifndef offsetof

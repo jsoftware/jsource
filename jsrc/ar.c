@@ -1157,7 +1157,7 @@ static DF2(jtfold12){F12IP;A z,vz;
 
    // Install initial inplaceability.  Since the inplaceability of v was used for F., we can assume that any inplaceability shown is allowed for v.
    // Remove WILLOPEN status which we are ignoring.  Values were calculated above
-   jtfg = (J)(((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|SHMSK(dmfr,ZZFLAGVIRTWINPLACEX,JTINPLACEW+JTINPLACEA));
+   jtfg = (J)(((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|PEXT0(dmfr,ZZFLAGVIRTWINPLACEX,JTINPLACEW+JTINPLACEA));
 
    --nitems;  // convert #items to # executions of loop
   }

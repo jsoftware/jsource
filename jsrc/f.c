@@ -389,7 +389,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
  // n=#boxes in w, wv->&first box
  n=AN(w); wv=AAV(w);
  // Get centering info for x and y, 012 for MinCenterMax
- xp=SHMSK((I)jtfg,JTTHORNXX,JTTHORNX>>JTTHORNXX); yp=SHMSK((I)jtfg,JTTHORNYX,JTTHORNY>>JTTHORNYX);
+ xp=PEXT0((I)jtfg,JTTHORNXX,JTTHORNX>>JTTHORNXX); yp=PEXT0((I)jtfg,JTTHORNYX,JTTHORNY>>JTTHORNYX);
  // get xn=# rows, xv->height; & similarly for y
  xn=AN(x); xv=AV(x); yn=AN(y); yv=AV(y);
  // Loop through each box, installing it in the proper position

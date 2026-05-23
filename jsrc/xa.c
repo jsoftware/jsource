@@ -174,7 +174,7 @@ F1(jtoutparms){F12IP;I*v;
  R mtv;
 }
 
-F1(jtposq){F12IP;ASSERTMTV(w); R v2(SHMSK(jt->boxpos,JTTHORNXX,JTTHORNX>>JTTHORNXX),SHMSK(jt->boxpos,JTTHORNYX,JTTHORNY>>JTTHORNYX));}
+F1(jtposq){F12IP;ASSERTMTV(w); R v2(PEXT0(jt->boxpos,JTTHORNXX,JTTHORNX>>JTTHORNXX),PEXT0(jt->boxpos,JTTHORNYX,JTTHORNY>>JTTHORNYX));}
 
 F1(jtposs){F12IP;I n,p,q,*v;
  RZ(w=vi(w));

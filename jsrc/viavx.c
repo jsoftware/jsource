@@ -30,7 +30,7 @@ I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-  UI fillval = SHMSK((1LL<<INUBSV)|(1LL<<ILESS)|(1LL<<INUB)|(1LL<<INUBI)|(1LL<<INUBIP),md&(IIMODPACK+IIOPMSK),1); UI temp=md&IIMODPACK?255:1; fillval=md&IREVERSED?temp:fillval;  // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
+  UI fillval = SHMSK(((I)1<<INUBSV)|(1LL<<ILESS)|(1LL<<INUB)|(1LL<<INUBI)|(1LL<<INUBIP),md&(IIMODPACK+IIOPMSK),1); UI temp=md&IIMODPACK?255:1; fillval=md&IREVERSED?temp:fillval;  // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
   mvc(p,hh->data.UI,1,&fillval);  // fill with repeated copies of fillval
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 

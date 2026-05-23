@@ -64,16 +64,16 @@
 // faster version of SCOW for use when the table contains all possible values
 #define SCOWF(T,bitdef,stmt)  {I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){UC v=hu[mwv[i]]; stmt}}
 // packed version
-#define SCOWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+#define SCOWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=SHMSK(*hv,BITNO(x),1)^bitdef; stmt}}
 // packed full version
-#define SCOWPF(T,bitdef,stmt)  {I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+#define SCOWPF(T,bitdef,stmt)  {I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); UC v=SHMSK(*hv,BITNO(x),1)^bitdef; stmt}}
 
 // just like SCOW/SCOWF but scanning from the end of w
 #define DCLZVQ(T,unused) T * RESTRICT zv=T##AV(z)+l*wsct;
 #define SCQW(T,bitdef,stmt)  {UC def[1]; def[0]=bitdef; I i; for(i=wsct-1;i>=0;--i){T x=wv[i]; UC *hv=hu+x; if(x<min)hv=def; if(x>max)hv=def; UC v=*hv; stmt}}
 #define SCQWF(T,bitdef,stmt)  {I i; for(i=wsct-1;i>=0;--i){UC v=hu[wv[i]]; stmt}}
-#define SCQWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; for(i=wsct-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=(*hv>>BITNO(x))&1; stmt}}
-#define SCQWPF(T,bitdef,stmt)  {I i; for(i=wsct-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+#define SCQWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; for(i=wsct-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=SHMSK(*hv,BITNO(x),1); stmt}}
+#define SCQWPF(T,bitdef,stmt)  {I i; for(i=wsct-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); UC v=SHMSK(*hv,BITNO(x),1)^bitdef; stmt}}
 
 // Create basic/FULL/PACK/FULL+PACK versions (used for all boolean maps)
 #define SMCASE0(casename, text) case casename: text break;

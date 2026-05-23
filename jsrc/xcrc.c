@@ -92,7 +92,7 @@ DF2(jtqhash12){F12IP; I hsiz; UI crc;
   crc=hic(AN(w)<<bplg(AT(w)),UCAV(w));  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
  }else{   // not DIRECT, calculate CRC of component CRCs
   crc=-1;  // where we accumulate CRC
-  I lpct=AN(w)<<((AT(w)>>RATX)&1);  // number of component values
+  I lpct=AN(w)<<PEXT0(AT(w),RATX,1);  // number of component values
   A *av=AAV(w);  // pointer to subvalues
   DQ(lpct, crc=CRC32L(crc,i0(jtqhash12(jt,zeroionei(0),C(*av),self))); ++av;)  // recur
  }
@@ -139,7 +139,7 @@ DF1(jttobase64){F12IP;
   I bytes=*(I*)wv;   // read 3 bytes, possibly ovedreading
   bytes &= ((UI4)1<<(ne<<3))-1;  // clear bits past end of string
   UI4 bytes4=0;
-//  bytes4 = base64tab[(bytes>>16)&0x3f];  // byte D
+//  bytes4 = base64tab[PEXT0(bytes,16,0x3f];  // byte D
   bytes4 = (bytes4<<8) + base64tab[PEXT0(bytes,22,0x3)+PEXT0(bytes,8-2,0x3c)]; // byte C
   bytes4 = (bytes4<<8) + base64tab[PEXT0(bytes,12,0xf)+((bytes<<(4-0))&0x30)]; // byte B
   bytes4 = (bytes4<<8) + base64tab[PEXT0((bytes,2-0),x3f)]; // byte A

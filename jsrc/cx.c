@@ -65,7 +65,7 @@
 // popstmt is used to call tpop if the tpop stack is not empty; asgstmt is issued after the parse, where a variable can be invalidated to prevent it from being saved over calls
 // we call only when the stack has values on it.  We do our best during assignment to retrace the stack rather than zap it. If the stack has any values, we must call to make
 // sure that all assignments-in-place have had the usercount fully restored
-#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); popstmt S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[SHMSK(tcesx,32,TCESXSXMSK)]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
+#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); popstmt S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[PEXT08(tcesx,32,TCESXSXMSK)]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
  SETTRACK \
  if(likely(!(attnval+(NPGpysfmtdl&128+16))))z=parsea(queue,m); \
  else {if(jt->sitop&&jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL)jt->sitop->dclnk->dcix=~ic; z=parsex(queue,m,CWSOURCE(cwsent,CNSTOREDCW,ic),(NPGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))NPGpysfmtdl&=~2;} \
@@ -269,7 +269,7 @@ DF2(jtxdefn){F12IP;
 
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
-  locsym=AAV1(sv->fgh[2])[HN*SHMSK(NPGpysfmtdl,6,1)+3];  // fetch pointer to preallocated symbol table
+  locsym=AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)+3];  // fetch pointer to preallocated symbol table
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){NPGpysfmtdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -372,7 +372,7 @@ nextlinedebug:;
       lvl=self!=callframe->dcf; lvl=callframe->dcc!=0?2:lvl;  // calculate name decoration according to table above
      }
      if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember.  lvl init to 0 for other cases
-     callframe->dcloc=locsym; callframe->dcc=AAV1(sv->fgh[2])[HN*SHMSK(NPGpysfmtdl,6,1)+0];  // install info about the exec for use in debug
+     callframe->dcloc=locsym; callframe->dcc=AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)+0];  // install info about the exec for use in debug
 
      // allocate the parse frame
      DC thisframe=deba(DCPARSE,0L,0L,0L);  // if deba fails it will be before it modifies sitop.  Remember our stack frame
@@ -421,7 +421,7 @@ nextlinedebug:;
   // the names cwsent, ic, NPGpysfmtdl, tcesx, t, z, jt, and old fit into the 8 nonvolatile non-SP registers
   // **************** switch by line type ********************
 
-  switch(PEXT0(tcesx,TCESXTYPEX,31)){  // highest cw is 33, but it aliases to 1 & there is no 32.  32 is used as a multipurpose flag
+  switch(PEXT08(tcesx,TCESXTYPEX,31)){  // highest cw is 33, but it aliases to 1 & there is no 32.  32 is used as a multipurpose flag
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
   // if there is nothing but if./while/end. most of the branches are internal
   case CBBLOCK:  // (also BLOCKEND) placed first because likely case for unpredicted first line of definition
@@ -560,7 +560,7 @@ dobblock:
     CDATA *newcv=voidAV0(cd);   // get address of CDATA portion of new block
     newcv->bchn=cv; newcv->fchn=0; cv=newcv;  // backward-chain CDATA areas; indicate no forward successor; advance to new block
    } 
-   BZ(forinitnames(jt,cv,PEXT0(tcesx,TCESXTYPEX,0x1f),cwsent[tcesx&TCESXSXMSK],ic,CWGO(cwsent,CNSTOREDCW,ic)));  // setup the names and start/end line#s, before we see the iteration value
+   BZ(forinitnames(jt,cv,PEXT08(tcesx,TCESXTYPEX,0x1f),cwsent[tcesx&TCESXSXMSK],ic,CWGO(cwsent,CNSTOREDCW,ic)));  // setup the names and start/end line#s, before we see the iteration value
    --ic; if(likely(FLAGGEDNOTRACE(tcesx)))goto knowntblock;   // We should be at a tblock; if so process it without fetching
    goto nextline;
   case CDOF:   // do. after for.

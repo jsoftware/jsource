@@ -869,7 +869,7 @@ static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->
  J jtfgv1=jtfg;  // remember which input args are inplaceable now - they will be inplaceable to v1 unless returned by v2
  if(hn>=3){
   RZ(ffy=(FAV(hv[2])->valencefns[1])((J)(intptr_t)((I)jtfg&(sv->flag|~(VFATOPL|VFATOPR))),a,w,hv[2]));  // x v2 y - inplacing whatever v0 doesn't use (self flags were set for v0).  Result of v2 is ALWAYS inplaceable into amend, as if executed in parser
-  if(unlikely(ffy==a)){jtfg=(J)(((I)jtfg&~JTINPLACEW)|SHMSK((I)jtfg,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)); jtfgv1=(J)((I)jtfgv1&~JTINPLACEA);}  // if v2 returns a, replace w's inplaceability with a'1 for }, clear a's for v1
+  if(unlikely(ffy==a)){jtfg=(J)(((I)jtfg&~JTINPLACEW)|PEXT0((I)jtfg,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)); jtfgv1=(J)((I)jtfgv1&~JTINPLACEA);}  // if v2 returns a, replace w's inplaceability with a'1 for }, clear a's for v1
  }else{ffy=w;}  // if v2 omitted or ], just use y directly
  jtfgv1=(J)((I)jtfgv1&~(JTINPLACEW*((w==ffy)))); // If v2 returned w, uninplace it for v1 but leave for amend.
  // x v0 y - allow inplacing of whatever hasn't been protected
@@ -897,7 +897,7 @@ static A jtgadv(J jt,A w){A hs;I n;
 static DF2(jtamnegate){F12IP;
  ARGCHK2(a,w); 
  // if y is CMPX/FL/QP, execute markd x} y which means negate
- if(AT(w)&FL+CMPX+QP)R jtamendn2(jtfg,markd(SHMSK(AT(w),FLX,FL+CMPX>>FLX)),w,a,self);
+ if(AT(w)&FL+CMPX+QP)R jtamendn2(jtfg,markd(PEXT0(AT(w),FLX,FL+CMPX>>FLX)),w,a,self);
  // otherwise, revert to x -@(|:){`[`]}"r y, processed by jtgav2
  US ranks=jt->ranks; RESETRANK;
  R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);

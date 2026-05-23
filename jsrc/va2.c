@@ -1060,7 +1060,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
 #ifdef PEXT
     nf=PEXT(allranks,(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)));  // extract inplaceability from ranks   allranks free
 #else
-    nf=(((allranks>>(2*RANKTX-1-1))&2)+((allranks>>(RANKTX-1))&1));  // extract inplaceability from ranks   allranks free
+    nf=(SHMSK(allranks,2*RANKTX-1-1,2)+PEXT0(allranks,RANKTX-1,1));  // extract inplaceability from ranks   allranks free
 #endif
     nf&=((I)jtfg>>VIPOKWX); nf*=((I)1<<VIPRNKX)+1; nf+=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; replicate rank/routine inplaceability flags; set other bits to 1
 // obsolete    nf+=(nf<<VIPRNKX)+~(VCVTIP+VIPRES);  // make 2 copies of the 2 bits, bits 4+=1  This is a long dependency chain through nf but it will overlap the PRODs coming up
@@ -1109,7 +1109,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
 // no good      n=n+n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  does not generate ADC - uses lea - same as the ADDCI solution
 // no good      n=n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  generates ADC but requires separate shift of n
 // obsolete     n=__builtin_addcll(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),&nne1);;
-    n=ADDCI(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),nne1);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
+    unsigned long junk; n=ADDCI(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),junk);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
 #endif
     aawwzknfxrz[5]=m;  // parm n is orig m, i. e. the length of the inner or only loop.
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
@@ -1142,8 +1142,8 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
     // bits 2-3 of jtfg indicate whether inplaceability is allowed by the op, the ranks, and the addresses
-    if(TYPESNE(t,at)){I ba=bplg(at); aawwzknfxrz[0]=(aawwzknfxrz[0]>>ba)<<bt; aawwzknfxrz[1]=(aawwzknfxrz[1]>>ba)<<bt; RZ(a=cvt(t|((I)jtfg&XCVTXNUMORIDEMSK),a)); jtfg = (J)(intptr_t)((I)jtfg | (((I)jtfg>>VIPRNKX)&JTINPLACEA));}
-    if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzknfxrz[2]=(aawwzknfxrz[2]>>bw)<<bt; aawwzknfxrz[3]=(aawwzknfxrz[3]>>bw)<<bt; RZ(w=cvt(t|((I)jtfg&XCVTXNUMORIDEMSK),w)); jtfg = (J)(intptr_t)((I)jtfg | (((I)jtfg>>VIPRNKX)&JTINPLACEW));}
+    if(TYPESNE(t,at)){I ba=bplg(at); aawwzknfxrz[0]=(aawwzknfxrz[0]>>ba)<<bt; aawwzknfxrz[1]=(aawwzknfxrz[1]>>ba)<<bt; RZ(a=cvt(t|((I)jtfg&XCVTXNUMORIDEMSK),a)); jtfg = (J)(intptr_t)((I)jtfg | SHMSK((I)jtfg,VIPRNKX,JTINPLACEA));}
+    if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzknfxrz[2]=(aawwzknfxrz[2]>>bw)<<bt; aawwzknfxrz[3]=(aawwzknfxrz[3]>>bw)<<bt; RZ(w=cvt(t|((I)jtfg&XCVTXNUMORIDEMSK),w)); jtfg = (J)(intptr_t)((I)jtfg | PEXT0((I)jtfg,VIPRNKX,JTINPLACEW));}
    }
   }
 
@@ -1866,7 +1866,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    //  0               4       10  11  8     15 16    13 14  9   routine indexes for homogeneous args (final pri)
    //                          6   7   4     11 12    9  10  5   biased by 4, the smallest we use here (values stored in the shift constant)
    // (B)             (I)      X   Q   D     I2 I4    DS  E  Z   internal type for each precision 
-   pri=4+SHMSK(0x5affcbf476ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here
+   pri=4+SHMSK8(0x5affcbf476ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
    if(unlikely(pri==8))selva2.cv|=VDD;      // We allow input conversion to be omitted for BID, so if we are using the DD line we have to install DD conversion
 // obsolete    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions

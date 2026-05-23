@@ -298,7 +298,7 @@ F1(jtparse){F12IP;A z;I stackallo=0;
  // parse a sentence in the time it takes to allocate a frame, that is unacceptable overhead.  We come through here for keyboard, script, and ". .
  // We need a DCPARSE frame to get error messages displayed, but we use the dcm field in it to indicate how many levels of ". are active
  if(unlikely(jt->uflags.trace&TRACEDB1)||unlikely(jt->sitop==0)||unlikely(jt->sitop->dctype!=DCPARSE)){RZ(deba(DCPARSE,queue,(A)m,0L)); stackallo=1;}
- I oexct=jt->sitop->dcm; jt->sitop->dcm+=SHMSK((I)jtfg,JTFROMEXECX,1);   // if this is "., raise the exec count in the PARSE frame
+ I oexct=jt->sitop->dcm; jt->sitop->dcm+=PEXT0((I)jtfg,JTFROMEXECX,1);   // if this is "., raise the exec count in the PARSE frame
  z=jtparsea(jtfg,queue,m);
  jt->sitop->dcm=oexct; if(unlikely(stackallo))debz();   // remove the exec count, pop stack if pushed
  // It is vital that we NOT issue EPILOG here, in case there are deleted values on the stack that need protection

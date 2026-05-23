@@ -304,7 +304,7 @@ rxapply=: 1 : 0
 if. L. x do. 'pat ndx'=. x else. pat=. x [ ndx=. ,0 end.
 if. 1 ~: #$ ndx do. 13!:8[3 end.
 mat=. ({.ndx) {"2 pat rxmatches y
-r=. u&.> mat rxfrom y
+r=. u.&.> mat rxfrom y
 r mat rxmerge y
 )
 

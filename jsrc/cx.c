@@ -65,7 +65,7 @@
 // popstmt is used to call tpop if the tpop stack is not empty; asgstmt is issued after the parse, where a variable can be invalidated to prevent it from being saved over calls
 // we call only when the stack has values on it.  We do our best during assignment to retrace the stack rather than zap it. If the stack has any values, we must call to make
 // sure that all assignments-in-place have had the usercount fully restored
-#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); popstmt S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[(tcesx>>32)&TCESXSXMSK]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
+#define parseline(z,popstmt,asgstmt) {tcesx=CWTCESX2(cwsent,ic); popstmt S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE); A *queue=&cwsent[SHMSK(tcesx,32,TCESXSXMSK)]; I m=(tcesx-(tcesx>>32))&TCESXSXMSK; \
  SETTRACK \
  if(likely(!(attnval+(NPGpysfmtdl&128+16))))z=parsea(queue,m); \
  else {if(jt->sitop&&jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL)jt->sitop->dclnk->dcix=~ic; z=parsex(queue,m,CWSOURCE(cwsent,CNSTOREDCW,ic),(NPGpysfmtdl&128+16)?jt->sitop->dclnk:0); if(!(jt->uflags.trace&TRACEDB))NPGpysfmtdl&=~2;} \
@@ -269,7 +269,7 @@ DF2(jtxdefn){F12IP;
 
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
-  locsym=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+3];  // fetch pointer to preallocated symbol table
+  locsym=AAV1(sv->fgh[2])[HN*SHMSK(NPGpysfmtdl,6,1)+3];  // fetch pointer to preallocated symbol table
   if(likely(!(__atomic_fetch_or(&AR(locsym),ARLSYMINUSE,__ATOMIC_ACQ_REL)&ARLSYMINUSE))){NPGpysfmtdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
@@ -372,7 +372,7 @@ nextlinedebug:;
       lvl=self!=callframe->dcf; lvl=callframe->dcc!=0?2:lvl;  // calculate name decoration according to table above
      }
      if(lvl!=0){BZ(callframe=deba(DCCALL,a?a:w?0:u,w?w:a?0:v,self)); callframe->dcnmlev=lvl;}  // allocate frame, remember.  lvl init to 0 for other cases
-     callframe->dcloc=locsym; callframe->dcc=AAV1(sv->fgh[2])[HN*((NPGpysfmtdl>>6)&1)+0];  // install info about the exec for use in debug
+     callframe->dcloc=locsym; callframe->dcc=AAV1(sv->fgh[2])[HN*SHMSK(NPGpysfmtdl,6,1)+0];  // install info about the exec for use in debug
 
      // allocate the parse frame
      DC thisframe=deba(DCPARSE,0L,0L,0L);  // if deba fails it will be before it modifies sitop.  Remember our stack frame
@@ -708,7 +708,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    UI4 yxbucks = *(UI4*)LXAV0(locsym); L *sympv=SYMORIGIN; if(a==0)yxbucks&=0xffff; if(w==0)yxbucks&=-0x10000;   // get bucket indexes & addr of symbols.  Mark which buckets are valid
    // For each of [xy], reassign any UNINCORPABLE value to ensure it is realized and recursive.  If error, the name will lose its value; that's OK.  Must not take error exit!
    while(yxbucks){if((US)yxbucks){L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]]; A yxv=QCWORD(ybuckptr->fval); if(yxv&&AFLAG(yxv)&AFUNINCORPABLE){SETFVAL(0,ybuckptr) symbisdel(ybuckptr->name,yxv,locsym);}} yxbucks>>=16;}  // clr val before assign in case of error (which must be on realize)
-   DC d; RZ(d=deba(DCPM+(~bic<<8)+(NPGpysfmtdl<<(7-6)&(~(I)jtfg>>(JTXDEFMODIFIERX-7))&128),locsym,AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)],self));  // push a debug frame for this error.  We know we didn't free locsym
+   DC d; RZ(d=deba(DCPM+(~bic<<8)+((NPGpysfmtdl<<(7-6))&SHMSK(~(I)jtfg,JTXDEFMODIFIERX-7,128)),locsym,AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)],self));  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
   }
  }

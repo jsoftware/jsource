@@ -139,7 +139,7 @@ A jtevery(J jtfg, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
 
  if(unlikely(flags&AFLAG(w)&AFPRISTINE))AFLAGCLRPRIST(w);  // if contents of w escaped, mark w no longer pristine
  // indicate pristinity of result
- AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE)   // could synthesize rather than loading from z
+ AFLAGORLOCAL(z,SHMSK(flags,ACINPLACEX-AFPRISTINEX,AFPRISTINE))   // could synthesize rather than loading from z
  R z;
 }
 
@@ -277,7 +277,7 @@ A jtevery2(J jtfg, A a, A w, A fs){F12IP;A*av,*wv,x,z,*zv;
  // for a repeated argument, we must remove pristinity from the result if we have cause to remove pristinity from the argument, since what
  // was captured externally could have been repeated in both places.  This is not needed if WILLBEOPENED but it doesn't hurt
  I xfernoprist = flags&(flags>>AFPRISTINEX); xfernoprist|=xfernoprist>>1;   // low 2 bits are repeat flags, then combine them
- AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE&~(xfernoprist<<AFPRISTINEX))   // could synthesize rather than loading from z
+ AFLAGORLOCAL(z,SHMSK(flags,ACINPLACEX-AFPRISTINEX,AFPRISTINE)&~(xfernoprist<<AFPRISTINEX))   // could synthesize rather than loading from z
  RETF(z);
 }
 

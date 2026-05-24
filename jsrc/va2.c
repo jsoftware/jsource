@@ -910,7 +910,7 @@ static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)
-static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks
+static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks
  A z;I m,mf,n,nf,zn;VA2 adocv,*aadocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  {I at=AT(a);
@@ -1080,6 +1080,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     // 2: n=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 (shape 4 5 or 1 4 5)
     // 3: m=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 0 (shape 5)
     I migrmf=mf;
+    I m1=REPSGN(m-2), nm1=m1+=(UI)1<(UI)n; m1+=(UI)1<(UI)nf;  // m1= (n!=1)+(nf!=1) - (m==1) nm1=(n!+1)-(m==1)
     DPMULDE(nf,mf,mf);  // mf is total # iterations
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
 #if 0   // clang will not generate ADC as called for here
@@ -1094,14 +1095,15 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     ADDCI((UI)jtfg&nmnfne1,~(VIPWCRLONG-1),0,cry1); n=ADDCI(n,n,cry1,cry2);  // if WCRLONG & n!=1, or enabled WFLONG and nf!=1, flag loop order in LSB of n, shifting other bits of n up
 #else  // obsolete 
 // obsolete      I fmnne1=2*(2*(nf!=1)+(m!=1))+(n!=1);  // set flags for values!=1.  We roll the bits into a register to save regs
-    I mmeq1=REPSGN(m-2), nne1=SGNTO0(1-n), nfne1=SGNTO0(1-nf);  // compare each value for >1; m's result is complemented
+//    C mmeq1=REPSGN(m-2), nne1=SGNTO0(1-n), nfne1=SGNTO0(1-nf);  // compare each value for >1; m's result is complemented
 // obsolete     if(unlikely((1LL<<fmnne1)&0b10111)){   // 2 values=1, can lose a loop (0 or 1 compare bits set)
 // obsolete    if(unlikely(((C)(nf!=1)+(C)(n!=2)-(C)(m==1))<=(C)0)){
-    if(unlikely(nfne1+mmeq1+nne1<=0)){  // m=1 + n=1 + nf=1 > 1 => m=1 + (1 - n!=1) + (1 - nf!=1) > 1 => m=1 - nf!=1 > n!=1 - 1 => m=1 - nf!=1 >= n!=1: any 2 values = 1
+//    if(unlikely(nfne1+mmeq1+nne1<=0)){  // m=1 + n=1 + nf=1 > 1 => m=1 + (1 - n!=1) + (1 - nf!=1) > 1 => m=1 - nf!=1 > n!=1 - 1 => m=1 - nf!=1 >= n!=1: any 2 values = 1
+    if(unlikely(m1<=0)){  // m=1 + n=1 + nf=1 > 1 => m=1 + (1 - n!=1) + (1 - nf!=1) > 1 => m=1 - nf!=1 > n!=1 - 1 => m=1 - nf!=1 >= n!=1: any 2 values = 1
      // migration is possible
      m*=migrmf; n*=nf;   // propagate mf and nf down
 // obsolete      n|=((I)jtfg>>VIPWFLONGX)&(fmnne1>>2);  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
-     nne1+=2*nfne1;  // (nf!=1) w repetition also comes if nf is not 1 and WFLONG.
+     nm1+=2*(m1-nm1);  // (nf!=1) w repetition also comes if nf is not 1 and WFLONG. m1 is nf+n-m, nm1 uis n-m, we want 2*nf+n-m
     }else{aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];}     // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration
     // encode major-axis in LSB of n, and complement m if there in only 1 loop
 // obsolete     n|=((I)jtfg>>VIPWCRLONGX)&fmnne1&1;  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; in this case nf must be 1 and there is no further flagging
@@ -1109,7 +1111,12 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
 // no good      n=n+n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  does not generate ADC - uses lea - same as the ADDCI solution
 // no good      n=n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  generates ADC but requires separate shift of n
 // obsolete     n=__builtin_addcll(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),&nne1);;
-    UI junk; n=ADDCI(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),junk);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
+//    UI junk; n=ADDCI(n,n,(UI)(0)<((UI)jtfg&((nm1-m1)*VIPWCRLONG)),junk);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
+#if __has_builtin(__builtin_addcll)
+    UI junk; n=ADDCI(n,n,(UI)(0)<((UI)jtfg&((nm1-m1)*VIPWCRLONG)),junk);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
+#else
+    n=n+n+((UI)(0)<((UI)jtfg&((nm1-m1)*VIPWCRLONG)));  // does not generate ADC - uses lea - same as the ADDCI solution
+#endif
 #endif
     aawwzknfxrz[5]=m;  // parm n is orig m, i. e. the length of the inner or only loop.
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case

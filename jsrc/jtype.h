@@ -28,7 +28,7 @@ typedef long long          IL;
 
 #else
 typedef int                I;
-typedef unsigned int       UI;
+typedef unsigned long       UI;
 typedef unsigned long long UIL;
 typedef long long          IL;
 #endif

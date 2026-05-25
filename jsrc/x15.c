@@ -1003,12 +1003,12 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
   CDASSERT((c!='z'&&c!='j')||cc->starlett[i].star,der);  // j and z require *
   CDASSERT(SY_64||c!='l',der); c=c=='l'?'x':c;  // l is x, but error on 32-bit
   c=!SY_64&&c=='x'?'i':c;  // replace x with i in 32-bit
-#define F2C(c,n) ((UI8)(n)<<(2*(c-'a')))
+#define F2C(c,n) ((UI8)(n)<<(2*(c-'a')))   // create a 2-bit field with value n, corresponding to lowercase character c
   cc->starlett[i].jtype=(UI4)cdjtype(c); cc->starlett[i].jtype=cc->starlett[i].jtype&INT1+INT2+INT4?INT:cc->starlett[i].jtype; // get the desired result type  For compatibility, don't allow result type INT[124], push them to INT
-  cc->starlett[i].type=SHMSK(F2C('c',0)|F2C('w',0)|F2C('u',0)|F2C('b',1)|F2C('s',1)|F2C('i',1)|F2C('l',1)|F2C('x',1)|F2C('f',2)|F2C('d',2)|F2C('z',3)|F2C('j',3),2*(c-'a'),3);  //0=char 1=int 2=fl 3=cmpx
-  cc->starlett[i].lgsz=SHMSK(F2C('c',0)|F2C('w',1)|F2C('u',2)|F2C('b',0)|F2C('s',1)|F2C('i',2)|F2C('l',3)|F2C('x',3)|F2C('f',2)|F2C('d',3)|F2C('z',2)|F2C('j',3),2*(c-'a'),3);  // lg(atom len needed)
-#define F1C(c) ((I)1<<(c-'a'))
-#define F1CN(c,n) ((I)(n)<<(c-'a'))
+  cc->starlett[i].type=(I)SHMSK8(F2C('c',0)|F2C('w',0)|F2C('u',0)|F2C('b',1)|F2C('s',1)|F2C('i',1)|F2C('l',1)|F2C('x',1)|F2C('f',2)|F2C('d',2)|F2C('z',3)|F2C('j',3),2*(c-'a'),3);  //0=char 1=int 2=fl 3=cmpx
+  cc->starlett[i].lgsz=(I)SHMSK8(F2C('c',0)|F2C('w',1)|F2C('u',2)|F2C('b',0)|F2C('s',1)|F2C('i',2)|F2C('l',3)|F2C('x',3)|F2C('f',2)|F2C('d',3)|F2C('z',2)|F2C('j',3),2*(c-'a'),3);  // lg(atom len needed)
+#define F1C(c) ((I)1<<(c-'a'))   // create a 1-bit field with value 1, corresponding to lowercase character c
+#define F1CN(c,n) ((I)(n)<<(c-'a'))     // create a 1-bit field with value n, corresponding to lowercase character c
   cc->starlett[i].flags=SHMSK(F1C('b')|F1C('s')|F1C('f')|F1C('i'),c-'a',1);  // integer/float type that can be sourced from a LIT
 #ifdef C_CD_NODF // platform does not support f or d args
  CDASSERT(cc->starlett[i].star==1 || (cc->starlett[i].type!=2),der);

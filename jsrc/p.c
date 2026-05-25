@@ -756,7 +756,7 @@ endname: ;
    // words have been pulled from queue.
 
    // Repurpose pt0ecam&CONJX during the execution phase to indicate next word is AVN/name, which guarantees the next word will be CAVN.  This will request a second pull during the next stacking if it is not cleared.
-   pt0ecam|=SHMSK8((((UI8)1<<QCADV)|((UI8)1<<QCVERB)|((UI8)1<<QCNOUN)|((UI8)1<<QCISLKPNAME)|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE))|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
+   pt0ecam|=(I)SHMSK8((((UI8)1<<QCADV)|((UI8)1<<QCVERB)|((UI8)1<<QCNOUN)|((UI8)1<<QCISLKPNAME)|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE))|((UI8)1<<(QCISLKPNAME+QCNAMEBYVALUE+QCNAMEABANDON)))
       ,QCPTYPE(y),(UI8)1)<<CONJX;  // We have read 1 word ahead.  remember next-is-CAVN status in CONJ (which will become the request for a 2nd pull).  If y is garbage this is immaterial because there will be no more pulls anyway
 
 #define NEXTY queue[0]

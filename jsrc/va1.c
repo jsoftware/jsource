@@ -341,7 +341,7 @@ static DF1(jtva1){F12IP;A z;I cv,n,wt,zt;VA1F ado;
  ARGCHK1(w);
  wt=AT(w); n=AN(w);
  if(unlikely(!(wt&NUMERIC))){ASSERT(AN(w)==0,EVDOMAIN) wt=B01;}  // arg must be numeric.  If it is, keep its type even if empty; if not, fail unless empty, for which treat as boolean
- VA1 *p=&u->p1[SHMSK8(0x76098054032100LL,CTTZ(wt)<<2,0xf)];  // convert numeric type to 4-bit fn#
+ VA1 *p=&u->p1[(I)SHMSK8(0x76098054032100LL,CTTZ(wt)<<2,0xf)];  // convert numeric type to 4-bit fn#
 
  if(likely(!((I)jtfg&JTRETRY))){
   ado=p->f; cv=p->cv;

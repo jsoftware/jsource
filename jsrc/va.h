@@ -7,30 +7,22 @@
 // bits 0-1 kept open for jtflags
 // bits 2-3 should be forced to 1 jtflags;
 #define VIPRES          0x3   // reserved for JT inplacing flags
-#define VIPWCRLONGX     2  // internal use in va2, overlaps BOX 9 means 'w has longer cell-rank, so x is repeated'
-#define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
-#define VIPWFLONGX      3  //  internal use in va2.  Spaced RANKTX from VIPWCRLONGX  Means 'w has longer frame, so x is repeated in outer loops'
-#define VIPWFLONG       ((I)1<<VIPWFLONGX)
-// bits 4-7 free
-#define VIPRNKX         8  // bits 8-9 should always be set, indicating that a converted argument can be inplaced; holds copy of inplaceability of repeat/rank/type
+#define VIPRNKX         2  // bits 2-3 should always be set, indicating that a converted argument can be inplaced; holds copy of inplaceability of repeat/rank/type
 #define VCVTIP          ((I)0x3<<VIPRNKX)   // this should always be set in any cv
-#define VRCX            10           // bit position for optional final result-conversion 10-11
+// bits 4-6 free
+#define VIPWCRLONGX     7  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  sign bit of lane 0
+#define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
+// bit 8 left open for overflow from loop-migration check
+#define VRCX            9           // bit position for optional final result-conversion 9-10
 #define VRD             ((I)1<<VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible
 #define VRNONE          ((I)3<<VRCX) // do not convert result  for now this is only in the atomic dyads - other leave the field at 00
 #define VRERR           ((I)0<<VRCX) // result-conversion removed by error (including EVNOCONV)
 #define VRMSK           ((I)3<<VRCX) // mask for result-conversion spec 10-11
-#define VOTX            12           // bit position for allocated result-type
-#define VB              ((I)B01X<<VOTX)
-#define VI              ((I)INTX<<VOTX)
-#define VD              ((I)FLX<<VOTX)
-#define VZ              ((I)CMPXX<<VOTX)
-#define VX              ((I)XNUMX<<VOTX)
-#define VQ              ((I)RATX<<VOTX)
-#define VI2             ((I)INT2X<<VOTX)
-#define VI4             ((I)INT4X<<VOTX)
-#define VE              ((I)QPX<<VOTX)
-#define VOTMSK          ((I)15<<VOTX) // mask for result type from function 12-15.  always present
+// 11-13 free
+// bit 14 left open for overflow from loop-migration check
+#define VIPWFLONGX      15  //  internal use in va2.  Means 'w has longer frame, so x is repeated in outer loops'  sign bit of lane 1
+#define VIPWFLONG       ((I)1<<VIPWFLONGX)
 #define VICX            16           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
 #define VBB             ((I)(15-B01X)<<VICX)
 #define VII             ((I)(15-INTX)<<VICX)
@@ -62,20 +54,31 @@
 #define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
 #define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
-// bit 27 free
-#define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
-#define VIPOKRNKW          ((I)1<<VIPOKRNKWX)
-// bit 29 free
-#define VIPOKRNKAX         30      // filled internally by va2 if the ranks allow inplacing a
-#define VIPOKRNKA          ((I)1<<VIPOKRNKAX)
-// bit 31 must not be used - it may be a sign bit, which has a meaning
+#define VOTX            27           // bit position for allocated result-type  MUST be highest bits!
+#define VB              ((I)B01X<<VOTX)
+#define VI              ((I)INTX<<VOTX)
+#define VD              ((I)FLX<<VOTX)
+#define VZ              ((I)CMPXX<<VOTX)
+#define VX              ((I)XNUMX<<VOTX)
+#define VQ              ((I)RATX<<VOTX)
+#define VI2             ((I)INT2X<<VOTX)
+#define VI4             ((I)INT4X<<VOTX)
+#define VE              ((I)QPX<<VOTX)
+#define VOTMSK          ((I)15<<VOTX) // mask for result type from function 12-15.  always present
+// bit 31 free, leave open to shorten immediates
+// obsolete #define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
+// obsolete #define VIPOKRNKW          ((I)1<<VIPOKRNKWX)
+// obsolete // bit 29 free
+// obsolete #define VIPOKRNKAX         30      // filled internally by va2 if the ranks allow inplacing a
+// obsolete #define VIPOKRNKA          ((I)1<<VIPOKRNKAX)
+// obsolete // bit 31 must not be used - it may be a sign bit, which has a meaning
 
 // Extract the argument-conversion type from cv coming from the table
 #define isatype(x) (((x)&VICMSK)!=0)  // 1 if there is input conversion
 #define atype(x) (((I)1<<(VICMSK>>VICX))>>(PEXT0((x),VICX,VICMSK>>VICX)))  // result is AT from flags
 
 // Extract the result type from cv coming from the table
-#define rtype(x) ((I)1<<(PEXT0((x),VOTX,VOTMSK>>VOTX)))
+#define rtype(x) ((I)1<<((x)>>VOTX))  // relies of output conversion being highest bits
 // obsolete #define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
 
 #define NOT(v) ((v)^VALIDBOOLEAN)

@@ -1099,19 +1099,19 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
 // obsolete     if(unlikely((1LL<<fmnne1)&0b10111)){   // 2 values=1, can lose a loop (0 or 1 compare bits set)
 // obsolete    if(unlikely(((C)(nf!=1)+(C)(n!=2)-(C)(m==1))<=(C)0)){
 //    if(unlikely(nfne1+mmeq1+nne1<=0)){  // m=1 + n=1 + nf=1 > 1 => m=1 + (1 - n!=1) + (1 - nf!=1) > 1 => m=1 - nf!=1 > n!=1 - 1 => m=1 - nf!=1 >= n!=1: any 2 values = 1
-    if(unlikely(m1<=0)){  // m=1 + n=1 + nf=1 > 1 => m=1 + (1 - n!=1) + (1 - nf!=1) > 1 => m=1 - nf!=1 > n!=1 - 1 => m=1 - nf!=1 >= n!=1: any 2 values = 1
+    if(unlikely(m1<=0)){  // m=1 + n=1 + nf=1 > 1 => m=1 + (1 - n!=1) + (1 - nf!=1) > 1 => m=1 - nf!=1 > n!=1 - 1 => (-m=1) + (nf!=1) + (n!=1) <=0: any 2 values = 1
      // migration is possible
      m*=migrmf; n*=nf;   // propagate mf and nf down
+     nfm1+=2*REPSGN(1-nf);  // (nf!=1) w repetition also comes if nf is not 1 and WFLONG. m1 is nf+n-m, nfm1 is nf-m, we want m1-x=2*nf+n => x=m1-(2*nf+n)=nf+n-m-2*nf-n=-m-nf  nfm1-2*(nf!=1)
 // obsolete      n|=((I)jtfg>>VIPWFLONGX)&(fmnne1>>2);  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
-     nfm1=-nfm1;  // (nf!=1) w repetition also comes if nf is not 1 and WFLONG. m1 is nf+n-m, nfm1 uis nf-m, we want m1-nfm1=2*nf+n =: nfm1=(nf+n-m)-(2*nf+n) = m-nf
-    }else{aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];}     // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration
+    }else{aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];}     // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration.  m1=original n1
     // encode major-axis in LSB of n, and complement m if there in only 1 loop
 // obsolete     n|=((I)jtfg>>VIPWCRLONGX)&fmnne1&1;  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; in this case nf must be 1 and there is no further flagging
 // no good  _addcarry_u64((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),n,n,&n);  does not generate the carry efficiently
 // no good      n=n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  generates ADC but requires separate shift of n
 // obsolete     n=__builtin_addcll(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),&nne1);;
 // no good     UI junk; n=ADDCI(n,n,(UI)(0)<((UI)jtfg&((m1-nfm1)*VIPWCRLONG)),junk);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
-    n=n+n+((UI)(0)<((UI)jtfg&((m1-nfm1)*VIPWCRLONG)));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  generates lea, not addc
+    n=n+n+((UI)(0)<((UI)jtfg&((m1-=nfm1)*VIPWCRLONG)));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  generates lea, not addc
 #endif
     aawwzknfxrz[5]=m;  // parm n is orig m, i. e. the length of the inner or only loop.
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case

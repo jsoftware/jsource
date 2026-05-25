@@ -142,7 +142,7 @@ DF1(jttobase64){F12IP;
 //  bytes4 = base64tab[PEXT0(bytes,16,0x3f];  // byte D
   bytes4 = (bytes4<<8) + base64tab[PEXT0(bytes,22,0x3)+PEXT0(bytes,8-2,0x3c)]; // byte C
   bytes4 = (bytes4<<8) + base64tab[PEXT0(bytes,12,0xf)+((bytes<<(4-0))&0x30)]; // byte B
-  bytes4 = (bytes4<<8) + base64tab[PEXT0((bytes,2-0),x3f)]; // byte A
+  bytes4 = (bytes4<<8) + base64tab[PEXT0((bytes,2-0),0x3f)]; // byte A
   // store the result
   *zv++ = bytes4;
   // stuff '=' over the last chars as needed
@@ -184,7 +184,7 @@ DF1(jtfrombase64){F12IP;
  UI4 *wv4=UI4AV(w); C *zv=CAV1(z);  // write result as bytes, to avoid requiring heroic action in the write combiners
  for(wn-=3;wn>0;wn-=4){  // for each block of 4, not counting an incomplete last one
   // translate the UTF8 via table lookup.  We could avoid the table reads if we didn't feel the need to validate the input
-  UI4 bytes4=*wv4++; I ba=base64invtab[bytes4&0xff]; I bb=base64invtab[PEXT0(bytes4,8,xff)];  I bc=base64invtab[PEXT0(bytes4,16,0xff)];  I bd=base64invtab[PEXT0(bytes4,24,xff)];
+  UI4 bytes4=*wv4++; I ba=base64invtab[bytes4&0xff]; I bb=base64invtab[PEXT0(bytes4,8,0xff)];  I bc=base64invtab[PEXT0(bytes4,16,0xff)];  I bd=base64invtab[PEXT0(bytes4,24,0xff)];
   ASSERT((ba|bb|bc|bd)!=0xff,EVDOMAIN);  // make sure no invalid input bytes
   // Create the 3 result bytes, MSB first
   *zv++ = (C)((ba<<2) + (bb>>4));

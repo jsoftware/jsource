@@ -999,8 +999,8 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
     // allranks is noun 0/0/anr/wnr
    }
    if(likely(jtfg!=0)){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.
-    jtfg = (J)((I)jtfg&VIPRES);  // remove all but the inplacing bits
-    jtfg = (J)((I)jtfg+aadocv->cv);  // insert flag bits for routine (always has bits 0-3=0xc); set bits 2-3 (converted inplacing bits)
+    jtfg=(J)((I)jtfg&VIPRES);  // remove all but the inplacing bits
+    jtfg=(J)((I)jtfg+aadocv->cv);  // insert flag bits for routine (always has VIPRNK)
 
 // obsolete     jtfg = (J)((I)jtfg+(((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)))) & (((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1))))) <<(VIPWCRLONGX-(RANKTX-1))));  // set flag for 'w has longer cell-rank' (VIPWCRLONG) and 'w has longer frame (wrt verb)' (VIPWFLONG)
     ak=wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)));  // bit 7='w has longer cell-rank' (VIPWCRLONG), 15='w has longer frame (wrt verb)' (VIPWFLONG)
@@ -1018,7 +1018,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
     // fr has the longer cell-rank
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
-    // bits 0-1 of jtfg are combined input+local; 2-3 just local; 4+ hold adocv.cv; sign set if ak==0. output type is always set to show non-sparse
+    // bits 0-1 of jtfg are combined input+local; VIPRNK just local; 4+ hold adocv.cv; sign set if ak==0. output type is always set to show non-sparse
     // 0-1 are set if operand is inplaceable according to prim & input inplaceability; 2-3 from prim only.  We use 0-1 unless we convert; then we use 2-3
      // jtfg VIPWFLONG set if wf>af, bit VIPWCRLONG set if wcr>acr
     zn=(I)jtfg&VIPWCRLONG?wk:ak;    // zn=#atoms in cell with larger rank
@@ -1108,15 +1108,10 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
     // encode major-axis in LSB of n, and complement m if there in only 1 loop
 // obsolete     n|=((I)jtfg>>VIPWCRLONGX)&fmnne1&1;  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; in this case nf must be 1 and there is no further flagging
 // no good  _addcarry_u64((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),n,n,&n);  does not generate the carry efficiently
-// no good      n=n+n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  does not generate ADC - uses lea - same as the ADDCI solution
 // no good      n=n+((UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)))  generates ADC but requires separate shift of n
 // obsolete     n=__builtin_addcll(n,n,(UI)(0)<((UI)jtfg&(nne1*VIPWCRLONG)),&nne1);;
-// obsolete    UI junk; n=ADDCI(n,n,(UI)(0)<((UI)jtfg&((nm1-m1)*VIPWCRLONG)),junk);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
-#if __has_builtin(__builtin_addcll)
-    UI junk; n=ADDCI(n,n,(UI)(0)<((UI)jtfg&((m1-nfm1)*VIPWCRLONG)),junk);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
-#else
-    n=n+n+((UI)(0)<((UI)jtfg&((m1-nfm1)*VIPWCRLONG)));  // does not generate ADC - uses lea - same as the ADDCI solution
-#endif
+// no good     UI junk; n=ADDCI(n,n,(UI)(0)<((UI)jtfg&((m1-nfm1)*VIPWCRLONG)),junk);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  scaf does not generate ADC
+    n=n+n+((UI)(0)<((UI)jtfg&((m1-nfm1)*VIPWCRLONG)));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  generates lea, not addc
 #endif
     aawwzknfxrz[5]=m;  // parm n is orig m, i. e. the length of the inner or only loop.
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case

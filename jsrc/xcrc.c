@@ -142,7 +142,7 @@ DF1(jttobase64){F12IP;
 //  bytes4 = base64tab[PEXT0(bytes,16,0x3f];  // byte D
   bytes4 = (bytes4<<8) + base64tab[PEXT0(bytes,22,0x3)+PEXT0(bytes,8-2,0x3c)]; // byte C
   bytes4 = (bytes4<<8) + base64tab[PEXT0(bytes,12,0xf)+((bytes<<(4-0))&0x30)]; // byte B
-  bytes4 = (bytes4<<8) + base64tab[PEXT0((bytes,2-0),0x3f)]; // byte A
+  bytes4 = (bytes4<<8) + base64tab[PEXT0(bytes,2-0,0x3f)]; // byte A
   // store the result
   *zv++ = bytes4;
   // stuff '=' over the last chars as needed

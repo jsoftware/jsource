@@ -105,6 +105,7 @@
 #if C_AVX2
 #if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))
 #include <immintrin.h>
+#include <x86intrin.h>
 #endif
 #endif
 

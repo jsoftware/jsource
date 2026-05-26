@@ -192,7 +192,8 @@ NB.  d. CDDOT,   CONJ, 0L,      ddot,
 NB.  D. CDCAP,   CONJ, 0L,      dcap,   
 NB.  D: CDCAPCO, CONJ, 0L,      dcapco, 
 
-(bsp{:: 'non-unique sparse elements' ;~ 'nonce error') -: e. etx t     NB. WIP non-unique sparse elements
+NB. (bsp{:: 'non-unique sparse elements' ;~ 'nonce error') -: e. etx t     NB. WIP non-unique sparse elements
+'nonce error' -: e. etx t     NB. WIP non-unique sparse elements
 
 NB.  E. CEBAR,   VERB, 0L,      ebar,   
 NB.  f. CFIX,    ADV,  fix,     0L,     

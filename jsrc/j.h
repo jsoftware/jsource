@@ -2157,17 +2157,17 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free
 #if !defined(__wasm__)
-#define PRODCOMMON(z,length,ain,type) {I _i=(I)(length); I * RESTRICT _zzt=(ain); \
-if(likely(type _i<3)){z=(I)&oneone; z=type _i>1?(I)_zzt:z; _zzt=type _i<1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=_zzt[type --_i]; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
+#define PRODCOMMON(z,length,ain,LTYPE) {LTYPE _i=(LTYPE)(length); I * RESTRICT _zzt=(ain); \
+if(likely(_i<(LTYPE)3)){z=(I)&oneone; z=_i>(LTYPE)1?(I)_zzt:z; _zzt=_i<(LTYPE)1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=_zzt[--_i]; NOUNROLL do{z*=_zzt[--_i];}while(_i); } }
 #else
 // the above original version confuse emscripten compiler when 1==length where zzt always becomes &oneone
 // but this version introduces mispredicted branches
-#define PRODCOMMON(z,length,ain,type) {I _i=(I)(length); I * RESTRICT _zzt=(ain); \
-if(likely(type _i<3)){z=(type _i<1)?1:(type _i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else{z=1; NOUNROLL do{z*=_zzt[type --_i];}while(type _i); } }
+#define PRODCOMMON(z,length,ain,LTYPE) {LTYPE _i=(LTYPE)(length); I * RESTRICT _zzt=(ain); \
+if(likely(_i<3)){z=(_i<1)?1:(_i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else{z=1; NOUNROLL do{z*=_zzt[--_i];}while(_i); } }
 #endif
-#define PROD(z,length,ain) PRODCOMMON(z,length,ain,)
+#define PROD(z,length,ain) PRODCOMMON(z,length,ain,I)
 // This version ignores bits of length above the low RANKTX bits
-#define PRODRNK(z,length,ain) PRODCOMMON(z,length,ain,(RANKT))
+#define PRODRNK(z,length,ain) PRODCOMMON(z,length,ain,RANKT)
 
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value
 // PRODX takes the product of init and v[0..n-1], generating error if overflow, but waiting till the end so no error if there is a 0 in the product

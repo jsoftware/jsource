@@ -988,13 +988,13 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
   }else{I ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
    {I af,wf;
-    // Heavy register pressure here.  Seemingly trivial changes to allranks cause early spill of a in next-to-last PRODRNK
+    // Heavy register pressure here.
     // When this was written with 6 names it barely fit in registers, so I rewrote it with 4 names.  Compiler's ideas about handling allranks fill spare register
     acr=0; af=allranks>>2*RANKTX;  // allranks = anr/wnr/avr/wvr (nr=noun rank)  wcr will hold verbrank
     wcr=(RANK2T)allranks; af|=RANKTMSK; af-=wcr; af=((I)af<0)?acr:af; af&=~RANKTMSK;  // af is 0/0/anr/wnr -> 0/0/anr/ffff -> 0/0/afr/x -> clamp at 0 -> 0/0/afr/0
     wf=allranks>>=2*RANKTX; wcr&=RANKTMSK; wf&=RANKTMSK; wf-=wcr; wf=((I)wf<0)?acr:wf;    // wf is 0/0/anr/wnr -> 0/0/0/anr ->  0/0/0/afr -> clamp at 0
     acr=allranks; acr-=af; acr-=wf;  // acr = 0/0/acr/wcr  (nr-fr=cr)
-    wcr=acr; wcr&=RANKTMSK; wf<<=RANKTX; wcr|=wf;   // wcr = wfr/wcr  final value
+    wcr=acr; wcr&=RANKTMSK; wf<<=RANKTX; wcr|=wf;   // wcr = wfr/wcr
     acr>>=RANKTX; acr|=af;  // acr = afr/acr    final value
     // allranks is noun 0/0/anr/wnr
    }
@@ -1029,14 +1029,24 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     aawwzknfxrz[4]=zn<<bplg(cvt);  // calc result-cell size and move it out of registers
     ak<<=bplg(at); wk<<=bplg(wt);  // convert cell sizes to bytes
     aawwzknfxrz[0]=ak; aawwzknfxrz[2]=wk; ak=((I)jtfg&VIPWFLONG)?0:ak; wk=((I)jtfg&VIPWFLONG)?wk:0; aawwzknfxrz[1]=ak; aawwzknfxrz[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
+#if 1
+    UI4 wcrr=wcr; wcrr=(I)jtfg&VIPWCRLONG?__builtin_rotateleft32(wcrr,RANK2TX):wcrr;       // frame(long cell)/cellrank(long cell)/frame(short cell)/cellrank(short cell)
+    fr=wcrr>>RANK2TX; I shortr=wcrr&RANKTMSK;  //  shortr=0/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
+#else  // obsolete
     I shortr=wcr>>SHMSK((I)jtfg,VIPWCRLONGX-LGRANK2TX,RANK2TX); fr=wcr>>(SHMSK((I)jtfg,VIPWCRLONGX-LGRANK2TX,RANK2TX)^RANK2TX); // shortr=frame(short cell)/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
     shortr&=RANKTMSK; fr&=RANK2TMSK; // cellrank(short cell)
+#endif
     shortr*=((I)1<<2*RANKTX)+((I)1<<RANKTX)-1;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  100000000+10000+ffffffffffffffff
     shortr+=fr;  // cellrank(short cell)/frame(long cell)+cellrank(short cell)/cellrank(long cell)-cellrank(short cell)
                  //  length for agreement / offset to excess frame, for calc n  / length for calc n,(# intracell repeats) - final value
     // fr is now frame/rank of long cell
     // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
     //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
+#if 1
+    UI f=wcr&RANKTMSK*((1LL<<RANKTX)+(1LL<<3*RANKTX)); f|=f>>RANKTX; f>>=RANKTX;  // afr/0/wfr/0   afr/afr/wfr/wfr    0/afr/afr/wfr
+    US ff=f, ffr=__builtin_rotateleft16(ff,RANKTX); f=(I)jtfg&VIPWFLONG?ffr:ff;    // 0/0/lfr/sfr
+    f=(f<<2*RANKTX)+(f>>RANKTX);   // lfr/sfr/0/lfr
+#else  // obsolete 
 #ifdef PEXT
     UI f=PEXT(wcr,RANKTMSK*((1LL<<RANKTX)+(1LL<<3*RANKTX)));   // 0/0/aframe/wframe; 
 #else
@@ -1045,6 +1055,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     f+=f<<2*RANKTX;   //  aframe/wframe/aframe/wframe
     f>>=SHMSK((I)jtfg,VIPWFLONGX-LGRANKTX,RANKTX);  // shift by 0/8 (8 if w has long frame) to give x/x/longframe/shortframe
     f&=RANKTMSK*(1+(1LL<<RANKTX)); f=(f<<2*RANKTX)+(f>>RANKTX);  // longframe/shortframe/0/longframe
+#endif
 #if SY_64
     f+=wcr<<4*RANKTX;  // afr/acr/wfr/wcr/long frame/short frame/0/long frame   wcr free
 #define acrwcr (fr>>4*RANKTX)  // put frames into fr to save a register
@@ -1053,10 +1064,10 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
 #endif
     fr+=f;    //   fr=afr/acr/wfr/wcr/longframe/shortframe/frame(long cell)/longframe+cellrank(long cell)
     f=fr&RANKTMSK; allranks|=(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)); allranks-=f; f<<=RANKTX; allranks-=f;  // set sign bit of rank if = long frame + long cell (can't be any bigger) f free
-    ASSERTAGREE(AS(a)+(acrwcr>>3*RANKTX), AS(w)+(((RANK2T)acrwcr>>RANKTX)), (shortr>>2*RANKTX))  // offset to each cellshape, and cellrank(short cell) acr wcr free but were actually spilled earlier
+    ASSERTAGREE(AS(a)+(acrwcr>>3*RANKTX), AS(w)+(((RANK2T)acrwcr>>RANKTX)), (shortr>>2*RANKTX))  // offset to each cellshape, and cellrank(short cell) acr wcr free
+    PRODRNK(n,shortr,AS((I)jtfg&VIPWCRLONG?w:a)+((RANK2T)shortr>>RANKTX));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
     nf=(allranks&((1LL<<(RANKTX-1))+(1LL<<(RANK2TX-1)))) * (((I)1<<(VIPOKWX-(RANKTX-1)))+((I)1<<(VIPOKAX-(RANK2TX-1))));  // bits 7,15 * 13,6 moves 7,15 to 20,21, trashing 13 and 28
     nf=((nf&(I)jtfg)>>VIPOKWX); nf*=((I)1<<VIPRNKX)+1; nf|=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; shift to 0-1, replicate rank/routine inplaceability flags; set other bits to 1
-    PRODRNK(n,shortr,AS((I)jtfg&VIPWCRLONG?w:a)+((RANK2T)shortr>>RANKTX));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
@@ -1068,12 +1079,13 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
 // obsolete #endif
 // obsolete    nf+=(nf<<VIPRNKX)+~(VCVTIP+VIPRES);  // make 2 copies of the 2 bits, bits 4+=1  This is a long dependency chain through nf but it will overlap the PRODs coming up
 // obsolete     nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of jtfg.  This is a long dependency chain through nf
+    A wflong=(I)jtfg&VIPWFLONG?w:a;  // arg with long frame, before we pollute jtfg with the slow nf
     if(likely(a!=w))jtfg=(J)((I)jtfg&nf); else jtfg=(J)((I)jtfg&~(VCVTIP+VIPRES));  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable; but never if args equal.  nf reused immediately
 // obsolete     jtfg=(J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free   rest of jtfg survives
     f=PEXT0(fr,2*RANKTX,RANKTMSK);  // recover (shorter frame len) from upper fr
-    PRODRNK(mf,f,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len) we are waiting for nf->jtfg to settle
-    PRODRNK(nf,((fr>>3*RANKTX)-f),f+AS(((I)jtfg&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
+    PRODRNK(nf,((fr>>3*RANKTX)-f),f+AS(wflong));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
+    PRODRNK(mf,f,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len) we are waiting for nf->jtfg to settle
     
     // Now nf=outer repeated frame  mf=outer common frame  n=inner repeated frame  m=inner common frame
     //    leading axes --------------------------------------------------------------> trailing axes
@@ -1086,7 +1098,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     I m1=REPSGN(m-2), nfm1=m1+=(UI)1<(UI)nf; m1+=(UI)1<(UI)n;  // m1=(n!=1)+(nf!=1)-(m==1)    nfm1=(nf!=1)-(m==1)
     DPMULDE(nf,mf,mf);  // mf is total # iterations
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
-#if 0   // clang will not generate ADC as called for here
+#if 0   // obsolete clang will not generate ADC as called for here
     UI cry1, cry2; UI nmnfne1;  // place to hold carry, and the 3 comparisons against 1.  bit 2 (VIPWCRLONG) matches n, bit 0 (will be VIPWFLONG) matches nf, leaving bit 1 to match m
 // obsolete     _addcarry_u64(_addcarry_u64(0, n, ~1, &junk), 0, 0, &nmnfne1); _addcarry_u64(_addcarry_u64(0, m, ~1, &junk), nmnfne1, nmnfne1, &nmnfne1);  _addcarry_u64(_addcarry_u64(0, nf, ~1, &junk), nmnfne1, nmnfne1, &nmnfne1); 
     ADDCI(n,~1,0,cry1); nmnfne1=ADDCI(0,0,cry1,cry2); ADDCI(m,~1,0,cry1); nmnfne1=ADDCI(nmnfne1,nmnfne1,cry1,cry2); ADDCI(nf,~1,0,cry1); nmnfne1=ADDCI(nmnfne1,nmnfne1,cry1,cry2);  // create the 3 comparison bits
@@ -1096,7 +1108,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
      nmnfne1+=8*nmnfne1; nmnfne1&=0xf;  // move nf bit to match VIPWFLONG, mask out upper copied bits
     }else{aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];}     // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration
     ADDCI((UI)jtfg&nmnfne1,~(VIPWCRLONG-1),0,cry1); n=ADDCI(n,n,cry1,cry2);  // if WCRLONG & n!=1, or enabled WFLONG and nf!=1, flag loop order in LSB of n, shifting other bits of n up
-#else  // obsolete 
+#else
 // obsolete      I fmnne1=2*(2*(nf!=1)+(m!=1))+(n!=1);  // set flags for values!=1.  We roll the bits into a register to save regs
 // obsolete    C mmeq1=REPSGN(m-2), nne1=SGNTO0(1-n), nfne1=SGNTO0(1-nf);  // compare each value for >1; m's result is complemented
 // obsolete     if(unlikely((1LL<<fmnne1)&0b10111)){   // 2 values=1, can lose a loop (0 or 1 compare bits set)

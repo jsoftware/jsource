@@ -165,7 +165,7 @@ _Static_assert((PTRPAR^PTMARKBACK&0xffff0000)==0,"MARKBACK must equal RPAR for e
 #define PTNAME0X 21  // when pt[0] is known to be NAME or NOUN, this bit is set if NAME
 #define PTNAME0 BIT(PTNAME0X)
 // converting type field to pt, store in z
-#define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&(((1LL<<(LASTNOUNX+1))-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
+#define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&((BIT(LASTNOUNX+1)-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
 
 // multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 // We flag all multiple assignments as final because the value is protected in the source
@@ -514,7 +514,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
 #define SETSTACK0PT0(v) pt0ecam|=(I)(v)<<32;   // use if upper pt0ecam known 0
 #define GETSTACK0PT (pt0ecam>>32)
 #define TESTSTACK0PT(x) ((pt0ecam&((UI)1<<((x)+32)))!=0)
-#define STACK0PTISCAVN (pt0ecam&(1LL<<(32+PTISCAVNX)))  // the bit must be > NOTFINALX, and must not be converted to boolean
+#define STACK0PTISCAVN PEXT08(pt0ecam,32+PTISCAVNX,1))  // the bit must be > NOTFINALX, and must not be converted to boolean
 #else
   UI4 stack0pt;
 #define SETSTACK0PT(v) stack0pt=(v);
@@ -732,7 +732,7 @@ endname: ;
      --pt0ecam;  //  decrement token# for the word we just processed
      queue--;  // back to the word we just fetched, which might be garbage
      stack[0].a = (A)((savy&~QCMASK)+PEXT0(savy,QCNAMEDX-STKNAMEDX,STKNAMEDMSK));   // finish setting the stack entry, with the new word.  The stack entry has STKNAMED/STKFAOWED with the rest of the address valid (no type flags)
-     pt0ecam|=((1LL<<(LASTNOUNX-1))<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
+     pt0ecam|=(BIT(LASTNOUNX-1)<<tx)&(3LL<<CONJX);   /// install pull delay line  OR it in: 000= no more, other 001=1 more (CONJ), 01x=2 more (RPAR).  (1xx could come in 1st time).  This is where we skip execution for CONJ/RPAR
      UI tmpes=pt0ecam;  // pt0ecam is going to be settling after stack0pt below.  To ratify the branch faster we save the relevant part (the pull queue)
      pt0ecam&=(I)(UI4)(~((0b111LL<<CONJX)|FLGPMSK));  // clear the pull queue, PMSK, and all of the stackpt0 field if any.  This is to save 2 fetches in executing lines 0-2 for =:
      stack[0].pt=it;   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB. Only parts have to be valid; we use the rest as flags

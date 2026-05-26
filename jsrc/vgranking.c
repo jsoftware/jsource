@@ -53,7 +53,7 @@ F1(jtranking){F12IP;A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TT
   // special case of k==1 or 2. Could be C2T/INT2 or a pair of B01/LIT/INT1.  INT2 is signed & cannot use small-range.  The pair is bigendian and cannot use condrange, but we can swap bytes
   // and we just assume the max range.
   if(wt&C2T){rng=condrange2((C2*)wv,wn,-1,0,maxrange);  // 2-byte char: get range
-  }else if(wt&IS1BYTE){rng.min=0; rng.range=(1LL<<((k-(wt&B01))<<3))+((wt&B01)<<(k-1)); if(rng.range>=maxrange)rng.range=0;  // 1 or 2 B01/LIT: 2, 256, 258, or 65536, see if too big
+  }else if(wt&IS1BYTE){rng.min=0; rng.range=BIT((k-(wt&B01))<<3)+((wt&B01)<<(k-1)); if(rng.range>=maxrange)rng.range=0;  // 1 or 2 B01/LIT: 2, 256, 258, or 65536, see if too big
   }else rng.range=0;  // Must be I2 or 2 I1s, can't do smallrange
  }else rng.range=0;
  if(!rng.range){I *yv;

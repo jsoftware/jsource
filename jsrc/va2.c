@@ -1003,7 +1003,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     jtfg=(J)((I)jtfg+aadocv->cv);  // insert flag bits for routine (always has VIPRNK)
 
 // obsolete     jtfg = (J)((I)jtfg+(((wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)))) & (((1LL<<(RANKTX-1)))+((1LL<<(2*RANKTX-1))))) <<(VIPWCRLONGX-(RANKTX-1))));  // set flag for 'w has longer cell-rank' (VIPWCRLONG) and 'w has longer frame (wrt verb)' (VIPWFLONG)
-    ak=wcr+(acr^(((1LL<<(RANKTX-1))-1)*((1LL<<(RANKTX))+1)));  // dual 8-bit wcr-acr-1, leaving carry-out at top of lane:  bit 7='w has longer cell-rank' (VIPWCRLONG), 15='w has longer frame (wrt verb)' (VIPWFLONG)
+    ak=wcr+(acr^((BIT(RANKTX-1)-1)*(BIT(RANKTX)+1)));  // dual 8-bit wcr-acr-1, leaving carry-out at top of lane:  bit 7='w has longer cell-rank' (VIPWCRLONG), 15='w has longer frame (wrt verb)' (VIPWFLONG)
 // obsolete 
 // obsolete #ifdef PEXT
 // obsolete     jtfg=(J)((I)jtfg+(PEXT(ak,0x8080)<<VIPWCRLONGX));  // move flags into position
@@ -1036,14 +1036,14 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     I shortr=wcr>>SHMSK((I)jtfg,VIPWCRLONGX-LGRANK2TX,RANK2TX); fr=wcr>>(SHMSK((I)jtfg,VIPWCRLONGX-LGRANK2TX,RANK2TX)^RANK2TX); // shortr=frame(short cell)/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
     shortr&=RANKTMSK; fr&=RANK2TMSK; // cellrank(short cell)
 #endif
-    shortr*=((I)1<<(2*RANKTX))+BIT(RANKTX)-1;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  100000000+10000+ffffffffffffffff
+    shortr*=BIT(2*RANKTX)+BIT(RANKTX)-1;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  100000000+10000+ffffffffffffffff
     shortr+=fr;  // cellrank(short cell)/frame(long cell)+cellrank(short cell)/cellrank(long cell)-cellrank(short cell)
                  //  length for agreement / offset to excess frame, for calc n  / length for calc n,(# intracell repeats) - final value
     // fr is now frame/rank of long cell
     // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
     //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
 #if 1
-    UI f=wcr&RANKTMSK*(BIT(RANKTX)+(1LL<<(3*RANKTX))); f|=f>>RANKTX; f>>=RANKTX;  // afr/0/wfr/0   afr/afr/wfr/wfr    0/afr/afr/wfr
+    UI f=wcr&RANKTMSK*(BIT(RANKTX)+BIT(3*RANKTX)); f|=f>>RANKTX; f>>=RANKTX;  // afr/0/wfr/0   afr/afr/wfr/wfr    0/afr/afr/wfr
     US ff=f, ffr=__builtin_rotateleft16(ff,RANKTX); f=(I)jtfg&VIPWFLONG?ffr:ff;    // 0/0/lfr/sfr
     f=(f<<(2*RANKTX))+(f>>RANKTX);   // lfr/sfr/0/lfr
 #else  // obsolete 
@@ -1063,10 +1063,10 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
 #define acrwcr wcr
 #endif
     fr+=f;    //   fr=afr/acr/wfr/wcr/longframe/shortframe/frame(long cell)/longframe+cellrank(long cell)
-    f=fr&RANKTMSK; allranks|=(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)); allranks-=f; f<<=RANKTX; allranks-=f;  // set sign bit of rank if = long frame + long cell (can't be any bigger) f free
+    f=fr&RANKTMSK; allranks|=BIT(RANKTX-1)+BIT(2*RANKTX-1); allranks-=f; f<<=RANKTX; allranks-=f;  // set sign bit of rank if = long frame + long cell (can't be any bigger) f free
     ASSERTAGREE(AS(a)+(acrwcr>>(3*RANKTX)), AS(w)+(((RANK2T)acrwcr>>RANKTX)), (shortr>>2*RANKTX))  // offset to each cellshape, and cellrank(short cell) acr wcr free
     PRODRNK(n,shortr,AS((I)jtfg&VIPWCRLONG?w:a)+((RANK2T)shortr>>RANKTX));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
-    nf=(allranks&((1LL<<(RANKTX-1))+(1LL<<(RANK2TX-1)))) * (((I)1<<(VIPOKWX-(RANKTX-1)))+((I)1<<(VIPOKAX-(RANK2TX-1))));  // bits 7,15 * 13,6 moves 7,15 to 20,21, trashing 13 and 28
+    nf=(allranks&(BIT(RANKTX-1)+BIT(RANK2TX-1))) * (BIT(VIPOKWX-(RANKTX-1))+BIT(VIPOKAX-(RANK2TX-1)));  // bits 7,15 * 13,6 moves 7,15 to 20,21, trashing 13 and 28
     nf=((nf&(I)jtfg)>>VIPOKWX); nf*=BIT(VIPRNKX)+1; nf|=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; shift to 0-1, replicate rank/routine inplaceability flags; set other bits to 1
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0

@@ -18,7 +18,7 @@ static F1X(jtlnoun);
 static F1X(jtlnum);
 static DF1X(jtlrr);
 
-#define NUMV(c)  ((BIT(C9)|BIT(CD)|BIT(CS)|BIT(CA)|BIT(CN)|BIT(CB))&(1LL<<(c)))
+#define NUMV(c)  ((BIT(C9)|BIT(CD)|BIT(CS)|BIT(CA)|BIT(CN)|BIT(CB))&BIT(c))
 
 // choose function for applying parentheses, for normal verbs and for tie strings
 #define parfn ((I)jtfg&JTPARENS?jtlcpb:jtlcpa)

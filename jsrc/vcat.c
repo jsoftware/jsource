@@ -370,7 +370,7 @@ endcell:;  // here when we have moved all the data & fill for a or w
   if(unlikely(needfill&extenmin)){
    I nfilled=0;  // accumulator for # fill cells
    for(aw=0;aw<2;++aw){if(dlen[aw][0]>=0){I fillacc=0; DO(cmax[aw], fillacc=fillacc*dlen[aw][i]+flen[aw][i];) nfilled+=fillacc;}}  // count total # fills for each arg, skipping atomic args
-   A *filla=(A*)jt->fillv; DO(1LL<<(klg-LGSZI), raN(filla[i],nfilled*ncells);)  // add to the usecount for each copy.  fillv must be pointer(s) to A block(s)
+   A *filla=(A*)jt->fillv; DO(BIT(klg-LGSZI), raN(filla[i],nfilled*ncells);)  // add to the usecount for each copy.  fillv must be pointer(s) to A block(s)
    A *tv=AAV(a); I tn=AN(a); DO(2, I rptct=awn[i][1]+1; DO(tn<<(klg-LGSZI), raN(tv[i],rptct);) tv=AAV(w); tn=AN(w);)  // add to the usercount for each repeat of the arg
    AFLAGORLOCAL(z,t&RECURSIBLE);  // mark the block recursive now that we have updated the childrens' usecounts
   }
@@ -515,10 +515,10 @@ F2(jtapip){F12IP;A h;
         // If an item of a is bigger than the entire (possibly expanded) nonatomic w,
         // copy fill to the output area.  Start the copy after the area that will be filled in by w
         wlen=AN(w)<<(fgwd&FGLGK); // the length in bytes of the data in w after fill to item size
-        if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,(1LL<<(fgwd&FGLGK)),jt->fillv);}
+        if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,BIT(fgwd&FGLGK),jt->fillv);}
        }
        // Fill has been installed.  Copy in the actual w data, replicating if w is atomic
-       if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1);} else mvc(wk,av,(1LL<<(fgwd&FGLGK)),CAV(w));  // no overcopy because there could be fill   scaf use JMC also if no fill, and have fast path for short copy/mvc
+       if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1);} else mvc(wk,av,BIT(fgwd&FGLGK),CAV(w));  // no overcopy because there could be fill   scaf use JMC also if no fill, and have fast path for short copy/mvc
        // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
        PRISTCLRF(w)  // this destroys w!
        // The data has been copied.  No more errors are possible.  It is safe to modify the size of a

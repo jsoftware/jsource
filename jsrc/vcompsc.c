@@ -214,7 +214,7 @@ A name(J jt,A a,A w){ \
    NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(*av,*wv); ++av; ++wv;); ADDBYTESINI(t); z+=t;}              \
          t=0; DQ(p+255,   t+=F(*av,*wv); ++av; ++wv;); ADDBYTESINI(t); z+=t; x=F(*av,*wv);  \
   }                                                                          \
-  x &= ((I)1<<(r1<<LGBB))-1; ADDBYTESINI(x); z+=x;    /* C_LE */                                                       \
+  x &= BIT(r1<<LGBB)-1; ADDBYTESINI(x); z+=x;    /* C_LE */                                                       \
   R sc(z);                                                                   \
  }
 

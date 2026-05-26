@@ -75,10 +75,10 @@
 
 // Extract the argument-conversion type from cv coming from the table
 #define isatype(x) (((x)&VICMSK)!=0)  // 1 if there is input conversion
-#define atype(x) (((I)1<<(VICMSK>>VICX))>>(PEXT0((x),VICX,VICMSK>>VICX)))  // result is AT from flags
+#define atype(x) (BIT(VICMSK>>VICX)>>(PEXT0((x),VICX,VICMSK>>VICX)))  // result is AT from flags
 
 // Extract the result type from cv coming from the table
-#define rtype(x) ((I)1<<((x)>>VOTX))  // relies of output conversion being highest bits
+#define rtype(x) BIT((x)>>VOTX)  // relies of output conversion being highest bits
 // obsolete #define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
 
 #define NOT(v) ((v)^VALIDBOOLEAN)
@@ -530,7 +530,7 @@ atomveclp: ;  /* come back here to do next atom op vector loop, with z running *
 rdmasklp: ;  /* here when we must read the new args under mask */ \
  \
  /* read any nonrepeated argument, shuffle */ \
- I totallen=len1&((1LL<<(BW-3))-1);  /* total remaining length */ \
+ I totallen=len1&(BIT(BW-3)-1);  /* total remaining length */ \
  I zinc=(totallen>2)<<(LGNPAR+LGSZI);  /* offset to second half of input, if it is valid */ \
  if(likely(!((I)x&1))){  /* if x is not repeated... */ \
   in0=_mm256_maskload_pd((D*)((C*)z+(I)x),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)x+zinc),_mm256_slli_epi64(wrmask,1)); \
@@ -571,7 +571,7 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
   /* The length of this batch comes from len0 or len1 */ \
   len0=-(len1>>(BW-3));   /* extract len0 from combined len0/len1, range 1 to 4, or 0 if not first batch */ \
   len0=len1<0?len0:len1;  /* len0=length of batch: len0 (first batch) or len1 (others) */ \
-  len1&=((1LL<<(BW-3))-1); /* discard len0 from length remaining */ \
+  len1&=(BIT(BW-3)-1); /* discard len0 from length remaining */ \
   I zinc=(len0>2)<<(LGNPAR+LGSZI);  /* offset to second half of result, if it can be written */ \
   _mm256_maskstore_pd((D*)((C*)z+zinc),_mm256_slli_epi64(wrmask,1),z1); \
   _mm256_maskstore_pd((D*)(z),wrmask,z0); \

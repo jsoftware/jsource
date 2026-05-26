@@ -552,7 +552,7 @@ static F2(jtloccre){F12IP;A g,y,z=0;C*s;I n,p;A v;
   // new named locale needed
   I type=REPSGN(p);  // -1 if impermanent, 0 if permanent
   if(unlikely(p<0))ASSERTSUFF(THREADID(jt)==0,EVLOCALE,goto exit;)  // permanent locale can be created/deleted only from master thread.
-  p=FULLHASHSIZE(1LL<<((REPSGN(p)^p)+5),SYMBSIZE,1,SYMLINFOSIZE);  // get table, size 2^|p|+5 minus a little
+  p=FULLHASHSIZE(BIT((REPSGN(p)^p)+5),SYMBSIZE,1,SYMLINFOSIZE);  // get table, size 2^|p|+5 minus a little
   p-=(UI)p/(sizeof(LX)*BB)+1;  // leave room for Bloom filter
   if(unlikely(stcreate(type,p,n,s)==0))goto exit;   // create the locale, but if error, cause this routine to exit with failure
  }

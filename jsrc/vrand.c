@@ -678,7 +678,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);
  ASSERTSYS(XSGN(x)>=1,"jtxrand") // x must be positive -- anything else is a coding error
  I n=XLIMBLEN(x), *xv=AV(x);  // number of Digits in x, &first digit
  X q= GAGMP(q, n*SZI); UI*qv= UIAV1(q); // result goes here
- B big= 1; I prev=0; A halflimb= sc(1LL<<SZI*4);
+ B big= 1; I prev=0; A halflimb= sc(BIT(SZI*4));
 #define rollpart(t) \
        1==t ?0 \
             :2==t ?(UI)(CAV0(roll(sc(2)))[0]) \
@@ -688,7 +688,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);
   UI limb= (UI)xv[j];
   if (big) { // does our limit still matter here?
    I hi= limb>>SZI*4;
-   I lo= limb&(1LL<<SZI*4)-1;
+   I lo= limb&BIT(SZI*4)-1;
    I rhi= 0, rlo;
    if (!big||prev>hi) hi= 1LL<<SZI*4;
    prev= 1;

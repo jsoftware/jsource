@@ -654,7 +654,7 @@ static void docall(FARPROC fpi, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B altern
   // the first 4 are encoded as lg2(# bytes to keep):
   // 64b  11111101xxxx111110xxxx1100 = 3f43e0c
   // 32b  10101001xxxx101010xxxx1000 = 2a22a08
-  I shiftamt=BW-((1LL<<SHMSK(SY_64?0x3f43e0c:0x2a22a08,charcode<<1,3))<<3);  // # high bits to fill
+  I shiftamt=BW-(BIT(SHMSK(SY_64?0x3f43e0c:0x2a22a08,charcode<<1,3))<<3);  // # high bits to fill
   r=(r<<shiftamt)>>shiftamt;  // fill em
   r=zl=='n'?0:r;  // handle 'n' specially: store 0
   *v=r;  // write out the formatted return code
@@ -1007,7 +1007,7 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
   cc->starlett[i].jtype=(UI4)cdjtype(c); cc->starlett[i].jtype=cc->starlett[i].jtype&INT1+INT2+INT4?INT:cc->starlett[i].jtype; // get the desired result type  For compatibility, don't allow result type INT[124], push them to INT
   cc->starlett[i].type=(I)SHMSK8(F2C('c',0)|F2C('w',0)|F2C('u',0)|F2C('b',1)|F2C('s',1)|F2C('i',1)|F2C('l',1)|F2C('x',1)|F2C('f',2)|F2C('d',2)|F2C('z',3)|F2C('j',3),2*(c-'a'),3);  //0=char 1=int 2=fl 3=cmpx
   cc->starlett[i].lgsz=(I)SHMSK8(F2C('c',0)|F2C('w',1)|F2C('u',2)|F2C('b',0)|F2C('s',1)|F2C('i',2)|F2C('l',3)|F2C('x',3)|F2C('f',2)|F2C('d',3)|F2C('z',2)|F2C('j',3),2*(c-'a'),3);  // lg(atom len needed)
-#define F1C(c) ((I)1<<(c-'a'))   // create a 1-bit field with value 1, corresponding to lowercase character c
+#define F1C(c) BIT(c-'a')   // create a 1-bit field with value 1, corresponding to lowercase character c
 #define F1CN(c,n) ((I)(n)<<(c-'a'))     // create a 1-bit field with value n, corresponding to lowercase character c
   cc->starlett[i].flags=SHMSK(F1C('b')|F1C('s')|F1C('f')|F1C('i'),c-'a',1);  // integer/float type that can be sourced from a LIT
 #ifdef C_CD_NODF // platform does not support f or d args
@@ -1497,7 +1497,7 @@ F2(jtmemw){F12IP;C*u;I m,n,t,*v;
 #endif
  I mvlen=AN(a)<<bplg(t);
  MC(u,AV(a),mvlen);   // copy the valid bytes of a
- if(m>AN(a))mvc(1LL<<bplg(t),u+mvlen,MEMSET00LEN,MEMSET00);  // append zero if called for
+ if(m>AN(a))mvc(BIT(bplg(t)),u+mvlen,MEMSET00LEN,MEMSET00);  // append zero if called for
  R mtm;
 }    /* 15!:2  memory write */
 

@@ -1178,7 +1178,7 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;IFN fn;I ar,*
  // for other types (which can be only IEPS/IIDOT/IICO), an item of w can have larger rank
  if(likely((c&=REPSGN(~f1))>0)){  // revert if w has higher rank than a cell of a
   c=TESTAGREE(as+ar-r,ws+f1,r)?c:0;  // verify agreement in cell-shape, set c=0 if not
-  if(((I)1<<(mode&IIOPMSK))&(BIT(ILESS)|BIT(IINTER))){
+  if(BIT(mode&IIOPMSK)&(BIT(ILESS)|BIT(IINTER))){
    if(f1<(wr!=0)||f1>1){
     // LESS/INTER where the hashtable has the wrong cell-rank.  Revert
     // LESS/INTER cannot revert simply by calling indexofsub, because a has to be reshaped to make the cell-rank match the item of w.

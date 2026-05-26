@@ -280,7 +280,7 @@ static DF2(jthkcmpfitabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cel
 }
 
 
-#define TYPETEST(t) ((((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ((((t)&CONJ+ADV+VERB)|BIT(31))>>ADVX)))&3)  // type class: noun adv conj verb
+#define TYPETEST(t) SHMSK(BIT(ADVX-ADVX)|2*BIT(CONJX-ADVX)|3*BIT(VERBX-ADVX),CTTZ((((t)&CONJ+ADV+VERB)|BIT(31))>>ADVX),3)  // type class: noun adv conj verb
 #define TYPE3(t0,t1,t2) (TYPETEST(t0)+4*TYPETEST(t1)+16*TYPETEST(t2))
 #define TYPE2(t0,t1) (TYPETEST(t0)+4*TYPETEST(t1))
 static struct {

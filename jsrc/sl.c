@@ -610,7 +610,7 @@ F1(jtlocname){F12IP;A g=jt->global;
 static SYMWALK(jtlocmap1,I,INT,18,3,1,
     {I t=AT(QCWORD(d->fval));
      *zv++=i; 
-     I zc; zc=(((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ(((t&CONJ+ADV+VERB)|BIT(31))>>ADVX)))&3;   // ADVX, CONJx, VERBX, and the implied NOUNX=31 must all be >+ 2 bits apart
+     I zc; zc=SHMSK(BIT(ADVX-ADVX)|2*BIT(CONJX-ADVX)|3*BIT(VERBX-ADVX),CTTZ(((t&CONJ+ADV+VERB)|BIT(31))>>ADVX),3);   // ADVX, CONJx, VERBX, and the implied NOUNX=31 must all be >+ 2 bits apart
      zc=t==SYMB?6:zc; zc=t&(NOUN|VERB|ADV|CONJ|SYMB)?zc:-2;
      *zv++=zc;
      *zv++=(I)rifvs(sfn(SFNSIMPLEONLY,d->name));})  // this is going to be put into a box

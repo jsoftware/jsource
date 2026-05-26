@@ -25,7 +25,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;I c,it,j,k,m,r,*s,t,*u,*wi,*z
 #if !SY_64
 D*wd=(D*)wc,*zd=(D*)zc;
 #endif
- I kx=k; kx=0b1101&(1LL<<k)?kx:1;  // set atom length to 2 if not one of 1 4 8
+ I kx=k; kx=SHMSK(0b1101,k,1)?kx:1;  // set atom length to 2 if not one of 1 4 8
  switch(MCASE(it,kx)){
  case MCASE(B01,LGSZI): DO(c,         *zi++=wi[i+c*(I)*b++];); break;
  case MCASE(B01,0): DO(c,         *zc++=wc[i+c*(I)*b++];); break;
@@ -108,12 +108,12 @@ F1(jtcasev){F12IP;A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
                                  // 10b1xx non-atomic length cell, xx is 00=multiple cells of a, 01=single cell of a (length abytes) repeated in each result cell; 10=a is a single cell of length abytes=cellsize not repeated.  When xx is x0, b=0 means cellsize is a multiple of SZI
                                  // 1101xx recursive types, xx is 00=multiple cells of a, 01=single cell of a (length abytes) repeated in each result cell; 1y=a is a single cell of length abytes=(cellsize<<lgk), with y=1 if abytes=SZI
 #define AMFLAGINFULL1X 7
-#define AMFLAGINFULL1 ((I)1<<AMFLAGINFULL1X)  // axis 1 is taken in full
+#define AMFLAGINFULL1 BIT(AMFLAGINFULL1X)  // axis 1 is taken in full
 #define AMFLAGSPLITX 8  // axis number of the axis (if any) that a expires in the middle of.  Possible only if selector has rank>1.  We must reset a in the middle of processing the axis
 #define AMFLAGDUFFWX 16
-#define AMFLAGDUFFW ((I)1<<AMFLAGDUFFWX)  // duff backoff for w, 0-7
+#define AMFLAGDUFFW BIT(AMFLAGDUFFWX)  // duff backoff for w, 0-7
 #define AMFLAGDUFFAX 24
-#define AMFLAGDUFFA ((I)1<<AMFLAGDUFFAX)  // duff backoff for a, 0-7.  Must be highest field
+#define AMFLAGDUFFA BIT(AMFLAGDUFFAX)  // duff backoff for a, 0-7.  Must be highest field
  struct __attribute__((aligned(ABDY))) axis{
   UI size;  // First, the length of this axis in the result.  Later, size in bytes of a cell of this axis
   C *base;  //  pointer to result cell of higher axis that this axis is indexing within.  base for axis i does not include index i.  Not needed for axis -1, or -2 if taken in full

@@ -30,7 +30,7 @@ I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-  UI fillval = SHMSK(((I)1<<INUBSV)|(1LL<<ILESS)|(1LL<<INUB)|(1LL<<INUBI)|(1LL<<INUBIP),md&(IIMODPACK+IIOPMSK),1); UI temp=md&IIMODPACK?255:1; fillval=md&IREVERSED?temp:fillval;  // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
+  UI fillval = SHMSK(BIT(INUBSV)|BIT(ILESS)|BIT(INUB)|BIT(INUBI)|BIT(INUBIP),md&(IIMODPACK+IIOPMSK),1); UI temp=md&IIMODPACK?255:1; fillval=md&IREVERSED?temp:fillval;  // mvc overfetches, so need full UI.  If PACK, always 0; otherwise look at bits 0-3 of opcode
   mvc(p,hh->data.UI,1,&fillval);  // fill with repeated copies of fillval
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
@@ -1178,7 +1178,7 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;IFN fn;I ar,*
  // for other types (which can be only IEPS/IIDOT/IICO), an item of w can have larger rank
  if(likely((c&=REPSGN(~f1))>0)){  // revert if w has higher rank than a cell of a
   c=TESTAGREE(as+ar-r,ws+f1,r)?c:0;  // verify agreement in cell-shape, set c=0 if not
-  if(((I)1<<(mode&IIOPMSK))&(((I)1<<ILESS)|((I)1<<IINTER))){
+  if(((I)1<<(mode&IIOPMSK))&(BIT(ILESS)|BIT(IINTER))){
    if(f1<(wr!=0)||f1>1){
     // LESS/INTER where the hashtable has the wrong cell-rank.  Revert
     // LESS/INTER cannot revert simply by calling indexofsub, because a has to be reshaped to make the cell-rank match the item of w.

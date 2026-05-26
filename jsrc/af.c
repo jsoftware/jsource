@@ -193,7 +193,7 @@ DF2(jtfix){F12IP;PROLOG(0005);A z;
  w=w==self?num(2):w;   // monad defaults to full replace
  I rqtype=rei0(w);   // get the requested operation
  if(self!=0){  // if not internal call, convert req to flags
-  ASSERT(BETWEENC(rqtype,0,4),EVDOMAIN) rqtype=((I)1<<FIXAFCOX)<<rqtype;  // audit value & convert to one-hot
+  ASSERT(BETWEENC(rqtype,0,4),EVDOMAIN) rqtype=BIT(FIXAFCOX)<<rqtype;  // audit value & convert to one-hot
  } 
  // To avoid infinite recursion ae keep an array of names that we have looked up.  We create that array here, initialized to empty.  To pass it into fixa, we create
  // a faux INT block to hold the value, and use AM in that block to point to the list of names.  The fauxblock has rank 0 but 2 items

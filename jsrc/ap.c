@@ -493,7 +493,7 @@ static DF2(jtginfix){F12IP;A h,*hv,x,z,*zv;I d,m,n;
 
 #define STATEISPREFIX 0x2000  // this is prefix rather than infix
 #define STATESLASH2X 14  // f is f'/ and x is 2
-#define STATESLASH2 ((I)1<<STATESLASH2X)
+#define STATESLASH2 BIT(STATESLASH2X)
 
 // prefix and infix: prefix if a is mark
 static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];

@@ -23,19 +23,19 @@ DF2(jtunquote){F12IP;A z;
 
 #define FLGDYAD 1   // conjunction or dyadic verb
 #define FLGLOCATIVEX JTXDEFMODIFIERX  // 8 name is a direct or indirect locative (not u./v.)
-#define FLGLOCATIVE ((I)1<<FLGLOCATIVEX)
+#define FLGLOCATIVE BIT(FLGLOCATIVEX)
 #define FLGNMFLGX 9   // place where we store flags from name
     // bits 9-16 hold name flags
 #define FLGPSEUDOX 17  // operation is pseudo-named function
-#define FLGPSEUDO ((I)1<<FLGPSEUDOX)
+#define FLGPSEUDO BIT(FLGPSEUDOX)
 #define FLGCACHEDX 18  // operation is cached, not requiring lookup
-#define FLGCACHED ((I)1<<FLGCACHEDX)
+#define FLGCACHED BIT(FLGCACHEDX)
 #define FLGANONX 19  // operation is pseudo-named function but only because of debug/pm.  The name should not be used to change locales
-#define FLGANON ((I)1<<FLGANONX)
+#define FLGANON BIT(FLGANONX)
 #define FLGLOCINCRDECRX 20  // this call is to a new locale & must incr/decr execcts
-#define FLGLOCINCRDECR ((I)1<<FLGLOCINCRDECRX)
+#define FLGLOCINCRDECR BIT(FLGLOCINCRDECRX)
 #define FLGLOCCHANGEDX 21  // the caller of this function has previously encountered cocurrent
-#define FLGLOCCHANGED ((I)1<<FLGLOCCHANGEDX)
+#define FLGLOCCHANGED BIT(FLGLOCCHANGEDX)
    // bits 22-28 must be 0 - they are stored into bstkreqd
 #define FLGFLAG2X 32  // location of FLAG2 flags
 

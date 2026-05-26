@@ -395,11 +395,11 @@ F1(jtiden){F12IP;A f,g,x=0;V*u,*v;
   break;
  case CBDOT: ;  // canned inverses for (bt b.)
   I bt=i0(g);
-#define INVM1 BMK(25)
-#define INV0 (BMK(2)+BMK(4)+BMK(5)+BMK(6)+BMK(7)+BMK(18)+BMK(20)+BMK(21)+BMK(22)+BMK(23))
-#define INV1 (BMK(1)+BMK(9)+BMK(11)+BMK(13)+BMK(17)+BMK(27)+BMK(29))
-  if(bt<32&&((INVM1|INV0|INV1)&(1LL<<bt))){I bi;
-   bi=-1; bi=INV0&(1LL<<bt)?0:bi; bi=INV1&(1LL<<bt)?1:bi;
+#define INVM1 BIT(25)
+#define INV0 (BIT(2)+BIT(4)+BIT(5)+BIT(6)+BIT(7)+BIT(18)+BIT(20)+BIT(21)+BIT(22)+BIT(23))
+#define INV1 (BIT(1)+BIT(9)+BIT(11)+BIT(13)+BIT(17)+BIT(27)+BIT(29))
+  if(bt<32&&SHMSK(INVM1|INV0|INV1,bt,1)){I bi;
+   bi=-1; bi=SHMSK(INV0,bt,1)?0:bi; bi=SHMSK(INV1,bt,1)?1:bi;
    x=num(bi);
   }
   break;

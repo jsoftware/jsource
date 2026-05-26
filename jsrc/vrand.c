@@ -894,7 +894,7 @@ static F2(jtrollksubdot){F12IP;A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt-
  }else{
   r=n; s=GMOF(m,x); if(s==x)s=0;
   k=CTLZI(m-1); ++k; k=m==1?0:k;
-  if(k&&(1LL<<k)==m){  /* m=2^k but is not 1 or 2 */
+  if(k&&BIT(k)==m){  /* m=2^k but is not 1 or 2 */
    p=jt->rngdata->rngw/k; q=n/p; r=n%p; mk=m-1;
    switch((s?2:0)+(1<p)){
    case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;

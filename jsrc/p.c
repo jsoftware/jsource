@@ -149,7 +149,7 @@ static const __attribute__((aligned(16*sizeof(UI4)))) UI4 ptcol[16] = {
 
 // tests for pt types
 #define PTISCAVNX 23  // this flag used in a register here
-#define PTISCAVN(pt) ((pt)&(1LL<<PTISCAVNX))
+#define PTISCAVN(pt) ((pt)&BIT(PTISCAVNX))
 #define PTISAN(pt) ((pt)&0x00090000)  // col 2 enables lines 0 or 3 - adv or noun
 #define PTISAC(pt) ((pt)&0x00180000)  // col 2 enables lines 3 or 4 - adv or conj
 #define PTISRPAR0(pt) ((pt)&0x7fff)
@@ -159,11 +159,11 @@ _Static_assert((PTRPAR^PTMARKBACK&0xffff0000)==0,"MARKBACK must equal RPAR for e
 #define PTISMARKFRONT(pt)  ((I4)(pt)>PTLPAR)  // pt is MARKFRONT
 #define PTISNOTASGNNAME  TESTSTACK0PT(24)  // NOT =./=: with name on the left
 #define PTASGNLOCALX 22  // set in the type-code for local assignment
-#define PTASGNLOCAL (1LL<<PTASGNLOCALX)
+#define PTASGNLOCAL BIT(PTASGNLOCALX)
 #define PTNOTLPARX 27  // this bit is set for NOT LPAR    used in a register here
-#define PTNOTLPAR (1LL<<PTNOTLPARX)  // this bit is set in pt only if NOT LPAR
+#define PTNOTLPAR BIT(PTNOTLPARX)  // this bit is set in pt only if NOT LPAR
 #define PTNAME0X 21  // when pt[0] is known to be NAME or NOUN, this bit is set if NAME
-#define PTNAME0 (1LL<<PTNAME0X)
+#define PTNAME0 BIT(PTNAME0X)
 // converting type field to pt, store in z
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt=(t)&(((1LL<<(LASTNOUNX+1))-1))?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}  // here when we know it's CAVN (not assignment)
 

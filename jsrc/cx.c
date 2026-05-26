@@ -31,7 +31,7 @@
 
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
 // line-> box 0 - executable words/control words/go/tcesx; n (in flag word)=#control words; cwsent->array of control-word data, a CW struct for each
-#define LINE(sv) {A x=AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)+0]; cwsent=CWBASE(x);  NPGpysfmtdl&=((I)1<<CWCTX)-1; NPGpysfmtdl|=-(CWNC(x)<<CWCTX);}  // h allocated at rank 1
+#define LINE(sv) {A x=AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)+0]; cwsent=CWBASE(x);  NPGpysfmtdl&=BIT(CWCTX)-1; NPGpysfmtdl|=-(CWNC(x)<<CWCTX);}  // h allocated at rank 1
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
@@ -1278,7 +1278,7 @@ colonfound:;   // : given.  takeafter the : for the first line, and taketo for t
   DO(2, A vv=i?v2:v1; I b; RZ(b=(I)preparse(vv,&hv[HN*i+0],&hv[HN*i+1])); flag|=((b>>1)*VTRY1)<<i; hv[HN*i+2]=vv;)
   // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text);(local symbol table)
   // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
-  if((1LL<<m)&0x206){  // types 1, 2, 9
+  if(SHMSK(0x206,m,1)){  // types 1, 2, 9
    I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 8=mu 4=nv 2=x 1=y, combined for both valences
    // for 9 : n, figure out best type after looking at n
    if(m==9){
@@ -1317,7 +1317,7 @@ colonfound:;   // : given.  takeafter the : for the first line, and taketo for t
   ft=m==1?ADVX:ft; okv1=m==1?modfn:okv1; okv2=m==1?jtvalenceerr:okv2;  // adv goes to modfn/valenceerr
   ft=m==2?CONJX:ft; okv1=m==2?jtvalenceerr:okv1; okv2=m==2?modfn:okv2;  // conj goes to valenceerr/modfn
   if(!(flag&VXOPR)){okv1=hv[HN*0+3]?okv1:jtvalenceerr; okv2=hv[HN*1+3]?okv2:jtvalenceerr;}    // don't allow call to undefined non-operator valence
-  fdeffill(z,0,CCOLONE, ((I)1<<ft), okv1,okv2, num(m),0L,h, flag, RMAX,RMAX,RMAX);
+  fdeffill(z,0,CCOLONE, BIT(ft), okv1,okv2, num(m),0L,h, flag, RMAX,RMAX,RMAX);
  }  // tacit form joins the explicit here
  // EPILOG is called for because of the allocations we made, but it is essential to make sure the pfsts created during crelocalsyms get deleted.  They have symbols with no value
  // that will cause trouble if 18!:_2 is executed before they are expunged.  As a nice side effect, all explicit definitions are recursive.

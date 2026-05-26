@@ -11,10 +11,10 @@
 #define VCVTIP          ((I)0x3<<VIPRNKX)   // this should always be set in any cv
 // bits 4-6 free
 #define VIPWCRLONGX     7  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  sign bit of lane 0
-#define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
+#define VIPWCRLONG      BIT(VIPWCRLONGX)
 // bit 8 left open for overflow from loop-migration check
 #define VRCX            9           // bit position for optional final result-conversion 9-10
-#define VRD             ((I)1<<VRCX) // convert result to D if possible   must be 1 bit below VRI
+#define VRD             BIT(VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible
 #define VRNONE          ((I)3<<VRCX) // do not convert result  for now this is only in the atomic dyads - other leave the field at 00
 #define VRERR           ((I)0<<VRCX) // result-conversion removed by error (including EVNOCONV)
@@ -22,7 +22,7 @@
 // 11-13 free
 // bit 14 left open for overflow from loop-migration check
 #define VIPWFLONGX      15  //  internal use in va2.  Means 'w has longer frame, so x is repeated in outer loops'  sign bit of lane 1
-#define VIPWFLONG       ((I)1<<VIPWFLONGX)
+#define VIPWFLONG       BIT(VIPWFLONGX)
 #define VICX            16           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
 #define VBB             ((I)(15-B01X)<<VICX)
 #define VII             ((I)(15-INTX)<<VICX)
@@ -37,22 +37,22 @@
 // obsolete #define VUNCH           (0<<VRESX)  // leave result unchanged
 // obsolete #define VRESMSK         (VB|VI|VD|VZ|VX|VQ)  // mask for result-type - if all 0, take result type from the args
 // obsolete #define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
-// obsolete #define VCOPYW          ((I)1<<VCOPYWX)
+// obsolete #define VCOPYW          BIT(VCOPYWX)
 // obsolete #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
-// obsolete #define VCOPYA          ((I)1<<VCOPYAX)
+// obsolete #define VCOPYA          BIT(VCOPYAX)
 #define VIPOKWX         20      // This routine can put its result over W
-#define VIPOKW          ((I)1<<VIPOKWX)
+#define VIPOKW          BIT(VIPOKWX)
 #define VIPOKAX         21      // This routine can put its result over A
-#define VIPOKA          ((I)1<<VIPOKAX)
+#define VIPOKA          BIT(VIPOKAX)
 // the conversion info for Vxx is in bits 22 and 24:
 #define VXEX            (VXX|XMODETOCVT((I)XMEXACT))  // exact conversion
 #define VXEQ            (VXX|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */
 #define VXCF            (VXX|XMODETOCVT((I)XMCEIL))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (VXX|XMODETOCVT((I)XMFLR))  /* convert to XNUM floor/ceiling       */
-#define VCANHALT        0  // ((I)1<<VCANHALTX) was 25, but no longer used
+#define VCANHALT        0  // BIT(VCANHALTX) was 25, but no longer used
 // bits 23 & 25 free
 #define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
-#define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
+#define VXCHASVTYPE     BIT(VXCHASVTYPEX)
 #define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
 #define VOTX            27           // bit position for allocated result-type  MUST be highest bits!
 #define VB              ((I)B01X<<VOTX)
@@ -67,10 +67,10 @@
 #define VOTMSK          ((I)15<<VOTX) // mask for result type from function 12-15.  always present
 // bit 31 free, leave open to shorten immediates
 // obsolete #define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
-// obsolete #define VIPOKRNKW          ((I)1<<VIPOKRNKWX)
+// obsolete #define VIPOKRNKW          BIT(VIPOKRNKWX)
 // obsolete // bit 29 free
 // obsolete #define VIPOKRNKAX         30      // filled internally by va2 if the ranks allow inplacing a
-// obsolete #define VIPOKRNKA          ((I)1<<VIPOKRNKAX)
+// obsolete #define VIPOKRNKA          BIT(VIPOKRNKAX)
 // obsolete // bit 31 must not be used - it may be a sign bit, which has a meaning
 
 // Extract the argument-conversion type from cv coming from the table
@@ -571,7 +571,7 @@ rdlp: ;  /* come here to fetch next batch & store it without masking */ \
   /* The length of this batch comes from len0 or len1 */ \
   len0=-(len1>>(BW-3));   /* extract len0 from combined len0/len1, range 1 to 4, or 0 if not first batch */ \
   len0=len1<0?len0:len1;  /* len0=length of batch: len0 (first batch) or len1 (others) */ \
-  len1&=((1LL<<(BW-3))-1); /* discard len0 from le ngth remaining */ \
+  len1&=((1LL<<(BW-3))-1); /* discard len0 from length remaining */ \
   I zinc=(len0>2)<<(LGNPAR+LGSZI);  /* offset to second half of result, if it can be written */ \
   _mm256_maskstore_pd((D*)((C*)z+zinc),_mm256_slli_epi64(wrmask,1),z1); \
   _mm256_maskstore_pd((D*)(z),wrmask,z0); \

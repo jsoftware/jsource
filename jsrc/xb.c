@@ -1208,7 +1208,7 @@ DF2(jtiso8601toe){F12IP;A z;I prec;I local;
   if(AT(a)&BOX){ASSERT(AR(a)==1,EVRANK) ASSERT(BETWEENC(AN(a),1,2),EVLENGTH) aprec=AAV(a)[0]; if(AN(a)==2)alocal=AAV(a)[1];}
   ASSERT(AT(aprec)&LIT,EVDOMAIN); ASSERT(AN(aprec)==1,EVLENGTH); ASSERT(AR(aprec)<=1,EVRANK);  // a must be a 1-character list or atom
   // convert precision character to precision to use (_1 for date, 0-9)
-  if(CAV(aprec)[0]=='d')prec=-1; else {prec=CAV(aprec)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(((I)1<<prec)&0x209,EVNONCE);}  // 0 3 9 allowed
+  if(CAV(aprec)[0]=='d')prec=-1; else {prec=CAV(aprec)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(SHMSK(0x209,prec,1),EVNONCE);}  // 0 3 9 allowed
   local=rei0(alocal); ASSERT(BETWEENO(local,-24*3600,24*3600),EVDOMAIN) local=local*1000000000;   // fetch timezone offset if any
  }else{
   w=a; prec=9; local=0; // monad: switch argument, set defaults
@@ -1338,7 +1338,7 @@ DF2(jtstringtoe){F12IP;A z;I prec;
   ASSERT(AN(a)==1,EVLENGTH);
   ASSERT(AR(a)<=1,EVRANK);  // a must be a 1-character list or atom
   // convert precision character to precision to use (_1 for date, 0-9)
-  if(CAV(a)[0]=='d')prec=-1; else {prec=CAV(a)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(((I)1<<prec)&0x209,EVNONCE);}  // 0 3 9 allowed
+  if(CAV(a)[0]=='d')prec=-1; else {prec=CAV(a)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(SHMSK(0x209,prec,1),EVNONCE);}  // 0 3 9 allowed
  }else{
   w=a; prec=9; // monad: switch argument, set defaults
  }

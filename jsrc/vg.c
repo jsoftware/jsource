@@ -272,7 +272,7 @@ static GF(jtgrdq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
  I sortdown63=SGNIF(jtfg,JTDESCENDX)&IMIN;  // sign bit set if sorting down; other bits 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
- unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
+ unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=BIT(hbit)-1;  // mask where the item number will go
  // Loop over each grade
  I *wv=IAV(w);  // we interpret the floats in w as if they were integers.
  while(--m>=0){
@@ -423,7 +423,7 @@ static GF(jtgriq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
  I gradedown=REPSGN(SGNIF(jtfg,JTDESCENDX));  // ~0 if sorting down, else 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
- unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
+ unsigned long hbit=CTLZI(n-1); ++hbit; I itemmask=BIT(hbit)-1;  // mask where the item number will go
  I itemmsb=(I)1<<(BW-1-hbit); I itemsigmsk=2*-itemmsb;  // get bit at place we will shift into sign bit, and a mask for all higher bits
  // Loop over each grade
  I *wv=IAV(w);  // we interpret the floats in w as if they were integers.

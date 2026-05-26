@@ -69,14 +69,14 @@ typedef long double        LD;
 typedef UC                 RANKT;
 #define RANKTX             8   // # bits in a RANKT
 #define LGRANKTX           3  // lg2(RANKTX)
-#define RANKTMSK           (((I)1<<RANKTX)-1)
+#define RANKTMSK           (BIT(RANKTX)-1)
 typedef US                 RANK2T;  // 2 ranks, (l<<8)|r
 typedef UI4                RANK4T;  // 4 ranks
 #define RANK2TX            16   // # bits in a RANK2T
 #define LGRANK2TX          4  // lg2(RANK2TX)
 #define RANK2TMSK           0xFFFFU
 #define LGRMAX             6  // lg2(RMAX+1)
-#define RMAX               (((I)1<<LGRMAX)-1)   // max rank, leaving 2 bits for flags
+#define RMAX               (BIT(LGRMAX)-1)   // max rank, leaving 2 bits for flags
 #define R2MAX              ((RMAX<<RANKTX)+RMAX)  // max value of a RANK2T
 
 typedef I                  FLAGT;
@@ -654,7 +654,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define ACINPLACEX      (BW-1)
 #define ACINPLACE       ((I)((UI)1<<ACINPLACEX))  // set when this block CAN be used in inplace operations.  Always the sign bit.
 #define ACPERMANENTX    (BW-2)
-#define ACPERMANENT     ((I)1<<ACPERMANENTX)  // next-to-top bit, set in blocks that should never modify the AC field
+#define ACPERMANENT     BIT(ACPERMANENTX)  // next-to-top bit, set in blocks that should never modify the AC field
 #define ACUSECOUNT      (I)1  // lower bits used for usecount
 #define ACAND(a,v)      __atomic_fetch_and(&AC(a),(v),__ATOMIC_ACQ_REL);
 #define ACOR(a,v)       __atomic_fetch_or(&AC(a),(v),__ATOMIC_ACQ_REL);
@@ -715,22 +715,22 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFRO            (I)1            /* read only; can't change data  matches B01    */
 #define AFROX           0            /* read only; can't change data    */
 #define AFNJAX          1            /* non-J alloc; i.e. mem mapped matches LIT   */
-#define AFNJA           ((I)1<<AFNJAX)
+#define AFNJA           BIT(AFNJAX)
 #define AFDEBUGRESULTX  2           // special flag for values that alter debug state matches INT
-#define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
+#define AFDEBUGRESULT   BIT(AFDEBUGRESULTX)
 // 3-4 free
 
 #define AFSENTENCEWORDX     8     // matches INT1X
-#define AFSENTENCEWORD      ((I)1<<AFSENTENCEWORDX)   // this block comes from an executing sentence and is protected by it
+#define AFSENTENCEWORD      BIT(AFSENTENCEWORDX)   // this block comes from an executing sentence and is protected by it
 #define AFANCHOREDX     9     // matches INT2X
-#define AFANCHORED      ((I)1<<AFANCHOREDX)   // this block must not be aliased (it is needed inplace)
+#define AFANCHORED      BIT(AFANCHOREDX)   // this block must not be aliased (it is needed inplace)
 #define AFUNINCORPABLEX 16      // 16
-#define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
+#define AFUNINCORPABLE  BIT(AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes and is probably on the C stack rather than 
                                 // allocated memory.  It must never become part of a named value (except that it can be assigned to the entirety of local x and y).  AFVIRTUAL must also be set.  If this block is
                                 // inplaceable, the data may be overwritten but the header must not be: clonevirtual() in that case to get a modifiable header
 #define AFVIRTUALX      C2TX      // matches C2TX 17
-#define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
+#define AFVIRTUAL       BIT(AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
                                  // cannot be assigned, unless it is 'realized' by creating another block and copying the data.  We realize whenever we call ra() on the block,
                                  // except during the EPILOG, where we don't realize the block unless the real block is about to be freed.  Like PERMANENT blocks,
@@ -744,17 +744,17 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
                                  // has been abandoned may be marked inplaceable as well.
                                  // NOTE: AFVIRTUALX must be higher than any RECURSIBLENOUN type (for test in result.h)
 #define AFKNOWNNAMEDX   C4TX      // matches C4TX 18   *** can be changed when block is shared
-#define AFKNOWNNAMED    ((I)1<<AFKNOWNNAMEDX)      // set (often) in a value when the value is assigned to a name.  It is possible that the name will be deleted, in which case the flag will be cleared
+#define AFKNOWNNAMED    BIT(AFKNOWNNAMEDX)      // set (often) in a value when the value is assigned to a name.  It is possible that the name will be deleted, in which case the flag will be cleared
                                   // even if the value is assigned to another name.  The purpose is to allow virtual extension: if you know that a value is assigned to a name, then only one
                                   // thread can encounter the value with AC=2, and that is safe for virtual extension.
 
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFVIRTUALBOXEDX XDX   // matches XDX 19
-#define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
+#define AFVIRTUALBOXED  BIT(AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
 #define AFUNIFORMITEMSX MARKX     // matches MARK 22
-#define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
+#define AFUNIFORMITEMS  BIT(AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AM (so this block cannot be virtual)
 #define AFPRISTINEX      ASGNX  // matches ASGN 24 - must be above all DIRECT flags   *** can be changed when block is shared
-#define AFPRISTINE  ((I)1<<AFPRISTINEX)  // meaningful only for BOX type.  This block's contents were made entirely of DIRECT inplaceable or PERMANENT values, and thus can be
+#define AFPRISTINE  BIT(AFPRISTINEX)  // meaningful only for BOX type.  This block's contents were made entirely of DIRECT inplaceable or PERMANENT values, and thus can be
    // inplaced by &.> .  If any of the contents are taken out, the PRISTINE flag must be cleared, unless the block is never going to be used again (i. e. is inplaceable).
    // When a VIRTUAL block is created, it inherits the PRISTINE status of its backer; if the block is modified or a value escapes by address, PRISTINE status is cleared in the backer.
    // If a PRISTINE virtual block is realized, the backer must become non-PRISTINE (because its contents are escaping).
@@ -762,14 +762,14 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
    // block was incorporated.
    // NOTE: if a block becomes shared, the value of PRISTINE becomes immaterial
 #define AFDPARENX CONWX     // matches CONW 26
-#define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word replaced the original and must use linear rep for its display
+#define AFDPAREN  BIT(AFDPARENX)  // In the words of an external definition, this word replaced the original and must use linear rep for its display
    // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
 #define AFUPPERTRIX RPARX      // matches RPAR 30
-#define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
+#define AFUPPERTRI  BIT(AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 // NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
-#define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
+#define AFAUDITUC       BIT(AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 #define AFLAGINIT(a,v)  {AFLAG(a)=(v);}  // used when it is known that a has just been allocated & is not shared
 #define AFLAGRESET(a,v) {AFLAG(a)=(v);} // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
 #define AFLAGFAUX(a,v)  {AFLAG(a)=(v);}  // used when a is known to be a faux block
@@ -791,19 +791,19 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 
 // rank flags in the AR field of symbol tables.  The allocated rank is always 0
 #define ARNAMEDX 0   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1.  Never set in a local table
-#define ARNAMED ((I)1<<ARNAMEDX)
+#define ARNAMED BIT(ARNAMEDX)
 // bit 1 not used
 // the rest of the flags apply only to local symbol tables
 #define ARLCLONEDX NMSHAREDX  // 2 set if this is a cloned local symbol table (in which symbol numbers are invalid); OR in a global table that suppresses the check for locally-defined names
-#define ARLCLONED (1LL<<ARLCLONEDX)
+#define ARLCLONED BIT(ARLCLONEDX)
 #define ARHASACVX 3   // set if this local symbol table contains an ACV
-#define ARHASACV ((I)1<<ARHASACVX)
+#define ARHASACV BIT(ARHASACVX)
 #define ARLOCALTABLEX 4   // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
-#define ARLOCALTABLE ((I)1<<ARLOCALTABLEX)
+#define ARLOCALTABLE BIT(ARLOCALTABLEX)
 #define ARLSYMINUSE 32  // This bit is set in the rank of the original local symbol table when it is in use
 #define ARINVALID 64  // This (named or numbered) symbol table was never filled in and must not be analyzed when freed
 #define ARNAMEADDEDX 7  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag.  Keep as sign bit
-#define ARNAMEADDED (1LL<<ARNAMEADDEDX)
+#define ARNAMEADDED BIT(ARNAMEADDEDX)
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 
@@ -811,7 +811,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define FIXALOCSONLY 8  // to fixa: replace only u/v (IMPLOC)
 #define FIXASTOPATINV 16  // to fixa: stop fixing a branch when it gets to a an explicit obverse 
 #define FIXAFCOX 5  // starting bit# of options given by f:
-#define FIXAFCONAMEONLY ((I)1<<FIXAFCOX)  // 32 fix only top name
+#define FIXAFCONAMEONLY BIT(FIXAFCOX)  // 32 fix only top name
 #define FIXAFCONAMESONCE ((I)2<<FIXAFCOX)  // 64 fix each name only once
   // 128 all names
 #define FIXAFCONOTLOCATIVES ((I)8<<FIXAFCOX)  // 256 don't fix locatives
@@ -937,10 +937,10 @@ typedef DST* DC;
 #define QCSENTTYPE(x) ((I)(x)&0xf+QCISLKPNAME)  // the meaningful parts of the sentence type.  QCNAMED is set or not for performance reasons
 // Values stored in the symbol table have QCSYMVAL semantics:
 #define QCNAMEDX 4  // set to indicate that this value came from a name
-#define QCNAMED ((I)1<<QCNAMEDX)
+#define QCNAMED BIT(QCNAMEDX)
 #define SETNAMED(w) (A)((I)(w)|QCNAMED)
 #define QCRAREQDX 5   // Value should be ra()d before stacking.  This is any global name or any sparse value.
-#define QCRAREQD ((I)1<<QCRAREQDX)
+#define QCRAREQD BIT(QCRAREQDX)
 #define ISRAREQD(w) ((I)(w)&QCRAREQD)  // true if value should be ra()d before stacking
 #define SETRAREQD(w) (A)((I)(w)|QCRAREQD)
 #define CLRRAREQD(w) (A)((I)(w)&~QCRAREQD)
@@ -950,11 +950,11 @@ typedef DST* DC;
 #define NAMELESSQCTOTYPEDQC(q) q=(A)(((I)q&~0xf)+ATYPETOVALTYPEACV(AT(QCWORD(q))));  // q is NAMELESS QC; result has QC type for AT(q) with unchanged semantics
 // In the LSBs returned by syrd1() bit 4 has QCNAMEDLOC semantics (bit 5 is garbage):
 #define QCNAMEDLOCX 4  // set if the value was found in a named locale, clear if numbered
-#define QCNAMEDLOC ((I)1<<QCNAMEDLOCX)  // set if the value was found in a named locale, clear if numbered
+#define QCNAMEDLOC BIT(QCNAMEDLOCX)  // set if the value was found in a named locale, clear if numbered
 #define CLRNAMEDLOC(w) (A)((I)(w)&~QCNAMEDLOC)
 // In the LSBs returned by syrd()  (stored by symbis()), bit 4 and the higher code points have QCFAOWED semantics:
 #define QCFAOWEDX 5  // the value was ra()d when it was stacked and must be fa()d when it leaves execution.  Normally matches RAREQD.  It is OK to ra() unnecessarily but this flag has to match the action we took in syrd
-#define QCFAOWED ((I)1<<QCFAOWEDX)
+#define QCFAOWED BIT(QCFAOWEDX)
 #define QCFAOWEDMSK (QCNAMED+QCFAOWED)  // the bits in FAOWED semantics (not including the type flags)
 #define CLRQCFAOWEDMSK(w) (A)((I)(w)&~QCFAOWEDMSK)
 #define SETFAOWED(w) (A)((I)(w)|QCFAOWED)
@@ -965,12 +965,12 @@ typedef DST* DC;
 // When the value is pushed onto the parser stack, we use STKNAMED semantics: STKNAMED is set in any named ref and
 // the FAOWED bit moves to bit 1 where it can be distinguished from a tstack pointer
 #define STKNAMEDX 0
-#define STKNAMED ((I)1<<STKNAMEDX)  // set if the address is the address of the arg (rather than of a tpop slot)
+#define STKNAMED BIT(STKNAMEDX)  // set if the address is the address of the arg (rather than of a tpop slot)
 #define ISSTKNAMED(w) ((I)(w)&STKNAMED)  // is fa() required?
 #define STKFAOWEDX 1   // set in parser stack if value had ra() performed when it was stacked (or if ra() was performed later while on the stack)
-#define STKFAOWED ((I)1<<STKFAOWEDX)
+#define STKFAOWED BIT(STKFAOWEDX)
 #define STKREFRESHRQDX 2  // set in verb of a line 1-3 exec to indicate that tpop[aw] are stale and must be refreshed from the stack
-#define STKREFRESHRQD ((I)1<<STKREFRESHRQDX)
+#define STKREFRESHRQD BIT(STKREFRESHRQDX)
 #define SETSTKFAOWED(w) (A)((I)(w)|STKFAOWED)
 #define CLRSTKFAOWED(w) (A)((I)(w)&~STKFAOWED)
 #define ISSTKFAOWED(w) ((I)(w)&STKFAOWED)  // is fa() required?
@@ -1008,10 +1008,10 @@ typedef struct {
 // flags in L->flag
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LPERMANENTX  1
-#define LPERMANENT   ((I)1<<LPERMANENTX)  // set if the name is a local name assigned in the definition; these names are never deleted - the value is cleared instead
+#define LPERMANENT   BIT(LPERMANENTX)  // set if the name is a local name assigned in the definition; these names are never deleted - the value is cleared instead
 #define LINFO           (I)4            // Indicates the symbol-table entry is info only and the value is not a valid pointer (diags only)
 #define LWASABANDONEDX  4
-#define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
+#define LWASABANDONED   BIT(LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
                                     // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
                                     // immediately
                                     // This value passes into AFLAGS and must not overlap anything there
@@ -1032,7 +1032,7 @@ typedef struct {
 // Macros to incr/decr execct of a locale
 #define EXECCTNOTDELD 0x1000000   // This bit is set when a locale is created, and removed when the user asks to delete it.  Lower bits are the exec count.  The locale is half-deleted when exec ct goes to 0
 #define EXECCTPERMX 25  // set to mark the locale permanent, execcts not tracked
-#define EXECCTPERM ((I)1<<EXECCTPERMX)
+#define EXECCTPERM BIT(EXECCTPERMX)
 #if PYXES
 #define INCREXECCT(l) __atomic_fetch_add(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL);
 #define DECREXECCT(l) if(unlikely(__atomic_sub_fetch(&LXAV0(l)[SYMLEXECCT],1,__ATOMIC_ACQ_REL)==0))locdestroy(l);
@@ -1076,10 +1076,10 @@ typedef struct{
 #define NMLOC           1       // direct   locative abc_lm_   only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMILOC          2       // indirect locative abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMSHAREDX    2
-#define NMSHARED     (1LL<<NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
+#define NMSHARED     BIT(NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
 #define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
-#define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup
+#define NMCACHED        BIT(NMCACHEDX)      // This NM is to cache any valid lookup
 #define NMMNUVXY           128       // one of the names m n u v x y
 
 
@@ -1299,19 +1299,19 @@ typedef struct {
 #define VFLR            (I)0x2000         /* function is <.@g                */
 #define VCEIL           (I)0x4000       /* function is >.@g                */
 #define VNOSELFX        15  // this node and its descndants DO NOT contain $:
-#define VNOSELF         ((I)1<<VNOSELFX)      
+#define VNOSELF         BIT(VNOSELFX)      
 #define VLOCK           (I)0x10000        /* function is locked              */
 #define VWASUNARY       (I)0x20000       // 17 this verb replaces the original, which was something like -: that is replaced by 0.5 *
 #define VNONAMEX           18  // f. can skip over this word because it is the same after being fixed (noun or no named descendants)
-#define VNONAME            ((I)1<<VNONAMEX)      
+#define VNONAME            BIT(VNONAMEX)      
 #define VXOPRX          19                // the definition is an explicit modifier that refers to x or y
-#define VXOPR           ((I)1<<VXOPRX)
+#define VXOPR           BIT(VXOPRX)
 #define VXOP            (I)0x100000      // this is the result of giving [u]/v args to a defn that had VXOPR set.  u and v are in fgh[0/2]
 #define VTRY1           (I)0x200000      /* monad contains try.             */
 #define VTRY2           (I)0x400000      /* dyad  contains try.  must be just above VTRY1           */
 #define VUNARYCODEX      23                //  2-bit field indiating the original verb (when taken with id)
 #define VUNARYCODE0     ((I)0<<VUNARYCODEX)
-#define VUNARYCODE1     ((I)1<<VUNARYCODEX)
+#define VUNARYCODE1     BIT(VUNARYCODEX)
 #define VUNARYCODE2     ((I)2<<VUNARYCODEX)
 #define VUNARYCODE3     ((I)3<<VUNARYCODEX)
 // bit VNOLOCCHG is wired into a flag reg in parser

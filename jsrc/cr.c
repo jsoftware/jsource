@@ -12,11 +12,11 @@
 
 // make sure these don't overlap with bits in result.h
 #define STATEWNOTEMPTYX 16  // set if a arg has atoms
-#define STATEWNOTEMPTY ((I)1<<STATEWNOTEMPTYX)
+#define STATEWNOTEMPTY BIT(STATEWNOTEMPTYX)
 #define STATEANOTEMPTYX 17  // set if a arg has atoms
-#define STATEANOTEMPTY ((I)1<<STATEANOTEMPTYX)
+#define STATEANOTEMPTY BIT(STATEANOTEMPTYX)
 #define STATEAWNOTEMPTYX 18  // set if a and w args both have atoms
-#define STATEAWNOTEMPTY ((I)1<<STATEAWNOTEMPTYX)
+#define STATEAWNOTEMPTY BIT(STATEAWNOTEMPTYX)
 // These bits start where they do to avoid overlap with AFPRISTINE.  Also, they are above where rank significance is
 #define STATEOUTERREPEATAX (AFPRISTINEX+1)
 #define STATEOUTERREPEATA (((I)1)<<STATEOUTERREPEATAX)

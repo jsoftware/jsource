@@ -229,12 +229,12 @@ typedef struct {
  I4 taskm[2];  // number of rows in leading tasks, unshortened trailing tasks
 } CACHEMMSTATE;
 #define OPHEIGHTX 2
-#define OPHEIGHT ((I)1<<OPHEIGHTX)  // height of outer-product block
+#define OPHEIGHT BIT(OPHEIGHTX)  // height of outer-product block
 #define OPWIDTHX 3
-#define OPWIDTH ((I)1<<OPWIDTHX)  // width of outer-product block
+#define OPWIDTH BIT(OPWIDTHX)  // width of outer-product block
 #define CACHEWIDTH 64  // width of resident cache block (in D atoms)
 #define CACHEHEIGHTX 4
-#define CACHEHEIGHT ((I)1<<CACHEHEIGHTX)  // height of resident cache block
+#define CACHEHEIGHT BIT(CACHEHEIGHTX)  // height of resident cache block
 #define MAXAROWS ((L2CACHESIZE/CACHEWIDTH/sizeof(D))*3/4)  // max #rows of a/z that we can process while staying in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH
 static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
@@ -1563,7 +1563,7 @@ finrle: ;
      // check for all-zero block, and update the sparse bitmap
      a10=_mm256_or_pd(a01,a00); a11=_mm256_or_pd(a02,a03); a10=_mm256_or_pd(a11,a10);  // OR of all values
      I blkis0=_mm256_testc_si256(_mm256_castpd_si256(sgnbit),_mm256_castpd_si256(a10))==1;   // testc is 1 if all values are +-0
-     *bma=((*bma)&~(1LL<<bmx))|(blkis0<<bmx);  //  set bit to (all values are not NE)
+     *bma=((*bma)&~BIT(bmx))|(blkis0<<bmx);  //  set bit to (all values are not NE)
      nzeroblocks+=blkis0;  // increment count of zero blocks
     }
    }

@@ -97,7 +97,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
    UC trace;  // tracing-related flags (debug and pm)  inherit
 #define TRACEDB1                1  // full debug
 #define TRACEPMX                 1  // set when PM is running
-#define TRACEPM              (1LL<<TRACEPMX)
+#define TRACEPM              BIT(TRACEPMX)
 #define TRACEDBSUSSS         0x20  // single-step request encountered - end suspension
 #define TRACEDBSUSCLEAR      0x40  // set to forcibly end suspension
 #define TRACEDBSUSFROMSCRIPT 0x80  // debug only, to keep reading from script during suspension
@@ -158,26 +158,26 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?
  C recurstate;       // state of recursions through JDo    init for task to RECSTATERUNNING
 #define RECSTATERUNNINGX 0  // JE is running, recursive call not allowed
-#define RECSTATERUNNING (1LL<<RECSTATERUNNINGX)
+#define RECSTATERUNNING BIT(RECSTATERUNNINGX)
 #define RECSTATERENTX 1 // JE has been reentered
-#define RECSTATERENT (1LL<<RECSTATERENTX)
+#define RECSTATERENT BIT(RECSTATERENTX)
 #define RECSTATEPROMPTINGX 2  // JE is at a prompt, a second prompt is not allowed
-#define RECSTATEPROMPTING (1LL<<RECSTATEPROMPTINGX)
+#define RECSTATEPROMPTING BIT(RECSTATEPROMPTINGX)
 // **************************************  end of initialized part
 
  C persistarea[0];  // end of area set at task startup
 // ************************************** everything after here persists over the life of the thread
  C taskstate;  // task state: modified by other tasks on a system lock or jbreak
 #define TASKSTATERUNNINGX 0   // This thread has started running a task
-#define TASKSTATERUNNING (1LL<<TASKSTATERUNNINGX)
+#define TASKSTATERUNNING BIT(TASKSTATERUNNINGX)
 #define TASKSTATELOCKACTIVEX 1  // thread has been notified that a systemlock has been called.  Transition of STATERUNNING is not allowed while LOCKACTIVE
-#define TASKSTATELOCKACTIVE (1LL<<TASKSTATELOCKACTIVEX)
+#define TASKSTATELOCKACTIVE BIT(TASKSTATELOCKACTIVEX)
 #define TASKSTATEACTIVEX 2  // thread is running on this JTT.  Changed under job lock.
-#define TASKSTATEACTIVE (1LL<<TASKSTATEACTIVEX)
+#define TASKSTATEACTIVE BIT(TASKSTATEACTIVEX)
 #define TASKSTATETERMINATEX 3  // thread has been signaled to terminate.  Changed under job lock.
-#define TASKSTATETERMINATE (1LL<<TASKSTATETERMINATEX)
+#define TASKSTATETERMINATE BIT(TASKSTATETERMINATEX)
 #define TASKSTATEFUTEXWAKEX 4  // wakeall is using jt->futexwt; don't delete it.  Accessed with RFO cycles
-#define TASKSTATEFUTEXWAKE (1LL<<TASKSTATEFUTEXWAKEX)
+#define TASKSTATEFUTEXWAKE BIT(TASKSTATEFUTEXWAKEX)
  B threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
  C scriptskipbyte;  // when not NUL, reading script discards lines up till the first one that starts NB. followed by skipbyte
@@ -487,7 +487,7 @@ typedef JST* JS;  // shared part of struct
  }else{jttout=MDTHREAD(injstout);}  // if jt is a shared pointer, keep it as jt and use the master/debug thread as jm
 
 _Static_assert(sizeof(struct JSTstruct)<=JTALIGNBDY,"too many threads");  // assert not too many threads
-_Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE),"threaddata size");  // assert size of threaddata what we expected
+_Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==BIT(LGTHREADBLKSIZE),"threaddata size");  // assert size of threaddata what we expected
 
 #if SY_64
 _Static_assert(offsetof(JTT,_cl0)==0*64,"cacheline 0 offset wrong");

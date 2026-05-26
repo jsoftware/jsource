@@ -65,12 +65,12 @@ static DF2(jtpowatom12){F12IP;
 #define POWERAMULT (I)1   // set if power was boxed
 #define POWERANEG (I)2   // set if power is negative
 #define POWERADOWHILEX 2  // When this bit is set in an infinite power, we are running ^:_.
-#define POWERADOWHILE ((I)1<<POWERADOWHILEX)
+#define POWERADOWHILE BIT(POWERADOWHILEX)
 _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
 #define POWERABSX 3  // bits 2&up=|power|, which makes poweratom negative for infinite power
-#define POWERABS ((I)1<<POWERABSX)
+#define POWERABS BIT(POWERABSX)
 #define POWERAEXTX (BW-2)   // when this bit is CLEAR in an infinite power, we have advanced to the runout polishing stage
-#define POWERAEXT ((I)1<<POWERAEXTX)
+#define POWERAEXT BIT(POWERAEXTX)
  A fs=FAV(self)->fgh[0];  // the verb u
  PROLOG(0);  // 
  A zz=0; // zz=result array if multiple results, 0 if single. 

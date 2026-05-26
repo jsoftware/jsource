@@ -126,7 +126,7 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
  __m256i a32=_mm256_maskload_epi64((long long const *) av, _mm256_loadu_si256((__m256i*)(validitymask + (3 - (temp >> 3)))));
 #endif
  // Load the mask of bits that must be set to declare a match on the whole string
- temp=32; temp=an<temp?an:temp; I fullmatchmsk=type + (UI4)(-(1LL<<temp));  // high-order 1 bits past the part that needs to be 1s in the mask - max length is 32  top 32 bits 0
+ temp=32; temp=an<temp?an:temp; I fullmatchmsk=type + (UI4)(-BIT(temp));  // high-order 1 bits past the part that needs to be 1s in the mask - max length is 32  top 32 bits 0
  // We put type into fullmatchmsk to save a register
  // scan full 31-byte sections until we hit one containing the first 2 characters
  C *wv0=wv;  // save initial pointer, to get index of match

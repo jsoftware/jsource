@@ -789,7 +789,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))unbiasforcomp
  // pass slot# back to front, putting them into 3 chains: new kvs, old keys, conflict keys (each in front-to-back order).  Conflict keys are assumed vary rare (usually repeated keys)
  I nroot=-1, oroot=-1, croot=-1, otail=0, nnew=0;;   // base of the 3 chains, inited to empty; tail of old chain, inited to 'not found yet' (safe even if result turns out to be 0); counter of new blocks
- DQ(n, I sh=((UI4*)(&s[i]))[1]; if(unlikely(sh&((1LL<<HASHBSTN)+(1LL<<(HASHTSTN+HASHBSTN))))){((UI4*)(&s[i]))[1]=croot; croot=i;}else{((I4*)(&s[i]))[1]=sh?nroot:oroot; nroot=sh?i:nroot; oroot=sh?oroot:i; nnew+=sh!=0; otail=sh|otail?otail:i;})
+ DQ(n, I sh=((UI4*)(&s[i]))[1]; if(unlikely(sh&(BIT(HASHBSTN)+(1LL<<(HASHTSTN+HASHBSTN))))){((UI4*)(&s[i]))[1]=croot; croot=i;}else{((I4*)(&s[i]))[1]=sh?nroot:oroot; nroot=sh?i:nroot; oroot=sh?oroot:i; nnew+=sh!=0; otail=sh|otail?otail:i;})
    // conflict if BSTN was set; otherwise old if high part of s[i]=0 
 
  // If the operation is going to run out of slots, abort before we start.

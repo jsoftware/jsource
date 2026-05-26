@@ -436,15 +436,15 @@ F2(jtapip){F12IP;A h;
    // collect some values into a flags register
 #define FGLGK 0x7
 #define FGVIRTREQDX 3    // if virtual extension required
-#define FGVIRTREQD (1LL<<FGVIRTREQDX)
+#define FGVIRTREQD BIT(FGVIRTREQDX)
 #define FGWATOMICX 8     // if w is atomic - higher than highest bit of rank
-#define FGWATOMIC (1LL<<FGWATOMICX)
+#define FGWATOMIC BIT(FGWATOMICX)
 #define FGWNOFILLX 9 // if fill is required for any reason.  If NOCELLFILL, the fill must come from higher axes of a that are not length 1
-#define FGWNOFILL (1LL<<FGWNOFILLX)
+#define FGWNOFILL BIT(FGWNOFILLX)
 #define FGWNOCELLFILLX 10 // if w has an interior axis that requires fill, i. e. take
-#define FGWNOCELLFILL (1LL<<FGWNOCELLFILLX)
+#define FGWNOCELLFILL BIT(FGWNOCELLFILLX)
 #define FGWPRISTX AFPRISTINEX  // 24 if w and inplacing do not prevent keeping a pristine
-#define FGWPRIST (1LL<<FGWPRISTX)
+#define FGWPRIST BIT(FGWPRISTX)
 #define FGARMINUSWRX 25    // ar minus wr, never negative.  Must be highest field
 #define FGARMINUSWR (RMAX<<FGARMINUSWRX)
       I fgwd= ((ar-wr)<<FGARMINUSWRX) + FGWNOCELLFILL + FGWNOFILL + ((wr-1)&FGWATOMIC) + (virtreqd<<FGVIRTREQDX) + lgk;  // collect flags.  If item of a has higher rank than w, force fill

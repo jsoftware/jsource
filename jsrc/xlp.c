@@ -74,7 +74,7 @@ struct __attribute__((aligned(NPAR*SZI))) pingpong {
 };
 
 #define LGBNDROWBATCH 6
-#define BNDROWBATCH ((I)1<<LGBNDROWBATCH)   // the number of bits of bndrowmask that we load at a time.
+#define BNDROWBATCH BIT(LGBNDROWBATCH)   // the number of bits of bndrowmask that we load at a time.
 #define CMPBATCH 64  // frequency with which we compare for cutoff.  MUST NOT BE SMALLER than BNDROWBATCH so that we restart on a bndrowmask bdy
   // We collect the totals for every compare batch.  If we are using low precision for the gradient, we should collect totals often enough that we don't
   // lose precision in each lane
@@ -85,18 +85,18 @@ struct __attribute__((aligned(NPAR*SZI))) pingpong {
 #define MAXCACHEDROWS 0x4000  // all cached for now
 #define ZVCOLCTX 16   // This field is decremented when the pipe is advanced, and the MSB is set if the advance puts a valid value into the first stage
 #define ZVCOLCT ((I)0x3ff<<ZVCOLCTX)   // This field is decremented when the pipe is advanced, and the MSB is set if the advance puts a valid value into the first stage
-#define ZVCOLCTDECR (-((I)1<<ZVCOLCTX))
+#define ZVCOLCTDECR (-BIT(ZVCOLCTX))
 #define ZVCOLCTVALID (((I)0x200<<ZVCOLCTX))  // This bit, 1 below ZVPIPE, is set when ZVNDAX has a valid column index
 #define ZVPIPE (((I)0x1c00<<ZVCOLCTX))  // Startup pipeline, one bit per stage, 1 at start of column processing if the stage contains valid data
 #define ZVPIPE1 (((I)0x1000<<ZVCOLCTX))  // PIPE0 after one advance, meaning 'data was ready before the most recent advance'
 #define ZVPIPE0 (((I)0x800<<ZVCOLCTX))  // final stage, holding data for the column to process
 #define ZVPIPEm1 (((I)0x400<<ZVCOLCTX))
 #define ZVSHARINGMINX 29
-#define ZVSHARINGMIN (1LL<<ZVSHARINGMINX)  // set if we should share the gradient if it is a new maximum
+#define ZVSHARINGMIN BIT(ZVSHARINGMINX)  // set if we should share the gradient if it is a new maximum
 // 2 bits free
 #define ZVNDAXX 32  // top part of zv is the index into ndxa of the next column to process
 #define ZVNDAX (~(UI)0<<ZVNDAXX)  // mask for it
-#define ZVNDAXINCR ((I)1<<ZVNDAXX)  // value to add to move to next index
+#define ZVNDAXINCR BIT(ZVNDAXX)  // value to add to move to next index
 
 #define BIGRESV 64  // size of large reservation.  As big as possible for column affinity in Qkt; but not so big as to fill the reorder buffer trying to move words to localndx, or to make localndx too big
 #define SMALLRESV 8  // small reservation used when we get close to the end.  Large to get column affinity; but small to avoid starving late threads
@@ -248,7 +248,7 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
        colxm2=localndx[0];  // start with the first column of the first reservation.  This waits for the reads to complete first time
       }else{
        // cycle 1..0 - normal chained reservation.  Leave pipe and colxm2 for the previous reservation, and set pointer/counters for the new.  This puns ZVCOLCTVALID, which is set for the new resv but used for the old; both 1, fortunately
-       zv=(zv&~(ZVNDAX|ZVCOLCT))+(-((I)1<<ZVNDAXX)+ZVCOLCTVALID+(ressize<<ZVCOLCTX));  // starting col index=-1 (in localndx), and arrange for 'valid' to be set for the # indexes we have+1
+       zv=(zv&~(ZVNDAX|ZVCOLCT))+(-BIT(ZVNDAXX)+ZVCOLCTVALID+(ressize<<ZVCOLCTX));  // starting col index=-1 (in localndx), and arrange for 'valid' to be set for the # indexes we have+1
       }
       nextcol+=ressize;  // advance nextcol to end+1 of reservation.  If this is past the end of input it will put us into termination
      }
@@ -456,13 +456,13 @@ if(rowx<nqkrows && (rowx&(BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaaf
 #undef ZVNEGATECOLX
 #undef ZVNEGATECOL
 #define ZVNEGATECOLX 0  // set if the result of the col-value calculation must be negated (for Enforcing vars)
-#define ZVNEGATECOL (1LL<<ZVNEGATECOLX)  // set if the current column was an improvement
+#define ZVNEGATECOL BIT(ZVNEGATECOLX)  // set if the current column was an improvement
 #undef ZVPOSCVFOUNDX
 #undef ZVPOSCVFOUND
 #define ZVSPR0X 1  // set if we have hit SPR of 0 and do not need to compute them any more
-#define ZVSPR0 (1LL<<ZVSPR0X)
+#define ZVSPR0 BIT(ZVSPR0X)
 #define ZVPOSCVFOUNDX 2  // set if we are looking for improvement and want to abort when SPR=0
-#define ZVPOSCVFOUND (1LL<<ZVPOSCVFOUNDX)
+#define ZVPOSCVFOUND BIT(ZVPOSCVFOUNDX)
 #define remflgs(zv) ((D*)((I)(zv)&~0x7))
 
 #define ALMOSTINF 1e300  // A very large value, used when we have seen a positive col value but have no SPR to report
@@ -1105,7 +1105,7 @@ static unsigned char jtmvmsparseegradx(J jt,struct mvmctx *ctx,UI4 ti){
        colxm2=localndx[0];  // start with the first column of the first reservation.  This waits for the reads to complete first time
       }else{
        // cycle 1..0 - normal chained reservation.  Leave pipe and colxm2 for the previous reservation, and set pointer/counters for the new.  This puns ZVCOLCTVALID, which is set for the new resv but used for the old; both 1, fortunately
-       zv=(zv&~(ZVNDAX|ZVCOLCT))+(-((I)1<<ZVNDAXX)+ZVCOLCTVALID+(ressize<<ZVCOLCTX));  // starting col index=-1 (in localndx), and arrange for 'valid' to be set for the # indexes we have+1
+       zv=(zv&~(ZVNDAX|ZVCOLCT))+(-BIT(ZVNDAXX)+ZVCOLCTVALID+(ressize<<ZVCOLCTX));  // starting col index=-1 (in localndx), and arrange for 'valid' to be set for the # indexes we have+1
       }
       nextcol+=ressize;  // advance nextcol to end+1 of reservation.  If this is past the end of input it will put us into termination
      }
@@ -1329,13 +1329,13 @@ if(rowx2<nqkrows2 && (rowx2&(2*BNDROWBATCH/1-1))!=0)SEGFAULT;  // scaaf
 #undef ZVNEGATECOLX
 #undef ZVNEGATECOL
 #define ZVNEGATECOLX 0  // set if the result of the col-value calculation must be negated (for Enforcing vars)
-#define ZVNEGATECOL (1LL<<ZVNEGATECOLX)  // set if the current column was an improvement
+#define ZVNEGATECOL BIT(ZVNEGATECOLX)  // set if the current column was an improvement
 #undef ZVPOSCVFOUNDX
 #undef ZVPOSCVFOUND
 #define ZVSPR0X 1  // set if we have hit SPR of 0 and do not need to compute them any more
-#define ZVSPR0 (1LL<<ZVSPR0X)
+#define ZVSPR0 BIT(ZVSPR0X)
 #define ZVPOSCVFOUNDX 2  // set if we are looking for improvement and want to abort when SPR=0
-#define ZVPOSCVFOUND (1LL<<ZVPOSCVFOUNDX)
+#define ZVPOSCVFOUND BIT(ZVPOSCVFOUNDX)
 #define remflgs(zv) ((D*)((I)(zv)&~0x7))
 
 #define ALMOSTINF 1e300  // A very large value, used when we have seen a positive col value but have no SPR to report
@@ -1874,7 +1874,7 @@ static unsigned char jtekupdatex(J jt,struct ekctx* const ctx,UI4 ti){
   pcoldh=_mm256_xor_pd(sgnbit,_mm256_set1_pd(pcn0v[rowx]));  // fetch high part of pivotcol value
   if(!(dpflag&32)){  // normal mode, gather, scatter, duplicate check
    if(dpflag&2)pcoldl=_mm256_xor_pd(sgnbit,_mm256_set1_pd(pcn0v[rown+rowx]));  // fetch low part if it is present
-   UI colx; I okwds=NPAR; I okmsk=(1LL<<NPAR)-1;  //  number/mask of valid wds in block
+   UI colx; I okwds=NPAR; I okmsk=BIT(NPAR)-1;  //  number/mask of valid wds in block
    // for each column-group
    __m256d endmask=sgnbit;  // mask for maskload and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
    for(colx=0;colx<coln;colx+=okwds){
@@ -2112,7 +2112,7 @@ __m256d prowdh, prowdl=_mm256_setzero_pd();  // values from the col of Qkt
   prowdh=_mm256_xor_pd(sgnbit,_mm256_set1_pd(prn0v[rowx].hi));  // fetch high part of pivotrow value into all lanes
   prowdl=_mm256_xor_pd(sgnbit,_mm256_set1_pd(prn0v[rowx].lo));  // fetch low part of pivotrow value into all lanes
     I colx;
-// I okmsk=(1LL<<NPAR)-1;  //  number/mask of valid wds in block
+// I okmsk=BIT(NPAR)-1;  //  number/mask of valid wds in block
    // for each column-group in Qkt (4 lanes)
    __m256d endmask;  // mask for 'maskload' and gather, indicating # words to process.  Starts all valid, reset for last batch or for any mplr
    // first handle the paired columns.  They always come in pairs of pairs, never have a multiplier, never ck
@@ -2534,7 +2534,7 @@ F1(jtfindspr){F12IP;ASSERT(0,EVNONCE);}
 #define MAXOP 100  // max # ops - must match with the value in xa.c
 #define MAXNON0 128  // max # non0 values in a stripe
 #define LGRESBLKE 2  // number of Es in a result block
-#define RESBLKE ((I)1<<LGRESBLKE)
+#define RESBLKE BIT(LGRESBLKE)
 #define B8ROWS 8  // number of rows of ring processed before release
 
 struct __attribute__((aligned(CACHELINESIZE))) bopctx {
@@ -2651,7 +2651,7 @@ I releasedelaythreaded=RELEASEDELAYCT0*20/MIN(20,MAX(5,nthreads)), releasedelayc
 #define RINGDCTMASK 0xffff000000000000
 #define RINGFINALSYNC 0x40000  // set when we have waited for final completion of all op indexes
 #define RINGNNTX 16  // non-non-temporal flags: for read and write.  0 (default) means non-temporal, 1=cached
-#define RINGNNTREAD ((I)1<<RINGNNTX)
+#define RINGNNTREAD BIT(RINGNNTX)
 #define RINGNNTWRITE ((I)2<<RINGNNTX)
 #define RINGACCREQD 0x8000  // set for ops after first, which require adding into the ring
 #define RINGRELSTARTX 8  // bit position of relstart, the next/current row of the ring to relesse

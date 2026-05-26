@@ -1087,13 +1087,13 @@ DF2(jtfoldZ){F12IP;
  // execute fold on input arguments, creating a derived verb to do the work.  Bivalent
 // bit 24 is PRISTINE
 #define STATEREVX 26   // reverse fold
-#define STATEREV ((I)1<<STATEREVX)
+#define STATEREV BIT(STATEREVX)
 #define STATEFWDX 27   // forward fold
-#define STATEFWD ((I)1<<STATEFWDX)
+#define STATEFWD BIT(STATEFWDX)
 #define STATEMULTX 28   // multiple fold
-#define STATEMULT ((I)1<<STATEMULTX)
+#define STATEMULT BIT(STATEMULTX)
 #define STATEDYADX 29   // call is dyadic.  Must be the MSB of the flags
-#define STATEDYAD ((I)1<<STATEDYADX)
+#define STATEDYAD BIT(STATEDYADX)
 static DF2(jtfold12){F12IP;A z,vz;
  struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z: exestatus[3] followed by zstatus mask: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);

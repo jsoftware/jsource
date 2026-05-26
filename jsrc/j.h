@@ -3,6 +3,7 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
+// paren regex \((?:[^()]++|(?R))*\)
 #if defined(__clang_major__) && !defined(__clang__)
 #error need workaround by define __clang__ in preprocessor macro
 #endif
@@ -657,7 +658,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // modes for indexofsub()
 #define IIOPMSKX        5  // # bits of flags
-#define IIOPMSK         (((I)1<<IIOPMSKX)-1)     // operation bits.  INTER also uses bit 3, which is included as a modifier in the switches
+#define IIOPMSK         (BIT(IIOPMSKX)-1)     // operation bits.  INTER also uses bit 3, which is included as a modifier in the switches
 #define IIDOT           0        // IIDOT and IICO must be 0-1
 #define IICO            1
 #define INUBSV          2   // BIT arrays INUBSV-INUBI init to 1 to that out-of-bounds in LESS keeps the value
@@ -1169,6 +1170,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)(((I)x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)(((I)x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
+#define BIT(n) ((I)1<<(n))    // I value with bit n set
 // The Bloom filter is n bits per hashchain for a locale.  Because the locales have so many hashchains currently, we will use just 1 bit
 // per chain.  These bits appear immediately after the chains themselves so that a few cachelines will suffice for any number of names in z that are to be skipped
 #define BLOOMBASE(l) (C*)(SYMBAV0(l)+AN(l))   // start of the Bloom filter for locale l, 1 bit per chain including SYMLINFO
@@ -2511,19 +2513,19 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 
 // flags in call to cachedmmult and blockedmmult
 #define FLGCMPX 0
-#define FLGCMP ((I)1<<FLGCMPX)  // arguments are complex
+#define FLGCMP BIT(FLGCMPX)  // arguments are complex
 #define FLGAUTRIX 1
-#define FLGAUTRI ((I)1<<FLGAUTRIX)  // left arg is upper-triangular
+#define FLGAUTRI BIT(FLGAUTRIX)  // left arg is upper-triangular
 #define FLGWUTRIX 2
-#define FLGWUTRI ((I)1<<FLGWUTRIX)  // left arg is upper-triangular
+#define FLGWUTRI BIT(FLGWUTRIX)  // left arg is upper-triangular
 #define FLGINTX 3
-#define FLGINT ((I)1<<FLGINTX)  // args are INT
+#define FLGINT BIT(FLGINTX)  // args are INT
 #define FLGZFIRSTX 4
-#define FLGZFIRST ((I)1<<FLGZFIRSTX)  // first pass of the Z values, use 0
+#define FLGZFIRST BIT(FLGZFIRSTX)  // first pass of the Z values, use 0
 #define FLGZLASTX 5
-#define FLGZLAST ((I)1<<FLGZLASTX)  // last pass of the Z values, write to output
+#define FLGZLAST BIT(FLGZLASTX)  // last pass of the Z values, write to output
 #define FLGWMINUSZX 6
-#define FLGWMINUSZ ((I)1<<FLGWMINUSZX)  // calculate z-x*y rather than x*y.  Used by %.
+#define FLGWMINUSZ BIT(FLGWMINUSZX)  // calculate z-x*y rather than x*y.  Used by %.
 
 
 

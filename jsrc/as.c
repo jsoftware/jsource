@@ -92,13 +92,13 @@ SUFFIXBFX( nandsfxB, NAND,INAND,SNAND,BNAND,(*x&v)^1)
  AHDRR(f,I,I){I i,*xx;                          \
   if(d==1){DQ(m, \
    UI dlct=(n+3)>>2;  \
-   UI dlct0=dlct; x+=(dlct-1)*(1LL<<2); z+=(dlct-1)*(1LL<<2); I t=neut; switch(n&3){do{case 0: ft1(x[3]) z[3]=t; case 3: ft1(x[2]) z[2]=t; case 2: ft1(x[1]) z[1]=t; case 1: ft1(x[0]) z[0]=t; x-=4; z-=4;}while(--dlct0);}   \
+   UI dlct0=dlct; x+=(dlct-1)*BIT(2); z+=(dlct-1)*BIT(2); I t=neut; switch(n&3){do{case 0: ft1(x[3]) z[3]=t; case 3: ft1(x[2]) z[2]=t; case 2: ft1(x[1]) z[1]=t; case 1: ft1(x[0]) z[0]=t; x-=4; z-=4;}while(--dlct0);}   \
    x+=n+4; z+=n+4; \
    ) R EVOK;  \
   }        \
   UI dlct=(n+3)>>2; I xstride1=d*SZI; I xstride3=3*xstride1;  \
   DQ(m,  \
-   DQ(d, x+=d*(dlct-1)*(1LL<<2); z+=d*(dlct-1)*(1LL<<2);  \
+   DQ(d, x+=d*(dlct-1)*BIT(2); z+=d*(dlct-1)*BIT(2);  \
     UI dlct0=dlct; I t=neut; switch(n&3){do{case 0: ftz(ft1,xstride3) case 3: ftz(ft1,2*xstride1) case 2: ftz(ft1,xstride1) case 1: ftz(ft1,0) x=(I*)((C*)x-4*xstride1); z=(I*)((C*)z-4*xstride1);}while(--dlct0);}   \
     x=(I*)((C*)x+4*xstride1)+1; z=(I*)((C*)z+4*xstride1)+1;  \
    )  \

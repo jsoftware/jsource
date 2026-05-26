@@ -416,7 +416,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    d->tcesx=(k?(C)k:2==as?CASSERT:CBBLOCK)<<TCESXTYPEX;  // init type; if not cw, call it BBLOCK unless it's the block after assert.  Rest of field to 0
    d->source=(US)i;                     /* source line number for this sentence   */
    // If this cw ends a loop/select, set a special goto line number; otherwise point to NSI
-   d->go=SHMSK(((I)1<<0)|BIT(CCONT)|BIT(CBREAK)|BIT(CCONTS)|BIT(CBREAKS)|BIT(CTHROW),k,1) ? (US)CWMAX : k==CRETURN ? (US)CWMAX-1 : (US)(1+n);
+   d->go=SHMSK(BIT(0)|BIT(CCONT)|BIT(CBREAK)|BIT(CCONTS)|BIT(CBREAKS)|BIT(CTHROW),k,1) ? (US)CWMAX : k==CRETURN ? (US)CWMAX-1 : (US)(1+n);
    b|=k==CGOTO;                         // remember if we see a goto_.
    // if not cw (ie executable sentence), turn words into an executable queue.  If cw, check for cw with data.  Set x to queue/cw, or 1 if cw w/o data
    if(!k){RZ(x=enqueue(w1,w0,2))}else{x=k==CLABEL||k==CGOTO||k==CFOR?w0:0L;}  // FOR must always go out; the length of the name is always needed, even if 0

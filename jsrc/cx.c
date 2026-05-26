@@ -1085,7 +1085,7 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
  I outsent=0;
  for(j=0;j<cn;++j) {   // look at each control word
   I endx=(cwv[j+1].tcesx-cwv[j].tcesx)&TCESXSXMSK;   // # words in sentence
-  if(((((I)1<<(BW-CBBLOCK-1))|((I)1<<(BW-CTBLOCK-1)))<<PEXT0(cwv[j].tcesx,TCESXTYPEX,31))<0){  // BBLOCK[END] or TBLOCK
+  if(((BIT(BW-CBBLOCK-1)|BIT(BW-CTBLOCK-1))<<PEXT0(cwv[j].tcesx,TCESXTYPEX,31))<0){  // BBLOCK[END] or TBLOCK
    // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
    A *lvv=lv+(cwv[j].tcesx&TCESXSXMSK);  // pointer to sentence words
    I startx=0;   // start and end+1 index of sentence
@@ -1160,13 +1160,12 @@ static A compiledefn(J jt, A sw, A cw){A z;
  //  end. for select. or do. for for.   followed by bblock
  //  goto./break./continue. where go is bblock[end]
  //  try. where NSI is bblock
-#define CWMB(x) ((I)1<<(x))
 #define CWIS1(msk,x) ((msk)>>PEXT0((x),TCESXTYPEX,31))
-#define CWFLGNSITBLOCK (CWMB(CIF)+CWMB(CWHILE)+CWMB(CFOR)+CWMB(CSELECT)+CWMB(CSELECTN))
-#define CWFLGNSIBBLOCK (CWMB(CENDSEL)+CWMB(CDOF)+CWMB(CTRY))
-#define CWFLGGOBBLOCK (CWMB(CELSE)+CWMB(CELSEIF)+CWMB(CWHILST)+CWMB(CEND)+CWMB(CCASE)+CWMB(CFCASE)+CWMB(CGOTO)+CWMB(CBREAKS)+CWMB(CBREAK)+CWMB(CCONT)+CWMB(CBREAKF)+CWMB(CCONTS)+CWMB(CRETURN))
-#define CWFLGNSIGOBBLOCK (CWMB(CDO))
-#define CWFLGGOEQNSITBLOCK (CWMB(CCASE)+CWMB(CFCASE))
+#define CWFLGNSITBLOCK (BIT(CIF)+BIT(CWHILE)+BIT(CFOR)+BIT(CSELECT)+BIT(CSELECTN))
+#define CWFLGNSIBBLOCK (BIT(CENDSEL)+BIT(CDOF)+BIT(CTRY))
+#define CWFLGGOBBLOCK (BIT(CELSE)+BIT(CELSEIF)+BIT(CWHILST)+BIT(CEND)+BIT(CCASE)+BIT(CFCASE)+BIT(CGOTO)+BIT(CBREAKS)+BIT(CBREAK)+BIT(CCONT)+BIT(CBREAKF)+BIT(CCONTS)+BIT(CRETURN))
+#define CWFLGNSIGOBBLOCK (BIT(CDO))
+#define CWFLGGOEQNSITBLOCK (BIT(CCASE)+BIT(CFCASE))
  UI4 prevt=0;
  DO(ncw, I go=cwv[i].go; go=go>ncw-1?ncw-1:go; UI4 tcesx=cwv[i].tcesx, otcesx=tcesx; if(prevt==CBBLOCKEND&&(tcesx>>TCESXTYPEX)==CEND&&go==i+1&&PEXT0(cwv[i+1].tcesx,TCESXTYPEX,31)==CBBLOCK)tcesx^=(CBBLOCKEND^CEND)<<TCESXTYPEX; prevt=otcesx>>TCESXTYPEX;
    tcesx|=((CWIS1(CWFLGNSITBLOCK,tcesx)&(cwv[i+1].tcesx>>TCESXTYPEX)==CTBLOCK)|(CWIS1(CWFLGNSIBBLOCK,tcesx)&PEXT0(cwv[i+1].tcesx,TCESXTYPEX,31)==CBBLOCK)|  // check modified tcesx so we don't pick up replaced END

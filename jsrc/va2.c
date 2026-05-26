@@ -1036,16 +1036,16 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     I shortr=wcr>>SHMSK((I)jtfg,VIPWCRLONGX-LGRANK2TX,RANK2TX); fr=wcr>>(SHMSK((I)jtfg,VIPWCRLONGX-LGRANK2TX,RANK2TX)^RANK2TX); // shortr=frame(short cell)/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
     shortr&=RANKTMSK; fr&=RANK2TMSK; // cellrank(short cell)
 #endif
-    shortr*=((I)1<<2*RANKTX)+BIT(RANKTX)-1;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  100000000+10000+ffffffffffffffff
+    shortr*=((I)1<<(2*RANKTX))+BIT(RANKTX)-1;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  100000000+10000+ffffffffffffffff
     shortr+=fr;  // cellrank(short cell)/frame(long cell)+cellrank(short cell)/cellrank(long cell)-cellrank(short cell)
                  //  length for agreement / offset to excess frame, for calc n  / length for calc n,(# intracell repeats) - final value
     // fr is now frame/rank of long cell
     // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
     //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
 #if 1
-    UI f=wcr&RANKTMSK*(BIT(RANKTX)+(1LL<<3*RANKTX)); f|=f>>RANKTX; f>>=RANKTX;  // afr/0/wfr/0   afr/afr/wfr/wfr    0/afr/afr/wfr
+    UI f=wcr&RANKTMSK*(BIT(RANKTX)+(1LL<<(3*RANKTX))); f|=f>>RANKTX; f>>=RANKTX;  // afr/0/wfr/0   afr/afr/wfr/wfr    0/afr/afr/wfr
     US ff=f, ffr=__builtin_rotateleft16(ff,RANKTX); f=(I)jtfg&VIPWFLONG?ffr:ff;    // 0/0/lfr/sfr
-    f=(f<<2*RANKTX)+(f>>RANKTX);   // lfr/sfr/0/lfr
+    f=(f<<(2*RANKTX))+(f>>RANKTX);   // lfr/sfr/0/lfr
 #else  // obsolete 
 #ifdef PEXT
     UI f=PEXT(wcr,RANKTMSK*(BIT(RANKTX)+(1LL<<3*RANKTX)));   // 0/0/aframe/wframe; 
@@ -1064,7 +1064,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
 #endif
     fr+=f;    //   fr=afr/acr/wfr/wcr/longframe/shortframe/frame(long cell)/longframe+cellrank(long cell)
     f=fr&RANKTMSK; allranks|=(1LL<<(RANKTX-1))+(1LL<<(2*RANKTX-1)); allranks-=f; f<<=RANKTX; allranks-=f;  // set sign bit of rank if = long frame + long cell (can't be any bigger) f free
-    ASSERTAGREE(AS(a)+(acrwcr>>3*RANKTX), AS(w)+(((RANK2T)acrwcr>>RANKTX)), (shortr>>2*RANKTX))  // offset to each cellshape, and cellrank(short cell) acr wcr free
+    ASSERTAGREE(AS(a)+(acrwcr>>(3*RANKTX)), AS(w)+(((RANK2T)acrwcr>>RANKTX)), (shortr>>2*RANKTX))  // offset to each cellshape, and cellrank(short cell) acr wcr free
     PRODRNK(n,shortr,AS((I)jtfg&VIPWCRLONG?w:a)+((RANK2T)shortr>>RANKTX));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
     nf=(allranks&((1LL<<(RANKTX-1))+(1LL<<(RANK2TX-1)))) * (((I)1<<(VIPOKWX-(RANKTX-1)))+((I)1<<(VIPOKAX-(RANK2TX-1))));  // bits 7,15 * 13,6 moves 7,15 to 20,21, trashing 13 and 28
     nf=((nf&(I)jtfg)>>VIPOKWX); nf*=BIT(VIPRNKX)+1; nf|=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; shift to 0-1, replicate rank/routine inplaceability flags; set other bits to 1
@@ -1083,7 +1083,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     if(likely(a!=w))jtfg=(J)((I)jtfg&nf); else jtfg=(J)((I)jtfg&~(VCVTIP+VIPRES));  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable; but never if args equal.  nf reused immediately
 // obsolete     jtfg=(J)((I)jtfg&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free   rest of jtfg survives
     f=PEXT0(fr,2*RANKTX,RANKTMSK);  // recover (shorter frame len) from upper fr
-    PRODRNK(nf,((fr>>3*RANKTX)-f),f+AS(wflong));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
+    PRODRNK(nf,((fr>>(3*RANKTX))-f),f+AS(wflong));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
     PRODRNK(mf,f,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len) we are waiting for nf->jtfg to settle
     

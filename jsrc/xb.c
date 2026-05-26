@@ -1093,10 +1093,10 @@ gotdate: ;
   if((c=='T')|(c==' '))c=*++sp;  // Consume the T/sp if present.  It must be followed by HH.  sp as a separator is not ISO 8601
   if(!(c&~' ')){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DDTbb treat this as ending the year, default the rest
   RDTWOC(hh,0,24);  // 24 allowed at midnight
-  if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>c){mm=ss=0; if((c&~' '))goto hittz; goto gottime;}
+  if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|BIT(0))>>c){mm=ss=0; if((c&~' '))goto hittz; goto gottime;}
   if(c==':')c=*++sp;  // skip ':' if present
   RDTWOC(mm,0,59);
-  if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>c){ss=0; if((c&~' '))goto hittz; goto gottime;}
+  if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|BIT(0))>>c){ss=0; if((c&~' '))goto hittz; goto gottime;}
   if(c==':')c=*++sp;  // skip ':' if present
   RDTWOC(ss,0,60);  // 60 allowed for leap second
   // If the seconds have decimal extension, turn it to nanoseconds.  ISO8601 allows fractional extension on the last time component even if it's not SS, but we don't support that 

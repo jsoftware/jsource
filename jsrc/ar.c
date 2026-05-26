@@ -158,13 +158,13 @@ AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
  AHDRR(f,I,I){I i;                          \
   if(d==1){DQ(m,  \
    UI dlct=(n+3)>>2;  \
-   UI dlct0=dlct; x+=(dlct-1)*(1LL<<2); I t=neut; switch(n&3){do{case 0: ft1(x[3]) case 3: ft1(x[2]) case 2: ft1(x[1]) case 1: ft1(x[0]) x-=4; }while(--dlct0);}   \
+   UI dlct0=dlct; x+=(dlct-1)*BIT(2); I t=neut; switch(n&3){do{case 0: ft1(x[3]) case 3: ft1(x[2]) case 2: ft1(x[1]) case 1: ft1(x[0]) x-=4; }while(--dlct0);}   \
    *z++=t; x+=n+4;  \
    ) R EVOK;  \
   }        \
   UI dlct=(n+3)>>2; I xstride1=d*SZI; I xstride3=3*xstride1;  \
   DQ(m,  \
-   DQ(d, x+=d*(dlct-1)*(1LL<<2);  \
+   DQ(d, x+=d*(dlct-1)*BIT(2);  \
     UI dlct0=dlct; I t=neut; switch(n&3){do{case 0: ft1(*(I*)((C*)x+xstride3)) case 3: ft1(*(I*)((C*)x+2*xstride1)) case 2: ft1(*(I*)((C*)x+xstride1)) case 1: ft1(x[0]) x=(I*)((C*)x-4*xstride1); }while(--dlct0);}   \
     *z++=t; x=(I*)((C*)x+4*xstride1)+1;  \
    )  \
@@ -202,7 +202,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
    case -6: acc5=prim(acc5,_mm256_loadu_pd(x+5*NPAR)); \
    case -7: acc6=prim(acc6,_mm256_loadu_pd(x+6*NPAR)); \
    case -8: acc7=prim(acc7,_mm256_loadu_pd(x+7*NPAR)); \
-   x+=(1LL<<3)*NPAR; \
+   x+=BIT(3)*NPAR; \
    }while(--n2!=0); \
    } \
   } \
@@ -221,8 +221,8 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  I xstride1=d*SZD; I xstride3=3*xstride1; I xstride5=5*xstride1; I xstride7=xstride5+2*xstride1; \
  DQ(m, D *x0; \
   DQ((d-1)>>LGNPAR, \
-   x0=(D*)((C*)x-((-n)&((1LL<<3)-1))*xstride1); UI n0=(n+(1LL<<3)-1)>>3; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; __m256d acc4=idreg; __m256d acc5=idreg; __m256d acc6=idreg; __m256d acc7=idreg;  \
-   switch(n&((1LL<<3)-1)){ \
+   x0=(D*)((C*)x-((-n)&(BIT(3)-1))*xstride1); UI n0=(n+BIT(3)-1)>>3; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; __m256d acc4=idreg; __m256d acc5=idreg; __m256d acc6=idreg; __m256d acc7=idreg;  \
+   switch(n&(BIT(3)-1)){ \
    do{ \
     case 0: acc0=prim(acc0,_mm256_loadu_pd(x0)); \
     case 7: acc1=prim(acc1,_mm256_loadu_pd((D*)((C*)x0+xstride1))); \
@@ -232,15 +232,15 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
     case 3: acc5=prim(acc5,_mm256_loadu_pd((D*)((C*)x0+xstride5))); \
     case 2: acc6=prim(acc6,_mm256_loadu_pd((D*)((C*)x0+2*xstride3))); \
     case 1: acc7=prim(acc7,_mm256_loadu_pd((D*)((C*)x0+xstride7))); \
-     x0=(D*)((C*)x0+(1LL<<3)*xstride1); \
+     x0=(D*)((C*)x0+BIT(3)*xstride1); \
    }while(--n0); \
    } \
    acc0=prim(acc0,acc4);  acc1=prim(acc1,acc5); acc2=prim(acc2,acc6); acc3=prim(acc3,acc7); \
    acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_storeu_pd(z,acc0); \
    x+=NPAR; z+=NPAR; \
   ) \
-  x0=(D*)((C*)x-((-n)&((1LL<<3)-1))*xstride1); UI n0=(n+(1LL<<3)-1)>>3; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; __m256d acc4=idreg; __m256d acc5=idreg; __m256d acc6=idreg; __m256d acc7=idreg;  \
-  switch(n&((1LL<<3)-1)){ \
+  x0=(D*)((C*)x-((-n)&(BIT(3)-1))*xstride1); UI n0=(n+BIT(3)-1)>>3; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; __m256d acc4=idreg; __m256d acc5=idreg; __m256d acc6=idreg; __m256d acc7=idreg;  \
+  switch(n&(BIT(3)-1)){ \
   do{ \
    case 0: acc0=prim(acc0,_mm256_maskload_pd(x0,endmask)); \
    case 7: acc1=prim(acc1,_mm256_maskload_pd((D*)((C*)x0+xstride1),endmask)); \
@@ -250,7 +250,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
    case 3: acc5=prim(acc5,_mm256_maskload_pd((D*)((C*)x0+xstride5),endmask)); \
    case 2: acc6=prim(acc6,_mm256_maskload_pd((D*)((C*)x0+2*xstride3),endmask)); \
    case 1: acc7=prim(acc7,_mm256_maskload_pd((D*)((C*)x0+xstride7),endmask)); \
-    x0=(D*)((C*)x0+(1LL<<3)*xstride1); \
+    x0=(D*)((C*)x0+BIT(3)*xstride1); \
   }while(--n0); \
   } \
   acc0=prim(acc0,acc4);  acc1=prim(acc1,acc5); acc2=prim(acc2,acc6); acc3=prim(acc3,acc7); \
@@ -836,7 +836,7 @@ static DF1(jtreduce){F12IP;A z;I d,f,m,n,r,t,wr,*ws,zt;
 #if !SY_64
     cwd=(cv>>LGBW)==2?TWV2:cwd; cwd=(cv>>LGBW)==3?TWV3:cwd;
 #endif
-    if(likely(((1LL<<(cv&(BW-1)))&cwd)!=0))RETF(jtreduce2(jt,w,cv,f));
+    if(likely((SHMSK(cwd,cv&(BW-1),1)!=0)))RETF(jtreduce2(jt,w,cv,f));
    }
   }  // fall through for 2 items that can't be handled specially
  }

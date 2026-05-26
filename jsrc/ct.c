@@ -487,7 +487,7 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
    // being we will copy out of the block quickly.  If no locales, there is no thundering herd, and we can read from the job block undisturbed (it has been dequeued)
    // set up jt state here only; for internal tasks, such setup is not needed
 #if SY_64
-   ((I*)jt)[0]=job->user.inherited[0]; ((I*)jt)[1]=job->user.inherited[1]&(((I)1<<((offsetof(JTT,uflags.init0area)-SZI)*BB))-1);  // copy inherited part, zero the following
+   ((I*)jt)[0]=job->user.inherited[0]; ((I*)jt)[1]=job->user.inherited[1]&(BIT((offsetof(JTT,uflags.init0area)-SZI)*BB)-1);  // copy inherited part, zero the following
 #else
    ((I8*)jt)[0]=job->user.inherited[0]; ((I8*)jt)[1]=job->user.inherited[1]&(((I8)1<<((offsetof(JTT,uflags.init0area)-8)*BB))-1);  // copy inherited part, zero the following
 #endif

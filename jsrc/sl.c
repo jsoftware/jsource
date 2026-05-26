@@ -254,13 +254,13 @@ B jtsymbinit(JS jjt){A q,zloc;JJ jt=MTHREAD(jjt);
  GATV0(q,SYMB,FULLHASHSIZE(100,SYMBSIZE,1,SYMLINFOSIZE),0); AFLAGORLOCAL(q,SYMB) INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc.  All SYMBs are recursive (though this one, which will never be freed, needn't be)
  jtinitnl(jt);  // init numbered locales, using master thread to allocate
  // init z locale about 2^9 chains
- SYMRESERVE(2) RZ(zloc=stcreate(0,FULLHASHSIZE(1LL<<8,SYMBSIZE,1,SYMLINFOSIZE),1L,"z      ")); ACX(zloc);   // make the z locale permanent.  6 trailing spaces (plus the NUL) avoids overfetch, which Address Sanitizer tests for
+ SYMRESERVE(2) RZ(zloc=stcreate(0,FULLHASHSIZE(BIT(8),SYMBSIZE,1,SYMLINFOSIZE),1L,"z      ")); ACX(zloc);   // make the z locale permanent.  6 trailing spaces (plus the NUL) avoids overfetch, which Address Sanitizer tests for
  // create zpath, the default path to use for all other locales
  GAT0(q,BOX,2,1); AAV1(q)[0]=0; AAV1(q)[1]=zloc; ACX(q); JT(jt,zpath)=&AAV1(q)[1];   // install ending 0 & z locale; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
  LOCPATH(zloc)=&AAV1(q)[0];   // make z locale have no path.  The path is already permanent
  // init the symbol tables for the master thread.  Worker threads must copy when they start execution
  // init base locale
- SYMRESERVE(2) RZ(q=stcreate(0,FULLHASHSIZE(1LL<<9,SYMBSIZE,1,SYMLINFOSIZE),sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));  // about 2^10 chains
+ SYMRESERVE(2) RZ(q=stcreate(0,FULLHASHSIZE(BIT(9),SYMBSIZE,1,SYMLINFOSIZE),sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));  // about 2^10 chains
  jt->global=q;  // init baselocale in master.  workers must init on each call
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
  // NOTE: you must apply a name from a private locale ONLY to the locale it was created in, or to a global locale.  Private names contain bucket info & symbol pointers that would
@@ -610,7 +610,7 @@ F1(jtlocname){F12IP;A g=jt->global;
 static SYMWALK(jtlocmap1,I,INT,18,3,1,
     {I t=AT(QCWORD(d->fval));
      *zv++=i; 
-     I zc; zc=(((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ(((t&CONJ+ADV+VERB)|(1LL<<31))>>ADVX)))&3;   // ADVX, CONJx, VERBX, and the implied NOUNX=31 must all be >+ 2 bits apart
+     I zc; zc=(((1LL<<(ADVX-ADVX))|(2LL<<(CONJX-ADVX))|(3LL<<(VERBX-ADVX)))>>(CTTZ(((t&CONJ+ADV+VERB)|BIT(31))>>ADVX)))&3;   // ADVX, CONJx, VERBX, and the implied NOUNX=31 must all be >+ 2 bits apart
      zc=t==SYMB?6:zc; zc=t&(NOUN|VERB|ADV|CONJ|SYMB)?zc:-2;
      *zv++=zc;
      *zv++=(I)rifvs(sfn(SFNSIMPLEONLY,d->name));})  // this is going to be put into a box

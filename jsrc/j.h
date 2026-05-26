@@ -822,7 +822,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTACKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
-#define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
+#define NTSTACK         BIT(AUDITEXECRESULTS?24:14)          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
 #define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
 // xdefn frees memory at the end of a sentence.  Well-written verbs (including anything that runs EPILOG) clean up their own mess.  The stack might contain only the result, or even be
@@ -1179,7 +1179,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define BLOOMSET(b,c) ((BLOOMTEST(b,c)==0)?((b)[(c)>>LGBB]|=(1<<((c)&(BB-1)))):0)   // set Bloom bit c in b.  Requires write lock on the locale.  Don't write if set, to avoid thrashing the mask.  Questionable, since we are writing to an undefined name here
 #define BLOOMCLEAR(l) mvc(BLOOMLEN(l),BLOOMBASE(l),MEMSET00LEN,MEMSET00) // reset Bloom filter to 0s
 #define BLOOMFILL(l) {((LX*)BLOOMBASE(l))[0]=-1; if(unlikely((UI)AN(l)>sizeof(LX)*BB))memset(BLOOMBASE(l),0xff,BLOOMLEN(l));} // reset Bloom filter to 1s (for local table) - usually with 1 store (if <=32 chains)
-#define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
 #define BOTHASUS(x,y) (((US)(C)(x)<<8)+(US)(C)(y))
 #define BOTHEQ8(x,y,X,Y) ( BOTHASUS(x,y) == BOTHASUS(X,Y) )
@@ -1236,7 +1235,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define CCMCAND(nm,cand,tval) I cand=0; CCMCAND1(nm,cand,tval,0); CCMCAND1(nm,cand,tval,1); CCMCAND1(nm,cand,tval,2); CCMCAND1(nm,cand,tval,3); CCMCAND1(nm,cand,tval,4); CCMCAND1(nm,cand,tval,5); CCMCAND1(nm,cand,tval,6); CCMCAND1(nm,cand,tval,7)
 // set the sign bit to the selected bit of the mask
 #define CCMSGN(cand,tval) (cand<<(tval&(BW-1)))   // set sign bit if value found
-#define CCMTST(cand,tval) (cand&(1LL<<(~tval&(BW-1))))  // test true is value found
+#define CCMTST(cand,tval) (cand&BIT(~tval&(BW-1)))  // test true is value found
 #define CLRATTN __atomic_store_n(&JT(jt,adbreak)[0],0,__ATOMIC_RELEASE);  // remove any pending ATT/BREAK; at start of sentence or where error handled
 #define DF1(f)          A f(JJ jtfg,    A w,A self)
 #define DF2(f)          A f(JJ jtfg,A a,A w,A self)
@@ -1471,7 +1470,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 }
 
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
-#define FULLHASHSIZE(n,s,r,w) (((((I)1<<(CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1)+1)) - AKXR(r)) / (s) - 1) | (1&~(w)))
+#define FULLHASHSIZE(n,s,r,w) (((BIT(CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1)+1) - AKXR(r)) / (s) - 1) | (1&~(w)))
 // Memory-allocation macros
 #if MEMHISTO   // create histogram of allocation calls
 #define HISTOCALL memhashadd(__LINE__,__FILE__);
@@ -1533,10 +1532,10 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #endif
 #endif
 // # turns through a Duff loop of m1+1 elements, with 1<<lgduff instances in the loop.  We assume we are handling [1,NPAR] elements at the end
-#define DUFFLPCTV(m1,lgduff,lgeleperiter) ((((m1)+((((I)1<<(lgduff))-1)<<(lgeleperiter)))>>((lgeleperiter)+(lgduff))))
+#define DUFFLPCTV(m1,lgduff,lgeleperiter) ((((m1)+((BIT(lgduff)-1)<<(lgeleperiter)))>>((lgeleperiter)+(lgduff))))
 #define DUFFLPCT(m1,lgduff) DUFFLPCTV(m1,lgduff,LGNPAR)
 // calculate the (backoff-1) in elements for the first pass through the Duff loop.  This (negative) value+1 must be added to the initial addresses
-#define DUFFBACKOFFV(m1,lgduff,lgeleperiter) ((((m1)>>(lgeleperiter))-1)|-((I)1<<(lgduff)))  // 0->-1, 7->-2, 1->-8
+#define DUFFBACKOFFV(m1,lgduff,lgeleperiter) ((((m1)>>(lgeleperiter))-1)|-BIT(lgduff))  // 0->-1, 7->-2, 1->-8
 #define DUFFBACKOFF(m1,lgduff) DUFFBACKOFFV(m1,lgduff,LGNPAR) // 0->-1, 7->-2, 1->-8
 // offset by n items
 #define OFFSETBID(ad,n,commute,id,bi,bd) (D*)((I)ad+((I)(n)*(((commute)&((bi)|(bd)))?1:SZD)))  // using shift gives warning on clang can't left-shift a negative constant!
@@ -2129,11 +2128,11 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
  ((I8)SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+((I8)ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+((I8)MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+((I8)NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \
  ,5*(CTTZ(i)-(LASTNOUNX+1)),31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   8 8 8 8 12 4 8 8 8 (1) 
 // bpnoun is like bp but for NOUN types, and not sparse
-#define bpnoun(i) ((I)1<<bplg(i))
+#define bpnoun(i) BIT(bplg(i))
 #define bp(i) (likely(CTTZ(i)<=LASTNOUNX)?bpnoun(i):bpnonnoun(i))
 
 // conversion from priority index to bit# in a type with that priority
-#define PRIORITYTYPE(p) (unlikely(((I)1<<(p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+0)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+SPX)<<4)+HPX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+FLX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+0)<<4)+0)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))  // 0 for C2TX/C4Tx to avoid field overflow
+#define PRIORITYTYPE(p) (unlikely(BIT((p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+0)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+SPX)<<4)+HPX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+FLX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+0)<<4)+0)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))  // 0 for C2TX/C4Tx to avoid field overflow
 // Conversion from type to priority
 //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F  
 // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
@@ -2943,4 +2942,11 @@ static INLINE void aligned_free(void *ptr) {
   #define CRC32(x,y)  crc32csb4(x,y) // returns UI4
   #define CRC32L(x,y) crc32csb8(x,y) // returns UI
   #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
+#endif
+
+#if !__has_builtin(__builtin_rotateleft16)
+#define __builtin_rotateleft16(v,n) ((US(v)<<(n))|((US)(v)>>(16-(n))))
+#endif
+#if !__has_builtin(__builtin_rotateleft32)
+#define __builtin_rotateleft32(v,n) ((UI4(v)<<(n))|((UI4)(v)>>(32-(n))))
 #endif

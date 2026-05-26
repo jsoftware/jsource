@@ -1504,7 +1504,7 @@ finrle: ;
      DO(AS(arwindexes)[1], I pvv=*pv++; _mm256_storeu_pd(ltemp[i],_mm256_loadu_pd(lcol[(pvv>>LGBLKSZ)*nr][pvv&(BLKSZ-1)]));)   // copy old values out
       DO(AS(arwindexes)[1], I pvv=*pv++;
        _mm256_storeu_pd(lcol[(pvv>>LGBLKSZ)*nr][pvv&(BLKSZ-1)],_mm256_loadu_pd(ltemp[i])); _mm256_storeu_pd(&rescol[pvv*wn],_mm256_loadu_pd(ltemp[i]));  // copy permuted values back in, to both destinations
-       if(!_mm256_testc_si256(_mm256_castpd_si256(sgnbit),_mm256_castpd_si256(_mm256_loadu_pd(ltemp[i]))))*(LBIT(pvv>>LGBLKSZ,i))&=~(1LL<<LBITX(pvv>>LGBLKSZ,i));  //  if the block contains a non0, cleat the 'block is 0' bit for it
+       if(!_mm256_testc_si256(_mm256_castpd_si256(sgnbit),_mm256_castpd_si256(_mm256_loadu_pd(ltemp[i]))))*(LBIT(pvv>>LGBLKSZ,i))&=~(BIT(LBITX(pvv>>LGBLKSZ,i)));  //  if the block contains a non0, cleat the 'block is 0' bit for it
       )
      )
      goto restartring;  // rerun the permuted ring, which is known to succeed

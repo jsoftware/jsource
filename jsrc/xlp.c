@@ -262,7 +262,7 @@ static unsigned char jtmvmsparsegradx(J jt,struct mvmctx *ctx,UI4 ti){
 
    // Pipe stage -2: read colx, Ax, Frow, RVT.
    colxm1=colxm2; frowm1=Frow[colxm2]; cutrowm1=cutoffstatus[colxm2][0]; cutsumsqm1=cutoffstatus[colxm2][1];  // other needed info
-   colrvtm1=(rvtv[colxm2>>(LGBB-1)]>>((colxm2&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);  // bound/enforcing flag for column
+   colrvtm1=(rvtv[colxm2>>(LGBB-1)]>>((colxm2&((1LL<<(LGBB-1))-1))<<1))&(BIT(2)-1);  // bound/enforcing flag for column
    colxm2=colxm2<nqkbcols?nqkbcols:colxm2; anm1=axv[colxm2][1]; axm1=axv[colxm2][0];  // if slack column, read from harmless decision vbl 0
 endpipem2: ;  // come here in runout where pipe input is invalid
    // end pipe stage -2
@@ -874,7 +874,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"bk is not on cacheline bdy")  // we fetch along rows; insist on data alignment
   box=C(AAV(w)[7]); ASSERT(AR(box)==2,EVRANK) ASSERT(AS(box)[0]==2,EVLENGTH) ASSERT(AS(box)[AR(box)-1]==bkzstride,EVLENGTH) ASSERT(AT(box)&FL,EVDOMAIN)
   // get column info, a 2-bit field of (bound,enforcing)
-  I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);
+  I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&(BIT(2)-1);
   opctx.u.spr.zv=(D*)(((I)DAV(box)&~7)|((colrvt&ZVNEGATECOL)<<ZVNEGATECOLX));  // flags: enforcing column requiring negation, abort on nonimproving row
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"column result is not on cacheline bdy")  // we store along rows; insist on data alignment
   ASSERT(BETWEENC(nparms,10,12),EVLENGTH)  // SPR has lots of parms
@@ -1119,7 +1119,7 @@ static unsigned char jtmvmsparseegradx(J jt,struct mvmctx *ctx,UI4 ti){
 
    // Pipe stage -2: read colx, Ax, Frow, RVT.
    colxm1=colxm2; frowm1=Frow[colxm2]; cutrowm1=cutoffstatus[colxm2][0]; cutsumsqm1=cutoffstatus[colxm2][1];  // other needed info
-   colrvtm1=(rvtv[colxm2>>(LGBB-1)]>>((colxm2&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);  // bound/enforcing flag for column
+   colrvtm1=(rvtv[colxm2>>(LGBB-1)]>>((colxm2&((1LL<<(LGBB-1))-1))<<1))&(BIT(2)-1);  // bound/enforcing flag for column
    colxm2=colxm2<nqkbcols?nqkbcols:colxm2; anm1=axv[colxm2][1]; axm1=axv[colxm2][0];  // if slack column, read from harmless decision vbl 0
 endpipem2: ;  // come here in runout where pipe input is invalid
    // end pipe stage -2
@@ -1752,7 +1752,7 @@ struct mvmctx opctx;  // parms to all threads, and return values
   box=C(AAV(w)[7]); ASSERT(AR(box)==1,EVRANK) ASSERT(AS(box)[0]==bkzstride,EVLENGTH) ASSERT(AT(box)&QP,EVDOMAIN)  // result area, stored in place
   ASSERTSYS(((I)DAV(box)&((SZD<<LGNPAR)-1))==0,"column result is not on cacheline bdy")  // we store along rows; insist on data alignment
   // get column info, a 2-bit field of (bound,enforcing)
-  I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&((1LL<<2)-1);
+  I colrvt=(rvtv[colx>>(LGBB-1)]>>((colx&((1LL<<(LGBB-1))-1))<<1))&(BIT(2)-1);
   opctx.u.spr.zv=(D*)(((I)DAV(box)&~7)|((colrvt&ZVNEGATECOL)<<ZVNEGATECOLX));  // flags: enforcing column requiring negation, abort on nonimproving row
   ASSERT(BETWEENC(nparms,10,12),EVLENGTH)  // SPR has lots of parms
   box=C(AAV(w)[10]); ASSERT(AR(box)==1,EVRANK) ASSERT(AT(box)&FL,EVDOMAIN) ASSERT(AS(box)[0]==bkzstride,EVLENGTH) opctx.u.spr.bkbeta=DAV(box);  // beta values corresponding to bk; we use only high part

@@ -910,7 +910,7 @@ typedef DST* DC;
 // The value which might also hold VALTYPESPARSE, or VALTYPENAMELESS which is converted to correct type before the lookup).  These types are seen only in valtypes in named blocks, which have QCSYMVAL semantics
 #define ATYPETOVALTYPEACV(t) (CTTZI((t)>>(LASTNOUNX-1)))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value'
 #define ATYPETOVALTYPE(t) (((t)&NOUN)?(unlikely(ISSPARSE(t))?VALTYPESPARSE:QCNOUN):ATYPETOVALTYPEACV(t))  // types 1=NOUN 4=ADV 7=SPARSE 8=VERB 10=CONJ  0 means 'no value or type not wanted'
-#define VALTYPETOATYPE(t) ((1LL<<(LASTNOUNX-1))<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
+#define VALTYPETOATYPE(t) (BIT(LASTNOUNX-1)<<(t))  // convert t from valtype form to AT form (suitable only for conversion to pt - actual noun type is lost)
 #define QCNOUNX 0
 #define QCNOUN ((LASTNOUNX-LASTNOUNX)+1)  // this bit must not be set in any non-noun CAVN type, i. e. not in ACV.  But it must be set in SPARSE.  It can be used to test for FUNC in a named QCTYPE
 // note: code points 2-3 must be left unused so we don't mess up clearing the pull queue

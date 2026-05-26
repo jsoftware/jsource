@@ -1171,6 +1171,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define BETWEENC(x,lo,hi) ((UI)(((I)x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)(((I)x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
 #define BIT(n) ((I)1<<(n))    // I value with bit n set
+#define BIT8(n) ((I8)1<<(n))    // I8 value with bit n set
 // The Bloom filter is n bits per hashchain for a locale.  Because the locales have so many hashchains currently, we will use just 1 bit
 // per chain.  These bits appear immediately after the chains themselves so that a few cachelines will suffice for any number of names in z that are to be skipped
 #define BLOOMBASE(l) (C*)(SYMBAV0(l)+AN(l))   // start of the Bloom filter for locale l, 1 bit per chain including SYMLINFO
@@ -2945,9 +2946,9 @@ static INLINE void aligned_free(void *ptr) {
 #endif
 
 #if !__has_builtin(__builtin_rotateleft16)
-#define __builtin_rotateleft16(v,n) ((US(v)<<(n))|((US)(v)>>(16-(n))))
+#define __builtin_rotateleft16(v,n) (((US)(v)<<(n))|((US)(v)>>(16-(n))))
 #endif
 #if !__has_builtin(__builtin_rotateleft32)
-#define __builtin_rotateleft32(v,n) ((UI4(v)<<(n))|((UI4)(v)>>(32-(n))))
+#define __builtin_rotateleft32(v,n) (((UI4)(v)<<(n))|((UI4)(v)>>(32-(n))))
 #endif
 

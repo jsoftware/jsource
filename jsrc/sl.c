@@ -566,7 +566,7 @@ exit:
 static F1(jtloccrenum){F12IP;C s[20];I k,p;A x;
  ARGCHK1(w);
  if(MARK&AT(w))p=JT(jt,locsize)[1]; else{p=rei0(w); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
- p=FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE);  // get table, size 2^p+6 minus a little
+ p=FULLHASHSIZE(BIT(p+5),SYMBSIZE,1,SYMLINFOSIZE);  // get table, size 2^p+6 minus a little
  p-=(UI)p/(sizeof(LX)*BB)+1;  // leave room for Bloom filter
  SYMRESERVE(1) RZ(x=stcreate(1,p,0,0L));  // make sure we have symbols to insert
  sprintf(s,FMTI,LOCNUM(x));   // extract locale# and convert to boxed string 

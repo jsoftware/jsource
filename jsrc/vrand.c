@@ -645,7 +645,7 @@ F2(jtrollksub){F12IP;A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->
     DQ(n, if((p-=k)<0){t=NEXT; p=BW-k;} u[i]=t&mk; t>>=k;)
     goto exit;
    }
-   if(m<BIT(50)){ 
+   if(m<BIT8(50)){ 
     // If we can do the calculation in the floating-point unit, do.  2^50 max to avoid rounding up
     D md=m*X64; DQ(n, u[i]=(I)(md*((D)(I)NEXT+(D)x63)); )   // avoid unsigned conversion, which requires conditional correction
     goto exit;
@@ -842,7 +842,7 @@ DF2(jtdeal){F12IP;A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->r
 #endif
  }else{
   RZ(z=apvwr(n,0L,1L)); zv=AV(z);
-  if(BW==64&&n<BIT(50)){ 
+  if(BW==64&&n<BIT8(50)){ 
    // If we can do the calculation in the floating-point unit, do
    D cd=c*X64; DO(m, j=i+(I)(cd*((D)(I)NEXT+(D)x63)); cd-=X64; k=zv[i]; zv[i]=zv[j]; zv[j]=k;)  // avoid unsigned conversion, which requires conditional correction
   }else{

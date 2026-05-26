@@ -936,9 +936,9 @@ inplace:;
     }else if(((k^16)|(t&FL+CMPX+QP))==0){ // 16-byte (not any inexact type).  Don't bother with small-range checking
      fnx=FNTBL16;
     }else{  // it's a hash.  Type must be QP/CMPX/FL/INT*/chars.  The case of 2/4/8-byte atoms was handled above
-#define RTNLINE ((1LL<<INTX*4)+(1LL<<INT2X*4)+(1LL<<INT4X*4)+(2LL<<FLX*4)+(3LL<<CMPXX*4)+(4LL<<QPX*4))   // line# for each type (0 for chars or INT[24])
+#define RTNLINE (BIT8(INTX*4)+BIT8(INT2X*4)+BIT8(INT4X*4)+2*BIT8(FLX*4)+3*BIT8(CMPXX*4)+4*BIT8(QPX*4))   // line# for each type (0 for chars or INT[24])
 // obsolete      I rtnno=unlikely(((t)&0xffff)==0)?((0x000000<<2)>>((CTTZ(t)&0x3)<<3)&0b1111100) : ((RTNLINE<<2)>>(CTTZ(t)*4))&0b111100;  // type: 0..4=chars/INT/FL/CMPX/QP
-     I rtnno=unlikely(((t)&0xffff)==0)?0 : SHMSK(RTNLINE<<2,CTTZ(t)*4,0b111100);  // type: 0..4=chars/INT/FL/CMPX/QP
+     I rtnno=unlikely(((t)&0xffff)==0)?0 : SHMSK8(RTNLINE<<2,CTTZ(t)*4,0b111100);  // type: 0..4=chars/INT/FL/CMPX/QP
      fnx=rtnno+((n==1)?2:0)+fnx+2;  // index: (datatype)/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
     }
    }

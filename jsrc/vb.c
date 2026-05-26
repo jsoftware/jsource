@@ -291,7 +291,7 @@ F2(jtsumebar){F12IP;A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  }
  if((-m&-n)>=0){R sc(n);}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it
 #if C_AVX2 || EMU_AVX2
- if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,BIT(56),0);
+ if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,BIT8(56),0);
 #endif
  GATV0(y,INT,d,1); yv= AV1(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){

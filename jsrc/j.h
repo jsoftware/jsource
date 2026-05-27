@@ -106,9 +106,6 @@
 #if C_AVX2
 #if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))
 #include <immintrin.h>
-#if defined(_WIN32) && defined(__MINGW32__)
-extern unsigned long long _pext_u64 (unsigned long long, unsigned long long);
-#endif
 #endif
 #endif
 

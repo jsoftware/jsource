@@ -60,9 +60,9 @@ fi
 
 if [ "$_DEBUG" = "1" ] || [ "$_DEBUG" = "2" ] || [ "$_DEBUG" = "3" ]; then
  if [ "$DEBUGCMD" = "gdb" ]; then
-  DB1="$DEBUGCMD -batch -return-child-result -ex \"thread apply all bt\" -ex \"run\" --args"
+  DB1="$DEBUGCMD -batch -return-child-result -ex \"run\" -ex \"bt\" --args"
  elif [ "$DEBUGCMD" = "gdb-multiarch" ]; then
-  DB1="$DEBUGCMD -batch -return-child-result -ex \"set architecture $DEBUGCPU\" -ex \"thread apply all bt\" -ex \"run\" --args"
+  DB1="$DEBUGCMD -batch -return-child-result -ex \"set architecture $DEBUGCPU\" -ex \"run\" -ex \"bt\" --args"
  else
  # fallback to lldb
   DB1="$DEBUGCMD -b -o run -k bt -k quit --"

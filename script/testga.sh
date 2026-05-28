@@ -95,6 +95,9 @@ elif [ "$unameop" = "Darwin" ]; then
  sysctl -a | grep cpu
 elif [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
  grep -i cpu /var/run/dmesg.boot
+elif [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ] || [ "$unameop" = "Msys" ]; then
+ wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
+ systeminfo
 fi
 ulimit -a || true
 

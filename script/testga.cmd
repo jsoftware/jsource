@@ -20,7 +20,6 @@ IF "%~1"=="arm64" GOTO L0
 IF "%~1" NEQ "x64" EXIT /b 1
 :L0
 
-wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
 systeminfo
 
 IF "%~1"=="x86" GOTO L01A

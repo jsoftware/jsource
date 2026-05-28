@@ -143,7 +143,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -152,7 +152,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/testga.sh linux i386 || exit 1
       cp jlibrary/bin32/* j32 || true

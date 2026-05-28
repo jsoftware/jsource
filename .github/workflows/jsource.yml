@@ -56,6 +56,7 @@ jobs:
 
    - name: Test JE (Linux)
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -111,6 +112,7 @@ jobs:
 
    - name: Test JE (Linux gcc)
      env:
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: 3
@@ -146,6 +148,7 @@ jobs:
 
    - name: Test JE (Linux32)
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
@@ -201,6 +204,7 @@ jobs:
 
    - name: Test JE (Linux32 gcc)
      env:
+      DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: 3
@@ -237,6 +241,7 @@ jobs:
 
    - name: Test JE (Linux debug)
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: 3
@@ -268,6 +273,7 @@ jobs:
 
    - name: Test JE (macOS)
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -319,6 +325,7 @@ jobs:
 
    - name: Test JE (macOS arm64)
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -370,6 +377,7 @@ jobs:
 
    - name: Test JE (Linux arm64)
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -422,6 +430,8 @@ jobs:
 
    - name: Test JE (Linux arm32)
      env:
+      DEBUGCMD: gdb-multiarch
+      DEBUGCPU: arm6
       USE_OPENMP: 0
       USE_PYXES: 0
       _DEBUG: 0
@@ -468,6 +478,7 @@ jobs:
       copy_artifact_path: j64
       commands: |
        apt-get install --no-install-recommends -y clang zip libomp-dev gdb
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -528,6 +539,7 @@ jobs:
       copy_artifact_path: j32
       commands: |
        apt-get install --no-install-recommends -y clang zip libomp-dev gdb
+       export DEBUGCMD=gdb
        export CC=gcc
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
@@ -599,6 +611,7 @@ jobs:
        echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        cat ~/.ssh/config || true
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -662,6 +675,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -727,6 +741,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -793,6 +808,7 @@ jobs:
        echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        cat ~/.ssh/config || true
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -860,6 +876,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -929,6 +946,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -997,6 +1015,7 @@ jobs:
        echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        cat ~/.ssh/config || true
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -1087,6 +1106,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      DEBUGCMD: lldb
      run: |
       script/buildga.sh wasm wasm32 || exit 1
       script/testga.sh wasm wasm32 || exit 1
@@ -1132,6 +1152,7 @@ jobs:
    - name: Test JE (Windows)
      shell: cmd
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1187,6 +1208,7 @@ jobs:
    - name: Test JE (Windows 32)
      shell: cmd
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
@@ -1244,6 +1266,7 @@ jobs:
      if: ${{ false }}
      shell: cmd
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1299,6 +1322,7 @@ jobs:
    - name: Test JE (Windows arm64)
      shell: cmd
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1340,16 +1364,16 @@ jobs:
       # { sys: clang64, env: clang-x86_64 }
       # { sys: clang64arm, env: clang-aarch64 }
 
-# windows msys2 x64 ----------------------------------------------------
- jewin-msys2-x64:
-  name: JE (Windows MSYS2 x64)
+# windows msys2 x64 clang ----------------------------------------------
+ jewin-msys2-x64-clang:
+  name: JE (Windows MSYS2 x64 clang)
   needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
 
-   - name: Setup Environment (Windows MSYS2 x64)
+   - name: Setup Environment (Windows MSYS2 x64 clang)
      uses: msys2/setup-msys2@v2
      with:
       msystem: CLANG64
@@ -1360,7 +1384,7 @@ jobs:
         mingw-w64-clang-x86_64-lldb
         make
 
-   - name: Build JE (Windows MSYS2 x64)
+   - name: Build JE (Windows MSYS2 x64 clang)
     # Run your build commands within the MSYS2 shell
      shell: msys2 {0}
      env:
@@ -1377,9 +1401,74 @@ jobs:
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
+   - name: Test JE (Windows MSYS2 x64 clang)
+     shell: msys2 {0}
+     env:
+      DEBUGCMD: lldb
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
+     run: |
+      script/testga.sh windows x86_64 || exit 1
+
+   - name: Compress Files (Windows MSYS2 x64 clang)
+     shell: pwsh
+     run: |
+      copy jlibrary/bin/* j64
+      del j64/profile.ijs
+      del j64/libopenblas*.dll
+      Compress-Archive j64 w64mwc.zip
+
+   - name: Release JE (Windows MSYS2 x64 clang)
+     uses: ncipollo/release-action@v1
+     with:
+      tag: build
+      artifacts: "w64mwc.zip"
+      token: ${{ secrets.GITHUB_TOKEN }}
+      allowUpdates: true
+      replacesArtifacts: true
+
+# windows msys2 x64 ----------------------------------------------------
+ jewin-msys2-x64:
+  name: JE (Windows MSYS2 x64)
+  needs: all
+  runs-on: windows-2022
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v4
+
+   - name: Setup Environment (Windows MSYS2 x64)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: MINGW64
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-x86_64-gcc
+        mingw-w64-x86_64-gdb
+        make
+
+   - name: Build JE (Windows MSYS2 x64)
+    # Run your build commands within the MSYS2 shell
+     shell: msys2 {0}
+     env:
+      CC: x86_64-w64-mingw32-gcc
+      CXX: x86_64-w64-mingw32-g++
+      WINDRES: windres
+      _SSE4_2: 1
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      PTHREADS4WSRC: 1
+      _DEBUG: 0
+     run: |
+      script/buildga.sh windows x86_64 || exit 1
+
    - name: Test JE (Windows MSYS2 x64)
      shell: msys2 {0}
      env:
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: 0
@@ -1442,6 +1531,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x86)
      shell: msys2 {0}
      env:
+      DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: 0
@@ -1504,6 +1594,7 @@ jobs:
    - name: Test JE (Windows MSYS2 arm64)
      shell: msys2 {0}
      env:
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: 0

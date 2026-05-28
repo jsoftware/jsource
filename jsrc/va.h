@@ -40,21 +40,20 @@
 // obsolete #define VCOPYW          BIT(VCOPYWX)
 // obsolete #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
 // obsolete #define VCOPYA          BIT(VCOPYAX)
-#define VIPOKWX         20      // This routine can put its result over W
+#define VIPOKWX         20      // This routine can put its result over W.  Paired with VIPOKA
 #define VIPOKW          BIT(VIPOKWX)
 #define VIPOKAX         21      // This routine can put its result over A
 #define VIPOKA          BIT(VIPOKAX)
-// the conversion info for Vxx is in bits 22 and 24:
+// the conversion info for Vxx is in bits 22-24:
 #define VXEX            (VXX|XMODETOCVT((I)XMEXACT))  // exact conversion
 #define VXEQ            (VXX|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */
 #define VXCF            (VXX|XMODETOCVT((I)XMCEIL))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (VXX|XMODETOCVT((I)XMFLR))  /* convert to XNUM floor/ceiling       */
 #define VCANHALT        0  // BIT(VCANHALTX) was 25, but no longer used
-// bits 23 & 25 free
-#define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
-#define VXCHASVTYPE     BIT(VXCHASVTYPEX)
 #define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
-#define VOTX            27           // bit position for allocated result-type  MUST be highest bits!
+// obsolete #define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
+// obsolete #define VXCHASVTYPE     BIT(VXCHASVTYPEX)
+#define VOTX            25           // bit position for allocated result-type  MUST be highest bits!
 #define VB              ((I)B01X<<VOTX)
 #define VI              ((I)INTX<<VOTX)
 #define VD              ((I)FLX<<VOTX)
@@ -64,8 +63,8 @@
 #define VI2             ((I)INT2X<<VOTX)
 #define VI4             ((I)INT4X<<VOTX)
 #define VE              ((I)QPX<<VOTX)
-#define VOTMSK          ((I)15<<VOTX) // mask for result type from function 12-15.  always present
-// bit 31 free, leave open to shorten immediates
+#define VOTMSK          ((I)15<<VOTX) // mask for result type from function 25-28.  always present
+// leave bits 29-31 unused to allow jtfg to shift up leaving 3 LSBs open.  Also allows short immediates
 // obsolete #define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
 // obsolete #define VIPOKRNKW          BIT(VIPOKRNKWX)
 // obsolete // bit 29 free

@@ -578,10 +578,12 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 // Restriction: MARK must be reserved for use as BOXMULTIASSIGN because of how parser tests for it
 // ** NOTE!! bits 22/24/26 are used in the call to cvt() (arg only) to override the conversion type for XNUMs
 // MARK and ASGN hold the 2-bit rounding mode
-#define XCVTXNUMORIDEMSK  (MARK+ASGN+CONW)   // in ccvt(), the override to use if XCVTXNUMORIDEX is set, otherwise 00
-#define XCVTXNUMORIDEX  CONWX   // in ccvt(), indicates that forced precision for result is present
-#define XMODETOCVT(x) (((((x)+2)&5)<<MARKX)|CONW)  // convert XMODE to a request to cvt to convert to that mode
-#define CVTTOXMODE(x) (PEXT0((x)+MARK,MARKX+1,3)) // convert cvt request back to xmode
+#define XCVTXNUMORIDEMSK  (MARK+ADV+ASGN)   // in ccvt(), the override to use if XCVTXNUMORIDEX is set, otherwise 00
+#define XCVTXNUMORIDEX  MARKX   // in ccvt(), indicates that forced precision for result is present
+#define XCVTXNUMORIDE  BIT(XCVTXNUMORIDEX)   // in ccvt(), indicates that forced precision for result is present
+// obsolete #define XMODETOCVT(x) (((((x)+2)&5)<<MARKX)|CONW)  // convert XMODE to a request to cvt to convert to that mode
+#define XMODETOCVT(x) ((((x)&3)<<(XCVTXNUMORIDEX+1))|XCVTXNUMORIDE)  // convert XMODE to a request to cvt to convert to that mode
+#define CVTTOXMODE(x) (PEXT0((x),XCVTXNUMORIDEX+1,3)) // convert cvt request back to xmode
 // ** NOTE!! bit 28 are used in the call to cvt() (arg only) to indicate NOFUZZ
 #define CVTNOFUZZX    LPARX     // 28 set if the name is one of u v u. v. that is always passed by value, never by reference
 #define CVTNOFUZZ     ((I)1L<<CVTNOFUZZX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name

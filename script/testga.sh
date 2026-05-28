@@ -63,11 +63,14 @@ if [ "$_DEBUG" = "1" ] || [ "$_DEBUG" = "2" ] || [ "$_DEBUG" = "3" ]; then
   DB1="$DEBUGCMD -batch -return-child-result -ex run -ex bt --args"
  elif [ "$DEBUGCMD" = "gdb-multiarch" ]; then
   DB1="$DEBUGCMD -batch -return-child-result -ex \"set architecture $DEBUGCPU\" -ex run -ex bt --args"
- else
- # fallback to lldb
+ elif [ "$DEBUGCMD" = "lldb" ]; then
   DB1="$DEBUGCMD -b -o run -k bt -k quit --"
+ else
+  echo "unsupported debug command: $DB1"
+  exit 1
  fi
  echo "debug command: $DB1"
+ $DEBUGCMD --version
 else
  DB1=
 fi

@@ -19,27 +19,35 @@ export jplatform="$1"
 if [ "$1" = "linux" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "raspberry" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "darwin" ]; then
  libj="libj"
  ext="dylib"
+ ext1=""
 elif [ "$1" = "android" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "openbsd" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "freebsd" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "windows" ]; then
  libj="j"
  ext="dll"
+ ext1=".exe"
 elif [ "$1" = "wasm" ]; then
  libj="libj"
  ext=""
+ ext1=""
 else
  echo "argument is linux|windows|darwin|raspberry|android|openbsd|freebsd|wasm"
  exit 1
@@ -101,19 +109,19 @@ fi
 if [ "$2" = "x86_64" ]; then
  if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
-   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
   fi
  elif [ "$1" = "linux" ]; then
   if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
-   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   if [ "$(cat /var/run/dmesg.boot | grep -c AVX2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
-   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
   fi
  elif [ "$1" = "windows" ]; then
   if [ -f "$B/${libj}avx2.${ext}" ]; then
-   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
   fi
  fi
 fi
@@ -122,35 +130,35 @@ fi
 if [ $m64 -eq 1 ]; then
  ls -l $B
  if [ "$1" = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
-  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -arm64 $DB1 $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -x86_64 $DB1 $B/jconsole -lib ${libj}.${ext} script/testga.ijs
+  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -arm64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -x86_64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
  else
-  LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}.${ext} script/testga.ijs
+  LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
  fi
 else
  ls -l $C
- LC_ALL=fr_FR.UTF-8 $DB1 $C/jconsole -lib ${libj}.${ext} script/testga.ijs
+ LC_ALL=fr_FR.UTF-8 $DB1 $C/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
 fi
 
 # avx512
 if [ "$2" = "x86_64" ]; then
  if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
-   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
   fi
  elif [ "$1" = "linux" ]; then
   if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "$B/${libj}avx5122.${ext}" ]; then
-   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   # if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
-  #   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
+  #   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
   # fi
   true
  elif [ "$1" = "windows" ]; then
   # no way to detect avx512 capacity
   # if [ -f "$B/${libj}avx512.${ext}" ]; then
-  #    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
+  #    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
   #   fi
   # fi
   true

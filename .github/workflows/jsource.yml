@@ -213,43 +213,6 @@ jobs:
      run: |
       script/testga.sh linux i386 || exit 1
 
-# linux debug ----------------------------------------------------------
- jelinuxd:
-  name: JE (Linux debug)
-  needs: all
-  runs-on: ubuntu-24.04
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Setup Environment (Linux debug)
-     run: |
-      script/install-lnx.sh
-      sudo mkdir -p /usr/lib/x86_64-linux-gnu
-      sudo mkdir -p /usr/lib/i386-linux-gnu
-      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
-      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
-
-   - name: Build JE (Linux debug)
-     env:
-      CC: clang
-      USE_SLEEF: 1
-      USE_OPENMP: 0
-      USE_PYXES: 1
-      USE_EMU_AVX: 1
-      _DEBUG: 3
-     run: |
-      script/buildga.sh linux x86_64 || exit 1
-
-   - name: Test JE (Linux debug)
-     env:
-      DEBUGCMD: lldb
-      USE_PYXES: 1
-      USE_EMU_AVX: 1
-      _DEBUG: 3
-     run: |
-      script/testga.sh linux x86_64 || exit 1
-
 # macOS ----------------------------------------------------------------
  jemacos:
   name: JE (macOS)
@@ -1399,7 +1362,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1409,7 +1372,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/testga.sh windows x86_64 || exit 1
 
@@ -1463,7 +1426,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1473,7 +1436,7 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/testga.sh windows x86_64 || exit 1
 
@@ -1589,7 +1552,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/buildga.sh windows arm64 || exit 1
 
@@ -1599,7 +1562,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 3
+      _DEBUG: 0
      run: |
       script/testga.sh windows arm64 || exit 1
 
@@ -1629,9 +1592,7 @@ jobs:
 # AFAIK there is no cleaner way to do this
   needs:
    - jelinux
-   - jelinux-gcc
    - jelinux32
-   - jelinuxd
    - jemacos
    - jemacosarm
    - jerpi64arm
@@ -1640,10 +1601,15 @@ jobs:
    - jewin32
    - jewinarm64
    - jeandroid
+   - jewasm
    - jefreebsd2
    - jefreebsdarm64
    - jeopenbsd2
    - jeopenbsdarm64
+   - jewin-msys2-x64-clang
+   - jewin-msys2-x64
+   - jewin-msys2-x86
+   - jewin-msys2-arm64
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v4
@@ -1672,9 +1638,7 @@ jobs:
 # comment out any needs not used by the webhook
   needs:
    - jelinux
-#   - jelinux-gcc
    - jelinux32
-   - jelinuxd
    - jemacos
    - jemacosarm
    - jerpi64arm
@@ -1683,10 +1647,15 @@ jobs:
    - jewin32
    - jewinarm64
    - jeandroid
+   - jewasm
    - jefreebsd2
    - jefreebsdarm64
    - jeopenbsd2
    - jeopenbsdarm64
+   - jewin-msys2-x64-clang
+   - jewin-msys2-x64
+   - jewin-msys2-x86
+   - jewin-msys2-arm64
   steps:
    - name: update server
      uses: distributhor/workflow-webhook@v2

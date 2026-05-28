@@ -69,8 +69,8 @@ if [ "$_DEBUG" = "1" ] || [ "$_DEBUG" = "2" ] || [ "$_DEBUG" = "3" ]; then
   echo "unsupported debug command: $DB1"
   exit 1
  fi
- echo "debug command: $DB1"
  $DEBUGCMD --version
+ echo "debug command: $DB1"
 else
  DB1=
 fi

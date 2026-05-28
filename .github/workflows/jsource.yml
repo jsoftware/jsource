@@ -1397,7 +1397,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1407,7 +1407,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/testga.sh windows x86_64 || exit 1
 
@@ -1461,7 +1461,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1471,7 +1471,7 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/testga.sh windows x86_64 || exit 1
 
@@ -1524,7 +1524,7 @@ jobs:
       USE_PYXES: 0
       USE_EMU_AVX: 0
       PTHREADS4WSRC: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/buildga.sh windows i386 || exit 1
 
@@ -1534,7 +1534,7 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/testga.sh windows i386 || exit 1
 
@@ -1587,7 +1587,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/buildga.sh windows arm64 || exit 1
 
@@ -1597,7 +1597,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/testga.sh windows arm64 || exit 1
 

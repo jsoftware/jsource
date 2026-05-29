@@ -539,7 +539,7 @@ f =: 1:`({{ x -: y [ rx__ =: x [ ry__ =: y }}  ". eftx)@.(3 = 4!:0 <'eformat_j_'
 f =: 1:`(-:  ". eftx)@.(3 = 4!:0 <'eformat_j_')  NB. check verbose msgs only if defined
 
 '|length error in f, executing dyad +|shapes 2 and 3 do not conform|   2 3    +4 5 6'    f '2 3+4 5 6'
-'|length error in f, executing dyad +"1|shapes 2 3 and 4 5 6 do not conform|   (i.2 3)    +"1 i.4 5 6'    f '(i. 2 3)+"1 i.4 5 6'
+'|length error in f, executing dyad +"1 1|shapes 2 3 and 4 5 6 do not conform|   (i.2 3)    +"1 i.4 5 6'    f '(i. 2 3)+"1 i.4 5 6'
 '|length error in f, executing dyad +"1 1|<frames> do not conform in shapes 2<3> and 2 3<6>|   (i.2 3)    +"1 i.2 3 6'    f '(i. 2 3)+"1 i.2 3 6'
 
 '|length error in f, executing dyad $|extending an empty array requires fill|   2 3    $$0' f '2 3 $ $0'

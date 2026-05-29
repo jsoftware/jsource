@@ -1711,9 +1711,9 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define INSTALLBOXNVRECUR(xv,k,z) {I zzK=(k); A zzZ=(xv)[zzK]; (xv)[zzK]=(z); ra(z); fa(zzZ);}  // z is known non-virtual.  Don't test - we know we are installing into a recursive block
 #define INSTALLBOXRECUR(xv,k,z) rifv(z); INSTALLBOXNVRECUR(xv,k,z)  // Don't test - we know we are installing into a recursive block
 // Same thing for RAT type.  z is a Q, xv[k] is a Q
-#define INSTALLRAT(x,xv,k,z) if(likely((UCISRECUR(x))!=0)){Q zzZ=xv[k]; ra(z.n); ra(z.d); fa(zzZ.n); fa(zzZ.d);} xv[k]=z
+#define INSTALLRAT(x,xv,k,z) if(likely((UCISRECUR(x))!=0)){Q zzZ=xv[k]; ra(z.n); ra(z.d);  xv[k]=z; fa(zzZ.n); fa(zzZ.d);} else xv[k]=z
 #define INSTALLRATNF(x,xv,k,z) if(likely((UCISRECUR(x))!=0)){ra(z.n); ra(z.d);} xv[k]=z   // Don't do the free - if we are installing into known 0
-#define INSTALLRATRECUR(xv,k,z) rifv(z.n); rifv(z.d); {I zzK=(k); {Q zzZ=xv[k]; ra(z.n); ra(z.d); fa(zzZ.n); fa(zzZ.d);} xv[zzK]=z;}  // Don't test - we know we are installing into a recursive block
+#define INSTALLRATRECUR(xv,k,z) rifv(z.n); rifv(z.d); {I zzK=(k); {Q zzZ=xv[k]; ra(z.n); ra(z.d); xv[zzK]=z; fa(zzZ.n); fa(zzZ.d);}}  // Don't test - we know we are installing into a recursive block
 // Use IRS[12] to call a verb that supports IRS.  Rank is nonnegative; result is assigned to z.  z mustn't be any other arg - it is also used as a temp
 // args should be names, because they are evaluated repeatedly, and also because rank is set before one of the evaluations
 #define IRS1COMMON(j,w,fs,r,f1,z) (z=(A)(r),z=(I)AR(w)>(I)(r)?z:(A)~0,jt->ranks=(RANK2T)(I)z,z=((AF)(f1))(j,(w),(A)(fs)),jt->ranks=R2MAX,z)  // nonneg rank

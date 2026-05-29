@@ -909,8 +909,8 @@ static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
-// allranks is (ranks of a and w),(verb ranks)
-static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){F12IP;  // allranks is argranks/ranks
+// allranks is (ranks of a and w),(verb ranks)  agreefr is the framelen for the initial agreement test
+static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks,I agreefr){F12IP;  // allranks is argranks/ranks
  A z;I m,mf,n,nf,zn;I cv;VF adocvfn;VA2 adocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  {I at=AT(a);
@@ -941,14 +941,36 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
    // Don't signal domain error on the types yet, because domain has lower priority than agreement
    // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
    // support nonnumeric sparse now
-   if(likely(!ISSPARSE(at|wt)))self=0;  // self=0 is our flag for 'dense'
+   self=ISSPARSE(at|wt)?self:0;  // self=0 is our flag for 'dense'
 // obsolete    at&=~SPARSE; wt&=~SPARSE;
   }
  }
 
- // finish up the computation of sizes.  We have to defer this till after var() because
- // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
- // so we have to RE when we call them
+
+ // vbls in use: a w allranks cv jt
+ // cv is going to take ~10 cycles to settle.  We want to do as much as we can before needing to look at it.  We can do the agreement test first, and then any input conversions
+
+ ASSERTAGREE(AS(a),AS(w),agreefr);  // outermost (or only) agreement check.  If we retry the operation we will do it agan, which is a waste.  But is it worth testing for?  We might be killing enough time that we never block on cv
+
+ // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
+ // Failed conversion are real errors, but they have priority below agreement errors.  If the conversion error is EVDOMAIN, we defer it by
+ // clearing adocvfn to 0, which gives later domain error
+ if(unlikely(isatype(cv))&&likely(self==0)){  // input conversion required (rare), which will predict correctly.
+  // Don't keep much in registers, because we have a bottleneck in the function call here
+  I t=atype(cv);
+  if(TYPESNE(AT(a),t)){A cz=cvt(t|(cv&XCVTXNUMORIDEMSK),a); if(likely(cz!=0)){a=cz; cv|=JTINPLACEA;}else{if(jt->jerr!=EVDOMAIN)R 0; RESETERR adocvfn=0;}}
+  if(TYPESNE(AT(w),t)){A cz=cvt(t|(cv&XCVTXNUMORIDEMSK),w); if(likely(cz!=0)){w=cz; cv|=JTINPLACEW;}else{if(jt->jerr!=EVDOMAIN)R 0; RESETERR adocvfn=0;}}
+// obsolete   if(likely((at|wt)!=t)){    // if an argument needs to be converted (probably will, but not necessarily if arg are not BID)
+// obsolete    I bt=bplg(t);  // get shared required input type
+// obsolete    // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
+// obsolete    // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
+// obsolete    // bits 2-3 of cv indicate whether inplaceability is allowed by the op, the ranks, and the addresses
+// obsolete    if(TYPESNE(t,at)){I ba=bplg(at); aawwzknfxrz[0]=(aawwzknfxrz[0]>>ba)<<bt; aawwzknfxrz[1]=(aawwzknfxrz[1]>>ba)<<bt; RZ(a=cvt(t|(cv&XCVTXNUMORIDEMSK),a)); cv|=SHMSK(cv,VIPRNKX,JTINPLACEA);}
+// obsolete    if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzknfxrz[2]=(aawwzknfxrz[2]>>bw)<<bt; aawwzknfxrz[3]=(aawwzknfxrz[3]>>bw)<<bt; RZ(w=cvt(t|(cv&XCVTXNUMORIDEMSK),w)); cv|=PEXT0(cv,VIPRNKX,JTINPLACEW);}
+// obsolete   }
+ }
+
+ // a and w have their final addresses.  No function calls till we allocate the result
 
  // Analyze the rank and calculate cell shapes, counts, and sizes.
  // We detect agreement error before domain error
@@ -992,7 +1014,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
     // Heavy register pressure here.
     // When this was written with 6 names it barely fit in registers, so I rewrote it with 4 names.  Compiler's ideas about handling allranks fill spare register
     // active vbls: cv a w aadocv
-    acr=0; af=allranks>>2*RANKTX;  // allranks = anr/wnr/avr/wvr (nr=noun rank)  wcr will hold verbrank
+    acr=0; af=allranks>>2*RANKTX;  // allranks = anr/wnr/avr/wvr (nr=noun rank)  wcr will hold verbranks
     wcr=(RANK2T)allranks; af|=RANKTMSK; af-=wcr; af=((I)af<0)?acr:af; af&=~RANKTMSK;  // af is 0/0/anr/wnr -> 0/0/anr/ffff -> 0/0/afr/x -> clamp at 0 -> 0/0/afr/0
     wf=allranks>>=2*RANKTX; wcr&=RANKTMSK; wf&=RANKTMSK; wf-=wcr; wf=((I)wf<0)?acr:wf;    // wf is 0/0/anr/wnr -> 0/0/0/anr ->  0/0/0/afr -> clamp at 0
     acr=allranks; acr-=af; acr-=wf;  // acr = 0/0/acr/wcr  (nr-fr=cr)
@@ -1146,34 +1168,13 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
    }
   }
  }
-
+ // Not sparse.
  RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We clear in case the action routine calls a function with IRS
 
- // Signal domain error if appropriate. Must do this after agreement tests
- ASSERT(adocvfn,EVDOMAIN);  // scaf move later to leave in reg
 // obsolete  if(likely(jtfg!=0)){   // if not sparse...
- // Not sparse.
+ aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.  scaf float as high as possible
 
- // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
- // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
- // might fail because the type in t is incompatible with the actual type in a.  t is rare.
- //
- // Because of the priority of errors we mustn't check the type until we have verified agreement above
- if(unlikely(isatype(cv))&&likely(zn>0)){  // input conversion required (rare), and the result is not empty
-  I at=AT(a), wt=AT(w), t=atype(cv);
-  if(likely((at|wt)!=t)){    // if an argument needs to be converted (probably will, but not necessarily if arg are not BID)
-   I bt=bplg(t);  // get shared required input type
-   // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
-   // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
-   // bits 2-3 of cv indicate whether inplaceability is allowed by the op, the ranks, and the addresses
-   if(TYPESNE(t,at)){I ba=bplg(at); aawwzknfxrz[0]=(aawwzknfxrz[0]>>ba)<<bt; aawwzknfxrz[1]=(aawwzknfxrz[1]>>ba)<<bt; RZ(a=cvt(t|(cv&XCVTXNUMORIDEMSK),a)); cv|=SHMSK(cv,VIPRNKX,JTINPLACEA);}
-   if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzknfxrz[2]=(aawwzknfxrz[2]>>bw)<<bt; aawwzknfxrz[3]=(aawwzknfxrz[3]>>bw)<<bt; RZ(w=cvt(t|(cv&XCVTXNUMORIDEMSK),w)); cv|=PEXT0(cv,VIPRNKX,JTINPLACEW);}
-  }
- }
-
- // From here on we have possibly changed the address of a and w
-
- // Allocate a result area of the right type, and copy in its cell-shape after the frame
+ // Allocate or reuse a result area of the right type, and copy in its cell-shape after the frame
  // If an argument can be overwritten, use it rather than allocating a new one
  // Argument can be overwritten if: action routine allows it; flagged in cv; usecount 1 or zombie; rank equals (length of longer frame)+(length of longer cell)
  // If the argument has rank that large, and the arguments agree, the argument MUST have the same number of atoms as the result, because all shape is accounted for.
@@ -1207,17 +1208,19 @@ allocate:;  // come here if no inplaceable block could have the type changed
 //                                     frame loc     shape of long frame             len of long frame  cellshape       longer cellen 
  } 
  // fr free
+ // Signal domain error if appropriate. Must do this after agreement tests
+ ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we get to keep adocvfn in the call register till end of loop.  We might have allocated a BOOL result block, which is OK
  if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
 // obsolete  VF adocvfn=aadocv->f;  // extract the function address.  This frees aadocv, and in clang16 brings adocvfn into register early to speed the expected misprediction
  // zn, zt  NOT USED FROM HERE ON
 
  // End of setup phase.  The execution phase:
+ // vbls needed from setup: adocvfn m a w z [jt]
 
  // The compiler thinks that because ak/wk/zk are used in the loop they should reside in registers.  So we force the compiler to spill aawwzknfxrz using forcetomemory.
  // We want m, mend, av, wv, zv, jj to be in registers  (m and zv so that the action routine can test them and do boundary alignment right away; mend so that the misprediction
  // of the last loop, if it happens, will be detected right away).  It might be better to have n (aawwzknfxrz[9]) in a register as well.
  {C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.  Could move up but gain is small
-  aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it, freeing up inplace (we know that anything needing conversion will not need retries)
   I mulofloloc;   // number of good results before we encountered integer overflow on multiply
   {
    I mend=aawwzknfxrz[9]+(I)zv;   // add addr to offset to get addr of last block of z
@@ -1230,6 +1233,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
    // Each release, monitor that clang brings adocvfn into register early to advance the expected misprediction.
    I jj=aawwzknfxrz[6];  // number of outer-outer loops, number-1 of each outer-inner loop
    lp000: ;
+   // vbls needed over loop: adocvfn m av wv zv [mend] jj jt
    {I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,av,wv,zv,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below
     if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
      // section did not complete normally.
@@ -1243,7 +1247,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
    lp000e: ;
   }
   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
-  if(likely(aawwzknfxrz[8]==VRNONE)){RETF(z) // normal return is here.  If NOCONV or error happened we lost VRI+VRD+VRNONE.
+  if(likely(aawwzknfxrz[8]==VRNONE)){RETF(z) // normal return is here, either success or failure.  If NOCONV or error happened we lost VRI+VRD+VRNONE.
   }else if(aawwzknfxrz[8]&VRI+VRD){RETF(cvz(aawwzknfxrz[8],z))   // if result conversion still required, do it
   }else if(aawwzknfxrz[8]&EVNOCONV){RETF(z)   // if no true error (but only suppression of conversion), OK (extremely rare)
 
@@ -1796,14 +1800,13 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
    self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
    selfranks=jtranks==R2MAX?selfranks:jtranks;
   }
-  // self, awr, and selfranks are needed in the retry
+  // self, af, awr, and selfranks are needed in the retry
  }
  // not singleton, or singleton needing retry
  
- ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
  NOUNROLL while(1){
   // Run the full dyad, retrying if a retryable error is returned
-  z=jtva2(jtfg,a,w,self,(awr<<RANK2TX)+selfranks);  // execute the verb
+  z=jtva2(jtfg,a,w,self,(awr<<RANK2TX)+selfranks,af);  // execute the verb
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
   jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation

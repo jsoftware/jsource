@@ -31,7 +31,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux)
      run: |
@@ -56,7 +56,6 @@ jobs:
 
    - name: Test JE (Linux)
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -76,7 +75,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Linux)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testlinux.txt
@@ -89,7 +88,7 @@ jobs:
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux gcc)
      run: |
@@ -106,16 +105,15 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
    - name: Test JE (Linux gcc)
      env:
-      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/testga.sh linux x86_64 || exit 1
 
@@ -126,7 +124,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux32)
      run: |
@@ -143,16 +141,13 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
      run: |
       script/buildga.sh linux i386 || exit 1
 
    - name: Test JE (Linux32)
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
      run: |
       script/testga.sh linux i386 || exit 1
       cp jlibrary/bin32/* j32 || true
@@ -170,7 +165,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Linux32)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testlinux32.txt
@@ -183,7 +178,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux32 gcc)
      run: |
@@ -200,18 +195,53 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/buildga.sh linux i386 || exit 1
 
    - name: Test JE (Linux32 gcc)
      env:
-      DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: 3
      run: |
       script/testga.sh linux i386 || exit 1
+
+# linux debug ----------------------------------------------------------
+ jelinuxd:
+  name: JE (Linux debug)
+  needs: all
+  runs-on: ubuntu-24.04
+  steps:
+   - name: Checkout Git repository
+     uses: actions/checkout@v6
+
+   - name: Setup Environment (Linux debug)
+     run: |
+      script/install-lnx.sh
+      sudo mkdir -p /usr/lib/x86_64-linux-gnu
+      sudo mkdir -p /usr/lib/i386-linux-gnu
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+
+   - name: Build JE (Linux debug)
+     env:
+      CC: clang
+      USE_SLEEF: 1
+      USE_OPENMP: 0
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 3
+     run: |
+      script/buildga.sh linux x86_64 || exit 1
+
+   - name: Test JE (Linux debug)
+     env:
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 3
+     run: |
+      script/testga.sh linux x86_64 || exit 1
 
 # macOS ----------------------------------------------------------------
  jemacos:
@@ -220,7 +250,7 @@ jobs:
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (macOS)
      run: |
@@ -238,7 +268,6 @@ jobs:
 
    - name: Test JE (macOS)
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -259,7 +288,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (macOS)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testdarwin.txt
@@ -272,7 +301,7 @@ jobs:
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (macOS arm64)
      run: |
@@ -290,7 +319,6 @@ jobs:
 
    - name: Test JE (macOS arm64)
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -311,7 +339,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (macOS arm64)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testdarwinarm.txt
@@ -324,7 +352,7 @@ jobs:
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux arm64)
      run: |
@@ -342,7 +370,6 @@ jobs:
 
    - name: Test JE (Linux arm64)
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -362,7 +389,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Linux arm64)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testrpi64.txt
@@ -375,7 +402,7 @@ jobs:
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux arm32)
      run: |
@@ -395,8 +422,6 @@ jobs:
 
    - name: Test JE (Linux arm32)
      env:
-      DEBUGCMD: gdb-multiarch
-      DEBUGCPU: arm6
       USE_OPENMP: 0
       USE_PYXES: 0
       _DEBUG: 0
@@ -417,7 +442,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Linux arm32)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testrpi32.txt
@@ -431,7 +456,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (Raspberry)
      uses: pguyot/arm-runner-action@v2
@@ -443,7 +468,6 @@ jobs:
       copy_artifact_path: j64
       commands: |
        apt-get install --no-install-recommends -y clang zip libomp-dev gdb
-       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -478,7 +502,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Raspberry)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testrpi64.txt
@@ -492,7 +516,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (Raspberry 32)
      uses: pguyot/arm-runner-action@v2
@@ -504,7 +528,6 @@ jobs:
       copy_artifact_path: j32
       commands: |
        apt-get install --no-install-recommends -y clang zip libomp-dev gdb
-       export DEBUGCMD=gdb
        export CC=gcc
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
@@ -540,7 +563,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Raspberry)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testrpi32.txt
@@ -554,7 +577,7 @@ jobs:
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (OpenBSD)
      uses: vmactions/openbsd-vm@v1
@@ -576,7 +599,6 @@ jobs:
        echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -604,7 +626,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (OpenBSD)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testopenbsd.txt
@@ -617,7 +639,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (OpenBSD)
      uses: cross-platform-actions/action@v0.32.0
@@ -640,7 +662,6 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -668,7 +689,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (OpenBSD)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testopenbsd.txt
@@ -683,7 +704,7 @@ jobs:
   #runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (OpenBSD arm64)
      uses: cross-platform-actions/action@v0.32.0
@@ -706,7 +727,6 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -733,7 +753,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (OpenBSD arm64)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testopenbsdarm64.txt
@@ -747,7 +767,7 @@ jobs:
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (FreeBSD)
      uses: vmactions/freebsd-vm@v1
@@ -773,7 +793,6 @@ jobs:
        echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -801,7 +820,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (FreeBSD)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testfreebsd.txt
@@ -814,7 +833,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (FreeBSD)
      uses: cross-platform-actions/action@v0.32.0
@@ -841,7 +860,6 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -870,7 +888,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (FreeBSD)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testfreebsd.txt
@@ -884,7 +902,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (FreeBSD arm64)
      uses: cross-platform-actions/action@v0.32.0
@@ -911,7 +929,6 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -939,7 +956,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (FreeBSD arm64)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testfreebsdarm64.txt
@@ -953,7 +970,7 @@ jobs:
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (FreeBSD arm64)
      uses: vmactions/freebsd-vm@v1
@@ -980,7 +997,6 @@ jobs:
        echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -1008,7 +1024,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (FreeBSD arm64)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testfreebsdarm64.txt
@@ -1021,7 +1037,7 @@ jobs:
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (android)
      uses: nttld/setup-ndk@v1
@@ -1057,7 +1073,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (wasm)
      uses: mymindstorm/setup-emsdk@v14
@@ -1071,7 +1087,6 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      DEBUGCMD: lldb
      run: |
       script/buildga.sh wasm wasm32 || exit 1
       script/testga.sh wasm wasm32 || exit 1
@@ -1096,10 +1111,10 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64
 
@@ -1117,7 +1132,6 @@ jobs:
    - name: Test JE (Windows)
      shell: cmd
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1141,7 +1155,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Windows)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testwin.txt
@@ -1154,10 +1168,10 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows 32)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: x86
 
@@ -1173,7 +1187,6 @@ jobs:
    - name: Test JE (Windows 32)
      shell: cmd
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 0
       USE_EMU_AVX: 0
      run: |
@@ -1197,7 +1210,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Windows 32)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testwin32.txt
@@ -1211,10 +1224,10 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows arm64)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64_arm64
 
@@ -1231,7 +1244,6 @@ jobs:
      if: ${{ false }}
      shell: cmd
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1255,7 +1267,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Windows arm64)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testwinarm64.txt
@@ -1268,10 +1280,10 @@ jobs:
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows arm64)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64_arm64
 
@@ -1287,7 +1299,6 @@ jobs:
    - name: Test JE (Windows arm64)
      shell: cmd
      env:
-      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
      run: |
@@ -1311,7 +1322,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Windows arm64)
-     uses: actions/upload-artifact@v4
+     uses: actions/upload-artifact@v7
      with:
       name: dist
       path: testwinarm64.txt
@@ -1329,70 +1340,6 @@ jobs:
       # { sys: clang64, env: clang-x86_64 }
       # { sys: clang64arm, env: clang-aarch64 }
 
-# windows msys2 x64 clang ----------------------------------------------
- jewin-msys2-x64-clang:
-  name: JE (Windows MSYS2 x64 clang)
-  needs: all
-  runs-on: windows-2022
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v4
-
-   - name: Setup Environment (Windows MSYS2 x64 clang)
-     uses: msys2/setup-msys2@v2
-     with:
-      msystem: CLANG64
-      update: true
-      # Install necessary packages (e.g., your build tools, gcc, make)
-      install: >-
-        mingw-w64-clang-x86_64-clang
-        mingw-w64-clang-x86_64-lldb
-        make
-
-   - name: Build JE (Windows MSYS2 x64 clang)
-    # Run your build commands within the MSYS2 shell
-     shell: msys2 {0}
-     env:
-      CC: x86_64-w64-mingw32-clang
-      CXX: x86_64-w64-mingw32-clang++
-      WINDRES: windres
-      _SSE4_2: 1
-      USE_SLEEF: 1
-      USE_OPENMP: 0
-      USE_PYXES: 1
-      USE_EMU_AVX: 1
-      PTHREADS4WSRC: 1
-      _DEBUG: 0
-     run: |
-      script/buildga.sh windows x86_64 || exit 1
-
-   - name: Test JE (Windows MSYS2 x64 clang)
-     shell: msys2 {0}
-     env:
-      DEBUGCMD: lldb
-      USE_PYXES: 1
-      USE_EMU_AVX: 1
-      _DEBUG: 0
-     run: |
-      script/testga.sh windows x86_64 || exit 1
-
-   - name: Compress Files (Windows MSYS2 x64 clang)
-     shell: pwsh
-     run: |
-      copy jlibrary/bin/* j64
-      del j64/profile.ijs
-      del j64/libopenblas*.dll
-      Compress-Archive j64 w64mwc.zip
-
-   - name: Release JE (Windows MSYS2 x64 clang)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "w64mwc.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
 # windows msys2 x64 ----------------------------------------------------
  jewin-msys2-x64:
   name: JE (Windows MSYS2 x64)
@@ -1400,7 +1347,7 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows MSYS2 x64)
      uses: msys2/setup-msys2@v2
@@ -1423,7 +1370,7 @@ jobs:
       _SSE4_2: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
-      USE_PYXES: 1
+      USE_PYXES: 0
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
       _DEBUG: 0
@@ -1433,8 +1380,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x64)
      shell: msys2 {0}
      env:
-      DEBUGCMD: gdb
-      USE_PYXES: 1
+      USE_PYXES: 0
       USE_EMU_AVX: 1
       _DEBUG: 0
      run: |
@@ -1464,7 +1410,7 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows MSYS2 x86)
      uses: msys2/setup-msys2@v2
@@ -1496,7 +1442,6 @@ jobs:
    - name: Test JE (Windows MSYS2 x86)
      shell: msys2 {0}
      env:
-      DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: 0
@@ -1527,7 +1472,7 @@ jobs:
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows MSYS2 arm64)
      uses: msys2/setup-msys2@v2
@@ -1549,7 +1494,7 @@ jobs:
       WINDRES: windres
       USE_SLEEF: 1
       USE_OPENMP: 0
-      USE_PYXES: 1
+      USE_PYXES: 0
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
       _DEBUG: 0
@@ -1559,8 +1504,7 @@ jobs:
    - name: Test JE (Windows MSYS2 arm64)
      shell: msys2 {0}
      env:
-      DEBUGCMD: lldb
-      USE_PYXES: 1
+      USE_PYXES: 0
       USE_EMU_AVX: 1
       _DEBUG: 0
      run: |
@@ -1592,7 +1536,9 @@ jobs:
 # AFAIK there is no cleaner way to do this
   needs:
    - jelinux
+   - jelinux-gcc
    - jelinux32
+   - jelinuxd
    - jemacos
    - jemacosarm
    - jerpi64arm
@@ -1601,18 +1547,13 @@ jobs:
    - jewin32
    - jewinarm64
    - jeandroid
-   - jewasm
    - jefreebsd2
    - jefreebsdarm64
    - jeopenbsd2
    - jeopenbsdarm64
-   - jewin-msys2-x64-clang
-   - jewin-msys2-x64
-   - jewin-msys2-x86
-   - jewin-msys2-arm64
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Get Test Results
      uses: actions/download-artifact@v4
@@ -1638,7 +1579,9 @@ jobs:
 # comment out any needs not used by the webhook
   needs:
    - jelinux
+#   - jelinux-gcc
    - jelinux32
+   - jelinuxd
    - jemacos
    - jemacosarm
    - jerpi64arm
@@ -1647,15 +1590,10 @@ jobs:
    - jewin32
    - jewinarm64
    - jeandroid
-   - jewasm
    - jefreebsd2
    - jefreebsdarm64
    - jeopenbsd2
    - jeopenbsdarm64
-   - jewin-msys2-x64-clang
-   - jewin-msys2-x64
-   - jewin-msys2-x86
-   - jewin-msys2-arm64
   steps:
    - name: update server
      uses: distributhor/workflow-webhook@v2

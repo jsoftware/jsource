@@ -31,7 +31,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux no pyxes)
      run: |
@@ -70,7 +70,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux no emu)
      run: |
@@ -109,7 +109,7 @@ jobs:
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (macOS arm64 no pyxes)
      run: |
@@ -139,7 +139,7 @@ jobs:
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (macOS arm64 no emu)
      run: |
@@ -169,7 +169,7 @@ jobs:
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux arm64 no pyxes)
      run: |
@@ -201,7 +201,7 @@ jobs:
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux arm64 no emu)
      run: |
@@ -233,10 +233,10 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows no pyxes)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64
 
@@ -266,10 +266,10 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows no emu)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64
 
@@ -299,10 +299,10 @@ jobs:
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows arm64 no pyxes)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64_arm64
 
@@ -330,10 +330,10 @@ jobs:
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows arm64 no emu)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64_arm64
 
@@ -361,7 +361,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux32 pyxes)
      run: |
@@ -388,7 +388,7 @@ jobs:
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux arm32 pyxes)
      run: |
@@ -412,10 +412,10 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows 32 pyxes)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: x86
 

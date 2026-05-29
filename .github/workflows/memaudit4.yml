@@ -31,7 +31,7 @@ jobs:
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux)
      run: |
@@ -69,7 +69,7 @@ jobs:
   runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux32)
      run: |
@@ -110,7 +110,7 @@ jobs:
   runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (macOS)
      run: |
@@ -142,7 +142,7 @@ jobs:
   runs-on: macos-15
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (macOS arm64)
      run: |
@@ -174,7 +174,7 @@ jobs:
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux arm64)
      run: |
@@ -208,7 +208,7 @@ jobs:
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Linux arm32)
      run: |
@@ -243,7 +243,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (FreeBSD)
      uses: cross-platform-actions/action@v0.32.0
@@ -292,7 +292,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Build, Test JE (FreeBSD arm64)
      uses: cross-platform-actions/action@v0.32.0
@@ -340,7 +340,7 @@ jobs:
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (wasm)
      uses: mymindstorm/setup-emsdk@v14
@@ -364,10 +364,10 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64
 
@@ -396,10 +396,10 @@ jobs:
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows 32)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: x86
 
@@ -429,10 +429,10 @@ jobs:
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
-     uses: actions/checkout@v4
+     uses: actions/checkout@v6
 
    - name: Setup Environment (Windows arm64)
-     uses: ilammy/msvc-dev-cmd@v1
+     uses: ilammy/msvc-dev-cmd@v1.13
      with:
       arch: amd64_arm64
 

@@ -7,20 +7,19 @@
 // bits 0-1 kept open for jtflags
 // bits 2-3 should be forced to 1 jtflags;
 #define VIPRES          0x3   // reserved for JT inplacing flags
-#define VIPRNKX         2  // bits 2-3 should always be set, indicating that a converted argument can be inplaced; holds copy of inplaceability of repeat/rank/type
-#define VCVTIP          ((I)0x3<<VIPRNKX)   // this should always be set in any cv
-// bits 4-6 free
+// obsolete #define VIPRNKX         2  // bits 2-3 should always be set, indicating that a converted argument can be inplaced; holds copy of inplaceability of repeat/rank/type
+#define VCVTIP          0    // bits 2-3 was ((I)0x3<<VIPRNKX)   // this should always be set in any cv
+// bits 2-6 free
 #define VIPWCRLONGX     7  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  sign bit of lane 0
 #define VIPWCRLONG      BIT(VIPWCRLONGX)
-// bit 8 left open for overflow from loop-migration check
+// bit 8 free
 #define VRCX            9           // bit position for optional final result-conversion 9-10
 #define VRD             BIT(VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible
 #define VRNONE          ((I)3<<VRCX) // do not convert result  for now this is only in the atomic dyads - other leave the field at 00
 #define VRERR           ((I)0<<VRCX) // result-conversion removed by error (including EVNOCONV)
 #define VRMSK           ((I)3<<VRCX) // mask for result-conversion spec 10-11
-// 11-13 free
-// bit 14 left open for overflow from loop-migration check
+// 11-14 free
 #define VIPWFLONGX      15  //  internal use in va2.  Means 'w has longer frame, so x is repeated in outer loops'  sign bit of lane 1
 #define VIPWFLONG       BIT(VIPWFLONGX)
 #define VICX            16           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
@@ -77,7 +76,8 @@
 #define atype(x) (BIT(VICMSK>>VICX)>>(PEXT0((x),VICX,VICMSK>>VICX)))  // result is AT from flags
 
 // Extract the result type from cv coming from the table
-#define rtype(x) BIT((x)>>VOTX)  // relies of output conversion being highest bits
+#define rtype(x) BIT((x)>>VOTX)  // relies on output conversion being highest bits
+#define rtypebplg(x) bpctlg((x)>>VOTX)  // relies on output conversion being highest bits; avoids CTTZ
 // obsolete #define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
 
 #define NOT(v) ((v)^VALIDBOOLEAN)

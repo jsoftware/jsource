@@ -1120,9 +1120,9 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #if C_AVX2 || EMU_AVX2
 // verify that shapes *x and *y match for l axes using AVX for rank<=vector size, loop otherwise
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
- {I *aaa=(I*)(x), *aab=(I*)(y); I aai=(l); \
-  if(unlikely(aai>NPAR)){NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR]))),_mm256_loadu_si256((__m256i*)validitymask)),EVLENGTH)}while((aai-=NPAR)>NPAR);} \
-  ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR))),_mm256_loadu_si256((__m256i*)(validitymask+NPAR+aai))),EVLENGTH) /* result is 1 if all match */ \
+ {C *aaa=(C*)(x), *aab=(C*)(y); I aai=(l)<<LGSZI; \
+  if(unlikely(aai>NPAR*SZI)){NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR*SZI])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR*SZI]))),_mm256_loadu_si256((__m256i*)validitymask)),EVLENGTH)}while((aai-=NPAR*SZI)>NPAR*SZI);} \
+  ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR*SZI)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR*SZI))),_mm256_loadu_si256((__m256i*)((C*)&validitymask+NPAR*SZI+aai))),EVLENGTH) /* result is 1 if all match */ \
  }
 // result is true if shapes agree.  Modify only aai
 #define TESTAGREE(x,y,l) \
@@ -2120,10 +2120,11 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // bp(type) returns the number of bytes in an atom of the type - not used for sparse args
 // bplg(type) works for NOUN types and returns the lg of the size - for sparse args, the size of the underlying dense type
 #if SY_64
-#define bplg(i) (I)SHMSK8((I8)0x008b0222888dc6c0LL,3*CTTZ(i),(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
+#define bpctlg(i) (I)SHMSK8((I8)0x008b0222888dc6c0LL,3*(i),(I)7)  //  010 001 011   000 000 100 010 001 010 001 000   100 011 011 100 011 011 000 000 =  0 1000 1011 0000 0010 0010 0010 1000 1000 1000 1101 1100 0110 1100 0000
 #else
-#define bplg(i) (I)SHMSK8((I8)0x008a022288694680LL,3*CTTZ(i),(I)7)  //  010 001 010   000 000 100 010 001 010 001 000   011 010 010 100 011 010 000 000 =  0 1000 1010 0000 0010 0010 0010 1000 1000 0110 1001 0100 0110 1000 0000
+#define bpctlg(i) (I)SHMSK8((I8)0x008a022288694680LL,3*(i),(I)7)  //  010 001 010   000 000 100 010 001 010 001 000   011 010 010 100 011 010 000 000 =  0 1000 1010 0000 0010 0010 0010 1000 1000 0110 1001 0100 0110 1000 0000
 #endif
+#define bplg(i) bpctlg(CTTZ(i))  //  010 001 010   000 000 100 010 001 010 001 000   011 010 010 100 011 010 000 000 =  0 1000 1010 0000 0010 0010 0010 1000 1000 0110 1001 0100 0110 1000 0000
 // bpnonnoun is like 1<<bplg but we know that the value is not a noun
 #define bpnonnoun(i) (I)SHMSK8((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ \
  ((I8)SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+((I8)ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+((I8)MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+((I8)NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) \

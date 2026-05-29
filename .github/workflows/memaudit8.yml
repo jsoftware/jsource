@@ -367,7 +367,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Setup Environment (Windows)
-     uses: ilammy/msvc-dev-cmd@v1.13
+     uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64
 
@@ -399,7 +399,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Setup Environment (Windows 32)
-     uses: ilammy/msvc-dev-cmd@v1.13
+     uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: x86
 
@@ -432,7 +432,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Setup Environment (Windows arm64)
-     uses: ilammy/msvc-dev-cmd@v1.13
+     uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64_arm64
 

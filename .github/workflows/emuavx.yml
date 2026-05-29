@@ -236,7 +236,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Setup Environment (Windows no pyxes)
-     uses: ilammy/msvc-dev-cmd@v1.13
+     uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64
 
@@ -269,7 +269,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Setup Environment (Windows no emu)
-     uses: ilammy/msvc-dev-cmd@v1.13
+     uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64
 
@@ -302,7 +302,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Setup Environment (Windows arm64 no pyxes)
-     uses: ilammy/msvc-dev-cmd@v1.13
+     uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64_arm64
 
@@ -333,7 +333,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Setup Environment (Windows arm64 no emu)
-     uses: ilammy/msvc-dev-cmd@v1.13
+     uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64_arm64
 
@@ -415,7 +415,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Setup Environment (Windows 32 pyxes)
-     uses: ilammy/msvc-dev-cmd@v1.13
+     uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: x86
 

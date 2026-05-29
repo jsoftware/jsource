@@ -19,27 +19,35 @@ export jplatform="$1"
 if [ "$1" = "linux" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "raspberry" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "darwin" ]; then
  libj="libj"
  ext="dylib"
+ ext1=""
 elif [ "$1" = "android" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "openbsd" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "freebsd" ]; then
  libj="libj"
  ext="so"
+ ext1=""
 elif [ "$1" = "windows" ]; then
  libj="j"
  ext="dll"
+ ext1=".exe"
 elif [ "$1" = "wasm" ]; then
  libj="libj"
  ext=""
+ ext1=""
 else
  echo "argument is linux|windows|darwin|raspberry|android|openbsd|freebsd|wasm"
  exit 1
@@ -58,6 +66,23 @@ else
  exit 1
 fi
 
+if [ "$_DEBUG" = "1" ] || [ "$_DEBUG" = "2" ] || [ "$_DEBUG" = "3" ]; then
+ if [ "$DEBUGCMD" = "gdb" ]; then
+  DB1="$DEBUGCMD -batch -return-child-result -ex run -ex bt --args"
+ elif [ "$DEBUGCMD" = "gdb-multiarch" ]; then
+  DB1="$DEBUGCMD -batch -return-child-result -ex \"set architecture $DEBUGCPU\" -ex run -ex bt --args"
+ elif [ "$DEBUGCMD" = "lldb" ]; then
+  DB1="$DEBUGCMD -b -o run -k bt -k quit --"
+ else
+  echo "unsupported debug command: $DB1"
+  exit 1
+ fi
+ $DEBUGCMD --version
+ echo "debug command: $DB1"
+else
+ DB1=
+fi
+
 dest=$1
 
 A=jlibrary
@@ -70,6 +95,8 @@ elif [ "$unameop" = "Darwin" ]; then
  sysctl -a | grep cpu
 elif [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
  grep -i cpu /var/run/dmesg.boot
+elif [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ] || [ "$unameop" = "Msys" ]; then
+ systeminfo
 fi
 ulimit -a || true
 
@@ -84,39 +111,19 @@ fi
 if [ "$2" = "x86_64" ]; then
  if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
-   if [ "$_DEBUG" = "3" ]; then
-    echo "running debug"
-    LC_ALL=fr_FR.UTF-8 lldb -b -o run -k bt -k quit -- $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
-   else
-    LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
-   fi
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
   fi
  elif [ "$1" = "linux" ]; then
   if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
-   if [ "$_DEBUG" = "3" ]; then
-    echo "running debug"
-    LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
-   else
-    LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
-   fi
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   if [ "$(cat /var/run/dmesg.boot | grep -c AVX2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
-   if [ "$_DEBUG" = "3" ]; then
-    echo "running debug"
-    LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
-   else
-    LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
-   fi
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
   fi
  elif [ "$1" = "windows" ]; then
   if [ -f "$B/${libj}avx2.${ext}" ]; then
-   if [ "$_DEBUG" = "3" ]; then
-    echo "running debug"
-    LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
-   else
-    LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx2.${ext} script/testga.ijs
-   fi
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
   fi
  fi
 fi
@@ -125,69 +132,35 @@ fi
 if [ $m64 -eq 1 ]; then
  ls -l $B
  if [ "$1" = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
-  if [ "$_DEBUG" = "3" ]; then
-   echo "running debug"
-   LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 lldb -b -o run -k bt -k quit -- $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-   # LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 lldb -b -o run -k bt -k quit -- $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-  else
-   LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -arm64 $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-   LC_ALL=fr_FR.UTF-8 APPLEM1=APPLEM1 arch -x86_64 $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-  fi
- elif [ "$1" = "darwin" ]; then
-  # lldb -b -o run -k bt -k quit -- $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-  if [ "$_DEBUG" = "3" ]; then
-   echo "running debug"
-   LC_ALL=fr_FR.UTF-8 lldb -b -o run -k bt -k quit -- $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-  else
-   LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-  fi
+  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -arm64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -x86_64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
  else
-  if [ "$_DEBUG" = "3" ]; then
-   echo "running debug"
-   LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-  else
-   LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}.${ext} script/testga.ijs
-  fi
+  LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
  fi
 else
  ls -l $C
- if [ "$_DEBUG" = "3" ]; then
-  echo "running debug"
-  if [ "$1" = "raspberry" ] && [ "$(uname -m)" = "aarch64" ]; then
-   LC_ALL=fr_FR.UTF-8 gdb-multiarch -batch -return-child-result -ex "set architecture arm6" -ex "run" -ex "thread apply all bt" --args $C/jconsole -lib ${libj}.${ext} script/testga.ijs
-  else
-   LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args $C/jconsole -lib ${libj}.${ext} script/testga.ijs
-  fi
- else
-  LC_ALL=fr_FR.UTF-8 $C/jconsole -lib ${libj}.${ext} script/testga.ijs
- fi
+ LC_ALL=fr_FR.UTF-8 $DB1 $C/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
 fi
 
 # avx512
 if [ "$2" = "x86_64" ]; then
  if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
-   if [ "$_DEBUG" = "3" ]; then
-    echo "running debug"
-    LC_ALL=fr_FR.UTF-8 lldb -b -o run -k bt -k quit -- $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
-   else
-    LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
-   fi
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
+  fi
+ elif [ "$1" = "linux" ]; then
+  if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "$B/${libj}avx5122.${ext}" ]; then
+   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   # if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
-  #   LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
+  #   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
   # fi
   true
  elif [ "$1" = "windows" ]; then
   # no way to detect avx512 capacity
   # if [ -f "$B/${libj}avx512.${ext}" ]; then
-  #    if [ "$_DEBUG" = "3" ]; then
-  #     echo "running debug"
-  #     LC_ALL=fr_FR.UTF-8 gdb -batch -return-child-result -ex "run" -ex "thread apply all bt" --args $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
-  #    else
-  #     LC_ALL=fr_FR.UTF-8 $B/jconsole -lib ${libj}avx512.${ext} script/testga.ijs
-  #    fi
+  #    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
   #   fi
   # fi
   true

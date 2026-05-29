@@ -149,6 +149,8 @@ if [ "x$MAKEFLAGS" = x'' ]; then
   par=$(nproc)
  elif [ "$unameop" = "Darwin" ] || [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
   par=$(sysctl -n hw.ncpu)
+ elif [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ] || [ "$unameop" = "Msys" ]; then
+  par=4
  else
   par=2
  fi

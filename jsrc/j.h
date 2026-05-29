@@ -106,9 +106,6 @@
 #if C_AVX2
 #if (defined(__GNUC__) || defined(__clang__)) && (defined(__i386__) || defined(__x86_64__))
 #include <immintrin.h>
-#if defined(_WIN32) && defined(__MINGW32__)
-extern unsigned long long _pext_u64 (unsigned long long, unsigned long long);
-#endif
 #endif
 #endif
 
@@ -2677,7 +2674,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // the instruction it won't take too long.  It would be a good idea to check the generated code to ensure the compiler does this
 #define SHMSK(s,x,m)  (((UI)(s)>>(x))&(m))  // x is bit#, m need not be contiguous.  x and m can be variables.  Use this version in constant expressions
 #define SHMSK8(s,x,m)  (((UI8)(s)>>(x))&(m))  // x is bit#, m need not be contiguous.  x and m can be variables.  Use this version in constant expressions
-#if C_AVX2  // more precisely, BMI2 support
+#if C_AVX2 && (defined(__clang__) || !defined(_WIN32)) // more precisely, BMI2 support.  MINGW32 gcc missing _pext_u64
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
 #define PEXT0(s,x,m)  _pext_u64((UI)(s),((UI)(m)<<(x)))  // x is bit#, m must be contiguous starting at bit 0.  x and m should be compile-time constants; otherwise use SHMSK
 // scafdebug #define PEXT0(s,x,m)  ((m)&((m)+1)?SEGFAULT:_pext_u64((UI)(s),((UI)(m)<<(x))))  //use this to ensure masks OK after major changes it bit numbering

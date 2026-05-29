@@ -59,6 +59,7 @@ R cstr("");
 
 //don't yet know how to do this for wasmer target
 #if HTML
+// 2!:0 execute returning result or error msg
 EM_JS(char *, execHost, (const char* ptr), {
 var cmd = Module.UTF8ToString(ptr);
 //console.log('code is: \n-----\n' + cmd + '\n--------');
@@ -73,6 +74,18 @@ const byteCount = (Module.lengthBytesUTF8(ret) + 1);
 const retPtr = Module._malloc(byteCount);
 Module.stringToUTF8(ret, retPtr, byteCount);
 return retPtr;
+})
+// 2!:1 execute returning "" or error msg
+EM_JS(char *, execHost1, (const char* ptr), {
+var cmd = Module.UTF8ToString(ptr);
+//console.log('code is: \n-----\n' + cmd + '\n--------');
+//catch errors and make sure we exit cleanly
+try {
+  return eval(cmd) || "";
+  } catch (e) {
+  console.log(e);
+  return "error";
+}
 })
 #endif
 
@@ -167,6 +180,17 @@ DF1(jthostne){F12IP;
   RZ(fz=toutf16x(w));
   b=_wsystem(USAV(fz));
 #else
+#if HTML
+ A t;C*s;I n;
+ n=AN(w);
+ GATV0(t,LIT,n,1); s=CAV1(t);
+ MC(s,AV(w),n);
+ s[n]='\0';
+ char * ret = execHost1(s);
+ //should this be unlinked?
+ unlink(s);
+ return cstr(ret);
+#endif
   b=system(CAV(str0(w)));
 #endif
 #if !SY_64 && (SYS&SYS_UNIX)

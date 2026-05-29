@@ -6,8 +6,10 @@
                                     /*   cv - control vector               */
 // bits 0-1 kept open for jtflags
 // bits 2-3 should be forced to 1 jtflags;
-#define VIPRES          0x3   // reserved for JT inplacing flags
-// obsolete #define VIPRNKX         2  // bits 2-3 should always be set, indicating that a converted argument can be inplaced; holds copy of inplaceability of repeat/rank/type
+#define VIPOKWX         JTINPLACEWX      // This routine can put its result over W.  Paired with VIPOKA
+#define VIPOKW          BIT(VIPOKWX)
+#define VIPOKAX         JTINPLACEAX      // This routine can put its result over A
+#define VIPOKA          BIT(VIPOKAX)
 #define VCVTIP          0    // bits 2-3 was ((I)0x3<<VIPRNKX)   // this should always be set in any cv
 // bits 2-6 free
 #define VIPWCRLONGX     7  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  sign bit of lane 0
@@ -39,10 +41,7 @@
 // obsolete #define VCOPYW          BIT(VCOPYWX)
 // obsolete #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
 // obsolete #define VCOPYA          BIT(VCOPYAX)
-#define VIPOKWX         20      // This routine can put its result over W.  Paired with VIPOKA
-#define VIPOKW          BIT(VIPOKWX)
-#define VIPOKAX         21      // This routine can put its result over A
-#define VIPOKA          BIT(VIPOKAX)
+// 20-21 free
 // the conversion info for Vxx is in bits 22-24:
 #define VXEX            (VXX|XMODETOCVT((I)XMEXACT))  // exact conversion
 #define VXEQ            (VXX|XMODETOCVT((I)XMEXMT))   /* convert to XNUM for = ~:            */

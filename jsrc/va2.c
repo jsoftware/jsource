@@ -910,7 +910,7 @@ static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)  agreefr is the framelen for the initial agreement test
-static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks,I agreefr){F12IP;  // allranks is argranks/ranks
+static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks,I agreefr){F12IP;  // allranks is argranks/ranks
  A z;I m,mf,n,nf,zn;I cv;VF adocvfn;VA2 adocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  {I at=AT(a);
@@ -919,7 +919,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
    // Here for the fast and important case, where the arguments are both dense B01/INT/FL
    VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
    VA2 *aadocv=&vainfo->p2[(at*3+(wt&INT+FL))>>INTX];   // test here to avoid the call overhead
-   cv=((I)jtfg&VIPRES)+aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
+   cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
    self=0;  // indicate not sparse
   }else{
 
@@ -935,7 +935,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
     adocv=var(self,at&~SPARSE,wt&~SPARSE);   // rerun the decode with safer types
     forcetomemory(aawwzknfxrz);  // make sure we don't try to keep these values in registers
    }
-   cv=((I)jtfg&VIPRES)+adocv.cv; adocvfn=adocv.f;   // fetch the address of the function and the cv
+   cv=adocv.cv; adocvfn=adocv.f;   // fetch the address of the function and the cv
 // obsolete   aadocv=&adocv;  // we save the address of the struct
    // We could allocate the result block here & avoid the test after the allocation later.  But we would have to check for agreement etc
    // Don't signal domain error on the types yet, because domain has lower priority than agreement
@@ -958,8 +958,8 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
  if(unlikely(isatype(cv))&&likely(self==0)){  // input conversion required (rare), which will predict correctly.
   // Don't keep much in registers, because we have a bottleneck in the function call here
   I t=atype(cv);
-  if(TYPESNE(AT(a),t)){A cz=cvt(t|(cv&XCVTXNUMORIDEMSK),a); if(likely(cz!=0)){a=cz; cv|=JTINPLACEA;}else{if(jt->jerr!=EVDOMAIN)R 0; RESETERR adocvfn=0;}}
-  if(TYPESNE(AT(w),t)){A cz=cvt(t|(cv&XCVTXNUMORIDEMSK),w); if(likely(cz!=0)){w=cz; cv|=JTINPLACEW;}else{if(jt->jerr!=EVDOMAIN)R 0; RESETERR adocvfn=0;}}
+  if(TYPESNE(AT(a),t)){A cz=cvt(t|(cv&XCVTXNUMORIDEMSK),a); if(likely(cz!=0)){a=cz; jtfg=(J)((I)jtfg|JTINPLACEA);}else{if(jt->jerr!=EVDOMAIN)R 0; RESETERR adocvfn=0;}}
+  if(TYPESNE(AT(w),t)){A cz=cvt(t|(cv&XCVTXNUMORIDEMSK),w); if(likely(cz!=0)){w=cz; jtfg=(J)((I)jtfg|JTINPLACEW);}else{if(jt->jerr!=EVDOMAIN)R 0; RESETERR adocvfn=0;}}
 // obsolete   if(likely((at|wt)!=t)){    // if an argument needs to be converted (probably will, but not necessarily if arg are not BID)
 // obsolete    I bt=bplg(t);  // get shared required input type
 // obsolete    // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
@@ -969,6 +969,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
 // obsolete    if(TYPESNE(t,wt)){I bw=bplg(wt); aawwzknfxrz[2]=(aawwzknfxrz[2]>>bw)<<bt; aawwzknfxrz[3]=(aawwzknfxrz[3]>>bw)<<bt; RZ(w=cvt(t|(cv&XCVTXNUMORIDEMSK),w)); cv|=PEXT0(cv,VIPRNKX,JTINPLACEW);}
 // obsolete   }
  }
+ cv&=(I)jtfg|~(JTINPLACEA+JTINPLACEW);  // If function doesn't support inplacing, remove it from the argument
 
  // a and w have their final addresses.  No function calls till we allocate the result
 
@@ -988,8 +989,8 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
     cv+=mf&VIPWCRLONG;  // set  VIPWCRLONG if a repeated
     raminusw=-raminusw;   // now wr-ar
     nf=REPSGN(raminusw);  // nf=-1 if a has longer frame, means cannot inplace w
-    nf=3+mf*2+nf;  // set inplaceability here: only if nonrepeated cell
-    nf&=(cv>>VIPOKWX); /*obsolete nf*=BIT(VIPRNKX)+1;*/ nf+=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; replicate rank/routine inplaceability flags; set other bits to 1
+    nf=3+2*mf+nf+~(JTINPLACEA+JTINPLACEW);  // set inplaceability here: only if nonrepeated cell
+// obsolete     nf&=(cv>>VIPOKWX); /*obsolete nf*=BIT(VIPRNKX)+1;*/ nf+=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; replicate rank/routine inplaceability flags; set other bits to 1
     raminusw=raminusw&mf; fr+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r.  f (high part of fr) is 0
     PRODRNK(n,fr-shortr,AS(cv&VIPWCRLONG?w:a)+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
    // notionally we now repurpose fr to be frame/rank, with the frame 0
@@ -998,7 +999,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
 // obsolete       // get number of inner cells
 // obsolete     nf&=shortr;  // we use shortr to shorten dependency chain on nf
 // obsolete     nf+=(nf<<VIPRNKX)+  // make 2 copies of the 2 bits, bits 4+=1  This is a long dependency chain through nf
-    if(likely(a!=w))cv&=nf; else cv&=~(VCVTIP+VIPRES);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable; but never if args equal
+    if(likely(a!=w))cv&=nf; else cv&=~(JTINPLACEA+JTINPLACEW);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable; but never if args equal
     // parm aawwzknfxrz[5] is orig m, i. e. the length of the inner or only loop.
     n=2*n-mf;  // parm m if there are 2 loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
@@ -1097,15 +1098,19 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
     // vbls needed: m a w zn cv fr shortr f allranks [jt]
     fr+=f;    //   fr=afr/acr/wfr/wcr/longframe/shortframe/frame(long cell)/longframe+cellrank(long cell)
 // obsolete     f=fr&RANKTMSK; allranks|=BIT(RANKTX-1)+BIT(2*RANKTX-1); allranks-=f; f<<=RANKTX; allranks-=f;  // 
-    allranks|=BIT(RANKTX-1)+BIT(2*RANKTX-1); f=fr&RANKTMSK; f*=BIT(RANKTX)+1; allranks-=f;   // set sign bit as carry-stopper, set sign bit of each rank if = long frame + long cell (can't be any bigger) f free
-    allranks&=BIT(RANKTX-1)+BIT(RANK2TX-1); allranks*=BIT(VIPOKWX-(RANKTX-1))+BIT(VIPOKAX-(RANK2TX-1));  // bits 7,15 * 13,6 moves 7,15 to 20,21, trashing 13 and 28
-    allranks&=cv; allranks>>=VIPOKWX; allranks|=~VIPRES; cv&=allranks;   // remove repeat-uninplaceable args from cv  allranks free
+    allranks|=BIT(RANKTX-1)+BIT(RANK2TX-1); f=fr&RANKTMSK; f*=BIT(RANKTX)+1; allranks-=f;   // set sign bit as carry-stopper, leave sign bit of each rank if = long frame + long cell (can't be any bigger) f free
+#ifdef PEXT
+    allranks=PEXT(allranks,BIT(RANKTX-1)+BIT(2*RANKTX-1));  // extract repeat-inplaceability for a/w
+#else
+    allranks&=BIT(RANKTX-1)+BIT(RANK2TX-1); allranks*=BIT((RANK2TX-2)-(RANKTX-1))+BIT(0); allranks>>=RANK2TX-2;  // bits 7,15 * 7,0 moves 7,15 to 14,15, trashing 7 and 22; then move to 0,1
+#endif
+    allranks|=~(JTINPLACEW+JTINPLACEA); cv&=allranks;   // remove repeat-uninplaceable args from cv  allranks free
     // vbls needed: m a w zn cv fr shortr [jt]
     ASSERTAGREE(AS(a)+(acrwcr>>(3*RANKTX)), AS(w)+(((RANK2T)acrwcr>>RANKTX)), (shortr>>2*RANKTX))  // offset to each cellshape, and cellrank(short cell) acr wcr free
     PRODRNK(n,shortr,AS(cv&VIPWCRLONG?w:a)+((RANK2T)shortr>>RANKTX));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
     // vbls needed: m a w zn cv fr n  [jt]
-    nf=(allranks&(BIT(RANKTX-1)+BIT(RANK2TX-1))) * (BIT(VIPOKWX-(RANKTX-1))+BIT(VIPOKAX-(RANK2TX-1)));
-    nf=(nf&cv)>>VIPOKWX; /*obsolete nf*=BIT(VIPRNKX)+1;*/ nf|=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; shift to 0-1, replicate rank/routine inplaceability flags; set other bits to 1
+// obsolete     nf=(allranks&(BIT(RANKTX-1)+BIT(RANK2TX-1))) * (BIT(VIPOKWX-(RANKTX-1))+BIT(VIPOKAX-(RANK2TX-1)));
+// obsolete     nf=(nf&cv)>>VIPOKWX; /*obsolete nf*=BIT(VIPRNKX)+1;*/ nf|=~(VCVTIP+VIPRES);  // keep inplaceability in nf only if supported by routine; shift to 0-1, replicate rank/routine inplaceability flags; set other bits to 1
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
@@ -1117,8 +1122,8 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
 // obsolete #endif
 // obsolete    nf+=(nf<<VIPRNKX)+~(VCVTIP+VIPRES);  // make 2 copies of the 2 bits, bits 4+=1  This is a long dependency chain through nf but it will overlap the PRODs coming up
 // obsolete     nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of cv.  This is a long dependency chain through nf
-    // vbls needed: m a w zn cv fr n f nf [jt]
-    if(unlikely(a==w))cv&=~(VCVTIP+VIPRES);  // 0-1=routine/rank/arg/input inplaceable; but never if args equal.
+    // vbls needed: m a w zn cv fr n f [jt]
+    if(unlikely(a==w))cv&=~(JTINPLACEW+JTINPLACEA);  // 0-1=routine/rank/arg/input inplaceable; but never if args equal.
 // obsolete     cv=(J)(cv&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free   rest of cv survives
     f=PEXT0(fr,2*RANKTX,RANKTMSK);  // recover (shorter frame len) from upper fr
     PRODRNK(nf,((fr>>(3*RANKTX))-f),f+AS(cv&VIPWFLONG?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
@@ -1153,7 +1158,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
 // obsolete    if(unlikely(((C)(nf!=1)+(C)(n!=2)-(C)(m==1))<=(C)0)){
 // obsolete    if(unlikely(nfne1+mmeq1+nne1<=0)){  
 // obsolete     cv=cv+cv+((UI)1<(UI)m); cv=cv+cv+((UI)1<(UI)nf); cv=cv+cv+((UI)1<(UI)n); // create mask of !=1, m/nf/n   scaf would like ADDC
-    I eq1ct=REPSGN(n-2); eq1ct=eq1ct+((UI)1<(UI)m); eq1ct=eq1ct+((UI)1<(UI)nf);  // m=1 + n=1 + nf=1 > 1 => n=1 + (1 - m!=1) + (1 - nf!=1) > 1 => n=1 - nf!=1 > m!=1 - 1 => n=1 - nf!=1 >= m!=1: any 2 values = 1
+    I neq1m=REPSGN(n-2), eq1ct=neq1m; eq1ct=eq1ct+((UI)1<(UI)m); eq1ct=eq1ct+((UI)1<(UI)nf);  // m=1 + n=1 + nf=1 > 1 => n=1 + (1 - m!=1) + (1 - nf!=1) > 1 => n=1 - nf!=1 > m!=1 - 1 => n=1 - nf!=1 >= m!=1: any 2 values = 1
     // encode major-axis in LSB of n, and complement m if there in only 1 loop
 // obsolete     if(unlikely(SHMSK(0b10111,cv&7,1))){  // 3/5/6/7: any 2 values = 1
     if(unlikely(eq1ct<=0)){  // any 2 or 3 values <= 1
@@ -1161,7 +1166,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
      m*=mf; n*=nf;   // propagate mf and nf down
      DPMULDE(nf,mf,mf);  // mf is total # iterations
 // obsolete      nfm1+=2*REPSGN(1-nf);  // (nf!=1) w repetition also comes if nf is not 1 and WFLONG. m1 is nf+n-m, nfm1 is nf-m, we want m1-x=2*nf+n => x=m1-(2*nf+n)=nf+n-m-2*nf-n=-m-nf  nfm1-2*(nf!=1)
-     n=n+n+((UI)REPSGN(n-2)<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  Does not generate ADC
+     n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  Does not generate ADC
      n=n+((UI)REPSGN(nf-2)<(UI)(cv&VIPWFLONG));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
 // obsolete      n=n+n+((UI)(0)<(cv&((cv&3)*((VIPWCRLONG+(VIPWFLONG>>1))<<3))));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  generates lea, not addc
 // obsolete              // we shift the n!=1 bit up to VIPWCRLONG, trashing the next bit; we shift the nf!=1 bit up to VIPWFLONG, trashing the previous bit
@@ -1170,7 +1175,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];
 // obsolete      n=n+n+(SHMSK(cv,VIPWCRLONGX+3,1)&cv);  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.
-     n=n+n+((UI)REPSGN(n-2)<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is setDoes not generate ADC
+     n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is setDoes not generate ADC
     } 
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
 #endif
@@ -1202,7 +1207,7 @@ static /*scaf*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * REST
  // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
  // Finally, if a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are
  // just not likely to be used reflexively)
- I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a), zt=rtype(cv);  // get type of result; is w inplaceable?  scaf! new rtype
+ I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a), zt=rtype(cv);  // get type of result; is w inplaceable?
  if((ipw|ipa)<0){  // see if either w or a is inplaceable
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
   z=ipw<0?w:a;  // z=inplaceable arg; 

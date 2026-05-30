@@ -66,6 +66,9 @@ else
  exit 1
 fi
 
+which gdb
+which lldb
+
 echo "DEBUGCMD: $DEBUGCMD"
 echo "_DEBUG: $_DEBUG"
 echo "USE_EMU_AVX: $USE_EMU_AVX"

@@ -16,13 +16,13 @@ echo %A%
 echo %B%
 echo %C%
 
+systeminfo
+
 @rem x64 x86 arm64
 IF "%~1"=="x86" GOTO L0
 IF "%~1"=="arm64" GOTO L0
 IF "%~1" NEQ "x64" EXIT /b 1
 :L0
-
-systeminfo
 
 IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B

@@ -258,7 +258,7 @@ jobs:
 
    - name: Test JE (macOS)
      env:
-      DEBUGCMD: gdb
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -312,7 +312,7 @@ jobs:
 
    - name: Test JE (macOS arm64)
      env:
-      DEBUGCMD: gdb
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -596,7 +596,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2 gdb
+       sudo pkg_add curl zip gmake nasm pcre2 gdb lldb
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -605,7 +605,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=gdb
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -663,7 +663,7 @@ jobs:
        rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2 gdb
+       sudo pkg_add curl zip gmake gmp pcre2 gdb lldb
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -672,7 +672,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=gdb
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -729,7 +729,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas lldb
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
@@ -740,7 +740,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=gdb
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -800,7 +800,7 @@ jobs:
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
        sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas lldb
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
@@ -811,7 +811,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=gdb
+       export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -946,13 +946,23 @@ jobs:
      run: |
       script\buildga.cmd x64
 
+   - name: Setup MSYS2 Environment (Windows)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: MINGW64
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-x86_64-gdb
+
    - name: Test JE (Windows)
      shell: cmd
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
+     run: |
      run: |
       script\testga.cmd x64
 
@@ -1188,7 +1198,6 @@ jobs:
       install: >-
         mingw-w64-clang-x86_64-clang
         mingw-w64-clang-x86_64-lldb
-        mingw-w64-x86_64-gdb
         make
 
    - name: Build JE (Windows MSYS2 x64 clang)
@@ -1211,7 +1220,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x64 clang)
      shell: msys2 {0}
      env:
-      DEBUGCMD: gdb
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -1380,7 +1389,6 @@ jobs:
       install: >-
         mingw-w64-clang-aarch64-clang
         mingw-w64-clang-aarch64-lldb
-        mingw-w64-clang-aarch64-gdb
         make
 
    - name: Build JE (Windows MSYS2 arm64)
@@ -1402,7 +1410,7 @@ jobs:
    - name: Test JE (Windows MSYS2 arm64)
      shell: msys2 {0}
      env:
-      DEBUGCMD: gdb
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}

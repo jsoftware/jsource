@@ -963,7 +963,6 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
-     run: |
       script\testga.cmd x64
 
    - name: Compress Files (Windows)

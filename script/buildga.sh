@@ -7,6 +7,10 @@
 #
 # if !x86_64 skip build avx2 and avx512
 
+echo '_DEBUG: $_DEBUG'
+echo 'USE_EMU_AVX: $USE_EMU_AVX'
+echo 'USE_PYXES: $USE_PYXES'
+
 set -evx
 CC=${CC-clang}
 _SSE4_2=${_SSE4_2:=1}

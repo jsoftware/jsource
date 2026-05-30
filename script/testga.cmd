@@ -3,8 +3,10 @@
 @echo on
 @rem if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip test avx2
 
-echo "%USE_EMU_AVX%"
-echo "%USE_PYXES%"
+echo "DEBUGCMD: %DEBUGCMD%"
+echo "_DEBUG: %_DEBUG%:
+echo "USE_EMU_AVX: %USE_EMU_AVX%"
+echo "USE_PYXES: %USE_PYXES%"
 
 set "A=jlibrary"
 set "B=jlibrary\bin"

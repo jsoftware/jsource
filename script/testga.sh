@@ -66,15 +66,20 @@ else
  exit 1
 fi
 
+echo 'DEBUGCMD: $DEBUGCMD'
+echo '_DEBUG: $_DEBUG'
+echo 'USE_EMU_AVX: $USE_EMU_AVX'
+echo 'USE_PYXES: $USE_PYXES'
+
 if [ -n "$_DEBUG" ] && [ "$_DEBUG" != "0" ]; then
  if [ -z "$DEBUGCMD" ]; then
   # default to lldb
   DEBUGCMD=lldb
  fi
  if [ "$DEBUGCMD" = "gdb" ]; then
-  DB1="$DEBUGCMD -batch -return-child-result -ex run -ex bt --args"
+  DB1="$DEBUGCMD -batch -return-child-result -ex run -ex bt -ex quit --args"
  elif [ "$DEBUGCMD" = "gdb-multiarch" ]; then
-  DB1="$DEBUGCMD -batch -return-child-result -ex \"set architecture $DEBUGCPU\" -ex run -ex bt --args"
+  DB1="$DEBUGCMD -batch -return-child-result -ex \"set architecture $DEBUGCPU\" -ex run -ex bt -ex quit --args"
  elif [ "$DEBUGCMD" = "lldb" ]; then
   DB1="$DEBUGCMD -b -o run -k bt -k quit --"
  else

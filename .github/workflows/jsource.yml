@@ -452,7 +452,7 @@ jobs:
  jerpi64:
   name: JE (Raspberry)
   needs: [all, deprecated]
-  runs-on: ubuntu-24.04-arm
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -468,12 +468,12 @@ jobs:
       commands: |
        apt-get install --no-install-recommends -y clang zip libomp-dev gdb
        export DEBUGCMD=lldb
-       export _DEBUG=$DEBUGLEVEL
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64
        cp jlibrary/bin/* j64 || true
@@ -531,13 +531,13 @@ jobs:
       commands: |
        apt-get install --no-install-recommends -y clang zip libomp-dev gdb
        export DEBUGCMD=gdb
-       export _DEBUG=$DEBUGLEVEL
        export CC=gcc
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
        export USE_OPENMP=0
        export USE_PYXES=0
        export USE_EMU_AVX=0
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l
        find j32 -type d -exec chmod a+rwx {} \;
@@ -577,72 +577,6 @@ jobs:
 
 # openbsd --------------------------------------------------------------
  jeopenbsd:
-  name: JE (OpenBSD vmactions)
-  needs: [all, deprecated]
-  runs-on: macos-15-intel
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v6
-
-   - name: Build, Test JE (OpenBSD)
-     uses: vmactions/openbsd-vm@v1
-     with:
-      usesh: true
-      sync: sshfs
-      prepare: |
-       pkg_add -u
-       rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2 gdb
-
-      run: |
-       rm -f jobdone
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       echo "Host *" >>~/.ssh/config || true
-       echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
-       export _DEBUG=$DEBUGLEVEL
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export USE_PYXES=1
-       export USE_EMU_AVX=1
-       script/buildga.sh openbsd x86_64 || exit 1
-       script/testga.sh openbsd x86_64
-       cp jlibrary/bin/* j64 || true
-       rm -f j64/profile.ijs
-       ls -l j64
-       zip -r obsd64.zip j64
-       touch jobdone
-
-   - name: Check Status (OpenBSD)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (OpenBSD)
-     if: ${{ false }}
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "obsd64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (OpenBSD)
-     if: ${{ false }}
-     uses: actions/upload-artifact@v7
-     with:
-      name: dist
-      path: testopenbsd.txt
-      overwrite: true
-
-# openbsd --------------------------------------------------------------
- jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
   needs: all
   runs-on: ubuntu-latest
@@ -672,12 +606,12 @@ jobs:
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
-       export _DEBUG=$DEBUGLEVEL
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh openbsd x86_64 || exit 1
        script/testga.sh openbsd x86_64
        cp jlibrary/bin/* j64 || true
@@ -739,12 +673,12 @@ jobs:
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
-       export _DEBUG=$DEBUGLEVEL
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh openbsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
@@ -774,76 +708,6 @@ jobs:
 
 # freebsd --------------------------------------------------------------
  jefreebsd:
-  name: JE (FreeBSD vmactions)
-  needs: [all, deprecated]
-  runs-on: macos-15-intel
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v6
-
-   - name: Build, Test JE (FreeBSD)
-     uses: vmactions/freebsd-vm@v1
-     with:
-      usesh: true
-      sync: sshfs
-      prepare: |
-       pkg upgrade -y
-       rdate time.cloudflare.com || true
-       pkg search openblas 1>&2
-       pkg install -y curl zip find gmake nasm pcre2 gdb openblas
-       find / -type f -name 'liblapack.so*' 1>&2
-       find / -type f -name 'libopenblas.so*' 1>&2
-       /sbin/ldconfig -r
-
-      run: |
-       rm -f jobdone
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       echo "Host *" >>~/.ssh/config || true
-       echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
-       export _DEBUG=$DEBUGLEVEL
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export USE_PYXES=1
-       export USE_EMU_AVX=1
-       script/buildga.sh freebsd x86_64 || exit 1
-       script/testga.sh freebsd x86_64
-       cp jlibrary/bin/* j64 || true
-       rm -f j64/profile.ijs
-       ls -l j64
-       zip -r fbsd64.zip j64
-       touch jobdone
-
-   - name: Check Status (FreeBSD)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (FreeBSD)
-     if: ${{ false }}
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "fbsd64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (FreeBSD)
-     if: ${{ false }}
-     uses: actions/upload-artifact@v7
-     with:
-      name: dist
-      path: testfreebsd.txt
-      overwrite: true
-
-# freebsd --------------------------------------------------------------
- jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
   needs: all
   runs-on: ubuntu-latest
@@ -877,12 +741,12 @@ jobs:
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
-       export _DEBUG=$DEBUGLEVEL
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh freebsd x86_64 || exit 1
        script/testga.sh freebsd x86_64
        cp jlibrary/bin/* j64 || true
@@ -948,12 +812,12 @@ jobs:
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
-       export _DEBUG=$DEBUGLEVEL
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh freebsd arm64 || exit 1
        script/testga.sh freebsd arm64
        cp jlibrary/bin/* j64 || true
@@ -976,77 +840,6 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (FreeBSD arm64)
-     uses: actions/upload-artifact@v7
-     with:
-      name: dist
-      path: testfreebsdarm64.txt
-      overwrite: true
-
-# freebsdarm64a --------------------------------------------------------------
- jefreebsdarm64a:
-  name: JE (FreeBSD arm64 vmactions)
-  needs: [all, slow, deprecated]
-  runs-on: macos-15
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v6
-
-   - name: Build, Test JE (FreeBSD arm64)
-     uses: vmactions/freebsd-vm@v1
-     with:
-      arch: aarch64
-      usesh: true
-      sync: sshfs
-      prepare: |
-       pkg upgrade -y
-       rdate time.cloudflare.com || true
-       pkg search openblas 1>&2
-       pkg install -y curl zip find gmake nasm pcre2 gdb openblas
-       find / -type f -name 'liblapack.so*' 1>&2
-       find / -type f -name 'libopenblas.so*' 1>&2
-       /sbin/ldconfig -r
-
-      run: |
-       rm -f jobdone
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       echo "Host *" >>~/.ssh/config || true
-       echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
-       export _DEBUG=$DEBUGLEVEL
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export USE_PYXES=1
-       export USE_EMU_AVX=1
-       script/buildga.sh freebsd arm64 || exit 1
-       script/testga.sh freebsd arm64
-       cp jlibrary/bin/* j64 || true
-       rm -f j64/profile.ijs
-       ls -l j64
-       zip -r fbsdarm64.zip j64
-       touch jobdone
-
-   - name: Check Status (FreeBSD arm64)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (FreeBSD arm64)
-     if: ${{ false }}
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "fbsdarm64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (FreeBSD arm64)
-     if: ${{ false }}
      uses: actions/upload-artifact@v7
      with:
       name: dist
@@ -1075,7 +868,6 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: $DEBUGLEVEL
      run: |
       script/buildga.sh android arm64 || exit 1
 
@@ -1651,8 +1443,8 @@ jobs:
    - jewinarm64
    - jeandroid
    - jewasm
-   - jefreebsd2
-   - jeopenbsd2
+   - jefreebsd
+   - jeopenbsd
    - jewin-msys2-x64-clang
    - jewin-msys2-x64
    - jewin-msys2-x86
@@ -1695,8 +1487,8 @@ jobs:
    - jewinarm64
    - jeandroid
    - jewasm
-   - jefreebsd2
-   - jeopenbsd2
+   - jefreebsd
+   - jeopenbsd
    - jewin-msys2-x64-clang
    - jewin-msys2-x64
    - jewin-msys2-x86

@@ -9,8 +9,9 @@ clang-cl --version
 powershell -command " Get-ChildItem -Recurse -Filter 'libomp.dll' -File -ErrorAction SilentlyContinue -Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\' "
 powershell -command " Get-ChildItem -Recurse -Filter 'libomp.lib' -File -ErrorAction SilentlyContinue -Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\' "
 
-echo "%USE_EMU_AVX%"
-echo "%USE_PYXES%"
+echo "_DEBUG: %_DEBUG%:
+echo "USE_EMU_AVX: %USE_EMU_AVX%"
+echo "USE_PYXES: %USE_PYXES%"
 
 set "A=jlibrary"
 set "B=jlibrary\bin"

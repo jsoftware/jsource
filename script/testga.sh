@@ -66,7 +66,11 @@ else
  exit 1
 fi
 
-if [ "$_DEBUG" = "1" ] || [ "$_DEBUG" = "2" ] || [ "$_DEBUG" = "3" ]; then
+if [ -n "$_DEBUG" ] && [ "$_DEBUG" != "0" ]; then
+ if [ -z "$DEBUGCMD" ]; then
+  # default to lldb
+  DEBUGCMD=lldb
+ fi
  if [ "$DEBUGCMD" = "gdb" ]; then
   DB1="$DEBUGCMD -batch -return-child-result -ex run -ex bt --args"
  elif [ "$DEBUGCMD" = "gdb-multiarch" ]; then
@@ -132,8 +136,8 @@ fi
 if [ $m64 -eq 1 ]; then
  ls -l $B
  if [ "$1" = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
-  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -arm64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
-  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -x86_64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  LC_ALL=fr_FR.UTF-8 arch -arm64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  LC_ALL=fr_FR.UTF-8 arch -x86_64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
  else
   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
  fi

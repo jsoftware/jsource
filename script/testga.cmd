@@ -36,7 +36,12 @@ IF "%~1" NEQ "x64" EXIT /b 1
 dir %B%
 IF "%USE_EMU_AVX%"=="0" GOTO L01F
 IF "%USE_PYXES%"=="0" GOTO L01F
+IF "%_DEBUG%"=="3" GOTO L01K
 %B%\jconsole -lib javx2.dll script\testga.ijs
+IF %ERRORLEVEL% NEQ 0 EXIT /b 1
+GOTO L01F
+:L01K
+%DEBUGCMD% -b -o run -k bt -k quit -- %B%\jconsole.exe -lib javx2.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01F
 IF "%_DEBUG%"=="3" GOTO L01H
@@ -49,7 +54,12 @@ IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01A
 dir %C%
+IF "%_DEBUG%"=="3" GOTO L01J
 %C%\jconsole script\testga.ijs
+IF %ERRORLEVEL% NEQ 0 EXIT /b 1
+GOTO L01C
+:L01J
+%DEBUGCMD% -b -o run -k bt -k quit -- %B%\jconsole.exe script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01B

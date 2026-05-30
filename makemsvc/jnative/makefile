@@ -13,7 +13,7 @@ else
  TARGET_CPU = x86
 endif
 
-ifeq (1,$(_DEBUG))
+ifeq (3,$(_DEBUG))
  COPTION := $(COPTION) /FS /Z7 /DDEBUG=1
  LDEBUG = /DEBUG
 endif

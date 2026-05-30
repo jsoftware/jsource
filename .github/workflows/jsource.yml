@@ -952,7 +952,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 0
      run: |
       script\testga.cmd x64
 
@@ -1010,7 +1010,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 0
      run: |
       script\testga.cmd x86
 
@@ -1070,7 +1070,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 0
      run: |
       script\testga.cmd arm64
 
@@ -1130,7 +1130,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 0
      run: |
       script\testga.cmd arm64
 

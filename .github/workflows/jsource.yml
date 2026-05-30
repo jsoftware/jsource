@@ -74,7 +74,7 @@ jobs:
 
    - name: Test JE (Linux)
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -168,7 +168,7 @@ jobs:
 
    - name: Test JE (Linux32)
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -258,7 +258,7 @@ jobs:
 
    - name: Test JE (macOS)
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -312,7 +312,7 @@ jobs:
 
    - name: Test JE (macOS arm64)
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -366,7 +366,7 @@ jobs:
 
    - name: Test JE (Linux arm64)
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -466,8 +466,8 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
-       export DEBUGCMD=lldb
+       apt-get install --no-install-recommends -y clang zip libomp-dev gdb lldb
+       export DEBUGCMD=gdb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -605,7 +605,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
+       export DEBUGCMD=gdb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -672,7 +672,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
+       export DEBUGCMD=gdb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -740,7 +740,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
+       export DEBUGCMD=gdb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -811,7 +811,7 @@ jobs:
        sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
        echo "client ssh config"
        sudo cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
+       export DEBUGCMD=gdb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
@@ -1188,6 +1188,7 @@ jobs:
       install: >-
         mingw-w64-clang-x86_64-clang
         mingw-w64-clang-x86_64-lldb
+        mingw-w64-x86_64-gdb
         make
 
    - name: Build JE (Windows MSYS2 x64 clang)
@@ -1210,7 +1211,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x64 clang)
      shell: msys2 {0}
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -1379,6 +1380,7 @@ jobs:
       install: >-
         mingw-w64-clang-aarch64-clang
         mingw-w64-clang-aarch64-lldb
+        mingw-w64-clang-aarch64-gdb
         make
 
    - name: Build JE (Windows MSYS2 arm64)
@@ -1400,7 +1402,7 @@ jobs:
    - name: Test JE (Windows MSYS2 arm64)
      shell: msys2 {0}
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}

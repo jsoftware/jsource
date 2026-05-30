@@ -4,7 +4,7 @@
 @rem if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip test avx2
 
 echo "DEBUGCMD: %DEBUGCMD%"
-echo "_DEBUG: %_DEBUG%:
+echo "_DEBUG: %_DEBUG%"
 echo "USE_EMU_AVX: %USE_EMU_AVX%"
 echo "USE_PYXES: %USE_PYXES%"
 
@@ -44,7 +44,7 @@ IF "%_DEBUG%"=="3" GOTO L01H
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01H
-lldb -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
+%DEBUGCMD% -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01A
@@ -59,6 +59,6 @@ IF "%_DEBUG%"=="3" GOTO L01I
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01I
-lldb -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
+%DEBUGCMD% -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01C

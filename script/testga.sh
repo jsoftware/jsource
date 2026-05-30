@@ -66,10 +66,10 @@ else
  exit 1
 fi
 
-echo 'DEBUGCMD: $DEBUGCMD'
-echo '_DEBUG: $_DEBUG'
-echo 'USE_EMU_AVX: $USE_EMU_AVX'
-echo 'USE_PYXES: $USE_PYXES'
+echo "DEBUGCMD: $DEBUGCMD"
+echo "_DEBUG: $_DEBUG"
+echo "USE_EMU_AVX: $USE_EMU_AVX"
+echo "USE_PYXES: $USE_PYXES"
 
 if [ -n "$_DEBUG" ] && [ "$_DEBUG" != "0" ]; then
  if [ -z "$DEBUGCMD" ]; then

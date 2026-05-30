@@ -537,7 +537,7 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=0
        export USE_EMU_AVX=0
-       export _DEBUG=${{ env.DEBUGLEVEL }}
+       export _DEBUG=0   # qemu-arm gdb not supported
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l
        find j32 -type d -exec chmod a+rwx {} \;

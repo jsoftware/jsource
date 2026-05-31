@@ -66,9 +66,6 @@ else
  exit 1
 fi
 
-which gdb
-which lldb
-
 echo "DEBUGCMD: $DEBUGCMD"
 echo "_DEBUG: $_DEBUG"
 echo "USE_EMU_AVX: $USE_EMU_AVX"
@@ -109,6 +106,10 @@ elif [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
  grep -i cpu /var/run/dmesg.boot
 elif [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ] || [ "$unameop" = "Msys" ]; then
  systeminfo
+ cygpath -w /mingw64 || true
+ echo $PATH
+ which gdb || true
+ which lldb || true
 fi
 ulimit -a || true
 

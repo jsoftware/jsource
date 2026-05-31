@@ -261,7 +261,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 0
      run: |
       script/testga.sh darwin x86_64 || exit 1
       rm -rf jlibrary/bin/ios
@@ -315,7 +315,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 0
      run: |
       script/testga.sh darwin arm64 || exit 1
       rm -rf jlibrary/bin/ios

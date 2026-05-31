@@ -100,6 +100,9 @@ eformat_j_=: exformat_j_ f.
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
+NB. this crash
+empty 6!:2 '{{ }}'
+
 NB. end of smoke test
 
 0!:_1 '$'   NB. temp skip to allow running full test suite

@@ -293,7 +293,7 @@ F1(jtspcount){F12IP;A z;I c=0,i,j,*v;A x;
 
 // Garbage collector.  Called when free has decided a call is needed.
 B jtspfree(J jt){I i;A p;
-  SEGFAULT;  // !!! test debugger backtrace
+//  SEGFAULT;  // !!! test debugger backtrace
   // We don't check the repatq, because we always test it before coming here
   for(i = 0;i<=PLIML-PMINL;++i) {
   // Check each chain to see if it is ready to coalesce

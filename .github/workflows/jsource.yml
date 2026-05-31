@@ -261,7 +261,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh darwin x86_64 || exit 1
       rm -rf jlibrary/bin/ios
@@ -315,7 +315,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh darwin arm64 || exit 1
       rm -rf jlibrary/bin/ios
@@ -646,7 +646,6 @@ jobs:
   name: JE (OpenBSD arm64)
   needs: [all, slow]
   runs-on: ubuntu-latest
-  #runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -780,7 +779,6 @@ jobs:
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
   needs: [all, slow]
-  #runs-on: ubuntu-24.04-arm
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -850,7 +848,7 @@ jobs:
  jeandroid:
   name: JE (android)
   needs: all
-  runs-on: macos-15-intel
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -946,19 +944,19 @@ jobs:
      run: |
       script\buildga.cmd x64
 
-   - name: Setup MSYS2 Environment (Windows)
+   - name: Setup Environment (Windows MSYS2 x64 clang)
      uses: msys2/setup-msys2@v2
      with:
-      msystem: MINGW64
+      msystem: CLANG64
       update: true
       # Install necessary packages (e.g., your build tools, gcc, make)
       install: >-
-        mingw-w64-x86_64-gdb
+        mingw-w64-clang-x86_64-lldb
 
-   - name: Test JE (Windows MSYS2 x64)
+   - name: Test JE (Windows MSYS2 x64 clang)
      shell: msys2 {0}
      env:
-      DEBUGCMD: gdb
+      DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}

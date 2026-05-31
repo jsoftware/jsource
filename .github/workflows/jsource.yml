@@ -28,15 +28,15 @@ jobs:
     - run: echo "Runall jobs"
 
  slow:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run slow jobs"
 
  deprecated:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run deprecated jobs"
@@ -848,7 +848,7 @@ jobs:
  jeandroid:
   name: JE (android)
   needs: all
-  runs-on: ubuntu-latest
+  runs-on: macos-15-intel
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6

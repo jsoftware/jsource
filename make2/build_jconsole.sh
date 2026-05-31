@@ -7,11 +7,7 @@ echo "entering $(pwd)"
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 
-if [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ] || [ "$unameop" = "Msys" ]; then
- OPTL=-O2
-else
- OPTL=-Og
-fi
+OPTL=-Og
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down

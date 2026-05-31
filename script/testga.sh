@@ -83,7 +83,7 @@ if [ -n "$_DEBUG" ] && [ "$_DEBUG" != "0" ]; then
  elif [ "$DEBUGCMD" = "lldb" ]; then
   DB1="$DEBUGCMD -b -o run -k bt -k quit --"
  else
-  echo "unsupported debug command: $DB1"
+  echo "unsupported debug command: $DEBUGCMD"
   exit 1
  fi
  $DEBUGCMD --version
@@ -106,10 +106,6 @@ elif [ "$unameop" = "OpenBSD" ] || [ "$unameop" = "FreeBSD" ]; then
  grep -i cpu /var/run/dmesg.boot
 elif [ "$unameop" = "MINGW64" ] || [ "$unameop" = "MINGW32" ] || [ "$unameop" = "CYGWIN" ] || [ "$unameop" = "MSYS" ] || [ "$unameop" = "Msys" ]; then
  systeminfo
- cygpath -w /mingw64 || true
- echo $PATH
- which gdb || true
- which lldb || true
 fi
 ulimit -a || true
 

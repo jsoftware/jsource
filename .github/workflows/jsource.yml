@@ -473,7 +473,7 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
-       export _DEBUG=${{ env.DEBUGLEVEL }}
+       export _DEBUG=0   # qemu-arm gdb not supported
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64
        cp jlibrary/bin/* j64 || true
@@ -955,7 +955,18 @@ jobs:
       install: >-
         mingw-w64-x86_64-gdb
 
+   - name: Test JE (Windows MSYS2 x64)
+     shell: msys2 {0}
+     env:
+      DEBUGCMD: gdb
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
+     run: |
+      script/testga.sh windows x86_64 || exit 1
+
    - name: Test JE (Windows)
+     if: ${{ false }}
      shell: cmd
      env:
       DEBUGCMD: gdb

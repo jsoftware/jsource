@@ -100,6 +100,11 @@ eformat_j_=: exformat_j_ f.
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
+NB. expected all 1
+echo ,(40 1$' ')=1{.("1) 40 0$' '
+echo ,(40 1$' ')=1{.("1) 40 0$' '
+echo ,(40 1$' ')=1{.("1) 40 0$' '
+
 NB. this crash
 empty 6!:2 '{{ }}'
 

@@ -13,7 +13,7 @@ on:
 # if: ${{ false }}
 
 env:
- DEBUGLEVEL: 3
+ DEBUGLEVEL: 0
 
 jobs:
 

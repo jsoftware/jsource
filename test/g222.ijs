@@ -108,8 +108,13 @@ smoutput '$'
 smoutput '%'
  assert. b -: (i.@# = i.~)"_1 yy
 smoutput '^'
+smoutput yy
+smoutput <@~."_1 yy
+smoutput ((<"1 b)#&.><"_1 yy)
+smoutput $ <@~."_1 yy
+smoutput $ ((<"1 b)#&.><"_1 yy)
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
-smoutput '&'
+smoutput '&'<@~."_1 yy
  1
 )
 

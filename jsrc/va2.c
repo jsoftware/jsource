@@ -906,7 +906,6 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 #endif
 // repair routines for integer overflow, possibly in place
 static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
-
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)  agreefr is the framelen for the initial agreement test
@@ -1207,10 +1206,10 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
  // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
  // Finally, if a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are
  // just not likely to be used reflexively)
- I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a), zt=rtype(cv);  // get type of result; is w inplaceable?
+ I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a), zt=rtype(cv);  // get type of result; is w/a inplaceable?  In test suite, inplaces 25% of the time
  if((ipw|ipa)<0){  // see if either w or a is inplaceable
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
-  z=ipw<0?w:a;  // z=inplaceable arg; 
+  z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
   if(unlikely(zt!=AT(z))){   // if type changes (zt!=incumbent and zt!=0)...  zt does not have upper flag bits
    // the type of inplaceable z must change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
    // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate

@@ -109,9 +109,12 @@ smoutput '%'
  assert. b -: (i.@# = i.~)"_1 yy
 smoutput '^'
 NB. smoutput yy
+smoutput $yy
 smoutput $ <@~."_1 yy
 smoutput $ ((<"1 b)#&.><"_1 yy)
 NB. smoutput <@~."_1 yy
+smoutput 3!:0 yy
+smoutput t
 elocs =. ((<"1 b)#&.><"_1 yy) ($ #: I.@,)@:~:&.> <@~."_1 yy
 smoutput elocs
 smoutput elocs (<@[ { ])&.> <@~."_1 yy
@@ -121,7 +124,7 @@ smoutput '&'
  1
 )
 
-test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
+test@:(t"_ {~ 3 87&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 'abcde'
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u:'abcde'
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u:'abcde'

@@ -12,6 +12,9 @@ on:
 
 # if: ${{ false }}
 
+env:
+ DEBUGLEVEL: 0
+
 jobs:
 
 # to run all jobs, enable all
@@ -23,6 +26,20 @@ jobs:
   runs-on: ubuntu-latest
   steps:
     - run: echo "Runall jobs"
+
+ slow:
+  if: false
+  #if: true
+  runs-on: ubuntu-latest
+  steps:
+    - run: echo "Run slow jobs"
+
+ deprecated:
+  if: false
+  #if: true
+  runs-on: ubuntu-latest
+  steps:
+    - run: echo "Run deprecated jobs"
 
 # linux ----------------------------------------------------------------
  jelinux:
@@ -51,14 +68,16 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
    - name: Test JE (Linux)
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh linux x86_64 || exit 1
       cp jlibrary/bin/* j64 || true
@@ -106,7 +125,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -115,7 +134,7 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh linux x86_64 || exit 1
 
@@ -143,16 +162,16 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
    - name: Test JE (Linux32)
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh linux i386 || exit 1
       cp jlibrary/bin32/* j32 || true
@@ -200,7 +219,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -209,7 +228,7 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh linux i386 || exit 1
 
@@ -233,6 +252,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh darwin x86_64 || exit 1
 
@@ -241,6 +261,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: 0
      run: |
       script/testga.sh darwin x86_64 || exit 1
       rm -rf jlibrary/bin/ios
@@ -285,6 +306,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh darwin arm64 || exit 1
 
@@ -293,6 +315,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: 0
      run: |
       script/testga.sh darwin arm64 || exit 1
       rm -rf jlibrary/bin/ios
@@ -337,16 +360,18 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
    - name: Test JE (Linux arm64)
      env:
-      DEBUGCMD: lldb
+      DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
-      script/testga.sh raspberry arm64
+      script/testga.sh raspberry arm64 || exit 1
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
       ls -l j64
@@ -389,7 +414,7 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
@@ -399,9 +424,9 @@ jobs:
       DEBUGCPU: arm6
       USE_OPENMP: 0
       USE_PYXES: 0
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
-      script/testga.sh raspberry armv6l
+      script/testga.sh raspberry armv6l || exit 1
       cp jlibrary/bin32/* j32 || true
       rm -f j32/profile.ijs
       ls -l j32
@@ -426,8 +451,7 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
-  needs: all
-  if: ${{ false }}
+  needs: [all, deprecated]
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -443,14 +467,15 @@ jobs:
       copy_artifact_path: j64
       commands: |
        apt-get install --no-install-recommends -y clang zip libomp-dev gdb
-       export DEBUGCMD=lldb
+       export DEBUGCMD=gdb
        export CC=clang
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=0   # qemu-arm gdb not supported
        script/buildga.sh raspberry arm64 || exit 1
-       script/testga.sh raspberry arm64
+       script/testga.sh raspberry arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        zip -r rpi64.zip j64
@@ -469,6 +494,7 @@ jobs:
       mv j64/* .
 
    - name: Release JE (Raspberry)
+     if: ${{ false }}
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -478,6 +504,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Raspberry)
+     if: ${{ false }}
      uses: actions/upload-artifact@v7
      with:
       name: dist
@@ -487,8 +514,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-  if: ${{ false }}
-  needs: all
+  needs: [all, deprecated]
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -511,8 +537,9 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=0
        export USE_EMU_AVX=0
+       export _DEBUG=0   # qemu-arm gdb not supported
        script/buildga.sh raspberry armv6l || exit 1
-       script/testga.sh raspberry armv6l
+       script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
        cp jlibrary/bin32/* j32 || true
@@ -531,6 +558,7 @@ jobs:
       mv j32/* .
 
    - name: Release JE (Raspberry32)
+     if: ${{ false }}
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -540,6 +568,7 @@ jobs:
       replacesArtifacts: true
 
    - name: Copy Test (Raspberry)
+     if: ${{ false }}
      uses: actions/upload-artifact@v7
      with:
       name: dist
@@ -548,70 +577,6 @@ jobs:
 
 # openbsd --------------------------------------------------------------
  jeopenbsd:
-  name: JE (OpenBSD vmactions)
-  needs: all
-  if: ${{ false }}
-  runs-on: macos-15-intel
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v6
-
-   - name: Build, Test JE (OpenBSD)
-     uses: vmactions/openbsd-vm@v1
-     with:
-      usesh: true
-      sync: sshfs
-      prepare: |
-       pkg_add -u
-       rdate time.cloudflare.com || true
-       pkg_add curl zip gmake nasm pcre2 gdb
-
-      run: |
-       rm -f jobdone
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       echo "Host *" >>~/.ssh/config || true
-       echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export USE_PYXES=1
-       export USE_EMU_AVX=1
-       script/buildga.sh openbsd x86_64 || exit 1
-       script/testga.sh openbsd x86_64
-       cp jlibrary/bin/* j64 || true
-       rm -f j64/profile.ijs
-       ls -l j64
-       zip -r obsd64.zip j64
-       touch jobdone
-
-   - name: Check Status (OpenBSD)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (OpenBSD)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "obsd64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (OpenBSD)
-     uses: actions/upload-artifact@v7
-     with:
-      name: dist
-      path: testopenbsd.txt
-      overwrite: true
-
-# openbsd --------------------------------------------------------------
- jeopenbsd2:
   name: JE (OpenBSD cross-platform-actions)
   needs: all
   runs-on: ubuntu-latest
@@ -628,10 +593,9 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake nasm pcre2 gdb
+       sudo pkg_add curl zip gmake nasm pcre2 gdb lldb
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -646,17 +610,13 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh openbsd x86_64 || exit 1
-       script/testga.sh openbsd x86_64
+       script/testga.sh openbsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        ls -l j64
        zip -r obsd64.zip j64
-       touch jobdone
-
-   - name: Check Status (OpenBSD)
-     run: |
-      test -f jobdone || exit 1
 
    - name: Release JE (OpenBSD)
      uses: ncipollo/release-action@v1
@@ -678,9 +638,8 @@ jobs:
 # too slow, comment out   script/testga.sh openbsd
  jeopenbsdarm64:
   name: JE (OpenBSD arm64)
-  needs: all
+  needs: [all, slow]
   runs-on: ubuntu-latest
-  #runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -694,10 +653,9 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_add curl zip gmake gmp pcre2 gdb
+       sudo pkg_add curl zip gmake gmp pcre2 gdb lldb
        /sbin/ldconfig -r
        ls -al ~/
        ls -al ~/.ssh
@@ -712,16 +670,12 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh openbsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        ls -l j64
        zip -r obsdarm64.zip j64
-       touch jobdone
-
-   - name: Check Status (OpenBSD arm64)
-     run: |
-      test -f jobdone || exit 1
 
    - name: Release JE (OpenBSD arm64)
      uses: ncipollo/release-action@v1
@@ -741,74 +695,6 @@ jobs:
 
 # freebsd --------------------------------------------------------------
  jefreebsd:
-  name: JE (FreeBSD vmactions)
-  needs: all
-  if: ${{ false }}
-  runs-on: macos-15-intel
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v6
-
-   - name: Build, Test JE (FreeBSD)
-     uses: vmactions/freebsd-vm@v1
-     with:
-      usesh: true
-      sync: sshfs
-      prepare: |
-       pkg upgrade -y
-       rdate time.cloudflare.com || true
-       pkg search openblas 1>&2
-       pkg install -y curl zip find gmake nasm pcre2 gdb openblas
-       find / -type f -name 'liblapack.so*' 1>&2
-       find / -type f -name 'libopenblas.so*' 1>&2
-       /sbin/ldconfig -r
-
-      run: |
-       rm -f jobdone
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       echo "Host *" >>~/.ssh/config || true
-       echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export USE_PYXES=1
-       export USE_EMU_AVX=1
-       script/buildga.sh freebsd x86_64 || exit 1
-       script/testga.sh freebsd x86_64
-       cp jlibrary/bin/* j64 || true
-       rm -f j64/profile.ijs
-       ls -l j64
-       zip -r fbsd64.zip j64
-       touch jobdone
-
-   - name: Check Status (FreeBSD)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (FreeBSD)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "fbsd64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (FreeBSD)
-     uses: actions/upload-artifact@v7
-     with:
-      name: dist
-      path: testfreebsd.txt
-      overwrite: true
-
-# freebsd --------------------------------------------------------------
- jefreebsd2:
   name: JE (FreeBSD cross-platform-actions)
   needs: all
   runs-on: ubuntu-latest
@@ -825,7 +711,6 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
@@ -847,18 +732,13 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh freebsd x86_64 || exit 1
-       script/testga.sh freebsd x86_64
+       script/testga.sh freebsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        ls -l j64
        zip -r fbsd64.zip j64
-       touch jobdone
-       ls -l .
-
-   - name: Check Status (FreeBSD)
-     run: |
-      test -f jobdone || exit 1
 
    - name: Release JE (FreeBSD)
      uses: ncipollo/release-action@v1
@@ -879,8 +759,7 @@ jobs:
 # freebsdarm64 --------------------------------------------------------------
  jefreebsdarm64:
   name: JE (FreeBSD arm64)
-  needs: all
-  #runs-on: ubuntu-24.04-arm
+  needs: [all, slow]
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -895,7 +774,6 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
@@ -917,86 +795,13 @@ jobs:
        export USE_OPENMP=0
        export USE_PYXES=1
        export USE_EMU_AVX=1
+       export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh freebsd arm64 || exit 1
-       script/testga.sh freebsd arm64
+       script/testga.sh freebsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        ls -l j64
        zip -r fbsdarm64.zip j64
-       touch jobdone
-
-   - name: Check Status (FreeBSD arm64)
-     run: |
-      test -f jobdone || exit 1
-
-   - name: Release JE (FreeBSD arm64)
-     uses: ncipollo/release-action@v1
-     with:
-      tag: build
-      artifacts: "fbsdarm64.zip"
-      token: ${{ secrets.GITHUB_TOKEN }}
-      allowUpdates: true
-      replacesArtifacts: true
-
-   - name: Copy Test (FreeBSD arm64)
-     uses: actions/upload-artifact@v7
-     with:
-      name: dist
-      path: testfreebsdarm64.txt
-      overwrite: true
-
-# freebsdarm64a --------------------------------------------------------------
- jefreebsdarm64a:
-  name: JE (FreeBSD arm64 vmactions)
-  if: ${{ false }}
-  needs: all
-  runs-on: macos-15
-  steps:
-   - name: Checkout Git repository
-     uses: actions/checkout@v6
-
-   - name: Build, Test JE (FreeBSD arm64)
-     uses: vmactions/freebsd-vm@v1
-     with:
-      arch: aarch64
-      usesh: true
-      sync: sshfs
-      prepare: |
-       pkg upgrade -y
-       rdate time.cloudflare.com || true
-       pkg search openblas 1>&2
-       pkg install -y curl zip find gmake nasm pcre2 gdb openblas
-       find / -type f -name 'liblapack.so*' 1>&2
-       find / -type f -name 'libopenblas.so*' 1>&2
-       /sbin/ldconfig -r
-
-      run: |
-       rm -f jobdone
-       /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       echo "Host *" >>~/.ssh/config || true
-       echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       cat ~/.ssh/config || true
-       export DEBUGCMD=lldb
-       export CC=clang
-       export USE_SLEEF=1
-       export USE_OPENMP=0
-       export USE_PYXES=1
-       export USE_EMU_AVX=1
-       script/buildga.sh freebsd arm64 || exit 1
-       script/testga.sh freebsd arm64
-       cp jlibrary/bin/* j64 || true
-       rm -f j64/profile.ijs
-       ls -l j64
-       zip -r fbsdarm64.zip j64
-       touch jobdone
-
-   - name: Check Status (FreeBSD arm64)
-     run: |
-      test -f jobdone || exit 1
 
    - name: Release JE (FreeBSD arm64)
      uses: ncipollo/release-action@v1
@@ -1071,7 +876,6 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      DEBUGCMD: lldb
      run: |
       script/buildga.sh wasm wasm32 || exit 1
       script/testga.sh wasm wasm32 || exit 1
@@ -1111,15 +915,37 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script\buildga.cmd x64
 
-   - name: Test JE (Windows)
-     shell: cmd
+   - name: Setup Environment (Windows MSYS2 x64 clang)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: CLANG64
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-clang-x86_64-lldb
+
+   - name: Test JE (Windows MSYS2 x64 clang)
+     shell: msys2 {0}
      env:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
+     run: |
+      script/testga.sh windows x86_64 || exit 1
+
+   - name: Test JE (Windows)
+     if: ${{ false }}
+     shell: cmd
+     env:
+      DEBUGCMD: gdb
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: 0
      run: |
       script\testga.cmd x64
 
@@ -1167,15 +993,37 @@ jobs:
       NASM: ${{github.workspace}}\openssl-asm\nasm
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script\buildga.cmd x86
 
+   - name: Setup Environment (Windows MSYS2 x86)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: MINGW32
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-i686-gdb
+
+   - name: Test JE (Windows MSYS2 x86)
+     shell: msys2 {0}
+     env:
+      DEBUGCMD: gdb
+      USE_PYXES: 0
+      USE_EMU_AVX: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
+     run: |
+      script/testga.sh windows i386 || exit 1
+
    - name: Test JE (Windows 32)
+     if: ${{ false }}
      shell: cmd
      env:
       DEBUGCMD: lldb
       USE_PYXES: 0
       USE_EMU_AVX: 0
+      _DEBUG: 0
      run: |
       script\testga.cmd x86
 
@@ -1206,38 +1054,40 @@ jobs:
 # windows arm64 old ----------------------------------------------------
  jewinarm64old:
   name: JE (Windows arm64 old)
-  needs: all
-  if: ${{ false }}
+  needs: [all, deprecated]
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
 
-   - name: Setup Environment (Windows arm64)
+   - name: Setup Environment (Windows arm64) old
      uses: ilammy/msvc-dev-cmd@v1
      with:
       arch: amd64_arm64
 
-   - name: Build JE (Windows arm64)
+   - name: Build JE (Windows arm64 old)
      shell: cmd
      env:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script\buildga.cmd arm64
 
-   - name: Test JE (Windows arm64)
+   - name: Test JE (Windows arm64 old)
      if: ${{ false }}
+     # host cpu not arm64
      shell: cmd
      env:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: 0
      run: |
       script\testga.cmd arm64
 
-   - name: Compress Files (Windows arm64)
+   - name: Compress Files (Windows arm64 old)
      shell: pwsh
      run: |
       copy jlibrary/bin/* j64
@@ -1245,7 +1095,8 @@ jobs:
       del j64/libopenblas*.dll
       Compress-Archive j64 warm64.zip
 
-   - name: Release JE (Windows arm64)
+   - name: Release JE (Windows arm64 old)
+     if: ${{ false }}
      uses: ncipollo/release-action@v1
      with:
       tag: build
@@ -1254,7 +1105,8 @@ jobs:
       allowUpdates: true
       replacesArtifacts: true
 
-   - name: Copy Test (Windows arm64)
+   - name: Copy Test (Windows arm64 old)
+     if: ${{ false }}
      uses: actions/upload-artifact@v7
      with:
       name: dist
@@ -1281,15 +1133,37 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script\buildga.cmd arm64
 
+   - name: Setup Environment (Windows MSYS2 arm64)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: CLANGARM64
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-clang-aarch64-lldb
+
+   - name: Test JE (Windows MSYS2 arm64)
+     shell: msys2 {0}
+     env:
+      DEBUGCMD: lldb
+      USE_PYXES: 1
+      USE_EMU_AVX: 1
+      _DEBUG: ${{ env.DEBUGLEVEL }}
+     run: |
+      script/testga.sh windows arm64 || exit 1
+
    - name: Test JE (Windows arm64)
+     if: ${{ false }}
      shell: cmd
      env:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
+      _DEBUG: 0
      run: |
       script\testga.cmd arm64
 
@@ -1362,7 +1236,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1372,7 +1246,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh windows x86_64 || exit 1
 
@@ -1426,7 +1300,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1436,7 +1310,7 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh windows x86_64 || exit 1
 
@@ -1489,7 +1363,7 @@ jobs:
       USE_PYXES: 0
       USE_EMU_AVX: 0
       PTHREADS4WSRC: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh windows i386 || exit 1
 
@@ -1499,7 +1373,7 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh windows i386 || exit 1
 
@@ -1552,7 +1426,7 @@ jobs:
       USE_PYXES: 1
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/buildga.sh windows arm64 || exit 1
 
@@ -1562,7 +1436,7 @@ jobs:
       DEBUGCMD: lldb
       USE_PYXES: 1
       USE_EMU_AVX: 1
-      _DEBUG: 0
+      _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
       script/testga.sh windows arm64 || exit 1
 
@@ -1602,10 +1476,8 @@ jobs:
    - jewinarm64
    - jeandroid
    - jewasm
-   - jefreebsd2
-   - jefreebsdarm64
-   - jeopenbsd2
-   - jeopenbsdarm64
+   - jefreebsd
+   - jeopenbsd
    - jewin-msys2-x64-clang
    - jewin-msys2-x64
    - jewin-msys2-x86
@@ -1648,10 +1520,8 @@ jobs:
    - jewinarm64
    - jeandroid
    - jewasm
-   - jefreebsd2
-   - jefreebsdarm64
-   - jeopenbsd2
-   - jeopenbsdarm64
+   - jefreebsd
+   - jeopenbsd
    - jewin-msys2-x64-clang
    - jewin-msys2-x64
    - jewin-msys2-x86

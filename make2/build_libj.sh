@@ -10,12 +10,14 @@ eval "$(./jplatform64.sh)"
 unset TARGET
 unset TARGET_a
 
+OPTL=-Og
+
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
  # OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
   3)
-   OPTLEVEL=" -Og -g "
+   OPTLEVEL=" $OPTL -g "
    DEBUG=1
    NASM_FLAGS="-g"
    ;;
@@ -25,7 +27,7 @@ if [ "" = "$CFLAGS" ]; then
    NASM_FLAGS="-g"
    ;;
   1)
-   OPTLEVEL=" -Og -g "
+   OPTLEVEL=" $OPTL -g "
    DEBUG=1
    NASM_FLAGS="-g"
    j64x=$64x-debug

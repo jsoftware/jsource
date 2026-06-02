@@ -23,7 +23,7 @@ COPTION = $(COPTION) /DSLEEF=1 /DSLEEFQUAD=1
 !if "1"=="$(USE_LINENOISE)"
 READLINE = 1
 !endif
-!if ""!="$(_DEBUG)"
+!if "3"=="$(_DEBUG)"
 COPTION = $(COPTION) /FS /Z7 /DDEBUG=1
 LDEBUG = /DEBUG
 !endif

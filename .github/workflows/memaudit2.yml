@@ -254,7 +254,6 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
@@ -278,11 +277,6 @@ jobs:
        export _MEMAUDIT=32
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
-       touch jobdone
-
-   - name: Check Status (FreeBSD)
-     run: |
-      test -f jobdone || exit 1
 
 # freebsdarm64 ---------------------------------------------------------------
  jefreebsdarm64:
@@ -303,7 +297,6 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
@@ -327,11 +320,6 @@ jobs:
        export _MEMAUDIT=32
        script/buildga.sh freebsd || exit 1
        script/testga.sh freebsd || exit 1
-       touch jobdone
-
-   - name: Check Status (FreeBSD arm64)
-     run: |
-      test -f jobdone || exit 1
 
 # wasm -----------------------------------------------------------------
  jewasm:

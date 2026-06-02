@@ -13,7 +13,7 @@ TARGET_CPU = x64
 TARGET_CPU = x86
 !endif
 
-!if "1"=="$(_DEBUG)"
+!if "3"=="$(_DEBUG)"
 COPTION = $(COPTION) /FS /Z7 /DDEBUG=1
 LDEBUG = /DEBUG
 !endif

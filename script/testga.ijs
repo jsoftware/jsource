@@ -2,6 +2,7 @@
 
 GITHUBCI=: 'true'-:2!:5'GITHUB_ACTIONS'
 
+1!:55 ::empty <'jobdone'
 testpath=: (1!:43''),'/test/'
 0!:0 <testpath,'tsu.ijs'
 
@@ -99,6 +100,14 @@ eformat_j_=: exformat_j_ f.
 
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
+
+NB. expected all 1
+NB. echo ,(40 1$' ')=1{.("1) 40 0$' '
+NB. echo ,(40 1$' ')=1{.("1) 40 0$' '
+NB. echo ,(40 1$' ')=1{.("1) 40 0$' '
+
+NB. this crash
+NB. empty 6!:2 '{{ }}'
 
 NB. end of smoke test
 
@@ -208,6 +217,7 @@ else.
   msg=. msg,;<@(LF,dtb) "1 RES
 end.
 msg fappends testres
+'' (1!:2 ::empty)^:(-.@*@#RES) <'jobdone'
 echo^:(*@#RES) RES
 )
 

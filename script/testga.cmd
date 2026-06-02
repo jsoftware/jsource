@@ -3,8 +3,10 @@
 @echo on
 @rem if $USE_EMU_AVX = 0 or $USE_PYXES = 0 skip test avx2
 
-echo "%USE_EMU_AVX%"
-echo "%USE_PYXES%"
+echo "DEBUGCMD: %DEBUGCMD%"
+echo "_DEBUG: %_DEBUG%"
+echo "USE_EMU_AVX: %USE_EMU_AVX%"
+echo "USE_PYXES: %USE_PYXES%"
 
 set "A=jlibrary"
 set "B=jlibrary\bin"
@@ -14,13 +16,13 @@ echo %A%
 echo %B%
 echo %C%
 
+systeminfo
+
 @rem x64 x86 arm64
 IF "%~1"=="x86" GOTO L0
 IF "%~1"=="arm64" GOTO L0
 IF "%~1" NEQ "x64" EXIT /b 1
 :L0
-
-systeminfo
 
 IF "%~1"=="x86" GOTO L01A
 IF "%~1"=="arm64" GOTO L01B
@@ -34,7 +36,12 @@ IF "%~1" NEQ "x64" EXIT /b 1
 dir %B%
 IF "%USE_EMU_AVX%"=="0" GOTO L01F
 IF "%USE_PYXES%"=="0" GOTO L01F
+IF "%_DEBUG%"=="3" GOTO L01K
 %B%\jconsole -lib javx2.dll script\testga.ijs
+IF %ERRORLEVEL% NEQ 0 EXIT /b 1
+GOTO L01F
+:L01K
+%DEBUGCMD% -b -o run -k bt -k quit -- %B%\jconsole.exe -lib javx2.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01F
 IF "%_DEBUG%"=="3" GOTO L01H
@@ -42,12 +49,17 @@ IF "%_DEBUG%"=="3" GOTO L01H
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01H
-lldb -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
+%DEBUGCMD% -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01A
 dir %C%
+IF "%_DEBUG%"=="3" GOTO L01J
 %C%\jconsole script\testga.ijs
+IF %ERRORLEVEL% NEQ 0 EXIT /b 1
+GOTO L01C
+:L01J
+%DEBUGCMD% -b -o run -k bt -k quit -- %B%\jconsole.exe script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01B
@@ -57,6 +69,6 @@ IF "%_DEBUG%"=="3" GOTO L01I
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 GOTO L01C
 :L01I
-lldb -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
+%DEBUGCMD% -b -o run -k bt -k quit -- %B%\jconsole.exe -lib j.dll script\testga.ijs
 IF %ERRORLEVEL% NEQ 0 EXIT /b 1
 :L01C

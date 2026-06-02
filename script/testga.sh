@@ -66,15 +66,24 @@ else
  exit 1
 fi
 
-if [ "$_DEBUG" = "1" ] || [ "$_DEBUG" = "2" ] || [ "$_DEBUG" = "3" ]; then
+echo "DEBUGCMD: $DEBUGCMD"
+echo "_DEBUG: $_DEBUG"
+echo "USE_EMU_AVX: $USE_EMU_AVX"
+echo "USE_PYXES: $USE_PYXES"
+
+if [ -n "$_DEBUG" ] && [ "$_DEBUG" != "0" ]; then
+ if [ -z "$DEBUGCMD" ]; then
+  # default to lldb
+  DEBUGCMD=lldb
+ fi
  if [ "$DEBUGCMD" = "gdb" ]; then
-  DB1="$DEBUGCMD -batch -return-child-result -ex run -ex bt --args"
+  DB1="$DEBUGCMD -batch -return-child-result -ex run -ex bt -ex quit --args"
  elif [ "$DEBUGCMD" = "gdb-multiarch" ]; then
-  DB1="$DEBUGCMD -batch -return-child-result -ex \"set architecture $DEBUGCPU\" -ex run -ex bt --args"
+  DB1="$DEBUGCMD -batch -return-child-result -ex \"set architecture $DEBUGCPU\" -ex run -ex bt -ex quit --args"
  elif [ "$DEBUGCMD" = "lldb" ]; then
   DB1="$DEBUGCMD -b -o run -k bt -k quit --"
  else
-  echo "unsupported debug command: $DB1"
+  echo "unsupported debug command: $DEBUGCMD"
   exit 1
  fi
  $DEBUGCMD --version
@@ -112,18 +121,22 @@ if [ "$2" = "x86_64" ]; then
  if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "linux" ]; then
   if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   if [ "$(cat /var/run/dmesg.boot | grep -c AVX2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "windows" ]; then
   if [ -f "$B/${libj}avx2.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  fi
 fi
@@ -132,14 +145,18 @@ fi
 if [ $m64 -eq 1 ]; then
  ls -l $B
  if [ "$1" = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
-  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -arm64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
-  LC_ALL=fr_FR.UTF-8 APPLEM=APPLEM arch -x86_64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  LC_ALL=fr_FR.UTF-8 arch -arm64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  test -f jobdone || exit 1
+  LC_ALL=fr_FR.UTF-8 arch -x86_64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  test -f jobdone || exit 1
  else
   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  test -f jobdone || exit 1
  fi
 else
  ls -l $C
  LC_ALL=fr_FR.UTF-8 $DB1 $C/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+ test -f jobdone || exit 1
 fi
 
 # avx512
@@ -147,10 +164,12 @@ if [ "$2" = "x86_64" ]; then
  if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "linux" ]; then
   if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "$B/${libj}avx5122.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   # if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
@@ -166,4 +185,3 @@ if [ "$2" = "x86_64" ]; then
   true
  fi
 fi
-touch jobdone || true

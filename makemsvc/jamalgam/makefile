@@ -23,7 +23,7 @@ endif
 ifeq (1,$(USE_LINENOISE))
  READLINE = 1
 endif
-ifneq ($(_DEBUG),)
+ifeq (3,$(_DEBUG))
  COPTION := $(COPTION) /FS /Z7 /DDEBUG=1
  LDEBUG = /DEBUG
 endif

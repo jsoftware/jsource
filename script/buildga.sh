@@ -7,6 +7,10 @@
 #
 # if !x86_64 skip build avx2 and avx512
 
+echo "_DEBUG: $_DEBUG"
+echo "USE_EMU_AVX: $USE_EMU_AVX"
+echo "USE_PYXES: $USE_PYXES"
+
 set -evx
 CC=${CC-clang}
 _SSE4_2=${_SSE4_2:=1}
@@ -166,32 +170,32 @@ if [ "$1" = "android" ]; then
  ln -sf ../../netdefs .
  cd ../..
  rm -f androidlibs.zip
- # build binary for armeabi-v7a x86 x86_64 arm64-v8a
+ # build binary for armeabi-v7a arm64-v8a
  cd android
  ndk-build
  # static library not copied by ndk-build
  cp obj/local/armeabi-v7a/libj.a libs/armeabi-v7a/.
  cp obj/local/arm64-v8a/libj.a libs/arm64-v8a/.
- cp obj/local/x86/libj.a libs/x86/.
- cp obj/local/x86_64/libj.a libs/x86_64/.
+# cp obj/local/x86/libj.a libs/x86/.
+# cp obj/local/x86_64/libj.a libs/x86_64/.
  zip -r ../androidlibs.zip libs
  cd ..
  # build binary for armeabi
- cd ~/
- wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
- unzip android-ndk-r16b-darwin-x86_64.zip
- cd -
- cd android
- sed -i "" -e "s/^APP_MODULES := jconsonle /##   APP_MODULES := jconsonle /g" jni/Application.mk
- sed -i "" -e "s/^# APP_MODULES := jconsonle-nopie /APP_MODULES := jconsonle-nopie /g" jni/Application.mk
- sed -i "" -e "s/^APP_ABI/##   APP_ABI/g" jni/Application.mk
- sed -i "" -e "s/^# APP_ABI := armeabi/APP_ABI := armeabi/g" jni/Application.mk
- sed -i "" -e "s/^APP_PLATFORM/##   APP_PLATFORM/g" jni/Application.mk
- sed -i "" -e "s/^# APP_PLATFORM/APP_PLATFORM/g" jni/Application.mk
- NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
- cp obj/local/armeabi/libj.a libs/armeabi/.
- zip -r ../androidlibs.zip libs
- cd ..
+#  cd ~/
+#  wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
+#  unzip android-ndk-r16b-darwin-x86_64.zip
+#  cd -
+#  cd android
+#  sed -i "" -e "s/^APP_MODULES := jconsonle /##   APP_MODULES := jconsonle /g" jni/Application.mk
+#  sed -i "" -e "s/^# APP_MODULES := jconsonle-nopie /APP_MODULES := jconsonle-nopie /g" jni/Application.mk
+#  sed -i "" -e "s/^APP_ABI/##   APP_ABI/g" jni/Application.mk
+#  sed -i "" -e "s/^# APP_ABI := armeabi/APP_ABI := armeabi/g" jni/Application.mk
+#  sed -i "" -e "s/^APP_PLATFORM/##   APP_PLATFORM/g" jni/Application.mk
+#  sed -i "" -e "s/^# APP_PLATFORM/APP_PLATFORM/g" jni/Application.mk
+#  NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
+#  cp obj/local/armeabi/libj.a libs/armeabi/.
+#  zip -r ../androidlibs.zip libs
+#  cd ..
  exit 0
 fi
 

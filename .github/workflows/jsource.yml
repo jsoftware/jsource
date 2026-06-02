@@ -371,7 +371,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
-      script/testga.sh raspberry arm64
+      script/testga.sh raspberry arm64 || exit 1
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
       ls -l j64
@@ -426,7 +426,7 @@ jobs:
       USE_PYXES: 0
       _DEBUG: ${{ env.DEBUGLEVEL }}
      run: |
-      script/testga.sh raspberry armv6l
+      script/testga.sh raspberry armv6l || exit 1
       cp jlibrary/bin32/* j32 || true
       rm -f j32/profile.ijs
       ls -l j32
@@ -475,7 +475,7 @@ jobs:
        export USE_EMU_AVX=1
        export _DEBUG=0   # qemu-arm gdb not supported
        script/buildga.sh raspberry arm64 || exit 1
-       script/testga.sh raspberry arm64
+       script/testga.sh raspberry arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        zip -r rpi64.zip j64
@@ -539,7 +539,7 @@ jobs:
        export USE_EMU_AVX=0
        export _DEBUG=0   # qemu-arm gdb not supported
        script/buildga.sh raspberry armv6l || exit 1
-       script/testga.sh raspberry armv6l
+       script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
        find j32 -type f -exec chmod a+rw {} \;
        cp jlibrary/bin32/* j32 || true
@@ -593,7 +593,6 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 gdb lldb
@@ -613,16 +612,11 @@ jobs:
        export USE_EMU_AVX=1
        export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh openbsd x86_64 || exit 1
-       script/testga.sh openbsd x86_64
+       script/testga.sh openbsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        ls -l j64
        zip -r obsd64.zip j64
-       touch jobdone
-
-   - name: Check Status (OpenBSD)
-     run: |
-      test -f jobdone || exit 1
 
    - name: Release JE (OpenBSD)
      uses: ncipollo/release-action@v1
@@ -659,7 +653,6 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 gdb lldb
@@ -683,11 +676,6 @@ jobs:
        rm -f j64/profile.ijs
        ls -l j64
        zip -r obsdarm64.zip j64
-       touch jobdone
-
-   - name: Check Status (OpenBSD arm64)
-     run: |
-      test -f jobdone || exit 1
 
    - name: Release JE (OpenBSD arm64)
      uses: ncipollo/release-action@v1
@@ -723,7 +711,6 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
@@ -747,17 +734,11 @@ jobs:
        export USE_EMU_AVX=1
        export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh freebsd x86_64 || exit 1
-       script/testga.sh freebsd x86_64
+       script/testga.sh freebsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        ls -l j64
        zip -r fbsd64.zip j64
-       touch jobdone
-       ls -l .
-
-   - name: Check Status (FreeBSD)
-     run: |
-      test -f jobdone || exit 1
 
    - name: Release JE (FreeBSD)
      uses: ncipollo/release-action@v1
@@ -793,7 +774,6 @@ jobs:
       shell: bash
 
       run: |
-       rm -f jobdone
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
@@ -817,16 +797,11 @@ jobs:
        export USE_EMU_AVX=1
        export _DEBUG=${{ env.DEBUGLEVEL }}
        script/buildga.sh freebsd arm64 || exit 1
-       script/testga.sh freebsd arm64
+       script/testga.sh freebsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        ls -l j64
        zip -r fbsdarm64.zip j64
-       touch jobdone
-
-   - name: Check Status (FreeBSD arm64)
-     run: |
-      test -f jobdone || exit 1
 
    - name: Release JE (FreeBSD arm64)
      uses: ncipollo/release-action@v1

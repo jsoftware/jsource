@@ -121,18 +121,22 @@ if [ "$2" = "x86_64" ]; then
  if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "linux" ]; then
   if [ "$(cat /proc/cpuinfo | grep -c avx2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   if [ "$(cat /var/run/dmesg.boot | grep -c AVX2)" -ne 0 ] && [ -f "$B/${libj}avx2.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "windows" ]; then
   if [ -f "$B/${libj}avx2.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx2.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  fi
 fi
@@ -142,13 +146,17 @@ if [ $m64 -eq 1 ]; then
  ls -l $B
  if [ "$1" = "darwin" ] && [ "$(uname -m)" = "arm64" ]; then
   LC_ALL=fr_FR.UTF-8 arch -arm64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  test -f jobdone || exit 1
   LC_ALL=fr_FR.UTF-8 arch -x86_64 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  test -f jobdone || exit 1
  else
   LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+  test -f jobdone || exit 1
  fi
 else
  ls -l $C
  LC_ALL=fr_FR.UTF-8 $DB1 $C/jconsole${ext1} -lib ${libj}.${ext} script/testga.ijs
+ test -f jobdone || exit 1
 fi
 
 # avx512
@@ -156,10 +164,12 @@ if [ "$2" = "x86_64" ]; then
  if [ "$1" = "darwin" ]; then
   if [ "$(sysctl -a | grep machdep.cpu | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "linux" ]; then
   if [ "$(cat /proc/cpuinfo | grep -c avx512)" -ne 0 ] && [ -f "$B/${libj}avx5122.${ext}" ]; then
    LC_ALL=fr_FR.UTF-8 $DB1 $B/jconsole${ext1} -lib ${libj}avx512.${ext} script/testga.ijs
+   test -f jobdone || exit 1
   fi
  elif [ "$1" = "openbsd" ] || [ "$1" = "freebsd" ]; then
   # if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "$B/${libj}avx512.${ext}" ]; then
@@ -175,4 +185,3 @@ if [ "$2" = "x86_64" ]; then
   true
  fi
 fi
-touch jobdone || true

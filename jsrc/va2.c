@@ -1015,7 +1015,7 @@ static INLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,
     // vbls needed: cv a w allranks acr wcr af wf self
     acr=0; af=allranks>>2*RANKTX;  // allranks = anr/wnr/avr/wvr (nr=noun rank)  wcr will hold verbranks
     wcr=(RANK2T)allranks; af|=RANKTMSK; af-=wcr; af=((I)af<0)?acr:af; af&=~RANKTMSK;  // af is 0/0/anr/wnr -> 0/0/anr/ffff -> 0/0/afr/x -> clamp at 0 -> 0/0/afr/0
-    wf=allranks>>=2*RANKTX; wcr&=RANKTMSK; wf&=RANKTMSK; wf-=wcr; wf=((I)wf<0)?acr:wf;    // wf is 0/0/anr/wnr -> 0/0/0/anr ->  0/0/0/afr -> clamp at 0
+    wf=allranks>>=2*RANKTX; wcr&=RANKTMSK; wf&=RANKTMSK; wf-=wcr; wf=((I)wf<0)?acr:wf;    // wf is 0/0/anr/wnr -> 0/0/0/anr ->  0/0/0/wfr -> clamp at 0
     acr=allranks; acr-=af; acr-=wf;  // acr = 0/0/acr/wcr  (nr-fr=cr)
     wcr=acr; wcr&=RANKTMSK; wf<<=RANKTX; wcr|=wf;   // wcr = wfr/wcr
     // vbls needed: a w cv acr wcr allranks af wf self [jt]

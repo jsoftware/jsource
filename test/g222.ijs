@@ -97,12 +97,19 @@ test@:(t"_ {~ (QKTEST{877 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: (10&u:&.>) ;:' miasm
 
 test=: 3 : 0   NB. ~:"_1
  yy=: y
+smoutput '!'
  b=: ~:"_1 yy
+smoutput '@'
  assert. 1=type b
+smoutput '#'
  assert. (<:#$yy)=#$b
+smoutput '$'
  assert. (1{$b) = 1{$yy
+smoutput '%'
  assert. b -: (i.@# = i.~)"_1 yy
+smoutput '^'
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
+smoutput '&'
  1
 )
 

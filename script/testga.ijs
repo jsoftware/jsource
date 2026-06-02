@@ -2,7 +2,7 @@
 
 GITHUBCI=: 'true'-:2!:5'GITHUB_ACTIONS'
 
-1!:55 ::empty 'jobdone'
+1!:55 ::empty <'jobdone'
 testpath=: (1!:43''),'/test/'
 0!:0 <testpath,'tsu.ijs'
 
@@ -217,7 +217,7 @@ else.
   msg=. msg,;<@(LF,dtb) "1 RES
 end.
 msg fappends testres
-'' (1!:2 ::empty)^:(-.@*@#RES) 'jobdone'
+'' (1!:2 ::empty)^:(-.@*@#RES) <'jobdone'
 echo^:(*@#RES) RES
 )
 

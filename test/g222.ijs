@@ -112,7 +112,10 @@ NB. smoutput yy
 smoutput $ <@~."_1 yy
 smoutput $ ((<"1 b)#&.><"_1 yy)
 NB. smoutput <@~."_1 yy
-smoutput ,. ((<"1 b)#&.><"_1 yy) ($ #: I.@,)@:~:&.> <@~."_1 yy
+elocs =. ((<"1 b)#&.><"_1 yy) ($ #: I.@,)@:~:&.> <@~."_1 yy
+smoutput elocs
+smoutput elocs (<@[ { ])&.> <@~."_1 yy
+smoutput elocs (<@[ { ])&.> ((<"1 b)#&.><"_1 yy)
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
 smoutput '&'
  1

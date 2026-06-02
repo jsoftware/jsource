@@ -249,7 +249,7 @@ DF2(jttsit2){F12IP;A z;D t;I n;I stackallo=0,i;
  RZ(w=ddtokens(vs(w),4+1+!!EXPLICITRUNNING));   // tokenize outside of timer.  We time as if the sentence were executed in an explicit defn
  // apply pppp to the sentence.  Create a 1-sentence block of control words
  A cwa; GAT0(cwa,LIT,2*sizeof(CW),1) AN(cwa)=1; CW *cwv=(CW*)voidAV1(cwa); cwv[0].tcesx=0+(CBBLOCK<<TCESXTYPEX); cwv[1].tcesx=AN(w);  // allo 2 CWs, of which 1 is the end marker
- RZ(w=mkwris(w)) RZ(pppp(jt,w,cwa))  // make sure we can write to w, and perform pppp on it
+ RZ(w=ca(w)); RZ(pppp(jt,w,cwa))  // perform pppp on w, which must be writable and NONrecursive
  I wn=AN(w); A *wv=AAV(w);  // get #words in sentence after pppp, and their address
  // The names don't have bucket info because we aren't creating an explicit definition.  That causes any assignment to search the local symbol table.  To avoid this time, we set bucket info in each assigned simple name:
  // to whatever is in the current local symbol table, or -1 if there is none

@@ -111,6 +111,12 @@ test=: 3 : 0   NB. ~:"_1
   smoutput b (# -: ~.@])&(erow&{) yy
   eb =. erow { b [ eyb =. #. erow { yy [ ey =. erow { yy
   smoutput (eb # ey) -: ~. ey
+  l =. erow {:: ((<"1 b)#&.><"_1 yy)
+  r =. erow {:: <@~."_1 yy
+  smoutput l -: r
+  smoutput _80 ]\ ": #. l
+  smoutput _80 ]\ ": #. r
+  smoutput ($ #: I.@,) l ~: r
  end.
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
  1

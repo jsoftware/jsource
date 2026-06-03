@@ -117,6 +117,9 @@ test=: 3 : 0   NB. ~:"_1
   smoutput _80 ]\ ": #. l
   smoutput _80 ]\ ": #. r
   smoutput ($ #: I.@,) l ~: r
+  smoutput l -: ~. ey
+  smoutput r -: ~. ey
+  smoutput 3!:3 yy 
  end.
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
  1

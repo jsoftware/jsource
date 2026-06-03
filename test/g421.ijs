@@ -166,11 +166,11 @@ pconv1=: 4 : 0
 s=: ?10$100
 t=: ?10$100
 eq=: 1e_8&> @: (>./) @: | @: -
-smoutput s (conv ((>./) @: | @: -) conv1) t
-smoutput s conv t
-smoutput s conv1 t
 smoutput s
 smoutput t
+smoutput s conv t
+smoutput s conv1 t
+smoutput s (conv ((>./) @: | @: -) conv1) t
 s ( conv eq  conv1) t
 s (pconv eq pconv1) t
 

@@ -111,14 +111,16 @@ test=: 3 : 0   NB. ~:"_1
   eb =. erow { b [ eyb =. #. erow { yy [ ey =. erow { yy
   smoutput _120 ]\ 5!:5 <'eb'
   smoutput _120 ]\ 5!:5 <'eyb'
-  smoutput b -: ~: ey
-  smoutput b -: ~: eyb
+  smoutput eb -: ~: ey
+  smoutput eb -: ~: eyb
   smoutput (eb # ey) -: ~. ey
   smoutput (eb # eyb) -: ~. eyb
   smoutput (# ~.ey),(+/~:ey)
   smoutput (# ~.eyb),(+/~:eyb)
   smoutput ~: ey
   smoutput ~: eyb
+  smoutput ~. ey
+  smoutput ~. eyb
  end.
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
  1

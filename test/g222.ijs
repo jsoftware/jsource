@@ -113,7 +113,10 @@ test=: 3 : 0   NB. ~:"_1
   smoutput _120 ]\ 5!:5 <'eyb'
   smoutput (eb # ey) -: ~. ey
   smoutput (eb # ey) -: ~. eyb
+  smoutput (# ~.ey),(+/~:ey)
+  smoutput (# ~.eyb),(+/~:eyb)
   smoutput ~: ey
+  smoutput ~: eyb
  end.
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
  1

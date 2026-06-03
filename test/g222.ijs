@@ -102,7 +102,7 @@ test=: 3 : 0   NB. ~:"_1
  assert. (<:#$yy)=#$b
  assert. (1{$b) = 1{$yy
  assert. b -: (i.@# = i.~)"_1 yy
- if. -. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
+ if. -. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy do.
   smoutput $yy
   erow =. {. I. ((<"1 b)#&.><"_1 yy) ~: <@~."_1 yy
   smoutput 3!:0 yy

@@ -104,13 +104,16 @@ test=: 3 : 0   NB. ~:"_1
  assert. b -: (i.@# = i.~)"_1 yy
  if. -. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy do.
   smoutput $yy
-  erow =. {. I. ((<"1 b)#&.><"_1 yy) ~: <@~."_1 yy
+  erow =. {.!.9 I. ((<"1 b)#&.><"_1 yy) ~: <@~."_1 yy
   smoutput 3!:0 yy
   smoutput erow
   smoutput ((<"1 b)#&.><"_1 yy) ~:&(erow&{) <@~."_1 yy
-  eb =. erow { b [ ey =. #. erow { yy
+  eb =. erow { b [ eyb =. #. erow { yy [ ey =. erow { yy
   smoutput _120 ]\ 5!:5 <'eb'
-  smoutput _120 ]\ 5!:5 <'ey'
+  smoutput _120 ]\ 5!:5 <'eyb'
+  smoutput (eb # ey) -: ~. ey
+  smoutput (eb # ey) -: ~. eyb
+  smoutput ~: ey
  end.
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
  1

@@ -119,7 +119,11 @@ test=: 3 : 0   NB. ~:"_1
   smoutput ($ #: I.@,) l ~: r
   smoutput l -: ~. ey
   smoutput r -: ~. ey
+  9!:37 ] 0 256 0 10000
+  smoutput 3!:3 l
+  smoutput 3!:3 r
   smoutput 3!:3 yy 
+  9!:37 ] 0 256 0 222
  end.
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
  1

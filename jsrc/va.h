@@ -62,7 +62,7 @@
 #define VI4             ((I)INT4X<<VOTX)
 #define VE              ((I)QPX<<VOTX)
 #define VOTMSK          ((I)15<<VOTX) // mask for result type from function 25-28.  always present
-// leave bits 29-31 unused to allow jtfg to shift up leaving 3 LSBs open.  Also allows short immediates
+// 29-31 free.  Also allows short immediates
 // obsolete #define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
 // obsolete #define VIPOKRNKW          BIT(VIPOKRNKWX)
 // obsolete // bit 29 free

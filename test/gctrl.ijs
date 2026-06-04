@@ -725,6 +725,9 @@ f6 =: 7!:2 'f5 5'
 f1 > f4 + 3000   NB. {{ }} was parsed when f1 was executed
 f6 < f3 + 1000  NB.  not when f3 was executed
 
+1: 6!:2 '{{ }}'  NB. used to crash
+1: 6!:2 '6 {{ x + y }} 5'  NB. used to crash
+
 
 
 

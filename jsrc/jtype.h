@@ -48,6 +48,7 @@ typedef unsigned short FLOAT16;  // top 16 bits of a floating-point value, used 
 typedef char               B;
 typedef unsigned char      C;
 typedef signed char        I1;
+typedef unsigned char      UI1;
 typedef char*              Ptr;
 typedef short              S;
 typedef short              C2;

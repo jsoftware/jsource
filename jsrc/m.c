@@ -1372,6 +1372,9 @@ if((I)jt&3)SEGFAULT;
 // NOTE!! z[i] dependency on struct AD
  I fv=lfsr++; DO((((I)1)<<(1+blockx-LGSZI)), if(i!=(NORMAHX+2)&&i!=(NORMAHX+6))((I*)z)[i] = fv;);   // fill block with garbage - but not the allocation word or zaploc
 #endif
+#if MEMAUDIT&1
+ if(z->h==0)SEGFAULT;  // h field must be valid
+#endif
  AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
   // we do not attempt to combine the AFLAG write into a 64-bit operation
 #if LEAKSNIFF

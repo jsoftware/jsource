@@ -11,10 +11,11 @@
 #define VIPOKAX         JTINPLACEAX      // This routine can put its result over A
 #define VIPOKA          BIT(VIPOKAX)
 #define VCVTIP          0    // bits 2-3 was ((I)0x3<<VIPRNKX)   // this should always be set in any cv
-// bits 2-6 free
-#define VIPWCRLONGX     7  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  sign bit of lane 0
+#define VIPWFLONGX      3  //  internal use in va2.  Means 'w has longer frame, so x is repeated in outer loops'  Must be bit 3, because used as shift count
+#define VIPWFLONG       BIT(VIPWFLONGX)
+#define VIPWCRLONGX     4  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  Must be 1 higher than VIPWFLONGX
 #define VIPWCRLONG      BIT(VIPWCRLONGX)
-// bit 8 free
+// bit 4-8 free
 #define VRCX            9           // bit position for optional final result-conversion 9-10
 #define VRD             BIT(VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible
@@ -22,8 +23,6 @@
 #define VRERR           ((I)0<<VRCX) // result-conversion removed by error (including EVNOCONV)
 #define VRMSK           ((I)3<<VRCX) // mask for result-conversion spec 10-11
 // 11-14 free
-#define VIPWFLONGX      15  //  internal use in va2.  Means 'w has longer frame, so x is repeated in outer loops'  sign bit of lane 1
-#define VIPWFLONG       BIT(VIPWFLONGX)
 #define VICX            16           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
 #define VBB             ((I)(15-B01X)<<VICX)
 #define VII             ((I)(15-INTX)<<VICX)

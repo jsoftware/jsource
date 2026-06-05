@@ -755,10 +755,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // Debugging options
 
 // #undef MEMAUDIT
-// #define MEMAUDIT 0x2e   // test = decimal 46
+// #define MEMAUDIT 0x3e   // test = decimal 46
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #ifndef MEMAUDIT
-#define MEMAUDIT 0   // Bitmask for memory audits: 
+#define MEMAUDIT 0x0   // Bitmask for memory audits: 
 //        1:  make sure  headers match pool#
 //        2:  full audit of tpush/tpop (ignored in J32)
 //            detect double-frees before they happen,

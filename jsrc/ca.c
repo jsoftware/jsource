@@ -671,6 +671,5 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
 
   fdeffillall(z,flag2,CAMP,VERB, f1,jtvalenceerr, a,w,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.cct=cct);
   FAV(z)->localuse.lu1.bondfn=(AF)((I)FAV(z)->localuse.lu1.bondfn+(I)vbf2);  // Lifetime Achievement Award, float+address.  One must be exactly 0 if value used, saves a branch
-
   R z;
 }

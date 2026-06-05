@@ -1085,7 +1085,7 @@ static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   RETF(cut02(IRS2(za, zw,self,1L,1L,jtlamin2,z),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w    the self is for error display
  }
  V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->valencefns[0];   // get the function pointers
- fauxblockINT(xfaux,5,1); // declare xpose arg where it has scope
+// obsolete  fauxblockINT(xfaux,5,1); // declare xpose arg where it has scope
  I *ws=AS(w);  // ws-> shape of w
  // get address of end+1 of the source data, so we can avoid out-of-bounds
  C *sdataend=CAV(w)+(AN(w)<<bplg(wt));  // addr+1 of source data
@@ -1109,7 +1109,7 @@ static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
     // 4 axes: S0 S1 R3 R2 S2 S3 [rest of ws beyond the axes]
     // 5 axes: S0 S1 R3 R2 S2 S3 R4 S4 [rest of ws beyond the axes]
     // these must be transposed to result in R2..Rn S0..Sn Wx..Wn
-    A xposearg; fauxINT(xposearg,xfaux,wr+axisct-2,1) I *xpv=IAV(xposearg);
+    A xposearg; GATV0(xposearg,INT,wr+axisct-2,1) I *xpv=IAV(xposearg);  // can't use faux block because it is passed into modifier, which on error would be freed in the caller after the block is out of scope 
     DO((axisct>>1)-1, *xpv++ = 4*i+3; *xpv++=4*i+2;) if(axisct&1)*xpv++=2*axisct-4;  // Rn
     DO(axisct>>1, *xpv++ = 4*i+0; *xpv++=4*i+1;) if(axisct&1)*xpv++=2*axisct-3;  // Sn
     DO(wr-axisct, *xpv++=2*axisct+i-2;);  // Wn, all the rest

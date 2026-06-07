@@ -142,7 +142,7 @@ jobs:
  jelinux32:
   name: JE (Linux32)
   needs: all
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -157,7 +157,7 @@ jobs:
 
    - name: Build JE (Linux32)
      env:
-      CC: clang-15
+      CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0
@@ -199,7 +199,7 @@ jobs:
  jelinux32-gcc:
   name: JE (Linux32 gcc)
   needs: all
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6

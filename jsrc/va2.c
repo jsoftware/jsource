@@ -40,7 +40,7 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
 
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
-INLINE static A jtssingleton(J jtfg,A a,A w,I af,I at,I wt,A self){F12JT;
+NOINLINE static A jtssingleton(J jtfg,A a,A w,I af,I at,I wt,A self){F12JT;
  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
  I opcode=(I)FAV(self)->lu2.lc;  // fetch operation#
  A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
@@ -909,14 +909,16 @@ static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)  agreefr is the framelen for the initial agreement test
-static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks,I agreefr){F12IP;  // allranks is argranks/ranks
+static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,I afwfagreefr){F12IP;  // allranks is argranks/ranks   clang19: MUST BE NOINLINE to avoid register spills
  A z;I m,mf,n,nf,zn;I cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
+ I vandx=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
+ I ar=AR(a), wr=AR(w);   // noun ranks
  {I at=AT(a);
   I wt=AT(w);
   if(likely(!((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL))))&&likely(!((I)jtfg&JTRETRY))){  // no error, bool/int/fl nonsparse args
    // Here for the fast and important case, where the arguments are both dense B01/INT/FL
-   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
+   VA *vainfo=(VA*)((I)va+vandx);  // extract table line from the primitive
    VA2 *aadocv=&vainfo->p2[(at*3+(wt&INT+FL))>>INTX];   // test here to avoid the call overhead
    cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
    self=0;  // indicate not sparse
@@ -945,11 +947,10 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
   }
  }
 
-
  // vbls in use: a w allranks cv jt
  // cv is going to take ~10 cycles to settle.  We want to do as much as we can before needing to look at it.  We can do the agreement test first, and then any input conversions
 
- ASSERTAGREE(AS(a),AS(w),agreefr);  // outermost (or only) agreement check.  If we retry the operation we will do it agan, which is a waste.  But is it worth testing for?  We might be killing enough time that we never block on cv
+ ASSERTAGREE(AS(a),AS(w),afwfagreefr>>(2*RANKTX));  // outermost (or only) agreement check.  If we retry the operation we will do it agan, which is a waste.  But is it worth testing for?  We might be killing enough time that we never block on cv
 
  // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
  // Failed conversion are real errors, but they have priority below agreement errors.  If the conversion error is EVDOMAIN, we defer it by
@@ -967,8 +968,10 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
  // Analyze the rank and calculate cell shapes, counts, and sizes.
  // We detect agreement error before domain error
  {aawwzknfxrz[9]=0;  // init to stop outer loop after first iteration
-  if(likely((allranks&RANK2TMSK)==0)){ // rank 0 0 means no outer frames, sets up faster
-   fr=allranks>>(3*RANKTX); UI shortr=PEXT0(allranks,2*RANKTX,RANKTMSK);  // fr,shortr = ar,wr to begin with.  Changes later
+// obsolete   if(likely((allranks&RANK2TMSK)==0)){ // rank 0 0 means no outer frames, sets up faster
+// obsolete    fr=allranks>>(3*RANKTX); UI shortr=PEXT0(allranks,2*RANKTX,RANKTMSK);  // fr,shortr = ar,wr to begin with.  Changes later
+  if(likely((RANK2T)afwfagreefr==0)){ // rank 0 0 means no outer frames, sets up faster
+   fr=ar; UI shortr=wr;  // fr,shortr = ar,wr to begin with.  Changes later
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
    if(likely(self==0)){  // nonsparse
@@ -995,7 +998,7 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
     // repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
     R vasp(a,w,FAV(self)->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,fr,0,shortr,0,shortr>fr?shortr:fr);
    }
-  }else{I ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
+  }else{I ak,wk;UI wcr;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
 // obsolete    {I af,wf;
     // Heavy register pressure here.
@@ -1009,8 +1012,9 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
 // obsolete     acr>>=RANKTX; acr|=af;  // acr = afr/acr    final value
 // obsolete     // allranks is noun 0/0/anr/wnr  wcr is wfr/wcr   acr is afr/acr
     // fr=nr-cr, clamped at 0; then cr=nr-fr
-    I acfr=((allranks>>2*RANKTX)|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-allranks; acfr&=((acfr>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
-    wcr=(allranks>>=2*RANKTX)-acfr; wcr=wcr+(acfr<<2*RANKTX); // allranks=0/0/anr/wnr  0/0/acr/wcr => af/wf/acr/wcr  
+// obsolete     I afwf=((allranks>>2*RANKTX)|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-allranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
+// obsolete     I allranks=(ar<<RANKTX)+wr; wcr=allranks-afwf; wcr=wcr+(afwf<<2*RANKTX); // allranks=0/0/anr/wnr  0/0/acr/wcr => af/wf/acr/wcr  
+    I afwf=(US)afwfagreefr; wcr=(afwf<<(2*RANKTX))-afwf; I allranks=(ar<<RANKTX)+wr; wcr+=allranks; // allranks=0/0/anr/wnr  wcr=af/wf/-af/-wf => af/wf/acr/wcr  
     {I wcomp=wcr<<RANKTX; I lflg=0+((US)wcr<(US)wcomp); lflg=lflg+lflg+((UI4)wcr<(UI4)wcomp); cv+=lflg<<VIPWFLONGX;}  //  WCRLONG if acr<wcr, then WFLONG if af<wf.  Actually, the = value is indeterminate.  scaf other polarity might be better
 // obsolete     // WFLONG to bit 2; shift allranks; rearrange all of wcr/fr; consider flushing wcr/fr to union; fix sparse code
 // obsolete    }
@@ -1020,7 +1024,7 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
 // obsolete 
 // obsolete     wcr+=acr<<2*RANKTX;  // afr/acr/wfr/wcr
 
-    // wcr is afr/wfr/acr/wcr  acfr is 0/0/afr/wfr  allranks is 0/0/anr/wnr
+    // wcr is afr/wfr/acr/wcr  afwf is 0/0/afr/wfr  allranks is 0/0/anr/wnr
 #define LANE(v,l) SHMSK(v,v##l*RANKTX,v##l##MSK)
 #define wcrWC 0
 #define wcrWCMSK RANKTMSK
@@ -1030,15 +1034,15 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
 #define wcrWFMSK RANKTMSK
 #define wcrAF 3
 #define wcrAFMSK ~0
-#define acfrWF 0
-#define acfrWFMSK RANKTMSK
-#define acfrAF 1
-#define acfrAFMSK ~0
+#define afwfWF 0
+#define afwfWFMSK RANKTMSK
+#define afwfAF 1
+#define afwfAFMSK ~0
 
 
-    // vbls needed: a w cv wcr acfr allranks [jt]
+    // vbls needed: a w cv wcr afwf allranks [jt]
 // obsolete     PRODRNK(ak,acr, AS(a)+(wcr>>(3*RANKTX))); PRODRNK(wk,wcr,AS(w)+PEXT0(wcr,RANKTX,RANKTMSK));   // left/right #atoms/cell  length is assigned first
-    PRODRNK(ak,LANE(wcr,AC), AS(a)+LANE(acfr,AF)); PRODRNK(wk,LANE(wcr,WC),AS(w)+LANE(acfr,WF));   // left/right #atoms/cell  length is assigned first
+    PRODRNK(ak,LANE(wcr,AC), AS(a)+LANE(afwf,AF)); PRODRNK(wk,LANE(wcr,WC),AS(w)+LANE(afwf,WF));   // left/right #atoms/cell  length is assigned first
        // note: the prod can never fail, because it gives the actual # cells of an existing noun
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
@@ -1048,9 +1052,9 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
     zn=cv&VIPWCRLONG?wk:ak;    // zn=#atoms in cell with larger rank
     m=cv&VIPWCRLONG?ak:wk;  // m=#atoms in common inner cell, i. e. the smaller
     ak<<=bplg(AT(a)); wk<<=bplg(AT(w)); aawwzknfxrz[4]=zn<<rtypebplg(cv);   // convert cell counts to bytes
-    // vbls needed: m a w zn cv wcr acfr allranks ak wk [jt]
+    // vbls needed: m a w zn cv wcr afwf allranks ak wk [jt]
     aawwzknfxrz[0]=ak; aawwzknfxrz[2]=wk; ak=(cv&VIPWFLONG)?0:ak; wk=(cv&VIPWFLONG)?wk:0; aawwzknfxrz[1]=ak; aawwzknfxrz[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
-    // vbls needed: m a w zn cv wcr acfr allranks [jt]
+    // vbls needed: m a w zn cv wcr afwf allranks [jt]
 // obsolete     UI4 wcrr=wcr; wcrr=cv&VIPWCRLONG?__builtin_rotateleft32(wcrr,RANK2TX):wcrr;       // frame(long cell)/cellrank(long cell)/frame(short cell)/cellrank(short cell)
 // obsolete     fr=wcrr>>RANK2TX; I shortr=wcrr&RANKTMSK;  //  shortr=0/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
    I wcrs=wcr>>RANKTX; UI4 shortr=cv&VIPWCRLONG?wcrs:wcr; fr=cv&VIPWCRLONG?wcr:wcrs;  // shortr=x/frame(short cell)/x/cellrank(short cell) fr=x/frame(long cell)/x/cellrank(long cell)
@@ -1080,22 +1084,22 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
 // obsolete     //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
     // fr will be  (longer frame len)                      / (frame(long cell))              /  (shorter frame len)  /   (longer frame len+longer cellrank)
     //            length of frame to copy, also to calc nf / (offset to store cellshape to)  / for #outer cells mf   / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
-    {I acfrr=__builtin_rotateleft16(acfr,~cv&VIPWFLONG); fr+=acfrr*(BIT(0)+BIT(frFL*RANKTX));}   // sfr/lfr => lfr/0/sfr/lfr  final value of fr    scaf lose ~
-    // vbls needed: m a w zn cv fr acfr shortr f allranks [jt]
+    {I afwfr=__builtin_rotateleft16(afwf,~cv&VIPWFLONG); fr+=afwfr*(BIT(0)+BIT(frFL*RANKTX));}   // sfr/lfr => lfr/0/sfr/lfr  final value of fr    scaf lose ~
+    // vbls needed: m a w zn cv fr afwf shortr f allranks [jt]
 // obsolete     UI f=wcr&(UI)RANKTMSK*(BIT(RANKTX)+BIT(3*RANKTX)); f|=f>>RANKTX; f>>=RANKTX;  // afr/0/wfr/0   afr/afr/wfr/wfr    0/afr/afr/wfr
 // obsolete     // vbls needed: m a w zn cv fr wcr shortr f ff allranks [jt]
 // obsolete     US ff=f, ffr=__builtin_rotateleft16(ff,RANKTX); f=cv&VIPWFLONG?ffr:ff;    // 0/0/lfr/sfr
 // obsolete     f=(f<<(2*RANKTX))+(f>>RANKTX);   // lfr/sfr/0/lfr
 // obsolete // WIP this goes away
 // obsolete #if SY_64
-// obsolete     // vbls needed: m a w zn cv fr acfr shortr f allranks [jt]
+// obsolete     // vbls needed: m a w zn cv fr afwf shortr f allranks [jt]
 // obsolete     f+=wcr<<4*RANKTX;  // afr/acr/wfr/wcr/long frame/short frame/0/long frame   wcr free
 // obsolete #define acrwcr (fr>>4*RANKTX)  // put frames into fr to save a register
 // obsolete #else
 // obsolete #define acrwcr wcr
 // obsolete #endif
-// obsolete // WIP just keep acfr, maybe flush fr to structure.  fix masks for acrwcr, fr, shortr below to match changes
-    // vbls needed: m a w zn cv fr shortr acfr allranks [jt]
+// obsolete // WIP just keep afwf, maybe flush fr to structure.  fix masks for acrwcr, fr, shortr below to match changes
+    // vbls needed: m a w zn cv fr shortr afwf allranks [jt]
 // obsolete     fr+=f;    //   fr=afr/acr/wfr/wcr/longframe/shortframe/frame(long cell)/longframe+cellrank(long cell)
 // obsolete     allranks|=BIT(RANKTX-1)+BIT(RANK2TX-1); f=fr&RANKTMSK; f*=BIT(RANKTX)+1; allranks-=f;   // set sign bit as carry-stopper, leave sign bit of each rank if = long frame + long cell (can't be any bigger) f free
     cv&=2*((UI1)(allranks>>RANKTX)==(UI1)LANE(fr,ZRANK))+((UI1)allranks==(UI1)LANE(fr,ZRANK))+~(JTINPLACEW+JTINPLACEA);  // if arg rank=z rank, mark keep inplaceability
@@ -1106,9 +1110,9 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
 // obsolete     allranks&=BIT(RANKTX-1)+BIT(RANK2TX-1); allranks*=BIT((RANK2TX-2)-(RANKTX-1))+BIT(0); allranks>>=RANK2TX-2;  // bits 7,15 * 7,0 moves 7,15 to 14,15, trashing 7 and 22; then move to 0,1
 // obsolete #endif
 // obsolete     allranks|=~(JTINPLACEW+JTINPLACEA); cv&=allranks;   // remove repeat-uninplaceable args from cv  allranks free
-    // vbls needed: m a w zn cv acfr fr shortr [jt]
+    // vbls needed: m a w zn cv afwf fr shortr [jt]
 // obsolete     ASSERTAGREE(AS(a)+(acrwcr>>(3*RANKTX)), AS(w)+(((RANK2T)acrwcr>>RANKTX)), (shortr>>2*RANKTX))  // offset to each cellshape, and cellrank(short cell) acr wcr free
-   ASSERTAGREE(AS(a)+LANE(acfr,AF), AS(w)+LANE(acfr,WF), LANE(shortr,CSC))  // offset to each cellshape, and cellrank(short cell) acfr free
+   ASSERTAGREE(AS(a)+LANE(afwf,AF), AS(w)+LANE(afwf,WF), LANE(shortr,CSC))  // offset to each cellshape, and cellrank(short cell) afwf free
 // obsolete     PRODRNK(n,shortr,AS(cv&VIPWCRLONG?w:a)+((RANK2T)shortr>>RANKTX));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
    PRODRNK(n,LANE(shortr,CSURP),AS(cv&VIPWCRLONG?w:a)+LANE(shortr,CSURPOFST));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
     // vbls needed: m a w zn cv fr n  [jt]
@@ -1156,7 +1160,7 @@ static /*scaf!*/NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RES
     // m and n need a few cycles to settle
    }else{  // sparse case
 // obsolete     I af=acr>>(RANKTX), wf=wcr>>(RANKTX); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
-    I af=LANE(wcr,AF), wf=LANE(wcr,WF); acr=LANE(wcr,AC); wcr=LANE(wcr,WC);   // separate cr and f for sparse
+    I af=LANE(wcr,AF), wf=LANE(wcr,WF); UI acr=LANE(wcr,AC); wcr=LANE(wcr,WC);   // separate cr and f for sparse
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af;
     R vasp(a,w,FAV(self)->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),af,acr,wf,wcr,f,fr);  // handle sparse arrays separately.
     // For sparse, repurpose aawwzknfxrz/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
@@ -1759,54 +1763,58 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 // This entry point supports inplacing
 DF2(jtatomic2){F12IP;A z;
  ARGCHK2(a,w);
- UI ar=AR(a), wr=AR(w); I at=AT(a), wt=AT(w); I af;
- if((ar+wr+((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))))==0){af=0; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton
+ UI ar=AR(a), wr=AR(w); I at=AT(a), wt=AT(w); I agreefr; I afwf; I isnotbid=((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL)));
+ if((ar+wr+isnotbid)==0){agreefr=0; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later
+retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We don't need the ranks - afwf=0 would suffice - but this is easy and rare
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
- RANK2T selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
+ UI selfranks=__atomic_load_n(&FAV(self)->lrr,__ATOMIC_RELAXED);  // get left & right rank from rank/primitive
  self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
- RANK2T jtranks=jt->ranks;  // fetch IRS ranks if any
- UI awr; I awm1=(AN(a)-1)|(AN(w)-1);  // awr is composite arg ranks; awm1 is 0 for singleton, - for empty
- selfranks=jtranks==R2MAX?selfranks:jtranks;
- // find frame
- af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
- I wf=(I)(wr-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
+ UI jtranks=jt->ranks;  // fetch IRS ranks if any
+ selfranks=jtranks==R2MAX?selfranks:jtranks;   // ignore IRS if not given, to get the rank to be used for the execution
+retryss:;  // here when a non-atomic singleton fails.  self has been advanced to the primitive, so we have to use the old selfranks and the updated self
+ I awm1=(AN(a)-1)|(AN(w)-1);  // awr is composite arg ranks; awm1 is 0 for singleton, - for empty
+ // find frames
+ UI awr=(ar<<RANKTX)+wr;  // composite ranks, needed by va2   0/0/anr/wnr
+ afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare
- if(awm1|((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL)))){
+ if(likely(awm1|isnotbid)){
   // not singleton BID: carry on with normal setup
-  awr=(ar<<RANKTX)+wr;  // composite ranks, needed by va2
-  // if there is no frame wrt rank, shift down to working on frame wrt 0.  Set selfranks=0 to signal that case.  It uses simpler setup
-  selfranks=af+wf==0?0:selfranks; af=af+wf==0?ar:af; wf=selfranks==0?wr:wf;  // the conditions had to be like this to prevent a jmp
-  af=af<wf?af:wf;  // set af to short frame for agreement test
+  afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
+  agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
+// obsolete   selfranks=af+wf==0?0:selfranks; af=af+wf==0?ar:af; wf=selfranks==0?wr:wf;  // the conditions had to be like this to prevent a jmp
+// obsolete   af=af<wf?af:wf;  // set af to short frame for agreement test
  }else{
-  // singleton.  we need the rank of the result
-  ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf; af+=ar;   // set af to max len of frame, ar to max cell rank; then af=max framelen + max rank = resultrank
+  // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank)
+// obsolete  af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
+// obsolete  I wf=(I)(wr-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
+// obsolete   ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf; af+=ar;   // set af to max len of frame, ar to max cell rank; then af=max framelen + max rank = resultrank
+ {I awcr=awr-afwf; agreefr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result
-  z=jtssingleton(jtfg,a,w,af,at,wt,self);
+  // any singleton.  agreefr is the rank of the result, with shape all 1s
+  z=jtssingleton(jtfg,a,w,agreefr,at,wt,self);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
-  awr=(AR(a)<<RANKTX)+AR(w);   // recover ranks
   jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation.  We must, because jt->jerr is set with the retry code
-  awm1=af=0;  // when we fall through, neuter the agreement test below, and indicate 'not empty result'
-  // we do not do the selfranks adjustment on this leg, because it's very rare & we don't want to have
-  // to keep the registers over the subroutine call
-
-  // Recalc values created in the main line.  This is very rare so use minimal registers.  self has been destroyed if ranks were not 0; self & selfranks survive the call then
-  if(awr==0){
-   // atomic args. self is at its initial value; realself and selfranks have not been created
-   realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
-   selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
-   jtranks=jt->ranks;  // fetch IRS ranks if any
-   self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
-   selfranks=jtranks==R2MAX?selfranks:jtranks;
-  }
-  // self, af, awr, and selfranks are needed in the retry
+  ar=AR(a); wr=AR(w); at=AT(a); wt=AT(w); isnotbid=1;  // restore aw vars so they won't be saved over the call; but set not BID to force the retry through va2.
+  if(likely(ar+wr==0))goto retryss0; goto retryss;  // retry.  atomic singletons must advance self (selfranks immaterial); others must not, using the incumbent self & selfranks
+// obsolete   // Recalc values created in the main line.  This is very rare so use minimal registers.  self has been destroyed if ranks were not 0; self & selfranks survive the call then
+// obsolete   if(awr==0){
+// obsolete    // atomic args. self is at its initial value; realself and selfranks have not been created
+// obsolete    realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
+// obsolete    selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
+// obsolete    jtranks=jt->ranks;  // fetch IRS ranks if any
+// obsolete    self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
+// obsolete    selfranks=jtranks==R2MAX?selfranks:jtranks;
+// obsolete   }
+// obsolete   // self, ar, wr, afwf, agreefr   are needed in the retry
  }
  // not singleton, or singleton needing retry
- 
+ afwf+=agreefr<<(2*RANKTX);  // put agreeaf into parm, freeing its register over the call
  NOUNROLL while(1){
-  // Run the full dyad, retrying if a retryable error is returned
-  z=jtva2(jtfg,a,w,self,(awr<<RANK2TX)+selfranks,af);  // execute the verb
+  // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
+// obsolete    z=jtva2(jtfg,a,w,self,(awr<<RANK2TX)+selfranks,af);  // execute the verb
+  z=jtva2(jtfg,a,w,self,afwf);  // execute the verb
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
   jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation

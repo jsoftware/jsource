@@ -337,7 +337,7 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
 #define VA1CASE(e,f) (10*(e)+(f))
 
 static DF1(jtva1){F12IP;A z;I cv,n,wt,zt;VA1F ado;
- UA *u=((UA*)((I)va1tab+FAV(self)->localuse.lu1.uavandx[0]));
+ UA *u=(UA*)((I)va1tab+__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[0],__ATOMIC_RELAXED));
  ARGCHK1(w);
  wt=AT(w); n=AN(w);
  if(unlikely(!(wt&NUMERIC))){ASSERT(AN(w)==0,EVDOMAIN) wt=B01;}  // arg must be numeric.  If it is, keep its type even if empty; if not, fail unless empty, for which treat as boolean

@@ -8,3 +8,4 @@ echo "fr_FR.UTF-8 UTF-8" | sudo tee -a /etc/locale.gen
 sudo locale-gen
 clang --version
 gcc --version
+sudo apt-cache pkgnames clang || true

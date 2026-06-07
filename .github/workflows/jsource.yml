@@ -214,7 +214,7 @@ jobs:
 
    - name: Build JE (Linux32 gcc)
      env:
-      CC: gcc-14
+      CC: gcc
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0
@@ -355,7 +355,7 @@ jobs:
 
    - name: Build JE (Linux arm64)
      env:
-      CC: clang
+      CC: clang-20
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 1

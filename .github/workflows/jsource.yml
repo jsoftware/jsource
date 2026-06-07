@@ -157,7 +157,7 @@ jobs:
 
    - name: Build JE (Linux32)
      env:
-      CC: clang
+      CC: clang-15
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0

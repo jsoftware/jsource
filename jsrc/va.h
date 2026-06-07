@@ -11,8 +11,8 @@
 #define VIPOKAX         JTINPLACEAX      // This routine can put its result over A
 #define VIPOKA          BIT(VIPOKAX)
 #define VCVTIP          0    // bits 2-3 was ((I)0x3<<VIPRNKX)   // this should always be set in any cv
-#define VIPWFLONGX      3  //  internal use in va2.  Means 'w has longer frame, so x is repeated in outer loops'  Must be bit 3, because used as shift count
-#define VIPWFLONG       BIT(VIPWFLONGX)
+#define VIPWFNOTLONGX   3  //  internal use in va2.  Means 'a has longer or equal frame, so y is repeated in outer loops'  Must be bit 3, because used as shift count
+#define VIPWFNOTLONG    BIT(VIPWFNOTLONGX)
 #define VIPWCRLONGX     4  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  Must be 1 higher than VIPWFLONGX
 #define VIPWCRLONG      BIT(VIPWCRLONGX)
 // bit 4-8 free

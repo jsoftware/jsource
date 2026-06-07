@@ -1015,7 +1015,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
 // obsolete     I afwf=((allranks>>2*RANKTX)|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-allranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
 // obsolete     I allranks=(ar<<RANKTX)+wr; wcr=allranks-afwf; wcr=wcr+(afwf<<2*RANKTX); // allranks=0/0/anr/wnr  0/0/acr/wcr => af/wf/acr/wcr  
     I afwf=(US)afwfagreefr; wcr=(afwf<<(2*RANKTX))-afwf; I allranks=(ar<<RANKTX)+wr; wcr+=allranks; // allranks=0/0/anr/wnr  wcr=af/wf/-af/-wf => af/wf/acr/wcr  
-    {I wcomp=wcr<<RANKTX; I lflg=0+((US)wcr<(US)wcomp); lflg=lflg+lflg+((UI4)wcr<(UI4)wcomp); cv+=lflg<<VIPWFLONGX;}  //  WCRLONG if acr<wcr, then WFLONG if af<wf.  Actually, the = value is indeterminate.  scaf other polarity might be better
+    { I wcomp=wcr<<RANKTX; I lflg=0+((US)wcr<(US)wcomp); lflg=lflg+lflg+((UI4)wcomp<(UI4)wcr); cv+=lflg<<VIPWFNOTLONGX; }  //  WCRLONG if acr<wcr, then WFLONG if wf<af.  Actually, the = value is indeterminate.
 // obsolete     // WFLONG to bit 2; shift allranks; rearrange all of wcr/fr; consider flushing wcr/fr to union; fix sparse code
 // obsolete    }
    if(likely(self==0)){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.
@@ -1048,12 +1048,12 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
     // 0-1 are set if operand is inplaceable according to prim & input inplaceability
-    // cv VIPWFLONG set if wf>af, bit VIPWCRLONG set if wcr>acr
+    // cv VIPWFNOTLONG set if wf<af, bit VIPWCRLONG set if wcr>acr
     zn=cv&VIPWCRLONG?wk:ak;    // zn=#atoms in cell with larger rank
     m=cv&VIPWCRLONG?ak:wk;  // m=#atoms in common inner cell, i. e. the smaller
     ak<<=bplg(AT(a)); wk<<=bplg(AT(w)); aawwzknfxrz[4]=zn<<rtypebplg(cv);   // convert cell counts to bytes
     // vbls needed: m a w zn cv wcr afwf allranks ak wk [jt]
-    aawwzknfxrz[0]=ak; aawwzknfxrz[2]=wk; ak=(cv&VIPWFLONG)?0:ak; wk=(cv&VIPWFLONG)?wk:0; aawwzknfxrz[1]=ak; aawwzknfxrz[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
+    aawwzknfxrz[0]=ak; aawwzknfxrz[2]=wk; ak=(cv&VIPWFNOTLONG)?ak:0; wk=(cv&VIPWFNOTLONG)?0:wk; aawwzknfxrz[1]=ak; aawwzknfxrz[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
     // vbls needed: m a w zn cv wcr afwf allranks [jt]
 // obsolete     UI4 wcrr=wcr; wcrr=cv&VIPWCRLONG?__builtin_rotateleft32(wcrr,RANK2TX):wcrr;       // frame(long cell)/cellrank(long cell)/frame(short cell)/cellrank(short cell)
 // obsolete     fr=wcrr>>RANK2TX; I shortr=wcrr&RANKTMSK;  //  shortr=0/cellrank(short cell)  fr=frame(long cell)/cellrank(long cell)
@@ -1084,7 +1084,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
 // obsolete     //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
     // fr will be  (longer frame len)                      / (frame(long cell))              /  (shorter frame len)  /   (longer frame len+longer cellrank)
     //            length of frame to copy, also to calc nf / (offset to store cellshape to)  / for #outer cells mf   / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
-    {I afwfr=__builtin_rotateleft16(afwf,~cv&VIPWFLONG); fr+=afwfr*(BIT(0)+BIT(frFL*RANKTX));}   // sfr/lfr => lfr/0/sfr/lfr  final value of fr    scaf lose ~
+    {I afwfr=__builtin_rotateleft16(afwf,cv&VIPWFNOTLONG); fr+=afwfr*(BIT(0)+BIT(frFL*RANKTX));}   // afr/wfr => sfr/lfr => lfr/0/sfr/lfr  final value of fr    scaf lose ~
     // vbls needed: m a w zn cv fr afwf shortr f allranks [jt]
 // obsolete     UI f=wcr&(UI)RANKTMSK*(BIT(RANKTX)+BIT(3*RANKTX)); f|=f>>RANKTX; f>>=RANKTX;  // afr/0/wfr/0   afr/afr/wfr/wfr    0/afr/afr/wfr
 // obsolete     // vbls needed: m a w zn cv fr wcr shortr f ff allranks [jt]
@@ -1126,7 +1126,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     {I f=LANE(fr,FS);  // recover (shorter frame len) from fr
 // obsolete     PRODRNK(nf,((fr>>(3*RANKTX))-f),f+AS(cv&VIPWFLONG?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
 // obsolete          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
-     PRODRNK(nf,LANE(fr,FL)-f,f+AS(cv&VIPWFLONG?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame  length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
+     PRODRNK(nf,LANE(fr,FL)-f,f+AS(cv&VIPWFNOTLONG?a:w));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame  length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
      PRODRNK(mf,f,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len) we are waiting for nf->cv to settle
     }
     
@@ -1146,7 +1146,8 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
      m*=mf; n*=nf;   // propagate mf and nf down
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  Should generate ADC
-     n=n+((UI)REPSGN(nf-2)<(UI)(cv&VIPWFLONG));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
+// obsolete      n=n+((UI)REPSGN(nf-2)<(UI)(cv&VIPWFLONG));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
+     n=n+((UI1)(cv&VIPWFNOTLONG)<(UI1)((UI)1<(UI)nf));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
     }else{    // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration.  Setting it nonzero engages multiple loops
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*aawwzknfxrz[4];
@@ -1209,7 +1210,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
 // obsolete     fr+=f;    //   fr=afr/acr/wfr/wcr/longframe/shortframe/frame(long cell)/longframe+cellrank(long cell)
 // obsolete    // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
 // obsolete   MCISH(AS(z),AS((cv&VIPWFLONG)?w:a),(RANK4T)fr>>3*RANKTX); MCISH(AS(z)+((RANK4T)fr>>3*RANKTX),scell,(fr&RANKTMSK)-((RANK4T)fr>>3*RANKTX));  // copy shape
-  MCISH(AS(z),AS((cv&VIPWFLONG)?w:a),LANE(fr,FL));     MCISH(AS(z)+LANE(fr,FL),  AS(cv&VIPWCRLONG?w:a)+LANE(fr,FLC),   LANE(fr,ZRANK)-LANE(fr,FL));  // copy shape    fr free
+  MCISH(AS(z),AS((cv&VIPWFNOTLONG)?a:w),LANE(fr,FL));     MCISH(AS(z)+LANE(fr,FL),  AS(cv&VIPWCRLONG?w:a)+LANE(fr,FLC),   LANE(fr,ZRANK)-LANE(fr,FL));  // copy shape    fr free
       //       start of long frame   len(long frame)         start of cellshape,  shape of long cell+its frame         rank of long cell (zrank-len of long frame)
  } 
  // Signal domain error if appropriate. Must do this after agreement tests
@@ -1237,7 +1238,8 @@ allocate:;  // come here if no inplaceable block could have the type changed
    // Each release, monitor that clang brings adocvfn into register early to advance the expected misprediction.
    I jj=aawwzknfxrz[6];  // number of outer-outer loops, number-1 of each outer-inner loop
    lp000: ;
-   // vbls needed over loop: adocvfn m av wv zv [mend] jj jt
+   // vbls needed over loop: [adocvfn] m av wv zv [mend] jj jt
+   // scaf! have separate path for loop v non-loop.  In loop, unroll the next values of av/wv/zv/jj
    {I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,av,wv,zv,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below
     if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
      // section did not complete normally.

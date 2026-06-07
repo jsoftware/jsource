@@ -1213,8 +1213,8 @@ allocate:;  // come here if no inplaceable block could have the type changed
   MCISH(AS(z),AS((cv&VIPWFNOTLONG)?a:w),LANE(fr,FL));     MCISH(AS(z)+LANE(fr,FL),  AS(cv&VIPWCRLONG?w:a)+LANE(fr,FLC),   LANE(fr,ZRANK)-LANE(fr,FL));  // copy shape    fr free
       //       start of long frame   len(long frame)         start of cellshape,  shape of long cell+its frame         rank of long cell (zrank-len of long frame)
  } 
- // Signal domain error if appropriate. Must do this after agreement tests
- ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we get to keep adocvfn in the call register till end of loop.  We might have allocated a BOOL result block, which is OK
+ // Signal domain error if appropriate.  Must do this after agreement tests
+ ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we hope to keep adocvfn in the call register till end of loop.  We might have allocated a BOOL result block, which is OK
  if(unlikely(AN(z)==0)){RETF(z);}  // If the result is empty, the allocated area says it all
 // obsolete  VF adocvfn=aadocv->f;  // extract the function address.  This frees aadocv, and in clang16 brings adocvfn into register early to speed the expected misprediction
  // zn, zt  NOT USED FROM HERE ON
@@ -1227,8 +1227,16 @@ allocate:;  // come here if no inplaceable block could have the type changed
  // of the last loop, if it happens, will be detected right away).  It might be better to have n (aawwzknfxrz[9]) in a register as well.
  {C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.  Could move up but gain is small
   I mulofloloc;   // number of good results before we encountered integer overflow on multiply
-  {
-   I mend=aawwzknfxrz[9]+(I)zv;   // add addr to offset to get addr of last block of z
+  if(aawwzknfxrz[9]==0){
+   // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update
+   I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,av,wv,zv,jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
+   if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
+    // section did not complete normally.
+    if(unlikely(lrc<0)){mulofloloc=((zv-CAV(z))>>LGSZI)+~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
+    else{aawwzknfxrz[8]=lrc;}   // remember any other error, which may be retryable
+   }
+  }else{
+   C *mend=aawwzknfxrz[9]+zv;   // add addr to offset to get addr of last block of z
    // Call the action routines:
    // aawwzknfxrz[6] is original nf-1, the number of inner outer loops; but IMIN if there are no outer loops.  We do this so that executions with no rank will ratify the branch immediately, reducing misbranch
    // overhead if there is any.  If there are outer loops, jj counts the inners and aawwzknfxrz[9] has the starting offset of the last inner loop of all.  aawwzknfxrz[0,1] are the cell-size of a for the outer loop, aawwzknfxrz[2,3] are for w;
@@ -1236,22 +1244,25 @@ allocate:;  // come here if no inplaceable block could have the type changed
    // m is the length of the inner loop, with flags: complement=single loop of length ~m, otherwise each loop has length m>>1, and LSB of m is set if the a arg atom is repeated
    // aawwzknfxrz[5] is the number of outer inner loops, used only if m>0.  n*m cannot=0. 
    // Each release, monitor that clang brings adocvfn into register early to advance the expected misprediction.
-   I jj=aawwzknfxrz[6];  // number of outer-outer loops, number-1 of each outer-inner loop
-   lp000: ;
+   I jj=aawwzknfxrz[6], n=aawwzknfxrz[5];  // number of outer-outer loops, number of outer-inner loops
+// obsolete    lp000: ;
    // vbls needed over loop: [adocvfn] m av wv zv [mend] jj jt
-   // scaf! have separate path for loop v non-loop.  In loop, unroll the next values of av/wv/zv/jj
-   {I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,av,wv,zv,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below
+   do{
+    // loop unroll: start calculating the values for the next iteration.  This can run while args are being fetched.   scaf! do 1 less iter, then fall through to no-loop case, save 1 setup.  Must handle error code
+    C *avu=av, *wvu=wv, *zvu=zv;  // the values for this iteration
+    aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj]; // jj is -1 on the last inner iter, where we use outer incr
+    I lrc=((AHDR2FN*)adocvfn)AH2A(n,m,avu,wvu,zvu,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below.  After the first time it doesn't matter whether adocvfn is in a reg, since the branch is predicted
     if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
      // section did not complete normally.
-     if(unlikely(lrc<0)){mulofloloc=((zv-CAV(z))>>LGSZI)+~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII; goto lp000e;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
+     if(unlikely(lrc<0)){mulofloloc=((zv-aawwzknfxrz[4]-CAV(z))>>LGSZI)+~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII; break;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
      if(lrc<aawwzknfxrz[8])aawwzknfxrz[8]=lrc;   // set rc to worst error found so far
-     if(lrc<EWOVIP)goto lp000e;  // error not recoverable in-place.  fail or retry, but no reason to continue loop
+     if(lrc<EWOVIP)break;  // error not recoverable in-place.  fail or retry, but no reason to continue loop
      // here error is correctable in place.  Continue loop
     }
-    if((I)zv==mend)goto lp000e; aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj];  goto lp000; // jj is -1 on the last inner iter, where we use outer incr
-   }
-   lp000e: ;
+// obsolete    lp000e: ;
+   }while(zv<=mend);
   }
+
   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
   if(likely(aawwzknfxrz[8]==VRNONE)){RETF(z) // normal return is here, either success or failure.  If NOCONV or error happened we lost VRI+VRD+VRNONE.
   }else if(aawwzknfxrz[8]&VRI+VRD){RETF(cvz(aawwzknfxrz[8],z))   // if result conversion still required, do it

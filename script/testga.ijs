@@ -101,6 +101,10 @@ eformat_j_=: exformat_j_ f.
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
+echo 65 97 +/ 1 2
+echo 65 97 +/ i.2
+echo 65 97 +/ 0 1
+
 NB. end of smoke test
 
 0!:_1 '$'   NB. temp skip to allow running full test suite

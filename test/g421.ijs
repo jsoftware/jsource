@@ -152,26 +152,7 @@ conv=: +//.@(*/)                 NB. convolution
 conv1=: 4 : 0
  n=. #x
  A=. (pru 2*n)^*/~i.2*n          NB. (%.A) = (2*n)%~r^-*/~i.2*n  
-echo 'A'
-echo A
-echo '((2*n)&{.) y'
-echo ((2*n)&{.) y
-echo '((2*n)&{.) x'
-echo ((2*n)&{.) x
-echo '(A&(+/ .*))&((2*n)&{.) y'
-echo (A&(+/ .*))&((2*n)&{.) y
-echo '(A&(+/ .*))&((2*n)&{.) x'
-echo (A&(+/ .*))&((2*n)&{.) x
-echo 'x *&(A&(+/ .*))&((2*n)&{.) y'
-echo x *&(A&(+/ .*))&((2*n)&{.) y
-echo 'x *&.(A&(+/ .*))&((2*n)&{.) y'
-t=. (9!:56)'cblas'
-0(9!:56)'cblas'
-echo x *&.(A&(+/ .*))&((2*n)&{.) y
-echo 'ok'
-t1=. }: x *&.(A&(+/ .*))&((2*n)&{.) y
-t (9!:56)'cblas'
-t1
+}: x *&.(A&(+/ .*))&((2*n)&{.) y
 )
 
 pconv=: (| +/~@i.)@#@[ +//.&, */ NB. positive wrapped convolution
@@ -181,6 +162,9 @@ pconv1=: 4 : 0
  A=. (*:pru 2*n)^*/~i.n          NB. (%.A) = n%~r^-*/~i.n
  x *&.(A&(+/ .*)) y
 )
+
+cblas=: (9!:56)'cblas'
+1: 0&(9!:56)^:IFWA64 'cblas'
 
 s=: 7 8
 t=: 9 1
@@ -203,6 +187,8 @@ smoutput s conv1 t
 smoutput s (conv ((>./) @: | @: -) conv1) t
 s ( conv eq  conv1) t
 s (pconv eq pconv1) t
+
+1: cblas(9!:56)'cblas'
 
 NB.  x f/. y ------------------------------------------------------------
 

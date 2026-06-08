@@ -166,25 +166,15 @@ pconv1=: 4 : 0
 cblas=: (9!:56)'cblas'
 1: 0&(9!:56)^:IFWA64 'cblas'
 
+eq=: 1e_8&> @: (>./) @: | @: -
+
 s=: 7 8
 t=: 9 1
-eq=: 1e_8&> @: (>./) @: | @: -
-smoutput s
-smoutput t
-smoutput s conv t
-smoutput s conv1 t
-smoutput s (conv ((>./) @: | @: -) conv1) t
 s ( conv eq  conv1) t
 s (pconv eq pconv1) t
 
 s=: ?10$100
 t=: ?10$100
-eq=: 1e_8&> @: (>./) @: | @: -
-smoutput s
-smoutput t
-smoutput s conv t
-smoutput s conv1 t
-smoutput s (conv ((>./) @: | @: -) conv1) t
 s ( conv eq  conv1) t
 s (pconv eq pconv1) t
 

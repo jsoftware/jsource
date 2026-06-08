@@ -1084,7 +1084,8 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
 // obsolete     //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
     // fr will be  (longer frame len)                      / (frame(long cell))              /  (shorter frame len)  /   (longer frame len+longer cellrank)
     //            length of frame to copy, also to calc nf / (offset to store cellshape to)  / for #outer cells mf   / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
-    {I afwfr=__builtin_rotateleft16(afwf,cv&VIPWFNOTLONG); fr+=afwfr*(BIT(0)+BIT(frFL*RANKTX));}   // afr/wfr => sfr/lfr => lfr/0/sfr/lfr  final value of fr    scaf lose ~
+   {I afwfr=__builtin_rotateleft16((US)afwf,cv&VIPWFNOTLONG); fr+=afwfr*(BIT(0)+BIT(frFL*RANKTX));}   // afr/wfr => sfr/lfr => lfr/0/sfr/lfr  final value of fr    scaf lose ~
+// obsolete     {I afwfr=((US)afwf<<(cv&VIPWFNOTLONG))|((US)afwf>>(16-((cv&VIPWFNOTLONG)&15))); fr+=afwfr*(BIT(0)+BIT(frFL*RANKTX));}   // afr/wfr => sfr/lfr => lfr/0/sfr/lfr  final value of fr    scaf lose ~
     // vbls needed: m a w zn cv fr afwf shortr f allranks [jt]
 // obsolete     UI f=wcr&(UI)RANKTMSK*(BIT(RANKTX)+BIT(3*RANKTX)); f|=f>>RANKTX; f>>=RANKTX;  // afr/0/wfr/0   afr/afr/wfr/wfr    0/afr/afr/wfr
 // obsolete     // vbls needed: m a w zn cv fr wcr shortr f ff allranks [jt]

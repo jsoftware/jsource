@@ -41,6 +41,13 @@ jobs:
   steps:
     - run: echo "Run deprecated jobs"
 
+ disabled:
+  #if: false
+  if: true
+  runs-on: ubuntu-latest
+  steps:
+    - run: echo "Run disabled jobs"
+
 # linux ----------------------------------------------------------------
  jelinux:
   name: JE (Linux)
@@ -1334,8 +1341,8 @@ jobs:
 # windows msys2 x86 ----------------------------------------------------
  jewin-msys2-x86:
   name: JE (Windows MSYS2 x86)
-  needs: all
-  runs-on: windows-2022
+  needs: [all, disabled]
+  runs-on: windows-2025
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -1524,7 +1531,7 @@ jobs:
    - jeopenbsd
    - jewin-msys2-x64-clang
    - jewin-msys2-x64
-   - jewin-msys2-x86
+#   - jewin-msys2-x86
    - jewin-msys2-arm64
   steps:
    - name: update server

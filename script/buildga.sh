@@ -121,22 +121,37 @@ elif [ "$1" = "windows" ]; then
  export NASM=$GITHUB_WORKSPACE/openssl-asm/nasm
  if [ "$2" = "x86_64" ]; then
   cp mpir/windows/x64/mpir.dll $B
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/bin/libomp.dll" $B
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/lib/libomp.lib" $B
+  if [ -f "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/x64/bin/libomp.dll" ]; then
+   cp "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/x64/bin/libomp.dll" $B
+   cp "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/x64/lib/libomp.lib" $B
+  else
+   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/bin/libomp.dll" $B
+   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/lib/libomp.lib" $B
+  fi
   cp pcre2/windows/x64/jpcre2.dll $A/tools/regex/.
   # cp pthreads4w/x64/pthreadVC3.dll $B
   curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
  elif [ "$2" = "i386" ]; then
   cp mpir/windows/x86/mpir.dll $C/mpir32.dll
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C
+  if [ -f "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/bin/libomp.dll" ]; then
+   cp "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
+   cp "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C
+  else
+   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
+   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C
+  fi
   cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
   # cp pthreads4w/x86/pthreadVC3.dll $C
   curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
  else
   cp mpir/windows/arm64/mpir.dll $B
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/lib/libomp.lib" $B
+  if [ -f "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" ]; then
+   cp "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B
+   cp "/c/Program Files/Microsoft Visual Studio/2025/Enterprise/VC/Tools/Llvm/ARM64/lib/libomp.lib" $B
+  else
+   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B
+   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/lib/libomp.lib" $B
+  fi
   cp pcre2/windows/arm64/jpcre2.dll $A/tools/regex/jpcre2_arm64.dll
   # cp pthreads4w/arm64/pthreadVC3.dll $B
   curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
@@ -176,26 +191,26 @@ if [ "$1" = "android" ]; then
  # static library not copied by ndk-build
  cp obj/local/armeabi-v7a/libj.a libs/armeabi-v7a/.
  cp obj/local/arm64-v8a/libj.a libs/arm64-v8a/.
-# cp obj/local/x86/libj.a libs/x86/.
-# cp obj/local/x86_64/libj.a libs/x86_64/.
+ # cp obj/local/x86/libj.a libs/x86/.
+ # cp obj/local/x86_64/libj.a libs/x86_64/.
  zip -r ../androidlibs.zip libs
  cd ..
  # build binary for armeabi
-#  cd ~/
-#  wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
-#  unzip android-ndk-r16b-darwin-x86_64.zip
-#  cd -
-#  cd android
-#  sed -i "" -e "s/^APP_MODULES := jconsonle /##   APP_MODULES := jconsonle /g" jni/Application.mk
-#  sed -i "" -e "s/^# APP_MODULES := jconsonle-nopie /APP_MODULES := jconsonle-nopie /g" jni/Application.mk
-#  sed -i "" -e "s/^APP_ABI/##   APP_ABI/g" jni/Application.mk
-#  sed -i "" -e "s/^# APP_ABI := armeabi/APP_ABI := armeabi/g" jni/Application.mk
-#  sed -i "" -e "s/^APP_PLATFORM/##   APP_PLATFORM/g" jni/Application.mk
-#  sed -i "" -e "s/^# APP_PLATFORM/APP_PLATFORM/g" jni/Application.mk
-#  NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
-#  cp obj/local/armeabi/libj.a libs/armeabi/.
-#  zip -r ../androidlibs.zip libs
-#  cd ..
+ #  cd ~/
+ #  wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
+ #  unzip android-ndk-r16b-darwin-x86_64.zip
+ #  cd -
+ #  cd android
+ #  sed -i "" -e "s/^APP_MODULES := jconsonle /##   APP_MODULES := jconsonle /g" jni/Application.mk
+ #  sed -i "" -e "s/^# APP_MODULES := jconsonle-nopie /APP_MODULES := jconsonle-nopie /g" jni/Application.mk
+ #  sed -i "" -e "s/^APP_ABI/##   APP_ABI/g" jni/Application.mk
+ #  sed -i "" -e "s/^# APP_ABI := armeabi/APP_ABI := armeabi/g" jni/Application.mk
+ #  sed -i "" -e "s/^APP_PLATFORM/##   APP_PLATFORM/g" jni/Application.mk
+ #  sed -i "" -e "s/^# APP_PLATFORM/APP_PLATFORM/g" jni/Application.mk
+ #  NDK_TOOLCHAIN_VERSION=4.9 ~/android-ndk-r16b/ndk-build
+ #  cp obj/local/armeabi/libj.a libs/armeabi/.
+ #  zip -r ../androidlibs.zip libs
+ #  cd ..
  exit 0
 fi
 

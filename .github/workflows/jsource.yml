@@ -42,8 +42,8 @@ jobs:
     - run: echo "Run deprecated jobs"
 
  disabled:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run disabled jobs"
@@ -1342,7 +1342,7 @@ jobs:
  jewin-msys2-x86:
   name: JE (Windows MSYS2 x86)
   needs: [all, disabled]
-  runs-on: windows-2025
+  runs-on: windows-2022
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6

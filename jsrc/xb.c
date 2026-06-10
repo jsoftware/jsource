@@ -311,11 +311,11 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){
   case CMPXX: RZ(mvw(zv,u,n+n,b,BU,1,1    )); break;
   default:
    if (!ISGMP(w)) {
-    // 1- and 2-byte C4T types, all of which have LAST0*.  We need to clear the last
+    // 1- and 2-byte and C4T types.  We need to clear the last
     // bytes, because the datalength is rounded up in bsize, and thus there are
     // up to 3 words at the end of y that will not be copied to.  We clear them to
     // 0 to provide repeatable results.
-    // Make sure there is a zero byte if the string is empty
+    // This also leaves a zero byte if the string is empty
     // * an exception is that LIT is also used for libgmp pseudo-arrays, without LAST0
     I suffsize = MIN(4*SZI,origzv+blksize-zv);  // len of area to clear to 0 
     mvc(suffsize,(origzv+blksize)-suffsize,MEMSET00LEN,MEMSET00);   // clear suffix
@@ -408,6 +408,7 @@ extern void jgmpguard(X);
 // w: pointer to those bytes
 // g: 0: result type A, 1: result type X (gmp)
 static A jtunbinr(J jt,B b,B d,B pre601,I m,A w,B g){C*u=(C*)w;
+ // allocate the area for the result
  ASSERT(m>BH(d),EVLENGTH);
  I t; RZ(mvw((C*)&t,BTX(d,pre601,w),1L,BU,b,SY_64,d)); // t: type
  I n; RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));         // n: quantity

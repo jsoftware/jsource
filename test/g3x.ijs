@@ -347,8 +347,8 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 
 2e10 > {:7!:1''
 
-'domain error' -: unbin etx '02' (<_2;0 1)}3!:3 x=: ?8$2
-'domain error' -: unbin etx '10' (<_2;6 7)}3!:3 x=: ?8$2
+'domain error' -: unbin etx '02' (<_1;0 1)}3!:3 x=: ?8$2
+'domain error' -: unbin etx '10' (<_1;6 7)}3!:3 x=: ?8$2
 
 'rank error'   -: unbin etx 'f'
 'rank error'   -: unbin etx 5 3$hexrep i.4

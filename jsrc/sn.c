@@ -71,7 +71,8 @@ A jtnfs(J jt,I n,C*s,I notlocal){A z;C f,*t;I m,p;NM*zv;
  }else{
   // The name may not be valid, but we will allocate a NAME block for it anyway
   GATV0(z,NAME,n,1); AC(z)=ACUC1; zv=NAV(z); if(likely(!notlocal))z->mback.lookaside=0;   // the block is cleared to 0 with no lookaside value.  This is the only place where a NAME is allocated (except for cloning).  NAME is always non-ip
-  MC(zv->s,s,n); zv->s[n]=0;  // should copy locally, with special dispensation for <4 chars
+  MC(zv->s,s,n);  // move in the name (no NUL)
+// obsolete  zv->s[n]=0;  // should copy locally, with special dispensation for <4 chars
   f=0; m=n; p=0;
   // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative
   if('_'==*t){

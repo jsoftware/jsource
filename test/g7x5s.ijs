@@ -3,7 +3,7 @@ NB. 7!:5 (no jmf) -------------------------------------------------------
 
 randuni''
 
-bp=: (IF64{1 1 4 8 16 4 4 2 4,:1 1 8 8 16 8 8 2 4) {~ 1 2 4 8 16 32 65536 131072 262144 i. 3!:0
+bp=: (IF64{1 1 4 8 16 4 2 4,:1 1 8 8 16 8 2 4) {~ 1 2 4 8 16 32 131072 262144 i. 3!:0
 sp=: 7!:5
 f =: 3 : '7!:5 <''a'' [ a =. memu y'   NB. resolve virtual y
 fmapped =: 3 : '7!:5 <''y'''
@@ -13,7 +13,7 @@ g =: 3 : 0
  z=. w*0                              NB. 0 words for memory management
  z=. z + w*7                          NB. 7 words for non-shape header words
  z=. z + w*r+(-.IF64)*0=2|r=. #$y     NB. shape, pad to doubleword boundary if 32 bits
- z=. z + ((bp y)**/$y) + (w-1)*(3!:0 y)e. 1 2 131072 262144  NB. atoms & trailing 0 word (uses whole word of padding-1)
+ z=. z + ((bp y)*<:*/$y) + (bp y)>.w  NB. atoms-1 & trailing pad
  >.&.(2&^.) z
 )
 gmapped =: 3 : 0  NB. contiguous header only

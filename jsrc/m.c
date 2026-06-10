@@ -1393,7 +1393,7 @@ printf("%p+\n",z);
  R z;
 }
 
-// bytes is total #bytes needed including headers, -1
+// bytes is total #bytes needed including headers, -1   scaf! remove from fast path
 RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 #if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
@@ -1448,17 +1448,18 @@ A zfillind(A w, I m){
 // We pack rank+type into one reg to save registers (it also helps the LIMIT test).  With this, the compiler should be able to save/restore
 // only 2 regs (ranktype and bytes) but the prodigal compiler saves 3.  We accept this to be able to save AK AR AT here, so that the caller doesn't have to preserve them over the call.
 // We don't store AN, because that would take another push/pop and we hope the caller needs to preserve it anyway.
-RESTRICTF A jtga0(J jt,I ranktype,I atoms){A z;
+RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
- I bytes; if(likely(ranktype&(BIT(LASTNOUNX+1)-1)))bytes = ALLOBYTESVSZLG(atoms,ranktype>>32,bplg(ranktype),ranktype&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,ranktype>>32,bpnonnoun(ranktype),ranktype&LAST0,0);
- ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
+ I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
+ ASSERT((UI)atoms<=2147483647U,EVLIMIT) ASSERT((UI)rank<=(UI)RMAX,EVLIMIT)
+/// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
     // We never use GA for NAME types, so we don't need to check for it
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC AFLAG AM
- AT(z)=(I4)ranktype; I rank=(UI)ranktype>>32; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
+ AT(z)=type; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
  // Clear data for non-DIRECT types in case of error
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
- if(unlikely(!(((I4)ranktype&DIRECT)>0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
+ if(unlikely(!((type&DIRECT)!=0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
  R z;
 }
 #else

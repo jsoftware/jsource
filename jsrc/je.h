@@ -805,11 +805,7 @@ extern void*    jvmreservea(I,I);
 extern void*    jvmalloca(I,I);
 extern B        jvmwire(void*,I);
 extern void     jvmunwire(void*,I);
-#if C_AVX2 || EMU_AVX2
-extern RESTRICTF A jtga0(J,I,I);
-#else
 extern RESTRICTF A jtga0(J,I,I,I);
-#endif
 extern void      jtrepatsend(J);
 extern void      jtrepatrecv(J);
 extern RESTRICTF A jtgaf(J,I);

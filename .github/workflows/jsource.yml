@@ -42,8 +42,8 @@ jobs:
     - run: echo "Run deprecated jobs"
 
  disabled:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run disabled jobs"
@@ -592,11 +592,11 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Build, Test JE (OpenBSD)
-     uses: cross-platform-actions/action@v0.32.0
+     uses: cross-platform-actions/action@v1.2.0
      with:
       operating_system: openbsd
       architecture: x86-64
-      version: '7.6'
+      version: '7.9'
       shell: bash
 
       run: |
@@ -652,11 +652,11 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Build, Test JE (OpenBSD arm64)
-     uses: cross-platform-actions/action@v0.32.0
+     uses: cross-platform-actions/action@v1.2.0
      with:
       operating_system: openbsd
       architecture: arm64
-      version: '7.6'
+      version: '7.9'
       shell: bash
 
       run: |
@@ -710,7 +710,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Build, Test JE (FreeBSD)
-     uses: cross-platform-actions/action@v0.32.0
+     uses: cross-platform-actions/action@v1.2.0
      with:
       operating_system: freebsd
       architecture: x86-64
@@ -773,7 +773,7 @@ jobs:
      uses: actions/checkout@v6
 
    - name: Build, Test JE (FreeBSD arm64)
-     uses: cross-platform-actions/action@v0.32.0
+     uses: cross-platform-actions/action@v1.2.0
      with:
       operating_system: freebsd
       architecture: arm64
@@ -1342,7 +1342,7 @@ jobs:
  jewin-msys2-x86:
   name: JE (Windows MSYS2 x86)
   needs: [all, disabled]
-  runs-on: windows-2025
+  runs-on: windows-2022
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6

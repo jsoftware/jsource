@@ -1611,6 +1611,10 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define GA0(v,t,n,r) {GA00(v,t,n,r) *((r)==1?AS(v):jt->shapesink)=(n);}  // used when shape=0 but rank may be 1 and must fill in with AN if so - never for sparse blocks
 #define GA10(v,t,n) {GA00(v,t,n,1) AS(v)[0]=(n);}  // used when rank is known to be 1
 
+// GACV is like GA but the type comes from cv
+#define GACVE0(v,cv,n,r,erraction) {HISTOCALL if(unlikely(!(v=jtga0cv(jt,(I)(cv),(I)(r),(I)(n)))))erraction; AN(v)=(n);}  // used when shape=0 and rank is never 1 or will always be filled in by user even if rank 1
+#define GACV00(v,t,n,r) {GACVE0(v,t,n,r,R 0)}  // used when shape will always be filled in by user.  Default error action is to exit
+
 // GAT[^V]*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  For GAT the number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \

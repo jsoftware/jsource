@@ -1128,27 +1128,26 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
  // If the argument has rank that large, and the arguments agree, the argument MUST have the same number of atoms as the result, because all shape is accounted for.
  // rank = rank of result (the rank of the result is the sum of (the longer frame-length) plus (the larger cell-rank))
  // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
- I zt=rtype(cv); // result type for the primitive
  if(unlikely(a==w))goto allocate;   // Finally, if a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
  I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a);  // is w/a inplaceable?  In test suite, inplaces 25% of the time
  if(withprob((ipw|ipa)<0,0.4)){  // see if either w or a is inplaceable
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
-  if(unlikely(zt!=AT(z))){   // if type changes (zt!=incumbent)...  zt does not have upper flag bits
+  if(unlikely(!(AT(z)&rtype(cv)))){   // if type changes (zt!=incumbent)...  zt does not have upper flag bits
    // the type of inplaceable z must change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
    // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
    if(AFLAG(z)&AFUNINCORPABLE){
 // obsolete      if((ipa&((zt&~AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
-    if((ipa&((zt^AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
+    if((ipa&(AT(a)<<(BW-rbitno(cv))))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
        // we could use a even if it changes type, if it is not UNINCORPABLE.  But if w is UNINCORPABLE and a is inplaceable, it's surely because a is an unrepeated UNINCORPABLE cell in dyad u"n - not worth checking
     z=a;  // we can use a as is, do so
-   }else AT(z)=zt;  // OK to change type of z to match the result, do so
+   }else AT(z)=rtype(cv);  // OK to change type of z to match the result, do so
    }
   }else{
 allocate:;  // come here if no inplaceable block could have the type changed
- // vbls needed: m a w zt zn cv fr [jt]
+ // vbls needed: m a w zn cv fr [jt]
 // obsolete   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
-  GA00(z,zt,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
+  GACV00(z,cv,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
 // vbls needed: m a w z cv(2 bits) fr [jt]
   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
   MCISH(AS(z),AS((cv&VIPWFNOTLONG)?a:w),LANE(fr,FL));     MCISH(AS(z)+LANE(fr,FL),  AS(cv&VIPWCRLONG?w:a)+LANE(fr,FLC),   LANE(fr,ZRANK)-LANE(fr,FL));  // copy shape    fr free

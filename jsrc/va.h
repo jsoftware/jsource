@@ -74,8 +74,9 @@
 #define atype(x) (BIT(VICMSK>>VICX)>>(PEXT0((x),VICX,VICMSK>>VICX)))  // result is AT from flags
 
 // Extract the result type from cv coming from the table
-#define rtype(x) BIT((x)>>VOTX)  // relies on output conversion being highest bits
-#define rtypebplg(x) bpctlg((x)>>VOTX)  // relies on output conversion being highest bits; avoids CTTZ
+#define rbitno(x) ((x)>>VOTX)
+#define rtype(x) BIT(rbitno(x))  // relies on output conversion being highest bits
+#define rtypebplg(x) bpctlg(rbitno(x))  // relies on output conversion being highest bits; avoids CTTZ
 // obsolete #define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
 
 #define NOT(v) ((v)^VALIDBOOLEAN)

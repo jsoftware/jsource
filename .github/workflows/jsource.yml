@@ -42,8 +42,8 @@ jobs:
     - run: echo "Run deprecated jobs"
 
  disabled:
-  if: false
-  #if: true
+  #if: false
+  if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run disabled jobs"
@@ -604,13 +604,13 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 gdb lldb
        /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       sudo echo "Host *" >>~/.ssh/config || true
-       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       sudo cat ~/.ssh/config || true
+       # ls -al ~/
+       # ls -al ~/.ssh
+       # sudo echo "Host *" >>~/.ssh/config || true
+       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       # echo "client ssh config"
+       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -664,13 +664,13 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 gdb lldb
        /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       sudo echo "Host *" >>~/.ssh/config || true
-       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       sudo cat ~/.ssh/config || true
+       # ls -al ~/
+       # ls -al ~/.ssh
+       # sudo echo "Host *" >>~/.ssh/config || true
+       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       # echo "client ssh config"
+       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -714,7 +714,7 @@ jobs:
      with:
       operating_system: freebsd
       architecture: x86-64
-      version: '14.4'
+      version: '15.0'
       shell: bash
 
       run: |
@@ -726,13 +726,13 @@ jobs:
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       sudo echo "Host *" >>~/.ssh/config || true
-       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       sudo cat ~/.ssh/config || true
+       # ls -al ~/
+       # ls -al ~/.ssh
+       # sudo echo "Host *" >>~/.ssh/config || true
+       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       # echo "client ssh config"
+       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -777,7 +777,7 @@ jobs:
      with:
       operating_system: freebsd
       architecture: arm64
-      version: '14.4'
+      version: '15.0'
       shell: bash
 
       run: |
@@ -789,13 +789,13 @@ jobs:
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
        /sbin/ldconfig -r
-       ls -al ~/
-       ls -al ~/.ssh
-       sudo echo "Host *" >>~/.ssh/config || true
-       sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       echo "client ssh config"
-       sudo cat ~/.ssh/config || true
+       # ls -al ~/
+       # ls -al ~/.ssh
+       # sudo echo "Host *" >>~/.ssh/config || true
+       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
+       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
+       # echo "client ssh config"
+       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1

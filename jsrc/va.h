@@ -51,17 +51,18 @@
 #define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
 // obsolete #define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
 // obsolete #define VXCHASVTYPE     BIT(VXCHASVTYPEX)
-#define VOTX            25           // bit position for allocated result-type  MUST be highest bits!
-#define VB              ((I)B01X<<VOTX)
-#define VI              ((I)INTX<<VOTX)
-#define VD              ((I)FLX<<VOTX)
-#define VZ              ((I)CMPXX<<VOTX)
-#define VX              ((I)XNUMX<<VOTX)
-#define VQ              ((I)RATX<<VOTX)
-#define VI2             ((I)INT2X<<VOTX)
-#define VI4             ((I)INT4X<<VOTX)
-#define VE              ((I)QPX<<VOTX)
-#define VOTMSK          ((I)15<<VOTX) // mask for result type from function 25-28.  always present
+#define VOTX            25           // bit position for allocated result-type
+#define VRBPLGX         29   // 29-31, the top bits, hold bplg(output type)
+#define VB              (((I)B01X<<VOTX)+((I)bpctlg(B01X)<<VRBPLGX))
+#define VI              (((I)INTX<<VOTX)+((I)bpctlg(INTX)<<VRBPLGX))
+#define VD              (((I)FLX<<VOTX)+((I)bpctlg(FLX)<<VRBPLGX))
+#define VZ              (((I)CMPXX<<VOTX)+((I)bpctlg(CMPXX)<<VRBPLGX))
+#define VX              (((I)XNUMX<<VOTX)+((I)bpctlg(XNUMX)<<VRBPLGX))
+#define VQ              (((I)RATX<<VOTX)+((I)bpctlg(RATX)<<VRBPLGX))
+#define VI2             (((I)INT2X<<VOTX)+((I)bpctlg(INT2X)<<VRBPLGX))
+#define VI4             (((I)INT4X<<VOTX)+((I)bpctlg(INT4X)<<VRBPLGX))
+#define VE              (((I)QPX<<VOTX)+((I)bpctlg(QPX)<<VRBPLGX))
+#define VOTMSK          (I)15 // mask for result type from function 25-28.  always present
 // 29-31 free.  Also allows short immediates
 // obsolete #define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
 // obsolete #define VIPOKRNKW          BIT(VIPOKRNKWX)
@@ -75,7 +76,7 @@
 #define atype(x) (BIT(VICMSK>>VICX)>>(PEXT0((x),VICX,VICMSK>>VICX)))  // result is AT from flags
 
 // Extract the result type from cv coming from the table
-#define rbitno(x) ((x)>>VOTX)
+#define rbitno(x) PEXT0((x),VOTX,VOTMSK)
 #define rtype(x) BIT(rbitno(x))  // relies on output conversion being highest bits
 #define rtypebplg(x) bpctlg(rbitno(x))  // relies on output conversion being highest bits; avoids CTTZ
 // obsolete #define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })

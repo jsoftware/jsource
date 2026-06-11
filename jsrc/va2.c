@@ -1148,8 +1148,17 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
 allocate:;  // come here if no inplaceable block could have the type changed
  // vbls needed: m a w zn cv fr [jt]
 // obsolete   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
-  GACV00(z,cv,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
-// vbls needed: m a w z cv(2 bits) fr [jt]
+ I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);
+ ASSERT((UI)LANE(fr,ZRANK)<=(UI)RMAX,EVLIMIT) ASSERT((UI)zn<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
+/// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
+ RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
+ AT(z)=rtype(cv); ARINIT(z,LANE(fr,ZRANK)); AK(z)=AKXR(LANE(fr,ZRANK)); AN(z)=zn;  // fill in the rest
+ // Clear data for non-DIRECT types in case of later error
+ // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
+ if(unlikely(!((AT(z)&DIRECT)!=0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
+
+// obsolete   GACV00(z,cv,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
+// vbls needed: m a w z cv fr [jt]
   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
   // Install shape.  The first move installs the frame & is thus needed only when there is rank; but it's wrong to branch around it, because it's only a dozen instructions and we expect
   // a pipeline break for the branch to the action routine.  We hope to have many cycles in the pipe when that break happens

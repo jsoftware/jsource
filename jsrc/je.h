@@ -1062,6 +1062,7 @@ extern void     writelock(S*,S);
 #endif
 #if C_AVX2 || EMU_AVX2
 extern I        memcmpne(void*, void*, I);
+extern A zfillind(A,I);
 #else
 #define memcmpne(s,t,l) (!!memcmp((s),(t),(l)))
 #endif

@@ -1460,6 +1460,7 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  if(unlikely(!((type&DIRECT)!=0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
  R z;
 }
+#if 0  // obsolete 
 // like jtga0, but only for types that can be produced by an atomic cv, i. e. nouns
 // the type is encoded in cv, as the rtype
 RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){A z;
@@ -1475,6 +1476,8 @@ RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){A z;
  if(unlikely(!((AT(z)&DIRECT)!=0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
  R z;
 }
+RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){R jtga0(jt,rtype(cv),rank,atoms);}
+#endif
 #else
 RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
@@ -1484,7 +1487,6 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  if(unlikely(!((type&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),MEMSET00LEN,MEMSET00);}
  R z;
 }
-RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){R jtga0(jt,rtype(cv),rank,atoms);}
 #endif
 
 // send expatriate blocks back home

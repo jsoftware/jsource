@@ -16,7 +16,9 @@
 #define VIPWCRLONGX     4  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  Must be 1 higher than VIPWFLONGX
 #define VIPWCRLONG      BIT(VIPWCRLONGX)
 #define VIPOLOOPREQD    BIT(5)    // set in va2 to indicate outer loop needed
-// bit 6-8 free
+#define VTYPECHGW       BIT(6)   // w arg (after conversion if any) is NOT the same type as the result (dyads only)
+#define VTYPECHGA       BIT(7)   // a arg (after conversion if any) is NOT the same type as the result (dyads only)
+// bit 8 free
 #define VRCX            9           // bit position for optional final result-conversion 9-10 must be higher than the RC bits 0-8
 #define VRD             BIT(VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible
@@ -78,7 +80,7 @@
 // Extract the result type from cv coming from the table
 #define rbitno(x) PEXT0((x),VOTX,VOTMSK)
 #define rtype(x) BIT(rbitno(x))  // relies on output conversion being highest bits
-#define rtypebplg(x) bpctlg(rbitno(x))  // relies on output conversion being highest bits; avoids CTTZ
+#define rtypebplg(x) ((x)>>VRBPLGX)  // relies on output conversion being highest bits; avoids CTTZ
 // obsolete #define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
 
 #define NOT(v) ((v)^VALIDBOOLEAN)

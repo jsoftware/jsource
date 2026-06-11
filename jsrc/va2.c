@@ -910,7 +910,7 @@ static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // allranks is (ranks of a and w),(verb ranks)  agreefr is the framelen for the initial agreement test
 static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,I afwfagreefr){F12IP;  // allranks is argranks/ranks   clang19: MUST BE NOINLINE to avoid register spills
- A z;I m,mf,n,nf,zn;I cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
+ A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  I vandx=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
  I at=AT(a), wt=AT(w), ar=AR(a), wr=AR(w);   // noun types & ranks
@@ -1143,32 +1143,31 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
        // we could use a even if it changes type, if it is not UNINCORPABLE.  But if w is UNINCORPABLE and a is inplaceable, it's surely because a is an unrepeated UNINCORPABLE cell in dyad u"n - not worth checking
     z=a;  // we can use a as is, do so
    }else AT(z)=rtype(cv);  // OK to change type of z to match the result, do so
-   }
-  }else{
+  }
+ }else{
 allocate:;  // come here if no inplaceable block could have the type changed
- // vbls needed: m a w zn cv fr [jt]
+   // vbls needed: m a w zn cv fr [jt]
+  // allocate the result area.  We avoid the subroutine call for the overhead, and to save regs and to avoid needing to calculate zt->bplg->bytes
 // obsolete   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
- I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);
- ASSERT((UI)LANE(fr,ZRANK)<=(UI)RMAX,EVLIMIT) ASSERT((UI)zn<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
+  I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);
+  ASSERT((UI)LANE(fr,ZRANK)<=(UI)RMAX,EVLIMIT) ASSERT((UI)zn<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
 /// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
- RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
- AT(z)=rtype(cv); ARINIT(z,LANE(fr,ZRANK)); AK(z)=AKXR(LANE(fr,ZRANK)); AN(z)=zn;  // fill in the rest
- // Clear data for non-DIRECT types in case of later error
- // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
- if(unlikely(!((AT(z)&DIRECT)!=0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
-
-// obsolete   GACV00(z,cv,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
-// vbls needed: m a w z cv fr [jt]
+  union {UI4 fr; UI1 lanes[4];} fru={.fr=fr};  // save fr where we can get to the lanes fr free
+  RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
+  AT(z)=rtype(cv); ARINIT(z,fru.lanes[frZRANK]); AK(z)=AKXR(fru.lanes[frZRANK]); AN(z)=zn;  // fill in the rest
   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
+  if(unlikely(((AT(z)&DIRECT)==0))){z=zfillind(z,bytes);}  // Clear data for non-DIRECT types in case of later error.  zfillind clears 32 bytes at a time, OK since the region of a power of 2 long
+// obsolete   GACV00(z,cv,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
+  // vbls needed: m a w z cv [jt]
   // Install shape.  The first move installs the frame & is thus needed only when there is rank; but it's wrong to branch around it, because it's only a dozen instructions and we expect
   // a pipeline break for the branch to the action routine.  We hope to have many cycles in the pipe when that break happens
-  MCISH(AS(z),AS((cv&VIPWFNOTLONG)?a:w),LANE(fr,FL));     MCISH(AS(z)+LANE(fr,FL),  AS(cv&VIPWCRLONG?w:a)+LANE(fr,FLC),   LANE(fr,ZRANK)-LANE(fr,FL));  // copy shape    fr free
-      //       start of long frame   len(long frame)         start of cellshape,  shape of long cell+its frame         rank of long cell (zrank-len of long frame)
+  MCISH(AS(z),AS((cv&VIPWFNOTLONG)?a:w),fru.lanes[frFL]);     MCISH(AS(z)+fru.lanes[frFL],  AS(cv&VIPWCRLONG?w:a)+fru.lanes[frFLC],   fru.lanes[frZRANK]-fru.lanes[frFL]);  // copy shape    fr free
+      //       start of long frame      len(long frame)         start of cellshape,              shape of long cell+its frame         rank of long cell (zrank-len of long frame)
  } 
  // Signal domain error if appropriate.  Must do this after agreement tests
  ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we hope to keep adocvfn in the call register till end of loop.  We might have allocated a BOOL result block, which is OK
- if(unlikely(AN(z)==0)){RETF(z);}  // If the result is empty, the allocated area says it all
- // zn, zt  NOT USED FROM HERE ON
+ if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
+ // zn free
 
  // End of setup phase.  The execution phase:
  // vbls needed from setup: adocvfn m a w z [jt]
@@ -1176,13 +1175,13 @@ allocate:;  // come here if no inplaceable block could have the type changed
  // The compiler thinks that because ak/wk/zk are used in the loop they should reside in registers.  So we force the compiler to spill aawwzknfxrz using forcetomemory.
  // We want m, mend, av, wv, zv, jj to be in registers  (m and zv so that the action routine can test them and do boundary alignment right away; mend so that the misprediction
  // of the last loop, if it happens, will be detected right away).  It might be better to have n (aawwzknfxrz[9]) in a register as well.
- {C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.  Could move up but gain is small
+ {C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.
   I mulofloloc;   // number of good results before we encountered integer overflow on multiply
   // we want to execute the action routine nf times.  We could execute the loop-with-unroll nf-1 times followed by the code for the last loop, but that would misbranch to the action routine twice when there is rank, plus one misbranch at loop-end
   // Alternatively, we could execute the loop-with-unroll nf times.  This would misbranch once for the action routine, once at start when there is rank, and at loopend; and would execute the unroll needlessly on the non-loops.
 //   We actually have two branches: no loop, no unroll, and loop nf times.  Each branch misbranches once for the action routine, and 0, 1, or 2 times when there is rank, with no unroll for no-rank. 
   if(withprob(!(cv&VIPOLOOPREQD),0.8)){   // see if outer loop needed
-   // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update
+   // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update.  The indirect call will misbranch, usually
    I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,av,wv,zv,jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
    if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
     // section did not complete normally.

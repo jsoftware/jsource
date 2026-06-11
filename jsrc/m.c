@@ -1447,8 +1447,8 @@ A zfillind(A w, I m){
 // like jtga, but don't copy shape or AN.   Never called for SPARSE type
 // We don't store AN, because that would take another push/pop and we hope the caller needs to preserve it anyway.
 RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
- // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
- // trailing NUL (because boolean-op code needs it)
+ // Get the number of bytes needed-1, including the header, the atoms, and end padding
+ // This takes several cycles: type->bplg->bytes->CTLZI (and then fetch from [block] in the subroutine).  Unfortunately, stuck in this routine there's nothing to overlap with it.
  I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes=ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes=ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
  ASSERT((UI)rank<=(UI)RMAX,EVLIMIT) ASSERT((UI)atoms<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
 /// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)

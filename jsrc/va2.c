@@ -1090,7 +1090,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     // testing for nf=1 is questionable.  It adds about 3 inst to the main line, but it saves a lot when it hits
     I neq1m=REPSGN(n-2), eq1ct=neq1m; eq1ct=eq1ct+((UI)1<(UI)m); eq1ct=eq1ct+((UI)1<(UI)nf);  // m=1 + n=1 + nf=1 > 1 => n=1 + (1 - m!=1) + (1 - nf!=1) > 1 => n=1 - nf!=1 > m!=1 - 1 => n=1 - nf!=1 >= m!=1: any 2 values = 1
     // encode major-axis in LSB of n, and complement m if there in only 1 loop
-    if(unlikely(eq1ct<=0)){  // any 2 or 3 values <= 1
+    if(withprob(eq1ct<=0,0.3)){  // any 2 or 3 values <= 1
      // migration is possible
      m*=mf; n*=nf;   // propagate mf and nf down
      DPMULDE(nf,mf,mf);  // mf is total # iterations

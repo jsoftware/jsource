@@ -2132,7 +2132,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // obsolete #define bpnonnoun(i) (I)SHMSK8((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ 
 // ((I8)SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+((I8)ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+((I8)MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+((I8)NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) 
 // ,5*(CTTZ(i)-(LASTNOUNX+1)),31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   I I I I I I4 I I I (1) 
-#define bpnonnoun(i) ((i)&SYMB?SYMBSIZE:INTSIZE)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   I I I I I I4 I I I (1) 
+// obsolete #define bpnonnoun(i) ((i)&SYMB?SYMBSIZE:INTSIZE)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   I I I I I I4 I I I (1) 
+#define bpnonnoun(i) (SZI==8?(unlikely(((i)&SYMB)!=0)?SYMBSIZE:INTSIZE):(unlikely(((i)&CONW)!=0)?CONWSIZE:INTSIZE))  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   I I I I I8 I4 I I I (1) 
 
 // bpnoun is like bp but for NOUN types, and not sparse
 #define bpnoun(i) BIT(bplg(i))

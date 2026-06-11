@@ -978,7 +978,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     raminusw=-raminusw;   // now wr-ar
     nf=REPSGN(raminusw);  // nf=-1 if a has longer frame, means cannot inplace w
     nf=3+2*mf+nf+~(JTINPLACEA+JTINPLACEW);  // set inplaceability here: only if nonrepeated cell
-    aawwzknfxrz[9]=0;  // set result-offset of last block to 0 indicating no loop over nf/mf
+// obsolete     aawwzknfxrz[9]=0;  // set result-offset of last block to 0 indicating no loop over nf/mf
     raminusw=raminusw&mf; fr+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r.  f (high part of fr) is 0
     PRODRNK(n,fr-shortr,AS(cv&VIPWCRLONG?w:a)+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
    // notionally we now repurpose fr to be frame/rank, with the frame 0
@@ -1096,11 +1096,12 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  Should generate ADC
      n=n+((UI1)(cv&VIPWFNOTLONG)<(UI1)((UI)1<(UI)nf));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
-     aawwzknfxrz[9]=0;  // set result-offset of last block to 0 indicating no loop over nf/mf.  No other aawwzknfxrz except [5] matter
+// obsolete      aawwzknfxrz[9]=0;  // set result-offset of last block to 0 indicating no loop over nf/mf.  No other aawwzknfxrz except [5] matter
     }else{    // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration.  Setting it nonzero engages multiple loops
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*(aawwzknfxrz[4]=zn<<rtypebplg(cv));   // set nf (#inner outer loops-1), byte offset to z location of last iteration
      n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set   Should generate ADC
+     cv|=VIPOLOOPREQD;  // indicate txhat the outer loops are needed
     } 
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
 
@@ -1138,7 +1139,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
    if(AFLAG(z)&AFUNINCORPABLE){
 // obsolete      if((ipa&((zt&~AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
-    if((ipa&(AT(a)<<(BW-rbitno(cv))))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
+    if((ipa&SGNIF(AT(a),rbitno(cv)))>=0)goto allocate;  // if a is not inplaceable or requires a new type, go GA the result area
        // we could use a even if it changes type, if it is not UNINCORPABLE.  But if w is UNINCORPABLE and a is inplaceable, it's surely because a is an unrepeated UNINCORPABLE cell in dyad u"n - not worth checking
     z=a;  // we can use a as is, do so
    }else AT(z)=rtype(cv);  // OK to change type of z to match the result, do so
@@ -1150,6 +1151,8 @@ allocate:;  // come here if no inplaceable block could have the type changed
   GACV00(z,cv,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
 // vbls needed: m a w z cv(2 bits) fr [jt]
   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
+  // Install shape.  The first move installs the frame & is thus needed only when there is rank; but it's wrong to branch around it, because it's only a dozen instructions and we expect
+  // a pipeline break for the branch to the action routine.  We hope to have many cycles in the pipe when that break happens
   MCISH(AS(z),AS((cv&VIPWFNOTLONG)?a:w),LANE(fr,FL));     MCISH(AS(z)+LANE(fr,FL),  AS(cv&VIPWCRLONG?w:a)+LANE(fr,FLC),   LANE(fr,ZRANK)-LANE(fr,FL));  // copy shape    fr free
       //       start of long frame   len(long frame)         start of cellshape,  shape of long cell+its frame         rank of long cell (zrank-len of long frame)
  } 
@@ -1169,11 +1172,12 @@ allocate:;  // come here if no inplaceable block could have the type changed
   // we want to execute the action routine nf times.  We could execute the loop-with-unroll nf-1 times followed by the code for the last loop, but that would misbranch to the action routine twice when there is rank, plus one misbranch at loop-end
   // Alternatively, we could execute the loop-with-unroll nf times.  This would misbranch once for the action routine, once at start when there is rank, and at loopend; and would execute the unroll needlessly on the non-loops.
 //   We actually have two branches: no loop, no unroll, and loop nf times.  Each branch misbranches once for the action routine, and 0, 1, or 2 times when there is rank, with no unroll for no-rank. 
-  if(withprob(aawwzknfxrz[9]==0,0.8)){
+  if(withprob(!(cv&VIPOLOOPREQD),0.8)){   // see if outer loop needed
    // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update
    I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,av,wv,zv,jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
    if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
     // section did not complete normally.
+    aawwzknfxrz[9]=0;  // retry needs the ending offset of result
     if(unlikely(lrc<0)){mulofloloc=((zv-CAV(z))>>LGSZI)+~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
     else{aawwzknfxrz[8]=lrc;}   // remember any other error, which may be retryable
    }

@@ -15,7 +15,8 @@
 #define VIPWFNOTLONG    BIT(VIPWFNOTLONGX)
 #define VIPWCRLONGX     4  // internal use in va2, means 'w has longer cell-rank, so x is repeated'.  Must be 1 higher than VIPWFLONGX
 #define VIPWCRLONG      BIT(VIPWCRLONGX)
-// bit 4-8 free
+#define VIPOLOOPREQD    BIT(5)    // set in va2 to indicate outer loop needed
+// bit 6-8 free
 #define VRCX            9           // bit position for optional final result-conversion 9-10 must be higher than the RC bits 0-8
 #define VRD             BIT(VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible

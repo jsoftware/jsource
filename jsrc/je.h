@@ -1059,8 +1059,8 @@ extern B        vlocnm(I,C*);
 #if PYXES
 extern void     readlock(S*,S);
 extern void     writelock(S*,S);
-extern A zfillind(A,I);
 #endif
+extern A zfillind(A,I);
 #if C_AVX2 || EMU_AVX2
 extern I        memcmpne(void*, void*, I);
 #else

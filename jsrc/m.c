@@ -1479,7 +1479,7 @@ RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){A z;
 RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){R jtga0(jt,rtype(cv),rank,atoms);}
 #endif
 #else
-A zfillind(A w, I bytes){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),MEMSET00LEN,MEMSET00); R w;}  // copy in 0s after the header, to the end of the block
+A zfillind(A w, I bytes){AS(w)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(w)+1),MEMSET00LEN,MEMSET00); R w;}  // copy in 0s after the header, to the end of the block
 RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),(type)&C4T,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),0,0);
  ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)

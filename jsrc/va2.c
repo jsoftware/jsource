@@ -1156,12 +1156,15 @@ allocate:;  // come here if no inplaceable block could have the type changed
   // allocate the result area.  We avoid the subroutine call for the overhead, and to save regs and to avoid needing to calculate zt->bplg->bytes
 // obsolete   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
   I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);   // never allo C4T
-  ASSERT((UI)LANE(fr,ZRANK)<=(UI)RMAX,EVLIMIT) ASSERT((UI)zn<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
 /// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
   union {UI4 fr; UI1 lanes[4];} fru={.fr=fr};  // save fr where we can get to the lanes fr free
 #if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
+  ASSERT(((I)bytes>(I)(zn)&&(I)(zn)>=(I)0)&&!(LANE(fr,ZRANK)&~RMAX),EVLIMIT)
   bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
+#else
+  ASSERT((UI)LANE(fr,ZRANK)<=(UI)RMAX,EVLIMIT) ASSERT((UI)zn<=2147483647,EVLIMIT)   // verify size & rank are in limits
 #endif
+  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // single-allocation limit
   RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
   AT(z)=rtype(cv); ARINIT(z,fru.lanes[frZRANK]); AK(z)=AKXR(fru.lanes[frZRANK]); AN(z)=zn;  // fill in the rest
   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy

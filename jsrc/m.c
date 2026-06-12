@@ -1400,7 +1400,7 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 #endif
  j=CTLZI((UI)bytes);  // 3 or 4 should return 2; 5 should return 3
 #if NORMAHX
- j=(6>j)?6:j;
+ j=(PMINL>j)?PMINL:j;
 #endif
  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);

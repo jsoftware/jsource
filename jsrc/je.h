@@ -1059,10 +1059,10 @@ extern B        vlocnm(I,C*);
 #if PYXES
 extern void     readlock(S*,S);
 extern void     writelock(S*,S);
+extern A zfillind(A,I);
 #endif
 #if C_AVX2 || EMU_AVX2
 extern I        memcmpne(void*, void*, I);
-extern A zfillind(A,I);
 #else
 #define memcmpne(s,t,l) (!!memcmp((s),(t),(l)))
 #endif

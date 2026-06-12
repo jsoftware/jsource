@@ -17,10 +17,10 @@
 #define VIPWCRLONG      BIT(VIPWCRLONGX)
 #define VIPOLOOPREQD    BIT(5)    // set in va2 to indicate outer loop needed
 #define VTYPECHGW       BIT(6)   // w arg (after conversion if any) is NOT the same type as the result (dyads only).  Required only if the arg is also marked VIPOKW
-#define VTYPECHGA       BIT(7)   // a arg (after conversion if any) is NOT the same type as the result (dyads only).  Required only if the arg is also marked VIPOKA
+#define VTYPECHGA       BIT(7)   // a arg (after conversion if any) is NOT the same type as the result (dyads only).  Required only if the arg is also marked VIPOKA  Must be next to VTYPECHGW
 // bit 8 free
 #define VRCX            9           // bit position for optional final result-conversion 9-10 must be higher than the RC bits 0-8
-#define VRD             BIT(VRCX) // convert result to D if possible   must be 1 bit below VRI
+#define VRD             ((I)1<<VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible
 #define VRNONE          ((I)3<<VRCX) // do not convert result  for now this is only in the atomic dyads - other leave the field at 00
 #define VRERR           ((I)0<<VRCX) // result-conversion removed by error (including EVNOCONV)
@@ -65,7 +65,6 @@
 #define VI4             (((I)INT4X<<VOTX)+((I)bpctlg(INT4X)<<VRBPLGX))
 #define VE              (((I)QPX<<VOTX)+((I)bpctlg(QPX)<<VRBPLGX))
 #define VOTMSK          (I)15 // mask for result type from function 25-28.  always present
-// 29-31 free.  Also allows short immediates
 // obsolete #define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
 // obsolete #define VIPOKRNKW          BIT(VIPOKRNKWX)
 // obsolete // bit 29 free

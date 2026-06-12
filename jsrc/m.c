@@ -1407,9 +1407,9 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 }
 
 #if C_AVX2 || EMU_AVX2
-// fill an INDIRECT block with 0s, starting with s[0].  m is #bytes requested for allo-1
+// fill an INDIRECT block with 0s, starting with s[0].  m is #bytes requested for allo-1, including header
 A zfillind(A w, I m){
- AS(w)[0]=0;  // the first byte by hand
+ AS(w)[0]=0;  // the first shape atom by hand, i. e. the part after the header up to the first 64B.  The rest is aligned on 32-byte boundaries
  if((m=(m-64)&-32)>=0){   // get #32-byte sections - 1; if there are some to do...
   void *z=&AS(w)[1];   // point to cache-aligned result area
   __m256i wd=_mm256_setzero_si256();  // write data, all 0
@@ -1479,12 +1479,13 @@ RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){A z;
 RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){R jtga0(jt,rtype(cv),rank,atoms);}
 #endif
 #else
+A zfillind(A w, I bytes){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),MEMSET00LEN,MEMSET00); R w;}  // copy in 0s after the header, to the end of the block
 RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
  ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
  AT(z)=type; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call
- if(unlikely(!((type&DIRECT)>0))){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),MEMSET00LEN,MEMSET00);}
+ if(unlikely(!((type&DIRECT)>0))){z=zfillind(z,bytes);}
  R z;
 }
 #endif

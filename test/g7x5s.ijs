@@ -13,7 +13,7 @@ g =: 3 : 0
  z=. w*0                              NB. 0 words for memory management
  z=. z + w*7                          NB. 7 words for non-shape header words
  z=. z + w*r+(-.IF64)*0=2|r=. #$y     NB. shape, pad to doubleword boundary if 32 bits
- z=. z + ((bp y)*<:*/$y) + (bp y)>.w  NB. atoms-1 & trailing pad
+ z=. z + ((bp y)*<:*/$y) + ((bp y)>.w) + ((-.IF64) * SZI * 262144 = 3!:0 y)  NB. atoms-1 & trailing pad
  >.&.(2&^.) z
 )
 gmapped =: 3 : 0  NB. contiguous header only
